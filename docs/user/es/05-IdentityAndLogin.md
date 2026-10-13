@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: a155256d8ce4d313 -->
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 185649658a1144d2 -->
 # 05 — Identidad e inicio de sesión
 
 <!-- languages -->
@@ -13,15 +13,21 @@ seguridad de esa identidad.
 
 ## Crear una identidad
 
-Haga clic en **Iniciar sesión** en la barra superior. El diálogo muestra
-todas las identidades que ya tiene este dispositivo (haga clic en una para
-usarla), o puede crear una nueva:
+Si aún no tiene nombre, haga clic en **Elegir un nombre** en la barra
+superior: escriba un nombre y haga clic en **Continuar como …**, y se crea
+una identidad con ese nombre, sin frase de contraseña hasta que añada una.
+Para protegerla enseguida, haga clic en **Protegerla ahora con una frase de
+contraseña**.
 
-1. Escriba un **nombre visible**. Es lo que ven las demás personas; puede
-   tener varias identidades con nombres distintos.
+Si ya tiene nombre, haga clic en él en la barra superior y luego en
+**Cambiar de nombre**. El diálogo muestra todas las identidades que ya tiene
+este dispositivo (haga clic en una para usarla), o crea una nueva:
+
+1. Escriba un **nombre**. Es lo que ven las demás personas; puede tener
+   varias identidades con nombres distintos.
 2. Escriba una **frase de contraseña** (al menos 8 caracteres) y luego
    escríbala otra vez para confirmarla.
-3. Haga clic en **Crear e iniciar sesión**.
+3. Haga clic en **Usar este nombre**.
 
 Así se crea una identidad **protegida** (se muestra con un 🔒): la clave
 se guarda cifrada y solo se descifra, en memoria, después de que ingresa la
@@ -50,10 +56,12 @@ una pregunta realmente distinta de si inició sesión o no:
   derecha): sigue siendo usted, y todavía puede explorar, construir y
   guardar, pero cualquier cosa que necesite una firma nueva (publicar, ser
   descubrible, unirse a una sala) falla con un mensaje de “identidad
-  bloqueada” hasta que la desbloquee. Haga clic en **Desbloquear** junto a
-  su nombre para ingresar su frase de contraseña, y vuelva a intentarlo.
-- **Sin sesión iniciada**: no es nadie; abra **Iniciar sesión** para
-  elegir o desbloquear una identidad otra vez.
+  bloqueada” hasta que la desbloquee. Haga clic en su nombre y luego en
+  **Desbloquear** para ingresar su frase de contraseña, y vuelva a
+  intentarlo.
+- **Sin nombre**: tras **Cambiar de nombre → Seguir sin nombre** es un
+  invitado; **Elegir un nombre** en la barra superior elige o desbloquea una
+  identidad otra vez.
 
 Una bóveda se bloquea automáticamente **15 minutos después de
 desbloquearla**, siga o no usando la app (no es un temporizador de

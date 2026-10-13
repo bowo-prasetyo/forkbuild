@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: bb51e610ce073878 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 331ff412e7f1ca0d -->
 # 06 — Avatar & Kehadiran
 
 <!-- languages -->
@@ -124,10 +124,11 @@ berjalan sebagai **tamu**: avatar dengan tampilan bawaan yang hanya Anda
 lihat dan tidak diberitahukan kepada siapa pun. Tamu bisa berbicara dengan
 penghuni, tetapi tidak bisa menambah atau menghapusnya atau menghias Dunia
 dengan hewan, karena itu perubahan yang ditandatangani dengan nama. Pilih
-nama (saat menerbitkan, dengan **Jalan di sini bersamaku**, atau lewat
-**Masuk**) dan avatar itu menjadi milik Anda di tempat ia berdiri, dengan
-tampilan yang disimpan di **Avatar Saya**, dan orang lain bisa melihatnya.
-Setelah keluar, ia kembali menjadi tamu.
+nama (saat menerbitkan, dengan **Jalan di sini bersamaku**, atau dengan
+**Pilih nama** di bilah atas) dan avatar itu menjadi milik Anda di tempat
+ia berdiri, dengan tampilan yang disimpan di **Avatar Saya**, dan orang
+lain bisa melihatnya. **Ganti nama → Lanjut tanpa nama** menjadikannya tamu
+lagi.
 
 | Tombol | Tindakan |
 |---|---|

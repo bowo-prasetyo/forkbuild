@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 8bcc959091ee56db -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 1aaeba5f85662d3b -->
 # 01 — Memulai
 
 <!-- languages -->
@@ -123,22 +123,24 @@ menambahkannya kapan saja. Untuk langsung memilih frasa sandi, klik
 **Lindungi dengan frasa sandi sekarang**. Tautan jalan bersama bertanya
 dengan cara yang sama, dengan **Berjalan sebagai …**.
 
-Anda juga dapat masuk kapan saja:
-Klik **Masuk** di pojok kanan atas. ForkBuild tidak memakai kata sandi atau
-akun pusat — sebagai gantinya, **identitas Anda adalah pasangan kunci
-kriptografis yang tersimpan di perangkat ini**. Dialog masuk menampilkan
-setiap identitas yang sudah ada di browser ini; klik salah satunya untuk
-memakainya, atau buat yang baru:
+Anda juga dapat memilih nama kapan saja: klik **Pilih nama** di pojok
+kanan atas, ketik sebuah nama, lalu klik **Lanjut sebagai …**. ForkBuild
+tidak memakai kata sandi atau akun pusat — sebagai gantinya, **di balik
+nama Anda ada pasangan kunci kriptografis yang tersimpan di perangkat
+ini**, yang disebut identitas.
 
-1. Ketik **nama tampilan** — inilah yang akan dilihat orang lain.
-2. Ketik **frasa sandi** minimal 8 karakter, dua kali. Frasa sandi
-   mengenkripsi kunci Anda di perangkat ini, dan tidak dapat diatur ulang,
-   jadi pilih yang akan Anda ingat. (Untuk melewatinya, centang **Buat
-   tanpa frasa sandi**; kunci lalu disimpan tanpa enkripsi di browser ini.)
-3. Klik **Buat & Masuk**.
+Setelah Anda punya nama, pojok kanan atas menampilkannya. Klik nama itu
+untuk **Avatar Saya**, **Identitas Saya**, **Data Anda**, dan **Ganti
+nama**, yang menampilkan setiap nama yang sudah ada di browser ini (klik
+salah satunya untuk memakainya), membuat nama baru, atau melanjutkan dengan
+**Lanjut tanpa nama**. Membuat nama baru di sana juga meminta **frasa
+sandi** minimal 8 karakter, dua kali. Frasa ini mengenkripsi kunci Anda di
+perangkat ini, dan tidak bisa diatur ulang, jadi pilih yang akan Anda
+ingat. (Untuk melewatinya, centang **Buat tanpa frasa sandi**; kuncinya
+lalu disimpan tanpa enkripsi di browser ini.) Lalu klik **Pakai nama ini**.
 
-Selesai — Anda sudah masuk, dan semua yang Anda bangun, terbitkan, atau
-kirim ditandatangani dengan identitas ini.
+Semua yang Anda bangun, terbitkan, atau kirim lalu ditandatangani dengan
+nama itu.
 
 Apa yang dilindungi frasa sandi, mengunci dan membuka kunci, serta
 mencadangkan identitas Anda dijelaskan di

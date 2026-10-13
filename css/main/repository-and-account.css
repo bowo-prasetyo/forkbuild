@@ -250,24 +250,114 @@
     white-space: nowrap;
 }
 
-.user-btn--login {
-    background: var(--accent);
-    color: #ffffff;
-}
-
-.user-btn--login:hover {
-    background: var(--accent-hover);
-}
-
-.user-btn--logout {
-    background: transparent;
-    color: var(--ink-muted);
+.user-choose-name {
+    background: var(--surface);
+    color: var(--accent-ink);
     border: 1px solid var(--line-strong);
 }
 
-.user-btn--logout:hover {
-    background: var(--surface-raised);
-    color: var(--ink-strong);
+.user-choose-name:hover {
+    background: var(--surface-hover);
+}
+
+/* The player's name, and a menu of what is theirs. */
+.user-menu {
+    position: relative;
+}
+
+.user-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    max-width: 14rem;
+    padding: 0.2rem 0.6rem 0.2rem 0.25rem;
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    font: inherit;
+    cursor: pointer;
+}
+
+.user-chip:hover,
+.user-menu--open .user-chip {
+    background: var(--surface-hover);
+}
+
+.user-chip-initial {
+    display: inline-grid;
+    place-items: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    flex: none;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #ffffff;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.user-chip--locked .user-chip-initial {
+    background: var(--surface-pressed);
+}
+
+.user-chip .user-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.user-chip-caret {
+    color: var(--ink-subtle);
+    font-size: 0.7rem;
+}
+
+.user-menu-panel {
+    display: none;
+    position: absolute;
+    top: calc(100% + 0.4rem);
+    right: 0;
+    z-index: 100;
+    min-width: 12rem;
+    padding: 0.4rem;
+    background: var(--surface-low);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(74, 52, 24, 0.2);
+}
+
+.user-menu--open .user-menu-panel {
+    display: grid;
+    gap: 0.1rem;
+}
+
+.user-menu-item {
+    display: block;
+    padding: 0.45rem 0.75rem;
+    background: none;
+    border: none;
+    border-radius: 6px;
+    color: var(--ink);
+    font: inherit;
+    font-size: 0.9rem;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.user-menu-item:hover {
+    background: var(--surface-hover);
+}
+
+.user-menu-unlock,
+.user-menu-switch {
+    color: var(--accent-ink);
+    font-weight: 600;
+}
+
+.user-menu-switch {
+    margin-top: 0.2rem;
+    border-top: 1px solid var(--line);
+    border-radius: 0 0 6px 6px;
 }
 
 /* Login Modal */
@@ -470,10 +560,6 @@
     margin: -0.4rem 0 0.75rem;
     color: #811818;
     font-size: 0.8rem;
-}
-
-.user-name--locked {
-    color: #825617;
 }
 
 /* Identity Lifecycle Hardening (0.2.67) */

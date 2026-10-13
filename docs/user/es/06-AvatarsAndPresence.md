@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: bb51e610ce073878 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 331ff412e7f1ca0d -->
 # 06 — Avatares y presencia
 
 <!-- languages -->
@@ -122,9 +122,10 @@ No necesita un nombre para caminar. Hasta que elija uno, camina como
 del que no se informa a nadie más. Un invitado puede hablar con los
 residentes, pero no puede añadirlos ni quitarlos ni decorar un mundo con un
 animal, porque son cambios firmados con un nombre. Elija un nombre (al
-publicar, con **Pasear aquí conmigo** o en **Iniciar sesión**) y el avatar
-pasa a ser suyo allí donde está, con el aspecto guardado en **Mi avatar**,
-y los demás pueden verlo. Al cerrar sesión vuelve a ser un invitado.
+publicar, con **Pasear aquí conmigo** o con **Elegir un nombre** en la barra
+superior) y el avatar pasa a ser suyo allí donde está, con el aspecto
+guardado en **Mi avatar**, y los demás pueden verlo. **Cambiar de nombre →
+Seguir sin nombre** lo vuelve a convertir en invitado.
 
 | Tecla | Acción |
 |---|---|

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 8bcc959091ee56db -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 1aaeba5f85662d3b -->
 # 01 — Erste Schritte
 
 <!-- languages -->
@@ -129,25 +129,26 @@ hinzu. Um gleich eine Passphrase zu wählen, klicken Sie stattdessen auf
 **Jetzt mit einer Passphrase schützen**. Ein Spazier-Link fragt genauso, mit
 **Als … spazieren**.
 
-Sie können sich auch jederzeit
-anmelden:
-Klicken Sie oben rechts auf **Anmelden**. ForkBuild verwendet keine
-Passwörter und keine zentralen Konten — stattdessen ist **Ihre Identität
-ein kryptografisches Schlüsselpaar, das auf diesem Gerät gespeichert ist**.
-Der Anmeldedialog listet jede Identität auf, die dieser Browser bereits
-besitzt; klicken Sie auf eine, um sie zu verwenden, oder erstellen Sie eine
-neue:
+Sie können auch jederzeit einen Namen wählen: Klicken Sie oben rechts auf
+**Namen wählen**, geben Sie einen ein und klicken Sie auf **Weiter als …**.
+ForkBuild verwendet keine Passwörter und keine zentralen Konten —
+stattdessen **steht hinter Ihrem Namen ein kryptografisches Schlüsselpaar,
+das auf diesem Gerät gespeichert ist**, eine sogenannte Identität.
 
-1. Geben Sie einen **Anzeigenamen** ein — das sehen andere Menschen.
-2. Geben Sie zweimal eine **Passphrase** mit mindestens 8 Zeichen ein. Sie
-   verschlüsselt Ihren Schlüssel auf diesem Gerät, und es gibt kein
-   Zurücksetzen; wählen Sie also eine, die Sie behalten. (Um sie zu
-   überspringen, setzen Sie das Häkchen bei **Ohne Passphrase erstellen**;
-   der Schlüssel wird dann unverschlüsselt in diesem Browser gespeichert.)
-3. Klicken Sie auf **Erstellen & anmelden**.
+Sobald Sie einen Namen haben, zeigt die Ecke oben rechts ihn an. Klicken Sie
+darauf für **Mein Avatar**, **Meine Identitäten**, **Ihre Daten** und
+**Namen wechseln**: Das listet jeden Namen auf, den dieser Browser schon
+besitzt (klicken Sie auf einen, um ihn zu verwenden), legt einen neuen an
+oder macht mit **Ohne Namen weiter** weiter. Ein neuer Name fragt dort auch
+zweimal nach einer **Passphrase** mit mindestens 8 Zeichen. Sie
+verschlüsselt Ihren Schlüssel auf diesem Gerät, und es gibt kein
+Zurücksetzen; wählen Sie also eine, die Sie behalten. (Um sie zu
+überspringen, setzen Sie das Häkchen bei **Ohne Passphrase erstellen**; der
+Schlüssel wird dann unverschlüsselt in diesem Browser gespeichert.) Klicken
+Sie dann auf **Diesen Namen nutzen**.
 
-Das war's — Sie sind jetzt angemeldet, und alles, was Sie bauen,
-veröffentlichen oder senden, wird mit dieser Identität signiert.
+Alles, was Sie bauen, veröffentlichen oder senden, wird dann unter diesem
+Namen signiert.
 
 Was eine Passphrase schützt, Sperren und Entsperren sowie das Sichern Ihrer
 Identität werden in [Identität & Anmeldung](05-IdentityAndLogin.md)

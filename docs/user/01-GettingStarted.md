@@ -113,20 +113,21 @@ says so after you publish, and **Protect with Passphrase** on
 click **Protect it with a passphrase now** instead. A walk link asks the
 same way, with **Walk as …**.
 
-You can also log in at any time: click **Login** in the top-right corner.
-ForkBuild doesn't use passwords or central accounts — instead, **your identity is a cryptographic key pair
-stored on this device**. The Log In dialog lists every identity this browser
-already holds; click one to use it, or create a new one:
+You can also choose a name at any time: click **Choose a name** in the
+top-right corner, type one and click **Continue as …**. ForkBuild doesn't
+use passwords or central accounts — instead, **your name is backed by a
+cryptographic key pair stored on this device**, called an identity.
 
-1. Type a **display name** — this is what other people will see.
-2. Type a **passphrase** of at least 8 characters, twice. It encrypts your
-   key on this device, and there is no reset, so choose one you'll keep.
-   (To skip it, tick **Create without a passphrase**; the key is then stored
-   unencrypted in this browser.)
-3. Click **Create & Log In**.
+Once you have a name, the top-right corner shows it. Click it for **My
+Avatar**, **My Identities**, **Your Data** and **Switch name**, which lists
+every name this browser already holds (click one to use it), makes a new one,
+or goes on with **Go on without a name**. Making a new name there also asks
+for a **passphrase** of at least 8 characters, twice. It encrypts your key on
+this device, and there is no reset, so choose one you'll keep. (To skip it,
+tick **Create without a passphrase**; the key is then stored unencrypted in
+this browser.) Then click **Use this name**.
 
-That's it — you're now signed in, and everything you build, publish, or send
-is signed with this identity.
+Everything you build, publish, or send is then signed under that name.
 
 What a passphrase protects, locking and unlocking, and backing your
 identity up are all covered in [Identity & Login](05-IdentityAndLogin.md).

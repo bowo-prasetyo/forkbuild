@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: a155256d8ce4d313 -->
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 185649658a1144d2 -->
 # 05 — Identitas & Masuk
 
 <!-- languages -->
@@ -13,15 +13,20 @@ membuat, melindungi, dan mencadangkan identitas itu.
 
 ## Membuat identitas
 
-Klik **Masuk** di bilah atas. Dialognya menampilkan setiap identitas yang
-sudah ada di perangkat ini — klik salah satunya untuk memakainya — atau
-buat yang baru:
+Jika belum punya nama, klik **Pilih nama** di bilah atas: ketik nama lalu
+klik **Lanjut sebagai …**, dan identitas dengan nama itu dibuat, tanpa
+frasa sandi sampai Anda menambahkannya. Untuk langsung melindunginya, klik
+**Lindungi dengan frasa sandi sekarang**.
 
-1. Ketik **nama tampilan**. Inilah yang dilihat orang lain; Anda dapat
-   memiliki beberapa identitas dengan nama yang berbeda.
+Jika sudah punya nama, klik nama itu di bilah atas, lalu **Ganti nama**.
+Dialognya menampilkan setiap identitas yang sudah ada di perangkat ini —
+klik salah satunya untuk memakainya — atau membuat yang baru:
+
+1. Ketik sebuah **nama**. Inilah yang dilihat orang lain; Anda bisa punya
+   beberapa identitas dengan nama berbeda.
 2. Ketik **frasa sandi** (minimal 8 karakter), lalu ketik lagi untuk
-   mengonfirmasinya.
-3. Klik **Buat & Masuk**.
+   mengonfirmasi.
+3. Klik **Pakai nama ini**.
 
 Ini membuat identitas yang **terlindungi** (ditampilkan dengan 🔒): kuncinya
 dienkripsi saat disimpan dan hanya didekripsi, di memori, setelah Anda
@@ -51,10 +56,10 @@ sedang masuk:
   diri Anda sendiri, dan masih dapat menelusuri, membangun, dan menyimpan,
   tetapi apa pun yang memerlukan tanda tangan baru (menerbitkan, menjadi
   dapat ditemukan, bergabung ke lobi) gagal dengan pesan "identity is
-  locked" (identitas terkunci) sampai Anda membukanya. Klik **Buka Kunci**
-  di samping nama Anda untuk memasukkan frasa sandi, lalu coba lagi.
-- **Keluar** — Anda bukan siapa-siapa; buka **Masuk** untuk memilih atau
-  membuka identitas lagi.
+  locked" (identitas terkunci) sampai Anda membukanya. Klik nama Anda, lalu
+  **Buka Kunci**, untuk memasukkan frasa sandi, lalu coba lagi.
+- **Tanpa nama** — setelah **Ganti nama → Lanjut tanpa nama** Anda menjadi
+  tamu; **Pilih nama** di bilah atas memilih atau membuka identitas lagi.
 
 Brankas terkunci otomatis **15 menit setelah Anda membukanya**, entah Anda
 masih memakai aplikasi atau tidak (ini bukan pengatur waktu

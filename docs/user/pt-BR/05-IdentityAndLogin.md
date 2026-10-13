@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: a155256d8ce4d313 -->
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 185649658a1144d2 -->
 # 05 — Identidade e login
 
 <!-- languages -->
@@ -12,15 +12,20 @@ guia mostra como criar, proteger e fazer backup dessa identidade.
 
 ## Criando uma identidade
 
-Clique em **Entrar** na barra superior. A caixa de diálogo lista todas as
-identidades que este dispositivo já tem — clique em uma para usá-la — ou
-crie uma nova:
+Sem nome ainda, clique em **Escolher um nome** na barra superior: digite um
+nome e clique em **Continuar como …**, e uma identidade com esse nome é
+criada, sem frase secreta até você adicionar uma. Para protegê-la logo,
+clique em **Protegê-la agora com uma frase secreta**.
 
-1. Digite um **nome de exibição**. É o que as outras pessoas veem; você pode
-   ter várias identidades com nomes diferentes.
-2. Digite uma **frase secreta** (pelo menos 8 caracteres) e depois digite de
-   novo para confirmar.
-3. Clique em **Criar e entrar**.
+Com um nome, clique nele na barra superior e depois em **Trocar de nome**.
+A caixa de diálogo lista todas as identidades que este dispositivo já tem —
+clique em uma para usá-la — ou cria uma nova:
+
+1. Digite um **nome**. É o que os outros veem; você pode ter várias
+   identidades com nomes diferentes.
+2. Digite uma **frase secreta** (pelo menos 8 caracteres) e digite de novo
+   para confirmar.
+3. Clique em **Usar este nome**.
 
 Isso cria uma identidade **protegida** (mostrada com um 🔒): a chave fica
 criptografada quando guardada e só é descriptografada, na memória, depois que
@@ -48,10 +53,11 @@ uma pergunta realmente diferente de você ter entrado ou não:
   direito) — você continua sendo você e ainda pode navegar, construir e
   salvar, mas tudo o que precisa de uma assinatura nova (publicar, ficar
   visível, entrar numa sala) falha com uma mensagem de "identidade
-  bloqueada" até você desbloquear. Clique em **Desbloquear** ao lado do seu
-  nome para digitar a frase secreta e tente de novo.
-- **Desconectado** — você não é ninguém; abra **Entrar** para escolher ou
-  desbloquear uma identidade de novo.
+  bloqueada" até você desbloquear. Clique no seu nome e depois em
+  **Desbloquear** para digitar a frase secreta e tente de novo.
+- **Sem nome** — depois de **Trocar de nome → Seguir sem nome** você é um
+  convidado; **Escolher um nome** na barra superior escolhe ou desbloqueia
+  uma identidade de novo.
 
 Um cofre se bloqueia automaticamente **15 minutos depois de você
 desbloqueá-lo**, esteja você usando o app ou não (não é um tempo de

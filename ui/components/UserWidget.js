@@ -1,4 +1,5 @@
-import { ref, onMounted, onBeforeUnmount, inject } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount, inject } from 'vue';
+import { useRoute } from 'vue-router';
 import LoginModal from './LoginModal.js';
 import { t } from '../i18n/i18n.js';
 
@@ -16,6 +17,13 @@ import { t } from '../i18n/i18n.js';
 // about what the app can currently do. A periodic timer calls
 // checkVaultTimeouts() so a vault that idles out is noticed here even
 // if nothing happens to attempt a sign in the meantime.
+//
+// The player's words (docs/Pillars.md, "Words"): there is no account, so
+// the header never says Login or Logout. With no name it offers **Choose a
+// name**, the short name-only dialog Publish uses; with one it shows the
+// name, and its menu holds My Avatar, My Identities, Your Data and **Switch
+// name**, which picks another name this device holds, makes a new one, or
+// goes on with none (docs/reviews/CreativeDirection-2026-10-12c.md).
 const VAULT_TIMEOUT_CHECK_INTERVAL_MS = 15000;
 
 export default {
@@ -23,9 +31,16 @@ export default {
     components: { LoginModal },
     setup() {
         const identityUseCase = inject('identityUseCase');
+        const route = useRoute();
         const user = ref(identityUseCase.currentUser());
         const lockedIdentityId = ref(null);
         const showModal = ref(false);
+        // Why the dialog is open: 'name' (Choose a name), 'switch' (Switch
+        // name) or null (Unlock).
+        const modalPurpose = ref(null);
+        const menuOpen = ref(false);
+        const widget = ref(null);
+        const initial = computed(() => (user.value && user.value.displayName ? Array.from(user.value.displayName.trim())[0] || '?' : '?').toUpperCase());
         let unsubscribeUser = null;
         let unsubscribeLock = null;
         let timeoutTimer = null;
@@ -42,8 +57,26 @@ export default {
         }
 
         function openLoginOrUnlock() {
+            modalPurpose.value = lockedIdentityId.value ? null : 'name';
+            menuOpen.value = false;
             showModal.value = true;
         }
+
+        function switchName() {
+            modalPurpose.value = 'switch';
+            menuOpen.value = false;
+            showModal.value = true;
+        }
+
+        function closeMenuOnOutsideClick(event) {
+            if (menuOpen.value && widget.value && !widget.value.contains(event.target)) menuOpen.value = false;
+        }
+
+        function closeMenuOnEscape(event) {
+            if (event.key === 'Escape') menuOpen.value = false;
+        }
+
+        watch(() => route.fullPath, () => { menuOpen.value = false; });
 
         onMounted(() => {
             unsubscribeUser = identityUseCase.onUserChanged((u) => {
@@ -54,6 +87,8 @@ export default {
                 refreshLockState();
             });
             refreshLockState();
+            document.addEventListener('click', closeMenuOnOutsideClick);
+            document.addEventListener('keydown', closeMenuOnEscape);
             timeoutTimer = setInterval(() => {
                 identityUseCase.checkVaultTimeouts();
             }, VAULT_TIMEOUT_CHECK_INTERVAL_MS);
@@ -69,27 +104,50 @@ export default {
             if (timeoutTimer) {
                 clearInterval(timeoutTimer);
             }
+            document.removeEventListener('click', closeMenuOnOutsideClick);
+            document.removeEventListener('keydown', closeMenuOnEscape);
         });
 
-        return { t, user, logout, showModal, lockedIdentityId, openLoginOrUnlock };
+        return {
+            t, user, initial, logout, showModal, modalPurpose, menuOpen, widget,
+            lockedIdentityId, openLoginOrUnlock, switchName
+        };
     },
     template: `
-        <div class="user-widget">
-            <template v-if="user && lockedIdentityId">
-                <span class="user-name user-name--locked" :title="t('userWidget.thisIdentitySVaultIs')">
-                    🔒 {{ user.displayName }}
-                </span>
-                <button class="user-btn user-btn--login" @click="openLoginOrUnlock">{{ t('userWidget.unlock') }}</button>
-                <button class="user-btn user-btn--logout" @click="logout">{{ t('userWidget.logout') }}</button>
-            </template>
-            <template v-else-if="user">
-                <span class="user-name">{{ user.displayName }}</span>
-                <button class="user-btn user-btn--logout" @click="logout">{{ t('userWidget.logout') }}</button>
+        <div ref="widget" class="user-widget">
+            <template v-if="user">
+                <div :class="['user-menu', { 'user-menu--open': menuOpen }]">
+                    <button
+                        type="button"
+                        :class="['user-chip', { 'user-chip--locked': lockedIdentityId }]"
+                        aria-haspopup="true"
+                        :aria-expanded="menuOpen ? 'true' : 'false'"
+                        :title="lockedIdentityId ? t('userWidget.thisIdentitySVaultIs') : null"
+                        @click="menuOpen = !menuOpen"
+                    >
+                        <span class="user-chip-initial" aria-hidden="true">{{ lockedIdentityId ? '🔒' : initial }}</span>
+                        <span class="user-name">{{ user.displayName }}</span>
+                        <span class="user-chip-caret" aria-hidden="true">▾</span>
+                    </button>
+                    <div class="user-menu-panel" role="menu">
+                        <button v-if="lockedIdentityId" type="button" role="menuitem" class="user-menu-item user-menu-unlock" @click="openLoginOrUnlock">{{ t('userWidget.unlock') }}</button>
+                        <router-link to="/avatar" role="menuitem" class="user-menu-item">{{ t('app.nav.myAvatar') }}</router-link>
+                        <router-link to="/identity" role="menuitem" class="user-menu-item">{{ t('app.nav.myIdentities') }}</router-link>
+                        <router-link to="/settings/data" role="menuitem" class="user-menu-item">{{ t('app.nav.yourData') }}</router-link>
+                        <button type="button" role="menuitem" class="user-menu-item user-menu-switch" @click="switchName">{{ t('userWidget.switchName') }}</button>
+                    </div>
+                </div>
             </template>
             <template v-else>
-                <button class="user-btn user-btn--login" @click="openLoginOrUnlock">{{ t('userWidget.login') }}</button>
+                <button type="button" class="user-btn user-choose-name" @click="openLoginOrUnlock">{{ t('userWidget.chooseName') }}</button>
             </template>
-            <LoginModal v-if="showModal" :unlock-identity-id="lockedIdentityId" @close="showModal = false" />
+            <LoginModal
+                v-if="showModal"
+                :purpose="modalPurpose"
+                :unlock-identity-id="modalPurpose ? null : lockedIdentityId"
+                @close="showModal = false"
+                @no-name="logout"
+            />
         </div>
     `
 };
