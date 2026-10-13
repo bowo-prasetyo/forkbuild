@@ -1,14 +1,14 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 9cd714dbbc4a41d4 -->
-# 05 — アイデンティティとログイン
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 6c3356512aea6399 -->
+# 05 — 名前とアイデンティティ
 
 <!-- languages -->
 [English](../05-IdentityAndLogin.md) · [Deutsch](../de/05-IdentityAndLogin.md) · [Español](../es/05-IdentityAndLogin.md) · [Français](../fr/05-IdentityAndLogin.md) · [Bahasa Indonesia](../id/05-IdentityAndLogin.md) · **日本語** · [한국어](../ko/05-IdentityAndLogin.md) · [Português (Brasil)](../pt-BR/05-IdentityAndLogin.md)
 <!-- /languages -->
 
-ForkBuild にはパスワードも中央のアカウントサーバーもありません。
-**あなたのアイデンティティは、このブラウザーに保存された暗号学的な鍵ペア
-です**。作るもの、公開するもの、送るメッセージ、移すものすべてに署名
-するのと同じ鍵です。このガイドでは、そのアイデンティティの作成、保護、
+ForkBuild にはパスワードもアカウントもありません。**名前の裏には
+アイデンティティ、つまりこのブラウザーに保存された暗号学的な鍵ペアが
+あります**。公開するもの、送るメッセージ、移すものすべてに署名するのと
+同じ鍵です。このガイドでは、名前の決め方、パスフレーズでの保護、
 バックアップについて説明します。
 
 ## アイデンティティを作成する

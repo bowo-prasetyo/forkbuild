@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 60b09baf9d911d48 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 554ed0580b2c3b36 -->
 # 09 — Publicaciones y evidencia externa
 
 <!-- languages -->
@@ -49,7 +49,7 @@ declaración:
 | Qué comparte | Un documento o un Mundo | Un registro firmado: un Mundo compartido, la autoría de una estructura o un nombre de lugar |
 | Dónde lo ve | Repositorio, Vista del autor, Vista del mundo | La página **Publicaciones** |
 | Qué hace con él | Abrirlo, explorarlo, bifurcarlo | Comprobarlo, obtener su contenido, distribuirlo y anclarlo |
-| Guía | [Publicar y bifurcar](04-PublishingAndForking.md) | Esta |
+| Guía | [Publicar y remezclar](04-PublishingAndForking.md) | Esta |
 
 **Publicar** por sí solo no pone un Mundo en la página Publicaciones. Lo
 hace **Compartir con pares**: firma el Mundo como un **Mundo compartido**
@@ -517,5 +517,5 @@ vuelva a configurar el proveedor de pinning, para continuar.
 ## ¿Y ahora qué?
 
 Compartir sus construcciones sigue ocurriendo en
-[Publicar y bifurcar](04-PublishingAndForking.md). Para ir más allá aquí,
+[Publicar y remezclar](04-PublishingAndForking.md). Para ir más allá aquí,
 continúe con [Evidencia y almacenamiento](11-EvidenceAndStorage.md).

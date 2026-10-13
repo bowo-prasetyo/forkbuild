@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 84ecfec9734a26aa -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: debe706fb81d65f3 -->
 # 02 — Editor
 
 <!-- languages -->
@@ -532,7 +532,7 @@ berarti tidak ada orang lain yang dapat mem-fork-nya sampai Anda memilih
 lisensi. Deskripsinya muncul sebagai cuplikan di kartunya di **Jelajahi** dan
 juga dapat dicari di sana; lisensi menentukan apakah — dan bagaimana —
 orang lain boleh mem-fork-nya. Lihat
-[Penerbitan & Fork](04-PublishingAndForking.md) untuk arti setiap lisensi.
+[Penerbitan & Remix](04-PublishingAndForking.md) untuk arti setiap lisensi.
 
 Deskripsi yang panjang lebih mudah dibaca dengan sedikit format, yang
 ditampilkan oleh panel Informasi Dokumen, penjelajah lokasi di Tampilan
@@ -582,7 +582,7 @@ Musik diputar pelan saat Anda membangun, sedikit lebih riang daripada di Tampila
 
 - **Simpan** (`Ctrl+S`) — menyimpan pekerjaan Anda di perangkat ini.
 - **Terbitkan** — membagikannya kepada semua orang (lihat
-  [Penerbitan & Fork](04-PublishingAndForking.md)). Menerbitkan juga
+  [Penerbitan & Remix](04-PublishingAndForking.md)). Menerbitkan juga
   menyimpannya. Bangunan yang dimulai dari bangunan siap pakai dan belum
   berisi apa pun buatan Anda ditanyai sekali: **Terus membangun**, atau
   **Tetap terbitkan**. Pesan sesudahnya berupa satu bilah: **Masuk ke

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: 941edcaf2e7249c7 -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: 0f7d63110556987a -->
 # 13 — Data Anda: mencadangkan dan memulihkan
 
 <!-- languages -->
@@ -193,7 +193,7 @@ pindah dengan cadangan penuh.
 
 Karya yang Anda **Terbitkan** hanya disimpan di perangkat ini, sampai Anda
 mendistribusikannya (lihat
-[Penerbitan & Fork](04-PublishingAndForking.md)).
+[Penerbitan & Remix](04-PublishingAndForking.md)).
 Kartunya di **Jelajahi** menyebutkan di mana perangkat ini mencatat
 distribusinya, misalnya **Disimpan di IPFS · Diumumkan di Nostr**: tempat
 bangunan atau Klaim Bertanda Tangannya diunggah (IPFS, Arweave, Steem, atau

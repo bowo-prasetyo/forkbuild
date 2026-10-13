@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: d0ced791059d2485 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 06d073f252435c51 -->
 # Häufige Fragen
 
 <!-- languages -->
@@ -53,7 +53,7 @@ Freund:
   Steem oder Blurt) hoch und kündigt es an, sodass andere es finden können, ohne
   mit Ihnen verbunden zu sein.
 
-Siehe [Veröffentlichen & Forken](04-PublishingAndForking.md#mit-verbundenen-peers-teilen).
+Siehe [Veröffentlichen & Remixen](04-PublishingAndForking.md#mit-verbundenen-peers-teilen).
 
 ### Wie mache ich meine Arbeit für alle zugänglich?
 
@@ -142,7 +142,7 @@ Nein. Die Passphrase ist der einzige Weg, den Schlüssel dieser Identität
 zu entschlüsseln, und kein Server hat eine Kopie. Wenn Sie die Identität
 exportiert haben, brauchen Sie trotzdem die Passphrase, die Sie für den
 Export gewählt haben. Andernfalls erstellen Sie eine neue Identität. Siehe
-[Identität & Anmeldung](05-IdentityAndLogin.md).
+[Ihr Name & Ihre Identität](05-IdentityAndLogin.md).
 
 ### Warum sperrt sich meine Identität immer wieder?
 

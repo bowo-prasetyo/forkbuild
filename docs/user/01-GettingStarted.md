@@ -62,7 +62,7 @@ The bar at the top is always visible:
 |---|---|
 | **Home** | The landing page |
 | **Build** | The Editor, where you build (see [The Editor](02-TheEditor.md)) |
-| **Explore** | Everyone's published builds, to open, remix or visit (see [Publishing & Forking](04-PublishingAndForking.md#the-repository)) |
+| **Explore** | Everyone's published builds, to open, remix or visit (see [Publishing & Remixing](04-PublishingAndForking.md#the-repository)) |
 | **Challenge** | This week's build challenge and its entries (see [The weekly build challenge](04-PublishingAndForking.md#the-weekly-build-challenge)) |
 | **Walk** | World View at this week's challenge plaza, to walk around the village of published builds (see [World View](03-WorldView.md)) |
 | **My Worlds** | Worlds you've visited on this device (see [My Worlds](03-WorldView.md#my-worlds--worlds-youve-actually-been-to)) |
@@ -76,7 +76,7 @@ at once.
   - **My Avatar** — how you appear to others in World View, see
     [Avatars & Presence](06-AvatarsAndPresence.md)
   - **My Identities** — the names (identities) stored on this device, see
-    [Identity & Login](05-IdentityAndLogin.md)
+    [Your Name & Identity](05-IdentityAndLogin.md)
   - **Your Data** — back up everything to one file, or copy it to another
     device, see [Your Data](13-YourData.md)
 - **People**
@@ -201,7 +201,7 @@ be sent to everyone later. Choose a name instead unless you only want it in
 your own **Explore**.
 
 What a passphrase protects, locking and unlocking, and backing your
-identity up are all covered in [Identity & Login](05-IdentityAndLogin.md).
+identity up are all covered in [Your Name & Identity](05-IdentityAndLogin.md).
 
 ## Installing ForkBuild
 
@@ -228,7 +228,7 @@ button isn't shown.
 ## What's next?
 
 - Learn the full building toolkit in **[The Editor](02-TheEditor.md)**.
-- Ready to share? Jump to **[Publishing & Forking](04-PublishingAndForking.md)**.
+- Ready to share? Jump to **[Publishing & Remixing](04-PublishingAndForking.md)**.
 - Walk around the village of published builds in **[World View](03-WorldView.md)**.
 - Set up your avatar and meet people in
   **[Avatars & Presence](06-AvatarsAndPresence.md)** and

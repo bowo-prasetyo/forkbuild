@@ -1,18 +1,19 @@
-# 04 — Publishing & Forking
+# 04 — Publishing & Remixing
 
 <!-- languages -->
 **English** · [Deutsch](de/04-PublishingAndForking.md) · [Español](es/04-PublishingAndForking.md) · [Français](fr/04-PublishingAndForking.md) · [Bahasa Indonesia](id/04-PublishingAndForking.md) · [日本語](ja/04-PublishingAndForking.md) · [한국어](ko/04-PublishingAndForking.md) · [Português (Brasil)](pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
 
-This is the heart of ForkBuild. **Publishing** shares your creation with the
-world. **Forking** lets anyone copy a creation and evolve it — with the whole
-history preserved.
+This is the heart of ForkBuild. **Publishing** shares your build with the
+world. **Remixing** lets anyone make their own copy of a build and take it
+further, with its whole history kept. (Some messages and developer documents
+call a remix a *fork*, as in ForkBuild.)
 
 ## Publishing your creation
 
 1. Build something in the Editor.
 2. Have a name, and make sure it's unlocked (see
-   [Identity & Login](05-IdentityAndLogin.md)). Publishing signs the
+   [Your Name & Identity](05-IdentityAndLogin.md)). Publishing signs the
    build with it. If you have no name yet, **Publish** asks you to choose
    one first; **Publish unsigned** there publishes it with no author, and
    no link.

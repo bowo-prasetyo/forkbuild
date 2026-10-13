@@ -1,13 +1,13 @@
-# 05 — Identity & Login
+# 05 — Your Name & Identity
 
 <!-- languages -->
 **English** · [Deutsch](de/05-IdentityAndLogin.md) · [Español](es/05-IdentityAndLogin.md) · [Français](fr/05-IdentityAndLogin.md) · [Bahasa Indonesia](id/05-IdentityAndLogin.md) · [日本語](ja/05-IdentityAndLogin.md) · [한국어](ko/05-IdentityAndLogin.md) · [Português (Brasil)](pt-BR/05-IdentityAndLogin.md)
 <!-- /languages -->
 
-ForkBuild has no passwords and no central account server. **Your identity is
-a cryptographic key pair stored in this browser** — the same key that signs
-everything you build, publish, message, or move. This guide covers creating,
-protecting, and backing up that identity.
+ForkBuild has no passwords and no accounts. **Behind your name is an
+identity: a cryptographic key pair stored in this browser** — the same key
+that signs everything you publish, message, or move. This guide covers
+choosing a name, protecting it with a passphrase, and backing it up.
 
 ## Creating an identity
 

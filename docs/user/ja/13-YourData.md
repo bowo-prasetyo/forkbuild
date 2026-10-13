@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: 941edcaf2e7249c7 -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: 0f7d63110556987a -->
 # 13 — あなたのデータ: バックアップと復元
 
 <!-- languages -->
@@ -197,7 +197,7 @@ Drive、Google Drive）が同期するフォルダーや USB ドライブを選�
 ## あなたの公開物
 
 **公開** した作品は、配信するまでこのデバイスにだけ保存されます
-（[公開とフォーク](04-PublishingAndForking.md)を参照）。
+（[公開とリミックス](04-PublishingAndForking.md)を参照）。
 **さがす** のカードには、このデバイスがその作品をどこに配信したと記録
 しているかが表示されます。たとえば **保存先: IPFS · 告知先: Nostr**
 です。作品やその署名済みクレームをアップロードした場所（IPFS、Arweave、

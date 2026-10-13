@@ -45,7 +45,7 @@ X", and about the optional depth you can add to a claim:
 | What it shares | A Document or World | A signed record: a Shared World, authorship of a structure, or a place name |
 | Where you see it | Repository, Author view, World View | The **Publications** page |
 | What you do with it | Open, explore, fork | Check it, fetch its content, distribute and anchor it |
-| Guide | [Publishing & Forking](04-PublishingAndForking.md) | This one |
+| Guide | [Publishing & Remixing](04-PublishingAndForking.md) | This one |
 
 **Publish** alone doesn't put a World on the Publications page. **Share
 with Peers** does: it signs the World as a **Shared World** that can travel
@@ -476,5 +476,5 @@ Reconnect the wallet, or reconfigure the pinning provider, to continue.
 ## What's next?
 
 Sharing your builds still happens in
-[Publishing & Forking](04-PublishingAndForking.md). To go further here,
+[Publishing & Remixing](04-PublishingAndForking.md). To go further here,
 continue with [Evidence & Storage](11-EvidenceAndStorage.md).

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 49f2f034ec1550ac -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: b3d70584719e6278 -->
 # 01 — Erste Schritte
 
 <!-- languages -->
@@ -68,7 +68,7 @@ Die Leiste oben ist immer sichtbar:
 |---|---|
 | **Start** | Die Startseite |
 | **Bauen** | Den Editor, in dem Sie bauen (siehe [Der Editor](02-TheEditor.md)) |
-| **Entdecken** | Die veröffentlichten Bauwerke aller, zum Öffnen, Remixen oder Besuchen (siehe [Veröffentlichen & Forken](04-PublishingAndForking.md#das-repository)) |
+| **Entdecken** | Die veröffentlichten Bauwerke aller, zum Öffnen, Remixen oder Besuchen (siehe [Veröffentlichen & Remixen](04-PublishingAndForking.md#das-repository)) |
 | **Challenge** | Die Bau-Challenge dieser Woche und ihre Beiträge (siehe [Die wöchentliche Bau-Challenge](04-PublishingAndForking.md#die-wöchentliche-bau-challenge)) |
 | **Spazieren** | Die Weltansicht am Platz der Challenge dieser Woche, um durch das Dorf der veröffentlichten Bauwerke zu gehen (siehe [Weltansicht](03-WorldView.md)) |
 | **Meine Welten** | Welten, die Sie auf diesem Gerät besucht haben (siehe [Meine Welten](03-WorldView.md#meine-welten--welten-in-denen-sie-wirklich-waren)) |
@@ -82,7 +82,7 @@ alle auf einmal.
   - **Mein Avatar** — wie andere Sie in der Weltansicht sehen, siehe
     [Avatare & Anwesenheit](06-AvatarsAndPresence.md)
   - **Meine Identitäten** — die auf diesem Gerät gespeicherten Namen
-    (Identitäten), siehe [Identität & Anmeldung](05-IdentityAndLogin.md)
+    (Identitäten), siehe [Ihr Name & Ihre Identität](05-IdentityAndLogin.md)
   - **Ihre Daten** — alles in eine Datei sichern oder auf ein anderes Gerät
     kopieren, siehe [Ihre Daten](13-YourData.md)
 - **Menschen**
@@ -227,7 +227,7 @@ Sie lieber einen Namen, es sei denn, Sie wollen es nur in Ihrem eigenen
 **Entdecken** haben.
 
 Was eine Passphrase schützt, Sperren und Entsperren sowie das Sichern Ihrer
-Identität werden in [Identität & Anmeldung](05-IdentityAndLogin.md)
+Identität werden in [Ihr Name & Ihre Identität](05-IdentityAndLogin.md)
 behandelt.
 
 ## ForkBuild installieren
@@ -259,7 +259,7 @@ ForkBuild schon installiert ist, wird die Schaltfläche nicht gezeigt.
 - Lernen Sie den vollständigen Baukasten in **[Der Editor](02-TheEditor.md)**
   kennen.
 - Bereit zum Teilen? Springen Sie zu
-  **[Veröffentlichen & Forken](04-PublishingAndForking.md)**.
+  **[Veröffentlichen & Remixen](04-PublishingAndForking.md)**.
 - Gehen Sie in der **[Weltansicht](03-WorldView.md)** durch das Dorf der
   veröffentlichten Bauwerke.
 - Richten Sie Ihren Avatar ein und lernen Sie Menschen kennen, in

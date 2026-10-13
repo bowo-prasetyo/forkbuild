@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: d0ced791059d2485 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 06d073f252435c51 -->
 # Perguntas frequentes
 
 <!-- languages -->
@@ -51,7 +51,7 @@ publicar só guarda a construção no seu próprio dispositivo e a lista no
   encontrá-la sem estar conectadas a você.
 
 Veja
-[Publicar e bifurcar](04-PublishingAndForking.md#compartilhando-com-pares-conectados).
+[Publicar e remixar](04-PublishingAndForking.md#compartilhando-com-pares-conectados).
 
 ### Como deixo meu trabalho disponível para todos?
 
@@ -135,7 +135,7 @@ Não. A frase secreta é o único jeito de descriptografar a chave daquela
 identidade, e não há servidor guardando uma cópia. Se você exportou a
 identidade, ainda precisa da frase secreta que escolheu para a exportação.
 Caso contrário, crie uma identidade nova. Veja
-[Identidade e login](05-IdentityAndLogin.md).
+[Seu nome e sua identidade](05-IdentityAndLogin.md).
 
 ### Por que minha identidade fica se bloqueando sozinha?
 

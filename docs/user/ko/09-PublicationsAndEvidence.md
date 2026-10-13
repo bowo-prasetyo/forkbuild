@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 60b09baf9d911d48 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 554ed0580b2c3b36 -->
 # 09 — 게시물과 외부 증거
 
 <!-- languages -->
@@ -43,7 +43,7 @@ X라고 부른다” 같은 **서명된 클레임**과, 클레임에 더할 수 
 | 공유하는 것 | 문서나 월드 | 서명된 기록: 공유 월드, 구조물의 저작자, 장소 이름 |
 | 보이는 곳 | 저장소, 작성자 보기, 월드 보기 | **게시물** 페이지 |
 | 할 수 있는 것 | 열기, 탐색, 포크 | 확인하기, 콘텐츠 가져오기, 배포와 앵커링 |
-| 안내 | [게시와 포크](04-PublishingAndForking.md) | 이 안내 |
+| 안내 | [게시와 리믹스](04-PublishingAndForking.md) | 이 안내 |
 
 **게시**만으로는 월드가 게시물 페이지에 올라가지 않습니다. **피어와 공유**가
 올립니다: 월드를 피어에게 전달될 수 있는 **공유 월드**로 서명합니다
@@ -432,5 +432,5 @@ JSON 묶음)를 고르는 파일 선택기와 붙여넣기 상자를 보여 줍�
 
 ## 다음은?
 
-작품 공유는 여전히 [게시와 포크](04-PublishingAndForking.md)에서 합니다. 여기서 더
+작품 공유는 여전히 [게시와 리믹스](04-PublishingAndForking.md)에서 합니다. 여기서 더
 나아가려면 [증거와 저장소](11-EvidenceAndStorage.md)로 이어 가세요.

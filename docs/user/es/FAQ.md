@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: d0ced791059d2485 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 06d073f252435c51 -->
 # Preguntas frecuentes
 
 <!-- languages -->
@@ -52,7 +52,7 @@ en *su* **Explorar**. Para que le llegue a su amigo:
   Steem o Blurt) y la anuncia, para que la gente pueda encontrarla sin estar
   conectada con usted.
 
-Consulte [Publicar y bifurcar](04-PublishingAndForking.md#compartir-con-pares-conectados).
+Consulte [Publicar y remezclar](04-PublishingAndForking.md#compartir-con-pares-conectados).
 
 ### ¿Cómo hago que mi trabajo esté disponible para todos?
 
@@ -135,7 +135,7 @@ No. La frase de contraseña es la única forma de descifrar la clave de esa
 identidad, y no hay ningún servidor que guarde una copia. Si exportó la
 identidad, igual necesita la frase de contraseña que eligió para la
 exportación. Si no, cree una identidad nueva. Consulte
-[Identidad e inicio de sesión](05-IdentityAndLogin.md).
+[Su nombre y su identidad](05-IdentityAndLogin.md).
 
 ### ¿Por qué mi identidad se sigue bloqueando sola?
 

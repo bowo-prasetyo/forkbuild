@@ -1,19 +1,21 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ba7ee7cf8bfc4b8a -->
-# 04 — Veröffentlichen & Forken
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d5e21e1edde37655 -->
+# 04 — Veröffentlichen & Remixen
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · **Deutsch** · [Español](../es/04-PublishingAndForking.md) · [Français](../fr/04-PublishingAndForking.md) · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · [한국어](../ko/04-PublishingAndForking.md) · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
 
-Das ist das Herz von ForkBuild. **Veröffentlichen** teilt Ihre Kreation mit
-der Welt. **Remixen** erlaubt jedem, eine Kreation zu kopieren und
-weiterzuentwickeln — wobei der ganze Verlauf erhalten bleibt.
+Das ist das Herz von ForkBuild. **Veröffentlichen** teilt Ihr Bauwerk mit
+der Welt. **Remixen** erlaubt jedem, eine eigene Kopie eines Bauwerks zu
+machen und es weiterzuentwickeln, wobei sein ganzer Verlauf erhalten bleibt.
+(Manche Meldungen und Entwicklerdokumente nennen einen Remix einen *Fork*,
+wie in ForkBuild.)
 
 ## Ihre Kreation veröffentlichen
 
 1. Bauen Sie etwas im Editor.
 2. Haben Sie einen Namen, und sorgen Sie dafür, dass er entsperrt ist
-   (siehe [Identität & Anmeldung](05-IdentityAndLogin.md)).
+   (siehe [Ihr Name & Ihre Identität](05-IdentityAndLogin.md)).
    Veröffentlichen signiert das Bauwerk damit. Haben Sie noch keinen Namen,
    bittet **Veröffentlichen** Sie zuerst, einen zu wählen; **Unsigniert
    veröffentlichen** veröffentlicht es dort ohne Autor und ohne Link.

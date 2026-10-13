@@ -1,14 +1,15 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 9cd714dbbc4a41d4 -->
-# 05 — Identidade e login
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 6c3356512aea6399 -->
+# 05 — Seu nome e sua identidade
 
 <!-- languages -->
 [English](../05-IdentityAndLogin.md) · [Deutsch](../de/05-IdentityAndLogin.md) · [Español](../es/05-IdentityAndLogin.md) · [Français](../fr/05-IdentityAndLogin.md) · [Bahasa Indonesia](../id/05-IdentityAndLogin.md) · [日本語](../ja/05-IdentityAndLogin.md) · [한국어](../ko/05-IdentityAndLogin.md) · **Português (Brasil)**
 <!-- /languages -->
 
-O ForkBuild não tem senhas nem servidor central de contas. **Sua identidade é
-um par de chaves criptográficas guardado neste navegador** — a mesma chave
-que assina tudo o que você constrói, publica, envia em mensagem ou move. Este
-guia mostra como criar, proteger e fazer backup dessa identidade.
+O ForkBuild não tem senhas nem contas. **Por trás do seu nome há uma
+identidade: um par de chaves criptográficas guardado neste navegador** — a
+mesma chave que assina tudo o que você publica, envia em mensagem ou move.
+Este guia mostra como escolher um nome, protegê-lo com uma frase secreta e
+fazer backup dele.
 
 ## Criando uma identidade
 

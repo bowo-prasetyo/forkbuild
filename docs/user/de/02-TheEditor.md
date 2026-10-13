@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 84ecfec9734a26aa -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: debe706fb81d65f3 -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -555,7 +555,7 @@ niemand sonst es forken kann, bis Sie eine wählen. Die Beschreibung
 erscheint als Auszug auf seiner Karte in **Entdecken** und ist dort auch
 durchsuchbar; die Lizenz legt fest, ob — und wie — andere es forken
 dürfen. Was jede Lizenz bedeutet, steht unter
-[Veröffentlichen & Forken](04-PublishingAndForking.md).
+[Veröffentlichen & Remixen](04-PublishingAndForking.md).
 
 Eine lange Beschreibung liest sich mit etwas Formatierung besser. Das
 Dokumentinformationsfeld, der Ortsbrowser in der Weltansicht und ein
@@ -608,7 +608,7 @@ Beim Bauen spielt leise Musik, etwas lebhafter als in der Weltansicht. Die Schal
 
 - **Speichern** (`Strg+S`) — Ihre Arbeit auf diesem Gerät behalten.
 - **Veröffentlichen** — mit allen teilen (siehe
-  [Veröffentlichen & Forken](04-PublishingAndForking.md)). Veröffentlichen
+  [Veröffentlichen & Remixen](04-PublishingAndForking.md)). Veröffentlichen
   speichert es auch. Bei einem Bauwerk, das aus einem fertigen begonnen
   wurde und noch nichts Eigenes enthält, wird einmal nachgefragt:
   **Weiterbauen** oder **Trotzdem veröffentlichen**. Die Meldung danach ist

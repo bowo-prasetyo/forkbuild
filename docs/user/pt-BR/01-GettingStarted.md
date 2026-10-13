@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 49f2f034ec1550ac -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: b3d70584719e6278 -->
 # 01 — Primeiros passos
 
 <!-- languages -->
@@ -65,7 +65,7 @@ A barra no alto está sempre visível:
 |---|---|
 | **Início** | A página inicial |
 | **Construir** | O Editor, onde você constrói (veja [O Editor](02-TheEditor.md)) |
-| **Explorar** | As construções publicadas de todo mundo, para abrir, remixar ou visitar (veja [Publicar e bifurcar](04-PublishingAndForking.md#o-repositório)) |
+| **Explorar** | As construções publicadas de todo mundo, para abrir, remixar ou visitar (veja [Publicar e remixar](04-PublishingAndForking.md#o-repositório)) |
 | **Desafio** | O desafio de construção desta semana e suas participações (veja [O desafio de construção semanal](04-PublishingAndForking.md#o-desafio-de-construção-semanal)) |
 | **Passear** | A Visão do mundo na praça do desafio desta semana, para andar pela vila de construções publicadas (veja [Visão do mundo](03-WorldView.md)) |
 | **Meus mundos** | Os Mundos que você visitou neste dispositivo (veja [Meus mundos](03-WorldView.md#meus-mundos--os-mundos-em-que-você-realmente-esteve)) |
@@ -79,7 +79,7 @@ de uma vez.
   - **Meu avatar** — como os outros veem você na Visão do mundo, veja
     [Avatares e presença](06-AvatarsAndPresence.md)
   - **Minhas identidades** — os nomes (identidades) guardados neste
-    dispositivo, veja [Identidade e login](05-IdentityAndLogin.md)
+    dispositivo, veja [Seu nome e sua identidade](05-IdentityAndLogin.md)
   - **Seus dados** — fazer backup de tudo num arquivo, ou copiar para outro
     dispositivo, veja [Seus dados](13-YourData.md)
 - **Pessoas**
@@ -219,7 +219,7 @@ pessoas e não pode ser enviada a todo mundo depois. Escolha um nome, a não
 ser que você só a queira no seu próprio **Explorar**.
 
 O que uma frase secreta protege, bloquear e desbloquear, e fazer backup da
-sua identidade estão em [Identidade e login](05-IdentityAndLogin.md).
+sua identidade estão em [Seu nome e sua identidade](05-IdentityAndLogin.md).
 
 ## Instalando o ForkBuild
 
@@ -249,7 +249,7 @@ aplicativos, ou o ForkBuild já está instalado, o botão não aparece.
 - Aprenda todas as ferramentas de construção em
   **[O Editor](02-TheEditor.md)**.
 - Pronto para compartilhar? Vá para
-  **[Publicar e bifurcar](04-PublishingAndForking.md)**.
+  **[Publicar e remixar](04-PublishingAndForking.md)**.
 - Passeie pela vila de construções publicadas na
   **[Visão do mundo](03-WorldView.md)**.
 - Configure seu avatar e conheça pessoas em

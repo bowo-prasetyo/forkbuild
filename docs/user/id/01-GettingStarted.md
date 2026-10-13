@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 49f2f034ec1550ac -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: b3d70584719e6278 -->
 # 01 — Memulai
 
 <!-- languages -->
@@ -67,7 +67,7 @@ Bilah di atas selalu terlihat:
 |---|---|
 | **Beranda** | Halaman awal |
 | **Bangun** | Editor, tempat Anda membangun (lihat [Editor](02-TheEditor.md)) |
-| **Jelajahi** | Bangunan terbitan semua orang, untuk dibuka, di-remix, atau dikunjungi (lihat [Penerbitan & Fork](04-PublishingAndForking.md#repositori)) |
+| **Jelajahi** | Bangunan terbitan semua orang, untuk dibuka, di-remix, atau dikunjungi (lihat [Penerbitan & Remix](04-PublishingAndForking.md#repositori)) |
 | **Tantangan** | Tantangan membangun minggu ini dan karya-karyanya (lihat [Tantangan membangun mingguan](04-PublishingAndForking.md#tantangan-membangun-mingguan)) |
 | **Jalan-jalan** | Tampilan Dunia di alun-alun tantangan minggu ini, untuk berjalan di desa bangunan terbitan (lihat [Tampilan Dunia](03-WorldView.md)) |
 | **Dunia Saya** | Dunia yang pernah Anda kunjungi di perangkat ini (lihat [Dunia Saya](03-WorldView.md#dunia-saya--dunia-yang-benar-benar-pernah-anda-kunjungi)) |
@@ -81,7 +81,7 @@ menampilkan semuanya sekaligus.
   - **Avatar Saya** — bagaimana Anda terlihat oleh orang lain di Tampilan
     Dunia, lihat [Avatar & Kehadiran](06-AvatarsAndPresence.md)
   - **Identitas Saya** — nama (identitas) yang tersimpan di perangkat ini,
-    lihat [Identitas & Masuk](05-IdentityAndLogin.md)
+    lihat [Nama & Identitas Anda](05-IdentityAndLogin.md)
   - **Data Anda** — mencadangkan semuanya ke satu file, atau menyalinnya ke
     perangkat lain, lihat [Data Anda](13-YourData.md)
 - **Orang**
@@ -220,7 +220,7 @@ Anda sendiri.
 
 Apa yang dilindungi frasa sandi, mengunci dan membuka kunci, serta
 mencadangkan identitas Anda dibahas di
-[Identitas & Masuk](05-IdentityAndLogin.md).
+[Nama & Identitas Anda](05-IdentityAndLogin.md).
 
 ## Memasang ForkBuild
 
@@ -249,7 +249,7 @@ atau ForkBuild sudah terpasang, tombol itu tidak ditampilkan.
 ## Apa selanjutnya?
 
 - Pelajari semua alat membangun di **[Editor](02-TheEditor.md)**.
-- Siap berbagi? Lanjut ke **[Penerbitan & Fork](04-PublishingAndForking.md)**.
+- Siap berbagi? Lanjut ke **[Penerbitan & Remix](04-PublishingAndForking.md)**.
 - Jalan-jalan di desa bangunan terbitan di
   **[Tampilan Dunia](03-WorldView.md)**.
 - Atur avatar Anda dan bertemu orang di

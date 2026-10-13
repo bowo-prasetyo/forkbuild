@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: ccdc007eba11d015 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: bf4c383f3135e813 -->
 # 03 — Weltansicht
 
 <!-- languages -->
@@ -424,7 +424,7 @@ Was kopiert wird, hängt davon ab, was Sie gewählt haben:
   Struktur — nicht die Welt, in der sie gerade steht.
 
 ForkBuild sagt Ihnen, sobald Ihre Kopie bereit ist (siehe
-[Veröffentlichen & Forken](04-PublishingAndForking.md)). Kann die Kopie
+[Veröffentlichen & Remixen](04-PublishingAndForking.md)). Kann die Kopie
 nicht erstellt werden, sagt ein Dialog **Keine Kopie möglich**, warum,
 meist weil die Lizenz des Bauwerks keine Kopien erlaubt oder das Bauwerk
 noch nicht abgerufen werden kann, und **Zurück zum Bauwerk** bringt Sie
@@ -844,7 +844,7 @@ bearbeitbare Kopie mit dem Titel *„Fork von &lt;ursprünglicher
 Name&gt;“*, und ein kurzer Hinweis („Ihre eigene bearbeitbare Kopie wurde
 erstellt — … bleibt unverändert“) sagt es Ihnen. Es gelten dieselben
 Lizenzregeln wie für jeden anderen Fork (siehe
-[Veröffentlichen & Forken](04-PublishingAndForking.md#forken-machen-sie-es-zu-ihrem-eigenen)).
+[Veröffentlichen & Remixen](04-PublishingAndForking.md#forken-machen-sie-es-zu-ihrem-eigenen)).
 
 ## Verlauf — frühere Zustände in der Vorschau ansehen und wiederherstellen
 
@@ -1422,4 +1422,4 @@ heruntergeladen zu werden.
 
 Bereit zu teilen, was Sie gemacht haben, oder die Arbeit eines anderen neu
 abzumischen? Weiter geht es mit
-**[Veröffentlichen & Forken](04-PublishingAndForking.md)**.
+**[Veröffentlichen & Remixen](04-PublishingAndForking.md)**.

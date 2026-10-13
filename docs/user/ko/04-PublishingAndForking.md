@@ -1,22 +1,20 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ba7ee7cf8bfc4b8a -->
-# 04 — 게시와 포크
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d5e21e1edde37655 -->
+# 04 — 게시와 리믹스
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · [Español](../es/04-PublishingAndForking.md) · [Français](../fr/04-PublishingAndForking.md) · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · **한국어** · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
 
-<!-- languages -->
-<!-- /languages -->
-
 이것이 ForkBuild의 핵심입니다. **게시**는 내 작품을 세상과 공유합니다.
-**리믹스**는 누구나 작품을 복사해 발전시킬 수 있게 해 주며 — 전체 기록이
-보존됩니다.
+**리믹스**는 누구나 작품의 자기 사본을 만들어 발전시킬 수 있게 해 주며,
+전체 기록이 보존됩니다. (일부 메시지와 개발자 문서에서는 ForkBuild라는
+이름처럼 리믹스를 *포크*라고 부릅니다.)
 
 ## 작품 게시하기
 
 1. 에디터에서 무언가를 지으세요.
 2. 이름을 정하고 그 이름이 잠금 해제되어 있는지 확인하세요
-   ([신원과 로그인](05-IdentityAndLogin.md) 참고). 게시하면 그 이름으로
+   ([이름과 신원](05-IdentityAndLogin.md) 참고). 게시하면 그 이름으로
    작품에 서명합니다. 아직 이름이 없다면 **게시**가 먼저 이름을 정하라고
    요청합니다. 거기서 **서명 없이 게시**를 고르면 작성자도 링크도 없이
    게시됩니다.

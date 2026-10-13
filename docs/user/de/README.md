@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: 0a529ac2186a5c9d -->
+<!-- translation-of: docs/user/README.md source-hash: a206e390cf4902f4 -->
 # ForkBuild-Benutzerdokumentation
 
 <!-- languages -->
@@ -47,7 +47,7 @@ Freunden herumzulaufen.
    Bewohner und **Eine Kopie bearbeiten**, um etwas in den Editor zu
    holen. Die Netzwerkwerkzeuge liegen unter **Erweiterte Werkzeuge
    zeigen**.
-4. **[Veröffentlichen & Forken](04-PublishingAndForking.md)** —
+4. **[Veröffentlichen & Remixen](04-PublishingAndForking.md)** —
    veröffentlichen und einen Link teilen, wählen, wohin Ihre Bauwerke
    gehen, Lizenzen, remixen, **Entdecken** und seine fertigen Bauwerke,
    die wöchentliche Challenge und ihr Platz und Stammbäume. Alles, wohin
@@ -67,8 +67,8 @@ Die Technik darunter: Ihre Identität im Detail, direkte Verbindungen zu
 anderen Menschen, die Netzwerke, an die ein Bauwerk gehen kann, und die
 experimentellen Werkzeuge. Zum Spielen brauchen Sie nichts davon.
 
-- **[Identität & Anmeldung](05-IdentityAndLogin.md)** — Ihre
-  kryptografische Identität, der Tresor (Sperren/Entsperren), das Sichern
+- **[Ihr Name & Ihre Identität](05-IdentityAndLogin.md)** — Ihr Name
+  und die kryptografische Identität dahinter, der Tresor (Sperren/Entsperren), das Sichern
   per Export/Import und das Verwalten von Identitäten unter **Meine
   Identitäten**.
 - **[Peer-Verbindungen & Freunde](07-PeerConnectionsAndFriends.md)** —

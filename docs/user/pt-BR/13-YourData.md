@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: 941edcaf2e7249c7 -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: 0f7d63110556987a -->
 # 13 — Seus dados
 
 <!-- languages -->
@@ -186,7 +186,7 @@ junto num backup completo.
 ## Suas publicações
 
 Uma criação que você **Publica** fica guardada só neste dispositivo, até você
-distribuí-la (veja [Publicar e bifurcar](04-PublishingAndForking.md)). O
+distribuí-la (veja [Publicar e remixar](04-PublishingAndForking.md)). O
 cartão dela em **Explorar** diz onde este dispositivo registrou a
 distribuição, por exemplo **Guardado no IPFS · Anunciado no Nostr**: para
 onde a construção ou a Declaração assinada dela foi enviada (IPFS, Arweave,

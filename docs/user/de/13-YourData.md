@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: 941edcaf2e7249c7 -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: 0f7d63110556987a -->
 # 13 — Ihre Daten
 
 <!-- languages -->
@@ -202,7 +202,7 @@ einer vollständigen Sicherung mit.
 
 Eine Kreation, die Sie **veröffentlichen**, wird nur auf diesem Gerät
 gespeichert, bis Sie sie verteilen (siehe
-[Veröffentlichen & Forken](04-PublishingAndForking.md)). Ihre Karte in
+[Veröffentlichen & Remixen](04-PublishingAndForking.md)). Ihre Karte in
 **Entdecken** sagt, wo dieses Gerät das Verteilen festgehalten hat, zum
 Beispiel **Gespeichert auf IPFS · Angekündigt auf Nostr**: wohin das
 Bauwerk oder sein Signierter Anspruch hochgeladen wurde (IPFS, Arweave, Steem

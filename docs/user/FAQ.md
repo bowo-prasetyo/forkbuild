@@ -49,7 +49,7 @@ To get it to your friend:
   Steem or Blurt) and announces it, so people can find it without being
   connected to you.
 
-See [Publishing & Forking](04-PublishingAndForking.md#sharing-with-connected-peers).
+See [Publishing & Remixing](04-PublishingAndForking.md#sharing-with-connected-peers).
 
 ### How do I make my work available to everyone?
 
@@ -122,7 +122,7 @@ before you move one of yours onto an occupied spot. See
 No. The passphrase is the only way to decrypt that identity's key, and
 there's no server holding a copy. If you exported the identity, you still
 need the passphrase you chose for the export. Otherwise create a new
-identity. See [Identity & Login](05-IdentityAndLogin.md).
+identity. See [Your Name & Identity](05-IdentityAndLogin.md).
 
 ### Why does my identity keep locking itself?
 

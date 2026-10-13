@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: 0a529ac2186a5c9d -->
+<!-- translation-of: docs/user/README.md source-hash: a206e390cf4902f4 -->
 # Dokumentasi Pengguna ForkBuild
 
 <!-- languages -->
@@ -47,7 +47,7 @@ berjalan-jalan bersama teman.
    **Jalan di sini bersamaku**, para penghuni, dan **Edit Salinan**
    untuk membawa sesuatu ke Editor. Alat jaringannya menunggu di bawah
    **Tampilkan alat lanjutan**.
-4. **[Penerbitan & Fork](04-PublishingAndForking.md)** — menerbitkan
+4. **[Penerbitan & Remix](04-PublishingAndForking.md)** — menerbitkan
    dan membagikan tautan, memilih ke mana bangunan Anda dikirim,
    lisensi, meremiks, **Jelajahi** dan bangunan siap pakainya, tantangan
    mingguan dan alun-alunnya, serta pohon keluarga. Untuk semua tujuan
@@ -67,8 +67,8 @@ Mesin di baliknya: identitas Anda secara rinci, koneksi langsung dengan
 orang lain, jaringan tempat sebuah bangunan bisa dikirim, dan alat
 eksperimental. Anda tidak memerlukan semua ini untuk bermain.
 
-- **[Identitas & Masuk](05-IdentityAndLogin.md)** —
-  identitas kriptografis Anda, brankas (mengunci/membuka), mencadangkannya
+- **[Nama & Identitas Anda](05-IdentityAndLogin.md)** — nama
+  Anda dan identitas kriptografis di baliknya, brankas (mengunci/membuka), mencadangkannya
   dengan ekspor/impor, dan mengelola identitas dari **Identitas Saya**.
 - **[Koneksi Rekan & Teman](07-PeerConnectionsAndFriends.md)** — terhubung langsung dengan orang lain, mengingat, berteman,
   mengikuti, memblokir, menghubungkan kembali secara otomatis, dan relay

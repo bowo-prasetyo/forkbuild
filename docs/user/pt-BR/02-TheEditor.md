@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 84ecfec9734a26aa -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: debe706fb81d65f3 -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -522,7 +522,7 @@ título do documento, no topo da barra lateral do Editor (na Visão do mundo,
 significa que ninguém mais pode bifurcá-lo até você escolher uma. A
 descrição aparece como trecho no cartão dela em **Explorar** e também pode
 ser pesquisada lá; a licença controla se — e como — outras pessoas podem
-bifurcá-lo. Veja [Publicar e bifurcar](04-PublishingAndForking.md) para o
+bifurcá-lo. Veja [Publicar e remixar](04-PublishingAndForking.md) para o
 que significa cada licença.
 
 Uma descrição longa fica mais legível com um pouco de formatação, que o
@@ -574,7 +574,7 @@ Enquanto você constrói, toca uma música suave, um pouco mais animada que a da
 
 - **Salvar** (`Ctrl+S`) — guarda seu trabalho neste dispositivo.
 - **Publicar** — compartilha com todo mundo (veja
-  [Publicar e bifurcar](04-PublishingAndForking.md)). Publicar também salva.
+  [Publicar e remixar](04-PublishingAndForking.md)). Publicar também salva.
   Uma construção começada a partir de uma pronta que ainda não tem nada seu
   é perguntada uma vez: **Continuar construindo** ou **Publicar mesmo
   assim**. A mensagem depois disso é uma barra só: **Entrar andando** e

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: ccdc007eba11d015 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: bf4c383f3135e813 -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
@@ -435,7 +435,7 @@ Ce qui est copié dépend de ce que vous avez choisi :
   — pas le Monde dans lequel elle se trouve.
 
 ForkBuild vous prévient dès que votre copie est prête (voir
-[Publier et forker](04-PublishingAndForking.md)). Si la copie ne peut pas
+[Publier et remixer](04-PublishingAndForking.md)). Si la copie ne peut pas
 être faite, une boîte de dialogue **Impossible de faire une copie** dit
 pourquoi, généralement parce que la licence de la construction n’autorise
 pas les copies ou que la construction ne peut pas encore être récupérée, et
@@ -859,7 +859,7 @@ un animal — crée automatiquement votre propre copie modifiable, intitulée
 *« Fork de &lt;nom d’origine&gt; »*, et un court avis (« Votre propre
 copie modifiable a été créée — … reste inchangé ») vous le signale. Elle
 suit les mêmes règles de licence que tout autre fork (voir
-[Publier et forker](04-PublishingAndForking.md#forker--faites-le-vôtre)).
+[Publier et remixer](04-PublishingAndForking.md#forker--faites-le-vôtre)).
 
 ## Historique — prévisualiser et restaurer des états antérieurs
 
@@ -1437,4 +1437,4 @@ la même vérification du contenu.
 
 Prêt à partager ce que vous avez créé, ou à remixer le travail de
 quelqu’un d’autre ? Passez à
-**[Publier et forker](04-PublishingAndForking.md)**.
+**[Publier et remixer](04-PublishingAndForking.md)**.

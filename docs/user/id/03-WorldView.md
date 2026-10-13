@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: ccdc007eba11d015 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: bf4c383f3135e813 -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
@@ -415,7 +415,7 @@ Apa yang disalin bergantung pada apa yang Anda pilih:
   sendiri — bukan Dunia tempat struktur itu kebetulan berada.
 
 ForkBuild memberi tahu Anda begitu salinan Anda siap (lihat
-[Penerbitan & Fork](04-PublishingAndForking.md)). Jika salinan tidak bisa
+[Penerbitan & Remix](04-PublishingAndForking.md)). Jika salinan tidak bisa
 dibuat, dialog **Tidak bisa membuat salinan** menjelaskan alasannya,
 biasanya karena lisensi bangunan itu tidak mengizinkan salinan atau
 bangunannya belum bisa diambil, dan **Kembali ke bangunan** membawa Anda
@@ -829,7 +829,7 @@ dapat diedit, berjudul *"Fork dari &lt;nama asli&gt;"*, dan pemberitahuan
 singkat ("Salinan Anda sendiri yang dapat diedit telah dibuat — "…" tidak
 berubah") memberi tahu Anda. Salinan ini mengikuti aturan lisensi yang sama
 seperti fork lainnya (lihat
-[Penerbitan & Fork](04-PublishingAndForking.md#fork-jadikan-milik-anda)).
+[Penerbitan & Remix](04-PublishingAndForking.md#fork-jadikan-milik-anda)).
 
 ## Riwayat — melihat pratinjau dan memulihkan keadaan sebelumnya
 
@@ -1392,4 +1392,4 @@ alih-alih diunduh lagi, setelah pemeriksaan konten yang sama.
 ## Apa selanjutnya?
 
 Siap membagikan apa yang telah Anda buat, atau me-remix karya orang lain?
-Lanjutkan ke **[Penerbitan & Fork](04-PublishingAndForking.md)**.
+Lanjutkan ke **[Penerbitan & Remix](04-PublishingAndForking.md)**.

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 49f2f034ec1550ac -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: b3d70584719e6278 -->
 # 01 — Primeros pasos
 
 <!-- languages -->
@@ -68,7 +68,7 @@ La barra de arriba siempre está visible:
 |---|---|
 | **Inicio** | La página de inicio |
 | **Construir** | El Editor, donde construye (consulte [El Editor](02-TheEditor.md)) |
-| **Explorar** | Las construcciones publicadas de todos, para abrirlas, remezclarlas o visitarlas (consulte [Publicar y bifurcar](04-PublishingAndForking.md#el-repositorio)) |
+| **Explorar** | Las construcciones publicadas de todos, para abrirlas, remezclarlas o visitarlas (consulte [Publicar y remezclar](04-PublishingAndForking.md#el-repositorio)) |
 | **Desafío** | El desafío de construcción de esta semana y sus participaciones (consulte [El desafío de construcción semanal](04-PublishingAndForking.md#el-desafío-de-construcción-semanal)) |
 | **Pasear** | La Vista del mundo en la plaza del desafío de esta semana, para recorrer el pueblo de construcciones publicadas (consulte [Vista del mundo](03-WorldView.md)) |
 | **Mis mundos** | Los Mundos que visitó en este dispositivo (consulte [Mis mundos](03-WorldView.md#mis-mundos--los-mundos-que-realmente-visitó)) |
@@ -83,7 +83,7 @@ muestra todos a la vez.
     [Avatares y presencia](06-AvatarsAndPresence.md)
   - **Mis identidades**: los nombres (identidades) guardados en este
     dispositivo; consulte
-    [Identidad e inicio de sesión](05-IdentityAndLogin.md)
+    [Su nombre y su identidad](05-IdentityAndLogin.md)
   - **Sus datos**: hacer una copia de seguridad de todo en un archivo, o
     copiarlo a otro dispositivo; consulte [Sus datos](13-YourData.md)
 - **Personas**
@@ -226,7 +226,7 @@ quiera en su propio **Explorar**.
 
 Qué protege una frase de contraseña, cómo bloquear y desbloquear, y cómo
 hacer una copia de seguridad de su identidad se explican en
-[Identidad e inicio de sesión](05-IdentityAndLogin.md).
+[Su nombre y su identidad](05-IdentityAndLogin.md).
 
 ## Instalar ForkBuild
 
@@ -257,7 +257,7 @@ instalar aplicaciones, o ForkBuild ya está instalado, el botón no aparece.
 - Aprenda todas las herramientas de construcción en
   **[El Editor](02-TheEditor.md)**.
 - ¿Listo para compartir? Vaya a
-  **[Publicar y bifurcar](04-PublishingAndForking.md)**.
+  **[Publicar y remezclar](04-PublishingAndForking.md)**.
 - Recorra el pueblo de construcciones publicadas en la
   **[Vista del mundo](03-WorldView.md)**.
 - Configure su avatar y conozca gente en

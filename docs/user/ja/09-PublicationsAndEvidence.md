@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 60b09baf9d911d48 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 554ed0580b2c3b36 -->
 # 09 — 公開物と外部証拠
 
 <!-- languages -->
@@ -47,7 +47,7 @@ ForkBuild を使うのに、ここにあるものは何も必要ありません�
 | 共有するもの | ドキュメントまたはワールド | 署名された記録: 共有ワールド、構造物の作者情報、地名 |
 | 見る場所 | リポジトリ、作者のページ、ワールドビュー | **公開物** ページ |
 | できること | 開く、探索、フォーク | 確認する、内容を取得する、配信してアンカーする |
-| ガイド | [公開とフォーク](04-PublishingAndForking.md) | このガイド |
+| ガイド | [公開とリミックス](04-PublishingAndForking.md) | このガイド |
 
 **公開** しただけでは、ワールドは公開物ページに載りません。
 **ピアと共有** で載ります。ワールドに、ピアのところへ移動できる
@@ -492,6 +492,6 @@ Nostr、Steem。最初は
 
 ## 次は？
 
-作品の共有は、引き続き [公開とフォーク](04-PublishingAndForking.md) で
+作品の共有は、引き続き [公開とリミックス](04-PublishingAndForking.md) で
 行います。ここをさらに進めるには、
 [証拠とストレージ](11-EvidenceAndStorage.md) に進んでください。

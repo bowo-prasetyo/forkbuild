@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 60b09baf9d911d48 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 554ed0580b2c3b36 -->
 # 09 — Publikasi & Bukti Eksternal
 
 <!-- languages -->
@@ -48,7 +48,7 @@ tambahkan pada sebuah klaim:
 | Apa yang dibagikan | Dokumen atau Dunia | Catatan bertanda tangan: Dunia Bersama, kepengarangan struktur, atau nama tempat |
 | Tempat melihatnya | Repositori, Halaman pembuat, Tampilan Dunia | Halaman **Publikasi** |
 | Apa yang Anda lakukan dengannya | Membuka, menjelajahi, mem-fork | Memeriksanya, mengambil kontennya, mendistribusikan dan menjangkarkannya |
-| Panduan | [Penerbitan & Fork](04-PublishingAndForking.md) | Yang ini |
+| Panduan | [Penerbitan & Remix](04-PublishingAndForking.md) | Yang ini |
 
 **Terbitkan** saja tidak memasukkan sebuah Dunia ke halaman Publikasi.
 **Bagikan dengan Rekan** yang melakukannya: ia menandatangani Dunia itu
@@ -521,5 +521,5 @@ pinning, untuk melanjutkan.
 ## Apa selanjutnya?
 
 Berbagi bangunan Anda tetap dilakukan di
-[Penerbitan & Fork](04-PublishingAndForking.md). Untuk melangkah lebih jauh
+[Penerbitan & Remix](04-PublishingAndForking.md). Untuk melangkah lebih jauh
 di sini, lanjutkan ke [Bukti & Penyimpanan](11-EvidenceAndStorage.md).

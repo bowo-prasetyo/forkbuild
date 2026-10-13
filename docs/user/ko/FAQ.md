@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: d0ced791059d2485 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 06d073f252435c51 -->
 # 자주 묻는 질문
 
 <!-- languages -->
@@ -45,7 +45,7 @@
 - **배포**는 Arweave나 IPFS(또는 실험적으로 Steem이나 Blurt)에 업로드하고 공지해서,
   나와 연결되지 않아도 찾을 수 있게 합니다.
 
-[게시와 포크](04-PublishingAndForking.md#연결된-피어와-공유하기)를 보세요.
+[게시와 리믹스](04-PublishingAndForking.md#연결된-피어와-공유하기)를 보세요.
 
 ### 내 작품을 모두가 쓸 수 있게 하려면 어떻게 하나요?
 
@@ -115,7 +115,7 @@ Arweave, IPFS, Nostr, Steem, Blurt에 배포한 것은 되돌릴 수 없습니�
 아니요. 암호 문구는 그 신원의 키를 복호화하는 유일한 방법이며, 사본을 가진
 서버도 없습니다. 신원을 내보냈다면 내보낼 때 정한 암호 문구가 여전히
 필요합니다. 그렇지 않다면 새 신원을 만드세요.
-[신원과 로그인](05-IdentityAndLogin.md)을 보세요.
+[이름과 신원](05-IdentityAndLogin.md)을 보세요.
 
 ### 왜 신원이 자꾸 저절로 잠기나요?
 

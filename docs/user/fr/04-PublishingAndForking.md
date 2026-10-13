@@ -1,19 +1,21 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ba7ee7cf8bfc4b8a -->
-# 04 — Publier et forker
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d5e21e1edde37655 -->
+# 04 — Publier et remixer
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · [Español](../es/04-PublishingAndForking.md) · **Français** · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · [한국어](../ko/04-PublishingAndForking.md) · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
 
-C’est le cœur de ForkBuild. **Publier** partage votre création avec le
-monde. **Remixer** permet à n’importe qui de copier une création et de la
-faire évoluer — en conservant tout l’historique.
+C’est le cœur de ForkBuild. **Publier** partage votre construction avec le
+monde. **Remixer** permet à n’importe qui de faire sa propre copie d’une
+construction et de la faire évoluer, en conservant tout son historique.
+(Certains messages et documents pour développeurs appellent un remix un
+*fork*, comme dans ForkBuild.)
 
 ## Publier votre création
 
 1. Construisez quelque chose dans l’Éditeur.
 2. Ayez un nom, et vérifiez qu’il est déverrouillé (voir
-   [Identité et connexion](05-IdentityAndLogin.md)). Publier signe la
+   [Votre nom et votre identité](05-IdentityAndLogin.md)). Publier signe la
    construction avec lui. Si vous n’avez pas encore de nom, **Publier**
    vous demande d’abord d’en choisir un ; **Publier sans signer** la publie
    alors sans auteur et sans lien.

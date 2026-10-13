@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: 0a529ac2186a5c9d -->
+<!-- translation-of: docs/user/README.md source-hash: a206e390cf4902f4 -->
 # Documentación para usuarios de ForkBuild
 
 <!-- languages -->
@@ -49,7 +49,7 @@ sus amigos.
    mirar cosas, **Construir aquí**, **Pasear aquí conmigo**, los
    residentes y **Editar una copia** para llevar algo al Editor. Sus
    herramientas de red esperan en **Mostrar herramientas avanzadas**.
-4. **[Publicar y bifurcar](04-PublishingAndForking.md)** — publicar y
+4. **[Publicar y remezclar](04-PublishingAndForking.md)** — publicar y
    compartir un enlace, elegir a dónde van sus construcciones,
    licencias, remezclar, **Explorar** y sus construcciones ya hechas,
    el reto semanal y su plaza, y los árboles familiares. Para todo lo
@@ -70,8 +70,8 @@ directas con otras personas, las redes a las que puede ir una
 construcción y las herramientas experimentales. No necesita nada de esto
 para jugar.
 
-- **[Identidad e inicio de sesión](05-IdentityAndLogin.md)**: su
-  identidad criptográfica, la bóveda (bloquear y desbloquear), hacer una
+- **[Su nombre y su identidad](05-IdentityAndLogin.md)**: su
+  nombre y la identidad criptográfica que hay detrás, la bóveda (bloquear y desbloquear), hacer una
   copia de seguridad con exportar/importar y administrar identidades
   desde **Mis identidades**.
 - **[Conexiones entre pares y amigos](07-PeerConnectionsAndFriends.md)**:

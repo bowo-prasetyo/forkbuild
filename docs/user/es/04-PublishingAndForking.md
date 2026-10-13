@@ -1,19 +1,21 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ba7ee7cf8bfc4b8a -->
-# 04 — Publicar y bifurcar
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d5e21e1edde37655 -->
+# 04 — Publicar y remezclar
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · **Español** · [Français](../fr/04-PublishingAndForking.md) · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · [한국어](../ko/04-PublishingAndForking.md) · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
 
-Este es el corazón de ForkBuild. **Publicar** comparte su creación con el
-mundo. **Remezclar** permite que cualquiera copie una creación y la haga
-evolucionar, conservando todo el historial.
+Este es el corazón de ForkBuild. **Publicar** comparte su construcción con
+el mundo. **Remezclar** permite que cualquiera haga su propia copia de una
+construcción y la lleve más lejos, conservando todo su historial. (Algunos
+mensajes y documentos para desarrolladores llaman *fork* a una remezcla,
+como en ForkBuild.)
 
 ## Publicar su creación
 
 1. Construya algo en el Editor.
 2. Tenga un nombre y asegúrese de que esté desbloqueado (consulte
-   [Identidad e inicio de sesión](05-IdentityAndLogin.md)). Publicar firma
+   [Su nombre y su identidad](05-IdentityAndLogin.md)). Publicar firma
    la construcción con él. Si todavía no tiene nombre, **Publicar** le pide
    elegir uno primero; **Publicar sin firmar** la publica ahí sin autor y
    sin enlace.

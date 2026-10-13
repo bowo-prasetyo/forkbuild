@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 60b09baf9d911d48 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 554ed0580b2c3b36 -->
 # 09 — Publications et preuves externes
 
 <!-- languages -->
@@ -49,7 +49,7 @@ vous pouvez ajouter à une revendication :
 | Ce qui est partagé | Un Document ou un Monde | Un enregistrement signé : un Monde partagé, la paternité d’une structure ou un nom de lieu |
 | Où on le voit | Dépôt, page d’auteur, Vue du Monde | La page **Publications** |
 | Ce qu’on en fait | L’ouvrir, l’explorer, le forker | Le vérifier, récupérer son contenu, le distribuer et l’ancrer |
-| Guide | [Publier et forker](04-PublishingAndForking.md) | Celui-ci |
+| Guide | [Publier et remixer](04-PublishingAndForking.md) | Celui-ci |
 
 **Publier** seul ne met pas un Monde sur la page Publications.
 **Partager avec les pairs**, si : cela signe le Monde comme **Monde
@@ -528,5 +528,5 @@ fournisseur d’épinglage, pour continuer.
 ## Et ensuite ?
 
 Partager vos constructions se fait toujours dans
-[Publier et forker](04-PublishingAndForking.md). Pour aller plus loin
+[Publier et remixer](04-PublishingAndForking.md). Pour aller plus loin
 ici, continuez avec [Preuves et stockage](11-EvidenceAndStorage.md).

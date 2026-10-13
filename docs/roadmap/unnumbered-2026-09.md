@@ -6552,3 +6552,22 @@ minutes of reading look like the first ten minutes of playing).
   exists, and a translation shows its own language's pictures.
 - docs/Translating.md ("Pictures") and CONTRIBUTING.md say when and how to retake them.
 - Not done: the dark look, a phone-sized picture, and pictures for the other pages.
+
+## Two guide pages named in the player's words (unnumbered, 2026-10-13)
+
+**Why.** The user-guide audit (docs/reviews/UserGuide-2026-10-13.md, open item 3) found two page titles in the words
+Pillars' "Words" says not to show a newcomer: "Publishing & Forking" (say remix) and "Identity & Login" (there is no
+account; say Choose a name). They are the titles the guide's index, Getting Started and the FAQ send a newcomer to.
+Pillar served: building feels joyful (the guide speaks the app's language).
+
+- **Publishing & Remixing** and **Your Name & Identity**, in English and in all seven translations (Veröffentlichen
+  & Remixen, Publicar y remezclar, Publier et remixer, Penerbitan & Remix, 公開とリミックス, 게시와 리믹스, Publicar e
+  remixar; Ihr Name & Ihre Identität, Su nombre y su identidad, Votre nom et votre identité, Nama & Identitas Anda,
+  名前とアイデンティティ, 이름과 신원, Seu nome e sua identidade). "Identity" stays, as on My Identities.
+- Every link that names either page says the new title; each page's opening paragraph now leads with remixing and
+  with your name, and the remix page says some messages still call a remix a *fork*.
+- The file names stay `04-PublishingAndForking.md` and `05-IdentityAndLogin.md`: the translation tooling, a test and
+  links from outside the guide point at them, and a renamed file on GitHub leaves no redirect behind.
+- Two more stray, empty language-link blocks in Korean pages are gone. Every translation is re-stamped.
+- Not done: headings inside the remix page that still say "fork" (Forking: make it your own, How to fork, When a fork
+  can't complete); changing them changes their anchors, which other pages and translations link to.

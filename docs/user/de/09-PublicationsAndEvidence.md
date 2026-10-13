@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 60b09baf9d911d48 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 554ed0580b2c3b36 -->
 # 09 — Veröffentlichungen & externe Nachweise
 
 <!-- languages -->
@@ -50,7 +50,7 @@ Tiefe, die Sie einem Anspruch geben können:
 | Was es teilt | Ein Dokument oder eine Welt | Einen signierten Datensatz: eine Geteilte Welt, die Urheberschaft einer Struktur oder einen Ortsnamen |
 | Wo Sie es sehen | Repository, Autorenansicht, Weltansicht | Die Seite **Veröffentlichungen** |
 | Was Sie damit tun | Öffnen, erkunden, forken | Es prüfen, seinen Inhalt holen, es verteilen und verankern |
-| Anleitung | [Veröffentlichen & Forken](04-PublishingAndForking.md) | Diese hier |
+| Anleitung | [Veröffentlichen & Remixen](04-PublishingAndForking.md) | Diese hier |
 
 **Veröffentlichen** allein bringt eine Welt nicht auf die Seite
 Veröffentlichungen. **Mit Peers teilen** tut es: Es signiert die Welt als
@@ -534,5 +534,5 @@ konfigurieren Sie den Pinning-Anbieter neu, um weiterzumachen.
 ## Wie geht es weiter?
 
 Ihre Bauwerke teilen Sie weiterhin über
-[Veröffentlichen & Forken](04-PublishingAndForking.md). Um hier weiter zu
+[Veröffentlichen & Remixen](04-PublishingAndForking.md). Um hier weiter zu
 gehen, lesen Sie [Nachweise & Speicher](11-EvidenceAndStorage.md).
