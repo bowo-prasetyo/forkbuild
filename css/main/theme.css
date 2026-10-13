@@ -1,0 +1,49 @@
+/* The look of everything around the 3D view: a small, sunny, hand-built
+   village (docs/Pillars.md, "Look"). Warm paper and wood, dark brown ink, and
+   a meadow green for the one thing to press. Every colour the stylesheets
+   share is named here; use these names in new rules rather than new colours.
+
+   Contrast, against --paper: --ink 13:1, --ink-soft 9.8:1, --ink-muted 6.8:1,
+   --ink-subtle 5.2:1, --ink-faint 4.5:1, --accent-ink 5.4:1. White on
+   --accent 4.9:1, on --accent-hover 5.6:1. */
+:root {
+    color-scheme: light;
+
+    /* Grounds, lightest last: the page, then a panel, then a card on it. */
+    --paper: #f6efe2;
+    --surface-low: #faf5eb;
+    --surface: #fffcf6;
+    /* Inputs, chips and buttons sit a little darker than the card under them. */
+    --surface-raised: #f1e8d8;
+    --surface-hover: #ebdfca;
+    --surface-pressed: #e2d3b8;
+    /* A panel laid over the 3D view. */
+    --overlay: rgba(253, 248, 238, 0.93);
+
+    --line-soft: #eee4d3;
+    --line: #e3d6c0;
+    --line-strong: #d4c3a5;
+    --line-bold: #bba78a;
+
+    --ink-strong: #211a12;
+    --ink: #2e261c;
+    --ink-soft: #46392b;
+    --ink-muted: #5f5040;
+    --ink-subtle: #716150;
+    --ink-faint: #7a6955;
+
+    /* Meadow green: Publish, Join, Try it now, what is on. */
+    --accent: #357f52;
+    --accent-hover: #2f7549;
+    --accent-ink: #2b6e45;
+    --accent-tint: #e2f0e5;
+
+    --shadow: 0 4px 16px rgba(74, 52, 24, 0.14);
+
+    --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/* A link the stylesheets don't style otherwise reads as the village's green. */
+a {
+    color: var(--accent-ink);
+}

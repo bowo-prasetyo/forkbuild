@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: b2edb99b3a03a213 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 30c9430bdca078bf -->
 # Pertanyaan Umum
 
 <!-- languages -->
@@ -171,12 +171,13 @@ dapat dibuka di sini.
 
 ### WASD tidak menggerakkan avatar saya
 
-Berjalan nonaktif sampai Anda menyalakannya:
+Berjalan sudah menyala saat Tampilan Dunia dibuka, dengan atau tanpa
+nama: yang belum punya nama berjalan sebagai tamu, hanya terlihat di
+layarnya sendiri. Jika tombol tidak menggerakkan avatar Anda:
 
-1. Masuk dan simpan avatar di **Avatar Saya**.
-2. Di bagian **Avatar** pada Tampilan Dunia, centang **Kendalikan Avatar
-   Saya (WASD, Shift, Spasi)**.
-3. Klik tampilan 3D, agar tombol yang ditekan tidak masuk ke kolom teks.
+1. Di **Pengaturan avatar** pada Tampilan Dunia, pastikan **Kendalikan
+   Avatar Saya (WASD, Shift, Spasi)** tercentang.
+2. Klik tampilan 3D, agar tombol yang ditekan tidak masuk ke kolom teks.
 
 Di layar sentuh, ketuk **Jalan** di atas joystick sebagai gantinya. Lihat
 [Walking your avatar](06-AvatarsAndPresence.md#menjalankan-avatar-anda).

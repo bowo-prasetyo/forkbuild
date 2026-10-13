@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: ec20eefd36a2abe5 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: bb51e610ce073878 -->
 # 06 — Avatars et présence
 
 <!-- languages -->
@@ -115,13 +115,21 @@ caméra vers lui et il réapparaît.
 ## Faire marcher votre avatar
 
 Faire voler la caméra ([Vue du Monde](03-WorldView.md#se-déplacer)) est une
-façon de se déplacer, mais vous pouvez aussi faire marcher directement
-votre avatar avec le **mode Contrôle de l’avatar**. Pour l’activer, vous
-devez être connecté avec un avatar enregistré dans **Mon avatar** ; cochez
-alors **Contrôler mon avatar (WASD, Maj, Espace)** dans la section
-**Avatar** de la Vue du Monde. Les touches ne font rien tant que vous ne
-l’avez pas fait, et elles sont ignorées quand un champ de texte a le
-focus — cliquez d’abord dans la vue 3D.
+façon de se déplacer, mais vous pouvez aussi faire marcher votre avatar
+directement avec le **mode Contrôle de l’avatar**, qui est actif à
+l’ouverture de la Vue du Monde (**Contrôler mon avatar (WASD, Maj,
+Espace)** sous **Réglages de l’avatar**). Les touches sont ignorées tant
+qu’un champ de texte a le focus : cliquez d’abord dans la vue 3D.
+
+Pas besoin d’un nom pour marcher. Tant que vous n’en avez pas choisi, vous
+marchez en **invité** : un avatar à l’apparence par défaut, que vous seul
+voyez et dont personne d’autre n’est informé. Un invité peut parler aux
+habitants, mais ne peut ni en ajouter ni en retirer, ni décorer un Monde
+avec un animal, car ce sont des modifications signées d’un nom. Choisissez
+un nom (en publiant, avec **Se promener ici avec moi** ou sous **Se
+connecter**) et l’avatar devient le vôtre là où il se tient, avec
+l’apparence enregistrée dans **Mon avatar**, et les autres peuvent le voir.
+Une déconnexion le refait invité.
 
 | Touche | Action |
 |---|---|

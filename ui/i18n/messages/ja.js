@@ -1726,6 +1726,7 @@ export default Object.freeze({
     'worldView.avatarSettings': 'アバターの設定',
     'worldView.talk': '話す',
     'worldView.logInAndCreateAn': 'ここに表示されるには、ログインしてアバターを作成してください（マイアバター）。',
+    'worldView.walkingAsGuest': 'ゲストとして歩いています。ここで自分の姿が見えるのはあなただけです。名前を決めると（公開するとき、または「ここで一緒に歩こう」で）友だちにも見えるようになります。',
     'worldView.camera': 'カメラ',
     'worldView.free': '自由',
     'worldView.firstPerson': '一人称',

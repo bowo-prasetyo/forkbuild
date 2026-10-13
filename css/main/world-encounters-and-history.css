@@ -23,8 +23,8 @@
     width: 100%;
     max-width: 600px;
     aspect-ratio: 1 / 1;
-    background: #161616;
-    border: 1px solid #2a2a2a;
+    background: var(--surface-low);
+    border: 1px solid var(--line);
     border-radius: 6px;
 }
 
@@ -34,7 +34,7 @@
 
 .world-encounter-canvas-empty-hint {
     font-size: 12px;
-    fill: #808080;
+    fill: var(--ink-subtle);
 }
 
 .world-encounter-marker {
@@ -51,7 +51,7 @@
 .world-encounter-observer-local-inspection-note {
     margin: 0 0 0.5rem;
     font-size: 11px;
-    color: #a0a0a0;
+    color: var(--ink-muted);
 }
 
 .world-encounter-marker-glyph {
@@ -61,7 +61,7 @@
 
 .world-encounter-marker-label {
     font-size: 9px;
-    fill: #a0a0a0;
+    fill: var(--ink-muted);
     pointer-events: none;
 }
 
@@ -72,15 +72,15 @@
 
 .wanderer-marker-label {
     font-size: 9px;
-    fill: #4caf7d;
+    fill: var(--accent-ink);
     font-weight: 600;
     pointer-events: none;
 }
 
 .world-encounter-inspection-panel {
     padding: 0.6rem 0.75rem;
-    background: #1c1c1c;
-    border: 1px solid #2a2a2a;
+    background: var(--surface-low);
+    border: 1px solid var(--line);
     border-radius: 6px;
 }
 
@@ -88,7 +88,7 @@
     margin: 0 0 0.4rem;
     font-size: 12px;
     font-weight: 600;
-    color: #e0e0e0;
+    color: var(--ink);
 }
 
 .world-encounter-inspection-detail {
@@ -100,18 +100,18 @@
 }
 
 .world-encounter-inspection-detail dt {
-    color: #808080;
+    color: var(--ink-subtle);
 }
 
 .world-encounter-inspection-detail dd {
     margin: 0;
-    color: #e0e0e0;
+    color: var(--ink);
 }
 
 .world-encounter-inspection-unavailable {
     margin: 0;
     font-size: 12px;
-    color: #808080;
+    color: var(--ink-subtle);
     font-style: italic;
 }
 
@@ -125,19 +125,19 @@
 }
 
 .world-encounter-inspection-source--local {
-    color: #808080;
+    color: var(--ink-subtle);
 }
 
 .world-encounter-inspection-source--peer {
-    color: #5aa9e6;
+    color: #175382;
 }
 
 .world-encounter-inspection-source--snapshot {
-    color: #e6b85a;
+    color: #825f17;
 }
 
 .world-encounter-inspection-source--unresolved {
-    color: #808080;
+    color: var(--ink-subtle);
     font-style: italic;
 }
 
@@ -161,9 +161,9 @@
 .world-encounter-unregister-snapshot {
     padding: 0.25rem 0.5rem;
     font-size: 12px;
-    color: #e0a05a;
-    background: #262626;
-    border: 1px solid #3a3a3a;
+    color: #814f18;
+    background: var(--surface-raised);
+    border: 1px solid var(--line-strong);
     border-radius: 4px;
     cursor: pointer;
 }
@@ -183,8 +183,8 @@
    palette so the two read as one family without being the same block. */
 .world-encounter-selection-origin-panel {
     padding: 0.6rem 0.75rem;
-    background: #1c1c1c;
-    border: 1px solid #2a2a2a;
+    background: var(--surface-low);
+    border: 1px solid var(--line);
     border-radius: 6px;
 }
 
@@ -192,13 +192,13 @@
     margin: 0 0 0.4rem;
     font-size: 12px;
     font-weight: 600;
-    color: #e0e0e0;
+    color: var(--ink);
 }
 
 .world-encounter-selection-origin-hint {
     margin: 0 0 0.4rem;
     font-size: 12px;
-    color: #808080;
+    color: var(--ink-subtle);
 }
 
 .world-encounter-selection-origin-list {
@@ -213,26 +213,26 @@
 .world-encounter-selection-origin-choice {
     padding: 0.25rem 0.5rem;
     font-size: 12px;
-    color: #e0e0e0;
-    background: #262626;
-    border: 1px solid #3a3a3a;
+    color: var(--ink);
+    background: var(--surface-raised);
+    border: 1px solid var(--line-strong);
     border-radius: 4px;
     cursor: pointer;
 }
 
 .world-encounter-selection-origin-choice:hover {
-    border-color: #4caf7d;
+    border-color: var(--accent);
 }
 
 .world-encounter-selection-origin-choice-active {
-    border-color: #4caf7d;
-    color: #4caf7d;
+    border-color: var(--accent);
+    color: var(--accent-ink);
 }
 
 .world-encounter-selection-origin-resolved {
     margin: 0;
     font-size: 12px;
-    color: #808080;
+    color: var(--ink-subtle);
 }
 
 /* 0.9.207 — World View History Timeline UI Integration.
@@ -254,11 +254,11 @@
 }
 
 .history-timeline-list .locations-panel-item:hover {
-    border-color: #4caf7d;
+    border-color: var(--accent);
 }
 
 .history-timeline-item--selected {
-    border-color: #4caf7d;
+    border-color: var(--accent);
 }
 
 .history-timeline-item--future {
@@ -266,7 +266,7 @@
 }
 
 .history-timeline-item--previewing .locations-panel-item-title {
-    color: #4caf7d;
+    color: var(--accent-ink);
 }
 
 .history-timeline-actions {
@@ -295,20 +295,20 @@
 }
 
 .notification-history-panel-error {
-    color: #e74c3c;
+    color: #822117;
     font-size: 0.9rem;
     margin: 0.5rem 0;
 }
 
 .notification-history-item-detail {
     display: block;
-    color: #707070;
+    color: var(--ink-faint);
     font-size: 0.8rem;
 }
 
 .notification-history-item-unavailable {
     font-size: 0.8rem;
-    color: #707070;
+    color: var(--ink-faint);
     font-style: italic;
 }
 

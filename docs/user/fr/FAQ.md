@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: b2edb99b3a03a213 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 30c9430bdca078bf -->
 # Questions fréquentes
 
 <!-- languages -->
@@ -170,12 +170,13 @@ anciennes versions s’ouvrent toujours ici.
 
 ### WASD ne fait pas bouger mon avatar
 
-La marche est désactivée tant que vous ne l’activez pas :
+La marche est active à l’ouverture de la Vue du Monde, avec ou sans
+nom : qui n’a pas encore de nom marche en invité, visible seulement sur son
+propre écran. Si les touches ne font pas bouger votre avatar :
 
-1. Connectez-vous et enregistrez un avatar dans **Mon avatar**.
-2. Dans la section **Avatar** de la Vue du Monde, cochez **Contrôler mon
-   avatar (WASD, Maj, Espace)**.
-3. Cliquez dans la vue 3D, pour que les touches n’aillent pas dans un
+1. Dans **Réglages de l’avatar** de la Vue du Monde, vérifiez que
+   **Contrôler mon avatar (WASD, Maj, Espace)** est coché.
+2. Cliquez dans la vue 3D, pour que les touches n’aillent pas dans un
    champ de texte.
 
 Sur un clavier AZERTY, ce sont les touches marquées W, A, S et D qui

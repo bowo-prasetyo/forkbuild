@@ -25,7 +25,7 @@
     margin: 0.25rem 0 1rem;
     font-size: clamp(2rem, 4.5vw, 3rem);
     line-height: 1.1;
-    color: #ffffff;
+    color: var(--ink-strong);
     /* Lines break between phrases in Japanese and Korean, and come out even. */
     word-break: auto-phrase;
     text-wrap: balance;
@@ -35,7 +35,7 @@
     margin: 0 0 1.5rem;
     font-size: 1.15rem;
     line-height: 1.5;
-    color: #c8c8c8;
+    color: var(--ink-soft);
 }
 
 .home-actions {
@@ -55,11 +55,11 @@
 }
 
 .home-cta-primary:hover {
-    background: #5fc490;
+    background: var(--accent-hover);
 }
 
 .home-cta-secondary {
-    color: #4caf7d;
+    color: var(--accent-ink);
     font-weight: 600;
     text-decoration: none;
 }
@@ -71,7 +71,7 @@
 .home-reassurance {
     margin: 1rem 0 0;
     font-size: 0.9rem;
-    color: #9a9a9a;
+    color: var(--ink-subtle);
 }
 
 /* The showcase keeps its shape before Three.js has loaded, so nothing moves
@@ -80,8 +80,8 @@
     aspect-ratio: 4 / 3;
     border-radius: 12px;
     overflow: hidden;
-    background: #1e2a33;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+    background: #deeaf3;
+    box-shadow: 0 12px 40px rgba(74, 52, 24, 0.2);
 }
 
 .build-turntable-canvas {
@@ -105,12 +105,12 @@
 .home-section h2 {
     margin: 0 0 0.4rem;
     font-size: 1.5rem;
-    color: #ffffff;
+    color: var(--ink-strong);
 }
 
 .home-section-lead {
     margin: 0 0 1.25rem;
-    color: #b0b0b0;
+    color: var(--ink-muted);
 }
 
 .home-reasons {
@@ -127,9 +127,9 @@
 
 .home-reason {
     padding: 1.1rem;
-    border: 1px solid #2a2a2a;
+    border: 1px solid var(--line);
     border-radius: 10px;
-    background: #1a1a1a;
+    background: var(--surface-low);
 }
 
 .home-reason-icon {
@@ -139,22 +139,22 @@
 .home-reason h3 {
     margin: 0.4rem 0 0.35rem;
     font-size: 1.05rem;
-    color: #ffffff;
+    color: var(--ink-strong);
 }
 
 .home-reason p {
     margin: 0;
     font-size: 0.925rem;
     line-height: 1.45;
-    color: #b0b0b0;
+    color: var(--ink-muted);
 }
 
 .home-footer {
     margin-top: 3.5rem;
     padding-top: 1.25rem;
-    border-top: 1px solid #2a2a2a;
+    border-top: 1px solid var(--line);
     font-size: 0.875rem;
-    color: #8a8a8a;
+    color: var(--ink-subtle);
 }
 
 .home-footer p {
@@ -168,7 +168,7 @@
 }
 
 .home-footer a {
-    color: #4caf7d;
+    color: var(--accent-ink);
     text-decoration: none;
 }
 

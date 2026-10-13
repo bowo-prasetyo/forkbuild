@@ -12,7 +12,7 @@
     flex: 1;
     min-width: 0;
     min-height: 0;
-    background: #121212;
+    background: var(--paper);
 }
 
 .world-viewport canvas {
@@ -27,8 +27,8 @@
     top: 5rem;
     right: 1.5rem;
     z-index: 10;
-    background: rgba(18, 18, 18, 0.6);
-    border: 1px solid rgba(74, 74, 74, 0.5);
+    background: rgba(253, 248, 238, 0.68);
+    border: 1px solid rgba(96, 72, 40, 0.6);
     border-radius: 6px;
     padding: 0.75rem 1rem;
     pointer-events: none;
@@ -41,7 +41,7 @@
 .world-view-nav-hud-coords {
     font-family: monospace;
     font-size: 0.85rem !important;
-    color: #a0a0a0 !important;
+    color: var(--ink-muted) !important;
     margin: 0;
     letter-spacing: 0.02em;
 }
@@ -61,16 +61,16 @@
 
 .world-view-nav-hud .compass-indicator-label {
     font-size: 0.9rem;
-    color: #b0b0b0;
+    color: var(--ink-muted);
 }
 
 /* 0.3.6 — Contextual location description */
 .world-view-nav-context {
     font-size: 0.85rem !important;
-    color: #c0c0c0 !important;
+    color: var(--ink-soft) !important;
     margin: 0.25rem 0 0 0;
     padding-top: 0.5rem;
-    border-top: 1px solid rgba(74, 74, 74, 0.5);
+    border-top: 1px solid rgba(96, 72, 40, 0.6);
     font-style: italic;
 }
 
@@ -81,7 +81,7 @@
     gap: 0.25rem;
     margin-top: 0.5rem;
     padding-top: 0.5rem;
-    border-top: 1px solid rgba(74, 74, 74, 0.5);
+    border-top: 1px solid rgba(96, 72, 40, 0.6);
 }
 
 .world-view-nav-marker {
@@ -89,12 +89,12 @@
     align-items: center;
     gap: 0.5rem;
     font-size: 0.8rem !important;
-    color: #a0a0a0 !important;
+    color: var(--ink-muted) !important;
 }
 
 .world-view-nav-marker .marker-direction {
     font-weight: bold;
-    color: #ffd700;
+    color: #a18b17;
     min-width: 24px;
     text-align: center;
 }
@@ -107,17 +107,17 @@
 }
 
 .world-view-nav-marker.collaborator .marker-direction {
-    color: #4ecdc4;
+    color: #227771;
 }
 
 .world-view-nav-marker.collaborator .marker-label {
-    color: #b0e0ff;
+    color: #175882;
 }
 
 /* 0.3.7 — matches .compass-indicator-marker--landmark, so a landmark's
    HUD row and its compass dot read as one system. */
 .world-view-nav-marker.landmark .marker-direction {
-    color: #f687b3;
+    color: #821741;
 }
 
 /* Original overlay style - keep for title/author info */
@@ -132,8 +132,8 @@
     top: 1rem;
     left: 1rem;
     z-index: 10;
-    background: rgba(18, 18, 18, 0.85);
-    border: 1px solid #2a2a2a;
+    background: rgba(253, 248, 238, 0.93);
+    border: 1px solid var(--line);
     border-radius: 4px;
     padding: 1rem 1.25rem;
     max-width: 280px;
@@ -143,25 +143,25 @@
 .world-view-overlay h2 {
     margin: 0 0 0.25rem;
     font-size: 1.1rem;
-    color: #e0e0e0;
+    color: var(--ink);
 }
 
 .world-view-overlay p {
     margin: 0;
-    color: #909090;
+    color: var(--ink-subtle);
     font-size: 0.9rem;
 }
 
 .world-view-date {
     margin-top: 0.25rem !important;
     font-size: 0.8rem !important;
-    color: #707070 !important;
+    color: var(--ink-faint) !important;
 }
 
 .world-view-hint {
     margin-top: 0.75rem !important;
     font-size: 0.75rem !important;
-    color: #606060 !important;
+    color: var(--ink-faint) !important;
     font-style: italic;
 }
 
@@ -173,11 +173,11 @@
     margin-top: 0.15rem !important;
     font-size: 0.8rem !important;
     font-weight: 600;
-    color: #4caf7d !important;
+    color: var(--accent-ink) !important;
 }
 
 .world-view-status--published {
-    color: #909090 !important;
+    color: var(--ink-subtle) !important;
 }
 
 /* 0.2.27: camera focus vs. active (editing) document — deliberately
@@ -188,7 +188,7 @@
 .world-view-context {
     margin: 0.2rem 0 0 !important;
     font-size: 0.72rem !important;
-    color: #707070 !important;
+    color: var(--ink-faint) !important;
     letter-spacing: 0.01em;
 }
 
@@ -212,7 +212,7 @@
    with .repository-view above; only what's unique to this view stays
    here. */
 .author-stats {
-    color: #909090;
+    color: var(--ink-subtle);
     margin: 0.5rem 0 1.5rem;
 }
 
@@ -220,7 +220,7 @@
 .fork-graph-section {
     margin-top: 2rem;
     padding-top: 1.5rem;
-    border-top: 1px solid #2a2a2a;
+    border-top: 1px solid var(--line);
 }
 
 .fork-tree {
@@ -229,8 +229,8 @@
 
 .fork-node {
     padding: 0.4rem 0.6rem;
-    background: #1f1f1f;
-    border: 1px solid #2a2a2a;
+    background: var(--surface);
+    border: 1px solid var(--line);
     border-radius: 4px;
     display: inline-flex;
     align-items: center;
@@ -238,12 +238,12 @@
 }
 
 .fork-node--root {
-    background: #234433;
-    border-color: #4caf7d;
+    background: var(--accent-tint);
+    border-color: var(--accent);
 }
 
 .fork-node-date {
-    color: #707070;
+    color: var(--ink-faint);
     font-size: 0.8rem;
 }
 
@@ -251,7 +251,7 @@
     list-style: none;
     margin: 0.25rem 0 0 1.5rem;
     padding: 0;
-    border-left: 1px solid #2a2a2a;
+    border-left: 1px solid var(--line);
 }
 
 .fork-tree-item {
@@ -267,22 +267,22 @@
 }
 
 .fork-connector {
-    color: #505050;
+    color: var(--ink-faint);
     font-family: monospace;
 }
 
 .fork-title {
-    color: #d0d0d0;
+    color: var(--ink-soft);
     font-weight: 500;
 }
 
 .fork-author {
-    color: #909090;
+    color: var(--ink-subtle);
     font-size: 0.85rem;
 }
 
 .fork-date {
-    color: #707070;
+    color: var(--ink-faint);
     font-size: 0.8rem;
 }
 
@@ -290,6 +290,7 @@
 .action-btn--explore {
     background: #3a6ea5;
     color: #ffffff;
+    border-color: transparent;
 }
 
 .action-btn--explore:hover {
@@ -298,7 +299,7 @@
 
 /* Clickable author in repository */
 .publication-author-link {
-    color: #4caf7d;
+    color: var(--accent-ink);
     text-decoration: none;
     cursor: pointer;
 }
@@ -312,19 +313,19 @@
     margin: 0.25rem 0 0 !important;
     font-family: monospace;
     font-size: 0.8rem !important;
-    color: #707070 !important;
+    color: var(--ink-faint) !important;
 }
 
 .world-view-nearby {
     margin-top: 1rem;
     padding-top: 0.75rem;
-    border-top: 1px solid #2a2a2a;
+    border-top: 1px solid var(--line);
 }
 
 .world-view-nearby h4 {
     margin: 0 0 0.5rem;
     font-size: 0.8rem;
-    color: #909090;
+    color: var(--ink-subtle);
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
@@ -340,11 +341,11 @@
 
 .nearby-item {
     padding: 0.35rem 0.5rem;
-    background: #1f1f1f;
-    border: 1px solid #2a2a2a;
+    background: var(--surface);
+    border: 1px solid var(--line);
     border-radius: 3px;
     font-size: 0.85rem;
-    color: #b0b0b0;
+    color: var(--ink-muted);
     cursor: pointer;
     white-space: nowrap;
     overflow: hidden;
@@ -352,22 +353,22 @@
 }
 
 .nearby-item:hover {
-    background: #234433;
-    border-color: #4caf7d;
-    color: #ffffff;
+    background: var(--accent-tint);
+    border-color: var(--accent);
+    color: var(--ink-strong);
 }
 /* World View 0.1.28 — Spatial Streaming UI */
 
 .world-view-section {
     margin-top: 1rem;
     padding-top: 0.75rem;
-    border-top: 1px solid #2a2a2a;
+    border-top: 1px solid var(--line);
 }
 
 .world-view-section h4 {
     margin: 0 0 0.5rem;
     font-size: 0.75rem;
-    color: #909090;
+    color: var(--ink-subtle);
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
@@ -386,15 +387,15 @@
     align-items: center;
     justify-content: space-between;
     padding: 0.35rem 0.5rem;
-    background: #1f1f1f;
-    border: 1px solid #2a2a2a;
+    background: var(--surface);
+    border: 1px solid var(--line);
     border-radius: 3px;
     font-size: 0.85rem;
 }
 
 .world-item--current {
-    background: #234433;
-    border-color: #4caf7d;
+    background: var(--accent-tint);
+    border-color: var(--accent);
 }
 
 .world-item--clickable {
@@ -402,12 +403,12 @@
 }
 
 .world-item--clickable:hover {
-    background: #2a2a2a;
-    border-color: #3a3a3a;
+    background: var(--surface-hover);
+    border-color: var(--line-strong);
 }
 
 .world-item-title {
-    color: #d0d0d0;
+    color: var(--ink-soft);
     font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
@@ -416,12 +417,12 @@
 }
 
 .world-item-author {
-    color: #707070;
+    color: var(--ink-faint);
     font-size: 0.75rem;
     flex-shrink: 0;
 }
 .world-view-error {
-    color: #e74c3c;
+    color: #822117;
     font-size: 0.9rem;
     margin: 0.5rem 0;
 }
@@ -431,17 +432,17 @@
 }
 
 .world-view-section--error h4 {
-    color: #e74c3c;
+    color: #822117;
 }
 
 .world-item--failed {
     opacity: 0.5;
-    border-color: #3a1f1f;
-    background: #1f1f1f;
+    border-color: #d49b9b;
+    background: var(--surface);
 }
 
 .world-item--failed .world-item-title {
-    color: #707070;
+    color: var(--ink-faint);
     text-decoration: line-through;
 }
 
@@ -507,13 +508,13 @@
 .world-search-empty {
     margin: 0;
     font-size: 0.82rem;
-    color: #808080;
+    color: var(--ink-subtle);
 }
 
 .world-search-count {
     margin: 0 0 0.4rem;
     font-size: 0.75rem;
-    color: #909090;
+    color: var(--ink-subtle);
 }
 
 .world-search-list {
@@ -531,8 +532,8 @@
     justify-content: space-between;
     gap: 0.5rem;
     padding: 0.45rem 0.6rem;
-    background: #1f1f1f;
-    border: 1px solid #2a2a2a;
+    background: var(--surface);
+    border: 1px solid var(--line);
     border-radius: 4px;
 }
 
@@ -543,7 +544,7 @@
 }
 
 .world-search-item-title {
-    color: #d0d0d0;
+    color: var(--ink-soft);
     font-weight: 500;
     font-size: 0.85rem;
     white-space: nowrap;
@@ -552,7 +553,7 @@
 }
 
 .world-search-item-author {
-    color: #707070;
+    color: var(--ink-faint);
     font-size: 0.75rem;
 }
 
@@ -560,13 +561,13 @@
    place in the World Unit coordinate system 0.2.24 established,
    rather than that system staying a purely internal convention. */
 .world-search-item-position {
-    color: #808080;
+    color: var(--ink-subtle);
     font-size: 0.72rem;
     margin-top: 0.1rem;
 }
 
 .world-search-item-note {
-    color: #c9a24a;
+    color: #8d6f2a;
     font-size: 0.72rem;
     margin-top: 0.15rem;
 }
@@ -590,8 +591,8 @@
     justify-content: space-between;
     gap: 0.6rem;
     padding: 0.5rem 0.65rem;
-    background: #1f1f1f;
-    border: 1px solid #2a2a2a;
+    background: var(--surface);
+    border: 1px solid var(--line);
     border-radius: 4px;
 }
 
@@ -602,7 +603,7 @@
 }
 
 .location-documents-item-title {
-    color: #d0d0d0;
+    color: var(--ink-soft);
     font-weight: 500;
     font-size: 0.85rem;
     white-space: nowrap;
@@ -611,12 +612,12 @@
 }
 
 .location-documents-item-owner {
-    color: #707070;
+    color: var(--ink-faint);
     font-size: 0.75rem;
 }
 
 .location-documents-empty {
-    color: #808080;
+    color: var(--ink-subtle);
     font-size: 0.82rem;
     padding: 0.5rem 0;
 }
@@ -634,14 +635,14 @@
 .world-view-byline {
     margin: 0 0 0.15rem !important;
     font-size: 0.8rem !important;
-    color: #909090 !important;
+    color: var(--ink-subtle) !important;
 }
 
 /* The controls hint, shown on request under the ? button, so it reads as
    an answer rather than background text. */
 .world-view-hint--controls {
     margin-top: 0.4rem !important;
-    color: #b0b0b0 !important;
+    color: var(--ink-muted) !important;
     font-style: normal;
 }
 
@@ -673,7 +674,7 @@
 .own-publication-panel h4.own-publication-panel-title {
     margin: 0;
     font-size: 0.75rem;
-    color: #909090;
+    color: var(--ink-subtle);
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
@@ -681,7 +682,7 @@
 .own-publication-panel h5 {
     margin: 0.5rem 0 0.35rem;
     font-size: 0.8rem;
-    color: #b0b0b0;
+    color: var(--ink-muted);
 }
 
 .own-publication-panel dl {
@@ -693,12 +694,12 @@
 }
 
 .own-publication-panel dt {
-    color: #707070;
+    color: var(--ink-faint);
 }
 
 .own-publication-panel dd {
     margin: 0;
-    color: #d0d0d0;
+    color: var(--ink-soft);
     overflow-wrap: anywhere;
 }
 
@@ -711,7 +712,7 @@
 .own-publication-placement-entry + .own-publication-placement-entry {
     margin-top: 0.4rem;
     padding-top: 0.4rem;
-    border-top: 1px solid #2a2a2a;
+    border-top: 1px solid var(--line);
 }
 
 /* Each placement row's own Move / Remove, and Remove's one-step confirmation. */
@@ -727,7 +728,7 @@
     flex-basis: 100%;
     margin: 0;
     font-size: 0.8rem !important;
-    color: #e0a34c !important;
+    color: #825617 !important;
 }
 
 .own-publication-placement-actions {
@@ -739,7 +740,7 @@
 .own-publication-panel .own-publication-commentary {
     margin-top: 0.5rem;
     padding-top: 0.5rem;
-    border-top: 1px solid #2a2a2a;
+    border-top: 1px solid var(--line);
 }
 
 /* The More menu: less frequent actions in a wrapping row, and Unpublish's
@@ -749,8 +750,8 @@
     flex-wrap: wrap;
     gap: 0.4rem;
     padding: 0.5rem;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid #2a2a2a;
+    background: rgba(96, 72, 40, 0.03);
+    border: 1px solid var(--line);
     border-radius: 4px;
 }
 
@@ -764,7 +765,7 @@
 .own-publication-unpublish-confirm-text {
     flex-basis: 100%;
     font-size: 0.8rem !important;
-    color: #e0a34c !important;
+    color: #825617 !important;
 }
 
 /* Commentary collapses to its title line, which is the toggle. */
@@ -778,7 +779,7 @@
 }
 
 .own-publication-commentary-toggle:hover {
-    color: #e0e0e0;
+    color: var(--ink);
 }
 
 /* The hover card floats over the viewport's bottom-right corner, out of
@@ -804,14 +805,14 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.25rem 0.5rem;
-    background: rgba(18, 18, 18, 0.6);
-    border: 1px solid rgba(74, 74, 74, 0.5);
+    background: rgba(253, 248, 238, 0.68);
+    border: 1px solid rgba(96, 72, 40, 0.6);
     border-radius: 6px;
 }
 
 .world-view-sound-toggle {
     background: transparent;
-    color: #e0e0e0;
+    color: var(--ink);
     border: none;
     white-space: nowrap;
 }
@@ -822,8 +823,8 @@
 
 .world-view-sound-spatial {
     background: transparent;
-    color: #e0e0e0;
-    border: 1px solid rgba(224, 224, 224, 0.3);
+    color: var(--ink);
+    border: 1px solid rgba(96, 72, 40, 0.3);
     font-size: 0.8rem;
     padding: 0.1rem 0.4rem;
 }
@@ -844,10 +845,10 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.3rem 0.6rem;
-    background: rgba(18, 18, 18, 0.6);
-    border: 1px solid rgba(74, 74, 74, 0.5);
+    background: rgba(253, 248, 238, 0.68);
+    border: 1px solid rgba(96, 72, 40, 0.6);
     border-radius: 6px;
-    color: #e0e0e0;
+    color: var(--ink);
     font-size: 0.85rem;
     pointer-events: none;
 }
@@ -857,7 +858,7 @@
     width: 140px;
     height: 8px;
     border-radius: 4px;
-    background: rgba(224, 224, 224, 0.2);
+    background: rgba(96, 72, 40, 0.2);
     overflow: hidden;
 }
 
@@ -899,16 +900,16 @@
 }
 
 .world-view-hud .action-btn {
-    background: rgba(18, 18, 18, 0.85);
-    color: #e0e0e0;
-    border: 1px solid #3a3a3a;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+    background: rgba(253, 248, 238, 0.93);
+    color: var(--ink);
+    border: 1px solid var(--line-strong);
+    box-shadow: 0 4px 14px rgba(74, 52, 24, 0.16);
 }
 
 .world-view-hud .action-btn--primary {
-    background: #4caf7d;
-    color: #0f2a1c;
-    border-color: #4caf7d;
+    background: var(--accent);
+    color: #ffffff;
+    border-color: var(--accent);
 }
 
 .world-view-hud-plaza {

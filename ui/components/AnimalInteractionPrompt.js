@@ -93,13 +93,13 @@ export default {
                 v-if="visible"
                 :style="{
                     background: 'rgba(18, 18, 18, 0.92)',
-                    border: '1px solid #3a3a3a',
+                    border: '1px solid var(--line-strong)',
                     borderLeft: '3px solid #b08d57',
                     borderRadius: '4px',
                     padding: '6px 14px',
                     fontFamily: 'monospace',
                     fontSize: '12px',
-                    color: '#e0e0e0',
+                    color: 'var(--ink)',
                     whiteSpace: 'nowrap'
                 }"
             >{{ label }}</div>
@@ -107,13 +107,13 @@ export default {
                 v-if="decoration"
                 :style="{
                     background: 'rgba(18, 18, 18, 0.92)',
-                    border: '1px solid #3a3a3a',
+                    border: '1px solid var(--line-strong)',
                     borderLeft: '3px solid #8d6fb0',
                     borderRadius: '4px',
                     padding: '6px 14px',
                     fontFamily: 'monospace',
                     fontSize: '12px',
-                    color: '#e0e0e0',
+                    color: 'var(--ink)',
                     whiteSpace: 'nowrap'
                 }"
             >{{ decorationLabel }}</div>

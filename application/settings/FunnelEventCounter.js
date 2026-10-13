@@ -93,6 +93,12 @@ export class FunnelEventCounter {
         return this.count(FunnelEvent.WORLD_NEIGHBOUR);
     }
 
+    // Someone with no name yet walked in World View
+    // (ui/views/worldView/useLocalAvatarOwner.js); once a page load.
+    walkedAsGuest() {
+        return this.countOnce(FunnelEvent.GUEST_WALK);
+    }
+
     // The builds this device has published, by document id: a visitor's own.
     ownDocumentIds() {
         try {

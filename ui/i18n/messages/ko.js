@@ -1729,6 +1729,7 @@ export default Object.freeze({
     'worldView.avatarSettings': '아바타 설정',
     'worldView.talk': '말하기',
     'worldView.logInAndCreateAn': '여기에 나타나려면 로그인하고 아바타(내 아바타)를 만드세요.',
+    'worldView.walkingAsGuest': '손님으로 걷고 있어요. 여기서 내 모습은 나만 볼 수 있어요. 이름을 정하면(게시할 때나 “여기서 같이 걷자”로) 친구들도 나를 볼 수 있어요.',
     'worldView.camera': '카메라',
     'worldView.free': '자유',
     'worldView.firstPerson': '1인칭',

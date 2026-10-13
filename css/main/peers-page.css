@@ -24,13 +24,13 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.4rem 0.6rem;
-    background: #1a1a1a;
-    border: 1px solid #2a2a2a;
+    background: var(--surface-low);
+    border: 1px solid var(--line);
     border-radius: 6px;
 }
 
 .peers-my-id code {
-    color: #d0d0d0;
+    color: var(--ink-soft);
     font-size: 0.82rem;
 }
 
@@ -53,7 +53,7 @@
 
 .peers-count {
     margin-left: 0.3rem;
-    color: #808080;
+    color: var(--ink-subtle);
     font-size: 0.85rem;
     font-weight: 400;
 }
@@ -67,31 +67,31 @@
 .peers-filter-btn {
     padding: 0.25rem 0.65rem;
     background: transparent;
-    border: 1px solid #2a2a2a;
+    border: 1px solid var(--line);
     border-radius: 999px;
-    color: #a0a0a0;
+    color: var(--ink-muted);
     font-size: 0.8rem;
     cursor: pointer;
 }
 
 .peers-filter-btn--active {
-    background: #234433;
-    border-color: #4caf7d;
-    color: #ffffff;
+    background: var(--accent-tint);
+    border-color: var(--accent);
+    color: var(--ink-strong);
 }
 
 .peers-rows {
     list-style: none;
     margin: 0;
     padding: 0;
-    border: 1px solid #2a2a2a;
+    border: 1px solid var(--line);
     border-radius: 8px;
-    background: #1a1a1a;
+    background: var(--surface-low);
 }
 
 .peers-row {
     padding: 0.7rem 0.9rem;
-    border-top: 1px solid #242424;
+    border-top: 1px solid var(--line-soft);
 }
 
 .peers-row:first-child {
@@ -118,7 +118,7 @@
 }
 
 .peers-row-title {
-    color: #e0e0e0;
+    color: var(--ink);
     font-weight: 600;
     overflow-wrap: anywhere;
 }
@@ -129,7 +129,7 @@
 
 .peers-row-meta {
     margin: 0.15rem 0 0;
-    color: #808080;
+    color: var(--ink-subtle);
     font-size: 0.78rem;
 }
 
@@ -142,7 +142,7 @@
 }
 
 .peers-person--offline .peers-row-title {
-    color: #b8b8b8;
+    color: var(--ink-muted);
 }
 
 .peers-presence {
@@ -153,41 +153,41 @@
 }
 
 .peers-presence--online {
-    background: #4caf7d;
+    background: var(--accent);
 }
 
 .peers-presence--offline {
     background: transparent;
-    border: 1px solid #5a5a5a;
+    border: 1px solid var(--line-bold);
 }
 
 .peers-tag {
     padding: 0.05rem 0.45rem;
-    border: 1px solid #3a3a3a;
+    border: 1px solid var(--line-strong);
     border-radius: 999px;
-    color: #a0a0a0;
+    color: var(--ink-muted);
     font-size: 0.7rem;
     white-space: nowrap;
 }
 
 .peers-tag--friend {
     border-color: rgba(76, 175, 125, 0.5);
-    color: #7fd1a6;
+    color: #28714b;
 }
 
 .peers-tag--following {
     border-color: rgba(90, 150, 224, 0.5);
-    color: #8ab8e8;
+    color: #194b80;
 }
 
 .peers-tag--blocked {
     border-color: rgba(224, 90, 90, 0.5);
-    color: #e08a8a;
+    color: #792020;
 }
 
 .peers-tag--warning {
     border-color: rgba(230, 180, 80, 0.5);
-    color: #e6b450;
+    color: #825e17;
 }
 
 /* The ⋯ menu is a native <details>, so it opens by keyboard with no
@@ -199,9 +199,9 @@
 .peers-menu-trigger {
     list-style: none;
     padding: 0.3rem 0.6rem;
-    border: 1px solid #2a2a2a;
+    border: 1px solid var(--line);
     border-radius: 4px;
-    color: #c0c0c0;
+    color: var(--ink-soft);
     cursor: pointer;
     line-height: 1;
 }
@@ -212,8 +212,8 @@
 
 .peers-menu[open] .peers-menu-trigger,
 .peers-menu-trigger:hover {
-    border-color: #4caf7d;
-    color: #ffffff;
+    border-color: var(--accent);
+    color: var(--ink-strong);
 }
 
 .peers-menu-list {
@@ -225,10 +225,10 @@
     flex-direction: column;
     min-width: 12rem;
     padding: 0.25rem;
-    background: #1f1f1f;
-    border: 1px solid #333333;
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
     border-radius: 6px;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 6px 18px rgba(74, 52, 24, 0.2);
 }
 
 .peers-menu-item {
@@ -236,23 +236,23 @@
     background: none;
     border: none;
     border-radius: 4px;
-    color: #d0d0d0;
+    color: var(--ink-soft);
     font-size: 0.85rem;
     text-align: left;
     cursor: pointer;
 }
 
 .peers-menu-item:hover:not(:disabled) {
-    background: #2a2a2a;
+    background: var(--surface-hover);
 }
 
 .peers-menu-item:disabled {
-    color: #6a6a6a;
+    color: var(--ink-faint);
     cursor: not-allowed;
 }
 
 .peers-menu-item--danger {
-    color: #e08a8a;
+    color: #792020;
 }
 
 .peers-menu-note {
@@ -264,7 +264,7 @@
 .peers-reply {
     margin-top: 0.6rem;
     padding-top: 0.6rem;
-    border-top: 1px dashed #2a2a2a;
+    border-top: 1px dashed var(--line);
 }
 
 .peers-rename-row,
@@ -285,7 +285,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 0.25rem;
-    border-bottom: 1px solid #2a2a2a;
+    border-bottom: 1px solid var(--line);
 }
 
 .peers-tab {
@@ -293,18 +293,18 @@
     background: none;
     border: none;
     border-bottom: 2px solid transparent;
-    color: #a0a0a0;
+    color: var(--ink-muted);
     font-size: 0.88rem;
     cursor: pointer;
 }
 
 .peers-tab:hover {
-    color: #e0e0e0;
+    color: var(--ink);
 }
 
 .peers-tab--active {
-    border-bottom-color: #4caf7d;
-    color: #ffffff;
+    border-bottom-color: var(--accent);
+    color: var(--ink-strong);
 }
 
 .peers-tab-panel {
@@ -320,7 +320,7 @@
 }
 
 .peers-more > summary {
-    color: #a0a0a0;
+    color: var(--ink-muted);
     font-size: 0.85rem;
     cursor: pointer;
 }
@@ -336,7 +336,7 @@
 .invitation-exchange-heading {
     margin: 1rem 0 0.35rem;
     font-size: 0.9rem;
-    color: #d0d0d0;
+    color: var(--ink-soft);
 }
 
 .invitation-exchange-part:first-child .invitation-exchange-heading,

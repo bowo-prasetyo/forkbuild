@@ -111,13 +111,13 @@ export default {
                 v-if="visible"
                 :style="{
                     background: 'rgba(18, 18, 18, 0.92)',
-                    border: '1px solid #3a3a3a',
-                    borderLeft: '3px solid #4caf7d',
+                    border: '1px solid var(--line-strong)',
+                    borderLeft: '3px solid var(--accent)',
                     borderRadius: '4px',
                     padding: '6px 14px',
                     fontFamily: 'monospace',
                     fontSize: '12px',
-                    color: '#e0e0e0',
+                    color: 'var(--ink)',
                     whiteSpace: 'nowrap'
                 }"
             >{{ label }}</div>
@@ -125,13 +125,13 @@ export default {
                 v-if="storeVisible"
                 :style="{
                     background: 'rgba(18, 18, 18, 0.92)',
-                    border: '1px solid #3a3a3a',
+                    border: '1px solid var(--line-strong)',
                     borderLeft: '3px solid #4c8caf',
                     borderRadius: '4px',
                     padding: '6px 14px',
                     fontFamily: 'monospace',
                     fontSize: '12px',
-                    color: '#e0e0e0',
+                    color: 'var(--ink)',
                     whiteSpace: 'nowrap'
                 }"
             >{{ storeLabel }}</div>
@@ -139,13 +139,13 @@ export default {
                 v-if="cycleVisible"
                 :style="{
                     background: 'rgba(18, 18, 18, 0.8)',
-                    border: '1px solid #3a3a3a',
-                    borderLeft: '3px solid #7a7a7a',
+                    border: '1px solid var(--line-strong)',
+                    borderLeft: '3px solid var(--line-strong)',
                     borderRadius: '4px',
                     padding: '4px 12px',
                     fontFamily: 'monospace',
                     fontSize: '11px',
-                    color: '#a8a8a8',
+                    color: 'var(--ink-muted)',
                     whiteSpace: 'nowrap'
                 }"
             >{{ t('vehicleInteractionPrompt.cycle') }}</div>

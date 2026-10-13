@@ -140,6 +140,9 @@ export const residentMethods = {
     // editable World, no permission or no signed-in identity, and when the
     // ground here won't do (see RESIDENT_REFUSAL).
     addResidentHere() {
+        if (this.isLocalAvatarGuest()) {
+            throw new UserFacingError(message('worldRefusal.signIn'), { detail: 'WorldNavigationSession: a guest can\'t add a resident' });
+        }
         const avatarPos = this.getAvatarPosition();
         if (!avatarPos) {
             throw new Error('WorldNavigationSession: cannot add a resident without a live avatar position');
@@ -181,6 +184,9 @@ export const residentMethods = {
     // Returns its id, or null when none is that close. Throws when its World
     // can't be edited.
     removeNearestResidentHere() {
+        if (this.isLocalAvatarGuest()) {
+            throw new UserFacingError(message('worldRefusal.signIn'), { detail: 'WorldNavigationSession: a guest can\'t remove a resident' });
+        }
         const avatarPos = this.getAvatarPosition();
         if (!avatarPos) {
             throw new Error('WorldNavigationSession: cannot remove a resident without a live avatar position');
@@ -225,11 +231,14 @@ export const residentMethods = {
             return null;
         }
         const nearest = this._residentRuntime().nearest(avatarPos, RESIDENT_INTERACTION_RADIUS, this._wildlifeClock());
+        // A guest talks to residents but adds or removes none: that changes a
+        // World, and a change is signed (application/avatar/GuestAvatar.js).
+        const guest = this.isLocalAvatarGuest();
         if (nearest) {
-            return { canAdd: false, canRemove: true, canTalk: true, refusal: null, targetResidentId: nearest.id };
+            return { canAdd: false, canRemove: !guest, canTalk: true, refusal: null, targetResidentId: nearest.id };
         }
         const refusal = this._residentRefusalAt(avatarPos);
-        return { canAdd: refusal === null, canRemove: false, canTalk: false, refusal, targetResidentId: null };
+        return { canAdd: refusal === null && !guest, canRemove: false, canTalk: false, refusal, targetResidentId: null };
     },
 
     // -----------------------------------------------------------------

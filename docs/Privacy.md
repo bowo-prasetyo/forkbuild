@@ -34,7 +34,9 @@ send it:
 - known peers, friends, the people you follow, blocks, chat history and
   queued messages (nobody is told you follow them, and nothing about a follow
   is ever sent);
-- your avatar profile, settings (including whether World View plays sound,
+- your avatar profile (walking World View before you choose a name, you
+  are a guest: that avatar is kept nowhere, not even here, and is never
+  sent to anyone), settings (including whether World View plays sound,
   how loud, and in 3D or stereo, whether World View shows its advanced
   tools, whether it is always day there, whether the sun and the moon cast shadows there, where Publish sends your builds, and the language you chose; when you
   haven't chosen one, ForkBuild reads the browser's preferred languages on
@@ -197,7 +199,7 @@ It also hears, the same way, when ForkBuild is installed as an app
 
 And when someone joins the weekly build challenge (**Join the challenge**,
 or the challenge in the Editor's **New**): `/e/challenge-join`; and when someone
-opens a week's challenge plaza in World View: `/e/plaza-visit`. And each time World View opens: `/e/world-visit`; and, once a visit, when someone else's build stands in view there (a build this device didn't publish and can't edit; the ready-made builds round the plaza don't count): `/e/world-neighbour`. And, at most once each time ForkBuild is opened, when someone uses one of the side systems: swims (`/e/swam`), catches an animal (`/e/animal-caught`), decorates a build with one (`/e/animal-decorated`), carries something, an animal or a stored vehicle (`/e/inventory-used`), sends a chat message (`/e/chat-sent`), makes or answers a voice call (`/e/voice-call`), or joins a public lobby (`/e/lobby-joined`). None of these says what was caught, said, called or joined. And when
+opens a week's challenge plaza in World View: `/e/plaza-visit`. And each time World View opens: `/e/world-visit`; and, once a visit, when someone else's build stands in view there (a build this device didn't publish and can't edit; the ready-made builds round the plaza don't count): `/e/world-neighbour`. And, at most once each time ForkBuild is opened, when someone with no name yet walks there as a guest: `/e/guest-walk`; nothing about where they walked is sent. And, at most once each time ForkBuild is opened, when someone uses one of the side systems: swims (`/e/swam`), catches an animal (`/e/animal-caught`), decorates a build with one (`/e/animal-decorated`), carries something, an animal or a stored vehicle (`/e/inventory-used`), sends a chat message (`/e/chat-sent`), makes or answers a voice call (`/e/voice-call`), or joins a public lobby (`/e/lobby-joined`). None of these says what was caught, said, called or joined. And when
 someone makes a **Walk here with me** link in World View: `/e/walk-link`; and
 when a friend arrives through one: `/e/walk-joined`. And when someone makes a
 **Build with me** link in the Editor: `/e/build-link`; and when a friend joins
@@ -281,6 +283,7 @@ only when you use the feature, and each server can be changed under
 | On the official site, you copy a build's embed code, or an embedded build is shown, or opened in ForkBuild (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with a fixed path naming which of the three it was, no referrer and no cookie |
 | On the official site, you join the weekly build challenge, or open its plaza (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with the fixed path `/e/challenge-join` or `/e/plaza-visit`, no referrer and no cookie |
 | On the official site, you open World View, and someone else's build stands in view there (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with the fixed path `/e/world-visit`, and at most one with `/e/world-neighbour` a visit, no referrer and no cookie |
+| On the official site, you walk in World View before choosing a name (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | at most one image request with the fixed path `/e/guest-walk` each time ForkBuild is opened, no referrer and no cookie |
 | On the official site, you swim, catch an animal, decorate a build with one, carry something, send a chat message, make or answer a voice call, or join a public lobby (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | at most one image request a page load for each, with its fixed path (`/e/swam`, `/e/animal-caught`, `/e/animal-decorated`, `/e/inventory-used`, `/e/chat-sent`, `/e/voice-call`, `/e/lobby-joined`), no referrer and no cookie |
 | On the official site, you make a **Walk here with me** link, or arrive through one (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with the fixed path `/e/walk-link` or `/e/walk-joined`, no referrer and no cookie |
 | On the official site, you make a **Build with me** link, or join through one (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with the fixed path `/e/build-link` or `/e/build-joined` (and `/e/publish-together` when a build made together is first published crediting them), no referrer and no cookie |

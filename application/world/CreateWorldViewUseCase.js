@@ -24,6 +24,7 @@ import { ReplayDocumentUseCase } from '../document/ReplayDocumentUseCase.js';
 import { RestoreHistoryStateUseCase } from '../document/RestoreHistoryStateUseCase.js';
 import { DocumentCloneService } from '../document/DocumentCloneService.js';
 import { WorldNavigationSession } from './WorldNavigationSession.js';
+import { CreateGuestAvatarUseCase } from '../avatar/GuestAvatar.js';
 import { WorldCommandPropagationUseCase } from '../document/WorldCommandPropagationUseCase.js';
 import { LocalContentStore } from '../../content/LocalContentStore.js';
 import { LoadPublishedWorldSessionUseCase } from '../publication/LoadPublishedWorldSessionUseCase.js';
@@ -33,7 +34,6 @@ import { CreateAvatarPresenceSessionUseCase } from '../avatar/CreateAvatarPresen
 import { CreateAvatarTemplateRegistryUseCase } from '../avatar/CreateAvatarTemplateRegistryUseCase.js';
 import { LocalAvatarPresenceBroadcastProvider } from '../../presence/LocalAvatarPresenceBroadcastProvider.js';
 import { PeerAvatarPresenceBroadcastProvider } from '../../presence/PeerAvatarPresenceBroadcastProvider.js';
-import { AvatarProfileVisibilityPolicy } from '../../core/AvatarProfileVisibilityPolicy.js';
 import { FriendshipState } from '../../core/FriendshipState.js';
 import { WorldAuthorizationService } from '../identity/WorldAuthorizationService.js';
 import { WorldMembershipUseCase } from '../identity/WorldMembershipUseCase.js';
@@ -197,21 +197,27 @@ export class CreateWorldViewUseCase {
         // See docs/Principles.md, "Discovery Is One Path, Not Two."
         const searchWorldUseCase = new SearchWorldUseCase(discoveryProvider);
 
-        // The local avatar stack, built only when someone is logged in; World View
-        // works normally without one. CreateAvatarPresenceSessionUseCase builds the
-        // profile and presence session from one AvatarProfileUseCase so they agree on
-        // identity. Presence and profile each have their own visibility policy.
-        let avatarProfileUseCase = null;
-        let avatarPresenceSession = null;
-        let presenceVisibilityUseCase = null;
-        let avatarProfileVisibilityUseCase = null;
-        if (identityProvider && typeof identityProvider.currentUser === 'function' && identityProvider.currentUser()) {
-            const avatarWiring = new CreateAvatarPresenceSessionUseCase().execute(identityProvider);
-            avatarProfileUseCase = avatarWiring.avatarProfileUseCase;
-            avatarPresenceSession = avatarWiring.presenceSession;
-            presenceVisibilityUseCase = avatarWiring.presenceVisibilityUseCase;
-            avatarProfileVisibilityUseCase = avatarWiring.avatarProfileVisibilityUseCase;
-        }
+        // The local avatar stack. Someone logged in walks as themselves:
+        // CreateAvatarPresenceSessionUseCase builds the profile and presence session
+        // from one AvatarProfileUseCase so they agree on identity, and presence and
+        // profile each have their own visibility policy. Anyone else walks as a
+        // guest (application/avatar/GuestAvatar.js), seen by nobody but themselves.
+        // Built again by `localAvatarWiring()` when someone logs in or out while
+        // World View is open (WorldNavigationSession#adoptLocalAvatar()).
+        // The peer channels below read the visibility of whichever avatar is current.
+        let currentAvatarWiring = null;
+        const localAvatarWiring = (initialState = {}) => {
+            currentAvatarWiring = identityProvider && typeof identityProvider.currentUser === 'function' && identityProvider.currentUser()
+                ? new CreateAvatarPresenceSessionUseCase().execute(identityProvider, initialState)
+                : new CreateGuestAvatarUseCase().execute(initialState);
+            return currentAvatarWiring;
+        };
+        const avatarWiring = localAvatarWiring();
+        const avatarProfileUseCase = avatarWiring.avatarProfileUseCase;
+        const avatarPresenceSession = avatarWiring.presenceSession;
+        const presenceVisibilityUseCase = avatarWiring.presenceVisibilityUseCase;
+        const avatarProfileVisibilityUseCase = avatarWiring.avatarProfileVisibilityUseCase;
+        const presenceVisibilityPolicy = () => currentAvatarWiring.presenceVisibilityUseCase.getPolicy();
 
         // Remote presence is built regardless of login (docs/Principles.md, "Watching
         // Presence Never Requires Having One"). The real peer transport is preferred
@@ -254,7 +260,7 @@ export class CreateWorldViewUseCase {
             ? new PeerAvatarPresenceBroadcastProvider({
                 peerMessageBus,
                 connectedPeerRegistry,
-                ...(presenceVisibilityUseCase ? { getVisibilityPolicy: () => presenceVisibilityUseCase.getPolicy() } : {}),
+                getVisibilityPolicy: presenceVisibilityPolicy,
                 ...(isFriend ? { isFriend } : {}),
                 ...(isBlocked ? { isBlocked } : {})
             })
@@ -266,9 +272,7 @@ export class CreateWorldViewUseCase {
                 peerMessageBus,
                 connectedPeerRegistry,
                 protocol: 'forkbuild:avatar-profile',
-                getVisibilityPolicy: avatarProfileVisibilityUseCase
-                    ? () => avatarProfileVisibilityUseCase.getPolicy()
-                    : () => AvatarProfileVisibilityPolicy.default(),
+                getVisibilityPolicy: () => currentAvatarWiring.avatarProfileVisibilityUseCase.getPolicy(),
                 ...(isFriend ? { isFriend } : {}),
                 ...(isBlocked ? { isBlocked } : {})
             })
@@ -279,7 +283,7 @@ export class CreateWorldViewUseCase {
                 peerMessageBus,
                 connectedPeerRegistry,
                 protocol: 'forkbuild:avatar-interaction',
-                ...(presenceVisibilityUseCase ? { getVisibilityPolicy: () => presenceVisibilityUseCase.getPolicy() } : {}),
+                getVisibilityPolicy: presenceVisibilityPolicy,
                 ...(isFriend ? { isFriend } : {}),
                 ...(isBlocked ? { isBlocked } : {})
             })
@@ -291,7 +295,7 @@ export class CreateWorldViewUseCase {
                 peerMessageBus,
                 connectedPeerRegistry,
                 protocol: 'forkbuild:avatar-vehicle',
-                ...(presenceVisibilityUseCase ? { getVisibilityPolicy: () => presenceVisibilityUseCase.getPolicy() } : {}),
+                getVisibilityPolicy: presenceVisibilityPolicy,
                 ...(isFriend ? { isFriend } : {}),
                 ...(isBlocked ? { isBlocked } : {})
             })
@@ -412,6 +416,8 @@ export class CreateWorldViewUseCase {
                 sessionRef = session;
                 return session;
             },
+            // The avatar for whoever is logged in now, or a guest's.
+            localAvatarWiring,
             // Exposed so the application layer can build spatial use cases for the UI.
             spatialIndexProvider,
             placementRegistry,

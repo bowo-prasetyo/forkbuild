@@ -17,7 +17,7 @@
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    color: #909090;
+    color: var(--ink-subtle);
 }
 
 .compass-indicator-dial {
@@ -25,8 +25,8 @@
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    border: 1px solid #3a3a3a;
-    background: #1a1a1a;
+    border: 1px solid var(--line-strong);
+    background: var(--surface-low);
     flex-shrink: 0;
     /* 0.3.6 — how far a contextual marker (.compass-indicator-marker)
        sits from the dial's own center; kept as a variable so a scaled-up
@@ -39,7 +39,7 @@
 .compass-indicator-tick {
     position: absolute;
     font-size: 0.55rem;
-    color: #707070;
+    color: var(--ink-faint);
     line-height: 1;
 }
 
@@ -59,12 +59,12 @@
     height: 10px;
     margin-left: -1px;
     margin-top: -10px;
-    background: #4caf7d;
+    background: var(--accent);
     transform-origin: 50% 10px;
 }
 
 .compass-indicator--unknown .compass-indicator-needle {
-    background: #4a4a4a;
+    background: var(--line-strong);
 }
 
 /* 0.3.6 — a contextual marker: a small dot pushed out to the dial's own
@@ -81,7 +81,7 @@
     width: 5px;
     height: 5px;
     border-radius: 50%;
-    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 0 0 1px rgba(74, 52, 24, 0.27);
 }
 
 .compass-indicator-marker--structure {
@@ -111,12 +111,12 @@
 .locations-panel-hint {
     margin: 0 0 0.85rem;
     font-size: 0.82rem;
-    color: #909090;
+    color: var(--ink-subtle);
     line-height: 1.5;
 }
 
 .locations-panel-empty {
-    color: #909090;
+    color: var(--ink-subtle);
     font-size: 0.85rem;
 }
 
@@ -137,8 +137,8 @@
     justify-content: space-between;
     gap: 0.75rem;
     padding: 0.5rem 0.6rem;
-    background: #1f1f1f;
-    border: 1px solid #2a2a2a;
+    background: var(--surface);
+    border: 1px solid var(--line);
     border-radius: 4px;
 }
 
@@ -151,7 +151,7 @@
 
 .locations-panel-item-title {
     font-size: 0.88rem;
-    color: #e0e0e0;
+    color: var(--ink);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -176,7 +176,7 @@
 .locations-panel-section-title {
     margin: 0 0 0.4rem;
     font-size: 0.72rem;
-    color: #707070;
+    color: var(--ink-faint);
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
@@ -190,7 +190,7 @@
 .locations-panel-item-position {
     font-family: monospace;
     font-size: 0.72rem;
-    color: #707070;
+    color: var(--ink-faint);
 }
 
 /* 0.3.9 — ui/components/WorldWelcomePanel.js: same .modal-overlay/
@@ -201,13 +201,13 @@
 .world-welcome-panel-place {
     margin: 0 0 0.3rem;
     font-size: 0.9rem;
-    color: #e0e0e0;
+    color: var(--ink);
 }
 
 .world-welcome-panel-stats {
     margin: 0 0 0.9rem;
     font-size: 0.82rem;
-    color: #909090;
+    color: var(--ink-subtle);
 }
 
 .world-welcome-panel-section + .world-welcome-panel-section {
@@ -217,7 +217,7 @@
 .world-welcome-panel-section-title {
     margin: 0 0 0.4rem;
     font-size: 0.72rem;
-    color: #707070;
+    color: var(--ink-faint);
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
@@ -230,7 +230,7 @@
     flex-direction: column;
     gap: 0.3rem;
     font-size: 0.85rem;
-    color: #b0b0b0;
+    color: var(--ink-muted);
 }
 
 .world-welcome-panel-list {
@@ -250,8 +250,8 @@
     justify-content: space-between;
     gap: 0.75rem;
     padding: 0.5rem 0.6rem;
-    background: #1f1f1f;
-    border: 1px solid #2a2a2a;
+    background: var(--surface);
+    border: 1px solid var(--line);
     border-radius: 4px;
 }
 
@@ -264,7 +264,7 @@
 
 .world-welcome-panel-item-title {
     font-size: 0.88rem;
-    color: #e0e0e0;
+    color: var(--ink);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -272,11 +272,11 @@
 
 .world-welcome-panel-item-reason {
     font-size: 0.75rem;
-    color: #707070;
+    color: var(--ink-faint);
 }
 
 .world-welcome-panel-empty {
-    color: #909090;
+    color: var(--ink-subtle);
     font-size: 0.85rem;
 }
 
@@ -288,21 +288,21 @@
     align-items: center;
     gap: 0.3rem;
     padding: 0.3rem 0.6rem;
-    background: #1f1f1f;
-    border: 1px solid #2a2a2a;
+    background: var(--surface);
+    border: 1px solid var(--line);
     border-radius: 4px;
-    color: #b0b0b0;
+    color: var(--ink-muted);
     font-size: 0.8rem;
     cursor: pointer;
 }
 
 .world-presence-indicator:hover {
-    border-color: #3a3a3a;
-    color: #e0e0e0;
+    border-color: var(--line-strong);
+    color: var(--ink);
 }
 
 .world-presence-indicator-count {
-    color: #e0e0e0;
+    color: var(--ink);
     font-weight: 600;
 }
 
@@ -314,12 +314,12 @@
 .world-members-panel-hint {
     margin: 0 0 0.85rem;
     font-size: 0.82rem;
-    color: #909090;
+    color: var(--ink-subtle);
     line-height: 1.5;
 }
 
 .world-members-panel-empty {
-    color: #909090;
+    color: var(--ink-subtle);
     font-size: 0.85rem;
 }
 
@@ -340,14 +340,14 @@
     justify-content: space-between;
     gap: 0.75rem;
     padding: 0.5rem 0.6rem;
-    background: #1f1f1f;
-    border: 1px solid #2a2a2a;
-    border-left: 3px solid #3a3a3a;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--line-strong);
     border-radius: 4px;
 }
 
 .world-members-panel-item--owner {
-    border-left-color: #4caf7d;
+    border-left-color: var(--accent);
 }
 
 .world-members-panel-item--editor {
@@ -363,7 +363,7 @@
 
 .world-members-panel-item-name {
     font-size: 0.88rem;
-    color: #e0e0e0;
+    color: var(--ink);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -371,15 +371,15 @@
 
 .world-members-panel-item-meta {
     font-size: 0.72rem;
-    color: #909090;
+    color: var(--ink-subtle);
 }
 
 .world-members-panel-online {
-    color: #4caf7d;
+    color: var(--accent-ink);
 }
 
 .world-members-panel-offline {
-    color: #707070;
+    color: var(--ink-faint);
 }
 
 .world-members-panel-item-actions {
@@ -388,7 +388,7 @@
 
 .world-members-panel-pending {
     font-size: 0.78rem;
-    color: #909090;
+    color: var(--ink-subtle);
     font-style: italic;
 }
 
@@ -398,12 +398,12 @@
     gap: 0.35rem;
     margin-bottom: 0.5rem;
     padding-top: 0.75rem;
-    border-top: 1px solid #2a2a2a;
+    border-top: 1px solid var(--line);
 }
 
 .world-members-panel-grant-form label {
     font-size: 0.78rem;
-    color: #909090;
+    color: var(--ink-subtle);
 }
 
 .world-members-panel-grant-row {
@@ -424,7 +424,7 @@
 .world-location-browser-context {
     margin: 0 0 0.85rem;
     font-size: 0.85rem;
-    color: #b0b0b0;
+    color: var(--ink-muted);
     line-height: 1.5;
 }
 
@@ -461,23 +461,23 @@
 }
 
 .world-location-browser-diagnostics-line--neutral {
-    color: #808080;
+    color: var(--ink-subtle);
 }
 
 .world-location-browser-diagnostics--complete .world-location-browser-diagnostics-line {
-    color: #4caf7d;
+    color: var(--accent-ink);
 }
 
 .world-location-browser-diagnostics--warning .world-location-browser-diagnostics-line {
-    color: #c9a24a;
+    color: #8d6f2a;
 }
 
 .world-location-browser-diagnostics--fatal .world-location-browser-diagnostics-line {
-    color: #e0a0a0;
+    color: #732626;
 }
 
 .world-location-browser-empty {
-    color: #808080;
+    color: var(--ink-subtle);
     font-size: 0.82rem;
     padding: 0.5rem 0;
 }
@@ -485,7 +485,7 @@
 .world-location-browser-count {
     margin: 0 0 0.5rem;
     font-size: 0.78rem;
-    color: #909090;
+    color: var(--ink-subtle);
 }
 
 .world-location-browser-list {
@@ -501,8 +501,8 @@
 
 .world-location-browser-item {
     padding: 0.5rem 0.65rem;
-    background: #1f1f1f;
-    border: 1px solid #2a2a2a;
+    background: var(--surface);
+    border: 1px solid var(--line);
     border-radius: 4px;
 }
 
@@ -521,7 +521,7 @@
 }
 
 .world-location-browser-item-title {
-    color: #d0d0d0;
+    color: var(--ink-soft);
     font-weight: 500;
     font-size: 0.85rem;
     white-space: nowrap;
@@ -530,18 +530,18 @@
 }
 
 .world-location-browser-item-author {
-    color: #707070;
+    color: var(--ink-faint);
     font-size: 0.75rem;
 }
 
 .world-location-browser-item-distance {
-    color: #808080;
+    color: var(--ink-subtle);
     font-size: 0.72rem;
     margin-top: 0.1rem;
 }
 
 .world-location-browser-item-note {
-    color: #c9a24a;
+    color: #8d6f2a;
     font-size: 0.72rem;
     margin-top: 0.15rem;
 }
@@ -557,7 +557,7 @@
 .world-location-browser-inspect {
     margin-top: 0.5rem;
     padding-top: 0.5rem;
-    border-top: 1px solid #2a2a2a;
+    border-top: 1px solid var(--line);
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
@@ -566,7 +566,7 @@
 .world-location-browser-inspect-note {
     margin: 0;
     font-size: 0.78rem;
-    color: #909090;
+    color: var(--ink-subtle);
     line-height: 1.4;
 }
 
@@ -578,12 +578,12 @@
     border: none;
     padding: 0;
     margin-left: 0.3rem;
-    color: #4caf7d;
+    color: var(--accent-ink);
     font-size: inherit;
     text-decoration: underline;
     cursor: pointer;
 }
 
 .inline-link-btn:hover {
-    color: #5fc490;
+    color: var(--accent-ink);
 }

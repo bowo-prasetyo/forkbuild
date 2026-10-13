@@ -109,19 +109,19 @@ export default {
                 zIndex: 30,
                 pointerEvents: 'none',
                 background: 'rgba(18, 18, 18, 0.88)',
-                border: '1px solid #3a3a3a',
-                borderLeft: invalid ? '3px solid #e05252' : '3px solid #4caf7d',
+                border: '1px solid var(--line-strong)',
+                borderLeft: invalid ? '3px solid #e05252' : '3px solid var(--accent)',
                 borderRadius: '4px',
                 padding: '8px 12px',
                 fontFamily: 'monospace',
                 fontSize: '12px',
                 lineHeight: '1.6',
-                color: '#e0e0e0',
+                color: 'var(--ink)',
                 minWidth: '150px'
             }"
         >
-            <div :style="{ color: invalid ? '#e05252' : '#4caf7d', fontWeight: '600', marginBottom: '2px' }">{{ title }}</div>
-            <div v-for="(line, index) in lines" :key="index" :style="{ color: '#d0d0d0' }">{{ line }}</div>
+            <div :style="{ color: invalid ? '#821717' : 'var(--accent-ink)', fontWeight: '600', marginBottom: '2px' }">{{ title }}</div>
+            <div v-for="(line, index) in lines" :key="index" :style="{ color: 'var(--ink-soft)' }">{{ line }}</div>
         </div>
     `
 };

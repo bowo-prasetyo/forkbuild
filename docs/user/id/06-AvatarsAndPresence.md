@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: ec20eefd36a2abe5 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: bb51e610ce073878 -->
 # 06 — Avatar & Kehadiran
 
 <!-- languages -->
@@ -112,13 +112,22 @@ mereka muncul lagi.
 
 ## Menjalankan avatar Anda
 
-Menerbangkan kamera ([Tampilan Dunia](03-WorldView.md#terbang-berkeliling)) adalah salah satu cara bergerak, tetapi Anda juga dapat
-menjalankan avatar Anda secara langsung dengan **Mode Kendali Avatar**.
-Untuk menyalakannya, Anda harus masuk dengan avatar yang tersimpan di
-**Avatar Saya**; lalu centang **Kendalikan Avatar Saya (WASD, Shift,
-Spasi)** di bagian **Avatar** pada Tampilan Dunia. Tombol-tombolnya tidak
-melakukan apa pun sebelum itu, dan diabaikan selama kolom teks sedang
-fokus — klik tampilan 3D terlebih dahulu.
+Menerbangkan kamera ([Tampilan Dunia](03-WorldView.md#terbang-berkeliling))
+adalah salah satu cara bergerak, tetapi Anda juga bisa menjalankan avatar
+secara langsung dengan **Mode Kendali Avatar**, yang sudah menyala saat
+Tampilan Dunia dibuka (**Kendalikan Avatar Saya (WASD, Shift, Spasi)** di
+**Pengaturan avatar**). Tombol diabaikan selama kolom teks sedang aktif —
+klik tampilan 3D terlebih dahulu.
+
+Anda tidak perlu nama untuk berjalan. Sampai Anda memilih nama, Anda
+berjalan sebagai **tamu**: avatar dengan tampilan bawaan yang hanya Anda
+lihat dan tidak diberitahukan kepada siapa pun. Tamu bisa berbicara dengan
+penghuni, tetapi tidak bisa menambah atau menghapusnya atau menghias Dunia
+dengan hewan, karena itu perubahan yang ditandatangani dengan nama. Pilih
+nama (saat menerbitkan, dengan **Jalan di sini bersamaku**, atau lewat
+**Masuk**) dan avatar itu menjadi milik Anda di tempat ia berdiri, dengan
+tampilan yang disimpan di **Avatar Saya**, dan orang lain bisa melihatnya.
+Setelah keluar, ia kembali menjadi tamu.
 
 | Tombol | Tindakan |
 |---|---|

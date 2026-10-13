@@ -13,15 +13,15 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 1rem;
-    background: #1a1a1a;
-    border-bottom: 1px solid #2a2a2a;
+    background: var(--surface-low);
+    border-bottom: 1px solid var(--line);
     font-size: 0.85rem;
 }
 
 .toolbar-save {
     padding: 0.3rem 0.8rem;
-    background: #4caf7d;
-    color: #121212;
+    background: var(--accent);
+    color: #ffffff;
     border: none;
     border-radius: 4px;
     font-weight: 600;
@@ -30,21 +30,21 @@
 }
 
 .toolbar-save:hover {
-    background: #5fc490;
+    background: var(--accent-hover);
 }
 
 .toolbar-new {
     padding: 0.3rem 0.8rem;
     background: transparent;
-    color: #d0d0d0;
-    border: 1px solid #3a3a3a;
+    color: var(--ink-soft);
+    border: 1px solid var(--line-strong);
     border-radius: 4px;
     font-size: 0.8rem;
     cursor: pointer;
 }
 
 .toolbar-new:hover {
-    background: #262626;
+    background: var(--surface-raised);
 }
 
 /* 0.9.641 — Editor Document Export. Same visual weight as .toolbar-new
@@ -54,15 +54,15 @@
 .toolbar-export {
     padding: 0.3rem 0.8rem;
     background: transparent;
-    color: #d0d0d0;
-    border: 1px solid #3a3a3a;
+    color: var(--ink-soft);
+    border: 1px solid var(--line-strong);
     border-radius: 4px;
     font-size: 0.8rem;
     cursor: pointer;
 }
 
 .toolbar-export:hover {
-    background: #262626;
+    background: var(--surface-raised);
 }
 
 /* 0.9.642 — Editor Document Import. Same visual weight as
@@ -70,30 +70,30 @@
 .toolbar-import {
     padding: 0.3rem 0.8rem;
     background: transparent;
-    color: #d0d0d0;
-    border: 1px solid #3a3a3a;
+    color: var(--ink-soft);
+    border: 1px solid var(--line-strong);
     border-radius: 4px;
     font-size: 0.8rem;
     cursor: pointer;
 }
 
 .toolbar-import:hover {
-    background: #262626;
+    background: var(--surface-raised);
 }
 
 /* The build as a 3D model file: a secondary action like .toolbar-export. */
 .toolbar-export-model {
     padding: 0.3rem 0.8rem;
     background: transparent;
-    color: #d0d0d0;
-    border: 1px solid #3a3a3a;
+    color: var(--ink-soft);
+    border: 1px solid var(--line-strong);
     border-radius: 4px;
     font-size: 0.8rem;
     cursor: pointer;
 }
 
 .toolbar-export-model:hover {
-    background: #262626;
+    background: var(--surface-raised);
 }
 
 /* The native file input itself is never shown — .toolbar-import is the
@@ -113,12 +113,12 @@
 }
 
 .toolbar-dirty {
-    color: #e0a34c;
+    color: #825617;
     font-size: 0.8rem;
 }
 
 .toolbar-dirty--clean {
-    color: #707070;
+    color: var(--ink-faint);
 }
 
 /* 0.6.2 — Editor UX Consolidation: opens
@@ -128,16 +128,16 @@
 .toolbar-shortcuts {
     padding: 0.3rem 0.8rem;
     background: transparent;
-    color: #909090;
-    border: 1px solid #2a2a2a;
+    color: var(--ink-subtle);
+    border: 1px solid var(--line);
     border-radius: 4px;
     font-size: 0.8rem;
     cursor: pointer;
 }
 
 .toolbar-shortcuts:hover {
-    background: #262626;
-    color: #d0d0d0;
+    background: var(--surface-raised);
+    color: var(--ink-soft);
 }
 
 /* 0.6.1 — World ↔ Editor Continuity & Return Navigation. Only
@@ -146,19 +146,19 @@
 .toolbar-back-to-world {
     padding: 0.3rem 0.8rem;
     background: transparent;
-    color: #d0d0d0;
-    border: 1px solid #3a3a3a;
+    color: var(--ink-soft);
+    border: 1px solid var(--line-strong);
     border-radius: 4px;
     font-size: 0.8rem;
     cursor: pointer;
 }
 
 .toolbar-back-to-world:hover {
-    background: #262626;
+    background: var(--surface-raised);
 }
 
 .toolbar-entry-context {
-    color: #a0a0a0;
+    color: var(--ink-muted);
     font-size: 0.78rem;
     white-space: nowrap;
     overflow: hidden;
@@ -169,15 +169,15 @@
 .toolbar-save-return {
     padding: 0.3rem 0.8rem;
     background: transparent;
-    color: #4caf7d;
-    border: 1px solid #3a6b53;
+    color: var(--accent-ink);
+    border: 1px solid #9bd4b8;
     border-radius: 4px;
     font-size: 0.8rem;
     cursor: pointer;
 }
 
 .toolbar-save-return:hover {
-    background: #1c2b24;
+    background: #dff1e9;
 }
 
 /* Hardening: Recent Documents — a dropdown instead of an
@@ -195,8 +195,8 @@
     gap: 0.4rem;
     padding: 0.3rem 0.7rem;
     background: transparent;
-    color: #b0b0b0;
-    border: 1px solid #3a3a3a;
+    color: var(--ink-muted);
+    border: 1px solid var(--line-strong);
     border-radius: 4px;
     font-size: 0.8rem;
     cursor: pointer;
@@ -204,21 +204,21 @@
 
 .toolbar-recent-toggle:hover,
 .toolbar-recent-toggle--open {
-    background: #262626;
-    color: #ffffff;
+    background: var(--surface-raised);
+    color: var(--ink-strong);
 }
 
 .toolbar-recent-count {
     padding: 0.05rem 0.4rem;
-    background: #2a2a2a;
+    background: var(--surface-hover);
     border-radius: 999px;
     font-size: 0.72rem;
-    color: #909090;
+    color: var(--ink-subtle);
 }
 
 .toolbar-recent-caret {
     font-size: 0.7rem;
-    color: #707070;
+    color: var(--ink-faint);
 }
 
 .dropdown-backdrop {
@@ -234,10 +234,10 @@
     z-index: 56;
     width: 300px;
     max-width: 80vw;
-    background: #1a1a1a;
-    border: 1px solid #2a2a2a;
+    background: var(--surface-low);
+    border: 1px solid var(--line);
     border-radius: 6px;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 12px 32px rgba(74, 52, 24, 0.23);
     padding: 0.5rem;
     display: flex;
     flex-direction: column;
@@ -247,18 +247,18 @@
 .toolbar-recent-search {
     box-sizing: border-box;
     width: 100%;
-    background: #121212;
-    border: 1px solid #3a3a3a;
+    background: var(--paper);
+    border: 1px solid var(--line-strong);
     border-radius: 4px;
     padding: 0.4rem 0.6rem;
-    color: #e0e0e0;
+    color: var(--ink);
     font-family: inherit;
     font-size: 0.82rem;
 }
 
 .toolbar-recent-search:focus {
     outline: none;
-    border-color: #4caf7d;
+    border-color: var(--accent);
 }
 
 .toolbar-recent-dropdown-list {
@@ -287,7 +287,7 @@
     background: transparent;
     border: none;
     border-radius: 4px;
-    color: #d0d0d0;
+    color: var(--ink-soft);
     text-align: left;
     cursor: pointer;
     font-size: 0.85rem;
@@ -299,22 +299,22 @@
     flex-shrink: 0;
     padding: 0.35rem 0.55rem;
     background: transparent;
-    border: 1px solid #3a3a3a;
+    border: 1px solid var(--line-strong);
     border-radius: 4px;
-    color: #a0a0a0;
+    color: var(--ink-muted);
     cursor: pointer;
     font-size: 0.75rem;
 }
 
 .toolbar-recent-dropdown-place:hover {
-    background: #262626;
-    border-color: #4caf7d;
-    color: #ffffff;
+    background: var(--surface-raised);
+    border-color: var(--accent);
+    color: var(--ink-strong);
 }
 
 .toolbar-recent-dropdown-item:hover {
-    background: #262626;
-    color: #ffffff;
+    background: var(--surface-raised);
+    color: var(--ink-strong);
 }
 
 .toolbar-recent-dropdown-title {
@@ -326,13 +326,13 @@
 
 .toolbar-recent-dropdown-date {
     flex-shrink: 0;
-    color: #707070;
+    color: var(--ink-faint);
     font-size: 0.75rem;
 }
 
 .toolbar-recent-dropdown-empty {
     margin: 0.5rem 0.25rem;
-    color: #707070;
+    color: var(--ink-faint);
     font-size: 0.82rem;
     font-style: italic;
 }
@@ -342,17 +342,17 @@
     margin-top: 0.4rem;
     padding: 0.4rem 0.55rem;
     background: transparent;
-    border: 1px solid #3a3a3a;
+    border: 1px solid var(--line-strong);
     border-radius: 4px;
-    color: #a0a0a0;
+    color: var(--ink-muted);
     cursor: pointer;
     font-size: 0.78rem;
 }
 
 .toolbar-recent-export-all:hover {
-    background: #262626;
-    border-color: #4caf7d;
-    color: #ffffff;
+    background: var(--surface-raised);
+    border-color: var(--accent);
+    color: var(--ink-strong);
 }
 
 .editor-body {
@@ -364,8 +364,8 @@
 .sidebar {
     width: 248px;
     flex-shrink: 0;
-    background: #181818;
-    border-right: 1px solid #2a2a2a;
+    background: var(--surface-low);
+    border-right: 1px solid var(--line);
     padding: 1rem;
 }
 
@@ -394,10 +394,10 @@
     gap: 0.4rem;
     align-self: flex-start;
     padding: 0.3rem 0.55rem;
-    background: #1f1f1f;
-    border: 1px solid #2a2a2a;
+    background: var(--surface);
+    border: 1px solid var(--line);
     border-radius: 4px;
-    color: #c0c0c0;
+    color: var(--ink-soft);
     font-size: 0.75rem;
     cursor: pointer;
 }
@@ -406,7 +406,7 @@
     width: 1.1rem;
     height: 1.1rem;
     padding: 0;
-    border: 1px solid #2a2a2a;
+    border: 1px solid var(--line);
     border-radius: 3px;
     background: none;
     cursor: pointer;
@@ -424,7 +424,7 @@
     width: 1.4rem;
     height: 1.4rem;
     padding: 0;
-    border: 1px solid #2a2a2a;
+    border: 1px solid var(--line);
     border-radius: 4px;
     cursor: pointer;
 }
@@ -436,7 +436,7 @@
 }
 
 .village-palette-swatch--selected {
-    outline: 2px solid #ffffff;
+    outline: 2px solid var(--line-strong);
     outline-offset: 1px;
 }
 
@@ -444,7 +444,7 @@
     margin: 0 0 0.25rem;
     font-size: 0.8rem;
     font-weight: 600;
-    color: #909090;
+    color: var(--ink-subtle);
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
@@ -459,7 +459,7 @@
     margin: 0.4rem 0 0;
     font-size: 0.7rem;
     font-weight: 600;
-    color: #707070;
+    color: var(--ink-faint);
     text-transform: capitalize;
     letter-spacing: 0.03em;
 }
@@ -477,20 +477,20 @@
     padding: 0.5rem 0.6rem;
     border-radius: 4px;
     font-size: 0.85rem;
-    color: #d0d0d0;
-    background: #1f1f1f;
+    color: var(--ink-soft);
+    background: var(--surface);
     border: 1px solid transparent;
     cursor: pointer;
 }
 
 .palette-item:hover {
-    background: #262626;
+    background: var(--surface-raised);
 }
 
 .palette-item--active {
-    background: #234433;
-    border-color: #4caf7d;
-    color: #ffffff;
+    background: var(--accent-tint);
+    border-color: var(--accent);
+    color: var(--ink-strong);
 }
 
 /* 0.2.81 — Forkable Structure Library. Reuses .palette-title and
@@ -521,19 +521,19 @@
 .structure-item {
     padding: 0.5rem 0.6rem;
     border-radius: 4px;
-    background: #1f1f1f;
+    background: var(--surface);
     cursor: pointer;
 }
 
 .structure-item:hover {
-    background: #262626;
+    background: var(--surface-raised);
 }
 
 .structure-item-name {
     flex: 1;
     min-width: 0;
     font-size: 0.85rem;
-    color: #d0d0d0;
+    color: var(--ink-soft);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -566,10 +566,10 @@
     gap: 0.3rem;
     min-width: 170px;
     padding: 0.4rem;
-    background: #1f1f1f;
-    border: 1px solid #2a2a2a;
+    background: var(--surface);
+    border: 1px solid var(--line);
     border-radius: 4px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 4px 12px rgba(74, 52, 24, 0.18);
 }
 
 /* Every action inside the menu (Fork, and — for a personal Structure —
@@ -592,7 +592,7 @@
 .personal-structure-library {
     margin-top: 0.5rem;
     padding-top: 0.5rem;
-    border-top: 1px solid #2a2a2a;
+    border-top: 1px solid var(--line);
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
@@ -653,10 +653,10 @@
 .build-library-tab {
     flex: 1;
     padding: 0.4rem 0.5rem;
-    background: #1f1f1f;
-    border: 1px solid #2a2a2a;
+    background: var(--surface);
+    border: 1px solid var(--line);
     border-radius: 4px;
-    color: #b0b0b0;
+    color: var(--ink-muted);
     font-size: 0.78rem;
     font-weight: 600;
     text-transform: uppercase;
@@ -665,34 +665,34 @@
 }
 
 .build-library-tab:hover {
-    background: #262626;
-    color: #e0e0e0;
+    background: var(--surface-raised);
+    color: var(--ink);
 }
 
 .build-library-tab--active {
-    background: #234433;
-    border-color: #4caf7d;
-    color: #ffffff;
+    background: var(--accent-tint);
+    border-color: var(--accent);
+    color: var(--ink-strong);
 }
 
 .build-library-search {
     padding: 0.4rem 0.5rem;
-    background: #121212;
-    border: 1px solid #2a2a2a;
+    background: var(--paper);
+    border: 1px solid var(--line);
     border-radius: 4px;
-    color: #e0e0e0;
+    color: var(--ink);
     font-size: 0.8rem;
     outline: none;
 }
 
 .build-library-search:focus {
-    border-color: #4caf7d;
+    border-color: var(--accent);
 }
 
 .build-library-empty {
     margin: 0.4rem 0 0;
     font-size: 0.78rem;
-    color: #707070;
+    color: var(--ink-faint);
 }
 
 /* Turns .palette-item/.structure-item (each already a background/
@@ -714,7 +714,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #2a2a2a;
+    background: var(--surface-hover);
 }
 
 .build-library-preview--pending {
@@ -736,7 +736,7 @@
 .build-library-preview-label {
     font-size: 0.75rem;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.85);
+    color: rgba(96, 72, 40, 0.6);
 }
 
 /* 0.6.4 — Blueprint Discovery, Search & Library Organization. The
@@ -754,10 +754,10 @@
 .build-library-source-tab {
     flex: 1;
     padding: 0.3rem 0.4rem;
-    background: #1f1f1f;
-    border: 1px solid #2a2a2a;
+    background: var(--surface);
+    border: 1px solid var(--line);
     border-radius: 4px;
-    color: #909090;
+    color: var(--ink-subtle);
     font-size: 0.7rem;
     font-weight: 600;
     text-transform: uppercase;
@@ -766,14 +766,14 @@
 }
 
 .build-library-source-tab:hover {
-    background: #262626;
-    color: #d0d0d0;
+    background: var(--surface-raised);
+    color: var(--ink-soft);
 }
 
 .build-library-source-tab--active {
-    background: #234433;
-    border-color: #4caf7d;
-    color: #ffffff;
+    background: var(--accent-tint);
+    border-color: var(--accent);
+    color: var(--ink-strong);
 }
 
 /* Category filter + sort dropdowns — reuses .build-library-search's own
@@ -788,16 +788,16 @@
     flex: 1;
     min-width: 0;
     padding: 0.35rem 0.4rem;
-    background: #121212;
-    border: 1px solid #2a2a2a;
+    background: var(--paper);
+    border: 1px solid var(--line);
     border-radius: 4px;
-    color: #e0e0e0;
+    color: var(--ink);
     font-size: 0.75rem;
     outline: none;
 }
 
 .build-library-filter-select:focus {
-    border-color: #4caf7d;
+    border-color: var(--accent);
 }
 
 /* "Recent" reuses .palette-group/.palette-category/.structure-list
@@ -806,7 +806,7 @@
    the exact same kind of list. */
 .recent-structures-group {
     padding-bottom: 0.4rem;
-    border-bottom: 1px solid #2a2a2a;
+    border-bottom: 1px solid var(--line);
 }
 
 .viewport {
@@ -843,8 +843,8 @@
 .toolbar-file-toggle {
     padding: 0.3rem 0.8rem;
     background: transparent;
-    color: #d0d0d0;
-    border: 1px solid #3a3a3a;
+    color: var(--ink-soft);
+    border: 1px solid var(--line-strong);
     border-radius: 4px;
     font-size: 0.8rem;
     cursor: pointer;
@@ -852,7 +852,7 @@
 
 .toolbar-file-toggle:hover,
 .toolbar-file-toggle[aria-expanded="true"] {
-    background: #262626;
+    background: var(--surface-raised);
 }
 
 /* Fixed under its button (Toolbar.js sets top and left), so a toolbar that
@@ -861,10 +861,10 @@
     position: fixed;
     z-index: 56;
     min-width: 160px;
-    background: #1a1a1a;
-    border: 1px solid #2a2a2a;
+    background: var(--surface-low);
+    border: 1px solid var(--line);
     border-radius: 6px;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 12px 32px rgba(74, 52, 24, 0.23);
     padding: 0.35rem;
     display: flex;
     flex-direction: column;
@@ -883,12 +883,12 @@
     top: 1rem;
     left: 1rem;
     z-index: 14;
-    background: rgba(18, 18, 18, 0.85);
-    color: #e0e0e0;
-    border: 1px solid #3a3a3a;
+    background: rgba(253, 248, 238, 0.93);
+    color: var(--ink);
+    border: 1px solid var(--line-strong);
 }
 
 .editor-see-inside.action-btn--active {
-    border-color: #4caf7d;
-    color: #4caf7d;
+    border-color: var(--accent);
+    color: var(--accent-ink);
 }

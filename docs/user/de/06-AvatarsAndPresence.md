@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: ec20eefd36a2abe5 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: bb51e610ce073878 -->
 # 06 — Avatare & Anwesenheit
 
 <!-- languages -->
@@ -114,12 +114,20 @@ wieder.
 
 Die Kamera zu fliegen ([Weltansicht](03-WorldView.md#herumfliegen)) ist
 eine Art, sich zu bewegen, aber Sie können mit dem **Modus
-Avatarsteuerung** auch direkt mit Ihrem Avatar gehen. Um ihn
-einzuschalten, müssen Sie angemeldet sein und unter **Mein Avatar** einen
-Avatar gespeichert haben; setzen Sie dann im Abschnitt **Avatar** der
-Weltansicht das Häkchen bei **Meinen Avatar steuern (WASD, Umschalt,
-Leertaste)**. Bis dahin tun die Tasten nichts, und sie werden ignoriert,
-solange ein Textfeld den Fokus hat — klicken Sie zuerst in die 3D-Ansicht.
+Avatarsteuerung** auch direkt mit Ihrem Avatar gehen. Er ist an, wenn die
+Weltansicht öffnet (**Meinen Avatar steuern (WASD, Umschalt, Leertaste)**
+unter **Avatar-Einstellungen**). Die Tasten werden ignoriert, solange ein
+Textfeld den Fokus hat — klicken Sie zuerst in die 3D-Ansicht.
+
+Zum Gehen brauchen Sie keinen Namen. Bis Sie einen wählen, gehen Sie als
+**Gast**: ein Avatar im Standardaussehen, den nur Sie sehen und von dem
+niemandem sonst etwas gesagt wird. Ein Gast kann mit Bewohnern sprechen,
+aber keine hinzufügen oder entfernen und keine Welt mit einem Tier
+schmücken, denn das sind Änderungen, die mit einem Namen signiert werden.
+Wählen Sie einen Namen (beim Veröffentlichen, mit **Mit mir hier
+spazieren** oder unter **Anmelden**), dann wird der Avatar dort, wo er
+steht, zu Ihrem, im Aussehen, das unter **Mein Avatar** gespeichert ist,
+und andere können ihn sehen. Nach dem Abmelden wird er wieder zum Gast.
 
 | Taste | Aktion |
 |---|---|

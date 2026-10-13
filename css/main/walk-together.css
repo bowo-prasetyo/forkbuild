@@ -18,7 +18,7 @@
 .walk-together-nobody,
 .walk-together-privacy {
     font-size: 0.85rem;
-    color: #b8b8b8;
+    color: var(--ink-muted);
 }
 
 .walk-together-link {
@@ -27,10 +27,10 @@
     box-sizing: border-box;
     margin: 0.5rem 0;
     padding: 0.45rem 0.6rem;
-    border: 1px solid #444;
+    border: 1px solid var(--line-bold);
     border-radius: 6px;
-    background: #1b1b1b;
-    color: #e8e8e8;
+    background: var(--surface-low);
+    color: var(--ink-strong);
     font-size: 0.8rem;
 }
 
@@ -51,12 +51,12 @@
 }
 
 .walk-together-guest--joined {
-    color: #6fd39b;
+    color: #247548;
 }
 
 .walk-together-guest--failed,
 .walk-together-failure {
-    color: #ff9b8a;
+    color: #822717;
 }
 
 .walk-together-join-view {
@@ -78,7 +78,7 @@
 }
 
 .walk-together-home a {
-    color: #4caf7d;
+    color: var(--accent-ink);
     font-weight: 600;
     text-decoration: none;
 }
@@ -109,10 +109,10 @@
     max-width: calc(100% - 8rem);
     box-sizing: border-box;
     padding: 0.45rem 0.7rem;
-    background: rgba(18, 18, 18, 0.9);
+    background: rgba(253, 248, 238, 0.96);
     border: 1px solid rgba(111, 211, 155, 0.45);
     border-radius: 10px;
-    color: #e0e0e0;
+    color: var(--ink);
     font-size: 0.85rem;
 }
 
@@ -136,7 +136,7 @@
 }
 
 .build-together-person--away {
-    color: #9a9a9a;
+    color: var(--ink-subtle);
 }
 
 .build-together-dot {
@@ -148,7 +148,7 @@
 
 .build-together-undo-note {
     font-size: 0.78rem;
-    color: #b8b8b8;
+    color: var(--ink-muted);
 }
 
 .build-together-strip-actions {

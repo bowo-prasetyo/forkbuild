@@ -1,3 +1,6 @@
+/* The village's colours (css/main/theme.css). */
+@import url('main/theme.css');
+
 /* embed.html: a build shown inside another site's page (ui/embed/EmbedView.js).
    It fills whatever frame it is given, from a phone-width column to a wide
    article, so nothing here has a fixed size. */
@@ -12,8 +15,8 @@ html, body, #app {
     height: 100%;
     overflow: hidden;
     font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-    background: #121212;
-    color: #e0e0e0;
+    background: var(--paper);
+    color: var(--ink);
 }
 
 .embed {
@@ -27,7 +30,7 @@ html, body, #app {
     position: relative;
     flex: 1;
     min-height: 0;
-    background: #1e2a33;
+    background: #deeaf3;
 }
 
 .build-turntable-canvas {
@@ -62,8 +65,8 @@ html, body, #app {
     margin: 0;
     padding: 0.2rem 0.55rem;
     border-radius: 999px;
-    background: rgba(18, 18, 18, 0.6);
-    color: #ffffff;
+    background: rgba(253, 248, 238, 0.68);
+    color: var(--ink-strong);
     font-size: 0.8rem;
     pointer-events: none;
 }
@@ -87,7 +90,7 @@ html, body, #app {
 }
 
 .embed a {
-    color: #4caf7d;
+    color: var(--accent-ink);
 }
 
 .embed-bar {
@@ -95,8 +98,8 @@ html, body, #app {
     align-items: center;
     gap: 0.75rem;
     padding: 0.55rem 0.75rem;
-    background: #121212;
-    border-top: 1px solid #2a2a2a;
+    background: var(--paper);
+    border-top: 1px solid var(--line);
 }
 
 .embed-caption {
@@ -115,20 +118,20 @@ html, body, #app {
 
 .embed-title {
     font-weight: 600;
-    color: #ffffff;
+    color: var(--ink-strong);
 }
 
 .embed-author {
     font-size: 0.85rem;
-    color: #b0b0b0;
+    color: var(--ink-muted);
 }
 
 .embed .embed-open {
     flex: none;
     padding: 0.5rem 0.9rem;
     border-radius: 4px;
-    background: #4caf7d;
-    color: #121212;
+    background: var(--accent);
+    color: #ffffff;
     font-weight: 600;
     text-decoration: none;
     white-space: nowrap;
@@ -136,7 +139,7 @@ html, body, #app {
 
 .embed .embed-open:hover,
 .embed .embed-open:focus-visible {
-    background: #5fc28f;
+    background: var(--accent-hover);
 }
 
 /* A narrow frame (a phone-width column) keeps the button, and lets the

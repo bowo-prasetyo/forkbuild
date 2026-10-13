@@ -134,7 +134,7 @@ old text is touched. Code and protocol documents keep their own terms.
 |---|---|---|
 | **build** | document, creation, publication, Shared World | What a player makes. A "World" is the same build seen from inside, in World View. (**My Worlds** lists the Worlds visited on this device, not your builds; a page of your own builds is open work.) |
 | **Publish** | distribute, announce, anchor | Going public. Distribute, announce and anchor are steps inside Publish, named only on the Publications page. |
-| **remix**, **make your own copy** | fork | "Fork" stays in the name, the tagline and developer documents. |
+| **remix**, **make your own copy** | fork | "Fork" stays in the name, the tagline and developer documents. The name stays **ForkBuild**: the owner confirmed it on 2026-10-13. |
 | **structure** | blueprint, preassembled | A ready-made group of bricks in the Build Library. |
 | **Advanced** | network | The menu group for everything a player doesn't need to build and share. |
 | **Build · Explore · Challenge · Walk** | Editor · Repository | The main menu. **Walk** opens this week's challenge plaza, the square the village of published builds grows round. |
@@ -155,6 +155,27 @@ the motorcycle, car and drone are now drawn and heard as a penny-farthing, a
 hay wagon and a hot-air balloon. Only their look, sound and names changed;
 their ids, which peers and saved inventories carry, and how each one moves
 stayed as they were.
+
+## Look
+
+Everything round the 3D view looks like the village it frames, not like a
+developer's tool: warm paper and wood for the grounds, dark brown ink for
+words, and one meadow green for the thing to press (**Try it now**,
+**Join the challenge**, **Publish** sends it on its way). Bricks keep their
+own colours; the shell never competes with them. Chosen on 2026-10-13
+(docs/reviews/CreativeDirection-2026-10-12c.md, finding 4), replacing the
+near-black shell the app had until then.
+
+- The colours are named once, in css/main/theme.css (`--paper`,
+  `--surface`, `--ink`, `--accent` and the rest); new rules use those names
+  rather than new colours. The embed takes them too.
+- Words stay readable: every ink reads at 4.5:1 or more on the page and its
+  panels, and white on the green buttons (tests/VillageLook.test.js).
+- A panel over the 3D view is warm paper, nearly opaque, so the world shows
+  at its edges and the words don't fight it.
+
+Not decided yet: a texture or edge for the bricks themselves, music, and a
+dark version for those who ask for one.
 
 ## What we are not making
 
@@ -191,6 +212,10 @@ Each pillar has a question the launch counters can answer
   are made (`/e/build-link`), how many friends join through them
   (`/e/build-joined`), and how many builds made together are published
   crediting them (`/e/publish-together`)?
+
+Also counted, with no target yet: how many visitors walk World View
+before they have a name (`/e/guest-walk`, once a page load; see "A guest
+walks" in the roadmap).
 
 ### The numbers to reach
 
@@ -316,3 +341,12 @@ no brick chosen places a cube, and a brick put on top of others rests on
 them; hipped roofs that cover a whole building in one piece; and a
 visitor's click in World View selects nothing, with the Words test covering
 World View.
+
+A fifth review on 2026-10-12
+([reviews/CreativeDirection-2026-10-12c.md](reviews/CreativeDirection-2026-10-12c.md))
+found the vision coherent and the process steering it weak, and four seams
+in the first five minutes. The owner took two of its recommendations on
+2026-10-13 (see the roadmap, "A guest walks, in a village-coloured
+shell"): someone with no name walks World View as a guest, seen only on
+their own screen, and the shell round the 3D view is light and warm (see
+"Look" above). The name stays ForkBuild.

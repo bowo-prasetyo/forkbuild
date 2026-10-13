@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: b2edb99b3a03a213 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 30c9430bdca078bf -->
 # Perguntas frequentes
 
 <!-- languages -->
@@ -167,12 +167,13 @@ abrindo aqui.
 
 ### WASD não move meu avatar
 
-Caminhar fica desligado até você ligar:
+Caminhar já está ligado quando a Visão do mundo abre, com ou sem nome:
+quem ainda não tem nome anda como convidado, visível só na própria tela.
+Se as teclas não movem seu avatar:
 
-1. Entre e salve um avatar em **Meu avatar**.
-2. Na seção **Avatar** da Visão do mundo, marque **Controlar meu avatar
-   (WASD, Shift, Espaço)**.
-3. Clique na visualização 3D, para que as teclas não vão para um campo de
+1. Em **Configurações do avatar** da Visão do mundo, confira se
+   **Controlar meu avatar (WASD, Shift, Espaço)** está marcado.
+2. Clique na visualização 3D, para que as teclas não vão para um campo de
    texto.
 
 Numa tela sensível ao toque, toque em **Andar** acima do joystick. Veja

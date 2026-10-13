@@ -1730,6 +1730,7 @@ export default Object.freeze({
     'worldView.avatarSettings': 'Ajustes del avatar',
     'worldView.talk': 'Hablar',
     'worldView.logInAndCreateAn': 'Inicie sesión y cree un avatar (Mi avatar) para aparecer aquí.',
+    'worldView.walkingAsGuest': 'Estás paseando como invitado: aquí solo te ves tú. Elige un nombre (al publicar, o con «Pasear aquí conmigo») y tus amigos también podrán verte.',
     'worldView.camera': 'Cámara',
     'worldView.free': 'Libre',
     'worldView.firstPerson': 'Primera persona',

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: b2edb99b3a03a213 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 30c9430bdca078bf -->
 # Häufige Fragen
 
 <!-- languages -->
@@ -176,12 +176,13 @@ lassen sich hier weiterhin öffnen.
 
 ### WASD bewegt meinen Avatar nicht
 
-Gehen ist aus, bis Sie es einschalten:
+Gehen ist an, wenn die Weltansicht öffnet, mit oder ohne Namen: Wer noch
+keinen Namen hat, geht als Gast und ist nur auf dem eigenen Bildschirm zu
+sehen. Wenn die Tasten Ihren Avatar nicht bewegen:
 
-1. Melden Sie sich an und speichern Sie unter **Mein Avatar** einen Avatar.
-2. Setzen Sie im Abschnitt **Avatar** der Weltansicht das Häkchen bei
-   **Meinen Avatar steuern (WASD, Umschalt, Leertaste)**.
-3. Klicken Sie in die 3D-Ansicht, damit die Tasten nicht in ein Textfeld
+1. Prüfen Sie unter **Avatar-Einstellungen** der Weltansicht, ob
+   **Meinen Avatar steuern (WASD, Umschalt, Leertaste)** angehakt ist.
+2. Klicken Sie in die 3D-Ansicht, damit die Tasten nicht in ein Textfeld
    gehen.
 
 Auf einem Touchscreen tippen Sie stattdessen auf **Gehen** über dem

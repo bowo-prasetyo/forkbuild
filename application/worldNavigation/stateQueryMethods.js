@@ -97,7 +97,7 @@ export const stateQueryMethods = {
         return {
             avatarId: presence.avatarId,
             isLocal: true,
-            displayName: profile.displayName || profile.ownerIdentity || 'You',
+            displayName: profile.displayName || (this.isLocalAvatarGuest() ? '' : profile.ownerIdentity) || 'You',
             ownerIdentity: profile.ownerIdentity,
             templateLabel: template ? template.displayLabel : null,
             // The local avatar always has its own chosen template.

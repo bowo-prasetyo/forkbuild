@@ -301,7 +301,7 @@ async function main() {
         // displayName, then ownerIdentity, then the avatarId itself,
         // then (local only) "You" — never throws, never blank.
         const sessionSource = codeOnly((await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n'));
-        assert(/getAvatarDisplayName\(avatarId\) \{\s*\n\s*if \(this\.isLocalAvatarId\(avatarId\)\) \{\s*\n\s*const profile = this\._avatarProfileUseCase[\s\S]{0,120}return \(profile && \(profile\.displayName \|\| profile\.ownerIdentity\)\) \|\| 'You';/.test(sessionSource),
+        assert(/getAvatarDisplayName\(avatarId\) \{\s*\n\s*if \(this\.isLocalAvatarId\(avatarId\)\) \{\s*\n\s*const profile = this\._avatarProfileUseCase[\s\S]{0,120}return \(profile && \(profile\.displayName \|\| (?:\(this\.isLocalAvatarGuest\(\) \? '' : )?profile\.ownerIdentity\)?\)\) \|\| 'You';/.test(sessionSource),
             "B3a. getAvatarDisplayName(), for the LOCAL avatar, degrades displayName -> ownerIdentity -> 'You' — never an empty string, never a raw avatarId shown for yourself.");
         assert(sessionSource.includes('if (knownProfile && knownProfile.displayName) {')
             && sessionSource.includes('return knownProfile.displayName;')

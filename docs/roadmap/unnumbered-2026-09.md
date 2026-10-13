@@ -6321,3 +6321,49 @@ draw of small points, so there is no setting; Always day shows none.
   the shaders compile, stars light the night sky and none by day, and anything in front hides them).
 - Not done: constellations, shooting stars, the moon's phases.
 
+
+## A guest walks, in a village-coloured shell (unnumbered, 2026-10-13)
+
+**Someone with no name walks World View as a guest, and everything round the 3D view is light and warm.** The third
+creative-direction audit of 2026-10-12 (docs/reviews/CreativeDirection-2026-10-12c.md) found **Walk** in the main menu
+giving a newcomer a camera and *"Log in and create an avatar (My Avatar) to appear here"* rather than a body (finding
+1), and the app's near-black developer chrome at odds with the small, sunny village it frames (finding 4). The owner
+took both recommendations, and confirmed the name ForkBuild. Pillars served: your work lives in a world (walking it
+needs nothing first), and building feels joyful (the screens round a build look like where it lives).
+
+- **A guest's avatar** (application/avatar/GuestAvatar.js). With nobody logged in, World View builds one in the
+  default look, held in memory and stored nowhere, whose presence and profile visibility both say no, so nothing about
+  it reaches a peer; its ride, which had no gate of its own, checks too (`_publishLocalVehicle()`). It walks, swims,
+  rides, catches and talks to residents like any avatar, and is "You" on its own screen. It adds, removes and
+  decorates nothing, because those are signed changes to a World: their prompts aren't offered, and their calls refuse
+  before anything is copied.
+- **Choosing a name where you stand** (`WorldNavigationSession#adoptLocalAvatar()`, `localAvatarPlacement()`;
+  ui/views/worldView/useLocalAvatarOwner.js). Logging in while World View is open, as **Walk here with me** asks a
+  guest to, swaps the guest's avatar for the named one at the same spot and facing, with walking and following kept,
+  so the friends who join see it; logging out turns it back into a guest. CreateWorldViewUseCase's
+  `localAvatarWiring()` builds either, and the peer channels read the visibility of whichever is current. The same
+  owner again (a lock or an unlock) keeps its avatar, whose sequence peers already know.
+- **The panel says so**: *"You're walking as a guest: only you can see yourself here. Choose a name (when you publish,
+  or with Walk here with me) and friends can see you too."*, in every language.
+- **Counted**: `/e/guest-walk` (core/VisitorCount.js, `FunnelEventCounter#walkedAsGuest()`), once a page load, when a
+  guest has walked more than a step from where they arrived; no target yet. The Privacy page lists it, and says a
+  guest's avatar is kept and sent nowhere.
+- **The look** (css/main/theme.css; docs/Pillars.md, "Look"). The colours are named once: warm paper grounds
+  (`--paper` #f6efe2, `--surface` #fffcf6 and the raised, hover and pressed steps), warm lines, dark brown inks from
+  `--ink-strong` to `--ink-faint`, and a meadow green `--accent` (#357f52) with white words. Every stylesheet,
+  including the embed's, and the few inline styles in components were moved to them: the common colours by name, the
+  rest by what they paint (a dark tint became a light tint of its hue, light words dark words of theirs, black shadows
+  soft brown ones), with white or dark words on a coloured button kept. A plain `.action-btn` now has its own ground
+  and edge, the active one is green, and a link nobody styles is green too. The page's theme colour and the installed
+  app's background follow.
+- The user guide's "Walking your avatar" and the FAQ's "WASD doesn't move my avatar", in every language: walking is on
+  from the start, with or without a name, and what a guest can and can't do.
+- Tests: `GuestWalking` (a guest's avatar has the default look, isn't stored and is advertised to nobody; it walks and
+  a replica on the same channel sees nothing; a name takes over where it stood, keeps walking and is seen, and logging
+  out makes a guest again; a guest adds, removes and decorates nothing, and is refused before anything is copied; the
+  count, once a page load); `VillageLook` (every ink at 4.5:1 or more on the page and its panels, white on both
+  greens; the grounds light and warm; no stylesheet back on the dark greys); `WorldViewPanelLayoutBrowser` (a guest
+  has every avatar control and the guest line, a named avatar none); the bundled site (Home's page light and warm, its
+  words dark, Try it now green with white words; the plaza walked as a guest after an unsigned publish).
+- Not done: the header's **Login** still says Login rather than the player's name; bricks have no texture or edge yet;
+  music; a dark version of the look for those who want one.

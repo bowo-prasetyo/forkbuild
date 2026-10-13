@@ -150,6 +150,9 @@ export const worldContentMethods = {
     // source AnimalPresence is discard()'d, so it can't be re-caught or
     // re-decorated, and it isn't a live creature for later loaders either.
     decorateNearestReleasedAnimalHere() {
+        if (this.isLocalAvatarGuest()) {
+            throw new UserFacingError(message('worldRefusal.signIn'), { detail: 'WorldNavigationSession: a guest can\'t decorate a World' });
+        }
         const avatarPos = this.getAvatarPosition();
         if (!avatarPos) {
             throw new Error('WorldNavigationSession: cannot decorate a World without a live avatar position');
@@ -259,6 +262,9 @@ export const worldContentMethods = {
     // Same guard and authorization as other World mutations. Returns null,
     // never throws, when nothing nearby qualifies.
     undecorateNearestAnimalDecorationHere() {
+        if (this.isLocalAvatarGuest()) {
+            throw new UserFacingError(message('worldRefusal.signIn'), { detail: 'WorldNavigationSession: a guest can\'t undecorate a World' });
+        }
         const avatarPos = this.getAvatarPosition();
         if (!avatarPos) {
             throw new Error('WorldNavigationSession: cannot undecorate a World without a live avatar position');

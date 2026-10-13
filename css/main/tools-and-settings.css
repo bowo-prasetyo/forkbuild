@@ -9,10 +9,10 @@
 
 .tool-btn {
     padding: 0.5rem 0.75rem;
-    background: #1f1f1f;
-    border: 1px solid #2a2a2a;
+    background: var(--surface);
+    border: 1px solid var(--line);
     border-radius: 4px;
-    color: #b0b0b0;
+    color: var(--ink-muted);
     font-size: 0.85rem;
     font-weight: 500;
     cursor: pointer;
@@ -21,19 +21,19 @@
 }
 
 .tool-btn:hover {
-    background: #262626;
-    border-color: #3a3a3a;
-    color: #e0e0e0;
+    background: var(--surface-raised);
+    border-color: var(--line-strong);
+    color: var(--ink);
 }
 
 .tool-btn--active {
-    background: #234433;
-    border-color: #4caf7d;
-    color: #ffffff;
+    background: var(--accent-tint);
+    border-color: var(--accent);
+    color: var(--ink-strong);
 }
 
 .tool-btn--active:hover {
-    background: #2a5540;
+    background: var(--accent-tint);
 }
 
 /* Allow interaction with controls inside the overlay */
@@ -48,7 +48,7 @@
 
 .placement-hint {
     margin: 0.5rem 0 0;
-    color: #9b59b6;
+    color: #6b3880;
     font-size: 0.8rem;
     font-style: italic;
 }
@@ -72,28 +72,29 @@
     margin-top: 0.75rem;
 }
 .world-view-dirty {
-    color: #e0a34c;
+    color: #825617;
     font-size: 0.8rem;
 }
 .world-view-dirty--clean {
-    color: #707070;
+    color: var(--ink-faint);
 }
 .action-btn--publish {
     background: #8e44ad;
     color: #ffffff;
+    border-color: transparent;
 }
 .action-btn--publish:hover {
     background: #9b59b6;
 }
 .world-item-dirty {
-    color: #e0a34c;
+    color: #825617;
     flex-shrink: 0;
     margin-left: 0.35rem;
 }
 /* Operation Timeline (0.1.40) */
 .timeline-hint {
     margin: 0 0 0.5rem;
-    color: #707070;
+    color: var(--ink-faint);
     font-size: 0.75rem;
     font-style: italic;
 }
@@ -112,43 +113,43 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.3rem 0.5rem;
-    background: #1f1f1f;
-    border: 1px solid #2a2a2a;
+    background: var(--surface);
+    border: 1px solid var(--line);
     border-radius: 3px;
     font-size: 0.8rem;
     cursor: pointer;
 }
 .timeline-item:hover {
-    background: #2a2a2a;
-    border-color: #3a3a3a;
+    background: var(--surface-hover);
+    border-color: var(--line-strong);
 }
 .timeline-item--initial {
     font-style: italic;
 }
 .timeline-item--initial .timeline-desc {
-    color: #909090;
+    color: var(--ink-subtle);
 }
 .timeline-item--undone {
     opacity: 0.45;
 }
 .timeline-item--previewing {
-    background: #234433;
-    border-color: #4caf7d;
+    background: var(--accent-tint);
+    border-color: var(--accent);
 }
 .timeline-desc {
-    color: #d0d0d0;
+    color: var(--ink-soft);
     flex: 1;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 .timeline-children {
-    color: #707070;
+    color: var(--ink-faint);
     font-size: 0.7rem;
     flex-shrink: 0;
 }
 .timeline-time {
-    color: #707070;
+    color: var(--ink-faint);
     font-family: monospace;
     font-size: 0.7rem;
     flex-shrink: 0;
@@ -160,11 +161,11 @@
     gap: 0.5rem;
     margin-top: 0.5rem;
     padding: 0.4rem 0.5rem;
-    background: #234433;
-    border: 1px solid #4caf7d;
+    background: var(--accent-tint);
+    border: 1px solid var(--accent);
     border-radius: 3px;
     font-size: 0.8rem;
-    color: #d0d0d0;
+    color: var(--ink-soft);
 }
 /* Historical State Restoration (0.1.41) */
 .timeline-preview-actions {
@@ -175,7 +176,7 @@
 /* Document Duplication, Forking & Clipboard (0.1.42) */
 .clipboard-info {
     margin: 0;
-    color: #d0d0d0;
+    color: var(--ink-soft);
     font-size: 0.85rem;
 }
 /* Groups (0.1.43) */
@@ -186,19 +187,19 @@
 }
 .group-action-btn {
     padding: 0.1rem 0.4rem;
-    background: #2a2a2a;
-    border: 1px solid #3a3a3a;
+    background: var(--surface-hover);
+    border: 1px solid var(--line-strong);
     border-radius: 3px;
-    color: #d0d0d0;
+    color: var(--ink-soft);
     font-size: 0.7rem;
     cursor: pointer;
 }
 .group-action-btn:hover {
-    background: #333333;
+    background: var(--surface-pressed);
 }
 .group-action-btn--danger {
     border-color: #c0392b;
-    color: #e74c3c;
+    color: #822117;
 }
 /* Advanced selection (0.1.45) */
 .viewport,
@@ -207,7 +208,7 @@
 }
 .marquee-rect {
     position: absolute;
-    border: 1px solid #4caf7d;
+    border: 1px solid var(--accent);
     background: rgba(76, 175, 125, 0.12);
     pointer-events: none;
     z-index: 20;
@@ -222,7 +223,7 @@
     margin-bottom: 0.5rem;
 }
 .groups-panel-empty {
-    color: #707070;
+    color: var(--ink-faint);
     font-size: 0.8rem;
     margin: 0.25rem 0 0;
 }
@@ -244,8 +245,8 @@
 
 .avatar-preview-panel {
     flex: 0 0 200px;
-    background: #1a1a1a;
-    border: 1px solid #333;
+    background: var(--surface-low);
+    border: 1px solid var(--line-strong);
     border-radius: 8px;
     padding: 1rem;
     text-align: center;
@@ -259,13 +260,13 @@
 
 .avatar-preview-label {
     font-size: 8px;
-    fill: #c9c9c9;
+    fill: var(--ink-soft);
 }
 
 .avatar-preview-accessories {
     margin: 0.5rem 0 0;
     font-size: 0.75rem;
-    color: #909090;
+    color: var(--ink-subtle);
 }
 
 .avatar-settings-form {
@@ -290,14 +291,14 @@
 .avatar-settings-visibility {
     margin-top: 2rem;
     padding-top: 1.5rem;
-    border-top: 1px solid #2a2a2a;
+    border-top: 1px solid var(--line);
     max-width: 480px;
 }
 
 .avatar-settings-visibility h2 {
     margin: 0 0 0.5rem;
     font-size: 1.1rem;
-    color: #e0e0e0;
+    color: var(--ink);
 }
 
 .avatar-visibility-peers {
@@ -329,20 +330,20 @@
     flex-direction: column;
     gap: 0.2rem;
     padding: 0.75rem 1rem;
-    background: #121212;
-    border: 1px solid #2a2a2a;
+    background: var(--paper);
+    border: 1px solid var(--line);
     border-radius: 4px;
     text-decoration: none;
 }
 
 .network-settings-link:hover {
-    border-color: #4caf7d;
-    background: #182018;
+    border-color: var(--accent);
+    background: #f5f0e5;
 }
 
 .network-settings-link-title {
     font-weight: 600;
-    color: #e0e0e0;
+    color: var(--ink);
 }
 
 /* The Bitcoin and Base wallet switches (ui/components/NetworkWritersSetting.js),
@@ -350,8 +351,8 @@
 .network-writers-setting {
     margin-top: 1.25rem;
     padding: 0.75rem 1rem;
-    background: #121212;
-    border: 1px solid #2a2a2a;
+    background: var(--paper);
+    border: 1px solid var(--line);
     border-radius: 4px;
 }
 
@@ -443,7 +444,7 @@
     gap: 0.5rem;
     margin-bottom: 0.6rem;
     font-size: 0.9rem;
-    color: #e0e0e0;
+    color: var(--ink);
 }
 
 /* The Publications page's batch anchoring picker: one row per publication,
@@ -460,7 +461,7 @@
     width: 2.2rem;
     height: 2.2rem;
     padding: 0;
-    border: 1px solid #3a3a3a;
+    border: 1px solid var(--line-strong);
     border-radius: 4px;
     background: transparent;
     cursor: pointer;
@@ -477,7 +478,7 @@
     align-items: center;
     gap: 0.35rem;
     font-size: 0.85rem;
-    color: #c9c9c9;
+    color: var(--ink-soft);
     text-transform: capitalize;
 }
 
@@ -489,12 +490,12 @@
     align-items: center;
     gap: 0.4rem;
     font-size: 0.82rem;
-    color: #c9c9c9;
+    color: var(--ink-soft);
     margin-bottom: 0.4rem;
 }
 
 .world-view-avatar-toggle--disabled {
-    color: #707070;
+    color: var(--ink-faint);
 }
 
 /* World View's Advanced switch, last in the panel: a visitor's view until
@@ -504,10 +505,10 @@
     align-items: center;
     gap: 0.4rem;
     font-size: 0.82rem;
-    color: #c9c9c9;
+    color: var(--ink-soft);
     margin-top: 0.8rem;
     padding-top: 0.6rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid rgba(96, 72, 40, 0.08);
 }
 
 .world-view-advanced-hint {
@@ -572,7 +573,7 @@
 .world-view-camera-perspective-label {
     display: block;
     font-size: 0.75rem;
-    color: #909090;
+    color: var(--ink-subtle);
     margin-bottom: 0.3rem;
 }
 
@@ -583,8 +584,9 @@
 }
 
 .action-btn--active {
-    background: #3a6ea5;
+    background: var(--accent);
     color: #ffffff;
+    border-color: transparent;
 }
 
 /* World View presence trust diagnostics (0.2.38) — an unobtrusive
@@ -593,12 +595,12 @@
    diagnostic information, not a warning demanding attention. */
 .world-view-avatar-diagnostics {
     font-size: 0.78rem;
-    color: #909090;
+    color: var(--ink-subtle);
     margin: 0 0 0.5rem 0;
 }
 
 .world-view-avatar-diagnostics-detail {
-    color: #707070;
+    color: var(--ink-faint);
 }
 
 /* Nearby Avatars (0.2.43) — same list-of-cards shape
@@ -613,7 +615,7 @@
 .nearby-avatars-panel h4 {
     margin: 0 0 0.35rem 0;
     font-size: 0.8rem;
-    color: #a0a0a0;
+    color: var(--ink-muted);
     text-transform: uppercase;
     letter-spacing: 0.03em;
 }
@@ -632,14 +634,14 @@
 .nearby-avatars-item {
     display: flex;
     padding: 0.4rem 0.55rem;
-    background: #1f1f1f;
-    border: 1px solid #2a2a2a;
+    background: var(--surface);
+    border: 1px solid var(--line);
     border-radius: 4px;
     cursor: pointer;
 }
 
 .nearby-avatars-item:hover {
-    border-color: #3a3a3a;
+    border-color: var(--line-strong);
 }
 
 .nearby-avatars-item-info {
@@ -650,7 +652,7 @@
 }
 
 .nearby-avatars-item-name {
-    color: #d0d0d0;
+    color: var(--ink-soft);
     font-weight: 500;
     font-size: 0.85rem;
     white-space: nowrap;
@@ -663,12 +665,12 @@
 }
 
 .nearby-avatars-item-distance {
-    color: #909090;
+    color: var(--ink-subtle);
     font-size: 0.75rem;
 }
 
 .nearby-avatars-item-detail {
-    color: #707070;
+    color: var(--ink-faint);
     font-size: 0.72rem;
 }
 
@@ -683,13 +685,13 @@
 .your-data-section {
     margin-top: 1.75rem;
     padding-top: 1.25rem;
-    border-top: 1px solid #2a2a2a;
+    border-top: 1px solid var(--line);
 }
 
 .your-data-section h2 {
     margin: 0 0 0.6rem;
     font-size: 1.05rem;
-    color: #e0e0e0;
+    color: var(--ink);
 }
 
 .your-data-table {
@@ -701,13 +703,13 @@
 
 .your-data-table td {
     padding: 0.35rem 0.5rem;
-    border-bottom: 1px solid #222;
-    color: #d0d0d0;
+    border-bottom: 1px solid var(--line-soft);
+    color: var(--ink-soft);
 }
 
 .your-data-count {
     text-align: right;
-    color: #909090;
+    color: var(--ink-subtle);
     white-space: nowrap;
 }
 
@@ -718,7 +720,7 @@
     align-items: flex-start;
     margin: 0.5rem 0;
     font-size: 0.85rem;
-    color: #d0d0d0;
+    color: var(--ink-soft);
 }
 
 .your-data-checkbox input,
@@ -742,7 +744,7 @@
 }
 
 .visitor-count-setting a {
-    color: #4caf7d;
+    color: var(--accent-ink);
     text-decoration: none;
 }
 
@@ -753,7 +755,7 @@
 .your-data-section h3 {
     margin: 1rem 0 0.4rem;
     font-size: 0.95rem;
-    color: #d0d0d0;
+    color: var(--ink-soft);
 }
 
 .your-data-buttons {
@@ -766,7 +768,7 @@
 .your-data-folder {
     margin: 0.35rem 0;
     font-size: 0.85rem;
-    color: #d0d0d0;
+    color: var(--ink-soft);
 }
 
 /* Copy to another device: the one-off code as a QR code and a link. */
