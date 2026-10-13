@@ -1,9 +1,10 @@
 // The Editor's sound: a short cue for each edit the user makes
 // (core/EditorSoundCues.js), heard through the same kind of provider as World
 // View's (audio/WebAudioSoundscapeProvider.js, without ambience), with the
-// same device mute and volume.
+// same device mute and volume, and the Editor's own music (core/MusicScore.js).
 import { editorSoundCueFor, EDITOR_SOUND_CUE } from '../../core/EditorSoundCues.js';
 import { SoundPreference } from '../settings/SoundPreference.js';
+import { MUSIC_MOOD } from '../../core/MusicScore.js';
 
 export class EditorSoundService {
     constructor({ provider, settingsStore, editorSession }) {
@@ -21,6 +22,7 @@ export class EditorSoundService {
         if (this._unsubscribe || this._disposed) {
             return;
         }
+        this._provider.setMusicMood?.(MUSIC_MOOD.EDITOR);
         this._preference.apply();
         this._unsubscribe = this._editorSession.onCommandActivity((activity, command) => {
             const cue = editorSoundCueFor(activity, command);
@@ -62,6 +64,10 @@ export class EditorSoundService {
 
     toggleSpatial() {
         return this._preference.toggleSpatial();
+    }
+
+    toggleMusic() {
+        return this._preference.toggleMusic();
     }
 
     dispose() {

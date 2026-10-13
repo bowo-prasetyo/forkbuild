@@ -563,6 +563,8 @@ penggeser di sampingnya mengatur volume. Ini pengaturan yang sama dengan
 milik Tampilan Dunia, diingat di perangkat ini. Suara dimulai dengan klik
 atau tekanan tombol pertama Anda, sebagaimana diwajibkan browser.
 
+Musik diputar pelan saat Anda membangun, sedikit lebih riang daripada di Tampilan Dunia. Tombol **♪ Musik** di samping penggeser menyalakan atau mematikannya; pilihannya sama dengan di Tampilan Dunia.
+
 ## Menyimpan, menerbitkan, memulai ulang
 
 - **Simpan** (`Ctrl+S`) — menyimpan pekerjaan Anda di perangkat ini.

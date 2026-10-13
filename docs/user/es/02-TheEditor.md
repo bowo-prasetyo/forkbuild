@@ -586,6 +586,8 @@ misma configuración que la de la Vista del mundo, y se recuerda en este
 dispositivo. El sonido empieza con su primer clic o la primera tecla que
 presione, como exigen los navegadores.
 
+Mientras construye suena una música suave, algo más animada que la de la Vista del mundo. El botón **♪ Música** junto al control la activa o desactiva; es la misma elección que en la Vista del mundo.
+
 ## Guardar, publicar, empezar de nuevo
 
 - **Guardar** (`Ctrl+S`): conserva su trabajo en este dispositivo.

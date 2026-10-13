@@ -587,6 +587,8 @@ dieselbe Einstellung wie in der Weltansicht und wird auf diesem Gerät
 gespeichert. Der Ton beginnt mit Ihrem ersten Klick oder Tastendruck, wie
 Browser es verlangen.
 
+Beim Bauen spielt leise Musik, etwas lebhafter als in der Weltansicht. Die Schaltfläche **♪ Musik** neben dem Regler schaltet sie aus oder ein; es ist dieselbe Wahl wie in der Weltansicht.
+
 ## Speichern, veröffentlichen, neu beginnen
 
 - **Speichern** (`Strg+S`) — Ihre Arbeit auf diesem Gerät behalten.

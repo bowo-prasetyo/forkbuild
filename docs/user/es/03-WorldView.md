@@ -230,6 +230,8 @@ una tableta, use los botones de volumen del propio dispositivo. ForkBuild
 recuerda sus preferencias, incluida 3D o Estéreo, en este dispositivo. El
 sonido se pausa mientras la pestaña está oculta.
 
+La **música** suena suave bajo los sonidos: una melodía tranquila que su navegador va inventando, cálida de día y más lenta y grave al anochecer, con pausas silenciosas entre piezas para que se oigan los sonidos del propio mundo. Nunca suena dos veces exactamente igual. Actívela o desactívela con el botón **♪ Música** junto al control de volumen; el botón **Sonido** y el control la silencian y ajustan su volumen junto con todo lo demás. ForkBuild recuerda la elección en este dispositivo, para ambas vistas.
+
 ## Orientación y ubicaciones
 
 Junto a las coordenadas de su cámara, una pequeña **brújula** muestra hacia

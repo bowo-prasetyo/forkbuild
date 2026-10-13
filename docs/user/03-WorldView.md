@@ -247,6 +247,8 @@ by pressing `M`, and set how loud it is with the slider beside it; on a
 phone or tablet, use the device's own volume buttons. ForkBuild remembers
 your choices, including 3D or Stereo, on this device. Sound pauses while the tab is hidden.
 
+**Music** plays softly under the sounds: a gentle tune your browser makes up as it goes, warm by day and slower and lower after dark, with quiet spells between pieces so the world's own sounds come through. It never plays exactly the same twice. Turn it off or on with the **♪ Music** button beside the volume slider; the **Sound** button and the slider mute it and set its volume with everything else. ForkBuild remembers the choice on this device, for both views.
+
 ## Orientation and Locations
 
 Next to your camera coordinates, a small **compass** shows which way you're

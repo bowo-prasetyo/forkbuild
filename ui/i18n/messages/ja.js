@@ -60,6 +60,10 @@ export default Object.freeze({
     'sound.stereo': 'ステレオ',
     'sound.spatialHint': '音を3D空間に配置します（ヘッドホン推奨）。クリックすると左右のみになります',
     'sound.stereoHint': '音を左右に配置します。クリックすると3Dになります',
+    'sound.musicOn': '♪ 音楽オン',
+    'sound.musicOff': '♪ 音楽オフ',
+    'sound.turnMusicOn': '音楽をオンにする',
+    'sound.turnMusicOff': '音楽をオフにする',
 
     // The Language page (ui/views/LanguageSettingsView.js).
     'language.title': '言語',

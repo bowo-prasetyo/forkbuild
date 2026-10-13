@@ -60,6 +60,10 @@ export default Object.freeze({
     'sound.stereo': 'Stereo',
     'sound.spatialHint': 'Suara ditempatkan dalam 3D (paling baik dengan headphone); klik untuk kiri dan kanan saja',
     'sound.stereoHint': 'Suara ditempatkan di kiri dan kanan; klik untuk 3D',
+    'sound.musicOn': '♪ Musik nyala',
+    'sound.musicOff': '♪ Musik mati',
+    'sound.turnMusicOn': 'Nyalakan musik',
+    'sound.turnMusicOff': 'Matikan musik',
 
     // The Language page (ui/views/LanguageSettingsView.js).
     'language.title': 'Bahasa',

@@ -10,8 +10,9 @@
 // browser) with resume(), setLayerLevels(levels), playCue(cue),
 // playCreatureCue(cue), playEditorCue(cue), setEngine(engine),
 // setRemoteEngines(engines),
-// setListener(pose), setSpatial(spatial), setVolume(volume), setMuted(muted)
-// and dispose().
+// setListener(pose), setSpatial(spatial), setVolume(volume), setMuted(muted),
+// setMusic(enabled), setMusicMood(mood) and dispose(). The music's mood
+// follows the day: warm by day, slow and low after dark (core/MusicScore.js).
 // Browsers keep audio silent until the user interacts with the page, so the
 // view calls unlock() from its first key press or tap.
 import { ambientMixAt, ambientMixAtNight, silentAmbientMix } from '../../core/AmbientSoundscape.js';
@@ -19,6 +20,7 @@ import { advanceAvatarSound, createAvatarSoundState } from '../../core/AvatarSou
 import { advanceCreatureSound, createCreatureSoundState } from '../../core/CreatureSoundCues.js';
 import { SoundPreference } from '../settings/SoundPreference.js';
 import { editorSoundCueFor } from '../../core/EditorSoundCues.js';
+import { musicMoodFor } from '../../core/MusicScore.js';
 
 const DEFAULT_SAMPLE_INTERVAL_MS = 250;
 // Moving less than this since the last sample can't change what is heard.
@@ -178,6 +180,7 @@ export class WorldSoundscapeService {
             return;
         }
         const night = this._nightLevel();
+        this._provider.setMusicMood?.(musicMoodFor({ view: 'world', nightLevel: night }));
         if (this._lastSampledAt
             && Math.hypot(position.x - this._lastSampledAt.x, position.z - this._lastSampledAt.z) < RESAMPLE_DISTANCE
             && Math.abs(night - this._lastSampledNight) < RESAMPLE_NIGHT_STEP) {
@@ -206,6 +209,10 @@ export class WorldSoundscapeService {
 
     toggleSpatial() {
         return this._preference.toggleSpatial();
+    }
+
+    toggleMusic() {
+        return this._preference.toggleMusic();
     }
 
     dispose() {

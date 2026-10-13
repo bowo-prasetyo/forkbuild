@@ -221,6 +221,8 @@ deslizante ao lado; em um celular ou tablet, use os botões de volume do
 próprio aparelho. O ForkBuild lembra suas escolhas, incluindo 3D ou Estéreo,
 neste dispositivo. O som pausa enquanto a aba está oculta.
 
+A **música** toca baixinho sob os sons: uma melodia suave que o seu navegador vai inventando, calorosa de dia e mais lenta e grave depois que escurece, com pausas silenciosas entre as peças para que os sons do próprio mundo apareçam. Ela nunca toca exatamente igual duas vezes. Ligue ou desligue com o botão **♪ Música** ao lado do controle de volume; o botão **Som** e o controle a silenciam e ajustam o volume junto com todo o resto. O ForkBuild lembra a escolha neste dispositivo, para as duas visões.
+
 ## Orientação e locais
 
 Ao lado das coordenadas da câmera, uma pequena **bússola** mostra para onde

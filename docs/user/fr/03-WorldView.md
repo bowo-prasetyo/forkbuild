@@ -238,6 +238,8 @@ tablette, utilisez les boutons de volume de l’appareil. ForkBuild retient
 vos choix, y compris 3D ou Stéréo, sur cet appareil. Le son se met en
 pause quand l’onglet est masqué.
 
+La **musique** joue doucement sous les sons : un air paisible que votre navigateur invente au fil du temps, chaleureux le jour, plus lent et plus grave la nuit, avec des silences entre les morceaux pour laisser passer les sons du monde. Elle ne joue jamais deux fois exactement la même chose. Activez-la ou désactivez-la avec le bouton **♪ Musique** à côté du curseur de volume ; le bouton **Son** et le curseur la coupent et règlent son volume avec tout le reste. ForkBuild retient ce choix sur cet appareil, pour les deux vues.
+
 ## Orientation et emplacements
 
 À côté des coordonnées de votre caméra, une petite **boussole** indique

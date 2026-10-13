@@ -1522,7 +1522,9 @@ ticked; while on, the session hands the renderer DAY and `nightLevel()` is 0, so
             ├── audio/AvatarSoundSynth.js                  footsteps per surface, jump whoosh, landing thud
             ├── audio/VehicleEngineVoice.js                one held voice per ridden vehicle type
             ├── audio/CreatureSoundSynth.js                animal and resident sounds, through a gain and stereo pan
-            └── audio/EditorSoundSynth.js                  the Editor's edit sounds
+            ├── audio/EditorSoundSynth.js                  the Editor's edit sounds
+            └── audio/MusicPlayer.js                       the music: core/MusicScore.js#musicPhrase() scheduled on the
+                                                           audio clock, a phrase at a time, under the master volume
 
     Editor: EditorSession#onCommandActivity() → core/EditorSoundCues.js#editorSoundCueFor()
             → application/editor/EditorSoundService.js → WebAudioSoundscapeProvider({ ambience: false })
@@ -1615,6 +1617,16 @@ ticked; while on, the session hands the renderer DAY and `nightLevel()` is 0, so
   the avatar's ears (drawn ground plus `y` plus 1.6 m; a rider's position already includes the ground), else the
   camera, facing the camera's full direction with up made perpendicular to it. The deprecated
   `setPosition()`/`setOrientation()` are used where AudioParams are missing (older Safari).
+- **Music.** `core/MusicScore.js#musicPhrase(mood, index, seed)` is pure: four bars over a chord progression, a pad
+  holding each chord, a bass on the bar and a melody of chord tones and steps (folded between a fifth and two octaves
+  above the tonic), in one of three moods (EDITOR in C major at 88 bpm, DAY in F major at 72, NIGHT in A minor at 56,
+  sparser). Phrases 6 and 7 of every 8 are rests. `audio/MusicPlayer.js` schedules a phrase at a time 0.6 s ahead on
+  the audio clock (a 200 ms timer only tops it up), through its own gain at 0.65 under the provider's master, so it
+  fades with mute and volume. The provider makes the player the first time music is to play (`setMusic(true)`, sound
+  unmuted and unlocked, page shown) with a seed from its `random`, so each visit's tune differs; `setMusicMood()` takes
+  effect at the next phrase. `SoundPreference` keeps `music` in 'sound-settings' (default on) and applies it;
+  `WorldSoundscapeService#sample()` sets DAY or NIGHT from `musicMoodFor({ nightLevel })`, `EditorSoundService#start()`
+  EDITOR.
 - **Not yet.** Vehicles other people ride (presence doesn't say who is riding what), and a player's landing
   weight (their vertical speed isn't sent).
 

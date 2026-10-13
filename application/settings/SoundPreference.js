@@ -1,4 +1,4 @@
-// This device's mute, volume and 3D choice, applied to a sound provider and
+// This device's mute, volume, 3D and music choice, applied to a sound provider and
 // kept in a SoundSettingsStore. Shared by World View's and the Editor's sound,
 // so muting in one is muted in the other.
 export class SoundPreference {
@@ -16,6 +16,7 @@ export class SoundPreference {
         this._provider.setVolume(this._settings.volume);
         this._provider.setMuted(this._settings.muted);
         this._provider.setSpatial(this._settings.spatial);
+        this._provider.setMusic?.(this._settings.music);
     }
 
     settings() {
@@ -44,6 +45,19 @@ export class SoundPreference {
 
     toggleSpatial() {
         return this.setSpatial(!this._settings.spatial);
+    }
+
+    setMusic(music) {
+        this._settings = this._settingsStore.save({ ...this._settings, music: Boolean(music) });
+        this._provider.setMusic?.(this._settings.music);
+        if (this._settings.music && !this._settings.muted) {
+            this._provider.resume();
+        }
+        return this._settings;
+    }
+
+    toggleMusic() {
+        return this.setMusic(!this._settings.music);
     }
 
     setVolume(volume) {
