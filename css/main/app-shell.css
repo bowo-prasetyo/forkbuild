@@ -127,8 +127,10 @@ html, body {
 /* The look, in the More menu's App group (ui/components/LookChoice.js). */
 .look-choice {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 0.25rem;
+    min-width: 0;
     padding: 0.3rem 0.75rem;
 }
 
