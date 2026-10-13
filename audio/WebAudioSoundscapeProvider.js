@@ -5,7 +5,8 @@
 // (audio/VehicleEngineVoice.js, audio/VehicleEventSynth.js), animals,
 // residents and other players (audio/CreatureSoundSynth.js, and the same
 // vehicle sounds, placed where each rider is) and edits
-// (audio/EditorSoundSynth.js).
+// (audio/EditorSoundSynth.js), and the music under them all
+// (audio/MusicPlayer.js, core/MusicScore.js), in the mood the view asks for.
 // Every sound is synthesized from noise and oscillators, so nothing is
 // downloaded and there are no audio files to license. What to play comes from
 // the services in application/; these files only decide how it sounds.
@@ -23,6 +24,8 @@ import {
 } from './CreatureSoundSynth.js';
 import { playEditorSound, hasEditorSound } from './EditorSoundSynth.js';
 import { playMount, playDismount, playBrake } from './VehicleEventSynth.js';
+import { MusicPlayer } from './MusicPlayer.js';
+import { MUSIC_MOOD } from '../core/MusicScore.js';
 
 const LAYERS = ['wind', 'birds', 'insects', 'water', 'stream', 'leaves', 'pines'];
 // The avatar's own sounds sit in front of the ambience.
@@ -119,6 +122,11 @@ export class WebAudioSoundscapeProvider {
         this._unlocked = false;
         this._disposed = false;
         this._birdTimer = null;
+        // The music: whether it plays (the device's choice), in which mood,
+        // and its player, made the first time music is to play.
+        this._music = false;
+        this._musicMood = MUSIC_MOOD.DAY;
+        this._musicPlayer = null;
         this._onVisibilityChange = () => this._syncRunning();
         if (this._document && typeof this._document.addEventListener === 'function') {
             this._document.addEventListener('visibilitychange', this._onVisibilityChange);
@@ -140,6 +148,25 @@ export class WebAudioSoundscapeProvider {
             this._build();
         }
         this._syncRunning();
+    }
+
+    // Whether the music plays (SoundPreference, the device's choice). It
+    // also stops while sound is muted or the page hidden.
+    setMusic(enabled) {
+        this._music = Boolean(enabled);
+        this._syncMusic();
+    }
+
+    // The music's mood (core/MusicScore.js): the Editor's, or World View's by
+    // day or night. It changes at the next phrase.
+    setMusicMood(mood) {
+        if (!mood) return;
+        this._musicMood = mood;
+        if (this._musicPlayer) this._musicPlayer.setMood(mood);
+    }
+
+    get musicPlaying() {
+        return Boolean(this._musicPlayer && this._musicPlayer.enabled);
     }
 
     setLayerLevels(levels) {
@@ -409,6 +436,10 @@ export class WebAudioSoundscapeProvider {
             this._clearTimeout(this._birdTimer);
             this._birdTimer = null;
         }
+        if (this._musicPlayer) {
+            this._musicPlayer.dispose();
+            this._musicPlayer = null;
+        }
         for (const source of this._sources) {
             try {
                 source.stop();
@@ -467,6 +498,22 @@ export class WebAudioSoundscapeProvider {
         } else if (context.state === 'running' && typeof context.suspend === 'function') {
             context.suspend().catch(() => {});
         }
+        this._syncMusic();
+    }
+
+    _syncMusic() {
+        const play = this._music && this._shouldRun();
+        if (!this._musicPlayer && play && this._context && this._master) {
+            this._musicPlayer = new MusicPlayer({
+                context: this._context,
+                output: this._master,
+                seed: Math.floor(this._random() * 1e9),
+                setTimeoutFn: this._setTimeout,
+                clearTimeoutFn: this._clearTimeout
+            });
+            this._musicPlayer.setMood(this._musicMood);
+        }
+        if (this._musicPlayer) this._musicPlayer.setEnabled(play);
     }
 
     _build() {

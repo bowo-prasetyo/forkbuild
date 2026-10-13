@@ -1,4 +1,4 @@
-// The sound button, volume slider and (in World View) 3D toggle, floating over
+// The sound button, volume slider, music toggle and (in World View) 3D toggle, floating over
 // the viewport. Presentational only: the host owns the settings and the
 // soundscape.
 import { t } from '../i18n/i18n.js';
@@ -9,10 +9,11 @@ export default {
         muted: { type: Boolean, default: false },
         volume: { type: Number, default: 0.5 },
         spatial: { type: Boolean, default: true },
+        music: { type: Boolean, default: true },
         // Only World View places sounds, so only it offers 3D.
         showSpatial: { type: Boolean, default: false }
     },
-    emits: ['toggle', 'volume', 'toggle-spatial'],
+    emits: ['toggle', 'volume', 'toggle-spatial', 'toggle-music'],
     computed: {
         percent() {
             return Math.round(this.volume * 100);
@@ -44,6 +45,14 @@ export default {
                 :aria-label="t('sound.volume')"
                 @input="onInput"
             >
+            <button
+                v-if="!muted"
+                type="button"
+                class="action-btn world-view-sound-music"
+                :aria-pressed="music ? 'true' : 'false'"
+                :title="music ? t('sound.turnMusicOff') : t('sound.turnMusicOn')"
+                @click="$emit('toggle-music')"
+            >{{ music ? t('sound.musicOn') : t('sound.musicOff') }}</button>
             <button
                 v-if="!muted && showSpatial"
                 type="button"

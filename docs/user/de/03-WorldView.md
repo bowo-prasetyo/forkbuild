@@ -232,6 +232,8 @@ oder Tablet nutzen Sie die Lautstärketasten des Geräts. ForkBuild merkt
 sich Ihre Wahl, einschließlich 3D oder Stereo, auf diesem Gerät. Der Ton
 pausiert, solange der Tab verborgen ist.
 
+**Musik** spielt leise unter den Klängen: eine sanfte Melodie, die Ihr Browser beim Spielen erfindet, warm am Tag und langsamer und tiefer nach Einbruch der Dunkelheit, mit stillen Pausen zwischen den Stücken, damit die Klänge der Welt durchkommen. Sie klingt nie zweimal genau gleich. Schalten Sie sie mit der Schaltfläche **♪ Musik** neben dem Lautstärkeregler aus oder ein; die Schaltfläche **Ton** und der Regler schalten sie mit allem anderen stumm und stellen ihre Lautstärke ein. ForkBuild merkt sich die Wahl auf diesem Gerät, für beide Ansichten.
+
 ## Orientierung und Orte
 
 Neben den Kamerakoordinaten zeigt ein kleiner **Kompass**, in welche

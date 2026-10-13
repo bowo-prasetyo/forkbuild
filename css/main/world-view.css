@@ -821,7 +821,8 @@
     width: 6rem;
 }
 
-.world-view-sound-spatial {
+.world-view-sound-spatial,
+.world-view-sound-music {
     background: transparent;
     color: var(--ink);
     border: 1px solid rgba(96, 72, 40, 0.3);
@@ -829,7 +830,8 @@
     padding: 0.1rem 0.4rem;
 }
 
-.world-view-sound-spatial[aria-pressed="true"] {
+.world-view-sound-spatial[aria-pressed="true"],
+.world-view-sound-music[aria-pressed="true"] {
     border-color: rgba(76, 175, 125, 0.8);
 }
 

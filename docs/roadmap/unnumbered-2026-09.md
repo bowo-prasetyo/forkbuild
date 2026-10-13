@@ -6431,3 +6431,31 @@ looks hand-built, and every screenshot and shared picture with it).
   beside the night glow).
 - Not done: studs or bevelled geometry; a per-brick choice of surface (it follows the brick's kind and, for the plain
   blocks, its colour); music.
+
+## Music under the building (unnumbered, 2026-10-13)
+
+**Why.** ForkBuild had wind, birds, footsteps and edit sounds, but no music; the third creative-direction audit of
+2026-10-12 (docs/reviews/CreativeDirection-2026-10-12c.md) and docs/Pillars.md's "Look" left it undecided. A quiet,
+unhurried tune is what gives an afternoon of building its mood. Pillar served: building feels joyful.
+
+- **The score** (core/MusicScore.js): pure and seeded, so nothing is downloaded, stored or sent. A phrase is four bars
+  over a chord progression: a soft pad holding the chord, a bass on the bar, and a melody of chord tones and passing
+  notes, kept within reach (never shrill, never muddy). Three moods: the Editor's (C major, a little lively), World
+  View's by day (F major, warm and unhurried) and by night (A minor, slow, low and sparse). Every piece of eight
+  phrases ends with two of silence, so the music comes and goes and the world's own sounds come through.
+- **The player** (audio/MusicPlayer.js): a music-box melody (a sine with a quiet octave), a warm pad (two detuned
+  triangles through a low-pass) and a round sine bass, scheduled a phrase at a time on the audio clock so timing never
+  depends on a timer, a little below the ambience at the same volume. It fades in and out.
+- **When it plays** (audio/WebAudioSoundscapeProvider.js): only while music is chosen, sound is on, audio is unlocked
+  by a gesture and the page is shown; each visit draws its own seed, so the tune never repeats exactly. World View
+  turns to the night's tune after dark (`musicMoodFor()`), at the next phrase.
+- **The choice** (core/SoundSettings.js, application/settings/SoundPreference.js): `music`, on by default, kept with
+  mute, volume and 3D in 'sound-settings'; an older saved choice reads as on. A **♪ Music** button beside the volume
+  slider in both views turns it off or on; the **Sound** button and `M` mute it with everything else.
+- Docs: Pillars' "Look", Privacy, docs/Architecture.md, and the sound sections of the World View and Editor guides in
+  every language.
+- Tests: `MusicScore` (the same notes for the same seed, every note in key and within its phrase, the melody in reach,
+  rests ending each piece, the moods' tempo and density, `musicMoodFor()`, the setting's default and keeping, World
+  View and the Editor handing choice and mood to the provider); `MusicBrowser` (a real OfflineAudioContext: every mood
+  heard, never clipping, silent while off; the provider playing only while chosen, unmuted, unlocked and shown).
+- Not done: a dark version of the look; music for other places (a plaza's own tune, a resident's song).

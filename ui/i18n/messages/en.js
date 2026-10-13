@@ -62,6 +62,10 @@ export default Object.freeze({
     'sound.stereo': 'Stereo',
     'sound.spatialHint': 'Sounds are placed in 3D (best with headphones); click for left and right only',
     'sound.stereoHint': 'Sounds are placed left and right; click for 3D',
+    'sound.musicOn': '♪ Music on',
+    'sound.musicOff': '♪ Music off',
+    'sound.turnMusicOn': 'Turn music on',
+    'sound.turnMusicOff': 'Turn music off',
 
     // The Language page (ui/views/LanguageSettingsView.js).
     'language.title': 'Language',

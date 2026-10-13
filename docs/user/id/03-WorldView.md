@@ -226,6 +226,8 @@ tombol volume perangkat itu sendiri. ForkBuild mengingat pilihan Anda,
 termasuk 3D atau Stereo, di perangkat ini. Suara berhenti selama tabnya
 tersembunyi.
 
+**Musik** diputar pelan di bawah suara-suara: nada lembut yang dikarang peramban Anda sambil berjalan, hangat di siang hari serta lebih lambat dan rendah setelah gelap, dengan jeda hening di antara lagu agar suara dunia itu sendiri tetap terdengar. Musik ini tidak pernah persis sama dua kali. Nyalakan atau matikan dengan tombol **♪ Musik** di samping penggeser volume; tombol **Suara** dan penggeser membisukan serta mengatur volumenya bersama yang lain. ForkBuild mengingat pilihan ini di perangkat ini, untuk kedua tampilan.
+
 ## Orientasi dan Lokasi
 
 Di samping koordinat kamera Anda, sebuah **kompas** kecil menunjukkan ke

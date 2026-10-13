@@ -596,6 +596,8 @@ ou en appuyant sur `M` (listé dans le panneau des raccourcis clavier,
 la Vue du Monde, mémorisé sur cet appareil. Le son démarre à votre premier
 clic ou appui sur une touche, comme l’exigent les navigateurs.
 
+Une musique douce accompagne la construction, un peu plus vive que celle de la Vue du Monde. Le bouton **♪ Musique** à côté du curseur l’active ou la désactive ; c’est le même choix que dans la Vue du Monde.
+
 ## Enregistrer, publier, recommencer
 
 - **Enregistrer** (`Ctrl+S`) — garder votre travail sur cet appareil.

@@ -555,6 +555,8 @@ teclado, `?`); o controle deslizante ao lado define o volume. É a mesma
 configuração da Visão do mundo, lembrada neste dispositivo. O som começa com
 seu primeiro clique ou tecla, como os navegadores exigem.
 
+Enquanto você constrói, toca uma música suave, um pouco mais animada que a da Visão do mundo. O botão **♪ Música** ao lado do controle a liga ou desliga; é a mesma escolha da Visão do mundo.
+
 ## Salvar, publicar, recomeçar
 
 - **Salvar** (`Ctrl+S`) — guarda seu trabalho neste dispositivo.

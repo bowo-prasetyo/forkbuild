@@ -1134,8 +1134,8 @@ export default {
         }
 
         const {
-            soundAvailable, soundMuted, soundVolume, soundSpatial, startSound, stopSound, toggleSound, setSoundVolume,
-            toggleSoundSpatial, onSoundKeyDown
+            soundAvailable, soundMuted, soundVolume, soundSpatial, soundMusic, startSound, stopSound, toggleSound, setSoundVolume,
+            toggleSoundSpatial, toggleSoundMusic, onSoundKeyDown
         } = useWorldSoundscape({ createWorldSoundscape: inject('createWorldSoundscape', null), session });
 
         const {
@@ -1327,9 +1327,11 @@ export default {
             soundMuted,
             soundVolume,
             soundSpatial,
+            soundMusic,
             toggleSound,
             setSoundVolume,
             toggleSoundSpatial,
+            toggleSoundMusic,
             touchPadVisible,
             panelOpen,
             togglePanel,
@@ -1716,10 +1718,12 @@ export default {
                 :muted="soundMuted"
                 :volume="soundVolume"
                 :spatial="soundSpatial"
+                :music="soundMusic"
                 :show-spatial="true"
                 @toggle="toggleSound"
                 @volume="setSoundVolume"
                 @toggle-spatial="toggleSoundSpatial"
+                @toggle-music="toggleSoundMusic"
             />
             <button
                 v-if="touchInput && hasLocalAvatar"

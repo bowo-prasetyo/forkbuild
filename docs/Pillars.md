@@ -182,7 +182,16 @@ stone (core/BrickSurface.js). A plain block is read by its colour: grass
 green is grass, pale sand smooth, dark brown timber, the rest laid in
 courses. The brick's colour still decides its colour.
 
-Not decided yet: music, and a dark version for those who ask for one.
+Music plays softly under the world's sounds (2026-10-13): a gentle tune
+made up as it goes from a seed (core/MusicScore.js), a music-box melody over
+a warm pad and a round bass, synthesized like every other sound, so nothing
+is downloaded. It has three moods: the Editor's a little lively, World
+View's warm by day and slow and low after dark. Pieces end in quiet spells,
+so it comes and goes rather than droning, and it sits below the ambience.
+One **♪ Music** button turns it off; mute and volume take it with
+everything else.
+
+Not decided yet: a dark version for those who ask for one.
 
 ## What we are not making
 

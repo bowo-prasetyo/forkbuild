@@ -2,19 +2,21 @@ import { ref } from 'vue';
 
 // The sound button, volume slider and M key shared by World View and the
 // Editor. `createSound()` makes the view's sound service (start(), unlock(),
-// settings(), toggleMuted(), setVolume(), dispose()), or returns null when the
+// settings(), toggleMuted(), setVolume(), toggleMusic(), dispose()), or returns null when the
 // app provides none, in which case no control is shown.
 export function useSoundControls(createSound) {
     const soundAvailable = ref(false);
     const soundMuted = ref(false);
     const soundVolume = ref(0.5);
     const soundSpatial = ref(true);
+    const soundMusic = ref(true);
     let service = null;
 
     function applySettings(settings) {
         soundMuted.value = settings.muted;
         soundVolume.value = settings.volume;
         soundSpatial.value = settings.spatial;
+        soundMusic.value = settings.music !== false;
     }
 
     // Browsers only let audio start from a user gesture, and iOS can suspend
@@ -68,6 +70,12 @@ export function useSoundControls(createSound) {
         }
     }
 
+    function toggleSoundMusic() {
+        if (service && typeof service.toggleMusic === 'function') {
+            applySettings(service.toggleMusic());
+        }
+    }
+
     // M without modifiers toggles sound. Returns whether it handled the key.
     function onSoundKeyDown(event) {
         if (!service || event.ctrlKey || event.metaKey || event.altKey || event.key.toLowerCase() !== 'm') {
@@ -86,7 +94,7 @@ export function useSoundControls(createSound) {
     }
 
     return {
-        soundAvailable, soundMuted, soundVolume, soundSpatial,
-        startSound, stopSound, toggleSound, setSoundVolume, toggleSoundSpatial, onSoundKeyDown, sound
+        soundAvailable, soundMuted, soundVolume, soundSpatial, soundMusic,
+        startSound, stopSound, toggleSound, setSoundVolume, toggleSoundSpatial, toggleSoundMusic, onSoundKeyDown, sound
     };
 }

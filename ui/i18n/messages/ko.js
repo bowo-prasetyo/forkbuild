@@ -63,6 +63,10 @@ export default Object.freeze({
     'sound.stereo': '스테레오',
     'sound.spatialHint': '소리가 3D로 배치됩니다(헤드폰 권장). 클릭하면 좌우로만 배치합니다',
     'sound.stereoHint': '소리가 좌우로 배치됩니다. 클릭하면 3D로 바뀝니다',
+    'sound.musicOn': '♪ 음악 켜짐',
+    'sound.musicOff': '♪ 음악 꺼짐',
+    'sound.turnMusicOn': '음악 켜기',
+    'sound.turnMusicOff': '음악 끄기',
 
     // The Language page (ui/views/LanguageSettingsView.js).
     'language.title': '언어',

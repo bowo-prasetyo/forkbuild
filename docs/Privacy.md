@@ -37,7 +37,7 @@ send it:
 - your avatar profile (walking World View before you choose a name, you
   are a guest: that avatar is kept nowhere, not even here, and is never
   sent to anyone), settings (including whether World View plays sound,
-  how loud, and in 3D or stereo, whether World View shows its advanced
+  how loud, in 3D or stereo, and with or without music, whether World View shows its advanced
   tools, whether it is always day there, whether the sun and the moon cast shadows there, where Publish sends your builds, and the language you chose; when you
   haven't chosen one, ForkBuild reads the browser's preferred languages on
   the device and sends them nowhere), and a TURN server's username and credential

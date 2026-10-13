@@ -398,8 +398,10 @@ export default {
                         v-if="soundAvailable"
                         :muted="soundMuted"
                         :volume="soundVolume"
+                        :music="soundMusic"
                         @toggle="toggleSound"
                         @volume="setSoundVolume"
+                        @toggle-music="toggleSoundMusic"
                     />
                 </div>
             </div>
@@ -1275,7 +1277,7 @@ export default {
         // A short sound for each edit, with World View's mute and volume.
         const createEditorSound = inject('createEditorSound', null);
         const {
-            soundAvailable, soundMuted, soundVolume, startSound, stopSound, toggleSound, setSoundVolume, onSoundKeyDown, sound
+            soundAvailable, soundMuted, soundVolume, soundMusic, startSound, stopSound, toggleSound, setSoundVolume, toggleSoundMusic, onSoundKeyDown, sound
         } = useSoundControls(() => (typeof createEditorSound === 'function' ? createEditorSound({ editorSession }) : null));
 
         function onDocumentSaved() {
@@ -1630,8 +1632,10 @@ export default {
             soundAvailable,
             soundMuted,
             soundVolume,
+            soundMusic,
             toggleSound,
             setSoundVolume,
+            toggleSoundMusic,
             onDocumentSaved,
             viewport,
             touchInput,
