@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: d8dfa742e1512331 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 84ecfec9734a26aa -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -9,6 +9,9 @@ O Editor é onde você constrói. Este guia mostra as ferramentas, como
 selecionar e transformar blocos e como organizar sua construção com grupos.
 
 ## O layout
+
+![O Editor](../img/pt-BR/editor.jpg)
+*A barra de ferramentas no alto; à esquerda, as ferramentas, o nome da construção, o painel Seleção e a Biblioteca de construção; no meio, a visão 3D.*
 
 ```
 ┌─────────────────────────────────────────────────────────────┐

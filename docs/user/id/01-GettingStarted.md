@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 165df6470706acd1 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 49f2f034ec1550ac -->
 # 01 — Memulai
 
 <!-- languages -->
@@ -22,6 +22,9 @@ Bagian lain halaman ini menjelaskan setiap langkah, dan cara memulai dari
 lahan kosong.
 
 ## Membuka ForkBuild
+
+![Layar Beranda ForkBuild](../img/id/home.jpg)
+*Layar Beranda: bilah atas, tiga cara masuk, dan tantangan membangun minggu ini.*
 
 ForkBuild berjalan di browser web modern mana pun: buka situs yang di-host
 dan Anda tiba di layar **Beranda**. (Untuk menjalankan salinan Anda
@@ -111,6 +114,9 @@ menampilkan semuanya sekaligus.
     [Memasang ForkBuild](#memasang-forkbuild))
 
 ## Menempatkan balok pertama Anda
+
+![Editor dengan rumah dari Beranda terbuka](../img/id/editor.jpg)
+*Editor dengan rumah dari Beranda terbuka: alat Anda dan Pustaka Bangunan di kiri, bangunannya di tengah, dan kartu Bangunan pertama Anda.*
 
 Saat pertama kali Anda membuka Editor, kartu **Bangunan pertama Anda** di
 sudut tampilan 3D memandu Anda melalui enam langkah dan mencentang

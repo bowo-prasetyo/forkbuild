@@ -59,6 +59,8 @@ filter to run matching files only: `npm run test:node -- Avatar`.
    `docs/Architecture.md` or `docs/Protocol.md`, edited in place;
    `docs/Privacy.md` if the app contacts a new server or stores something new,
    and `docs/CapabilityMatrix.md` if what a surface may change is different.
+   After a visible change to Home, the Editor or World View, retake the
+   guide's pictures with `node scripts/user-guide-screenshots.mjs`.
    Add an entry to the roadmap describing what changed and why.
 5. Open a pull request. CI runs the full test suite; it must pass.
 

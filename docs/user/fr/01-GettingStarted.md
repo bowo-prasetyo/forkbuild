@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 165df6470706acd1 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 49f2f034ec1550ac -->
 # 01 — Premiers pas
 
 <!-- languages -->
@@ -24,6 +24,9 @@ La suite de cette page explique chaque étape, et comment partir d’un
 terrain vide à la place.
 
 ## Ouvrir ForkBuild
+
+![L’écran d’Accueil de ForkBuild](../img/fr/home.jpg)
+*L’écran d’Accueil : la barre du haut, les trois façons de commencer et le défi de construction de la semaine.*
 
 ForkBuild fonctionne dans n’importe quel navigateur web récent : ouvrez le
 site hébergé et vous arrivez sur l’écran d’**Accueil**. (Pour faire tourner
@@ -115,6 +118,9 @@ montre tous à la fois.
     [Installer ForkBuild](#installer-forkbuild))
 
 ## Placer votre première brique
+
+![L’Éditeur avec la maison de l’Accueil ouverte](../img/fr/editor.jpg)
+*L’Éditeur avec la maison de l’Accueil ouverte : vos outils et la Bibliothèque de construction à gauche, la construction au milieu, et la carte Votre première construction.*
 
 La première fois que vous ouvrez l’Éditeur, une carte **Votre première
 construction** dans un coin de la vue 3D vous guide à travers six étapes et

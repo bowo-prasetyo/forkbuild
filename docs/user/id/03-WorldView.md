@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: da5501ad67f233f7 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: ccdc007eba11d015 -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
@@ -36,6 +36,9 @@ jaringan di balik Dunia dijelaskan di akhir, di
 [Alat lanjutan](#alat-lanjutan).
 
 ## Membuka Tampilan Dunia
+
+![Tampilan Dunia di alun-alun tantangan](../img/id/world-view.jpg)
+*Tampilan Dunia di alun-alun tantangan: panel samping di kiri, avatar Anda di alun-alun, serta suara dan kompas di kanan atas.*
 
 **Jalan-jalan** di menu utama membuka Tampilan Dunia di alun-alun tantangan
 minggu ini, tanpa perlu bangunan sendiri. Alun-alun itu adalah alun-alun

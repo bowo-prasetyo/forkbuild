@@ -21,6 +21,9 @@ plot instead.
 
 ## Opening ForkBuild
 
+![ForkBuild's Home screen](img/en/home.jpg)
+*The Home screen: the top bar, the three ways in, and this week's build challenge.*
+
 ForkBuild runs in any current web browser: open the hosted site and you
 land on the **Home** screen. (To run a copy of your own, see
 [Running your own copy](#running-your-own-copy) at the end of this page.)
@@ -103,6 +106,9 @@ at once.
     [Installing ForkBuild](#installing-forkbuild))
 
 ## Placing your first brick
+
+![The Editor with Home's house open](img/en/editor.jpg)
+*The Editor with Home's house open: your tools and the Build Library on the left, the build in the middle, and the Your first build card.*
 
 The first time you open the Editor, a **Your first build** card in the
 corner of the 3D view walks you through six steps and ticks each one off

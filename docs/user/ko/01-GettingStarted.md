@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 165df6470706acd1 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 49f2f034ec1550ac -->
 # 01 — 시작하기
 
 <!-- languages -->
@@ -21,6 +21,9 @@
 설명합니다.
 
 ## ForkBuild 열기
+
+![ForkBuild의 홈 화면](../img/ko/home.jpg)
+*홈 화면: 맨 위 막대, 시작하는 세 가지 방법, 이번 주 건축 챌린지.*
 
 ForkBuild는 최신 웹 브라우저라면 어디서든 실행됩니다: 호스팅된 사이트를
 열면 **홈** 화면이 나타납니다. (직접 사본을 실행하는 방법은 이 페이지 끝의
@@ -99,6 +102,9 @@ ForkBuild는 최신 웹 브라우저라면 어디서든 실행됩니다: 호스�
     ([ForkBuild 설치하기](#forkbuild-설치하기) 참고)
 
 ## 첫 블록 놓기
+
+![홈의 집을 연 에디터](../img/ko/editor.jpg)
+*홈의 집을 연 에디터: 왼쪽에 도구와 빌드 라이브러리, 가운데에 작품, 그리고 나의 첫 작품 카드.*
 
 에디터를 처음 열면 3D 보기 모서리의 **나의 첫 작품** 카드가 여섯 단계를
 안내하고, 한 단계를 마칠 때마다 체크합니다. 마지막 단계는 게시한 내 작품

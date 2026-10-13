@@ -9,6 +9,9 @@ transform bricks, and how to organize your build with groups.
 
 ## The layout
 
+![The Editor](img/en/editor.jpg)
+*The toolbar along the top; the tools, the build's name, the Selection panel and the Build Library on the left; the 3D view in the middle.*
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │ Toolbar: Save · Publish · New · Export · Import · Recent ·  │

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: da5501ad67f233f7 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: ccdc007eba11d015 -->
 # 03 — Visão do mundo
 
 <!-- languages -->
@@ -36,6 +36,9 @@ As ferramentas de rede por trás do Mundo são descritas no fim, em
 [Ferramentas avançadas](#ferramentas-avançadas).
 
 ## Abrindo a Visão do mundo
+
+![A Visão do mundo na praça do desafio](../img/pt-BR/world-view.jpg)
+*A Visão do mundo na praça do desafio: o painel lateral à esquerda, seu avatar na praça, e o som e a bússola no canto superior direito.*
 
 **Passear**, no menu principal, abre a Visão do mundo na praça do desafio
 desta semana, sem precisar de uma construção sua. A praça é a praça da vila:

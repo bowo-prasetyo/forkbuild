@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: d8dfa742e1512331 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 84ecfec9734a26aa -->
 # 02 — エディター
 
 <!-- languages -->
@@ -9,6 +9,9 @@
 変形、グループによる作品の整理について説明します。
 
 ## 画面の構成
+
+![エディター](../img/ja/editor.jpg)
+*上にツールバー。左に道具、作品の名前、選択パネル、ビルドライブラリ。中央に 3D ビュー。*
 
 ```
 ┌─────────────────────────────────────────────────────────────┐

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: d8dfa742e1512331 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 84ecfec9734a26aa -->
 # 02 — Editor
 
 <!-- languages -->
@@ -10,6 +10,9 @@ cara memilih dan mentransformasi balok, dan cara menata bangunan Anda
 dengan grup.
 
 ## Tata letak
+
+![Editor](../img/id/editor.jpg)
+*Bilah alat di atas; di kiri, alat, nama bangunan, panel Pilihan, dan Pustaka Bangunan; di tengah, tampilan 3D.*
 
 ```
 ┌─────────────────────────────────────────────────────────────┐

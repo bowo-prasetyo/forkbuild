@@ -456,9 +456,24 @@ English. Bring the translation up to date, then `--stamp` it, which takes
 the banner away. The check also fails on a link in a translation that
 leads to a missing page or heading.
 
+**Pictures.** Getting Started, The Editor and World View show pictures of
+the main screens: Home, the Editor and World View at the challenge plaza.
+Each language has its own, in `docs/user/img/<code>/`, taken in that
+language by
+
+```
+node scripts/user-guide-screenshots.mjs ja
+```
+
+(every language without a code). A translation shows its own language's
+pictures (`../img/ja/home.jpg`), and writes their alt text and caption in its
+language. Take them again after a visible change to one of these screens.
+`tests/UserGuideScreenshots.test.js` fails while a shipped language has no
+pictures or a page names one that isn't there.
+
 Adding a language to the user guide: add it to `LANGUAGES` in
-`scripts/check-doc-translations.mjs`, with its out-of-date banner, and
-create its folder.
+`scripts/check-doc-translations.mjs`, with its out-of-date banner, create
+its folder, and take its pictures.
 
 ## Adding a language
 

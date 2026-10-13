@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: d8dfa742e1512331 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 84ecfec9734a26aa -->
 # 02 — 에디터
 
 <!-- languages -->
@@ -12,6 +12,9 @@
 변환하는 방법, 그룹으로 작품을 정리하는 방법을 다룹니다.
 
 ## 레이아웃
+
+![에디터](../img/ko/editor.jpg)
+*위쪽에 툴바, 왼쪽에 도구, 작품 이름, 선택 패널, 빌드 라이브러리, 가운데에 3D 보기.*
 
 ```
 ┌─────────────────────────────────────────────────────────────┐

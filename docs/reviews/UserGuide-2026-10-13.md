@@ -207,11 +207,13 @@ the toolbar rather than under **File**. **Fixed.**
    stamped (see the roadmap entry "The user guide's fixes, in every
    language"). The English of 11 pages had changed, so their translations
    had carried the standard "the English has changed" banner until then.
-2. **No pictures.** The guide has no screenshots or diagrams apart from
-   two ASCII sketches. One picture each of Home, the Editor's layout and
-   World View's panel would do more for a newcomer than any rewrite. They
-   need a way to keep them current in two looks and eight languages, so
-   it's a decision, not a quick fix.
+2. **No pictures.** *Done the same day:* Getting Started, The Editor and
+   World View now show Home, the Editor and World View at the challenge
+   plaza, in each of the eight languages, taken by
+   `scripts/user-guide-screenshots.mjs` (see the roadmap entry "Pictures of
+   the main screens, in every language"). Only the light look is shown.
+   Until then the guide had no screenshots or diagrams apart from two ASCII
+   sketches.
 3. **Page titles still use protocol words.** "Publishing & Forking" and
    "Identity & Login" name a page by words Pillars says not to show a
    newcomer (fork, Login). Renaming changes file names or headings that
