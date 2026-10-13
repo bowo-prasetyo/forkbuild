@@ -5,6 +5,10 @@
 [English](../05-IdentityAndLogin.md) · [Deutsch](../de/05-IdentityAndLogin.md) · [Español](../es/05-IdentityAndLogin.md) · **Français** · [Bahasa Indonesia](../id/05-IdentityAndLogin.md) · [日本語](../ja/05-IdentityAndLogin.md) · [한국어](../ko/05-IdentityAndLogin.md) · [Português (Brasil)](../pt-BR/05-IdentityAndLogin.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../05-IdentityAndLogin.md).
+<!-- /stale -->
+
 ForkBuild n’a ni mot de passe ni serveur de comptes central. **Votre
 identité est une paire de clés cryptographiques stockée dans ce
 navigateur** — la même clé qui signe tout ce que vous construisez,

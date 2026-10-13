@@ -7,14 +7,41 @@
 Short answers to the questions people most often run into, each linking to
 the guide that explains it in full.
 
+## Getting around
+
+### Where did the Editor, the Repository and Login go?
+
+They were renamed in the menu. **Build** opens the Editor, **Explore** is
+what used to be the Repository, and **Choose a name** (or your name, once
+you have one) replaces Login. **Walk** opens the World at this week's
+challenge plaza. See
+[Finding your way around](01-GettingStarted.md#finding-your-way-around).
+
+### I can't find My Avatar, Peers or Network Settings
+
+They're under **More** in the top bar (on a phone, under **Menu**):
+**You** has My Avatar, My Identities and Your Data; **People** has Peers,
+Following and Conversations; **Advanced** has Publications and Network
+Settings. Clicking your name in the top-right corner also opens My Avatar,
+My Identities and Your Data.
+
 ## Publishing and sharing
 
-### I published my creation, but my friend can't find it in their Repository
+### I published my build, but my friend can't find it in Explore
 
-Publishing only stores the creation on your own device and lists it in
-*your* Repository. Nothing is sent anywhere until you choose to:
+Unless you chose **Everyone** when Publish asked
+[Who can find it?](04-PublishingAndForking.md#who-can-find-it), publishing
+only stores the build on your own device and lists it in *your* Explore.
+To get it to your friend:
 
-- **Share with Peers**, under your creation in the Repository, offers it to
+- **Send the link.** Publish shows **Copy link** (and **Share…** where your
+  device can share); the build travels inside the link, so your friend can
+  open it on any device. See
+  [Sharing a link](04-PublishingAndForking.md#sharing-a-link).
+- **Let everyone find it.** Click **Let everyone find it** in the notice
+  after Publish, and it appears in everyone's Explore, the challenge and
+  the World.
+- **Share with Peers**, under your build in Explore, offers it to
   the people you're connected to. A Friend's or Known Peer's device adds it
   by itself; anyone else sees it under **Shared with you** and clicks
   **Retrieve**. You need to be connected at the same time for it to arrive.
@@ -26,10 +53,15 @@ See [Publishing & Forking](04-PublishingAndForking.md#sharing-with-connected-pee
 
 ### How do I make my work available to everyone?
 
-Distribute it: store it on Arweave or IPFS (or, experimentally, Steem or
-Blurt) and announce it on Nostr or Arweave (or Steem or Blurt), so anyone can find and
-check it without being connected to you. Click **Distribute** right after
-publishing, or under **My Shared World** in World View. You need a signing
+Choose **Everyone** when Publish asks
+[Who can find it?](04-PublishingAndForking.md#who-can-find-it) (or click
+**Let everyone find it** after publishing). Each build you publish is then
+sent to everyone and appears in **Explore**, the weekly challenge and the
+World, with nothing to install.
+
+To also keep a copy on a decentralized storage network, distribute it:
+store it on Arweave or IPFS (or, experimentally, Steem or Blurt) and
+announce it on Nostr or Arweave (or Steem or Blurt). That needs a signing
 browser extension for the networks you pick, such as Wander for Arweave or
 nos2x for Nostr. [Distributing Your Work](Distribution.md) lists everything
 you can distribute, where it can go and what each network needs.
@@ -51,19 +83,21 @@ so creations you already published keep the license they had. See
 - **cannot sign, identity is locked** — your identity locked itself; click
   **Unlock** next to your name in the top bar and publish again.
 
-### Does publishing need me to be logged in?
+### Do I need a name to publish?
 
-Publishing works while logged out, but the result has no author and no
-signature, so you can't share it with peers or distribute it later. Log in
-before you publish.
+Yes, in practice. Publish asks you to choose one, which takes a few
+seconds and needs no account. **Publish unsigned** in that dialog publishes
+with no name, but the result has no author and no signature, so it gets no
+link, and you can't share it with peers or send it to everyone later. See
+[Choosing a name](01-GettingStarted.md#choosing-a-name).
 
 ### Can I unpublish something?
 
 Yes: open the World in World View, then in **My Shared World** choose
-**More ▾ → Unpublish…**. That removes it from your Repository. It can't
+**More ▾ → Unpublish…**. That removes it from your Explore. It can't
 recall copies other people already received or anything you distributed to
 Arweave, IPFS, Nostr, Steem or Blurt. This device does remember what you
-unpublished, so the Repository's search of the networks won't list those
+unpublished, so Explore's search of the networks won't list those
 copies again here; other devices and other people can still find them.
 
 ### Someone placed my build in their World. Did they move mine?
@@ -130,11 +164,11 @@ cloud storage syncs. See [Your Data](13-YourData.md) and [Privacy](../Privacy.md
 No. Identities are meant to last. To stop using one, declare a successor or
 revoke it on **My Identities**.
 
-### I revoked my identity, so why can I still log in with it?
+### I revoked my identity, so why can I still use it?
 
 That's expected. Revoking stops the identity from signing anything new,
-including what it needs to connect to other people, but it doesn't stop you
-from logging in. That way you can still look at it or export it.
+including what it needs to connect to other people, but you can still
+choose it on this device. That way you can still look at it or export it.
 It shows **Revoked** on **My Identities**, and it can never be un-revoked.
 Create a new identity to keep working. See
 [What revoking does — and doesn't](05-IdentityAndLogin.md#what-revoking-does--and-doesnt).
@@ -229,14 +263,16 @@ connection. See [Installing ForkBuild](01-GettingStarted.md#installing-forkbuild
 
 ### Can I 3D-print my build, or open it in Blender?
 
-Yes. **3D model** in the Editor's toolbar downloads it as an STL for 3D
+Yes. **File → 3D model** in the Editor's toolbar downloads it as an STL for 3D
 printing (in millimetres, standing on the bed) or as a colored glTF or OBJ
 for Blender and other programs. See
 [Downloading a 3D model](02-TheEditor.md#downloading-a-3d-model).
 
 ### Do I need a crypto wallet?
 
-No. Building, saving, publishing, forking, peers and chat need none. A
-wallet or signing extension is only needed for the experimental
-distribution and anchoring features in
-[Evidence & Storage](11-EvidenceAndStorage.md).
+No. Building, saving, publishing, sharing a link, sending a build to
+everyone, remixing, peers and chat need none. A wallet or signing extension
+is only needed if you choose to distribute a build to a storage network
+yourself (Arweave needs an Arweave wallet such as Wander; Nostr needs a
+signing extension such as nos2x), and for the experimental anchoring
+features in [Evidence & Storage](11-EvidenceAndStorage.md).

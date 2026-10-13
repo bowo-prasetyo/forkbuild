@@ -5,6 +5,10 @@
 [English](../FAQ.md) · [Deutsch](../de/FAQ.md) · [Español](../es/FAQ.md) · [Français](../fr/FAQ.md) · [Bahasa Indonesia](../id/FAQ.md) · **日本語** · [한국어](../ko/FAQ.md) · [Português (Brasil)](../pt-BR/FAQ.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **注意:** このページの英語版は翻訳後に更新されているため、この翻訳は古くなっている可能性があります。[英語版](../FAQ.md)も参照してください。
+<!-- /stale -->
+
 よく出会う疑問への短い答えです。それぞれ、詳しく説明しているガイドに
 リンクしています。
 

@@ -5,6 +5,10 @@
 [English](../03-WorldView.md) · **Deutsch** · [Español](../es/03-WorldView.md) · [Français](../fr/03-WorldView.md) · [Bahasa Indonesia](../id/03-WorldView.md) · [日本語](../ja/03-WorldView.md) · [한국어](../ko/03-WorldView.md) · [Português (Brasil)](../pt-BR/03-WorldView.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../03-WorldView.md).
+<!-- /stale -->
+
 Die Weltansicht ist der geteilte 3D-Raum, in dem **jede veröffentlichte
 Kreation Seite an Seite existiert**. Fliegen Sie herum, suchen Sie, was Sie
 suchen, entdecken Sie, was andere in der Nähe gebaut haben, und

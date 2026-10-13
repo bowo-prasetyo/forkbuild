@@ -5,6 +5,10 @@
 [English](../07-PeerConnectionsAndFriends.md) · [Deutsch](../de/07-PeerConnectionsAndFriends.md) · [Español](../es/07-PeerConnectionsAndFriends.md) · [Français](../fr/07-PeerConnectionsAndFriends.md) · **Bahasa Indonesia** · [日本語](../ja/07-PeerConnectionsAndFriends.md) · [한국어](../ko/07-PeerConnectionsAndFriends.md) · [Português (Brasil)](../pt-BR/07-PeerConnectionsAndFriends.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../07-PeerConnectionsAndFriends.md).
+<!-- /stale -->
+
 ForkBuild menghubungkan Anda langsung ke browser orang lain — tidak ada
 server pusat yang menyimpan daftar teman. Buka **Rekan** di bilah atas
 untuk mengelola siapa yang terhubung, Anda kenal, dan berteman dengan Anda.

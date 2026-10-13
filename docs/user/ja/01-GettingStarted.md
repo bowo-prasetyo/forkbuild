@@ -5,6 +5,10 @@
 [English](../01-GettingStarted.md) · [Deutsch](../de/01-GettingStarted.md) · [Español](../es/01-GettingStarted.md) · [Français](../fr/01-GettingStarted.md) · [Bahasa Indonesia](../id/01-GettingStarted.md) · **日本語** · [한국어](../ko/01-GettingStarted.md) · [Português (Brasil)](../pt-BR/01-GettingStarted.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **注意:** このページの英語版は翻訳後に更新されているため、この翻訳は古くなっている可能性があります。[英語版](../01-GettingStarted.md)も参照してください。
+<!-- /stale -->
+
 ようこそ！このガイドでは、「アプリを開いたところ」から「何か作れた」
 までを、5 分ほどで案内します。
 

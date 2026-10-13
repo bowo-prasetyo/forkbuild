@@ -5,6 +5,10 @@
 [English](../07-PeerConnectionsAndFriends.md) · [Deutsch](../de/07-PeerConnectionsAndFriends.md) · [Español](../es/07-PeerConnectionsAndFriends.md) · [Français](../fr/07-PeerConnectionsAndFriends.md) · [Bahasa Indonesia](../id/07-PeerConnectionsAndFriends.md) · [日本語](../ja/07-PeerConnectionsAndFriends.md) · **한국어** · [Português (Brasil)](../pt-BR/07-PeerConnectionsAndFriends.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **참고:** 이 페이지의 영어판이 번역 이후에 바뀌었으므로, 이 번역은 최신 내용이 아닐 수 있습니다. [영어판](../07-PeerConnectionsAndFriends.md)을 참고하세요.
+<!-- /stale -->
+
 <!-- languages -->
 <!-- /languages -->
 

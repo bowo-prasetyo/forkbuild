@@ -5,6 +5,10 @@
 [English](../02-TheEditor.md) · [Deutsch](../de/02-TheEditor.md) · [Español](../es/02-TheEditor.md) · **Français** · [Bahasa Indonesia](../id/02-TheEditor.md) · [日本語](../ja/02-TheEditor.md) · [한국어](../ko/02-TheEditor.md) · [Português (Brasil)](../pt-BR/02-TheEditor.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../02-TheEditor.md).
+<!-- /stale -->
+
 L’Éditeur est l’endroit où vous construisez. Ce guide présente les outils,
 la façon de sélectionner et de transformer des briques, et comment
 organiser votre construction avec des groupes.

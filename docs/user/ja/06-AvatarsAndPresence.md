@@ -5,6 +5,10 @@
 [English](../06-AvatarsAndPresence.md) · [Deutsch](../de/06-AvatarsAndPresence.md) · [Español](../es/06-AvatarsAndPresence.md) · [Français](../fr/06-AvatarsAndPresence.md) · [Bahasa Indonesia](../id/06-AvatarsAndPresence.md) · **日本語** · [한국어](../ko/06-AvatarsAndPresence.md) · [Português (Brasil)](../pt-BR/06-AvatarsAndPresence.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **注意:** このページの英語版は翻訳後に更新されているため、この翻訳は古くなっている可能性があります。[英語版](../06-AvatarsAndPresence.md)も参照してください。
+<!-- /stale -->
+
 **アバター** は、ワールドビューで他の人からあなたがどう見えるかです。
 その外見、位置、動き方です。このガイドでは、アバターのカスタマイズ、
 誰に見えるかの設定、ほかの人のアバターとのやり取りについて説明します。

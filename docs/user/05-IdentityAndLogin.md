@@ -65,7 +65,7 @@ remembers who you were logged in as.
 
 ## Managing identities — the My Identities page
 
-Open **My Identities** in the top bar to see every identity this device
+Open **More → My Identities** (or click your name in the top bar) to see every identity this device
 holds, with its own lock state, independent of which one you're currently
 logged in as. From here you can:
 

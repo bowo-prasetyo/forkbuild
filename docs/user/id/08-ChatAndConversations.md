@@ -5,6 +5,10 @@
 [English](../08-ChatAndConversations.md) · [Deutsch](../de/08-ChatAndConversations.md) · [Español](../es/08-ChatAndConversations.md) · [Français](../fr/08-ChatAndConversations.md) · **Bahasa Indonesia** · [日本語](../ja/08-ChatAndConversations.md) · [한국어](../ko/08-ChatAndConversations.md) · [Português (Brasil)](../pt-BR/08-ChatAndConversations.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../08-ChatAndConversations.md).
+<!-- /stale -->
+
 Pesan langsung di ForkBuild bersifat rekan-ke-rekan dan **khusus teman** —
 lihat [Koneksi Rekan & Teman](07-PeerConnectionsAndFriends.md) untuk cara
 berteman dengan seseorang terlebih dahulu.

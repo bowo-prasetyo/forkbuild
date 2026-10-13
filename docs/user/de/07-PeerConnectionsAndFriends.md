@@ -5,6 +5,10 @@
 [English](../07-PeerConnectionsAndFriends.md) · **Deutsch** · [Español](../es/07-PeerConnectionsAndFriends.md) · [Français](../fr/07-PeerConnectionsAndFriends.md) · [Bahasa Indonesia](../id/07-PeerConnectionsAndFriends.md) · [日本語](../ja/07-PeerConnectionsAndFriends.md) · [한국어](../ko/07-PeerConnectionsAndFriends.md) · [Português (Brasil)](../pt-BR/07-PeerConnectionsAndFriends.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../07-PeerConnectionsAndFriends.md).
+<!-- /stale -->
+
 ForkBuild verbindet Sie direkt mit den Browsern anderer Menschen — es gibt
 keinen zentralen Server mit einer Freundesliste. Öffnen Sie in der oberen
 Leiste **Peers**, um zu verwalten, mit wem Sie verbunden sind, wen Sie

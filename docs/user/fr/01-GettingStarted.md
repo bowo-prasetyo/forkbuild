@@ -5,6 +5,10 @@
 [English](../01-GettingStarted.md) · [Deutsch](../de/01-GettingStarted.md) · [Español](../es/01-GettingStarted.md) · **Français** · [Bahasa Indonesia](../id/01-GettingStarted.md) · [日本語](../ja/01-GettingStarted.md) · [한국어](../ko/01-GettingStarted.md) · [Português (Brasil)](../pt-BR/01-GettingStarted.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../01-GettingStarted.md).
+<!-- /stale -->
+
 Bienvenue ! Ce guide vous amène de « je viens d’ouvrir l’application » à
 « j’ai construit quelque chose » en cinq minutes environ.
 

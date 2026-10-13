@@ -497,7 +497,7 @@ in the **Document Properties** dialog, opened with the **✎** button beside
 the document title at the top of the Editor's sidebar (in World View, it's
 the **Edit Metadata** button). A new document starts with no license, which
 means nobody else can fork it until you choose one. The description shows up as a
-snippet on its Repository card and is searchable there too; the license
+snippet on its card in Explore and is searchable there too; the license
 controls whether — and how — other people are allowed to fork it. See
 [Publishing & Forking](04-PublishingAndForking.md) for what each license
 means.
@@ -516,7 +516,7 @@ Blurt posts all show:
 | `\*`, `\#`, `\-` | the character itself |
 
 Nothing else is formatting: links, pictures and HTML stay as plain text.
-Repository cards show the description's words on one line, without the
+Cards in Explore show the description's words on one line, without the
 formatting.
 
 **Tags** say what the build is, like `japanese temple garden`: up to 5,
@@ -560,16 +560,16 @@ Music plays softly while you build, a little livelier than World View's. The **�
   ready-made builds (a castle, a harbor island, a village square, a house, a
   mill and a bridge) as your own copy, seen whole. If what's open has
   unsaved changes, New says so first; save it to keep them.
-- **File** holds the next three:
-- **Export** — download the current creation as a JSON file, to keep a copy
-  or move it to another device. Files use a compact format that stores
-  bricks as a table.
-- **3D model** — download the creation as a 3D model for other programs
-  (see [Downloading a 3D model](#downloading-a-3d-model)).
-- **Import** — open an exported file as a new creation with its own
-  identity; nothing is kept until you **Save**. Files exported by earlier
-  versions still open (they are converted as they load), but ForkBuild 1.0.0
-  and older can't open files exported by this version.
+- **File** — a menu with three more:
+  - **Export** — download the current build as a JSON file, to keep a copy
+    or move it to another device. Files use a compact format that stores
+    bricks as a table.
+  - **3D model** — download the build as a 3D model for other programs
+    (see [Downloading a 3D model](#downloading-a-3d-model)).
+  - **Import** — open an exported file as a new build with its own
+    identity; nothing is kept until you **Save**. Files exported by earlier
+    versions still open (they are converted as they load), but ForkBuild 1.0.0
+    and older can't open files exported by this version.
 - **Recent** — reopen something you saved before (it appears after your
   first save; click a document's name to open it). Once you've saved enough
   documents, a filter box appears so you can jump straight to one by name.

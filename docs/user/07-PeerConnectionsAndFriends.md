@@ -5,7 +5,7 @@
 <!-- /languages -->
 
 ForkBuild connects you directly to other people's browsers — there's no
-central server holding a friends list. Open **Peers** in the top bar to
+central server holding a friends list. Open **More → Peers** to
 manage who you're connected, known, and friends with.
 
 ## The page at a glance
@@ -172,7 +172,7 @@ anything.
   World View. You follow an *identity*, never a typed author name: several
   people can publish under the same name, so an author's page shows one
   **Follow** per identity that signed work under that name.
-- **The Following page** (**Following** in the top bar) lists the people you
+- **The Following page** (**More → Following**) lists the people you
   follow, each with **Unfollow**, and below them the newest work of theirs
   that has reached this device, newest first. Click a name to see only that
   person's work.
@@ -217,7 +217,7 @@ credentials when you start a connection (never just for opening the app)
 and uses them automatically. The server hands out a limited number of
 relay credentials each month; once they run out, connections are still
 tried, just without a relay, until the next month. To use a relay of your own, open **TURN
-Server** from **Network Settings** in the top bar
+Server** from **More → Network Settings**
 (`/settings/turn-server`) and configure your own TURN relay: a server
 that actually forwards the connection's data when a direct path can't be
 established.

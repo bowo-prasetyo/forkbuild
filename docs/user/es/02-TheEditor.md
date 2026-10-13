@@ -5,6 +5,10 @@
 [English](../02-TheEditor.md) · [Deutsch](../de/02-TheEditor.md) · **Español** · [Français](../fr/02-TheEditor.md) · [Bahasa Indonesia](../id/02-TheEditor.md) · [日本語](../ja/02-TheEditor.md) · [한국어](../ko/02-TheEditor.md) · [Português (Brasil)](../pt-BR/02-TheEditor.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés](../02-TheEditor.md).
+<!-- /stale -->
+
 El Editor es donde construye. Esta guía cubre las herramientas, cómo
 seleccionar y transformar bloques, y cómo organizar su construcción con
 grupos.
