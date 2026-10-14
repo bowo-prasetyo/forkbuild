@@ -6727,3 +6727,29 @@ opened and remixed).
   sent to everyone before this change, which this device never noted, until they are published again; short links for
   builds others distributed but this device never opened from a note; a short link stops working if no relay
   keeps the note, and nothing re-sends notes yet.
+
+## Where newcomers stop: the first steps counted (unnumbered, 2026-10-14)
+
+A week of the public counter showed visits but no `/e/…` path at all, and nothing between arriving and publishing was
+counted: a visitor who left Home, one who opened the Editor and got lost, and one who built but didn't publish all
+looked the same. Pillar: **Building** (do people who arrive start a build?).
+
+- **Counted** (core/VisitorCount.js, `EDITOR_OPEN`, `STARTER_OPEN`, `EDITOR_EDIT`; application/settings/
+  FunnelEventCounter.js `openedEditor()`, `openedStarter()`, `editedInEditor()`), at most once a page load each, under
+  the other counts' rules (the official site, **Count this browser**, Global Privacy Control, Do Not Track):
+  `/e/editor-open` when the Editor opens, whichever way in; `/e/starter-open` when a ready-made build opens in it as
+  the visitor's own copy from a `?start=` link (Home's main button, a challenge); `/e/editor-edit` on the visitor's
+  first edit there (ui/views/EditorView.js, through `EditorSession#onCommandActivity()`: an executed command, so an
+  undo or redo isn't one, and a collaborator's edits arriving from peers are left out). Nothing about the build or the
+  edit is part of the path. No target yet.
+- **Reading them** (core/LaunchTargets.js `FIRST_STEPS`, `evaluateFirstSteps()`): the scorecard
+  (scripts/launch-scorecard.mjs) now starts with FIRST STEPS, each step's total and its share of the daily visits,
+  ending with the builds published. docs/launch/README.md says what each drop points at; docs/Pillars.md lists them.
+- The Privacy page, in every language: the counts, and their row in "Servers ForkBuild contacts", stamped up to date.
+- Tests: `FunnelEventCounter` (each a fixed path, once a page load, not when the count is off, and one not sent isn't
+  taken as counted), `LaunchTargets` (the steps read counted paths, in order, against the daily visits; the scorecard
+  starts with them). Checked by hand on the unbundled site served as the official one: Home's main button sends
+  `/e/editor-open` and `/e/starter-open`, the first brick placed `/e/editor-edit`, and opening the Editor again in the
+  same page load nothing more.
+- Not done: which way into the Editor a visit took beyond `?start=` (New, a plot, a fork) isn't told apart; how long a
+  first edit took; Publish opened but abandoned.

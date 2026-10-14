@@ -48,6 +48,28 @@ function counter({ origin = VISITOR_COUNT_SITE_ORIGIN, privacySignals = {}, enab
     console.log('✓ fixed paths only');
 }
 
+// The first steps towards a build: the Editor opened, a ready-made build
+// opened in it, a first edit; each a fixed path, at most once a page load.
+{
+    const { instance, hits } = counter();
+    for (let i = 0; i < 3; i++) {
+        instance.openedEditor();
+        instance.openedStarter();
+        instance.editedInEditor();
+    }
+    assert(hits.join() === [FunnelEvent.EDITOR_OPEN, FunnelEvent.STARTER_OPEN, FunnelEvent.EDITOR_EDIT].map((event) => funnelEventHitUrl(event, '5')).join()
+        && hits.map((url) => url.match(/p=%2Fe%2F([a-z-]+)/)[1]).join() === 'editor-open,starter-open,editor-edit',
+        `each counted once a page load, as /e/editor-open, /e/starter-open and /e/editor-edit (${hits})`);
+    const off = counter({ enabled: false });
+    assert(off.instance.openedEditor() === false && off.instance.editedInEditor() === false && off.hits.length === 0, 'not when the visitor count is turned off');
+    const later = counter();
+    later.store.setEnabled(false);
+    later.instance.openedEditor();
+    later.store.setEnabled(true);
+    assert(later.instance.openedEditor() === true && later.hits.length === 1, 'one not sent is not taken as counted');
+    console.log('✓ the first steps towards a build, once a page load');
+}
+
 // Under the daily count's rules: the official site, the setting, GPC and DNT.
 {
     const sent = counter();

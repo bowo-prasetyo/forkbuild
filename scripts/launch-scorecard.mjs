@@ -10,7 +10,7 @@
 // a JSON object of { "/e/<event>": total }, GoatCounter's CSV export (one row
 // per hit), or lines of "/e/<event> total". Exits 0 whatever the numbers say.
 import { readFileSync } from 'node:fs';
-import { evaluateLaunchTargets, evaluateSideSystems, parseCounts, SIDE_SYSTEM_STATUS, TARGET_STATUS } from '../core/LaunchTargets.js';
+import { evaluateFirstSteps, evaluateLaunchTargets, evaluateSideSystems, parseCounts, SIDE_SYSTEM_STATUS, TARGET_STATUS } from '../core/LaunchTargets.js';
 
 const SIDE_MARK = { [SIDE_SYSTEM_STATUS.USED]: '✓ used', [SIDE_SYSTEM_STATUS.RARELY_USED]: '! rarely used', [SIDE_SYSTEM_STATUS.TOO_FEW]: '… too few' };
 const MARK = { [TARGET_STATUS.MET]: '✓ met', [TARGET_STATUS.MISSED]: '✗ below', [TARGET_STATUS.TOO_FEW]: '… too few' };
@@ -31,7 +31,13 @@ function goal(result) {
 
 export function formatScorecard(counts) {
     const { results, gate } = evaluateLaunchTargets(counts);
-    const lines = [];
+    // Where newcomers stop between arriving and publishing (FIRST_STEPS).
+    const steps = evaluateFirstSteps(counts);
+    const lines = [`FIRST STEPS (out of ${steps[0].visits} daily visits)`];
+    for (const step of steps) {
+        const share = step.share === null ? '—' : `${(step.share * 100).toFixed(1)}%`;
+        lines.push(`  ${step.id.padEnd(11)} ${String(step.count).padStart(6)} ${share.padStart(7)}  ${step.question}`);
+    }
     let pillar = null;
     for (const result of results) {
         if (result.pillar !== pillar) {

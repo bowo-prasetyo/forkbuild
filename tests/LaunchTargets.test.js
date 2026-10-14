@@ -1,5 +1,5 @@
 import {
-    LAUNCH_TARGETS, NETWORK_GATE_TARGETS, TARGET_STATUS, evaluateLaunchTargets, medianBrickRange, medianPlacedRange, parseCounts
+    FIRST_STEPS, LAUNCH_TARGETS, evaluateFirstSteps, NETWORK_GATE_TARGETS, TARGET_STATUS, evaluateLaunchTargets, medianBrickRange, medianPlacedRange, parseCounts
 } from '../core/LaunchTargets.js';
 import { FunnelEvent } from '../core/VisitorCount.js';
 import { formatScorecard } from '../scripts/launch-scorecard.mjs';
@@ -23,6 +23,18 @@ const byId = (results) => Object.fromEntries(results.map((result) => [result.id,
     assert(NETWORK_GATE_TARGETS.every((id) => LAUNCH_TARGETS.some((target) => target.id === id && target.pillar === 'building')),
         'the gate on new networks is the building targets');
     console.log('✓ every target reads counted paths and answers for a pillar');
+}
+
+// The first steps, in a newcomer's order, read against the daily visits.
+{
+    const paths = new Set(Object.values(FunnelEvent).map((event) => `/e/${event}`));
+    assert(FIRST_STEPS.every((step) => step.paths.every((key) => paths.has(key))), 'every first step reads paths the app counts');
+    const steps = evaluateFirstSteps({ '/': 40, '/e/editor-open': 20, '/e/starter-open': 12, '/e/editor-edit': 8, '/e/publish-bricks-1': 2, '/e/publish-bricks-50': 1 });
+    assert(steps.map((step) => step.id).join() === 'editor,ready-made,edit,publish', 'in the order a newcomer takes them');
+    assert(steps.map((step) => step.count).join() === '20,12,8,3' && steps[0].share === 0.5 && steps[3].share === 3 / 40,
+        `each step's total and share of the daily visits, publishing the builds published (${JSON.stringify(steps)})`);
+    assert(evaluateFirstSteps({ '/e/editor-open': 3 })[0].share === null, 'no daily visits, no share');
+    console.log('✓ the first steps are read in order against the daily visits');
 }
 
 // The median build's range: the middle build in size order.
@@ -91,6 +103,7 @@ const byId = (results) => Object.fromEntries(results.map((result) => [result.id,
     assert(text.includes('BUILDING') && text.includes('FAMILY') && text.includes('WORLD'), 'grouped by pillar');
     assert(/✗ below\s+median-placed/.test(text) && /✗ below\s+second-build/.test(text), 'a missed target says so');
     const gateAt = text.indexOf('New networks: CLOSED: a building target is below where it should be.');
+    assert(text.startsWith('FIRST STEPS (out of 0 daily visits)') && /publish\s+60\s+—/.test(text), 'it starts with the first steps');
     assert(gateAt > 0 && text.indexOf('SIDE SYSTEMS') > gateAt, 'and ends with the gate, then the side systems it watches (tests/SideSystems.test.js)');
     console.log('✓ the scorecard groups targets by pillar and ends with the gate, then the side systems');
 }

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 852cc20309a2972a -->
+<!-- translation-of: docs/Privacy.md source-hash: b7e385296e91b9fd -->
 # 개인정보 보호
 
 <!-- languages -->
@@ -168,7 +168,7 @@ IndexedDB가 없는 브라우저는 `forkbuild:`로 시작하는 키로 `localSt
 
 그리고 누군가 주간 건축 챌린지에 참여할 때(**챌린지 참여하기**, 또는
 에디터의 **새로 만들기**에 있는 챌린지): `/e/challenge-join`.
-그리고 월드 뷰에서 한 주의 챌린지 광장을 열 때: `/e/plaza-visit`. 그리고 월드 뷰를 열 때마다: `/e/world-visit`, 그리고 방문마다 한 번, 그곳에서 다른 사람의 작품이 보일 때(이 기기가 게시하지 않았고 편집할 수 없는 작품, 광장 둘레의 미리 지어진 작품은 세지 않음): `/e/world-neighbour`. 그리고 ForkBuild를 열 때마다 많아야 한 번, 아직 이름이 없는 사람이 그곳을 손님으로 걸을 때: `/e/guest-walk`. 어디를 걸었는지는 아무것도 보내지 않습니다. 그리고 ForkBuild를 열 때마다 많아야 한 번씩, 누군가 부가 시스템을 쓸 때: 수영할 때(`/e/swam`), 동물을 잡을 때(`/e/animal-caught`), 동물로 작품을 꾸밀 때(`/e/animal-decorated`), 동물이나 보관한 탈것을 지닐 때(`/e/inventory-used`), 채팅 메시지를 보낼 때(`/e/chat-sent`), 음성 통화를 걸거나 받을 때(`/e/voice-call`), 공개 로비에 참여할 때(`/e/lobby-joined`). 무엇을 잡았는지, 무슨 말을 했는지, 누구에게 전화했는지, 어디에 참여했는지는 보내지 않습니다. 그리고 월드 뷰에서 **여기서 같이 걷자** 링크를 만들 때: `/e/walk-link`, 그 링크로 친구가 도착할 때: `/e/walk-joined`. 그리고 에디터에서 **같이 만들자** 링크를 만들 때: `/e/build-link`, 그 링크로 친구가 참가할 때: `/e/build-joined`, 그리고 함께 만든 친구를 기록한 작품이 처음 게시될 때: `/e/publish-together`. 그리고 작품을 게시할 때마다, 모두에게 보냈으면 `/e/publish-found`, 링크로만 두었으면 `/e/publish-link-only`를 보냅니다.
+그리고 월드 뷰에서 한 주의 챌린지 광장을 열 때: `/e/plaza-visit`. 그리고 월드 뷰를 열 때마다: `/e/world-visit`, 그리고 방문마다 한 번, 그곳에서 다른 사람의 작품이 보일 때(이 기기가 게시하지 않았고 편집할 수 없는 작품, 광장 둘레의 미리 지어진 작품은 세지 않음): `/e/world-neighbour`. 그리고 ForkBuild를 열 때마다 많아야 한 번, 아직 이름이 없는 사람이 그곳을 손님으로 걸을 때: `/e/guest-walk`. 어디를 걸었는지는 아무것도 보내지 않습니다. 그리고 ForkBuild를 열 때마다 많아야 한 번씩, 에디터가 열릴 때: `/e/editor-open`, **홈**이나 챌린지 페이지의 링크로 미리 지어진 작품이 내 사본으로 에디터에서 열릴 때: `/e/starter-open`, 그리고 그곳에서 처음으로 무언가를 바꿀 때: `/e/editor-edit`. 어떤 작품인지, 무엇을 바꿨는지는 보내지 않습니다. 그리고 ForkBuild를 열 때마다 많아야 한 번씩, 누군가 부가 시스템을 쓸 때: 수영할 때(`/e/swam`), 동물을 잡을 때(`/e/animal-caught`), 동물로 작품을 꾸밀 때(`/e/animal-decorated`), 동물이나 보관한 탈것을 지닐 때(`/e/inventory-used`), 채팅 메시지를 보낼 때(`/e/chat-sent`), 음성 통화를 걸거나 받을 때(`/e/voice-call`), 공개 로비에 참여할 때(`/e/lobby-joined`). 무엇을 잡았는지, 무슨 말을 했는지, 누구에게 전화했는지, 어디에 참여했는지는 보내지 않습니다. 그리고 월드 뷰에서 **여기서 같이 걷자** 링크를 만들 때: `/e/walk-link`, 그 링크로 친구가 도착할 때: `/e/walk-joined`. 그리고 에디터에서 **같이 만들자** 링크를 만들 때: `/e/build-link`, 그 링크로 친구가 참가할 때: `/e/build-joined`, 그리고 함께 만든 친구를 기록한 작품이 처음 게시될 때: `/e/publish-together`. 그리고 작품을 게시할 때마다, 모두에게 보냈으면 `/e/publish-found`, 링크로만 두었으면 `/e/publish-link-only`를 보냅니다.
 
 그리고 이 브라우저에서 작품을 처음 게시할 때(나중에 같은 작품을 다시 게시하면 아무것도 보내지 않음):
 
@@ -231,6 +231,7 @@ Nostr 릴레이, Arweave 게이트웨이, Steem과 Blurt 노드에서 새 공지
 | 공식 사이트에서 주간 건축 챌린지에 참여하거나 그 광장을 열 때("방문자 수" 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 고정 경로 `/e/challenge-join` 또는 `/e/plaza-visit`의 이미지 요청 하나, 리퍼러와 쿠키 없음 |
 | 공식 사이트에서 월드 뷰를 열고, 그곳에서 다른 사람의 작품이 보일 때("방문자 수" 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 고정 경로 `/e/world-visit`의 이미지 요청 하나, 그리고 방문마다 많아야 한 번 `/e/world-neighbour`, 리퍼러와 쿠키 없음 |
 | 공식 사이트에서 이름을 정하기 전에 월드 보기를 걸을 때(“방문자 수 집계” 참고) | GoatCounter(`forkbuild.goatcounter.com`) | ForkBuild를 열 때마다 많아야 한 번, 고정 경로 `/e/guest-walk`의 이미지 요청, 리퍼러와 쿠키 없음 |
+| 공식 사이트에서 에디터를 열거나, **홈**이나 챌린지에서 미리 지어진 작품을 그곳에서 열거나, 그곳에서 무언가를 바꿀 때("방문자 수" 참고) | GoatCounter(`forkbuild.goatcounter.com`) | ForkBuild를 열 때마다 각각 많아야 한 번, 고정 경로(`/e/editor-open`, `/e/starter-open`, `/e/editor-edit`)의 이미지 요청, 리퍼러와 쿠키 없음 |
 | 공식 사이트에서 수영하거나, 동물을 잡거나, 동물로 작품을 꾸미거나, 무언가를 지니거나, 채팅 메시지를 보내거나, 음성 통화를 걸거나 받거나, 공개 로비에 참여할 때("방문자 수" 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 각각 페이지를 열 때마다 많아야 한 번, 고정 경로(`/e/swam`, `/e/animal-caught`, `/e/animal-decorated`, `/e/inventory-used`, `/e/chat-sent`, `/e/voice-call`, `/e/lobby-joined`)의 이미지 요청, 리퍼러와 쿠키 없음 |
 | 공식 사이트에서 **여기서 같이 걷자** 링크를 만들거나 그 링크로 도착할 때("방문자 수" 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 고정 경로 `/e/walk-link` 또는 `/e/walk-joined`의 이미지 요청 1건, 리퍼러와 쿠키 없음 |
 | 공식 사이트에서 **같이 만들자** 링크를 만들거나 그 링크로 참가할 때("방문자 수" 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 고정 경로 `/e/build-link` 또는 `/e/build-joined`(함께 만든 작품이 그 친구들을 기록한 채 처음 게시될 때는 `/e/publish-together`도)의 이미지 요청 1건, 리퍼러와 쿠키 없음 |
