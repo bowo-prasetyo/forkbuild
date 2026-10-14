@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d5e21e1edde37655 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 678438731470dcad -->
 # 04 — 公開とリミックス
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · [Español](../es/04-PublishingAndForking.md) · [Français](../fr/04-PublishingAndForking.md) · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · **日本語** · [한국어](../ko/04-PublishingAndForking.md) · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **注意:** このページの英語版は翻訳後に更新されているため、この翻訳は古くなっている可能性があります。[英語版](../04-PublishingAndForking.md)も参照してください。
-<!-- /stale -->
 
 ここが ForkBuild の中心です。**公開** は、あなたの作品を世界と共有
 します。**リミックス** は、誰でも作品の自分用のコピーを作って発展させ
@@ -233,7 +229,7 @@ Blurt の Keychain）が送るたびに承認を求め、Arweave と Blurt で�
 
 このダイアログはワールドビューと同じものです。**ストレージ** と **告知 /
 発見の基盤** の設定、別々の **スナップショットのみ配信** / **署名済み
-クレームのみ配信** ボタンは、[ワールドでの出会い](03-WorldView.md#ワールドでの出会い--ピアが共有している公開物とアバター) で説明している
+クレームのみ配信** ボタンは、[ワールドでの出会い](WorldViewAdvancedTools.md#ワールドでの出会い--ピアが共有している公開物とアバター) で説明している
 とおりに動きます。ここで違うのは 2 点です。いつも公開のクリックで今でき
 た共有ワールドそのものに対して働くこと、そして **スナップショット** が
 先なので、**送る** はスナップショット、次に署名済みクレームの順に送る
@@ -343,9 +339,9 @@ Nostr、Arweave、Steem、Blurt で配信する（[配信](Distribution.md) を�
 ほかの人は通常、あなたが公開した作品を自分のワールドに配置できます。
 それはあなたの作品の配置を追加するもので、コピーではなく、あなたの
 作品を動かしたり変えたりすることもありません
-（[なぜ他の人の作品を配置できるの？](03-WorldView.md#なぜ他の人の作品を配置できるの)
+（[なぜ他の人の作品を配置できるの？](WorldViewAdvancedTools.md#なぜ他の人の作品を配置できるの)
 を参照）。フォークは別のもので、ライセンスで決まります
-（[配置とフォークの違い](03-WorldView.md#配置とフォークの違い)を参照）。
+（[配置とフォークの違い](WorldViewAdvancedTools.md#配置とフォークの違い)を参照）。
 配置してほしくない場合は、**ドキュメントのプロパティ** を開いて
 **ワールドに配置できる人** を設定します。
 
@@ -486,7 +482,7 @@ Steem、Blurt に配信した作品を探し、検証できたものを追加し
 
 **さがす** にあるのは、このデバイスから公開したものや直接見つけたもの
 だけではありません。ワールドビューの
-[ワールドでの出会い](03-WorldView.md#ワールドでの出会い--ピアが共有している公開物とアバター)
+[ワールドでの出会い](WorldViewAdvancedTools.md#ワールドでの出会い--ピアが共有している公開物とアバター)
 の地図でピアが見せてくれた分散型の作品も、その内容が実際に
 解決されると、この検索とその作者のページに加わり、再読み込みしても
 残ります。ここにあるほかのものと区別されずに表示されます。

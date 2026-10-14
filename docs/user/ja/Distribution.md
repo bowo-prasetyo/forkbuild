@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: e191fb1f57264f38 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: c6324c75a72ab6b3 -->
 # 作品を配信する
 
 <!-- languages -->
 [English](../Distribution.md) · [Deutsch](../de/Distribution.md) · [Español](../es/Distribution.md) · [Français](../fr/Distribution.md) · [Bahasa Indonesia](../id/Distribution.md) · **日本語** · [한국어](../ko/Distribution.md) · [Português (Brasil)](../pt-BR/Distribution.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **注意:** このページの英語版は翻訳後に更新されているため、この翻訳は古くなっている可能性があります。[英語版](../Distribution.md)も参照してください。
-<!-- /stale -->
 
 ForkBuild で作るものは、すべて自分のデバイスから始まります。**配信** は、
 作品を分散型ネットワークに載せるための、別の任意の手順です。これにより、
@@ -69,8 +65,8 @@ ForkBuild で作るものは、すべて自分のデバイスから始まりま�
 
 - 署名済みクレームとスナップショット:
   [送り先](04-PublishingAndForking.md#送り先--公開と同時に作品を送る)、
-  [自分の共有ワールド](03-WorldView.md#自分の共有ワールド--ピアなしで自分のスナップショットを配信する)、
-  [配信ダイアログ](03-WorldView.md#ワールドでの出会い--ピアが共有している公開物とアバター)
+  [自分の共有ワールド](WorldViewAdvancedTools.md#自分の共有ワールド--ピアなしで自分のスナップショットを配信する)、
+  [配信ダイアログ](WorldViewAdvancedTools.md#ワールドでの出会い--ピアが共有している公開物とアバター)
   そのもの。
 - 公開物ページ:
   [公開物ページから配信する](09-PublicationsAndEvidence.md#公開物ページから配信する)、
@@ -158,7 +154,7 @@ Arweave の 256 KB を超える作品には IPFS を選んでください。接�
 - ワールドビューの **共有ワールドを発見** は、共有ワールドを Arweave と
   Nostr で直接探して確かめ、「自分の公開物は本当に、無傷で
   公開されているか」に答えます。
-  [共有ワールドを発見](03-WorldView.md#共有ワールドを発見--分散型ネットワークを直接検索する)を
+  [共有ワールドを発見](WorldViewAdvancedTools.md#共有ワールドを発見--分散型ネットワークを直接検索する)を
   参照してください。
 - 公開物ページでは、**IPFSの内容を検証** が IPFS へのアップロードを
   取得し直してハッシュと比べ、**証拠を検証** がアンカーを確かめます。

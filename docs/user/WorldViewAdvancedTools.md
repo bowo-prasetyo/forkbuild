@@ -1,7 +1,7 @@
 # World View: Advanced Tools
 
 <!-- languages -->
-**English** · [Deutsch](de/WorldViewAdvancedTools.md) · [Español](es/WorldViewAdvancedTools.md) · [Français](fr/WorldViewAdvancedTools.md) · [Bahasa Indonesia](id/WorldViewAdvancedTools.md)
+**English** · [Deutsch](de/WorldViewAdvancedTools.md) · [Español](es/WorldViewAdvancedTools.md) · [Français](fr/WorldViewAdvancedTools.md) · [Bahasa Indonesia](id/WorldViewAdvancedTools.md) · [日本語](ja/WorldViewAdvancedTools.md)
 <!-- /languages -->
 
 This page covers the parts of [World View](03-WorldView.md) that show only
