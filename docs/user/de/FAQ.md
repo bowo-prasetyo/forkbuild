@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 06d073f252435c51 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 781eb04573741493 -->
 # Häufige Fragen
 
 <!-- languages -->
 [English](../FAQ.md) · **Deutsch** · [Español](../es/FAQ.md) · [Français](../fr/FAQ.md) · [Bahasa Indonesia](../id/FAQ.md) · [日本語](../ja/FAQ.md) · [한국어](../ko/FAQ.md) · [Português (Brasil)](../pt-BR/FAQ.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../FAQ.md).
-<!-- /stale -->
 
 Kurze Antworten auf die Fragen, auf die man am häufigsten stößt, jeweils
 mit einem Link zur Anleitung, die es ausführlich erklärt.
@@ -128,7 +124,7 @@ bleibt, wo Sie es hingestellt haben, und das Bauwerk behält Ihren Namen
 und seinen Verlauf. Wenn Sie das nicht möchten, wählen Sie vor dem
 Veröffentlichen unter **Wer es in der Welt platzieren darf** die Option
 **Nur ich darf es platzieren**. Siehe
-[Warum kann ich die Bauwerke anderer platzieren?](03-WorldView.md#warum-kann-ich-die-bauwerke-anderer-platzieren).
+[Warum kann ich die Bauwerke anderer platzieren?](WorldViewAdvancedTools.md#warum-kann-ich-die-bauwerke-anderer-platzieren).
 
 ### Warum stehen zwei Bauwerke an derselben Stelle?
 
@@ -136,7 +132,7 @@ Eine Platzierung beansprucht kein Land, und es gibt keinen zentralen
 Server, der sagt, wer zuerst da war; daher können zwei Platzierungen
 denselben Punkt nennen. Sie werden gewarnt, bevor Sie eine Ihrer
 Platzierungen auf eine belegte Stelle verschieben. Siehe
-[Warum können zwei Bauwerke an derselben Stelle stehen?](03-WorldView.md#warum-können-zwei-bauwerke-an-derselben-stelle-stehen).
+[Warum können zwei Bauwerke an derselben Stelle stehen?](WorldViewAdvancedTools.md#warum-können-zwei-bauwerke-an-derselben-stelle-stehen).
 
 ## Identität und Ihre Daten
 

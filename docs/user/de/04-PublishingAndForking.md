@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d5e21e1edde37655 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 678438731470dcad -->
 # 04 — Veröffentlichen & Remixen
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · **Deutsch** · [Español](../es/04-PublishingAndForking.md) · [Français](../fr/04-PublishingAndForking.md) · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · [한국어](../ko/04-PublishingAndForking.md) · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../04-PublishingAndForking.md).
-<!-- /stale -->
 
 Das ist das Herz von ForkBuild. **Veröffentlichen** teilt Ihr Bauwerk mit
 der Welt. **Remixen** erlaubt jedem, eine eigene Kopie eines Bauwerks zu
@@ -260,7 +256,7 @@ Der Dialog ist derselbe, den die Weltansicht verwendet — seine Einstellungen
 **Speicher** und **Substrat für Ankündigung / Entdeckung** und die getrennten
 Schaltflächen **Nur Snapshot verteilen** / **Nur Signierten Anspruch
 verteilen** funktionieren wie unter
-[Begegnungen in der Welt](03-WorldView.md#begegnungen-in-der-welt--veröffentlichungen-und-avatare-die-ihre-peers-teilen) beschrieben. Zwei Dinge
+[Begegnungen in der Welt](WorldViewAdvancedTools.md#begegnungen-in-der-welt--veröffentlichungen-und-avatare-die-ihre-peers-teilen) beschrieben. Zwei Dinge
 sind hier anders: Er wirkt immer auf genau die Geteilte Welt, die Ihr Klick
 auf Veröffentlichen gerade erzeugt hat, und der **Snapshot** geht zuerst,
 sodass **Senden** erst den Snapshot und dann den Signierten Anspruch sendet.
@@ -373,9 +369,9 @@ wählen, die es erlaubt.
 Andere können Ihre veröffentlichte Kreation normalerweise in ihren eigenen
 Welten platzieren. Das fügt eine Platzierung Ihres Bauwerks hinzu, nie eine
 Kopie davon, und verschiebt oder verändert Ihres nie (siehe
-[Warum kann ich die Bauwerke anderer platzieren?](03-WorldView.md#warum-kann-ich-die-bauwerke-anderer-platzieren)).
+[Warum kann ich die Bauwerke anderer platzieren?](WorldViewAdvancedTools.md#warum-kann-ich-die-bauwerke-anderer-platzieren)).
 Forken ist davon getrennt und wird durch die Lizenz geregelt (siehe
-[Platzieren oder forken](03-WorldView.md#platzieren-oder-forken)). Wenn Sie
+[Platzieren oder forken](WorldViewAdvancedTools.md#platzieren-oder-forken)). Wenn Sie
 nicht möchten, dass andere es platzieren, öffnen Sie
 **Dokumenteigenschaften** und stellen Sie **Wer es in der Welt platzieren
 darf** ein:
@@ -531,7 +527,7 @@ Benachrichtigungen; siehe
 
 **Entdecken** ist auch nicht auf das beschränkt, was von diesem Gerät
 veröffentlicht oder direkt entdeckt wurde: Ein dezentrales Bauwerk, das ein Peer Ihnen in der eigenen Karte
-[Begegnungen in der Welt](03-WorldView.md#begegnungen-in-der-welt--veröffentlichungen-und-avatare-die-ihre-peers-teilen)
+[Begegnungen in der Welt](WorldViewAdvancedTools.md#begegnungen-in-der-welt--veröffentlichungen-und-avatare-die-ihre-peers-teilen)
 der Weltansicht gezeigt hat, kommt, sobald ihr Inhalt sich tatsächlich
 auflösen lässt, ebenfalls in diese Suche und in die Autorenansicht ihres
 Autors und bleibt dort auch nach einem Neuladen. Sie wird nicht anders

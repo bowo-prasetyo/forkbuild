@@ -1,5 +1,9 @@
 # World View: Advanced Tools
 
+<!-- languages -->
+**English** · [Deutsch](de/WorldViewAdvancedTools.md)
+<!-- /languages -->
+
 This page covers the parts of [World View](03-WorldView.md) that show only
 when you tick **Show advanced tools** at the bottom of the side panel. They
 are for the networks behind the World: where a build is placed, where it is

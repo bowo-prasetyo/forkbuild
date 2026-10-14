@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 554ed0580b2c3b36 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 49a511b82dd0a439 -->
 # 09 — Veröffentlichungen & externe Nachweise
 
 <!-- languages -->
 [English](../09-PublicationsAndEvidence.md) · **Deutsch** · [Español](../es/09-PublicationsAndEvidence.md) · [Français](../fr/09-PublicationsAndEvidence.md) · [Bahasa Indonesia](../id/09-PublicationsAndEvidence.md) · [日本語](../ja/09-PublicationsAndEvidence.md) · [한국어](../ko/09-PublicationsAndEvidence.md) · [Português (Brasil)](../pt-BR/09-PublicationsAndEvidence.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../09-PublicationsAndEvidence.md).
-<!-- /stale -->
 
 > **Teilweise experimentell.** Die Seite Veröffentlichungen ist eine
 > reguläre Funktion: ihre Liste und Status, das Entfernen unbrauchbarer
@@ -97,7 +93,7 @@ erforderlich:
 | **Veröffentlichung** | das Buch selbst | Ein signierter Datensatz: eine Geteilte Welt, eine Bauplan-Zuschreibung oder ein Ortsnamensanspruch. Sie trägt den Hash ihres Inhalts und die Signatur ihres Herausgebers. |
 | **Inhalt** | der Ort, an dem gedruckte Exemplare lagern | Die Bytes, um die es in der Veröffentlichung geht, etwa die Steine einer Welt. Sie liegen immer zuerst auf diesem Gerät; **Auf … speichern** legt eine Kopie auf IPFS, Arweave, Steem oder Blurt ab, damit andere sie holen können. Siehe [Inhaltsanbieter](10-NetworkSettings.md#inhaltsanbieter). |
 | **Snapshot** | ein gedrucktes Exemplar | Eine gespeicherte Kopie des Inhalts einer Veröffentlichung, etwa der Steine einer Welt, die andere holen und gegen ihren Hash prüfen können. Siehe [Lokaler Snapshot](#lokaler-snapshot). |
-| **Platzierung** | das Regal, in dem das Exemplar steht | Ein signierter Nachweis, wo ein Bauwerk in der Welt steht. Eine Geteilte Welt kann mehrere haben. Siehe [Platzieren oder forken](03-WorldView.md#platzieren-oder-forken). |
+| **Platzierung** | das Regal, in dem das Exemplar steht | Ein signierter Nachweis, wo ein Bauwerk in der Welt steht. Eine Geteilte Welt kann mehrere haben. Siehe [Platzieren oder forken](WorldViewAdvancedTools.md#platzieren-oder-forken). |
 | **Ankündigung / Entdeckung** | ein Eintrag im Bibliothekskatalog | Ein kleiner signierter Hinweis auf Nostr, Arweave, Steem oder Blurt, dass die Veröffentlichung oder der Snapshot existiert und wo die Kopie ist, damit Menschen, die nicht mit Ihnen verbunden sind, sie finden können. Siehe [Anbieter für Ankündigung / Entdeckung](10-NetworkSettings.md#anbieter-für-ankündigung--entdeckung). |
 | **Nachweis / Verankerung** *(experimentell, außer auf Arweave)* | ein Notarstempel | Der Hash des Inhalts, in eine Blockchain-Transaktion geschrieben (Bitcoin, Base, Arweave, Steem oder Blurt), als Nachweis, dass er zu diesem Zeitpunkt existierte. Sie speichert und kündigt nichts an. Siehe [Nachweise & Speicher](11-EvidenceAndStorage.md). |
 | **Kommentare** | Leserrezensionen | Kommentare, die jeder Angemeldete an eine Veröffentlichung hängen kann, jeweils vom Kommentierenden signiert, nicht vom Herausgeber. Siehe [Kommentare](#kommentare). |
@@ -113,7 +109,7 @@ Sie listet Ansprüche auf, die Sie anderswo erstellt haben, solche, die
 Peers Ihnen gesendet haben, und Kreationen aus dem Repository, die in
 dezentraler Form angekommen sind. Ortsnamensansprüche lassen sich auch
 direkt über Nostr finden, ohne Peer; siehe
-[Ortsnamen in der Nähe](03-WorldView.md#ortsnamen-in-der-nähe--ansprüche-von-jedem-entdecken).
+[Ortsnamen in der Nähe](WorldViewAdvancedTools.md#ortsnamen-in-der-nähe--ansprüche-von-jedem-entdecken).
 
 ### Die Urheberschaft einer Struktur beanspruchen
 
@@ -151,7 +147,7 @@ verbundenen Peers einen signierten Anspruch an.
 Direkt nach dem Veröffentlichen bietet das Feld an, den Namen zu
 **Verteilen**, damit auch Personen, die nicht mit Ihnen verbunden sind, ihn
 finden können, zum Beispiel über
-[Ortsnamen in der Nähe](03-WorldView.md#ortsnamen-in-der-nähe--ansprüche-von-jedem-entdecken).
+[Ortsnamen in der Nähe](WorldViewAdvancedTools.md#ortsnamen-in-der-nähe--ansprüche-von-jedem-entdecken).
 Wählen Sie das **Netzwerk** (Arweave, Blurt, Nostr oder Steem; es beginnt mit Ihrem
 [Anbieter für Ankündigung / Entdeckung](10-NetworkSettings.md#anbieter-für-ankündigung--entdeckung))
 und klicken Sie auf **Verteilen**, oder auf **Nicht jetzt**, um es zu
@@ -335,7 +331,7 @@ Kommentare finden Sie:
 - im **Repository** und auf Autorenseiten: die Schaltfläche
   **Kommentieren** auf jeder Karte und in jeder Listenzeile;
 - im Feld
-  [Meine Geteilte Welt](03-WorldView.md#meine-geteilte-welt--ihren-eigenen-snapshot-verteilen-ohne-peers)
+  [Meine Geteilte Welt](WorldViewAdvancedTools.md#meine-geteilte-welt--ihren-eigenen-snapshot-verteilen-ohne-peers)
   der Weltansicht, in dessen Abschnitt **Kommentare**;
 - bei einer ausgewählten **Begegnung in der Welt**: ihre Schaltfläche
   **Kommentieren**.
