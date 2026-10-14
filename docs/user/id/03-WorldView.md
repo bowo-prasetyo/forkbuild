@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: acdd48cfaeaf59fa -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 0aea3f753b8a2a06 -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
@@ -500,8 +500,8 @@ jumlah bangunan serta penandanya. **Lanjutkan Menjelajah** membawa Anda
 masuk lagi. Hanya perangkat ini yang menyimpan daftarnya, dan tidak ada
 orang lain yang melihatnya.
 
-Belum ke mana-mana? **Jelajahi Repositori** membuka **Jelajahi**, tempat
-Anda dapat menemukan Dunia atau mulai dari bangunan siap pakai.
+Belum ke mana-mana? **Buka Jelajahi** untuk menemukan Dunia atau mulai dari
+bangunan siap pakai.
 
 **Bangunan yang Anda bantu buat** mencantumkan bangunan yang mencantumkan
 nama Anda saat Anda membangun bersama teman dengan **Bangun bersamaku**

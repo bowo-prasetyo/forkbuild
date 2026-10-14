@@ -72,6 +72,22 @@ console.log(`✓ ${checked} messages a newcomer meets use the player's words`);
     console.log('✓ nothing a newcomer meets says log in or out');
 }
 
+// Advanced screens too: nothing anywhere in the app says sign in or log in, or
+// calls Explore the Repository (the user-guide audit of 2026-10-13, open item
+// 5, found "Sign in" on commentary, Peers, Following, Conversations and Chat,
+// and the Repository on My Worlds and a distribution result).
+{
+    const words = /\bsign(?:ed|ing)?[ -]?(?:in|out)\b|\blog(?:ged|ging)?[ -]?(?:in|out)\b|\blogin\b|\brepositor(?:y|ies)\b/i;
+    const saying = [];
+    for (const [key, value] of Object.entries(en)) {
+        for (const text of typeof value === 'string' ? [value] : Object.values(value || {})) {
+            if (typeof text === 'string' && words.test(text.replace(/\{[^}]*\}/g, ''))) saying.push(`${key}: ${text}`);
+        }
+    }
+    assert(saying.length === 0, `say Choose a name and Explore everywhere, never sign in, log in or Repository:\n  ${saying.join('\n  ')}`);
+    console.log('✓ no message anywhere says sign in, log in or Repository');
+}
+
 // The main menu names what a player does.
 assert(en['app.nav.editor'] === 'Build' && en['app.nav.repository'] === 'Explore' && en['app.nav.walk'] === 'Walk', 'Build · Explore · Challenge · Walk in the menu');
 console.log('✓ the menu says Build, Explore, Challenge and Walk');

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: acdd48cfaeaf59fa -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 0aea3f753b8a2a06 -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
@@ -515,9 +515,8 @@ auteur et leur nombre de constructions et de points de repère.
 **Continuer l’exploration** vous y ramène. Seul cet appareil garde la
 liste, et personne d’autre ne la voit.
 
-Vous n’êtes encore allé nulle part ? **Parcourez le Dépôt** ouvre
-**Explorer**, où vous pouvez trouver un Monde ou partir d’une construction
-toute prête.
+Vous n’êtes encore allé nulle part ? **Ouvrez Explorer** pour trouver un
+Monde ou partir d’une construction toute prête.
 
 **Constructions auxquelles vous avez participé** liste les constructions
 où un ami vous a crédité quand vous avez construit ensemble avec

@@ -976,7 +976,7 @@ async function runTests() {
         };
         const sharedStrings = [
             'No commentary yet.',
-            'Sign in to add commentary.',
+            'Choose a name to add commentary.',
             'Commentary could not be loaded.',
             'Commentary could not be created.'
         ];
@@ -1022,7 +1022,7 @@ async function runTests() {
             assert(!/Commentary \(\{\{/.test(files[name]), `60. ${name} renders no equivalent count heading — confirmed still absent, not silently added.`);
         }
 
-        classification['I — vocabulary and presentation'] = 'ALREADY_CORRECT (with one classified asymmetry): "Comment"/"Hide Comments"/"Post Comment"/"No commentary yet."/"Sign in to add commentary."/both error strings are byte-identical everywhere. DELIBERATE_PRESENTATION_ASYMMETRY: only OwnPublicationPanel (0.9.251, explicitly scoped there) renders a live count in its own heading; Card/List/WorldEncounterCanvas do not. This changes information density, not the meaning of Commentary, and is not implemented here per this milestone\'s own test-only scope.';
+        classification['I — vocabulary and presentation'] = 'ALREADY_CORRECT (with one classified asymmetry): "Comment"/"Hide Comments"/"Post Comment"/"No commentary yet."/"Choose a name to add commentary."/both error strings are byte-identical everywhere. DELIBERATE_PRESENTATION_ASYMMETRY: only OwnPublicationPanel (0.9.251, explicitly scoped there) renders a live count in its own heading; Card/List/WorldEncounterCanvas do not. This changes information density, not the meaning of Commentary, and is not implemented here per this milestone\'s own test-only scope.';
         console.log('✓ Section I: Commentary vocabulary is byte-identical across all five surfaces. One narrow, pre-existing, deliberately-scoped presentation asymmetry (a count heading, OwnPublicationPanel only) is named and classified, not altered.');
     }
 

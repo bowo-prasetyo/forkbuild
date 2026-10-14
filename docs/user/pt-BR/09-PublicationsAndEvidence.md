@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 49a511b82dd0a439 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 70cc3e473f9bbf3c -->
 # 09 — Publicações e evidências externas
 
 <!-- languages -->
@@ -253,7 +253,7 @@ falhou só por causa do hash antigo, ela aparece primeiro, com um selo
 
 | Tipo | Como publicar de novo |
 |---|---|
-| **Mundo compartilhado** | Publique o Mundo de novo no Editor e depois use **Compartilhar com pares** abaixo dele no Repositório (**Abrir o Repositório**). |
+| **Mundo compartilhado** | Publique o Mundo de novo no Editor e depois use **Compartilhar com pares** abaixo dele no Explorar (**Abrir o Explorar**). |
 | **Atribuição de planta** | No Editor, abra o painel **Informações** da estrutura, **Assinar de novo para este projeto**, depois **Publicar na rede** (**Abrir o Editor**). |
 | **Declaração de nome de lugar** | Na Visão do mundo, abra o painel de nomes do lugar e use **Publicar um nome** de novo. |
 
@@ -263,7 +263,7 @@ Castelo** em vez de **Mundo compartilhado**) e **Abrir no Editor** abre
 aquele Mundo, pronto para publicar de novo. O nome e o link vêm do seu
 próprio registro, nunca do conteúdo da entrada antiga, que ninguém consegue
 verificar. Se o registro sumiu (você despublicou aquele Mundo desde então),
-o cartão mostra **Abrir o Repositório**, como acima.
+o cartão mostra **Abrir o Explorar**, como acima.
 
 A cópia nova ganha um cartão próprio; depois remova a antiga. A antiga nunca
 é aceita, mesmo sendo sua: este dispositivo também guarda conteúdo recebido
@@ -312,8 +312,8 @@ Você encontra comentários:
 - num **Encontro no Mundo** selecionado: o botão **Comentar** dele.
 
 Cada um mostra os comentários, do mais antigo para o mais novo, com a
-identidade de cada autor. Se você entrou, ganha uma caixa de texto e
-**Publicar comentário**; se não, uma nota pedindo para entrar.
+identidade de cada autor. Se você escolheu um nome, ganha uma caixa de texto
+e **Publicar comentário**; se não, uma nota pedindo para escolher um nome.
 
 Os comentários são permanentes: nada de editar, excluir ou responder.
 

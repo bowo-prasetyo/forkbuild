@@ -6620,3 +6620,24 @@ lived in, and the page should be as easy to read as they are to meet).
   are kept word for word from each translation, since they quote the app. Every translation is stamped.
 - Korean bold or italic that GitHub didn't close (a closing marker after punctuation with a particle straight after
   it, such as `**←/→**로`) is fixed on the Avatars & Presence page.
+
+## Choose a name and Explore in the advanced messages too (unnumbered, 2026-10-14)
+
+**Why.** The user-guide audit (docs/reviews/UserGuide-2026-10-13.md, open item 5) found the app still saying "Sign
+in" on commentary, Peers, Following, Conversations and Chat, "Browse the Repository" on My Worlds and "Repository" in
+a distribution result: messages outside the namespaces tests/WordsTable.test.js checked. There is no account and no
+Repository any more (docs/Pillars.md, "Words"), so a player who met **Choose a name** and **Explore** everywhere else
+met the old words on these screens. Pillar served: building feels joyful (the app speaks one language).
+
+- 30 messages, in English and all seven languages: "Sign in to …" is now "Choose a name to …" (with "or pick one on
+  My Identities" where the message links there); "Repository" is **Explore**; My Identities' "Authenticated / Not
+  signed in" is "In use / Not in use"; the distribution result's row is "Your build", beside its **Explore**
+  button; a locked name "can still be used". Walk-here and build-together invitations said "Logging in takes a
+  moment"; they now say choosing a name does.
+- tests/WordsTable.test.js now checks every message, not only a newcomer's screens, for sign in, log in and
+  Repository (placeholders aside).
+- The user guide's World View and Publications & External Evidence quote the new **Open Explore** and the note to
+  choose a name, in every language.
+- Not done: developer errors from application/ that say "sign in" (plain Errors named after their use case), and the
+  guide's own prose on the advanced pages (Publications & External Evidence, Peer Connections, Network Settings,
+  Your Name & Identity), which still says the Repository or logged in.

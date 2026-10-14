@@ -456,8 +456,8 @@ been inside on this device, newest first, with its title, author, and how
 many builds and landmarks it has. **Continue Exploring** takes you back
 in. Only this device keeps the list, and nobody else sees it.
 
-Haven't been anywhere yet? **Browse the Repository** opens **Explore**,
-where you can find a World or start from a ready-made build.
+Haven't been anywhere yet? **Open Explore** to find a World or start from
+a ready-made build.
 
 **Builds you helped make** lists the builds a friend credited you on when
 you built together with **Build with me** (see

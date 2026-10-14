@@ -352,9 +352,9 @@ console.log('✓ the Publications page separates usable publications from failed
 
     const card = [...thirdHost.querySelectorAll('.identity-mgmt-card')].find((candidate) => candidate.textContent.includes('Yours'));
     assert(card && card.querySelector('.identity-mgmt-name').textContent.trim() === 'Shared World', 'without a record, the card keeps its kind as its name');
-    assert(card.textContent.includes('Share with Peers under it in the Repository'), "and the kind's own advice");
-    const link = [...card.querySelectorAll('a')].find((candidate) => candidate.textContent.trim() === 'Open Repository');
-    assert(link && link.getAttribute('href') === '/repository' && !card.textContent.includes('Open in Editor'), 'with a link to the Repository, not the Editor');
+    assert(card.textContent.includes('Share with Peers under it in Explore'), "and the kind's own advice");
+    const link = [...card.querySelectorAll('a')].find((candidate) => candidate.textContent.trim() === 'Open Explore');
+    assert(link && link.getAttribute('href') === '/repository' && !card.textContent.includes('Open in Editor'), 'with a link to Explore, not the Editor');
 
     third.unmount();
     thirdHost.remove();

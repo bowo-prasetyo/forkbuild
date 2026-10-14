@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 49a511b82dd0a439 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 70cc3e473f9bbf3c -->
 # 09 — Veröffentlichungen & externe Nachweise
 
 <!-- languages -->
@@ -271,7 +271,7 @@ veröffentlichen“ sagt sie Ihnen, wie:
 
 | Art | So veröffentlichen Sie sie erneut |
 |---|---|
-| **Geteilte Welt** | Veröffentlichen Sie die Welt erneut aus dem Editor und dann im Repository darunter **Mit Peers teilen** (**Repository öffnen**). |
+| **Geteilte Welt** | Veröffentlichen Sie die Welt erneut aus dem Editor und dann unter Entdecken darunter **Mit Peers teilen** (**Entdecken öffnen**). |
 | **Bauplan-Zuschreibung** | Öffnen Sie im Editor das Feld **Info** der Struktur, **Für dieses Design erneut signieren**, dann **Im Netzwerk veröffentlichen** (**Editor öffnen**). |
 | **Ortsnamensanspruch** | Öffnen Sie in der Weltansicht das Namensfeld des Ortes und nutzen Sie erneut **Einen Namen veröffentlichen**. |
 
@@ -282,7 +282,7 @@ trägt den Namen der Welt (**Meine Burg** statt **Geteilte Welt**), und
 Veröffentlichen. Name und Link stammen aus Ihrem eigenen Nachweis, nie aus
 dem Inhalt des alten Eintrags, den niemand prüfen kann. Ist der Nachweis
 weg (Sie haben diese Welt inzwischen zurückgezogen), zeigt die Karte wie
-oben **Repository öffnen**.
+oben **Entdecken öffnen**.
 
 Die neue Kopie bekommt ihre eigene Karte; entfernen Sie dann die alte. Die
 alte wird nie angenommen, auch wenn sie Ihre ist: Dieses Gerät speichert
@@ -337,8 +337,8 @@ Kommentare finden Sie:
   **Kommentieren**.
 
 Jede zeigt die Kommentare, den ältesten zuerst, mit der Identität jedes
-Autors. Angemeldet bekommen Sie ein Textfeld und **Kommentar senden**;
-sonst einen Hinweis, sich anzumelden.
+Autors. Mit gewähltem Namen bekommen Sie ein Textfeld und **Kommentar
+senden**; sonst einen Hinweis, einen Namen zu wählen.
 
 Kommentare sind dauerhaft: kein Bearbeiten, Löschen oder Antworten.
 

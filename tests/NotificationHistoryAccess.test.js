@@ -75,8 +75,8 @@ function accessFor(identityProvider, lookupProviders = [discoveryProvider]) {
     }
     // What the panel shows (errorText): the refusal in the person's language.
     const shown = errorText(signedOutError);
-    assert(signedOutError && /sign in/i.test(shown) && !/UseCase/.test(shown),
-        `signed out, it asks you to sign in, without the use case's class name — got ${shown}`);
+    assert(signedOutError && /choose a name/i.test(shown) && !/UseCase/.test(shown),
+        `with no name, it asks you to choose one, without the use case's class name — got ${shown}`);
     console.log('✓ reads the signed-in identity\'s notifications from shared storage');
 }
 

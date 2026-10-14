@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: acdd48cfaeaf59fa -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 0aea3f753b8a2a06 -->
 # 03 — Vista del mundo
 
 <!-- languages -->
@@ -495,9 +495,8 @@ autor y cuántas construcciones e hitos tiene. **Seguir explorando** lo
 vuelve a llevar adentro. Solo este dispositivo guarda la lista, y nadie más
 la ve.
 
-¿Todavía no estuvo en ninguno? **Explore el Repositorio** abre
-**Explorar**, donde puede encontrar un Mundo o empezar desde una
-construcción lista.
+¿Todavía no estuvo en ninguno? **Abra Explorar** para encontrar un Mundo o
+empezar desde una construcción lista.
 
 **Construcciones que ayudó a hacer** lista las construcciones en las que un
 amigo le dio crédito cuando construyeron juntos con **Construir conmigo**

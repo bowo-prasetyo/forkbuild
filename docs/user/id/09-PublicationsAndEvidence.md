@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 49a511b82dd0a439 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 70cc3e473f9bbf3c -->
 # 09 — Publikasi & Bukti Eksternal
 
 <!-- languages -->
@@ -259,7 +259,7 @@ perlu menerbitkannya lagi", ia memberi tahu caranya:
 
 | Jenis | Cara menerbitkannya lagi |
 |---|---|
-| **Dunia Bersama** | Terbitkan Dunia itu lagi dari Editor, lalu **Bagikan dengan Rekan** di bawahnya di Repositori (**Buka Repositori**). |
+| **Dunia Bersama** | Terbitkan Dunia itu lagi dari Editor, lalu **Bagikan dengan Rekan** di bawahnya di Jelajahi (**Buka Jelajahi**). |
 | **Atribusi Cetak Biru** | Di Editor, buka panel **Info** struktur itu, **Tandatangani ulang untuk desain ini**, lalu **Terbitkan ke Jaringan** (**Buka Editor**). |
 | **Klaim Nama Tempat** | Di Tampilan Dunia, buka panel penamaan tempat itu dan **Terbitkan Sebuah Nama** lagi. |
 
@@ -270,7 +270,7 @@ di Editor** membuka Dunia itu, siap diterbitkan lagi. Nama dan tautannya
 berasal dari catatan Anda sendiri, tidak pernah dari konten entri lama yang
 tidak dapat diperiksa siapa pun. Jika catatannya sudah tidak ada (Anda
 membatalkan penerbitan Dunia itu sejak saat itu), kartunya menampilkan
-**Buka Repositori** seperti di atas.
+**Buka Jelajahi** seperti di atas.
 
 Salinan baru mendapat kartunya sendiri; lalu hapus yang lama. Yang lama
 tidak pernah diterima, meskipun milik Anda: perangkat ini juga menyimpan
@@ -323,8 +323,8 @@ Anda akan menemukan komentar:
 - pada **Perjumpaan Dunia** yang dipilih: tombol **Komentar**-nya.
 
 Masing-masing menampilkan komentar, dari yang terlama, dengan identitas
-setiap pemberi komentar. Jika sudah masuk, Anda mendapat kotak teks dan
-**Kirim Komentar**; jika belum, catatan untuk masuk.
+setiap pemberi komentar. Jika sudah memilih nama, Anda mendapat kotak teks
+dan **Kirim Komentar**; jika belum, catatan untuk memilih nama.
 
 Komentar bersifat permanen: tidak ada penyuntingan, penghapusan, atau
 balasan.

@@ -14,7 +14,7 @@ const { kindPlugins } = new CreatePublicationDisplayKindRegistryUseCase().execut
 
 const world = republishAdviceFor(kindPlugins[PUBLICATION_CONTENT_KIND]);
 assert(displayText(world.text).includes('Publish the World again') && displayText(world.text).includes('Share with Peers'), 'a World is published and shared again');
-assert(world.route === '/repository' && displayText(world.routeLabel) === 'Open Repository', 'from the Repository');
+assert(world.route === '/repository' && displayText(world.routeLabel) === 'Open Explore', 'from Explore');
 
 const attribution = republishAdviceFor(kindPlugins[BLUEPRINT_ATTRIBUTION_KIND]);
 assert(displayText(attribution.text).includes('Re-sign for this design') && displayText(attribution.text).includes('Publish to Network'), 'an attribution is re-signed and published');

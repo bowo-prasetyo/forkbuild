@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: acdd48cfaeaf59fa -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 0aea3f753b8a2a06 -->
 # 03 — Visão do mundo
 
 <!-- languages -->
@@ -484,8 +484,8 @@ quantas construções e marcos tem. **Continuar explorando** leva você de
 volta para dentro. Só este dispositivo guarda a lista, e ninguém mais a
 vê.
 
-Ainda não foi a lugar nenhum? **Explore o Repositório** abre **Explorar**,
-onde você pode encontrar um Mundo ou começar de uma construção pronta.
+Ainda não foi a lugar nenhum? **Abra o Explorar** para encontrar um Mundo
+ou começar de uma construção pronta.
 
 **Construções que você ajudou a fazer** lista as construções em que um
 amigo deu crédito a você quando construíram juntos com **Construir comigo**
