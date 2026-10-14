@@ -6677,3 +6677,53 @@ Snapshot possession exchange).
   redeploying a self-hosted worker, and what 1.3.0 does with co-built Publications, which it refuses since their
   signed payload carries `builtWith`, the new bricks, tilts and the new links) and known limitations (long share
   links first). `docs/ReleaseNotes-1.3.md` points to it, and the README names 1.4.0 and links all five.
+
+## Short links for builds sent to everyone (unnumbered, 2026-10-14)
+
+**A build sent to everyone is shared by a link of about 90 characters.** The link that carries its build is about
+3,700 characters for the ready-made castle and up to 12,000, and Discord (2,000) and Telegram (4,096) refuse it,
+so the viral loop leaked where builders talk (docs/reviews/Growth-2026-10-13.md, item 1). A build sent to everyone
+already sits on the public Nostr relays as a build note ("Find each other"), so a short link names the note instead of
+carrying the build. The owner chose the audit's recommendation for its decision 1: only builds sent to everyone get one;
+nothing new is stored anywhere. Pillar served: every build has a family tree (a link that can be pasted anywhere gets
+opened and remixed).
+
+- **The link** (core/ForkBuildAppLinks.js `noteLinkUrl()`): the rendezvous worker's `/n/<publication id>`, and
+  `#/n/<publication id>` in the app (ui/router/index.js, `/n/:noteId`). `<publication id>` is the note's `d` tag id.
+- **The worker** (server/rendezvous-worker/noteLink.js; buildPreview.js `resolveSharedBuild()`): asks the relays in
+  `NOSTR_RELAYS` (the app's three defaults when unset) for `{"kinds":[30078],"#d":["forkbuild-build:<id>"],"limit":10}`
+  over WebSockets it opens itself, 4 s per relay, and tries the payloads newest first through `/b/`'s own checks until
+  one carries a build its builder signed under that id. Then the same page, picture and oEmbed as `/b/`, sending people
+  on to `#/n/<id>`. A found build's page and picture are kept in the edge cache for a day; the plain card for a missing
+  one only a minute. The notes' Nostr signatures aren't checked there: anyone can send a note under any id, and only the
+  builder's signature decides. `decodeLinkPayload()` takes a note's larger limit (48,000).
+- **The app** (application/buildNotes/BuildNoteDiscovery.js `findLinkOnly()`; ui/views/PublicationLinkView.js): asks
+  every relay under Network Settings for the build's notes, drops those whose Nostr signature fails or whose claim names
+  another build, and opens them newest first as link-only shares until one checks out. None: "This build couldn't be
+  found on the relays right now", with **Try again**.
+- **Who gets one** (application/buildNotes/FindableBuildsStore.js, `findable-builds`, backed up with Publications): a
+  Publication this device knows is on the relays: its own once a relay took the note (PublishBuildNoteUseCase's
+  `onSent`), or one it opened from a note in Explore or the challenge (BuildNoteDiscovery's `onOpened`). The share strip
+  (ui/components/PublicationShareLink.js) follows the store, so right after Publish the long link turns short once the
+  note is out. Order: a distributed build's network link, then the short link, then the link that carries the build
+  (`ShareLinkKind.SHORT`, application/publication/PublicationShareLink.js `shortShareUrl()`). A build too large for its
+  own link (12,000) but within a note (48,000, about 2,000 bricks) is now shareable by link. Embed and Save picture still
+  use the build itself.
+- **Counting it.** `/e/share-link-short` beside `/e/share-link` when the link shared was short (core/VisitorCount.js,
+  `sharedShortLink()`); docs/launch/README.md says how to read it.
+- Every language: the short link's hint and the not-found message; guide 04's "Sharing a link" and the Privacy page
+  (the local record, the count, the worker's and the app's relay requests, and what a short link holds), stamped up to
+  date. docs/Protocol.md ("Short links"), docs/Architecture.md, docs/Deployment.md, the worker's README and
+  `wrangler.toml` (`NOSTR_RELAYS`).
+- Tests: `ShortLinks` (the link; the worker's reading agreeing with core/BuildNote.js; its relay client over a
+  Worker-style WebSocket, with EOSE, a silent relay and a refusal; the /n/ page, picture and oEmbed for a real signed
+  castle, a newer note carrying another build or a retitled claim passed over, none found, bad ids, a 1,500-brick build
+  past /b/'s limit; the store, sending and opening noting builds; what the share offers; the count),
+  `PublicationLinkViewBrowser` (a short link: none found then Try again, a forged newest note passed over) and
+  `PublicationShareLinkBrowser` (the link turning short once the note is out, counted as short).
+- Upgrading: redeploy the rendezvous worker before this app is published, or short links answer with its plain "is
+  running" text. A self-hosted worker may set `NOSTR_RELAYS` to the relays its app uses.
+- Not done: builds kept to their link (the audit's decision 1, deferred: it would store builds on the worker); builds
+  sent to everyone before this change, which this device never noted, until they are published again; short links for
+  builds others distributed but this device never opened from a note; a short link stops working if no relay
+  keeps the note, and nothing re-sends notes yet.

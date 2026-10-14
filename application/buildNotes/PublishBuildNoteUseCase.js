@@ -20,13 +20,16 @@ export class PublishBuildNoteUseCase {
     // (application/publication/sharing/PublicationLinkPayload.js);
     // `publishToRelay(relayUrl, template)` to `{ published }`;
     // `relayUrls()` lists the relays; `placementClaimFor(publication)` gives
-    // `{ placementRecord }` when this device holds its publisher's placement.
-    constructor({ readBuildText, encodePayload, publishToRelay, relayUrls, placementClaimFor = () => ({}) }) {
+    // `{ placementRecord }` when this device holds its publisher's placement;
+    // `onSent(publicationId)` hears of a note at least one relay took
+    // (application/buildNotes/FindableBuildsStore.js).
+    constructor({ readBuildText, encodePayload, publishToRelay, relayUrls, placementClaimFor = () => ({}), onSent = null }) {
         this._readBuildText = readBuildText;
         this._encodePayload = encodePayload;
         this._publishToRelay = publishToRelay;
         this._relayUrls = relayUrls;
         this._placementClaimFor = placementClaimFor;
+        this._onSent = onSent;
     }
 
     // Resolves to `{ outcome, sent, relays }`: `sent` is how many relays took
@@ -73,6 +76,13 @@ export class PublishBuildNoteUseCase {
             }
         }));
         const sent = answers.filter(Boolean).length;
+        if (sent > 0 && this._onSent) {
+            try {
+                this._onSent(claim.id);
+            } catch {
+                // The note went out all the same.
+            }
+        }
         return result(sent > 0 ? BuildNoteSendOutcome.SENT : BuildNoteSendOutcome.FAILED, { sent, relays: relays.length });
     }
 }

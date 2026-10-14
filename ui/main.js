@@ -690,7 +690,7 @@ const repositoryNetworkDiscovery = new RepositoryNetworkDiscovery({
 // beside what the other networks hold, and this device's own sent the same
 // way when its builder chose so (application/settings/FindabilityStore.js).
 const challengeEntryLog = new ChallengeEntryLog(new LocalStorageProvider());
-const { findabilityStore, publishBuildNoteUseCase, buildNoteDiscovery } = composeBuildNotes({
+const { findabilityStore, findableBuildsStore, publishBuildNoteUseCase, buildNoteDiscovery } = composeBuildNotes({
     relayUrls: resolvedNostrRelayUrls,
     queryRelay: nostrRelayQueryClient,
     publicationContentStore,
@@ -703,6 +703,7 @@ const { findabilityStore, publishBuildNoteUseCase, buildNoteDiscovery } = compos
     placementClaimLookup: publisherPlacementClaimLookup
 });
 app.provide('findabilityStore', findabilityStore);
+app.provide('findableBuildsStore', findableBuildsStore);
 app.provide('publishBuildNoteUseCase', publishBuildNoteUseCase);
 app.provide('buildNoteDiscovery', buildNoteDiscovery);
 app.provide('repositoryNetworkDiscovery', repositoryDiscoveryWithBuildNotes(repositoryNetworkDiscovery, buildNoteDiscovery));

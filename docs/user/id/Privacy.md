@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 6f1093cff06f0c48 -->
+<!-- translation-of: docs/Privacy.md source-hash: 852cc20309a2972a -->
 # Privasi
 
 <!-- languages -->
@@ -58,6 +58,10 @@ perangkat kecuali Anda menerbitkan, mengekspor, atau mengirimnya:
 - untuk setiap minggu tantangan membangun yang Anda buka, ID karya peserta
   yang ditemukan di jaringan, agar halamannya menampilkannya lagi sebelum
   mencari.
+- bangunan mana yang diketahui perangkat ini ada di relay Nostr sebagai
+  catatan bangunan (milik Anda, begitu sebuah relay menerima catatannya, dan
+  milik orang lain yang dibukanya dari catatan), agar bisa dibagikan dengan
+  tautan pendek.
 - untuk setiap bangunan yang Anda mulai dengan **Bangun di sini**, Dunia dan
   tempat yang Anda pilih, agar saat diterbitkan bangunan itu berdiri di
   sana.
@@ -193,12 +197,14 @@ penghitung yang tidak memasang cookie. Hanya permintaan itu yang dikirim:
 - **Siapa pun dapat melihat jumlah totalnya** di dasbor publik,
   <https://forkbuild.goatcounter.com/>.
 
-Penghitung yang sama juga diberi tahu tentang tiga momen saat membagikan
+Penghitung yang sama juga diberi tahu tentang momen-momen ini saat membagikan
 bangunan, masing-masing sebagai satu permintaan gambar lagi dengan jenis
 yang sama, dengan jalur tetapnya sendiri:
 
 - `/e/share-link`: tautan ke sebuah bangunan disalin atau dibagikan dengan
   **Salin tautan** atau **Bagikan…**;
+- `/e/share-link-short`: tautan itu tautan pendek (`/n/…`), dihitung di
+  samping `/e/share-link`, tidak pernah menggantikannya;
 - `/e/opened-shared-link`: tautan yang dibagikan membuka sebuah bangunan;
 - `/e/remix-from-link`: bangunan yang dibuka dari tautan yang dibagikan
   disalin ke Editor (paling banyak sekali per bangunan setiap kali aplikasi
@@ -324,8 +330,10 @@ Anda dan apa yang Anda minta darinya.
 | Anda mendistribusikan Klaim Bertanda Tangan sebuah Publikasi di Blurt (*eksperimental*) | host gambar Blurt (`img-upload.blurt.blog`), secara langsung atau, bila peramban tidak dapat menjangkaunya, melalui relai `/blurt-image` server rendezvous, yang tidak menyimpan apa pun | gambar bangunan berukuran 320×200 untuk pratinjau postingan, ditandatangani dengan kunci posting Blurt Anda |
 | Anda mendistribusikan Klaim Bertanda Tangan sebuah Publikasi di Steem (*eksperimental*) | host gambar Steem (`steemitimages.com`), secara langsung atau, bila peramban tidak dapat menjangkaunya, melalui relai `/steem-image` milik server rendezvous, yang tidak menyimpan apa pun | gambar bangunan berukuran 320×200 untuk pratinjau postingan, ditandatangani dengan kunci posting Steem Anda |
 | Seseorang membuka, atau sebuah situs menampilkan pratinjau, tautan yang membawa bangunannya (`/b/…`) | server rendezvous (`forkbuild-rendezvous.prazjp.workers.dev`) | tautan itu, yang memuat bangunan dan Klaim Bertanda Tangannya; server tidak menyimpan apa pun |
+| Seseorang membuka, atau sebuah situs menampilkan pratinjau, tautan pendek ke bangunan yang dikirim ke semua orang (`/n/…`) | server rendezvous (`forkbuild-rendezvous.prazjp.workers.dev`), yang meminta catatan bangunan itu ke relay Nostr (`relay.damus.io`, `nos.lol`, `relay.primal.net`) | tautan itu, yang menyebut Publikasi bangunan; server tidak menyimpan apa pun, dan Cloudflare menyimpan halaman dan gambar bangunan yang ditemukan di cache selama sehari |
+| Anda membuka tautan pendek (`#/n/…`) | setiap relay Nostr di **Pengaturan Jaringan** | kueri untuk catatan bangunan itu saja (`forkbuild-build:<id>`); yang terbaru yang lolos pemeriksaan dibuka di perangkat ini |
 | Seseorang membuka halaman yang berisi bangunan yang disematkan (`embed.html#…`) | situs tempat ForkBuild disajikan (`bowo-prasetyo.github.io`) | permintaan untuk berkas-berkas sematan, tanpa referrer; tidak pernah bangunannya, yang ada di bagian alamat yang tidak dikirim browser |
-| Sebuah situs atau editor menanyakan cara menyematkan tautan `/b/…` (oEmbed) | `/oembed` milik server rendezvous (`forkbuild-rendezvous.prazjp.workers.dev`) | tautannya, yang memuat bangunan dan Klaim Bertanda Tangannya; server tidak menyimpan apa pun |
+| Sebuah situs atau editor menanyakan cara menyematkan tautan `/b/…` (`/n/…`) (oEmbed) | `/oembed` milik server rendezvous (`forkbuild-rendezvous.prazjp.workers.dev`) | tautannya, yang memuat bangunan dan Klaim Bertanda Tangannya; server tidak menyimpan apa pun |
 | Anda membuka tautan bersama ke sebuah Publikasi (`#/view/…`) | node Steem atau Blurt, gateway Arweave, atau gateway IPFS yang disebut tautan itu, lalu substrat pengumuman untuk menemukan bangunannya | postingan, transaksi, atau CID mana yang Anda buka |
 | Anda menjangkarkan atau memverifikasi bukti di Bitcoin (*eksperimental*) | API Esplora (`blockstream.info`) | transaksi yang Anda siarkan atau cari |
 | Anda memverifikasi bukti di Base (*eksperimental*) | endpoint JSON-RPC Base (`mainnet.base.org`) | transaksi yang Anda cari |
@@ -348,6 +356,18 @@ diminta. Membuat tautan tidak menghubungi apa pun. Siapa pun yang memegang
 tautan itu dapat melihat bangunannya, judul, deskripsi, dan nama pembuatnya,
 serta kunci publik identitas Anda, seperti pada Dunia Bersama mana pun yang
 Anda distribusikan.
+
+**Tautan pendek** (ditawarkan sebagai gantinya begitu bangunan dikirim ke
+semua orang, lihat **Siapa yang bisa menemukannya?** di atas) hanya berisi ID
+Publikasi bangunan itu (`forkbuild-rendezvous.prazjp.workers.dev/n/…`). Membukanya, atau situs yang menampilkan
+pratinjaunya, mengirim ID itu ke server rendezvous, yang meminta catatan
+bangunan itu ke relay Nostr publik, memeriksanya seperti tautan yang
+membawa bangunannya, menggambar gambarnya, mengarahkan orang ke aplikasi
+(`#/n/…`), dan tidak menyimpan apa pun; lalu aplikasi meminta catatan itu
+sendiri ke relay. Bangunan itu sudah publik di relay tersebut, dan itulah
+yang diandalkan tautan pendek: tautan berhenti berfungsi jika tidak ada
+relay yang menyimpan catatannya. Bangunan yang hanya untuk tautannya tidak
+pernah mendapatkannya.
 
 **Bangunan yang disematkan** (kode yang disalin **Sematkan**: sebuah
 `<iframe>` dari `embed.html#…` di situs tempat ForkBuild disajikan) memuat

@@ -55,7 +55,8 @@ export function visitorCountHitUrl(random) {
 }
 
 // The few moments the counter also hears about, each as its own fixed path
-// (docs/Privacy.md, "Visitor count"): a share link copied or shared, a shared
+// (docs/Privacy.md, "Visitor count"): a share link copied or shared, and
+// whether it was a short one, a shared
 // link opened, a build opened from a link then copied into the Editor,
 // ForkBuild installed as an app, and a build's embed code copied, an embedded
 // build shown on another site, and opened from there in ForkBuild; the weekly
@@ -73,6 +74,9 @@ export function visitorCountHitUrl(random) {
 // Nothing about the build, the link or the person is part of the path.
 export const FunnelEvent = Object.freeze({
     SHARE_LINK: 'share-link',
+    // The link shared was a short one (/n/<id>, core/ForkBuildAppLinks.js),
+    // counted beside share-link, never instead of it.
+    SHARE_LINK_SHORT: 'share-link-short',
     OPENED_SHARED_LINK: 'opened-shared-link',
     REMIX_FROM_LINK: 'remix-from-link',
     INSTALLED: 'installed',

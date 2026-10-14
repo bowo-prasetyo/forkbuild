@@ -81,6 +81,15 @@ picture** and **Embed**, with the link below them. The same buttons are under
   ForkBuild. A link that was changed shows only "A shared build".
 - **It needs a signature.** Publish under a name; a build published
   without one (**Publish unsigned**) gets no link.
+- **A short link once it's sent to everyone.** When the build went to
+  **Everyone** (see [Who can find it?](#who-can-find-it)), the buttons offer
+  a short link instead, about 90 characters, that names the build rather
+  than carrying it: whoever opens it gets the build from the public Nostr
+  relays it was sent to, checked as a link is. It fits in any chat, Discord
+  and Telegram included, and works for builds of up to about 2,000 bricks.
+  Builds kept to their link keep the long link, since there is nowhere else
+  for the build to be. A short link works as long as a relay keeps the
+  build; if none answers, the page says so and offers **Try again**.
 - **Size.** A build of up to about 500 bricks fits; the ready-made castle's
   link is about 3,700 characters. Email and most chat apps and social sites
   keep a link that long, but Discord and Telegram limit how long a message

@@ -1,6 +1,7 @@
 import { computed, inject, onBeforeUnmount, ref, watch } from 'vue';
 import {
-    canUseShareSheet, copyEmbedCode, copyPublicationShareLink, describePublicationShare, prepareLinkOnlyShare, sharePublicationLink
+    ShareLinkKind, canUseShareSheet, copyEmbedCode, copyPublicationShareLink, describePublicationShare, prepareLinkOnlyShare, sharePublicationLink,
+    shortShareUrl
 } from '../../application/publication/PublicationShareLink.js';
 import { embedCode } from '../../core/ForkBuildAppLinks.js';
 import { challengeOfTags } from '../../core/BuildChallenge.js';
@@ -23,7 +24,9 @@ function feedbackText(outcome) {
 // record (publicationDistributionLifecycleStore, restored from this browser's
 // storage when not yet in memory), which it follows, so the link changes as
 // soon as a distribution stores the claim. Before that, given `publication`,
-// a build small enough is shared inside the link itself. A build that fits
+// a build sent to everyone as a build note (core/BuildNote.js) gets a short
+// link that names the note, and otherwise a build small enough is shared
+// inside the link itself. A build that fits
 // in a link can also be embedded: Embed shows the <iframe> code to paste into
 // a blog post or web page (core/ForkBuildAppLinks.js, embedCode()).
 export default {
@@ -46,6 +49,7 @@ export default {
         const lifecycleRestorer = inject('publicationDistributionLifecycleRestorer', null);
         const contentStore = inject('publicationContentStore', null);
         const funnel = inject('funnelEventCounter', null);
+        const findableBuildsStore = inject('findableBuildsStore', null);
         const lifecycle = ref(null);
         const linkOnly = ref(null);
         const feedback = ref('');
@@ -71,6 +75,22 @@ export default {
         }
         watch(() => props.publicationId, follow, { immediate: true });
         onBeforeUnmount(() => unsubscribe?.());
+
+        // Whether the build is known to be on the relays, followed, so the
+        // short link appears as soon as the note right after Publish goes out.
+        const findable = ref(false);
+        function readFindable() {
+            try {
+                findable.value = Boolean(findableBuildsStore?.has(props.publicationId));
+            } catch {
+                findable.value = false;
+            }
+        }
+        watch(() => props.publicationId, readFindable, { immediate: true });
+        const unsubscribeFindable = typeof findableBuildsStore?.subscribe === 'function'
+            ? findableBuildsStore.subscribe((publicationId) => { if (publicationId === props.publicationId) findable.value = true; })
+            : null;
+        onBeforeUnmount(() => unsubscribeFindable?.());
 
         let preparing = 0;
         async function prepare(publication) {
@@ -98,7 +118,8 @@ export default {
             }
         });
         const share = computed(() => {
-            const described = describePublicationShare({ lifecycle: lifecycle.value, title: props.title, linkOnly: linkOnly.value });
+            const shortUrl = shortShareUrl({ publicationId: props.publicationId, findable: findable.value });
+            const described = describePublicationShare({ lifecycle: lifecycle.value, title: props.title, linkOnly: linkOnly.value, shortUrl });
             if (!described) return null;
             if (!described.available) return { ...described, reason: t(described.reason) };
             const title = displayText(described.title);
@@ -120,6 +141,7 @@ export default {
             feedback.value = feedbackText(outcome);
             if (outcome === 'shared' || outcome === 'copied') {
                 funnel?.sharedLink();
+                if (share.value?.kind === ShareLinkKind.SHORT) funnel?.sharedShortLink?.();
                 emit('shared');
             }
         }

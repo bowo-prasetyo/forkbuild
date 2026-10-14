@@ -126,6 +126,10 @@ A shared build's own link gets its own title and picture from the rendezvous
 worker: **Share…** and **Copy link** point at its `/b/<payload>`, which
 serves the preview and sends people on to `APP_URL#/s/<payload>` (see
 `server/rendezvous-worker/README.md`, "Link previews for shared builds").
+A build sent to everyone is shared by a short link, the worker's
+`/n/<publication id>`, which reads the build's note from the Nostr relays in
+`NOSTR_RELAYS` (the app's defaults when unset) and sends people on to
+`APP_URL#/n/<publication id>` (same README, "Short links").
 Redeploy the worker before publishing an app that shares such links. A copy
 hosted elsewhere sets the worker's `APP_URL` to its own address and
 `FORKBUILD_LINK_PREVIEW_URL` in `core/ForkBuildAppLinks.js` to its worker.

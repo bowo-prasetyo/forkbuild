@@ -2,6 +2,7 @@ import { BuildNoteDiscovery } from '../../application/buildNotes/BuildNoteDiscov
 import { PublishBuildNoteUseCase } from '../../application/buildNotes/PublishBuildNoteUseCase.js';
 import { CarrierKeyStore } from '../../application/buildNotes/CarrierKeyStore.js';
 import { FindabilityStore } from '../../application/settings/FindabilityStore.js';
+import { FindableBuildsStore } from '../../application/buildNotes/FindableBuildsStore.js';
 import { LocalStorageProvider } from '../../storage/LocalStorageProvider.js';
 import { LocalDiscoveryProvider } from '../../discovery/LocalDiscoveryProvider.js';
 
@@ -16,6 +17,8 @@ export function composeBuildNotes({
 }) {
     const storageProvider = new LocalStorageProvider();
     const findabilityStore = new FindabilityStore({ storageProvider });
+    // The builds known to be on the relays, which get a short link.
+    const findableBuildsStore = new FindableBuildsStore({ storageProvider });
 
     let modules = null;
     function loadModules() {
@@ -54,7 +57,8 @@ export function composeBuildNotes({
         encodePayload: async (request) => (await loadModules()).payload.encodePublicationLinkPayload(request),
         publishToRelay: async (relayUrl, template) => (await carrierPublisher())(relayUrl, template),
         relayUrls: () => relayUrls,
-        placementClaimFor: (publication) => (placementClaimLookup ? placementClaimLookup.claimFor(publication) : {})
+        placementClaimFor: (publication) => (placementClaimLookup ? placementClaimLookup.claimFor(publication) : {}),
+        onSent: (publicationId) => findableBuildsStore.add(publicationId)
     });
 
     let linkedPlacement = null;
@@ -93,8 +97,9 @@ export function composeBuildNotes({
         openedOutcome: 'opened',
         adoptPlacement: async (record) => (await publisherPlacement()).adopt(record),
         isKnown,
-        entryLog
+        entryLog,
+        onOpened: (publicationId) => findableBuildsStore.add(publicationId)
     });
 
-    return { findabilityStore, publishBuildNoteUseCase, buildNoteDiscovery };
+    return { findabilityStore, findableBuildsStore, publishBuildNoteUseCase, buildNoteDiscovery };
 }

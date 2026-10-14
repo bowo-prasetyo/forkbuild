@@ -337,7 +337,7 @@ The embed page checks the claim and build as opening the link does
 nothing, and links to `#/s/<payload>`. The rendezvous worker answers oEmbed
 (https://oembed.com) for its `/b/` links:
 
-    https://forkbuild-rendezvous.prazjp.workers.dev/oembed?url=<a /b/<payload> link>[&maxwidth=…][&maxheight=…][&format=json]
+    https://forkbuild-rendezvous.prazjp.workers.dev/oembed?url=<a /b/<payload> or /n/<publicationId> link>[&maxwidth=…][&maxheight=…][&format=json]
 
 with a `rich` answer whose `html` is the same `<iframe>` (titled in English,
 sized within `maxwidth` and `maxheight` at 4:3), plus `title`, `author_name`
@@ -374,6 +374,37 @@ claim's own signature and the snapshot's hash decide, as for any link. A
 `placement`, when present, goes to AdoptPublisherPlacementUseCase, which
 keeps it only if the Publication's publisher signed it. A challenge entry
 is logged under a week's tag only when the snapshot itself carries that tag.
+
+### Short links
+
+A build sent to everyone as a build note can be shared by a link that names
+its note instead of carrying it (core/ForkBuildAppLinks.js, noteLinkUrl()):
+
+    https://forkbuild-rendezvous.prazjp.workers.dev/n/<publicationId>
+    https://forkbuild-rendezvous.prazjp.workers.dev/n/<publicationId>/preview.png
+    https://bowo-prasetyo.github.io/forkbuild/#/n/<publicationId>
+
+`<publicationId>` is the `d` tag's id, 1 to 128 of `A–Z a–z 0–9 _ -`. A
+reader asks its relays for that one build's notes,
+
+    {"kinds":[30078],"#d":["forkbuild-build:<publicationId>"],"limit":10}
+
+and tries their payloads newest first, each once, until one opens as a
+link-only share whose claim has that id; the rest are ignored. Newest isn't
+trusted for being newest: anyone can send a note under any id, and only the
+claim's own signature and the snapshot's hash decide. The app
+(application/buildNotes/BuildNoteDiscovery.js, findLinkOnly()) also drops
+notes whose Nostr signature fails; the rendezvous worker
+(server/rendezvous-worker/noteLink.js) doesn't check it, since it proves
+nothing about the build, and answers `/n/…` with the same preview page,
+picture and oEmbed as `/b/…`, sending people on to the app's `#/n/…`. With
+no note that checks out, the page is the plain "A shared build" card and
+the app says the build couldn't be found, with Try again.
+
+The app offers a short link only for a Publication it knows is on the relays
+(application/buildNotes/FindableBuildsStore.js): its own once a relay took
+the note, or one it opened from a note. A build kept to its link has no note
+and keeps its link-only share.
 
 ## Signatures
 

@@ -1,4 +1,4 @@
-import { buildNoteFilter, latestBuildNotes } from '../../core/BuildNote.js';
+import { buildNoteFilter, buildNoteFilterForPublication, buildNotesForPublication, latestBuildNotes } from '../../core/BuildNote.js';
 import { buildTagsOf } from './PublishBuildNoteUseCase.js';
 
 // Finds the builds others sent to everyone (core/BuildNote.js): asks every
@@ -27,10 +27,11 @@ export class BuildNoteDiscovery {
     // that means it opened; `adoptPlacement(record)` adopts a signed
     // placement; `isKnown(publicationId)` says whether this device already
     // has it; `entryLog` (application/challenge/ChallengeEntryLog.js) is
-    // optional.
+    // optional; `onOpened(publicationId)` hears of each build opened from a
+    // note (application/buildNotes/FindableBuildsStore.js).
     constructor({
         queryRelay, relayUrls, verifyEvent = () => true, decodePayload, openLinkOnly, openedOutcome,
-        adoptPlacement = null, isKnown = () => false, entryLog = null, openLimit = BUILD_NOTE_OPEN_LIMIT
+        adoptPlacement = null, isKnown = () => false, entryLog = null, openLimit = BUILD_NOTE_OPEN_LIMIT, onOpened = null
     }) {
         this._queryRelay = queryRelay;
         this._relayUrls = relayUrls;
@@ -42,6 +43,7 @@ export class BuildNoteDiscovery {
         this._isKnown = isKnown;
         this._entryLog = entryLog;
         this._openLimit = openLimit;
+        this._onOpened = onOpened;
         // Publication ids whose note didn't open: not tried again this visit.
         this._refused = new Set();
         this._running = new Map();
@@ -61,9 +63,31 @@ export class BuildNoteDiscovery {
         return this._running.get(key);
     }
 
-    async _run(tag) {
-        const filter = buildNoteFilter({ tag });
-        if (!filter) return summary();
+    // The builds a short link (`#/n/<publicationId>`) may open: each
+    // `{ claim, snapshotText }` a note for `publicationId` carries whose claim
+    // names that Publication, newest first. Anyone can send a note under any
+    // id, so the caller opens them in turn, as a link is opened, and keeps the
+    // first that checks out. Resolves to [] when no relay has one or none
+    // answers; never rejects.
+    async findLinkOnly(publicationId) {
+        const filter = buildNoteFilterForPublication(publicationId);
+        if (!filter) return [];
+        const notes = buildNotesForPublication(await this._verifiedEvents(filter), publicationId);
+        const candidates = [];
+        for (const note of notes) {
+            let linkOnly = null;
+            try {
+                linkOnly = await this._decodePayload(note.payload);
+            } catch {
+                linkOnly = null;
+            }
+            if (linkOnly && linkOnly.claim?.id === publicationId) candidates.push(linkOnly);
+        }
+        return candidates;
+    }
+
+    // Every relay's answer to `filter` whose Nostr signature checks out.
+    async _verifiedEvents(filter) {
         let relays = [];
         try {
             relays = [...(this._relayUrls() || [])];
@@ -86,7 +110,13 @@ export class BuildNoteDiscovery {
                 return false;
             }
         }));
-        const notes = latestBuildNotes(events.filter((event, index) => verified[index]));
+        return events.filter((event, index) => verified[index]);
+    }
+
+    async _run(tag) {
+        const filter = buildNoteFilter({ tag });
+        if (!filter) return summary();
+        const notes = latestBuildNotes(await this._verifiedEvents(filter));
 
         const admitted = [];
         const known = [];
@@ -145,6 +175,13 @@ export class BuildNoteDiscovery {
             return null;
         }
         if (!opened || opened.outcome !== this._openedOutcome || !opened.publication) return null;
+        if (this._onOpened) {
+            try {
+                this._onOpened(note.publicationId);
+            } catch {
+                // Opened all the same.
+            }
+        }
         if (note.placementRecord && this._adoptPlacement) {
             try {
                 await this._adoptPlacement(note.placementRecord);

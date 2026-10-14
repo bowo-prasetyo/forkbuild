@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: f9d9cc641a8a9b34 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: b0b1839dc28a506e -->
 # 04 — Publicar e remixar
 
 <!-- languages -->
@@ -84,6 +84,16 @@ ficam em **Meu Mundo compartilhado** na Visão do mundo.
   o abrir ao ForkBuild. Um link alterado mostra só "A shared build".
 - **Precisa de assinatura.** Publique com um nome; uma construção
   publicada sem nome (**Publicar sem assinar**) não ganha link.
+- **Um link curto assim que é enviada para todos.** Se a construção foi
+  para **Todo mundo** (veja [Quem pode encontrá-la?](#quem-pode-encontrá-la)),
+  os botões oferecem em vez disso um link curto, de uns 90 caracteres, que
+  nomeia a construção em vez de levá-la: quem abre recebe a construção dos
+  relays públicos do Nostr para onde ela foi enviada, verificada como num
+  link. Cabe em qualquer chat, Discord e Telegram incluídos, e serve para
+  construções de até uns 2.000 blocos. Construções mantidas só no link
+  ficam com o link longo, porque a construção não está em nenhum outro
+  lugar. Um link curto funciona enquanto algum relay guardar a construção;
+  se nenhum responder, a página avisa e oferece **Tentar novamente**.
 - **Tamanho.** Cabe uma construção de até uns 500 blocos; o link do castelo
   pronto tem uns 3.700 caracteres. O e-mail e a maioria dos aplicativos de
   conversa e redes sociais mantêm um link desse tamanho, mas o Discord e o

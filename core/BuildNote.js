@@ -57,6 +57,18 @@ export function buildNoteFilter({ tag = null, limit = BUILD_NOTE_QUERY_LIMIT } =
     return Object.freeze({ kinds: [BUILD_NOTE_KIND], '#t': [discoveryTag || BUILD_NOTE_TAG], limit });
 }
 
+// The most notes a reader asks for one build (a short link, `/n/<id>`):
+// relays answer with every carrier key's copy, and anyone can send a note
+// under any build's id, so a reader checks them newest first until one opens.
+export const BUILD_NOTE_CANDIDATE_LIMIT = 10;
+
+// The relay filter for the notes of one Publication, or null for an id a
+// note can't carry.
+export function buildNoteFilterForPublication(publicationId, limit = BUILD_NOTE_CANDIDATE_LIMIT) {
+    if (typeof publicationId !== 'string' || !publicationId) return null;
+    return Object.freeze({ kinds: [BUILD_NOTE_KIND], '#d': [D_TAG_PREFIX + publicationId], limit });
+}
+
 // `{ publicationId, payload, placementRecord, tags, createdAt }` from a
 // relay's event, or null for anything that isn't a note this version wrote.
 // `publicationId` and `tags` are the note's own say-so, for sorting and
@@ -102,4 +114,18 @@ export function latestBuildNotes(events) {
         if (!known || note.createdAt > known.createdAt) byPublication.set(note.publicationId, note);
     }
     return [...byPublication.values()].sort((a, b) => (b.createdAt - a.createdAt) || (a.publicationId < b.publicationId ? -1 : 1));
+}
+
+// Every note for `publicationId` among `events`, each payload once, newest
+// first and at most `limit`: the candidates a short link tries in turn.
+export function buildNotesForPublication(events, publicationId, limit = BUILD_NOTE_CANDIDATE_LIMIT) {
+    const seen = new Set();
+    const notes = [];
+    for (const event of Array.isArray(events) ? events : []) {
+        const note = readBuildNote(event);
+        if (!note || note.publicationId !== publicationId || seen.has(note.payload)) continue;
+        seen.add(note.payload);
+        notes.push(note);
+    }
+    return notes.sort((a, b) => b.createdAt - a.createdAt).slice(0, limit);
 }

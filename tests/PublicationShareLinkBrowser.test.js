@@ -18,6 +18,7 @@ import { BUILD_PICTURE_HEIGHT, BUILD_PICTURE_WIDTH } from '../renderer/BuildPict
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { t } from '../ui/i18n/i18n.js';
 import { challengeAt } from '../core/BuildChallenge.js';
+import { FindableBuildsStore } from '../application/buildNotes/FindableBuildsStore.js';
 import { assert } from './support/Assert.js';
 
 // Share, Copy link and Save picture for a build just published, rendered by
@@ -41,13 +42,16 @@ function publishCastle({ signedIn = true, tags = [] } = {}) {
     return { publication, contentStore };
 }
 
-function mount({ publication, contentStore }) {
+function mount({ publication, contentStore }, { findableBuildsStore = null } = {}) {
     const counted = [];
     const host = document.createElement('div');
     document.body.appendChild(host);
     const app = createApp(PublicationShareLink, { publicationId: publication.id, title: publication.title, publication });
     app.provide('publicationContentStore', contentStore);
-    app.provide('funnelEventCounter', { sharedLink: () => counted.push('share-link'), copiedEmbedCode: () => counted.push('embed-code') });
+    app.provide('funnelEventCounter', {
+        sharedLink: () => counted.push('share-link'), sharedShortLink: () => counted.push('share-link-short'), copiedEmbedCode: () => counted.push('embed-code')
+    });
+    if (findableBuildsStore) app.provide('findableBuildsStore', findableBuildsStore);
     app.mount(host);
     return { host, counted, unmount: () => { app.unmount(); host.remove(); } };
 }
@@ -169,4 +173,28 @@ HTMLAnchorElement.prototype.click = function captureDownload() {
         delete navigator.canShare;
     }
     console.log('✓ a challenge entry is shared with the challenge\'s name and tag');
+}
+
+// Sent to everyone: once a relay takes the build's note, the link becomes a
+// short one that names it, and copying it is counted as one.
+{
+    const castle = publishCastle();
+    const findableBuildsStore = new FindableBuildsStore({ storageProvider: new InMemoryStorageProvider() });
+    const { host, counted, unmount } = mount(castle, { findableBuildsStore });
+    try {
+        await until(() => host.querySelector('.publication-share-link-url')?.value.includes('/b/'), 'the long link while the note is on its way');
+        findableBuildsStore.add(castle.publication.id);
+        await until(() => host.querySelector('.publication-share-link-url').value.includes('/n/'), 'the short link');
+        const url = host.querySelector('.publication-share-link-url').value;
+        assert(url === `https://forkbuild-rendezvous.prazjp.workers.dev/n/${castle.publication.id}`, `the short link names the build (${url})`);
+        assert(host.textContent.includes(t('share.shortHint')), 'its hint says it is a short link');
+        assert(host.querySelector('.publication-share-link-embed'), 'Embed is still offered, from the build itself');
+        copied.length = 0;
+        [...host.querySelectorAll('button')].find((button) => button.textContent.trim() === t('share.copy')).click();
+        await until(() => counted.length === 2, 'the copy to be counted');
+        assert(copied.length === 1 && copied[0] === url && counted.join() === 'share-link,share-link-short', `copied and counted as a short link (${counted})`);
+        console.log('✓ a build sent to everyone is shared by a short link');
+    } finally {
+        unmount();
+    }
 }

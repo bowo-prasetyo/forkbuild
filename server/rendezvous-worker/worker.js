@@ -74,9 +74,12 @@ import { handleBuildPreview, handleOEmbed, isBuildPreviewPath, isOEmbedPath } fr
 // Link previews: GET /b/<payload> and /b/<payload>/preview.png
 // (buildPreview.js) give a build shared in a link a title and picture when
 // the link is pasted into a chat or a post, then send people on to the app.
+// Short links, GET /n/<publication id>, do the same for a build sent to
+// everyone, whose build note the worker reads from the Nostr relays
+// (noteLink.js).
 //
-// Neither file imports anything from the app, so the worker can be deployed
-// on its own.
+// None of these files imports anything from the app, so the worker can be
+// deployed on its own.
 
 const PROTOCOL_VERSION = 1;
 const SIGNING_DOMAIN = 'forkbuild';
@@ -228,7 +231,7 @@ function canonicalBytes({ type, id, revision, payload }) {
 
 // True when `signature` (a core/Signature.js toJSON()) is `signer`'s valid
 // Ed25519 signature over `descriptor`.
-async function verifySignature(descriptor, signature, signer) {
+export async function verifySignature(descriptor, signature, signer) {
     if (!signature || typeof signature !== 'object'
         || (signature.algorithm !== undefined && signature.algorithm !== 'Ed25519')
         || signature.signer !== signer

@@ -20,6 +20,16 @@
 // links they are given (Notion, Ghost, WordPress plugins and others) get the
 // <iframe> of the app's embed.html, the same code the app's Embed copies
 // (core/ForkBuildAppLinks.js, embedCode()).
+//
+// GET /n/<publication id> and /n/<publication id>/preview.png are short links
+// to builds sent to everyone: the same page and picture, for the build whose
+// note the relays hold (noteLink.js), sending people on to the app's
+// #/n/<publication id>, where the app reads the note itself. oEmbed answers
+// for them too.
+
+import {
+    MAX_NOTE_PAYLOAD_LENGTH, fetchNoteEvents, isNotePublicationId, notePayloads, noteRelaysOf, queryRelayOverWebSocket
+} from './noteLink.js';
 
 const FORMAT_VERSION = '1';
 const MAX_PAYLOAD_LENGTH = 16000;
@@ -107,8 +117,9 @@ const UNKNOWN_SHAPE = [1, 1, 1, 0x9e9e9e, 'box'];
 
 // `{ claim, snapshotText }` from a link payload, or null for anything this
 // version didn't write.
-export async function decodeLinkPayload(payload) {
-    if (typeof payload !== 'string' || payload.length > MAX_PAYLOAD_LENGTH || payload[0] !== FORMAT_VERSION) return null;
+// `maxLength` is a /b/ link's limit unless given (a build note's is larger).
+export async function decodeLinkPayload(payload, maxLength = MAX_PAYLOAD_LENGTH) {
+    if (typeof payload !== 'string' || payload.length > maxLength || payload[0] !== FORMAT_VERSION) return null;
     const text = payload.slice(1);
     if (!/^[A-Za-z0-9_-]+$/.test(text) || text.length % 4 === 1) return null;
     let packed;
@@ -475,9 +486,10 @@ async function encodePng(pixels, width, height) {
 // ---------------------------------------------------------------- page
 
 const PATH = /^\/b\/([A-Za-z0-9_-]{2,16000})(\/preview\.png)?$/;
+const NOTE_PATH = /^\/n\/([A-Za-z0-9_-]{1,128})(\/preview\.png)?$/;
 
 export function isBuildPreviewPath(pathname) {
-    return PATH.test(pathname);
+    return PATH.test(pathname) || NOTE_PATH.test(pathname);
 }
 
 export function isOEmbedPath(pathname) {
@@ -488,27 +500,60 @@ function appUrlOf(env) {
     return typeof env?.APP_URL === 'string' && /^https?:\/\//.test(env.APP_URL) ? env.APP_URL : DEFAULT_APP_URL;
 }
 
-// GET /b/<payload>: the preview page, which sends people on to the app.
-// GET /b/<payload>/preview.png: the build's picture. `verifySignature` is
-// the worker's Ed25519 check.
-export async function handleBuildPreview(request, env, { verifySignature }) {
+// What a /b/ or /n/ path names: `{ link, picture, payload, build, appRoute }`,
+// `link` the page's own path (/b/<payload> or /n/<id>), `picture` whether the
+// picture was asked for, `payload` and `build` (checkSharedBuild()) null when
+// it doesn't check out or, for /n/, no relay has a note that does; null for
+// any other path. `queryRelay(relayUrl, filter)` asks one relay.
+export async function resolveSharedBuild(pathname, env, { verifySignature, queryRelay = queryRelayOverWebSocket }) {
+    const linked = PATH.exec(pathname);
+    if (linked) {
+        const payload = linked[1];
+        const decoded = await decodeLinkPayload(payload);
+        const build = decoded ? await checkSharedBuild(decoded, verifySignature) : null;
+        return { link: `/b/${payload}`, picture: Boolean(linked[2]), payload: build ? payload : null, build, appRoute: `/s/${payload}` };
+    }
+    const named = NOTE_PATH.exec(pathname);
+    if (!named || !isNotePublicationId(named[1])) return null;
+    const publicationId = named[1];
+    const resolved = { link: `/n/${publicationId}`, picture: Boolean(named[2]), payload: null, build: null, appRoute: `/n/${publicationId}` };
+    const events = await fetchNoteEvents(publicationId, { relays: noteRelaysOf(env), queryRelay });
+    // Newest first, until one names this build and checks out.
+    for (const payload of notePayloads(events, publicationId)) {
+        const decoded = await decodeLinkPayload(payload, MAX_NOTE_PAYLOAD_LENGTH);
+        if (!decoded || decoded.claim?.id !== publicationId) continue;
+        const build = await checkSharedBuild(decoded, verifySignature);
+        if (build) return { ...resolved, payload, build };
+    }
+    return resolved;
+}
+
+// GET /b/<payload> or /n/<publication id>: the preview page, which sends
+// people on to the app. GET …/preview.png: the build's picture.
+// `verifySignature` is the worker's Ed25519 check; `queryRelay` asks a relay
+// for a short link's note.
+export async function handleBuildPreview(request, env, { verifySignature, queryRelay = queryRelayOverWebSocket }) {
     const url = new URL(request.url);
-    const match = PATH.exec(url.pathname);
-    if (!match || (request.method !== 'GET' && request.method !== 'HEAD')) {
+    if (!isBuildPreviewPath(url.pathname) || (request.method !== 'GET' && request.method !== 'HEAD')) {
         return new Response('Not found', { status: 404 });
     }
-    const payload = match[1];
+    const cache = globalThis.caches?.default ?? null;
+    const cacheKey = new Request(url.href, { method: 'GET' });
+    // A short link's page and picture are kept once found: a Publication's
+    // build never changes, and the relays are asked once per edge location.
+    const cached = cache && NOTE_PATH.test(url.pathname) ? await cache.match(cacheKey) : null;
+    if (cached) return request.method === 'HEAD' ? new Response(null, { headers: cached.headers }) : cached;
+
+    const resolved = await resolveSharedBuild(url.pathname, env, { verifySignature, queryRelay });
+    if (!resolved) return new Response('Not found', { status: 404 });
+    const { build } = resolved;
     const appUrl = appUrlOf(env);
-    const decoded = await decodeLinkPayload(payload);
-    const build = decoded ? await checkSharedBuild(decoded, verifySignature) : null;
-    if (match[2]) {
+    if (resolved.picture) {
         if (!build || build.bricks.length === 0 || build.bricks.length > MAX_DRAWN_BRICKS) {
             return Response.redirect(new URL('assets/social/forkbuild-card.png', appUrl).href, 302);
         }
         // Drawn once per edge location: the payload is the build, so its
         // picture never changes.
-        const cache = globalThis.caches?.default ?? null;
-        const cacheKey = new Request(url.href, { method: 'GET' });
         let response = cache ? await cache.match(cacheKey) : null;
         if (!response) {
             response = new Response(await renderPreviewPng(build.bricks), {
@@ -518,17 +563,22 @@ export async function handleBuildPreview(request, env, { verifySignature }) {
         }
         return request.method === 'HEAD' ? new Response(null, { headers: response.headers }) : response;
     }
-    const selfUrl = `${url.origin}/b/${payload}`;
+    const selfUrl = `${url.origin}${resolved.link}`;
     const oembedUrl = build ? `${url.origin}/oembed?url=${encodeURIComponent(selfUrl)}&format=json` : null;
-    const page = previewPage({ build, appLink: `${appUrl}#/s/${payload}`, selfUrl, appUrl, oembedUrl });
-    return new Response(request.method === 'HEAD' ? null : page, {
+    const page = previewPage({ build, appLink: `${appUrl}#${resolved.appRoute}`, selfUrl, appUrl, oembedUrl });
+    // A short link whose note wasn't found may be found in a minute (a relay
+    // was slow, or the note is on its way), so that page isn't kept.
+    const missing = !build && resolved.appRoute.startsWith('/n/');
+    const response = new Response(page, {
         headers: {
             'content-type': 'text/html; charset=utf-8',
-            'cache-control': 'public, max-age=86400',
+            'cache-control': missing ? 'public, max-age=60' : 'public, max-age=86400',
             'content-security-policy': "default-src 'none'; img-src https:; style-src 'unsafe-inline'",
             'referrer-policy': 'no-referrer'
         }
     });
+    if (cache && !missing && resolved.appRoute.startsWith('/n/')) await cache.put(cacheKey, response.clone());
+    return request.method === 'HEAD' ? new Response(null, { headers: response.headers }) : response;
 }
 
 export function previewPage({ build, appLink, selfUrl, appUrl, oembedUrl = null }) {
@@ -569,11 +619,11 @@ ${oembedUrl ? `<link rel="alternate" type="application/json+oembed" href="${e(oe
 `;
 }
 
-// GET /oembed?url=<this worker's /b/<payload>>[&maxwidth=…][&maxheight=…]
+// GET /oembed?url=<this worker's /b/<payload> or /n/<id>>[&maxwidth=…][&maxheight=…]
 // [&format=json]: a "rich" oEmbed answer whose html is the build's embed, for
 // a build whose signature and hash check out; 404 for anything else, and 501
 // for a format other than JSON, as the specification asks.
-export async function handleOEmbed(request, env, { verifySignature }) {
+export async function handleOEmbed(request, env, { verifySignature, queryRelay = queryRelayOverWebSocket }) {
     const url = new URL(request.url);
     if (request.method !== 'GET' && request.method !== 'HEAD') return new Response('Not found', { status: 404 });
     const format = url.searchParams.get('format');
@@ -584,12 +634,9 @@ export async function handleOEmbed(request, env, { verifySignature }) {
     } catch {
         return new Response('Not found', { status: 404 });
     }
-    const match = target.origin === url.origin ? PATH.exec(target.pathname) : null;
-    if (!match || match[2]) return new Response('Not found', { status: 404 });
-    const payload = match[1];
-    const decoded = await decodeLinkPayload(payload);
-    const build = decoded ? await checkSharedBuild(decoded, verifySignature) : null;
-    if (!build) return new Response('Not found', { status: 404 });
+    const resolved = target.origin === url.origin ? await resolveSharedBuild(target.pathname, env, { verifySignature, queryRelay }) : null;
+    if (!resolved || resolved.picture || !resolved.build) return new Response('Not found', { status: 404 });
+    const { build, payload } = resolved;
 
     const appUrl = appUrlOf(env);
     const { width, height } = embedSize(url.searchParams.get('maxwidth'), url.searchParams.get('maxheight'));
@@ -606,7 +653,7 @@ export async function handleOEmbed(request, env, { verifySignature }) {
         width,
         height,
         cache_age: 86400,
-        ...(drawn ? { thumbnail_url: `${url.origin}/b/${payload}/preview.png`, thumbnail_width: PREVIEW_WIDTH, thumbnail_height: PREVIEW_HEIGHT } : {})
+        ...(drawn ? { thumbnail_url: `${url.origin}${resolved.link}/preview.png`, thumbnail_width: PREVIEW_WIDTH, thumbnail_height: PREVIEW_HEIGHT } : {})
     };
     return new Response(request.method === 'HEAD' ? null : JSON.stringify(answer), {
         headers: {

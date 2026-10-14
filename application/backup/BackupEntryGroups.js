@@ -69,6 +69,9 @@ const EXACT_NAMES = new Map([
     ['own-snapshot-distributions', BackupEntryGroup.PUBLICATIONS],
     ['own-commentary-distributions', BackupEntryGroup.PUBLICATIONS],
     ['forkbuild-unpublished-publications', BackupEntryGroup.PUBLICATIONS],
+    // The builds known to be on the Nostr relays, which get a short link
+    // (application/buildNotes/FindableBuildsStore.js).
+    ['findable-builds', BackupEntryGroup.PUBLICATIONS],
 
     ['public-lobby-display-name', BackupEntryGroup.PEOPLE],
 

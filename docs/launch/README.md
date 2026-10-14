@@ -122,6 +122,9 @@ the week after, by day:
   (links opened by someone), `/e/remix-from-link` (copies made from a link).
   Opened links per week is the number that says whether ForkBuild is being
   seen by people its makers didn't bring.
+  `/e/share-link-short` counts the links made that were short ones (a build
+  sent to everyone, `/n/…`): set against `/e/share-link`, it says how many
+  links could be pasted into Discord or Telegram at all.
 
 Each of these has a number to reach (docs/Pillars.md, "The numbers to
 reach"). For a week, export the hits from GoatCounter (or write the totals

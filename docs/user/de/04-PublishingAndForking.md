@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: f9d9cc641a8a9b34 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: b0b1839dc28a506e -->
 # 04 — Veröffentlichen & Remixen
 
 <!-- languages -->
@@ -86,6 +86,17 @@ Weltansicht unter **Meine Geteilte Welt**.
   zeigt nur „A shared build“.
 - **Er braucht eine Signatur.** Veröffentlichen Sie unter einem Namen; ein
   Bauwerk ohne Namen (**Unsigniert veröffentlichen**) bekommt keinen Link.
+- **Ein kurzer Link, sobald es an alle gesendet ist.** Ging das Bauwerk an
+  **Alle** (siehe [Wer kann es finden?](#wer-kann-es-finden)), bieten die
+  Schaltflächen stattdessen einen kurzen Link von etwa 90 Zeichen an, der
+  das Bauwerk nennt, statt es zu enthalten: Wer ihn öffnet, bekommt das
+  Bauwerk von den öffentlichen Nostr-Relays, an die es gesendet wurde, und
+  es wird geprüft wie bei einem Link. Er passt in jeden Chat, auch in
+  Discord und Telegram, und funktioniert für Bauwerke mit bis zu etwa
+  2.000 Steinen. Bauwerke, die bei ihrem Link bleiben, behalten den langen
+  Link, denn das Bauwerk ist nirgendwo sonst. Ein kurzer Link funktioniert,
+  solange ein Relay das Bauwerk behält; antwortet keines, sagt die Seite
+  das und bietet **Erneut versuchen** an.
 - **Größe.** Ein Bauwerk mit bis zu etwa 500 Steinen passt hinein; der Link
   der mitgelieferten Burg hat etwa 3.700 Zeichen. E-Mail und die meisten
   Chat-Apps und sozialen Netzwerke behalten einen so langen Link, Discord

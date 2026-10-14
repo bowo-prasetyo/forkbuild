@@ -54,6 +54,11 @@ export class FunnelEventCounter {
         return this.count(FunnelEvent.SHARE_LINK);
     }
 
+    // The link just shared was a short one, as well as a link.
+    sharedShortLink() {
+        return this.count(FunnelEvent.SHARE_LINK_SHORT);
+    }
+
     openedSharedLink(documentId) {
         if (typeof documentId === 'string' && documentId) this._openedFromLink.add(documentId);
         return this.count(FunnelEvent.OPENED_SHARED_LINK);

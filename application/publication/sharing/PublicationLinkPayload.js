@@ -11,8 +11,9 @@ const FORMAT_VERSION = '1';
 // castle's 127 take about 3,700 characters, the claim included). Email, most
 // chat apps and social sites keep a link this long whole; a bigger build is
 // shared through the networks instead. Discord (2,000 characters a message)
-// and Telegram (4,096) refuse long messages sooner, so there a distributed
-// build's network link is the one to paste.
+// and Telegram (4,096) refuse long messages sooner, so there the short link
+// of a build sent to everyone (core/ForkBuildAppLinks.js, noteLinkUrl()) or a
+// distributed build's network link is the one to paste.
 export const MAX_LINK_PAYLOAD_LENGTH = 12000;
 
 // What a payload may unpack to, so a hostile link can't make the page

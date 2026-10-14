@@ -231,3 +231,56 @@ const text = (host, selector) => host.querySelector(selector)?.textContent.trim(
         view.unmount();
     }
 }
+
+// A short link (`#/n/<publication id>`): the notes the relays hold are opened
+// newest first until one checks out; with none, it says so and offers Try
+// again, which asks the relays once more.
+{
+    const castle = publishCastle({ remix: false });
+    const linkOnly = { claim: castle.publication.toJSON(), snapshotText: await castle.contentStore.get(castle.publication.contentReference) };
+    const forged = { claim: { ...linkOnly.claim, title: 'Free prizes' }, snapshotText: linkOnly.snapshotText };
+    let answers = [];
+    const asked = [];
+    const opened = [];
+    const router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+            { path: '/n/:noteId', component: PublicationLinkView },
+            { path: '/', component: { template: '<p>home</p>' } }
+        ]
+    });
+    await router.push(`/n/${castle.publication.id}`);
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    const app = createApp({ template: '<router-view />' });
+    app.use(router);
+    app.provide('buildNoteDiscovery', { findLinkOnly: async (id) => { asked.push(id); return answers; } });
+    app.provide('openPublicationLink', async ({ linkOnly: candidate }) => {
+        opened.push(candidate.claim.title);
+        return candidate === forged
+            ? { outcome: OpenPublicationLinkOutcome.NOT_VERIFIED, publication: null, documentId: null, message: 'forged' }
+            : { outcome: OpenPublicationLinkOutcome.OPENED, publication: castle.publication, documentId: castle.publication.documentId, message: null };
+    });
+    app.provide('publicationContentStore', castle.contentStore);
+    app.provide('decentralizedPublicationDiscoveryProvider', new DecentralizedPublicationDiscoveryProvider());
+    app.provide('funnelEventCounter', { openedSharedLink: () => {} });
+    app.mount(host);
+    try {
+        await until(() => host.querySelector('.publication-link-message'), 'the message');
+        assert(asked.join() === castle.publication.id, 'the relays are asked for the build the link names');
+        assert(text(host, '.publication-link-message') === t('publicationLink.noteNotFound'), 'with no note, it says the build isn\'t on the relays');
+        const retry = [...host.querySelectorAll('.publication-link-actions button')].find((button) => button.textContent.trim() === t('publicationLink.tryAgain'));
+        assert(retry, 'and offers Try again');
+
+        answers = [forged, linkOnly];
+        retry.click();
+        await until(() => host.querySelector('.shared-build-view'), 'the arrival screen');
+        assert(asked.length === 2, 'Try again asks the relays once more');
+        assert(opened.join('|') === 'Free prizes|Castle on the hill', 'the newest note, forged, is passed over for the one that checks out');
+        assert(host.querySelector('.shared-build-view').textContent.includes('Castle on the hill'), 'the build arrives');
+        console.log('✓ a short link opens the note that checks out, and says when there is none');
+    } finally {
+        app.unmount();
+        host.remove();
+    }
+}

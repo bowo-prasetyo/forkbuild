@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: f9d9cc641a8a9b34 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: b0b1839dc28a506e -->
 # 04 — Publier et remixer
 
 <!-- languages -->
@@ -87,6 +87,18 @@ boutons se trouvent sous **Mon Monde partagé** dans la Vue du monde.
   modifié n’affiche que « A shared build ».
 - **Il faut une signature.** Publiez sous un nom ; une construction
   publiée sans nom (**Publier sans signer**) n’obtient pas de lien.
+- **Un lien court dès qu’elle est envoyée à tout le monde.** Si la
+  construction est allée à **Tout le monde** (voir
+  [Qui peut la trouver ?](#qui-peut-la-trouver-)), les boutons proposent
+  plutôt un lien court, d’environ 90 caractères, qui nomme la construction
+  au lieu de la porter : qui l’ouvre reçoit la construction des relais
+  Nostr publics auxquels elle a été envoyée, vérifiée comme pour un lien.
+  Il tient dans n’importe quelle discussion, Discord et Telegram compris,
+  et vaut pour les constructions jusqu’à environ 2 000 briques. Les
+  constructions gardées pour leur lien gardent le lien long, puisque la
+  construction n’est nulle part ailleurs. Un lien court marche tant qu’un
+  relais garde la construction ; si aucun ne répond, la page le dit et
+  propose **Réessayer**.
 - **Taille.** Une construction d’environ 500 briques au plus y tient ; le
   lien du château prêt à l’emploi fait environ 3 700 caractères. Le
   courriel et la plupart des messageries et des réseaux sociaux gardent un

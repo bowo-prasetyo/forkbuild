@@ -39,7 +39,7 @@ export default {
         });
         const PRIMARY_PATHS = ['/', '/editor', '/repository', '/challenge', '/worlds/recent'];
         const inMore = computed(() => !PRIMARY_PATHS.includes(route.path)
-            && !route.path.startsWith('/challenge/') && !route.path.startsWith('/world/') && !route.path.startsWith('/view/') && !route.path.startsWith('/s/')
+            && !route.path.startsWith('/challenge/') && !route.path.startsWith('/world/') && !route.path.startsWith('/view/') && !route.path.startsWith('/s/') && !route.path.startsWith('/n/')
             && !route.path.startsWith('/plaza/'));
         // Walk goes to this week's plaza (ui/router/index.js, `/walk`), so it is
         // the page shown on any plaza.
