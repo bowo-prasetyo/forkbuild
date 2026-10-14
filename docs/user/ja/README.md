@@ -5,6 +5,10 @@
 [English](../README.md) · [Deutsch](../de/README.md) · [Español](../es/README.md) · [Français](../fr/README.md) · [Bahasa Indonesia](../id/README.md) · **日本語** · [한국어](../ko/README.md) · [Português (Brasil)](../pt-BR/README.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **注意:** このページの英語版は翻訳後に更新されているため、この翻訳は古くなっている可能性があります。[英語版](../README.md)も参照してください。
+<!-- /stale -->
+
 ブラウザーで ForkBuild を使うためのガイドです。はじめての方は
 **[はじめに](01-GettingStarted.md)** から読んでください。アプリを開いて
 から、最初の作品の中を歩くまで 5 分ほどです。

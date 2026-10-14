@@ -5,6 +5,10 @@
 [English](../README.md) · [Deutsch](../de/README.md) · [Español](../es/README.md) · [Français](../fr/README.md) · [Bahasa Indonesia](../id/README.md) · [日本語](../ja/README.md) · [한국어](../ko/README.md) · **Português (Brasil)**
 <!-- /languages -->
 
+<!-- stale -->
+> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../README.md).
+<!-- /stale -->
+
 Guias práticos para usar o ForkBuild no navegador. É novo por aqui?
 Comece por **[Primeiros passos](01-GettingStarted.md)**: cinco minutos
 entre abrir o aplicativo e entrar andando na sua primeira construção.

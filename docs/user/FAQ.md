@@ -106,14 +106,14 @@ No. A placement only says where *their* World shows your build; yours
 stays where you put it, and the build keeps your name and history. If you
 don't want this, choose **Only I may place it** under **Who can place it in
 the World** before you publish. See
-[Why can I place other people's builds?](03-WorldView.md#why-can-i-place-other-peoples-builds).
+[Why can I place other people's builds?](WorldViewAdvancedTools.md#why-can-i-place-other-peoples-builds).
 
 ### Why are two builds sitting in the same spot?
 
 A placement doesn't claim land, and there's no central server to say who
 got a spot first, so two placements can name the same point. You're warned
 before you move one of yours onto an occupied spot. See
-[Why can two builds sit in the same spot?](03-WorldView.md#why-can-two-builds-sit-in-the-same-spot).
+[Why can two builds sit in the same spot?](WorldViewAdvancedTools.md#why-can-two-builds-sit-in-the-same-spot).
 
 ## Identity and your data
 

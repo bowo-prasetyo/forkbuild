@@ -5,6 +5,10 @@
 [English](../README.md) · [Deutsch](../de/README.md) · [Español](../es/README.md) · [Français](../fr/README.md) · **Bahasa Indonesia** · [日本語](../ja/README.md) · [한국어](../ko/README.md) · [Português (Brasil)](../pt-BR/README.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../README.md).
+<!-- /stale -->
+
 Panduan cara memakai ForkBuild di browser. Baru di sini? Mulailah dengan
 **[Memulai](01-GettingStarted.md)**: lima menit dari membuka aplikasi
 sampai berjalan di dalam bangunan pertama Anda.

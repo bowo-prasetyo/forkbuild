@@ -238,7 +238,7 @@ The dialog is the same one World View uses — its **Storage** and
 **Announcement / Discovery substrate** settings, and the separate
 **Distribute Snapshot only** / **Distribute Signed Claim only** buttons
 all work as described in
-[World Encounters](03-WorldView.md#world-encounters--publications-and-avatars-your-peers-are-sharing).
+[World Encounters](WorldViewAdvancedTools.md#world-encounters--publications-and-avatars-your-peers-are-sharing).
 Two things differ here: it always acts on the exact Shared World your
 Publish click just produced, and the **Snapshot** goes first, so **Send**
 sends the Snapshot, then the Signed Claim. Closing the dialog (**Close**,
@@ -345,9 +345,9 @@ they just can't fork it until you pick a license that allows it.
 Other people can normally place your published creation in their own
 Worlds. That adds a placement of your build, never a copy of it, and it never
 moves or changes yours (see
-[Why can I place other people's builds?](03-WorldView.md#why-can-i-place-other-peoples-builds)).
+[Why can I place other people's builds?](WorldViewAdvancedTools.md#why-can-i-place-other-peoples-builds)).
 Forking is separate and governed by the license (see
-[Placing vs forking](03-WorldView.md#placing-vs-forking)).
+[Placing vs forking](WorldViewAdvancedTools.md#placing-vs-forking)).
 If you'd rather they didn't place it, open **Document Properties** and set **Who can
 place it in the World**:
 
@@ -490,7 +490,7 @@ published under that name. Following someone puts their new work on your
 Explore isn't limited to what was published from this device or
 discovered outright, either: a decentralized build a peer
 showed you in World View's own
-[World Encounters](03-WorldView.md#world-encounters--publications-and-avatars-your-peers-are-sharing)
+[World Encounters](WorldViewAdvancedTools.md#world-encounters--publications-and-avatars-your-peers-are-sharing)
 map, once its content actually resolves, joins this same search and its
 author's Author view too, and stays there after a reload. It's shown no
 differently from anything else here.
