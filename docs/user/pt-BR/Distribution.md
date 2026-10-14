@@ -67,6 +67,39 @@ nada.
 O Snapshot de um Mundo leva junto o seu posicionamento assinado, então quem o
 busca vê a construção exatamente onde você a colocou.
 
+### Declaração assinada e Snapshot: duas metades de um mesmo Mundo
+
+Um Mundo publicado é distribuído em duas partes separadas:
+
+| | Declaração assinada | Snapshot |
+|---|---|---|
+| **Como…** | Uma ficha de catálogo autenticada em cartório | O exemplar impresso na estante, etiquetado com o lugar onde fica |
+| **O que contém** | O título do Mundo, você como autor, a licença dele, o Mundo do qual ele foi bifurcado (se houver) e o **hash do conteúdo** dele, uma impressão digital dos blocos, tudo assinado com a sua identidade | Cada bloco do Mundo, mais o seu posicionamento assinado: onde você o colocou na Visão do mundo |
+| **Tamanho** | Alguns kilobytes | Tão grande quanto a construção: até 256 KB no Arweave, sem limite no IPFS |
+| **O que prova** | Que você publicou este Mundo, com exatamente esta impressão digital | Nada por si só; quem o busca confere os blocos com o hash do conteúdo |
+| **Para que serve** | Links de compartilhamento, e **Descobrir Mundo compartilhado**, que procura o seu Mundo e o confere | Mostrar a sua construção na Visão do mundo, onde você a posicionou, para quem estiver andando por perto |
+
+O hash do conteúdo liga as duas: quem tiver os blocos pode conferir que eles
+batem com a impressão digital do seu registro assinado.
+
+As duas metades usam os dois papéis: cada uma é guardada na rede de
+Conteúdo que você escolher e anunciada na rede de Anúncio / descoberta que
+você escolher. Com IPFS e Nostr, por exemplo, **Distribuir** guarda o
+Snapshot no IPFS e o anuncia no Nostr, depois guarda a Declaração assinada
+no IPFS e também a anuncia no Nostr.
+
+Cada metade é útil sozinha, por isso os diálogos de **Distribuir** mostram
+o resultado de cada uma separadamente e deixam você tentar de novo uma
+delas com **Distribuir só o Snapshot** ou **Distribuir só a Declaração
+assinada**:
+
+- **Só o Snapshot:** a sua construção aparece na Visão do mundo para quem
+  estiver por perto, mas nenhum registro assinado da publicação a sustenta.
+- **Só a Declaração assinada:** dá para encontrar o seu Mundo e confirmar
+  que ele é seu, mas não buscar os blocos dele nas redes. Os pares
+  conectados a você ainda podem obtê-los diretamente de você enquanto você
+  estiver on-line.
+
 Detalhes:
 
 - Declaração assinada e Snapshot:
