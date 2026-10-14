@@ -1,9 +1,10 @@
 // Takes the press kit's screenshots (docs/launch/press/) from this checkout,
 // in a real browser, with no network: Home on a desktop and a phone, a
 // ready-made castle and harbor island in the Editor, and the weekly
-// challenge. Also at Product Hunt's gallery size (1270 × 760).
+// challenge. Also at Product Hunt's gallery size (1270 × 760), and itch.io's
+// cover (630 × 500, docs/launch/itch/cover.html over the castle shot).
 //
-//   node scripts/press-kit.mjs
+//   node scripts/press-kit.mjs [file-name-filter]
 //
 // Needs Chromium as the tests do (`npx playwright-core install chromium`, or
 // set CHROMIUM_PATH). Run it again after a visible change, and commit the
@@ -43,15 +44,18 @@ const SHOTS = [
     { file: 'editor-harbor-island.png', size: [1280, 800], hash: '#/editor?start=showcase:harbor_island', ready: '.document-info-compact-title', settle: 2500, hideGuide: true },
     { file: 'challenge.png', size: [1280, 800], hash: '#/challenge', ready: '.challenge-view .featured-build-card', settle: 2500 },
     { file: 'producthunt-home.png', size: [1270, 760], hash: '#/', ready: '.home-showcase canvas, .home-showcase .build-turntable-fallback', settle: 2500 },
-    { file: 'producthunt-editor.png', size: [1270, 760], hash: '#/editor?start=showcase:village_square', ready: '.document-info-compact-title', settle: 2500, hideGuide: true }
+    { file: 'producthunt-editor.png', size: [1270, 760], hash: '#/editor?start=showcase:village_square', ready: '.document-info-compact-title', settle: 2500, hideGuide: true },
+    // After editor-castle.png, which it is drawn over.
+    { file: 'itch-cover.png', size: [630, 500], hash: 'docs/launch/itch/cover.html', ready: '.band img', settle: 500 }
 ];
+const only = process.argv[2];
 
 mkdirSync(outdir, { recursive: true });
 const server = await serve(root);
 const base = `http://127.0.0.1:${server.address().port}/`;
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined });
 try {
-    for (const shot of SHOTS) {
+    for (const shot of SHOTS.filter((s) => !only || s.file.includes(only))) {
         // A fresh context each time: no saved documents, so every shot is a first visit.
         const context = await browser.newContext({
             viewport: { width: shot.size[0], height: shot.size[1] },
