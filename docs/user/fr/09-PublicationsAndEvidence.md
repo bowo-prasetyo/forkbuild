@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 49a511b82dd0a439 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 70cc3e473f9bbf3c -->
 # 09 — Publications et preuves externes
 
 <!-- languages -->
@@ -264,7 +264,7 @@ nouveau », elle vous explique comment faire :
 
 | Type | Comment la publier de nouveau |
 |---|---|
-| **Monde partagé** | Publiez de nouveau le Monde depuis l’Éditeur, puis **Partager avec les pairs** en dessous, dans le Dépôt (**Ouvrir le Dépôt**). |
+| **Monde partagé** | Publiez de nouveau le Monde depuis l’Éditeur, puis **Partager avec les pairs** en dessous, dans Explorer (**Ouvrir Explorer**). |
 | **Attribution de plan** | Dans l’Éditeur, ouvrez le panneau **Infos** de la structure, **Signer de nouveau pour ce design**, puis **Publier sur le réseau** (**Ouvrir l’Éditeur**). |
 | **Proposition de nom de lieu** | Dans la Vue du Monde, ouvrez le panneau de nommage du lieu et utilisez de nouveau **Publier un nom**. |
 
@@ -275,7 +275,7 @@ l’Éditeur** ouvre ce Monde, prêt à être publié de nouveau. Le nom et le
 lien viennent de votre propre enregistrement, jamais du contenu de
 l’ancienne entrée, que personne ne peut vérifier. Si l’enregistrement a
 disparu (vous avez depuis dépublié ce Monde), la carte affiche **Ouvrir
-le Dépôt** comme ci-dessus.
+Explorer** comme ci-dessus.
 
 La nouvelle copie obtient sa propre carte ; retirez ensuite l’ancienne.
 L’ancienne n’est jamais acceptée, même si elle est à vous : cet appareil
@@ -327,9 +327,9 @@ Vous trouverez des commentaires :
   **Commenter**.
 
 Chacun affiche les commentaires, du plus ancien au plus récent, avec
-l’identité de chaque auteur. Connecté, vous avez une zone de texte et
-**Publier le commentaire** ; sinon, une note vous invitant à vous
-connecter.
+l’identité de chaque auteur. Avec un nom choisi, vous avez une zone de texte
+et **Publier le commentaire** ; sinon, une note vous invitant à choisir un
+nom.
 
 Les commentaires sont permanents : ni modification, ni suppression, ni
 réponses.

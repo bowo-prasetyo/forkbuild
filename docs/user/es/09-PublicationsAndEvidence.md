@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 49a511b82dd0a439 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 70cc3e473f9bbf3c -->
 # 09 — Publicaciones y evidencia externa
 
 <!-- languages -->
@@ -262,7 +262,7 @@ dice cómo hacerlo:
 
 | Tipo | Cómo volver a publicarla |
 |---|---|
-| **Mundo compartido** | Vuelva a publicar el Mundo desde el Editor; luego use **Compartir con pares** debajo de él en el Repositorio (**Abrir el Repositorio**). |
+| **Mundo compartido** | Vuelva a publicar el Mundo desde el Editor; luego use **Compartir con pares** debajo de él en Explorar (**Abrir Explorar**). |
 | **Atribución de plano** | En el Editor, abra el panel **Información** de la estructura, **Volver a firmar para este diseño** y luego **Publicar en la red** (**Abrir el Editor**). |
 | **Declaración de nombre de lugar** | En la Vista del mundo, abra el panel de nombres del lugar y vuelva a usar **Publicar un nombre**. |
 
@@ -272,8 +272,8 @@ del Mundo (**Mi castillo** en lugar de **Mundo compartido**) y **Abrir en
 el Editor** abre ese Mundo, listo para volver a publicarlo. El nombre y el
 enlace salen de su propio registro, nunca del contenido de la entrada
 antigua, que nadie puede comprobar. Si el registro ya no está (desde
-entonces retiró la publicación de ese Mundo), la tarjeta muestra **Abrir el
-Repositorio** como arriba.
+entonces retiró la publicación de ese Mundo), la tarjeta muestra **Abrir
+Explorar** como arriba.
 
 La nueva copia recibe su propia tarjeta; luego quite la antigua. La antigua
 nunca se acepta, aunque sea suya: este dispositivo también guarda
@@ -323,8 +323,8 @@ Encontrará los comentarios:
 - en un **Encuentro en el Mundo** seleccionado: su botón **Comentar**.
 
 Cada uno muestra los comentarios, del más antiguo al más reciente, con la
-identidad de cada autor. Con la sesión iniciada, tiene un cuadro de texto y
-**Publicar comentario**; si no, una nota para que inicie sesión.
+identidad de cada autor. Con un nombre elegido, tiene un cuadro de texto y
+**Publicar comentario**; si no, una nota para que elija un nombre.
 
 Los comentarios son permanentes: no se pueden editar, eliminar ni
 responder.

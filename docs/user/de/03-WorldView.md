@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: acdd48cfaeaf59fa -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 0aea3f753b8a2a06 -->
 # 03 — Weltansicht
 
 <!-- languages -->
@@ -503,9 +503,8 @@ diesem Gerät waren, die neueste zuerst, mit Titel, Autor und der Zahl ihrer
 Bauwerke und Wahrzeichen. **Weiter erkunden** bringt Sie wieder hinein.
 Nur dieses Gerät führt die Liste, und niemand sonst sieht sie.
 
-Waren Sie noch nirgends? **Durchsuchen Sie das Repository** öffnet
-**Entdecken**, wo Sie eine Welt finden oder mit einem fertigen Bauwerk
-beginnen können.
+Waren Sie noch nirgends? **Öffnen Sie Entdecken**, um eine Welt zu finden
+oder mit einem fertigen Bauwerk zu beginnen.
 
 **Bauten, an denen Sie mitgebaut haben** listet die Bauwerke, bei denen ein
 Freund Sie genannt hat, als Sie mit **Mit mir bauen** zusammen gebaut haben

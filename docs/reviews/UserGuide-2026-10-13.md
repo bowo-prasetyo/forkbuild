@@ -232,6 +232,11 @@ the toolbar rather than under **File**. **Fixed.**
    My Worlds, and "Repository" in a distribution result. These are outside
    the namespaces tests/WordsTable.test.js checks, so the guide follows the
    app there; the messages themselves could follow Pillars' words.
+   *Done 2026-10-14:* those 30 messages now say **Choose a name** and
+   **Explore** in every language, and tests/WordsTable.test.js checks every
+   message (see the roadmap entry "Choose a name and Explore in the advanced
+   messages too"). The guide's own prose on the advanced pages still says
+   the Repository and logged in.
 6. **Prose pass.** Finding 4's remaining passages. *Partly done
    2026-10-14:* both World View pages are rewritten at about 16 words a
    sentence (from about 25), with one sentence in fifty over 40 words.

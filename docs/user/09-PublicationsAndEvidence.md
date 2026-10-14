@@ -241,7 +241,7 @@ badge. Instead of "its author needs to publish it again", it tells you how:
 
 | Kind | How to publish it again |
 |---|---|
-| **Shared World** | Publish the World again from the Editor, then **Share with Peers** under it in the Repository (**Open Repository**). |
+| **Shared World** | Publish the World again from the Editor, then **Share with Peers** under it in Explore (**Open Explore**). |
 | **Blueprint Attribution** | In the Editor, open the structure's **Info** panel, **Re-sign for this design**, then **Publish to Network** (**Open Editor**). |
 | **Place Naming Claim** | In World View, open the place's naming panel and **Publish A Name** again. |
 
@@ -250,7 +250,7 @@ own record of what you published: it's named for the World (**My Castle**
 instead of **Shared World**) and **Open in Editor** opens that World, ready to
 publish again. The name and the link come from your own record, never from
 the old entry's content, which nobody can check. If the record is gone (you
-unpublished that World since), the card shows **Open Repository** as above.
+unpublished that World since), the card shows **Open Explore** as above.
 
 The new copy gets its own card; then remove the old one. The old one is
 never accepted, even though it's yours: this device also stores content
@@ -298,8 +298,9 @@ You'll find comments:
   panel, in its **Commentary** section;
 - on a selected **World Encounter**: its **Comment** button.
 
-Each shows the comments, oldest first, with each author's identity. Signed
-in, you get a text box and **Post Comment**; otherwise, a note to sign in.
+Each shows the comments, oldest first, with each author's identity. With a
+name chosen, you get a text box and **Post Comment**; otherwise, a note
+asking you to choose a name.
 
 Comments are permanent: no editing, deleting or replies.
 
