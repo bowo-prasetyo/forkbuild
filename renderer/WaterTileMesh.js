@@ -5,6 +5,7 @@ import { LAKE_SURFACE_HEIGHT, waterSurfaceColorAt, seaShareAt } from '../core/Hy
 import { TERRAIN_TILE_SIZE, tileCenter } from '../core/TerrainTiling.js';
 import { TILE_SEGMENTS } from './TerrainTileMesh.js';
 import { makeWaterWaving } from './WaterWaveMaterial.js';
+import { buildRiverTileMesh } from './RiverTileMesh.js';
 
 // The renderer-side counterpart to core/Hydrology.js's LAKE concept —
 // see docs/Roadmap.md, 0.2.89: it knows nothing about WHERE a lake is or
@@ -13,9 +14,8 @@ import { makeWaterWaving } from './WaterWaveMaterial.js';
 // renderer/TerrainTileMesh.js already establishes for ground and
 // renderer/NaturalFeatureTileMesh.js establishes for trees.
 //
-// A lake gets ACTUAL flat geometry (unlike a river, which stays a ground
-// COLOR tint in core/Hydrology.js#hydrologyGroundColorAt() — see that
-// file's own header for why the two are represented differently): still
+// A lake gets ACTUAL flat geometry (a river's water is a separate thin
+// sheet that follows the ground instead, renderer/RiverTileMesh.js): still
 // water genuinely sits at one constant elevation regardless of how the
 // terrain beneath it rises and falls, exactly the way a real lake's
 // surface does not follow the lakebed. A ground-color tint could never
@@ -114,4 +114,17 @@ export function buildWaterTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE, w
     }), waveTime, { lit: false }));
     mesh.add(underside);
     return mesh;
+}
+
+// Everything wet in one tile, for the water streaming ring
+// (renderer/Renderer.js): the lake or sea above (buildWaterTileMesh()) and
+// any river running through (renderer/RiverTileMesh.js), both moving with
+// the one shared `waveTime`. An empty group when the tile is dry.
+export function buildWaterTile(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE, waveTime = { value: 0 }) {
+    const tile = new THREE.Group();
+    const standing = buildWaterTileMesh(tx, tz, seed, tileSize, waveTime);
+    if (standing.isMesh) tile.add(standing);
+    const river = buildRiverTileMesh(tx, tz, seed, tileSize, waveTime);
+    if (river) tile.add(river);
+    return tile;
 }

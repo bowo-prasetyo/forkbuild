@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: d78ce0dde206a2f5 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 6842079854f690d0 -->
 # 03 — 월드 보기
 
 <!-- languages -->
@@ -103,6 +103,7 @@
 닿으며 땅이 깊은 바다로 내려갑니다.
 
 **물.** 호수는 바람에 잔물결이 일고, 바다는 느린 너울로 출렁입니다.
+강은 비탈을 따라 흐르고, 땅이 가파를수록 빨라집니다.
 아바타는 호수나 바다에 걸어 들어가고, 물이 깊어질수록 느려집니다.
 물이 키의 절반보다 깊으면 헤엄칩니다
 ([수영과 잠수](06-AvatarsAndPresence.md#수영과-잠수) 참고). 잠수하면

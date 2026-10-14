@@ -6810,3 +6810,47 @@ walking to).
   variant compiling). Checked by eye on a rendered coast and lake.
 - Not done: rivers still don't flow (they are a ground tint, not water; the next step); foam where waves meet the
   shore; boats and swimmers bobbing with the swell.
+
+## Rivers that run (unnumbered, 2026-10-14)
+
+Lakes rippled and the sea swelled, but a river was still only a blue tint on the ground, and it vanished wherever its
+channel crossed a steeper stretch. Pillar: **Your work is yours, and lives in a world** (the world around a build is
+worth walking to).
+
+- **Which way, and how fast** (core/RiverFlow.js, new): `riverFlowAt()`, a pure function of place, gives the water's
+  velocity. A river here is a channel laid over the terrain with no source or mouth, so downstream is read from the
+  ground: the water runs along the channel (core/Hydrology.js `riverChannelTangentAt()`, new) the way the ground falls
+  over `FLOW_BASELINE` (15 units) either side, faster the steeper, up to `MAX_RIVER_SPEED` (1.2 units a second) at a
+  1% fall. Where a stretch levels out the water slows smoothly to still and runs the other way past the low point, two
+  runs meeting in a dip; the speed passes through zero there, so the current never jumps. `riverWaterAt()` says how
+  much water covers a place: full over most of the channel, easing out across its banks (from
+  `riverProximityAt()`, new, which the ground tint now shares).
+- **The water** (renderer/RiverTileMesh.js, new): a thin sheet 0.08 units over the ground, in the water tile
+  (renderer/WaterTileMesh.js `buildWaterTile()`, new, the lake or sea and the river together, so no new streaming
+  ring). The river is about six units wide and the ground has a vertex every 3.3, so the sheet has four cells to each
+  ground cell. It follows the ground MESH's own triangles (`groundMeshHeightAt()`), not the terrain function, so the
+  true terrain can't poke through between the ground's vertices or leave the water floating; its cells are cut along
+  the ground's diagonal, so every water triangle sits inside one ground triangle. Its normals come from world
+  positions alone, so tiles meet without a crease in the light; a polygon offset keeps it from flickering against the
+  ground far off. Tiles far from any channel skip the search.
+- **The current** (renderer/RiverFlowMaterial.js, new): a soft noise pattern drifted along each vertex's velocity
+  with the usual two-phase flow map (two copies 0.8 s apart on a 1.6 s cycle, each faded out as it resets),
+  streaked along the channel's direction (not the current's, which turns about in a dip and left a seam there),
+  tilting the light and lightening the crests, faded out 18 to 60 units off. It reads the same time the lakes' waves
+  do.
+- **Rivers cross SOIL too.** `isRiverAt()` allowed only GRASS, so a fifth of every channel, its steeper stretches,
+  had no river; with running water the gaps read as a broken river. It now allows GRASS or SOIL (never ROCK, WATER or
+  highland). Everything that reads it (trees and animals kept off rivers, vehicles, residents, the plaza, the river's
+  sound) follows along that extra ground. docs/principles/terrain.md notes the river now has water.
+- **Visual only**, like the waves: the height field is untouched, and walking, wading and swimming are as before.
+- The World View guide's **Water** paragraph says rivers run downhill, in every language.
+- Tests: `RiverFlow` (water covers the channel and only the channel, fading at the banks without a step; the tangent
+  runs along the river; the current runs along it, downhill, as fast as the fall says and never past the limit; it is
+  smooth and deterministic; the bed keeps its tint; `groundMeshHeightAt()` matches a real terrain tile's triangles;
+  a real river tile lies just over the drawn ground, carries the current, channel and coverage at each vertex, faces
+  up and meets its neighbour without a step; dry tiles carry nothing), `RiverFlowBrowser` (real WebGL: the shader
+  compiles; the pattern drifts downstream and, with the current turned about, the other way), and `Hydrology` and
+  `AvatarWaterInteractionProductBoundaryAudit` now allow a river on SOIL. Checked by eye on rendered rivers, one
+  reaching a lake.
+- Not done: rivers aren't carved into the ground (the bed is the terrain's own surface); no foam or rapids; a
+  river doesn't slow a wading avatar.
