@@ -67,6 +67,40 @@ nada.
 El Snapshot de un Mundo lleva consigo su ubicación firmada, así que quienes
 lo recuperan ven la construcción exactamente donde usted la puso.
 
+### Declaración firmada y Snapshot: dos mitades de un mismo Mundo
+
+Un Mundo publicado se distribuye en dos piezas separadas:
+
+| | Declaración firmada | Snapshot |
+|---|---|---|
+| **Como…** | Una ficha de catálogo notariada | El ejemplar impreso en la estantería, etiquetado con el lugar donde está |
+| **Qué contiene** | El título del Mundo, usted como autor, su licencia, el Mundo del que se bifurcó (si lo hay) y su **hash del contenido**, una huella de los bloques, todo firmado con su identidad | Cada bloque del Mundo, más su ubicación firmada: dónde lo puso en la Vista del mundo |
+| **Tamaño** | Unos pocos kilobytes | Tan grande como la construcción: hasta 256 KB en Arweave, sin límite en IPFS |
+| **Qué demuestra** | Que usted publicó este Mundo, con exactamente esta huella | Nada por sí solo; quien lo recupera comprueba los bloques contra el hash del contenido |
+| **Para qué sirve** | Los enlaces para compartir, y **Descubrir Mundo compartido**, que busca su Mundo y lo comprueba | Mostrar su construcción en la Vista del mundo, donde la colocó, a quienes caminan cerca |
+
+El hash del contenido une las dos: quien tenga los bloques puede comprobar
+que coinciden con la huella de su registro firmado.
+
+Las dos mitades usan los dos papeles: cada una se guarda en la red de
+Contenido que elija y se anuncia en la red de Anuncio / descubrimiento que
+elija. Con IPFS y Nostr, por ejemplo, **Distribuir** guarda el Snapshot en
+IPFS y lo anuncia en Nostr, y luego guarda la Declaración firmada en IPFS y
+también la anuncia en Nostr.
+
+Cada mitad es útil por sí sola, por eso los diálogos de **Distribuir**
+informan de cada una por separado y le permiten reintentar una con
+**Distribuir solo el Snapshot** o **Distribuir solo la Declaración
+firmada**:
+
+- **Solo el Snapshot:** su construcción aparece en la Vista del mundo para
+  quienes están cerca, pero ningún registro firmado de la publicación la
+  respalda.
+- **Solo la Declaración firmada:** se puede encontrar su Mundo y confirmar
+  que es suyo, pero no recuperar sus bloques de las redes. Los pares con los
+  que está conectado aún pueden obtenerlos directamente de usted mientras
+  esté en línea.
+
 Detalles:
 
 - Declaración firmada y Snapshot:

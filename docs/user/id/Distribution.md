@@ -72,6 +72,41 @@ Snapshot sebuah Dunia membawa penempatan bertanda tangan Anda, sehingga
 orang yang mengambilnya melihat bangunan itu tepat di tempat Anda
 menaruhnya.
 
+### Klaim Bertanda Tangan dan Snapshot: dua separuh dari satu Dunia
+
+Dunia yang diterbitkan didistribusikan dalam dua bagian terpisah:
+
+| | Klaim Bertanda Tangan | Snapshot |
+|---|---|---|
+| **Seperti…** | Kartu katalog yang dinotariskan | Salinan cetak di rak, berlabel tempat letaknya |
+| **Isinya** | Judul Dunia, Anda sebagai pembuatnya, lisensinya, Dunia asal fork-nya (jika ada), dan **hash konten**-nya, sidik jari balok-baloknya, semuanya ditandatangani dengan identitas Anda | Setiap balok Dunia, ditambah penempatan bertanda tangan Anda: tempat Anda menaruhnya di Tampilan Dunia |
+| **Ukuran** | Beberapa kilobyte | Sebesar bangunannya: hingga 256 KB di Arweave, tanpa batas di IPFS |
+| **Yang dibuktikannya** | Bahwa Anda menerbitkan Dunia ini, dengan sidik jari persis ini | Tidak ada dengan sendirinya; siapa pun yang mengambilnya memeriksa balok-baloknya terhadap hash konten |
+| **Kegunaannya** | Tautan berbagi, dan **Temukan Dunia Bersama** yang mencari Dunia Anda dan memeriksanya | Menampilkan bangunan Anda di Tampilan Dunia, di tempat Anda menaruhnya, kepada orang yang berjalan di dekatnya |
+
+Hash konten mengikat keduanya: siapa pun yang memegang balok-baloknya dapat
+memeriksa bahwa balok-balok itu cocok dengan sidik jari pada catatan
+bertanda tangan Anda.
+
+Kedua separuh memakai kedua peran: masing-masing disimpan di jaringan Konten
+yang Anda pilih dan diumumkan di jaringan Pengumuman / Penemuan yang Anda
+pilih. Dengan IPFS dan Nostr, misalnya, **Distribusikan** menyimpan Snapshot
+di IPFS dan mengumumkannya di Nostr, lalu menyimpan Klaim Bertanda Tangan di
+IPFS dan mengumumkannya di Nostr juga.
+
+Setiap separuh berguna dengan sendirinya, itulah sebabnya dialog
+**Distribusikan** melaporkannya secara terpisah dan memungkinkan Anda
+mencoba ulang salah satunya dengan **Distribusikan Snapshot saja** atau
+**Distribusikan Klaim Bertanda Tangan saja**:
+
+- **Snapshot saja:** bangunan Anda muncul di Tampilan Dunia bagi orang di
+  dekatnya, tetapi tidak ada catatan bertanda tangan atas publikasi itu di
+  baliknya.
+- **Klaim Bertanda Tangan saja:** orang dapat menemukan Dunia Anda dan
+  memastikan bahwa itu milik Anda, tetapi tidak dapat mengambil
+  balok-baloknya dari jaringan. Rekan yang terhubung dengan Anda masih dapat
+  mengambilnya langsung dari Anda selama Anda daring.
+
 Detail:
 
 - Klaim Bertanda Tangan dan Snapshot:

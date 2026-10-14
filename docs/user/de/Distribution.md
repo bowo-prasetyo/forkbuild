@@ -71,6 +71,38 @@ Der Snapshot einer Welt trägt Ihre signierte Platzierung mit sich, sodass
 Menschen, die ihn abrufen, den Bau genau dort sehen, wo Sie ihn hingestellt
 haben.
 
+### Signierter Anspruch und Snapshot: zwei Hälften einer Welt
+
+Eine veröffentlichte Welt wird in zwei getrennten Teilen verteilt:
+
+| | Signierter Anspruch | Snapshot |
+|---|---|---|
+| **Wie …** | Eine notariell beglaubigte Katalogkarte | Das gedruckte Exemplar im Regal, beschriftet mit seinem Standort |
+| **Was er enthält** | Den Titel der Welt, Sie als Urheber, ihre Lizenz, die Welt, von der sie geforkt wurde (falls vorhanden), und ihren **Inhalts-Hash**, einen Fingerabdruck der Steine, alles mit Ihrer Identität signiert | Jeden Stein der Welt, dazu Ihre signierte Platzierung: wo Sie sie in der Weltansicht hingestellt haben |
+| **Größe** | Ein paar Kilobyte | So groß wie das Bauwerk: bis zu 256 KB auf Arweave, ohne Grenze auf IPFS |
+| **Was er beweist** | Dass Sie diese Welt veröffentlicht haben, mit genau diesem Fingerabdruck | Für sich allein nichts; wer ihn abruft, prüft die Steine gegen den Inhalts-Hash |
+| **Wofür er dient** | Teilen-Links, und **Geteilte Welt entdecken**, das Ihre Welt nachschlägt und prüft | Ihr Bauwerk in der Weltansicht, dort wo Sie es platziert haben, Menschen zu zeigen, die in der Nähe unterwegs sind |
+
+Der Inhalts-Hash verbindet die beiden: Wer die Steine hat, kann prüfen, dass
+sie zum Fingerabdruck in Ihrem signierten Eintrag passen.
+
+Beide Hälften nutzen beide Rollen: Jede wird im gewählten Inhalts-Netzwerk
+gespeichert und im gewählten Netzwerk für Ankündigung / Entdeckung
+angekündigt. Mit IPFS und Nostr zum Beispiel speichert **Verteilen** den
+Snapshot auf IPFS und kündigt ihn auf Nostr an, dann speichert es den
+Signierten Anspruch auf IPFS und kündigt auch ihn auf Nostr an.
+
+Jede Hälfte ist für sich nützlich. Deshalb melden die **Verteilen**-Dialoge
+sie getrennt und lassen Sie eine davon mit **Nur Snapshot verteilen** oder
+**Nur Signierten Anspruch verteilen** erneut versuchen:
+
+- **Nur Snapshot:** Ihr Bauwerk erscheint in der Weltansicht für Menschen in
+  der Nähe, aber kein signierter Eintrag der Veröffentlichung steht dahinter.
+- **Nur Signierter Anspruch:** Man kann Ihre Welt finden und bestätigen, dass
+  sie Ihnen gehört, ihre Steine aber nicht aus den Netzwerken abrufen. Peers,
+  mit denen Sie verbunden sind, können sie weiterhin direkt von Ihnen
+  bekommen, solange Sie online sind.
+
 Einzelheiten:
 
 - Signierter Anspruch und Snapshot:
