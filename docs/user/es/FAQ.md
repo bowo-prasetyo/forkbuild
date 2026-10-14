@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 06d073f252435c51 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 781eb04573741493 -->
 # Preguntas frecuentes
 
 <!-- languages -->
 [English](../FAQ.md) · [Deutsch](../de/FAQ.md) · **Español** · [Français](../fr/FAQ.md) · [Bahasa Indonesia](../id/FAQ.md) · [日本語](../ja/FAQ.md) · [한국어](../ko/FAQ.md) · [Português (Brasil)](../pt-BR/FAQ.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés](../FAQ.md).
-<!-- /stale -->
 
 Respuestas breves a las preguntas con las que más se encuentra la gente,
 cada una con un enlace a la guía que la explica por completo.
@@ -121,7 +117,7 @@ No. Una colocación solo dice dónde muestra *su* Mundo la construcción de
 usted; la suya se queda donde la puso, y la construcción conserva su nombre
 y su historial. Si no quiere esto, elija **Solo yo puedo colocarlo** en
 **Quién puede colocarlo en el Mundo** antes de publicar. Consulte
-[¿Por qué puedo colocar construcciones de otras personas?](03-WorldView.md#por-qué-puedo-colocar-construcciones-de-otras-personas).
+[¿Por qué puedo colocar construcciones de otras personas?](WorldViewAdvancedTools.md#por-qué-puedo-colocar-construcciones-de-otras-personas).
 
 ### ¿Por qué hay dos construcciones en el mismo lugar?
 
@@ -129,7 +125,7 @@ Una colocación no reclama terreno, y no hay ningún servidor central que
 diga quién llegó primero a un lugar, así que dos colocaciones pueden
 nombrar el mismo punto. Se le avisa antes de mover una de las suyas a un
 lugar ocupado. Consulte
-[¿Por qué dos construcciones pueden estar en el mismo lugar?](03-WorldView.md#por-qué-dos-construcciones-pueden-estar-en-el-mismo-lugar).
+[¿Por qué dos construcciones pueden estar en el mismo lugar?](WorldViewAdvancedTools.md#por-qué-dos-construcciones-pueden-estar-en-el-mismo-lugar).
 
 ## Identidad y sus datos
 

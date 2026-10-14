@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/README.md source-hash: a206e390cf4902f4 -->
+<!-- translation-of: docs/user/README.md source-hash: a002122a9a62ba43 -->
 # Documentación para usuarios de ForkBuild
 
 <!-- languages -->
 [English](../README.md) · [Deutsch](../de/README.md) · **Español** · [Français](../fr/README.md) · [Bahasa Indonesia](../id/README.md) · [日本語](../ja/README.md) · [한국어](../ko/README.md) · [Português (Brasil)](../pt-BR/README.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés](../README.md).
-<!-- /stale -->
 
 Guías prácticas para usar ForkBuild en el navegador. ¿Es nuevo aquí?
 Empiece por **[Primeros pasos](01-GettingStarted.md)**: cinco minutos desde
@@ -52,7 +48,7 @@ sus amigos.
    donde vive cada construcción publicada: caminar y volar, encontrar y
    mirar cosas, **Construir aquí**, **Pasear aquí conmigo**, los
    residentes y **Editar una copia** para llevar algo al Editor. Sus
-   herramientas de red esperan en **Mostrar herramientas avanzadas**.
+   herramientas de red tienen su propia página, más abajo en Avanzado.
 4. **[Publicar y remezclar](04-PublishingAndForking.md)** — publicar y
    compartir un enlace, elegir a dónde van sus construcciones,
    licencias, remezclar, **Explorar** y sus construcciones ya hechas,
@@ -74,6 +70,12 @@ directas con otras personas, las redes a las que puede ir una
 construcción y las herramientas experimentales. No necesita nada de esto
 para jugar.
 
+- **[Vista del mundo: herramientas avanzadas](WorldViewAdvancedTools.md)**:
+  lo que agrega **Mostrar herramientas avanzadas**: inspeccionar bloques,
+  las colocaciones y por qué se puede colocar la construcción de
+  cualquiera, Encuentros en el Mundo, nombres de lugares descubiertos,
+  construcciones declaradas y enviar su propia construcción desde
+  **Mi Mundo compartido**.
 - **[Su nombre y su identidad](05-IdentityAndLogin.md)**: su
   nombre y la identidad criptográfica que hay detrás, la bóveda (bloquear y desbloquear), hacer una
   copia de seguridad con exportar/importar y administrar identidades
