@@ -221,12 +221,18 @@ the toolbar rather than under **File**. **Fixed.**
    `04-PublishingAndForking.md` and `05-IdentityAndLogin.md`, so links into
    them from outside the guide keep working. Until then the titles used
    words Pillars says not to show a newcomer (fork, Login).
-4. **World View is still long** (1,275 lines). Splitting it into "Visiting
-   the World" and "World View: advanced tools" is the natural next step
-   now that the advanced material sits together.
+4. **World View is still long** (1,275 lines). *Done 2026-10-14:* World
+   View is now a visitor's page (580 lines), and everything behind
+   **Show advanced tools** has its own page, World View: Advanced Tools,
+   in every language (see the roadmap entry "World View split into a
+   visitor's page and its advanced tools"). Section titles are unchanged,
+   so links keep their anchors.
 5. **The app is inconsistent in a few advanced messages.** It says "Sign in"
    on commentary, Peers, Following, Conversations and Chat, "Browse the Repository" on
    My Worlds, and "Repository" in a distribution result. These are outside
    the namespaces tests/WordsTable.test.js checks, so the guide follows the
    app there; the messages themselves could follow Pillars' words.
-6. **Prose pass.** Finding 4's remaining passages.
+6. **Prose pass.** Finding 4's remaining passages. *Partly done
+   2026-10-14:* both World View pages are rewritten at about 16 words a
+   sentence (from about 25), with one sentence in fifty over 40 words.
+   Still to do: the residents section and the distribution walkthrough.
