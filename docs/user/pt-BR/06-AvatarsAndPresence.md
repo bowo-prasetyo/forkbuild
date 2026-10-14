@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 5eccfdfd3ac8fb32 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: f9738fa9f2faf553 -->
 # 06 — Avatares e presença
 
 <!-- languages -->
@@ -337,7 +337,7 @@ prefere pegar a soltar. Só animais que você soltou podem ser decorados — a
 vida selvagem que o mundo pôs sozinho não pode. Um aviso aparece quando **G**
 decoraria ou desfaria algo por perto. Como adicionar um
 [marco](03-WorldView.md#marcos--marcando-um-lugar-que-vale-lembrar),
-decorar exige que você tenha entrado com acesso EDIT ao Mundo em que está. No
+decorar exige um nome e acesso EDIT ao Mundo em que está. No
 Mundo publicado de outra pessoa, a decoração vai para a sua própria cópia
 dele — desde que a licença permita bifurcar. Se nada disso se aplica, **G**
 simplesmente não faz nada; o botão **Decorar** do painel de toque diz o

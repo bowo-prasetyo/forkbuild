@@ -39,14 +39,14 @@ You can protect it later from **My Identities**.
 > the only way to decrypt the key — if you lose it, that identity is gone,
 > even to ForkBuild itself. Choose one you can keep.
 
-## The vault: locked vs. logged out
+## The vault: locked vs. no name
 
 A protected identity's decrypted key lives in something called its **vault**.
 The vault can be **locked** or **unlocked**, and that's a genuinely different
-question from whether you're logged in:
+question from which name you're using:
 
-- **Logged in, unlocked** — everything works normally.
-- **Logged in, locked** (🔒 next to your name in the top-right) — you're
+- **Using a name, unlocked** — everything works normally.
+- **Using a name, locked** (🔒 next to your name in the top-right) — you're
   still yourself, and you can still browse, build and save, but anything
   that needs a fresh signature (publishing, being discoverable,
   joining a lobby) fails with an "identity is locked"
@@ -61,15 +61,15 @@ not you're still using the app (it isn't an inactivity timer), or whenever
 you click **Lock** yourself on **My Identities**. Reloading the page
 always leaves protected identities locked — the decrypted key is never
 written to disk, only ever held in memory — even though the app still
-remembers who you were logged in as.
+remembers which name you were using.
 
 ## Managing identities — the My Identities page
 
 Open **More → My Identities** (or click your name in the top bar) to see every identity this device
 holds, with its own lock state, independent of which one you're currently
-logged in as. From here you can:
+using. From here you can:
 
-- **Create** a new identity (same as the login dialog).
+- **Create** a new identity (same as the name dialog).
 - **Protect with Passphrase** — shown on an unprotected identity (marked
   ⚠ Unprotected). It encrypts the existing key; the identity itself doesn't
   change, and it's locked until you unlock it.
@@ -98,11 +98,11 @@ to stop using one, revoke it instead.
 ### What revoking does — and doesn't
 
 Revoking stops an identity from signing anything new, including the proof
-it needs to start a new connection with another person. It does **not** log
-you out, and you can still log in with it afterwards — its card on **My
+it needs to start a new connection with another person. It does **not** stop
+you using it, and you can still choose it afterwards — its card on **My
 Identities** just shows **Revoked**. That's on purpose, so you
 can still open it to look at it or **Export** it one last time. To keep
-working, create a new identity and log in with that one instead.
+working, create a new identity and use that one instead.
 
 Revoking is permanent, on this device and on any device you restore its
 backup to. Connections that were already open when you revoked aren't cut;
@@ -128,8 +128,8 @@ produces a downloadable file containing your encrypted private key:
    anything.
 2. Enter the export's passphrase to actually import it.
 
-An imported identity always lands **locked**, and you are not automatically
-logged in as it — unlock it from My Identities or the login dialog like any
+An imported identity always lands **locked**, and ForkBuild doesn't switch
+to it by itself — unlock it from My Identities or the name dialog like any
 other protected identity.
 
 The file also carries the identity's signed lifecycle records: its
@@ -166,6 +166,6 @@ on reload.
 
 ## What's next?
 
-Now that you're signed in, set up how you appear to others in
+Now that you have a name, set up how you appear to others in
 **[Avatars & Presence](06-AvatarsAndPresence.md)**, or find people to build
 with in **[Peer Connections & Friends](07-PeerConnectionsAndFriends.md)**.

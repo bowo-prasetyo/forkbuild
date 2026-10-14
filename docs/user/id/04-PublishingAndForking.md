@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 678438731470dcad -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: f9d9cc641a8a9b34 -->
 # 04 — Penerbitan & Remix
 
 <!-- languages -->
@@ -270,7 +270,7 @@ Hasil Klaim Bertanda Tangan muncul di bagiannya sendiri:
 | **Dunia Bersama** | Id Dunia Bersama itu sendiri — memastikan Dunia Bersama mana yang dimaksud hasil ini. |
 | **Materi** | Lokasi yang dihasilkan unggahan, atau "Belum diunggah" jika tidak selesai. |
 | **Penemuan** | Id pengumuman, atau "Belum diumumkan" jika tidak selesai — satu baris per relay jika beberapa relay dikonfigurasi. |
-| **Repositori** | Tombol **Jelajahi** yang langsung melompat ke halaman publikasi ini di Tampilan Dunia — ditampilkan setiap kali publikasi memiliki tempat untuk dijelajahi, yang dalam praktiknya selalu. |
+| **Bangunan Anda** | Tombol **Jelajahi** yang langsung melompat ke halaman publikasi ini di Tampilan Dunia — ditampilkan setiap kali publikasi memiliki tempat untuk dijelajahi, yang dalam praktiknya selalu. |
 
 **Bangunan besar.** Penyimpanan Arweave menerima Snapshot hingga 256 KB,
 sekitar delapan ribu balok. Untuk yang lebih besar, pilih penyimpanan IPFS
@@ -414,13 +414,13 @@ berubah"); lihat
 Yang asli tidak pernah tersentuh, seberapa banyak pun Anda mengubah
 salinan Anda.
 
-## Repositori
+## Jelajahi
 
-**Jelajahi** di bilah atas (disebut *Repositori* di versi lama dan di
-beberapa pesan lanjutan) adalah katalog yang dapat dicari berisi setiap
+**Jelajahi** di bilah atas (disebut *Repositori* di versi
+lama) adalah katalog yang dapat dicari berisi setiap
 bangunan terbitan yang diketahui perangkat ini: milik Anda sendiri, yang dibagikan
 rekan kepada Anda, dan yang ditemukan di jaringan terdesentralisasi.
-Repositori dibuat agar tetap mudah dipakai baik berisi sepuluh karya
+Jelajahi dibuat agar tetap mudah dipakai baik berisi sepuluh karya
 maupun sepuluh ribu.
 
 ### Bangunan siap pakai
@@ -455,7 +455,7 @@ baru yang ditemukannya; **Periksa lagi** mencari sekali lagi.
   ditambahkan: ditandatangani dengan kunci yang disebutkannya, dan persis
   karya yang diumumkan. Selebihnya dilewati, dan catatan yang gagal tidak
   diambil lagi.
-- Repositori memeriksa hingga 20 karya baru sekaligus. Jika ada lebih
+- Jelajahi memeriksa hingga 20 karya baru sekaligus. Jika ada lebih
   banyak, baris itu menyebutkan berapa yang tersisa untuk lain kali.
 - Karya yang ditemukan dengan cara ini tetap ada di **Jelajahi** Anda setelah
   dimuat ulang.

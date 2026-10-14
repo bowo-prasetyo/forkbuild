@@ -45,9 +45,9 @@ send it:
 - whether this browser takes part in the daily visitor count, and the last
   day it did;
 - other people's Publications this device has found and verified, from
-  peers, links, World View or the Repository's search of the networks, and,
+  peers, links, World View or Explore's search of the networks, and,
   for those found on the networks, where each one's signed record was read.
-- the ids of Publications you unpublished on this device, so the Repository's
+- the ids of Publications you unpublished on this device, so Explore's
   search of the networks doesn't list copies you distributed earlier again.
 - for each week's build challenge you open, the ids of the entries found on
   the networks, so its page lists them again before searching.
@@ -71,8 +71,8 @@ send it:
 
 Clearing this site's data in the browser deletes all of it, and there is no
 other copy and no way to recover it. Back it up first with **Your Data →
-Back Up to a File**: the file holds all of the above except which identity
-is logged in, encrypted with a passphrase you choose, and stays wherever you
+Back Up to a File**: the file holds all of the above except which name
+you were using, encrypted with a passphrase you choose, and stays wherever you
 put it. ForkBuild never uploads it. **Share Backup** hands the file to the
 app you pick on your device. If you choose a backup folder, the browser
 keeps ForkBuild's permission for it, and ForkBuild keeps the folder and, if
@@ -117,7 +117,7 @@ settings (see "Notifications on this device" below).
   They also receive the Snapshot and Place Naming announcements your device
   has discovered, so they learn which World regions you have searched for
   place names (docs/AnnouncementIndex.md).
-- **Peers, for Worlds you share.** **Share with Peers** in the Repository
+- **Peers, for Worlds you share.** **Share with Peers** in Explore
   offers one of your published Worlds to everyone you're connected to now and
   to anyone who connects later, lobby strangers included: they receive its
   listing and can fetch the World itself from your device while you're
@@ -297,7 +297,7 @@ only when you use the feature, and each server can be changed under
 | A peer connection starts | STUN servers (`stun.l.google.com`) | nothing but a request for your public IP address |
 | You start a peer connection, if the rendezvous server offers a relay | the rendezvous server's `/turn-credentials`, then its TURN relay (Cloudflare) | a request for short-lived relay credentials, at most about once an hour; relayed traffic is end-to-end encrypted by WebRTC |
 | The app is open and its tab visible (background announcement sync) | Nostr relays (`relay.damus.io`), an Arweave gateway (`arweave.net`), Steem nodes (`api.steemit.com`), Blurt nodes (`rpc.blurt.blog`) | queries for ForkBuild's discovery tags: the shared Snapshot and Commentary tags, and the Place Naming regions and map cells you have visited |
-| You open Explore (the Repository) or an author's page | Nostr relays (`relay.damus.io`), an Arweave gateway (`arweave.net`), Steem nodes (`api.steemit.com`), Blurt nodes (`rpc.blurt.blog`) | a query for the shared Publication tag (`forkbuild-publication`); then a request for each newly announced Publication's signed record, at most 20 per visit or **Check again** |
+| You open Explore or an author's page | Nostr relays (`relay.damus.io`), an Arweave gateway (`arweave.net`), Steem nodes (`api.steemit.com`), Blurt nodes (`rpc.blurt.blog`) | a query for the shared Publication tag (`forkbuild-publication`); then a request for each newly announced Publication's signed record, at most 20 per visit or **Check again** |
 | You open a week's build challenge (**Challenge**) | Nostr relays (`relay.damus.io`), an Arweave gateway (`arweave.net`), Steem nodes (`api.steemit.com`), Blurt nodes (`rpc.blurt.blog`) | a query for that week's tag (`forkbuild-tag:<tag>`); then a request for each newly announced entry's signed record, at most 20 per visit or **Check again** |
 | You publish a build with **Everyone** chosen under **Who can find it?** | every Nostr relay under **Network Settings** (`relay.damus.io`, `nos.lol`, `relay.primal.net`) | a build note: the signed build itself, its tags and its publisher's signed placement, signed with this device's carrier key |
 | You open Explore, an author's page, a week's challenge or its plaza | every Nostr relay under **Network Settings** | a query for build notes (`forkbuild-build`, or that week's `forkbuild-tag:<tag>`); each new note is checked and opened on this device, at most 40 per visit |

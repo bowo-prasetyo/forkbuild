@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 70cc3e473f9bbf3c -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: dbd0c9839aa5a461 -->
 # 09 — Publikasi & Bukti Eksternal
 
 <!-- languages -->
@@ -17,14 +17,14 @@
 > dan Base-nya, Steem, Blurt, pinning IPFS jarak jauh, serta seluruh panel
 > **Alat Dompet & Arsip**. Panduan [11](11-EvidenceAndStorage.md)
 > dan [12](12-ArchiveAndLeaderboards.md) menyebutkan bagian mana yang
-> Eksperimental. Membangun, menyimpan, menerbitkan ke Repositori, fork,
+> Eksperimental. Membangun, menyimpan, menerbitkan ke Jelajahi, fork,
 > identitas, dan rekan tidak bergantung pada semua itu.
 
 Tidak ada satu pun dari ini yang diperlukan untuk memakai ForkBuild.
 Lewati saja jika Anda hanya ingin membangun, menerbitkan, dan menjelajah.
 
-Halaman **Publikasi** adalah lapisan yang lebih teknis daripada Repositori.
-Repositori berkaitan dengan Dokumen dan Dunia; halaman Publikasi berkaitan
+Halaman **Publikasi** adalah lapisan yang lebih teknis daripada Jelajahi.
+Jelajahi berkaitan dengan Dokumen dan Dunia; halaman Publikasi berkaitan
 dengan **klaim bertanda tangan** seperti "Saya merancang struktur ini" atau
 "Saya menyebut tempat ini X", dan dengan kedalaman opsional yang dapat Anda
 tambahkan pada sebuah klaim:
@@ -43,22 +43,22 @@ tambahkan pada sebuah klaim:
 
 ## Dua arti "terbitkan"
 
-| | **Terbitkan** (Repositori) | **Halaman Publikasi** |
+| | **Terbitkan** (Jelajahi) | **Halaman Publikasi** |
 |---|---|---|
 | Apa yang dibagikan | Dokumen atau Dunia | Catatan bertanda tangan: Dunia Bersama, kepengarangan struktur, atau nama tempat |
-| Tempat melihatnya | Repositori, Halaman pembuat, Tampilan Dunia | Halaman **Publikasi** |
+| Tempat melihatnya | Jelajahi, Halaman pembuat, Tampilan Dunia | Halaman **Publikasi** |
 | Apa yang Anda lakukan dengannya | Membuka, menjelajahi, mem-fork | Memeriksanya, mengambil kontennya, mendistribusikan dan menjangkarkannya |
 | Panduan | [Penerbitan & Remix](04-PublishingAndForking.md) | Yang ini |
 
 **Terbitkan** saja tidak memasukkan sebuah Dunia ke halaman Publikasi.
 **Bagikan dengan Rekan** yang melakukannya: ia menandatangani Dunia itu
 sebagai **Dunia Bersama** yang dapat berpindah ke rekan (lihat
-[Karya Repositori, terdesentralisasi](#karya-repositori-terdesentralisasi)).
+[Bangunan dari Jelajahi, terdesentralisasi](#bangunan-dari-jelajahi-terdesentralisasi)).
 
 Halaman Publikasi tidak memiliki **Buka**, **Jelajahi**, atau **Remix**,
 bahkan untuk Dunia Bersama. Halaman ini menampilkan catatan bertanda
 tangan, bukan Dunianya. Untuk membuka, menjelajahi, atau mem-fork Dunia
-Bersama, temukan di Repositori, di halaman pembuatnya, atau di Tampilan
+Bersama, temukan di Jelajahi, di halaman pembuatnya, atau di Tampilan
 Dunia. Yang Anda terima dari rekan muncul di sana begitu kontennya ada di
 perangkat ini. (Satu-satunya pengecualian adalah **Buka di Editor** pada
 Dunia Bersama milik Anda sendiri yang perlu diterbitkan lagi; lihat
@@ -73,7 +73,7 @@ masing-masing adalah salah satu dari tiga jenis:
 | **Atribusi Cetak Biru** | Klaim bahwa Anda merancang sebuah struktur |
 | **Klaim Nama Tempat** | Nama untuk sebuah Wilayah atau Penanda |
 
-Tampilan Dunia, Editor, dan Repositori juga menyebut catatan bertanda
+Tampilan Dunia, Editor, dan Jelajahi juga menyebut catatan bertanda
 tangan sebuah Dunia sebagai **Dunia Bersama**, seperti di **Dunia Bersama
 Saya**, **Temukan Dunia Bersama**, dan **Kembali ke Dunia Bersama**.
 
@@ -92,7 +92,7 @@ merupakan jenis publikasi, dan hanya publikasi itu sendiri yang wajib:
 | **Penempatan** | Rak tempat salinan itu ditaruh | Catatan bertanda tangan tentang di mana sebuah bangunan berdiri di Dunia. Satu Dunia Bersama dapat memiliki beberapa penempatan. Lihat [Menempatkan vs mem-fork](WorldViewAdvancedTools.md#menempatkan-vs-mem-fork). |
 | **Pengumuman / Penemuan** | Entri katalog perpustakaan | Pemberitahuan kecil bertanda tangan di Nostr, Arweave, Steem, atau Blurt yang menyatakan bahwa publikasi atau Snapshot itu ada dan di mana salinannya, agar orang yang tidak terhubung dengan Anda dapat menemukannya. Lihat [Penyedia Pengumuman / Penemuan](10-NetworkSettings.md#penyedia-pengumuman--penemuan). |
 | **Bukti / Penjangkaran** *(Eksperimental, kecuali di Arweave)* | Cap notaris | Hash konten yang ditulis ke dalam transaksi blockchain (Bitcoin, Base, Arweave, Steem, atau Blurt), sebagai bukti bahwa konten itu sudah ada pada waktu tersebut. Tidak menyimpan atau mengumumkan apa pun. Lihat [Bukti & Penyimpanan](11-EvidenceAndStorage.md). |
-| **Komentar** | Ulasan pembaca | Komentar yang dapat dilekatkan siapa pun yang sudah masuk pada sebuah publikasi, masing-masing ditandatangani oleh pemberi komentar, bukan oleh penerbit. Lihat [Komentar](#komentar). |
+| **Komentar** | Ulasan pembaca | Komentar yang dapat dilekatkan siapa pun yang punya nama pada sebuah publikasi, masing-masing ditandatangani oleh pemberi komentar, bukan oleh penerbit. Lihat [Komentar](#komentar). |
 
 Jadi Anda membuat publikasi; lalu, jika mau, menyimpan kontennya,
 mengumumkannya, menjangkarkannya, dan menempatkannya (untuk Dunia
@@ -102,7 +102,7 @@ Bersama); dan siapa pun dapat mengomentarinya.
 
 Anda tidak pernah membuat klaim di halaman Publikasi itu sendiri. Halaman
 ini mencantumkan klaim yang Anda buat di tempat lain, yang dikirim rekan
-kepada Anda, dan karya Repositori yang datang dalam bentuk
+kepada Anda, dan bangunan dari Jelajahi yang datang dalam bentuk
 terdesentralisasi. Klaim nama tempat juga dapat ditemukan langsung dari
 Nostr, tanpa melibatkan rekan; lihat
 [Nama Tempat di Sekitar](WorldViewAdvancedTools.md#nama-tempat-di-sekitar--menemukan-klaim-dari-siapa-pun).
@@ -163,15 +163,15 @@ terbitkan selama kalian terhubung. Klaim yang diterima hanyalah catatan
 yang ditandatangani dengan sah: kontennya tidak ada di perangkat Anda
 sampai Anda mengambilnya dengan **Ambil dari Rekan** (di bawah).
 
-### Karya Repositori, terdesentralisasi
+### Bangunan dari Jelajahi, terdesentralisasi
 
 Sebuah kartu juga dapat berisi **Dunia Bersama** — jenis objek yang sama
-dengan entri Repositori, dibungkus untuk perjalanan terdesentralisasi.
-**Bagikan dengan Rekan** di Repositori membuatnya untuk Dunia Anda sendiri
+dengan entri Jelajahi, dibungkus untuk perjalanan terdesentralisasi.
+**Bagikan dengan Rekan** di Jelajahi membuatnya untuk Dunia Anda sendiri
 (lihat
 [Berbagi dengan rekan yang terhubung](04-PublishingAndForking.md#berbagi-dengan-rekan-yang-terhubung)).
 Begitu Anda menyelesaikannya di sini dengan **Periksa Ulang** atau **Ambil
-dari Rekan**, karya itu bergabung ke pencarian Repositori, halaman
+dari Rekan**, karya itu bergabung ke pencarian Jelajahi, halaman
 pembuatnya, dan Tampilan Dunia, dan tetap ada setelah dimuat ulang.
 
 ## Halaman Publikasi
@@ -309,14 +309,14 @@ kontennya sudah tersimpan.
 
 ## Komentar
 
-Identitas mana pun yang sudah masuk dapat mengomentari publikasi apa pun
-yang terselesaikan: karya Repositori, klaim kepengarangan, atau nama
+Siapa pun yang punya nama dapat mengomentari publikasi apa pun
+yang terselesaikan: bangunan dari Jelajahi, klaim kepengarangan, atau nama
 tempat. Tidak ada pemeriksaan kepemilikan, syarat pertemanan, atau
 moderasi.
 
 Anda akan menemukan komentar:
 
-- di **Repositori** dan di halaman pembuat: tombol **Komentar** di setiap
+- di **Jelajahi** dan di halaman pembuat: tombol **Komentar** di setiap
   kartu dan baris daftar;
 - di panel
   [Dunia Bersama Saya](WorldViewAdvancedTools.md#dunia-bersama-saya--mendistribusikan-snapshot-anda-sendiri-tanpa-rekan) di Tampilan Dunia, di bagian **Komentar**-nya;
@@ -331,7 +331,7 @@ balasan.
 
 ### Cara komentar berpindah
 
-Komentar yang dikirim dari **Repositori** disimpan di perangkat Anda,
+Komentar yang dikirim dari **Jelajahi** disimpan di perangkat Anda,
 dikirim ke rekan yang terhubung dengan Anda, dan diterbitkan ke jaringan
 yang dipilih di samping **Kirim Komentar** (Nostr, Arweave, Steem, atau Blurt;
 dimulai dari

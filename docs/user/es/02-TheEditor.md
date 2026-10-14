@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: debe706fb81d65f3 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 6e10bd69ebe05267 -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -649,7 +649,7 @@ Mientras construye suena una música suave, algo más animada que la de la Vista
 **Construir conmigo**, bajo el nombre de la construcción en la barra
 lateral, crea un enlace que permite a sus amigos trabajar en esta
 construcción con usted, al mismo tiempo. Envíelo como prefiera; también
-aparece como código QR para un móvil. Un amigo que lo abre inicia sesión si
+aparece como código QR para un móvil. Un amigo que lo abre elige un nombre si
 aún no lo ha hecho (sus bloques se añaden con su nombre), pulsa **Unirse** y
 su construcción se abre en el Editor de su amigo. Desde entonces, cada
 bloque que cualquiera de los dos coloque, mueva, cambie de color o elimine
@@ -662,7 +662,7 @@ aparece en ambas pantallas.
   pantallas, y **Rehacer** lo vuelve a poner; los pasos de sus amigos solo
   pueden deshacerlos ellos.
 - Tiene que ser su propia construcción: una que usted empezó o una copia que
-  hizo. Una construcción que empezó antes de iniciar sesión pasa a ser suya
+  hizo. Una construcción que empezó antes de elegir un nombre pasa a ser suya
   cuando invita a sus amigos a ella.
 - Cualquiera que abra el enlace en sus primeros 30 minutos puede unirse,
   mientras la construcción siga abierta en su Editor. Todos los que se

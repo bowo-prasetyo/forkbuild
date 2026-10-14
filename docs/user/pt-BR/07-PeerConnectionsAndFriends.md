@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 02e25094626dc446 -->
+<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 97d455d5ee147f7c -->
 # 07 — Conexões entre pares e amigos
 
 <!-- languages -->
@@ -176,8 +176,8 @@ nas **Configurações de rede**) e de uma identidade desbloqueada.
 **Seguir** mantém você em dia com as criações de alguém, como seguir uma
 conta numa rede social, sem que nenhum dos dois peça nada ao outro.
 
-- **Onde seguir.** **Seguir** aparece nos cartões de publicação do
-  Repositório, ao lado de **Assinado por …** na página de um autor, no menu
+- **Onde seguir.** **Seguir** aparece nos cartões de publicação de
+  Explorar, ao lado de **Assinado por …** na página de um autor, no menu
   **⋯** de uma pessoa nesta página e como **Seguir os trabalhos** num avatar
   na Visão do mundo. Você segue uma *identidade*, nunca um nome de autor
   digitado: várias pessoas podem publicar com o mesmo nome, então a página de
@@ -201,7 +201,7 @@ conta numa rede social, sem que nenhum dos dois peça nada ao outro.
   assinados por pessoas que você segue ficam na frente dos outros.
 
 **Seguir é privado e de mão única.** A lista fica guardada neste
-dispositivo, para a identidade com que você entrou. Nunca é enviada para
+dispositivo, para o nome que você está usando. Nunca é enviada para
 lugar nenhum, as pessoas que você segue nunca são avisadas, e não há
 contagem de seguidores: sem servidor, ninguém conseguiria contá-los de forma
 honesta. Seguir também não dá nada à outra pessoa: nem chat, nem ver seu

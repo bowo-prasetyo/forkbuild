@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: debe706fb81d65f3 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 6e10bd69ebe05267 -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -663,7 +663,7 @@ Une musique douce accompagne la construction, un peu plus vive que celle de la V
 **Construire avec moi**, sous le nom de la construction dans la barre
 latérale, crée un lien qui permet à vos amis de travailler sur cette
 construction avec vous, en même temps. Envoyez-le comme vous voulez ; il
-s’affiche aussi en code QR pour un téléphone. Un ami qui l’ouvre se connecte
+s’affiche aussi en code QR pour un téléphone. Un ami qui l’ouvre choisit un nom
 s’il ne l’a pas encore fait (ses briques sont ajoutées sous son nom), clique
 sur **Rejoindre**, et votre construction s’ouvre dans son Éditeur. Dès lors,
 chaque brique que l’un de vous place, déplace, recolore ou supprime apparaît
@@ -676,8 +676,8 @@ sur les deux écrans.
   les écrans, et **Rétablir** la remet ; c’est à vos amis d’annuler leurs
   propres étapes.
 - Il doit s’agir de votre propre construction : une que vous avez commencée,
-  ou une copie que vous avez faite. Une construction commencée avant de vous
-  connecter devient la vôtre quand vous y invitez des amis.
+  ou une copie que vous avez faite. Une construction commencée avant de choisir
+  un nom devient la vôtre quand vous y invitez des amis.
 - Toute personne qui ouvre le lien dans ses 30 premières minutes peut
   rejoindre, tant que la construction reste ouverte dans votre Éditeur. Tous
   ceux qui ont rejoint peuvent construire jusqu’à ce que vous cliquiez sur

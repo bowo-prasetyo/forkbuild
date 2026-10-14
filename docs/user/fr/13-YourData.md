@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: 0f7d63110556987a -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: 2f10096b5d79ec2b -->
 # 13 — Vos données : sauvegarder et restaurer
 
 <!-- languages -->
@@ -52,8 +52,8 @@ appareils doivent être en ligne : ils se trouvent par le serveur de
 rendez-vous, puis les données passent directement de l’un à l’autre,
 chiffrées avec une clé qui n’existe que dans le code. Le serveur de
 rendez-vous ne voit ni la clé ni vos données. Les identités protégées par
-une phrase secrète le restent, et vous vous connectez sur l’autre appareil
-comme après une restauration.
+une phrase secrète le restent, et sur l’autre appareil vous choisissez de
+nouveau votre nom, comme après une restauration.
 
 ## Sauvegarder
 
@@ -74,8 +74,8 @@ les perdrez pas. La phrase secrète de sauvegarde est distincte de celles
 de vos identités : chaque identité du fichier reste protégée par la
 sienne.
 
-La sauvegarde n’indique pas quelle identité est connectée. Après une
-restauration, vous vous reconnectez.
+La sauvegarde n’indique pas quel nom vous utilisiez. Après une
+restauration, choisissez de nouveau votre nom.
 
 En plus de **Sauvegarder dans un fichier**, la même section permet :
 

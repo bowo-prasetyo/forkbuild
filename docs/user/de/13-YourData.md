@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: 0f7d63110556987a -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: 2f10096b5d79ec2b -->
 # 13 — Ihre Daten
 
 <!-- languages -->
@@ -55,8 +55,8 @@ müssen online sein: Sie finden sich über den Rendezvous-Server, dann gehen
 die Daten direkt zwischen ihnen hin und her, verschlüsselt mit einem
 Schlüssel, den nur der Code enthält. Der Rendezvous-Server sieht weder den
 Schlüssel noch Ihre Daten. Identitäten mit Passphrase bleiben durch sie
-geschützt, und Sie melden sich auf dem anderen Gerät an wie nach einer
-Wiederherstellung.
+geschützt, und Sie wählen auf dem anderen Gerät Ihren Namen erneut, wie
+nach einer Wiederherstellung.
 
 ## Sichern
 
@@ -76,8 +76,8 @@ keinem Weg öffnen**; bewahren Sie beides also so auf, dass Sie es nicht
 verlieren. Die Passphrase der Sicherung ist unabhängig von den Passphrasen
 Ihrer Identitäten: Jede Identität darin bleibt durch ihre eigene geschützt.
 
-Die Sicherung enthält nicht, welche Identität angemeldet ist. Nach einer
-Wiederherstellung melden Sie sich erneut an.
+Die Sicherung enthält nicht, welchen Namen Sie verwendet haben. Nach einer
+Wiederherstellung wählen Sie Ihren Namen erneut.
 
 Neben **In eine Datei sichern** kann derselbe Abschnitt:
 

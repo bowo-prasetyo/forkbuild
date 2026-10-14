@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: d53bccd516685088 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 5d71d34792209c99 -->
 # Référence des commandes
 
 <!-- languages -->
@@ -378,7 +378,7 @@ et avec lui le pavé.
 | **Ranger** / **Sortir** | `Q` | Affiché quand vous pouvez ranger le véhicule où vous êtes, ou en sortir un rangé. Sortir nomme le véhicule, et sa place dans la liste (comme 2/3) quand vous en transportez plusieurs |
 | **‹** / **›** à côté de Sortir | `[` / `]` | Avec 2 véhicules ou plus : choisir un véhicule plus ancien ou plus récent à sortir |
 | **Attraper** / **Relâcher** | `F` | Affiché quand un animal attrapable est proche, ou quand vous en transportez un |
-| **Décorer** / **Annuler la décoration** | `G` | Affiché près d’un animal que vous avez relâché, ou près d’une décoration. Contrairement à `G`, une décoration refusée (non connecté, pas de droit de MODIFICATION) en indique la raison |
+| **Décorer** / **Annuler la décoration** | `G` | Affiché près d’un animal que vous avez relâché, ou près d’une décoration. Contrairement à `G`, une décoration refusée (pas de nom, pas de droit de MODIFICATION) en indique la raison |
 | **↶** / **↷** | `←` / `→` | À bord : un virage de 45° par appui |
 | **Freiner** | `Ctrl` (maintenu) | À bord |
 

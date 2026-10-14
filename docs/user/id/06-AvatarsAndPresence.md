@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 5eccfdfd3ac8fb32 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: f9738fa9f2faf553 -->
 # 06 — Avatar & Kehadiran
 
 <!-- languages -->
@@ -363,7 +363,7 @@ yang baru dilepaskan, sama seperti **F** lebih memilih menangkap daripada
 melepaskan. Hanya hewan yang Anda lepaskan yang dapat dijadikan hiasan —
 satwa liar yang ditempatkan dunia sendiri tidak bisa. Petunjuk muncul saat
 **G** dapat menghiasi atau mengurungkan sesuatu di dekat Anda. Seperti
-menambahkan [penanda](03-WorldView.md#penanda--menandai-tempat-yang-layak-diingat), menghiasi memerlukan Anda masuk dengan akses EDIT ke
+menambahkan [penanda](03-WorldView.md#penanda--menandai-tempat-yang-layak-diingat), menghiasi memerlukan sebuah nama dan akses EDIT ke
 Dunia tempat Anda berada. Di Dunia terbitan orang lain, hiasannya masuk ke
 salinan Anda sendiri — selama lisensinya mengizinkan fork. Jika semua itu
 tidak berlaku, **G** tidak melakukan apa-apa; tombol **Hiasi** di pad

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 6c3356512aea6399 -->
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 3ba8fc359bf11937 -->
 # 05 — Ihr Name & Ihre Identität
 
 <!-- languages -->
@@ -46,15 +46,15 @@ Identitäten** können Sie sie später schützen.
 > verlieren Sie sie, ist diese Identität verloren, selbst für ForkBuild.
 > Wählen Sie eine, die Sie behalten können.
 
-## Der Tresor: gesperrt oder abgemeldet
+## Der Tresor: gesperrt oder ohne Namen
 
 Der entschlüsselte Schlüssel einer geschützten Identität liegt in ihrem
 sogenannten **Tresor**. Der Tresor kann **gesperrt** oder **entsperrt**
-sein, und das ist eine wirklich andere Frage als die, ob Sie angemeldet
-sind:
+sein, und das ist eine wirklich andere Frage als die, welchen Namen Sie
+verwenden:
 
-- **Angemeldet, entsperrt** — alles funktioniert normal.
-- **Angemeldet, gesperrt** (🔒 neben Ihrem Namen oben rechts) — Sie sind
+- **Mit Namen, entsperrt** — alles funktioniert normal.
+- **Mit Namen, gesperrt** (🔒 neben Ihrem Namen oben rechts) — Sie sind
   weiterhin Sie selbst und können weiter stöbern, bauen und speichern, aber
   alles, was eine frische Signatur braucht (Veröffentlichen, Auffindbar
   sein, einer Lobby beitreten), schlägt mit einer Meldung „identity is
@@ -70,16 +70,16 @@ Sie die App noch benutzen oder nicht (es ist kein Inaktivitäts-Timer), oder
 wann immer Sie unter **Meine Identitäten** selbst auf **Sperren** klicken.
 Ein Neuladen der Seite lässt geschützte Identitäten immer gesperrt — der
 entschlüsselte Schlüssel wird nie auf die Festplatte geschrieben, sondern
-nur im Arbeitsspeicher gehalten —, auch wenn die App sich noch merkt, als
-wer Sie angemeldet waren.
+nur im Arbeitsspeicher gehalten —, auch wenn die App sich noch merkt,
+welchen Namen Sie verwendet haben.
 
 ## Identitäten verwalten — die Seite Meine Identitäten
 
 Öffnen Sie **Mehr → Meine Identitäten** (oder klicken Sie oben auf Ihren Namen), um jede Identität
 dieses Geräts zu sehen, jeweils mit ihrem eigenen Sperrzustand, unabhängig
-davon, mit welcher Sie gerade angemeldet sind. Von hier aus können Sie:
+davon, welche Sie gerade verwenden. Von hier aus können Sie:
 
-- **Erstellen** — eine neue Identität (wie im Anmeldedialog).
+- **Erstellen** — eine neue Identität (wie im Namensdialog).
 - **Mit Passphrase schützen** — erscheint bei einer ungeschützten
   Identität (markiert mit ⚠ Ungeschützt). Es verschlüsselt den vorhandenen
   Schlüssel; die Identität selbst ändert sich nicht und bleibt gesperrt,
@@ -116,12 +116,12 @@ stattdessen.
 
 Widerrufen hindert eine Identität daran, noch etwas Neues zu signieren,
 auch den Nachweis, den sie braucht, um eine neue Verbindung mit einer
-anderen Person aufzubauen. Es meldet Sie **nicht** ab, und Sie können sich
-danach weiterhin mit ihr anmelden — ihre Karte unter **Meine Identitäten**
+anderen Person aufzubauen. Sie können sie **weiterhin**
+verwenden und auch danach noch wählen — ihre Karte unter **Meine Identitäten**
 zeigt dann nur **Widerrufen**. Das ist Absicht, damit Sie sie noch öffnen
 können, um sie anzusehen oder ein letztes Mal zu **Exportieren**. Um
-weiterzuarbeiten, erstellen Sie eine neue Identität und melden sich
-stattdessen mit dieser an.
+weiterzuarbeiten, erstellen Sie eine neue Identität und
+verwenden stattdessen diese.
 
 Widerrufen ist endgültig, auf diesem Gerät und auf jedem Gerät, auf dem Sie
 ihre Sicherung wiederherstellen. Verbindungen, die beim Widerrufen schon
@@ -153,9 +153,9 @@ oder in einen anderen Browser:
 2. Geben Sie die Passphrase des Exports ein, um sie tatsächlich zu
    importieren.
 
-Eine importierte Identität landet immer **gesperrt**, und Sie werden nicht
-automatisch mit ihr angemeldet — entsperren Sie sie unter Meine Identitäten
-oder im Anmeldedialog wie jede andere geschützte Identität.
+Eine importierte Identität landet immer **gesperrt**, und ForkBuild wechselt
+nicht von selbst zu ihr — entsperren Sie sie unter Meine Identitäten
+oder im Namensdialog wie jede andere geschützte Identität.
 
 Die Datei trägt außerdem die signierten Lebenszyklus-Nachweise der
 Identität: ihren Widerruf, den benannten Nachfolger und die Geräte, die
@@ -196,7 +196,7 @@ beim Neuladen zurückgesetzt.
 
 ## Wie geht es weiter?
 
-Jetzt, da Sie angemeldet sind, legen Sie in
+Jetzt, da Sie einen Namen haben, legen Sie in
 **[Avatare & Anwesenheit](06-AvatarsAndPresence.md)** fest, wie andere Sie
 sehen, oder finden Sie in
 **[Peer-Verbindungen & Freunde](07-PeerConnectionsAndFriends.md)** Menschen,

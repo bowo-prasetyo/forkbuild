@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 02e25094626dc446 -->
+<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 97d455d5ee147f7c -->
 # 07 — Connexions entre pairs et amis
 
 <!-- languages -->
@@ -196,8 +196,8 @@ rendez-vous** dans **Paramètres réseau**) et d’une identité déverrouillée
 un compte sur un réseau social, sans que personne n’ait rien à demander à
 l’autre.
 
-- **Où suivre.** **Suivre** apparaît sur les cartes de publication du
-  Dépôt, à côté de **Signé par …** sur la page d’un auteur, dans le menu
+- **Où suivre.** **Suivre** apparaît sur les cartes de publication
+  d’Explorer, à côté de **Signé par …** sur la page d’un auteur, dans le menu
   **⋯** d’une personne sur cette page, et sous la forme **Suivre ses
   créations** sur un avatar dans la Vue du Monde. Vous suivez une
   *identité*, jamais un nom d’auteur saisi : plusieurs personnes peuvent
@@ -225,7 +225,7 @@ l’autre.
   reste.
 
 **Suivre est privé et à sens unique.** La liste est conservée sur cet
-appareil, pour l’identité avec laquelle vous êtes connecté. Elle n’est
+appareil, pour le nom que vous utilisez. Elle n’est
 jamais envoyée nulle part, les personnes que vous suivez n’en sont jamais
 informées, et il n’y a pas de compteur d’abonnés : sans serveur, personne
 ne pourrait les compter honnêtement. Suivre ne donne rien non plus à

@@ -6640,4 +6640,21 @@ met the old words on these screens. Pillar served: building feels joyful (the ap
   choose a name, in every language.
 - Not done: developer errors from application/ that say "sign in" (plain Errors named after their use case), and the
   guide's own prose on the advanced pages (Publications & External Evidence, Peer Connections, Network Settings,
-  Your Name & Identity), which still says the Repository or logged in.
+  Your Name & Identity), which still said the Repository or logged in (since done: "The guide says Explore and
+  your name").
+
+## The guide says Explore and your name (unnumbered, 2026-10-14)
+
+**Why.** After the advanced messages changed ("Choose a name and Explore in the advanced messages too"), the guide's
+own prose still called the catalogue "the Repository" and spoke of being logged in or signing in, on Publications &
+External Evidence, Peer Connections, Network Settings, Your Name & Identity, Your Data and the privacy notice. A
+player reading it met words the app no longer uses (docs/Pillars.md, "Words"). Pillar served: building feels joyful
+(the guide and the app speak one language).
+
+- English and all seven languages: "the Repository" is **Explore** (Publishing & Remixing's section is now
+  "Explore", and Publications' "A build from Explore, decentralized"; links follow the new anchors); "logged in",
+  "signed in" and "log out" say which name you're using, or to choose a name. The vault section compares locked
+  with having no name; revoking an identity "does not stop you using it".
+- The privacy notice (docs/Privacy.md and its translations) says Explore and "which name you were using".
+- Kept: the FAQ entry for returning players and the history note in Publishing & Remixing, which say what the
+  Repository and Login were; the file name 05-IdentityAndLogin.md; "session" where it means a visit.

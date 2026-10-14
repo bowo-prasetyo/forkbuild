@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 6c3356512aea6399 -->
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 3ba8fc359bf11937 -->
 # 05 — Su nombre y su identidad
 
 <!-- languages -->
@@ -45,14 +45,14 @@ identidades**.
 > pierde, esa identidad desaparece, incluso para el propio ForkBuild. Elija
 > una que pueda conservar.
 
-## La bóveda: bloqueada o sin sesión
+## La bóveda: bloqueada o sin nombre
 
 La clave descifrada de una identidad protegida vive en algo llamado su
 **bóveda**. La bóveda puede estar **bloqueada** o **desbloqueada**, y esa es
-una pregunta realmente distinta de si inició sesión o no:
+una pregunta realmente distinta de qué nombre usa:
 
-- **Con sesión iniciada, desbloqueada**: todo funciona con normalidad.
-- **Con sesión iniciada, bloqueada** (🔒 junto a su nombre, arriba a la
+- **Con un nombre, desbloqueada**: todo funciona con normalidad.
+- **Con un nombre, bloqueada** (🔒 junto a su nombre, arriba a la
   derecha): sigue siendo usted, y todavía puede explorar, construir y
   guardar, pero cualquier cosa que necesite una firma nueva (publicar, ser
   descubrible, unirse a una sala) falla con un mensaje de “identidad
@@ -68,18 +68,17 @@ desbloquearla**, siga o no usando la app (no es un temporizador de
 inactividad), o cuando usted mismo hace clic en **Bloquear** en **Mis
 identidades**. Recargar la página siempre deja bloqueadas las identidades
 protegidas (la clave descifrada nunca se escribe en el disco, solo se
-mantiene en memoria), aunque la app todavía recuerde con quién había
-iniciado sesión.
+mantiene en memoria), aunque la app todavía recuerde qué nombre estaba
+usando.
 
 ## Administrar identidades — la página Mis identidades
 
 Abra **Más → Mis identidades** (o haga clic en su nombre en la barra superior) para ver todas las
 identidades que tiene este dispositivo, cada una con su propio estado de
-bloqueo, independientemente de con cuál haya iniciado sesión. Desde aquí
+bloqueo, independientemente de cuál esté usando. Desde aquí
 puede:
 
-- **Crear** una identidad nueva (igual que en el diálogo de inicio de
-  sesión).
+- **Crear** una identidad nueva (igual que en el diálogo del nombre).
 - **Proteger con frase de contraseña**: aparece en una identidad sin
   protección (marcada ⚠ Sin protección). Cifra la clave existente; la
   identidad en sí no cambia, y queda bloqueada hasta que la desbloquee.
@@ -114,12 +113,11 @@ revóquela.
 ### Qué hace revocar — y qué no
 
 Revocar impide que una identidad firme nada nuevo, incluida la prueba que
-necesita para iniciar una nueva conexión con otra persona. **No** cierra su
-sesión, y puede seguir iniciando sesión con ella después: su tarjeta en
+necesita para iniciar una nueva conexión con otra persona. **No** le impide
+usarla, y puede seguir eligiéndola después: su tarjeta en
 **Mis identidades** simplemente muestra **Revocada**. Es a propósito, para
 que todavía pueda abrirla para consultarla o usar **Exportar** una última
-vez. Para seguir trabajando, cree una identidad nueva e inicie sesión con
-ella.
+vez. Para seguir trabajando, cree una identidad nueva y use esa.
 
 Revocar es permanente, en este dispositivo y en cualquier dispositivo donde
 restaure su copia de seguridad. Las conexiones que ya estaban abiertas
@@ -149,9 +147,9 @@ clave privada cifrada:
 2. Ingrese la frase de contraseña de la exportación para importarla de
    verdad.
 
-Una identidad importada siempre llega **bloqueada**, y no se inicia sesión
-automáticamente con ella: desbloquéela desde Mis identidades o desde el
-diálogo de inicio de sesión, como cualquier otra identidad protegida.
+Una identidad importada siempre llega **bloqueada**, y ForkBuild no cambia
+a ella por sí solo: desbloquéela desde Mis identidades o desde el
+diálogo del nombre, como cualquier otra identidad protegida.
 
 El archivo también lleva los registros firmados del ciclo de vida de la
 identidad: su revocación, la sucesora que declaró y los dispositivos que
@@ -190,7 +188,7 @@ tiempo de bloqueo restante. El conteo se reinicia al recargar.
 
 ## ¿Y ahora qué?
 
-Ahora que inició sesión, configure cómo lo ven los demás en
+Ahora que tiene un nombre, configure cómo lo ven los demás en
 **[Avatares y presencia](06-AvatarsAndPresence.md)**, o encuentre personas
 con las que construir en
 **[Conexiones entre pares y amigos](07-PeerConnectionsAndFriends.md)**.

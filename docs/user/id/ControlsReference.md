@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: d53bccd516685088 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 5d71d34792209c99 -->
 # Referensi Kontrol
 
 <!-- languages -->
@@ -362,7 +362,7 @@ atas joystick menyalakan dan mematikan mode itu, beserta pad-nya.
 | **Simpan** / **Keluarkan** | `Q` | Ditampilkan saat Anda dapat menyimpan kendaraan yang dinaiki, atau mengeluarkan yang tersimpan. Tombol Keluarkan menyebut nama kendaraannya, dan urutannya dalam daftar (seperti 2/3) saat Anda membawa lebih dari satu |
 | **‹** / **›** di samping Keluarkan | `[` / `]` | Membawa 2+ kendaraan: memilih yang lebih lama atau lebih baru untuk dikeluarkan |
 | **Tangkap** / **Lepaskan** | `F` | Ditampilkan saat ada hewan yang dapat ditangkap di dekat Anda, atau selama membawa hewan |
-| **Hiasi** / **Urungkan Hiasan** | `G` | Ditampilkan di dekat hewan yang Anda lepaskan, atau di dekat hiasan. Tidak seperti `G`, hiasan yang ditolak (belum masuk, tidak ada akses EDIT) menyebutkan alasannya |
+| **Hiasi** / **Urungkan Hiasan** | `G` | Ditampilkan di dekat hewan yang Anda lepaskan, atau di dekat hiasan. Tidak seperti `G`, hiasan yang ditolak (tanpa nama, tidak ada akses EDIT) menyebutkan alasannya |
 | **↶** / **↷** | `←` / `→` | Selama berkendara: belokan kemudi 45° per ketukan |
 | **Rem** | `Ctrl` (ditahan) | Selama berkendara |
 

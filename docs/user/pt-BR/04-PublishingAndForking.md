@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 678438731470dcad -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: f9d9cc641a8a9b34 -->
 # 04 — Publicar e remixar
 
 <!-- languages -->
@@ -261,7 +261,7 @@ O resultado da Declaração assinada aparece na seção dela:
 | **Mundo compartilhado** | O id do próprio Mundo compartilhado — confirma de qual Mundo compartilhado é este resultado. |
 | **Material** | O local que o envio produziu, ou "Ainda não enviado" se ele não foi concluído. |
 | **Descoberta** | O id do anúncio, ou "Ainda não anunciado" se ele não foi concluído — uma linha por relay quando vários estão configurados. |
-| **Repositório** | Um botão **Explorar** que leva direto à página desta publicação na Visão do mundo — mostrado sempre que a publicação tem algum lugar para explorar, o que na prática é sempre. |
+| **Sua construção** | Um botão **Explorar** que leva direto à página desta publicação na Visão do mundo — mostrado sempre que a publicação tem algum lugar para explorar, o que na prática é sempre. |
 
 **Construções grandes.** O armazenamento no Arweave aceita um Snapshot de
 até 256 KB, uns oito mil blocos. Para qualquer coisa maior, escolha o
@@ -404,10 +404,10 @@ editável foi criada; … não muda"); veja
 
 O original nunca é tocado, por mais que você mude sua cópia.
 
-## O Repositório
+## Explorar
 
 **Explorar**, na barra superior (chamado de *Repositório* em versões
-anteriores e em algumas mensagens avançadas), é o catálogo pesquisável de
+anteriores), é o catálogo pesquisável de
 todas as construções publicadas que este dispositivo conhece: as suas, as que pares compartilharam com você
 e as encontradas em redes descentralizadas. Ele foi feito para continuar
 prático tenha dez criações ou dez mil.

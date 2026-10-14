@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 6c3356512aea6399 -->
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 3ba8fc359bf11937 -->
 # 05 — Votre nom et votre identité
 
 <!-- languages -->
@@ -46,15 +46,15 @@ identités**.
 > si vous la perdez, cette identité est perdue, même pour ForkBuild.
 > Choisissez-en une que vous pourrez garder.
 
-## Le coffre : verrouillé ou déconnecté
+## Le coffre : verrouillé ou sans nom
 
 La clé déchiffrée d’une identité protégée se trouve dans ce qu’on appelle
 son **coffre**. Le coffre peut être **verrouillé** ou **déverrouillé**, et
-c’est une question réellement différente de celle de savoir si vous êtes
-connecté :
+c’est une question réellement différente de celle de savoir quel nom vous
+utilisez :
 
-- **Connecté, déverrouillé** — tout fonctionne normalement.
-- **Connecté, verrouillé** (🔒 à côté de votre nom en haut à droite) —
+- **Avec un nom, déverrouillé** — tout fonctionne normalement.
+- **Avec un nom, verrouillé** (🔒 à côté de votre nom en haut à droite) —
   vous êtes toujours vous-même, et vous pouvez toujours parcourir,
   construire et enregistrer, mais tout ce qui demande une nouvelle
   signature (publier, être découvrable, rejoindre un salon) échoue avec
@@ -71,17 +71,17 @@ n’est pas un délai d’inactivité), ou quand vous cliquez vous-même sur
 **Verrouiller** dans **Mes identités**. Recharger la page laisse toujours
 les identités protégées verrouillées — la clé déchiffrée n’est jamais
 écrite sur le disque, seulement gardée en mémoire — même si l’application
-se souvient encore de l’identité avec laquelle vous étiez connecté.
+se souvient encore du nom que vous utilisiez.
 
 ## Gérer les identités — la page Mes identités
 
 Ouvrez **Plus → Mes identités** (ou cliquez sur votre nom dans la barre du haut) pour voir toutes les
 identités que cet appareil détient, chacune avec son propre état de
-verrouillage, indépendamment de celle avec laquelle vous êtes connecté.
+verrouillage, indépendamment de celle que vous utilisez.
 De là, vous pouvez :
 
-- **Créer** une nouvelle identité (comme dans la boîte de dialogue de
-  connexion).
+- **Créer** une nouvelle identité (comme dans la boîte de dialogue du
+  nom).
 - **Protéger par une phrase secrète** — affiché sur une identité non
   protégée (marquée ⚠ Non protégée). Cela chiffre la clé existante ;
   l’identité elle-même ne change pas, et elle reste verrouillée jusqu’à ce
@@ -117,11 +117,11 @@ durer ; si vous voulez arrêter d’en utiliser une, révoquez-la plutôt.
 
 Révoquer empêche une identité de signer quoi que ce soit de nouveau, y
 compris la preuve dont elle a besoin pour établir une nouvelle connexion
-avec une autre personne. Cela ne vous déconnecte **pas**, et vous pouvez
-toujours vous connecter avec elle ensuite — sa carte dans **Mes identités**
+avec une autre personne. Cela ne vous empêche **pas** de l’utiliser,
+et vous pouvez toujours la choisir ensuite — sa carte dans **Mes identités**
 affiche simplement **Révoquée**. C’est voulu, pour que vous puissiez encore
 l’ouvrir pour la consulter ou l’**Exporter** une dernière fois. Pour
-continuer à travailler, créez une nouvelle identité et connectez-vous avec
+continuer à travailler, créez une nouvelle identité et utilisez
 celle-ci.
 
 La révocation est définitive, sur cet appareil et sur tout appareil où vous
@@ -152,9 +152,9 @@ autre navigateur :
    déjà — sans rien déchiffrer.
 2. Saisissez la phrase secrète de l’export pour l’importer réellement.
 
-Une identité importée arrive toujours **verrouillée**, et vous n’êtes pas
-automatiquement connecté avec elle — déverrouillez-la depuis Mes
-identités ou la boîte de dialogue de connexion, comme toute autre identité
+Une identité importée arrive toujours **verrouillée**, et ForkBuild ne passe
+pas à elle de lui-même — déverrouillez-la depuis Mes
+identités ou la boîte de dialogue du nom, comme toute autre identité
 protégée.
 
 Le fichier contient aussi les enregistrements signés du cycle de vie de
@@ -195,7 +195,7 @@ au rechargement.
 
 ## Et ensuite ?
 
-Maintenant que vous êtes connecté, configurez votre apparence pour les
+Maintenant que vous avez un nom, configurez votre apparence pour les
 autres dans **[Avatars et présence](06-AvatarsAndPresence.md)**, ou
 trouvez des personnes avec qui construire dans
 **[Connexions entre pairs et amis](07-PeerConnectionsAndFriends.md)**.

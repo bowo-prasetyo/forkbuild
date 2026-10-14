@@ -355,7 +355,7 @@ above the joystick turns the mode, and with it the pad, on and off.
 | **Store** / **Deploy** | `Q` | Shown when you can store the vehicle you're on, or deploy a stored one. Deploy names the vehicle, and its place in the list (such as 2/3) when you carry more than one |
 | **‹** / **›** beside Deploy | `[` / `]` | Carrying 2+ vehicles: choose an older or newer one to deploy |
 | **Catch** / **Release** | `F` | Shown when an animal is catchable nearby, or while carrying one |
-| **Decorate** / **Undo Decoration** | `G` | Shown near an animal you released, or near a decoration. Unlike `G`, a refused decoration (not signed in, no EDIT access) says why |
+| **Decorate** / **Undo Decoration** | `G` | Shown near an animal you released, or near a decoration. Unlike `G`, a refused decoration (no name, no EDIT access) says why |
 | **↶** / **↷** | `←` / `→` | While riding: a 45° steering turn per tap |
 | **Brake** | `Ctrl` (held) | While riding |
 

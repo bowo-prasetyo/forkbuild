@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 8ab09781761d8e4a -->
+<!-- translation-of: docs/Privacy.md source-hash: 6f1093cff06f0c48 -->
 # Confidentialité
 
 <!-- languages -->
@@ -48,10 +48,10 @@ jamais l’appareil, sauf si vous le publiez, l’exportez ou l’envoyez :
   dernier jour où il l’a fait ;
 - les publications d’autres personnes que cet appareil a trouvées et
   vérifiées, auprès de pairs, par des liens, dans la Vue du Monde ou par la
-  recherche du Dépôt sur les réseaux, et, pour celles trouvées sur les
+  recherche d’Explorer sur les réseaux, et, pour celles trouvées sur les
   réseaux, l’endroit où l’enregistrement signé de chacune a été lu ;
 - les identifiants des publications que vous avez dépubliées sur cet
-  appareil, pour que la recherche du Dépôt sur les réseaux ne liste plus
+  appareil, pour que la recherche d’Explorer sur les réseaux ne liste plus
   les copies que vous aviez distribuées.
 - à quels réseaux cet appareil a envoyé chacun de vos commentaires, et
   quand, pour que chaque commentaire puisse indiquer où il est allé.
@@ -79,8 +79,8 @@ jamais l’appareil, sauf si vous le publiez, l’exportez ou l’envoyez :
 Effacer les données de ce site dans le navigateur supprime tout cela, et
 il n’existe aucune autre copie ni aucun moyen de le récupérer.
 Sauvegardez-le d’abord avec **Vos données → Sauvegarder dans un
-fichier** : le fichier contient tout ce qui précède sauf l’identité
-connectée, chiffré avec une phrase secrète de votre choix, et reste là où
+fichier** : le fichier contient tout ce qui précède sauf le nom que
+vous utilisiez, chiffré avec une phrase secrète de votre choix, et reste là où
 vous le mettez. ForkBuild ne l’envoie jamais. **Partager la sauvegarde**
 remet le fichier à l’application que vous choisissez sur votre appareil.
 Si vous choisissez un dossier de sauvegarde, le navigateur garde
@@ -122,7 +122,7 @@ notifications sur cet appareil soient activées est gardé avec vos réglages
   dans quelles régions du Monde vous avez cherché des noms de lieux
   (docs/AnnouncementIndex.md).
 - **Les pairs, pour les Mondes que vous partagez.** **Partager avec les
-  pairs**, dans le Dépôt, propose l’un de vos Mondes publiés à toutes les
+  pairs**, dans Explorer, propose l’un de vos Mondes publiés à toutes les
   personnes auxquelles vous êtes connecté maintenant et à toutes celles
   qui se connecteront plus tard, y compris les inconnus des salons : elles
   reçoivent sa fiche et peuvent récupérer le Monde lui-même sur votre
@@ -317,7 +317,7 @@ demandez.
 | Une connexion entre pairs démarre | des serveurs STUN (`stun.l.google.com`) | rien d’autre qu’une demande de votre adresse IP publique |
 | Vous démarrez une connexion entre pairs, si le serveur de rendez-vous propose un relais | le `/turn-credentials` du serveur de rendez-vous, puis son relais TURN (Cloudflare) | une demande d’identifiants de relais de courte durée, au plus environ une fois par heure ; le trafic relayé est chiffré de bout en bout par WebRTC |
 | L’application est ouverte et son onglet visible (synchronisation des annonces en arrière-plan) | des relais Nostr (`relay.damus.io`), une passerelle Arweave (`arweave.net`), des nœuds Steem (`api.steemit.com`), des nœuds Blurt (`rpc.blurt.blog`) | des requêtes pour les tags de découverte de ForkBuild : les tags communs des Snapshots et des Commentaires, et les régions de Noms de lieux et cases de carte que vous avez visitées |
-| Vous ouvrez Explorer (le Dépôt) ou une page d’auteur | des relais Nostr (`relay.damus.io`), une passerelle Arweave (`arweave.net`), des nœuds Steem (`api.steemit.com`), des nœuds Blurt (`rpc.blurt.blog`) | une requête pour le tag commun des publications (`forkbuild-publication`) ; puis une demande de l’enregistrement signé de chaque publication nouvellement annoncée, au plus 20 par visite ou par **Vérifier à nouveau** |
+| Vous ouvrez Explorer ou une page d’auteur | des relais Nostr (`relay.damus.io`), une passerelle Arweave (`arweave.net`), des nœuds Steem (`api.steemit.com`), des nœuds Blurt (`rpc.blurt.blog`) | une requête pour le tag commun des publications (`forkbuild-publication`) ; puis une demande de l’enregistrement signé de chaque publication nouvellement annoncée, au plus 20 par visite ou par **Vérifier à nouveau** |
 | Vous ouvrez le défi de construction d’une semaine (**Défi**) | relais Nostr (`relay.damus.io`), une passerelle Arweave (`arweave.net`), des nœuds Steem (`api.steemit.com`), des nœuds Blurt (`rpc.blurt.blog`) | une requête pour l’étiquette de cette semaine (`forkbuild-tag:<tag>`) ; puis une demande de l’enregistrement signé de chaque nouvelle participation annoncée, au plus 20 par visite ou **Vérifier à nouveau** |
 | Vous publiez une construction après avoir choisi **Tout le monde** sous **Qui peut la trouver ?** | chaque relais Nostr des **Paramètres réseau** (`relay.damus.io`, `nos.lol`, `relay.primal.net`) | une note de construction : la construction signée elle-même, ses étiquettes et l’emplacement signé de son éditeur, signée avec la clé porteuse de cet appareil |
 | Vous ouvrez Explorer, la page d’une personne, le défi d’une semaine ou sa place | chaque relais Nostr des **Paramètres réseau** | une requête de notes de construction (`forkbuild-build`, ou `forkbuild-tag:<tag>` de la semaine) ; chaque nouvelle note est vérifiée et ouverte sur cet appareil, au plus 40 par visite |

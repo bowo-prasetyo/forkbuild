@@ -104,7 +104,7 @@ you can still change it there. **Forget Service** removes it.
 Choose **Arweave**, **Blurt** (experimental), **Nostr** or **Steem** (experimental) as the default
 place your publications (Shared Worlds, Blueprint Attributions and
 place-name claims), Snapshots and comments are announced. It's only a
-default: every **Distribute** dialog, the Repository's per-card
+default: every **Distribute** dialog, Explore's per-card
 Distribution picker and the network picker next to **Post Comment** start
 on it, and you can switch them for one action.
 Finding other people's content always searches all of them.
@@ -151,7 +151,7 @@ Arweave's. The defaults are `https://ipfs.filebase.io`,
 
 This list is used when resolving or materializing an IPFS Snapshot
 Placement, for **Verify IPFS Content**, and for opening shared links to
-content on IPFS, and when the Repository and the weekly challenge read
+content on IPFS, and when Explore and the weekly challenge read
 builds found on the networks whose Signed Claim is on IPFS. It doesn't
 change where your own content is pinned.
 

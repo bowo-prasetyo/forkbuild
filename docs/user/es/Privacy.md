@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 8ab09781761d8e4a -->
+<!-- translation-of: docs/Privacy.md source-hash: 6f1093cff06f0c48 -->
 # Privacidad
 
 <!-- languages -->
@@ -46,11 +46,11 @@ dispositivo a menos que usted lo publique, lo exporte o lo envíe:
 - si este navegador participa en el recuento diario de visitantes, y el
   último día en que lo hizo;
 - las publicaciones de otras personas que este dispositivo encontró y
-  verificó, desde pares, enlaces, la Vista del mundo o la búsqueda del
-  Repositorio en las redes, y, para las encontradas en las redes, dónde se
+  verificó, desde pares, enlaces, la Vista del mundo o la búsqueda de
+  Explorar en las redes, y, para las encontradas en las redes, dónde se
   leyó el registro firmado de cada una;
 - los identificadores de las publicaciones que retiró en este dispositivo,
-  para que la búsqueda del Repositorio en las redes no vuelva a listar
+  para que la búsqueda de Explorar en las redes no vuelva a listar
   copias que distribuyó antes.
 - a qué redes envió este dispositivo cada uno de sus comentarios, y cuándo,
   para que cada comentario pueda indicar adónde fue.
@@ -77,8 +77,8 @@ dispositivo a menos que usted lo publique, lo exporte o lo envíe:
 Borrar los datos de este sitio en el navegador lo elimina todo, y no hay
 ninguna otra copia ni forma de recuperarlo. Haga primero una copia de
 seguridad con **Sus datos → Hacer copia de seguridad en un archivo**: el
-archivo contiene todo lo anterior excepto con qué identidad se inició
-sesión, cifrado con una frase de contraseña que usted elige, y se queda
+archivo contiene todo lo anterior excepto qué nombre estaba
+usando, cifrado con una frase de contraseña que usted elige, y se queda
 donde usted lo ponga. ForkBuild nunca lo sube. **Compartir copia de
 seguridad** le entrega el archivo a la app que elija en su dispositivo. Si
 elige una carpeta de copias de seguridad, el navegador conserva el permiso
@@ -118,7 +118,7 @@ dispositivo» más abajo).
   descubrió su dispositivo, así que se enteran de en qué regiones del Mundo
   buscó nombres de lugares (docs/AnnouncementIndex.md).
 - **Los pares, para los Mundos que comparte.** **Compartir con pares**, en
-  el Repositorio, ofrece uno de sus Mundos publicados a todas las personas
+  Explorar, ofrece uno de sus Mundos publicados a todas las personas
   con las que está conectado ahora y a cualquiera que se conecte después,
   incluidos los desconocidos de una sala: reciben su listado y pueden
   obtener el Mundo en sí desde su dispositivo mientras usted esté
@@ -303,7 +303,7 @@ dirección IP y lo que usted le pide.
 | Se inicia una conexión entre pares | servidores STUN (`stun.l.google.com`) | nada más que una solicitud de su dirección IP pública |
 | Inicia una conexión entre pares, si el servidor de encuentro ofrece un relay | `/turn-credentials` del servidor de encuentro, y luego su relay TURN (Cloudflare) | una solicitud de credenciales de relay de corta duración, como máximo una vez por hora aproximadamente; el tráfico retransmitido está cifrado de extremo a extremo por WebRTC |
 | La app está abierta y su pestaña visible (sincronización de anuncios en segundo plano) | relays de Nostr (`relay.damus.io`), un gateway de Arweave (`arweave.net`), nodos de Steem (`api.steemit.com`), nodos de Blurt (`rpc.blurt.blog`) | consultas por las etiquetas de descubrimiento de ForkBuild: las etiquetas compartidas de Snapshots y de comentarios, y las regiones de nombres de lugares y las celdas del mapa que visitó |
-| Abre Explorar (el Repositorio) o la página de un autor | relays de Nostr (`relay.damus.io`), un gateway de Arweave (`arweave.net`), nodos de Steem (`api.steemit.com`), nodos de Blurt (`rpc.blurt.blog`) | una consulta por la etiqueta compartida de publicaciones (`forkbuild-publication`); luego una solicitud del registro firmado de cada publicación recién anunciada, como máximo 20 por visita o por **Volver a buscar** |
+| Abre Explorar o la página de un autor | relays de Nostr (`relay.damus.io`), un gateway de Arweave (`arweave.net`), nodos de Steem (`api.steemit.com`), nodos de Blurt (`rpc.blurt.blog`) | una consulta por la etiqueta compartida de publicaciones (`forkbuild-publication`); luego una solicitud del registro firmado de cada publicación recién anunciada, como máximo 20 por visita o por **Volver a buscar** |
 | Abre el desafío de construcción de una semana (**Desafío**) | relés de Nostr (`relay.damus.io`), una pasarela de Arweave (`arweave.net`), nodos de Steem (`api.steemit.com`), nodos de Blurt (`rpc.blurt.blog`) | una consulta por la etiqueta de esa semana (`forkbuild-tag:<tag>`); después, una solicitud del registro firmado de cada participación anunciada nueva, como máximo 20 por visita o **Volver a buscar** |
 | Publica una construcción habiendo elegido **Todos** en **¿Quién puede encontrarla?** | cada relé de Nostr de **Configuración de red** (`relay.damus.io`, `nos.lol`, `relay.primal.net`) | una nota de construcción: la propia construcción firmada, sus etiquetas y la ubicación firmada de quien la publica, firmada con la clave portadora de este dispositivo |
 | Abre Explorar, la página de una persona, el desafío de una semana o su plaza | cada relé de Nostr de **Configuración de red** | una consulta de notas de construcción (`forkbuild-build`, o `forkbuild-tag:<tag>` de esa semana); cada nota nueva se comprueba y se abre en este dispositivo, como máximo 40 por visita |

@@ -251,7 +251,7 @@ The Signed Claim's result appears in its own section:
 | **Shared World** | The Shared World's own id — confirms which Shared World this result is about. |
 | **Material** | The location the upload produced, or "Not yet uploaded" if it didn't complete. |
 | **Discovery** | The announcement id, or "Not yet announced" if it didn't complete — one row per relay when several are configured. |
-| **Repository** | An **Explore** button that jumps straight to this publication's page in World View — shown whenever the publication carries somewhere to explore, which in practice is always. |
+| **Your build** | An **Explore** button that jumps straight to this publication's page in World View — shown whenever the publication carries somewhere to explore, which in practice is always. |
 
 **Large builds.** Arweave storage takes a Snapshot of up to 256 KB, about
 eight thousand bricks. For anything larger, choose IPFS storage (a local
@@ -387,13 +387,13 @@ is unchanged"); see
 
 The original is never touched, no matter how much you change your copy.
 
-## The Repository
+## Explore
 
-**Explore** in the top bar (called the *Repository* in older versions and
-in a few advanced messages) is the searchable catalog of every published
-build this device knows about: your own, ones peers have shared with you, and
-ones found on decentralized networks. It's built to stay usable whether it
-holds ten creations or ten thousand.
+**Explore** in the top bar (called the *Repository* in older versions) is
+the searchable catalog of every published build this device knows about:
+your own, ones peers have shared with you, and ones found on decentralized
+networks. It's built to stay usable whether it holds ten creations or ten
+thousand.
 
 ### Ready-made builds
 

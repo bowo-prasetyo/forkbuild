@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 70cc3e473f9bbf3c -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: dbd0c9839aa5a461 -->
 # 09 — Publications et preuves externes
 
 <!-- languages -->
@@ -18,14 +18,14 @@
 > IPFS distant et tout le panneau **Outils de portefeuille et d’archives**.
 > Les guides [11](11-EvidenceAndStorage.md) et
 > [12](12-ArchiveAndLeaderboards.md) indiquent lesquelles de leurs sections
-> sont Expérimentales. Construire, enregistrer, publier dans le Dépôt,
+> sont Expérimentales. Construire, enregistrer, publier dans Explorer,
 > forker, les identités et les pairs n’en dépendent pas.
 
 Rien de tout cela n’est nécessaire pour utiliser ForkBuild. Passez si vous
 voulez seulement construire, publier et explorer.
 
-La page **Publications** est une couche plus technique que le Dépôt. Le
-Dépôt concerne les Documents et les Mondes ; la page Publications
+La page **Publications** est une couche plus technique qu’Explorer.
+Explorer concerne les Documents et les Mondes ; la page Publications
 concerne les **revendications signées** comme « j’ai conçu cette
 structure » ou « j’appelle ce lieu X », et la profondeur facultative que
 vous pouvez ajouter à une revendication :
@@ -44,22 +44,22 @@ vous pouvez ajouter à une revendication :
 
 ## Deux sens de « publier »
 
-| | **Publier** (Dépôt) | **Page Publications** |
+| | **Publier** (Explorer) | **Page Publications** |
 |---|---|---|
 | Ce qui est partagé | Un Document ou un Monde | Un enregistrement signé : un Monde partagé, la paternité d’une structure ou un nom de lieu |
-| Où on le voit | Dépôt, page d’auteur, Vue du Monde | La page **Publications** |
+| Où on le voit | Explorer, page d’auteur, Vue du Monde | La page **Publications** |
 | Ce qu’on en fait | L’ouvrir, l’explorer, le forker | Le vérifier, récupérer son contenu, le distribuer et l’ancrer |
 | Guide | [Publier et remixer](04-PublishingAndForking.md) | Celui-ci |
 
 **Publier** seul ne met pas un Monde sur la page Publications.
 **Partager avec les pairs**, si : cela signe le Monde comme **Monde
 partagé**, capable de voyager vers les pairs (voir
-[Une création du Dépôt, décentralisée](#une-création-du-dépôt-décentralisée)).
+[Une construction d’Explorer, décentralisée](#une-construction-dexplorer-décentralisée)).
 
 La page Publications n’a ni **Ouvrir**, ni **Explorer**, ni **Remixer**,
 même pas pour un Monde partagé. Elle montre l’enregistrement signé, pas le
 Monde. Pour ouvrir, explorer ou forker un Monde partagé, trouvez-le dans
-le Dépôt, sur la page de son auteur ou dans la Vue du Monde. Un Monde
+Explorer, sur la page de son auteur ou dans la Vue du Monde. Un Monde
 reçu d’un pair y apparaît dès que son contenu est sur cet appareil.
 (La seule exception est **Ouvrir dans l’Éditeur** sur votre propre Monde
 partagé qui doit être publié de nouveau ; voir
@@ -74,7 +74,7 @@ est de l’un de ces trois types :
 | **Attribution de plan** | Une revendication selon laquelle vous avez conçu une structure |
 | **Proposition de nom de lieu** | Un nom pour une Région ou un Point de repère |
 
-La Vue du Monde, l’Éditeur et le Dépôt appellent eux aussi
+La Vue du Monde, l’Éditeur et Explorer appellent eux aussi
 l’enregistrement signé d’un Monde un **Monde partagé**, comme dans **Mon
 Monde partagé**, **Découvrir un Monde partagé** et **Retour au Monde
 partagé**.
@@ -94,7 +94,7 @@ type de publication, et seule la publication elle-même est obligatoire :
 | **Placement** | Le rayon où l’exemplaire est rangé | Un enregistrement signé de l’endroit où se tient une construction dans le Monde. Un Monde partagé peut en avoir plusieurs. Voir [Placer ou forker](WorldViewAdvancedTools.md#placer-ou-forker). |
 | **Annonce / Découverte** | Une fiche du catalogue de la bibliothèque | Un petit avis signé sur Nostr, Arweave, Steem ou Blurt indiquant que la publication ou le Snapshot existe et où se trouve sa copie, pour que des personnes non connectées à vous puissent la trouver. Voir [Fournisseur d’annonce / de découverte](10-NetworkSettings.md#fournisseur-dannonce--de-découverte). |
 | **Preuve / Ancrage** *(Expérimental, sauf sur Arweave)* | Le tampon d’un notaire | Le hash du contenu inscrit dans une transaction blockchain (Bitcoin, Base, Arweave, Steem ou Blurt), comme preuve qu’il existait à ce moment-là. Il ne stocke ni n’annonce rien. Voir [Preuves et stockage](11-EvidenceAndStorage.md). |
-| **Commentaires** | Les critiques des lecteurs | Des commentaires que toute personne connectée peut joindre à une publication, chacun signé par son auteur, pas par l’éditeur. Voir [Commentaires](#commentaires). |
+| **Commentaires** | Les critiques des lecteurs | Des commentaires que toute personne ayant un nom peut joindre à une publication, chacun signé par son auteur, pas par l’éditeur. Voir [Commentaires](#commentaires). |
 
 Vous faites donc une publication ; puis, si vous le souhaitez, vous
 stockez son contenu, l’annoncez, l’ancrez et la placez (pour un Monde
@@ -104,7 +104,7 @@ partagé) ; et n’importe qui peut la commenter.
 
 Vous ne créez jamais de revendication sur la page Publications
 elle-même. Elle liste les revendications que vous avez faites ailleurs,
-celles que des pairs vous ont envoyées, et les créations du Dépôt arrivées
+celles que des pairs vous ont envoyées, et les constructions d’Explorer arrivées
 sous forme décentralisée. Les propositions de nom de lieu peuvent aussi
 être trouvées directement sur Nostr, sans aucun pair ; voir
 [Noms de lieux à proximité](WorldViewAdvancedTools.md#noms-de-lieux-à-proximité--découvrir-les-propositions-de-nimporte-qui).
@@ -166,15 +166,15 @@ pendant que vous êtes connecté. Une revendication reçue n’est qu’un
 enregistrement valablement signé : son contenu n’est sur votre appareil
 qu’une fois récupéré avec **Récupérer auprès des pairs** (ci-dessous).
 
-### Une création du Dépôt, décentralisée
+### Une construction d’Explorer, décentralisée
 
 Une carte peut aussi contenir un **Monde partagé** — le même type d’objet
-qu’une entrée du Dépôt, emballé pour voyager de façon décentralisée.
-**Partager avec les pairs**, dans le Dépôt, en crée un pour vos propres
+qu’une entrée d’Explorer, emballé pour voyager de façon décentralisée.
+**Partager avec les pairs**, dans Explorer, en crée un pour vos propres
 Mondes (voir
 [Partager avec les pairs connectés](04-PublishingAndForking.md#partager-avec-les-pairs-connectés)).
 Une fois résolu ici avec **Revérifier** ou **Récupérer auprès des pairs**,
-il rejoint la recherche du Dépôt, la page de son auteur et la Vue du
+il rejoint la recherche d’Explorer, la page de son auteur et la Vue du
 Monde, et y reste après un rechargement.
 
 ## La page Publications
@@ -311,14 +311,14 @@ annoncé** signifie que seule l’annonce a échoué ; le contenu a été stock�
 
 ## Commentaires
 
-Toute identité connectée peut commenter n’importe quelle publication qui
-se résout : une création du Dépôt, une revendication de paternité ou un
+Toute personne ayant un nom peut commenter n’importe quelle publication
+qui se résout : une construction d’Explorer, une revendication de paternité ou un
 nom de lieu. Il n’y a ni vérification de propriété, ni exigence d’amitié,
 ni modération.
 
 Vous trouverez des commentaires :
 
-- dans le **Dépôt** et sur les pages d’auteur : le bouton **Commenter**
+- dans **Explorer** et sur les pages d’auteur : le bouton **Commenter**
   de chaque carte et ligne de liste ;
 - dans le panneau
   [Mon Monde partagé](WorldViewAdvancedTools.md#mon-monde-partagé--distribuer-votre-propre-snapshot-sans-pair-nécessaire)
@@ -336,7 +336,7 @@ réponses.
 
 ### Comment voyagent les commentaires
 
-Un commentaire publié depuis le **Dépôt** est enregistré sur votre
+Un commentaire publié depuis **Explorer** est enregistré sur votre
 appareil, envoyé aux pairs auxquels vous êtes connecté, et publié sur le
 réseau choisi à côté de **Publier le commentaire** (Nostr, Arweave,
 Steem ou Blurt ; il démarre sur votre
@@ -362,7 +362,7 @@ autre réseau aussi ? Sous chacun de vos commentaires, une ligne indique à
 quels réseaux cet appareil l’a envoyé, ou *Pas encore envoyé à un réseau
 depuis cet appareil.* **Distribuer** l’envoie alors au réseau choisi et
 indique si cela a fonctionné ; un réseau où il est déjà allé est signalé et
-ne peut pas être choisi à nouveau. Seul l’auteur du commentaire, connecté,
+ne peut pas être choisi à nouveau. Seul l’auteur du commentaire, sous ce nom,
 le voit, car lui seul peut signer le commentaire pour un réseau, et la ligne
 ne connaît que ce que cet appareil a envoyé.
 

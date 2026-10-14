@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 6c3356512aea6399 -->
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 3ba8fc359bf11937 -->
 # 05 — Nama & Identitas Anda
 
 <!-- languages -->
@@ -44,15 +44,15 @@ melindunginya nanti dari **Identitas Saya**.
 > jika hilang, identitas itu hilang, bahkan bagi ForkBuild sendiri.
 > Pilihlah yang dapat Anda ingat.
 
-## Brankas: terkunci vs. keluar
+## Brankas: terkunci atau tanpa nama
 
 Kunci yang sudah didekripsi dari identitas yang terlindungi berada di
 sesuatu yang disebut **brankas**. Brankas dapat **terkunci** atau **tidak
-terkunci**, dan itu benar-benar pertanyaan yang berbeda dari apakah Anda
-sedang masuk:
+terkunci**, dan itu benar-benar pertanyaan yang berbeda dari nama mana yang
+sedang Anda pakai:
 
-- **Masuk, tidak terkunci** — semuanya berfungsi seperti biasa.
-- **Masuk, terkunci** (🔒 di samping nama Anda di kanan atas) — Anda tetap
+- **Dengan nama, tidak terkunci** — semuanya berfungsi seperti biasa.
+- **Dengan nama, terkunci** (🔒 di samping nama Anda di kanan atas) — Anda tetap
   diri Anda sendiri, dan masih dapat menelusuri, membangun, dan menyimpan,
   tetapi apa pun yang memerlukan tanda tangan baru (menerbitkan, menjadi
   dapat ditemukan, bergabung ke lobi) gagal dengan pesan "identity is
@@ -66,16 +66,16 @@ masih memakai aplikasi atau tidak (ini bukan pengatur waktu
 ketidakaktifan), atau kapan pun Anda sendiri mengeklik **Kunci** di
 **Identitas Saya**. Memuat ulang halaman selalu membuat identitas yang
 terlindungi terkunci — kunci yang sudah didekripsi tidak pernah ditulis ke
-disk, hanya disimpan di memori — meskipun aplikasi tetap mengingat sebagai
-siapa Anda masuk.
+disk, hanya disimpan di memori — meskipun aplikasi tetap mengingat nama
+yang sedang Anda pakai.
 
 ## Mengelola identitas — halaman Identitas Saya
 
 Buka **Lainnya → Identitas Saya** (atau klik nama Anda di bilah atas) untuk melihat setiap identitas yang
 ada di perangkat ini, masing-masing dengan status kuncinya sendiri, terlepas
-dari identitas mana yang sedang Anda pakai untuk masuk. Dari sini Anda dapat:
+dari identitas mana yang sedang Anda pakai. Dari sini Anda dapat:
 
-- **Membuat** identitas baru (sama seperti dialog masuk).
+- **Membuat** identitas baru (sama seperti dialog nama).
 - **Lindungi dengan Frasa Sandi** — ditampilkan pada identitas yang tidak
   terlindungi (ditandai **⚠ Tidak Terlindungi**). Ini mengenkripsi kunci
   yang ada; identitasnya sendiri tidak berubah, dan identitas itu terkunci
@@ -110,11 +110,11 @@ jika Anda ingin berhenti memakainya, cabut saja.
 
 Mencabut menghentikan identitas dari menandatangani apa pun yang baru,
 termasuk bukti yang dibutuhkannya untuk memulai koneksi baru dengan orang
-lain. Mencabut **tidak** membuat Anda keluar, dan Anda masih bisa masuk
-dengannya setelah itu — kartunya di **Identitas Saya** hanya menampilkan
+lain. Mencabut **tidak** menghentikan Anda memakainya, dan Anda masih bisa
+memilihnya setelah itu — kartunya di **Identitas Saya** hanya menampilkan
 **Dicabut**. Itu disengaja, agar Anda masih bisa membukanya untuk melihatnya
 atau **Ekspor** sekali lagi. Untuk terus bekerja, buat identitas baru dan
-masuk dengan identitas itu.
+pakai identitas itu.
 
 Pencabutan bersifat permanen, di perangkat ini dan di perangkat mana pun
 tempat Anda memulihkan cadangannya. Koneksi yang sudah terbuka saat Anda
@@ -144,9 +144,9 @@ yang terenkripsi:
    memilikinya — tanpa mendekripsi apa pun.
 2. Masukkan frasa sandi ekspornya untuk benar-benar mengimpornya.
 
-Identitas yang diimpor selalu masuk dalam keadaan **terkunci**, dan Anda
-tidak otomatis masuk sebagai identitas itu — buka kuncinya dari Identitas
-Saya atau dialog masuk seperti identitas terlindungi lainnya.
+Identitas yang diimpor selalu masuk dalam keadaan **terkunci**, dan ForkBuild
+tidak otomatis beralih ke identitas itu — buka kuncinya dari Identitas
+Saya atau dialog nama seperti identitas terlindungi lainnya.
 
 File itu juga membawa catatan siklus hidup identitas yang ditandatangani:
 pencabutannya, pengganti yang dinyatakannya, dan perangkat yang
@@ -185,7 +185,7 @@ jedanya. Hitungannya diatur ulang saat halaman dimuat ulang.
 
 ## Apa selanjutnya?
 
-Setelah Anda masuk, atur bagaimana Anda terlihat oleh orang lain di
+Setelah Anda punya nama, atur bagaimana Anda terlihat oleh orang lain di
 **[Avatar & Kehadiran](06-AvatarsAndPresence.md)**, atau temukan orang
 untuk membangun bersama di
 **[Koneksi Rekan & Teman](07-PeerConnectionsAndFriends.md)**.

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: b3d70584719e6278 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 545a8b3fca4e1167 -->
 # 01 — Erste Schritte
 
 <!-- languages -->
@@ -68,7 +68,7 @@ Die Leiste oben ist immer sichtbar:
 |---|---|
 | **Start** | Die Startseite |
 | **Bauen** | Den Editor, in dem Sie bauen (siehe [Der Editor](02-TheEditor.md)) |
-| **Entdecken** | Die veröffentlichten Bauwerke aller, zum Öffnen, Remixen oder Besuchen (siehe [Veröffentlichen & Remixen](04-PublishingAndForking.md#das-repository)) |
+| **Entdecken** | Die veröffentlichten Bauwerke aller, zum Öffnen, Remixen oder Besuchen (siehe [Veröffentlichen & Remixen](04-PublishingAndForking.md#entdecken)) |
 | **Challenge** | Die Bau-Challenge dieser Woche und ihre Beiträge (siehe [Die wöchentliche Bau-Challenge](04-PublishingAndForking.md#die-wöchentliche-bau-challenge)) |
 | **Spazieren** | Die Weltansicht am Platz der Challenge dieser Woche, um durch das Dorf der veröffentlichten Bauwerke zu gehen (siehe [Weltansicht](03-WorldView.md)) |
 | **Meine Welten** | Welten, die Sie auf diesem Gerät besucht haben (siehe [Meine Welten](03-WorldView.md#meine-welten--welten-in-denen-sie-wirklich-waren)) |

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 678438731470dcad -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: f9d9cc641a8a9b34 -->
 # 04 — Publier et remixer
 
 <!-- languages -->
@@ -276,7 +276,7 @@ Le résultat de la Déclaration signée apparaît dans sa propre section :
 | **Monde partagé** | L’id du Monde partagé — confirme de quel Monde partagé parle ce résultat. |
 | **Contenu** | L’emplacement produit par l’envoi, ou « Pas encore envoyé » s’il n’a pas abouti. |
 | **Découverte** | L’id de l’annonce, ou « Pas encore annoncé » si elle n’a pas abouti — une ligne par relais quand plusieurs sont configurés. |
-| **Dépôt** | Un bouton **Explorer** qui mène directement à la page de cette publication dans la Vue du Monde — affiché dès que la publication a un endroit à explorer, c’est-à-dire en pratique toujours. |
+| **Votre construction** | Un bouton **Explorer** qui mène directement à la page de cette publication dans la Vue du Monde — affiché dès que la publication a un endroit à explorer, c’est-à-dire en pratique toujours. |
 
 **Grosses constructions.** Le stockage Arweave accepte un Snapshot
 jusqu’à 256 Ko, soit environ huit mille briques. Au-delà, choisissez le
@@ -423,10 +423,10 @@ modifiable a été créée — … reste inchangé ») ; voir
 
 L’original n’est jamais touché, quoi que vous changiez dans votre copie.
 
-## Le Dépôt
+## Explorer
 
 **Explorer**, dans la barre du haut (appelé *Dépôt* dans les versions
-antérieures et dans quelques messages avancés), est le catalogue, avec
+antérieures), est le catalogue, avec
 recherche, de toutes les constructions publiées que cet appareil connaît : les vôtres, celles que des pairs ont
 partagées avec vous, et celles trouvées sur des réseaux décentralisés. Il
 est conçu pour rester utilisable qu’il contienne dix créations ou dix

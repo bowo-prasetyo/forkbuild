@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 09927c2e29d339ff -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 0c2f0fe4b600a2de -->
 # 10 — Configurações de rede
 
 <!-- languages -->
@@ -113,7 +113,7 @@ Escolha **Arweave**, **Blurt** (experimental), **Nostr** ou **Steem** (experimen
 padrão onde suas publicações (Mundos compartilhados, atribuições de planta e
 declarações de nomes de lugares), Snapshots e comentários são anunciados. É
 só um padrão: toda caixa de diálogo **Distribuir**, o seletor de Distribuição
-de cada cartão no Repositório e o seletor de rede ao lado de **Publicar
+de cada cartão em Explorar e o seletor de rede ao lado de **Publicar
 comentário** começam nele, e você pode trocá-los para uma ação.
 Encontrar o conteúdo de outras pessoas sempre pesquisa todos eles.
 
@@ -160,7 +160,7 @@ os do Arweave. Os padrões são `https://ipfs.filebase.io`, `https://gateway.pin
 
 Esta lista é usada ao resolver ou materializar um Posicionamento de
 Snapshot no IPFS, para **Verificar conteúdo no IPFS**, para abrir links compartilhados para
-conteúdo no IPFS e quando o Repositório e o desafio semanal leem
+conteúdo no IPFS e quando Explorar e o desafio semanal leem
 construções encontradas nas redes cuja Declaração assinada está no IPFS.
 Ela não muda onde o seu próprio conteúdo é fixado.
 

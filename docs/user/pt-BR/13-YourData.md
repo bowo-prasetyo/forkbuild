@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: 0f7d63110556987a -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: 2f10096b5d79ec2b -->
 # 13 — Seus dados
 
 <!-- languages -->
@@ -48,8 +48,8 @@ dispositivos. Os dois dispositivos precisam estar on-line: eles se
 encontram pelo servidor de encontro e depois os dados vão diretamente de um
 para o outro, criptografados com uma chave que só existe no código. O
 servidor de encontro não vê nem a chave nem seus dados. Identidades com
-frase secreta continuam protegidas por ela, e você entra no outro
-dispositivo como depois de uma restauração.
+frase secreta continuam protegidas por ela, e no outro
+dispositivo você escolhe seu nome de novo, como depois de uma restauração.
 
 ## Fazendo backup
 
@@ -68,8 +68,8 @@ dois num lugar onde não vá perdê-los. A frase secreta do backup é separada
 das frases secretas das suas identidades: cada identidade lá dentro continua
 protegida pela sua própria.
 
-O backup não inclui com qual identidade você entrou. Depois de restaurar,
-você entra de novo.
+O backup não inclui qual nome você estava usando. Depois de restaurar,
+escolha seu nome de novo.
 
 Além de **Fazer backup em um arquivo**, a mesma seção pode:
 
