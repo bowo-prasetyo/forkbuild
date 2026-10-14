@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 import { terrainHeightAt } from '../core/TerrainHeightField.js';
 import { surfaceCategoryAt, SURFACE_CATEGORY } from '../core/TerrainSurface.js';
-import { LAKE_SURFACE_HEIGHT, waterSurfaceColorAt } from '../core/Hydrology.js';
+import { LAKE_SURFACE_HEIGHT, waterSurfaceColorAt, seaShareAt } from '../core/Hydrology.js';
 import { TERRAIN_TILE_SIZE, tileCenter } from '../core/TerrainTiling.js';
 import { TILE_SEGMENTS } from './TerrainTileMesh.js';
+import { makeWaterWaving } from './WaterWaveMaterial.js';
 
 // The renderer-side counterpart to core/Hydrology.js's LAKE concept —
 // see docs/Roadmap.md, 0.2.89: it knows nothing about WHERE a lake is or
@@ -21,6 +22,11 @@ import { TILE_SEGMENTS } from './TerrainTileMesh.js';
 // express that; a flat plane can, and needs no new streaming machinery
 // to do it.
 //
+// The surface is still in shape but not in motion: the material moves it
+// with core/WaterWaves.js's swell and ripples (renderer/WaterWaveMaterial.js),
+// lifting at most MAX_SWELL_HEIGHT, far less than SINK_DEPTH, so a dry
+// vertex never rises through the ground.
+//
 // The "sink every dry vertex below ground" trick below is what keeps
 // this mesh trivially correct at a tile boundary with zero seam-handling
 // code: every vertex is placed from nothing but its own WORLD (x, z),
@@ -33,6 +39,7 @@ const SINK_DEPTH = 4; // world units below the actual ground — comfortably occ
 const UNDERSIDE_COLOR = 0x9fd8e8;
 const UNDERSIDE_OPACITY = 0.7;
 const WATER_OPACITY = 0.78; // translucent, not a mirror — see core/TerrainSurface.js's own "buildings and avatars remain the visual focus" restraint, extended here to water
+const WATER_ROUGHNESS = 0.4; // glossy enough that the sun glints off the ripples, still far from a mirror
 
 // Deliberately untested directly, same posture as renderer/TerrainTileMesh.js
 // and renderer/NaturalFeatureTileMesh.js — see
@@ -40,7 +47,9 @@ const WATER_OPACITY = 0.78; // translucent, not a mirror — see core/TerrainSur
 // ORCHESTRATION is unit-tested (with a fake tile factory, reused unchanged
 // for water — see renderer/Renderer.js) while the real Three.js
 // geometry-building glue here isn't.
-export function buildWaterTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE) {
+// `waveTime` is the { value } in seconds every water tile's waves read (see
+// renderer/WaterWaveMaterial.js); a tile built without one stays still.
+export function buildWaterTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE, waveTime = { value: 0 }) {
     const geometry = new THREE.PlaneGeometry(tileSize, tileSize, TILE_SEGMENTS, TILE_SEGMENTS);
     geometry.rotateX(-Math.PI / 2);
 
@@ -49,6 +58,7 @@ export function buildWaterTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE) {
     // Per-vertex color, so one tile can run from lake tone to sea tone
     // across a shelf (core/Hydrology.js#waterSurfaceColorAt()).
     const colors = new Float32Array(position.count * 3);
+    const seaShares = new Float32Array(position.count);
     let hasWater = false;
     for (let i = 0; i < position.count; i++) {
         const worldX = center.x + position.getX(i);
@@ -61,6 +71,7 @@ export function buildWaterTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE) {
             colors[i * 3] = color.r;
             colors[i * 3 + 1] = color.g;
             colors[i * 3 + 2] = color.b;
+            seaShares[i] = seaShareAt(seed, worldX, worldZ);
         } else {
             position.setY(i, terrainHeightAt(seed, worldX, worldZ) - SINK_DEPTH);
         }
@@ -75,14 +86,16 @@ export function buildWaterTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE) {
 
     position.needsUpdate = true;
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    geometry.setAttribute('aSeaShare', new THREE.BufferAttribute(seaShares, 1));
     geometry.computeVertexNormals();
 
-    const material = new THREE.MeshStandardMaterial({
+    const material = makeWaterWaving(new THREE.MeshStandardMaterial({
         vertexColors: true,
+        roughness: WATER_ROUGHNESS,
         transparent: true,
         opacity: WATER_OPACITY,
         depthWrite: false // standard transparent-water convention — avoids self-sorting artifacts between overlapping lake tiles
-    });
+    }), waveTime);
     const mesh = new THREE.Mesh(geometry, material);
     // Vertex Y already holds the ABSOLUTE world elevation (sampled at
     // worldX/worldZ above) — the exact same convention
@@ -92,13 +105,13 @@ export function buildWaterTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE) {
     // The underside, seen only by a diver looking up: a bright, unlit sheet, as
     // daylight through the surface looks from below. Back faces only, so it is
     // never drawn from above.
-    const underside = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({
+    const underside = new THREE.Mesh(geometry, makeWaterWaving(new THREE.MeshBasicMaterial({
         color: UNDERSIDE_COLOR,
         transparent: true,
         opacity: UNDERSIDE_OPACITY,
         depthWrite: false,
         side: THREE.BackSide
-    }));
+    }), waveTime, { lit: false }));
     mesh.add(underside);
     return mesh;
 }

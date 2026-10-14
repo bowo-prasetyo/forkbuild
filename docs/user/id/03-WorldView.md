@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 0aea3f753b8a2a06 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: d78ce0dde206a2f5 -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
@@ -111,7 +111,8 @@ ladang, danau, sungai, dan laut mengikuti bentuk tanah. Daratan di tengah
 selalu kering; sekitar seribu satuan ke luar, Anda sampai di pantai,
 tempat tanah menurun ke laut dalam.
 
-**Air.** Avatar Anda mengarungi danau atau laut dan melambat saat air
+**Air.** Danau beriak tertiup angin dan laut berayun dengan
+ombak yang pelan. Avatar Anda mengarungi danau atau laut dan melambat saat air
 naik. Begitu air lebih dalam dari setengah tingginya, ia berenang (lihat
 [Berenang dan menyelam](06-AvatarsAndPresence.md#berenang-dan-menyelam)).
 Menyelamlah, dan Anda melihat rumput laut dan kawanan ikan kecil.

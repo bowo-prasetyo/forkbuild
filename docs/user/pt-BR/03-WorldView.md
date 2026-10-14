@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 0aea3f753b8a2a06 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: d78ce0dde206a2f5 -->
 # 03 — Visão do mundo
 
 <!-- languages -->
@@ -107,7 +107,8 @@ campos, lagos, rios e o mar seguem a forma do chão. O terreno do centro
 está sempre seco; a umas mil unidades você chega a uma costa, onde o chão
 desce para o mar fundo.
 
-**Água.** Seu avatar entra andando num lago ou no mar e fica mais lento
+**Água.** Os lagos ondulam com a brisa e o mar balança num
+marulho lento. Seu avatar entra andando num lago ou no mar e fica mais lento
 conforme a água sobe. Quando a água é mais funda que metade da altura dele,
 ele nada (veja
 [Nadar e mergulhar](06-AvatarsAndPresence.md#nadar-e-mergulhar)). Mergulhe

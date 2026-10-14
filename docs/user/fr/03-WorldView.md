@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 0aea3f753b8a2a06 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: d78ce0dde206a2f5 -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
@@ -113,7 +113,8 @@ forêt, champs, lacs, rivières et mer suivent la forme du sol. Le terrain
 au centre est toujours sec ; à environ mille unités, vous atteignez une
 côte, où le sol descend vers la mer profonde.
 
-**L’eau.** Votre avatar entre à pied dans un lac ou dans la mer et
+**L’eau.** Les lacs frémissent sous la brise et la mer roule d’une
+houle lente. Votre avatar entre à pied dans un lac ou dans la mer et
 ralentit à mesure que l’eau monte. Quand l’eau est plus profonde que la
 moitié de sa taille, il nage (voir
 [Nager et plonger](06-AvatarsAndPresence.md#nager-et-plonger)). Plongez,

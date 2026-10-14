@@ -133,9 +133,12 @@ export class Renderer {
         // the SAME terrain tile mesh above, so they load and unload with
         // the ground exactly like every other ground-color treatment
         // already does.
+        // Lakes ripple and the sea swells (core/WaterWaves.js): every water
+        // tile's material reads this one time, which _renderFrame() advances.
+        this._waterWaveTime = { value: 0 };
         this._waterStreaming = new TerrainStreamingController(
             this._sceneManager,
-            (tx, tz) => buildWaterTileMesh(tx, tz, DEFAULT_WORLD_SEED),
+            (tx, tz) => buildWaterTileMesh(tx, tz, DEFAULT_WORLD_SEED, TERRAIN_TILE_SIZE, this._waterWaveTime),
             { disposeTile: disposeOwnedTile }
         );
         this._waterStreaming.update(
@@ -369,6 +372,9 @@ export class Renderer {
         this._terrainStreaming.update(this._cameraController.camera.position.x, this._cameraController.camera.position.z);
         this._vegetationStreaming.update(this._cameraController.camera.position.x, this._cameraController.camera.position.z);
         this._waterStreaming.update(this._cameraController.camera.position.x, this._cameraController.camera.position.z);
+        // Seconds since the page opened, not the wall clock: small enough to
+        // keep full float precision in the shader for days.
+        this._waterWaveTime.value = performance.now() / 1000;
         this._wildlifeStreaming.update(this._cameraController.camera.position.x, this._cameraController.camera.position.z);
         const wildlifeTime = this._wildlifeClock();
         const observer = this.wildlifeObserver();

@@ -104,7 +104,8 @@ farmland, lakes, rivers and the sea all follow the shape of the ground.
 The land near the centre is always dry; about a thousand units out you
 reach a coast, where the ground slopes down into deep sea.
 
-**Water.** Your avatar wades into a lake or the sea and slows as the water
+**Water.** Lakes ripple in the breeze and the sea rolls with a slow
+swell. Your avatar wades into a lake or the sea and slows as the water
 rises. Once the water is deeper than half its height, it swims (see
 [Swimming and diving](06-AvatarsAndPresence.md#swimming-and-diving)). Dive
 under and you see seaweed and small schools of fish.
