@@ -2,7 +2,7 @@
 # ワールドビュー：詳細ツール
 
 <!-- languages -->
-[English](../WorldViewAdvancedTools.md) · [Deutsch](../de/WorldViewAdvancedTools.md) · [Español](../es/WorldViewAdvancedTools.md) · [Français](../fr/WorldViewAdvancedTools.md) · [Bahasa Indonesia](../id/WorldViewAdvancedTools.md) · **日本語**
+[English](../WorldViewAdvancedTools.md) · [Deutsch](../de/WorldViewAdvancedTools.md) · [Español](../es/WorldViewAdvancedTools.md) · [Français](../fr/WorldViewAdvancedTools.md) · [Bahasa Indonesia](../id/WorldViewAdvancedTools.md) · **日本語** · [한국어](../ko/WorldViewAdvancedTools.md)
 <!-- /languages -->
 
 このページでは、サイドパネルのいちばん下で **詳細ツールを表示** に

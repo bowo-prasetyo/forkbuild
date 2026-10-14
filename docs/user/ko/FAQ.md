@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 06d073f252435c51 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 781eb04573741493 -->
 # 자주 묻는 질문
 
 <!-- languages -->
 [English](../FAQ.md) · [Deutsch](../de/FAQ.md) · [Español](../es/FAQ.md) · [Français](../fr/FAQ.md) · [Bahasa Indonesia](../id/FAQ.md) · [日本語](../ja/FAQ.md) · **한국어** · [Português (Brasil)](../pt-BR/FAQ.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **참고:** 이 페이지의 영어판이 번역 이후에 바뀌었으므로, 이 번역은 최신 내용이 아닐 수 있습니다. [영어판](../FAQ.md)을 참고하세요.
-<!-- /stale -->
 
 사람들이 가장 자주 부딪히는 질문에 대한 짧은 답이며, 각각 자세히 설명하는
 안내로 연결됩니다.
@@ -101,7 +97,7 @@ Arweave, IPFS, Nostr, Steem, Blurt에 배포한 것은 되돌릴 수 없습니�
 것은 내가 놓은 곳에 그대로 있고, 작품은 내 이름과 기록을 유지합니다. 원하지
 않는다면 게시하기 전에 **월드에 배치할 수 있는 사람**에서 **나만 배치 가능**을
 고르세요.
-[왜 다른 사람의 작품을 배치할 수 있나요?](03-WorldView.md#왜-다른-사람의-작품을-배치할-수-있나요)를
+[왜 다른 사람의 작품을 배치할 수 있나요?](WorldViewAdvancedTools.md#왜-다른-사람의-작품을-배치할-수-있나요)를
 보세요.
 
 ### 왜 작품 두 개가 같은 자리에 있나요?
@@ -109,7 +105,7 @@ Arweave, IPFS, Nostr, Steem, Blurt에 배포한 것은 되돌릴 수 없습니�
 배치는 땅을 차지하지 않으며, 누가 먼저 자리를 잡았는지 정해 줄 중앙 서버도
 없으므로, 배치 두 개가 같은 지점을 가리킬 수 있습니다. 내 배치를 이미 차 있는
 자리로 옮기기 전에는 경고가 나옵니다.
-[왜 두 작품이 같은 자리에 있을 수 있나요?](03-WorldView.md#왜-두-작품이-같은-자리에-있을-수-있나요)를
+[왜 두 작품이 같은 자리에 있을 수 있나요?](WorldViewAdvancedTools.md#왜-두-작품이-같은-자리에-있을-수-있나요)를
 보세요.
 
 ## 신원과 내 데이터

@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/README.md source-hash: a206e390cf4902f4 -->
+<!-- translation-of: docs/user/README.md source-hash: a002122a9a62ba43 -->
 # ForkBuild 사용자 문서
 
 <!-- languages -->
 [English](../README.md) · [Deutsch](../de/README.md) · [Español](../es/README.md) · [Français](../fr/README.md) · [Bahasa Indonesia](../id/README.md) · [日本語](../ja/README.md) · **한국어** · [Português (Brasil)](../pt-BR/README.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **참고:** 이 페이지의 영어판이 번역 이후에 바뀌었으므로, 이 번역은 최신 내용이 아닐 수 있습니다. [영어판](../README.md)을 참고하세요.
-<!-- /stale -->
 
 <!-- languages -->
 <!-- /languages -->
@@ -47,7 +43,7 @@
    인스턴스, 그리고 작품의 제목/설명/라이선스.
 3. **[월드 보기](03-WorldView.md)** — 게시된 모든 작품이 있는 공유 3D 월드. 걷고 날아다니기,
    무언가를 찾아 살펴보기, **여기에 짓기**, **여기서 같이 걷자**, 주민, 그리고 무언가를 에디터로 가져가는 **사본
-   편집**. 네트워크 도구는 **고급 도구 보기** 아래에 있어요.
+   편집**. 네트워크 도구는 아래 고급에 따로 페이지가 있습니다.
 4. **[게시와 리믹스](04-PublishingAndForking.md)** — 게시와 링크 공유, 작품을 보낼 곳
    고르기, 라이선스, 리믹스, **둘러보기**와 미리 지어진 작품, 주간 챌린지와 광장, 가계도. 작품을 보낼 수 있는 모든 곳은
    [작품 배포하기](Distribution.md)를 보세요.
@@ -62,6 +58,10 @@
 그 아래에서 돌아가는 장치들이에요. 아이덴티티의 자세한 내용, 다른 사람과의 직접 연결, 작품을 보낼 수 있는 네트워크, 실험적인
 도구. 노는 데는 하나도 필요 없어요.
 
+- **[월드 보기: 고급 도구](WorldViewAdvancedTools.md)** — **고급 도구
+  보기**가 더하는 것: 블록 살펴보기, 배치와 누구의 작품이든 배치할 수 있는
+  이유, 월드 조우, 발견한 장소 이름, 주장된 작품, **내 공유 월드**에서 내
+  작품 보내기.
 - **[이름과 신원](05-IdentityAndLogin.md)** — 내 이름과 그 뒤의 암호학적 신원, 보관소
   (잠금/잠금 해제), 내보내기/가져오기로 백업하기, **내 신원**에서 신원
   관리하기.

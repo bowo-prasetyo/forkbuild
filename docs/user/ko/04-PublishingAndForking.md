@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d5e21e1edde37655 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 678438731470dcad -->
 # 04 — 게시와 리믹스
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · [Español](../es/04-PublishingAndForking.md) · [Français](../fr/04-PublishingAndForking.md) · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · **한국어** · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **참고:** 이 페이지의 영어판이 번역 이후에 바뀌었으므로, 이 번역은 최신 내용이 아닐 수 있습니다. [영어판](../04-PublishingAndForking.md)을 참고하세요.
-<!-- /stale -->
 
 이것이 ForkBuild의 핵심입니다. **게시**는 내 작품을 세상과 공유합니다.
 **리믹스**는 누구나 작품의 자기 사본을 만들어 발전시킬 수 있게 해 주며,
@@ -214,7 +210,7 @@ Arweave 지갑, nos2x 같은 Nostr 확장 프로그램, Steem이나 Blurt Keycha
 
 이 대화 상자는 월드 보기와 같은 것입니다. **저장소**와 **공지 / 발견 기반**
 설정, 따로 있는 **스냅샷만 배포** / **서명 클레임만 배포** 버튼은
-[월드 조우](03-WorldView.md#월드-조우--피어가-공유하는-게시물과-아바타)에서 설명한 대로 동작합니다. 여기서 다른 점은 두
+[월드 조우](WorldViewAdvancedTools.md#월드-조우--피어가-공유하는-게시물과-아바타)에서 설명한 대로 동작합니다. 여기서 다른 점은 두
 가지입니다. 언제나 방금 게시 클릭으로 만들어진 바로 그 공유 월드에 대해
 동작하고, **스냅샷**이 먼저라서 **보내기**는 스냅샷을 보낸 다음 서명
 클레임을 보냅니다. 대화 상자를 닫아도(**닫기**, 바깥 클릭, Escape) 그것이
@@ -311,9 +307,9 @@ Nostr, Arweave, Steem, Blurt에 배포하기 전까지는 *내* **둘러보기**
 다른 사람은 보통 내가 게시한 작품을 자기 월드에 배치할 수 있습니다. 그것은 내
 작품의 배치를 추가하는 것이지 사본을 만드는 것이 아니며, 내 것을 옮기거나
 바꾸지 않습니다
-([왜 다른 사람의 작품을 배치할 수 있나요?](03-WorldView.md#왜-다른-사람의-작품을-배치할-수-있나요)
+([왜 다른 사람의 작품을 배치할 수 있나요?](WorldViewAdvancedTools.md#왜-다른-사람의-작품을-배치할-수-있나요)
 참고). 포크는 별개이며 라이선스가 정합니다
-([배치 대 포크](03-WorldView.md#배치-대-포크) 참고). 배치하지 않았으면
+([배치 대 포크](WorldViewAdvancedTools.md#배치-대-포크) 참고). 배치하지 않았으면
 좋겠다면 **문서 속성**을 열고 **월드에 배치할 수 있는 사람**을 정하세요:
 
 | 설정 | 의미 |
@@ -443,7 +439,7 @@ ForkBuild는 내 공유 월드를 알게 되는 즉시 작품을 그 자리에 �
 
 **둘러보기**는 이 기기에서 게시했거나 직접 발견한 것으로만 제한되지도 않습니다: 피어가
 월드 보기의
-[월드 조우](03-WorldView.md#월드-조우--피어가-공유하는-게시물과-아바타) 지도에서
+[월드 조우](WorldViewAdvancedTools.md#월드-조우--피어가-공유하는-게시물과-아바타) 지도에서
 보여 준 탈중앙 작품은, 콘텐츠가 실제로 해석되면 이 검색과 그 작성자의
 작성자 보기에도 들어가고, 새로 고친 뒤에도 남아 있습니다. 여기 있는 다른 것과
 다르게 표시되지 않습니다.
