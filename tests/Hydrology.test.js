@@ -88,7 +88,7 @@ async function runTests() {
             }
 
             if (feature === HYDROLOGY_FEATURE.RIVER) {
-                assert(surface === SURFACE_CATEGORY.GRASS, `9. A RIVER coordinate always sits on GRASS surface, never WATER/SOIL/ROCK (got ${surface} at ${x},${z})`);
+                assert(surface === SURFACE_CATEGORY.GRASS || surface === SURFACE_CATEGORY.SOIL, `9. A RIVER coordinate always sits on GRASS or SOIL surface, never WATER/ROCK (got ${surface} at ${x},${z})`);
                 const height = terrainHeightAt(DEFAULT_WORLD_SEED, x, z);
                 assert(height < HIGHLAND_ELEVATION, `10. A RIVER coordinate always sits strictly below HIGHLAND_ELEVATION (${x},${z})`);
                 checkedRiver++;

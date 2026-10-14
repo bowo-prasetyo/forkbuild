@@ -142,14 +142,14 @@ async function runTests() {
         assert(surfaceCategoryAt(seed, river.x, river.z) !== SURFACE_CATEGORY.WATER,
             '5. A RIVER coordinate is never also a WATER (lake) coordinate');
 
-        // A river is a ground-COLOR treatment only — it never touches
-        // the height field a lake's own geometry (and the avatar's own
-        // movement) is built from. Confirms core/Hydrology.js's own "A
-        // River Is Ground Color" design is exactly what real code does.
+        // A river never touches the height field a lake's own geometry
+        // (and the avatar's own movement) is built from: its bed is a
+        // ground-COLOR tint and its water (renderer/RiverTileMesh.js) a
+        // thin sheet drawn over that ground, visual only.
         const colorAtRiver = hydrologyGroundColorAt(seed, river.x, river.z);
         const heightAtRiver = terrainHeightAt(seed, river.x, river.z);
-        const riverIsGrass = surfaceCategoryAt(seed, river.x, river.z) === SURFACE_CATEGORY.GRASS;
-        assert(riverIsGrass, '6. A river coordinate sits on ordinary GRASS ground');
+        const riverSurface = surfaceCategoryAt(seed, river.x, river.z);
+        assert(riverSurface === SURFACE_CATEGORY.GRASS || riverSurface === SURFACE_CATEGORY.SOIL, '6. A river coordinate sits on ordinary GRASS or SOIL ground, never WATER');
         assert(Number.isFinite(heightAtRiver) && Number.isFinite(colorAtRiver.r),
             '7. A river coordinate has both an ordinary terrain height AND a tinted ground color — two independent facts, one of which (color) a river changes and the other (height) it never does');
 

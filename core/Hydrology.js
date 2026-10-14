@@ -206,7 +206,7 @@ export function riverChannelDistanceAt(seed, x, z) {
 // own TREE_LATTICE_SPACING (4), never a lake-sized body of flowing
 // water.
 const RIVER_HALF_WIDTH = 3;
-const RIVER_CHANNEL_THRESHOLD = RIVER_HALF_WIDTH * CHANNEL_PHASE_GRADIENT;
+export const RIVER_CHANNEL_THRESHOLD = RIVER_HALF_WIDTH * CHANNEL_PHASE_GRADIENT;
 
 // ---------------------------------------------------------------------
 // Valley bias — a CONTINUOUS intensity multiplier, never a hard gate,
@@ -250,22 +250,47 @@ function valleyFactorAt(seed, x, z, height) {
 }
 
 // The one public river PREDICATE — true only within the channel band,
-// on flat-enough ground (GRASS surface, same restriction every flat
-// ecology zone already imposes), and strictly below HIGHLAND_ELEVATION
-// (the same lowland/midland band core/TerrainEcology.js's own
-// FOREST/FIELD/GRASSLAND zones already occupy — rivers thread through
-// exactly the ground those zones exist on, never across ROCK or
-// HIGHLAND). Deliberately does NOT consult valleyFactorAt() — that
-// stays a continuous TINT INTENSITY input (see hydrologyGroundColorAt()
-// below), never a second hard gate a boolean predicate would have to
-// snap across.
+// on GRASS or SOIL (a river runs down the moderate slopes SOIL marks as
+// readily as across flat grass — faster there, core/RiverFlow.js — and
+// since rivers became real, running water, a channel that vanished for
+// every steeper stretch read as a broken river), and strictly below
+// HIGHLAND_ELEVATION (the same lowland/midland band
+// core/TerrainEcology.js's own FOREST/FIELD/GRASSLAND zones already
+// occupy — never across ROCK, WATER or HIGHLAND). Deliberately does NOT
+// consult valleyFactorAt() — that stays a continuous TINT INTENSITY
+// input (see hydrologyGroundColorAt() below), never a second hard gate a
+// boolean predicate would have to snap across.
 export function isRiverAt(seed, x, z) {
-    if (surfaceCategoryAt(seed, x, z) !== SURFACE_CATEGORY.GRASS) return false;
+    const surface = surfaceCategoryAt(seed, x, z);
+    if (surface !== SURFACE_CATEGORY.GRASS && surface !== SURFACE_CATEGORY.SOIL) return false;
 
     const height = terrainHeightAt(seed, x, z);
     if (height >= HIGHLAND_ELEVATION) return false;
 
     return riverChannelDistanceAt(seed, x, z) < RIVER_CHANNEL_THRESHOLD;
+}
+
+// How far into a river (x, z) lies: 1 on the channel's centreline, falling
+// to 0 at its banks, and 0 wherever isRiverAt() is false. The ground tint
+// below and the river's water (core/RiverFlow.js) both fade by it.
+export function riverProximityAt(seed, x, z) {
+    if (!isRiverAt(seed, x, z)) return 0;
+    return 1 - clamp01(riverChannelDistanceAt(seed, x, z) / RIVER_CHANNEL_THRESHOLD);
+}
+
+// The unit direction along the river channel at (x, z): perpendicular to
+// the channel field's gradient, so it follows the winding centreline.
+// Which of the two ways it points is not meaningful (it flips between
+// neighbouring channels); core/RiverFlow.js decides downstream from the
+// terrain. Meaningful only in or near a channel.
+const TANGENT_SAMPLE_DISTANCE = 0.5;
+export function riverChannelTangentAt(seed, x, z) {
+    const d = TANGENT_SAMPLE_DISTANCE;
+    const gx = channelFieldAt(seed, x + d, z) - channelFieldAt(seed, x - d, z);
+    const gz = channelFieldAt(seed, x, z + d) - channelFieldAt(seed, x, z - d);
+    const magnitude = Math.hypot(gx, gz);
+    if (magnitude === 0) return { dx: CHANNEL_AXIS_Z / CHANNEL_AXIS_LENGTH, dz: -CHANNEL_AXIS_X / CHANNEL_AXIS_LENGTH };
+    return { dx: -gz / magnitude, dz: gx / magnitude };
 }
 
 // The one public classification entry point — mirrors
@@ -287,6 +312,10 @@ export function hydrologyFeatureAt(seed, x, z) {
 // restraint (see that file's header).
 const RIVER_TINT = Object.freeze({ r: 0.42, g: 0.58, b: 0.72 });
 
+// The river's own water (renderer/RiverTileMesh.js), laid over that tint:
+// a touch deeper and greener, as running water over a shallow bed.
+export const RIVER_SURFACE_COLOR = Object.freeze({ r: 0.40, g: 0.58, b: 0.72 });
+
 // The one public ground-color entry point for this milestone —
 // hydrologyGroundColorAt(seed, x, z) starts from
 // core/TerrainEcology.js#ecologyGroundColorAt() (completely unchanged,
@@ -301,10 +330,9 @@ const RIVER_TINT = Object.freeze({ r: 0.42, g: 0.58, b: 0.72 });
 // from ground COLOR (see that file's own header).
 export function hydrologyGroundColorAt(seed, x, z) {
     const base = ecologyGroundColorAt(seed, x, z);
-    if (!isRiverAt(seed, x, z)) return base;
+    const proximity = riverProximityAt(seed, x, z);
+    if (proximity === 0) return base;
 
-    const distance = riverChannelDistanceAt(seed, x, z);
-    const proximity = 1 - clamp01(distance / RIVER_CHANNEL_THRESHOLD); // 1 at centerline, 0 at the channel's own edge
     const height = terrainHeightAt(seed, x, z);
     const intensity = proximity * valleyFactorAt(seed, x, z, height);
 

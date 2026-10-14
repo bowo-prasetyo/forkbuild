@@ -7,7 +7,7 @@ import { AnimationLoop } from './AnimationLoop.js';
 import { TerrainStreamingController } from './TerrainStreamingController.js';
 import { buildTerrainTileMesh } from './TerrainTileMesh.js';
 import { buildNaturalFeatureTileMesh } from './NaturalFeatureTileMesh.js';
-import { buildWaterTileMesh } from './WaterTileMesh.js';
+import { buildWaterTile } from './WaterTileMesh.js';
 import { buildWildlifeTileMesh, updateWildlifeTileMesh } from './WildlifeTileMesh.js';
 import { disposeOwnedTile, disposeInstancedTile } from './TileDisposal.js';
 import { terrainHeightAt as computeTerrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
@@ -127,18 +127,16 @@ export class Renderer {
         // Water shares the ground's tile grid and load/unload
         // orchestration by construction, differing only in what its
         // tileFactory builds: a flat lake plane (renderer/WaterTileMesh.js)
-        // instead of colored ground or trees. Rivers need no streamed
-        // geometry of their own — they are a ground-color tint
-        // core/Hydrology.js#hydrologyGroundColorAt() already layers into
-        // the SAME terrain tile mesh above, so they load and unload with
-        // the ground exactly like every other ground-color treatment
-        // already does.
-        // Lakes ripple and the sea swells (core/WaterWaves.js): every water
-        // tile's material reads this one time, which _renderFrame() advances.
+        // instead of colored ground or trees. A river's water
+        // (renderer/RiverTileMesh.js) rides in the same tile, over the
+        // tint core/Hydrology.js#hydrologyGroundColorAt() lays on its bed.
+        // Lakes ripple, the sea swells (core/WaterWaves.js) and rivers run
+        // (core/RiverFlow.js): every water tile's material reads this one
+        // time, which _renderFrame() advances.
         this._waterWaveTime = { value: 0 };
         this._waterStreaming = new TerrainStreamingController(
             this._sceneManager,
-            (tx, tz) => buildWaterTileMesh(tx, tz, DEFAULT_WORLD_SEED, TERRAIN_TILE_SIZE, this._waterWaveTime),
+            (tx, tz) => buildWaterTile(tx, tz, DEFAULT_WORLD_SEED, TERRAIN_TILE_SIZE, this._waterWaveTime),
             { disposeTile: disposeOwnedTile }
         );
         this._waterStreaming.update(

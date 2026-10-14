@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: d78ce0dde206a2f5 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 6842079854f690d0 -->
 # 03 — ワールドビュー
 
 <!-- languages -->
@@ -109,6 +109,7 @@
 地面は深い海へと下っていきます。
 
 **水。** 湖はそよ風にさざ波を立て、海はゆっくりとうねります。
+川は坂を下って流れ、地面が急なところほど速くなります。
 アバターは湖や海に歩いて入り、水が深くなるほど遅くなります。
 水が背の半分より深くなると泳ぎます
 （[泳ぐ・潜る](06-AvatarsAndPresence.md#泳ぐ潜る) を参照）。潜ると、

@@ -120,6 +120,13 @@ A lake is still water at one constant level, drawn as a flat plane at
 water. A river is expressed as ground color. Every vertex is still
 placed from its own world coordinates, so tiles need no seam handling.
 
+Revised (2026-10-14): a river now also has water, a thin sheet laid just
+over the ground mesh's own triangles along the channel
+(renderer/RiverTileMesh.js), running the way the ground falls
+(core/RiverFlow.js). The bed keeps its ground color, the height field is
+untouched and the water is visual only, so the rule's point stands: a
+river never becomes a second ground truth.
+
 [Full text](history/0.1-0.2.md#a-lake-is-rendered-geometry-a-river-is-ground-color-0289)
 
 ### Wildlife Is A Fifth Pure Function Layered On Terrain, Sibling To Natural Features, Never A New Ground Truth (0.9.667)
