@@ -1,7 +1,8 @@
 # ForkBuild 1.3 release notes
 
 *Released 2026-10-06 as version 1.3.0.* For 1.2, see
-[ReleaseNotes-1.2.md](ReleaseNotes-1.2.md).
+[ReleaseNotes-1.2.md](ReleaseNotes-1.2.md); for what came after, see
+[ReleaseNotes-1.4.md](ReleaseNotes-1.4.md).
 
 1.3 adds Blurt as a fifth decentralized network, speaks French and Korean,
 lets avatars swim and dive in a World that now has open sea, and makes
