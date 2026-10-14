@@ -6775,3 +6775,38 @@ tree** (the first thing anyone sees says *build a little place, anyone can remix
   picture taken from Home's turning village in this checkout. The press kit's pictures and the guide's were retaken.
 - docs/Pillars.md ("Look"), docs/Deployment.md and docs/launch/PressKit.md (a Logo section) say what each file is.
 - Not done: the turning village's fallback picture, when 3D can't start, is still favicon.svg.
+
+## Lakes that ripple and a sea that swells (unnumbered, 2026-10-14)
+
+World View's lakes and sea were flat sheets that never moved, the one still thing in a world where animals wander,
+fish swim and the sky turns. Pillar: **Your work is yours, and lives in a world** (the world around a build is worth
+walking to).
+
+- **The waves** (core/WaterWaves.js, new): a pure function of world (x, z), time and how much the water is sea
+  (`waterWaveAt()`). Each wave is a travelling sine whose speed follows from its wavelength as on deep water (longer
+  runs faster), slowed alike by `WAVE_PACE`. A lake has barely any swell and a fine wind ripple; the sea a long swell,
+  a cross swell and a choppier ripple. `SWELL` waves move the surface itself; `RIPPLE` waves, shorter than the water
+  grid's 3.3-unit spacing could hold, only tilt the light.
+- **Lake to sea** (core/Hydrology.js `seaShareAt()`, new): the 0-to-1 share of sea the surface colour already eased
+  by, now named and also carried by every water vertex, so the waves blend from lake to sea across a coast with no
+  seam, as the colour does.
+- **Drawn** (renderer/WaterWaveMaterial.js, new): the water tiles' materials (renderer/WaterTileMesh.js) are patched
+  to lift each vertex by the swell and tilt its normal, and, on the lit top, tilt each pixel by the ripples, fading
+  them out from 12 to 40 units off so distant water doesn't shimmer as a moiré. The shader is written from
+  core/WaterWaves.js's own constants. Positions are taken in world space, so neighbouring tiles move their shared
+  edge alike. The top is a little glossier (roughness 0.4) so the sun glints off the ripples; the underside a diver
+  sees follows the swell. One shared time uniform, advanced once a frame by renderer/Renderer.js from
+  `performance.now()` (not the wall clock, so it keeps float precision in the shader for days), moves all the water:
+  no per-tile work on the CPU.
+- **Visual only.** Swimming, wading, boats, fish and the underwater view all keep the one flat `LAKE_SURFACE_HEIGHT`.
+  The swell never passes `MAX_SWELL_HEIGHT` (0.2 units at sea, under 0.03 on a lake), low enough not to show as an
+  avatar floating above the water, and far less than the 4 units dry vertices sink, so none rises through the ground.
+- The World View guide's **Water** paragraph says so, in every language.
+- Tests: `WaterWaves` (pure, bounded by `MAX_SWELL_HEIGHT`, moving, the sea taller and choppier than a lake,
+  blending without a step, slopes that are the height's true derivatives, longer waves faster, every swell long
+  enough for the grid, `seaShareAt()` agreeing with where the sea is, every water vertex of a real tile carrying its
+  own sea share), `WaterWavesBrowser` (real WebGL: a strip of sea drawn exactly where the core puts the surface at
+  three moments; the lit top steady at one time and shifting as time moves; the underside drawing from below; every
+  variant compiling). Checked by eye on a rendered coast and lake.
+- Not done: rivers still don't flow (they are a ground tint, not water; the next step); foam where waves meet the
+  shore; boats and swimmers bobbing with the swell.

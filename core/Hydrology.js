@@ -327,11 +327,19 @@ export const LAKE_SURFACE_COLOR = SURFACE_PALETTE[SURFACE_CATEGORY.WATER];
 // water, so a coast never steps) but reads a deeper, still soft blue.
 export const SEA_SURFACE_COLOR = Object.freeze({ r: 0.40, g: 0.55, b: 0.68 });
 
+// How much the standing water at (x, z) is sea rather than lake: 0 inland,
+// 1 past the shallow edge of the shelf, easing in between. The surface's
+// colour (below) and its waves (core/WaterWaves.js) both follow it, so
+// neither shows a seam at a coast.
+export function seaShareAt(seed, x, z) {
+    return clamp01(seaBasinAt(seed, x, z) / SEA_BASIN_MIN);
+}
+
 // Surface color of standing water at (x, z): the lake tone inland,
 // easing to SEA_SURFACE_COLOR across the shelf so a coast never shows a
 // hard color seam. Meaningful only where SURFACE_CATEGORY.WATER holds.
 export function waterSurfaceColorAt(seed, x, z) {
-    const t = clamp01(seaBasinAt(seed, x, z) / SEA_BASIN_MIN);
+    const t = seaShareAt(seed, x, z);
     return {
         r: lerp(LAKE_SURFACE_COLOR.r, SEA_SURFACE_COLOR.r, t),
         g: lerp(LAKE_SURFACE_COLOR.g, SEA_SURFACE_COLOR.g, t),

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 0aea3f753b8a2a06 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: d78ce0dde206a2f5 -->
 # 03 — Weltansicht
 
 <!-- languages -->
@@ -113,7 +113,8 @@ Flüsse und das Meer folgen der Form des Geländes. Das Land in der Mitte ist
 immer trocken; etwa tausend Einheiten weiter draußen kommen Sie an eine
 Küste, wo der Boden ins tiefe Meer abfällt.
 
-**Wasser.** Ihr Avatar watet in einen See oder ins Meer und wird langsamer,
+**Wasser.** Seen kräuseln sich im Wind, und das Meer hebt und senkt
+sich in einer langsamen Dünung. Ihr Avatar watet in einen See oder ins Meer und wird langsamer,
 je höher das Wasser steigt. Ist das Wasser tiefer als seine halbe Größe,
 schwimmt er (siehe
 [Schwimmen und Tauchen](06-AvatarsAndPresence.md#schwimmen-und-tauchen)).
