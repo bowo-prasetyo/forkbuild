@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: e191fb1f57264f38 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: c6324c75a72ab6b3 -->
 # Distribuindo seu trabalho
 
 <!-- languages -->
 [English](../Distribution.md) · [Deutsch](../de/Distribution.md) · [Español](../es/Distribution.md) · [Français](../fr/Distribution.md) · [Bahasa Indonesia](../id/Distribution.md) · [日本語](../ja/Distribution.md) · [한국어](../ko/Distribution.md) · **Português (Brasil)**
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../Distribution.md).
-<!-- /stale -->
 
 Tudo o que o ForkBuild cria começa no seu próprio dispositivo.
 **Distribuir** é o passo separado e opcional que coloca seu trabalho em
@@ -73,8 +69,8 @@ Detalhes:
 
 - Declaração assinada e Snapshot:
   [Para onde vai](04-PublishingAndForking.md#para-onde-vai--enviando-uma-construção-ao-publicar),
-  [Meu Mundo compartilhado](03-WorldView.md#meu-mundo-compartilhado--distribuindo-seu-próprio-snapshot-sem-precisar-de-pares)
-  e o próprio [diálogo Distribuir](03-WorldView.md#encontros-no-mundo--publicações-e-avatares-que-seus-pares-estão-compartilhando).
+  [Meu Mundo compartilhado](WorldViewAdvancedTools.md#meu-mundo-compartilhado--distribuindo-seu-próprio-snapshot-sem-precisar-de-pares)
+  e o próprio [diálogo Distribuir](WorldViewAdvancedTools.md#encontros-no-mundo--publicações-e-avatares-que-seus-pares-estão-compartilhando).
 - A página Publicações:
   [Distribuindo pela página Publicações](09-PublicationsAndEvidence.md#distribuindo-pela-página-publicações),
   [Posicionamentos de snapshot](11-EvidenceAndStorage.md#posicionamentos-de-snapshot) e
@@ -160,7 +156,7 @@ você.
 - **Descobrir Mundo compartilhado** na Visão do mundo procura seu Mundo
   compartilhado direto no Arweave e no Nostr e o confere, respondendo à
   pergunta "minha publicação está mesmo lá fora, intacta?". Veja
-  [Descobrir Mundo compartilhado](03-WorldView.md#descobrir-mundo-compartilhado--pesquisando-direto-nas-redes-descentralizadas).
+  [Descobrir Mundo compartilhado](WorldViewAdvancedTools.md#descobrir-mundo-compartilhado--pesquisando-direto-nas-redes-descentralizadas).
 - Na página Publicações, **Verificar conteúdo no IPFS** busca de volta um
   envio ao IPFS e o compara com o hash dele, e **Verificar evidências**
   confere uma âncora.

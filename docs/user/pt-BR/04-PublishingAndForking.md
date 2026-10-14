@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d5e21e1edde37655 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 678438731470dcad -->
 # 04 — Publicar e remixar
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · [Español](../es/04-PublishingAndForking.md) · [Français](../fr/04-PublishingAndForking.md) · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · [한국어](../ko/04-PublishingAndForking.md) · **Português (Brasil)**
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../04-PublishingAndForking.md).
-<!-- /stale -->
 
 Este é o coração do ForkBuild. **Publicar** compartilha sua construção com
 o mundo. **Remixar** deixa qualquer pessoa fazer uma cópia sua de uma
@@ -252,7 +248,7 @@ pequena taxa a cada vez. Sem nenhuma, o envio termina com um simples aviso
 O diálogo é o mesmo que a Visão do mundo usa: os ajustes **Armazenamento** e
 **Substrato de anúncio / descoberta** e os botões separados **Distribuir só
 o Snapshot** / **Distribuir só a Declaração assinada** funcionam como
-descrito em [Encontros no Mundo](03-WorldView.md#encontros-no-mundo--publicações-e-avatares-que-seus-pares-estão-compartilhando). Duas coisas mudam aqui: ele sempre
+descrito em [Encontros no Mundo](WorldViewAdvancedTools.md#encontros-no-mundo--publicações-e-avatares-que-seus-pares-estão-compartilhando). Duas coisas mudam aqui: ele sempre
 age sobre o Mundo compartilhado exato que seu clique em Publicar acabou de
 produzir, e o **Snapshot** vai primeiro, então **Enviar** envia o Snapshot e
 depois a Declaração assinada. Fechar o diálogo (**Fechar**, clicar fora ou
@@ -366,9 +362,9 @@ permita.
 Em geral, outras pessoas podem posicionar sua criação publicada nos Mundos
 delas. Isso adiciona um posicionamento da sua construção, nunca uma cópia
 dela, e nunca move nem muda a sua (veja
-[Por que posso posicionar construções de outras pessoas?](03-WorldView.md#por-que-posso-posicionar-construções-de-outras-pessoas)).
+[Por que posso posicionar construções de outras pessoas?](WorldViewAdvancedTools.md#por-que-posso-posicionar-construções-de-outras-pessoas)).
 Bifurcar é outra coisa, regida pela licença (veja
-[Posicionar ou bifurcar](03-WorldView.md#posicionar-ou-bifurcar)).
+[Posicionar ou bifurcar](WorldViewAdvancedTools.md#posicionar-ou-bifurcar)).
 Se você preferir que não a posicionem, abra **Propriedades do documento** e
 defina **Quem pode posicioná-lo no Mundo**:
 
@@ -515,7 +511,7 @@ novos dessa pessoa na sua página **Seguindo** e nas suas notificações; veja
 O **Explorar** também não se limita ao que foi publicado deste dispositivo ou
 descoberto diretamente: uma construção descentralizada que um par
 mostrou a você no mapa de
-[Encontros no Mundo](03-WorldView.md#encontros-no-mundo--publicações-e-avatares-que-seus-pares-estão-compartilhando)
+[Encontros no Mundo](WorldViewAdvancedTools.md#encontros-no-mundo--publicações-e-avatares-que-seus-pares-estão-compartilhando)
 da Visão do mundo, depois que o conteúdo dela de fato se resolve, também
 entra nesta mesma busca e na página do autor dela, e continua lá depois de
 recarregar. Ela aparece igual a qualquer outra coisa aqui.

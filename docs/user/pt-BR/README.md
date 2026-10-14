@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/README.md source-hash: a206e390cf4902f4 -->
+<!-- translation-of: docs/user/README.md source-hash: a002122a9a62ba43 -->
 # Documentação do ForkBuild para usuários
 
 <!-- languages -->
 [English](../README.md) · [Deutsch](../de/README.md) · [Español](../es/README.md) · [Français](../fr/README.md) · [Bahasa Indonesia](../id/README.md) · [日本語](../ja/README.md) · [한국어](../ko/README.md) · **Português (Brasil)**
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../README.md).
-<!-- /stale -->
 
 Guias práticos para usar o ForkBuild no navegador. É novo por aqui?
 Comece por **[Primeiros passos](01-GettingStarted.md)**: cinco minutos
@@ -49,7 +45,7 @@ com amigos.
    onde vive cada construção publicada: andar e voar por aí, encontrar e
    olhar coisas, **Construir aqui**, **Passear aqui comigo**, os
    moradores e **Editar uma cópia** para levar algo ao Editor. As
-   ferramentas de rede ficam em **Mostrar ferramentas avançadas**.
+   ferramentas de rede têm uma página própria, mais abaixo em Avançado.
 4. **[Publicar e remixar](04-PublishingAndForking.md)** — publicar e
    compartilhar um link, escolher para onde suas construções vão,
    licenças, remixar, o **Explorar** e suas construções prontas, o
@@ -70,6 +66,12 @@ A maquinaria por baixo: sua identidade em detalhe, conexões diretas com
 outras pessoas, as redes para onde uma construção pode ir e as
 ferramentas experimentais. Você não precisa de nada disso para jogar.
 
+- **[Visão do mundo: ferramentas avançadas](WorldViewAdvancedTools.md)** —
+  o que **Mostrar ferramentas avançadas** acrescenta: inspecionar blocos,
+  os posicionamentos e por que dá para posicionar a construção de
+  qualquer pessoa, Encontros no Mundo, nomes de lugares descobertos,
+  construções declaradas e enviar a sua própria construção a partir de
+  **Meu Mundo compartilhado**.
 - **[Seu nome e sua identidade](05-IdentityAndLogin.md)** — seu nome e a
   identidade criptográfica por trás dele, o cofre (bloquear/desbloquear), o backup dela com
   exportação/importação e o gerenciamento de identidades em **Minhas
