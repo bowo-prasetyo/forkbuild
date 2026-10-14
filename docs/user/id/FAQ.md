@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 06d073f252435c51 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 781eb04573741493 -->
 # Pertanyaan Umum
 
 <!-- languages -->
 [English](../FAQ.md) · [Deutsch](../de/FAQ.md) · [Español](../es/FAQ.md) · [Français](../fr/FAQ.md) · **Bahasa Indonesia** · [日本語](../ja/FAQ.md) · [한국어](../ko/FAQ.md) · [Português (Brasil)](../pt-BR/FAQ.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../FAQ.md).
-<!-- /stale -->
 
 Jawaban singkat atas pertanyaan yang paling sering muncul, masing-masing
 dengan tautan ke panduan yang menjelaskannya secara lengkap.
@@ -124,7 +120,7 @@ bangunan Anda; bangunan Anda tetap di tempat yang Anda tentukan, dan tetap
 membawa nama serta riwayat Anda. Jika Anda tidak menginginkannya, pilih
 **Hanya saya yang boleh menempatkannya** di bawah **Siapa yang dapat
 menempatkannya di Dunia** sebelum Anda menerbitkan. Lihat
-[Mengapa saya bisa menempatkan bangunan orang lain?](03-WorldView.md#mengapa-saya-bisa-menempatkan-bangunan-orang-lain).
+[Mengapa saya bisa menempatkan bangunan orang lain?](WorldViewAdvancedTools.md#mengapa-saya-bisa-menempatkan-bangunan-orang-lain).
 
 ### Mengapa ada dua bangunan di tempat yang sama?
 
@@ -132,7 +128,7 @@ Penempatan tidak mengklaim lahan, dan tidak ada server pusat yang
 menentukan siapa yang lebih dulu mendapatkan suatu tempat, jadi dua
 penempatan bisa menunjuk titik yang sama. Anda diperingatkan sebelum
 memindahkan salah satu bangunan Anda ke tempat yang sudah terisi. Lihat
-[Mengapa dua bangunan bisa berada di tempat yang sama?](03-WorldView.md#mengapa-dua-bangunan-bisa-berada-di-tempat-yang-sama).
+[Mengapa dua bangunan bisa berada di tempat yang sama?](WorldViewAdvancedTools.md#mengapa-dua-bangunan-bisa-berada-di-tempat-yang-sama).
 
 ## Identitas dan data Anda
 

@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/README.md source-hash: a206e390cf4902f4 -->
+<!-- translation-of: docs/user/README.md source-hash: a002122a9a62ba43 -->
 # Dokumentasi Pengguna ForkBuild
 
 <!-- languages -->
 [English](../README.md) · [Deutsch](../de/README.md) · [Español](../es/README.md) · [Français](../fr/README.md) · **Bahasa Indonesia** · [日本語](../ja/README.md) · [한국어](../ko/README.md) · [Português (Brasil)](../pt-BR/README.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../README.md).
-<!-- /stale -->
 
 Panduan cara memakai ForkBuild di browser. Baru di sini? Mulailah dengan
 **[Memulai](01-GettingStarted.md)**: lima menit dari membuka aplikasi
@@ -49,8 +45,8 @@ berjalan-jalan bersama teman.
    setiap bangunan yang diterbitkan berada: berjalan dan terbang
    berkeliling, menemukan dan melihat berbagai hal, **Bangun di sini**,
    **Jalan di sini bersamaku**, para penghuni, dan **Edit Salinan**
-   untuk membawa sesuatu ke Editor. Alat jaringannya menunggu di bawah
-   **Tampilkan alat lanjutan**.
+   untuk membawa sesuatu ke Editor. Alat jaringannya punya halaman
+   sendiri, di bawah bagian Lanjutan.
 4. **[Penerbitan & Remix](04-PublishingAndForking.md)** — menerbitkan
    dan membagikan tautan, memilih ke mana bangunan Anda dikirim,
    lisensi, meremiks, **Jelajahi** dan bangunan siap pakainya, tantangan
@@ -71,6 +67,11 @@ Mesin di baliknya: identitas Anda secara rinci, koneksi langsung dengan
 orang lain, jaringan tempat sebuah bangunan bisa dikirim, dan alat
 eksperimental. Anda tidak memerlukan semua ini untuk bermain.
 
+- **[Tampilan Dunia: Alat Lanjutan](WorldViewAdvancedTools.md)** — apa
+  yang ditambahkan **Tampilkan alat lanjutan**: memeriksa balok,
+  penempatan dan mengapa bangunan siapa pun bisa ditempatkan, Perjumpaan
+  Dunia, nama tempat yang ditemukan, bangunan yang diklaim, dan
+  mengirimkan bangunan Anda sendiri dari **Dunia Bersama Saya**.
 - **[Nama & Identitas Anda](05-IdentityAndLogin.md)** — nama
   Anda dan identitas kriptografis di baliknya, brankas (mengunci/membuka), mencadangkannya
   dengan ekspor/impor, dan mengelola identitas dari **Identitas Saya**.

@@ -2,7 +2,7 @@
 # Weltansicht: Erweiterte Werkzeuge
 
 <!-- languages -->
-[English](../WorldViewAdvancedTools.md) · **Deutsch** · [Español](../es/WorldViewAdvancedTools.md) · [Français](../fr/WorldViewAdvancedTools.md)
+[English](../WorldViewAdvancedTools.md) · **Deutsch** · [Español](../es/WorldViewAdvancedTools.md) · [Français](../fr/WorldViewAdvancedTools.md) · [Bahasa Indonesia](../id/WorldViewAdvancedTools.md)
 <!-- /languages -->
 
 Diese Seite beschreibt die Teile der [Weltansicht](03-WorldView.md), die
