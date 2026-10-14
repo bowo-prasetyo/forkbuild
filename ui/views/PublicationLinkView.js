@@ -1,7 +1,7 @@
 import { computed, defineAsyncComponent, inject, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { OpenPublicationLinkOutcome } from '../../application/publication/OpenPublicationLink.js';
-import { describePublicationClaimLocator, publicationClaimLocatorFromViewPath } from '../../core/ForkBuildAppLinks.js';
+import { describePublicationClaimLocator, isNoteLinkPublicationId, publicationClaimLocatorFromViewPath } from '../../core/ForkBuildAppLinks.js';
 import { decodePublicationLinkPayload } from '../../application/publication/sharing/PublicationLinkPayload.js';
 import { readSharedBuildBricks, readSharedBuildDocument } from '../../application/publication/sharing/ReadSharedBuild.js';
 import { BUILD_MODEL_FORMATS } from '../../core/BuildModelFormats.js';
@@ -28,12 +28,17 @@ const NETWORK_NAMES = Object.freeze({ steem: 'Steem', blurt: 'Blurt', arweave: '
 // Worth trying again: the network or search couldn't be reached, the build
 // wasn't found yet, or (off Steem and Blurt) the claim may not have arrived yet.
 const RETRY_OUTCOMES = new Set([OpenPublicationLinkOutcome.UNREACHABLE, OpenPublicationLinkOutcome.BUILD_NOT_FOUND]);
+// A short link whose build note no relay answered with (yet).
+const NOTE_NOT_FOUND = 'note-not-found';
 
 // Where a link to a Publication lands: `#/view/steem/<author>/<permlink>` or
 // `#/view/blurt/<author>/<permlink>` (the "see it in 3D" link on a Steem or
 // Blurt post), `#/view/ar/<id>` or
 // `#/view/ipfs/<cid>` (links shared with Share) name its Signed Claim;
-// `#/s/<payload>` (a link-only share) carries the claim and the build.
+// `#/s/<payload>` (a link-only share) carries the claim and the build;
+// `#/n/<publicationId>` (a short link) names a build sent to everyone, whose
+// build note (core/BuildNote.js) is read from the Nostr relays and opened as
+// a link-only share is.
 // `openPublicationLink` (ui/main.js) reads and verifies it, fetches and
 // checks its build, and admits it as World discovery does; this view then
 // shows the build, or says why it can't.
@@ -51,6 +56,7 @@ export default {
         const route = useRoute();
         const router = useRouter();
         const openLink = inject('openPublicationLink', null);
+        const buildNoteDiscovery = inject('buildNoteDiscovery', null);
         const funnel = inject('funnelEventCounter', null);
         const contentStore = inject('publicationContentStore', null);
         const networkPublicationLocatorStore = inject('networkPublicationLocatorStore', null);
@@ -63,9 +69,13 @@ export default {
         // The build as opened: what the arrival screen shows.
         const arrived = ref(null);
         const payload = typeof route.params.payload === 'string' ? route.params.payload : null;
-        const locator = payload ? null : publicationClaimLocatorFromViewPath(route.path);
+        // A short link's id is the Publication's (its note's `d` tag).
+        const notePublicationId = typeof route.params.noteId === 'string' && isNoteLinkPublicationId(route.params.noteId)
+            ? route.params.noteId
+            : null;
+        const locator = payload || notePublicationId ? null : publicationClaimLocatorFromViewPath(route.path);
         const where = describePublicationClaimLocator(locator);
-        const label = where ? t(where.label) : t(payload ? 'publicationLink.label.link' : 'publicationLink.thisLink');
+        const label = where ? t(where.label) : t(payload || notePublicationId ? 'publicationLink.label.link' : 'publicationLink.thisLink');
         const network = where ? NETWORK_NAMES[where.network] : null;
 
         // Lookups never stop the build from showing; a failed one shows less.
@@ -121,6 +131,8 @@ export default {
                     result = linkOnly
                         ? await openLink({ linkOnly })
                         : { outcome: OpenPublicationLinkOutcome.INVALID_LINK, message: t('publicationLink.damaged'), publication: null };
+                } else if (route.params.noteId !== undefined) {
+                    result = await openNoteLink();
                 } else {
                     result = await openLink({ locator });
                 }
@@ -140,9 +152,27 @@ export default {
                 : null;
             message.value = typeof result.message === 'string' ? result.message : t(result.message);
             // A link-only share reads nothing from a network, so trying again can't help.
-            const retry = !payload && (RETRY_OUTCOMES.has(result.outcome)
+            const retry = !payload && (RETRY_OUTCOMES.has(result.outcome) || result.outcome === NOTE_NOT_FOUND
                 || (result.outcome === OpenPublicationLinkOutcome.CLAIM_UNAVAILABLE && !['steem', 'blurt'].includes(where?.network)));
             state.value = retry ? 'retry' : 'failed';
+        }
+
+        // A short link: the notes the relays hold for it, newest first, each
+        // opened as a link-only share until one checks out (anyone can send a
+        // note under any build's id, so the newest isn't trusted for being
+        // newest).
+        async function openNoteLink() {
+            if (!notePublicationId) {
+                return { outcome: OpenPublicationLinkOutcome.INVALID_LINK, message: t('publicationLink.damaged'), publication: null };
+            }
+            const candidates = buildNoteDiscovery ? await buildNoteDiscovery.findLinkOnly(notePublicationId) : [];
+            let last = null;
+            for (const linkOnly of candidates) {
+                const opened = await openLink({ linkOnly });
+                if (opened.outcome === OpenPublicationLinkOutcome.OPENED) return opened;
+                last = opened;
+            }
+            return last || { outcome: NOTE_NOT_FOUND, message: t('publicationLink.noteNotFound'), publication: null };
         }
 
         // The bricks the turntable draws: the build's own, read when it opened.

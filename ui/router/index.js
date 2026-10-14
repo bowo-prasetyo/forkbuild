@@ -100,6 +100,8 @@ const routes = [
     // A link-only share: the Signed Claim and the build travel in the link
     // itself (application/publication/sharing/PublicationLinkPayload.js).
     { path: '/s/:payload', name: 'link-only-publication-link', component: PublicationLinkView },
+    // A short link: a build sent to everyone, read from its build note (core/BuildNote.js).
+    { path: '/n/:noteId', name: 'note-publication-link', component: PublicationLinkView },
     // 0.9.15 — Mount Live World View. Superseded as a top-nav, user-
     // facing destination by 0.9.17 above (`WorldEncounterCanvas` now
     // lives inside `/world/:documentId` itself) — kept registered,

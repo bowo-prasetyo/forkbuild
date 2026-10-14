@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 6f1093cff06f0c48 -->
+<!-- translation-of: docs/Privacy.md source-hash: 852cc20309a2972a -->
 # Datenschutz
 
 <!-- languages -->
@@ -57,6 +57,10 @@ veröffentlichen, exportieren oder senden es:
 - für jede Woche der Bau-Challenge, die Sie öffnen, die IDs der in den
   Netzwerken gefundenen Beiträge, damit ihre Seite sie vor der Suche wieder
   anzeigt.
+- welche Bauwerke dieses Gerät als Bau-Notizen auf den Nostr-Relays weiß
+  (Ihre eigenen, sobald ein Relay die Notiz angenommen hat, und die anderer,
+  die es aus einer geöffnet hat), damit sie per kurzem Link geteilt werden
+  können.
 - für jeden Bau, den Sie mit **Hier bauen** begonnen haben, die Welt und die
   gewählte Stelle, damit er beim Veröffentlichen dort steht.
 - für jedes Bauwerk, das mit einer vorgefertigten Struktur oder als Kopie
@@ -193,12 +197,14 @@ setzt. Mehr sendet sie nicht:
 - **Die Summen kann jeder sehen**, im öffentlichen Dashboard unter
   <https://forkbuild.goatcounter.com/>.
 
-Derselbe Zähler erfährt außerdem von drei Momenten beim Teilen eines
+Derselbe Zähler erfährt außerdem von diesen Momenten beim Teilen eines
 Bauwerks, jeweils als eine weitere Bildanfrage derselben Art, unter einem
 eigenen festen Pfad:
 
 - `/e/share-link`: ein Link zu einem Bauwerk wurde mit **Link kopieren**
   oder **Teilen …** kopiert oder geteilt;
+- `/e/share-link-short`: dieser Link war ein kurzer (`/n/…`), zusätzlich
+  zu `/e/share-link` gezählt, nie stattdessen;
 - `/e/opened-shared-link`: ein geteilter Link hat ein Bauwerk geöffnet;
 - `/e/remix-from-link`: ein über einen geteilten Link geöffnetes Bauwerk
   wurde in den Editor kopiert (höchstens einmal pro Bauwerk, solange die
@@ -324,8 +330,10 @@ was Sie bei ihm anfragen.
 | Sie verteilen den Signierten Anspruch einer Veröffentlichung auf Blurt (*experimentell*) | der Bildhoster von Blurt (`img-upload.blurt.blog`), direkt oder, wenn der Browser ihn nicht erreicht, über das `/blurt-image`-Relay des Rendezvous-Servers, das nichts speichert | ein 320×200-Bild des Bauwerks für die Vorschau des Beitrags, signiert mit Ihrem Blurt-Posting-Schlüssel |
 | Sie verteilen den Signierten Anspruch einer Veröffentlichung auf Steem (*experimentell*) | der Steem-Bildhoster (`steemitimages.com`), direkt oder, wenn der Browser ihn nicht erreicht, über das `/steem-image`-Relay des Rendezvous-Servers, das nichts speichert | ein 320×200-Bild des Bauwerks für die Vorschau des Beitrags, signiert mit Ihrem Steem-Posting-Schlüssel |
 | Jemand öffnet einen Link, der sein Bauwerk enthält (`/b/…`), oder eine Website zeigt eine Vorschau davon | der Rendezvous-Server (`forkbuild-rendezvous.prazjp.workers.dev`) | den Link, der das Bauwerk und seinen Signierten Anspruch enthält; er speichert nichts |
+| Jemand öffnet einen kurzen Link zu einem an alle gesendeten Bauwerk (`/n/…`), oder eine Website zeigt eine Vorschau davon | der Rendezvous-Server (`forkbuild-rendezvous.prazjp.workers.dev`), der die Nostr-Relays (`relay.damus.io`, `nos.lol`, `relay.primal.net`) nach der Notiz des Bauwerks fragt | den Link, der die Publikation des Bauwerks nennt; der Server speichert nichts, und Cloudflare behält Seite und Bild eines gefundenen Bauwerks einen Tag im Cache |
+| Sie öffnen einen kurzen Link (`#/n/…`) | jedes Nostr-Relay unter **Netzwerkeinstellungen** | eine Anfrage nach den Notizen genau dieses Bauwerks (`forkbuild-build:<id>`); die neueste, die die Prüfung besteht, wird auf diesem Gerät geöffnet |
 | Jemand öffnet eine Seite, in die ein Bauwerk eingebettet ist (`embed.html#…`) | die Website, von der ForkBuild bereitgestellt wird (`bowo-prasetyo.github.io`) | Anfragen nach den Dateien der Einbettung, ohne Referrer; nie das Bauwerk, das im Teil der Adresse steht, den Browser nicht senden |
-| Eine Website oder ein Editor fragt, wie ein `/b/…`-Link eingebettet wird (oEmbed) | `/oembed` des Rendezvous-Servers (`forkbuild-rendezvous.prazjp.workers.dev`) | den Link, der das Bauwerk und seinen Signierten Anspruch enthält; er speichert nichts |
+| Eine Website oder ein Editor fragt, wie ein `/b/…` (`/n/…`)-Link eingebettet wird (oEmbed) | `/oembed` des Rendezvous-Servers (`forkbuild-rendezvous.prazjp.workers.dev`) | den Link, der das Bauwerk und seinen Signierten Anspruch enthält; er speichert nichts |
 | Sie öffnen einen geteilten Link zu einer Veröffentlichung (`#/view/…`) | der Steem- oder Blurt-Knoten, das Arweave-Gateway oder das IPFS-Gateway, das der Link nennt, dann die Ankündigungssubstrate, um sein Bauwerk zu finden | welchen Beitrag, welche Transaktion oder welche CID Sie öffnen |
 | Sie verankern oder überprüfen Nachweise auf Bitcoin (*experimentell*) | eine Esplora-API (`blockstream.info`) | die Transaktion, die Sie senden oder nachschlagen |
 | Sie überprüfen Nachweise auf Base (*experimentell*) | ein Base-JSON-RPC-Endpunkt (`mainnet.base.org`) | die Transaktion, die Sie nachschlagen |
@@ -347,6 +355,18 @@ betreibt, kann die angefragten Adressen protokollieren. Einen Link zu
 erstellen kontaktiert nichts. Wer den Link hat, sieht das Bauwerk, seinen
 Titel, seine Beschreibung und den Namen des Autors sowie den öffentlichen
 Schlüssel Ihrer Identität, wie bei jeder Geteilten Welt, die Sie verteilen.
+
+**Ein kurzer Link** (stattdessen angeboten, sobald ein Bauwerk an alle
+gesendet wurde, siehe **Wer kann es finden?** oben) enthält nur die ID der
+Publikation des Bauwerks (`forkbuild-rendezvous.prazjp.workers.dev/n/…`). Wer ihn öffnet oder eine Website, die
+eine Vorschau zeigt, schickt diese ID an den Rendezvous-Server. Er fragt die
+öffentlichen Nostr-Relays nach der Notiz des Bauwerks, prüft sie wie einen
+Link, der sein Bauwerk enthält, zeichnet das Bild, schickt die Leute weiter
+zur App (`#/n/…`) und speichert nichts; die App fragt die Relays dann selbst
+nach der Notiz. Das Bauwerk war auf diesen Relays bereits öffentlich, und
+genau darauf beruht ein kurzer Link: Er funktioniert nicht mehr, wenn kein
+Relay die Notiz behält. Bauwerke, die bei ihrem Link bleiben, bekommen nie
+einen.
 
 **Ein eingebettetes Bauwerk** (der Code, den **Einbetten** kopiert: ein
 `<iframe>` von `embed.html#…` auf der Website, von der ForkBuild

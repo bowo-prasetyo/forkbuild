@@ -260,9 +260,36 @@ Check it by sharing a build from the app and opening the link, or by pasting
 it into a link-preview debugger (for example Facebook's Sharing Debugger or
 opengraph.xyz).
 
+### Short links
+
+`GET /n/<publication id>` is the short link the app shares for a build sent
+to everyone (see `docs/Protocol.md`, "Short links", in the main repo). It
+is about 90 characters however large the build is, so it fits in Discord
+and Telegram, which refuse a `/b/` link of a few thousand characters. The
+build itself was sent to the public Nostr relays as a build note, so this
+route (`noteLink.js`) asks those relays for that build's notes, one REQ per
+relay, each socket closed at EOSE or after 4 seconds, and tries the notes'
+payloads newest first through exactly the checks above until one carries a
+build its builder signed under that id. It then answers as `/b/` does, with
+the same page and `/n/<id>/preview.png` picture, and sends people on to
+`APP_URL#/n/<id>`, where the app reads the note itself.
+
+- **Which relays:** `NOSTR_RELAYS`, a comma-separated list of `wss://`
+  addresses in `wrangler.toml`, at most eight; without it, the app's own
+  defaults (`relay.damus.io`, `nos.lol`, `relay.primal.net`).
+- **Kept:** a found build's page and picture stay in Cloudflare's edge cache
+  for a day (a Publication's build never changes), so the relays are asked
+  once per edge location, not for every crawler. A short link whose note
+  wasn't found gets the plain card, cached for a minute only, in case a
+  relay was slow or the note is still on its way.
+- **Nothing is stored**, as for `/b/`. The note's own Nostr signature isn't
+  checked here: it proves only which device sent the note, and anyone can
+  send one under any build's id. The builder's signature inside is what
+  counts.
+
 ### oEmbed
 
-`GET /oembed?url=<a /b/<payload> link of this worker>` answers oEmbed
+`GET /oembed?url=<a /b/<payload> or /n/<publication id> link of this worker>` answers oEmbed
 (https://oembed.com), so sites and editors that embed links themselves
 (Notion, Ghost, WordPress plugins and others that discover oEmbed) show the
 build itself, turning, rather than a card. The answer is `type: "rich"`, and

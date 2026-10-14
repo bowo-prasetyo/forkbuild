@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: f9d9cc641a8a9b34 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: b0b1839dc28a506e -->
 # 04 — Publicar y remezclar
 
 <!-- languages -->
@@ -85,6 +85,17 @@ están en **Mi Mundo compartido** en la Vista de mundo.
   modificado solo muestra “A shared build”.
 - **Necesita una firma.** Publique con un nombre; una construcción
   publicada sin nombre (**Publicar sin firmar**) no recibe enlace.
+- **Un enlace corto en cuanto se envía a todos.** Si la construcción se
+  envió a **Todos** (vea [¿Quién puede encontrarla?](#quién-puede-encontrarla)),
+  los botones ofrecen en su lugar un enlace corto, de unos 90 caracteres,
+  que nombra la construcción en vez de llevarla: quien lo abre recibe la
+  construcción de los relays públicos de Nostr a los que se envió, y se
+  comprueba como un enlace. Cabe en cualquier chat, Discord y Telegram
+  incluidos, y sirve para construcciones de hasta unos 2000 bloques. Las
+  construcciones que se quedan en su enlace conservan el enlace largo,
+  porque la construcción no está en ningún otro sitio. Un enlace corto
+  funciona mientras algún relay guarde la construcción; si ninguno
+  responde, la página lo dice y ofrece **Intentar de nuevo**.
 - **Tamaño.** Cabe una construcción de hasta unos 500 bloques; el enlace del
   castillo listo para usar tiene unos 3.700 caracteres. El correo y la
   mayoría de las aplicaciones de chat y redes sociales conservan un enlace

@@ -53,6 +53,9 @@ send it:
   the networks, so its page lists them again before searching.
 - which networks this device sent each of your comments to, and when, so
   each comment can say where it went.
+- which builds this device knows are on the Nostr relays as build notes
+  (your own, once a relay took the note, and others' it opened from one),
+  so they can be shared by a short link.
 - for each build you started with **Build here**, the World and the spot
   you chose, so publishing it stands it there.
 - for each build started from a ready-made structure or as a copy of a
@@ -179,11 +182,13 @@ sets no cookies. That request is all it sends:
 - **Anyone can see the totals** on the public dashboard,
   <https://forkbuild.goatcounter.com/>.
 
-The same counter also hears about three moments in sharing a build, each as
+The same counter also hears about these moments in sharing a build, each as
 one more image request of the same kind, under its own fixed path:
 
 - `/e/share-link`: a link to a build was copied or shared with **Copy link**
   or **Share…**;
+- `/e/share-link-short`: that link was a short one (`/n/…`), heard as well
+  as `/e/share-link`, never instead of it;
 - `/e/opened-shared-link`: a shared link opened a build;
 - `/e/remix-from-link`: a build opened from a shared link was copied into
   the Editor (at most once per build each time the app is open).
@@ -310,8 +315,10 @@ only when you use the feature, and each server can be changed under
 | You distribute a Publication's Signed Claim on Blurt (*experimental*) | Blurt's image host (`img-upload.blurt.blog`), directly or, when the browser can't reach it, through the rendezvous server's `/blurt-image` relay, which keeps nothing | a 320×200 picture of the build for the post's preview, signed with your Blurt posting key |
 | You distribute a Publication's Signed Claim on Steem (*experimental*) | the Steem image host (`steemitimages.com`), directly or, when the browser can't reach it, through the rendezvous server's `/steem-image` relay, which keeps nothing | a 320×200 picture of the build for the post's preview, signed with your Steem posting key |
 | Someone opens, or a site previews, a link to a build that carries it (`/b/…`) | the rendezvous server (`forkbuild-rendezvous.prazjp.workers.dev`) | the link, which holds the build and its Signed Claim; it keeps nothing |
+| Someone opens, or a site previews, a short link to a build sent to everyone (`/n/…`) | the rendezvous server (`forkbuild-rendezvous.prazjp.workers.dev`), which asks the Nostr relays (`relay.damus.io`, `nos.lol`, `relay.primal.net`) for the build's note | the link, which names the build's Publication; the server keeps nothing, and Cloudflare keeps a found build's page and picture in its cache for a day |
+| You open a short link (`#/n/…`) | every Nostr relay under **Network Settings** | a query for that one build's notes (`forkbuild-build:<id>`); the newest that checks out is opened on this device |
 | Someone opens a page with a build embedded in it (`embed.html#…`) | the site ForkBuild is served from (`bowo-prasetyo.github.io`) | requests for the embed's files, with no referrer; never the build, which is in the part of the address browsers don't send |
-| A site or editor asks how to embed a `/b/…` link (oEmbed) | the rendezvous server's `/oembed` (`forkbuild-rendezvous.prazjp.workers.dev`) | the link, which holds the build and its Signed Claim; it keeps nothing |
+| A site or editor asks how to embed a `/b/…` or `/n/…` link (oEmbed) | the rendezvous server's `/oembed` (`forkbuild-rendezvous.prazjp.workers.dev`) | the link, which holds the build and its Signed Claim; it keeps nothing |
 | You open a shared link to a Publication (`#/view/…`) | the Steem or Blurt node, Arweave gateway or IPFS gateway the link names, then the announcement substrates to find its build | which post, transaction or CID you open |
 | You anchor or verify evidence on Bitcoin (*experimental*) | an Esplora API (`blockstream.info`) | the transaction you broadcast or look up |
 | You verify evidence on Base (*experimental*) | a Base JSON-RPC endpoint (`mainnet.base.org`) | the transaction you look up |
@@ -332,6 +339,17 @@ Cloudflare, which runs the server, may log the addresses requested. Making a
 link contacts nothing. Anyone who has the link can see the build, its title,
 description and author name, and your identity's public key, as with any
 Shared World you distribute.
+
+**A short link** (offered instead once a build was sent to everyone, see
+**Who can find it?** above) holds only the id of the build's Publication
+(`forkbuild-rendezvous.prazjp.workers.dev/n/…`). Opening it, or a site
+previewing it, sends that id to the rendezvous server, which asks the public
+Nostr relays for the build's note, checks it as it checks a link that
+carries its build, draws the picture, sends people on to the app (`#/n/…`)
+and keeps nothing; the app then asks the relays for the note itself. The
+build was already public on those relays, which is what a short link relies
+on: it stops working if no relay keeps the note. Builds kept to their link
+never get one.
 
 **An embedded build** (the code **Embed** copies: an `<iframe>` of
 `embed.html#…` on the site ForkBuild is served from) holds the same, your

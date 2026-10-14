@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 6f1093cff06f0c48 -->
+<!-- translation-of: docs/Privacy.md source-hash: 852cc20309a2972a -->
 # Privacidade
 
 <!-- languages -->
@@ -56,6 +56,10 @@ que você publique, exporte ou envie:
 - para cada semana do desafio de construção que você abre, os ids das
   participações encontradas nas redes, para que a página dele as mostre de
   novo antes de procurar.
+- quais construções este dispositivo sabe que estão nos relays do Nostr como
+  notas de construção (as suas, assim que um relay aceitou a nota, e as de
+  outras pessoas que ele abriu a partir de uma), para poder compartilhá-las
+  por um link curto.
 - para cada construção que você começou com **Construir aqui**, o Mundo e o
   lugar escolhidos, para que ao publicar ela fique ali.
 - para cada construção começada a partir de uma estrutura pronta ou como
@@ -182,12 +186,14 @@ cookies. Essa solicitação é tudo o que ele envia:
 - **Qualquer pessoa pode ver os totais** no painel público,
   <https://forkbuild.goatcounter.com/>.
 
-O mesmo contador também fica sabendo de três momentos ao compartilhar uma
+O mesmo contador também fica sabendo destes momentos ao compartilhar uma
 construção, cada um como mais uma solicitação de imagem do mesmo tipo, com
 seu próprio caminho fixo:
 
 - `/e/share-link`: um link para uma construção foi copiado ou compartilhado
   com **Copiar link** ou **Compartilhar…**;
+- `/e/share-link-short`: esse link era curto (`/n/…`), contado além de
+  `/e/share-link`, nunca no lugar dele;
 - `/e/opened-shared-link`: um link compartilhado abriu uma construção;
 - `/e/remix-from-link`: uma construção aberta por um link compartilhado foi
   copiada para o Editor (no máximo uma vez por construção enquanto o
@@ -310,8 +316,10 @@ pede a ele.
 | Você distribui a Declaração assinada de uma publicação no Blurt (*experimental*) | o servidor de imagens do Blurt (`img-upload.blurt.blog`), diretamente ou, quando o navegador não consegue alcançá-lo, pelo relay `/blurt-image` do servidor de encontro, que não guarda nada | uma imagem 320×200 da construção para a prévia da postagem, assinada com sua chave de postagem do Blurt |
 | Você distribui a Declaração assinada de uma publicação no Steem (*experimental*) | o servidor de imagens do Steem (`steemitimages.com`), diretamente ou, quando o navegador não consegue alcançá-lo, pelo relé `/steem-image` do servidor de encontro, que não guarda nada | uma imagem de 320×200 da construção para a prévia da postagem, assinada com sua chave de postagem do Steem |
 | Alguém abre, ou um site mostra a prévia de, um link que leva a construção (`/b/…`) | o servidor de encontro (`forkbuild-rendezvous.prazjp.workers.dev`) | o link, que contém a construção e a Declaração assinada dela; ele não guarda nada |
+| Alguém abre, ou um site mostra a prévia de, um link curto para uma construção enviada para todos (`/n/…`) | o servidor de encontro (`forkbuild-rendezvous.prazjp.workers.dev`), que pede aos relays do Nostr (`relay.damus.io`, `nos.lol`, `relay.primal.net`) a nota da construção | o link, que nomeia a Publicação da construção; o servidor não guarda nada, e o Cloudflare guarda em cache a página e a imagem de uma construção encontrada por um dia |
+| Você abre um link curto (`#/n/…`) | cada relay do Nostr em **Configurações de rede** | uma consulta pelas notas só dessa construção (`forkbuild-build:<id>`); a mais recente que passa na verificação é aberta neste dispositivo |
 | Alguém abre uma página com uma construção incorporada (`embed.html#…`) | o site de onde o ForkBuild é servido (`bowo-prasetyo.github.io`) | solicitações dos arquivos da incorporação, sem referenciador; nunca a construção, que fica na parte do endereço que os navegadores não enviam |
-| Um site ou editor pergunta como incorporar um link `/b/…` (oEmbed) | o `/oembed` do servidor de encontro (`forkbuild-rendezvous.prazjp.workers.dev`) | o link, que contém a construção e sua Reivindicação assinada; ele não guarda nada |
+| Um site ou editor pergunta como incorporar um link `/b/…` (`/n/…`) (oEmbed) | o `/oembed` do servidor de encontro (`forkbuild-rendezvous.prazjp.workers.dev`) | o link, que contém a construção e sua Reivindicação assinada; ele não guarda nada |
 | Você abre um link compartilhado de uma publicação (`#/view/…`) | o nó do Steem ou do Blurt, o gateway do Arweave ou o gateway IPFS que o link indica, e depois os substratos de anúncio para encontrar a construção | qual postagem, transação ou CID você abre |
 | Você ancora ou verifica evidências no Bitcoin (*experimental*) | uma API Esplora (`blockstream.info`) | a transação que você transmite ou consulta |
 | Você verifica evidências na Base (*experimental*) | um endpoint JSON-RPC da Base (`mainnet.base.org`) | a transação que você consulta |
@@ -334,6 +342,17 @@ pedidos. Criar um link não contata nada. Quem tiver o link pode ver a
 construção, o título, a descrição e o nome do autor dela, e a chave pública
 da sua identidade, como em qualquer Mundo compartilhado que você
 distribuir.
+
+**Um link curto** (oferecido no lugar assim que uma construção foi enviada
+para todos; veja **Quem pode encontrá-la?** acima) contém só o id da
+Publicação da construção (`forkbuild-rendezvous.prazjp.workers.dev/n/…`). Abri-lo, ou um site mostrar a prévia
+dele, envia esse id ao servidor de encontro, que pede aos relays públicos do
+Nostr a nota da construção, verifica-a como verifica um link que leva a
+construção, desenha a imagem, manda as pessoas para o aplicativo (`#/n/…`) e
+não guarda nada; depois o aplicativo pede a nota aos relays por conta
+própria. A construção já era pública nesses relays, e é nisso que um link
+curto se apoia: ele para de funcionar se nenhum relay guardar a nota.
+Construções mantidas só no link nunca recebem um.
 
 **Uma construção incorporada** (o código que **Incorporar** copia: um
 `<iframe>` de `embed.html#…` no site de onde o ForkBuild é servido) leva o

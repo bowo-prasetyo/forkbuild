@@ -51,6 +51,10 @@ TURN_CREDENTIALS_PER_MONTH = "1000"
 # Where a shared build's link preview (GET /b/<payload>, buildPreview.js)
 # sends people: the app, whose #/s/<payload> opens the build.
 APP_URL = "https://bowo-prasetyo.github.io/forkbuild/"
+# The Nostr relays a short link (GET /n/<publication id>, noteLink.js) reads
+# a build's note from: comma-separated wss:// addresses. Left unset, the
+# app's own defaults are used (relay.damus.io, nos.lol, relay.primal.net).
+# NOSTR_RELAYS = "wss://relay.damus.io,wss://nos.lol,wss://relay.primal.net"
 
 # Keeps the worker's logs, including the relay allowance warnings (80% used,
 # and each refusal past it), searchable under Workers & Pages →

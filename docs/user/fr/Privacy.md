@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 6f1093cff06f0c48 -->
+<!-- translation-of: docs/Privacy.md source-hash: 852cc20309a2972a -->
 # Confidentialité
 
 <!-- languages -->
@@ -58,6 +58,10 @@ jamais l’appareil, sauf si vous le publiez, l’exportez ou l’envoyez :
 - pour chaque semaine du défi de construction que vous ouvrez, les
   identifiants des participations trouvées sur les réseaux, pour que sa page
   les affiche de nouveau avant de chercher.
+- les constructions que cet appareil sait présentes sur les relais Nostr
+  sous forme de notes de construction (les vôtres, dès qu’un relais a pris
+  la note, et celles des autres qu’il a ouvertes depuis l’une d’elles), pour
+  pouvoir les partager par un lien court.
 - pour chaque construction commencée avec **Construire ici**, le monde et
   l’emplacement choisis, pour qu’une fois publiée elle s’y dresse.
 - pour chaque construction commencée à partir d’une structure toute faite ou
@@ -195,12 +199,14 @@ envoie.
 - **Tout le monde peut consulter les totaux** sur le tableau de bord
   public, <https://forkbuild.goatcounter.com/>.
 
-Le même compteur est aussi informé de trois moments du partage d’une
+Le même compteur est aussi informé de ces moments du partage d’une
 construction, chacun par une requête d’image de plus du même genre, sous
 son propre chemin fixe :
 
 - `/e/share-link` : un lien vers une construction a été copié ou partagé
   avec **Copier le lien** ou **Partager…** ;
+- `/e/share-link-short` : ce lien était un lien court (`/n/…`), compté en
+  plus de `/e/share-link`, jamais à sa place ;
 - `/e/opened-shared-link` : un lien partagé a ouvert une construction ;
 - `/e/remix-from-link` : une construction ouverte depuis un lien partagé a
   été copiée dans l’Éditeur (au plus une fois par construction chaque fois
@@ -330,8 +336,10 @@ demandez.
 | Vous distribuez la Déclaration signée d’une Publication sur Blurt (*expérimental*) | l’hébergeur d’images de Blurt (`img-upload.blurt.blog`), directement ou, quand le navigateur ne peut pas l’atteindre, par le relais `/blurt-image` du serveur de rendez-vous, qui ne conserve rien | une image 320×200 de la construction pour l’aperçu de l’article, signée avec votre clé de publication Blurt |
 | Vous distribuez la Déclaration signée d’une Publication sur Steem (*expérimental*) | l’hébergeur d’images de Steem (`steemitimages.com`), directement ou, quand le navigateur ne peut pas l’atteindre, par le relais `/steem-image` du serveur de rendez-vous, qui ne garde rien | une image 320×200 de la construction pour l’aperçu de l’article, signée avec votre clé de publication Steem |
 | Quelqu’un ouvre, ou un site affiche l’aperçu d’un lien qui contient sa construction (`/b/…`) | le serveur de rendez-vous (`forkbuild-rendezvous.prazjp.workers.dev`) | le lien, qui contient la construction et sa Déclaration signée ; il ne conserve rien |
+| Quelqu’un ouvre, ou un site prévisualise, un lien court vers une construction envoyée à tout le monde (`/n/…`) | le serveur de rendez-vous (`forkbuild-rendezvous.prazjp.workers.dev`), qui demande la note de la construction aux relais Nostr (`relay.damus.io`, `nos.lol`, `relay.primal.net`) | le lien, qui nomme la Publication de la construction ; le serveur ne garde rien, et Cloudflare garde en cache la page et l’image d’une construction trouvée pendant un jour |
+| Vous ouvrez un lien court (`#/n/…`) | chaque relais Nostr des **Paramètres réseau** | une requête pour les notes de cette seule construction (`forkbuild-build:<id>`) ; la plus récente qui passe la vérification est ouverte sur cet appareil |
 | Quelqu’un ouvre une page où une construction est intégrée (`embed.html#…`) | le site d’où ForkBuild est servi (`bowo-prasetyo.github.io`) | les requêtes des fichiers de l’intégration, sans référent ; jamais la construction, qui est dans la partie de l’adresse que les navigateurs n’envoient pas |
-| Un site ou un éditeur demande comment intégrer un lien `/b/…` (oEmbed) | le `/oembed` du serveur de rendez-vous (`forkbuild-rendezvous.prazjp.workers.dev`) | le lien, qui contient la construction et sa Revendication signée ; il ne conserve rien |
+| Un site ou un éditeur demande comment intégrer un lien `/b/…` (`/n/…`) (oEmbed) | le `/oembed` du serveur de rendez-vous (`forkbuild-rendezvous.prazjp.workers.dev`) | le lien, qui contient la construction et sa Revendication signée ; il ne conserve rien |
 | Vous ouvrez un lien partagé vers une Publication (`#/view/…`) | le nœud Steem ou Blurt, la passerelle Arweave ou la passerelle IPFS que le lien désigne, puis les supports d’annonce pour trouver sa construction | l’article, la transaction ou le CID que vous ouvrez |
 | Vous ancrez ou vérifiez des preuves sur Bitcoin (*expérimental*) | une API Esplora (`blockstream.info`) | la transaction que vous diffusez ou consultez |
 | Vous vérifiez des preuves sur Base (*expérimental*) | un endpoint JSON-RPC Base (`mainnet.base.org`) | la transaction que vous consultez |
@@ -354,6 +362,19 @@ journaliser les adresses demandées. Créer un lien ne contacte rien.
 Quiconque a le lien peut voir la construction, son titre, sa description et
 le nom de son auteur, ainsi que la clé publique de votre identité, comme pour
 tout Monde partagé que vous distribuez.
+
+**Un lien court** (proposé à la place dès qu’une construction a été
+envoyée à tout le monde, voir **Qui peut la trouver ?** plus haut) ne
+contient que l’identifiant de la Publication de la construction
+(`forkbuild-rendezvous.prazjp.workers.dev/n/…`). L’ouvrir, ou qu’un site le prévisualise, envoie cet identifiant
+au serveur de rendez-vous, qui demande la note de la construction aux
+relais Nostr publics, la vérifie comme il vérifie un lien qui porte sa
+construction, dessine l’image, envoie les gens vers l’application
+(`#/n/…`) et ne garde rien ; l’application demande ensuite elle-même la
+note aux relais. La construction était déjà publique sur ces relais, et
+c’est ce sur quoi repose un lien court : il cesse de marcher si aucun
+relais ne garde la note. Les constructions gardées pour leur lien n’en ont
+jamais.
 
 **Une construction intégrée** (le code que copie **Intégrer** : un
 `<iframe>` de `embed.html#…` sur le site d’où ForkBuild est servi) contient

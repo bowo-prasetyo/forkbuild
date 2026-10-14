@@ -1,4 +1,4 @@
-import { describePublicationClaimLocator, linkOnlyPublicationViewUrl, linkPreviewUrl, publicationShareUrl, FORKBUILD_APP_URL, FORKBUILD_LINK_PREVIEW_URL } from '../../core/ForkBuildAppLinks.js';
+import { describePublicationClaimLocator, isNoteLinkPublicationId, linkOnlyPublicationViewUrl, linkPreviewUrl, noteLinkUrl, publicationShareUrl, FORKBUILD_APP_URL, FORKBUILD_LINK_PREVIEW_URL } from '../../core/ForkBuildAppLinks.js';
 import { PublicationDistributionState } from './distribution/PublicationDistributionLifecycle.js';
 import { ContentReference } from '../../core/ContentReference.js';
 import { MAX_LINK_PAYLOAD_LENGTH, encodePublicationLinkPayload } from './sharing/PublicationLinkPayload.js';
@@ -9,24 +9,35 @@ import { message } from '../../core/Message.js';
 // the link names where its Signed Claim was stored, as the distribution
 // lifecycle records it. Before that, a build small enough travels inside the
 // link itself (a link-only share), so sharing needs no network, wallet or
-// account anywhere.
+// account anywhere. A build sent to everyone as a build note
+// (core/BuildNote.js) gets a short link instead, which names the note.
 
 export const ShareLinkKind = Object.freeze({
     NETWORK: 'network',
+    SHORT: 'short',
     LINK_ONLY: 'link-only'
 });
 
+// The short link for `publicationId` (core/ForkBuildAppLinks.js, noteLinkUrl())
+// when `findable` (it is known to be on the relays,
+// application/buildNotes/FindableBuildsStore.js), else null.
+export function shortShareUrl({ publicationId, findable, previewUrl = FORKBUILD_LINK_PREVIEW_URL }) {
+    return findable && isNoteLinkPublicationId(publicationId) ? noteLinkUrl(publicationId, previewUrl) : null;
+}
+
 // What to offer for `lifecycle` (a PublicationDistributionLifecycleMemoryStore
 // entry, or null) and `linkOnly` (what prepareLinkOnlyShare() resolved to, or
-// null while it hasn't): null when there is nothing to share yet;
+// null while it hasn't) and `shortUrl` (shortShareUrl(), or null): null when
+// there is nothing to share yet;
 // `{ available: true, kind, url, title, text, hint, note }` when it can be
 // shared (`note` says what to expect where the claim is stored, or is null);
 // `{ available: false, reason }` when no link reaches it. A distributed
-// Publication's network link comes first, as the shorter link. `reason`,
+// Publication's network link comes first, then the short link, and the link
+// that carries the build last, as the longest. `reason`,
 // `hint`, `note` and `text` are messages (core/Message.js), and so is `title`
 // when the Publication has none; the UI hands the share functions below a copy
 // with them turned into text.
-export function describePublicationShare({ lifecycle, title = null, linkOnly = null }) {
+export function describePublicationShare({ lifecycle, title = null, linkOnly = null, shortUrl = null }) {
     const name = typeof title === 'string' && title.trim() ? title.trim() : message('share.untitled');
     const material = lifecycle?.material;
     const distributed = Boolean(material && material.state === PublicationDistributionState.PRESENT);
@@ -35,6 +46,12 @@ export function describePublicationShare({ lifecycle, title = null, linkOnly = n
         return Object.freeze({
             available: true, kind: ShareLinkKind.NETWORK, url: networkUrl, title: name,
             text: message('share.text', { title: name }), hint: message('share.hint'), note: shareNote(material)
+        });
+    }
+    if (shortUrl) {
+        return Object.freeze({
+            available: true, kind: ShareLinkKind.SHORT, url: shortUrl, title: name,
+            text: message('share.text', { title: name }), hint: message('share.shortHint'), note: null
         });
     }
     if (linkOnly?.url) {

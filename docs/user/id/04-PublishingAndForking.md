@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: f9d9cc641a8a9b34 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: b0b1839dc28a506e -->
 # 04 — Penerbitan & Remix
 
 <!-- languages -->
@@ -88,6 +88,18 @@ bawah **Dunia Bersama Saya** di Tampilan Dunia.
 - **Perlu tanda tangan.** Terbitkan dengan sebuah nama; bangunan yang
   diterbitkan tanpa nama (**Terbitkan tanpa tanda tangan**) tidak mendapat
   tautan.
+- **Tautan pendek begitu dikirim ke semua orang.** Jika bangunan dikirim ke
+  **Semua orang** (lihat
+  [Siapa yang bisa menemukannya?](#siapa-yang-bisa-menemukannya)), tombolnya
+  menawarkan tautan pendek, sekitar 90 karakter, yang menyebut bangunan itu
+  alih-alih membawanya: siapa pun yang membukanya mendapatkan bangunan dari
+  relay Nostr publik tempat bangunan itu dikirim, dan diperiksa seperti
+  tautan. Tautan ini muat di obrolan mana pun, termasuk Discord dan
+  Telegram, dan berlaku untuk bangunan hingga sekitar 2.000 balok.
+  Bangunan yang hanya untuk tautannya tetap memakai tautan panjang, karena
+  bangunan itu tidak ada di tempat lain. Tautan pendek berfungsi selama ada
+  relay yang menyimpan bangunan itu; jika tidak ada yang menjawab,
+  halamannya mengatakannya dan menawarkan **Coba lagi**.
 - **Ukuran.** Bangunan hingga sekitar 500 balok muat; tautan kastel siap
   pakai sekitar 3.700 karakter. Email serta sebagian besar aplikasi obrolan
   dan media sosial mempertahankan tautan sepanjang itu, tetapi Discord dan

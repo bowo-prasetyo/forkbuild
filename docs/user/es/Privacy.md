@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 6f1093cff06f0c48 -->
+<!-- translation-of: docs/Privacy.md source-hash: 852cc20309a2972a -->
 # Privacidad
 
 <!-- languages -->
@@ -57,6 +57,10 @@ dispositivo a menos que usted lo publique, lo exporte o lo envíe:
 - para cada semana del desafío de construcción que abre, los identificadores
   de las participaciones encontradas en las redes, para que su página las
   vuelva a mostrar antes de buscar.
+- qué construcciones sabe este dispositivo que están en los relays de Nostr
+  como notas de construcción (las suyas, en cuanto un relay aceptó la nota,
+  y las de otros que abrió desde una), para poder compartirlas con un enlace
+  corto.
 - para cada construcción que empezó con **Construir aquí**, el mundo y el
   lugar que eligió, para que al publicarla quede allí.
 - para cada construcción empezada con una estructura prefabricada o como
@@ -186,12 +190,14 @@ Esa solicitud es todo lo que envía:
 - **Cualquiera puede ver los totales** en el panel público,
   <https://forkbuild.goatcounter.com/>.
 
-El mismo contador también se entera de tres momentos al compartir una
+El mismo contador también se entera de estos momentos al compartir una
 construcción, cada uno como una solicitud de imagen más del mismo tipo, con
 su propia ruta fija:
 
 - `/e/share-link`: se copió o se compartió un enlace a una construcción con
   **Copiar enlace** o **Compartir…**;
+- `/e/share-link-short`: ese enlace era corto (`/n/…`), contado además de
+  `/e/share-link`, nunca en su lugar;
 - `/e/opened-shared-link`: un enlace compartido abrió una construcción;
 - `/e/remix-from-link`: una construcción abierta desde un enlace compartido
   se copió en el Editor (como mucho una vez por construcción cada vez que la
@@ -316,8 +322,10 @@ dirección IP y lo que usted le pide.
 | Distribuye en Blurt la Declaración firmada de una publicación (*experimental*) | el alojamiento de imágenes de Blurt (`img-upload.blurt.blog`), directamente o, cuando el navegador no puede alcanzarlo, a través del relé `/blurt-image` del servidor de encuentro, que no guarda nada | una imagen de 320×200 de la construcción para la vista previa de la publicación, firmada con su clave de publicación de Blurt |
 | Distribuye en Steem la Declaración firmada de una publicación (*experimental*) | el alojamiento de imágenes de Steem (`steemitimages.com`), directamente o, cuando el navegador no puede alcanzarlo, a través del relé `/steem-image` del servidor de encuentro, que no guarda nada | una imagen de 320×200 de la construcción para la vista previa de la publicación, firmada con su clave de publicación de Steem |
 | Alguien abre, o un sitio muestra la vista previa de, un enlace que lleva su construcción (`/b/…`) | el servidor de encuentro (`forkbuild-rendezvous.prazjp.workers.dev`) | el enlace, que contiene la construcción y su Declaración firmada; no guarda nada |
+| Alguien abre, o un sitio muestra la vista previa de, un enlace corto a una construcción enviada a todos (`/n/…`) | el servidor de encuentro (`forkbuild-rendezvous.prazjp.workers.dev`), que pide a los relays de Nostr (`relay.damus.io`, `nos.lol`, `relay.primal.net`) la nota de la construcción | el enlace, que nombra la Publicación de la construcción; el servidor no guarda nada, y Cloudflare guarda en caché la página y la imagen de una construcción encontrada durante un día |
+| Usted abre un enlace corto (`#/n/…`) | cada relay de Nostr en **Configuración de red** | una consulta por las notas de esa construcción (`forkbuild-build:<id>`); se abre en este dispositivo la más reciente que pasa la comprobación |
 | Alguien abre una página con una construcción insertada (`embed.html#…`) | el sitio desde el que se sirve ForkBuild (`bowo-prasetyo.github.io`) | solicitudes de los archivos de la inserción, sin referente; nunca la construcción, que va en la parte de la dirección que los navegadores no envían |
-| Un sitio o un editor pregunta cómo insertar un enlace `/b/…` (oEmbed) | el `/oembed` del servidor de encuentro (`forkbuild-rendezvous.prazjp.workers.dev`) | el enlace, que contiene la construcción y su Reclamación firmada; no guarda nada |
+| Un sitio o un editor pregunta cómo insertar un enlace `/b/…` (`/n/…`) (oEmbed) | el `/oembed` del servidor de encuentro (`forkbuild-rendezvous.prazjp.workers.dev`) | el enlace, que contiene la construcción y su Reclamación firmada; no guarda nada |
 | Abre un enlace compartido a una publicación (`#/view/…`) | el nodo de Steem o Blurt, el gateway de Arweave o el gateway de IPFS que indica el enlace, y luego los sustratos de anuncio para encontrar su construcción | qué publicación, transacción o CID abre |
 | Ancla o verifica evidencia en Bitcoin (*experimental*) | una API Esplora (`blockstream.info`) | la transacción que transmite o consulta |
 | Verifica evidencia en Base (*experimental*) | un endpoint JSON-RPC de Base (`mainnet.base.org`) | la transacción que consulta |
@@ -340,6 +348,18 @@ solicitadas. Crear un enlace no contacta nada. Quien tenga el enlace puede
 ver la construcción, su título, su descripción y el nombre del autor, y la
 clave pública de su identidad, como con cualquier Mundo compartido que
 distribuya.
+
+**Un enlace corto** (ofrecido en su lugar cuando una construcción se envió
+a todos; vea **¿Quién puede encontrarla?** más arriba) contiene solo el
+identificador de la Publicación de la construcción (`forkbuild-rendezvous.prazjp.workers.dev/n/…`). Abrirlo, o
+que un sitio muestre su vista previa, envía ese identificador al servidor
+de encuentro, que pide a los relays públicos de Nostr la nota de la
+construcción, la comprueba como comprueba un enlace que lleva su
+construcción, dibuja la imagen, envía a la gente a la aplicación (`#/n/…`) y
+no guarda nada; después la aplicación pide la nota a los relays por sí
+misma. La construcción ya era pública en esos relays, y en eso se basa un
+enlace corto: deja de funcionar si ningún relay guarda la nota. Las
+construcciones que se quedan en su enlace nunca tienen uno.
 
 **Una construcción insertada** (el código que copia **Insertar**: un
 `<iframe>` de `embed.html#…` en el sitio desde el que se sirve ForkBuild)

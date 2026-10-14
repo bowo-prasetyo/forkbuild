@@ -332,7 +332,13 @@ placement announced beside the Snapshot
 the build itself and takes the same path with no network; Share offers it,
 by way of the rendezvous worker's `/b/<payload>` link preview
 (server/rendezvous-worker/buildPreview.js: a title, a picture drawn in the
-worker, then on to the app), for a Publication not yet distributed, with Save picture
+worker, then on to the app), for a Publication not yet distributed. One sent
+to everyone as a build note gets a short link instead, `/n/<publication id>`
+(`/n/:noteId` in the app, docs/Protocol.md "Short links"), which names the
+note: the worker (server/rendezvous-worker/noteLink.js) and the app
+(BuildNoteDiscovery#findLinkOnly()) read it from the relays and open the
+newest that checks out; application/buildNotes/FindableBuildsStore.js says
+which Publications are on the relays. Either comes with Save picture
 (renderer/BuildPicture.js, a 1200 × 630 PNG drawn by
 DocumentThumbnailRenderer), and Embed, the same payload as an `<iframe>` of
 embed.html for other sites' pages. embed.html is a page of its own

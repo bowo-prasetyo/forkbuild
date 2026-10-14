@@ -137,6 +137,34 @@ export function payloadFromLinkPreviewUrl(url) {
     return match ? match[1] : null;
 }
 
+// A short link to a build sent to everyone as a build note (core/BuildNote.js):
+// the rendezvous worker's /n/<publication id>, which reads the note from the
+// public Nostr relays, gives it the same title and picture as /b/, and sends
+// people on to the app's #/n/<publication id>, where the app reads the note
+// itself. The link names the build instead of carrying it, so it stays about
+// 90 characters however large the build is.
+const NOTE_LINK_ID_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
+
+export function isNoteLinkPublicationId(publicationId) {
+    return typeof publicationId === 'string' && NOTE_LINK_ID_PATTERN.test(publicationId);
+}
+
+export function noteLinkUrl(publicationId, previewUrl = FORKBUILD_LINK_PREVIEW_URL) {
+    if (!isNoteLinkPublicationId(publicationId)) throw new TypeError('not a publication id a short link can carry');
+    return `${previewUrl}n/${publicationId}`;
+}
+
+export function noteLinkViewPath(publicationId) {
+    if (!isNoteLinkPublicationId(publicationId)) throw new TypeError('not a publication id a short link can carry');
+    return `/n/${publicationId}`;
+}
+
+// The publication id a /n/<id> link names, or null.
+export function publicationIdFromNoteLinkUrl(url) {
+    const match = typeof url === 'string' ? /\/n\/([A-Za-z0-9_-]{1,128})(?:[?#].*)?$/.exec(url) : null;
+    return match ? match[1] : null;
+}
+
 // The page that shows a build carried in a link on another site, inside an
 // <iframe> (ui/embed/): `embed.html#<payload>`, the payload in the fragment
 // as for #/s/<payload>, so the build never reaches a server.
