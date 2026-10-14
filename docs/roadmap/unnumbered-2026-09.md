@@ -6658,3 +6658,22 @@ player reading it met words the app no longer uses (docs/Pillars.md, "Words"). P
 - The privacy notice (docs/Privacy.md and its translations) says Explore and "which name you were using".
 - Kept: the FAQ entry for returning players and the history note in Publishing & Remixing, which say what the
   Repository and Login were; the file name 05-IdentityAndLogin.md; "session" where it means a visit.
+
+## Release 1.4.0 (unnumbered, 2026-10-14)
+
+**Version 1.4.0 is released.** Everything since 1.3.0 ships under its own version number; until now the published
+site ran it as 1.3.0, and Steem and Blurt posts said `forkbuild/1.3.0`. It is a minor release: it adds features (the
+Home page and ready-made builds, the guided first build, fifty bricks and tilting, link-only shares with previews,
+embeds and 3D models, build notes and the village, the weekly challenge, Walk here with me, Build with me and
+co-builder credits, day and night, music, the light and dark looks, the installable app and Copy to another device),
+retires the leaderboards, the reconciliation pages and Publisher Associations, turns the network writers into
+switches, and fixes what the "Fix" entries above name, with no security fix. `PROTOCOL_VERSION` is unchanged; the
+protocol gains additive parts (Brick Tilt, link-only shares, build notes, walk and build links, `builtWith`, the
+Snapshot possession exchange).
+
+- `package.json`, `package-lock.json` and `core/version.js` say 1.4.0.
+- `docs/ReleaseNotes-1.4.md` is new: what's new, removed, changed and fixed, privacy (the new counts, build notes and
+  their carrier key, link previews, walking and building together), upgrading from 1.3.0 (switching a wallet back on,
+  redeploying a self-hosted worker, and what 1.3.0 does with co-built Publications, which it refuses since their
+  signed payload carries `builtWith`, the new bricks, tilts and the new links) and known limitations (long share
+  links first). `docs/ReleaseNotes-1.3.md` points to it, and the README names 1.4.0 and links all five.

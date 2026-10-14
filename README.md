@@ -16,10 +16,11 @@ default setup uses is a rendezvous server that helps peers find each other,
 plus an anonymous, cookie-free visitor count once a day that you can turn off;
 see [docs/Privacy.md](docs/Privacy.md) for everything the app contacts.
 
-**Version 1.3.0**, released 2026-10-06: see the
-[release notes](docs/ReleaseNotes-1.3.md). It adds Blurt as a network,
-French and Korean, swimming and the open sea, timber-framing bricks, build
-tags and formatted descriptions, and finds Worlds others distributed. 1.1.0
+**Version 1.4.0**, released 2026-10-14: see the
+[release notes](docs/ReleaseNotes-1.4.md). It is the builder's release:
+fifty bricks that tilt, links that carry the build, builds anyone can find
+in a village round the weekly challenge, walking and building together from
+one link, and day and night in World View. 1.1.0
 fixed two security problems in 1.0.0, so update any copy older than that. Every milestone is recorded in
 [docs/Roadmap.md](docs/Roadmap.md).
 
@@ -302,7 +303,8 @@ See [docs/Architecture.md](docs/Architecture.md) for the full description.
 - [docs/Privacy.md](docs/Privacy.md): what ForkBuild stores, and every server
   it can contact.
 - [CONTRIBUTING.md](CONTRIBUTING.md): how to set up, test and submit changes.
-- [docs/ReleaseNotes-1.3.md](docs/ReleaseNotes-1.3.md),
+- [docs/ReleaseNotes-1.4.md](docs/ReleaseNotes-1.4.md),
+  [docs/ReleaseNotes-1.3.md](docs/ReleaseNotes-1.3.md),
   [docs/ReleaseNotes-1.2.md](docs/ReleaseNotes-1.2.md),
   [docs/ReleaseNotes-1.1.md](docs/ReleaseNotes-1.1.md) and
   [docs/ReleaseNotes-1.0.md](docs/ReleaseNotes-1.0.md): what each release

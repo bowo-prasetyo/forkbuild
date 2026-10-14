@@ -1,6 +1,6 @@
 {
   "name": "forkbuild",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "private": true,
   "description": "Build in 3D in your browser. Remix anything. Own your work. A browser-based, decentralized building platform.",
   "license": "MPL-2.0",
