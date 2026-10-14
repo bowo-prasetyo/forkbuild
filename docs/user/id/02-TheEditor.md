@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: debe706fb81d65f3 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 6e10bd69ebe05267 -->
 # 02 — Editor
 
 <!-- languages -->
@@ -626,7 +626,7 @@ Musik diputar pelan saat Anda membangun, sedikit lebih riang daripada di Tampila
 **Bangun bersamaku**, di bawah nama bangunan di bilah sisi, membuat tautan
 yang memungkinkan teman membangun bangunan ini bersama Anda, pada saat yang
 sama. Kirimkan dengan cara apa pun; tautan itu juga tampil sebagai kode QR
-untuk ponsel. Teman yang membukanya masuk jika belum (baloknya ditambahkan
+untuk ponsel. Teman yang membukanya memilih nama jika belum (baloknya ditambahkan
 atas namanya), mengklik **Bergabung**, lalu bangunan Anda terbuka di
 Editor-nya. Sejak itu, setiap balok yang ditempatkan, dipindahkan, diwarnai
 ulang, atau dihapus oleh salah satu dari kalian muncul di kedua layar.
@@ -638,7 +638,7 @@ ulang, atau dihapus oleh salah satu dari kalian muncul di kedua layar.
   semua layar, dan **Ulangi** mengembalikannya; langkah teman-teman Anda hanya
   bisa diurungkan oleh mereka sendiri.
 - Bangunan itu harus milik Anda sendiri: yang Anda mulai, atau salinan yang
-  Anda buat. Bangunan yang Anda mulai sebelum masuk menjadi milik Anda saat
+  Anda buat. Bangunan yang Anda mulai sebelum memilih nama menjadi milik Anda saat
   Anda mengundang teman ke sana.
 - Siapa pun yang membuka tautan dalam 30 menit pertamanya dapat bergabung,
   selama bangunan tetap terbuka di Editor Anda. Semua yang sudah bergabung

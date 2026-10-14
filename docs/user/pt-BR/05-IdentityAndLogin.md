@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 6c3356512aea6399 -->
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 3ba8fc359bf11937 -->
 # 05 — Seu nome e sua identidade
 
 <!-- languages -->
@@ -43,14 +43,14 @@ assinar como você. Você pode protegê-la depois em **Minhas identidades**.
 > identidade se foi, até para o próprio ForkBuild. Escolha uma que você
 > consiga guardar.
 
-## O cofre: bloqueado ou desconectado
+## O cofre: bloqueado ou sem nome
 
 A chave descriptografada de uma identidade protegida fica numa coisa chamada
 **cofre**. O cofre pode estar **bloqueado** ou **desbloqueado**, e essa é
-uma pergunta realmente diferente de você ter entrado ou não:
+uma pergunta realmente diferente de qual nome você está usando:
 
-- **Conectado, desbloqueado** — tudo funciona normalmente.
-- **Conectado, bloqueado** (🔒 ao lado do seu nome, no canto superior
+- **Com um nome, desbloqueado** — tudo funciona normalmente.
+- **Com um nome, bloqueado** (🔒 ao lado do seu nome, no canto superior
   direito) — você continua sendo você e ainda pode navegar, construir e
   salvar, mas tudo o que precisa de uma assinatura nova (publicar, ficar
   visível, entrar numa sala) falha com uma mensagem de "identidade
@@ -65,15 +65,15 @@ desbloqueá-lo**, esteja você usando o app ou não (não é um tempo de
 inatividade), ou sempre que você mesmo clicar em **Bloquear** em **Minhas
 identidades**. Recarregar a página sempre deixa as identidades protegidas
 bloqueadas — a chave descriptografada nunca é gravada em disco, só fica na
-memória —, mesmo que o app ainda lembre com quem você tinha entrado.
+memória —, mesmo que o app ainda lembre qual nome você estava usando.
 
 ## Gerenciando identidades — a página Minhas identidades
 
 Abra **Mais → Minhas identidades** (ou clique no seu nome na barra superior) para ver todas as identidades
 que este dispositivo tem, cada uma com seu estado de bloqueio, independente
-de com qual você entrou. Daqui você pode:
+de qual você está usando. Daqui você pode:
 
-- **Criar** uma identidade nova (como na caixa de diálogo de login).
+- **Criar** uma identidade nova (como na caixa de diálogo do nome).
 - **Proteger com frase secreta** — aparece numa identidade desprotegida
   (marcada ⚠ Desprotegida). Criptografa a chave existente; a identidade em
   si não muda, e fica bloqueada até você desbloqueá-la.
@@ -104,11 +104,11 @@ quiser parar de usar uma, revogue-a.
 
 Revogar impede uma identidade de assinar qualquer coisa nova, inclusive a
 prova de que ela precisa para iniciar uma nova conexão com outra pessoa.
-Isso **não** desconecta você, e você ainda pode entrar com ela depois — o
+Isso **não** impede você de usá-la, e você ainda pode escolhê-la depois — o
 cartão dela em **Minhas identidades** só mostra **Revogada**. É de
 propósito, para que você ainda possa abri-la para consultar ou
 **Exportar** uma última vez. Para continuar trabalhando, crie uma nova
-identidade e entre com ela.
+identidade e use essa.
 
 Revogar é permanente, neste dispositivo e em qualquer dispositivo em que
 você restaurar o backup dela. Conexões que já estavam abertas quando você
@@ -137,9 +137,9 @@ navegador:
    nome, ID, algoritmo e se você já a tem — sem descriptografar nada.
 2. Digite a frase secreta da exportação para importá-la de fato.
 
-Uma identidade importada sempre chega **bloqueada**, e você não entra
-automaticamente com ela — desbloqueie-a em Minhas identidades ou na caixa de
-diálogo de login, como qualquer outra identidade protegida.
+Uma identidade importada sempre chega **bloqueada**, e o ForkBuild não
+muda para ela sozinho — desbloqueie-a em Minhas identidades ou na caixa de
+diálogo do nome, como qualquer outra identidade protegida.
 
 O arquivo também leva os registros assinados do ciclo de vida da identidade:
 a revogação dela, a sucessora que ela declarou e os dispositivos que ela
@@ -177,7 +177,7 @@ tempo de bloqueio restante. A contagem zera ao recarregar.
 
 ## E agora?
 
-Agora que você entrou, configure como os outros veem você em
+Agora que você tem um nome, configure como os outros veem você em
 **[Avatares e presença](06-AvatarsAndPresence.md)**, ou encontre pessoas
 para construir junto em
 **[Conexões entre pares e amigos](07-PeerConnectionsAndFriends.md)**.

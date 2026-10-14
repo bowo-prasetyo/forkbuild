@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 5eccfdfd3ac8fb32 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: f9738fa9f2faf553 -->
 # 06 — Avatars et présence
 
 <!-- languages -->
@@ -370,7 +370,7 @@ transformés en décoration — la faune placée par le monde lui-même, non.
 Une indication s’affiche quand **G** décorerait ou annulerait quelque
 chose à proximité. Comme pour ajouter un
 [point de repère](03-WorldView.md#points-de-repère--marquer-un-lieu-qui-mérite-quon-sen-souvienne),
-décorer demande d’être connecté avec le droit de MODIFICATION sur le Monde
+décorer demande un nom et le droit de MODIFICATION sur le Monde
 où vous êtes. Sur le Monde publié de quelqu’un d’autre, la décoration va
 dans votre propre copie — à condition que sa licence autorise les forks.
 Si rien de tout cela ne s’applique, **G** ne fait simplement rien ; le

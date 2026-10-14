@@ -589,8 +589,8 @@ Music plays softly while you build, a little livelier than World View's. The **â
 
 **Build with me**, under the build's name in the sidebar, makes a link that
 lets friends build this build with you, at the same time. Send it any way you
-like; it also shows as a QR code for a phone. A friend who opens it logs in
-if they haven't yet (their bricks are added under their name), clicks
+like; it also shows as a QR code for a phone. A friend who opens it chooses a
+name if they haven't yet (their bricks are added under their name), clicks
 **Join**, and your build opens in their Editor. From then on, each brick
 either of you places, moves, recolours or deletes appears on both screens.
 
@@ -600,7 +600,7 @@ either of you places, moves, recolours or deletes appears on both screens.
 - **Undo** (`Ctrl/Cmd + Z`) takes back your own last step on every screen,
   and **Redo** puts it back; your friends' steps are theirs to undo.
 - It has to be your own build: one you started, or a copy you made. A build
-  you began before logging in becomes yours when you invite friends to it.
+  you began before choosing a name becomes yours when you invite friends to it.
 - Anyone who opens the link in its first 30 minutes can join, while the
   build stays open in your Editor. Everyone who joined can build until you
   press **Stop**, open another build, or leave the Editor. **Link** in the

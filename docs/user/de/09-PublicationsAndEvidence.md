@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 70cc3e473f9bbf3c -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: dbd0c9839aa5a461 -->
 # 09 — Veröffentlichungen & externe Nachweise
 
 <!-- languages -->
@@ -19,14 +19,14 @@
 > sowie den ganzen Bereich **Wallet- & Archivwerkzeuge**. Die
 > Anleitungen [11](11-EvidenceAndStorage.md) und
 > [12](12-ArchiveAndLeaderboards.md) sagen, welche ihrer Abschnitte
-> experimentell sind. Bauen, Speichern, Veröffentlichen im Repository,
+> experimentell sind. Bauen, Speichern, Veröffentlichen unter Entdecken,
 > Forken, Identitäten und Peers hängen von nichts davon ab.
 
 Nichts hiervon ist nötig, um ForkBuild zu nutzen. Überspringen Sie es, wenn
 Sie nur bauen, veröffentlichen und erkunden möchten.
 
-Die Seite **Veröffentlichungen** ist eine technischere Ebene als das
-Repository. Im Repository geht es um Dokumente und Welten; auf der Seite
+Die Seite **Veröffentlichungen** ist eine technischere Ebene als
+Entdecken. Unter Entdecken geht es um Dokumente und Welten; auf der Seite
 Veröffentlichungen geht es um **signierte Ansprüche** wie „Ich habe diese
 Struktur entworfen“ oder „Ich nenne diesen Ort X“ und um die optionale
 Tiefe, die Sie einem Anspruch geben können:
@@ -45,22 +45,22 @@ Tiefe, die Sie einem Anspruch geben können:
 
 ## Zwei Bedeutungen von „veröffentlichen“
 
-| | **Veröffentlichen** (Repository) | **Seite Veröffentlichungen** |
+| | **Veröffentlichen** (Entdecken) | **Seite Veröffentlichungen** |
 |---|---|---|
 | Was es teilt | Ein Dokument oder eine Welt | Einen signierten Datensatz: eine Geteilte Welt, die Urheberschaft einer Struktur oder einen Ortsnamen |
-| Wo Sie es sehen | Repository, Autorenansicht, Weltansicht | Die Seite **Veröffentlichungen** |
+| Wo Sie es sehen | Entdecken, Autorenansicht, Weltansicht | Die Seite **Veröffentlichungen** |
 | Was Sie damit tun | Öffnen, erkunden, forken | Es prüfen, seinen Inhalt holen, es verteilen und verankern |
 | Anleitung | [Veröffentlichen & Remixen](04-PublishingAndForking.md) | Diese hier |
 
 **Veröffentlichen** allein bringt eine Welt nicht auf die Seite
 Veröffentlichungen. **Mit Peers teilen** tut es: Es signiert die Welt als
 **Geteilte Welt**, die zu Peers reisen kann (siehe
-[Eine Kreation aus dem Repository, dezentral](#eine-kreation-aus-dem-repository-dezentral)).
+[Ein Bauwerk aus Entdecken, dezentral](#ein-bauwerk-aus-entdecken-dezentral)).
 
 Die Seite Veröffentlichungen hat kein **Öffnen**, **Erkunden** oder
 **Remixen**, nicht einmal für eine Geteilte Welt. Sie zeigt den signierten
 Datensatz, nicht die Welt. Um eine Geteilte Welt zu öffnen, zu erkunden
-oder zu forken, suchen Sie sie im Repository, auf der Seite ihres Autors
+oder zu forken, suchen Sie sie unter Entdecken, auf der Seite ihres Autors
 oder in der Weltansicht. Eine, die Sie von einem Peer erhalten haben,
 erscheint dort, sobald ihr Inhalt auf diesem Gerät ist. (Die einzige
 Ausnahme ist **Im Editor öffnen** bei Ihrer eigenen Geteilten Welt, die
@@ -76,7 +76,7 @@ Jeder Eintrag auf der Seite Veröffentlichungen ist eine
 | **Bauplan-Zuschreibung** | Ein Anspruch, dass Sie eine Struktur entworfen haben |
 | **Ortsnamensanspruch** | Ein Name für eine Region oder ein Wahrzeichen |
 
-Weltansicht, Editor und Repository nennen den signierten Datensatz einer
+Weltansicht, Editor und Entdecken nennen den signierten Datensatz einer
 Welt ebenfalls **Geteilte Welt**, wie in **Meine Geteilte Welt**,
 **Geteilte Welt entdecken** und **Zurück zur Geteilten Welt**.
 
@@ -96,7 +96,7 @@ erforderlich:
 | **Platzierung** | das Regal, in dem das Exemplar steht | Ein signierter Nachweis, wo ein Bauwerk in der Welt steht. Eine Geteilte Welt kann mehrere haben. Siehe [Platzieren oder forken](WorldViewAdvancedTools.md#platzieren-oder-forken). |
 | **Ankündigung / Entdeckung** | ein Eintrag im Bibliothekskatalog | Ein kleiner signierter Hinweis auf Nostr, Arweave, Steem oder Blurt, dass die Veröffentlichung oder der Snapshot existiert und wo die Kopie ist, damit Menschen, die nicht mit Ihnen verbunden sind, sie finden können. Siehe [Anbieter für Ankündigung / Entdeckung](10-NetworkSettings.md#anbieter-für-ankündigung--entdeckung). |
 | **Nachweis / Verankerung** *(experimentell, außer auf Arweave)* | ein Notarstempel | Der Hash des Inhalts, in eine Blockchain-Transaktion geschrieben (Bitcoin, Base, Arweave, Steem oder Blurt), als Nachweis, dass er zu diesem Zeitpunkt existierte. Sie speichert und kündigt nichts an. Siehe [Nachweise & Speicher](11-EvidenceAndStorage.md). |
-| **Kommentare** | Leserrezensionen | Kommentare, die jeder Angemeldete an eine Veröffentlichung hängen kann, jeweils vom Kommentierenden signiert, nicht vom Herausgeber. Siehe [Kommentare](#kommentare). |
+| **Kommentare** | Leserrezensionen | Kommentare, die jeder mit einem Namen an eine Veröffentlichung hängen kann, jeweils vom Kommentierenden signiert, nicht vom Herausgeber. Siehe [Kommentare](#kommentare). |
 
 Sie erstellen also eine Veröffentlichung; dann können Sie, wenn Sie
 möchten, ihren Inhalt speichern, sie ankündigen, verankern und (bei einer
@@ -106,7 +106,7 @@ Geteilten Welt) platzieren; und jeder kann sie kommentieren.
 
 Auf der Seite Veröffentlichungen selbst erstellen Sie nie einen Anspruch.
 Sie listet Ansprüche auf, die Sie anderswo erstellt haben, solche, die
-Peers Ihnen gesendet haben, und Kreationen aus dem Repository, die in
+Peers Ihnen gesendet haben, und Bauwerke aus Entdecken, die in
 dezentraler Form angekommen sind. Ortsnamensansprüche lassen sich auch
 direkt über Nostr finden, ohne Peer; siehe
 [Ortsnamen in der Nähe](WorldViewAdvancedTools.md#ortsnamen-in-der-nähe--ansprüche-von-jedem-entdecken).
@@ -168,15 +168,15 @@ während Sie verbunden sind. Ein empfangener Anspruch ist nur ein gültig
 signierter Datensatz: Sein Inhalt ist nicht auf Ihrem Gerät, bis Sie ihn
 mit **Von Peers abrufen** (unten) holen.
 
-### Eine Kreation aus dem Repository, dezentral
+### Ein Bauwerk aus Entdecken, dezentral
 
 Eine Karte kann auch eine **Geteilte Welt** enthalten — dieselbe Art von
-Objekt wie ein Eintrag im Repository, verpackt für die dezentrale Reise.
-**Mit Peers teilen** im Repository erstellt eine für Ihre eigenen Welten
+Objekt wie ein Eintrag unter Entdecken, verpackt für die dezentrale Reise.
+**Mit Peers teilen** unter Entdecken erstellt eine für Ihre eigenen Welten
 (siehe
 [Mit verbundenen Peers teilen](04-PublishingAndForking.md#mit-verbundenen-peers-teilen)).
 Sobald Sie eine hier mit **Erneut prüfen** oder **Von Peers abrufen**
-auflösen, kommt sie in die Suche des Repositorys, auf die Seite ihres
+auflösen, kommt sie in die Suche von Entdecken, auf die Seite ihres
 Autors und in die Weltansicht und bleibt dort auch nach einem Neuladen.
 
 ## Die Seite Veröffentlichungen
@@ -321,14 +321,14 @@ ist; der Inhalt wurde gespeichert.
 
 ## Kommentare
 
-Jede angemeldete Identität kann jede Veröffentlichung kommentieren, die
-sich auflösen lässt: eine Kreation aus dem Repository, einen
+Jeder mit einem Namen kann jede Veröffentlichung kommentieren, die
+sich auflösen lässt: ein Bauwerk aus Entdecken, einen
 Urheberschaftsanspruch oder einen Ortsnamen. Es gibt keine Prüfung auf
 Eigentum, keine Freundschaftspflicht und keine Moderation.
 
 Kommentare finden Sie:
 
-- im **Repository** und auf Autorenseiten: die Schaltfläche
+- unter **Entdecken** und auf Autorenseiten: die Schaltfläche
   **Kommentieren** auf jeder Karte und in jeder Listenzeile;
 - im Feld
   [Meine Geteilte Welt](WorldViewAdvancedTools.md#meine-geteilte-welt--ihren-eigenen-snapshot-verteilen-ohne-peers)
@@ -344,7 +344,7 @@ Kommentare sind dauerhaft: kein Bearbeiten, Löschen oder Antworten.
 
 ### Wie Kommentare reisen
 
-Ein im **Repository** gesendeter Kommentar wird auf Ihrem Gerät
+Ein unter **Entdecken** gesendeter Kommentar wird auf Ihrem Gerät
 gespeichert, an die Peers gesendet, mit denen Sie verbunden sind, und im
 neben **Kommentar senden** gewählten Netzwerk veröffentlicht (Nostr,
 Arweave, Steem oder Blurt; es beginnt mit Ihrem
@@ -370,8 +370,8 @@ anderes Netzwerk? Unter jedem Ihrer eigenen Kommentare steht, an welche
 Netzwerke dieses Gerät ihn gesendet hat, oder *Von diesem Gerät noch an kein
 Netzwerk gesendet.* **Verteilen** sendet ihn dort an das gewählte Netzwerk
 und meldet, ob es geklappt hat; ein Netzwerk, an das er schon ging, ist
-markiert und kann nicht erneut gewählt werden. Nur die angemeldete Autorin
-oder der angemeldete Autor sieht das, denn nur sie können den Kommentar für
+markiert und kann nicht erneut gewählt werden. Nur wer den Kommentar unter
+diesem Namen geschrieben hat, sieht das, denn nur sie können den Kommentar für
 ein Netzwerk signieren, und die Zeile kennt nur, was dieses Gerät gesendet
 hat.
 

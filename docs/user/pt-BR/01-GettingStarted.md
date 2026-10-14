@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: b3d70584719e6278 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 545a8b3fca4e1167 -->
 # 01 — Primeiros passos
 
 <!-- languages -->
@@ -65,7 +65,7 @@ A barra no alto está sempre visível:
 |---|---|
 | **Início** | A página inicial |
 | **Construir** | O Editor, onde você constrói (veja [O Editor](02-TheEditor.md)) |
-| **Explorar** | As construções publicadas de todo mundo, para abrir, remixar ou visitar (veja [Publicar e remixar](04-PublishingAndForking.md#o-repositório)) |
+| **Explorar** | As construções publicadas de todo mundo, para abrir, remixar ou visitar (veja [Publicar e remixar](04-PublishingAndForking.md#explorar)) |
 | **Desafio** | O desafio de construção desta semana e suas participações (veja [O desafio de construção semanal](04-PublishingAndForking.md#o-desafio-de-construção-semanal)) |
 | **Passear** | A Visão do mundo na praça do desafio desta semana, para andar pela vila de construções publicadas (veja [Visão do mundo](03-WorldView.md)) |
 | **Meus mundos** | Os Mundos que você visitou neste dispositivo (veja [Meus mundos](03-WorldView.md#meus-mundos--os-mundos-em-que-você-realmente-esteve)) |

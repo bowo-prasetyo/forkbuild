@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: 0f7d63110556987a -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: 2f10096b5d79ec2b -->
 # 13 — Sus datos
 
 <!-- languages -->
@@ -53,8 +53,8 @@ dispositivos deben estar en línea: se encuentran a través del servidor de
 encuentro y luego los datos van directamente entre ellos, cifrados con una
 clave que solo existe en el código. El servidor de encuentro no ve ni la
 clave ni sus datos. Las identidades con frase de contraseña siguen
-protegidas por ella, y usted inicia sesión en el otro dispositivo como
-después de una restauración.
+protegidas por ella, y en el otro dispositivo usted vuelve a elegir su
+nombre, como después de una restauración.
 
 ## Hacer una copia de seguridad
 
@@ -74,8 +74,8 @@ perder. La frase de contraseña de la copia de seguridad es distinta de las
 frases de contraseña de sus identidades: cada identidad que contiene sigue
 protegida por la suya.
 
-La copia de seguridad no incluye con qué identidad se inició sesión.
-Después de restaurar, inicie sesión de nuevo.
+La copia de seguridad no incluye qué nombre estaba usando.
+Después de restaurar, vuelva a elegir su nombre.
 
 Además de **Hacer copia de seguridad en un archivo**, la misma sección
 puede:

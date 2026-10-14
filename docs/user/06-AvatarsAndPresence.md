@@ -332,7 +332,7 @@ both are nearby, **G** decorates a fresh released animal first, just as
 decorated — wildlife the world placed by itself can't. A prompt shows when
 **G** would decorate or undo something nearby. Like adding a
 [landmark](03-WorldView.md#landmarks--marking-a-place-worth-remembering),
-decorating needs you signed in with EDIT access to the World you're in.
+decorating needs a name and EDIT access to the World you're in.
 On someone else's published World, the decoration goes into your own
 copy of it — as long as its license allows forking. If none of that
 applies, **G** simply does nothing; the touch pad's **Decorate** button

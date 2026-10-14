@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 678438731470dcad -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: f9d9cc641a8a9b34 -->
 # 04 — Veröffentlichen & Remixen
 
 <!-- languages -->
@@ -271,7 +271,7 @@ Abschnitt:
 | **Geteilte Welt** | Die eigene ID der Geteilten Welt — bestätigt, um welche Geteilte Welt es bei diesem Ergebnis geht. |
 | **Material** | Der Ort, den der Upload ergeben hat, oder „Noch nicht hochgeladen“, wenn er nicht abgeschlossen wurde. |
 | **Entdeckung** | Die Ankündigungs-ID oder „Noch nicht angekündigt“, wenn sie nicht abgeschlossen wurde — eine Zeile pro Relay, wenn mehrere konfiguriert sind. |
-| **Repository** | Eine Schaltfläche **Erkunden**, die direkt zur Seite dieser Veröffentlichung in der Weltansicht springt — sichtbar, sobald die Veröffentlichung etwas zum Erkunden mitbringt, was praktisch immer der Fall ist. |
+| **Ihr Bauwerk** | Eine Schaltfläche **Erkunden**, die direkt zur Seite dieser Veröffentlichung in der Weltansicht springt — sichtbar, sobald die Veröffentlichung etwas zum Erkunden mitbringt, was praktisch immer der Fall ist. |
 
 **Große Bauwerke.** Arweave-Speicher nimmt einen Snapshot von bis zu
 256 KB, etwa achttausend Steine. Für alles Größere wählen Sie IPFS-Speicher
@@ -415,10 +415,10 @@ bearbeitbare Kopie wurde erstellt — … bleibt unverändert“); siehe
 
 Das Original wird nie berührt, egal wie sehr Sie Ihre Kopie ändern.
 
-## Das Repository
+## Entdecken
 
-**Entdecken** in der oberen Leiste (in älteren Versionen und in einigen
-erweiterten Meldungen *Repository* genannt) ist der durchsuchbare Katalog
+**Entdecken** in der oberen Leiste (in älteren
+Versionen *Repository* genannt) ist der durchsuchbare Katalog
 aller veröffentlichten Bauwerke, die dieses Gerät kennt: Ihrer eigenen, solcher, die Peers mit
 Ihnen geteilt haben, und solcher, die in dezentralen Netzwerken gefunden
 wurden. Es ist so gebaut, dass es benutzbar bleibt, ob es zehn Kreationen

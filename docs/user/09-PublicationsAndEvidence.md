@@ -16,13 +16,13 @@
 > the whole **Wallet & Archive Tools** panel. Guides
 > [11](11-EvidenceAndStorage.md) and [12](12-ArchiveAndLeaderboards.md) say
 > which of their sections are Experimental. Building, saving, publishing to
-> the Repository, forking, identities and peers don't depend on any of it.
+> Explore, forking, identities and peers don't depend on any of it.
 
 None of this is needed to use ForkBuild. Skip it if you just want to build,
 publish and explore.
 
-The **Publications** page is a more technical layer than the Repository. The
-Repository is about Documents and Worlds; the Publications page is about
+The **Publications** page is a more technical layer than Explore. Explore
+is about Documents and Worlds; the Publications page is about
 **signed claims** such as "I designed this structure" or "I call this place
 X", and about the optional depth you can add to a claim:
 
@@ -40,20 +40,20 @@ X", and about the optional depth you can add to a claim:
 
 ## Two meanings of "publish"
 
-| | **Publish** (Repository) | **Publications page** |
+| | **Publish** (Explore) | **Publications page** |
 |---|---|---|
 | What it shares | A Document or World | A signed record: a Shared World, authorship of a structure, or a place name |
-| Where you see it | Repository, Author view, World View | The **Publications** page |
+| Where you see it | Explore, Author view, World View | The **Publications** page |
 | What you do with it | Open, explore, fork | Check it, fetch its content, distribute and anchor it |
 | Guide | [Publishing & Remixing](04-PublishingAndForking.md) | This one |
 
 **Publish** alone doesn't put a World on the Publications page. **Share
 with Peers** does: it signs the World as a **Shared World** that can travel
-to peers (see [A Repository creation, decentralized](#a-repository-creation-decentralized)).
+to peers (see [A build from Explore, decentralized](#a-build-from-explore-decentralized)).
 
 The Publications page has no **Open**, **Explore** or **Remix**, not even for
 a Shared World. It shows the signed record, not the World. To open, explore
-or fork a Shared World, find it in the Repository, on its author's page or
+or fork a Shared World, find it in Explore, on its author's page or
 in World View. One you received from a peer appears there once its content
 is on this device. (The one exception is **Open in Editor** on your own
 Shared World that needs publishing again; see
@@ -68,7 +68,7 @@ three kinds:
 | **Blueprint Attribution** | A claim that you designed a structure |
 | **Place Naming Claim** | A name for a Region or Landmark |
 
-World View, the Editor and the Repository call a World's signed record a
+World View, the Editor and Explore call a World's signed record a
 **Shared World** too, as in **My Shared World**, **Discover Shared World**
 and **Back to Shared World**.
 
@@ -87,7 +87,7 @@ itself is required:
 | **Placement** | Where the copy is shelved | A signed record of where a build stands in the World. One Shared World can have several. See [Placing vs forking](WorldViewAdvancedTools.md#placing-vs-forking). |
 | **Announcement / Discovery** | A library catalogue entry | A small signed notice on Nostr, Arweave, Steem or Blurt saying the publication or Snapshot exists and where its copy is, so people who aren't connected to you can find it. See [Announcement / Discovery Provider](10-NetworkSettings.md#announcement--discovery-provider). |
 | **Proof / Anchoring** *(Experimental, except on Arweave)* | A notary's stamp | The content's hash written into a blockchain transaction (Bitcoin, Base, Arweave, Steem or Blurt), as evidence it existed by that time. It stores and announces nothing. See [Evidence & Storage](11-EvidenceAndStorage.md). |
-| **Commentary** | Readers' reviews | Comments anyone signed in can attach to a publication, each signed by its commenter, not the publisher. See [Commentary](#commentary). |
+| **Commentary** | Readers' reviews | Comments anyone with a name can attach to a publication, each signed by its commenter, not the publisher. See [Commentary](#commentary). |
 
 So you make a publication; then, if you like, store its content, announce
 it, anchor it, and place it (for a Shared World); and anyone can comment on
@@ -96,7 +96,7 @@ it.
 ## Where a publication comes from
 
 You never create a claim on the Publications page itself. It lists claims
-you made elsewhere, ones peers sent you, and Repository creations that
+you made elsewhere, ones peers sent you, and builds from Explore that
 arrived in decentralized form. Place-name claims can also be found straight
 from Nostr, with no peer involved; see
 [Nearby Place Names](WorldViewAdvancedTools.md#nearby-place-names--discovering-claims-from-anyone).
@@ -150,14 +150,14 @@ you're connected. A received claim is only a validly signed record: its
 content isn't on your device until you fetch it with **Retrieve from Peers**
 (below).
 
-### A Repository creation, decentralized
+### A build from Explore, decentralized
 
 A card can also hold a **Shared World** — the same kind of object as a
-Repository listing, wrapped for decentralized travel. **Share with Peers** in
-the Repository creates one for your own Worlds (see
+listing in Explore, wrapped for decentralized travel. **Share with Peers** in
+Explore creates one for your own Worlds (see
 [Sharing with connected peers](04-PublishingAndForking.md#sharing-with-connected-peers)).
 Once you resolve one here with **Re-check** or **Retrieve from Peers**, it
-joins the Repository's search, its author's page and World View, and stays
+joins Explore's search, its author's page and World View, and stays
 after a reload.
 
 ## The Publications page
@@ -285,13 +285,13 @@ announced** means only the announcement failed; the content was stored.
 
 ## Commentary
 
-Any signed-in identity can comment on any publication that resolves: a
-Repository creation, an authorship claim or a place name. There's no
+Anyone with a name can comment on any publication that resolves: a
+build from Explore, an authorship claim or a place name. There's no
 ownership check, friendship requirement or moderation.
 
 You'll find comments:
 
-- in the **Repository** and on author pages: the **Comment** button on
+- in **Explore** and on author pages: the **Comment** button on
   every card and list row;
 - in World View's
   [My Shared World](WorldViewAdvancedTools.md#my-shared-world--distributing-your-own-snapshot-no-peers-required)
@@ -306,7 +306,7 @@ Comments are permanent: no editing, deleting or replies.
 
 ### How comments travel
 
-A comment posted from the **Repository** is saved on your device, sent to
+A comment posted from **Explore** is saved on your device, sent to
 peers you're connected to, and published to the network chosen next to
 **Post Comment** (Nostr, Arweave, Steem or Blurt; it starts on your
 [Announcement / Discovery Provider](10-NetworkSettings.md#announcement--discovery-provider)),
@@ -328,7 +328,7 @@ Under each of your own comments, a line says which networks this device has
 sent it to, or *Not sent to any network from this device yet*.
 **Distribute** there sends it to the network you pick and says whether it
 worked; a network it already went to is marked and can't be sent to again.
-Only the comment's author, signed in, sees it, since only they can sign the
+Only the comment's author, using that name, sees it, since only they can sign the
 comment for a network, and the line knows only what this device sent.
 
 Other people's comments reach you:

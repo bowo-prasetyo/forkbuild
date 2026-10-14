@@ -166,8 +166,8 @@ Settings**) and an unlocked identity.
 account on a social network, without either of you asking the other for
 anything.
 
-- **Where to follow.** **Follow** appears on publication cards in the
-  Repository, next to **Signed by …** on an author's page, in a person's
+- **Where to follow.** **Follow** appears on publication cards in
+  Explore, next to **Signed by …** on an author's page, in a person's
   **⋯** menu on this page, and as **Follow Their Work** on an avatar in
   World View. You follow an *identity*, never a typed author name: several
   people can publish under the same name, so an author's page shows one
@@ -191,7 +191,7 @@ anything.
   the rest.
 
 **Following is private and one-sided.** The list is kept on this device, for
-the identity you're signed in as. It's never sent anywhere, the people you
+the name you're using. It's never sent anywhere, the people you
 follow are never told, and there are no follower counts: without a server,
 nobody could count them honestly. Following gives the other person nothing
 either: no chat, no view of your avatar, no way to reach you. That's still

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: d53bccd516685088 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 5d71d34792209c99 -->
 # Steuerungsreferenz
 
 <!-- languages -->
@@ -370,7 +370,7 @@ Pad ein und aus.
 | **Wegstellen** / **… hervorholen** | `Q` | Sichtbar, wenn Sie das Fahrzeug, auf dem Sie sind, wegstellen oder ein abgestelltes hervorholen können. Hervorholen nennt das Fahrzeug und, wenn Sie mehr als eines tragen, seinen Platz in der Liste (etwa 2/3) |
 | **‹** / **›** neben Hervorholen | `[` / `]` | Mit 2 oder mehr Fahrzeugen: ein älteres oder neueres zum Hervorholen wählen |
 | **Fangen** / **Freilassen** | `F` | Sichtbar, wenn ein fangbares Tier in der Nähe ist oder Sie eines tragen |
-| **Schmücken** / **Schmuck entfernen** | `G` | Sichtbar nahe einem Tier, das Sie freigelassen haben, oder nahe einem Schmuck. Anders als `G` sagt ein verweigertes Schmücken (nicht angemeldet, keine Bearbeitungsrechte), warum |
+| **Schmücken** / **Schmuck entfernen** | `G` | Sichtbar nahe einem Tier, das Sie freigelassen haben, oder nahe einem Schmuck. Anders als `G` sagt ein verweigertes Schmücken (kein Name, keine Bearbeitungsrechte), warum |
 | **↶** / **↷** | `←` / `→` | Beim Fahren: eine 45°-Lenkdrehung pro Tippen |
 | **Bremsen** | `Strg` (gehalten) | Beim Fahren |
 

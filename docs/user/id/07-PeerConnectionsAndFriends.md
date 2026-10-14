@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 02e25094626dc446 -->
+<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 97d455d5ee147f7c -->
 # 07 — Koneksi Rekan & Teman
 
 <!-- languages -->
@@ -192,7 +192,7 @@ mengikuti akun di media sosial, tanpa salah satu dari kalian meminta apa
 pun kepada yang lain.
 
 - **Tempat mengikuti.** **Ikuti** muncul di kartu publikasi di
-  Repositori, di samping **Ditandatangani oleh …** di halaman pembuat, di
+  Jelajahi, di samping **Ditandatangani oleh …** di halaman pembuat, di
   menu **⋯** seseorang di halaman ini, dan sebagai **Ikuti Karya Mereka**
   pada avatar di Tampilan Dunia. Anda mengikuti sebuah *identitas*, bukan
   nama pembuat yang diketik: beberapa orang dapat menerbitkan dengan nama
@@ -218,7 +218,7 @@ pun kepada yang lain.
   lain.
 
 **Mengikuti bersifat pribadi dan satu arah.** Daftarnya disimpan di
-perangkat ini, untuk identitas yang sedang Anda pakai untuk masuk. Daftar
+perangkat ini, untuk nama yang sedang Anda pakai. Daftar
 itu tidak pernah dikirim ke mana pun, orang yang Anda ikuti tidak pernah
 diberi tahu, dan tidak ada jumlah pengikut: tanpa server, tidak ada yang
 dapat menghitungnya dengan jujur. Mengikuti juga tidak memberi apa pun

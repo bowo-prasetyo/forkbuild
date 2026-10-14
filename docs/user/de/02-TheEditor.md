@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: debe706fb81d65f3 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 6e10bd69ebe05267 -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -653,7 +653,7 @@ Beim Bauen spielt leise Musik, etwas lebhafter als in der Weltansicht. Die Schal
 **Mit mir bauen**, unter dem Namen des Bauwerks in der Seitenleiste,
 erstellt einen Link, mit dem Freunde dieses Bauwerk gleichzeitig mit Ihnen
 bauen. Schicken Sie ihn auf jedem Weg, der Ihnen passt; er erscheint auch
-als QR-Code für ein Handy. Ein Freund, der ihn öffnet, meldet sich an, falls
+als QR-Code für ein Handy. Ein Freund, der ihn öffnet, wählt einen Namen, falls
 noch nicht geschehen (seine Steine werden unter seinem Namen hinzugefügt),
 klickt auf **Beitreten**, und Ihr Bauwerk öffnet sich in seinem Editor. Von
 da an erscheint jeder Stein, den einer von Ihnen platziert, verschiebt,
@@ -666,8 +666,8 @@ umfärbt oder löscht, auf beiden Bildschirmen.
   allen Bildschirmen zurück, und **Wiederholen** stellt ihn wieder her; die
   Schritte Ihrer Freunde machen diese selbst rückgängig.
 - Es muss Ihr eigenes Bauwerk sein: eines, das Sie begonnen haben, oder eine
-  Kopie, die Sie erstellt haben. Ein Bauwerk, das Sie vor der Anmeldung
-  begonnen haben, wird Ihres, wenn Sie Freunde dazu einladen.
+  Kopie, die Sie erstellt haben. Ein Bauwerk, das Sie begonnen haben, bevor
+  Sie einen Namen gewählt haben, wird Ihres, wenn Sie Freunde dazu einladen.
 - Wer den Link in den ersten 30 Minuten öffnet, kann beitreten, solange das
   Bauwerk in Ihrem Editor geöffnet bleibt. Alle, die beigetreten sind,
   können bauen, bis Sie auf **Beenden** klicken, ein anderes Bauwerk öffnen

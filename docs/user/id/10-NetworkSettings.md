@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 09927c2e29d339ff -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 0c2f0fe4b600a2de -->
 # 10 — Pengaturan Jaringan
 
 <!-- languages -->
@@ -117,7 +117,7 @@ Pilih **Arweave**, **Blurt** (eksperimental), **Nostr**, atau **Steem** (eksperi
 bawaan untuk mengumumkan publikasi Anda (Dunia Bersama, Atribusi Cetak
 Biru, dan klaim nama tempat), Snapshot, dan komentar. Ini hanya bawaan:
 setiap dialog **Distribusikan**, pemilih Distribusi per kartu di
-Repositori, dan pemilih jaringan di samping **Kirim Komentar** dimulai
+Jelajahi, dan pemilih jaringan di samping **Kirim Komentar** dimulai
 dari pilihan ini, dan Anda dapat menggantinya untuk satu tindakan.
 Mencari konten orang lain selalu menelusuri semuanya.
 
@@ -164,7 +164,7 @@ berurutan seperti milik Arweave. Bawaannya adalah `https://ipfs.filebase.io`, `h
 
 Daftar ini dipakai saat menyelesaikan atau mewujudkan Penempatan Snapshot
 IPFS, untuk **Verifikasi Konten IPFS**, untuk membuka tautan bersama ke konten di IPFS, dan
-saat Repositori dan tantangan mingguan membaca bangunan yang ditemukan di
+saat Jelajahi dan tantangan mingguan membaca bangunan yang ditemukan di
 jaringan yang Klaim Bertanda Tangannya ada di IPFS. Daftar ini tidak
 mengubah tempat konten Anda sendiri disematkan.
 

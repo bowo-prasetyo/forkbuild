@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: d53bccd516685088 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 5d71d34792209c99 -->
 # Referência de controles
 
 <!-- languages -->
@@ -363,7 +363,7 @@ O painel de toque aparece enquanto você controla seu avatar; o botão
 | **Guardar** / **Tirar** | `Q` | Aparece quando você pode guardar o veículo em que está, ou tirar um guardado. Tirar diz o nome do veículo, e o lugar dele na lista (como 2/3) quando você carrega mais de um |
 | **‹** / **›** ao lado de Tirar | `[` / `]` | Carregando 2 ou mais veículos: escolher um mais antigo ou mais novo para tirar |
 | **Pegar** / **Soltar** | `F` | Aparece quando há um animal pegável por perto, ou enquanto você carrega um |
-| **Decorar** / **Desfazer decoração** | `G` | Aparece perto de um animal que você soltou, ou perto de uma decoração. Ao contrário de `G`, uma decoração recusada (sem ter entrado, sem acesso EDIT) diz por quê |
+| **Decorar** / **Desfazer decoração** | `G` | Aparece perto de um animal que você soltou, ou perto de uma decoração. Ao contrário de `G`, uma decoração recusada (sem nome, sem acesso EDIT) diz por quê |
 | **↶** / **↷** | `←` / `→` | Montado: uma virada de 45° por toque |
 | **Frear** | `Ctrl` (segurado) | Montado |
 

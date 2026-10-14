@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: b3d70584719e6278 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 545a8b3fca4e1167 -->
 # 01 — 시작하기
 
 <!-- languages -->
@@ -59,7 +59,7 @@ ForkBuild는 최신 웹 브라우저라면 어디서든 실행됩니다: 호스�
 |---|---|
 | **홈** | 첫 페이지 |
 | **짓기** | 작품을 짓는 에디터([에디터](02-TheEditor.md) 참고) |
-| **둘러보기** | 모두가 게시한 작품. 열거나, 리믹스하거나, 방문할 수 있습니다([게시와 리믹스](04-PublishingAndForking.md#저장소) 참고) |
+| **둘러보기** | 모두가 게시한 작품. 열거나, 리믹스하거나, 방문할 수 있습니다([게시와 리믹스](04-PublishingAndForking.md#둘러보기) 참고) |
 | **챌린지** | 이번 주 건축 챌린지와 참가작([주간 건축 챌린지](04-PublishingAndForking.md#주간-건축-챌린지) 참고) |
 | **걷기** | 이번 주 챌린지 광장에서 월드 보기를 열어, 게시된 작품들의 마을을 걸어 봅니다([월드 보기](03-WorldView.md) 참고) |
 | **내 월드** | 이 기기에서 가 본 월드([내 월드](03-WorldView.md#내-월드--실제로-가-본-월드) 참고) |

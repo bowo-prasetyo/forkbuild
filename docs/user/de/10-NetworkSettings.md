@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 09927c2e29d339ff -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 0c2f0fe4b600a2de -->
 # 10 — Netzwerkeinstellungen
 
 <!-- languages -->
@@ -120,7 +120,7 @@ Wählen Sie **Arweave**, **Blurt** (experimentell), **Nostr** oder **Steem** (ex
 Standardort, an dem Ihre Veröffentlichungen (Geteilte Welten,
 Bauplan-Zuschreibungen und Ortsnamensansprüche), Snapshots und Kommentare
 angekündigt werden. Es ist nur ein Standard: Jeder Dialog **Verteilen**,
-die Verteilungsauswahl auf jeder Karte im Repository und die
+die Verteilungsauswahl auf jeder Karte unter Entdecken und die
 Netzwerkauswahl neben **Kommentar senden** beginnen damit, und Sie können
 sie für eine Aktion umstellen. Die Suche nach Inhalten anderer Personen
 durchsucht immer alle.
@@ -169,7 +169,7 @@ versucht wie bei Arweave. Standard sind `https://ipfs.filebase.io`, `https://gat
 
 Diese Liste wird verwendet, wenn eine IPFS-Snapshot-Platzierung aufgelöst
 oder materialisiert wird, für **IPFS-Inhalt überprüfen**, zum Öffnen geteilter Links zu
-Inhalten auf IPFS und wenn das Repository und die wöchentliche Challenge
+Inhalten auf IPFS und wenn Entdecken und die wöchentliche Challenge
 in den Netzwerken gefundene Bauwerke lesen, deren Signierter Anspruch auf
 IPFS liegt. Sie ändert nicht, wo Ihre eigenen Inhalte gepinnt werden.
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: debe706fb81d65f3 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 6e10bd69ebe05267 -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -615,7 +615,7 @@ Enquanto você constrói, toca uma música suave, um pouco mais animada que a da
 **Construir comigo**, abaixo do nome da construção na barra lateral, cria um
 link que deixa seus amigos trabalharem nesta construção com você, ao mesmo
 tempo. Envie como quiser; ele também aparece como QR code para um celular.
-Um amigo que abre o link entra na conta, se ainda não entrou (os blocos dele
+Um amigo que abre o link escolhe um nome, se ainda não tem (os blocos dele
 são adicionados com o nome dele), clica em **Entrar** e a sua construção
 abre no Editor dele. A partir daí, cada bloco que qualquer um de vocês
 colocar, mover, mudar de cor ou excluir aparece nas duas telas.
@@ -626,7 +626,7 @@ colocar, mover, mudar de cor ou excluir aparece nas duas telas.
 - **Desfazer** (`Ctrl/Cmd + Z`) desfaz o seu último passo em todas as telas, e
   **Refazer** o traz de volta; desfazer os passos dos seus amigos cabe a eles.
 - Precisa ser a sua própria construção: uma que você começou, ou uma cópia
-  que você fez. Uma construção que você começou antes de entrar na conta
+  que você fez. Uma construção que você começou antes de escolher um nome
   passa a ser sua quando você convida amigos para ela.
 - Qualquer pessoa que abrir o link nos primeiros 30 minutos pode entrar,
   enquanto a construção continuar aberta no seu Editor. Todos que entraram

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 5eccfdfd3ac8fb32 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: f9738fa9f2faf553 -->
 # 06 — Avatare & Anwesenheit
 
 <!-- languages -->
@@ -362,7 +362,7 @@ vorzieht. Nur Tiere, die Sie freigelassen haben, können zum Schmuck werden
 erscheint, wenn **G** in der Nähe etwas schmücken oder rückgängig machen
 würde. Wie das Hinzufügen eines
 [Wahrzeichens](03-WorldView.md#wahrzeichen--einen-ort-markieren-den-man-sich-merken-sollte)
-erfordert das Schmücken, dass Sie angemeldet sind und Bearbeitungsrechte
+erfordert das Schmücken einen Namen und Bearbeitungsrechte
 für die Welt haben, in der Sie sind. In der veröffentlichten Welt eines
 anderen kommt der Schmuck in Ihre eigene Kopie davon — sofern ihre Lizenz
 das Forken erlaubt. Trifft nichts davon zu, tut **G** einfach nichts; die

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 5eccfdfd3ac8fb32 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: f9738fa9f2faf553 -->
 # 06 — Avatares y presencia
 
 <!-- languages -->
@@ -345,7 +345,7 @@ que **F** prefiere atrapar antes que soltar. Solo se pueden decorar los
 animales que usted soltó: la fauna que colocó el mundo por sí solo no. Un
 aviso aparece cuando **G** decoraría o desharía algo cercano. Igual que
 agregar un [hito](03-WorldView.md#hitos--marcar-un-lugar-que-vale-la-pena-recordar),
-decorar requiere haber iniciado sesión con acceso de EDICIÓN al Mundo en el
+decorar requiere un nombre y acceso de EDICIÓN al Mundo en el
 que está. En el Mundo publicado de otra persona, la decoración va a su
 propia copia de él, siempre que su licencia permita bifurcarlo. Si nada de
 eso se cumple, **G** simplemente no hace nada; el botón **Decorar** del

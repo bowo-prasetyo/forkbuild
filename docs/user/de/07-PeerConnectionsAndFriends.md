@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 02e25094626dc446 -->
+<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 97d455d5ee147f7c -->
 # 07 — Peer-Verbindungen & Freunde
 
 <!-- languages -->
@@ -195,7 +195,7 @@ wie das Folgen eines Kontos in einem sozialen Netzwerk, ohne dass einer
 den anderen um etwas bitten muss.
 
 - **Wo Sie folgen können.** **Folgen** erscheint auf Karten von
-  Veröffentlichungen im Repository, neben **Signiert von …** auf der Seite
+  Veröffentlichungen unter Entdecken, neben **Signiert von …** auf der Seite
   eines Autors, im Menü **⋯** einer Person auf dieser Seite und als
   **Ihren Werken folgen** bei einem Avatar in der Weltansicht. Sie folgen
   einer *Identität*, nie einem eingegebenen Autorennamen: Mehrere
@@ -223,7 +223,7 @@ den anderen um etwas bitten muss.
   folgen, werden vor den übrigen behalten.
 
 **Folgen ist privat und einseitig.** Die Liste wird auf diesem Gerät für
-die Identität aufbewahrt, mit der Sie angemeldet sind. Sie wird nie
+den Namen aufbewahrt, den Sie verwenden. Sie wird nie
 irgendwohin gesendet, die Menschen, denen Sie folgen, erfahren es nie, und
 es gibt keine Followerzahlen: Ohne Server könnte sie niemand ehrlich
 zählen. Folgen gibt der anderen Person auch nichts: keinen Chat, keinen

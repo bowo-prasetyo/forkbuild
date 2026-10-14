@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: b3d70584719e6278 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 545a8b3fca4e1167 -->
 # 01 — Memulai
 
 <!-- languages -->
@@ -67,7 +67,7 @@ Bilah di atas selalu terlihat:
 |---|---|
 | **Beranda** | Halaman awal |
 | **Bangun** | Editor, tempat Anda membangun (lihat [Editor](02-TheEditor.md)) |
-| **Jelajahi** | Bangunan terbitan semua orang, untuk dibuka, di-remix, atau dikunjungi (lihat [Penerbitan & Remix](04-PublishingAndForking.md#repositori)) |
+| **Jelajahi** | Bangunan terbitan semua orang, untuk dibuka, di-remix, atau dikunjungi (lihat [Penerbitan & Remix](04-PublishingAndForking.md#jelajahi)) |
 | **Tantangan** | Tantangan membangun minggu ini dan karya-karyanya (lihat [Tantangan membangun mingguan](04-PublishingAndForking.md#tantangan-membangun-mingguan)) |
 | **Jalan-jalan** | Tampilan Dunia di alun-alun tantangan minggu ini, untuk berjalan di desa bangunan terbitan (lihat [Tampilan Dunia](03-WorldView.md)) |
 | **Dunia Saya** | Dunia yang pernah Anda kunjungi di perangkat ini (lihat [Dunia Saya](03-WorldView.md#dunia-saya--dunia-yang-benar-benar-pernah-anda-kunjungi)) |

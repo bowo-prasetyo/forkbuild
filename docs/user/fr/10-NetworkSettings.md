@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 09927c2e29d339ff -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 0c2f0fe4b600a2de -->
 # 10 — Paramètres réseau
 
 <!-- languages -->
@@ -124,8 +124,8 @@ Choisissez **Arweave**, **Blurt** (expérimental), **Nostr** ou **Steem** (expé
 endroit par défaut où sont annoncés vos publications (Mondes partagés,
 Attributions de plans et propositions de noms de lieux), vos Snapshots et
 vos commentaires. Ce n’est qu’une valeur par défaut : chaque boîte de
-dialogue **Distribuer**, le sélecteur de Distribution de chaque carte du
-Dépôt et le sélecteur de réseau à côté de **Publier le commentaire**
+dialogue **Distribuer**, le sélecteur de Distribution de chaque carte
+d’Explorer et le sélecteur de réseau à côté de **Publier le commentaire**
 démarrent dessus, et vous pouvez en changer pour une action. Chercher le
 contenu des autres les interroge toujours tous.
 
@@ -174,7 +174,7 @@ l’ordre comme celles d’Arweave. Les valeurs par défaut sont
 
 Cette liste sert à résoudre ou matérialiser un Placement de Snapshot IPFS,
 pour **Vérifier le contenu IPFS**, pour ouvrir les liens partagés vers du contenu sur IPFS, et
-quand le Dépôt et le défi hebdomadaire lisent des constructions trouvées
+quand Explorer et le défi hebdomadaire lisent des constructions trouvées
 sur les réseaux dont la Déclaration signée est sur IPFS. Elle ne change pas
 l’endroit où votre propre contenu est épinglé.
 

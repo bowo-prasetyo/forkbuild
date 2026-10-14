@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: 0f7d63110556987a -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: 2f10096b5d79ec2b -->
 # 13 — Data Anda: mencadangkan dan memulihkan
 
 <!-- languages -->
@@ -49,8 +49,8 @@ identitas Anda, jadi tunjukkan hanya ke perangkat Anda sendiri. Kedua
 perangkat harus online: keduanya saling menemukan lewat server rendezvous,
 lalu data dikirim langsung di antara keduanya, dienkripsi dengan kunci yang
 hanya ada di kode. Server rendezvous tidak melihat kunci maupun data Anda.
-Identitas yang memakai frasa sandi tetap terlindungi olehnya, dan Anda
-masuk di perangkat lain seperti setelah pemulihan.
+Identitas yang memakai frasa sandi tetap terlindungi olehnya, dan di
+perangkat lain Anda memilih nama lagi, seperti setelah pemulihan.
 
 ## Mencadangkan
 
@@ -69,8 +69,8 @@ itu**, jadi simpan keduanya di tempat yang tidak akan hilang. Frasa sandi
 cadangan terpisah dari frasa sandi identitas Anda: setiap identitas di
 dalamnya tetap dilindungi frasa sandinya sendiri.
 
-Cadangan tidak mencatat identitas mana yang sedang masuk. Setelah
-memulihkan, Anda masuk lagi.
+Cadangan tidak mencatat nama mana yang sedang Anda pakai. Setelah
+memulihkan, pilih nama Anda lagi.
 
 Selain **Cadangkan ke File**, bagian yang sama dapat:
 

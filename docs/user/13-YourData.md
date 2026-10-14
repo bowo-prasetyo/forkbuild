@@ -45,8 +45,8 @@ show it only to your own devices. Both devices must be online: they find
 each other through the rendezvous server, then the data goes straight
 between them, encrypted with a key that exists only in the code. The
 rendezvous server sees neither the key nor your data. Identities with a
-passphrase stay protected by it, and you log in on the other device as
-after a restore.
+passphrase stay protected by it, and on the other device you choose your
+name again, as after a restore.
 
 ## Backing up
 
@@ -63,8 +63,8 @@ passphrase. It's safe to keep in cloud storage or on a USB stick, but
 somewhere you won't lose them. The backup passphrase is separate from your
 identities' passphrases: each identity inside stays protected by its own.
 
-The backup doesn't include which identity is logged in. After a restore
-you log in again.
+The backup doesn't include which name you were using. After a restore,
+choose your name again.
 
 Besides **Back Up to a File**, the same section can:
 

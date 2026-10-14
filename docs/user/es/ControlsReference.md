@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: d53bccd516685088 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 5d71d34792209c99 -->
 # Referencia de controles
 
 <!-- languages -->
@@ -371,7 +371,7 @@ modo y, con él, el panel.
 | **Guardar** / **Sacar** | `Q` | Aparece cuando puede guardar el vehículo que conduce, o sacar uno guardado. Sacar nombra el vehículo, y su lugar en la lista (como 2/3) cuando lleva más de uno |
 | **‹** / **›** junto a Sacar | `[` / `]` | Llevando 2 o más vehículos: elegir uno más antiguo o más nuevo para sacar |
 | **Atrapar** / **Soltar** | `F` | Aparece cuando hay un animal que se puede atrapar cerca, o mientras lleva uno |
-| **Decorar** / **Deshacer decoración** | `G` | Aparece cerca de un animal que soltó, o cerca de una decoración. A diferencia de `G`, una decoración rechazada (sin sesión iniciada, sin acceso de EDICIÓN) dice por qué |
+| **Decorar** / **Deshacer decoración** | `G` | Aparece cerca de un animal que soltó, o cerca de una decoración. A diferencia de `G`, una decoración rechazada (sin nombre, sin acceso de EDICIÓN) dice por qué |
 | **↶** / **↷** | `←` / `→` | Mientras conduce: un giro de 45° por toque |
 | **Frenar** | `Ctrl` (mantener) | Mientras conduce |
 

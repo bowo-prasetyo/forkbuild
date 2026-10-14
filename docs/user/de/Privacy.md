@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 8ab09781761d8e4a -->
+<!-- translation-of: docs/Privacy.md source-hash: 6f1093cff06f0c48 -->
 # Datenschutz
 
 <!-- languages -->
@@ -46,11 +46,11 @@ veröffentlichen, exportieren oder senden es:
 - ob dieser Browser an der täglichen Besucherzählung teilnimmt, und an
   welchem Tag zuletzt;
 - Veröffentlichungen anderer Leute, die dieses Gerät gefunden und geprüft
-  hat, von Peers, aus Links, aus der Weltansicht oder aus der Suche des
-  Repositorys in den Netzwerken, und bei den in den Netzwerken gefundenen,
+  hat, von Peers, aus Links, aus der Weltansicht oder aus der Suche von
+  Entdecken in den Netzwerken, und bei den in den Netzwerken gefundenen,
   wo der signierte Eintrag jeder einzelnen gelesen wurde;
 - die IDs der Veröffentlichungen, die Sie auf diesem Gerät zurückgezogen
-  haben, damit die Suche des Repositorys in den Netzwerken Kopien, die Sie
+  haben, damit die Suche von Entdecken in den Netzwerken Kopien, die Sie
   früher verteilt haben, nicht wieder auflistet.
 - an welche Netzwerke dieses Gerät jeden Ihrer Kommentare gesendet hat, und
   wann, damit jeder Kommentar zeigen kann, wohin er ging.
@@ -78,7 +78,7 @@ veröffentlichen, exportieren oder senden es:
 Das Löschen der Daten dieser Website im Browser löscht all das, und es gibt
 keine andere Kopie und keinen Weg, sie wiederherzustellen. Sichern Sie es
 vorher mit **Ihre Daten → In eine Datei sichern**: Die Datei enthält alles
-oben Genannte außer der Angabe, welche Identität angemeldet ist, ist mit
+oben Genannte außer der Angabe, welchen Namen Sie verwendet haben, ist mit
 einer von Ihnen gewählten Passphrase verschlüsselt und bleibt, wo Sie sie
 ablegen. ForkBuild lädt sie nie hoch. **Sicherung teilen** übergibt die
 Datei an die App, die Sie auf Ihrem Gerät auswählen. Wenn Sie einen
@@ -118,8 +118,8 @@ eingeschaltet sind, wird mit Ihren Einstellungen gespeichert (siehe
   Ankündigungen von Snapshots und Ortsnamen, die Ihr Gerät entdeckt hat,
   und erfahren so, in welchen Regionen der Welt Sie nach Ortsnamen gesucht
   haben (docs/AnnouncementIndex.md).
-- **Peers, bei Welten, die Sie teilen.** **Mit Peers teilen** im
-  Repository bietet eine Ihrer veröffentlichten Welten allen an, mit denen
+- **Peers, bei Welten, die Sie teilen.** **Mit Peers teilen** unter
+  Entdecken bietet eine Ihrer veröffentlichten Welten allen an, mit denen
   Sie jetzt verbunden sind, und allen, die sich später verbinden,
   einschließlich Fremder aus einer Lobby: Sie erhalten ihren Eintrag und
   können die Welt selbst von Ihrem Gerät abrufen, solange Sie verbunden
@@ -311,7 +311,7 @@ was Sie bei ihm anfragen.
 | Eine Peer-Verbindung beginnt | STUN-Server (`stun.l.google.com`) | nichts außer einer Anfrage nach Ihrer öffentlichen IP-Adresse |
 | Sie beginnen eine Peer-Verbindung, wenn der Rendezvous-Server ein Relay anbietet | `/turn-credentials` des Rendezvous-Servers, dann sein TURN-Relay (Cloudflare) | eine Anfrage nach kurzlebigen Relay-Zugangsdaten, höchstens etwa einmal pro Stunde; weitergeleiteter Verkehr ist durch WebRTC Ende-zu-Ende-verschlüsselt |
 | Die App ist geöffnet und ihr Tab sichtbar (Synchronisierung der Ankündigungen im Hintergrund) | Nostr-Relays (`relay.damus.io`), ein Arweave-Gateway (`arweave.net`), Steem-Knoten (`api.steemit.com`), Blurt-Knoten (`rpc.blurt.blog`) | Abfragen nach den Entdeckungs-Tags von ForkBuild: den gemeinsamen Tags für Snapshots und Kommentare sowie den Ortsnamen-Regionen und Kartenzellen, die Sie besucht haben |
-| Sie öffnen „Entdecken“ (das Repository) oder eine Autorenseite | Nostr-Relays (`relay.damus.io`), ein Arweave-Gateway (`arweave.net`), Steem-Knoten (`api.steemit.com`), Blurt-Knoten (`rpc.blurt.blog`) | eine Abfrage nach dem gemeinsamen Veröffentlichungs-Tag (`forkbuild-publication`); dann eine Anfrage nach dem signierten Eintrag jeder neu angekündigten Veröffentlichung, höchstens 20 pro Besuch oder **Erneut prüfen** |
+| Sie öffnen „Entdecken“ oder eine Autorenseite | Nostr-Relays (`relay.damus.io`), ein Arweave-Gateway (`arweave.net`), Steem-Knoten (`api.steemit.com`), Blurt-Knoten (`rpc.blurt.blog`) | eine Abfrage nach dem gemeinsamen Veröffentlichungs-Tag (`forkbuild-publication`); dann eine Anfrage nach dem signierten Eintrag jeder neu angekündigten Veröffentlichung, höchstens 20 pro Besuch oder **Erneut prüfen** |
 | Sie öffnen die Bau-Challenge einer Woche (**Challenge**) | Nostr-Relays (`relay.damus.io`), ein Arweave-Gateway (`arweave.net`), Steem-Knoten (`api.steemit.com`), Blurt-Knoten (`rpc.blurt.blog`) | eine Abfrage nach dem Tag dieser Woche (`forkbuild-tag:<tag>`); dann eine Anfrage nach dem signierten Datensatz jedes neu angekündigten Beitrags, höchstens 20 pro Besuch oder **Erneut prüfen** |
 | Sie veröffentlichen ein Bauwerk, nachdem Sie unter **Wer kann es finden?** **Alle** gewählt haben | jedes Nostr-Relay unter **Netzwerkeinstellungen** (`relay.damus.io`, `nos.lol`, `relay.primal.net`) | eine Bauwerk-Notiz: das signierte Bauwerk selbst, seine Tags und die signierte Platzierung seines Herausgebers, signiert mit dem Trägerschlüssel dieses Geräts |
 | Sie öffnen „Entdecken“, die Seite einer Person, die Challenge einer Woche oder ihren Platz | jedes Nostr-Relay unter **Netzwerkeinstellungen** | eine Abfrage nach Bauwerk-Notizen (`forkbuild-build` oder `forkbuild-tag:<tag>` der Woche); jede neue Notiz wird auf diesem Gerät geprüft und geöffnet, höchstens 40 pro Besuch |

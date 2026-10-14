@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 8ab09781761d8e4a -->
+<!-- translation-of: docs/Privacy.md source-hash: 6f1093cff06f0c48 -->
 # Privasi
 
 <!-- languages -->
@@ -47,11 +47,11 @@ perangkat kecuali Anda menerbitkan, mengekspor, atau mengirimnya:
 - apakah browser ini ikut dalam hitungan pengunjung harian, dan hari
   terakhir browser ini dihitung;
 - publikasi orang lain yang telah ditemukan dan diverifikasi perangkat ini,
-  dari rekan, tautan, Tampilan Dunia, atau pencarian Repositori di
+  dari rekan, tautan, Tampilan Dunia, atau pencarian Jelajahi di
   jaringan, dan, untuk yang ditemukan di jaringan, tempat catatan
   bertandatangan masing-masing dibaca;
 - ID publikasi yang Anda batalkan penerbitannya di perangkat ini, agar
-  pencarian Repositori di jaringan tidak mencantumkan lagi salinan yang
+  pencarian Jelajahi di jaringan tidak mencantumkan lagi salinan yang
   pernah Anda distribusikan.
 - jaringan mana saja yang menerima setiap komentar Anda dari perangkat ini,
   dan kapan, agar setiap komentar bisa menunjukkan ke mana ia dikirim.
@@ -79,7 +79,7 @@ perangkat kecuali Anda menerbitkan, mengekspor, atau mengirimnya:
 Menghapus data situs ini di browser akan menghapus semuanya, dan tidak ada
 salinan lain maupun cara untuk memulihkannya. Cadangkan terlebih dahulu
 dengan **Data Anda → Cadangkan ke File**: file itu berisi semua hal di
-atas kecuali identitas mana yang sedang masuk, dienkripsi dengan frasa
+atas kecuali nama mana yang sedang Anda pakai, dienkripsi dengan frasa
 sandi yang Anda pilih, dan tetap berada di tempat Anda menaruhnya.
 ForkBuild tidak pernah mengunggahnya. **Bagikan Cadangan** menyerahkan
 file itu ke aplikasi yang Anda pilih di perangkat Anda. Jika Anda memilih
@@ -120,7 +120,7 @@ Apakah notifikasi di perangkat ini aktif disimpan bersama pengaturan Anda
   ditemukan perangkat Anda, sehingga mereka mengetahui wilayah Dunia mana
   yang pernah Anda cari nama tempatnya (docs/AnnouncementIndex.md).
 - **Rekan, untuk Dunia yang Anda bagikan.** **Bagikan dengan Rekan** di
-  Repositori menawarkan salah satu Dunia terbitan Anda kepada semua orang
+  Jelajahi menawarkan salah satu Dunia terbitan Anda kepada semua orang
   yang terhubung dengan Anda sekarang dan siapa pun yang terhubung
   kemudian, termasuk orang asing dari lobi: mereka menerima daftarnya dan
   dapat mengambil Dunia itu sendiri dari perangkat Anda selama Anda
@@ -311,7 +311,7 @@ Anda dan apa yang Anda minta darinya.
 | Koneksi rekan dimulai | server STUN (`stun.l.google.com`) | hanya permintaan alamat IP publik Anda |
 | Anda memulai koneksi rekan, jika server rendezvous menawarkan relay | `/turn-credentials` pada server rendezvous, lalu relay TURN-nya (Cloudflare) | permintaan kredensial relay berumur pendek, paling sering sekitar sekali sejam; lalu lintas yang direlay dienkripsi ujung ke ujung oleh WebRTC |
 | Aplikasi terbuka dan tabnya terlihat (sinkronisasi pengumuman di latar belakang) | relay Nostr (`relay.damus.io`), gateway Arweave (`arweave.net`), node Steem (`api.steemit.com`), node Blurt (`rpc.blurt.blog`) | kueri untuk tag penemuan ForkBuild: tag Snapshot dan Komentar bersama, serta wilayah Penamaan Tempat dan sel peta yang pernah Anda kunjungi |
-| Anda membuka Jelajahi (Repositori) atau halaman pembuat | relay Nostr (`relay.damus.io`), gateway Arweave (`arweave.net`), node Steem (`api.steemit.com`), node Blurt (`rpc.blurt.blog`) | kueri untuk tag Publikasi bersama (`forkbuild-publication`); lalu permintaan catatan bertandatangan untuk setiap publikasi yang baru diumumkan, paling banyak 20 per kunjungan atau per **Periksa lagi** |
+| Anda membuka Jelajahi atau halaman pembuat | relay Nostr (`relay.damus.io`), gateway Arweave (`arweave.net`), node Steem (`api.steemit.com`), node Blurt (`rpc.blurt.blog`) | kueri untuk tag Publikasi bersama (`forkbuild-publication`); lalu permintaan catatan bertandatangan untuk setiap publikasi yang baru diumumkan, paling banyak 20 per kunjungan atau per **Periksa lagi** |
 | Anda membuka tantangan membangun suatu minggu (**Tantangan**) | relay Nostr (`relay.damus.io`), gateway Arweave (`arweave.net`), node Steem (`api.steemit.com`), node Blurt (`rpc.blurt.blog`) | kueri untuk tag minggu itu (`forkbuild-tag:<tag>`); lalu permintaan rekaman bertanda tangan untuk setiap karya peserta yang baru diumumkan, paling banyak 20 per kunjungan atau **Periksa lagi** |
 | Anda menerbitkan bangunan setelah memilih **Semua orang** di **Siapa yang bisa menemukannya?** | setiap relay Nostr di **Pengaturan Jaringan** (`relay.damus.io`, `nos.lol`, `relay.primal.net`) | catatan bangunan: bangunan bertanda tangan itu sendiri, tag-nya, dan penempatan bertanda tangan dari penerbitnya, ditandatangani dengan kunci pembawa perangkat ini |
 | Anda membuka Jelajahi, halaman seseorang, tantangan suatu minggu, atau alun-alunnya | setiap relay Nostr di **Pengaturan Jaringan** | kueri catatan bangunan (`forkbuild-build`, atau `forkbuild-tag:<tag>` minggu itu); setiap catatan baru diperiksa dan dibuka di perangkat ini, paling banyak 40 per kunjungan |

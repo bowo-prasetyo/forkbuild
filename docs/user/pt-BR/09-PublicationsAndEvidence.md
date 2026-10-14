@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 70cc3e473f9bbf3c -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: dbd0c9839aa5a461 -->
 # 09 — Publicações e evidências externas
 
 <!-- languages -->
@@ -17,14 +17,14 @@
 > o Steem, o Blurt, o pinning remoto no IPFS e o painel inteiro
 > **Ferramentas de carteira e arquivo**. Os guias
 > [11](11-EvidenceAndStorage.md) e [12](12-ArchiveAndLeaderboards.md) dizem
-> quais das seções deles são experimentais. Construir, salvar, publicar no
-> Repositório, bifurcar, identidades e pares não dependem de nada disso.
+> quais das seções deles são experimentais. Construir, salvar, publicar em
+> Explorar, bifurcar, identidades e pares não dependem de nada disso.
 
 Nada disto é necessário para usar o ForkBuild. Pule se você só quer
 construir, publicar e explorar.
 
-A página **Publicações** é uma camada mais técnica que o Repositório. O
-Repositório trata de Documentos e Mundos; a página Publicações trata de
+A página **Publicações** é uma camada mais técnica que Explorar.
+Explorar trata de Documentos e Mundos; a página Publicações trata de
 **declarações assinadas**, como "eu projetei esta estrutura" ou "eu chamo
 este lugar de X", e da profundidade opcional que você pode dar a uma
 declaração:
@@ -43,22 +43,22 @@ declaração:
 
 ## Dois sentidos de "publicar"
 
-| | **Publicar** (Repositório) | **Página Publicações** |
+| | **Publicar** (Explorar) | **Página Publicações** |
 |---|---|---|
 | O que compartilha | Um Documento ou Mundo | Um registro assinado: um Mundo compartilhado, a autoria de uma estrutura ou um nome de lugar |
-| Onde você vê | Repositório, página do autor, Visão do mundo | A página **Publicações** |
+| Onde você vê | Explorar, página do autor, Visão do mundo | A página **Publicações** |
 | O que você faz com ele | Abrir, explorar, bifurcar | Verificar, buscar o conteúdo, distribuir e ancorar |
 | Guia | [Publicar e remixar](04-PublishingAndForking.md) | Este |
 
 **Publicar** sozinho não coloca um Mundo na página Publicações. **Compartilhar
 com pares** coloca: ele assina o Mundo como um **Mundo compartilhado** que
 pode viajar até os pares (veja
-[Uma criação do Repositório, descentralizada](#uma-criação-do-repositório-descentralizada)).
+[Uma construção de Explorar, descentralizada](#uma-construção-de-explorar-descentralizada)).
 
 A página Publicações não tem **Abrir**, **Explorar** nem **Remixar**, nem
 para um Mundo compartilhado. Ela mostra o registro assinado, não o Mundo.
-Para abrir, explorar ou bifurcar um Mundo compartilhado, encontre-o no
-Repositório, na página do autor ou na Visão do mundo. Um que você recebeu de
+Para abrir, explorar ou bifurcar um Mundo compartilhado, encontre-o em
+Explorar, na página do autor ou na Visão do mundo. Um que você recebeu de
 um par aparece lá depois que o conteúdo dele está neste dispositivo. (A
 única exceção é **Abrir no Editor** num Mundo compartilhado seu que precisa
 ser publicado de novo; veja
@@ -73,7 +73,7 @@ três tipos:
 | **Atribuição de planta** | Uma declaração de que você projetou uma estrutura |
 | **Declaração de nome de lugar** | Um nome para uma Região ou um Marco |
 
-A Visão do mundo, o Editor e o Repositório também chamam o registro assinado
+A Visão do mundo, o Editor e Explorar também chamam o registro assinado
 de um Mundo de **Mundo compartilhado**, como em **Meu Mundo compartilhado**,
 **Descobrir Mundo compartilhado** e **Voltar ao Mundo compartilhado**.
 
@@ -92,7 +92,7 @@ obrigatória:
 | **Posicionamento** | Em que estante o exemplar fica | Um registro assinado de onde uma construção fica no Mundo. Um Mundo compartilhado pode ter vários. Veja [Posicionar ou bifurcar](WorldViewAdvancedTools.md#posicionar-ou-bifurcar). |
 | **Anúncio / descoberta** | Uma ficha no catálogo da biblioteca | Um pequeno aviso assinado no Nostr, no Arweave, no Steem ou no Blurt dizendo que a publicação ou o Snapshot existe e onde está a cópia, para que pessoas não conectadas a você possam encontrá-lo. Veja [Provedor de anúncio / descoberta](10-NetworkSettings.md#provedor-de-anúncio--descoberta). |
 | **Prova / ancoragem** *(Experimental, exceto no Arweave)* | O carimbo de um cartório | O hash do conteúdo gravado numa transação de blockchain (Bitcoin, Base, Arweave, Steem ou Blurt), como evidência de que ele existia naquele momento. Não guarda nem anuncia nada. Veja [Evidências e armazenamento](11-EvidenceAndStorage.md). |
-| **Comentários** | As resenhas dos leitores | Comentários que qualquer pessoa que entrou pode anexar a uma publicação, cada um assinado por quem comentou, não pelo editor. Veja [Comentários](#comentários). |
+| **Comentários** | As resenhas dos leitores | Comentários que qualquer pessoa com um nome pode anexar a uma publicação, cada um assinado por quem comentou, não pelo editor. Veja [Comentários](#comentários). |
 
 Então você faz uma publicação; depois, se quiser, guarda o conteúdo dela, a
 anuncia, a ancora e a posiciona (no caso de um Mundo compartilhado); e
@@ -102,7 +102,7 @@ qualquer pessoa pode comentar nela.
 
 Você nunca cria uma declaração na própria página Publicações. Ela lista as
 declarações que você fez em outros lugares, as que os pares enviaram a você
-e as criações do Repositório que chegaram em forma descentralizada. As
+e as construções de Explorar que chegaram em forma descentralizada. As
 declarações de nomes de lugares também podem ser encontradas direto no
 Nostr, sem nenhum par envolvido; veja
 [Nomes de lugares por perto](WorldViewAdvancedTools.md#nomes-de-lugares-por-perto--descobrindo-declarações-de-qualquer-pessoa).
@@ -159,15 +159,15 @@ enquanto vocês estão conectados. Uma declaração recebida é só um registro
 assinado de forma válida: o conteúdo dela não está no seu dispositivo até
 você buscá-lo com **Recuperar dos pares** (abaixo).
 
-### Uma criação do Repositório, descentralizada
+### Uma construção de Explorar, descentralizada
 
 Um cartão também pode conter um **Mundo compartilhado** — o mesmo tipo de
-objeto que uma entrada do Repositório, embalado para viajar de forma
-descentralizada. **Compartilhar com pares** no Repositório cria um para os
+objeto que uma entrada de Explorar, embalado para viajar de forma
+descentralizada. **Compartilhar com pares** em Explorar cria um para os
 seus próprios Mundos (veja
 [Compartilhando com pares conectados](04-PublishingAndForking.md#compartilhando-com-pares-conectados)).
 Depois que você o resolve aqui com **Verificar de novo** ou **Recuperar dos
-pares**, ele entra na busca do Repositório, na página do autor e na Visão do
+pares**, ele entra na busca de Explorar, na página do autor e na Visão do
 mundo, e continua lá depois de recarregar.
 
 ## A página Publicações
@@ -298,13 +298,13 @@ que só o anúncio falhou; o conteúdo foi guardado.
 
 ## Comentários
 
-Qualquer identidade que entrou pode comentar em qualquer publicação que se
-resolve: uma criação do Repositório, uma declaração de autoria ou um nome de
+Qualquer pessoa com um nome pode comentar em qualquer publicação que se
+resolve: uma construção de Explorar, uma declaração de autoria ou um nome de
 lugar. Não há verificação de dono, exigência de amizade nem moderação.
 
 Você encontra comentários:
 
-- no **Repositório** e nas páginas de autor: o botão **Comentar** em todo
+- em **Explorar** e nas páginas de autor: o botão **Comentar** em todo
   cartão e linha da lista;
 - no painel
   [Meu Mundo compartilhado](WorldViewAdvancedTools.md#meu-mundo-compartilhado--distribuindo-seu-próprio-snapshot-sem-precisar-de-pares)
@@ -319,7 +319,7 @@ Os comentários são permanentes: nada de editar, excluir ou responder.
 
 ### Como os comentários viajam
 
-Um comentário postado pelo **Repositório** é salvo no seu dispositivo,
+Um comentário postado em **Explorar** é salvo no seu dispositivo,
 enviado aos pares a que você está conectado e publicado na rede escolhida ao
 lado de **Publicar comentário** (Nostr, Arweave, Steem ou Blurt; começa no seu
 [Provedor de anúncio / descoberta](10-NetworkSettings.md#provedor-de-anúncio--descoberta)),
@@ -343,7 +343,7 @@ também? Embaixo de cada comentário seu, uma linha diz para quais redes este
 dispositivo o enviou, ou *Ainda não enviado a nenhuma rede a partir deste
 dispositivo.* **Distribuir** ali o envia para a rede escolhida e diz se deu
 certo; uma rede para a qual ele já foi aparece marcada e não pode ser
-escolhida de novo. Só o autor do comentário, conectado, vê isso, porque só
+escolhida de novo. Só o autor do comentário, usando esse nome, vê isso, porque só
 ele pode assinar o comentário para uma rede, e a linha só sabe o que este
 dispositivo enviou.
 

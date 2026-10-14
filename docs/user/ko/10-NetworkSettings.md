@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 09927c2e29d339ff -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 0c2f0fe4b600a2de -->
 # 10 — 네트워크 설정
 
 <!-- languages -->
@@ -98,7 +98,7 @@
 
 게시물(공유 월드, 설계도 저작자 표시, 장소 이름 클레임), 스냅샷, 댓글을 공지할
 기본 위치로 **Arweave**, **Blurt**(실험적), **Nostr**, **Steem**(실험적) 중 하나를 고르세요. 기본값일
-뿐입니다: 모든 **배포** 대화 상자, 저장소의 카드별 배포 선택기, **댓글 게시** 옆의
+뿐입니다: 모든 **배포** 대화 상자, 둘러보기의 카드별 배포 선택기, **댓글 게시** 옆의
 네트워크 선택기가 이것으로 시작하며, 작업 하나에 한해 바꿀 수 있습니다. 다른
 사람의 콘텐츠를 찾을 때는 항상 그 모두를 검색합니다.
 
@@ -137,7 +137,7 @@ IPFS 콘텐츠를 읽는 게이트웨이로, 한 줄에 URL 하나씩이며 Arwe
 시도합니다. 기본값은 `https://ipfs.filebase.io`, `https://gateway.pinata.cloud`, `https://ipfs.io`, `https://dweb.link`, `https://4everland.io`입니다.
 
 이 목록은 IPFS 스냅샷 배치를 해석하거나 구현할 때, **IPFS 콘텐츠 검증**에, IPFS에 있는
-콘텐츠의 공유 링크를 열 때, 그리고 저장소와 주간 챌린지가 서명된 주장이
+콘텐츠의 공유 링크를 열 때, 그리고 둘러보기와 주간 챌린지가 서명된 주장이
 IPFS에 있는 작품을 네트워크에서 찾아 읽을 때 사용됩니다. 내 콘텐츠가
 고정되는 곳은 바뀌지 않습니다.
 

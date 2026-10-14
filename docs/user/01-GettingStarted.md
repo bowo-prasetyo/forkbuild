@@ -62,7 +62,7 @@ The bar at the top is always visible:
 |---|---|
 | **Home** | The landing page |
 | **Build** | The Editor, where you build (see [The Editor](02-TheEditor.md)) |
-| **Explore** | Everyone's published builds, to open, remix or visit (see [Publishing & Remixing](04-PublishingAndForking.md#the-repository)) |
+| **Explore** | Everyone's published builds, to open, remix or visit (see [Publishing & Remixing](04-PublishingAndForking.md#explore)) |
 | **Challenge** | This week's build challenge and its entries (see [The weekly build challenge](04-PublishingAndForking.md#the-weekly-build-challenge)) |
 | **Walk** | World View at this week's challenge plaza, to walk around the village of published builds (see [World View](03-WorldView.md)) |
 | **My Worlds** | Worlds you've visited on this device (see [My Worlds](03-WorldView.md#my-worlds--worlds-youve-actually-been-to)) |
