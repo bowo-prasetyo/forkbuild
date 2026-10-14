@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 36d3d49f37473bfe -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 5eccfdfd3ac8fb32 -->
 # 06 — Avatar & Kehadiran
 
 <!-- languages -->
@@ -371,94 +371,90 @@ sentuh justru memberi tahu alasannya.
 
 ### Penghuni
 
-Sebuah Dunia dapat memiliki **penghuni**: orang-orang yang tinggal di sana
-dan berjalan-jalan di sekitar tempat yang mereka sebut rumah, menjalani hari
-di antara bangunan Anda. Untuk menambahkannya, berdirilah di tanah terbuka
-tempat Anda ingin mereka tinggal dan tekan **R** (atau klik **Tambahkan
-Penghuni di Sini** di bagian **Avatar**). Penghuni muncul tepat di samping
-Anda, dan sejak itu menjadi bagian dari konten Dunia itu sendiri —
-disimpan, diterbitkan, dan di-fork bersamanya, seperti
-[penanda](03-WorldView.md#penanda--menandai-tempat-yang-layak-diingat). Menambahkannya memerlukan Anda masuk dengan akses EDIT ke
-Dunia tempat Anda berada; di Dunia terbitan orang lain, penghuninya masuk
-ke salinan Anda sendiri. Berubah pikiran? Berdirilah di samping penghuni
-dan tekan **R** lagi (petunjuk menampilkan **[R] Hapus Penghuni**), atau
-urungkan dengan **Ctrl/Cmd+Z**.
+Sebuah Dunia bisa punya **penghuni**: orang yang tinggal di sana dan
+berjalan-jalan di sekitar rumahnya, di antara bangunan Anda.
 
-Penghuni tetap berada dalam jarak sekitar enam langkah dari rumah. Mereka
-berjalan memutari dinding, pohon, dan air, tidak pernah menembusnya, dan
-sesekali beristirahat untuk berdiri dan melihat sekeliling. Setiap orang
-yang membuka Dunia itu melihat setiap penghuni di tempat yang sama pada
-saat yang sama, karena posisi mereka berasal dari Dunia dan jam, bukan dari
-apa pun yang dikirim antarpemain. Mereka padat: Anda menabrak mereka
-seperti menabrak pohon. Namun mereka tidak berhenti atau menyingkir untuk
-Anda, jadi seorang penghuni bisa saja berjalan menembus Anda saat Anda
-berdiri diam.
+**Menambah dan menghapus penghuni.** Berdirilah di tanah terbuka tempat
+Anda ingin ia tinggal lalu tekan **R**, atau klik **Tambahkan Penghuni di
+Sini** di bagian **Avatar**. Ia muncul tepat di samping Anda. Untuk
+menghapusnya, berdirilah di sampingnya dan tekan **R** lagi (muncul
+petunjuk **[R] Hapus Penghuni**), atau urungkan dengan **Ctrl/Cmd+Z**.
 
-Penghuni memperhatikan Anda. Saat seorang penghuni sedang berdiri dan Anda
-berada di depan atau di sampingnya, dalam beberapa langkah, ia berbalik
-menghadap Anda, dan jika Anda berjalan tepat ke dekatnya, ia melambaikan
-tangan. Ia melambai sekali setiap kali Anda datang. Seperti hewan, ini
-hanya terjadi di layar Anda, dan hanya untuk avatar Anda sendiri.
+- Anda harus bisa mengedit Dunia tempat Anda berada. Di Dunia terbitan
+  orang lain, penghuni masuk ke salinan Anda sendiri.
+- Penghuni perlu tanah kering yang terbuka: bukan atap atau air, dan tidak
+  saat Anda berkendara. Jika tidak bisa ditambahkan, bagian Avatar
+  menyebut alasannya.
+- Penghuni adalah bagian dari Dunia, seperti
+  [penanda](03-WorldView.md#penanda--menandai-tempat-yang-layak-diingat):
+  mereka disimpan, diterbitkan, dan disalin bersamanya.
 
-Penghuni juga mengenal lingkungannya. Berdirilah di samping salah satunya
-dan tekan **T** (petunjuk menampilkan **[T] Bicara**; bagian Avatar dan pad
-sentuh juga memiliki tombol **Bicara**), dan ia memberi tahu satu dua hal
-tentang apa yang ada di sekitar, dalam gelembung ucapan di atas kepalanya:
-sepeda atau rusa di dekat sini, sebuah penanda, struktur yang ditempatkan
-di Dunia (dengan judul dan pembuatnya), seseorang yang ada di sekitar,
-tempat ia tinggal, atau bangunan lain yang agak jauh — misalnya *"Ada
+**Cara mereka bergerak.** Penghuni tetap dalam jarak sekitar enam langkah
+dari rumahnya. Mereka mengitari dinding, pohon, dan air, tidak pernah
+menembusnya, dan sesekali berhenti untuk melihat sekeliling. Semua orang
+melihat setiap penghuni di tempat yang sama pada saat yang sama, karena
+letaknya berasal dari Dunia dan jam. Tidak ada yang dikirim antarpemain.
+Anda menabrak penghuni seperti menabrak pohon, tetapi ia tidak menyingkir
+untuk Anda, jadi ia bisa berjalan menembus Anda saat Anda diam.
+
+**Mereka memperhatikan Anda.** Saat Anda mendekat sampai beberapa langkah,
+di depan atau di samping penghuni, ia menoleh menghadap Anda. Datangi
+tepat ke sebelahnya dan ia melambai, sekali setiap kali Anda datang.
+Seperti hewan, ini hanya terjadi di layar Anda, dan hanya untuk avatar
+Anda sendiri.
+
+**Berbicara dengan penghuni.** Berdirilah di sampingnya lalu tekan **T**
+(muncul petunjuk **[T] Bicara**; bagian Avatar dan panel sentuh juga
+punya tombol **Bicara**). Ia menceritakan sesuatu di dekat situ dalam
+gelembung ucapan: sepeda atau rusa, penanda, bangunan dan siapa
+pembuatnya, seseorang yang ada di sekitar, tempat tinggalnya, atau
+bangunan yang lebih jauh. Misalnya: *"Ada
 bangunan bernama “Hill Fort” karya bob, sekitar 3,6 km ke arah timur
-laut."* Jarak dibulatkan dan arah dilihat dari tempat penghuni berdiri
-(utara adalah arah yang ditunjuk kompas). Ajak bicara lagi dan ia
-menyebutkan hal lain. Gelembungnya hilang setelah beberapa detik, atau
-begitu Anda pergi.
+laut."*
 
-Selama gelembung itu muncul, tombol **Fokus** muncul di bagian bawah
-tampilan untuk setiap hal yang disebutkannya yang tidak berpindah — penanda,
-struktur, bangunan, atau kendaraan (hewan dan orang berpindah, jadi tidak
-mendapat tombol). Klik untuk mengayunkan kamera ke sana dan melihat, sama
-seperti **Fokus** di panel Lokasi: avatar Anda tetap di samping penghuni,
-dan berjalan lagi mengembalikan kamera jika Ikuti Avatar aktif.
+- Jarak dibulatkan. Arah dihitung dari tempat penghuni berdiri, dengan
+  utara ke arah yang ditunjuk kompas.
+- Ajak bicara lagi dan ia menyebut hal lain. Gelembungnya hilang setelah
+  beberapa detik, atau saat Anda pergi.
+- Untuk hal yang tidak berpindah (penanda, bangunan, atau kendaraan),
+  tombol **Fokus** muncul di bagian bawah tampilan. Tombol ini mengarahkan
+  kamera untuk melihatnya, seperti **Fokus** di Lokasi. Avatar Anda tetap
+  di tempatnya, dan berjalan mengembalikan kamera jika Ikuti Avatar aktif.
 
-Setiap kali ketiga Anda berbicara dengannya, dan setiap kali ia tidak punya
-hal lain untuk dikatakan, seorang penghuni bisa bertanya-tanya dengan suara
-keras tentang sesuatu yang belum pernah ada di tanah sekitarnya: jembatan di
-atas sungai, dermaga di danau atau laut, menara pengawas di dataran tinggi,
-atau, di tanah lapang, sumur, paviliun yang teduh, lapak pasar, atau pondok —
-misalnya *"Belum pernah ada yang membangun jembatan di atas sungai sekitar
-30 m ke arah timur."* Selama ia mengatakannya, tombol **Bangun jembatan di
-sana** (atau dermaga, menara pengawas…) muncul di bagian bawah tampilan.
-Klik, dan Editor membuka bangunan baru milik Anda untuk tempat itu, dimulai
-dari struktur Desa yang sudah jadi, sama seperti **Bangun di sini** di
-Tampilan Dunia: menerbitkannya akan menempatkannya di sana. Itu hanya
-pikiran yang diucapkan, tidak pernah tugas: tidak ada yang disimpan, tidak
-ada yang memeriksa apakah sudah dibangun, dan tidak ada hadiah. Tanah yang
-sama memberi pikiran yang sama kepada semua orang, dan tempat yang sudah
-punya bangunan di dekatnya tidak menginginkan apa pun.
+**Ide untuk lingkungan sekitar.** Setiap kali ketiga, atau saat tidak ada
+hal lain untuk diceritakan, penghuni mungkin bertanya-tanya tentang
+sesuatu yang belum pernah ada di tanah sekitarnya: jembatan di atas
+sungai, dermaga di air, menara pandang di dataran tinggi, atau sumur,
+paviliun teduh, lapak pasar, atau pondok di tanah terbuka. Misalnya: *"Belum pernah ada yang membangun jembatan di atas sungai sekitar
+30 m ke arah timur."*
 
-Begitu ada sesuatu di sana, ia mengatakannya sebagai fakta biasa, misalnya
-*"Seseorang sudah membangun sekitar 14 m ke arah timur, tepat di tempat yang
-selalu saya kira cocok untuk sebuah sumur."*, dengan menyebut nama
-bangunannya jika ada judul, dan tombol untuk melihatnya. Tetap tidak ada
-yang disimpan atau diberi hadiah.
+- Selama ia mengatakannya, muncul tombol seperti **Bangun jembatan di
+  sana**. Tombol itu membuka bangunan baru milik Anda di Editor untuk
+  tempat itu, dimulai dari struktur Desa yang sudah jadi, sama seperti
+  **Bangun di sini** di Tampilan Dunia. Saat Anda menerbitkannya, ia
+  berdiri di sana.
+- Itu hanya pikiran, bukan tugas: tidak ada yang diingat, tidak ada yang
+  memeriksa, dan tidak ada hadiah.
+- Tanah yang sama memberi pikiran yang sama kepada semua orang. Tempat
+  yang sudah ada bangunannya di dekat situ tidak punya keinginan apa pun.
+- Begitu sesuatu berdiri di sana, penghuni malah mengatakannya, menyebut
+  nama bangunan itu jika berjudul, dengan tombol untuk melihatnya.
+  Misalnya: *"Seseorang sudah membangun sekitar 14 m ke arah timur, tepat di tempat yang
+selalu saya kira cocok untuk sebuah sumur."*
 
-Apa yang dikatakan penghuni adalah apa yang diketahui ForkBuild *Anda*:
-bangunan di katalog Anda, orang-orang yang hadir bersama Anda, kendaraan dan
-hewan yang belum Anda ambil. Orang lain yang berbicara dengan penghuni yang
-sama mungkin mendengar hal yang berbeda, dan tidak ada orang lain yang
-pernah melihat apa yang dikatakannya kepada Anda. Ia tidak pernah
-menyebutkan kendaraan yang Anda simpan atau sedang Anda naiki, kendaraan
-yang sedang dinaiki orang lain, atau hewan yang sudah Anda tangkap.
-Bangunan disebut dengan judul dan pembuatnya sebagaimana tercantum di
-publikasinya, sama seperti di bagian lain aplikasi.
+**Yang diketahui penghuni** adalah yang diketahui ForkBuild *Anda*:
+bangunan di katalog Anda, orang-orang yang ada di sini bersama Anda, dan
+kendaraan serta hewan yang belum diambil siapa pun. Orang lain yang
+berbicara dengan penghuni yang sama mungkin mendengar hal berbeda, dan
+tidak ada orang lain yang melihat apa yang dikatakannya kepada Anda. Ia
+tidak pernah menyebut kendaraan yang Anda simpan atau yang sedang
+dikendarai orang, atau hewan yang Anda tangkap. Bangunan disebut dengan
+judul dan pembuatnya, seperti di seluruh aplikasi.
 
-Penghuni memerlukan tanah kering yang terbuka: bukan atap, bukan air, dan
-tidak saat Anda sedang berkendara. Bagian Avatar menyebutkan alasannya saat
-tidak dapat menambahkan penghuni di tempat Anda berdiri. Penghuni bukan
-orang — mereka tidak memiliki profil, tidak pernah muncul di Orang atau
-Terdekat, tidak dapat diklik untuk melihat info, dan tidak pernah memberi
-Anda misi, tugas, atau hadiah — mereka hanya tinggal di sana, dan memberi
-tahu apa yang ada di sekitar saat Anda bertanya.
+Penghuni bukan orang. Mereka tidak punya profil, tidak pernah muncul di
+Orang atau Di Sekitar, dan tidak bisa diklik untuk info. Mereka tidak
+pernah memberi misi, tugas, atau hadiah: mereka hanya tinggal di sana,
+dan menceritakan apa yang ada di sekitar saat Anda bertanya.
 
 #### Apa yang tetap ada setelah dimuat ulang
 

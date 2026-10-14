@@ -1,16 +1,18 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: c6324c75a72ab6b3 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: 5cfbb171295f8928 -->
 # Ihre Arbeit verteilen
 
 <!-- languages -->
 [English](../Distribution.md) · **Deutsch** · [Español](../es/Distribution.md) · [Français](../fr/Distribution.md) · [Bahasa Indonesia](../id/Distribution.md) · [日本語](../ja/Distribution.md) · [한국어](../ko/Distribution.md) · [Português (Brasil)](../pt-BR/Distribution.md)
 <!-- /languages -->
 
-Alles, was ForkBuild erstellt, beginnt auf Ihrem eigenen Gerät. **Verteilen**
-ist der separate, optionale Schritt, der Ihre Arbeit in dezentrale Netzwerke
-bringt, sodass Menschen, die nicht mit Ihnen verbunden sind, sie finden,
-abrufen und prüfen können. Diese Seite fasst an einer Stelle zusammen, was
-Sie verteilen können, wohin es gehen kann und was Sie dafür brauchen. Jeder
-Abschnitt verweist auf die Anleitung, die die Einzelheiten erklärt.
+Alles, was Sie in ForkBuild machen, beginnt auf Ihrem eigenen Gerät.
+**Verteilen** bringt es in dezentrale Netzwerke, sodass Menschen, die nicht
+mit Ihnen verbunden sind, es finden, abrufen und prüfen können, dass es von
+Ihnen ist. Es ist freiwillig und etwas anderes als Veröffentlichen.
+
+Diese Seite zeigt, was Sie verteilen können, wohin es gehen kann und was
+Sie dafür brauchen. Jeder Abschnitt verweist auf die Anleitung mit den
+Einzelheiten.
 
 ## Veröffentlichen, teilen, verteilen: drei verschiedene Dinge
 
@@ -20,13 +22,14 @@ Abschnitt verweist auf die Anleitung, die die Einzelheiten erklärt.
 | **Mit Peers teilen** | Direkt zu den Menschen, mit denen Sie verbunden sind | Ihre verbundenen Peers, solange Sie online sind | [Mit verbundenen Peers teilen](04-PublishingAndForking.md#mit-verbundenen-peers-teilen) |
 | **Verteilen** | Dezentrale Netzwerke (IPFS, Arweave, Nostr, Steem, Blurt) | Jeder, ganz ohne Verbindung zu Ihnen | Diese Seite |
 
-Bis Sie wählen, wohin Ihre Bauwerke gehen, sendet Veröffentlichen von
-selbst nichts irgendwohin. Sobald Sie wählen (im Editor unter **Wohin es
-geht**, mit angehaktem **Bei jedem Veröffentlichen hierhin senden**), verteilt
-jedes Veröffentlichen eines signierten Bauwerks es auch dorthin; entfernen
-Sie das Häkchen, um aufzuhören. Mit Peers teilen ist kein Verteilen: Peers
-behalten eine Kopie nur so lange, wie sie möchten, und sonst kann sie
-niemand finden.
+Veröffentlichen sendet von selbst nichts irgendwohin, bis Sie wählen, wohin
+Ihre Bauwerke gehen. Das wählen Sie im Editor unter **Wohin es geht**: Mit
+angehaktem **Bei jedem Veröffentlichen hierhin senden** wird jedes
+Veröffentlichen eines signierten Bauwerks auch dorthin verteilt. Entfernen
+Sie das Häkchen, um aufzuhören.
+
+Mit Peers teilen ist kein Verteilen. Peers behalten eine Kopie nur so
+lange, wie sie möchten, und sonst kann sie niemand finden.
 
 ## Die drei Rollen, die ein Netzwerk spielen kann
 
@@ -39,9 +42,10 @@ getrennt gewählt:
 | **Ankündigung / Entdeckung** | Ein Eintrag im Bibliothekskatalog | Veröffentlicht einen kleinen signierten Hinweis, dass Ihre Arbeit existiert und wo ihre Kopie liegt, damit andere sie finden können | **Nostr**, **Arweave**, **Steem** *(experimentell)*, **Blurt** *(experimentell)* |
 | **Nachweis / Verankerung** *(experimentell, optional)* | Der Stempel eines Notars | Schreibt den Hash Ihres Inhalts in eine Blockchain, als Nachweis, dass er zu diesem Zeitpunkt existierte. Er speichert und kündigt nichts an. | **Bitcoin**, **Arweave**, **Base**, **Steem**, **Blurt** |
 
-Speichern ohne Ankündigung heißt, dass niemand weiß, wo er suchen soll; eine
-Ankündigung ohne Speicher verweist auf nichts. **Verteilen** erledigt beides
-mit einem Klick. Verankern ist ein Extra und geschieht separat auf der Seite
+Die ersten beiden brauchen Sie zusammen. Gespeicherte Arbeit ohne
+Ankündigung ist schwer zu finden, und eine Ankündigung ohne Gespeichertes
+verweist auf nichts. **Verteilen** erledigt beides mit einem Klick.
+Verankern ist ein Extra und geschieht separat auf der Seite
 **Veröffentlichungen**.
 
 Legen Sie Ihre übliche Wahl für jede Rolle unter
@@ -61,7 +65,7 @@ nie etwas.
 | **Der Inhalts-Hash jeder Veröffentlichung** (eine Welt, ein Urheberschaftsanspruch oder ein Ortsname) | — | — | Bitcoin, Arweave, Base, Steem oder Blurt | Die Karte der Veröffentlichung auf der Seite **Veröffentlichungen** |
 | **Die Urheberschaft einer Struktur** (Bauplan-Zuschreibung) | Arweave, IPFS, Steem oder Blurt | Nostr, Arweave, Steem oder Blurt | — | **Verteilen** im **Info**-Feld der Struktur, angeboten, sobald Sie **Im Netzwerk veröffentlichen**; die Seite **Veröffentlichungen** |
 | **Ein Ortsname** (Ortsnamensanspruch) | Arweave, IPFS, Steem oder Blurt | Nostr, Arweave, Steem oder Blurt | — | **Verteilen** im Benennungsfeld der Weltansicht, angeboten, sobald Sie **Einen Namen veröffentlichen** (es kündigt den Namen im gewählten Netzwerk an); die Seite **Veröffentlichungen** für alle diese |
-| **Ein Kommentar** zu einer Veröffentlichung | — | Nostr, Arweave, Steem oder Blurt, oder keines (**Nur lokal & Peers**) | — | **Kommentar senden**, im Repository oder in der Weltansicht, im daneben gewählten Netzwerk; später **Verteilen** unter Ihrem eigenen Kommentar |
+| **Ein Kommentar** zu einer Veröffentlichung | — | Nostr, Arweave, Steem oder Blurt, oder keines (**Nur lokal & Peers**) | — | **Kommentar senden**, unter Entdecken oder in der Weltansicht, im daneben gewählten Netzwerk; später **Verteilen** unter Ihrem eigenen Kommentar |
 
 Der Snapshot einer Welt trägt Ihre signierte Platzierung mit sich, sodass
 Menschen, die ihn abrufen, den Bau genau dort sehen, wo Sie ihn hingestellt
@@ -129,47 +133,47 @@ bereits dessen Inhalts-Hash trägt; siehe [Blurt](11-EvidenceAndStorage.md#blurt
 
 1. **Veröffentlichen** Sie Ihre Welt im Editor (siehe
    [Ihre Kreation veröffentlichen](04-PublishingAndForking.md#ihre-kreation-veröffentlichen)).
-2. Klicken Sie in dem erscheinenden Hinweis auf **Verteilen** oder später in
-   der Weltansicht unter **Meine Geteilte Welt**.
+2. Klicken Sie in dem erscheinenden Hinweis auf **Verteilen**. Sie können es
+   auch später tun, in der Weltansicht unter **Meine Geteilte Welt**.
 3. Wählen Sie einen **Speicher** und ein **Substrat für Ankündigung /
-   Entdeckung**, zum Beispiel IPFS und Nostr oder Arweave für beides, und
-   klicken Sie auf **Verteilen**. Es verteilt zuerst den Snapshot, dann den
-   Signierten Anspruch, und meldet beides getrennt. Schlägt eine Hälfte fehl,
-   wiederholen Sie nur diese Hälfte mit ihrer eigenen Schaltfläche
-   **Nur … verteilen**.
-4. Verankern Sie die Veröffentlichung optional auf der Seite
-   **Veröffentlichungen** (zum Beispiel **Auf Arweave verankern**), um
+   Entdeckung**: zum Beispiel IPFS und Nostr, oder Arweave für beides.
+   Klicken Sie auf **Verteilen**.
+4. Es sendet den Snapshot, dann den Signierten Anspruch, und zeigt für
+   jedes ein Ergebnis. Schlägt eine Hälfte fehl, wiederholen Sie nur diese
+   mit ihrer eigenen Schaltfläche **Nur … verteilen**.
+5. *Optional:* Verankern Sie die Veröffentlichung auf der Seite
+   **Veröffentlichungen** (zum Beispiel mit **Auf Arweave verankern**), um
    festzuhalten, wann sie existierte.
-5. Klicken Sie unter dem Ergebnis auf **Teilen …** oder **Link kopieren**, um
-   anderen einen Link zu geben, der Ihren Bau auf jedem Gerät öffnet,
-   bereit zum Remixen oder für einen Rundgang in der Weltansicht.
+6. Klicken Sie unter dem Ergebnis auf **Teilen …** oder **Link kopieren**.
+   Der Link öffnet Ihr Bauwerk auf jedem Gerät, bereit zum Remixen oder für
+   einen Rundgang.
 
-Für einen Bau, der größer als die 256 KB von Arweave ist, wählen Sie IPFS.
-Peers, mit denen Sie verbunden sind, können Bauten von bis zu 64 MB weiterhin
+Ein Bauwerk, das für Arweave zu groß ist (über 256 KB), kann stattdessen
+auf IPFS. Peers, mit denen Sie verbunden sind, können Bauwerke bis 64 MB
 direkt von Ihnen abrufen.
 
 ## Prüfen, ob es geklappt hat
 
-- Die Repository-Karte Ihres Baus zeigt, wo dieses Gerät das Verteilen
-  festgehalten hat, zum Beispiel **Gespeichert auf IPFS · Angekündigt auf
-  Nostr** oder **Auf diesem Gerät ist keine Verteilung verzeichnet.** Siehe
+- **Auf Ihrer eigenen Karte.** Die Karte Ihres Bauwerks unter
+  **Entdecken** zeigt, wo dieses Gerät das Verteilen festgehalten hat: zum
+  Beispiel **Gespeichert auf IPFS · Angekündigt auf Nostr** oder **Auf
+  diesem Gerät ist keine Verteilung verzeichnet.** Siehe
   [Ihre Veröffentlichungen](13-YourData.md#ihre-veröffentlichungen).
-- Das Repository anderer Leute findet Ihre Veröffentlichung auf Nostr,
-  Arweave, Steem oder Blurt, sobald sie es das nächste Mal öffnen, sofern sie
-  unter dem üblichen Entdeckungs-Tag `forkbuild-publication` angekündigt
-  wurde. Siehe
+- **Für andere.** Deren **Entdecken** findet Ihr Bauwerk auf Nostr,
+  Arweave, Steem oder Blurt, sobald sie es das nächste Mal öffnen, sofern
+  es unter dem üblichen Entdeckungs-Tag `forkbuild-publication`
+  angekündigt wurde. Siehe
   [Von anderen verteilte Kreationen](04-PublishingAndForking.md#von-anderen-verteilte-kreationen).
-- **Geteilte Welt entdecken** in der Weltansicht sucht Ihre Geteilte Welt
-  direkt auf Arweave und Nostr und prüft sie; so beantwortet es die Frage
-  „Ist meine Veröffentlichung wirklich da draußen, und zwar unversehrt?“.
-  Siehe
+- **Direkt in den Netzwerken.** **Geteilte Welt entdecken** in der
+  Weltansicht sucht Ihre Welt auf Arweave und Nostr und prüft sie: Ist sie
+  wirklich da draußen, und unversehrt? Siehe
   [Geteilte Welt entdecken](WorldViewAdvancedTools.md#geteilte-welt-entdecken--dezentrale-netzwerke-direkt-durchsuchen).
-- Auf der Seite Veröffentlichungen ruft **IPFS-Inhalt überprüfen** einen
-  IPFS-Upload zurück und vergleicht ihn mit seinem Hash, und
+- **Auf der Seite Veröffentlichungen.** **IPFS-Inhalt überprüfen** ruft
+  einen IPFS-Upload zurück und vergleicht ihn mit seinem Hash.
   **Nachweise überprüfen** prüft einen Anker.
 
-Verteilen lässt sich nicht rückgängig machen: Sobald etwas angekündigt oder
-gespeichert ist, haben andere vielleicht schon eine Kopie. **Zurückziehen**
-entfernt eine Welt nur aus Ihrem eigenen Katalog, und dieses Gerät merkt
-sich dann, die verteilten Kopien nicht wieder aufzulisten, wenn das
-Repository die Netzwerke durchsucht.
+Verteilen lässt sich nicht rückgängig machen: Sobald etwas gespeichert
+oder angekündigt ist, haben andere vielleicht schon eine Kopie.
+**Zurückziehen** entfernt eine Welt nur aus Ihrem eigenen Katalog. Dieses
+Gerät merkt sich dann, die verteilten Kopien nicht wieder aufzulisten, wenn
+Entdecken die Netzwerke durchsucht.

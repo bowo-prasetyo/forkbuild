@@ -235,4 +235,7 @@ the toolbar rather than under **File**. **Fixed.**
 6. **Prose pass.** Finding 4's remaining passages. *Partly done
    2026-10-14:* both World View pages are rewritten at about 16 words a
    sentence (from about 25), with one sentence in fifty over 40 words.
-   Still to do: the residents section and the distribution walkthrough.
+   The residents section and the walkthrough in Distributing Your Work
+   followed the same day, at about 17 and 15 words a sentence (see the
+   roadmap entry "Residents and Distributing Your Work in plain
+   language"). **Done.**

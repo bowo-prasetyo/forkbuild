@@ -4,12 +4,13 @@
 **English** · [Deutsch](de/Distribution.md) · [Español](es/Distribution.md) · [Français](fr/Distribution.md) · [Bahasa Indonesia](id/Distribution.md) · [日本語](ja/Distribution.md) · [한국어](ko/Distribution.md) · [Português (Brasil)](pt-BR/Distribution.md)
 <!-- /languages -->
 
-Everything ForkBuild makes starts on your own device. **Distributing** is
-the separate, optional step that puts your work on decentralized networks,
-so people who aren't connected to you can find it, fetch it and check it.
-This page gathers in one place what you can distribute, where it can go,
-and what you need. Each section links to the guide that explains the
-details.
+Everything you make in ForkBuild starts on your own device.
+**Distributing** puts it on decentralized networks, so people who aren't
+connected to you can find it, fetch it and check that it's yours. It's
+optional, and separate from publishing.
+
+This page shows what you can distribute, where it can go, and what you
+need. Each section links to the guide with the details.
 
 ## Publish, share, distribute: three different things
 
@@ -19,12 +20,13 @@ details.
 | **Share with Peers** | Straight to the people you're connected to | Your connected peers, while you're online | [Sharing with connected peers](04-PublishingAndForking.md#sharing-with-connected-peers) |
 | **Distribute** | Decentralized networks (IPFS, Arweave, Nostr, Steem, Blurt) | Anyone, with no connection to you needed | This page |
 
-Until you choose where your builds go, publishing sends nothing anywhere by
-itself. Once you choose (in the Editor's **Where it goes**, with **Send here
-every time I publish** ticked), each Publish of a signed build distributes
-it there too; untick the box to stop. Sharing with peers isn't
-distribution: peers keep a copy only as long as they choose to, and nobody
-else can find it.
+Publishing sends nothing anywhere by itself until you choose where your
+builds go. You choose in the Editor's **Where it goes**: with **Send here
+every time I publish** ticked, each Publish of a signed build is
+distributed there too. Untick the box to stop.
+
+Sharing with peers isn't distributing. Peers keep a copy only as long as
+they choose to, and nobody else can find it.
 
 ## The three roles a network can play
 
@@ -36,18 +38,18 @@ Distributing uses up to three kinds of network, each chosen separately:
 | **Announcement / Discovery** | A library catalogue entry | Publishes a small signed notice saying your work exists and where its copy is, so others can find it | **Nostr**, **Arweave**, **Steem** *(experimental)*, **Blurt** *(experimental)* |
 | **Proof / Anchoring** *(experimental, optional)* | A notary's stamp | Writes your content's hash into a blockchain, as evidence it existed by that time. It stores and announces nothing. | **Bitcoin**, **Arweave**, **Base**, **Steem**, **Blurt** |
 
-Storage without an announcement means nobody knows where to look; an
-announcement without storage points at nothing. **Distribute** does both in
-one click. Anchoring is extra, and done separately on the **Publications**
-page.
+You need both of the first two. Stored work that isn't announced is hard
+to find, and an announcement with nothing stored points at nothing.
+**Distribute** does both in one click. Anchoring is extra, and done
+separately on the **Publications** page.
 
 Set your usual choice for each role under
 [Network Settings](10-NetworkSettings.md):
 [Content Provider](10-NetworkSettings.md#content-provider),
 [Announcement / Discovery Provider](10-NetworkSettings.md#announcement--discovery-provider)
 and [Proof / Anchoring Provider](10-NetworkSettings.md#proof--anchoring-provider).
-These only fill in the first choice of every picker; saving them never
-sends anything.
+They only fill in the first choice of each picker. Saving them never sends
+anything.
 
 ## What you can distribute
 
@@ -58,7 +60,7 @@ sends anything.
 | **Any publication's content hash** (a World, an authorship claim or a place name) | — | — | Bitcoin, Arweave, Base, Steem or Blurt | The publication's card on the **Publications** page |
 | **Authorship of a structure** (Blueprint Attribution) | Arweave, IPFS, Steem or Blurt | Nostr, Arweave, Steem or Blurt | — | **Distribute** in the structure's **Info** panel, offered once you **Publish to Network**; the **Publications** page |
 | **A place name** (Place Naming Claim) | Arweave, IPFS, Steem or Blurt | Nostr, Arweave, Steem or Blurt | — | **Distribute** in World View's naming panel, offered once you **Publish A Name** (it announces the name on the network you pick); the **Publications** page for any of these |
-| **A comment** on a publication | — | Nostr, Arweave, Steem or Blurt, or none (**Local & peers only**) | — | **Post Comment**, in the Repository or World View, on the network chosen beside it; later, **Distribute** under your own comment |
+| **A comment** on a publication | — | Nostr, Arweave, Steem or Blurt, or none (**Local & peers only**) | — | **Post Comment**, in Explore or World View, on the network chosen beside it; later, **Distribute** under your own comment |
 
 A World's Snapshot carries your signed placement with it, so people who
 fetch it see the build exactly where you put it.
@@ -155,41 +157,40 @@ content hash; see [Blurt](11-EvidenceAndStorage.md#blurt).
 
 1. **Publish** your World in the Editor (see
    [Publishing your creation](04-PublishingAndForking.md#publishing-your-creation)).
-2. Click **Distribute** in the notice that appears, or later under **My
-   Shared World** in World View.
-3. Pick a **Storage** and an **Announcement / Discovery substrate**, for
-   example IPFS and Nostr, or Arweave for both, and click **Distribute**.
-   It distributes the Snapshot, then the Signed Claim, and reports each
-   one separately. If one half fails, retry just that half with its own
-   **… only** button.
-4. Optionally, on the **Publications** page, anchor the publication (for
-   example **Anchor on Arweave**) to record when it existed.
-5. Click **Share…** or **Copy link** under the result to give people a
-   link that opens your build on any device, ready to remix or walk
-   around in World View.
+2. Click **Distribute** in the notice that appears. You can also do it
+   later, under **My Shared World** in World View.
+3. Pick a **Storage** and an **Announcement / Discovery substrate**: for
+   example IPFS and Nostr, or Arweave for both. Click **Distribute**.
+4. It sends the Snapshot, then the Signed Claim, and shows a result for
+   each. If one half fails, retry just that half with its own **… only**
+   button.
+5. *Optional:* on the **Publications** page, anchor the publication (for
+   example with **Anchor on Arweave**) to record when it existed.
+6. Click **Share…** or **Copy link** under the result. The link opens your
+   build on any device, ready to remix or walk around in.
 
-For a build larger than Arweave's 256 KB, choose IPFS. Peers you're
-connected to can still fetch builds of up to 64 MB straight from you.
+A build too big for Arweave (over 256 KB) can go on IPFS instead. Peers
+you're connected to can fetch builds of up to 64 MB straight from you.
 
 ## Checking it worked
 
-- Your build's Repository card says where this device recorded
-  distributing it, for example **Stored on IPFS · Announced on Nostr**,
-  or **No distribution recorded on this device**. See
-  [Your publications](13-YourData.md#your-publications).
-- Other people's Repository finds your Publication on Nostr, Arweave,
-  Steem or Blurt the next time they open it, as long as it was announced under the
-  usual discovery tag, `forkbuild-publication`. See
+- **On your own card.** Your build's card in **Explore** says where this
+  device recorded distributing it: for example **Stored on IPFS ·
+  Announced on Nostr**, or **No distribution recorded on this device**.
+  See [Your publications](13-YourData.md#your-publications).
+- **For other people.** Their **Explore** finds your build on Nostr,
+  Arweave, Steem or Blurt the next time they open it, as long as it was
+  announced under the usual discovery tag, `forkbuild-publication`. See
   [Creations others distributed](04-PublishingAndForking.md#creations-others-distributed).
-- **Discover Shared World** in World View looks your Shared World up on
-  Arweave and Nostr directly and checks it, answering "is my publication
-  really out there, intact?" See
+- **Straight from the networks.** **Discover Shared World** in World View
+  looks your World up on Arweave and Nostr and checks it: is it really out
+  there, intact? See
   [Discover Shared World](WorldViewAdvancedTools.md#discover-shared-world--searching-decentralized-networks-directly).
-- On the Publications page, **Verify IPFS Content** fetches an IPFS upload
-  back and compares it with its hash, and **Verify Evidence** checks an
+- **On the Publications page.** **Verify IPFS Content** fetches an IPFS
+  upload back and compares it with its hash. **Verify Evidence** checks an
   anchor.
 
-Distribution can't be taken back: once something is announced or stored,
-other people may already hold a copy. **Unpublish** removes a World from
-your own catalog only, and this device then remembers not to list the
-distributed copies again when the Repository searches the networks.
+Distributing can't be undone: once something is stored or announced,
+other people may already have a copy. **Unpublish** only removes a World
+from your own catalog. This device then remembers not to list the copies
+you distributed when Explore searches the networks.

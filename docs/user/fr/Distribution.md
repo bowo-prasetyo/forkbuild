@@ -1,17 +1,18 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: c6324c75a72ab6b3 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: 5cfbb171295f8928 -->
 # Distribuer votre travail
 
 <!-- languages -->
 [English](../Distribution.md) · [Deutsch](../de/Distribution.md) · [Español](../es/Distribution.md) · **Français** · [Bahasa Indonesia](../id/Distribution.md) · [日本語](../ja/Distribution.md) · [한국어](../ko/Distribution.md) · [Português (Brasil)](../pt-BR/Distribution.md)
 <!-- /languages -->
 
-Tout ce que crée ForkBuild commence sur votre propre appareil.
-**Distribuer** est l’étape distincte et facultative qui place votre
-travail sur des réseaux décentralisés, pour que des personnes non
-connectées à vous puissent le trouver, le récupérer et le vérifier.
-Cette page réunit en un seul endroit ce que vous pouvez distribuer, où, et
-ce dont vous avez besoin. Chaque section renvoie vers le guide qui
-explique les détails.
+Tout ce que vous faites dans ForkBuild commence sur votre propre appareil.
+**Distribuer** le place sur des réseaux décentralisés, pour que des
+personnes qui ne sont pas connectées à vous puissent le trouver, le
+récupérer et vérifier qu’il vient bien de vous. C’est facultatif, et
+différent de publier.
+
+Cette page montre ce que vous pouvez distribuer, où cela peut aller et ce
+qu’il vous faut. Chaque section renvoie au guide qui donne les détails.
 
 ## Publier, partager, distribuer : trois choses différentes
 
@@ -21,13 +22,14 @@ explique les détails.
 | **Partager avec les pairs** | Directement aux personnes auxquelles vous êtes connecté | Vos pairs connectés, tant que vous êtes en ligne | [Partager avec les pairs connectés](04-PublishingAndForking.md#partager-avec-les-pairs-connectés) |
 | **Distribuer** | Des réseaux décentralisés (IPFS, Arweave, Nostr, Steem, Blurt) | N’importe qui, sans connexion à vous | Cette page |
 
-Tant que vous n’avez pas choisi où vont vos constructions, publier
-n’envoie rien nulle part de soi-même. Une fois le choix fait (dans **Où
-elle va** de l’Éditeur, avec **Envoyer ici à chaque publication** coché),
-chaque Publier d’une construction signée la distribue aussi là ; décochez
-la case pour arrêter. Partager avec les pairs n’est pas distribuer : les
-pairs gardent une copie aussi longtemps qu’ils le veulent, et personne
-d’autre ne peut la trouver.
+Publier n’envoie rien nulle part de soi-même tant que vous n’avez pas
+choisi où vont vos constructions. Vous le choisissez dans **Où elle va**,
+dans l’Éditeur : avec **Envoyer ici à chaque publication** coché, chaque
+publication d’une construction signée la distribue aussi là. Décochez la
+case pour arrêter.
+
+Partager avec les pairs n’est pas distribuer. Les pairs gardent une copie
+aussi longtemps qu’ils le veulent, et personne d’autre ne peut la trouver.
 
 ## Les trois rôles qu’un réseau peut jouer
 
@@ -40,10 +42,10 @@ séparément :
 | **Annonce / Découverte** | Une fiche du catalogue de la bibliothèque | Publie un petit avis signé indiquant que votre travail existe et où se trouve sa copie, pour que d’autres puissent le trouver | **Nostr**, **Arweave**, **Steem** *(expérimental)*, **Blurt** *(expérimental)* |
 | **Preuve / Ancrage** *(expérimental, facultatif)* | Le tampon d’un notaire | Inscrit le hash de votre contenu dans une blockchain, comme preuve qu’il existait à ce moment-là. Il ne stocke ni n’annonce rien. | **Bitcoin**, **Arweave**, **Base**, **Steem**, **Blurt** |
 
-Un stockage sans annonce, c’est personne qui ne sait où chercher ; une
-annonce sans stockage pointe vers rien. **Distribuer** fait les deux en un
-clic. L’ancrage est un supplément, fait séparément sur la page
-**Publications**.
+Il vous faut les deux premiers ensemble. Un travail stocké sans annonce
+est difficile à trouver, et une annonce sans rien de stocké ne mène à rien.
+**Distribuer** fait les deux en un clic. L’ancrage est un supplément, fait
+séparément sur la page **Publications**.
 
 Définissez votre choix habituel pour chaque rôle sous
 [Paramètres réseau](10-NetworkSettings.md) :
@@ -62,7 +64,7 @@ enregistrer n’envoie jamais rien.
 | **Le hash de contenu de n’importe quelle publication** (un Monde, une revendication de paternité ou un nom de lieu) | — | — | Bitcoin, Arweave, Base, Steem ou Blurt | La carte de la publication sur la page **Publications** |
 | **La paternité d’une structure** (Attribution de plan) | Arweave, IPFS, Steem ou Blurt | Nostr, Arweave, Steem ou Blurt | — | **Distribuer** dans le panneau **Infos** de la structure, proposé une fois que vous avez cliqué sur **Publier sur le réseau** ; la page **Publications** |
 | **Un nom de lieu** (Proposition de nom de lieu) | Arweave, IPFS, Steem ou Blurt | Nostr, Arweave, Steem ou Blurt | — | **Distribuer** dans le panneau de nommage de la Vue du Monde, proposé une fois que vous avez cliqué sur **Publier un nom** (il annonce le nom sur le réseau choisi) ; la page **Publications** pour n’importe lequel d’entre eux |
-| **Un commentaire** sur une publication | — | Nostr, Arweave, Steem ou Blurt, ou aucun (**Local et pairs uniquement**) | — | **Publier le commentaire**, dans le Dépôt ou la Vue du Monde, sur le réseau choisi à côté ; plus tard, **Distribuer** sous votre propre commentaire |
+| **Un commentaire** sur une publication | — | Nostr, Arweave, Steem ou Blurt, ou aucun (**Local et pairs uniquement**) | — | **Publier le commentaire**, dans Explorer ou la Vue du Monde, sur le réseau choisi à côté ; plus tard, **Distribuer** sous votre propre commentaire |
 
 Le Snapshot d’un Monde emporte votre placement signé, si bien que les
 personnes qui le récupèrent voient la construction exactement là où vous
@@ -168,45 +170,47 @@ déjà son hash de contenu ; voir [Blurt](11-EvidenceAndStorage.md#blurt).
 
 1. **Publiez** votre Monde dans l’Éditeur (voir
    [Publier votre création](04-PublishingAndForking.md#publier-votre-création)).
-2. Cliquez sur **Distribuer** dans l’avis qui apparaît, ou plus tard sous
-   **Mon Monde partagé** dans la Vue du Monde.
-3. Choisissez un **Stockage** et un **Support d’annonce / de
-   découverte**, par exemple IPFS et Nostr, ou Arweave pour les deux, et
-   cliquez sur **Distribuer**. Cela distribue le Snapshot, puis la
-   Déclaration signée, et rend compte de chacun séparément. Si une moitié
-   échoue, réessayez seulement celle-ci avec son propre bouton
-   **… seulement**.
-4. Éventuellement, sur la page **Publications**, ancrez la publication
-   (par exemple **Ancrer sur Arweave**) pour enregistrer quand elle
-   existait.
-5. Cliquez sur **Partager…** ou **Copier le lien** sous le résultat pour
-   donner aux gens un lien qui ouvre votre construction sur n’importe quel
-   appareil, prête à être remixée ou visitée dans la Vue du Monde.
+2. Cliquez sur **Distribuer** dans l’avis qui apparaît. Vous pouvez aussi
+   le faire plus tard, sous **Mon Monde partagé** dans la Vue du Monde.
+3. Choisissez un **Stockage** et un **Support d’annonce / de découverte** :
+   par exemple IPFS et Nostr, ou Arweave pour les deux. Cliquez sur
+   **Distribuer**.
+4. Il envoie le Snapshot, puis la Déclaration signée, et affiche un
+   résultat pour chacun. Si une moitié échoue, réessayez seulement
+   celle-là avec son propre bouton **… seulement**.
+5. *Facultatif :* sur la page **Publications**, ancrez la publication (par
+   exemple avec **Ancrer sur Arweave**) pour garder la trace de la date à
+   laquelle elle existait.
+6. Cliquez sur **Partager…** ou **Copier le lien** sous le résultat. Le
+   lien ouvre votre construction sur n’importe quel appareil, prête à être
+   remixée ou visitée.
 
-Pour une construction plus grande que les 256 Ko d’Arweave, choisissez
-IPFS. Les pairs auxquels vous êtes connecté peuvent toujours récupérer
-directement chez vous des constructions jusqu’à 64 Mo.
+Une construction trop grande pour Arweave (plus de 256 Ko) peut aller sur
+IPFS. Les pairs auxquels vous êtes connecté peuvent récupérer des
+constructions jusqu’à 64 Mo directement chez vous.
 
 ## Vérifier que cela a fonctionné
 
-- La carte de votre construction dans le Dépôt indique où cet appareil a
-  enregistré sa distribution, par exemple **Stocké sur IPFS · Annoncé sur
-  Nostr**, ou **Aucune distribution enregistrée sur cet appareil**. Voir
+- **Sur votre propre carte.** La carte de votre construction dans
+  **Explorer** indique où cet appareil a enregistré sa distribution : par
+  exemple **Stocké sur IPFS · Annoncé sur Nostr**, ou **Aucune distribution
+  enregistrée sur cet appareil.** Voir
   [Vos publications](13-YourData.md#vos-publications).
-- Le Dépôt des autres trouve votre publication sur Nostr, Arweave, Steem ou Blurt
-  la prochaine fois qu’ils l’ouvrent, à condition qu’elle ait été annoncée
-  sous le tag de découverte habituel, `forkbuild-publication`. Voir
+- **Pour les autres.** Leur **Explorer** trouve votre construction sur
+  Nostr, Arweave, Steem ou Blurt la prochaine fois qu’ils l’ouvrent, pourvu
+  qu’elle ait été annoncée sous l’étiquette de découverte habituelle,
+  `forkbuild-publication`. Voir
   [Créations distribuées par d’autres](04-PublishingAndForking.md#créations-distribuées-par-dautres).
-- **Découvrir un Monde partagé**, dans la Vue du Monde, recherche
-  directement votre Monde partagé sur Arweave et Nostr et le vérifie, pour
-  répondre à « ma publication est-elle vraiment là-bas, intacte ? ». Voir
+- **Directement sur les réseaux.** **Découvrir un Monde partagé**, dans la
+  Vue du Monde, cherche votre Monde sur Arweave et Nostr et le vérifie :
+  est-il vraiment là-bas, intact ? Voir
   [Découvrir un Monde partagé](WorldViewAdvancedTools.md#découvrir-un-monde-partagé--chercher-directement-sur-les-réseaux-décentralisés).
-- Sur la page Publications, **Vérifier le contenu IPFS** récupère un
-  envoi IPFS et le compare à son hash, et **Vérifier les preuves**
-  vérifie une ancre.
+- **Sur la page Publications.** **Vérifier le contenu IPFS** récupère un
+  envoi IPFS et le compare à son hash. **Vérifier les preuves** vérifie une
+  ancre.
 
-Une distribution ne peut pas être reprise : une fois quelque chose annoncé
-ou stocké, d’autres personnes en détiennent peut-être déjà une copie.
-**Dépublier** ne retire un Monde que de votre propre catalogue, et cet
-appareil retient alors de ne plus lister les copies distribuées quand le
-Dépôt cherche sur les réseaux.
+Distribuer ne peut pas être annulé : dès que quelque chose est stocké ou
+annoncé, d’autres en ont peut-être déjà une copie. **Dépublier** ne fait
+que retirer un Monde de votre propre catalogue. Cet appareil se souvient
+alors de ne plus afficher les copies que vous avez distribuées quand
+Explorer cherche sur les réseaux.

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 36d3d49f37473bfe -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 5eccfdfd3ac8fb32 -->
 # 06 — Avatars et présence
 
 <!-- languages -->
@@ -379,97 +379,93 @@ bouton **Décorer** du pavé tactile, lui, vous explique pourquoi.
 ### Habitants
 
 Un Monde peut avoir des **habitants** : des personnes qui y vivent et se
-promènent autour de l’endroit qu’elles appellent leur maison, vaquant à
-leurs occupations au milieu de vos bâtiments. Pour en ajouter un,
-placez-vous sur un terrain dégagé où vous voulez qu’il vive et appuyez sur
-**R** (ou cliquez sur **Ajouter un habitant ici** dans la section
-**Avatar**). Il apparaît juste à côté de vous, et à partir de là il fait
-partie du contenu propre du Monde — enregistré, publié et forké avec lui,
-comme un
-[point de repère](03-WorldView.md#points-de-repère--marquer-un-lieu-qui-mérite-quon-sen-souvienne).
-En ajouter un demande d’être connecté avec le droit de MODIFICATION sur le
-Monde où vous êtes ; sur le Monde publié de quelqu’un d’autre, l’habitant
-va dans votre propre copie. Vous avez changé d’avis ? Placez-vous à côté
-d’un habitant et appuyez de nouveau sur **R** (une indication affiche
-**[R] Retirer l’habitant**), ou annulez avec **Ctrl/Cmd+Z**.
+promènent autour de chez elles, parmi vos bâtiments.
 
-Les habitants restent à environ six pas de chez eux. Ils contournent les
-murs, les arbres et l’eau, sans jamais les traverser, et font une pause
-de temps en temps pour s’arrêter et regarder autour d’eux. Toute personne
-qui ouvre le Monde voit chaque habitant au même endroit au même moment,
-car leur position découle du Monde et de l’horloge, et non de quoi que ce
-soit envoyé entre joueurs. Ils sont solides : vous les heurtez comme un
-arbre. Ils ne s’arrêtent pas et ne s’écartent pas pour vous, cependant,
-si bien que l’un d’eux peut vous traverser pendant que vous êtes immobile.
+**En ajouter et en retirer un.** Placez-vous sur un sol dégagé, là où vous
+voulez qu’il vive, et appuyez sur **R**, ou cliquez sur **Ajouter un
+habitant ici** dans la section **Avatar**. Il apparaît juste à côté de vous.
+Pour en retirer un, placez-vous à côté et appuyez de nouveau sur **R** (un
+message affiche **[R] Retirer l’habitant**), ou annulez avec
+**Ctrl/Cmd+Z**.
 
-Les habitants vous remarquent. Quand l’un d’eux est arrêté et que vous
-êtes devant lui ou sur son côté, à quelques pas, il se tourne vers vous,
-et si vous venez juste à côté de lui, il vous fait signe. Il fait signe
-une fois chaque fois que vous venez le voir. Comme pour les animaux, cela
-ne se produit que sur votre écran, et seulement pour votre propre avatar.
+- Vous devez pouvoir modifier le Monde où vous êtes. Dans le Monde publié
+  de quelqu’un d’autre, l’habitant va dans votre propre copie.
+- Un habitant a besoin d’un sol sec et dégagé : pas un toit ni l’eau, et
+  pas pendant que vous êtes sur un véhicule. Quand il ne peut pas être
+  ajouté, la section Avatar dit pourquoi.
+- Les habitants font partie du Monde, comme un
+  [point de repère](03-WorldView.md#points-de-repère--marquer-un-lieu-qui-mérite-quon-sen-souvienne) :
+  ils sont enregistrés, publiés et copiés avec lui.
 
-Les habitants connaissent aussi leur voisinage. Placez-vous à côté de
-l’un d’eux et appuyez sur **T** (une indication affiche **[T] Parler** ;
-la section Avatar et le pavé tactile ont aussi un bouton **Parler**), et
-il vous dit une ou deux choses sur ce qu’il y a autour, dans une bulle
-au-dessus de sa tête : un vélo ou un cerf à proximité, un point de repère,
-une structure placée dans le Monde (par son titre et son auteur),
-quelqu’un qui est dans les parages, le lieu où il vit, ou une autre
-construction un peu plus loin — par exemple *« Il y a une construction
+**Comment ils se déplacent.** Les habitants restent à environ six pas de
+chez eux. Ils contournent les murs, les arbres et l’eau, sans jamais les
+traverser, et s’arrêtent de temps en temps pour regarder autour d’eux. Tout
+le monde voit chaque habitant au même endroit au même moment, car sa
+position vient du Monde et de l’horloge. Rien n’est envoyé entre joueurs.
+Vous butez contre un habitant comme contre un arbre, mais il ne s’écarte
+pas pour vous : il peut donc vous traverser pendant que vous restez
+immobile.
+
+**Ils vous remarquent.** Quand vous arrivez à quelques pas, devant un
+habitant ou à côté, il se tourne vers vous. Venez tout près et il vous fait
+signe de la main, une fois chaque fois que vous approchez. Comme pour les
+animaux, cela n’arrive que sur votre écran, et seulement pour votre propre
+avatar.
+
+**Parler à un habitant.** Placez-vous à côté de lui et appuyez sur **T**
+(un message affiche **[T] Parler** ; la section Avatar et le pavé tactile
+ont aussi un bouton **Parler**). Il vous parle de quelque chose à
+proximité dans une bulle : un vélo ou un cerf, un point de repère, une
+construction et qui l’a faite, quelqu’un qui est là, le lieu où il vit, ou
+une construction plus loin. Par exemple : *« Il y a une construction
 appelée « Fort de la colline », de bob, à environ 3,6 km au nord-est. »*
-Les distances sont arrondies et les directions sont vues depuis l’endroit
-où se tient l’habitant (le nord est la direction qu’indique la boussole).
-Parlez-lui de nouveau et il mentionne autre chose. La bulle disparaît
-après quelques secondes, ou dès que vous vous éloignez.
 
-Tant que la bulle est affichée, un bouton **Centrer** apparaît en bas de
-la vue pour chaque chose mentionnée qui ne bouge pas — un point de
-repère, une structure, une construction ou un véhicule (les animaux et les
-personnes se déplacent, ils n’en ont donc pas). Cliquez dessus pour
-tourner la caméra et jeter un œil, comme **Centrer** dans le panneau
-Emplacements : votre avatar reste à côté de l’habitant, et marcher de
-nouveau ramène la caméra si Suivre l’avatar est activé.
+- Les distances sont arrondies. Les directions partent de l’endroit où se
+  tient l’habitant, le nord étant là où pointe la boussole.
+- Parlez-lui encore et il mentionne autre chose. La bulle disparaît après
+  quelques secondes, ou quand vous vous éloignez.
+- Pour ce qui ne bouge pas (un point de repère, une construction ou un
+  véhicule), un bouton **Centrer** apparaît en bas de la vue. Il emmène la
+  caméra jeter un coup d’œil, comme **Centrer** dans Emplacements. Votre
+  avatar reste où il est, et marcher ramène la caméra si Suivre l’avatar
+  est activé.
 
-Une fois sur trois quand vous lui parlez, et chaque fois qu’il n’a rien
-d’autre à dire, un habitant peut se demander à voix haute ce que le terrain
-voisin n’a jamais eu : un pont sur une rivière, un ponton sur un lac ou la
-mer, une tour de guet sur une hauteur, ou, sur un terrain dégagé, un puits,
-un pavillon ombragé, un étal de marché ou une maisonnette — par exemple
-*« Personne n’a jamais construit de pont sur la rivière située à environ
-30 m à l’est. »* Pendant qu’il le dit, un bouton **Construire un pont
-là-bas** (ou un ponton, une tour de guet…) apparaît en bas de la vue.
-Cliquez dessus et l’Éditeur ouvre une nouvelle construction à vous pour cet
-endroit, commencée à partir de la structure de Village toute prête, comme
-**Construire ici** dans la Vue du Monde : la publier la place là-bas. Ce
-n’est jamais qu’une pensée à voix haute, jamais une tâche : rien n’est
-gardé, personne ne vérifie si elle a été construite, et il n’y a aucune
-récompense. Le même terrain donne la même pensée à tout le monde, et un
-endroit qui a déjà une construction à côté ne souhaite rien.
+**Des idées pour le voisinage.** Une fois sur trois, ou quand il n’a rien
+d’autre à dire, un habitant peut se demander à voix haute pourquoi le
+terrain voisin n’a jamais eu quelque chose : un pont sur une rivière, un
+ponton sur l’eau, un belvédère sur une hauteur, ou un puits, un pavillon
+ombragé, un étal de marché ou une maisonnette sur un sol dégagé. Par
+exemple : *« Personne n’a jamais construit de pont sur la rivière située à environ
+30 m à l’est. »*
 
-Une fois que quelque chose s’y dresse, il le dit à la place, comme un simple
-fait, par exemple *« Quelqu’un a construit à environ 14 m à l’est, juste là
-où j’ai toujours pensé qu’irait un puits. »*, en nommant la construction si
-elle a un titre, avec un bouton pour la regarder. Là encore, rien n’est
-gardé ni récompensé.
+- Pendant qu’il le dit, un bouton comme **Construire un pont là-bas**
+  apparaît. Il ouvre dans l’Éditeur une nouvelle construction à vous pour
+  cet endroit, commencée à partir de la structure de Village toute prête,
+  comme **Construire ici** dans la Vue du Monde. Quand vous la publiez,
+  elle se dresse là.
+- Ce n’est qu’une pensée, jamais une tâche : rien n’est retenu, personne ne
+  vérifie, et il n’y a pas de récompense.
+- Le même terrain donne la même pensée à tout le monde. Un endroit qui a
+  déjà une construction à proximité n’a rien à souhaiter.
+- Une fois que quelque chose s’y dresse, l’habitant le dit à la place, en
+  nommant la construction si elle a un titre, avec un bouton pour la voir.
+  Par exemple : *« Quelqu’un a construit à environ 14 m à l’est, juste là
+où j’ai toujours pensé qu’irait un puits. »*
 
-Ce que dit un habitant, c’est ce que sait *votre* copie de ForkBuild : les
-constructions de votre catalogue, les personnes présentes avec vous, les
-véhicules et les animaux que vous n’avez pas pris. Quelqu’un d’autre qui
-parle au même habitant peut entendre des choses différentes, et personne
-d’autre ne voit jamais ce qu’il vous a dit. Il ne mentionne jamais un
-véhicule que vous avez rangé ou que vous conduisez, un véhicule conduit
-par quelqu’un d’autre, ni un animal que vous avez attrapé. Les
-constructions sont nommées avec le titre et l’auteur que leur donne leur
-publication, comme partout ailleurs dans l’application.
+**Ce que sait un habitant**, c’est ce que sait *votre* ForkBuild : les
+constructions de votre catalogue, les personnes présentes avec vous, et
+les véhicules et animaux que personne n’a pris. Quelqu’un d’autre qui
+parle au même habitant peut entendre autre chose, et personne d’autre ne
+voit ce qu’il vous a dit. Il ne mentionne jamais un véhicule que vous avez
+rangé ou que quelqu’un conduit, ni un animal que vous avez attrapé. Les
+constructions sont nommées avec leur titre et leur auteur, comme partout
+dans l’application.
 
-Un habitant a besoin d’un terrain sec et dégagé : pas un toit, pas l’eau,
-et pas pendant que vous êtes à bord d’un véhicule. La section Avatar
-indique pourquoi quand elle ne peut pas en ajouter un là où vous êtes. Les
-habitants ne sont pas des personnes — ils n’ont pas de profil,
-n’apparaissent jamais sous Personnes ou À proximité, ne peuvent pas être
-cliqués pour des infos, et ne vous donnent jamais de quêtes, de tâches ni
-de récompenses — ils vivent simplement là, et vous disent ce qu’il y a
-autour quand vous le demandez.
+Les habitants ne sont pas des personnes. Ils n’ont pas de profil,
+n’apparaissent jamais dans Personnes ni dans À proximité, et on ne peut pas
+cliquer dessus pour avoir des infos. Ils ne vous donnent jamais de quêtes,
+de tâches ni de récompenses : ils vivent simplement là, et vous disent ce
+qu’il y a autour quand vous demandez.
 
 #### Ce qui survit à un rechargement
 

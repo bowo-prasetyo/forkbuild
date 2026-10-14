@@ -6600,3 +6600,23 @@ newcomer reads after their first build is about what they can see and do).
   translated section titles, so its links keep working. Every translation is stamped.
 - Not done: the residents section of Avatars & Presence and the Distribution walkthrough have not had the same
   plain-language pass.
+
+## Residents and Distributing Your Work in plain language (unnumbered, 2026-10-14)
+
+**Why.** The user-guide audit (docs/reviews/UserGuide-2026-10-13.md, open item 6) left two passages without the
+plain-language pass World View had: the residents section of Avatars & Presence (about 26 words a sentence, one in
+seven over 40) and the walkthrough in Distributing Your Work, which still sent readers to the Repository, the page
+the menu now calls Explore. Pillar served: building feels joyful (residents are what makes a ready-made home feel
+lived in, and the page should be as easy to read as they are to meet).
+
+- **Residents** is regrouped under short lead-ins: adding and removing one, how they move, how they notice you,
+  talking to one (with the Focus button), ideas for the neighbourhood, and what a resident knows. About 17 words a
+  sentence. The heading and its anchor are unchanged.
+- **Distributing Your Work**: a plainer opening, the publish-and-share paragraph split in two, the walkthrough as six
+  numbered steps, and "Checking it worked" grouped by where you look. It now says **Explore** where it said the
+  Repository (the build's card, other people's search, Unpublish, where comments are posted). About 15 words a
+  sentence.
+- **All seven translations** carry the same changes in each language's own words; the resident's example sayings
+  are kept word for word from each translation, since they quote the app. Every translation is stamped.
+- Korean bold or italic that GitHub didn't close (a closing marker after punctuation with a particle straight after
+  it, such as `**←/→**로`) is fixed on the Avatars & Presence page.
