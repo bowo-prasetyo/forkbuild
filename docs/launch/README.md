@@ -95,6 +95,15 @@ the week after, by day:
 - **Arrivals per channel:** `/r/hn`, `/r/producthunt`, `/r/reddit`, …
 - **Did they build?** `/e/challenge-join` against the arrivals; the daily
   count `/`.
+- **Where do newcomers stop?** Against the daily count `/`, in the order a
+  newcomer takes them: `/e/editor-open` (the Editor opened, any way in),
+  `/e/starter-open` (a ready-made build opened from Home's main button or a
+  challenge), `/e/editor-edit` (a first edit made), then the builds
+  published (the five `/e/publish-bricks-…` paths). Each Editor step counts
+  at most once a page load. The biggest drop between two of them is where
+  to look first: few opening the Editor is Home's page; many opening it
+  but few editing is the Editor's first minute; many editing but few
+  publishing is Publish. The scorecard prints these first as FIRST STEPS.
 - **How much did they build?** The five `/e/publish-bricks-…` paths, one per
   build published for the first time, so together they are the builds
   published. The range holding the middle one is the median build's size:

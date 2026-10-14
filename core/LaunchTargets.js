@@ -200,6 +200,30 @@ export function evaluateSideSystems(counts) {
     return SIDE_SYSTEMS.map((system) => evaluateSideSystem(system, counts));
 }
 
+// The first steps between arriving and publishing (core/VisitorCount.js,
+// EDITOR_OPEN, STARTER_OPEN, EDITOR_EDIT), watched rather than aimed at, in
+// the order a newcomer takes them: each step's total, and its share of the
+// daily visits, says where visitors stop. The three Editor steps are counted
+// once a page load and the daily count once a day, so a share can pass 100%
+// when visitors come back the same day; the last step, the builds published
+// for the first time, is the brick ranges' total.
+export const FIRST_STEPS = Object.freeze([
+    Object.freeze({ id: 'editor', question: 'Do visitors open the Editor?', paths: Object.freeze([path(FunnelEvent.EDITOR_OPEN)]) }),
+    Object.freeze({ id: 'ready-made', question: 'Do they open a ready-made build from Home or a challenge?', paths: Object.freeze([path(FunnelEvent.STARTER_OPEN)]) }),
+    Object.freeze({ id: 'edit', question: 'Do they make an edit?', paths: Object.freeze([path(FunnelEvent.EDITOR_EDIT)]) }),
+    Object.freeze({ id: 'publish', question: 'Do they publish a build?', paths: Object.freeze(BRICK_RANGES.map((range) => range.path)) })
+]);
+
+// Each first step against `counts`: { id, question, count, visits, share },
+// `share` null when no daily visits were counted.
+export function evaluateFirstSteps(counts) {
+    const visits = total(counts, [DAILY_VISIT_PATH]);
+    return FIRST_STEPS.map((step) => {
+        const count = total(counts, step.paths);
+        return Object.freeze({ id: step.id, question: step.question, count, visits, share: visits > 0 ? count / visits : null });
+    });
+}
+
 // The targets that must all be met before a new network or chain joins: the
 // bricks builders placed themselves, so a ready-made build published
 // untouched never opens it.

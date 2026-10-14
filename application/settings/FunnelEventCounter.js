@@ -104,6 +104,20 @@ export class FunnelEventCounter {
         return this.countOnce(FunnelEvent.GUEST_WALK);
     }
 
+    // The first steps towards a build (core/VisitorCount.js, EDITOR_OPEN,
+    // STARTER_OPEN, EDITOR_EDIT; ui/views/EditorView.js), once a page load each.
+    openedEditor() {
+        return this.countOnce(FunnelEvent.EDITOR_OPEN);
+    }
+
+    openedStarter() {
+        return this.countOnce(FunnelEvent.STARTER_OPEN);
+    }
+
+    editedInEditor() {
+        return this.countOnce(FunnelEvent.EDITOR_EDIT);
+    }
+
     // The builds this device has published, by document id: a visitor's own.
     ownDocumentIds() {
         try {

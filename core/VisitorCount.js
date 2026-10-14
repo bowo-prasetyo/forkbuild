@@ -65,7 +65,9 @@ export function visitorCountHitUrl(random) {
 // friend joining through one; a build published crediting friends who built
 // it together; a build published and sent to everyone, or kept to its link
 // (each publish, core/BuildNote.js); World View opened, and someone else's
-// build seen there (once a visit); each kept side system used (once a page
+// build seen there (once a visit); the Editor opened, a ready-made build
+// opened in it from a link, and a first edit made there (once a page load
+// each); each kept side system used (once a page
 // load: swimming, an animal caught or decorated with, the inventory, chat,
 // voice, a public lobby); and, when
 // a build is first published from this device, roughly how many bricks it
@@ -113,6 +115,15 @@ export const FunnelEvent = Object.freeze({
     // Someone with no name yet walking in World View, at most once a page
     // load (docs/reviews/CreativeDirection-2026-10-12c.md, finding 1).
     GUEST_WALK: 'guest-walk',
+    // The first steps between arriving and publishing, each at most once a
+    // page load, so the totals read as visits that took them: the Editor
+    // opened (any way in), a ready-made build opened in it as the visitor's
+    // own copy from a Home or challenge link (`?start=`), and a first edit
+    // made there by the visitor (a collaborator's edits arriving from peers
+    // don't count). Nothing about the build or the edit is part of the path.
+    EDITOR_OPEN: 'editor-open',
+    STARTER_OPEN: 'starter-open',
+    EDITOR_EDIT: 'editor-edit',
     // The side systems the owner kept (docs/Pillars.md, "The side systems";
     // core/SideSystemUse.js), each at most once a page load: in the water,
     // an animal caught, one decorated with (G), something carried (an animal

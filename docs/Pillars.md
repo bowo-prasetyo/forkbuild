@@ -238,6 +238,11 @@ Each pillar has a question the launch counters can answer
 Also counted, with no target yet: how many visitors walk World View
 before they have a name (`/e/guest-walk`, once a page load; see "A guest
 walks" in the roadmap).
+And the first steps between arriving and publishing, once a page load each,
+with no target yet: the Editor opened (`/e/editor-open`), a ready-made build
+opened in it from Home or a challenge (`/e/starter-open`), and a first edit
+made there (`/e/editor-edit`). Read against the daily count, they say where
+newcomers stop (`node scripts/launch-scorecard.mjs` prints them first).
 
 ### The numbers to reach
 

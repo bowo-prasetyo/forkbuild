@@ -59,6 +59,7 @@ import PublicationShareLink from '../components/PublicationShareLink.js';
 import ProtectIdentityNote from '../components/ProtectIdentityNote.js';
 import FirstBuildGuide from '../components/FirstBuildGuide.js';
 import StarterJobCard from '../components/StarterJobCard.js';
+import { EDITOR_ACTIVITY } from '../../core/EditorSoundCues.js';
 import { isStarterJobDone, starterJobById, starterJobGuide, unfinishedStructure } from '../../core/StarterJob.js';
 import { worldBricks } from '../../core/PlacedBricks.js';
 import BuildPlotBanner from '../components/BuildPlotBanner.js';
@@ -981,6 +982,11 @@ export default {
         }
         watch(documentVersion, () => { if (seeInside.value) editorSession.refreshSeeInside(); });
         const unwatchSeeInside = editorSession.onCommandActivity(() => { if (seeInside.value) editorSession.refreshSeeInside(); });
+        // A visit that edited, once a page load (core/VisitorCount.js,
+        // EDITOR_EDIT): the visitor's own edit, an undo or redo not one.
+        const unwatchFirstEdit = funnelEventCounter
+            ? editorSession.onCommandActivity((activity) => { if (activity === EDITOR_ACTIVITY.EXECUTED) funnelEventCounter.editedInEditor(); })
+            : null;
         // Done, or another build opened: the roof goes wherever it is put.
         watch([starterJobShown, starterJobDone], ([shown, done]) => {
             if (!shown || done) editorContext.setPlacementGuide(null);
@@ -1292,6 +1298,8 @@ export default {
             editorSession.start(viewport.value);
             startSound();
             firstBuildGuide.followFirstBuildEdits();
+            // The Editor opened, whichever way in (core/VisitorCount.js, EDITOR_OPEN).
+            funnelEventCounter?.openedEditor();
 
             unsubTool = editorContext.eventBus.subscribe(
                 EditorEvent.TOOL_CHANGED,
@@ -1424,6 +1432,7 @@ export default {
                 const unfinished = job ? unfinishedStructure(job, structure) : null;
                 if (structure && editorSession.forkStructure(unfinished || structure)) {
                     editorSession.frameDocument();
+                    funnelEventCounter?.openedStarter();
                     if (unfinished) {
                         startStarterJob(job, structure);
                         feedback.show(t('starterJob.started', { name: libraryItemName(structure) }), { durationMs: 5000 });
@@ -1579,6 +1588,7 @@ export default {
         onBeforeUnmount(() => {
             unwatchStarterJob?.();
             unwatchSeeInside?.();
+            unwatchFirstEdit?.();
             unmounted = true;
             if (unsubTool) {
                 unsubTool.unsubscribe();
