@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 554ed0580b2c3b36 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 49a511b82dd0a439 -->
 # 09 — Publications et preuves externes
 
 <!-- languages -->
@@ -91,7 +91,7 @@ type de publication, et seule la publication elle-même est obligatoire :
 | **Publication** | Le livre lui-même | Un enregistrement signé : un Monde partagé, une Attribution de plan ou une Proposition de nom de lieu. Il porte le hash de son contenu et la signature de son éditeur. |
 | **Contenu** | L’endroit où sont gardés les exemplaires imprimés | Les octets dont parle la publication, comme les briques d’un Monde. Ils sont toujours d’abord conservés sur cet appareil ; **Stocker sur …** en place une copie sur IPFS, Arweave, Steem ou Blurt pour que d’autres puissent la récupérer. Voir [Fournisseur de contenu](10-NetworkSettings.md#fournisseur-de-contenu). |
 | **Snapshot** | Un exemplaire imprimé | Une copie stockée du contenu d’une publication, comme les briques d’un Monde, que d’autres peuvent récupérer et vérifier par rapport à son hash. Voir [Snapshot local](#snapshot-local). |
-| **Placement** | Le rayon où l’exemplaire est rangé | Un enregistrement signé de l’endroit où se tient une construction dans le Monde. Un Monde partagé peut en avoir plusieurs. Voir [Placer ou forker](03-WorldView.md#placer-ou-forker). |
+| **Placement** | Le rayon où l’exemplaire est rangé | Un enregistrement signé de l’endroit où se tient une construction dans le Monde. Un Monde partagé peut en avoir plusieurs. Voir [Placer ou forker](WorldViewAdvancedTools.md#placer-ou-forker). |
 | **Annonce / Découverte** | Une fiche du catalogue de la bibliothèque | Un petit avis signé sur Nostr, Arweave, Steem ou Blurt indiquant que la publication ou le Snapshot existe et où se trouve sa copie, pour que des personnes non connectées à vous puissent la trouver. Voir [Fournisseur d’annonce / de découverte](10-NetworkSettings.md#fournisseur-dannonce--de-découverte). |
 | **Preuve / Ancrage** *(Expérimental, sauf sur Arweave)* | Le tampon d’un notaire | Le hash du contenu inscrit dans une transaction blockchain (Bitcoin, Base, Arweave, Steem ou Blurt), comme preuve qu’il existait à ce moment-là. Il ne stocke ni n’annonce rien. Voir [Preuves et stockage](11-EvidenceAndStorage.md). |
 | **Commentaires** | Les critiques des lecteurs | Des commentaires que toute personne connectée peut joindre à une publication, chacun signé par son auteur, pas par l’éditeur. Voir [Commentaires](#commentaires). |
@@ -107,7 +107,7 @@ elle-même. Elle liste les revendications que vous avez faites ailleurs,
 celles que des pairs vous ont envoyées, et les créations du Dépôt arrivées
 sous forme décentralisée. Les propositions de nom de lieu peuvent aussi
 être trouvées directement sur Nostr, sans aucun pair ; voir
-[Noms de lieux à proximité](03-WorldView.md#noms-de-lieux-à-proximité--découvrir-les-propositions-de-nimporte-qui).
+[Noms de lieux à proximité](WorldViewAdvancedTools.md#noms-de-lieux-à-proximité--découvrir-les-propositions-de-nimporte-qui).
 
 ### Revendiquer la paternité d’une structure
 
@@ -145,7 +145,7 @@ une proposition signée à vos pairs connectés.
 Juste après la publication, le panneau propose de **Distribuer** le nom,
 pour que les personnes non connectées à vous puissent aussi le trouver,
 par exemple via
-[Noms de lieux à proximité](03-WorldView.md#noms-de-lieux-à-proximité--découvrir-les-propositions-de-nimporte-qui).
+[Noms de lieux à proximité](WorldViewAdvancedTools.md#noms-de-lieux-à-proximité--découvrir-les-propositions-de-nimporte-qui).
 Choisissez le **Réseau** (Arweave, Blurt, Nostr ou Steem ; il démarre sur votre
 [Fournisseur d’annonce / de découverte](10-NetworkSettings.md#fournisseur-dannonce--de-découverte))
 et cliquez sur **Distribuer**, ou sur **Pas maintenant** pour passer. Vous
@@ -321,7 +321,7 @@ Vous trouverez des commentaires :
 - dans le **Dépôt** et sur les pages d’auteur : le bouton **Commenter**
   de chaque carte et ligne de liste ;
 - dans le panneau
-  [Mon Monde partagé](03-WorldView.md#mon-monde-partagé--distribuer-votre-propre-snapshot-sans-pair-nécessaire)
+  [Mon Monde partagé](WorldViewAdvancedTools.md#mon-monde-partagé--distribuer-votre-propre-snapshot-sans-pair-nécessaire)
   de la Vue du Monde, dans sa section **Commentaires** ;
 - sur une **Rencontre dans le Monde** sélectionnée : son bouton
   **Commenter**.

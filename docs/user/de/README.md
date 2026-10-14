@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: a206e390cf4902f4 -->
+<!-- translation-of: docs/user/README.md source-hash: a002122a9a62ba43 -->
 # ForkBuild-Benutzerdokumentation
 
 <!-- languages -->
@@ -45,8 +45,8 @@ Freunden herumzulaufen.
    jedes veröffentlichte Bauwerk steht: herumlaufen und -fliegen, Dinge
    finden und ansehen, **Hier bauen**, **Mit mir hier spazieren**,
    Bewohner und **Eine Kopie bearbeiten**, um etwas in den Editor zu
-   holen. Die Netzwerkwerkzeuge liegen unter **Erweiterte Werkzeuge
-   zeigen**.
+   holen. Ihre Netzwerkwerkzeuge haben eine eigene Seite, unten unter
+   Erweitert.
 4. **[Veröffentlichen & Remixen](04-PublishingAndForking.md)** —
    veröffentlichen und einen Link teilen, wählen, wohin Ihre Bauwerke
    gehen, Lizenzen, remixen, **Entdecken** und seine fertigen Bauwerke,
@@ -67,6 +67,11 @@ Die Technik darunter: Ihre Identität im Detail, direkte Verbindungen zu
 anderen Menschen, die Netzwerke, an die ein Bauwerk gehen kann, und die
 experimentellen Werkzeuge. Zum Spielen brauchen Sie nichts davon.
 
+- **[Weltansicht: Erweiterte Werkzeuge](WorldViewAdvancedTools.md)** —
+  was **Erweiterte Werkzeuge zeigen** hinzufügt: Steine untersuchen,
+  Platzierungen und warum sich jedes Bauwerk platzieren lässt, Begegnungen
+  in der Welt, entdeckte Ortsnamen, beanspruchte Bauwerke und das Verteilen
+  Ihres eigenen Bauwerks aus **Meine Geteilte Welt**.
 - **[Ihr Name & Ihre Identität](05-IdentityAndLogin.md)** — Ihr Name
   und die kryptografische Identität dahinter, der Tresor (Sperren/Entsperren), das Sichern
   per Export/Import und das Verwalten von Identitäten unter **Meine

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d5e21e1edde37655 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 678438731470dcad -->
 # 04 — Publicar y remezclar
 
 <!-- languages -->
@@ -251,7 +251,7 @@ El diálogo es el mismo que usa la Vista del mundo: sus ajustes
 **Almacenamiento** y **Sustrato de anuncio / descubrimiento** y los botones
 separados **Distribuir solo el Snapshot** / **Distribuir solo la
 Declaración firmada** funcionan como se describe en
-[Encuentros en el Mundo](03-WorldView.md#encuentros-en-el-mundo--publicaciones-y-avatares-que-comparten-sus-pares). Hay dos diferencias: siempre actúa sobre el
+[Encuentros en el Mundo](WorldViewAdvancedTools.md#encuentros-en-el-mundo--publicaciones-y-avatares-que-comparten-sus-pares). Hay dos diferencias: siempre actúa sobre el
 Mundo compartido exacto que acaba de producir su clic en Publicar, y el
 **Snapshot** va primero, así que **Enviar** envía el Snapshot y luego la
 Declaración firmada. Cerrar el diálogo (**Cerrar**, un clic fuera o Escape)
@@ -366,9 +366,9 @@ lo permita.
 Normalmente, otras personas pueden colocar su creación publicada en sus
 propios Mundos. Eso agrega una colocación de su construcción, nunca una
 copia, y nunca mueve ni cambia la suya (consulte
-[¿Por qué puedo colocar construcciones de otras personas?](03-WorldView.md#por-qué-puedo-colocar-construcciones-de-otras-personas)).
+[¿Por qué puedo colocar construcciones de otras personas?](WorldViewAdvancedTools.md#por-qué-puedo-colocar-construcciones-de-otras-personas)).
 Bifurcar es aparte y lo rige la licencia (consulte
-[Colocar o bifurcar](03-WorldView.md#colocar-o-bifurcar)).
+[Colocar o bifurcar](WorldViewAdvancedTools.md#colocar-o-bifurcar)).
 Si prefiere que no la coloquen, abra **Propiedades del documento** y
 configure **Quién puede colocarlo en el Mundo**:
 
@@ -518,7 +518,7 @@ trabajo nuevo en su página **Siguiendo** y en sus notificaciones; consulte
 
 **Explorar** tampoco se limita a lo que se publicó desde este dispositivo
 o se descubrió directamente: una construcción descentralizada que un par le mostró en el mapa de
-[Encuentros en el Mundo](03-WorldView.md#encuentros-en-el-mundo--publicaciones-y-avatares-que-comparten-sus-pares)
+[Encuentros en el Mundo](WorldViewAdvancedTools.md#encuentros-en-el-mundo--publicaciones-y-avatares-que-comparten-sus-pares)
 de la Vista del mundo, una vez que su contenido realmente se resuelve,
 también se suma a esta misma búsqueda y a la Vista del autor de su autor, y
 sigue allí después de recargar. No se muestra de ninguna forma distinta de

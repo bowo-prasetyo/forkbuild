@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: e191fb1f57264f38 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: c6324c75a72ab6b3 -->
 # 작품 배포하기
 
 <!-- languages -->
@@ -96,8 +96,8 @@ Nostr에 공지합니다.
 
 - 서명 클레임과 스냅샷:
   [보낼 곳](04-PublishingAndForking.md#보낼-곳--게시하면서-작품-보내기),
-  [내 공유 월드](03-WorldView.md#내-공유-월드--피어-없이-내-스냅샷-배포하기),
-  그리고 [배포 대화 상자](03-WorldView.md#월드-조우--피어가-공유하는-게시물과-아바타)
+  [내 공유 월드](WorldViewAdvancedTools.md#내-공유-월드--피어-없이-내-스냅샷-배포하기),
+  그리고 [배포 대화 상자](WorldViewAdvancedTools.md#월드-조우--피어가-공유하는-게시물과-아바타)
   자체.
 - 게시물 페이지:
   [게시물 페이지에서 배포하기](09-PublicationsAndEvidence.md#게시물-페이지에서-배포하기),
@@ -177,7 +177,7 @@ Arweave의 256KB보다 큰 작품이라면 IPFS를 고르세요. 연결된 피�
   보세요.
 - 월드 보기의 **공유 월드 찾기**는 Arweave와 Nostr에서 내 공유 월드를 직접 찾아
   확인해서, “내 게시물이 정말 손상 없이 저기 있나?”에 답합니다.
-  [공유 월드 찾기](03-WorldView.md#공유-월드-찾기--탈중앙-네트워크-직접-검색하기)를
+  [공유 월드 찾기](WorldViewAdvancedTools.md#공유-월드-찾기--탈중앙-네트워크-직접-검색하기)를
   보세요.
 - 게시물 페이지에서 **IPFS 콘텐츠 검증**은 IPFS 업로드를 다시 가져와 해시와
   비교하고, **증거 검증**은 앵커를 확인합니다.

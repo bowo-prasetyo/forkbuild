@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: e191fb1f57264f38 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: c6324c75a72ab6b3 -->
 # Distribuir su trabajo
 
 <!-- languages -->
@@ -68,8 +68,8 @@ Detalles:
 
 - Declaración firmada y Snapshot:
   [A dónde va](04-PublishingAndForking.md#a-dónde-va--enviar-una-construcción-al-publicar),
-  [Mi Mundo compartido](03-WorldView.md#mi-mundo-compartido--distribuir-su-propio-snapshot-sin-necesidad-de-pares)
-  y el propio [diálogo Distribuir](03-WorldView.md#encuentros-en-el-mundo--publicaciones-y-avatares-que-comparten-sus-pares).
+  [Mi Mundo compartido](WorldViewAdvancedTools.md#mi-mundo-compartido--distribuir-su-propio-snapshot-sin-necesidad-de-pares)
+  y el propio [diálogo Distribuir](WorldViewAdvancedTools.md#encuentros-en-el-mundo--publicaciones-y-avatares-que-comparten-sus-pares).
 - La página Publicaciones:
   [Distribuir desde la página Publicaciones](09-PublicationsAndEvidence.md#distribuir-desde-la-página-publicaciones),
   [Ubicaciones de Snapshots](11-EvidenceAndStorage.md#ubicaciones-de-snapshots) y
@@ -155,7 +155,7 @@ con los que está conectado pueden seguir recuperando construcciones de hasta
 - **Descubrir Mundo compartido** en la Vista del mundo busca su Mundo
   compartido directamente en Arweave y Nostr y lo comprueba, respondiendo a
   «¿mi publicación está realmente ahí fuera, intacta?». Consulte
-  [Descubrir Mundo compartido](03-WorldView.md#descubrir-mundo-compartido--buscar-directamente-en-redes-descentralizadas).
+  [Descubrir Mundo compartido](WorldViewAdvancedTools.md#descubrir-mundo-compartido--buscar-directamente-en-redes-descentralizadas).
 - En la página Publicaciones, **Verificar contenido de IPFS** vuelve a
   recuperar una subida a IPFS y la compara con su hash, y
   **Verificar evidencia** comprueba un ancla.

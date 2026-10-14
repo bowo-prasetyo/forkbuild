@@ -2,8 +2,8 @@
 // spot in a World where someone chose Build here, remembered for the build
 // they started there, so that publishing the build stands it on that spot.
 // Like any placement, it is the builder's own note of where to show their
-// build; it claims no land (docs/user/03-WorldView.md, "Why can two builds
-// sit in the same spot?").
+// build; it claims no land (docs/user/WorldViewAdvancedTools.md, "Why can
+// two builds sit in the same spot?").
 //
 // `{ buildDocumentId, worldDocumentId, worldTitle, position: { x, y, z }, createdAt }`.
 

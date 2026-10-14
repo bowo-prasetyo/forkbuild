@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 06d073f252435c51 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 781eb04573741493 -->
 # Perguntas frequentes
 
 <!-- languages -->
@@ -117,7 +117,7 @@ Não. Um posicionamento só diz onde o Mundo *dela* mostra sua construção; a
 sua fica onde você a pôs, e a construção mantém seu nome e seu histórico. Se
 você não quiser isso, escolha **Só eu posso posicioná-lo** em **Quem pode
 posicioná-lo no Mundo** antes de publicar. Veja
-[Por que posso posicionar construções de outras pessoas?](03-WorldView.md#por-que-posso-posicionar-construções-de-outras-pessoas).
+[Por que posso posicionar construções de outras pessoas?](WorldViewAdvancedTools.md#por-que-posso-posicionar-construções-de-outras-pessoas).
 
 ### Por que há duas construções no mesmo ponto?
 
@@ -125,7 +125,7 @@ Um posicionamento não reivindica terreno, e não há servidor central para
 dizer quem chegou primeiro a um ponto, então dois posicionamentos podem
 citar o mesmo ponto. Você é avisado antes de mover um dos seus para um ponto
 ocupado. Veja
-[Por que duas construções podem ficar no mesmo ponto?](03-WorldView.md#por-que-duas-construções-podem-ficar-no-mesmo-ponto).
+[Por que duas construções podem ficar no mesmo ponto?](WorldViewAdvancedTools.md#por-que-duas-construções-podem-ficar-no-mesmo-ponto).
 
 ## Identidade e seus dados
 

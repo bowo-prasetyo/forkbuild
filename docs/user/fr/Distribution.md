@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: e191fb1f57264f38 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: c6324c75a72ab6b3 -->
 # Distribuer votre travail
 
 <!-- languages -->
@@ -108,8 +108,8 @@ Détails :
 
 - Déclaration signée et Snapshot :
   [Où elle va](04-PublishingAndForking.md#où-elle-va--envoyer-une-construction-en-publiant),
-  [Mon Monde partagé](03-WorldView.md#mon-monde-partagé--distribuer-votre-propre-snapshot-sans-pair-nécessaire),
-  et la [boîte de dialogue Distribuer](03-WorldView.md#rencontres-dans-le-monde--publications-et-avatars-que-vos-pairs-partagent)
+  [Mon Monde partagé](WorldViewAdvancedTools.md#mon-monde-partagé--distribuer-votre-propre-snapshot-sans-pair-nécessaire),
+  et la [boîte de dialogue Distribuer](WorldViewAdvancedTools.md#rencontres-dans-le-monde--publications-et-avatars-que-vos-pairs-partagent)
   elle-même.
 - La page Publications :
   [Distribuer depuis la page Publications](09-PublicationsAndEvidence.md#distribuer-depuis-la-page-publications),
@@ -200,7 +200,7 @@ directement chez vous des constructions jusqu’à 64 Mo.
 - **Découvrir un Monde partagé**, dans la Vue du Monde, recherche
   directement votre Monde partagé sur Arweave et Nostr et le vérifie, pour
   répondre à « ma publication est-elle vraiment là-bas, intacte ? ». Voir
-  [Découvrir un Monde partagé](03-WorldView.md#découvrir-un-monde-partagé--chercher-directement-sur-les-réseaux-décentralisés).
+  [Découvrir un Monde partagé](WorldViewAdvancedTools.md#découvrir-un-monde-partagé--chercher-directement-sur-les-réseaux-décentralisés).
 - Sur la page Publications, **Vérifier le contenu IPFS** récupère un
   envoi IPFS et le compare à son hash, et **Vérifier les preuves**
   vérifie une ancre.

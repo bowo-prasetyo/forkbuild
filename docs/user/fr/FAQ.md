@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 06d073f252435c51 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 781eb04573741493 -->
 # Questions fréquentes
 
 <!-- languages -->
@@ -118,7 +118,7 @@ construction ; la vôtre reste là où vous l’avez mise, et la construction
 garde votre nom et son historique. Si vous ne voulez pas de cela,
 choisissez **Moi seul peux le placer** sous **Qui peut le placer dans le
 Monde** avant de publier. Voir
-[Pourquoi puis-je placer les constructions des autres ?](03-WorldView.md#pourquoi-puis-je-placer-les-constructions-des-autres-).
+[Pourquoi puis-je placer les constructions des autres ?](WorldViewAdvancedTools.md#pourquoi-puis-je-placer-les-constructions-des-autres-).
 
 ### Pourquoi deux constructions se trouvent-elles au même endroit ?
 
@@ -126,7 +126,7 @@ Un placement ne revendique pas de terrain, et il n’y a pas de serveur
 central pour dire qui a eu un endroit en premier : deux placements peuvent
 donc désigner le même point. Vous êtes prévenu avant de déplacer l’un des
 vôtres sur un endroit occupé. Voir
-[Pourquoi deux constructions peuvent-elles se trouver au même endroit ?](03-WorldView.md#pourquoi-deux-constructions-peuvent-elles-se-trouver-au-même-endroit-).
+[Pourquoi deux constructions peuvent-elles se trouver au même endroit ?](WorldViewAdvancedTools.md#pourquoi-deux-constructions-peuvent-elles-se-trouver-au-même-endroit-).
 
 ## Identité et données
 

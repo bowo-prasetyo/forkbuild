@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 554ed0580b2c3b36 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 49a511b82dd0a439 -->
 # 09 — Publikasi & Bukti Eksternal
 
 <!-- languages -->
@@ -89,7 +89,7 @@ merupakan jenis publikasi, dan hanya publikasi itu sendiri yang wajib:
 | **Publikasi** | Bukunya sendiri | Catatan bertanda tangan: Dunia Bersama, Atribusi Cetak Biru, atau Klaim Nama Tempat. Membawa hash kontennya dan tanda tangan penerbitnya. |
 | **Konten** | Tempat salinan cetak disimpan | Byte yang menjadi isi publikasi, seperti balok sebuah Dunia. Selalu disimpan di perangkat ini terlebih dahulu; **Simpan di …** menaruh salinannya di IPFS, Arweave, Steem, atau Blurt agar orang lain dapat mengambilnya. Lihat [Penyedia Konten](10-NetworkSettings.md#penyedia-konten). |
 | **Snapshot** | Satu salinan cetak | Satu salinan tersimpan dari konten publikasi, seperti balok sebuah Dunia, yang dapat diambil orang lain dan dicocokkan dengan hash-nya. Lihat [Snapshot Lokal](#snapshot-lokal). |
-| **Penempatan** | Rak tempat salinan itu ditaruh | Catatan bertanda tangan tentang di mana sebuah bangunan berdiri di Dunia. Satu Dunia Bersama dapat memiliki beberapa penempatan. Lihat [Menempatkan vs mem-fork](03-WorldView.md#menempatkan-vs-mem-fork). |
+| **Penempatan** | Rak tempat salinan itu ditaruh | Catatan bertanda tangan tentang di mana sebuah bangunan berdiri di Dunia. Satu Dunia Bersama dapat memiliki beberapa penempatan. Lihat [Menempatkan vs mem-fork](WorldViewAdvancedTools.md#menempatkan-vs-mem-fork). |
 | **Pengumuman / Penemuan** | Entri katalog perpustakaan | Pemberitahuan kecil bertanda tangan di Nostr, Arweave, Steem, atau Blurt yang menyatakan bahwa publikasi atau Snapshot itu ada dan di mana salinannya, agar orang yang tidak terhubung dengan Anda dapat menemukannya. Lihat [Penyedia Pengumuman / Penemuan](10-NetworkSettings.md#penyedia-pengumuman--penemuan). |
 | **Bukti / Penjangkaran** *(Eksperimental, kecuali di Arweave)* | Cap notaris | Hash konten yang ditulis ke dalam transaksi blockchain (Bitcoin, Base, Arweave, Steem, atau Blurt), sebagai bukti bahwa konten itu sudah ada pada waktu tersebut. Tidak menyimpan atau mengumumkan apa pun. Lihat [Bukti & Penyimpanan](11-EvidenceAndStorage.md). |
 | **Komentar** | Ulasan pembaca | Komentar yang dapat dilekatkan siapa pun yang sudah masuk pada sebuah publikasi, masing-masing ditandatangani oleh pemberi komentar, bukan oleh penerbit. Lihat [Komentar](#komentar). |
@@ -105,7 +105,7 @@ ini mencantumkan klaim yang Anda buat di tempat lain, yang dikirim rekan
 kepada Anda, dan karya Repositori yang datang dalam bentuk
 terdesentralisasi. Klaim nama tempat juga dapat ditemukan langsung dari
 Nostr, tanpa melibatkan rekan; lihat
-[Nama Tempat di Sekitar](03-WorldView.md#nama-tempat-di-sekitar--menemukan-klaim-dari-siapa-pun).
+[Nama Tempat di Sekitar](WorldViewAdvancedTools.md#nama-tempat-di-sekitar--menemukan-klaim-dari-siapa-pun).
 
 ### Mengklaim kepengarangan sebuah struktur
 
@@ -143,7 +143,7 @@ terhubung dengan Anda.
 Tepat setelah Anda menerbitkan, panel menawarkan untuk **Distribusikan**
 nama itu, agar orang yang tidak terhubung dengan Anda juga dapat
 menemukannya, misalnya melalui
-[Nama Tempat di Sekitar](03-WorldView.md#nama-tempat-di-sekitar--menemukan-klaim-dari-siapa-pun).
+[Nama Tempat di Sekitar](WorldViewAdvancedTools.md#nama-tempat-di-sekitar--menemukan-klaim-dari-siapa-pun).
 Pilih **Jaringan** (Arweave, Blurt, Nostr, atau Steem; dimulai dari
 [Penyedia Pengumuman / Penemuan](10-NetworkSettings.md#penyedia-pengumuman--penemuan)
 Anda) lalu klik **Distribusikan**, atau **Nanti saja** untuk melewatinya.
@@ -319,7 +319,7 @@ Anda akan menemukan komentar:
 - di **Repositori** dan di halaman pembuat: tombol **Komentar** di setiap
   kartu dan baris daftar;
 - di panel
-  [Dunia Bersama Saya](03-WorldView.md#dunia-bersama-saya--mendistribusikan-snapshot-anda-sendiri-tanpa-rekan) di Tampilan Dunia, di bagian **Komentar**-nya;
+  [Dunia Bersama Saya](WorldViewAdvancedTools.md#dunia-bersama-saya--mendistribusikan-snapshot-anda-sendiri-tanpa-rekan) di Tampilan Dunia, di bagian **Komentar**-nya;
 - pada **Perjumpaan Dunia** yang dipilih: tombol **Komentar**-nya.
 
 Masing-masing menampilkan komentar, dari yang terlama, dengan identitas

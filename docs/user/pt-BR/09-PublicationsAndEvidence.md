@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 554ed0580b2c3b36 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 49a511b82dd0a439 -->
 # 09 — Publicações e evidências externas
 
 <!-- languages -->
@@ -89,7 +89,7 @@ obrigatória:
 | **Publicação** | O livro em si | Um registro assinado: um Mundo compartilhado, uma Atribuição de planta ou uma Declaração de nome de lugar. Leva o hash do conteúdo e a assinatura do editor. |
 | **Conteúdo** | Onde ficam os exemplares impressos | Os bytes de que trata a publicação, como os blocos de um Mundo. Sempre ficam primeiro neste dispositivo; **Armazenar em …** põe uma cópia no IPFS, no Arweave, no Steem ou no Blurt para que outros possam buscá-la. Veja [Provedor de conteúdo](10-NetworkSettings.md#provedor-de-conteúdo). |
 | **Snapshot** | Um exemplar impresso | Uma cópia guardada do conteúdo de uma publicação, como os blocos de um Mundo, que outros podem buscar e conferir com o hash. Veja [Snapshot local](#snapshot-local). |
-| **Posicionamento** | Em que estante o exemplar fica | Um registro assinado de onde uma construção fica no Mundo. Um Mundo compartilhado pode ter vários. Veja [Posicionar ou bifurcar](03-WorldView.md#posicionar-ou-bifurcar). |
+| **Posicionamento** | Em que estante o exemplar fica | Um registro assinado de onde uma construção fica no Mundo. Um Mundo compartilhado pode ter vários. Veja [Posicionar ou bifurcar](WorldViewAdvancedTools.md#posicionar-ou-bifurcar). |
 | **Anúncio / descoberta** | Uma ficha no catálogo da biblioteca | Um pequeno aviso assinado no Nostr, no Arweave, no Steem ou no Blurt dizendo que a publicação ou o Snapshot existe e onde está a cópia, para que pessoas não conectadas a você possam encontrá-lo. Veja [Provedor de anúncio / descoberta](10-NetworkSettings.md#provedor-de-anúncio--descoberta). |
 | **Prova / ancoragem** *(Experimental, exceto no Arweave)* | O carimbo de um cartório | O hash do conteúdo gravado numa transação de blockchain (Bitcoin, Base, Arweave, Steem ou Blurt), como evidência de que ele existia naquele momento. Não guarda nem anuncia nada. Veja [Evidências e armazenamento](11-EvidenceAndStorage.md). |
 | **Comentários** | As resenhas dos leitores | Comentários que qualquer pessoa que entrou pode anexar a uma publicação, cada um assinado por quem comentou, não pelo editor. Veja [Comentários](#comentários). |
@@ -105,7 +105,7 @@ declarações que você fez em outros lugares, as que os pares enviaram a você
 e as criações do Repositório que chegaram em forma descentralizada. As
 declarações de nomes de lugares também podem ser encontradas direto no
 Nostr, sem nenhum par envolvido; veja
-[Nomes de lugares por perto](03-WorldView.md#nomes-de-lugares-por-perto--descobrindo-declarações-de-qualquer-pessoa).
+[Nomes de lugares por perto](WorldViewAdvancedTools.md#nomes-de-lugares-por-perto--descobrindo-declarações-de-qualquer-pessoa).
 
 ### Declarando a autoria de uma estrutura
 
@@ -139,7 +139,7 @@ uma declaração assinada aos seus pares conectados.
 
 Logo depois de publicar, o painel oferece **Distribuir** o nome, para que
 quem não está conectado a você também possa encontrá-lo, por exemplo em
-[Nomes de lugares por perto](03-WorldView.md#nomes-de-lugares-por-perto--descobrindo-declarações-de-qualquer-pessoa).
+[Nomes de lugares por perto](WorldViewAdvancedTools.md#nomes-de-lugares-por-perto--descobrindo-declarações-de-qualquer-pessoa).
 Escolha a **Rede** (Arweave, Blurt, Nostr ou Steem; começa no seu
 [Provedor de anúncio / descoberta](10-NetworkSettings.md#provedor-de-anúncio--descoberta))
 e clique em **Distribuir**, ou em **Agora não** para pular. Você também pode
@@ -307,7 +307,7 @@ Você encontra comentários:
 - no **Repositório** e nas páginas de autor: o botão **Comentar** em todo
   cartão e linha da lista;
 - no painel
-  [Meu Mundo compartilhado](03-WorldView.md#meu-mundo-compartilhado--distribuindo-seu-próprio-snapshot-sem-precisar-de-pares)
+  [Meu Mundo compartilhado](WorldViewAdvancedTools.md#meu-mundo-compartilhado--distribuindo-seu-próprio-snapshot-sem-precisar-de-pares)
   da Visão do mundo, na seção **Comentários**;
 - num **Encontro no Mundo** selecionado: o botão **Comentar** dele.
 

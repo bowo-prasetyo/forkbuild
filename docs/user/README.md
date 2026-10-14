@@ -43,7 +43,7 @@ Everything you need to build, share, remix and walk around with friends.
    published build lives in: walking and flying around, finding and
    looking at things, **Build here**, **Walk here with me**, residents,
    and **Edit a Copy** to take something into the Editor. Its network
-   tools wait under **Show advanced tools**.
+   tools have their own page, under Advanced below.
 4. **[Publishing & Remixing](04-PublishingAndForking.md)** —
    publishing and sharing a link, choosing where your builds go,
    licenses, remixing, Explore and its ready-made builds, the
@@ -62,6 +62,10 @@ The machinery underneath: your identity in detail, direct connections to
 other people, the networks a build can be sent to, and the experimental
 tools. You don't need any of it to play.
 
+- **[World View: Advanced Tools](WorldViewAdvancedTools.md)** — what
+  **Show advanced tools** adds: inspecting bricks, placements and why
+  anyone's build can be placed, World Encounters, discovered place names,
+  claimed builds, and sending your own build out from **My Shared World**.
 - **[Your Name & Identity](05-IdentityAndLogin.md)** — your name and the
   cryptographic identity behind it, the vault (locking/unlocking), backing
   it up with export/import, and managing identities from **My Identities**.

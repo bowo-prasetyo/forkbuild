@@ -84,7 +84,7 @@ itself is required:
 | **Publication** | The book itself | A signed record: a Shared World, a Blueprint Attribution or a Place Naming Claim. It carries the hash of its content and its publisher's signature. |
 | **Content** | Where printed copies are kept | The bytes the publication is about, such as a World's bricks. They're always kept on this device first; **Store on …** puts a copy on IPFS, Arweave, Steem or Blurt so others can fetch it. See [Content Provider](10-NetworkSettings.md#content-provider). |
 | **Snapshot** | A printed copy | One stored copy of a publication's content, such as a World's bricks, which others can fetch and check against its hash. See [Local Snapshot](#local-snapshot). |
-| **Placement** | Where the copy is shelved | A signed record of where a build stands in the World. One Shared World can have several. See [Placing vs forking](03-WorldView.md#placing-vs-forking). |
+| **Placement** | Where the copy is shelved | A signed record of where a build stands in the World. One Shared World can have several. See [Placing vs forking](WorldViewAdvancedTools.md#placing-vs-forking). |
 | **Announcement / Discovery** | A library catalogue entry | A small signed notice on Nostr, Arweave, Steem or Blurt saying the publication or Snapshot exists and where its copy is, so people who aren't connected to you can find it. See [Announcement / Discovery Provider](10-NetworkSettings.md#announcement--discovery-provider). |
 | **Proof / Anchoring** *(Experimental, except on Arweave)* | A notary's stamp | The content's hash written into a blockchain transaction (Bitcoin, Base, Arweave, Steem or Blurt), as evidence it existed by that time. It stores and announces nothing. See [Evidence & Storage](11-EvidenceAndStorage.md). |
 | **Commentary** | Readers' reviews | Comments anyone signed in can attach to a publication, each signed by its commenter, not the publisher. See [Commentary](#commentary). |
@@ -99,7 +99,7 @@ You never create a claim on the Publications page itself. It lists claims
 you made elsewhere, ones peers sent you, and Repository creations that
 arrived in decentralized form. Place-name claims can also be found straight
 from Nostr, with no peer involved; see
-[Nearby Place Names](03-WorldView.md#nearby-place-names--discovering-claims-from-anyone).
+[Nearby Place Names](WorldViewAdvancedTools.md#nearby-place-names--discovering-claims-from-anyone).
 
 ### Claiming authorship of a structure
 
@@ -131,7 +131,7 @@ This announces a signed claim to your connected peers.
 
 Right after you publish, the panel offers to **Distribute** the name, so
 people who aren't connected to you can find it too, for example through
-[Nearby Place Names](03-WorldView.md#nearby-place-names--discovering-claims-from-anyone).
+[Nearby Place Names](WorldViewAdvancedTools.md#nearby-place-names--discovering-claims-from-anyone).
 Pick the **Network** (Arweave, Blurt, Nostr or Steem; it starts on your
 [Announcement / Discovery Provider](10-NetworkSettings.md#announcement--discovery-provider))
 and click **Distribute**, or **Not now** to skip it. You can distribute any
@@ -294,7 +294,7 @@ You'll find comments:
 - in the **Repository** and on author pages: the **Comment** button on
   every card and list row;
 - in World View's
-  [My Shared World](03-WorldView.md#my-shared-world--distributing-your-own-snapshot-no-peers-required)
+  [My Shared World](WorldViewAdvancedTools.md#my-shared-world--distributing-your-own-snapshot-no-peers-required)
   panel, in its **Commentary** section;
 - on a selected **World Encounter**: its **Comment** button.
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: e191fb1f57264f38 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: c6324c75a72ab6b3 -->
 # Mendistribusikan Karya Anda
 
 <!-- languages -->
@@ -72,8 +72,8 @@ Detail:
 
 - Klaim Bertanda Tangan dan Snapshot:
   [Ke mana dikirim](04-PublishingAndForking.md#ke-mana-dikirim--mengirim-bangunan-saat-menerbitkan),
-  [Dunia Bersama Saya](03-WorldView.md#dunia-bersama-saya--mendistribusikan-snapshot-anda-sendiri-tanpa-rekan),
-  dan [dialog Distribusikan](03-WorldView.md#perjumpaan-dunia--publikasi-dan-avatar-yang-dibagikan-rekan-anda)
+  [Dunia Bersama Saya](WorldViewAdvancedTools.md#dunia-bersama-saya--mendistribusikan-snapshot-anda-sendiri-tanpa-rekan),
+  dan [dialog Distribusikan](WorldViewAdvancedTools.md#perjumpaan-dunia--publikasi-dan-avatar-yang-dibagikan-rekan-anda)
   itu sendiri.
 - Halaman Publikasi:
   [Mendistribusikan dari halaman Publikasi](09-PublicationsAndEvidence.md#mendistribusikan-dari-halaman-publikasi),
@@ -162,7 +162,7 @@ langsung dari Anda.
   langsung di Arweave dan Nostr lalu memeriksanya, sehingga menjawab
   pertanyaan "apakah publikasi saya benar-benar ada di luar sana, dan
   utuh?" Lihat
-  [Temukan Dunia Bersama](03-WorldView.md#temukan-dunia-bersama--mencari-langsung-di-jaringan-terdesentralisasi).
+  [Temukan Dunia Bersama](WorldViewAdvancedTools.md#temukan-dunia-bersama--mencari-langsung-di-jaringan-terdesentralisasi).
 - Di halaman Publikasi, **Verifikasi Konten IPFS** mengambil kembali
   unggahan IPFS dan membandingkannya dengan hash-nya, dan
   **Verifikasi Bukti** memeriksa sebuah jangkar.

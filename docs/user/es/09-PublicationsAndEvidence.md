@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 554ed0580b2c3b36 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 49a511b82dd0a439 -->
 # 09 — Publicaciones y evidencia externa
 
 <!-- languages -->
@@ -91,7 +91,7 @@ publicación en sí es obligatoria:
 | **Publicación** | El libro en sí | Un registro firmado: un Mundo compartido, una Atribución de plano o una Declaración de nombre de lugar. Lleva el hash de su contenido y la firma de su editor. |
 | **Contenido** | Donde se guardan los ejemplares impresos | Los bytes de los que trata la publicación, como los bloques de un Mundo. Siempre se guardan primero en este dispositivo; **Guardar en …** pone una copia en IPFS, Arweave, Steem o Blurt para que otros puedan obtenerla. Consulte [Proveedor de contenido](10-NetworkSettings.md#proveedor-de-contenido). |
 | **Snapshot** | Un ejemplar impreso | Una copia guardada del contenido de una publicación, como los bloques de un Mundo, que otros pueden obtener y comprobar contra su hash. Consulte [Snapshot local](#snapshot-local). |
-| **Colocación** | Dónde está el ejemplar en el estante | Un registro firmado de dónde está una construcción en el Mundo. Un Mundo compartido puede tener varias. Consulte [Colocar o bifurcar](03-WorldView.md#colocar-o-bifurcar). |
+| **Colocación** | Dónde está el ejemplar en el estante | Un registro firmado de dónde está una construcción en el Mundo. Un Mundo compartido puede tener varias. Consulte [Colocar o bifurcar](WorldViewAdvancedTools.md#colocar-o-bifurcar). |
 | **Anuncio / descubrimiento** | Una ficha del catálogo de una biblioteca | Un pequeño aviso firmado en Nostr, Arweave, Steem o Blurt que dice que la publicación o el Snapshot existen y dónde está su copia, para que puedan encontrarlo personas que no están conectadas con usted. Consulte [Proveedor de anuncio / descubrimiento](10-NetworkSettings.md#proveedor-de-anuncio--descubrimiento). |
 | **Prueba / anclaje** *(Experimental, salvo en Arweave)* | El sello de un notario | El hash del contenido escrito en una transacción de blockchain (Bitcoin, Base, Arweave, Steem o Blurt), como evidencia de que existía en ese momento. No guarda ni anuncia nada. Consulte [Evidencia y almacenamiento](11-EvidenceAndStorage.md). |
 | **Comentarios** | Las reseñas de los lectores | Comentarios que cualquiera que haya iniciado sesión puede asociar a una publicación, cada uno firmado por quien comenta, no por el editor. Consulte [Comentarios](#comentarios). |
@@ -107,7 +107,7 @@ muestra las declaraciones que hizo en otro lugar, las que le enviaron sus
 pares y las creaciones del Repositorio que llegaron en forma
 descentralizada. Las declaraciones de nombres de lugares también se pueden
 encontrar directamente en Nostr, sin ningún par de por medio; consulte
-[Nombres de lugares cercanos](03-WorldView.md#nombres-de-lugares-cercanos--descubrir-declaraciones-de-cualquier-persona).
+[Nombres de lugares cercanos](WorldViewAdvancedTools.md#nombres-de-lugares-cercanos--descubrir-declaraciones-de-cualquier-persona).
 
 ### Declarar la autoría de una estructura
 
@@ -143,7 +143,7 @@ una declaración firmada a sus pares conectados.
 Justo después de publicar, el panel ofrece **Distribuir** el nombre, para
 que también puedan encontrarlo quienes no están conectados con usted, por
 ejemplo mediante
-[Nombres de lugares cercanos](03-WorldView.md#nombres-de-lugares-cercanos--descubrir-declaraciones-de-cualquier-persona).
+[Nombres de lugares cercanos](WorldViewAdvancedTools.md#nombres-de-lugares-cercanos--descubrir-declaraciones-de-cualquier-persona).
 Elija la **Red** (Arweave, Blurt, Nostr o Steem; empieza en su
 [Proveedor de anuncio / descubrimiento](10-NetworkSettings.md#proveedor-de-anuncio--descubrimiento))
 y haga clic en **Distribuir**, o en **Ahora no** para omitirlo. También puede
@@ -318,7 +318,7 @@ Encontrará los comentarios:
 - en el **Repositorio** y en las páginas de autor: el botón **Comentar** de
   cada tarjeta y de cada fila de la lista;
 - en el panel
-  [Mi Mundo compartido](03-WorldView.md#mi-mundo-compartido--distribuir-su-propio-snapshot-sin-necesidad-de-pares)
+  [Mi Mundo compartido](WorldViewAdvancedTools.md#mi-mundo-compartido--distribuir-su-propio-snapshot-sin-necesidad-de-pares)
   de la Vista del mundo, en su sección **Comentarios**;
 - en un **Encuentro en el Mundo** seleccionado: su botón **Comentar**.
 

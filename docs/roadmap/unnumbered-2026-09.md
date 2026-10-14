@@ -6571,3 +6571,32 @@ Pillar served: building feels joyful (the guide speaks the app's language).
 - Two more stray, empty language-link blocks in Korean pages are gone. Every translation is re-stamped.
 - Not done: headings inside the remix page that still say "fork" (Forking: make it your own, How to fork, When a fork
   can't complete); changing them changes their anchors, which other pages and translations link to.
+
+## World View split into a visitor's page and its advanced tools (unnumbered, 2026-10-14)
+
+**Why.** The user-guide audit (docs/reviews/UserGuide-2026-10-13.md, open items 4 and 6) found World View still 1,278
+lines, twice any other page, with half of it describing panels that only show with **Show advanced tools** on, and
+its prose the densest in the guide (about 25 words a sentence, one sentence in seven over 40). A visitor who opens it
+wants to walk, look around, copy something and bring friends. Pillar served: building feels joyful (the page a
+newcomer reads after their first build is about what they can see and do).
+
+- **docs/user/03-WorldView.md** is now the visitor's page (580 lines): opening World View, the visitor's view, moving
+  around and what's around you, inside a build, day and night, sound, orientation and notifications, Explore / Map /
+  Places, Info, Edit a Copy, Build here, Walk here with me, the challenge plaza, landmarks, My Worlds, finding worlds,
+  save and publish, history.
+- **docs/user/WorldViewAdvancedTools.md** (new, 520 lines) has everything behind the advanced toggle, opening with a
+  table of what each tool is for: inspecting, Camera vs. Editing, About this build and Placement (with why anyone's
+  build can be placed, why two can share a spot, and placing vs forking), Documents Here, World Encounters with the
+  Distribute dialog, Discover Shared World, Nearby Place Names, Claimed Builds, and My Shared World with its
+  placements and Diagnostic Tools. Section titles are unchanged, so links keep their anchors on the new page.
+- Both pages are rewritten in shorter sentences: about 16 words a sentence, and one in fifty over 40 words.
+- Corrections found on the way: the compass no longer "sits next to your camera coordinates" (those show only with
+  advanced tools on); the panel a click opens is **About this build**, with **Focus**, **Move** and **Remove from
+  World** under Placement; faint see-through builds are explained on the visitor's page, since a visitor sees them.
+- Links from the index, the FAQ, Publishing & Remixing, Publications & External Evidence and Distributing Your Work
+  point at the new page, as do the comments in core/BuildPlot.js and core/BuildSettlement.js. The index lists the new
+  page under Advanced.
+- **All seven translations** have both pages, in each language's own words from `ui/i18n/messages/`; each keeps its
+  translated section titles, so its links keep working. Every translation is stamped.
+- Not done: the residents section of Avatars & Presence and the Distribution walkthrough have not had the same
+  plain-language pass.

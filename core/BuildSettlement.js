@@ -19,8 +19,8 @@ import { naturalFeaturesInRegion } from './NaturalFeatureField.js';
 // Pure: the caller says which spots are taken (by the placements it knows of)
 // and this picks the first free one, starting from a slot the build's own id
 // chooses, so two builders who don't know of each other rarely pick the same
-// spot. A spot claims no land (docs/user/03-WorldView.md, "Why can two
-// builds sit in the same spot?"); the chosen position becomes the build's
+// spot. A spot claims no land (docs/user/WorldViewAdvancedTools.md, "Why can
+// two builds sit in the same spot?"); the chosen position becomes the build's
 // signed placement, which everyone who finds the build adopts.
 
 // The village's first ring, just outside the plaza's clearing and its

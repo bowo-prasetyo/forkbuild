@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d5e21e1edde37655 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 678438731470dcad -->
 # 04 — Penerbitan & Remix
 
 <!-- languages -->
@@ -257,7 +257,7 @@ Dialog ini sama dengan yang dipakai Tampilan Dunia — pengaturan
 **Penyimpanan** dan **Substrat Pengumuman / Penemuan**-nya, serta tombol
 terpisah **Distribusikan Snapshot saja** / **Distribusikan Klaim Bertanda
 Tangan saja**, bekerja seperti yang dijelaskan di
-[Perjumpaan Dunia](03-WorldView.md#perjumpaan-dunia--publikasi-dan-avatar-yang-dibagikan-rekan-anda). Dua hal berbeda di sini: dialog ini selalu
+[Perjumpaan Dunia](WorldViewAdvancedTools.md#perjumpaan-dunia--publikasi-dan-avatar-yang-dibagikan-rekan-anda). Dua hal berbeda di sini: dialog ini selalu
 bekerja pada Dunia Bersama persis yang baru dihasilkan klik Terbitkan Anda,
 dan **Snapshot** didahulukan, sehingga **Kirim** mengirim Snapshot, lalu
 Klaim Bertanda Tangan. Menutup dialog (**Tutup**, klik di luarnya, atau
@@ -370,8 +370,8 @@ lisensi yang mengizinkannya.
 Orang lain biasanya dapat menempatkan karya terbitan Anda di Dunia mereka
 sendiri. Itu menambahkan penempatan bangunan Anda, tidak pernah salinannya,
 dan tidak pernah memindahkan atau mengubah milik Anda (lihat
-[Mengapa saya bisa menempatkan bangunan orang lain?](03-WorldView.md#mengapa-saya-bisa-menempatkan-bangunan-orang-lain)). Fork adalah hal terpisah dan diatur oleh lisensi (lihat
-[Menempatkan vs mem-fork](03-WorldView.md#menempatkan-vs-mem-fork)). Jika Anda lebih suka mereka tidak menempatkannya, buka **Properti
+[Mengapa saya bisa menempatkan bangunan orang lain?](WorldViewAdvancedTools.md#mengapa-saya-bisa-menempatkan-bangunan-orang-lain)). Fork adalah hal terpisah dan diatur oleh lisensi (lihat
+[Menempatkan vs mem-fork](WorldViewAdvancedTools.md#menempatkan-vs-mem-fork)). Jika Anda lebih suka mereka tidak menempatkannya, buka **Properti
 Dokumen** dan atur **Siapa yang dapat menempatkannya di Dunia**:
 
 | Pengaturan | Arti |
@@ -527,7 +527,7 @@ notifikasi Anda; lihat
 **Jelajahi** juga tidak terbatas pada apa yang diterbitkan dari perangkat ini
 atau ditemukan secara langsung: bangunan terdesentralisasi yang
 ditunjukkan seorang rekan kepada Anda di peta
-[Perjumpaan Dunia](03-WorldView.md#perjumpaan-dunia--publikasi-dan-avatar-yang-dibagikan-rekan-anda) di Tampilan Dunia, begitu kontennya benar-benar
+[Perjumpaan Dunia](WorldViewAdvancedTools.md#perjumpaan-dunia--publikasi-dan-avatar-yang-dibagikan-rekan-anda) di Tampilan Dunia, begitu kontennya benar-benar
 terselesaikan, juga bergabung ke pencarian yang sama ini dan ke Halaman
 pembuatnya, dan tetap di sana setelah dimuat ulang. Karya itu ditampilkan
 tidak berbeda dengan hal lain di sini.

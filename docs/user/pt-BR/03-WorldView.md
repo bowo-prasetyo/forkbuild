@@ -1,22 +1,20 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: bf4c383f3135e813 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: acdd48cfaeaf59fa -->
 # 03 — Visão do mundo
 
 <!-- languages -->
 [English](../03-WorldView.md) · [Deutsch](../de/03-WorldView.md) · [Español](../es/03-WorldView.md) · [Français](../fr/03-WorldView.md) · [Bahasa Indonesia](../id/03-WorldView.md) · [日本語](../ja/03-WorldView.md) · [한국어](../ko/03-WorldView.md) · **Português (Brasil)**
 <!-- /languages -->
 
-A Visão do mundo é o espaço 3D compartilhado onde **todas as construções
-publicadas ficam lado a lado**. Voe por ele, procure o que você quer,
-descubra o que outras pessoas construíram por perto e inspecione os blocos
-delas — a Visão do mundo é uma superfície de exploração somente leitura,
-nunca um segundo lugar para construir. No momento em que você quiser mudar
-algo, **Editar uma cópia** entrega a você uma cópia independente no Editor,
-o único lugar onde se constrói no ForkBuild — veja
-[Editar uma cópia](#editar-uma-cópia--levando-algo-para-o-editor) abaixo.
+A Visão do mundo é o mundo 3D compartilhado onde **todas as construções
+publicadas ficam lado a lado**. Você anda ou voa por ele, encontra coisas,
+olha o que outras pessoas construíram e traz seus amigos.
 
-As únicas exceções são anotações, não construção: dar nome a Regiões do
-Mundo e a [Marcos](#marcos--marcando-um-lugar-que-vale-lembrar), e fixar no
-Mundo, como decoração, um animal solto, com **G** (veja
+Aqui você não constrói: para isso existe o Editor. Quando quiser mudar
+algo que encontrou, **Editar uma cópia** abre uma cópia sua no Editor (veja
+[Editar uma cópia](#editar-uma-cópia--levando-algo-para-o-editor)). As
+únicas mudanças que a Visão do mundo faz são rótulos, não blocos: dar nome
+a [Marcos](#marcos--marcando-um-lugar-que-vale-lembrar) e regiões, e deixar
+no Mundo, como decoração, um animal solto, com **G** (veja
 [Avatares e presença](06-AvatarsAndPresence.md#decorando-um-mundo-com-um-animal)).
 
 **A versão curta:**
@@ -32,137 +30,115 @@ Mundo, como decoração, um animal solto, com **G** (veja
 | Silenciar ou ligar o som | O botão **Som**, ou `M` |
 
 Todos os controles estão na [Referência de controles](ControlsReference.md).
-As ferramentas de rede por trás do Mundo são descritas no fim, em
-[Ferramentas avançadas](#ferramentas-avançadas).
+As ferramentas de rede por trás do Mundo têm sua própria página:
+[Visão do mundo: ferramentas avançadas](WorldViewAdvancedTools.md).
 
 ## Abrindo a Visão do mundo
 
 ![A Visão do mundo na praça do desafio](../img/pt-BR/world-view.jpg)
 *A Visão do mundo na praça do desafio: o painel lateral à esquerda, seu avatar na praça, e o som e a bússola no canto superior direito.*
 
-**Passear**, no menu principal, abre a Visão do mundo na praça do desafio
-desta semana, sem precisar de uma construção sua. A praça é a praça da vila:
-as seis construções prontas ficam ao redor dela para todo mundo, toda vez
-que você abre a Visão do mundo, prontas para remixar, e a vila de
-construções publicadas cresce logo do lado de fora delas (veja
-[A praça do desafio](04-PublishingAndForking.md#a-praça-do-desafio)).
+Há dois jeitos de entrar:
 
-Em **Explorar**, clique em **Explorar** em qualquer criação — ou vá direto à
-URL de um mundo. Você aparece ao lado daquela criação no mundo
-compartilhado. Construções que outras pessoas enviaram para todo mundo são
-encontradas lá e no desafio (veja
-[Quem pode encontrá-la?](04-PublishingAndForking.md#quem-pode-encontrá-la)),
-e ficam onde quem as construiu as pôs: remixes ao lado do que remixam, o
-resto na vila ao redor da praça.
+- **Passear** na barra superior abre a Visão do mundo na praça do desafio
+  desta semana. Você não precisa de uma construção sua. A praça é a praça
+  da vila: as seis construções prontas ficam em volta dela, prontas para
+  remixar, e logo do lado de fora as construções publicadas formam uma
+  vila (veja [A praça do desafio](04-PublishingAndForking.md#a-praça-do-desafio)).
+- Na página **Explorar**, **Explorar** em qualquer construção leva você
+  bem ao lado dela. Abrir o link de um Mundo faz o mesmo.
+
+As construções que outras pessoas
+[enviaram para todos](04-PublishingAndForking.md#quem-pode-encontrá-la)
+ficam onde quem as fez as colocou: os remixes ao lado do que remixam, e o
+resto na vila em volta da praça.
 
 ## Uma visão de visitante, e Avançado
 
-A Visão do mundo abre como uma visão de visitante. O que você veio fazer
-fica numa barra na parte de baixo do Mundo: **Construir aqui**, **Passear
-aqui comigo** e **Editar uma cópia** quando a construção não é sua. O painel
-lateral traz o nome da construção e quem a fez (o mesmo nome em todo lugar
-onde uma construção é creditada), depois para onde ir e o que há ao seu
-redor. No celular o painel começa fechado, para o Mundo ocupar a tela;
-**Painel** o abre. Na praça, o celular mostra em vez disso uma linha sobre o
-Mundo, **Praça: …** e quantas construções estão lá, que abre o painel. Quem
-é desenhado, e se as teclas fazem seu avatar andar e a câmera o segue, ficam
-ligados para todo mundo e esperam em **Configurações do avatar**; a escolha
-de câmera continua ao lado. As ferramentas das redes por trás do Mundo ficam no fim do
-painel, em **Mostrar ferramentas avançadas**:
+A Visão do mundo abre como visão de visitante. O que você veio fazer fica
+numa barra na parte de baixo do Mundo: **Construir aqui**, **Passear aqui
+comigo** e, quando a construção não é sua, **Editar uma cópia**.
 
-- as coordenadas sobre a visão, os campos **Local** da busca e a linha
-  **Câmera · Edição** do cabeçalho
-  (veja [Câmera e edição](#câmera-e-edição));
-- os grupos **Nomes de lugares**, **Construções declaradas** e **Encontros
-  no Mundo** de Por perto, com **Descoberta de Mundos compartilhados** dentro
-  dos Encontros;
-- **Meu Mundo compartilhado**, o painel de rede da sua publicação, e **Mover
-  posicionamento** ao lado;
-- a lista de Mundos que não puderam carregar e os diagnósticos de avatares;
-- selecionar com um clique: como visitante, clicar na vista (para começar a
-  andar, por exemplo) não seleciona nada além de outro avatar, então os
-  detalhes de nenhum bloco se abrem; com Avançado ligado, um clique abre
-  [Inspecionando um bloco](#inspecionando-um-bloco--ou-uma-estrutura-posicionada).
+O painel lateral mostra o nome da construção e quem a fez, depois para
+onde você pode ir e o que há em volta. No celular, o painel começa fechado
+para o Mundo ocupar a tela; **Painel** o abre. Na praça, o celular mostra
+em vez disso uma linha, **Praça: …** com quantas construções há ali;
+toque nela para abrir o painel. Quem aparece, se as teclas movem seu
+avatar e as escolhas de câmera ficam em **Configurações do avatar**.
 
-A escolha fica guardada neste dispositivo e não muda nada para mais
-ninguém. A bússola, os nomes de lugares embaixo, Buscar, Locais, o Mapa e
-Lugares, seu avatar e Salvar e Publicar da construção continuam nas duas
-visões. Construções cujos editores declaram um lugar por perto continuam
-desenhadas como fantasmas claros; a lista delas fica em Avançado.
+No fim do painel, **Mostrar ferramentas avançadas** acrescenta as
+ferramentas para as redes por trás do Mundo: coordenadas, inspecionar
+blocos, posicionamentos, Encontros no Mundo e mais. Elas estão em uma
+página própria,
+[Visão do mundo: ferramentas avançadas](WorldViewAdvancedTools.md). A
+escolha fica guardada neste dispositivo e não muda nada para mais ninguém.
+Tudo nesta página funciona com ou sem elas.
 
 ## Voando por aí
 
-- **Arrastar com o botão esquerdo** — orbitar a câmera
-- **Arrastar com o botão direito** — mover a vista
-- **Rolar** — aproximar e afastar
-- **Home** (a tecla, ou o botão **Início** no painel) — voltar ao seu
-  próprio mundo (veja abaixo)
+- **Arrastar com o botão esquerdo**: girar a câmera
+- **Arrastar com o botão direito**: deslizar a câmera para o lado
+- **Rolar**: aproximar e afastar
+- **Início** (a tecla, ou o botão do painel): voltar para o seu próprio
+  Mundo (veja [Orientação e locais](#orientação-e-locais))
 
-Conforme você se move, os mundos próximos **entram e saem** automaticamente.
-O painel da esquerda se lê de cima para baixo: o que você está vendo (o
-cabeçalho), para onde pode ir (Início, Locais e as guias Explorar / Mapa /
-Lugares), o que há ao seu redor (Por perto) e depois suas próprias
-ferramentas — Buscar, Avatar e Meu Mundo compartilhado. Embaixo, ele mostra:
+Para andar com seu avatar, veja
+[Caminhando com seu avatar](06-AvatarsAndPresence.md#caminhando-com-seu-avatar).
 
-- **Mundos à vista** — os outros mundos carregados ao seu redor no momento
-  (oculto enquanto o único carregado é o mundo em que você está, que o
-  cabeçalho já nomeia)
-- **Mundos próximos** — clique em um para voar direto até ele
+Os Mundos próximos **carregam e descarregam sozinhos** conforme você se
+move. O painel lateral se lê de cima para baixo:
 
-No topo da seção **Por perto** de Explorar há também dois botões,
-**Explorar aqui** e **O que há aqui?** — veja
-[Encontrando mundos](#encontrando-mundos) abaixo.
+1. o que você está olhando (o cabeçalho);
+2. para onde você pode ir: **Início**, **Locais** e as abas **Explorar**,
+   **Mapa** e **Lugares**;
+3. o que há em volta (**Por perto**);
+4. suas próprias ferramentas: **Buscar** e **Avatar**.
 
-Passar o mouse sobre o Mundo mostra o que está sob o ponteiro em um pequeno
-cartão no canto inferior direito da visualização, para que o painel em si
-nunca pule enquanto você mexe o mouse.
+No fim, **Mundos à vista** lista os outros Mundos carregados em volta de
+você, e **Mundos próximos** os que você pode visitar com um clique.
 
-O próprio chão é gerado do mesmo jeito para todos a partir de uma semente
-compartilhada — grama, praia, rocha, floresta e lavoura, lagos, rios
-sinuosos e o mar aberto seguem a altitude e a umidade do terreno, não uma
-distribuição aleatória. A terra ao redor da origem é sempre seca; afaste-se
-umas mil unidades e você chegará a um litoral, onde o chão desce por uma
-plataforma até um mar profundo, de um azul mais escuro. Seu avatar entra
-num lago ou no mar, cada vez mais devagar à medida que a água sobe, e
-quando a água passa da metade da altura dele, ele nada (veja [Nadar e
-mergulhar](06-AvatarsAndPresence.md#nadar-e-mergulhar)). Mergulhe e a vista
-vira uma água verde-azulada: algas balançam no fundo e pequenos cardumes
-circulam em águas abertas, os mesmos peixes nos mesmos lugares para todos. É cenário: nada nele pode ser editado, e ele parece
-idêntico não importa quem olhe nem quando.
+Aponte para algo no Mundo e um cartãozinho no canto inferior direito da
+visão diz o que é.
 
-O chão de floresta tem sua própria mistura de espécies de árvores, vinda da
-mesma semente — coníferas onde a umidade é maior, árvores de folhas largas
-onde é mais seco e arbustos na borda dos campos — e cervos (na floresta) e
-coelhos (nos campos) aparecem como mais um cenário gerado pela semente ao
-lado delas. As árvores ficam exatamente onde foram postas. Os animais
-passeiam devagar em torno do ponto onde foram postos, nunca a mais que
-alguns passos dele, parando e virando enquanto andam — os coelhos saltam, os
-cervos caminham balançando a cabeça. Quando param, pastam com a cabeça baixa
-na grama, ou levantam a cabeça e olham em volta (um coelho se senta nas
-patas traseiras). Chegue perto de um e ele vira a cabeça para olhar você —
-um cervo pastando para e levanta a cabeça, e um coelho se senta se você se
-aproximar — mas ele não vê você se estiver bem atrás dele. Os animais nunca
-fogem nem mudam de lugar por sua causa: a reação acontece só na sua tela, e
-os animais das outras pessoas olham para elas.
-Os coelhos têm orelhas longas e em pé e um rabinho de algodão; os cervos têm
-orelhas para os lados e um rabo curto. Os caminhos deles vêm da mesma
-semente e do relógio, então todos que olham para o mesmo lugar no mesmo
-momento veem os mesmos animais nos mesmos lugares. A vida selvagem bloqueia
-seu caminho a pé exatamente como uma árvore, onde quer que o animal tenha
-ido parar — veja
-[Caminhando com seu avatar](06-AvatarsAndPresence.md#caminhando-com-seu-avatar)
-— e nada disso pode ser editado.
+### O que há em volta
 
-Um Mundo também pode ter **moradores** — pessoas que moram lá e passeiam em
-volta de suas casas, contornando as construções em vez de atravessá-las, e
-que se viram para cumprimentar você quando você chega perto; converse com
-um e ele conta o que há por ali. Ao contrário da vida selvagem, eles fazem
-parte do conteúdo do próprio Mundo: quem os adiciona é o autor. As casas
-prontas já vêm habitadas: uma cópia da Casa, de um chalé ou de outra moradia
-pronta começa com um morador que vive logo ao lado da porta da frente, e as
-que ficam ao redor da praça do desafio também têm o seu; remova o seu com
-**R** como qualquer outro. Veja
-[Moradores](06-AvatarsAndPresence.md#moradores).
+**O terreno** é o mesmo para todos. Grama, praias, rocha, floresta,
+campos, lagos, rios e o mar seguem a forma do chão. O terreno do centro
+está sempre seco; a umas mil unidades você chega a uma costa, onde o chão
+desce para o mar fundo.
+
+**Água.** Seu avatar entra andando num lago ou no mar e fica mais lento
+conforme a água sobe. Quando a água é mais funda que metade da altura dele,
+ele nada (veja
+[Nadar e mergulhar](06-AvatarsAndPresence.md#nadar-e-mergulhar)). Mergulhe
+e você vê algas e pequenos cardumes de peixes.
+
+**Árvores e animais.** A floresta tem coníferas onde é mais úmido e
+árvores de folhas largas onde é mais seco, com arbustos na beira dos
+campos. Cervos vivem na floresta e coelhos nos campos. As árvores nunca se
+mexem. Os animais andam devagar perto do próprio lugar, param para pastar
+e levantam a cabeça de vez em quando. Chegue perto e um deles vira a
+cabeça para olhar você (a não ser que você esteja bem atrás); um cervo que
+pasta levanta a cabeça, um coelho fica sentado nas patas de trás. Eles
+nunca fogem nem mudam de lugar por sua causa, e as outras pessoas veem os
+animais olhando para *elas*. Os animais bloqueiam seu caminho a pé, como
+as árvores.
+
+Todos que olham o mesmo lugar no mesmo momento veem o mesmo terreno, os
+mesmos peixes, árvores e animais. Nada disso pode ser editado.
+
+Os **moradores** são pessoas que vivem num Mundo. Passeiam em volta de
+casa, contornam os prédios em vez de atravessá-los e se viram para
+cumprimentar você; fale com um e ele conta o que há por perto. Ao
+contrário dos animais, eles fazem parte do Mundo: quem o fez os coloca.
+As casas prontas vêm com um morador perto da porta, inclusive as que ficam
+em volta da praça do desafio. Na sua própria construção, **R** remove um.
+Veja [Moradores](06-AvatarsAndPresence.md#moradores).
+
+**Construções fracas e transparentes** são construções que outras pessoas
+anunciaram perto de você e que este dispositivo não aceitou. Elas somem de
+novo quando você segue em frente. Veja
+[Construções declaradas](WorldViewAdvancedTools.md#construções-declaradas--construções-de-outras-pessoas-onde-os-editores-dizem-que-elas-ficam).
 
 ### Dentro de uma construção
 
@@ -217,368 +193,337 @@ lembrada neste dispositivo e não muda nada para mais ninguém.
 
 ## Som
 
-**Controles:** o botão **Som** no canto superior direito da visualização
-(inferior direito no celular), ou `M`, liga ou desliga todo o som; o
-controle deslizante ao lado ajusta o volume (no celular ou tablet, use os
-botões de volume do aparelho). **♪ Música** liga ou desliga só a música, e
-**3D** alterna entre som 3D e **Estéreo** simples. O som começa com seu
-primeiro clique, toque ou tecla, como os navegadores exigem, e pausa
-enquanto a aba está oculta. O ForkBuild lembra essas escolhas neste
-dispositivo, para as duas visões.
+**Controles**, no canto superior direito da visão (inferior direito no
+celular):
 
-A Visão do mundo toca um som de fundo baixo que combina com onde você está:
-vento em terreno alto e rochoso, canto de pássaros nas florestas, grilos nos
-campos e pastagens, água batendo na margem de um lago e água correndo ao
-lado de um rio. As árvores ao seu redor são ouvidas pelo tipo: folhas
-farfalhando em matas de folhas largas e arbustos, vento suspirando entre as
-coníferas, mais alto quanto mais perto elas estão. Tudo vai se desfazendo
-enquanto você passa de um tipo de terreno para outro.
+- **Som**, ou `M`: ligar ou desligar todo o som.
+- O controle deslizante: o volume. No celular ou tablet, use os botões de
+  volume do aparelho.
+- **♪ Música**: ligar ou desligar só a música.
+- **3D**: alternar entre som 3D e **Estéreo** simples.
 
-Seu avatar também faz seus próprios sons. Os passos acompanham o ritmo da
-caminhada ou da corrida e mudam conforme o que está sob os pés: grama, folhas
-estalando na floresta, areia fofa na praia, pedra em terreno alto e rochoso,
-respingos em um lago ou rio, e uma batida oca sobre blocos. Pular faz um
-zunido, e aterrissar um baque, mais pesado depois de uma queda maior.
-Montado em um veículo, você o ouve: os pneus e a catraca de uma bicicleta ou de um biciclo, o rodar das rodas de madeira de uma carroça de feno ou o queimador de um balão de ar quente, subindo quando você acelera e sumindo quando você desce; os de rodas ficam quietos parados. Subir e descer também têm som próprio (a campainha e o descanso da bicicleta, o rangido e o sino do biciclo, as tábuas rangendo e o feno farfalhando na carroça, o queimador rugindo e apagando), e frear em velocidade faz os freios cantarem, rasparem ou rangerem, mais
-alto quanto mais rápido você estava.
+O som começa no seu primeiro clique, toque ou tecla (os navegadores
+exigem isso) e pausa enquanto a aba está escondida. Essas escolhas ficam
+guardadas neste dispositivo, na Visão do mundo e no Editor.
 
-As mudanças que você faz em um Mundo aqui têm os mesmos sons curtos do
-Editor: dar nome a um marco ou região, adicionar ou remover um morador,
-transformar um animal em decoração ou o contrário, e desfazer e refazer. As
-mudanças feitas por um colaborador são silenciosas.
+**O que você ouve:**
 
-Os animais e as pessoas ao seu redor também são ouvidos, da direção em que
-estão e mais baixo quanto mais longe estiverem. Um cervo bufa e um coelho
-bate a pata quando levanta a cabeça em alerta, e de novo, assustado, quando
-você chega perto; dá para ouvir os passos deles quando passam. Pegar um faz
-um farfalhar e um dedilhado subindo, e soltá-lo, o mesmo descendo. Um
-morador cantarola um simpático "hm-hm" quando se vira para cumprimentar
-você, murmura com uma voz própria quando fala com você, e os passos dele são
-ouvidos quando ele passa. Todos os visitantes ouvem o mesmo cervo levantar a
-cabeça no mesmo momento, porque quando um animal faz isso é parte do Mundo.
+- **O terreno em volta**: vento no alto das rochas, pássaros na floresta,
+  grilos nos campos, água batendo na beira do lago, um rio correndo. As
+  árvores farfalham ou suspiram ao vento, mais alto quanto mais perto. Os
+  sons se misturam quando você passa de um tipo de terreno para outro.
+- **Seu avatar**: passos que mudam com o chão (grama, folhas, areia,
+  pedra, água, blocos), um sopro ao pular e uma batida ao cair.
+- **Veículos**: rodas ou o queimador de um balão, mais alto conforme você
+  acelera; sons ao subir e descer; e freios que chiam quando você para de
+  repente.
+- **Animais e moradores**: um cervo bufa e um coelho bate o pé quando
+  levanta a cabeça ou se assusta; pegar e soltar um tem som próprio. Os
+  moradores cantarolam ao cumprimentar você e murmuram ao falar. Todo
+  mundo ouve o mesmo cervo levantar a cabeça no mesmo momento.
+- **Outras pessoas**: os passos, pulos e veículos delas, de onde elas
+  estão, enquanto você puder vê-las. Esconda os outros avatares e elas
+  ficam em silêncio. Os veículos são ouvidos a até 40 m, só os três mais
+  próximos.
+- **Suas próprias mudanças**: dar nome a um marco ou região, adicionar ou
+  remover um morador, decorar com um animal, e desfazer e refazer fazem o
+  mesmo som curto que no Editor. As mudanças dos outros não fazem som.
 
-Os avatares das outras pessoas também são ouvidos: os passos delas sobre o
-que estiverem pisando, e seus pulos e aterrissagens, de onde estão. Só são
-ouvidas as pessoas que você consegue ver; oculte os outros avatares e eles
-ficam em silêncio. Alguém montado em um veículo é ouvido nele, até 40 m de
-distância: as rodas ou o queimador subindo e descendo com a velocidade, a subida e a descida,
-e um chiado quando a pessoa reduz bruscamente (a frenagem em si não é
-enviada, então uma parada brusca é entendida como frenagem). Só tocam os veículos dos três condutores mais próximos, para que uma multidão não abafe
-o resto.
+Os sons vêm de onde estão: na frente ou atrás, em cima ou embaixo, à
+esquerda ou à direita, e giram quando você gira a câmera. Fones de ouvido
+ajudam. **Estéreo** toca só esquerda e direita, o que pode combinar melhor
+com um aparelho lento ou com caixas de som.
 
-Os sons ao seu redor são posicionados em **3D**: à frente ou atrás, acima ou
-abaixo, além de à esquerda ou à direita, girando quando você gira a câmera.
-Fica melhor com fones de ouvido. O botão **3D** ao lado do controle de volume
-muda para esquerda e direita simples (**Estéreo**), que pode ser melhor para
-um dispositivo lento ou para caixas de som.
+A **música** toca baixinho por baixo: uma melodia tranquila que o seu
+navegador inventa na hora, calorosa de dia e mais lenta depois que
+escurece, com pausas de silêncio entre as músicas. Ela nunca toca igual
+duas vezes.
 
-Tudo é gerado no seu navegador, então nada é baixado e nenhum som é enviado.
-As outras pessoas ouvem seus passos e seu veículo do mesmo jeito que você
-ouve os delas: o navegador delas os cria a partir de onde já vê seu avatar
-andando ou montado.
-
-A **música** toca baixinho sob os sons: uma melodia suave que o seu
-navegador vai inventando, calorosa de dia e mais lenta e grave depois que
-escurece, com pausas silenciosas entre as músicas para que os sons do
-próprio mundo apareçam. Ela nunca toca duas vezes exatamente igual. O botão
-**Som** e o controle deslizante a silenciam e ajustam o volume dela junto
-com todo o resto.
+Todo o som é criado no seu navegador: nada é baixado e nada é enviado. Os
+navegadores das outras pessoas criam o som dos seus passos a partir do que
+já veem você andando.
 
 ## Orientação e locais
 
-Ao lado das coordenadas da câmera, uma pequena **bússola** mostra para onde
-você está virado (ela é somente leitura — nunca move a câmera). Uma fileira
-de botões perto do topo do painel cuida do deslocamento:
+A **bússola** flutua no canto superior direito da visão. Ela mostra norte,
+leste, sul e oeste, para onde você está virado em graus e pontinhos para
+construções, pessoas e marcos por perto. Aponte para um ponto para ver o
+nome, ou leia a lista embaixo da bússola, que também diz o lugar onde você
+está. A bússola só mostra; ela nunca move a câmera.
 
-- **Início** leva você, câmera e avatar, de volta ao seu próprio mundo
-  atual: o que você tem aberto, ou focou por último. Você chega logo do
-  lado de fora, nunca dentro dele, por mais longe que tenha ido. Se você
-  ainda não focou um mundo seu nesta sessão, Início leva você ao centro do
-  mapa compartilhado (também listado em "Mundo" em **Locais**).
-- **Locais** abre uma lista de todos os lugares que esta sessão conhece no
-  momento, agrupados em **Mundo**, **Estruturas**, **Marcos** e **Lugares** —
-  cada um com um botão **Focar**. Como Buscar e Explorar aqui/O que há aqui?,
-  Focar só move a câmera; nunca carrega, seleciona nem edita nada.
-- **👥 N on-line** é o botão **Membros**: conta quem está aqui, e clicar nele
-  abre o painel Membros do Mundo. Um botão **Sala** vem logo depois quando o
-  Mundo tem uma sala pública.
-- **?** mostra os controles de câmera e de caminhada (arrastar para orbitar,
-  rolar para o zoom, e WASD, Shift e Espaço enquanto você controla seu
-  avatar); clique de novo para ocultá-los.
+Uma fileira de botões no alto do painel ajuda você a se locomover:
 
-**Notificações** é o botão 🔔 no cabeçalho do app, ao lado do seu nome (ou de **Escolher um nome**), então
-ele está em todas as páginas, não só na Visão do mundo. Ele abre seu
-**Histórico de notificações** — um registro durável dos fatos de notificação
-endereçados à sua identidade, com a atividade mais recente primeiro. Três coisas geram uma: alguém comentar uma publicação que você publicou
-(veja [Comentários](09-PublicationsAndEvidence.md#comentários)), uma obra nova de alguém que você segue (veja
-[Seguindo pessoas](07-PeerConnectionsAndFriends.md#seguindo-pessoas)) e alguém
-remixar uma das suas construções (veja
-[Contagem de remixes](04-PublishingAndForking.md#contagem-de-remixes)). Cada entrada
-diz o que aconteceu e quando, e um botão **Explorar** leva você ao Mundo
-daquela publicação: dentro da Visão do mundo, ele voa até lá; em qualquer
-outro lugar, abre a Visão do mundo nele. É um registro simples, somente
-leitura, não uma caixa de entrada: não há estado de lida/não lida, não dá
-para dispensar uma entrada e não há contador no botão. Ele carrega uma vez
-quando você o abre e de novo só se você clicar em **Atualizar**; nunca se
-atualiza sozinho em segundo plano. Ele está ligado à identidade com que você
-entrou, não ao Mundo ou documento que você tem aberto.
+- **Início** leva você, câmera e avatar, de volta ao seu próprio Mundo: o
+  que está aberto, ou o último que você olhou. Você chega bem ao lado, por
+  mais longe que tenha ido. Se ainda não esteve num Mundo seu, Início leva
+  você ao centro do mapa.
+- **Locais** lista todos os lugares que a Visão do mundo conhece até
+  agora, agrupados em **Mundo**, **Estruturas**, **Marcos** e **Lugares**.
+  **Focar** numa linha move a câmera até lá, e nada mais.
+- **👥 N on-line** conta quem está aqui; clique para ver os membros do
+  Mundo. Se o Mundo tem uma sala pública, vem em seguida um botão **Sala**.
+- **?** mostra os controles de câmera e de andar; clique de novo para
+  escondê-los.
 
-A bússola mostra os pontos cardeais (N, L, S, O) e sua direção atual em
-graus, mais pequenos pontos para estruturas, colaboradores e marcos
-próximos — passe o mouse sobre um para ver o rótulo, ou confira a lista
-legível embaixo da bússola.
+**Notificações** é o botão 🔔 no cabeçalho do app, ao lado do seu nome (ou
+de **Escolher um nome**), então está em todas as páginas. Ele abre o seu
+**Histórico de notificações**, o mais recente primeiro. Você recebe uma
+notificação quando:
+
+- alguém comenta uma construção que você publicou (veja
+  [Comentários](09-PublicationsAndEvidence.md#comentários));
+- alguém que você segue publica algo novo (veja
+  [Seguindo pessoas](07-PeerConnectionsAndFriends.md#seguindo-pessoas));
+- alguém remixa uma das suas construções (veja
+  [Contagem de remixes](04-PublishingAndForking.md#contagem-de-remixes)).
+
+Cada uma diz o que aconteceu e quando. **Explorar** leva você ao Mundo
+daquela construção. É uma lista simples, não uma caixa de entrada: nada é
+marcado como lido, nada é dispensado e o botão não mostra número. Ela
+carrega quando você a abre; **Atualizar** carrega de novo. Ela pertence ao
+seu nome, não ao Mundo que está aberto.
 
 ### Notificações neste dispositivo
 
-No alto do painel, **Avisar neste dispositivo** deixa seu dispositivo
-mostrar essas notificações sozinho, como as de qualquer aplicativo: o
-navegador pede sua permissão, e **Desativar** para. Elas aparecem enquanto
-o ForkBuild está aberto mas não na frente, em outra aba ou como
-[aplicativo instalado](01-GettingStarted.md#instalando-o-forkbuild) em segundo plano;
-clicar numa delas abre o ForkBuild naquela construção. Nada é enviado para
-lugar nenhum para isso, então um ForkBuild fechado não mostra nada: o que
-chegou nesse meio-tempo estará no painel da próxima vez. Aparecem no
-máximo algumas de uma vez, e o resto espera no painel. Se o navegador
-bloquear as notificações do ForkBuild, o painel avisa; permita-as nas
-configurações do site no navegador para ativá-las.
+No alto do painel, **Avisar neste dispositivo** deixa o seu aparelho
+mostrar essas notificações por conta própria, como qualquer app. O
+navegador pede permissão; **Desativar** para.
+
+Elas aparecem enquanto o ForkBuild está aberto mas não na frente: em
+outra aba, ou como [app instalado](01-GettingStarted.md#instalando-o-forkbuild)
+em segundo plano. Clicar numa abre o ForkBuild naquela construção. Nada é
+enviado para lugar nenhum para isso, então um ForkBuild fechado não mostra
+nada; o que chegou nesse meio-tempo está na lista da próxima vez. Só
+algumas aparecem de uma vez; o resto espera na lista. Se o navegador as
+bloquear, o painel avisa: permita as notificações do ForkBuild nas
+configurações do site no navegador.
 
 ### Explorar, Mapa e Lugares — três jeitos de navegar, nunca ao mesmo tempo
 
-Abaixo dos botões de navegação ficam três guias: **Explorar**, **Mapa** e
-**Lugares**. Só uma fica aberta por vez.
+Embaixo dos botões há três abas. Só uma fica aberta, e trocar de aba só
+muda o que o painel mostra.
 
-- **Explorar** é o padrão. Mostra quem está aqui e alguns destinos
-  sugeridos, e depois uma seção **Por perto** com grupos recolhíveis:
-  **Lugares**, **Marcos** e **Pessoas**, cada linha com um nome, uma
-  distância e um botão **Ir**. Um grupo só aparece quando tem algo. Clique
-  no título de um grupo para abri-lo ou recolhê-lo; a Visão do mundo lembra
-  quais você deixou abertos. Com **Mostrar ferramentas avançadas** ligado,
-  aparecem mais três grupos: **Nomes de lugares**, **Construções
-  declaradas** e **Encontros no Mundo** (veja
-  [Ferramentas avançadas](#ferramentas-avançadas)).
-- **Mapa** abre o mesmo Mapa do mundo plano, visto de cima, descrito abaixo.
-- **Lugares** abre o diretório de lugares geográficos descrito em
-  [Lugares geográficos](#lugares-geográficos) abaixo.
-
-Trocar de guia só muda o que o painel mostra: nunca move seu avatar nem
-muda nada.
+- **Explorar** (o padrão) mostra quem está aqui e alguns lugares para
+  visitar, e depois **Por perto**: **Lugares**, **Marcos** e **Pessoas** em
+  volta de você, cada um com a distância e um botão **Ir**. Grupos vazios
+  ficam escondidos. Clique no título de um grupo para recolher ou abrir;
+  a Visão do mundo lembra quais você deixou abertos. As ferramentas
+  avançadas acrescentam mais três grupos (veja
+  [Visão do mundo: ferramentas avançadas](WorldViewAdvancedTools.md)).
+- **Mapa** mostra o [Mapa do mundo](#o-mapa-do-mundo).
+- **Lugares** lista os [lugares geográficos](#lugares-geográficos).
 
 ### Informações — o que estou vendo?
 
-Ao lado da maioria dos botões **Ir**, nas linhas de Por perto de Explorar
-e no painel Locais, há um botão **Informações**. **Ir** leva sua câmera até
-lá; **Informações** descreve o lugar sem mover nada: o que é, a que
-distância está e dentro de qual lugar com nome fica ("Você está em Vila
-dos Salgueiros") ou perto de qual ("Você está perto de Vila do Ribeirão").
+Ao lado da maioria dos botões **Ir**, em Por perto e em **Locais**, há um
+botão **Informações**. **Ir** move a sua câmera até lá. **Informações**
+conta sobre o lugar sem sair do lugar: o que é, a que distância está e em
+que lugar com nome ele fica ("Você está em Vila dos Salgueiros") ou perto
+de qual ("Você está perto de Vila Kawahara").
 
-No painel Informações você pode:
+No painel de informações você pode:
 
-- **Ir** — viajar até lá;
-- **Mostrar no mapa** — vê-lo no Mapa do mundo;
-- **Nomes** (para um lugar com nome) — ver, ou publicar, como as pessoas o
-  chamam;
-- **Editar uma cópia** — abrir uma cópia sua no Editor (veja abaixo).
+- **Ir**: viajar até lá;
+- **Mostrar no mapa**: vê-lo no Mapa do mundo;
+- **Nomes** (para um lugar com nome): ver como as pessoas o chamam, ou
+  publicar um nome;
+- **Editar uma cópia**: abrir uma cópia sua no Editor (veja abaixo).
 
 ### Editar uma cópia — levando algo para o Editor
 
 **Editar uma cópia** é o jeito de mudar algo que você encontrou na Visão
-do mundo. Faz uma cópia sua, independente, da construção e a abre no
-Editor, pronta para você continuar. O original nunca é tocado.
+do mundo. Ela faz uma cópia independente sua da construção e a abre no
+Editor, pronta para continuar. O original nunca é tocado.
 
-Você encontra o botão:
+Você a encontra:
 
-- na barra embaixo do Mundo, quando a construção que você visita não é
-  sua: ele copia a construção inteira;
+- na barra da parte de baixo do Mundo, quando a construção que você está
+  visitando não é sua: ela copia a construção inteira;
 - no painel **Informações** de uma região, um marco ou uma estrutura
   posicionada;
-- no painel **Inspeção**, quando você clica em um bloco, em chão vazio ou
-  em uma estrutura posicionada com **Mostrar ferramentas avançadas**
-  ligado.
+- com as ferramentas avançadas, ao clicar num bloco, num chão vazio ou
+  numa estrutura posicionada (veja
+  [Inspecionando um bloco](WorldViewAdvancedTools.md#inspecionando-um-bloco--ou-uma-estrutura-posicionada)).
 
 O que é copiado depende do que você escolheu:
 
-- Para um **marco**, uma **região**, um **bloco** ou **chão vazio**, é o
-  documento do Mundo a que eles pertencem.
-- Para uma **estrutura posicionada**, é o conteúdo da própria estrutura —
-  não o Mundo em que ela está.
+- Para um **marco**, uma **região**, um **bloco** ou **chão vazio**, você
+  recebe o Mundo ao qual pertencem.
+- Para uma **estrutura posicionada**, você recebe essa estrutura, não o
+  Mundo onde ela está.
 
-O ForkBuild avisa assim que sua cópia fica pronta (veja
-[Publicar e remixar](04-PublishingAndForking.md)). Se não der para fazer
-a cópia, uma caixa de diálogo **Não dá para fazer uma cópia** explica o
-motivo, normalmente porque a licença da construção não permite cópias ou
-porque ela ainda não pode ser buscada, e **Voltar à construção** leva você
+O ForkBuild avisa assim que a sua cópia fica pronta (veja
+[Publicar e remixar](04-PublishingAndForking.md)). Se a cópia não puder
+ser feita, um diálogo **Não dá para fazer uma cópia** diz por quê, em
+geral porque a licença da construção não permite cópias ou porque a
+construção ainda não pode ser obtida, e **Voltar à construção** leva você
 de volta para onde estava (veja
 [Quando uma bifurcação não pode ser concluída](04-PublishingAndForking.md#quando-uma-bifurcação-não-pode-ser-concluída)).
 
-Um **lugar geográfico** e uma **pessoa** nunca oferecem Editar uma cópia:
-um lugar geográfico agrupa as regiões de várias pessoas, sem uma única
-construção para copiar (abra uma das regiões dele em vez disso).
+Um **lugar geográfico** e uma **pessoa** não têm Editar uma cópia. Um
+lugar geográfico é feito das regiões de várias pessoas, então não existe
+uma única construção para copiar; abra uma das regiões dele.
 
-Editar uma cópia é a mesma ação que **Remixar** no **Explorar** e na página
-de um autor: uma cópia nova e sua, com as mesmas regras de licença (veja
-[Bifurcar: torne-a sua](04-PublishingAndForking.md#bifurcar-torne-a-sua)).
-Todo o resto da Visão do mundo, como Buscar, a bússola, o Mapa e
-Informações, só serve para olhar.
+Editar uma cópia é o mesmo que **Remixar** em Explorar e na página de um
+autor, com as mesmas regras de licença (veja
+[Bifurcar: torne a sua](04-PublishingAndForking.md#bifurcar-torne-a-sua)).
+Todo o resto na Visão do mundo, como Buscar, a bússola, o Mapa e
+Informações, só olha.
 
 ### Construir aqui — começar uma construção para este lugar
 
-**Construir aqui**, ao lado de **Início**, começa no Editor uma
-construção nova e vazia para o lugar onde seu avatar está (ou, voando, o
-lugar sob a câmera). O Editor diz para qual Mundo ela é. Quando você a
-publica, ela fica exatamente ali: o primeiro posicionamento é esse lugar,
-em vez de um terreno livre que o ForkBuild escolhe, e **Ir ver** traz você
-de volta para olhar. **Esquecer este lugar** deixa que ela seja
-posicionada como sempre. O lugar é só uma nota sua de onde mostrar sua
-construção, guardada neste dispositivo e nos seus backups; ele não
-reivindica o terreno, e outras pessoas também podem construir ali.
+**Construir aqui**, ao lado de **Início**, começa no Editor uma construção
+nova e vazia para o lugar onde o seu avatar está (ou, voando, o lugar
+embaixo da câmera). O Editor diz para qual Mundo ela é.
+
+Quando você a publica, a construção fica bem naquele lugar, em vez de num
+terreno livre que o ForkBuild escolhe. **Ir ver** traz você de volta para
+olhar. **Esquecer este lugar**, no Editor, deixa o ForkBuild posicioná-la
+como de costume.
+
+O lugar é só uma anotação sua, guardada neste dispositivo e nos backups
+dele. Não reserva o terreno, e outras pessoas também podem construir ali
+(veja
+[Por que duas construções podem ficar no mesmo ponto?](WorldViewAdvancedTools.md#por-que-duas-construções-podem-ficar-no-mesmo-ponto)).
 
 ### Passear aqui comigo — trazer amigos para este Mundo
 
 **Passear aqui comigo**, ao lado de **Construir aqui**, cria um link que
-traz amigos para o Mundo em que você está, para passearem juntos por ele.
-Envie como quiser; ele também aparece como QR code para um celular. Um amigo
-que abre o link entra na conta, se ainda não entrou (ele passeia com o
-próprio avatar, com o próprio nome), clica em **Entrar** e chega a este
-Mundo, onde vocês se veem andando por aí. A janela mostra quem está a
-caminho e quem já chegou.
+traz seus amigos para o Mundo onde você está, para passear juntos. Mande
+como quiser, ou deixe que leiam o QR code com o celular.
 
-- O Mundo precisa estar publicado antes: o ForkBuild do seu amigo confere a
-  assinatura e a construção, como faz com um link compartilhado, e guarda
-  uma cópia.
-- O link funciona para qualquer pessoa que o abrir, por 30 minutos,
-  enquanto você ficar na visão do mundo. Fechar a janela não o interrompe;
-  **Parar o link** interrompe. Os amigos que já entraram continuam
-  conectados nos dois casos.
-- Entrar conecta os dois dispositivos diretamente, como um convite em
-  **Pares**: cada um pode ver o endereço IP do outro, e os avatares aparecem
-  conforme a visibilidade de presença de cada lado permite (veja
-  [Avatares e presença](06-AvatarsAndPresence.md)). Ninguém vira um par
-  lembrado nem amigo a menos que você escolha.
+Um amigo que abre o link escolhe um nome se ainda não tiver (cada um anda
+com o próprio avatar), clica em **Entrar** e chega a este Mundo. Vocês se
+veem andando. O diálogo mostra quem está a caminho e quem já chegou.
+
+- O Mundo precisa estar publicado antes: o ForkBuild do seu amigo confere
+  a assinatura e a construção, como num link compartilhado, e guarda uma
+  cópia.
+- O link funciona por 30 minutos para quem abrir, enquanto você ficar na
+  Visão do mundo. Fechar o diálogo não o interrompe; **Parar o link**
+  interrompe. Quem já entrou continua conectado de qualquer jeito.
+- Entrar conecta os dois aparelhos diretamente, como um convite em
+  **Pares**. Cada um vê o endereço IP do outro, e os avatares aparecem
+  conforme a **Visibilidade da presença** de cada um permite (veja
+  [Quem pode ver você](06-AvatarsAndPresence.md#quem-pode-ver-você-duas-configurações-independentes)).
+  Ninguém vira um par conhecido ou amigo a não ser que você escolha.
 - É preciso um servidor de encontro. O site oficial tem um; uma cópia que
   você mesmo roda precisa do seu (veja
-  [Conexões entre pares e amigos](07-PeerConnectionsAndFriends.md)).
+  [Conexões com pares e amigos](07-PeerConnectionsAndFriends.md)).
 
 ### A praça do desafio
 
-**Passear pela praça** na página do desafio de uma semana abre a visão do
-mundo na praça da vila: calçada, com um poço, bancos e postes de luz, e as
-seis construções prontas ao redor. A praça e as construções prontas fazem
-parte do Mundo, como os morros e as árvores: ficam em toda Visão do mundo,
-para todo mundo, e não são de ninguém. A vila de construções publicadas
-cresce logo do lado de fora delas, então a sua própria casa publicada tem
-vizinhos. Um painel lista as participações da semana e as construções
-prontas (veja
+**Passear pela praça** na página de um desafio da semana, ou **Passear**
+na barra superior, abre a Visão do mundo na praça da vila: calçada, com um
+poço, bancos e postes de luz, e as seis construções prontas em volta.
+
+A praça e as construções prontas fazem parte do Mundo, como os morros e
+as árvores. Estão ali para todos, e não são de ninguém. As construções
+publicadas formam uma vila logo do lado de fora, então a sua própria casa
+ganha vizinhos. Um painel lista as participações da semana e as
+construções prontas (veja
 [A praça do desafio](04-PublishingAndForking.md#a-praça-do-desafio)).
-Nenhuma árvore cresce ao redor da praça, e **Construir aqui** não é
-oferecido lá.
+Nenhuma árvore cresce em volta da praça, e nela não há **Construir aqui**.
 
 ### Marcos — marcando um lugar que vale lembrar
 
 Um **marco** é um ponto com nome que você coloca num Mundo, como "Ponte
-velha" ou "Vista linda", com uma descrição opcional. Ele é posicionado
-exatamente onde seu avatar está.
+velha" ou "Bela vista", com uma descrição se quiser. Ele fica exatamente
+onde o seu avatar está.
 
-Se você tem acesso EDIT ao Mundo em que está, a seção Marcos do painel
-**Locais** mostra um botão **+ Adicionar marco**. Dê um título a ele (e, se
-quiser, uma descrição) e clique em **Posicionar aqui** — ele aparece na hora
-para você e, instantes depois, para todos os outros colaboradores do mesmo
-Mundo, na bússola, no painel Locais deles e como destino aonde ir. Os
-marcos pertencem ao Mundo, não a você: qualquer pessoa com acesso EDIT pode
-renomear, redescrever ou remover qualquer marco, não só quem o criou.
+Quando você pode editar o Mundo onde está, a parte de Marcos de
+**Locais** tem um botão **+ Adicionar marco**. Dê um título, e uma
+descrição se quiser, e clique em **Posicionar aqui**. Ele aparece na hora
+para você e, instantes depois, para todos que editam o mesmo Mundo: na
+bússola, em **Locais** e como lugar para ir.
+
+Os marcos pertencem ao Mundo, não a você. Qualquer pessoa que pode editar
+o Mundo pode renomear, mudar ou remover qualquer marco, seja quem for que
+o fez.
 
 ### O Mapa do mundo
 
-A guia **Mapa** abre uma vista plana, de cima, de tudo o que esta sessão
-conhece no Mundo — lugares com nome, marcos, estruturas, todos os outros que
-estão aqui e um marcador para você. Role ou use +/− para o zoom, clique em
-um espaço vazio para mover o mapa e clique em qualquer lugar ou pessoa para
-levar a câmera direto até lá. Nada no mapa é editável, e olhar para ele
-nunca muda nada — é só um jeito de ver de uma vez a geografia que os
-colaboradores de um Mundo já construíram e nomearam, em vez de um marco por
-vez.
+A aba **Mapa** mostra o Mundo de cima: lugares com nome, marcos,
+construções, as pessoas que estão aqui e um marcador para você. Ela mostra
+tudo o que a Visão do mundo conhece até agora, de uma vez.
+
+- Role, ou use **+** e **−**, para o zoom.
+- Arraste um espaço vazio para mover o mapa.
+- Clique num lugar ou numa pessoa para mover a sua câmera até lá.
+
+Olhar o mapa nunca muda nada.
 
 ### Lugares geográficos
 
-A guia **Lugares** abre um diretório de todos os **lugares geográficos** que
-esta sessão identificou — lugares que várias pessoas nomearam ou
-descreveram de forma independente (como região — veja a seção Lugares do
-próprio painel Locais) e que acabam ocupando mais ou menos o mesmo terreno.
-Clique em uma linha para abrir a tela de detalhes dele: quantas descrições
-e Mundos ele abrange, os **Nomes da comunidade** dele e os botões **Ir ao
-lugar** / **Mostrar no mapa**. Clique em **← Voltar** (ou pressione Esc)
-para voltar ao diretório — ir para Mapa ou Explorar e voltar a Lugares
-depois reabre exatamente a tela que você deixou, detalhe ou lista.
+Um **lugar geográfico** é uma área que várias pessoas nomearam ou
+descreveram como região, cada uma por conta própria, e que acaba sendo
+mais ou menos o mesmo terreno. A aba **Lugares** lista os que a Visão do
+mundo encontrou até agora.
 
-Os **Nomes da comunidade** de um lugar mostram os nomes principais; **Mais
-nomes** mostra a lista completa classificada. Logo abaixo você pode
-publicar um nome seu. Todo o resto (outras descrições do lugar, o histórico
-completo de nomes, importação e exportação) fica recolhido em **Mais**.
+Clique num deles para ver quantas descrições e Mundos ele abrange, os
+**Nomes da comunidade** dele, e **Ir ao lugar** e **Mostrar no mapa**.
+**← Voltar** (ou Escape) volta para a lista. Se você trocar de aba e
+voltar, encontra a mesma tela que deixou.
 
-> Publicar um nome o anuncia aos seus pares conectados do mesmo jeito que
-> declarar a autoria de uma estrutura — veja
-> [Publicações e evidências externas](09-PublicationsAndEvidence.md) se
-> quiser ver em um só lugar todas as declarações que este dispositivo
-> publicou ou de que ficou sabendo.
+Os **Nomes da comunidade** de um lugar mostram os nomes principais;
+**Mais nomes** mostra a lista completa em ordem. Embaixo você pode
+publicar um nome seu. Todo o resto (outras descrições do lugar, o
+histórico completo de nomes, importar e exportar) fica recolhido em
+**Mais**.
+
+Publicar um nome avisa as pessoas com quem você está conectado, do mesmo
+jeito que declarar que você fez uma construção. Para ver todos os nomes e
+declarações que este dispositivo publicou ou conheceu, veja
+[Publicações e evidências externas](09-PublicationsAndEvidence.md).
 
 ## Meus mundos — os Mundos em que você realmente esteve
 
-Clique em **Meus mundos** na barra superior para ver todos os Mundos que
-este dispositivo visitou, do mais recente para o mais antigo, com título,
-autor e quantas estruturas e marcos cada um tem. Clique em **Continuar
-explorando** num cartão para entrar de novo direto.
+**Meus mundos**, na barra superior, lista todos os Mundos em que você
+esteve neste dispositivo, o mais recente primeiro, com título, autor e
+quantas construções e marcos tem. **Continuar explorando** leva você de
+volta para dentro. Só este dispositivo guarda a lista, e ninguém mais a
+vê.
 
-A lista fica só neste dispositivo, e ninguém mais a vê. Um Mundo aparece
-aqui assim que você esteve dentro dele. Ainda não foi a lugar nenhum?
-**Explore o Repositório** abre o **Explorar**, onde você encontra seu
-primeiro Mundo ou começa com uma construção pronta.
+Ainda não foi a lugar nenhum? **Explore o Repositório** abre **Explorar**,
+onde você pode encontrar um Mundo ou começar de uma construção pronta.
 
-Abaixo dos Mundos, **Construções que você ajudou a fazer** lista as
-construções em que um amigo deu crédito a você por terem construído juntos
-com **Construir comigo** (veja
-[O Editor](02-TheEditor.md#construir-comigo-construir-juntos-ao-vivo)): o
-título de cada uma, de quem ela é (**com** o nome, que abre a página dessa
-pessoa) e **Ainda não publicada** até seu amigo publicá-la; depois disso, o
-título abre o Mundo dela. Seus outros dispositivos também as listam, depois
-de conectados a este. A seção só aparece quando há algo nela.
+**Construções que você ajudou a fazer** lista as construções em que um
+amigo deu crédito a você quando construíram juntos com **Construir comigo**
+(veja [O Editor](02-TheEditor.md#construir-comigo-construir-juntos-ao-vivo)).
+Cada uma mostra o título e **com** o nome do seu amigo, que abre a página
+dele. Mostra **Ainda não publicada** até seu amigo publicar; aí o título
+abre o Mundo dela. Seus outros dispositivos também as listam, depois de
+conectados a este. A seção só aparece quando tem algo.
 
 ## Encontrando mundos
 
-Há três jeitos de encontrar algo no mundo compartilhado, cada um
-respondendo a uma pergunta diferente.
+Há dois jeitos de procurar algo, cada um respondendo a uma pergunta
+diferente.
 
 ### Buscar — "quais publicações correspondem a isto?"
 
-O painel **Buscar** pesquisa por **título ou autor**, em tudo o que foi
-publicado — não só no que está carregado ao seu redor. Digite um termo e
-clique em **Buscar**.
+**Buscar** procura um **título ou autor** em tudo o que foi publicado,
+não só no que está carregado em volta de você. Digite uma palavra e
+clique em **Buscar**. Cada resultado mostra onde está (📍); clique em
+**Focar** para voar até lá.
 
-Se quiser, você pode restringir a um **Local**: preencha X/Y/Z e um **Raio**
-(em unidades do Mundo), e a busca só devolve resultados dentro dessa
-distância daquele ponto. Deixe Local em branco para uma busca simples por
-texto.
-(Os campos de local só aparecem com **Mostrar ferramentas avançadas** ligado.)
-
-Cada resultado mostra:
-
-- 📍 a posição
-- 📏 a que distância está (só numa busca por local)
-- um aviso se a posição mostrada é uma **posição padrão** em vez de uma que o
-  autor de fato escolheu (veja [Posição no mundo](#posição-no-mundo) abaixo)
-
-Clique em **Focar** para voar até lá.
+Um resultado pode dizer que sua posição é uma **posição padrão**: o autor
+nunca escolheu um lugar, então o ForkBuild a mostra em algum. Com as
+ferramentas avançadas, você também pode buscar por posição (veja
+[Visão do mundo: ferramentas avançadas](WorldViewAdvancedTools.md)); os
+resultados então mostram a que distância estão (📏).
 
 ### Explorar aqui / O que há aqui? — "o que há ao meu redor agora?"
 
-Estes dois botões, no topo da seção Por perto de Explorar, pesquisam **a
-partir de onde a câmera está agora** — você não precisa já saber um título
-nem digitar coordenadas.
+Esses dois botões, no alto de **Por perto** em Explorar, olham **em volta
+de onde está a sua câmera**. Você não precisa de título nem de
+coordenadas.
 
-- **Explorar aqui** pesquisa uma área razoavelmente ampla em volta da câmera
-  e deixa você aumentar ou diminuir esse raio depois.
-- **O que há aqui?** confere só a área imediata — útil quando você quer saber
-  "tem alguma coisa praticamente onde estou?"
+- **Explorar aqui** olha uma área ampla. Depois você pode ampliá-la ou
+  reduzi-la.
+- **O que há aqui?** olha só bem onde você está.
 
-Os dois abrem a caixa de diálogo **Explorar local**:
+Os dois abrem o diálogo **Explorar local**:
 
 ```
 📍 Centro: 100.0, 50.0, 250.0
@@ -591,221 +536,58 @@ de alice
 [Focar] [Selecionar] [Inspecionar]
 ```
 
-Cada resultado oferece três ações distintas:
+Cada resultado tem três botões:
 
 | Botão | O que faz |
 |---|---|
-| **Focar** | Voa com a câmera até lá *e* o torna o documento que você está editando |
-| **Selecionar** | O torna o documento que você está editando, **sem** mover a câmera |
-| **Inspecionar** | Expande um resumo na própria linha — título, autor, status, posição, dono — sem mover nada |
+| **Focar** | Voa até lá e faz dela a construção em que a sua próxima mudança se aplica |
+| **Selecionar** | Faz dela a construção em que a sua próxima mudança se aplica, sem sair do lugar |
+| **Inspecionar** | Mostra título, autor, status, posição e dono, sem sair do lugar |
 
-Esta caixa de diálogo nunca move um posicionamento, edita um documento nem
-publica nada por conta própria — serve só para olhar em volta e escolher
-para onde ir.
-
-### Documentos aqui
-
-Quando o painel de informações de um posicionamento diz que outros
-documentos ocupam exatamente a mesma posição, clique em **Ver** para abrir
-**Documentos aqui** — uma lista simples de tudo o que está naquele ponto,
-cada um com seu botão **Focar**. Só aparecem documentos que ainda estão de
-fato publicados — se algum foi despublicado, ele simplesmente fica fora da
-lista, em vez de aparecer como uma linha com que você não pode fazer nada.
-
-## Informações e posicionamento do documento
-
-Abaixo do cabeçalho há dois painéis para o documento que você está editando:
-
-- **Informações do documento** — título, descrição, licença, quem pode
-  posicioná-lo, status e (se for uma bifurcação) de que mundo ele foi
-  bifurcado. Clique em **Editar metadados** para mudar o título, a
-  descrição, a licença ou quem pode posicioná-lo.
-- **Posicionamento** — *onde* esse documento fica no espaço compartilhado,
-  em **unidades do Mundo** (o sistema de coordenadas próprio do ForkBuild,
-  não coordenadas de GPS — uma unidade do Mundo representa um metro do mundo
-  real). Clique em **Mover** para dar a ele novas coordenadas X/Y/Z
-  diretamente, ou use os botões de ajuste ± (1 / 10 / 100 unidades do
-  Mundo) para deslocar a posição atual antes de confirmar. **Focar** voa
-  até lá.
-
-São de propósito dois painéis separados: o que uma criação *é* e onde ela
-*fica* são perguntas diferentes, e mover um posicionamento nunca edita o
-documento em si (nem o contrário).
-
-### Posição no mundo
-
-Se outro documento já ocupa exatamente o ponto para onde você está se
-movendo, você vê um aviso listando quem está lá antes de pedirem sua
-confirmação — dividir um local é permitido (uma cena de pátio e a construção
-em volta dela podem legitimamente ficar no mesmo lugar), o ForkBuild só
-garante que você veja isso antes.
-
-### Posicionamentos que não são seus
-
-Se um posicionamento pertence a outra pessoa, o painel Posicionamento mostra
-**🔒 Posicionado por &lt;nome&gt;: você pode ver este posicionamento, mas não
-movê-lo.** e o botão **Mover** fica desabilitado. Você ainda pode **Focar**,
-inspecionar e usar **Editar uma cópia** para construir a partir do que está
-lá; só *onde ele fica no espaço compartilhado* é a outra pessoa quem move.
-
-### Por que posso posicionar construções de outras pessoas?
-
-Uma construção de verdade não pode ser levantada e posta em outro lugar,
-então pode parecer estranho que o ForkBuild deixe você posicionar a
-construção publicada de qualquer pessoa onde quiser. Uma construção
-publicada não é um objeto físico único. É um conteúdo fixo, identificado pelo
-hash do conteúdo, mais ou menos como um arquivo ou um repositório Git. Um
-**posicionamento** é um registro separado e assinado que diz "mostre esta
-construção aqui". Ele aponta para a construção; não a copia. A mesma
-construção pode ter muitos posicionamentos, e cada um mostra exatamente o
-mesmo conteúdo publicado.
-
-Então posicionar a construção de outra pessoa nunca move nem muda a dela:
-
-- **O posicionamento dela fica onde ela o pôs.** Só ela pode movê-lo (veja
-  [Posicionamentos que não são seus](#posicionamentos-que-não-são-seus)
-  acima).
-- **Seu posicionamento é assinado por você**, e só diz onde *você* mostra a
-  construção dela.
-- **A construção mantém o autor e o histórico.** Continua sendo exatamente o
-  conteúdo que ela publicou, e qualquer pessoa pode conferir isso com o hash
-  e a assinatura.
-
-Também não há um mundo central único que decida quem é dono de qual
-terreno. Cada Mundo mostra os posicionamentos que aceitou. É por isso que uma
-construção que alguém anuncia perto de você só aparece como fantasma até
-você escolher **Aceitar posição** (veja
-[Construções declaradas](#construções-declaradas--construções-de-outras-pessoas-onde-os-editores-dizem-que-elas-ficam)).
-Ninguém consegue largar uma construção no seu Mundo sem a sua permissão.
-
-Alguns motivos para posicionar uma construção que você não fez:
-
-- **Curadoria**, como um Mundo-galeria que reúne construções de que você
-  gosta.
-- **Compor uma cena**, como pôr o castelo de um amigo ao lado da sua vila.
-- **Reaproveitar como está.** Posicione quando quiser a construção sem
-  mudanças, e use
-  [Editar uma cópia](#editar-uma-cópia--levando-algo-para-o-editor) só
-  quando quiser mudá-la.
-
-Um editor que não queira isso pode escolher **Só eu posso posicioná-lo** ao
-publicar (veja
-[Escolhendo quem pode posicioná-lo](04-PublishingAndForking.md#escolhendo-quem-pode-posicioná-lo)).
-Você ainda pode encontrar, ver e, se a licença permitir, bifurcar a
-construção dele, mas não pode posicioná-la.
-
-### Por que duas construções podem ficar no mesmo ponto?
-
-Na vida real, duas construções não podem ocupar o mesmo lugar. No ForkBuild
-podem, porque um posicionamento não ocupa terreno. É só uma nota assinada
-dizendo "mostre esta construção aqui", e duas notas podem citar o mesmo
-ponto.
-
-O ForkBuild permite isso de propósito:
-
-- **Ninguém distribui terrenos.** Não há servidor central que decida quem
-  chegou primeiro a um ponto, e o ForkBuild nunca escolhe um vencedor entre
-  dois posicionamentos assinados. Os dois continuam válidos.
-- **Cada dispositivo conhece um conjunto diferente de posicionamentos.** Um
-  ponto ocupado no dispositivo do seu amigo pode continuar vazio no seu, até
-  os posicionamentos chegarem a você. Uma regra rígida de "uma construção por
-  ponto" daria respostas diferentes em dispositivos diferentes, então o
-  ForkBuild não finge impor uma.
-- **Às vezes você quer isso.** Uma cena de pátio dentro de uma construção,
-  uma versão antiga mostrada no lugar da nova, ou exposições sobrepostas de
-  propósito são todas construções que pertencem ao mesmo lugar.
-
-Isso não quer dizer que qualquer pessoa pode amontoar coisas nas suas
-construções:
-
-- **Você é avisado antes.** **Mover…** lista o que já está num ponto antes de
-  você confirmar, e o ForkBuild nunca move sua construção em silêncio para
-  outro lugar (veja [Posição no mundo](#posição-no-mundo)).
-- **Nada de duplicatas por engano.** **Adicionar posicionamento aqui** se
-  recusa quando já há um posicionamento exatamente onde você está.
-- **A declaração de outra pessoa é só um fantasma.** Uma posição anunciada
-  por qualquer pessoa que não seja o próprio editor da construção aparece só
-  como fantasma translúcido, e nunca num ponto onde este dispositivo já
-  conhece um posicionamento de verdade (veja
-  [Construções declaradas](#construções-declaradas--construções-de-outras-pessoas-onde-os-editores-dizem-que-elas-ficam)).
-- **Só o dono pode mover ou remover um posicionamento** (veja
-  [Posicionamentos que não são seus](#posicionamentos-que-não-são-seus)).
-
-O ForkBuild só confere construções exatamente no mesmo ponto. Duas
-construções em pontos próximos cujos blocos por acaso se tocam não são
-sinalizadas. Para o raciocínio de projeto, veja
-[Overlap Is A Fact; Collision Is A Policy Decision](../../principles/placement.md#overlap-is-a-fact-collision-is-a-policy-decision-0225)
-(em inglês) e as regras depois dele.
-
-### Posicionar ou bifurcar
-
-Os dois deixam você ter a construção de outra pessoa num Mundo seu, mas são
-coisas diferentes:
-
-| | Posicionar | Bifurcar (Bifurcar, ou Editar uma cópia) |
-|---|---|---|
-| O que é criado | Um posicionamento: um pequeno registro assinado de onde mostrar a construção | Um documento novo, com ids novos, que pertence a você |
-| A construção | O mesmo Mundo compartilhado, mostrado como foi publicado | Sua própria cópia, com uma nota apontando para o original |
-| Dá para mudar os blocos? | Não | Sim, no Editor |
-| Quem é o autor | O editor original | Você, com o original registrado como pai |
-| Controlado por | A configuração **Quem pode posicioná-lo no Mundo** do editor | A licença |
-| Publicar | Nada novo é publicado | Cria um novo Mundo compartilhado em seu nome |
-
-Posicionar é como fazer um link para o mesmo arquivo a partir de outra
-página; bifurcar é como clonar um repositório para trabalhar na sua cópia.
-Então só uma bifurcação é uma cópia de verdade. Quem escolheu **Só eu posso
-posicioná-lo** ainda pode permitir bifurcações pela licença, e uma
-bifurcação passa a ser sua para posicionar onde quiser.
+O diálogo em si nunca move, muda ou publica nada.
 
 ## A Visão do mundo é somente leitura — construir é no Editor
 
-Não há ferramenta Colocar, nem gizmo de transformação, nem copiar/colar, nem
-grupos aqui — clicar, arrastar ou pressionar uma tecla nunca muda um bloco.
-Para construir a partir de algo, use
-**[Editar uma cópia](#editar-uma-cópia--levando-algo-para-o-editor)** e
-continue em [O Editor](02-TheEditor.md). As exceções de anotação listadas no
-começo deste guia continuam valendo.
+Clicar, arrastar ou apertar uma tecla na Visão do mundo nunca muda um
+bloco. Aqui não há ferramentas de construção. Para construir em cima de
+algo, use **[Editar uma cópia](#editar-uma-cópia--levando-algo-para-o-editor)**
+e continue no [Editor](02-TheEditor.md). As únicas mudanças que a Visão do
+mundo faz são os rótulos citados no começo desta página.
 
 ## Vendo outros colaboradores
 
-Quando várias pessoas estão no mesmo Mundo:
+Quando há outras pessoas no mesmo Mundo:
 
-- **Veja as outras pessoas** — os avatares delas aparecem com nomes de
-  exibição e indicadores de atividade (por exemplo, "**Bob — explorando por
-  perto**").
-- **Atualizações em tempo real** — tudo o que elas publicam (um marco, um
-  nome, uma bifurcação nova delas) aparece para você na hora.
-- **Feed de atividade efêmero** — um painel local mostra a atividade
-  recente para ajudar você a entender o que mudou, mesmo fora da sua vista
-  atual. Esse feed é temporário e não é guardado.
+- **Você as vê**: os avatares delas, com o nome e o que estão fazendo
+  ("**Bob — explorando por perto**").
+- **Você vê as mudanças delas na hora**: um marco, um nome, uma nova
+  cópia delas.
+- **Uma lista curta de atividade** no painel mostra o que mudou há pouco,
+  mesmo fora da sua vista. Ela só fica guardada enquanto você está aqui.
 
-> **A presença descreve atividade; ela nunca muda nada sozinha.** A presença
-> espacial ajuda você a entender o que os outros estão fazendo, mas só uma
-> mudança de verdade — feita no Editor, ou uma das exceções de anotação da
-> Visão do mundo — muda o ambiente compartilhado.
+Ver pessoas nunca muda nada por si só. Só uma mudança de verdade muda:
+uma feita no Editor, ou um dos rótulos que a Visão do mundo permite.
 
 ## Salvar e publicar aqui também
 
-O cabeçalho tem os botões **Salvar**, **Publicar** e **Editar metadados**
-sempre que você está editando algo, para que você possa registrar e
-compartilhar um mundo sem sair dele. A linha de status (**🔒 Publicado** ou
-**✎ Editando sua cópia**) sempre mostra qual é o caso.
+Quando você está trabalhando numa construção, o cabeçalho tem **Salvar**,
+**Publicar** e **Editar metadados**, então você pode salvá-la e
+compartilhá-la sem sair. A linha de status diz qual é: **🔒 Publicado** ou
+**✎ Editando sua cópia**.
 
-Um mundo publicado nunca pode mudar. Se o mundo que você está editando está
-publicado, sua primeira mudança aqui — editar os metadados, adicionar ou
-renomear um marco ou região, ou decorá-lo com um animal — cria
-automaticamente sua própria cópia editável, com o título *"Bifurcação de
-&lt;nome original&gt;"*, e um aviso curto ("Sua própria cópia editável foi
-criada; … não muda") informa isso. Ela segue as mesmas regras de licença que
-qualquer outra bifurcação (veja
+Uma construção publicada nunca muda. Se a construção em que você está foi
+publicada, a sua primeira mudança aqui (os dados dela, um marco ou região,
+ou um animal como decoração) cria uma cópia sua, com o título
+*"Bifurcação de &lt;nome original&gt;"*. Um aviso curto informa isso ("Sua
+própria cópia editável foi criada; … não muda"). Valem as mesmas regras de
+licença de qualquer remix (veja
 [Publicar e remixar](04-PublishingAndForking.md#bifurcar-torne-a-sua)).
 
 ## Histórico — visualizar e restaurar estados anteriores
 
-Toda mudança que você faz aqui — adicionar, renomear ou remover um marco ou
-região — fica registrada no histórico do documento. Clique em **Histórico**
-no cabeçalho para abri-lo. Você vai ver uma lista numerada com data e hora,
-assim:
+Cada mudança que você faz aqui, como adicionar, renomear ou remover um
+marco ou região, fica no histórico da construção. Clique em **Histórico**
+no cabeçalho para ver uma lista numerada com horários, assim:
 
 ```
 1. Adicionar marco “Ponte velha”
@@ -813,526 +595,19 @@ assim:
 3. Remover marco “Vista linda”
 ```
 
-As entradas que você desfez aparecem marcadas como **Desfeito**. Clicar em
-uma entrada só a seleciona; nada muda até você pressionar um dos botões:
+Os passos que você desfez aparecem marcados como **Desfeito**. Clicar num
+passo só o escolhe; nada muda até você apertar um botão:
 
-- **Prévia** — mostra como o mundo estava *logo depois* do passo
-  selecionado, ao lado do atual, sem mudar nada. **Cancelar prévia** volta
-  ao presente.
-- **Restaurar** — torna o passo selecionado seu estado **atual**. O
-  documento fica com alterações não salvas, então você ainda pode decidir se
-  vai salvá-lo. Não há confirmação separada.
-- **Fechar** — fecha o painel.
-
-## Ferramentas avançadas
-
-Tudo nesta seção só aparece com **Mostrar ferramentas avançadas** ligado,
-no fim do painel (veja
-[Uma visão de visitante, e Avançado](#uma-visão-de-visitante-e-avançado)).
-Elas servem às redes por trás do Mundo: conferir onde uma construção está
-guardada, enviar a sua à mão e ver o que outras pessoas anunciaram por
-perto. Você não precisa de nenhuma delas para andar, construir, remixar ou
-compartilhar um link.
-
-### Inspecionando um bloco — ou uma estrutura posicionada
-
-Com **Mostrar ferramentas avançadas** ligado, clique em qualquer bloco para
-abrir o painel **Inspeção** (como visitante, um clique não seleciona nada),
-que diz:
-
-- Que tipo de bloco é
-- A posição e a rotação dele
-- A qual mundo e construção ele pertence
-- Quem é o autor do mundo
-
-Use **Focar bloco** para aproximar bem, ou **Focar Mundo** para ir à posição
-inicial daquela criação. Logo ao lado, um botão **Editar uma cópia** bifurca
-o Mundo a que o bloco pertence e abre a cópia no Editor — sem tocar no
-original. Clicar no chão vazio dentro de uma criação abre o mesmo tipo de
-painel (posição e o mundo/autor a que pertence, sem os campos específicos de
-bloco) com seu próprio botão **Editar uma cópia**, pelo mesmo motivo:
-bifurcar não exige encontrar antes algo notável, só clicar em qualquer ponto
-dentro do Mundo em que você quer construir.
-
-Clique em uma **estrutura posicionada** (uma instância de um documento
-inteiro, inserida em uma criação a partir do Editor — veja
-[O Editor](02-TheEditor.md#instâncias-de-estrutura-uma-referência-viva)) e o
-mesmo painel mostra, em vez disso, o que ela referencia: o título do
-documento de origem, a posição local e no mundo, a rotação, a altura do chão
-e o título e o autor do mundo que a contém. Isso é somente leitura na Visão
-do mundo — não há gizmo, nem campo numérico, nem nada para arrastar. Clique
-em **Abrir origem** para ir direto ao Editor no próprio documento
-referenciado; todas as outras instâncias dele, onde quer que estejam
-posicionadas, refletem o que você editar lá. O botão **Editar uma cópia**
-dela, ao lado de Abrir origem, age sobre esse mesmo documento referenciado,
-e não sobre o Mundo que só o posiciona — se você preferir trabalhar em uma
-cópia independente, sem tocar em nenhuma outra instância (nem no original),
-use esse em vez de Abrir origem.
-
-Todo botão "Editar uma cópia" na Visão do mundo — aqui e no painel Focar de
-uma região/marco/estrutura — é a mesma ação; veja
-[Editar uma cópia](#editar-uma-cópia--levando-algo-para-o-editor) acima.
-
-### Câmera e edição
-
-(Aparece com **Mostrar ferramentas avançadas** ligado; veja [Uma visão de visitante, e Avançado](#uma-visão-de-visitante-e-avançado).)
-
-O cabeçalho mostra duas coisas que podem de fato ser diferentes:
-
-```
-Câmera: Castelo da Alice · Editando: Castelo do Bob
-```
-
-**Câmera** é para onde você está olhando — voar até um mundo, ou clicar no
-botão **Focar** de um resultado de busca, leva a câmera até lá. **Editando**
-é o documento a que sua próxima ação (adicionar um marco ou região, editar
-metadados, publicar) de fato se aplicaria — clicar em um bloco ou
-posicionamento, ou no botão **Selecionar** de um resultado de busca ou de
-local, o muda *sem* mover a câmera. (Mudar os blocos em si só acontece no
-Editor — veja
-[Editar uma cópia](#editar-uma-cópia--levando-algo-para-o-editor) acima.)
-
-Os dois em geral andam juntos (Focar faz as duas coisas), mas duas criações
-podem ocupar exatamente o mesmo ponto do mundo — focar uma e depois a outra
-não move a câmera da segunda vez, mas o cabeçalho continua dizendo qual
-você está editando agora. Voar e olhar as coisas nunca muda sozinho o que
-você está editando; só selecionar de fato um bloco ou um documento muda.
-
-"Ir", nas linhas de Por perto de Explorar e no painel Informações, é o mesmo
-mecanismo de mover a câmera dos botões "Focar" de Buscar, Locais e
-Posicionamento — só o rótulo muda; todos movem a câmera. O que mais ele
-faz — se também muda o documento que você está editando, como o Focar de
-[Buscar](#buscar--quais-publicações-correspondem-a-isto) faz — continua
-dependendo do contexto, exatamente como descrito na seção de cada painel;
-dizer "Ir" em vez de "Focar" não muda nada disso.
-
-### Encontros no Mundo — publicações e avatares que seus pares estão compartilhando
-
-(Aparece com **Mostrar ferramentas avançadas** ligado; veja [Uma visão de visitante, e Avançado](#uma-visão-de-visitante-e-avançado).)
-
-O grupo **Encontros no Mundo**, dentro da seção Por perto de Explorar, é um
-pequeno mapa plano próprio — separado do Mapa do mundo descrito abaixo — que
-mostra dois tipos de coisa de que seus pares conectados falaram a você:
-outras **publicações** (veja
-[Publicações e evidências externas](09-PublicationsAndEvidence.md))
-posicionadas por perto, e os **avatares** de outras pessoas, cada um com seu
-marcador, ao lado de um marcador para você.
-
-Clique em um marcador para abrir um painel de inspeção:
-
-- Um marcador de **publicação** mostra o título, o editor, se ela é
-  assinada, a posição e quantas âncoras de evidência externa e
-  posicionamentos de snapshot ela tem.
-- Um marcador de **avatar** mostra o nome de exibição, o dono e a posição.
-
-Se mais de um par conectado oferecer o mesmo encontro, aparece uma lista
-**Escolher fonte** para você escolher a cópia de qual par inspecionar. Como
-tudo na Visão do mundo, isto é só para olhar — nada aqui move sua câmera nem
-edita nada.
-
-Se você rodou **Descobrir Mundo compartilhado** (abaixo) e ele encontrou uma
-pista descentralizada — um local no Arweave ou no Nostr — para a publicação
-selecionada, uma linha **Local** mostra qual será usada. Quando mais de uma
-pista corresponde, aparece no lugar dela uma lista **Escolher local**:
-escolha uma, e Material/Verificação abaixo carregam daquele local. Até você
-escolher, nada é carregado de nenhuma delas, e uma escolha feita para um
-encontro nunca passa para outro.
-
-Selecionar uma publicação também mostra mais dois blocos de status abaixo
-dela. **Material** / **Verificação** tentam de fato carregar o conteúdo
-daquela publicação e conferi-lo criptograficamente com o que foi declarado
-sobre ela. Para conteúdo que este dispositivo já tem, isso funciona direto;
-para qualquer coisa que um par mostrou a você, em geral aparece
-**Unavailable** / **Unverifiable** (indisponível / não verificável) — a
-menos que você tenha rodado à parte **Descobrir Mundo compartilhado**
-(abaixo) para essa mesma publicação; nesse caso, uma pista descentralizada
-resolvida que ele encontrou é reaproveitada aqui também, e Material /
-Verificação podem voltar **Available** / **Verified** (disponível /
-verificado) do mesmo jeito que numa descoberta direta. De todo modo, uma
-linha **Fonte** abaixo de Material diz de onde veio de fato o conteúdo
-inspecionado — **Local** (já estava neste dispositivo) ou **Decentralized**
-(descentralizado: recuperado por uma pista resolvida no Arweave/Nostr) — um
-fato simples sobre esta observação, nunca uma nota de confiança. Quando este
-dispositivo tem o material da própria publicação, aparece um botão
-**Distribuir** — clique nele para abrir uma caixa de diálogo **Distribuir**,
-em vez de deixar todos os seletores de armazenamento, botões e resultados
-na tela o tempo todo. Fechar a caixa de diálogo de novo (**Fechar**, clicar
-fora dela ou Esc) nunca perde nada do que ela produziu: reabri-la mostra
-exatamente o mesmo resultado, erro ou andamento em que você a deixou — a
-caixa de diálogo é pura apresentação, e nada nela depende de ela estar
-aberta.
-
-A caixa de diálogo abre com um conjunto de configurações, usado em tudo o
-que ela distribui: um **Armazenamento** — **Arweave**, **IPFS (Kubo
-local)**, **IPFS (pinning remoto)** (que exige digitar um Endpoint e uma
-Credencial novos toda vez; nada disso é salvo), **Steem** ou **Blurt**
-(experimentais, veja [Steem](11-EvidenceAndStorage.md#steem) e
-[Blurt](11-EvidenceAndStorage.md#blurt)) — e um **Substrato de
-anúncio / descoberta** (**Arweave**, **Blurt**, **Nostr** ou **Steem**). Os dois abrem
-com as preferências de provedor que você salvou. Armazenamento só lista os
-backends em que este dispositivo consegue de fato posicionar um Snapshot
-(mais o pinning remoto), então você não consegue escolher um que só
-falharia no meio do caminho.
-
-Se os dois protocolos abaixo estiverem disponíveis, um botão combinado
-**Distribuir** fica logo abaixo dessas configurações — a ação principal, que
-distribui a Declaração assinada e o Snapshot juntos com as configurações
-acima. Ele não muda nada em nenhum dos protocolos: cada um continua rodando
-de forma independente, cada um continua informando na sua própria seção
-abaixo, e uma falha em um nunca é escondida pelo outro nem o bloqueia — mas
-ele roda os dois um depois do outro, nunca ao mesmo tempo, já que os dois
-podem acabar pedindo para a mesma extensão de carteira conectada assinar, e
-dois pedidos de assinatura disparados juntos são uma falha real de
-extensões. Cada seção abaixo também tem seu próprio botão menor
-**Distribuir só a Declaração assinada** / **Distribuir só o Snapshot**, com
-as mesmas configurações — útil se você quer só um dos dois, ou quer tentar
-de novo só a metade que falhou. (Se só um protocolo estiver disponível, o
-botão da seção dele é simplesmente **Distribuir Declaração assinada** ou
-**Distribuir Snapshot**.)
-
-A seção **Declaração assinada** acompanha se a publicação já passou à parte
-pela distribuição no Arweave/Nostr, mostrando **Ausente** tanto em
-**Material** quanto em **Descoberta** até que isso aconteça. Distribuí-la
-envia o material e o anuncia. Os dois passos são assinados por uma extensão
-do navegador: uma carteira Arweave (como a Wander) para o Arweave, e uma
-extensão de assinatura Nostr (como a nos2x) para o Nostr. Sem a extensão
-correspondente instalada, a tentativa termina com "Não foi possível concluir
-a distribuição." e o motivo. Uma tentativa bem-sucedida mostra o id da
-publicação, o local do **Material** e o id do anúncio de **Descoberta** —
-uma linha de Descoberta por relay quando você configurou vários
-[relays do Nostr](10-NetworkSettings.md#relays-do-nostr).
-
-A seção **Snapshot**, logo abaixo na mesma caixa de diálogo, tem a mesma
-elegibilidade e precisa das mesmas extensões, mas usa outro protocolo: os
-Snapshots (veja
-[Publicações e evidências externas](09-PublicationsAndEvidence.md#snapshot-local))
-são posicionados e descobertos independentemente da distribuição da
-Declaração assinada, então esta seção nunca compartilha estado, histórico ou
-resultado com a seção Declaração assinada acima — só as configurações.
-Clicar nela mostra exatamente o que voltou: um **Hash do conteúdo**, um
-**Localizador** e um id de **Anúncio** — ou "Sem anúncio" se o
-posicionamento deu certo mas o anúncio no Nostr não, o que é informado como
-resultado parcial, nunca como erro. Uma falha de verdade mostra, em vez
-disso, um aviso simples "Não foi possível concluir a distribuição do
-Snapshot.". Nem o estado nem o resultado de nenhuma das seções é lembrado em
-lugar nenhum — selecionar outro encontro, ou sair da página, os apaga.
-
-**Uma publicação que um par mostrou a você aqui não fica presa em Encontros
-no Mundo depois que ela se resolve de verdade.** No momento em que o
-Material de uma publicação mostrada por um par chega a **Available** — o
-conteúdo carrega e confere de verdade — ela também entra no mesmo catálogo
-por trás da busca do [Repositório](04-PublishingAndForking.md#o-repositório)
-e de todas as páginas de autor, exatamente como se tivesse sido encontrada
-do jeito comum: pesquisar no Repositório, ou abrir a página do autor, agora
-também a mostra, e ela continua lá depois de recarregar.
-Não há selo nem rótulo marcando que ela foi "encontrada por um par" depois
-que entra — um cartão do Repositório ou uma listagem na página do autor
-parece igual nos dois casos, já que a essa altura seu próprio dispositivo
-verificou o conteúdo por conta própria; só *como você ficou sabendo dela*
-foi diferente.
-
-### Descobrir Mundo compartilhado — pesquisando direto nas redes descentralizadas
-
-Ainda dentro do grupo Encontros no Mundo, mas sem precisar clicar em
-marcador nem de nenhum par conectado, há um botão **Descoberta de Mundos
-compartilhados** que abre um pequeno popup próprio. Dentro dele fica o
-painel **Descobrir Mundo compartilhado**: digite um **id do Mundo
-compartilhado** e a **etiqueta de descoberta** com que ele foi distribuído,
-e clique em **Descobrir Mundo compartilhado** para consultar o Arweave e o
-Nostr diretamente. O campo da etiqueta de descoberta começa preenchido com a
-etiqueta de campanha compartilhada do próprio ForkBuild — a que uma
-publicação distribuída de dentro deste app teria usado —, então no caso
-comum você só precisa digitar o id do Mundo compartilhado; ele continua
-sendo um campo comum, que você pode editar à vontade se precisar apontá-lo
-para outra etiqueta. O resultado mostra uma linha **Descoberta**
-(**Unavailable**, **Resolved** ou **Ambiguous** — indisponível, resolvido ou
-ambíguo, este último quando aparece mais de uma pista independente para o
-mesmo local) e, depois de resolvido, a mesma leitura de
-Material/Fonte/Verificação descrita acima, com os mesmos campos e palavras.
-Hoje isso só se resolve para uma das suas próprias publicações — uma que
-você assinou e ainda tem localmente, cujo local declarado corresponde ao que
-a rede informa —, então pense nisso como "minha publicação está mesmo lá
-fora, intacta?" em vez de uma busca geral no trabalho de todo mundo. Fechar
-o popup mantém o que você digitou ou encontrou — reabri-lo continua de onde
-você parou, até você pesquisar de novo ou sair da página.
-
-Quando um resultado descoberto volta **Verified**, aparece um botão
-**Selecionar Mundo compartilhado**; clicar nele registra esse resultado como
-"a publicação com que você está trabalhando agora", mostrada depois em um
-pequeno aviso próprio logo abaixo. Selecionar é só essa escolha explícita —
-nunca distribui, verifica de novo nem alimenta sua seleção local acima — e
-continua valendo mesmo depois de você fazer outra pesquisa, até você
-selecionar outra coisa ou sair da página. Só um resultado verificado pode
-ser selecionado; nada que esteja **Rejected** (rejeitado), **Unverifiable**
-ou ainda não resolvido oferece o botão.
-
-Os painéis de Encontros no Mundo guiados por marcadores só mostram o que um
-par conectado agora ou há pouco realmente contou a você; o grupo em si
-mostra **Ainda não há nada para encontrar aqui.** até que pelo menos um
-tenha contado. Descobrir Mundo compartilhado é a única exceção — funciona
-mesmo sem nenhum par conectado, já que consulta uma rede descentralizada
-diretamente. Veja
-[Conexões entre pares e amigos](07-PeerConnectionsAndFriends.md) para se
-conectar a alguém.
-
-### Nomes de lugares por perto — descobrindo declarações de qualquer pessoa
-
-(Aparece com **Mostrar ferramentas avançadas** ligado; veja [Uma visão de visitante, e Avançado](#uma-visão-de-visitante-e-avançado).)
-
-**Nomes de lugares**, o quarto grupo de Por perto, mostra declarações
-assinadas de nomes de lugares para as Regiões do Mundo ao seu redor — sem
-precisar de nenhum par conectado. Como Descobrir Mundo compartilhado acima,
-ele pesquisa direto em uma rede descentralizada (Nostr) as declarações
-marcadas para uma região perto de você; ao contrário de todo o resto de Por
-perto, ele começa recolhido, já que uma declaração descoberta e não
-verificada é uma coisa nova e pouco familiar de ver nesta página.
-
-Cada linha mostra o nome declarado, mais ou menos onde ele fica, quem o
-declarou e quando. Há dois botões:
-
-- **Navegar** move sua câmera até a região da declaração — exatamente como
-  **Ir** no resto de Por perto. Nunca adota, verifica nem age sobre a
-  declaração de forma alguma, e nunca renomeia nada.
-- **Adotar** salva a declaração no seu dispositivo, passando-a pela mesma
-  verificação de assinatura por que passa uma declaração vinda de um par
-  conectado (veja
-  [Recebendo uma de um par](09-PublicationsAndEvidence.md#recebendo-uma-de-um-par)).
-  Depois de adotada, ela é só uma declaração conhecida, como qualquer outra
-  — o botão Adotar da linha é trocado por **✓ Já salvo**, e adotar a mesma
-  declaração de novo só confirma que nada mudou.
-
-Duas declarações que dão nome ao mesmo terreno aparecem ambas aqui — esta
-lista nunca escolhe uma "vencedora", e adotar uma nunca significa dizer que
-ela é mais correta que outra. Se a descoberta em si falhar (sem conexão com
-relay, ou erro na consulta), um pequeno aviso diz isso, mas as declarações
-que você já viu continuam na tela; nunca é tratado como "não há declarações
-por perto". Veja
-[Dando nome a um lugar](09-PublicationsAndEvidence.md#dando-nome-a-um-lugar)
-para saber como uma declaração é publicada.
-
-### Construções declaradas — construções de outras pessoas, onde os editores dizem que elas ficam
-
-(Aparece com **Mostrar ferramentas avançadas** ligado; veja [Uma visão de visitante, e Avançado](#uma-visão-de-visitante-e-avançado).)
-
-Enquanto você caminha, o ForkBuild baixa os Snapshots anunciados perto de
-você (veja o caminho automático de
-[Meu Mundo compartilhado](#meu-mundo-compartilhado--distribuindo-seu-próprio-snapshot-sem-precisar-de-pares)).
-O anúncio de um Snapshot pode dizer onde o editor o posicionou, mas isso é
-só uma **declaração**: ninguém conferiu, e confiar nela às cegas deixaria
-qualquer pessoa pôr uma construção em cima da sua. Por isso uma construção
-declarada aparece como **fantasma** — os blocos dela desenhados translúcidos
-na posição declarada — e nunca vira sozinha um posicionamento de verdade.
-
-Há uma exceção, e ela não precisa de clique. Quando um editor distribui o
-Snapshot dele, o anúncio também leva o **posicionamento assinado** dele.
-Quando este dispositivo conhece o Mundo compartilhado daquela construção
-(ele está no seu Repositório, ou você usa **Verificar**), o ForkBuild confere
-se o posicionamento foi assinado com a chave daquele Mundo compartilhado e,
-se foi, mostra a construção sólida, exatamente onde o editor a pôs. Continua
-sendo o posicionamento dele, não o seu: você não pode movê-lo nem removê-lo.
-Se ele a mover depois e distribuir de novo, ela se move para você também.
-Uma posição assinada por qualquer outra pessoa continua fantasma.
-
-Um fantasma só é desenhado quando:
-
-- a posição dele está perto de você (sua célula do mapa ou as vizinhas, uns
-  1.000 de distância em cada direção), e ele some de novo quando você se
-  afasta;
-- o conteúdo dele foi baixado e corresponde ao hash de conteúdo;
-- este dispositivo ainda não tem um posicionamento daquela construção —
-  quando tiver, a construção de verdade aparece no lugar;
-- nada que este dispositivo conhece já está posicionado exatamente naquele
-  ponto — uma declaração sempre cede a um posicionamento de verdade.
-
-Você não pode selecionar, inspecionar, editar nem bifurcar um fantasma na
-visualização 3D. Construções muito grandes são desenhadas só em parte (os
-primeiros milhares de blocos).
-
-Cada fantasma também ganha uma linha no grupo **Construções declaradas**,
-das mais próximas para as mais distantes: título, distância, posição e
-"declarado por …" — o título e o autor vêm do próprio conteúdo da construção
-e são tão não verificados quanto a posição. Cada linha tem:
-
-- **Navegar** — move a câmera para olhar o ponto declarado. Nada mais muda.
-- **Verificar** — aparece enquanto este dispositivo ainda não tem o registro
-  assinado do Mundo compartilhado da construção. Ele procura o registro no
-  Nostr e no Arweave, confere a assinatura e confere se é exatamente o Mundo
-  compartilhado desta construção e se nomeia exatamente o conteúdo que o
-  fantasma mostra. Se tudo conferir, o Mundo compartilhado é adicionado ao
-  seu Repositório e a linha passa a dizer "assinado por *nome* (chave
-  did:key:…)". Se não, a linha diz por quê: nada foi anunciado (o editor
-  pode ter distribuído só o Snapshot — o botão combinado **Distribuir**
-  anuncia os dois), nenhuma cópia estava assinada de forma válida, ou o
-  Mundo compartilhado assinado nomeia outro conteúdo. Verificar nunca aceita
-  uma declaração por si só; mas, se o anúncio trazia o posicionamento
-  assinado do editor, a construção agora aparece sólida onde ele a pôs (veja
-  acima), e o fantasma some.
-- **Aceitar posição** — o único jeito de confiar em uma declaração. Posiciona
-  a construção na posição declarada com um posicionamento *seu*, assinado por
-  você como qualquer outro, e a partir daí ela é uma construção normal do seu
-  Mundo. Só fica habilitado quando este dispositivo tem o registro assinado e
-  verificado do Mundo compartilhado do editor — por **Verificar**, quando ele
-  compartilha o Mundo com você (veja
-  [Compartilhando com pares conectados](04-PublishingAndForking.md#compartilhando-com-pares-conectados);
-  aí ele aparece no seu Repositório), ou quando o
-  [Encontro no Mundo](#encontros-no-mundo--publicações-e-avatares-que-seus-pares-estão-compartilhando)
-  de um par conectado para ele chega a **Available** — e só se aquele Mundo
-  compartilhado nomear exatamente o conteúdo que o fantasma mostra. Ele
-  também fica desabilitado quando o editor daquele Mundo compartilhado
-  escolheu **Só eu posso posicioná-lo** (veja
-  [Escolhendo quem pode posicioná-lo](04-PublishingAndForking.md#escolhendo-quem-pode-posicioná-lo)).
-  Sempre que está desabilitado, a linha diz por quê.
-
-  **O que "verificado" significa.** Prova que a construção é exatamente o
-  conteúdo de um Mundo compartilhado assinado pela chave mostrada. Não prova
-  quem tem essa chave — qualquer pessoa pode criar uma e se chamar "bob" — e
-  não prova a posição, que continua só declarada. Aceitar posição funciona
-  também com chaves que você não conhece; confiar ou não em uma é decisão
-  sua.
-- **Ocultar** — remove aquele fantasma e a linha dele até você sair da
-  Visão do mundo. Nada é denunciado nem excluído.
-
-### Meu Mundo compartilhado — distribuindo seu próprio Snapshot, sem precisar de pares
-
-(Aparece com **Mostrar ferramentas avançadas** ligado; veja [Uma visão de visitante, e Avançado](#uma-visão-de-visitante-e-avançado).)
-
-Mais abaixo no painel, depois de Buscar e Avatar, fica o painel **Meu Mundo
-compartilhado**, que mostra o título e o autor do seu mundo atual depois que
-ele é de fato publicado, mais um botão **Distribuir** próprio, que abre
-exatamente o mesmo tipo de caixa de diálogo **Distribuir** descrita acima
-para Encontros no Mundo — é o mesmo componente, então tudo no layout dela, o
-botão combinado **Distribuir**, as configurações compartilhadas de
-Armazenamento/substrato, as seções **Declaração assinada**/**Snapshot** e o
-comportamento de "fechar nunca perde um resultado" é exatamente como
-descrito em
-[Encontros no Mundo](#encontros-no-mundo--publicações-e-avatares-que-seus-pares-estão-compartilhando)
-acima. A única diferença é *o que* ela distribui: a caixa de diálogo de
-Encontros no Mundo sempre age sobre a publicação encontrada que você
-selecionou; esta sempre age sobre *o seu próprio mundo atual*, e nenhuma
-compartilha estado, histórico ou resultado com a outra — **Distribuir só a
-Declaração assinada** aqui distribui a Declaração assinada por trás do seu
-mundo do mesmo jeito que o botão de Encontros no Mundo; **Distribuir só o
-Snapshot** o distribui pelo protocolo separado de Snapshot — veja
-[Snapshot local](09-PublicationsAndEvidence.md#snapshot-local) para o que
-essa diferença significa. O pinning remoto no IPFS e a ancoragem no
-Bitcoin/Base ficam na Central de publicações da página Publicações (veja
-[Publicação no IPFS](11-EvidenceAndStorage.md#publicação-no-ipfs) e
-[O fluxo de âncora no Bitcoin](11-EvidenceAndStorage.md#o-fluxo-de-âncora-no-bitcoin))
-— os dois precisam antes de uma conta ou de uma carteira conectada, então
-nenhum deles é um botão de um clique aqui.
-
-A razão de ser de Meu Mundo compartilhado é nunca depender de Encontros no
-Mundo ter algo para mostrar. Encontros no Mundo só mostra o que um par
-conectado agora ou há pouco contou a você — sem mais ninguém por perto, ele
-fica vazio. Meu Mundo compartilhado não precisa de nada disso: está sempre
-aqui quando você tem um mundo aberto, haja ou não alguém por perto, e esteja
-ele publicado ou não (até você publicá-lo, o botão fica desabilitado, com
-uma nota dizendo que ainda não há nada para distribuir).
-
-**Distribuir** e o link de compartilhamento ficam à vista. As ações menos
-usadas esperam atrás de **Mais ▾**: **Exportar Snapshot**, **Verificar
-correspondência do Snapshot**, **Ferramentas de diagnóstico** (abaixo) e
-**Despublicar…**. Despublicar pergunta uma vez antes de agir — tira o Mundo
-do catálogo, enquanto os posicionamentos dele, o Documento e as cópias
-distribuídas ficam — e **Cancelar** desiste.
-As cópias que você já distribuiu não podem ser recolhidas, mas este
-dispositivo lembra o que você despublicou, então a busca do Repositório nas
-redes não volta a listá-las. Os resultados de Exportar e
-Verificar continuam no painel depois que você fecha o menu.
-
-Quando o Mundo que você tem aberto foi publicado por outra pessoa (um que um
-par compartilhou com você, por exemplo), o painel se chama **Mundo
-compartilhado** e deixa de fora **Despublicar** e **Distribuir**: só o
-próprio editor de um Mundo pode retirá-lo ou distribuí-lo. Os
-posicionamentos, as ferramentas de Snapshot, o link de compartilhamento e
-**Comentários** continuam, então você ainda pode ler e postar comentários no
-Mundo de qualquer pessoa.
-
-Abaixo de tudo isso fica uma seção **Comentários**, recolhida em uma única
-linha **▸ Comentários (N)** até você clicar nela (o número continua
-atualizado enquanto ela está recolhida) e, como tudo neste painel, restrita
-ao seu mundo atual — veja
-[Comentários](09-PublicationsAndEvidence.md#comentários) para o quadro
-completo de quem pode comentar e o que acontece quando alguém comenta. Como
-Distribuir Snapshot, postar de fato um comentário exige que seu mundo esteja
-publicado; até lá, a caixa de escrita fica desabilitada.
-
-Uma lista **Posicionamentos (N)** mostra todos os locais em que este Mundo
-compartilhado está de fato posicionado, na ordem em que foram encontrados —
-posição, revisão e (quando conhecido) dono, uma linha por posicionamento.
-Nada aqui é reduzido a "o mais recente": um Mundo compartilhado pode de fato
-ficar em mais de um lugar, e todos os posicionamentos que este dispositivo
-consegue descobrir aparecem na lista, nunca só um único, o atualizado mais
-recentemente, no lugar dos outros.
-
-Cada linha tem seus próprios **Mover…** e **Remover…**, que agem exatamente
-sobre aquele posicionamento e nenhum outro. **Mover…** abre a mesma caixa de
-diálogo X/Y/Z Mover posicionamento (com o aviso de sobreposição) para aquele
-posicionamento. **Remover…** pergunta uma vez antes de tirar aquele
-posicionamento do Mundo; o Mundo compartilhado, o Documento dele e os outros
-posicionamentos ficam, e remover o último posicionamento só significa que a
-construção não aparece mais em lugar nenhum até você posicioná-la de novo.
-Os dois ficam desabilitados num posicionamento feito por outra pessoa: só o
-dono pode movê-lo ou removê-lo.
-
-**Adicionar posicionamento aqui**, embaixo da lista, posiciona a mesma
-construção *de novo* na posição do seu avatar (ou, sem avatar, da câmera) —
-nunca move um posicionamento existente; para isso, use o **Mover…** daquele
-posicionamento. Ele adiciona um posicionamento, não uma cópia: a construção
-continua sendo um único Mundo compartilhado (veja
-[Posicionar ou bifurcar](#posicionar-ou-bifurcar)). A confirmação diz onde
-ela foi posicionada e quantos posicionamentos o Mundo compartilhado tem
-agora. Se já houver um posicionamento exatamente onde você está, o botão se
-recusa e pede que você se mova antes, para que cliques repetidos não
-empilhem duplicatas invisíveis num só ponto. Uma lista vazia só significa
-que este Mundo compartilhado ainda não foi posicionado em lugar nenhum; uma
-falha de leitura mostra, em vez disso, um erro simples próprio.
-
-Dentro de **Mais**, um botão **Ferramentas de diagnóstico** — presente só
-quando pelo menos um dos recursos por trás dele está disponível — abre um
-pequeno popup de ferramentas manuais de recuperação, passo a passo, para
-quando a descoberta ou o posicionamento automático de Snapshots não
-produzem o que você espera: **Descobrir Snapshots** mostra tudo o que foi
-anunciado com a etiqueta de descoberta da campanha compartilhada — acessível
-mesmo sem pares conectados, sem Encontros no Mundo e sem um Mundo
-compartilhado seu; selecionar um e clicar em **Resolver o Snapshot
-selecionado** confere se ele pode de fato ser recuperado; a partir daí você
-pode **Atribuir o Snapshot selecionado** (ele corresponde ao hash de
-conteúdo deste Mundo compartilhado?) e, de forma independente,
-**Materializar o Snapshot selecionado** (guardar os bytes dele neste
-dispositivo) — e, a qualquer momento depois de selecionar um candidato,
-**Usar a posição declarada** adota a posição que o próprio Snapshot
-declara, se tiver uma. Depois de materializado, **Posicionar o Snapshot
-materializado** e em seguida **Registrar o Snapshot posicionado** de fato o
-adicionam ao Mundo que você está vendo agora, sem recarregar. Cada um desses
-é um clique explícito próprio — nada aqui se encadeia, tenta de novo ou
-classifica um candidato por você; é a mesma contenção que todos os outros
-fluxos manuais, um passo de cada vez, do ForkBuild já seguem.
-
-**O caminho automático, de que este popup é a alternativa, usa mais do que
-só este dispositivo.** Enquanto você caminha, o ForkBuild procura de tempos
-em tempos candidatos a Snapshot nos bastidores — a mesma verificação que
-**Descobrir Snapshots** acima faz à mão —, juntando num único conjunto de
-candidatos o que este dispositivo já tem localmente, o que um par conectado
-compartilhou de forma passiva (só por estar conectado, sem nenhuma ação da
-parte dele) e o que o Nostr informa. Um candidato que se resolve passa em
-silêncio pela mesma cadeia resolver → materializar → posicionar → registrar
-descrita acima, e aparece exatamente como qualquer outro marcador de
-**Encontro no Mundo** — não há lista nem notificação separada de
-"descobertos automaticamente", e os botões manuais das Ferramentas de
-diagnóstico acima continuam funcionando exatamente como descrito, sem
-mudança, para quando este caminho passivo não encontra o que você mesmo
-procura.
-
-O caminho automático só baixa Snapshots perto de você: os posicionados, ou
-anunciados como posicionados, na sua célula do mapa ou nas vizinhas (uns
-1.000 de distância em cada direção), mais os 20 mais novos que não dizem
-onde ficam. Um Snapshot mais distante é baixado quando você chega perto
-dele. No máximo quatro são baixados ao mesmo tempo. Um Snapshot que este
-dispositivo já baixou é lido do próprio armazenamento em vez de baixado de
-novo, depois da mesma verificação de conteúdo.
+- **Prévia** mostra o Mundo como estava *logo depois* daquele passo, ao
+  lado do atual, sem mudar nada. **Cancelar prévia** volta.
+- **Restaurar** volta para aquele passo. Não pergunta antes, mas deixa a
+  mudança sem salvar, então você ainda pode escolher se quer salvar.
+- **Fechar** fecha a lista.
 
 ## E agora?
 
-Pronto para compartilhar o que você fez, ou remixar o trabalho de outra
-pessoa? Continue em **[Publicar e remixar](04-PublishingAndForking.md)**.
+Pronto para compartilhar o que você fez, ou para remixar o trabalho de
+outra pessoa? Continue em
+**[Publicar e remixar](04-PublishingAndForking.md)**. Para as ferramentas
+de rede por trás do Mundo, veja
+**[Visão do mundo: ferramentas avançadas](WorldViewAdvancedTools.md)**.

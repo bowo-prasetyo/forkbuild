@@ -98,8 +98,8 @@ Details:
 
 - Signed Claim and Snapshot:
   [Where it goes](04-PublishingAndForking.md#where-it-goes--sending-a-build-as-you-publish),
-  [My Shared World](03-WorldView.md#my-shared-world--distributing-your-own-snapshot-no-peers-required),
-  and the [Distribute dialog](03-WorldView.md#world-encounters--publications-and-avatars-your-peers-are-sharing)
+  [My Shared World](WorldViewAdvancedTools.md#my-shared-world--distributing-your-own-snapshot-no-peers-required),
+  and the [Distribute dialog](WorldViewAdvancedTools.md#world-encounters--publications-and-avatars-your-peers-are-sharing)
   itself.
 - The Publications page:
   [Distributing from the Publications page](09-PublicationsAndEvidence.md#distributing-from-the-publications-page),
@@ -184,7 +184,7 @@ connected to can still fetch builds of up to 64 MB straight from you.
 - **Discover Shared World** in World View looks your Shared World up on
   Arweave and Nostr directly and checks it, answering "is my publication
   really out there, intact?" See
-  [Discover Shared World](03-WorldView.md#discover-shared-world--searching-decentralized-networks-directly).
+  [Discover Shared World](WorldViewAdvancedTools.md#discover-shared-world--searching-decentralized-networks-directly).
 - On the Publications page, **Verify IPFS Content** fetches an IPFS upload
   back and compares it with its hash, and **Verify Evidence** checks an
   anchor.

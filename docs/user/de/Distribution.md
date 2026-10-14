@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: e191fb1f57264f38 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: c6324c75a72ab6b3 -->
 # Ihre Arbeit verteilen
 
 <!-- languages -->
@@ -71,8 +71,8 @@ Einzelheiten:
 
 - Signierter Anspruch und Snapshot:
   [Wohin es geht](04-PublishingAndForking.md#wohin-es-geht--ein-bauwerk-beim-veröffentlichen-senden),
-  [Meine Geteilte Welt](03-WorldView.md#meine-geteilte-welt--ihren-eigenen-snapshot-verteilen-ohne-peers)
-  und der [Verteilen-Dialog](03-WorldView.md#begegnungen-in-der-welt--veröffentlichungen-und-avatare-die-ihre-peers-teilen)
+  [Meine Geteilte Welt](WorldViewAdvancedTools.md#meine-geteilte-welt--ihren-eigenen-snapshot-verteilen-ohne-peers)
+  und der [Verteilen-Dialog](WorldViewAdvancedTools.md#begegnungen-in-der-welt--veröffentlichungen-und-avatare-die-ihre-peers-teilen)
   selbst.
 - Die Seite Veröffentlichungen:
   [Von der Seite Veröffentlichungen verteilen](09-PublicationsAndEvidence.md#von-der-seite-veröffentlichungen-verteilen),
@@ -163,7 +163,7 @@ direkt von Ihnen abrufen.
   direkt auf Arweave und Nostr und prüft sie; so beantwortet es die Frage
   „Ist meine Veröffentlichung wirklich da draußen, und zwar unversehrt?“.
   Siehe
-  [Geteilte Welt entdecken](03-WorldView.md#geteilte-welt-entdecken--dezentrale-netzwerke-direkt-durchsuchen).
+  [Geteilte Welt entdecken](WorldViewAdvancedTools.md#geteilte-welt-entdecken--dezentrale-netzwerke-direkt-durchsuchen).
 - Auf der Seite Veröffentlichungen ruft **IPFS-Inhalt überprüfen** einen
   IPFS-Upload zurück und vergleicht ihn mit seinem Hash, und
   **Nachweise überprüfen** prüft einen Anker.
