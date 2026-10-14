@@ -175,6 +175,17 @@ near-black shell the app had until then.
 - A panel over the 3D view is warm paper, nearly opaque, so the world shows
   at its edges and the words don't fight it.
 
+The logo is a little house, and a remix of it behind (2026-10-14): the
+fantasy's *build a little place, anyone can remix it* in one picture, drawn
+like the bricks, with the same soft dark line along its edges, in the
+village's colours: a terracotta roof, plaster walls and a meadow-green door,
+and the copy behind in greens. It is assets/icons/logo.svg (on paper, for
+the app's icon) and assets/icons/logo-mark.svg (without, beside the name in
+the header and on the link-preview card). A browser tab is too small for two
+houses, so favicon.svg is one green brick, drawn heavy enough to read at
+16 px. It replaced a green cube with a Git branch on a near-black tile,
+which looked like a developer's tool and read as a parcel at tab size.
+
 Bricks look like what they are made of (2026-10-13): a soft dark line
 along every brick's edges, a slight shade of its own, and the grain of its
 surface, masonry courses, plaster, wood, roof tiles, glass, leaves or rough

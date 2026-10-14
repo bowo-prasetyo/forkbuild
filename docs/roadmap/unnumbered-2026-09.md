@@ -6753,3 +6753,25 @@ looked the same. Pillar: **Building** (do people who arrive start a build?).
   same page load nothing more.
 - Not done: which way into the Editor a visit took beyond `?start=` (New, a plot, a fork) isn't told apart; how long a
   first edit took; Publish opened but abandoned.
+
+## A logo that looks like the game (unnumbered, 2026-10-14)
+
+The logo was a green cube with a Git branch cut into its top, on a near-black tile. Since the shell turned to warm
+paper (docs/Pillars.md, "Look"), it was the last thing that looked like a developer's tool: black on a cream page and
+in a light tab, a branch symbol where the app says remix, and at tab size a box with tape across it, a parcel. The
+branch's ends also ran off the cube's top, so it read as split rather than built. Pillar: **Every build has a family
+tree** (the first thing anyone sees says *build a little place, anyone can remix it*).
+
+- **The logo** (assets/icons/logo.svg on paper, assets/icons/logo-mark.svg without): a little house, plaster walls, a
+  terracotta roof and a meadow-green door, with a copy of it behind in greens, the remix. Drawn like the bricks, with a
+  soft dark line (`--ink`) along every edge, in the theme's colours.
+- **The small logo** (favicon.svg): two houses don't survive 16 px, so the tab shows one green brick with a stud, on
+  paper, its outline heavy enough to read at that size.
+- **Where it shows:** beside ForkBuild in the header (ui/App.js), in the manifest (its SVG icon is now logo.svg; the
+  tab keeps favicon.svg), the PNG and maskable icons, and the link-preview card, now on paper with Home's own words and
+  line ("Remix anything. Own your work.") in place of "Build. Fork. Share. Evolve." The service worker keeps both
+  logo SVGs with the app shell, so the header has its logo offline.
+- **Made by** `node scripts/brand-icons.mjs` (new): the PNG icons and the card from logo-mark.svg, the card's
+  picture taken from Home's turning village in this checkout. The press kit's pictures and the guide's were retaken.
+- docs/Pillars.md ("Look"), docs/Deployment.md and docs/launch/PressKit.md (a Logo section) say what each file is.
+- Not done: the turning village's fallback picture, when 3D can't start, is still favicon.svg.
