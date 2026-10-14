@@ -46,7 +46,7 @@ const EMBED_ENTRY = 'ui/embed/embedBoot.js';
 const NOT_PUBLISHED = ['tests/', 'server/', '.github/'];
 // What the service worker keeps on install besides the bundle's own files.
 const APP_SHELL = ['index.html', 'manifest.webmanifest', 'favicon.svg', 'assets/icons/icon-192.png', 'assets/icons/icon-512.png',
-    'assets/icons/icon-maskable-512.png', 'assets/icons/apple-touch-icon.png'];
+    'assets/icons/icon-maskable-512.png', 'assets/icons/apple-touch-icon.png', 'assets/icons/logo.svg', 'assets/icons/logo-mark.svg'];
 // Translations are kept once used rather than on install: only one is needed.
 const TRANSLATION_ENTRY = /^ui\/i18n\/messages\/[^/]+\.js$/;
 

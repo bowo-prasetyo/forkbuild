@@ -117,7 +117,7 @@ export default {
     template: `
         <div class="app-shell">
             <header class="app-header">
-                <span class="app-title">ForkBuild</span>
+                <span class="app-title"><img class="app-title-mark" src="assets/icons/logo-mark.svg" alt="">ForkBuild</span>
                 <button
                     type="button"
                     class="app-menu-toggle"

@@ -85,11 +85,14 @@ change those two lines to its own address. The app itself never fetches
 them, so the Content Security Policy needs nothing for them.
 
 `manifest.webmanifest` (linked from `index.html`) names the app, its colors
-and its icons (`favicon.svg`, and `assets/icons/` for browsers that want
-PNGs, including a maskable one), so browsers that install web apps can
-install ForkBuild from the address bar. Its addresses are relative, so it
-works unchanged wherever the folder is served. The manifest is fetched from
-the page's own origin, which `default-src 'self'` already allows.
+and its icons (`assets/icons/logo.svg`, and PNGs in `assets/icons/` for
+browsers that want them, including a maskable one), so browsers that install
+web apps can install ForkBuild from the address bar. The page's own tab icon
+is `favicon.svg`, the logo's small version. `node scripts/brand-icons.mjs`
+draws the PNGs and the link-preview card from the logo. The manifest's
+addresses are relative, so it works unchanged wherever the folder is
+served. The manifest is fetched from the page's own origin, which
+`default-src 'self'` already allows.
 
 ### Installing and working offline
 

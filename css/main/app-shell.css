@@ -41,9 +41,18 @@ html, body {
 }
 
 .app-title {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
     font-weight: 700;
     font-size: 1.05rem;
     letter-spacing: 0.02em;
+}
+
+/* The logo beside the name: a little house, and a remix of it behind. */
+.app-title-mark {
+    height: 1.75rem;
+    width: auto;
 }
 
 .app-nav {
