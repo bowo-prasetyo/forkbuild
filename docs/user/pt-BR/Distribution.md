@@ -1,16 +1,17 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: c6324c75a72ab6b3 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: 5cfbb171295f8928 -->
 # Distribuindo seu trabalho
 
 <!-- languages -->
 [English](../Distribution.md) · [Deutsch](../de/Distribution.md) · [Español](../es/Distribution.md) · [Français](../fr/Distribution.md) · [Bahasa Indonesia](../id/Distribution.md) · [日本語](../ja/Distribution.md) · [한국어](../ko/Distribution.md) · **Português (Brasil)**
 <!-- /languages -->
 
-Tudo o que o ForkBuild cria começa no seu próprio dispositivo.
-**Distribuir** é o passo separado e opcional que coloca seu trabalho em
-redes descentralizadas, para que pessoas que não estão conectadas a você
-possam encontrá-lo, buscá-lo e conferi-lo. Esta página reúne em um só lugar
-o que você pode distribuir, para onde pode ir e do que você precisa. Cada
-seção tem um link para o guia que explica os detalhes.
+Tudo o que você faz no ForkBuild começa no seu próprio dispositivo.
+**Distribuir** coloca isso em redes descentralizadas, para que pessoas que
+não estão conectadas a você possam encontrar, obter e conferir que é seu.
+É opcional, e é diferente de publicar.
+
+Esta página mostra o que você pode distribuir, para onde pode ir e do que
+você precisa. Cada seção tem um link para o guia com os detalhes.
 
 ## Publicar, compartilhar, distribuir: três coisas diferentes
 
@@ -20,13 +21,14 @@ seção tem um link para o guia que explica os detalhes.
 | **Compartilhar com pares** | Direto para as pessoas com quem você está conectado | Seus pares conectados, enquanto você estiver online | [Compartilhando com pares conectados](04-PublishingAndForking.md#compartilhando-com-pares-conectados) |
 | **Distribuir** | Redes descentralizadas (IPFS, Arweave, Nostr, Steem, Blurt) | Qualquer pessoa, sem precisar estar conectada a você | Esta página |
 
-Até você escolher para onde suas construções vão, publicar não envia nada
-para lugar nenhum por conta própria. Quando você escolhe (no **Para onde
-vai** do Editor, com **Enviar para cá toda vez que eu publicar** marcado),
-cada Publicar de uma construção assinada também a distribui para lá;
-desmarque a caixa para parar. Compartilhar com pares não é distribuir: os
-pares guardam uma cópia só enquanto quiserem, e mais ninguém consegue
-encontrá-la.
+Publicar não envia nada para lugar nenhum por conta própria até você
+escolher para onde suas construções vão. Você escolhe no **Para onde vai**
+do Editor: com **Enviar para cá toda vez que eu publicar** marcado, cada
+vez que você publica uma construção assinada ela também é distribuída para
+lá. Desmarque a caixa para parar.
+
+Compartilhar com pares não é distribuir. Os pares guardam uma cópia só
+enquanto quiserem, e mais ninguém consegue encontrá-la.
 
 ## Os três papéis que uma rede pode cumprir
 
@@ -38,10 +40,10 @@ Distribuir usa até três tipos de rede, cada um escolhido separadamente:
 | **Anúncio / descoberta** | Uma ficha no catálogo de uma biblioteca | Publica um pequeno aviso assinado dizendo que seu trabalho existe e onde está a cópia dele, para que outras pessoas possam encontrá-lo | **Nostr**, **Arweave**, **Steem** *(experimental)*, **Blurt** *(experimental)* |
 | **Prova / ancoragem** *(experimental, opcional)* | O carimbo de um cartório | Grava o hash do seu conteúdo em uma blockchain, como evidência de que ele existia naquele momento. Não guarda nem anuncia nada. | **Bitcoin**, **Arweave**, **Base**, **Steem**, **Blurt** |
 
-Armazenar sem anunciar significa que ninguém sabe onde procurar; um anúncio
-sem armazenamento aponta para o nada. **Distribuir** faz as duas coisas com
-um clique. Ancorar é um extra, feito separadamente na página
-**Publicações**.
+Você precisa dos dois primeiros juntos. Um trabalho armazenado sem anúncio
+é difícil de encontrar, e um anúncio sem nada armazenado não aponta para
+nada. **Distribuir** faz as duas coisas com um clique. Ancorar é um extra,
+feito separadamente na página **Publicações**.
 
 Defina sua escolha habitual para cada papel em
 [Configurações de rede](10-NetworkSettings.md):
@@ -60,7 +62,7 @@ nada.
 | **O hash do conteúdo de qualquer publicação** (um Mundo, uma declaração de autoria ou um nome de lugar) | — | — | Bitcoin, Arweave, Base, Steem ou Blurt | O card da publicação na página **Publicações** |
 | **A autoria de uma estrutura** (Atribuição de planta) | Arweave, IPFS, Steem ou Blurt | Nostr, Arweave, Steem ou Blurt | — | **Distribuir** no painel **Informações** da estrutura, oferecido assim que você usa **Publicar na rede**; a página **Publicações** |
 | **Um nome de lugar** (Declaração de nome de lugar) | Arweave, IPFS, Steem ou Blurt | Nostr, Arweave, Steem ou Blurt | — | **Distribuir** no painel de nomes da Visão do mundo, oferecido assim que você usa **Publicar um nome** (anuncia o nome na rede que você escolher); a página **Publicações** para qualquer uma dessas opções |
-| **Um comentário** sobre uma publicação | — | Nostr, Arweave, Steem ou Blurt, ou nenhuma (**Somente local e pares**) | — | **Publicar comentário**, no Repositório ou na Visão do mundo, na rede escolhida ao lado; depois, **Distribuir** embaixo do seu próprio comentário |
+| **Um comentário** sobre uma publicação | — | Nostr, Arweave, Steem ou Blurt, ou nenhuma (**Somente local e pares**) | — | **Publicar comentário**, em Explorar ou na Visão do mundo, na rede escolhida ao lado; depois, **Distribuir** embaixo do seu próprio comentário |
 
 O Snapshot de um Mundo leva junto o seu posicionamento assinado, então quem o
 busca vê a construção exatamente onde você a colocou.
@@ -123,46 +125,47 @@ construção no Blurt já traz o hash do conteúdo dela; veja [Blurt](11-Evidenc
 
 ## Um caminho típico
 
-1. **Publique** seu Mundo no Editor (veja
+1. **Publique** o seu Mundo no Editor (veja
    [Publicando sua criação](04-PublishingAndForking.md#publicando-sua-criação)).
-2. Clique em **Distribuir** no aviso que aparece, ou depois em
-   **Meu Mundo compartilhado** na Visão do mundo.
-3. Escolha um **Armazenamento** e um **Substrato de anúncio / descoberta**,
-   por exemplo IPFS e Nostr, ou Arweave para os dois, e clique em
-   **Distribuir**. Ele distribui o Snapshot, depois a Declaração assinada,
-   e informa cada um separadamente. Se uma metade falhar, tente de novo só
-   essa metade com o botão **Distribuir só …** dela.
-4. Se quiser, na página **Publicações**, ancore a publicação (por exemplo
-   **Ancorar em Arweave**) para registrar quando ela existia.
-5. Clique em **Compartilhar…** ou **Copiar link** abaixo do resultado para
-   dar às pessoas um link que abre sua construção em qualquer dispositivo,
-   pronta para remixar ou passear na Visão do mundo.
+2. Clique em **Distribuir** no aviso que aparece. Você também pode fazer
+   isso depois, em **Meu Mundo compartilhado** na Visão do mundo.
+3. Escolha um **Armazenamento** e um **Substrato de anúncio / descoberta**:
+   por exemplo IPFS e Nostr, ou Arweave para os dois. Clique em
+   **Distribuir**.
+4. Ele envia o Snapshot, depois a Declaração assinada, e mostra um
+   resultado para cada um. Se uma metade falhar, tente de novo só essa com
+   o botão próprio dela, **Distribuir só …**.
+5. *Opcional:* na página **Publicações**, ancore a publicação (por exemplo
+   com **Ancorar em Arweave**) para registrar quando ela existia.
+6. Clique em **Compartilhar…** ou **Copiar link** embaixo do resultado. O
+   link abre a sua construção em qualquer dispositivo, pronta para remixar
+   ou passear.
 
-Para uma construção maior que os 256 KB do Arweave, escolha o IPFS. Pares
-conectados a você ainda podem buscar construções de até 64 MB direto de
-você.
+Uma construção grande demais para o Arweave (mais de 256 KB) pode ir para o
+IPFS. Os pares conectados a você podem pegar construções de até 64 MB
+direto de você.
 
 ## Conferindo se deu certo
 
-- O card da sua construção no Repositório diz onde este dispositivo
-  registrou a distribuição, por exemplo **Guardado no IPFS · Anunciado no
-  Nostr**, ou **Nenhuma distribuição registrada neste dispositivo.** Veja
+- **No seu próprio cartão.** O cartão da sua construção em **Explorar**
+  diz onde este dispositivo registrou a distribuição: por exemplo
+  **Guardado no IPFS · Anunciado no Nostr**, ou **Nenhuma distribuição
+  registrada neste dispositivo.** Veja
   [Suas publicações](13-YourData.md#suas-publicações).
-- O Repositório de outras pessoas encontra sua publicação no Nostr, no
-  Arweave, no Steem ou no Blurt na próxima vez que elas o abrirem, desde que ela
-  tenha sido anunciada com a tag de descoberta de sempre,
+- **Para outras pessoas.** O **Explorar** delas encontra a sua construção
+  no Nostr, Arweave, Steem ou Blurt na próxima vez que o abrirem, desde
+  que ela tenha sido anunciada com a tag de descoberta de sempre,
   `forkbuild-publication`. Veja
   [Criações que outras pessoas distribuíram](04-PublishingAndForking.md#criações-que-outras-pessoas-distribuíram).
-- **Descobrir Mundo compartilhado** na Visão do mundo procura seu Mundo
-  compartilhado direto no Arweave e no Nostr e o confere, respondendo à
-  pergunta "minha publicação está mesmo lá fora, intacta?". Veja
+- **Direto nas redes.** **Descobrir Mundo compartilhado**, na Visão do
+  mundo, procura o seu Mundo no Arweave e no Nostr e o confere: ele está
+  mesmo lá fora, inteiro? Veja
   [Descobrir Mundo compartilhado](WorldViewAdvancedTools.md#descobrir-mundo-compartilhado--pesquisando-direto-nas-redes-descentralizadas).
-- Na página Publicações, **Verificar conteúdo no IPFS** busca de volta um
-  envio ao IPFS e o compara com o hash dele, e **Verificar evidências**
+- **Na página Publicações.** **Verificar conteúdo no IPFS** busca de volta
+  algo enviado ao IPFS e compara com o hash. **Verificar evidências**
   confere uma âncora.
 
-A distribuição não pode ser desfeita: depois que algo é anunciado ou
-guardado, outras pessoas podem já ter uma cópia. **Despublicar** remove um
-Mundo só do seu próprio catálogo, e este dispositivo passa a lembrar de não
-listar de novo as cópias distribuídas quando o Repositório pesquisa nas
-redes.
+Distribuir não pode ser desfeito: assim que algo é armazenado ou anunciado,
+outras pessoas podem já ter uma cópia. **Despublicar** só tira um Mundo do
+seu próprio catálogo. Este dispositivo então lembra de não listar de novo
+as cópias que você distribuiu quando o Explorar procura nas redes.

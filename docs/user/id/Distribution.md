@@ -1,17 +1,19 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: c6324c75a72ab6b3 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: 5cfbb171295f8928 -->
 # Mendistribusikan Karya Anda
 
 <!-- languages -->
 [English](../Distribution.md) · [Deutsch](../de/Distribution.md) · [Español](../es/Distribution.md) · [Français](../fr/Distribution.md) · **Bahasa Indonesia** · [日本語](../ja/Distribution.md) · [한국어](../ko/Distribution.md) · [Português (Brasil)](../pt-BR/Distribution.md)
 <!-- /languages -->
 
-Semua yang dibuat ForkBuild dimulai di perangkat Anda sendiri.
-**Mendistribusikan** adalah langkah terpisah yang opsional untuk menaruh
-karya Anda di jaringan terdesentralisasi, sehingga orang yang tidak
-terhubung dengan Anda dapat menemukan, mengambil, dan memeriksanya. Halaman
-ini mengumpulkan di satu tempat apa saja yang dapat Anda distribusikan, ke
-mana semuanya dapat dikirim, dan apa yang Anda perlukan. Setiap bagian
-menautkan ke panduan yang menjelaskan detailnya.
+Semua yang Anda buat di ForkBuild berawal di perangkat Anda sendiri.
+**Mendistribusikan** menaruhnya di jaringan terdesentralisasi, agar orang
+yang tidak terhubung dengan Anda bisa menemukannya, mengambilnya, dan
+memeriksa bahwa itu milik Anda. Ini opsional, dan berbeda dari
+menerbitkan.
+
+Halaman ini menunjukkan apa yang bisa Anda distribusikan, ke mana, dan apa
+yang Anda perlukan. Setiap bagian menautkan ke panduan yang berisi
+detailnya.
 
 ## Menerbitkan, berbagi, mendistribusikan: tiga hal yang berbeda
 
@@ -21,13 +23,14 @@ menautkan ke panduan yang menjelaskan detailnya.
 | **Bagikan dengan Rekan** | Langsung ke orang-orang yang terhubung dengan Anda | Rekan yang terhubung, selama Anda daring | [Berbagi dengan rekan yang terhubung](04-PublishingAndForking.md#berbagi-dengan-rekan-yang-terhubung) |
 | **Distribusikan** | Jaringan terdesentralisasi (IPFS, Arweave, Nostr, Steem, Blurt) | Siapa pun, tanpa perlu terhubung dengan Anda | Halaman ini |
 
-Sampai Anda memilih ke mana bangunan Anda dikirim, menerbitkan tidak
-mengirim apa pun ke mana pun dengan sendirinya. Setelah Anda memilih (di
-**Ke mana dikirim** pada Editor, dengan **Kirim ke sini setiap kali aku
-menerbitkan** tercentang), setiap Terbitkan bangunan bertanda tangan juga
-mendistribusikannya ke sana; hapus centang untuk berhenti. Berbagi dengan
-rekan bukan distribusi: rekan menyimpan salinan hanya selama mereka mau,
-dan tidak ada orang lain yang bisa menemukannya.
+Menerbitkan tidak mengirim apa pun ke mana pun dengan sendirinya sampai
+Anda memilih ke mana bangunan Anda dikirim. Anda memilihnya di **Ke mana
+dikirim** pada Editor: dengan **Kirim ke sini setiap kali aku menerbitkan**
+tercentang, setiap kali Anda menerbitkan bangunan bertanda tangan, bangunan
+itu juga didistribusikan ke sana. Hapus centang untuk berhenti.
+
+Berbagi dengan rekan bukan distribusi. Rekan menyimpan salinan hanya
+selama mereka mau, dan tidak ada orang lain yang bisa menemukannya.
 
 ## Tiga peran yang dapat dimainkan sebuah jaringan
 
@@ -40,10 +43,11 @@ terpisah:
 | **Pengumuman / Penemuan** | Entri di katalog perpustakaan | Menerbitkan pemberitahuan kecil bertanda tangan bahwa karya Anda ada dan di mana salinannya, agar orang lain dapat menemukannya | **Nostr**, **Arweave**, **Steem** *(eksperimental)*, **Blurt** *(eksperimental)* |
 | **Bukti / Penjangkaran** *(eksperimental, opsional)* | Stempel notaris | Menuliskan hash konten Anda ke blockchain, sebagai bukti bahwa konten itu sudah ada pada waktu tersebut. Peran ini tidak menyimpan atau mengumumkan apa pun. | **Bitcoin**, **Arweave**, **Base**, **Steem**, **Blurt** |
 
-Penyimpanan tanpa pengumuman berarti tidak ada yang tahu harus mencari di
-mana; pengumuman tanpa penyimpanan menunjuk ke kekosongan.
-**Distribusikan** melakukan keduanya dengan satu klik. Penjangkaran adalah
-tambahan, dan dilakukan terpisah di halaman **Publikasi**.
+Anda memerlukan dua peran pertama bersama-sama. Karya yang disimpan tanpa
+diumumkan sulit ditemukan, dan pengumuman tanpa ada yang disimpan tidak
+menunjuk ke apa pun. **Distribusikan** melakukan keduanya dengan satu
+klik. Penjangkaran adalah tambahan, dan dilakukan terpisah di halaman
+**Publikasi**.
 
 Atur pilihan biasa Anda untuk setiap peran di
 [Pengaturan Jaringan](10-NetworkSettings.md):
@@ -62,7 +66,7 @@ tidak pernah mengirim apa pun.
 | **Hash konten publikasi apa pun** (Dunia, klaim kepengarangan, atau nama tempat) | — | — | Bitcoin, Arweave, Base, Steem, atau Blurt | Kartu publikasi itu di halaman **Publikasi** |
 | **Kepengarangan sebuah struktur** (Atribusi Cetak Biru) | Arweave, IPFS, Steem, atau Blurt | Nostr, Arweave, Steem, atau Blurt | — | **Distribusikan** di panel **Info** struktur, yang ditawarkan begitu Anda **Terbitkan ke Jaringan**; halaman **Publikasi** |
 | **Nama tempat** (Klaim Nama Tempat) | Arweave, IPFS, Steem, atau Blurt | Nostr, Arweave, Steem, atau Blurt | — | **Distribusikan** di panel penamaan Tampilan Dunia, yang ditawarkan begitu Anda **Terbitkan Sebuah Nama** (mengumumkan nama itu di jaringan yang Anda pilih); halaman **Publikasi** untuk pilihan mana pun |
-| **Komentar** pada sebuah publikasi | — | Nostr, Arweave, Steem, atau Blurt, atau tidak ada (**Lokal & rekan saja**) | — | **Kirim Komentar**, di Repositori atau Tampilan Dunia, di jaringan yang dipilih di sebelahnya; nanti, **Distribusikan** di bawah komentar Anda sendiri |
+| **Komentar** pada sebuah publikasi | — | Nostr, Arweave, Steem, atau Blurt, atau tidak ada (**Lokal & rekan saja**) | — | **Kirim Komentar**, di Jelajahi atau Tampilan Dunia, di jaringan yang dipilih di sebelahnya; nanti, **Distribusikan** di bawah komentar Anda sendiri |
 
 Snapshot sebuah Dunia membawa penempatan bertanda tangan Anda, sehingga
 orang yang mengambilnya melihat bangunan itu tepat di tempat Anda
@@ -131,44 +135,44 @@ bangunan Anda sudah memuat hash kontennya; lihat [Blurt](11-EvidenceAndStorage.m
 
 1. **Terbitkan** Dunia Anda di Editor (lihat
    [Menerbitkan karya Anda](04-PublishingAndForking.md#menerbitkan-karya-anda)).
-2. Klik **Distribusikan** di pemberitahuan yang muncul, atau nanti di bawah
-   **Dunia Bersama Saya** di Tampilan Dunia.
-3. Pilih **Penyimpanan** dan **Substrat Pengumuman / Penemuan**, misalnya
-   IPFS dan Nostr, atau Arweave untuk keduanya, lalu klik **Distribusikan**.
-   Snapshot didistribusikan lebih dulu, lalu Klaim Bertanda Tangan, dan
-   hasil masing-masing dilaporkan terpisah. Jika salah satu separuh gagal,
-   ulangi separuh itu saja dengan tombol **Distribusikan … saja** miliknya.
-4. Jika mau, di halaman **Publikasi**, jangkarkan publikasi itu (misalnya
-   **Jangkarkan di Arweave**) untuk mencatat kapan publikasi itu sudah ada.
-5. Klik **Bagikan…** atau **Salin tautan** di bawah hasilnya untuk memberi
-   orang tautan yang membuka bangunan Anda di perangkat apa pun, siap
-   di-remix atau dijelajahi di Tampilan Dunia.
+2. Klik **Distribusikan** pada pemberitahuan yang muncul. Anda juga bisa
+   melakukannya nanti, di **Dunia Bersama Saya** dalam Tampilan Dunia.
+3. Pilih **Penyimpanan** dan **Substrat Pengumuman / Penemuan**: misalnya
+   IPFS dan Nostr, atau Arweave untuk keduanya. Klik **Distribusikan**.
+4. Ia mengirim Snapshot, lalu Klaim Bertanda Tangan, dan menampilkan hasil
+   untuk masing-masing. Jika salah satu gagal, ulangi yang itu saja dengan
+   tombol **Distribusikan … saja** miliknya.
+5. *Opsional:* di halaman **Publikasi**, jangkarkan publikasi itu
+   (misalnya dengan **Jangkarkan di Arweave**) untuk mencatat kapan ia ada.
+6. Klik **Bagikan…** atau **Salin tautan** di bawah hasilnya. Tautan itu
+   membuka bangunan Anda di perangkat apa pun, siap di-remix atau
+   dijelajahi.
 
-Untuk bangunan yang lebih besar dari batas 256 KB Arweave, pilih IPFS. Rekan
-yang terhubung dengan Anda tetap dapat mengambil bangunan hingga 64 MB
+Bangunan yang terlalu besar untuk Arweave (lebih dari 256 KB) bisa ke IPFS
+saja. Rekan yang terhubung dengan Anda bisa mengambil bangunan hingga 64 MB
 langsung dari Anda.
 
 ## Memeriksa apakah berhasil
 
-- Kartu Repositori bangunan Anda menyebutkan di mana perangkat ini mencatat
-  distribusinya, misalnya **Disimpan di IPFS · Diumumkan di Nostr**, atau
-  **Tidak ada distribusi yang tercatat di perangkat ini.** Lihat
+- **Di kartu Anda sendiri.** Kartu bangunan Anda di **Jelajahi**
+  menyebutkan di mana perangkat ini mencatat distribusinya: misalnya
+  **Disimpan di IPFS · Diumumkan di Nostr**, atau **Tidak ada distribusi
+  yang tercatat di perangkat ini.** Lihat
   [Publikasi Anda](13-YourData.md#publikasi-anda).
-- Repositori orang lain menemukan publikasi Anda di Nostr, Arweave, Steem,
-  atau Blurt saat mereka membukanya lagi, asalkan publikasi itu diumumkan dengan
-  tag penemuan yang biasa, `forkbuild-publication`. Lihat
+- **Bagi orang lain.** **Jelajahi** mereka menemukan bangunan Anda di
+  Nostr, Arweave, Steem, atau Blurt saat mereka membukanya lagi, asalkan
+  diumumkan dengan tag penemuan yang biasa, `forkbuild-publication`. Lihat
   [Karya yang didistribusikan orang lain](04-PublishingAndForking.md#karya-yang-didistribusikan-orang-lain).
-- **Temukan Dunia Bersama** di Tampilan Dunia mencari Dunia Bersama Anda
-  langsung di Arweave dan Nostr lalu memeriksanya, sehingga menjawab
-  pertanyaan "apakah publikasi saya benar-benar ada di luar sana, dan
-  utuh?" Lihat
+- **Langsung dari jaringan.** **Temukan Dunia Bersama** di Tampilan Dunia
+  mencari Dunia Anda di Arweave dan Nostr lalu memeriksanya: apakah
+  benar-benar ada di luar sana, utuh? Lihat
   [Temukan Dunia Bersama](WorldViewAdvancedTools.md#temukan-dunia-bersama--mencari-langsung-di-jaringan-terdesentralisasi).
-- Di halaman Publikasi, **Verifikasi Konten IPFS** mengambil kembali
-  unggahan IPFS dan membandingkannya dengan hash-nya, dan
-  **Verifikasi Bukti** memeriksa sebuah jangkar.
+- **Di halaman Publikasi.** **Verifikasi Konten IPFS** mengambil kembali
+  unggahan IPFS dan membandingkannya dengan hash-nya. **Verifikasi Bukti**
+  memeriksa jangkar.
 
-Distribusi tidak dapat ditarik kembali: begitu sesuatu diumumkan atau
-disimpan, orang lain mungkin sudah memiliki salinannya.
-**Batalkan Penerbitan** hanya menghapus Dunia dari katalog Anda sendiri,
-dan perangkat ini lalu ingat untuk tidak mencantumkan lagi salinan yang
-sudah didistribusikan saat Repositori mencari di jaringan.
+Distribusi tidak bisa dibatalkan: begitu sesuatu disimpan atau diumumkan,
+orang lain mungkin sudah punya salinannya. **Batalkan Penerbitan** hanya
+mengeluarkan Dunia dari katalog Anda sendiri. Perangkat ini lalu ingat
+untuk tidak mencantumkan lagi salinan yang Anda distribusikan saat
+Jelajahi mencari di jaringan.

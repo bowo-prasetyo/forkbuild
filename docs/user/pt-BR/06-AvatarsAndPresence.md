@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 36d3d49f37473bfe -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 5eccfdfd3ac8fb32 -->
 # 06 — Avatares e presença
 
 <!-- languages -->
@@ -345,87 +345,86 @@ porquê.
 
 ### Moradores
 
-Um Mundo pode ter **moradores**: pessoas que moram lá e passeiam em volta do
-lugar que chamam de casa, tocando o dia entre as suas construções. Para
-adicionar um, fique num chão aberto onde quer que ele more e pressione **R**
-(ou clique em **Adicionar morador aqui** na seção **Avatar**). Ele aparece
-bem ao seu lado e, a partir daí, faz parte do conteúdo do próprio Mundo —
-salvo, publicado e bifurcado junto com ele, como um
-[marco](03-WorldView.md#marcos--marcando-um-lugar-que-vale-lembrar).
-Adicionar um exige que você tenha entrado com acesso EDIT ao Mundo em que
-está; no Mundo publicado de outra pessoa, o morador vai para a sua própria
-cópia dele. Mudou de ideia? Fique ao lado de um morador e pressione **R** de
-novo (um aviso mostra **[R] Remover morador**), ou desfaça com
-**Ctrl/Cmd+Z**.
+Um Mundo pode ter **moradores**: pessoas que vivem ali e passeiam em volta
+de casa, entre as suas construções.
 
-Os moradores ficam a uns seis passos de casa. Eles contornam paredes,
-árvores e água, nunca as atravessam, e de vez em quando fazem uma pausa para
-ficar parados e olhar em volta. Todos que abrem o Mundo veem cada morador no
-mesmo lugar no mesmo momento, porque onde eles estão vem do Mundo e do
-relógio, não de algo enviado entre jogadores. Eles são sólidos: você esbarra
-neles como esbarraria numa árvore. Mas eles não param nem desviam por você,
-então um pode passar direto através de você enquanto você está parado.
+**Adicionar e remover um.** Fique num chão aberto onde você quer que ele
+more e aperte **R**, ou clique em **Adicionar morador aqui** na seção
+**Avatar**. Ele aparece bem ao seu lado. Para remover um, fique ao lado
+dele e aperte **R** de novo (um aviso mostra **[R] Remover morador**), ou
+desfaça com **Ctrl/Cmd+Z**.
 
-Os moradores percebem você. Quando um está parado e você está na frente ou
-ao lado dele, a poucos passos, ele se vira para você, e se você chegar bem
-perto, ele acena. Ele acena uma vez a cada vez que você se aproxima. Como com
-os animais, isso só acontece na sua tela, e só para o seu próprio avatar.
+- Você precisa poder editar o Mundo onde está. No Mundo publicado de outra
+  pessoa, o morador vai para a sua própria cópia.
+- Um morador precisa de chão seco e aberto: nada de telhado ou água, e
+  não enquanto você anda num veículo. Quando não dá para adicionar, a seção
+  Avatar diz por quê.
+- Os moradores fazem parte do Mundo, como um
+  [marco](03-WorldView.md#marcos--marcando-um-lugar-que-vale-lembrar): são
+  salvos, publicados e copiados com ele.
 
-Os moradores também conhecem a vizinhança. Fique ao lado de um e pressione
-**T** (um aviso mostra **[T] Conversar**; a seção Avatar e o painel de toque
-também têm um botão **Conversar**), e ele conta uma ou duas coisas sobre o
-que há em volta, num balão de fala sobre a cabeça: uma bicicleta ou um
-cervo por perto, um marco, uma estrutura posicionada no Mundo (pelo título e
-autor), alguém que está por ali, o lugar onde ele mora ou outra construção um
-pouco mais longe — por exemplo *"Tem uma construção chamada “Forte do
-Morro”, de bob, a uns 3,6 km a nordeste."* As distâncias são arredondadas e
-as direções são vistas de onde o morador está (o norte é para onde a bússola
-aponta). Converse de novo e ele fala de outra coisa. O balão some depois de
-alguns segundos, ou assim que você se afasta.
+**Como eles se movem.** Os moradores ficam a uns seis passos de casa. Eles
+contornam paredes, árvores e água, nunca atravessam, e de vez em quando
+param para olhar em volta. Todos veem cada morador no mesmo lugar no mesmo
+momento, porque onde ele está vem do Mundo e do relógio. Nada é enviado
+entre os jogadores. Você esbarra num morador como numa árvore, mas ele não
+desvia de você, então pode passar através de você enquanto você fica
+parado.
 
-Enquanto o balão está visível, aparece um botão **Focar** na parte de baixo
-da visualização para cada coisa que ele mencionou e que fica no lugar — um
-marco, uma estrutura, uma construção ou um veículo (animais e pessoas se
-movem, então não ganham botão). Clique nele para virar a câmera e dar uma
-olhada, como **Focar** no painel Locais: seu avatar fica ao lado do morador,
-e voltar a andar traz a câmera de volta se Seguir avatar estiver ativo.
+**Eles notam você.** Quando você chega a poucos passos, na frente de um
+morador ou ao lado dele, ele se vira para você. Chegue bem perto e ele
+acena, uma vez a cada vez que você se aproxima. Como com os animais, isso
+só acontece na sua tela, e só para o seu próprio avatar.
 
-Uma em cada três vezes que você fala com ele, e sempre que não tem mais nada
-a dizer, um morador pode, em vez disso, se perguntar em voz alta sobre algo
-que o terreno ali perto nunca teve: uma ponte sobre um rio, um píer num lago
-ou no mar, uma torre de vigia num terreno alto ou, em terreno aberto, um
-poço, um pavilhão com sombra, uma barraca de feira ou uma casinha — por
-exemplo, *"Ninguém nunca construiu uma ponte sobre o rio que fica a cerca de
-30 m a leste."* Enquanto ele diz isso, um botão **Construir uma ponte lá**
-(ou um píer, uma torre de vigia…) aparece na parte de baixo da visão. Clique
-e o Editor abre uma construção nova e sua para esse lugar, começada a partir
-da estrutura de Vila pronta, igual a **Construir aqui** na Visão do mundo:
-publicá-la a coloca lá. É sempre só um pensamento em voz alta, nunca uma
-tarefa: nada fica guardado, ninguém confere se foi construído e não há
-recompensa. O mesmo terreno dá o mesmo pensamento a todo mundo, e um lugar
-que já tem uma construção por perto não deseja nada.
+**Conversar com um morador.** Fique ao lado de um e aperte **T** (um aviso
+mostra **[T] Conversar**; a seção Avatar e o painel de toque também têm um
+botão **Conversar**). Ele conta, num balão de fala, algo que há por perto:
+uma bicicleta ou um cervo, um marco, uma construção e quem a fez, alguém
+que está por ali, o lugar onde ele mora, ou uma construção mais longe. Por
+exemplo: *"Tem uma construção chamada “Forte do
+Morro”, de bob, a uns 3,6 km a nordeste."*
 
-Quando já houver algo lá, ele diz isso no lugar, como um simples fato, por
-exemplo *“Alguém construiu a uns 14 m a leste, bem onde eu sempre achei que
-caberia um poço.”*, dizendo o nome da construção se ela tiver título, com um
-botão para olhar para ela. Ainda assim, nada fica guardado nem é
-recompensado.
+- As distâncias são arredondadas. As direções são a partir de onde o
+  morador está, com o norte para onde a bússola aponta.
+- Converse de novo e ele fala de outra coisa. O balão some depois de
+  alguns segundos, ou quando você se afasta.
+- Para o que não sai do lugar (um marco, uma construção ou um veículo),
+  aparece um botão **Focar** embaixo da visão. Ele leva a câmera para dar
+  uma olhada, como **Focar** em Locais. O seu avatar fica onde está, e
+  andar traz a câmera de volta se Seguir avatar estiver ativo.
 
-O que um morador diz é o que a *sua* cópia do ForkBuild sabe: as construções
-do seu catálogo, as pessoas presentes com você, os veículos e animais que
-você não pegou. Outra pessoa que converse com o mesmo morador pode ouvir
-coisas diferentes, e ninguém mais vê o que ele disse a você. Ele nunca
-menciona um veículo que você guardou ou em que está montado, um em que outra
-pessoa está montada, nem um animal que você pegou. As construções são
-chamadas pelo título e autor que a publicação delas dá, como em todo o resto
-do app.
+**Ideias para a vizinhança.** Uma vez a cada três, ou quando não tem mais
+nada para dizer, um morador pode pensar alto em algo que o terreno ali
+perto nunca teve: uma ponte sobre um rio, um píer na água, um mirante num
+lugar alto, ou um poço, um pavilhão com sombra, uma barraca de feira ou um
+chalé em chão aberto. Por exemplo: *"Ninguém nunca construiu uma ponte sobre o rio que fica a cerca de
+30 m a leste."*
 
-Um morador precisa de chão seco e aberto: não um telhado, não a água, e não
-enquanto você está montado num veículo. A seção Avatar diz por quê quando
-não dá para adicionar um onde você está. Os moradores não são pessoas — não
-têm perfil, nunca aparecem em Pessoas nem em Por perto, não dá para clicar
-neles para ver informações, e nunca dão missões, tarefas nem recompensas —
-eles só moram ali, e contam o que há por perto quando você pergunta.
+- Enquanto ele fala, aparece um botão como **Construir uma ponte lá**. Ele
+  abre no Editor uma construção nova sua para aquele ponto, começada a
+  partir da estrutura de Vila pronta, igual a **Construir aqui** na Visão
+  do mundo. Quando você a publica, ela fica ali.
+- É só um pensamento, nunca uma tarefa: nada é lembrado, ninguém confere,
+  e não há recompensa.
+- O mesmo terreno dá a todos o mesmo pensamento. Um ponto que já tem uma
+  construção por perto não tem nada a desejar.
+- Quando algo passa a ficar ali, o morador fala disso em vez disso,
+  dizendo o nome da construção se ela tiver título, com um botão para
+  vê-la. Por exemplo: *“Alguém construiu a uns 14 m a leste, bem onde eu sempre achei que
+caberia um poço.”*
+
+**O que um morador sabe** é o que o *seu* ForkBuild sabe: as construções
+do seu catálogo, as pessoas que estão aqui com você, e os veículos e
+animais que ninguém pegou. Outra pessoa que conversa com o mesmo morador
+pode ouvir outra coisa, e ninguém mais vê o que ele disse a você. Ele
+nunca fala de um veículo que você guardou ou que alguém está usando, nem
+de um animal que você pegou. As construções são chamadas pelo título e
+pelo autor, como em todo o app.
+
+Os moradores não são pessoas. Não têm perfil, nunca aparecem em Pessoas ou
+em Por perto, e não dá para clicar neles para ver informações. Nunca dão
+missões, tarefas ou recompensas: eles só moram ali, e contam o que há por
+perto quando você pergunta.
 
 #### O que sobrevive a uma recarga
 

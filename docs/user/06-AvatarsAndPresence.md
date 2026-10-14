@@ -340,84 +340,84 @@ tells you why instead.
 
 ### Residents
 
-A World can have **residents**: people who live there and stroll around the
-spot they call home, going about their day among your buildings. To add
-one, stand on open ground where you want them to live and press **R** (or
-click **Add Resident Here** in the **Avatar** section). They appear right
-beside you, and from then on they're part of the World's own content —
-saved, published and forked with it, like a
-[landmark](03-WorldView.md#landmarks--marking-a-place-worth-remembering).
-Adding one needs you signed in with EDIT access to the World you're in; on
-someone else's published World, the resident goes into your own copy of it.
-Changed your mind? Stand next to a resident and press **R** again (a prompt
-shows **[R] Remove Resident**), or undo with **Ctrl/Cmd+Z**.
+A World can have **residents**: people who live there and stroll around
+their home, among your buildings.
 
-Residents stay within about six steps of home. They walk around walls,
-trees and water, never through them, and they take a break now and then to
-stand and look around. Everyone who opens the World sees each resident in
-the same place at the same moment, because where they are comes from the
-World and the clock, not from anything sent between players. They're solid:
-you bump into them like you would a tree. They don't stop or step aside for
-you, though, so one may walk straight through you while you stand still.
+**Adding and removing one.** Stand on open ground where you want them to
+live and press **R**, or click **Add Resident Here** in the **Avatar**
+section. They appear right beside you. To remove one, stand next to it and
+press **R** again (a prompt shows **[R] Remove Resident**), or undo with
+**Ctrl/Cmd+Z**.
 
-Residents notice you. When one is standing and you're in front of it or to
-its side, within a few steps, it turns to face you, and if you walk right
-up to it, it waves. It waves once each time you come over. As with animals,
-this only happens on your screen, and only for your own avatar.
+- You need to be able to edit the World you're in. On someone else's
+  published World, the resident goes into your own copy of it.
+- A resident needs dry, open ground: not a rooftop or the water, and not
+  while you're riding. When it can't be added, the Avatar section says why.
+- Residents are part of the World, like a
+  [landmark](03-WorldView.md#landmarks--marking-a-place-worth-remembering):
+  they're saved, published and copied with it.
 
-Residents also know their neighbourhood. Stand beside one and press **T**
-(a prompt shows **[T] Talk**; the Avatar section and the touch pad have a
-**Talk** button too), and it tells you a thing or two about what's around,
-in a speech bubble over its head: a bicycle or a deer nearby, a landmark,
-a structure placed in the World (by its title and author), someone who's
-around, the place it lives in, or another build some way
-off — for example *"About 3.6 km to the north-east, there's a build called
-“Hill Fort” by bob."* Distances are rounded and directions are seen from
-where the resident stands (north is the way the compass points). Talk to it
-again and it mentions something else. The bubble goes after a few seconds,
-or as soon as you walk away.
+**How they move.** Residents stay within about six steps of home. They walk
+around walls, trees and water, never through them, and stop now and then
+to look around. Everyone sees each resident in the same place at the same
+moment, because where they are comes from the World and the clock. Nothing
+is sent between players. You bump into a resident like a tree, but it
+doesn't step aside for you, so one may walk through you while you stand
+still.
 
-While the bubble is up, a **Focus** button appears at the bottom of the
-view for each thing it mentioned that stays put — a landmark, a structure,
-a build or a vehicle (animals and people move on, so they don't get one).
-Click it to swing the camera over for a look, the same as **Focus** in the
-Locations panel: your avatar stays beside the resident, and walking again
-brings the camera back if Follow Avatar is on.
+**They notice you.** When you come within a few steps, in front of a
+resident or beside it, it turns to face you. Walk right up and it waves,
+once each time you come over. Like animals, this happens only on your
+screen, and only for your own avatar.
 
-Every third time you talk to it, and whenever it has nothing else to say, a
-resident may instead wonder aloud about something the ground nearby has
-never had: a bridge over a river, a dock on a lake or the sea, a lookout on
-high ground, or, on open ground, a well, a shady pavilion, a market stall
-or a cottage — for example *"Nobody has ever built a bridge over the river
-about 30 m to the east."* While it says so, a **Build a bridge there**
-button (or a dock, a lookout…) appears at the bottom of the view. Click it
-and the Editor opens a new build of your own for that spot, started from
-the ready-made Village structure, the same as **Build here** in World View:
-publishing it stands it there. It is only ever a thought out loud, never a
-task: nothing is remembered, nobody checks whether it got built, and there
-is no reward. The same ground gives the same thought to everyone, and a
-spot that already has a build nearby has nothing to wish for.
+**Talking to a resident.** Stand beside one and press **T** (a prompt shows
+**[T] Talk**; the Avatar section and the touch pad have a **Talk** button
+too). It tells you about something nearby in a speech bubble: a bicycle or
+a deer, a landmark, a build and who made it, someone who's around, the
+place it lives in, or a build further off. For example: *"About 3.6 km to
+the north-east, there's a build called “Hill Fort” by bob."*
 
-Once something does stand there, it says so instead, as a plain fact — for
-example *"Someone has built about 14 m to the east, just where I always
-thought a well would go."* — naming the build when it has a title, with a
-button to look at it. Still nothing is kept or rewarded.
+- Distances are rounded. Directions are from where the resident stands,
+  with north the way the compass points.
+- Talk again and it mentions something else. The bubble goes after a few
+  seconds, or when you walk away.
+- For anything that stays put (a landmark, a build or a vehicle), a
+  **Focus** button appears at the bottom of the view. It swings the camera
+  over for a look, like **Focus** in Locations. Your avatar stays where it
+  is, and walking brings the camera back if Follow Avatar is on.
 
-What a resident says is what *your* copy of ForkBuild knows: the builds in
-your catalog, the people present with you, the vehicles and animals you
-haven't taken. Someone else talking to the same resident may hear different
-things, and nobody else ever sees what it told you. It never mentions a
-vehicle you've stored or are riding, one someone else is riding, or an
-animal you've caught. Builds are
-named with their title and author as their publication gives them, the
-same as everywhere else in the app.
+**Ideas for the neighbourhood.** Every third time you talk, or when it has
+nothing else to say, a resident may wonder aloud about something the
+ground nearby has never had: a bridge over a river, a dock on the water, a
+lookout on high ground, or a well, a shady pavilion, a market stall or a
+cottage on open ground. For example: *"Nobody has ever built a bridge over
+the river about 30 m to the east."*
 
-A resident needs dry, open ground: not a rooftop, not the water, and not
-while you're riding. The Avatar section says why when it can't add one
-where you're standing. Residents aren't people — they have no profile,
-never show up under People or Nearby, can't be clicked for info, and never
-give you quests, tasks or rewards — they just live there, and tell you
-what's around when you ask.
+- While it says so, a button such as **Build a bridge there** appears. It
+  opens a new build of your own in the Editor for that spot, started from
+  the ready-made Village structure, like **Build here** in World View.
+  When you publish it, it stands there.
+- It's only a thought, never a task: nothing is remembered, nobody checks,
+  and there's no reward.
+- The same ground gives everyone the same thought. A spot with a build
+  nearby has nothing to wish for.
+- Once something stands there, the resident says so instead, naming the
+  build when it has a title, with a button to look at it. For example:
+  *"Someone has built about 14 m to the east, just where I always thought a
+  well would go."*
+
+**What a resident knows** is what *your* copy of ForkBuild knows: the
+builds in your catalog, the people here with you, and the vehicles and
+animals nobody has taken. Someone else talking to the same resident may
+hear something different, and nobody else sees what it told you. It never
+mentions a vehicle you've stored or someone is riding, or an animal you've
+caught. Builds are named with their title and author, as everywhere else
+in the app.
+
+Residents aren't people. They have no profile, never show up under People
+or Nearby, and can't be clicked for info. They never give you quests,
+tasks or rewards: they just live there, and tell you what's around when
+you ask.
 
 #### What survives a reload
 

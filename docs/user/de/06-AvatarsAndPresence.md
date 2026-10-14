@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 36d3d49f37473bfe -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 5eccfdfd3ac8fb32 -->
 # 06 — Avatare & Anwesenheit
 
 <!-- languages -->
@@ -370,96 +370,91 @@ Schaltfläche **Schmücken** auf dem Touchpad sagt stattdessen, warum.
 
 ### Bewohner
 
-Eine Welt kann **Bewohner** haben: Menschen, die dort leben und um den Ort
-herumspazieren, den sie ihr Zuhause nennen, und zwischen Ihren Gebäuden
-ihrem Tag nachgehen. Um einen hinzuzufügen, stellen Sie sich auf offenen
-Boden, wo er leben soll, und drücken Sie **R** (oder klicken Sie im
-Abschnitt **Avatar** auf **Hier einen Bewohner hinzufügen**). Er erscheint
-direkt neben Ihnen und ist ab dann Teil des eigenen Inhalts der Welt —
-gespeichert, veröffentlicht und geforkt mit ihr, wie ein
-[Wahrzeichen](03-WorldView.md#wahrzeichen--einen-ort-markieren-den-man-sich-merken-sollte).
-Um einen hinzuzufügen, müssen Sie angemeldet sein und Bearbeitungsrechte
-für die Welt haben, in der Sie sind; in der veröffentlichten Welt eines
-anderen kommt der Bewohner in Ihre eigene Kopie davon. Umentschieden?
-Stellen Sie sich neben einen Bewohner und drücken Sie erneut **R** (ein
-Hinweis zeigt **[R] Bewohner entfernen**) oder machen Sie es mit
+Eine Welt kann **Bewohner** haben: Menschen, die dort leben und zwischen
+Ihren Gebäuden um ihr Zuhause spazieren.
+
+**Hinzufügen und entfernen.** Stellen Sie sich auf offenen Boden, wo er
+leben soll, und drücken Sie **R**, oder klicken Sie im Abschnitt **Avatar**
+auf **Hier einen Bewohner hinzufügen**. Er erscheint direkt neben Ihnen. Um
+einen zu entfernen, stellen Sie sich neben ihn und drücken erneut **R** (ein
+Hinweis zeigt **[R] Bewohner entfernen**), oder machen Sie es mit
 **Strg/Cmd+Z** rückgängig.
 
-Bewohner bleiben innerhalb von etwa sechs Schritten um ihr Zuhause. Sie
-gehen um Wände, Bäume und Wasser herum, nie hindurch, und machen ab und zu
-eine Pause, um stehen zu bleiben und sich umzusehen. Jeder, der die Welt
-öffnet, sieht jeden Bewohner im selben Moment am selben Ort, denn wo er
-ist, ergibt sich aus der Welt und der Uhrzeit, nicht aus irgendetwas, das
-zwischen Spielern gesendet wird. Sie sind fest: Sie stoßen an sie wie an
-einen Baum. Sie bleiben aber nicht für Sie stehen und weichen nicht aus;
-einer kann also direkt durch Sie hindurchgehen, während Sie stillstehen.
+- Sie müssen die Welt, in der Sie sind, bearbeiten dürfen. In der
+  veröffentlichten Welt eines anderen kommt der Bewohner in Ihre eigene
+  Kopie davon.
+- Ein Bewohner braucht trockenen, offenen Boden: kein Dach, kein Wasser,
+  und nicht, während Sie fahren. Geht es nicht, sagt der Abschnitt Avatar,
+  warum.
+- Bewohner gehören zur Welt, wie ein
+  [Wahrzeichen](03-WorldView.md#wahrzeichen--einen-ort-markieren-den-man-sich-merken-sollte):
+  Sie werden mit ihr gespeichert, veröffentlicht und kopiert.
 
-Bewohner bemerken Sie. Wenn einer steht und Sie innerhalb weniger Schritte
-vor oder neben ihm sind, dreht er sich zu Ihnen, und wenn Sie direkt auf
-ihn zugehen, winkt er. Er winkt einmal jedes Mal, wenn Sie herüberkommen.
-Wie bei Tieren geschieht das nur auf Ihrem Bildschirm und nur für Ihren
-eigenen Avatar.
+**Wie sie sich bewegen.** Bewohner bleiben innerhalb von etwa sechs
+Schritten um ihr Zuhause. Sie gehen um Wände, Bäume und Wasser herum, nie
+hindurch, und bleiben ab und zu stehen, um sich umzusehen. Alle sehen jeden
+Bewohner im selben Moment am selben Ort, denn wo er ist, ergibt sich aus
+der Welt und der Uhrzeit. Zwischen Spielern wird nichts gesendet. Sie
+stoßen an einen Bewohner wie an einen Baum, aber er weicht Ihnen nicht aus;
+einer kann also durch Sie hindurchgehen, während Sie stillstehen.
 
-Bewohner kennen außerdem ihre Nachbarschaft. Stellen Sie sich neben einen
-und drücken Sie **T** (ein Hinweis zeigt **[T] Sprechen**; der Abschnitt
-Avatar und das Touchpad haben ebenfalls eine Schaltfläche **Sprechen**),
-und er erzählt Ihnen in einer Sprechblase über seinem Kopf das eine oder
-andere über die Umgebung: ein Fahrrad oder ein Reh in der Nähe, ein
-Wahrzeichen, eine in der Welt platzierte Struktur (mit Titel und Autor),
-jemanden, der gerade da ist, den Ort, an dem er lebt, oder ein anderes
-Bauwerk etwas weiter weg — zum Beispiel *„Das Bauwerk „Hügelburg“ von bob
-steht etwa 3,6 km nordöstlich von hier.“* Entfernungen sind gerundet, und
-Richtungen gelten von dort aus, wo der Bewohner steht (Norden ist dort,
-wohin der Kompass zeigt). Sprechen Sie ihn erneut an, erwähnt er etwas
-anderes. Die Sprechblase verschwindet nach ein paar Sekunden oder sobald
-Sie weggehen.
+**Sie bemerken Sie.** Kommen Sie auf wenige Schritte heran, vor einem
+Bewohner oder neben ihm, dreht er sich zu Ihnen. Gehen Sie direkt auf ihn
+zu, winkt er, einmal jedes Mal, wenn Sie herüberkommen. Wie bei Tieren
+geschieht das nur auf Ihrem Bildschirm und nur für Ihren eigenen Avatar.
 
-Solange die Sprechblase zu sehen ist, erscheint unten in der Ansicht eine
-Schaltfläche **Fokus** für jedes erwähnte Ding, das an seinem Platz
-bleibt — ein Wahrzeichen, eine Struktur, ein Bauwerk oder ein Fahrzeug
-(Tiere und Menschen ziehen weiter, daher bekommen sie keine). Klicken Sie
-darauf, um die Kamera zum Ansehen hinüberzuschwenken, genau wie
-**Fokussieren** im Feld Orte: Ihr Avatar bleibt neben dem Bewohner, und
-erneutes Gehen bringt die Kamera zurück, wenn Avatar folgen an ist.
+**Mit einem Bewohner sprechen.** Stellen Sie sich neben einen und drücken
+Sie **T** (ein Hinweis zeigt **[T] Sprechen**; der Abschnitt Avatar und das
+Touchpad haben auch eine Schaltfläche **Sprechen**). Er erzählt in einer
+Sprechblase von etwas in der Nähe: einem Fahrrad oder einem Hirsch, einem
+Wahrzeichen, einem Bauwerk und wer es gemacht hat, jemandem, der da ist,
+dem Ort, an dem er lebt, oder einem Bauwerk weiter weg. Zum Beispiel:
+*„Das Bauwerk „Hügelburg“ von bob
+steht etwa 3,6 km nordöstlich von hier.“*
 
-Jedes dritte Mal, wenn Sie mit ihm sprechen, und immer dann, wenn er sonst
-nichts zu sagen hat, denkt ein Bewohner stattdessen laut darüber nach, was
-der Boden in der Nähe noch nie hatte: eine Brücke über einen Fluss, einen
-Steg an einem See oder am Meer, einen Aussichtsturm auf einer Anhöhe oder auf
-freier Fläche einen Brunnen, einen schattigen Pavillon, einen Marktstand oder
-ein Häuschen — zum Beispiel *„Über den Fluss etwa 30 m östlich von hier hat
-noch nie jemand eine Brücke gebaut.“* Solange er das sagt, erscheint unten in
-der Ansicht eine Schaltfläche **Dort eine Brücke bauen** (oder einen Steg,
-einen Aussichtsturm …). Ein Klick öffnet im Editor einen neuen eigenen Bau
-für diese Stelle, begonnen mit dem fertigen Dorf-Bauwerk, genau wie **Hier
-bauen** in der Weltansicht: Veröffentlichen stellt ihn dorthin. Es ist immer
-nur ein laut gedachter Gedanke, nie eine Aufgabe: Nichts wird gespeichert,
-niemand prüft, ob es gebaut wurde, und es gibt keine Belohnung. Derselbe
-Boden weckt bei allen denselben Gedanken, und eine Stelle, an der schon ein
-Bau steht, wünscht sich nichts.
+- Entfernungen sind gerundet. Richtungen gelten von dort, wo der Bewohner
+  steht; Norden ist, wohin der Kompass zeigt.
+- Sprechen Sie ihn erneut an, erwähnt er etwas anderes. Die Blase
+  verschwindet nach ein paar Sekunden oder wenn Sie weggehen.
+- Für alles, was an seinem Platz bleibt (ein Wahrzeichen, ein Bauwerk oder
+  ein Fahrzeug), erscheint unten in der Ansicht eine Schaltfläche
+  **Fokussieren**. Sie schwenkt die Kamera hinüber, wie **Fokussieren**
+  unter Orte. Ihr Avatar bleibt, wo er ist, und Gehen holt die Kamera
+  zurück, wenn Avatar folgen an ist.
 
-Steht dort dann etwas, sagt er stattdessen genau das, als schlichte
-Tatsache, etwa *„Jemand hat etwa 14 m östlich gebaut, genau da, wo ich immer
-dachte, ein Brunnen gehöre hin.“*, mit dem Namen des Bauwerks, wenn es einen
-Titel hat, und einer Schaltfläche, um es anzusehen. Auch dann wird nichts
-festgehalten oder belohnt.
+**Ideen für die Nachbarschaft.** Jedes dritte Mal, oder wenn er sonst
+nichts zu sagen hat, denkt ein Bewohner vielleicht laut über etwas nach,
+das der Boden in der Nähe nie hatte: eine Brücke über einen Fluss, einen
+Steg am Wasser, einen Aussichtsturm auf einer Anhöhe, oder einen Brunnen,
+einen schattigen Pavillon, einen Marktstand oder ein Häuschen auf offenem
+Boden. Zum Beispiel: *„Über den Fluss etwa 30 m östlich von hier hat
+noch nie jemand eine Brücke gebaut.“*
 
-Was ein Bewohner sagt, ist das, was *Ihre* Kopie von ForkBuild weiß: die
-Bauwerke in Ihrem Katalog, die Menschen, die mit Ihnen da sind, die
-Fahrzeuge und Tiere, die Sie nicht genommen haben. Jemand anderes, der mit
-demselben Bewohner spricht, kann anderes hören, und niemand sonst sieht je,
-was er Ihnen gesagt hat. Er erwähnt nie ein Fahrzeug, das Sie abgestellt
-haben oder fahren, eines, das jemand anderes fährt, oder ein Tier, das Sie
-gefangen haben. Bauwerke werden mit Titel und Autor so genannt, wie ihre
-Veröffentlichung sie angibt, genau wie überall sonst in der App.
+- Währenddessen erscheint eine Schaltfläche wie **Dort eine Brücke
+  bauen**. Sie öffnet im Editor ein neues eigenes Bauwerk für diese Stelle,
+  begonnen mit dem fertigen Dorf-Bauwerk, wie **Hier bauen** in der
+  Weltansicht. Wenn Sie es veröffentlichen, steht es dort.
+- Es ist nur ein Gedanke, nie eine Aufgabe: Nichts wird gespeichert,
+  niemand prüft nach, und es gibt keine Belohnung.
+- Derselbe Boden bringt allen denselben Gedanken. Eine Stelle, in deren
+  Nähe schon ein Bauwerk steht, hat nichts zu wünschen.
+- Steht dort einmal etwas, sagt der Bewohner das stattdessen, nennt das
+  Bauwerk, wenn es einen Titel hat, mit einer Schaltfläche, um es
+  anzusehen. Zum Beispiel: *„Jemand hat etwa 14 m östlich gebaut, genau da, wo ich immer
+dachte, ein Brunnen gehöre hin.“*
 
-Ein Bewohner braucht trockenen, offenen Boden: kein Dach, kein Wasser und
-nicht, während Sie fahren. Der Abschnitt Avatar sagt, warum, wenn er dort,
-wo Sie stehen, keinen hinzufügen kann. Bewohner sind keine Personen — sie
-haben kein Profil, erscheinen nie unter Personen oder In der Nähe, lassen
-sich nicht für Infos anklicken und geben Ihnen nie Aufgaben, Aufträge oder
-Belohnungen — sie leben einfach dort und erzählen Ihnen, was es in der
-Umgebung gibt, wenn Sie fragen.
+**Was ein Bewohner weiß**, ist, was *Ihr* ForkBuild weiß: die Bauwerke in
+Ihrem Katalog, die Menschen, die mit Ihnen hier sind, und die Fahrzeuge und
+Tiere, die niemand mitgenommen hat. Wer mit demselben Bewohner spricht,
+hört vielleicht etwas anderes, und niemand sonst sieht, was er Ihnen
+erzählt hat. Er erwähnt nie ein Fahrzeug, das Sie verstaut haben oder auf
+dem jemand fährt, oder ein Tier, das Sie gefangen haben. Bauwerke werden
+mit Titel und Autor genannt, wie überall in der App.
+
+Bewohner sind keine Personen. Sie haben kein Profil, erscheinen nie unter
+Menschen oder In der Nähe und lassen sich nicht für Infos anklicken. Sie
+geben Ihnen nie Quests, Aufgaben oder Belohnungen: Sie wohnen einfach dort
+und erzählen, was es in der Nähe gibt, wenn Sie fragen.
 
 #### Was ein Neuladen übersteht
 

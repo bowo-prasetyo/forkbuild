@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 36d3d49f37473bfe -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 5eccfdfd3ac8fb32 -->
 # 06 — Avatares y presencia
 
 <!-- languages -->
@@ -354,90 +354,84 @@ panel táctil le dice en cambio por qué.
 ### Habitantes
 
 Un Mundo puede tener **habitantes**: personas que viven allí y pasean
-alrededor del lugar que consideran su hogar, haciendo su vida entre sus
-edificios. Para agregar uno, párese en terreno abierto donde quiera que
-viva y presione **R** (o haga clic en **Agregar habitante aquí** en la
-sección **Avatar**). Aparece justo a su lado, y a partir de entonces forma
-parte del contenido propio del Mundo: se guarda, se publica y se bifurca
-con él, como un
-[hito](03-WorldView.md#hitos--marcar-un-lugar-que-vale-la-pena-recordar).
-Agregar uno requiere haber iniciado sesión con acceso de EDICIÓN al Mundo
-en el que está; en el Mundo publicado de otra persona, el habitante va a su
-propia copia de él. ¿Cambió de opinión? Párese junto a un habitante y
+alrededor de su casa, entre sus edificios.
+
+**Agregar y quitar uno.** Párese en suelo abierto donde quiera que viva y
+presione **R**, o haga clic en **Agregar habitante aquí** en la sección
+**Avatar**. Aparece justo a su lado. Para quitar uno, párese junto a él y
 presione **R** otra vez (aparece el aviso **[R] Quitar habitante**), o
 deshaga con **Ctrl/Cmd+Z**.
 
-Los habitantes se quedan a unos seis pasos de su hogar como máximo.
+- Tiene que poder editar el Mundo en el que está. En el Mundo publicado de
+  otra persona, el habitante va a su propia copia.
+- Un habitante necesita suelo seco y abierto: no un tejado ni el agua, y
+  no mientras usted va en un vehículo. Cuando no se puede agregar, la
+  sección Avatar dice por qué.
+- Los habitantes forman parte del Mundo, como un
+  [hito](03-WorldView.md#hitos--marcar-un-lugar-que-vale-la-pena-recordar):
+  se guardan, se publican y se copian con él.
+
+**Cómo se mueven.** Los habitantes se quedan a unos seis pasos de su casa.
 Rodean paredes, árboles y agua, nunca los atraviesan, y de vez en cuando se
-toman un descanso para quedarse parados y mirar alrededor. Todos los que
-abren el Mundo ven a cada habitante en el mismo lugar en el mismo momento,
-porque dónde están sale del Mundo y del reloj, no de nada que se envíen los
-jugadores. Son sólidos: choca con ellos como con un árbol. Sin embargo, no
-se detienen ni se apartan por usted, así que uno puede atravesarlo mientras
-usted está quieto.
+detienen a mirar alrededor. Todos ven a cada habitante en el mismo lugar en
+el mismo momento, porque dónde está sale del Mundo y del reloj. No se envía
+nada entre jugadores. Usted choca con un habitante como con un árbol, pero
+él no se aparta, así que uno puede atravesarlo mientras usted está quieto.
 
-Los habitantes lo notan. Cuando uno está parado y usted está delante o al
-costado, a pocos pasos, se gira para mirarlo, y si se acerca hasta él, lo
-saluda con la mano. Saluda una vez cada vez que usted se acerca. Igual que
-con los animales, esto solo ocurre en su pantalla, y solo para su propio
-avatar.
+**Lo notan.** Cuando se acerca a unos pocos pasos, delante de un habitante
+o a su lado, se vuelve hacia usted. Si llega justo a su lado, saluda con la
+mano, una vez cada vez que usted se acerca. Como con los animales, esto
+solo pasa en su pantalla, y solo con su propio avatar.
 
-Los habitantes también conocen su vecindario. Párese junto a uno y presione
-**T** (aparece el aviso **[T] Hablar**; la sección Avatar y el panel táctil
-también tienen un botón **Hablar**), y le contará una o dos cosas sobre lo
-que hay alrededor, en un globo de diálogo sobre su cabeza: una bicicleta o
-un venado cerca, un hito, una estructura colocada en el Mundo (por su
-título y su autor), alguien que anda por ahí, el lugar en el que vive, u
-otra construcción a cierta distancia; por ejemplo: *“Hay una construcción
-llamada “Hill Fort”, de bob, a unos 3,6 km al noreste.”* Las distancias se
-redondean y las direcciones se ven desde donde está el habitante (el norte
-es hacia donde apunta la brújula). Háblele otra vez y menciona otra cosa.
-El globo desaparece a los pocos segundos, o en cuanto usted se aleja.
+**Hablar con un habitante.** Párese junto a uno y presione **T** (aparece
+el aviso **[T] Hablar**; la sección Avatar y el panel táctil también tienen
+un botón **Hablar**). Le cuenta algo de lo que hay cerca en un globo de
+diálogo: una bicicleta o un ciervo, un hito, una construcción y quién la
+hizo, alguien que anda por ahí, el lugar donde vive, o una construcción más
+lejos. Por ejemplo: *“Hay una construcción
+llamada “Hill Fort”, de bob, a unos 3,6 km al noreste.”*
 
-Mientras el globo está visible, aparece un botón **Enfocar** al pie de la
-vista para cada cosa que mencionó y que no se mueve: un hito, una
-estructura, una construcción o un vehículo (los animales y las personas se
-desplazan, así que no tienen uno). Haga clic en él para llevar la cámara a
-echar un vistazo, igual que **Enfocar** en el panel Ubicaciones: su avatar
-se queda junto al habitante, y al volver a caminar la cámara regresa si
-Seguir avatar está activado.
+- Las distancias están redondeadas. Las direcciones se dan desde donde
+  está el habitante, con el norte hacia donde apunta la brújula.
+- Hable otra vez y menciona otra cosa. El globo desaparece a los pocos
+  segundos, o cuando usted se aleja.
+- Para lo que no se mueve (un hito, una construcción o un vehículo),
+  aparece un botón **Enfocar** en la parte inferior de la vista. Lleva la
+  cámara a mirarlo, como **Enfocar** en Ubicaciones. Su avatar se queda
+  donde está, y al caminar la cámara vuelve si Seguir avatar está activado.
 
-Una de cada tres veces que habla con él, y siempre que no tiene otra cosa
-que decir, un residente puede preguntarse en voz alta por algo que el
-terreno cercano nunca ha tenido: un puente sobre un río, un muelle en un
-lago o en el mar, una atalaya en un terreno alto o, en terreno abierto, un
-pozo, un pabellón con sombra, un puesto de mercado o una casita; por
-ejemplo, *«Nadie ha construido nunca un puente sobre el río que está a unos
-30 m al este.»* Mientras lo dice, aparece abajo en la vista un botón
-**Construir un puente allí** (o un muelle, una atalaya…). Haga clic y el
-Editor abre una construcción nueva y suya para ese lugar, empezada a partir
-de la estructura de Aldea ya hecha, igual que **Construir aquí** en la Vista
-del mundo: al publicarla, queda allí. Es solo un pensamiento en voz alta,
-nunca una tarea: no se guarda nada, nadie comprueba si se construyó y no hay
-recompensa. El mismo terreno da el mismo pensamiento a todo el mundo, y un
-lugar que ya tiene una construcción cerca no desea nada.
+**Ideas para el vecindario.** Una de cada tres veces, o cuando no tiene
+otra cosa que decir, un habitante puede preguntarse en voz alta por algo
+que el terreno cercano nunca tuvo: un puente sobre un río, un muelle en el
+agua, un mirador en lo alto, o un pozo, un pabellón con sombra, un puesto
+de mercado o una casita en suelo abierto. Por ejemplo: *«Nadie ha construido nunca un puente sobre el río que está a unos
+30 m al este.»*
 
-Cuando ya hay algo allí, lo dice en su lugar, como un simple hecho, por
-ejemplo *«Alguien ha construido a unos 14 m al este, justo donde siempre
-pensé que iría un pozo.»*, con el nombre de la construcción si tiene título
-y un botón para mirarla. Tampoco entonces se guarda ni se premia nada.
+- Mientras lo dice, aparece un botón como **Construir un puente allí**.
+  Abre en el Editor una construcción nueva suya para ese lugar, empezada a
+  partir de la estructura de Aldea ya hecha, igual que **Construir aquí**
+  en la Vista del mundo. Cuando la publica, queda allí.
+- Es solo un pensamiento, nunca una tarea: no se recuerda nada, nadie lo
+  comprueba y no hay recompensa.
+- El mismo terreno les da a todos el mismo pensamiento. Un lugar que ya
+  tiene una construcción cerca no tiene nada que desear.
+- Cuando algo ya está allí, el habitante lo dice en su lugar, nombrando la
+  construcción si tiene título, con un botón para verla. Por ejemplo:
+  *«Alguien ha construido a unos 14 m al este, justo donde siempre
+pensé que iría un pozo.»*
 
-Lo que dice un habitante es lo que sabe *su* copia de ForkBuild: las
-construcciones de su catálogo, las personas presentes con usted, los
-vehículos y animales que no se llevó. Otra persona que hable con el mismo
-habitante puede oír cosas distintas, y nadie más ve nunca lo que le dijo a
-usted. Nunca menciona un vehículo que usted guardó o que está conduciendo,
-uno que conduce otra persona, ni un animal que atrapó. Las construcciones
-se nombran con el título y el autor que les da su publicación, igual que en
-el resto de la app.
+**Lo que sabe un habitante** es lo que sabe *su* ForkBuild: las
+construcciones de su catálogo, las personas que están aquí con usted, y
+los vehículos y animales que nadie se llevó. Otra persona que hable con el
+mismo habitante puede oír algo distinto, y nadie más ve lo que le dijo a
+usted. Nunca menciona un vehículo que usted guardó o que alguien está
+usando, ni un animal que usted atrapó. Las construcciones se nombran con su
+título y autor, como en toda la aplicación.
 
-Un habitante necesita terreno seco y abierto: no un techo, no el agua, y no
-mientras usted conduce. La sección Avatar dice por qué cuando no puede
-agregar uno donde está parado. Los habitantes no son personas: no tienen
-perfil, nunca aparecen en Personas ni en Cerca, no se puede hacer clic en
-ellos para ver información, y nunca le dan misiones, tareas ni
-recompensas: solo viven allí, y le cuentan qué hay alrededor cuando les
-pregunta.
+Los habitantes no son personas. No tienen perfil, nunca aparecen en
+Personas ni en Cerca, y no se puede hacer clic en ellos para ver
+información. Nunca le dan misiones, tareas ni recompensas: simplemente
+viven allí, y le cuentan qué hay cerca cuando pregunta.
 
 #### Qué se conserva al recargar
 
