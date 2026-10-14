@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/README.md source-hash: a206e390cf4902f4 -->
+<!-- translation-of: docs/user/README.md source-hash: a002122a9a62ba43 -->
 # Documentation utilisateur de ForkBuild
 
 <!-- languages -->
 [English](../README.md) · [Deutsch](../de/README.md) · [Español](../es/README.md) · **Français** · [Bahasa Indonesia](../id/README.md) · [日本語](../ja/README.md) · [한국어](../ko/README.md) · [Português (Brasil)](../pt-BR/README.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../README.md).
-<!-- /stale -->
 
 Guides pratiques pour utiliser ForkBuild dans le navigateur. Nouveau
 venu ? Commencez par **[Premiers pas](01-GettingStarted.md)** : cinq
@@ -52,8 +48,8 @@ avec des amis.
    vit chaque construction publiée : marcher et voler, trouver et
    regarder les choses, **Construire ici**, **Se promener ici avec
    moi**, les habitants et **Modifier une copie** pour emporter quelque
-   chose dans l’Éditeur. Ses outils réseau attendent sous **Afficher les
-   outils avancés**.
+   chose dans l’Éditeur. Ses outils réseau ont leur propre page, plus bas
+   dans Avancé.
 4. **[Publier et remixer](04-PublishingAndForking.md)** — publier et
    partager un lien, choisir où vont vos constructions, les licences,
    remixer, **Explorer** et ses constructions toutes prêtes, le défi de la
@@ -75,6 +71,12 @@ directes avec d’autres personnes, les réseaux où une construction peut
 aller, et les outils expérimentaux. Rien de tout cela n’est nécessaire
 pour jouer.
 
+- **[La Vue du Monde : outils avancés](WorldViewAdvancedTools.md)** — ce
+  qu’ajoute **Afficher les outils avancés** : inspecter les briques, les
+  placements et pourquoi on peut placer la construction de n’importe qui,
+  Rencontres dans le Monde, les noms de lieux découverts, les constructions
+  déclarées et l’envoi de votre propre construction depuis **Mon Monde
+  partagé**.
 - **[Votre nom et votre identité](05-IdentityAndLogin.md)** — votre nom et
   l’identité cryptographique derrière lui, le coffre (verrouillage et déverrouillage), sa
   sauvegarde par export et import, et la gestion des identités depuis

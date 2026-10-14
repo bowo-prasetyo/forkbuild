@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d5e21e1edde37655 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 678438731470dcad -->
 # 04 — Publier et remixer
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · [Español](../es/04-PublishingAndForking.md) · **Français** · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · [한국어](../ko/04-PublishingAndForking.md) · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../04-PublishingAndForking.md).
-<!-- /stale -->
 
 C’est le cœur de ForkBuild. **Publier** partage votre construction avec le
 monde. **Remixer** permet à n’importe qui de faire sa propre copie d’une
@@ -266,7 +262,7 @@ La boîte de dialogue est la même que celle de la Vue du Monde : ses
 réglages **Stockage** et **Support d’annonce / de découverte** et les
 boutons séparés **Distribuer le Snapshot seulement** / **Distribuer la
 Déclaration signée seulement** fonctionnent comme décrit dans
-[Rencontres dans le Monde](03-WorldView.md#rencontres-dans-le-monde--publications-et-avatars-que-vos-pairs-partagent). Deux choses diffèrent ici : elle agit
+[Rencontres dans le Monde](WorldViewAdvancedTools.md#rencontres-dans-le-monde--publications-et-avatars-que-vos-pairs-partagent). Deux choses diffèrent ici : elle agit
 toujours sur le Monde partagé exact que votre clic sur Publier vient de
 produire, et le **Snapshot** passe en premier, si bien qu’**Envoyer** envoie
 le Snapshot, puis la Déclaration signée. Fermer la boîte de dialogue
@@ -384,9 +380,9 @@ vous ne choisissez pas une licence qui le permet.
 Les autres peuvent normalement placer votre création publiée dans leurs
 propres Mondes. Cela ajoute un placement de votre construction, jamais une
 copie, et cela ne déplace ni ne modifie jamais la vôtre (voir
-[Pourquoi puis-je placer les constructions des autres ?](03-WorldView.md#pourquoi-puis-je-placer-les-constructions-des-autres-)).
+[Pourquoi puis-je placer les constructions des autres ?](WorldViewAdvancedTools.md#pourquoi-puis-je-placer-les-constructions-des-autres-)).
 Forker est distinct et régi par la licence (voir
-[Placer ou forker](03-WorldView.md#placer-ou-forker)).
+[Placer ou forker](WorldViewAdvancedTools.md#placer-ou-forker)).
 Si vous préférez qu’ils ne la placent pas, ouvrez **Propriétés du
 document** et réglez **Qui peut le placer dans le Monde** :
 
@@ -539,7 +535,7 @@ créations sur votre page **Abonnements** et dans vos notifications ; voir
 **Explorer** ne se limite pas non plus à ce qui a été publié depuis cet
 appareil ou découvert directement : une construction décentralisée qu’un pair
 vous a montrée sur la carte des
-[Rencontres dans le Monde](03-WorldView.md#rencontres-dans-le-monde--publications-et-avatars-que-vos-pairs-partagent)
+[Rencontres dans le Monde](WorldViewAdvancedTools.md#rencontres-dans-le-monde--publications-et-avatars-que-vos-pairs-partagent)
 de la Vue du Monde, une fois son contenu réellement résolu, rejoint aussi
 cette recherche et la page de son auteur, et y reste après un
 rechargement. Elle n’est affichée d’aucune façon différente du reste.

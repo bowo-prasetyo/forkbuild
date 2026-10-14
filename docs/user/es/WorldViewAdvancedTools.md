@@ -2,7 +2,7 @@
 # Vista del mundo: herramientas avanzadas
 
 <!-- languages -->
-[English](../WorldViewAdvancedTools.md) · [Deutsch](../de/WorldViewAdvancedTools.md) · **Español**
+[English](../WorldViewAdvancedTools.md) · [Deutsch](../de/WorldViewAdvancedTools.md) · **Español** · [Français](../fr/WorldViewAdvancedTools.md)
 <!-- /languages -->
 
 Esta página trata de las partes de la [Vista del mundo](03-WorldView.md)
