@@ -1527,8 +1527,13 @@ worked out in the vertex shader from the drop's own fixed numbers and the time; 
 camera, so the rain goes with it anywhere in the world at no extra cost. A drop falls only while its rank (spread
 evenly from 0 to 1) is below the rain's strength; the rest are folded behind the far plane. The streaks are the
 sky's light paled, fainter at night, thinning at the box's edges, depth-tested but not written, so walls and hills
-in front hide them; under water, and dry, nothing is drawn. The rain falls through roofs: nothing tells it where
-they are. renderer/RainRings.js is a shader chunk the lakes and sea (renderer/WaterWaveMaterial.js) and rivers
+in front hide them; under water, and dry, nothing is drawn. Under a roof the rain stays outside:
+application/worldNavigation/avatarPresenceMethods.js#_setRainShelter() hands the renderer (`setRainShelter()`) the
+build the avatar stands in (core/IndoorView.js's `indoorCutaway()`: its footprint, and its `top`, the highest of its
+boxes, lifted onto the ground), whatever the camera perspective, only when that changes, and null under open sky or
+riding; RainFall folds away every streak any part of which is inside that footprint and below that top, so the room
+stays dry while it still rains outside its windows. Other builds' roofs it knows nothing of, but their walls hide
+what falls inside them. renderer/RainRings.js is a shader chunk the lakes and sea (renderer/WaterWaveMaterial.js) and rivers
 (renderer/RiverFlowMaterial.js) share: the water is cut into 0.8 m cells, in each a drop lands about every 0.9 s
 (a little different per cell) at its own place, if a hash of the cell and the drop is below the rain's strength,
 and a ring spreads from it to 0.55 m, fading, lightening the water and tilting its light. Each pixel looks at its
@@ -1597,11 +1602,13 @@ ticked; while on, the session hands the renderer DAY and `nightLevel()` is 0, so
   (insects × (1 + night), plus 0.3 × night where there is no open water), `nightLevel` being
   `WorldNavigationSession#nightLevel()` (see "Day and night"). In the rain `ambientMixInRain(mix, rain)` sets RAIN, a
   layer no place gives, to the rain's strength, and turns birds down by up to 85% and insects by up to 80%, `rain`
-  being `WorldNavigationSession#weather().rain`.
+  being `WorldNavigationSession#weather().rain`; under a roof (`ambientMixInRain(mix, rain, sheltered)`,
+  `sheltered` being `WorldNavigationSession#isSheltered()`) ROOF, rain drumming on the roof, takes the rain's
+  strength, and RAIN, heard through the walls, falls to 0.3 of it.
 - **Service.** `WorldView` makes one through the `createWorldSoundscape` factory `ui/main.js` provides
   (`ui/views/worldView/useWorldSoundscape.js`), after `session.start()`, and disposes it on unmount. It resamples
   only when the listener has moved at least 0.5 m, night has deepened or lifted by 0.05, or rain has started, stopped
-  or changed by 0.05, and plays silence while there is no listener position. `unlock()`
+  or changed by 0.05, or the listener has stepped under a roof or out from one, and plays silence while there is no listener position. `unlock()`
   is called from every pointerdown and keydown, because browsers only let audio start (and iOS only lets it resume)
   from a user gesture. `M` and the Sound button (`ui/components/SoundControl.js`) toggle mute; the preference is
   this device's own.
@@ -1610,7 +1617,8 @@ ticked; while on, the session hands the renderer DAY and `nightLevel()` is 0, so
   noise for a river, a trilled 4.4 kHz tone for insects, separate randomly timed chirp phrases for birds, more
   often the more birds there are, and, only while a spring is heard, short rising plips for its bubbles, a few at a
   time, more often the nearer it is; rain is band-passed white noise round 3.8 kHz pattering at 11 Hz over a soft
-  low-passed brown wash. Level changes fade with a 0.8 s time constant. The `AudioContext` is created on the
+  low-passed brown wash; a roof drums duller and closer, band-passed round 1.3 kHz under two beating tremolos
+  (17 and 6.3 Hz), over a low thrum. Level changes fade with a 0.8 s time constant. The `AudioContext` is created on the
   first `resume()`, and suspended while muted or while the page is hidden, so it costs nothing then.
 - **Avatar sounds.** `advanceAvatarSound(state, observation, deltaSeconds, seed)` is pure; the service keeps its
   state between frames. Footsteps are counted by distance, one per stride (0.75 m walking, 0.94 m running: one per

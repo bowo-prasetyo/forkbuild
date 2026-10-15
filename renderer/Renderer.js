@@ -71,6 +71,7 @@ export class Renderer {
         this._cloudSky = null;
         this._rainFall = null;
         this._weather = null;
+        this._rainShelter = null;
         // How hard it rains, 0 to 1: every water tile's rain rings read it
         // (renderer/RainRings.js).
         this._rainLevel = { value: 0 };
@@ -292,11 +293,22 @@ export class Renderer {
         if (!this._cloudSky) {
             this._cloudSky = new CloudSky(this._sceneManager);
             this._rainFall = new RainFall(this._sceneManager);
+            this._rainFall.setShelter(this._rainShelter);
         }
         this._cloudSky.set(weather);
         const rain = Number.isFinite(weather.rain) ? weather.rain : 0;
         this._rainFall.set(rain);
         this._rainLevel.value = rain;
+    }
+
+    // Keeps the rain off `shelter` (`{ minX, maxX, minZ, maxZ, top }` in world
+    // coordinates: the build the avatar stands in), or lets it fall
+    // everywhere again with null (renderer/RainFall.js).
+    setRainShelter(shelter) {
+        this._rainShelter = shelter || null;
+        if (this._rainFall) {
+            this._rainFall.setShelter(this._rainShelter);
+        }
     }
 
     // How hard it is raining here, 0 to 1, as last set by setWeather().

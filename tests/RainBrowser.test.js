@@ -97,6 +97,36 @@ function changed(a, b, threshold = 6) {
     assert(lit(pixels(scene)) === 0, 'a wall in front hides the rain behind it');
     scene.remove(wall);
 
+    // Inside a house: no drop falls under its roof, while it still rains
+    // outside it.
+    camera.position.set(91234.5, 1.5, -82345.5);
+    camera.lookAt(91234.5, 1.5, -82355.5);
+    rain.setShelter(null);
+    rain.update(camera, 10, DAY);
+    const open = lit(pixels(scene));
+    rain.setShelter({ minX: 91234.5 - 3, maxX: 91234.5 + 3, minZ: -82345.5 - 4, maxZ: -82345.5 + 3, top: 6 });
+    rain.update(camera, 10, DAY);
+    const sheltered = pixels(scene);
+    const outside = lit(sheltered);
+    assert(outside > open * 0.3 && outside < open, `under a roof it still rains outside, but less is seen (${outside} of ${open} pixels)`);
+    // Nothing falls in the room itself: the pixels looking at the near part of
+    // it, low and centred, before the far wall at 4 m.
+    camera.lookAt(91234.5, -10, -82346.5);
+    rain.update(camera, 10, DAY);
+    const down = pixels(scene);
+    let inRoom = 0;
+    for (let y = SIZE * 0.35; y < SIZE * 0.65; y++) {
+        for (let x = SIZE * 0.35; x < SIZE * 0.65; x++) {
+            const i = (Math.floor(y) * SIZE + Math.floor(x)) * 4;
+            if (down[i] + down[i + 1] + down[i + 2] > 0) inRoom++;
+        }
+    }
+    assert(inRoom === 0, `looking down at the floor, no rain in the room (${inRoom} pixels)`);
+    rain.setShelter(null);
+    rain.update(camera, 10, DAY);
+    assert(lit(pixels(scene)) > 0, 'outside again, it rains there too');
+    camera.lookAt(91234.5, 1.5, -82355.5);
+
     rain.update(camera, 10, DAY, true);
     assert(!rain.lines.visible, 'under water it doesn\'t fall');
     rain.dispose();

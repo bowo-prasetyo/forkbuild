@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 077aa1744307f526 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 3be15df9efe58aef -->
 # 03 — Weltansicht
 
 <!-- languages -->
@@ -207,7 +207,9 @@ Schatten. Es wird nie so dunkel, dass man Bauten schlecht sieht.
 Ab und zu bringt ein bedeckter Himmel Regen, jeweils für ein paar Minuten.
 Sie sehen ihn um sich herum fallen und Ringe sich ausbreiten, wo die Tropfen
 auf einen See, das Meer oder einen Fluss treffen, und Sie hören ihn, während
-Vögel und Insekten verstummen. Regen ist nur zum Ansehen und Anhören: Flüsse
+Vögel und Insekten verstummen. Treten Sie in ein Bauwerk, bleibt es trocken:
+Sie hören den Regen aufs Dach trommeln und sehen ihn draußen weiter fallen.
+Regen ist nur zum Ansehen und Anhören: Flüsse
 steigen nicht, und Sie gehen genauso schnell.
 
 Wenn Sie lieber immer Tag hätten, setzen Sie unten im Bereich, direkt über

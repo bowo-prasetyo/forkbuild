@@ -1,6 +1,6 @@
 // Plays World View's and the Editor's sound with the Web Audio API: the
 // ambient layers (wind, birds, insects, lake, river, leaves, pines, a
-// spring bubbling and rain), the
+// spring bubbling, rain and rain drumming on a roof), the
 // local avatar's footsteps, jumps and landings (audio/AvatarSoundSynth.js),
 // the engine of what it rides and getting on, off and braking
 // (audio/VehicleEngineVoice.js, audio/VehicleEventSynth.js), animals,
@@ -28,7 +28,7 @@ import { playMount, playDismount, playBrake } from './VehicleEventSynth.js';
 import { MusicPlayer } from './MusicPlayer.js';
 import { MUSIC_MOOD } from '../core/MusicScore.js';
 
-const LAYERS = ['wind', 'birds', 'insects', 'water', 'stream', 'leaves', 'pines', 'spring', 'rain'];
+const LAYERS = ['wind', 'birds', 'insects', 'water', 'stream', 'leaves', 'pines', 'spring', 'rain', 'roof'];
 // The avatar's own sounds sit in front of the ambience.
 const EFFECTS_GAIN = 0.7;
 // A placed cue's nodes are let go once it has surely finished.
@@ -40,7 +40,7 @@ const REMOTE_ENGINE_TIME_CONSTANT = 0.08;
 const REMOTE_ENGINE_RELEASE_SECONDS = 1;
 
 // Each layer's gain at level 1, balanced by ear so no single layer dominates.
-const LAYER_PEAK = Object.freeze({ wind: 0.4, birds: 0.35, insects: 0.035, water: 0.35, stream: 0.2, leaves: 0.12, pines: 0.18, spring: 0.3, rain: 0.3 });
+const LAYER_PEAK = Object.freeze({ wind: 0.4, birds: 0.35, insects: 0.035, water: 0.35, stream: 0.2, leaves: 0.12, pines: 0.18, spring: 0.3, rain: 0.3, roof: 0.35 });
 
 // Time constant of a level change: walking into a forest fades birds in over
 // a couple of seconds rather than switching them on.
@@ -559,6 +559,7 @@ export class WebAudioSoundscapeProvider {
             this._buildLeaves(white);
             this._buildPines(white);
             this._buildRain(white, brown);
+            this._buildRoof(white, brown);
         }
         this._effects = context.createGain();
         this._effects.gain.value = EFFECTS_GAIN;
@@ -698,6 +699,27 @@ export class WebAudioSoundscapeProvider {
         this._loop(brown, (NOISE_SECONDS * 3) / 4).connect(wash);
         wash.connect(washGain);
         washGain.connect(this._layerGains.rain);
+    }
+
+    // Rain on a roof overhead: a duller, closer drumming than rain in the open,
+    // the patter uneven (two tremolos beating against each other), over a
+    // hollow low thrum.
+    _buildRoof(white, brown) {
+        const drum = this._filter('bandpass', 1300, 0.9);
+        const patter = this._context.createGain();
+        patter.gain.value = 0.6;
+        this._modulate(patter.gain, 17, 0.22);
+        this._modulate(patter.gain, 6.3, 0.16);
+        this._loop(white, (NOISE_SECONDS * 2) / 5).connect(drum);
+        drum.connect(patter);
+        patter.connect(this._layerGains.roof);
+        const thrum = this._filter('lowpass', 260, 1.2);
+        const thrumGain = this._context.createGain();
+        thrumGain.gain.value = 0.5;
+        this._modulate(thrumGain.gain, 0.3, 0.12);
+        this._loop(brown, NOISE_SECONDS / 7).connect(thrum);
+        thrum.connect(thrumGain);
+        thrumGain.connect(this._layerGains.roof);
     }
 
     _buildInsects() {

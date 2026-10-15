@@ -48,6 +48,7 @@ export class WorldSoundscapeService {
         onCommandActivity = null,
         nightLevel = null,
         rainLevel = null,
+        sheltered = null,
         sampleIntervalMs = DEFAULT_SAMPLE_INTERVAL_MS,
         setIntervalFn = globalThis.setInterval.bind(globalThis),
         clearIntervalFn = globalThis.clearInterval.bind(globalThis)
@@ -70,6 +71,9 @@ export class WorldSoundscapeService {
         // How hard it rains, 0 to 1 (core/Weather.js); absent, never.
         this._rainLevel = typeof rainLevel === 'function' ? rainLevel : () => 0;
         this._lastSampledRain = 0;
+        // Whether the listener is under a roof, where rain drums on it; absent, never.
+        this._sheltered = typeof sheltered === 'function' ? sheltered : () => false;
+        this._lastSampledSheltered = false;
         this._avatarObservation = typeof avatarObservation === 'function' ? avatarObservation : null;
         this._onRenderFrame = typeof onRenderFrame === 'function' ? onRenderFrame : null;
         this._avatarSoundState = createAvatarSoundState();
@@ -187,18 +191,21 @@ export class WorldSoundscapeService {
         }
         const night = this._nightLevel();
         const rain = this._rainLevel();
+        const underRoof = Boolean(this._sheltered());
         this._provider.setMusicMood?.(musicMoodFor({ view: 'world', nightLevel: night }));
         if (this._lastSampledAt
             && Math.hypot(position.x - this._lastSampledAt.x, position.z - this._lastSampledAt.z) < RESAMPLE_DISTANCE
             && Math.abs(night - this._lastSampledNight) < RESAMPLE_NIGHT_STEP
             && Math.abs(rain - this._lastSampledRain) < RESAMPLE_RAIN_STEP
-            && (rain === 0) === (this._lastSampledRain === 0)) {
+            && (rain === 0) === (this._lastSampledRain === 0)
+            && underRoof === this._lastSampledSheltered) {
             return;
         }
         this._lastSampledAt = { x: position.x, z: position.z };
         this._lastSampledNight = night;
         this._lastSampledRain = rain;
-        this._provider.setLayerLevels(ambientMixInRain(ambientMixAtNight(ambientMixAt(this._seed, position.x, position.z), night), rain));
+        this._lastSampledSheltered = underRoof;
+        this._provider.setLayerLevels(ambientMixInRain(ambientMixAtNight(ambientMixAt(this._seed, position.x, position.z), night), rain, underRoof));
     }
 
     settings() {

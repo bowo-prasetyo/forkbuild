@@ -17,7 +17,11 @@ import { DAY } from '../core/DayCycle.js';
 //
 // Seen through, depth-tested but not written, so builds and hills in front
 // hide the rain behind them. Under water, or with no rain, nothing is drawn.
-// The rain falls through roofs: it has no idea where they are.
+// Inside the build the avatar stands in (setShelter(): its footprint and its
+// top, application/worldNavigation/avatarPresenceMethods.js), no drop falls
+// below the top, so it doesn't rain in the room, while it still rains outside
+// the windows. Other builds' roofs it knows nothing of, but their walls hide
+// what falls inside them.
 
 export const DROP_COUNT = 3000;
 export const BOX_WIDTH = 36;
@@ -40,6 +44,8 @@ const VERTEX = /* glsl */ `
     uniform vec3 uCamera;
     uniform float uTime;
     uniform float uRain;
+    uniform vec4 uShelter;
+    uniform float uShelterTop;
     varying float vFade;
     void main() {
         if (aDrop.w >= uRain) {
@@ -53,6 +59,13 @@ const VERTEX = /* glsl */ `
         vec2 around = mod(aDrop.xy * ${BOX_WIDTH.toFixed(1)} - uCamera.xz, ${BOX_WIDTH.toFixed(1)}) - ${(BOX_WIDTH / 2).toFixed(1)};
         vec3 world = vec3(uCamera.x + around.x, uCamera.y + ${BOX_TOP.toFixed(1)} - drop, uCamera.z + around.y);
         world.xz += vec2(${SLANT.x.toFixed(3)}, ${SLANT.z.toFixed(3)}) * drop;
+        // Under the shelter's roof, any part of its streak: folded away like a
+        // drop that isn't falling.
+        if (world.y - ${STREAK_LENGTH.toFixed(2)} < uShelterTop && world.x > uShelter.x && world.x < uShelter.y && world.z > uShelter.z && world.z < uShelter.w) {
+            gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
+            vFade = 0.0;
+            return;
+        }
         world += vec3(${SLANT.x.toFixed(3)}, -1.0, ${SLANT.z.toFixed(3)}) * (aTip * ${STREAK_LENGTH.toFixed(2)});
         // Thin out towards the box's sides and its top and bottom, so its
         // edges never show.
@@ -101,6 +114,9 @@ export class RainFall {
                 uCamera: { value: new THREE.Vector3() },
                 uTime: { value: 0 },
                 uRain: { value: 0 },
+                // (minX, maxX, minZ, maxZ) and top; with none, below everything.
+                uShelter: { value: new THREE.Vector4(0, 0, 0, 0) },
+                uShelterTop: { value: -1e9 },
                 uColor: { value: new THREE.Color(0xcfd8e0) },
                 uOpacity: { value: DAY_OPACITY }
             },
@@ -120,6 +136,21 @@ export class RainFall {
     // How hard it rains, 0 to 1 (core/Weather.js's rain).
     set(rain) {
         this._rain = Number.isFinite(rain) ? Math.min(Math.max(rain, 0), 1) : 0;
+    }
+
+    // Keeps the rain off `shelter`: `{ minX, maxX, minZ, maxZ, top }` in
+    // world coordinates, the build the avatar stands in; null lets it fall
+    // everywhere.
+    setShelter(shelter) {
+        const u = this._material.uniforms;
+        const valid = shelter && [shelter.minX, shelter.maxX, shelter.minZ, shelter.maxZ, shelter.top].every(Number.isFinite);
+        if (valid) {
+            u.uShelter.value.set(shelter.minX, shelter.maxX, shelter.minZ, shelter.maxZ);
+            u.uShelterTop.value = shelter.top;
+        } else {
+            u.uShelter.value.set(0, 0, 0, 0);
+            u.uShelterTop.value = -1e9;
+        }
     }
 
     // Lets the rain fall round `camera` for this frame, `seconds` into its
