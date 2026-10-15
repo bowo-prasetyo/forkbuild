@@ -2,13 +2,23 @@
 // clock, the same wall-clock time wildlife wanders by, so everyone at a build
 // sees the same sky without exchanging anything. "Always day" is this device's
 // own choice (application/settings/WorldViewSkyStore.js) and changes nothing
-// for anyone else.
+// for anyone else. The weather (core/Weather.js) follows the same clock, and
+// Always day keeps it fair as well.
 import { DAY, DAY_SKY_BODIES, skyBodiesAt, skyLookAt } from '../../core/DayCycle.js';
+import { FAIR_WEATHER, overcastLook, weatherAt } from '../../core/Weather.js';
 
 export const dayCycleMethods = {
-    // The sky's look right now: core/DayCycle.js's DAY while Always day is on.
+    // The sky's look right now, greyed as far as the weather is overcast:
+    // core/DayCycle.js's DAY while Always day is on.
     skyLook() {
-        return this._alwaysDay ? DAY : skyLookAt(this._wildlifeClock());
+        if (this._alwaysDay) return DAY;
+        const now = this._wildlifeClock();
+        return overcastLook(skyLookAt(now), weatherAt(now).overcast);
+    },
+
+    // The weather right now (core/Weather.js): fair while Always day is on.
+    weather() {
+        return this._alwaysDay ? FAIR_WEATHER : weatherAt(this._wildlifeClock());
     },
 
     // Where the sun and the moon are right now, and where the light comes
@@ -63,6 +73,10 @@ export const dayCycleMethods = {
         // A render facade that can't draw them keeps its light where it is.
         if (this._session && typeof this._session.setSkyBodies === 'function') {
             this._session.setSkyBodies(this.skyBodies());
+        }
+        // A render facade that can't draw clouds draws none.
+        if (this._session && typeof this._session.setWeather === 'function') {
+            this._session.setWeather(this.weather());
         }
     },
 

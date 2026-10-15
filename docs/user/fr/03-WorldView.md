@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 58af5105d177cff3 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 29a889111fb679ab -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
@@ -204,9 +204,15 @@ tourne lentement autour d’un point haut dans le nord : les étoiles se lèvent
 à l’est et se couchent à l’ouest avec la lune, et chacun voit les mêmes
 étoiles au même moment.
 
+Les nuages vont et viennent, les mêmes pour tous au même moment. La plupart
+du temps, quelques nuages blancs passent ; de temps en temps le ciel se
+couvre, et parfois il devient gris et bouché, avec une lumière plus douce et
+des ombres plus pâles. Il ne fait jamais assez sombre pour qu’on distingue
+mal les constructions.
+
 Si vous préférez qu’il fasse toujours jour, cochez **Toujours le jour** en
-bas du panneau, juste au-dessus de **Ombres**. Ce choix
-est mémorisé sur cet appareil et ne change rien pour les autres.
+bas du panneau, juste au-dessus de **Ombres**. Le ciel reste
+alors dégagé. Ce choix est mémorisé sur cet appareil et ne change rien pour les autres.
 
 ## Son
 

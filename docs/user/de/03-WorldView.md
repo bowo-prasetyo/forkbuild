@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 58af5105d177cff3 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 29a889111fb679ab -->
 # 03 — Weltansicht
 
 <!-- languages -->
@@ -199,9 +199,14 @@ ganze Sternenhimmel dreht sich langsam um einen Punkt hoch im Norden, sodass
 die Sterne mit dem Mond im Osten aufgehen und im Westen untergehen, und alle
 sehen im selben Moment dieselben Sterne.
 
+Wolken kommen und gehen, für alle im selben Moment dieselben. Meistens
+ziehen ein paar weiße Wolken vorüber; ab und zu bewölkt sich der Himmel, und
+manchmal wird er grau und bedeckt, mit weicherem Licht und blasseren
+Schatten. Es wird nie so dunkel, dass man Bauten schlecht sieht.
+
 Wenn Sie lieber immer Tag hätten, setzen Sie unten im Bereich, direkt über
-**Schatten**, das Häkchen bei **Immer Tag**. Das wird auf
-diesem Gerät gespeichert und ändert für niemanden sonst etwas.
+**Schatten**, das Häkchen bei **Immer Tag**. Dann bleibt auch der
+Himmel klar. Das wird auf diesem Gerät gespeichert und ändert für niemanden sonst etwas.
 
 ## Ton
 

@@ -1730,7 +1730,7 @@ export default Object.freeze({
     'worldView.advancedTools': 'Afficher les outils avancés',
     'worldView.advancedToolsHint': 'Coordonnées, la recherche par emplacement, la ligne caméra et édition, Rencontres dans le Monde, constructions déclarées, noms de lieux découverts et les outils réseau de ta publication. Mémorisé sur cet appareil.',
     'worldView.alwaysDay': 'Toujours le jour',
-    'worldView.alwaysDayHint': 'Ici, le ciel passe du jour à la nuit et revient toutes les {minutes} minutes, et les fenêtres et les lanternes s’allument à la nuit tombée. Mémorisé sur cet appareil.',
+    'worldView.alwaysDayHint': 'Ici, le ciel passe du jour à la nuit et revient toutes les {minutes} minutes, les nuages vont et viennent, et les fenêtres et les lanternes s’allument à la nuit tombée. « Toujours le jour » le garde clair et ensoleillé. Mémorisé sur cet appareil.',
     'worldView.shadows': 'Ombres',
     'worldView.shadowsHint': 'Le soleil et la lune projettent des ombres autour de vous. Sur les téléphones, elles sont d’abord désactivées, pour que la Vue du Monde reste fluide. Mémorisé sur cet appareil.',
     'worldView.askTheResidentNextTo': 'Demander à l’habitant à côté de vous ce qu’il y a autour (T)',

@@ -804,6 +804,10 @@ export class RenderWorldViewUseCase {
             setSkyBodies: (bodies) => {
                 renderer.setSkyBodies(bodies);
             },
+            // How cloudy the sky is (core/Weather.js#weatherAt()).
+            setWeather: (weather) => {
+                renderer.setWeather(weather);
+            },
             // Whether the sun and the moon cast shadows (renderer/SunShadows.js).
             setShadowsEnabled: (enabled) => {
                 renderer.setShadowsEnabled(enabled);

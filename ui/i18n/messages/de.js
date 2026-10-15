@@ -1730,7 +1730,7 @@ export default Object.freeze({
     'worldView.advancedTools': 'Erweiterte Werkzeuge zeigen',
     'worldView.advancedToolsHint': 'Koordinaten, die Ortssuche, die Zeile zu Kamera und Bearbeitung, Begegnungen in der Welt, beanspruchte Bauwerke, gefundene Ortsnamen und die Netzwerkwerkzeuge deiner Veröffentlichung. Wird auf diesem Gerät gespeichert.',
     'worldView.alwaysDay': 'Immer Tag',
-    'worldView.alwaysDayHint': 'Hier wechselt der Himmel alle {minutes} Minuten von Tag zu Nacht und zurück, und im Dunkeln leuchten Fenster und Laternen. Wird auf diesem Gerät gespeichert.',
+    'worldView.alwaysDayHint': 'Hier wechselt der Himmel alle {minutes} Minuten von Tag zu Nacht und zurück, Wolken kommen und gehen, und im Dunkeln leuchten Fenster und Laternen. „Immer Tag“ hält ihn klar und sonnig. Wird auf diesem Gerät gespeichert.',
     'worldView.shadows': 'Schatten',
     'worldView.shadowsHint': 'Sonne und Mond werfen in Ihrer Nähe Schatten. Auf Smartphones sind sie zunächst aus, damit die Weltansicht flüssig bleibt. Wird auf diesem Gerät gespeichert.',
     'worldView.askTheResidentNextTo': 'Den Bewohner neben Ihnen fragen, was es in der Umgebung gibt (T)',

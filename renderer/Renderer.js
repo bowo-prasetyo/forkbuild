@@ -20,6 +20,7 @@ import { DAY } from '../core/DayCycle.js';
 import { makeNightGlowing } from './NightGlowMaterial.js';
 import { SkyBodies } from './SkyBodies.js';
 import { StarSky } from './StarSky.js';
+import { CloudSky } from './CloudSky.js';
 import { SunShadows } from './SunShadows.js';
 
 // Under water the view closes in to a blue-green haze: murkier and greener in a
@@ -65,6 +66,9 @@ export class Renderer {
         this._skyBodies = null;
         this._starSky = null;
         this._skyBodiesState = null;
+        // The clouds, made the first time setWeather() is called.
+        this._cloudSky = null;
+        this._weather = null;
         this._sceneManager.scene.background = new THREE.Color(DAY.sky);
 
         this._cameraController = new CameraController(
@@ -270,6 +274,20 @@ export class Renderer {
         this._lights.setDirection(bodies.light, bodies.lightStrength);
     }
 
+    // Draws World View's clouds as `weather` (core/Weather.js#weatherAt())
+    // says, drifting by the world's clock (renderer/CloudSky.js). A renderer
+    // never given any (the Editor, thumbnails) draws none.
+    setWeather(weather) {
+        if (!weather || weather === this._weather) {
+            return;
+        }
+        this._weather = weather;
+        if (!this._cloudSky) {
+            this._cloudSky = new CloudSky(this._sceneManager);
+        }
+        this._cloudSky.set(weather);
+    }
+
     // Turns the sun's and the moon's shadows on or off
     // (renderer/SunShadows.js). Only World View turns them on.
     setShadowsEnabled(enabled) {
@@ -368,6 +386,9 @@ export class Renderer {
             this._skyBodies.dispose();
             this._starSky.dispose();
         }
+        if (this._cloudSky) {
+            this._cloudSky.dispose();
+        }
         window.removeEventListener('resize', this._onResize);
         this._cameraController.dispose();
         this._container.removeChild(this._webglRenderer.domElement);
@@ -394,6 +415,10 @@ export class Renderer {
             this._skyBodies.update(this._cameraController.camera, underwater);
             this._starSky.set(this._skyLook.glow, this._skyBodiesState.skyTurn);
             this._starSky.update(this._cameraController.camera, performance.now() / 1000, underwater);
+        }
+        if (this._cloudSky) {
+            const underwater = Boolean(UNDERWATER_LOOK[this._underwaterView]);
+            this._cloudSky.update(this._cameraController.camera, this._wildlifeClock(), this._skyLook, underwater);
         }
         for (const listener of this._frameListeners) {
             listener(deltaSeconds);

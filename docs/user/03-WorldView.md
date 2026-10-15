@@ -181,9 +181,14 @@ across them, and fade again at dawn. The whole starry sky turns slowly round
 a point high in the north, so the stars rise in the east and set in the west
 with the moon, and everyone sees the same stars at the same moment.
 
+Clouds come and go, the same for everyone at the same moment. Most of the
+time a few white clouds drift over; now and then the sky clouds over, and
+sometimes it turns grey and overcast, with softer light and fainter shadows.
+It's never so dark that builds are hard to see.
+
 If you'd rather it were always day, tick **Always day** at the bottom of the
-panel, just above **Shadows**. It's remembered on this device and
-changes nothing for anyone else.
+panel, just above **Shadows**. It keeps the sky clear as well. It's
+remembered on this device and changes nothing for anyone else.
 
 ## Sound
 

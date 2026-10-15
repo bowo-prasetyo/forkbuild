@@ -1731,7 +1731,7 @@ export default Object.freeze({
     'worldView.advancedTools': 'Mostrar ferramentas avançadas',
     'worldView.advancedToolsHint': 'Coordenadas, a busca por local, a linha de câmera e edição, Encontros no Mundo, construções reivindicadas, nomes de lugares descobertos e as ferramentas de rede da sua publicação. Lembrado neste dispositivo.',
     'worldView.alwaysDay': 'Sempre de dia',
-    'worldView.alwaysDayHint': 'Aqui o céu passa do dia para a noite e volta a cada {minutes} minutos, e janelas e lanternas se acendem quando escurece. Lembrado neste dispositivo.',
+    'worldView.alwaysDayHint': 'Aqui o céu passa do dia para a noite e volta a cada {minutes} minutos, as nuvens vêm e vão, e janelas e lanternas se acendem quando escurece. “Sempre de dia” deixa o dia claro e ensolarado. Lembrado neste dispositivo.',
     'worldView.shadows': 'Sombras',
     'worldView.shadowsHint': 'O sol e a lua projetam sombras perto de você. Nos celulares elas começam desligadas, para a Visão do mundo continuar fluida. Lembrado neste dispositivo.',
     'worldView.askTheResidentNextTo': 'Pergunte ao morador ao seu lado o que há por perto (T)',

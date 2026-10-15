@@ -1454,6 +1454,11 @@ geometry and materials are shared by every tile.
     application/worldNavigation/dayCycleMethods.js  setShadowsOn(): setShadowsEnabled(on) on the render facade
     renderer/Renderer.js#setShadowsEnabled()       renderer/SunShadows.js, which follows the camera's target each frame
 
+    core/Weather.js#weatherAt(seconds)             cloud cover 0..1 and how overcast 0..1 (same clock; FAIR_WEATHER, a
+            │                                       clear sky, while Always day); overcastLook() greys skyLookAt()'s look
+    application/worldNavigation/dayCycleMethods.js  every render frame: setWeather(weather) on the render facade
+    renderer/Renderer.js#setWeather()              renderer/CloudSky.js (made on first call), placed and drifted each frame
+
 World View's sky turns once every `DAY_CYCLE_SECONDS` (40 minutes): dawn, about half the cycle in day, dusk, a
 little over a fifth in full night, dawn again, each look blending into the next. It is worked out from the wall
 clock, the same clock wildlife wanders by, so everyone at a build sees the same sky with nothing sent or stored. A
@@ -1488,6 +1493,27 @@ the camera every frame at 0.85 of its far plane and turned by the quaternion for
 as the look's glow goes from 0.72 to 0.98 (deep dusk to night) and fade the same way at dawn, twinkle by a per-star
 phase, thin out towards the horizon, and hide under water and in Always day. Made with the sun and the moon on the
 first `setSkyBodies()`, so the Editor and thumbnails never draw them.
+
+**Clouds and overcast.** core/Weather.js cuts the same clock into spells of 8 minutes, each with its own cloud
+cover from a hash of its number: about three in five fair (a few clouds, cover 0.06 to 0.22), one in four cloudy
+(0.38 to 0.62) and about one in seven overcast (0.88 to 1). Over the last 2 minutes of a spell the cover blends into
+the next one's, so clouds gather and clear. It is one weather for the whole world, so everyone at a build, and
+everyone walking together, shares it. From cover 0.55 to 0.88 the sky turns overcast, and `overcastLook()` greys the
+look `skyLookAt()` gives: the background towards the grey of its own brightness, the fill and sunlight paler, the
+sun's (moon's) light dimmed by up to 60% with 30% of what it loses handed to the fill from above, so shadows soften.
+The light never drops below a clear NIGHT's moon, so builds stay readable, and lamps don't light up for clouds (the
+glow is unchanged). With no overcast the same look comes back; with the same overcast the same blended look too.
+renderer/CloudSky.js draws the clouds on the upper half of a sphere round the camera at 0.75 of its far plane, inside
+the sun and the moon (0.8) and the stars (0.85), transparent at `renderOrder` -1, so it passes in front of them while
+builds, hills and water nearer still cover it. Each pixel follows its own direction up to a layer 180 m up (at least
+60 m over the camera) and reads a 256² tiling value-noise texture there twice, at 1600 and 430 m a repeat, drifting
+at two speeds by the world's clock (the offsets worked out on the CPU in full precision, as fractions of a repeat).
+A cover is turned into the noise threshold above which that share of the sky is cloud, from the mixed noise's own
+spread, so cover means what it says; overcast fills the rest into one sheet, still darker where it is thick. The
+clouds take their colour from the look: the sky's colour brightened towards its light, more so the brighter the
+light (white by day, rosy at dusk and dawn, a dim grey at night). They thin out towards the horizon, never show
+below it, hide under water, and aren't drawn at all with no clouds: in Always day, and in the Editor and thumbnails,
+which never call `setWeather()`.
 
 **Shadows.** The directional light casts them when World View turns them on (`Renderer#setShadowsEnabled()`,
 renderer/SunShadows.js): one 2048² PCF-soft shadow map over a square 45 m each way round the camera's target (the

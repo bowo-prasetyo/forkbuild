@@ -1727,7 +1727,7 @@ export default Object.freeze({
     'worldView.advancedTools': '詳細ツールを表示',
     'worldView.advancedToolsHint': '座標、位置での検索、カメラと編集の行、ワールドでの出会い、主張された作品、見つかった地名、公開のネットワークツール。この端末に記憶されます。',
     'worldView.alwaysDay': '常に昼',
-    'worldView.alwaysDayHint': 'ここでは空が{minutes}分ごとに昼から夜へ、また昼へと移り変わり、暗くなると窓とランタンに灯りがともります。この端末に記憶されます。',
+    'worldView.alwaysDayHint': 'ここでは空が{minutes}分ごとに昼から夜へ、また昼へと移り変わり、雲が流れては消え、暗くなると窓とランタンに灯りがともります。「常に昼」にすると、いつも晴れた昼になります。この端末に記憶されます。',
     'worldView.shadows': '影',
     'worldView.shadowsHint': '太陽と月があなたの近くに影を落とします。スマートフォンでは、ワールドビューを滑らかに保つため最初はオフです。この端末に記憶されます。',
     'worldView.askTheResidentNextTo': '隣にいる住人に周りのことを聞く（T）',
