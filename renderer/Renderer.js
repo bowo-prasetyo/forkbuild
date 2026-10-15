@@ -22,6 +22,7 @@ import { SkyBodies } from './SkyBodies.js';
 import { StarSky } from './StarSky.js';
 import { CloudSky } from './CloudSky.js';
 import { RainFall } from './RainFall.js';
+import { BRICK_WET, createWetSurfaces, makeWet, setWetShelter, setWetness } from './WetSurfaces.js';
 import { SunShadows } from './SunShadows.js';
 
 // Under water the view closes in to a blue-green haze: murkier and greener in a
@@ -72,6 +73,9 @@ export class Renderer {
         this._rainFall = null;
         this._weather = null;
         this._rainShelter = null;
+        // How wet the ground and the bricks are (renderer/WetSurfaces.js),
+        // shared by the terrain and every brick this adds.
+        this._wetSurfaces = createWetSurfaces();
         // How hard it rains, 0 to 1: every water tile's rain rings read it
         // (renderer/RainRings.js).
         this._rainLevel = { value: 0 };
@@ -101,7 +105,7 @@ export class Renderer {
         // second, independently-computed terrain function anywhere else.
         this._terrainStreaming = new TerrainStreamingController(
             this._sceneManager,
-            (tx, tz) => buildTerrainTileMesh(tx, tz, DEFAULT_WORLD_SEED),
+            (tx, tz) => buildTerrainTileMesh(tx, tz, DEFAULT_WORLD_SEED, TERRAIN_TILE_SIZE, this._wetSurfaces),
             { disposeTile: disposeOwnedTile }
         );
         this._terrainStreaming.update(
@@ -233,6 +237,14 @@ export class Renderer {
     }
 
     add(object) {
+        // Bricks get wet in the rain (renderer/WetSurfaces.js).
+        if (object && typeof object.traverse === 'function') {
+            object.traverse((child) => {
+                for (const material of [].concat(child.material || [])) {
+                    if (material.userData && material.userData.brickSurface) makeWet(material, this._wetSurfaces, BRICK_WET);
+                }
+            });
+        }
         if (object && object.userData && object.userData.nightGlow) {
             makeNightGlowing(object.material, object.userData.nightGlow, this._nightGlow);
         }
@@ -299,6 +311,7 @@ export class Renderer {
         const rain = Number.isFinite(weather.rain) ? weather.rain : 0;
         this._rainFall.set(rain);
         this._rainLevel.value = rain;
+        setWetness(this._wetSurfaces, weather.wetness);
     }
 
     // Keeps the rain off `shelter` (`{ minX, maxX, minZ, maxZ, top }` in world
@@ -309,6 +322,13 @@ export class Renderer {
         if (this._rainFall) {
             this._rainFall.setShelter(this._rainShelter);
         }
+        setWetShelter(this._wetSurfaces, this._rainShelter);
+    }
+
+    // How wet the ground and bricks are here, 0 to 1, as last set by
+    // setWeather().
+    get wetness() {
+        return this._wetSurfaces.wetness.value;
     }
 
     // How hard it is raining here, 0 to 1, as last set by setWeather().

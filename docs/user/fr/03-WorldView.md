@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 3be15df9efe58aef -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 457f63313d61fa43 -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
@@ -215,7 +215,9 @@ De temps en temps, un ciel couvert apporte la pluie, pour quelques minutes
 là où les gouttes touchent un lac, la mer ou une rivière, et vous l’entendez,
 tandis que les oiseaux et les insectes se taisent. Entrez dans une
 construction et vous restez au sec : vous entendez la pluie tambouriner sur
-le toit et la voyez toujours tomber dehors. La pluie n’est là que pour
+le toit et la voyez toujours tomber dehors. Sous la pluie, le sol et les
+constructions foncent et luisent, puis sèchent en quelques minutes une fois
+qu’elle s’arrête. La pluie n’est là que pour
 les yeux et les oreilles : les rivières ne montent pas et vous marchez tout
 aussi vite.
 

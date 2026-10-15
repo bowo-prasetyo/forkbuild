@@ -807,11 +807,13 @@ export class RenderWorldViewUseCase {
             // How cloudy the sky is (core/Weather.js#weatherAt()).
             setWeather: (weather) => {
                 renderer.setWeather(weather);
+                worldRenderer.brickInstances.setWetness(weather.wetness);
             },
             // The build the avatar stands in, which the rain falls round
             // (renderer/RainFall.js), or null under open sky.
             setRainShelter: (shelter) => {
                 renderer.setRainShelter(shelter);
+                worldRenderer.brickInstances.setWetShelter(shelter);
             },
             // Whether the sun and the moon cast shadows (renderer/SunShadows.js).
             setShadowsEnabled: (enabled) => {

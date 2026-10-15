@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 3be15df9efe58aef -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 457f63313d61fa43 -->
 # 03 — Visão do mundo
 
 <!-- languages -->
@@ -202,7 +202,9 @@ De vez em quando um céu encoberto traz chuva, por alguns minutos de cada
 vez. Você a vê cair ao seu redor e anéis se espalharem onde as gotas caem num
 lago, no mar ou num rio, e a ouve, enquanto os pássaros e os insetos se
 calam. Se você entrar numa construção, lá dentro não chove: você ouve a
-chuva tamborilar no telhado e a vê continuar caindo lá fora. A chuva é só
+chuva tamborilar no telhado e a vê continuar caindo lá fora. Na chuva, o
+chão e as construções escurecem e brilham, e secam em alguns minutos depois
+que ela para. A chuva é só
 para ver e ouvir: os rios não sobem e você anda tão
 rápido quanto antes.
 

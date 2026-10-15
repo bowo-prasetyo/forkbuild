@@ -3,6 +3,7 @@ import { ThreeBrickFactory, DEFAULT_COLOR } from './ThreeBrickFactory.js';
 import { doorSwingOffset } from '../core/DoorSwing.js';
 import { castShadows } from './ShadowRoles.js';
 import { applyBrickSurface, withBrickBounds } from './BrickSurfaceMaterial.js';
+import { BRICK_WET, createWetSurfaces, makeWet, setWetShelter, setWetness } from './WetSurfaces.js';
 import { brickSurfaceOf } from '../core/BrickSurface.js';
 
 // Edge length of the cube of space one batch covers.
@@ -36,6 +37,8 @@ export class BrickInstanceRegistry {
         this._scene = scene;
         this._brickFactory = brickFactory;
         this._nightGlow = { value: 0 };
+        // How wet the bricks are in the rain (renderer/WetSurfaces.js).
+        this._wetSurfaces = createWetSurfaces();
         // surface -> material, made the first time a brick of it is drawn.
         this._materials = new Map();
         this._cutaway = null;
@@ -225,6 +228,20 @@ export class BrickInstanceRegistry {
         return this._nightGlow.value;
     }
 
+    // How wet the bricks are, 0 (dry) to 1 (soaked), and the build the
+    // avatar stands in, whose room stays dry (renderer/WetSurfaces.js).
+    setWetness(wetness) {
+        setWetness(this._wetSurfaces, wetness);
+    }
+
+    setWetShelter(shelter) {
+        setWetShelter(this._wetSurfaces, shelter);
+    }
+
+    get wetness() {
+        return this._wetSurfaces.wetness.value;
+    }
+
     // The light the brick gives off at full night (0xRRGGBB), 0 for none, or
     // null when it isn't here.
     getGlow(brickId) {
@@ -335,7 +352,7 @@ export class BrickInstanceRegistry {
         const surface = surfaceOfVisual(visual);
         let material = this._materials.get(surface);
         if (!material) {
-            material = applyBrickSurface(createInstancedBrickMaterial(this._nightGlow), surface);
+            material = makeWet(applyBrickSurface(createInstancedBrickMaterial(this._nightGlow), surface), this._wetSurfaces, BRICK_WET);
             if (this._cutaway) this._cutaway.apply(material);
             this._materials.set(surface, material);
         }

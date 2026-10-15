@@ -40,8 +40,9 @@ const OVERCAST_FULL = 0.88;
 
 // cloudCover: how much of the sky the clouds hide, 0 to 1. overcast: how far
 // the sky and its light have turned grey, 0 to 1. rain: how hard it rains, 0
-// (dry) to 1 (a downpour).
-export const FAIR_WEATHER = Object.freeze({ cloudCover: 0, overcast: 0, rain: 0 });
+// (dry) to 1 (a downpour). wetness: how wet the ground is (wetnessAt()), 0
+// (dry) to 1 (soaked).
+export const FAIR_WEATHER = Object.freeze({ cloudCover: 0, overcast: 0, rain: 0, wetness: 0 });
 
 // The weather at `seconds` (Unix time): a frozen object shaped like
 // FAIR_WEATHER. With no clock, fair.
@@ -52,26 +53,83 @@ export function weatherAt(seconds) {
     const spell = Math.floor(seconds / WEATHER_SPELL_SECONDS);
     const into = seconds - spell * WEATHER_SPELL_SECONDS;
     let cover = spellCover(spell);
+    const changing = into - (WEATHER_SPELL_SECONDS - WEATHER_CHANGE_SECONDS);
+    if (changing > 0) {
+        cover += (spellCover(spell + 1) - cover) * smooth01(changing / WEATHER_CHANGE_SECONDS);
+    }
+    return weatherOfCover(cover, rainAt(seconds), wetnessAt(seconds));
+}
+
+// How hard it rains at `seconds`: the spell's rain, changing into the next
+// spell's over the last of it.
+export function rainAt(seconds) {
+    if (!Number.isFinite(seconds)) return 0;
+    const spell = Math.floor(seconds / WEATHER_SPELL_SECONDS);
+    const into = seconds - spell * WEATHER_SPELL_SECONDS;
     let rain = spellRain(spell);
     const changing = into - (WEATHER_SPELL_SECONDS - WEATHER_CHANGE_SECONDS);
     if (changing > 0) {
         const t = changing / WEATHER_CHANGE_SECONDS;
-        cover += (spellCover(spell + 1) - cover) * smooth01(t);
         const nextRain = spellRain(spell + 1);
         // Rain waits for the clouds to gather, and stops before they clear.
         const rainT = nextRain > rain ? (t - (1 - RAIN_CHANGE_SHARE)) / RAIN_CHANGE_SHARE : t / RAIN_CHANGE_SHARE;
         rain += (nextRain - rain) * smooth01(rainT);
     }
-    return weatherOfCover(cover, rain);
+    return rain;
 }
 
-export function weatherOfCover(cloudCover, rain = 0) {
+export function weatherOfCover(cloudCover, rain = 0, wetness = 0) {
     const cover = clamp01(cloudCover);
     return Object.freeze({
         cloudCover: cover,
         overcast: smooth01((cover - OVERCAST_FROM) / (OVERCAST_FULL - OVERCAST_FROM)),
-        rain: Number.isFinite(rain) ? clamp01(rain) : 0
+        rain: Number.isFinite(rain) ? clamp01(rain) : 0,
+        wetness: Number.isFinite(wetness) ? clamp01(wetness) : 0
     });
+}
+
+// How wet the ground is at `seconds`, 0 (dry) to 1 (soaked): it soaks up
+// rain quickly (WET_SECONDS, the time to close most of the way towards how
+// wet the rain makes it: WET_GAIN times the rain, so even a light shower
+// darkens the ground) and dries slowly once it stops (DRY_SECONDS: half dry
+// in under two minutes, nearly dry in seven or eight). Worked out from the
+// clock alone, like the rest of the weather, by following the rain from
+// WETNESS_HISTORY_SECONDS back, in WETNESS_STEP_SECONDS steps on a grid
+// fixed in time, so every device reaches the same answer; the last steps
+// followed are kept, so following on from one frame to the next is cheap.
+export const WET_SECONDS = 40;
+export const DRY_SECONDS = 150;
+export const WET_GAIN = 2.5;
+const WETNESS_STEP_SECONDS = 5;
+const WETNESS_HISTORY_SECONDS = 2 * WEATHER_SPELL_SECONDS;
+
+let wetnessFollowed = null;
+
+export function wetnessAt(seconds) {
+    if (!Number.isFinite(seconds)) return 0;
+    // Followed from dry at the start of the spell before last: by then the
+    // rain of any earlier spell has dried, near enough.
+    const anchor = (Math.floor(seconds / WEATHER_SPELL_SECONDS) * WEATHER_SPELL_SECONDS) - WETNESS_HISTORY_SECONDS;
+    const steps = Math.floor((seconds - anchor) / WETNESS_STEP_SECONDS);
+    let step = 0;
+    let wet = 0;
+    if (wetnessFollowed && wetnessFollowed.anchor === anchor && wetnessFollowed.step <= steps) {
+        step = wetnessFollowed.step;
+        wet = wetnessFollowed.wet;
+    }
+    for (; step < steps; step++) {
+        wet = wetnessStep(wet, rainAt(anchor + step * WETNESS_STEP_SECONDS), WETNESS_STEP_SECONDS);
+    }
+    wetnessFollowed = { anchor, step, wet };
+    // Between two steps, part of the next.
+    const partial = seconds - (anchor + steps * WETNESS_STEP_SECONDS);
+    return clamp01(wetnessStep(wet, rainAt(anchor + steps * WETNESS_STEP_SECONDS), partial));
+}
+
+function wetnessStep(wet, rain, seconds) {
+    const soaked = Math.min(1, rain * WET_GAIN);
+    const tau = soaked > wet ? WET_SECONDS : DRY_SECONDS;
+    return wet + (soaked - wet) * (1 - Math.exp(-seconds / tau));
 }
 
 // The cloud cover a whole spell settles on.

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 3be15df9efe58aef -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 457f63313d61fa43 -->
 # 03 — Weltansicht
 
 <!-- languages -->
@@ -209,6 +209,8 @@ Sie sehen ihn um sich herum fallen und Ringe sich ausbreiten, wo die Tropfen
 auf einen See, das Meer oder einen Fluss treffen, und Sie hören ihn, während
 Vögel und Insekten verstummen. Treten Sie in ein Bauwerk, bleibt es trocken:
 Sie hören den Regen aufs Dach trommeln und sehen ihn draußen weiter fallen.
+Boden und Bauwerke werden im Regen dunkler und glänzen und trocknen nach dem
+Regen in ein paar Minuten wieder ab.
 Regen ist nur zum Ansehen und Anhören: Flüsse
 steigen nicht, und Sie gehen genauso schnell.
 
