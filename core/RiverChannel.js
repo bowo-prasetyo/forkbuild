@@ -82,7 +82,7 @@ export const CHANNEL_AXIS_LENGTH = Math.hypot(CHANNEL_AXIS_X, CHANNEL_AXIS_Z);
 // expressed as an actual world-space half-width instead of an opaque
 // sine-space number that would silently drift out of proportion if
 // RIVER_FREQUENCY or the axis ever changed.
-const CHANNEL_PHASE_GRADIENT = RIVER_FREQUENCY * Math.PI * 2 * CHANNEL_AXIS_LENGTH;
+export const CHANNEL_PHASE_GRADIENT = RIVER_FREQUENCY * Math.PI * 2 * CHANNEL_AXIS_LENGTH;
 
 // A signed value in [-1, 1] whose zero-crossings trace winding channel
 // centerlines across the world — a warped sine band, the standard

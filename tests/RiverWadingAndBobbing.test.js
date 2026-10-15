@@ -5,6 +5,7 @@ import { riverProximityAt } from '../core/Hydrology.js';
 import { RIVER_BED_DEPTH, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { AVATAR_SWIM_DEPTH, AvatarSwimMode } from '../core/AvatarSwimming.js';
 import { AvatarVisual } from '../renderer/AvatarVisual.js';
+import { POOL_DEPTH } from '../core/RiverBed.js';
 import { assert } from './support/Assert.js';
 
 // Wading through a river slows an avatar by the water in its carved bed,
@@ -30,7 +31,7 @@ async function runTests() {
         assert(water.speedFactorAt(river.x, river.z) < 1, 'wading through a river slows the avatar');
         assert(water.speedFactorAt(river.x, river.z) === waterDepthSpeedFactor(depth), 'by the same rule as wading into a lake');
         assert(water.waterSurfaceAt(river.x, river.z) === null, 'a river has no surface to swim at');
-        assert(RIVER_BED_DEPTH * RIVER_FILL < AVATAR_SWIM_DEPTH, 'no river is deep enough to swim');
+        assert(Math.max(RIVER_BED_DEPTH, POOL_DEPTH) * RIVER_FILL < AVATAR_SWIM_DEPTH, 'no river, nor the pool it ends in, is deep enough to swim');
 
         let dry = null;
         for (let x = river.x; x < river.x + 60 && !dry; x += 0.5) {

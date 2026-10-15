@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: c1dd00dcfb4946dc -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 100b949f1ba678b2 -->
 # 03 — Vista del mundo
 
 <!-- languages -->
@@ -113,7 +113,9 @@ a una costa, donde el suelo baja hacia el mar profundo.
 
 **Agua.** Los lagos se rizan con la brisa y el mar se mece con un
 oleaje lento. Los ríos corren cuesta abajo por su cauce, más rápido donde
-el terreno es más empinado. Se forma espuma donde las olas llegan a la
+el terreno es más empinado. Nacen en manantiales al pie de las tierras
+altas, bajan por el terreno más empinado en pequeñas cascadas y a veces
+terminan en un estanque tranquilo. Se forma espuma donde las olas llegan a la
 orilla y donde un río pasa por rápidos. Su avatar entra caminando en un
 lago, en el mar o en un río y va más
 despacio a medida que sube el agua. Cuando el agua es más profunda que la

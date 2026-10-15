@@ -6907,3 +6907,41 @@ through it as through grass, water met every shore without a trace, and a swimme
   on rendered rivers, rapids and a coast; turning either foam off fails its test.
 - Not done: boats (there are none to bob; the showcase sailboat is bricks); released animals floating on deep water
   don't bob; a river's current doesn't carry anything; residents and animals wade through rivers at full speed.
+
+## Rivers that don't just stop: white water over rock, cascades, springs and ponds (unnumbered, 2026-10-15)
+
+Following rivers showed most of them stopping on dry land. Measured over 8,000 × 8,000 units, 656 river ends were on
+land against 184 at a lake or the sea; 90% of those were a river vanishing across a patch of rock-steep ground and
+reappearing within 60 units, and nearly all the rest were where a channel met highland, with the water running away
+from it. Pillar: **Your work is yours, and lives in a world** (the world around a build is worth walking to).
+
+- **Over rock** (core/Hydrology.js `isRiverAt()`): a river now runs on any ground but standing water, below highland.
+  Its bed is carved there too, and the steep water already breaks white (core/RiverFlow.js `riverRapidsAt()`).
+  Everything that reads `isRiverAt()` (trees, animals, vehicles, residents, the plaza, the river's sound) follows.
+- **The bed, in one place** (core/RiverBed.js, new): the channel's bowl, now joined by cascades and pools, moved out of
+  core/TerrainHeightField.js, which hands it the land (the base height function, the water line, highland) so it
+  imports neither the height field nor what reads it. TerrainHeightField keeps `terrainHeightAt()`,
+  `riverBedDepthAt()` and gains `riverBedAt()`, `riverPoolAt()`, `riverPoolReachAt()`, `riverChannelFallAt()` and
+  `riverSurfaceHeightAt()`.
+- **Cascades**: where a river falls more than 4.5% over 15 units either way (fully by 5.5%; the steepest twentieth of
+  this world's rivers, about 3% of their length), its bed is cut into a staircase following the land's own contours
+  every 0.4 units of height: a flat pool, then a drop. Each drop is as short as it can be while no steeper than 0.4,
+  and the step cut falls off fast towards the banks (and the bowl is shallower over a cascade), so nowhere in a
+  cascade or pool is steeper than 0.69, inside the walkable 0.75. The water lies flat in each pool and pours over each
+  drop, white (`drop`), calmer in the pools. This world has no cliffs, so these are a river's own little falls, not
+  tall waterfalls.
+- **Springs and ponds**: where a channel meets highland it ends in a round pool 5 units across its middle, 0.7 deep,
+  centred where the centreline crosses `HIGHLAND_ELEVATION`. When the river runs away from it, it is a spring: its
+  water spreads outward from the centre (`riverFlowAt()`). When the river runs into it, a still pond. About 200
+  springs and 30 ponds in the same area.
+- **Result**: in the same sample, every river that ends on land now ends in its pool; none just stops.
+- docs/principles/terrain.md and docs/Architecture.md say so; the World View guide's **Water** paragraph, in every
+  language, says rivers rise at springs, cascade down the steepest ground and sometimes end in a pond.
+- Tests: `RiverEnds` (no river just stops on land; rivers run over rock in beds; a cascade's pool floors lie on its
+  steps and every drop pours white; the steepest step in any cascade or pool is walkable; rivers start at springs that
+  spread outward and a few end in ponds lying nearly still; pools sit at the highland edge), and `RiverFlow`,
+  `Hydrology` and `RiverWadingAndBobbing` updated for rivers over rock, pools above highland, and water standing over a
+  cascade's steps. Checked by eye on a rendered cascade (with and without water) and a spring.
+- Not done: tall waterfalls (they would need cliffs, a change to the land itself); a spring's welling is the current's
+  drift, with no bubbles or sound of its own; a river that runs along the highland edge for a while gets a wider margin
+  of pool along it.
