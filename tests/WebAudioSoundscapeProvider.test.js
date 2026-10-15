@@ -245,6 +245,30 @@ async function runTests() {
         console.log('✓ a spring bubbles, and only while one is near');
     }
 
+    // Thunder rolls in the distance: audible, swelling and dying away, and
+    // nothing at all before audio has started.
+    {
+        const { offline, context } = runningOffline(6);
+        const provider = new WebAudioSoundscapeProvider({
+            contextFactory: () => context,
+            documentRef: null,
+            random: seededRandom(),
+            setTimeoutFn: () => 1,
+            clearTimeoutFn: () => {}
+        });
+        provider.playThunder({ loudness: 1 });
+        provider.setLayerLevels(silence());
+        provider.resume();
+        provider.playThunder({ loudness: 1 });
+        const data = (await offline.startRendering()).getChannelData(0);
+        const swell = rmsOf(data, SAMPLE_RATE * 0.4, SAMPLE_RATE * 1.2);
+        const late = rmsOf(data, SAMPLE_RATE * 4, SAMPLE_RATE * 5);
+        assert(swell > 0.01, `thunder is heard (rms ${swell})`);
+        assert(late < swell * 0.4, `and rolls away (${late} after vs ${swell})`);
+        provider.dispose();
+        console.log('✓ thunder rumbles and rolls away');
+    }
+
     // Footsteps on every surface, a jump and a landing are audible and short.
     {
         for (const surface of ['grass', 'leaves', 'sand', 'stone', 'water', 'structure']) {

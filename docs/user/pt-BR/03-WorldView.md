@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 457f63313d61fa43 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 7ddc6a422dbb8936 -->
 # 03 — Visão do mundo
 
 <!-- languages -->
@@ -204,7 +204,7 @@ lago, no mar ou num rio, e a ouve, enquanto os pássaros e os insetos se
 calam. Se você entrar numa construção, lá dentro não chove: você ouve a
 chuva tamborilar no telhado e a vê continuar caindo lá fora. Na chuva, o
 chão e as construções escurecem e brilham, e secam em alguns minutos depois
-que ela para. A chuva é só
+que ela para. Os aguaceiros mais fortes às vezes trazem uma tempestade suave: de vez em quando um relâmpago ilumina de leve o céu, e alguns segundos depois um trovão ronca ao longe. Se o seu dispositivo pede menos movimento, os relâmpagos não piscam. A chuva é só
 para ver e ouvir: os rios não sobem e você anda tão
 rápido quanto antes.
 

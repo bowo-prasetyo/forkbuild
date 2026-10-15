@@ -49,6 +49,8 @@ export class WorldSoundscapeService {
         nightLevel = null,
         rainLevel = null,
         sheltered = null,
+        weatherClock = null,
+        thunderBetween = null,
         sampleIntervalMs = DEFAULT_SAMPLE_INTERVAL_MS,
         setIntervalFn = globalThis.setInterval.bind(globalThis),
         clearIntervalFn = globalThis.clearInterval.bind(globalThis)
@@ -74,6 +76,11 @@ export class WorldSoundscapeService {
         // Whether the listener is under a roof, where rain drums on it; absent, never.
         this._sheltered = typeof sheltered === 'function' ? sheltered : () => false;
         this._lastSampledSheltered = false;
+        // Thunder (core/Storms.js): what is heard between one sample and the
+        // next, on the weather's clock; absent, none.
+        this._weatherClock = typeof weatherClock === 'function' ? weatherClock : null;
+        this._thunderBetween = typeof thunderBetween === 'function' ? thunderBetween : null;
+        this._lastThunderCheck = null;
         this._avatarObservation = typeof avatarObservation === 'function' ? avatarObservation : null;
         this._onRenderFrame = typeof onRenderFrame === 'function' ? onRenderFrame : null;
         this._avatarSoundState = createAvatarSoundState();
@@ -183,6 +190,7 @@ export class WorldSoundscapeService {
         if (this._disposed) {
             return;
         }
+        this._hearThunder();
         const position = this._listenerPosition();
         if (!position || !Number.isFinite(position.x) || !Number.isFinite(position.z)) {
             this._lastSampledAt = null;
@@ -206,6 +214,19 @@ export class WorldSoundscapeService {
         this._lastSampledRain = rain;
         this._lastSampledSheltered = underRoof;
         this._provider.setLayerLevels(ambientMixInRain(ambientMixAtNight(ambientMixAt(this._seed, position.x, position.z), night), rain, underRoof));
+    }
+
+    // Plays the thunder that has come since the last sample, if any.
+    _hearThunder() {
+        if (!this._weatherClock || !this._thunderBetween) return;
+        const now = this._weatherClock();
+        if (!Number.isFinite(now)) return;
+        const since = this._lastThunderCheck;
+        this._lastThunderCheck = now;
+        if (since === null || typeof this._provider.playThunder !== 'function') return;
+        for (const thunder of this._thunderBetween(since, now) || []) {
+            this._provider.playThunder(thunder);
+        }
     }
 
     settings() {

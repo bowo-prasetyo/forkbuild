@@ -2,18 +2,39 @@
 // clock, the same wall-clock time wildlife wanders by, so everyone at a build
 // sees the same sky without exchanging anything. "Always day" is this device's
 // own choice (application/settings/WorldViewSkyStore.js) and changes nothing
-// for anyone else. The weather (core/Weather.js) follows the same clock, and
-// Always day keeps it fair as well.
+// for anyone else. The weather (core/Weather.js) and its storms
+// (core/Storms.js) follow the same clock, and Always day keeps it fair as
+// well.
 import { DAY, DAY_SKY_BODIES, skyBodiesAt, skyLookAt } from '../../core/DayCycle.js';
 import { FAIR_WEATHER, overcastLook, weatherAt } from '../../core/Weather.js';
+import { lightningAt, lightningLook, thunderBetween } from '../../core/Storms.js';
 
 export const dayCycleMethods = {
-    // The sky's look right now, greyed as far as the weather is overcast:
-    // core/DayCycle.js's DAY while Always day is on.
+    // The sky's look right now, greyed as far as the weather is overcast and
+    // lit by any flash of lightning (core/Storms.js), unless this device asks
+    // for no flashes: core/DayCycle.js's DAY while Always day is on.
     skyLook() {
         if (this._alwaysDay) return DAY;
         const now = this._wildlifeClock();
-        return overcastLook(skyLookAt(now), weatherAt(now).overcast);
+        const look = overcastLook(skyLookAt(now), weatherAt(now).overcast);
+        return this._noFlashes ? look : lightningLook(look, lightningAt(now));
+    },
+
+    // Keeps lightning from flashing on this device (it asks for reduced
+    // motion): the storm's thunder is still heard.
+    setNoFlashes(noFlashes) {
+        this._noFlashes = noFlashes === true;
+    },
+
+    // The world's clock the weather follows, in seconds.
+    weatherClock() {
+        return this._wildlifeClock();
+    },
+
+    // The thunder heard after `from` and up to `to` on that clock
+    // (core/Storms.js#thunderBetween()): none while Always day is on.
+    thunderBetween(from, to) {
+        return this._alwaysDay ? [] : thunderBetween(from, to);
     },
 
     // The weather right now (core/Weather.js): fair while Always day is on.

@@ -1,6 +1,6 @@
 // Plays World View's and the Editor's sound with the Web Audio API: the
 // ambient layers (wind, birds, insects, lake, river, leaves, pines, a
-// spring bubbling, rain and rain drumming on a roof), the
+// spring bubbling, rain and rain drumming on a roof), distant thunder, the
 // local avatar's footsteps, jumps and landings (audio/AvatarSoundSynth.js),
 // the engine of what it rides and getting on, off and braking
 // (audio/VehicleEngineVoice.js, audio/VehicleEventSynth.js), animals,
@@ -51,6 +51,9 @@ const BIRD_AUDIBLE_LEVEL = 0.05;
 // A spring bubbles only when one is this near; its bubbles are scheduled
 // only then, so away from springs nothing runs.
 const SPRING_AUDIBLE_LEVEL = 0.05;
+// Thunder: how loud at its loudest, and how long it rolls.
+const THUNDER_PEAK = 0.9;
+const THUNDER_SECONDS = 5;
 
 // Sets a node's `<name>X/Y/Z` AudioParams (a panner's position, the
 // listener's position, forward and up), or the deprecated setter where
@@ -109,6 +112,7 @@ export class WebAudioSoundscapeProvider {
         this._layerGains = {};
         this._effects = null;
         this._effectsNoise = null;
+        this._thunderNoise = null;
         this._engineVoice = null;
         this._engine = null;
         // Other riders' engines: the last list asked for, and the voices
@@ -212,6 +216,42 @@ export class WebAudioSoundscapeProvider {
         } else if (cue.kind === AVATAR_SOUND_CUE.BRAKE) {
             playBrake(this._context, this._effects, this._effectsNoise, cue.vehicleType, cue.intensity, this._random);
         }
+    }
+
+    // Thunder rolling in the distance (core/Storms.js): a low rumble that swells
+    // over half a second and rolls away over a few, in uneven rolls, as loud
+    // as `thunder.loudness` (0 to 1) says. Never a crack: the storm is always
+    // far off. Dropped unless audio is playing.
+    playThunder(thunder) {
+        if (!thunder || !this._isPlaying() || !this._thunderNoise) {
+            return;
+        }
+        const loudness = Number.isFinite(thunder.loudness) ? Math.min(Math.max(thunder.loudness, 0), 1) : 0.5;
+        const context = this._context;
+        const now = context.currentTime;
+        const source = context.createBufferSource();
+        source.buffer = this._thunderNoise;
+        const low = this._filter('lowpass', 140 + 80 * loudness, 0.7);
+        const lower = this._filter('lowpass', 260, 0.5);
+        const rumble = context.createGain();
+        // The rolls: a swell, then uneven bumps dying away.
+        const steps = 48;
+        const curve = new Float32Array(steps);
+        for (let i = 0; i < steps; i++) {
+            const t = (i / (steps - 1)) * THUNDER_SECONDS;
+            const swell = Math.min(1, t / 0.5);
+            const fade = Math.exp(-Math.max(0, t - 0.5) / 1.3);
+            curve[i] = THUNDER_PEAK * loudness * swell * fade * (0.6 + 0.4 * this._random());
+        }
+        curve[steps - 1] = 0;
+        rumble.gain.setValueAtTime(0, now);
+        rumble.gain.setValueCurveAtTime(curve, now, THUNDER_SECONDS);
+        source.connect(low);
+        low.connect(lower);
+        lower.connect(rumble);
+        rumble.connect(this._master);
+        source.start(now, this._random() * NOISE_SECONDS * 0.5);
+        source.stop(now + THUNDER_SECONDS + 0.1);
     }
 
     // An animal's or resident's sound (core/CreatureSoundCues.js), at the
@@ -552,6 +592,7 @@ export class WebAudioSoundscapeProvider {
         const white = this._noiseBuffer(false);
         if (this._ambience) {
             const brown = this._noiseBuffer(true);
+            this._thunderNoise = brown;
             this._buildWind(brown);
             this._buildWater(brown);
             this._buildStream(white);

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 457f63313d61fa43 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 7ddc6a422dbb8936 -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
@@ -217,7 +217,7 @@ tandis que les oiseaux et les insectes se taisent. Entrez dans une
 construction et vous restez au sec : vous entendez la pluie tambouriner sur
 le toit et la voyez toujours tomber dehors. Sous la pluie, le sol et les
 constructions foncent et luisent, puis sèchent en quelques minutes une fois
-qu’elle s’arrête. La pluie n’est là que pour
+qu’elle s’arrête. Les plus fortes averses amènent parfois un orage tranquille : de temps en temps, un éclair éclaire doucement le ciel, et le tonnerre gronde au loin quelques secondes plus tard. Si votre appareil demande de réduire les animations, les éclairs ne clignotent pas. La pluie n’est là que pour
 les yeux et les oreilles : les rivières ne montent pas et vous marchez tout
 aussi vite.
 

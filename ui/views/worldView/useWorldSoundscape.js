@@ -19,7 +19,9 @@ export function useWorldSoundscape({ createWorldSoundscape, session }) {
             onCommandActivity: (listener) => session.onCommandActivity(listener),
             nightLevel: () => session.nightLevel(),
             rainLevel: () => (typeof session.weather === 'function' ? session.weather().rain || 0 : 0),
-            sheltered: () => (typeof session.isSheltered === 'function' ? session.isSheltered() : false)
+            sheltered: () => (typeof session.isSheltered === 'function' ? session.isSheltered() : false),
+            weatherClock: () => (typeof session.weatherClock === 'function' ? session.weatherClock() : null),
+            thunderBetween: (from, to) => (typeof session.thunderBetween === 'function' ? session.thunderBetween(from, to) : [])
         })
         : null));
 }
