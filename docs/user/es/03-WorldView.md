@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 29a889111fb679ab -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 077aa1744307f526 -->
 # 03 — Vista del mundo
 
 <!-- languages -->
@@ -203,6 +203,12 @@ Las nubes vienen y van, las mismas para todos en el mismo momento. Casi
 siempre pasan unas pocas nubes blancas; de vez en cuando el cielo se nubla, y
 a veces se vuelve gris y cubierto, con una luz más suave y sombras más
 tenues. Nunca oscurece tanto como para que cueste ver las construcciones.
+
+De vez en cuando un cielo cubierto trae lluvia, durante unos minutos cada
+vez. La ve caer a su alrededor y formar anillos donde las gotas caen sobre un
+lago, el mar o un río, y la oye, mientras los pájaros y los insectos se
+callan. La lluvia es solo para ver y oír: los ríos no crecen y usted camina
+igual de rápido.
 
 Si prefiere que siempre sea de día, marque **Siempre de día** al final del
 panel, justo encima de **Sombras**. Así el cielo también

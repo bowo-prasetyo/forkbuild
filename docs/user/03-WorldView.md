@@ -186,6 +186,12 @@ time a few white clouds drift over; now and then the sky clouds over, and
 sometimes it turns grey and overcast, with softer light and fainter shadows.
 It's never so dark that builds are hard to see.
 
+Now and then an overcast sky brings rain, for a few minutes at a time. You
+see it falling around you and rings spreading wherever the drops land on a
+lake, the sea or a river, and you hear it, while the birds and insects go
+quiet. Rain is only for looking and listening: rivers don't rise, and you
+walk just as fast.
+
 If you'd rather it were always day, tick **Always day** at the bottom of the
 panel, just above **Shadows**. It keeps the sky clear as well. It's
 remembered on this device and changes nothing for anyone else.

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 29a889111fb679ab -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 077aa1744307f526 -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
@@ -209,6 +209,13 @@ du temps, quelques nuages blancs passent ; de temps en temps le ciel se
 couvre, et parfois il devient gris et bouché, avec une lumière plus douce et
 des ombres plus pâles. Il ne fait jamais assez sombre pour qu’on distingue
 mal les constructions.
+
+De temps en temps, un ciel couvert apporte la pluie, pour quelques minutes
+à chaque fois. Vous la voyez tomber autour de vous et des cercles s’étendre
+là où les gouttes touchent un lac, la mer ou une rivière, et vous l’entendez,
+tandis que les oiseaux et les insectes se taisent. La pluie n’est là que pour
+les yeux et les oreilles : les rivières ne montent pas et vous marchez tout
+aussi vite.
 
 Si vous préférez qu’il fasse toujours jour, cochez **Toujours le jour** en
 bas du panneau, juste au-dessus de **Ombres**. Le ciel reste

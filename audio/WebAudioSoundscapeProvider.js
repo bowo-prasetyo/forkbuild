@@ -1,6 +1,6 @@
 // Plays World View's and the Editor's sound with the Web Audio API: the
-// ambient layers (wind, birds, insects, lake, river, leaves, pines and a
-// spring bubbling), the
+// ambient layers (wind, birds, insects, lake, river, leaves, pines, a
+// spring bubbling and rain), the
 // local avatar's footsteps, jumps and landings (audio/AvatarSoundSynth.js),
 // the engine of what it rides and getting on, off and braking
 // (audio/VehicleEngineVoice.js, audio/VehicleEventSynth.js), animals,
@@ -28,7 +28,7 @@ import { playMount, playDismount, playBrake } from './VehicleEventSynth.js';
 import { MusicPlayer } from './MusicPlayer.js';
 import { MUSIC_MOOD } from '../core/MusicScore.js';
 
-const LAYERS = ['wind', 'birds', 'insects', 'water', 'stream', 'leaves', 'pines', 'spring'];
+const LAYERS = ['wind', 'birds', 'insects', 'water', 'stream', 'leaves', 'pines', 'spring', 'rain'];
 // The avatar's own sounds sit in front of the ambience.
 const EFFECTS_GAIN = 0.7;
 // A placed cue's nodes are let go once it has surely finished.
@@ -40,7 +40,7 @@ const REMOTE_ENGINE_TIME_CONSTANT = 0.08;
 const REMOTE_ENGINE_RELEASE_SECONDS = 1;
 
 // Each layer's gain at level 1, balanced by ear so no single layer dominates.
-const LAYER_PEAK = Object.freeze({ wind: 0.4, birds: 0.35, insects: 0.035, water: 0.35, stream: 0.2, leaves: 0.12, pines: 0.18, spring: 0.3 });
+const LAYER_PEAK = Object.freeze({ wind: 0.4, birds: 0.35, insects: 0.035, water: 0.35, stream: 0.2, leaves: 0.12, pines: 0.18, spring: 0.3, rain: 0.3 });
 
 // Time constant of a level change: walking into a forest fades birds in over
 // a couple of seconds rather than switching them on.
@@ -558,6 +558,7 @@ export class WebAudioSoundscapeProvider {
             this._buildInsects();
             this._buildLeaves(white);
             this._buildPines(white);
+            this._buildRain(white, brown);
         }
         this._effects = context.createGain();
         this._effects.gain.value = EFFECTS_GAIN;
@@ -678,6 +679,25 @@ export class WebAudioSoundscapeProvider {
         this._loop(white, (NOISE_SECONDS * 2) / 3).connect(filter);
         filter.connect(sigh);
         sigh.connect(this._layerGains.pines);
+    }
+
+    // Rain: a steady, bright hiss of countless drops, over a soft low wash,
+    // the hiss pattering a little as heavier drops land.
+    _buildRain(white, brown) {
+        const hiss = this._filter('bandpass', 3800, 0.5);
+        const patter = this._context.createGain();
+        patter.gain.value = 0.75;
+        this._modulate(patter.gain, 11, 0.12);
+        this._modulate(patter.gain, 0.21, 0.1);
+        this._loop(white, NOISE_SECONDS / 5).connect(hiss);
+        hiss.connect(patter);
+        patter.connect(this._layerGains.rain);
+        const wash = this._filter('lowpass', 700, 0.5);
+        const washGain = this._context.createGain();
+        washGain.gain.value = 0.35;
+        this._loop(brown, (NOISE_SECONDS * 3) / 4).connect(wash);
+        wash.connect(washGain);
+        washGain.connect(this._layerGains.rain);
     }
 
     _buildInsects() {

@@ -1,4 +1,5 @@
 import { LAKE_WAVES, SEA_WAVES, WAVE_KIND, waveNumber, waveAngularSpeed } from '../core/WaterWaves.js';
+import { RAIN_RINGS_GLSL } from './RainRings.js';
 
 // Makes a water tile's material move with core/WaterWaves.js: the swell
 // lifts and drops the vertices and tilts their normals, and, on the lit top
@@ -11,6 +12,9 @@ import { LAKE_WAVES, SEA_WAVES, WAVE_KIND, waveNumber, waveAngularSpeed } from '
 // once with no per-tile work. Each vertex carries `aSeaShare`
 // (core/Hydrology.js#seaShareAt()), which blends lake waves into sea waves
 // across a shelf exactly as the colour blends.
+//
+// `rain` is a shared { value } too, how hard it is raining (0 to 1): rain
+// rings the lit surface (renderer/RainRings.js).
 //
 // Positions are taken in world space, never tile space, so two tiles
 // sharing an edge move that edge identically: no seam, the same discipline
@@ -70,6 +74,8 @@ const FOAM_DEPTH = 0.35;
 const LAKE_FOAM = 0.45;
 const FOAM_COLOR = [0.93, 0.96, 0.97];
 const FOAM_STRENGTH = 0.8;
+// How much a raindrop's ring lightens the water.
+const RAIN_RING_LIGHTEN = 0.35;
 
 const FRAGMENT_HEAD = `${WAVE_COMMON}
 #define RIPPLE_FADE_NEAR ${glslFloat(RIPPLE_FADE_NEAR)}
@@ -99,14 +105,16 @@ float shoreFoam(float near) {
     return foam * mix(${glslFloat(LAKE_FOAM)}, 1.0, vSeaShare);
 }
 ${waveFunction('waterRipple', WAVE_KIND.RIPPLE)}
+${RAIN_RINGS_GLSL}
 `;
 
 // `lit` for the top surface (a MeshStandardMaterial: swell, tilted normals,
-// ripples); false for the unlit underside a diver sees, which only needs to
-// follow the swell so it stays glued to the top.
-export function makeWaterWaving(material, waveTime, { lit = true } = {}) {
+// ripples, rain rings); false for the unlit underside a diver sees, which only
+// needs to follow the swell so it stays glued to the top.
+export function makeWaterWaving(material, waveTime, { lit = true, rain = { value: 0 } } = {}) {
     material.onBeforeCompile = (shader) => {
         shader.uniforms.uWaveTime = waveTime;
+        shader.uniforms.uRain = rain;
         shader.vertexShader = shader.vertexShader
             .replace('#include <common>', `#include <common>\n${VERTEX_HEAD}`)
             .replace('void main() {', `void main() {
@@ -121,10 +129,12 @@ export function makeWaterWaving(material, waveTime, { lit = true } = {}) {
                 .replace('#include <common>', `#include <common>\n${FRAGMENT_HEAD}`)
                 .replace('#include <color_fragment>', `#include <color_fragment>
 \tfloat waterNear = 1.0 - smoothstep(RIPPLE_FADE_NEAR, RIPPLE_FADE_FAR, length(vViewPosition));
-\tdiffuseColor.rgb = mix(diffuseColor.rgb, vec3(${FOAM_COLOR.map(glslFloat).join(', ')}), shoreFoam(waterNear) * ${glslFloat(FOAM_STRENGTH)});`)
+\tdiffuseColor.rgb = mix(diffuseColor.rgb, vec3(${FOAM_COLOR.map(glslFloat).join(', ')}), shoreFoam(waterNear) * ${glslFloat(FOAM_STRENGTH)});
+\tvec3 waterRain = rainRings(vWaterXZ, uWaveTime, rainNear(length(vViewPosition)));
+\tdiffuseColor.rgb = mix(diffuseColor.rgb, vec3(${FOAM_COLOR.map(glslFloat).join(', ')}), min(1.0, waterRain.x) * ${glslFloat(RAIN_RING_LIGHTEN)});`)
                 .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
 \tvec3 waterRippleNow = waterRipple(vWaterXZ, vSeaShare) * (1.0 - smoothstep(RIPPLE_FADE_NEAR, RIPPLE_FADE_FAR, length(vViewPosition)));
-\tnormal = normalize(normal + mat3(viewMatrix) * vec3(-waterRippleNow.y, 0.0, -waterRippleNow.z));`);
+\tnormal = normalize(normal + mat3(viewMatrix) * vec3(-waterRippleNow.y - waterRain.y, 0.0, -waterRippleNow.z - waterRain.z));`);
         }
     };
     material.customProgramCacheKey = () => (lit ? 'forkbuild-water-waves-lit' : 'forkbuild-water-waves-unlit');

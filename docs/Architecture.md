@@ -1454,10 +1454,13 @@ geometry and materials are shared by every tile.
     application/worldNavigation/dayCycleMethods.js  setShadowsOn(): setShadowsEnabled(on) on the render facade
     renderer/Renderer.js#setShadowsEnabled()       renderer/SunShadows.js, which follows the camera's target each frame
 
-    core/Weather.js#weatherAt(seconds)             cloud cover 0..1 and how overcast 0..1 (same clock; FAIR_WEATHER, a
-            │                                       clear sky, while Always day); overcastLook() greys skyLookAt()'s look
+    core/Weather.js#weatherAt(seconds)             cloud cover 0..1, how overcast 0..1 and rain 0..1 (same clock;
+            │                                       FAIR_WEATHER, clear and dry, while Always day); overcastLook() greys
+            │                                       skyLookAt()'s look
     application/worldNavigation/dayCycleMethods.js  every render frame: setWeather(weather) on the render facade
-    renderer/Renderer.js#setWeather()              renderer/CloudSky.js (made on first call), placed and drifted each frame
+    renderer/Renderer.js#setWeather()              renderer/CloudSky.js and renderer/RainFall.js (made on first call),
+                                                    placed each frame; the shared rain { value } every water material's
+                                                    rings read (renderer/RainRings.js)
 
 World View's sky turns once every `DAY_CYCLE_SECONDS` (40 minutes): dawn, about half the cycle in day, dusk, a
 little over a fifth in full night, dawn again, each look blending into the next. It is worked out from the wall
@@ -1514,6 +1517,23 @@ clouds take their colour from the look: the sky's colour brightened towards its 
 light (white by day, rosy at dusk and dawn, a dim grey at night). They thin out towards the horizon, never show
 below it, hide under water, and aren't drawn at all with no clouds: in Always day, and in the Editor and thumbnails,
 which never call `setWeather()`.
+
+**Rain.** About four overcast spells in five rain (`spellRain()`: one spell in eight in all), each at its own
+strength from 0.35 to 1. When a spell changes, rain starts over the last quarter of the change, once the clouds have
+gathered, and stops over the first quarter, before they clear, so it never rains from a sky that isn't mostly
+overcast. renderer/RainFall.js draws 3000 drops as one `LineSegments` of short streaks, each drop's place in a box 36
+m across and 24 m tall round the camera, and how far through its fall (14 m a second, slanting a little) it is,
+worked out in the vertex shader from the drop's own fixed numbers and the time; a drop's place is wrapped round the
+camera, so the rain goes with it anywhere in the world at no extra cost. A drop falls only while its rank (spread
+evenly from 0 to 1) is below the rain's strength; the rest are folded behind the far plane. The streaks are the
+sky's light paled, fainter at night, thinning at the box's edges, depth-tested but not written, so walls and hills
+in front hide them; under water, and dry, nothing is drawn. The rain falls through roofs: nothing tells it where
+they are. renderer/RainRings.js is a shader chunk the lakes and sea (renderer/WaterWaveMaterial.js) and rivers
+(renderer/RiverFlowMaterial.js) share: the water is cut into 0.8 m cells, in each a drop lands about every 0.9 s
+(a little different per cell) at its own place, if a hash of the cell and the drop is below the rain's strength,
+and a ring spreads from it to 0.55 m, fading, lightening the water and tilting its light. Each pixel looks at its
+cell and the eight round it; the rings fade out from 10 to 28 m away, and at no rain the chunk returns at once. Its
+`rain` is one { value } `Renderer` hands every water tile, as it does `waveTime`.
 
 **Shadows.** The directional light casts them when World View turns them on (`Renderer#setShadowsEnabled()`,
 renderer/SunShadows.js): one 2048² PCF-soft shadow map over a square 45 m each way round the camera's target (the
@@ -1575,10 +1595,13 @@ ticked; while on, the session hands the renderer DAY and `nightLevel()` is 0, so
   Like the terrain it is a pure function of place: nothing is stored or sent, and every viewer at a spot
   hears the same land. After dark `ambientMixAtNight(mix, nightLevel)` turns birds down to a tenth and crickets up
   (insects × (1 + night), plus 0.3 × night where there is no open water), `nightLevel` being
-  `WorldNavigationSession#nightLevel()` (see "Day and night").
+  `WorldNavigationSession#nightLevel()` (see "Day and night"). In the rain `ambientMixInRain(mix, rain)` sets RAIN, a
+  layer no place gives, to the rain's strength, and turns birds down by up to 85% and insects by up to 80%, `rain`
+  being `WorldNavigationSession#weather().rain`.
 - **Service.** `WorldView` makes one through the `createWorldSoundscape` factory `ui/main.js` provides
   (`ui/views/worldView/useWorldSoundscape.js`), after `session.start()`, and disposes it on unmount. It resamples
-  only when the listener has moved at least 0.5 m or night has deepened or lifted by 0.05, and plays silence while there is no listener position. `unlock()`
+  only when the listener has moved at least 0.5 m, night has deepened or lifted by 0.05, or rain has started, stopped
+  or changed by 0.05, and plays silence while there is no listener position. `unlock()`
   is called from every pointerdown and keydown, because browsers only let audio start (and iOS only lets it resume)
   from a user gesture. `M` and the Sound button (`ui/components/SoundControl.js`) toggle mute; the preference is
   this device's own.
@@ -1586,7 +1609,8 @@ ticked; while on, the session hands the renderer DAY and `nightLevel()` is 0, so
   unchanged: looping brown noise through a gusting low-pass for wind and slow waves for a lake, band-passed white
   noise for a river, a trilled 4.4 kHz tone for insects, separate randomly timed chirp phrases for birds, more
   often the more birds there are, and, only while a spring is heard, short rising plips for its bubbles, a few at a
-  time, more often the nearer it is. Level changes fade with a 0.8 s time constant. The `AudioContext` is created on the
+  time, more often the nearer it is; rain is band-passed white noise round 3.8 kHz pattering at 11 Hz over a soft
+  low-passed brown wash. Level changes fade with a 0.8 s time constant. The `AudioContext` is created on the
   first `resume()`, and suspended while muted or while the page is hidden, so it costs nothing then.
 - **Avatar sounds.** `advanceAvatarSound(state, observation, deltaSeconds, seed)` is pure; the service keeps its
   state between frames. Footsteps are counted by distance, one per stride (0.75 m walking, 0.94 m running: one per

@@ -28,8 +28,9 @@ const RIVER_OPACITY = 0.8;
 const RIVER_ROUGHNESS = 0.35;
 
 // The river water for one tile, or null when no river runs through it.
-// `waveTime` is the same shared { value } the lakes' waves read.
-export function buildRiverTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE, waveTime = { value: 0 }) {
+// `waveTime` is the same shared { value } the lakes' waves read, and `rain`
+// the same shared { value } their rain rings read.
+export function buildRiverTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE, waveTime = { value: 0 }, rain = { value: 0 }) {
     if (!tileHasRiverDetail(tx, tz, seed, tileSize)) return null;
 
     const center = tileCenter(tx, tz, tileSize);
@@ -121,7 +122,7 @@ export function buildRiverTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE, w
         polygonOffset: true,
         polygonOffsetFactor: -1,
         polygonOffsetUnits: -4
-    }), waveTime);
+    }), waveTime, { rain });
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(center.x, 0, center.z);
     return mesh;

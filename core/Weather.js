@@ -1,4 +1,5 @@
-// World View's weather: how cloudy the sky is at a moment. Worked out from
+// World View's weather: how cloudy the sky is at a moment, and how hard it
+// is raining. Worked out from
 // the clock alone, as the day and night are (core/DayCycle.js), so everyone
 // at a build sees the same clouds with nothing sent or stored, and it is the
 // same weather all over the world: friends walking together always share it.
@@ -6,8 +7,11 @@
 // Time is cut into spells of WEATHER_SPELL_SECONDS, each with its own cloud
 // cover drawn from a hash of its number: about three spells in five fair,
 // with a few clouds; one in four cloudy; and about one in seven overcast.
-// Over the last WEATHER_CHANGE_SECONDS of a spell the cover blends into the
-// next one's, so clouds gather and clear rather than switching.
+// Most overcast spells rain (spellRain()): about one spell in eight. Over the
+// last WEATHER_CHANGE_SECONDS of a spell the cover blends into the next
+// one's, so clouds gather and clear rather than switching; rain comes in over
+// the last RAIN_CHANGE_SHARE of that, once the clouds have gathered, and stops
+// over the first, before they clear.
 //
 // Overcast greys the sky and softens its light (overcastLook()), never below
 // what a clear NIGHT gives, so builds stay readable in any weather.
@@ -23,6 +27,11 @@ const CLOUDY_SHARE = 0.25;
 const FAIR_COVER = Object.freeze({ from: 0.06, to: 0.22 });
 const CLOUDY_COVER = Object.freeze({ from: 0.38, to: 0.62 });
 const OVERCAST_COVER = Object.freeze({ from: 0.88, to: 1 });
+// The share of overcast spells that rain, and how hard, 0 to 1.
+const RAIN_CHANCE = 0.8;
+const RAIN_STRENGTH = Object.freeze({ from: 0.35, to: 1 });
+// The share of a change rain takes to start or stop.
+export const RAIN_CHANGE_SHARE = 0.25;
 
 // Where, in cloud cover, the sky starts to turn overcast and where it is
 // fully so.
@@ -30,8 +39,9 @@ const OVERCAST_FROM = 0.55;
 const OVERCAST_FULL = 0.88;
 
 // cloudCover: how much of the sky the clouds hide, 0 to 1. overcast: how far
-// the sky and its light have turned grey, 0 to 1.
-export const FAIR_WEATHER = Object.freeze({ cloudCover: 0, overcast: 0 });
+// the sky and its light have turned grey, 0 to 1. rain: how hard it rains, 0
+// (dry) to 1 (a downpour).
+export const FAIR_WEATHER = Object.freeze({ cloudCover: 0, overcast: 0, rain: 0 });
 
 // The weather at `seconds` (Unix time): a frozen object shaped like
 // FAIR_WEATHER. With no clock, fair.
@@ -42,18 +52,25 @@ export function weatherAt(seconds) {
     const spell = Math.floor(seconds / WEATHER_SPELL_SECONDS);
     const into = seconds - spell * WEATHER_SPELL_SECONDS;
     let cover = spellCover(spell);
+    let rain = spellRain(spell);
     const changing = into - (WEATHER_SPELL_SECONDS - WEATHER_CHANGE_SECONDS);
     if (changing > 0) {
-        cover += (spellCover(spell + 1) - cover) * smooth01(changing / WEATHER_CHANGE_SECONDS);
+        const t = changing / WEATHER_CHANGE_SECONDS;
+        cover += (spellCover(spell + 1) - cover) * smooth01(t);
+        const nextRain = spellRain(spell + 1);
+        // Rain waits for the clouds to gather, and stops before they clear.
+        const rainT = nextRain > rain ? (t - (1 - RAIN_CHANGE_SHARE)) / RAIN_CHANGE_SHARE : t / RAIN_CHANGE_SHARE;
+        rain += (nextRain - rain) * smooth01(rainT);
     }
-    return weatherOfCover(cover);
+    return weatherOfCover(cover, rain);
 }
 
-export function weatherOfCover(cloudCover) {
+export function weatherOfCover(cloudCover, rain = 0) {
     const cover = clamp01(cloudCover);
     return Object.freeze({
         cloudCover: cover,
-        overcast: smooth01((cover - OVERCAST_FROM) / (OVERCAST_FULL - OVERCAST_FROM))
+        overcast: smooth01((cover - OVERCAST_FROM) / (OVERCAST_FULL - OVERCAST_FROM)),
+        rain: Number.isFinite(rain) ? clamp01(rain) : 0
     });
 }
 
@@ -64,6 +81,13 @@ export function spellCover(spell) {
     if (u < FAIR_SHARE) return lerp(FAIR_COVER.from, FAIR_COVER.to, v);
     if (u < FAIR_SHARE + CLOUDY_SHARE) return lerp(CLOUDY_COVER.from, CLOUDY_COVER.to, v);
     return lerp(OVERCAST_COVER.from, OVERCAST_COVER.to, v);
+}
+
+// How hard a whole spell rains: only ever an overcast one.
+export function spellRain(spell) {
+    if (hashUnit(spell) < FAIR_SHARE + CLOUDY_SHARE) return 0;
+    if (hashUnit(spell ^ 0x1b873593) >= RAIN_CHANCE) return 0;
+    return lerp(RAIN_STRENGTH.from, RAIN_STRENGTH.to, hashUnit(spell ^ 0x68e31da4));
 }
 
 // `look` (shaped like core/DayCycle.js's DAY) under an `overcast` sky: the

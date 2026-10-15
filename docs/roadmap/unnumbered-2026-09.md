@@ -7011,3 +7011,37 @@ keeps the sky clear.
   drift smoothly however late the clock; none below the horizon, none through what is in front, none under water;
   the shader compiles). Checked by eye at day, dusk and night, fair, cloudy and overcast.
 - Not done: rain (next); the weather is the same over the whole world, with no fronts passing from place to place.
+
+## Rain (unnumbered, 2026-10-15)
+
+The second half of weather: now and then an overcast sky rains, for a few minutes at a time, the same for everyone
+at the same moment. Pillar: **Your work is yours, and lives in a world** (the world around a build is worth walking
+to). Nothing to learn, and Always day keeps it dry.
+
+- **When it rains** (core/Weather.js `spellRain()`, and `rain` in every weather): about four overcast spells in five
+  rain, one spell in eight in all, each at its own strength. Rain starts only once the clouds have gathered and stops
+  before they clear (over a quarter of the 2-minute change each way), so it never rains from a sky that isn't mostly
+  overcast.
+- **Falling rain** (renderer/RainFall.js, new): 3000 streaks in one draw, in a box round the camera, placed and
+  fallen in the vertex shader from fixed numbers and the time and wrapped round the camera, so it goes everywhere at
+  no extra cost; as many fall as the rain is strong. Coloured by the sky's light, fainter at night; walls in front hide
+  it; none under water.
+- **Rings on the water** (renderer/RainRings.js, new, shared by renderer/WaterWaveMaterial.js and
+  renderer/RiverFlowMaterial.js): drops land in a grid of cells and rings spread from them, lightening the water and
+  tilting its light, more the harder it rains, fading out by 28 m. Renderer hands every water tile one shared
+  `rain` value, as it does the waves' time.
+- **The sound of rain** (core/AmbientSoundscape.js `AMBIENT_LAYER.RAIN`, `ambientMixInRain()`;
+  audio/WebAudioSoundscapeProvider.js): a bright, pattering hiss over a soft wash, as loud as the rain is strong,
+  wherever you stand; birds and insects mostly fall quiet. WorldSoundscapeService resamples as rain starts, stops or
+  changes (`rainLevel`, from the session's weather).
+- The World View guide gains a paragraph on rain, in every language; docs/Architecture.md gains **Rain** under
+  **Day and night**, and its soundscape the rain layer.
+- Tests: `Rain` (one spell in eight rains, only overcast ones; rain waits for the clouds and stops before they clear,
+  gradually; heard wherever you stand, quietening birds and insects; the soundscape follows it; the session rains with
+  the world and Always day keeps it dry), `RainBrowser` (real WebGL: no streaks in the dry, more the harder it rains,
+  falling on from moment to moment, fainter at night, the same far from the origin, hidden behind a wall and under
+  water; a shower rings a lake and a river near by, a downpour more, the rings move, none far off; the shaders
+  compile), `WebAudioSoundscapeProvider` (rain is audible; World View hands the soundscape the session's rain).
+  Checked by eye over a lake, by day and at night.
+- Not done: rain falls through roofs (nothing tells it where they are); the ground doesn't look wet; rivers don't
+  rise; no thunder or lightning.
