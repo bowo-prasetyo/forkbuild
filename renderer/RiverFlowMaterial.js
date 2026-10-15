@@ -24,6 +24,13 @@ const PATTERN_FADE_FAR = 60;
 // How hard the pattern tilts the light, and how much it lightens a crest.
 const NORMAL_STRENGTH = 0.3;
 const CREST_LIGHTEN = 0.12;
+// Rapids (core/RiverFlow.js#riverRapidsAt(), per vertex as `aRapids`) break
+// white: the crests of the drifting pattern turn to foam, more of them the
+// rougher the water. Far off, where the pattern fades, a steady share of
+// foam stands in for it, so rapids still read from a distance.
+const FOAM_COLOR = [0.92, 0.95, 0.96];
+const FOAM_STRENGTH = 0.85;
+const FAR_FOAM_SHARE = 0.35;
 
 function glslFloat(v) {
     return v.toPrecision(8);
@@ -32,9 +39,11 @@ function glslFloat(v) {
 const VERTEX_HEAD = /* glsl */ `
 attribute vec2 aFlow;
 attribute vec2 aChannel;
+attribute float aRapids;
 varying vec2 vRiverXZ;
 varying vec2 vFlow;
 varying vec2 vChannel;
+varying float vRapids;
 `;
 
 const FRAGMENT_HEAD = /* glsl */ `
@@ -42,6 +51,7 @@ uniform float uWaveTime;
 varying vec2 vRiverXZ;
 varying vec2 vFlow;
 varying vec2 vChannel;
+varying float vRapids;
 // A hash without sin(), so it stays steady far from the world's origin.
 float riverHash(vec2 p) {
     vec3 p3 = fract(vec3(p.xyx) * 0.1031);
@@ -92,13 +102,16 @@ export function makeRiverFlowing(material, waveTime) {
             .replace('void main() {', `void main() {
     vRiverXZ = (modelMatrix * vec4(position, 1.0)).xz;
     vFlow = aFlow;
-    vChannel = aChannel;`);
+    vChannel = aChannel;
+    vRapids = aRapids;`);
         shader.fragmentShader = shader.fragmentShader
             .replace('#include <common>', `#include <common>\n${FRAGMENT_HEAD}`)
             .replace('#include <color_fragment>', `#include <color_fragment>
 \tfloat riverNear = 1.0 - smoothstep(${glslFloat(PATTERN_FADE_NEAR)}, ${glslFloat(PATTERN_FADE_FAR)}, length(vViewPosition));
 \tvec3 riverNow = riverSurface();
-\tdiffuseColor.rgb *= 1.0 + (riverNow.x - 0.5) * ${glslFloat(2 * CREST_LIGHTEN)} * riverNear;`)
+\tdiffuseColor.rgb *= 1.0 + (riverNow.x - 0.5) * ${glslFloat(2 * CREST_LIGHTEN)} * riverNear;
+\tfloat riverFoam = vRapids * mix(${glslFloat(FAR_FOAM_SHARE)}, smoothstep(0.62 - 0.14 * vRapids, 0.74 - 0.14 * vRapids, riverNow.x), riverNear);
+\tdiffuseColor.rgb = mix(diffuseColor.rgb, vec3(${FOAM_COLOR.map(glslFloat).join(', ')}), riverFoam * ${glslFloat(FOAM_STRENGTH)});`)
             .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
 \tnormal = normalize(normal + mat3(viewMatrix) * vec3(-riverNow.y, 0.0, -riverNow.z) * ${glslFloat(NORMAL_STRENGTH)} * riverNear);`);
     };

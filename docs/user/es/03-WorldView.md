@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 6842079854f690d0 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: c1dd00dcfb4946dc -->
 # 03 — Vista del mundo
 
 <!-- languages -->
@@ -112,10 +112,12 @@ terreno. La tierra del centro siempre está seca; a unas mil unidades llega
 a una costa, donde el suelo baja hacia el mar profundo.
 
 **Agua.** Los lagos se rizan con la brisa y el mar se mece con un
-oleaje lento. Los ríos corren cuesta abajo, más rápido donde el terreno
-es más empinado. Su avatar entra caminando en un lago o en el mar y va más
+oleaje lento. Los ríos corren cuesta abajo por su cauce, más rápido donde
+el terreno es más empinado. Se forma espuma donde las olas llegan a la
+orilla y donde un río pasa por rápidos. Su avatar entra caminando en un
+lago, en el mar o en un río y va más
 despacio a medida que sube el agua. Cuando el agua es más profunda que la
-mitad de su altura, nada (consulte
+mitad de su altura, nada, subiendo y bajando con el oleaje (consulte
 [Nadar y bucear](06-AvatarsAndPresence.md#nadar-y-bucear)). Si se sumerge,
 ve algas y pequeños cardúmenes de peces.
 

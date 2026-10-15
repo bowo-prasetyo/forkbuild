@@ -33,7 +33,7 @@ camera.lookAt(0, 0, 0);
 
 const waveTime = { value: 0 };
 
-function sheet(vx, vz) {
+function sheet(vx, vz, rapids = 0) {
     const geometry = new THREE.PlaneGeometry(SPAN, SPAN, 8, 8);
     geometry.rotateX(-Math.PI / 2);
     const count = geometry.attributes.position.count;
@@ -48,6 +48,7 @@ function sheet(vx, vz) {
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 4));
     geometry.setAttribute('aFlow', new THREE.BufferAttribute(flows, 2));
     geometry.setAttribute('aChannel', new THREE.BufferAttribute(channels, 2));
+    geometry.setAttribute('aRapids', new THREE.BufferAttribute(new Float32Array(count).fill(rapids), 1));
     return new THREE.Mesh(geometry, makeRiverFlowing(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.35 }), waveTime));
 }
 
@@ -109,6 +110,26 @@ function bestShift(earlier, later, axis) {
     assert(shiftBack <= -1 && shiftBack >= -5, `against +x it drifts towards -x (best shift ${shiftBack} px)`);
     scene.remove(back);
     console.log('✓ a current the other way drifts the other way');
+}
+
+{
+    // Rapids break white: the same water, running rough, is lighter, with
+    // foam on its crests.
+    const mean = (luma) => luma.reduce((sum, v) => sum + v, 0) / luma.length;
+    const calm = sheet(1.2, 0, 0);
+    scene.add(calm);
+    const smooth = frame(0.3);
+    scene.remove(calm);
+    const rough = sheet(1.2, 0, 1);
+    scene.add(rough);
+    const broken = frame(0.3);
+    scene.remove(rough);
+    assert(mean(broken) > mean(smooth) * 1.05, `rapids are lighter (${mean(broken).toFixed(0)} against ${mean(smooth).toFixed(0)})`);
+    // Foam: pixels lighter than anything on the calm water.
+    const brightestCalm = Math.max(...smooth);
+    const foam = broken.filter((v) => v > brightestCalm + 10).length;
+    assert(foam > SIZE * SIZE / 20, `rapids foam on their crests (${foam} pixels lighter than any calm water)`);
+    console.log('✓ rapids break white');
 }
 
 assert(!shaderErrors.some((e) => /Shader|WebGLProgram/.test(e)), `the river shader compiles (${shaderErrors.join(' | ')})`);

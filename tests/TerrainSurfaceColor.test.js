@@ -1,7 +1,7 @@
 import {
     surfaceCategoryAt, surfaceColorAt, SURFACE_CATEGORY, SURFACE_PALETTE
 } from '../core/TerrainSurface.js';
-import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+import { terrainHeightAt, baseTerrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { TERRAIN_TILE_SIZE, tileCenter } from '../core/TerrainTiling.js';
 import { assert } from './support/Assert.js';
 
@@ -22,10 +22,12 @@ import { assert } from './support/Assert.js';
 // detail); every assertion is about determinism, boundedness, continuity,
 // and the elevation/slope relationship that DEFINES classification.
 
+// The ground is classified by the lie of the land, before river beds are
+// cut (core/TerrainHeightField.js#baseTerrainHeightAt()).
 function slopeAt(seed, x, z) {
-    const h = terrainHeightAt(seed, x, z);
-    const dx = terrainHeightAt(seed, x + 1, z) - h;
-    const dz = terrainHeightAt(seed, x, z + 1) - h;
+    const h = baseTerrainHeightAt(seed, x, z);
+    const dx = baseTerrainHeightAt(seed, x + 1, z) - h;
+    const dz = baseTerrainHeightAt(seed, x, z + 1) - h;
     return Math.sqrt(dx * dx + dz * dz);
 }
 
@@ -95,7 +97,7 @@ async function runTests() {
         for (let x = -2000; x <= 2000; x += 31) {
             for (let z = -2000; z <= 2000; z += 37) {
                 const category = surfaceCategoryAt(DEFAULT_WORLD_SEED, x, z);
-                const h = terrainHeightAt(DEFAULT_WORLD_SEED, x, z);
+                const h = baseTerrainHeightAt(DEFAULT_WORLD_SEED, x, z);
                 if (category === SURFACE_CATEGORY.WATER) waterHeights.push(h);
                 if (category === SURFACE_CATEGORY.GRASS) grassHeights.push(h);
             }
@@ -137,7 +139,7 @@ async function runTests() {
         for (let x = -3000; x <= 3000; x += 17) {
             for (let z = -3000; z <= 3000; z += 19) {
                 if (surfaceCategoryAt(DEFAULT_WORLD_SEED, x, z) !== SURFACE_CATEGORY.GRASS) continue;
-                const h = terrainHeightAt(DEFAULT_WORLD_SEED, x, z);
+                const h = baseTerrainHeightAt(DEFAULT_WORLD_SEED, x, z);
                 if (lowGrass === null || h < lowGrass.h) lowGrass = { x, z, h };
                 if (highGrass === null || h > highGrass.h) highGrass = { x, z, h };
             }

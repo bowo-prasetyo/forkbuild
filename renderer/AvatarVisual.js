@@ -49,6 +49,10 @@ export class AvatarVisual {
         this._appearanceKey = null;
         this._lastAnimation = null;
         this._swimMode = null;
+        // Where presence puts the avatar's feet, and how far the swell lifts
+        // it on top of that while it swims at the surface (setFloat()).
+        this._poseY = 0;
+        this._float = 0;
         this._animationTime = 0;
         // 0.2.44 — see this file's own header above. `_lastRotationY`
         // is what setFacingOverride(null) restores to: the real,
@@ -96,7 +100,8 @@ export class AvatarVisual {
     // active setFacingOverride keep winning visually without this
     // method needing to know that override exists.
     setPose(position, rotation) {
-        this.root.position.set(position.x, position.y, position.z);
+        this._poseY = position.y;
+        this.root.position.set(position.x, position.y + this._float, position.z);
         this._lastRotationY = rotation ? (rotation.y || 0) : 0;
         this._applyFacing();
     }
@@ -121,6 +126,18 @@ export class AvatarVisual {
     // setAnimation above already follows for a locomotion change.
     // How the avatar is in the water (core/AvatarSwimming.js's AvatarSwimMode, or
     // null on land), worked out by the caller from its position.
+    get swimMode() {
+        return this._swimMode;
+    }
+
+    // How far the water lifts the avatar above where presence puts it: a
+    // swimmer at the surface rides the swell (core/WaterWaves.js), set every
+    // frame by its caller. Drawing only; presence never hears of it.
+    setFloat(offset) {
+        this._float = Number.isFinite(offset) ? offset : 0;
+        this.root.position.y = this._poseY + this._float;
+    }
+
     setSwimMode(swimMode) {
         const normalized = swimMode || null;
         if (normalized === this._swimMode) {

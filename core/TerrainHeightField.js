@@ -1,4 +1,5 @@
 import { lerp, smoothstep } from '../utils/interpolation.js';
+import { riverChannelDistanceAt, RIVER_CHANNEL_THRESHOLD } from './RiverChannel.js';
 
 // Deterministic, seeded ground elevation for World View — see
 // docs/Roadmap.md, 0.2.76, "World Ground & Terrain Foundation," and
@@ -109,7 +110,20 @@ function valueNoise2D(seed, x, z) {
 // site in this codebase calls this SAME function rather than computing
 // its own approximation (see renderer/Renderer.js#terrainHeightAt(),
 // the single shared query point that wraps it with DEFAULT_WORLD_SEED).
+// It is the ground as it physically lies: the lie of the land
+// (baseTerrainHeightAt()) with river beds cut into it (riverBedDepthAt()).
 export function terrainHeightAt(seed, x, z) {
+    const base = baseTerrainHeightAt(seed, x, z);
+    return base - bedDepthAt(seed, x, z, base);
+}
+
+// The lie of the land before any river cuts its bed: hills, valleys and
+// sea basins. What the ground is CLASSIFIED by (core/TerrainSurface.js's
+// water, slope and highland; core/TerrainEcology.js's zones;
+// core/Hydrology.js's rivers), so a bed's own banks never turn a river's
+// edge into rock or its floor into a lake, and the classification of
+// every place stays exactly what it was before beds were carved.
+export function baseTerrainHeightAt(seed, x, z) {
     let height = 0;
     for (const octave of OCTAVES) {
         const n = valueNoise2D(seed + octave.seedOffset, x * octave.frequency, z * octave.frequency);
@@ -131,6 +145,60 @@ export function seaBasinAt(seed, x, z) {
 
 function clamp01(v) {
     return v < 0 ? 0 : v > 1 ? 1 : v;
+}
+
+// The thresholds the ground is classified by. Defined here, not in
+// core/TerrainSurface.js (which re-exports and explains them), because the
+// river bed below must stay inside the ground they allow a river on, and
+// this file cannot import TerrainSurface, which reads the terrain.
+// Fractions of TERRAIN_HEIGHT_BOUND, so they scale with it.
+export const WATER_LEVEL = -TERRAIN_HEIGHT_BOUND * 0.5;
+export const HIGHLAND_ELEVATION = TERRAIN_HEIGHT_BOUND * 0.5;
+export const ROCK_SLOPE = 0.075; // roughly the steepest ~5% of this world's terrain
+export const SLOPE_SAMPLE_DISTANCE = 1;
+
+// The lie of the land's slope at (x, z): rise over SLOPE_SAMPLE_DISTANCE
+// along x and z, combined.
+export function baseSlopeAt(seed, x, z, height = baseTerrainHeightAt(seed, x, z)) {
+    const dx = baseTerrainHeightAt(seed, x + SLOPE_SAMPLE_DISTANCE, z) - height;
+    const dz = baseTerrainHeightAt(seed, x, z + SLOPE_SAMPLE_DISTANCE) - height;
+    return Math.sqrt(dx * dx + dz * dz) / SLOPE_SAMPLE_DISTANCE;
+}
+
+// River beds. A river (core/Hydrology.js#isRiverAt()) runs in a shallow
+// bowl cut into the ground along its channel (core/RiverChannel.js):
+// RIVER_BED_DEPTH deep on the centreline, easing to nothing at the banks
+// ((1 - u²)², u the distance from the centreline as a share of the
+// channel's half-width), so the bank has no edge and the ground stays
+// continuous everywhere. The water fills it (core/RiverFlow.js).
+//
+// The bed fades out, smoothly, before every limit a river has: towards
+// the water line (so its floor never dips to WATER_LEVEL and reads as a
+// lake), towards highland, and towards rock-steep ground. So wherever there
+// is a bed there is a river, and nothing kept off rivers (trees, animals,
+// vehicles at rest) ever stands in one.
+export const RIVER_BED_DEPTH = 0.6;
+const BED_WATER_CLEARANCE = 0.15; // the floor never comes within about this of WATER_LEVEL
+const BED_HIGHLAND_FADE = 1;      // over the last unit of height below HIGHLAND_ELEVATION
+const BED_SLOPE_FADE = 0.015;     // over the last stretch of slope below ROCK_SLOPE
+
+function bedDepthAt(seed, x, z, base) {
+    const distance = riverChannelDistanceAt(seed, x, z);
+    if (distance >= RIVER_CHANNEL_THRESHOLD) return 0;
+    if (base <= WATER_LEVEL + BED_WATER_CLEARANCE || base >= HIGHLAND_ELEVATION) return 0;
+    const slope = baseSlopeAt(seed, x, z, base);
+    if (slope >= ROCK_SLOPE) return 0;
+    const u = distance / RIVER_CHANNEL_THRESHOLD;
+    const bowl = (1 - u * u) * (1 - u * u);
+    const nearWater = smoothstep(clamp01((base - WATER_LEVEL - BED_WATER_CLEARANCE) / RIVER_BED_DEPTH));
+    const belowHighland = 1 - smoothstep(clamp01((base - (HIGHLAND_ELEVATION - BED_HIGHLAND_FADE)) / BED_HIGHLAND_FADE));
+    const belowRock = 1 - smoothstep(clamp01((slope - (ROCK_SLOPE - BED_SLOPE_FADE)) / BED_SLOPE_FADE));
+    return RIVER_BED_DEPTH * bowl * nearWater * belowHighland * belowRock;
+}
+
+// How deep the river bed is cut at (x, z): 0 off a river.
+export function riverBedDepthAt(seed, x, z) {
+    return bedDepthAt(seed, x, z, baseTerrainHeightAt(seed, x, z));
 }
 
 // Deliberately not yet: a per-World/per-Document terrain seed (today's

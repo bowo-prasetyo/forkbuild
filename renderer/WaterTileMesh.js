@@ -59,10 +59,16 @@ export function buildWaterTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE, w
     // across a shelf (core/Hydrology.js#waterSurfaceColorAt()).
     const colors = new Float32Array(position.count * 3);
     const seaShares = new Float32Array(position.count);
+    // How far below the still surface the ground lies, negative on dry
+    // ground: where it runs shallow the surface foams
+    // (renderer/WaterWaveMaterial.js).
+    const shoreDepths = new Float32Array(position.count);
     let hasWater = false;
     for (let i = 0; i < position.count; i++) {
         const worldX = center.x + position.getX(i);
         const worldZ = center.z + position.getZ(i);
+        const groundHeight = terrainHeightAt(seed, worldX, worldZ);
+        shoreDepths[i] = LAKE_SURFACE_HEIGHT - groundHeight;
         const isLake = surfaceCategoryAt(seed, worldX, worldZ) === SURFACE_CATEGORY.WATER;
         if (isLake) {
             hasWater = true;
@@ -73,7 +79,7 @@ export function buildWaterTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE, w
             colors[i * 3 + 2] = color.b;
             seaShares[i] = seaShareAt(seed, worldX, worldZ);
         } else {
-            position.setY(i, terrainHeightAt(seed, worldX, worldZ) - SINK_DEPTH);
+            position.setY(i, groundHeight - SINK_DEPTH);
         }
     }
 
@@ -87,6 +93,7 @@ export function buildWaterTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE, w
     position.needsUpdate = true;
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     geometry.setAttribute('aSeaShare', new THREE.BufferAttribute(seaShares, 1));
+    geometry.setAttribute('aShoreDepth', new THREE.BufferAttribute(shoreDepths, 1));
     geometry.computeVertexNormals();
 
     const material = makeWaterWaving(new THREE.MeshStandardMaterial({

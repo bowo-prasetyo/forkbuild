@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 6842079854f690d0 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: c1dd00dcfb4946dc -->
 # 03 — Visão do mundo
 
 <!-- languages -->
@@ -108,10 +108,12 @@ está sempre seco; a umas mil unidades você chega a uma costa, onde o chão
 desce para o mar fundo.
 
 **Água.** Os lagos ondulam com a brisa e o mar balança num
-marulho lento. Os rios correm morro abaixo, mais rápido onde o terreno é
-mais íngreme. Seu avatar entra andando num lago ou no mar e fica mais lento
+marulho lento. Os rios correm morro abaixo pelo leito, mais rápido onde o
+terreno é mais íngreme. Forma-se espuma onde as ondas chegam à margem e
+onde um rio passa por corredeiras. Seu avatar entra andando num lago, no
+mar ou num rio e fica mais lento
 conforme a água sobe. Quando a água é mais funda que metade da altura dele,
-ele nada (veja
+ele nada, subindo e descendo com o marulho (veja
 [Nadar e mergulhar](06-AvatarsAndPresence.md#nadar-e-mergulhar)). Mergulhe
 e você vê algas e pequenos cardumes de peixes.
 

@@ -1,11 +1,16 @@
-import { riverFlowAt, riverWaterAt, MAX_RIVER_SPEED, FULL_SPEED_SLOPE, FLOW_BASELINE } from '../core/RiverFlow.js';
+import {
+    riverFlowAt, riverWaterAt, riverWaterDepthAt, riverSurfaceHeightAt, riverRapidsAt,
+    MAX_RIVER_SPEED, FULL_SPEED_SLOPE, FLOW_BASELINE, RIVER_FILL, RAPIDS_FROM_SLOPE, RAPIDS_FULL_SLOPE
+} from '../core/RiverFlow.js';
 import {
     riverProximityAt, riverChannelTangentAt, riverChannelDistanceAt, isRiverAt, hydrologyGroundColorAt
 } from '../core/Hydrology.js';
 import { ecologyGroundColorAt } from '../core/TerrainEcology.js';
-import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { buildRiverTileMesh, groundMeshHeightAt, RIVER_SURFACE_LIFT } from '../renderer/RiverTileMesh.js';
-import { buildTerrainTileMesh } from '../renderer/TerrainTileMesh.js';
+import {
+    terrainHeightAt, baseTerrainHeightAt, riverBedDepthAt, RIVER_BED_DEPTH, WATER_LEVEL, DEFAULT_WORLD_SEED
+} from '../core/TerrainHeightField.js';
+import { buildRiverTileMesh, RIVER_SURFACE_LIFT } from '../renderer/RiverTileMesh.js';
+import { buildTerrainTileMesh, tileHasRiverDetail, TILE_SEGMENTS, RIVER_SUBDIVISIONS } from '../renderer/TerrainTileMesh.js';
 import { buildWaterTile } from '../renderer/WaterTileMesh.js';
 import { tileCenter } from '../core/TerrainTiling.js';
 import { assert } from './support/Assert.js';
@@ -97,8 +102,8 @@ async function runTests() {
             assert(Math.abs(Math.abs(vx * dx + vz * dz) - speed) < 1e-9, 'the current runs along the channel');
             const fx = vx / speed;
             const fz = vz / speed;
-            const fall = terrainHeightAt(SEED, x - fx * FLOW_BASELINE, z - fz * FLOW_BASELINE)
-                - terrainHeightAt(SEED, x + fx * FLOW_BASELINE, z + fz * FLOW_BASELINE);
+            const fall = baseTerrainHeightAt(SEED, x - fx * FLOW_BASELINE, z - fz * FLOW_BASELINE)
+                - baseTerrainHeightAt(SEED, x + fx * FLOW_BASELINE, z + fz * FLOW_BASELINE);
             assert(fall > 0, 'the current runs the way the ground falls');
             downhill++;
             // Steeper ground, faster water, up to full speed.
@@ -137,44 +142,63 @@ async function runTests() {
     }
 
     {
-        // groundMeshHeightAt() is the plane of the triangle the terrain mesh
-        // actually draws: check it against a real terrain tile's triangles.
-        const tx = 3;
-        const tz = -2;
-        const terrain = buildTerrainTileMesh(tx, tz, SEED);
-        const center = tileCenter(tx, tz);
-        const position = terrain.geometry.attributes.position;
-        const index = terrain.geometry.index.array;
-        const spacing = 40 / 12;
-        const heightAt = (i, j) => terrainHeightAt(SEED, i * spacing, j * spacing);
-        let checkedTriangles = 0;
-        for (let f = 0; f < index.length; f += 3) {
-            const v = [0, 1, 2].map((k) => ({
-                x: center.x + position.getX(index[f + k]),
-                y: position.getY(index[f + k]),
-                z: center.z + position.getZ(index[f + k])
-            }));
-            // Points inside the triangle, by barycentric weights.
-            for (const [w0, w1] of [[1 / 3, 1 / 3], [0.6, 0.2], [0.2, 0.6], [0.15, 0.15]]) {
-                const w2 = 1 - w0 - w1;
-                const x = v[0].x * w0 + v[1].x * w1 + v[2].x * w2;
-                const z = v[0].z * w0 + v[1].z * w1 + v[2].z * w2;
-                const y = v[0].y * w0 + v[1].y * w1 + v[2].y * w2;
-                const ours = groundMeshHeightAt(x, z, spacing, heightAt);
-                assert(Math.abs(ours - y) < 1e-4, `groundMeshHeightAt() matches the drawn ground (got ${ours}, drawn ${y})`);
-            }
-            checkedTriangles++;
+        // Carved beds (core/TerrainHeightField.js): the ground is the lie of the
+        // land with the bed cut into it, only where a river is, never deeper
+        // than RIVER_BED_DEPTH, never down to the water line, and smooth.
+        let deep = 0;
+        for (const [x, z] of points) {
+            const bed = riverBedDepthAt(SEED, x, z);
+            assert(Math.abs(terrainHeightAt(SEED, x, z) - (baseTerrainHeightAt(SEED, x, z) - bed)) < 1e-12, 'the ground is the land less the bed');
+            assert(bed >= 0 && bed <= RIVER_BED_DEPTH, 'the bed is never deeper than RIVER_BED_DEPTH');
+            assert(terrainHeightAt(SEED, x, z) > WATER_LEVEL + 0.05, 'a bed never reaches down to the water line');
+            if (riverProximityAt(SEED, x, z) > 0.9 && bed > RIVER_BED_DEPTH * 0.5) deep++;
+            // Smooth: a small step never jumps the ground.
+            assert(Math.abs(terrainHeightAt(SEED, x + 0.05, z) - terrainHeightAt(SEED, x, z)) < 0.05, 'the bed has no edge');
         }
-        assert(checkedTriangles === 12 * 12 * 2, 'every ground triangle was checked');
-        console.log('✓ groundMeshHeightAt() is the height of the ground as drawn');
+        assert(deep > 20, `the middle of a river runs deep (${deep} deep samples)`);
+        for (let i = 0; i < 3000; i++) {
+            const x = i * 13.7 - 20000;
+            const z = i * -9.1 + 7000;
+            const bed = riverBedDepthAt(SEED, x, z);
+            if (bed > 0) assert(isRiverAt(SEED, x, z), 'wherever there is a bed there is a river');
+            else assert(terrainHeightAt(SEED, x, z) === baseTerrainHeightAt(SEED, x, z), 'off a river the ground is the land itself');
+        }
+        console.log('✓ river beds are cut only where rivers run, smoothly, never to the water line');
     }
 
     {
-        // A real river tile: its sheet sits RIVER_SURFACE_LIFT over the drawn
-        // ground at every vertex, carries the current, and is see-through at
-        // its banks.
-        // A river tile whose eastern neighbour has river too, to check the
-        // edge they share.
+        // The water fills the bed RIVER_FILL of the way up, below the banks.
+        for (const [x, z] of points) {
+            const bed = riverBedDepthAt(SEED, x, z);
+            const depth = riverWaterDepthAt(SEED, x, z);
+            assert(Math.abs(depth - bed * RIVER_FILL) < 1e-12, 'the water fills the bed');
+            assert(Math.abs(riverSurfaceHeightAt(SEED, x, z) - (terrainHeightAt(SEED, x, z) + depth)) < 1e-9, 'the surface is the bed plus the water');
+            assert(riverSurfaceHeightAt(SEED, x, z) <= baseTerrainHeightAt(SEED, x, z) + 1e-12, 'the surface sits no higher than the banks');
+        }
+        console.log('✓ the water fills the bed up to just below its banks');
+    }
+
+    {
+        // Rapids: only where the river falls steeply, and only a little of it.
+        let some = 0;
+        for (const [x, z] of points) {
+            const rapids = riverRapidsAt(SEED, x, z);
+            assert(rapids >= 0 && rapids <= 1, 'rapids are a share');
+            const tangent = riverChannelTangentAt(SEED, x, z);
+            const fall = Math.abs(baseTerrainHeightAt(SEED, x - tangent.dx * FLOW_BASELINE, z - tangent.dz * FLOW_BASELINE)
+                - baseTerrainHeightAt(SEED, x + tangent.dx * FLOW_BASELINE, z + tangent.dz * FLOW_BASELINE)) / (2 * FLOW_BASELINE);
+            if (fall <= RAPIDS_FROM_SLOPE) assert(rapids === 0, 'gentle water never breaks');
+            if (fall >= RAPIDS_FULL_SLOPE) assert(rapids === 1, 'the steepest water breaks fully');
+            if (rapids > 0) some++;
+        }
+        assert(some > 0 && some < points.length * 0.3, `some, not most, of a river is rapids (${some} of ${points.length})`);
+        console.log('✓ rapids break only where a river falls steeply');
+    }
+
+    {
+        // A river tile: its ground is built fine enough to show the bed, and
+        // its water lies over that ground at the river's surface, carrying
+        // the current, the channel, the rapids and how much water covers it.
         let mesh = null;
         let right = null;
         let tile = null;
@@ -186,57 +210,106 @@ async function runTests() {
             }
         }
         assert(mesh && right, 'two neighbouring river tiles were found');
+        assert(tileHasRiverDetail(tile.tx, tile.tz, SEED), 'a river tile is built fine');
+        const ground = buildTerrainTileMesh(tile.tx, tile.tz, SEED);
+        const fineSide = TILE_SEGMENTS * RIVER_SUBDIVISIONS + 1;
+        assert(ground.geometry.attributes.position.count === fineSide * fineSide, 'its ground has the fine grid');
         const center = tileCenter(tile.tx, tile.tz);
-        const spacing = 40 / 12;
-        const heightAt = (i, j) => terrainHeightAt(SEED, i * spacing, j * spacing);
+        const key = (x, z) => `${x.toFixed(3)},${z.toFixed(3)}`;
+        const groundAt = new Map();
+        const gp = ground.geometry.attributes.position;
+        for (let i = 0; i < gp.count; i++) groundAt.set(key(gp.getX(i), gp.getZ(i)), gp.getY(i));
+
         const position = mesh.geometry.attributes.position;
         const color = mesh.geometry.attributes.color;
         const flow = mesh.geometry.attributes.aFlow;
-        assert(color.itemSize === 4 && flow.itemSize === 2, 'each vertex has a colour with alpha and a current');
+        const channel = mesh.geometry.attributes.aChannel;
+        const rapids = mesh.geometry.attributes.aRapids;
+        assert(color.itemSize === 4 && flow.itemSize === 2 && channel.itemSize === 2 && rapids.itemSize === 1, 'each vertex has a colour with alpha, a current, a channel and rapids');
         let banks = 0;
         let running = 0;
+        let filled = 0;
         for (let i = 0; i < position.count; i++) {
             const x = center.x + position.getX(i);
             const z = center.z + position.getZ(i);
-            const ground = groundMeshHeightAt(x, z, spacing, heightAt);
-            assert(Math.abs(position.getY(i) - ground - RIVER_SURFACE_LIFT) < 1e-4, 'the water lies just over the drawn ground');
+            const below = groundAt.get(key(position.getX(i), position.getZ(i)));
+            assert(below !== undefined, 'every water vertex sits on a ground vertex');
+            assert(Math.abs(position.getY(i) - riverSurfaceHeightAt(SEED, x, z) - RIVER_SURFACE_LIFT) < 1e-4, 'the water lies at the river\'s surface');
+            assert(position.getY(i) >= below + RIVER_SURFACE_LIFT - 1e-4, 'the water lies over the ground');
+            if (Math.abs(position.getY(i) - below - RIVER_SURFACE_LIFT - riverWaterDepthAt(SEED, x, z)) < 1e-4) filled++;
             assert(Math.abs(color.getW(i) - riverWaterAt(SEED, x, z)) < 1e-4, 'its alpha is how much water covers it');
             if (color.getW(i) === 0) banks++;
-            const expected = riverFlowAt(SEED, x, z);
             if (color.getW(i) > 0) {
+                const expected = riverFlowAt(SEED, x, z);
                 assert(Math.abs(flow.getX(i) - expected.vx) < 1e-5 && Math.abs(flow.getY(i) - expected.vz) < 1e-5, 'it carries the current there');
                 const tangent = riverChannelTangentAt(SEED, x, z);
-                const channel = mesh.geometry.attributes.aChannel;
                 assert(Math.abs(channel.getX(i) * tangent.dx + channel.getY(i) * tangent.dz) > 0.999, 'and the way the channel lies');
+                assert(Math.abs(rapids.getX(i) - riverRapidsAt(SEED, x, z)) < 1e-5, 'and how rough it runs');
                 if (Math.hypot(expected.vx, expected.vz) > 0.1) running++;
             }
         }
         assert(banks > 0 && running > 0, 'the sheet fades out at its banks and the water in it runs');
-        // Upward-facing, like the ground.
+        assert(filled > position.count * 0.9, `the water stands its own depth over the carved ground (${filled} of ${position.count})`);
         const normal = mesh.geometry.attributes.normal;
         for (let i = 0; i < normal.count; i++) assert(normal.getY(i) > 0.5, 'the sheet faces up');
-        console.log('✓ a river tile\'s water lies over the ground, carries the current, and fades at its banks');
+        console.log('✓ a river tile is built fine, and its water fills the bed, carrying the current');
 
-        // Two neighbouring tiles agree on their shared edge.
-        {
-            const edgeX = center.x + 20;
-            const ours = new Map();
-            for (let i = 0; i < position.count; i++) {
-                if (Math.abs(center.x + position.getX(i) - edgeX) < 1e-6) ours.set((center.z + position.getZ(i)).toFixed(3), position.getY(i));
-            }
-            const rightCenter = tileCenter(tile.tx + 1, tile.tz);
-            const rp = right.geometry.attributes.position;
-            let shared = 0;
-            for (let i = 0; i < rp.count; i++) {
-                const key = (rightCenter.z + rp.getZ(i)).toFixed(3);
-                if (Math.abs(rightCenter.x + rp.getX(i) - edgeX) < 1e-6 && ours.has(key)) {
-                    assert(Math.abs(ours.get(key) - rp.getY(i)) < 1e-5, 'neighbouring tiles meet at the same height');
-                    shared++;
-                }
-            }
-            assert(shared > 0, 'the two tiles share river vertices on their edge');
-            console.log('✓ neighbouring river tiles meet without a step');
+        // Two neighbouring river tiles agree on their shared edge.
+        const edgeX = center.x + 20;
+        const ours = new Map();
+        for (let i = 0; i < position.count; i++) {
+            if (Math.abs(center.x + position.getX(i) - edgeX) < 1e-6) ours.set((center.z + position.getZ(i)).toFixed(3), position.getY(i));
         }
+        const rightCenter = tileCenter(tile.tx + 1, tile.tz);
+        const rp = right.geometry.attributes.position;
+        let shared = 0;
+        for (let i = 0; i < rp.count; i++) {
+            const k = (rightCenter.z + rp.getZ(i)).toFixed(3);
+            if (Math.abs(rightCenter.x + rp.getX(i) - edgeX) < 1e-6 && ours.has(k)) {
+                assert(Math.abs(ours.get(k) - rp.getY(i)) < 1e-5, 'neighbouring tiles meet at the same height');
+                shared++;
+            }
+        }
+        assert(shared > 0, 'the two tiles share river vertices on their edge');
+        console.log('✓ neighbouring river tiles meet without a step');
+    }
+
+    {
+        // Where a fine tile meets an ordinary one, its edge lies on the
+        // ordinary tile's edge: no crack between them.
+        let pair = null;
+        for (let tx = -20; tx <= 20 && !pair; tx++) {
+            for (let tz = -20; tz <= 20 && !pair; tz++) {
+                if (tileHasRiverDetail(tx, tz, SEED) && !tileHasRiverDetail(tx + 1, tz, SEED)) pair = { tx, tz };
+            }
+        }
+        assert(pair, 'a fine tile beside an ordinary one was found');
+        const fine = buildTerrainTileMesh(pair.tx, pair.tz, SEED);
+        const coarse = buildTerrainTileMesh(pair.tx + 1, pair.tz, SEED);
+        assert(coarse.geometry.attributes.position.count === (TILE_SEGMENTS + 1) ** 2, 'the ordinary tile has the ordinary grid');
+        const edgeX = (pair.tx + 1) * 40;
+        const coarseEdge = [];
+        const cp = coarse.geometry.attributes.position;
+        const coarseCenter = tileCenter(pair.tx + 1, pair.tz);
+        for (let i = 0; i < cp.count; i++) {
+            if (Math.abs(coarseCenter.x + cp.getX(i) - edgeX) < 1e-6) coarseEdge.push({ z: coarseCenter.z + cp.getZ(i), y: cp.getY(i) });
+        }
+        coarseEdge.sort((a, b) => a.z - b.z);
+        const fp = fine.geometry.attributes.position;
+        const fineCenter = tileCenter(pair.tx, pair.tz);
+        let checked = 0;
+        for (let i = 0; i < fp.count; i++) {
+            if (Math.abs(fineCenter.x + fp.getX(i) - edgeX) > 1e-6) continue;
+            const z = fineCenter.z + fp.getZ(i);
+            let k = coarseEdge.findIndex((p, n) => n + 1 < coarseEdge.length && p.z <= z + 1e-6 && coarseEdge[n + 1].z >= z - 1e-6);
+            const a = coarseEdge[k];
+            const b = coarseEdge[k + 1];
+            const t = (z - a.z) / (b.z - a.z);
+            assert(Math.abs(fp.getY(i) - (a.y + (b.y - a.y) * t)) < 1e-4, 'the fine edge lies on the ordinary edge');
+            checked++;
+        }
+        assert(checked === TILE_SEGMENTS * RIVER_SUBDIVISIONS + 1, 'every vertex of the shared edge was checked');
+        console.log('✓ a fine tile meets an ordinary one without a crack');
     }
 
     {

@@ -27,7 +27,9 @@
 // simulation. See this file's own "Deliberately not yet" note at the
 // bottom.
 
-import { terrainHeightAt, TERRAIN_HEIGHT_BOUND } from './TerrainHeightField.js';
+import {
+    baseTerrainHeightAt, baseSlopeAt, WATER_LEVEL, HIGHLAND_ELEVATION, ROCK_SLOPE
+} from './TerrainHeightField.js';
 import { lerp, smoothstep } from '../utils/interpolation.js';
 
 export const SURFACE_CATEGORY = Object.freeze({
@@ -68,8 +70,10 @@ const GRASS_HIGHLAND = Object.freeze({ r: 0.67, g: 0.75, b: 0.58 });
 // zones against the EXACT same water level and highland elevation this
 // file already uses for WATER/GRASS-highland-tint — one shared threshold,
 // never two independently-tuned copies that could silently drift apart.
-export const WATER_LEVEL = -TERRAIN_HEIGHT_BOUND * 0.5;
-export const HIGHLAND_ELEVATION = TERRAIN_HEIGHT_BOUND * 0.5;
+// Defined in core/TerrainHeightField.js, which carves river beds inside
+// them and cannot import this file; re-exported here, where they have
+// always been read from.
+export { WATER_LEVEL, HIGHLAND_ELEVATION };
 
 // Slope is measured exactly the way core/TerrainWalkability.js measures
 // a movement step — rise over a small fixed horizontal run — sampled in
@@ -84,14 +88,16 @@ export const HIGHLAND_ELEVATION = TERRAIN_HEIGHT_BOUND * 0.5;
 // well under 0.2, nowhere near DEFAULT_MAX_WALKABLE_SLOPE), so a
 // genuinely exposed hillside reads as SOIL/ROCK long before it would
 // ever be rejected as unwalkable.
-const SLOPE_SAMPLE_DISTANCE = 1;
-const ROCK_SLOPE = 0.075; // roughly the steepest ~5% of this world's terrain
+// SLOPE_SAMPLE_DISTANCE and ROCK_SLOPE (roughly the steepest ~5% of this
+// world's terrain) live in core/TerrainHeightField.js for the same reason
+// as WATER_LEVEL above.
 const SOIL_SLOPE = 0.05;  // roughly the steepest ~20% of this world's terrain
 
+// Classified by the lie of the land, before river beds are cut
+// (core/TerrainHeightField.js#baseTerrainHeightAt()): a bed's own banks
+// never read as soil or rock, nor its floor as water.
 function slopeAt(seed, x, z, height) {
-    const dx = terrainHeightAt(seed, x + SLOPE_SAMPLE_DISTANCE, z) - height;
-    const dz = terrainHeightAt(seed, x, z + SLOPE_SAMPLE_DISTANCE) - height;
-    return Math.sqrt(dx * dx + dz * dz) / SLOPE_SAMPLE_DISTANCE;
+    return baseSlopeAt(seed, x, z, height);
 }
 
 // The one public classification entry point. Deliberately evaluated in
@@ -99,7 +105,7 @@ function slopeAt(seed, x, z, height) {
 // always wins over elevation — so one coordinate never reads as two
 // different categories depending on evaluation order.
 export function surfaceCategoryAt(seed, x, z) {
-    const height = terrainHeightAt(seed, x, z);
+    const height = baseTerrainHeightAt(seed, x, z);
     if (height <= WATER_LEVEL) return SURFACE_CATEGORY.WATER;
 
     const slope = slopeAt(seed, x, z, height);
@@ -181,7 +187,7 @@ export function surfaceColorAt(seed, x, z) {
     let base = SURFACE_PALETTE[category];
 
     if (category === SURFACE_CATEGORY.GRASS) {
-        const height = terrainHeightAt(seed, x, z);
+        const height = baseTerrainHeightAt(seed, x, z);
         const t = clamp01((height - WATER_LEVEL) / (HIGHLAND_ELEVATION - WATER_LEVEL));
         base = lerpColor(base, GRASS_HIGHLAND, t);
     }
