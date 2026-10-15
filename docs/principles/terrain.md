@@ -109,6 +109,14 @@ them (`baseTerrainHeightAt()`): surface, ecology and rivers are decided
 exactly as before, and a bed is cut only where they already put a river.
 The bed is still a pure function of (seed, x, z), never stored.
 
+Revised again (same day): a river no longer stops at steep ground. It runs
+over rock, cascading down the steepest stretches in small stepped falls,
+and where its channel meets highland it ends in a round pool, a spring or
+a still pond (core/RiverBed.js). Each shape is local: a cascade's steps
+follow the land's own contours, and a pool sits where the centreline
+crosses HIGHLAND_ELEVATION, so nothing about a river is traced or stored.
+This world has no cliffs, so no tall waterfalls.
+
 [Full text](history/0.1-0.2.md#hydrology-is-a-fourth-pure-function-layered-on-terrain-sibling-to-ecology-never-a-new-ground-truth-0289)
 
 ### A River Is A Bounded, Local Channel Field, Never A Global Drainage Simulation (0.2.89)

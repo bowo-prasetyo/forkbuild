@@ -4,7 +4,7 @@ import {
 } from '../core/Hydrology.js';
 import { surfaceCategoryAt, SURFACE_CATEGORY, WATER_LEVEL, HIGHLAND_ELEVATION } from '../core/TerrainSurface.js';
 import { ecologyGroundColorAt } from '../core/TerrainEcology.js';
-import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+import { terrainHeightAt, baseTerrainHeightAt, riverPoolReachAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
 import { assert } from './support/Assert.js';
 
@@ -88,9 +88,10 @@ async function runTests() {
             }
 
             if (feature === HYDROLOGY_FEATURE.RIVER) {
-                assert(surface === SURFACE_CATEGORY.GRASS || surface === SURFACE_CATEGORY.SOIL, `9. A RIVER coordinate always sits on GRASS or SOIL surface, never WATER/ROCK (got ${surface} at ${x},${z})`);
-                const height = terrainHeightAt(DEFAULT_WORLD_SEED, x, z);
-                assert(height < HIGHLAND_ELEVATION, `10. A RIVER coordinate always sits strictly below HIGHLAND_ELEVATION (${x},${z})`);
+                assert(surface !== SURFACE_CATEGORY.WATER, `9. A RIVER coordinate never sits on standing WATER (got ${surface} at ${x},${z})`);
+                const height = baseTerrainHeightAt(DEFAULT_WORLD_SEED, x, z);
+                const pool = riverPoolReachAt(DEFAULT_WORLD_SEED, x, z);
+                assert(height < HIGHLAND_ELEVATION || pool > 0, `10. A RIVER coordinate sits strictly below HIGHLAND_ELEVATION, or in the pool its channel ends in there (${x},${z})`);
                 checkedRiver++;
             }
         }

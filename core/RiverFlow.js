@@ -20,8 +20,9 @@
 // (riverWaterDepthAt()) is not: wading through a river slows an avatar
 // the way wading into a lake does.
 
-import { baseTerrainHeightAt, riverBedDepthAt } from './TerrainHeightField.js';
+import { riverBedAt, riverPoolAt, riverChannelFallAt, riverSurfaceHeightAt as surfaceHeightAt } from './TerrainHeightField.js';
 import { riverChannelTangentAt, riverProximityAt } from './Hydrology.js';
+import { RIVER_FILL, FALL_BASELINE } from './RiverBed.js';
 
 // World units a second, at full speed: a brisk stream, about a walking pace.
 export const MAX_RIVER_SPEED = 1.2;
@@ -32,61 +33,90 @@ export const MAX_RIVER_SPEED = 1.2;
 export const FULL_SPEED_SLOPE = 0.01;
 
 // How far up- and downstream the ground is compared, in world units: long
-// enough to read the lie of the land, not every bump in it.
-export const FLOW_BASELINE = 15;
+// enough to read the lie of the land, not every bump in it. The same
+// baseline core/RiverBed.js finds its cascades by.
+export const FLOW_BASELINE = FALL_BASELINE;
+
+// Where a river ends in a pool at the highland edge (core/RiverBed.js), the
+// pool is a spring when the river runs away from it: its water wells up at
+// the centre and spreads outward at up to SPRING_SPEED. When the river runs
+// into it instead, it is a still pond the current dies away in.
+export const SPRING_SPEED = 0.5;
+
+export { RIVER_FILL };
 
 function clampUnit(v) {
     return v < -1 ? -1 : v > 1 ? 1 : v;
 }
 
-// The fall of the land along the channel at (x, z), over FLOW_BASELINE
-// either side: > 0 where it falls along `tangent`. Read from the lie of
-// the land (core/TerrainHeightField.js#baseTerrainHeightAt()), not the
-// carved bed, whose own depth would add bumps of its own.
-function channelFallAt(seed, x, z, tangent) {
-    const behind = baseTerrainHeightAt(seed, x - tangent.dx * FLOW_BASELINE, z - tangent.dz * FLOW_BASELINE);
-    const ahead = baseTerrainHeightAt(seed, x + tangent.dx * FLOW_BASELINE, z + tangent.dz * FLOW_BASELINE);
-    return (behind - ahead) / (2 * FLOW_BASELINE);
+function smooth01(v) {
+    const t = v < 0 ? 0 : v > 1 ? 1 : v;
+    return t * t * (3 - 2 * t);
 }
 
 // The water's velocity at (x, z): { vx, vz } in world units a second.
 // Meaningful where the river is (core/Hydrology.js#riverProximityAt() > 0).
 export function riverFlowAt(seed, x, z) {
     const tangent = riverChannelTangentAt(seed, x, z);
-    const speed = clampUnit(channelFallAt(seed, x, z, tangent) / FULL_SPEED_SLOPE) * MAX_RIVER_SPEED;
-    return { vx: tangent.dx * speed, vz: tangent.dz * speed };
+    const speed = clampUnit(riverChannelFallAt(seed, x, z, tangent) / FULL_SPEED_SLOPE) * MAX_RIVER_SPEED;
+    const vx = tangent.dx * speed;
+    const vz = tangent.dz * speed;
+    const pool = riverPoolAt(seed, x, z);
+    if (!pool || pool.r >= 1) return { vx, vz };
+
+    // In the pool: the channel's current gives way to the pool's own,
+    // fully within half its radius.
+    const inPool = 1 - smooth01((pool.r - 0.5) / 0.5);
+    const slope = Math.hypot(pool.gx, pool.gz) || 1;
+    const upX = pool.gx / slope;
+    const upZ = pool.gz / slope;
+    // A spring when the river runs away from the highland.
+    const spring = smooth01(-(vx * upX + vz * upZ) / (0.3 * MAX_RIVER_SPEED));
+    // Outward from the pool's centre: across the channel (the channel
+    // field's own gradient is (tangent.dz, -tangent.dx)) and up the slope.
+    const outX = pool.across * tangent.dz + pool.up * upX;
+    const outZ = pool.across * -tangent.dx + pool.up * upZ;
+    const outLength = Math.hypot(outX, outZ) || 1;
+    const welling = SPRING_SPEED * spring * smooth01(pool.r * 3);
+    return {
+        vx: vx * (1 - inPool) + (outX / outLength) * welling * inPool,
+        vz: vz * (1 - inPool) + (outZ / outLength) * welling * inPool
+    };
 }
 
 // Rapids: where the river runs down ground well past FULL_SPEED_SLOPE it
 // breaks white. 0 on gentle water, rising to 1 by RAPIDS_FULL_SLOPE; the
 // renderer foams the surface by it (renderer/RiverFlowMaterial.js).
 // Measured on this world's rivers: about a tenth of their length falls
-// faster than RAPIDS_FROM_SLOPE.
+// faster than RAPIDS_FROM_SLOPE. On a cascade (core/RiverBed.js) the water
+// is calmer in its pools and white where it pours over each drop; in a
+// highland pool it is still.
 export const RAPIDS_FROM_SLOPE = 0.035;
 export const RAPIDS_FULL_SLOPE = 0.05;
+const CASCADE_POOL_CALM = 0.6;
 
 export function riverRapidsAt(seed, x, z) {
-    const fall = Math.abs(channelFallAt(seed, x, z, riverChannelTangentAt(seed, x, z)));
-    const t = Math.min(1, Math.max(0, (fall - RAPIDS_FROM_SLOPE) / (RAPIDS_FULL_SLOPE - RAPIDS_FROM_SLOPE)));
-    return t * t * (3 - 2 * t);
+    const fall = Math.abs(riverChannelFallAt(seed, x, z, riverChannelTangentAt(seed, x, z)));
+    const rapids = smooth01((fall - RAPIDS_FROM_SLOPE) / (RAPIDS_FULL_SLOPE - RAPIDS_FROM_SLOPE));
+    const bed = riverBedAt(seed, x, z);
+    const inCascadePool = bed.cascade * (1 - bed.drop);
+    return Math.max(rapids * (1 - CASCADE_POOL_CALM * inCascadePool), bed.drop) * (1 - bed.pool);
 }
 
-// The water in a river's bed. The bed (core/TerrainHeightField.js#
-// riverBedDepthAt()) is filled RIVER_FILL of the way up, so the surface
-// sits just below the banks and meets the ground where the bed runs out.
-// Wading reads the depth (application/avatar/AvatarWaterConstraint.js):
-// at most RIVER_FILL × RIVER_BED_DEPTH (0.48), well short of swimming.
-export const RIVER_FILL = 0.8;
-
+// The water in a river's bed (core/RiverBed.js): RIVER_FILL of its smooth
+// depth, the channel's bowl or the pool, so the surface sits just below the
+// banks and meets the ground where the bed runs out; a cascade's steps are
+// cut beneath it, so it lies flat in each pool and pours over each drop.
+// Wading reads the depth (application/avatar/AvatarWaterConstraint.js): at
+// most RIVER_FILL × POOL_DEPTH (0.56), well short of swimming.
 export function riverWaterDepthAt(seed, x, z) {
-    return riverBedDepthAt(seed, x, z) * RIVER_FILL;
+    return riverBedAt(seed, x, z).waterDepth;
 }
 
 // The height of a river's surface at (x, z): the bed's floor plus the water
 // in it. Where there is no bed, the ground itself.
 export function riverSurfaceHeightAt(seed, x, z) {
-    const base = baseTerrainHeightAt(seed, x, z);
-    return base - riverBedDepthAt(seed, x, z) * (1 - RIVER_FILL);
+    return surfaceHeightAt(seed, x, z);
 }
 
 // How much river water covers (x, z), 0 to 1: full over most of the

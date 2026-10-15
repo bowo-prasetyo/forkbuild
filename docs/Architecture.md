@@ -1415,8 +1415,9 @@ surface and stays silent under water. Presence keeps its existing `animation` va
 wildlife. Each is a pure function of `(seed, x, z)`:
 
 - `TerrainHeightField`: how high. `terrainHeightAt()` is the ground as it lies, with river beds cut into it
-  (`riverBedDepthAt()`, along `core/RiverChannel.js`'s channels); `baseTerrainHeightAt()` is the land before the
-  beds, which everything below classifies by, so a bed's banks never read as rock nor its floor as a lake
+  (`core/RiverBed.js`, handed the land so it imports neither: a bowl along `core/RiverChannel.js`'s channels, stepped
+  cascades down the steepest of them, and a pool where a channel meets highland); `baseTerrainHeightAt()` is the land
+  before the beds, which everything below classifies by, so a bed's banks never read as rock nor its floor as a lake
 - `TerrainSurface`: what it looks like
 - `TerrainEcology`: which zone
 - `Hydrology`: lakes and rivers; `RiverFlow`: a river's current, rapids, and the water in its bed

@@ -47,7 +47,8 @@
 // accumulation has) — it exists as its own honest, bounded, local
 // primitive for tests and future work to build on.
 
-import { terrainHeightAt, baseTerrainHeightAt, seaBasinAt } from './TerrainHeightField.js';
+import { terrainHeightAt, baseTerrainHeightAt, seaBasinAt, riverPoolReachAt } from './TerrainHeightField.js';
+import { REACH as RIVER_BED_REACH } from './RiverBed.js';
 import { surfaceCategoryAt, SURFACE_CATEGORY, WATER_LEVEL, HIGHLAND_ELEVATION, SURFACE_PALETTE } from './TerrainSurface.js';
 import { ecologyGroundColorAt } from './TerrainEcology.js';
 import { lerp } from '../utils/interpolation.js';
@@ -150,34 +151,36 @@ function valleyFactorAt(seed, x, z, height) {
     return lerp(VALLEY_MIN_FACTOR, 1, clamp01(depth / VALLEY_SOFT_RANGE));
 }
 
-// The one public river PREDICATE — true only within the channel band,
-// on GRASS or SOIL (a river runs down the moderate slopes SOIL marks as
-// readily as across flat grass — faster there, core/RiverFlow.js — and
-// since rivers became real, running water, a channel that vanished for
-// every steeper stretch read as a broken river), and strictly below
-// HIGHLAND_ELEVATION (the same lowland/midland band
-// core/TerrainEcology.js's own FOREST/FIELD/GRASSLAND zones already
-// occupy — never across ROCK, WATER or HIGHLAND). Deliberately does NOT
+// The one public river PREDICATE — true within the channel band on any
+// ground but standing water, strictly below HIGHLAND_ELEVATION (the same
+// lowland/midland band core/TerrainEcology.js's own FOREST/FIELD/GRASSLAND
+// zones already occupy), and in the round pool a channel ends in where it
+// meets highland (core/RiverBed.js). A river runs over soil and rock as
+// readily as grass: steep ground is where it breaks white and cascades
+// (core/RiverFlow.js, core/RiverBed.js), and a channel that vanished for
+// every steeper stretch read as a broken river. Deliberately does NOT
 // consult valleyFactorAt() — that stays a continuous TINT INTENSITY
 // input (see hydrologyGroundColorAt() below), never a second hard gate a
 // boolean predicate would have to snap across.
 export function isRiverAt(seed, x, z) {
-    // The channel first: by far the cheapest test, and false almost
-    // everywhere.
-    if (riverChannelDistanceAt(seed, x, z) >= RIVER_CHANNEL_THRESHOLD) return false;
-    const surface = surfaceCategoryAt(seed, x, z);
-    if (surface !== SURFACE_CATEGORY.GRASS && surface !== SURFACE_CATEGORY.SOIL) return false;
-
-    const height = baseTerrainHeightAt(seed, x, z);
-    return height < HIGHLAND_ELEVATION;
+    return riverProximityAt(seed, x, z) > 0;
 }
 
-// How far into a river (x, z) lies: 1 on the channel's centreline, falling
-// to 0 at its banks, and 0 wherever isRiverAt() is false. The ground tint
+// How far into a river (x, z) lies: 1 on the channel's centreline (or at
+// the centre of the pool it ends in), falling to 0 at its banks, and 0
+// off a river. The ground tint
 // below and the river's water (core/RiverFlow.js) both fade by it.
 export function riverProximityAt(seed, x, z) {
-    if (!isRiverAt(seed, x, z)) return 0;
-    return 1 - clamp01(riverChannelDistanceAt(seed, x, z) / RIVER_CHANNEL_THRESHOLD);
+    // The channel first: by far the cheapest test, and false almost
+    // everywhere.
+    const distance = riverChannelDistanceAt(seed, x, z);
+    if (distance >= RIVER_CHANNEL_THRESHOLD * RIVER_BED_REACH) return 0;
+    const height = baseTerrainHeightAt(seed, x, z);
+    if (height <= WATER_LEVEL) return 0;
+    const channel = distance < RIVER_CHANNEL_THRESHOLD && height < HIGHLAND_ELEVATION
+        ? 1 - distance / RIVER_CHANNEL_THRESHOLD
+        : 0;
+    return Math.max(channel, riverPoolReachAt(seed, x, z));
 }
 
 // The one public classification entry point — mirrors

@@ -7,8 +7,9 @@ import {
 } from '../core/Hydrology.js';
 import { ecologyGroundColorAt } from '../core/TerrainEcology.js';
 import {
-    terrainHeightAt, baseTerrainHeightAt, riverBedDepthAt, RIVER_BED_DEPTH, WATER_LEVEL, DEFAULT_WORLD_SEED
+    terrainHeightAt, baseTerrainHeightAt, riverBedDepthAt, riverBedAt, riverPoolReachAt, RIVER_BED_DEPTH, WATER_LEVEL, DEFAULT_WORLD_SEED
 } from '../core/TerrainHeightField.js';
+import { POOL_DEPTH } from '../core/RiverBed.js';
 import { buildRiverTileMesh, RIVER_SURFACE_LIFT } from '../renderer/RiverTileMesh.js';
 import { buildTerrainTileMesh, tileHasRiverDetail, TILE_SEGMENTS, RIVER_SUBDIVISIONS } from '../renderer/TerrainTileMesh.js';
 import { buildWaterTile } from '../renderer/WaterTileMesh.js';
@@ -96,7 +97,8 @@ async function runTests() {
             const { vx, vz } = riverFlowAt(SEED, x, z);
             const speed = Math.hypot(vx, vz);
             assert(speed <= MAX_RIVER_SPEED + 1e-9, 'never faster than MAX_RIVER_SPEED');
-            if (speed < 1e-6) continue;
+            // A highland pool has a current of its own (checked below).
+            if (speed < 1e-6 || riverPoolReachAt(SEED, x, z) > 0) continue;
             moving++;
             const { dx, dz } = riverChannelTangentAt(SEED, x, z);
             assert(Math.abs(Math.abs(vx * dx + vz * dz) - speed) < 1e-9, 'the current runs along the channel');
@@ -149,7 +151,7 @@ async function runTests() {
         for (const [x, z] of points) {
             const bed = riverBedDepthAt(SEED, x, z);
             assert(Math.abs(terrainHeightAt(SEED, x, z) - (baseTerrainHeightAt(SEED, x, z) - bed)) < 1e-12, 'the ground is the land less the bed');
-            assert(bed >= 0 && bed <= RIVER_BED_DEPTH, 'the bed is never deeper than RIVER_BED_DEPTH');
+            assert(bed >= 0 && bed <= Math.max(RIVER_BED_DEPTH, POOL_DEPTH), 'the bed is never deeper than a calm bed or a pool');
             assert(terrainHeightAt(SEED, x, z) > WATER_LEVEL + 0.05, 'a bed never reaches down to the water line');
             if (riverProximityAt(SEED, x, z) > 0.9 && bed > RIVER_BED_DEPTH * 0.5) deep++;
             // Smooth: a small step never jumps the ground.
@@ -167,11 +169,12 @@ async function runTests() {
     }
 
     {
-        // The water fills the bed RIVER_FILL of the way up, below the banks.
+        // The water fills the bed's smooth depth RIVER_FILL of the way up,
+        // below the banks (a cascade's steps are cut beneath it).
         for (const [x, z] of points) {
-            const bed = riverBedDepthAt(SEED, x, z);
+            const bed = riverBedAt(SEED, x, z);
             const depth = riverWaterDepthAt(SEED, x, z);
-            assert(Math.abs(depth - bed * RIVER_FILL) < 1e-12, 'the water fills the bed');
+            assert(Math.abs(depth - bed.waterDepth) < 1e-12 && depth <= bed.depth * RIVER_FILL + 1e-12, 'the water fills the bed');
             assert(Math.abs(riverSurfaceHeightAt(SEED, x, z) - (terrainHeightAt(SEED, x, z) + depth)) < 1e-9, 'the surface is the bed plus the water');
             assert(riverSurfaceHeightAt(SEED, x, z) <= baseTerrainHeightAt(SEED, x, z) + 1e-12, 'the surface sits no higher than the banks');
         }
@@ -187,8 +190,10 @@ async function runTests() {
             const tangent = riverChannelTangentAt(SEED, x, z);
             const fall = Math.abs(baseTerrainHeightAt(SEED, x - tangent.dx * FLOW_BASELINE, z - tangent.dz * FLOW_BASELINE)
                 - baseTerrainHeightAt(SEED, x + tangent.dx * FLOW_BASELINE, z + tangent.dz * FLOW_BASELINE)) / (2 * FLOW_BASELINE);
-            if (fall <= RAPIDS_FROM_SLOPE) assert(rapids === 0, 'gentle water never breaks');
-            if (fall >= RAPIDS_FULL_SLOPE) assert(rapids === 1, 'the steepest water breaks fully');
+            const bed = riverBedAt(SEED, x, z);
+            if (fall <= RAPIDS_FROM_SLOPE) assert(rapids === bed.drop * (1 - bed.pool), 'gentle water never breaks, but at a cascade\'s drop');
+            if (fall >= RAPIDS_FULL_SLOPE && bed.cascade === 0 && bed.pool === 0) assert(rapids === 1, 'the steepest water breaks fully');
+            assert(rapids >= bed.drop * (1 - bed.pool) - 1e-12, 'water pours white over every drop');
             if (rapids > 0) some++;
         }
         assert(some > 0 && some < points.length * 0.3, `some, not most, of a river is rapids (${some} of ${points.length})`);

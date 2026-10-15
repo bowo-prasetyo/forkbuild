@@ -106,6 +106,8 @@ reach a coast, where the ground slopes down into deep sea.
 
 **Water.** Lakes ripple in the breeze and the sea rolls with a slow
 swell. Rivers run downhill in their beds, quicker where the ground is steeper.
+They rise at springs below the highland, tumble down the steepest ground
+in little cascades, and now and then end in a still pond.
 Foam gathers where waves reach the shore and where a river runs over
 rapids. Your avatar wades into a lake, the sea or a river and slows as
 the water rises. Once the water is deeper than half its height, it swims,
