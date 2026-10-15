@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 29a889111fb679ab -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 077aa1744307f526 -->
 # 03 — Visão do mundo
 
 <!-- languages -->
@@ -197,6 +197,12 @@ As nuvens vêm e vão, as mesmas para todos no mesmo momento. Quase sempre
 passam algumas nuvens brancas; de vez em quando o céu fica nublado, e às
 vezes fica cinzento e encoberto, com luz mais suave e sombras mais fracas.
 Nunca fica tão escuro a ponto de as construções ficarem difíceis de ver.
+
+De vez em quando um céu encoberto traz chuva, por alguns minutos de cada
+vez. Você a vê cair ao seu redor e anéis se espalharem onde as gotas caem num
+lago, no mar ou num rio, e a ouve, enquanto os pássaros e os insetos se
+calam. A chuva é só para ver e ouvir: os rios não sobem e você anda tão
+rápido quanto antes.
 
 Se você preferir que seja sempre dia, marque **Sempre de dia** no fim do
 painel, logo acima de **Sombras**. O céu também fica

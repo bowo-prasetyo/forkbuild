@@ -49,7 +49,9 @@ const WATER_ROUGHNESS = 0.4; // glossy enough that the sun glints off the ripple
 // geometry-building glue here isn't.
 // `waveTime` is the { value } in seconds every water tile's waves read (see
 // renderer/WaterWaveMaterial.js); a tile built without one stays still.
-export function buildWaterTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE, waveTime = { value: 0 }) {
+// `rain` is the { value } of how hard it is raining, 0 to 1, that rings the
+// water (renderer/RainRings.js); a tile built without one stays dry.
+export function buildWaterTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE, waveTime = { value: 0 }, rain = { value: 0 }) {
     const geometry = new THREE.PlaneGeometry(tileSize, tileSize, TILE_SEGMENTS, TILE_SEGMENTS);
     geometry.rotateX(-Math.PI / 2);
 
@@ -102,7 +104,7 @@ export function buildWaterTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE, w
         transparent: true,
         opacity: WATER_OPACITY,
         depthWrite: false // standard transparent-water convention — avoids self-sorting artifacts between overlapping lake tiles
-    }), waveTime);
+    }), waveTime, { rain });
     const mesh = new THREE.Mesh(geometry, material);
     // Vertex Y already holds the ABSOLUTE world elevation (sampled at
     // worldX/worldZ above) — the exact same convention
@@ -126,12 +128,13 @@ export function buildWaterTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE, w
 // Everything wet in one tile, for the water streaming ring
 // (renderer/Renderer.js): the lake or sea above (buildWaterTileMesh()) and
 // any river running through (renderer/RiverTileMesh.js), both moving with
-// the one shared `waveTime`. An empty group when the tile is dry.
-export function buildWaterTile(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE, waveTime = { value: 0 }) {
+// the one shared `waveTime` and rung alike by the one shared `rain`. An empty
+// group when the tile is dry.
+export function buildWaterTile(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE, waveTime = { value: 0 }, rain = { value: 0 }) {
     const tile = new THREE.Group();
-    const standing = buildWaterTileMesh(tx, tz, seed, tileSize, waveTime);
+    const standing = buildWaterTileMesh(tx, tz, seed, tileSize, waveTime, rain);
     if (standing.isMesh) tile.add(standing);
-    const river = buildRiverTileMesh(tx, tz, seed, tileSize, waveTime);
+    const river = buildRiverTileMesh(tx, tz, seed, tileSize, waveTime, rain);
     if (river) tile.add(river);
     return tile;
 }

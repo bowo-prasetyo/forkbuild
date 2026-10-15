@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 29a889111fb679ab -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 077aa1744307f526 -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
@@ -203,6 +203,12 @@ Awan datang dan pergi, sama bagi semua orang pada saat yang sama.
 Biasanya beberapa awan putih melintas; sesekali langit berawan, dan kadang
 menjadi kelabu dan mendung, dengan cahaya yang lebih lembut dan bayangan
 yang lebih samar. Tidak pernah segelap itu sampai bangunan sulit dilihat.
+
+Sesekali langit mendung membawa hujan, beberapa menit setiap kalinya. Anda
+melihatnya turun di sekitar Anda dan lingkaran yang menyebar di tempat
+tetesannya jatuh ke danau, laut, atau sungai, dan Anda mendengarnya,
+sementara burung dan serangga terdiam. Hujan hanya untuk dilihat dan
+didengar: sungai tidak meluap, dan Anda tetap berjalan secepat biasa.
 
 Jika Anda lebih suka selalu siang, centang **Selalu siang** di bagian bawah
 panel, tepat di atas **Bayangan**. Langit pun tetap

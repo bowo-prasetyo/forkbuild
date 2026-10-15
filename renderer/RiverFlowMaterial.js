@@ -14,8 +14,12 @@
 //
 // `waveTime` is the shared { value } in seconds the lakes' waves read
 // (renderer/WaterWaveMaterial.js), advanced once a frame by
-// renderer/Renderer.js. Positions are taken in world space, so tiles meet
+// renderer/Renderer.js. `rain`, a shared { value } as well, is how hard it
+// is raining, 0 to 1: rain rings the surface as it does the lakes
+// (renderer/RainRings.js). Positions are taken in world space, so tiles meet
 // without a seam.
+
+import { RAIN_RINGS_GLSL } from './RainRings.js';
 
 const FLOW_CYCLE = 1.6;
 // Off this far from the camera the pattern is smaller than a pixel and
@@ -24,6 +28,8 @@ const PATTERN_FADE_NEAR = 18;
 const PATTERN_FADE_FAR = 60;
 // How hard the pattern tilts the light, and how much it lightens a crest.
 const NORMAL_STRENGTH = 0.3;
+// How much a raindrop's ring lightens the water.
+const RAIN_RING_LIGHTEN = 0.35;
 const CREST_LIGHTEN = 0.12;
 // Rapids (core/RiverFlow.js#riverRapidsAt(), per vertex as `aRapids`) break
 // white: the crests of the drifting pattern turn to foam, more of them the
@@ -121,9 +127,10 @@ vec3 riverSurface() {
 }
 `;
 
-export function makeRiverFlowing(material, waveTime) {
+export function makeRiverFlowing(material, waveTime, { rain = { value: 0 } } = {}) {
     material.onBeforeCompile = (shader) => {
         shader.uniforms.uWaveTime = waveTime;
+        shader.uniforms.uRain = rain;
         shader.vertexShader = shader.vertexShader
             .replace('#include <common>', `#include <common>\n${VERTEX_HEAD}`)
             .replace('void main() {', `void main() {
@@ -133,7 +140,7 @@ export function makeRiverFlowing(material, waveTime) {
     vRapids = aRapids;
     vSpring = aSpring;`);
         shader.fragmentShader = shader.fragmentShader
-            .replace('#include <common>', `#include <common>\n${FRAGMENT_HEAD}`)
+            .replace('#include <common>', `#include <common>\n${FRAGMENT_HEAD}\n${RAIN_RINGS_GLSL}`)
             .replace('#include <color_fragment>', `#include <color_fragment>
 \tfloat riverNear = 1.0 - smoothstep(${glslFloat(PATTERN_FADE_NEAR)}, ${glslFloat(PATTERN_FADE_FAR)}, length(vViewPosition));
 \tvec3 riverNow = riverSurface();
@@ -141,11 +148,14 @@ export function makeRiverFlowing(material, waveTime) {
 \tfloat riverFoam = vRapids * mix(${glslFloat(FAR_FOAM_SHARE)}, smoothstep(0.62 - 0.14 * vRapids, 0.74 - 0.14 * vRapids, riverNow.x), riverNear);
 \tdiffuseColor.rgb = mix(diffuseColor.rgb, vec3(${FOAM_COLOR.map(glslFloat).join(', ')}), riverFoam * ${glslFloat(FOAM_STRENGTH)});
 \tvec2 springNow = springWelling();
-\tdiffuseColor.rgb = mix(diffuseColor.rgb, vec3(${FOAM_COLOR.map(glslFloat).join(', ')}), min(1.0, springNow.x));`)
+\tdiffuseColor.rgb = mix(diffuseColor.rgb, vec3(${FOAM_COLOR.map(glslFloat).join(', ')}), min(1.0, springNow.x));
+\tvec3 riverRain = rainRings(vRiverXZ, uWaveTime, rainNear(length(vViewPosition)));
+\tdiffuseColor.rgb = mix(diffuseColor.rgb, vec3(${FOAM_COLOR.map(glslFloat).join(', ')}), min(1.0, riverRain.x) * ${glslFloat(RAIN_RING_LIGHTEN)});`)
             .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
 \tnormal = normalize(normal + mat3(viewMatrix) * vec3(-riverNow.y, 0.0, -riverNow.z) * ${glslFloat(NORMAL_STRENGTH)} * riverNear);
 \tvec2 springWay = length(vSpring.yz) > 1e-4 ? normalize(vSpring.yz) : vec2(0.0);
-\tnormal = normalize(normal + mat3(viewMatrix) * vec3(springWay.x, 0.0, springWay.y) * springNow.y);`);
+\tnormal = normalize(normal + mat3(viewMatrix) * vec3(springWay.x, 0.0, springWay.y) * springNow.y);
+\tnormal = normalize(normal + mat3(viewMatrix) * vec3(-riverRain.y, 0.0, -riverRain.z));`);
     };
     material.customProgramCacheKey = () => 'forkbuild-river-flow';
     material.needsUpdate = true;

@@ -15,7 +15,7 @@
 // follows the day: warm by day, slow and low after dark (core/MusicScore.js).
 // Browsers keep audio silent until the user interacts with the page, so the
 // view calls unlock() from its first key press or tap.
-import { ambientMixAt, ambientMixAtNight, silentAmbientMix } from '../../core/AmbientSoundscape.js';
+import { ambientMixAt, ambientMixAtNight, ambientMixInRain, silentAmbientMix } from '../../core/AmbientSoundscape.js';
 import { advanceAvatarSound, createAvatarSoundState } from '../../core/AvatarSoundCues.js';
 import { advanceCreatureSound, createCreatureSoundState } from '../../core/CreatureSoundCues.js';
 import { SoundPreference } from '../settings/SoundPreference.js';
@@ -25,8 +25,10 @@ import { musicMoodFor } from '../../core/MusicScore.js';
 const DEFAULT_SAMPLE_INTERVAL_MS = 250;
 // Moving less than this since the last sample can't change what is heard.
 const RESAMPLE_DISTANCE = 0.5;
-// Nor can night deepening or lifting by less than this.
+// Nor can night deepening or lifting, or rain growing or easing, by less
+// than this.
 const RESAMPLE_NIGHT_STEP = 0.05;
+const RESAMPLE_RAIN_STEP = 0.05;
 // An engine's load changes smaller than this aren't worth a new ramp.
 const ENGINE_LOAD_STEP = 0.02;
 // Animals and residents are looked at this often: often enough to catch a
@@ -45,6 +47,7 @@ export class WorldSoundscapeService {
         onRenderFrame = null,
         onCommandActivity = null,
         nightLevel = null,
+        rainLevel = null,
         sampleIntervalMs = DEFAULT_SAMPLE_INTERVAL_MS,
         setIntervalFn = globalThis.setInterval.bind(globalThis),
         clearIntervalFn = globalThis.clearInterval.bind(globalThis)
@@ -64,6 +67,9 @@ export class WorldSoundscapeService {
         // How deep into the night it is, 0 to 1 (core/DayCycle.js); absent, always day.
         this._nightLevel = typeof nightLevel === 'function' ? nightLevel : () => 0;
         this._lastSampledNight = 0;
+        // How hard it rains, 0 to 1 (core/Weather.js); absent, never.
+        this._rainLevel = typeof rainLevel === 'function' ? rainLevel : () => 0;
+        this._lastSampledRain = 0;
         this._avatarObservation = typeof avatarObservation === 'function' ? avatarObservation : null;
         this._onRenderFrame = typeof onRenderFrame === 'function' ? onRenderFrame : null;
         this._avatarSoundState = createAvatarSoundState();
@@ -180,15 +186,19 @@ export class WorldSoundscapeService {
             return;
         }
         const night = this._nightLevel();
+        const rain = this._rainLevel();
         this._provider.setMusicMood?.(musicMoodFor({ view: 'world', nightLevel: night }));
         if (this._lastSampledAt
             && Math.hypot(position.x - this._lastSampledAt.x, position.z - this._lastSampledAt.z) < RESAMPLE_DISTANCE
-            && Math.abs(night - this._lastSampledNight) < RESAMPLE_NIGHT_STEP) {
+            && Math.abs(night - this._lastSampledNight) < RESAMPLE_NIGHT_STEP
+            && Math.abs(rain - this._lastSampledRain) < RESAMPLE_RAIN_STEP
+            && (rain === 0) === (this._lastSampledRain === 0)) {
             return;
         }
         this._lastSampledAt = { x: position.x, z: position.z };
         this._lastSampledNight = night;
-        this._provider.setLayerLevels(ambientMixAtNight(ambientMixAt(this._seed, position.x, position.z), night));
+        this._lastSampledRain = rain;
+        this._provider.setLayerLevels(ambientMixInRain(ambientMixAtNight(ambientMixAt(this._seed, position.x, position.z), night), rain));
     }
 
     settings() {

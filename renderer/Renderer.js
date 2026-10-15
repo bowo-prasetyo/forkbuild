@@ -21,6 +21,7 @@ import { makeNightGlowing } from './NightGlowMaterial.js';
 import { SkyBodies } from './SkyBodies.js';
 import { StarSky } from './StarSky.js';
 import { CloudSky } from './CloudSky.js';
+import { RainFall } from './RainFall.js';
 import { SunShadows } from './SunShadows.js';
 
 // Under water the view closes in to a blue-green haze: murkier and greener in a
@@ -66,9 +67,13 @@ export class Renderer {
         this._skyBodies = null;
         this._starSky = null;
         this._skyBodiesState = null;
-        // The clouds, made the first time setWeather() is called.
+        // The clouds and the rain, made the first time setWeather() is called.
         this._cloudSky = null;
+        this._rainFall = null;
         this._weather = null;
+        // How hard it rains, 0 to 1: every water tile's rain rings read it
+        // (renderer/RainRings.js).
+        this._rainLevel = { value: 0 };
         this._sceneManager.scene.background = new THREE.Color(DAY.sky);
 
         this._cameraController = new CameraController(
@@ -142,7 +147,7 @@ export class Renderer {
         this._waterWaveTime = { value: 0 };
         this._waterStreaming = new TerrainStreamingController(
             this._sceneManager,
-            (tx, tz) => buildWaterTile(tx, tz, DEFAULT_WORLD_SEED, TERRAIN_TILE_SIZE, this._waterWaveTime),
+            (tx, tz) => buildWaterTile(tx, tz, DEFAULT_WORLD_SEED, TERRAIN_TILE_SIZE, this._waterWaveTime, this._rainLevel),
             { disposeTile: disposeOwnedTile }
         );
         this._waterStreaming.update(
@@ -274,9 +279,11 @@ export class Renderer {
         this._lights.setDirection(bodies.light, bodies.lightStrength);
     }
 
-    // Draws World View's clouds as `weather` (core/Weather.js#weatherAt())
-    // says, drifting by the world's clock (renderer/CloudSky.js). A renderer
-    // never given any (the Editor, thumbnails) draws none.
+    // Draws World View's clouds and rain as `weather`
+    // (core/Weather.js#weatherAt()) says: the clouds drifting by the world's
+    // clock (renderer/CloudSky.js), the rain falling round the camera
+    // (renderer/RainFall.js) and ringing the water (renderer/RainRings.js).
+    // A renderer never given any (the Editor, thumbnails) draws none.
     setWeather(weather) {
         if (!weather || weather === this._weather) {
             return;
@@ -284,8 +291,17 @@ export class Renderer {
         this._weather = weather;
         if (!this._cloudSky) {
             this._cloudSky = new CloudSky(this._sceneManager);
+            this._rainFall = new RainFall(this._sceneManager);
         }
         this._cloudSky.set(weather);
+        const rain = Number.isFinite(weather.rain) ? weather.rain : 0;
+        this._rainFall.set(rain);
+        this._rainLevel.value = rain;
+    }
+
+    // How hard it is raining here, 0 to 1, as last set by setWeather().
+    get rainLevel() {
+        return this._rainLevel.value;
     }
 
     // Turns the sun's and the moon's shadows on or off
@@ -388,6 +404,7 @@ export class Renderer {
         }
         if (this._cloudSky) {
             this._cloudSky.dispose();
+            this._rainFall.dispose();
         }
         window.removeEventListener('resize', this._onResize);
         this._cameraController.dispose();
@@ -419,6 +436,7 @@ export class Renderer {
         if (this._cloudSky) {
             const underwater = Boolean(UNDERWATER_LOOK[this._underwaterView]);
             this._cloudSky.update(this._cameraController.camera, this._wildlifeClock(), this._skyLook, underwater);
+            this._rainFall.update(this._cameraController.camera, this._waterWaveTime.value, this._skyLook, underwater);
         }
         for (const listener of this._frameListeners) {
             listener(deltaSeconds);
