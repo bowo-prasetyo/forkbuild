@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 100b949f1ba678b2 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 58af5105d177cff3 -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
@@ -115,7 +115,7 @@ côte, où le sol descend vers la mer profonde.
 
 **L’eau.** Les lacs frémissent sous la brise et la mer roule d’une
 houle lente. Les rivières descendent la pente dans leur lit, plus vite là où le
-sol est plus raide. Elles naissent de sources au pied des hautes terres,
+sol est plus raide. Elles naissent de sources bouillonnantes au pied des hautes terres,
 dévalent les pentes les plus raides en petites cascades et finissent
 parfois dans un étang calme. L’écume se forme là où les vagues atteignent le rivage
 et là où une rivière franchit des rapides. Votre avatar entre à pied dans

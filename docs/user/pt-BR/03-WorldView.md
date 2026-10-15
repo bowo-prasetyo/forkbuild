@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 100b949f1ba678b2 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 58af5105d177cff3 -->
 # 03 — Visão do mundo
 
 <!-- languages -->
@@ -109,7 +109,7 @@ desce para o mar fundo.
 
 **Água.** Os lagos ondulam com a brisa e o mar balança num
 marulho lento. Os rios correm morro abaixo pelo leito, mais rápido onde o
-terreno é mais íngreme. Nascem em fontes ao pé das terras
+terreno é mais íngreme. Nascem em fontes borbulhantes ao pé das terras
 altas, descem o terreno mais íngreme em pequenas cascatas e às vezes
 terminam numa lagoa tranquila. Forma-se espuma onde as ondas chegam à margem e
 onde um rio passa por corredeiras. Seu avatar entra andando num lago, no

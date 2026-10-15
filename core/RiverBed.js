@@ -97,22 +97,54 @@ export function landGradientAt(seed, x, z, land, base = land.baseAt(seed, x, z))
     };
 }
 
-// Where (x, z) lies relative to the spring pool a channel may end in at the
-// highland edge: `across` (signed, world units from the centreline),
-// `up` (signed, world units up the slope from where the centreline crosses
-// highland) and the pool's share there (1 at its centre, 0 at its rim and
-// beyond). Measured to first order: good within a pool's width.
+// Where (x, z) lies relative to the pool a channel ends in at the highland
+// edge: `across` (signed, world units from the centreline), `up` (signed,
+// world units ALONG the channel past where its centreline crosses into
+// highland), the unit direction up the channel into the highland
+// (`dirX`, `dirZ`), the land's own gradient (`gx`, `gz`), and the pool's
+// share there (1 at its centre, 0 at its rim and beyond). Measured to first
+// order: good within a pool's width.
+//
+// Only where the channel heads INTO the highland: a channel running along
+// the highland edge crosses it at a glance, again and again, and a pool at
+// each glance smeared into one long strip beside the edge. So the pool
+// fades in with how squarely the channel meets the slope (CROSSING_FROM to
+// CROSSING_FULL, the cosine between the channel and straight uphill), and
+// its distance past the edge is measured along the channel, so it is round
+// about the river, not drawn out along the contour.
+export const CROSSING_FROM = 0.35;
+export const CROSSING_FULL = 0.6;
+// The slope a pool is laid out by is read across POOL_GRADIENT_SPAN either
+// way: the land's finest bumps (a few units across) would otherwise swing
+// its direction from one step to the next, and a channel grazing the edge
+// would flicker in and out of having a pool.
+const POOL_GRADIENT_SPAN = 4;
+
+function poolGradientAt(seed, x, z, land) {
+    const d = POOL_GRADIENT_SPAN;
+    return {
+        gx: (land.baseAt(seed, x + d, z) - land.baseAt(seed, x - d, z)) / (2 * d),
+        gz: (land.baseAt(seed, x, z + d) - land.baseAt(seed, x, z - d)) / (2 * d)
+    };
+}
+
 export function poolAt(seed, x, z, land, base = land.baseAt(seed, x, z)) {
     const field = channelFieldAt(seed, x, z);
     const across = field / CHANNEL_PHASE_GRADIENT;
     if (Math.abs(across) >= POOL_RADIUS) return null;
-    const { gx, gz } = landGradientAt(seed, x, z, land, base);
-    const slope = Math.max(POOL_MIN_SLOPE, Math.hypot(gx, gz));
-    const up = (base - land.highland) / slope;
+    const { gx, gz } = poolGradientAt(seed, x, z, land);
+    const slope = Math.hypot(gx, gz);
+    if (slope < POOL_MIN_SLOPE) return null;
+    const tangent = riverChannelTangentAt(seed, x, z);
+    const climb = tangent.dx * gx + tangent.dz * gz; // rise per unit along the tangent
+    const crossing = smoothstep(clamp01((Math.abs(climb) / slope - CROSSING_FROM) / (CROSSING_FULL - CROSSING_FROM)));
+    if (crossing === 0) return null;
+    const up = (base - land.highland) / Math.abs(climb);
     if (Math.abs(up) >= POOL_RADIUS) return null;
     const r = Math.hypot(across, up) / POOL_RADIUS;
-    const share = r >= 1 ? 0 : (1 - r * r) * (1 - r * r);
-    return { across, up, r, share, gx, gz };
+    const share = r >= 1 ? 0 : (1 - r * r) * (1 - r * r) * crossing;
+    const sign = climb > 0 ? 1 : -1;
+    return { across, up, r, share, crossing, dirX: tangent.dx * sign, dirZ: tangent.dz * sign, gx, gz };
 }
 
 // How far towards a pool's centre (x, z) lies: 1 at its centre, 0 at its
@@ -120,7 +152,7 @@ export function poolAt(seed, x, z, land, base = land.baseAt(seed, x, z)) {
 export function poolReachAt(seed, x, z, land, base = land.baseAt(seed, x, z)) {
     if (base <= land.highland - POOL_SEARCH_BELOW) return 0;
     const at = poolAt(seed, x, z, land, base);
-    return at && at.r < 1 ? 1 - at.r : 0;
+    return at && at.r < 1 ? (1 - at.r) * at.crossing : 0;
 }
 
 export function riverBedAt(seed, x, z, land, base = land.baseAt(seed, x, z)) {

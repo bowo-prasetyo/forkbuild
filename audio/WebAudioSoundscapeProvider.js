@@ -1,5 +1,6 @@
 // Plays World View's and the Editor's sound with the Web Audio API: the
-// ambient layers (wind, birds, insects, lake, river, leaves and pines), the
+// ambient layers (wind, birds, insects, lake, river, leaves, pines and a
+// spring bubbling), the
 // local avatar's footsteps, jumps and landings (audio/AvatarSoundSynth.js),
 // the engine of what it rides and getting on, off and braking
 // (audio/VehicleEngineVoice.js, audio/VehicleEventSynth.js), animals,
@@ -27,7 +28,7 @@ import { playMount, playDismount, playBrake } from './VehicleEventSynth.js';
 import { MusicPlayer } from './MusicPlayer.js';
 import { MUSIC_MOOD } from '../core/MusicScore.js';
 
-const LAYERS = ['wind', 'birds', 'insects', 'water', 'stream', 'leaves', 'pines'];
+const LAYERS = ['wind', 'birds', 'insects', 'water', 'stream', 'leaves', 'pines', 'spring'];
 // The avatar's own sounds sit in front of the ambience.
 const EFFECTS_GAIN = 0.7;
 // A placed cue's nodes are let go once it has surely finished.
@@ -39,7 +40,7 @@ const REMOTE_ENGINE_TIME_CONSTANT = 0.08;
 const REMOTE_ENGINE_RELEASE_SECONDS = 1;
 
 // Each layer's gain at level 1, balanced by ear so no single layer dominates.
-const LAYER_PEAK = Object.freeze({ wind: 0.4, birds: 0.35, insects: 0.035, water: 0.35, stream: 0.2, leaves: 0.12, pines: 0.18 });
+const LAYER_PEAK = Object.freeze({ wind: 0.4, birds: 0.35, insects: 0.035, water: 0.35, stream: 0.2, leaves: 0.12, pines: 0.18, spring: 0.3 });
 
 // Time constant of a level change: walking into a forest fades birds in over
 // a couple of seconds rather than switching them on.
@@ -47,6 +48,9 @@ const LEVEL_TIME_CONSTANT = 0.8;
 const VOLUME_TIME_CONSTANT = 0.05;
 const NOISE_SECONDS = 4;
 const BIRD_AUDIBLE_LEVEL = 0.05;
+// A spring bubbles only when one is this near; its bubbles are scheduled
+// only then, so away from springs nothing runs.
+const SPRING_AUDIBLE_LEVEL = 0.05;
 
 // Sets a node's `<name>X/Y/Z` AudioParams (a panner's position, the
 // listener's position, forward and up), or the deprecated setter where
@@ -122,6 +126,7 @@ export class WebAudioSoundscapeProvider {
         this._unlocked = false;
         this._disposed = false;
         this._birdTimer = null;
+        this._springTimer = null;
         // The music: whether it plays (the device's choice), in which mood,
         // and its player, made the first time music is to play.
         this._music = false;
@@ -180,6 +185,9 @@ export class WebAudioSoundscapeProvider {
         const now = this._context.currentTime;
         for (const layer of LAYERS) {
             this._layerGains[layer].gain.setTargetAtTime(this._levels[layer] * LAYER_PEAK[layer], now, LEVEL_TIME_CONSTANT);
+        }
+        if (this._ambience && this._shouldRun()) {
+            this._scheduleSpring();
         }
     }
 
@@ -436,6 +444,10 @@ export class WebAudioSoundscapeProvider {
             this._clearTimeout(this._birdTimer);
             this._birdTimer = null;
         }
+        if (this._springTimer !== null) {
+            this._clearTimeout(this._springTimer);
+            this._springTimer = null;
+        }
         if (this._musicPlayer) {
             this._musicPlayer.dispose();
             this._musicPlayer = null;
@@ -494,6 +506,7 @@ export class WebAudioSoundscapeProvider {
             }
             if (this._ambience) {
                 this._scheduleBird();
+                this._scheduleSpring();
             }
         } else if (context.state === 'running' && typeof context.suspend === 'function') {
             context.suspend().catch(() => {});
@@ -702,6 +715,58 @@ export class WebAudioSoundscapeProvider {
             }
             this._scheduleBird();
         }, delayMs);
+    }
+
+    // A spring bubbles: short rising plips, a few at a time, more often the
+    // nearer the spring. Scheduled only while one is heard.
+    _scheduleSpring() {
+        if (this._springTimer !== null || !this._context || this._levels.spring <= SPRING_AUDIBLE_LEVEL) {
+            return;
+        }
+        const level = this._levels.spring;
+        const delayMs = (900 - 650 * level) * (0.4 + this._random());
+        this._springTimer = this._setTimeout(() => {
+            this._springTimer = null;
+            if (!this._shouldRun()) {
+                return;
+            }
+            if (this._context.state === 'running' && this._levels.spring > SPRING_AUDIBLE_LEVEL) {
+                this._playBubbles();
+            }
+            this._scheduleSpring();
+        }, delayMs);
+    }
+
+    _playBubbles() {
+        const context = this._context;
+        const output = typeof context.createStereoPanner === 'function' ? context.createStereoPanner() : context.createGain();
+        if (output.pan) {
+            output.pan.value = this._random() * 0.8 - 0.4;
+        }
+        output.connect(this._layerGains.spring);
+        const bubbles = 1 + Math.floor(this._random() * 3);
+        let start = context.currentTime + 0.02;
+        for (let i = 0; i < bubbles; i++) {
+            // A bubble's pitch rises as it breaks the surface.
+            const length = 0.04 + this._random() * 0.05;
+            const from = 450 + this._random() * 650;
+            const oscillator = context.createOscillator();
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(from, start);
+            oscillator.frequency.exponentialRampToValueAtTime(from * 1.8, start + length);
+            const envelope = context.createGain();
+            envelope.gain.setValueAtTime(0, start);
+            envelope.gain.linearRampToValueAtTime(0.8 + this._random() * 0.2, start + 0.005);
+            envelope.gain.exponentialRampToValueAtTime(0.001, start + length);
+            oscillator.connect(envelope);
+            envelope.connect(output);
+            oscillator.start(start);
+            oscillator.stop(start + length + 0.02);
+            if (i === bubbles - 1) {
+                oscillator.onended = () => output.disconnect();
+            }
+            start += length + 0.02 + this._random() * 0.12;
+        }
     }
 
     _playBirdCall() {

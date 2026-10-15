@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 100b949f1ba678b2 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 58af5105d177cff3 -->
 # 03 — Weltansicht
 
 <!-- languages -->
@@ -115,7 +115,7 @@ Küste, wo der Boden ins tiefe Meer abfällt.
 
 **Wasser.** Seen kräuseln sich im Wind, und das Meer hebt und senkt
 sich in einer langsamen Dünung. Flüsse fließen in ihrem Bett bergab,
-schneller, wo der Boden steiler ist. Sie entspringen Quellen am Fuß des Hochlands,
+schneller, wo der Boden steiler ist. Sie entspringen sprudelnden Quellen am Fuß des Hochlands,
 stürzen über das steilste Gelände in kleinen Kaskaden und enden manchmal
 in einem stillen Teich. Wo Wellen das Ufer erreichen und wo
 ein Fluss über Stromschnellen läuft, bildet sich Schaum. Ihr Avatar watet

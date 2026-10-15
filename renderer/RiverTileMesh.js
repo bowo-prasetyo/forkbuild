@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { riverChannelTangentAt, RIVER_SURFACE_COLOR } from '../core/Hydrology.js';
-import { riverWaterAt, riverFlowAt, riverRapidsAt, riverSurfaceHeightAt } from '../core/RiverFlow.js';
+import { riverWaterAt, riverCurrentAt, riverRapidsAt, riverSurfaceHeightAt } from '../core/RiverFlow.js';
 import { TERRAIN_TILE_SIZE, tileCenter } from '../core/TerrainTiling.js';
 import { TILE_SEGMENTS, RIVER_SUBDIVISIONS, tileHasRiverDetail } from './TerrainTileMesh.js';
 import { makeRiverFlowing } from './RiverFlowMaterial.js';
@@ -10,7 +10,8 @@ import { makeRiverFlowing } from './RiverFlowMaterial.js';
 // carrying at each vertex how much water covers it (riverWaterAt(), as
 // alpha, so the banks are soft), which way it runs (riverFlowAt()), which
 // way the channel lies (core/Hydrology.js#riverChannelTangentAt()) and how
-// much it breaks into rapids (riverRapidsAt()), for
+// much it breaks into rapids (riverRapidsAt()) and how strongly it wells up
+// as a spring, with the way to the spring's centre (riverSpringAt()), for
 // renderer/RiverFlowMaterial.js.
 //
 // It is built on exactly the fine grid renderer/TerrainTileMesh.js gives a
@@ -53,6 +54,7 @@ export function buildRiverTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE, w
     const flows = [];
     const channels = [];
     const rapids = [];
+    const springs = [];
     const indices = [];
     const surfaceAt = (x, z) => riverSurfaceHeightAt(seed, x, z);
     const vertex = (i, j) => {
@@ -73,11 +75,13 @@ export function buildRiverTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE, w
         normals.push(-slopeX / length, 1 / length, -slopeZ / length);
         colors.push(RIVER_SURFACE_COLOR.r, RIVER_SURFACE_COLOR.g, RIVER_SURFACE_COLOR.b, coverage[key]);
         const wet = coverage[key] > 0;
-        const flow = wet ? riverFlowAt(seed, x, z) : { vx: 0, vz: 0 };
-        flows.push(flow.vx, flow.vz);
+        const current = wet ? riverCurrentAt(seed, x, z) : { vx: 0, vz: 0, spring: null };
+        flows.push(current.vx, current.vz);
         const tangent = riverChannelTangentAt(seed, x, z);
         channels.push(tangent.dx, tangent.dz);
         rapids.push(wet ? riverRapidsAt(seed, x, z) : 0);
+        const spring = current.spring;
+        springs.push(spring ? spring.strength : 0, spring ? spring.centreX - x : 0, spring ? spring.centreZ - z : 0);
         index = positions.length / 3 - 1;
         indexOf.set(key, index);
         return index;
@@ -102,6 +106,7 @@ export function buildRiverTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE, w
     geometry.setAttribute('aFlow', new THREE.Float32BufferAttribute(flows, 2));
     geometry.setAttribute('aChannel', new THREE.Float32BufferAttribute(channels, 2));
     geometry.setAttribute('aRapids', new THREE.Float32BufferAttribute(rapids, 1));
+    geometry.setAttribute('aSpring', new THREE.Float32BufferAttribute(springs, 3));
     geometry.setIndex(indices);
 
     const material = makeRiverFlowing(new THREE.MeshStandardMaterial({

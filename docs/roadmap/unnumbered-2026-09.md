@@ -6945,3 +6945,39 @@ from it. Pillar: **Your work is yours, and lives in a world** (the world around 
 - Not done: tall waterfalls (they would need cliffs, a change to the land itself); a spring's welling is the current's
   drift, with no bubbles or sound of its own; a river that runs along the highland edge for a while gets a wider margin
   of pool along it.
+
+## Round pools, and springs that bubble (unnumbered, 2026-10-15)
+
+The pools rivers end in at the highland edge were laid out by the distance straight up the slope from the edge, so
+where a channel ran alongside the edge every point of it seemed to be at an end, and the pool smeared along the whole
+stretch: in an 8,000 × 8,000 sample a fifth of pools (79 of 386) were over 30 units long, the longest 86, against
+about 10 for a round one. And a spring, though its water spread outward, looked and sounded like any other river.
+Pillar: **Your work is yours, and lives in a world** (the world around a build is worth walking to).
+
+- **Round pools** (core/RiverBed.js `poolAt()`): a pool forms only where the channel heads into the highland, fading
+  in as the cosine between the channel and straight uphill rises from 0.35 to 0.6 (`crossing`), and its distance
+  past the edge is measured along the channel, so the pool is round about the river and centred on it. The slope it
+  is laid out by is read 4 units either way, so the land's finest bumps don't make a grazing channel flicker in and
+  out of having a pool. In the same sample, pools over 30 units long fell from 79 to 14, the longest from 86 to 62
+  (those left are a channel weaving in and out along the edge: a short chain of round pools, one at each crossing,
+  not one smeared pool). River ends on land still end in a pool, but for one channel that runs exactly along the
+  edge without ever crossing it squarely.
+- **Springs that look like springs** (core/RiverFlow.js `riverSpringAt()`, new: how strongly the water wells up,
+  and where the spring's centre is): each river vertex carries it (`aSpring`, renderer/RiverTileMesh.js), and the
+  river's shader (renderer/RiverFlowMaterial.js) spreads rings outward from the centre, 1.4 units apart at 0.6 units a
+  second, fading out by 4.5 units, lightening the crests and tilting the light outward, with a few bubbles breaking
+  the surface in the middle. A still pond has none.
+- **And sound like them** (core/AmbientSoundscape.js `AMBIENT_LAYER.SPRING`, audio/WebAudioSoundscapeProvider.js):
+  the loudest spring found underfoot or within 12 m, by its strength and nearness to its centre (heard within 16 m),
+  plays short rising "plips", one to three at a time, more often the nearer you are. The bubbles are scheduled only
+  while a spring is heard, so away from springs nothing runs.
+- docs/Architecture.md's soundscape and the World View guide's **Water** paragraph, in every language ("bubbling
+  springs"), say so.
+- Tests: `RiverEnds` (pools are round about the river: walking along the edge from a pool's centre, the pool ends
+  within its radius; and a spring's water spreads outward where the channel meets the edge squarely),
+  `RiverFlowBrowser` (real WebGL: a spring rings still water and the rings spread outward; reversing them fails),
+  `AmbientSoundscape` (a spring is heard at its centre, less further off, silent far off, and almost nowhere else),
+  `WebAudioSoundscapeProvider` (bubbles are scheduled only while a spring is near, each round schedules the next, and
+  they are audible). Checked by eye on a rendered spring.
+- Not done: a channel that runs exactly along the highland edge without ever heading into it ends without a pool
+  (one such end in the sample).

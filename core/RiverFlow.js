@@ -57,31 +57,67 @@ function smooth01(v) {
 // The water's velocity at (x, z): { vx, vz } in world units a second.
 // Meaningful where the river is (core/Hydrology.js#riverProximityAt() > 0).
 export function riverFlowAt(seed, x, z) {
+    const { vx, vz } = poolCurrentAt(seed, x, z);
+    return { vx, vz };
+}
+
+// The current at (x, z), and, in a highland pool, how it gives way there:
+// the channel's current (`channelVx`, `channelVz`), how far into the pool's
+// own water (x, z) is (`inPool`, 0..1), how much the pool is a spring
+// (`spring`, 0..1), its centre (`centreX`, `centreZ`) and the current
+// itself (`vx`, `vz`).
+function poolCurrentAt(seed, x, z) {
     const tangent = riverChannelTangentAt(seed, x, z);
     const speed = clampUnit(riverChannelFallAt(seed, x, z, tangent) / FULL_SPEED_SLOPE) * MAX_RIVER_SPEED;
     const vx = tangent.dx * speed;
     const vz = tangent.dz * speed;
     const pool = riverPoolAt(seed, x, z);
-    if (!pool || pool.r >= 1) return { vx, vz };
+    if (!pool || pool.r >= 1) return { vx, vz, pool: null };
 
     // In the pool: the channel's current gives way to the pool's own,
     // fully within half its radius.
-    const inPool = 1 - smooth01((pool.r - 0.5) / 0.5);
+    const inPool = (1 - smooth01((pool.r - 0.5) / 0.5)) * pool.crossing;
     const slope = Math.hypot(pool.gx, pool.gz) || 1;
     const upX = pool.gx / slope;
     const upZ = pool.gz / slope;
     // A spring when the river runs away from the highland.
     const spring = smooth01(-(vx * upX + vz * upZ) / (0.3 * MAX_RIVER_SPEED));
     // Outward from the pool's centre: across the channel (the channel
-    // field's own gradient is (tangent.dz, -tangent.dx)) and up the slope.
-    const outX = pool.across * tangent.dz + pool.up * upX;
-    const outZ = pool.across * -tangent.dx + pool.up * upZ;
+    // field's own gradient is (tangent.dz, -tangent.dx)) and on up the
+    // channel into the highland.
+    const outX = pool.across * tangent.dz + pool.up * pool.dirX;
+    const outZ = pool.across * -tangent.dx + pool.up * pool.dirZ;
     const outLength = Math.hypot(outX, outZ) || 1;
     const welling = SPRING_SPEED * spring * smooth01(pool.r * 3);
     return {
         vx: vx * (1 - inPool) + (outX / outLength) * welling * inPool,
-        vz: vz * (1 - inPool) + (outZ / outLength) * welling * inPool
+        vz: vz * (1 - inPool) + (outZ / outLength) * welling * inPool,
+        pool: { inPool, spring, centreX: x - outX, centreZ: z - outZ }
     };
+}
+
+// A spring at (x, z): how strongly the water there wells up (`strength`,
+// 0..1: 1 within the middle of a spring's pool, fading to its rim, 0 in a
+// still pond or off a pool) and where its centre is (`centreX`,
+// `centreZ`), so the renderer can ring the surface out from it
+// (renderer/RiverFlowMaterial.js) and the soundscape can bubble
+// (core/AmbientSoundscape.js). Null where there is no spring.
+export function riverSpringAt(seed, x, z) {
+    return springOf(poolCurrentAt(seed, x, z).pool);
+}
+
+function springOf(pool) {
+    if (!pool) return null;
+    const strength = pool.spring * pool.inPool;
+    if (strength <= 0) return null;
+    return { strength, centreX: pool.centreX, centreZ: pool.centreZ };
+}
+
+// riverFlowAt() and riverSpringAt() at once, for a renderer that wants both
+// at every vertex (renderer/RiverTileMesh.js): the pool is found once.
+export function riverCurrentAt(seed, x, z) {
+    const { vx, vz, pool } = poolCurrentAt(seed, x, z);
+    return { vx, vz, spring: springOf(pool) };
 }
 
 // Rapids: where the river runs down ground well past FULL_SPEED_SLOPE it

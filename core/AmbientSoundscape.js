@@ -4,6 +4,7 @@
 // stored.
 import { ecologyZoneAt, ECOLOGY_ZONE } from './TerrainEcology.js';
 import { isRiverAt } from './Hydrology.js';
+import { riverSpringAt } from './RiverFlow.js';
 import { naturalFeaturesInRegion, TREE_SPECIES } from './NaturalFeatureField.js';
 
 export const AMBIENT_LAYER = Object.freeze({
@@ -15,8 +16,23 @@ export const AMBIENT_LAYER = Object.freeze({
     // Leaves rustling in broadleaf trees and scrub, and wind sighing through
     // conifers, from the trees actually standing around the listener.
     LEAVES: 'leaves',
-    PINES: 'pines'
+    PINES: 'pines',
+    // A spring bubbling up where a river rises (core/RiverFlow.js), heard
+    // only close by.
+    SPRING: 'spring'
 });
+
+// A spring is heard within this distance of its centre, loudest at it.
+const SPRING_EARSHOT = 16;
+// Where around the listener a spring is looked for: the spot underfoot and
+// two rings, near enough to find any pool a spring is heard from.
+const SPRING_SAMPLES = Object.freeze([
+    [0, 0],
+    ...[6, 12].flatMap((radius) => Array.from({ length: 8 }, (_, i) => {
+        const angle = (i / 8) * Math.PI * 2;
+        return [Math.cos(angle) * radius, Math.sin(angle) * radius];
+    }))
+]);
 
 // Trees within this distance are heard, the nearest loudest.
 const TREE_EARSHOT = 20;
@@ -77,6 +93,7 @@ export function ambientMixAt(seed, x, z) {
             }
         }
     }
+    mix[AMBIENT_LAYER.SPRING] = springLevelAt(seed, x, z);
     const trees = naturalFeaturesInRegion(seed, x - TREE_EARSHOT, z - TREE_EARSHOT, x + TREE_EARSHOT, z + TREE_EARSHOT);
     for (const tree of trees) {
         const nearness = 1 - Math.hypot(tree.x - x, tree.z - z) / TREE_EARSHOT;
@@ -89,6 +106,19 @@ export function ambientMixAt(seed, x, z) {
         mix[layer] = Math.min(1, Math.max(0, mix[layer]));
     }
     return mix;
+}
+
+// How loudly a spring bubbles at (x, z): its strength, falling away with
+// distance from its centre; the loudest spring heard wins.
+function springLevelAt(seed, x, z) {
+    let level = 0;
+    for (const [dx, dz] of SPRING_SAMPLES) {
+        const spring = riverSpringAt(seed, x + dx, z + dz);
+        if (!spring) continue;
+        const nearness = 1 - Math.hypot(spring.centreX - x, spring.centreZ - z) / SPRING_EARSHOT;
+        if (nearness > 0) level = Math.max(level, spring.strength * nearness);
+    }
+    return level;
 }
 
 // The same mix after dark (core/DayCycle.js): `nightLevel` from 0 (day) to 1
