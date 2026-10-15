@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 58af5105d177cff3 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 29a889111fb679ab -->
 # 03 — Visão do mundo
 
 <!-- languages -->
@@ -193,9 +193,14 @@ gira devagar em torno de um ponto alto no norte, então as estrelas nascem no
 leste e se põem no oeste junto com a lua, e todos veem as mesmas estrelas no
 mesmo momento.
 
+As nuvens vêm e vão, as mesmas para todos no mesmo momento. Quase sempre
+passam algumas nuvens brancas; de vez em quando o céu fica nublado, e às
+vezes fica cinzento e encoberto, com luz mais suave e sombras mais fracas.
+Nunca fica tão escuro a ponto de as construções ficarem difíceis de ver.
+
 Se você preferir que seja sempre dia, marque **Sempre de dia** no fim do
-painel, logo acima de **Sombras**. A escolha fica
-lembrada neste dispositivo e não muda nada para mais ninguém.
+painel, logo acima de **Sombras**. O céu também fica
+limpo. A escolha fica lembrada neste dispositivo e não muda nada para mais ninguém.
 
 ## Som
 

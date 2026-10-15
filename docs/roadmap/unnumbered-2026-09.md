@@ -6981,3 +6981,33 @@ Pillar: **Your work is yours, and lives in a world** (the world around a build i
   they are audible). Checked by eye on a rendered spring.
 - Not done: a channel that runs exactly along the highland edge without ever heading into it ends without a pool
   (one such end in the sample).
+
+## Clouds and overcast skies (unnumbered, 2026-10-15)
+
+World View's sky turned from day to night and back, but it was always clear. Now clouds come and go, the same for
+everyone at the same moment, and now and then the sky turns grey and overcast. This is the first half of weather;
+rain, its rings on the water and its sound come next. Pillar: **Your work is yours, and lives in a world** (the world
+around a build is worth walking to). It changes nothing for a newcomer: there is nothing to learn, and Always day
+keeps the sky clear.
+
+- **A weather clock** (core/Weather.js, new): `weatherAt(seconds)` gives the cloud cover and how overcast it is, from
+  the wall clock alone, as the day and night are, so nothing is sent or stored. Spells of 8 minutes each settle on a
+  cover from a hash of their number (about 60% fair with a few clouds, 25% cloudy, 15% overcast), and blend into the
+  next over 2 minutes.
+- **Overcast light** (`overcastLook()`): the sky greys, the sun's light dims and goes pale and some of it comes back
+  as fill from above, so shadows soften; never darker than a clear night, and lamps don't come on for clouds.
+- **Clouds** (renderer/CloudSky.js, new): a layer 180 m up, drawn on a dome round the camera in front of the sun,
+  the moon and the stars and behind everything else, shaped by a small tiling noise texture read at two sizes
+  drifting with the wind by the world's clock, covering as much of the sky as the weather says, and coloured by the
+  sky: white by day, rosy at dusk, dim at night. With no clouds it isn't drawn.
+- **Always day keeps it fair** (application/worldNavigation/dayCycleMethods.js `weather()`): `FAIR_WEATHER`, a clear
+  sky. Its hint says so in every language, as does the World View guide (a new paragraph on clouds, in every
+  language). docs/Architecture.md's **Day and night** gains **Clouds and overcast**.
+- Tests: `Weather` (the same moment gives the same weather; the shares of fair, cloudy and overcast spells; a spell
+  holds and changes gradually; overcast greys the sky and dims the sun, never below a clear night; the session hands
+  World View the weather and the overcast look, and Always day keeps both fair), `CloudSkyBrowser` (real WebGL: no
+  clouds in a clear sky; about as much of the sky clouded as the cover says, more the cloudier, all of it overcast;
+  white by day and dim at night; the same moment draws the same clouds, a minute later they have moved, and they
+  drift smoothly however late the clock; none below the horizon, none through what is in front, none under water;
+  the shader compiles). Checked by eye at day, dusk and night, fair, cloudy and overcast.
+- Not done: rain (next); the weather is the same over the whole world, with no fronts passing from place to place.

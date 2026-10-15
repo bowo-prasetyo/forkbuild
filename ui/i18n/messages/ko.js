@@ -1730,7 +1730,7 @@ export default Object.freeze({
     'worldView.advancedTools': '고급 도구 보기',
     'worldView.advancedToolsHint': '좌표, 위치 검색, 카메라·편집 줄, 월드 조우, 주장된 작품, 발견한 장소 이름, 내 게시물의 네트워크 도구. 이 기기에 기억됩니다.',
     'worldView.alwaysDay': '항상 낮',
-    'worldView.alwaysDayHint': '이곳의 하늘은 {minutes}분마다 낮에서 밤으로, 다시 낮으로 바뀌고, 어두워지면 창문과 랜턴에 불이 켜집니다. 이 기기에 기억됩니다.',
+    'worldView.alwaysDayHint': '이곳의 하늘은 {minutes}분마다 낮에서 밤으로, 다시 낮으로 바뀌고, 구름이 오가며, 어두워지면 창문과 랜턴에 불이 켜집니다. ‘항상 낮’을 켜면 늘 맑은 낮이 됩니다. 이 기기에 기억됩니다.',
     'worldView.shadows': '그림자',
     'worldView.shadowsHint': '해와 달이 주변에 그림자를 드리웁니다. 휴대폰에서는 월드 보기가 부드럽게 움직이도록 처음에는 꺼져 있습니다. 이 기기에 기억됩니다.',
     'worldView.askTheResidentNextTo': '옆에 있는 주민에게 주변에 무엇이 있는지 묻기 (T)',

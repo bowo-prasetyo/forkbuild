@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 58af5105d177cff3 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 29a889111fb679ab -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
@@ -199,9 +199,14 @@ berbintang berputar perlahan mengelilingi satu titik tinggi di utara, sehingga
 bintang terbit di timur dan terbenam di barat bersama bulan, dan semua orang
 melihat bintang yang sama pada saat yang sama.
 
+Awan datang dan pergi, sama bagi semua orang pada saat yang sama.
+Biasanya beberapa awan putih melintas; sesekali langit berawan, dan kadang
+menjadi kelabu dan mendung, dengan cahaya yang lebih lembut dan bayangan
+yang lebih samar. Tidak pernah segelap itu sampai bangunan sulit dilihat.
+
 Jika Anda lebih suka selalu siang, centang **Selalu siang** di bagian bawah
-panel, tepat di atas **Bayangan**. Pilihan ini diingat di
-perangkat ini dan tidak mengubah apa pun bagi orang lain.
+panel, tepat di atas **Bayangan**. Langit pun tetap
+cerah. Pilihan ini diingat di perangkat ini dan tidak mengubah apa pun bagi orang lain.
 
 ## Suara
 

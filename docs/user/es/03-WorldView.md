@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 58af5105d177cff3 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 29a889111fb679ab -->
 # 03 — Vista del mundo
 
 <!-- languages -->
@@ -199,9 +199,14 @@ despacio alrededor de un punto alto en el norte, así que las estrellas salen
 por el este y se ponen por el oeste con la luna, y todos ven las mismas
 estrellas en el mismo momento.
 
+Las nubes vienen y van, las mismas para todos en el mismo momento. Casi
+siempre pasan unas pocas nubes blancas; de vez en cuando el cielo se nubla, y
+a veces se vuelve gris y cubierto, con una luz más suave y sombras más
+tenues. Nunca oscurece tanto como para que cueste ver las construcciones.
+
 Si prefiere que siempre sea de día, marque **Siempre de día** al final del
-panel, justo encima de **Sombras**. Se recuerda en
-este dispositivo y no cambia nada para nadie más.
+panel, justo encima de **Sombras**. Así el cielo también
+queda despejado. Se recuerda en este dispositivo y no cambia nada para nadie más.
 
 ## Sonido
 
