@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 457f63313d61fa43 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 7ddc6a422dbb8936 -->
 # 03 — Vista del mundo
 
 <!-- languages -->
@@ -210,7 +210,7 @@ lago, el mar o un río, y la oye, mientras los pájaros y los insectos se
 callan. Si entra en una construcción, dentro no llueve: oye la lluvia
 repiquetear en el tejado y la ve seguir cayendo fuera. Con la lluvia, el
 suelo y las construcciones se oscurecen y brillan, y se secan en unos minutos
-cuando para. La lluvia es solo
+cuando para. Los chaparrones más fuertes traen a veces una tormenta suave: de vez en cuando un relámpago ilumina un poco el cielo y unos segundos después retumba un trueno lejano. Si su dispositivo pide reducir el movimiento, los relámpagos no destellan. La lluvia es solo
 para ver y oír: los ríos no crecen y usted camina
 igual de rápido.
 

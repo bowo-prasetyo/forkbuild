@@ -1540,6 +1540,19 @@ and a ring spreads from it to 0.55 m, fading, lightening the water and tilting i
 cell and the eight round it; the rings fade out from 10 to 28 m away, and at no rain the chunk returns at once. Its
 `rain` is one { value } `Renderer` hands every water tile, as it does `waveTime`.
 
+**Storms.** core/Storms.js storms in the heaviest downpours: `storminessAt()` rises from rain 0.75 to 0.9 (about a
+third of rainy spells). Time is cut into 30-second slots; in each, a strike may fall within its first 10 s (so
+strikes are at least 20 s apart), with a chance of 0.4 times the storminess: one about every 75 s at the height of
+a storm. Each strike hashes its distance, which sets its brightness, and how soon (2.5 to 7 s) and how loud its
+thunder is. `lightningAt()` is two soft pulses (the second half as bright) within half a second, and
+`lightningLook()` lifts the sky's colour 35% of the way and the fill light by up to 0.6 towards a pale blue-white,
+never white: dayCycleMethods' `skyLook()` applies it each frame unless Always day is on or the device asks for
+reduced motion (`setNoFlashes()`, from `prefers-reduced-motion` in ui/views/WorldView.js), and the clouds take the
+flash's colour from the look. `thunderBetween(from, to)` lists the thunder heard in a span, catching up at most 60 s
+after a long gap; WorldSoundscapeService asks for it on every sample (`weatherClock`, `thunderBetween`, from the
+session, none in Always day) and the provider's `playThunder()` plays a low, low-passed brown-noise rumble that
+swells over half a second and rolls away over five in uneven rolls, never a crack.
+
 **Wet ground.** `core/Weather.js#wetnessAt(seconds)` follows the rain (`rainAt()`) in 5-second steps on a grid fixed
 in time, from dry at the start of the spell before last, towards 2.5 × the rain (so a light shower soaks too) with a
 40-second time constant while it rises and a 150-second one while it dries: half dry in under two minutes, nearly in

@@ -192,8 +192,11 @@ lake, the sea or a river, and you hear it, while the birds and insects go
 quiet. Step inside a build and it stays dry: you hear the rain drumming on
 the roof instead, and see it still falling outside. The ground and builds
 get darker and glisten in the rain, and dry off over a few minutes after it
-stops. Rain is only for
-looking and listening: rivers don't rise, and you walk just as fast.
+stops. The heaviest downpours sometimes bring a gentle storm: now and then
+lightning softly lights the sky, and thunder rumbles far off a few seconds
+later. If your device is set to reduce motion, the lightning doesn't flash.
+Rain is only for looking and listening: rivers don't rise, and you walk just
+as fast.
 
 If you'd rather it were always day, tick **Always day** at the bottom of the
 panel, just above **Shadows**. It keeps the sky clear as well. It's

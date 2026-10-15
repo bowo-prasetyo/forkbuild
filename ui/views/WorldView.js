@@ -968,6 +968,11 @@ export default {
             if (typeof session.setAlwaysDay === 'function') session.setAlwaysDay(alwaysDay.value);
         }
         if (typeof session.setAlwaysDay === 'function') session.setAlwaysDay(alwaysDay.value);
+        // Lightning doesn't flash for anyone who asks for reduced motion
+        // (core/Storms.js); its thunder is still heard.
+        if (typeof session.setNoFlashes === 'function' && typeof window.matchMedia === 'function') {
+            session.setNoFlashes(window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+        }
 
         // Shadows from the sun and the moon, as this device chose
         // (application/settings/WorldViewShadowStore.js).

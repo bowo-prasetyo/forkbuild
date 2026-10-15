@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 457f63313d61fa43 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 7ddc6a422dbb8936 -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
@@ -210,7 +210,7 @@ tetesannya jatuh ke danau, laut, atau sungai, dan Anda mendengarnya,
 sementara burung dan serangga terdiam. Masuklah ke dalam bangunan dan Anda
 tetap kering: Anda mendengar hujan berderai di atap dan melihatnya tetap
 turun di luar. Saat hujan, tanah dan bangunan menjadi lebih gelap dan
-berkilau, lalu mengering dalam beberapa menit setelah hujan reda. Hujan hanya untuk dilihat dan
+berkilau, lalu mengering dalam beberapa menit setelah hujan reda. Hujan paling deras kadang membawa badai yang lembut: sesekali kilat menerangi langit dengan lembut, dan beberapa detik kemudian guntur bergemuruh di kejauhan. Jika perangkat Anda diatur untuk mengurangi gerakan, kilat tidak berkedip. Hujan hanya untuk dilihat dan
 didengar: sungai tidak meluap, dan Anda tetap berjalan secepat biasa.
 
 Jika Anda lebih suka selalu siang, centang **Selalu siang** di bagian bawah

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 457f63313d61fa43 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 7ddc6a422dbb8936 -->
 # 03 — Weltansicht
 
 <!-- languages -->
@@ -211,7 +211,7 @@ Vögel und Insekten verstummen. Treten Sie in ein Bauwerk, bleibt es trocken:
 Sie hören den Regen aufs Dach trommeln und sehen ihn draußen weiter fallen.
 Boden und Bauwerke werden im Regen dunkler und glänzen und trocknen nach dem
 Regen in ein paar Minuten wieder ab.
-Regen ist nur zum Ansehen und Anhören: Flüsse
+Die stärksten Güsse bringen manchmal ein sanftes Gewitter: Ab und zu erhellt ein Blitz leicht den Himmel, und ein paar Sekunden später grollt fern der Donner. Ist Ihr Gerät auf reduzierte Bewegung eingestellt, blitzt es nicht. Regen ist nur zum Ansehen und Anhören: Flüsse
 steigen nicht, und Sie gehen genauso schnell.
 
 Wenn Sie lieber immer Tag hätten, setzen Sie unten im Bereich, direkt über

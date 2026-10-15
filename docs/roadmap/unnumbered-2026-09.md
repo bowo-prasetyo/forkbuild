@@ -7095,3 +7095,28 @@ yours, and lives in a world** (the world around a build is worth walking to). Al
   roof dry, above it and outside wet; a wall darkens less than ground; instanced bricks with their surface soak;
   the shaders compile). Checked by eye, overcast and in sun, dry, drying and soaked.
 - Not done: no puddles; trees, rocks and animals don't look wet.
+
+## Gentle storms (unnumbered, 2026-10-15)
+
+The last of the weather: the heaviest downpours now and then become a gentle storm, lightning softly lighting the sky
+and thunder rumbling far off a few seconds later, the same for everyone at the same moment. Pillar: **Your work is
+yours, and lives in a world** (the world around a build is worth walking to). Always day has none.
+
+- **Storms** (core/Storms.js, new): only rain from 0.75 up storms (about a third of rainy spells). A strike can fall
+  in each 30-second slot, never closer than 20 s to the last, about one every 75 s at the height of a storm; each has
+  its own distance, setting how bright it is and how soon and loud its thunder.
+- **Kept gentle for anyone sensitive to flashing light**: a flash is at most two soft pulses within half a second,
+  lifting the sky and its light part of the way, never to white, far under three flashes a second; a device that
+  asks for reduced motion sees no flashes at all (`setNoFlashes()`, from `prefers-reduced-motion`), and still hears
+  the thunder.
+- **Thunder** (`thunderBetween()`; WorldSoundscapeService `weatherClock`, `thunderBetween`;
+  audio/WebAudioSoundscapeProvider.js `playThunder()`): a distant, low rumble that swells and rolls away over five
+  seconds, quieter the further the strike, never a crack; each strike heard once however the samples fall, and
+  only the last minute's after a long gap.
+- The World View guide's rain paragraph says so, in every language; docs/Architecture.md gains **Storms**.
+- Tests: `Storms` (only the heaviest downpours storm; strikes at least 20 s apart and about every 75 s at the
+  height; a flash at most two soft pulses within half a second, never white; thunder once per strike, 2.5 to 7 s
+  later, nearer sooner and louder, the same however the time is cut; the session flashes the sky unless asked for
+  reduced motion or in Always day, and the soundscape plays each thunder once), `WebAudioSoundscapeProvider`
+  (thunder is audible and rolls away). Checked by eye at night and by day.
+- Not done: no lightning bolt drawn in the sky, only its light; the weather is the same over the whole world.
