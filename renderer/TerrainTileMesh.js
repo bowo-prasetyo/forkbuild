@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { makeWet, TERRAIN_WET } from './WetSurfaces.js';
 import { terrainHeightAt } from '../core/TerrainHeightField.js';
 import {
     hydrologyGroundColorAt, riverTintAt, withRiverTint, riverChannelDistanceAt, RIVER_CHANNEL_THRESHOLD
@@ -77,7 +78,9 @@ export function tileHasRiverDetail(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE) {
     return false;
 }
 
-export function buildTerrainTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE) {
+// `wetSurfaces` (renderer/WetSurfaces.js#createWetSurfaces()), when given,
+// lets the ground soak up the rain and dry again.
+export function buildTerrainTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE, wetSurfaces = null) {
     const fine = tileHasRiverDetail(tx, tz, seed, tileSize);
     const segments = fine ? TILE_SEGMENTS * RIVER_SUBDIVISIONS : TILE_SEGMENTS;
     const geometry = new THREE.PlaneGeometry(tileSize, tileSize, segments, segments);
@@ -106,6 +109,7 @@ export function buildTerrainTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE)
     // buffer set above is the ONLY source of terrain color, never a flat
     // material tint layered on top of it.
     const material = new THREE.MeshStandardMaterial({ vertexColors: true });
+    if (wetSurfaces) makeWet(material, wetSurfaces, TERRAIN_WET);
     const mesh = new THREE.Mesh(geometry, material);
     // Vertex Y already holds the ABSOLUTE world elevation (sampled at
     // worldX/worldZ above), so the mesh's own position.y stays 0 — only

@@ -1454,8 +1454,8 @@ geometry and materials are shared by every tile.
     application/worldNavigation/dayCycleMethods.js  setShadowsOn(): setShadowsEnabled(on) on the render facade
     renderer/Renderer.js#setShadowsEnabled()       renderer/SunShadows.js, which follows the camera's target each frame
 
-    core/Weather.js#weatherAt(seconds)             cloud cover 0..1, how overcast 0..1 and rain 0..1 (same clock;
-            │                                       FAIR_WEATHER, clear and dry, while Always day); overcastLook() greys
+    core/Weather.js#weatherAt(seconds)             cloud cover 0..1, how overcast 0..1, rain 0..1 and wetness 0..1
+            │                                       (same clock; FAIR_WEATHER, clear and dry, while Always day); overcastLook() greys
             │                                       skyLookAt()'s look
     application/worldNavigation/dayCycleMethods.js  every render frame: setWeather(weather) on the render facade
     renderer/Renderer.js#setWeather()              renderer/CloudSky.js and renderer/RainFall.js (made on first call),
@@ -1539,6 +1539,18 @@ what falls inside them. renderer/RainRings.js is a shader chunk the lakes and se
 and a ring spreads from it to 0.55 m, fading, lightening the water and tilting its light. Each pixel looks at its
 cell and the eight round it; the rings fade out from 10 to 28 m away, and at no rain the chunk returns at once. Its
 `rain` is one { value } `Renderer` hands every water tile, as it does `waveTime`.
+
+**Wet ground.** `core/Weather.js#wetnessAt(seconds)` follows the rain (`rainAt()`) in 5-second steps on a grid fixed
+in time, from dry at the start of the spell before last, towards 2.5 × the rain (so a light shower soaks too) with a
+40-second time constant while it rises and a 150-second one while it dries: half dry in under two minutes, nearly in
+eight. The steps followed last are kept, so a frame costs a step or two, and the answer is the same however it is
+asked. renderer/WetSurfaces.js patches the terrain's material (renderer/TerrainTileMesh.js) and every brick's, the
+instanced ones (renderer/BrickInstanceRegistry.js) and those `Renderer#add()` is given: by the wetness (one shared
+uniform per owner, set from `setWeather()`; the registry's through the render facade) a surface darkens, the
+ground by up to 32% and bricks by 20%, walls only 45% as much as what faces the sky, and what faces the sky loses
+roughness (to 0.62 for ground, 0.42 for bricks) for a sheen. Below the underside of the roof over the avatar
+(the shelter's `ceiling`) and inside its footprint nothing is wet, so the room it stands in stays dry while its
+roof does not. At no wetness the patch changes nothing.
 
 **Shadows.** The directional light casts them when World View turns them on (`Renderer#setShadowsEnabled()`,
 renderer/SunShadows.js): one 2048² PCF-soft shadow map over a square 45 m each way round the camera's target (the

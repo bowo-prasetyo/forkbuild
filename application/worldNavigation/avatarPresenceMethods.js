@@ -462,7 +462,8 @@ export const avatarPresenceMethods = {
     },
 
     // Keeps the rain off the build the avatar stands in, whatever the camera
-    // (renderer/RainFall.js): its footprint and its top, in the renderer's
+    // (renderer/RainFall.js), and its room dry (renderer/WetSurfaces.js): its
+    // footprint, its top and the underside of its roof, in the renderer's
     // (ground-lifted) coordinates, handed over only when that changes; null
     // under open sky. Riding, or with no avatar, there is none.
     _setRainShelter(view) {
@@ -471,9 +472,12 @@ export const avatarPresenceMethods = {
             maxX: view.cutaway.maxX,
             minZ: view.cutaway.minZ,
             maxZ: view.cutaway.maxZ,
-            top: view.cutaway.top + view.groundY
+            top: view.cutaway.top + view.groundY,
+            // The underside of the roof over the avatar: below it, the room
+            // stays dry (renderer/WetSurfaces.js).
+            ceiling: view.cutaway.ceiling + view.groundY
         }) : null;
-        const key = shelter ? `${shelter.minX.toFixed(2)},${shelter.maxX.toFixed(2)},${shelter.minZ.toFixed(2)},${shelter.maxZ.toFixed(2)},${shelter.top.toFixed(2)}` : null;
+        const key = shelter ? `${shelter.minX.toFixed(2)},${shelter.maxX.toFixed(2)},${shelter.minZ.toFixed(2)},${shelter.maxZ.toFixed(2)},${shelter.top.toFixed(2)},${shelter.ceiling.toFixed(2)}` : null;
         if (key === this._rainShelterKey) return;
         this._rainShelterKey = key;
         this._rainShelter = shelter;

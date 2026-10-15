@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 3be15df9efe58aef -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 457f63313d61fa43 -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
@@ -209,7 +209,8 @@ melihatnya turun di sekitar Anda dan lingkaran yang menyebar di tempat
 tetesannya jatuh ke danau, laut, atau sungai, dan Anda mendengarnya,
 sementara burung dan serangga terdiam. Masuklah ke dalam bangunan dan Anda
 tetap kering: Anda mendengar hujan berderai di atap dan melihatnya tetap
-turun di luar. Hujan hanya untuk dilihat dan
+turun di luar. Saat hujan, tanah dan bangunan menjadi lebih gelap dan
+berkilau, lalu mengering dalam beberapa menit setelah hujan reda. Hujan hanya untuk dilihat dan
 didengar: sungai tidak meluap, dan Anda tetap berjalan secepat biasa.
 
 Jika Anda lebih suka selalu siang, centang **Selalu siang** di bagian bawah

@@ -7071,3 +7071,27 @@ in a world** (a build is a place to shelter in).
   Checked by eye from inside a room looking out of its doorway.
 - Not done: only the build the avatar stands in shelters, and only under a roof within 7 m of its feet (what
   core/IndoorView.js counts as indoors); a tree's canopy is open sky.
+
+## Wet ground (unnumbered, 2026-10-15)
+
+In the rain the ground and builds looked as dry as on a sunny day. Now they darken and glisten as they soak up the
+rain, and dry off over a few minutes once it stops, the same for everyone at the same moment. Pillar: **Your work is
+yours, and lives in a world** (the world around a build is worth walking to). Always day keeps it dry.
+
+- **How wet it is** (core/Weather.js `wetnessAt()`, `rainAt()`, and `wetness` in every weather): the rain followed
+  in 5-second steps on a grid fixed in time, soaking in quickly (about a minute, even a light shower) and drying
+  slowly (half in under two minutes, nearly in eight); the last steps are kept, so following it frame to frame is
+  cheap and every device gets the same answer.
+- **Wet surfaces** (renderer/WetSurfaces.js, new): the terrain and every brick, instanced or not, darken by the
+  wetness (ground more than bricks, walls less than what faces the sky) and what faces the sky gets a soft sheen.
+  One shared value per owner a frame (`Renderer#setWeather()`, `BrickInstanceRegistry#setWetness()`).
+- **The room stays dry**: the shelter the session hands over gains the underside of the roof (`ceiling`); below it,
+  inside the build's footprint, nothing is wet, while the roof itself is.
+- The World View guide's rain paragraph says so, in every language; docs/Architecture.md gains **Wet ground**.
+- Tests: `WetGround` (dry after a dry spell; a downpour soaks the ground within a couple of minutes; half dry within
+  two, nearly dry in eight; the same however asked, smoothly across spells; the session is wet with the world and
+  Always day keeps it dry; the shelter carries the roof's underside; bricks soak with one number),
+  `WetSurfacesBrowser` (real WebGL: dry looks exactly as before; soaked ground darker, damp in between; under the
+  roof dry, above it and outside wet; a wall darkens less than ground; instanced bricks with their surface soak;
+  the shaders compile). Checked by eye, overcast and in sun, dry, drying and soaked.
+- Not done: no puddles; trees, rocks and animals don't look wet.
