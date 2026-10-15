@@ -408,6 +408,7 @@ export const avatarPresenceMethods = {
         const perspective = this._cameraPerspective;
         const cutaway = view && perspective !== CameraPerspective.FIRST_PERSON ? view.cutaway : null;
         this._setIndoorCutaway(cutaway, view ? view.groundY : 0);
+        this._setRainShelter(view);
         if (!view || !this._spatialCameraController) {
             return false;
         }
@@ -458,6 +459,33 @@ export const avatarPresenceMethods = {
     // update stood under a roof).
     isIndoors() {
         return Boolean(this._indoorCutawayKey);
+    },
+
+    // Keeps the rain off the build the avatar stands in, whatever the camera
+    // (renderer/RainFall.js): its footprint and its top, in the renderer's
+    // (ground-lifted) coordinates, handed over only when that changes; null
+    // under open sky. Riding, or with no avatar, there is none.
+    _setRainShelter(view) {
+        const shelter = view ? Object.freeze({
+            minX: view.cutaway.minX,
+            maxX: view.cutaway.maxX,
+            minZ: view.cutaway.minZ,
+            maxZ: view.cutaway.maxZ,
+            top: view.cutaway.top + view.groundY
+        }) : null;
+        const key = shelter ? `${shelter.minX.toFixed(2)},${shelter.maxX.toFixed(2)},${shelter.minZ.toFixed(2)},${shelter.maxZ.toFixed(2)},${shelter.top.toFixed(2)}` : null;
+        if (key === this._rainShelterKey) return;
+        this._rainShelterKey = key;
+        this._rainShelter = shelter;
+        if (this._session && typeof this._session.setRainShelter === 'function') {
+            this._session.setRainShelter(shelter);
+        }
+    },
+
+    // Whether the avatar stands under a roof, whatever the camera: where the
+    // rain is heard drumming on it rather than falling round it.
+    isSheltered() {
+        return Boolean(this._rainShelterKey);
     },
 
     // Whether the camera currently follows the local avatar's

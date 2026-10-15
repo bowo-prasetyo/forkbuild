@@ -7045,3 +7045,29 @@ to). Nothing to learn, and Always day keeps it dry.
   Checked by eye over a lake, by day and at night.
 - Not done: rain falls through roofs (nothing tells it where they are); the ground doesn't look wet; rivers don't
   rise; no thunder or lightning.
+
+## Rain stays outside, and drums on the roof (unnumbered, 2026-10-15)
+
+Rain fell through roofs: walking into a house in First Person while it rained, it rained in the living room. Now
+the build you stand in stays dry, and you hear the rain drumming on its roof. Pillar: **Your work is yours, and lives
+in a world** (a build is a place to shelter in).
+
+- **The rain stays outside** (renderer/RainFall.js `setShelter()`): the session hands the renderer the build the
+  avatar stands in, its footprint and its top (core/IndoorView.js's `indoorCutaway()` gains `top`), in every camera
+  perspective, only when it changes (application/worldNavigation/avatarPresenceMethods.js `_setRainShelter()`,
+  `isSheltered()`; `Renderer#setRainShelter()`). The rain's shader folds away every streak any part of which is inside
+  that footprint and below that top, so the room is dry while it still rains outside its windows and doorway.
+- **Drumming on the roof** (core/AmbientSoundscape.js `AMBIENT_LAYER.ROOF`, `ambientMixInRain(mix, rain,
+  sheltered)`; audio/WebAudioSoundscapeProvider.js): under a roof the rain drums on it, duller and closer, and the
+  rain outside is heard faintly through the walls. WorldSoundscapeService resamples as you step in or out
+  (`sheltered`, from the session).
+- The World View guide's rain paragraph says so, in every language; docs/Architecture.md's **Rain** and
+  soundscape too.
+- Tests: `RainShelter` (a build's shelter reaches its top; the session hands the renderer the shelter in every
+  perspective, not again for a step within, and takes it away outside or riding; under a roof rain drums on it and
+  the rain outside is faint; the soundscape follows you in and out), `RainBrowser` (real WebGL: under a roof no
+  streak falls in the room while it still rains outside; breaking the shelter fails it),
+  `WebAudioSoundscapeProvider` (the drumming is audible; World View hands the soundscape whether you are sheltered).
+  Checked by eye from inside a room looking out of its doorway.
+- Not done: only the build the avatar stands in shelters, and only under a roof within 7 m of its feet (what
+  core/IndoorView.js counts as indoors); a tree's canopy is open sky.

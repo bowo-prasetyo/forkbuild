@@ -83,7 +83,7 @@ function zeroCrossingRate(data, from, to) {
 
 async function runTests() {
     // Every continuous layer makes sound on its own, and silence is silent.
-    for (const layer of ['wind', 'water', 'stream', 'insects', 'leaves', 'pines', 'rain']) {
+    for (const layer of ['wind', 'water', 'stream', 'insects', 'leaves', 'pines', 'rain', 'roof']) {
         const rms = await render((provider) => provider.setLayerLevels({ ...silence(), [layer]: 1 }));
         assert(rms > 0.001, `${layer} is audible (rms ${rms})`);
     }
@@ -582,6 +582,9 @@ async function runTests() {
         assert(factoryArgs.rainLevel() === 0, 'a session with no weather is dry');
         session.weather = () => ({ cloudCover: 1, overcast: 1, rain: 0.7 });
         assert(factoryArgs.rainLevel() === 0.7, 'and the soundscape hears the session\'s rain');
+        assert(factoryArgs.sheltered() === false, 'a session with no roofs shelters no one');
+        session.isSheltered = () => true;
+        assert(factoryArgs.sheltered() === true, 'and the soundscape hears when you are under one');
 
         window.dispatchEvent(new PointerEvent('pointerdown'));
         assert(events.includes('unlock'), 'a tap unlocks audio');

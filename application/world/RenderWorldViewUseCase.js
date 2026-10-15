@@ -808,6 +808,11 @@ export class RenderWorldViewUseCase {
             setWeather: (weather) => {
                 renderer.setWeather(weather);
             },
+            // The build the avatar stands in, which the rain falls round
+            // (renderer/RainFall.js), or null under open sky.
+            setRainShelter: (shelter) => {
+                renderer.setRainShelter(shelter);
+            },
             // Whether the sun and the moon cast shadows (renderer/SunShadows.js).
             setShadowsEnabled: (enabled) => {
                 renderer.setShadowsEnabled(enabled);

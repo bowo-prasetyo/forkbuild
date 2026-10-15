@@ -22,7 +22,9 @@ export const AMBIENT_LAYER = Object.freeze({
     SPRING: 'spring',
     // Rain falling (core/Weather.js): the same wherever the listener stands,
     // set by ambientMixInRain(), never by the place.
-    RAIN: 'rain'
+    RAIN: 'rain',
+    // Rain drumming on the roof over the listener's head, under shelter.
+    ROOF: 'roof'
 });
 
 // A spring is heard within this distance of its centre, loudest at it.
@@ -141,13 +143,18 @@ export function ambientMixAtNight(mix, nightLevel) {
 
 // The same mix in the rain (core/Weather.js): `rain` from 0 (dry) to 1 (a
 // downpour) is heard as it falls, and birds and insects mostly fall quiet.
-export function ambientMixInRain(mix, rain) {
+// `sheltered` under a roof, it drums on the roof instead, and the rain
+// outside is heard only faintly, through the walls.
+const RAIN_THROUGH_WALLS = 0.3;
+
+export function ambientMixInRain(mix, rain, sheltered = false) {
     const wet = Number.isFinite(rain) ? Math.min(Math.max(rain, 0), 1) : 0;
     if (wet === 0) {
         return mix;
     }
     const next = { ...mix };
-    next[AMBIENT_LAYER.RAIN] = wet;
+    next[AMBIENT_LAYER.RAIN] = sheltered ? wet * RAIN_THROUGH_WALLS : wet;
+    next[AMBIENT_LAYER.ROOF] = sheltered ? wet : 0;
     next[AMBIENT_LAYER.BIRDS] = mix[AMBIENT_LAYER.BIRDS] * (1 - 0.85 * wet);
     next[AMBIENT_LAYER.INSECTS] = mix[AMBIENT_LAYER.INSECTS] * (1 - 0.8 * wet);
     return next;

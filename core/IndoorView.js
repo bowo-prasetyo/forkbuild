@@ -69,7 +69,10 @@ export function connectedBoxes(seed, boxes, { gap = CONNECTED_GAP, limit = MAX_B
 
 // What to cut away while the avatar at `position` stands inside a build:
 // `{ minX, maxX, minZ, maxZ, y }`, the build's footprint and the height above
-// which its bricks are hidden, or null outdoors. In the avatar's coordinates.
+// which its bricks are hidden, or null outdoors; with `ceiling`, the bottom of
+// the roof over the avatar, and `top`, the top of the whole build, which keeps
+// the rain off everything under it (renderer/RainFall.js). In the avatar's
+// coordinates.
 export function indoorCutaway(position, boxes) {
     const ceiling = ceilingOver(position, boxes);
     if (!ceiling) return null;
@@ -78,14 +81,16 @@ export function indoorCutaway(position, boxes) {
     let maxX = -Infinity;
     let minZ = Infinity;
     let maxZ = -Infinity;
+    let top = -Infinity;
     for (const box of build) {
         minX = Math.min(minX, box.min.x);
         maxX = Math.max(maxX, box.max.x);
         minZ = Math.min(minZ, box.min.z);
         maxZ = Math.max(maxZ, box.max.z);
+        top = Math.max(top, box.max.y);
     }
     const y = Math.min(position.y + CUT_ABOVE_FEET, ceiling.min.y);
-    return Object.freeze({ minX, maxX, minZ, maxZ, y, ceiling: ceiling.min.y });
+    return Object.freeze({ minX, maxX, minZ, maxZ, y, ceiling: ceiling.min.y, top });
 }
 
 // The Editor's See inside (docs/reviews/CreativeDirection-2026-10-12b.md,

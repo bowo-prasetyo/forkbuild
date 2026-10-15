@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 077aa1744307f526 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 3be15df9efe58aef -->
 # 03 — Visão do mundo
 
 <!-- languages -->
@@ -201,7 +201,9 @@ Nunca fica tão escuro a ponto de as construções ficarem difíceis de ver.
 De vez em quando um céu encoberto traz chuva, por alguns minutos de cada
 vez. Você a vê cair ao seu redor e anéis se espalharem onde as gotas caem num
 lago, no mar ou num rio, e a ouve, enquanto os pássaros e os insetos se
-calam. A chuva é só para ver e ouvir: os rios não sobem e você anda tão
+calam. Se você entrar numa construção, lá dentro não chove: você ouve a
+chuva tamborilar no telhado e a vê continuar caindo lá fora. A chuva é só
+para ver e ouvir: os rios não sobem e você anda tão
 rápido quanto antes.
 
 Se você preferir que seja sempre dia, marque **Sempre de dia** no fim do

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 077aa1744307f526 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 3be15df9efe58aef -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
@@ -207,7 +207,9 @@ yang lebih samar. Tidak pernah segelap itu sampai bangunan sulit dilihat.
 Sesekali langit mendung membawa hujan, beberapa menit setiap kalinya. Anda
 melihatnya turun di sekitar Anda dan lingkaran yang menyebar di tempat
 tetesannya jatuh ke danau, laut, atau sungai, dan Anda mendengarnya,
-sementara burung dan serangga terdiam. Hujan hanya untuk dilihat dan
+sementara burung dan serangga terdiam. Masuklah ke dalam bangunan dan Anda
+tetap kering: Anda mendengar hujan berderai di atap dan melihatnya tetap
+turun di luar. Hujan hanya untuk dilihat dan
 didengar: sungai tidak meluap, dan Anda tetap berjalan secepat biasa.
 
 Jika Anda lebih suka selalu siang, centang **Selalu siang** di bagian bawah
