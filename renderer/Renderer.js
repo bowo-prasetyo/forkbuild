@@ -13,6 +13,8 @@ import { disposeOwnedTile, disposeInstancedTile } from './TileDisposal.js';
 import { terrainHeightAt as computeTerrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
 import { underwaterViewAt, UNDERWATER_VIEW } from '../core/UnderwaterView.js';
+import { seaShareAt } from '../core/Hydrology.js';
+import { waterWaveAt } from '../core/WaterWaves.js';
 import { buildUnderwaterLifeTileMesh, updateUnderwaterLifeTileMesh } from './UnderwaterLifeTileMesh.js';
 import { DAY } from '../core/DayCycle.js';
 import { makeNightGlowing } from './NightGlowMaterial.js';
@@ -306,6 +308,13 @@ export class Renderer {
     // header for why one shared seed, and docs/Principles.md, "Terrain
     // Elevation Is A Rendering-Time Offset, Never A Presence Or
     // Placement Fact," for how callers are expected to use the result.
+    // How far the swell lifts the lake or sea at (x, z) right now: the very
+    // waves the water tiles draw (core/WaterWaves.js, the same time), for
+    // whatever floats there to ride them.
+    waterSwellAt(x, z) {
+        return waterWaveAt(seaShareAt(DEFAULT_WORLD_SEED, x, z), x, z, this._waterWaveTime.value).height;
+    }
+
     terrainHeightAt(x, z) {
         return computeTerrainHeightAt(DEFAULT_WORLD_SEED, x, z);
     }

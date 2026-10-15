@@ -102,6 +102,13 @@ Hydrology is ecology's sibling: both consult the terrain surface
 independently, and neither imports the other. (The same pattern as the
 ecology rule above.)
 
+Revised (2026-10-15): rivers now cut beds into the ground
+(core/TerrainHeightField.js#riverBedDepthAt()), so `terrainHeightAt()`
+is the land with its beds. Classification still reads the land before
+them (`baseTerrainHeightAt()`): surface, ecology and rivers are decided
+exactly as before, and a bed is cut only where they already put a river.
+The bed is still a pure function of (seed, x, z), never stored.
+
 [Full text](history/0.1-0.2.md#hydrology-is-a-fourth-pure-function-layered-on-terrain-sibling-to-ecology-never-a-new-ground-truth-0289)
 
 ### A River Is A Bounded, Local Channel Field, Never A Global Drainage Simulation (0.2.89)

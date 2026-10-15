@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 6842079854f690d0 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: c1dd00dcfb4946dc -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
@@ -112,9 +112,11 @@ selalu kering; sekitar seribu satuan ke luar, Anda sampai di pantai,
 tempat tanah menurun ke laut dalam.
 
 **Air.** Danau beriak tertiup angin dan laut berayun dengan
-ombak yang pelan. Sungai mengalir menuruni lereng, lebih deras di tanah
-yang lebih curam. Avatar Anda mengarungi danau atau laut dan melambat saat air
-naik. Begitu air lebih dalam dari setengah tingginya, ia berenang (lihat
+ombak yang pelan. Sungai mengalir menuruni lereng di alurnya, lebih deras di
+tanah yang lebih curam. Buih muncul di tempat ombak mencapai pantai dan
+di tempat sungai melewati jeram. Avatar Anda mengarungi danau, laut, atau
+sungai dan melambat saat air
+naik. Begitu air lebih dalam dari setengah tingginya, ia berenang, naik turun mengikuti ombak (lihat
 [Berenang dan menyelam](06-AvatarsAndPresence.md#berenang-dan-menyelam)).
 Menyelamlah, dan Anda melihat rumput laut dan kawanan ikan kecil.
 

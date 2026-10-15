@@ -6854,3 +6854,56 @@ worth walking to).
   reaching a lake.
 - Not done: rivers aren't carved into the ground (the bed is the terrain's own surface); no foam or rapids; a
   river doesn't slow a wading avatar.
+
+## Carved river beds, foam, wading in rivers and riding the swell (unnumbered, 2026-10-15)
+
+Rivers ran, lakes rippled and the sea swelled, but a river was a sheet of water lying on flat ground, an avatar walked
+through it as through grass, water met every shore without a trace, and a swimmer sat still on a moving sea. Pillar:
+**Your work is yours, and lives in a world** (the world around a build is worth walking to).
+
+- **Carved beds** (core/TerrainHeightField.js `riverBedDepthAt()`, new): a river runs in a shallow bowl cut along its
+  channel, `RIVER_BED_DEPTH` (0.6) deep on the centreline and easing to nothing at the banks, so the ground has no
+  edge. `terrainHeightAt()` is now the land with its beds; `baseTerrainHeightAt()` (new) is the land before them, and
+  everything that CLASSIFIES ground reads it (core/TerrainSurface.js, core/TerrainEcology.js, core/Hydrology.js's
+  rivers, core/RiverFlow.js's fall), so a bed's own banks never turn to rock nor its floor to a lake, and every
+  place is classified exactly as before. The bed fades out, smoothly, before every limit a river has (the water line,
+  highland, rock-steep ground), so wherever there is a bed there is a river, and nothing kept off rivers stands in
+  one. Its floor never comes down to `WATER_LEVEL`. The channel field moved, bit for bit, to core/RiverChannel.js
+  (new), and `WATER_LEVEL`, `HIGHLAND_ELEVATION` and `ROCK_SLOPE` to TerrainHeightField (TerrainSurface re-exports
+  the first two), so the height field can cut beds without importing what reads it.
+- **Ground fine enough to show them** (renderer/TerrainTileMesh.js `tileHasRiverDetail()`, `RIVER_SUBDIVISIONS`): a
+  bed is narrower than two ground cells, so a tile a river runs through is built four times finer each way. Its edge
+  against an ordinary tile lies on that tile's own edge, so the two meet without a crack. Its ground colour is laid
+  from the ordinary grid's points over the same triangles an ordinary tile draws, and only the river tint
+  (core/Hydrology.js `riverTintAt()`, new) is sampled at every point, so it looks like its neighbours away from the
+  river and stays cheap to build: about 4 ms a tile on average with its river, against about 2.7 before.
+  `isRiverAt()` now tests the channel, its cheapest condition, first.
+- **The water fills the bed** (core/RiverFlow.js `riverSurfaceHeightAt()`, `riverWaterDepthAt()`): `RIVER_FILL` (0.8)
+  of the way up, just below the banks. renderer/RiverTileMesh.js now lays its sheet on the fine ground's own grid at
+  that surface, above the bed at every vertex.
+- **Wading in rivers** (application/avatar/AvatarWaterConstraint.js): a river slows an avatar by the water in its bed,
+  by the same rule as wading into a lake (at most 0.48 deep, so up to about a third slower). It has no surface for
+  swimming; no river is deep enough to swim. A synthetic ground in a test has no real rivers unless it is given some.
+- **Foam.** At a shore (renderer/WaterWaveMaterial.js): each lake and sea vertex carries how deep the ground lies
+  below the still surface (`aShoreDepth`, negative on dry ground); within 0.35 of it, plus the swell there, the water
+  foams in a broken, drifting pattern, so the foam line laps up and down the beach; less of it on a lake. On a river
+  (renderer/RiverFlowMaterial.js): where the river falls steeply (core/RiverFlow.js `riverRapidsAt()`, from 3.5% to
+  5%, about a tenth of a river's length) the crests of its current break white, a steady share of foam standing in
+  far off.
+- **Riding the swell** (renderer/AvatarVisual.js `setFloat()`, renderer/Renderer.js `waterSwellAt()`): a swimmer at
+  the surface, yours or another player's, rises and falls with the very swell the water draws, each frame, where it
+  is drawn; presence keeps the still level, and the camera doesn't bob.
+- docs/principles/terrain.md notes rivers now cut beds; docs/Architecture.md's terrain layers and wading say so; the
+  World View guide's **Water** paragraph, in every language, says rivers run in their beds, where foam gathers,
+  that an avatar wades into a river, and that a swimmer rides the swell.
+- Tests: `RiverFlow` (beds only where rivers run, smooth, never to the water line, the ground the land less the bed;
+  the water fills it below the banks; rapids only where steep, and only some; a river tile built fine, its water at
+  the river's surface and its own depth over the carved ground at each vertex, carrying current, channel, rapids and
+  coverage; a fine tile meeting an ordinary one without a crack), `RiverWadingAndBobbing` (a river slows by its
+  depth, as a lake does, and never makes an avatar swim; a synthetic ground has only the rivers it is given; the drawn
+  avatar rides the swell over its presence), `WaterWavesBrowser` (shallow water at a shore foams and deep water does
+  not; the renderer reports the swell it draws, and it moves), `RiverFlowBrowser` (rapids are lighter, with foam on
+  their crests); `TerrainSurfaceColor` measures slope on the land before beds, as classification does. Checked by eye
+  on rendered rivers, rapids and a coast; turning either foam off fails its test.
+- Not done: boats (there are none to bob; the showcase sailboat is bricks); released animals floating on deep water
+  don't bob; a river's current doesn't carry anything; residents and animals wade through rivers at full speed.

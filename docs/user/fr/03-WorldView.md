@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 6842079854f690d0 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: c1dd00dcfb4946dc -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
@@ -114,10 +114,12 @@ au centre est toujours sec ; à environ mille unités, vous atteignez une
 côte, où le sol descend vers la mer profonde.
 
 **L’eau.** Les lacs frémissent sous la brise et la mer roule d’une
-houle lente. Les rivières descendent la pente, plus vite là où le sol est
-plus raide. Votre avatar entre à pied dans un lac ou dans la mer et
+houle lente. Les rivières descendent la pente dans leur lit, plus vite là où le
+sol est plus raide. L’écume se forme là où les vagues atteignent le rivage
+et là où une rivière franchit des rapides. Votre avatar entre à pied dans
+un lac, dans la mer ou dans une rivière et
 ralentit à mesure que l’eau monte. Quand l’eau est plus profonde que la
-moitié de sa taille, il nage (voir
+moitié de sa taille, il nage, montant et descendant avec la houle (voir
 [Nager et plonger](06-AvatarsAndPresence.md#nager-et-plonger)). Plongez,
 et vous voyez des algues et de petits bancs de poissons.
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 6842079854f690d0 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: c1dd00dcfb4946dc -->
 # 03 — Weltansicht
 
 <!-- languages -->
@@ -114,10 +114,12 @@ immer trocken; etwa tausend Einheiten weiter draußen kommen Sie an eine
 Küste, wo der Boden ins tiefe Meer abfällt.
 
 **Wasser.** Seen kräuseln sich im Wind, und das Meer hebt und senkt
-sich in einer langsamen Dünung. Flüsse fließen bergab, schneller, wo der
-Boden steiler ist. Ihr Avatar watet in einen See oder ins Meer und wird langsamer,
+sich in einer langsamen Dünung. Flüsse fließen in ihrem Bett bergab,
+schneller, wo der Boden steiler ist. Wo Wellen das Ufer erreichen und wo
+ein Fluss über Stromschnellen läuft, bildet sich Schaum. Ihr Avatar watet
+in einen See, ins Meer oder in einen Fluss und wird langsamer,
 je höher das Wasser steigt. Ist das Wasser tiefer als seine halbe Größe,
-schwimmt er (siehe
+schwimmt er und hebt und senkt sich mit der Dünung (siehe
 [Schwimmen und Tauchen](06-AvatarsAndPresence.md#schwimmen-und-tauchen)).
 Tauchen Sie unter, sehen Sie Seegras und kleine Fischschwärme.
 

@@ -1,6 +1,7 @@
 import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../../core/TerrainHeightField.js';
 import { surfaceCategoryAt, SURFACE_CATEGORY } from '../../core/TerrainSurface.js';
 import { LAKE_SURFACE_HEIGHT } from '../../core/Hydrology.js';
+import { riverWaterDepthAt } from '../../core/RiverFlow.js';
 import { waterDepthSpeedFactor, DEFAULT_MAX_WALKING_DEPTH } from '../../core/AvatarWaterWalkability.js';
 
 // Supplies real world water to the avatar's movement: how deep the water is at a
@@ -9,17 +10,26 @@ import { waterDepthSpeedFactor, DEFAULT_MAX_WALKING_DEPTH } from '../../core/Ava
 // The pure rules live in core/AvatarWaterWalkability.js (wading) and
 // core/AvatarSwimming.js (swimming and diving).
 //
-// "Water" is `surfaceCategoryAt(...) === SURFACE_CATEGORY.WATER`, the same
-// predicate the renderer uses, so lakes and the sea count and a river (ground
-// color only) never does.
+// Standing water is `surfaceCategoryAt(...) === SURFACE_CATEGORY.WATER`, the
+// same predicate the renderer uses: lakes and the sea, which an avatar wades
+// into and swims in. A river (core/RiverFlow.js#riverWaterDepthAt(), the
+// water in its carved bed) is wading only: it slows the avatar by its depth,
+// but at most about half a unit deep it is never deep enough to swim, so it
+// has no surface for swimming (waterSurfaceAt()).
 //
-// `heightAt`/`isWaterAt` are injectable so tests can substitute synthetic values.
+// `heightAt`/`isWaterAt`/`riverDepthAt` are injectable so tests can
+// substitute synthetic values.
 export class AvatarWaterConstraint {
-    constructor({ seed = DEFAULT_WORLD_SEED, maxWalkingDepth = DEFAULT_MAX_WALKING_DEPTH, heightAt, isWaterAt } = {}) {
+    constructor({ seed = DEFAULT_WORLD_SEED, maxWalkingDepth = DEFAULT_MAX_WALKING_DEPTH, heightAt, isWaterAt, riverDepthAt } = {}) {
         this._heightAt = typeof heightAt === 'function' ? heightAt : (x, z) => terrainHeightAt(seed, x, z);
         this._isWaterAt = typeof isWaterAt === 'function'
             ? isWaterAt
             : (x, z) => surfaceCategoryAt(seed, x, z) === SURFACE_CATEGORY.WATER;
+        // A synthetic ground (an injected heightAt) has no rivers unless it is
+        // given some: the real world's rivers would not line up with it.
+        this._riverDepthAt = typeof riverDepthAt === 'function'
+            ? riverDepthAt
+            : typeof heightAt === 'function' ? () => 0 : (x, z) => riverWaterDepthAt(seed, x, z);
         this._maxWalkingDepth = maxWalkingDepth;
     }
 
@@ -27,10 +37,11 @@ export class AvatarWaterConstraint {
         return this._maxWalkingDepth;
     }
 
-    // 0 on dry ground, else `LAKE_SURFACE_HEIGHT - groundHeight`, floored at 0 so a
-    // shoreline sample above the surface never reports a negative depth.
+    // In standing water `LAKE_SURFACE_HEIGHT - groundHeight`, floored at 0 so a
+    // shoreline sample above the surface never reports a negative depth; in a
+    // river, the water in its bed; 0 on dry ground.
     depthAt(x, z) {
-        if (!this._isWaterAt(x, z)) return 0;
+        if (!this._isWaterAt(x, z)) return this._riverDepthAt(x, z);
         return Math.max(0, LAKE_SURFACE_HEIGHT - this._heightAt(x, z));
     }
 

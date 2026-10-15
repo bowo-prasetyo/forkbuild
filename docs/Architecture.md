@@ -1270,7 +1270,8 @@ framing wins over the World's remembered camera. `arrivalState()` says when the 
 guided first build's last step (core/FirstBuildChecklist.js), on World View's existing 100 ms presence tick.
 
 `AvatarWaterConstraint` is not a step in that chain. It supplies water to the controller: the depth that slows wading
-(`core/AvatarWaterWalkability.js`), and where the surface lies in the presence frame. On foot, water deeper than half
+(`core/AvatarWaterWalkability.js`), in a lake or the sea or in a river's bed (`core/RiverFlow.js#riverWaterDepthAt()`,
+never deep enough to swim), and where the surface of standing water lies in the presence frame. On foot, water deeper than half
 the avatar's height over whatever it would stand on (`core/AvatarSwimming.js#isSwimmableDepth()`) makes the avatar
 swim: the simulation still steers and moves it, at `SWIM_SPEED_FACTOR`, but its height comes from
 `stepSwimFeetHeight()` (Space rises, C dives, otherwise it drifts up) between the bed and the floating height, carried
@@ -1413,10 +1414,12 @@ surface and stays silent under water. Presence keeps its existing `animation` va
 `renderer/Renderer.js` runs five `TerrainStreamingController`s: terrain, vegetation, water, underwater life and
 wildlife. Each is a pure function of `(seed, x, z)`:
 
-- `TerrainHeightField`: how high
+- `TerrainHeightField`: how high. `terrainHeightAt()` is the ground as it lies, with river beds cut into it
+  (`riverBedDepthAt()`, along `core/RiverChannel.js`'s channels); `baseTerrainHeightAt()` is the land before the
+  beds, which everything below classifies by, so a bed's banks never read as rock nor its floor as a lake
 - `TerrainSurface`: what it looks like
 - `TerrainEcology`: which zone
-- `Hydrology`: lakes and river color
+- `Hydrology`: lakes and rivers; `RiverFlow`: a river's current, rapids, and the water in its bed
 - `NaturalFeatureField`: trees, with CONIFER, BROADLEAF or SCRUB chosen by moisture
 - `WildlifeField`: animals, where they were placed (`WildlifeMotion` adds time: where they have wandered to)
 - `UnderwaterLifeField`: seaweed rooted on lake and sea beds, and fish schools circling where the water is deep over

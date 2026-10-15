@@ -105,8 +105,11 @@ The land near the centre is always dry; about a thousand units out you
 reach a coast, where the ground slopes down into deep sea.
 
 **Water.** Lakes ripple in the breeze and the sea rolls with a slow
-swell. Rivers run downhill, quicker where the ground is steeper. Your avatar wades into a lake or the sea and slows as the water
-rises. Once the water is deeper than half its height, it swims (see
+swell. Rivers run downhill in their beds, quicker where the ground is steeper.
+Foam gathers where waves reach the shore and where a river runs over
+rapids. Your avatar wades into a lake, the sea or a river and slows as
+the water rises. Once the water is deeper than half its height, it swims,
+rising and falling with the swell (see
 [Swimming and diving](06-AvatarsAndPresence.md#swimming-and-diving)). Dive
 under and you see seaweed and small schools of fish.
 

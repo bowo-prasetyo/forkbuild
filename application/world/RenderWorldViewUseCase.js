@@ -204,6 +204,16 @@ export class RenderWorldViewUseCase {
             }
             worldRenderer.animateDoors(observers, deltaSeconds);
         });
+        // A swimmer at the surface rides the swell (core/WaterWaves.js), where
+        // it is drawn: its presence keeps the still level.
+        function floatOnSwell(visual) {
+            const atSurface = visual.swimMode === AvatarSwimMode.SURFACE;
+            visual.setFloat(atSurface ? renderer.waterSwellAt(visual.root.position.x, visual.root.position.z) : 0);
+        }
+        renderer.addFrameListener(() => {
+            if (localAvatarVisual) floatOnSwell(localAvatarVisual);
+            for (const visual of remoteAvatarVisuals.values()) floatOnSwell(visual);
+        });
         renderer.addFrameListener((deltaSeconds) => {
             residentFieldRenderer.tick(deltaSeconds);
             if (localAvatarVisual) {

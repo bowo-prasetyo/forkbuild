@@ -28,7 +28,7 @@
 // every one of those constants imported from core/TerrainSurface.js
 // itself, never re-derived.
 
-import { terrainHeightAt } from './TerrainHeightField.js';
+import { baseTerrainHeightAt } from './TerrainHeightField.js';
 import { surfaceCategoryAt, surfaceColorAt, SURFACE_CATEGORY, WATER_LEVEL, HIGHLAND_ELEVATION } from './TerrainSurface.js';
 import { lerp, smoothstep } from '../utils/interpolation.js';
 
@@ -158,7 +158,7 @@ export function ecologyZoneAt(seed, x, z) {
     if (surface === SURFACE_CATEGORY.WATER) return ECOLOGY_ZONE.WATER;
     if (surface === SURFACE_CATEGORY.ROCK) return ECOLOGY_ZONE.ROCK;
 
-    const height = terrainHeightAt(seed, x, z);
+    const height = baseTerrainHeightAt(seed, x, z);
     if (surface === SURFACE_CATEGORY.SOIL || height >= HIGHLAND_ELEVATION) {
         return ECOLOGY_ZONE.HIGHLAND;
     }
@@ -217,7 +217,7 @@ export function ecologyGroundColorAt(seed, x, z) {
         // WATER_LEVEL itself — the shoreline reads as sand, the inland
         // edge of the beach band fades back toward ordinary grass color
         // rather than ending in a hard line.
-        const height = terrainHeightAt(seed, x, z);
+        const height = baseTerrainHeightAt(seed, x, z);
         const t = 1 - clamp01((height - WATER_LEVEL) / BEACH_BAND_WIDTH);
         return {
             r: lerp(base.r, BEACH_SAND.r, t),

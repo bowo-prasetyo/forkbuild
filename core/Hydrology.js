@@ -47,10 +47,18 @@
 // accumulation has) — it exists as its own honest, bounded, local
 // primitive for tests and future work to build on.
 
-import { terrainHeightAt, seaBasinAt } from './TerrainHeightField.js';
+import { terrainHeightAt, baseTerrainHeightAt, seaBasinAt } from './TerrainHeightField.js';
 import { surfaceCategoryAt, SURFACE_CATEGORY, WATER_LEVEL, HIGHLAND_ELEVATION, SURFACE_PALETTE } from './TerrainSurface.js';
 import { ecologyGroundColorAt } from './TerrainEcology.js';
-import { lerp, smoothstep } from '../utils/interpolation.js';
+import { lerp } from '../utils/interpolation.js';
+import {
+    riverChannelDistanceAt, riverChannelTangentAt, RIVER_CHANNEL_THRESHOLD, CHANNEL_AXIS_X, CHANNEL_AXIS_Z, CHANNEL_AXIS_LENGTH
+} from './RiverChannel.js';
+
+// The channel field lives in core/RiverChannel.js (so the terrain can carve
+// river beds without importing this file); re-exported for every caller
+// that has always read it from here.
+export { riverChannelDistanceAt, riverChannelTangentAt, RIVER_CHANNEL_THRESHOLD };
 
 export const HYDROLOGY_FEATURE = Object.freeze({
     NONE: 'NONE',   // dry ground — no sea, no lake, no river
@@ -66,39 +74,6 @@ export const SEA_BASIN_MIN = 0.25;
 
 function clamp01(v) {
     return v < 0 ? 0 : v > 1 ? 1 : v;
-}
-
-// A small, fast, deterministic 32-bit avalanche hash — independently
-// reimplemented per core/TerrainEcology.js's own header precedent: every
-// noise field in this codebase gets its own tiny, module-private
-// primitive rather than a shared one two unrelated fields could
-// accidentally correlate through.
-function hash2D(seed, latticeX, latticeZ) {
-    let h = seed | 0;
-    h = Math.imul(h ^ latticeX, 0x27d4eb2d);
-    h = Math.imul(h ^ (latticeZ + 0x9e3779b9), 0x165667b1);
-    h ^= h >>> 15;
-    h = Math.imul(h, 0x85ebca6b);
-    h ^= h >>> 13;
-    h = Math.imul(h, 0xc2b2ae35);
-    h ^= h >>> 16;
-    return (h >>> 0) / 4294967296;
-}
-
-function valueNoise2D(seed, x, z) {
-    const x0 = Math.floor(x);
-    const z0 = Math.floor(z);
-    const tx = smoothstep(x - x0);
-    const tz = smoothstep(z - z0);
-
-    const v00 = hash2D(seed, x0, z0);
-    const v10 = hash2D(seed, x0 + 1, z0);
-    const v01 = hash2D(seed, x0, z0 + 1);
-    const v11 = hash2D(seed, x0 + 1, z0 + 1);
-
-    const top = lerp(v00, v10, tx);
-    const bottom = lerp(v01, v11, tx);
-    return lerp(top, bottom, tz);
 }
 
 // ---------------------------------------------------------------------
@@ -135,80 +110,6 @@ export function flowDirectionAt(seed, x, z) {
 }
 
 // ---------------------------------------------------------------------
-// River channel field — a bounded, local, domain-warped noise band.
-// ---------------------------------------------------------------------
-
-// 'HYWX' / 'HYWZ' / 'HYVL' as bytes — arbitrary but fixed forever, and
-// deliberately far from every seed offset core/TerrainHeightField.js,
-// core/TerrainSurface.js, and core/TerrainEcology.js already use, so the
-// channel warp, its own axis noise, and every other decorrelated field
-// in this codebase never visibly track one another.
-const WARP_X_SEED_OFFSET = 0x48595758;
-const WARP_Z_SEED_OFFSET = 0x48595a5a;
-
-// Low frequency, broad warp — enough to bend otherwise-straight channel
-// bands into winding curves without breaking them into disconnected
-// fragments (a HIGH-frequency warp would do that instead).
-const WARP_FREQUENCY = 1 / 220;
-const WARP_AMPLITUDE = 60;
-
-// Wavelength ~260 world units (half that between two adjacent parallel
-// bands pre-warp) — sparse enough that exploring a handful of terrain
-// tiles (TERRAIN_TILE_SIZE = 40) plausibly crosses one river rather than
-// a dense grid of them, the same "restrained, not everywhere" posture
-// core/TerrainEcology.js's own FIELD cultivation threshold established.
-const RIVER_FREQUENCY = 1 / 260;
-
-// The channel axis is a FIXED (never seed- or position-dependent)
-// direction in world space, deliberately not aligned to either world
-// axis (the same "not aligned to any tile axis" reasoning
-// core/TerrainEcology.js#FIELD_ROW_ANGLE already used for furrow rows) —
-// otherwise every river would read as either perfectly north-south or
-// perfectly east-west before warp bends it, an obviously artificial
-// tell. The warp above is what actually gives a river its winding
-// shape; this axis just keeps the unwarped band from looking grid-like.
-const CHANNEL_AXIS_X = 1;
-const CHANNEL_AXIS_Z = 0.35;
-const CHANNEL_AXIS_LENGTH = Math.hypot(CHANNEL_AXIS_X, CHANNEL_AXIS_Z);
-
-// The channel field's own phase gradient magnitude along its axis —
-// derived, not tuned by hand, so RIVER_CHANNEL_THRESHOLD (below) can be
-// expressed as an actual world-space half-width instead of an opaque
-// sine-space number that would silently drift out of proportion if
-// RIVER_FREQUENCY or the axis ever changed.
-const CHANNEL_PHASE_GRADIENT = RIVER_FREQUENCY * Math.PI * 2 * CHANNEL_AXIS_LENGTH;
-
-// A signed value in [-1, 1] whose zero-crossings trace winding channel
-// centerlines across the world — a warped sine band, the standard
-// "fake a river without simulating one" technique: cheap, O(1), and by
-// construction continuous in world coordinates (never tile coordinates),
-// so two tiles sharing an edge always agree on it exactly.
-function channelFieldAt(seed, x, z) {
-    const warpX = (valueNoise2D(seed + WARP_X_SEED_OFFSET, x * WARP_FREQUENCY, z * WARP_FREQUENCY) - 0.5) * 2 * WARP_AMPLITUDE;
-    const warpZ = (valueNoise2D(seed + WARP_Z_SEED_OFFSET, x * WARP_FREQUENCY, z * WARP_FREQUENCY) - 0.5) * 2 * WARP_AMPLITUDE;
-
-    const warpedX = x + warpX;
-    const warpedZ = z + warpZ;
-    const along = warpedX * CHANNEL_AXIS_X + warpedZ * CHANNEL_AXIS_Z;
-    return Math.sin(along * RIVER_FREQUENCY * Math.PI * 2);
-}
-
-// How close (x, z) sits to the nearest channel centerline, in [0, 1] —
-// 0 exactly ON a centerline, rising toward 1 at the midpoint between two
-// adjacent bands. Exported so tests (and any future renderer/tool) can
-// inspect the raw field without re-deriving it from isRiverAt().
-export function riverChannelDistanceAt(seed, x, z) {
-    return Math.abs(channelFieldAt(seed, x, z));
-}
-
-// river half-width expressed in ACTUAL world units, not sine-space —
-// a modest stream, comparable in scale to core/NaturalFeatureField.js's
-// own TREE_LATTICE_SPACING (4), never a lake-sized body of flowing
-// water.
-const RIVER_HALF_WIDTH = 3;
-export const RIVER_CHANNEL_THRESHOLD = RIVER_HALF_WIDTH * CHANNEL_PHASE_GRADIENT;
-
-// ---------------------------------------------------------------------
 // Valley bias — a CONTINUOUS intensity multiplier, never a hard gate,
 // so a river tinting toward a locally-flatter or slightly-rising
 // cross-section fades smoothly rather than snapping on/off (which would
@@ -239,10 +140,10 @@ const VALLEY_SOFT_RANGE = 0.6;
 const VALLEY_MIN_FACTOR = 0.35;
 
 function valleyFactorAt(seed, x, z, height) {
-    const heightA = terrainHeightAt(
+    const heightA = baseTerrainHeightAt(
         seed, x + CROSS_AXIS_X * VALLEY_SAMPLE_DISTANCE, z + CROSS_AXIS_Z * VALLEY_SAMPLE_DISTANCE
     );
-    const heightB = terrainHeightAt(
+    const heightB = baseTerrainHeightAt(
         seed, x - CROSS_AXIS_X * VALLEY_SAMPLE_DISTANCE, z - CROSS_AXIS_Z * VALLEY_SAMPLE_DISTANCE
     );
     const depth = (heightA + heightB) / 2 - height;
@@ -261,13 +162,14 @@ function valleyFactorAt(seed, x, z, height) {
 // input (see hydrologyGroundColorAt() below), never a second hard gate a
 // boolean predicate would have to snap across.
 export function isRiverAt(seed, x, z) {
+    // The channel first: by far the cheapest test, and false almost
+    // everywhere.
+    if (riverChannelDistanceAt(seed, x, z) >= RIVER_CHANNEL_THRESHOLD) return false;
     const surface = surfaceCategoryAt(seed, x, z);
     if (surface !== SURFACE_CATEGORY.GRASS && surface !== SURFACE_CATEGORY.SOIL) return false;
 
-    const height = terrainHeightAt(seed, x, z);
-    if (height >= HIGHLAND_ELEVATION) return false;
-
-    return riverChannelDistanceAt(seed, x, z) < RIVER_CHANNEL_THRESHOLD;
+    const height = baseTerrainHeightAt(seed, x, z);
+    return height < HIGHLAND_ELEVATION;
 }
 
 // How far into a river (x, z) lies: 1 on the channel's centreline, falling
@@ -276,21 +178,6 @@ export function isRiverAt(seed, x, z) {
 export function riverProximityAt(seed, x, z) {
     if (!isRiverAt(seed, x, z)) return 0;
     return 1 - clamp01(riverChannelDistanceAt(seed, x, z) / RIVER_CHANNEL_THRESHOLD);
-}
-
-// The unit direction along the river channel at (x, z): perpendicular to
-// the channel field's gradient, so it follows the winding centreline.
-// Which of the two ways it points is not meaningful (it flips between
-// neighbouring channels); core/RiverFlow.js decides downstream from the
-// terrain. Meaningful only in or near a channel.
-const TANGENT_SAMPLE_DISTANCE = 0.5;
-export function riverChannelTangentAt(seed, x, z) {
-    const d = TANGENT_SAMPLE_DISTANCE;
-    const gx = channelFieldAt(seed, x + d, z) - channelFieldAt(seed, x - d, z);
-    const gz = channelFieldAt(seed, x, z + d) - channelFieldAt(seed, x, z - d);
-    const magnitude = Math.hypot(gx, gz);
-    if (magnitude === 0) return { dx: CHANNEL_AXIS_Z / CHANNEL_AXIS_LENGTH, dz: -CHANNEL_AXIS_X / CHANNEL_AXIS_LENGTH };
-    return { dx: -gz / magnitude, dz: gx / magnitude };
 }
 
 // The one public classification entry point — mirrors
@@ -329,13 +216,23 @@ export const RIVER_SURFACE_COLOR = Object.freeze({ r: 0.40, g: 0.58, b: 0.72 });
 // LAKE ground its actual flat water-plane geometry, a separate concern
 // from ground COLOR (see that file's own header).
 export function hydrologyGroundColorAt(seed, x, z) {
-    const base = ecologyGroundColorAt(seed, x, z);
+    return withRiverTint(ecologyGroundColorAt(seed, x, z), riverTintAt(seed, x, z));
+}
+
+// How strongly the river tint lies on the ground at (x, z), 0 to 1: the
+// half of hydrologyGroundColorAt() that is the river's own. Exported so a
+// renderer drawing ground finer than its ecology colour needs to be
+// sampled (renderer/TerrainTileMesh.js's river tiles) can sample the tint
+// alone at every vertex.
+export function riverTintAt(seed, x, z) {
     const proximity = riverProximityAt(seed, x, z);
-    if (proximity === 0) return base;
+    if (proximity === 0) return 0;
+    return proximity * valleyFactorAt(seed, x, z, baseTerrainHeightAt(seed, x, z));
+}
 
-    const height = terrainHeightAt(seed, x, z);
-    const intensity = proximity * valleyFactorAt(seed, x, z, height);
-
+// `base` with the river tint laid over it at `intensity` (riverTintAt()).
+export function withRiverTint(base, intensity) {
+    if (intensity === 0) return base;
     return {
         r: lerp(base.r, RIVER_TINT.r, intensity),
         g: lerp(base.g, RIVER_TINT.g, intensity),
