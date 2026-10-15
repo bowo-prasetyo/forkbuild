@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 100b949f1ba678b2 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 58af5105d177cff3 -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
@@ -113,7 +113,7 @@ tempat tanah menurun ke laut dalam.
 
 **Air.** Danau beriak tertiup angin dan laut berayun dengan
 ombak yang pelan. Sungai mengalir menuruni lereng di alurnya, lebih deras di
-tanah yang lebih curam. Sungai bermula dari mata air di kaki dataran
+tanah yang lebih curam. Sungai bermula dari mata air yang menggelegak di kaki dataran
 tinggi, mengalir menuruni tanah tercuram dalam riam-riam kecil, dan
 sesekali berakhir di kolam yang tenang. Buih muncul di tempat ombak mencapai pantai dan
 di tempat sungai melewati jeram. Avatar Anda mengarungi danau, laut, atau

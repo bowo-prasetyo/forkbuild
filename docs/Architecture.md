@@ -1544,7 +1544,9 @@ ticked; while on, the session hands the renderer DAY and `nightLevel()` is 0, so
   spot underfoot weighs 0.4, the near ring 0.4 and the far ring 0.2, so a lake or forest is heard before it is
   reached. LEAVES and PINES come from the trees themselves: every tree `naturalFeaturesInRegion()` puts within 20 m
   adds its nearness (1 − distance / 20) over 6 to its layer, BROADLEAF fully and SCRUB at 0.4 to LEAVES, CONIFER to
-  PINES. Like the terrain it is a pure function of place: nothing is stored or sent, and every viewer at a spot
+  PINES. SPRING is a spring bubbling where a river rises (`core/RiverFlow.js#riverSpringAt()`): the loudest spring
+  found underfoot or on rings at 6 m and 12 m, by its strength times its nearness (1 − distance to its centre / 16).
+  Like the terrain it is a pure function of place: nothing is stored or sent, and every viewer at a spot
   hears the same land. After dark `ambientMixAtNight(mix, nightLevel)` turns birds down to a tenth and crickets up
   (insects × (1 + night), plus 0.3 × night where there is no open water), `nightLevel` being
   `WorldNavigationSession#nightLevel()` (see "Day and night").
@@ -1556,8 +1558,9 @@ ticked; while on, the session hands the renderer DAY and `nightLevel()` is 0, so
   this device's own.
 - **Provider.** Every sound is synthesized, so there are no audio files and the Content Security Policy is
   unchanged: looping brown noise through a gusting low-pass for wind and slow waves for a lake, band-passed white
-  noise for a river, a trilled 4.4 kHz tone for insects, and separate randomly timed chirp phrases for birds, more
-  often the more birds there are. Level changes fade with a 0.8 s time constant. The `AudioContext` is created on the
+  noise for a river, a trilled 4.4 kHz tone for insects, separate randomly timed chirp phrases for birds, more
+  often the more birds there are, and, only while a spring is heard, short rising plips for its bubbles, a few at a
+  time, more often the nearer it is. Level changes fade with a 0.8 s time constant. The `AudioContext` is created on the
   first `resume()`, and suspended while muted or while the page is hidden, so it costs nothing then.
 - **Avatar sounds.** `advanceAvatarSound(state, observation, deltaSeconds, seed)` is pure; the service keeps its
   state between frames. Footsteps are counted by distance, one per stride (0.75 m walking, 0.94 m running: one per

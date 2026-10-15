@@ -33,7 +33,7 @@ camera.lookAt(0, 0, 0);
 
 const waveTime = { value: 0 };
 
-function sheet(vx, vz, rapids = 0) {
+function sheet(vx, vz, rapids = 0, spring = 0) {
     const geometry = new THREE.PlaneGeometry(SPAN, SPAN, 8, 8);
     geometry.rotateX(-Math.PI / 2);
     const count = geometry.attributes.position.count;
@@ -49,6 +49,11 @@ function sheet(vx, vz, rapids = 0) {
     geometry.setAttribute('aFlow', new THREE.BufferAttribute(flows, 2));
     geometry.setAttribute('aChannel', new THREE.BufferAttribute(channels, 2));
     geometry.setAttribute('aRapids', new THREE.BufferAttribute(new Float32Array(count).fill(rapids), 1));
+    // A spring centred on the middle of the view: each vertex's way to it.
+    const springs = new Float32Array(count * 3);
+    const position = geometry.attributes.position;
+    for (let i = 0; i < count; i++) springs.set([spring, -position.getX(i), -position.getZ(i)], i * 3);
+    geometry.setAttribute('aSpring', new THREE.BufferAttribute(springs, 3));
     return new THREE.Mesh(geometry, makeRiverFlowing(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.35 }), waveTime));
 }
 
@@ -130,6 +135,50 @@ function bestShift(earlier, later, axis) {
     const foam = broken.filter((v) => v > brightestCalm + 10).length;
     assert(foam > SIZE * SIZE / 20, `rapids foam on their crests (${foam} pixels lighter than any calm water)`);
     console.log('✓ rapids break white');
+}
+
+{
+    // A spring: rings spread outward from its centre over still water, and
+    // none without one. The rings are read off a radial profile: the
+    // brightness at each distance from the centre, in pixels.
+    const profile = (luma) => {
+        const sums = new Float32Array(SIZE);
+        const counts = new Float32Array(SIZE);
+        for (let row = 0; row < SIZE; row++) {
+            for (let col = 0; col < SIZE; col++) {
+                const r = Math.round(Math.hypot(col + 0.5 - SIZE / 2, row + 0.5 - SIZE / 2));
+                sums[r] += luma[row * SIZE + col];
+                counts[r]++;
+            }
+        }
+        return Array.from(sums, (sum, r) => (counts[r] ? sum / counts[r] : 0));
+    };
+    const spread = (values) => {
+        const mean = values.reduce((a, v) => a + v, 0) / values.length;
+        return Math.sqrt(values.reduce((a, v) => a + (v - mean) * (v - mean), 0) / values.length);
+    };
+    const FROM = 14;
+    const TO = 30; // inside the rings' fade (4.5 units, 36 pixels)
+    const still = sheet(0, 0, 0, 0);
+    scene.add(still);
+    const calm = profile(frame(0.2)).slice(FROM, TO);
+    scene.remove(still);
+    const welling = sheet(0, 0, 0, 1);
+    scene.add(welling);
+    const a = profile(frame(0.2));
+    const b = profile(frame(1.0));
+    scene.remove(welling);
+    assert(spread(a.slice(FROM, TO)) > spread(calm) * 3, `a spring rings the water (${spread(a.slice(FROM, TO)).toFixed(1)} against ${spread(calm).toFixed(1)})`);
+    // In 0.8 s the rings move 0.6 × 0.8 = 0.48 units outward: about 4 pixels.
+    let best = 0;
+    let bestError = Infinity;
+    for (let shift = -5; shift <= 5; shift++) {
+        let error = 0;
+        for (let r = FROM; r < TO; r++) error += (b[r + shift] - a[r]) ** 2;
+        if (error < bestError) { bestError = error; best = shift; }
+    }
+    assert(best >= 2 && best <= 6, `the rings spread outward (best shift ${best} px)`);
+    console.log('✓ a spring rings the water, spreading outward');
 }
 
 assert(!shaderErrors.some((e) => /Shader|WebGLProgram/.test(e)), `the river shader compiles (${shaderErrors.join(' | ')})`);

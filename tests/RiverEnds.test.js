@@ -139,7 +139,9 @@ async function runTests() {
         for (let x = -SPAN; x < SPAN; x += 2) {
             for (let z = -SPAN; z < SPAN; z += 2) {
                 const pool = riverPoolAt(SEED, x, z);
-                if (!pool || pool.r > 0.6 || pool.r < 0.4) continue;
+                // Pools at full strength: where the channel meets the edge
+                // squarely (a glancing one keeps more of its own current).
+                if (!pool || pool.r > 0.6 || pool.r < 0.4 || pool.crossing < 1) continue;
                 const key = `${Math.round(x / 15)},${Math.round(z / 15)}`;
                 if (seen.has(key)) continue;
                 seen.add(key);
@@ -152,8 +154,8 @@ async function runTests() {
                 const intoHighland = Math.sign(fall) * uphill;
                 const { vx, vz } = riverFlowAt(SEED, x, z);
                 const speed = Math.hypot(vx, vz);
-                const outX = pool.across * tangent.dz + pool.up * pool.gx / Math.hypot(pool.gx, pool.gz);
-                const outZ = pool.across * -tangent.dx + pool.up * pool.gz / Math.hypot(pool.gx, pool.gz);
+                const outX = pool.across * tangent.dz + pool.up * pool.dirX;
+                const outZ = pool.across * -tangent.dx + pool.up * pool.dirZ;
                 if (Math.abs(fall) < 0.005) continue; // a river too level here to say
                 if (intoHighland < -0.3) {
                     springs++;
@@ -167,6 +169,40 @@ async function runTests() {
         assert(springs > 10, `rivers start at springs (${springs})`);
         assert(ponds > 0, `a few rivers end in ponds (${ponds})`);
         console.log(`✓ rivers start at springs (${springs}) and a few end in still ponds (${ponds})`);
+    }
+
+    {
+        // A pool is round about the river, not drawn out along the highland
+        // edge: a pool's length along the edge used to grow wherever a channel
+        // ran beside it. Walking along the edge (across the slope) from a
+        // pool's centre, the pool ends within its own radius.
+        let centres = 0;
+        let drawnOut = 0;
+        const seen = new Set();
+        for (const [px, pz] of centre) {
+            const near = riverPoolAt(SEED, px, pz);
+            if (!near || near.r >= 1 || near.crossing < 1) continue;
+            // The pool's centre, from this point's place in it.
+            const tangent = riverChannelTangentAt(SEED, px, pz);
+            const x = px - (near.across * tangent.dz + near.up * near.dirX);
+            const z = pz - (near.across * -tangent.dx + near.up * near.dirZ);
+            const key = `${Math.round(x / 15)},${Math.round(z / 15)}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            const pool = riverPoolAt(SEED, x, z);
+            if (!pool || pool.r > 0.2) continue;
+            centres++;
+            const slope = Math.hypot(pool.gx, pool.gz);
+            const alongX = -pool.gz / slope;
+            const alongZ = pool.gx / slope;
+            for (const side of [1, -1]) {
+                const far = riverPoolAt(SEED, x + side * alongX * POOL_RADIUS * 1.5, z + side * alongZ * POOL_RADIUS * 1.5);
+                if (far && far.r < 1 && far.crossing > 0.5) drawnOut++;
+            }
+        }
+        assert(centres > 12, `pool centres were found (${centres})`);
+        assert(drawnOut <= centres * 2 * 0.1, `pools are round, not drawn out along the edge (${drawnOut} of ${centres * 2} reach on)`);
+        console.log(`✓ pools are round about the river (${drawnOut} of ${centres * 2} reach on along the edge, a neighbouring crossing)`);
     }
 
     {

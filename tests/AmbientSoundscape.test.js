@@ -1,4 +1,5 @@
 import { AMBIENT_LAYER, AMBIENT_LAYERS, ambientMixAt, silentAmbientMix } from '../core/AmbientSoundscape.js';
+import { riverSpringAt } from '../core/RiverFlow.js';
 import { ecologyZoneAt, ECOLOGY_ZONE } from '../core/TerrainEcology.js';
 import { isRiverAt } from '../core/Hydrology.js';
 import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
@@ -134,4 +135,29 @@ function mixAt({ x, z }) {
         assert(near > far && far > 0, `a lone tree rustles louder up close (${near} vs ${far})`);
     }
     console.log('✓ leaves and pines follow the trees around you');
+}
+
+{
+    // A spring bubbles: heard at its centre, fading with distance, silent far
+    // off.
+    let spring = null;
+    for (let x = -1500; x < 1500 && !spring; x += 1) {
+        for (let z = -1500; z < 1500 && !spring; z += 1) {
+            const at = riverSpringAt(SEED, x, z);
+            if (at && at.strength > 0.95) spring = at;
+        }
+    }
+    assert(spring, 'setup: a spring exists');
+    const atCentre = ambientMixAt(SEED, spring.centreX, spring.centreZ)[AMBIENT_LAYER.SPRING];
+    const nearBy = ambientMixAt(SEED, spring.centreX + 8, spring.centreZ)[AMBIENT_LAYER.SPRING];
+    const farOff = ambientMixAt(SEED, spring.centreX + 40, spring.centreZ)[AMBIENT_LAYER.SPRING];
+    assert(atCentre > 0.6, `a spring bubbles at its centre (${atCentre})`);
+    assert(atCentre >= nearBy && farOff === 0, `louder close by, silent far off (${atCentre}, ${nearBy}, ${farOff})`);
+    // Most places, nowhere near a spring, hear none.
+    let heard = 0;
+    for (let i = 0; i < 200; i++) {
+        if (ambientMixAt(SEED, i * 97 - 9000, i * -61 + 3000)[AMBIENT_LAYER.SPRING] > 0) heard++;
+    }
+    assert(heard < 5, `springs are heard only near springs (${heard} of 200 places)`);
+    console.log('✓ a spring is heard bubbling close by, and nowhere else');
 }

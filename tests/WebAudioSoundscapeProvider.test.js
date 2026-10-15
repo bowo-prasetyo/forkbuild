@@ -217,6 +217,34 @@ async function runTests() {
         console.log('✓ bird calls are audible and denser where there are more birds');
     }
 
+    // A spring bubbles: short plips, scheduled only while one is heard.
+    {
+        const { offline, context } = runningOffline(2);
+        const timers = [];
+        const provider = new WebAudioSoundscapeProvider({
+            contextFactory: () => context,
+            documentRef: null,
+            random: seededRandom(),
+            setTimeoutFn: (fn, ms) => { timers.push({ fn, ms }); return timers.length; },
+            clearTimeoutFn: () => {}
+        });
+        provider.setLayerLevels({ ...silence(), spring: 0 });
+        provider.resume();
+        const birdsOnly = timers.length;
+        assert(birdsOnly === 1, `with no spring near, only birdsong is scheduled (${birdsOnly} timers)`);
+        provider.setLayerLevels({ ...silence(), spring: 1 });
+        assert(timers.length === birdsOnly + 1, 'a spring near starts its bubbling');
+        const bubbling = timers[timers.length - 1];
+        bubbling.fn();
+        assert(timers.length === birdsOnly + 2, 'each round of bubbles schedules the next');
+        const buffer = await offline.startRendering();
+        const data = buffer.getChannelData(0);
+        const rms = Math.sqrt(data.reduce((sum, v) => sum + v * v, 0) / data.length);
+        assert(rms > 0.0005, `a spring's bubbles are audible (rms ${rms})`);
+        provider.dispose();
+        console.log('✓ a spring bubbles, and only while one is near');
+    }
+
     // Footsteps on every surface, a jump and a landing are audible and short.
     {
         for (const surface of ['grass', 'leaves', 'sand', 'stone', 'water', 'structure']) {
