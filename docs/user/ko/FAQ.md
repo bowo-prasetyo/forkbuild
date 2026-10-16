@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 2f9e5c7d0c3be7d5 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 0c405c0607976a30 -->
 # 자주 묻는 질문
 
 <!-- languages -->
@@ -270,6 +270,10 @@ ForkBuild에는 상점도, 가격도, NFT도 없으며, 작품 판매를 돕거�
 약속한 일은 나와 상대방 사이의 일이고, 게임은 그것을 알지 못합니다. 누가
 작품을 만들었는지, 누가 복사할 수 있는지, 누가 배치할 수 있는지는 바뀌지
 않습니다.
+
+내 작품은 언제든 가져갈 수 있습니다. 파일로 내보내거나 3D 모델로 내려받을 수
+있습니다([저장, 게시, 새로 시작](02-TheEditor.md#저장-게시-새로-시작)과
+[3D 모델 내려받기](02-TheEditor.md#3d-모델-내려받기) 참고).
 
 ForkBuild 안에서 다른 사람이 게시된 작품으로 무엇을 할 수 있는지는 라이선스
 ([라이선스 고르기](04-PublishingAndForking.md#라이선스-고르기) 참고)와

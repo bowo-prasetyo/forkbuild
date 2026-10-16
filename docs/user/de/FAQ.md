@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 2f9e5c7d0c3be7d5 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 0c405c0607976a30 -->
 # Häufige Fragen
 
 <!-- languages -->
@@ -330,6 +330,11 @@ außerhalb. Was außerhalb von ForkBuild vereinbart wird, ist eine Sache
 zwischen Ihnen und der anderen Person, und das Spiel weiß nichts davon: Es
 ändert nicht, wer das Bauwerk gemacht hat, wer es kopieren oder wer es
 platzieren darf.
+
+Ihr Bauwerk können Sie immer mitnehmen: Sie können es als Datei
+exportieren oder als 3D-Modell herunterladen (siehe
+[Speichern, veröffentlichen, neu beginnen](02-TheEditor.md#speichern-veröffentlichen-neu-beginnen)
+und [Ein 3D-Modell herunterladen](02-TheEditor.md#ein-3d-modell-herunterladen)).
 
 In ForkBuild bestimmen die Lizenz (siehe
 [Eine Lizenz wählen](04-PublishingAndForking.md#eine-lizenz-wählen)) und

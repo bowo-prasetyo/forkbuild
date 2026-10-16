@@ -285,6 +285,11 @@ Anything agreed outside ForkBuild is between you and the other person, and
 the game knows nothing of it: it doesn't change who made the build, who
 can copy it or who can place it.
 
+Your build is always yours to take with you: you can export it as a file
+or download it as a 3D model (see
+[Saving, publishing, starting over](02-TheEditor.md#saving-publishing-starting-over)
+and [Downloading a 3D model](02-TheEditor.md#downloading-a-3d-model)).
+
 Inside ForkBuild, what other people may do with a published build is
 decided by its license (see
 [Choosing a license](04-PublishingAndForking.md#choosing-a-license)) and by
