@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 978ac53d098ad90d -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 87406cb37cc04363 -->
 # Questions fréquentes
 
 <!-- languages -->
@@ -136,6 +136,12 @@ Si vous préférez que ce soit la sienne que les gens trouvent, vous pouvez
 retirer la vôtre de votre Monde et la dépublier, mais les copies déjà
 envoyées restent (voir
 [Puis-je dépublier quelque chose ?](#puis-je-dépublier-quelque-chose-)).
+
+Il en va de même pour un fichier que vous avez exporté : il peut
+l’importer comme sa propre copie quand sa licence autorise les remix, et
+vous pouvez exporter une copie avec une licence plus ouverte que celle de
+votre publication (voir
+[Enregistrer, publier, recommencer](02-TheEditor.md#enregistrer-publier-recommencer)).
 
 **Déclarer un successeur**, dans **Mes identités**, ne transmet pas une
 construction : cela retire toute votre identité au profit d’une autre des

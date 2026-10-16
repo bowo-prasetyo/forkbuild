@@ -79,6 +79,8 @@ import { useSelectionActions } from './editorView/useSelectionActions.js';
 import { useStructureLibrary } from './editorView/useStructureLibrary.js';
 import { useBlueprintExchange } from './editorView/useBlueprintExchange.js';
 import { ExportAllDocumentsUseCase, ImportDocumentBundleUseCase } from '../../application/document/DocumentBundle.js';
+import { ExportDocumentUseCase } from '../../application/document/ExportDocumentUseCase.js';
+import { ImportDocumentUseCase } from '../../application/document/ImportDocumentUseCase.js';
 import { useStructureInspection } from './editorView/useStructureInspection.js';
 import { useSoundControls } from '../composables/useSoundControls.js';
 import SoundControl from '../components/SoundControl.js';
@@ -640,6 +642,8 @@ export default {
             previewUseCase,
             loadDocumentUseCase,
             identityProvider,
+            exportDocumentUseCase: new ExportDocumentUseCase(undefined, { identityProvider }),
+            importDocumentUseCase: new ImportDocumentUseCase(undefined, undefined, { identityProvider, ownIdentityIds: () => [ownBuilderIdentityId()] }),
             copySelectionUseCase,
             pasteClipboardUseCase,
             repeatSelectionUseCase,
@@ -946,8 +950,8 @@ export default {
             blueprintAttributionExchange, blueprintAttributionUseCase, blueprintLineageExchange,
             blueprintLineageUseCase, documentManager, editorSession, feedback, refreshPersonalStructureGroups,
             personalStructureLibraryStore,
-            exportAllDocumentsUseCase: new ExportAllDocumentsUseCase(documentStorage),
-            importDocumentBundleUseCase: new ImportDocumentBundleUseCase(documentStorage),
+            exportAllDocumentsUseCase: new ExportAllDocumentsUseCase(documentStorage, undefined, { identityProvider }),
+            importDocumentBundleUseCase: new ImportDocumentBundleUseCase(documentStorage, { identityProvider, ownIdentityIds: () => [ownBuilderIdentityId()] }),
             onSavedDocumentsChanged: () => { savedDocumentsRevision.value++; }
         });
 

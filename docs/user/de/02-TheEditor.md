@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 6e10bd69ebe05267 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: ab2f4955cd9c3ad1 -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -633,6 +633,18 @@ Beim Bauen spielt leise Musik, etwas lebhafter als in der Weltansicht. Die Schal
     die frühere Versionen exportiert haben, lassen sich weiterhin öffnen (sie
     werden beim Laden umgewandelt), aber ForkBuild 1.0.0 und älter kann von
     dieser Version exportierte Dateien nicht öffnen.
+  Wenn Sie das Bauwerk gemacht haben, signiert **Exportieren** die Datei,
+  sodass jeder, der sie importiert, dem Namen und der Lizenz darin trauen
+  kann. Ihre eigenen Bauwerke werden als sie selbst importiert. Das Bauwerk
+  eines anderen öffnet sich als Ihre eigene Kopie, die ihn nennt, wenn seine
+  Lizenz Remixe erlaubt; wenn nicht, oder wenn die Datei geändert wurde,
+  nachdem ihr Urheber sie signiert hat, wird es nicht importiert. Die Datei
+  trägt die Lizenz, die das Bauwerk beim Exportieren hat. Sie können ein
+  Bauwerk also als **All Rights Reserved** veröffentlichen und trotzdem
+  jemandem eine Kopie geben, auf der er aufbauen darf: Wählen Sie in
+  **Dokumenteigenschaften** eine andere Lizenz, exportieren Sie, und stellen
+  Sie sie danach zurück. **Alle Bauwerke exportieren** und sein
+  **Importieren** unter **Zuletzt** funktionieren genauso.
 - **Zuletzt** — etwas wieder öffnen, das Sie früher gespeichert haben (es
   erscheint nach dem ersten Speichern; klicken Sie auf den Namen eines
   Dokuments, um es zu öffnen). Sobald Sie genug Dokumente gespeichert

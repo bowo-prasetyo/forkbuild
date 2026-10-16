@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 978ac53d098ad90d -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 87406cb37cc04363 -->
 # Häufige Fragen
 
 <!-- languages -->
@@ -142,6 +142,12 @@ Soll lieber seine Kopie die sein, die andere finden, können Sie Ihres aus
 Ihrer Welt entfernen und die Veröffentlichung zurückziehen; bereits
 verschickte Kopien bleiben aber (siehe
 [Kann ich eine Veröffentlichung zurückziehen?](#kann-ich-eine-veröffentlichung-zurückziehen)).
+
+Dasselbe gilt für eine Datei, die Sie exportiert haben: Er kann sie als
+eigene Kopie importieren, wenn ihre Lizenz Remixe erlaubt, und Sie können
+eine Kopie mit einer offeneren Lizenz exportieren als der, mit der Sie
+veröffentlicht haben (siehe
+[Speichern, veröffentlichen, neu beginnen](02-TheEditor.md#speichern-veröffentlichen-neu-beginnen)).
 
 **Nachfolger benennen** unter **Meine Identitäten** gibt kein Bauwerk
 weiter: Es setzt Ihre ganze Identität zugunsten einer anderen Ihrer eigenen

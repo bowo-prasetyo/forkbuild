@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 978ac53d098ad90d -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 87406cb37cc04363 -->
 # Preguntas frecuentes
 
 <!-- languages -->
@@ -135,6 +135,12 @@ Si prefiere que la suya sea la que la gente encuentre, puede quitar la
 de usted de su Mundo y retirar su publicación, aunque las copias ya
 enviadas se quedan (consulte
 [¿Puedo retirar la publicación de algo?](#puedo-retirar-la-publicación-de-algo)).
+
+Lo mismo vale para un archivo que usted exportó: esa persona puede
+importarlo como copia suya cuando su licencia permite remezclas, y usted
+puede exportar una copia con una licencia más abierta que la que publicó
+(consulte
+[Guardar, publicar, empezar de nuevo](02-TheEditor.md#guardar-publicar-empezar-de-nuevo)).
 
 **Declarar sucesora**, en **Mis identidades**, no entrega una
 construcción: retira toda su identidad en favor de otra que también sea

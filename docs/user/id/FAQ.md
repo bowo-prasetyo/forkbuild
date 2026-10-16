@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 978ac53d098ad90d -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 87406cb37cc04363 -->
 # Pertanyaan Umum
 
 <!-- languages -->
@@ -138,6 +138,12 @@ Jika Anda lebih suka salinannya yang ditemukan orang, Anda dapat
 menghapus milik Anda dari Dunia Anda dan membatalkan penerbitannya,
 meskipun salinan yang sudah terkirim tetap ada (lihat
 [Bisakah saya membatalkan penerbitan?](#bisakah-saya-membatalkan-penerbitan)).
+
+Hal yang sama berlaku untuk file yang Anda ekspor: orang itu dapat
+mengimpornya sebagai salinannya sendiri jika lisensinya mengizinkan remix,
+dan Anda dapat mengekspor salinan dengan lisensi yang lebih terbuka
+daripada yang Anda terbitkan (lihat
+[Menyimpan, menerbitkan, memulai ulang](02-TheEditor.md#menyimpan-menerbitkan-memulai-ulang)).
 
 **Nyatakan Pengganti**, di **Identitas Saya**, tidak menyerahkan sebuah
 bangunan: itu memensiunkan seluruh identitas Anda demi identitas lain

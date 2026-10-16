@@ -217,15 +217,40 @@ presence or any other message.
 
 ### Editor Document Export File (0.9.641–0.9.642)
 
-Editor → Export writes exactly `DocumentSerializer.serialize()`'s output, the same envelope Save stores:
+Editor → Export writes `DocumentSerializer.serialize()`'s output, the same envelope Save stores, with a seal beside
+it when the identity exporting is the build's author (2026-10-16):
 
-    { schemaVersion, world, metadata }
+    { schemaVersion, world, metadata, seal? }
 
-It is not a Publication and is not signed. Import runs `DocumentSerializer.deserialize()` (migrate → validate →
-construct), then `DocumentCloneService`. The imported document always gets a fresh `documentId`, fresh brick and
-building ids, and remapped group membership, with `parentDocumentId` set to `null`. A file's own `world.id` is never
-reused as a storage key. Newer `schemaVersion`s are rejected. `protocolVersion` must still match exactly; there is
-no migration path for it yet.
+It is not a Publication. Import runs `DocumentSerializer.deserialize()` (migrate → validate → construct), then
+`DocumentCloneService`. The imported document always gets a fresh `documentId`, fresh brick and building ids, and
+remapped group membership. A file's own `world.id` is never reused as a storage key. Newer `schemaVersion`s are
+rejected. `protocolVersion` must still match exactly; there is no migration path for it yet. Copies of ForkBuild
+from before seals ignore `seal`.
+
+**Seal** (core/DocumentSeal.js, identity/DocumentSealing.js): the maker's signed statement that they made exactly
+this build, with these terms.
+
+    { kind: 'forkbuild.document-seal', schemaVersion: 1, documentId, authorIdentityId, contentHash, sealedAt, signature }
+
+`contentHash` is the SHA-256 of `JSON.stringify({ schemaVersion, world, metadata })` as written, so any change to the
+document, its license included, breaks the seal. It is signed with type `document-seal` over
+`{ documentId, authorIdentityId, contentHash, sealedAt }`, and holds only when `documentId` is the file's `world.id`,
+`authorIdentityId` is the file's `metadata.authorIdentityId` and the signer is that identity. A file whose author
+isn't the identity exporting it (or exported while signed out or locked) has no seal.
+
+**Whose build an import becomes** (application/document/DocumentImportPolicy.js), from the author the file names,
+its seal and its license:
+
+| The file | Import |
+|---|---|
+| names no `authorIdentityId`, or one of this device's own identities (or the identity it is an authorized device of), or credits one of them in `builtWith` with a seal that isn't broken | the same build, `parentDocumentId` `null`, author and license as in the file |
+| someone else's, license allows forks (CC0, CC BY, CC BY-SA, CC BY-NC) | the importer's copy, like a fork: the importer is author, `parentDocumentId` is the file's `world.id`, and the license keeps its id with the maker's name, title and `sourceDocumentId` as `attribution` |
+| someone else's, license allows no forks (CC BY-ND, All Rights Reserved, unspecified) | refused |
+| someone else's, with a seal that doesn't hold | refused |
+
+An unsealed file is taken at its word: the author and license it names are respected. A seal can be deleted, but
+nobody else can make one that holds in the maker's name.
 
 ### Document Bundle
 
@@ -233,11 +258,13 @@ Editor → Recent → **Export All Builds** writes every saved document in one f
 
     { kind: 'forkbuild-document-bundle', formatVersion: 1, exportedAt, documents: [ { schemaVersion, world, metadata }, … ] }
 
-Each entry is exactly what Save stores, and each is validated on import like a single file; one that fails is
-counted and skipped. A document whose `world.id` names nothing on this device is saved under that id, so documents
-moved to a new device keep the placements and history that name them. One already here with the same serialized
-content is skipped; one here with different content is imported as a copy with a fresh identity, as a single file
-is. Recovery checkpoints are not included. Newer `formatVersion`s are rejected.
+Each entry is what Save stores, sealed like a single file when the exporting identity is its author, and each is
+validated on import like a single file; one that fails is counted and skipped. Each follows the same rules as a
+single import: someone else's build is saved as the importer's copy when its license allows forks, and left out
+when it doesn't or its seal doesn't hold. A document of one's own whose `world.id` names nothing on this device is
+saved under that id, so documents moved to a new device keep the placements and history that name them. One already
+here with the same serialized content is skipped; one here with different content is imported as a copy with a
+fresh identity, as a single file is. Recovery checkpoints are not included. Newer `formatVersion`s are rejected.
 
 ### Blueprint Bundle
 

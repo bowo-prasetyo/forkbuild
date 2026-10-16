@@ -3,6 +3,7 @@ import { BLUEPRINT_ATTRIBUTION_KIND } from '../../../core/BlueprintAttribution.j
 import { BLUEPRINT_LINEAGE_CLAIM_KIND } from '../../../core/BlueprintLineageClaim.js';
 import { buildBlueprintBundle, blueprintBundlePackages, isBlueprintBundle } from '../../../application/blueprint/BlueprintBundle.js';
 import { isDocumentBundle } from '../../../application/document/DocumentBundle.js';
+import { DocumentImportOutcome, DocumentImportRefusedError } from '../../../application/document/DocumentImportPolicy.js';
 import { message } from '../../../core/Message.js';
 import { errorText, t } from '../../i18n/i18n.js';
 import { libraryItemName } from '../../i18n/libraryText.js';
@@ -123,10 +124,27 @@ export function useBlueprintExchange({
     		if (!imported) {
     			return;
     		}
-    		feedback.show(imported.metadata.title ? t('blueprintExchange.importedDocument', { title: imported.metadata.title }) : t('blueprintExchange.importedUntitled'));
+    		feedback.show(importedText(imported));
     	} catch (e) {
+    		if (e instanceof DocumentImportRefusedError) {
+    			feedback.show(t(e.outcome === DocumentImportOutcome.ALTERED ? 'blueprintExchange.importAltered' : 'blueprintExchange.importNotAllowed'), { durationMs: 8000 });
+    			return;
+    		}
     		feedback.show(errorText(e).replace(/^DocumentSerializer:\s*/, ''));
     	}
+    }
+
+    // What Import made of a file: the same build, or (someone else's build)
+    // the importer's own copy, which names whose it was.
+    function importedText(imported) {
+    	const attribution = imported.metadata.parentDocumentId ? imported.metadata.license?.attribution : null;
+    	if (attribution) {
+    		const title = attribution.title || imported.metadata.title || '';
+    		return attribution.author
+    			? t('blueprintExchange.importedCopy', { author: attribution.author, title })
+    			: t('blueprintExchange.importedCopyUnnamed', { title });
+    	}
+    	return imported.metadata.title ? t('blueprintExchange.importedDocument', { title: imported.metadata.title }) : t('blueprintExchange.importedUntitled');
     }
 
     // Saves every document in the bundle without opening any of them.
@@ -135,13 +153,16 @@ export function useBlueprintExchange({
             return;
         }
         try {
-            const { added, copied, unchanged, failed } = await importDocumentBundleUseCase.execute(bundle);
+            const { added, copied, unchanged, remixed = 0, refused = 0, failed } = await importDocumentBundleUseCase.execute(bundle);
             onSavedDocumentsChanged();
-            const parts = [message('blueprintExchange.importedDocuments', { count: added + copied })];
+            const saved = added + copied + remixed;
+            const parts = [message('blueprintExchange.importedDocuments', { count: saved })];
             if (copied) parts.push(message('blueprintExchange.copiedBeside', { count: copied }));
+            if (remixed) parts.push(message('blueprintExchange.remixedCopies', { count: remixed }));
             if (unchanged) parts.push(message('blueprintExchange.alreadyHere', { count: unchanged }));
+            if (refused) parts.push(message('blueprintExchange.leftOutNotYours', { count: refused }));
             if (failed) parts.push(message('blueprintExchange.unreadable', { count: failed }));
-            feedback.show(t(added + copied ? 'blueprintExchange.summaryOpenRecent' : 'blueprintExchange.summary', { parts }), { durationMs: 8000 });
+            feedback.show(t(saved ? 'blueprintExchange.summaryOpenRecent' : 'blueprintExchange.summary', { parts }), { durationMs: 8000 });
         } catch (e) {
             feedback.show(errorText(e));
         }
