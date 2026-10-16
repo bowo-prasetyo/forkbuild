@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 0c405c0607976a30 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 978ac53d098ad90d -->
 # Häufige Fragen
 
 <!-- languages -->
@@ -125,6 +125,27 @@ und seinen Verlauf. Wenn Sie das nicht möchten, wählen Sie vor dem
 Veröffentlichen unter **Wer es in der Welt platzieren darf** die Option
 **Nur ich darf es platzieren**. Siehe
 [Warum kann ich die Bauwerke anderer platzieren?](WorldViewAdvancedTools.md#warum-kann-ich-die-bauwerke-anderer-platzieren).
+
+### Kann ich mein Bauwerk jemand anderem geben?
+
+Nicht als sein Urheber. Urheber eines Bauwerks ist die Identität, die es
+signiert hat, und niemand kann diese Signatur ändern. Ihr Bauwerk zeigt
+also immer Sie als Urheber. Genau das hält die Namensnennung ehrlich, wenn
+Bauwerke geremixt werden.
+
+Was jemand anderes tun kann, wenn die Lizenz des Bauwerks Remixe erlaubt:
+mit **Eine Kopie bearbeiten** oder **Remixen** eine eigene Kopie machen.
+Diese Kopie gehört ihm, um sie zu ändern, zu veröffentlichen und zu
+platzieren, und sie zeigt, dass sie von Ihrem stammt (siehe
+[Forken: machen Sie es zu Ihrem eigenen](04-PublishingAndForking.md#forken-machen-sie-es-zu-ihrem-eigenen)).
+Soll lieber seine Kopie die sein, die andere finden, können Sie Ihres aus
+Ihrer Welt entfernen und die Veröffentlichung zurückziehen; bereits
+verschickte Kopien bleiben aber (siehe
+[Kann ich eine Veröffentlichung zurückziehen?](#kann-ich-eine-veröffentlichung-zurückziehen)).
+
+**Nachfolger benennen** unter **Meine Identitäten** gibt kein Bauwerk
+weiter: Es setzt Ihre ganze Identität zugunsten einer anderen Ihrer eigenen
+zur Ruhe.
 
 ### Warum stehen zwei Bauwerke an derselben Stelle?
 

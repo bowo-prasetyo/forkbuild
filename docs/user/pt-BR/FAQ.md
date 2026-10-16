@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 0c405c0607976a30 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 978ac53d098ad90d -->
 # Perguntas frequentes
 
 <!-- languages -->
@@ -118,6 +118,27 @@ sua fica onde você a pôs, e a construção mantém seu nome e seu histórico. 
 você não quiser isso, escolha **Só eu posso posicioná-lo** em **Quem pode
 posicioná-lo no Mundo** antes de publicar. Veja
 [Por que posso posicionar construções de outras pessoas?](WorldViewAdvancedTools.md#por-que-posso-posicionar-construções-de-outras-pessoas).
+
+### Posso dar minha construção para outra pessoa?
+
+Não como autor dela. O autor de uma construção é a identidade que a
+assinou, e ninguém pode mudar essa assinatura, então sua construção sempre
+vai mostrar você como autor. É isso que mantém o crédito de todos honesto
+quando construções são remixadas.
+
+O que outra pessoa pode fazer, se a licença da construção permitir
+remixes, é fazer a própria cópia com **Editar uma cópia** ou **Remixar**.
+A cópia dela é dela para mudar, publicar e posicionar, e mostra que veio
+da sua (veja
+[Bifurcar: torne-a sua](04-PublishingAndForking.md#bifurcar-torne-a-sua)).
+Se você preferir que a dela seja a que as pessoas encontram, pode remover
+a sua do seu Mundo e despublicá-la, mas cópias já enviadas continuam
+existindo (veja
+[Posso despublicar alguma coisa?](#posso-despublicar-alguma-coisa)).
+
+**Declarar sucessora**, em **Minhas identidades**, não entrega uma
+construção: aposenta sua identidade inteira em favor de outra que também
+é sua.
 
 ### Por que há duas construções no mesmo ponto?
 

@@ -108,6 +108,24 @@ don't want this, choose **Only I may place it** under **Who can place it in
 the World** before you publish. See
 [Why can I place other people's builds?](WorldViewAdvancedTools.md#why-can-i-place-other-peoples-builds).
 
+### Can I give my build to someone else?
+
+Not as its maker. A build's maker is the identity that signed it, and
+nobody can change that signature, so your build will always show you as
+its maker. That is what keeps everyone's credit honest when builds are
+remixed.
+
+What someone else can do, if the build's license allows remixes, is make
+their own copy with **Edit a Copy** or **Remix**. Their copy is theirs to
+change, publish and place, and it shows it came from yours (see
+[Forking: make it your own](04-PublishingAndForking.md#forking-make-it-your-own)).
+If you'd rather theirs be the one people find, you can remove yours from
+your World and unpublish it, though copies already sent out stay (see
+[Can I unpublish something?](#can-i-unpublish-something)).
+
+**Declare Successor**, under **My Identities**, doesn't hand a build over:
+it retires your whole identity in favor of another of your own.
+
 ### Why are two builds sitting in the same spot?
 
 A placement doesn't claim land, and there's no central server to say who
