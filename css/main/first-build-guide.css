@@ -229,8 +229,8 @@
     }
 }
 
-/* The job Home's main button leaves (ui/components/StarterJobCard.js): at
-   the top of the Editor's sidebar, under Select and Place. */
+/* What a ready-made build asks of its builder (ui/components/StarterJobCard.js):
+   at the top of the Editor's sidebar, under Select and Place. */
 .starter-job {
     margin: 0.5rem 0;
     padding: 0.6rem 0.75rem;
@@ -255,6 +255,30 @@
     line-height: 1.4;
 }
 
-.starter-job--done .starter-job-text {
-    margin-bottom: 0;
+.starter-job-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+/* On a phone the sidebar is a closed drawer, so the card sits over the 3D
+   view instead, above the touch bar. */
+.starter-job--floating {
+    position: absolute;
+    left: 0.5rem;
+    right: 0.5rem;
+    bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
+    z-index: 18;
+    margin: 0;
+    background-color: rgba(var(--overlay-rgb), 0.97);
+    background-image: linear-gradient(rgba(255, 193, 7, 0.08), rgba(255, 193, 7, 0.08));
+    box-shadow: 0 6px 18px rgba(var(--shade-rgb), 0.2);
+}
+
+.starter-job--floating.starter-job--done {
+    background-image: linear-gradient(rgba(76, 175, 125, 0.1), rgba(76, 175, 125, 0.1));
+}
+
+.starter-job--floating .starter-job-text {
+    font-size: 0.82rem;
 }

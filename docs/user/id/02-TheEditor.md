@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: fe5b24d5d2806c27 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 6eb96f13049b4531 -->
 # 02 — Editor
 
 <!-- languages -->
@@ -91,8 +91,17 @@ selesai: dindingnya sudah berdiri dan ruangannya sudah berperabot, tetapi
 belum beratap. Kartu **Tugas Anda: beri atap** di bagian atas alat
 mengatakannya. Klik **Ambil atap** (ini memilih **Atap Limas 6x6** dan
 beralih ke Tempatkan), lalu klik di mana saja pada rumah: atapnya terpasang
-di atas dinding. Kartu itu lalu mengatakan bahwa rumah itu kini milik Anda.
-Terbitkan dan masuklah ke dalamnya, atau lanjutkan membangun.
+di atas dinding. Kartu itu lalu mengatakan bahwa rumah itu kini milik Anda,
+dengan **Terbitkan** (Terbitkan yang sama dengan di bilah alat) dan
+**Lanjut membangun**, yang menyimpan kartunya.
+
+Setiap bangunan siap pakai lainnya (kartu di **Beranda**, ide sebuah
+tantangan, atau yang dipilih lewat **Baru** di Editor) dibuka dengan kartu
+**Jadikan milikmu**. Klik **Ambil pohon** (ini memilih pohon dan beralih ke
+Tempatkan), lalu klik tanah di samping bangunan. Begitu ada sesuatu buatan
+Anda di dalamnya, kartu itu menawarkan **Terbitkan** dengan cara yang sama. Di
+ponsel, kartu itu berada di atas tampilan 3D, di atas tombol sentuh, karena
+alat-alatnya terlipat di sana.
 
 ## Bangunan pertama Anda
 

@@ -85,8 +85,15 @@ walls are up and its room is furnished, but it has no roof. A **Your job:
 give it a roof** card at the top of the tools says so. Click **Pick the
 roof** (it chooses **Hip Roof 6x6** and switches to Place), then click
 anywhere on the house: the roof goes on top of the walls. The
-card then says the house is yours now. Publish it and walk inside, or keep
-going.
+card then says the house is yours now, with **Publish it** (the same Publish
+as the toolbar's) and **Keep building**, which puts the card away.
+
+Every other ready-made build (Home's cards, a challenge's ideas, or one
+chosen under the Editor's **New**) opens with a **Make it yours** card
+instead. Click **Pick a tree** (it chooses a tree and switches to Place),
+then click the ground beside the build. Once something of your own is in it,
+the card offers **Publish it** the same way. On a phone the card sits over the
+3D view, above the touch buttons, because the tools are folded away there.
 
 ## Your first build
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: fe5b24d5d2806c27 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 6eb96f13049b4531 -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -95,7 +95,16 @@ Una tarjeta **Su tarea: ponerle techo** en la parte superior de las
 herramientas se lo indica. Haga clic en **Elegir el techo** (elige
 **Techo a cuatro aguas 6x6** y cambia a Colocar) y luego en cualquier parte
 de la casa: el techo queda encima de las paredes. Después, la tarjeta dice
-que la casa ya es suya. Publíquela y entre caminando, o siga construyendo.
+que la casa ya es suya, con **Publicarla** (el mismo Publicar de la barra de
+herramientas) y **Seguir construyendo**, que guarda la tarjeta.
+
+Cualquier otra construcción ya hecha (las tarjetas de Inicio, las ideas de un
+reto o una que elija en **Nuevo** del Editor) se abre en cambio con una
+tarjeta **Hágala suya**. Haga clic en **Elegir un árbol** (elige un árbol y
+cambia a Colocar) y luego en el suelo junto a la construcción. En cuanto tenga
+algo suyo, la tarjeta ofrece **Publicarla** de la misma manera. En un
+teléfono, la tarjeta queda sobre la vista 3D, encima de los botones táctiles,
+porque allí las herramientas están plegadas.
 
 ## Su primera construcción
 

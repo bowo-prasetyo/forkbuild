@@ -140,6 +140,10 @@ async function startFromHome(browser, base) {
         await page.mouse.up();
         await page.waitForSelector('.starter-job--done', { timeout: 10_000 });
         assert((await page.textContent('.starter-job-title')).includes('yours now'), 'a roof on, the House is the builder\'s');
+        // Its card's Publish it starts the toolbar's Publish, with its questions.
+        await page.click('.starter-job-publish');
+        await page.waitForSelector('.modal-overlay[role="dialog"], [role="dialog"][aria-modal="true"]', { timeout: 10_000 });
+        await page.keyboard.press('Escape');
         // See inside cuts it away above the ground floor, and back.
         await page.click('.editor-see-inside');
         assert(await page.getAttribute('.editor-see-inside', 'aria-pressed') === 'true', 'See inside is on');
@@ -152,6 +156,10 @@ async function startFromHome(browser, base) {
         await page.click('.new-document-build[data-structure-id="showcase:castle"]');
         await page.waitForFunction(() => document.querySelector('.document-info-compact-title')?.textContent.trim() === 'Castle', null, { timeout: 30_000 });
         assert(!(await page.$('.new-document-dialog')), 'New closes once a build is chosen');
+        // With no job, its card asks for a first brick of the builder's own.
+        await page.waitForSelector('.starter-job[data-stage="first-edit"]', { timeout: 10_000 });
+        await page.click('.starter-job-pick');
+        assert(await page.$eval('.tool-switcher--editor .tool-btn:nth-child(2)', (button) => button.classList.contains('tool-btn--active')), 'Pick a tree turns Place on');
 
         // Download as a 3D model: a glTF binary named after the build.
         // Under the toolbar's File menu, with Export and Import.

@@ -60,7 +60,7 @@ import ProtectIdentityNote from '../components/ProtectIdentityNote.js';
 import FirstBuildGuide from '../components/FirstBuildGuide.js';
 import StarterJobCard from '../components/StarterJobCard.js';
 import { EDITOR_ACTIVITY } from '../../core/EditorSoundCues.js';
-import { isStarterJobDone, starterJobById, starterJobGuide, unfinishedStructure } from '../../core/StarterJob.js';
+import { FIRST_EDIT_BRICK_ID, isStarterJobDone, starterCardStage as stageOfStarterCard, starterJobById, starterJobGuide, unfinishedStructure } from '../../core/StarterJob.js';
 import { worldBricks } from '../../core/PlacedBricks.js';
 import BuildPlotBanner from '../components/BuildPlotBanner.js';
 import { useBuildPlot } from './editorView/useBuildPlot.js';
@@ -110,6 +110,7 @@ export default {
     template: `
         <div class="editor-view">
             <Toolbar
+                ref="toolbar"
                 :document-manager="documentManager"
                 :save-document-use-case="saveDocumentUseCase"
                 :load-document-use-case="loadDocumentUseCase"
@@ -286,8 +287,8 @@ export default {
                         {{ t('editor.composingHint', { title: activeCompositionTitle }) }}
                     </p>
                     </template>
-                    <!-- The job Home's main button left (core/StarterJob.js). -->
-                    <StarterJobCard v-if="starterJobShown" :done="starterJobDone" @pick="pickStarterJobBrick" />
+                    <!-- What a ready-made build asks of its builder (core/StarterJob.js); over the 3D view on a phone. -->
+                    <StarterJobCard v-if="starterCardStage && !compactLayout" :stage="starterCardStage" @pick="pickStarterJobBrick" @publish="publishFromStarterCard" @hide="hideStarterCard" />
                     <DocumentInfoPanel compact :info="documentInfo" @edit-metadata="showMetadataEditor = true" />
                     <!-- Build with me: a link that lets friends build this with you, live. -->
                     <button
@@ -390,6 +391,7 @@ export default {
                         @stop="stopBuild"
                         @leave="leaveBuild"
                     />
+                    <StarterJobCard v-if="starterCardStage && compactLayout" floating :stage="starterCardStage" @pick="pickStarterJobBrick" @publish="publishFromStarterCard" @hide="hideStarterCard" />
                     <FirstBuildGuide
                         v-if="firstBuildVisible"
                         :progress="firstBuildProgress"
@@ -508,6 +510,7 @@ export default {
         const route = useRoute();
         const router = useRouter();
         const viewport = ref(null);
+        const toolbar = ref(null);
 
         const registry = new CreateBrickRegistryUseCase().execute();
         const structureRegistry = new CreateStructureRegistryUseCase().execute();
@@ -803,14 +806,15 @@ export default {
             return pins && documentManager.document?.world.id === pins.worldId ? pins.structures : [];
         });
         const pinnedTitle = computed(() => challengePins.value?.title ?? '');
-        // The job Home's main button left to do (core/StarterJob.js), for as
-        // long as the build it opened is the open build.
+        // A build opened from something ready-made (core/StarterJob.js), with
+        // the job Home's main button left to do or none, for as long as it is
+        // the open build: its card, until it is published or hidden.
         const starterJob = ref(null);
         // Any edit, undo or redo may finish (or unfinish) the job.
         const starterJobEdits = ref(0);
         let unwatchStarterJob = null;
         function startStarterJob(job, structure) {
-            starterJob.value = { job, worldId: documentManager.document?.world.id ?? null, guide: starterJobGuide(job, structure) };
+            starterJob.value = { job, worldId: documentManager.document?.world.id ?? null, guide: job ? starterJobGuide(job, structure) : null, published: false, hidden: false };
             unwatchStarterJob?.();
             unwatchStarterJob = editorSession.onCommandActivity(() => { starterJobEdits.value++; });
         }
@@ -824,9 +828,33 @@ export default {
             const job = starterJob.value?.job;
             return Boolean(job) && isStarterJobDone(job, worldBricks(documentManager.document?.world), (id) => registry.get(id));
         });
+        const starterCardStage = computed(() => {
+            void starterJobEdits.value;
+            if (!starterJobShown.value) return null;
+            let placedCount = 0;
+            try {
+                placedCount = readyMadeBricks ? readyMadeBricks.placedCount(documentManager.document?.world) : 0;
+            } catch {
+                placedCount = 0;
+            }
+            const { job, published, hidden } = starterJob.value;
+            return stageOfStarterCard({ job, jobDone: starterJobDone.value, placedCount, published, hidden });
+        });
+        function hideStarterCard() {
+            if (starterJob.value) starterJob.value = { ...starterJob.value, hidden: true };
+        }
+        // The same Publish as the toolbar's, with its questions.
+        function publishFromStarterCard() {
+            toolbar.value?.requestPublish();
+        }
         function pickStarterJobBrick() {
-            const job = starterJob.value?.job;
-            if (!job) return;
+            if (!starterJob.value) return;
+            const job = starterJob.value.job;
+            if (!job) {
+                editorContext.setActiveBrick(FIRST_EDIT_BRICK_ID);
+                setTool(ToolId.PLACE);
+                return;
+            }
             editorContext.setActiveBrick(job.brickId);
             // The roof goes on the house wherever on it the pointer is.
             editorContext.setPlacementGuide(starterJobShown.value && !starterJobDone.value ? starterJob.value.guide : null);
@@ -852,6 +880,7 @@ export default {
             newDocumentDialog.value = null;
             if (editorSession.forkStructure(structure)) {
                 editorSession.frameDocument();
+                startStarterJob(null, structure);
                 feedback.show(t('editor.startedFromBuild', { name: libraryItemName(structure) }));
             }
         }
@@ -1025,6 +1054,9 @@ export default {
             onPublishedForNotes(publication);
             onBuildPlotPublished(publication);
             walkInsidePublished(publication);
+            if (starterJob.value && starterJob.value.worldId === publishedWorld?.id) {
+                starterJob.value = { ...starterJob.value, published: true };
+            }
         }
         let unsubDocumentState = null;
 
@@ -1437,8 +1469,8 @@ export default {
                 if (structure && editorSession.forkStructure(unfinished || structure)) {
                     editorSession.frameDocument();
                     funnelEventCounter?.openedStarter();
+                    startStarterJob(unfinished ? job : null, structure);
                     if (unfinished) {
-                        startStarterJob(job, structure);
                         feedback.show(t('starterJob.started', { name: libraryItemName(structure) }), { durationMs: 5000 });
                     } else if (!joinChallenge(challenge)) {
                         feedback.show(t('editor.startedFromBuild', { name: libraryItemName(structure) }));
@@ -1653,6 +1685,7 @@ export default {
             onDocumentSaved,
             viewport,
             touchInput,
+            compactLayout,
             sidebarOpen,
             touchMultiSelect,
             toggleTouchMultiSelect,
@@ -1757,7 +1790,7 @@ export default {
             onDocumentPublished,
             onPublished, protectNoteDue, seeInside, toggleSeeInside, buildPlot, buildPlotPublished, forgetBuildPlot, visitBuildPlot,
             ...firstBuildGuide,
-            pinnedStructures, pinnedTitle, starterJobShown, starterJobDone, pickStarterJobBrick,
+            pinnedStructures, pinnedTitle, starterCardStage, pickStarterJobBrick, publishFromStarterCard, hideStarterCard, toolbar,
             walkInside,
             distributePublishedDocument,
             distributePublishedDocumentAndSnapshot,

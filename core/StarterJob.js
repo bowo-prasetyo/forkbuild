@@ -73,3 +73,27 @@ export function isStarterJobDone(job, bricks, definitionOf) {
     }
     return false;
 }
+
+// What the starter card (ui/components/StarterJobCard.js) asks of a build
+// opened from something ready-made: the job left to do; with no job, a first
+// brick of the builder's own; then, once the build is theirs, to publish it.
+// The launch week's counts showed most visitors stopping at an untouched
+// build, and none publishing (docs/Roadmap.md, "Make it yours, then publish").
+export const StarterCardStage = Object.freeze({
+    JOB: 'job',
+    FIRST_EDIT: 'first-edit',
+    PUBLISH: 'publish'
+});
+
+// The brick the first-edit card picks: a tree stands beside any of the
+// ready-made builds, wherever it is put.
+export const FIRST_EDIT_BRICK_ID = 'core:pine_tree';
+
+// The card's stage, or null once the build is published or the card hidden.
+// `placedCount` is how many bricks the builder placed or changed
+// (core/PlacedBricks.js).
+export function starterCardStage({ job = null, jobDone = false, placedCount = 0, published = false, hidden = false } = {}) {
+    if (published || hidden) return null;
+    if (job) return jobDone ? StarterCardStage.PUBLISH : StarterCardStage.JOB;
+    return placedCount > 0 ? StarterCardStage.PUBLISH : StarterCardStage.FIRST_EDIT;
+}

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: fe5b24d5d2806c27 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 6eb96f13049b4531 -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -91,7 +91,16 @@ telhado. Um cartão **Sua tarefa: colocar o telhado** no alto das ferramentas
 avisa isso. Clique em **Pegar o telhado** (ele escolhe
 **Telhado de quatro águas 6x6** e muda para Colocar) e depois em qualquer
 lugar da casa: o telhado vai para cima das paredes. Então o cartão diz que
-a casa agora é sua. Publique-a e entre andando, ou continue construindo.
+a casa agora é sua, com **Publicar** (o mesmo Publicar da barra de
+ferramentas) e **Continuar construindo**, que guarda o cartão.
+
+Qualquer outra construção pronta (os cartões do **Início**, as ideias de um
+desafio ou uma escolhida em **Novo** no Editor) abre com um cartão
+**Deixe com a sua cara**. Clique em **Pegar uma árvore** (ele escolhe uma
+árvore e muda para Colocar) e depois no chão ao lado da construção. Assim que
+houver algo seu nela, o cartão oferece **Publicar** do mesmo jeito. No
+celular, o cartão fica sobre a visão 3D, acima dos botões de toque, porque ali
+as ferramentas ficam recolhidas.
 
 ## Sua primeira construção
 
