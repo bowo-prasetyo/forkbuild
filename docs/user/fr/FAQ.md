@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 0c405c0607976a30 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 978ac53d098ad90d -->
 # Questions fréquentes
 
 <!-- languages -->
@@ -119,6 +119,27 @@ garde votre nom et son historique. Si vous ne voulez pas de cela,
 choisissez **Moi seul peux le placer** sous **Qui peut le placer dans le
 Monde** avant de publier. Voir
 [Pourquoi puis-je placer les constructions des autres ?](WorldViewAdvancedTools.md#pourquoi-puis-je-placer-les-constructions-des-autres-).
+
+### Puis-je donner ma construction à quelqu’un d’autre ?
+
+Pas en tant que son auteur. L’auteur d’une construction est l’identité qui
+l’a signée, et personne ne peut changer cette signature : votre
+construction vous montrera donc toujours comme son auteur. C’est ce qui
+garde le crédit de chacun honnête quand les constructions sont remixées.
+
+Ce que quelqu’un d’autre peut faire, si la licence de la construction
+autorise les remix, c’est faire sa propre copie avec **Modifier une
+copie** ou **Remixer**. Sa copie est à lui pour la modifier, la publier et
+la placer, et elle montre qu’elle vient de la vôtre (voir
+[Forker : faites-le vôtre](04-PublishingAndForking.md#forker--faites-le-vôtre)).
+Si vous préférez que ce soit la sienne que les gens trouvent, vous pouvez
+retirer la vôtre de votre Monde et la dépublier, mais les copies déjà
+envoyées restent (voir
+[Puis-je dépublier quelque chose ?](#puis-je-dépublier-quelque-chose-)).
+
+**Déclarer un successeur**, dans **Mes identités**, ne transmet pas une
+construction : cela retire toute votre identité au profit d’une autre des
+vôtres.
 
 ### Pourquoi deux constructions se trouvent-elles au même endroit ?
 

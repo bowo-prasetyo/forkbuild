@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 0c405c0607976a30 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 978ac53d098ad90d -->
 # Preguntas frecuentes
 
 <!-- languages -->
@@ -118,6 +118,27 @@ usted; la suya se queda donde la puso, y la construcción conserva su nombre
 y su historial. Si no quiere esto, elija **Solo yo puedo colocarlo** en
 **Quién puede colocarlo en el Mundo** antes de publicar. Consulte
 [¿Por qué puedo colocar construcciones de otras personas?](WorldViewAdvancedTools.md#por-qué-puedo-colocar-construcciones-de-otras-personas).
+
+### ¿Puedo darle mi construcción a otra persona?
+
+No como su autor. El autor de una construcción es la identidad que la
+firmó, y nadie puede cambiar esa firma, así que su construcción siempre lo
+mostrará a usted como su autor. Eso es lo que mantiene honesto el
+reconocimiento de todos cuando las construcciones se remezclan.
+
+Lo que otra persona sí puede hacer, si la licencia de la construcción
+permite remezclas, es hacer su propia copia con **Editar una copia** o
+**Remezclar**. Su copia es suya para cambiarla, publicarla y colocarla, y
+muestra que viene de la suya (consulte
+[Bifurcar: hágalo suyo](04-PublishingAndForking.md#bifurcar-hágalo-suyo)).
+Si prefiere que la suya sea la que la gente encuentre, puede quitar la
+de usted de su Mundo y retirar su publicación, aunque las copias ya
+enviadas se quedan (consulte
+[¿Puedo retirar la publicación de algo?](#puedo-retirar-la-publicación-de-algo)).
+
+**Declarar sucesora**, en **Mis identidades**, no entrega una
+construcción: retira toda su identidad en favor de otra que también sea
+suya.
 
 ### ¿Por qué hay dos construcciones en el mismo lugar?
 

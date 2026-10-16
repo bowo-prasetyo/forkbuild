@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 0c405c0607976a30 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 978ac53d098ad90d -->
 # Pertanyaan Umum
 
 <!-- languages -->
@@ -121,6 +121,27 @@ membawa nama serta riwayat Anda. Jika Anda tidak menginginkannya, pilih
 **Hanya saya yang boleh menempatkannya** di bawah **Siapa yang dapat
 menempatkannya di Dunia** sebelum Anda menerbitkan. Lihat
 [Mengapa saya bisa menempatkan bangunan orang lain?](WorldViewAdvancedTools.md#mengapa-saya-bisa-menempatkan-bangunan-orang-lain).
+
+### Bisakah saya memberikan bangunan saya kepada orang lain?
+
+Tidak sebagai pembuatnya. Pembuat sebuah bangunan adalah identitas yang
+menandatanganinya, dan tidak ada yang bisa mengubah tanda tangan itu, jadi
+bangunan Anda akan selalu menunjukkan Anda sebagai pembuatnya. Itulah yang
+menjaga kredit setiap orang tetap jujur ketika bangunan di-remix.
+
+Yang bisa dilakukan orang lain, jika lisensi bangunan mengizinkan remix,
+adalah membuat salinannya sendiri dengan **Edit Salinan** atau **Remix**.
+Salinan itu miliknya untuk diubah, diterbitkan, dan ditempatkan, dan
+menunjukkan bahwa ia berasal dari milik Anda (lihat
+[Fork: jadikan milik Anda](04-PublishingAndForking.md#fork-jadikan-milik-anda)).
+Jika Anda lebih suka salinannya yang ditemukan orang, Anda dapat
+menghapus milik Anda dari Dunia Anda dan membatalkan penerbitannya,
+meskipun salinan yang sudah terkirim tetap ada (lihat
+[Bisakah saya membatalkan penerbitan?](#bisakah-saya-membatalkan-penerbitan)).
+
+**Nyatakan Pengganti**, di **Identitas Saya**, tidak menyerahkan sebuah
+bangunan: itu memensiunkan seluruh identitas Anda demi identitas lain
+milik Anda sendiri.
 
 ### Mengapa ada dua bangunan di tempat yang sama?
 
