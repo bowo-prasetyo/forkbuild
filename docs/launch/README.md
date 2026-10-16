@@ -28,6 +28,9 @@ Every post links to the site with a `ref` naming where it was posted:
 | Blurt | <https://bowo-prasetyo.github.io/forkbuild/?ref=blurt> |
 | Teachers and schools | <https://bowo-prasetyo.github.io/forkbuild/?ref=edu> |
 | The GitHub README | <https://bowo-prasetyo.github.io/forkbuild/?ref=github> |
+| Game Jolt | <https://bowo-prasetyo.github.io/forkbuild/?ref=gamejolt> |
+| IndieDB | <https://bowo-prasetyo.github.io/forkbuild/?ref=indiedb> |
+| YouTube (the launch clip's description) | <https://bowo-prasetyo.github.io/forkbuild/?ref=youtube> |
 
 A visit through one of these is counted once as `/r/<channel>` on the
 public visitor counter, <https://forkbuild.goatcounter.com/>, under the same

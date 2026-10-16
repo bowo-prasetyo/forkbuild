@@ -235,10 +235,10 @@ and never sent anywhere.
 
 And when ForkBuild is opened through a link in one of its own launch posts,
 which ends in `?ref=` and the name of the place it was posted (`hn`,
-`producthunt`, `reddit`, `itch`, `nostr`, `steem`, `blurt`, `edu` or
-`github`; any other value is ignored): `/r/` and that name, such as `/r/hn`,
-once. The app then takes `ref` out of the address, so reloading or passing
-the address on doesn't send it again. This tells which posts brought people,
+`producthunt`, `reddit`, `itch`, `nostr`, `steem`, `blurt`, `edu`,
+`gamejolt`, `indiedb`, `youtube` or `github`; any other value is ignored):
+`/r/` and that name, such as `/r/hn`, once. The app then takes `ref` out of
+the address, so reloading or passing the address on doesn't send it again. This tells which posts brought people,
 and nothing about who they are or what they did.
 
 Each sends only its path and the random number: never the link, the build,

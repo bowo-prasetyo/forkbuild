@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: b7e385296e91b9fd -->
+<!-- translation-of: docs/Privacy.md source-hash: 5b1a4648b8c09240 -->
 # Privasi
 
 <!-- languages -->
@@ -248,7 +248,7 @@ memang sudah disimpannya (lihat "Apa yang tetap di perangkat Anda"); untuk balok
 
 Dan saat ForkBuild dibuka lewat tautan dari salah satu postingan
 peluncurannya sendiri, yang diakhiri `?ref=` dan nama tempat postingan itu
-(`hn`, `producthunt`, `reddit`, `itch`, `nostr`, `steem`, `blurt`, `edu` atau `github`; nilai lain diabaikan): `/r/` dan nama itu, seperti
+(`hn`, `producthunt`, `reddit`, `itch`, `nostr`, `steem`, `blurt`, `edu`, `gamejolt`, `indiedb`, `youtube` atau `github`; nilai lain diabaikan): `/r/` dan nama itu, seperti
 `/r/hn`, sekali. Aplikasi lalu menghapus `ref` dari alamat, sehingga memuat
 ulang atau meneruskan alamat itu tidak mengirimnya lagi. Ini menunjukkan
 postingan mana yang membawa orang, dan tidak ada apa pun tentang siapa

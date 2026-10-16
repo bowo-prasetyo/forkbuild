@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: b7e385296e91b9fd -->
+<!-- translation-of: docs/Privacy.md source-hash: 5b1a4648b8c09240 -->
 # プライバシー
 
 <!-- languages -->
@@ -217,7 +217,7 @@ ForkBuild 自身のファイル（コード、スタイルシート、アイコ�
 これらは、このブラウザーがすでに保存している公開済みの作品から求めます（「デバイスに残るもの」を参照）。置いたブロックについては、各作品が始まったときのブロックのメモも使います。このメモは作品と一緒にこのデバイスに保存され、どこにも送られません。
 
 また、ForkBuild 自身のローンチ投稿のリンク（末尾が `?ref=` と投稿先の名前:
-`hn`, `producthunt`, `reddit`, `itch`, `nostr`, `steem`, `blurt`, `edu`、`github`。それ以外の値は無視されます）から開かれたとき:
+`hn`, `producthunt`, `reddit`, `itch`, `nostr`, `steem`, `blurt`, `edu`, `gamejolt`, `indiedb`, `youtube`、`github`。それ以外の値は無視されます）から開かれたとき:
 `/r/` とその名前（たとえば `/r/hn`）を 1 回。その後アプリはアドレスから
 `ref` を取り除くので、再読み込みしたりアドレスを渡したりしても、もう一度は
 送られません。どの投稿から人が来たかがわかるだけで、その人が誰で何をしたかは

@@ -7261,3 +7261,16 @@ is published).
   where the next drop is will show in `/e/editor-edit` against the `/e/publish-*` counts. The guide's Editor picture
   (the House with its roof job, on a wide screen) looks as it did, so it wasn't retaken. The translations were written
   without a native speaker's review.
+
+## Three more launch channels: Game Jolt, IndieDB and YouTube (unnumbered, 2026-10-16)
+
+**itch.io brought most of the launch week's tagged visits, so the next places to try are its neighbours.** Game Jolt
+takes the same launcher as itch.io, IndieDB lists the project and links out, and the launch clip now has a YouTube
+description to link from. Arrivals from any of them read as untagged visits, because `?ref=` only counts a fixed list.
+Pillar served: none directly; it is infrastructure for finding where builders come from, kept as small as the
+channels before it.
+
+- `gamejolt`, `indiedb` and `youtube` join `core/LaunchChannel.js`'s list, each counted once as `/r/<channel>` under
+  the visitor count's rules, like the others. Any other value is still ignored and never sent.
+- The Privacy page names them, in all eight languages, and the launch kit lists each one's link.
+- Tests: `LaunchChannel` (the three are read from `?ref=` and counted as their own fixed paths).

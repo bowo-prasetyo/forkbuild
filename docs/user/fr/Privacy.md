@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: b7e385296e91b9fd -->
+<!-- translation-of: docs/Privacy.md source-hash: 5b1a4648b8c09240 -->
 # Confidentialité
 
 <!-- languages -->
@@ -251,7 +251,7 @@ déjà (voir « Ce qui reste sur votre appareil ») ; pour les briques posées, 
 
 Et quand ForkBuild est ouvert par un lien de l’une de ses propres
 publications de lancement, qui se termine par `?ref=` et le nom de l’endroit
-où il a été publié (`hn`, `producthunt`, `reddit`, `itch`, `nostr`, `steem`, `blurt`, `edu` ou `github` ; toute autre valeur est ignorée) :
+où il a été publié (`hn`, `producthunt`, `reddit`, `itch`, `nostr`, `steem`, `blurt`, `edu`, `gamejolt`, `indiedb`, `youtube` ou `github` ; toute autre valeur est ignorée) :
 `/r/` suivi de ce nom, comme `/r/hn`, une fois. L’application retire
 ensuite `ref` de l’adresse, pour qu’un rechargement ou une adresse
 transmise ne l’envoie pas à nouveau. Cela indique quelles publications ont

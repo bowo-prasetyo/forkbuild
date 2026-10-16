@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: b7e385296e91b9fd -->
+<!-- translation-of: docs/Privacy.md source-hash: 5b1a4648b8c09240 -->
 # Privacidade
 
 <!-- languages -->
@@ -235,7 +235,7 @@ ele já guarda (veja "O que fica no seu dispositivo"); para os blocos colocados,
 
 E quando o ForkBuild é aberto por um link de um dos próprios posts de
 lançamento, que termina em `?ref=` e no nome do lugar onde foi publicado
-(`hn`, `producthunt`, `reddit`, `itch`, `nostr`, `steem`, `blurt`, `edu` ou `github`; qualquer outro valor é ignorado): `/r/` e esse nome,
+(`hn`, `producthunt`, `reddit`, `itch`, `nostr`, `steem`, `blurt`, `edu`, `gamejolt`, `indiedb`, `youtube` ou `github`; qualquer outro valor é ignorado): `/r/` e esse nome,
 como `/r/hn`, uma vez. O app então tira `ref` do endereço, para que
 recarregar ou repassar o endereço não o envie de novo. Isso mostra quais
 posts trouxeram pessoas, e nada sobre quem elas são ou o que fizeram.

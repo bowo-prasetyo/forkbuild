@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: b7e385296e91b9fd -->
+<!-- translation-of: docs/Privacy.md source-hash: 5b1a4648b8c09240 -->
 # Datenschutz
 
 <!-- languages -->
@@ -246,7 +246,7 @@ und ohnehin aufbewahrt (siehe „Was auf Ihrem Gerät bleibt“); für die geset
 
 Und wenn ForkBuild über einen Link aus einem seiner eigenen Launch-Posts
 geöffnet wird, der auf `?ref=` und den Namen des Orts endet, an dem er
-erschien (`hn`, `producthunt`, `reddit`, `itch`, `nostr`, `steem`, `blurt`, `edu` oder `github`; jeder andere Wert wird ignoriert): `/r/` und
+erschien (`hn`, `producthunt`, `reddit`, `itch`, `nostr`, `steem`, `blurt`, `edu`, `gamejolt`, `indiedb`, `youtube` oder `github`; jeder andere Wert wird ignoriert): `/r/` und
 dieser Name, etwa `/r/hn`, einmal. Die App nimmt `ref` danach aus der
 Adresse, sodass ein Neuladen oder Weitergeben der Adresse es nicht noch
 einmal sendet. Das zeigt, welche Posts Menschen gebracht haben, und nichts

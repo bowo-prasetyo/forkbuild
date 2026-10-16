@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: b7e385296e91b9fd -->
+<!-- translation-of: docs/Privacy.md source-hash: 5b1a4648b8c09240 -->
 # 개인정보 보호
 
 <!-- languages -->
@@ -182,7 +182,7 @@ IndexedDB가 없는 브라우저는 `forkbuild:`로 시작하는 키로 `localSt
 이 값들은 이 브라우저가 이미 보관하고 있는 게시한 작품들로부터 계산합니다("내 기기에 남는 것" 참고). 놓은 블록에 대해서는 각 작품이 시작할 때의 블록을 적은 메모도 쓰는데, 이 메모는 작품 곁에 이 기기에만 보관되고 어디로도 보내지지 않습니다.
 
 그리고 ForkBuild 자체의 출시 게시물에 있는 링크(끝이 `?ref=`와 게시한 곳의
-이름: `hn`, `producthunt`, `reddit`, `itch`, `nostr`, `steem`, `blurt`, `edu`, `github`. 다른 값은 무시됨)로 열릴 때: `/r/`와 그 이름(예:
+이름: `hn`, `producthunt`, `reddit`, `itch`, `nostr`, `steem`, `blurt`, `edu`, `gamejolt`, `indiedb`, `youtube`, `github`. 다른 값은 무시됨)로 열릴 때: `/r/`와 그 이름(예:
 `/r/hn`)을 한 번. 그런 다음 앱은 주소에서 `ref`를 지우므로, 새로 고치거나
 주소를 전달해도 다시 보내지 않습니다. 이것은 어떤 게시물이 사람들을
 데려왔는지만 알려 주고, 그 사람이 누구이며 무엇을 했는지는 알려 주지
