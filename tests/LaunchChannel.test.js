@@ -11,6 +11,9 @@ import { assert } from './support/Assert.js';
 {
     assert(launchChannelOf('?ref=hn') === 'hn', 'a listed channel is read');
     assert(launchChannelOf('?utm=x&ref=producthunt') === 'producthunt', 'beside other parameters');
+    for (const channel of ['gamejolt', 'indiedb', 'youtube']) {
+        assert(launchChannelOf(`?ref=${channel}`) === channel, `${channel} is listed`);
+    }
     for (const search of ['', '?', '?ref=', '?ref=HN', '?ref=hn&ref=reddit', '?ref=evil.example', '?ref=hn%2Fx', '?source=hn', null, 42]) {
         assert(launchChannelOf(search) === null, `${JSON.stringify(search)} names no channel`);
     }

@@ -7,7 +7,7 @@ import { VISITOR_COUNT_ENDPOINT } from './VisitorCount.js';
 // the other moments it counts. Any other value, and any other parameter,
 // names nothing and is never sent.
 export const LAUNCH_CHANNELS = Object.freeze([
-    'hn', 'producthunt', 'reddit', 'itch', 'nostr', 'steem', 'blurt', 'edu', 'github'
+    'hn', 'producthunt', 'reddit', 'itch', 'nostr', 'steem', 'blurt', 'edu', 'github', 'gamejolt', 'indiedb', 'youtube'
 ]);
 
 export const LAUNCH_CHANNEL_PARAMETER = 'ref';
