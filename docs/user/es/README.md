@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: 4ae3c13f1318370c -->
+<!-- translation-of: docs/user/README.md source-hash: b52156afbaeaed07 -->
 # Documentación para usuarios de ForkBuild
 
 <!-- languages -->
@@ -18,7 +18,7 @@ construcción.
 | Aprender las herramientas de construcción | [El Editor](02-TheEditor.md) |
 | Compartir una construcción con un amigo | [Compartir un enlace](04-PublishingAndForking.md#compartir-un-enlace) |
 | Que todos encuentren mi construcción | [¿Quién puede encontrarla?](04-PublishingAndForking.md#quién-puede-encontrarla) |
-| Remezclar la construcción de otra persona | [Bifurcar: hágalo suyo](04-PublishingAndForking.md#bifurcar-hágalo-suyo) |
+| Remezclar la construcción de otra persona | [Remezclar: hágalo suyo](04-PublishingAndForking.md#remezclar-hágalo-suyo) |
 | Construir con un amigo, en vivo | [Construir conmigo](02-TheEditor.md#construir-conmigo-construir-juntos-en-vivo) |
 | Pasear con amigos | [Pasear aquí conmigo](03-WorldView.md#pasear-aquí-conmigo--traer-a-sus-amigos-a-este-mundo) |
 | Cambiar cómo se ve mi avatar | [Avatares y presencia](06-AvatarsAndPresence.md#personalizar-su-avatar) |
@@ -43,7 +43,7 @@ sus amigos.
    selección, transformaciones, colores de bloques, grupos, las
    estructuras de la Biblioteca de construcción y sus propios planos,
    instancias de estructuras, y el título, la descripción y la licencia de
-   una creación.
+   una construcción.
 3. **[Vista del mundo](03-WorldView.md)** — el mundo 3D compartido
    donde vive cada construcción publicada: caminar y volar, encontrar y
    mirar cosas, **Construir aquí**, **Pasear aquí conmigo**, los
@@ -178,11 +178,11 @@ Editor le permite construir con estructuras completas de una vez: veintidós
 ya hechas en cinco categorías, más todo lo que usted mismo guarde:
 
 - **Coloque** una estructura directamente en lo que está construyendo, o
-  **bifurque** una en un documento propio completamente nuevo.
+  **remezcle** una en una construcción propia completamente nueva.
 - **Guarde sus propias** construcciones como estructuras reutilizables en
   **Mis estructuras**, su biblioteca personal de planos.
 - **Exporte e importe** un plano como un archivo portátil para
   compartirlo con otra persona o llevarlo a otro dispositivo.
 
-Consulte [El Editor](02-TheEditor.md#estructuras-componer-bifurcar-y-su-biblioteca-personal)
+Consulte [El Editor](02-TheEditor.md#estructuras-componer-remezclar-y-su-biblioteca-personal)
 para ver la guía completa.

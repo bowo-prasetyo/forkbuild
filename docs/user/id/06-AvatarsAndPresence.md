@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: f9738fa9f2faf553 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 3b81c1f78e8542a3 -->
 # 06 — Avatar & Kehadiran
 
 <!-- languages -->
@@ -365,7 +365,7 @@ satwa liar yang ditempatkan dunia sendiri tidak bisa. Petunjuk muncul saat
 **G** dapat menghiasi atau mengurungkan sesuatu di dekat Anda. Seperti
 menambahkan [penanda](03-WorldView.md#penanda--menandai-tempat-yang-layak-diingat), menghiasi memerlukan sebuah nama dan akses EDIT ke
 Dunia tempat Anda berada. Di Dunia terbitan orang lain, hiasannya masuk ke
-salinan Anda sendiri — selama lisensinya mengizinkan fork. Jika semua itu
+salinan Anda sendiri — selama lisensinya mengizinkan remix. Jika semua itu
 tidak berlaku, **G** tidak melakukan apa-apa; tombol **Hiasi** di pad
 sentuh justru memberi tahu alasannya.
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 75f6ca907e2e67ae -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: fe5b24d5d2806c27 -->
 # 02 — Editor
 
 <!-- languages -->
@@ -20,7 +20,7 @@ dengan grup.
 │             Terbaru · ⌨ Pintasan                            │
 ├──────────────────────┬──────────────────────────────────────┤
 │ [Pilih | Tempatkan]  │                                      │
-│ Judul dokumen     ✎  │                                      │
+│ Judul bangunan    ✎  │                                      │
 │ Pilihan              │            Viewport 3D               │
 │ Pustaka Bangunan     │                                      │
 │   [Balok|Struktur]   │                                      │
@@ -34,7 +34,7 @@ dengan grup.
 - **Alat** — beralih antara **Pilih** (`1`) dan **Tempatkan** (`2`).
   **Tempatkan** tetap tersorot selama Anda menempatkan balok atau
   struktur.
-- **Judul dokumen** — nama karya yang terbuka. Klik **✎** untuk mengedit
+- **Judul bangunan** — nama karya yang terbuka. Klik **✎** untuk mengedit
   judul, deskripsi, dan lisensinya. Apakah sudah tersimpan ditampilkan di
   bilah alat.
 - **Pilihan** — hanya menampilkan apa yang dapat bekerja pada pilihan Anda
@@ -60,7 +60,7 @@ dengan grup.
     bangunan lebih besar dalam kategori **unggulan**, ditambah
     **Struktur Saya** milik Anda sendiri. Klik sebuah kartu untuk
     menempatkannya — lihat
-    [Struktur: menyusun, mem-fork, dan pustaka pribadi Anda](#struktur-menyusun-mem-fork-dan-pustaka-pribadi-anda)
+    [Struktur: menyusun, me-remix, dan pustaka pribadi Anda](#struktur-menyusun-me-remix-dan-pustaka-pribadi-anda)
     di bawah.
 
 ### Panel Pilihan
@@ -204,7 +204,7 @@ memilih warna sendiri:
   warna **Warna** di bagian **Pilihan** untuk mewarnai ulang semuanya
   sekaligus. Setiap perubahan dapat diurungkan (`Ctrl/Cmd+Z`) seperti
   suntingan lainnya. Contoh warna tidak ditawarkan untuk pilihan instans
-  struktur — edit dokumen struktur itu sendiri sebagai gantinya (lihat
+  struktur — edit bangunan struktur itu sendiri sebagai gantinya (lihat
   [Instans struktur](#instans-struktur-referensi-hidup) di bawah).
 
 Di samping setiap contoh **Warna** ada sederet **warna desa** (plester,
@@ -318,7 +318,7 @@ pun yang sedang dipilih:
 > pernah mengubah grupnya. Dan menghapus grup hanya menghapus *labelnya*,
 > bukan balok di dalamnya.
 
-## Struktur: menyusun, mem-fork, dan pustaka pribadi Anda
+## Struktur: menyusun, me-remix, dan pustaka pribadi Anda
 
 Tab **Struktur** di Pustaka Bangunan (lihat [Tata letak](#tata-letak) di
 atas) memberi Anda dua puluh dua struktur siap pakai — rumah, lumbung, sumur,
@@ -330,23 +330,23 @@ dari sebuah bangunan. Ada tiga hal berbeda yang dapat Anda lakukan dengan
 salah satunya, dan masing-masing penting untuk alasan yang berbeda:
 
 - **Tempatkan** (klik kartunya) — menyalin balok struktur langsung ke
-  dokumen yang sedang Anda kerjakan, sehingga menjadi bagian dari satu
+  bangunan yang sedang Anda kerjakan, sehingga menjadi bagian dari satu
   bangunan yang lebih besar. Inilah tindakan sehari-hari.
-- **Remix Sebagai Bangunan Baru** (di menu **⋮** kartu) — memulai dokumen
+- **Remix Sebagai Bangunan Baru** (di menu **⋮** kartu) — memulai bangunan
   baru yang mandiri yang berawal sebagai salinan persis struktur itu.
 - **Remix ke Struktur Saya** (hanya kartu bawaan, di menu **⋮**) —
   menambahkan struktur ke **Struktur Saya** milik Anda, tanpa melibatkan
-  dokumen sama sekali. Lihat
+  bangunan sama sekali. Lihat
   [Struktur Saya](#struktur-saya-pustaka-cetak-biru-pribadi-anda) di
   bawah.
 - **Info** (di menu **⋮** kartu) — tampilan baca-saja berisi nama,
   kategori, jumlah balok, jejak, tinggi, sumber, dan deskripsi struktur.
-- Tempatkan **dokumen tersimpan** milik Anda sendiri sebagai **instans
+- Tempatkan **bangunan tersimpan** milik Anda sendiri sebagai **instans
   struktur** — referensi hidup yang dapat dipakai ulang, bukan salinan —
   dari dropdown **Terbaru** di bilah alat, bukan dari Pustaka Bangunan.
   Lihat [Instans struktur](#instans-struktur-referensi-hidup) di bawah.
 
-### Menempatkan struktur ke dalam dokumen Anda
+### Menempatkan struktur ke dalam bangunan Anda
 
 Klik kartu mana pun di tab **Struktur** — yang bawaan atau salah satu
 **Struktur Saya** milik Anda — dan pratinjau bayangan tembus pandang dari
@@ -356,27 +356,27 @@ seperti menempatkan satu balok:
 1. Gerakkan penunjuk untuk memosisikan bayangan.
 2. Tekan `R` / `Shift+R` untuk memutarnya per 90°.
 3. Klik untuk menerapkan — setiap balok dalam struktur ditambahkan ke
-   dokumen Anda sebagai satu **langkah urung**. Posisi yang terisi
+   bangunan Anda sebagai satu **langkah urung**. Posisi yang terisi
    mewarnai bayangan menjadi merah dan menolak kliknya, sama seperti satu
    balok menolak ditempatkan di atas balok lain.
 4. `Escape` membatalkan — tidak ada yang ditambahkan, dan Anda kembali ke
    alat yang Anda pakai sebelumnya.
 
-Balok yang Anda dapatkan adalah balok biasa di dokumen Anda sejak saat
+Balok yang Anda dapatkan adalah balok biasa di bangunan Anda sejak saat
 mendarat — tidak dapat dibedakan dari apa pun yang Anda tempatkan dengan
 tangan, bebas diedit, dipilih, dikelompokkan, atau dihapus seperti yang
 lain. Menempatkan beberapa struktur adalah cara cepat membangun sebuah
 adegan: klik Rumah, tempatkan; klik Lumbung, tempatkan di sampingnya; klik
 Sumur, tempatkan di halaman.
 
-### Mem-fork struktur sebagai dokumen baru
+### Me-remix struktur sebagai bangunan baru
 
 Buka menu **⋮** sebuah kartu dan klik **Remix Sebagai Bangunan Baru** untuk
 memulai karya baru milik Anda yang berawal sebagai salinan persis struktur
 itu — balok yang persis sama, dapat diedit dengan setiap alat di panduan
-ini, dalam dokumennya sendiri alih-alih dilebur ke apa pun yang sedang Anda
-buka. Fork tidak pernah mengubah salinan milik pustaka: fork Rumah sepuluh
-kali dan masing-masing menjadi karya mandiri sejak Anda mengeklik Fork.
+ini, dalam bangunannya sendiri alih-alih dilebur ke apa pun yang sedang Anda
+buka. Remix tidak pernah mengubah salinan milik pustaka: remix Rumah sepuluh
+kali dan masing-masing menjadi karya mandiri sejak Anda mengeklik Remix.
 
 ### Struktur Saya: pustaka cetak biru pribadi Anda
 
@@ -393,12 +393,12 @@ bawah tab Struktur, tepat di bawah kategori bawaan.
 Ada cara kedua sebuah struktur masuk ke Struktur Saya, tanpa ada yang perlu
 dipilih atau dibangun terlebih dahulu: buka menu **⋮** pada kartu
 **bawaan** mana pun dan klik **Remix ke Struktur Saya**. Struktur itu
-ditambahkan persis apa adanya — tidak ada dokumen yang dibuat, tidak ada
+ditambahkan persis apa adanya — tidak ada bangunan yang dibuat, tidak ada
 yang diekstrak — jadi siap untuk Ganti Nama, Ekspor, atau ditempatkan
 langsung, seperti entri lain di pustaka Anda.
 
 Struktur di **Struktur Saya** bekerja persis seperti yang bawaan — klik
-untuk menempatkannya ke dokumen Anda saat ini, atau Remix Sebagai Bangunan
+untuk menempatkannya ke bangunan Anda saat ini, atau Remix Sebagai Bangunan
 Baru — dengan dua tindakan tambahan di menu **⋮**-nya:
 
 | Tindakan | Fungsinya |
@@ -409,10 +409,10 @@ Baru — dengan dua tindakan tambahan di menu **⋮**-nya:
 **Struktur Saya** hanya menyimpan *struktur itu sendiri* — nama dan
 sekumpulan balok. Menghapus satu struktur tidak pernah menyentuh apa pun
 yang sudah Anda bangun dengannya: setiap tempat yang sudah Anda tempati
-atau fork dengannya tetap menyimpan balok-balok itu apa adanya. Dan
+atau remix dengannya tetap menyimpan balok-balok itu apa adanya. Dan
 struktur itu tidak pernah diedit di tempat — jika Anda ingin mengubah apa
 yang sebenarnya dibangun oleh struktur tersimpan, tempatkan ke sebuah
-dokumen, edit dokumen itu, lalu **Buat Cetak Biru** lagi (secara opsional
+bangunan, edit bangunan itu, lalu **Buat Cetak Biru** lagi (secara opsional
 dengan nama baru, seperti "Farmstead Deluxe" — itu menjadi entri tersendiri
 di Struktur Saya, bukan pengganti yang asli).
 
@@ -476,7 +476,7 @@ panel **Info** struktur dari kartunya dan Anda akan menemukan:
   desainnya terlebih dahulu: tombol ini muncul untuk desain apa pun yang
   berbagi sidik jari lama itu.
 
-Ini opsional, dan sepenuhnya terpisah dari menempatkan, mem-fork, atau
+Ini opsional, dan sepenuhnya terpisah dari menempatkan, me-remix, atau
 membagikan struktur itu sendiri — fitur ini ada untuk situasi saat Anda
 ingin melekatkan nama Anda pada sebuah desain dengan cara yang dapat
 diverifikasi orang lain secara mandiri, bukan sekadar dipercaya. Lihat
@@ -486,24 +486,24 @@ bukti eksternal yang mandiri padanya.
 
 ## Instans struktur: referensi hidup
 
-Menempatkan (di atas) menyalin balok struktur ke dokumen Anda sekali.
+Menempatkan (di atas) menyalin balok struktur ke bangunan Anda sekali.
 Terkadang yang Anda inginkan justru salinan **hidup** dari sesuatu yang
-sudah Anda bangun — dokumen tersimpan apa pun, bukan hanya yang ada di
+sudah Anda bangun — bangunan tersimpan apa pun, bukan hanya yang ada di
 pustaka — yang selalu selaras dengan sumbernya setiap kali Anda melihatnya.
-Itulah **instans struktur**: instans merujuk dokumen sumber alih-alih
+Itulah **instans struktur**: instans merujuk bangunan sumber alih-alih
 menyalin baloknya, sehingga mengedit sumbernya nanti otomatis memperbarui
 setiap instansnya.
 
 1. Buka dropdown **Terbaru** di bilah alat. (Dropdown ini muncul setelah
-   Anda menyimpan setidaknya satu dokumen.)
-2. Di samping dokumen tersimpan mana pun, klik **Tempatkan**. Mengeklik
-   nama dokumen justru membukanya, menggantikan apa yang sedang Anda buka.
+   Anda menyimpan setidaknya satu bangunan.)
+2. Di samping bangunan tersimpan mana pun, klik **Tempatkan**. Mengeklik
+   nama bangunan justru membukanya, menggantikan apa yang sedang Anda buka.
 3. Arahkan penunjuk ke tanah, tekan `R` untuk memutar, dan klik untuk
    menempatkannya — persis seperti menempatkan balok.
 
-Instans adalah *referensi* hidup ke dokumen itu, bukan salinan baloknya:
-dokumen yang sama dapat ditempatkan berapa kali pun, dan mengedit balok
-dokumen sumber nanti memperbarui setiap instansnya. Pilih sebuah instans
+Instans adalah *referensi* hidup ke bangunan itu, bukan salinan baloknya:
+bangunan yang sama dapat ditempatkan berapa kali pun, dan mengedit balok
+bangunan sumber nanti memperbarui setiap instansnya. Pilih sebuah instans
 dengan alat Pilih (`1`) dan bilah sisi menampilkan:
 
 | Kontrol | Fungsinya |
@@ -513,11 +513,11 @@ dengan alat Pilih (`1`) dan bilah sisi menampilkan:
 | **Kolom X / Z / Rotasi °, lalu Terapkan** | Menetapkan posisi dan arah yang tepat — ketinggian (Y tanah) selalu mengikuti medan dan bukan sasaran yang Anda tetapkan |
 | **Putar ↻ / ↺** | Memutar tepat 90° |
 | **Duplikat** (`Ctrl/Cmd+D`) | Menempatkan instans lain dari struktur yang sama |
-| **Hapus** | Menghapus instans ini — dokumen sumbernya tidak tersentuh |
-| **Edit Bangunan Sumber** | Membuka dokumen yang dirujuk itu sendiri, untuk mengubah tampilan setiap instansnya |
+| **Hapus** | Menghapus instans ini — bangunan sumbernya tidak tersentuh |
+| **Edit Bangunan Sumber** | Membuka bangunan yang dirujuk itu sendiri, untuk mengubah tampilan setiap instansnya |
 
 Mengedit *isi* struktur yang ditempatkan selalu dilakukan dengan mengedit
-dokumen sumbernya — tidak ada cara untuk mengedit balok sebuah instans
+bangunan sumbernya — tidak ada cara untuk mengedit balok sebuah instans
 secara langsung, dan justru itulah yang menjaga setiap instansnya tetap
 selaras.
 
@@ -526,16 +526,16 @@ selaras.
 Setiap karya memiliki **judul**, **deskripsi** opsional, **lisensi**, dan
 pengaturan **Siapa yang dapat menempatkannya di Dunia** — atur semuanya di
 dialog **Properti Bangunan**, yang dibuka dengan tombol **✎** di samping
-judul dokumen di bagian atas bilah sisi Editor (di Tampilan Dunia,
-tombolnya **Edit Metadata**). Dokumen baru dimulai tanpa lisensi, yang
-berarti tidak ada orang lain yang dapat mem-fork-nya sampai Anda memilih
+judul bangunan di bagian atas bilah sisi Editor (di Tampilan Dunia,
+tombolnya **Edit Metadata**). Bangunan baru dimulai tanpa lisensi, yang
+berarti tidak ada orang lain yang dapat me-remix-nya sampai Anda memilih
 lisensi. Deskripsinya muncul sebagai cuplikan di kartunya di **Jelajahi** dan
 juga dapat dicari di sana; lisensi menentukan apakah — dan bagaimana —
-orang lain boleh mem-fork-nya. Lihat
+orang lain boleh me-remix-nya. Lihat
 [Penerbitan & Remix](04-PublishingAndForking.md) untuk arti setiap lisensi.
 
 Deskripsi yang panjang lebih mudah dibaca dengan sedikit format, yang
-ditampilkan oleh panel Informasi Dokumen, penjelajah lokasi di Tampilan
+ditampilkan oleh panel Informasi Bangunan, penjelajah lokasi di Tampilan
 Dunia, serta postingan Steem dan Blurt:
 
 | Tulis | Hasilnya |
@@ -555,7 +555,7 @@ dipisahkan spasi atau koma, masing-masing dari huruf kecil, angka, dan tanda
 hubung (aksen dihapus, jadi `café` menjadi `cafe`). Bila bangunan belum
 punya, dialog mengisi kolom dengan saran dari judul dan deskripsi, yang bisa
 Anda simpan, ubah, atau hapus; tombol di bawah kolom menambahkan saran lain.
-Fork tetap membawa tagnya. Postingan Blurt mencantumkannya setelah tag
+Remix tetap membawa tagnya. Postingan Blurt mencantumkannya setelah tag
 ForkBuild sendiri, sehingga orang yang menjelajah Blurt lewat tag bisa
 menemukan bangunan Anda.
 
@@ -568,7 +568,7 @@ pemindahan dan tik ganda untuk putaran, rangkaian bip cepat untuk tempel
 atau duplikat, denting terang untuk warna baru, dua nada untuk
 pengelompokan, lonceng untuk memberi nama tempat, bip menurun untuk urungkan
 dan bip menaik untuk ulangi, serta akor kecil saat Anda menyimpan. Perubahan
-yang dibuat kolaborator di dokumen yang sama tidak bersuara.
+yang dibuat kolaborator di bangunan yang sama tidak bersuara.
 
 Matikan atau nyalakan suara dengan tombol **Suara** di kanan atas tampilan
 atau dengan menekan `M` (tercantum di daftar Pintasan Keyboard, `?`);
@@ -619,16 +619,16 @@ Musik diputar pelan saat Anda membangun, sedikit lebih riang daripada di Tampila
   **Properti Bangunan**, ekspor, lalu kembalikan. **Ekspor Semua Bangunan**
   dan **Impor**-nya, di **Terbaru**, bekerja dengan cara yang sama.
 - **Terbaru** — membuka kembali sesuatu yang pernah Anda simpan (muncul
-  setelah penyimpanan pertama; klik nama dokumen untuk membukanya). Begitu
-  Anda menyimpan cukup banyak dokumen, kotak saring muncul sehingga Anda
+  setelah penyimpanan pertama; klik nama bangunan untuk membukanya). Begitu
+  Anda menyimpan cukup banyak bangunan, kotak saring muncul sehingga Anda
   dapat langsung melompat ke salah satunya berdasarkan nama. Setiap entri
   juga memiliki tombol **Tempatkan** — lihat
   [Instans struktur](#instans-struktur-referensi-hidup) — untuk
-  menambahkannya ke dokumen *saat ini* alih-alih menggantinya. **Ekspor
+  menambahkannya ke bangunan *saat ini* alih-alih menggantinya. **Ekspor
   Semua Bangunan** di bagian bawah mengunduh setiap bangunan tersimpan
-  sebagai satu file; **Impor** membacanya kembali, menyimpan dokumen yang
+  sebagai satu file; **Impor** membacanya kembali, menyimpan bangunan yang
   belum ada di perangkat ini (buka dari Terbaru), melewati yang sudah ada
-  tanpa perubahan, dan menyimpan salinan di samping dokumen yang ada dalam
+  tanpa perubahan, dan menyimpan salinan di samping bangunan yang ada dalam
   versi berbeda. Perubahan yang belum disimpan tidak disertakan, jadi
   simpan terlebih dahulu.
 

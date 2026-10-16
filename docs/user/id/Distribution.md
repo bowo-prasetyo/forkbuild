@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: 5cfbb171295f8928 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: 5a1b60c315ac9a44 -->
 # Mendistribusikan Karya Anda
 
 <!-- languages -->
@@ -79,7 +79,7 @@ Dunia yang diterbitkan didistribusikan dalam dua bagian terpisah:
 | | Klaim Bertanda Tangan | Snapshot |
 |---|---|---|
 | **Seperti…** | Kartu katalog yang dinotariskan | Salinan cetak di rak, berlabel tempat letaknya |
-| **Isinya** | Judul Dunia, Anda sebagai pembuatnya, lisensinya, Dunia asal fork-nya (jika ada), dan **hash konten**-nya, sidik jari balok-baloknya, semuanya ditandatangani dengan identitas Anda | Setiap balok Dunia, ditambah penempatan bertanda tangan Anda: tempat Anda menaruhnya di Tampilan Dunia |
+| **Isinya** | Judul Dunia, Anda sebagai pembuatnya, lisensinya, Dunia asal remix-nya (jika ada), dan **hash konten**-nya, sidik jari balok-baloknya, semuanya ditandatangani dengan identitas Anda | Setiap balok Dunia, ditambah penempatan bertanda tangan Anda: tempat Anda menaruhnya di Tampilan Dunia |
 | **Ukuran** | Beberapa kilobyte | Sebesar bangunannya: hingga 256 KB di Arweave, tanpa batas di IPFS |
 | **Yang dibuktikannya** | Bahwa Anda menerbitkan Dunia ini, dengan sidik jari persis ini | Tidak ada dengan sendirinya; siapa pun yang mengambilnya memeriksa balok-baloknya terhadap hash konten |
 | **Kegunaannya** | Tautan berbagi, dan **Temukan Dunia Bersama** yang mencari Dunia Anda dan memeriksanya | Menampilkan bangunan Anda di Tampilan Dunia, di tempat Anda menaruhnya, kepada orang yang berjalan di dekatnya |

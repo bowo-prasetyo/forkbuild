@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 67400ead6416db5b -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 29cdc8613dfca1c8 -->
 # Visão do mundo: ferramentas avançadas
 
 <!-- languages -->
@@ -21,7 +21,7 @@ muda nada para mais ninguém.
 |---|---|---|
 | [Inspecionar](#inspecionando-um-bloco--ou-uma-estrutura-posicionada) | Clique num bloco ou numa estrutura posicionada | Ver o que é e de onde veio |
 | [Câmera e edição](#câmera-e-edição) | Uma linha no cabeçalho do painel | Ver em que construção a sua próxima mudança se aplica |
-| [Sobre esta construção, e Posicionamento](#informações-e-posicionamento-do-documento) | Embaixo do cabeçalho, depois de um clique | Os dados de uma construção e onde ela fica |
+| [Sobre esta construção, e Posicionamento](#informações-e-posicionamento-da-construção) | Embaixo do cabeçalho, depois de um clique | Os dados de uma construção e onde ela fica |
 | Coordenadas e busca por **Local** | Sobre a visão, e em **Buscar** | Encontrar coisas pela posição X/Y/Z |
 | [Encontros no Mundo](#encontros-no-mundo--publicações-e-avatares-que-seus-pares-estão-compartilhando) | **Por perto**, em Explorar | O que as pessoas conectadas compartilham |
 | [Nomes de lugares](#nomes-de-lugares-por-perto--descobrindo-declarações-de-qualquer-pessoa) | **Por perto**, em Explorar | Nomes que outras pessoas deram aos lugares em volta |
@@ -92,7 +92,7 @@ câmera. Se também mudam o que você edita depende do painel (em
 [Buscar](03-WorldView.md#buscar--quais-publicações-correspondem-a-isto),
 Focar muda).
 
-## Informações e posicionamento do documento
+## Informações e posicionamento da construção
 
 Clique num bloco, num chão vazio ou numa estrutura posicionada e dois
 painéis se abrem embaixo do cabeçalho, para a construção em que você
@@ -222,12 +222,12 @@ apontadas. Para os motivos desse projeto, veja
 [Overlap Is A Fact; Collision Is A Policy Decision](../../principles/placement.md#overlap-is-a-fact-collision-is-a-policy-decision-0225)
 (em inglês) e as regras que vêm depois.
 
-### Posicionar ou bifurcar
+### Posicionar ou remixar
 
 As duas coisas põem a construção de outra pessoa num Mundo seu, mas são
 diferentes:
 
-| | Posicionar | Bifurcar (Remixar, ou Editar uma cópia) |
+| | Posicionar | Remixar (ou Editar uma cópia) |
 |---|---|---|
 | O que é criado | Um posicionamento: uma pequena anotação assinada de onde mostrar a construção | Uma construção nova, com ids novos, que é sua |
 | A construção | O mesmo Mundo compartilhado, como foi publicado | Uma cópia sua, com uma anotação que aponta para o original |
@@ -236,7 +236,7 @@ diferentes:
 | Controlado por | A opção **Quem pode posicioná-lo** do editor | A licença |
 | Ao publicar | Nada novo é publicado | Cria um Mundo compartilhado novo com o seu nome |
 
-Posicionar é como fazer um link para um arquivo; bifurcar é como fazer uma
+Posicionar é como fazer um link para um arquivo; remixar é como fazer uma
 cópia sua para mudar. Quem escolheu **Só eu posso posicioná-lo** ainda
 pode permitir remixes pela licença, e um remix é seu para posicionar onde
 quiser.
@@ -525,7 +525,7 @@ Os dois ficam desativados num posicionamento feito por outra pessoa.
 construção *de novo* onde o seu avatar está (ou embaixo da câmera, sem
 avatar). Não move um posicionamento existente nem faz uma cópia: continua
 sendo um Mundo compartilhado só (veja
-[Posicionar ou bifurcar](#posicionar-ou-bifurcar)). Ele diz onde
+[Posicionar ou remixar](#posicionar-ou-remixar)). Ele diz onde
 posicionou a construção e quantos posicionamentos ela tem agora. Se já há
 um posicionamento exatamente onde você está, ele pede que você se mova
 antes, para que dois cliques não empilhem dois no mesmo ponto.

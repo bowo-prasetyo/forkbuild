@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: e45448af38374f12 -->
+<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 7ffb295aa351970e -->
 # 07 — Connexions entre pairs et amis
 
 <!-- languages -->
@@ -197,25 +197,25 @@ rendez-vous** dans **Paramètres réseau**) et d’une identité déverrouillée
 
 ## Suivre des personnes
 
-**Suivre** vous tient au courant des créations de quelqu’un, comme suivre
+**Suivre** vous tient au courant des constructions de quelqu’un, comme suivre
 un compte sur un réseau social, sans que personne n’ait rien à demander à
 l’autre.
 
 - **Où suivre.** **Suivre** apparaît sur les cartes de publication
   d’Explorer, à côté de **Signé par …** sur la page d’un auteur, dans le menu
   **⋯** d’une personne sur cette page, et sous la forme **Suivre ses
-  créations** sur un avatar dans la Vue du Monde. Vous suivez une
+  constructions** sur un avatar dans la Vue du Monde. Vous suivez une
   *identité*, jamais un nom d’auteur saisi : plusieurs personnes peuvent
   publier sous le même nom, la page d’un auteur affiche donc un
-  **Suivre** par identité ayant signé des créations sous ce nom.
+  **Suivre** par identité ayant signé des constructions sous ce nom.
 - **La page Abonnements** (**Plus → Abonnements**) liste
   les personnes que vous suivez, chacune avec **Ne plus suivre**, et en
-  dessous leurs créations les plus récentes arrivées sur cet appareil, des
+  dessous leurs constructions les plus récentes arrivées sur cet appareil, des
   plus récentes aux plus anciennes. Cliquez sur un nom pour ne voir que
-  les créations de cette personne.
-- **Notifications.** Quand une nouvelle création d’une personne que vous
+  les constructions de cette personne.
+- **Notifications.** Quand une nouvelle construction d’une personne que vous
   suivez arrive sur cet appareil, le panneau 🔔 reçoit une entrée **… a publié quelque chose de nouveau**,
-  une fois par création (et votre appareil l’affiche aussi, si vous avez
+  une fois par construction (et votre appareil l’affiche aussi, si vous avez
   activé [Notifications sur cet appareil](03-WorldView.md#notifications-sur-cet-appareil)), avec
   **Explorer** pour l’ouvrir.
 - **Ses Mondes partagés sont récupérés pour vous.** Les Mondes qu’une
@@ -237,14 +237,14 @@ ne pourrait les compter honnêtement. Suivre ne donne rien non plus à
 l’autre personne : pas de chat, pas de vue sur votre avatar, aucun moyen
 de vous joindre. C’est toujours le rôle de l’amitié.
 
-**Ce que suivre ne fait pas.** Suivre repère les créations des personnes
+**Ce que suivre ne fait pas.** Suivre repère les constructions des personnes
 que vous suivez parmi ce qui arrive sur cet appareil ; cela ne va pas
-chercher leurs créations de soi-même. Les créations arrivent toujours par
+chercher leurs constructions de soi-même. Les constructions arrivent toujours par
 les voies habituelles : la découverte de Mondes dans la Vue du Monde, les
 Mondes partagés par les pairs connectés, et les liens que vous ouvrez.
-Seules les créations dont la signature est valide comptent, personne ne
+Seules les constructions dont la signature est valide comptent, personne ne
 peut donc apparaître sur votre page Abonnements en inscrivant le nom ou
-l’identité de quelqu’un d’autre sur son travail. Les créations d’une
+l’identité de quelqu’un d’autre sur son travail. Les constructions d’une
 personne que vous avez **Bloquée** restent masquées même si vous la
 suivez.
 

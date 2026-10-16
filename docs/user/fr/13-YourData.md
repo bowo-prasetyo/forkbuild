@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: 2f10096b5d79ec2b -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: 33341ea95fd2e843 -->
 # 13 — Vos données : sauvegarder et restaurer
 
 <!-- languages -->
@@ -6,7 +6,7 @@
 <!-- /languages -->
 
 ForkBuild n’a ni comptes ni serveur qui garde votre travail. Tout ce qu’il
-stocke se trouve dans ce navigateur, sur cet appareil : vos documents, vos
+stocke se trouve dans ce navigateur, sur cet appareil : vos constructions, vos
 identités et leurs clés privées, vos structures, publications, pairs et
 amis, l’historique du chat et vos réglages. **Effacer les données de ce
 site dans le navigateur supprime tout définitivement**, tout comme
@@ -18,8 +18,8 @@ l’endroit où vous en gardez une copie.
 ## Sur cet appareil
 
 La première section liste ce qui est stocké, par type, et l’espace
-utilisé. Les nombres sont des entrées de stockage, pas des documents : un
-document enregistré et la liste des documents font deux entrées, par
+utilisé. Les nombres sont des entrées de stockage, pas des constructions : un
+construction enregistrée et la liste des constructions font deux entrées, par
 exemple.
 
 Si elle indique **Le navigateur peut supprimer ces données quand le
@@ -106,7 +106,7 @@ menu, sur chaque page, le signale, avec **Sauvegarder maintenant** et **Me
 le rappeler dans une semaine** :
 
 - Elle apparaît la première fois une semaine après que ce navigateur a
-  commencé à contenir votre travail (documents, identités, structures,
+  commencé à contenir votre travail (constructions, identités, structures,
   pairs ou chat), si vous n’avez jamais sauvegardé.
 - Ensuite, elle apparaît quand la dernière sauvegarde est plus ancienne
   que ce que vous avez choisi sous **Rappels et sauvegardes automatiques →
@@ -160,7 +160,7 @@ peut réécrire ses anciennes données.
 2. Choisissez comment restaurer :
    - **Ajouter ce que cet appareil n’a pas** (par défaut) : tout ce qui,
      dans la sauvegarde, n’est pas sur cet appareil est ajouté. Quand les
-     deux ont quelque chose, comme le même document ou un réglage, la
+     deux ont quelque chose, comme la même construction ou un réglage, la
      version de cet appareil est conservée.
    - **Remplacer tout ce qui est sur cet appareil par la sauvegarde** :
      supprime d’abord ce que ForkBuild a stocké ici, puis restaure
@@ -180,13 +180,13 @@ sa propre page :
 
 | Quoi | Exporter | Importer |
 |---|---|---|
-| Un document | **Exporter** dans la barre d’outils de l’Éditeur | **Importer** dans la barre d’outils de l’Éditeur |
+| Une construction | **Exporter** dans la barre d’outils de l’Éditeur | **Importer** dans la barre d’outils de l’Éditeur |
 | Toutes les constructions enregistrées | **Exporter toutes les constructions** en bas du menu **Récents** de l’Éditeur | **Importer** dans la barre d’outils de l’Éditeur |
 | Une structure | **Exporter le plan** dans le menu **⋮** de sa carte | **Importer un plan** à côté de **Mes structures** |
 | Toutes les structures | **Tout exporter** à côté de **Mes structures** | **Importer un plan** à côté de **Mes structures** |
 | Une identité | **Exporter** dans **Mes identités** | **Importer une identité** dans **Mes identités** |
 
-Importer tous les documents remet ceux que cet appareil n’a pas, garde
+Importer toutes les constructions remet celles que cet appareil n’a pas, garde
 ceux qu’il a déjà tels quels, et enregistre une copie à côté de ceux qu’il
 a dans une autre version. Importer toutes les structures ignore les
 designs déjà présents dans Mes structures. Une identité exportée emporte
@@ -198,7 +198,7 @@ se déplacent qu’avec une sauvegarde complète.
 
 ## Vos publications
 
-Une création que vous **Publiez** n’est stockée que sur cet appareil,
+Une construction que vous **Publiez** n’est stockée que sur cet appareil,
 jusqu’à ce que vous la distribuiez (voir
 [Publier et remixer](04-PublishingAndForking.md)). Sa carte dans **Explorer**
 indique où cet appareil a enregistré sa distribution, par exemple

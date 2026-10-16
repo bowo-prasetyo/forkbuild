@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: d748ce22f6360f55 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: be6c14fcfc79e4c8 -->
 # 09 — Publicaciones y evidencia externa
 
 <!-- languages -->
@@ -23,14 +23,14 @@
 > todo el panel **Herramientas de billetera y archivo**. Las guías
 > [11](11-EvidenceAndStorage.md) y [12](12-ArchiveAndAchievements.md)
 > indican cuáles de sus secciones son Experimentales. Construir, guardar,
-> publicar en Explorar, bifurcar, las identidades y los pares no
+> publicar en Explorar, remezclar, las identidades y los pares no
 > dependen de nada de esto.
 
 Nada de esto es necesario para usar ForkBuild. Sáltelo si solo quiere
 construir, publicar y explorar.
 
 La página **Publicaciones** es una capa más técnica que Explorar.
-Explorar trata de documentos y Mundos; la página Publicaciones trata de
+Explorar trata de construcciones y Mundos; la página Publicaciones trata de
 **declaraciones firmadas** como “yo diseñé esta estructura” o “yo llamo X a
 este lugar”, y de la profundidad opcional que puede agregarle a una
 declaración:
@@ -51,9 +51,9 @@ declaración:
 
 | | **Publicar** (Explorar) | **Página Publicaciones** |
 |---|---|---|
-| Qué comparte | Un documento o un Mundo | Un registro firmado: un Mundo compartido, la autoría de una estructura o un nombre de lugar |
+| Qué comparte | Una construcción o un Mundo | Un registro firmado: un Mundo compartido, la autoría de una estructura o un nombre de lugar |
 | Dónde lo ve | Explorar, Vista del autor, Vista del mundo | La página **Publicaciones** |
-| Qué hace con él | Abrirlo, explorarlo, bifurcarlo | Comprobarlo, obtener su contenido, distribuirlo y anclarlo |
+| Qué hace con él | Abrirlo, explorarlo, remezclarlo | Comprobarlo, obtener su contenido, distribuirlo y anclarlo |
 | Guía | [Publicar y remezclar](04-PublishingAndForking.md) | Esta |
 
 **Publicar** por sí solo no pone un Mundo en la página Publicaciones. Lo
@@ -63,7 +63,7 @@ que puede viajar a los pares (consulte
 
 La página Publicaciones no tiene **Abrir**, **Explorar** ni **Remezclar**, ni
 siquiera para un Mundo compartido. Muestra el registro firmado, no el
-Mundo. Para abrir, explorar o bifurcar un Mundo compartido, búsquelo en
+Mundo. Para abrir, explorar o remezclar un Mundo compartido, búsquelo en
 Explorar, en la página de su autor o en la Vista del mundo. Uno que
 recibió de un par aparece allí cuando su contenido está en este
 dispositivo. (La única excepción es **Abrir en el Editor** en su propio
@@ -96,7 +96,7 @@ publicación en sí es obligatoria:
 | **Publicación** | El libro en sí | Un registro firmado: un Mundo compartido, una Atribución de plano o una Declaración de nombre de lugar. Lleva el hash de su contenido y la firma de su editor. |
 | **Contenido** | Donde se guardan los ejemplares impresos | Los bytes de los que trata la publicación, como los bloques de un Mundo. Siempre se guardan primero en este dispositivo; **Guardar en …** pone una copia en IPFS, Arweave, Steem o Blurt para que otros puedan obtenerla. Consulte [Proveedor de contenido](10-NetworkSettings.md#proveedor-de-contenido). |
 | **Snapshot** | Un ejemplar impreso | Una copia guardada del contenido de una publicación, como los bloques de un Mundo, que otros pueden obtener y comprobar contra su hash. Consulte [Snapshot local](#snapshot-local). |
-| **Colocación** | Dónde está el ejemplar en el estante | Un registro firmado de dónde está una construcción en el Mundo. Un Mundo compartido puede tener varias. Consulte [Colocar o bifurcar](WorldViewAdvancedTools.md#colocar-o-bifurcar). |
+| **Colocación** | Dónde está el ejemplar en el estante | Un registro firmado de dónde está una construcción en el Mundo. Un Mundo compartido puede tener varias. Consulte [Colocar o remezclar](WorldViewAdvancedTools.md#colocar-o-remezclar). |
 | **Anuncio / descubrimiento** | Una ficha del catálogo de una biblioteca | Un pequeño aviso firmado en Nostr, Arweave, Steem o Blurt que dice que la publicación o el Snapshot existen y dónde está su copia, para que puedan encontrarlo personas que no están conectadas con usted. Consulte [Proveedor de anuncio / descubrimiento](10-NetworkSettings.md#proveedor-de-anuncio--descubrimiento). |
 | **Prueba / anclaje** *(Experimental, salvo en Arweave)* | El sello de un notario | El hash del contenido escrito en una transacción de blockchain (Bitcoin, Base, Arweave, Steem o Blurt), como evidencia de que existía en ese momento. No guarda ni anuncia nada. Consulte [Evidencia y almacenamiento](11-EvidenceAndStorage.md). |
 | **Comentarios** | Las reseñas de los lectores | Comentarios que cualquiera con un nombre puede asociar a una publicación, cada uno firmado por quien comenta, no por el editor. Consulte [Comentarios](#comentarios). |

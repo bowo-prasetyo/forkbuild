@@ -66,18 +66,18 @@ browser extension for the networks you pick, such as Wander for Arweave or
 nos2x for Nostr. [Distributing Your Work](Distribution.md) lists everything
 you can distribute, where it can go and what each network needs.
 
-### Why can't anyone fork my creation?
+### Why can't anyone remix my build?
 
-A new document has no license, and an unlicensed creation can't be forked.
-Open **Build Properties** (the **✎** beside the document title in the
-Editor), choose a license that allows forking (any CC license except
+A new build has no license, and an unlicensed build can't be remixed.
+Open **Build Properties** (the **✎** beside the build title in the
+Editor), choose a license that allows remixing (any CC license except
 CC BY-ND), and publish again. The setting is part of what gets published,
-so creations you already published keep the license they had. See
+so builds you already published keep the license they had. See
 [Choosing a license](04-PublishingAndForking.md#choosing-a-license).
 
 ### Publish failed. What do the messages mean?
 
-- **a title is required before publishing** — give the creation a title in
+- **a title is required before publishing** — give the build a title in
   **Build Properties**.
 - **cannot publish an empty world** — place at least one brick first.
 - **cannot sign, identity is locked** — your identity locked itself; click
@@ -118,7 +118,7 @@ remixed.
 What someone else can do, if the build's license allows remixes, is make
 their own copy with **Edit a Copy** or **Remix**. Their copy is theirs to
 change, publish and place, and it shows it came from yours (see
-[Forking: make it your own](04-PublishingAndForking.md#forking-make-it-your-own)).
+[Remixing: make it your own](04-PublishingAndForking.md#remixing-make-it-your-own)).
 If you'd rather theirs be the one people find, you can remove yours from
 your World and unpublish it, though copies already sent out stay (see
 [Can I unpublish something?](#can-i-unpublish-something)).
@@ -163,7 +163,7 @@ there and restore the file on the other device (see
 [Your Data](13-YourData.md)).
 To move one kind of thing:
 
-- **Documents**: **Export** in the Editor toolbar, or **Export All
+- **Builds**: **Export** in the Editor toolbar, or **Export All
   Builds** at the bottom of **Recent**, then **Import** on the other
   device.
 - **Your own structures**: **Export Blueprint** from a card's **⋮** menu,
@@ -174,7 +174,7 @@ Chat history, friends and settings move only with a full backup.
 
 ### Will clearing my browser data delete my work?
 
-Yes. Documents, identities, friends and chat history all live in this
+Yes. Builds, identities, friends and chat history all live in this
 browser's storage for this site, and clearing it deletes them for good.
 Back them up first with **Your Data → Back Up to a File**, and keep the
 file and its passphrase safe; **Restore** on the same page brings everything
@@ -196,9 +196,9 @@ It shows **Revoked** on **My Identities**, and it can never be un-revoked.
 Create a new identity to keep working. See
 [What revoking does — and doesn't](05-IdentityAndLogin.md#what-revoking-does--and-doesnt).
 
-### Why won't an older copy of ForkBuild open my exported document?
+### Why won't an older copy of ForkBuild open my exported build?
 
-Documents are now saved in a newer, more compact format. ForkBuild 1.0.0
+Builds are now saved in a newer, more compact format. ForkBuild 1.0.0
 and older can't read it, so update the other copy first. Files exported by
 older versions still open here.
 

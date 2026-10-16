@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: f1e16b4c1352d5a0 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 53acfc3595aae824 -->
 # Perguntas frequentes
 
 <!-- languages -->
@@ -70,13 +70,13 @@ Nostr.
 [Distribuindo seu trabalho](Distribution.md) lista tudo o que
 você pode distribuir, para onde pode ir e do que cada rede precisa.
 
-### Por que ninguém consegue bifurcar minha criação?
+### Por que ninguém consegue remixar minha construção?
 
-Um documento novo não tem licença, e uma criação sem licença não pode ser
-bifurcada. Abra **Propriedades da construção** (o **✎** ao lado do título do
-documento no Editor), escolha uma licença que permita bifurcar (qualquer
+Uma construção nova não tem licença, e uma construção sem licença não pode ser
+remixada. Abra **Propriedades da construção** (o **✎** ao lado do título do
+construção no Editor), escolha uma licença que permita remixar (qualquer
 licença CC, menos a CC BY-ND) e publique de novo. A configuração faz parte do
-que é publicado, então as criações que você já publicou mantêm a licença que
+que é publicado, então as construções que você já publicou mantêm a licença que
 tinham. Veja
 [Escolhendo uma licença](04-PublishingAndForking.md#escolhendo-uma-licença).
 
@@ -85,7 +85,7 @@ tinham. Veja
 Estas mensagens aparecem em inglês no app:
 
 - **a title is required before publishing** (é preciso um título antes de
-  publicar) — dê um título à criação em **Propriedades da construção**.
+  publicar) — dê um título à construção em **Propriedades da construção**.
 - **cannot publish an empty world** (não é possível publicar um mundo vazio)
   — coloque pelo menos um bloco antes.
 - **cannot sign, identity is locked** (não é possível assinar, a identidade
@@ -130,7 +130,7 @@ O que outra pessoa pode fazer, se a licença da construção permitir
 remixes, é fazer a própria cópia com **Editar uma cópia** ou **Remixar**.
 A cópia dela é dela para mudar, publicar e posicionar, e mostra que veio
 da sua (veja
-[Bifurcar: torne-a sua](04-PublishingAndForking.md#bifurcar-torne-a-sua)).
+[Remixar: torne-a sua](04-PublishingAndForking.md#remixar-torne-a-sua)).
 Se você preferir que a dela seja a que as pessoas encontram, pode remover
 a sua do seu Mundo e despublicá-la, mas cópias já enviadas continuam
 existindo (veja
@@ -217,9 +217,9 @@ mostra **Revogada** em **Minhas identidades**, e a revogação nunca pode ser
 desfeita. Crie uma nova identidade para continuar trabalhando. Veja
 [O que revogar faz — e o que não faz](05-IdentityAndLogin.md#o-que-revogar-faz--e-o-que-não-faz).
 
-### Por que uma cópia mais antiga do ForkBuild não abre meu documento exportado?
+### Por que uma cópia mais antiga do ForkBuild não abre minha construção exportada?
 
-Os documentos agora são salvos num formato mais novo e mais compacto. O
+As construções agora são salvos num formato mais novo e mais compacto. O
 ForkBuild 1.0.0 e anteriores não conseguem lê-lo, então atualize antes a
 outra cópia. Os arquivos exportados por versões mais antigas continuam
 abrindo aqui.

@@ -16,7 +16,7 @@ app to walking inside your first build.
 | Learn the building tools | [The Editor](02-TheEditor.md) |
 | Share a build with a friend | [Sharing a link](04-PublishingAndForking.md#sharing-a-link) |
 | Let everyone find my build | [Who can find it?](04-PublishingAndForking.md#who-can-find-it) |
-| Remix someone else's build | [Forking: make it your own](04-PublishingAndForking.md#forking-make-it-your-own) |
+| Remix someone else's build | [Remixing: make it your own](04-PublishingAndForking.md#remixing-make-it-your-own) |
 | Build together with a friend, live | [Build with me](02-TheEditor.md#build-with-me-building-together-live) |
 | Walk around with friends | [Walk here with me](03-WorldView.md#walk-here-with-me--bringing-friends-into-this-world) |
 | Change how my avatar looks | [Avatars & Presence](06-AvatarsAndPresence.md#customizing-your-avatar) |
@@ -38,7 +38,7 @@ Everything you need to build, share, remix and walk around with friends.
 2. **[The Editor](02-TheEditor.md)** — the building toolkit: tools,
    selection, transforms, brick colors, groups, the Build Library's
    structures and your own blueprints, structure instances, and a
-   creation's title/description/license.
+   build's title/description/license.
 3. **[World View](03-WorldView.md)** — the shared 3D world every
    published build lives in: walking and flying around, finding and
    looking at things, **Build here**, **Walk here with me**, residents,
@@ -159,12 +159,12 @@ Beyond individual bricks, the Editor's Build Library lets you build with
 whole structures at once — twenty-two ready-made ones spanning five
 categories, plus anything you save yourself:
 
-- **Place** a structure straight into what you're building, or **fork**
-  one into a brand-new document of its own.
+- **Place** a structure straight into what you're building, or **remix**
+  one into a brand-new build of its own.
 - **Save your own** builds as reusable structures in **My Structures**,
   your personal blueprint library.
 - **Export and import** a blueprint as a portable file to share it with
   someone else, or carry it to another device.
 
-See [The Editor](02-TheEditor.md#structures-composing-forking-and-your-personal-library)
+See [The Editor](02-TheEditor.md#structures-composing-remixing-and-your-personal-library)
 for the full walkthrough.

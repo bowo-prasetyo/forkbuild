@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: e45448af38374f12 -->
+<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 7ffb295aa351970e -->
 # 07 — Conexiones entre pares y amigos
 
 <!-- languages -->
@@ -189,7 +189,7 @@ encuentro** en **Configuración de red**) y una identidad desbloqueada.
 
 ## Seguir a personas
 
-**Seguir** lo mantiene al tanto de las creaciones de alguien, como seguir
+**Seguir** lo mantiene al tanto de las construcciones de alguien, como seguir
 una cuenta en una red social, sin que ninguno de los dos le pida nada al
 otro.
 
@@ -205,9 +205,9 @@ otro.
   trabajo más reciente de ellas que llegó a este dispositivo, del más nuevo
   al más antiguo. Haga clic en un nombre para ver solo el trabajo de esa
   persona.
-- **Notificaciones.** Cuando una creación nueva de alguien a quien sigue
+- **Notificaciones.** Cuando una construcción nueva de alguien a quien sigue
   llega a este dispositivo, el panel 🔔 recibe una entrada **… publicó algo nuevo**, una vez por
-  creación (y su dispositivo también la muestra, si activó
+  construcción (y su dispositivo también la muestra, si activó
   [Notificaciones en este dispositivo](03-WorldView.md#notificaciones-en-este-dispositivo)), con **Explorar** para abrirla.
 - **Sus Mundos compartidos se obtienen para usted.** Los Mundos que alguien
   a quien sigue comparte con sus pares conectados se recuperan
@@ -228,7 +228,7 @@ una forma de contactarlo. Para eso sigue estando la amistad.
 
 **Lo que no hace seguir.** Seguir selecciona el trabajo de las personas que
 sigue entre lo que llega a este dispositivo; no va a buscar su trabajo por
-sí solo. Las creaciones siguen llegando por las vías habituales: el
+sí solo. Las construcciones siguen llegando por las vías habituales: el
 descubrimiento de Mundos en la Vista del mundo, los Mundos compartidos por
 pares conectados y los enlaces que usted abre. Solo cuenta el trabajo cuya
 firma pasa la comprobación, así que nadie puede entrar a su página

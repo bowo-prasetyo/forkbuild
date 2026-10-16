@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 22e0b2ed04283579 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 4a1027c916706bd6 -->
 # Referência de controles
 
 <!-- languages -->
@@ -45,13 +45,13 @@ completa.
 | Painel Buscar, **Buscar** | Pesquisar publicações por título/autor, se quiser dentro de um raio em torno de uma coordenada |
 | **Explorar aqui** | Abrir a caixa de diálogo Explorar local centrada na posição atual da câmera |
 | **O que há aqui?** | O mesmo, com um raio pequeno e fixo — "o que há praticamente aqui" |
-| **Focar** de um resultado | Voar com a câmera até lá e torná-lo o documento ativo (em edição) |
-| **Selecionar** de um resultado | Torná-lo o documento ativo, sem mover a câmera |
+| **Focar** de um resultado | Voar com a câmera até lá e torná-lo a construção ativa (em edição) |
+| **Selecionar** de um resultado | Torná-lo a construção ativa, sem mover a câmera |
 | **Inspecionar** de um resultado | Expandir um resumo somente leitura ali mesmo |
 
 ## Orientação e navegação (Visão do mundo)
 
-Só navegação de câmera — nenhum destes carrega um documento, muda a seleção
+Só navegação de câmera — nenhum destes carrega uma construção, muda a seleção
 ou edita algo. Veja [Visão do mundo](03-WorldView.md#orientação-e-locais).
 
 | Controle | Ação |
@@ -157,7 +157,7 @@ neste dispositivo e sobrevivem a uma recarga — veja
 | `Ctrl/Cmd+A` | Selecionar tudo | |
 | `Esc` | Limpar a seleção | Sequência própria do Esc no Editor, abaixo — o Esc da Visão do mundo só fecha o painel que estiver aberto |
 | `Delete` / `Backspace` | Excluir a seleção — **só no Editor** | um passo de desfazer; nenhuma tecla faz isso na Visão do mundo |
-| Botão **Focar** do painel Seleção — **só no Editor** | Enquadrar a câmera no(s) bloco(s) selecionado(s), na hora | sem atalho de teclado; só a câmera — nunca mexe no documento, na seleção nem no histórico de desfazer; só para seleções de blocos, não para posicionamentos de estruturas |
+| Botão **Focar** do painel Seleção — **só no Editor** | Enquadrar a câmera no(s) bloco(s) selecionado(s), na hora | sem atalho de teclado; só a câmera — nunca mexe na construção, na seleção nem no histórico de desfazer; só para seleções de blocos, não para posicionamentos de estruturas |
 
 ## Transformar — teclado (só no Editor)
 
@@ -223,8 +223,8 @@ bloqueia a repetição inteira, em vez de criar algumas cópias e outras não.
 
 ## Estruturas (Biblioteca de construção) — só no Editor
 
-Compor, bifurcar e sua biblioteca pessoal — veja
-[O Editor](02-TheEditor.md#estruturas-compor-bifurcar-e-sua-biblioteca-pessoal).
+Compor, remixar e sua biblioteca pessoal — veja
+[O Editor](02-TheEditor.md#estruturas-compor-remixar-e-sua-biblioteca-pessoal).
 
 | Entrada | Ação | Observações |
 |---|---|---|
@@ -232,31 +232,31 @@ Compor, bifurcar e sua biblioteca pessoal — veja
 | `R` / `Shift+R` ao posicionar | Girar o fantasma pendente ±90° | as mesmas teclas da prévia de um bloco |
 | Clicar | Confirmar — todos os blocos da estrutura entram como um passo de desfazer | recusado numa posição ocupada (vermelha) |
 | `Esc` ao posicionar | Cancelar — nada é adicionado | |
-| Menu **⋮** do cartão, **Remixar como nova construção** | Começar um documento novo que nasce como cópia daquela estrutura | nunca muda a entrada da biblioteca |
-| Menu **⋮** de um cartão pronto, **Remixar para Minhas estruturas** | Adicioná-la a Minhas estruturas como está | nenhum documento criado, nada extraído |
+| Menu **⋮** do cartão, **Remixar como nova construção** | Começar uma construção nova que nasce como cópia daquela estrutura | nunca muda a entrada da biblioteca |
+| Menu **⋮** de um cartão pronto, **Remixar para Minhas estruturas** | Adicioná-la a Minhas estruturas como está | nenhuma construção criada, nada extraído |
 | Menu **⋮** de qualquer cartão, **Informações** | Mostrar um painel somente leitura com nome/categoria/blocos/área ocupada/altura/origem/descrição | nunca editável |
 | Seleção com **1 ou mais blocos**, depois **Criar planta** (seção **Grupos e planta** do painel Seleção, ou Paleta de comandos) | Abrir uma pequena caixa de diálogo (nome / categoria / descrição + prévia); salvar a seleção como nova entrada em **Minhas estruturas** | |
 | Menu **⋮** de um cartão de **Minhas estruturas**, **Renomear** | Mudar o nome de uma estrutura pessoal | só estruturas pessoais |
-| Menu **⋮** de um cartão de **Minhas estruturas**, **Remover** | Excluí-la da sua biblioteca | nunca mexe nos blocos já compostos ou bifurcados a partir dela |
+| Menu **⋮** de um cartão de **Minhas estruturas**, **Remover** | Excluí-la da sua biblioteca | nunca mexe nos blocos já compostos ou remixados a partir dela |
 | Menu **⋮** de qualquer cartão, **Exportar planta** | Baixá-la como arquivo JSON portátil | pronta ou pessoal |
 | Botão **Importar planta** (ao lado do título Minhas estruturas) | Adicionar um arquivo de planta à sua biblioteca como entrada nova | identidade nova, mesmo para um arquivo importado de novo |
 
 ## Instâncias de estrutura (Editor)
 
-Uma **instância de estrutura** posiciona um documento salvo inteiro como uma
+Uma **instância de estrutura** posiciona uma construção salva inteiro como uma
 única unidade selecionável — uma referência viva, não uma cópia — veja
 [O Editor](02-TheEditor.md#instâncias-de-estrutura-uma-referência-viva).
 
 | Entrada | Ação | Observações |
 |---|---|---|
-| Menu **Recentes** da barra de ferramentas, botão **Posicionar** de um documento | Entrar no modo de posicionar estrutura com aquele documento | clicar no nome do documento o abre em vez disso |
+| Menu **Recentes** da barra de ferramentas, botão **Posicionar** de uma construção | Entrar no modo de posicionar estrutura com aquela construção | clicar no nome da construção o abre em vez disso |
 | `R` / `Shift+R` ao posicionar | Girar a instância pendente ±90° | as mesmas teclas da prévia de um bloco |
 | Clicar numa instância posicionada (ferramenta Selecionar) | Selecioná-la como uma unidade, diferente de uma seleção de blocos | |
 | Arrastar na área de visualização, ou o gizmo | Mover / girar a instância | |
-| `Ctrl/Cmd+D` | Duplicar — posiciona outra instância do mesmo documento | veja [Duplicar](#duplicar-só-no-editor) — seleções de instância ganham uma instância nova em vez de uma cópia nova de blocos |
+| `Ctrl/Cmd+D` | Duplicar — posiciona outra instância da mesma construção | veja [Duplicar](#duplicar-só-no-editor) — seleções de instância ganham uma instância nova em vez de uma cópia nova de blocos |
 | Campos **X / Z / Rotação** do painel da instância, depois Aplicar | Definir posição/direção exatas | Y (altura) sempre vem do terreno, nunca é um alvo |
-| **Editar construção de origem** no painel da instância | Abrir o documento referenciado para mudar os blocos dele | todas as instâncias se atualizam, já que uma instância é uma referência viva |
-| `Delete` / `Backspace` | Remover a instância | nunca mexe no documento referenciado |
+| **Editar construção de origem** no painel da instância | Abrir a construção referenciada para mudar os blocos dele | todas as instâncias se atualizam, já que uma instância é uma referência viva |
+| `Delete` / `Backspace` | Remover a instância | nunca mexe na construção referenciada |
 
 ## Grupos (só no Editor)
 
@@ -307,7 +307,7 @@ também pode visualizá-las e restaurá-las.
 | Entrada | Ação |
 |---|---|
 | `1` / `2` | Alternar entre as ferramentas Selecionar / Colocar |
-| `Ctrl/Cmd+S` | Salvar o documento |
+| `Ctrl/Cmd+S` | Salvar a construção |
 
 ## Colocação (só no Editor)
 

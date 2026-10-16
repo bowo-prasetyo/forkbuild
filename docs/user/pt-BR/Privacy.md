@@ -19,7 +19,7 @@ dados IndexedDB `forkbuild`; navegadores sem IndexedDB usam `localStorage`,
 com chaves que começam com `forkbuild:`) e nunca sai do dispositivo, a menos
 que você publique, exporte ou envie:
 
-- seus documentos, as cópias de recuperação das alterações não salvas e as
+- suas construções, as cópias de recuperação das alterações não salvas e as
   estruturas salvas;
 - suas identidades: a chave pública de cada uma, e a chave privada,
   criptografada com sua frase secreta, a menos que você tenha escolhido
@@ -174,7 +174,7 @@ cookies. Essa solicitação é tudo o que ele envia:
 - **O que o GoatCounter recebe:** seu endereço IP e o User-Agent do seu
   navegador, como em qualquer solicitação web, mais um caminho fixo (`/`) e
   um número aleatório que impede que a imagem fique em cache. Nenhuma
-  página, documento, mundo, identidade, referenciador ou qualquer coisa que
+  página, construção, mundo, identidade, referenciador ou qualquer coisa que
   o ForkBuild guarde é incluída, então ele não tem como saber o que você faz
   no aplicativo, nem mesmo qual página abriu.
 - **O que ele guarda:** só totais: visitantes por hora e por dia, e de quais
@@ -327,7 +327,7 @@ pede a ele.
 | Você conecta uma carteira de navegador (*experimental*) | a extensão de carteira que você escolher | o que ela pedir para você aprovar |
 
 O ForkBuild nunca envia sua chave privada, sua frase secreta nem seus
-documentos salvos para nenhum desses servidores.
+construções salvas para nenhum desses servidores.
 
 **Um link que leva a construção** (criado por **Copiar link** ou
 **Compartilhar…** antes de a construção ser distribuída) carrega seu Mundo

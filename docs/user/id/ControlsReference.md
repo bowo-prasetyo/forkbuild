@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 22e0b2ed04283579 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 4a1027c916706bd6 -->
 # Referensi Kontrol
 
 <!-- languages -->
@@ -44,13 +44,13 @@ penjelasan lengkapnya.
 | Panel pencarian, **Cari** | Mencari publikasi berdasarkan judul/pembuat, secara opsional dalam radius dari suatu koordinat |
 | **Jelajahi di Sini** | Membuka dialog Jelajahi Lokasi yang berpusat pada posisi kamera saat ini |
 | **Ada Apa di Sini?** | Sama, dengan radius tetap yang kecil — "apa yang ada tepat di sini" |
-| **Fokus** pada sebuah hasil | Menerbangkan kamera ke sana dan menjadikannya dokumen aktif (yang sedang diedit) |
-| **Pilih** pada sebuah hasil | Menjadikannya dokumen aktif, tanpa memindahkan kamera |
+| **Fokus** pada sebuah hasil | Menerbangkan kamera ke sana dan menjadikannya bangunan aktif (yang sedang diedit) |
+| **Pilih** pada sebuah hasil | Menjadikannya bangunan aktif, tanpa memindahkan kamera |
 | **Periksa** pada sebuah hasil | Membuka ringkasan baca-saja di tempat |
 
 ## Orientasi & Navigasi (Tampilan Dunia)
 
-Murni navigasi kamera — tidak satu pun memuat dokumen, mengubah pilihan,
+Murni navigasi kamera — tidak satu pun memuat bangunan, mengubah pilihan,
 atau mengedit apa pun. Lihat
 [Tampilan Dunia](03-WorldView.md#orientasi-dan-lokasi).
 
@@ -155,7 +155,7 @@ disimpan di perangkat ini dan tetap ada setelah dimuat ulang — lihat
 | `Ctrl/Cmd+A` | Pilih Semua | |
 | `Esc` | Hapus Pilihan | Urutan Escape milik Editor sendiri, di bawah — Escape di Tampilan Dunia hanya menutup panel mana pun yang sedang terbuka |
 | `Delete` / `Backspace` | Hapus Pilihan — **hanya Editor** | satu langkah urung; tidak ada tombol yang terikat sama sekali di Tampilan Dunia |
-| Tombol **Fokus** di panel Pilihan — **hanya Editor** | Membingkai kamera pada balok yang dipilih, seketika | tanpa pintasan keyboard; hanya kamera — tidak pernah menyentuh dokumen, pilihan, atau riwayat urung; hanya untuk pilihan balok, bukan penempatan struktur |
+| Tombol **Fokus** di panel Pilihan — **hanya Editor** | Membingkai kamera pada balok yang dipilih, seketika | tanpa pintasan keyboard; hanya kamera — tidak pernah menyentuh bangunan, pilihan, atau riwayat urung; hanya untuk pilihan balok, bukan penempatan struktur |
 
 ## Transformasi — keyboard (hanya Editor)
 
@@ -221,8 +221,8 @@ memblokir seluruh pengulangan alih-alih membuat sebagian salinan saja.
 
 ## Struktur (Pustaka Bangunan) — hanya Editor
 
-Menyusun, mem-fork, dan pustaka pribadi Anda — lihat
-[Editor](02-TheEditor.md#struktur-menyusun-mem-fork-dan-pustaka-pribadi-anda).
+Menyusun, me-remix, dan pustaka pribadi Anda — lihat
+[Editor](02-TheEditor.md#struktur-menyusun-me-remix-dan-pustaka-pribadi-anda).
 
 | Masukan | Tindakan | Catatan |
 |---|---|---|
@@ -230,31 +230,31 @@ Menyusun, mem-fork, dan pustaka pribadi Anda — lihat
 | `R` / `Shift+R` saat menempatkan | Memutar bayangan yang tertunda ±90° | tombol pratinjau penempatan yang sama seperti balok |
 | Klik | Menerapkan — setiap balok dalam struktur mendarat sebagai satu langkah urung | ditolak di posisi yang terisi (merah) |
 | `Esc` saat menempatkan | Membatalkan — tidak ada yang ditambahkan | |
-| Menu **⋮** pada kartu, **Remix Sebagai Bangunan Baru** | Memulai dokumen baru yang berawal sebagai salinan struktur itu | tidak pernah mengubah entri pustaka |
-| Menu **⋮** pada kartu bawaan, **Remix ke Struktur Saya** | Menambahkannya ke Struktur Saya apa adanya | tidak ada dokumen yang dibuat, tidak ada yang diekstrak |
+| Menu **⋮** pada kartu, **Remix Sebagai Bangunan Baru** | Memulai bangunan baru yang berawal sebagai salinan struktur itu | tidak pernah mengubah entri pustaka |
+| Menu **⋮** pada kartu bawaan, **Remix ke Struktur Saya** | Menambahkannya ke Struktur Saya apa adanya | tidak ada bangunan yang dibuat, tidak ada yang diekstrak |
 | Menu **⋮** pada kartu mana pun, **Info** | Menampilkan panel baca-saja berisi nama/kategori/balok/jejak/tinggi/sumber/deskripsi | tidak pernah dapat diedit |
 | Pilihan dengan **1+ balok**, lalu **Buat Cetak Biru** (bagian **Grup & cetak biru** pada panel Pilihan, atau Palet Perintah) | Membuka dialog kecil (nama / kategori / deskripsi + pratinjau); menyimpan pilihan sebagai entri baru di **Struktur Saya** | |
 | Menu **⋮** pada kartu **Struktur Saya**, **Ganti Nama** | Mengubah nama struktur pribadi | hanya struktur pribadi |
-| Menu **⋮** pada kartu **Struktur Saya**, **Hapus** | Menghapusnya dari pustaka Anda | tidak pernah menyentuh balok yang sudah disusun atau di-fork darinya |
+| Menu **⋮** pada kartu **Struktur Saya**, **Hapus** | Menghapusnya dari pustaka Anda | tidak pernah menyentuh balok yang sudah disusun atau di-remix darinya |
 | Menu **⋮** pada kartu mana pun, **Ekspor Cetak Biru** | Mengunduhnya sebagai file JSON portabel | bawaan atau pribadi |
 | Tombol **Impor Cetak Biru** (di samping judul Struktur Saya) | Menambahkan file cetak biru ke pustaka Anda sebagai entri baru | identitas baru, bahkan untuk file yang diimpor ulang |
 
 ## Instans Struktur (Editor)
 
-**Instans struktur** menempatkan seluruh dokumen tersimpan sebagai satu
+**Instans struktur** menempatkan seluruh bangunan tersimpan sebagai satu
 unit yang dapat dipilih — referensi hidup, bukan salinan — lihat
 [Editor](02-TheEditor.md#instans-struktur-referensi-hidup).
 
 | Masukan | Tindakan | Catatan |
 |---|---|---|
-| Dropdown **Terbaru** di bilah alat, tombol **Tempatkan** pada sebuah dokumen | Masuk ke mode Tempatkan-Struktur dengan dokumen itu sebagai sasaran | mengeklik nama dokumen justru membukanya |
+| Dropdown **Terbaru** di bilah alat, tombol **Tempatkan** pada sebuah bangunan | Masuk ke mode Tempatkan-Struktur dengan bangunan itu sebagai sasaran | mengeklik nama bangunan justru membukanya |
 | `R` / `Shift+R` saat menempatkan | Memutar instans yang tertunda ±90° | tombol pratinjau penempatan yang sama seperti balok |
 | Klik instans yang sudah ditempatkan (alat Pilih) | Memilihnya sebagai satu unit, berbeda dari pilihan balok | |
 | Seret di viewport, atau gizmo | Memindahkan / memutar instans | |
-| `Ctrl/Cmd+D` | Duplikat — menempatkan instans lain dari dokumen yang sama | lihat [Duplikat](#duplikat-hanya-editor) — pilihan instans mendapat instans baru alih-alih salinan balok baru |
+| `Ctrl/Cmd+D` | Duplikat — menempatkan instans lain dari bangunan yang sama | lihat [Duplikat](#duplikat-hanya-editor) — pilihan instans mendapat instans baru alih-alih salinan balok baru |
 | Kolom **X / Z / Rotasi** di panel instans, lalu Terapkan | Menetapkan posisi/arah yang tepat | Y (ketinggian) selalu diturunkan dari medan, tidak pernah menjadi sasaran |
-| **Edit Bangunan Sumber** di panel instans | Membuka dokumen yang dirujuk untuk mengubah baloknya | setiap instans ikut diperbarui, karena instans adalah referensi hidup |
-| `Delete` / `Backspace` | Menghapus instans | tidak pernah menyentuh dokumen yang dirujuk |
+| **Edit Bangunan Sumber** di panel instans | Membuka bangunan yang dirujuk untuk mengubah baloknya | setiap instans ikut diperbarui, karena instans adalah referensi hidup |
+| `Delete` / `Backspace` | Menghapus instans | tidak pernah menyentuh bangunan yang dirujuk |
 
 ## Grup (hanya Editor)
 
@@ -305,7 +305,7 @@ juga dapat menampilkan pratinjau dan memulihkannya.
 | Masukan | Tindakan |
 |---|---|
 | `1` / `2` | Beralih ke alat Pilih / Tempatkan |
-| `Ctrl/Cmd+S` | Menyimpan dokumen |
+| `Ctrl/Cmd+S` | Menyimpan bangunan |
 
 ## Penempatan (hanya Editor)
 

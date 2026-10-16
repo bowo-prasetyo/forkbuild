@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: df3ccec07b27f9d8 -->
+<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: eefddf9b6eb874a7 -->
 # 08 — Chat et conversations
 
 <!-- languages -->
@@ -134,4 +134,4 @@ besoin d’une étape « déconnecter » séparée.
 Retournez à **[Connexions entre pairs et amis](07-PeerConnectionsAndFriends.md)**
 pour trouver d’autres personnes avec qui construire et discuter, ou
 revenez à **[la Vue du Monde](03-WorldView.md)** pour voir où vivent les
-créations de chacun.
+constructions de chacun.

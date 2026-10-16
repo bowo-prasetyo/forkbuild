@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/12-ArchiveAndAchievements.md source-hash: ccbd98440904720c -->
+<!-- translation-of: docs/user/12-ArchiveAndAchievements.md source-hash: 60c7fd2807c8b8fe -->
 # 12 — Archive et succès
 
 <!-- languages -->
@@ -133,10 +133,10 @@ parmi vos identités de publication Bitcoin et Base connues (par exemple
 « Bitcoin — a1b2…c3d4 — contenu 9f8e… »), puis cliquez sur **Enregistrer
 la référence**. Une publication ne peut pas se référencer elle-même. Les
 références ne sont jamais faites que par vous ; rien n’en crée
-automatiquement, et les forks faits ailleurs dans l’application non plus.
+automatiquement, et les remix faits ailleurs dans l’application non plus.
 
-Une référence n’est délibérément pas appelée un fork : elle enregistre
-que le pointeur existe, pas ce qu’il signifie (un fork, une citation, une
+Une référence n’est délibérément pas appelée un remix : elle enregistre
+que le pointeur existe, pas ce qu’il signifie (un remix, une citation, une
 réponse).
 
 Les références enregistrées sont listées de la plus ancienne à la plus

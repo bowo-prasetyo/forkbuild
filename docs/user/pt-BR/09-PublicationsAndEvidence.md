@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: d748ce22f6360f55 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: be6c14fcfc79e4c8 -->
 # 09 — Publicações e evidências externas
 
 <!-- languages -->
@@ -23,7 +23,7 @@
 > **Ferramentas de carteira e arquivo**. Os guias
 > [11](11-EvidenceAndStorage.md) e [12](12-ArchiveAndAchievements.md) dizem
 > quais das seções deles são experimentais. Construir, salvar, publicar em
-> Explorar, bifurcar, identidades e pares não dependem de nada disso.
+> Explorar, remixar, identidades e pares não dependem de nada disso.
 
 Nada disto é necessário para usar o ForkBuild. Pule se você só quer
 construir, publicar e explorar.
@@ -50,9 +50,9 @@ declaração:
 
 | | **Publicar** (Explorar) | **Página Publicações** |
 |---|---|---|
-| O que compartilha | Um Documento ou Mundo | Um registro assinado: um Mundo compartilhado, a autoria de uma estrutura ou um nome de lugar |
+| O que compartilha | Um Construção ou Mundo | Um registro assinado: um Mundo compartilhado, a autoria de uma estrutura ou um nome de lugar |
 | Onde você vê | Explorar, página do autor, Visão do mundo | A página **Publicações** |
-| O que você faz com ele | Abrir, explorar, bifurcar | Verificar, buscar o conteúdo, distribuir e ancorar |
+| O que você faz com ele | Abrir, explorar, remixar | Verificar, buscar o conteúdo, distribuir e ancorar |
 | Guia | [Publicar e remixar](04-PublishingAndForking.md) | Este |
 
 **Publicar** sozinho não coloca um Mundo na página Publicações. **Compartilhar
@@ -62,7 +62,7 @@ pode viajar até os pares (veja
 
 A página Publicações não tem **Abrir**, **Explorar** nem **Remixar**, nem
 para um Mundo compartilhado. Ela mostra o registro assinado, não o Mundo.
-Para abrir, explorar ou bifurcar um Mundo compartilhado, encontre-o em
+Para abrir, explorar ou remixar um Mundo compartilhado, encontre-o em
 Explorar, na página do autor ou na Visão do mundo. Um que você recebeu de
 um par aparece lá depois que o conteúdo dele está neste dispositivo. (A
 única exceção é **Abrir no Editor** num Mundo compartilhado seu que precisa
@@ -94,7 +94,7 @@ obrigatória:
 | **Publicação** | O livro em si | Um registro assinado: um Mundo compartilhado, uma Atribuição de planta ou uma Declaração de nome de lugar. Leva o hash do conteúdo e a assinatura do editor. |
 | **Conteúdo** | Onde ficam os exemplares impressos | Os bytes de que trata a publicação, como os blocos de um Mundo. Sempre ficam primeiro neste dispositivo; **Armazenar em …** põe uma cópia no IPFS, no Arweave, no Steem ou no Blurt para que outros possam buscá-la. Veja [Provedor de conteúdo](10-NetworkSettings.md#provedor-de-conteúdo). |
 | **Snapshot** | Um exemplar impresso | Uma cópia guardada do conteúdo de uma publicação, como os blocos de um Mundo, que outros podem buscar e conferir com o hash. Veja [Snapshot local](#snapshot-local). |
-| **Posicionamento** | Em que estante o exemplar fica | Um registro assinado de onde uma construção fica no Mundo. Um Mundo compartilhado pode ter vários. Veja [Posicionar ou bifurcar](WorldViewAdvancedTools.md#posicionar-ou-bifurcar). |
+| **Posicionamento** | Em que estante o exemplar fica | Um registro assinado de onde uma construção fica no Mundo. Um Mundo compartilhado pode ter vários. Veja [Posicionar ou remixar](WorldViewAdvancedTools.md#posicionar-ou-remixar). |
 | **Anúncio / descoberta** | Uma ficha no catálogo da biblioteca | Um pequeno aviso assinado no Nostr, no Arweave, no Steem ou no Blurt dizendo que a publicação ou o Snapshot existe e onde está a cópia, para que pessoas não conectadas a você possam encontrá-lo. Veja [Provedor de anúncio / descoberta](10-NetworkSettings.md#provedor-de-anúncio--descoberta). |
 | **Prova / ancoragem** *(Experimental, exceto no Arweave)* | O carimbo de um cartório | O hash do conteúdo gravado numa transação de blockchain (Bitcoin, Base, Arweave, Steem ou Blurt), como evidência de que ele existia naquele momento. Não guarda nem anuncia nada. Veja [Evidências e armazenamento](11-EvidenceAndStorage.md). |
 | **Comentários** | As resenhas dos leitores | Comentários que qualquer pessoa com um nome pode anexar a uma publicação, cada um assinado por quem comentou, não pelo editor. Veja [Comentários](#comentários). |

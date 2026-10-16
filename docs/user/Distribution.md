@@ -16,7 +16,7 @@ need. Each section links to the guide with the details.
 
 | Action | Where it goes | Who gets it | Guide |
 |---|---|---|---|
-| **Publish** | This device, and once you've chosen where your builds go, there too | Nobody else until then; then anyone | [Publishing your creation](04-PublishingAndForking.md#publishing-your-creation), [Where it goes](04-PublishingAndForking.md#where-it-goes--sending-a-build-as-you-publish) |
+| **Publish** | This device, and once you've chosen where your builds go, there too | Nobody else until then; then anyone | [Publishing your build](04-PublishingAndForking.md#publishing-your-build), [Where it goes](04-PublishingAndForking.md#where-it-goes--sending-a-build-as-you-publish) |
 | **Share with Peers** | Straight to the people you're connected to | Your connected peers, while you're online | [Sharing with connected peers](04-PublishingAndForking.md#sharing-with-connected-peers) |
 | **Distribute** | Decentralized networks (IPFS, Arweave, Nostr, Steem, Blurt) | Anyone, with no connection to you needed | This page |
 
@@ -72,7 +72,7 @@ A published World is distributed in two separate pieces:
 | | Signed Claim | Snapshot |
 |---|---|---|
 | **Like…** | A notarised catalogue card | The printed copy on the shelf, labelled with where it stands |
-| **What it holds** | The World's title, you as its author, its license, the World it was forked from (if any) and its **content hash**, a fingerprint of the bricks, all signed with your identity | Every brick of the World, plus your signed placement: where you put it in World View |
+| **What it holds** | The World's title, you as its author, its license, the World it was remixed from (if any) and its **content hash**, a fingerprint of the bricks, all signed with your identity | Every brick of the World, plus your signed placement: where you put it in World View |
 | **Size** | A few kilobytes | As large as the build: up to 256 KB on Arweave, no limit on IPFS |
 | **What it proves** | That you published this World, with exactly this fingerprint | Nothing by itself; anyone who fetches it checks the bricks against the content hash |
 | **What it's used for** | Share links, and **Discover Shared World** looking your World up and checking it | Showing your build in World View, where you placed it, to people walking nearby |
@@ -156,7 +156,7 @@ content hash; see [Blurt](11-EvidenceAndStorage.md#blurt).
 ## A typical route
 
 1. **Publish** your World in the Editor (see
-   [Publishing your creation](04-PublishingAndForking.md#publishing-your-creation)).
+   [Publishing your build](04-PublishingAndForking.md#publishing-your-build)).
 2. Click **Distribute** in the notice that appears. You can also do it
    later, under **My Shared World** in World View.
 3. Pick a **Storage** and an **Announcement / Discovery substrate**: for
@@ -181,7 +181,7 @@ you're connected to can fetch builds of up to 64 MB straight from you.
 - **For other people.** Their **Explore** finds your build on Nostr,
   Arweave, Steem or Blurt the next time they open it, as long as it was
   announced under the usual discovery tag, `forkbuild-publication`. See
-  [Creations others distributed](04-PublishingAndForking.md#creations-others-distributed).
+  [Builds others distributed](04-PublishingAndForking.md#builds-others-distributed).
 - **Straight from the networks.** **Discover Shared World** in World View
   looks your World up on Arweave and Nostr and checks it: is it really out
   there, intact? See

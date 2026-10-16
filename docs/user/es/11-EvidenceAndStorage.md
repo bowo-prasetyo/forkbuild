@@ -407,7 +407,7 @@ Archivo de observaciones.
 
 La tarjeta **Publicaciones de anclaje en Bitcoin** muestra un registro por
 cada transacción que finalizó este dispositivo: `{ ID del anclaje, hash del
-contenido, txid, red, fecha de creación }`. Se crea cuando **Verificar y
+contenido, txid, red, fecha de construcción }`. Se crea cuando **Verificar y
 finalizar transacción** funciona, funcione o no la transmisión después, y
 no tiene ningún estado propio de confirmado o válido. **Mostrar
 publicaciones** las muestra. Cada fila tiene:
@@ -543,7 +543,7 @@ también se conserva en el
 
 Igual que la de Bitcoin, la tarjeta **Publicaciones de anclaje en Base**
 conserva un registro por cada transacción finalizada: `{ hash del
-contenido, txid, red, fecha de creación }`. **Mostrar publicaciones** las
+contenido, txid, red, fecha de construcción }`. **Mostrar publicaciones** las
 muestra, y **Mostrar ciclo de vida de la publicación** muestra **Registro
 de publicación creado** seguido de cada **Observación de inclusión n.º N**.
 Los resultados de transmisión de Base no se guardan, así que no hay

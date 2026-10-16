@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 50fb553e94b18514 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: fba04da122bf921c -->
 # 03 — Vista del mundo
 
 <!-- languages -->
@@ -387,7 +387,7 @@ la copia, un diálogo **No se puede hacer una copia** dice por qué,
 normalmente porque la licencia de la construcción no permite copias o
 porque todavía no se puede obtener la construcción, y **Volver a la
 construcción** lo devuelve adonde estaba (consulte
-[Cuando una bifurcación no se puede completar](04-PublishingAndForking.md#cuando-una-bifurcación-no-se-puede-completar)).
+[Cuando una remezcla no se puede completar](04-PublishingAndForking.md#cuando-una-remezcla-no-se-puede-completar)).
 
 Un **lugar geográfico** y una **persona** no tienen Editar una copia. Un
 lugar geográfico está hecho de las regiones de varias personas, así que no
@@ -395,7 +395,7 @@ hay una sola construcción que copiar; abra una de sus regiones.
 
 Editar una copia es lo mismo que **Remezclar** en Explorar y en la página
 de un autor, con las mismas reglas de licencia (consulte
-[Bifurcar: hágalo suyo](04-PublishingAndForking.md#bifurcar-hágalo-suyo)).
+[Remezclar: hágalo suyo](04-PublishingAndForking.md#remezclar-hágalo-suyo)).
 Todo lo demás en la Vista del mundo, como Buscar, la brújula, el Mapa e
 Información, solo mira.
 
@@ -562,7 +562,7 @@ Los dos abren el diálogo **Explorar ubicación**:
 📍 Centro: 100.0, 50.0, 250.0
 ⭕ Radio: 25 unidades del Mundo
 
-Se muestran 3 de 3 documentos descubribles
+Se muestran 3 de 3 construcciones que se pueden encontrar
 
 📍 Ayuntamiento         📏 A 4.2 unidades del Mundo
 de alicia
@@ -616,7 +616,7 @@ animal como decoración) crea su propia copia, titulada *“Remezcla de
 &lt;nombre original&gt;”*. Un breve aviso se lo dice (“Se creó su propia
 copia editable: … no cambió”). Se aplican las mismas reglas de licencia
 que a cualquier remezcla (consulte
-[Publicar y remezclar](04-PublishingAndForking.md#bifurcar-hágalo-suyo)).
+[Publicar y remezclar](04-PublishingAndForking.md#remezclar-hágalo-suyo)).
 
 ## Historial — previsualizar y restaurar estados anteriores
 

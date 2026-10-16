@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/12-ArchiveAndAchievements.md source-hash: ccbd98440904720c -->
+<!-- translation-of: docs/user/12-ArchiveAndAchievements.md source-hash: 60c7fd2807c8b8fe -->
 # 12 — Archivo y logros
 
 <!-- languages -->
@@ -128,10 +128,10 @@ identidades de publicación de Bitcoin y Base conocidas (por ejemplo,
 “Bitcoin — a1b2…c3d4 — contenido 9f8e…”), y luego haga clic en
 **Registrar referencia**. Una publicación no puede hacer referencia a sí
 misma. Las referencias solo las crea usted; nada crea una automáticamente,
-y bifurcar en otra parte de la app tampoco.
+y remezclar en otra parte de la app tampoco.
 
-A propósito, una referencia no se llama bifurcación: registra que el
-puntero existe, no lo que significa (una bifurcación, una cita, una
+A propósito, una referencia no se llama remezcla: registra que el
+puntero existe, no lo que significa (una remezcla, una cita, una
 respuesta).
 
 Las referencias registradas se muestran de la más antigua a la más

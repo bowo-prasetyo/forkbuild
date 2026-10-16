@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: 2f10096b5d79ec2b -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: 33341ea95fd2e843 -->
 # 13 — Data Anda: mencadangkan dan memulihkan
 
 <!-- languages -->
@@ -7,7 +7,7 @@
 
 ForkBuild tidak memiliki akun dan tidak ada server yang menyimpan pekerjaan
 Anda. Semua yang disimpannya berada di browser ini, di perangkat ini:
-dokumen, identitas beserta kunci privatnya, struktur, publikasi, rekan dan
+bangunan, identitas beserta kunci privatnya, struktur, publikasi, rekan dan
 teman, riwayat obrolan, serta pengaturan. **Menghapus data situs ini di
 browser akan menghapus semuanya untuk selamanya**, begitu pula mencopot
 pemasangan browser atau kehilangan perangkat.
@@ -19,7 +19,7 @@ menyimpan salinannya.
 
 Bagian pertama menampilkan apa yang tersimpan, per jenis, dan berapa
 banyak ruang yang dipakainya. Angkanya adalah entri penyimpanan, bukan
-dokumen: misalnya, satu dokumen tersimpan dan daftar dokumen adalah dua
+bangunan: misalnya, satu bangunan tersimpan dan daftar bangunan adalah dua
 entri.
 
 Jika tertulis **Browser dapat menghapus data ini saat ruang disk hampir
@@ -101,7 +101,7 @@ menu di setiap halaman memberi tahu Anda, dengan **Cadangkan Sekarang**
 dan **Ingatkan Saya Seminggu Lagi**:
 
 - Bilah itu pertama kali muncul seminggu setelah browser ini mulai
-  menyimpan pekerjaan Anda (dokumen, identitas, struktur, rekan, atau
+  menyimpan pekerjaan Anda (bangunan, identitas, struktur, rekan, atau
   obrolan), jika Anda belum pernah mencadangkan.
 - Setelah itu, bilah muncul saat cadangan terakhir lebih lama daripada
   yang Anda pilih di **Pengingat dan pencadangan otomatis → Ingatkan saya
@@ -153,7 +153,7 @@ dapat menulis kembali datanya yang lebih lama.
 2. Pilih cara memulihkan:
    - **Tambahkan apa yang tidak dimiliki perangkat ini** (bawaan): semua
      isi cadangan yang tidak ada di perangkat ini ditambahkan. Jika
-     keduanya memiliki sesuatu, seperti dokumen atau pengaturan yang
+     keduanya memiliki sesuatu, seperti bangunan atau pengaturan yang
      sama, versi perangkat ini yang disimpan.
    - **Ganti semua yang ada di perangkat ini dengan cadangan**: menghapus
      dulu apa yang disimpan ForkBuild di sini, lalu memulihkan cadangan
@@ -173,15 +173,15 @@ halamannya masing-masing:
 
 | Apa | Ekspor | Impor |
 |---|---|---|
-| Satu dokumen | **Ekspor** di bilah alat Editor | **Impor** di bilah alat Editor |
+| Satu bangunan | **Ekspor** di bilah alat Editor | **Impor** di bilah alat Editor |
 | Semua bangunan tersimpan | **Ekspor Semua Bangunan** di bagian bawah menu **Terbaru** di Editor | **Impor** di bilah alat Editor |
 | Satu struktur | **Ekspor Cetak Biru** di menu **⋮** pada kartunya | **Impor Cetak Biru** di samping **Struktur Saya** |
 | Semua struktur | **Ekspor Semua** di samping **Struktur Saya** | **Impor Cetak Biru** di samping **Struktur Saya** |
 | Satu identitas | **Ekspor** di **Identitas Saya** | **Impor Identitas** di **Identitas Saya** |
 
-Mengimpor semua dokumen mengembalikan dokumen yang tidak dimiliki
+Mengimpor semua bangunan mengembalikan bangunan yang tidak dimiliki
 perangkat ini, membiarkan yang sudah ada tanpa perubahan, dan menyimpan
-salinan di samping dokumen yang ada dalam versi berbeda. Mengimpor semua
+salinan di samping bangunan yang ada dalam versi berbeda. Mengimpor semua
 struktur melewati desain yang sudah ada di Struktur Saya. Identitas yang
 diekspor juga membawa pencabutan, pengganti, dan otorisasi perangkatnya,
 sehingga identitas yang dicabut kembali dalam keadaan dicabut.

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: e45448af38374f12 -->
+<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 7ffb295aa351970e -->
 # 07 — Peer-Verbindungen & Freunde
 
 <!-- languages -->
@@ -195,7 +195,7 @@ den **Netzwerkeinstellungen**) und eine entsperrte Identität.
 
 ## Personen folgen
 
-**Folgen** hält Sie über die Kreationen einer Person auf dem Laufenden,
+**Folgen** hält Sie über die Bauwerke einer Person auf dem Laufenden,
 wie das Folgen eines Kontos in einem sozialen Netzwerk, ohne dass einer
 den anderen um etwas bitten muss.
 
@@ -212,9 +212,9 @@ den anderen um etwas bitten muss.
   darunter ihre neuesten Werke, die dieses Gerät erreicht haben, das
   neueste zuerst. Klicken Sie auf einen Namen, um nur die Werke dieser
   Person zu sehen.
-- **Benachrichtigungen.** Wenn eine neue Kreation von jemandem, dem Sie
+- **Benachrichtigungen.** Wenn ein neues Bauwerk von jemandem, dem Sie
   folgen, dieses Gerät erreicht, bekommt das Feld 🔔 einen Eintrag **… hat etwas Neues veröffentlicht**,
-  einmal pro Kreation (und Ihr Gerät zeigt ihn auch an, wenn Sie
+  einmal pro Bauwerk (und Ihr Gerät zeigt ihn auch an, wenn Sie
   [Benachrichtigungen auf diesem Gerät](03-WorldView.md#benachrichtigungen-auf-diesem-gerät) eingeschaltet haben), mit **Erkunden**, um sie zu
   öffnen.
 - **Ihre geteilten Welten werden für Sie geholt.** Welten, die jemand, dem
@@ -237,7 +237,7 @@ die Freundschaft da.
 
 **Was Folgen nicht tut.** Folgen sucht die Werke der Menschen, denen Sie
 folgen, aus dem heraus, was dieses Gerät erreicht; es holt ihre Werke
-nicht selbst. Kreationen kommen weiterhin auf den üblichen Wegen an:
+nicht selbst. Bauwerke kommen weiterhin auf den üblichen Wegen an:
 Entdeckung von Welten in der Weltansicht, von verbundenen Peers geteilte
 Welten und Links, die Sie öffnen. Nur Werke mit gültiger Signatur zählen,
 sodass niemand auf Ihre Seite Gefolgt gelangt, indem er den Namen oder die

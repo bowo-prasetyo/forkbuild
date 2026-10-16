@@ -83,7 +83,7 @@ and current animation) to open its **Avatar Info Panel**:
 - **Follow Avatar** — locks your camera to their movement
 - **Greet / Wave / Point** — sends a one-off gesture to that avatar
 - **Follow Their Work** — follows the identity behind the avatar, so their
-  new creations show on the **Following** page (see
+  new builds show on the **Following** page (see
   [Following people](07-PeerConnectionsAndFriends.md#following-people)).
   It only appears when the avatar's presence is signed, because a signature
   is what proves whose avatar it is.
@@ -334,7 +334,7 @@ decorated — wildlife the world placed by itself can't. A prompt shows when
 [landmark](03-WorldView.md#landmarks--marking-a-place-worth-remembering),
 decorating needs a name and EDIT access to the World you're in.
 On someone else's published World, the decoration goes into your own
-copy of it — as long as its license allows forking. If none of that
+copy of it — as long as its license allows remixing. If none of that
 applies, **G** simply does nothing; the touch pad's **Decorate** button
 tells you why instead.
 

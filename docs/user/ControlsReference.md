@@ -42,13 +42,13 @@ Not keyboard shortcuts, but the World View's own way of finding things — see
 | Search panel, **Find** | Search publications by title/author, optionally within a radius of a coordinate |
 | **Explore Here** | Open the Explore Location dialog centered on the camera's current position |
 | **What's Here?** | Same, with a small fixed radius — "what's essentially right here" |
-| A result's **Focus** | Fly the camera there and make it the active (editing) document |
-| A result's **Select** | Make it the active document, without moving the camera |
+| A result's **Focus** | Fly the camera there and make it the active (editing) build |
+| A result's **Select** | Make it the active build, without moving the camera |
 | A result's **Inspect** | Expand a read-only summary in place |
 
 ## Orientation & Navigation (World View)
 
-Purely camera navigation — none of these load a document, change
+Purely camera navigation — none of these load a build, change
 selection, or edit anything. See
 [World View](03-WorldView.md#orientation-and-locations).
 
@@ -151,7 +151,7 @@ device and survive a reload — see
 | `Ctrl/Cmd+A` | Select All | |
 | `Esc` | Clear Selection | Editor's own Escape chain, below — World View's own Escape only ever closes whichever panel is open |
 | `Delete` / `Backspace` | Delete Selection — **Editor only** | one undo step; no keyboard binding at all in World View |
-| Selection panel's **Focus** button — **Editor only** | Frame the camera on the selected brick(s), instantly | no keyboard shortcut; camera-only — never touches the document, selection, or undo history; brick selections only, not structure placements |
+| Selection panel's **Focus** button — **Editor only** | Frame the camera on the selected brick(s), instantly | no keyboard shortcut; camera-only — never touches the build, selection, or undo history; brick selections only, not structure placements |
 
 ## Transform — keyboard (Editor only)
 
@@ -217,8 +217,8 @@ creating some copies and not others.
 
 ## Structures (Build Library) — Editor only
 
-Composing, forking, and your personal library — see
-[The Editor](02-TheEditor.md#structures-composing-forking-and-your-personal-library).
+Composing, remixing, and your personal library — see
+[The Editor](02-TheEditor.md#structures-composing-remixing-and-your-personal-library).
 
 | Input | Action | Notes |
 |---|---|---|
@@ -226,31 +226,31 @@ Composing, forking, and your personal library — see
 | `R` / `Shift+R` while placing | Rotate the pending ghost ±90° | same placement-preview keys as a brick |
 | Click | Commit — every brick in the structure lands as one undo step | refused at an occupied (red) position |
 | `Esc` while placing | Cancel — nothing added | |
-| Card's **⋮** menu, **Remix As New Build** | Start a brand-new document that begins as a copy of that structure | never modifies the library entry |
-| Built-in card's **⋮** menu, **Remix to My Structures** | Add it to My Structures as-is | no document created, nothing extracted |
+| Card's **⋮** menu, **Remix As New Build** | Start a brand-new build that begins as a copy of that structure | never modifies the library entry |
+| Built-in card's **⋮** menu, **Remix to My Structures** | Add it to My Structures as-is | no build created, nothing extracted |
 | Any card's **⋮** menu, **Info** | Show a read-only name/category/bricks/footprint/height/source/description panel | never editable |
 | Selection with **1+ bricks**, then **Create Blueprint** (Selection panel's **Groups & blueprint** section, or Command Palette) | Open a small dialog (name / category / description + preview); save the selection as a new entry in **My Structures** | |
 | **My Structures** card's **⋮** menu, **Rename** | Change a personal structure's name | personal structures only |
-| **My Structures** card's **⋮** menu, **Remove** | Delete it from your library | never touches bricks already composed or forked from it |
+| **My Structures** card's **⋮** menu, **Remove** | Delete it from your library | never touches bricks already composed or remixed from it |
 | Any card's **⋮** menu, **Export Blueprint** | Download it as a portable JSON file | built-in or personal |
 | **Import Blueprint** button (beside the My Structures heading) | Add a blueprint file to your library as a new entry | fresh identity, even for a re-imported file |
 
 ## Structure Instances (Editor)
 
-A **structure instance** places a whole saved document as a single,
+A **structure instance** places a whole saved build as a single,
 selectable unit — a live reference, not a copy — see
 [The Editor](02-TheEditor.md#structure-instances-a-live-reference).
 
 | Input | Action | Notes |
 |---|---|---|
-| Toolbar **Recent** dropdown, a document's **Place** button | Enter Place-Structure mode targeting that document | clicking the document's name opens it instead |
+| Toolbar **Recent** dropdown, a build's **Place** button | Enter Place-Structure mode targeting that build | clicking the build's name opens it instead |
 | `R` / `Shift+R` while placing | Rotate the pending instance ±90° | same placement-preview keys as a brick |
 | Click a placed instance (Select tool) | Select it as one unit, distinct from a brick selection | |
 | Drag in the viewport, or the gizmo | Move / rotate the instance | |
-| `Ctrl/Cmd+D` | Duplicate — places another instance of the same document | see [Duplicate](#duplicate-editor-only) — instance selections get a fresh instance instead of a fresh brick copy |
+| `Ctrl/Cmd+D` | Duplicate — places another instance of the same build | see [Duplicate](#duplicate-editor-only) — instance selections get a fresh instance instead of a fresh brick copy |
 | Instance panel **X / Z / Rotation** fields, then Apply | Set an exact position/heading | Y (elevation) is always terrain-derived, never a target |
-| Instance panel **Edit Source Build** | Open the referenced document to change its bricks | every instance updates, since an instance is a live reference |
-| `Delete` / `Backspace` | Remove the instance | never touches the referenced document |
+| Instance panel **Edit Source Build** | Open the referenced build to change its bricks | every instance updates, since an instance is a live reference |
+| `Delete` / `Backspace` | Remove the instance | never touches the referenced build |
 
 ## Groups (Editor only)
 
@@ -300,7 +300,7 @@ can also preview and restore them.
 | Input | Action |
 |---|---|
 | `1` / `2` | Switch Select / Place tool |
-| `Ctrl/Cmd+S` | Save document |
+| `Ctrl/Cmd+S` | Save build |
 
 ## Placement (Editor only)
 

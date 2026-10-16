@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 50fb553e94b18514 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: fba04da122bf921c -->
 # 03 — Visão do mundo
 
 <!-- languages -->
@@ -379,7 +379,7 @@ ser feita, um diálogo **Não dá para fazer uma cópia** diz por quê, em
 geral porque a licença da construção não permite cópias ou porque a
 construção ainda não pode ser obtida, e **Voltar à construção** leva você
 de volta para onde estava (veja
-[Quando uma bifurcação não pode ser concluída](04-PublishingAndForking.md#quando-uma-bifurcação-não-pode-ser-concluída)).
+[Quando um remix não pode ser concluído](04-PublishingAndForking.md#quando-um-remix-não-pode-ser-concluído)).
 
 Um **lugar geográfico** e uma **pessoa** não têm Editar uma cópia. Um
 lugar geográfico é feito das regiões de várias pessoas, então não existe
@@ -387,7 +387,7 @@ uma única construção para copiar; abra uma das regiões dele.
 
 Editar uma cópia é o mesmo que **Remixar** em Explorar e na página de um
 autor, com as mesmas regras de licença (veja
-[Bifurcar: torne a sua](04-PublishingAndForking.md#bifurcar-torne-a-sua)).
+[Remixar: torne a sua](04-PublishingAndForking.md#remixar-torne-a-sua)).
 Todo o resto na Visão do mundo, como Buscar, a bússola, o Mapa e
 Informações, só olha.
 
@@ -550,7 +550,7 @@ Os dois abrem o diálogo **Explorar local**:
 📍 Centro: 100.0, 50.0, 250.0
 ⭕ Raio: 25 unidades do Mundo
 
-Mostrando 3 de 3 documentos que podem ser descobertos
+Mostrando 3 de 3 construções que podem ser encontradas
 
 📍 Prefeitura           📏 A 4,2 unidades do Mundo
 de alice
@@ -602,7 +602,7 @@ ou um animal como decoração) cria uma cópia sua, com o título
 *"Remix de &lt;nome original&gt;"*. Um aviso curto informa isso ("Sua
 própria cópia editável foi criada; … não muda"). Valem as mesmas regras de
 licença de qualquer remix (veja
-[Publicar e remixar](04-PublishingAndForking.md#bifurcar-torne-a-sua)).
+[Publicar e remixar](04-PublishingAndForking.md#remixar-torne-a-sua)).
 
 ## Histórico — visualizar e restaurar estados anteriores
 

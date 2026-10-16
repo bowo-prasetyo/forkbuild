@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: f1e16b4c1352d5a0 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 53acfc3595aae824 -->
 # Pertanyaan Umum
 
 <!-- languages -->
@@ -71,11 +71,11 @@ Nostr. [Mendistribusikan Karya Anda](Distribution.md)
 mencantumkan semua yang dapat Anda distribusikan, ke mana semuanya dapat
 dikirim, dan apa yang dibutuhkan setiap jaringan.
 
-### Mengapa tidak ada yang bisa mem-fork karya saya?
+### Mengapa tidak ada yang bisa me-remix karya saya?
 
-Dokumen baru tidak memiliki lisensi, dan karya tanpa lisensi tidak dapat
-di-fork. Buka **Properti Bangunan** (tombol **✎** di samping judul dokumen
-di Editor), pilih lisensi yang mengizinkan fork (lisensi CC apa pun kecuali
+Bangunan baru tidak memiliki lisensi, dan karya tanpa lisensi tidak dapat
+di-remix. Buka **Properti Bangunan** (tombol **✎** di samping judul bangunan
+di Editor), pilih lisensi yang mengizinkan remix (lisensi CC apa pun kecuali
 CC BY-ND), lalu terbitkan lagi. Pengaturan ini termasuk bagian dari apa
 yang diterbitkan, jadi karya yang sudah Anda terbitkan tetap memakai
 lisensinya yang lama. Lihat
@@ -133,7 +133,7 @@ Yang bisa dilakukan orang lain, jika lisensi bangunan mengizinkan remix,
 adalah membuat salinannya sendiri dengan **Edit Salinan** atau **Remix**.
 Salinan itu miliknya untuk diubah, diterbitkan, dan ditempatkan, dan
 menunjukkan bahwa ia berasal dari milik Anda (lihat
-[Fork: jadikan milik Anda](04-PublishingAndForking.md#fork-jadikan-milik-anda)).
+[Remix: jadikan milik Anda](04-PublishingAndForking.md#remix-jadikan-milik-anda)).
 Jika Anda lebih suka salinannya yang ditemukan orang, Anda dapat
 menghapus milik Anda dari Dunia Anda dan membatalkan penerbitannya,
 meskipun salinan yang sudah terkirim tetap ada (lihat
@@ -183,7 +183,7 @@ lalu pindai kodenya dengan perangkat lain (atau buka tautannya di sana)
 selagi keduanya online. Atau cadangkan di sana dan pulihkan file itu di
 perangkat lain (lihat [Data Anda](13-YourData.md)). Untuk memindahkan satu jenis saja:
 
-- **Dokumen**: **Ekspor** di bilah alat Editor, atau **Ekspor Semua
+- **Bangunan**: **Ekspor** di bilah alat Editor, atau **Ekspor Semua
   Bangunan** di bagian bawah **Terbaru**, lalu **Impor** di perangkat lain.
 - **Struktur Anda sendiri**: **Ekspor Cetak Biru** dari menu **⋮** pada
   kartunya, atau **Ekspor Semua** di samping **Struktur Saya**, lalu
@@ -196,7 +196,7 @@ penuh.
 
 ### Apakah menghapus data browser akan menghapus pekerjaan saya?
 
-Ya. Dokumen, identitas, teman, dan riwayat obrolan semuanya berada di
+Ya. Bangunan, identitas, teman, dan riwayat obrolan semuanya berada di
 penyimpanan browser ini untuk situs ini, dan menghapusnya akan
 menghilangkannya untuk selamanya. Cadangkan terlebih dahulu dengan
 **Data Anda → Cadangkan ke File**, dan simpan file serta frasa sandinya
@@ -222,9 +222,9 @@ bisa melihat atau mengekspornya. Identitas itu menampilkan **Dicabut** di
 identitas baru untuk terus bekerja. Lihat
 [Apa yang dilakukan pencabutan — dan yang tidak](05-IdentityAndLogin.md#apa-yang-dilakukan-pencabutan--dan-yang-tidak).
 
-### Mengapa salinan ForkBuild yang lebih lama tidak bisa membuka dokumen yang saya ekspor?
+### Mengapa salinan ForkBuild yang lebih lama tidak bisa membuka bangunan yang saya ekspor?
 
-Dokumen kini disimpan dalam format yang lebih baru dan lebih ringkas.
+Bangunan kini disimpan dalam format yang lebih baru dan lebih ringkas.
 ForkBuild 1.0.0 dan yang lebih lama tidak dapat membacanya, jadi perbarui
 salinan lain itu terlebih dahulu. File yang diekspor versi lama tetap
 dapat dibuka di sini.

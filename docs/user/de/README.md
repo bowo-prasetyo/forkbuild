@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: 4ae3c13f1318370c -->
+<!-- translation-of: docs/user/README.md source-hash: b52156afbaeaed07 -->
 # ForkBuild-Benutzerdokumentation
 
 <!-- languages -->
@@ -17,7 +17,7 @@ App bis zum Spaziergang durch Ihr erstes Bauwerk.
 | Die Bauwerkzeuge lernen | [Der Editor](02-TheEditor.md) |
 | Ein Bauwerk mit einem Freund teilen | [Einen Link teilen](04-PublishingAndForking.md#einen-link-teilen) |
 | Mein Bauwerk für alle auffindbar machen | [Wer kann es finden?](04-PublishingAndForking.md#wer-kann-es-finden) |
-| Das Bauwerk eines anderen remixen | [Forken: machen Sie es zu Ihrem eigenen](04-PublishingAndForking.md#forken-machen-sie-es-zu-ihrem-eigenen) |
+| Das Bauwerk eines anderen remixen | [Remixen: machen Sie es zu Ihrem eigenen](04-PublishingAndForking.md#remixen-machen-sie-es-zu-ihrem-eigenen) |
 | Live mit einem Freund zusammen bauen | [Mit mir bauen](02-TheEditor.md#mit-mir-bauen-gemeinsam-bauen-live) |
 | Mit Freunden spazieren gehen | [Mit mir hier spazieren](03-WorldView.md#mit-mir-hier-spazieren--freunde-in-diese-welt-holen) |
 | Das Aussehen meines Avatars ändern | [Avatare & Anwesenheit](06-AvatarsAndPresence.md#ihren-avatar-anpassen) |
@@ -40,7 +40,7 @@ Freunden herumzulaufen.
 2. **[Der Editor](02-TheEditor.md)** — das Baukastenwerkzeug: Werkzeuge,
    Auswahl, Transformationen, Steinfarben, Gruppen, die Strukturen der
    Baubibliothek und Ihre eigenen Baupläne, Strukturinstanzen sowie Titel,
-   Beschreibung und Lizenz einer Kreation.
+   Beschreibung und Lizenz eines Bauwerks.
 3. **[Weltansicht](03-WorldView.md)** — die geteilte 3D-Welt, in der
    jedes veröffentlichte Bauwerk steht: herumlaufen und -fliegen, Dinge
    finden und ansehen, **Hier bauen**, **Mit mir hier spazieren**,
@@ -176,7 +176,7 @@ mit ganzen Strukturen auf einmal bauen — zweiundzwanzig fertigen in fünf
 Kategorien sowie allem, was Sie selbst speichern:
 
 - **Platzieren** Sie eine Struktur direkt in das, was Sie gerade bauen,
-  oder **forken** Sie sie in ein ganz neues eigenes Dokument.
+  oder **remixen** Sie sie in ein ganz neues eigenes Bauwerk.
 - **Speichern** Sie eigene Bauten als wiederverwendbare Strukturen in
   **Meine Strukturen**, Ihrer persönlichen Bauplanbibliothek.
 - **Exportieren und importieren** Sie einen Bauplan als portable Datei,
@@ -184,4 +184,4 @@ Kategorien sowie allem, was Sie selbst speichern:
   mitzunehmen.
 
 Die vollständige Anleitung finden Sie unter
-[Der Editor](02-TheEditor.md#strukturen-zusammensetzen-forken-und-ihre-persönliche-bibliothek).
+[Der Editor](02-TheEditor.md#strukturen-zusammensetzen-remixen-und-ihre-persönliche-bibliothek).

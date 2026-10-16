@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 22e0b2ed04283579 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 4a1027c916706bd6 -->
 # Referencia de controles
 
 <!-- languages -->
@@ -46,13 +46,13 @@ completa.
 | Panel Buscar, **Buscar** | Buscar publicaciones por título o autor, opcionalmente dentro de un radio alrededor de una coordenada |
 | **Explorar aquí** | Abrir el diálogo Explorar ubicación centrado en la posición actual de la cámara |
 | **¿Qué hay aquí?** | Lo mismo, con un radio fijo pequeño: “qué hay justo aquí” |
-| **Enfocar** en un resultado | Llevar la cámara hasta allí y convertirlo en el documento activo (en edición) |
-| **Seleccionar** en un resultado | Convertirlo en el documento activo, sin mover la cámara |
+| **Enfocar** en un resultado | Llevar la cámara hasta allí y convertirlo en la construcción activa (en edición) |
+| **Seleccionar** en un resultado | Convertirlo en la construcción activa, sin mover la cámara |
 | **Inspeccionar** en un resultado | Desplegar en el lugar un resumen de solo lectura |
 
 ## Orientación y navegación (Vista del mundo)
 
-Solo navegación de la cámara: ninguno de estos carga un documento, cambia
+Solo navegación de la cámara: ninguno de estos carga una construcción, cambia
 la selección ni edita nada. Consulte la
 [Vista del mundo](03-WorldView.md#orientación-y-ubicaciones).
 
@@ -160,7 +160,7 @@ en este dispositivo y se conservan al recargar: consulte
 | `Ctrl/Cmd+A` | Seleccionar todo | |
 | `Esc` | Borrar la selección | La cadena propia de Escape del Editor, abajo; el Escape propio de la Vista del mundo solo cierra el panel que esté abierto |
 | `Supr` / `Retroceso` | Eliminar la selección: **solo en el Editor** | un paso de deshacer; en la Vista del mundo no tiene ninguna tecla asignada |
-| Botón **Enfocar** del panel Selección: **solo en el Editor** | Encuadrar la cámara en los bloques seleccionados, al instante | sin atajo de teclado; solo la cámara: nunca toca el documento, la selección ni el historial de deshacer; solo para selecciones de bloques, no de colocaciones de estructuras |
+| Botón **Enfocar** del panel Selección: **solo en el Editor** | Encuadrar la cámara en los bloques seleccionados, al instante | sin atajo de teclado; solo la cámara: nunca toca la construcción, la selección ni el historial de deshacer; solo para selecciones de bloques, no de colocaciones de estructuras |
 
 ## Transformar — teclado (solo en el Editor)
 
@@ -227,8 +227,8 @@ y otras no.
 
 ## Estructuras (Biblioteca de construcción) — solo en el Editor
 
-Componer, bifurcar y su biblioteca personal: consulte
-[El Editor](02-TheEditor.md#estructuras-componer-bifurcar-y-su-biblioteca-personal).
+Componer, remezclar y su biblioteca personal: consulte
+[El Editor](02-TheEditor.md#estructuras-componer-remezclar-y-su-biblioteca-personal).
 
 | Entrada | Acción | Notas |
 |---|---|---|
@@ -236,31 +236,31 @@ Componer, bifurcar y su biblioteca personal: consulte
 | `R` / `Mayús+R` mientras coloca | Girar ±90° el fantasma pendiente | las mismas teclas de vista previa de colocación que un bloque |
 | Clic | Confirmar: todos los bloques de la estructura se colocan como un solo paso de deshacer | se rechaza en una posición ocupada (roja) |
 | `Esc` mientras coloca | Cancelar: no se agrega nada | |
-| Menú **⋮** de la tarjeta, **Remezclar como construcción nueva** | Empezar un documento completamente nuevo que comienza como una copia de esa estructura | nunca modifica la entrada de la biblioteca |
-| Menú **⋮** de una tarjeta integrada, **Remezclar a Mis estructuras** | Agregarla a Mis estructuras tal como está | no se crea ningún documento ni se extrae nada |
+| Menú **⋮** de la tarjeta, **Remezclar como construcción nueva** | Empezar una construcción completamente nueva que comienza como una copia de esa estructura | nunca modifica la entrada de la biblioteca |
+| Menú **⋮** de una tarjeta integrada, **Remezclar a Mis estructuras** | Agregarla a Mis estructuras tal como está | no se crea ninguna construcción ni se extrae nada |
 | Menú **⋮** de cualquier tarjeta, **Información** | Mostrar un panel de solo lectura con nombre, categoría, bloques, superficie, altura, origen y descripción | nunca se puede editar |
 | Selección con **1 o más bloques**, y luego **Crear plano** (sección **Grupos y plano** del panel Selección, o la Paleta de comandos) | Abrir un pequeño diálogo (nombre / categoría / descripción + vista previa); guardar la selección como una entrada nueva en **Mis estructuras** | |
 | Menú **⋮** de una tarjeta de **Mis estructuras**, **Cambiar nombre** | Cambiar el nombre de una estructura personal | solo estructuras personales |
-| Menú **⋮** de una tarjeta de **Mis estructuras**, **Quitar** | Eliminarla de su biblioteca | nunca toca los bloques ya compuestos o bifurcados a partir de ella |
+| Menú **⋮** de una tarjeta de **Mis estructuras**, **Quitar** | Eliminarla de su biblioteca | nunca toca los bloques ya compuestos o remezclados a partir de ella |
 | Menú **⋮** de cualquier tarjeta, **Exportar plano** | Descargarla como un archivo JSON portátil | integrada o personal |
 | Botón **Importar plano** (junto al título Mis estructuras) | Agregar un archivo de plano a su biblioteca como una entrada nueva | identidad nueva, incluso para un archivo reimportado |
 
 ## Instancias de estructuras (Editor)
 
-Una **instancia de estructura** coloca un documento guardado entero como
+Una **instancia de estructura** coloca una construcción guardada entera como
 una sola unidad seleccionable (una referencia viva, no una copia): consulte
 [El Editor](02-TheEditor.md#instancias-de-estructuras-una-referencia-viva).
 
 | Entrada | Acción | Notas |
 |---|---|---|
-| Menú desplegable **Recientes** de la barra de herramientas, botón **Colocar** de un documento | Entrar en el modo Colocar estructura con ese documento | hacer clic en el nombre del documento, en cambio, lo abre |
+| Menú desplegable **Recientes** de la barra de herramientas, botón **Colocar** de una construcción | Entrar en el modo Colocar estructura con esa construcción | hacer clic en el nombre de la construcción, en cambio, la abre |
 | `R` / `Mayús+R` mientras coloca | Girar ±90° la instancia pendiente | las mismas teclas de vista previa de colocación que un bloque |
 | Clic en una instancia colocada (herramienta Seleccionar) | Seleccionarla como una sola unidad, distinta de una selección de bloques | |
 | Arrastrar en la ventana gráfica, o el gizmo | Mover / girar la instancia | |
-| `Ctrl/Cmd+D` | Duplicar: coloca otra instancia del mismo documento | consulte [Duplicar](#duplicar-solo-en-el-editor): las selecciones de instancias obtienen una instancia nueva en lugar de una copia nueva de bloques |
+| `Ctrl/Cmd+D` | Duplicar: coloca otra instancia de la misma construcción | consulte [Duplicar](#duplicar-solo-en-el-editor): las selecciones de instancias obtienen una instancia nueva en lugar de una copia nueva de bloques |
 | Campos **X / Z / Rotación** del panel de la instancia, y luego Aplicar | Fijar una posición y una orientación exactas | Y (la elevación) siempre se deriva del terreno, nunca es un objetivo |
-| **Editar construcción de origen** en el panel de la instancia | Abrir el documento referenciado para cambiar sus bloques | todas las instancias se actualizan, ya que una instancia es una referencia viva |
-| `Supr` / `Retroceso` | Quitar la instancia | nunca toca el documento referenciado |
+| **Editar construcción de origen** en el panel de la instancia | Abrir la construcción referenciada para cambiar sus bloques | todas las instancias se actualizan, ya que una instancia es una referencia viva |
+| `Supr` / `Retroceso` | Quitar la instancia | nunca toca la construcción referenciada |
 
 ## Grupos (solo en el Editor)
 
@@ -312,7 +312,7 @@ también puede previsualizarlas y restaurarlas.
 | Entrada | Acción |
 |---|---|
 | `1` / `2` | Cambiar a la herramienta Seleccionar / Colocar |
-| `Ctrl/Cmd+S` | Guardar el documento |
+| `Ctrl/Cmd+S` | Guardar la construcción |
 
 ## Colocación (solo en el Editor)
 

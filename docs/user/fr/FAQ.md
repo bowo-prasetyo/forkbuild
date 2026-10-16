@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: f1e16b4c1352d5a0 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 53acfc3595aae824 -->
 # Questions fréquentes
 
 <!-- languages -->
@@ -71,20 +71,20 @@ Nostr.
 [Distribuer votre travail](Distribution.md) liste tout ce que vous pouvez
 distribuer, où, et ce dont chaque réseau a besoin.
 
-### Pourquoi personne ne peut-il forker ma création ?
+### Pourquoi personne ne peut-il remixer ma construction ?
 
-Un nouveau document n’a pas de licence, et une création sans licence ne
-peut pas être forkée. Ouvrez **Propriétés de la construction** (le **✎** à côté
-du titre du document dans l’Éditeur), choisissez une licence qui autorise
-les forks (n’importe quelle licence CC sauf CC BY-ND), et publiez de
-nouveau. Le réglage fait partie de ce qui est publié, les créations déjà
+Une nouvelle construction n’a pas de licence, et une construction sans licence ne
+peut pas être remixée. Ouvrez **Propriétés de la construction** (le **✎** à côté
+du titre de la construction dans l’Éditeur), choisissez une licence qui autorise
+les remix (n’importe quelle licence CC sauf CC BY-ND), et publiez de
+nouveau. Le réglage fait partie de ce qui est publié, les constructions déjà
 publiées gardent donc la licence qu’elles avaient. Voir
 [Choisir une licence](04-PublishingAndForking.md#choisir-une-licence).
 
 ### La publication a échoué. Que veulent dire les messages ?
 
 - **a title is required before publishing** — donnez un titre à la
-  création dans **Propriétés de la construction**.
+  construction dans **Propriétés de la construction**.
 - **cannot publish an empty world** — placez d’abord au moins une brique.
 - **cannot sign, identity is locked** — votre identité s’est verrouillée
   d’elle-même ; cliquez sur **Déverrouiller** à côté de votre nom dans la
@@ -131,7 +131,7 @@ Ce que quelqu’un d’autre peut faire, si la licence de la construction
 autorise les remix, c’est faire sa propre copie avec **Modifier une
 copie** ou **Remixer**. Sa copie est à lui pour la modifier, la publier et
 la placer, et elle montre qu’elle vient de la vôtre (voir
-[Forker : faites-le vôtre](04-PublishingAndForking.md#forker--faites-le-vôtre)).
+[Remixer : faites-le vôtre](04-PublishingAndForking.md#remixer--faites-le-vôtre)).
 Si vous préférez que ce soit la sienne que les gens trouvent, vous pouvez
 retirer la vôtre de votre Monde et la dépublier, mais les copies déjà
 envoyées restent (voir
@@ -182,7 +182,7 @@ pendant que les deux sont en ligne. Ou faites-y une sauvegarde et restaurez
 le fichier sur l’autre appareil (voir [Vos données](13-YourData.md)). Pour déplacer un seul type
 de chose :
 
-- **Documents** : **Exporter** dans la barre d’outils de l’Éditeur, ou
+- **Constructions** : **Exporter** dans la barre d’outils de l’Éditeur, ou
   **Exporter toutes les constructions** en bas de **Récents**, puis **Importer**
   sur l’autre appareil.
 - **Vos propres structures** : **Exporter le plan** depuis le menu **⋮**
@@ -196,7 +196,7 @@ sauvegarde complète.
 
 ### Effacer les données de mon navigateur supprimera-t-il mon travail ?
 
-Oui. Les documents, identités, amis et l’historique du chat se trouvent
+Oui. Les constructions, identités, amis et l’historique du chat se trouvent
 tous dans le stockage de ce navigateur pour ce site, et l’effacer les
 supprime définitivement. Sauvegardez-les d’abord avec **Vos données →
 Sauvegarder dans un fichier**, et gardez en sécurité le fichier et sa
@@ -221,9 +221,9 @@ ainsi encore la consulter ou l’exporter. Elle affiche **Révoquée** dans
 nouvelle identité pour continuer à travailler. Voir
 [Ce que fait la révocation — et ce qu’elle ne fait pas](05-IdentityAndLogin.md#ce-que-fait-la-révocation--et-ce-quelle-ne-fait-pas).
 
-### Pourquoi une ancienne copie de ForkBuild n’ouvre-t-elle pas mon document exporté ?
+### Pourquoi une ancienne copie de ForkBuild n’ouvre-t-elle pas ma construction exportée ?
 
-Les documents sont désormais enregistrés dans un format plus récent et
+Les constructions sont désormais enregistrées dans un format plus récent et
 plus compact. ForkBuild 1.0.0 et les versions antérieures ne savent pas le
 lire : mettez d’abord à jour l’autre copie. Les fichiers exportés par les
 anciennes versions s’ouvrent toujours ici.

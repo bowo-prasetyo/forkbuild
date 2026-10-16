@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 67400ead6416db5b -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 29cdc8613dfca1c8 -->
 # Tampilan Dunia: Alat Lanjutan
 
 <!-- languages -->
@@ -21,7 +21,7 @@ apa pun bagi orang lain.
 |---|---|---|
 | [Memeriksa](#memeriksa-balok--atau-struktur-yang-ditempatkan) | Klik balok atau struktur yang ditempatkan | Melihat apa itu dan dari mana asalnya |
 | [Kamera vs. Mengedit](#kamera-vs-mengedit) | Satu baris di bagian kepala panel | Melihat bangunan mana yang dikenai perubahan Anda berikutnya |
-| [Tentang bangunan ini, dan Penempatan](#informasi-dokumen-dan-penempatan) | Di bawah bagian kepala, setelah klik | Detail bangunan dan tempatnya berdiri |
+| [Tentang bangunan ini, dan Penempatan](#informasi-bangunan-dan-penempatan) | Di bawah bagian kepala, setelah klik | Detail bangunan dan tempatnya berdiri |
 | Koordinat dan pencarian **Lokasi** | Di atas tampilan, dan di **Cari** | Menemukan sesuatu berdasarkan posisi X/Y/Z |
 | [Perjumpaan Dunia](#perjumpaan-dunia--publikasi-dan-avatar-yang-dibagikan-rekan-anda) | **Di Sekitar**, di Jelajahi | Apa yang dibagikan orang yang terhubung |
 | [Nama Tempat](#nama-tempat-di-sekitar--menemukan-klaim-dari-siapa-pun) | **Di Sekitar**, di Jelajahi | Nama yang diberikan orang lain untuk tempat di sekitar Anda |
@@ -95,7 +95,7 @@ bergantung pada panelnya (di
 [Cari](03-WorldView.md#cari--publikasi-mana-yang-cocok-dengan-ini), Fokus
 mengubahnya).
 
-## Informasi Dokumen dan Penempatan
+## Informasi Bangunan dan Penempatan
 
 Klik balok, tanah kosong, atau struktur yang ditempatkan, dan dua panel
 terbuka di bawah bagian kepala, untuk bangunan yang Anda klik:
@@ -229,12 +229,12 @@ Untuk alasan rancangannya, lihat
 [Overlap Is A Fact; Collision Is A Policy Decision](../../principles/placement.md#overlap-is-a-fact-collision-is-a-policy-decision-0225)
 (bahasa Inggris) dan aturan sesudahnya.
 
-### Menempatkan vs mem-fork
+### Menempatkan vs me-remix
 
 Keduanya memasukkan bangunan orang lain ke Dunia milik Anda, tetapi
 berbeda:
 
-| | Menempatkan | Mem-fork (Remix, atau Edit Salinan) |
+| | Menempatkan | Me-remix (atau Edit Salinan) |
 |---|---|---|
 | Yang dibuat | Penempatan: catatan kecil bertanda tangan tentang di mana bangunan ditampilkan | Bangunan baru, dengan id baru, milik Anda |
 | Bangunannya | Dunia Bersama yang sama, seperti saat diterbitkan | Salinan Anda sendiri, dengan catatan yang merujuk ke aslinya |
@@ -243,7 +243,7 @@ berbeda:
 | Dikendalikan oleh | Pengaturan **Siapa yang dapat menempatkannya** milik penerbit | Lisensi |
 | Saat menerbitkan | Tidak ada yang baru diterbitkan | Membuat Dunia Bersama baru atas nama Anda |
 
-Menempatkan itu seperti menautkan ke sebuah berkas; mem-fork seperti
+Menempatkan itu seperti menautkan ke sebuah berkas; me-remix seperti
 membuat salinan sendiri untuk diubah. Orang yang memilih **Hanya saya yang
 boleh menempatkannya** tetap bisa mengizinkan remix lewat lisensinya, dan
 remix itu milik Anda untuk ditempatkan di mana saja.
@@ -540,7 +540,7 @@ Keduanya nonaktif pada penempatan yang dibuat orang lain.
 yang sama *sekali lagi* di tempat avatar Anda berdiri (atau di bawah
 kamera, jika tanpa avatar). Ia tidak memindahkan penempatan yang ada dan
 tidak membuat salinan: tetap satu Dunia Bersama (lihat
-[Menempatkan vs mem-fork](#menempatkan-vs-mem-fork)). Ia menyebut di mana
+[Menempatkan vs me-remix](#menempatkan-vs-me-remix)). Ia menyebut di mana
 bangunan ditempatkan dan berapa penempatannya sekarang. Jika sudah ada
 penempatan tepat di tempat Anda, ia meminta Anda bergeser dulu, jadi dua
 kali klik tidak menumpuk dua di satu tempat.

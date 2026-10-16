@@ -359,7 +359,7 @@ ForkBuild tells you the moment your copy is ready (see
 made, a **Can't make a copy** dialog says why, usually because the
 build's license doesn't allow copies or the build can't be fetched yet,
 and **Back to the build** returns you to where you were (see
-[When a fork can't complete](04-PublishingAndForking.md#when-a-fork-cant-complete)).
+[When a remix can't complete](04-PublishingAndForking.md#when-a-remix-cant-complete)).
 
 A **geographic place** and a **person** have no Edit a Copy. A geographic
 place is made of several people's regions, so there's no single build to
@@ -367,7 +367,7 @@ copy; open one of its regions instead.
 
 Edit a Copy is the same as **Remix** in Explore and on an author's page,
 with the same license rules (see
-[Forking: make it your own](04-PublishingAndForking.md#forking-make-it-your-own)).
+[Remixing: make it your own](04-PublishingAndForking.md#remixing-make-it-your-own)).
 Everything else in World View, such as Search, the compass, the Map and
 Info, only looks.
 
@@ -522,7 +522,7 @@ Both open the **Explore Location** dialog:
 📍 Center: 100.0, 50.0, 250.0
 ⭕ Radius: 25 World Units
 
-Showing 3 of 3 discoverable documents
+Showing 3 of 3 builds you can find
 
 📍 City Hall            📏 4.2 World Units away
 by alice
@@ -572,7 +572,7 @@ your first change here (its details, a landmark or region, or an animal
 left as decoration) makes your own copy, titled *"Remix of &lt;original
 name&gt;"*. A short notice tells you so ("Created your own editable copy —
 … is unchanged"). The same license rules apply as for any remix (see
-[Publishing & Remixing](04-PublishingAndForking.md#forking-make-it-your-own)).
+[Publishing & Remixing](04-PublishingAndForking.md#remixing-make-it-your-own)).
 
 ## History — previewing and restoring earlier states
 

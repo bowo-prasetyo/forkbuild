@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: df3ccec07b27f9d8 -->
+<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: eefddf9b6eb874a7 -->
 # 08 — Chat & Unterhaltungen
 
 <!-- languages -->
@@ -139,4 +139,4 @@ Kehren Sie zu
 **[Peer-Verbindungen & Freunde](07-PeerConnectionsAndFriends.md)** zurück,
 um weitere Menschen zum Bauen und Chatten zu finden, oder besuchen Sie
 erneut die **[Weltansicht](03-WorldView.md)**, um zu sehen, wo die
-Kreationen aller leben.
+Bauwerke aller leben.

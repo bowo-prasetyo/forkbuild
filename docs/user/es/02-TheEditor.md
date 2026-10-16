@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 75f6ca907e2e67ae -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: fe5b24d5d2806c27 -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -20,7 +20,7 @@ grupos.
 │        Recientes · ⌨ Atajos                                 │
 ├──────────────────────┬──────────────────────────────────────┤
 │ [Seleccionar|Colocar]│                                      │
-│ Título del doc.   ✎  │                                      │
+│ Título constr.    ✎  │                                      │
 │ Selección            │        Ventana gráfica 3D            │
 │ Biblioteca de constr.│                                      │
 │ [Bloques|Estructuras]│                                      │
@@ -30,12 +30,12 @@ grupos.
 
 - **Barra de herramientas**: primero **Guardar**, **Publicar** y **Nuevo**,
   luego **Archivo**, un menú con **Exportar**, **Modelo 3D** e **Importar**;
-  volver a abrir documentos recientes y abrir la superposición **⌨ Atajos**
+  volver a abrir construcciones recientes y abrir la superposición **⌨ Atajos**
   (también `?`).
 - **Herramientas**: alterne entre **Seleccionar** (`1`) y **Colocar**
   (`2`). **Colocar** sigue resaltada mientras coloca un bloque o una
   estructura.
-- **Título del documento**: el nombre de la creación abierta. Haga clic en
+- **Título de la construcción**: el nombre de la construcción abierta. Haga clic en
   **✎** para editar su título, su descripción y su licencia. Si está
   guardada o no se muestra en la barra de herramientas.
 - **Selección**: solo muestra lo que puede actuar sobre su selección
@@ -62,7 +62,7 @@ grupos.
     construcciones más grandes de la categoría **destacados**, más
     sus propias **Mis estructuras**. Haga clic en una tarjeta para
     colocarla: consulte
-    [Estructuras: componer, bifurcar y su biblioteca personal](#estructuras-componer-bifurcar-y-su-biblioteca-personal)
+    [Estructuras: componer, remezclar y su biblioteca personal](#estructuras-componer-remezclar-y-su-biblioteca-personal)
     más abajo.
 
 ### El panel Selección
@@ -159,7 +159,7 @@ ForkBuild le da un control preciso sobre la selección:
 | **Mayús + clic** | Agrega ese bloque a la selección |
 | **Mayús + arrastrar** | Dibuja un recuadro: selecciona todo lo que hay dentro |
 | **Ctrl/Cmd + Mayús + arrastrar** | Selección con recuadro que se *agrega* a la selección actual |
-| **Ctrl/Cmd + A** | Selecciona todos los bloques de la creación |
+| **Ctrl/Cmd + A** | Selecciona todos los bloques de la construcción |
 | **Escape** | Borra la selección |
 
 > **Por qué importa:** Construir algo más grande que un solo bloque
@@ -208,7 +208,7 @@ elegir el suyo:
   **Color** de la sección **Selección** para cambiarles el color a todos a
   la vez. Cada cambio se puede deshacer (`Ctrl/Cmd+Z`) como cualquier otra
   edición. La muestra no se ofrece cuando la selección es una instancia de
-  estructura: en ese caso, edite el documento propio de la estructura
+  estructura: en ese caso, edite la construcción propia de la estructura
   (consulte
   [Instancias de estructuras](#instancias-de-estructuras-una-referencia-viva)
   más abajo).
@@ -218,7 +218,7 @@ Junto a cada muestra de **Color** hay una fila de **colores del pueblo**
 bien: un clic elige uno, para los siguientes bloques o para la selección.
 La muestra sigue permitiendo elegir cualquier color.
 
-El color de un bloque se guarda con su creación y viaja con ella cuando la
+El color de un bloque se guarda con su construcción y viaja con ella cuando la
 publica o la comparte.
 
 ## Transformaciones precisas: valores numéricos, alineación y repetición
@@ -326,7 +326,7 @@ botones actúan sobre el grupo que esté seleccionado:
 > nunca cambia el grupo. Y eliminar un grupo solo quita la *etiqueta*, no
 > los bloques que contiene.
 
-## Estructuras: componer, bifurcar y su biblioteca personal
+## Estructuras: componer, remezclar y su biblioteca personal
 
 La pestaña **Estructuras** de la Biblioteca de construcción (consulte
 [La disposición](#la-disposición) arriba) le ofrece veintidós estructuras ya
@@ -339,28 +339,28 @@ distintas que puede hacer con cualquiera de ellas, y cada una importa por
 razones distintas:
 
 - **Colocar** (haga clic en la tarjeta): copia los bloques de la
-  estructura directamente en el documento en el que ya está trabajando,
+  estructura directamente en la construcción en la que ya está trabajando,
   para que pase a formar parte de una construcción más grande. Es la
   acción de todos los días.
 - **Remezclar como construcción nueva** (en el menú **⋮** de la tarjeta):
-  empieza un documento completamente nuevo e independiente que comienza
+  empieza una construcción completamente nueva e independiente que comienza
   como una copia exacta de esa estructura.
 - **Remezclar a Mis estructuras** (solo tarjetas integradas, en el menú
   **⋮**): agrega la estructura a sus propias **Mis estructuras**, sin
-  ningún documento de por medio. Consulte
+  ninguna construcción de por medio. Consulte
   [Mis estructuras](#mis-estructuras-su-biblioteca-personal-de-planos) más
   abajo.
 - **Información** (en el menú **⋮** de la tarjeta): una vista de solo
   lectura del nombre, la categoría, el número de bloques, la superficie,
   la altura, el origen y la descripción de una estructura.
-- Coloque un **documento guardado** propio como **instancia de
+- Coloque una **construcción guardada** propia como **instancia de
   estructura** (una referencia viva y reutilizable, en lugar de una copia)
   desde el menú desplegable **Recientes** de la barra de herramientas, no
   desde la Biblioteca de construcción. Consulte
   [Instancias de estructuras](#instancias-de-estructuras-una-referencia-viva)
   más abajo.
 
-### Colocar una estructura en su documento
+### Colocar una estructura en su construcción
 
 Haga clic en cualquier tarjeta de la pestaña **Estructuras** (una
 integrada o una de sus propias **Mis estructuras**) y aparece una vista
@@ -370,29 +370,29 @@ sobre el suelo, exactamente como al colocar un solo bloque:
 1. Mueva el puntero para ubicar el fantasma.
 2. Presione `R` / `Mayús+R` para girarlo en pasos de 90°.
 3. Haga clic para confirmar: todos los bloques de la estructura se
-   agregan a su documento como un solo **paso de deshacer**. Una posición
+   agregan a su construcción como un solo **paso de deshacer**. Una posición
    ocupada tiñe el fantasma de rojo y rechaza el clic, igual que un solo
    bloque se niega a colocarse encima de otro.
 4. `Escape` cancela: no se agrega nada y vuelve a la herramienta que
    estaba usando antes.
 
-Los bloques que obtiene son bloques comunes de su documento desde el
+Los bloques que obtiene son bloques comunes de su construcción desde el
 momento en que se colocan: no se distinguen de nada que haya colocado a
 mano, y puede editarlos, seleccionarlos, agruparlos o eliminarlos como
 cualquier otra cosa. Colocar varias estructuras es una forma rápida de
 armar una escena: haga clic en Casa y colóquela; haga clic en Granero y
 colóquelo al lado; haga clic en Pozo y colóquelo en el patio.
 
-### Bifurcar una estructura como documento nuevo
+### Remezclar una estructura como construcción nueva
 
 Abra el menú **⋮** de una tarjeta y haga clic en **Remezclar como construcción
-nueva** para empezar una creación completamente nueva y propia que
+nueva** para empezar una construcción completamente nueva y propia que
 comienza como una copia exacta de esa estructura: exactamente los mismos
 bloques, editables con todas las herramientas de esta guía, en un
-documento propio en lugar de mezclados con lo que tenga abierto en ese
-momento. Bifurcar nunca cambia la copia de la biblioteca: bifurque Casa
-diez veces y cada una será su propia creación independiente desde el
-momento en que haga clic en Bifurcar.
+construcción propia en lugar de mezclados con lo que tenga abierto en ese
+momento. Remezclar nunca cambia la copia de la biblioteca: remezcle Casa
+diez veces y cada una será su propia construcción independiente desde el
+momento en que haga clic en Remezclar.
 
 ### Mis estructuras: su biblioteca personal de planos
 
@@ -411,12 +411,12 @@ Hay una segunda forma de que una estructura termine en Mis estructuras,
 sin nada que seleccionar ni construir antes: abra el menú **⋮** de
 cualquier tarjeta **integrada** y haga clic en **Remezclar a Mis
 estructuras**. Se agrega exactamente como ya está (no se crea ningún
-documento ni se extrae nada), así que queda lista para cambiarle el
+construcción ni se extrae nada), así que queda lista para cambiarle el
 nombre, exportarla o colocarla de inmediato, como cualquier otra entrada
 de su biblioteca.
 
 Una estructura de **Mis estructuras** funciona exactamente como una
-integrada (haga clic para colocarla en su documento actual, o use
+integrada (haga clic para colocarla en su construcción actual, o use
 Remezclar como construcción nueva), con dos acciones adicionales en su menú
 **⋮**:
 
@@ -427,10 +427,10 @@ Remezclar como construcción nueva), con dos acciones adicionales en su menú
 
 **Mis estructuras** solo guarda la *estructura en sí*: un nombre y un
 conjunto de bloques. Quitar una nunca afecta nada de lo que ya construyó
-con ella: cada lugar donde ya la colocó o la bifurcó conserva esos bloques
+con ella: cada lugar donde ya la colocó o la remezcló conserva esos bloques
 exactamente como están. Y nunca se edita en su lugar: si quiere cambiar lo
-que construye una estructura guardada, colóquela en un documento, edite
-ese documento y luego use **Crear plano** de nuevo (si quiere, con un
+que construye una estructura guardada, colóquela en una construcción, edite
+esa construcción y luego use **Crear plano** de nuevo (si quiere, con un
 nombre nuevo, como “Granja de lujo”: pasa a ser su propia entrada aparte
 en Mis estructuras, no un reemplazo de la original).
 
@@ -494,7 +494,7 @@ registro firmado de quién afirma haberla diseñado. Abra el panel
   botón vuelve a firmar su declaración. Revise primero el diseño: el botón
   aparece para cualquier diseño que comparta la huella antigua.
 
-Esto es opcional, y totalmente aparte de colocar, bifurcar o compartir la
+Esto es opcional, y totalmente aparte de colocar, remezclar o compartir la
 estructura en sí: existe para las situaciones en que quiere asociar su
 nombre a un diseño de una forma que otras personas puedan verificar de
 manera independiente, no solo creer. Consulte
@@ -504,25 +504,25 @@ evidencia externa independiente.
 
 ## Instancias de estructuras: una referencia viva
 
-Colocar (arriba) copia los bloques de una estructura en su documento una
+Colocar (arriba) copia los bloques de una estructura en su construcción una
 sola vez. A veces lo que quiere, en cambio, es una copia **viva** de algo
-que ya construyó (cualquier documento guardado, no solo algo de su
+que ya construyó (cualquier construcción guardada, no solo algo de su
 biblioteca) que se mantenga sincronizada con su origen cada vez que la
-mira. Eso es una **instancia de estructura**: hace referencia al documento
+mira. Eso es una **instancia de estructura**: hace referencia a la construcción
 de origen en lugar de copiar sus bloques, así que editar el origen más
 adelante actualiza automáticamente todas sus instancias.
 
 1. Abra el menú desplegable **Recientes** de la barra de herramientas.
-   (Aparece cuando guardó al menos un documento).
-2. Junto a cualquier documento guardado, haga clic en **Colocar**. Hacer
-   clic en el nombre del documento, en cambio, lo abre y reemplaza lo que
+   (Aparece cuando guardó al menos una construcción).
+2. Junto a cualquier construcción guardada, haga clic en **Colocar**. Hacer
+   clic en el nombre de la construcción, en cambio, la abre y reemplaza lo que
    tiene abierto.
 3. Pase el cursor por el suelo, presione `R` para girar y haga clic para
    colocarlo, exactamente como al colocar un bloque.
 
-Una instancia es una *referencia* viva a ese documento, no una copia de
-sus bloques: el mismo documento se puede colocar cualquier cantidad de
-veces, y editar más adelante los bloques del documento de origen actualiza
+Una instancia es una *referencia* viva a esa construcción, no una copia de
+sus bloques: la misma construcción se puede colocar cualquier cantidad de
+veces, y editar más adelante los bloques de la construcción de origen actualiza
 todas sus instancias. Seleccione una instancia con la herramienta
 Seleccionar (`1`) y la barra lateral muestra:
 
@@ -533,30 +533,30 @@ Seleccionar (`1`) y la barra lateral muestra:
 | **Campos X / Z / Rotación °, luego Aplicar** | Fijar una posición y una orientación exactas: la elevación (Y del suelo) siempre sigue el terreno y no es un objetivo que usted fije |
 | **Girar ↻ / ↺** | Girar exactamente 90° |
 | **Duplicar** (`Ctrl/Cmd+D`) | Colocar otra instancia de la misma estructura |
-| **Eliminar** | Quitar esta instancia: el documento de origen no se toca |
-| **Editar construcción de origen** | Abrir el documento referenciado en sí, para cambiar cómo se ven todas sus instancias |
+| **Eliminar** | Quitar esta instancia: la construcción de origen no se toca |
+| **Editar construcción de origen** | Abrir la construcción referenciada en sí, para cambiar cómo se ven todas sus instancias |
 
 Editar el *contenido* de una estructura colocada siempre se hace editando
-su documento de origen: no hay forma de editar directamente los bloques de
+su construcción de origen: no hay forma de editar directamente los bloques de
 una instancia, y eso es justamente lo que mantiene sincronizadas todas sus
 instancias.
 
 ## Propiedades de la construcción
 
-Cada creación tiene un **título**, una **descripción** opcional, una
+Cada construcción tiene un **título**, una **descripción** opcional, una
 **licencia** y una opción **Quién puede colocarlo en el Mundo**:
 configúrelos en el diálogo **Propiedades de la construcción**, que se abre con
-el botón **✎** junto al título del documento, arriba en la barra lateral
+el botón **✎** junto al título de la construcción, arriba en la barra lateral
 del Editor (en la Vista del mundo, es el botón **Editar metadatos**). Un
-documento nuevo empieza sin licencia, lo que significa que nadie más puede
-bifurcarlo hasta que usted elija una. La descripción aparece como un
+construcción nueva empieza sin licencia, lo que significa que nadie más puede
+remezclarla hasta que usted elija una. La descripción aparece como un
 fragmento en su tarjeta de **Explorar** y también se puede buscar allí; la
-licencia controla si otras personas pueden bifurcarlo, y cómo. Consulte
+licencia controla si otras personas pueden remezclarla, y cómo. Consulte
 [Publicar y remezclar](04-PublishingAndForking.md) para saber qué significa
 cada licencia.
 
 Una descripción larga se lee mejor con un poco de formato, que muestran el
-panel de información del documento, el explorador de lugares de la Vista del
+panel de información de la construcción, el explorador de lugares de la Vista del
 mundo y las publicaciones en Steem y Blurt:
 
 | Escriba | Para obtener |
@@ -577,7 +577,7 @@ jardin`: hasta 5, separadas por espacios o comas, hechas de minúsculas,
 dígitos y guiones (los acentos se quitan, así `café` queda `cafe`). Si una
 construcción no tiene, el diálogo llena el campo con sugerencias a partir
 del título y la descripción, que puede conservar, cambiar o borrar; los
-botones bajo el campo añaden otras sugerencias. Una bifurcación conserva sus
+botones bajo el campo añaden otras sugerencias. Una remezcla conserva sus
 etiquetas. Una publicación en Blurt las muestra después de las de ForkBuild,
 para que quien explore Blurt por etiquetas encuentre su construcción.
 
@@ -590,7 +590,7 @@ doble tic para un giro, una ráfaga rápida de pitidos al pegar o duplicar,
 un tintineo brillante para un color nuevo, dos notas al agrupar, una
 campana al nombrar un lugar, un pitido descendente para deshacer y uno
 ascendente para rehacer, y un pequeño acorde al guardar. Los cambios que
-hace un colaborador en el mismo documento son silenciosos.
+hace un colaborador en la misma construcción son silenciosos.
 
 Active o desactive el sonido con el botón **Sonido**, arriba a la derecha
 de la vista, o presionando `M` (aparece en la superposición Atajos de
@@ -642,15 +642,15 @@ Mientras construye suena una música suave, algo más animada que la de la Vista
   construcción**, exporte y luego vuelva a ponerla. **Exportar todas las
   construcciones** y su **Importar**, en **Recientes**, funcionan igual.
 - **Recientes**: vuelve a abrir algo que guardó antes (aparece después de
-  su primer guardado; haga clic en el nombre de un documento para
-  abrirlo). Cuando ya guardó suficientes documentos, aparece un cuadro de
+  su primer guardado; haga clic en el nombre de una construcción para
+  abrirlo). Cuando ya guardó suficientes construcciones, aparece un cuadro de
   filtro para ir directamente a uno por su nombre. Cada entrada también
   tiene un botón **Colocar** (consulte
   [Instancias de estructuras](#instancias-de-estructuras-una-referencia-viva))
-  para agregarlo a su documento *actual* en lugar de reemplazarlo.
+  para agregarla a su construcción *actual* en lugar de reemplazarla.
   **Exportar todas las construcciones**, al final, descarga todas las
   construcciones guardadas en un solo archivo; **Importar** lo vuelve a leer:
-  guarda los documentos que este dispositivo no tiene (ábralos desde
+  guarda las construcciones que este dispositivo no tiene (ábralas desde
   Recientes), omite los que tiene sin cambios y guarda una copia al lado de
   cualquiera que tenga en otra versión. Los cambios sin guardar no se
   incluyen, así que guarde primero.

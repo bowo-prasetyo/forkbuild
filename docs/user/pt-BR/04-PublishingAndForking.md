@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 75e82daaf1bb2646 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: bad564fee7824288 -->
 # 04 — Publicar e remixar
 
 <!-- languages -->
@@ -7,11 +7,11 @@
 
 Este é o coração do ForkBuild. **Publicar** compartilha sua construção com
 o mundo. **Remixar** deixa qualquer pessoa fazer uma cópia sua de uma
-construção e levá-la adiante, com todo o histórico preservado. (Algumas
-mensagens e documentos para desenvolvedores chamam um remix de *fork*, como
+construção e levá-la adiante, com todo o histórico preservado. (Os
+documentos para desenvolvedores chamam um remix de *fork*, como
 em ForkBuild.)
 
-## Publicando sua criação
+## Publicando sua construção
 
 1. Construa algo no Editor.
 2. Tenha um nome e confira se ele está desbloqueado (veja
@@ -19,18 +19,18 @@ em ForkBuild.)
    construção com ele. Se você ainda não tem nome, **Publicar** pede que
    você escolha um primeiro; **Publicar sem assinar** ali a publica sem
    autor e sem link.
-3. Dê um título a ela — Publicar recusa uma criação sem título ou vazia — e,
+3. Dê um título a ela — Publicar recusa uma construção sem título ou vazia — e,
    se quiser, uma descrição e uma licença: clique em **✎** ao lado do título
-   do documento na barra lateral para abrir **Propriedades da construção**. Um
-   documento novo não tem licença; na primeira vez que você o publicar, o
+   da construção na barra lateral para abrir **Propriedades da construção**. Uma
+   construção nova não tem licença; na primeira vez que você a publicar, o
    ForkBuild pergunta se outras pessoas podem remixá-lo (veja
    [Deixando outras pessoas remixarem](#deixando-outras-pessoas-remixarem)).
 4. Pressione **Salvar** para guardá-la.
 5. Clique em **Publicar**. Na primeira vez, o ForkBuild também pergunta
    [Quem pode encontrá-la?](#quem-pode-encontrá-la)
 
-Sua criação agora aparece em **Explorar** neste dispositivo, onde você pode
-pesquisá-la, abri-la e bifurcá-la, com seu nome como autor. As outras
+Sua construção agora aparece em **Explorar** neste dispositivo, onde você pode
+pesquisá-la, abri-la e remixá-la, com seu nome como autor. As outras
 pessoas a veem quando você compartilha o link dela, ou na hora se você
 escolheu **Todo mundo** em [Quem pode encontrá-la?](#quem-pode-encontrá-la).
 Ela também recebe um lugar no mundo compartilhado, ao lado daquilo a que
@@ -301,7 +301,7 @@ enviada a todo mundo (veja [Quem pode encontrá-la?](#quem-pode-encontrá-la))
 ou você distribuí-la no Nostr, no Arweave, no Steem ou no Blurt (veja
 [Distribuição](Distribution.md)): aí o **Explorar** de qualquer pessoa a
 encontra (veja
-[Criações que outras pessoas distribuíram](#criações-que-outras-pessoas-distribuíram)).
+[Construções que outras pessoas distribuíram](#construções-que-outras-pessoas-distribuíram)).
 Para colocá-la no **Explorar** de alguém com quem você está conectado
 (veja [Conexões entre pares e amigos](07-PeerConnectionsAndFriends.md)),
 clique em **Compartilhar com pares** abaixo dela em **Explorar**. O botão só aparece nos
@@ -344,44 +344,44 @@ coisa:
 - **Agora não** não publica nada.
 
 Sua resposta é salva como a licença da construção, então a pergunta vem só
-uma vez; mude quando quiser em **Propriedades da construção**. Uma
-bifurcação já leva a licença do original, então publicar uma nunca
+uma vez; mude quando quiser em **Propriedades da construção**. Um
+remix já leva a licença do original, então publicar um nunca
 pergunta.
 
 ### Todas as licenças
 
-Uma criação publicada sempre aparece com uma licença, escolhida na caixa de
+Uma construção publicada sempre aparece com uma licença, escolhida na caixa de
 diálogo **Propriedades da construção**:
 
 | Licença | Significado |
 |---|---|
 | **CC0 1.0 — Domínio público** | Nenhum direito reservado — qualquer pessoa pode fazer qualquer coisa com ela |
-| **CC BY 4.0 — Atribuição** | Qualquer pessoa pode bifurcá-la e reutilizá-la, dando crédito a você |
-| **CC BY-SA 4.0 — Atribuição, Compartilha Igual** | As bifurcações precisam levar adiante a mesma licença |
-| **CC BY-NC 4.0 — Atribuição, Não Comercial** | Bifurcar é permitido, uso comercial não |
-| **CC BY-ND 4.0 — Atribuição, Sem Derivações** | Pode ser vista, mas **bifurcar não é permitido** |
-| **Todos os direitos reservados** | Pode ser vista, mas bifurcar não é permitido |
-| **Nenhuma licença especificada** | Bifurcar não é permitido até você definir uma |
+| **CC BY 4.0 — Atribuição** | Qualquer pessoa pode remixá-la e reutilizá-la, dando crédito a você |
+| **CC BY-SA 4.0 — Atribuição, Compartilha Igual** | Os remixes precisam levar adiante a mesma licença |
+| **CC BY-NC 4.0 — Atribuição, Não Comercial** | Remixar é permitido, uso comercial não |
+| **CC BY-ND 4.0 — Atribuição, Sem Derivações** | Pode ser vista, mas **remixar não é permitido** |
+| **Todos os direitos reservados** | Pode ser vista, mas remixar não é permitido |
+| **Nenhuma licença especificada** | Remixar não é permitido até você definir uma |
 
-Se você deixar uma criação sem licença, as pessoas ainda podem abri-la e
-explorá-la — só não podem bifurcá-la até você escolher uma licença que
+Se você deixar uma construção sem licença, as pessoas ainda podem abri-la e
+explorá-la — só não podem remixá-la até você escolher uma licença que
 permita.
 
 ## Escolhendo quem pode posicioná-lo
 
-Em geral, outras pessoas podem posicionar sua criação publicada nos Mundos
+Em geral, outras pessoas podem posicionar sua construção publicada nos Mundos
 delas. Isso adiciona um posicionamento da sua construção, nunca uma cópia
 dela, e nunca move nem muda a sua (veja
 [Por que posso posicionar construções de outras pessoas?](WorldViewAdvancedTools.md#por-que-posso-posicionar-construções-de-outras-pessoas)).
-Bifurcar é outra coisa, regida pela licença (veja
-[Posicionar ou bifurcar](WorldViewAdvancedTools.md#posicionar-ou-bifurcar)).
+Remixar é outra coisa, regida pela licença (veja
+[Posicionar ou remixar](WorldViewAdvancedTools.md#posicionar-ou-remixar)).
 Se você preferir que não a posicionem, abra **Propriedades da construção** e
 defina **Quem pode posicioná-lo no Mundo**:
 
 | Configuração | Significado |
 |---|---|
 | **Qualquer pessoa pode posicioná-lo** | O padrão. Qualquer pessoa pode posicioná-la onde quiser no próprio Mundo |
-| **Só eu posso posicioná-lo** | Só você pode posicioná-la. Outras pessoas ainda podem encontrá-la, vê-la e (se a licença permitir) bifurcá-la, mas o ForkBuild não as deixa posicioná-la |
+| **Só eu posso posicioná-lo** | Só você pode posicioná-la. Outras pessoas ainda podem encontrá-la, vê-la e (se a licença permitir) remixá-la, mas o ForkBuild não as deixa posicioná-la |
 
 A configuração é assinada como parte da publicação quando você publica,
 então ninguém pode removê-la nem mudá-la depois. Isso também significa que
@@ -389,7 +389,7 @@ ela só vale para o que você publicar depois de escolhê-la. Uma publicação
 que já saiu mantém a configuração com que foi publicada, então publique de
 novo se quiser que a nova valha.
 
-Ela funciona do mesmo jeito que a permissão de bifurcar da licença: toda
+Ela funciona do mesmo jeito que a permissão de remixar da licença: toda
 cópia do ForkBuild a respeita, mas ela não é uma tranca. Alguém que mude o
 código do app poderia ignorá-la, e ela não desfaz um posicionamento que
 alguém fez antes de você escolhê-la.
@@ -401,9 +401,9 @@ mundo: o anúncio leva seu posicionamento assinado, e o ForkBuild delas
 mostra a construção ali assim que conhece seu Mundo compartilhado. Mova-a e
 distribua de novo, e ela se move para elas também.
 
-## Editando uma criação publicada
+## Editando uma construção publicada
 
-Uma criação publicada é **imutável** — nunca pode mudar depois. Para
+Uma construção publicada é **imutável** — nunca pode mudar depois. Para
 construir a partir dela, **Bifurque** (abaixo), ou use **Editar uma cópia**
 na Visão do mundo. Na Visão do mundo, fazer sua primeira mudança num mundo
 publicado — os metadados, o nome de um marco ou região, ou uma decoração de
@@ -420,7 +420,7 @@ O original nunca é tocado, por mais que você mude sua cópia.
 anteriores), é o catálogo pesquisável de
 todas as construções publicadas que este dispositivo conhece: as suas, as que pares compartilharam com você
 e as encontradas em redes descentralizadas. Ele foi feito para continuar
-prático tenha dez criações ou dez mil.
+prático tenha dez construções ou dez mil.
 
 ### Construções prontas
 
@@ -441,20 +441,20 @@ seria um remix seu. Clique num nome para abrir sua própria cópia. São
 exemplos do app, nunca publicações de alguém; também estão em
 **Estruturas** na Biblioteca de construção, em *coleção*.
 
-### Criações que outras pessoas distribuíram
+### Construções que outras pessoas distribuíram
 
 Toda vez que você abre o **Explorar** (ou a página de um autor), ele procura
-no Nostr, no Arweave, no Steem e no Blurt criações que outras pessoas distribuíram lá
+no Nostr, no Arweave, no Steem e no Blurt construções que outras pessoas distribuíram lá
 e adiciona as que consegue verificar. Uma linha acima da lista diz o que
-ele está fazendo e depois quantas criações novas encontrou; **Verificar de
+ele está fazendo e depois quantas construções novas encontrou; **Verificar de
 novo** procura mais uma vez.
 
-- Só é adicionada uma criação cujo registro assinado confere: assinado pela
-  chave que ele indica e exatamente a criação que foi anunciada. Qualquer
+- Só é adicionada uma construção cujo registro assinado confere: assinado pela
+  chave que ele indica e exatamente a construção que foi anunciada. Qualquer
   outra coisa é ignorada, e um registro que falhou não é buscado de novo.
-- Ele verifica até 20 criações novas por vez. Se houver mais, a linha diz
+- Ele verifica até 20 construções novas por vez. Se houver mais, a linha diz
   quantas ficaram para a próxima vez.
-- Uma criação encontrada assim continua no seu **Explorar** depois de
+- Uma construção encontrada assim continua no seu **Explorar** depois de
   recarregar a página.
 - O build dela ainda não está no seu dispositivo. **Explorar** busca o build
   de onde ele foi armazenado e o confere, depois o abre na Visão do mundo,
@@ -494,12 +494,12 @@ Ordenar: [Publicadas recentemente ▾]   Agrupar: [Nenhum ▾]   [Cartões] [Lis
 - A paginação é explícita, página por página, em vez de rolagem infinita —
   então "página 5" sempre quer dizer a mesma coisa se você voltar depois.
 
-Toda criação oferece três ações:
+Toda construção oferece três ações:
 
 | Botão | O que faz |
 |---|---|
-| **Abrir** | Carrega aquele documento no Editor |
-| **Remixar** | Copia para uma criação editável sua |
+| **Abrir** | Carrega aquela construção no Editor |
+| **Remixar** | Copia para uma construção editável sua |
 | **Explorar** | Voa até ela na Visão do mundo |
 
 (O botão **Continuar explorando** de **Meus mundos** — veja
@@ -509,7 +509,7 @@ você já visitou em vez de um que está encontrando pela primeira vez.)
 
 Clique no **nome de qualquer autor** para visitar a **página do autor** — um
 portfólio de tudo o que a pessoa fez, incluindo os originais e todas as
-bifurcações que nasceram deles, com exatamente o mesmo catálogo de
+remixes que nasceram deles, com exatamente o mesmo catálogo de
 busca/ordenação/paginação do **Explorar**, só que restrito àquele autor.
 
 Um cartão cuja assinatura confere também tem um botão **Seguir**, e uma
@@ -526,10 +526,10 @@ da Visão do mundo, depois que o conteúdo dela de fato se resolve, também
 entra nesta mesma busca e na página do autor dela, e continua lá depois de
 recarregar. Ela aparece igual a qualquer outra coisa aqui.
 
-## Bifurcar: torne-a sua
+## Remixar: torne-a sua
 
-**Remixar** é o que torna o ForkBuild especial. Quando você bifurca uma
-criação:
+**Remixar** é o que torna o ForkBuild especial. Quando você remixa uma
+construção:
 
 - Você recebe uma **cópia nova e independente** para editar à vontade.
 - O **original não é tocado** — suas mudanças nunca o afetam.
@@ -539,17 +539,17 @@ Funciona exatamente como fazer um fork de um projeto no Git: você abre um
 ramo, faz suas coisas, e a árvore genealógica acompanha todo mundo. (Na
 Visão do mundo isso também acontece automaticamente no momento em que você
 muda um mundo publicado — veja
-[Editando uma criação publicada](#editando-uma-criação-publicada) acima.)
+[Editando uma construção publicada](#editando-uma-construção-publicada) acima.)
 
 > **Na Visão do mundo, também se chama "Editar uma cópia".** É a mesma
 > operação nos dois casos, com as mesmas regras de licença e o mesmo
 > tratamento de
-> [Não dá para fazer uma cópia](#quando-uma-bifurcação-não-pode-ser-concluída).
+> [Não dá para fazer uma cópia](#quando-um-remix-não-pode-ser-concluído).
 > Veja
 > [Editar uma cópia](03-WorldView.md#editar-uma-cópia--levando-algo-para-o-editor)
 > para o passo a passo na própria Visão do mundo.
 
-### Como bifurcar
+### Como remixar
 
 1. Encontre uma construção no **Explorar** (ou na Visão do mundo).
 2. Clique em **Remixar**.
@@ -557,14 +557,14 @@ muda um mundo publicado — veja
    original&gt;"*.
 4. Continue a construção, depois salve e publique como sua.
 
-Sua bifurcação publicada aparece com uma nota **Remix de “…”, de …**, que a
+Seu remix publicado aparece com uma nota **Remix de “…”, de …**, que a
 liga de volta ao original.
 
 ### Contagem de remixes
 
 A página de uma construção e o cartão dela no **Explorar** dizem quantas
 vezes ela foi remixada (**Remixada 3 vezes**): quantas construções
-diferentes, bifurcadas dela e publicadas, este dispositivo encontrou. Um
+diferentes, remixadas dela e publicadas, este dispositivo encontrou. Um
 remix publicado duas vezes conta uma vez, e uma construção que ninguém
 remixou não mostra nada. A contagem é só o que este dispositivo conhece,
 então outro dispositivo pode mostrar um número diferente, e ela nunca
@@ -575,13 +575,13 @@ suas construções, seu 🔔 ganha uma entrada **… remixou sua construção**,
 uma vez por remix (e seu dispositivo também a mostra, se você ativou
 [Notificações neste dispositivo](03-WorldView.md#notificações-neste-dispositivo)).
 
-### Quando uma bifurcação não pode ser concluída
+### Quando um remix não pode ser concluído
 
-De vez em quando uma bifurcação não dá certo — na maioria das vezes ao
-bifurcar um Mundo compartilhado encontrado por um par ou por uma rede
+De vez em quando um remix não dá certo — na maioria das vezes ao
+remixar um Mundo compartilhado encontrado por um par ou por uma rede
 descentralizada (veja
 [Publicações e evidências externas](09-PublicationsAndEvidence.md)), e não
-uma construção comum do **Explorar**. Em vez de largar você num documento
+uma construção comum do **Explorar**. Em vez de largar você numa construção
 vazio e sem relação no Editor, o ForkBuild mostra uma caixa de diálogo
 **Não dá para fazer uma cópia** dizendo exatamente o que deu errado:
 
@@ -683,9 +683,9 @@ sua própria cópia.
 
 ## A árvore genealógica
 
-Como toda bifurcação registra o pai, o ForkBuild consegue desenhar a
-linhagem inteira de uma criação. Numa **página do autor**, você vê uma
-**árvore de bifurcações**:
+Como todo remix registra o pai, o ForkBuild consegue desenhar a
+linhagem inteira de uma construção. Numa **página do autor**, você vê uma
+**árvore de remixes**:
 
 ```
 Casa medieval (original)
@@ -693,7 +693,7 @@ Casa medieval (original)
    └─ Remix de Remix de… (de Carol)
 ```
 
-Isso quer dizer que uma ótima criação pode inspirar todo um ecossistema de
+Isso quer dizer que uma ótima construção pode inspirar todo um ecossistema de
 variações — e todos na cadeia recebem crédito.
 
 A página própria de uma construção, aberta de um link compartilhado,

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: df3ccec07b27f9d8 -->
+<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: eefddf9b6eb874a7 -->
 # 08 — 채팅과 대화
 
 <!-- languages -->

@@ -18,7 +18,7 @@ the box is remembered on this device and changes nothing for anyone else.
 |---|---|---|
 | [Inspecting](#inspecting-a-brick--or-a-placed-structure) | Click a brick or a placed structure | See what it is and where it came from |
 | [Camera vs. Editing](#camera-vs-editing) | A line in the panel's header | See which build your next change applies to |
-| [About this build, and Placement](#document-information-and-placement) | Below the header, after a click | A build's details, and where it stands |
+| [About this build, and Placement](#build-information-and-placement) | Below the header, after a click | A build's details, and where it stands |
 | Coordinates and **Location** search | Over the view, and in **Search** | Find things by X/Y/Z position |
 | [World Encounters](#world-encounters--publications-and-avatars-your-peers-are-sharing) | Explore's **Nearby** section | What connected people are sharing |
 | [Place Names](#nearby-place-names--discovering-claims-from-anyone) | Explore's **Nearby** section | Names other people gave the places around you |
@@ -86,7 +86,7 @@ camera. Whether they also change what you edit depends on the panel (in
 [Search](03-WorldView.md#search--which-publications-match-this), Focus
 does).
 
-## Document Information and Placement
+## Build Information and Placement
 
 Click a brick, bare ground or a placed structure and two panels open below
 the header, for the build you clicked:
@@ -201,11 +201,11 @@ reasons, see
 [Overlap Is A Fact; Collision Is A Policy Decision](../principles/placement.md#overlap-is-a-fact-collision-is-a-policy-decision-0225)
 and the rules after it.
 
-### Placing vs forking
+### Placing vs remixing
 
 Both put someone else's build in a World of yours, but they're different:
 
-| | Placing | Forking (Remix, or Edit a Copy) |
+| | Placing | Remixing (Remix, or Edit a Copy) |
 |---|---|---|
 | What's created | A placement: a small signed note of where to show the build | A new build, with new ids, that belongs to you |
 | The build | The same Shared World, shown as published | Your own copy, with a note linking back to the original |
@@ -214,7 +214,7 @@ Both put someone else's build in a World of yours, but they're different:
 | Controlled by | The publisher's **Who can place it** setting | The license |
 | Publishing it | Nothing new is published | Creates a new Shared World under your name |
 
-Placing is like linking to a file; forking is like making your own copy of
+Placing is like linking to a file; remixing is like making your own copy of
 it to change. Someone who chose **Only I may place it** can still allow
 remixes through their license, and a remix is yours to place wherever you
 like.
@@ -477,7 +477,7 @@ Both are greyed out on a placement someone else made.
 **Add Placement Here**, under the list, places the same build *again*
 where your avatar stands (or under the camera, without one). It doesn't
 move an existing placement, and it doesn't make a copy: it's still one
-Shared World (see [Placing vs forking](#placing-vs-forking)). It says where
+Shared World (see [Placing vs remixing](#placing-vs-remixing)). It says where
 it placed the build and how many placements it now has. If a placement
 already stands exactly where you are, it asks you to move first, so
 clicking twice can't stack two on one spot.

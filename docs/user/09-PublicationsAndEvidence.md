@@ -20,13 +20,13 @@
 > the whole **Wallet & Archive Tools** panel. Guides
 > [11](11-EvidenceAndStorage.md) and [12](12-ArchiveAndAchievements.md) say
 > which of their sections are Experimental. Building, saving, publishing to
-> Explore, forking, identities and peers don't depend on any of it.
+> Explore, remixing, identities and peers don't depend on any of it.
 
 None of this is needed to use ForkBuild. Skip it if you just want to build,
 publish and explore.
 
 The **Publications** page is a more technical layer than Explore. Explore
-is about Documents and Worlds; the Publications page is about
+is about builds and Worlds; the Publications page is about
 **signed claims** such as "I designed this structure" or "I call this place
 X", and about the optional depth you can add to a claim:
 
@@ -46,9 +46,9 @@ X", and about the optional depth you can add to a claim:
 
 | | **Publish** (Explore) | **Publications page** |
 |---|---|---|
-| What it shares | A Document or World | A signed record: a Shared World, authorship of a structure, or a place name |
+| What it shares | A build or World | A signed record: a Shared World, authorship of a structure, or a place name |
 | Where you see it | Explore, Author view, World View | The **Publications** page |
-| What you do with it | Open, explore, fork | Check it, fetch its content, distribute and anchor it |
+| What you do with it | Open, explore, remix | Check it, fetch its content, distribute and anchor it |
 | Guide | [Publishing & Remixing](04-PublishingAndForking.md) | This one |
 
 **Publish** alone doesn't put a World on the Publications page. **Share
@@ -57,7 +57,7 @@ to peers (see [A build from Explore, decentralized](#a-build-from-explore-decent
 
 The Publications page has no **Open**, **Explore** or **Remix**, not even for
 a Shared World. It shows the signed record, not the World. To open, explore
-or fork a Shared World, find it in Explore, on its author's page or
+or remix a Shared World, find it in Explore, on its author's page or
 in World View. One you received from a peer appears there once its content
 is on this device. (The one exception is **Open in Editor** on your own
 Shared World that needs publishing again; see
@@ -88,7 +88,7 @@ itself is required:
 | **Publication** | The book itself | A signed record: a Shared World, a Blueprint Attribution or a Place Naming Claim. It carries the hash of its content and its publisher's signature. |
 | **Content** | Where printed copies are kept | The bytes the publication is about, such as a World's bricks. They're always kept on this device first; **Store on …** puts a copy on IPFS, Arweave, Steem or Blurt so others can fetch it. See [Content Provider](10-NetworkSettings.md#content-provider). |
 | **Snapshot** | A printed copy | One stored copy of a publication's content, such as a World's bricks, which others can fetch and check against its hash. See [Local Snapshot](#local-snapshot). |
-| **Placement** | Where the copy is shelved | A signed record of where a build stands in the World. One Shared World can have several. See [Placing vs forking](WorldViewAdvancedTools.md#placing-vs-forking). |
+| **Placement** | Where the copy is shelved | A signed record of where a build stands in the World. One Shared World can have several. See [Placing vs remixing](WorldViewAdvancedTools.md#placing-vs-remixing). |
 | **Announcement / Discovery** | A library catalogue entry | A small signed notice on Nostr, Arweave, Steem or Blurt saying the publication or Snapshot exists and where its copy is, so people who aren't connected to you can find it. See [Announcement / Discovery Provider](10-NetworkSettings.md#announcement--discovery-provider). |
 | **Proof / Anchoring** *(Experimental, except on Arweave)* | A notary's stamp | The content's hash written into a blockchain transaction (Bitcoin, Base, Arweave, Steem or Blurt), as evidence it existed by that time. It stores and announces nothing. See [Evidence & Storage](11-EvidenceAndStorage.md). |
 | **Commentary** | Readers' reviews | Comments anyone with a name can attach to a publication, each signed by its commenter, not the publisher. See [Commentary](#commentary). |

@@ -121,4 +121,4 @@ separate "disconnect" step.
 
 Head back to **[Peer Connections & Friends](07-PeerConnectionsAndFriends.md)**
 to find more people to build and chat with, or revisit
-**[World View](03-WorldView.md)** to see where everyone's creations live.
+**[World View](03-WorldView.md)** to see where everyone's builds live.

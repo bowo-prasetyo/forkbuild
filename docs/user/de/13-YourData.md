@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: 2f10096b5d79ec2b -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: 33341ea95fd2e843 -->
 # 13 — Ihre Daten
 
 <!-- languages -->
@@ -7,7 +7,7 @@
 
 ForkBuild hat keine Konten und keinen Server, der Ihre Arbeit aufbewahrt.
 Alles, was es speichert, liegt in diesem Browser auf diesem Gerät: Ihre
-Dokumente, Identitäten und deren private Schlüssel, Strukturen,
+Bauwerke, Identitäten und deren private Schlüssel, Strukturen,
 Veröffentlichungen, Peers und Freunde, Chatverläufe und Einstellungen.
 **Das Löschen der Daten dieser Website im Browser löscht all das
 endgültig**, ebenso das Deinstallieren des Browsers oder der Verlust des
@@ -19,8 +19,8 @@ eine Kopie.
 ## Auf diesem Gerät
 
 Der erste Abschnitt listet auf, was gespeichert ist, nach Art, und wie viel
-Platz es belegt. Die Zahlen sind Speichereinträge, keine Dokumente: Ein
-gespeichertes Dokument und die Liste der Dokumente sind zum Beispiel zwei
+Platz es belegt. Die Zahlen sind Speichereinträge, keine Bauwerke: Ein
+gespeichertes Bauwerk und die Liste der Bauwerke sind zum Beispiel zwei
 Einträge.
 
 Steht dort **Der Browser kann diese Daten bei knappem Speicherplatz
@@ -107,7 +107,7 @@ Menü auf jeder Seite, mit **Jetzt sichern** und **In einer Woche
 erinnern**:
 
 - Sie erscheint zum ersten Mal eine Woche, nachdem dieser Browser begonnen
-  hat, Ihre Arbeit zu halten (Dokumente, Identitäten, Strukturen, Peers
+  hat, Ihre Arbeit zu halten (Bauwerke, Identitäten, Strukturen, Peers
   oder Chat), falls Sie nie gesichert haben.
 - Danach erscheint sie, wenn die letzte Sicherung älter ist als unter
   **Erinnerungen und automatische Sicherungen → Mich ans Sichern
@@ -159,7 +159,7 @@ Tab kann seine älteren Daten zurückschreiben.
 2. Wählen Sie, wie wiederhergestellt wird:
    - **Hinzufügen, was dieses Gerät nicht hat** (Standard): Alles in der
      Sicherung, was nicht auf diesem Gerät ist, wird hinzugefügt. Wo beide
-     etwas haben, etwa dasselbe Dokument oder eine Einstellung, wird die
+     etwas haben, etwa dasselbe Bauwerk oder eine Einstellung, wird die
      Version dieses Geräts behalten.
    - **Alles auf diesem Gerät durch die Sicherung ersetzen**: löscht
      zuerst, was ForkBuild hier gespeichert hat, und stellt dann die
@@ -181,13 +181,13 @@ Export auf ihrer eigenen Seite:
 
 | Was | Export | Import |
 |---|---|---|
-| Ein Dokument | **Exportieren** in der Werkzeugleiste des Editors | **Importieren** in der Werkzeugleiste des Editors |
+| Ein Bauwerk | **Exportieren** in der Werkzeugleiste des Editors | **Importieren** in der Werkzeugleiste des Editors |
 | Alle gespeicherten Bauwerke | **Alle Bauwerke exportieren** ganz unten im Menü **Zuletzt** des Editors | **Importieren** in der Werkzeugleiste des Editors |
 | Eine Struktur | **Bauplan exportieren** im Menü **⋮** ihrer Karte | **Bauplan importieren** neben **Meine Strukturen** |
 | Alle Strukturen | **Alle exportieren** neben **Meine Strukturen** | **Bauplan importieren** neben **Meine Strukturen** |
 | Eine Identität | **Exportieren** unter **Meine Identitäten** | **Identität importieren** unter **Meine Identitäten** |
 
-Der Import aller Dokumente stellt die zurück, die dieses Gerät nicht hat,
+Der Import aller Bauwerke stellt die zurück, die dieses Gerät nicht hat,
 lässt die, die es schon hat, unverändert und speichert eine Kopie neben
 jedem, das es in einer anderen Version hat. Der Import aller Strukturen
 überspringt Designs, die schon in Meine Strukturen sind. Eine exportierte
@@ -200,7 +200,7 @@ einer vollständigen Sicherung mit.
 
 ## Ihre Veröffentlichungen
 
-Eine Kreation, die Sie **veröffentlichen**, wird nur auf diesem Gerät
+Ein Bauwerk, das Sie **veröffentlichen**, wird nur auf diesem Gerät
 gespeichert, bis Sie sie verteilen (siehe
 [Veröffentlichen & Remixen](04-PublishingAndForking.md)). Ihre Karte in
 **Entdecken** sagt, wo dieses Gerät das Verteilen festgehalten hat, zum

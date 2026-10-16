@@ -18,7 +18,7 @@ transform bricks, and how to organize your build with groups.
 │          ⌨ Shortcuts                                        │
 ├──────────────────────┬──────────────────────────────────────┤
 │ [Select | Place]     │                                      │
-│ Document title    ✎  │                                      │
+│ Build title       ✎  │                                      │
 │ Selection            │            3D Viewport               │
 │ Build Library        │                                      │
 │   [Bricks|Structures]│                                      │
@@ -31,7 +31,7 @@ transform bricks, and how to organize your build with groups.
   open the **⌨ Shortcuts** overlay (also `?`).
 - **Tools** — switch between **Select** (`1`) and **Place** (`2`). **Place**
   stays highlighted while you're placing a brick or a structure.
-- **Document title** — the open creation's name. Click **✎** to edit its
+- **Build title** — the open build's name. Click **✎** to edit its
   title, description and license. Whether it's saved is shown in the
   toolbar.
 - **Selection** — only shows what can act on your current selection; see
@@ -55,7 +55,7 @@ transform bricks, and how to organize your build with groups.
   - **Structures** — twenty-two ready-made structures across five categories
     (residential, agricultural, commercial, community, infrastructure) and
     three larger **showcase** builds, plus your own **My Structures**. Click a card to place it — see
-    [Structures: composing, forking, and your personal library](#structures-composing-forking-and-your-personal-library)
+    [Structures: composing, remixing, and your personal library](#structures-composing-remixing-and-your-personal-library)
     below.
 
 ### The Selection panel
@@ -144,7 +144,7 @@ ForkBuild gives you precise control over selection:
 | **Shift + Click** | Adds that brick to the selection |
 | **Shift + Drag** | Draws a box — selects everything inside |
 | **Ctrl/Cmd + Shift + Drag** | Box-select and *add* to the current selection |
-| **Ctrl/Cmd + A** | Select every brick in the creation |
+| **Ctrl/Cmd + A** | Select every brick in the build |
 | **Escape** | Clear the selection |
 
 > **Why it matters:** Building anything bigger than a single brick means
@@ -189,7 +189,7 @@ Every brick type has its own default color, but you can choose your own:
   swatch in the **Selection** section to recolor them all at once. Each
   change is undoable (`Ctrl/Cmd+Z`) like any other edit. The swatch isn't
   offered for a structure-instance selection — edit the structure's own
-  document instead (see
+  build instead (see
   [Structure instances](#structure-instances-a-live-reference) below).
 
 Beside each **Color** swatch is a row of **village colors** (plaster,
@@ -197,7 +197,7 @@ stone, brick, roof red, oak, leaf, sky and more) that go well together:
 one click picks one, for the next bricks or for the selection. The swatch
 still lets you pick any color.
 
-A brick's color is saved with your creation and travels with it when you
+A brick's color is saved with your build and travels with it when you
 publish or share it.
 
 ## Precise transforms: numeric input, alignment, and repeat
@@ -298,7 +298,7 @@ is selected:
 > changes the group. And deleting a group only removes the *label*, not the
 > bricks inside it.
 
-## Structures: composing, forking, and your personal library
+## Structures: composing, remixing, and your personal library
 
 The Build Library's **Structures** tab (see [The layout](#the-layout) above)
 gives you twenty-two ready-made structures — houses, barns, a well, a market, a
@@ -310,22 +310,22 @@ are three different things you can do with any of them, and they matter for
 different reasons:
 
 - **Place** (click the card) — copies the structure's bricks straight into
-  the document you're already working on, so it becomes part of one bigger
+  the build you're already working on, so it becomes part of one bigger
   build. This is the everyday action.
 - **Remix As New Build** (in the card's **⋮** menu) — starts a brand-new,
-  independent document that begins as an exact copy of that structure.
+  independent build that begins as an exact copy of that structure.
 - **Remix to My Structures** (built-in cards only, in the **⋮** menu) — adds
-  the structure to your own **My Structures**, with no document involved at
+  the structure to your own **My Structures**, with no build involved at
   all. See [My Structures](#my-structures-your-personal-blueprint-library)
   below.
 - **Info** (in the card's **⋮** menu) — a read-only look at a structure's
   name, category, brick count, footprint, height, source, and description.
-- Place a **saved document** of your own as a **structure instance** — a
+- Place a **saved build** of your own as a **structure instance** — a
   live, reusable reference rather than a copy — from the toolbar's **Recent**
   dropdown, not the Build Library. See
   [Structure instances](#structure-instances-a-live-reference) below.
 
-### Placing a structure into your document
+### Placing a structure into your build
 
 Click any card in the **Structures** tab — a built-in one or one of your own
 **My Structures** — and a translucent ghost preview of the whole structure
@@ -334,28 +334,28 @@ single brick:
 
 1. Move the pointer to position the ghost.
 2. Press `R` / `Shift+R` to rotate it in 90° steps.
-3. Click to commit — every brick in the structure is added to your document
+3. Click to commit — every brick in the structure is added to your build
    as one **undo step**. An occupied position tints the ghost red and
    refuses the click, the same way a single brick refuses to place on top
    of another.
 4. `Escape` cancels — nothing is added, and you're returned to whichever
    tool you were using before.
 
-The bricks you get are ordinary bricks in your document from the moment
+The bricks you get are ordinary bricks in your build from the moment
 they land — indistinguishable from anything you placed by hand, free to
 edit, select, group, or delete like anything else. Placing several
 structures is a fast way to build a scene: click House, place it; click
 Barn, place it beside it; click Well, place it in the yard.
 
-### Forking a structure as a new document
+### Remixing a structure as a new build
 
 Open a card's **⋮** menu and click **Remix As New Build** to start a
-brand-new creation of your own that begins as an exact copy of that
+brand-new build of your own that begins as an exact copy of that
 structure — the exact same bricks, editable with every tool in this guide,
-in a document of its own rather than folded into whatever you currently
-have open. Forking never changes the library's own copy: fork House ten
-times and each one is its own independent creation from the moment you
-click Fork.
+in a build of its own rather than folded into whatever you currently
+have open. Remixing never changes the library's own copy: remix House ten
+times and each one is its own independent build from the moment you
+click Remix.
 
 ### My Structures: your personal blueprint library
 
@@ -372,11 +372,11 @@ below the built-in categories.
 There's a second way a structure ends up in My Structures, with nothing to
 select and nothing to build first: open any **built-in** card's **⋮** menu
 and click **Remix to My Structures**. It's added exactly as it already is —
-no document created, nothing extracted — so it's ready to Rename, Export,
+no build created, nothing extracted — so it's ready to Rename, Export,
 or place right away, like any other entry in your library.
 
 A structure in **My Structures** works exactly like a built-in one — click
-to place it into your current document, or Remix As New Build — with two
+to place it into your current build, or Remix As New Build — with two
 extra actions in its **⋮** menu:
 
 | Action | What it does |
@@ -386,10 +386,10 @@ extra actions in its **⋮** menu:
 
 **My Structures** only ever stores the *structure itself* — a name and a set
 of bricks. Removing one never touches anything you already built with it:
-every place you've already placed or forked it into keeps those bricks
+every place you've already placed or remixed it into keeps those bricks
 exactly as they are. And it never edits in place — if you want to change
-what a saved structure actually builds, place it into a document, edit
-that document, then **Create Blueprint** again (optionally under a new
+what a saved structure actually builds, place it into a build, edit
+that build, then **Create Blueprint** again (optionally under a new
 name, like "Farmstead Deluxe" — it becomes its own separate entry in My
 Structures, not a replacement for the original).
 
@@ -448,7 +448,7 @@ you'll find:
   claim again. Check the design first: the button appears for any design
   that shares the old fingerprint.
 
-This is optional, and entirely separate from placing, forking, or sharing
+This is optional, and entirely separate from placing, remixing, or sharing
 the structure itself — it exists for situations where you want to attach
 your name to a design in a way other people can independently verify, not
 merely trust. See
@@ -458,24 +458,24 @@ external evidence to it.
 
 ## Structure instances: a live reference
 
-Placing (above) copies a structure's bricks into your document once.
+Placing (above) copies a structure's bricks into your build once.
 Sometimes what you want instead is a **live** copy of something you've
-already built — any saved document, not just something in your library —
+already built — any saved build, not just something in your library —
 that stays in sync with its source every time you look at it. That's a
-**structure instance**: it references the source document rather than
+**structure instance**: it references the source build rather than
 copying its bricks, so editing the source later updates every instance of
 it automatically.
 
 1. Open the **Recent** dropdown in the toolbar. (It appears once you've
-   saved at least one document.)
-2. Next to any saved document, click **Place**. Clicking the document's
+   saved at least one build.)
+2. Next to any saved build, click **Place**. Clicking the build's
    name instead opens it, replacing what you have open.
 3. Hover the ground, press `R` to rotate, and click to place it — exactly
    like placing a brick.
 
-An instance is a live *reference* to that document, not a copy of its
-bricks: the same document can be placed any number of times, and editing the
-source document's bricks later updates every instance of it. Select an
+An instance is a live *reference* to that build, not a copy of its
+bricks: the same build can be placed any number of times, and editing the
+source build's bricks later updates every instance of it. Select an
 instance with the Select tool (`1`) and the sidebar shows:
 
 | Control | What it does |
@@ -485,28 +485,28 @@ instance with the Select tool (`1`) and the sidebar shows:
 | **X / Z / Rotation ° fields, then Apply** | Set an exact position and heading — elevation (Ground Y) always follows the terrain and isn't a target you set |
 | **Rotate ↻ / ↺** | Rotate exactly 90° |
 | **Duplicate** (`Ctrl/Cmd+D`) | Place another instance of the same structure |
-| **Delete** | Remove this instance — the source document is untouched |
-| **Edit Source Build** | Open the referenced document itself, to change what every instance of it looks like |
+| **Delete** | Remove this instance — the source build is untouched |
+| **Edit Source Build** | Open the referenced build itself, to change what every instance of it looks like |
 
 Editing a placed structure's *content* always happens by editing its source
-document — there's no way to edit an instance's bricks directly, which is
+build — there's no way to edit an instance's bricks directly, which is
 exactly what keeps every instance of it in sync.
 
 ## Build Properties
 
-Every creation has a **title**, an optional **description**, a
+Every build has a **title**, an optional **description**, a
 **license**, and a **Who can place it in the World** setting — set them
 in the **Build Properties** dialog, opened with the **✎** button beside
-the document title at the top of the Editor's sidebar (in World View, it's
-the **Edit Metadata** button). A new document starts with no license, which
-means nobody else can fork it until you choose one. The description shows up as a
+the build title at the top of the Editor's sidebar (in World View, it's
+the **Edit Metadata** button). A new build starts with no license, which
+means nobody else can remix it until you choose one. The description shows up as a
 snippet on its card in Explore and is searchable there too; the license
-controls whether — and how — other people are allowed to fork it. See
+controls whether — and how — other people are allowed to remix it. See
 [Publishing & Remixing](04-PublishingAndForking.md) for what each license
 means.
 
 A long description reads better with a little formatting, which the
-Document Information panel, World View's location browser and Steem and
+**About this build** panel, World View's location browser and Steem and
 Blurt posts all show:
 
 | Write | To get |
@@ -527,7 +527,7 @@ separated by spaces or commas, each made of lowercase letters, digits and
 hyphens (accents are dropped, so `café` becomes `cafe`). When a build has
 none, the dialog fills the field with suggestions from its title and
 description, which you can keep, change or clear; the buttons under the
-field add other suggestions. A fork keeps its tags. A Blurt post lists them
+field add other suggestions. A remix keeps its tags. A Blurt post lists them
 after ForkBuild's own, so people browsing Blurt by tag can find your build.
 
 ## Sound
@@ -538,7 +538,7 @@ is removed, a tick for a move and a double tick for a turn, a quick run of
 blips for a paste or duplicate, a bright ping for a new color, two notes for
 grouping, a bell for naming a place, a falling blip for undo and a rising
 one for redo, and a small chord when you save. Changes a collaborator makes
-in the same document are silent.
+in the same build are silent.
 
 Turn sound off or on with the **Sound** button at the top right of the view
 or by pressing `M` (listed in the Keyboard Shortcuts overlay, `?`); the
@@ -584,13 +584,13 @@ Music plays softly while you build, a little livelier than World View's. The **�
   **Export All Builds** and its **Import**, under **Recent**, work the same
   way.
 - **Recent** — reopen something you saved before (it appears after your
-  first save; click a document's name to open it). Once you've saved enough
-  documents, a filter box appears so you can jump straight to one by name.
+  first save; click a build's name to open it). Once you've saved enough
+  builds, a filter box appears so you can jump straight to one by name.
   Each entry also has a **Place** button — see
   [Structure instances](#structure-instances-a-live-reference)
-  — for adding it to your *current* document instead of replacing it.
+  — for adding it to your *current* build instead of replacing it.
   **Export All Builds** at the bottom downloads every saved build as
-  one file; **Import** reads it back, saving the documents this device
+  one file; **Import** reads it back, saving the builds this device
   doesn't have (open them from Recent), skipping ones it has unchanged, and
   saving a copy beside any it has in a different version. Unsaved changes
   aren't included, so save first.

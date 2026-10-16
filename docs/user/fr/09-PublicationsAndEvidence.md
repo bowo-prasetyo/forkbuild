@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: d748ce22f6360f55 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: be6c14fcfc79e4c8 -->
 # 09 — Publications et preuves externes
 
 <!-- languages -->
@@ -24,13 +24,13 @@
 > Les guides [11](11-EvidenceAndStorage.md) et
 > [12](12-ArchiveAndAchievements.md) indiquent lesquelles de leurs sections
 > sont Expérimentales. Construire, enregistrer, publier dans Explorer,
-> forker, les identités et les pairs n’en dépendent pas.
+> remixer, les identités et les pairs n’en dépendent pas.
 
 Rien de tout cela n’est nécessaire pour utiliser ForkBuild. Passez si vous
 voulez seulement construire, publier et explorer.
 
 La page **Publications** est une couche plus technique qu’Explorer.
-Explorer concerne les Documents et les Mondes ; la page Publications
+Explorer concerne les Constructions et les Mondes ; la page Publications
 concerne les **revendications signées** comme « j’ai conçu cette
 structure » ou « j’appelle ce lieu X », et la profondeur facultative que
 vous pouvez ajouter à une revendication :
@@ -51,9 +51,9 @@ vous pouvez ajouter à une revendication :
 
 | | **Publier** (Explorer) | **Page Publications** |
 |---|---|---|
-| Ce qui est partagé | Un Document ou un Monde | Un enregistrement signé : un Monde partagé, la paternité d’une structure ou un nom de lieu |
+| Ce qui est partagé | Un Construction ou un Monde | Un enregistrement signé : un Monde partagé, la paternité d’une structure ou un nom de lieu |
 | Où on le voit | Explorer, page d’auteur, Vue du Monde | La page **Publications** |
-| Ce qu’on en fait | L’ouvrir, l’explorer, le forker | Le vérifier, récupérer son contenu, le distribuer et l’ancrer |
+| Ce qu’on en fait | L’ouvrir, l’explorer, le remixer | Le vérifier, récupérer son contenu, le distribuer et l’ancrer |
 | Guide | [Publier et remixer](04-PublishingAndForking.md) | Celui-ci |
 
 **Publier** seul ne met pas un Monde sur la page Publications.
@@ -63,7 +63,7 @@ partagé**, capable de voyager vers les pairs (voir
 
 La page Publications n’a ni **Ouvrir**, ni **Explorer**, ni **Remixer**,
 même pas pour un Monde partagé. Elle montre l’enregistrement signé, pas le
-Monde. Pour ouvrir, explorer ou forker un Monde partagé, trouvez-le dans
+Monde. Pour ouvrir, explorer ou remixer un Monde partagé, trouvez-le dans
 Explorer, sur la page de son auteur ou dans la Vue du Monde. Un Monde
 reçu d’un pair y apparaît dès que son contenu est sur cet appareil.
 (La seule exception est **Ouvrir dans l’Éditeur** sur votre propre Monde
@@ -96,7 +96,7 @@ type de publication, et seule la publication elle-même est obligatoire :
 | **Publication** | Le livre lui-même | Un enregistrement signé : un Monde partagé, une Attribution de plan ou une Proposition de nom de lieu. Il porte le hash de son contenu et la signature de son éditeur. |
 | **Contenu** | L’endroit où sont gardés les exemplaires imprimés | Les octets dont parle la publication, comme les briques d’un Monde. Ils sont toujours d’abord conservés sur cet appareil ; **Stocker sur …** en place une copie sur IPFS, Arweave, Steem ou Blurt pour que d’autres puissent la récupérer. Voir [Fournisseur de contenu](10-NetworkSettings.md#fournisseur-de-contenu). |
 | **Snapshot** | Un exemplaire imprimé | Une copie stockée du contenu d’une publication, comme les briques d’un Monde, que d’autres peuvent récupérer et vérifier par rapport à son hash. Voir [Snapshot local](#snapshot-local). |
-| **Placement** | Le rayon où l’exemplaire est rangé | Un enregistrement signé de l’endroit où se tient une construction dans le Monde. Un Monde partagé peut en avoir plusieurs. Voir [Placer ou forker](WorldViewAdvancedTools.md#placer-ou-forker). |
+| **Placement** | Le rayon où l’exemplaire est rangé | Un enregistrement signé de l’endroit où se tient une construction dans le Monde. Un Monde partagé peut en avoir plusieurs. Voir [Placer ou remixer](WorldViewAdvancedTools.md#placer-ou-remixer). |
 | **Annonce / Découverte** | Une fiche du catalogue de la bibliothèque | Un petit avis signé sur Nostr, Arweave, Steem ou Blurt indiquant que la publication ou le Snapshot existe et où se trouve sa copie, pour que des personnes non connectées à vous puissent la trouver. Voir [Fournisseur d’annonce / de découverte](10-NetworkSettings.md#fournisseur-dannonce--de-découverte). |
 | **Preuve / Ancrage** *(Expérimental, sauf sur Arweave)* | Le tampon d’un notaire | Le hash du contenu inscrit dans une transaction blockchain (Bitcoin, Base, Arweave, Steem ou Blurt), comme preuve qu’il existait à ce moment-là. Il ne stocke ni n’annonce rien. Voir [Preuves et stockage](11-EvidenceAndStorage.md). |
 | **Commentaires** | Les critiques des lecteurs | Des commentaires que toute personne ayant un nom peut joindre à une publication, chacun signé par son auteur, pas par l’éditeur. Voir [Commentaires](#commentaires). |

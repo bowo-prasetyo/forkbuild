@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: f9738fa9f2faf553 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 3b81c1f78e8542a3 -->
 # 06 — Avatares y presencia
 
 <!-- languages -->
@@ -91,7 +91,7 @@ actual) para abrir su **panel de información del avatar**:
 - **Saludar / Agitar la mano / Señalar**: envía un gesto puntual a ese
   avatar
 - **Seguir su trabajo**: sigue a la identidad que hay detrás del avatar,
-  para que sus nuevas creaciones aparezcan en la página **Siguiendo**
+  para que sus nuevas construcciones aparezcan en la página **Siguiendo**
   (consulte
   [Seguir a personas](07-PeerConnectionsAndFriends.md#seguir-a-personas)).
   Solo aparece cuando la presencia del avatar está firmada, porque una
@@ -347,7 +347,7 @@ aviso aparece cuando **G** decoraría o desharía algo cercano. Igual que
 agregar un [hito](03-WorldView.md#hitos--marcar-un-lugar-que-vale-la-pena-recordar),
 decorar requiere un nombre y acceso de EDICIÓN al Mundo en el
 que está. En el Mundo publicado de otra persona, la decoración va a su
-propia copia de él, siempre que su licencia permita bifurcarlo. Si nada de
+propia copia de él, siempre que su licencia permita remezclarlo. Si nada de
 eso se cumple, **G** simplemente no hace nada; el botón **Decorar** del
 panel táctil le dice en cambio por qué.
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: f1e16b4c1352d5a0 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 53acfc3595aae824 -->
 # Preguntas frecuentes
 
 <!-- languages -->
@@ -70,13 +70,13 @@ redes que elija, como Wander para Arweave o nos2x para Nostr.
 [Distribuir su trabajo](Distribution.md) enumera todo lo que
 puede distribuir, adónde puede ir y qué necesita cada red.
 
-### ¿Por qué nadie puede bifurcar mi creación?
+### ¿Por qué nadie puede remezclar mi construcción?
 
-Un documento nuevo no tiene licencia, y una creación sin licencia no se
-puede bifurcar. Abra **Propiedades de la construcción** (el **✎** junto al
-título del documento en el Editor), elija una licencia que permita
-bifurcar (cualquier licencia CC excepto CC BY-ND) y vuelva a publicar. La
-opción forma parte de lo que se publica, así que las creaciones que ya
+Una construcción nueva no tiene licencia, y una construcción sin licencia no se
+puede remezclar. Abra **Propiedades de la construcción** (el **✎** junto al
+título de la construcción en el Editor), elija una licencia que permita
+remezclar (cualquier licencia CC excepto CC BY-ND) y vuelva a publicar. La
+opción forma parte de lo que se publica, así que las construcciones que ya
 publicó conservan la licencia que tenían. Consulte
 [Elegir una licencia](04-PublishingAndForking.md#elegir-una-licencia).
 
@@ -85,7 +85,7 @@ publicó conservan la licencia que tenían. Consulte
 Estos mensajes aparecen en inglés en la app:
 
 - **a title is required before publishing** (se necesita un título antes
-  de publicar): póngale un título a la creación en **Propiedades de la
+  de publicar): póngale un título a la construcción en **Propiedades de la
   construcción**.
 - **cannot publish an empty world** (no se puede publicar un mundo vacío):
   primero coloque al menos un bloque.
@@ -130,7 +130,7 @@ Lo que otra persona sí puede hacer, si la licencia de la construcción
 permite remezclas, es hacer su propia copia con **Editar una copia** o
 **Remezclar**. Su copia es suya para cambiarla, publicarla y colocarla, y
 muestra que viene de la suya (consulte
-[Bifurcar: hágalo suyo](04-PublishingAndForking.md#bifurcar-hágalo-suyo)).
+[Remezclar: hágalo suyo](04-PublishingAndForking.md#remezclar-hágalo-suyo)).
 Si prefiere que la suya sea la que la gente encuentre, puede quitar la
 de usted de su Mundo y retirar su publicación, aunque las copias ya
 enviadas se quedan (consulte
@@ -193,7 +193,7 @@ una copia de seguridad completa.
 
 ### ¿Borrar los datos del navegador elimina mi trabajo?
 
-Sí. Los documentos, las identidades, los amigos y el historial de chat
+Sí. Las construcciones, las identidades, los amigos y el historial de chat
 viven en el almacenamiento de este navegador para este sitio, y borrarlo
 los elimina para siempre. Haga primero una copia de seguridad con **Sus
 datos → Hacer copia de seguridad en un archivo**, y guarde en un lugar
@@ -218,9 +218,9 @@ elegirla en este dispositivo. Así todavía puede consultarla o exportarla. Mues
 deshacer. Cree una identidad nueva para seguir trabajando. Consulte
 [Qué hace revocar — y qué no](05-IdentityAndLogin.md#qué-hace-revocar--y-qué-no).
 
-### ¿Por qué una copia más antigua de ForkBuild no abre mi documento exportado?
+### ¿Por qué una copia más antigua de ForkBuild no abre mi construcción exportada?
 
-Ahora los documentos se guardan en un formato más nuevo y compacto.
+Ahora las construcciones se guardan en un formato más nuevo y compacto.
 ForkBuild 1.0.0 y anteriores no pueden leerlo, así que primero actualice la
 otra copia. Los archivos exportados por versiones anteriores se siguen
 abriendo aquí.

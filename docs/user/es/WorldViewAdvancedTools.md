@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 67400ead6416db5b -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 29cdc8613dfca1c8 -->
 # Vista del mundo: herramientas avanzadas
 
 <!-- languages -->
@@ -21,7 +21,7 @@ nadie más.
 |---|---|---|
 | [Inspeccionar](#inspeccionar-un-bloque--o-una-estructura-colocada) | Clic en un bloque o una estructura colocada | Ver qué es y de dónde viene |
 | [Cámara y edición](#cámara-y-edición) | Una línea en el encabezado del panel | Ver a qué construcción se aplica su próximo cambio |
-| [Sobre esta construcción, y Colocación](#información-del-documento-y-colocación) | Bajo el encabezado, tras un clic | Los datos de una construcción y dónde está |
+| [Sobre esta construcción, y Colocación](#información-de-la-construcción-y-colocación) | Bajo el encabezado, tras un clic | Los datos de una construcción y dónde está |
 | Coordenadas y búsqueda por **Ubicación** | Sobre la vista, y en **Buscar** | Encontrar cosas por su posición X/Y/Z |
 | [Encuentros en el Mundo](#encuentros-en-el-mundo--publicaciones-y-avatares-que-comparten-sus-pares) | **Cerca**, en Explorar | Lo que comparten las personas conectadas |
 | [Nombres de lugares](#nombres-de-lugares-cercanos--descubrir-declaraciones-de-cualquier-persona) | **Cerca**, en Explorar | Nombres que otras personas dieron a los lugares a su alrededor |
@@ -92,7 +92,7 @@ cámara. Que además cambien lo que edita depende del panel (en
 [Buscar](03-WorldView.md#buscar--qué-publicaciones-coinciden), Enfocar lo
 hace).
 
-## Información del documento y colocación
+## Información de la construcción y colocación
 
 Haga clic en un bloque, en suelo vacío o en una estructura colocada y se
 abren dos paneles bajo el encabezado, para la construcción en la que hizo
@@ -223,12 +223,12 @@ señalan. Para las razones de este diseño, consulte
 [Overlap Is A Fact; Collision Is A Policy Decision](../../principles/placement.md#overlap-is-a-fact-collision-is-a-policy-decision-0225)
 (en inglés) y las reglas que le siguen.
 
-### Colocar o bifurcar
+### Colocar o remezclar
 
 Las dos cosas ponen la construcción de otra persona en un Mundo suyo, pero
 son distintas:
 
-| | Colocar | Bifurcar (Remezclar, o Editar una copia) |
+| | Colocar | Remezclar (o Editar una copia) |
 |---|---|---|
 | Qué se crea | Una colocación: una pequeña nota firmada de dónde mostrar la construcción | Una construcción nueva, con ids nuevos, que es suya |
 | La construcción | El mismo Mundo compartido, tal como se publicó | Su propia copia, con una nota que remite al original |
@@ -237,7 +237,7 @@ son distintas:
 | Lo controla | La opción **Quién puede colocarlo** del editor | La licencia |
 | Al publicarla | No se publica nada nuevo | Crea un Mundo compartido nuevo con su nombre |
 
-Colocar es como enlazar a un archivo; bifurcar es como hacer su propia
+Colocar es como enlazar a un archivo; remezclar es como hacer su propia
 copia para cambiarla. Quien eligió **Solo yo puedo colocarlo** aún puede
 permitir remezclas con su licencia, y una remezcla es suya para colocarla
 donde quiera.
@@ -524,7 +524,7 @@ Los dos están desactivados en una colocación que hizo otra persona.
 **Agregar colocación aquí**, bajo la lista, coloca la misma construcción
 *otra vez* donde está su avatar (o bajo la cámara, si no tiene uno). No
 mueve una colocación existente ni hace una copia: sigue siendo un solo
-Mundo compartido (consulte [Colocar o bifurcar](#colocar-o-bifurcar)). Dice
+Mundo compartido (consulte [Colocar o remezclar](#colocar-o-remezclar)). Dice
 dónde colocó la construcción y cuántas colocaciones tiene ahora. Si ya hay
 una colocación exactamente donde está, le pide que se mueva primero, así
 que hacer clic dos veces no apila dos en un mismo lugar.

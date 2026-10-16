@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: f9738fa9f2faf553 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 3b81c1f78e8542a3 -->
 # 06 — Avatare & Anwesenheit
 
 <!-- languages -->
@@ -93,7 +93,7 @@ aktueller Animation), um sein **Avatar-Infofeld** zu öffnen:
 - **Avatar folgen** — koppelt Ihre Kamera an seine Bewegung
 - **Grüßen / Winken / Zeigen** — sendet dem Avatar eine einmalige Geste
 - **Ihren Werken folgen** — folgt der Identität hinter dem Avatar, sodass
-  ihre neuen Kreationen auf der Seite **Gefolgt** erscheinen (siehe
+  ihre neuen Bauwerke auf der Seite **Gefolgt** erscheinen (siehe
   [Personen folgen](07-PeerConnectionsAndFriends.md#personen-folgen)). Es
   erscheint nur, wenn die Anwesenheit des Avatars signiert ist, denn erst
   eine Signatur beweist, wessen Avatar es ist.
@@ -365,7 +365,7 @@ würde. Wie das Hinzufügen eines
 erfordert das Schmücken einen Namen und Bearbeitungsrechte
 für die Welt haben, in der Sie sind. In der veröffentlichten Welt eines
 anderen kommt der Schmuck in Ihre eigene Kopie davon — sofern ihre Lizenz
-das Forken erlaubt. Trifft nichts davon zu, tut **G** einfach nichts; die
+das Remixen erlaubt. Trifft nichts davon zu, tut **G** einfach nichts; die
 Schaltfläche **Schmücken** auf dem Touchpad sagt stattdessen, warum.
 
 ### Bewohner

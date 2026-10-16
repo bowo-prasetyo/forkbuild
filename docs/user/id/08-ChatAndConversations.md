@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: df3ccec07b27f9d8 -->
+<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: eefddf9b6eb874a7 -->
 # 08 — Obrolan & Percakapan
 
 <!-- languages -->
@@ -131,4 +131,4 @@ tidak memerlukan langkah "putuskan" terpisah.
 
 Kembali ke **[Koneksi Rekan & Teman](07-PeerConnectionsAndFriends.md)**
 untuk menemukan lebih banyak orang untuk membangun dan mengobrol bersama,
-atau kunjungi lagi **[Tampilan Dunia](03-WorldView.md)** untuk melihat di mana karya semua orang berada.
+atau kunjungi lagi **[Tampilan Dunia](03-WorldView.md)** untuk melihat di mana bangunan semua orang berada.

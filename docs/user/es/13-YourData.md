@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: 2f10096b5d79ec2b -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: 33341ea95fd2e843 -->
 # 13 — Sus datos
 
 <!-- languages -->
@@ -6,7 +6,7 @@
 <!-- /languages -->
 
 ForkBuild no tiene cuentas ni un servidor que guarde su trabajo. Todo lo
-que guarda vive en este navegador, en este dispositivo: sus documentos, sus
+que guarda vive en este navegador, en este dispositivo: sus construcciones, sus
 identidades y sus claves privadas, estructuras, publicaciones, pares y
 amigos, historial de chat y configuración. **Borrar los datos de este sitio
 en el navegador lo elimina todo para siempre**, y lo mismo pasa si
@@ -18,8 +18,8 @@ conserva una copia.
 ## En este dispositivo
 
 La primera sección muestra lo que está guardado, por tipo, y cuánto
-espacio ocupa. Los conteos son entradas de almacenamiento, no documentos:
-un documento guardado y la lista de documentos son dos entradas, por
+espacio ocupa. Los conteos son entradas de almacenamiento, no construcciones:
+una construcción guardada y la lista de construcciones son dos entradas, por
 ejemplo.
 
 Si dice **El navegador podría eliminar estos datos cuando quede poco
@@ -108,7 +108,7 @@ tiempo, una barra debajo del menú, en todas las páginas, lo indica, con
 **Hacer copia de seguridad ahora** y **Recordármelo en una semana**:
 
 - Aparece por primera vez una semana después de que este navegador
-  empieza a guardar su trabajo (documentos, identidades, estructuras, pares
+  empieza a guardar su trabajo (construcciones, identidades, estructuras, pares
   o chat), si nunca hizo una copia de seguridad.
 - Después, aparece cuando la última copia de seguridad es más antigua que
   lo que eligió en **Recordatorios y copias de seguridad automáticas →
@@ -161,7 +161,7 @@ abierta puede volver a escribir sus datos anteriores.
 2. Elija cómo restaurar:
    - **Agregar lo que este dispositivo no tiene** (la predeterminada): se
      agrega todo lo que hay en la copia de seguridad y no está en este
-     dispositivo. Donde ambos tienen algo, como el mismo documento o una
+     dispositivo. Donde ambos tienen algo, como la misma construcción o una
      configuración, se conserva la versión de este dispositivo.
    - **Reemplazar todo lo que hay en este dispositivo por la copia de
      seguridad**: primero elimina lo que ForkBuild guardó aquí y luego
@@ -183,13 +183,13 @@ propia página:
 
 | Qué | Exportar | Importar |
 |---|---|---|
-| Un documento | **Exportar** en la barra de herramientas del Editor | **Importar** en la barra de herramientas del Editor |
+| Una construcción | **Exportar** en la barra de herramientas del Editor | **Importar** en la barra de herramientas del Editor |
 | Todas las construcciones guardadas | **Exportar todas las construcciones**, al final del menú **Recientes** del Editor | **Importar** en la barra de herramientas del Editor |
 | Una estructura | **Exportar plano** en el menú **⋮** de su tarjeta | **Importar plano** junto a **Mis estructuras** |
 | Todas las estructuras | **Exportar todo** junto a **Mis estructuras** | **Importar plano** junto a **Mis estructuras** |
 | Una identidad | **Exportar** en **Mis identidades** | **Importar identidad** en **Mis identidades** |
 
-Importar todos los documentos repone los que este dispositivo no tiene,
+Importar todas las construcciones repone las que este dispositivo no tiene,
 deja sin cambios los que ya tiene y guarda una copia al lado de cualquiera
 que tenga en otra versión. Importar todas las estructuras omite los diseños
 que ya están en Mis estructuras. Una identidad exportada también lleva su
@@ -201,7 +201,7 @@ configuración solo se trasladan con una copia de seguridad completa.
 
 ## Sus publicaciones
 
-Una creación que **publica** se guarda solo en este dispositivo, hasta que
+Una construcción que **publica** se guarda solo en este dispositivo, hasta que
 la distribuya (consulte [Publicar y remezclar](04-PublishingAndForking.md)).
 Su tarjeta en **Explorar** indica dónde registró este dispositivo su
 distribución, por ejemplo **Guardado en IPFS · Anunciado en Nostr**: dónde

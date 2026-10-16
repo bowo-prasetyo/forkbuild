@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 75e82daaf1bb2646 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: bad564fee7824288 -->
 # 04 — Publier et remixer
 
 <!-- languages -->
@@ -8,10 +8,10 @@
 C’est le cœur de ForkBuild. **Publier** partage votre construction avec le
 monde. **Remixer** permet à n’importe qui de faire sa propre copie d’une
 construction et de la faire évoluer, en conservant tout son historique.
-(Certains messages et documents pour développeurs appellent un remix un
+(Les documents pour développeurs appellent un remix un
 *fork*, comme dans ForkBuild.)
 
-## Publier votre création
+## Publier votre construction
 
 1. Construisez quelque chose dans l’Éditeur.
 2. Ayez un nom, et vérifiez qu’il est déverrouillé (voir
@@ -19,18 +19,18 @@ construction et de la faire évoluer, en conservant tout son historique.
    construction avec lui. Si vous n’avez pas encore de nom, **Publier**
    vous demande d’abord d’en choisir un ; **Publier sans signer** la publie
    alors sans auteur et sans lien.
-3. Donnez-lui un titre — Publier refuse une création sans titre ou vide —
+3. Donnez-lui un titre — Publier refuse une construction sans titre ou vide —
    et, si vous le souhaitez, une description et une licence : cliquez sur
-   **✎** à côté du titre du document dans la barre latérale pour ouvrir
-   **Propriétés de la construction**. Un nouveau document n’a pas de licence ;
+   **✎** à côté du titre de la construction dans la barre latérale pour ouvrir
+   **Propriétés de la construction**. Une nouvelle construction n’a pas de licence ;
    la première fois que vous le publiez, ForkBuild demande si d’autres
    peuvent le remixer (voir [Laisser les autres la remixer](#laisser-les-autres-la-remixer)).
 4. Appuyez sur **Enregistrer** pour qu’elle soit stockée.
 5. Cliquez sur **Publier**. La première fois, ForkBuild demande aussi
    [Qui peut la trouver ?](#qui-peut-la-trouver-)
 
-Votre création apparaît maintenant dans **Explorer** sur cet appareil, où
-vous pouvez la chercher, l’ouvrir et la forker, avec votre nom comme
+Votre construction apparaît maintenant dans **Explorer** sur cet appareil, où
+vous pouvez la chercher, l’ouvrir et la remixer, avec votre nom comme
 auteur. Les autres la voient dès que vous partagez son lien, ou tout de
 suite si vous avez choisi **Tout le monde** sous
 [Qui peut la trouver ?](#qui-peut-la-trouver-). Elle reçoit aussi une
@@ -319,7 +319,7 @@ Une construction que vous publiez n’est listée que dans *votre*
 [Qui peut la trouver ?](#qui-peut-la-trouver-)) ou que vous la distribuiez
 sur Nostr, Arweave, Steem ou Blurt (voir [Distribution](Distribution.md)) :
 l’**Explorer** de chacun la trouve alors (voir
-[Créations distribuées par d’autres](#créations-distribuées-par-dautres)).
+[Constructions distribuées par d’autres](#constructions-distribuées-par-dautres)).
 Pour la mettre dans l’**Explorer** de quelqu’un à qui vous êtes connecté
 (voir [Connexions entre pairs et amis](07-PeerConnectionsAndFriends.md)),
 cliquez sur **Partager avec les pairs** sous elle dans **Explorer**. Le
@@ -365,43 +365,43 @@ quoi que ce soit :
 
 Votre réponse est enregistrée comme licence de la construction, on ne vous
 le demande donc qu’une fois ; changez-la quand vous voulez dans
-**Propriétés de la construction**. Un fork porte déjà la licence de son original,
+**Propriétés de la construction**. Un remix porte déjà la licence de son original,
 le publier ne demande donc jamais rien.
 
 ### Toutes les licences
 
-Une création publiée est toujours affichée avec une licence, choisie dans
+Une construction publiée est toujours affichée avec une licence, choisie dans
 la boîte de dialogue **Propriétés de la construction** :
 
 | Licence | Signification |
 |---|---|
 | **CC0 1.0 — Domaine public** | Aucun droit réservé — chacun peut en faire ce qu’il veut |
-| **CC BY 4.0 — Attribution** | Chacun peut la forker et la réutiliser, en vous citant |
-| **CC BY-SA 4.0 — Attribution, Partage dans les mêmes conditions** | Les forks doivent garder la même licence |
-| **CC BY-NC 4.0 — Attribution, Pas d’utilisation commerciale** | Les forks sont autorisés, l’usage commercial ne l’est pas |
-| **CC BY-ND 4.0 — Attribution, Pas de modification** | Consultable, mais **les forks ne sont pas autorisés** |
-| **Tous droits réservés** | Consultable, mais les forks ne sont pas autorisés |
-| **Aucune licence indiquée** | Les forks ne sont pas autorisés tant que vous n’en définissez pas une |
+| **CC BY 4.0 — Attribution** | Chacun peut la remixer et la réutiliser, en vous citant |
+| **CC BY-SA 4.0 — Attribution, Partage dans les mêmes conditions** | Les remix doivent garder la même licence |
+| **CC BY-NC 4.0 — Attribution, Pas d’utilisation commerciale** | Les remix sont autorisés, l’usage commercial ne l’est pas |
+| **CC BY-ND 4.0 — Attribution, Pas de modification** | Consultable, mais **les remix ne sont pas autorisés** |
+| **Tous droits réservés** | Consultable, mais les remix ne sont pas autorisés |
+| **Aucune licence indiquée** | Les remix ne sont pas autorisés tant que vous n’en définissez pas une |
 
-Si vous laissez une création sans licence, les gens peuvent toujours
-l’ouvrir et l’explorer — ils ne peuvent simplement pas la forker tant que
+Si vous laissez une construction sans licence, les gens peuvent toujours
+l’ouvrir et l’explorer — ils ne peuvent simplement pas la remixer tant que
 vous ne choisissez pas une licence qui le permet.
 
 ## Choisir qui peut le placer
 
-Les autres peuvent normalement placer votre création publiée dans leurs
+Les autres peuvent normalement placer votre construction publiée dans leurs
 propres Mondes. Cela ajoute un placement de votre construction, jamais une
 copie, et cela ne déplace ni ne modifie jamais la vôtre (voir
 [Pourquoi puis-je placer les constructions des autres ?](WorldViewAdvancedTools.md#pourquoi-puis-je-placer-les-constructions-des-autres-)).
-Forker est distinct et régi par la licence (voir
-[Placer ou forker](WorldViewAdvancedTools.md#placer-ou-forker)).
+Remixer est distinct et régi par la licence (voir
+[Placer ou remixer](WorldViewAdvancedTools.md#placer-ou-remixer)).
 Si vous préférez qu’ils ne la placent pas, ouvrez **Propriétés de la
 construction** et réglez **Qui peut le placer dans le Monde** :
 
 | Réglage | Signification |
 |---|---|
 | **Tout le monde peut le placer** | Par défaut. Chacun peut la placer où il veut dans son propre Monde |
-| **Moi seul peux le placer** | Vous seul pouvez la placer. Les autres peuvent toujours la trouver, la voir et (si la licence le permet) la forker, mais ForkBuild ne les laissera pas la placer |
+| **Moi seul peux le placer** | Vous seul pouvez la placer. Les autres peuvent toujours la trouver, la voir et (si la licence le permet) la remixer, mais ForkBuild ne les laissera pas la placer |
 
 Le réglage est signé avec la publication au moment où vous publiez,
 personne ne peut donc le retirer ni le changer ensuite. Cela veut aussi
@@ -409,7 +409,7 @@ dire qu’il ne s’applique qu’à ce que vous publiez après l’avoir choisi
 Une publication déjà sortie garde le réglage avec lequel elle a été
 publiée : publiez de nouveau si vous voulez que le nouveau s’applique.
 
-Il fonctionne comme l’autorisation de fork de la licence : chaque copie de
+Il fonctionne comme l’autorisation de remix de la licence : chaque copie de
 ForkBuild le respecte, mais ce n’est pas un verrou. Quelqu’un qui aurait
 modifié le code de l’application pourrait l’ignorer, et il ne peut pas
 annuler un placement fait avant que vous le choisissiez.
@@ -421,10 +421,10 @@ Vue du Monde : l’annonce porte votre placement signé, et leur ForkBuild
 montre la construction à cet endroit dès qu’il connaît votre Monde partagé.
 Déplacez-la et distribuez de nouveau, et elle se déplace aussi chez eux.
 
-## Modifier une création publiée
+## Modifier une construction publiée
 
-Une création publiée est **immuable** — elle ne peut jamais changer après
-coup. Pour la développer, **Forkez**-la (ci-dessous), ou utilisez
+Une construction publiée est **immuable** — elle ne peut jamais changer après
+coup. Pour la développer, **Remixez**-la (ci-dessous), ou utilisez
 **Modifier une copie** dans la Vue du Monde. Dans la Vue du Monde, votre
 première modification d’un monde publié — ses métadonnées, le nom d’un
 point de repère ou d’une région, ou une décoration animale — crée
@@ -441,7 +441,7 @@ L’original n’est jamais touché, quoi que vous changiez dans votre copie.
 antérieures), est le catalogue, avec
 recherche, de toutes les constructions publiées que cet appareil connaît : les vôtres, celles que des pairs ont
 partagées avec vous, et celles trouvées sur des réseaux décentralisés. Il
-est conçu pour rester utilisable qu’il contienne dix créations ou dix
+est conçu pour rester utilisable qu’il contienne dix constructions ou dix
 mille.
 
 ### Constructions toutes prêtes
@@ -465,21 +465,21 @@ ouvrir votre propre copie. Ce sont les exemples de l’application, jamais les
 publications de quelqu’un ; ils sont aussi dans les **Structures** de la
 Bibliothèque de construction, sous *collection*.
 
-### Créations distribuées par d’autres
+### Constructions distribuées par d’autres
 
 Chaque fois que vous ouvrez **Explorer** (ou une page d’auteur), il cherche sur
-Nostr, Arweave, Steem et Blurt les créations que d’autres personnes y ont
+Nostr, Arweave, Steem et Blurt les constructions que d’autres personnes y ont
 distribuées, et ajoute celles qu’il peut vérifier. Une ligne au-dessus de
-la liste indique ce qu’il fait, puis combien de nouvelles créations il a
+la liste indique ce qu’il fait, puis combien de nouvelles constructions il a
 trouvées ; **Vérifier à nouveau** cherche encore une fois.
 
-- Seule une création dont l’enregistrement signé est vérifié est ajoutée :
-  signé par la clé qu’il nomme, et exactement la création annoncée. Tout le
+- Seule une construction dont l’enregistrement signé est vérifié est ajoutée :
+  signé par la clé qu’il nomme, et exactement la construction annoncée. Tout le
   reste est ignoré, et un enregistrement qui a échoué n’est pas récupéré de
   nouveau.
-- Il vérifie jusqu’à 20 nouvelles créations à la fois. S’il y en a plus,
+- Il vérifie jusqu’à 20 nouvelles constructions à la fois. S’il y en a plus,
   la ligne indique combien il en reste pour la prochaine fois.
-- Une création trouvée ainsi reste dans votre **Explorer** après un
+- Une construction trouvée ainsi reste dans votre **Explorer** après un
   rechargement.
 - Son build n’est pas encore sur votre appareil. **Explorer** le récupère
   là où il a été stocké, le vérifie, puis l’ouvre dans la Vue du Monde,
@@ -520,12 +520,12 @@ Trier : [Publiés récemment ▾]   Grouper : [Aucun ▾]   [Cartes] [Liste]
   sans fin — « page 5 » veut donc toujours dire la même chose si vous y
   revenez plus tard.
 
-Chaque création propose trois actions :
+Chaque construction propose trois actions :
 
 | Bouton | Ce qu’il fait |
 |---|---|
-| **Ouvrir** | Charger ce document dans l’Éditeur |
-| **Remixer** | Le copier dans votre propre création modifiable |
+| **Ouvrir** | Charger cette construction dans l’Éditeur |
+| **Remixer** | Le copier dans votre propre construction modifiable |
 | **Explorer** | Aller le voir dans la Vue du Monde |
 
 (Le bouton **Continuer l’exploration** de **Mes mondes** — voir
@@ -535,13 +535,13 @@ déjà visité plutôt que pour un Monde que vous découvrez.)
 
 Cliquez sur le **nom d’un auteur** pour ouvrir sa **page d’auteur** — un
 portfolio de tout ce qu’il a créé, y compris ses originaux et tous les
-forks qui en sont nés, avec exactement le même catalogue de recherche, de
+remix qui en sont nés, avec exactement le même catalogue de recherche, de
 tri et de pagination qu’**Explorer**, simplement limité à cet auteur.
 
 Une carte dont la signature est valide a aussi un bouton **Suivre**, et
 une page d’auteur affiche **Signé par …** avec **Suivre** pour chaque
 identité qui a publié sous ce nom. Suivre quelqu’un place ses nouvelles
-créations sur votre page **Abonnements** et dans vos notifications ; voir
+constructions sur votre page **Abonnements** et dans vos notifications ; voir
 [Suivre des personnes](07-PeerConnectionsAndFriends.md#suivre-des-personnes).
 
 **Explorer** ne se limite pas non plus à ce qui a été publié depuis cet
@@ -552,10 +552,10 @@ de la Vue du Monde, une fois son contenu réellement résolu, rejoint aussi
 cette recherche et la page de son auteur, et y reste après un
 rechargement. Elle n’est affichée d’aucune façon différente du reste.
 
-## Forker : faites-le vôtre
+## Remixer : faites-le vôtre
 
-**Remixer** est ce qui rend ForkBuild unique. Quand vous forkez une
-création :
+**Remixer** est ce qui rend ForkBuild unique. Quand vous remixez une
+construction :
 
 - Vous obtenez une **toute nouvelle copie indépendante**, à modifier
   librement.
@@ -568,17 +568,17 @@ Cela fonctionne exactement comme forker un projet dans Git : vous créez
 une branche, faites votre propre chose, et l’arbre généalogique garde la
 trace de tout le monde. (Dans la Vue du Monde, cela se produit aussi
 automatiquement dès que vous modifiez un monde publié — voir
-[Modifier une création publiée](#modifier-une-création-publiée)
+[Modifier une construction publiée](#modifier-une-construction-publiée)
 ci-dessus.)
 
 > **Aussi appelé « Modifier une copie » dans la Vue du Monde.** C’est la
 > même opération sous-jacente dans les deux cas, avec les mêmes règles de
 > licence et la même gestion de
-> [Impossible de faire une copie](#quand-un-fork-ne-peut-pas-aboutir). Voir
+> [Impossible de faire une copie](#quand-un-remix-ne-peut-pas-aboutir). Voir
 > [Modifier une copie](03-WorldView.md#modifier-une-copie--emporter-quelque-chose-dans-léditeur)
 > pour la présentation propre à la Vue du Monde.
 
-### Comment forker
+### Comment remixer
 
 1. Trouvez une construction dans **Explorer** (ou dans la Vue du Monde).
 2. Cliquez sur **Remixer**.
@@ -586,14 +586,14 @@ ci-dessus.)
    d’origine&gt; »*.
 4. Développez-la, puis enregistrez-la et publiez-la comme la vôtre.
 
-Votre fork publié apparaît avec une note **Remix de « … » par …**, qui le
+Votre remix publié apparaît avec une note **Remix de « … » par …**, qui le
 relie à l’original.
 
 ### Nombre de remix
 
 La page d’une construction et sa carte dans **Explorer** disent combien de
 fois elle a été remixée (**Remixée 3 fois**) : combien de constructions
-différentes, forkées à partir d’elle et publiées, cet appareil a trouvées.
+différentes, remixées à partir d’elle et publiées, cet appareil a trouvées.
 Un remix publié deux fois compte une fois, et une construction que
 personne n’a remixée n’affiche rien. Le nombre n’est que ce que cet
 appareil connaît, un autre appareil peut donc afficher un nombre
@@ -604,13 +604,13 @@ constructions, votre 🔔 reçoit une entrée **… a remixé votre
 construction**, une fois par remix (et votre appareil l’affiche aussi, si
 vous avez activé [Notifications sur cet appareil](03-WorldView.md#notifications-sur-cet-appareil)).
 
-### Quand un fork ne peut pas aboutir
+### Quand un remix ne peut pas aboutir
 
-Il arrive qu’un fork ne puisse pas aboutir — le plus souvent en forkant un
+Il arrive qu’un remix ne puisse pas aboutir — le plus souvent en remixant un
 Monde partagé trouvé via un pair ou un réseau décentralisé (voir
 [Publications et preuves externes](09-PublicationsAndEvidence.md)) plutôt
 qu’une construction ordinaire d’**Explorer**. Au lieu de vous déposer
-dans un document vide et sans rapport de l’Éditeur, ForkBuild affiche une
+dans une construction vide et sans rapport de l’Éditeur, ForkBuild affiche une
 boîte de dialogue **Impossible de faire une copie** qui nomme exactement le
 problème :
 
@@ -714,9 +714,9 @@ parmi elles. Promenez-vous parmi elles ou choisissez-en une dans le panneau :
 
 ## L’arbre généalogique
 
-Comme chaque fork enregistre son parent, ForkBuild peut dessiner toute la
-lignée d’une création. Sur une **page d’auteur**, vous verrez un **arbre
-des forks** :
+Comme chaque remix enregistre son parent, ForkBuild peut dessiner toute la
+lignée d’une construction. Sur une **page d’auteur**, vous verrez un **arbre
+des remix** :
 
 ```
 Maison médiévale (original)
@@ -724,7 +724,7 @@ Maison médiévale (original)
    └─ Remix de Remix de… (par Carol)
 ```
 
-Une belle création peut ainsi inspirer tout un écosystème de variantes —
+Une belle construction peut ainsi inspirer tout un écosystème de variantes —
 et chacun dans la chaîne est crédité.
 
 La page propre d’une construction, ouverte depuis un lien partagé, montre
