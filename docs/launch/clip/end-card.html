@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ForkBuild launch clip end card</title>
+<!-- The launch clip's last few seconds (scripts/launch-clip.mjs), 1280 × 720:
+     the logo, name, the fantasy and where to play. Colours are
+     css/main/theme.css's. -->
+<style>
+  html, body { margin: 0; width: 1280px; height: 720px; overflow: hidden; }
+  body {
+    display: flex; align-items: center; justify-content: center; background: #f6efe2;
+    font: 16px/1.3 system-ui, -apple-system, "Segoe UI", sans-serif; color: #2e261c;
+  }
+  .end { display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .name { display: flex; align-items: center; gap: 22px; }
+  .name img { width: 120px; height: 120px; }
+  h1 { margin: 0; font-size: 84px; letter-spacing: -1.5px; color: #211a12; }
+  p { margin: 28px 0 0; font-size: 36px; font-weight: 600; }
+  .play { margin-top: 34px; padding: 14px 30px; border-radius: 12px; background: #357f52; color: #fff; font-size: 30px; font-weight: 700; }
+  .facts { margin-top: 18px; font-size: 22px; color: #4a3f31; }
+</style>
+</head>
+<body>
+  <div class="end">
+    <div class="name">
+      <img src="../../../assets/icons/logo.svg" alt="">
+      <h1>ForkBuild</h1>
+    </div>
+    <p>Build a little place. Anyone can remix it.<br>Walk inside it with friends.</p>
+    <span class="play">Play free on itch.io</span>
+    <span class="facts">In your browser · No account · No download</span>
+  </div>
+</body>
+</html>
