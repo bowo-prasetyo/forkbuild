@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 781eb04573741493 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 2f9e5c7d0c3be7d5 -->
 # Häufige Fragen
 
 <!-- languages -->
@@ -321,3 +321,25 @@ Speichernetz verteilen wollen (Arweave braucht eine Arweave-Wallet wie
 Wander, Nostr eine Signiererweiterung wie nos2x), und für die
 experimentellen Funktionen zum Verankern in
 [Nachweise & Speicher](11-EvidenceAndStorage.md).
+
+### Kann ich mein Bauwerk verkaufen oder daraus ein NFT machen?
+
+ForkBuild hat keinen Shop, keine Preise und keine NFTs. Es hilft nicht beim
+Verkaufen von Bauwerken und empfiehlt keinen Ort dafür, weder im Spiel noch
+außerhalb. Was außerhalb von ForkBuild vereinbart wird, ist eine Sache
+zwischen Ihnen und der anderen Person, und das Spiel weiß nichts davon: Es
+ändert nicht, wer das Bauwerk gemacht hat, wer es kopieren oder wer es
+platzieren darf.
+
+In ForkBuild bestimmen die Lizenz (siehe
+[Eine Lizenz wählen](04-PublishingAndForking.md#eine-lizenz-wählen)) und
+**Wer es in der Welt platzieren darf** (siehe
+[Wählen, wer es platzieren darf](04-PublishingAndForking.md#wählen-wer-es-platzieren-darf)),
+was andere mit einem veröffentlichten Bauwerk tun dürfen. Jede Kopie von
+ForkBuild hält sich daran, aber keines von beiden ist ein Schloss, und
+bereits verschickte Kopien lassen sich nicht zurückholen (siehe
+[Kann ich eine Veröffentlichung zurückziehen?](#kann-ich-eine-veröffentlichung-zurückziehen)).
+
+Ist Ihr Bauwerk ein Remix, trägt es die Lizenz seines Originals, deren
+Bedingungen also weiter gelten: Ein Bauwerk unter CC BY-NC darf zum
+Beispiel nicht kommerziell genutzt werden.

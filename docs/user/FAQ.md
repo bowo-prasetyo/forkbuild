@@ -276,3 +276,24 @@ is only needed if you choose to distribute a build to a storage network
 yourself (Arweave needs an Arweave wallet such as Wander; Nostr needs a
 signing extension such as nos2x), and for the experimental anchoring
 features in [Evidence & Storage](11-EvidenceAndStorage.md).
+
+### Can I sell my build, or make it an NFT?
+
+ForkBuild has no shop, no prices and no NFTs, and it doesn't help with
+selling builds or recommend anywhere to do it, in the game or outside it.
+Anything agreed outside ForkBuild is between you and the other person, and
+the game knows nothing of it: it doesn't change who made the build, who
+can copy it or who can place it.
+
+Inside ForkBuild, what other people may do with a published build is
+decided by its license (see
+[Choosing a license](04-PublishingAndForking.md#choosing-a-license)) and by
+**Who can place it in the World** (see
+[Choosing who can place it](04-PublishingAndForking.md#choosing-who-can-place-it)).
+Every copy of ForkBuild honors them, but neither is a lock, and copies
+already sent out can't be recalled (see
+[Can I unpublish something?](#can-i-unpublish-something)).
+
+If your build is a remix, it carries its original's license, so that
+license's terms still apply: a CC BY-NC build, for instance, may not be
+used commercially.

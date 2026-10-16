@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 781eb04573741493 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 2f9e5c7d0c3be7d5 -->
 # Pertanyaan Umum
 
 <!-- languages -->
@@ -310,3 +310,25 @@ mendistribusikan sendiri bangunan ke jaringan penyimpanan (Arweave
 memerlukan dompet Arweave seperti Wander; Nostr memerlukan ekstensi penanda
 tangan seperti nos2x), dan untuk fitur penjangkaran eksperimental di
 [Bukti & Penyimpanan](11-EvidenceAndStorage.md).
+
+### Bisakah saya menjual bangunan saya, atau menjadikannya NFT?
+
+ForkBuild tidak punya toko, harga, maupun NFT, dan tidak membantu menjual
+bangunan atau merekomendasikan tempat untuk melakukannya, di dalam game
+maupun di luarnya. Apa pun yang disepakati di luar ForkBuild adalah urusan
+Anda dan orang lain itu, dan game tidak mengetahuinya: hal itu tidak
+mengubah siapa yang membuat bangunan, siapa yang boleh menyalinnya, atau
+siapa yang boleh menempatkannya.
+
+Di dalam ForkBuild, apa yang boleh dilakukan orang lain dengan bangunan
+yang sudah diterbitkan ditentukan oleh lisensinya (lihat
+[Memilih lisensi](04-PublishingAndForking.md#memilih-lisensi)) dan oleh
+**Siapa yang dapat menempatkannya di Dunia** (lihat
+[Memilih siapa yang dapat menempatkannya](04-PublishingAndForking.md#memilih-siapa-yang-dapat-menempatkannya)).
+Setiap salinan ForkBuild mematuhinya, tetapi keduanya bukan kunci, dan
+salinan yang sudah terkirim tidak dapat ditarik kembali (lihat
+[Bisakah saya membatalkan penerbitan?](#bisakah-saya-membatalkan-penerbitan)).
+
+Jika bangunan Anda adalah remix, ia membawa lisensi aslinya, jadi
+ketentuan lisensi itu tetap berlaku: bangunan dengan CC BY-NC, misalnya,
+tidak boleh digunakan secara komersial.

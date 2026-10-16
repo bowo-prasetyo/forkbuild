@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 781eb04573741493 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 2f9e5c7d0c3be7d5 -->
 # Perguntas frequentes
 
 <!-- languages -->
@@ -305,3 +305,24 @@ quiser distribuir você mesmo uma construção numa rede de armazenamento (o
 Arweave precisa de uma carteira Arweave como a Wander; o Nostr, de uma
 extensão de assinatura como a nos2x), e para os recursos experimentais de
 ancoragem de [Evidências e armazenamento](11-EvidenceAndStorage.md).
+
+### Posso vender minha construção, ou transformá-la num NFT?
+
+O ForkBuild não tem loja, preços nem NFTs, e não ajuda a vender
+construções nem recomenda onde fazer isso, dentro do jogo ou fora dele. O
+que for combinado fora do ForkBuild fica entre você e a outra pessoa, e o
+jogo não sabe de nada: isso não muda quem fez a construção, quem pode
+copiá-la nem quem pode posicioná-la.
+
+Dentro do ForkBuild, o que outras pessoas podem fazer com uma construção
+publicada é decidido pela licença dela (veja
+[Escolhendo uma licença](04-PublishingAndForking.md#escolhendo-uma-licença))
+e por **Quem pode posicioná-lo no Mundo** (veja
+[Escolhendo quem pode posicioná-lo](04-PublishingAndForking.md#escolhendo-quem-pode-posicioná-lo)).
+Toda cópia do ForkBuild as respeita, mas nenhuma das duas é uma tranca, e
+cópias já enviadas não podem ser recolhidas (veja
+[Posso despublicar alguma coisa?](#posso-despublicar-alguma-coisa)).
+
+Se sua construção é um remix, ela leva a licença da original, então os
+termos dessa licença continuam valendo: uma construção em CC BY-NC, por
+exemplo, não pode ser usada comercialmente.
