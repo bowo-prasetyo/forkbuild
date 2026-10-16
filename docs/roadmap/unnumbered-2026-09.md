@@ -7183,3 +7183,31 @@ others may do with it).
   look-only mode, so a build whose license allows no copies is refused rather than opened to look at; its published
   link is where to look at it. A friend who joined Build with me but placed no bricks isn't credited on the build, so
   the copy saved on their device follows the rules for someone else's build when restored from a bundle.
+
+## One word for each idea: build, remix (unnumbered, 2026-10-16)
+
+**The app still said "fork" and "document" in places a player reads.** docs/Pillars.md's Words table says *build* and
+*remix* (or *make your own copy*), and tests/WordsTable.test.js kept the screens a newcomer meets first in line, but the
+rest of the Editor, World View's placement dialogs and Your Data still said "Fork As New Document", "Document
+Properties", "Fork of …" or "Imported 2 documents". Pillar served: every build has a family tree (one word, remix, for
+what makes it grow), with building feels joyful (a player isn't made to learn three words for one thing).
+
+- **36 messages** say *build*, *remix* or *your own copy* instead of *document* or *fork*, in all eight languages:
+  **Build Properties** (was Document Properties), **Remix As New Build** and **Remix to My Structures** on structure
+  cards, **Edit Source Build**, **Builds Here**, World Encounter's **Remix**, **Original Builds & Remixes** on an
+  author's page, a copy titled **Remix of …** (was Fork of …), Import and Export's counts, history, recovery, the
+  placement dialogs, Your Data's backup, and the experimental banner. The title a copy is given by default in
+  application/document/DocumentTitles.js says **Remix of** too.
+- **The guide names the new labels** wherever it names these buttons and dialogs, in every language, and its links to
+  the Editor's **Build Properties** section follow the new heading. docs/Translating.md's glossaries say *remix*
+  (and the language's word for a copy) where they said *fork*.
+- **tests/WordsTable.test.js covers more screens**: the rest of the Editor, World View's placement dialogs, an
+  author's page, Your Data and the experimental banner, so these words don't drift back. "Distribute" in the
+  alignment tools (spacing bricks evenly) isn't the publishing word and is left alone.
+- **Kept**: *publication* and *snapshot* on the Advanced pages, where they name the signed record and its frozen
+  build; ForkBuild's name; code and protocol documents.
+- Tests: `WordsTable` (the wider screens), the seven locale tests and the tests that check a copy's title (Remix
+  of …), `ExportAllDocumentsAndStructures` (Imported 2 builds).
+- Not done: the guide's own prose still says "fork" in places (most of the Publishing & Forking chapter, whose title
+  and headings other pages link to), and "document" where it isn't naming a button; that wording pass is its own
+  change.

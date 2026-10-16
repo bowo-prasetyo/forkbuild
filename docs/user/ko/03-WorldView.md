@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 7ddc6a422dbb8936 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 50fb553e94b18514 -->
 # 03 — 월드 보기
 
 <!-- languages -->
@@ -550,7 +550,7 @@ alice 님 작성
 
 게시된 작품은 절대 바뀌지 않습니다. 지금 있는 작품이 게시된 것이라면,
 여기서 하는 첫 변경(작품 정보, 랜드마크나 지역, 장식용 동물)이
-*“&lt;원래 이름&gt;의 포크”*라는 제목의 내 사본을 만듭니다. 짧은
+*“&lt;원래 이름&gt;의 리믹스”*라는 제목의 내 사본을 만듭니다. 짧은
 알림(“수정 가능한 사본을 만들었습니다 — …은(는) 바뀌지 않았습니다”)이
 알려 줍니다. 라이선스 규칙은 다른 리믹스와 같습니다
 ([게시와 리믹스](04-PublishingAndForking.md#포크-내-것으로-만들기) 참고).

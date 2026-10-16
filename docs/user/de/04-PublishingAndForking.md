@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: b0b1839dc28a506e -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 75e82daaf1bb2646 -->
 # 04 — Veröffentlichen & Remixen
 
 <!-- languages -->
@@ -22,7 +22,7 @@ wie in ForkBuild.)
 3. Geben Sie ihr einen Titel — Veröffentlichen verweigert eine Kreation
    ohne Titel oder eine leere — und, optional, eine Beschreibung und eine
    Lizenz: Klicken Sie in der Seitenleiste auf **✎** neben dem
-   Dokumenttitel, um **Dokumenteigenschaften** zu öffnen. Ein neues
+   Dokumenttitel, um **Bauwerkeigenschaften** zu öffnen. Ein neues
    Dokument hat keine Lizenz; beim ersten Veröffentlichen fragt ForkBuild,
    ob andere es remixen dürfen (siehe [Andere remixen lassen](#andere-remixen-lassen)).
 4. Drücken Sie **Speichern**, damit sie gespeichert ist.
@@ -353,13 +353,13 @@ ForkBuild **Dürfen andere es remixen?**, bevor etwas veröffentlicht wird:
 
 Ihre Antwort wird als Lizenz des Bauwerks gespeichert, Sie werden also nur
 einmal gefragt; ändern können Sie sie jederzeit in den
-**Dokumenteigenschaften**. Ein Fork trägt bereits die Lizenz seines
+**Bauwerkeigenschaften**. Ein Fork trägt bereits die Lizenz seines
 Originals, beim Veröffentlichen eines Forks wird also nie gefragt.
 
 ### Alle Lizenzen
 
 Eine veröffentlichte Kreation wird immer mit einer Lizenz angezeigt,
-gewählt im Dialog **Dokumenteigenschaften**:
+gewählt im Dialog **Bauwerkeigenschaften**:
 
 | Lizenz | Bedeutung |
 |---|---|
@@ -384,7 +384,7 @@ Kopie davon, und verschiebt oder verändert Ihres nie (siehe
 Forken ist davon getrennt und wird durch die Lizenz geregelt (siehe
 [Platzieren oder forken](WorldViewAdvancedTools.md#platzieren-oder-forken)). Wenn Sie
 nicht möchten, dass andere es platzieren, öffnen Sie
-**Dokumenteigenschaften** und stellen Sie **Wer es in der Welt platzieren
+**Bauwerkeigenschaften** und stellen Sie **Wer es in der Welt platzieren
 darf** ein:
 
 | Einstellung | Bedeutung |
@@ -419,7 +419,7 @@ nachträglich nie ändern. Um auf einer aufzubauen, **forken** Sie sie
 (unten) oder nutzen Sie **Eine Kopie bearbeiten** in der Weltansicht. In
 der Weltansicht erstellt Ihre erste Änderung an einer veröffentlichten
 Welt — ihren Metadaten, einem Wahrzeichen- oder Regionsnamen oder einem
-Tierschmuck — automatisch Ihre eigene Kopie mit dem Titel *„Fork von
+Tierschmuck — automatisch Ihre eigene Kopie mit dem Titel *„Remix von
 &lt;ursprünglicher Name&gt;“*, mit einer kurzen Bestätigung („Ihre eigene
 bearbeitbare Kopie wurde erstellt — … bleibt unverändert“); siehe
 [Auch hier speichern und veröffentlichen](03-WorldView.md#auch-hier-speichern-und-veröffentlichen).
@@ -572,7 +572,7 @@ oben.)
 
 1. Finden Sie ein Bauwerk in **Entdecken** (oder in der Weltansicht).
 2. Klicken Sie auf **Remixen**.
-3. Die Kopie öffnet sich im Editor, mit dem Titel *„Fork von
+3. Die Kopie öffnet sich im Editor, mit dem Titel *„Remix von
    &lt;ursprünglicher Name&gt;“*.
 4. Bauen Sie darauf auf, speichern und veröffentlichen Sie sie dann als
    Ihre eigene.
@@ -636,7 +636,7 @@ Jede vierte Woche ist stattdessen eine Remix-Woche (siehe unten).
    dieser Bauwerke als Ihre eigene Kopie.
 2. Bauen Sie es auf Ihre Art: Setzen Sie gern eine Idee ein und machen Sie
    sie zu Ihrer. Was Sie auch bauen, nimmt teil, solange es den Tag der
-   Woche behält (fügen Sie ihn unter **Dokumenteigenschaften → Tags** hinzu,
+   Woche behält (fügen Sie ihn unter **Bauwerkeigenschaften → Tags** hinzu,
    wenn Sie anders begonnen haben).
 3. Veröffentlichen Sie es vor Ende der Woche und teilen Sie den Link. Der
    Text des Links nennt die Challenge und ihren Tag, bereit für einen Post.
@@ -708,8 +708,8 @@ einen **Fork-Baum**:
 
 ```
 Mittelalterliches Haus (Original)
-└─ Fork von Mittelalterliches Haus (von Bob)
-   └─ Fork von Fork von … (von Carol)
+└─ Remix von Mittelalterliches Haus (von Bob)
+   └─ Remix von Remix von … (von Carol)
 ```
 
 So kann eine großartige Kreation ein ganzes Ökosystem von Varianten

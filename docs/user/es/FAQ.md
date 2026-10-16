@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 87406cb37cc04363 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: f1e16b4c1352d5a0 -->
 # Preguntas frecuentes
 
 <!-- languages -->
@@ -73,7 +73,7 @@ puede distribuir, adónde puede ir y qué necesita cada red.
 ### ¿Por qué nadie puede bifurcar mi creación?
 
 Un documento nuevo no tiene licencia, y una creación sin licencia no se
-puede bifurcar. Abra **Propiedades del documento** (el **✎** junto al
+puede bifurcar. Abra **Propiedades de la construcción** (el **✎** junto al
 título del documento en el Editor), elija una licencia que permita
 bifurcar (cualquier licencia CC excepto CC BY-ND) y vuelva a publicar. La
 opción forma parte de lo que se publica, así que las creaciones que ya
@@ -85,8 +85,8 @@ publicó conservan la licencia que tenían. Consulte
 Estos mensajes aparecen en inglés en la app:
 
 - **a title is required before publishing** (se necesita un título antes
-  de publicar): póngale un título a la creación en **Propiedades del
-  documento**.
+  de publicar): póngale un título a la creación en **Propiedades de la
+  construcción**.
 - **cannot publish an empty world** (no se puede publicar un mundo vacío):
   primero coloque al menos un bloque.
 - **cannot sign, identity is locked** (no se puede firmar, la identidad

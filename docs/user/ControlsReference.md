@@ -226,8 +226,8 @@ Composing, forking, and your personal library — see
 | `R` / `Shift+R` while placing | Rotate the pending ghost ±90° | same placement-preview keys as a brick |
 | Click | Commit — every brick in the structure lands as one undo step | refused at an occupied (red) position |
 | `Esc` while placing | Cancel — nothing added | |
-| Card's **⋮** menu, **Fork As New Document** | Start a brand-new document that begins as a copy of that structure | never modifies the library entry |
-| Built-in card's **⋮** menu, **Fork to My Structures** | Add it to My Structures as-is | no document created, nothing extracted |
+| Card's **⋮** menu, **Remix As New Build** | Start a brand-new document that begins as a copy of that structure | never modifies the library entry |
+| Built-in card's **⋮** menu, **Remix to My Structures** | Add it to My Structures as-is | no document created, nothing extracted |
 | Any card's **⋮** menu, **Info** | Show a read-only name/category/bricks/footprint/height/source/description panel | never editable |
 | Selection with **1+ bricks**, then **Create Blueprint** (Selection panel's **Groups & blueprint** section, or Command Palette) | Open a small dialog (name / category / description + preview); save the selection as a new entry in **My Structures** | |
 | **My Structures** card's **⋮** menu, **Rename** | Change a personal structure's name | personal structures only |
@@ -249,7 +249,7 @@ selectable unit — a live reference, not a copy — see
 | Drag in the viewport, or the gizmo | Move / rotate the instance | |
 | `Ctrl/Cmd+D` | Duplicate — places another instance of the same document | see [Duplicate](#duplicate-editor-only) — instance selections get a fresh instance instead of a fresh brick copy |
 | Instance panel **X / Z / Rotation** fields, then Apply | Set an exact position/heading | Y (elevation) is always terrain-derived, never a target |
-| Instance panel **Edit Source Document** | Open the referenced document to change its bricks | every instance updates, since an instance is a live reference |
+| Instance panel **Edit Source Build** | Open the referenced document to change its bricks | every instance updates, since an instance is a live reference |
 | `Delete` / `Backspace` | Remove the instance | never touches the referenced document |
 
 ## Groups (Editor only)

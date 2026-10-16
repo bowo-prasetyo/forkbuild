@@ -54,7 +54,7 @@ function assertTranslated(value, where) {
     const error = new UserFacingError(message('fork.notPermitted', { license: 'CC-BY-ND-4.0' }), { detail: 'document "d1"' });
     assert(error instanceof Error && isUserFacingError(error), 'it is an Error');
     assert(error.message === 'fork.notPermitted: document "d1"', 'its message is the key plus the detail, for logs');
-    assert(errorText(error) === 'This world can\'t be edited: its license (CC-BY-ND-4.0) doesn\'t allow forking.', 'errorText() gives the person\'s message');
+    assert(errorText(error) === 'This world can\'t be edited: its license (CC-BY-ND-4.0) doesn\'t allow remixes.', 'errorText() gives the person\'s message');
     assert(errorText(new Error('plain')) === 'plain', 'a plain Error shows its own text');
     assert(errorText(null, 'Something went wrong') === 'Something went wrong' && errorText('text') === 'text', 'nothing falls back, text is text');
     let refused = false;

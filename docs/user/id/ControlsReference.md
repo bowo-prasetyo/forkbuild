@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 5d71d34792209c99 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 22e0b2ed04283579 -->
 # Referensi Kontrol
 
 <!-- languages -->
@@ -230,8 +230,8 @@ Menyusun, mem-fork, dan pustaka pribadi Anda — lihat
 | `R` / `Shift+R` saat menempatkan | Memutar bayangan yang tertunda ±90° | tombol pratinjau penempatan yang sama seperti balok |
 | Klik | Menerapkan — setiap balok dalam struktur mendarat sebagai satu langkah urung | ditolak di posisi yang terisi (merah) |
 | `Esc` saat menempatkan | Membatalkan — tidak ada yang ditambahkan | |
-| Menu **⋮** pada kartu, **Fork Sebagai Dokumen Baru** | Memulai dokumen baru yang berawal sebagai salinan struktur itu | tidak pernah mengubah entri pustaka |
-| Menu **⋮** pada kartu bawaan, **Fork ke Struktur Saya** | Menambahkannya ke Struktur Saya apa adanya | tidak ada dokumen yang dibuat, tidak ada yang diekstrak |
+| Menu **⋮** pada kartu, **Remix Sebagai Bangunan Baru** | Memulai dokumen baru yang berawal sebagai salinan struktur itu | tidak pernah mengubah entri pustaka |
+| Menu **⋮** pada kartu bawaan, **Remix ke Struktur Saya** | Menambahkannya ke Struktur Saya apa adanya | tidak ada dokumen yang dibuat, tidak ada yang diekstrak |
 | Menu **⋮** pada kartu mana pun, **Info** | Menampilkan panel baca-saja berisi nama/kategori/balok/jejak/tinggi/sumber/deskripsi | tidak pernah dapat diedit |
 | Pilihan dengan **1+ balok**, lalu **Buat Cetak Biru** (bagian **Grup & cetak biru** pada panel Pilihan, atau Palet Perintah) | Membuka dialog kecil (nama / kategori / deskripsi + pratinjau); menyimpan pilihan sebagai entri baru di **Struktur Saya** | |
 | Menu **⋮** pada kartu **Struktur Saya**, **Ganti Nama** | Mengubah nama struktur pribadi | hanya struktur pribadi |
@@ -253,7 +253,7 @@ unit yang dapat dipilih — referensi hidup, bukan salinan — lihat
 | Seret di viewport, atau gizmo | Memindahkan / memutar instans | |
 | `Ctrl/Cmd+D` | Duplikat — menempatkan instans lain dari dokumen yang sama | lihat [Duplikat](#duplikat-hanya-editor) — pilihan instans mendapat instans baru alih-alih salinan balok baru |
 | Kolom **X / Z / Rotasi** di panel instans, lalu Terapkan | Menetapkan posisi/arah yang tepat | Y (ketinggian) selalu diturunkan dari medan, tidak pernah menjadi sasaran |
-| **Edit Dokumen Sumber** di panel instans | Membuka dokumen yang dirujuk untuk mengubah baloknya | setiap instans ikut diperbarui, karena instans adalah referensi hidup |
+| **Edit Bangunan Sumber** di panel instans | Membuka dokumen yang dirujuk untuk mengubah baloknya | setiap instans ikut diperbarui, karena instans adalah referensi hidup |
 | `Delete` / `Backspace` | Menghapus instans | tidak pernah menyentuh dokumen yang dirujuk |
 
 ## Grup (hanya Editor)

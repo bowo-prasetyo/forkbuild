@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 739698f533b6d7bb -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 67400ead6416db5b -->
 # Visão do mundo: ferramentas avançadas
 
 <!-- languages -->
@@ -127,10 +127,10 @@ não movê-lo.**, e **Mover** fica desativado. Você ainda pode focá-la,
 inspecioná-la e usar **Editar uma cópia** para construir a partir dela. Só
 onde ela fica é coisa dessa pessoa.
 
-### Documentos aqui
+### Construções aqui
 
 Quando o painel Posicionamento diz que outras construções dividem este
-ponto, clique em **Ver** para abrir **Documentos aqui**: uma lista de todas
+ponto, clique em **Ver** para abrir **Construções aqui**: uma lista de todas
 as construções nesse ponto, cada uma com um botão **Focar**. Construções
 despublicadas ficam de fora.
 

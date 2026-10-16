@@ -23,7 +23,7 @@ assert(say('resident.buildBy', { title: 'Castelo do Morro', author: 'ana', where
     === 'Tem uma construção chamada “Castelo do Morro”, de ana, a uns 3,2 km ao norte.',
     '7. A resident speaks Portuguese, with a decimal comma');
 assert(say('history.undo', { action: message('history.moveBricks', { count: 12000 }) }) === 'Desfazer: Mover 12.000 blocos', '8. Undo labels, with Brazilian digit grouping');
-assert(say('document.forkOf', { title: 'Vila dos Salgueiros' }) === 'Bifurcação de Vila dos Salgueiros', '9. A fork\'s title');
+assert(say('document.forkOf', { title: 'Vila dos Salgueiros' }) === 'Remix de Vila dos Salgueiros', '9. A fork\'s title');
 assert(say('peerConnections.connectingTo', { name: 'jonas' }) === 'Conectando a jonas', '10. A name in a sentence');
 assert(say('compass.e') === 'L' && say('compass.sw') === 'SO' && say('compass.w') === 'O', '11. Compass points');
 

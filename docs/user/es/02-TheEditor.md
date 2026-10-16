@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: e0b170cbd10b7cf8 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 75f6ca907e2e67ae -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -342,10 +342,10 @@ razones distintas:
   estructura directamente en el documento en el que ya está trabajando,
   para que pase a formar parte de una construcción más grande. Es la
   acción de todos los días.
-- **Bifurcar como documento nuevo** (en el menú **⋮** de la tarjeta):
+- **Remezclar como construcción nueva** (en el menú **⋮** de la tarjeta):
   empieza un documento completamente nuevo e independiente que comienza
   como una copia exacta de esa estructura.
-- **Bifurcar a Mis estructuras** (solo tarjetas integradas, en el menú
+- **Remezclar a Mis estructuras** (solo tarjetas integradas, en el menú
   **⋮**): agrega la estructura a sus propias **Mis estructuras**, sin
   ningún documento de por medio. Consulte
   [Mis estructuras](#mis-estructuras-su-biblioteca-personal-de-planos) más
@@ -385,8 +385,8 @@ colóquelo al lado; haga clic en Pozo y colóquelo en el patio.
 
 ### Bifurcar una estructura como documento nuevo
 
-Abra el menú **⋮** de una tarjeta y haga clic en **Bifurcar como documento
-nuevo** para empezar una creación completamente nueva y propia que
+Abra el menú **⋮** de una tarjeta y haga clic en **Remezclar como construcción
+nueva** para empezar una creación completamente nueva y propia que
 comienza como una copia exacta de esa estructura: exactamente los mismos
 bloques, editables con todas las herramientas de esta guía, en un
 documento propio en lugar de mezclados con lo que tenga abierto en ese
@@ -409,7 +409,7 @@ debajo de las categorías integradas.
 
 Hay una segunda forma de que una estructura termine en Mis estructuras,
 sin nada que seleccionar ni construir antes: abra el menú **⋮** de
-cualquier tarjeta **integrada** y haga clic en **Bifurcar a Mis
+cualquier tarjeta **integrada** y haga clic en **Remezclar a Mis
 estructuras**. Se agrega exactamente como ya está (no se crea ningún
 documento ni se extrae nada), así que queda lista para cambiarle el
 nombre, exportarla o colocarla de inmediato, como cualquier otra entrada
@@ -417,7 +417,7 @@ de su biblioteca.
 
 Una estructura de **Mis estructuras** funciona exactamente como una
 integrada (haga clic para colocarla en su documento actual, o use
-Bifurcar como documento nuevo), con dos acciones adicionales en su menú
+Remezclar como construcción nueva), con dos acciones adicionales en su menú
 **⋮**:
 
 | Acción | Qué hace |
@@ -534,18 +534,18 @@ Seleccionar (`1`) y la barra lateral muestra:
 | **Girar ↻ / ↺** | Girar exactamente 90° |
 | **Duplicar** (`Ctrl/Cmd+D`) | Colocar otra instancia de la misma estructura |
 | **Eliminar** | Quitar esta instancia: el documento de origen no se toca |
-| **Editar documento de origen** | Abrir el documento referenciado en sí, para cambiar cómo se ven todas sus instancias |
+| **Editar construcción de origen** | Abrir el documento referenciado en sí, para cambiar cómo se ven todas sus instancias |
 
 Editar el *contenido* de una estructura colocada siempre se hace editando
 su documento de origen: no hay forma de editar directamente los bloques de
 una instancia, y eso es justamente lo que mantiene sincronizadas todas sus
 instancias.
 
-## Propiedades del documento
+## Propiedades de la construcción
 
 Cada creación tiene un **título**, una **descripción** opcional, una
 **licencia** y una opción **Quién puede colocarlo en el Mundo**:
-configúrelos en el diálogo **Propiedades del documento**, que se abre con
+configúrelos en el diálogo **Propiedades de la construcción**, que se abre con
 el botón **✎** junto al título del documento, arriba en la barra lateral
 del Editor (en la Vista del mundo, es el botón **Editar metadatos**). Un
 documento nuevo empieza sin licencia, lo que significa que nadie más puede
@@ -638,8 +638,8 @@ Mientras construye suena una música suave, algo más animada que la de la Vista
   que su autor lo firmara, no se importa. El archivo lleva la licencia que
   tiene la construcción al exportarla, así que puede publicar una
   construcción como **All Rights Reserved** y aun así dar a alguien una
-  copia sobre la que pueda construir: elija otra licencia en **Propiedades
-  del documento**, exporte y luego vuelva a ponerla. **Exportar todas las
+  copia sobre la que pueda construir: elija otra licencia en **Propiedades de la
+  construcción**, exporte y luego vuelva a ponerla. **Exportar todas las
   construcciones** y su **Importar**, en **Recientes**, funcionan igual.
 - **Recientes**: vuelve a abrir algo que guardó antes (aparece después de
   su primer guardado; haga clic en el nombre de un documento para

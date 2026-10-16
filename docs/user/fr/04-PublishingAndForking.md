@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: b0b1839dc28a506e -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 75e82daaf1bb2646 -->
 # 04 — Publier et remixer
 
 <!-- languages -->
@@ -22,7 +22,7 @@ construction et de la faire évoluer, en conservant tout son historique.
 3. Donnez-lui un titre — Publier refuse une création sans titre ou vide —
    et, si vous le souhaitez, une description et une licence : cliquez sur
    **✎** à côté du titre du document dans la barre latérale pour ouvrir
-   **Propriétés du document**. Un nouveau document n’a pas de licence ;
+   **Propriétés de la construction**. Un nouveau document n’a pas de licence ;
    la première fois que vous le publiez, ForkBuild demande si d’autres
    peuvent le remixer (voir [Laisser les autres la remixer](#laisser-les-autres-la-remixer)).
 4. Appuyez sur **Enregistrer** pour qu’elle soit stockée.
@@ -365,13 +365,13 @@ quoi que ce soit :
 
 Votre réponse est enregistrée comme licence de la construction, on ne vous
 le demande donc qu’une fois ; changez-la quand vous voulez dans
-**Propriétés du document**. Un fork porte déjà la licence de son original,
+**Propriétés de la construction**. Un fork porte déjà la licence de son original,
 le publier ne demande donc jamais rien.
 
 ### Toutes les licences
 
 Une création publiée est toujours affichée avec une licence, choisie dans
-la boîte de dialogue **Propriétés du document** :
+la boîte de dialogue **Propriétés de la construction** :
 
 | Licence | Signification |
 |---|---|
@@ -395,8 +395,8 @@ copie, et cela ne déplace ni ne modifie jamais la vôtre (voir
 [Pourquoi puis-je placer les constructions des autres ?](WorldViewAdvancedTools.md#pourquoi-puis-je-placer-les-constructions-des-autres-)).
 Forker est distinct et régi par la licence (voir
 [Placer ou forker](WorldViewAdvancedTools.md#placer-ou-forker)).
-Si vous préférez qu’ils ne la placent pas, ouvrez **Propriétés du
-document** et réglez **Qui peut le placer dans le Monde** :
+Si vous préférez qu’ils ne la placent pas, ouvrez **Propriétés de la
+construction** et réglez **Qui peut le placer dans le Monde** :
 
 | Réglage | Signification |
 |---|---|
@@ -428,7 +428,7 @@ coup. Pour la développer, **Forkez**-la (ci-dessous), ou utilisez
 **Modifier une copie** dans la Vue du Monde. Dans la Vue du Monde, votre
 première modification d’un monde publié — ses métadonnées, le nom d’un
 point de repère ou d’une région, ou une décoration animale — crée
-automatiquement votre propre copie, intitulée *« Fork de &lt;nom
+automatiquement votre propre copie, intitulée *« Remix de &lt;nom
 d’origine&gt; »*, avec une courte confirmation (« Votre propre copie
 modifiable a été créée — … reste inchangé ») ; voir
 [Enregistrer et publier ici aussi](03-WorldView.md#enregistrer-et-publier-ici-aussi).
@@ -582,7 +582,7 @@ ci-dessus.)
 
 1. Trouvez une construction dans **Explorer** (ou dans la Vue du Monde).
 2. Cliquez sur **Remixer**.
-3. La copie s’ouvre dans l’Éditeur, intitulée *« Fork de &lt;nom
+3. La copie s’ouvre dans l’Éditeur, intitulée *« Remix de &lt;nom
    d’origine&gt; »*.
 4. Développez-la, puis enregistrez-la et publiez-la comme la vôtre.
 
@@ -646,7 +646,7 @@ semaine du remix (voir plus bas).
    la page ouvre plutôt l’une de ces constructions comme votre propre copie.
 2. Construisez à votre façon : ajoutez une idée si vous voulez, puis
    faites-en la vôtre. Quoi que vous construisiez, cela participe tant que
-   l’étiquette de la semaine reste (ajoutez-la dans **Propriétés du document
+   l’étiquette de la semaine reste (ajoutez-la dans **Propriétés de la construction
    → Étiquettes** si vous avez commencé autrement).
 3. Publiez-la avant la fin de la semaine et partagez son lien. Le texte du
    lien nomme le défi et son étiquette, prêt pour une publication.
@@ -720,8 +720,8 @@ des forks** :
 
 ```
 Maison médiévale (original)
-└─ Fork de Maison médiévale (par Bob)
-   └─ Fork de Fork de… (par Carol)
+└─ Remix de Maison médiévale (par Bob)
+   └─ Remix de Remix de… (par Carol)
 ```
 
 Une belle création peut ainsi inspirer tout un écosystème de variantes —

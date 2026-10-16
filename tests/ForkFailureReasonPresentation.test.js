@@ -231,7 +231,7 @@ async function run() {
 
         const forkedDocument = new ForkDocumentUseCase(storage).execute(documentId, grace, publication);
         assert(forkedDocument instanceof Document, '1. a legitimately-licensed, retrieved fork still returns a real, editable Document.');
-        assert(forkedDocument.metadata.title === 'Fork of Freely Forkable', '2. the fork\'s own derived title is unchanged.');
+        assert(forkedDocument.metadata.title === 'Remix of Freely Forkable', '2. the fork\'s own derived title is unchanged.');
         assert(forkedDocument.world.id !== documentId, '3. the fork still gets a fresh world.id.');
         assert(!('reason' in forkedDocument), '4. a SUCCESSFUL fork carries no .reason of any kind — that field only ever appears on a thrown Error.');
     }

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 739698f533b6d7bb -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 67400ead6416db5b -->
 # La Vue du Monde : outils avancés
 
 <!-- languages -->
@@ -133,10 +133,10 @@ le déplacer**, et **Déplacer** est grisé. Vous pouvez quand même la
 centrer, l’inspecter et utiliser **Modifier une copie** pour construire à
 partir d’elle. Seul l’endroit où elle se trouve leur appartient.
 
-### Documents ici
+### Constructions ici
 
 Quand le panneau Placement indique que d’autres constructions partagent
-cet endroit, cliquez sur **Voir** pour ouvrir **Documents ici** : la liste
+cet endroit, cliquez sur **Voir** pour ouvrir **Constructions ici** : la liste
 de toutes les constructions à cet endroit, chacune avec un bouton
 **Centrer**. Les constructions dépubliées n’y figurent pas.
 

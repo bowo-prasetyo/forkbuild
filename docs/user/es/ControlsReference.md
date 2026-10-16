@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 5d71d34792209c99 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 22e0b2ed04283579 -->
 # Referencia de controles
 
 <!-- languages -->
@@ -236,8 +236,8 @@ Componer, bifurcar y su biblioteca personal: consulte
 | `R` / `Mayús+R` mientras coloca | Girar ±90° el fantasma pendiente | las mismas teclas de vista previa de colocación que un bloque |
 | Clic | Confirmar: todos los bloques de la estructura se colocan como un solo paso de deshacer | se rechaza en una posición ocupada (roja) |
 | `Esc` mientras coloca | Cancelar: no se agrega nada | |
-| Menú **⋮** de la tarjeta, **Bifurcar como documento nuevo** | Empezar un documento completamente nuevo que comienza como una copia de esa estructura | nunca modifica la entrada de la biblioteca |
-| Menú **⋮** de una tarjeta integrada, **Bifurcar a Mis estructuras** | Agregarla a Mis estructuras tal como está | no se crea ningún documento ni se extrae nada |
+| Menú **⋮** de la tarjeta, **Remezclar como construcción nueva** | Empezar un documento completamente nuevo que comienza como una copia de esa estructura | nunca modifica la entrada de la biblioteca |
+| Menú **⋮** de una tarjeta integrada, **Remezclar a Mis estructuras** | Agregarla a Mis estructuras tal como está | no se crea ningún documento ni se extrae nada |
 | Menú **⋮** de cualquier tarjeta, **Información** | Mostrar un panel de solo lectura con nombre, categoría, bloques, superficie, altura, origen y descripción | nunca se puede editar |
 | Selección con **1 o más bloques**, y luego **Crear plano** (sección **Grupos y plano** del panel Selección, o la Paleta de comandos) | Abrir un pequeño diálogo (nombre / categoría / descripción + vista previa); guardar la selección como una entrada nueva en **Mis estructuras** | |
 | Menú **⋮** de una tarjeta de **Mis estructuras**, **Cambiar nombre** | Cambiar el nombre de una estructura personal | solo estructuras personales |
@@ -259,7 +259,7 @@ una sola unidad seleccionable (una referencia viva, no una copia): consulte
 | Arrastrar en la ventana gráfica, o el gizmo | Mover / girar la instancia | |
 | `Ctrl/Cmd+D` | Duplicar: coloca otra instancia del mismo documento | consulte [Duplicar](#duplicar-solo-en-el-editor): las selecciones de instancias obtienen una instancia nueva en lugar de una copia nueva de bloques |
 | Campos **X / Z / Rotación** del panel de la instancia, y luego Aplicar | Fijar una posición y una orientación exactas | Y (la elevación) siempre se deriva del terreno, nunca es un objetivo |
-| **Editar documento de origen** en el panel de la instancia | Abrir el documento referenciado para cambiar sus bloques | todas las instancias se actualizan, ya que una instancia es una referencia viva |
+| **Editar construcción de origen** en el panel de la instancia | Abrir el documento referenciado para cambiar sus bloques | todas las instancias se actualizan, ya que una instancia es una referencia viva |
 | `Supr` / `Retroceso` | Quitar la instancia | nunca toca el documento referenciado |
 
 ## Grupos (solo en el Editor)

@@ -22,7 +22,7 @@ assert(say('resident.buildBy', { title: '丘の砦', author: 'taro', where: mess
     === '北へ約3.2 km行ったところにtaroさんの「丘の砦」という作品があります。',
     '7. A resident speaks Japanese, with the place before the thing');
 assert(say('history.undo', { action: message('history.moveBricks', { count: 12 }) }) === '元に戻す: 12個のブロックを移動', '8. Undo labels');
-assert(say('document.forkOf', { title: '柳の村' }) === '柳の村のフォーク', '9. A fork\'s title');
+assert(say('document.forkOf', { title: '柳の村' }) === '柳の村のリミックス', '9. A fork\'s title');
 assert(say('peerConnections.connectingTo', { name: 'hanako' }) === 'hanakoさんに接続中', '10. A name goes before the verb');
 assert(say('compass.ne') === '北東', '11. Compass points');
 

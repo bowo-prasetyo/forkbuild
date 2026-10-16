@@ -69,7 +69,7 @@ you can distribute, where it can go and what each network needs.
 ### Why can't anyone fork my creation?
 
 A new document has no license, and an unlicensed creation can't be forked.
-Open **Document Properties** (the **✎** beside the document title in the
+Open **Build Properties** (the **✎** beside the document title in the
 Editor), choose a license that allows forking (any CC license except
 CC BY-ND), and publish again. The setting is part of what gets published,
 so creations you already published keep the license they had. See
@@ -78,7 +78,7 @@ so creations you already published keep the license they had. See
 ### Publish failed. What do the messages mean?
 
 - **a title is required before publishing** — give the creation a title in
-  **Document Properties**.
+  **Build Properties**.
 - **cannot publish an empty world** — place at least one brick first.
 - **cannot sign, identity is locked** — your identity locked itself; click
   **Unlock** next to your name in the top bar and publish again.

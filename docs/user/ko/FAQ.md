@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 87406cb37cc04363 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: f1e16b4c1352d5a0 -->
 # 자주 묻는 질문
 
 <!-- languages -->
@@ -62,7 +62,7 @@ Arweave는 Wander, Nostr는 nos2x)이 필요합니다. [작품 배포하기](Dis
 
 ### 왜 아무도 내 작품을 포크할 수 없나요?
 
-새 문서에는 라이선스가 없으며, 라이선스 없는 작품은 포크할 수 없습니다. **문서
+새 문서에는 라이선스가 없으며, 라이선스 없는 작품은 포크할 수 없습니다. **작품
 속성**(에디터의 문서 제목 옆 **✎**)을 열고 포크를 허용하는 라이선스(CC BY-ND를
 제외한 모든 CC 라이선스)를 고른 다음 다시 게시하세요. 이 설정은 게시되는 것의
 일부이므로, 이미 게시한 작품은 그때의 라이선스를 유지합니다.
@@ -70,7 +70,7 @@ Arweave는 Wander, Nostr는 nos2x)이 필요합니다. [작품 배포하기](Dis
 
 ### 게시에 실패했어요. 메시지가 무슨 뜻인가요?
 
-- **a title is required before publishing** — **문서 속성**에서 작품에 제목을
+- **a title is required before publishing** — **작품 속성**에서 작품에 제목을
   붙이세요.
 - **cannot publish an empty world** — 먼저 블록을 하나 이상 놓으세요.
 - **cannot sign, identity is locked** — 신원이 스스로 잠겼습니다. 맨 위 막대에서

@@ -102,9 +102,9 @@ export default Object.freeze({
     'worldView.firstBuildWalkedInside': '🎉 はじめての作品の中に入りました！',
 
     // Forking a published World (application/worldNavigation/forkOnWriteMethods.js).
-    'fork.notice.blocked': '「{license}」で公開されています — 作者がフォークを許可していないため、このワールドは閲覧できますが編集はできません。',
-    'fork.notice.forkOnEdit': '公開済みのスナップショットです — 最初に編集したときに、編集可能なあなた専用のフォークが作成されます。元のワールドは変更されません。',
-    'fork.notPermitted': 'このワールドは編集できません: ライセンス（{license}）がフォークを許可していません。',
+    'fork.notice.blocked': '「{license}」で公開されています — 作者がリミックスを許可していないため、このワールドは閲覧できますが編集はできません。',
+    'fork.notice.forkOnEdit': '公開済みの作品です — 最初に編集したときに、あなた専用のコピーが作られます。元のワールドは変更されません。',
+    'fork.notPermitted': 'このワールドは編集できません: ライセンス（{license}）がリミックスを許可していません。',
 
     // Document details (application/document/: LicenseLabels.js,
     // PlacementPolicyLabels.js, DocumentLifecycleStatus.js).
@@ -516,7 +516,7 @@ export default Object.freeze({
     'editorActionCategory.history': '履歴',
     'editorActionCategory.interface': 'インターフェース',
     'editorAction.selection.selectAll': 'すべて選択',
-    'editorAction.selection.selectAll.description': 'アクティブなドキュメントのブロックをすべて選択します',
+    'editorAction.selection.selectAll.description': '作品のブロックをすべて選択します',
     'editorAction.selection.selectAll.done': 'すべてのブロックを選択しました',
     'editorAction.selection.clear': '選択を解除',
     'editorAction.selection.clear.description': '現在の選択を解除します',
@@ -555,7 +555,7 @@ export default Object.freeze({
     'editorAction.clipboard.copy.description': '選択したブロックをクリップボードにコピーします',
     'editorAction.clipboard.copy.done': '選択をコピーしました',
     'editorAction.clipboard.paste': '貼り付け',
-    'editorAction.clipboard.paste.description': 'クリップボードの内容をドキュメントに貼り付けます',
+    'editorAction.clipboard.paste.description': 'クリップボードの内容を作品に貼り付けます',
     'editorAction.clipboard.paste.done': '貼り付けました',
     'editorAction.structure.createFromSelection': 'ブループリントを作成',
     'editorAction.structure.createFromSelection.description': '選択したブロックから、独自のローカル原点に正規化した再利用可能な構造物を作成します',
@@ -669,7 +669,7 @@ export default Object.freeze({
     'editorActionReason.selectAtLeast': { other: 'ブロックを{count}個以上選択してください' },
 
     // Editor: recovering unsaved changes (ui/components/RecoveryBanner.js).
-    'recovery.found': 'このドキュメントについて、{when}の未保存の変更が見つかりました。',
+    'recovery.found': 'この作品について、{when}の未保存の変更が見つかりました。',
     'recovery.earlierSession': '以前のセッション',
     'recovery.recover': '復元',
     'recovery.discard': '破棄',
@@ -688,8 +688,8 @@ export default Object.freeze({
     // Editor: a structure in the Build Library (ui/components/StructureLibraryCard.js).
     'structureCard.moreActions': 'その他の操作',
     'structureCard.info': '情報',
-    'structureCard.fork': '新しいドキュメントとしてフォーク',
-    'structureCard.forkToLibrary': 'マイ構造物にフォーク',
+    'structureCard.fork': '新しい作品としてリミックス',
+    'structureCard.forkToLibrary': 'マイ構造物にリミックス',
     'structureCard.rename': '名前を変更',
     'structureCard.export': 'ブループリントをエクスポート',
     'structureCard.remove': '削除',
@@ -737,8 +737,8 @@ export default Object.freeze({
     'documentInfo.editMetadata': 'メタデータを編集',
 
     // Editor and World View: editing document details (ui/components/MetadataEditorDialog.js).
-    'metadataEditor.label': 'ドキュメントのプロパティ',
-    'metadataEditor.title': 'ドキュメントのプロパティ',
+    'metadataEditor.label': '作品のプロパティ',
+    'metadataEditor.title': '作品のプロパティ',
     'metadataEditor.fieldTitle': 'タイトル',
     'metadataEditor.untitled': '無題',
     'metadataEditor.description': '説明',
@@ -750,9 +750,9 @@ export default Object.freeze({
     'metadataEditor.tagsSuggestedHint': 'タイトルと説明から提案しました。そのまま使うか、変更または削除してください。{count} 個まで。Blurt の投稿では ForkBuild 自身のタグの後に並びます。',
     'metadataEditor.tagSuggestions': '候補:',
     'metadataEditor.license': 'ライセンス',
-    'metadataEditor.noLicenseHint': 'ライセンスがない場合、設定されるまでフォークは許可されません。',
+    'metadataEditor.noLicenseHint': 'ライセンスがない場合、設定されるまでリミックスは許可されません。',
     'metadataEditor.placement': 'ワールドに配置できる人',
-    'metadataEditor.placementHint': '他の人も見つけて閲覧し、（ライセンスが許せば）フォークすることはできますが、ForkBuildは自分のワールドに配置させません。次回の公開から適用されます。',
+    'metadataEditor.placementHint': '他の人も見つけて閲覧し、（ライセンスが許せば）リミックスすることはできますが、ForkBuildは自分のワールドに配置させません。次回の公開から適用されます。',
     'metadataEditor.cancel': 'キャンセル',
     'metadataEditor.save': '保存',
 
@@ -857,8 +857,8 @@ export default Object.freeze({
     'structureInstance.duplicateHint': '同じ構造物をもう1つ配置',
     'structureInstance.delete': '削除',
     'structureInstance.deleteHint': 'この配置をワールドから削除',
-    'structureInstance.editSource': '元のドキュメントを編集',
-    'structureInstance.editSourceHint': '参照しているドキュメントを開いてブロックを編集',
+    'structureInstance.editSource': '元の作品を編集',
+    'structureInstance.editSourceHint': '元になった作品を開いてブロックを編集',
 
     // Editor: the editing sidebar (ui/components/EditingSidebar.js).
     'editingSidebar.selection': '選択',
@@ -1052,14 +1052,14 @@ export default Object.freeze({
     'blueprintExchange.exported': '「{name}」をブループリントとしてエクスポートしました',
     'blueprintExchange.libraryEmpty': 'マイ構造物は空です',
     'blueprintExchange.exportedStructures': { other: '{count}個の構造物をエクスポートしました' },
-    'blueprintExchange.noDocuments': 'エクスポートする保存済みドキュメントがありません',
-    'blueprintExchange.exportedDocuments': { other: '{count}件のドキュメントをエクスポートしました' },
+    'blueprintExchange.noDocuments': 'エクスポートする保存済みの作品がありません',
+    'blueprintExchange.exportedDocuments': { other: '{count}件の作品をエクスポートしました' },
     'blueprintExchange.exportedDocument': '「{title}」をエクスポートしました',
-    'blueprintExchange.exportedUntitled': '「ドキュメント」をエクスポートしました',
+    'blueprintExchange.exportedUntitled': '「作品」をエクスポートしました',
     'blueprintExchange.invalidDocumentJson': '有効なJSONではありません — 「エクスポート」で書き出したファイルを選んでください。',
     'blueprintExchange.importedDocument': '「{title}」をインポートしました',
-    'blueprintExchange.importedUntitled': '「ドキュメント」をインポートしました',
-    'blueprintExchange.importedDocuments': { other: '{count}件のドキュメントをインポートしました' },
+    'blueprintExchange.importedUntitled': '「作品」をインポートしました',
+    'blueprintExchange.importedDocuments': { other: '{count}件の作品をインポートしました' },
     'blueprintExchange.copiedBeside': '{count}件はここにある別バージョンの横にコピーとして追加',
     'blueprintExchange.alreadyHere': '{count}件はすでにここにあります',
     'blueprintExchange.alreadyThere': '{count}件はすでにあちらにあります',
@@ -1348,8 +1348,8 @@ export default Object.freeze({
 
     // World View: historyTimelinePanel.
     'historyTimelinePanel.history': '履歴',
-    'historyTimelinePanel.readOnlyUntilYouChoose': '下で「プレビュー」か「復元」を選ぶまでは読み取り専用です — 項目を選択しただけでドキュメントが変わることはありません。「プレビュー」は現在の状態に触れずに過去の状態を並べて再現し、「復元」は現在のドキュメントをその状態に戻して未保存の状態にします。',
-    'historyTimelinePanel.noHistoryYetMakeAn': '履歴はまだありません — このドキュメントを編集するとここに表示されます。',
+    'historyTimelinePanel.readOnlyUntilYouChoose': '下で「プレビュー」か「復元」を選ぶまでは読み取り専用です — 項目を選択しただけで作品が変わることはありません。「プレビュー」は現在の状態に触れずに過去の状態を並べて再現し、「復元」は現在の作品をその状態に戻して未保存の状態にします。',
+    'historyTimelinePanel.noHistoryYetMakeAn': '履歴はまだありません — この作品を編集するとここに表示されます。',
     'historyTimelinePanel.undone': '· 取り消し済み',
     'historyTimelinePanel.previewing': '· プレビュー中',
     'historyTimelinePanel.preview': 'プレビュー',
@@ -1366,8 +1366,8 @@ export default Object.freeze({
     'landmarkFormModal.cancel': 'キャンセル',
 
     // World View: locationDocumentsDialog.
-    'locationDocumentsDialog.documentsAtThisLocation': 'この場所のドキュメント',
-    'locationDocumentsDialog.documentsHere': 'ここにあるドキュメント',
+    'locationDocumentsDialog.documentsAtThisLocation': 'この場所の作品',
+    'locationDocumentsDialog.documentsHere': 'ここにある作品',
     'locationDocumentsDialog.focus': 'フォーカス',
     'locationDocumentsDialog.nothingElseIsRecordedAt': 'この位置には他に何も記録されていません。',
     'locationDocumentsDialog.close': '閉じる',
@@ -1440,7 +1440,7 @@ export default Object.freeze({
     'ownPublicationPanel.confirmUnpublish': '公開の取り消しを確認',
     'ownPublicationPanel.distribute': '配信',
     'ownPublicationPanel.unpublish': '公開を取り消す…',
-    'ownPublicationPanel.removeThisWorldFromThe': 'このデバイスのさがすからこのワールドを削除しますか？配置とドキュメントは残ります。配信済みのコピーはネットワーク上に残り、ほかの人は引き続き見つけられますが、このデバイスには再び表示されません。',
+    'ownPublicationPanel.removeThisWorldFromThe': 'このデバイスのさがすからこのワールドを削除しますか？配置と作品は残ります。配信済みのコピーはネットワーク上に残り、ほかの人は引き続き見つけられますが、このデバイスには再び表示されません。',
     'ownPublicationPanel.unpublish2': '公開を取り消す',
     'ownPublicationPanel.publication': '共有ワールド',
     'ownPublicationPanel.outcome': '結果',
@@ -1471,7 +1471,7 @@ export default Object.freeze({
     // World View: placementEditorDialog.
     'placementEditorDialog.movePlacement': '配置を移動',
     'placementEditorDialog.movePlacement2': '配置を移動',
-    'placementEditorDialog.thisMovesWhereTheWorld': '共有空間でのワールドの位置を移動します。ドキュメントは編集されず、フォークも作成されません。',
+    'placementEditorDialog.thisMovesWhereTheWorld': '共有空間でのワールドの位置を移動します。作品は編集されず、コピーも作られません。',
     'placementEditorDialog.xWorldUnits': 'X（ワールド単位）',
     'placementEditorDialog.yWorldUnits': 'Y（ワールド単位）',
     'placementEditorDialog.zWorldUnits': 'Z（ワールド単位）',
@@ -1592,7 +1592,7 @@ export default Object.freeze({
     'worldEncounterCanvas.thisPublicationSMaterialCould': 'この共有ワールドのデータを調べられませんでした。',
     'worldEncounterCanvas.open': '開く',
     'worldEncounterCanvas.explore': '探索',
-    'worldEncounterCanvas.fork': 'フォーク',
+    'worldEncounterCanvas.fork': 'リミックス',
     'worldEncounterCanvas.close': '閉じる',
     'worldEncounterCanvas.chooseSource': '出所を選択',
     'worldEncounterCanvas.thisEncounterIsOfferedBy': 'この出会いは複数の出所から提供されています。',
@@ -1764,7 +1764,7 @@ export default Object.freeze({
     'worldView.redo': 'やり直す',
     'worldView.history': '履歴',
     'worldView.hover': 'ホバー',
-    'worldView.openTheReferencedDocumentIn': '参照しているドキュメントをエディターで開く',
+    'worldView.openTheReferencedDocumentIn': '元になった作品をエディターで開く',
     'worldView.forkThisDocumentAndOpen': '自分用のコピーを作ってエディターで開く',
     'worldView.inspection': '調査',
     'worldView.type': '種類',
@@ -1995,7 +1995,7 @@ export default Object.freeze({
     // World View: placementEditorDialog, continued.
     'placementEditorDialog.placeAnyway': 'それでも配置',
     'placementEditorDialog.move': '移動',
-    'placementEditorDialog.overlap': { other: '⚠ ここにはすでに他のドキュメントが{count}件あります。' },
+    'placementEditorDialog.overlap': { other: '⚠ ここにはすでに他の作品が{count}件あります。' },
 
     // World View: publicationCommentaryRemoteCheck, continued.
     'publicationCommentaryRemoteCheck.checking': '確認中…',
@@ -2060,7 +2060,7 @@ export default Object.freeze({
     // Saved with the document in the language of whoever made it; {title} is
     // the source World's own title.
     'document.untitledWorld': '無題のForkBuildワールド',
-    'document.forkOf': '{title}のフォーク',
+    'document.forkOf': '{title}のリミックス',
     'document.copyOf': '{title}のコピー',
 
     // How an edit is named in undo/redo and the history timeline
@@ -2087,7 +2087,7 @@ export default Object.freeze({
     'history.removeFromGroup': { '=1': 'ブロックをグループから外す', other: '{count}個のブロックをグループから外す' },
     'history.repeatCopies': { other: '{count}個のコピーを繰り返し作成' },
     'history.transformSelection': '選択を変形',
-    'history.copyStructureIntoDocument': '{name}をドキュメントにコピー',
+    'history.copyStructureIntoDocument': '{name}を作品にコピー',
     'history.deleteGroup': 'グループを削除',
     'history.duplicateGroup': 'グループを複製',
     'history.renameGroup': 'グループの名前を変更',
@@ -2118,7 +2118,7 @@ export default Object.freeze({
     'worldView.verify': '検証',
 
     // World View: placementInfoPanel, continued.
-    'placementInfoPanel.overlap': { other: '⚠ 他に{count}件のドキュメントがこの場所にあります。' },
+    'placementInfoPanel.overlap': { other: '⚠ 他に{count}件の作品がこの場所にあります。' },
 
     // World View: worldCollaboratorIndicator, continued.
     'worldCollaboratorIndicator.followName': '{name}さんを追う',
@@ -2415,7 +2415,7 @@ export default Object.freeze({
     // Publications: evidenceExportComparisonTable.
 
     // Publications: authorView.
-    'authorView.originalWorksForks': 'オリジナル作品とフォーク',
+    'authorView.originalWorksForks': 'オリジナルとリミックス',
 
     // Publications: publications.
     'publications.publications': '公開物',
@@ -3210,7 +3210,7 @@ export default Object.freeze({
     'publications.whatReplacingTheCurrentArchive': '現在のアーカイブを上の外部のアーカイブで置き換えた場合に変わる内容です — 下の「現在のアーカイブを置き換える」を明示的にクリックするまで、現在のアーカイブはそのままです。',
     'publications.replacingRestampsEveryFactIn': '置き換えると、上の外部のアーカイブのすべての事実に「インポート済み」（0.8.83）の印が付け直されます — そのため、元になる観測が同じでも、置き換え後の現在のフィンガープリントは上に表示された「外部のフィンガープリント」とは異なります。',
     'publications.localFactsWereObservedBy': 'ローカルの事実は、このレプリカが直接観測したものです。インポートした事実は、以前の「現在のアーカイブを置き換える」によるインポートでこのアーカイブに入ったものです。どちらがより信頼できるということはなく、各事実がどこから来たかを示すだけです。',
-    'publications.anExplicitDurableRecordThat2': 'ある公開が別の公開を参照していることを示す、明示的で永続的な記録です — 内容、タイムスタンプ、作者の一致から推測されることはありません。どちらの公開も上で永続的なIDを持っている必要があります。参照は「フォーク」という分類ではなく、「この公開があの公開を指している」という出所のはっきりした単なる事実です。',
+    'publications.anExplicitDurableRecordThat2': 'ある公開が別の公開を参照していることを示す、明示的で永続的な記録です — 内容、タイムスタンプ、作者の一致から推測されることはありません。どちらの公開も上で永続的なIDを持っている必要があります。参照は「リミックス」という分類ではなく、「この公開があの公開を指している」という出所のはっきりした単なる事実です。',
     'publications.nothingHereIsSavedAnywhere': 'ここに入力した内容はどこにも保存されません。この設定はこの閲覧セッションの間だけページのメモリ上にあり、ページを再読み込みするか「設定をクリア」をクリックした時点で破棄されます。',
     'publications.thisReplicaDoesNotCurrently': 'このレプリカは現在、有効なスナップショットを持っていません。下から取得元を選んで — 「スナップショットをインポート」、配置の「スナップショットを実体化」、ピアの「ピアからスナップショットを取得」のいずれか — もう一度お試しください。',
 
@@ -3832,7 +3832,7 @@ export default Object.freeze({
 
     // Identity, Peers, Chat and settings: experimentalBanner.
     'experimentalBanner.experimental': '実験的機能です。',
-    'experimentalBanner.thisAreaWorksButMay': 'この部分は動作しますが、今後のバージョンで変更または削除される可能性があり、作成したものが引き継がれない場合があります。ForkBuildの中核（建築、保存、公開、フォーク、アイデンティティ、ピア）には影響しません。',
+    'experimentalBanner.thisAreaWorksButMay': 'この部分は動作しますが、今後のバージョンで変更または削除される可能性があり、作成したものが引き継がれない場合があります。ForkBuildの中核（建築、保存、公開、リミックス、アイデンティティ、ピア）には影響しません。',
 
     // Identity, Peers, Chat and settings: loginModal.
     'loginModal.protectedWithAPassphrase': 'パスフレーズで保護されています',
@@ -4333,7 +4333,7 @@ export default Object.freeze({
     'yourDataView.askTheBrowserToKeep': 'データを残すようブラウザーに頼む',
     'yourDataView.theBrowserSaidNoBrowsers': 'ブラウザーに断られました。通常、サイトをブックマークしたり、インストールしたり、頻繁に使ったりすると同意してくれます。',
     'yourDataView.backUp': 'バックアップ',
-    'yourDataView.theBackupHoldsYourDocuments': 'バックアップには、ドキュメント、アイデンティティとその秘密鍵、構造物、公開物、ピア、友達、チャットの履歴、設定が含まれます。ここで決めたパスフレーズで暗号化され、復元にはそのパスフレーズが必要です。パスフレーズなしで開く方法はありません。',
+    'yourDataView.theBackupHoldsYourDocuments': 'バックアップには、作品、アイデンティティとその秘密鍵、構造物、公開物、ピア、友達、チャットの履歴、設定が含まれます。ここで決めたパスフレーズで暗号化され、復元にはそのパスフレーズが必要です。パスフレーズなしで開く方法はありません。',
     'yourDataView.includeBuildsDownloadedFromOther': '他の人からダウンロードした作品も含める（大きくなる場合があります。通常は再取得できます）',
     'yourDataView.rememberTheBackupKeyOn': 'ワンクリックと自動バックアップのために、このデバイスにバックアップの鍵を記憶する（パスフレーズ自体は保存されず、鍵はバックアップの作成にしか使えず、開くことはできません）',
     'yourDataView.shareBackup': 'バックアップを共有…',
@@ -4625,7 +4625,7 @@ export default Object.freeze({
     'avatarSettingsView.saveProfileVisibility': 'プロフィールの公開範囲を保存',
 
     // Your Data: backup groups (application/backup/BackupEntryGroups.js ids).
-    'backupGroup.documents': 'ドキュメントと未保存の変更',
+    'backupGroup.documents': '作品と未保存の変更',
     'backupGroup.identities': 'アイデンティティ',
     'backupGroup.structures': 'マイ構造物',
     'backupGroup.publications': 'あなたの公開物と証拠',

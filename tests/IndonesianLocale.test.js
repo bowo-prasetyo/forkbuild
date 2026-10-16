@@ -22,6 +22,6 @@ assert(say('resident.buildBy', { title: 'Benteng Bukit', author: 'budi', where: 
     === 'Ada bangunan bernama “Benteng Bukit” karya budi, sekitar 3,2 km ke arah utara.',
     '7. A resident speaks Indonesian, with the decimal comma');
 assert(say('history.undo', { action: message('history.moveBricks', { count: 12 }) }) === 'Urungkan Pindahkan 12 Balok', '8. Undo labels');
-assert(say('document.forkOf', { title: 'Desa Dedalu' }) === 'Fork dari Desa Dedalu', '9. A fork\'s title');
+assert(say('document.forkOf', { title: 'Desa Dedalu' }) === 'Remix dari Desa Dedalu', '9. A fork\'s title');
 
 console.log('✅ All Indonesian locale tests passed.');

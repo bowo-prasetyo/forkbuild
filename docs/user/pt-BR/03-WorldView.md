@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 7ddc6a422dbb8936 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 50fb553e94b18514 -->
 # 03 — Visão do mundo
 
 <!-- languages -->
@@ -599,7 +599,7 @@ compartilhá-la sem sair. A linha de status diz qual é: **🔒 Publicado** ou
 Uma construção publicada nunca muda. Se a construção em que você está foi
 publicada, a sua primeira mudança aqui (os dados dela, um marco ou região,
 ou um animal como decoração) cria uma cópia sua, com o título
-*"Bifurcação de &lt;nome original&gt;"*. Um aviso curto informa isso ("Sua
+*"Remix de &lt;nome original&gt;"*. Um aviso curto informa isso ("Sua
 própria cópia editável foi criada; … não muda"). Valem as mesmas regras de
 licença de qualquer remix (veja
 [Publicar e remixar](04-PublishingAndForking.md#bifurcar-torne-a-sua)).

@@ -402,7 +402,7 @@ async function runTests() {
         const actionsBlockEnd = canvasSource.indexOf('world-encounter-observer-local-commentary-panel');
         const actionsBlock = canvasSource.slice(actionsBlockStart, actionsBlockEnd);
 
-        assert(actionsBlock.includes('>Open</button>') && actionsBlock.includes('>Explore</button>') && actionsBlock.includes('>Fork</button>'), 'I1. The three route actions are labeled with plain verbs — "Open"/"Explore"/"Fork" — never a raw field name or internal identifier.');
+        assert(actionsBlock.includes('>Open</button>') && actionsBlock.includes('>Explore</button>') && actionsBlock.includes('>Remix</button>'), 'I1. The three route actions are labeled with plain verbs — "Open"/"Explore"/"Remix" — never a raw field name or internal identifier.');
         // I2. Extract only the literal TEXT NODES the actions block would
         // actually render to the screen (the content between `>` and `<`
         // for each element) — deliberately excluding attribute bindings

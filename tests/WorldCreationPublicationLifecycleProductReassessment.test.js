@@ -428,7 +428,7 @@ async function main() {
         assert(docW2.world.id !== docW1.world.id, 'F1. Fork produces a genuinely new World identity — never the source\'s.');
         assert(docW2.metadata.parentDocumentId === docW1.world.id, 'F1b. Lineage recorded correctly: the fork\'s parentDocumentId points at the SOURCE World\'s id.');
         assert(docW2.metadata.author === 'bob', 'F1c. The forker becomes the new owner, never the source\'s original author.');
-        assert(docW2.metadata.title === 'Fork of Genesis', 'F1d. Title correctly marks this as a fork.');
+        assert(docW2.metadata.title === 'Remix of Genesis', 'F1d. Title correctly marks this as a fork.');
 
         // F2. Subsequent edits to W2 cannot mutate W1 or P1.
         docW2.world.addBuilding(new Building({ creator: 'bob' }));

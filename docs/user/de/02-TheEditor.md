@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: e0b170cbd10b7cf8 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 75f6ca907e2e67ae -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -342,10 +342,10 @@ Gründen wichtig:
 - **Platzieren** (Klick auf die Karte) — kopiert die Steine der Struktur
   direkt in das Dokument, an dem Sie gerade arbeiten, sodass sie Teil
   eines größeren Bauwerks wird. Das ist die alltägliche Aktion.
-- **Als neues Dokument forken** (im Menü **⋮** der Karte) — beginnt ein
+- **Als neues Bauwerk remixen** (im Menü **⋮** der Karte) — beginnt ein
   ganz neues, unabhängiges Dokument, das als genaue Kopie dieser Struktur
   startet.
-- **In Meine Strukturen forken** (nur bei eingebauten Karten, im Menü
+- **In Meine Strukturen remixen** (nur bei eingebauten Karten, im Menü
   **⋮**) — fügt die Struktur Ihren eigenen **Meine Strukturen** hinzu,
   ganz ohne Dokument. Siehe
   [Meine Strukturen](#meine-strukturen-ihre-persönliche-bauplanbibliothek)
@@ -385,8 +385,8 @@ anklicken, daneben platzieren; Brunnen anklicken, in den Hof platzieren.
 
 ### Eine Struktur als neues Dokument forken
 
-Öffnen Sie das Menü **⋮** einer Karte und klicken Sie auf **Als neues
-Dokument forken**, um eine ganz neue eigene Kreation zu beginnen, die als
+Öffnen Sie das Menü **⋮** einer Karte und klicken Sie auf **Als neues Bauwerk
+remixen**, um eine ganz neue eigene Kreation zu beginnen, die als
 genaue Kopie dieser Struktur startet — genau dieselben Steine, mit jedem
 Werkzeug dieser Anleitung bearbeitbar, in einem eigenen Dokument, statt in
 das eingefügt zu werden, was Sie gerade geöffnet haben. Forken ändert nie
@@ -409,8 +409,8 @@ Strukturen, direkt unter den eingebauten Kategorien.
 
 Es gibt einen zweiten Weg, wie eine Struktur in Meine Strukturen landet,
 ohne dass Sie etwas auswählen oder erst bauen müssen: Öffnen Sie das Menü
-**⋮** einer **eingebauten** Karte und klicken Sie auf **In Meine
-Strukturen forken**. Sie wird genau so hinzugefügt, wie sie ist — kein
+**⋮** einer **eingebauten** Karte und klicken Sie auf **In Meine Strukturen
+remixen**. Sie wird genau so hinzugefügt, wie sie ist — kein
 Dokument wird erstellt, nichts herausgelöst —, und lässt sich daher sofort
 umbenennen, exportieren oder platzieren wie jeder andere Eintrag Ihrer
 Bibliothek.
@@ -537,17 +537,17 @@ Auswahlwerkzeug (`1`) aus, und die Seitenleiste zeigt:
 | **Drehen ↻ / ↺** | Um genau 90° drehen |
 | **Duplizieren** (`Strg/Cmd+D`) | Eine weitere Instanz derselben Struktur platzieren |
 | **Löschen** | Diese Instanz entfernen — das Quelldokument bleibt unberührt |
-| **Quelldokument bearbeiten** | Das referenzierte Dokument selbst öffnen, um zu ändern, wie jede seiner Instanzen aussieht |
+| **Ursprungsbauwerk bearbeiten** | Das referenzierte Dokument selbst öffnen, um zu ändern, wie jede seiner Instanzen aussieht |
 
 Der *Inhalt* einer platzierten Struktur wird immer über ihr Quelldokument
 bearbeitet — die Steine einer Instanz lassen sich nicht direkt bearbeiten,
 und genau das hält jede ihrer Instanzen synchron.
 
-## Dokumenteigenschaften
+## Bauwerkeigenschaften
 
 Jede Kreation hat einen **Titel**, eine optionale **Beschreibung**, eine
 **Lizenz** und eine Einstellung **Wer es in der Welt platzieren darf** —
-festgelegt im Dialog **Dokumenteigenschaften**, der sich mit der
+festgelegt im Dialog **Bauwerkeigenschaften**, der sich mit der
 Schaltfläche **✎** neben dem Dokumenttitel oben in der Seitenleiste des
 Editors öffnet (in der Weltansicht ist es die Schaltfläche **Metadaten
 bearbeiten**). Ein neues Dokument beginnt ohne Lizenz, was bedeutet, dass
@@ -642,7 +642,7 @@ Beim Bauen spielt leise Musik, etwas lebhafter als in der Weltansicht. Die Schal
   trägt die Lizenz, die das Bauwerk beim Exportieren hat. Sie können ein
   Bauwerk also als **All Rights Reserved** veröffentlichen und trotzdem
   jemandem eine Kopie geben, auf der er aufbauen darf: Wählen Sie in
-  **Dokumenteigenschaften** eine andere Lizenz, exportieren Sie, und stellen
+  **Bauwerkeigenschaften** eine andere Lizenz, exportieren Sie, und stellen
   Sie sie danach zurück. **Alle Bauwerke exportieren** und sein
   **Importieren** unter **Zuletzt** funktionieren genauso.
 - **Zuletzt** — etwas wieder öffnen, das Sie früher gespeichert haben (es

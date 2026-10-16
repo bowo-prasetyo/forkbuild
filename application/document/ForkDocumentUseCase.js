@@ -11,7 +11,7 @@ import { isStorageEntryNotLoadedError, retryWhenLoaded } from '../../storage/Sto
 // loaded from storage by its world id (publication.documentId), then
 // cloned via DocumentCloneService — the single cloning mechanism shared
 // with World View's Duplicate/Fork (0.1.42): fresh instance identities
-// throughout, "Fork of <title>", the current user as author, lineage via
+// throughout, "Remix of <title>", the current user as author, lineage via
 // parentDocumentId. The result is an ordinary editable Document, ready
 // to be opened by EditorSession.
 //

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 87406cb37cc04363 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: f1e16b4c1352d5a0 -->
 # Pertanyaan Umum
 
 <!-- languages -->
@@ -74,7 +74,7 @@ dikirim, dan apa yang dibutuhkan setiap jaringan.
 ### Mengapa tidak ada yang bisa mem-fork karya saya?
 
 Dokumen baru tidak memiliki lisensi, dan karya tanpa lisensi tidak dapat
-di-fork. Buka **Properti Dokumen** (tombol **✎** di samping judul dokumen
+di-fork. Buka **Properti Bangunan** (tombol **✎** di samping judul dokumen
 di Editor), pilih lisensi yang mengizinkan fork (lisensi CC apa pun kecuali
 CC BY-ND), lalu terbitkan lagi. Pengaturan ini termasuk bagian dari apa
 yang diterbitkan, jadi karya yang sudah Anda terbitkan tetap memakai
@@ -86,7 +86,7 @@ lisensinya yang lama. Lihat
 Alasan setelah "Gagal menerbitkan:" ditampilkan dalam bahasa Inggris.
 
 - **a title is required before publishing** (judul diperlukan sebelum
-  menerbitkan) — beri karya itu judul di **Properti Dokumen**.
+  menerbitkan) — beri karya itu judul di **Properti Bangunan**.
 - **cannot publish an empty world** (dunia kosong tidak dapat diterbitkan)
   — tempatkan setidaknya satu balok terlebih dahulu.
 - **cannot sign, identity is locked** (tidak dapat menandatangani,

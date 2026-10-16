@@ -33,7 +33,7 @@ in.
 | Refusals from `application/` (sign in first, already friends, wrong passphrase …) | Translated (`UserFacingError`) |
 | Resident speech in World View | Translated |
 | Undo/redo and history labels | Translated (a label saved by an older version stays in its English) |
-| A new World's title, a fork's "Fork of …" and a copy's "Copy of …" | In the language of whoever made it, saved like any title |
+| A new World's title, a remix's "Remix of …" and a copy's "Copy of …" | In the language of whoever made it, saved like any title |
 | User guide (`docs/user/`) | Partly: see "Translating the user guide" below |
 | Developer documentation (the rest of `docs/`) | English only |
 
@@ -134,7 +134,7 @@ they are. The words it uses for ForkBuild's own ideas:
 | Publication / publish | Publikasi / terbitkan |
 | Shared World (a World's signed record) | Dunia Bersama |
 | Signed Claim | Klaim Bertanda Tangan |
-| fork | fork (di-fork, Fork dari …) |
+| remix (fork) | remix (me-remix, Remix dari …); a copy is salinan |
 | peer | rekan |
 | identity / passphrase | identitas / frasa sandi |
 | landmark / region / resident | penanda / wilayah / penghuni |
@@ -167,7 +167,7 @@ it uses for ForkBuild's own ideas:
 | Publication / publish | Veröffentlichung / veröffentlichen |
 | Shared World (a World's signed record) | Geteilte Welt |
 | Signed Claim | Signierter Anspruch |
-| fork | Fork (forken, geforkt, „Fork von …“) |
+| remix (fork) | Remix (remixen, „Remix von …“); a copy is Kopie |
 | peer | Peer |
 | identity / passphrase | Identität / Passphrase |
 | landmark / region / resident | Wahrzeichen / Region / Bewohner |
@@ -204,7 +204,7 @@ words it uses for ForkBuild's own ideas:
 | Publication / publish | publicación / publicar |
 | Shared World (a World's signed record) | Mundo compartido |
 | Signed Claim | Declaración firmada |
-| fork | bifurcar, bifurcación (“Bifurcación de …”) |
+| remix (fork) | remezclar, remezcla (“Remezcla de …”); a copy is copia |
 | peer | par |
 | identity / passphrase | identidad / frase de contraseña |
 | landmark / region / resident | hito / región / habitante |
@@ -247,7 +247,7 @@ for ForkBuild's own ideas:
 | Publication / publish / unpublish | publication / publier / dépublier |
 | Shared World (a World's signed record) | Monde partagé |
 | Signed Claim | Déclaration signée |
-| fork | fork, forker (« Fork de … ») |
+| remix (fork) | remix, remixer (« Remix de … ») ; a copy is copie |
 | peer | pair |
 | identity / passphrase | identité / phrase secrète |
 | landmark / region / resident | point de repère / région / habitant |
@@ -292,7 +292,7 @@ ForkBuild's own ideas:
 | Publication / publish / unpublish | publicação / publicar / despublicar |
 | Shared World (a World's signed record) | Mundo compartilhado |
 | Signed Claim | Declaração assinada |
-| fork | bifurcar, bifurcação (“Bifurcação de …”) |
+| remix (fork) | remixar, remix (“Remix de …”); a copy is cópia |
 | peer | par |
 | identity / passphrase | identidade / frase secreta |
 | landmark / region / resident | marco / região / morador |
@@ -329,7 +329,7 @@ for ForkBuild's own ideas:
 | Publication / publish | 公開物 / 公開する |
 | Shared World (a World's signed record) | 共有ワールド |
 | Signed Claim | 署名済みクレーム |
-| fork | フォーク (…のフォーク) |
+| remix (fork) | リミックス (…のリミックス); a copy is コピー |
 | peer | ピア |
 | identity / passphrase | アイデンティティ / パスフレーズ |
 | landmark / region / resident | ランドマーク / 地域 / 住人 |
@@ -370,7 +370,7 @@ uses for ForkBuild's own ideas:
 | Signed Claim / claim | 서명 클레임 / 클레임 |
 | distribute / announce / discover | 배포 / 공지 / 발견 |
 | attribution / lineage | 저작자 표시 / 계보 |
-| fork | 포크 (…의 포크) |
+| remix (fork) | 리믹스 (…의 리믹스); a copy is 사본 |
 | peer | 피어 |
 | identity / passphrase | 신원 / 암호 문구 |
 | landmark / region / resident | 랜드마크 / 지역 / 주민 |

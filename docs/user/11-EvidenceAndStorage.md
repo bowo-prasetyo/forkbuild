@@ -743,7 +743,7 @@ back and signature-checked like one from Arweave.
 
 **On Steem.** A Signed Claim's post shows a picture of your build, its
 title, your name and description (whole, up to 2,000 characters, with its
-[formatting](02-TheEditor.md#document-properties)), and a "See it in 3D"
+[formatting](02-TheEditor.md#build-properties)), and a "See it in 3D"
 link. Keychain asks
 you to approve signing the picture, which is uploaded to Steemit's image
 host at no Resource Credit cost; if you decline or it can't be made, the
@@ -798,9 +798,9 @@ post.
 - **One post per build.** A Distribute makes one top-level post from your
   account, tagged `forkbuild` and `forkbuild-snapshot` or
   `forkbuild-publication`, then your build's own
-  [tags](02-TheEditor.md#document-properties), with a picture of your build, its title, your
+  [tags](02-TheEditor.md#build-properties), with a picture of your build, its title, your
   name and description (whole, up to 2,000 characters, with its
-  [formatting](02-TheEditor.md#document-properties)), and a "See it in 3D"
+  [formatting](02-TheEditor.md#build-properties)), and a "See it in 3D"
   link. What follows in the next
   half hour (the Publication's announcement, a comment, an anchor) is added
   to the same post by editing it, so your followers see one post, not

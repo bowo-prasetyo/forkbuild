@@ -118,10 +118,10 @@ When someone else placed a build, the Placement panel says **🔒 Placed by
 is greyed out. You can still focus it, inspect it, and use **Edit a Copy**
 to build on it. Only where it stands is theirs to change.
 
-### Documents Here
+### Builds Here
 
 When the Placement panel says other builds share this spot, click **View**
-to open **Documents Here**: a list of every build at that spot, each with a
+to open **Builds Here**: a list of every build at that spot, each with a
 **Focus** button. Builds that have been unpublished are left off.
 
 ### Why can I place other people's builds?

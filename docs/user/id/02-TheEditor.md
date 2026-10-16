@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: e0b170cbd10b7cf8 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 75f6ca907e2e67ae -->
 # 02 — Editor
 
 <!-- languages -->
@@ -332,9 +332,9 @@ salah satunya, dan masing-masing penting untuk alasan yang berbeda:
 - **Tempatkan** (klik kartunya) — menyalin balok struktur langsung ke
   dokumen yang sedang Anda kerjakan, sehingga menjadi bagian dari satu
   bangunan yang lebih besar. Inilah tindakan sehari-hari.
-- **Fork Sebagai Dokumen Baru** (di menu **⋮** kartu) — memulai dokumen
+- **Remix Sebagai Bangunan Baru** (di menu **⋮** kartu) — memulai dokumen
   baru yang mandiri yang berawal sebagai salinan persis struktur itu.
-- **Fork ke Struktur Saya** (hanya kartu bawaan, di menu **⋮**) —
+- **Remix ke Struktur Saya** (hanya kartu bawaan, di menu **⋮**) —
   menambahkan struktur ke **Struktur Saya** milik Anda, tanpa melibatkan
   dokumen sama sekali. Lihat
   [Struktur Saya](#struktur-saya-pustaka-cetak-biru-pribadi-anda) di
@@ -371,7 +371,7 @@ Sumur, tempatkan di halaman.
 
 ### Mem-fork struktur sebagai dokumen baru
 
-Buka menu **⋮** sebuah kartu dan klik **Fork Sebagai Dokumen Baru** untuk
+Buka menu **⋮** sebuah kartu dan klik **Remix Sebagai Bangunan Baru** untuk
 memulai karya baru milik Anda yang berawal sebagai salinan persis struktur
 itu — balok yang persis sama, dapat diedit dengan setiap alat di panduan
 ini, dalam dokumennya sendiri alih-alih dilebur ke apa pun yang sedang Anda
@@ -392,13 +392,13 @@ bawah tab Struktur, tepat di bawah kategori bawaan.
 
 Ada cara kedua sebuah struktur masuk ke Struktur Saya, tanpa ada yang perlu
 dipilih atau dibangun terlebih dahulu: buka menu **⋮** pada kartu
-**bawaan** mana pun dan klik **Fork ke Struktur Saya**. Struktur itu
+**bawaan** mana pun dan klik **Remix ke Struktur Saya**. Struktur itu
 ditambahkan persis apa adanya — tidak ada dokumen yang dibuat, tidak ada
 yang diekstrak — jadi siap untuk Ganti Nama, Ekspor, atau ditempatkan
 langsung, seperti entri lain di pustaka Anda.
 
 Struktur di **Struktur Saya** bekerja persis seperti yang bawaan — klik
-untuk menempatkannya ke dokumen Anda saat ini, atau Fork Sebagai Dokumen
+untuk menempatkannya ke dokumen Anda saat ini, atau Remix Sebagai Bangunan
 Baru — dengan dua tindakan tambahan di menu **⋮**-nya:
 
 | Tindakan | Fungsinya |
@@ -514,18 +514,18 @@ dengan alat Pilih (`1`) dan bilah sisi menampilkan:
 | **Putar ↻ / ↺** | Memutar tepat 90° |
 | **Duplikat** (`Ctrl/Cmd+D`) | Menempatkan instans lain dari struktur yang sama |
 | **Hapus** | Menghapus instans ini — dokumen sumbernya tidak tersentuh |
-| **Edit Dokumen Sumber** | Membuka dokumen yang dirujuk itu sendiri, untuk mengubah tampilan setiap instansnya |
+| **Edit Bangunan Sumber** | Membuka dokumen yang dirujuk itu sendiri, untuk mengubah tampilan setiap instansnya |
 
 Mengedit *isi* struktur yang ditempatkan selalu dilakukan dengan mengedit
 dokumen sumbernya — tidak ada cara untuk mengedit balok sebuah instans
 secara langsung, dan justru itulah yang menjaga setiap instansnya tetap
 selaras.
 
-## Properti Dokumen
+## Properti Bangunan
 
 Setiap karya memiliki **judul**, **deskripsi** opsional, **lisensi**, dan
 pengaturan **Siapa yang dapat menempatkannya di Dunia** — atur semuanya di
-dialog **Properti Dokumen**, yang dibuka dengan tombol **✎** di samping
+dialog **Properti Bangunan**, yang dibuka dengan tombol **✎** di samping
 judul dokumen di bagian atas bilah sisi Editor (di Tampilan Dunia,
 tombolnya **Edit Metadata**). Dokumen baru dimulai tanpa lisensi, yang
 berarti tidak ada orang lain yang dapat mem-fork-nya sampai Anda memilih
@@ -616,7 +616,7 @@ Musik diputar pelan saat Anda membangun, sedikit lebih riang daripada di Tampila
   membawa lisensi yang dimiliki bangunan saat Anda mengekspornya, jadi Anda
   dapat menerbitkan bangunan sebagai **All Rights Reserved** dan tetap
   memberi seseorang salinan yang boleh ia kembangkan: pilih lisensi lain di
-  **Properti Dokumen**, ekspor, lalu kembalikan. **Ekspor Semua Bangunan**
+  **Properti Bangunan**, ekspor, lalu kembalikan. **Ekspor Semua Bangunan**
   dan **Impor**-nya, di **Terbaru**, bekerja dengan cara yang sama.
 - **Terbaru** — membuka kembali sesuatu yang pernah Anda simpan (muncul
   setelah penyimpanan pertama; klik nama dokumen untuk membukanya). Begitu

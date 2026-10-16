@@ -22,7 +22,7 @@ assert(say('resident.buildBy', { title: 'Hügelburg', author: 'anna', where: mes
     === 'Das Bauwerk „Hügelburg“ von anna steht etwa 3,2 km nördlich von hier.',
     '7. A resident speaks German, with a decimal comma');
 assert(say('history.undo', { action: message('history.moveBricks', { count: 1200 }) }) === 'Rückgängig: 1.200 Steine verschieben', '8. Undo labels, with German digit grouping');
-assert(say('document.forkOf', { title: 'Weidendorf' }) === 'Fork von Weidendorf', '9. A fork\'s title');
+assert(say('document.forkOf', { title: 'Weidendorf' }) === 'Remix von Weidendorf', '9. A fork\'s title');
 assert(say('peerConnections.connectingTo', { name: 'jonas' }) === 'Verbinde mit jonas', '10. A name in a sentence');
 assert(say('compass.ne') === 'NO' && say('compass.e') === 'O', '11. Compass points');
 

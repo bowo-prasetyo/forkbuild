@@ -83,7 +83,7 @@ function createDoc(title, author) {
     const stubIdentity = { currentUser: () => ({ username: 'Bob' }) };
     const forkedDoc = forkUseCase.execute(doc.world.id, stubIdentity, byPub);
     
-    assert(forkedDoc.metadata.title === 'Fork of Open Work', 'Fork title applied');
+    assert(forkedDoc.metadata.title === 'Remix of Open Work', 'Fork title applied');
     assert(forkedDoc.metadata.author === 'Bob', 'Fork author applied');
     assert(forkedDoc.metadata.license.id === LicenseId.CC_BY_4_0, 'License inherited');
     assert(forkedDoc.metadata.license.attribution.author === 'Alice', 'Attribution author stamped');

@@ -510,7 +510,7 @@ async function run() {
         assert(outcome.openDocumentCalls.length === 1, '2. editorSession.openDocument() was called exactly once.');
         const { doc: openedDocument, ctx: openedEntryContext } = outcome.openDocumentCalls[0];
         assert(openedDocument instanceof Document, '3. a real, editable Document was opened.');
-        assert(openedDocument.metadata.title === 'Fork of Freely Forkable', '4. the fork\'s own derived title is correct.');
+        assert(openedDocument.metadata.title === 'Remix of Freely Forkable', '4. the fork\'s own derived title is correct.');
         assert(openedDocument.world.id !== publication.documentId, '5. the fork got a fresh World identity — never the source\'s own.');
         assert(openedEntryContext === null, '6. with no entry context on this route, openDocument() received null — never a manufactured one.');
         assert(outcome.feedbackLog.length === 1 && outcome.feedbackLog[0].includes('Made your own copy of'),

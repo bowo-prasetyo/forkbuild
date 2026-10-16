@@ -148,7 +148,7 @@ async function run() {
     assert(documentsDownload.data.documents.length === 2 && /^forkbuild-documents-/.test(documentsDownload.name), 'Export All Documents downloads the bundle');
     await editorExchange.importDocument(JSON.stringify(documentsDownload.data));
     assert(revisions === 1, 'the Recent list is told to read the documents again');
-    assert(/^Imported 2 documents/.test(editorLog.at(-1)), `the import is reported (${editorLog.at(-1)})`);
+    assert(/^Imported 2 builds/.test(editorLog.at(-1)), `the import is reported (${editorLog.at(-1)})`);
     console.log('✓ the Editor exports and imports every document through its own buttons');
 }
 

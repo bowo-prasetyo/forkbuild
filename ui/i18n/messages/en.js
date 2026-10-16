@@ -104,9 +104,9 @@ export default Object.freeze({
     'worldView.firstBuildWalkedInside': '🎉 You walked into your first build!',
 
     // Forking a published World (application/worldNavigation/forkOnWriteMethods.js).
-    'fork.notice.blocked': 'Published under "{license}" — the author has not allowed forking, so this world can be viewed but not edited.',
-    'fork.notice.forkOnEdit': 'Published snapshot — your first edit creates your own editable fork; the original is never changed.',
-    'fork.notPermitted': 'This world can\'t be edited: its license ({license}) doesn\'t allow forking.',
+    'fork.notice.blocked': 'Published under "{license}" — its maker hasn\'t allowed remixes, so this world can be viewed but not edited.',
+    'fork.notice.forkOnEdit': 'Published build — your first edit makes your own copy; the original is never changed.',
+    'fork.notPermitted': 'This world can\'t be edited: its license ({license}) doesn\'t allow remixes.',
 
     // Document details (application/document/: LicenseLabels.js,
     // PlacementPolicyLabels.js, DocumentLifecycleStatus.js).
@@ -518,7 +518,7 @@ export default Object.freeze({
     'editorActionCategory.history': 'History',
     'editorActionCategory.interface': 'Interface',
     'editorAction.selection.selectAll': 'Select All',
-    'editorAction.selection.selectAll.description': 'Select every brick in the active document',
+    'editorAction.selection.selectAll.description': 'Select every brick in the build',
     'editorAction.selection.selectAll.done': 'Selected all bricks',
     'editorAction.selection.clear': 'Clear Selection',
     'editorAction.selection.clear.description': 'Clear the current selection',
@@ -557,7 +557,7 @@ export default Object.freeze({
     'editorAction.clipboard.copy.description': 'Copy the selected bricks to the clipboard',
     'editorAction.clipboard.copy.done': 'Copied selection',
     'editorAction.clipboard.paste': 'Paste',
-    'editorAction.clipboard.paste.description': 'Paste the clipboard contents into the document',
+    'editorAction.clipboard.paste.description': 'Paste the clipboard contents into the build',
     'editorAction.clipboard.paste.done': 'Pasted',
     'editorAction.structure.createFromSelection': 'Create Blueprint',
     'editorAction.structure.createFromSelection.description': 'Create a reusable Structure from the selected bricks, normalized to its own local origin',
@@ -671,7 +671,7 @@ export default Object.freeze({
     'editorActionReason.selectAtLeast': { one: 'Select at least {count} brick', other: 'Select at least {count} bricks' },
 
     // Editor: recovering unsaved changes (ui/components/RecoveryBanner.js).
-    'recovery.found': 'Unsaved changes from {when} were found for this document.',
+    'recovery.found': 'Unsaved changes from {when} were found for this build.',
     'recovery.earlierSession': 'an earlier session',
     'recovery.recover': 'Recover',
     'recovery.discard': 'Discard',
@@ -690,8 +690,8 @@ export default Object.freeze({
     // Editor: a structure in the Build Library (ui/components/StructureLibraryCard.js).
     'structureCard.moreActions': 'More actions',
     'structureCard.info': 'Info',
-    'structureCard.fork': 'Fork As New Document',
-    'structureCard.forkToLibrary': 'Fork to My Structures',
+    'structureCard.fork': 'Remix As New Build',
+    'structureCard.forkToLibrary': 'Remix to My Structures',
     'structureCard.rename': 'Rename',
     'structureCard.export': 'Export Blueprint',
     'structureCard.remove': 'Remove',
@@ -739,8 +739,8 @@ export default Object.freeze({
     'documentInfo.editMetadata': 'Edit Metadata',
 
     // Editor and World View: editing document details (ui/components/MetadataEditorDialog.js).
-    'metadataEditor.label': 'Document properties',
-    'metadataEditor.title': 'Document Properties',
+    'metadataEditor.label': 'Build properties',
+    'metadataEditor.title': 'Build Properties',
     'metadataEditor.fieldTitle': 'Title',
     'metadataEditor.untitled': 'Untitled',
     'metadataEditor.description': 'Description',
@@ -752,9 +752,9 @@ export default Object.freeze({
     'metadataEditor.tagsSuggestedHint': 'Suggested from the title and description: keep, change or clear them. Up to {count}; a Blurt post lists them after ForkBuild\'s own.',
     'metadataEditor.tagSuggestions': 'Suggestions:',
     'metadataEditor.license': 'License',
-    'metadataEditor.noLicenseHint': 'No license means forking is not permitted until one is set.',
+    'metadataEditor.noLicenseHint': 'No license means remixing is not allowed until one is set.',
     'metadataEditor.placement': 'Who can place it in the World',
-    'metadataEditor.placementHint': 'Others can still find, view and (if the license allows) fork it, but ForkBuild won\'t let them place it in their World. Applies from your next publish.',
+    'metadataEditor.placementHint': 'Others can still find, view and (if the license allows) remix it, but ForkBuild won\'t let them place it in their World. Applies from your next publish.',
     'metadataEditor.cancel': 'Cancel',
     'metadataEditor.save': 'Save',
 
@@ -859,8 +859,8 @@ export default Object.freeze({
     'structureInstance.duplicateHint': 'Place another instance of the same structure',
     'structureInstance.delete': 'Delete',
     'structureInstance.deleteHint': 'Remove this instance from the World',
-    'structureInstance.editSource': 'Edit Source Document',
-    'structureInstance.editSourceHint': 'Open the referenced Document to edit its bricks',
+    'structureInstance.editSource': 'Edit Source Build',
+    'structureInstance.editSourceHint': 'Open the build it comes from to edit its bricks',
 
     // Editor: the editing sidebar (ui/components/EditingSidebar.js).
     'editingSidebar.selection': 'Selection',
@@ -1054,14 +1054,14 @@ export default Object.freeze({
     'blueprintExchange.exported': 'Exported "{name}" as a blueprint',
     'blueprintExchange.libraryEmpty': 'My Structures is empty',
     'blueprintExchange.exportedStructures': { one: 'Exported {count} structure', other: 'Exported {count} structures' },
-    'blueprintExchange.noDocuments': 'No saved documents to export',
-    'blueprintExchange.exportedDocuments': { one: 'Exported {count} document', other: 'Exported {count} documents' },
+    'blueprintExchange.noDocuments': 'No saved builds to export',
+    'blueprintExchange.exportedDocuments': { one: 'Exported {count} build', other: 'Exported {count} builds' },
     'blueprintExchange.exportedDocument': 'Exported "{title}"',
-    'blueprintExchange.exportedUntitled': 'Exported "document"',
+    'blueprintExchange.exportedUntitled': 'Exported "build"',
     'blueprintExchange.invalidDocumentJson': 'That is not valid JSON — choose a file exported with "Export."',
     'blueprintExchange.importedDocument': 'Imported "{title}"',
-    'blueprintExchange.importedUntitled': 'Imported "document"',
-    'blueprintExchange.importedDocuments': { one: 'Imported {count} document', other: 'Imported {count} documents' },
+    'blueprintExchange.importedUntitled': 'Imported "build"',
+    'blueprintExchange.importedDocuments': { one: 'Imported {count} build', other: 'Imported {count} builds' },
     'blueprintExchange.copiedBeside': '{count} as a copy beside a different version here',
     'blueprintExchange.alreadyHere': '{count} already here',
     'blueprintExchange.alreadyThere': '{count} already there',
@@ -1350,8 +1350,8 @@ export default Object.freeze({
 
     // World View: historyTimelinePanel.
     'historyTimelinePanel.history': 'History',
-    'historyTimelinePanel.readOnlyUntilYouChoose': 'Read-only until you choose Preview or Restore below — selecting an entry never changes the document by itself. Preview reconstructs a past state alongside the live one without touching it; Restore rebases the live document onto that state and leaves it dirty.',
-    'historyTimelinePanel.noHistoryYetMakeAn': 'No history yet — make an edit to this document to see it here.',
+    'historyTimelinePanel.readOnlyUntilYouChoose': 'Read-only until you choose Preview or Restore below — selecting an entry never changes the build by itself. Preview reconstructs a past state alongside the live one without touching it; Restore rebases the live build onto that state and leaves it dirty.',
+    'historyTimelinePanel.noHistoryYetMakeAn': 'No history yet — make an edit to this build to see it here.',
     'historyTimelinePanel.undone': '· undone',
     'historyTimelinePanel.previewing': '· previewing',
     'historyTimelinePanel.preview': 'Preview',
@@ -1368,8 +1368,8 @@ export default Object.freeze({
     'landmarkFormModal.cancel': 'Cancel',
 
     // World View: locationDocumentsDialog.
-    'locationDocumentsDialog.documentsAtThisLocation': 'Documents at this location',
-    'locationDocumentsDialog.documentsHere': 'Documents Here',
+    'locationDocumentsDialog.documentsAtThisLocation': 'Builds at this location',
+    'locationDocumentsDialog.documentsHere': 'Builds Here',
     'locationDocumentsDialog.focus': 'Focus',
     'locationDocumentsDialog.nothingElseIsRecordedAt': 'Nothing else is recorded at this exact position.',
     'locationDocumentsDialog.close': 'Close',
@@ -1442,7 +1442,7 @@ export default Object.freeze({
     'ownPublicationPanel.confirmUnpublish': 'Confirm unpublish',
     'ownPublicationPanel.distribute': 'Distribute',
     'ownPublicationPanel.unpublish': 'Unpublish…',
-    'ownPublicationPanel.removeThisWorldFromThe': 'Remove this World from Explore on this device? Its placements and the Document stay. Copies you already distributed stay on the networks, where other people can still find them, but this device won\'t list them again.',
+    'ownPublicationPanel.removeThisWorldFromThe': 'Remove this World from Explore on this device? Its placements and the build stay. Copies you already distributed stay on the networks, where other people can still find them, but this device won\'t list them again.',
     'ownPublicationPanel.unpublish2': 'Unpublish',
     'ownPublicationPanel.publication': 'Shared World',
     'ownPublicationPanel.outcome': 'Outcome',
@@ -1473,7 +1473,7 @@ export default Object.freeze({
     // World View: placementEditorDialog.
     'placementEditorDialog.movePlacement': 'Move placement',
     'placementEditorDialog.movePlacement2': 'Move Placement',
-    'placementEditorDialog.thisMovesWhereTheWorld': 'This moves where the world sits in shared space. It does not edit the document, and does not create a fork.',
+    'placementEditorDialog.thisMovesWhereTheWorld': 'This moves where the world sits in shared space. It does not edit the build, and does not make a copy.',
     'placementEditorDialog.xWorldUnits': 'X (World Units)',
     'placementEditorDialog.yWorldUnits': 'Y (World Units)',
     'placementEditorDialog.zWorldUnits': 'Z (World Units)',
@@ -1594,7 +1594,7 @@ export default Object.freeze({
     'worldEncounterCanvas.thisPublicationSMaterialCould': 'This Shared World\'s material could not be inspected.',
     'worldEncounterCanvas.open': 'Open',
     'worldEncounterCanvas.explore': 'Explore',
-    'worldEncounterCanvas.fork': 'Fork',
+    'worldEncounterCanvas.fork': 'Remix',
     'worldEncounterCanvas.close': 'Close',
     'worldEncounterCanvas.chooseSource': 'Choose Source',
     'worldEncounterCanvas.thisEncounterIsOfferedBy': 'This encounter is offered by more than one source.',
@@ -1766,7 +1766,7 @@ export default Object.freeze({
     'worldView.redo': 'Redo',
     'worldView.history': 'History',
     'worldView.hover': 'Hover',
-    'worldView.openTheReferencedDocumentIn': 'Open the referenced Document in the Editor',
+    'worldView.openTheReferencedDocumentIn': 'Open the build it comes from in the Editor',
     'worldView.forkThisDocumentAndOpen': 'Make your own copy and open it in the Editor',
     'worldView.inspection': 'Inspection',
     'worldView.type': 'Type',
@@ -1997,7 +1997,7 @@ export default Object.freeze({
     // World View: placementEditorDialog, continued.
     'placementEditorDialog.placeAnyway': 'Place Anyway',
     'placementEditorDialog.move': 'Move',
-    'placementEditorDialog.overlap': { one: '⚠ {count} other document is already located here.', other: '⚠ {count} other documents are already located here.' },
+    'placementEditorDialog.overlap': { one: '⚠ {count} other build is already located here.', other: '⚠ {count} other builds are already located here.' },
 
     // World View: publicationCommentaryRemoteCheck, continued.
     'publicationCommentaryRemoteCheck.checking': 'Checking…',
@@ -2062,7 +2062,7 @@ export default Object.freeze({
     // Saved with the document in the language of whoever made it; {title} is
     // the source World's own title.
     'document.untitledWorld': 'Untitled ForkBuild World',
-    'document.forkOf': 'Fork of {title}',
+    'document.forkOf': 'Remix of {title}',
     'document.copyOf': 'Copy of {title}',
 
     // How an edit is named in undo/redo and the history timeline
@@ -2089,7 +2089,7 @@ export default Object.freeze({
     'history.removeFromGroup': { one: 'Remove Brick from Group', other: 'Remove {count} Bricks from Group' },
     'history.repeatCopies': { one: 'Repeat {count} Copy', other: 'Repeat {count} Copies' },
     'history.transformSelection': 'Transform Selection',
-    'history.copyStructureIntoDocument': 'Copy {name} Into Document',
+    'history.copyStructureIntoDocument': 'Copy {name} Into Build',
     'history.deleteGroup': 'Delete Group',
     'history.duplicateGroup': 'Duplicate Group',
     'history.renameGroup': 'Rename Group',
@@ -2120,7 +2120,7 @@ export default Object.freeze({
     'worldView.verify': 'Verify',
 
     // World View: placementInfoPanel, continued.
-    'placementInfoPanel.overlap': { one: '⚠ {count} other document shares this location.', other: '⚠ {count} other documents share this location.' },
+    'placementInfoPanel.overlap': { one: '⚠ {count} other build shares this location.', other: '⚠ {count} other builds share this location.' },
 
     // World View: worldCollaboratorIndicator, continued.
     'worldCollaboratorIndicator.followName': 'Follow {name}',
@@ -2417,7 +2417,7 @@ export default Object.freeze({
     // Publications: evidenceExportComparisonTable.
 
     // Publications: authorView.
-    'authorView.originalWorksForks': 'Original Works & Forks',
+    'authorView.originalWorksForks': 'Original Builds & Remixes',
 
     // Publications: publications.
     'publications.publications': 'Publications',
@@ -3213,7 +3213,7 @@ export default Object.freeze({
     'publications.whatReplacingTheCurrentArchive': 'What replacing the current archive with the external archive above would change — the current archive stays exactly as it is until "Replace Current Archive" below is clicked explicitly.',
     'publications.replacingRestampsEveryFactIn': 'Replacing restamps every fact in the external archive above IMPORTED (0.8.83) — the resulting current fingerprint will therefore differ from "External fingerprint" shown above, even though the underlying observations are identical.',
     'publications.localFactsWereObservedBy': 'Local facts were observed by this replica directly. Imported facts entered this archive through a prior "Replace Current Archive" import. Neither is more trustworthy than the other — this only states where each fact came from.',
-    'publications.anExplicitDurableRecordThat2': 'An explicit, durable record that one publication references another — never inferred from matching content, timestamps, or authors. Both publications must already have a durable identity above; a reference is never a "fork" classification, only a plain, attributable fact: this publication points at that one.',
+    'publications.anExplicitDurableRecordThat2': 'An explicit, durable record that one publication references another — never inferred from matching content, timestamps, or authors. Both publications must already have a durable identity above; a reference is never a "remix" classification, only a plain, attributable fact: this publication points at that one.',
     'publications.nothingHereIsSavedAnywhere': 'Nothing here is saved anywhere. This configuration lives only in this page\'s own memory for this browsing session, and is discarded the moment the page reloads or "Clear Configuration" is clicked.',
     'publications.thisReplicaDoesNotCurrently': 'This replica does not currently possess a valid snapshot. Choose a source below — "Import Snapshot," a placement\'s own "Materialize Snapshot," or a peer\'s own "Get Snapshot from Peer" — to try again.',
 
@@ -3835,7 +3835,7 @@ export default Object.freeze({
 
     // Identity, Peers, Chat and settings: experimentalBanner.
     'experimentalBanner.experimental': 'Experimental.',
-    'experimentalBanner.thisAreaWorksButMay': 'This area works, but may change or be removed in a later version, and what it produces may not carry over. The core of ForkBuild (building, saving, publishing, forking, identities and peers) is not affected.',
+    'experimentalBanner.thisAreaWorksButMay': 'This area works, but may change or be removed in a later version, and what it produces may not carry over. The core of ForkBuild (building, saving, publishing, remixing, identities and peers) is not affected.',
 
     // Identity, Peers, Chat and settings: loginModal.
     'loginModal.protectedWithAPassphrase': 'Protected with a passphrase',
@@ -4336,7 +4336,7 @@ export default Object.freeze({
     'yourDataView.askTheBrowserToKeep': 'Ask the Browser to Keep It',
     'yourDataView.theBrowserSaidNoBrowsers': 'The browser said no. Browsers usually agree once the site is bookmarked, installed or used often.',
     'yourDataView.backUp': 'Back up',
-    'yourDataView.theBackupHoldsYourDocuments': 'The backup holds your documents, identities and their private keys, structures, publications, peers, friends, chat history and settings. It is encrypted with the passphrase you choose here, which is needed to restore it. There is no way to open it without that passphrase.',
+    'yourDataView.theBackupHoldsYourDocuments': 'The backup holds your builds, identities and their private keys, structures, publications, peers, friends, chat history and settings. It is encrypted with the passphrase you choose here, which is needed to restore it. There is no way to open it without that passphrase.',
     'yourDataView.includeBuildsDownloadedFromOther': 'Include builds downloaded from other people (can be large; they can usually be fetched again)',
     'yourDataView.rememberTheBackupKeyOn': 'Remember the backup key on this device, for one-click and automatic backups (the passphrase itself isn\'t kept, and the key can only make backups, not open them)',
     'yourDataView.shareBackup': 'Share Backup…',
@@ -4628,7 +4628,7 @@ export default Object.freeze({
     'avatarSettingsView.saveProfileVisibility': 'Save Profile Visibility',
 
     // Your Data: backup groups (application/backup/BackupEntryGroups.js ids).
-    'backupGroup.documents': 'Documents and unsaved changes',
+    'backupGroup.documents': 'Builds and unsaved changes',
     'backupGroup.identities': 'Identities',
     'backupGroup.structures': 'My Structures',
     'backupGroup.publications': 'Your publications and evidence',

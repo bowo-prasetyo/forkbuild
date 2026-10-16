@@ -29,7 +29,7 @@ assert(say('resident.buildBy', { title: 'Château du Lac', author: 'ana', where:
     '9. A resident speaks French, with a decimal comma and guillemets');
 assert(say('history.undo', { action: message('history.moveBricks', { count: 12000 }) }) === `Annuler${NBSP}: Déplacer 12${NNBSP}000 briques`,
     '10. Undo labels, with French digit grouping and a space before the colon');
-assert(say('document.forkOf', { title: 'Village des Saules' }) === 'Fork de Village des Saules', '11. A fork\'s title');
+assert(say('document.forkOf', { title: 'Village des Saules' }) === 'Remix de Village des Saules', '11. A remix\'s title');
 assert(say('peerConnections.connectingTo', { name: 'jonas' }) === 'Connexion à jonas', '12. A name in a sentence');
 assert(say('compass.e') === 'E' && say('compass.sw') === 'SO' && say('compass.w') === 'O', '13. Compass points');
 assert(say('worldView.whatSHere') === `Qu’y a-t-il ici${NNBSP}?`, '14. A narrow space before a question mark');

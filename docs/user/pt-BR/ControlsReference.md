@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 5d71d34792209c99 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 22e0b2ed04283579 -->
 # Referência de controles
 
 <!-- languages -->
@@ -232,8 +232,8 @@ Compor, bifurcar e sua biblioteca pessoal — veja
 | `R` / `Shift+R` ao posicionar | Girar o fantasma pendente ±90° | as mesmas teclas da prévia de um bloco |
 | Clicar | Confirmar — todos os blocos da estrutura entram como um passo de desfazer | recusado numa posição ocupada (vermelha) |
 | `Esc` ao posicionar | Cancelar — nada é adicionado | |
-| Menu **⋮** do cartão, **Bifurcar como novo documento** | Começar um documento novo que nasce como cópia daquela estrutura | nunca muda a entrada da biblioteca |
-| Menu **⋮** de um cartão pronto, **Bifurcar para Minhas estruturas** | Adicioná-la a Minhas estruturas como está | nenhum documento criado, nada extraído |
+| Menu **⋮** do cartão, **Remixar como nova construção** | Começar um documento novo que nasce como cópia daquela estrutura | nunca muda a entrada da biblioteca |
+| Menu **⋮** de um cartão pronto, **Remixar para Minhas estruturas** | Adicioná-la a Minhas estruturas como está | nenhum documento criado, nada extraído |
 | Menu **⋮** de qualquer cartão, **Informações** | Mostrar um painel somente leitura com nome/categoria/blocos/área ocupada/altura/origem/descrição | nunca editável |
 | Seleção com **1 ou mais blocos**, depois **Criar planta** (seção **Grupos e planta** do painel Seleção, ou Paleta de comandos) | Abrir uma pequena caixa de diálogo (nome / categoria / descrição + prévia); salvar a seleção como nova entrada em **Minhas estruturas** | |
 | Menu **⋮** de um cartão de **Minhas estruturas**, **Renomear** | Mudar o nome de uma estrutura pessoal | só estruturas pessoais |
@@ -255,7 +255,7 @@ Uma **instância de estrutura** posiciona um documento salvo inteiro como uma
 | Arrastar na área de visualização, ou o gizmo | Mover / girar a instância | |
 | `Ctrl/Cmd+D` | Duplicar — posiciona outra instância do mesmo documento | veja [Duplicar](#duplicar-só-no-editor) — seleções de instância ganham uma instância nova em vez de uma cópia nova de blocos |
 | Campos **X / Z / Rotação** do painel da instância, depois Aplicar | Definir posição/direção exatas | Y (altura) sempre vem do terreno, nunca é um alvo |
-| **Editar documento de origem** no painel da instância | Abrir o documento referenciado para mudar os blocos dele | todas as instâncias se atualizam, já que uma instância é uma referência viva |
+| **Editar construção de origem** no painel da instância | Abrir o documento referenciado para mudar os blocos dele | todas as instâncias se atualizam, já que uma instância é uma referência viva |
 | `Delete` / `Backspace` | Remover a instância | nunca mexe no documento referenciado |
 
 ## Grupos (só no Editor)

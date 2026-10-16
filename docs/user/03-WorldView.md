@@ -569,7 +569,7 @@ status line says which it is: **🔒 Published** or **✎ Editing your copy**.
 
 A published build never changes. If the build you're in is published,
 your first change here (its details, a landmark or region, or an animal
-left as decoration) makes your own copy, titled *"Fork of &lt;original
+left as decoration) makes your own copy, titled *"Remix of &lt;original
 name&gt;"*. A short notice tells you so ("Created your own editable copy —
 … is unchanged"). The same license rules apply as for any remix (see
 [Publishing & Remixing](04-PublishingAndForking.md#forking-make-it-your-own)).

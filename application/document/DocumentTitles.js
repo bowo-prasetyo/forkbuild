@@ -11,7 +11,7 @@
 // keeps equal to these.
 const ENGLISH = Object.freeze({
     untitledWorld: () => 'Untitled ForkBuild World',
-    forkOf: (title) => `Fork of ${title}`,
+    forkOf: (title) => `Remix of ${title}`,
     copyOf: (title) => `Copy of ${title}`
 });
 

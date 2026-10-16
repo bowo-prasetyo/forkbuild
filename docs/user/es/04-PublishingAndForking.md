@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: b0b1839dc28a506e -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 75e82daaf1bb2646 -->
 # 04 — Publicar y remezclar
 
 <!-- languages -->
@@ -21,8 +21,8 @@ como en ForkBuild.)
    sin enlace.
 3. Póngale un título (Publicar rechaza una creación sin título o vacía) y,
    si quiere, una descripción y una licencia: haga clic en **✎** junto al
-   título del documento en la barra lateral para abrir **Propiedades del
-   documento**. Un documento nuevo no tiene licencia; la primera vez que
+   título del documento en la barra lateral para abrir **Propiedades de la
+   construcción**. Un documento nuevo no tiene licencia; la primera vez que
    lo publique, ForkBuild le preguntará si otros pueden remezclarlo (vea
    [Dejar que otros la remezclen](#dejar-que-otros-la-remezclen)).
 4. Presione **Guardar** para que quede guardado.
@@ -349,14 +349,14 @@ pregunta **¿Dejar que otros la remezclen?** antes de publicar nada:
 - **Ahora no** no publica nada.
 
 Su respuesta se guarda como la licencia de la construcción, así que solo se
-le pregunta una vez; cámbiela cuando quiera en **Propiedades del
-documento**. Una bifurcación ya lleva la licencia de su original, así que
+le pregunta una vez; cámbiela cuando quiera en **Propiedades de la
+construcción**. Una bifurcación ya lleva la licencia de su original, así que
 publicar una nunca pregunta.
 
 ### Todas las licencias
 
 Una creación publicada siempre se muestra con una licencia, elegida en el
-diálogo **Propiedades del documento**:
+diálogo **Propiedades de la construcción**:
 
 | Licencia | Significado |
 |---|---|
@@ -380,7 +380,7 @@ copia, y nunca mueve ni cambia la suya (consulte
 [¿Por qué puedo colocar construcciones de otras personas?](WorldViewAdvancedTools.md#por-qué-puedo-colocar-construcciones-de-otras-personas)).
 Bifurcar es aparte y lo rige la licencia (consulte
 [Colocar o bifurcar](WorldViewAdvancedTools.md#colocar-o-bifurcar)).
-Si prefiere que no la coloquen, abra **Propiedades del documento** y
+Si prefiere que no la coloquen, abra **Propiedades de la construcción** y
 configure **Quién puede colocarlo en el Mundo**:
 
 | Opción | Significado |
@@ -413,7 +413,7 @@ construir sobre una, **bifúrquela** (abajo) o use **Editar una copia** en
 la Vista del mundo. En la Vista del mundo, hacer su primer cambio en un
 mundo publicado (sus metadatos, el nombre de un hito o una región, o una
 decoración con un animal) crea automáticamente su propia copia, titulada
-*“Bifurcación de &lt;nombre original&gt;”*, con una breve confirmación
+*“Remezcla de &lt;nombre original&gt;”*, con una breve confirmación
 (“Se creó su propia copia editable; “…” no cambia”); consulte
 [Guardar y publicar también aquí](03-WorldView.md#guardar-y-publicar-también-aquí).
 
@@ -563,7 +563,7 @@ publicado: consulte
 
 1. Encuentre una construcción en **Explorar** (o en la Vista del mundo).
 2. Haga clic en **Remezclar**.
-3. La copia se abre en el Editor, titulada *“Bifurcación de &lt;nombre
+3. La copia se abre en el Editor, titulada *“Remezcla de &lt;nombre
    original&gt;”*.
 4. Construya sobre ella y luego guárdela y publíquela como propia.
 
@@ -626,7 +626,7 @@ el carro de heno.»* Una de cada cuatro semanas es una semana de remezcla
    en cambio una de esas construcciones como su propia copia.
 2. Constrúyalo a su manera: agregue una idea si quiere y hágala suya.
    Construya lo que construya, participa mientras conserve la etiqueta de
-   la semana (añádala en **Propiedades del documento → Etiquetas** si
+   la semana (añádala en **Propiedades de la construcción → Etiquetas** si
    empezó de otra forma).
 3. Publíquela antes de que acabe la semana y comparta su enlace. El texto
    del enlace nombra el desafío y su etiqueta, listo para una publicación.
@@ -700,8 +700,8 @@ bifurcaciones**:
 
 ```
 Casa medieval (original)
-└─ Bifurcación de Casa medieval (de Beto)
-   └─ Bifurcación de Bifurcación de… (de Carola)
+└─ Remezcla de Casa medieval (de Beto)
+   └─ Remezcla de Remezcla de… (de Carola)
 ```
 
 Esto significa que una gran creación puede inspirar todo un ecosistema de

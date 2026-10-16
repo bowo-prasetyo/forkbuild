@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 5d71d34792209c99 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 22e0b2ed04283579 -->
 # Steuerungsreferenz
 
 <!-- languages -->
@@ -234,8 +234,8 @@ Zusammensetzen, Forken und Ihre persönliche Bibliothek — siehe
 | `R` / `Umschalt+R` beim Platzieren | Den wartenden Geist um ±90° drehen | dieselben Tasten wie bei der Vorschau eines Steins |
 | Klick | Übernehmen — jeder Stein der Struktur landet als ein Rückgängig-Schritt | an einer belegten (roten) Position verweigert |
 | `Esc` beim Platzieren | Abbrechen — nichts wird hinzugefügt | |
-| Menü **⋮** der Karte, **Als neues Dokument forken** | Ein ganz neues Dokument beginnen, das als Kopie dieser Struktur startet | ändert nie den Bibliothekseintrag |
-| Menü **⋮** einer eingebauten Karte, **In Meine Strukturen forken** | Sie unverändert zu Meine Strukturen hinzufügen | kein Dokument erstellt, nichts herausgelöst |
+| Menü **⋮** der Karte, **Als neues Bauwerk remixen** | Ein ganz neues Dokument beginnen, das als Kopie dieser Struktur startet | ändert nie den Bibliothekseintrag |
+| Menü **⋮** einer eingebauten Karte, **In Meine Strukturen remixen** | Sie unverändert zu Meine Strukturen hinzufügen | kein Dokument erstellt, nichts herausgelöst |
 | Menü **⋮** jeder Karte, **Info** | Ein schreibgeschütztes Feld mit Name/Kategorie/Steinen/Grundfläche/Höhe/Quelle/Beschreibung zeigen | nie bearbeitbar |
 | Auswahl mit **1 oder mehr Steinen**, dann **Bauplan erstellen** (Abschnitt **Gruppen & Bauplan** des Felds Auswahl oder Befehlspalette) | Einen kleinen Dialog öffnen (Name / Kategorie / Beschreibung + Vorschau); die Auswahl als neuen Eintrag in **Meine Strukturen** speichern | |
 | Menü **⋮** einer Karte in **Meine Strukturen**, **Umbenennen** | Den Namen einer persönlichen Struktur ändern | nur persönliche Strukturen |
@@ -258,7 +258,7 @@ Kopie — siehe
 | Im Ansichtsfenster ziehen, oder das Gizmo | Die Instanz verschieben / drehen | |
 | `Strg/Cmd+D` | Duplizieren — platziert eine weitere Instanz desselben Dokuments | siehe [Duplizieren](#duplizieren-nur-editor) — bei ausgewählten Instanzen entsteht eine neue Instanz statt einer neuen Steinkopie |
 | Felder **X / Z / Drehung** im Feld der Instanz, dann Anwenden | Eine genaue Position/Ausrichtung festlegen | Y (die Höhe) ergibt sich immer aus dem Gelände, nie ein Zielwert |
-| **Quelldokument bearbeiten** im Feld der Instanz | Das referenzierte Dokument öffnen, um seine Steine zu ändern | jede Instanz aktualisiert sich, da eine Instanz eine lebendige Referenz ist |
+| **Ursprungsbauwerk bearbeiten** im Feld der Instanz | Das referenzierte Dokument öffnen, um seine Steine zu ändern | jede Instanz aktualisiert sich, da eine Instanz eine lebendige Referenz ist |
 | `Entf` / `Rücktaste` | Die Instanz entfernen | berührt nie das referenzierte Dokument |
 
 ## Gruppen (nur Editor)
