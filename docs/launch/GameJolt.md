@@ -7,13 +7,13 @@ its own address, and its rendezvous server answers only the official site),
 so the Game Jolt page is a storefront that sends players to the site, with
 the same launcher as itch.io's.
 
-**Page:** not published yet. Put its address here once it is.
+**Page:** <https://gamejolt.com/games/forkbuild/1108002> (published 16 October 2026)
 
 **Link:** <https://bowo-prasetyo.github.io/forkbuild/?ref=gamejolt>
 
-Game Jolt's add-game form has changed over the years and its help pages lag
-behind it, so a field below marked *(check)* is named from older guides:
-use whatever the live form calls it.
+The fields below are named as Game Jolt's game dashboard named them on 16
+October 2026, page by page (**Details**, **Description**, **Design**,
+**Packages**, **Maturity**, **Settings**).
 
 ## The upload
 
@@ -28,41 +28,39 @@ zip -j forkbuild-gamejolt.zip docs/launch/gamejolt/index.html docs/launch/press/
 ```
 
 Under **Packages**, make a package (call it *ForkBuild*), add a release
-(version `1.4.0`, the app's own version in package.json), and upload the
-zip as a **browser build** (*HTML*). Set its size to **800 × 500**, as on
-itch.io, rather than **Fit to screen**: the launcher is one small card, and
-a full-screen frame only stretches the castle behind it. Publish the
-release; releases start hidden.
+with **Version Number** `1.4.0` (the app's own version in package.json; a
+new release starts at 0.1.0, so change it), and upload the zip under
+**Upload Browser Build**. Leave **Fit to screen?** off: the launcher is one
+small card, and a full-screen frame only stretches the castle behind it.
+Leave **HTTPS support?** on. Publish the release; releases start hidden.
 
 Re-zip after the launcher or the castle shot changes, and add a new release
 for each app release so the page's version stays current.
 
 ## Every field
 
-| Field | Set it to |
+| Page → field | Set it to |
 |---|---|
-| Title | ForkBuild |
-| Website *(check)* | <https://bowo-prasetyo.github.io/forkbuild/?ref=gamejolt> |
-| Category | **Other**, or **Strategy/Sim** if the list has no closer fit. Game Jolt has no "sandbox" or "building" category; the tags say that. |
-| Development status | **Complete**, with updates: ForkBuild is released (1.4), and a "Complete" game needs a build, which the launcher is. |
-| Engine/Language/Creation Tool *(check)* | **HTML5** (or **JavaScript**, whichever the list offers) |
-| Description | See below. |
-| Tags | `building`, `sandbox`, `cozy`, `3d`, `multiplayer`, `coop`, `opensource`, `creative`, `relaxing`, `exploration`, as many as the form takes, in that order. Game Jolt tags are one word, so `co-op` and `open-source` lose their hyphens. |
-| Maturity rating | Answer the questionnaire honestly; it should come out **Everyone**. ForkBuild has no violence, no sexual content, no gambling and no purchases. It does have **chat and voice with other players**, so answer yes wherever the form asks about players talking to each other. |
-| Thumbnail | `press/itch-cover.png` (630 × 500) if the form accepts it, or a crop of `press/editor-castle.png` to the size it asks for. Required before the page can be published. |
-| Header | `press/itch-wide-cover.png` (1260 × 540): the logo, name and the fantasy beside the castle. |
-| Screenshots | The same four as itch.io, in this order: `home-desktop.png`, `editor-castle.png`, `editor-harbor-island.png`, `home-phone.png`. |
-| Video | The launch clip's YouTube link (`press/launch-clip.mp4`). |
-| Ads | **Off**, in the game's settings. ForkBuild promises no ads (its description says so, and [Educators](Educators.md) says it runs no advertising), and ads beside it would read as ours. |
-| Pricing | Free. |
-| Comments | On. Answer them like any launch comment. |
+| Details → Development Stage | **Complete/Stable**: ForkBuild is released (1.4) and has a playable build, the launcher. |
+| Details → Title | ForkBuild |
+| Details → URL Path | `forkbuild`: the page's own address on Game Jolt, letters, numbers and hyphens only. The site's link goes in **Website**, not here. |
+| Details → Website (optional) | <https://bowo-prasetyo.github.io/forkbuild/?ref=gamejolt> |
+| Details → Engine/Language/Creation Tool | **HTML 5/JS** |
+| Details → Add to partner system? | Off. It only applies to paid games. |
+| Description → Game Description | See below, with the hashtags at its end. |
+| Description → Game Tags | **#other**. The listed tags are genres (action, horror, puzzle…) and none fits a building game; Game Jolt takes your own tags as `#hashtags` in the description instead: `#building #sandbox #cozy #3d #multiplayer #coop #opensource #creative #relaxing #exploration`, one word each, so `co-op` and `open-source` lose their hyphens. |
+| Design → Change Header | `press/itch-wide-cover.png` (1260 × 540): the logo, name and the fantasy beside the castle. |
+| Design → Add Media | The same four screenshots as itch.io, in this order: `home-desktop.png`, `editor-castle.png`, `editor-harbor-island.png`, `home-phone.png`; and the launch clip's YouTube link (`press/launch-clip.mp4`). |
+| Design → Game Thumbnail | `press/itch-cover.png` (630 × 500), or a crop of `press/editor-castle.png` if the form asks for another size. Required before the page can be published. |
+| Design → Color Theme | The app's green, `#357f52`, if it's offered. |
+| Maturity → Age Rating | **All Ages**, with every content descriptor (violence, substances, sex/nudity, language, humor, gambling) at **None**. The form doesn't ask about players talking to each other; the description says there's chat and voice. |
+| Music | Nothing for now: it takes MP3s only, and ForkBuild's music is synthesized as it plays. |
+| Settings → Allow comments? | On. Answer them like any launch comment. |
+| Settings → Allow ratings? | On. |
 
-### AI disclosure
-
-If the form asks whether the game uses generative AI, answer as on itch.io:
-**yes**, for code, text, graphics and sound. ForkBuild's code, its text in
-every language, its logo and drawings (made by code) and its music
-(synthesized by code) were all written with an AI assistant.
+The dashboard has no ads setting and no generative-AI question. Game Jolt
+shows its own ads on game pages, so the description says ForkBuild has no
+ads *in the game*, rather than a bare "no ads" sitting beside one.
 
 ## Description
 
@@ -87,14 +85,17 @@ every language, its logo and drawings (made by code) and its music
 > - **Share a build as a link** that shows a picture of it when you paste it,
 >   embed it in a web page, or download it for Blender or a 3D printer.
 >
-> No account, no download, no ads. Your builds stay on your device until you
-> share them. Free and open source, in eight languages.
+> No account, no download, no ads in the game. Your builds stay on your
+> device until you share them. Free and open source, in eight languages.
 >
 > **Play opens ForkBuild in a new tab**, on its own site, so your builds are
 > saved there and it can be installed as an app.
 >
 > Play: <https://bowo-prasetyo.github.io/forkbuild/?ref=gamejolt>
+>
 > Source: <https://github.com/bowo-prasetyo/forkbuild>
+>
+> #building #sandbox #cozy #3d #multiplayer #coop #opensource #creative #relaxing #exploration
 
 ## Posts
 
