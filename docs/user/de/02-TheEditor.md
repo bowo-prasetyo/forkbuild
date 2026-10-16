@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: ab2f4955cd9c3ad1 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: e0b170cbd10b7cf8 -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -687,6 +687,9 @@ umfärbt oder löscht, auf beiden Bildschirmen.
 - Der Editor jedes Freundes behält seine eigene Kopie, auf seinem Gerät
   gespeichert. Wenn Sie aufhören, kann er sie behalten, aber was er ändert,
   erreicht Sie nicht mehr.
+  Ein Freund, der keine Steine gesetzt hat, wird nicht genannt, daher bleibt
+  seine Kopie Ihr Bauwerk: Aus einer Sicherung wiederhergestellt, folgt sie
+  der Lizenz des Bauwerks, wie bei jedem anderen.
 - Alle, deren Steine Ihr Bauwerk übernimmt, werden darauf genannt: Der
   Bereich des Bauwerks zeigt **Gebaut mit** und ihre Namen, und wenn Sie
   veröffentlichen, sagen es auch der geteilte Link und der Stammbaum, unter

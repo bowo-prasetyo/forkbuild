@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: ab2f4955cd9c3ad1 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: e0b170cbd10b7cf8 -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -698,6 +698,9 @@ sur les deux écrans.
 - L’Éditeur de chaque ami garde sa propre copie, enregistrée sur son
   appareil. Quand vous arrêtez, il peut la garder, mais ce qu’il modifie ne
   vous parvient plus.
+  Un ami qui n’a posé aucune brique n’est pas crédité, donc sa copie reste
+  votre construction : restaurée depuis une sauvegarde, elle suit la
+  licence de la construction, comme celle de n’importe qui.
 - Toutes les personnes dont votre construction intègre les briques y sont
   créditées : le panneau de la construction indique **Construit avec** et
   leurs noms, et quand vous publiez, le lien partagé et l’arbre généalogique
