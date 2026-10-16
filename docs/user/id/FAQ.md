@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 2f9e5c7d0c3be7d5 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 0c405c0607976a30 -->
 # Pertanyaan Umum
 
 <!-- languages -->
@@ -319,6 +319,11 @@ maupun di luarnya. Apa pun yang disepakati di luar ForkBuild adalah urusan
 Anda dan orang lain itu, dan game tidak mengetahuinya: hal itu tidak
 mengubah siapa yang membuat bangunan, siapa yang boleh menyalinnya, atau
 siapa yang boleh menempatkannya.
+
+Bangunan Anda selalu bisa Anda bawa: Anda dapat mengekspornya sebagai
+file atau mengunduhnya sebagai model 3D (lihat
+[Menyimpan, menerbitkan, memulai ulang](02-TheEditor.md#menyimpan-menerbitkan-memulai-ulang)
+dan [Mengunduh model 3D](02-TheEditor.md#mengunduh-model-3d)).
 
 Di dalam ForkBuild, apa yang boleh dilakukan orang lain dengan bangunan
 yang sudah diterbitkan ditentukan oleh lisensinya (lihat

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 2f9e5c7d0c3be7d5 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 0c405c0607976a30 -->
 # Questions fréquentes
 
 <!-- languages -->
@@ -322,6 +322,11 @@ constructions ni ne recommande d’endroit où le faire, dans le jeu ou en
 dehors. Ce qui est convenu en dehors de ForkBuild ne regarde que vous et
 l’autre personne, et le jeu n’en sait rien : cela ne change ni qui a fait
 la construction, ni qui peut la copier, ni qui peut la placer.
+
+Votre construction est toujours à vous, à emporter : vous pouvez
+l’exporter sous forme de fichier ou la télécharger comme modèle 3D (voir
+[Enregistrer, publier, recommencer](02-TheEditor.md#enregistrer-publier-recommencer)
+et [Télécharger un modèle 3D](02-TheEditor.md#télécharger-un-modèle-3d)).
 
 Dans ForkBuild, ce que les autres peuvent faire d’une construction publiée
 est décidé par sa licence (voir
