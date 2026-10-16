@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ForkBuild</title>
+<!-- The Game Jolt launcher (docs/launch/GameJolt.md): the itch.io one
+     (docs/launch/itch/index.html) with Game Jolt's ref, uploaded zipped with
+     editor-castle.png beside it. ForkBuild can't run inside Game Jolt's
+     frame, so this page sends players to the site. Colours are
+     css/main/theme.css's. -->
+<style>
+  :root {
+    color-scheme: light dark;
+    --paper: #f6efe2; --surface: #fffcf6; --ink: #2e261c; --ink-soft: #4a3f31;
+    --line: #dccaa7; --accent: #357f52; --accent-hover: #2f7549;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --paper: #1c1712; --surface: #26201a; --ink: #f0e6d5; --ink-soft: #d8ccb8; --line: #4a3f31; }
+  }
+  html, body { height: 100%; margin: 0; }
+  body {
+    display: flex; align-items: center; justify-content: flex-start;
+    background: var(--paper) url("editor-castle.png") -250px -175px / 1300px auto no-repeat;
+    color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; text-align: center;
+  }
+  main {
+    margin: 16px 16px 16px 40px; padding: 22px 28px; max-width: 20rem; border-radius: 14px;
+    background: color-mix(in srgb, var(--surface) 94%, transparent);
+    border: 1px solid var(--line); box-shadow: 0 6px 24px rgb(46 38 28 / 0.25);
+  }
+  .logo { width: 64px; height: 64px; display: block; margin: 0 auto 6px; }
+  h1 { margin: 0 0 6px; font-size: 2.1rem; }
+  p { margin: 0 0 18px; color: var(--ink-soft); }
+  a.play {
+    display: inline-block; padding: 14px 30px; border-radius: 10px;
+    background: var(--accent); color: #fff; font-weight: 700; font-size: 1.15rem; text-decoration: none;
+  }
+  a.play:hover, a.play:focus-visible { background: var(--accent-hover); }
+  small { display: block; margin-top: 14px; color: var(--ink-soft); }
+  /* Phones and narrow embeds: the card in the middle, over the castle. */
+  @media (max-width: 560px) {
+    body { justify-content: center; background-position: center; background-size: cover; }
+    main { margin: 16px; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="ForkBuild">
+    <rect width="64" height="64" rx="14" fill="#f6efe2"/>
+    <g stroke="#2e261c" stroke-width="1.3" stroke-linejoin="round">
+      <polygon points="44.3,21.3 56,28.1 50.6,24.9 39,18.2" fill="#2b6e45"/>
+      <polygon points="33.6,36.9 45.2,43.6 45.2,34.3 33.6,27.5" fill="#e2f0e5"/>
+      <polygon points="56,37.4 45.2,43.6 45.2,34.3 50.6,24.9 56,28.1" fill="#c4ddc9"/>
+      <polygon points="31.8,28.3 45.2,36 51.5,25.5 38.1,17.7" fill="#5aa877"/>
+      <polygon points="25.5,18.2 42.5,28.1 34.7,23.8 17.6,13.9" fill="#a24a2f"/>
+      <polygon points="9.8,40.7 26.8,50.6 26.8,37.1 9.8,27.3" fill="#f3e7d0"/>
+      <polygon points="42.5,41.5 26.8,50.6 26.8,37.1 34.7,23.8 42.5,28.1" fill="#dccaa7"/>
+      <polygon points="16.1,44.4 20.5,46.9 20.5,38.6 16.1,36" fill="#357f52"/>
+      <polygon points="37,39.6 32.3,42.3 32.3,36.9 37,34.1" fill="#9cc6dc"/>
+      <polygon points="8,28 26.8,38.9 35.6,24.3 16.7,13.4" fill="#d0683f"/>
+    </g>
+  </svg>
+  <h1>ForkBuild</h1>
+  <p>Build a little place. Anyone can remix it. Walk inside it with friends.</p>
+  <a class="play" href="https://bowo-prasetyo.github.io/forkbuild/?ref=gamejolt" target="_blank" rel="noopener">Play ForkBuild</a>
+  <small>Opens in a new tab. Free, open source, no account.</small>
+</main>
+</body>
+</html>

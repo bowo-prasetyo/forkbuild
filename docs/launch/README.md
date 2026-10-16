@@ -9,6 +9,7 @@ reads like an advert, and most of them ask that you say you made it.
 - [Product Hunt](ProductHunt.md)
 - [Reddit](Reddit.md)
 - [itch.io](ItchIo.md): published at <https://forkbuild.itch.io/forkbuild>
+- [Game Jolt](GameJolt.md): the next storefront, with the same launcher
 - [Nostr, Steem and Blurt](Communities.md)
 - [Educators](Educators.md)
 - [Press kit](PressKit.md): screenshots, one-liners, facts
