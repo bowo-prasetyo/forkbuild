@@ -2,7 +2,8 @@
 // in a real browser, with no network: Home on a desktop and a phone, a
 // ready-made castle and harbor island in the Editor, and the weekly
 // challenge. Also at Product Hunt's gallery size (1270 × 760), and itch.io's
-// cover (630 × 500, docs/launch/itch/cover.html over the castle shot).
+// cover (630 × 500, docs/launch/itch/cover.html) and wide cover (1260 × 540,
+// 21:9, docs/launch/itch/wide-cover.html), both over the castle shot.
 //
 //   node scripts/press-kit.mjs [file-name-filter]
 //
@@ -46,7 +47,8 @@ const SHOTS = [
     { file: 'producthunt-home.png', size: [1270, 760], hash: '#/', ready: '.home-showcase canvas, .home-showcase .build-turntable-fallback', settle: 2500 },
     { file: 'producthunt-editor.png', size: [1270, 760], hash: '#/editor?start=showcase:village_square', ready: '.document-info-compact-title', settle: 2500, hideGuide: true },
     // After editor-castle.png, which it is drawn over.
-    { file: 'itch-cover.png', size: [630, 500], hash: 'docs/launch/itch/cover.html', ready: '.band img', settle: 500 }
+    { file: 'itch-cover.png', size: [630, 500], hash: 'docs/launch/itch/cover.html', ready: '.band img', settle: 500 },
+    { file: 'itch-wide-cover.png', size: [1260, 540], hash: 'docs/launch/itch/wide-cover.html', ready: '.name img', settle: 500 }
 ];
 const only = process.argv[2];
 

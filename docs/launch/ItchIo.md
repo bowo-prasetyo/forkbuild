@@ -49,6 +49,7 @@ delete the old upload. Re-zip after the press shots change.
 | Cover image | `press/itch-cover.png` (630 × 500): the castle, with the logo, name and tagline on a paper band. |
 | Gameplay video | A YouTube or Vimeo link to the launch clip (*Try it now → finish the house → Walk inside it*, 30 seconds, recorded with **Always day**), once it exists. Pages with a video are clicked more than pages without one. |
 | Screenshots | Four, in this order, from [the press kit](press/): `home-desktop.png`, `editor-castle.png`, `editor-harbor-island.png`, `home-phone.png`. None names a week's theme, so they don't go out of date. |
+| Promo images | Under **Metadata → Promo images**: **Wide cover** `press/itch-wide-cover.png` (1260 × 540, 21:9; itch only features a game on its home page with one), **Social media image** `assets/social/forkbuild-card.png`, **Favicon** `assets/icons/icon-512.png`. Leave **Logo** empty until there is a wide, transparent logo with the name in it: itch shows the title instead. |
 
 ### AI generation disclosure
 

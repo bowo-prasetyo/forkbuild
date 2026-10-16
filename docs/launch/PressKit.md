@@ -41,6 +41,7 @@ In [press/](press/), made by `node scripts/press-kit.mjs`:
 | `challenge.png` | This week's build challenge | 1280 × 800 |
 | `producthunt-home.png`, `producthunt-editor.png` | Product Hunt's gallery size | 1270 × 760 |
 | `itch-cover.png` | itch.io's cover: the castle, with the logo, name and tagline ([itch/cover.html](itch/cover.html)) | 630 × 500 |
+| `itch-wide-cover.png` | itch.io's wide cover, for its home page featuring: the logo, name and the fantasy beside the castle ([itch/wide-cover.html](itch/wide-cover.html)) | 1260 × 540 (21:9) |
 
 The link-preview card is [assets/social/forkbuild-card.png](../../assets/social/forkbuild-card.png),
 and the icons are in [assets/icons/](../../assets/icons/), both made by
