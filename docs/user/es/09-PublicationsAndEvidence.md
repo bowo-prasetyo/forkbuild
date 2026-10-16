@@ -1,9 +1,14 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: dbd0c9839aa5a461 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: d748ce22f6360f55 -->
 # 09 — Publicaciones y evidencia externa
 
 <!-- languages -->
 [English](../09-PublicationsAndEvidence.md) · [Deutsch](../de/09-PublicationsAndEvidence.md) · **Español** · [Français](../fr/09-PublicationsAndEvidence.md) · [Bahasa Indonesia](../id/09-PublicationsAndEvidence.md) · [日本語](../ja/09-PublicationsAndEvidence.md) · [한국어](../ko/09-PublicationsAndEvidence.md) · [Português (Brasil)](../pt-BR/09-PublicationsAndEvidence.md)
 <!-- /languages -->
+
+> **Avanzado.** No necesita este capítulo para construir, compartir, remezclar
+> o pasear con sus amigos: eso está en los
+> [capítulos de Jugar](README.md#jugar-léalo-en-orden). Siga leyendo si quiere saber qué
+> funciona por debajo.
 
 > **En parte experimental.** La página Publicaciones es una función
 > habitual: su lista y sus estados, quitar publicaciones que no se pueden
@@ -16,7 +21,7 @@
 > **Experimental**: todo tipo de anclaje salvo en Arweave, las billeteras y
 > sus pasos de Bitcoin y Base, Steem, Blurt, el pinning remoto de IPFS y
 > todo el panel **Herramientas de billetera y archivo**. Las guías
-> [11](11-EvidenceAndStorage.md) y [12](12-ArchiveAndLeaderboards.md)
+> [11](11-EvidenceAndStorage.md) y [12](12-ArchiveAndAchievements.md)
 > indican cuáles de sus secciones son Experimentales. Construir, guardar,
 > publicar en Explorar, bifurcar, las identidades y los pares no
 > dependen de nada de esto.
@@ -39,7 +44,7 @@ declaración:
 - **[Evidencia y almacenamiento](11-EvidenceAndStorage.md)**: evidencia
   externa (Bitcoin, Base, Arweave, Steem, Blurt), los flujos de billetera, las
   Ubicaciones de Snapshots, la publicación en IPFS, Steem y Blurt.
-- **[Archivo y logros](12-ArchiveAndLeaderboards.md)**: el archivo
+- **[Archivo y logros](12-ArchiveAndAchievements.md)**: el archivo
   duradero de observaciones, las referencias y los logros.
 
 ## Dos significados de “publicar”
@@ -182,7 +187,7 @@ final, el panel plegado **Herramientas de billetera y archivo**
 contiene herramientas para toda la página en tres pestañas: **Anclaje en
 blockchain**, **Herramientas de archivo** y **Referencias y logros**
 (consulte las guías [11](11-EvidenceAndStorage.md) y
-[12](12-ArchiveAndLeaderboards.md)). El enlace a él en la introducción de
+[12](12-ArchiveAndAchievements.md)). El enlace a él en la introducción de
 la página, y en cualquier paso que necesite observar antes una billetera,
 lo abre por usted.
 
@@ -229,7 +234,7 @@ Debajo, dos secciones plegadas:
 | **Snapshot** | [Snapshot local](#snapshot-local): lo que tiene este dispositivo y cómo obtenerlo. |
 | **Descentralización y evidencia** | [Descentralización](#la-descentralización-de-un-vistazo), la [lista de evidencia](11-EvidenceAndStorage.md#la-lista-de-evidencia) y los pasos de las transacciones de Bitcoin y Base (Experimental). |
 | **Colocaciones e IPFS** | La lista de [Ubicaciones de Snapshots](11-EvidenceAndStorage.md#ubicaciones-de-snapshots) y la [Publicación en IPFS](11-EvidenceAndStorage.md#publicación-en-ipfs) (Experimental). |
-| **Historial** | **Mostrar línea de tiempo entre dominios**: todas las observaciones de IPFS, Bitcoin y Base que este dispositivo registró para esta publicación, en orden cronológico, tomadas del [Archivo de observaciones](12-ArchiveAndLeaderboards.md), así que se conservan entre visitas; o un aviso de que todavía no hay nada registrado. |
+| **Historial** | **Mostrar línea de tiempo entre dominios**: todas las observaciones de IPFS, Bitcoin y Base que este dispositivo registró para esta publicación, en orden cronológico, tomadas del [Archivo de observaciones](12-ArchiveAndAchievements.md), así que se conservan entre visitas; o un aviso de que todavía no hay nada registrado. |
 
 ### Significado de los estados
 
@@ -509,7 +514,7 @@ comprobaciones, los intentos y las pantallas en curso no.
 
 Después de recargar, los resultados de un flujo o de una publicación en
 IPFS siguen visibles en el
-[Archivo de observaciones](12-ArchiveAndLeaderboards.md#el-archivo-de-observaciones-de-publicaciones),
+[Archivo de observaciones](12-ArchiveAndAchievements.md#el-archivo-de-observaciones-de-publicaciones),
 en el ciclo de vida de un registro o (para Bitcoin) en la Evidencia
 histórica de anclajes en Bitcoin. Vuelva a conectar la billetera, o
 vuelva a configurar el proveedor de pinning, para continuar.

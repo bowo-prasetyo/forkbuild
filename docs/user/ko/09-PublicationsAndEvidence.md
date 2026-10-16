@@ -1,9 +1,13 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: dbd0c9839aa5a461 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: d748ce22f6360f55 -->
 # 09 — 게시물과 외부 증거
 
 <!-- languages -->
 [English](../09-PublicationsAndEvidence.md) · [Deutsch](../de/09-PublicationsAndEvidence.md) · [Español](../es/09-PublicationsAndEvidence.md) · [Français](../fr/09-PublicationsAndEvidence.md) · [Bahasa Indonesia](../id/09-PublicationsAndEvidence.md) · [日本語](../ja/09-PublicationsAndEvidence.md) · **한국어** · [Português (Brasil)](../pt-BR/09-PublicationsAndEvidence.md)
 <!-- /languages -->
+
+> **고급.** 짓고, 공유하고, 리믹스하고, 친구와 돌아다니는 데 이 장은 필요
+> 없어요. 그건 [놀기 장](README.md#놀기-순서대로-읽기)에 있어요. 그 아래에서 무엇이
+> 돌아가는지 궁금할 때 읽어 보세요.
 
 <!-- languages -->
 <!-- /languages -->
@@ -15,7 +19,7 @@
 > 수 있습니다. 페이지는 그런 부분마다 **실험적** 배지를 붙입니다:
 > Arweave를 제외한 모든 종류의 앵커링, 지갑과 그 Bitcoin·Base 단계, Steem, Blurt, 원격 IPFS 피닝, 그리고
 > **지갑 및 아카이브 도구** 패널 전체. 안내 [11](11-EvidenceAndStorage.md)과
-> [12](12-ArchiveAndLeaderboards.md)에 어떤 섹션이 실험적인지 나와 있습니다.
+> [12](12-ArchiveAndAchievements.md)에 어떤 섹션이 실험적인지 나와 있습니다.
 > 짓기, 저장, 둘러보기에 게시하기, 포크, 신원, 피어는 이 중 어느 것에도 의존하지
 > 않습니다.
 
@@ -33,7 +37,7 @@ X라고 부른다” 같은 **서명된 클레임**과, 클레임에 더할 수 
   연결 서버. 실험적 기능이 아니며 모두에게 유용합니다.
 - **[증거와 저장소](11-EvidenceAndStorage.md)** — 외부 증거(Bitcoin, Base,
   Arweave, Steem, Blurt), 지갑 절차, 스냅샷 배치, IPFS 게시, Steem과 Blurt.
-- **[아카이브와 업적](12-ArchiveAndLeaderboards.md)** — 영구 관측 아카이브,
+- **[아카이브와 업적](12-ArchiveAndAchievements.md)** — 영구 관측 아카이브,
   참조, 업적.
 
 ## “게시”의 두 가지 의미
@@ -150,7 +154,7 @@ X라고 부른다” 같은 **서명된 클레임**과, 클레임에 더할 수 
 것이든 피어의 것이든 모두 나열됩니다. 맨 아래에 접혀 있는 **지갑 및 아카이브 도구** 패널에는 페이지 전체에 쓰는 도구가 탭 세
 개에 있습니다: **블록체인
 앵커링**, **아카이브 도구**, **참조와 업적**(안내 [11](11-EvidenceAndStorage.md)과
-[12](12-ArchiveAndLeaderboards.md) 참고). 페이지 소개에 있는 링크와, 먼저 지갑을
+[12](12-ArchiveAndAchievements.md) 참고). 페이지 소개에 있는 링크와, 먼저 지갑을
 관측해야 하는 단계의 링크를 누르면 이 패널이 열립니다.
 
 이 패널은 [네트워크 설정](10-NetworkSettings.md#실험적-도구-표시)에서 **실험적 도구 표시**가 켜져 있을 때만
@@ -187,7 +191,7 @@ X라고 부른다” 같은 **서명된 클레임**과, 클레임에 더할 수 
 | **스냅샷** | [로컬 스냅샷](#로컬-스냅샷): 이 기기가 가진 것과 그것을 얻는 방법. |
 | **탈중앙화와 증거** | [탈중앙화](#탈중앙화-한눈에-보기), [증거 목록](11-EvidenceAndStorage.md#증거-목록), Bitcoin과 Base 트랜잭션 단계(실험적). |
 | **배치와 IPFS** | [스냅샷 배치](11-EvidenceAndStorage.md#스냅샷-배치) 목록과 [IPFS 게시](11-EvidenceAndStorage.md#ipfs-게시)(실험적). |
-| **기록** | **도메인 간 타임라인 표시**: 이 기기가 이 게시물에 대해 기록한 모든 IPFS, Bitcoin, Base 관측을 시간 순서로. [관측 아카이브](12-ArchiveAndLeaderboards.md)에서 읽으므로 방문이 바뀌어도 남으며, 기록이 없으면 그렇다고 알려 줌. |
+| **기록** | **도메인 간 타임라인 표시**: 이 기기가 이 게시물에 대해 기록한 모든 IPFS, Bitcoin, Base 관측을 시간 순서로. [관측 아카이브](12-ArchiveAndAchievements.md)에서 읽으므로 방문이 바뀌어도 남으며, 기록이 없으면 그렇다고 알려 줌. |
 
 ### 상태의 의미
 
@@ -426,7 +430,7 @@ JSON 묶음)를 고르는 파일 선택기와 붙여넣기 상자를 보여 줍�
 | 게시물 참조 | 열어 두었던 카드와 줄 |
 
 새로 고친 뒤에도 절차나 IPFS 게시의 결과는
-[관측 아카이브](12-ArchiveAndLeaderboards.md#게시-관측-아카이브), 기록의 수명 주기,
+[관측 아카이브](12-ArchiveAndAchievements.md#게시-관측-아카이브), 기록의 수명 주기,
 또는 (Bitcoin이라면) Bitcoin 앵커 증거 기록에서 볼 수 있습니다. 계속하려면 지갑을
 다시 연결하거나 피닝 제공자를 다시 설정하세요.
 

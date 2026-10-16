@@ -1,9 +1,14 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: dbd0c9839aa5a461 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: d748ce22f6360f55 -->
 # 09 — Publikasi & Bukti Eksternal
 
 <!-- languages -->
 [English](../09-PublicationsAndEvidence.md) · [Deutsch](../de/09-PublicationsAndEvidence.md) · [Español](../es/09-PublicationsAndEvidence.md) · [Français](../fr/09-PublicationsAndEvidence.md) · **Bahasa Indonesia** · [日本語](../ja/09-PublicationsAndEvidence.md) · [한국어](../ko/09-PublicationsAndEvidence.md) · [Português (Brasil)](../pt-BR/09-PublicationsAndEvidence.md)
 <!-- /languages -->
+
+> **Lanjutan.** Anda tidak memerlukan bab ini untuk membangun, berbagi,
+> meremiks, atau berjalan-jalan bersama teman: semua itu ada di
+> [bab Bermain](README.md#bermain-baca-berurutan). Lanjutkan membaca bila Anda ingin tahu apa
+> yang berjalan di baliknya.
 
 > **Sebagian eksperimental.** Halaman Publikasi adalah fitur biasa: daftar
 > dan statusnya, menghapus publikasi yang tidak dapat dipakai, mengumumkan
@@ -16,7 +21,7 @@
 > setiap jenis penjangkaran kecuali Arweave, dompet beserta langkah Bitcoin
 > dan Base-nya, Steem, Blurt, pinning IPFS jarak jauh, serta seluruh panel
 > **Alat Dompet & Arsip**. Panduan [11](11-EvidenceAndStorage.md)
-> dan [12](12-ArchiveAndLeaderboards.md) menyebutkan bagian mana yang
+> dan [12](12-ArchiveAndAchievements.md) menyebutkan bagian mana yang
 > Eksperimental. Membangun, menyimpan, menerbitkan ke Jelajahi, fork,
 > identitas, dan rekan tidak bergantung pada semua itu.
 
@@ -38,7 +43,7 @@ tambahkan pada sebuah klaim:
 - **[Bukti & Penyimpanan](11-EvidenceAndStorage.md)** — bukti eksternal
   (Bitcoin, Base, Arweave, Steem, Blurt), alur dompet, Penempatan Snapshot,
   penerbitan IPFS, Steem, dan Blurt.
-- **[Arsip & Pencapaian](12-ArchiveAndLeaderboards.md)** — arsip
+- **[Arsip & Pencapaian](12-ArchiveAndAchievements.md)** — arsip
   pengamatan yang tahan lama, referensi, dan pencapaian.
 
 ## Dua arti "terbitkan"
@@ -182,7 +187,7 @@ milik rekan. Di bagian bawah, panel terlipat **Alat Dompet & Arsip** berisi
 alat untuk seluruh halaman dalam tiga tab:
 **Penjangkaran Blockchain**, **Alat Arsip**, dan **Referensi &
 Pencapaian** (lihat panduan [11](11-EvidenceAndStorage.md) dan
-[12](12-ArchiveAndLeaderboards.md)). Tautan ke panel itu di pengantar
+[12](12-ArchiveAndAchievements.md)). Tautan ke panel itu di pengantar
 halaman, dan di setiap langkah yang memerlukan pengamatan dompet terlebih
 dahulu, akan membukanya untuk Anda.
 
@@ -226,7 +231,7 @@ Di bawahnya, dua bagian terlipat:
 | **Snapshot** | [Snapshot Lokal](#snapshot-lokal): apa yang disimpan perangkat ini, dan cara mendapatkannya. |
 | **Desentralisasi & Bukti** | [Desentralisasi](#desentralisasi-sekilas), [daftar bukti](11-EvidenceAndStorage.md#daftar-bukti), dan langkah-langkah transaksi Bitcoin dan Base (Eksperimental). |
 | **Penempatan & IPFS** | Daftar [Penempatan Snapshot](11-EvidenceAndStorage.md#penempatan-snapshot) dan [Penerbitan IPFS](11-EvidenceAndStorage.md#penerbitan-ipfs) (Eksperimental). |
-| **Riwayat** | **Tampilkan Linimasa Lintas Domain**: setiap pengamatan IPFS, Bitcoin, dan Base yang dicatat perangkat ini untuk publikasi ini, berurutan menurut waktu, dari [Arsip Pengamatan](12-ArchiveAndLeaderboards.md), sehingga tersimpan antarkunjungan; atau catatan bahwa belum ada yang tercatat. |
+| **Riwayat** | **Tampilkan Linimasa Lintas Domain**: setiap pengamatan IPFS, Bitcoin, dan Base yang dicatat perangkat ini untuk publikasi ini, berurutan menurut waktu, dari [Arsip Pengamatan](12-ArchiveAndAchievements.md), sehingga tersimpan antarkunjungan; atau catatan bahwa belum ada yang tercatat. |
 
 ### Arti status
 
@@ -513,7 +518,7 @@ percobaan, dan layar yang sedang berlangsung tidak.
 | Referensi Publikasi | Kartu dan baris mana yang sedang Anda buka |
 
 Setelah dimuat ulang, hasil sebuah alur atau penerbitan IPFS tetap terlihat
-di [Arsip Pengamatan](12-ArchiveAndLeaderboards.md#arsip-pengamatan-publikasi),
+di [Arsip Pengamatan](12-ArchiveAndAchievements.md#arsip-pengamatan-publikasi),
 siklus hidup sebuah catatan, atau (untuk Bitcoin) Bukti Jangkar Bitcoin
 Historis. Hubungkan kembali dompet, atau konfigurasikan ulang penyedia
 pinning, untuk melanjutkan.

@@ -1,9 +1,14 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: c5e3e99fc2863179 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: db53c936c475dddc -->
 # 11 — Bukti & Penyimpanan
 
 <!-- languages -->
 [English](../11-EvidenceAndStorage.md) · [Deutsch](../de/11-EvidenceAndStorage.md) · [Español](../es/11-EvidenceAndStorage.md) · [Français](../fr/11-EvidenceAndStorage.md) · **Bahasa Indonesia** · [日本語](../ja/11-EvidenceAndStorage.md) · [한국어](../ko/11-EvidenceAndStorage.md) · [Português (Brasil)](../pt-BR/11-EvidenceAndStorage.md)
 <!-- /languages -->
+
+> **Lanjutan.** Anda tidak memerlukan bab ini untuk membangun, berbagi,
+> meremiks, atau berjalan-jalan bersama teman: semua itu ada di
+> [bab Bermain](README.md#bermain-baca-berurutan). Lanjutkan membaca bila Anda ingin tahu apa
+> yang berjalan di baliknya.
 
 > **Sebagian besar eksperimental.** Menyimpan konten di IPFS atau Arweave
 > dari blok **Distribusi → Konten** pada sebuah kartu
@@ -381,7 +386,7 @@ ditambang, dengan tiga hasil yang sama seperti
 pemeriksaan ditambahkan ke **Tampilkan Riwayat Konfirmasi** milik
 penyiaran ini. Daftar itu dihapus saat dimuat ulang, tetapi setiap hasil
 juga disimpan di
-[Arsip Pengamatan Publikasi](12-ArchiveAndLeaderboards.md#arsip-pengamatan-publikasi).
+[Arsip Pengamatan Publikasi](12-ArchiveAndAchievements.md#arsip-pengamatan-publikasi).
 
 ### Apa yang tidak dilakukan alur ini
 
@@ -526,7 +531,7 @@ Base** memeriksa apakah transaksi itu sudah ada di dalam blok:
 **Amati Transaksi Lagi** menambahkan ke **Tampilkan Riwayat Pengamatan**.
 Daftar itu dihapus saat dimuat ulang, tetapi setiap pengamatan juga
 disimpan di
-[Arsip Pengamatan Publikasi](12-ArchiveAndLeaderboards.md#arsip-pengamatan-publikasi).
+[Arsip Pengamatan Publikasi](12-ArchiveAndAchievements.md#arsip-pengamatan-publikasi).
 
 ### Publikasi Jangkar Base
 
@@ -677,7 +682,7 @@ seperti penempatan, hasilnya bukan klaim bertanda tangan yang dapat
 ditemukan orang lain: hasilnya adalah catatan bahwa sebuah penyedia
 menerima byte ini. Hasil di layar dihapus saat dimuat ulang, tetapi setiap
 penerbitan yang berhasil dan setiap verifikasi juga disimpan di
-[Arsip Pengamatan Publikasi](12-ArchiveAndLeaderboards.md#arsip-pengamatan-publikasi).
+[Arsip Pengamatan Publikasi](12-ArchiveAndAchievements.md#arsip-pengamatan-publikasi).
 
 ### Mengonfigurasi penyedia pinning jarak jauh
 

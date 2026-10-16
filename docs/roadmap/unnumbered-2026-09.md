@@ -7120,3 +7120,25 @@ yours, and lives in a world** (the world around a build is worth walking to). Al
   reduced motion or in Always day, and the soundscape plays each thunder once), `WebAudioSoundscapeProvider`
   (thunder is audible and rolls away). Checked by eye at night and by day.
 - Not done: no lightning bolt drawn in the sky, only its light; the weather is the same over the whole world.
+
+## Advanced chapters marked, VISION for contributors (unnumbered, 2026-10-15)
+
+**The last of the creative-direction review's documentation items.** Pillar served: building feels joyful (a newcomer
+is told which chapters they can skip), with the project's own direction (contributors read the code's purpose in the
+game's terms).
+
+- **Each Advanced chapter says it is optional**: Identity & Login, Peer Connections & Friends, Chat & Conversations,
+  Publications & External Evidence, Network Settings, Evidence & Storage and Archive & Achievements open with a note
+  that building, sharing, remixing and walking with friends don't need them, linking to the Play chapters. In all
+  eight languages.
+- **Chapter 12 renamed** from `12-ArchiveAndLeaderboards.md` to `12-ArchiveAndAchievements.md`, matching its title
+  since leaderboards were retired, in every language, with every link to it.
+- **docs/VISION.md's second half** ("How it's built, for contributors") replaces "engine first … Git for 3D models"
+  and the 0.1.46 navigation notes: why a build is a signed document in an open format, the layers and what each holds,
+  what a contributor keeps to (the Editor builds and World View is for looking and meeting, changes through the World
+  as undoable commands, remixes remember their source, infrastructure out of sight, the player's words), and where to
+  start.
+- **Who signs** (docs/Pillars.md, "Networks: readers and writers"): writers sign and pay through the player's own
+  extension or wallet wherever one exists, and ForkBuild holds no key for those networks; IPFS remote pinning, with no
+  extension or wallet, is the exception whose access details ForkBuild holds (address and fields saved, token for the
+  visit).

@@ -1,9 +1,13 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: dbd0c9839aa5a461 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: d748ce22f6360f55 -->
 # 09 — 公開物と外部証拠
 
 <!-- languages -->
 [English](../09-PublicationsAndEvidence.md) · [Deutsch](../de/09-PublicationsAndEvidence.md) · [Español](../es/09-PublicationsAndEvidence.md) · [Français](../fr/09-PublicationsAndEvidence.md) · [Bahasa Indonesia](../id/09-PublicationsAndEvidence.md) · **日本語** · [한국어](../ko/09-PublicationsAndEvidence.md) · [Português (Brasil)](../pt-BR/09-PublicationsAndEvidence.md)
 <!-- /languages -->
+
+> **詳細。** 作る、共有する、リミックスする、友達と歩き回るためにこの章は
+> 必要ありません。それは [遊ぶの章](README.md#遊ぶ順番に読んでください) にあります。下で何が
+> 動いているか知りたくなったら読み進めてください。
 
 > **一部は試験的です。** 公開物ページは通常の機能です。一覧と状態、
 > 使えない公開物の削除、Nostr や Arweave での告知、IPFS や Arweave への
@@ -15,7 +19,7 @@
 > IPFS ピン留め、そして
 > **ウォレット・アーカイブ用ツール** のパネル全体です。
 > ガイド [11](11-EvidenceAndStorage.md) と
-> [12](12-ArchiveAndLeaderboards.md) には、どのセクションが実験的かが
+> [12](12-ArchiveAndAchievements.md) には、どのセクションが実験的かが
 > 書かれています。作品づくり、保存、「さがす」への公開、フォーク、
 > アイデンティティ、ピアは、どれもこれに依存しません。
 
@@ -37,7 +41,7 @@ ForkBuild を使うのに、ここにあるものは何も必要ありません�
 - **[証拠とストレージ](11-EvidenceAndStorage.md)** — 外部証拠
   （Bitcoin、Base、Arweave、Steem、Blurt）、ウォレットのパイプライン、
   スナップショットの配置、IPFS への公開、Steem と Blurt。
-- **[アーカイブと実績](12-ArchiveAndLeaderboards.md)** — 永続的な
+- **[アーカイブと実績](12-ArchiveAndAchievements.md)** — 永続的な
   観測アーカイブ、参照、実績。
 
 ## 「公開」の 2 つの意味
@@ -171,7 +175,7 @@ Nostr、Steem。最初は
 には、ページ全体のための道具が 3 つのタブで入っています。
 **ブロックチェーンへのアンカリング**、**アーカイブツール**、
 **参照と実績** です（ガイド [11](11-EvidenceAndStorage.md) と
-[12](12-ArchiveAndLeaderboards.md) を参照）。ページの冒頭にあるリンクや、
+[12](12-ArchiveAndAchievements.md) を参照）。ページの冒頭にあるリンクや、
 先にウォレットの観測が必要な手順のリンクから開くと、パネルが自動で
 開きます。
 
@@ -213,7 +217,7 @@ Nostr、Steem。最初は
 | **スナップショット** | [ローカルのスナップショット](#ローカルのスナップショット): このデバイスが保持しているものと、その取得方法。 |
 | **分散化と証拠** | [分散化](#分散化の概要)、[証拠の一覧](11-EvidenceAndStorage.md#証拠の一覧)、Bitcoin と Base のトランザクションの手順（実験的）。 |
 | **配置とIPFS** | [スナップショットの配置](11-EvidenceAndStorage.md#スナップショットの配置) の一覧と [IPFSへの公開](11-EvidenceAndStorage.md#ipfsへの公開)（実験的）。 |
-| **履歴** | **ドメイン横断のタイムラインを表示**: この端末がこの公開物について記録した IPFS、Bitcoin、Base のすべての観測を時系列で。[観測アーカイブ](12-ArchiveAndLeaderboards.md) から読むので、訪問をまたいで残ります。何も記録がなければ、そう表示されます。 |
+| **履歴** | **ドメイン横断のタイムラインを表示**: この端末がこの公開物について記録した IPFS、Bitcoin、Base のすべての観測を時系列で。[観測アーカイブ](12-ArchiveAndAchievements.md) から読むので、訪問をまたいで残ります。何も記録がなければ、そう表示されます。 |
 
 ### 状態の意味
 
@@ -485,7 +489,7 @@ Nostr、Steem。最初は
 | 公開物の参照 | 開いていたカードや行 |
 
 再読み込みしたあとも、パイプラインや IPFS への公開の結果は、
-[観測アーカイブ](12-ArchiveAndLeaderboards.md#公開物の観測アーカイブ)、
+[観測アーカイブ](12-ArchiveAndAchievements.md#公開物の観測アーカイブ)、
 記録のライフサイクル、（Bitcoin の場合は）過去の Bitcoin アンカーの
 証拠で見られます。続けるには、ウォレットを接続し直すか、ピン留め
 サービスを設定し直してください。

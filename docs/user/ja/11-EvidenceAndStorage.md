@@ -1,9 +1,13 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: c5e3e99fc2863179 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: db53c936c475dddc -->
 # 11 — 証拠とストレージ
 
 <!-- languages -->
 [English](../11-EvidenceAndStorage.md) · [Deutsch](../de/11-EvidenceAndStorage.md) · [Español](../es/11-EvidenceAndStorage.md) · [Français](../fr/11-EvidenceAndStorage.md) · [Bahasa Indonesia](../id/11-EvidenceAndStorage.md) · **日本語** · [한국어](../ko/11-EvidenceAndStorage.md) · [Português (Brasil)](../pt-BR/11-EvidenceAndStorage.md)
 <!-- /languages -->
+
+> **詳細。** 作る、共有する、リミックスする、友達と歩き回るためにこの章は
+> 必要ありません。それは [遊ぶの章](README.md#遊ぶ順番に読んでください) にあります。下で何が
+> 動いているか知りたくなったら読み進めてください。
 
 > **ほとんどが試験的です。** カードの **配信 → 内容** ブロックから
 > IPFS や Arweave にコンテンツを保存すること（[配置を作成する](#配置を作成する)
@@ -362,7 +366,7 @@ Bitcoin ネットワークに送ります。
 結果を返します。確認のたびに、このブロードキャストの
 **承認の履歴を表示** に追加されます。この一覧は再読み込みで消えますが、
 すべての結果は
-[公開物の観測アーカイブ](12-ArchiveAndLeaderboards.md#公開物の観測アーカイブ)
+[公開物の観測アーカイブ](12-ArchiveAndAchievements.md#公開物の観測アーカイブ)
 にも残ります。
 
 ### パイプラインがしないこと
@@ -506,7 +510,7 @@ Bitcoin とは別のもので、独自のウォレット、独自のトランザ
 
 **トランザクションをもう一度観測** は **観測の履歴を表示** に追加します。
 この一覧は再読み込みで消えますが、すべての観測は
-[公開物の観測アーカイブ](12-ArchiveAndLeaderboards.md#公開物の観測アーカイブ)
+[公開物の観測アーカイブ](12-ArchiveAndAchievements.md#公開物の観測アーカイブ)
 にも残ります。
 
 ### Base アンカーの公開
@@ -652,7 +656,7 @@ IPFS の配置を *読む* のにノードは不要です。**スナップショ
 署名付きのクレームではなく、サービスがそのバイト列を受け入れたという
 記録です。画面上の結果は再読み込みで消えますが、成功したすべての公開と
 すべての検証は
-[公開物の観測アーカイブ](12-ArchiveAndLeaderboards.md#公開物の観測アーカイブ)
+[公開物の観測アーカイブ](12-ArchiveAndAchievements.md#公開物の観測アーカイブ)
 にも残ります。
 
 ### リモートのピン留めサービスを設定する

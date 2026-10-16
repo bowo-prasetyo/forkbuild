@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: a002122a9a62ba43 -->
+<!-- translation-of: docs/user/README.md source-hash: 4ae3c13f1318370c -->
 # ForkBuild-Benutzerdokumentation
 
 <!-- languages -->
@@ -98,7 +98,7 @@ experimentellen Werkzeuge. Zum Spielen brauchen Sie nichts davon.
   und, *experimentell*, andere externe Nachweise, die Wallet-Abläufe für
   Bitcoin und Base, entferntes IPFS-Pinning, Steem und Blurt.
   [Ihre Arbeit verteilen](Distribution.md) zeigt, wie das zusammenpasst.
-- **[Archiv & Erfolge](12-ArchiveAndLeaderboards.md)** —
+- **[Archiv & Erfolge](12-ArchiveAndAchievements.md)** —
   *experimentell*. Das Beobachtungsarchiv, Veröffentlichungsverweise
   und Erfolge.
 

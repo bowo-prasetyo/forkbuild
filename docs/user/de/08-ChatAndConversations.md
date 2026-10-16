@@ -1,9 +1,14 @@
-<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: d5ddd1ed7cb40c91 -->
+<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: df3ccec07b27f9d8 -->
 # 08 — Chat & Unterhaltungen
 
 <!-- languages -->
 [English](../08-ChatAndConversations.md) · **Deutsch** · [Español](../es/08-ChatAndConversations.md) · [Français](../fr/08-ChatAndConversations.md) · [Bahasa Indonesia](../id/08-ChatAndConversations.md) · [日本語](../ja/08-ChatAndConversations.md) · [한국어](../ko/08-ChatAndConversations.md) · [Português (Brasil)](../pt-BR/08-ChatAndConversations.md)
 <!-- /languages -->
+
+> **Erweitert.** Zum Bauen, Teilen, Remixen und Herumlaufen mit Freunden
+> brauchen Sie dieses Kapitel nicht: Das steht in den
+> [Spielen-Kapiteln](README.md#spielen-der-reihe-nach-lesen). Lesen Sie weiter, wenn Sie wissen
+> möchten, was darunter läuft.
 
 Direktnachrichten in ForkBuild laufen Peer-to-Peer und **nur unter
 Freunden** — wie Sie sich zuerst mit jemandem befreunden, steht unter

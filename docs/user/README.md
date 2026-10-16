@@ -88,7 +88,7 @@ tools. You don't need any of it to play.
   *experimental*, other external evidence, the Bitcoin and Base wallet
   pipelines, remote IPFS pinning, Steem and Blurt.
   [Distributing Your Work](Distribution.md) shows how these fit together.
-- **[Archive & Achievements](12-ArchiveAndLeaderboards.md)** —
+- **[Archive & Achievements](12-ArchiveAndAchievements.md)** —
   *experimental*. The observation archive, publication references and
   achievements.
 

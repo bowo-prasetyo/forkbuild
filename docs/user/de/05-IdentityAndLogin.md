@@ -1,9 +1,14 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 3ba8fc359bf11937 -->
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 87bd554695c88554 -->
 # 05 — Ihr Name & Ihre Identität
 
 <!-- languages -->
 [English](../05-IdentityAndLogin.md) · **Deutsch** · [Español](../es/05-IdentityAndLogin.md) · [Français](../fr/05-IdentityAndLogin.md) · [Bahasa Indonesia](../id/05-IdentityAndLogin.md) · [日本語](../ja/05-IdentityAndLogin.md) · [한국어](../ko/05-IdentityAndLogin.md) · [Português (Brasil)](../pt-BR/05-IdentityAndLogin.md)
 <!-- /languages -->
+
+> **Erweitert.** Zum Bauen, Teilen, Remixen und Herumlaufen mit Freunden
+> brauchen Sie dieses Kapitel nicht: Das steht in den
+> [Spielen-Kapiteln](README.md#spielen-der-reihe-nach-lesen). Lesen Sie weiter, wenn Sie wissen
+> möchten, was darunter läuft.
 
 ForkBuild hat keine Passwörter und keine Konten. **Hinter Ihrem Namen steht
 eine Identität: ein kryptografisches Schlüsselpaar, das in diesem Browser

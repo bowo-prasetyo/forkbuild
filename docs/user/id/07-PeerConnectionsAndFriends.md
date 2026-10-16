@@ -1,9 +1,14 @@
-<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 97d455d5ee147f7c -->
+<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: e45448af38374f12 -->
 # 07 — Koneksi Rekan & Teman
 
 <!-- languages -->
 [English](../07-PeerConnectionsAndFriends.md) · [Deutsch](../de/07-PeerConnectionsAndFriends.md) · [Español](../es/07-PeerConnectionsAndFriends.md) · [Français](../fr/07-PeerConnectionsAndFriends.md) · **Bahasa Indonesia** · [日本語](../ja/07-PeerConnectionsAndFriends.md) · [한국어](../ko/07-PeerConnectionsAndFriends.md) · [Português (Brasil)](../pt-BR/07-PeerConnectionsAndFriends.md)
 <!-- /languages -->
+
+> **Lanjutan.** Anda tidak memerlukan bab ini untuk membangun, berbagi,
+> meremiks, atau berjalan-jalan bersama teman: semua itu ada di
+> [bab Bermain](README.md#bermain-baca-berurutan). Lanjutkan membaca bila Anda ingin tahu apa
+> yang berjalan di baliknya.
 
 ForkBuild menghubungkan Anda langsung ke browser orang lain — tidak ada
 server pusat yang menyimpan daftar teman. Buka **Lainnya → Rekan**

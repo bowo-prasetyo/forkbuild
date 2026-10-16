@@ -1,9 +1,13 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: c5e3e99fc2863179 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: db53c936c475dddc -->
 # 11 — 증거와 저장소
 
 <!-- languages -->
 [English](../11-EvidenceAndStorage.md) · [Deutsch](../de/11-EvidenceAndStorage.md) · [Español](../es/11-EvidenceAndStorage.md) · [Français](../fr/11-EvidenceAndStorage.md) · [Bahasa Indonesia](../id/11-EvidenceAndStorage.md) · [日本語](../ja/11-EvidenceAndStorage.md) · **한국어** · [Português (Brasil)](../pt-BR/11-EvidenceAndStorage.md)
 <!-- /languages -->
+
+> **고급.** 짓고, 공유하고, 리믹스하고, 친구와 돌아다니는 데 이 장은 필요
+> 없어요. 그건 [놀기 장](README.md#놀기-순서대로-읽기)에 있어요. 그 아래에서 무엇이
+> 돌아가는지 궁금할 때 읽어 보세요.
 
 <!-- languages -->
 <!-- /languages -->
@@ -325,7 +329,7 @@ Bitcoin 앵커의 카드에는 **Bitcoin 앵커** 섹션도 있습니다. **조�
 [Bitcoin 앵커 조정](#bitcoin-앵커-조정)과 같은 세 가지입니다. 확인할 때마다 이
 브로드캐스트의 **컨펌 기록 표시**에 추가됩니다. 그 목록은 새로 고치면 지워지지만,
 모든 결과는
-[게시 관측 아카이브](12-ArchiveAndLeaderboards.md#게시-관측-아카이브)에도
+[게시 관측 아카이브](12-ArchiveAndAchievements.md#게시-관측-아카이브)에도
 보관됩니다.
 
 ### 절차가 하지 않는 것
@@ -457,7 +461,7 @@ Bitcoin 앵커의 카드에는 **Bitcoin 앵커** 섹션도 있습니다. **조�
 
 **트랜잭션 다시 관측**은 **관측 기록 표시**에 추가됩니다. 그 목록은 새로 고치면
 지워지지만, 모든 관측은
-[게시 관측 아카이브](12-ArchiveAndLeaderboards.md#게시-관측-아카이브)에도
+[게시 관측 아카이브](12-ArchiveAndAchievements.md#게시-관측-아카이브)에도
 보관됩니다.
 
 ### Base 앵커 게시
@@ -585,7 +589,7 @@ Kubo 노드는 해석과 게시를 모두 할 수 있고, 원격 게이트웨이
 게시만 할 수 있습니다.) 배치와 달리 결과는 다른 사람이 발견할 수 있는 서명된
 클레임이 아니라, 제공자가 이 바이트를 받아들였다는 기록입니다. 화면의 결과는 새로
 고치면 지워지지만, 모든 성공한 게시와 모든 검증은
-[게시 관측 아카이브](12-ArchiveAndLeaderboards.md#게시-관측-아카이브)에도
+[게시 관측 아카이브](12-ArchiveAndAchievements.md#게시-관측-아카이브)에도
 보관됩니다.
 
 ### 원격 피닝 제공자 설정하기

@@ -1,9 +1,13 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 0c2f0fe4b600a2de -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 80bde5395bb4efa2 -->
 # 10 — 네트워크 설정
 
 <!-- languages -->
 [English](../10-NetworkSettings.md) · [Deutsch](../de/10-NetworkSettings.md) · [Español](../es/10-NetworkSettings.md) · [Français](../fr/10-NetworkSettings.md) · [Bahasa Indonesia](../id/10-NetworkSettings.md) · [日本語](../ja/10-NetworkSettings.md) · **한국어** · [Português (Brasil)](../pt-BR/10-NetworkSettings.md)
 <!-- /languages -->
+
+> **고급.** 짓고, 공유하고, 리믹스하고, 친구와 돌아다니는 데 이 장은 필요
+> 없어요. 그건 [놀기 장](README.md#놀기-순서대로-읽기)에 있어요. 그 아래에서 무엇이
+> 돌아가는지 궁금할 때 읽어 보세요.
 
 <!-- languages -->
 <!-- /languages -->
