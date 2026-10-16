@@ -7142,3 +7142,44 @@ game's terms).
   extension or wallet wherever one exists, and ForkBuild holds no key for those networks; IPFS remote pinning, with no
   extension or wallet, is the exception whose access details ForkBuild holds (address and fields saved, token for the
   visit).
+
+## Sealed exports: Import respects the maker and the license (unnumbered, 2026-10-16)
+
+**Import let anyone take someone else's build as their own.** File → Import kept the maker's name inside the build
+but recorded no source, checked no license, and the build could then be edited and published under the importer's
+name: an All Rights Reserved build passed through Export and Import came out as the importer's, with no credit and no
+place in its family tree. Export wrote plain, unsigned JSON, so the name and license in a file were only claims. Pillar
+served: every build has a family tree (credit travels with the work), with your work is yours (a maker decides what
+others may do with it).
+
+- **A maker's export is sealed** (core/DocumentSeal.js, identity/DocumentSealing.js, new; `SignatureType.DOCUMENT_SEAL`):
+  when the identity exporting is the build's author, the file gains a `seal` beside `world` and `metadata`, signed
+  over the SHA-256 of the document as written, so changing anything in it, its license included, breaks the seal.
+  Someone else's export, or one made signed out or locked, is the plain document as before. Older copies of ForkBuild
+  ignore the field, and a build's content hash doesn't change.
+- **Whose build an import becomes** (application/document/DocumentImportPolicy.js, new): a file naming no maker, or one
+  of this device's identities (or the one it is an authorized device of), or one that credits one of them under
+  Built with (as each friend's saved copy from Build with me does), opens as the same build, as before, so moving
+  one's own builds between devices still works. Someone else's opens as the importer's copy, the way Edit a Copy
+  makes one (the importer is author, it records the build it came from, and its license keeps the maker's name as
+  attribution) when the license allows remixes, and is refused when it doesn't (CC BY-ND, All Rights Reserved, none)
+  or when its seal doesn't hold. An unsealed file is taken at its word: the maker and terms it names are respected.
+- **Export All Builds and its Import** (application/document/DocumentBundle.js) follow the same rules: the maker's
+  builds are sealed, and someone else's in a bundle are saved as copies or left out (`remixed`, `refused`).
+- **A different license for the copy you give**: the file carries the license the build has when exported, so a
+  maker can publish as All Rights Reserved and still export a copy someone may build on.
+- **The Editor says what Import did**: "Opened as your own copy of alice's "Monument"", or why it didn't (the maker
+  hasn't allowed copies; the build was changed after its maker signed it), and a bundle's summary counts both. Six new
+  messages, in every language.
+- The Editor guide's File menu, the FAQ's "Can I give my build to someone else?", docs/Protocol.md (the seal and the
+  import table) and docs/Architecture.md say so, in every language where the guide is translated.
+- Tests: `DocumentSeal` (only the maker's export is sealed and it verifies; someone else's All Rights Reserved, CC
+  BY-ND or unlicensed build is refused; a CC0 or CC BY one opens as the importer's copy crediting its maker and
+  recording its source; a changed file is refused and nobody else can seal in the maker's name; deleting a seal still
+  leaves the maker's terms respected; one's own builds, a device acting for the maker, a build crediting the importer
+  under Built with, and files naming no maker open as before; bundles seal and follow the same rules; the Editor reports each outcome).
+- Not done: a seal can be deleted, and nothing stops someone copying bricks they can see; what a seal guarantees is
+  that nobody else can make a file carrying the maker's name and terms that still verifies. The Editor has no
+  look-only mode, so a build whose license allows no copies is refused rather than opened to look at; its published
+  link is where to look at it. A friend who joined Build with me but placed no bricks isn't credited on the build, so
+  the copy saved on their device follows the rules for someone else's build when restored from a bundle.

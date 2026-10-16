@@ -74,8 +74,10 @@ export class EditorSession {
         personalStructureLibraryStore = null,
         exportBlueprintUseCase = new ExportBlueprintUseCase(),
         importBlueprintUseCase = new ImportBlueprintUseCase(),
-        exportDocumentUseCase = new ExportDocumentUseCase(),
-        importDocumentUseCase = new ImportDocumentUseCase(),
+        // Both seal and judge a build by who is signed in (core/
+        // DocumentSeal.js); built from identityProvider unless given.
+        exportDocumentUseCase = null,
+        importDocumentUseCase = null,
         blueprintAttributionExchange = null,
         blueprintLineageExchange = null,
         forkStructureToLibraryUseCase = new ForkStructureToLibraryUseCase(),
@@ -109,8 +111,8 @@ export class EditorSession {
         this._personalStructureLibraryStore = personalStructureLibraryStore;
         this._exportBlueprintUseCase = exportBlueprintUseCase;
         this._importBlueprintUseCase = importBlueprintUseCase;
-        this._exportDocumentUseCase = exportDocumentUseCase;
-        this._importDocumentUseCase = importDocumentUseCase;
+        this._exportDocumentUseCase = exportDocumentUseCase ?? new ExportDocumentUseCase(undefined, { identityProvider });
+        this._importDocumentUseCase = importDocumentUseCase ?? new ImportDocumentUseCase(undefined, undefined, { identityProvider });
         this._blueprintAttributionExchange = blueprintAttributionExchange;
         this._blueprintLineageExchange = blueprintLineageExchange;
         this._forkStructureToLibraryUseCase = forkStructureToLibraryUseCase;

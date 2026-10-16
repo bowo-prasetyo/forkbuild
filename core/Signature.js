@@ -273,7 +273,13 @@ export const SignatureType = Object.freeze({
     // PublicationCommentaryDistributionEnvelope.js's own
     // getPublicationCommentaryDistributionSigningDescriptor() and this
     // file's own header, "no unsigned claims."
-    PUBLICATION_COMMENTARY_DISTRIBUTION: 'publication-commentary-distribution'
+    PUBLICATION_COMMENTARY_DISTRIBUTION: 'publication-commentary-distribution',
+    // A build's maker sealing the file File → Export writes (core/
+    // DocumentSeal.js): "I made exactly this build, with these terms."
+    // Import believes a file's author and license only when its seal
+    // verifies. The signer MUST equal the sealed build's own
+    // `authorIdentityId`.
+    DOCUMENT_SEAL: 'document-seal'
 });
 
 export class Signature {

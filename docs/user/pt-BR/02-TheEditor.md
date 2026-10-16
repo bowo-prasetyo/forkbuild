@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 6e10bd69ebe05267 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: ab2f4955cd9c3ad1 -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -598,6 +598,18 @@ Enquanto você constrói, toca uma música suave, um pouco mais animada que a da
     exportados por versões anteriores continuam abrindo (são convertidos ao
     carregar), mas o ForkBuild 1.0.0 e anteriores não conseguem abrir arquivos
     exportados por esta versão.
+  Quando a construção é sua, **Exportar** assina o arquivo, para que quem o
+  importar possa confiar no nome e na licença que ele traz. Suas próprias
+  construções são importadas como elas mesmas. A de outra pessoa abre como
+  cópia sua, dando o crédito a ela, quando a licença permite remixes;
+  quando não permite, ou quando o arquivo foi mudado depois que quem fez o
+  assinou, ela não é importada. O arquivo leva a licença que a construção
+  tem quando você exporta, então você pode publicar uma construção como
+  **All Rights Reserved** e mesmo assim dar a alguém uma cópia em que essa
+  pessoa possa construir: escolha outra licença em **Propriedades do
+  documento**, exporte e depois volte a licença. **Exportar todas as
+  construções** e o **Importar** dela, em **Recentes**, funcionam do mesmo
+  jeito.
 - **Recentes** — reabre algo que você salvou antes (aparece depois do
   primeiro salvamento; clique no nome de um documento para abri-lo). Quando
   você tiver salvo documentos suficientes, aparece uma caixa de filtro para

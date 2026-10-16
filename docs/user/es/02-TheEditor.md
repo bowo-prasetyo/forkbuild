@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 6e10bd69ebe05267 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: ab2f4955cd9c3ad1 -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -630,6 +630,17 @@ Mientras construye suena una música suave, algo más animada que la de la Vista
     archivos exportados por versiones anteriores siguen abriéndose (se
     convierten al cargarse), pero ForkBuild 1.0.0 y anteriores no pueden
     abrir archivos exportados por esta versión.
+  Cuando la construcción es suya, **Exportar** firma el archivo, para que
+  quien lo importe pueda fiarse del nombre y la licencia que lleva. Sus
+  propias construcciones se importan como ellas mismas. La de otra persona
+  se abre como copia suya, que le da el crédito, cuando su licencia permite
+  remezclas; cuando no lo permite, o cuando el archivo se cambió después de
+  que su autor lo firmara, no se importa. El archivo lleva la licencia que
+  tiene la construcción al exportarla, así que puede publicar una
+  construcción como **All Rights Reserved** y aun así dar a alguien una
+  copia sobre la que pueda construir: elija otra licencia en **Propiedades
+  del documento**, exporte y luego vuelva a ponerla. **Exportar todas las
+  construcciones** y su **Importar**, en **Recientes**, funcionan igual.
 - **Recientes**: vuelve a abrir algo que guardó antes (aparece después de
   su primer guardado; haga clic en el nombre de un documento para
   abrirlo). Cuando ya guardó suficientes documentos, aparece un cuadro de

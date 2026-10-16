@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 6e10bd69ebe05267 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: ab2f4955cd9c3ad1 -->
 # 02 — Editor
 
 <!-- languages -->
@@ -607,6 +607,17 @@ Musik diputar pelan saat Anda membangun, sedikit lebih riang daripada di Tampila
     yang diekspor versi sebelumnya tetap dapat dibuka (dikonversi saat
     dimuat), tetapi ForkBuild 1.0.0 dan yang lebih lama tidak dapat membuka
     file yang diekspor versi ini.
+  Jika Anda yang membuat bangunan itu, **Ekspor** menandatangani filenya,
+  sehingga siapa pun yang mengimpornya dapat memercayai nama dan lisensi di
+  dalamnya. Bangunan Anda sendiri diimpor sebagai dirinya sendiri. Bangunan
+  orang lain dibuka sebagai salinan Anda sendiri yang mencantumkan
+  pembuatnya, jika lisensinya mengizinkan remix; jika tidak, atau jika file
+  diubah setelah pembuatnya menandatanganinya, file tidak diimpor. File
+  membawa lisensi yang dimiliki bangunan saat Anda mengekspornya, jadi Anda
+  dapat menerbitkan bangunan sebagai **All Rights Reserved** dan tetap
+  memberi seseorang salinan yang boleh ia kembangkan: pilih lisensi lain di
+  **Properti Dokumen**, ekspor, lalu kembalikan. **Ekspor Semua Bangunan**
+  dan **Impor**-nya, di **Terbaru**, bekerja dengan cara yang sama.
 - **Terbaru** — membuka kembali sesuatu yang pernah Anda simpan (muncul
   setelah penyimpanan pertama; klik nama dokumen untuk membukanya). Begitu
   Anda menyimpan cukup banyak dokumen, kotak saring muncul sehingga Anda

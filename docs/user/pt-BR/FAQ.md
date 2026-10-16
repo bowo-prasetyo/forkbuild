@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 978ac53d098ad90d -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 87406cb37cc04363 -->
 # Perguntas frequentes
 
 <!-- languages -->
@@ -135,6 +135,11 @@ Se você preferir que a dela seja a que as pessoas encontram, pode remover
 a sua do seu Mundo e despublicá-la, mas cópias já enviadas continuam
 existindo (veja
 [Posso despublicar alguma coisa?](#posso-despublicar-alguma-coisa)).
+
+O mesmo vale para um arquivo que você exportou: a pessoa pode importá-lo
+como cópia própria quando a licença permite remixes, e você pode exportar
+uma cópia com uma licença mais aberta do que a que publicou (veja
+[Salvar, publicar, recomeçar](02-TheEditor.md#salvar-publicar-recomeçar)).
 
 **Declarar sucessora**, em **Minhas identidades**, não entrega uma
 construção: aposenta sua identidade inteira em favor de outra que também

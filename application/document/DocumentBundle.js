@@ -3,6 +3,8 @@ import { DocumentManifest } from './DocumentManifest.js';
 import { DocumentManager } from './DocumentManager.js';
 import { SaveDocumentUseCase } from './SaveDocumentUseCase.js';
 import { ImportDocumentUseCase } from './ImportDocumentUseCase.js';
+import { sealDocumentJson, verifyDocumentSeal } from '../../identity/DocumentSealing.js';
+import { DocumentImportOutcome, decideDocumentImport } from './DocumentImportPolicy.js';
 
 // Every saved document in one file, for moving them all to another device
 // or keeping a copy (a single document still exports on its own).
@@ -14,11 +16,14 @@ export function isDocumentBundle(value) {
 }
 
 // Reads each saved document as stored; the recovery checkpoints of
-// unsaved changes are not included, as with a single export.
+// unsaved changes are not included, as with a single export. Each build
+// the exporting identity made is sealed (core/DocumentSeal.js), as a
+// single export is.
 export class ExportAllDocumentsUseCase {
-    constructor(storageProvider, documentManifest = new DocumentManifest(storageProvider)) {
+    constructor(storageProvider, documentManifest = new DocumentManifest(storageProvider), { identityProvider = null } = {}) {
         this._storageProvider = storageProvider;
         this._documentManifest = documentManifest;
+        this._identityProvider = identityProvider;
     }
 
     // Resolves to the bundle, or null when nothing is saved.
@@ -26,7 +31,7 @@ export class ExportAllDocumentsUseCase {
         const documents = [];
         for (const entry of this._documentManifest.list()) {
             const json = await this._storageProvider.loadAsync(entry.id);
-            if (json !== null) documents.push(json);
+            if (json !== null) documents.push((this._identityProvider && sealDocumentJson(json, this._identityProvider)) || json);
         }
         if (documents.length === 0) return null;
         return { kind: DOCUMENT_BUNDLE_KIND, formatVersion: DOCUMENT_BUNDLE_FORMAT_VERSION, exportedAt: new Date().toISOString(), documents };
@@ -39,22 +44,30 @@ export class ExportAllDocumentsUseCase {
 // different content is saved as a copy with a fresh id, like a single
 // import, so neither version is lost. Each document is validated on its
 // own: a bad one is counted and the rest still import.
+//
+// Someone else's build in a bundle follows the same rules as a single
+// import (application/document/DocumentImportPolicy.js): it is saved as
+// the importer's credited copy when its license allows remixes
+// (`remixed`), and left out when it doesn't or its seal doesn't hold
+// (`refused`).
 export class ImportDocumentBundleUseCase {
     constructor(
         storageProvider,
         {
             documentSerializer = new DocumentSerializer(),
-            importDocumentUseCase = new ImportDocumentUseCase(documentSerializer),
+            identityProvider = null,
+            ownIdentityIds = null,
+            importDocumentUseCase: importUseCase = new ImportDocumentUseCase(documentSerializer, undefined, { identityProvider, ownIdentityIds }),
             saveDocumentUseCase = new SaveDocumentUseCase(storageProvider, documentSerializer)
         } = {}
     ) {
         this._storageProvider = storageProvider;
         this._documentSerializer = documentSerializer;
-        this._importDocumentUseCase = importDocumentUseCase;
+        this._importDocumentUseCase = importUseCase;
         this._saveDocumentUseCase = saveDocumentUseCase;
     }
 
-    // Resolves to { added, copied, unchanged, failed }.
+    // Resolves to { added, copied, unchanged, remixed, refused, failed }.
     async execute(bundle) {
         if (!isDocumentBundle(bundle) || !Array.isArray(bundle.documents)) {
             throw new Error('That is not a ForkBuild document bundle.');
@@ -62,10 +75,27 @@ export class ImportDocumentBundleUseCase {
         if (bundle.formatVersion !== DOCUMENT_BUNDLE_FORMAT_VERSION) {
             throw new Error('This bundle was made by a newer version of ForkBuild. Update this copy first.');
         }
-        const result = { added: 0, copied: 0, unchanged: 0, failed: 0 };
+        const result = { added: 0, copied: 0, unchanged: 0, remixed: 0, refused: 0, failed: 0 };
+        const ownIdentityIds = this._importDocumentUseCase.ownIdentityIds();
         for (const json of bundle.documents) {
             try {
                 const document = this._documentSerializer.deserialize(json);
+                const outcome = decideDocumentImport({
+                    authorIdentityId: document.metadata.authorIdentityId,
+                    license: document.metadata.license,
+                    builtWith: document.metadata.builtWith,
+                    sealStatus: verifyDocumentSeal(json).status,
+                    ownIdentityIds
+                });
+                if (outcome === DocumentImportOutcome.COPY) {
+                    this._saveDocumentUseCase.execute(new DocumentManager(this._importDocumentUseCase.execute(json)));
+                    result.remixed++;
+                    continue;
+                }
+                if (outcome !== DocumentImportOutcome.OWN) {
+                    result.refused++;
+                    continue;
+                }
                 const existing = await this._storageProvider.loadAsync(document.world.id);
                 if (existing === null) {
                     this._saveDocumentUseCase.execute(new DocumentManager(document));

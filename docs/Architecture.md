@@ -202,7 +202,13 @@ docs/CapabilityMatrix.md for exactly what each surface may do.
   - Export/Import (0.9.641/0.9.642): ExportDocumentUseCase and
     ImportDocumentUseCase, reached from the Toolbar. Import always clones
     to a fresh identity through DocumentCloneService, which also remaps
-    group membership (0.9.644).
+    group membership (0.9.644). Export seals the file when the identity
+    exporting is the build's author (core/DocumentSeal.js,
+    identity/DocumentSealing.js), and DocumentImportPolicy decides whose
+    build an import becomes: one's own opens as itself, someone else's as
+    the importer's credited copy when its license allows remixes, and is
+    refused when it doesn't or its seal doesn't hold. Export All Builds and
+    its import (DocumentBundle.js) follow the same rules.
   - Focus Selection (0.9.661): the `selection.focus` action calls
     getSelectionSummary() then frameCameraOn().
   - Structure face snapping (0.9.611): PickingService#pickPlacement()

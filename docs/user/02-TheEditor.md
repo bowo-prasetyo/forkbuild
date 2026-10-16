@@ -573,6 +573,16 @@ Music plays softly while you build, a little livelier than World View's. The **â
     identity; nothing is kept until you **Save**. Files exported by earlier
     versions still open (they are converted as they load), but ForkBuild 1.0.0
     and older can't open files exported by this version.
+  When you made the build, **Export** signs the file, so whoever imports it
+  can trust the name and license in it. Your own builds import as
+  themselves. Someone else's opens as your own copy, crediting them, when
+  its license allows remixes; when it doesn't, or when the file was changed
+  after its maker signed it, it isn't imported. The file carries the license
+  the build has when you export it, so you can publish a build as **All
+  Rights Reserved** and still give someone a copy they may build on: choose
+  another license in **Document Properties**, export, then set it back.
+  **Export All Builds** and its **Import**, under **Recent**, work the same
+  way.
 - **Recent** â€” reopen something you saved before (it appears after your
   first save; click a document's name to open it). Once you've saved enough
   documents, a filter box appears so you can jump straight to one by name.

@@ -123,6 +123,11 @@ If you'd rather theirs be the one people find, you can remove yours from
 your World and unpublish it, though copies already sent out stay (see
 [Can I unpublish something?](#can-i-unpublish-something)).
 
+The same goes for a file you exported: they can import it as their own copy
+when its license allows remixes, and you can export a copy with a more open
+license than the one you published (see
+[Saving, publishing, starting over](02-TheEditor.md#saving-publishing-starting-over)).
+
 **Declare Successor**, under **My Identities**, doesn't hand a build over:
 it retires your whole identity in favor of another of your own.
 

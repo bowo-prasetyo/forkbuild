@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 6e10bd69ebe05267 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: ab2f4955cd9c3ad1 -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -643,6 +643,18 @@ Une musique douce accompagne la construction, un peu plus vive que celle de la V
     antérieures s’ouvrent toujours (ils sont convertis au chargement), mais
     ForkBuild 1.0.0 et les versions antérieures ne peuvent pas ouvrir les
     fichiers exportés par cette version.
+  Quand vous avez fait la construction, **Exporter** signe le fichier, pour
+  que la personne qui l’importe puisse se fier au nom et à la licence qu’il
+  porte. Vos propres constructions s’importent telles quelles. Celle de
+  quelqu’un d’autre s’ouvre comme votre propre copie, qui le crédite,
+  quand sa licence autorise les remix ; sinon, ou si le fichier a été
+  modifié après que son auteur l’a signé, elle n’est pas importée. Le
+  fichier porte la licence qu’a la construction au moment de l’export :
+  vous pouvez donc publier une construction en **All Rights Reserved** et
+  quand même donner à quelqu’un une copie sur laquelle il peut construire.
+  Choisissez une autre licence dans **Propriétés du document**, exportez,
+  puis remettez-la. **Exporter toutes les constructions** et son
+  **Importer**, sous **Récents**, fonctionnent de la même façon.
 - **Récents** — rouvrir quelque chose que vous avez enregistré (la liste
   apparaît après votre premier enregistrement ; cliquez sur le nom d’un
   document pour l’ouvrir). Dès que vous avez enregistré assez de
