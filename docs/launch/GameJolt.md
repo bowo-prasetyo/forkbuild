@@ -7,7 +7,7 @@ its own address, and its rendezvous server answers only the official site),
 so the Game Jolt page is a storefront that sends players to the site, with
 the same launcher as itch.io's.
 
-**Page:** not published yet. Put its address here once it is.
+**Page:** <https://gamejolt.com/games/forkbuild/1108002> (published 16 October 2026)
 
 **Link:** <https://bowo-prasetyo.github.io/forkbuild/?ref=gamejolt>
 
@@ -42,6 +42,7 @@ for each app release so the page's version stays current.
 | Field | Set it to |
 |---|---|
 | Title | ForkBuild |
+| URL path | `forkbuild`: the page's own address on Game Jolt (`gamejolt.com/games/forkbuild/…`), letters, numbers and hyphens only. The site's link goes in **Website** and the description, not here. |
 | Website *(check)* | <https://bowo-prasetyo.github.io/forkbuild/?ref=gamejolt> |
 | Category | **Other**, or **Strategy/Sim** if the list has no closer fit. Game Jolt has no "sandbox" or "building" category; the tags say that. |
 | Development status | **Complete**, with updates: ForkBuild is released (1.4), and a "Complete" game needs a build, which the launcher is. |
