@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: ab2f4955cd9c3ad1 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: e0b170cbd10b7cf8 -->
 # 02 — Editor
 
 <!-- languages -->
@@ -658,6 +658,9 @@ ulang, atau dihapus oleh salah satu dari kalian muncul di kedua layar.
 - Editor setiap teman menyimpan salinannya sendiri di perangkatnya. Saat
   Anda berhenti, ia boleh menyimpannya, tetapi perubahannya tidak lagi
   sampai kepada Anda.
+  Teman yang tidak memasang balok apa pun tidak dicantumkan, jadi
+  salinannya tetap bangunan Anda: saat dipulihkan dari cadangan, salinan
+  itu mengikuti lisensi bangunan, seperti milik orang lain.
 - Semua orang yang baloknya diterima bangunan Anda dicantumkan di bangunan
   itu: panel bangunan menampilkan **Dibangun bersama** dan nama mereka, dan
   saat Anda menerbitkan, tautan yang dibagikan dan silsilahnya juga

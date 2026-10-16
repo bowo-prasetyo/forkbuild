@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: ab2f4955cd9c3ad1 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: e0b170cbd10b7cf8 -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -682,6 +682,10 @@ aparece en ambas pantallas.
   mostrar el enlace.
 - El Editor de cada amigo guarda su propia copia, en su dispositivo. Cuando
   usted se detiene, pueden conservarla, pero lo que cambien ya no le llega.
+  Un amigo que no colocó ningún bloque no recibe crédito, así que su copia
+  sigue siendo su construcción: al restaurarla desde una copia de
+  seguridad, sigue la licencia de la construcción, como la de cualquier
+  otra persona.
 - Todos aquellos cuyos bloques incorpora su construcción figuran en ella: el
   panel de la construcción dice **Construida con** y sus nombres, y cuando
   usted publica, el enlace compartido y el árbol familiar también lo dicen,

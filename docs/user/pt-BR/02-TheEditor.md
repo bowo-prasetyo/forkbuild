@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: ab2f4955cd9c3ad1 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: e0b170cbd10b7cf8 -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -647,6 +647,9 @@ colocar, mover, mudar de cor ou excluir aparece nas duas telas.
 - O Editor de cada amigo guarda a própria cópia, salva no dispositivo dele.
   Quando você para, ele pode ficar com ela, mas o que ele mudar não chega
   mais até você.
+  Um amigo que não colocou nenhum bloco não recebe crédito, então a cópia
+  dele continua sendo sua construção: restaurada de um backup, ela segue a
+  licença da construção, como a de qualquer outra pessoa.
 - Todos cujos blocos a sua construção recebe aparecem nos créditos dela: o
   painel da construção diz **Construída com** e os nomes deles, e quando
   você publica, o link compartilhado e a árvore genealógica também dizem

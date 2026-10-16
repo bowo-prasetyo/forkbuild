@@ -617,6 +617,9 @@ either of you places, moves, recolours or deletes appears on both screens.
   strip shows the link again.
 - Each friend's Editor keeps its own copy, saved on their device. When you
   stop, they can keep it, but what they change no longer reaches you.
+  A friend who placed no bricks isn't credited, so their copy stays your
+  build: restored from a backup, it follows the build's license, like
+  anyone else's.
 - Everyone whose bricks your build takes in is credited on it: the build's
   panel says **Built with** and their names, and when you publish, the
   shared link and the family tree say so too, under your signature. Each
