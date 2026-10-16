@@ -7234,3 +7234,30 @@ document", in every language. Pillar served: every build has a family tree (one 
   (documentation).
 - **tests/WordsTable.test.js reads the English guide too**, so "fork", "document" and "creation" don't come back.
 - Not done: the translations were written without a native speaker's review.
+
+## Make it yours, then publish (unnumbered, 2026-10-16)
+
+**The launch week's counts showed where newcomers stop.** Of 24 daily visits, 10 opened the Editor and 9 of those
+came in through a ready-made build, but only 3 made an edit and none published (`node scripts/launch-scorecard.mjs`).
+Only Home's main button left a job to do (the House's roof); every other ready-made build opened with a toast and
+nothing asking for a first brick. The roof card that did ask sat in the sidebar, which on a phone is a closed drawer,
+and once the roof was on it said "Publish it" without a button for it. Pillar served: building feels joyful (helps a
+newcomer finish a first build they're proud of), and every build has a family tree (nothing is remixed until something
+is published).
+
+- **Every ready-made build carries the starter card** (`ui/components/StarterJobCard.js`, its stage from
+  `starterCardStage()` in `core/StarterJob.js`): Home's cards, a challenge's ideas and the Editor's **New** as well as
+  Home's main button. With no job, it says **Make it yours** and **Pick a tree** picks a tree and turns Place on; one
+  brick the builder placed or changed (`core/PlacedBricks.js`) moves it on.
+- **Then it asks to publish**: **It's yours now!** with **Publish it**, which starts the toolbar's own Publish with
+  every question it asks (the remix permission, **Who can find it?** and a name to sign with), and **Keep building**,
+  which puts the card away for that build. It goes once the build is published.
+- **On a phone the card floats over the 3D view**, above the touch bar, instead of hiding in the sidebar drawer.
+- Five new messages, in all eight languages; the guide's "Try it now" section says the same, in every language.
+- Tests: `StarterJob` (the stages, and a tree beside each ready-made build counting as the builder's own),
+  `StarterJobCardBrowser` (each stage's buttons, and where the card sits floating), and the bundle check (Publish it
+  opens Publish's questions; the castle from New asks for a first brick).
+- Not done: Publish's own questions are unchanged, so a first publish can still ask three of them; whether that is
+  where the next drop is will show in `/e/editor-edit` against the `/e/publish-*` counts. The guide's Editor picture
+  (the House with its roof job, on a wide screen) looks as it did, so it wasn't retaken. The translations were written
+  without a native speaker's review.

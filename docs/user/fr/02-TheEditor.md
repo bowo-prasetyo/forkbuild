@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: fe5b24d5d2806c27 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 6eb96f13049b4531 -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -97,8 +97,17 @@ pas finie : ses murs sont montés et sa pièce est meublée, mais elle n’a pas
 de toit. Une carte **Votre mission : un toit** en haut des outils vous le
 dit. Cliquez sur **Prendre le toit** (il choisit **Toit en croupe 6x6** et
 passe en Placement), puis n’importe où sur la maison : le toit se pose sur
-les murs. La carte dit alors que la maison est à vous. Publiez-la et entrez
-dedans, ou continuez.
+les murs. La carte dit alors que la maison est à vous, avec **La publier** (le
+même Publier que celui de la barre d’outils) et **Continuer à construire**,
+qui range la carte.
+
+Toute autre construction toute prête (les cartes de l’**Accueil**, les idées
+d’un défi, ou celle choisie sous **Nouveau** dans l’Éditeur) s’ouvre plutôt
+avec une carte **Faites-la vôtre**. Cliquez sur **Prendre un arbre** (il
+choisit un arbre et passe en Placement), puis sur le sol à côté de la
+construction. Dès qu’elle contient quelque chose de vous, la carte propose
+**La publier** de la même façon. Sur un téléphone, la carte se place sur la
+vue 3D, au-dessus des boutons tactiles, car les outils y sont repliés.
 
 ## Votre première construction
 

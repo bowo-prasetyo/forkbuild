@@ -2,7 +2,8 @@ import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
-import { STARTER_JOBS, StarterJobId, isStarterJobDone, starterJobById, starterJobGuide, unfinishedStructure } from '../core/StarterJob.js';
+import { FIRST_EDIT_BRICK_ID, STARTER_JOBS, StarterCardStage, StarterJobId, isStarterJobDone, starterCardStage, starterJobById, starterJobGuide, unfinishedStructure } from '../core/StarterJob.js';
+import { FEATURED_STRUCTURE_IDS } from '../application/home/FeaturedBuilds.js';
 import { restingHeight } from '../core/BrickResting.js';
 import { addReadyMadeBricks, countPlacedBricks, worldBricks } from '../core/PlacedBricks.js';
 import { STARTER_JOB_ID, STARTER_STRUCTURE_ID } from '../application/home/FeaturedBuilds.js';
@@ -176,4 +177,35 @@ function placementTool(bricks = []) {
     assert(editorContext.activeBrick.definitionId === 'core:wall_1x3', 'a brick already chosen stays chosen');
     manager.stop();
     console.log('✓ Place with no brick chosen loads the Cube, and the first click places it');
+}
+
+// The card a ready-made build carries: the job, or with none a first brick
+// of the builder's own, then Publish; gone once published or hidden.
+{
+    const job = starterJobById('roof');
+    assert(starterCardStage({ job }) === StarterCardStage.JOB, 'the House asks for its roof first');
+    assert(starterCardStage({ job, placedCount: 3 }) === StarterCardStage.JOB, 'other bricks don\'t do the job');
+    assert(starterCardStage({ job, jobDone: true, placedCount: 1 }) === StarterCardStage.PUBLISH, 'a roof on, it asks to publish');
+    assert(starterCardStage({}) === StarterCardStage.FIRST_EDIT, 'a ready-made build with no job asks for a first brick of the builder\'s own');
+    assert(starterCardStage({ placedCount: 1 }) === StarterCardStage.PUBLISH, 'one brick of their own, and it asks to publish');
+    assert(starterCardStage({ placedCount: 4, published: true }) === null, 'published, the card goes');
+    assert(starterCardStage({ job, jobDone: true, hidden: true }) === null, 'hidden, it stays hidden');
+    assert(starterCardStage({ hidden: true }) === null, 'at any stage');
+    assert(starterCardStage() === StarterCardStage.FIRST_EDIT, 'nothing said: a first brick');
+    console.log('✓ the starter card asks for the job or a first brick, then to publish, until published or hidden');
+}
+
+// The first-edit card's tree: a real brick, and placing it beside a
+// ready-made build makes the build the builder's own.
+{
+    assert(registry.get(FIRST_EDIT_BRICK_ID)?.category === 'nature', `the first-edit card picks a tree (${FIRST_EDIT_BRICK_ID})`);
+    for (const id of FEATURED_STRUCTURE_IDS) {
+        const structure = structures.get(id);
+        const readyMade = addReadyMadeBricks(null, structure.bricks);
+        assert(countPlacedBricks(structure.bricks, readyMade) === 0 && starterCardStage({ placedCount: 0 }) === StarterCardStage.FIRST_EDIT, `${id} opens untouched`);
+        const tree = new Brick({ definitionId: FIRST_EDIT_BRICK_ID, position: new Position(40, 1.25, 40) });
+        const placed = countPlacedBricks([...structure.bricks, tree], readyMade);
+        assert(placed === 1 && starterCardStage({ placedCount: placed }) === StarterCardStage.PUBLISH, `a tree beside ${id} is the builder's own`);
+    }
+    console.log('✓ a tree beside any ready-made build is the builder\'s own brick, and the card moves on to Publish');
 }

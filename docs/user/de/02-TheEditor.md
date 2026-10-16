@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: fe5b24d5d2806c27 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 6eb96f13049b4531 -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -96,8 +96,17 @@ es hat kein Dach. Eine Karte **Ihre Aufgabe: ein Dach** oben bei den
 Werkzeugen sagt das. Klicken Sie auf **Dach wählen** (es wählt
 **Walmdach 6x6** und wechselt zu Platzieren) und dann irgendwo auf das
 Haus: Das Dach kommt oben auf die Wände. Danach sagt die Karte, dass das
-Haus jetzt Ihnen gehört. Veröffentlichen Sie es und gehen Sie hinein, oder
-bauen Sie weiter.
+Haus jetzt Ihnen gehört, mit **Veröffentlichen** (dasselbe Veröffentlichen
+wie in der Werkzeugleiste) und **Weiterbauen**, das die Karte wegräumt.
+
+Jedes andere fertige Bauwerk (die Karten auf **Start**, die Ideen einer
+Challenge oder eines, das Sie unter **Neu** im Editor wählen) öffnet
+stattdessen mit einer Karte **Machen Sie es zu Ihrem eigenen**. Klicken Sie
+auf **Baum wählen** (es wählt einen Baum und wechselt zu Platzieren) und dann
+neben dem Bauwerk auf den Boden. Sobald etwas Eigenes darin steht, bietet die
+Karte ebenso **Veröffentlichen** an. Auf einem Telefon liegt die Karte über
+der 3D-Ansicht, über den Touch-Schaltflächen, weil die Werkzeuge dort
+eingeklappt sind.
 
 ## Ihr erstes Bauwerk
 
