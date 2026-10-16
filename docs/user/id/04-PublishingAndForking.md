@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 75e82daaf1bb2646 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: bad564fee7824288 -->
 # 04 — Penerbitan & Remix
 
 <!-- languages -->
@@ -8,7 +8,7 @@
 Inilah inti ForkBuild. **Menerbitkan** membagikan bangunan Anda kepada
 dunia. **Remix** memungkinkan siapa pun membuat salinan sendiri dari sebuah
 bangunan dan mengembangkannya, dengan seluruh riwayatnya tetap terjaga.
-(Beberapa pesan dan dokumen pengembang menyebut remix sebagai *fork*,
+(Dokumen pengembang menyebut remix sebagai *fork*,
 seperti dalam ForkBuild.)
 
 ## Menerbitkan karya Anda
@@ -21,7 +21,7 @@ seperti dalam ForkBuild.)
    tanda tangan** di sana menerbitkannya tanpa pembuat dan tanpa tautan.
 3. Beri judul — Terbitkan menolak karya tanpa judul atau kosong — dan,
    secara opsional, deskripsi dan lisensi: klik **✎** di samping judul
-   dokumen di bilah sisi untuk membuka **Properti Bangunan**. Dokumen baru
+   bangunan di bilah sisi untuk membuka **Properti Bangunan**. Bangunan baru
    tidak memiliki lisensi; saat pertama kali Anda menerbitkannya, ForkBuild
    bertanya apakah orang lain boleh me-remix-nya (lihat
    [Mengizinkan orang lain me-remix](#mengizinkan-orang-lain-me-remix)).
@@ -30,7 +30,7 @@ seperti dalam ForkBuild.)
    [Siapa yang bisa menemukannya?](#siapa-yang-bisa-menemukannya)
 
 Karya Anda kini muncul di **Jelajahi** di perangkat ini, tempat Anda dapat
-mencarinya, membukanya, dan mem-fork-nya, dengan nama Anda sebagai
+mencarinya, membukanya, dan me-remix-nya, dengan nama Anda sebagai
 pembuatnya. Orang lain melihatnya setelah Anda membagikan tautannya, atau
 langsung jika Anda memilih **Semua orang** di
 [Siapa yang bisa menemukannya?](#siapa-yang-bisa-menemukannya). Karya itu
@@ -355,7 +355,7 @@ bertanya **Izinkan orang lain me-remix?** sebelum apa pun diterbitkan:
 - **Nanti saja** tidak menerbitkan apa pun.
 
 Jawaban Anda disimpan sebagai lisensi bangunan, jadi Anda hanya ditanya
-sekali; ubah kapan saja di **Properti Bangunan**. Sebuah fork sudah membawa
+sekali; ubah kapan saja di **Properti Bangunan**. Sebuah remix sudah membawa
 lisensi aslinya, jadi menerbitkannya tidak pernah bertanya.
 
 ### Semua lisensi
@@ -366,15 +366,15 @@ dialog **Properti Bangunan**:
 | Lisensi | Arti |
 |---|---|
 | **CC0 1.0 — Domain Publik** | Tidak ada hak yang dilindungi — siapa pun boleh melakukan apa pun dengannya |
-| **CC BY 4.0 — Atribusi** | Siapa pun boleh mem-fork dan memakai ulang, dengan mencantumkan nama Anda |
-| **CC BY-SA 4.0 — Atribusi, BerbagiSerupa** | Fork harus membawa lisensi yang sama |
-| **CC BY-NC 4.0 — Atribusi, NonKomersial** | Fork diizinkan, penggunaan komersial tidak |
-| **CC BY-ND 4.0 — Atribusi, TanpaTurunan** | Dapat dilihat, tetapi **fork tidak diizinkan** |
-| **Hak Cipta Dilindungi** | Dapat dilihat, tetapi fork tidak diizinkan |
-| **Tidak ada lisensi yang ditentukan** | Fork tidak diizinkan sampai Anda menetapkan lisensi |
+| **CC BY 4.0 — Atribusi** | Siapa pun boleh me-remix dan memakai ulang, dengan mencantumkan nama Anda |
+| **CC BY-SA 4.0 — Atribusi, BerbagiSerupa** | Remix harus membawa lisensi yang sama |
+| **CC BY-NC 4.0 — Atribusi, NonKomersial** | Remix diizinkan, penggunaan komersial tidak |
+| **CC BY-ND 4.0 — Atribusi, TanpaTurunan** | Dapat dilihat, tetapi **remix tidak diizinkan** |
+| **Hak Cipta Dilindungi** | Dapat dilihat, tetapi remix tidak diizinkan |
+| **Tidak ada lisensi yang ditentukan** | Remix tidak diizinkan sampai Anda menetapkan lisensi |
 
 Jika Anda membiarkan karya tanpa lisensi, orang tetap dapat membuka dan
-menjelajahinya — mereka hanya tidak dapat mem-fork-nya sampai Anda memilih
+menjelajahinya — mereka hanya tidak dapat me-remix-nya sampai Anda memilih
 lisensi yang mengizinkannya.
 
 ## Memilih siapa yang dapat menempatkannya
@@ -382,14 +382,14 @@ lisensi yang mengizinkannya.
 Orang lain biasanya dapat menempatkan karya terbitan Anda di Dunia mereka
 sendiri. Itu menambahkan penempatan bangunan Anda, tidak pernah salinannya,
 dan tidak pernah memindahkan atau mengubah milik Anda (lihat
-[Mengapa saya bisa menempatkan bangunan orang lain?](WorldViewAdvancedTools.md#mengapa-saya-bisa-menempatkan-bangunan-orang-lain)). Fork adalah hal terpisah dan diatur oleh lisensi (lihat
-[Menempatkan vs mem-fork](WorldViewAdvancedTools.md#menempatkan-vs-mem-fork)). Jika Anda lebih suka mereka tidak menempatkannya, buka **Properti
+[Mengapa saya bisa menempatkan bangunan orang lain?](WorldViewAdvancedTools.md#mengapa-saya-bisa-menempatkan-bangunan-orang-lain)). Remix adalah hal terpisah dan diatur oleh lisensi (lihat
+[Menempatkan vs me-remix](WorldViewAdvancedTools.md#menempatkan-vs-me-remix)). Jika Anda lebih suka mereka tidak menempatkannya, buka **Properti
 Bangunan** dan atur **Siapa yang dapat menempatkannya di Dunia**:
 
 | Pengaturan | Arti |
 |---|---|
 | **Siapa pun boleh menempatkannya** | Bawaan. Siapa pun boleh menempatkannya di mana saja di Dunia mereka sendiri |
-| **Hanya saya yang boleh menempatkannya** | Hanya Anda yang dapat menempatkannya. Orang lain tetap dapat menemukan, melihat, dan (jika lisensi mengizinkan) mem-fork-nya, tetapi ForkBuild tidak akan membiarkan mereka menempatkannya |
+| **Hanya saya yang boleh menempatkannya** | Hanya Anda yang dapat menempatkannya. Orang lain tetap dapat menemukan, melihat, dan (jika lisensi mengizinkan) me-remix-nya, tetapi ForkBuild tidak akan membiarkan mereka menempatkannya |
 
 Pengaturan ini ditandatangani sebagai bagian dari publikasi saat Anda
 menerbitkan, jadi tidak ada yang dapat menghapus atau mengubahnya setelah
@@ -398,7 +398,7 @@ terbitkan setelah memilihnya. Publikasi yang sudah beredar tetap memakai
 pengaturan saat diterbitkan, jadi terbitkan lagi jika Anda ingin pengaturan
 baru berlaku.
 
-Cara kerjanya sama seperti izin fork pada lisensi: setiap salinan ForkBuild
+Cara kerjanya sama seperti izin remix pada lisensi: setiap salinan ForkBuild
 mematuhinya, tetapi itu bukan kunci. Seseorang yang mengubah kode aplikasi
 dapat mengabaikannya, dan pengaturan ini tidak dapat menarik kembali
 penempatan yang dibuat seseorang sebelum Anda memilihnya.
@@ -514,7 +514,7 @@ Setiap karya menawarkan tiga tindakan:
 
 | Tombol | Fungsinya |
 |---|---|
-| **Buka** | Memuat dokumen itu ke Editor |
+| **Buka** | Memuat bangunan itu ke Editor |
 | **Remix** | Menyalinnya menjadi karya Anda sendiri yang dapat diedit |
 | **Jelajahi** | Terbang ke sana di Tampilan Dunia |
 
@@ -525,7 +525,7 @@ baru pertama kali Anda temukan.)
 
 Klik **nama pembuat** mana pun untuk mengunjungi **Halaman pembuat** milik
 mereka — portofolio semua yang telah mereka buat, termasuk karya asli dan
-semua fork yang tumbuh darinya, memakai katalog pencarian/urutan/penomoran
+semua remix yang tumbuh darinya, memakai katalog pencarian/urutan/penomoran
 halaman yang persis sama dengan **Jelajahi**, hanya dibatasi pada satu
 pembuat itu.
 
@@ -544,9 +544,9 @@ terselesaikan, juga bergabung ke pencarian yang sama ini dan ke Halaman
 pembuatnya, dan tetap di sana setelah dimuat ulang. Karya itu ditampilkan
 tidak berbeda dengan hal lain di sini.
 
-## Fork: jadikan milik Anda
+## Remix: jadikan milik Anda
 
-**Remix** adalah yang membuat ForkBuild istimewa. Saat Anda mem-fork sebuah
+**Remix** adalah yang membuat ForkBuild istimewa. Saat Anda me-remix sebuah
 karya:
 
 - Anda mendapat **salinan baru yang mandiri** untuk diedit dengan bebas.
@@ -556,32 +556,32 @@ karya:
 
 Cara kerjanya persis seperti mem-fork proyek di Git: Anda bercabang,
 mengerjakan hal Anda sendiri, dan pohon keluarganya mencatat semua orang.
-(Di Tampilan Dunia, fork juga terjadi otomatis begitu Anda mengubah dunia
+(Di Tampilan Dunia, remix juga terjadi otomatis begitu Anda mengubah dunia
 yang diterbitkan — lihat
 [Mengedit karya yang sudah diterbitkan](#mengedit-karya-yang-sudah-diterbitkan)
 di atas.)
 
 > **Disebut juga "Edit Salinan" di Tampilan Dunia.** Keduanya operasi yang
 > sama di baliknya, dengan aturan lisensi yang sama dan penanganan
-> [Tidak bisa membuat salinan](#saat-fork-tidak-dapat-diselesaikan) yang sama.
+> [Tidak bisa membuat salinan](#saat-remix-tidak-dapat-diselesaikan) yang sama.
 > Lihat
 > [Edit Salinan](03-WorldView.md#edit-salinan--membawa-sesuatu-ke-editor) untuk panduan Tampilan Dunia sendiri.
 
-### Cara mem-fork
+### Cara me-remix
 
 1. Temukan sebuah bangunan di **Jelajahi** (atau di Tampilan Dunia).
 2. Klik **Remix**.
 3. Salinannya terbuka di Editor, berjudul *"Remix dari &lt;nama asli&gt;"*.
 4. Kembangkan, lalu simpan dan terbitkan sebagai milik Anda.
 
-Fork terbitan Anda muncul dengan catatan **Remix dari "…" oleh …**, yang
+Remix terbitan Anda muncul dengan catatan **Remix dari "…" oleh …**, yang
 menautkannya kembali ke yang asli.
 
 ### Jumlah remix
 
 Halaman sebuah bangunan dan kartunya di **Jelajahi** menyebutkan berapa kali
 ia di-remix (**Di-remix 3 kali**): berapa banyak bangunan berbeda yang
-di-fork darinya dan diterbitkan yang telah ditemukan perangkat ini. Remix
+di-remix darinya dan diterbitkan yang telah ditemukan perangkat ini. Remix
 yang diterbitkan dua kali dihitung sekali, dan bangunan yang belum pernah
 di-remix tidak menampilkan apa pun. Jumlahnya hanya apa yang diketahui
 perangkat ini, jadi perangkat lain bisa menampilkan angka berbeda, dan
@@ -592,12 +592,12 @@ bangunan Anda, 🔔 Anda mendapat entri **… me-remix bangunan Anda**, sekali
 per remix (dan perangkat Anda juga menampilkannya, jika Anda mengaktifkan
 [Notifikasi di perangkat ini](03-WorldView.md#notifikasi-di-perangkat-ini)).
 
-### Saat fork tidak dapat diselesaikan
+### Saat remix tidak dapat diselesaikan
 
-Sesekali fork tidak dapat dilakukan — paling sering saat mem-fork Dunia
+Sesekali remix tidak dapat dilakukan — paling sering saat me-remix Dunia
 Bersama yang ditemukan melalui rekan atau jaringan terdesentralisasi
 (lihat [Publikasi & Bukti Eksternal](09-PublicationsAndEvidence.md)),
-bukan bangunan biasa di **Jelajahi**. Alih-alih melempar Anda ke dokumen
+bukan bangunan biasa di **Jelajahi**. Alih-alih melempar Anda ke bangunan
 Editor kosong yang tidak berhubungan, ForkBuild menampilkan dialog **Tidak
 bisa membuat salinan** yang menyebutkan persis apa yang salah:
 
@@ -698,9 +698,9 @@ salinanmu sendiri.
 
 ## Pohon keluarga
 
-Karena setiap fork mencatat induknya, ForkBuild dapat menggambar seluruh
+Karena setiap remix mencatat induknya, ForkBuild dapat menggambar seluruh
 silsilah sebuah karya. Di **Halaman pembuat**, Anda akan melihat **pohon
-fork**:
+remix**:
 
 ```
 Medieval House (asli)

@@ -21,7 +21,7 @@ données IndexedDB `forkbuild` ; les navigateurs sans IndexedDB utilisent
 `localStorage`, sous des clés commençant par `forkbuild:`) et ne quitte
 jamais l’appareil, sauf si vous le publiez, l’exportez ou l’envoyez :
 
-- vos documents, les copies de récupération des modifications non
+- vos constructions, les copies de récupération des modifications non
   enregistrées, et les structures enregistrées ;
 - vos identités : la clé publique de chacune, et sa clé privée, chiffrée
   avec votre phrase secrète sauf si vous avez choisi de la créer sans ;
@@ -186,7 +186,7 @@ envoie.
 - **Ce que reçoit GoatCounter :** votre adresse IP et le User-Agent de
   votre navigateur, comme pour toute requête web, plus un chemin fixe (`/`)
   et un nombre aléatoire qui empêche l’image d’être mise en cache. Aucune
-  page, aucun document, aucun Monde, aucune identité, aucun référent ni rien
+  page, aucune construction, aucun Monde, aucune identité, aucun référent ni rien
   de ce que ForkBuild stocke n’est inclus ; il ne peut donc pas savoir ce
   que vous faites dans l’application, ni même quelle page vous avez ouverte.
 - **Ce qu’il conserve :** uniquement des totaux, c’est-à-dire les visiteurs
@@ -347,7 +347,7 @@ demandez.
 | Vous connectez un portefeuille de navigateur (*expérimental*) | l’extension de portefeuille que vous choisissez | tout ce qu’elle vous demande d’approuver |
 
 ForkBuild n’envoie jamais votre clé privée, votre phrase secrète ni vos
-documents enregistrés à aucun de ces serveurs.
+constructions enregistrées à aucun de ces serveurs.
 
 **Un lien qui contient sa construction** (créé par **Copier le lien** ou
 **Partager…** avant qu’une construction soit distribuée) porte votre Monde

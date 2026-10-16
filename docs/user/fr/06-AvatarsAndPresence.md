@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: f9738fa9f2faf553 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 3b81c1f78e8542a3 -->
 # 06 — Avatars et présence
 
 <!-- languages -->
@@ -94,8 +94,8 @@ d’avatar** :
 - **Suivre l’avatar** — verrouille votre caméra sur ses mouvements
 - **Saluer / Faire signe / Montrer du doigt** — envoie un geste ponctuel à
   cet avatar
-- **Suivre ses créations** — suit l’identité derrière l’avatar, pour que
-  ses nouvelles créations apparaissent sur la page **Abonnements** (voir
+- **Suivre ses constructions** — suit l’identité derrière l’avatar, pour que
+  ses nouvelles constructions apparaissent sur la page **Abonnements** (voir
   [Suivre des personnes](07-PeerConnectionsAndFriends.md#suivre-des-personnes)).
   Ce bouton n’apparaît que si la présence de l’avatar est signée, car
   c’est la signature qui prouve à qui appartient l’avatar.
@@ -372,7 +372,7 @@ chose à proximité. Comme pour ajouter un
 [point de repère](03-WorldView.md#points-de-repère--marquer-un-lieu-qui-mérite-quon-sen-souvienne),
 décorer demande un nom et le droit de MODIFICATION sur le Monde
 où vous êtes. Sur le Monde publié de quelqu’un d’autre, la décoration va
-dans votre propre copie — à condition que sa licence autorise les forks.
+dans votre propre copie — à condition que sa licence autorise les remix.
 Si rien de tout cela ne s’applique, **G** ne fait simplement rien ; le
 bouton **Décorer** du pavé tactile, lui, vous explique pourquoi.
 

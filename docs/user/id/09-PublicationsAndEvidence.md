@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: d748ce22f6360f55 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: be6c14fcfc79e4c8 -->
 # 09 — Publikasi & Bukti Eksternal
 
 <!-- languages -->
@@ -22,14 +22,14 @@
 > dan Base-nya, Steem, Blurt, pinning IPFS jarak jauh, serta seluruh panel
 > **Alat Dompet & Arsip**. Panduan [11](11-EvidenceAndStorage.md)
 > dan [12](12-ArchiveAndAchievements.md) menyebutkan bagian mana yang
-> Eksperimental. Membangun, menyimpan, menerbitkan ke Jelajahi, fork,
+> Eksperimental. Membangun, menyimpan, menerbitkan ke Jelajahi, remix,
 > identitas, dan rekan tidak bergantung pada semua itu.
 
 Tidak ada satu pun dari ini yang diperlukan untuk memakai ForkBuild.
 Lewati saja jika Anda hanya ingin membangun, menerbitkan, dan menjelajah.
 
 Halaman **Publikasi** adalah lapisan yang lebih teknis daripada Jelajahi.
-Jelajahi berkaitan dengan Dokumen dan Dunia; halaman Publikasi berkaitan
+Jelajahi berkaitan dengan Bangunan dan Dunia; halaman Publikasi berkaitan
 dengan **klaim bertanda tangan** seperti "Saya merancang struktur ini" atau
 "Saya menyebut tempat ini X", dan dengan kedalaman opsional yang dapat Anda
 tambahkan pada sebuah klaim:
@@ -50,9 +50,9 @@ tambahkan pada sebuah klaim:
 
 | | **Terbitkan** (Jelajahi) | **Halaman Publikasi** |
 |---|---|---|
-| Apa yang dibagikan | Dokumen atau Dunia | Catatan bertanda tangan: Dunia Bersama, kepengarangan struktur, atau nama tempat |
+| Apa yang dibagikan | Bangunan atau Dunia | Catatan bertanda tangan: Dunia Bersama, kepengarangan struktur, atau nama tempat |
 | Tempat melihatnya | Jelajahi, Halaman pembuat, Tampilan Dunia | Halaman **Publikasi** |
-| Apa yang Anda lakukan dengannya | Membuka, menjelajahi, mem-fork | Memeriksanya, mengambil kontennya, mendistribusikan dan menjangkarkannya |
+| Apa yang Anda lakukan dengannya | Membuka, menjelajahi, me-remix | Memeriksanya, mengambil kontennya, mendistribusikan dan menjangkarkannya |
 | Panduan | [Penerbitan & Remix](04-PublishingAndForking.md) | Yang ini |
 
 **Terbitkan** saja tidak memasukkan sebuah Dunia ke halaman Publikasi.
@@ -62,7 +62,7 @@ sebagai **Dunia Bersama** yang dapat berpindah ke rekan (lihat
 
 Halaman Publikasi tidak memiliki **Buka**, **Jelajahi**, atau **Remix**,
 bahkan untuk Dunia Bersama. Halaman ini menampilkan catatan bertanda
-tangan, bukan Dunianya. Untuk membuka, menjelajahi, atau mem-fork Dunia
+tangan, bukan Dunianya. Untuk membuka, menjelajahi, atau me-remix Dunia
 Bersama, temukan di Jelajahi, di halaman pembuatnya, atau di Tampilan
 Dunia. Yang Anda terima dari rekan muncul di sana begitu kontennya ada di
 perangkat ini. (Satu-satunya pengecualian adalah **Buka di Editor** pada
@@ -94,7 +94,7 @@ merupakan jenis publikasi, dan hanya publikasi itu sendiri yang wajib:
 | **Publikasi** | Bukunya sendiri | Catatan bertanda tangan: Dunia Bersama, Atribusi Cetak Biru, atau Klaim Nama Tempat. Membawa hash kontennya dan tanda tangan penerbitnya. |
 | **Konten** | Tempat salinan cetak disimpan | Byte yang menjadi isi publikasi, seperti balok sebuah Dunia. Selalu disimpan di perangkat ini terlebih dahulu; **Simpan di …** menaruh salinannya di IPFS, Arweave, Steem, atau Blurt agar orang lain dapat mengambilnya. Lihat [Penyedia Konten](10-NetworkSettings.md#penyedia-konten). |
 | **Snapshot** | Satu salinan cetak | Satu salinan tersimpan dari konten publikasi, seperti balok sebuah Dunia, yang dapat diambil orang lain dan dicocokkan dengan hash-nya. Lihat [Snapshot Lokal](#snapshot-lokal). |
-| **Penempatan** | Rak tempat salinan itu ditaruh | Catatan bertanda tangan tentang di mana sebuah bangunan berdiri di Dunia. Satu Dunia Bersama dapat memiliki beberapa penempatan. Lihat [Menempatkan vs mem-fork](WorldViewAdvancedTools.md#menempatkan-vs-mem-fork). |
+| **Penempatan** | Rak tempat salinan itu ditaruh | Catatan bertanda tangan tentang di mana sebuah bangunan berdiri di Dunia. Satu Dunia Bersama dapat memiliki beberapa penempatan. Lihat [Menempatkan vs me-remix](WorldViewAdvancedTools.md#menempatkan-vs-me-remix). |
 | **Pengumuman / Penemuan** | Entri katalog perpustakaan | Pemberitahuan kecil bertanda tangan di Nostr, Arweave, Steem, atau Blurt yang menyatakan bahwa publikasi atau Snapshot itu ada dan di mana salinannya, agar orang yang tidak terhubung dengan Anda dapat menemukannya. Lihat [Penyedia Pengumuman / Penemuan](10-NetworkSettings.md#penyedia-pengumuman--penemuan). |
 | **Bukti / Penjangkaran** *(Eksperimental, kecuali di Arweave)* | Cap notaris | Hash konten yang ditulis ke dalam transaksi blockchain (Bitcoin, Base, Arweave, Steem, atau Blurt), sebagai bukti bahwa konten itu sudah ada pada waktu tersebut. Tidak menyimpan atau mengumumkan apa pun. Lihat [Bukti & Penyimpanan](11-EvidenceAndStorage.md). |
 | **Komentar** | Ulasan pembaca | Komentar yang dapat dilekatkan siapa pun yang punya nama pada sebuah publikasi, masing-masing ditandatangani oleh pemberi komentar, bukan oleh penerbit. Lihat [Komentar](#komentar). |

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/12-ArchiveAndAchievements.md source-hash: ccbd98440904720c -->
+<!-- translation-of: docs/user/12-ArchiveAndAchievements.md source-hash: 60c7fd2807c8b8fe -->
 # 12 — Archiv & Erfolge
 
 <!-- languages -->
@@ -134,10 +134,10 @@ Veröffentlichung (die, auf die verwiesen wird)** (zum Beispiel „Bitcoin —
 a1b2…c3d4 — Inhalt 9f8e…“) und klicken Sie dann auf **Verweis erfassen**.
 Eine Veröffentlichung kann nicht auf sich selbst verweisen. Verweise
 erstellen immer nur Sie; nichts erstellt einen automatisch, auch das
-Forken an anderer Stelle der App nicht.
+Remixen an anderer Stelle der App nicht.
 
-Ein Verweis heißt absichtlich nicht Fork: Er hält fest, dass der Verweis
-existiert, nicht, was er bedeutet (ein Fork, ein Zitat, eine Antwort).
+Ein Verweis heißt absichtlich nicht Remix: Er hält fest, dass der Verweis
+existiert, nicht, was er bedeutet (ein Remix, ein Zitat, eine Antwort).
 
 Erfasste Verweise werden der älteste zuerst aufgelistet, mit Chain,
 kurzer Identität und Inhalts-Hash beider Seiten und dem Zeitpunkt der

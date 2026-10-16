@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: 2f10096b5d79ec2b -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: 33341ea95fd2e843 -->
 # 13 — Seus dados
 
 <!-- languages -->
@@ -6,7 +6,7 @@
 <!-- /languages -->
 
 O ForkBuild não tem contas nem servidor que guarde seu trabalho. Tudo o que
-ele guarda fica neste navegador, neste dispositivo: seus documentos,
+ele guarda fica neste navegador, neste dispositivo: suas construções,
 identidades e as chaves privadas delas, estruturas, publicações, pares e
 amigos, histórico de conversas e configurações. **Limpar os dados deste site
 no navegador apaga tudo isso para sempre**, e o mesmo acontece se você
@@ -18,8 +18,8 @@ uma cópia.
 ## Neste dispositivo
 
 A primeira seção lista o que está guardado, por tipo, e quanto espaço ocupa.
-As contagens são entradas de armazenamento, não documentos: um documento
-salvo e a lista de documentos são duas entradas, por exemplo.
+As contagens são entradas de armazenamento, não construções: uma construção
+salvo e a lista de construções são duas entradas, por exemplo.
 
 Se aparecer **O navegador pode remover estes dados quando o disco estiver
 cheio.**, clique em **Pedir ao navegador para mantê-los**. Os navegadores
@@ -98,7 +98,7 @@ em todas as páginas, avisa isso, com **Fazer backup agora** e **Lembrar
 daqui a uma semana**:
 
 - Ela aparece pela primeira vez uma semana depois que este navegador começa
-  a guardar seu trabalho (documentos, identidades, estruturas, pares ou
+  a guardar seu trabalho (construções, identidades, estruturas, pares ou
   conversas), se você nunca fez backup.
 - Depois disso, ela aparece quando o último backup é mais antigo do que o
   que você escolheu em **Lembretes e backups automáticos → Lembrar-me de
@@ -147,7 +147,7 @@ gravar de volta os dados antigos dela.
 2. Escolha como restaurar:
    - **Adicionar o que este dispositivo não tem** (o padrão): tudo o que está
      no backup e não está neste dispositivo é adicionado. Onde os dois têm
-     algo, como o mesmo documento ou uma configuração, a versão deste
+     algo, como a mesma construção ou uma configuração, a versão deste
      dispositivo é mantida.
    - **Substituir tudo neste dispositivo pelo backup**: apaga primeiro o que
      o ForkBuild guardou aqui e depois restaura o backup exatamente. Marque a
@@ -167,13 +167,13 @@ dele:
 
 | O quê | Exportar | Importar |
 |---|---|---|
-| Um documento | **Exportar** na barra de ferramentas do Editor | **Importar** na barra de ferramentas do Editor |
+| Uma construção | **Exportar** na barra de ferramentas do Editor | **Importar** na barra de ferramentas do Editor |
 | Todas as construções salvas | **Exportar todas as construções**, no fim do menu **Recentes** do Editor | **Importar** na barra de ferramentas do Editor |
 | Uma estrutura | **Exportar planta** no menu **⋮** do cartão dela | **Importar planta** ao lado de **Minhas estruturas** |
 | Todas as estruturas | **Exportar tudo** ao lado de **Minhas estruturas** | **Importar planta** ao lado de **Minhas estruturas** |
 | Uma identidade | **Exportar** em **Minhas identidades** | **Importar identidade** em **Minhas identidades** |
 
-Importar todos os documentos traz de volta os que este dispositivo não tem,
+Importar todos as construções traz de volta os que este dispositivo não tem,
 mantém sem mudanças os que ele já tem e salva uma cópia ao lado de qualquer
 um que ele tenha em outra versão. Importar todas as estruturas ignora os
 projetos que já estão em Minhas estruturas. Uma identidade exportada também
@@ -185,7 +185,7 @@ junto num backup completo.
 
 ## Suas publicações
 
-Uma criação que você **Publica** fica guardada só neste dispositivo, até você
+Uma construção que você **Publica** fica guardada só neste dispositivo, até você
 distribuí-la (veja [Publicar e remixar](04-PublishingAndForking.md)). O
 cartão dela em **Explorar** diz onde este dispositivo registrou a
 distribuição, por exemplo **Guardado no IPFS · Anunciado no Nostr**: para
@@ -197,7 +197,7 @@ A linha só diz o que este dispositivo tem registrado. Ela não confere se um
 envio continua disponível (uma cópia no IPFS só dura enquanto alguém a
 mantiver fixada) e uma distribuição feita de outro dispositivo não é
 conhecida aqui. Sem registro, o cartão diz **Nenhuma distribuição registrada
-neste dispositivo.**: faça um backup, ou abra a criação na Visão do mundo com
+neste dispositivo.**: faça um backup, ou abra a construção na Visão do mundo com
 **Explorar** e use **Distribuir** em **Meu Mundo compartilhado**.
 Compartilhá-la com pares conectados não é registrado como distribuição: eles
 só mantêm uma cópia enquanto quiserem.

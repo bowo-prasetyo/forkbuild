@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 22e0b2ed04283579 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 4a1027c916706bd6 -->
 # Steuerungsreferenz
 
 <!-- languages -->
@@ -44,13 +44,13 @@ finden — die vollständige Erklärung steht unter
 | Suchfeld, **Suchen** | Veröffentlichungen nach Titel/Autor suchen, wahlweise innerhalb eines Radius um eine Koordinate |
 | **Hier erkunden** | Den Dialog Ort erkunden öffnen, zentriert auf die aktuelle Position der Kamera |
 | **Was ist hier?** | Dasselbe mit einem kleinen festen Radius — „was genau hier ist“ |
-| **Fokussieren** bei einem Ergebnis | Die Kamera dorthin fliegen und es zum aktiven (bearbeiteten) Dokument machen |
-| **Auswählen** bei einem Ergebnis | Es zum aktiven Dokument machen, ohne die Kamera zu bewegen |
+| **Fokussieren** bei einem Ergebnis | Die Kamera dorthin fliegen und es zum aktiven (bearbeiteten) Bauwerk machen |
+| **Auswählen** bei einem Ergebnis | Es zum aktiven Bauwerk machen, ohne die Kamera zu bewegen |
 | **Untersuchen** bei einem Ergebnis | An Ort und Stelle eine schreibgeschützte Zusammenfassung aufklappen |
 
 ## Orientierung & Navigation (Weltansicht)
 
-Reine Kameranavigation — nichts davon lädt ein Dokument, ändert die
+Reine Kameranavigation — nichts davon lädt ein Bauwerk, ändert die
 Auswahl oder bearbeitet etwas. Siehe
 [Weltansicht](03-WorldView.md#orientierung-und-orte).
 
@@ -158,7 +158,7 @@ diesem Gerät gespeichert und überstehen ein Neuladen — siehe
 | `Strg/Cmd+A` | Alles auswählen | |
 | `Esc` | Auswahl aufheben | Die eigene Escape-Reihenfolge des Editors, unten — Escape in der Weltansicht schließt nur das jeweils offene Feld |
 | `Entf` / `Rücktaste` | Auswahl löschen — **nur Editor** | ein Rückgängig-Schritt; in der Weltansicht gar keine Tastenbelegung |
-| Schaltfläche **Fokussieren** im Feld Auswahl — **nur Editor** | Die Kamera sofort auf den/die ausgewählten Stein(e) ausrichten | kein Tastenkürzel; nur die Kamera — berührt nie Dokument, Auswahl oder Rückgängig-Verlauf; nur für ausgewählte Steine, nicht für Strukturplatzierungen |
+| Schaltfläche **Fokussieren** im Feld Auswahl — **nur Editor** | Die Kamera sofort auf den/die ausgewählten Stein(e) ausrichten | kein Tastenkürzel; nur die Kamera — berührt nie Bauwerk, Auswahl oder Rückgängig-Verlauf; nur für ausgewählte Steine, nicht für Strukturplatzierungen |
 
 ## Transformieren — Tastatur (nur Editor)
 
@@ -225,8 +225,8 @@ zu erstellen und andere nicht.
 
 ## Strukturen (Baubibliothek) — nur Editor
 
-Zusammensetzen, Forken und Ihre persönliche Bibliothek — siehe
-[Der Editor](02-TheEditor.md#strukturen-zusammensetzen-forken-und-ihre-persönliche-bibliothek).
+Zusammensetzen, Remixen und Ihre persönliche Bibliothek — siehe
+[Der Editor](02-TheEditor.md#strukturen-zusammensetzen-remixen-und-ihre-persönliche-bibliothek).
 
 | Eingabe | Aktion | Hinweise |
 |---|---|---|
@@ -234,32 +234,32 @@ Zusammensetzen, Forken und Ihre persönliche Bibliothek — siehe
 | `R` / `Umschalt+R` beim Platzieren | Den wartenden Geist um ±90° drehen | dieselben Tasten wie bei der Vorschau eines Steins |
 | Klick | Übernehmen — jeder Stein der Struktur landet als ein Rückgängig-Schritt | an einer belegten (roten) Position verweigert |
 | `Esc` beim Platzieren | Abbrechen — nichts wird hinzugefügt | |
-| Menü **⋮** der Karte, **Als neues Bauwerk remixen** | Ein ganz neues Dokument beginnen, das als Kopie dieser Struktur startet | ändert nie den Bibliothekseintrag |
-| Menü **⋮** einer eingebauten Karte, **In Meine Strukturen remixen** | Sie unverändert zu Meine Strukturen hinzufügen | kein Dokument erstellt, nichts herausgelöst |
+| Menü **⋮** der Karte, **Als neues Bauwerk remixen** | Ein ganz neues Bauwerk beginnen, das als Kopie dieser Struktur startet | ändert nie den Bibliothekseintrag |
+| Menü **⋮** einer eingebauten Karte, **In Meine Strukturen remixen** | Sie unverändert zu Meine Strukturen hinzufügen | kein Bauwerk erstellt, nichts herausgelöst |
 | Menü **⋮** jeder Karte, **Info** | Ein schreibgeschütztes Feld mit Name/Kategorie/Steinen/Grundfläche/Höhe/Quelle/Beschreibung zeigen | nie bearbeitbar |
 | Auswahl mit **1 oder mehr Steinen**, dann **Bauplan erstellen** (Abschnitt **Gruppen & Bauplan** des Felds Auswahl oder Befehlspalette) | Einen kleinen Dialog öffnen (Name / Kategorie / Beschreibung + Vorschau); die Auswahl als neuen Eintrag in **Meine Strukturen** speichern | |
 | Menü **⋮** einer Karte in **Meine Strukturen**, **Umbenennen** | Den Namen einer persönlichen Struktur ändern | nur persönliche Strukturen |
-| Menü **⋮** einer Karte in **Meine Strukturen**, **Entfernen** | Sie aus Ihrer Bibliothek löschen | berührt nie Steine, die bereits daraus zusammengesetzt oder geforkt wurden |
+| Menü **⋮** einer Karte in **Meine Strukturen**, **Entfernen** | Sie aus Ihrer Bibliothek löschen | berührt nie Steine, die bereits daraus zusammengesetzt oder geremixt wurden |
 | Menü **⋮** jeder Karte, **Bauplan exportieren** | Sie als portable JSON-Datei herunterladen | eingebaut oder persönlich |
 | Schaltfläche **Bauplan importieren** (neben der Überschrift Meine Strukturen) | Eine Bauplandatei als neuen Eintrag in Ihre Bibliothek aufnehmen | frische Identität, auch bei einer erneut importierten Datei |
 
 ## Strukturinstanzen (Editor)
 
-Eine **Strukturinstanz** platziert ein ganzes gespeichertes Dokument als
+Eine **Strukturinstanz** platziert ein ganzes gespeichertes Bauwerk als
 eine einzige auswählbare Einheit — eine lebendige Referenz, keine
 Kopie — siehe
 [Der Editor](02-TheEditor.md#strukturinstanzen-eine-lebendige-referenz).
 
 | Eingabe | Aktion | Hinweise |
 |---|---|---|
-| Auswahlmenü **Zuletzt** in der Werkzeugleiste, Schaltfläche **Platzieren** eines Dokuments | In den Modus zum Platzieren einer Struktur für dieses Dokument wechseln | ein Klick auf den Namen des Dokuments öffnet es dagegen |
+| Auswahlmenü **Zuletzt** in der Werkzeugleiste, Schaltfläche **Platzieren** eines Bauwerks | In den Modus zum Platzieren einer Struktur für dieses Bauwerk wechseln | ein Klick auf den Namen des Bauwerks öffnet es dagegen |
 | `R` / `Umschalt+R` beim Platzieren | Die wartende Instanz um ±90° drehen | dieselben Tasten wie bei der Vorschau eines Steins |
 | Klick auf eine platzierte Instanz (Auswahlwerkzeug) | Sie als eine Einheit auswählen, getrennt von einer Steinauswahl | |
 | Im Ansichtsfenster ziehen, oder das Gizmo | Die Instanz verschieben / drehen | |
-| `Strg/Cmd+D` | Duplizieren — platziert eine weitere Instanz desselben Dokuments | siehe [Duplizieren](#duplizieren-nur-editor) — bei ausgewählten Instanzen entsteht eine neue Instanz statt einer neuen Steinkopie |
+| `Strg/Cmd+D` | Duplizieren — platziert eine weitere Instanz desselben Bauwerks | siehe [Duplizieren](#duplizieren-nur-editor) — bei ausgewählten Instanzen entsteht eine neue Instanz statt einer neuen Steinkopie |
 | Felder **X / Z / Drehung** im Feld der Instanz, dann Anwenden | Eine genaue Position/Ausrichtung festlegen | Y (die Höhe) ergibt sich immer aus dem Gelände, nie ein Zielwert |
-| **Ursprungsbauwerk bearbeiten** im Feld der Instanz | Das referenzierte Dokument öffnen, um seine Steine zu ändern | jede Instanz aktualisiert sich, da eine Instanz eine lebendige Referenz ist |
-| `Entf` / `Rücktaste` | Die Instanz entfernen | berührt nie das referenzierte Dokument |
+| **Ursprungsbauwerk bearbeiten** im Feld der Instanz | Das referenzierte Bauwerk öffnen, um seine Steine zu ändern | jede Instanz aktualisiert sich, da eine Instanz eine lebendige Referenz ist |
+| `Entf` / `Rücktaste` | Die Instanz entfernen | berührt nie das referenzierte Bauwerk |
 
 ## Gruppen (nur Editor)
 
@@ -311,7 +311,7 @@ kann sie auch in der Vorschau zeigen und wiederherstellen.
 | Eingabe | Aktion |
 |---|---|
 | `1` / `2` | Zwischen Auswahl- und Platzierwerkzeug wechseln |
-| `Strg/Cmd+S` | Dokument speichern |
+| `Strg/Cmd+S` | Bauwerk speichern |
 
 ## Platzieren (nur Editor)
 

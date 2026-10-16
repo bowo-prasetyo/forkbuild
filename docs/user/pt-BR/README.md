@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: 4ae3c13f1318370c -->
+<!-- translation-of: docs/user/README.md source-hash: b52156afbaeaed07 -->
 # Documentação do ForkBuild para usuários
 
 <!-- languages -->
@@ -17,7 +17,7 @@ entre abrir o aplicativo e entrar andando na sua primeira construção.
 | Aprender as ferramentas de construção | [O Editor](02-TheEditor.md) |
 | Compartilhar uma construção com um amigo | [Compartilhando um link](04-PublishingAndForking.md#compartilhando-um-link) |
 | Deixar todo mundo encontrar minha construção | [Quem pode encontrá-la?](04-PublishingAndForking.md#quem-pode-encontrá-la) |
-| Remixar a construção de outra pessoa | [Bifurcar: torne-a sua](04-PublishingAndForking.md#bifurcar-torne-a-sua) |
+| Remixar a construção de outra pessoa | [Remixar: torne-a sua](04-PublishingAndForking.md#remixar-torne-a-sua) |
 | Construir com um amigo, ao vivo | [Construir comigo](02-TheEditor.md#construir-comigo-construir-juntos-ao-vivo) |
 | Passear com amigos | [Passear aqui comigo](03-WorldView.md#passear-aqui-comigo--trazer-amigos-para-este-mundo) |
 | Mudar a aparência do meu avatar | [Avatares e presença](06-AvatarsAndPresence.md#personalizando-seu-avatar) |
@@ -40,7 +40,7 @@ com amigos.
 2. **[O Editor](02-TheEditor.md)** — o kit de construção: ferramentas,
    seleção, transformações, cores dos blocos, grupos, as estruturas da
    Biblioteca de construção e suas próprias plantas, instâncias de
-   estruturas, e o título/descrição/licença de uma criação.
+   estruturas, e o título/descrição/licença de uma construção.
 3. **[Visão do mundo](03-WorldView.md)** — o mundo 3D compartilhado
    onde vive cada construção publicada: andar e voar por aí, encontrar e
    olhar coisas, **Construir aqui**, **Passear aqui comigo**, os
@@ -170,11 +170,11 @@ construir com estruturas inteiras de uma vez — vinte e duas prontas, em cinco
 categorias, mais tudo o que você mesmo salvar:
 
 - **Posicione** uma estrutura direto no que você está construindo, ou
-  **bifurque** uma em um documento novo só dela.
+  **bifurque** uma em uma construção nova só dela.
 - **Salve as suas próprias** construções como estruturas reutilizáveis em
   **Minhas estruturas**, sua biblioteca pessoal de plantas.
 - **Exporte e importe** uma planta como um arquivo portátil para
   compartilhá-la com outra pessoa ou levá-la a outro dispositivo.
 
-Veja [O Editor](02-TheEditor.md#estruturas-compor-bifurcar-e-sua-biblioteca-pessoal)
+Veja [O Editor](02-TheEditor.md#estruturas-compor-remixar-e-sua-biblioteca-pessoal)
 para o passo a passo completo.

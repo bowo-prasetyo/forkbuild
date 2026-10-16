@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/12-ArchiveAndAchievements.md source-hash: ccbd98440904720c -->
+<!-- translation-of: docs/user/12-ArchiveAndAchievements.md source-hash: 60c7fd2807c8b8fe -->
 # 12 — Arsip & Pencapaian
 
 <!-- languages -->
@@ -125,10 +125,10 @@ Mencatat bahwa satu identitas publikasi menunjuk ke identitas lain.
 ketahui (misalnya "Bitcoin — a1b2…c3d4 — content 9f8e…"), lalu klik
 **Catat Referensi**. Sebuah publikasi tidak dapat merujuk dirinya sendiri.
 Referensi hanya pernah dibuat oleh Anda; tidak ada yang membuatnya secara
-otomatis, dan fork di bagian lain aplikasi juga tidak.
+otomatis, dan remix di bagian lain aplikasi juga tidak.
 
-Referensi sengaja tidak disebut fork: referensi mencatat bahwa penunjuk
-itu ada, bukan apa artinya (fork, kutipan, balasan).
+Referensi sengaja tidak disebut remix: referensi mencatat bahwa penunjuk
+itu ada, bukan apa artinya (remix, kutipan, balasan).
 
 Referensi yang tercatat dicantumkan dari yang terlama, dengan rantai,
 identitas singkat, hash konten, dan waktu pencatatan kedua sisi. Duplikat

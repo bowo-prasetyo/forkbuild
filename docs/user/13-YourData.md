@@ -5,7 +5,7 @@
 <!-- /languages -->
 
 ForkBuild has no accounts and no server that keeps your work. Everything it
-stores lives in this browser, on this device: your documents, identities
+stores lives in this browser, on this device: your builds, identities
 and their private keys, structures, publications, peers and friends, chat
 history and settings. **Clearing this site's data in the browser deletes all
 of it for good**, and so does uninstalling the browser or losing the device.
@@ -16,8 +16,8 @@ copy.
 ## On this device
 
 The first section lists what is stored, by kind, and how much space it
-uses. The counts are storage entries, not documents: a saved document and
-the list of documents are two entries, for example.
+uses. The counts are storage entries, not builds: a saved build and
+the list of builds are two entries, for example.
 
 If it says **The browser may remove this data when the disk is low**, click
 **Ask the Browser to Keep It**. Browsers usually agree once you've
@@ -89,7 +89,7 @@ If this device hasn't been backed up for a while, a bar under the menu on
 every page says so, with **Back Up Now** and **Remind Me in a Week**:
 
 - It first appears a week after this browser starts holding your work
-  (documents, identities, structures, peers or chat), if you've never backed
+  (builds, identities, structures, peers or chat), if you've never backed
   up.
 - After that, it appears when the last backup is older than you chose under
   **Reminders and automatic backups → Remind me to back up**: every week,
@@ -134,7 +134,7 @@ data back.
 2. Choose how to restore:
    - **Add what this device doesn't have** (the default): everything in the
      backup that isn't on this device is added. Where both have something,
-     such as the same document or a setting, this device's version is kept.
+     such as the same build or a setting, this device's version is kept.
    - **Replace everything on this device with the backup**: deletes what
      ForkBuild has stored here first, then restores the backup exactly.
      Tick the confirmation to enable it.
@@ -151,13 +151,13 @@ For moving one kind of thing, or sharing it, use the export on its own page:
 
 | What | Export | Import |
 |---|---|---|
-| One document | **Export** in the Editor toolbar | **Import** in the Editor toolbar |
+| One build | **Export** in the Editor toolbar | **Import** in the Editor toolbar |
 | Every saved build | **Export All Builds** at the bottom of the Editor's **Recent** menu | **Import** in the Editor toolbar |
 | One structure | **Export Blueprint** in its card's **⋮** menu | **Import Blueprint** beside **My Structures** |
 | Every structure | **Export All** beside **My Structures** | **Import Blueprint** beside **My Structures** |
 | One identity | **Export** on **My Identities** | **Import Identity** on **My Identities** |
 
-Importing every document puts back the ones this device doesn't have, keeps
+Importing every build puts back the ones this device doesn't have, keeps
 the ones it already has unchanged, and saves a copy beside any it has in a
 different version. Importing every structure skips designs already in My
 Structures. An exported identity also carries its revocation, successor and
@@ -168,7 +168,7 @@ backup.
 
 ## Your publications
 
-A creation you **Publish** is stored on this device only, until you
+A build you **Publish** is stored on this device only, until you
 distribute it (see [Publishing & Remixing](04-PublishingAndForking.md)).
 Its card in Explore says where this device recorded distributing it, for
 example **Stored on IPFS · Announced on Nostr**: where the build or its

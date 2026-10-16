@@ -166,7 +166,7 @@ Settings**) and an unlocked identity.
 
 ## Following people
 
-**Follow** keeps you up to date with someone's creations, like following an
+**Follow** keeps you up to date with someone's builds, like following an
 account on a social network, without either of you asking the other for
 anything.
 
@@ -180,9 +180,9 @@ anything.
   follow, each with **Unfollow**, and below them the newest work of theirs
   that has reached this device, newest first. Click a name to see only that
   person's work.
-- **Notifications.** When a new creation by someone you follow reaches this
+- **Notifications.** When a new build by someone you follow reaches this
   device, the 🔔 panel gets a **… published something new** entry, once per
-  creation, with **Explore** to open it (and your device shows it too, if
+  build, with **Explore** to open it (and your device shows it too, if
   you turned on
   [Notifications on this device](03-WorldView.md#notifications-on-this-device)).
 - **Their shared Worlds are fetched for you.** Worlds that someone you follow
@@ -203,7 +203,7 @@ what friendship is for.
 
 **What following doesn't do.** Following picks out the work of the people you
 follow from what reaches this device; it doesn't go and fetch their work by
-itself. Creations still arrive the usual ways: World discovery in World View,
+itself. Builds still arrive the usual ways: World discovery in World View,
 Worlds shared by connected peers, and links you open. Only work whose
 signature checks out counts, so nobody can get onto your Following page by
 typing someone else's name or identity on their work. Work by someone you've

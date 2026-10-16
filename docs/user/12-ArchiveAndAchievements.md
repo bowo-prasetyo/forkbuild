@@ -116,10 +116,10 @@ publication (the one being pointed at)** from your known Bitcoin and Base
 publication identities (for example "Bitcoin — a1b2…c3d4 — content 9f8e…"),
 then click **Record Reference**. A publication can't reference itself.
 References are only ever made by you; nothing creates one automatically,
-and forking elsewhere in the app doesn't either.
+and remixing elsewhere in the app doesn't either.
 
-A reference is deliberately not called a fork: it records that the pointer
-exists, not what it means (a fork, a citation, a reply).
+A reference is deliberately not called a remix: it records that the pointer
+exists, not what it means (a remix, a citation, a reply).
 
 Recorded references are listed oldest first, with both sides' chain, short
 identity, content hash, and when it was recorded. Duplicates are kept as

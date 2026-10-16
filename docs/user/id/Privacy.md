@@ -20,7 +20,7 @@ IndexedDB `forkbuild`; browser tanpa IndexedDB memakai `localStorage`,
 dengan kunci yang diawali `forkbuild:`) dan tidak pernah keluar dari
 perangkat kecuali Anda menerbitkan, mengekspor, atau mengirimnya:
 
-- dokumen Anda, salinan pemulihan dari perubahan yang belum disimpan, dan
+- bangunan Anda, salinan pemulihan dari perubahan yang belum disimpan, dan
   struktur yang disimpan;
 - identitas Anda: kunci publik masing-masing, dan kunci privatnya, yang
   dienkripsi dengan frasa sandi Anda kecuali Anda memilih membuatnya tanpa
@@ -184,7 +184,7 @@ penghitung yang tidak memasang cookie. Hanya permintaan itu yang dikirim:
 - **Yang diterima GoatCounter:** alamat IP Anda dan User-Agent browser
   Anda, seperti pada permintaan web mana pun, ditambah jalur tetap (`/`)
   dan angka acak yang mencegah gambar disimpan di cache. Tidak ada halaman,
-  dokumen, Dunia, identitas, perujuk, atau apa pun yang disimpan ForkBuild
+  bangunan, Dunia, identitas, perujuk, atau apa pun yang disimpan ForkBuild
   yang ikut dikirim, jadi GoatCounter tidak dapat tahu apa yang Anda
   lakukan di aplikasi, bahkan halaman mana yang Anda buka.
 - **Yang disimpannya:** hanya jumlah total, yaitu pengunjung per jam dan per
@@ -340,7 +340,7 @@ Anda dan apa yang Anda minta darinya.
 | Anda memverifikasi bukti di Base (*eksperimental*) | endpoint JSON-RPC Base (`mainnet.base.org`) | transaksi yang Anda cari |
 | Anda menghubungkan dompet browser (*eksperimental*) | ekstensi dompet yang Anda pilih | apa pun yang dimintanya untuk Anda setujui |
 
-ForkBuild tidak pernah mengirim kunci privat, frasa sandi, atau dokumen
+ForkBuild tidak pernah mengirim kunci privat, frasa sandi, atau bangunan
 tersimpan Anda ke server mana pun di atas.
 
 **Tautan yang membawa bangunannya** (dibuat dengan **Salin tautan** atau

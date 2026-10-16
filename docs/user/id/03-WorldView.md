@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 50fb553e94b18514 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: fba04da122bf921c -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
@@ -390,7 +390,7 @@ dibuat, dialog **Tidak bisa membuat salinan** menjelaskan alasannya,
 biasanya karena lisensi bangunan tidak mengizinkan salinan atau bangunan
 belum bisa diambil, dan **Kembali ke bangunan** mengembalikan Anda ke
 tempat semula (lihat
-[Saat fork tidak dapat diselesaikan](04-PublishingAndForking.md#saat-fork-tidak-dapat-diselesaikan)).
+[Saat remix tidak dapat diselesaikan](04-PublishingAndForking.md#saat-remix-tidak-dapat-diselesaikan)).
 
 **Tempat geografis** dan **orang** tidak punya Edit Salinan. Tempat
 geografis terdiri dari wilayah milik beberapa orang, jadi tidak ada satu
@@ -398,7 +398,7 @@ bangunan untuk disalin; buka salah satu wilayahnya saja.
 
 Edit Salinan sama dengan **Remix** di Jelajahi dan di halaman pembuat,
 dengan aturan lisensi yang sama (lihat
-[Fork: jadikan milik Anda](04-PublishingAndForking.md#fork-jadikan-milik-anda)).
+[Remix: jadikan milik Anda](04-PublishingAndForking.md#remix-jadikan-milik-anda)).
 Semua hal lain di Tampilan Dunia, seperti Cari, kompas, Peta, dan Info,
 hanya melihat.
 
@@ -565,7 +565,7 @@ Keduanya membuka dialog **Jelajahi Lokasi**:
 📍 Pusat: 100.0, 50.0, 250.0
 ⭕ Radius: 25 Satuan Dunia
 
-Menampilkan 3 dari 3 dokumen yang dapat ditemukan
+Menampilkan 3 dari 3 bangunan yang dapat ditemukan
 
 📍 City Hall            📏 4,2 Satuan Dunia
 oleh alice
@@ -621,7 +621,7 @@ sendiri, berjudul *"Remix dari &lt;nama asli&gt;"*. Pemberitahuan singkat
 memberi tahu Anda ("Salinan Anda sendiri yang dapat diedit telah dibuat —
 "…" tidak berubah"). Aturan lisensinya sama seperti untuk remix mana pun
 (lihat
-[Penerbitan & Remix](04-PublishingAndForking.md#fork-jadikan-milik-anda)).
+[Penerbitan & Remix](04-PublishingAndForking.md#remix-jadikan-milik-anda)).
 
 ## Riwayat — melihat pratinjau dan memulihkan keadaan sebelumnya
 

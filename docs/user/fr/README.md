@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: 4ae3c13f1318370c -->
+<!-- translation-of: docs/user/README.md source-hash: b52156afbaeaed07 -->
 # Documentation utilisateur de ForkBuild
 
 <!-- languages -->
@@ -18,7 +18,7 @@ première construction.
 | Apprendre les outils de construction | [L’Éditeur](02-TheEditor.md) |
 | Partager une construction avec un ami | [Partager un lien](04-PublishingAndForking.md#partager-un-lien) |
 | Que tout le monde trouve ma construction | [Qui peut la trouver ?](04-PublishingAndForking.md#qui-peut-la-trouver-) |
-| Remixer la construction de quelqu’un d’autre | [Forker : faites-le vôtre](04-PublishingAndForking.md#forker--faites-le-vôtre) |
+| Remixer la construction de quelqu’un d’autre | [Remixer : faites-le vôtre](04-PublishingAndForking.md#remixer--faites-le-vôtre) |
 | Construire avec un ami, en direct | [Construire avec moi](02-TheEditor.md#construire-avec-moi--construire-ensemble-en-direct) |
 | Me promener avec des amis | [Se promener ici avec moi](03-WorldView.md#se-promener-ici-avec-moi--amener-vos-amis-dans-ce-monde) |
 | Changer l’apparence de mon avatar | [Avatars et présence](06-AvatarsAndPresence.md#personnaliser-votre-avatar) |
@@ -43,7 +43,7 @@ avec des amis.
    outils, sélection, transformations, couleurs des briques, groupes, les
    structures de la Bibliothèque de construction et vos propres plans,
    les instances de structure, et le titre, la description et la licence
-   d’une création.
+   d’une construction.
 3. **[La Vue du Monde](03-WorldView.md)** — le monde 3D partagé où
    vit chaque construction publiée : marcher et voler, trouver et
    regarder les choses, **Construire ici**, **Se promener ici avec
@@ -186,12 +186,12 @@ coup — vingt-deux structures prêtes à l’emploi réparties en cinq catégor
 plus tout ce que vous enregistrez vous-même :
 
 - **Placez** une structure directement dans ce que vous construisez, ou
-  **forkez**-la dans un tout nouveau document.
+  **remixez**-la dans une toute nouvelle construction.
 - **Enregistrez vos propres** constructions comme structures
   réutilisables dans **Mes structures**, votre bibliothèque personnelle
   de plans.
 - **Exportez et importez** un plan sous forme de fichier portable pour
   le partager avec quelqu’un, ou l’emporter sur un autre appareil.
 
-Voir [L’Éditeur](02-TheEditor.md#structures--composer-forker-et-votre-bibliothèque-personnelle)
+Voir [L’Éditeur](02-TheEditor.md#structures--composer-remixer-et-votre-bibliothèque-personnelle)
 pour la présentation complète.

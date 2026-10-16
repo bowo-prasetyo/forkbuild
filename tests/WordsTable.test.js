@@ -1,3 +1,4 @@
+import { readdirSync, readFileSync } from 'node:fs';
 import en from '../ui/i18n/messages/en.js';
 import { assert } from './support/Assert.js';
 
@@ -100,3 +101,25 @@ console.log(`✓ ${checked} messages a newcomer meets use the player's words`);
 // The main menu names what a player does.
 assert(en['app.nav.editor'] === 'Build' && en['app.nav.repository'] === 'Explore' && en['app.nav.walk'] === 'Walk', 'Build · Explore · Challenge · Walk in the menu');
 console.log('✓ the menu says Build, Explore, Challenge and Walk');
+
+// The user guide too (2026-10-16): its English pages say build and remix,
+// never document, creation or fork. What may still say them: the product's
+// name, file names in links, code samples, the note that developer documents
+// call a remix a *fork*, the comparison with forking in Git, and the archive's
+// creation time (12-ArchiveAndAchievements.md).
+{
+    const guide = new URL('../docs/user/', import.meta.url);
+    const allowed = /ForkBuild|\*fork\*|forking a project in Git|Developer documents|creation time/;
+    const words = /\bfork(?:s|ed|ing)?\b|\bdocuments?\b|\bcreations?\b/i;
+    const saying = [];
+    for (const file of readdirSync(guide).filter((name) => name.endsWith('.md'))) {
+        const text = readFileSync(new URL(file, guide), 'utf8').replace(/^```[\s\S]*?^```/gm, '');
+        text.split('\n').forEach((line, index) => {
+            if (line.startsWith('<!--')) return;
+            const prose = line.replace(/\]\([^)]*\)/g, ']').replace(allowed, '');
+            if (words.test(prose)) saying.push(`${file}:${index + 1}: ${line.trim()}`);
+        });
+    }
+    assert(saying.length === 0, `the user guide says build and remix (docs/Pillars.md, "Words"):\n  ${saying.join('\n  ')}`);
+    console.log('✓ the English user guide says build and remix');
+}

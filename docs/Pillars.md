@@ -154,7 +154,8 @@ tests/WordsTable.test.js fails when a word from the *Not* column comes back
 on a screen a newcomer meets (the menu, Home, the Editor, a shared link,
 Explore, the challenge and Publish's dialogs), and since 2026-10-16 on the
 rest of the Editor (Build Properties, structures, history, recovery,
-Import and Export), World View's placement dialogs and Your Data.
+Import and Export), World View's placement dialogs and Your Data. It also
+keeps the English user guide (docs/user/) saying build and remix.
 
 ## Tone
 

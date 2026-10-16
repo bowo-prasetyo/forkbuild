@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: 5cfbb171295f8928 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: 5a1b60c315ac9a44 -->
 # Distribuindo seu trabalho
 
 <!-- languages -->
@@ -17,7 +17,7 @@ você precisa. Cada seção tem um link para o guia com os detalhes.
 
 | Ação | Para onde vai | Quem recebe | Guia |
 |---|---|---|---|
-| **Publicar** | Este dispositivo e, depois que você escolhe para onde suas construções vão, lá também | Ninguém mais até lá; depois, qualquer pessoa | [Publicando sua criação](04-PublishingAndForking.md#publicando-sua-criação), [Para onde vai](04-PublishingAndForking.md#para-onde-vai--enviando-uma-construção-ao-publicar) |
+| **Publicar** | Este dispositivo e, depois que você escolhe para onde suas construções vão, lá também | Ninguém mais até lá; depois, qualquer pessoa | [Publicando sua construção](04-PublishingAndForking.md#publicando-sua-construção), [Para onde vai](04-PublishingAndForking.md#para-onde-vai--enviando-uma-construção-ao-publicar) |
 | **Compartilhar com pares** | Direto para as pessoas com quem você está conectado | Seus pares conectados, enquanto você estiver online | [Compartilhando com pares conectados](04-PublishingAndForking.md#compartilhando-com-pares-conectados) |
 | **Distribuir** | Redes descentralizadas (IPFS, Arweave, Nostr, Steem, Blurt) | Qualquer pessoa, sem precisar estar conectada a você | Esta página |
 
@@ -74,7 +74,7 @@ Um Mundo publicado é distribuído em duas partes separadas:
 | | Declaração assinada | Snapshot |
 |---|---|---|
 | **Como…** | Uma ficha de catálogo autenticada em cartório | O exemplar impresso na estante, etiquetado com o lugar onde fica |
-| **O que contém** | O título do Mundo, você como autor, a licença dele, o Mundo do qual ele foi bifurcado (se houver) e o **hash do conteúdo** dele, uma impressão digital dos blocos, tudo assinado com a sua identidade | Cada bloco do Mundo, mais o seu posicionamento assinado: onde você o colocou na Visão do mundo |
+| **O que contém** | O título do Mundo, você como autor, a licença dele, o Mundo do qual ele foi remixado (se houver) e o **hash do conteúdo** dele, uma impressão digital dos blocos, tudo assinado com a sua identidade | Cada bloco do Mundo, mais o seu posicionamento assinado: onde você o colocou na Visão do mundo |
 | **Tamanho** | Alguns kilobytes | Tão grande quanto a construção: até 256 KB no Arweave, sem limite no IPFS |
 | **O que prova** | Que você publicou este Mundo, com exatamente esta impressão digital | Nada por si só; quem o busca confere os blocos com o hash do conteúdo |
 | **Para que serve** | Links de compartilhamento, e **Descobrir Mundo compartilhado**, que procura o seu Mundo e o confere | Mostrar a sua construção na Visão do mundo, onde você a posicionou, para quem estiver andando por perto |
@@ -159,7 +159,7 @@ construção no Blurt já traz o hash do conteúdo dela; veja [Blurt](11-Evidenc
 ## Um caminho típico
 
 1. **Publique** o seu Mundo no Editor (veja
-   [Publicando sua criação](04-PublishingAndForking.md#publicando-sua-criação)).
+   [Publicando sua construção](04-PublishingAndForking.md#publicando-sua-construção)).
 2. Clique em **Distribuir** no aviso que aparece. Você também pode fazer
    isso depois, em **Meu Mundo compartilhado** na Visão do mundo.
 3. Escolha um **Armazenamento** e um **Substrato de anúncio / descoberta**:
@@ -189,7 +189,7 @@ direto de você.
   no Nostr, Arweave, Steem ou Blurt na próxima vez que o abrirem, desde
   que ela tenha sido anunciada com a tag de descoberta de sempre,
   `forkbuild-publication`. Veja
-  [Criações que outras pessoas distribuíram](04-PublishingAndForking.md#criações-que-outras-pessoas-distribuíram).
+  [Construções que outras pessoas distribuíram](04-PublishingAndForking.md#construções-que-outras-pessoas-distribuíram).
 - **Direto nas redes.** **Descobrir Mundo compartilhado**, na Visão do
   mundo, procura o seu Mundo no Arweave e no Nostr e o confere: ele está
   mesmo lá fora, inteiro? Veja

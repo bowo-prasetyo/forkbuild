@@ -6,10 +6,10 @@
 
 This is the heart of ForkBuild. **Publishing** shares your build with the
 world. **Remixing** lets anyone make their own copy of a build and take it
-further, with its whole history kept. (Some messages and developer documents
-call a remix a *fork*, as in ForkBuild.)
+further, with its whole history kept. (Developer documents call a remix a
+*fork*, as in ForkBuild.)
 
-## Publishing your creation
+## Publishing your build
 
 1. Build something in the Editor.
 2. Have a name, and make sure it's unlocked (see
@@ -17,18 +17,18 @@ call a remix a *fork*, as in ForkBuild.)
    build with it. If you have no name yet, **Publish** asks you to choose
    one first; **Publish unsigned** there publishes it with no author, and
    no link.
-3. Give it a title — Publish refuses an untitled or empty creation — and,
+3. Give it a title — Publish refuses an untitled or empty build — and,
    optionally, a description and a license: click **✎** beside the
-   document title in the sidebar to open **Build Properties**. A new
-   document has no license; the first time you publish it, ForkBuild asks
+   build title in the sidebar to open **Build Properties**. A new
+   build has no license; the first time you publish it, ForkBuild asks
    whether others may remix it (see
    [Letting others remix it](#letting-others-remix-it)).
 4. Press **Save** so it's stored.
 5. Click **Publish**. The first time, ForkBuild also asks
    [Who can find it?](#who-can-find-it).
 
-Your creation now appears in **Explore** on this device, where
-you can search for it, open it, and fork it, with your name as the author.
+Your build now appears in **Explore** on this device, where
+you can search for it, open it, and remix it, with your name as the author.
 Other people see it once you share its link, or right away when you chose
 **Everyone** under [Who can find it?](#who-can-find-it). It's also given a
 spot in the shared world, next to what it belongs with (see
@@ -287,7 +287,7 @@ A build you publish is listed in *your* Explore only, until it is sent to
 everyone (see [Who can find it?](#who-can-find-it)) or you distribute it on
 Nostr, Arweave, Steem or Blurt (see [Distribution](Distribution.md)): then
 anyone's Explore finds it (see
-[Creations others distributed](#creations-others-distributed)). To put it in
+[Builds others distributed](#builds-others-distributed)). To put it in
 the Explore of someone you're connected to (see
 [Peer Connections & Friends](07-PeerConnectionsAndFriends.md)), click
 **Share with Peers** under it in Explore. The button appears only on
@@ -328,42 +328,42 @@ The first time you publish a build that has no license, ForkBuild asks
 - **Not now** publishes nothing.
 
 Your answer is saved as the build's license, so you're asked only once;
-change it any time in **Build Properties**. A fork already carries its
+change it any time in **Build Properties**. A remix already carries its
 original's license, so publishing one never asks.
 
 ### All the licenses
 
-A published creation is always shown with a license, chosen from the
+A published build is always shown with a license, chosen from the
 **Build Properties** dialog:
 
 | License | Meaning |
 |---|---|
 | **CC0 1.0 — Public Domain** | No rights reserved — anyone can do anything with it |
-| **CC BY 4.0 — Attribution** | Anyone can fork and reuse it, crediting you |
-| **CC BY-SA 4.0 — Attribution, ShareAlike** | Forks must carry the same license forward |
-| **CC BY-NC 4.0 — Attribution, NonCommercial** | Forking allowed, commercial use isn't |
-| **CC BY-ND 4.0 — Attribution, No Derivatives** | Viewable, but **forking is not allowed** |
-| **All Rights Reserved** | Viewable, but forking is not allowed |
-| **No license specified** | Forking is not allowed until you set one |
+| **CC BY 4.0 — Attribution** | Anyone can remix and reuse it, crediting you |
+| **CC BY-SA 4.0 — Attribution, ShareAlike** | Remixes must carry the same license forward |
+| **CC BY-NC 4.0 — Attribution, NonCommercial** | Remixing allowed, commercial use isn't |
+| **CC BY-ND 4.0 — Attribution, No Derivatives** | Viewable, but **remixing is not allowed** |
+| **All Rights Reserved** | Viewable, but remixing is not allowed |
+| **No license specified** | Remixing is not allowed until you set one |
 
-If you leave a creation unlicensed, people can still open and explore it —
-they just can't fork it until you pick a license that allows it.
+If you leave a build unlicensed, people can still open and explore it —
+they just can't remix it until you pick a license that allows it.
 
 ## Choosing who can place it
 
-Other people can normally place your published creation in their own
+Other people can normally place your published build in their own
 Worlds. That adds a placement of your build, never a copy of it, and it never
 moves or changes yours (see
 [Why can I place other people's builds?](WorldViewAdvancedTools.md#why-can-i-place-other-peoples-builds)).
-Forking is separate and governed by the license (see
-[Placing vs forking](WorldViewAdvancedTools.md#placing-vs-forking)).
+Remixing is separate and governed by the license (see
+[Placing vs remixing](WorldViewAdvancedTools.md#placing-vs-remixing)).
 If you'd rather they didn't place it, open **Build Properties** and set **Who can
 place it in the World**:
 
 | Setting | Meaning |
 |---|---|
 | **Anyone may place it** | The default. Anyone can place it wherever they like in their own World |
-| **Only I may place it** | Only you can place it. Other people can still find, view and (if the license allows) fork it, but ForkBuild won't let them place it |
+| **Only I may place it** | Only you can place it. Other people can still find, view and (if the license allows) remix it, but ForkBuild won't let them place it |
 
 The setting is signed as part of the publication when you publish, so
 nobody can remove or change it afterwards. That also means it applies only
@@ -371,7 +371,7 @@ to what you publish after choosing it. A publication that's already out
 keeps the setting it was published with, so publish again if you want the
 new one to apply.
 
-It works the same way the license's fork permission does: every copy of
+It works the same way the license's remix permission does: every copy of
 ForkBuild honors it, but it isn't a lock. Someone who changed the app's code
 could ignore it, and it can't take back a placement someone made before you
 chose it.
@@ -383,9 +383,9 @@ signed placement, and their ForkBuild shows the build there as soon as it
 knows your Shared World. Move it and distribute again, and it moves for them
 too.
 
-## Editing a published creation
+## Editing a published build
 
-A published creation is **immutable** — it can never change after the
+A published build is **immutable** — it can never change after the
 fact. To build on one, **Remix** it (below), or use **Edit a Copy** in World
 View. In World View, making your first change to a published world — its
 metadata, a landmark or region name, or an animal decoration —
@@ -401,7 +401,7 @@ The original is never touched, no matter how much you change your copy.
 **Explore** in the top bar (called the *Repository* in older versions) is
 the searchable catalog of every published build this device knows about:
 your own, ones peers have shared with you, and ones found on decentralized
-networks. It's built to stay usable whether it holds ten creations or ten
+networks. It's built to stay usable whether it holds ten builds or ten
 thousand.
 
 ### Ready-made builds
@@ -423,19 +423,19 @@ to open your own copy of it. They're the app's own examples, never anyone's
 publications; they're also in the Build Library's **Structures**, under
 *collection*.
 
-### Creations others distributed
+### Builds others distributed
 
 Each time you open Explore (or an author's page), it looks on Nostr,
-Arweave, Steem and Blurt for creations other people distributed there, and
+Arweave, Steem and Blurt for builds other people distributed there, and
 adds the ones it can verify. A line above the list says what it's doing, then
-how many new creations it found; **Check again** looks once more.
+how many new builds it found; **Check again** looks once more.
 
-- Only a creation whose signed record checks out is added: signed by the key
-  it names and exactly the creation that was announced. Anything else is
+- Only a build whose signed record checks out is added: signed by the key
+  it names and exactly the build that was announced. Anything else is
   skipped, and a record that failed isn't fetched again.
-- It checks up to 20 new creations at a time. If there are more, the line
+- It checks up to 20 new builds at a time. If there are more, the line
   says how many are left for next time.
-- A creation found this way stays in your Explore after a reload.
+- A build found this way stays in your Explore after a reload.
 - Its build isn't on your device yet. **Explore** fetches it from where it
   was stored and checks it, then opens it in World View, just like opening
   a shared link.
@@ -472,12 +472,12 @@ Sort: [Recently Published ▾]   Group: [None ▾]   [Cards] [List]
 - Pagination is explicit, page by page, rather than endless scrolling — so
   "page 5" always means the same thing if you come back to it later.
 
-Every creation offers three actions:
+Every build offers three actions:
 
 | Button | What it does |
 |---|---|
-| **Open** | Load that document into the Editor |
-| **Remix** | Copy it into your own editable creation |
+| **Open** | Load that build into the Editor |
+| **Remix** | Copy it into your own editable build |
 | **Explore** | Fly to it in World View |
 
 (**My Worlds**' own **Continue Exploring** button — see
@@ -486,7 +486,7 @@ the same thing as **Explore** here, just worded for a World you've already
 visited rather than one you're finding for the first time.)
 
 Click any **author's name** to visit their **Author view** — a portfolio of
-everything they've made, including their originals and all the forks that grew
+everything they've made, including their originals and all the remixes that grew
 from them, using the exact same search/sort/pagination catalog as
 Explore, just scoped to that one author.
 
@@ -504,9 +504,9 @@ map, once its content actually resolves, joins this same search and its
 author's Author view too, and stays there after a reload. It's shown no
 differently from anything else here.
 
-## Forking: make it your own
+## Remixing: make it your own
 
-**Forking** is what makes ForkBuild special. When you fork a creation:
+**Remixing** is what makes ForkBuild special. When you remix a build:
 
 - You get a **brand-new, independent copy** to edit freely.
 - The **original is untouched** — your changes never affect it.
@@ -515,29 +515,29 @@ differently from anything else here.
 It works just like forking a project in Git: you branch off, do your own thing,
 and the family tree keeps track of everyone. (In World View it also happens automatically the moment you change a
 published world — see
-[Editing a published creation](#editing-a-published-creation) above.)
+[Editing a published build](#editing-a-published-build) above.)
 
 > **Also called "Edit a Copy" in World View.** It's the same underlying
 > operation either way, with the same license rules and the same
-> [Can't make a copy](#when-a-fork-cant-complete) handling. See
+> [Can't make a copy](#when-a-remix-cant-complete) handling. See
 > [Edit a Copy](03-WorldView.md#edit-a-copy--taking-something-into-the-editor)
 > for World View's own walkthrough of it.
 
-### How to fork
+### How to remix
 
 1. Find a build in **Explore** (or in World View).
 2. Click **Remix**.
 3. The copy opens in the Editor, titled *"Remix of &lt;original name&gt;"*.
 4. Build on it, then save and publish it as your own.
 
-Your published fork shows up with a **Remixed from "…" by …** note, linking
+Your published remix shows up with a **Remixed from "…" by …** note, linking
 it back to the original.
 
 ### Remix counts
 
 A build's page and its card in Explore say how many times it was remixed
 (**Remixed 3 times**): how many different builds this device has found
-that were forked from it and published. A remix published twice counts
+that were remixed from it and published. A remix published twice counts
 once, and a build nobody has remixed shows nothing. The count is only what
 this device knows, so another device may show a different number, and it
 never decides what is shown first.
@@ -547,13 +547,13 @@ gets a **… remixed your build** entry, once per remix (and your device
 shows it too, if you turned on
 [Notifications on this device](03-WorldView.md#notifications-on-this-device)).
 
-### When a fork can't complete
+### When a remix can't complete
 
-Occasionally a fork can't go through — most often when forking a Shared World
+Occasionally a remix can't go through — most often when remixing a Shared World
 found through a peer or a decentralized network (see
 [Publications & External Evidence](09-PublicationsAndEvidence.md)) rather
 than an ordinary build in Explore. Instead of dropping you into a blank,
-unrelated Editor document, ForkBuild shows a **Can't make a copy** dialog
+unrelated Editor build, ForkBuild shows a **Can't make a copy** dialog
 naming exactly what went wrong:
 
 - **This build's license doesn't allow copies.** — see
@@ -645,8 +645,8 @@ as **Explore** would, and **Edit a Copy** starts your own copy of it.
 
 ## The family tree
 
-Because every fork records its parent, ForkBuild can draw a creation's whole
-lineage. On an **Author view**, you'll see a **fork tree**:
+Because every remix records its parent, ForkBuild can draw a build's whole
+lineage. On an **Author view**, you'll see a **remix tree**:
 
 ```
 Medieval House (original)
@@ -654,7 +654,7 @@ Medieval House (original)
    └─ Remix of Remix of… (by Carol)
 ```
 
-This means a great creation can inspire an entire ecosystem of variations —
+This means a great build can inspire an entire ecosystem of variations —
 and everyone in the chain gets credit.
 
 A build's own page, opened from a shared link, shows the same lineage as a
@@ -672,8 +672,8 @@ Here's the whole journey in one flow:
 2. **Save** it.
 3. **Publish** it, and send it to everyone or share its link.
 4. Someone **finds** it — by searching, by exploring nearby in World View, or
-   by browsing your Author page — and **forks** it.
-5. They **publish** their fork.
+   by browsing your Author page — and **remixes** it.
+5. They **publish** their remix.
 6. Others **explore** both in World View, and the tree grows.
 
 That's the open construction ecosystem ForkBuild is built for.

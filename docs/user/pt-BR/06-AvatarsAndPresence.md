@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: f9738fa9f2faf553 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 3b81c1f78e8542a3 -->
 # 06 — Avatares e presença
 
 <!-- languages -->
@@ -88,7 +88,7 @@ informações do avatar**:
 - **Seguir avatar** — trava sua câmera no movimento dele
 - **Cumprimentar / Acenar / Apontar** — envia um gesto pontual àquele avatar
 - **Seguir os trabalhos** — segue a identidade por trás do avatar, para que
-  as criações novas dela apareçam na página **Seguindo** (veja
+  as construções novas dela apareçam na página **Seguindo** (veja
   [Seguindo pessoas](07-PeerConnectionsAndFriends.md#seguindo-pessoas)). Só
   aparece quando a presença do avatar é assinada, porque é a assinatura que
   prova de quem é o avatar.
@@ -339,7 +339,7 @@ decoraria ou desfaria algo por perto. Como adicionar um
 [marco](03-WorldView.md#marcos--marcando-um-lugar-que-vale-lembrar),
 decorar exige um nome e acesso EDIT ao Mundo em que está. No
 Mundo publicado de outra pessoa, a decoração vai para a sua própria cópia
-dele — desde que a licença permita bifurcar. Se nada disso se aplica, **G**
+dele — desde que a licença permita remixar. Se nada disso se aplica, **G**
 simplesmente não faz nada; o botão **Decorar** do painel de toque diz o
 porquê.
 

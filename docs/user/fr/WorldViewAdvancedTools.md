@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 67400ead6416db5b -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 29cdc8613dfca1c8 -->
 # La Vue du Monde : outils avancés
 
 <!-- languages -->
@@ -21,7 +21,7 @@ pour personne d’autre.
 |---|---|---|
 | [Inspecter](#inspecter-une-brique--ou-une-structure-placée) | Clic sur une brique ou une structure placée | Voir ce que c’est et d’où ça vient |
 | [Caméra et modification](#caméra-et-modification) | Une ligne dans l’en-tête du panneau | Voir à quelle construction s’applique votre prochain changement |
-| [À propos de cette construction, et Placement](#informations-sur-le-document-et-placement) | Sous l’en-tête, après un clic | Les informations d’une construction et où elle se trouve |
+| [À propos de cette construction, et Placement](#informations-sur-la-construction-et-placement) | Sous l’en-tête, après un clic | Les informations d’une construction et où elle se trouve |
 | Coordonnées et recherche par **Emplacement** | Au-dessus de la vue, et dans **Recherche** | Trouver des choses par leur position X/Y/Z |
 | [Rencontres dans le Monde](#rencontres-dans-le-monde--publications-et-avatars-que-vos-pairs-partagent) | **À proximité**, dans Explorer | Ce que partagent les personnes connectées |
 | [Noms de lieux](#noms-de-lieux-à-proximité--découvrir-les-propositions-de-nimporte-qui) | **À proximité**, dans Explorer | Les noms que d’autres ont donnés aux lieux autour de vous |
@@ -96,7 +96,7 @@ panneau (dans la
 [Recherche](03-WorldView.md#recherche---quelles-publications-correspondent--),
 Centrer le fait).
 
-## Informations sur le document et placement
+## Informations sur la construction et placement
 
 Cliquez sur une brique, un sol nu ou une structure placée, et deux panneaux
 s’ouvrent sous l’en-tête, pour la construction sur laquelle vous avez
@@ -230,12 +230,12 @@ signalées. Pour les raisons de ce choix, voir
 [Overlap Is A Fact; Collision Is A Policy Decision](../../principles/placement.md#overlap-is-a-fact-collision-is-a-policy-decision-0225)
 (en anglais) et les règles qui suivent.
 
-### Placer ou forker
+### Placer ou remixer
 
 Les deux mettent la construction de quelqu’un d’autre dans un Monde à
 vous, mais ce n’est pas la même chose :
 
-| | Placer | Forker (Remixer, ou Modifier une copie) |
+| | Placer | Remixer (ou Modifier une copie) |
 |---|---|---|
 | Ce qui est créé | Un placement : une petite note signée indiquant où montrer la construction | Une nouvelle construction, avec de nouveaux id, qui vous appartient |
 | La construction | Le même Monde partagé, tel que publié | Votre propre copie, avec une note qui renvoie à l’original |
@@ -244,7 +244,7 @@ vous, mais ce n’est pas la même chose :
 | Contrôlé par | Le réglage **Qui peut le placer** de l’éditeur | La licence |
 | À la publication | Rien de nouveau n’est publié | Crée un nouveau Monde partagé à votre nom |
 
-Placer, c’est comme faire un lien vers un fichier ; forker, c’est comme en
+Placer, c’est comme faire un lien vers un fichier ; remixer, c’est comme en
 faire votre propre copie pour la changer. Quelqu’un qui a choisi **Moi
 seul peux le placer** peut quand même autoriser les remix par sa licence,
 et un remix est à vous, à placer où vous voulez.
@@ -541,7 +541,7 @@ Les deux sont grisés sur un placement fait par quelqu’un d’autre.
 **Ajouter un placement ici**, sous la liste, place la même construction
 *une fois de plus* là où se tient votre avatar (ou sous la caméra, sans
 avatar). Il ne déplace aucun placement existant et ne fait pas de copie :
-cela reste un seul Monde partagé (voir [Placer ou forker](#placer-ou-forker)).
+cela reste un seul Monde partagé (voir [Placer ou remixer](#placer-ou-remixer)).
 Il indique où il a placé la construction et combien de placements elle a
 maintenant. Si un placement se trouve déjà exactement là où vous êtes, il
 vous demande de bouger d’abord, pour que deux clics n’en empilent pas deux

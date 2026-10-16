@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 75e82daaf1bb2646 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: bad564fee7824288 -->
 # 04 — Veröffentlichen & Remixen
 
 <!-- languages -->
@@ -11,7 +11,7 @@ machen und es weiterzuentwickeln, wobei sein ganzer Verlauf erhalten bleibt.
 (Manche Meldungen und Entwicklerdokumente nennen einen Remix einen *Fork*,
 wie in ForkBuild.)
 
-## Ihre Kreation veröffentlichen
+## Ihr Bauwerk veröffentlichen
 
 1. Bauen Sie etwas im Editor.
 2. Haben Sie einen Namen, und sorgen Sie dafür, dass er entsperrt ist
@@ -19,18 +19,18 @@ wie in ForkBuild.)
    Veröffentlichen signiert das Bauwerk damit. Haben Sie noch keinen Namen,
    bittet **Veröffentlichen** Sie zuerst, einen zu wählen; **Unsigniert
    veröffentlichen** veröffentlicht es dort ohne Autor und ohne Link.
-3. Geben Sie ihr einen Titel — Veröffentlichen verweigert eine Kreation
+3. Geben Sie ihm einen Titel — Veröffentlichen verweigert ein Bauwerk
    ohne Titel oder eine leere — und, optional, eine Beschreibung und eine
    Lizenz: Klicken Sie in der Seitenleiste auf **✎** neben dem
-   Dokumenttitel, um **Bauwerkeigenschaften** zu öffnen. Ein neues
-   Dokument hat keine Lizenz; beim ersten Veröffentlichen fragt ForkBuild,
+   Bauwerkstitel, um **Bauwerkeigenschaften** zu öffnen. Ein neues
+   Bauwerk hat keine Lizenz; beim ersten Veröffentlichen fragt ForkBuild,
    ob andere es remixen dürfen (siehe [Andere remixen lassen](#andere-remixen-lassen)).
 4. Drücken Sie **Speichern**, damit sie gespeichert ist.
 5. Klicken Sie auf **Veröffentlichen**. Beim ersten Mal fragt ForkBuild
    außerdem [Wer kann es finden?](#wer-kann-es-finden)
 
-Ihre Kreation erscheint jetzt unter **Entdecken** auf diesem Gerät, wo Sie
-sie suchen, öffnen und forken können, mit Ihrem Namen als Autor. Andere
+Ihr Bauwerk erscheint jetzt unter **Entdecken** auf diesem Gerät, wo Sie
+sie suchen, öffnen und remixen können, mit Ihrem Namen als Autor. Andere
 sehen sie, sobald Sie ihren Link teilen, oder sofort, wenn Sie unter
 [Wer kann es finden?](#wer-kann-es-finden) **Alle** gewählt haben. Sie
 erhält außerdem einen Platz in der geteilten Welt, neben dem, wozu sie
@@ -310,7 +310,7 @@ Ein Bauwerk, das Sie veröffentlichen, steht nur in *Ihrem* **Entdecken**,
 bis es an alle gesendet wird (siehe [Wer kann es finden?](#wer-kann-es-finden))
 oder Sie es auf Nostr, Arweave, Steem oder Blurt verteilen (siehe
 [Verteilung](Distribution.md)): Dann findet es **Entdecken** bei allen (siehe
-[Von anderen verteilte Kreationen](#von-anderen-verteilte-kreationen)). Um
+[Von anderen verteilte Bauwerke](#von-anderen-verteilte-bauwerke)). Um
 es in **Entdecken** von jemandem zu bringen, mit dem Sie verbunden sind
 (siehe [Peer-Verbindungen & Freunde](07-PeerConnectionsAndFriends.md)),
 klicken Sie in **Entdecken** darunter auf **Mit Peers teilen**. Die
@@ -353,36 +353,36 @@ ForkBuild **Dürfen andere es remixen?**, bevor etwas veröffentlicht wird:
 
 Ihre Antwort wird als Lizenz des Bauwerks gespeichert, Sie werden also nur
 einmal gefragt; ändern können Sie sie jederzeit in den
-**Bauwerkeigenschaften**. Ein Fork trägt bereits die Lizenz seines
-Originals, beim Veröffentlichen eines Forks wird also nie gefragt.
+**Bauwerkeigenschaften**. Ein Remix trägt bereits die Lizenz seines
+Originals, beim Veröffentlichen eines Remixe wird also nie gefragt.
 
 ### Alle Lizenzen
 
-Eine veröffentlichte Kreation wird immer mit einer Lizenz angezeigt,
+Ein veröffentlichtes Bauwerk wird immer mit einer Lizenz angezeigt,
 gewählt im Dialog **Bauwerkeigenschaften**:
 
 | Lizenz | Bedeutung |
 |---|---|
 | **CC0 1.0 — Gemeinfrei** | Keine Rechte vorbehalten — jeder darf alles damit tun |
-| **CC BY 4.0 — Namensnennung** | Jeder darf sie forken und wiederverwenden, unter Nennung Ihres Namens |
-| **CC BY-SA 4.0 — Namensnennung, Weitergabe unter gleichen Bedingungen** | Forks müssen dieselbe Lizenz weitertragen |
-| **CC BY-NC 4.0 — Namensnennung, Nicht kommerziell** | Forken erlaubt, kommerzielle Nutzung nicht |
-| **CC BY-ND 4.0 — Namensnennung, Keine Bearbeitungen** | Ansehen erlaubt, aber **Forken nicht** |
-| **Alle Rechte vorbehalten** | Ansehen erlaubt, aber Forken nicht |
-| **Keine Lizenz angegeben** | Forken ist nicht erlaubt, bis Sie eine festlegen |
+| **CC BY 4.0 — Namensnennung** | Jeder darf sie remixen und wiederverwenden, unter Nennung Ihres Namens |
+| **CC BY-SA 4.0 — Namensnennung, Weitergabe unter gleichen Bedingungen** | Remixe müssen dieselbe Lizenz weitertragen |
+| **CC BY-NC 4.0 — Namensnennung, Nicht kommerziell** | Remixen erlaubt, kommerzielle Nutzung nicht |
+| **CC BY-ND 4.0 — Namensnennung, Keine Bearbeitungen** | Ansehen erlaubt, aber **Remixen nicht** |
+| **Alle Rechte vorbehalten** | Ansehen erlaubt, aber Remixen nicht |
+| **Keine Lizenz angegeben** | Remixen ist nicht erlaubt, bis Sie eine festlegen |
 
-Lassen Sie eine Kreation ohne Lizenz, können andere sie trotzdem öffnen
-und erkunden — sie können sie nur nicht forken, bis Sie eine Lizenz
+Lassen Sie ein Bauwerk ohne Lizenz, können andere es trotzdem öffnen
+und erkunden — sie können es nur nicht remixen, bis Sie eine Lizenz
 wählen, die es erlaubt.
 
 ## Wählen, wer es platzieren darf
 
-Andere können Ihre veröffentlichte Kreation normalerweise in ihren eigenen
+Andere können Ihr veröffentlichtes Bauwerk normalerweise in ihren eigenen
 Welten platzieren. Das fügt eine Platzierung Ihres Bauwerks hinzu, nie eine
 Kopie davon, und verschiebt oder verändert Ihres nie (siehe
 [Warum kann ich die Bauwerke anderer platzieren?](WorldViewAdvancedTools.md#warum-kann-ich-die-bauwerke-anderer-platzieren)).
-Forken ist davon getrennt und wird durch die Lizenz geregelt (siehe
-[Platzieren oder forken](WorldViewAdvancedTools.md#platzieren-oder-forken)). Wenn Sie
+Remixen ist davon getrennt und wird durch die Lizenz geregelt (siehe
+[Platzieren oder remixen](WorldViewAdvancedTools.md#platzieren-oder-remixen)). Wenn Sie
 nicht möchten, dass andere es platzieren, öffnen Sie
 **Bauwerkeigenschaften** und stellen Sie **Wer es in der Welt platzieren
 darf** ein:
@@ -390,7 +390,7 @@ darf** ein:
 | Einstellung | Bedeutung |
 |---|---|
 | **Jeder darf es platzieren** | Standard. Jeder kann es in seiner eigenen Welt platzieren, wo er möchte |
-| **Nur ich darf es platzieren** | Nur Sie können es platzieren. Andere können es weiterhin finden, ansehen und (wenn die Lizenz es erlaubt) forken, aber ForkBuild lässt sie es nicht platzieren |
+| **Nur ich darf es platzieren** | Nur Sie können es platzieren. Andere können es weiterhin finden, ansehen und (wenn die Lizenz es erlaubt) remixen, aber ForkBuild lässt sie es nicht platzieren |
 
 Die Einstellung wird beim Veröffentlichen als Teil der Veröffentlichung
 signiert, sodass niemand sie danach entfernen oder ändern kann. Das heißt
@@ -399,7 +399,7 @@ Eine bereits veröffentlichte Veröffentlichung behält die Einstellung, mit
 der sie veröffentlicht wurde; veröffentlichen Sie also erneut, wenn die
 neue gelten soll.
 
-Sie funktioniert genauso wie die Fork-Erlaubnis der Lizenz: Jede Kopie von
+Sie funktioniert genauso wie die Remix-Erlaubnis der Lizenz: Jede Kopie von
 ForkBuild hält sich daran, aber sie ist kein Schloss. Wer den Code der App
 ändert, könnte sie ignorieren, und sie kann keine Platzierung zurücknehmen,
 die jemand vor Ihrer Wahl gemacht hat.
@@ -412,10 +412,10 @@ ForkBuild zeigt das Bauwerk dort, sobald es Ihre Geteilte Welt kennt.
 Verschieben Sie es und verteilen Sie erneut, und es verschiebt sich auch bei
 ihnen.
 
-## Eine veröffentlichte Kreation bearbeiten
+## Ein veröffentlichtes Bauwerk bearbeiten
 
-Eine veröffentlichte Kreation ist **unveränderlich** — sie kann sich
-nachträglich nie ändern. Um auf einer aufzubauen, **forken** Sie sie
+Ein veröffentlichtes Bauwerk ist **unveränderlich** — es kann sich
+nachträglich nie ändern. Um auf einem aufzubauen, **remixen** Sie es
 (unten) oder nutzen Sie **Eine Kopie bearbeiten** in der Weltansicht. In
 der Weltansicht erstellt Ihre erste Änderung an einer veröffentlichten
 Welt — ihren Metadaten, einem Wahrzeichen- oder Regionsnamen oder einem
@@ -432,7 +432,7 @@ Das Original wird nie berührt, egal wie sehr Sie Ihre Kopie ändern.
 Versionen *Repository* genannt) ist der durchsuchbare Katalog
 aller veröffentlichten Bauwerke, die dieses Gerät kennt: Ihrer eigenen, solcher, die Peers mit
 Ihnen geteilt haben, und solcher, die in dezentralen Netzwerken gefunden
-wurden. Es ist so gebaut, dass es benutzbar bleibt, ob es zehn Kreationen
+wurden. Es ist so gebaut, dass es benutzbar bleibt, ob es zehn Bauwerke
 enthält oder zehntausend.
 
 ### Fertige Bauwerke
@@ -454,21 +454,21 @@ von Ihnen. Ein Klick auf einen Namen öffnet Ihre eigene Kopie davon. Es sind
 Beispiele der App, nie die Veröffentlichungen von jemandem; Sie finden sie
 auch in der Baubibliothek unter **Strukturen**, Kategorie *Sammlung*.
 
-### Von anderen verteilte Kreationen
+### Von anderen verteilte Bauwerke
 
 Jedes Mal, wenn Sie **Entdecken** (oder eine Autorenseite) öffnen, sucht es
-auf Nostr, Arweave, Steem und Blurt nach Kreationen, die andere dort verteilt
+auf Nostr, Arweave, Steem und Blurt nach Bauwerken, die andere dort verteilt
 haben, und fügt die hinzu, die es überprüfen kann. Eine Zeile über der Liste
-sagt, was es gerade tut, und dann, wie viele neue Kreationen es gefunden
+sagt, was es gerade tut, und dann, wie viele neue Bauwerke es gefunden
 hat; **Erneut prüfen** sucht noch einmal.
 
-- Hinzugefügt wird nur eine Kreation, deren signierter Eintrag die Prüfung
-  besteht: signiert mit dem Schlüssel, den er nennt, und genau die
-  Kreation, die angekündigt wurde. Alles andere wird übersprungen, und ein
+- Hinzugefügt wird nur ein Bauwerk, dessen signierter Eintrag die Prüfung
+  besteht: signiert mit dem Schlüssel, den er nennt, und genau das
+  Bauwerk, das angekündigt wurde. Alles andere wird übersprungen, und ein
   Eintrag, der durchgefallen ist, wird nicht noch einmal abgerufen.
-- Es prüft bis zu 20 neue Kreationen auf einmal. Gibt es mehr, sagt die
+- Es prüft bis zu 20 neue Bauwerke auf einmal. Gibt es mehr, sagt die
   Zeile, wie viele für das nächste Mal übrig sind.
-- Eine so gefundene Kreation bleibt auch nach dem Neuladen in Ihrem
+- Ein so gefundenes Bauwerk bleibt auch nach dem Neuladen in Ihrem
   **Entdecken**.
 - Ihr Build ist noch nicht auf Ihrem Gerät. **Erkunden** holt ihn von dort,
   wo er gespeichert wurde, prüft ihn und öffnet ihn dann in der
@@ -509,12 +509,12 @@ Sortieren: [Zuletzt veröffentlicht ▾]  Gruppieren: [Keine ▾]  [Karten] [Lis
   scrollend — „Seite 5“ meint also immer dasselbe, wenn Sie später
   zurückkommen.
 
-Jede Kreation bietet drei Aktionen:
+Jedes Bauwerk bietet drei Aktionen:
 
 | Schaltfläche | Was sie tut |
 |---|---|
-| **Öffnen** | Das Dokument in den Editor laden |
-| **Remixen** | Es in Ihre eigene bearbeitbare Kreation kopieren |
+| **Öffnen** | Das Bauwerk in den Editor laden |
+| **Remixen** | Es in Ihr eigenes bearbeitbares Bauwerk kopieren |
 | **Erkunden** | In der Weltansicht dorthin fliegen |
 
 (Die eigene Schaltfläche **Weiter erkunden** unter **Meine Welten** —
@@ -525,7 +525,7 @@ schon besucht haben, statt für eine, die Sie zum ersten Mal finden.)
 
 Klicken Sie auf den **Namen eines Autors**, um seine **Autorenansicht** zu
 besuchen — ein Portfolio von allem, was er gemacht hat, einschließlich
-seiner Originale und aller Forks, die daraus gewachsen sind, mit genau
+seiner Originale und aller Remixe, die daraus gewachsen sind, mit genau
 demselben Katalog für Suche, Sortierung und Seiten wie **Entdecken**, nur
 auf diesen einen Autor beschränkt.
 
@@ -544,9 +544,9 @@ auflösen lässt, ebenfalls in diese Suche und in die Autorenansicht ihres
 Autors und bleibt dort auch nach einem Neuladen. Sie wird nicht anders
 angezeigt als alles andere hier.
 
-## Forken: machen Sie es zu Ihrem eigenen
+## Remixen: machen Sie es zu Ihrem eigenen
 
-**Remixen** macht ForkBuild besonders. Wenn Sie eine Kreation forken:
+**Remixen** macht ForkBuild besonders. Wenn Sie ein Bauwerk remixen:
 
 - Erhalten Sie eine **ganz neue, unabhängige Kopie**, die Sie frei
   bearbeiten können.
@@ -559,16 +559,16 @@ Es funktioniert genau wie das Forken eines Projekts in Git: Sie zweigen ab,
 machen Ihr eigenes Ding, und der Stammbaum behält alle im Blick. (In der
 Weltansicht geschieht es außerdem automatisch, sobald Sie eine
 veröffentlichte Welt ändern — siehe
-[Eine veröffentlichte Kreation bearbeiten](#eine-veröffentlichte-kreation-bearbeiten)
+[Ein veröffentlichtes Bauwerk bearbeiten](#ein-veröffentlichtes-bauwerk-bearbeiten)
 oben.)
 
 > **In der Weltansicht auch „Eine Kopie bearbeiten“ genannt.** Es ist so
 > oder so derselbe Vorgang, mit denselben Lizenzregeln und derselben
-> Behandlung von [Keine Kopie möglich](#wenn-ein-fork-nicht-möglich-ist).
+> Behandlung von [Keine Kopie möglich](#wenn-ein-remix-nicht-möglich-ist).
 > Die eigene Anleitung der Weltansicht dazu steht unter
 > [Eine Kopie bearbeiten](03-WorldView.md#eine-kopie-bearbeiten--etwas-in-den-editor-übernehmen).
 
-### So forken Sie
+### So remixen Sie
 
 1. Finden Sie ein Bauwerk in **Entdecken** (oder in der Weltansicht).
 2. Klicken Sie auf **Remixen**.
@@ -577,14 +577,14 @@ oben.)
 4. Bauen Sie darauf auf, speichern und veröffentlichen Sie sie dann als
    Ihre eigene.
 
-Ihr veröffentlichter Fork erscheint mit dem Vermerk **Remix von „…“ von …**,
+Ihr veröffentlichter Remix erscheint mit dem Vermerk **Remix von „…“ von …**,
 der auf das Original zurückverweist.
 
 ### Remix-Zähler
 
 Die Seite eines Bauwerks und seine Karte in **Entdecken** sagen, wie oft es
 geremixt wurde (**3-mal geremixt**): wie viele verschiedene Bauwerke dieses
-Gerät gefunden hat, die davon geforkt und veröffentlicht wurden. Ein
+Gerät gefunden hat, die davon geremixt und veröffentlicht wurden. Ein
 zweimal veröffentlichter Remix zählt einmal, und ein Bauwerk, das niemand
 geremixt hat, zeigt nichts. Der Zähler ist nur, was dieses Gerät kennt,
 ein anderes Gerät kann also eine andere Zahl zeigen, und er entscheidet
@@ -595,14 +595,14 @@ bekommt Ihre 🔔 einen Eintrag **… hat Ihr Bauwerk geremixt**, einmal pro
 Remix (und Ihr Gerät zeigt ihn auch an, wenn Sie
 [Benachrichtigungen auf diesem Gerät](03-WorldView.md#benachrichtigungen-auf-diesem-gerät) eingeschaltet haben).
 
-### Wenn ein Fork nicht möglich ist
+### Wenn ein Remix nicht möglich ist
 
-Gelegentlich kann ein Fork nicht durchgeführt werden — meistens beim
-Forken einer Geteilten Welt, die über einen Peer oder ein dezentrales
+Gelegentlich kann ein Remix nicht durchgeführt werden — meistens beim
+Remixen einer Geteilten Welt, die über einen Peer oder ein dezentrales
 Netzwerk gefunden wurde (siehe
 [Veröffentlichungen & externe Nachweise](09-PublicationsAndEvidence.md)),
 statt eines gewöhnlichen Bauwerks in **Entdecken**. Statt Sie in ein leeres,
-fremdes Editor-Dokument zu werfen, zeigt ForkBuild einen Dialog **Keine
+fremdes Editor-Bauwerk zu werfen, zeigt ForkBuild einen Dialog **Keine
 Kopie möglich**, der genau nennt, was schiefgegangen ist:
 
 - **Die Lizenz dieses Bauwerks erlaubt keine Kopien.** — siehe
@@ -702,9 +702,9 @@ und **Eine Kopie bearbeiten** beginnt deine eigene Kopie.
 
 ## Der Stammbaum
 
-Weil jeder Fork seinen Elternteil festhält, kann ForkBuild die ganze
-Abstammung einer Kreation zeichnen. In einer **Autorenansicht** sehen Sie
-einen **Fork-Baum**:
+Weil jeder Remix seinen Elternteil festhält, kann ForkBuild die ganze
+Abstammung eines Bauwerks zeichnen. In einer **Autorenansicht** sehen Sie
+einen **Remix-Baum**:
 
 ```
 Mittelalterliches Haus (Original)
@@ -712,7 +712,7 @@ Mittelalterliches Haus (Original)
    └─ Remix von Remix von … (von Carol)
 ```
 
-So kann eine großartige Kreation ein ganzes Ökosystem von Varianten
+So kann ein großartiges Bauwerk ein ganzes Ökosystem von Varianten
 anstoßen — und jeder in der Kette wird genannt.
 
 Die eigene Seite eines Baus, geöffnet über einen geteilten Link, zeigt
@@ -733,7 +733,7 @@ Hier ist der ganze Weg in einem Ablauf:
 4. Jemand **findet** es — durch Suchen, durch Erkunden in der Nähe in der
    Weltansicht oder durch Stöbern auf Ihrer Autorenseite — und **remixt**
    es.
-5. Diese Person **veröffentlicht** ihren Fork.
+5. Diese Person **veröffentlicht** ihren Remix.
 6. Andere **erkunden** beide in der Weltansicht, und der Baum wächst.
 
 Das ist das offene Bau-Ökosystem, für das ForkBuild gemacht ist.

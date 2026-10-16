@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: 5cfbb171295f8928 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: 5a1b60c315ac9a44 -->
 # Distribuer votre travail
 
 <!-- languages -->
@@ -18,7 +18,7 @@ qu’il vous faut. Chaque section renvoie au guide qui donne les détails.
 
 | Action | Où cela va | Qui le reçoit | Guide |
 |---|---|---|---|
-| **Publier** | Cet appareil et, une fois choisi où vont vos constructions, là aussi | Personne d’autre jusque-là ; ensuite, tout le monde | [Publier votre création](04-PublishingAndForking.md#publier-votre-création), [Où elle va](04-PublishingAndForking.md#où-elle-va--envoyer-une-construction-en-publiant) |
+| **Publier** | Cet appareil et, une fois choisi où vont vos constructions, là aussi | Personne d’autre jusque-là ; ensuite, tout le monde | [Publier votre construction](04-PublishingAndForking.md#publier-votre-construction), [Où elle va](04-PublishingAndForking.md#où-elle-va--envoyer-une-construction-en-publiant) |
 | **Partager avec les pairs** | Directement aux personnes auxquelles vous êtes connecté | Vos pairs connectés, tant que vous êtes en ligne | [Partager avec les pairs connectés](04-PublishingAndForking.md#partager-avec-les-pairs-connectés) |
 | **Distribuer** | Des réseaux décentralisés (IPFS, Arweave, Nostr, Steem, Blurt) | N’importe qui, sans connexion à vous | Cette page |
 
@@ -77,7 +77,7 @@ Un Monde publié est distribué en deux morceaux distincts :
 | | Déclaration signée | Snapshot |
 |---|---|---|
 | **Comme…** | Une fiche de catalogue certifiée | L’exemplaire imprimé sur l’étagère, étiqueté avec son emplacement |
-| **Ce qu’elle contient** | Le titre du Monde, vous comme auteur, sa licence, le Monde dont il est forké (le cas échéant) et son **hash de contenu**, une empreinte des briques, le tout signé avec votre identité | Chaque brique du Monde, plus votre placement signé : l’endroit où vous l’avez mis dans la Vue du Monde |
+| **Ce qu’elle contient** | Le titre du Monde, vous comme auteur, sa licence, le Monde dont il est remixé (le cas échéant) et son **hash de contenu**, une empreinte des briques, le tout signé avec votre identité | Chaque brique du Monde, plus votre placement signé : l’endroit où vous l’avez mis dans la Vue du Monde |
 | **Taille** | Quelques kilo-octets | Aussi grand que la construction : jusqu’à 256 Ko sur Arweave, sans limite sur IPFS |
 | **Ce qu’elle prouve** | Que vous avez publié ce Monde, avec exactement cette empreinte | Rien en soi ; quiconque le récupère vérifie les briques par rapport au hash de contenu |
 | **À quoi elle sert** | Les liens de partage, et **Découvrir un Monde partagé** qui recherche et vérifie votre Monde | Afficher votre construction dans la Vue du Monde, là où vous l’avez placée, aux personnes qui marchent à proximité |
@@ -169,7 +169,7 @@ déjà son hash de contenu ; voir [Blurt](11-EvidenceAndStorage.md#blurt).
 ## Un parcours type
 
 1. **Publiez** votre Monde dans l’Éditeur (voir
-   [Publier votre création](04-PublishingAndForking.md#publier-votre-création)).
+   [Publier votre construction](04-PublishingAndForking.md#publier-votre-construction)).
 2. Cliquez sur **Distribuer** dans l’avis qui apparaît. Vous pouvez aussi
    le faire plus tard, sous **Mon Monde partagé** dans la Vue du Monde.
 3. Choisissez un **Stockage** et un **Support d’annonce / de découverte** :
@@ -200,7 +200,7 @@ constructions jusqu’à 64 Mo directement chez vous.
   Nostr, Arweave, Steem ou Blurt la prochaine fois qu’ils l’ouvrent, pourvu
   qu’elle ait été annoncée sous l’étiquette de découverte habituelle,
   `forkbuild-publication`. Voir
-  [Créations distribuées par d’autres](04-PublishingAndForking.md#créations-distribuées-par-dautres).
+  [Constructions distribuées par d’autres](04-PublishingAndForking.md#constructions-distribuées-par-dautres).
 - **Directement sur les réseaux.** **Découvrir un Monde partagé**, dans la
   Vue du Monde, cherche votre Monde sur Arweave et Nostr et le vérifie :
   est-il vraiment là-bas, intact ? Voir

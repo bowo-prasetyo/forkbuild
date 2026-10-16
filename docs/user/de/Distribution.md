@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: 5cfbb171295f8928 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: 5a1b60c315ac9a44 -->
 # Ihre Arbeit verteilen
 
 <!-- languages -->
@@ -18,7 +18,7 @@ Einzelheiten.
 
 | Aktion | Wohin es geht | Wer es bekommt | Anleitung |
 |---|---|---|---|
-| **Veröffentlichen** | Dieses Gerät, und sobald Sie gewählt haben, wohin Ihre Bauwerke gehen, auch dorthin | Bis dahin niemand sonst; danach alle | [Ihre Kreation veröffentlichen](04-PublishingAndForking.md#ihre-kreation-veröffentlichen), [Wohin es geht](04-PublishingAndForking.md#wohin-es-geht--ein-bauwerk-beim-veröffentlichen-senden) |
+| **Veröffentlichen** | Dieses Gerät, und sobald Sie gewählt haben, wohin Ihre Bauwerke gehen, auch dorthin | Bis dahin niemand sonst; danach alle | [Ihr Bauwerk veröffentlichen](04-PublishingAndForking.md#ihr-bauwerk-veröffentlichen), [Wohin es geht](04-PublishingAndForking.md#wohin-es-geht--ein-bauwerk-beim-veröffentlichen-senden) |
 | **Mit Peers teilen** | Direkt zu den Menschen, mit denen Sie verbunden sind | Ihre verbundenen Peers, solange Sie online sind | [Mit verbundenen Peers teilen](04-PublishingAndForking.md#mit-verbundenen-peers-teilen) |
 | **Verteilen** | Dezentrale Netzwerke (IPFS, Arweave, Nostr, Steem, Blurt) | Jeder, ganz ohne Verbindung zu Ihnen | Diese Seite |
 
@@ -78,7 +78,7 @@ Eine veröffentlichte Welt wird in zwei getrennten Teilen verteilt:
 | | Signierter Anspruch | Snapshot |
 |---|---|---|
 | **Wie …** | Eine notariell beglaubigte Katalogkarte | Das gedruckte Exemplar im Regal, beschriftet mit seinem Standort |
-| **Was er enthält** | Den Titel der Welt, Sie als Urheber, ihre Lizenz, die Welt, von der sie geforkt wurde (falls vorhanden), und ihren **Inhalts-Hash**, einen Fingerabdruck der Steine, alles mit Ihrer Identität signiert | Jeden Stein der Welt, dazu Ihre signierte Platzierung: wo Sie sie in der Weltansicht hingestellt haben |
+| **Was er enthält** | Den Titel der Welt, Sie als Urheber, ihre Lizenz, die Welt, von der sie geremixt wurde (falls vorhanden), und ihren **Inhalts-Hash**, einen Fingerabdruck der Steine, alles mit Ihrer Identität signiert | Jeden Stein der Welt, dazu Ihre signierte Platzierung: wo Sie sie in der Weltansicht hingestellt haben |
 | **Größe** | Ein paar Kilobyte | So groß wie das Bauwerk: bis zu 256 KB auf Arweave, ohne Grenze auf IPFS |
 | **Was er beweist** | Dass Sie diese Welt veröffentlicht haben, mit genau diesem Fingerabdruck | Für sich allein nichts; wer ihn abruft, prüft die Steine gegen den Inhalts-Hash |
 | **Wofür er dient** | Teilen-Links, und **Geteilte Welt entdecken**, das Ihre Welt nachschlägt und prüft | Ihr Bauwerk in der Weltansicht, dort wo Sie es platziert haben, Menschen zu zeigen, die in der Nähe unterwegs sind |
@@ -164,7 +164,7 @@ bereits dessen Inhalts-Hash trägt; siehe [Blurt](11-EvidenceAndStorage.md#blurt
 ## Ein typischer Weg
 
 1. **Veröffentlichen** Sie Ihre Welt im Editor (siehe
-   [Ihre Kreation veröffentlichen](04-PublishingAndForking.md#ihre-kreation-veröffentlichen)).
+   [Ihr Bauwerk veröffentlichen](04-PublishingAndForking.md#ihr-bauwerk-veröffentlichen)).
 2. Klicken Sie in dem erscheinenden Hinweis auf **Verteilen**. Sie können es
    auch später tun, in der Weltansicht unter **Meine Geteilte Welt**.
 3. Wählen Sie einen **Speicher** und ein **Substrat für Ankündigung /
@@ -195,7 +195,7 @@ direkt von Ihnen abrufen.
   Arweave, Steem oder Blurt, sobald sie es das nächste Mal öffnen, sofern
   es unter dem üblichen Entdeckungs-Tag `forkbuild-publication`
   angekündigt wurde. Siehe
-  [Von anderen verteilte Kreationen](04-PublishingAndForking.md#von-anderen-verteilte-kreationen).
+  [Von anderen verteilte Bauwerke](04-PublishingAndForking.md#von-anderen-verteilte-bauwerke).
 - **Direkt in den Netzwerken.** **Geteilte Welt entdecken** in der
   Weltansicht sucht Ihre Welt auf Arweave und Nostr und prüft sie: Ist sie
   wirklich da draußen, und unversehrt? Siehe

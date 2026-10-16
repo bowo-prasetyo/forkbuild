@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 50fb553e94b18514 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: fba04da122bf921c -->
 # 03 — Weltansicht
 
 <!-- languages -->
@@ -390,7 +390,7 @@ Kopie nicht machen, sagt ein Dialog **Keine Kopie möglich**, warum, meist
 weil die Lizenz des Bauwerks keine Kopien erlaubt oder das Bauwerk noch
 nicht geladen werden kann, und **Zurück zum Bauwerk** bringt Sie dorthin
 zurück, wo Sie waren (siehe
-[Wenn ein Fork nicht möglich ist](04-PublishingAndForking.md#wenn-ein-fork-nicht-möglich-ist)).
+[Wenn ein Remix nicht möglich ist](04-PublishingAndForking.md#wenn-ein-remix-nicht-möglich-ist)).
 
 Ein **geografischer Ort** und eine **Person** haben kein Eine Kopie
 bearbeiten. Ein geografischer Ort besteht aus den Regionen mehrerer
@@ -399,7 +399,7 @@ stattdessen eine seiner Regionen.
 
 Eine Kopie bearbeiten ist dasselbe wie **Remixen** unter Entdecken und auf
 der Seite eines Autors, mit denselben Lizenzregeln (siehe
-[Forken: Machen Sie es zu Ihrem eigenen](04-PublishingAndForking.md#forken-machen-sie-es-zu-ihrem-eigenen)).
+[Remixen: Machen Sie es zu Ihrem eigenen](04-PublishingAndForking.md#remixen-machen-sie-es-zu-ihrem-eigenen)).
 Alles andere in der Weltansicht, etwa die Suche, der Kompass, die Karte und
 Info, schaut nur.
 
@@ -570,7 +570,7 @@ Beide öffnen den Dialog **Ort erkunden**:
 📍 Mitte: 100.0, 50.0, 250.0
 ⭕ Radius: 25 Welteinheiten
 
-3 von 3 auffindbaren Dokumenten werden angezeigt
+3 von 3 auffindbaren Bauwerken werden angezeigt
 
 📍 Rathaus             📏 4.2 Welteinheiten entfernt
 von alice
@@ -623,7 +623,7 @@ Wahrzeichen oder eine Region, oder ein Tier als Schmuck) Ihre eigene Kopie
 mit dem Titel *„Remix von &lt;ursprünglicher Name&gt;“*. Ein kurzer Hinweis
 sagt es Ihnen („Ihre eigene bearbeitbare Kopie wurde erstellt — … bleibt
 unverändert“). Es gelten dieselben Lizenzregeln wie für jeden Remix (siehe
-[Veröffentlichen & Remixen](04-PublishingAndForking.md#forken-machen-sie-es-zu-ihrem-eigenen)).
+[Veröffentlichen & Remixen](04-PublishingAndForking.md#remixen-machen-sie-es-zu-ihrem-eigenen)).
 
 ## Verlauf — frühere Zustände in der Vorschau ansehen und wiederherstellen
 

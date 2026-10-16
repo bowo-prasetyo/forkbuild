@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: 4ae3c13f1318370c -->
+<!-- translation-of: docs/user/README.md source-hash: b52156afbaeaed07 -->
 # Dokumentasi Pengguna ForkBuild
 
 <!-- languages -->
@@ -17,7 +17,7 @@ sampai berjalan di dalam bangunan pertama Anda.
 | Mempelajari alat membangun | [Editor](02-TheEditor.md) |
 | Membagikan bangunan kepada teman | [Membagikan tautan](04-PublishingAndForking.md#membagikan-tautan) |
 | Membiarkan semua orang menemukan bangunan saya | [Siapa yang bisa menemukannya?](04-PublishingAndForking.md#siapa-yang-bisa-menemukannya) |
-| Me-remix bangunan orang lain | [Fork: jadikan milik Anda](04-PublishingAndForking.md#fork-jadikan-milik-anda) |
+| Me-remix bangunan orang lain | [Remix: jadikan milik Anda](04-PublishingAndForking.md#remix-jadikan-milik-anda) |
 | Membangun bersama teman, secara langsung | [Bangun bersamaku](02-TheEditor.md#bangun-bersamaku-membangun-bersama-secara-langsung) |
 | Jalan-jalan bersama teman | [Jalan di sini bersamaku](03-WorldView.md#jalan-di-sini-bersamaku--membawa-teman-ke-dunia-ini) |
 | Mengubah tampilan avatar saya | [Avatar & Kehadiran](06-AvatarsAndPresence.md#menyesuaikan-avatar-anda) |
@@ -169,10 +169,10 @@ membangun dengan seluruh struktur sekaligus — dua puluh dua struktur siap paka
 dalam lima kategori, ditambah apa pun yang Anda simpan sendiri:
 
 - **Tempatkan** sebuah struktur langsung ke dalam apa yang sedang Anda
-  bangun, atau **fork** menjadi dokumen baru tersendiri.
+  bangun, atau **remix** menjadi bangunan baru tersendiri.
 - **Simpan bangunan Anda sendiri** sebagai struktur yang dapat dipakai
   ulang di **Struktur Saya**, pustaka cetak biru pribadi Anda.
 - **Ekspor dan impor** cetak biru sebagai file portabel untuk dibagikan
   kepada orang lain, atau dibawa ke perangkat lain.
 
-Lihat [Editor](02-TheEditor.md#struktur-menyusun-mem-fork-dan-pustaka-pribadi-anda) untuk penjelasan lengkapnya.
+Lihat [Editor](02-TheEditor.md#struktur-menyusun-me-remix-dan-pustaka-pribadi-anda) untuk penjelasan lengkapnya.

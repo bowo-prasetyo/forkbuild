@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 67400ead6416db5b -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 29cdc8613dfca1c8 -->
 # Weltansicht: Erweiterte Werkzeuge
 
 <!-- languages -->
@@ -21,7 +21,7 @@ für niemanden sonst etwas.
 |---|---|---|
 | [Untersuchen](#einen-stein-untersuchen--oder-eine-platzierte-struktur) | Klick auf einen Stein oder eine platzierte Struktur | Sehen, was es ist und woher es stammt |
 | [Kamera und Bearbeitung](#kamera-und-bearbeitung) | Eine Zeile im Kopfbereich des Feldes | Sehen, für welches Bauwerk Ihre nächste Änderung gilt |
-| [Über dieses Bauwerk, und Platzierung](#dokumentinformationen-und-platzierung) | Unter dem Kopfbereich, nach einem Klick | Die Angaben eines Bauwerks und wo es steht |
+| [Über dieses Bauwerk, und Platzierung](#bauwerkinformationen-und-platzierung) | Unter dem Kopfbereich, nach einem Klick | Die Angaben eines Bauwerks und wo es steht |
 | Koordinaten und Suche nach **Ort** | Über der Ansicht und in der **Suche** | Dinge über ihre X/Y/Z-Position finden |
 | [Begegnungen in der Welt](#begegnungen-in-der-welt--veröffentlichungen-und-avatare-die-ihre-peers-teilen) | **In der Nähe** unter Erkunden | Was verbundene Menschen teilen |
 | [Ortsnamen](#ortsnamen-in-der-nähe--ansprüche-von-jedem-entdecken) | **In der Nähe** unter Erkunden | Namen, die andere den Orten um Sie gegeben haben |
@@ -94,7 +94,7 @@ die Kamera. Ob sie auch ändern, was Sie bearbeiten, hängt vom Feld ab (in
 der [Suche](03-WorldView.md#suche--welche-veröffentlichungen-passen-dazu)
 tut Fokussieren es).
 
-## Dokumentinformationen und Platzierung
+## Bauwerkinformationen und Platzierung
 
 Klicken Sie auf einen Stein, freien Boden oder eine platzierte Struktur,
 öffnen sich unter dem Kopfbereich zwei Felder für das angeklickte Bauwerk:
@@ -225,12 +225,12 @@ gemeldet. Die Gründe für diese Entscheidung stehen in
 [Overlap Is A Fact; Collision Is A Policy Decision](../../principles/placement.md#overlap-is-a-fact-collision-is-a-policy-decision-0225)
 (Englisch) und den Regeln danach.
 
-### Platzieren oder forken
+### Platzieren oder remixen
 
 Beides bringt das Bauwerk eines anderen in eine Welt von Ihnen, aber es ist
 nicht dasselbe:
 
-| | Platzieren | Forken (Remixen oder Eine Kopie bearbeiten) |
+| | Platzieren | Remixen (oder Eine Kopie bearbeiten) |
 |---|---|---|
 | Was entsteht | Eine Platzierung: eine kleine signierte Notiz, wo das Bauwerk gezeigt wird | Ein neues Bauwerk mit neuen IDs, das Ihnen gehört |
 | Das Bauwerk | Dieselbe Geteilte Welt, wie veröffentlicht | Ihre eigene Kopie, mit einem Verweis auf das Original |
@@ -239,7 +239,7 @@ nicht dasselbe:
 | Gesteuert durch | Die Einstellung **Wer es platzieren darf** des Herausgebers | Die Lizenz |
 | Veröffentlichen | Nichts Neues wird veröffentlicht | Erstellt eine neue Geteilte Welt unter Ihrem Namen |
 
-Platzieren ist wie ein Link auf eine Datei; Forken ist wie eine eigene
+Platzieren ist wie ein Link auf eine Datei; Remixen ist wie eine eigene
 Kopie davon, um sie zu ändern. Wer **Nur ich darf es platzieren** gewählt
 hat, kann Remixe trotzdem über die Lizenz erlauben, und ein Remix gehört
 Ihnen, um ihn zu platzieren, wo Sie möchten.
@@ -539,7 +539,7 @@ hat.
 Bauwerk *noch einmal* dort, wo Ihr Avatar steht (oder unter der Kamera,
 ohne Avatar). Es verschiebt keine bestehende Platzierung und macht keine
 Kopie: Es bleibt eine Geteilte Welt (siehe
-[Platzieren oder forken](#platzieren-oder-forken)). Es sagt, wo es das
+[Platzieren oder remixen](#platzieren-oder-remixen)). Es sagt, wo es das
 Bauwerk platziert hat und wie viele Platzierungen es jetzt hat. Steht genau
 dort, wo Sie sind, schon eine Platzierung, bittet es Sie, sich zuerst zu
 bewegen, sodass zweimal Klicken keine zwei auf eine Stelle stapelt.

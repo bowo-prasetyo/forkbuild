@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 75f6ca907e2e67ae -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: fe5b24d5d2806c27 -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -20,7 +20,7 @@ organiser votre construction avec des groupes.
 │   Exporter · Importer · Récents · ⌨ Raccourcis              │
 ├──────────────────────┬──────────────────────────────────────┤
 │ [Sélection|Placement]│                                      │
-│ Titre du document ✎  │                                      │
+│ Titre de la constr. ✎│                                      │
 │ Sélection            │              Vue 3D                  │
 │ Bibliothèque de      │                                      │
 │ construction         │                                      │
@@ -30,12 +30,12 @@ organiser votre construction avec des groupes.
 
 - **Barre d’outils** — d’abord **Enregistrer**, **Publier** et
   **Nouveau**, puis **Fichier**, un menu avec **Exporter**, **Modèle 3D** et
-  **Importer** ; rouvrir les documents récents, et ouvrir le panneau
+  **Importer** ; rouvrir les constructions récentes, et ouvrir le panneau
   **⌨ Raccourcis** (aussi `?`).
 - **Outils** — basculer entre **Sélection** (`1`) et **Placement** (`2`).
   **Placement** reste en surbrillance pendant que vous placez une brique
   ou une structure.
-- **Titre du document** — le nom de la création ouverte. Cliquez sur **✎**
+- **Titre de la construction** — le nom de la construction ouverte. Cliquez sur **✎**
   pour modifier son titre, sa description et sa licence. Son état
   d’enregistrement est affiché dans la barre d’outils.
 - **Sélection** — n’affiche que ce qui peut agir sur votre sélection
@@ -65,7 +65,7 @@ organiser votre construction avec des groupes.
     infrastructure) et trois constructions plus grandes de la catégorie **vitrine**, plus
     vos propres **Mes structures**. Cliquez sur une
     carte pour la placer — voir
-    [Structures : composer, forker et votre bibliothèque personnelle](#structures--composer-forker-et-votre-bibliothèque-personnelle)
+    [Structures : composer, remixer et votre bibliothèque personnelle](#structures--composer-remixer-et-votre-bibliothèque-personnelle)
     ci-dessous.
 
 ### Le panneau Sélection
@@ -162,7 +162,7 @@ ForkBuild vous donne un contrôle précis sur la sélection :
 | **Maj + Clic** | Ajoute cette brique à la sélection |
 | **Maj + Glisser** | Trace un cadre — sélectionne tout ce qui est dedans |
 | **Ctrl/Cmd + Maj + Glisser** | Sélection par cadre en *ajoutant* à la sélection actuelle |
-| **Ctrl/Cmd + A** | Sélectionne toutes les briques de la création |
+| **Ctrl/Cmd + A** | Sélectionne toutes les briques de la construction |
 | **Échap** | Efface la sélection |
 
 > **Pourquoi c’est important :** construire quoi que ce soit de plus grand
@@ -211,7 +211,7 @@ vôtre :
   recolorer toutes d’un coup. Chaque changement s’annule (`Ctrl/Cmd+Z`)
   comme n’importe quelle autre modification. Le nuancier n’est pas
   proposé pour une instance de structure sélectionnée — modifiez plutôt
-  le document de la structure (voir
+  la construction de la structure (voir
   [Instances de structure](#instances-de-structure--une-référence-vivante)
   ci-dessous).
 
@@ -221,7 +221,7 @@ vont bien ensemble : un clic en choisit une, pour les prochaines briques
 ou pour la sélection. Le nuancier permet toujours de choisir n’importe
 quelle couleur.
 
-La couleur d’une brique est enregistrée avec votre création et la suit
+La couleur d’une brique est enregistrée avec votre construction et la suit
 quand vous la publiez ou la partagez.
 
 ## Transformations précises : saisie numérique, alignement et répétition
@@ -332,7 +332,7 @@ Ces boutons agissent sur le groupe sélectionné :
 > briques — cela ne modifie jamais le groupe. Et supprimer un groupe ne
 > retire que l’*étiquette*, pas les briques qu’il contient.
 
-## Structures : composer, forker et votre bibliothèque personnelle
+## Structures : composer, remixer et votre bibliothèque personnelle
 
 L’onglet **Structures** de la Bibliothèque de construction (voir
 [La disposition](#la-disposition) ci-dessus) vous offre vingt-deux structures
@@ -345,28 +345,28 @@ une construction. Vous pouvez faire trois choses différentes avec chacune
 d’elles, et elles servent à des fins différentes :
 
 - **Placer** (cliquez sur la carte) — copie les briques de la structure
-  directement dans le document sur lequel vous travaillez déjà, pour
+  directement dans la construction sur lequel vous travaillez déjà, pour
   qu’elle fasse partie d’une construction plus grande. C’est l’action de
   tous les jours.
 - **Remixer en nouvelle construction** (dans le menu **⋮** de la carte) —
-  démarre un tout nouveau document indépendant, qui commence comme une
+  démarre une toute nouvelle construction indépendante, qui commence comme une
   copie exacte de cette structure.
 - **Remixer dans Mes structures** (cartes intégrées uniquement, dans le
   menu **⋮**) — ajoute la structure à vos propres **Mes structures**,
-  sans aucun document. Voir
+  sans aucune construction. Voir
   [Mes structures](#mes-structures--votre-bibliothèque-personnelle-de-plans)
   ci-dessous.
 - **Infos** (dans le menu **⋮** de la carte) — un aperçu en lecture seule
   du nom, de la catégorie, du nombre de briques, de l’emprise, de la
   hauteur, de la source et de la description d’une structure.
-- Placez l’un de vos **documents enregistrés** comme **instance de
+- Placez l’une de vos **constructions enregistrées** comme **instance de
   structure** — une référence vivante et réutilisable plutôt qu’une
   copie — depuis la liste déroulante **Récents** de la barre d’outils, pas
   depuis la Bibliothèque de construction. Voir
   [Instances de structure](#instances-de-structure--une-référence-vivante)
   ci-dessous.
 
-### Placer une structure dans votre document
+### Placer une structure dans votre construction
 
 Cliquez sur n’importe quelle carte de l’onglet **Structures** — une carte
 intégrée ou l’une de vos **Mes structures** — et un aperçu fantôme
@@ -376,28 +376,28 @@ sol, exactement comme pour placer une seule brique :
 1. Déplacez le pointeur pour positionner le fantôme.
 2. Appuyez sur `R` / `Maj+R` pour le faire pivoter par pas de 90°.
 3. Cliquez pour valider — toutes les briques de la structure sont
-   ajoutées à votre document en **une seule étape d’annulation**. Une
+   ajoutées à votre construction en **une seule étape d’annulation**. Une
    position occupée teinte le fantôme en rouge et refuse le clic, de la
    même façon qu’une brique refuse de se poser sur une autre.
 4. `Échap` annule — rien n’est ajouté, et vous revenez à l’outil que vous
    utilisiez avant.
 
-Les briques obtenues sont des briques ordinaires de votre document dès
+Les briques obtenues sont des briques ordinaires de votre construction dès
 qu’elles se posent — impossibles à distinguer de celles placées à la
 main, libres d’être modifiées, sélectionnées, groupées ou supprimées comme
 les autres. Placer plusieurs structures est une façon rapide de
 construire une scène : cliquez sur Maison, placez-la ; cliquez sur
 Grange, placez-la à côté ; cliquez sur Puits, placez-le dans la cour.
 
-### Forker une structure en nouveau document
+### Remixer une structure en nouvelle construction
 
 Ouvrez le menu **⋮** d’une carte et cliquez sur **Remixer en nouvelle
-construction** pour démarrer une toute nouvelle création qui commence comme
+construction** pour démarrer une toute nouvelle construction qui commence comme
 une copie exacte de cette structure — exactement les mêmes briques,
-modifiables avec tous les outils de ce guide, dans un document à part
-plutôt que mêlées à ce que vous avez ouvert. Forker ne modifie jamais la
-copie de la bibliothèque : forkez Maison dix fois, et chacune est une
-création indépendante dès que vous cliquez sur Forker.
+modifiables avec tous les outils de ce guide, dans une construction à part
+plutôt que mêlées à ce que vous avez ouvert. Remixer ne modifie jamais la
+copie de la bibliothèque : remixez Maison dix fois, et chacune est une
+construction indépendante dès que vous cliquez sur Remixer.
 
 ### Mes structures : votre bibliothèque personnelle de plans
 
@@ -416,12 +416,12 @@ sous les catégories intégrées.
 Il existe une seconde façon d’ajouter une structure à Mes structures, sans
 rien à sélectionner ni à construire d’abord : ouvrez le menu **⋮**
 d’une carte **intégrée** et cliquez sur **Remixer dans Mes structures**.
-Elle est ajoutée telle quelle — aucun document créé, rien d’extrait — et
+Elle est ajoutée telle quelle — aucune construction créée, rien d’extrait — et
 peut donc être renommée, exportée ou placée tout de suite, comme toute
 autre entrée de votre bibliothèque.
 
 Une structure de **Mes structures** fonctionne exactement comme une
-structure intégrée — cliquez pour la placer dans votre document actuel,
+structure intégrée — cliquez pour la placer dans votre construction actuelle,
 ou Remixer en nouvelle construction — avec deux actions supplémentaires dans son
 menu **⋮** :
 
@@ -432,10 +432,10 @@ menu **⋮** :
 
 **Mes structures** ne stocke jamais que la *structure elle-même* — un nom
 et un ensemble de briques. En retirer une ne touche jamais à ce que vous
-avez déjà construit avec : partout où vous l’avez déjà placée ou forkée,
+avez déjà construit avec : partout où vous l’avez déjà placée ou remixée,
 ces briques restent exactement telles quelles. Et elle ne se modifie
 jamais sur place — si vous voulez changer ce qu’une structure enregistrée
-construit, placez-la dans un document, modifiez ce document, puis
+construit, placez-la dans une construction, modifiez cette construction, puis
 **Créer un plan** de nouveau (éventuellement sous un nouveau nom, comme
 « Ferme de luxe » — elle devient une entrée distincte dans Mes
 structures, pas un remplacement de l’originale).
@@ -502,7 +502,7 @@ panneau **Infos** de la structure depuis sa carte et vous trouverez :
   revendication. Vérifiez d’abord le design : le bouton apparaît pour tout
   design qui partage l’ancienne empreinte.
 
-C’est facultatif, et entièrement indépendant du placement, du fork ou du
+C’est facultatif, et entièrement indépendant du placement, du remix ou du
 partage de la structure elle-même — cela existe pour les situations où
 vous voulez associer votre nom à un design d’une façon que d’autres
 peuvent vérifier indépendamment, et pas seulement croire. Voir
@@ -513,25 +513,25 @@ des preuves externes indépendantes.
 ## Instances de structure : une référence vivante
 
 Placer (ci-dessus) copie une fois les briques d’une structure dans votre
-document. Parfois, ce que vous voulez plutôt, c’est une copie **vivante**
-de quelque chose que vous avez déjà construit — n’importe quel document
+construction. Parfois, ce que vous voulez plutôt, c’est une copie **vivante**
+de quelque chose que vous avez déjà construit — n’importe quelle construction
 enregistré, pas seulement ce qui est dans votre bibliothèque — qui reste
 synchronisée avec sa source chaque fois que vous la regardez. C’est une
-**instance de structure** : elle référence le document source au lieu de
+**instance de structure** : elle référence la construction source au lieu de
 copier ses briques, si bien que modifier la source plus tard met à jour
 automatiquement toutes ses instances.
 
 1. Ouvrez la liste déroulante **Récents** de la barre d’outils. (Elle
-   apparaît dès que vous avez enregistré au moins un document.)
-2. À côté de n’importe quel document enregistré, cliquez sur **Placer**.
-   Cliquer sur le nom du document l’ouvre plutôt, à la place de ce que
+   apparaît dès que vous avez enregistré au moins une construction.)
+2. À côté de n’importe quelle construction enregistrée, cliquez sur **Placer**.
+   Cliquer sur le nom de la construction l’ouvre plutôt, à la place de ce que
    vous avez ouvert.
 3. Survolez le sol, appuyez sur `R` pour pivoter, et cliquez pour placer —
    exactement comme pour placer une brique.
 
-Une instance est une *référence* vivante à ce document, pas une copie de
-ses briques : le même document peut être placé autant de fois que vous
-voulez, et modifier plus tard les briques du document source met à jour
+Une instance est une *référence* vivante à cette construction, pas une copie de
+ses briques : le même construction peut être placé autant de fois que vous
+voulez, et modifier plus tard les briques de la construction source met à jour
 toutes ses instances. Sélectionnez une instance avec l’outil Sélection
 (`1`) et la barre latérale affiche :
 
@@ -542,31 +542,31 @@ toutes ses instances. Sélectionnez une instance avec l’outil Sélection
 | **Champs X / Z / Rotation °, puis Appliquer** | Définir une position et une orientation exactes — l’altitude (Sol Y) suit toujours le terrain et n’est pas une cible que vous définissez |
 | **Pivoter ↻ / ↺** | Pivoter d’exactement 90° |
 | **Dupliquer** (`Ctrl/Cmd+D`) | Placer une autre instance de la même structure |
-| **Supprimer** | Retirer cette instance — le document source n’est pas touché |
-| **Modifier la construction source** | Ouvrir le document référencé lui-même, pour changer l’apparence de toutes ses instances |
+| **Supprimer** | Retirer cette instance — la construction source n’est pas touchée |
+| **Modifier la construction source** | Ouvrir la construction référencée elle-même, pour changer l’apparence de toutes ses instances |
 
 Modifier le *contenu* d’une structure placée se fait toujours en modifiant
-son document source — il est impossible de modifier directement les
+sa construction source — il est impossible de modifier directement les
 briques d’une instance, et c’est justement ce qui garde toutes ses
 instances synchronisées.
 
 ## Propriétés de la construction
 
-Chaque création a un **titre**, une **description** facultative, une
+Chaque construction a un **titre**, une **description** facultative, une
 **licence** et un réglage **Qui peut le placer dans le Monde** — à
 définir dans la boîte de dialogue **Propriétés de la construction**, ouverte avec
-le bouton **✎** à côté du titre du document en haut de la barre latérale
+le bouton **✎** à côté du titre de la construction en haut de la barre latérale
 de l’Éditeur (dans la Vue du Monde, c’est le bouton **Modifier les
-métadonnées**). Un nouveau document commence sans licence, ce qui veut
-dire que personne d’autre ne peut le forker tant que vous n’en choisissez
+métadonnées**). Une nouvelle construction commence sans licence, ce qui veut
+dire que personne d’autre ne peut le remixer tant que vous n’en choisissez
 pas une. La description apparaît comme extrait sur sa carte dans **Explorer** et y
 est aussi consultable par recherche ; la licence détermine si — et
-comment — d’autres personnes peuvent la forker. Voir
+comment — d’autres personnes peuvent la remixer. Voir
 [Publier et remixer](04-PublishingAndForking.md) pour la signification de
 chaque licence.
 
 Une longue description se lit mieux avec un peu de mise en forme, que
-montrent le panneau d’informations du document, le navigateur de lieux de la
+montrent le panneau d’informations de la construction, le navigateur de lieux de la
 Vue du monde et les articles Steem et Blurt :
 
 | Écrivez | Pour obtenir |
@@ -588,7 +588,7 @@ minuscules, de chiffres et de tirets (les accents sont retirés, `café` devient
 `cafe`). Si une construction n’en a pas, la boîte de dialogue remplit le champ
 avec des suggestions tirées du titre et de la description, que vous pouvez
 garder, modifier ou effacer ; les boutons sous le champ ajoutent d’autres
-suggestions. Une bifurcation garde ses étiquettes. Un article Blurt les affiche
+suggestions. Un remix garde ses étiquettes. Un article Blurt les affiche
 après celles de ForkBuild, pour que ceux qui parcourent Blurt par étiquette
 trouvent votre construction.
 
@@ -602,7 +602,7 @@ pour un collage ou une duplication, un tintement clair pour une nouvelle
 couleur, deux notes pour un groupement, une cloche pour nommer un lieu, un
 bip descendant pour annuler et un bip montant pour rétablir, et un petit
 accord quand vous enregistrez. Les modifications qu’un collaborateur fait
-dans le même document sont silencieuses.
+dans la même construction sont silencieuses.
 
 Coupez ou activez le son avec le bouton **Son** en haut à droite de la vue
 ou en appuyant sur `M` (listé dans le panneau des raccourcis clavier,
@@ -657,14 +657,14 @@ Une musique douce accompagne la construction, un peu plus vive que celle de la V
   **Importer**, sous **Récents**, fonctionnent de la même façon.
 - **Récents** — rouvrir quelque chose que vous avez enregistré (la liste
   apparaît après votre premier enregistrement ; cliquez sur le nom d’un
-  document pour l’ouvrir). Dès que vous avez enregistré assez de
-  documents, un champ de filtre apparaît pour aller directement à l’un
+  construction pour l’ouvrir). Dès que vous avez enregistré assez de
+  constructions, un champ de filtre apparaît pour aller directement à l’un
   d’eux par son nom. Chaque entrée a aussi un bouton **Placer** — voir
   [Instances de structure](#instances-de-structure--une-référence-vivante)
-  — pour l’ajouter à votre document *actuel* au lieu de le remplacer.
+  — pour l’ajouter à votre construction *actuelle* au lieu de la remplacer.
   **Exporter toutes les constructions**, en bas, télécharge toutes les constructions
   enregistrées dans un seul fichier ; **Importer** le relit, en
-  enregistrant les documents que cet appareil n’a pas (ouvrez-les depuis
+  enregistrant les constructions que cet appareil n’a pas (ouvrez-les depuis
   Récents), en ignorant ceux qu’il a déjà à l’identique, et en
   enregistrant une copie à côté de ceux qu’il a dans une autre version.
   Les modifications non enregistrées ne sont pas incluses, alors

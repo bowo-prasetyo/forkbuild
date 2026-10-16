@@ -7211,3 +7211,26 @@ what makes it grow), with building feels joyful (a player isn't made to learn th
 - Not done: the guide's own prose still says "fork" in places (most of the Publishing & Forking chapter, whose title
   and headings other pages link to), and "document" where it isn't naming a button; that wording pass is its own
   change.
+
+## The guide says build and remix too (unnumbered, 2026-10-16)
+
+**The previous entry left the guide's own prose saying "fork", "document" and "creation".** The in-app text said build
+and remix, but the user guide still said "How to fork", "Placing vs forking", "Publishing your creation" and "the source
+document", in every language. Pillar served: every build has a family tree (one word for what makes it grow).
+
+- **Every guide page, in all eight languages,** says *build* for what a player makes and *remix* (or *your own copy*)
+  for building on someone's build. Headings follow: **Remixing: make it your own**, **How to remix**, **When a remix
+  can't complete**, **Placing vs remixing**, **Structures: composing, remixing, and your personal library**,
+  **Publishing your build**, **Editing a published build**, **Builds others distributed** and the FAQ's **Why can't
+  anyone remix my build?**, with every link to them updated. The chapter's file keeps its name,
+  04-PublishingAndForking.md, which no reader sees.
+- **Each language's grammar follows the new word**: articles, adjectives and pronouns where Spanish, French and
+  Portuguese change gender (documento → construcción, document → construction, bifurcação → remix), German's
+  Kreation → Bauwerk, and Korean's particles (문서를 → 작품을).
+- **Two examples matched the app again**: the Editor diagram's **Build title**, and World View's "Showing 3 of 3 builds
+  you can find".
+- **Kept on purpose**: ForkBuild's name, the note that developer documents call a remix a *fork*, the comparison with
+  forking in Git, the archive page's JSON document and creation time, and the guide's own name for itself
+  (documentation).
+- **tests/WordsTable.test.js reads the English guide too**, so "fork", "document" and "creation" don't come back.
+- Not done: the translations were written without a native speaker's review.

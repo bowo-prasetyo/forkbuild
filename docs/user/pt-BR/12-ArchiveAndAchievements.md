@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/12-ArchiveAndAchievements.md source-hash: ccbd98440904720c -->
+<!-- translation-of: docs/user/12-ArchiveAndAchievements.md source-hash: 60c7fd2807c8b8fe -->
 # 12 — Arquivo e conquistas
 
 <!-- languages -->
@@ -126,10 +126,10 @@ referenciada (a que é apontada)** entre as suas identidades de publicação
 conhecidas no Bitcoin e na Base (por exemplo "Bitcoin — a1b2…c3d4 — conteúdo
 9f8e…") e clique em **Registrar referência**. Uma publicação não pode fazer
 referência a si mesma. As referências só são feitas por você; nada cria uma
-automaticamente, nem bifurcar em outro lugar do app.
+automaticamente, nem remixar em outro lugar do app.
 
-De propósito, uma referência não se chama bifurcação: ela registra que o
-apontamento existe, não o que ele significa (uma bifurcação, uma citação,
+De propósito, uma referência não se chama remix: ela registra que o
+apontamento existe, não o que ele significa (um remix, uma citação,
 uma resposta).
 
 As referências registradas aparecem da mais antiga para a mais nova, com a

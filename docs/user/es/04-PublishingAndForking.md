@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 75e82daaf1bb2646 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: bad564fee7824288 -->
 # 04 — Publicar y remezclar
 
 <!-- languages -->
@@ -7,11 +7,11 @@
 
 Este es el corazón de ForkBuild. **Publicar** comparte su construcción con
 el mundo. **Remezclar** permite que cualquiera haga su propia copia de una
-construcción y la lleve más lejos, conservando todo su historial. (Algunos
-mensajes y documentos para desarrolladores llaman *fork* a una remezcla,
+construcción y la lleve más lejos, conservando todo su historial. (Los
+documentos para desarrolladores llaman *fork* a una remezcla,
 como en ForkBuild.)
 
-## Publicar su creación
+## Publicar su construcción
 
 1. Construya algo en el Editor.
 2. Tenga un nombre y asegúrese de que esté desbloqueado (consulte
@@ -19,18 +19,18 @@ como en ForkBuild.)
    la construcción con él. Si todavía no tiene nombre, **Publicar** le pide
    elegir uno primero; **Publicar sin firmar** la publica ahí sin autor y
    sin enlace.
-3. Póngale un título (Publicar rechaza una creación sin título o vacía) y,
+3. Póngale un título (Publicar rechaza una construcción sin título o vacía) y,
    si quiere, una descripción y una licencia: haga clic en **✎** junto al
-   título del documento en la barra lateral para abrir **Propiedades de la
-   construcción**. Un documento nuevo no tiene licencia; la primera vez que
+   título de la construcción en la barra lateral para abrir **Propiedades de la
+   construcción**. Una construcción nueva no tiene licencia; la primera vez que
    lo publique, ForkBuild le preguntará si otros pueden remezclarlo (vea
    [Dejar que otros la remezclen](#dejar-que-otros-la-remezclen)).
 4. Presione **Guardar** para que quede guardado.
 5. Haga clic en **Publicar**. La primera vez, ForkBuild también pregunta
    [¿Quién puede encontrarla?](#quién-puede-encontrarla)
 
-Su creación aparece ahora en **Explorar** en este dispositivo, donde puede
-buscarla, abrirla y bifurcarla, con su nombre como autor. Otras personas la
+Su construcción aparece ahora en **Explorar** en este dispositivo, donde puede
+buscarla, abrirla y remezclarla, con su nombre como autor. Otras personas la
 ven cuando comparte su enlace, o enseguida si eligió **Todos** en
 [¿Quién puede encontrarla?](#quién-puede-encontrarla). También recibe un
 lugar en el mundo compartido, junto a aquello con lo que va (consulte
@@ -306,7 +306,7 @@ se envía a todos (consulte [¿Quién puede encontrarla?](#quién-puede-encontra
 o la distribuye en Nostr, Arweave, Steem o Blurt (consulte
 [Distribución](Distribution.md)): entonces el **Explorar** de cualquiera la
 encuentra (consulte
-[Creaciones que otros distribuyeron](#creaciones-que-otros-distribuyeron)).
+[Construcciones que otros distribuyeron](#construcciones-que-otros-distribuyeron)).
 Para ponerla en el **Explorar** de alguien con quien está conectado
 (consulte [Conexiones entre pares y amigos](07-PeerConnectionsAndFriends.md)),
 haga clic en **Compartir con pares** debajo de ella en **Explorar**. El botón
@@ -350,43 +350,43 @@ pregunta **¿Dejar que otros la remezclen?** antes de publicar nada:
 
 Su respuesta se guarda como la licencia de la construcción, así que solo se
 le pregunta una vez; cámbiela cuando quiera en **Propiedades de la
-construcción**. Una bifurcación ya lleva la licencia de su original, así que
+construcción**. Una remezcla ya lleva la licencia de su original, así que
 publicar una nunca pregunta.
 
 ### Todas las licencias
 
-Una creación publicada siempre se muestra con una licencia, elegida en el
+Una construcción publicada siempre se muestra con una licencia, elegida en el
 diálogo **Propiedades de la construcción**:
 
 | Licencia | Significado |
 |---|---|
 | **CC0 1.0 — Dominio público** | Sin derechos reservados: cualquiera puede hacer cualquier cosa con ella |
-| **CC BY 4.0 — Atribución** | Cualquiera puede bifurcarla y reutilizarla, dándole crédito a usted |
-| **CC BY-SA 4.0 — Atribución, Compartir igual** | Las bifurcaciones deben llevar la misma licencia |
-| **CC BY-NC 4.0 — Atribución, No comercial** | Se permite bifurcar, no el uso comercial |
-| **CC BY-ND 4.0 — Atribución, Sin derivadas** | Se puede ver, pero **no se permite bifurcar** |
-| **Todos los derechos reservados** | Se puede ver, pero no se permite bifurcar |
-| **Sin licencia especificada** | No se permite bifurcar hasta que elija una |
+| **CC BY 4.0 — Atribución** | Cualquiera puede remezclarla y reutilizarla, dándole crédito a usted |
+| **CC BY-SA 4.0 — Atribución, Compartir igual** | Las remezclas deben llevar la misma licencia |
+| **CC BY-NC 4.0 — Atribución, No comercial** | Se permite remezclar, no el uso comercial |
+| **CC BY-ND 4.0 — Atribución, Sin derivadas** | Se puede ver, pero **no se permite remezclar** |
+| **Todos los derechos reservados** | Se puede ver, pero no se permite remezclar |
+| **Sin licencia especificada** | No se permite remezclar hasta que elija una |
 
-Si deja una creación sin licencia, la gente igual puede abrirla y
-explorarla; solo que no puede bifurcarla hasta que elija una licencia que
+Si deja una construcción sin licencia, la gente igual puede abrirla y
+explorarla; solo que no puede remezclarla hasta que elija una licencia que
 lo permita.
 
 ## Elegir quién puede colocarlo
 
-Normalmente, otras personas pueden colocar su creación publicada en sus
+Normalmente, otras personas pueden colocar su construcción publicada en sus
 propios Mundos. Eso agrega una colocación de su construcción, nunca una
 copia, y nunca mueve ni cambia la suya (consulte
 [¿Por qué puedo colocar construcciones de otras personas?](WorldViewAdvancedTools.md#por-qué-puedo-colocar-construcciones-de-otras-personas)).
-Bifurcar es aparte y lo rige la licencia (consulte
-[Colocar o bifurcar](WorldViewAdvancedTools.md#colocar-o-bifurcar)).
+Remezclar es aparte y lo rige la licencia (consulte
+[Colocar o remezclar](WorldViewAdvancedTools.md#colocar-o-remezclar)).
 Si prefiere que no la coloquen, abra **Propiedades de la construcción** y
 configure **Quién puede colocarlo en el Mundo**:
 
 | Opción | Significado |
 |---|---|
 | **Cualquiera puede colocarlo** | La predeterminada. Cualquiera puede colocarlo donde quiera en su propio Mundo |
-| **Solo yo puedo colocarlo** | Solo usted puede colocarlo. Otras personas igual pueden encontrarlo, verlo y (si la licencia lo permite) bifurcarlo, pero ForkBuild no les deja colocarlo |
+| **Solo yo puedo colocarlo** | Solo usted puede colocarlo. Otras personas igual pueden encontrarlo, verlo y (si la licencia lo permite) remezclarlo, pero ForkBuild no les deja colocarlo |
 
 La opción se firma como parte de la publicación al publicar, así que nadie
 puede quitarla ni cambiarla después. Eso también significa que solo se
@@ -394,7 +394,7 @@ aplica a lo que publique después de elegirla. Una publicación que ya está
 disponible conserva la opción con la que se publicó, así que vuelva a
 publicar si quiere que se aplique la nueva.
 
-Funciona igual que el permiso de bifurcar de la licencia: todas las copias
+Funciona igual que el permiso de remezclar de la licencia: todas las copias
 de ForkBuild lo respetan, pero no es un candado. Alguien que modificara el
 código de la app podría ignorarlo, y no puede deshacer una colocación que
 alguien hizo antes de que usted lo eligiera.
@@ -406,9 +406,9 @@ anuncio lleva su colocación firmada, y su ForkBuild muestra la construcción
 allí en cuanto conoce su Mundo compartido. Muévala y distribúyala de nuevo, y
 también se mueve para ellos.
 
-## Editar una creación publicada
+## Editar una construcción publicada
 
-Una creación publicada es **inmutable**: nunca puede cambiar después. Para
+Una construcción publicada es **inmutable**: nunca puede cambiar después. Para
 construir sobre una, **bifúrquela** (abajo) o use **Editar una copia** en
 la Vista del mundo. En la Vista del mundo, hacer su primer cambio en un
 mundo publicado (sus metadatos, el nombre de un hito o una región, o una
@@ -425,7 +425,7 @@ El original nunca se toca, por mucho que cambie su copia.
 anteriores), es el catálogo, con búsqueda,
 de todas las construcciones publicadas que conoce este dispositivo: las suyas, las que le compartieron
 sus pares y las que se encontraron en redes descentralizadas. Está hecho
-para seguir siendo útil tanto si tiene diez creaciones como diez mil.
+para seguir siendo útil tanto si tiene diez construcciones como diez mil.
 
 ### Construcciones ya hechas
 
@@ -447,21 +447,21 @@ abrir su propia copia. Son ejemplos de la aplicación, nunca publicaciones de
 nadie; también están en **Estructuras** de la Biblioteca de construcción,
 en *colección*.
 
-### Creaciones que otros distribuyeron
+### Construcciones que otros distribuyeron
 
 Cada vez que abre **Explorar** (o la página de un autor), busca en Nostr,
-Arweave, Steem y Blurt creaciones que otras personas distribuyeron allí, y agrega
+Arweave, Steem y Blurt construcciones que otras personas distribuyeron allí, y agrega
 las que puede verificar. Una línea encima de la lista dice lo que está
-haciendo y luego cuántas creaciones nuevas encontró; **Volver a buscar**
+haciendo y luego cuántas construcciones nuevas encontró; **Volver a buscar**
 busca una vez más.
 
-- Solo se agrega una creación cuyo registro firmado se verifica: firmado
-  por la clave que nombra y exactamente la creación que se anunció.
+- Solo se agrega una construcción cuyo registro firmado se verifica: firmado
+  por la clave que nombra y exactamente la construcción que se anunció.
   Cualquier otra cosa se omite, y un registro que falló no se vuelve a
   obtener.
-- Verifica hasta 20 creaciones nuevas a la vez. Si hay más, la línea dice
+- Verifica hasta 20 construcciones nuevas a la vez. Si hay más, la línea dice
   cuántas quedan para la próxima vez.
-- Una creación encontrada así permanece en su **Explorar** después de
+- Una construcción encontrada así permanece en su **Explorar** después de
   recargar.
 - Su compilación todavía no está en su dispositivo. **Explorar** la obtiene
   de donde se almacenó y la verifica, y luego la abre en la Vista del
@@ -502,12 +502,12 @@ Ordenar: [Publicados recientemente ▾]   Agrupar: [Ninguno ▾]   [Tarjetas] [L
   desplazamiento infinito: así “la página 5” siempre significa lo mismo si
   vuelve a ella más tarde.
 
-Cada creación ofrece tres acciones:
+Cada construcción ofrece tres acciones:
 
 | Botón | Qué hace |
 |---|---|
-| **Abrir** | Carga ese documento en el Editor |
-| **Remezclar** | Lo copia en una creación editable propia |
+| **Abrir** | Carga esa construcción en el Editor |
+| **Remezclar** | Lo copia en una construcción editable propia |
 | **Explorar** | Vuela hasta él en la Vista del mundo |
 
 (El botón **Seguir explorando** de **Mis mundos** (consulte
@@ -517,7 +517,7 @@ ya visitó en lugar de uno que encuentra por primera vez).
 
 Haga clic en el **nombre de cualquier autor** para visitar su **Vista del
 autor**: un portafolio de todo lo que hizo, incluidos sus originales y
-todas las bifurcaciones que surgieron de ellos, con exactamente el mismo
+todas las remezclas que surgieron de ellos, con exactamente el mismo
 catálogo de búsqueda, orden y paginación que **Explorar**, solo que
 limitado a ese autor.
 
@@ -535,10 +535,10 @@ también se suma a esta misma búsqueda y a la Vista del autor de su autor, y
 sigue allí después de recargar. No se muestra de ninguna forma distinta de
 todo lo demás.
 
-## Bifurcar: hágalo suyo
+## Remezclar: hágalo suyo
 
-**Remezclar** es lo que hace especial a ForkBuild. Cuando bifurca una
-creación:
+**Remezclar** es lo que hace especial a ForkBuild. Cuando remezcla una
+construcción:
 
 - Obtiene una **copia completamente nueva e independiente** para editar
   libremente.
@@ -549,17 +549,17 @@ Funciona igual que bifurcar un proyecto en Git: usted se separa, hace lo
 suyo, y el árbol genealógico lleva la cuenta de todos. (En la Vista del
 mundo también ocurre automáticamente en el momento en que cambia un mundo
 publicado: consulte
-[Editar una creación publicada](#editar-una-creación-publicada) arriba).
+[Editar una construcción publicada](#editar-una-construcción-publicada) arriba).
 
 > **En la Vista del mundo también se llama “Editar una copia”.** Es la
 > misma operación de fondo en ambos casos, con las mismas reglas de
 > licencia y el mismo manejo de
-> [No se puede hacer una copia](#cuando-una-bifurcación-no-se-puede-completar).
+> [No se puede hacer una copia](#cuando-una-remezcla-no-se-puede-completar).
 > Consulte
 > [Editar una copia](03-WorldView.md#editar-una-copia--llevar-algo-al-editor)
 > para ver cómo funciona en la Vista del mundo.
 
-### Cómo bifurcar
+### Cómo remezclar
 
 1. Encuentre una construcción en **Explorar** (o en la Vista del mundo).
 2. Haga clic en **Remezclar**.
@@ -567,14 +567,14 @@ publicado: consulte
    original&gt;”*.
 4. Construya sobre ella y luego guárdela y publíquela como propia.
 
-Su bifurcación publicada aparece con una nota **Remezcla de “…” de …**,
+Su remezcla publicada aparece con una nota **Remezcla de “…” de …**,
 que la vincula con el original.
 
 ### Recuentos de remezclas
 
 La página de una construcción y su tarjeta en **Explorar** dicen cuántas
 veces se remezcló (**Remezclada 3 veces**): cuántas construcciones
-distintas, bifurcadas de ella y publicadas, ha encontrado este
+distintas, remezcladas de ella y publicadas, ha encontrado este
 dispositivo. Una remezcla publicada dos veces cuenta una vez, y una
 construcción que nadie ha remezclado no muestra nada. El recuento es solo
 lo que este dispositivo conoce, así que otro dispositivo puede mostrar un
@@ -585,14 +585,14 @@ sus construcciones, su 🔔 recibe una entrada **… remezcló su
 construcción**, una vez por remezcla (y su dispositivo también la muestra,
 si activó [Notificaciones en este dispositivo](03-WorldView.md#notificaciones-en-este-dispositivo)).
 
-### Cuando una bifurcación no se puede completar
+### Cuando una remezcla no se puede completar
 
-A veces una bifurcación no puede completarse; la mayoría de las veces al
-bifurcar un Mundo compartido encontrado mediante un par o una red
+A veces una remezcla no puede completarse; la mayoría de las veces al
+remezclar un Mundo compartido encontrado mediante un par o una red
 descentralizada (consulte
 [Publicaciones y evidencia externa](09-PublicationsAndEvidence.md)) en
 lugar de una construcción común de **Explorar**. En lugar de dejarlo en
-un documento del Editor vacío y sin relación, ForkBuild muestra un diálogo
+una construcción del Editor vacío y sin relación, ForkBuild muestra un diálogo
 **No se puede hacer una copia** que indica exactamente qué salió mal:
 
 - **La licencia de esta construcción no permite copias.** Consulte
@@ -694,9 +694,9 @@ empieza tu propia copia.
 
 ## El árbol genealógico
 
-Como cada bifurcación registra a su antecesor, ForkBuild puede dibujar todo
-el linaje de una creación. En una **Vista del autor**, verá un **árbol de
-bifurcaciones**:
+Como cada remezcla registra a su antecesor, ForkBuild puede dibujar todo
+el linaje de una construcción. En una **Vista del autor**, verá un **árbol de
+remezclas**:
 
 ```
 Casa medieval (original)
@@ -704,7 +704,7 @@ Casa medieval (original)
    └─ Remezcla de Remezcla de… (de Carola)
 ```
 
-Esto significa que una gran creación puede inspirar todo un ecosistema de
+Esto significa que una gran construcción puede inspirar todo un ecosistema de
 variaciones, y que todos en la cadena reciben crédito.
 
 La página propia de una construcción, abierta desde un enlace compartido,

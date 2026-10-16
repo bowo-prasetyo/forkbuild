@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 75f6ca907e2e67ae -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: fe5b24d5d2806c27 -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -20,7 +20,7 @@ ordnen.
 │   Exportieren · Importieren · Zuletzt · ⌨ Tastenkürzel      │
 ├──────────────────────┬──────────────────────────────────────┤
 │ [Auswählen|Platzieren│                                      │
-│ Dokumenttitel     ✎  │                                      │
+│ Bauwerkstitel     ✎  │                                      │
 │ Auswahl              │          3D-Ansichtsfenster          │
 │ Baubibliothek        │                                      │
 │  [Steine|Strukturen] │                                      │
@@ -35,7 +35,7 @@ ordnen.
 - **Werkzeuge** — wechseln Sie zwischen **Auswählen** (`1`) und
   **Platzieren** (`2`). **Platzieren** bleibt hervorgehoben, solange Sie
   einen Stein oder eine Struktur platzieren.
-- **Dokumenttitel** — der Name der geöffneten Kreation. Klicken Sie auf
+- **Bauwerkstitel** — der Name des geöffneten Bauwerks. Klicken Sie auf
   **✎**, um Titel, Beschreibung und Lizenz zu bearbeiten. Ob sie
   gespeichert ist, zeigt die Werkzeugleiste.
 - **Auswahl** — zeigt nur, was auf Ihre aktuelle Auswahl wirken kann;
@@ -63,7 +63,7 @@ ordnen.
     drei größere **Schaustücke** sowie
     Ihre eigenen **Meine Strukturen**. Klicken Sie auf eine Karte, um sie
     zu platzieren — siehe
-    [Strukturen: zusammensetzen, forken und Ihre persönliche Bibliothek](#strukturen-zusammensetzen-forken-und-ihre-persönliche-bibliothek)
+    [Strukturen: zusammensetzen, remixen und Ihre persönliche Bibliothek](#strukturen-zusammensetzen-remixen-und-ihre-persönliche-bibliothek)
     unten.
 
 ### Das Feld Auswahl
@@ -162,7 +162,7 @@ ForkBuild gibt Ihnen genaue Kontrolle über die Auswahl:
 | **Umschalt + Klick** | Fügt den Stein der Auswahl hinzu |
 | **Umschalt + Ziehen** | Zieht einen Rahmen — wählt alles darin aus |
 | **Strg/Cmd + Umschalt + Ziehen** | Rahmenauswahl, die der aktuellen Auswahl *hinzugefügt* wird |
-| **Strg/Cmd + A** | Alle Steine der Kreation auswählen |
+| **Strg/Cmd + A** | Alle Steine des Bauwerks auswählen |
 | **Escape** | Die Auswahl aufheben |
 
 > **Warum das wichtig ist:** Alles, was größer als ein einzelner Stein ist,
@@ -212,7 +212,7 @@ wählen:
   auf einmal umzufärben. Jede Änderung lässt sich wie jede andere
   Bearbeitung rückgängig machen (`Strg/Cmd+Z`). Für eine ausgewählte
   Strukturinstanz wird das Farbfeld nicht angeboten — bearbeiten Sie
-  stattdessen das eigene Dokument der Struktur (siehe
+  stattdessen das eigene Bauwerk der Struktur (siehe
   [Strukturinstanzen](#strukturinstanzen-eine-lebendige-referenz) unten).
 
 Neben jedem Farbfeld **Farbe** steht eine Reihe von **Dorffarben** (Putz,
@@ -220,7 +220,7 @@ Stein, Ziegel, Dachrot, Eiche, Laub, Himmel und mehr), die gut
 zusammenpassen: Ein Klick wählt eine davon, für die nächsten Steine oder
 für die Auswahl. Mit dem Farbfeld können Sie weiterhin jede Farbe wählen.
 
-Die Farbe eines Steins wird mit Ihrer Kreation gespeichert und reist mit
+Die Farbe eines Steins wird mit Ihrem Bauwerk gespeichert und reist mit
 ihr, wenn Sie sie veröffentlichen oder teilen.
 
 ## Genaue Transformationen: Zahleneingabe, Ausrichten und Wiederholen
@@ -328,7 +328,7 @@ Bauplan**. Diese Schaltflächen wirken auf die gerade ausgewählte Gruppe:
 > die Gruppe selbst ändert sich nie. Und das Löschen einer Gruppe entfernt
 > nur das *Etikett*, nicht die Steine darin.
 
-## Strukturen: zusammensetzen, forken und Ihre persönliche Bibliothek
+## Strukturen: zusammensetzen, remixen und Ihre persönliche Bibliothek
 
 Der Reiter **Strukturen** der Baubibliothek (siehe
 [Der Aufbau](#der-aufbau) oben) bietet zweiundzwanzig fertige Strukturen — Häuser,
@@ -340,26 +340,26 @@ können Sie drei verschiedene Dinge tun, und sie sind aus verschiedenen
 Gründen wichtig:
 
 - **Platzieren** (Klick auf die Karte) — kopiert die Steine der Struktur
-  direkt in das Dokument, an dem Sie gerade arbeiten, sodass sie Teil
+  direkt in das Bauwerk, an dem Sie gerade arbeiten, sodass sie Teil
   eines größeren Bauwerks wird. Das ist die alltägliche Aktion.
 - **Als neues Bauwerk remixen** (im Menü **⋮** der Karte) — beginnt ein
-  ganz neues, unabhängiges Dokument, das als genaue Kopie dieser Struktur
+  ganz neues, unabhängiges Bauwerk, das als genaue Kopie dieser Struktur
   startet.
 - **In Meine Strukturen remixen** (nur bei eingebauten Karten, im Menü
   **⋮**) — fügt die Struktur Ihren eigenen **Meine Strukturen** hinzu,
-  ganz ohne Dokument. Siehe
+  ganz ohne Bauwerk. Siehe
   [Meine Strukturen](#meine-strukturen-ihre-persönliche-bauplanbibliothek)
   unten.
 - **Info** (im Menü **⋮** der Karte) — ein schreibgeschützter Blick auf
   Name, Kategorie, Anzahl der Steine, Grundfläche, Höhe, Quelle und
   Beschreibung einer Struktur.
-- Ein eigenes **gespeichertes Dokument** als **Strukturinstanz**
+- Ein eigenes **gespeichertes Bauwerk** als **Strukturinstanz**
   platzieren — eine lebendige, wiederverwendbare Referenz statt einer
   Kopie — über das Auswahlmenü **Zuletzt** in der Werkzeugleiste, nicht
   über die Baubibliothek. Siehe
   [Strukturinstanzen](#strukturinstanzen-eine-lebendige-referenz) unten.
 
-### Eine Struktur in Ihr Dokument platzieren
+### Eine Struktur in Ihr Bauwerk platzieren
 
 Klicken Sie im Reiter **Strukturen** auf eine beliebige Karte — eine
 eingebaute oder eine Ihrer eigenen **Meine Strukturen** —, und eine
@@ -370,28 +370,28 @@ Steins:
 1. Bewegen Sie den Zeiger, um den Geist zu positionieren.
 2. Drücken Sie `R` / `Umschalt+R`, um ihn in 90°-Schritten zu drehen.
 3. Klicken Sie, um zu übernehmen — jeder Stein der Struktur wird Ihrem
-   Dokument als ein **Rückgängig-Schritt** hinzugefügt. Eine belegte
+   Bauwerk als ein **Rückgängig-Schritt** hinzugefügt. Eine belegte
    Position färbt den Geist rot und verweigert den Klick, genauso wie ein
    einzelner Stein sich nicht auf einen anderen setzen lässt.
 4. `Escape` bricht ab — nichts wird hinzugefügt, und Sie kehren zu dem
    Werkzeug zurück, das Sie vorher benutzt haben.
 
 Die Steine, die Sie erhalten, sind ab dem Moment, in dem sie landen,
-gewöhnliche Steine in Ihrem Dokument — nicht von dem zu unterscheiden, was
+gewöhnliche Steine in Ihrem Bauwerk — nicht von dem zu unterscheiden, was
 Sie von Hand platziert haben, und frei zu bearbeiten, auszuwählen, zu
 gruppieren oder zu löschen. Mehrere Strukturen zu platzieren ist ein
 schneller Weg zu einer Szene: Haus anklicken, platzieren; Scheune
 anklicken, daneben platzieren; Brunnen anklicken, in den Hof platzieren.
 
-### Eine Struktur als neues Dokument forken
+### Eine Struktur als neues Bauwerk remixen
 
 Öffnen Sie das Menü **⋮** einer Karte und klicken Sie auf **Als neues Bauwerk
-remixen**, um eine ganz neue eigene Kreation zu beginnen, die als
+remixen**, um ein ganz neues eigenes Bauwerk zu beginnen, das als
 genaue Kopie dieser Struktur startet — genau dieselben Steine, mit jedem
-Werkzeug dieser Anleitung bearbeitbar, in einem eigenen Dokument, statt in
-das eingefügt zu werden, was Sie gerade geöffnet haben. Forken ändert nie
-die Kopie der Bibliothek selbst: Forken Sie das Haus zehnmal, ist jedes
-ab dem Klick auf Forken eine eigene, unabhängige Kreation.
+Werkzeug dieser Anleitung bearbeitbar, in einem eigenen Bauwerk, statt in
+das eingefügt zu werden, was Sie gerade geöffnet haben. Remixen ändert nie
+die Kopie der Bibliothek selbst: Remixen Sie das Haus zehnmal, ist jedes
+ab dem Klick auf Remixen ein eigenes, unabhängiges Bauwerk.
 
 ### Meine Strukturen: Ihre persönliche Bauplanbibliothek
 
@@ -411,13 +411,13 @@ Es gibt einen zweiten Weg, wie eine Struktur in Meine Strukturen landet,
 ohne dass Sie etwas auswählen oder erst bauen müssen: Öffnen Sie das Menü
 **⋮** einer **eingebauten** Karte und klicken Sie auf **In Meine Strukturen
 remixen**. Sie wird genau so hinzugefügt, wie sie ist — kein
-Dokument wird erstellt, nichts herausgelöst —, und lässt sich daher sofort
+Bauwerk wird erstellt, nichts herausgelöst —, und lässt sich daher sofort
 umbenennen, exportieren oder platzieren wie jeder andere Eintrag Ihrer
 Bibliothek.
 
 Eine Struktur in **Meine Strukturen** funktioniert genau wie eine
-eingebaute — klicken Sie, um sie in Ihr aktuelles Dokument zu platzieren,
-oder forken Sie sie als neues Dokument — mit zwei zusätzlichen Aktionen im
+eingebaute — klicken Sie, um sie in Ihr aktuelles Bauwerk zu platzieren,
+oder remixen Sie sie als neues Bauwerk — mit zwei zusätzlichen Aktionen im
 Menü **⋮**:
 
 | Aktion | Was sie tut |
@@ -428,10 +428,10 @@ Menü **⋮**:
 **Meine Strukturen** speichert immer nur die *Struktur selbst* — einen
 Namen und eine Menge Steine. Das Entfernen einer Struktur berührt nie
 etwas, das Sie schon damit gebaut haben: Überall, wo Sie sie bereits
-platziert oder hineingeforkt haben, bleiben die Steine genau so, wie sie
+platziert oder hineingeremixt haben, bleiben die Steine genau so, wie sie
 sind. Und sie wird nie an Ort und Stelle bearbeitet — wenn Sie ändern
 möchten, was eine gespeicherte Struktur baut, platzieren Sie sie in ein
-Dokument, bearbeiten Sie dieses Dokument und nutzen Sie dann erneut
+Bauwerk, bearbeiten Sie dieses Bauwerk und nutzen Sie dann erneut
 **Bauplan erstellen** (wahlweise unter einem neuen Namen, etwa „Bauernhof
 Deluxe“ — er wird ein eigener, getrennter Eintrag in Meine Strukturen,
 kein Ersatz für das Original).
@@ -497,7 +497,7 @@ Sie das Feld **Info** der Struktur über ihre Karte, und Sie finden:
   Anspruch erneut. Prüfen Sie zuerst das Design: Die Schaltfläche erscheint
   bei jedem Design, das den alten Fingerabdruck teilt.
 
-Das ist optional und völlig getrennt vom Platzieren, Forken oder Teilen
+Das ist optional und völlig getrennt vom Platzieren, Remixen oder Teilen
 der Struktur selbst — es ist für Fälle gedacht, in denen Sie Ihren Namen
 so an ein Design heften möchten, dass andere es unabhängig überprüfen
 können, statt einfach zu vertrauen. Was mit einem Anspruch nach der
@@ -508,24 +508,24 @@ anhängen, steht unter
 ## Strukturinstanzen: eine lebendige Referenz
 
 Platzieren (oben) kopiert die Steine einer Struktur einmal in Ihr
-Dokument. Manchmal möchten Sie stattdessen eine **lebendige** Kopie von
-etwas, das Sie schon gebaut haben — jedes gespeicherte Dokument, nicht nur
+Bauwerk. Manchmal möchten Sie stattdessen eine **lebendige** Kopie von
+etwas, das Sie schon gebaut haben — jedes gespeicherte Bauwerk, nicht nur
 etwas aus Ihrer Bibliothek —, die bei jedem Hinsehen mit ihrer Quelle
 übereinstimmt. Das ist eine **Strukturinstanz**: Sie verweist auf das
-Quelldokument, statt seine Steine zu kopieren, sodass spätere Änderungen
+Ursprungsbauwerk, statt seine Steine zu kopieren, sodass spätere Änderungen
 an der Quelle jede Instanz automatisch aktualisieren.
 
 1. Öffnen Sie das Auswahlmenü **Zuletzt** in der Werkzeugleiste. (Es
-   erscheint, sobald Sie mindestens ein Dokument gespeichert haben.)
-2. Klicken Sie neben einem gespeicherten Dokument auf **Platzieren**. Ein
-   Klick auf den Namen des Dokuments öffnet es dagegen und ersetzt, was
+   erscheint, sobald Sie mindestens ein Bauwerk gespeichert haben.)
+2. Klicken Sie neben einem gespeicherten Bauwerk auf **Platzieren**. Ein
+   Klick auf den Namen des Bauwerks öffnet es dagegen und ersetzt, was
    Sie geöffnet haben.
 3. Fahren Sie über den Boden, drücken Sie `R` zum Drehen und klicken Sie
    zum Platzieren — genau wie bei einem Stein.
 
-Eine Instanz ist eine lebendige *Referenz* auf dieses Dokument, keine
-Kopie seiner Steine: Dasselbe Dokument kann beliebig oft platziert
-werden, und spätere Änderungen an den Steinen des Quelldokuments
+Eine Instanz ist eine lebendige *Referenz* auf dieses Bauwerk, keine
+Kopie seiner Steine: Dasselbe Bauwerk kann beliebig oft platziert
+werden, und spätere Änderungen an den Steinen des Ursprungsbauwerks
 aktualisieren jede seiner Instanzen. Wählen Sie eine Instanz mit dem
 Auswahlwerkzeug (`1`) aus, und die Seitenleiste zeigt:
 
@@ -536,29 +536,29 @@ Auswahlwerkzeug (`1`) aus, und die Seitenleiste zeigt:
 | **Felder X / Z / Drehung °, dann Anwenden** | Eine genaue Position und Ausrichtung festlegen — die Höhe (Boden-Y) folgt immer dem Gelände und ist kein Zielwert, den Sie festlegen |
 | **Drehen ↻ / ↺** | Um genau 90° drehen |
 | **Duplizieren** (`Strg/Cmd+D`) | Eine weitere Instanz derselben Struktur platzieren |
-| **Löschen** | Diese Instanz entfernen — das Quelldokument bleibt unberührt |
-| **Ursprungsbauwerk bearbeiten** | Das referenzierte Dokument selbst öffnen, um zu ändern, wie jede seiner Instanzen aussieht |
+| **Löschen** | Diese Instanz entfernen — das Ursprungsbauwerk bleibt unberührt |
+| **Ursprungsbauwerk bearbeiten** | Das referenzierte Bauwerk selbst öffnen, um zu ändern, wie jede seiner Instanzen aussieht |
 
-Der *Inhalt* einer platzierten Struktur wird immer über ihr Quelldokument
+Der *Inhalt* einer platzierten Struktur wird immer über ihr Ursprungsbauwerk
 bearbeitet — die Steine einer Instanz lassen sich nicht direkt bearbeiten,
 und genau das hält jede ihrer Instanzen synchron.
 
 ## Bauwerkeigenschaften
 
-Jede Kreation hat einen **Titel**, eine optionale **Beschreibung**, eine
+Jedes Bauwerk hat einen **Titel**, eine optionale **Beschreibung**, eine
 **Lizenz** und eine Einstellung **Wer es in der Welt platzieren darf** —
 festgelegt im Dialog **Bauwerkeigenschaften**, der sich mit der
-Schaltfläche **✎** neben dem Dokumenttitel oben in der Seitenleiste des
+Schaltfläche **✎** neben dem Bauwerkstitel oben in der Seitenleiste des
 Editors öffnet (in der Weltansicht ist es die Schaltfläche **Metadaten
-bearbeiten**). Ein neues Dokument beginnt ohne Lizenz, was bedeutet, dass
-niemand sonst es forken kann, bis Sie eine wählen. Die Beschreibung
+bearbeiten**). Ein neues Bauwerk beginnt ohne Lizenz, was bedeutet, dass
+niemand sonst es remixen kann, bis Sie eine wählen. Die Beschreibung
 erscheint als Auszug auf seiner Karte in **Entdecken** und ist dort auch
-durchsuchbar; die Lizenz legt fest, ob — und wie — andere es forken
+durchsuchbar; die Lizenz legt fest, ob — und wie — andere es remixen
 dürfen. Was jede Lizenz bedeutet, steht unter
 [Veröffentlichen & Remixen](04-PublishingAndForking.md).
 
 Eine lange Beschreibung liest sich mit etwas Formatierung besser. Das
-Dokumentinformationsfeld, der Ortsbrowser in der Weltansicht und ein
+Feld **Über dieses Bauwerk**, der Ortsbrowser in der Weltansicht und ein
 Steem- und Blurt-Beiträge zeigen sie an:
 
 | Schreiben Sie | Ergebnis |
@@ -593,7 +593,7 @@ schnelle Folge von Pieptönen für Einfügen oder Duplizieren, ein heller
 Ping für eine neue Farbe, zwei Töne für das Gruppieren, eine Glocke für
 das Benennen eines Ortes, ein fallender Piepton für Rückgängig und ein
 steigender für Wiederholen und ein kleiner Akkord beim Speichern.
-Änderungen, die ein Mitwirkender im selben Dokument macht, sind lautlos.
+Änderungen, die ein Mitwirkender im selben Bauwerk macht, sind lautlos.
 
 Schalten Sie den Ton mit der Schaltfläche **Ton** oben rechts in der
 Ansicht oder mit `M` aus oder ein (aufgeführt in der Übersicht
@@ -647,15 +647,15 @@ Beim Bauen spielt leise Musik, etwas lebhafter als in der Weltansicht. Die Schal
   **Importieren** unter **Zuletzt** funktionieren genauso.
 - **Zuletzt** — etwas wieder öffnen, das Sie früher gespeichert haben (es
   erscheint nach dem ersten Speichern; klicken Sie auf den Namen eines
-  Dokuments, um es zu öffnen). Sobald Sie genug Dokumente gespeichert
+  Bauwerks, um es zu öffnen). Sobald Sie genug Bauwerke gespeichert
   haben, erscheint ein Filterfeld, mit dem Sie direkt eines nach Namen
   ansteuern. Jeder Eintrag hat außerdem eine Schaltfläche
   **Platzieren** — siehe
   [Strukturinstanzen](#strukturinstanzen-eine-lebendige-referenz) —, um
-  ihn Ihrem *aktuellen* Dokument hinzuzufügen, statt es zu ersetzen.
+  ihn Ihrem *aktuellen* Bauwerk hinzuzufügen, statt es zu ersetzen.
   **Alle Bauwerke exportieren** ganz unten lädt alle gespeicherten
   Bauwerke als eine Datei herunter; **Importieren** liest sie wieder ein,
-  speichert die Dokumente, die dieses Gerät nicht hat (öffnen Sie sie über
+  speichert die Bauwerke, die dieses Gerät nicht hat (öffnen Sie sie über
   Zuletzt), überspringt unveränderte, die es hat, und speichert eine Kopie
   neben jedem, das es in einer anderen Version hat. Ungespeicherte
   Änderungen sind nicht enthalten, speichern Sie also vorher.

@@ -20,7 +20,7 @@ Alles Folgende liegt im Speicher dieses Browsers (der IndexedDB-Datenbank
 die mit `forkbuild:` beginnen) und verlässt das Gerät nie, es sei denn, Sie
 veröffentlichen, exportieren oder senden es:
 
-- Ihre Dokumente, Kopien ungespeicherter Änderungen zur
+- Ihre Bauwerke, Kopien ungespeicherter Änderungen zur
   Absturzwiederherstellung und gespeicherte Strukturen;
 - Ihre Identitäten: jeweils der öffentliche Schlüssel und der private
   Schlüssel, mit Ihrer Passphrase verschlüsselt, sofern Sie sie nicht ohne
@@ -182,7 +182,7 @@ setzt. Mehr sendet sie nicht:
 - **Was GoatCounter erhält:** Ihre IP-Adresse und den User-Agent Ihres
   Browsers, wie bei jeder Webanfrage, dazu einen festen Pfad (`/`) und eine
   Zufallszahl, die verhindert, dass das Bild zwischengespeichert wird. Keine
-  Seite, kein Dokument, keine Welt, keine Identität, kein Referrer und
+  Seite, kein Bauwerk, keine Welt, keine Identität, kein Referrer und
   nichts, was ForkBuild speichert, ist enthalten; GoatCounter erfährt also
   nicht, was Sie in der App tun, nicht einmal, welche Seite Sie geöffnet
   haben.
@@ -341,7 +341,7 @@ was Sie bei ihm anfragen.
 | Sie verbinden eine Browser-Wallet (*experimentell*) | die Wallet-Erweiterung, die Sie wählen | was immer sie Sie bestätigen lässt |
 
 ForkBuild sendet Ihren privaten Schlüssel, Ihre Passphrase oder Ihre
-gespeicherten Dokumente nie an einen dieser Server.
+gespeicherten Bauwerke nie an einen dieser Server.
 
 **Ein Link, der sein Bauwerk enthält** (von **Link kopieren** oder
 **Teilen …** erstellt, bevor ein Bauwerk verteilt ist), trägt Ihre signierte

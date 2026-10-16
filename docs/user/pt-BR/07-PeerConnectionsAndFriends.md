@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: e45448af38374f12 -->
+<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 7ffb295aa351970e -->
 # 07 — Conexões entre pares e amigos
 
 <!-- languages -->
@@ -178,7 +178,7 @@ nas **Configurações de rede**) e de uma identidade desbloqueada.
 
 ## Seguindo pessoas
 
-**Seguir** mantém você em dia com as criações de alguém, como seguir uma
+**Seguir** mantém você em dia com as construções de alguém, como seguir uma
 conta numa rede social, sem que nenhum dos dois peça nada ao outro.
 
 - **Onde seguir.** **Seguir** aparece nos cartões de publicação de
@@ -192,9 +192,9 @@ conta numa rede social, sem que nenhum dos dois peça nada ao outro.
   você segue, cada uma com **Deixar de seguir**, e abaixo delas os trabalhos
   mais novos delas que chegaram a este dispositivo, do mais novo para o mais
   antigo. Clique num nome para ver só os trabalhos daquela pessoa.
-- **Notificações.** Quando uma criação nova de alguém que você segue chega a
+- **Notificações.** Quando uma construção nova de alguém que você segue chega a
   este dispositivo, o painel 🔔 ganha uma entrada **… publicou algo novo**, uma vez por
-  criação (e seu dispositivo também a mostra, se você ativou
+  construção (e seu dispositivo também a mostra, se você ativou
   [Notificações neste dispositivo](03-WorldView.md#notificações-neste-dispositivo)), com **Explorar** para abri-la.
 - **Os Mundos compartilhados delas são buscados para você.** Os Mundos que
   alguém que você segue compartilha com pares conectados são recuperados
@@ -214,7 +214,7 @@ avatar, nem como chegar até você. Para isso continua existindo a amizade.
 
 **O que seguir não faz.** Seguir separa os trabalhos das pessoas que você
 segue a partir do que chega a este dispositivo; não sai buscando os
-trabalhos delas sozinho. As criações continuam chegando pelos caminhos de
+trabalhos delas sozinho. As construções continuam chegando pelos caminhos de
 sempre: a descoberta de Mundos na Visão do mundo, Mundos compartilhados por
 pares conectados e links que você abre. Só contam trabalhos cuja assinatura
 confere, então ninguém consegue entrar na sua página Seguindo digitando o

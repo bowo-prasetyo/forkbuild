@@ -562,7 +562,7 @@ parcours étape par étape ne le fait jamais.
 ## Placements de Snapshot
 
 Les placements de snapshot sont une fonctionnalité ordinaire, de leur
-création sur IPFS, Arweave ou Local jusqu’à la liste de l’onglet
+construction sur IPFS, Arweave ou Local jusqu’à la liste de l’onglet
 **Placements et IPFS**. Seul IPFS (épinglage distant) comme fournisseur
 préféré est *Expérimental*.
 

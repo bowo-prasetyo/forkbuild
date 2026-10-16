@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 22e0b2ed04283579 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 4a1027c916706bd6 -->
 # Référence des commandes
 
 <!-- languages -->
@@ -50,14 +50,14 @@ complète.
 | Panneau Recherche, **Chercher** | Chercher des publications par titre ou auteur, éventuellement dans un rayon autour d’une coordonnée |
 | **Explorer ici** | Ouvrir la boîte de dialogue Explorer l’emplacement, centrée sur la position actuelle de la caméra |
 | **Qu’y a-t-il ici ?** | Pareil, avec un petit rayon fixe — « ce qu’il y a pratiquement ici » |
-| **Centrer** sur un résultat | Déplacer la caméra jusque-là et en faire le document actif (en cours de modification) |
-| **Sélectionner** sur un résultat | En faire le document actif, sans déplacer la caméra |
+| **Centrer** sur un résultat | Déplacer la caméra jusque-là et en faire la construction active (en cours de modification) |
+| **Sélectionner** sur un résultat | En faire la construction active, sans déplacer la caméra |
 | **Inspecter** sur un résultat | Déplier sur place un résumé en lecture seule |
 
 ## Orientation et navigation (Vue du Monde)
 
 Purement de la navigation de caméra — aucune de ces commandes ne charge
-de document, ne change la sélection ni ne modifie quoi que ce soit. Voir
+de construction, ne change la sélection ni ne modifie quoi que ce soit. Voir
 [Vue du Monde](03-WorldView.md#orientation-et-emplacements).
 
 | Contrôle | Action |
@@ -165,7 +165,7 @@ enregistrés sur cet appareil et survivent à un rechargement — voir
 | `Ctrl/Cmd+A` | Tout sélectionner | |
 | `Échap` | Effacer la sélection | La chaîne Échap propre à l’Éditeur, ci-dessous — dans la Vue du Monde, Échap ne fait que fermer le panneau ouvert |
 | `Suppr` / `Retour arrière` | Supprimer la sélection — **Éditeur uniquement** | une étape d’annulation ; aucune touche associée dans la Vue du Monde |
-| Bouton **Centrer** du panneau Sélection — **Éditeur uniquement** | Cadrer instantanément la caméra sur la ou les briques sélectionnées | pas de raccourci clavier ; caméra seulement — ne touche jamais au document, à la sélection ni à l’historique d’annulation ; sélections de briques uniquement, pas les placements de structure |
+| Bouton **Centrer** du panneau Sélection — **Éditeur uniquement** | Cadrer instantanément la caméra sur la ou les briques sélectionnées | pas de raccourci clavier ; caméra seulement — ne touche jamais à la construction, à la sélection ni à l’historique d’annulation ; sélections de briques uniquement, pas les placements de structure |
 
 ## Transformation — clavier (Éditeur uniquement)
 
@@ -233,8 +233,8 @@ répétition au lieu de créer certaines copies et pas d’autres.
 
 ## Structures (Bibliothèque de construction) — Éditeur uniquement
 
-Composer, forker et votre bibliothèque personnelle — voir
-[L’Éditeur](02-TheEditor.md#structures--composer-forker-et-votre-bibliothèque-personnelle).
+Composer, remixer et votre bibliothèque personnelle — voir
+[L’Éditeur](02-TheEditor.md#structures--composer-remixer-et-votre-bibliothèque-personnelle).
 
 | Entrée | Action | Remarques |
 |---|---|---|
@@ -242,32 +242,32 @@ Composer, forker et votre bibliothèque personnelle — voir
 | `R` / `Maj+R` pendant le placement | Faire pivoter le fantôme de ±90° | mêmes touches d’aperçu de placement que pour une brique |
 | Clic | Valider — toutes les briques de la structure se posent en une étape d’annulation | refusé à une position occupée (rouge) |
 | `Échap` pendant le placement | Annuler — rien n’est ajouté | |
-| Menu **⋮** d’une carte, **Remixer en nouvelle construction** | Démarrer un tout nouveau document qui commence comme une copie de cette structure | ne modifie jamais l’entrée de la bibliothèque |
-| Menu **⋮** d’une carte intégrée, **Remixer dans Mes structures** | L’ajouter telle quelle à Mes structures | aucun document créé, rien d’extrait |
+| Menu **⋮** d’une carte, **Remixer en nouvelle construction** | Démarrer une toute nouvelle construction qui commence comme une copie de cette structure | ne modifie jamais l’entrée de la bibliothèque |
+| Menu **⋮** d’une carte intégrée, **Remixer dans Mes structures** | L’ajouter telle quelle à Mes structures | aucune construction créée, rien d’extrait |
 | Menu **⋮** de n’importe quelle carte, **Infos** | Afficher un panneau en lecture seule nom / catégorie / briques / emprise / hauteur / source / description | jamais modifiable |
 | Sélection d’**1 brique ou plus**, puis **Créer un plan** (section **Groupes et plan** du panneau Sélection, ou Palette de commandes) | Ouvrir une petite boîte de dialogue (nom / catégorie / description + aperçu) ; enregistrer la sélection comme nouvelle entrée de **Mes structures** | |
 | Menu **⋮** d’une carte de **Mes structures**, **Renommer** | Changer le nom d’une structure personnelle | structures personnelles uniquement |
-| Menu **⋮** d’une carte de **Mes structures**, **Retirer** | La supprimer de votre bibliothèque | ne touche jamais aux briques déjà composées ou forkées à partir d’elle |
+| Menu **⋮** d’une carte de **Mes structures**, **Retirer** | La supprimer de votre bibliothèque | ne touche jamais aux briques déjà composées ou remixées à partir d’elle |
 | Menu **⋮** de n’importe quelle carte, **Exporter le plan** | La télécharger sous forme de fichier JSON portable | intégrée ou personnelle |
 | Bouton **Importer un plan** (à côté du titre Mes structures) | Ajouter un fichier de plan à votre bibliothèque comme nouvelle entrée | nouvelle identité, même pour un fichier réimporté |
 
 ## Instances de structure (Éditeur)
 
-Une **instance de structure** place un document enregistré entier comme
+Une **instance de structure** place une construction enregistrée entière comme
 une seule unité sélectionnable — une référence vivante, pas une copie —
 voir
 [L’Éditeur](02-TheEditor.md#instances-de-structure--une-référence-vivante).
 
 | Entrée | Action | Remarques |
 |---|---|---|
-| Liste déroulante **Récents** de la barre d’outils, bouton **Placer** d’un document | Entrer en mode Placer une structure visant ce document | cliquer sur le nom du document l’ouvre plutôt |
+| Liste déroulante **Récents** de la barre d’outils, bouton **Placer** d’une construction | Entrer en mode Placer une structure visant cette construction | cliquer sur le nom de la construction l’ouvre plutôt |
 | `R` / `Maj+R` pendant le placement | Faire pivoter l’instance en attente de ±90° | mêmes touches d’aperçu de placement que pour une brique |
 | Clic sur une instance placée (outil Sélection) | La sélectionner comme une unité, distincte d’une sélection de briques | |
 | Glisser dans la vue, ou le manipulateur | Déplacer / faire pivoter l’instance | |
-| `Ctrl/Cmd+D` | Dupliquer — place une autre instance du même document | voir [Dupliquer](#dupliquer-éditeur-uniquement) — une sélection d’instance obtient une nouvelle instance plutôt qu’une nouvelle copie de briques |
+| `Ctrl/Cmd+D` | Dupliquer — place une autre instance du même construction | voir [Dupliquer](#dupliquer-éditeur-uniquement) — une sélection d’instance obtient une nouvelle instance plutôt qu’une nouvelle copie de briques |
 | Champs **X / Z / Rotation** du panneau d’instance, puis Appliquer | Définir une position et une orientation exactes | Y (altitude) vient toujours du terrain, ce n’est jamais une cible |
-| **Modifier la construction source** du panneau d’instance | Ouvrir le document référencé pour modifier ses briques | toutes les instances se mettent à jour, puisqu’une instance est une référence vivante |
-| `Suppr` / `Retour arrière` | Retirer l’instance | ne touche jamais au document référencé |
+| **Modifier la construction source** du panneau d’instance | Ouvrir la construction référencée pour modifier ses briques | toutes les instances se mettent à jour, puisqu’une instance est une référence vivante |
+| `Suppr` / `Retour arrière` | Retirer l’instance | ne touche jamais à la construction référencée |
 
 ## Groupes (Éditeur uniquement)
 
@@ -319,7 +319,7 @@ permet aussi de les prévisualiser et de les restaurer.
 | Entrée | Action |
 |---|---|
 | `1` / `2` | Passer à l’outil Sélection / Placement |
-| `Ctrl/Cmd+S` | Enregistrer le document |
+| `Ctrl/Cmd+S` | Enregistrer la construction |
 
 ## Placement (Éditeur uniquement)
 

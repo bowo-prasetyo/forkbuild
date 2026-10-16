@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: d748ce22f6360f55 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: be6c14fcfc79e4c8 -->
 # 09 — Veröffentlichungen & externe Nachweise
 
 <!-- languages -->
@@ -25,13 +25,13 @@
 > Anleitungen [11](11-EvidenceAndStorage.md) und
 > [12](12-ArchiveAndAchievements.md) sagen, welche ihrer Abschnitte
 > experimentell sind. Bauen, Speichern, Veröffentlichen unter Entdecken,
-> Forken, Identitäten und Peers hängen von nichts davon ab.
+> Remixen, Identitäten und Peers hängen von nichts davon ab.
 
 Nichts hiervon ist nötig, um ForkBuild zu nutzen. Überspringen Sie es, wenn
 Sie nur bauen, veröffentlichen und erkunden möchten.
 
 Die Seite **Veröffentlichungen** ist eine technischere Ebene als
-Entdecken. Unter Entdecken geht es um Dokumente und Welten; auf der Seite
+Entdecken. Unter Entdecken geht es um Bauwerke und Welten; auf der Seite
 Veröffentlichungen geht es um **signierte Ansprüche** wie „Ich habe diese
 Struktur entworfen“ oder „Ich nenne diesen Ort X“ und um die optionale
 Tiefe, die Sie einem Anspruch geben können:
@@ -52,9 +52,9 @@ Tiefe, die Sie einem Anspruch geben können:
 
 | | **Veröffentlichen** (Entdecken) | **Seite Veröffentlichungen** |
 |---|---|---|
-| Was es teilt | Ein Dokument oder eine Welt | Einen signierten Datensatz: eine Geteilte Welt, die Urheberschaft einer Struktur oder einen Ortsnamen |
+| Was es teilt | Ein Bauwerk oder eine Welt | Einen signierten Datensatz: eine Geteilte Welt, die Urheberschaft einer Struktur oder einen Ortsnamen |
 | Wo Sie es sehen | Entdecken, Autorenansicht, Weltansicht | Die Seite **Veröffentlichungen** |
-| Was Sie damit tun | Öffnen, erkunden, forken | Es prüfen, seinen Inhalt holen, es verteilen und verankern |
+| Was Sie damit tun | Öffnen, erkunden, remixen | Es prüfen, seinen Inhalt holen, es verteilen und verankern |
 | Anleitung | [Veröffentlichen & Remixen](04-PublishingAndForking.md) | Diese hier |
 
 **Veröffentlichen** allein bringt eine Welt nicht auf die Seite
@@ -65,7 +65,7 @@ Veröffentlichungen. **Mit Peers teilen** tut es: Es signiert die Welt als
 Die Seite Veröffentlichungen hat kein **Öffnen**, **Erkunden** oder
 **Remixen**, nicht einmal für eine Geteilte Welt. Sie zeigt den signierten
 Datensatz, nicht die Welt. Um eine Geteilte Welt zu öffnen, zu erkunden
-oder zu forken, suchen Sie sie unter Entdecken, auf der Seite ihres Autors
+oder zu remixen, suchen Sie sie unter Entdecken, auf der Seite ihres Autors
 oder in der Weltansicht. Eine, die Sie von einem Peer erhalten haben,
 erscheint dort, sobald ihr Inhalt auf diesem Gerät ist. (Die einzige
 Ausnahme ist **Im Editor öffnen** bei Ihrer eigenen Geteilten Welt, die
@@ -98,7 +98,7 @@ erforderlich:
 | **Veröffentlichung** | das Buch selbst | Ein signierter Datensatz: eine Geteilte Welt, eine Bauplan-Zuschreibung oder ein Ortsnamensanspruch. Sie trägt den Hash ihres Inhalts und die Signatur ihres Herausgebers. |
 | **Inhalt** | der Ort, an dem gedruckte Exemplare lagern | Die Bytes, um die es in der Veröffentlichung geht, etwa die Steine einer Welt. Sie liegen immer zuerst auf diesem Gerät; **Auf … speichern** legt eine Kopie auf IPFS, Arweave, Steem oder Blurt ab, damit andere sie holen können. Siehe [Inhaltsanbieter](10-NetworkSettings.md#inhaltsanbieter). |
 | **Snapshot** | ein gedrucktes Exemplar | Eine gespeicherte Kopie des Inhalts einer Veröffentlichung, etwa der Steine einer Welt, die andere holen und gegen ihren Hash prüfen können. Siehe [Lokaler Snapshot](#lokaler-snapshot). |
-| **Platzierung** | das Regal, in dem das Exemplar steht | Ein signierter Nachweis, wo ein Bauwerk in der Welt steht. Eine Geteilte Welt kann mehrere haben. Siehe [Platzieren oder forken](WorldViewAdvancedTools.md#platzieren-oder-forken). |
+| **Platzierung** | das Regal, in dem das Exemplar steht | Ein signierter Nachweis, wo ein Bauwerk in der Welt steht. Eine Geteilte Welt kann mehrere haben. Siehe [Platzieren oder remixen](WorldViewAdvancedTools.md#platzieren-oder-remixen). |
 | **Ankündigung / Entdeckung** | ein Eintrag im Bibliothekskatalog | Ein kleiner signierter Hinweis auf Nostr, Arweave, Steem oder Blurt, dass die Veröffentlichung oder der Snapshot existiert und wo die Kopie ist, damit Menschen, die nicht mit Ihnen verbunden sind, sie finden können. Siehe [Anbieter für Ankündigung / Entdeckung](10-NetworkSettings.md#anbieter-für-ankündigung--entdeckung). |
 | **Nachweis / Verankerung** *(experimentell, außer auf Arweave)* | ein Notarstempel | Der Hash des Inhalts, in eine Blockchain-Transaktion geschrieben (Bitcoin, Base, Arweave, Steem oder Blurt), als Nachweis, dass er zu diesem Zeitpunkt existierte. Sie speichert und kündigt nichts an. Siehe [Nachweise & Speicher](11-EvidenceAndStorage.md). |
 | **Kommentare** | Leserrezensionen | Kommentare, die jeder mit einem Namen an eine Veröffentlichung hängen kann, jeweils vom Kommentierenden signiert, nicht vom Herausgeber. Siehe [Kommentare](#kommentare). |

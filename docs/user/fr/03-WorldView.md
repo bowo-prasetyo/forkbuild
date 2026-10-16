@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 50fb553e94b18514 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: fba04da122bf921c -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
@@ -402,7 +402,7 @@ ForkBuild vous prévient dès que votre copie est prête (voir
 pourquoi, en général parce que la licence de la construction n’autorise
 pas les copies ou que la construction ne peut pas encore être récupérée,
 et **Retour à la construction** vous ramène où vous étiez (voir
-[Quand un fork ne peut pas aboutir](04-PublishingAndForking.md#quand-un-fork-ne-peut-pas-aboutir)).
+[Quand un remix ne peut pas aboutir](04-PublishingAndForking.md#quand-un-remix-ne-peut-pas-aboutir)).
 
 Un **lieu géographique** et une **personne** n’ont pas de Modifier une
 copie. Un lieu géographique est fait des régions de plusieurs personnes, il
@@ -411,7 +411,7 @@ régions.
 
 Modifier une copie revient à **Remixer** dans Explorer et sur la page d’un
 auteur, avec les mêmes règles de licence (voir
-[Forker : faites-le vôtre](04-PublishingAndForking.md#forker--faites-le-vôtre)).
+[Remixer : faites-le vôtre](04-PublishingAndForking.md#remixer--faites-le-vôtre)).
 Tout le reste de la Vue du Monde, comme la Recherche, la boussole, la Carte
 et Infos, ne fait que regarder.
 
@@ -585,7 +585,7 @@ Les deux ouvrent la boîte de dialogue **Explorer l’emplacement** :
 📍 Centre : 100.0, 50.0, 250.0
 ⭕ Rayon : 25 unités du Monde
 
-3 documents découvrables affichés sur 3
+3 constructions trouvables affichées sur 3
 
 📍 Hôtel de ville       📏 À 4,2 unités du Monde
 par alice
@@ -641,7 +641,7 @@ repère ou une région, ou un animal comme décoration) crée votre propre
 copie, intitulée *« Remix de &lt;nom d’origine&gt; »*. Un court avis vous
 le signale (« Votre propre copie modifiable a été créée — … reste
 inchangé »). Les mêmes règles de licence s’appliquent qu’à tout remix (voir
-[Publier et remixer](04-PublishingAndForking.md#forker--faites-le-vôtre)).
+[Publier et remixer](04-PublishingAndForking.md#remixer--faites-le-vôtre)).
 
 ## Historique — prévisualiser et restaurer des états antérieurs
 

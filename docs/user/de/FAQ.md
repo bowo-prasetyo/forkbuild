@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: f1e16b4c1352d5a0 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 53acfc3595aae824 -->
 # Häufige Fragen
 
 <!-- languages -->
@@ -73,14 +73,14 @@ oder nos2x für Nostr. [Ihre Arbeit verteilen](Distribution.md)
 listet alles auf, was Sie verteilen können, wohin es gehen kann und was
 jedes Netzwerk braucht.
 
-### Warum kann niemand meine Kreation forken?
+### Warum kann niemand mein Bauwerk remixen?
 
-Ein neues Dokument hat keine Lizenz, und eine Kreation ohne Lizenz kann
-nicht geforkt werden. Öffnen Sie **Bauwerkeigenschaften** (das **✎**
-neben dem Dokumenttitel im Editor), wählen Sie eine Lizenz, die das Forken
+Ein neues Bauwerk hat keine Lizenz, und ein Bauwerk ohne Lizenz kann
+nicht geremixt werden. Öffnen Sie **Bauwerkeigenschaften** (das **✎**
+neben dem Bauwerkstitel im Editor), wählen Sie eine Lizenz, die das Remixen
 erlaubt (jede CC-Lizenz außer CC BY-ND), und veröffentlichen Sie erneut.
 Die Einstellung ist Teil dessen, was veröffentlicht wird, daher behalten
-bereits veröffentlichte Kreationen ihre bisherige Lizenz. Siehe
+bereits veröffentlichte Bauwerke ihre bisherige Lizenz. Siehe
 [Eine Lizenz wählen](04-PublishingAndForking.md#eine-lizenz-wählen).
 
 ### Das Veröffentlichen ist fehlgeschlagen. Was bedeuten die Meldungen?
@@ -88,7 +88,7 @@ bereits veröffentlichte Kreationen ihre bisherige Lizenz. Siehe
 Diese Meldungen zeigt die App nur auf Englisch:
 
 - **a title is required before publishing** (vor dem Veröffentlichen ist
-  ein Titel nötig) — geben Sie der Kreation in den
+  ein Titel nötig) — geben Sie dem Bauwerk in den
   **Bauwerkeigenschaften** einen Titel.
 - **cannot publish an empty world** (eine leere Welt kann nicht
   veröffentlicht werden) — platzieren Sie zuerst mindestens einen Stein.
@@ -137,7 +137,7 @@ Was jemand anderes tun kann, wenn die Lizenz des Bauwerks Remixe erlaubt:
 mit **Eine Kopie bearbeiten** oder **Remixen** eine eigene Kopie machen.
 Diese Kopie gehört ihm, um sie zu ändern, zu veröffentlichen und zu
 platzieren, und sie zeigt, dass sie von Ihrem stammt (siehe
-[Forken: machen Sie es zu Ihrem eigenen](04-PublishingAndForking.md#forken-machen-sie-es-zu-ihrem-eigenen)).
+[Remixen: machen Sie es zu Ihrem eigenen](04-PublishingAndForking.md#remixen-machen-sie-es-zu-ihrem-eigenen)).
 Soll lieber seine Kopie die sein, die andere finden, können Sie Ihres aus
 Ihrer Welt entfernen und die Veröffentlichung zurückziehen; bereits
 verschickte Kopien bleiben aber (siehe
@@ -189,7 +189,7 @@ stellen die Datei auf dem anderen Gerät wieder her (siehe
 [Ihre Daten](13-YourData.md)). Um nur eine Art von Dingen
 mitzunehmen:
 
-- **Dokumente**: **Exportieren** in der Werkzeugleiste des Editors oder
+- **Bauwerke**: **Exportieren** in der Werkzeugleiste des Editors oder
   **Alle Bauwerke exportieren** ganz unten unter **Zuletzt**, dann
   **Importieren** auf dem anderen Gerät.
 - **Ihre eigenen Strukturen**: **Bauplan exportieren** im Menü **⋮** einer
@@ -203,7 +203,7 @@ Sicherung mit.
 
 ### Löscht das Löschen meiner Browserdaten meine Arbeit?
 
-Ja. Dokumente, Identitäten, Freunde und Chatverläufe liegen alle im
+Ja. Bauwerke, Identitäten, Freunde und Chatverläufe liegen alle im
 Speicher dieses Browsers für diese Website, und ihn zu löschen entfernt sie
 endgültig. Sichern Sie sie vorher mit **Ihre Daten → In eine Datei
 sichern** und bewahren Sie die Datei und ihre Passphrase sicher auf;
@@ -229,9 +229,9 @@ Sie sie weiterhin ansehen oder exportieren. Sie zeigt **Widerrufen** unter
 Erstellen Sie eine neue Identität, um weiterzuarbeiten. Siehe
 [Was Widerrufen bewirkt — und was nicht](05-IdentityAndLogin.md#was-widerrufen-bewirkt--und-was-nicht).
 
-### Warum öffnet eine ältere Kopie von ForkBuild mein exportiertes Dokument nicht?
+### Warum öffnet eine ältere Kopie von ForkBuild mein exportiertes Bauwerk nicht?
 
-Dokumente werden jetzt in einem neueren, kompakteren Format gespeichert.
+Bauwerke werden jetzt in einem neueren, kompakteren Format gespeichert.
 ForkBuild 1.0.0 und älter kann es nicht lesen, aktualisieren Sie also
 zuerst die andere Kopie. Dateien, die ältere Versionen exportiert haben,
 lassen sich hier weiterhin öffnen.

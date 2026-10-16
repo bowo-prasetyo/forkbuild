@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: e45448af38374f12 -->
+<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 7ffb295aa351970e -->
 # 07 — Koneksi Rekan & Teman
 
 <!-- languages -->
@@ -192,24 +192,24 @@ Lobi memerlukan server rendezvous (lihat **Server Rendezvous** di
 
 ## Mengikuti orang
 
-**Ikuti** membuat Anda selalu tahu karya terbaru seseorang, seperti
+**Ikuti** membuat Anda selalu tahu bangunan terbaru seseorang, seperti
 mengikuti akun di media sosial, tanpa salah satu dari kalian meminta apa
 pun kepada yang lain.
 
 - **Tempat mengikuti.** **Ikuti** muncul di kartu publikasi di
   Jelajahi, di samping **Ditandatangani oleh …** di halaman pembuat, di
-  menu **⋯** seseorang di halaman ini, dan sebagai **Ikuti Karya Mereka**
+  menu **⋯** seseorang di halaman ini, dan sebagai **Ikuti Bangunan Mereka**
   pada avatar di Tampilan Dunia. Anda mengikuti sebuah *identitas*, bukan
   nama pembuat yang diketik: beberapa orang dapat menerbitkan dengan nama
   yang sama, jadi halaman pembuat menampilkan satu **Ikuti** per identitas
-  yang menandatangani karya dengan nama itu.
+  yang menandatangani bangunan dengan nama itu.
 - **Halaman Diikuti** (**Lainnya → Diikuti**) mencantumkan orang yang
   Anda ikuti, masing-masing dengan **Berhenti Mengikuti**, dan di bawahnya
-  karya terbaru mereka yang telah sampai di perangkat ini, dari yang
-  terbaru. Klik sebuah nama untuk melihat karya orang itu saja.
-- **Notifikasi.** Saat karya baru dari orang yang Anda ikuti sampai di
+  bangunan terbaru mereka yang telah sampai di perangkat ini, dari yang
+  terbaru. Klik sebuah nama untuk melihat bangunan orang itu saja.
+- **Notifikasi.** Saat bangunan baru dari orang yang Anda ikuti sampai di
   perangkat ini, panel 🔔 mendapat entri **… menerbitkan sesuatu yang baru**, sekali per
-  karya (dan perangkat Anda juga menampilkannya, jika Anda mengaktifkan
+  bangunan (dan perangkat Anda juga menampilkannya, jika Anda mengaktifkan
   [Notifikasi di perangkat ini](03-WorldView.md#notifikasi-di-perangkat-ini)),
   dengan **Jelajahi** untuk membukanya.
 - **Dunia yang mereka bagikan diambilkan untuk Anda.** Dunia yang dibagikan
@@ -230,13 +230,13 @@ dapat menghitungnya dengan jujur. Mengikuti juga tidak memberi apa pun
 kepada orang lain itu: tidak ada obrolan, tidak dapat melihat avatar Anda,
 tidak ada cara untuk menghubungi Anda. Itu tetap fungsi pertemanan.
 
-**Apa yang tidak dilakukan mengikuti.** Mengikuti memilah karya orang yang
+**Apa yang tidak dilakukan mengikuti.** Mengikuti memilah bangunan orang yang
 Anda ikuti dari apa yang sampai di perangkat ini; mengikuti tidak pergi
-mengambil karya mereka dengan sendirinya. Karya tetap datang lewat cara
+mengambil bangunan mereka dengan sendirinya. Bangunan tetap datang lewat cara
 biasa: penemuan Dunia di Tampilan Dunia, Dunia yang dibagikan rekan yang
-terhubung, dan tautan yang Anda buka. Hanya karya yang tanda tangannya
+terhubung, dan tautan yang Anda buka. Hanya bangunan yang tanda tangannya
 valid yang dihitung, jadi tidak ada yang bisa masuk ke halaman Diikuti
-Anda dengan mengetik nama atau identitas orang lain pada karyanya. Karya
+Anda dengan mengetik nama atau identitas orang lain pada bangunannya. Bangunan
 orang yang Anda **Blokir** tetap tersembunyi meskipun Anda mengikutinya.
 
 ## TURN: me-relay koneksi rekan yang tidak menemukan jalur langsung
