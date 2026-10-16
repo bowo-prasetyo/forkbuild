@@ -105,9 +105,9 @@ export default Object.freeze({
     'worldView.firstBuildWalkedInside': '🎉 Sie sind in Ihr erstes Bauwerk hineingegangen!',
 
     // Forking a published World (application/worldNavigation/forkOnWriteMethods.js).
-    'fork.notice.blocked': 'Veröffentlicht unter „{license}“ — der Autor hat das Forken nicht erlaubt, daher kann diese Welt angesehen, aber nicht bearbeitet werden.',
-    'fork.notice.forkOnEdit': 'Veröffentlichter Snapshot — Ihre erste Änderung erstellt Ihren eigenen bearbeitbaren Fork; das Original wird nie verändert.',
-    'fork.notPermitted': 'Diese Welt kann nicht bearbeitet werden: Ihre Lizenz ({license}) erlaubt kein Forken.',
+    'fork.notice.blocked': 'Veröffentlicht unter „{license}“ — der Urheber hat keine Remixe erlaubt, daher kann diese Welt angesehen, aber nicht bearbeitet werden.',
+    'fork.notice.forkOnEdit': 'Veröffentlichtes Bauwerk — Ihre erste Änderung macht Ihre eigene Kopie; das Original wird nie verändert.',
+    'fork.notPermitted': 'Diese Welt kann nicht bearbeitet werden: Ihre Lizenz ({license}) erlaubt keine Remixe.',
 
     // Document details (application/document/: LicenseLabels.js,
     // PlacementPolicyLabels.js, DocumentLifecycleStatus.js).
@@ -519,7 +519,7 @@ export default Object.freeze({
     'editorActionCategory.history': 'Verlauf',
     'editorActionCategory.interface': 'Oberfläche',
     'editorAction.selection.selectAll': 'Alles auswählen',
-    'editorAction.selection.selectAll.description': 'Alle Steine im aktiven Dokument auswählen',
+    'editorAction.selection.selectAll.description': 'Alle Steine im Bauwerk auswählen',
     'editorAction.selection.selectAll.done': 'Alle Steine ausgewählt',
     'editorAction.selection.clear': 'Auswahl aufheben',
     'editorAction.selection.clear.description': 'Die aktuelle Auswahl aufheben',
@@ -558,7 +558,7 @@ export default Object.freeze({
     'editorAction.clipboard.copy.description': 'Die ausgewählten Steine in die Zwischenablage kopieren',
     'editorAction.clipboard.copy.done': 'Auswahl kopiert',
     'editorAction.clipboard.paste': 'Einfügen',
-    'editorAction.clipboard.paste.description': 'Den Inhalt der Zwischenablage in das Dokument einfügen',
+    'editorAction.clipboard.paste.description': 'Den Inhalt der Zwischenablage in das Bauwerk einfügen',
     'editorAction.clipboard.paste.done': 'Eingefügt',
     'editorAction.structure.createFromSelection': 'Bauplan erstellen',
     'editorAction.structure.createFromSelection.description': 'Aus den ausgewählten Steinen eine wiederverwendbare Struktur erstellen, normalisiert auf ihren eigenen lokalen Ursprung',
@@ -672,7 +672,7 @@ export default Object.freeze({
     'editorActionReason.selectAtLeast': { one: 'Wählen Sie mindestens {count} Stein', other: 'Wählen Sie mindestens {count} Steine' },
 
     // Editor: recovering unsaved changes (ui/components/RecoveryBanner.js).
-    'recovery.found': 'Für dieses Dokument wurden ungespeicherte Änderungen von {when} gefunden.',
+    'recovery.found': 'Für dieses Bauwerk wurden ungespeicherte Änderungen von {when} gefunden.',
     'recovery.earlierSession': 'einer früheren Sitzung',
     'recovery.recover': 'Wiederherstellen',
     'recovery.discard': 'Verwerfen',
@@ -691,8 +691,8 @@ export default Object.freeze({
     // Editor: a structure in the Build Library (ui/components/StructureLibraryCard.js).
     'structureCard.moreActions': 'Weitere Aktionen',
     'structureCard.info': 'Info',
-    'structureCard.fork': 'Als neues Dokument forken',
-    'structureCard.forkToLibrary': 'In Meine Strukturen forken',
+    'structureCard.fork': 'Als neues Bauwerk remixen',
+    'structureCard.forkToLibrary': 'In Meine Strukturen remixen',
     'structureCard.rename': 'Umbenennen',
     'structureCard.export': 'Bauplan exportieren',
     'structureCard.remove': 'Entfernen',
@@ -740,8 +740,8 @@ export default Object.freeze({
     'documentInfo.editMetadata': 'Metadaten bearbeiten',
 
     // Editor and World View: editing document details (ui/components/MetadataEditorDialog.js).
-    'metadataEditor.label': 'Dokumenteigenschaften',
-    'metadataEditor.title': 'Dokumenteigenschaften',
+    'metadataEditor.label': 'Bauwerkeigenschaften',
+    'metadataEditor.title': 'Bauwerkeigenschaften',
     'metadataEditor.fieldTitle': 'Titel',
     'metadataEditor.untitled': 'Ohne Titel',
     'metadataEditor.description': 'Beschreibung',
@@ -753,9 +753,9 @@ export default Object.freeze({
     'metadataEditor.tagsSuggestedHint': 'Aus Titel und Beschreibung vorgeschlagen: behalten, ändern oder löschen. Bis zu {count}; ein Blurt-Beitrag listet sie nach den Tags von ForkBuild.',
     'metadataEditor.tagSuggestions': 'Vorschläge:',
     'metadataEditor.license': 'Lizenz',
-    'metadataEditor.noLicenseHint': 'Ohne Lizenz ist das Forken nicht erlaubt, bis eine festgelegt wird.',
+    'metadataEditor.noLicenseHint': 'Ohne Lizenz ist Remixen nicht erlaubt, bis eine festgelegt wird.',
     'metadataEditor.placement': 'Wer es in der Welt platzieren darf',
-    'metadataEditor.placementHint': 'Andere können es weiterhin finden, ansehen und (wenn die Lizenz es erlaubt) forken, aber ForkBuild lässt sie es nicht in ihrer Welt platzieren. Gilt ab Ihrer nächsten Veröffentlichung.',
+    'metadataEditor.placementHint': 'Andere können es weiterhin finden, ansehen und (wenn die Lizenz es erlaubt) remixen, aber ForkBuild lässt sie es nicht in ihrer Welt platzieren. Gilt ab Ihrer nächsten Veröffentlichung.',
     'metadataEditor.cancel': 'Abbrechen',
     'metadataEditor.save': 'Speichern',
 
@@ -860,8 +860,8 @@ export default Object.freeze({
     'structureInstance.duplicateHint': 'Eine weitere Instanz derselben Struktur platzieren',
     'structureInstance.delete': 'Löschen',
     'structureInstance.deleteHint': 'Diese Instanz aus der Welt entfernen',
-    'structureInstance.editSource': 'Quelldokument bearbeiten',
-    'structureInstance.editSourceHint': 'Das referenzierte Dokument öffnen, um seine Steine zu bearbeiten',
+    'structureInstance.editSource': 'Ursprungsbauwerk bearbeiten',
+    'structureInstance.editSourceHint': 'Das Bauwerk öffnen, aus dem es stammt, um seine Steine zu bearbeiten',
 
     // Editor: the editing sidebar (ui/components/EditingSidebar.js).
     'editingSidebar.selection': 'Auswahl',
@@ -1055,14 +1055,14 @@ export default Object.freeze({
     'blueprintExchange.exported': '„{name}“ als Bauplan exportiert',
     'blueprintExchange.libraryEmpty': 'Meine Strukturen ist leer',
     'blueprintExchange.exportedStructures': { one: '{count} Struktur exportiert', other: '{count} Strukturen exportiert' },
-    'blueprintExchange.noDocuments': 'Keine gespeicherten Dokumente zum Exportieren',
-    'blueprintExchange.exportedDocuments': { one: '{count} Dokument exportiert', other: '{count} Dokumente exportiert' },
+    'blueprintExchange.noDocuments': 'Keine gespeicherten Bauwerke zum Exportieren',
+    'blueprintExchange.exportedDocuments': { one: '{count} Bauwerk exportiert', other: '{count} Bauwerke exportiert' },
     'blueprintExchange.exportedDocument': '„{title}“ exportiert',
-    'blueprintExchange.exportedUntitled': '„Dokument“ exportiert',
+    'blueprintExchange.exportedUntitled': '„Bauwerk“ exportiert',
     'blueprintExchange.invalidDocumentJson': 'Das ist kein gültiges JSON — wählen Sie eine mit „Exportieren“ exportierte Datei.',
     'blueprintExchange.importedDocument': '„{title}“ importiert',
-    'blueprintExchange.importedUntitled': '„Dokument“ importiert',
-    'blueprintExchange.importedDocuments': { one: '{count} Dokument importiert', other: '{count} Dokumente importiert' },
+    'blueprintExchange.importedUntitled': '„Bauwerk“ importiert',
+    'blueprintExchange.importedDocuments': { one: '{count} Bauwerk importiert', other: '{count} Bauwerke importiert' },
     'blueprintExchange.copiedBeside': '{count} als Kopie neben einer anderen Version hier',
     'blueprintExchange.alreadyHere': '{count} bereits hier',
     'blueprintExchange.alreadyThere': '{count} bereits dort',
@@ -1351,8 +1351,8 @@ export default Object.freeze({
 
     // World View: historyTimelinePanel.
     'historyTimelinePanel.history': 'Verlauf',
-    'historyTimelinePanel.readOnlyUntilYouChoose': 'Schreibgeschützt, bis Sie unten Vorschau oder Wiederherstellen wählen — das Auswählen eines Eintrags ändert das Dokument nie von selbst. Vorschau rekonstruiert einen früheren Zustand neben dem aktuellen, ohne ihn zu berühren; Wiederherstellen setzt das aktuelle Dokument auf diesen Zustand und lässt es mit ungespeicherten Änderungen zurück.',
-    'historyTimelinePanel.noHistoryYetMakeAn': 'Noch kein Verlauf — nehmen Sie eine Änderung an diesem Dokument vor, um sie hier zu sehen.',
+    'historyTimelinePanel.readOnlyUntilYouChoose': 'Schreibgeschützt, bis Sie unten Vorschau oder Wiederherstellen wählen — das Auswählen eines Eintrags ändert das Bauwerk nie von selbst. Vorschau rekonstruiert einen früheren Zustand neben dem aktuellen, ohne ihn zu berühren; Wiederherstellen setzt das aktuelle Bauwerk auf diesen Zustand und lässt es mit ungespeicherten Änderungen zurück.',
+    'historyTimelinePanel.noHistoryYetMakeAn': 'Noch kein Verlauf — nehmen Sie eine Änderung an diesem Bauwerk vor, um sie hier zu sehen.',
     'historyTimelinePanel.undone': '· rückgängig gemacht',
     'historyTimelinePanel.previewing': '· in Vorschau',
     'historyTimelinePanel.preview': 'Vorschau',
@@ -1369,8 +1369,8 @@ export default Object.freeze({
     'landmarkFormModal.cancel': 'Abbrechen',
 
     // World View: locationDocumentsDialog.
-    'locationDocumentsDialog.documentsAtThisLocation': 'Dokumente an diesem Ort',
-    'locationDocumentsDialog.documentsHere': 'Dokumente hier',
+    'locationDocumentsDialog.documentsAtThisLocation': 'Bauwerke an diesem Ort',
+    'locationDocumentsDialog.documentsHere': 'Bauwerke hier',
     'locationDocumentsDialog.focus': 'Fokussieren',
     'locationDocumentsDialog.nothingElseIsRecordedAt': 'An genau dieser Position ist nichts weiter verzeichnet.',
     'locationDocumentsDialog.close': 'Schließen',
@@ -1443,7 +1443,7 @@ export default Object.freeze({
     'ownPublicationPanel.confirmUnpublish': 'Zurückziehen bestätigen',
     'ownPublicationPanel.distribute': 'Verteilen',
     'ownPublicationPanel.unpublish': 'Veröffentlichung zurückziehen …',
-    'ownPublicationPanel.removeThisWorldFromThe': 'Diese Welt auf diesem Gerät aus Entdecken entfernen? Ihre Platzierungen und das Dokument bleiben erhalten. Bereits verteilte Kopien bleiben in den Netzwerken, wo andere sie weiterhin finden können, aber dieses Gerät listet sie nicht wieder auf.',
+    'ownPublicationPanel.removeThisWorldFromThe': 'Diese Welt auf diesem Gerät aus Entdecken entfernen? Ihre Platzierungen und das Bauwerk bleiben erhalten. Bereits verteilte Kopien bleiben in den Netzwerken, wo andere sie weiterhin finden können, aber dieses Gerät listet sie nicht wieder auf.',
     'ownPublicationPanel.unpublish2': 'Zurückziehen',
     'ownPublicationPanel.publication': 'Geteilte Welt',
     'ownPublicationPanel.outcome': 'Ergebnis',
@@ -1474,7 +1474,7 @@ export default Object.freeze({
     // World View: placementEditorDialog.
     'placementEditorDialog.movePlacement': 'Platzierung verschieben',
     'placementEditorDialog.movePlacement2': 'Platzierung verschieben',
-    'placementEditorDialog.thisMovesWhereTheWorld': 'Dies verschiebt, wo die Welt im geteilten Raum liegt. Es bearbeitet weder das Dokument, noch erstellt es einen Fork.',
+    'placementEditorDialog.thisMovesWhereTheWorld': 'Dies verschiebt, wo die Welt im geteilten Raum liegt. Es bearbeitet weder das Bauwerk, noch macht es eine Kopie.',
     'placementEditorDialog.xWorldUnits': 'X (Welteinheiten)',
     'placementEditorDialog.yWorldUnits': 'Y (Welteinheiten)',
     'placementEditorDialog.zWorldUnits': 'Z (Welteinheiten)',
@@ -1595,7 +1595,7 @@ export default Object.freeze({
     'worldEncounterCanvas.thisPublicationSMaterialCould': 'Das Material dieser Geteilten Welt konnte nicht untersucht werden.',
     'worldEncounterCanvas.open': 'Öffnen',
     'worldEncounterCanvas.explore': 'Erkunden',
-    'worldEncounterCanvas.fork': 'Forken',
+    'worldEncounterCanvas.fork': 'Remixen',
     'worldEncounterCanvas.close': 'Schließen',
     'worldEncounterCanvas.chooseSource': 'Quelle wählen',
     'worldEncounterCanvas.thisEncounterIsOfferedBy': 'Diese Begegnung wird von mehr als einer Quelle angeboten.',
@@ -1767,7 +1767,7 @@ export default Object.freeze({
     'worldView.redo': 'Wiederholen',
     'worldView.history': 'Verlauf',
     'worldView.hover': 'Zeiger',
-    'worldView.openTheReferencedDocumentIn': 'Das referenzierte Dokument im Editor öffnen',
+    'worldView.openTheReferencedDocumentIn': 'Das Bauwerk, aus dem es stammt, im Editor öffnen',
     'worldView.forkThisDocumentAndOpen': 'Eine eigene Kopie erstellen und im Editor öffnen',
     'worldView.inspection': 'Untersuchung',
     'worldView.type': 'Typ',
@@ -1998,7 +1998,7 @@ export default Object.freeze({
     // World View: placementEditorDialog, continued.
     'placementEditorDialog.placeAnyway': 'Trotzdem platzieren',
     'placementEditorDialog.move': 'Verschieben',
-    'placementEditorDialog.overlap': { one: '⚠ Hier befindet sich bereits {count} anderes Dokument.', other: '⚠ Hier befinden sich bereits {count} andere Dokumente.' },
+    'placementEditorDialog.overlap': { one: '⚠ Hier befindet sich bereits {count} anderes Bauwerk.', other: '⚠ Hier befinden sich bereits {count} andere Bauwerke.' },
 
     // World View: publicationCommentaryRemoteCheck, continued.
     'publicationCommentaryRemoteCheck.checking': 'Wird geprüft …',
@@ -2063,7 +2063,7 @@ export default Object.freeze({
     // Saved with the document in the language of whoever made it; {title} is
     // the source World's own title.
     'document.untitledWorld': 'ForkBuild-Welt ohne Titel',
-    'document.forkOf': 'Fork von {title}',
+    'document.forkOf': 'Remix von {title}',
     'document.copyOf': 'Kopie von {title}',
 
     // How an edit is named in undo/redo and the history timeline
@@ -2090,7 +2090,7 @@ export default Object.freeze({
     'history.removeFromGroup': { one: 'Stein aus Gruppe entfernen', other: '{count} Steine aus Gruppe entfernen' },
     'history.repeatCopies': { one: '{count} Kopie wiederholen', other: '{count} Kopien wiederholen' },
     'history.transformSelection': 'Auswahl transformieren',
-    'history.copyStructureIntoDocument': '{name} ins Dokument kopieren',
+    'history.copyStructureIntoDocument': '{name} ins Bauwerk kopieren',
     'history.deleteGroup': 'Gruppe löschen',
     'history.duplicateGroup': 'Gruppe duplizieren',
     'history.renameGroup': 'Gruppe umbenennen',
@@ -2121,7 +2121,7 @@ export default Object.freeze({
     'worldView.verify': 'Überprüfen',
 
     // World View: placementInfoPanel, continued.
-    'placementInfoPanel.overlap': { one: '⚠ {count} anderes Dokument teilt sich diesen Ort.', other: '⚠ {count} andere Dokumente teilen sich diesen Ort.' },
+    'placementInfoPanel.overlap': { one: '⚠ {count} anderes Bauwerk teilt sich diesen Ort.', other: '⚠ {count} andere Bauwerke teilen sich diesen Ort.' },
 
     // World View: worldCollaboratorIndicator, continued.
     'worldCollaboratorIndicator.followName': '{name} folgen',
@@ -2418,7 +2418,7 @@ export default Object.freeze({
     // Publications: evidenceExportComparisonTable.
 
     // Publications: authorView.
-    'authorView.originalWorksForks': 'Originalwerke & Forks',
+    'authorView.originalWorksForks': 'Originale & Remixe',
 
     // Publications: publications.
     'publications.publications': 'Veröffentlichungen',
@@ -3213,7 +3213,7 @@ export default Object.freeze({
     'publications.whatReplacingTheCurrentArchive': 'Was das Ersetzen des aktuellen Archivs durch das externe Archiv oben ändern würde — das aktuelle Archiv bleibt genau so, wie es ist, bis unten ausdrücklich auf „Aktuelles Archiv ersetzen“ geklickt wird.',
     'publications.replacingRestampsEveryFactIn': 'Das Ersetzen kennzeichnet jede Tatsache im externen Archiv oben neu als IMPORTIERT (0.8.83) — der resultierende aktuelle Fingerabdruck unterscheidet sich daher vom oben angezeigten „Externer Fingerabdruck“, obwohl die zugrunde liegenden Beobachtungen identisch sind.',
     'publications.localFactsWereObservedBy': 'Lokale Tatsachen wurden von diesem Replikat direkt beobachtet. Importierte Tatsachen sind über einen früheren Import mit „Aktuelles Archiv ersetzen“ in dieses Archiv gelangt. Keine ist vertrauenswürdiger als die andere — dies gibt nur an, woher jede Tatsache stammt.',
-    'publications.anExplicitDurableRecordThat2': 'Ein ausdrücklicher, dauerhafter Datensatz, dass eine Veröffentlichung auf eine andere verweist — nie aus übereinstimmenden Inhalten, Zeitstempeln oder Autoren abgeleitet. Beide Veröffentlichungen müssen oben bereits eine dauerhafte Identität haben; ein Verweis ist nie eine Einstufung als „Fork“, nur eine schlichte, zuordenbare Tatsache: Diese Veröffentlichung zeigt auf jene.',
+    'publications.anExplicitDurableRecordThat2': 'Ein ausdrücklicher, dauerhafter Datensatz, dass eine Veröffentlichung auf eine andere verweist — nie aus übereinstimmenden Inhalten, Zeitstempeln oder Autoren abgeleitet. Beide Veröffentlichungen müssen oben bereits eine dauerhafte Identität haben; ein Verweis ist nie eine Einstufung als „Remix“, nur eine schlichte, zuordenbare Tatsache: Diese Veröffentlichung zeigt auf jene.',
     'publications.nothingHereIsSavedAnywhere': 'Nichts hiervon wird irgendwo gespeichert. Diese Konfiguration existiert nur im Speicher dieser Seite für diese Browsersitzung und wird verworfen, sobald die Seite neu geladen oder auf „Konfiguration löschen“ geklickt wird.',
     'publications.thisReplicaDoesNotCurrently': 'Dieses Replikat besitzt derzeit keinen gültigen Snapshot. Wählen Sie unten eine Quelle — „Snapshot importieren“, das eigene „Snapshot materialisieren“ einer Platzierung oder „Snapshot von Peer holen“ eines Peers —, um es erneut zu versuchen.',
 
@@ -3834,7 +3834,7 @@ export default Object.freeze({
 
     // Identity, Peers, Chat and settings: experimentalBanner.
     'experimentalBanner.experimental': 'Experimentell.',
-    'experimentalBanner.thisAreaWorksButMay': 'Dieser Bereich funktioniert, kann sich aber in einer späteren Version ändern oder entfernt werden, und was er erzeugt, wird möglicherweise nicht übernommen. Der Kern von ForkBuild (Bauen, Speichern, Veröffentlichen, Forken, Identitäten und Peers) ist davon nicht betroffen.',
+    'experimentalBanner.thisAreaWorksButMay': 'Dieser Bereich funktioniert, kann sich aber in einer späteren Version ändern oder entfernt werden, und was er erzeugt, wird möglicherweise nicht übernommen. Der Kern von ForkBuild (Bauen, Speichern, Veröffentlichen, Remixen, Identitäten und Peers) ist davon nicht betroffen.',
 
     // Identity, Peers, Chat and settings: loginModal.
     'loginModal.protectedWithAPassphrase': 'Mit einer Passphrase geschützt',
@@ -4335,7 +4335,7 @@ export default Object.freeze({
     'yourDataView.askTheBrowserToKeep': 'Den Browser bitten, sie zu behalten',
     'yourDataView.theBrowserSaidNoBrowsers': 'Der Browser hat abgelehnt. Browser stimmen meist zu, sobald die Website als Lesezeichen gespeichert, installiert oder häufig genutzt wird.',
     'yourDataView.backUp': 'Sichern',
-    'yourDataView.theBackupHoldsYourDocuments': 'Die Sicherung enthält Ihre Dokumente, Identitäten und deren private Schlüssel, Strukturen, Veröffentlichungen, Peers, Freunde, Chatverläufe und Einstellungen. Sie wird mit der hier gewählten Passphrase verschlüsselt, die zum Wiederherstellen nötig ist. Ohne diese Passphrase lässt sie sich auf keinem Weg öffnen.',
+    'yourDataView.theBackupHoldsYourDocuments': 'Die Sicherung enthält Ihre Bauwerke, Identitäten und deren private Schlüssel, Strukturen, Veröffentlichungen, Peers, Freunde, Chatverläufe und Einstellungen. Sie wird mit der hier gewählten Passphrase verschlüsselt, die zum Wiederherstellen nötig ist. Ohne diese Passphrase lässt sie sich auf keinem Weg öffnen.',
     'yourDataView.includeBuildsDownloadedFromOther': 'Von anderen Personen heruntergeladene Bauwerke einschließen (kann groß sein; sie lassen sich meist erneut abrufen)',
     'yourDataView.rememberTheBackupKeyOn': 'Den Sicherungsschlüssel auf diesem Gerät merken, für Sicherungen mit einem Klick und automatische Sicherungen (die Passphrase selbst wird nicht gespeichert, und der Schlüssel kann Sicherungen nur erstellen, nicht öffnen)',
     'yourDataView.shareBackup': 'Sicherung teilen …',
@@ -4627,7 +4627,7 @@ export default Object.freeze({
     'avatarSettingsView.saveProfileVisibility': 'Sichtbarkeit des Profils speichern',
 
     // Your Data: backup groups (application/backup/BackupEntryGroups.js ids).
-    'backupGroup.documents': 'Dokumente und ungespeicherte Änderungen',
+    'backupGroup.documents': 'Bauwerke und ungespeicherte Änderungen',
     'backupGroup.identities': 'Identitäten',
     'backupGroup.structures': 'Meine Strukturen',
     'backupGroup.publications': 'Ihre Veröffentlichungen und Nachweise',

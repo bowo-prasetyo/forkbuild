@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 87406cb37cc04363 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: f1e16b4c1352d5a0 -->
 # Questions fréquentes
 
 <!-- languages -->
@@ -74,7 +74,7 @@ distribuer, où, et ce dont chaque réseau a besoin.
 ### Pourquoi personne ne peut-il forker ma création ?
 
 Un nouveau document n’a pas de licence, et une création sans licence ne
-peut pas être forkée. Ouvrez **Propriétés du document** (le **✎** à côté
+peut pas être forkée. Ouvrez **Propriétés de la construction** (le **✎** à côté
 du titre du document dans l’Éditeur), choisissez une licence qui autorise
 les forks (n’importe quelle licence CC sauf CC BY-ND), et publiez de
 nouveau. Le réglage fait partie de ce qui est publié, les créations déjà
@@ -84,7 +84,7 @@ publiées gardent donc la licence qu’elles avaient. Voir
 ### La publication a échoué. Que veulent dire les messages ?
 
 - **a title is required before publishing** — donnez un titre à la
-  création dans **Propriétés du document**.
+  création dans **Propriétés de la construction**.
 - **cannot publish an empty world** — placez d’abord au moins une brique.
 - **cannot sign, identity is locked** — votre identité s’est verrouillée
   d’elle-même ; cliquez sur **Déverrouiller** à côté de votre nom dans la

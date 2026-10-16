@@ -76,7 +76,7 @@ function createTestDocument(brickCount = 3, title = 'Alice Castle') {
 
     // Verify the fork is a new document.
     assert(forked.world.id !== doc.world.id, 'fork has new documentId');
-    assert(forked.metadata.title === 'Fork of Alice Castle', 'fork title');
+    assert(forked.metadata.title === 'Remix of Alice Castle', 'fork title');
     assert(forked.metadata.author === 'bob', 'fork attributed to forker');
     assert(forked.metadata.parentDocumentId === doc.world.id, 'fork lineage');
 
@@ -458,7 +458,7 @@ function createTestDocument(brickCount = 3, title = 'Alice Castle') {
     assert(D2.world.id !== castleDoc.world.id, 'D2 has new documentId');
     assert(D2.metadata.parentDocumentId === castleDoc.world.id, 'D2 lineage');
     assert(D2.metadata.author === 'bob', 'D2 attributed to Bob');
-    assert(D2.metadata.title === 'Fork of Alice Castle', 'D2 title');
+    assert(D2.metadata.title === 'Remix of Alice Castle', 'D2 title');
 
     // 5. Bob edits D2.
     const bobManager = new DocumentManager();

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: e0b170cbd10b7cf8 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 75f6ca907e2e67ae -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -348,10 +348,10 @@ d’elles, et elles servent à des fins différentes :
   directement dans le document sur lequel vous travaillez déjà, pour
   qu’elle fasse partie d’une construction plus grande. C’est l’action de
   tous les jours.
-- **Forker en nouveau document** (dans le menu **⋮** de la carte) —
+- **Remixer en nouvelle construction** (dans le menu **⋮** de la carte) —
   démarre un tout nouveau document indépendant, qui commence comme une
   copie exacte de cette structure.
-- **Forker dans Mes structures** (cartes intégrées uniquement, dans le
+- **Remixer dans Mes structures** (cartes intégrées uniquement, dans le
   menu **⋮**) — ajoute la structure à vos propres **Mes structures**,
   sans aucun document. Voir
   [Mes structures](#mes-structures--votre-bibliothèque-personnelle-de-plans)
@@ -391,8 +391,8 @@ Grange, placez-la à côté ; cliquez sur Puits, placez-le dans la cour.
 
 ### Forker une structure en nouveau document
 
-Ouvrez le menu **⋮** d’une carte et cliquez sur **Forker en nouveau
-document** pour démarrer une toute nouvelle création qui commence comme
+Ouvrez le menu **⋮** d’une carte et cliquez sur **Remixer en nouvelle
+construction** pour démarrer une toute nouvelle création qui commence comme
 une copie exacte de cette structure — exactement les mêmes briques,
 modifiables avec tous les outils de ce guide, dans un document à part
 plutôt que mêlées à ce que vous avez ouvert. Forker ne modifie jamais la
@@ -415,14 +415,14 @@ sous les catégories intégrées.
 
 Il existe une seconde façon d’ajouter une structure à Mes structures, sans
 rien à sélectionner ni à construire d’abord : ouvrez le menu **⋮**
-d’une carte **intégrée** et cliquez sur **Forker dans Mes structures**.
+d’une carte **intégrée** et cliquez sur **Remixer dans Mes structures**.
 Elle est ajoutée telle quelle — aucun document créé, rien d’extrait — et
 peut donc être renommée, exportée ou placée tout de suite, comme toute
 autre entrée de votre bibliothèque.
 
 Une structure de **Mes structures** fonctionne exactement comme une
 structure intégrée — cliquez pour la placer dans votre document actuel,
-ou Forker en nouveau document — avec deux actions supplémentaires dans son
+ou Remixer en nouvelle construction — avec deux actions supplémentaires dans son
 menu **⋮** :
 
 | Action | Ce qu’elle fait |
@@ -543,18 +543,18 @@ toutes ses instances. Sélectionnez une instance avec l’outil Sélection
 | **Pivoter ↻ / ↺** | Pivoter d’exactement 90° |
 | **Dupliquer** (`Ctrl/Cmd+D`) | Placer une autre instance de la même structure |
 | **Supprimer** | Retirer cette instance — le document source n’est pas touché |
-| **Modifier le document source** | Ouvrir le document référencé lui-même, pour changer l’apparence de toutes ses instances |
+| **Modifier la construction source** | Ouvrir le document référencé lui-même, pour changer l’apparence de toutes ses instances |
 
 Modifier le *contenu* d’une structure placée se fait toujours en modifiant
 son document source — il est impossible de modifier directement les
 briques d’une instance, et c’est justement ce qui garde toutes ses
 instances synchronisées.
 
-## Propriétés du document
+## Propriétés de la construction
 
 Chaque création a un **titre**, une **description** facultative, une
 **licence** et un réglage **Qui peut le placer dans le Monde** — à
-définir dans la boîte de dialogue **Propriétés du document**, ouverte avec
+définir dans la boîte de dialogue **Propriétés de la construction**, ouverte avec
 le bouton **✎** à côté du titre du document en haut de la barre latérale
 de l’Éditeur (dans la Vue du Monde, c’est le bouton **Modifier les
 métadonnées**). Un nouveau document commence sans licence, ce qui veut
@@ -652,7 +652,7 @@ Une musique douce accompagne la construction, un peu plus vive que celle de la V
   fichier porte la licence qu’a la construction au moment de l’export :
   vous pouvez donc publier une construction en **All Rights Reserved** et
   quand même donner à quelqu’un une copie sur laquelle il peut construire.
-  Choisissez une autre licence dans **Propriétés du document**, exportez,
+  Choisissez une autre licence dans **Propriétés de la construction**, exportez,
   puis remettez-la. **Exporter toutes les constructions** et son
   **Importer**, sous **Récents**, fonctionnent de la même façon.
 - **Récents** — rouvrir quelque chose que vous avez enregistré (la liste

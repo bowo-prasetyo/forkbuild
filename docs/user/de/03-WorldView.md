@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 7ddc6a422dbb8936 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 50fb553e94b18514 -->
 # 03 — Weltansicht
 
 <!-- languages -->
@@ -620,7 +620,7 @@ ist: **🔒 Veröffentlicht** oder **✎ Ihre Kopie wird bearbeitet**.
 Ein veröffentlichtes Bauwerk ändert sich nie. Ist das Bauwerk, in dem Sie
 sind, veröffentlicht, macht Ihre erste Änderung hier (seine Angaben, ein
 Wahrzeichen oder eine Region, oder ein Tier als Schmuck) Ihre eigene Kopie
-mit dem Titel *„Fork von &lt;ursprünglicher Name&gt;“*. Ein kurzer Hinweis
+mit dem Titel *„Remix von &lt;ursprünglicher Name&gt;“*. Ein kurzer Hinweis
 sagt es Ihnen („Ihre eigene bearbeitbare Kopie wurde erstellt — … bleibt
 unverändert“). Es gelten dieselben Lizenzregeln wie für jeden Remix (siehe
 [Veröffentlichen & Remixen](04-PublishingAndForking.md#forken-machen-sie-es-zu-ihrem-eigenen)).

@@ -26,7 +26,7 @@ assert(say('history.undo', { action: message('history.moveBricks', { count: 1200
 assert(say('resident.buildBy', { title: '버드나무 성', author: 'ana', where: message('resident.where.north', { distance: message('resident.distance.kilometers', { kilometers: 3.2 }) }) })
     === '북쪽으로 약 3.2km 떨어진 곳에 ana 님이 만든 “버드나무 성”이라는 작품이 있어요.',
     '9. A resident speaks Korean, the place first and politely');
-assert(say('document.forkOf', { title: '버드나무 마을' }) === '버드나무 마을의 포크', '10. A fork\'s title');
+assert(say('document.forkOf', { title: '버드나무 마을' }) === '버드나무 마을의 리믹스', '10. A fork\'s title');
 assert(say('peerConnections.connectingTo', { name: 'jonas' }) === 'jonas 님과 연결 중', '11. A name in a sentence takes 님');
 assert(say('compass.n') === '북' && say('compass.se') === '남동' && say('units.metersToward', { distance: 40, direction: say('compass.w') }) === '서쪽 40m',
     '12. Compass points');

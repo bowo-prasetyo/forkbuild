@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 87406cb37cc04363 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: f1e16b4c1352d5a0 -->
 # Häufige Fragen
 
 <!-- languages -->
@@ -76,7 +76,7 @@ jedes Netzwerk braucht.
 ### Warum kann niemand meine Kreation forken?
 
 Ein neues Dokument hat keine Lizenz, und eine Kreation ohne Lizenz kann
-nicht geforkt werden. Öffnen Sie **Dokumenteigenschaften** (das **✎**
+nicht geforkt werden. Öffnen Sie **Bauwerkeigenschaften** (das **✎**
 neben dem Dokumenttitel im Editor), wählen Sie eine Lizenz, die das Forken
 erlaubt (jede CC-Lizenz außer CC BY-ND), und veröffentlichen Sie erneut.
 Die Einstellung ist Teil dessen, was veröffentlicht wird, daher behalten
@@ -89,7 +89,7 @@ Diese Meldungen zeigt die App nur auf Englisch:
 
 - **a title is required before publishing** (vor dem Veröffentlichen ist
   ein Titel nötig) — geben Sie der Kreation in den
-  **Dokumenteigenschaften** einen Titel.
+  **Bauwerkeigenschaften** einen Titel.
 - **cannot publish an empty world** (eine leere Welt kann nicht
   veröffentlicht werden) — platzieren Sie zuerst mindestens einen Stein.
 - **cannot sign, identity is locked** (Signieren nicht möglich, Identität

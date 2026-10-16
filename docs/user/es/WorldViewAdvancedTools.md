@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 739698f533b6d7bb -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 67400ead6416db5b -->
 # Vista del mundo: herramientas avanzadas
 
 <!-- languages -->
@@ -128,10 +128,10 @@ moverla**, y **Mover** está desactivado. Aún puede enfocarla,
 inspeccionarla y usar **Editar una copia** para construir sobre ella. Solo
 dónde está es cosa de esa persona.
 
-### Documentos aquí
+### Construcciones aquí
 
 Cuando el panel Colocación dice que otras construcciones comparten este
-lugar, haga clic en **Ver** para abrir **Documentos aquí**: una lista de
+lugar, haga clic en **Ver** para abrir **Construcciones aquí**: una lista de
 todas las construcciones en ese lugar, cada una con un botón **Enfocar**.
 Las construcciones cuya publicación se retiró no aparecen.
 

@@ -23,7 +23,7 @@ assert(say('resident.buildBy', { title: 'Castillo del Cerro', author: 'ana', whe
     === 'Hay una construcción llamada “Castillo del Cerro”, de ana, a unos 3,2 km al norte.',
     '7. A resident speaks Spanish, with a decimal comma');
 assert(say('history.undo', { action: message('history.moveBricks', { count: 12000 }) }) === 'Deshacer: Mover 12.000 bloques', '8. Undo labels, with Spanish digit grouping');
-assert(say('document.forkOf', { title: 'Aldea de los Sauces' }) === 'Bifurcación de Aldea de los Sauces', '9. A fork\'s title');
+assert(say('document.forkOf', { title: 'Aldea de los Sauces' }) === 'Remezcla de Aldea de los Sauces', '9. A fork\'s title');
 assert(say('peerConnections.connectingTo', { name: 'jonas' }) === 'Conectando con jonas', '10. A name in a sentence');
 assert(say('compass.sw') === 'SO' && say('compass.w') === 'O' && say('compass.nw') === 'NO', '11. Compass points');
 

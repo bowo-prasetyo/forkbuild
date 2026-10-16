@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: b0b1839dc28a506e -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 75e82daaf1bb2646 -->
 # 04 — Penerbitan & Remix
 
 <!-- languages -->
@@ -21,7 +21,7 @@ seperti dalam ForkBuild.)
    tanda tangan** di sana menerbitkannya tanpa pembuat dan tanpa tautan.
 3. Beri judul — Terbitkan menolak karya tanpa judul atau kosong — dan,
    secara opsional, deskripsi dan lisensi: klik **✎** di samping judul
-   dokumen di bilah sisi untuk membuka **Properti Dokumen**. Dokumen baru
+   dokumen di bilah sisi untuk membuka **Properti Bangunan**. Dokumen baru
    tidak memiliki lisensi; saat pertama kali Anda menerbitkannya, ForkBuild
    bertanya apakah orang lain boleh me-remix-nya (lihat
    [Mengizinkan orang lain me-remix](#mengizinkan-orang-lain-me-remix)).
@@ -355,13 +355,13 @@ bertanya **Izinkan orang lain me-remix?** sebelum apa pun diterbitkan:
 - **Nanti saja** tidak menerbitkan apa pun.
 
 Jawaban Anda disimpan sebagai lisensi bangunan, jadi Anda hanya ditanya
-sekali; ubah kapan saja di **Properti Dokumen**. Sebuah fork sudah membawa
+sekali; ubah kapan saja di **Properti Bangunan**. Sebuah fork sudah membawa
 lisensi aslinya, jadi menerbitkannya tidak pernah bertanya.
 
 ### Semua lisensi
 
 Karya yang diterbitkan selalu ditampilkan dengan lisensi, yang dipilih dari
-dialog **Properti Dokumen**:
+dialog **Properti Bangunan**:
 
 | Lisensi | Arti |
 |---|---|
@@ -384,7 +384,7 @@ sendiri. Itu menambahkan penempatan bangunan Anda, tidak pernah salinannya,
 dan tidak pernah memindahkan atau mengubah milik Anda (lihat
 [Mengapa saya bisa menempatkan bangunan orang lain?](WorldViewAdvancedTools.md#mengapa-saya-bisa-menempatkan-bangunan-orang-lain)). Fork adalah hal terpisah dan diatur oleh lisensi (lihat
 [Menempatkan vs mem-fork](WorldViewAdvancedTools.md#menempatkan-vs-mem-fork)). Jika Anda lebih suka mereka tidak menempatkannya, buka **Properti
-Dokumen** dan atur **Siapa yang dapat menempatkannya di Dunia**:
+Bangunan** dan atur **Siapa yang dapat menempatkannya di Dunia**:
 
 | Pengaturan | Arti |
 |---|---|
@@ -418,7 +418,7 @@ berubah setelahnya. Untuk mengembangkannya, **Remix** (di bawah), atau
 gunakan **Edit Salinan** di Tampilan Dunia. Di Tampilan Dunia, membuat
 perubahan pertama Anda pada dunia yang diterbitkan — metadatanya, penanda
 atau nama wilayah, atau hiasan hewan — otomatis membuat salinan Anda
-sendiri, berjudul *"Fork dari &lt;nama asli&gt;"*, dengan konfirmasi
+sendiri, berjudul *"Remix dari &lt;nama asli&gt;"*, dengan konfirmasi
 singkat ("Salinan Anda sendiri yang dapat diedit telah dibuat — "…" tidak
 berubah"); lihat
 [Menyimpan dan menerbitkan di sini juga](03-WorldView.md#menyimpan-dan-menerbitkan-di-sini-juga).
@@ -571,7 +571,7 @@ di atas.)
 
 1. Temukan sebuah bangunan di **Jelajahi** (atau di Tampilan Dunia).
 2. Klik **Remix**.
-3. Salinannya terbuka di Editor, berjudul *"Fork dari &lt;nama asli&gt;"*.
+3. Salinannya terbuka di Editor, berjudul *"Remix dari &lt;nama asli&gt;"*.
 4. Kembangkan, lalu simpan dan terbitkan sebagai milik Anda.
 
 Fork terbitan Anda muncul dengan catatan **Remix dari "…" oleh …**, yang
@@ -633,7 +633,7 @@ bawah).
    sebagai salinan Anda sendiri.
 2. Bangun dengan cara Anda: tambahkan sebuah ide jika mau, lalu jadikan
    milik Anda. Apa pun yang Anda bangun ikut serta selama tetap memakai tag
-   minggu itu (tambahkan di **Properti Dokumen → Tag** jika Anda memulai
+   minggu itu (tambahkan di **Properti Bangunan → Tag** jika Anda memulai
    dengan cara lain).
 3. Terbitkan sebelum minggu berakhir, lalu bagikan tautannya. Teks
    tautannya menyebut tantangan dan tagnya, siap untuk sebuah postingan.
@@ -704,8 +704,8 @@ fork**:
 
 ```
 Medieval House (asli)
-└─ Fork dari Medieval House (oleh Bob)
-   └─ Fork dari Fork dari… (oleh Carol)
+└─ Remix dari Medieval House (oleh Bob)
+   └─ Remix dari Remix dari… (oleh Carol)
 ```
 
 Ini berarti sebuah karya hebat dapat mengilhami seluruh ekosistem variasi —

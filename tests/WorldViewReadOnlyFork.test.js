@@ -236,7 +236,7 @@ async function run() {
 
         // C. Independent Document.
         assert(forked.world.id !== sourceDocumentId, '19. the fork has a fresh document identity');
-        assert(forked.metadata.title === "Fork of Alice's Village", '20. the fork is titled "Fork of ..."');
+        assert(forked.metadata.title === "Remix of Alice's Village", '20. the fork is titled "Remix of ..."');
         assert(forked.metadata.parentDocumentId === sourceDocumentId, '21. lineage is recorded via parentDocumentId');
         assert(forked.world.getWorldLandmarks().length === 1 && forked.world.getWorldLandmarks()[0].title === 'Village Well',
             '22. the fork carries the source\'s own content (landmark included)');

@@ -75,7 +75,7 @@ let backupFile;
     await settle();
     await waitFor(() => /Using 1\.2 MB/.test(text(host)), 'the storage estimate');
     const summary = [...host.querySelectorAll('.your-data-table tr')].map((row) => [...row.cells].map(text).join(' ')).join('; ');
-    assert(summary.includes('Documents and unsaved changes 2 entries') && summary.includes('My Structures 1 entry'), `the page lists what is stored (${summary})`);
+    assert(summary.includes('Builds and unsaved changes 2 entries') && summary.includes('My Structures 1 entry'), `the page lists what is stored (${summary})`);
     assert(host.querySelector('.your-data-persist'), 'the page offers to ask the browser to keep the data');
 
     host.querySelector('.your-data-backup').click();

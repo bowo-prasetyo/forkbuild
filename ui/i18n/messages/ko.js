@@ -105,9 +105,9 @@ export default Object.freeze({
     'worldView.firstBuildWalkedInside': '🎉 첫 작품 안으로 걸어 들어갔어요!',
 
     // Forking a published World (application/worldNavigation/forkOnWriteMethods.js).
-    'fork.notice.blocked': '“{license}” 라이선스로 게시되었습니다. 작성자가 포크를 허용하지 않아 이 월드는 볼 수만 있고 수정할 수 없습니다.',
-    'fork.notice.forkOnEdit': '게시된 스냅샷입니다. 처음 수정하면 수정 가능한 내 포크가 만들어지며, 원본은 절대 바뀌지 않습니다.',
-    'fork.notPermitted': '이 월드는 수정할 수 없습니다. 라이선스({license})가 포크를 허용하지 않습니다.',
+    'fork.notice.blocked': '“{license}” 라이선스로 게시되었습니다. 만든 사람이 리믹스를 허용하지 않아 이 월드는 볼 수만 있고 수정할 수 없습니다.',
+    'fork.notice.forkOnEdit': '게시된 작품입니다. 처음 수정하면 내 사본이 만들어지며, 원본은 절대 바뀌지 않습니다.',
+    'fork.notPermitted': '이 월드는 수정할 수 없습니다. 라이선스({license})가 리믹스를 허용하지 않습니다.',
 
     // Document details (application/document/: LicenseLabels.js,
     // PlacementPolicyLabels.js, DocumentLifecycleStatus.js).
@@ -519,7 +519,7 @@ export default Object.freeze({
     'editorActionCategory.history': '기록',
     'editorActionCategory.interface': '인터페이스',
     'editorAction.selection.selectAll': '모두 선택',
-    'editorAction.selection.selectAll.description': '현재 문서의 모든 블록 선택',
+    'editorAction.selection.selectAll.description': '작품의 모든 블록 선택',
     'editorAction.selection.selectAll.done': '모든 블록을 선택했습니다',
     'editorAction.selection.clear': '선택 해제',
     'editorAction.selection.clear.description': '현재 선택 해제',
@@ -558,7 +558,7 @@ export default Object.freeze({
     'editorAction.clipboard.copy.description': '선택한 블록을 클립보드에 복사',
     'editorAction.clipboard.copy.done': '선택 항목을 복사했습니다',
     'editorAction.clipboard.paste': '붙여넣기',
-    'editorAction.clipboard.paste.description': '클립보드 내용을 문서에 붙여넣기',
+    'editorAction.clipboard.paste.description': '클립보드 내용을 작품에 붙여넣기',
     'editorAction.clipboard.paste.done': '붙여넣었습니다',
     'editorAction.structure.createFromSelection': '설계도 만들기',
     'editorAction.structure.createFromSelection.description': '선택한 블록으로 재사용 가능한 구조물을 만들고, 자체 로컬 원점에 맞춰 정규화',
@@ -672,7 +672,7 @@ export default Object.freeze({
     'editorActionReason.selectAtLeast': { other: '블록을 {count}개 이상 선택하세요' },
 
     // Editor: recovering unsaved changes (ui/components/RecoveryBanner.js).
-    'recovery.found': '이 문서에 대해 {when}의 저장하지 않은 변경 사항을 찾았습니다.',
+    'recovery.found': '이 작품에 대해 {when}의 저장하지 않은 변경 사항을 찾았습니다.',
     'recovery.earlierSession': '이전 세션',
     'recovery.recover': '복구',
     'recovery.discard': '버리기',
@@ -691,8 +691,8 @@ export default Object.freeze({
     // Editor: a structure in the Build Library (ui/components/StructureLibraryCard.js).
     'structureCard.moreActions': '추가 작업',
     'structureCard.info': '정보',
-    'structureCard.fork': '새 문서로 포크',
-    'structureCard.forkToLibrary': '내 구조물로 포크',
+    'structureCard.fork': '새 작품으로 리믹스',
+    'structureCard.forkToLibrary': '내 구조물로 리믹스',
     'structureCard.rename': '이름 바꾸기',
     'structureCard.export': '설계도 내보내기',
     'structureCard.remove': '제거',
@@ -740,8 +740,8 @@ export default Object.freeze({
     'documentInfo.editMetadata': '메타데이터 편집',
 
     // Editor and World View: editing document details (ui/components/MetadataEditorDialog.js).
-    'metadataEditor.label': '문서 속성',
-    'metadataEditor.title': '문서 속성',
+    'metadataEditor.label': '작품 속성',
+    'metadataEditor.title': '작품 속성',
     'metadataEditor.fieldTitle': '제목',
     'metadataEditor.untitled': '제목 없음',
     'metadataEditor.description': '설명',
@@ -753,9 +753,9 @@ export default Object.freeze({
     'metadataEditor.tagsSuggestedHint': '제목과 설명에서 제안한 태그입니다. 그대로 두거나 바꾸거나 지우세요. {count}개까지이며, Blurt 게시물에서는 ForkBuild 자체 태그 뒤에 표시됩니다.',
     'metadataEditor.tagSuggestions': '제안:',
     'metadataEditor.license': '라이선스',
-    'metadataEditor.noLicenseHint': '라이선스가 없으면 라이선스를 정할 때까지 포크가 허용되지 않습니다.',
+    'metadataEditor.noLicenseHint': '라이선스가 없으면 라이선스를 정할 때까지 리믹스가 허용되지 않습니다.',
     'metadataEditor.placement': '월드에 배치할 수 있는 사람',
-    'metadataEditor.placementHint': '다른 사람도 이 작품을 찾고, 보고, (라이선스가 허용하면) 포크할 수 있지만, ForkBuild는 자기 월드에 배치하는 것은 허용하지 않습니다. 다음 게시부터 적용됩니다.',
+    'metadataEditor.placementHint': '다른 사람도 이 작품을 찾고, 보고, (라이선스가 허용하면) 리믹스할 수 있지만, ForkBuild는 자기 월드에 배치하는 것은 허용하지 않습니다. 다음 게시부터 적용됩니다.',
     'metadataEditor.cancel': '취소',
     'metadataEditor.save': '저장',
 
@@ -860,8 +860,8 @@ export default Object.freeze({
     'structureInstance.duplicateHint': '같은 구조물의 인스턴스를 하나 더 배치',
     'structureInstance.delete': '삭제',
     'structureInstance.deleteHint': '이 인스턴스를 월드에서 제거',
-    'structureInstance.editSource': '원본 문서 편집',
-    'structureInstance.editSourceHint': '참조된 문서를 열어 블록 편집',
+    'structureInstance.editSource': '원본 작품 편집',
+    'structureInstance.editSourceHint': '이 작품이 나온 작품을 열어 블록 편집',
 
     // Editor: the editing sidebar (ui/components/EditingSidebar.js).
     'editingSidebar.selection': '선택',
@@ -1055,14 +1055,14 @@ export default Object.freeze({
     'blueprintExchange.exported': '“{name}”을(를) 설계도로 내보냈습니다',
     'blueprintExchange.libraryEmpty': '내 구조물이 비어 있습니다',
     'blueprintExchange.exportedStructures': { other: '구조물 {count}개를 내보냈습니다' },
-    'blueprintExchange.noDocuments': '내보낼 저장된 문서가 없습니다',
-    'blueprintExchange.exportedDocuments': { other: '문서 {count}개를 내보냈습니다' },
+    'blueprintExchange.noDocuments': '내보낼 저장된 작품이 없습니다',
+    'blueprintExchange.exportedDocuments': { other: '작품 {count}개를 내보냈습니다' },
     'blueprintExchange.exportedDocument': '“{title}”을(를) 내보냈습니다',
-    'blueprintExchange.exportedUntitled': '“문서”를 내보냈습니다',
+    'blueprintExchange.exportedUntitled': '“작품”을 내보냈습니다',
     'blueprintExchange.invalidDocumentJson': '올바른 JSON이 아닙니다 — “내보내기”로 내보낸 파일을 선택하세요.',
     'blueprintExchange.importedDocument': '“{title}”을(를) 가져왔습니다',
-    'blueprintExchange.importedUntitled': '“문서”를 가져왔습니다',
-    'blueprintExchange.importedDocuments': { other: '문서 {count}개를 가져왔습니다' },
+    'blueprintExchange.importedUntitled': '“작품”을 가져왔습니다',
+    'blueprintExchange.importedDocuments': { other: '작품 {count}개를 가져왔습니다' },
     'blueprintExchange.copiedBeside': '{count}개는 여기 있는 다른 버전 옆에 사본으로',
     'blueprintExchange.alreadyHere': '{count}개는 이미 여기 있음',
     'blueprintExchange.alreadyThere': '{count}개는 이미 거기 있음',
@@ -1351,8 +1351,8 @@ export default Object.freeze({
 
     // World View: historyTimelinePanel.
     'historyTimelinePanel.history': '기록',
-    'historyTimelinePanel.readOnlyUntilYouChoose': '아래에서 미리 보기나 복원을 선택하기 전에는 읽기 전용입니다 — 항목을 선택하는 것만으로는 문서가 바뀌지 않습니다. 미리 보기는 현재 상태를 건드리지 않고 그 옆에 과거 상태를 재구성합니다. 복원은 현재 문서를 그 상태로 되돌리고 저장하지 않은 상태로 둡니다.',
-    'historyTimelinePanel.noHistoryYetMakeAn': '아직 기록이 없습니다 — 이 문서를 수정하면 여기에 표시됩니다.',
+    'historyTimelinePanel.readOnlyUntilYouChoose': '아래에서 미리 보기나 복원을 선택하기 전에는 읽기 전용입니다 — 항목을 선택하는 것만으로는 작품이 바뀌지 않습니다. 미리 보기는 현재 상태를 건드리지 않고 그 옆에 과거 상태를 재구성합니다. 복원은 현재 작품을 그 상태로 되돌리고 저장하지 않은 상태로 둡니다.',
+    'historyTimelinePanel.noHistoryYetMakeAn': '아직 기록이 없습니다 — 이 작품을 수정하면 여기에 표시됩니다.',
     'historyTimelinePanel.undone': '· 실행 취소됨',
     'historyTimelinePanel.previewing': '· 미리 보는 중',
     'historyTimelinePanel.preview': '미리 보기',
@@ -1369,8 +1369,8 @@ export default Object.freeze({
     'landmarkFormModal.cancel': '취소',
 
     // World View: locationDocumentsDialog.
-    'locationDocumentsDialog.documentsAtThisLocation': '이 위치의 문서',
-    'locationDocumentsDialog.documentsHere': '여기 있는 문서',
+    'locationDocumentsDialog.documentsAtThisLocation': '이 위치의 작품',
+    'locationDocumentsDialog.documentsHere': '여기 있는 작품',
     'locationDocumentsDialog.focus': '초점',
     'locationDocumentsDialog.nothingElseIsRecordedAt': '이 정확한 위치에 기록된 다른 것은 없습니다.',
     'locationDocumentsDialog.close': '닫기',
@@ -1443,7 +1443,7 @@ export default Object.freeze({
     'ownPublicationPanel.confirmUnpublish': '게시 취소 확인',
     'ownPublicationPanel.distribute': '배포',
     'ownPublicationPanel.unpublish': '게시 취소…',
-    'ownPublicationPanel.removeThisWorldFromThe': '이 기기의 둘러보기에서 이 월드를 제거할까요? 배치와 문서는 그대로 남습니다. 이미 배포한 사본은 네트워크에 남아 다른 사람이 계속 찾을 수 있지만, 이 기기에는 다시 표시되지 않습니다.',
+    'ownPublicationPanel.removeThisWorldFromThe': '이 기기의 둘러보기에서 이 월드를 제거할까요? 배치와 작품은 그대로 남습니다. 이미 배포한 사본은 네트워크에 남아 다른 사람이 계속 찾을 수 있지만, 이 기기에는 다시 표시되지 않습니다.',
     'ownPublicationPanel.unpublish2': '게시 취소',
     'ownPublicationPanel.publication': '공유 월드',
     'ownPublicationPanel.outcome': '결과',
@@ -1474,7 +1474,7 @@ export default Object.freeze({
     // World View: placementEditorDialog.
     'placementEditorDialog.movePlacement': '배치 이동',
     'placementEditorDialog.movePlacement2': '배치 이동',
-    'placementEditorDialog.thisMovesWhereTheWorld': '공유 공간에서 월드가 놓인 위치를 옮깁니다. 문서를 수정하지 않으며 포크도 만들지 않습니다.',
+    'placementEditorDialog.thisMovesWhereTheWorld': '공유 공간에서 월드가 놓인 위치를 옮깁니다. 작품을 수정하지 않으며 사본도 만들지 않습니다.',
     'placementEditorDialog.xWorldUnits': 'X (월드 단위)',
     'placementEditorDialog.yWorldUnits': 'Y (월드 단위)',
     'placementEditorDialog.zWorldUnits': 'Z (월드 단위)',
@@ -1595,7 +1595,7 @@ export default Object.freeze({
     'worldEncounterCanvas.thisPublicationSMaterialCould': '이 공유 월드의 콘텐츠를 점검할 수 없습니다.',
     'worldEncounterCanvas.open': '열기',
     'worldEncounterCanvas.explore': '탐색',
-    'worldEncounterCanvas.fork': '포크',
+    'worldEncounterCanvas.fork': '리믹스',
     'worldEncounterCanvas.close': '닫기',
     'worldEncounterCanvas.chooseSource': '출처 선택',
     'worldEncounterCanvas.thisEncounterIsOfferedBy': '이 조우는 둘 이상의 출처에서 제공됩니다.',
@@ -1767,7 +1767,7 @@ export default Object.freeze({
     'worldView.redo': '다시 실행',
     'worldView.history': '기록',
     'worldView.hover': '가리킴',
-    'worldView.openTheReferencedDocumentIn': '참조된 문서를 에디터에서 열기',
+    'worldView.openTheReferencedDocumentIn': '이 작품이 나온 작품을 에디터에서 열기',
     'worldView.forkThisDocumentAndOpen': '내 사본을 만들어 에디터에서 열기',
     'worldView.inspection': '살펴보기',
     'worldView.type': '유형',
@@ -1998,7 +1998,7 @@ export default Object.freeze({
     // World View: placementEditorDialog, continued.
     'placementEditorDialog.placeAnyway': '그래도 배치',
     'placementEditorDialog.move': '이동',
-    'placementEditorDialog.overlap': { other: '⚠ 다른 문서 {count}개가 이미 여기에 있습니다.' },
+    'placementEditorDialog.overlap': { other: '⚠ 다른 작품 {count}개가 이미 여기에 있습니다.' },
 
     // World View: publicationCommentaryRemoteCheck, continued.
     'publicationCommentaryRemoteCheck.checking': '확인 중…',
@@ -2063,7 +2063,7 @@ export default Object.freeze({
     // Saved with the document in the language of whoever made it; {title} is
     // the source World's own title.
     'document.untitledWorld': '제목 없는 ForkBuild 월드',
-    'document.forkOf': '{title}의 포크',
+    'document.forkOf': '{title}의 리믹스',
     'document.copyOf': '{title}의 사본',
 
     // How an edit is named in undo/redo and the history timeline
@@ -2090,7 +2090,7 @@ export default Object.freeze({
     'history.removeFromGroup': { '=1': '그룹에서 블록 제거', other: '그룹에서 블록 {count}개 제거' },
     'history.repeatCopies': { other: '사본 {count}개 반복' },
     'history.transformSelection': '선택 항목 변환',
-    'history.copyStructureIntoDocument': '{name}을(를) 문서에 복사',
+    'history.copyStructureIntoDocument': '{name}을(를) 작품에 복사',
     'history.deleteGroup': '그룹 삭제',
     'history.duplicateGroup': '그룹 복제',
     'history.renameGroup': '그룹 이름 바꾸기',
@@ -2121,7 +2121,7 @@ export default Object.freeze({
     'worldView.verify': '확인',
 
     // World View: placementInfoPanel, continued.
-    'placementInfoPanel.overlap': { other: '⚠ 다른 문서 {count}개가 이 위치를 함께 쓰고 있습니다.' },
+    'placementInfoPanel.overlap': { other: '⚠ 다른 작품 {count}개가 이 위치를 함께 쓰고 있습니다.' },
 
     // World View: worldCollaboratorIndicator, continued.
     'worldCollaboratorIndicator.followName': '{name} 님 따라가기',
@@ -2418,7 +2418,7 @@ export default Object.freeze({
     // Publications: evidenceExportComparisonTable.
 
     // Publications: authorView.
-    'authorView.originalWorksForks': '원작과 포크',
+    'authorView.originalWorksForks': '원작과 리믹스',
 
     // Publications: publications.
     'publications.publications': '게시물',
@@ -3213,7 +3213,7 @@ export default Object.freeze({
     'publications.whatReplacingTheCurrentArchive': '현재 아카이브를 위의 외부 아카이브로 교체하면 무엇이 바뀌는지 보여 줍니다 — 아래의 “현재 아카이브 교체”를 명시적으로 클릭하기 전까지 현재 아카이브는 그대로 유지됩니다.',
     'publications.replacingRestampsEveryFactIn': '교체하면 위 외부 아카이브의 모든 사실이 IMPORTED(0.8.83)로 다시 표시됩니다 — 따라서 기반 관측이 동일하더라도 결과로 나오는 현재 지문은 위에 표시된 “외부 지문”과 다릅니다.',
     'publications.localFactsWereObservedBy': '로컬 사실은 이 복제본이 직접 관측한 것입니다. 가져온 사실은 이전의 “현재 아카이브 교체” 가져오기를 통해 이 아카이브에 들어온 것입니다. 어느 쪽도 더 신뢰할 만하지 않습니다 — 각 사실이 어디서 왔는지만 나타냅니다.',
-    'publications.anExplicitDurableRecordThat2': '한 게시물이 다른 게시물을 참조한다는 명시적이고 영구적인 기록입니다 — 콘텐츠, 타임스탬프, 작성자가 일치한다고 추론하지 않습니다. 두 게시물 모두 위에서 이미 영구 식별자를 가지고 있어야 합니다. 참조는 “포크” 분류가 아니라, 이 게시물이 저 게시물을 가리킨다는 출처가 분명한 단순한 사실입니다.',
+    'publications.anExplicitDurableRecordThat2': '한 게시물이 다른 게시물을 참조한다는 명시적이고 영구적인 기록입니다 — 콘텐츠, 타임스탬프, 작성자가 일치한다고 추론하지 않습니다. 두 게시물 모두 위에서 이미 영구 식별자를 가지고 있어야 합니다. 참조는 “리믹스” 분류가 아니라, 이 게시물이 저 게시물을 가리킨다는 출처가 분명한 단순한 사실입니다.',
     'publications.nothingHereIsSavedAnywhere': '여기 입력한 내용은 어디에도 저장되지 않습니다. 이 설정은 이번 브라우징 세션 동안 이 페이지의 메모리에만 있으며, 페이지를 새로 고치거나 “설정 지우기”를 클릭하는 순간 사라집니다.',
     'publications.thisReplicaDoesNotCurrently': '이 복제본에는 현재 유효한 스냅샷이 없습니다. 아래에서 출처를 골라 — “스냅샷 가져오기”, 배치의 “스냅샷 구체화”, 피어의 “피어에게서 스냅샷 받기” — 다시 시도하세요.',
 
@@ -3835,7 +3835,7 @@ export default Object.freeze({
 
     // Identity, Peers, Chat and settings: experimentalBanner.
     'experimentalBanner.experimental': '실험적 기능입니다.',
-    'experimentalBanner.thisAreaWorksButMay': '이 영역은 작동하지만, 이후 버전에서 바뀌거나 제거될 수 있으며 만들어 낸 결과가 이어지지 않을 수 있습니다. ForkBuild의 핵심 기능(짓기, 저장, 게시, 포크, 신원, 피어)에는 영향이 없습니다.',
+    'experimentalBanner.thisAreaWorksButMay': '이 영역은 작동하지만, 이후 버전에서 바뀌거나 제거될 수 있으며 만들어 낸 결과가 이어지지 않을 수 있습니다. ForkBuild의 핵심 기능(짓기, 저장, 게시, 리믹스, 신원, 피어)에는 영향이 없습니다.',
 
     // Identity, Peers, Chat and settings: loginModal.
     'loginModal.protectedWithAPassphrase': '암호 문구로 보호됨',
@@ -4336,7 +4336,7 @@ export default Object.freeze({
     'yourDataView.askTheBrowserToKeep': '브라우저에 보관 요청',
     'yourDataView.theBrowserSaidNoBrowsers': '브라우저가 거절했습니다. 보통 사이트를 북마크하거나, 설치하거나, 자주 사용하면 허락합니다.',
     'yourDataView.backUp': '백업',
-    'yourDataView.theBackupHoldsYourDocuments': '백업에는 문서, 신원과 개인 키, 구조물, 게시물, 피어, 친구, 채팅 기록, 설정이 들어 있습니다. 여기서 정한 암호 문구로 암호화되며, 복원할 때 그 암호 문구가 필요합니다. 암호 문구 없이는 열 수 없습니다.',
+    'yourDataView.theBackupHoldsYourDocuments': '백업에는 작품, 신원과 개인 키, 구조물, 게시물, 피어, 친구, 채팅 기록, 설정이 들어 있습니다. 여기서 정한 암호 문구로 암호화되며, 복원할 때 그 암호 문구가 필요합니다. 암호 문구 없이는 열 수 없습니다.',
     'yourDataView.includeBuildsDownloadedFromOther': '다른 사람에게서 다운로드한 작품 포함 (용량이 클 수 있으며, 보통 다시 가져올 수 있습니다)',
     'yourDataView.rememberTheBackupKeyOn': '원클릭 백업과 자동 백업을 위해 이 기기에 백업 키 기억하기 (암호 문구 자체는 보관하지 않으며, 이 키로는 백업을 만들 수만 있고 열 수는 없습니다)',
     'yourDataView.shareBackup': '백업 공유…',
@@ -4628,7 +4628,7 @@ export default Object.freeze({
     'avatarSettingsView.saveProfileVisibility': '프로필 공개 범위 저장',
 
     // Your Data: backup groups (application/backup/BackupEntryGroups.js ids).
-    'backupGroup.documents': '문서와 저장하지 않은 변경 사항',
+    'backupGroup.documents': '작품과 저장하지 않은 변경 사항',
     'backupGroup.identities': '신원',
     'backupGroup.structures': '내 구조물',
     'backupGroup.publications': '내 게시물과 증거',

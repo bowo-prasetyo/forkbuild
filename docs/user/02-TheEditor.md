@@ -312,9 +312,9 @@ different reasons:
 - **Place** (click the card) — copies the structure's bricks straight into
   the document you're already working on, so it becomes part of one bigger
   build. This is the everyday action.
-- **Fork As New Document** (in the card's **⋮** menu) — starts a brand-new,
+- **Remix As New Build** (in the card's **⋮** menu) — starts a brand-new,
   independent document that begins as an exact copy of that structure.
-- **Fork to My Structures** (built-in cards only, in the **⋮** menu) — adds
+- **Remix to My Structures** (built-in cards only, in the **⋮** menu) — adds
   the structure to your own **My Structures**, with no document involved at
   all. See [My Structures](#my-structures-your-personal-blueprint-library)
   below.
@@ -349,7 +349,7 @@ Barn, place it beside it; click Well, place it in the yard.
 
 ### Forking a structure as a new document
 
-Open a card's **⋮** menu and click **Fork As New Document** to start a
+Open a card's **⋮** menu and click **Remix As New Build** to start a
 brand-new creation of your own that begins as an exact copy of that
 structure — the exact same bricks, editable with every tool in this guide,
 in a document of its own rather than folded into whatever you currently
@@ -371,12 +371,12 @@ below the built-in categories.
 
 There's a second way a structure ends up in My Structures, with nothing to
 select and nothing to build first: open any **built-in** card's **⋮** menu
-and click **Fork to My Structures**. It's added exactly as it already is —
+and click **Remix to My Structures**. It's added exactly as it already is —
 no document created, nothing extracted — so it's ready to Rename, Export,
 or place right away, like any other entry in your library.
 
 A structure in **My Structures** works exactly like a built-in one — click
-to place it into your current document, or Fork As New Document — with two
+to place it into your current document, or Remix As New Build — with two
 extra actions in its **⋮** menu:
 
 | Action | What it does |
@@ -486,17 +486,17 @@ instance with the Select tool (`1`) and the sidebar shows:
 | **Rotate ↻ / ↺** | Rotate exactly 90° |
 | **Duplicate** (`Ctrl/Cmd+D`) | Place another instance of the same structure |
 | **Delete** | Remove this instance — the source document is untouched |
-| **Edit Source Document** | Open the referenced document itself, to change what every instance of it looks like |
+| **Edit Source Build** | Open the referenced document itself, to change what every instance of it looks like |
 
 Editing a placed structure's *content* always happens by editing its source
 document — there's no way to edit an instance's bricks directly, which is
 exactly what keeps every instance of it in sync.
 
-## Document Properties
+## Build Properties
 
 Every creation has a **title**, an optional **description**, a
 **license**, and a **Who can place it in the World** setting — set them
-in the **Document Properties** dialog, opened with the **✎** button beside
+in the **Build Properties** dialog, opened with the **✎** button beside
 the document title at the top of the Editor's sidebar (in World View, it's
 the **Edit Metadata** button). A new document starts with no license, which
 means nobody else can fork it until you choose one. The description shows up as a
@@ -580,7 +580,7 @@ Music plays softly while you build, a little livelier than World View's. The **�
   after its maker signed it, it isn't imported. The file carries the license
   the build has when you export it, so you can publish a build as **All
   Rights Reserved** and still give someone a copy they may build on: choose
-  another license in **Document Properties**, export, then set it back.
+  another license in **Build Properties**, export, then set it back.
   **Export All Builds** and its **Import**, under **Recent**, work the same
   way.
 - **Recent** — reopen something you saved before (it appears after your

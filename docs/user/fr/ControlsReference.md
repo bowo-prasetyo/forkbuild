@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 5d71d34792209c99 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 22e0b2ed04283579 -->
 # Référence des commandes
 
 <!-- languages -->
@@ -242,8 +242,8 @@ Composer, forker et votre bibliothèque personnelle — voir
 | `R` / `Maj+R` pendant le placement | Faire pivoter le fantôme de ±90° | mêmes touches d’aperçu de placement que pour une brique |
 | Clic | Valider — toutes les briques de la structure se posent en une étape d’annulation | refusé à une position occupée (rouge) |
 | `Échap` pendant le placement | Annuler — rien n’est ajouté | |
-| Menu **⋮** d’une carte, **Forker en nouveau document** | Démarrer un tout nouveau document qui commence comme une copie de cette structure | ne modifie jamais l’entrée de la bibliothèque |
-| Menu **⋮** d’une carte intégrée, **Forker dans Mes structures** | L’ajouter telle quelle à Mes structures | aucun document créé, rien d’extrait |
+| Menu **⋮** d’une carte, **Remixer en nouvelle construction** | Démarrer un tout nouveau document qui commence comme une copie de cette structure | ne modifie jamais l’entrée de la bibliothèque |
+| Menu **⋮** d’une carte intégrée, **Remixer dans Mes structures** | L’ajouter telle quelle à Mes structures | aucun document créé, rien d’extrait |
 | Menu **⋮** de n’importe quelle carte, **Infos** | Afficher un panneau en lecture seule nom / catégorie / briques / emprise / hauteur / source / description | jamais modifiable |
 | Sélection d’**1 brique ou plus**, puis **Créer un plan** (section **Groupes et plan** du panneau Sélection, ou Palette de commandes) | Ouvrir une petite boîte de dialogue (nom / catégorie / description + aperçu) ; enregistrer la sélection comme nouvelle entrée de **Mes structures** | |
 | Menu **⋮** d’une carte de **Mes structures**, **Renommer** | Changer le nom d’une structure personnelle | structures personnelles uniquement |
@@ -266,7 +266,7 @@ voir
 | Glisser dans la vue, ou le manipulateur | Déplacer / faire pivoter l’instance | |
 | `Ctrl/Cmd+D` | Dupliquer — place une autre instance du même document | voir [Dupliquer](#dupliquer-éditeur-uniquement) — une sélection d’instance obtient une nouvelle instance plutôt qu’une nouvelle copie de briques |
 | Champs **X / Z / Rotation** du panneau d’instance, puis Appliquer | Définir une position et une orientation exactes | Y (altitude) vient toujours du terrain, ce n’est jamais une cible |
-| **Modifier le document source** du panneau d’instance | Ouvrir le document référencé pour modifier ses briques | toutes les instances se mettent à jour, puisqu’une instance est une référence vivante |
+| **Modifier la construction source** du panneau d’instance | Ouvrir le document référencé pour modifier ses briques | toutes les instances se mettent à jour, puisqu’une instance est une référence vivante |
 | `Suppr` / `Retour arrière` | Retirer l’instance | ne touche jamais au document référencé |
 
 ## Groupes (Éditeur uniquement)

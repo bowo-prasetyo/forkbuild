@@ -102,9 +102,9 @@ export default Object.freeze({
     'worldView.firstBuildWalkedInside': '🎉 Anda masuk ke dalam bangunan pertama Anda!',
 
     // Forking a published World (application/worldNavigation/forkOnWriteMethods.js).
-    'fork.notice.blocked': 'Diterbitkan dengan "{license}" — pembuatnya tidak mengizinkan fork, jadi dunia ini dapat dilihat tetapi tidak dapat diedit.',
-    'fork.notice.forkOnEdit': 'Snapshot yang diterbitkan — suntingan pertama Anda membuat fork Anda sendiri yang dapat diedit; aslinya tidak pernah berubah.',
-    'fork.notPermitted': 'Dunia ini tidak dapat diedit: lisensinya ({license}) tidak mengizinkan fork.',
+    'fork.notice.blocked': 'Diterbitkan dengan "{license}" — pembuatnya tidak mengizinkan remix, jadi dunia ini dapat dilihat tetapi tidak dapat diedit.',
+    'fork.notice.forkOnEdit': 'Bangunan yang diterbitkan — suntingan pertama Anda membuat salinan Anda sendiri; aslinya tidak pernah berubah.',
+    'fork.notPermitted': 'Dunia ini tidak dapat diedit: lisensinya ({license}) tidak mengizinkan remix.',
 
     // Document details (application/document/: LicenseLabels.js,
     // PlacementPolicyLabels.js, DocumentLifecycleStatus.js).
@@ -516,7 +516,7 @@ export default Object.freeze({
     'editorActionCategory.history': 'Riwayat',
     'editorActionCategory.interface': 'Antarmuka',
     'editorAction.selection.selectAll': 'Pilih Semua',
-    'editorAction.selection.selectAll.description': 'Pilih setiap balok di dokumen aktif',
+    'editorAction.selection.selectAll.description': 'Pilih setiap balok di bangunan',
     'editorAction.selection.selectAll.done': 'Semua balok dipilih',
     'editorAction.selection.clear': 'Hapus Pilihan',
     'editorAction.selection.clear.description': 'Kosongkan pilihan saat ini',
@@ -555,7 +555,7 @@ export default Object.freeze({
     'editorAction.clipboard.copy.description': 'Salin balok yang dipilih ke papan klip',
     'editorAction.clipboard.copy.done': 'Pilihan disalin',
     'editorAction.clipboard.paste': 'Tempel',
-    'editorAction.clipboard.paste.description': 'Tempel isi papan klip ke dokumen',
+    'editorAction.clipboard.paste.description': 'Tempel isi papan klip ke bangunan',
     'editorAction.clipboard.paste.done': 'Ditempel',
     'editorAction.structure.createFromSelection': 'Buat Cetak Biru',
     'editorAction.structure.createFromSelection.description': 'Buat Struktur yang dapat dipakai ulang dari balok yang dipilih, dinormalkan ke titik asal lokalnya sendiri',
@@ -669,7 +669,7 @@ export default Object.freeze({
     'editorActionReason.selectAtLeast': { other: 'Pilih setidaknya {count} balok' },
 
     // Editor: recovering unsaved changes (ui/components/RecoveryBanner.js).
-    'recovery.found': 'Ditemukan perubahan yang belum disimpan dari {when} untuk dokumen ini.',
+    'recovery.found': 'Ditemukan perubahan yang belum disimpan dari {when} untuk bangunan ini.',
     'recovery.earlierSession': 'sesi sebelumnya',
     'recovery.recover': 'Pulihkan',
     'recovery.discard': 'Buang',
@@ -688,8 +688,8 @@ export default Object.freeze({
     // Editor: a structure in the Build Library (ui/components/StructureLibraryCard.js).
     'structureCard.moreActions': 'Tindakan lainnya',
     'structureCard.info': 'Info',
-    'structureCard.fork': 'Fork Sebagai Dokumen Baru',
-    'structureCard.forkToLibrary': 'Fork ke Struktur Saya',
+    'structureCard.fork': 'Remix Sebagai Bangunan Baru',
+    'structureCard.forkToLibrary': 'Remix ke Struktur Saya',
     'structureCard.rename': 'Ganti Nama',
     'structureCard.export': 'Ekspor Cetak Biru',
     'structureCard.remove': 'Hapus',
@@ -737,8 +737,8 @@ export default Object.freeze({
     'documentInfo.editMetadata': 'Edit Metadata',
 
     // Editor and World View: editing document details (ui/components/MetadataEditorDialog.js).
-    'metadataEditor.label': 'Properti dokumen',
-    'metadataEditor.title': 'Properti Dokumen',
+    'metadataEditor.label': 'Properti bangunan',
+    'metadataEditor.title': 'Properti Bangunan',
     'metadataEditor.fieldTitle': 'Judul',
     'metadataEditor.untitled': 'Tanpa Judul',
     'metadataEditor.description': 'Deskripsi',
@@ -750,9 +750,9 @@ export default Object.freeze({
     'metadataEditor.tagsSuggestedHint': 'Disarankan dari judul dan deskripsi: simpan, ubah, atau hapus. Hingga {count}; postingan Blurt mencantumkannya setelah tag ForkBuild sendiri.',
     'metadataEditor.tagSuggestions': 'Saran:',
     'metadataEditor.license': 'Lisensi',
-    'metadataEditor.noLicenseHint': 'Tanpa lisensi berarti fork tidak diizinkan sampai lisensi ditetapkan.',
+    'metadataEditor.noLicenseHint': 'Tanpa lisensi berarti remix tidak diizinkan sampai lisensi ditetapkan.',
     'metadataEditor.placement': 'Siapa yang dapat menempatkannya di Dunia',
-    'metadataEditor.placementHint': 'Orang lain masih dapat menemukan, melihat, dan (jika lisensinya mengizinkan) mem-fork-nya, tetapi ForkBuild tidak akan membiarkan mereka menempatkannya di Dunia mereka. Berlaku mulai penerbitan Anda berikutnya.',
+    'metadataEditor.placementHint': 'Orang lain masih dapat menemukan, melihat, dan (jika lisensinya mengizinkan) me-remix-nya, tetapi ForkBuild tidak akan membiarkan mereka menempatkannya di Dunia mereka. Berlaku mulai penerbitan Anda berikutnya.',
     'metadataEditor.cancel': 'Batal',
     'metadataEditor.save': 'Simpan',
 
@@ -857,8 +857,8 @@ export default Object.freeze({
     'structureInstance.duplicateHint': 'Tempatkan satu lagi instans dari struktur yang sama',
     'structureInstance.delete': 'Hapus',
     'structureInstance.deleteHint': 'Hapus instans ini dari Dunia',
-    'structureInstance.editSource': 'Edit Dokumen Sumber',
-    'structureInstance.editSourceHint': 'Buka Dokumen yang dirujuk untuk mengedit baloknya',
+    'structureInstance.editSource': 'Edit Bangunan Sumber',
+    'structureInstance.editSourceHint': 'Buka bangunan asalnya untuk mengedit baloknya',
 
     // Editor: the editing sidebar (ui/components/EditingSidebar.js).
     'editingSidebar.selection': 'Pilihan',
@@ -1052,14 +1052,14 @@ export default Object.freeze({
     'blueprintExchange.exported': '"{name}" diekspor sebagai cetak biru',
     'blueprintExchange.libraryEmpty': 'Struktur Saya kosong',
     'blueprintExchange.exportedStructures': { other: '{count} struktur diekspor' },
-    'blueprintExchange.noDocuments': 'Tidak ada dokumen tersimpan untuk diekspor',
-    'blueprintExchange.exportedDocuments': { other: '{count} dokumen diekspor' },
+    'blueprintExchange.noDocuments': 'Tidak ada bangunan tersimpan untuk diekspor',
+    'blueprintExchange.exportedDocuments': { other: '{count} bangunan diekspor' },
     'blueprintExchange.exportedDocument': '"{title}" diekspor',
-    'blueprintExchange.exportedUntitled': '"dokumen" diekspor',
+    'blueprintExchange.exportedUntitled': '"bangunan" diekspor',
     'blueprintExchange.invalidDocumentJson': 'Itu bukan JSON yang valid — pilih file yang diekspor dengan "Ekspor".',
     'blueprintExchange.importedDocument': '"{title}" diimpor',
-    'blueprintExchange.importedUntitled': '"dokumen" diimpor',
-    'blueprintExchange.importedDocuments': { other: '{count} dokumen diimpor' },
+    'blueprintExchange.importedUntitled': '"bangunan" diimpor',
+    'blueprintExchange.importedDocuments': { other: '{count} bangunan diimpor' },
     'blueprintExchange.copiedBeside': '{count} sebagai salinan di samping versi lain di sini',
     'blueprintExchange.alreadyHere': '{count} sudah ada di sini',
     'blueprintExchange.alreadyThere': '{count} sudah ada di sana',
@@ -1348,8 +1348,8 @@ export default Object.freeze({
 
     // World View: historyTimelinePanel.
     'historyTimelinePanel.history': 'Riwayat',
-    'historyTimelinePanel.readOnlyUntilYouChoose': 'Hanya-baca sampai Anda memilih Pratinjau atau Pulihkan di bawah — memilih entri tidak pernah mengubah dokumen dengan sendirinya. Pratinjau menyusun ulang keadaan lampau di samping keadaan saat ini tanpa menyentuhnya; Pulihkan menjadikan keadaan itu sebagai dasar dokumen saat ini dan menandainya belum disimpan.',
-    'historyTimelinePanel.noHistoryYetMakeAn': 'Belum ada riwayat — lakukan suntingan pada dokumen ini untuk melihatnya di sini.',
+    'historyTimelinePanel.readOnlyUntilYouChoose': 'Hanya-baca sampai Anda memilih Pratinjau atau Pulihkan di bawah — memilih entri tidak pernah mengubah bangunan dengan sendirinya. Pratinjau menyusun ulang keadaan lampau di samping keadaan saat ini tanpa menyentuhnya; Pulihkan menjadikan keadaan itu sebagai dasar bangunan saat ini dan menandainya belum disimpan.',
+    'historyTimelinePanel.noHistoryYetMakeAn': 'Belum ada riwayat — lakukan suntingan pada bangunan ini untuk melihatnya di sini.',
     'historyTimelinePanel.undone': '· diurungkan',
     'historyTimelinePanel.previewing': '· sedang dipratinjau',
     'historyTimelinePanel.preview': 'Pratinjau',
@@ -1366,8 +1366,8 @@ export default Object.freeze({
     'landmarkFormModal.cancel': 'Batal',
 
     // World View: locationDocumentsDialog.
-    'locationDocumentsDialog.documentsAtThisLocation': 'Dokumen di lokasi ini',
-    'locationDocumentsDialog.documentsHere': 'Dokumen di Sini',
+    'locationDocumentsDialog.documentsAtThisLocation': 'Bangunan di lokasi ini',
+    'locationDocumentsDialog.documentsHere': 'Bangunan di Sini',
     'locationDocumentsDialog.focus': 'Fokus',
     'locationDocumentsDialog.nothingElseIsRecordedAt': 'Tidak ada hal lain yang tercatat di posisi persis ini.',
     'locationDocumentsDialog.close': 'Tutup',
@@ -1440,7 +1440,7 @@ export default Object.freeze({
     'ownPublicationPanel.confirmUnpublish': 'Konfirmasi pembatalan penerbitan',
     'ownPublicationPanel.distribute': 'Distribusikan',
     'ownPublicationPanel.unpublish': 'Batalkan Penerbitan…',
-    'ownPublicationPanel.removeThisWorldFromThe': 'Hapus Dunia ini dari Jelajahi di perangkat ini? Penempatannya dan Dokumennya tetap ada. Salinan yang sudah Anda distribusikan tetap ada di jaringan, tempat orang lain masih bisa menemukannya, tetapi perangkat ini tidak akan menampilkannya lagi.',
+    'ownPublicationPanel.removeThisWorldFromThe': 'Hapus Dunia ini dari Jelajahi di perangkat ini? Penempatannya dan bangunannya tetap ada. Salinan yang sudah Anda distribusikan tetap ada di jaringan, tempat orang lain masih bisa menemukannya, tetapi perangkat ini tidak akan menampilkannya lagi.',
     'ownPublicationPanel.unpublish2': 'Batalkan Penerbitan',
     'ownPublicationPanel.publication': 'Dunia Bersama',
     'ownPublicationPanel.outcome': 'Hasil',
@@ -1471,7 +1471,7 @@ export default Object.freeze({
     // World View: placementEditorDialog.
     'placementEditorDialog.movePlacement': 'Pindahkan penempatan',
     'placementEditorDialog.movePlacement2': 'Pindahkan Penempatan',
-    'placementEditorDialog.thisMovesWhereTheWorld': 'Ini memindahkan letak dunia di ruang bersama. Ini tidak mengedit dokumen, dan tidak membuat fork.',
+    'placementEditorDialog.thisMovesWhereTheWorld': 'Ini memindahkan letak dunia di ruang bersama. Ini tidak mengedit bangunan, dan tidak membuat salinan.',
     'placementEditorDialog.xWorldUnits': 'X (Satuan Dunia)',
     'placementEditorDialog.yWorldUnits': 'Y (Satuan Dunia)',
     'placementEditorDialog.zWorldUnits': 'Z (Satuan Dunia)',
@@ -1592,7 +1592,7 @@ export default Object.freeze({
     'worldEncounterCanvas.thisPublicationSMaterialCould': 'Materi Dunia Bersama ini tidak dapat diperiksa.',
     'worldEncounterCanvas.open': 'Buka',
     'worldEncounterCanvas.explore': 'Jelajahi',
-    'worldEncounterCanvas.fork': 'Fork',
+    'worldEncounterCanvas.fork': 'Remix',
     'worldEncounterCanvas.close': 'Tutup',
     'worldEncounterCanvas.chooseSource': 'Pilih Sumber',
     'worldEncounterCanvas.thisEncounterIsOfferedBy': 'Perjumpaan ini ditawarkan oleh lebih dari satu sumber.',
@@ -1764,7 +1764,7 @@ export default Object.freeze({
     'worldView.redo': 'Ulangi',
     'worldView.history': 'Riwayat',
     'worldView.hover': 'Arahkan',
-    'worldView.openTheReferencedDocumentIn': 'Buka Dokumen yang dirujuk di Editor',
+    'worldView.openTheReferencedDocumentIn': 'Buka bangunan asalnya di Editor',
     'worldView.forkThisDocumentAndOpen': 'Buat salinan Anda sendiri dan buka di Editor',
     'worldView.inspection': 'Pemeriksaan',
     'worldView.type': 'Tipe',
@@ -1995,7 +1995,7 @@ export default Object.freeze({
     // World View: placementEditorDialog, continued.
     'placementEditorDialog.placeAnyway': 'Tetap Tempatkan',
     'placementEditorDialog.move': 'Pindahkan',
-    'placementEditorDialog.overlap': { other: '⚠ {count} dokumen lain sudah berada di sini.' },
+    'placementEditorDialog.overlap': { other: '⚠ {count} bangunan lain sudah berada di sini.' },
 
     // World View: publicationCommentaryRemoteCheck, continued.
     'publicationCommentaryRemoteCheck.checking': 'Memeriksa…',
@@ -2060,7 +2060,7 @@ export default Object.freeze({
     // Saved with the document in the language of whoever made it; {title} is
     // the source World's own title.
     'document.untitledWorld': 'Dunia ForkBuild Tanpa Judul',
-    'document.forkOf': 'Fork dari {title}',
+    'document.forkOf': 'Remix dari {title}',
     'document.copyOf': 'Salinan {title}',
 
     // How an edit is named in undo/redo and the history timeline
@@ -2087,7 +2087,7 @@ export default Object.freeze({
     'history.removeFromGroup': { '=1': 'Keluarkan Balok dari Grup', other: 'Keluarkan {count} Balok dari Grup' },
     'history.repeatCopies': { other: 'Ulangi {count} Salinan' },
     'history.transformSelection': 'Transformasi Pilihan',
-    'history.copyStructureIntoDocument': 'Salin {name} ke Dokumen',
+    'history.copyStructureIntoDocument': 'Salin {name} ke Bangunan',
     'history.deleteGroup': 'Hapus Grup',
     'history.duplicateGroup': 'Duplikat Grup',
     'history.renameGroup': 'Ganti Nama Grup',
@@ -2118,7 +2118,7 @@ export default Object.freeze({
     'worldView.verify': 'Verifikasi',
 
     // World View: placementInfoPanel, continued.
-    'placementInfoPanel.overlap': { other: '⚠ {count} dokumen lain berbagi lokasi ini.' },
+    'placementInfoPanel.overlap': { other: '⚠ {count} bangunan lain berbagi lokasi ini.' },
 
     // World View: worldCollaboratorIndicator, continued.
     'worldCollaboratorIndicator.followName': 'Ikuti {name}',
@@ -2415,7 +2415,7 @@ export default Object.freeze({
     // Publications: evidenceExportComparisonTable.
 
     // Publications: authorView.
-    'authorView.originalWorksForks': 'Karya Asli & Fork',
+    'authorView.originalWorksForks': 'Karya Asli & Remix',
 
     // Publications: publications.
     'publications.publications': 'Publikasi',
@@ -3210,7 +3210,7 @@ export default Object.freeze({
     'publications.whatReplacingTheCurrentArchive': 'Apa yang akan berubah jika arsip saat ini diganti dengan arsip eksternal di atas — arsip saat ini tetap persis seperti adanya sampai "Ganti Arsip Saat Ini" di bawah diklik secara eksplisit.',
     'publications.replacingRestampsEveryFactIn': 'Penggantian memberi stempel ulang DIIMPOR (0.8.83) pada setiap fakta di arsip eksternal di atas — sehingga sidik jari saat ini yang dihasilkan akan berbeda dari "Sidik jari eksternal" yang ditampilkan di atas, meskipun pengamatan dasarnya identik.',
     'publications.localFactsWereObservedBy': 'Fakta lokal diamati langsung oleh replika ini. Fakta yang diimpor masuk ke arsip ini melalui impor "Ganti Arsip Saat Ini" sebelumnya. Tidak ada yang lebih tepercaya daripada yang lain — ini hanya menyatakan dari mana setiap fakta berasal.',
-    'publications.anExplicitDurableRecordThat2': 'Catatan permanen yang eksplisit bahwa satu publikasi merujuk publikasi lain — tidak pernah disimpulkan dari konten, stempel waktu, atau pembuat yang cocok. Kedua publikasi harus sudah memiliki identitas permanen di atas; referensi tidak pernah merupakan klasifikasi "fork", hanya fakta biasa yang dapat diatribusikan: publikasi ini menunjuk publikasi itu.',
+    'publications.anExplicitDurableRecordThat2': 'Catatan permanen yang eksplisit bahwa satu publikasi merujuk publikasi lain — tidak pernah disimpulkan dari konten, stempel waktu, atau pembuat yang cocok. Kedua publikasi harus sudah memiliki identitas permanen di atas; referensi tidak pernah merupakan klasifikasi "remix", hanya fakta biasa yang dapat diatribusikan: publikasi ini menunjuk publikasi itu.',
     'publications.nothingHereIsSavedAnywhere': 'Tidak ada yang disimpan di mana pun di sini. Konfigurasi ini hanya ada di memori halaman ini untuk sesi penjelajahan ini, dan dibuang begitu halaman dimuat ulang atau "Hapus Konfigurasi" diklik.',
     'publications.thisReplicaDoesNotCurrently': 'Replika ini saat ini tidak memiliki snapshot yang valid. Pilih sumber di bawah — "Impor Snapshot", "Materialisasi Snapshot" milik sebuah penempatan, atau "Ambil Snapshot dari Rekan" milik rekan — untuk mencoba lagi.',
 
@@ -3832,7 +3832,7 @@ export default Object.freeze({
 
     // Identity, Peers, Chat and settings: experimentalBanner.
     'experimentalBanner.experimental': 'Eksperimental.',
-    'experimentalBanner.thisAreaWorksButMay': 'Bagian ini berfungsi, tetapi dapat berubah atau dihapus di versi mendatang, dan hasilnya mungkin tidak terbawa. Inti ForkBuild (membangun, menyimpan, menerbitkan, fork, identitas, dan rekan) tidak terpengaruh.',
+    'experimentalBanner.thisAreaWorksButMay': 'Bagian ini berfungsi, tetapi dapat berubah atau dihapus di versi mendatang, dan hasilnya mungkin tidak terbawa. Inti ForkBuild (membangun, menyimpan, menerbitkan, me-remix, identitas, dan rekan) tidak terpengaruh.',
 
     // Identity, Peers, Chat and settings: loginModal.
     'loginModal.protectedWithAPassphrase': 'Dilindungi dengan frasa sandi',
@@ -4333,7 +4333,7 @@ export default Object.freeze({
     'yourDataView.askTheBrowserToKeep': 'Minta Browser untuk Menyimpannya',
     'yourDataView.theBrowserSaidNoBrowsers': 'Browser menolak. Browser biasanya setuju setelah situs ditandai, dipasang, atau sering digunakan.',
     'yourDataView.backUp': 'Cadangkan',
-    'yourDataView.theBackupHoldsYourDocuments': 'Cadangan berisi dokumen Anda, identitas beserta kunci privatnya, struktur, publikasi, rekan, teman, riwayat obrolan, dan pengaturan. Cadangan dienkripsi dengan frasa sandi yang Anda pilih di sini, yang diperlukan untuk memulihkannya. Tidak ada cara untuk membukanya tanpa frasa sandi itu.',
+    'yourDataView.theBackupHoldsYourDocuments': 'Cadangan berisi bangunan Anda, identitas beserta kunci privatnya, struktur, publikasi, rekan, teman, riwayat obrolan, dan pengaturan. Cadangan dienkripsi dengan frasa sandi yang Anda pilih di sini, yang diperlukan untuk memulihkannya. Tidak ada cara untuk membukanya tanpa frasa sandi itu.',
     'yourDataView.includeBuildsDownloadedFromOther': 'Sertakan bangunan yang diunduh dari orang lain (bisa besar; biasanya dapat diambil lagi)',
     'yourDataView.rememberTheBackupKeyOn': 'Ingat kunci cadangan di perangkat ini, untuk pencadangan sekali klik dan otomatis (frasa sandinya sendiri tidak disimpan, dan kunci hanya dapat membuat cadangan, bukan membukanya)',
     'yourDataView.shareBackup': 'Bagikan Cadangan…',
@@ -4625,7 +4625,7 @@ export default Object.freeze({
     'avatarSettingsView.saveProfileVisibility': 'Simpan Visibilitas Profil',
 
     // Your Data: backup groups (application/backup/BackupEntryGroups.js ids).
-    'backupGroup.documents': 'Dokumen dan perubahan yang belum disimpan',
+    'backupGroup.documents': 'Bangunan dan perubahan yang belum disimpan',
     'backupGroup.identities': 'Identitas',
     'backupGroup.structures': 'Struktur Saya',
     'backupGroup.publications': 'Publikasi dan bukti Anda',

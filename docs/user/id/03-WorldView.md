@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 7ddc6a422dbb8936 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 50fb553e94b18514 -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
@@ -617,7 +617,7 @@ membagikannya tanpa pergi. Baris status menyebut yang mana:
 Bangunan yang diterbitkan tidak pernah berubah. Jika bangunan tempat Anda
 berada sudah diterbitkan, perubahan pertama Anda di sini (detailnya,
 penanda atau wilayah, atau hewan sebagai hiasan) membuat salinan Anda
-sendiri, berjudul *"Fork dari &lt;nama asli&gt;"*. Pemberitahuan singkat
+sendiri, berjudul *"Remix dari &lt;nama asli&gt;"*. Pemberitahuan singkat
 memberi tahu Anda ("Salinan Anda sendiri yang dapat diedit telah dibuat —
 "…" tidak berubah"). Aturan lisensinya sama seperti untuk remix mana pun
 (lihat

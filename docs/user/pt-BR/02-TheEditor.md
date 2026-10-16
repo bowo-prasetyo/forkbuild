@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: e0b170cbd10b7cf8 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 75f6ca907e2e67ae -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -324,9 +324,9 @@ qualquer uma delas, e elas importam por motivos diferentes:
 - **Posicionar** (clique no cartão) — copia os blocos da estrutura direto
   para o documento em que você já está trabalhando, e ela passa a fazer
   parte de uma construção maior. É a ação do dia a dia.
-- **Bifurcar como novo documento** (no menu **⋮** do cartão) — começa um
+- **Remixar como nova construção** (no menu **⋮** do cartão) — começa um
   documento novo e independente, que nasce como cópia exata da estrutura.
-- **Bifurcar para Minhas estruturas** (só nos cartões prontos, no menu
+- **Remixar para Minhas estruturas** (só nos cartões prontos, no menu
   **⋮**) — adiciona a estrutura às suas **Minhas estruturas**, sem nenhum
   documento envolvido. Veja
   [Minhas estruturas](#minhas-estruturas-sua-biblioteca-pessoal-de-plantas)
@@ -365,7 +365,7 @@ posicione no quintal.
 
 ### Bifurcando uma estrutura como novo documento
 
-Abra o menu **⋮** de um cartão e clique em **Bifurcar como novo documento**
+Abra o menu **⋮** de um cartão e clique em **Remixar como nova construção**
 para começar uma criação nova sua, que nasce como cópia exata da estrutura —
 os mesmos blocos, editáveis com todas as ferramentas deste guia, em um
 documento próprio em vez de incluídos no que você tem aberto. Bifurcar nunca
@@ -386,14 +386,14 @@ logo abaixo das categorias prontas.
 
 Há uma segunda forma de uma estrutura ir parar em Minhas estruturas, sem
 nada para selecionar nem construir antes: abra o menu **⋮** de qualquer
-cartão **pronto** e clique em **Bifurcar para Minhas estruturas**. Ela é
+cartão **pronto** e clique em **Remixar para Minhas estruturas**. Ela é
 adicionada exatamente como está — nenhum documento criado, nada extraído —
 e fica pronta para Renomear, Exportar ou posicionar na hora, como qualquer
 outra entrada da sua biblioteca.
 
 Uma estrutura em **Minhas estruturas** funciona exatamente como uma pronta —
-clique para posicioná-la no documento atual, ou Bifurcar como novo
-documento — com duas ações extras no menu **⋮**:
+clique para posicioná-la no documento atual, ou Remixar como nova
+construção — com duas ações extras no menu **⋮**:
 
 | Ação | O que faz |
 |---|---|
@@ -506,17 +506,17 @@ a barra lateral mostra:
 | **Girar ↻ / ↺** | Girar exatamente 90° |
 | **Duplicar** (`Ctrl/Cmd+D`) | Posicionar outra instância da mesma estrutura |
 | **Excluir** | Remover esta instância — o documento de origem não é afetado |
-| **Editar documento de origem** | Abrir o próprio documento referenciado, para mudar a aparência de todas as instâncias dele |
+| **Editar construção de origem** | Abrir o próprio documento referenciado, para mudar a aparência de todas as instâncias dele |
 
 Editar o *conteúdo* de uma estrutura posicionada sempre se faz editando o
 documento de origem — não há como editar diretamente os blocos de uma
 instância, e é exatamente isso que mantém todas as instâncias em sincronia.
 
-## Propriedades do documento
+## Propriedades da construção
 
 Toda criação tem um **título**, uma **descrição** opcional, uma **licença**
 e uma configuração **Quem pode posicioná-lo no Mundo** — defina-os na caixa
-de diálogo **Propriedades do documento**, aberta pelo botão **✎** ao lado do
+de diálogo **Propriedades da construção**, aberta pelo botão **✎** ao lado do
 título do documento, no topo da barra lateral do Editor (na Visão do mundo,
 é o botão **Editar metadados**). Um documento novo começa sem licença, o que
 significa que ninguém mais pode bifurcá-lo até você escolher uma. A
@@ -606,8 +606,8 @@ Enquanto você constrói, toca uma música suave, um pouco mais animada que a da
   assinou, ela não é importada. O arquivo leva a licença que a construção
   tem quando você exporta, então você pode publicar uma construção como
   **All Rights Reserved** e mesmo assim dar a alguém uma cópia em que essa
-  pessoa possa construir: escolha outra licença em **Propriedades do
-  documento**, exporte e depois volte a licença. **Exportar todas as
+  pessoa possa construir: escolha outra licença em **Propriedades da
+  construção**, exporte e depois volte a licença. **Exportar todas as
   construções** e o **Importar** dela, em **Recentes**, funcionam do mesmo
   jeito.
 - **Recentes** — reabre algo que você salvou antes (aparece depois do

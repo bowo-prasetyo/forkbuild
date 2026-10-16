@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: b0b1839dc28a506e -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 75e82daaf1bb2646 -->
 # 04 — Publicar e remixar
 
 <!-- languages -->
@@ -21,7 +21,7 @@ em ForkBuild.)
    autor e sem link.
 3. Dê um título a ela — Publicar recusa uma criação sem título ou vazia — e,
    se quiser, uma descrição e uma licença: clique em **✎** ao lado do título
-   do documento na barra lateral para abrir **Propriedades do documento**. Um
+   do documento na barra lateral para abrir **Propriedades da construção**. Um
    documento novo não tem licença; na primeira vez que você o publicar, o
    ForkBuild pergunta se outras pessoas podem remixá-lo (veja
    [Deixando outras pessoas remixarem](#deixando-outras-pessoas-remixarem)).
@@ -344,14 +344,14 @@ coisa:
 - **Agora não** não publica nada.
 
 Sua resposta é salva como a licença da construção, então a pergunta vem só
-uma vez; mude quando quiser em **Propriedades do documento**. Uma
+uma vez; mude quando quiser em **Propriedades da construção**. Uma
 bifurcação já leva a licença do original, então publicar uma nunca
 pergunta.
 
 ### Todas as licenças
 
 Uma criação publicada sempre aparece com uma licença, escolhida na caixa de
-diálogo **Propriedades do documento**:
+diálogo **Propriedades da construção**:
 
 | Licença | Significado |
 |---|---|
@@ -375,7 +375,7 @@ dela, e nunca move nem muda a sua (veja
 [Por que posso posicionar construções de outras pessoas?](WorldViewAdvancedTools.md#por-que-posso-posicionar-construções-de-outras-pessoas)).
 Bifurcar é outra coisa, regida pela licença (veja
 [Posicionar ou bifurcar](WorldViewAdvancedTools.md#posicionar-ou-bifurcar)).
-Se você preferir que não a posicionem, abra **Propriedades do documento** e
+Se você preferir que não a posicionem, abra **Propriedades da construção** e
 defina **Quem pode posicioná-lo no Mundo**:
 
 | Configuração | Significado |
@@ -407,7 +407,7 @@ Uma criação publicada é **imutável** — nunca pode mudar depois. Para
 construir a partir dela, **Bifurque** (abaixo), ou use **Editar uma cópia**
 na Visão do mundo. Na Visão do mundo, fazer sua primeira mudança num mundo
 publicado — os metadados, o nome de um marco ou região, ou uma decoração de
-animal — cria automaticamente sua própria cópia, com o título *"Bifurcação
+animal — cria automaticamente sua própria cópia, com o título *"Remix
 de &lt;nome original&gt;"*, e uma confirmação curta ("Sua própria cópia
 editável foi criada; … não muda"); veja
 [Salvar e publicar aqui também](03-WorldView.md#salvar-e-publicar-aqui-também).
@@ -553,7 +553,7 @@ muda um mundo publicado — veja
 
 1. Encontre uma construção no **Explorar** (ou na Visão do mundo).
 2. Clique em **Remixar**.
-3. A cópia abre no Editor, com o título *"Bifurcação de &lt;nome
+3. A cópia abre no Editor, com o título *"Remix de &lt;nome
    original&gt;"*.
 4. Continue a construção, depois salve e publique como sua.
 
@@ -617,7 +617,7 @@ abaixo).
    sua própria cópia.
 2. Construa do seu jeito: coloque uma ideia se quiser e faça dela a sua.
    Seja o que for que você construir, participa enquanto mantiver a tag da
-   semana (adicione-a em **Propriedades do documento → Tags** se começou de
+   semana (adicione-a em **Propriedades da construção → Tags** se começou de
    outro jeito).
 3. Publique antes do fim da semana e compartilhe o link. O texto do link
    cita o desafio e a tag, pronto para um post.
@@ -689,8 +689,8 @@ linhagem inteira de uma criação. Numa **página do autor**, você vê uma
 
 ```
 Casa medieval (original)
-└─ Bifurcação de Casa medieval (de Bob)
-   └─ Bifurcação de Bifurcação de… (de Carol)
+└─ Remix de Casa medieval (de Bob)
+   └─ Remix de Remix de… (de Carol)
 ```
 
 Isso quer dizer que uma ótima criação pode inspirar todo um ecossistema de

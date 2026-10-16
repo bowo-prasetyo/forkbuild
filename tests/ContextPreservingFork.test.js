@@ -220,7 +220,7 @@ async function run() {
 
         // B. Correct fork — same content, independent identity.
         assert(forked.world.id !== barnDocumentId, '17. the fork has a fresh document identity');
-        assert(forked.metadata.title === 'Fork of Barn', '18. titled "Fork of ..."');
+        assert(forked.metadata.title === 'Remix of Barn', '18. titled "Remix of ..."');
         assert(forked.metadata.parentDocumentId === barnDocumentId, '19. lineage recorded via parentDocumentId');
         assert(forked.world.getBuildings().length === 1 && forked.world.getBuildings()[0].getBricks().length === 1,
             '20. the fork carries the Barn\'s own content (one building, one brick)');

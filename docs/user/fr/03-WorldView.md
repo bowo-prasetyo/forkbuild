@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 7ddc6a422dbb8936 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 50fb553e94b18514 -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
@@ -638,7 +638,7 @@ partager sans partir. La ligne d’état dit de quoi il s’agit :
 Une construction publiée ne change jamais. Si la construction où vous êtes
 est publiée, votre premier changement ici (ses informations, un point de
 repère ou une région, ou un animal comme décoration) crée votre propre
-copie, intitulée *« Fork de &lt;nom d’origine&gt; »*. Un court avis vous
+copie, intitulée *« Remix de &lt;nom d’origine&gt; »*. Un court avis vous
 le signale (« Votre propre copie modifiable a été créée — … reste
 inchangé »). Les mêmes règles de licence s’appliquent qu’à tout remix (voir
 [Publier et remixer](04-PublishingAndForking.md#forker--faites-le-vôtre)).

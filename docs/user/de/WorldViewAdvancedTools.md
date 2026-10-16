@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 739698f533b6d7bb -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 67400ead6416db5b -->
 # Weltansicht: Erweiterte Werkzeuge
 
 <!-- languages -->
@@ -129,10 +129,10 @@ nicht verschieben**, und **Verschieben** ist ausgegraut. Sie können es
 trotzdem fokussieren, untersuchen und mit **Eine Kopie bearbeiten** darauf
 aufbauen. Nur wo es steht, dürfen allein sie ändern.
 
-### Dokumente hier
+### Bauwerke hier
 
 Sagt das Feld Platzierung, dass andere Bauwerke diese Stelle teilen,
-klicken Sie auf **Ansehen**, um **Dokumente hier** zu öffnen: eine Liste
+klicken Sie auf **Ansehen**, um **Bauwerke hier** zu öffnen: eine Liste
 jedes Bauwerks an dieser Stelle, jedes mit einer Schaltfläche
 **Fokussieren**. Bauwerke, deren Veröffentlichung zurückgezogen wurde,
 fehlen.

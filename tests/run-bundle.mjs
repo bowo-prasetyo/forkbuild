@@ -365,7 +365,7 @@ async function openLinkOnlyShare(browser, base) {
         await page.goBack();
         await page.waitForSelector('.shared-build-edit-copy', { timeout: 60_000 });
         await page.click('.shared-build-edit-copy');
-        await page.waitForFunction(() => document.querySelector('.document-info-compact-title')?.textContent.trim() === 'Fork of Linked castle', null, { timeout: 60_000 });
+        await page.waitForFunction(() => document.querySelector('.document-info-compact-title')?.textContent.trim() === 'Remix of Linked castle', null, { timeout: 60_000 });
         assert(!(await page.$('.fork-failure-dialog')), 'Edit a Copy opens the visitor\'s own copy, with no failure');
         await page.goBack();
         await page.waitForSelector('.shared-build-model-link[data-format="stl"]', { timeout: 60_000 });
@@ -635,7 +635,7 @@ async function firstVisit(browser, base) {
             assert((await visit.textContent('.shared-build-title')).trim() === 'House', 'the link opens on the house');
             assert((await visit.textContent('.shared-build-license')).includes('CC BY 4.0'), 'which allows remixes, as chosen');
             await visit.click('.shared-build-edit-copy');
-            await visit.waitForFunction(() => document.querySelector('.document-info-compact-title')?.textContent.trim() === 'Fork of House', null, { timeout: 60_000 });
+            await visit.waitForFunction(() => document.querySelector('.document-info-compact-title')?.textContent.trim() === 'Remix of House', null, { timeout: 60_000 });
         } finally {
             await friend.close();
         }

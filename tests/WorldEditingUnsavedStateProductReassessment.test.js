@@ -841,7 +841,7 @@ async function main() {
         // vocabulary, and its date formatting degrades gracefully.
         const bannerSource = await readSource('ui/components/RecoveryBanner.js');
         assert(/t\('recovery\.found', \{ when: formatSavedAt\(status\.recovery\.savedAt\) \}\)/.test(bannerSource)
-            && t('recovery.found', { when: 'Tuesday' }) === 'Unsaved changes from Tuesday were found for this document.',
+            && t('recovery.found', { when: 'Tuesday' }) === 'Unsaved changes from Tuesday were found for this build.',
             'L5a. RecoveryBanner\'s user-facing sentence is plain language — no "checkpoint," "contentHash," or "revision" jargon leaks into it.');
         assert(/return Number\.isNaN\(date\.getTime\(\)\)\s*\?\s*t\('recovery\.earlierSession'\)/.test(bannerSource) && t('recovery.earlierSession') === 'an earlier session',
             'L5b. formatSavedAt() degrades gracefully to "an earlier session" rather than showing "Invalid Date" for a malformed timestamp — confirmed live below.');

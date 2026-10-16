@@ -15,11 +15,11 @@ import { assert } from './support/Assert.js';
 setDocumentTitles();
 assert(untitledWorldTitle() === 'Untitled ForkBuild World' && untitledWorldTitle() === en['document.untitledWorld'],
     '1. A new World is "Untitled ForkBuild World", as in the English messages');
-assert(forkTitle('Hill Fort') === 'Fork of Hill Fort' && forkTitle('Hill Fort') === en['document.forkOf'].replace('{title}', 'Hill Fort'),
-    '2. A fork is "Fork of …", as in the English messages');
+assert(forkTitle('Hill Fort') === 'Remix of Hill Fort' && forkTitle('Hill Fort') === en['document.forkOf'].replace('{title}', 'Hill Fort'),
+    '2. A fork is "Remix of …", as in the English messages');
 assert(copyTitle('Hill Fort') === 'Copy of Hill Fort' && copyTitle('Hill Fort') === en['document.copyOf'].replace('{title}', 'Hill Fort'),
     '3. A copy is "Copy of …", as in the English messages');
-assert(forkTitle('') === 'Fork of Untitled ForkBuild World', '4. A fork of an untitled World names it as untitled');
+assert(forkTitle('') === 'Remix of Untitled ForkBuild World', '4. A fork of an untitled World names it as untitled');
 
 // B. Set from the chosen language, as ui/main.js does.
 const german = new Translator({
@@ -49,7 +49,7 @@ assert(forkTitle('Hill Fort') === 'Abzweigung von Hill Fort', '8. So is a fork')
 
 // C. Leaving one out keeps its English; no argument restores all.
 setDocumentTitles({ untitledWorld: () => 'X' });
-assert(untitledWorldTitle() === 'X' && forkTitle('A') === 'Fork of A', '9. A title left out stays English');
+assert(untitledWorldTitle() === 'X' && forkTitle('A') === 'Remix of A', '9. A title left out stays English');
 setDocumentTitles();
 assert(untitledWorldTitle() === 'Untitled ForkBuild World', '10. With no argument, English again');
 

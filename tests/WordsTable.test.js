@@ -19,14 +19,22 @@ const PLAYER_NAMESPACES = Object.freeze([
     'challenge', 'plaza',
     'publicationCatalog', 'publicationCard', 'helpedBuilds', 'builderView',
     'worldView', 'worldWelcomePanel', 'worldSearchPanel', 'worldFocusPanel', 'worldMapPanel', 'worldLocationBrowser',
-    'worldPresenceIndicator', 'worldCollaboratorIndicator', 'nearbyAvatarsPanel'
+    'worldPresenceIndicator', 'worldCollaboratorIndicator', 'nearbyAvatarsPanel',
+    // The rest of the Editor, World View's placement dialogs and Your Data
+    // (2026-10-16): every remaining "fork" and "document" a player reads.
+    'fork', 'document', 'history', 'editorAction', 'recovery', 'metadataEditor', 'structureCard',
+    'structureInstance', 'blueprintExchange', 'historyTimelinePanel', 'locationDocumentsDialog',
+    'placementEditorDialog', 'placementInfoPanel', 'authorView', 'yourDataView', 'backupGroup',
+    'experimentalBanner'
 ]);
 
 // World View's panels a click opens only with Show advanced tools on: a
 // brick's inspection.
-const ADVANCED_KEYS = new Set([
-    'worldView.openTheReferencedDocumentIn'
-]);
+const ADVANCED_KEYS = new Set([]);
+
+// "Distribute" in the alignment tools spaces bricks evenly; it isn't the
+// publishing word the table means.
+const SPACING_KEY = /\.distribute(X|Y|Z|Bricks)\b/;
 
 // "ForkBuild" is the name, so only "fork" as a word of its own counts.
 const NOT_WORDS = Object.freeze([
@@ -43,6 +51,7 @@ for (const [key, value] of Object.entries(en)) {
     const texts = typeof value === 'string' ? [value] : Object.values(value || {});
     for (const text of texts) {
         for (const { word, pattern, say } of NOT_WORDS) {
+            if (word === 'Distribute' && SPACING_KEY.test(key)) continue;
             if (typeof text === 'string' && pattern.test(text)) found.push(`${key} says "${word}" (say ${say}): ${text}`);
         }
     }

@@ -19,7 +19,7 @@ call a remix a *fork*, as in ForkBuild.)
    no link.
 3. Give it a title — Publish refuses an untitled or empty creation — and,
    optionally, a description and a license: click **✎** beside the
-   document title in the sidebar to open **Document Properties**. A new
+   document title in the sidebar to open **Build Properties**. A new
    document has no license; the first time you publish it, ForkBuild asks
    whether others may remix it (see
    [Letting others remix it](#letting-others-remix-it)).
@@ -328,13 +328,13 @@ The first time you publish a build that has no license, ForkBuild asks
 - **Not now** publishes nothing.
 
 Your answer is saved as the build's license, so you're asked only once;
-change it any time in **Document Properties**. A fork already carries its
+change it any time in **Build Properties**. A fork already carries its
 original's license, so publishing one never asks.
 
 ### All the licenses
 
 A published creation is always shown with a license, chosen from the
-**Document Properties** dialog:
+**Build Properties** dialog:
 
 | License | Meaning |
 |---|---|
@@ -357,7 +357,7 @@ moves or changes yours (see
 [Why can I place other people's builds?](WorldViewAdvancedTools.md#why-can-i-place-other-peoples-builds)).
 Forking is separate and governed by the license (see
 [Placing vs forking](WorldViewAdvancedTools.md#placing-vs-forking)).
-If you'd rather they didn't place it, open **Document Properties** and set **Who can
+If you'd rather they didn't place it, open **Build Properties** and set **Who can
 place it in the World**:
 
 | Setting | Meaning |
@@ -389,7 +389,7 @@ A published creation is **immutable** — it can never change after the
 fact. To build on one, **Remix** it (below), or use **Edit a Copy** in World
 View. In World View, making your first change to a published world — its
 metadata, a landmark or region name, or an animal decoration —
-automatically creates your own copy, titled *"Fork of &lt;original
+automatically creates your own copy, titled *"Remix of &lt;original
 name&gt;"*, with a short confirmation ("Created your own editable copy — …
 is unchanged"); see
 [Save and publish here, too](03-WorldView.md#save-and-publish-here-too).
@@ -527,7 +527,7 @@ published world — see
 
 1. Find a build in **Explore** (or in World View).
 2. Click **Remix**.
-3. The copy opens in the Editor, titled *"Fork of &lt;original name&gt;"*.
+3. The copy opens in the Editor, titled *"Remix of &lt;original name&gt;"*.
 4. Build on it, then save and publish it as your own.
 
 Your published fork shows up with a **Remixed from "…" by …** note, linking
@@ -586,7 +586,7 @@ the top bar opens its page.
    builds as your own copy instead.
 2. Build it your way: drop in an idea if you like, then make it yours.
    Whatever you build enters as long as it keeps the week's tag (add it in
-   **Document Properties → Tags** if you started some other way).
+   **Build Properties → Tags** if you started some other way).
 3. Publish it before the week ends, and share its link. The link's text
    names the challenge and its tag, ready for a post.
 
@@ -650,8 +650,8 @@ lineage. On an **Author view**, you'll see a **fork tree**:
 
 ```
 Medieval House (original)
-└─ Fork of Medieval House (by Bob)
-   └─ Fork of Fork of… (by Carol)
+└─ Remix of Medieval House (by Bob)
+   └─ Remix of Remix of… (by Carol)
 ```
 
 This means a great creation can inspire an entire ecosystem of variations —

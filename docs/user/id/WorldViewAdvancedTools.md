@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 739698f533b6d7bb -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 67400ead6416db5b -->
 # Tampilan Dunia: Alat Lanjutan
 
 <!-- languages -->
@@ -131,10 +131,10 @@ dinonaktifkan. Anda tetap bisa memfokuskannya, memeriksanya, dan memakai
 **Edit Salinan** untuk membangun di atasnya. Hanya letaknya yang menjadi
 hak mereka.
 
-### Dokumen di Sini
+### Bangunan di Sini
 
 Jika panel Penempatan menyebut ada bangunan lain di tempat ini, klik
-**Lihat** untuk membuka **Dokumen di Sini**: daftar setiap bangunan di
+**Lihat** untuk membuka **Bangunan di Sini**: daftar setiap bangunan di
 tempat itu, masing-masing dengan tombol **Fokus**. Bangunan yang
 penerbitannya dibatalkan tidak dicantumkan.
 

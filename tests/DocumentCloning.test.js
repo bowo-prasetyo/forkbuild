@@ -181,7 +181,7 @@ function createSession(storage, { replay = true } = {}) {
     const fork = new ForkDocumentUseCase(storage).execute(source.world.id, stubIdentityProvider);
     assert(fork.world.id !== source.world.id, 'fork has a new document identity');
     assert(fork.world.getBuildings()[0].getBricks()[0].id !== source.world.getBuildings()[0].getBricks()[0].id, 'fork brick identities are fresh');
-    assert(fork.metadata.title === 'Fork of Published Original', 'fork title');
+    assert(fork.metadata.title === 'Remix of Published Original', 'fork title');
     assert(fork.metadata.author === 'alice', 'fork attributed to the current user');
     assert(fork.metadata.parentDocumentId === source.world.id, 'fork lineage');
 
@@ -364,7 +364,7 @@ function createSession(storage, { replay = true } = {}) {
 
     const forkId = nav.forkDocument(doc.world.id);
     const forkDoc = nav.getDocument(forkId);
-    assert(forkDoc.metadata.title === `Fork of ${doc.metadata.title}`, 'fork title');
+    assert(forkDoc.metadata.title === `Remix of ${doc.metadata.title}`, 'fork title');
     assert(forkDoc.metadata.author === 'alice', 'fork author');
     assert(forkDoc.metadata.parentDocumentId === doc.world.id, 'fork lineage');
     assert(nav.isDocumentDirty(forkId), 'fork is dirty until saved');
@@ -442,7 +442,7 @@ function createSession(storage, { replay = true } = {}) {
     for (const id of idsB0) {
         assert(!idsA.includes(id), 'copied brick IDs are unique across documents');
     }
-    assert(docB.metadata.title === `Fork of ${docA.metadata.title}`, 'fork title');
+    assert(docB.metadata.title === `Remix of ${docA.metadata.title}`, 'fork title');
     assert(docB.metadata.author === 'alice', 'fork attributed to the current user');
     assert(docB.metadata.parentDocumentId === docA.world.id, 'fork lineage recorded');
     assert(nav.isDocumentDirty(forkId), 'fork starts dirty');

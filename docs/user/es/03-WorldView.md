@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 7ddc6a422dbb8936 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 50fb553e94b18514 -->
 # 03 — Vista del mundo
 
 <!-- languages -->
@@ -612,7 +612,7 @@ sin salir. La línea de estado dice cuál es: **🔒 Publicado** o
 
 Una construcción publicada nunca cambia. Si la construcción en la que está
 es publicada, su primer cambio aquí (sus datos, un hito o una región, o un
-animal como decoración) crea su propia copia, titulada *“Bifurcación de
+animal como decoración) crea su propia copia, titulada *“Remezcla de
 &lt;nombre original&gt;”*. Un breve aviso se lo dice (“Se creó su propia
 copia editable: … no cambió”). Se aplican las mismas reglas de licencia
 que a cualquier remezcla (consulte

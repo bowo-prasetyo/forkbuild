@@ -152,7 +152,9 @@ old text is touched. Code and protocol documents keep their own terms.
 
 tests/WordsTable.test.js fails when a word from the *Not* column comes back
 on a screen a newcomer meets (the menu, Home, the Editor, a shared link,
-Explore, the challenge and Publish's dialogs).
+Explore, the challenge and Publish's dialogs), and since 2026-10-16 on the
+rest of the Editor (Build Properties, structures, history, recovery,
+Import and Export), World View's placement dialogs and Your Data.
 
 ## Tone
 
