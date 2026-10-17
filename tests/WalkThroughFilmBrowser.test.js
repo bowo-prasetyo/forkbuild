@@ -171,7 +171,7 @@ async function mountDialog({ router = null, documentId = null }) {
     assert(router.currentRoute.value.query.film === 'walk' && dialog.closed() === 1, 'it opens World View on the build, to film it, and closes');
     const request = takeWalkThroughFilmRequest('doc-hut');
     assert(request && request.shape === BuildVideoShape.TALL && request.music === false && request.name === 'Little hut', `World View gets the shape, the music choice and the name (${JSON.stringify(request && { shape: request.shape, music: request.music })})`);
-    assert(request.text.credit === t('video.credit', { author: 'alice' }) && request.description.text.includes('https://example.test/n/hut')
+    assert(request.text.credit === t('video.credit', { author: 'alice' }) && request.description.text.split('\n').includes(t('video.description.remixLink', { url: 'https://example.test/n/hut' }))
         && request.description.title === t('video.description.titleShorts', { title: 'Little hut' }), 'and the words for the video and its description');
     assert(takeWalkThroughFilmRequest('doc-hut') === null, 'once only, so reopening the address later films nothing');
     dialog.unmount();
