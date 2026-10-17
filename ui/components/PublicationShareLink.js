@@ -6,6 +6,7 @@ import {
 import { embedCode } from '../../core/ForkBuildAppLinks.js';
 import { challengeOfTags } from '../../core/BuildChallenge.js';
 import { challengeThemeTitle } from './challenge/challengeText.js';
+import BuildVideoDialog from './buildVideo/BuildVideoDialog.js';
 import { displayText, t } from '../i18n/i18n.js';
 
 const FEEDBACK = Object.freeze({
@@ -19,9 +20,10 @@ function feedbackText(outcome) {
     return FEEDBACK[outcome] ? t(FEEDBACK[outcome]) : '';
 }
 
-// Share, Copy link and Save picture for a Publication. Once it is distributed,
-// the link names where its Signed Claim is stored, from its distribution
-// record (publicationDistributionLifecycleStore, restored from this browser's
+// Share, Copy link, Save picture and Make a video (BuildVideoDialog) for a
+// Publication. Once it is distributed, the link names where its Signed Claim
+// is stored, from its distribution record
+// (publicationDistributionLifecycleStore, restored from this browser's
 // storage when not yet in memory), which it follows, so the link changes as
 // soon as a distribution stores the claim. Before that, given `publication`,
 // a build sent to everyone as a build note (core/BuildNote.js) gets a short
@@ -31,6 +33,7 @@ function feedbackText(outcome) {
 // a blog post or web page (core/ForkBuildAppLinks.js, embedCode()).
 export default {
     name: 'PublicationShareLink',
+    components: { BuildVideoDialog },
     props: {
         publicationId: { type: String, default: null },
         title: { type: String, default: null },
@@ -56,6 +59,7 @@ export default {
         const pictureState = ref('idle');
         const embedOpen = ref(false);
         const embedFeedback = ref('');
+        const videoOpen = ref(false);
         let unsubscribe = null;
 
         function follow(publicationId) {
@@ -99,6 +103,7 @@ export default {
             pictureState.value = 'idle';
             embedOpen.value = false;
             embedFeedback.value = '';
+            videoOpen.value = false;
             if (!publication || !contentStore) return;
             const prepared = await prepareLinkOnlyShare({ publication, contentStore });
             if (attempt === preparing) linkOnly.value = prepared;
@@ -187,9 +192,15 @@ export default {
             }
         }
 
+        // Make a video: the build as published, and the link that opens it
+        // for the video's description.
+        const videoSnapshotText = computed(() => linkOnly.value?.snapshotText ?? null);
+        const videoBuildUrl = computed(() => (share.value?.available ? share.value.url : null));
+        const videoTitle = computed(() => (share.value?.available ? share.value.title : (props.title || '')));
+
         return {
             t, share, shareSheet, feedback, shareNow, copy, canSavePicture, pictureState, savePicture,
-            embed, embedOpen, embedFeedback, toggleEmbed, copyEmbed
+            embed, embedOpen, embedFeedback, toggleEmbed, copyEmbed, videoOpen, videoSnapshotText, videoBuildUrl, videoTitle
         };
     },
     template: `
@@ -200,6 +211,7 @@ export default {
                     <button type="button" :class="['action-btn', shareSheet ? 'action-btn--secondary' : 'action-btn--primary']" @click="copy">{{ t('share.copy') }}</button>
                     <template v-if="!compact">
                         <button v-if="canSavePicture" type="button" class="action-btn action-btn--secondary publication-share-link-picture" :disabled="pictureState === 'drawing'" @click="savePicture">{{ t('share.savePicture') }}</button>
+                        <button v-if="canSavePicture" type="button" class="action-btn action-btn--secondary publication-share-link-video" @click="videoOpen = true">{{ t('share.makeVideo') }}</button>
                         <button v-if="embed" type="button" class="action-btn action-btn--secondary publication-share-link-embed" :aria-expanded="embedOpen ? 'true' : 'false'" @click="toggleEmbed">{{ t('share.embed') }}</button>
                     </template>
                     <span class="publication-share-link-feedback" role="status">{{ feedback }}</span>
@@ -208,6 +220,7 @@ export default {
                     <summary>{{ t('share.moreWays') }}</summary>
                     <div class="publication-share-link-actions">
                         <button v-if="canSavePicture" type="button" class="action-btn action-btn--secondary publication-share-link-picture" :disabled="pictureState === 'drawing'" @click="savePicture">{{ t('share.savePicture') }}</button>
+                        <button v-if="canSavePicture" type="button" class="action-btn action-btn--secondary publication-share-link-video" @click="videoOpen = true">{{ t('share.makeVideo') }}</button>
                         <button v-if="embed" type="button" class="action-btn action-btn--secondary publication-share-link-embed" :aria-expanded="embedOpen ? 'true' : 'false'" @click="toggleEmbed">{{ t('share.embed') }}</button>
                     </div>
                     <input class="publication-share-link-url" readonly :value="share.url" :aria-label="t('share.linkLabel')" @focus="$event.target.select()">
@@ -235,11 +248,21 @@ export default {
             <template v-else>
                 <div v-if="canSavePicture" class="publication-share-link-actions">
                     <button type="button" class="action-btn action-btn--secondary publication-share-link-picture" :disabled="pictureState === 'drawing'" @click="savePicture">{{ t('share.savePicture') }}</button>
+                    <button type="button" class="action-btn action-btn--secondary publication-share-link-video" @click="videoOpen = true">{{ t('share.makeVideo') }}</button>
                 </div>
                 <p v-if="share" class="form-hint form-hint--neutral">{{ share.reason }}</p>
             </template>
             <p v-if="pictureState === 'drawing'" class="form-hint form-hint--neutral" role="status">{{ t('share.pictureDrawing') }}</p>
             <p v-else-if="pictureState === 'failed'" class="form-hint" role="alert">{{ t('share.pictureFailed') }}</p>
+            <Teleport to="body">
+                <BuildVideoDialog
+                    v-if="videoOpen && videoSnapshotText"
+                    :snapshot-text="videoSnapshotText"
+                    :title="videoTitle"
+                    :build-url="videoBuildUrl"
+                    @close="videoOpen = false"
+                />
+            </Teleport>
         </div>
     `
 };

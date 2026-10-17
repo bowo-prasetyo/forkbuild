@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: bad564fee7824288 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 3716d8f23c114fbb -->
 # 04 — Publicar y remezclar
 
 <!-- languages -->
@@ -110,6 +110,18 @@ están en **Mi Mundo compartido** en la Vista de mundo.
 - **Guardar imagen** descarga un PNG de 1200 × 630 de la construcción, con
   su título y “Haga su propia versión en ForkBuild” en la parte inferior,
   para publicar donde un enlace por sí solo no muestra ninguna imagen.
+- **Hacer un video** graba un video corto de la construcción para que usted
+  lo suba a YouTube, Shorts, TikTok o Reels: un **Time-lapse de la
+  construcción**, en el que se levanta bloque a bloque desde el suelo, o un
+  **Plato giratorio**, en el que da una vuelta, en **Horizontal (16:9)** o
+  **Vertical (9:16)**. Su nombre va en la parte inferior, y termina con una
+  tarjeta que dice quién la construyó, con todos los que la construyeron con
+  usted, y dónde remezclarla. El video se hace en su dispositivo, durante lo
+  que dura (medio minuto como mucho), y se guarda en sus descargas; no se sube
+  nada. Después, **Copiar título** y **Copiar descripción** le dan el texto
+  para pegar junto a él: quién la construyó, el enlace a su construcción, un
+  enlace a ForkBuild y la licencia. Deje la pestaña al frente mientras graba;
+  la grabación se pausa mientras está oculta.
 
 Copiar o compartir un enlace, y abrir uno, se cuentan de forma anónima,
 como la visita diaria; consulte

@@ -563,8 +563,8 @@ Music plays softly while you build, a little livelier than World View's. The **â
   it. A build started from a ready-made one that has nothing of your own in
   it yet is asked about once: **Keep building**, or **Publish anyway**. The
   message after it is one bar: **Walk inside it** and **Copy link**, with
-  **More ways to share** holding the link itself, **Save picture** and
-  **Embed**. A reminder to add a passphrase to the identity you published
+  **More ways to share** holding the link itself, **Save picture**, **Make a video**
+  and **Embed**. A reminder to add a passphrase to the identity you published
   with waits for your next publish when that identity was just made.
 - **New** â€” start something new: an **Empty plot**, or one of the
   ready-made builds (a castle, a harbor island, a village square, a house, a

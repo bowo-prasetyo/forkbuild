@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 6eb96f13049b4531 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 044b3cba0265f86d -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -622,8 +622,8 @@ Beim Bauen spielt leise Musik, etwas lebhafter als in der Weltansicht. Die Schal
   wurde und noch nichts Eigenes enthält, wird einmal nachgefragt:
   **Weiterbauen** oder **Trotzdem veröffentlichen**. Die Meldung danach ist
   eine einzige Leiste: **Hineingehen** und **Link kopieren**, und unter
-  **Weitere Möglichkeiten zum Teilen** der Link selbst, **Bild speichern**
-  und **Einbetten**. Eine Erinnerung, der Identität, mit der Sie
+  **Weitere Möglichkeiten zum Teilen** der Link selbst, **Bild speichern**,
+  **Video machen** und **Einbetten**. Eine Erinnerung, der Identität, mit der Sie
   veröffentlicht haben, eine Passphrase zu geben, wartet bis zu Ihrer
   nächsten Veröffentlichung, wenn diese Identität gerade erst erstellt wurde.
 - **Neu** — etwas Neues beginnen: ein **Leeres Grundstück** oder eines der

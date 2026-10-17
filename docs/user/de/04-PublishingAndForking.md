@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: bad564fee7824288 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 3716d8f23c114fbb -->
 # 04 — Veröffentlichen & Remixen
 
 <!-- languages -->
@@ -112,6 +112,18 @@ Weltansicht unter **Meine Geteilte Welt**.
 - **Bild speichern** lädt ein PNG des Bauwerks in 1200 × 630 herunter, mit
   seinem Titel und „Eigene Version auf ForkBuild bauen“ am unteren Rand,
   zum Posten dort, wo ein Link allein kein Bild zeigt.
+- **Video machen** nimmt ein kurzes Video des Bauwerks auf, das Sie selbst
+  auf YouTube, Shorts, TikTok oder Reels hochladen: einen **Zeitraffer**, in
+  dem es Stein für Stein vom Boden aufwächst, oder einen **Drehteller**, auf
+  dem es sich einmal dreht, jeweils **Breit (16:9)** oder **Hoch (9:16)**. Sein
+  Name läuft am unteren Rand mit, und am Ende steht, wer es gebaut hat (mit
+  allen, die mitgebaut haben) und wo man es remixen kann. Das Video entsteht
+  auf Ihrem Gerät, so lange wie es läuft (höchstens eine halbe Minute), und
+  landet in Ihren Downloads; nichts wird hochgeladen. **Titel kopieren** und
+  **Beschreibung kopieren** geben Ihnen dann Text zum Einfügen: wer es gebaut
+  hat, den Link zu Ihrem Bauwerk, einen Link zu ForkBuild und die Lizenz.
+  Lassen Sie den Tab während der Aufnahme im Vordergrund; ist er verdeckt,
+  pausiert sie.
 
 Das Kopieren oder Teilen eines Links und das Öffnen eines Links werden
 anonym gezählt, wie der tägliche Besuch; siehe

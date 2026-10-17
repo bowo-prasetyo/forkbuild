@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: bad564fee7824288 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 3716d8f23c114fbb -->
 # 04 — Publicar e remixar
 
 <!-- languages -->
@@ -107,6 +107,18 @@ ficam em **Meu Mundo compartilhado** na Visão do mundo.
 - **Salvar imagem** baixa um PNG de 1200 × 630 da construção, com o título
   dela e "Faça sua versão no ForkBuild" na parte de baixo, para postar onde
   um link sozinho não mostra imagem.
+- **Fazer um vídeo** grava um vídeo curto da construção para você mesmo
+  enviar ao YouTube, Shorts, TikTok ou Reels: um **Time-lapse da construção**,
+  em que ela sobe bloco por bloco a partir do chão, ou um **Prato giratório**,
+  em que ela dá uma volta, em **Horizontal (16:9)** ou **Vertical (9:16)**. O
+  nome dela aparece embaixo, e o vídeo termina com um cartão dizendo quem
+  construiu, com todos que construíram junto com você, e onde fazer um remix.
+  O vídeo é feito no seu dispositivo, pelo tempo que dura (meio minuto no
+  máximo), e salvo nos seus downloads; nada é enviado. Depois, **Copiar
+  título** e **Copiar descrição** dão o texto para colar ao lado dele: quem
+  construiu, o link da sua construção, um link para o ForkBuild e a licença.
+  Deixe a aba na frente enquanto grava; a gravação pausa enquanto a aba está
+  escondida.
 
 Copiar ou compartilhar um link, e abrir um, são contados de forma anônima,
 como a visita diária; veja
