@@ -5,6 +5,10 @@
 [English](../01-GettingStarted.md) · **Deutsch** · [Español](../es/01-GettingStarted.md) · [Français](../fr/01-GettingStarted.md) · [Bahasa Indonesia](../id/01-GettingStarted.md) · [日本語](../ja/01-GettingStarted.md) · [한국어](../ko/01-GettingStarted.md) · [Português (Brasil)](../pt-BR/01-GettingStarted.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../01-GettingStarted.md).
+<!-- /stale -->
+
 Willkommen! Diese Anleitung bringt Sie in etwa fünf Minuten von „gerade die
 App geöffnet“ zu „ich habe etwas gebaut“. Sie brauchen kein Konto, keinen
 Download und keinen Namen, um anzufangen: Alles bleibt auf Ihrem Gerät, bis

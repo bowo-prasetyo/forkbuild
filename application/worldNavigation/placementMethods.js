@@ -568,6 +568,32 @@ export const placementMethods = {
         this._session.hidePlazaExhibit(key);
     },
 
+    // While a challenge plaza is visited (core/PlazaEntrySpots.js,
+    // PLAZA_QUIET_RADIUS): placed builds within `radius` of `center` whose
+    // document isn't in `keep` (the week's entries) are left out of what
+    // streams in (_findVisibleDocuments()), so the square shows that week
+    // alone. On screen only: no placement is touched. null lets every build
+    // stream in again; the caller refreshes the view either way.
+    setPlazaQuiet(quiet) {
+        this._plazaQuiet = quiet && quiet.center && Number.isFinite(quiet.radius)
+            ? { center: quiet.center, radius: quiet.radius, keep: new Set(quiet.keep || []) }
+            : null;
+    },
+
+    _isLeftOutByPlaza(documentId) {
+        const quiet = this._plazaQuiet;
+        if (!quiet || quiet.keep.has(documentId)) return false;
+        // Never what the visitor is working on.
+        if (this.isDocumentDirty(documentId) || this._localOnlyDocumentIds.has(documentId)) return false;
+        let position = null;
+        try {
+            position = this._getWorldPosition(documentId);
+        } catch {
+            return false;
+        }
+        return Boolean(position) && Math.hypot(position.x - quiet.center.x, position.z - quiet.center.z) <= quiet.radius;
+    },
+
     _plazaExhibitSolids() {
         if (!this._plazaExhibitSolidMap) this._plazaExhibitSolidMap = new Map();
         return this._plazaExhibitSolidMap;

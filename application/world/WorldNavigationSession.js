@@ -451,6 +451,8 @@ export class WorldNavigationSession {
         // position inherited from the source.
         this._localOnlyDocumentIds = new Set();
         this._localPositions = new Map();
+        // Set while a challenge plaza is visited (setPlazaQuiet()).
+        this._plazaQuiet = null;
 
         // Set by _forkForEdit, cleared by consumeForkNotice(). A drain rather than
         // an event: the UI already polls session state after each interaction.

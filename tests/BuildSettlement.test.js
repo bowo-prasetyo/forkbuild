@@ -1,19 +1,20 @@
 import {
-    REMIX_RING_RADII, SETTLEMENT_TAKEN_RADIUS, SETTLEMENT_TREE_CLEARANCE, VILLAGE_FIRST_RING_RADIUS, VILLAGE_SLOT_SPACING,
-    isSettleableGround, ringSpots, settleBeside, settleInVillage
+    SETTLEMENT_TAKEN_RADIUS, SETTLEMENT_TREE_CLEARANCE, VILLAGE_FIRST_RING_RADIUS, VILLAGE_SLOT_SPACING,
+    isSettleableGround, ringSpots, settleInVillage
 } from '../core/BuildSettlement.js';
 import { naturalFeaturesInRegion } from '../core/NaturalFeatureField.js';
 import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { PLAZA_CENTER, PLAZA_VILLAGE_RADIUS } from '../core/ChallengePlaza.js';
 import { computeDeterministicGridPosition } from '../core/DeterministicGridPlacement.js';
-import { SettledPlacementStrategy } from '../application/placement/SettledPlacementStrategy.js';
+import { StandingPlacementStrategy } from '../application/placement/StandingPlacementStrategy.js';
 import { GridPlacementStrategy } from '../application/placement/InitialPlacementStrategy.js';
 import { assert } from './support/Assert.js';
 
-// Builds settle next to each other (docs/reviews/CreativeDirection-2026-10-12.md,
-// finding 2): a remix beside the build it remixes, everything else in the
-// village that grows round the challenge plaza, and a republished build where
-// it already stood.
+// The rings round the challenge plaza, where a week's entries are shown as
+// exhibits (core/PlazaEntrySpots.js); and where a build stands when it is
+// published: where an earlier publish stood it, else on the id-keyed grid,
+// never round the plaza (docs/reviews/CreativeDirection-2026-10-12.md,
+// finding 2, "Decided afterwards").
 
 const distance = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
 
@@ -29,7 +30,7 @@ function spatialIndex(placements = []) {
     };
 }
 
-// The village: round the plaza, on good ground, never the same spot twice.
+// The rings: round the plaza, on good ground, never the same spot twice.
 {
     const taken = [];
     const isTaken = (x, z) => taken.some((spot) => distance(spot, { x, z }) < SETTLEMENT_TAKEN_RADIUS);
@@ -58,22 +59,17 @@ function spatialIndex(placements = []) {
     assert(settleInVillage({ publicationId: 'pub-a' }).x !== settleInVillage({ publicationId: 'pub-b' }).x
         || settleInVillage({ publicationId: 'pub-a' }).z !== settleInVillage({ publicationId: 'pub-b' }).z, 'different ids start at different spots');
     assert(settleInVillage({ publicationId: 'full', isTaken: () => true }) === null, 'a full village settles nobody');
-    console.log('✓ builds settle in a village round the plaza, each on a spot of its own');
+    console.log('✓ the rings round the plaza give each entry a spot of its own, on good ground');
 }
 
-// A remix beside its source.
+// A ring's spots are evenly round it.
 {
-    const source = { x: -400, y: 0, z: 500 };
-    const spot = settleBeside({ source, publicationId: 'remix-1' });
-    assert(spot && distance(spot, source) <= REMIX_RING_RADII[REMIX_RING_RADII.length - 1] + 0.01, 'within a street of its source');
-    assert(settleBeside({ source: null, publicationId: 'r' }) === null && settleBeside({ source: { x: NaN, z: 0 }, publicationId: 'r' }) === null, 'needs somewhere to stand beside');
     const ring = ringSpots({ x: 0, z: 0 }, 18, 20);
     assert(ring.length === 5 && Math.abs(distance(ring[0], { x: 0, z: 0 }) - 18) < 0.01, 'a ring\'s spots are evenly round it');
-    console.log('✓ a remix stands beside the build it comes from');
+    console.log('✓ a ring\'s spots are evenly round it');
 }
 
-// At publish: where an earlier publish stood it, beside its source, in the
-// village, and the grid only when nothing else can.
+// At publish: where an earlier publish stood it, else the grid, remix or not.
 {
     const index = spatialIndex();
     const publications = new Map();
@@ -85,42 +81,33 @@ function spatialIndex(placements = []) {
         index.add(publicationId, position);
         return position;
     };
-    const strategy = new SettledPlacementStrategy({
+    const strategy = new StandingPlacementStrategy({
         spatialIndexProvider: index,
         findPublicationsByDocumentId: (documentId) => publications.get(documentId) || [],
         fallback: new GridPlacementStrategy()
     });
+    const same = (a, b) => a.x === b.x && a.z === b.z;
 
-    const first = publish('house', 'house-v1', '2026-10-12T10:00:00Z');
-    assert(distance(first, PLAZA_CENTER) <= VILLAGE_FIRST_RING_RADIUS + 0.01, 'a first build joins the village');
-    const second = publish('house', 'house-v2', '2026-10-12T11:00:00Z');
-    assert(second.x === first.x && second.z === first.z, 'publishing again never moves it');
+    const first = publish('house', 'house-v1', '2026-10-17T10:00:00Z');
+    assert(same(first, computeDeterministicGridPosition('house-v1')), 'a first build takes its spot on the grid');
+    assert(distance(first, PLAZA_CENTER) > PLAZA_VILLAGE_RADIUS + VILLAGE_FIRST_RING_RADIUS, 'not round the plaza');
+    const second = publish('house', 'house-v2', '2026-10-17T11:00:00Z');
+    assert(same(second, first), 'publishing again never moves it');
 
-    const remix = publish('house-remix', 'remix-v1', '2026-10-12T12:00:00Z', 'house');
-    assert(distance(remix, first) <= REMIX_RING_RADII[REMIX_RING_RADII.length - 1] + 0.01 && distance(remix, first) >= SETTLEMENT_TAKEN_RADIUS, 'a remix stands beside the build it remixes');
+    const remix = publish('house-remix', 'remix-v1', '2026-10-17T12:00:00Z', 'house');
+    assert(same(remix, computeDeterministicGridPosition('remix-v1')), 'a remix takes its own spot on the grid, like any build');
 
-    // A source this device knows only as a Publication, with no placement, stands on the grid.
-    publications.set('found', [{ id: 'found-pub', documentId: 'found', publishedAt: '2026-10-01T00:00:00Z' }]);
-    const besideFound = publish('found-remix', 'found-remix-v1', '2026-10-12T13:00:00Z', 'found');
-    assert(distance(besideFound, computeDeterministicGridPosition('found-pub')) <= REMIX_RING_RADII[1] + 0.01, 'beside a found build, where the grid stands it');
+    // Placed round the plaza while builds settled there: republishing keeps it there.
+    const settled = settleInVillage({ publicationId: 'old-v1' });
+    publications.set('old', [{ id: 'old-v1', documentId: 'old', publishedAt: '2026-10-13T00:00:00Z' }]);
+    index.add('old-v1', settled);
+    assert(same(publish('old', 'old-v2', '2026-10-17T13:00:00Z'), settled), 'a build placed round the plaza before stays where it stands');
 
-    const unknownParent = publish('orphan', 'orphan-v1', '2026-10-12T14:00:00Z', 'never-seen');
-    assert(distance(unknownParent, PLAZA_CENTER) <= VILLAGE_FIRST_RING_RADIUS + 0.01, 'a remix of a build this device doesn\'t know joins the village');
-
-    const crowded = new SettledPlacementStrategy({
-        spatialIndexProvider: { findByPublicationId: () => [], discover: () => [{}] },
-        findPublicationsByDocumentId: () => [],
-        fallback: new GridPlacementStrategy()
-    });
-    const fallback = crowded.computePosition({ publicationId: 'late', documentId: 'late' });
-    const grid = computeDeterministicGridPosition('late');
-    assert(fallback.x === grid.x && fallback.z === grid.z, 'with every spot taken, the grid as before');
-
-    const broken = new SettledPlacementStrategy({
+    const broken = new StandingPlacementStrategy({
         spatialIndexProvider: { findByPublicationId: () => { throw new Error('broken'); }, discover: () => [] },
         findPublicationsByDocumentId: () => [{ id: 'x' }],
         fallback: new GridPlacementStrategy()
     });
-    assert(broken.computePosition({ publicationId: 'b', documentId: 'b' }).x === computeDeterministicGridPosition('b').x, 'a broken index never stops a publish');
-    console.log('✓ at publish a build keeps its spot, stands beside its source, or joins the village');
+    assert(same(broken.computePosition({ publicationId: 'b', documentId: 'b' }), computeDeterministicGridPosition('b')), 'a broken index never stops a publish');
+    console.log('✓ at publish a build keeps its spot, or takes its own on the grid; nothing new is placed round the plaza');
 }

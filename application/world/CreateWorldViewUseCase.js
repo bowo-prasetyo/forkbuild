@@ -17,7 +17,7 @@ import { LocalAuthorizationVerifier } from '../../identity/LocalAuthorizationVer
 import { MoveWorldPlacementUseCase } from '../placement/MoveWorldPlacementUseCase.js';
 import { RemoveWorldPlacementUseCase } from '../placement/RemoveWorldPlacementUseCase.js';
 import { GridPlacementStrategy } from '../placement/InitialPlacementStrategy.js';
-import { SettledPlacementStrategy } from '../placement/SettledPlacementStrategy.js';
+import { StandingPlacementStrategy } from '../placement/StandingPlacementStrategy.js';
 import { CreateCommandRegistryUseCase } from '../editor/CreateCommandRegistryUseCase.js';
 import { CreateBrickRegistryUseCase } from '../editor/CreateBrickRegistryUseCase.js';
 import { ReplayDocumentUseCase } from '../document/ReplayDocumentUseCase.js';
@@ -117,9 +117,9 @@ export class CreateWorldViewUseCase {
             spatialIndexProvider,
             placementRegistry
         );
-        // Beside what it remixes, or in the village round the plaza
-        // (core/BuildSettlement.js), as a build published from the Editor.
-        const initialPlacementStrategy = new SettledPlacementStrategy({
+        // Where an earlier publish stands it, else on the id-keyed grid, as a
+        // build published from the Editor.
+        const initialPlacementStrategy = new StandingPlacementStrategy({
             spatialIndexProvider,
             findPublicationsByDocumentId: (documentId) => publicationActionDiscoveryProvider.findByDocumentId(documentId),
             fallback: new GridPlacementStrategy()

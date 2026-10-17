@@ -7,7 +7,7 @@ import { PublishDocumentUseCase } from '../publication/PublishDocumentUseCase.js
 import { PlacePublicationUseCase } from '../placement/PlacePublicationUseCase.js';
 import { GridPlacementStrategy } from '../placement/InitialPlacementStrategy.js';
 import { BuildPlotPlacementStrategy } from '../plot/BuildPlotPlacementStrategy.js';
-import { SettledPlacementStrategy } from '../placement/SettledPlacementStrategy.js';
+import { StandingPlacementStrategy } from '../placement/StandingPlacementStrategy.js';
 import { LoadPublicationDocumentUseCase } from '../publication/LoadPublicationDocumentUseCase.js';
 import { CreateBrickRegistryUseCase } from '../editor/CreateBrickRegistryUseCase.js';
 import { LocalContentStore } from '../../content/LocalContentStore.js';
@@ -27,10 +27,11 @@ import { LocalContentStore } from '../../content/LocalContentStore.js';
 export class CreatePublisherUseCase {
     // `buildPlotStore`, when given, puts a build started with Build here on
     // its plot when it is first published (BuildPlotPlacementStrategy).
-    // Otherwise a build settles beside what it remixes, or in the village
-    // round the challenge plaza (SettledPlacementStrategy);
+    // Otherwise a build stays where an earlier publish of it stands, or takes
+    // its spot on the id-keyed grid (StandingPlacementStrategy);
     // `foundPublications` (the Publications found elsewhere, with
-    // findByDocumentId()) lets a remix find the build it came from.
+    // findByDocumentId()) lets it find an earlier publish made on another
+    // device.
     execute(identityProvider, { buildPlotStore = null, foundPublications = null } = {}) {
         const storageProvider = new LocalStorageProvider();
         const contentStore = new LocalContentStore(storageProvider);
@@ -47,7 +48,7 @@ export class CreatePublisherUseCase {
             placementRegistry,
             identityProvider
         );
-        const settledPlacementStrategy = new SettledPlacementStrategy({
+        const standingPlacementStrategy = new StandingPlacementStrategy({
             spatialIndexProvider,
             findPublicationsByDocumentId: (documentId) => [
                 ...discoveryProvider.findByDocumentId(documentId),
@@ -56,8 +57,8 @@ export class CreatePublisherUseCase {
             fallback: new GridPlacementStrategy()
         });
         const initialPlacementStrategy = buildPlotStore
-            ? new BuildPlotPlacementStrategy({ buildPlotStore, fallback: settledPlacementStrategy })
-            : settledPlacementStrategy;
+            ? new BuildPlotPlacementStrategy({ buildPlotStore, fallback: standingPlacementStrategy })
+            : standingPlacementStrategy;
 
         return {
             publishDocumentUseCase: new PublishDocumentUseCase(

@@ -159,6 +159,20 @@ claim.
 *Measured by:* plaza visits per challenge join, and a new count of World
 View sessions that see at least one other person's build.
 
+**Decided afterwards (2026-10-17, by the project owner):** builds go back
+to the id-keyed grid. The settlement shipped as one village round the
+challenge plaza for everything, so every week's builds crowded one square,
+and an old week's plaza showed newer builds round it. The owner prefers the
+grid's sparseness: builds with room round them, in a land that feels wide.
+So a Build here build goes on its plot, a republished build stays where it
+stands, and everything else, remixes included, takes its grid spot. The
+plaza shows only its week's entries, as exhibits round the square, and
+leaves other placed builds near it out of view while it is visited
+(core/PlazaEntrySpots.js). Builds placed round the plaza from 2026-10-12 to
+2026-10-17 keep their signed spots. Expect fewer neighbours in view
+(`/e/world-neighbour`) until the World fills up; the plaza is where builds
+meet.
+
 ### 3. Inside is reachable, but it isn't a place yet (P1, pillar 3)
 
 The door now opens and the avatar walks through. Here is the moment of

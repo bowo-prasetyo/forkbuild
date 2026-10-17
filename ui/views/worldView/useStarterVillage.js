@@ -10,9 +10,8 @@ import { libraryItemName } from '../../i18n/libraryText.js';
 // (core/library/PlazaSquare.js) and the six ready-made builds
 // (application/home/FeaturedBuilds.js) stand in every World View, wherever it
 // opens, drawn and walked into like the plaza's exhibits but never placed,
-// signed or stored. A published build settles beside them, so it stands in
-// a village from its first day, and so does a friend who walks there with
-// its builder. The plaza's panel lists them (useChallengePlaza.js).
+// signed or stored. A week's entries are shown round them while its plaza
+// is visited. The plaza's panel lists them (useChallengePlaza.js).
 // Exhibit keys are Document ids; these can't be.
 export const VILLAGE_SQUARE_KEY = 'plaza:square';
 const READY_MADE_KEY_PREFIX = 'ready-made:';

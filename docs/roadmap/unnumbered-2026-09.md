@@ -7497,3 +7497,35 @@ round, the odd plink of a drop in a puddle; under a roof, taps the roof rings wi
   and are heard over the rain only as far ahead as they were scheduled).
 - Not done: drops don't change with what they land on (leaves, a road, a lake) or with wind; a roof is the same
   whatever it's built of. Checked by measurement and rendered recordings, not yet by ear in the app.
+
+## Builds have room again; the plaza shows its week alone (unnumbered, 2026-10-17)
+
+**Every build settled round the challenge plaza.** Since "Find each other" (2026-10-12), a published build was
+placed in rings round the plaza's square, a remix on a ring round what it remixes. So every week's builds crowded
+one square, its best spots went to whoever published first, and an old week's plaza showed newer builds round it:
+last week's "Quiet place" plaza stood among this week's lighthouses. The project owner chose the id-keyed grid
+instead (docs/reviews/CreativeDirection-2026-10-12.md, finding 2, "Decided afterwards"): builds with room round them,
+in a land that feels wide. Pillar served: your work is yours, and lives in a world. How a player notices: a new build
+stands on a spot of its own out in the World, and a week's plaza shows that week's entries round the square and
+nothing else.
+
+- **Placement** (application/placement/StandingPlacementStrategy.js, replacing SettledPlacementStrategy.js): a Build
+  here build goes on its plot (BuildPlotPlacementStrategy, unchanged), a republished build stays where an earlier
+  publish of it stands, and anything else, a remix too, takes its spot on the id-keyed grid
+  (core/DeterministicGridPlacement.js). core/BuildSettlement.js keeps only the rings, which now lay out the plaza's
+  exhibits; `settleBeside()` and the remix rings are gone. Builds placed round the plaza from 2026-10-12 to 2026-10-17
+  keep their signed spots.
+- **The plaza** (ui/views/worldView/useChallengePlaza.js): only the week's entries take spots round the square, so
+  another week's placed build no longer pushes them outward; and while the plaza is visited, placed builds within
+  `PLAZA_QUIET_RADIUS` (150, World View's streaming radius) of the middle that aren't the week's entries are left out
+  of what streams in (`setPlazaQuiet()`, `_findVisibleDocuments()` in application/worldNavigation/). On screen only:
+  no placement is touched, nothing the visitor is working on is left out, and all streams in again on leaving. The
+  grid starts 170 from the middle, so no grid placement is ever left out.
+- Home's "Explore together" text no longer promises a village round the weekly challenge, in every language.
+- docs/user/01, 03 and 04 and docs/Protocol.md say so; their translations carry the out-of-date banner.
+- Tests: `BuildSettlement` (a build takes its grid spot, a remix too; republishing keeps a spot, round the plaza
+  included; a broken index never stops a publish), `PlazaQuiet` (another week's build near the square is left out
+  while the plaza is visited and back after; the week's entries, builds further off and what the visitor works on
+  never are).
+- Not done: moving a remix beside its source takes **Move…** in the advanced tools, with no one-tap "beside the
+  original"; fewer builds see a neighbour (`/e/world-neighbour`) until the World fills up.

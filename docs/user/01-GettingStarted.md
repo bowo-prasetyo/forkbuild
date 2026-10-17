@@ -64,7 +64,7 @@ The bar at the top is always visible:
 | **Build** | The Editor, where you build (see [The Editor](02-TheEditor.md)) |
 | **Explore** | Everyone's published builds, to open, remix or visit (see [Publishing & Remixing](04-PublishingAndForking.md#explore)) |
 | **Challenge** | This week's build challenge and its entries (see [The weekly build challenge](04-PublishingAndForking.md#the-weekly-build-challenge)) |
-| **Walk** | World View at this week's challenge plaza, to walk around the village of published builds (see [World View](03-WorldView.md)) |
+| **Walk** | World View at this week's challenge plaza, to walk among the week's entries round the village square (see [World View](03-WorldView.md)) |
 | **My Worlds** | Worlds you've visited on this device (see [My Worlds](03-WorldView.md#my-worlds--worlds-youve-actually-been-to)) |
 | **🔔** | Your notifications: comments, remixes and new builds by people you follow (see [Orientation and Locations](03-WorldView.md#orientation-and-locations)) |
 | **Choose a name** | Pick the name you publish and walk under; once you have one, it shows here instead (see [Choosing a name](#choosing-a-name)) |
@@ -229,7 +229,7 @@ button isn't shown.
 
 - Learn the full building toolkit in **[The Editor](02-TheEditor.md)**.
 - Ready to share? Jump to **[Publishing & Remixing](04-PublishingAndForking.md)**.
-- Walk around the village of published builds in **[World View](03-WorldView.md)**.
+- Walk among other people's builds in **[World View](03-WorldView.md)**.
 - Set up your avatar and meet people in
   **[Avatars & Presence](06-AvatarsAndPresence.md)** and
   **[Peer Connections & Friends](07-PeerConnectionsAndFriends.md)**.

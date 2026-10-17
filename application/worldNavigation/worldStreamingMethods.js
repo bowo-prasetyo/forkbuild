@@ -21,10 +21,7 @@ export const worldStreamingMethods = {
             cameraState.position.y,
             cameraState.position.z
         );
-        const visibleIds = this._worldLayoutProvider.findVisibleDocuments(
-            cameraPos,
-            STREAMING_RADIUS
-        );
+        const visibleIds = this._findVisibleDocuments(cameraPos, STREAMING_RADIUS);
         const currentlyLoaded = new Set(this._loadedDocuments.keys());
         const toUnload = Array.from(currentlyLoaded).filter((id) => {
             if (visibleIds.includes(id)) return false;
@@ -72,6 +69,13 @@ export const worldStreamingMethods = {
             visible: visibleIds,
             failed: this._getFailedIds()
         };
+    },
+
+    // The placed builds within `radius` of `center`, less those a challenge
+    // plaza leaves out while it is visited (setPlazaQuiet()).
+    _findVisibleDocuments(center, radius) {
+        const ids = this._worldLayoutProvider.findVisibleDocuments(center, radius);
+        return this._plazaQuiet ? ids.filter((id) => !this._isLeftOutByPlaza(id)) : ids;
     },
 
     // Tries local storage first, unchanged. Only when storage[documentId] is

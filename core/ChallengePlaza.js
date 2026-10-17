@@ -1,11 +1,12 @@
 // The challenge plaza (docs/user/03-WorldView.md, "The challenge plaza"): a
 // square of open ground in the shared World, the middle of its village
 // (core/StarterVillage.js), where a week's challenge entries can be found.
-// An entry stands where it settled (core/BuildSettlement.js); one this
-// device knows no placement for is shown, while someone visits the plaza,
-// at the spot it would settle on (ui/views/worldView/useChallengePlaza.js),
-// so a build stands in one place. Exhibits are never placements: nothing is
-// signed, stored or claimed for anyone.
+// While someone visits a week's plaza, that week's entries, and only those,
+// are shown round the square, each on the spot it would settle on
+// (core/PlazaEntrySpots.js, ui/views/worldView/useChallengePlaza.js); a
+// published build itself is placed on the id-keyed grid, away from here.
+// Exhibits are never placements: nothing is signed, stored or claimed for
+// anyone.
 //
 // Everything here is pure, so every device that knows the same entries lays
 // them out the same way.
@@ -17,9 +18,9 @@
 export const PLAZA_CENTER = Object.freeze({ x: -170, y: 0, z: 300 });
 
 // The village round the middle (core/StarterVillage.js): its square and
-// ready-made builds stand inside this radius, and no published build settles
-// inside it (core/BuildSettlement.js), so the first ring of published builds
-// stands just outside them.
+// ready-made builds stand inside this radius, and no entry is shown inside
+// it (core/BuildSettlement.js), so the first ring of a week's entries stands
+// just outside them.
 export const PLAZA_VILLAGE_RADIUS = 48;
 
 // No tree grows within this distance of the middle

@@ -1,7 +1,7 @@
 import { computed, inject, ref } from 'vue';
 import { challengeById } from '../../../core/BuildChallenge.js';
 import { PLAZA_CENTER, PLAZA_MAX_EXHIBITS, plazaEntryOrder } from '../../../core/ChallengePlaza.js';
-import { plazaEntrySpots } from '../../../core/PlazaEntrySpots.js';
+import { PLAZA_QUIET_RADIUS, plazaEntrySpots } from '../../../core/PlazaEntrySpots.js';
 import { CreateChallengeEntriesUseCase } from '../../../application/challenge/CreateChallengeEntriesUseCase.js';
 import { OpenPublicationLinkOutcome } from '../../../application/publication/OpenPublicationLink.js';
 import { readSharedBuildDocument } from '../../../application/publication/sharing/ReadSharedBuild.js';
@@ -12,17 +12,20 @@ import { t } from '../../i18n/i18n.js';
 // The challenge plaza (core/ChallengePlaza.js), when World View opens on
 // `/plaza/<week>`: takes the visitor to the village square
 // (useStarterVillage.js, standing in every World View), and lists the
-// week's entries and the village's ready-made builds. Every entry stands in
-// the village (core/PlazaEntrySpots.js): where it settled, when this device
-// knows a placement for it there; otherwise, placed far away or not at all,
-// it is shown, as an exhibit, on the spot it would settle on
-// (core/BuildSettlement.js), among the village's builds rather than on a
-// stage of its own. An entry's build is read from this device, or fetched
-// and checked the way opening its link would
-// (application/publication/OpenPublicationLink.js); an entry whose publisher
-// chose "Only I may place it" is left to the challenge page, since standing
-// it here would be placing it. Exhibits are never placements: they are gone
-// when the visitor leaves.
+// week's entries and the village's ready-made builds. Only that week's
+// entries stand round the square (core/PlazaEntrySpots.js): where it is
+// placed, for one placed there while builds still settled round the plaza;
+// otherwise, placed elsewhere (published builds take their spot on the
+// id-keyed grid) or not at all, it is shown, as an exhibit, on the spot it
+// would settle on round the square (core/BuildSettlement.js). Other placed
+// builds near the square are left out of World View while the plaza is
+// visited (session.setPlazaQuiet()), so the square shows its week alone. An
+// entry's build is read from this device, or fetched and checked the way
+// opening its link would (application/publication/OpenPublicationLink.js);
+// an entry whose publisher chose "Only I may place it" is left to the
+// challenge page, since standing it here would be placing it. Exhibits are
+// never placements, and nothing left out is touched: all is as before when
+// the visitor leaves.
 export function useChallengePlaza({ route, router, session, refreshSpatialUI, village = null }) {
     const challengeId = route.name === 'plaza' ? String(route.params.challengeId || '') : null;
     const challenge = challengeId ? challengeById(challengeId) : null;
@@ -59,12 +62,14 @@ export function useChallengePlaza({ route, router, session, refreshSpatialUI, vi
     const shown = new Map();
     let active = false;
 
-    // Where each build this device knows stands: publication id -> position.
-    function knownPlacements() {
+    // Where each of the week's entries this device knows a placement for
+    // stands: publication id -> position. Other builds are left out of the
+    // square, so they take no spot in it.
+    function knownPlacements(entryIds) {
         const byPublication = new Map();
         try {
             for (const placement of session.listKnownPlacements() || []) {
-                if (placement.publicationId && !byPublication.has(placement.publicationId)) byPublication.set(placement.publicationId, placement.position);
+                if (entryIds.has(placement.publicationId) && !byPublication.has(placement.publicationId)) byPublication.set(placement.publicationId, placement.position);
             }
         } catch {
             // Every entry is then shown where it would settle.
@@ -123,7 +128,7 @@ export function useChallengePlaza({ route, router, session, refreshSpatialUI, vi
         }
         const spots = new Map(plazaEntrySpots(
             ready.map((build) => ({ key: build.publication.documentId, publicationId: build.publication.id })),
-            { placedAt: knownPlacements(), seed: session.getWorldSeed?.() }
+            { placedAt: knownPlacements(new Set(candidates.map((publication) => publication.id))), seed: session.getWorldSeed?.() }
         ).map((spot) => [spot.key, spot]));
 
         for (const [key, position] of Array.from(shown.entries())) {
@@ -161,9 +166,18 @@ export function useChallengePlaza({ route, router, session, refreshSpatialUI, vi
         refreshSpatialUI();
     }
 
+    // Leaves out of World View the placed builds near the square that aren't
+    // among `entries`, the week's (all of them: one asking not to be placed
+    // by others still stands where its publisher put it).
+    function quietSquare(entries) {
+        session.setPlazaQuiet({ center: PLAZA_CENTER, radius: PLAZA_QUIET_RADIUS, keep: entries.map((publication) => publication.documentId) });
+        session.updateSpatialView();
+    }
+
     // Reads every entry not read yet, one at a time, redrawing as each arrives.
     async function load() {
         const ordered = plazaEntryOrder(listEntries(challenge.tag));
+        quietSquare(ordered);
         const candidates = ordered.filter(isPlaceable);
         plaza.value = { ...plaza.value, notPlaceable: ordered.length - candidates.length };
         arrange(candidates, { settled: false });
@@ -185,14 +199,15 @@ export function useChallengePlaza({ route, router, session, refreshSpatialUI, vi
     async function enterPlaza() {
         if (!challenge) return false;
         active = true;
+        quietSquare([]);
         session.visitPosition(PLAZA_CENTER);
         funnel?.visitedPlaza();
         await load();
         if (!active || !entryDiscovery) return true;
         const result = await entryDiscovery.run(challenge.tag);
         if (active && result.found > 0) await load();
-        // The village round the plaza (core/BuildSettlement.js): the builds
-        // others sent to everyone, so they stand where their builders put them.
+        // The builds others sent to everyone, so they stand where their
+        // builders put them (those near the square are still left out).
         if (active && neighbourDiscovery) {
             try {
                 const found = await neighbourDiscovery.run();
@@ -208,6 +223,7 @@ export function useChallengePlaza({ route, router, session, refreshSpatialUI, vi
         active = false;
         for (const key of Array.from(shown.keys())) session.hidePlazaExhibit(key);
         shown.clear();
+        session.setPlazaQuiet(null);
     }
 
     function backToPlaza() {
