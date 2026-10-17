@@ -2,17 +2,23 @@ import { message } from './Message.js';
 import { LAUNCH_CHANNEL_PARAMETER } from './LaunchChannel.js';
 
 // A short video of a build to upload to YouTube, Shorts, TikTok or Reels
-// yourself (renderer/BuildVideoRecorder.js records it on this device; nothing
-// is uploaded): the build turning, or rising brick by brick, then an end card
-// saying who built it and where to remix it. This is the pure part: the
+// yourself (recorded on this device; nothing is uploaded): the build turning
+// or rising brick by brick (renderer/BuildVideoRecorder.js), or walked into in
+// World View with its sounds and music (core/WalkThroughFilm.js,
+// renderer/WorldFilmRecorder.js), then an end card saying who built it and
+// where to remix it. This is the pure part: the
 // shapes, how long each part lasts, what each moment shows, the order bricks
 // rise in, and the title and description to paste beside the video.
 
 export const BuildVideoKind = Object.freeze({
     TURNTABLE: 'turntable',
-    TIMELAPSE: 'timelapse'
+    TIMELAPSE: 'timelapse',
+    WALKTHROUGH: 'walkthrough'
 });
 export const BUILD_VIDEO_KINDS = Object.freeze(Object.values(BuildVideoKind));
+// The kinds drawn away from the screen, on their own, with no sound; a
+// walk-through is filmed in World View.
+export const DRAWN_VIDEO_KINDS = Object.freeze([BuildVideoKind.TURNTABLE, BuildVideoKind.TIMELAPSE]);
 
 // Wide for YouTube; tall for Shorts, TikTok and Reels.
 export const BuildVideoShape = Object.freeze({
@@ -43,7 +49,7 @@ export const END_CARD_FADE_SECONDS = 0.5;
 // `riseSeconds` is 0 for a turntable; `showSeconds` is the time between the
 // last brick and the end card.
 export function buildVideoTimeline(kind, brickCount) {
-    if (!BUILD_VIDEO_KINDS.includes(kind)) throw new Error(`Unknown video kind: ${kind}`);
+    if (!DRAWN_VIDEO_KINDS.includes(kind)) throw new Error(`Not a drawn video kind: ${kind}`);
     const count = Math.max(0, Math.floor(Number(brickCount) || 0));
     const riseSeconds = kind === BuildVideoKind.TIMELAPSE && count > 1
         ? Math.min(MAX_RISE_SECONDS, Math.max(MIN_RISE_SECONDS, count / BRICKS_PER_SECOND))
@@ -115,9 +121,18 @@ export const BUILD_VIDEO_MIME_TYPES = Object.freeze([
     'video/webm'
 ]);
 
-// The first of BUILD_VIDEO_MIME_TYPES `isTypeSupported` accepts, or null.
-export function chooseVideoMimeType(isTypeSupported) {
-    for (const type of BUILD_VIDEO_MIME_TYPES) {
+// The same, for a video with sound.
+export const BUILD_VIDEO_WITH_SOUND_MIME_TYPES = Object.freeze([
+    'video/mp4;codecs=avc1.42E01F,mp4a.40.2',
+    'video/webm;codecs=vp9,opus',
+    'video/webm;codecs=vp8,opus',
+    'video/webm'
+]);
+
+// The first of BUILD_VIDEO_MIME_TYPES (BUILD_VIDEO_WITH_SOUND_MIME_TYPES, with
+// `sound`) `isTypeSupported` accepts, or null.
+export function chooseVideoMimeType(isTypeSupported, { sound = false } = {}) {
+    for (const type of sound ? BUILD_VIDEO_WITH_SOUND_MIME_TYPES : BUILD_VIDEO_MIME_TYPES) {
         try {
             if (isTypeSupported(type)) return type;
         } catch {
@@ -143,6 +158,10 @@ export function videoFileExtension(mimeType) {
 
 // YouTube's limit on a title, in characters.
 const TITLE_LIMIT = 100;
+// The longest link to the build a description carries: YouTube takes 5,000
+// characters, and a link that carries its whole build can be longer
+// (application/publication/sharing/PublicationLinkPayload.js).
+export const DESCRIPTION_LINK_LIMIT = 3500;
 
 // The title and description to paste beside the video where it is uploaded,
 // as messages (core/Message.js) the UI turns into text: `{ title, lines }`,
@@ -151,19 +170,22 @@ const TITLE_LIMIT = 100;
 // (`buildUrl`, when it has one) and to ForkBuild (`appUrl`, tagged so a visit
 // from the video is counted as one: core/LaunchChannel.js), and names its
 // license. `title` and the names are plain text; `license` is a message or
-// text. A tall video is meant for Shorts, so its title says so.
+// text. A tall video is meant for Shorts, so its title says so. A link longer
+// than DESCRIPTION_LINK_LIMIT is left out, and `linkLeftOut` says so.
 export function describeBuildVideo({
     title, author = '', builtWith = [], remixedFrom = '', license = null, buildUrl = null, appUrl, challengeTag = null, shape = BuildVideoShape.WIDE
 }) {
     const name = String(title || '').trim();
     const names = builtWith.map((entry) => String(entry || '').trim()).filter(Boolean);
+    const linkLeftOut = Boolean(buildUrl) && buildUrl.length > DESCRIPTION_LINK_LIMIT;
+    const link = linkLeftOut ? null : buildUrl;
     const hashtags = ['#ForkBuild', ...(challengeTag ? [`#${challengeTag}`] : []), ...(shape === BuildVideoShape.TALL ? ['#Shorts'] : [])].join(' ');
     const lines = [
         author ? message('video.description.byAuthor', { title: name, author }) : message('video.description.built', { title: name }),
         ...(names.length ? [message('video.description.builtWith', { names: names.join(', ') })] : []),
         ...(remixedFrom ? [message('video.description.remixedFrom', { title: remixedFrom })] : []),
         null,
-        ...(buildUrl ? [message('video.description.remixLink', { url: buildUrl })] : []),
+        ...(link ? [message('video.description.remixLink', { url: link })] : []),
         message('video.description.appLink', { url: appUrl }),
         null,
         ...(license ? [message('video.description.license', { license })] : []),
@@ -171,7 +193,8 @@ export function describeBuildVideo({
     ];
     return Object.freeze({
         title: message(shape === BuildVideoShape.TALL ? 'video.description.titleShorts' : 'video.description.title', { title: truncate(name, TITLE_LIMIT - 40) }),
-        lines: Object.freeze(lines)
+        lines: Object.freeze(lines),
+        linkLeftOut
     });
 }
 

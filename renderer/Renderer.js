@@ -214,6 +214,7 @@ export class Renderer {
         // registers here instead of Renderer knowing anything about
         // avatars, movement, or presence.
         this._frameListeners = new Set();
+        this._renderedFrameListeners = new Set();
         this._animationLoop = new AnimationLoop((deltaSeconds) => this._renderFrame(deltaSeconds));
 
         this._onResize = this._onResize.bind(this);
@@ -414,6 +415,15 @@ export class Renderer {
         return () => this._frameListeners.delete(callback);
     }
 
+    // Registers `callback(canvas)` to run right after each frame is drawn,
+    // while the canvas still holds it (it is cleared once the page shows it),
+    // for copying frames into a video (renderer/WorldFilmRecorder.js).
+    // Returns an unsubscribe function.
+    addRenderedFrameListener(callback) {
+        this._renderedFrameListeners.add(callback);
+        return () => this._renderedFrameListeners.delete(callback);
+    }
+
     start() {
         this._animationLoop.start();
     }
@@ -425,6 +435,7 @@ export class Renderer {
     dispose() {
         this.stop();
         this._frameListeners.clear();
+        this._renderedFrameListeners.clear();
         this._terrainStreaming.dispose();
         this._vegetationStreaming.dispose();
         this._waterStreaming.dispose();
@@ -475,6 +486,9 @@ export class Renderer {
         }
         this._sunShadows.follow(this._cameraController.target);
         this._webglRenderer.render(this._sceneManager.scene, this._cameraController.camera);
+        for (const listener of this._renderedFrameListeners) {
+            listener(this._webglRenderer.domElement);
+        }
     }
 
     _applyUnderwaterView(view) {

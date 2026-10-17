@@ -3,7 +3,7 @@
 // standing back for a tall frame, the file it is saved as, the format asked
 // for, and the title and description pasted beside it.
 import {
-    BUILD_VIDEO_MIME_TYPES, BUILD_VIDEO_SIZES, BuildVideoKind, BuildVideoShape, END_CARD_FADE_SECONDS, TURN_SECONDS,
+    BUILD_VIDEO_MIME_TYPES, BUILD_VIDEO_SIZES, BUILD_VIDEO_WITH_SOUND_MIME_TYPES, DESCRIPTION_LINK_LIMIT, BuildVideoKind, BuildVideoShape, END_CARD_FADE_SECONDS, TURN_SECONDS,
     buildVideoFileName, buildVideoFrame, buildVideoTimeline, canRecordBuildVideo, chooseVideoMimeType, describeBuildVideo,
     timelapseOrder, videoAppUrl, videoCameraDistanceScale, videoFileExtension
 } from '../core/BuildVideo.js';
@@ -42,6 +42,13 @@ const close = (a, b) => Math.abs(a - b) < 1e-9;
         threw = true;
     }
     assert(threw, 'an unknown kind is refused');
+    threw = false;
+    try {
+        buildVideoTimeline(BuildVideoKind.WALKTHROUGH, 3);
+    } catch {
+        threw = true;
+    }
+    assert(threw, 'a walk-through is filmed in World View, not drawn on a timeline');
     console.log('✓ timelines');
 }
 
@@ -104,6 +111,9 @@ const close = (a, b) => Math.abs(a - b) < 1e-9;
     assert(chooseVideoMimeType(() => true) === BUILD_VIDEO_MIME_TYPES[0], 'MP4 is preferred where it is recorded');
     assert(chooseVideoMimeType((type) => type.startsWith('video/webm')) === 'video/webm;codecs=vp9', 'otherwise WebM with VP9');
     assert(chooseVideoMimeType(() => false) === null, 'null where nothing is recorded');
+    assert(chooseVideoMimeType(() => true, { sound: true }) === BUILD_VIDEO_WITH_SOUND_MIME_TYPES[0]
+        && BUILD_VIDEO_WITH_SOUND_MIME_TYPES[0].includes('mp4a'), 'with sound, a format with an audio codec');
+    assert(chooseVideoMimeType((type) => type.startsWith('video/webm'), { sound: true }) === 'video/webm;codecs=vp9,opus', 'WebM with Opus otherwise');
     assert(chooseVideoMimeType(() => { throw new Error('no'); }) === null, 'a browser that throws records nothing');
     assert(videoFileExtension('video/mp4;codecs=avc1.42E01F') === 'mp4' && videoFileExtension('video/webm;codecs=vp8') === 'webm', 'the extension follows the format');
 
@@ -145,6 +155,12 @@ const close = (a, b) => Math.abs(a - b) < 1e-9;
     assert(plain.title.key === 'video.description.title', 'a wide video\'s title is plain');
     assert(JSON.stringify(plainKeys) === JSON.stringify(['video.description.built', null, 'video.description.appLink', null, '#ForkBuild']),
         `a build with no author, link or license still says where it was built (${JSON.stringify(plainKeys)})`);
+
+    assert(described.linkLeftOut === false, 'a short link is kept');
+    const longLink = `https://example.test/b/${'a'.repeat(DESCRIPTION_LINK_LIMIT)}`;
+    const leftOut = describeBuildVideo({ title: 'Harbor', buildUrl: longLink, appUrl });
+    assert(leftOut.linkLeftOut && !leftOut.lines.some((line) => line?.key === 'video.description.remixLink'),
+        'a link that carries a large build is too long for a YouTube description: it is left out, and that is said');
 
     const long = describeBuildVideo({ title: 'x'.repeat(200), appUrl });
     assert(long.title.params.title.length === 60 && long.title.params.title.endsWith('…'), 'a long title is shortened to fit YouTube\'s limit');

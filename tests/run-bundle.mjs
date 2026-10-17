@@ -651,6 +651,40 @@ async function firstVisit(browser, base) {
         await signing.close();
     }
 
+    // Make a video, Walk-through: from a build just published, World View
+    // films the avatar walking into it, with its sound, and saves the video.
+    const filming = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    const film = await filming.newPage();
+    try {
+        await film.goto(`${base}/#/editor?start=village:house`);
+        await film.waitForFunction(() => document.querySelector('.document-info-compact-title')?.textContent.trim() === 'House', null, { timeout: 60_000 });
+        await film.click('.toolbar-publish');
+        await film.waitForSelector('.nothing-added-dialog', { timeout: 10_000 });
+        await film.click('.nothing-added-dialog button:has-text("Publish anyway")');
+        await film.waitForSelector('.remix-permission-dialog', { timeout: 10_000 });
+        await film.click('.remix-permission-allow');
+        await film.waitForSelector('.findability-dialog', { timeout: 10_000 });
+        await film.click('.findability-link');
+        await film.waitForSelector('.login-modal-quick', { timeout: 10_000 });
+        await film.fill('.login-modal-quick-name', 'Film maker');
+        await film.click('.login-modal-quick-go');
+        await film.waitForSelector('.editor-post-publish-share .publication-share-more summary', { timeout: 60_000 });
+        await film.click('.editor-post-publish-share .publication-share-more summary');
+        await film.click('.editor-post-publish-share .publication-share-link-video');
+        await film.click('.build-video-dialog [data-kind="walkthrough"] input');
+        const filmed = film.waitForEvent('download', { timeout: 120_000 });
+        await film.click('.build-video-record');
+        await film.waitForSelector('.walk-through-film-panel', { timeout: 60_000 });
+        assert(film.url().includes('#/world/') && !film.url().includes('film='), `World View films it, leaving the address clean (${film.url()})`);
+        const video = await filmed;
+        assert(/^forkbuild-house-walkthrough\.(webm|mp4)$/.test(video.suggestedFilename()), `the walk-through is saved, named after the house (${video.suggestedFilename()})`);
+        await film.waitForSelector('.walk-through-film-panel[data-stage="saved"] .build-video-description', { timeout: 30_000 });
+        await film.click('.walk-through-film-close');
+        await film.waitForFunction(() => !document.querySelector('.walk-through-film-panel'), null, { timeout: 10_000 });
+    } finally {
+        await filming.close();
+    }
+
     const phone = await browser.newContext({ viewport: { width: 390, height: 800 } });
     const small = await phone.newPage();
     try {
@@ -805,7 +839,7 @@ try {
     await offlineAndNotifications(browser, `http://127.0.0.1:${server.address().port}`, published.precacheFiles, published.outdir);
     console.log(`✓ the published site keeps its ${published.precacheFiles} files on the first visit and opens offline, Home and the Editor; a new version is offered and starts on Reload; notifications on this device turn on and off (or say the browser blocks them)`);
     await firstVisit(browser, `http://127.0.0.1:${server.address().port}`);
-    console.log('✓ a first visit: six pages and More in the nav, Walk opening the plaza with the ready-made builds, Publish asking who can find it, the guided first build in the Editor, where Place with no brick picked places a cube on the first real click and stacks a second, Publish asking about remixes and to log in, an untouched ready-made house asked about once, the published link copied on another device, and Walk inside it arriving at the house door and walking in');
+    console.log('✓ a first visit: six pages and More in the nav, Walk opening the plaza with the ready-made builds, Publish asking who can find it, the guided first build in the Editor, where Place with no brick picked places a cube on the first real click and stacks a second, Publish asking about remixes and to log in, an untouched ready-made house asked about once, the published link copied on another device, Walk inside it arriving at the house door and walking in, and a walk-through of a published house filmed in World View');
     await walkThePlaza(browser, `http://127.0.0.1:${server.address().port}`);
     console.log('✓ an entry published for the week stands in its plaza, reached from the challenge page, and World View stays there until Open takes you to the entry\'s World; an unknown week says so');
     await postingSwitches(browser, `http://127.0.0.1:${server.address().port}`);

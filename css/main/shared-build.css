@@ -476,3 +476,35 @@
 .helped-builds-shelf {
     margin-top: 2rem;
 }
+
+.build-video-music {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.6rem;
+    color: var(--ink-soft);
+}
+
+/* Filming a walk-through in World View
+   (ui/components/buildVideo/WalkThroughFilmPanel.js): floats over the 3D
+   view, which is all the video records. */
+.walk-through-film-panel {
+    position: fixed;
+    left: 50%;
+    bottom: 1rem;
+    transform: translateX(-50%);
+    z-index: 90;
+    width: min(520px, calc(100vw - 2rem));
+    max-height: 80vh;
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding: 1rem 1.25rem;
+    background: var(--surface-low);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    box-shadow: 0 12px 40px rgba(var(--shade-rgb), 0.23);
+}
+
+.walk-through-film-panel .modal-actions {
+    margin-top: 0.6rem;
+}

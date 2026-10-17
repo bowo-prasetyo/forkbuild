@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 3716d8f23c114fbb -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 33cea86c419bfd8c -->
 # 04 — Publier et remixer
 
 <!-- languages -->
@@ -127,6 +127,18 @@ boutons se trouvent sous **Mon Monde partagé** dans la Vue du monde.
   construction, un lien vers ForkBuild et la licence. Gardez l’onglet au
   premier plan pendant l’enregistrement ; il se met en pause quand l’onglet
   est caché.
+- Une **Visite**, le troisième genre de **Faire une vidéo**, est filmée dans
+  la Vue du Monde : elle s’ouvre sur votre construction, votre avatar part
+  quelques pas en arrière, marche jusqu’à la porte (qui s’ouvre) et entre,
+  puis regarde tout autour de la pièce, avec les sons de la Vue du Monde
+  (oiseaux ou grillons, vent, pas, la porte) et, si vous ne décochez pas
+  **Avec musique**, sa musique. Seule la vue 3D est filmée, jamais les
+  panneaux, et cela prend le temps de la vidéo (environ 15 secondes). Une
+  construction sans porte est rejointe par l’avant. La musique et les sons
+  sont dans la vidéo même si vous les avez coupés. Un lien qui contient une
+  grande construction est trop long pour une description YouTube : il est
+  laissé de côté, et Faire une vidéo le dit ; publiez avec « Qui peut la
+  trouver ? » sur « Tout le monde » pour un lien court.
 
 Copier ou partager un lien, et en ouvrir un, sont comptés anonymement,
 comme la visite quotidienne ; voir

@@ -351,7 +351,14 @@ DocumentThumbnailRenderer), Make a video
 build time-lapse or a turntable, wide or tall, and its end card, title and
 description; renderer/BuildVideoRecorder.js draws it into a canvas and
 records it with MediaRecorder as it plays, on the device, uploading
-nothing), and Embed, the same payload as an `<iframe>` of
+nothing; a walk-through hands World View the request
+(ui/components/buildVideo/walkThroughFilmRequest.js) and opens it at
+`/world/<id>?film=walk`, where ui/views/worldView/useWalkThroughFilm.js
+waits for the build, application/worldNavigation/walkThroughFilmMethods.js
+walks the avatar through core/WalkThroughFilm.js's plan with World View's own
+movement and third-person camera, and renderer/WorldFilmRecorder.js copies
+each frame from the renderer's after-render hook, with the soundscape's
+recording (audio/WebAudioSoundscapeProvider.js#startCapture())), and Embed, the same payload as an `<iframe>` of
 embed.html for other sites' pages. embed.html is a page of its own
 (ui/embed/embedBoot.js), not a route: it starts no storage, peers or
 relays, checks the payload as opening the link does

@@ -34,6 +34,7 @@ import { documentOperationMethods } from '../worldNavigation/documentOperationMe
 import { soundObservationMethods } from '../worldNavigation/soundObservationMethods.js';
 import { remoteVehicleMethods } from '../worldNavigation/remoteVehicleMethods.js';
 import { arrivalMethods } from '../worldNavigation/arrivalMethods.js';
+import { walkThroughFilmMethods } from '../worldNavigation/walkThroughFilmMethods.js';
 import { dayCycleMethods } from '../worldNavigation/dayCycleMethods.js';
 import { CommandHistoryEvent } from '../events/CommandHistoryEvent.js';
 import { EDITOR_ACTIVITY } from '../../core/EditorSoundCues.js';
@@ -427,6 +428,8 @@ export class WorldNavigationSession {
         // Arriving at a build's door, and whether the avatar has walked in;
         // see arrivalMethods.
         this._arrival = null;
+        // A walk-through being filmed; see walkThroughFilmMethods.
+        this._walkThroughFilm = null;
         this._eventBus = null;
         this._discoveryProvider = discoveryProvider;
         // Falls back to `discoveryProvider` when no separate provider is supplied.
@@ -624,6 +627,16 @@ export class WorldNavigationSession {
         return this._session.onAnimationFrame(callback);
     }
 
+    // Calls `callback(canvas)` right after every frame is drawn, with the
+    // canvas holding it (World View's walk-through video). Returns an
+    // unsubscribe function, or null when the render facade can't.
+    onRenderedFrame(callback) {
+        if (typeof this._session.onRenderedFrame !== 'function') {
+            return null;
+        }
+        return this._session.onRenderedFrame(callback);
+    }
+
     // Independent of _setupLocalAvatar(): vehicles are a fact about the World,
     // so a logged-out spectator still sees vehicles near the camera (see
     // docs/Principles.md, "Watching Presence Never Requires Having One").
@@ -729,6 +742,7 @@ export class WorldNavigationSession {
     }
 
     dispose() {
+        this.stopWalkThroughFilm();
         // An honest LEAVE for every entered World, rather than relying on other
         // replicas pruning dropped connections.
         if (this._worldPresenceUseCase) {
@@ -911,5 +925,6 @@ installMethods(
     soundObservationMethods,
     remoteVehicleMethods,
     arrivalMethods,
+    walkThroughFilmMethods,
     dayCycleMethods
 );

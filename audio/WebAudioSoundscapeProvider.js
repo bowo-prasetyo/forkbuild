@@ -54,6 +54,10 @@ const SPRING_AUDIBLE_LEVEL = 0.05;
 // Thunder: how loud at its loudest, and how long it rolls.
 const THUNDER_PEAK = 0.9;
 const THUNDER_SECONDS = 5;
+// A recording (startCapture()) hears everything at this level, whatever the
+// listener's own volume: the default volume, so a video sounds as a newcomer
+// would first hear it.
+const CAPTURE_LEVEL = 0.5;
 
 // Sets a node's `<name>X/Y/Z` AudioParams (a panner's position, the
 // listener's position, forward and up), or the deprecated setter where
@@ -108,7 +112,12 @@ export class WebAudioSoundscapeProvider {
         this._setTimeout = setTimeoutFn;
         this._clearTimeout = clearTimeoutFn;
         this._context = null;
+        // Every sound is mixed into `_master`, which is heard through
+        // `_output` at the listener's volume, and recorded through `_capture`.
         this._master = null;
+        this._output = null;
+        this._capture = null;
+        this._captureMusic = true;
         this._layerGains = {};
         this._effects = null;
         this._effectsNoise = null;
@@ -176,6 +185,49 @@ export class WebAudioSoundscapeProvider {
 
     get musicPlaying() {
         return Boolean(this._musicPlayer && this._musicPlayer.enabled);
+    }
+
+    // Starts recording everything this plays, for a video (World View's
+    // walk-through): a MediaStream with one audio track, at CAPTURE_LEVEL
+    // whatever the volume, and heard even while sound is muted. `music` says
+    // whether the music is in it, whatever the music setting. Null where Web
+    // Audio can't record. Must be called after a user gesture, like resume().
+    startCapture({ music = true } = {}) {
+        if (this._disposed) {
+            return null;
+        }
+        this.stopCapture();
+        this.resume();
+        const context = this._context;
+        if (!context || typeof context.createMediaStreamDestination !== 'function') {
+            return null;
+        }
+        const level = context.createGain();
+        level.gain.value = CAPTURE_LEVEL;
+        const destination = context.createMediaStreamDestination();
+        this._master.connect(level);
+        level.connect(destination);
+        this._capture = { level, destination };
+        this._captureMusic = Boolean(music);
+        this._syncRunning();
+        return destination.stream;
+    }
+
+    // Stops the recording startCapture() began.
+    stopCapture() {
+        const capture = this._capture;
+        if (!capture) {
+            return;
+        }
+        this._capture = null;
+        try {
+            this._master.disconnect(capture.level);
+        } catch {
+            // Already disconnected.
+        }
+        capture.level.disconnect();
+        capture.destination.stream.getTracks().forEach((track) => track.stop());
+        if (!this._disposed) this._syncRunning();
     }
 
     setLayerLevels(levels) {
@@ -477,6 +529,7 @@ export class WebAudioSoundscapeProvider {
             return;
         }
         this._disposed = true;
+        this.stopCapture();
         if (this._document && typeof this._document.removeEventListener === 'function') {
             this._document.removeEventListener('visibilitychange', this._onVisibilityChange);
         }
@@ -517,10 +570,10 @@ export class WebAudioSoundscapeProvider {
     }
 
     _applyMaster() {
-        if (!this._master) {
+        if (!this._output) {
             return;
         }
-        this._master.gain.setTargetAtTime(this._masterTarget(), this._context.currentTime, VOLUME_TIME_CONSTANT);
+        this._output.gain.setTargetAtTime(this._masterTarget(), this._context.currentTime, VOLUME_TIME_CONSTANT);
     }
 
     _isPlaying() {
@@ -528,7 +581,7 @@ export class WebAudioSoundscapeProvider {
     }
 
     _shouldRun() {
-        return this._unlocked && !this._muted && !this._disposed && !(this._document && this._document.hidden);
+        return this._unlocked && (!this._muted || Boolean(this._capture)) && !this._disposed && !(this._document && this._document.hidden);
     }
 
     _syncRunning() {
@@ -555,7 +608,9 @@ export class WebAudioSoundscapeProvider {
     }
 
     _syncMusic() {
-        const play = this._music && this._shouldRun();
+        // While recording, the recording's choice, so the video has music
+        // only when asked for.
+        const play = (this._capture ? this._captureMusic : this._music) && this._shouldRun();
         if (!this._musicPlayer && play && this._context && this._master) {
             this._musicPlayer = new MusicPlayer({
                 context: this._context,
@@ -581,8 +636,10 @@ export class WebAudioSoundscapeProvider {
         }
         this._context = context;
         this._master = context.createGain();
-        this._master.gain.value = this._masterTarget();
-        this._master.connect(context.destination);
+        this._output = context.createGain();
+        this._output.gain.value = this._masterTarget();
+        this._master.connect(this._output);
+        this._output.connect(context.destination);
         for (const layer of LAYERS) {
             const gain = context.createGain();
             gain.gain.value = this._levels[layer] * LAYER_PEAK[layer];
