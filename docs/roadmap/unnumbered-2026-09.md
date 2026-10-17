@@ -7320,3 +7320,57 @@ picture**, and the file it saves is ready to upload.
   else's build from its shared link; and counting how many videos are made, which would add a counted moment to the
   Privacy page. Rendering is real time, so a video takes as long to make as it lasts. The translations were written
   without a native speaker's review.
+
+## Make a video: a walk-through filmed in World View, with its sounds and music (unnumbered, 2026-10-17)
+
+**The time-lapse and the turntable show a build from outside; only ForkBuild can walk you into one.** The day before's
+Make a video left "a walk-through filmed in World View" as the video only ForkBuild can make: the avatar walking up to
+the door, the door swinging open, and the room inside, with the birds, the footsteps and the music a visitor hears.
+That is the video most likely to stop someone scrolling Shorts. Pillar served: your work is yours, and lives in a world
+(a build is shown as a place to walk into, not only a model), with every build has a family tree (the same credits and
+remix link as every video). How a player notices: **Walk-through** is the third kind in Make a video.
+
+- **The walk** (`core/WalkThroughFilm.js`, new, pure): from the build's entrance (`core/BuildEntrance.js`), the avatar
+  starts 7, 5.5 or 4 steps back from the door, the farthest with a clear way to it, holds for a second, walks to the
+  door and on in (2.2 units, less in a small build, keeping off the far wall), turning to face where it goes, then looks
+  slowly all the way round (7 seconds, easing in and out) and the end card fades in. A build with no door is walked up
+  to from 5 steps back and looked at. A walk that can't reach a point gives up after 10 seconds and looks round from
+  where it got to. Every ready-made build with a door is walked into in about 4 seconds; a film runs about 15.
+- **Walked by World View itself** (`application/worldNavigation/walkThroughFilmMethods.js`, new): the session puts the
+  avatar at the start, turns it and holds its forward key each render frame, so it walks with World View's own
+  movement, collisions, swinging doors, footsteps and third-person camera, which indoors frames the room with the roof
+  cut away (`core/IndoorView.js`). The person's movement keys do nothing while it films, no camera glide takes the view
+  away, and stopping gives the camera its perspective back.
+- **Recorded as drawn** (`renderer/WorldFilmRecorder.js`, new): `Renderer` gains an after-render hook
+  (`addRenderedFrameListener`, through the render facade's `onRenderedFrame` and the session's), from which each frame
+  is copied, cropped from the middle of the view to the video's shape, with the strip and end card now shared with the
+  other kinds (`renderer/BuildVideoOverlay.js`). Recording starts with the first frame copied, so a video never opens
+  on an empty canvas. Only the 3D view is recorded, never the panels. MP4 with AAC where the browser records it, WebM
+  with Opus otherwise.
+- **With its sound** (`audio/WebAudioSoundscapeProvider.js`, `startCapture()`/`stopCapture()`, through
+  `WorldSoundscapeService`): everything is mixed into one node, heard through the person's volume and recorded at the
+  default volume, so a video sounds as a newcomer first hears World View, even while the person has sound muted.
+  **With music** (on unless unticked) decides the music in the video, whatever the person's music setting, which comes
+  back afterwards.
+- **How it's asked for**: Make a video (`BuildVideoDialog`) offers Walk-through where it can open World View (a router
+  and the build's document), hands World View the request in memory (`walkThroughFilmRequest.js`, so a reload or a
+  bookmark films nothing) and opens `/world/<id>?film=walk`; World View settles for a moment once the build has loaded,
+  films it, and shows `WalkThroughFilmPanel`: getting ready, filming with progress and Stop, then the saved video's
+  title and description to paste (`BuildVideoSaved`, now shared with the dialog). A share panel inside World View
+  starts it in place.
+- **A link too long for a description is left out**: a link that carries a large build can pass YouTube's 5,000
+  characters (up to 12,000), so `describeBuildVideo()` leaves out a link over 3,500 and Make a video says to publish
+  with Who can find it? set to Everyone for a short link. This applies to every kind of video.
+- 10 new messages, in all eight languages; the guide's Publishing chapter, README.md and docs/Architecture.md describe
+  it in every language where the guide is translated.
+- Tests: `WalkThroughFilm` (the plan, each frame's steering, a fence moving the start nearer, a build with no door, the
+  real movement pipeline walking all 15 ready-made builds with a door from the start to inside, the session placing,
+  walking and stopping the avatar and giving the camera back, and the crop), `WalkThroughFilmBrowser` (World View's
+  sound recorded while muted, music following the video's choice and coming back after, a tall video cropped from the
+  middle with sound in it, and Make a video handing the request to World View once), `BuildVideo` (the walk-through
+  kind, formats with sound, the long link left out), and the bundle check (a published house filmed in World View and
+  saved).
+- Not done: other camera angles (a first-person walk, or a sweep round the outside before going in); filming someone
+  else's build from its shared link; music for the time-lapse and turntable; a tall video takes the middle of a wide
+  view, so it is sharper on a tall window; and the film runs in real time with the tab in front. The translations were
+  written without a native speaker's review.

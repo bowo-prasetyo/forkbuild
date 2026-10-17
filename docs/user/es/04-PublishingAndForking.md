@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 3716d8f23c114fbb -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 33cea86c419bfd8c -->
 # 04 — Publicar y remezclar
 
 <!-- languages -->
@@ -122,6 +122,18 @@ están en **Mi Mundo compartido** en la Vista de mundo.
   para pegar junto a él: quién la construyó, el enlace a su construcción, un
   enlace a ForkBuild y la licencia. Deje la pestaña al frente mientras graba;
   la grabación se pausa mientras está oculta.
+- Un **Recorrido**, el tercer tipo en **Hacer un video**, se filma en la
+  Vista del mundo: se abre en su construcción, su avatar empieza unos pasos
+  atrás, camina hasta la puerta (que se abre) y entra, y mira alrededor de
+  la habitación, con los sonidos de la Vista del mundo (pájaros o grillos,
+  viento, pasos, la puerta) y, si no desmarca **Con música**, su música. Solo
+  se filma la vista 3D, nunca los paneles, y tarda lo que dura (unos 15
+  segundos). A una construcción sin puerta se camina hasta su frente. La
+  música y los sonidos van en el video aunque usted los tenga apagados. Un
+  enlace que lleva una construcción grande es demasiado largo para una
+  descripción de YouTube, así que se deja fuera y Hacer un video lo dice;
+  publique con **¿Quién puede encontrarla?** en **Todos** para obtener un
+  enlace corto.
 
 Copiar o compartir un enlace, y abrir uno, se cuentan de forma anónima,
 como la visita diaria; consulte

@@ -260,6 +260,7 @@ export default {
                     :snapshot-text="videoSnapshotText"
                     :title="videoTitle"
                     :build-url="videoBuildUrl"
+                    :document-id="publication?.documentId ?? null"
                     @close="videoOpen = false"
                 />
             </Teleport>

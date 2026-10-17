@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 3716d8f23c114fbb -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 33cea86c419bfd8c -->
 # 04 — Publicar e remixar
 
 <!-- languages -->
@@ -119,6 +119,17 @@ ficam em **Meu Mundo compartilhado** na Visão do mundo.
   construiu, o link da sua construção, um link para o ForkBuild e a licença.
   Deixe a aba na frente enquanto grava; a gravação pausa enquanto a aba está
   escondida.
+- Um **Passeio**, o terceiro tipo em **Fazer um vídeo**, é filmado na Visão
+  do mundo: ela abre na sua construção, seu avatar começa alguns passos
+  atrás, caminha até a porta (que se abre) e entra, e olha em volta do
+  cômodo, com os sons da Visão do mundo (pássaros ou grilos, vento, passos, a
+  porta) e, se você não desmarcar **Com música**, a música. Só a visão 3D é
+  filmada, nunca os painéis, e leva o tempo do vídeo (cerca de 15 segundos).
+  Uma construção sem porta é visitada pela frente. A música e os sons vão no
+  vídeo mesmo que você os tenha desligado. Um link que leva uma construção
+  grande é longo demais para a descrição do YouTube, então fica de fora e
+  Fazer um vídeo avisa; publique com **Quem pode encontrá-la?** em **Todo
+  mundo** para ter um link curto.
 
 Copiar ou compartilhar um link, e abrir um, são contados de forma anônima,
 como a visita diária; veja

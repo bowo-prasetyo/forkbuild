@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 3716d8f23c114fbb -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 33cea86c419bfd8c -->
 # 04 — Penerbitan & Remix
 
 <!-- languages -->
@@ -125,6 +125,18 @@ bawah **Dunia Bersama Saya** di Tampilan Dunia.
   ditempel di sampingnya: siapa yang membangunnya, tautan ke bangunan Anda,
   tautan ke ForkBuild, dan lisensinya. Biarkan tab tetap di depan selama
   merekam; perekaman berhenti sejenak saat tab tersembunyi.
+- **Jelajah**, jenis ketiga di **Buat video**, difilmkan di Tampilan Dunia:
+  Tampilan Dunia terbuka di bangunan Anda, avatar Anda mulai beberapa langkah
+  di depannya, berjalan ke pintu (yang terbuka) lalu masuk, dan melihat
+  sekeliling ruangan, dengan suara Tampilan Dunia (burung atau jangkrik,
+  angin, langkah kaki, pintu) dan, kecuali Anda menghapus centang **Dengan
+  musik**, musiknya. Hanya tampilan 3D yang difilmkan, bukan panelnya, dan
+  lamanya sama dengan durasi video (sekitar 15 detik). Bangunan tanpa pintu
+  didatangi dari depan. Musik dan suara tetap ada di video meskipun Anda
+  mematikannya. Tautan yang memuat bangunan besar terlalu panjang untuk
+  deskripsi YouTube, jadi tidak disertakan dan Buat video memberitahukannya;
+  terbitkan dengan **Siapa yang bisa menemukannya?** diatur ke **Semua
+  orang** untuk tautan pendek.
 
 Menyalin atau membagikan tautan, dan membukanya, dihitung secara anonim,
 seperti kunjungan harian; lihat

@@ -1,4 +1,4 @@
-import { ref, computed, onMounted, onBeforeUnmount, inject } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, inject, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { CreateBrickRegistryUseCase } from '../../application/editor/CreateBrickRegistryUseCase.js';
 import { CreateWorldViewUseCase } from '../../application/world/CreateWorldViewUseCase.js';
@@ -12,6 +12,7 @@ import { selectNearbySnapshotCandidates } from '../../application/snapshot/Nearb
 import { limitConcurrency } from '../../utils/limitConcurrency.js';
 import ActionFeedback from '../components/ActionFeedback.js';
 import { useArrival } from './worldView/useArrival.js';
+import { useWalkThroughFilm } from './worldView/useWalkThroughFilm.js';
 import DocumentInfoPanel from '../components/DocumentInfoPanel.js';
 import MetadataEditorDialog from '../components/MetadataEditorDialog.js';
 import PlacementInfoPanel from '../components/PlacementInfoPanel.js';
@@ -23,6 +24,7 @@ import AvatarInfoPanel from '../components/AvatarInfoPanel.js';
 import NearbyAvatarsPanel from '../components/NearbyAvatarsPanel.js';
 import CompassIndicator from '../components/CompassIndicator.js';
 import SoundControl from '../components/SoundControl.js';
+import WalkThroughFilmPanel from '../components/buildVideo/WalkThroughFilmPanel.js';
 import LocationsPanel from '../components/LocationsPanel.js';
 import LandmarkFormModal from '../components/LandmarkFormModal.js';
 import RegionFormModal from '../components/RegionFormModal.js';
@@ -121,7 +123,7 @@ export default {
         WorldWelcomePanel, WorldMapPanel, PlaceNamingPanel,
         GeographicPlaceDirectoryPanel, GeographicPlacePanel, CollapsibleSection,
         WorldFocusPanel, WorldEncounterCanvas, OwnPublicationPanel, VehicleInteractionPrompt, AnimalInteractionPrompt, ResidentInteractionPrompt, ResidentSpeechActions,
-        HistoryTimelinePanel, TouchMovementPad, BreathMeter, SoundControl, WalkTogetherDialog, LoginModal
+        HistoryTimelinePanel, TouchMovementPad, BreathMeter, SoundControl, WalkTogetherDialog, LoginModal, WalkThroughFilmPanel
     },
     setup() {
         const route = useRoute();
@@ -1140,7 +1142,7 @@ export default {
 
         const {
             soundAvailable, soundMuted, soundVolume, soundSpatial, soundMusic, startSound, stopSound, toggleSound, setSoundVolume,
-            toggleSoundSpatial, toggleSoundMusic, onSoundKeyDown
+            toggleSoundSpatial, toggleSoundMusic, onSoundKeyDown, sound
         } = useWorldSoundscape({ createWorldSoundscape: inject('createWorldSoundscape', null), session });
 
         const {
@@ -1150,6 +1152,14 @@ export default {
         });
 
         const { arriveAtDoor, watchArrival } = useArrival({ session, feedback });
+        // Make a video's walk-through (`?film=walk`): filmed here, at the build.
+        const { film, beginFilm, watchFilm, stopFilm } = useWalkThroughFilm({ session, sound });
+        // Asked for from a share panel in World View itself, which stays open.
+        watch(() => route.query.film, (value) => {
+            if (value !== 'walk') return;
+            beginFilm(route.params.documentId);
+            router.replace({ path: route.path });
+        });
 
         onMounted(() => {
             allPublications.value = listPublicationsUseCase.execute();
@@ -1165,6 +1175,11 @@ export default {
                 // Walk inside it (the Editor, after Publish): at the build's door.
                 skipWelcomeFor(initialDocumentId);
                 arriveAtDoor(initialDocumentId);
+                router.replace({ path: `/world/${initialDocumentId}` });
+            } else if (route.query.film === 'walk') {
+                // Make a video's walk-through, filmed at the build.
+                skipWelcomeFor(initialDocumentId);
+                if (!beginFilm(initialDocumentId)) session.navigateToDocument(initialDocumentId);
                 router.replace({ path: `/world/${initialDocumentId}` });
             } else {
                 session.navigateToDocument(initialDocumentId);
@@ -1213,6 +1228,7 @@ export default {
             spatialPresenceSyncInterval = setInterval(() => {
                 syncCurrentWorldSpatialPresence();
                 watchArrival();
+                watchFilm();
             }, 100);
 
             // Its own short interval: the 3-second refresh is far too slow for a prompt
@@ -1287,10 +1303,13 @@ export default {
             if (historyPreviewCursor.value !== null) {
                 guarded(() => session.cancelHistoryPreview());
             }
+            stopFilm();
             session.dispose();
         });
 
         return {
+            film,
+            stopFilm,
             displayText,
             compassText,
             spatialContextDescription,
@@ -1578,6 +1597,7 @@ export default {
     },
     template: `
         <div class="world-view">
+            <WalkThroughFilmPanel v-if="film" :film="film" @stop="stopFilm" @close="stopFilm" />
             <div :class="['world-view-overlay', { 'world-view-overlay--collapsed': !panelOpen }]">
               <!-- Shown only on phone-width screens (css/main/touch-and-compact.css). -->
               <button

@@ -253,6 +253,20 @@ export class WorldSoundscapeService {
         return this._preference.toggleMusic();
     }
 
+    // Records what World View plays, for a walk-through video
+    // (audio/WebAudioSoundscapeProvider.js#startCapture()): a MediaStream, or
+    // null where the sound can't be recorded.
+    startCapture({ music = true } = {}) {
+        if (this._disposed || typeof this._provider.startCapture !== 'function') {
+            return null;
+        }
+        return this._provider.startCapture({ music });
+    }
+
+    stopCapture() {
+        if (typeof this._provider.stopCapture === 'function') this._provider.stopCapture();
+    }
+
     dispose() {
         if (this._disposed) {
             return;

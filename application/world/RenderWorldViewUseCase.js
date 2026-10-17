@@ -515,6 +515,9 @@ export class RenderWorldViewUseCase {
             // this stays deliberately generic rather than
             // avatar-specific.
             onAnimationFrame: (callback) => renderer.addFrameListener(callback),
+            // Right after each frame is drawn, with the canvas it was drawn
+            // into: World View's walk-through video copies it from there.
+            onRenderedFrame: (callback) => renderer.addRenderedFrameListener(callback),
 
             // 0.2.37 — the remote-avatar counterpart to setLocalAvatar/
             // updateLocalAvatarPresence/removeLocalAvatar. Called only

@@ -583,6 +583,10 @@ export const localAvatarMethods = {
         if (!this._avatarControlModeActive || !this._avatarMovementController) {
             return false;
         }
+        // While a walk-through is filmed, the film walks the avatar.
+        if (this._walkThroughFilm) {
+            return false;
+        }
         this._processContinuousMovementInput(key, 'keydown');
         const movementConsumed = this._avatarMovementController.keyDown(key);
         // Tried independently of movement; either controller recognizing the key
@@ -608,6 +612,10 @@ export const localAvatarMethods = {
 
     avatarKeyUp(key) {
         if (!this._avatarMovementController) {
+            return false;
+        }
+        // The film holds its own key; the person's were released when it began.
+        if (this._walkThroughFilm) {
             return false;
         }
         // Not gated on control mode, so an Alt release after the mode turned off
