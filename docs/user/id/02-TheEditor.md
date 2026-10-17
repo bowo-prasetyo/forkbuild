@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 6eb96f13049b4531 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 044b3cba0265f86d -->
 # 02 — Editor
 
 <!-- languages -->

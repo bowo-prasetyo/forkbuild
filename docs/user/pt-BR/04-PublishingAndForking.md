@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: bad564fee7824288 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 3716d8f23c114fbb -->
 # 04 — Publicar e remixar
 
 <!-- languages -->
