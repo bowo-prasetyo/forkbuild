@@ -5,6 +5,10 @@
 [English](../WorldViewAdvancedTools.md) · **Deutsch** · [Español](../es/WorldViewAdvancedTools.md) · [Français](../fr/WorldViewAdvancedTools.md) · [Bahasa Indonesia](../id/WorldViewAdvancedTools.md) · [日本語](../ja/WorldViewAdvancedTools.md) · [한국어](../ko/WorldViewAdvancedTools.md) · [Português (Brasil)](../pt-BR/WorldViewAdvancedTools.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../WorldViewAdvancedTools.md).
+<!-- /stale -->
+
 Diese Seite beschreibt die Teile der [Weltansicht](03-WorldView.md), die
 nur erscheinen, wenn Sie unten im Seitenfeld das Häkchen bei **Erweiterte
 Werkzeuge zeigen** setzen. Sie sind für die Netzwerke hinter der Welt: wo

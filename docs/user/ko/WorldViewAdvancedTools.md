@@ -5,6 +5,10 @@
 [English](../WorldViewAdvancedTools.md) · [Deutsch](../de/WorldViewAdvancedTools.md) · [Español](../es/WorldViewAdvancedTools.md) · [Français](../fr/WorldViewAdvancedTools.md) · [Bahasa Indonesia](../id/WorldViewAdvancedTools.md) · [日本語](../ja/WorldViewAdvancedTools.md) · **한국어** · [Português (Brasil)](../pt-BR/WorldViewAdvancedTools.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **참고:** 이 페이지의 영어판이 번역 이후에 바뀌었으므로, 이 번역은 최신 내용이 아닐 수 있습니다. [영어판](../WorldViewAdvancedTools.md)을 참고하세요.
+<!-- /stale -->
+
 이 페이지는 사이드 패널 맨 아래에서 **고급 도구 보기**를 체크했을 때만
 나타나는 [월드 보기](03-WorldView.md)의 부분을 다룹니다. 모두 월드 뒤의
 네트워크를 위한 것입니다. 작품이 어디에 배치되어 있는지, 어디에 저장되어

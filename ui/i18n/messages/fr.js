@@ -1546,6 +1546,8 @@ export default Object.freeze({
     'placementEditorDialog.yWorldUnits': 'Y (unités du Monde)',
     'placementEditorDialog.zWorldUnits': 'Z (unités du Monde)',
     'placementEditorDialog.nudgeBy': 'Décaler de',
+    'placementEditorDialog.toGridSpot': 'Placer sur sa case de la grille',
+    'placementEditorDialog.gridSpotHint': 'Sa propre case sur la grille du monde, choisie à partir de la construction elle-même, là où les constructions sont placées à la publication : X {x}, Z {z}. Remplit les nombres ; cliquez ensuite sur Déplacer.',
     'placementEditorDialog.cancel': 'Annuler',
 
     // World View: placementInfoPanel.

@@ -1547,6 +1547,8 @@ export default Object.freeze({
     'placementEditorDialog.yWorldUnits': 'Y (unidades del Mundo)',
     'placementEditorDialog.zWorldUnits': 'Z (unidades del Mundo)',
     'placementEditorDialog.nudgeBy': 'Desplazar en',
+    'placementEditorDialog.toGridSpot': 'Mover a su lugar en la cuadrícula',
+    'placementEditorDialog.gridSpotHint': 'Su propio lugar en la cuadrícula del mundo, elegido a partir de la construcción misma, donde se colocan las construcciones al publicarlas: X {x}, Z {z}. Rellena los números; luego haga clic en Mover.',
     'placementEditorDialog.cancel': 'Cancelar',
 
     // World View: placementInfoPanel.

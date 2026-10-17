@@ -1543,6 +1543,8 @@ export default Object.freeze({
     'placementEditorDialog.yWorldUnits': 'Y (Satuan Dunia)',
     'placementEditorDialog.zWorldUnits': 'Z (Satuan Dunia)',
     'placementEditorDialog.nudgeBy': 'Geser sebesar',
+    'placementEditorDialog.toGridSpot': 'Pindahkan ke titik gridnya',
+    'placementEditorDialog.gridSpotHint': 'Titiknya sendiri di grid dunia, dipilih dari bangunan itu sendiri, tempat bangunan ditempatkan saat diterbitkan: X {x}, Z {z}. Mengisi angkanya; lalu klik Pindahkan.',
     'placementEditorDialog.cancel': 'Batal',
 
     // World View: placementInfoPanel.

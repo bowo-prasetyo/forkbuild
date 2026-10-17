@@ -1434,6 +1434,8 @@
         "placementEditorDialog.yWorldUnits": "b97aaac6",
         "placementEditorDialog.zWorldUnits": "2a38164f",
         "placementEditorDialog.nudgeBy": "cb040b36",
+        "placementEditorDialog.toGridSpot": "af255b25",
+        "placementEditorDialog.gridSpotHint": "c17f6490",
         "placementEditorDialog.cancel": "19766ed6",
         "placementInfoPanel.placement": "4df99399",
         "placementInfoPanel.positionWorldUnits": "1a6dbfc3",

@@ -7529,3 +7529,20 @@ nothing else.
   never are).
 - Not done: moving a remix beside its source takes **Move…** in the advanced tools, with no one-tap "beside the
   original"; fewer builds see a neighbour (`/e/world-neighbour`) until the World fills up.
+
+## Move to its grid spot (unnumbered, 2026-10-17)
+
+**A build placed round the plaza had no way back to the grid.** Builds published from 2026-10-12 to 2026-10-17 were
+placed round the challenge plaza; since "Builds have room again" a build is placed on the id-keyed grid, but moving an
+older one there meant knowing its grid spot, worked out from a Publication id the app shows nowhere. Pillar served:
+your work is yours (you decide where it stands). How a player notices: **Move Placement** has **Move to its grid
+spot**, which fills in the build's grid spot; **Move** takes it there.
+
+- ui/components/PlacementEditorDialog.js: the button fills X, Y and Z with `computeDeterministicGridPosition()` of the
+  placement's Publication id, says where that is, and is greyed out once the form is there. Like the nudges it only
+  fills the form: **Move** submits it, through the same overlap check and signed move.
+- docs/user/WorldViewAdvancedTools.md ("World position") and 04 ("Where a build stands") say so, and to
+  **Distribute** afterwards so other devices adopt the new spot; their translations carry the out-of-date banner.
+- Tests: `PlacementGridSpotBrowser` (the button fills in the grid spot and Move submits it; nothing moves before Move;
+  already there, or with no Publication known, nothing is offered).
+- Not done: one placement at a time; no "move all my builds round the plaza" in one go.

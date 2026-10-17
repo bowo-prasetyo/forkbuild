@@ -5,6 +5,10 @@
 [English](../WorldViewAdvancedTools.md) · [Deutsch](../de/WorldViewAdvancedTools.md) · [Español](../es/WorldViewAdvancedTools.md) · [Français](../fr/WorldViewAdvancedTools.md) · [Bahasa Indonesia](../id/WorldViewAdvancedTools.md) · [日本語](../ja/WorldViewAdvancedTools.md) · [한국어](../ko/WorldViewAdvancedTools.md) · **Português (Brasil)**
 <!-- /languages -->
 
+<!-- stale -->
+> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../WorldViewAdvancedTools.md).
+<!-- /stale -->
+
 Esta página trata das partes da [Visão do mundo](03-WorldView.md) que só
 aparecem quando você marca **Mostrar ferramentas avançadas** no fim do
 painel lateral. Elas servem às redes por trás do Mundo: onde uma

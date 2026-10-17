@@ -1547,6 +1547,8 @@ export default Object.freeze({
     'placementEditorDialog.yWorldUnits': 'Y (unidades do Mundo)',
     'placementEditorDialog.zWorldUnits': 'Z (unidades do Mundo)',
     'placementEditorDialog.nudgeBy': 'Deslocar em',
+    'placementEditorDialog.toGridSpot': 'Mover para seu lugar na grade',
+    'placementEditorDialog.gridSpotHint': 'Seu próprio lugar na grade do mundo, escolhido a partir da construção, onde as construções são colocadas ao publicar: X {x}, Z {z}. Preenche os números; depois clique em Mover.',
     'placementEditorDialog.cancel': 'Cancelar',
 
     // World View: placementInfoPanel.

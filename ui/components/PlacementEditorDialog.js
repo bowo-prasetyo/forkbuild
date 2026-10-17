@@ -30,10 +30,17 @@
 // never silently applies to a different position than the one it was
 // shown for.
 //
+// "Move to its grid spot" fills the form with the placement's own spot on
+// the id-keyed grid (core/DeterministicGridPlacement.js), where a build is
+// placed when it is published: a way back for a build placed round the
+// challenge plaza from 2026-10-12 to 2026-10-17. Like the nudges it only
+// fills the form; Move still submits it, with the same overlap check.
+//
 // Emits move({ x, y, z }) — plain numbers, not a Position instance,
 // since the caller (WorldNavigationSession.movePlacement) constructs
 // whatever position type MoveWorldPlacementUseCase expects.
 import { t } from '../i18n/i18n.js';
+import { computeDeterministicGridPosition } from '../../core/DeterministicGridPlacement.js';
 const STEP_PRESETS = [1, 10, 100];
 
 export default {
@@ -59,6 +66,15 @@ export default {
         };
     },
     computed: {
+        // The placement's spot on the grid, or null when its Publication is unknown.
+        gridSpot() {
+            const publicationId = this.info ? this.info.publicationId : null;
+            return publicationId ? computeDeterministicGridPosition(publicationId) : null;
+        },
+        atGridSpot() {
+            const spot = this.gridSpot;
+            return Boolean(spot) && Number(this.x) === spot.x && Number(this.y) === spot.y && Number(this.z) === spot.z;
+        },
         warningIsCurrent() {
             const warning = this.overlapWarning;
             const position = warning && warning.overlap ? warning.overlap.position : null;
@@ -68,6 +84,12 @@ export default {
     },
     methods: {
         t,
+        toGridSpot() {
+            if (!this.gridSpot) return;
+            this.x = this.gridSpot.x;
+            this.y = this.gridSpot.y;
+            this.z = this.gridSpot.z;
+        },
         nudge(axis, sign) {
             const delta = sign * (Number(this.step) || 0);
             this[axis] = (Number(this[axis]) || 0) + delta;
@@ -108,6 +130,11 @@ export default {
                     <span class="form-label">{{ t('placementEditorDialog.zWorldUnits') }}</span>
                     <input v-model.number="z" type="number" step="1" class="form-input" />
                 </label>
+
+                <div v-if="gridSpot" class="form-field placement-grid-spot">
+                    <button type="button" class="action-btn placement-grid-spot-btn" :disabled="atGridSpot" @click="toGridSpot">{{ t('placementEditorDialog.toGridSpot') }}</button>
+                    <p class="form-hint form-hint--neutral">{{ t('placementEditorDialog.gridSpotHint', { x: gridSpot.x, z: gridSpot.z }) }}</p>
+                </div>
 
                 <div class="placement-nudge">
                     <div class="placement-nudge-step">
