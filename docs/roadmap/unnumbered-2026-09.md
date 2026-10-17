@@ -7460,3 +7460,40 @@ shows the whole room, and World View shows a tall frame while it films.
 - Tests: the bundle check (a tall walk-through drawn at 720 × 1280 while it films, in a framed view, and the view filled
   again once the video is saved), `WalkThroughFilm` (the tall sweep standing back by the narrow frame's scale).
 - Not done: the Camera buttons in World View's panel don't show the camera the film uses while it films.
+
+## Rain that sounds like rain (unnumbered, 2026-10-17)
+
+**The rain sounded like static.** It was white noise band-passed round 3.8 kHz with an 11 Hz tremolo: measured
+over 9 seconds, its kurtosis was 2.9 (Gaussian noise is 3; every moment as loud as the next), both ears heard exactly
+the same signal (correlation 1), 43% of its energy was above 6 kHz, and a shower was a downpour turned down. Real rain
+is thousands of separate impacts, most faint and a few loud, some of them ringing as the bubble a drop traps in a
+puddle rises ("Physically based models for liquid sounds", van den Doel, 2005), and it is all round you. Pillar
+served: your work is yours, and lives in a world (a world whose weather you hear). How a player notices: in the rain
+you hear drops, a patter you can pick single drops out of in a shower and a roar in a downpour, coming from all
+round, the odd plink of a drop in a puddle; under a roof, taps the roof rings with.
+
+- **Drops, not noise** (audio/RainSynth.js): `renderDropBed()` renders a seamless stereo loop of drop impacts, each
+  a tick 0.15 to 1.5 ms long through its own one-pole low-pass, bigger (louder) drops longer and duller, with a share
+  of them followed by a Minnaert bubble (a damped sine at 1.1 to 4.5 kHz whose pitch rises as it dies away), each ear
+  its own drops; `renderDropBank()` renders 48 separate near drops, a third of them ringing; `playDrop()` plays one.
+  The textures come from their own fixed seed (`dropRandom()`), so rendering them doesn't shift the random sequence
+  every other sound is varied with.
+- **The rain** (audio/WebAudioSoundscapeProvider.js `_buildRain()`): a sparse bed (220 drops a second per ear) always,
+  and a dense one (2,600, fewer loud drops) whose gain follows the rain's level, so heavier rain fills in between the
+  drops rather than only getting louder; both through a high-pass at 380 Hz and a gentle low-pass at 7.5 kHz, swelling
+  a little in slow waves, over the soft brown wash as before. Over them, near drops (`_scheduleRainDrops()`): every
+  0.25 s the next 0.4 s is scheduled from where the last left off, so a late timer leaves no gap, at exponential
+  intervals, up to 40 a second at the heaviest, each a random drop of the bank at a random pitch (0.8 to 1.25), loudness
+  and one of five places left to right; only while rain is heard, like a spring's bubbles.
+- **The roof** (`_buildRoof()`): its two beating tremolos on noise are replaced by a bed of drop taps through the
+  same band round 1.3 kHz, which now rings with each one, over the same low thrum.
+- Rendering both takes about 150 ms at 48 kHz, so it happens the first time it rains or a roof drums, not when sound
+  first starts (`_ensureRain()`). A downpour and the roof are as loud as before (within a dB); a shower is about 2 dB quieter, its drops sparser.
+- Measured the same way afterwards: a downpour's kurtosis is about 11 and a shower's about 25, the ears' correlation
+  about 0.1, and about 15% of the energy above 6 kHz, most of it between 500 Hz and 6 kHz.
+- docs/Architecture.md's soundscape section says so.
+- Tests: `WebAudioSoundscapeProvider` (rain is separate drops, not steady noise, each ear its own, a shower's drops
+  standing apart more than a downpour's; near drops are scheduled only while it rains, each round scheduling the next,
+  and are heard over the rain only as far ahead as they were scheduled).
+- Not done: drops don't change with what they land on (leaves, a road, a lake) or with wind; a roof is the same
+  whatever it's built of. Checked by measurement and rendered recordings, not yet by ear in the app.

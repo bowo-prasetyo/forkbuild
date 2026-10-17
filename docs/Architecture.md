@@ -1631,6 +1631,7 @@ ticked; while on, the session hands the renderer DAY and `nightLevel()` is 0, so
             ├── audio/VehicleEngineVoice.js                one held voice per ridden vehicle type
             ├── audio/CreatureSoundSynth.js                animal and resident sounds, through a gain and stereo pan
             ├── audio/EditorSoundSynth.js                  the Editor's edit sounds
+            ├── audio/RainSynth.js                         rain's drops: looped beds and a bank of near drops
             └── audio/MusicPlayer.js                       the music: core/MusicScore.js#musicPhrase() scheduled on the
                                                            audio clock, a phrase at a time, under the master volume
 
@@ -1663,9 +1664,14 @@ ticked; while on, the session hands the renderer DAY and `nightLevel()` is 0, so
   unchanged: looping brown noise through a gusting low-pass for wind and slow waves for a lake, band-passed white
   noise for a river, a trilled 4.4 kHz tone for insects, separate randomly timed chirp phrases for birds, more
   often the more birds there are, and, only while a spring is heard, short rising plips for its bubbles, a few at a
-  time, more often the nearer it is; rain is band-passed white noise round 3.8 kHz pattering at 11 Hz over a soft
-  low-passed brown wash; a roof drums duller and closer, band-passed round 1.3 kHz under two beating tremolos
-  (17 and 6.3 Hz), over a low thrum. Level changes fade with a 0.8 s time constant. The `AudioContext` is created on the
+  time, more often the nearer it is. Rain is made of drops, not filtered noise (audio/RainSynth.js): stereo loops of
+  rendered drop impacts, each a tick a millisecond or so long (bigger drops longer and duller), most faint and a
+  few loud, some ringing with a rising bubble "plink" as they land in water, each ear its own drops; a sparse bed
+  always, and a dense one that fills in at the rain's level, so a shower is heard drop by drop and a downpour as a
+  roar; over them, near drops from a bank of 48, scheduled every 0.25 s (up to 40 a second at the heaviest, at
+  exponential intervals, random pitch and place) only while rain is heard; and a soft low-passed brown wash. A roof
+  drums with a bed of drop taps through a band round 1.3 kHz, the roof ringing, over a low thrum. The drops are
+  rendered from their own fixed seed, the first time it rains or a roof drums. Level changes fade with a 0.8 s time constant. The `AudioContext` is created on the
   first `resume()`, and suspended while muted or while the page is hidden, so it costs nothing then.
 - **Avatar sounds.** `advanceAvatarSound(state, observation, deltaSeconds, seed)` is pure; the service keeps its
   state between frames. Footsteps are counted by distance, one per stride (0.75 m walking, 0.94 m running: one per
