@@ -6,12 +6,13 @@
 // cropped to the video's shape (renderer/WorldFilmRecorder.js).
 import { findBuildEntrance, hasWalkedInside } from '../core/BuildEntrance.js';
 import {
-    APPROACH_DISTANCES, END_CARD_SECONDS, WalkThroughCamera, FRONT_LOOK_SECONDS, LOOK_DEGREES, LOOK_SECONDS, OPENING_SECONDS, WALK_LIMIT_SECONDS, WalkThroughPhase,
+    APPROACH_DISTANCES, END_CARD_SECONDS, EYES_FIELD_OF_VIEW, SWEEP_DEGREES, SWEEP_SECONDS, WalkThroughCamera, sweepFraming, FRONT_LOOK_SECONDS, LOOK_DEGREES, LOOK_SECONDS, OPENING_SECONDS, WALK_LIMIT_SECONDS, WalkThroughPhase,
     estimateWalkThroughSeconds, planWalkThrough, startWalkThrough, stepWalkThrough, turnToward
 } from '../core/WalkThroughFilm.js';
 import { walkThroughFilmMethods } from '../application/worldNavigation/walkThroughFilmMethods.js';
 import { coverCrop } from '../renderer/WorldFilmRecorder.js';
 import { CameraPerspective } from '../core/CameraPerspective.js';
+import { brickCollisionBoxes } from '../core/BrickPassage.js';
 import { DEFAULT_MAX_STEP_HEIGHT } from '../core/BrickWalkability.js';
 import { AvatarStepConstraint } from '../application/avatar/AvatarStepConstraint.js';
 import { AvatarMovementConstraint } from '../application/avatar/AvatarMovementConstraint.js';
@@ -65,6 +66,61 @@ const planOf = (bricks) => planWalkThrough(findBuildEntrance(bricks, registry), 
     assert(front.start.z < cubeEntrance.stand.z && front.lookDegrees === 0 && front.lookSeconds === FRONT_LOOK_SECONDS, 'from farther back, then looked at');
     assert(planWalkThrough(null) === null, 'no entrance, no plan');
     console.log('✓ the walk starts back from the door, goes through it and in');
+
+    // Through its eyes, it walks on to the most open spot well in and ahead of
+    // the door, so the look round shows the room rather than a wall: never
+    // somewhere less open than behind it, and further in where there is room.
+    const eyes = planWalkThrough(entrance, house, registry, { camera: WalkThroughCamera.EYES });
+    const behind = planWalkThrough(entrance, house, registry, { camera: WalkThroughCamera.BEHIND });
+    const openness = (bricks, point) => Math.min(...bricks.flatMap((brick) => {
+        const definition = registry.get(brick.definitionId);
+        return brickCollisionBoxes(brick.position, brick.definitionId, definition, brick.rotation || 0, brick.tilt || 0)
+            .filter((box) => box.max.y > 0.3 && box.min.y < 1.8 && !brick.definitionId.includes('door'));
+    }).map((box) => Math.hypot(Math.max(box.min.x - point.x, 0, point.x - box.max.x), Math.max(box.min.z - point.z, 0, point.z - box.max.z))));
+    for (const candidate of structures) {
+        const way = findBuildEntrance(candidate.bricks, registry);
+        if (way?.kind !== 'door') continue;
+        const seen = planWalkThrough(way, candidate.bricks, registry, { camera: WalkThroughCamera.EYES }).path.at(-1);
+        const followed = planWalkThrough(way, candidate.bricks, registry).path.at(-1);
+        assert(openness(candidate.bricks, seen) >= openness(candidate.bricks, followed) - 1e-9, `through its eyes, ${candidate.id}'s spot is no less open`);
+        assert(hasWalkedInside(way, seen) && Math.hypot(seen.x - way.door.x, seen.z - way.door.z) <= 4, `and inside ${candidate.id}, near the door`);
+    }
+    const castle = structure('showcase:castle').bricks;
+    const castleWay = findBuildEntrance(castle, registry);
+    const castleEyes = planWalkThrough(castleWay, castle, registry, { camera: WalkThroughCamera.EYES }).path.at(-1);
+    const castleBehind = planWalkThrough(castleWay, castle, registry).path.at(-1);
+    assert(openness(castle, castleEyes) > openness(castle, castleBehind) + 0.5
+        && Math.hypot(castleEyes.x - castleWay.door.x, castleEyes.z - castleWay.door.z) > 3,
+    `in the castle's courtyard it walks further in, somewhere more open (${openness(castle, castleEyes).toFixed(2)} against ${openness(castle, castleBehind).toFixed(2)})`);
+    assert(eyes.path.every((point) => hasWalkedInside(entrance, point) || point === eyes.path[0]), 'in the house, it stays on the way in');
+    assert(JSON.stringify(behind.path) === JSON.stringify(plan.path), 'behind it, the walk is as it was');
+}
+
+// The sweep: half way round the build, from far enough back to see it whole,
+// ending on the side the avatar starts from, then the opening.
+{
+    const house = structure(STARTER_STRUCTURE_ID).bricks;
+    const entrance = findBuildEntrance(house, registry);
+    assert(planWalkThrough(entrance, house, registry).sweep === null, 'no sweep unless asked');
+    const plan = planWalkThrough(entrance, house, registry, { sweep: true });
+    const { sweep } = plan;
+    assert(sweep.seconds === SWEEP_SECONDS && sweep.distance >= 9 && sweep.height > 4, `far back and above the house (${sweep.distance}, ${sweep.height})`);
+    const first = sweepFraming(sweep, 0);
+    const last = sweepFraming(sweep, 1);
+    const side = (framing) => Math.atan2(framing.position.x - sweep.center.x, framing.position.z - sweep.center.z);
+    const toStart = Math.atan2(plan.start.x - sweep.center.x, plan.start.z - sweep.center.z);
+    assert(Math.abs(Math.sin(side(last) - toStart)) < 1e-6 && Math.cos(side(last) - toStart) > 0, 'it ends on the side the avatar starts from');
+    assert(Math.cos(side(first) - side(last)) < -0.999 && SWEEP_DEGREES === 180, 'having come half way round');
+    assert(first.target === sweep.center && near(Math.hypot(first.position.x - sweep.center.x, first.position.z - sweep.center.z), sweep.distance), 'looking at the build, always as far away');
+    const early = sweepFraming(sweep, 0.1);
+    assert(Math.abs(side(early) - side(first)) < Math.PI * 0.1, 'it sets off gently');
+
+    let step = stepWalkThrough(plan, startWalkThrough(plan), { position: plan.start, heading: plan.heading, deltaSeconds: SWEEP_SECONDS / 2 });
+    assert(step.state.phase === WalkThroughPhase.SWEEP && step.camera && !step.walking && step.heading === plan.heading, 'during the sweep the camera moves and the avatar waits');
+    step = stepWalkThrough(plan, step.state, { position: plan.start, heading: plan.heading, deltaSeconds: SWEEP_SECONDS / 2 });
+    assert(step.state.phase === WalkThroughPhase.OPENING && step.camera === null, 'then the opening, from the camera asked for');
+    assert(near(estimateWalkThroughSeconds(plan) - estimateWalkThroughSeconds(planWalkThrough(entrance, house, registry)), SWEEP_SECONDS), 'the estimate counts the sweep');
+    console.log('✓ the sweep goes half way round the outside and ends behind the avatar');
 }
 
 // Each frame: a still opening, walking to each point in turn while turning to
@@ -138,32 +194,34 @@ function walker(bricks, layout = { x: 0, y: 0, z: 0 }) {
     for (const candidate of structures) {
         const entrance = findBuildEntrance(candidate.bricks, registry);
         if (entrance?.kind !== 'door') continue;
-        const plan = planWalkThrough(entrance, candidate.bricks, registry);
-        const { presence, controller } = walker(candidate.bricks);
-        presence.update({ position: { ...plan.start }, rotation: { x: 0, y: plan.heading, z: 0 } });
-        let state = startWalkThrough();
-        let held = false;
-        let lookedAt = null;
-        for (let i = 0; i < 1000 && state.phase !== WalkThroughPhase.DONE; i++) {
-            const { position, rotation } = presence.current;
-            const step = stepWalkThrough(plan, state, { position, heading: rotation.y, deltaSeconds: 0.05 });
-            state = step.state;
-            if (state.phase === WalkThroughPhase.LOOK && lookedAt === null) lookedAt = state.time;
-            presence.update({ rotation: { x: 0, y: step.heading, z: 0 } });
-            if (step.walking !== held) {
-                if (step.walking) controller.keyDown('w');
-                else controller.keyUp('w');
-                held = step.walking;
+        for (const camera of [WalkThroughCamera.BEHIND, WalkThroughCamera.EYES]) {
+            const plan = planWalkThrough(entrance, candidate.bricks, registry, { camera });
+            const { presence, controller } = walker(candidate.bricks);
+            presence.update({ position: { ...plan.start }, rotation: { x: 0, y: plan.heading, z: 0 } });
+            let state = startWalkThrough();
+            let held = false;
+            let lookedAt = null;
+            for (let i = 0; i < 1000 && state.phase !== WalkThroughPhase.DONE; i++) {
+                const { position, rotation } = presence.current;
+                const step = stepWalkThrough(plan, state, { position, heading: rotation.y, deltaSeconds: 0.05 });
+                state = step.state;
+                if (state.phase === WalkThroughPhase.LOOK && lookedAt === null) lookedAt = state.time;
+                presence.update({ rotation: { x: 0, y: step.heading, z: 0 } });
+                if (step.walking !== held) {
+                    if (step.walking) controller.keyDown('w');
+                    else controller.keyUp('w');
+                    held = step.walking;
+                }
+                controller.tick(0.05);
             }
-            controller.tick(0.05);
+            assert(state.phase === WalkThroughPhase.DONE, `${candidate.id}'s film ends (${camera})`);
+            assert(hasWalkedInside(entrance, presence.current.position), `and ends inside ${candidate.id} (${camera})`);
+            assert(lookedAt !== null && lookedAt < OPENING_SECONDS + WALK_LIMIT_SECONDS - 2, `having walked in, not given up, in ${candidate.id} (${camera}, ${lookedAt})`);
         }
-        assert(state.phase === WalkThroughPhase.DONE, `${candidate.id}'s film ends`);
-        assert(hasWalkedInside(entrance, presence.current.position), `and ends inside ${candidate.id}`);
-        assert(lookedAt !== null && lookedAt < OPENING_SECONDS + WALK_LIMIT_SECONDS - 2, `having walked in, not given up, in ${candidate.id} (${lookedAt})`);
         filmed++;
     }
     assert(filmed >= 14, `every ready-made build with a door (${filmed}) is walked into`);
-    console.log(`✓ the film walks into all ${filmed} ready-made builds with a door`);
+    console.log(`✓ the film walks into all ${filmed} ready-made builds with a door, behind the avatar and through its eyes`);
 }
 
 // World View's session: it puts the avatar at the start with the third-person
@@ -176,6 +234,7 @@ function filmHost({ avatar = true, loaded = true } = {}) {
     const keys = [];
     const frames = new Set();
     const perspectives = [];
+    const framings = [];
     const host = {
         ...walkThroughFilmMethods,
         _registry: registry,
@@ -192,6 +251,9 @@ function filmHost({ avatar = true, loaded = true } = {}) {
         getCameraPerspective() { return this._cameraPerspective; },
         setCameraPerspective(perspective) { this._cameraPerspective = perspective; perspectives.push(perspective); return true; },
         _applyCameraPerspectiveFraming() {},
+        _spatialCameraController: { applyFraming(framing) { framings.push(framing); } },
+        _session: { fov: 60, getCameraFov() { return this.fov; }, setCameraFov(degrees) { this.fov = degrees; } },
+        getWorldSeed: () => 1,
         releaseAvatarMovementKeys() { keys.push('release'); },
         onRenderFrame(callback) { frames.add(callback); return () => frames.delete(callback); }
     };
@@ -200,7 +262,7 @@ function filmHost({ avatar = true, loaded = true } = {}) {
         for (const callback of [...frames]) callback(seconds);
         controller.tick(seconds);
     };
-    return { host, keys, frames, perspectives, presence, frame };
+    return { host, keys, frames, perspectives, framings, presence, frame };
 }
 {
     const { host: nobody } = filmHost({ avatar: false });
@@ -233,13 +295,33 @@ function filmHost({ avatar = true, loaded = true } = {}) {
 
     // Through the avatar's eyes: the first-person camera, given back after.
     host.startWalkThroughFilm('doc-1', { camera: WalkThroughCamera.EYES });
-    assert(host.getCameraPerspective() === CameraPerspective.FIRST_PERSON, 'through its eyes, the first-person camera films it');
+    assert(host.getCameraPerspective() === CameraPerspective.FIRST_PERSON && host._session.fov === EYES_FIELD_OF_VIEW,
+        'through its eyes, the first-person camera films it, with a wide lens');
     host.stopWalkThroughFilm();
+    assert(host._session.fov === 60, 'and the camera\'s own lens comes back');
     host.setCameraPerspective(null);
     host.startWalkThroughFilm('doc-1', { camera: WalkThroughCamera.BEHIND });
     assert(host.getCameraPerspective() === CameraPerspective.THIRD_PERSON, 'behind it, the third-person camera');
     host.stopWalkThroughFilm();
     assert(host.getCameraPerspective() === null, 'and the free camera comes back after');
+
+    // With a sweep, the film moves the camera round the house first, with no
+    // perspective taking it over, then films the walk from the camera asked for.
+    const swept = filmHost();
+    swept.host.startWalkThroughFilm('doc-1', { camera: WalkThroughCamera.EYES, sweep: true });
+    assert(swept.host.getCameraPerspective() === null && swept.host.walkThroughFilmState().phase === WalkThroughPhase.SWEEP && swept.host._session.fov === 60,
+        'it opens on the sweep, the camera free, with its own lens');
+    swept.frame(SWEEP_SECONDS / 2);
+    const framed = swept.framings.at(-1);
+    assert(framed && framed.position.y > framed.target.y && Math.hypot(framed.position.x - framed.target.x, framed.position.z - framed.target.z) >= 9,
+        'the camera circles the house from above and far back');
+    assert(!swept.keys.includes('down:w'), 'while the avatar waits');
+    swept.frame(SWEEP_SECONDS / 2 + 0.05);
+    assert(swept.host.getCameraPerspective() === CameraPerspective.FIRST_PERSON && swept.host._session.fov === EYES_FIELD_OF_VIEW, 'then it sees through the avatar\'s eyes, wide');
+    for (let i = 0; i < 600 && !swept.host.walkThroughFilmState().done; i++) swept.frame(0.05);
+    assert(swept.host.walkThroughFilmState().done && hasWalkedInside(findBuildEntrance(structure(STARTER_STRUCTURE_ID).bricks, registry),
+        { x: swept.presence.current.position.x - 100, z: swept.presence.current.position.z + 40 }), 'and walks in');
+    swept.host.stopWalkThroughFilm();
     console.log('✓ World View films the walk with the real avatar and gives everything back after');
 }
 

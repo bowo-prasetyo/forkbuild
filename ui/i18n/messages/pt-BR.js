@@ -1183,6 +1183,7 @@ export default Object.freeze({
     'video.walkthrough': 'Passeio',
     'video.walkthroughDescription': 'Seu avatar caminha até a porta e entra, filmado na Visão do mundo com seus sons: pássaros, vento, passos e a porta.',
     'video.music': 'Com música',
+    'video.sweep': 'Começar com uma volta da câmera por fora',
     'video.camera': 'Câmera',
     'video.cameraBehind': 'Atrás do avatar',
     'video.cameraBehindDescription': 'Segue seu avatar logo atrás dele; lá dentro, o telhado é recortado para mostrar o cômodo.',

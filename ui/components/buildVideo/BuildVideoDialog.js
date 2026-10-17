@@ -35,8 +35,8 @@ const SHAPES = Object.freeze([
 // (renderer/BuildVideoRecorder.js, with audio/MusicRecording.js's music), and
 // downloaded, with a title and a description to paste where the person
 // uploads it (BuildVideoSaved). A walk-through is filmed in World View, from
-// behind the avatar or through its eyes, with its sounds and, if asked, its
-// music: the dialog hands World View the request
+// behind the avatar or through its eyes, opening on a sweep round the outside
+// unless unticked, with its sounds and, if asked, its music: the dialog hands World View the request
 // (walkThroughFilmRequest.js) and opens the build there. Nothing is uploaded.
 // `snapshotText` is the published build; `buildUrl` the link that opens it,
 // when it has one; `documentId` the build World View stands it as, which a
@@ -62,6 +62,7 @@ export default {
         const shape = ref(BuildVideoShape.WIDE);
         const music = ref(true);
         const camera = ref(WalkThroughCamera.BEHIND);
+        const sweep = ref(true);
         // choose, recording, done, failed, or unsupported in a browser that
         // can't record.
         const state = ref(canRecordBuildVideo(globalThis) ? 'choose' : 'unsupported');
@@ -85,6 +86,7 @@ export default {
                     documentId: props.documentId,
                     shape: shape.value,
                     camera: camera.value,
+                    sweep: sweep.value,
                     music: music.value,
                     name,
                     text: videoOverlayText(build.metadata, name),
@@ -153,7 +155,7 @@ export default {
         const percent = computed(() => Math.round(progress.value * 100));
         const walkThrough = computed(() => kind.value === BuildVideoKind.WALKTHROUGH);
         return {
-            t, kindsFor, shapes: SHAPES, cameras: CAMERAS, kind, shape, camera, music, walkThrough, state, percent, fileName, description, record, cancel
+            t, kindsFor, shapes: SHAPES, cameras: CAMERAS, kind, shape, camera, sweep, music, walkThrough, state, percent, fileName, description, record, cancel
         };
     },
     mounted() {
@@ -217,6 +219,10 @@ export default {
                             <span class="model-export-description">{{ t(option.description) }}</span>
                         </label>
                     </fieldset>
+                    <label v-if="walkThrough" class="build-video-music build-video-sweep">
+                        <input type="checkbox" class="build-video-sweep-input" v-model="sweep">
+                        {{ t('video.sweep') }}
+                    </label>
                     <label class="build-video-music">
                         <input type="checkbox" class="build-video-music-input" v-model="music">
                         {{ t('video.music') }}

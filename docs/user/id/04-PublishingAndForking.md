@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 81aeb5eb1dfcabbf -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: be62128f33d26d38 -->
 # 04 — Penerbitan & Remix
 
 <!-- languages -->
@@ -142,6 +142,11 @@ bawah **Dunia Bersama Saya** di Tampilan Dunia.
   Di **Kamera**, **Di belakang avatar** mengikutinya dari tepat di belakang,
   dan **Lewat matanya** memfilmkan apa yang dilihatnya, seolah penonton
   sendiri yang masuk.
+  **Mulai dengan kamera memutari bagian luar**, dicentang kecuali Anda
+  menghapusnya, membuka video dengan kamera memutari setengah bangunan Anda
+  sebelum jelajah. Lewat matanya, avatar berjalan ke titik paling lapang di
+  ruangan dan difilmkan dengan lensa lebar, seperti video tur rumah, sehingga
+  ruangan kecil pun terlihat utuh.
 
 Menyalin atau membagikan tautan, dan membukanya, dihitung secara anonim,
 seperti kunjungan harian; lihat

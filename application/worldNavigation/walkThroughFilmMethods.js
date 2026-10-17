@@ -1,7 +1,8 @@
 import { findBuildEntrance } from '../../core/BuildEntrance.js';
 import { CameraPerspective } from '../../core/CameraPerspective.js';
+import { terrainHeightAt } from '../../core/TerrainHeightField.js';
 import {
-    planWalkThrough, startWalkThrough, stepWalkThrough, estimateWalkThroughSeconds, WalkThroughCamera, WalkThroughPhase
+    EYES_FIELD_OF_VIEW, planWalkThrough, startWalkThrough, stepWalkThrough, estimateWalkThroughSeconds, WalkThroughCamera, WalkThroughPhase
 } from '../../core/WalkThroughFilm.js';
 
 // The key that walks the avatar ahead (application/avatar/AvatarMovementController.js).
@@ -13,7 +14,9 @@ const FORWARD_KEY = 'w';
 // movement, so it bumps into what is there, the door swings open, its
 // footsteps are heard and the camera follows it in: World View's third-person
 // camera (indoors, core/IndoorView.js frames the room), or its first-person
-// one, seeing through the avatar's eyes. The person's own movement keys do
+// one, seeing through the avatar's eyes. A sweep round the outside, when
+// asked for, comes first: the camera is moved round the build each frame
+// while the avatar waits, with no perspective taking it over until the walk. The person's own movement keys do
 // nothing until the film ends. ui/views/worldView/useWalkThroughFilm.js records
 // what is drawn.
 export const walkThroughFilmMethods = {
@@ -26,10 +29,11 @@ export const walkThroughFilmMethods = {
     },
 
     // Starts filming `documentId`'s walk-through, seen from `camera`
-    // (core/WalkThroughFilm.js's WalkThroughCamera). Returns `{ kind, seconds }`
+    // (core/WalkThroughFilm.js's WalkThroughCamera), opening on a sweep round
+    // the outside when `sweep` is set. Returns `{ kind, seconds }`
     // (a build entered by a door or walked up to, and about how long the film
     // runs), or null when it can't be filmed now (canFilmWalkThrough()).
-    startWalkThroughFilm(documentId, { camera = WalkThroughCamera.BEHIND } = {}) {
+    startWalkThroughFilm(documentId, { camera = WalkThroughCamera.BEHIND, sweep = false } = {}) {
         if (!this.canFilmWalkThrough(documentId)) {
             return null;
         }
@@ -40,7 +44,7 @@ export const walkThroughFilmMethods = {
         for (const building of document.world.getBuildings()) {
             for (const brick of building.getBricks()) bricks.push(brick);
         }
-        const plan = planWalkThrough(findBuildEntrance(bricks, this._registry), bricks, this._registry);
+        const plan = planWalkThrough(findBuildEntrance(bricks, this._registry), bricks, this._registry, { camera, sweep });
         if (!plan) {
             return null;
         }
@@ -56,14 +60,25 @@ export const walkThroughFilmMethods = {
             documentId,
             plan,
             layout,
-            state: startWalkThrough(),
+            state: startWalkThrough(plan),
+            perspectiveForWalk: camera === WalkThroughCamera.EYES ? CameraPerspective.FIRST_PERSON : CameraPerspective.THIRD_PERSON,
+            // Through its eyes, the walk has a wide lens (core/WalkThroughFilm.js),
+            // and the camera's own comes back after; null when the render
+            // facade can't change it.
+            fovForWalk: camera === WalkThroughCamera.EYES ? EYES_FIELD_OF_VIEW : null,
+            fov: typeof this._session?.getCameraFov === 'function' ? this._session.getCameraFov() : null,
+            // The camera, unlike the avatar, is in drawn coordinates: the
+            // build stands on the ground at its own origin (as arrivalMethods).
+            ground: terrainHeightAt(this.getWorldSeed(), layout.x, layout.z),
             walking: false,
             endCard: 0,
             perspective: typeof this.getCameraPerspective === 'function' ? this.getCameraPerspective() : null,
             unsubscribe: null
         };
         this._walkThroughFilm = film;
-        this.setCameraPerspective(camera === WalkThroughCamera.EYES ? CameraPerspective.FIRST_PERSON : CameraPerspective.THIRD_PERSON);
+        // During a sweep the film moves the camera itself.
+        if (plan.sweep) this.setCameraPerspective(null);
+        else this._seeWalkThroughWalk(film);
         film.unsubscribe = this.onRenderFrame((deltaSeconds) => this._stepWalkThroughFilm(deltaSeconds));
         return Object.freeze({ kind: plan.kind, seconds: estimateWalkThroughSeconds(plan) });
     },
@@ -98,6 +113,15 @@ export const walkThroughFilmMethods = {
         if (typeof film.unsubscribe === 'function') film.unsubscribe();
         if (film.walking && this._avatarMovementController) this._avatarMovementController.keyUp(FORWARD_KEY);
         this.setCameraPerspective(film.perspective ?? null);
+        if (film.fov !== null && typeof this._session?.setCameraFov === 'function') this._session.setCameraFov(film.fov);
+    },
+
+    // The walk seen from the camera asked for, with its lens.
+    _seeWalkThroughWalk(film) {
+        this.setCameraPerspective(film.perspectiveForWalk);
+        if (film.fovForWalk !== null && film.fov !== null && typeof this._session?.setCameraFov === 'function') {
+            this._session.setCameraFov(film.fovForWalk);
+        }
     },
 
     // One render frame of the film: turn the avatar and walk it ahead or stop
@@ -121,6 +145,15 @@ export const walkThroughFilmMethods = {
         // or a focus asked for as the build loaded) takes it away, and while
         // the avatar stands still at the start, nothing else would frame it.
         this._activeCameraFocus = null;
+        if (step.camera) {
+            if (this._spatialCameraController) {
+                const drawn = (point) => ({ x: point.x + film.layout.x, y: point.y + film.layout.y + film.ground, z: point.z + film.layout.z });
+                this._spatialCameraController.applyFraming({ position: drawn(step.camera.position), target: drawn(step.camera.target) });
+            }
+        } else if (this.getCameraPerspective() !== film.perspectiveForWalk) {
+            // The sweep is over: the walk is seen from the camera asked for.
+            this._seeWalkThroughWalk(film);
+        }
         if (step.state.phase === WalkThroughPhase.OPENING && typeof this._applyCameraPerspectiveFraming === 'function') {
             this._applyCameraPerspectiveFraming(position, step.heading);
         }
