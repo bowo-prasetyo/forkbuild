@@ -395,6 +395,9 @@ export class RenderWorldViewUseCase {
             // filmed through the avatar's eyes widens it).
             getCameraFov: () => renderer.cameraController.fov,
             setCameraFov: (degrees) => renderer.cameraController.setFov(degrees),
+            // Draws at exactly a walk-through video's size and shape while it
+            // is filmed (`{ width, height }`), or at the view's own (null).
+            setFrameSize: (size) => renderer.setFrameSize(size),
             addWorld: (world, documentId, layoutPosition) => worldRenderer.addWorld(world, documentId, layoutPosition),
             removeWorld: (world, documentId) => worldRenderer.removeWorld(world, documentId),
             showClaimedBuild: (key, world, position) => claimedBuildGhostRenderer.show(key, world, position),

@@ -627,6 +627,15 @@ export class WorldNavigationSession {
         return this._session.onAnimationFrame(callback);
     }
 
+    // Draws World View at exactly `size` (`{ width, height }`), the shape of
+    // a walk-through video being filmed, fitted into the view; null draws at
+    // the view's own size again. Does nothing where the render facade can't.
+    setRenderFrameSize(size) {
+        if (typeof this._session.setFrameSize === 'function') {
+            this._session.setFrameSize(size);
+        }
+    }
+
     // Calls `callback(canvas)` right after every frame is drawn, with the
     // canvas holding it (World View's walk-through video). Returns an
     // unsubscribe function, or null when the render facade can't.

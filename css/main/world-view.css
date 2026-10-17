@@ -920,3 +920,9 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+/* While a walk-through is filmed, World View draws at the video's own shape
+   (renderer/Renderer.js, setFrameSize()), with bars beside it. */
+.world-viewport--framed {
+    background: #111;
+}

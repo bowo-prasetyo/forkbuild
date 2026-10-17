@@ -214,6 +214,8 @@ export class Renderer {
         // registers here instead of Renderer knowing anything about
         // avatars, movement, or presence.
         this._frameListeners = new Set();
+        // A fixed size to draw at, or null for the view's own; see setFrameSize().
+        this._frameSize = null;
         this._renderedFrameListeners = new Set();
         this._animationLoop = new AnimationLoop((deltaSeconds) => this._renderFrame(deltaSeconds));
 
@@ -507,7 +509,52 @@ export class Renderer {
         }
     }
 
+    // Draws every frame at exactly `size` (`{ width, height }` pixels), as a
+    // walk-through video is (renderer/WorldFilmRecorder.js), shown fitted into
+    // the view with bars beside it, so what is seen is what is filmed; null
+    // draws at the view's own size again.
+    setFrameSize(size) {
+        const width = Math.round(Number(size?.width));
+        const height = Math.round(Number(size?.height));
+        const canvas = this._webglRenderer.domElement;
+        if (!(width > 0 && height > 0)) {
+            if (!this._frameSize) return;
+            this._frameSize = null;
+            canvas.style.width = '';
+            canvas.style.height = '';
+            canvas.style.marginLeft = '';
+            canvas.style.marginTop = '';
+            this._container.classList.remove('world-viewport--framed');
+            this._webglRenderer.setPixelRatio(window.devicePixelRatio || 1);
+            this._onResize();
+            return;
+        }
+        this._frameSize = { width, height };
+        this._container.classList.add('world-viewport--framed');
+        this._webglRenderer.setPixelRatio(1);
+        this._webglRenderer.setSize(width, height, false);
+        this._cameraController.setAspect(width / height);
+        this._fitFrame();
+    }
+
+    // The fixed-size frame (setFrameSize()) scaled to fit the view, centred.
+    _fitFrame() {
+        const { width, height } = this._frameSize;
+        const viewWidth = this._container.clientWidth;
+        const viewHeight = this._container.clientHeight;
+        const scale = Math.min(viewWidth / width, viewHeight / height);
+        const canvas = this._webglRenderer.domElement;
+        canvas.style.width = `${width * scale}px`;
+        canvas.style.height = `${height * scale}px`;
+        canvas.style.marginLeft = `${(viewWidth - width * scale) / 2}px`;
+        canvas.style.marginTop = `${(viewHeight - height * scale) / 2}px`;
+    }
+
     _onResize() {
+        if (this._frameSize) {
+            this._fitFrame();
+            return;
+        }
         const width = this._container.clientWidth;
         const height = this._container.clientHeight;
         this._cameraController.setAspect(width / height);

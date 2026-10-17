@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: be62128f33d26d38 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 04f6ffccd852efa9 -->
 # 04 — Penerbitan & Remix
 
 <!-- languages -->
@@ -147,6 +147,9 @@ bawah **Dunia Bersama Saya** di Tampilan Dunia.
   sebelum jelajah. Lewat matanya, avatar berjalan ke titik paling lapang di
   ruangan dan difilmkan dengan lensa lebar, seperti video tur rumah, sehingga
   ruangan kecil pun terlihat utuh.
+  Selama merekam, Tampilan Dunia digambar dengan bentuk video itu sendiri,
+  lebar atau tegak, dengan bilah di sampingnya, sehingga yang Anda lihat
+  adalah yang masuk ke video.
 
 Menyalin atau membagikan tautan, dan membukanya, dihitung secara anonim,
 seperti kunjungan harian; lihat
