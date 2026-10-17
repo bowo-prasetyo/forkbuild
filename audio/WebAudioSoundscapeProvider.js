@@ -8,9 +8,10 @@
 // vehicle sounds, placed where each rider is) and edits
 // (audio/EditorSoundSynth.js), and the music under them all
 // (audio/MusicPlayer.js, core/MusicScore.js), in the mood the view asks for.
-// Every sound is synthesized from noise and oscillators, so nothing is
-// downloaded and there are no audio files to license. What to play comes from
-// the services in application/; these files only decide how it sounds.
+// Every sound is synthesized from noise, oscillators and rendered drops
+// (audio/RainSynth.js), so nothing is downloaded and there are no audio files
+// to license. What to play comes from the services in application/; these
+// files only decide how it sounds.
 //
 // The AudioContext is made on the first resume(), which the view calls from a
 // user gesture: browsers refuse to start audio before one. While the page is
@@ -27,6 +28,7 @@ import { playEditorSound, hasEditorSound } from './EditorSoundSynth.js';
 import { playMount, playDismount, playBrake } from './VehicleEventSynth.js';
 import { MusicPlayer } from './MusicPlayer.js';
 import { MUSIC_MOOD } from '../core/MusicScore.js';
+import { dropRandom, renderDropBed, renderDropBank, playDrop } from './RainSynth.js';
 
 const LAYERS = ['wind', 'birds', 'insects', 'water', 'stream', 'leaves', 'pines', 'spring', 'rain', 'roof'];
 // The avatar's own sounds sit in front of the ambience.
@@ -51,6 +53,16 @@ const BIRD_AUDIBLE_LEVEL = 0.05;
 // A spring bubbles only when one is this near; its bubbles are scheduled
 // only then, so away from springs nothing runs.
 const SPRING_AUDIBLE_LEVEL = 0.05;
+// Rain's near drops: how many a second at the heaviest rain, how many
+// different ones there are, and how far ahead they are scheduled each time
+// (every RAIN_DROP_TICK seconds). Scheduled only while rain is heard.
+const RAIN_DROPS_PER_SECOND = 40;
+const RAIN_DROP_BANK_SIZE = 48;
+const RAIN_DROP_TICK = 0.25;
+const RAIN_DROP_LOOKAHEAD = 0.4;
+const RAIN_AUDIBLE_LEVEL = 0.05;
+// Where near drops land, left to right.
+const RAIN_DROP_PANS = [-0.8, -0.35, 0.1, 0.5, 0.85];
 // Thunder: how loud at its loudest, and how long it rolls.
 const THUNDER_PEAK = 0.9;
 const THUNDER_SECONDS = 5;
@@ -140,6 +152,13 @@ export class WebAudioSoundscapeProvider {
         this._disposed = false;
         this._birdTimer = null;
         this._springTimer = null;
+        this._rainTimer = null;
+        // Rain's near drops: the bank they are played from, the panners they
+        // land in, and the context time scheduled up to.
+        this._rainBank = null;
+        this._rainPanners = [];
+        this._rainScheduledUntil = 0;
+        this._rainDense = null;
         // The music: whether it plays (the device's choice), in which mood,
         // and its player, made the first time music is to play.
         this._music = false;
@@ -242,8 +261,15 @@ export class WebAudioSoundscapeProvider {
         for (const layer of LAYERS) {
             this._layerGains[layer].gain.setTargetAtTime(this._levels[layer] * LAYER_PEAK[layer], now, LEVEL_TIME_CONSTANT);
         }
+        if (this._ambience) {
+            this._ensureRain();
+        }
+        if (this._rainDense) {
+            this._rainDense.gain.setTargetAtTime(this._levels.rain, now, LEVEL_TIME_CONSTANT);
+        }
         if (this._ambience && this._shouldRun()) {
             this._scheduleSpring();
+            this._scheduleRainDrops();
         }
     }
 
@@ -541,6 +567,10 @@ export class WebAudioSoundscapeProvider {
             this._clearTimeout(this._springTimer);
             this._springTimer = null;
         }
+        if (this._rainTimer !== null) {
+            this._clearTimeout(this._rainTimer);
+            this._rainTimer = null;
+        }
         if (this._musicPlayer) {
             this._musicPlayer.dispose();
             this._musicPlayer = null;
@@ -600,6 +630,7 @@ export class WebAudioSoundscapeProvider {
             if (this._ambience) {
                 this._scheduleBird();
                 this._scheduleSpring();
+                this._scheduleRainDrops();
             }
         } else if (context.state === 'running' && typeof context.suspend === 'function') {
             context.suspend().catch(() => {});
@@ -656,8 +687,7 @@ export class WebAudioSoundscapeProvider {
             this._buildInsects();
             this._buildLeaves(white);
             this._buildPines(white);
-            this._buildRain(white, brown);
-            this._buildRoof(white, brown);
+            this._ensureRain();
         }
         this._effects = context.createGain();
         this._effects.gain.value = EFFECTS_GAIN;
@@ -780,37 +810,82 @@ export class WebAudioSoundscapeProvider {
         sigh.connect(this._layerGains.pines);
     }
 
-    // Rain: a steady, bright hiss of countless drops, over a soft low wash,
-    // the hiss pattering a little as heavier drops land.
-    _buildRain(white, brown) {
-        const hiss = this._filter('bandpass', 3800, 0.5);
-        const patter = this._context.createGain();
-        patter.gain.value = 0.75;
-        this._modulate(patter.gain, 11, 0.12);
-        this._modulate(patter.gain, 0.21, 0.1);
-        this._loop(white, NOISE_SECONDS / 5).connect(hiss);
-        hiss.connect(patter);
-        patter.connect(this._layerGains.rain);
-        const wash = this._filter('lowpass', 700, 0.5);
+    // The rain and the drumming on a roof take a moment to render, so they
+    // are made the first time it rains rather than with everything else.
+    _ensureRain() {
+        if (this._rainBank || (this._levels.rain <= 0 && this._levels.roof <= 0)) {
+            return;
+        }
+        this._buildRain(this._thunderNoise);
+        this._buildRoof(this._thunderNoise);
+    }
+
+    // Rain: beds of small drops, each ear its own (audio/RainSynth.js), a
+    // few of them ringing as they land in puddles, over a soft low wash of
+    // rain far off; nearer drops land over them one by one
+    // (_scheduleRainDrops()). A shower is a sparse bed you can hear the drops
+    // in; the harder it rains the more a dense bed fills in between them
+    // (_rainDense, at the rain's level). Shaped like rain heard outdoors:
+    // little below a few hundred hertz but the wash, the very top rolled off.
+    _buildRain(brown) {
+        const body = this._filter('highpass', 380, 0.6);
+        const air = this._filter('lowpass', 7500, 0.5);
+        const bedGain = this._context.createGain();
+        bedGain.gain.value = 0.75;
+        // Rain comes and goes a little in slow waves.
+        this._modulate(bedGain.gain, 0.11, 0.1);
+        body.connect(air);
+        air.connect(bedGain);
+        bedGain.connect(this._layerGains.rain);
+        this._rainDense = this._context.createGain();
+        this._rainDense.gain.value = this._levels.rain;
+        this._rainDense.connect(body);
+        const beds = [
+            { seconds: 3.7, rate: 2600, bubbles: 0.03, spread: 1.5, output: this._rainDense },
+            { seconds: 6.1, rate: 220, bubbles: 0.08, output: body }
+        ];
+        const random = dropRandom(1);
+        for (const { output, ...drops } of beds) {
+            const bed = this._context.createBufferSource();
+            bed.buffer = renderDropBed(this._context, random, drops);
+            bed.loop = true;
+            bed.start(0);
+            this._sources.push(bed);
+            bed.connect(output);
+        }
+        const wash = this._filter('lowpass', 600, 0.5);
         const washGain = this._context.createGain();
-        washGain.gain.value = 0.35;
+        washGain.gain.value = 0.25;
         this._loop(brown, (NOISE_SECONDS * 3) / 4).connect(wash);
         wash.connect(washGain);
         washGain.connect(this._layerGains.rain);
+        this._rainBank = renderDropBank(this._context, random, RAIN_DROP_BANK_SIZE);
+        const near = this._filter('lowpass', 9000, 0.5);
+        near.connect(this._layerGains.rain);
+        const canPan = typeof this._context.createStereoPanner === 'function';
+        this._rainPanners = RAIN_DROP_PANS.map((pan) => {
+            const panner = canPan ? this._context.createStereoPanner() : this._context.createGain();
+            if (panner.pan) panner.pan.value = pan;
+            panner.connect(near);
+            return panner;
+        });
     }
 
-    // Rain on a roof overhead: a duller, closer drumming than rain in the open,
-    // the patter uneven (two tremolos beating against each other), over a
-    // hollow low thrum.
-    _buildRoof(white, brown) {
+    // Rain on a roof overhead: duller, closer drops than rain in the open,
+    // each a tap that the roof rings with (a resonant band round 1.3 kHz),
+    // over a hollow low thrum.
+    _buildRoof(brown) {
+        const taps = this._context.createBufferSource();
+        taps.buffer = renderDropBed(this._context, dropRandom(2), { seconds: 4.7, rate: 900 });
+        taps.loop = true;
+        taps.start(0);
+        this._sources.push(taps);
         const drum = this._filter('bandpass', 1300, 0.9);
-        const patter = this._context.createGain();
-        patter.gain.value = 0.6;
-        this._modulate(patter.gain, 17, 0.22);
-        this._modulate(patter.gain, 6.3, 0.16);
-        this._loop(white, (NOISE_SECONDS * 2) / 5).connect(drum);
-        drum.connect(patter);
-        patter.connect(this._layerGains.roof);
+        const tapGain = this._context.createGain();
+        tapGain.gain.value = 1.1;
+        taps.connect(drum);
+        drum.connect(tapGain);
+        tapGain.connect(this._layerGains.roof);
         const thrum = this._filter('lowpass', 260, 1.2);
         const thrumGain = this._context.createGain();
         thrumGain.gain.value = 0.5;
@@ -875,6 +950,43 @@ export class WebAudioSoundscapeProvider {
             }
             this._scheduleSpring();
         }, delayMs);
+    }
+
+    // Rain's near drops: every RAIN_DROP_TICK seconds the next stretch of
+    // them is scheduled, at random moments (more the harder it rains), so a
+    // late timer leaves no gap. Scheduled only while rain is heard.
+    _scheduleRainDrops() {
+        if (this._rainTimer !== null || !this._rainBank || this._levels.rain <= RAIN_AUDIBLE_LEVEL) {
+            return;
+        }
+        this._rainTimer = this._setTimeout(() => {
+            this._rainTimer = null;
+            if (!this._shouldRun()) {
+                return;
+            }
+            if (this._context.state === 'running' && this._levels.rain > RAIN_AUDIBLE_LEVEL) {
+                this._playRainDrops();
+            }
+            this._scheduleRainDrops();
+        }, RAIN_DROP_TICK * 1000);
+    }
+
+    _playRainDrops() {
+        const context = this._context;
+        const now = context.currentTime;
+        const until = now + RAIN_DROP_LOOKAHEAD;
+        const rate = RAIN_DROPS_PER_SECOND * this._levels.rain;
+        let at = Math.max(this._rainScheduledUntil, now + 0.02);
+        for (;;) {
+            // Drops fall independently: the gaps between them are exponential.
+            at += -Math.log(1 - this._random()) / rate;
+            if (at >= until) break;
+            const index = Math.floor(this._random() * RAIN_DROP_BANK_SIZE);
+            const panner = this._rainPanners[Math.floor(this._random() * this._rainPanners.length)];
+            const loudness = 0.08 + 0.55 * this._random() ** 2;
+            playDrop(context, panner, this._rainBank, index, at, loudness, 0.8 + this._random() * 0.45);
+        }
+        this._rainScheduledUntil = until;
     }
 
     _playBubbles() {

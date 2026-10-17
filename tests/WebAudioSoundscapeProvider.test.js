@@ -245,6 +245,81 @@ async function runTests() {
         console.log('✓ a spring bubbles, and only while one is near');
     }
 
+    // Rain is drops, not hiss: filtered noise is as loud from moment to moment
+    // as it is on average (a kurtosis of 3), where rain is mostly faint drops
+    // with loud ones among them; each ear hears its own drops; and a shower's
+    // drops stand apart more than a downpour's.
+    {
+        const renderRain = async (rain) => {
+            const context = new OfflineAudioContext(2, SAMPLE_RATE * SECONDS, SAMPLE_RATE);
+            const provider = new WebAudioSoundscapeProvider({ contextFactory: () => context, documentRef: null, random: seededRandom() });
+            provider.setLayerLevels({ ...silence(), rain });
+            provider.resume();
+            const buffer = await context.startRendering();
+            provider.dispose();
+            const from = SAMPLE_RATE * (SECONDS - 2);
+            const left = buffer.getChannelData(0).subarray(from);
+            const right = buffer.getChannelData(1).subarray(from);
+            let squares = 0, fourths = 0, cross = 0, rightSquares = 0;
+            for (let i = 0; i < left.length; i++) {
+                squares += left[i] * left[i];
+                fourths += left[i] ** 4;
+                cross += left[i] * right[i];
+                rightSquares += right[i] * right[i];
+            }
+            return {
+                kurtosis: (fourths / left.length) / (squares / left.length) ** 2,
+                correlation: cross / Math.sqrt(squares * rightSquares)
+            };
+        };
+        const downpour = await renderRain(1);
+        const shower = await renderRain(0.3);
+        assert(downpour.kurtosis > 6, `rain is separate drops, not steady noise (kurtosis ${downpour.kurtosis})`);
+        assert(Math.abs(downpour.correlation) < 0.5, `each ear hears its own drops (correlation ${downpour.correlation})`);
+        assert(shower.kurtosis > downpour.kurtosis * 1.3, `a shower's drops stand apart more (kurtosis ${shower.kurtosis} vs ${downpour.kurtosis})`);
+        console.log('✓ rain is made of drops, all round you');
+    }
+
+    // Near drops land one by one over the rain, scheduled only while it rains.
+    {
+        const renderDrops = async (fire) => {
+            const { offline, context } = runningOffline(1);
+            const timers = [];
+            const provider = new WebAudioSoundscapeProvider({
+                contextFactory: () => context,
+                documentRef: null,
+                random: seededRandom(),
+                setTimeoutFn: (fn, ms) => { timers.push({ fn, ms }); return timers.length; },
+                clearTimeoutFn: () => {}
+            });
+            provider.setLayerLevels(silence());
+            provider.resume();
+            const dry = timers.length;
+            provider.setLayerLevels({ ...silence(), rain: 1 });
+            assert(timers.length === dry + 1, 'rain starts its near drops');
+            if (fire) {
+                timers[timers.length - 1].fn();
+                assert(timers.length === dry + 2, 'each round of drops schedules the next');
+            }
+            const buffer = await offline.startRendering();
+            provider.setLayerLevels(silence());
+            const scheduled = timers.length;
+            timers[timers.length - 1].fn();
+            assert(timers.length === scheduled, 'the drops stop when the rain does');
+            provider.dispose();
+            return buffer.getChannelData(0);
+        };
+        // The rain is rendered the same both times, so what differs is the drops.
+        const bed = await renderDrops(false);
+        const withDrops = await renderDrops(true);
+        const drops = withDrops.map((value, i) => value - bed[i]);
+        const early = rmsOf(drops, 0, SAMPLE_RATE * 0.45);
+        const late = rmsOf(drops, SAMPLE_RATE * 0.5);
+        assert(early > 0.0005, `near drops are heard over the rain (rms ${early})`);
+        assert(late === 0, `only as far ahead as they were scheduled (rms ${late})`);
+        console.log('✓ near drops land only while it rains');
+    }
+
     // Thunder rolls in the distance: audible, swelling and dying away, and
     // nothing at all before audio has started.
     {
