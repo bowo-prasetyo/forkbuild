@@ -5,6 +5,10 @@
 [English](../WorldViewAdvancedTools.md) · [Deutsch](../de/WorldViewAdvancedTools.md) · [Español](../es/WorldViewAdvancedTools.md) · [Français](../fr/WorldViewAdvancedTools.md) · **Bahasa Indonesia** · [日本語](../ja/WorldViewAdvancedTools.md) · [한국어](../ko/WorldViewAdvancedTools.md) · [Português (Brasil)](../pt-BR/WorldViewAdvancedTools.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../WorldViewAdvancedTools.md).
+<!-- /stale -->
+
 Halaman ini membahas bagian [Tampilan Dunia](03-WorldView.md) yang hanya
 muncul saat Anda mencentang **Tampilkan alat lanjutan** di bagian bawah
 panel samping. Semuanya untuk jaringan di balik Dunia: di mana sebuah

@@ -1545,6 +1545,8 @@ export default Object.freeze({
     'placementEditorDialog.yWorldUnits': 'Y (World Units)',
     'placementEditorDialog.zWorldUnits': 'Z (World Units)',
     'placementEditorDialog.nudgeBy': 'Nudge by',
+    'placementEditorDialog.toGridSpot': 'Move to its grid spot',
+    'placementEditorDialog.gridSpotHint': 'Its own spot on the World\'s grid, chosen from the build itself, where builds are placed when published: X {x}, Z {z}. Fills in the numbers; then click Move.',
     'placementEditorDialog.cancel': 'Cancel',
 
     // World View: placementInfoPanel.

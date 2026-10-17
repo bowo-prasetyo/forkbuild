@@ -1546,6 +1546,8 @@ export default Object.freeze({
     'placementEditorDialog.yWorldUnits': 'Y (월드 단위)',
     'placementEditorDialog.zWorldUnits': 'Z (월드 단위)',
     'placementEditorDialog.nudgeBy': '미세 이동 단위',
+    'placementEditorDialog.toGridSpot': '격자 위 자리로',
+    'placementEditorDialog.gridSpotHint': '작품 자체로 정해지는, 월드 격자 위 이 작품의 자리입니다. 게시한 작품은 이곳에 놓입니다: X {x}, Z {z}. 숫자를 채워 주니 이어서 이동을 누르세요.',
     'placementEditorDialog.cancel': '취소',
 
     // World View: placementInfoPanel.

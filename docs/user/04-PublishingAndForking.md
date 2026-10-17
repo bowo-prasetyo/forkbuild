@@ -249,7 +249,9 @@ World View's [advanced tools](WorldViewAdvancedTools.md#placements).
 Everyone who finds the build sees it on the same spot, since its place
 travels with it, signed by you. Builds published from 12 to 17 October 2026
 were placed round the challenge plaza instead, and stay there until their
-builders move them.
+builders move them: **Move to its grid spot**, in **Move Placement**, takes
+one to its grid spot (see
+[World position](WorldViewAdvancedTools.md#world-position)).
 
 ## Where it goes — sending a build as you publish
 

@@ -98,13 +98,21 @@ the header, for the build you clicked:
   These are ForkBuild's own coordinates, not GPS; one World Unit is one
   metre. **Focus** takes you there. **Move** opens **Move Placement**,
   where you type new X, Y and Z values or nudge the build by 1, 10 or 100
-  units. **Remove from World** takes this placement out.
+  units. **Move to its grid spot** fills in the build's own spot on the
+  World's grid, where builds are placed when published; click **Move** to
+  go there. **Remove from World** takes this placement out.
 
 They're two panels because *what* a build is and *where* it stands are
 separate. Moving a placement never changes the build, and changing the
 build never moves it.
 
 ### World position
+
+To take a build back to its own spot on the World's grid (one published
+from 12 to 17 October 2026 was placed round the challenge plaza instead),
+open **Move Placement**, click **Move to its grid spot**, then **Move**.
+Then send it out again with **Distribute** in **My Shared World**, so
+other devices move it too.
 
 If another build already stands exactly where you're moving to, **Move
 Placement** warns you and lists what's there before you confirm. Sharing a

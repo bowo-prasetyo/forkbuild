@@ -1543,6 +1543,8 @@ export default Object.freeze({
     'placementEditorDialog.yWorldUnits': 'Y（ワールド単位）',
     'placementEditorDialog.zWorldUnits': 'Z（ワールド単位）',
     'placementEditorDialog.nudgeBy': '移動量',
+    'placementEditorDialog.toGridSpot': 'グリッド上の位置へ',
+    'placementEditorDialog.gridSpotHint': '作品そのものから決まる、ワールドのグリッド上のこの作品の位置です。公開した作品はここに置かれます：X {x}、Z {z}。数値を入力するので、続けて「移動」を押してください。',
     'placementEditorDialog.cancel': 'キャンセル',
 
     // World View: placementInfoPanel.

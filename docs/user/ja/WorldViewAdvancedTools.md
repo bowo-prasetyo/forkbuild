@@ -5,6 +5,10 @@
 [English](../WorldViewAdvancedTools.md) · [Deutsch](../de/WorldViewAdvancedTools.md) · [Español](../es/WorldViewAdvancedTools.md) · [Français](../fr/WorldViewAdvancedTools.md) · [Bahasa Indonesia](../id/WorldViewAdvancedTools.md) · **日本語** · [한국어](../ko/WorldViewAdvancedTools.md) · [Português (Brasil)](../pt-BR/WorldViewAdvancedTools.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **注意:** このページの英語版は翻訳後に更新されているため、この翻訳は古くなっている可能性があります。[英語版](../WorldViewAdvancedTools.md)も参照してください。
+<!-- /stale -->
+
 このページでは、サイドパネルのいちばん下で **詳細ツールを表示** に
 チェックを入れたときだけ現れる、[ワールドビュー](03-WorldView.md) の
 部分を説明します。どれもワールドの裏にあるネットワークのためのもので、

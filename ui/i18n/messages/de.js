@@ -1546,6 +1546,8 @@ export default Object.freeze({
     'placementEditorDialog.yWorldUnits': 'Y (Welteinheiten)',
     'placementEditorDialog.zWorldUnits': 'Z (Welteinheiten)',
     'placementEditorDialog.nudgeBy': 'Schrittweite',
+    'placementEditorDialog.toGridSpot': 'Auf seinen Rasterplatz',
+    'placementEditorDialog.gridSpotHint': 'Sein eigener Platz im Raster der Welt, aus dem Bauwerk selbst gewählt, wo Bauwerke beim Veröffentlichen platziert werden: X {x}, Z {z}. Trägt die Zahlen ein; klicken Sie dann auf Verschieben.',
     'placementEditorDialog.cancel': 'Abbrechen',
 
     // World View: placementInfoPanel.

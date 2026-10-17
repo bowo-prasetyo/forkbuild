@@ -630,6 +630,16 @@
     margin-top: 0.4rem;
 }
 
+/* "Move to its grid spot" on the Move Placement dialog: fills the fields
+   with the placement's grid spot (ui/components/PlacementEditorDialog.js). */
+.placement-grid-spot {
+    align-items: flex-start;
+}
+
+.placement-grid-spot .form-hint {
+    margin: 0.35rem 0 0;
+}
+
 /* 0.2.24: relative nudge convenience on the Move Placement dialog —
    always adjusts the absolute X/Y/Z fields above; nothing relative is
    ever persisted (see ui/components/PlacementEditorDialog.js). */
