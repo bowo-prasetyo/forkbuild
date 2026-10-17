@@ -7403,3 +7403,36 @@ under every kind in Make a video, and **Camera** under Walk-through.
 - Not done: a choice of tune or mood; the walk-through's first-person look round sees a small room close up, where
   a step further in would show more; a sweep round the outside before going in. The translations were written without
   a native speaker's review.
+
+## Make a video: a sweep round the outside, and a wider look round small rooms (unnumbered, 2026-10-17)
+
+**The walk-through opened on the avatar's back, and through its eyes a small room was a wall at a time.** The previous
+entry left both: a walk-through filmed through the avatar's eyes in the ready-made House saw a window or a corner, and
+in a tall video, cropped from the middle of the view, hardly more than a wall. A video that opens on the whole build
+before going in also gives a viewer the thing to want before the walk shows what it's like inside. Pillar served:
+your work is yours, and lives in a world (a build shown whole, then as a place), with building feels joyful. How a
+player notices: **Start with a sweep round the outside** under Walk-through, and a room that shows whole through its
+eyes.
+
+- **The sweep** (`core/WalkThroughFilm.js`, `planWalkThrough(…, { sweep })`, `sweepFraming()`): the camera circles half
+  way round the build in 6 seconds, eased, from far enough back to see it whole (at least 9 units, more for a wide or
+  tall build) and above it, looking at its middle, and ends on the side the avatar starts from, behind it; then the
+  film cuts to the avatar and walks in as before. The session (`walkThroughFilmMethods.js`) frames the camera itself
+  each frame of the sweep, in drawn coordinates on the ground under the build, with no perspective taking it over, and
+  turns the chosen one on when it ends. On unless unticked; a film with it runs about 21 seconds.
+- **A wider look round through its eyes**: the walk is filmed with an 80° lens instead of World View's 60°
+  (`EYES_FIELD_OF_VIEW`, through a new `CameraController` field of view and the render facade's
+  `getCameraFov`/`setCameraFov`), as house tours are, and the camera's own comes back when the film ends. The avatar
+  also walks on to the most open spot it can reach well in and roughly ahead of the door (at least 2 units in, within
+  30° of straight on, at most 4 units away), the farthest from walls and furniture: further in where there is room
+  (3.6 units into the castle's courtyard, 3 into the village hall), and never off to the side just past the doorway,
+  where the door swings open into the room. Behind the avatar, the walk is as it was.
+- 1 new message, in all eight languages; the guide's Publishing chapter, README.md and docs/Architecture.md say so.
+- Tests: `WalkThroughFilm` (the sweep's circle, its ending behind the avatar's start, easing and timing; the session
+  framing the camera through the sweep and handing over to the camera asked for, with its lens; the first-person spot
+  never less open than behind it in any ready-made build and further in the castle; every ready-made build with a door
+  walked into from both cameras with the real movement pipeline), `WalkThroughFilmBrowser` (the sweep asked only for a
+  walk-through, on by default, and handed to World View).
+- Not done: the ready-made House's room has a table in its middle, so through its eyes it stands where it did; the
+  wider lens is what shows that room. A tall video still takes the middle of the view. The translations were written
+  without a native speaker's review.

@@ -391,6 +391,10 @@ export class RenderWorldViewUseCase {
             getCameraState: () => renderer.cameraController.getState(),
             setCameraState: (state) => renderer.cameraController.setState(state),
             setControlsEnabled: (enabled) => renderer.cameraController.setEnabled(enabled),
+            // The camera's vertical field of view, in degrees (a walk-through
+            // filmed through the avatar's eyes widens it).
+            getCameraFov: () => renderer.cameraController.fov,
+            setCameraFov: (degrees) => renderer.cameraController.setFov(degrees),
             addWorld: (world, documentId, layoutPosition) => worldRenderer.addWorld(world, documentId, layoutPosition),
             removeWorld: (world, documentId) => worldRenderer.removeWorld(world, documentId),
             showClaimedBuild: (key, world, position) => claimedBuildGhostRenderer.show(key, world, position),

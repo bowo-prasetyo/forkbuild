@@ -1182,6 +1182,7 @@ export default Object.freeze({
     'video.walkthrough': 'Rundgang',
     'video.walkthroughDescription': 'Ihr Avatar geht zur Tür und hinein, gefilmt in der Weltansicht mit ihren Geräuschen: Vögel, Wind, Schritte und die Tür.',
     'video.music': 'Mit Musik',
+    'video.sweep': 'Mit einem Schwenk um das Bauwerk beginnen',
     'video.camera': 'Kamera',
     'video.cameraBehind': 'Hinter dem Avatar',
     'video.cameraBehindDescription': 'Folgt Ihrem Avatar von knapp dahinter; drinnen wird das Dach weggeschnitten, damit der Raum zu sehen ist.',

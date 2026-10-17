@@ -1182,6 +1182,7 @@ export default Object.freeze({
     'video.walkthrough': '걸어 들어가기',
     'video.walkthroughDescription': '아바타가 문까지 걸어가 안으로 들어가는 모습을 월드 보기의 소리(새, 바람, 발소리, 문)와 함께 촬영합니다.',
     'video.music': '음악 넣기',
+    'video.sweep': '먼저 바깥을 한 바퀴 비추기',
     'video.camera': '카메라',
     'video.cameraBehind': '아바타 뒤에서',
     'video.cameraBehindDescription': '아바타 바로 뒤에서 따라갑니다. 안에서는 방이 보이도록 지붕이 잘려 나갑니다.',

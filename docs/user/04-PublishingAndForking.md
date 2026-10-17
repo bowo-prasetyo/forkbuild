@@ -129,6 +129,11 @@ picture** and **Embed**, with the link below them. The same buttons are under
   for a short link.
   Under **Camera**, **Behind the avatar** follows it from just behind, and
   **Through its eyes** films what it sees, as if the viewer walked in.
+  **Start with a sweep round the outside**, ticked unless you untick it, opens
+  the video with the camera circling half way round your build before the
+  walk. Through its eyes, the avatar walks on to the most open spot in the
+  room and is filmed with a wide lens, as house tours are, so a small room
+  shows whole.
 
 Copying or sharing a link, and opening one, are counted anonymously, like
 the daily visit; see [Daily visitor count](13-YourData.md#daily-visitor-count).

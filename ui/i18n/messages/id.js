@@ -1179,6 +1179,7 @@ export default Object.freeze({
     'video.walkthrough': 'Jelajah',
     'video.walkthroughDescription': 'Avatar Anda berjalan ke pintu lalu masuk, difilmkan di Tampilan Dunia dengan suaranya: burung, angin, langkah kaki, dan pintu.',
     'video.music': 'Dengan musik',
+    'video.sweep': 'Mulai dengan kamera memutari bagian luar',
     'video.camera': 'Kamera',
     'video.cameraBehind': 'Di belakang avatar',
     'video.cameraBehindDescription': 'Mengikuti avatar Anda dari tepat di belakangnya; di dalam, atapnya dipotong agar ruangannya terlihat.',

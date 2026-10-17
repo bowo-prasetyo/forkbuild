@@ -72,6 +72,18 @@ export class CameraController {
         this._camera.updateProjectionMatrix();
     }
 
+    // The camera's vertical field of view, in degrees: DEFAULT_FOV, or wider
+    // while a walk-through is filmed through the avatar's eyes.
+    get fov() {
+        return this._camera.fov;
+    }
+
+    setFov(degrees) {
+        if (!Number.isFinite(degrees) || degrees <= 0 || degrees >= 180) return;
+        this._camera.fov = degrees;
+        this._camera.updateProjectionMatrix();
+    }
+
     // Called once per frame by Renderer so OrbitControls damping/inertia
     // keeps animating even when the user isn't actively dragging.
     update() {

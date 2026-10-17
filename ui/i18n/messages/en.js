@@ -1181,6 +1181,7 @@ export default Object.freeze({
     'video.walkthrough': 'Walk-through',
     'video.walkthroughDescription': 'Your avatar walks up to the door and inside, filmed in World View with its sounds: birds, wind, footsteps and the door.',
     'video.music': 'With music',
+    'video.sweep': 'Start with a sweep round the outside',
     'video.camera': 'Camera',
     'video.cameraBehind': 'Behind the avatar',
     'video.cameraBehindDescription': 'Follows your avatar from just behind it; inside, the roof is cut away so the room shows.',

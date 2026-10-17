@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 81aeb5eb1dfcabbf -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: be62128f33d26d38 -->
 # 04 — Publicar y remezclar
 
 <!-- languages -->
@@ -138,6 +138,12 @@ están en **Mi Mundo compartido** en la Vista de mundo.
   enlace corto.
   En **Cámara**, **Detrás del avatar** lo sigue desde justo detrás, y **Con
   sus ojos** filma lo que ve, como si quien mira entrara en persona.
+  **Empezar con un giro de la cámara alrededor**, marcado a menos que lo
+  desmarque, abre el video con la cámara dando media vuelta alrededor de su
+  construcción antes del recorrido. Con sus ojos, el avatar avanza hasta el
+  punto más despejado de la habitación y se filma con un gran angular, como en
+  los recorridos de casas, para que hasta una habitación pequeña se vea
+  entera.
 
 Copiar o compartir un enlace, y abrir uno, se cuentan de forma anónima,
 como la visita diaria; consulte

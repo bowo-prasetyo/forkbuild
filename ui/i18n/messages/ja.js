@@ -1179,6 +1179,7 @@ export default Object.freeze({
     'video.walkthrough': 'ウォークスルー',
     'video.walkthroughDescription': 'アバターがドアまで歩いて中に入る様子を、ワールドビューの音（鳥、風、足音、ドア）と一緒に撮影します。',
     'video.music': '音楽を入れる',
+    'video.sweep': '最初に外側をぐるりと映す',
     'video.camera': 'カメラ',
     'video.cameraBehind': 'アバターの後ろから',
     'video.cameraBehindDescription': 'アバターのすぐ後ろからついていきます。中に入ると屋根が取り除かれ、部屋が見えます。',

@@ -1182,6 +1182,7 @@ export default Object.freeze({
     'video.walkthrough': 'Visite',
     'video.walkthroughDescription': 'Votre avatar marche jusqu’à la porte et entre, filmé dans la Vue du Monde avec ses sons : oiseaux, vent, pas et la porte.',
     'video.music': 'Avec musique',
+    'video.sweep': 'Commencer par un tour de caméra autour',
     'video.camera': 'Caméra',
     'video.cameraBehind': 'Derrière l’avatar',
     'video.cameraBehindDescription': 'Suit votre avatar de juste derrière ; à l’intérieur, le toit est retiré pour montrer la pièce.',

@@ -356,8 +356,9 @@ nothing; a walk-through hands World View the request
 (ui/components/buildVideo/walkThroughFilmRequest.js) and opens it at
 `/world/<id>?film=walk`, where ui/views/worldView/useWalkThroughFilm.js
 waits for the build, application/worldNavigation/walkThroughFilmMethods.js
-walks the avatar through core/WalkThroughFilm.js's plan, from behind it or
-through its eyes, with World View's own
+walks the avatar through core/WalkThroughFilm.js's plan (after a sweep of
+the camera round the outside, when asked), from behind it or through its eyes
+with a wider lens, with World View's own
 movement and its third-person or first-person camera, and renderer/WorldFilmRecorder.js copies
 each frame from the renderer's after-render hook, with the soundscape's
 recording (audio/WebAudioSoundscapeProvider.js#startCapture())), and Embed, the same payload as an `<iframe>` of

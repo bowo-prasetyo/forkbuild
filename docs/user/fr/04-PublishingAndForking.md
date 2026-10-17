@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 81aeb5eb1dfcabbf -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: be62128f33d26d38 -->
 # 04 — Publier et remixer
 
 <!-- languages -->
@@ -144,6 +144,11 @@ boutons se trouvent sous **Mon Monde partagé** dans la Vue du monde.
   trouver ? » sur « Tout le monde » pour un lien court.
   Sous **Caméra**, **Derrière l’avatar** le suit de juste derrière, et **Par
   ses yeux** filme ce qu’il voit, comme si le spectateur entrait lui-même.
+  **Commencer par un tour de caméra autour**, coché sauf si vous le décochez,
+  ouvre la vidéo sur la caméra faisant un demi-tour de votre construction
+  avant la visite. Par ses yeux, l’avatar avance jusqu’à l’endroit le plus
+  dégagé de la pièce et est filmé au grand angle, comme les visites de
+  maisons, pour qu’une petite pièce se voie en entier.
 
 Copier ou partager un lien, et en ouvrir un, sont comptés anonymement,
 comme la visite quotidienne ; voir

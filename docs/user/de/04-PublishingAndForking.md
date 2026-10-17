@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 81aeb5eb1dfcabbf -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: be62128f33d26d38 -->
 # 04 — Veröffentlichen & Remixen
 
 <!-- languages -->
@@ -142,6 +142,11 @@ Weltansicht unter **Meine Geteilte Welt**.
   Unter **Kamera** folgt **Hinter dem Avatar** ihm von knapp dahinter, und
   **Durch seine Augen** filmt, was er sieht, als ginge der Zuschauer selbst
   hinein.
+  **Mit einem Schwenk um das Bauwerk beginnen**, angehakt, solange Sie es
+  nicht abwählen, eröffnet das Video mit einer Kamerafahrt halb um Ihr Bauwerk
+  herum, bevor der Rundgang beginnt. Durch seine Augen geht der Avatar weiter
+  bis zur freiesten Stelle im Raum und wird mit einem Weitwinkel gefilmt, wie
+  bei Hausrundgängen, sodass auch ein kleiner Raum ganz zu sehen ist.
 
 Das Kopieren oder Teilen eines Links und das Öffnen eines Links werden
 anonym gezählt, wie der tägliche Besuch; siehe
