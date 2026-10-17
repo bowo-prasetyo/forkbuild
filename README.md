@@ -88,6 +88,11 @@ longer-term aim.
   itself, so it opens on any device with no wallet or account,
   shows the build's title and a picture of it when pasted into a chat or a
   post, and **Save picture** downloads a PNG of it to post alongside.
+- **Make a video** of a build for YouTube, Shorts, TikTok or Reels: a
+  time-lapse of it rising brick by brick, or a turntable, wide or tall,
+  ending on a card that credits everyone who built it and says where to
+  remix it, with a title and description to paste that link back to the
+  build. It is recorded on your device and you upload it yourself.
 - A shared link opens on the build itself, turning, with who made it, what
   it was remixed from and how many times it has been remixed, its whole family tree, and one big
   **Edit a Copy** button that needs no account. The first publish of a build

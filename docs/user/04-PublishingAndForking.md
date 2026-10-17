@@ -103,6 +103,17 @@ picture** and **Embed**, with the link below them. The same buttons are under
 - **Save picture** downloads a 1200 × 630 PNG of the build, with its title
   and "Remix it on ForkBuild" along the bottom, for posting where a link
   alone shows no picture.
+- **Make a video** records a short video of the build to upload to YouTube,
+  Shorts, TikTok or Reels yourself: a **Build time-lapse**, where it rises
+  brick by brick from the ground up, or a **Turntable**, where it turns once,
+  either **Wide (16:9)** or **Tall (9:16)**. Its name runs along the bottom,
+  and it ends on a card saying who built it, with everyone who built it with
+  you, and where to remix it. The video is made on your device, taking as
+  long as it plays (half a minute at most), and saved to your downloads;
+  nothing is uploaded. Then **Copy title** and **Copy description** give you
+  text to paste beside it: who built it, the link to your build, a link to
+  ForkBuild and the build's license. Keep the tab in front while it records;
+  it pauses while the tab is hidden.
 
 Copying or sharing a link, and opening one, are counted anonymously, like
 the daily visit; see [Daily visitor count](13-YourData.md#daily-visitor-count).

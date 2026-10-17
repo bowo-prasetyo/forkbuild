@@ -588,7 +588,8 @@ Enquanto você constrói, toca uma música suave, um pouco mais animada que a da
   é perguntada uma vez: **Continuar construindo** ou **Publicar mesmo
   assim**. A mensagem depois disso é uma barra só: **Entrar andando** e
   **Copiar link**, com **Mais formas de compartilhar** reunindo o próprio
-  link, **Salvar imagem** e **Incorporar**. Um lembrete para adicionar uma
+  link, **Salvar imagem**,
+  **Fazer um vídeo** e **Incorporar**. Um lembrete para adicionar uma
   frase secreta à identidade com que você publicou espera sua próxima
   publicação quando essa identidade acabou de ser criada.
 - **Novo** — começa algo novo: um **Terreno vazio**, ou uma das

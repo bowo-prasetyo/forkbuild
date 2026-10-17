@@ -113,6 +113,18 @@ bawah **Dunia Bersama Saya** di Tampilan Dunia.
 - **Simpan gambar** mengunduh PNG 1200 × 630 dari bangunan itu, dengan
   judulnya dan "Remix di ForkBuild" di bagian bawah, untuk diunggah di
   tempat yang tidak menampilkan gambar untuk tautan saja.
+- **Buat video** merekam video pendek bangunan itu untuk Anda unggah sendiri
+  ke YouTube, Shorts, TikTok, atau Reels: **Time-lapse pembangunan**, tempat
+  bangunan berdiri balok demi balok dari tanah, atau **Meja putar**, tempat
+  bangunan berputar satu kali, dalam bentuk **Lebar (16:9)** atau **Tegak
+  (9:16)**. Namanya tampil di bagian bawah, dan video diakhiri kartu yang
+  menyebut siapa yang membangunnya, bersama semua yang ikut membangun, dan di
+  mana me-remix-nya. Video dibuat di perangkat Anda selama durasinya (paling
+  lama setengah menit) lalu disimpan ke unduhan; tidak ada yang diunggah.
+  Setelah itu **Salin judul** dan **Salin deskripsi** memberi teks untuk
+  ditempel di sampingnya: siapa yang membangunnya, tautan ke bangunan Anda,
+  tautan ke ForkBuild, dan lisensinya. Biarkan tab tetap di depan selama
+  merekam; perekaman berhenti sejenak saat tab tersembunyi.
 
 Menyalin atau membagikan tautan, dan membukanya, dihitung secara anonim,
 seperti kunjungan harian; lihat

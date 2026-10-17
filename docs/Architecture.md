@@ -346,7 +346,12 @@ note: the worker (server/rendezvous-worker/noteLink.js) and the app
 newest that checks out; application/buildNotes/FindableBuildsStore.js says
 which Publications are on the relays. Either comes with Save picture
 (renderer/BuildPicture.js, a 1200 × 630 PNG drawn by
-DocumentThumbnailRenderer), and Embed, the same payload as an `<iframe>` of
+DocumentThumbnailRenderer), Make a video
+(ui/components/buildVideo/BuildVideoDialog.js: core/BuildVideo.js plans a
+build time-lapse or a turntable, wide or tall, and its end card, title and
+description; renderer/BuildVideoRecorder.js draws it into a canvas and
+records it with MediaRecorder as it plays, on the device, uploading
+nothing), and Embed, the same payload as an `<iframe>` of
 embed.html for other sites' pages. embed.html is a page of its own
 (ui/embed/embedBoot.js), not a route: it starts no storage, peers or
 relays, checks the payload as opening the link does

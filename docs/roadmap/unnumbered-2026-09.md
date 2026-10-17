@@ -7274,3 +7274,49 @@ channels before it.
   the visitor count's rules, like the others. Any other value is still ignored and never sent.
 - The Privacy page names them, in all eight languages, and the launch kit lists each one's link.
 - Tests: `LaunchChannel` (the three are read from `?ref=` and counted as their own fixed paths).
+
+## Make a video: a build for YouTube, Shorts, TikTok and Reels (unnumbered, 2026-10-17)
+
+**A build could travel as a link, an embed, a picture or a 3D model, but not as a video, and video is where people who
+have never heard of ForkBuild find things to try.** YouTube and Shorts recommend videos to people who aren't looking for
+them, and "watch it come together" is one of the most watched kinds of building video. Every video a builder posts is
+one more way into ForkBuild, made and sent by the builder to their own audience, and nothing points that audience back
+to the build unless the video says where it is. Pillar served: every build has a family tree (the video credits
+everyone who built it, and its description links to the build so a viewer can make their own copy), with building feels
+joyful (a time-lapse shows the craft, not just the result). How a player notices: **Make a video** sits beside **Save
+picture**, and the file it saves is ready to upload.
+
+- **Make a video** (`ui/components/buildVideo/BuildVideoDialog.js`, new; offered by `PublicationShareLink` wherever Save
+  picture is, which in the Editor right after Publish is under **More ways to share**): a **Build time-lapse**, the
+  build rising brick by brick from the ground up while the camera turns, or a **Turntable**, one slow turn; **Wide
+  (16:9)** for YouTube or **Tall (9:16)** for Shorts, TikTok and Reels.
+- **What it shows** (`core/BuildVideo.js`, new, pure): one turn every 12 seconds; a time-lapse rises at about 12 bricks
+  a second, between 5 and 20 seconds, lowest bricks first and in the order they were placed at each height, then turns
+  finished for 3 seconds; every video ends on a 3.5-second end card. The longest video is under half a minute. The
+  build's name runs along the bottom with "Made in ForkBuild"; the end card gives the title, who built it and who built
+  it with them, "Remix it, free, in your browser", ForkBuild's address and "Link in the description".
+- **Recorded on the device** (`renderer/BuildVideoRecorder.js`, new): the bricks drawn as Home's turntable draws them,
+  into a canvas recorded with MediaRecorder as it plays, as MP4 where the browser records it and WebM otherwise (YouTube
+  takes either), then downloaded. Recording pauses while the tab is hidden, so the video doesn't freeze; it can be
+  stopped part way. Its WebGL context is released when it finishes. Nothing is uploaded and nothing new is stored or
+  contacted: uploading to YouTube for the builder would need a Google sign-in and a server holding its tokens, which
+  "your work is yours" rules out.
+- **A title and description to paste**: who built it, everyone who built it with them and the build it remixes, the link
+  that opens the build (the same one Copy link gives), ForkBuild's address with `?ref=youtube` so a visit from a video is
+  counted under the `youtube` launch channel added the day before, the license, and `#ForkBuild`, the week's challenge
+  tag for a challenge entry, and `#Shorts` for a tall video. **Copy title** and **Copy description** copy them.
+- **The first ten minutes are unchanged**: nothing new on Home, in the Editor's toolbar or on a shared link; the button
+  appears only once a build is published, and right after Publish only under More ways to share.
+- 46 new messages, in all eight languages; the guide's Publishing chapter and the Editor's Publish entry describe it in
+  every language, and README.md and docs/Architecture.md name it.
+- Tests: `BuildVideo` (sizes, timelines and their limits, what each moment shows, the order bricks rise in, the camera
+  standing back for a tall frame, file names, the format chosen, whether a browser can record, and the title and
+  description with their links and credits), `BuildVideoBrowser` (a tall video of the castle recorded at 720 × 1280,
+  progress to the end, stopping part way, and the dialog from a published build's share actions downloading a wide
+  1280 × 720 time-lapse and offering a description that credits the builder and links to the build and to ForkBuild).
+- Not done: a walk-through filmed in World View (the avatar walking up to the door and inside, at dusk with the lanterns
+  lit), which is the video only ForkBuild can make and comes next; a QR code on the end card (the link that carries a
+  build is too long for one, and a short link exists only for builds sent to everyone); making a video of someone
+  else's build from its shared link; and counting how many videos are made, which would add a counted moment to the
+  Privacy page. Rendering is real time, so a video takes as long to make as it lasts. The translations were written
+  without a native speaker's review.

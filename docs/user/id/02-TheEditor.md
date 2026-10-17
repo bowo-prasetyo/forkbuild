@@ -596,7 +596,8 @@ Musik diputar pelan saat Anda membangun, sedikit lebih riang daripada di Tampila
   berisi apa pun buatan Anda ditanyai sekali: **Terus membangun**, atau
   **Tetap terbitkan**. Pesan sesudahnya berupa satu bilah: **Masuk ke
   dalamnya** dan **Salin tautan**, dengan **Cara lain untuk berbagi** yang
-  berisi tautan itu sendiri, **Simpan gambar**, dan **Sematkan**. Pengingat
+  berisi tautan itu sendiri, **Simpan gambar**, **Buat video**,
+  dan **Sematkan**. Pengingat
   untuk menambahkan frasa sandi ke identitas yang Anda pakai untuk
   menerbitkan menunggu penerbitan berikutnya jika identitas itu baru saja
   dibuat.

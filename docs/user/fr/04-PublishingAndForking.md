@@ -114,6 +114,19 @@ boutons se trouvent sous **Mon Monde partagé** dans la Vue du monde.
   construction, avec son titre et « Faites-en votre version sur
   ForkBuild » en bas, à publier là où un lien seul n’affiche aucune
   image.
+- **Faire une vidéo** enregistre une courte vidéo de la construction, à
+  mettre vous-même sur YouTube, Shorts, TikTok ou Reels : une **Construction
+  en accéléré**, où elle s’élève brique par brique depuis le sol, ou un
+  **Plateau tournant**, où elle fait un tour, en **Large (16:9)** ou
+  **Vertical (9:16)**. Son nom défile en bas, et elle se termine sur une carte
+  qui dit qui l’a construite, avec tous ceux qui l’ont construite avec vous, et
+  où la remixer. La vidéo est faite sur votre appareil, le temps qu’elle dure
+  (une demi-minute au plus), et enregistrée dans vos téléchargements ; rien
+  n’est envoyé. Ensuite, **Copier le titre** et **Copier la description**
+  donnent le texte à coller à côté : qui l’a construite, le lien vers votre
+  construction, un lien vers ForkBuild et la licence. Gardez l’onglet au
+  premier plan pendant l’enregistrement ; il se met en pause quand l’onglet
+  est caché.
 
 Copier ou partager un lien, et en ouvrir un, sont comptés anonymement,
 comme la visite quotidienne ; voir

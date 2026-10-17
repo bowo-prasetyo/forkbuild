@@ -631,7 +631,8 @@ Une musique douce accompagne la construction, un peu plus vive que celle de la V
   fois : **Continuer à construire**, ou **Publier quand même**. Le message
   qui suit tient en une barre : **Entrer à pied** et **Copier le lien**, avec
   **Autres façons de partager**, qui regroupe le lien lui-même,
-  **Enregistrer l’image** et **Intégrer**. Un rappel d’ajouter une phrase de
+  **Enregistrer l’image**,
+  **Faire une vidéo** et **Intégrer**. Un rappel d’ajouter une phrase de
   passe à l’identité avec laquelle vous avez publié attend votre publication
   suivante quand cette identité vient d’être créée.
 - **Nouveau** — commencer quelque chose de nouveau : un **Terrain vide**,

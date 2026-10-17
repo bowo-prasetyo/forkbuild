@@ -619,7 +619,8 @@ Mientras construye suena una música suave, algo más animada que la de la Vista
   no tiene nada suyo se le pregunta una vez: **Seguir construyendo** o
   **Publicar de todos modos**. El mensaje que sigue es una sola barra:
   **Entrar caminando** y **Copiar enlace**, con **Más formas de compartir**,
-  que reúne el enlace en sí, **Guardar imagen** e **Insertar**. Un
+  que reúne el enlace en sí, **Guardar imagen**,
+  **Hacer un video** e **Insertar**. Un
   recordatorio para añadir una frase de contraseña a la identidad con la que
   publicó espera a su próxima publicación cuando esa identidad se acaba de
   crear.
