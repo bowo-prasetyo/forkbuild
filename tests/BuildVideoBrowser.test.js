@@ -3,6 +3,8 @@ import { createApp } from 'vue';
 import PublicationShareLink from '../ui/components/PublicationShareLink.js';
 import { recordBuildVideo } from '../renderer/BuildVideoRecorder.js';
 import { BuildVideoKind, BuildVideoShape } from '../core/BuildVideo.js';
+import { createMusicRecording } from '../audio/MusicRecording.js';
+import { MUSIC_MOOD } from '../core/MusicScore.js';
 import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
@@ -71,6 +73,46 @@ async function videoSize(blob) {
     console.log('✓ a tall video of the build is recorded');
 }
 
+// How loud a video's sound is, second by second ([] for a video with none).
+async function loudness(blob) {
+    let audio;
+    try {
+        audio = await new OfflineAudioContext(1, 44100, 44100).decodeAudioData(await blob.arrayBuffer());
+    } catch {
+        return [];
+    }
+    const data = audio.getChannelData(0);
+    const levels = [];
+    const step = Math.floor(audio.sampleRate / 2);
+    for (let from = 0; from + step <= data.length; from += step) {
+        let sum = 0;
+        for (let i = from; i < from + step; i++) sum += data[i] * data[i];
+        levels.push(Math.sqrt(sum / step));
+    }
+    return levels;
+}
+
+// With music: the music is recorded with it, from the start, and fades away
+// under the end card; the music's track is left to whoever made it.
+{
+    const soundtrack = await createMusicRecording({ mood: MUSIC_MOOD.EDITOR, seed: 7 });
+    assert(soundtrack && soundtrack.stream.getAudioTracks().length === 1, 'the music is ready to record');
+    const timeline = Object.freeze({ kind: BuildVideoKind.TURNTABLE, riseSeconds: 0, showSeconds: 3, endCardSeconds: 2.5, totalSeconds: 5.5 });
+    const video = await recordBuildVideo(castleBricks, { registry, timeline, shape: BuildVideoShape.WIDE, text, soundtrack });
+    const levels = await loudness(video.blob);
+    assert(levels.length >= 9, `the video has sound (${levels.length} half-seconds)`);
+    const playing = Math.max(...levels.slice(1, 6));
+    assert(playing > 0.003, `music plays through it (${playing.toFixed(4)})`);
+    assert(levels.at(-1) < playing / 3, `and fades away by the end (${levels.at(-1).toFixed(4)} after ${playing.toFixed(4)})`);
+    assert(soundtrack.stream.getAudioTracks()[0].readyState === 'live', 'its track is left to the music');
+    soundtrack.stop();
+    assert(soundtrack.stream.getAudioTracks()[0].readyState === 'ended', 'which stopping ends');
+
+    const silent = await recordBuildVideo(castleBricks, { registry, timeline: Object.freeze({ ...timeline, showSeconds: 0.5, totalSeconds: 1 }), shape: BuildVideoShape.WIDE, text });
+    assert((await loudness(silent.blob)).length === 0, 'without music, a video has no sound track');
+    console.log('✓ a time-lapse or a turntable can have music, fading under the end card');
+}
+
 // Stopping part way rejects with an AbortError, and the browser has a WebGL
 // context to spare afterwards.
 {
@@ -136,6 +178,7 @@ HTMLAnchorElement.prototype.click = function captureDownload() {
 
     assert(downloads.length === 1 && /^forkbuild-little-hut-timelapse\.(webm|mp4)$/.test(downloads[0].download), `the video is downloaded, named after the build (${downloads[0]?.download})`);
     const blob = await (await fetch(downloads[0].href)).blob();
+    assert((await loudness(blob)).length > 0, 'with music, as it is unless turned off');
     const size = await videoSize(blob);
     assert(size.width === 1280 && size.height === 720, `wide, 1280 × 720 (got ${size.width} × ${size.height})`);
 

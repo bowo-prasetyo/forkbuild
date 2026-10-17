@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 33cea86c419bfd8c -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 81aeb5eb1dfcabbf -->
 # 04 — Veröffentlichen & Remixen
 
 <!-- languages -->
@@ -124,6 +124,9 @@ Weltansicht unter **Meine Geteilte Welt**.
   hat, den Link zu Ihrem Bauwerk, einen Link zu ForkBuild und die Lizenz.
   Lassen Sie den Tab während der Aufnahme im Vordergrund; ist er verdeckt,
   pausiert sie.
+  Ist **Mit Musik** angehakt, wie es ist, solange Sie es nicht abwählen, wird
+  die Musik von ForkBuild mit aufgenommen und klingt unter der Schlusskarte
+  aus.
 - Ein **Rundgang**, die dritte Art unter **Video machen**, wird in der
   Weltansicht gefilmt: Sie öffnet sich bei Ihrem Bauwerk, Ihr Avatar beginnt
   ein paar Schritte davor, geht zur Tür (die aufschwingt) und hinein und
@@ -136,6 +139,9 @@ Weltansicht unter **Meine Geteilte Welt**.
   der ein großes Bauwerk enthält, ist zu lang für eine YouTube-Beschreibung,
   daher wird er weggelassen, und Video machen sagt es; veröffentlichen Sie mit
   **Wer kann es finden?** auf **Alle** für einen kurzen Link.
+  Unter **Kamera** folgt **Hinter dem Avatar** ihm von knapp dahinter, und
+  **Durch seine Augen** filmt, was er sieht, als ginge der Zuschauer selbst
+  hinein.
 
 Das Kopieren oder Teilen eines Links und das Öffnen eines Links werden
 anonym gezählt, wie der tägliche Besuch; siehe

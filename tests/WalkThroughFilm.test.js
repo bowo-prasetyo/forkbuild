@@ -6,7 +6,7 @@
 // cropped to the video's shape (renderer/WorldFilmRecorder.js).
 import { findBuildEntrance, hasWalkedInside } from '../core/BuildEntrance.js';
 import {
-    APPROACH_DISTANCES, END_CARD_SECONDS, FRONT_LOOK_SECONDS, LOOK_DEGREES, LOOK_SECONDS, OPENING_SECONDS, WALK_LIMIT_SECONDS, WalkThroughPhase,
+    APPROACH_DISTANCES, END_CARD_SECONDS, WalkThroughCamera, FRONT_LOOK_SECONDS, LOOK_DEGREES, LOOK_SECONDS, OPENING_SECONDS, WALK_LIMIT_SECONDS, WalkThroughPhase,
     estimateWalkThroughSeconds, planWalkThrough, startWalkThrough, stepWalkThrough, turnToward
 } from '../core/WalkThroughFilm.js';
 import { walkThroughFilmMethods } from '../application/worldNavigation/walkThroughFilmMethods.js';
@@ -230,6 +230,16 @@ function filmHost({ avatar = true, loaded = true } = {}) {
     assert(frames.size === 0 && host.walkThroughFilmState() === null && !host.isFilmingWalkThrough(), 'stopping lets go of the frames');
     assert(perspectives.at(-1) === CameraPerspective.FIRST_PERSON, 'and gives the camera back its perspective');
     host.stopWalkThroughFilm();
+
+    // Through the avatar's eyes: the first-person camera, given back after.
+    host.startWalkThroughFilm('doc-1', { camera: WalkThroughCamera.EYES });
+    assert(host.getCameraPerspective() === CameraPerspective.FIRST_PERSON, 'through its eyes, the first-person camera films it');
+    host.stopWalkThroughFilm();
+    host.setCameraPerspective(null);
+    host.startWalkThroughFilm('doc-1', { camera: WalkThroughCamera.BEHIND });
+    assert(host.getCameraPerspective() === CameraPerspective.THIRD_PERSON, 'behind it, the third-person camera');
+    host.stopWalkThroughFilm();
+    assert(host.getCameraPerspective() === null, 'and the free camera comes back after');
     console.log('✓ World View films the walk with the real avatar and gives everything back after');
 }
 

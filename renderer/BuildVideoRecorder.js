@@ -22,16 +22,25 @@ const FOV_DEGREES = 35;
 const PADDING = 1.05;
 const FRAMES_PER_SECOND = 30;
 const BITS_PER_SECOND = 8_000_000;
+const AUDIO_BITS_PER_SECOND = 128_000;
+// The soundtrack fades away this long before the video ends, under the end card.
+const SOUNDTRACK_FADE_SECONDS = 1.6;
 
 // Records `bricks` (core/Brick.js) as a `timeline` (buildVideoTimeline())
 // video in `shape`. `text` is in the viewer's language: `{ title, credit,
 // badge, call, address, hint }`, the strip naming the build and the end card
 // (the build's title and `credit` above `call`, `address` and `hint`).
-// `onProgress(fraction)` follows it; aborting `signal` stops it and rejects
-// with an AbortError. Resolves to `{ blob, mimeType, extension }`.
-export async function recordBuildVideo(bricks, { registry, timeline, shape, text, onProgress = () => {}, signal = null }) {
+// `soundtrack`, when given, is music to record with it
+// (audio/MusicRecording.js: `{ stream, play(), fadeOut(), pause(), resume() }`),
+// started with the recording and faded out under the end card; the caller stops it. `onProgress(fraction)`
+// follows it; aborting `signal` stops it and rejects with an AbortError.
+// Resolves to `{ blob, mimeType, extension }`.
+export async function recordBuildVideo(bricks, {
+    registry, timeline, shape, text, soundtrack = null, onProgress = () => {}, signal = null
+}) {
     const Recorder = globalThis.MediaRecorder;
-    const mimeType = Recorder ? chooseVideoMimeType((type) => Recorder.isTypeSupported(type)) : null;
+    const sound = Boolean(soundtrack && soundtrack.stream.getAudioTracks().length > 0);
+    const mimeType = Recorder ? chooseVideoMimeType((type) => Recorder.isTypeSupported(type), { sound }) : null;
     if (!mimeType) throw new Error('this browser can\'t record a video');
     if (signal?.aborted) throw abortError();
     const { width, height } = BUILD_VIDEO_SIZES[shape];
@@ -51,8 +60,13 @@ export async function recordBuildVideo(bricks, { registry, timeline, shape, text
     };
     drawAt(0);
 
-    const stream = canvas.captureStream(FRAMES_PER_SECOND);
-    const recorder = new Recorder(stream, { mimeType, videoBitsPerSecond: BITS_PER_SECOND });
+    const video = canvas.captureStream(FRAMES_PER_SECOND);
+    const stream = new MediaStream([...video.getVideoTracks(), ...(sound ? soundtrack.stream.getAudioTracks() : [])]);
+    const recorder = new Recorder(stream, {
+        mimeType,
+        videoBitsPerSecond: BITS_PER_SECOND,
+        ...(sound ? { audioBitsPerSecond: AUDIO_BITS_PER_SECOND } : {})
+    });
     const chunks = [];
     recorder.ondataavailable = (event) => {
         if (event.data && event.data.size > 0) chunks.push(event.data);
@@ -67,6 +81,7 @@ export async function recordBuildVideo(bricks, { registry, timeline, shape, text
             let hiddenAt = null;
             let hiddenFor = 0;
             let finished = false;
+            let fading = false;
             const finish = (error) => {
                 if (finished) return;
                 finished = true;
@@ -82,10 +97,12 @@ export async function recordBuildVideo(bricks, { registry, timeline, shape, text
                 if (document.hidden && recorder.state === 'recording') {
                     hiddenAt = performance.now();
                     recorder.pause();
+                    if (sound) soundtrack.pause();
                 } else if (!document.hidden && recorder.state === 'paused') {
                     hiddenFor += performance.now() - hiddenAt;
                     hiddenAt = null;
                     recorder.resume();
+                    if (sound) soundtrack.resume();
                 }
             };
             const tick = (now) => {
@@ -95,6 +112,10 @@ export async function recordBuildVideo(bricks, { registry, timeline, shape, text
                     const seconds = (now - started - hiddenFor) / 1000;
                     drawAt(seconds);
                     onProgress(Math.min(1, seconds / timeline.totalSeconds));
+                    if (sound && !fading && seconds >= timeline.totalSeconds - SOUNDTRACK_FADE_SECONDS) {
+                        fading = true;
+                        soundtrack.fadeOut();
+                    }
                     if (seconds >= timeline.totalSeconds) {
                         // One more frame's time, so the last one is recorded.
                         setTimeout(() => finish(null), 1000 / FRAMES_PER_SECOND * 2);
@@ -107,10 +128,12 @@ export async function recordBuildVideo(bricks, { registry, timeline, shape, text
             document.addEventListener('visibilitychange', onVisibility);
             recorder.onerror = (event) => finish(event.error || new Error('the video couldn\'t be recorded'));
             recorder.start(1000);
+            if (sound) soundtrack.play();
             frameRequest = requestAnimationFrame(tick);
         });
     } finally {
-        stream.getTracks().forEach((track) => track.stop());
+        // Only the canvas's track: the soundtrack's belongs to whoever made it.
+        video.getTracks().forEach((track) => track.stop());
         scene.dispose();
     }
     const type = mimeType.split(';')[0];

@@ -91,7 +91,8 @@ longer-term aim.
 - **Make a video** of a build for YouTube, Shorts, TikTok or Reels: a
   time-lapse of it rising brick by brick, a turntable, or a walk-through
   filmed in World View, your avatar walking up to the door and inside with
-  World View's sounds and music, wide or tall,
+  World View's sounds, seen from behind it or through its eyes, wide or tall,
+  with music or without,
   ending on a card that credits everyone who built it and says where to
   remix it, with a title and description to paste that link back to the
   build. It is recorded on your device and you upload it yourself.

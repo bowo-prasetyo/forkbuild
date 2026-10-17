@@ -5,7 +5,7 @@
 // (a reload, a bookmark) films nothing.
 let pending = null;
 
-// `request`: `{ documentId, shape, music, name, text, description }`.
+// `request`: `{ documentId, shape, camera, music, name, text, description }`.
 export function requestWalkThroughFilm(request) {
     pending = Object.freeze({ ...request });
 }

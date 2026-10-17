@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 33cea86c419bfd8c -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 81aeb5eb1dfcabbf -->
 # 04 — Publicar e remixar
 
 <!-- languages -->
@@ -119,6 +119,8 @@ ficam em **Meu Mundo compartilhado** na Visão do mundo.
   construiu, o link da sua construção, um link para o ForkBuild e a licença.
   Deixe a aba na frente enquanto grava; a gravação pausa enquanto a aba está
   escondida.
+  Com **Com música** marcado, como fica a não ser que você desmarque, a música
+  do ForkBuild é gravada junto e some aos poucos sob o cartão final.
 - Um **Passeio**, o terceiro tipo em **Fazer um vídeo**, é filmado na Visão
   do mundo: ela abre na sua construção, seu avatar começa alguns passos
   atrás, caminha até a porta (que se abre) e entra, e olha em volta do
@@ -130,6 +132,8 @@ ficam em **Meu Mundo compartilhado** na Visão do mundo.
   grande é longo demais para a descrição do YouTube, então fica de fora e
   Fazer um vídeo avisa; publique com **Quem pode encontrá-la?** em **Todo
   mundo** para ter um link curto.
+  Em **Câmera**, **Atrás do avatar** o segue logo atrás, e **Pelos olhos
+  dele** filma o que ele vê, como se quem assiste entrasse por conta própria.
 
 Copiar ou compartilhar um link, e abrir um, são contados de forma anônima,
 como a visita diária; veja

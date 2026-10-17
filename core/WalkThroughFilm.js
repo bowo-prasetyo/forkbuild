@@ -40,6 +40,15 @@ const END_CARD_FADE_SECONDS = 0.5;
 // A held moment before walking off, so the video opens on the build.
 export const OPENING_SECONDS = 1;
 
+// Where the film is seen from: just behind and above the avatar (World View's
+// third-person camera, which indoors frames the room with the roof cut away),
+// or through its eyes (the first-person camera).
+export const WalkThroughCamera = Object.freeze({
+    BEHIND: 'behind',
+    EYES: 'eyes'
+});
+export const WALK_THROUGH_CAMERAS = Object.freeze(Object.values(WalkThroughCamera));
+
 export const WalkThroughPhase = Object.freeze({
     OPENING: 'opening',
     WALK: 'walk',

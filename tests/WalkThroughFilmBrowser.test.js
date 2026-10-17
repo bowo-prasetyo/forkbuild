@@ -157,20 +157,24 @@ async function mountDialog({ router = null, documentId = null }) {
     const dialog = await mountDialog({ router, documentId: 'doc-hut' });
     const option = dialog.host.querySelector('[data-kind="walkthrough"]');
     assert(option && option.textContent.includes(t('video.walkthrough')), 'with it, a walk-through is offered');
-    assert(!dialog.host.querySelector('.build-video-music'), 'music is asked about only for a walk-through');
+    assert(dialog.host.querySelector('.build-video-music-input').checked, 'every kind has music, unless turned off');
+    assert(!dialog.host.querySelector('[data-camera]'), 'the camera is asked about only for a walk-through');
     option.querySelector('input').click();
-    await until(() => dialog.host.querySelector('.build-video-music'), 'the music option');
-    assert(dialog.host.querySelector('.build-video-music-input').checked, 'with music, unless turned off');
+    await until(() => dialog.host.querySelector('[data-camera]'), 'the camera choice');
+    assert(dialog.host.querySelector('[data-camera="behind"] input').checked && dialog.host.querySelector('[data-camera="eyes"]').textContent.includes(t('video.cameraEyes')),
+        'behind the avatar, or through its eyes');
     assert(dialog.host.textContent.includes(t('video.walkthroughNote')) && dialog.host.querySelector('.build-video-record').textContent.trim() === t('video.filmWalkthrough'),
         'it says the walk is filmed in World View');
     dialog.host.querySelector('[data-shape="tall"] input').click();
+    dialog.host.querySelector('[data-camera="eyes"] input').click();
     dialog.host.querySelector('.build-video-music-input').click();
     await new Promise((resolve) => setTimeout(resolve, 0));
     dialog.host.querySelector('.build-video-record').click();
     await until(() => router.currentRoute.value.path === '/world/doc-hut', 'World View to open');
     assert(router.currentRoute.value.query.film === 'walk' && dialog.closed() === 1, 'it opens World View on the build, to film it, and closes');
     const request = takeWalkThroughFilmRequest('doc-hut');
-    assert(request && request.shape === BuildVideoShape.TALL && request.music === false && request.name === 'Little hut', `World View gets the shape, the music choice and the name (${JSON.stringify(request && { shape: request.shape, music: request.music })})`);
+    assert(request && request.shape === BuildVideoShape.TALL && request.camera === 'eyes' && request.music === false && request.name === 'Little hut',
+        `World View gets the shape, the camera, the music choice and the name (${JSON.stringify(request && { shape: request.shape, camera: request.camera, music: request.music })})`);
     assert(request.text.credit === t('video.credit', { author: 'alice' }) && request.description.text.split('\n').includes(t('video.description.remixLink', { url: 'https://example.test/n/hut' }))
         && request.description.title === t('video.description.titleShorts', { title: 'Little hut' }), 'and the words for the video and its description');
     assert(takeWalkThroughFilmRequest('doc-hut') === null, 'once only, so reopening the address later films nothing');

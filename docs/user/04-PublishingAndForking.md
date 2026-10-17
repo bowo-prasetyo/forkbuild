@@ -114,6 +114,8 @@ picture** and **Embed**, with the link below them. The same buttons are under
   text to paste beside it: who built it, the link to your build, a link to
   ForkBuild and the build's license. Keep the tab in front while it records;
   it pauses while the tab is hidden.
+  With **With music** ticked, as it is unless you untick it, the music
+  ForkBuild plays is recorded with it and fades away under the end card.
 - A **Walk-through**, the third kind in **Make a video**, is filmed in World
   View: it opens at your build, your avatar starts a few steps back, walks
   up to the door (which swings open) and inside, and looks round the room,
@@ -125,6 +127,8 @@ picture** and **Embed**, with the link below them. The same buttons are under
   large build is too long for a YouTube description, so it is left out and
   Make a video says so; publish with **Who can find it?** set to **Everyone**
   for a short link.
+  Under **Camera**, **Behind the avatar** follows it from just behind, and
+  **Through its eyes** films what it sees, as if the viewer walked in.
 
 Copying or sharing a link, and opening one, are counted anonymously, like
 the daily visit; see [Daily visitor count](13-YourData.md#daily-visitor-count).

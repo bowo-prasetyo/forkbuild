@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 33cea86c419bfd8c -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 81aeb5eb1dfcabbf -->
 # 04 — Publier et remixer
 
 <!-- languages -->
@@ -127,6 +127,9 @@ boutons se trouvent sous **Mon Monde partagé** dans la Vue du monde.
   construction, un lien vers ForkBuild et la licence. Gardez l’onglet au
   premier plan pendant l’enregistrement ; il se met en pause quand l’onglet
   est caché.
+  Avec **Avec musique** coché, ce qu’il est sauf si vous le décochez, la
+  musique de ForkBuild est enregistrée avec elle et s’efface sous la carte de
+  fin.
 - Une **Visite**, le troisième genre de **Faire une vidéo**, est filmée dans
   la Vue du Monde : elle s’ouvre sur votre construction, votre avatar part
   quelques pas en arrière, marche jusqu’à la porte (qui s’ouvre) et entre,
@@ -139,6 +142,8 @@ boutons se trouvent sous **Mon Monde partagé** dans la Vue du monde.
   grande construction est trop long pour une description YouTube : il est
   laissé de côté, et Faire une vidéo le dit ; publiez avec « Qui peut la
   trouver ? » sur « Tout le monde » pour un lien court.
+  Sous **Caméra**, **Derrière l’avatar** le suit de juste derrière, et **Par
+  ses yeux** filme ce qu’il voit, comme si le spectateur entrait lui-même.
 
 Copier ou partager un lien, et en ouvrir un, sont comptés anonymement,
 comme la visite quotidienne ; voir
