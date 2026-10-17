@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 33cea86c419bfd8c -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 81aeb5eb1dfcabbf -->
 # 04 — Penerbitan & Remix
 
 <!-- languages -->
@@ -125,6 +125,8 @@ bawah **Dunia Bersama Saya** di Tampilan Dunia.
   ditempel di sampingnya: siapa yang membangunnya, tautan ke bangunan Anda,
   tautan ke ForkBuild, dan lisensinya. Biarkan tab tetap di depan selama
   merekam; perekaman berhenti sejenak saat tab tersembunyi.
+  Jika **Dengan musik** dicentang, seperti bawaannya kecuali Anda menghapus
+  centangnya, musik ForkBuild ikut direkam dan memudar di bawah kartu penutup.
 - **Jelajah**, jenis ketiga di **Buat video**, difilmkan di Tampilan Dunia:
   Tampilan Dunia terbuka di bangunan Anda, avatar Anda mulai beberapa langkah
   di depannya, berjalan ke pintu (yang terbuka) lalu masuk, dan melihat
@@ -137,6 +139,9 @@ bawah **Dunia Bersama Saya** di Tampilan Dunia.
   deskripsi YouTube, jadi tidak disertakan dan Buat video memberitahukannya;
   terbitkan dengan **Siapa yang bisa menemukannya?** diatur ke **Semua
   orang** untuk tautan pendek.
+  Di **Kamera**, **Di belakang avatar** mengikutinya dari tepat di belakang,
+  dan **Lewat matanya** memfilmkan apa yang dilihatnya, seolah penonton
+  sendiri yang masuk.
 
 Menyalin atau membagikan tautan, dan membukanya, dihitung secara anonim,
 seperti kunjungan harian; lihat

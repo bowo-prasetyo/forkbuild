@@ -70,7 +70,7 @@ export function useWalkThroughFilm({ session, sound }) {
             audio = null;
         }
         recorder = new WorldFilmRecorder({ shape: request.shape, text: request.text, audioStream: audio });
-        const started = session.startWalkThroughFilm(request.documentId);
+        const started = session.startWalkThroughFilm(request.documentId, { camera: request.camera });
         if (!started) throw new Error('the walk-through could not start');
         estimate = Math.max(1, started.seconds);
         recorder.start();

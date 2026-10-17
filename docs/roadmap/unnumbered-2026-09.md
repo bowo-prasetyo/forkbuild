@@ -7374,3 +7374,32 @@ remix link as every video). How a player notices: **Walk-through** is the third 
   else's build from its shared link; music for the time-lapse and turntable; a tall video takes the middle of a wide
   view, so it is sharper on a tall window; and the film runs in real time with the tab in front. The translations were
   written without a native speaker's review.
+
+## Make a video: music for the time-lapse and turntable, and a walk-through through the avatar's eyes (unnumbered, 2026-10-17)
+
+**Two of the previous entry's "Not done": the time-lapse and turntable were silent, and the walk-through had one
+camera.** A silent video loses viewers in the first seconds on YouTube and Shorts, and a walk-through seen through the
+avatar's eyes feels like walking in yourself. Pillar served: building feels joyful (a build going up to music), with
+your work is yours, and lives in a world (a build entered as if by the viewer). How a player notices: **With music**
+under every kind in Make a video, and **Camera** under Walk-through.
+
+- **Music for every kind**: **With music**, on unless unticked, is offered for the time-lapse and the turntable too.
+  `audio/MusicRecording.js` (new) plays the same synthesized music as World View and the Editor
+  (`audio/MusicPlayer.js`) into a recordable stream in its own AudioContext, made during the click (browsers start
+  audio only after one) and never sent to the speakers, so making a video stays silent. A time-lapse has the Editor's
+  bright, lively mood; a turntable World View's by day. `recordBuildVideo()` takes it as `soundtrack`: the music
+  starts with the recording, from the top of a phrase, pauses while the tab is hidden, and fades away under the end
+  card. A video without music has no sound track, as before.
+- **Through its eyes**: **Camera** offers **Behind the avatar** (World View's third-person camera, which indoors cuts
+  the roof away) or **Through its eyes** (its first-person camera). `core/WalkThroughFilm.js` gains
+  `WalkThroughCamera`; `startWalkThroughFilm(documentId, { camera })` films from it and gives the camera back its
+  perspective after; the request from Make a video carries it.
+- 5 new messages, in all eight languages; the guide's Publishing chapter says so in every language, and README.md and
+  docs/Architecture.md name it.
+- Tests: `BuildVideoBrowser` (music recorded through a turntable from the start, fading away by its end, its track
+  left to the music until stopped, no sound track without it, and the dialog's time-lapse having music by default),
+  `WalkThroughFilm` (each camera's perspective, and the free camera given back), `WalkThroughFilmBrowser` (the camera
+  asked only for a walk-through and handed to World View).
+- Not done: a choice of tune or mood; the walk-through's first-person look round sees a small room close up, where
+  a step further in would show more; a sweep round the outside before going in. The translations were written without
+  a native speaker's review.

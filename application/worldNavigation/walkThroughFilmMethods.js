@@ -1,6 +1,8 @@
 import { findBuildEntrance } from '../../core/BuildEntrance.js';
 import { CameraPerspective } from '../../core/CameraPerspective.js';
-import { planWalkThrough, startWalkThrough, stepWalkThrough, estimateWalkThroughSeconds, WalkThroughPhase } from '../../core/WalkThroughFilm.js';
+import {
+    planWalkThrough, startWalkThrough, stepWalkThrough, estimateWalkThroughSeconds, WalkThroughCamera, WalkThroughPhase
+} from '../../core/WalkThroughFilm.js';
 
 // The key that walks the avatar ahead (application/avatar/AvatarMovementController.js).
 const FORWARD_KEY = 'w';
@@ -9,8 +11,9 @@ const FORWARD_KEY = 'w';
 // avatar is put a few steps back from a build's door, and every render frame
 // it is turned and walked ahead as the film says, through World View's own
 // movement, so it bumps into what is there, the door swings open, its
-// footsteps are heard and the third-person camera follows it in (indoors,
-// core/IndoorView.js frames the room). The person's own movement keys do
+// footsteps are heard and the camera follows it in: World View's third-person
+// camera (indoors, core/IndoorView.js frames the room), or its first-person
+// one, seeing through the avatar's eyes. The person's own movement keys do
 // nothing until the film ends. ui/views/worldView/useWalkThroughFilm.js records
 // what is drawn.
 export const walkThroughFilmMethods = {
@@ -22,10 +25,11 @@ export const walkThroughFilmMethods = {
             && !(typeof this.avatarVehicleMount === 'function' && this.avatarVehicleMount()));
     },
 
-    // Starts filming `documentId`'s walk-through. Returns `{ kind, seconds }`
+    // Starts filming `documentId`'s walk-through, seen from `camera`
+    // (core/WalkThroughFilm.js's WalkThroughCamera). Returns `{ kind, seconds }`
     // (a build entered by a door or walked up to, and about how long the film
     // runs), or null when it can't be filmed now (canFilmWalkThrough()).
-    startWalkThroughFilm(documentId) {
+    startWalkThroughFilm(documentId, { camera = WalkThroughCamera.BEHIND } = {}) {
         if (!this.canFilmWalkThrough(documentId)) {
             return null;
         }
@@ -59,7 +63,7 @@ export const walkThroughFilmMethods = {
             unsubscribe: null
         };
         this._walkThroughFilm = film;
-        this.setCameraPerspective(CameraPerspective.THIRD_PERSON);
+        this.setCameraPerspective(camera === WalkThroughCamera.EYES ? CameraPerspective.FIRST_PERSON : CameraPerspective.THIRD_PERSON);
         film.unsubscribe = this.onRenderFrame((deltaSeconds) => this._stepWalkThroughFilm(deltaSeconds));
         return Object.freeze({ kind: plan.kind, seconds: estimateWalkThroughSeconds(plan) });
     },

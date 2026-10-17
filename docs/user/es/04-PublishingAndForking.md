@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 33cea86c419bfd8c -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 81aeb5eb1dfcabbf -->
 # 04 — Publicar y remezclar
 
 <!-- languages -->
@@ -122,6 +122,8 @@ están en **Mi Mundo compartido** en la Vista de mundo.
   para pegar junto a él: quién la construyó, el enlace a su construcción, un
   enlace a ForkBuild y la licencia. Deje la pestaña al frente mientras graba;
   la grabación se pausa mientras está oculta.
+  Con **Con música** marcado, como está a menos que lo desmarque, la música de
+  ForkBuild se graba con él y se desvanece bajo la tarjeta final.
 - Un **Recorrido**, el tercer tipo en **Hacer un video**, se filma en la
   Vista del mundo: se abre en su construcción, su avatar empieza unos pasos
   atrás, camina hasta la puerta (que se abre) y entra, y mira alrededor de
@@ -134,6 +136,8 @@ están en **Mi Mundo compartido** en la Vista de mundo.
   descripción de YouTube, así que se deja fuera y Hacer un video lo dice;
   publique con **¿Quién puede encontrarla?** en **Todos** para obtener un
   enlace corto.
+  En **Cámara**, **Detrás del avatar** lo sigue desde justo detrás, y **Con
+  sus ojos** filma lo que ve, como si quien mira entrara en persona.
 
 Copiar o compartir un enlace, y abrir uno, se cuentan de forma anónima,
 como la visita diaria; consulte

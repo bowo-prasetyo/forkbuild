@@ -2,6 +2,8 @@ import { computed, onBeforeUnmount, ref } from 'vue';
 import {
     BuildVideoKind, BuildVideoShape, buildVideoFileName, buildVideoTimeline, canRecordBuildVideo
 } from '../../../core/BuildVideo.js';
+import { WalkThroughCamera } from '../../../core/WalkThroughFilm.js';
+import { MUSIC_MOOD } from '../../../core/MusicScore.js';
 import BuildVideoSaved from './BuildVideoSaved.js';
 import { downloadVideo, videoDescription, videoOverlayText } from './buildVideoText.js';
 import { requestWalkThroughFilm } from './walkThroughFilmRequest.js';
@@ -12,17 +14,29 @@ const KINDS = Object.freeze([
     { kind: BuildVideoKind.TURNTABLE, name: 'video.turntable', description: 'video.turntableDescription' },
     { kind: BuildVideoKind.WALKTHROUGH, name: 'video.walkthrough', description: 'video.walkthroughDescription' }
 ]);
+const CAMERAS = Object.freeze([
+    { camera: WalkThroughCamera.BEHIND, name: 'video.cameraBehind', description: 'video.cameraBehindDescription' },
+    { camera: WalkThroughCamera.EYES, name: 'video.cameraEyes', description: 'video.cameraEyesDescription' }
+]);
+// The music under a drawn video: the Editor's, bright and a little lively,
+// while the build goes up; World View's by day while it turns.
+const MUSIC_MOODS = Object.freeze({
+    [BuildVideoKind.TIMELAPSE]: MUSIC_MOOD.EDITOR,
+    [BuildVideoKind.TURNTABLE]: MUSIC_MOOD.DAY
+});
 const SHAPES = Object.freeze([
     { shape: BuildVideoShape.WIDE, name: 'video.wide', description: 'video.wideDescription' },
     { shape: BuildVideoShape.TALL, name: 'video.tall', description: 'video.tallDescription' }
 ]);
 
 // Make a video (from PublicationShareLink, beside Save picture): pick a
-// time-lapse, a turntable or a walk-through, wide or tall. A time-lapse or a
-// turntable is recorded here, on this device (renderer/BuildVideoRecorder.js),
-// and downloaded, with a title and a description to paste where the person
-// uploads it (BuildVideoSaved). A walk-through is filmed in World View, with
-// its sounds and, if asked, its music: the dialog hands World View the request
+// time-lapse, a turntable or a walk-through, wide or tall, with music or
+// without. A time-lapse or a turntable is recorded here, on this device
+// (renderer/BuildVideoRecorder.js, with audio/MusicRecording.js's music), and
+// downloaded, with a title and a description to paste where the person
+// uploads it (BuildVideoSaved). A walk-through is filmed in World View, from
+// behind the avatar or through its eyes, with its sounds and, if asked, its
+// music: the dialog hands World View the request
 // (walkThroughFilmRequest.js) and opens the build there. Nothing is uploaded.
 // `snapshotText` is the published build; `buildUrl` the link that opens it,
 // when it has one; `documentId` the build World View stands it as, which a
@@ -47,6 +61,7 @@ export default {
         const kind = ref(BuildVideoKind.TIMELAPSE);
         const shape = ref(BuildVideoShape.WIDE);
         const music = ref(true);
+        const camera = ref(WalkThroughCamera.BEHIND);
         // choose, recording, done, failed, or unsupported in a browser that
         // can't record.
         const state = ref(canRecordBuildVideo(globalThis) ? 'choose' : 'unsupported');
@@ -69,6 +84,7 @@ export default {
                 requestWalkThroughFilm({
                     documentId: props.documentId,
                     shape: shape.value,
+                    camera: camera.value,
                     music: music.value,
                     name,
                     text: videoOverlayText(build.metadata, name),
@@ -91,7 +107,13 @@ export default {
             progress.value = 0;
             const mine = new AbortController();
             controller = mine;
+            let soundtrack = null;
             try {
+                // Started first, while the click still counts as a gesture.
+                if (music.value) {
+                    const { createMusicRecording } = await import('../../../audio/MusicRecording.js');
+                    soundtrack = await createMusicRecording({ mood: MUSIC_MOODS[kind.value] });
+                }
                 // Imported here, so Three.js loads only when a video is asked for.
                 const [{ recordBuildVideo }, { CreateBrickRegistryUseCase }, { bricksOfDocument }, { build, name }] = await Promise.all([
                     import('../../../renderer/BuildVideoRecorder.js'),
@@ -105,6 +127,7 @@ export default {
                     timeline: buildVideoTimeline(kind.value, bricks.length),
                     shape: shape.value,
                     text: videoOverlayText(build.metadata, name),
+                    soundtrack,
                     onProgress: (fraction) => { progress.value = fraction; },
                     signal: mine.signal
                 });
@@ -116,6 +139,7 @@ export default {
                 if (error?.name === 'AbortError') return;
                 state.value = 'failed';
             } finally {
+                soundtrack?.stop();
                 if (controller === mine) controller = null;
             }
         }
@@ -129,7 +153,7 @@ export default {
         const percent = computed(() => Math.round(progress.value * 100));
         const walkThrough = computed(() => kind.value === BuildVideoKind.WALKTHROUGH);
         return {
-            t, kindsFor, shapes: SHAPES, kind, shape, music, walkThrough, state, percent, fileName, description, record, cancel
+            t, kindsFor, shapes: SHAPES, cameras: CAMERAS, kind, shape, camera, music, walkThrough, state, percent, fileName, description, record, cancel
         };
     },
     mounted() {
@@ -183,7 +207,17 @@ export default {
                             <span class="model-export-description">{{ t(option.description) }}</span>
                         </label>
                     </fieldset>
-                    <label v-if="walkThrough" class="build-video-music">
+                    <fieldset v-if="walkThrough" class="build-video-choice">
+                        <legend>{{ t('video.camera') }}</legend>
+                        <label v-for="option in cameras" :key="option.camera" class="model-export-option build-video-option" :data-camera="option.camera">
+                            <span class="build-video-option-head">
+                                <input type="radio" name="build-video-camera" :value="option.camera" v-model="camera">
+                                <span class="model-export-name">{{ t(option.name) }}</span>
+                            </span>
+                            <span class="model-export-description">{{ t(option.description) }}</span>
+                        </label>
+                    </fieldset>
+                    <label class="build-video-music">
                         <input type="checkbox" class="build-video-music-input" v-model="music">
                         {{ t('video.music') }}
                     </label>
