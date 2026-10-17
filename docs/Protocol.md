@@ -486,16 +486,16 @@ constraints, expiresAt, issuedAt, nonce, parentDelegationId }` with
 
 Where a publish first places a world is the publisher's choice, not part of
 the protocol: a reader only adopts the signed record. ForkBuild's own choice
-(application/placement/SettledPlacementStrategy.js, core/BuildSettlement.js)
-is a Build here plot when there is one; else the position an earlier
-Publication of the same world already has; else a free spot on a ring 18 or
-36 units round the world it remixes; else the first free spot of the
-village round the challenge plaza (rings from 56 units out, 22 apart, spots
-20 apart, each ring walked from a slot chosen by the Publication id's
-FNV-1a hash, skipping water, rock, rivers, trees and the 48 units round the
-plaza where its ready-made builds stand, core/StarterVillage.js; builds
-published before 2026-10-12's Release F settled from 90 out); else
-the id-keyed grid (core/DeterministicGridPlacement.js), as before.
+(application/plot/BuildPlotPlacementStrategy.js,
+application/placement/StandingPlacementStrategy.js) is a Build here plot
+when there is one; else the position an earlier Publication of the same
+world already has; else the id-keyed grid
+(core/DeterministicGridPlacement.js), remix or not. From 2026-10-12 to
+2026-10-17 a remix was placed on a ring round the world it remixes and
+anything else in rings round the challenge plaza (core/BuildSettlement.js);
+those placements stand as they were signed. The rings round the plaza now
+only lay out a week's entries while its plaza is visited, as exhibits that
+are never placements (core/PlazaEntrySpots.js).
 
 ## Rendezvous
 

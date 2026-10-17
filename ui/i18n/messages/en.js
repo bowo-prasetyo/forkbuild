@@ -2891,7 +2891,7 @@ export default Object.freeze({
     'homeView.remixTitle': 'Remix anything',
     'homeView.remixText': 'Make your own copy of any published build, as its license allows. Your copy records where it came from, so credit travels with it.',
     'homeView.exploreTitle': 'Explore together',
-    'homeView.exploreText': 'Walk through what you and your friends built, in a village that grows round the weekly challenge, and meet people there.',
+    'homeView.exploreText': 'Walk through what you and your friends built, out across a wide, open land, and meet people there.',
     'homeView.ownTitle': 'Yours to keep',
     'homeView.ownText': 'No accounts and no central server holding your work. Your identity is a key on your device, your builds are saved in your browser, and one file backs it all up.',
     'homeView.openSource': 'ForkBuild is free and open source, under the Mozilla Public License 2.0.',

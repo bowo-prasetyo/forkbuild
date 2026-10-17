@@ -2889,7 +2889,7 @@ export default Object.freeze({
     'homeView.remixTitle': 'Remix apa saja',
     'homeView.remixText': 'Buat salinan Anda sendiri dari bangunan apa pun yang diterbitkan, sejauh lisensinya mengizinkan. Salinan Anda mencatat asalnya, jadi kredit ikut terbawa.',
     'homeView.exploreTitle': 'Jelajahi bersama',
-    'homeView.exploreText': 'Jelajahi apa yang Anda dan teman-teman bangun, di desa yang tumbuh di sekitar tantangan mingguan, dan temui orang-orang di sana.',
+    'homeView.exploreText': 'Jelajahi apa yang Anda dan teman-teman bangun, di negeri yang luas dan terbuka, dan temui orang-orang di sana.',
     'homeView.ownTitle': 'Milikmu sepenuhnya',
     'homeView.ownText': 'Tanpa akun dan tanpa server pusat yang menyimpan karya Anda. Identitas Anda adalah kunci di perangkat Anda, bangunan Anda tersimpan di browser, dan satu file mencadangkan semuanya.',
     'homeView.openSource': 'ForkBuild gratis dan bersumber terbuka, di bawah Mozilla Public License 2.0.',

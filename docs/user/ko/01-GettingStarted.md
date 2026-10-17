@@ -5,6 +5,10 @@
 [English](../01-GettingStarted.md) · [Deutsch](../de/01-GettingStarted.md) · [Español](../es/01-GettingStarted.md) · [Français](../fr/01-GettingStarted.md) · [Bahasa Indonesia](../id/01-GettingStarted.md) · [日本語](../ja/01-GettingStarted.md) · **한국어** · [Português (Brasil)](../pt-BR/01-GettingStarted.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **참고:** 이 페이지의 영어판이 번역 이후에 바뀌었으므로, 이 번역은 최신 내용이 아닐 수 있습니다. [영어판](../01-GettingStarted.md)을 참고하세요.
+<!-- /stale -->
+
 환영합니다! 이 안내를 따라가면 “앱을 막 열었다”에서 “무언가를 지었다”까지
 5분 정도면 갈 수 있습니다. 시작하는 데 계정도, 다운로드도, 이름도 필요
 없습니다: 공유하기로 정할 때까지 모든 것이 내 기기에 남습니다.

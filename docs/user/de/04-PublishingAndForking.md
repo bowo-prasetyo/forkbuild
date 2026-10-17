@@ -5,6 +5,10 @@
 [English](../04-PublishingAndForking.md) · **Deutsch** · [Español](../es/04-PublishingAndForking.md) · [Français](../fr/04-PublishingAndForking.md) · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · [한국어](../ko/04-PublishingAndForking.md) · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../04-PublishingAndForking.md).
+<!-- /stale -->
+
 Das ist das Herz von ForkBuild. **Veröffentlichen** teilt Ihr Bauwerk mit
 der Welt. **Remixen** erlaubt jedem, eine eigene Kopie eines Bauwerks zu
 machen und es weiterzuentwickeln, wobei sein ganzer Verlauf erhalten bleibt.

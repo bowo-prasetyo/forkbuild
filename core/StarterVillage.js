@@ -5,9 +5,9 @@ import { PLAZA_CENTER, PLAZA_VILLAGE_RADIUS, layoutPlazaExhibits, plazaFootprint
 // finding 1): the square and the ready-made builds round it stand in the
 // shared World for everyone, in every World View, the way its terrain and
 // trees do. They are the World's own content: the same on every device,
-// signed by nobody, never a placement, never stored. Builds published since
-// settle in rings just outside them (core/BuildSettlement.js), so the first
-// house anyone publishes has neighbours.
+// signed by nobody, never a placement, never stored. While a week's plaza is
+// visited, its entries are shown in rings just outside them
+// (core/PlazaEntrySpots.js).
 //
 // Pure: where each ready-made build stands, from its bricks.
 
@@ -37,7 +37,7 @@ export function starterVillageLayout(structures, brickRegistry, { center = PLAZA
 
 // How far from the plaza's middle the village's ready-made builds reach: the
 // furthest footprint corner. Kept inside PLAZA_VILLAGE_RADIUS, so no
-// published build settles on them.
+// entry is shown on them.
 export function starterVillageReach(layout, { center = PLAZA_CENTER } = {}) {
     let reach = 0;
     for (const { position, footprint } of layout || []) {

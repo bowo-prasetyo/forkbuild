@@ -31,7 +31,7 @@ Your build now appears in **Explore** on this device, where
 you can search for it, open it, and remix it, with your name as the author.
 Other people see it once you share its link, or right away when you chose
 **Everyone** under [Who can find it?](#who-can-find-it). It's also given a
-spot in the shared world, next to what it belongs with (see
+spot of its own in the shared world (see
 [Where a build stands](#where-a-build-stands)), so **Explore** always has
 somewhere to take people — see
 [Finding worlds](03-WorldView.md#finding-worlds).
@@ -231,21 +231,25 @@ below. Builds published without a name can't be sent. See
 
 ### Where a build stands
 
-A published build stands in the shared World next to what it belongs
-with:
+A published build gets a spot of its own in the shared World, with room
+round it, so the World feels like a wide, open land:
 
-- **a remix** stands beside the build it remixes, so a family tree becomes
-  a street;
-- **anything else** joins the village that grows round the challenge
-  plaza, ring by ring from the inside out, starting just outside the
-  ready-made builds that stand round its square, so builds published about
-  the same time are neighbours, and the first ones are in sight of the
-  square;
-- **Build here** still puts a build on the spot you chose, and publishing a
-  build again never moves it.
+- **Build here** puts a build on the spot you chose;
+- **anything else**, a remix too, gets its own spot on the World's grid,
+  chosen from the build itself, so every device puts it in the same place;
+- publishing a build again never moves it.
+
+A challenge entry is placed the same way. While someone visits the week's
+[challenge plaza](#the-challenge-plaza), it is also shown round the square
+beside the week's other entries, without moving it.
+
+To stand a remix beside the build it remixes, move it there: **Move…**, in
+World View's [advanced tools](WorldViewAdvancedTools.md#placements).
 
 Everyone who finds the build sees it on the same spot, since its place
-travels with it, signed by you.
+travels with it, signed by you. Builds published from 12 to 17 October 2026
+were placed round the challenge plaza instead, and stay there until their
+builders move them.
 
 ## Where it goes — sending a build as you publish
 
@@ -652,17 +656,20 @@ families instead (see [Ready-made builds](#ready-made-builds)).
 **Walk** in the main menu takes you to this week's plaza, and so does
 **Walk the plaza** on the challenge page once a week has entries. It is the
 village square of the shared World: the six ready-made builds stand round
-it for everyone, always, each with **Remix**, and the village of published
-builds grows just outside them, the week's entries among them. Walk among
-them, or pick one in the panel: **Navigate** flies to it, **Open** opens it
-as **Explore** would, and **Edit a Copy** starts your own copy of it.
+it for everyone, always, each with **Remix**, and the week's entries stand
+just outside them. Walk among them, or pick one in the panel: **Navigate**
+flies to it, **Open** opens it as **Explore** would, and **Edit a Copy**
+starts your own copy of it.
 
-- Every entry stands in the village. One whose spot this device knows to be
-  in the village stands there, where it settled when it was published. Any
-  other (one placed far away, as builds published before they settled in
-  the village were, or one whose spot this device doesn't know) is shown,
-  while you're at the plaza, on the spot it would settle on in the village;
-  its own spot stays where it is.
+- Only the week's entries stand round the square: last week's plaza shows
+  last week's entries, and this week's shows this week's.
+- Each entry is shown, while you're at the plaza, on a spot round the
+  square. It's a copy for the exhibition: the build's own spot, out in the
+  World, stays where it is. An entry that was placed round the square
+  (builds published from 12 to 17 October 2026 were) stands there itself.
+- Other builds placed near the square are left out while you're at the
+  plaza, so the square shows its week alone. Nothing happens to them: they
+  are back when you leave.
 - The panel lists the first 24 entries published. The rest are on the
   challenge page.
 - Entries found on the networks are fetched and checked the way opening

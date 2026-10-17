@@ -5,6 +5,10 @@
 [English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · [Español](../es/04-PublishingAndForking.md) · [Français](../fr/04-PublishingAndForking.md) · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · **한국어** · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **참고:** 이 페이지의 영어판이 번역 이후에 바뀌었으므로, 이 번역은 최신 내용이 아닐 수 있습니다. [영어판](../04-PublishingAndForking.md)을 참고하세요.
+<!-- /stale -->
+
 이것이 ForkBuild의 핵심입니다. **게시**는 내 작품을 세상과 공유합니다.
 **리믹스**는 누구나 작품의 자기 사본을 만들어 발전시킬 수 있게 해 주며,
 전체 기록이 보존됩니다. (개발자 문서에서는 ForkBuild라는

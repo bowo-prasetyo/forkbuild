@@ -2893,7 +2893,7 @@ export default Object.freeze({
     'homeView.remixTitle': 'Remezcle lo que quiera',
     'homeView.remixText': 'Haga su propia copia de cualquier construcción publicada, según lo permita su licencia. Su copia registra de dónde viene, así el reconocimiento viaja con ella.',
     'homeView.exploreTitle': 'Explora en compañía',
-    'homeView.exploreText': 'Recorra lo que usted y sus amigos han construido, en un pueblo que crece alrededor del desafío semanal, y conozca gente allí.',
+    'homeView.exploreText': 'Recorra lo que usted y sus amigos han construido, por una tierra amplia y abierta, y conozca gente allí.',
     'homeView.ownTitle': 'Es suyo',
     'homeView.ownText': 'Sin cuentas y sin un servidor central que guarde su trabajo. Su identidad es una clave en su dispositivo, sus construcciones se guardan en su navegador y un solo archivo lo respalda todo.',
     'homeView.openSource': 'ForkBuild es libre y de código abierto, bajo la Mozilla Public License 2.0.',

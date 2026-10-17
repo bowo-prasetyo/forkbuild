@@ -124,9 +124,8 @@ longer-term aim.
 **World View**
 - A shared world where published creations are placed and streamed in around
   the camera, on deterministic terrain with vegetation, water and wildlife.
-  Builds settle next to what they belong with: a remix beside the build it
-  remixes, everything else in a village that grows round the weekly
-  challenge's plaza.
+  Each published build gets a spot of its own, with room round it; the
+  weekly challenge's plaza shows that week's entries round its square.
 - **Walk** in the main menu opens that plaza, with the ready-made builds
   standing round the square while a week has few entries, so there is
   somewhere to walk before you've built anything.

@@ -171,14 +171,8 @@ export const stateQueryMethods = {
             cameraState.position.y,
             cameraState.position.z
         );
-        const visible = this._worldLayoutProvider.findVisibleDocuments(
-            cameraPos,
-            STREAMING_RADIUS
-        );
-        const nearby = this._worldLayoutProvider.findVisibleDocuments(
-            cameraPos,
-            NAVIGATION_RADIUS
-        );
+        const visible = this._findVisibleDocuments(cameraPos, STREAMING_RADIUS);
+        const nearby = this._findVisibleDocuments(cameraPos, NAVIGATION_RADIUS);
         return {
             loaded: Array.from(this._loadedDocuments.keys()),
             visible,

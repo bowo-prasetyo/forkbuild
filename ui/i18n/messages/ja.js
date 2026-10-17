@@ -2889,7 +2889,7 @@ export default Object.freeze({
     'homeView.remixTitle': '何でもリミックス',
     'homeView.remixText': '公開された作品なら、ライセンスが認める範囲で自分のコピーを作れます。コピーは元の作品を記録するので、クレジットも一緒に引き継がれます。',
     'homeView.exploreTitle': '一緒に探検',
-    'homeView.exploreText': 'あなたと友だちが作ったものの中を歩きましょう。毎週のチャレンジのまわりに育つ村で、人とも出会えます。',
+    'homeView.exploreText': 'あなたと友だちが作ったものの中を歩きましょう。広く開けた土地で、人とも出会えます。',
     'homeView.ownTitle': 'あなたのもの',
     'homeView.ownText': 'アカウントも、作品を預かる中央サーバーもありません。アイデンティティはデバイス上の鍵で、作品はブラウザーに保存され、ファイル1つですべてをバックアップできます。',
     'homeView.openSource': 'ForkBuildは、Mozilla Public License 2.0 の無料のオープンソースソフトウェアです。',

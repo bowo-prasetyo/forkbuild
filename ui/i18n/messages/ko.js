@@ -2892,7 +2892,7 @@ export default Object.freeze({
     'homeView.remixTitle': '무엇이든 리믹스',
     'homeView.remixText': '게시된 작품이라면 라이선스가 허용하는 범위에서 내 사본을 만들 수 있습니다. 사본에는 원본이 기록되어 출처 표시가 함께 따라갑니다.',
     'homeView.exploreTitle': '함께 탐험',
-    'homeView.exploreText': '나와 친구들이 지은 것 사이를 걸어 보세요. 매주 챌린지를 중심으로 자라는 마을에서 사람들도 만날 수 있습니다.',
+    'homeView.exploreText': '나와 친구들이 지은 것 사이를 걸어 보세요. 넓고 탁 트인 땅에서 사람들도 만날 수 있습니다.',
     'homeView.ownTitle': '온전히 내 것',
     'homeView.ownText': '계정도, 작업을 보관하는 중앙 서버도 없습니다. 신원은 기기에 있는 키이고, 작품은 브라우저에 저장되며, 파일 하나로 모두 백업됩니다.',
     'homeView.openSource': 'ForkBuild는 Mozilla Public License 2.0에 따른 무료 오픈 소스입니다.',

@@ -41,15 +41,16 @@ There are two ways in:
 
 - **Walk** in the top bar opens World View at this week's challenge plaza.
   You don't need a build of your own. The plaza is the village square: the
-  six ready-made builds stand round it, ready to remix, and published
-  builds make a village just outside (see
+  six ready-made builds stand round it, ready to remix, and the week's
+  entries stand just outside (see
   [The challenge plaza](04-PublishingAndForking.md#the-challenge-plaza)).
 - On the **Explore** page, **Explore** on any build puts you next to it.
   Opening a link to a World does the same.
 
 Builds that people [sent to everyone](04-PublishingAndForking.md#who-can-find-it)
-stand where their builders put them: remixes next to what they remix, the
-rest in the village round the plaza.
+stand where their builders put them: each on a spot of its own, with room
+round it, across a wide land (see
+[Where a build stands](04-PublishingAndForking.md#where-a-build-stands)).
 
 ## A visitor's view, and Advanced
 
@@ -417,9 +418,10 @@ opens World View at the village square: paved, with a well, benches and
 lamp posts, and the six ready-made builds round it.
 
 The square and the ready-made builds are part of the World, like its hills
-and trees. They stand there for everyone, and nobody owns them. Published
-builds make a village just outside, so your own house has neighbours. A
-panel lists the week's entries and the ready-made builds (see
+and trees. They stand there for everyone, and nobody owns them. The week's
+entries stand just outside, and only that week's: open last week's plaza
+and you see last week's entries. A panel lists the week's entries and the
+ready-made builds (see
 [The challenge plaza](04-PublishingAndForking.md#the-challenge-plaza)).
 No trees grow round the square, and there's no **Build here** on it.
 

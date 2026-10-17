@@ -5,37 +5,27 @@ import { HYDROLOGY_FEATURE, hydrologyFeatureAt } from './Hydrology.js';
 import { DEFAULT_WORLD_SEED } from './TerrainHeightField.js';
 import { naturalFeaturesInRegion } from './NaturalFeatureField.js';
 
-// Where a newly published build settles in the shared World
-// (docs/reviews/CreativeDirection-2026-10-12.md, finding 2): next to what it
-// belongs with, so that builds have neighbours and the World can look like
-// Home's village rather than one build alone in a field.
+// The rings round the challenge plaza where a week's entries are shown, as
+// exhibits, while someone visits it (core/PlazaEntrySpots.js). Nothing is
+// placed here: a published build takes its spot on the id-keyed grid
+// (application/placement/StandingPlacementStrategy.js), so it has room round
+// it. Builds published while builds still settled here (from 2026-10-12)
+// were placed on these rings, and keep those spots.
 //
-// - A remix stands in a ring round the build it remixes, so a family tree
-//   becomes a street.
-// - Anything else joins the village that grows round the challenge plaza,
-//   ring by ring from the inside out, so builds published about the same
-//   time stand together and the plaza is the village square.
-//
-// Pure: the caller says which spots are taken (by the placements it knows of)
-// and this picks the first free one, starting from a slot the build's own id
-// chooses, so two builders who don't know of each other rarely pick the same
-// spot. A spot claims no land (docs/user/WorldViewAdvancedTools.md, "Why can
-// two builds sit in the same spot?"); the chosen position becomes the build's
-// signed placement, which everyone who finds the build adopts.
+// Pure: the caller says which spots are taken and this picks the first free
+// one, starting from a slot the entry's own id chooses, so every device that
+// knows the same entries lays them out the same way.
 
-// The village's first ring, just outside the plaza's clearing and its
-// ready-made builds (core/StarterVillage.js): close enough that a build on
-// it sees the square, well inside World View's streaming radius.
+// The first ring, just outside the plaza's clearing and its ready-made
+// builds (core/StarterVillage.js): close enough that an entry on it sees the
+// square, well inside World View's streaming radius.
 export const VILLAGE_FIRST_RING_RADIUS = PLAZA_VILLAGE_RADIUS + 8;
 // Between two rings, and between two neighbours on a ring: room for a
 // house and its garden.
 export const VILLAGE_RING_SPACING = 22;
 export const VILLAGE_SLOT_SPACING = 20;
-// How far out the village may grow before a build falls back to the grid.
+// How far out the rings may go.
 export const VILLAGE_MAX_RINGS = 40;
-
-// The rings round a remixed build: close enough to be one street.
-export const REMIX_RING_RADII = Object.freeze([18, 36]);
 
 // Two builds closer than this are taken to share a spot.
 export const SETTLEMENT_TAKEN_RADIUS = VILLAGE_SLOT_SPACING * 0.75;
@@ -71,24 +61,12 @@ export function ringSpots(center, radius, spacing) {
     return spots;
 }
 
-// The village spot for a build: `{ x, y, z }`, or null when every ring up to
+// The village spot for an entry: `{ x, y, z }`, or null when every ring up to
 // VILLAGE_MAX_RINGS is taken or under water. `isTaken(x, z)` answers from
 // the placements the caller knows of.
 export function settleInVillage({ publicationId, isTaken = () => false, seed = DEFAULT_WORLD_SEED, center = PLAZA_CENTER }) {
     for (let ring = 0; ring < VILLAGE_MAX_RINGS; ring++) {
         const spot = firstFreeSpot(ringSpots(center, VILLAGE_FIRST_RING_RADIUS + ring * VILLAGE_RING_SPACING, VILLAGE_SLOT_SPACING), { publicationId, isTaken, seed });
-        if (spot) return spot;
-    }
-    return null;
-}
-
-// The spot beside the build a remix comes from, standing at `source`, or
-// null when its rings are full.
-export function settleBeside({ source, publicationId, isTaken = () => false, seed = DEFAULT_WORLD_SEED }) {
-    if (!source || !Number.isFinite(source.x) || !Number.isFinite(source.z)) return null;
-    const center = { x: source.x, y: Number.isFinite(source.y) ? source.y : 0, z: source.z };
-    for (const radius of REMIX_RING_RADII) {
-        const spot = firstFreeSpot(ringSpots(center, radius, VILLAGE_SLOT_SPACING), { publicationId, isTaken, seed });
         if (spot) return spot;
     }
     return null;
