@@ -108,7 +108,16 @@ export default {
             const prepared = await prepareLinkOnlyShare({ publication, contentStore });
             if (attempt === preparing) linkOnly.value = prepared;
         }
-        watch(() => props.publication, prepare, { immediate: true });
+        // Keyed on the claim, not the object: World View hands in a fresh
+        // Publication for the same claim on every refresh (every few seconds),
+        // and re-preparing then closed Make a video and Embed and blinked the
+        // buttons away.
+        const publicationClaim = computed(() => {
+            const publication = props.publication;
+            if (!publication) return null;
+            return JSON.stringify(typeof publication.toJSON === 'function' ? publication.toJSON() : publication);
+        });
+        watch(publicationClaim, () => prepare(props.publication), { immediate: true });
 
         // The share functions and the share sheet take text, so the messages
         // are translated once here.

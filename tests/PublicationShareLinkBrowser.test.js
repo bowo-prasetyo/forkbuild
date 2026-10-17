@@ -1,5 +1,5 @@
 // @environment browser
-import { createApp } from 'vue';
+import { createApp, h, nextTick, shallowRef } from 'vue';
 import PublicationShareLink from '../ui/components/PublicationShareLink.js';
 import { decodePublicationLinkPayload } from '../application/publication/sharing/PublicationLinkPayload.js';
 import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
@@ -19,6 +19,7 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { t } from '../ui/i18n/i18n.js';
 import { challengeAt } from '../core/BuildChallenge.js';
 import { FindableBuildsStore } from '../application/buildNotes/FindableBuildsStore.js';
+import { Publication } from '../publisher/Publication.js';
 import { assert } from './support/Assert.js';
 
 // Share, Copy link and Save picture for a build just published, rendered by
@@ -196,5 +197,35 @@ HTMLAnchorElement.prototype.click = function captureDownload() {
         console.log('✓ a build sent to everyone is shared by a short link');
     } finally {
         unmount();
+    }
+}
+
+// World View hands in a fresh Publication for the same claim on every
+// refresh; that alone must not close Embed or blink the buttons away.
+{
+    const castle = publishCastle();
+    const current = shallowRef(castle.publication);
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    const app = createApp({
+        render: () => h(PublicationShareLink, { publicationId: current.value.id, title: current.value.title, publication: current.value })
+    });
+    app.provide('publicationContentStore', castle.contentStore);
+    app.mount(host);
+    try {
+        await until(() => host.querySelector('.publication-share-link-embed'), 'Embed');
+        host.querySelector('.publication-share-link-embed').click();
+        await until(() => host.querySelector('.publication-share-embed-code'), 'the embed code');
+        const embedCode = host.querySelector('.publication-share-embed-code');
+        for (let i = 0; i < 3; i++) {
+            current.value = Publication.fromJSON(castle.publication.toJSON());
+            await nextTick();
+            assert(host.querySelector('.publication-share-embed-code') === embedCode, 'Embed stays open, the same code box');
+            assert(host.querySelector('.publication-share-link-picture'), 'Save picture stays offered');
+        }
+        console.log('✓ a fresh copy of the same Publication keeps Embed open');
+    } finally {
+        app.unmount();
+        host.remove();
     }
 }
