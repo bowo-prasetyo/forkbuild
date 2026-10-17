@@ -1,4 +1,4 @@
-import { computed, getCurrentInstance, onBeforeUnmount, ref } from 'vue';
+import { computed, onBeforeUnmount, ref } from 'vue';
 import {
     BuildVideoKind, BuildVideoShape, buildVideoFileName, buildVideoTimeline, canRecordBuildVideo
 } from '../../../core/BuildVideo.js';
@@ -39,9 +39,11 @@ export default {
     emits: ['close'],
     setup(props, { emit }) {
         // A walk-through opens World View, so it is offered only where there
-        // is a router to get there and a build to film.
-        const router = getCurrentInstance()?.appContext.config.globalProperties.$router ?? null;
-        const kinds = KINDS.filter((option) => option.kind !== BuildVideoKind.WALKTHROUGH || (router && props.documentId));
+        // is a router to get there (the template passes its `$router`) and a
+        // build to film.
+        function kindsFor(router) {
+            return KINDS.filter((option) => option.kind !== BuildVideoKind.WALKTHROUGH || (router && props.documentId));
+        }
         const kind = ref(BuildVideoKind.TIMELAPSE);
         const shape = ref(BuildVideoShape.WIDE);
         const music = ref(true);
@@ -61,7 +63,7 @@ export default {
         }
 
         // Hands the walk-through to World View, which films it.
-        async function filmWalkThrough() {
+        async function filmWalkThrough(router) {
             try {
                 const { build, name } = await readBuild();
                 requestWalkThroughFilm({
@@ -79,10 +81,10 @@ export default {
             }
         }
 
-        async function record() {
+        async function record(router = null) {
             if (state.value === 'recording') return;
             if (kind.value === BuildVideoKind.WALKTHROUGH) {
-                await filmWalkThrough();
+                if (router) await filmWalkThrough(router);
                 return;
             }
             state.value = 'recording';
@@ -127,7 +129,7 @@ export default {
         const percent = computed(() => Math.round(progress.value * 100));
         const walkThrough = computed(() => kind.value === BuildVideoKind.WALKTHROUGH);
         return {
-            t, kinds, shapes: SHAPES, kind, shape, music, walkThrough, state, percent, fileName, description, record, cancel
+            t, kindsFor, shapes: SHAPES, kind, shape, music, walkThrough, state, percent, fileName, description, record, cancel
         };
     },
     mounted() {
@@ -163,7 +165,7 @@ export default {
                     <p class="model-export-lead">{{ t('video.lead') }}</p>
                     <fieldset class="build-video-choice">
                         <legend>{{ t('video.kind') }}</legend>
-                        <label v-for="option in kinds" :key="option.kind" class="model-export-option build-video-option" :data-kind="option.kind">
+                        <label v-for="option in kindsFor($router)" :key="option.kind" class="model-export-option build-video-option" :data-kind="option.kind">
                             <span class="build-video-option-head">
                                 <input type="radio" name="build-video-kind" :value="option.kind" v-model="kind">
                                 <span class="model-export-name">{{ t(option.name) }}</span>
@@ -198,7 +200,7 @@ export default {
                     <button v-if="state === 'recording'" type="button" class="action-btn action-btn--secondary build-video-cancel" @click="cancel">{{ t('video.stop') }}</button>
                     <template v-else>
                         <button type="button" class="action-btn action-btn--secondary build-video-close" @click="close">{{ t(state === 'done' ? 'video.done' : 'video.cancel') }}</button>
-                        <button v-if="state === 'choose' || state === 'failed'" type="button" class="action-btn action-btn--primary build-video-record" @click="record">{{ t(walkThrough ? 'video.filmWalkthrough' : 'video.record') }}</button>
+                        <button v-if="state === 'choose' || state === 'failed'" type="button" class="action-btn action-btn--primary build-video-record" @click="record($router)">{{ t(walkThrough ? 'video.filmWalkthrough' : 'video.record') }}</button>
                         <button v-else-if="state === 'done'" type="button" class="action-btn action-btn--secondary build-video-another" @click="state = 'choose'">{{ t('video.another') }}</button>
                     </template>
                 </div>
