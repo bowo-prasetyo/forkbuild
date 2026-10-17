@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: be62128f33d26d38 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 04f6ffccd852efa9 -->
 # 04 — Publicar e remixar
 
 <!-- languages -->
@@ -139,6 +139,9 @@ ficam em **Meu Mundo compartilhado** na Visão do mundo.
   construção antes do passeio. Pelos olhos dele, o avatar segue até o ponto
   mais aberto do cômodo e é filmado com uma lente grande-angular, como nos
   tours de casas, para que até um cômodo pequeno apareça inteiro.
+  Enquanto filma, a Visão do mundo é desenhada no formato do próprio vídeo,
+  horizontal ou vertical, com faixas dos lados, para que o que você vê seja o
+  que vai para o vídeo.
 
 Copiar ou compartilhar um link, e abrir um, são contados de forma anônima,
 como a visita diária; veja

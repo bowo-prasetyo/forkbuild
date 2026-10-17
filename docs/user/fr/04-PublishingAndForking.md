@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: be62128f33d26d38 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 04f6ffccd852efa9 -->
 # 04 — Publier et remixer
 
 <!-- languages -->
@@ -149,6 +149,9 @@ boutons se trouvent sous **Mon Monde partagé** dans la Vue du monde.
   avant la visite. Par ses yeux, l’avatar avance jusqu’à l’endroit le plus
   dégagé de la pièce et est filmé au grand angle, comme les visites de
   maisons, pour qu’une petite pièce se voie en entier.
+  Pendant le tournage, la Vue du Monde s’affiche au format de la vidéo, large
+  ou vertical, avec des bandes sur les côtés : ce que vous voyez est ce qui
+  est filmé.
 
 Copier ou partager un lien, et en ouvrir un, sont comptés anonymement,
 comme la visite quotidienne ; voir

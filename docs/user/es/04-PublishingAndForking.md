@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: be62128f33d26d38 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 04f6ffccd852efa9 -->
 # 04 — Publicar y remezclar
 
 <!-- languages -->
@@ -144,6 +144,9 @@ están en **Mi Mundo compartido** en la Vista de mundo.
   punto más despejado de la habitación y se filma con un gran angular, como en
   los recorridos de casas, para que hasta una habitación pequeña se vea
   entera.
+  Mientras filma, la Vista del mundo se dibuja con la forma del video,
+  horizontal o vertical, con franjas a los lados, para que lo que ve sea lo
+  que queda en el video.
 
 Copiar o compartir un enlace, y abrir uno, se cuentan de forma anónima,
 como la visita diaria; consulte

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: be62128f33d26d38 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 04f6ffccd852efa9 -->
 # 04 — Veröffentlichen & Remixen
 
 <!-- languages -->
@@ -147,6 +147,8 @@ Weltansicht unter **Meine Geteilte Welt**.
   herum, bevor der Rundgang beginnt. Durch seine Augen geht der Avatar weiter
   bis zur freiesten Stelle im Raum und wird mit einem Weitwinkel gefilmt, wie
   bei Hausrundgängen, sodass auch ein kleiner Raum ganz zu sehen ist.
+  Während gefilmt wird, zeigt die Weltansicht genau das Format des Videos,
+  breit oder hoch, mit Balken daneben, sodass Sie sehen, was ins Video kommt.
 
 Das Kopieren oder Teilen eines Links und das Öffnen eines Links werden
 anonym gezählt, wie der tägliche Besuch; siehe

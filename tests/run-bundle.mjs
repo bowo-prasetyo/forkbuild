@@ -672,15 +672,30 @@ async function firstVisit(browser, base) {
         await film.click('.editor-post-publish-share .publication-share-more summary');
         await film.click('.editor-post-publish-share .publication-share-link-video');
         await film.click('.build-video-dialog [data-kind="walkthrough"] input');
+        await film.click('.build-video-dialog [data-shape="tall"] input');
         const filmed = film.waitForEvent('download', { timeout: 120_000 });
         await film.click('.build-video-record');
         await film.waitForSelector('.walk-through-film-panel', { timeout: 60_000 });
+        // A tall video is drawn at its own shape, fitted into the view, not cropped from it.
+        await film.waitForSelector('.walk-through-film-panel[data-stage="filming"]', { timeout: 60_000 });
+        const framed = await film.evaluate(() => {
+            const canvas = document.querySelector('.world-viewport canvas');
+            return { width: canvas.width, height: canvas.height, framed: Boolean(document.querySelector('.world-viewport--framed')), shown: canvas.getBoundingClientRect().height };
+        });
+        assert(framed.width === 720 && framed.height === 1280 && framed.framed && framed.shown > 0, `World View draws the tall video at 720 × 1280 while it films (${JSON.stringify(framed)})`);
         assert(film.url().includes('#/world/') && !film.url().includes('film='), `World View films it, leaving the address clean (${film.url()})`);
         const video = await filmed;
         assert(/^forkbuild-house-walkthrough\.(webm|mp4)$/.test(video.suggestedFilename()), `the walk-through is saved, named after the house (${video.suggestedFilename()})`);
         await film.waitForSelector('.walk-through-film-panel[data-stage="saved"] .build-video-description', { timeout: 30_000 });
+        assert(!(await film.$('.world-viewport--framed')), 'and fills the view again once the video is saved');
         await film.click('.walk-through-film-close');
         await film.waitForFunction(() => !document.querySelector('.walk-through-film-panel'), null, { timeout: 10_000 });
+        const unframed = await film.evaluate(() => {
+            const viewport = document.querySelector('.world-viewport');
+            const canvas = viewport.querySelector('canvas');
+            return { canvas: canvas.getBoundingClientRect().width, viewport: viewport.clientWidth, margin: canvas.style.marginLeft };
+        });
+        assert(Math.abs(unframed.canvas - unframed.viewport) < 2 && unframed.margin === '', `the canvas fills World View again (${JSON.stringify(unframed)})`);
     } finally {
         await filming.close();
     }
