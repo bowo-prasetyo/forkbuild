@@ -11,6 +11,7 @@ import {
 } from '../core/WalkThroughFilm.js';
 import { walkThroughFilmMethods } from '../application/worldNavigation/walkThroughFilmMethods.js';
 import { coverCrop } from '../renderer/WorldFilmRecorder.js';
+import { videoCameraDistanceScale } from '../core/BuildVideo.js';
 import { CameraPerspective } from '../core/CameraPerspective.js';
 import { brickCollisionBoxes } from '../core/BrickPassage.js';
 import { DEFAULT_MAX_STEP_HEIGHT } from '../core/BrickWalkability.js';
@@ -120,6 +121,9 @@ const planOf = (bricks) => planWalkThrough(findBuildEntrance(bricks, registry), 
     step = stepWalkThrough(plan, step.state, { position: plan.start, heading: plan.heading, deltaSeconds: SWEEP_SECONDS / 2 });
     assert(step.state.phase === WalkThroughPhase.OPENING && step.camera === null, 'then the opening, from the camera asked for');
     assert(near(estimateWalkThroughSeconds(plan) - estimateWalkThroughSeconds(planWalkThrough(entrance, house, registry)), SWEEP_SECONDS), 'the estimate counts the sweep');
+    const tall = planWalkThrough(entrance, house, registry, { sweep: true, aspect: 9 / 16 }).sweep;
+    assert(near(tall.distance, sweep.distance * videoCameraDistanceScale(9 / 16, 60)) && tall.distance > sweep.distance * 1.5,
+        `for a tall video it stands back further, to see the build whole across a narrow frame (${tall.distance.toFixed(1)} against ${sweep.distance.toFixed(1)})`);
     console.log('✓ the sweep goes half way round the outside and ends behind the avatar');
 }
 

@@ -134,6 +134,8 @@ picture** and **Embed**, with the link below them. The same buttons are under
   walk. Through its eyes, the avatar walks on to the most open spot in the
   room and is filmed with a wide lens, as house tours are, so a small room
   shows whole.
+  While it films, World View is drawn at the video's own shape, wide or tall,
+  with bars beside it, so what you see is what goes into the video.
 
 Copying or sharing a link, and opening one, are counted anonymously, like
 the daily visit; see [Daily visitor count](13-YourData.md#daily-visitor-count).

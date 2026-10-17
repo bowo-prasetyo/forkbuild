@@ -1,6 +1,7 @@
 import { AVATAR_COLLISION_HEIGHT, AVATAR_COLLISION_RADIUS, brickAabb } from './AvatarCollision.js';
 import { DEFAULT_MAX_STEP_HEIGHT } from './BrickWalkability.js';
 import { brickCollisionBoxes, isPassableDoor } from './BrickPassage.js';
+import { videoCameraDistanceScale } from './BuildVideo.js';
 
 // A walk-through video of a build, filmed in World View (core/BuildVideo.js
 // has the other kinds): the avatar starts a few steps back from the build's
@@ -33,6 +34,9 @@ export const SWEEP_SECONDS = 6;
 export const SWEEP_DEGREES = 180;
 const SWEEP_MIN_DISTANCE = 9;
 const SWEEP_MIN_LIFT = 4;
+// World View's camera's vertical field of view, in degrees, which the sweep
+// is seen through (renderer/CameraController.js).
+const WORLD_VIEW_FIELD_OF_VIEW = 60;
 // A waypoint is reached within this distance.
 export const WAYPOINT_REACH = 0.35;
 // The walk gives up on a waypoint it can't reach after this long (something
@@ -80,8 +84,10 @@ export const WalkThroughPhase = Object.freeze({
 // is null or `{ center: { x, y, z }, distance, height, fromAzimuth, seconds }`
 // (the camera circles at `height`, `distance` from `center`, looking at it,
 // from `fromAzimuth` round SWEEP_DEGREES, ending on the side the avatar
-// starts from). Null for no entrance.
-export function planWalkThrough(entrance, bricks = [], registry = null, { camera = WalkThroughCamera.BEHIND, sweep = false } = {}) {
+// starts from), farther away for a frame `aspect` (width / height) narrower
+// than it is high, so a tall video still sees the build whole. Null for no
+// entrance.
+export function planWalkThrough(entrance, bricks = [], registry = null, { camera = WalkThroughCamera.BEHIND, sweep = false, aspect = 16 / 9 } = {}) {
     if (!entrance) return null;
     const ground = entrance.stand.y;
     const blocking = blockingBoxes(bricks, registry, ground);
@@ -112,12 +118,12 @@ export function planWalkThrough(entrance, bricks = [], registry = null, { camera
             lookDegrees: 0
         };
     }
-    return Object.freeze({ ...walk, sweep: sweep ? planSweep(entrance, bricks, registry, walk.start) : null });
+    return Object.freeze({ ...walk, sweep: sweep ? planSweep(entrance, bricks, registry, walk.start, aspect) : null });
 }
 
 // The sweep round `entrance`'s build: a circle round its middle, wide enough
 // to see it whole, ending on the side of `start`, behind the avatar.
-function planSweep(entrance, bricks, registry, start) {
+function planSweep(entrance, bricks, registry, start, aspect) {
     const ground = entrance.stand.y;
     let top = ground + 1;
     for (const brick of Array.isArray(bricks) ? bricks : []) {
@@ -134,7 +140,7 @@ function planSweep(entrance, bricks, registry, start) {
     const toStart = (Math.atan2(start.x - center.x, start.z - center.z) * 180) / Math.PI;
     return Object.freeze({
         center: Object.freeze({ x: center.x, y: ground + height * 0.4, z: center.z }),
-        distance: Math.max(SWEEP_MIN_DISTANCE, halfDiagonal * 2.2 + height * 0.5),
+        distance: Math.max(SWEEP_MIN_DISTANCE, halfDiagonal * 2.2 + height * 0.5) * videoCameraDistanceScale(aspect, WORLD_VIEW_FIELD_OF_VIEW),
         height: ground + Math.max(SWEEP_MIN_LIFT, height * 0.9 + 2.5),
         fromAzimuth: normalizeDegrees(toStart - SWEEP_DEGREES),
         seconds: SWEEP_SECONDS

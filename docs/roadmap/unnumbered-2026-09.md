@@ -7436,3 +7436,27 @@ eyes.
 - Not done: the ready-made House's room has a table in its middle, so through its eyes it stands where it did; the
   wider lens is what shows that room. A tall video still takes the middle of the view. The translations were written
   without a native speaker's review.
+
+## Make a video: a tall walk-through drawn at its own shape (unnumbered, 2026-10-17)
+
+**A tall walk-through was cropped from the middle of a wide view.** World View drew at the shape of the window, and a
+9:16 video took a strip from its middle: in a 1280 × 800 window, about 420 pixels across scaled up to 720, seeing about 36°
+across where the wide video saw 90°. Indoors that was a wall at a time, and the sweep cut the sides off the build.
+Shorts, TikTok and Reels are tall, so the shape most shared was the one worst made. Pillar served: your work is yours,
+and lives in a world (a build shown as it is, in the shape it is shared in). How a player notices: a tall walk-through
+shows the whole room, and World View shows a tall frame while it films.
+
+- **World View draws at the video's size while it films** (`Renderer#setFrameSize()`, through the render facade's
+  `setFrameSize` and the session's `setRenderFrameSize`): exactly 1280 × 720 or 720 × 1280 pixels, the camera's aspect
+  to match, and on screen the canvas fitted into the view, centred, with dark bars beside it
+  (`.world-viewport--framed`), so what is seen is what is filmed. Clicks in the view still land where they look, since
+  picking measures the canvas where it is drawn. When the film ends, is stopped or fails, World View fills the view at
+  its own size and pixel ratio again. A wide video, drawn at 1280 × 720, no longer depends on the window's shape
+  either; `WorldFilmRecorder`'s crop is now whole-frame, kept for a browser that draws at another size.
+- **The sweep stands back for a tall frame** (`planWalkThrough(…, { aspect })`): farther away by
+  `videoCameraDistanceScale()`, as the time-lapse and turntable already are, so the build is seen whole across a
+  narrow frame.
+- The guide's Publishing chapter says so, in every language, and docs/Architecture.md names it.
+- Tests: the bundle check (a tall walk-through drawn at 720 × 1280 while it films, in a framed view, and the view filled
+  again once the video is saved), `WalkThroughFilm` (the tall sweep standing back by the narrow frame's scale).
+- Not done: the Camera buttons in World View's panel don't show the camera the film uses while it films.

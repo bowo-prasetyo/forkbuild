@@ -1,5 +1,5 @@
 import { computed, ref } from 'vue';
-import { BuildVideoKind, buildVideoFileName, canRecordBuildVideo } from '../../../core/BuildVideo.js';
+import { BUILD_VIDEO_SIZES, BuildVideoKind, buildVideoFileName, canRecordBuildVideo } from '../../../core/BuildVideo.js';
 import { takeWalkThroughFilmRequest } from '../../components/buildVideo/walkThroughFilmRequest.js';
 import { downloadVideo } from '../../components/buildVideo/buildVideoText.js';
 
@@ -70,7 +70,11 @@ export function useWalkThroughFilm({ session, sound }) {
             audio = null;
         }
         recorder = new WorldFilmRecorder({ shape: request.shape, text: request.text, audioStream: audio });
-        const started = session.startWalkThroughFilm(request.documentId, { camera: request.camera, sweep: request.sweep });
+        // World View draws at the video's own size and shape while it films,
+        // rather than the video being cropped from the middle of the view.
+        if (typeof session.setRenderFrameSize === 'function') session.setRenderFrameSize(BUILD_VIDEO_SIZES[request.shape]);
+        const size = BUILD_VIDEO_SIZES[request.shape];
+        const started = session.startWalkThroughFilm(request.documentId, { camera: request.camera, sweep: request.sweep, aspect: size.width / size.height });
         if (!started) throw new Error('the walk-through could not start');
         estimate = Math.max(1, started.seconds);
         recorder.start();
@@ -110,6 +114,7 @@ export function useWalkThroughFilm({ session, sound }) {
         unsubscribe = null;
         recorder = null;
         if (typeof session.stopWalkThroughFilm === 'function') session.stopWalkThroughFilm();
+        if (typeof session.setRenderFrameSize === 'function') session.setRenderFrameSize(null);
         const service = sound();
         if (service && typeof service.stopCapture === 'function') service.stopCapture();
     }

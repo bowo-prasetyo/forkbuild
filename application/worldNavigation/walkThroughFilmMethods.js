@@ -30,10 +30,11 @@ export const walkThroughFilmMethods = {
 
     // Starts filming `documentId`'s walk-through, seen from `camera`
     // (core/WalkThroughFilm.js's WalkThroughCamera), opening on a sweep round
-    // the outside when `sweep` is set. Returns `{ kind, seconds }`
+    // the outside when `sweep` is set, framed for a video `aspect` (width /
+    // height). Returns `{ kind, seconds }`
     // (a build entered by a door or walked up to, and about how long the film
     // runs), or null when it can't be filmed now (canFilmWalkThrough()).
-    startWalkThroughFilm(documentId, { camera = WalkThroughCamera.BEHIND, sweep = false } = {}) {
+    startWalkThroughFilm(documentId, { camera = WalkThroughCamera.BEHIND, sweep = false, aspect = 16 / 9 } = {}) {
         if (!this.canFilmWalkThrough(documentId)) {
             return null;
         }
@@ -44,7 +45,7 @@ export const walkThroughFilmMethods = {
         for (const building of document.world.getBuildings()) {
             for (const brick of building.getBricks()) bricks.push(brick);
         }
-        const plan = planWalkThrough(findBuildEntrance(bricks, this._registry), bricks, this._registry, { camera, sweep });
+        const plan = planWalkThrough(findBuildEntrance(bricks, this._registry), bricks, this._registry, { camera, sweep, aspect });
         if (!plan) {
             return null;
         }

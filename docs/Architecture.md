@@ -360,7 +360,8 @@ walks the avatar through core/WalkThroughFilm.js's plan (after a sweep of
 the camera round the outside, when asked), from behind it or through its eyes
 with a wider lens, with World View's own
 movement and its third-person or first-person camera, and renderer/WorldFilmRecorder.js copies
-each frame from the renderer's after-render hook, with the soundscape's
+each frame from the renderer's after-render hook (World View drawing at the
+video's own size meanwhile, `Renderer#setFrameSize()`), with the soundscape's
 recording (audio/WebAudioSoundscapeProvider.js#startCapture())), and Embed, the same payload as an `<iframe>` of
 embed.html for other sites' pages. embed.html is a page of its own
 (ui/embed/embedBoot.js), not a route: it starts no storage, peers or
