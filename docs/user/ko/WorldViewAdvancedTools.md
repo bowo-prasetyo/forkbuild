@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 29cdc8613dfca1c8 -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 88c9c021db48f898 -->
 # 월드 보기: 고급 도구
 
 <!-- languages -->
 [English](../WorldViewAdvancedTools.md) · [Deutsch](../de/WorldViewAdvancedTools.md) · [Español](../es/WorldViewAdvancedTools.md) · [Français](../fr/WorldViewAdvancedTools.md) · [Bahasa Indonesia](../id/WorldViewAdvancedTools.md) · [日本語](../ja/WorldViewAdvancedTools.md) · **한국어** · [Português (Brasil)](../pt-BR/WorldViewAdvancedTools.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **참고:** 이 페이지의 영어판이 번역 이후에 바뀌었으므로, 이 번역은 최신 내용이 아닐 수 있습니다. [영어판](../WorldViewAdvancedTools.md)을 참고하세요.
-<!-- /stale -->
 
 이 페이지는 사이드 패널 맨 아래에서 **고급 도구 보기**를 체크했을 때만
 나타나는 [월드 보기](03-WorldView.md)의 부분을 다룹니다. 모두 월드 뒤의
@@ -101,7 +97,9 @@
 - **배치**: 작품이 월드의 어디에 서 있는지를 **월드 단위**로 보여 줍니다.
   GPS가 아니라 ForkBuild 고유의 좌표이며, 1월드 단위는 1미터입니다.
   **초점**으로 그곳에 갑니다. **이동**은 **배치 이동**을 열어, 새 X, Y,
-  Z 값을 입력하거나 작품을 1, 10, 100단위씩 밀 수 있습니다.
+  Z 값을 입력하거나 작품을 1, 10, 100단위씩 밀 수 있습니다. **격자 위
+  자리로**는 월드 격자 위에 있는 그 작품 자신의 자리, 곧 게시할 때 작품이
+  놓이는 자리를 채워 넣습니다. **이동**을 누르면 그곳으로 옮겨집니다.
   **월드에서 제거**는 이 배치를 뺍니다.
 
 패널이 둘인 것은 작품이 *무엇인지*와 *어디에* 서 있는지가 다른 문제이기
@@ -109,6 +107,11 @@
 옮겨지지 않습니다.
 
 ### 월드 위치
+
+작품을 월드 격자 위의 제 자리로 되돌리려면(2026년 10월 12일부터 17일까지
+게시된 작품은 그 대신 챌린지 광장 둘레에 놓였습니다) **배치 이동**을 열고
+**격자 위 자리로**를 누른 다음 **이동**을 누르세요. 그런 다음 **내 공유
+월드**의 **배포**로 다시 내보내면 다른 기기에서도 작품이 옮겨집니다.
 
 옮길 자리에 이미 다른 작품이 정확히 서 있으면, **배치 이동**이 확인 전에
 경고하고 거기 있는 것을 보여 줍니다. 자리를 함께 쓰는 것은 허용됩니다.

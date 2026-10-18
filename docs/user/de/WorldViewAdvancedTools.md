@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 29cdc8613dfca1c8 -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 88c9c021db48f898 -->
 # Weltansicht: Erweiterte Werkzeuge
 
 <!-- languages -->
 [English](../WorldViewAdvancedTools.md) · **Deutsch** · [Español](../es/WorldViewAdvancedTools.md) · [Français](../fr/WorldViewAdvancedTools.md) · [Bahasa Indonesia](../id/WorldViewAdvancedTools.md) · [日本語](../ja/WorldViewAdvancedTools.md) · [한국어](../ko/WorldViewAdvancedTools.md) · [Português (Brasil)](../pt-BR/WorldViewAdvancedTools.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../WorldViewAdvancedTools.md).
-<!-- /stale -->
 
 Diese Seite beschreibt die Teile der [Weltansicht](03-WorldView.md), die
 nur erscheinen, wenn Sie unten im Seitenfeld das Häkchen bei **Erweiterte
@@ -110,14 +106,24 @@ Klicken Sie auf einen Stein, freien Boden oder eine platzierte Struktur,
   Das sind ForkBuilds eigene Koordinaten, kein GPS; eine Welteinheit ist
   ein Meter. **Fokussieren** bringt Sie hin. **Verschieben** öffnet
   **Platzierung verschieben**, wo Sie neue X-, Y- und Z-Werte eingeben oder
-  das Bauwerk um 1, 10 oder 100 Einheiten anstoßen. **Aus der Welt
-  entfernen** nimmt diese Platzierung heraus.
+  das Bauwerk um 1, 10 oder 100 Einheiten anstoßen. **Auf seinen
+  Rasterplatz** trägt den eigenen Platz des Bauwerks im Raster der Welt
+  ein, wo Bauwerke beim Veröffentlichen platziert werden; klicken Sie auf
+  **Verschieben**, um dorthin zu gehen. **Aus der Welt entfernen** nimmt
+  diese Platzierung heraus.
 
 Es sind zwei Felder, weil *was* ein Bauwerk ist und *wo* es steht, getrennt
 sind. Eine Platzierung zu verschieben ändert nie das Bauwerk, und das
 Bauwerk zu ändern verschiebt es nie.
 
 ### Position in der Welt
+
+Um ein Bauwerk zurück auf seinen eigenen Platz im Raster der Welt zu
+bringen (eines, das vom 12. bis 17. Oktober 2026 veröffentlicht wurde, kam
+stattdessen rund um den Challenge-Platz), öffnen Sie **Platzierung
+verschieben**, klicken auf **Auf seinen Rasterplatz** und dann auf
+**Verschieben**. Senden Sie es danach mit **Verteilen** in **Meine Geteilte
+Welt** erneut aus, damit andere Geräte es ebenfalls verschieben.
 
 Steht schon ein anderes Bauwerk genau dort, wohin Sie verschieben, warnt
 **Platzierung verschieben** Sie und listet, was dort ist, bevor Sie

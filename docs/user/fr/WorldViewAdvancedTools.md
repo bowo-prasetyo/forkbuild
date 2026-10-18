@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 29cdc8613dfca1c8 -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 88c9c021db48f898 -->
 # La Vue du Monde : outils avancés
 
 <!-- languages -->
 [English](../WorldViewAdvancedTools.md) · [Deutsch](../de/WorldViewAdvancedTools.md) · [Español](../es/WorldViewAdvancedTools.md) · **Français** · [Bahasa Indonesia](../id/WorldViewAdvancedTools.md) · [日本語](../ja/WorldViewAdvancedTools.md) · [한국어](../ko/WorldViewAdvancedTools.md) · [Português (Brasil)](../pt-BR/WorldViewAdvancedTools.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../WorldViewAdvancedTools.md).
-<!-- /stale -->
 
 Cette page présente les parties de la [Vue du Monde](03-WorldView.md) qui
 n’apparaissent que si vous cochez **Afficher les outils avancés** en bas du
@@ -114,7 +110,10 @@ cliqué :
   du Monde**. Ce sont les coordonnées propres à ForkBuild, pas du GPS ; une
   unité du Monde vaut un mètre. **Centrer** vous y emmène. **Déplacer**
   ouvre **Déplacer le placement**, où vous tapez de nouvelles valeurs X, Y
-  et Z ou décalez la construction de 1, 10 ou 100 unités. **Retirer du
+  et Z ou décalez la construction de 1, 10 ou 100 unités. **Placer sur sa
+  case de la grille** remplit l’emplacement propre de la construction sur
+  la grille du Monde, là où les constructions sont placées à leur
+  publication ; cliquez sur **Déplacer** pour y aller. **Retirer du
   Monde** retire ce placement.
 
 Ce sont deux panneaux parce que *ce qu’est* une construction et *où elle
@@ -122,6 +121,13 @@ se trouve* sont deux choses distinctes. Déplacer un placement ne change
 jamais la construction, et changer la construction ne la déplace jamais.
 
 ### Position dans le Monde
+
+Pour ramener une construction à son propre emplacement sur la grille du
+Monde (une construction publiée du 12 au 17 octobre 2026 a plutôt été
+placée autour de la place du défi), ouvrez **Déplacer le placement**,
+cliquez sur **Placer sur sa case de la grille**, puis sur **Déplacer**.
+Envoyez-la ensuite de nouveau avec **Distribuer** dans **Mon Monde
+partagé**, pour que les autres appareils la déplacent aussi.
 
 Si une autre construction se trouve déjà exactement là où vous la
 déplacez, **Déplacer le placement** vous prévient et liste ce qui s’y

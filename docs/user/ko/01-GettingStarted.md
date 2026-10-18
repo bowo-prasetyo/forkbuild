@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 545a8b3fca4e1167 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 3895abf811fef371 -->
 # 01 — 시작하기
 
 <!-- languages -->
 [English](../01-GettingStarted.md) · [Deutsch](../de/01-GettingStarted.md) · [Español](../es/01-GettingStarted.md) · [Français](../fr/01-GettingStarted.md) · [Bahasa Indonesia](../id/01-GettingStarted.md) · [日本語](../ja/01-GettingStarted.md) · **한국어** · [Português (Brasil)](../pt-BR/01-GettingStarted.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **참고:** 이 페이지의 영어판이 번역 이후에 바뀌었으므로, 이 번역은 최신 내용이 아닐 수 있습니다. [영어판](../01-GettingStarted.md)을 참고하세요.
-<!-- /stale -->
 
 환영합니다! 이 안내를 따라가면 “앱을 막 열었다”에서 “무언가를 지었다”까지
 5분 정도면 갈 수 있습니다. 시작하는 데 계정도, 다운로드도, 이름도 필요
@@ -65,7 +61,7 @@ ForkBuild는 최신 웹 브라우저라면 어디서든 실행됩니다: 호스�
 | **짓기** | 작품을 짓는 에디터([에디터](02-TheEditor.md) 참고) |
 | **둘러보기** | 모두가 게시한 작품. 열거나, 리믹스하거나, 방문할 수 있습니다([게시와 리믹스](04-PublishingAndForking.md#둘러보기) 참고) |
 | **챌린지** | 이번 주 건축 챌린지와 참가작([주간 건축 챌린지](04-PublishingAndForking.md#주간-건축-챌린지) 참고) |
-| **걷기** | 이번 주 챌린지 광장에서 월드 보기를 열어, 게시된 작품들의 마을을 걸어 봅니다([월드 보기](03-WorldView.md) 참고) |
+| **걷기** | 이번 주 챌린지 광장에서 월드 보기를 열어, 마을 광장 둘레에 선 그 주의 출품작 사이를 걸어 봅니다([월드 보기](03-WorldView.md) 참고) |
 | **내 월드** | 이 기기에서 가 본 월드([내 월드](03-WorldView.md#내-월드--실제로-가-본-월드) 참고) |
 | **🔔** | 내 알림: 댓글, 리믹스, 내가 팔로우하는 사람의 새 작품([방향과 위치](03-WorldView.md#방향과-위치) 참고) |
 | **이름 정하기** | 게시하고 걸을 때 쓸 이름을 정합니다. 이름이 생기면 여기에 그 이름이 보입니다([이름 정하기](#이름-정하기) 참고) |
@@ -224,7 +220,7 @@ iPhone이나 iPad의 Safari에서는 버튼이 대신 방법을 알려 줍니다
 
 - 짓는 도구 전체는 **[에디터](02-TheEditor.md)**에서 배우세요.
 - 공유할 준비가 되었다면 **[게시와 리믹스](04-PublishingAndForking.md)**로.
-- **[월드 보기](03-WorldView.md)**에서 게시된 작품들의 마을을 걸어 보세요.
+- **[월드 보기](03-WorldView.md)**에서 다른 사람들의 작품 사이를 걸어 보세요.
 - 아바타를 꾸미고 사람을 만나려면
   **[아바타와 접속 상태](06-AvatarsAndPresence.md)**와
   **[피어 연결과 친구](07-PeerConnectionsAndFriends.md)**를 보세요.

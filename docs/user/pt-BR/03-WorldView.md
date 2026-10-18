@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: fba04da122bf921c -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 9ef1584b89ce019e -->
 # 03 — Visão do mundo
 
 <!-- languages -->
 [English](../03-WorldView.md) · [Deutsch](../de/03-WorldView.md) · [Español](../es/03-WorldView.md) · [Français](../fr/03-WorldView.md) · [Bahasa Indonesia](../id/03-WorldView.md) · [日本語](../ja/03-WorldView.md) · [한국어](../ko/03-WorldView.md) · **Português (Brasil)**
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../03-WorldView.md).
-<!-- /stale -->
 
 A Visão do mundo é o mundo 3D compartilhado onde **todas as construções
 publicadas ficam lado a lado**. Você anda ou voa por ele, encontra coisas,
@@ -47,15 +43,16 @@ Há dois jeitos de entrar:
 - **Passear** na barra superior abre a Visão do mundo na praça do desafio
   desta semana. Você não precisa de uma construção sua. A praça é a praça
   da vila: as seis construções prontas ficam em volta dela, prontas para
-  remixar, e logo do lado de fora as construções publicadas formam uma
-  vila (veja [A praça do desafio](04-PublishingAndForking.md#a-praça-do-desafio)).
+  remixar, e logo do lado de fora ficam as participações da semana
+  (veja [A praça do desafio](04-PublishingAndForking.md#a-praça-do-desafio)).
 - Na página **Explorar**, **Explorar** em qualquer construção leva você
   bem ao lado dela. Abrir o link de um Mundo faz o mesmo.
 
 As construções que outras pessoas
 [enviaram para todos](04-PublishingAndForking.md#quem-pode-encontrá-la)
-ficam onde quem as fez as colocou: os remixes ao lado do que remixam, e o
-resto na vila em volta da praça.
+ficam onde quem as fez as colocou: cada uma num lugar só dela, com espaço
+em volta, por uma terra ampla (veja
+[Onde uma construção fica](04-PublishingAndForking.md#onde-uma-construção-fica)).
 
 ## Uma visão de visitante, e Avançado
 
@@ -443,9 +440,9 @@ na barra superior, abre a Visão do mundo na praça da vila: calçada, com um
 poço, bancos e postes de luz, e as seis construções prontas em volta.
 
 A praça e as construções prontas fazem parte do Mundo, como os morros e
-as árvores. Estão ali para todos, e não são de ninguém. As construções
-publicadas formam uma vila logo do lado de fora, então a sua própria casa
-ganha vizinhos. Um painel lista as participações da semana e as
+as árvores. Estão ali para todos, e não são de ninguém. As participações
+da semana ficam logo do lado de fora, e só as daquela semana: abra a praça
+da semana passada e você vê as participações da semana passada. Um painel lista as participações da semana e as
 construções prontas (veja
 [A praça do desafio](04-PublishingAndForking.md#a-praça-do-desafio)).
 Nenhuma árvore cresce em volta da praça, e nela não há **Construir aqui**.

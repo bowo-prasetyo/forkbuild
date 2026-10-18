@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 545a8b3fca4e1167 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 3895abf811fef371 -->
 # 01 — はじめに
 
 <!-- languages -->
 [English](../01-GettingStarted.md) · [Deutsch](../de/01-GettingStarted.md) · [Español](../es/01-GettingStarted.md) · [Français](../fr/01-GettingStarted.md) · [Bahasa Indonesia](../id/01-GettingStarted.md) · **日本語** · [한국어](../ko/01-GettingStarted.md) · [Português (Brasil)](../pt-BR/01-GettingStarted.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **注意:** このページの英語版は翻訳後に更新されているため、この翻訳は古くなっている可能性があります。[英語版](../01-GettingStarted.md)も参照してください。
-<!-- /stale -->
 
 ようこそ！このガイドでは、「アプリを開いたところ」から「何か作れた」
 までを、5 分ほどで案内します。始めるのにアカウントもダウンロードも名前も
@@ -68,7 +64,7 @@ ForkBuild は最新のウェブブラウザーならどれでも動きます。�
 | **つくる** | 作品を作るエディター（[エディター](02-TheEditor.md) を参照） |
 | **さがす** | みんなが公開した作品。開く、リミックスする、訪れることができます（[公開とリミックス](04-PublishingAndForking.md#さがす) を参照） |
 | **チャレンジ** | 今週の建築チャレンジとその応募作品（[毎週の建築チャレンジ](04-PublishingAndForking.md#毎週の建築チャレンジ) を参照） |
-| **歩く** | 今週のチャレンジの広場でワールドビューを開き、公開された作品の村を歩けます（[ワールドビュー](03-WorldView.md) を参照） |
+| **歩く** | 今週のチャレンジの広場でワールドビューを開き、村の広場を囲むその週の応募作品の間を歩けます（[ワールドビュー](03-WorldView.md) を参照） |
 | **マイワールド** | このデバイスで訪れたワールド（[マイワールド](03-WorldView.md#マイワールド--実際に訪れたワールド) を参照） |
 | **🔔** | 通知。コメント、リミックス、フォローしている人の新しい作品（[方向と場所](03-WorldView.md#方向と場所) を参照） |
 | **名前を決める** | 公開や散歩に使う名前を決めます。名前を決めると、ここにその名前が表示されます（[名前を決める](#名前を決める) を参照） |
@@ -244,7 +240,7 @@ iPhone や iPad の Safari では、ボタンが代わりに方法を案内し�
 
 - 作るための道具は **[エディター](02-TheEditor.md)** ですべて学べます。
 - 共有する準備ができたら **[公開とリミックス](04-PublishingAndForking.md)** へ。
-- 公開された作品の村を **[ワールドビュー](03-WorldView.md)** で歩きましょう。
+- ほかの人の作品の間を **[ワールドビュー](03-WorldView.md)** で歩きましょう。
 - アバターを整えて人と出会うには
   **[アバターと在席状況](06-AvatarsAndPresence.md)** と
   **[ピア接続と友達](07-PeerConnectionsAndFriends.md)** をご覧ください。

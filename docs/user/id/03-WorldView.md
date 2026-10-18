@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: fba04da122bf921c -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 9ef1584b89ce019e -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
 [English](../03-WorldView.md) · [Deutsch](../de/03-WorldView.md) · [Español](../es/03-WorldView.md) · [Français](../fr/03-WorldView.md) · **Bahasa Indonesia** · [日本語](../ja/03-WorldView.md) · [한국어](../ko/03-WorldView.md) · [Português (Brasil)](../pt-BR/03-WorldView.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../03-WorldView.md).
-<!-- /stale -->
 
 Tampilan Dunia adalah dunia 3D bersama tempat **setiap bangunan yang
 diterbitkan berdiri berdampingan**. Anda berjalan atau terbang berkeliling,
@@ -49,16 +45,17 @@ Ada dua cara masuk:
 - **Jalan-jalan** di bilah atas membuka Tampilan Dunia di alun-alun
   tantangan minggu ini. Anda tidak perlu punya bangunan sendiri.
   Alun-alunnya adalah alun-alun desa: enam bangunan siap pakai berdiri
-  mengelilinginya, siap di-remix, dan bangunan yang diterbitkan membentuk
-  desa tepat di luarnya (lihat
+  mengelilinginya, siap di-remix, dan karya minggu ini berdiri tepat di
+  luarnya (lihat
   [Alun-alun tantangan](04-PublishingAndForking.md#alun-alun-tantangan)).
 - Di halaman **Jelajahi**, **Jelajahi** pada bangunan mana pun membawa Anda
   tepat ke sebelahnya. Membuka tautan ke sebuah Dunia juga begitu.
 
 Bangunan yang
 [dikirim orang lain kepada semua orang](04-PublishingAndForking.md#siapa-yang-bisa-menemukannya)
-berdiri di tempat pembuatnya meletakkannya: remix di sebelah yang
-di-remix, sisanya di desa sekeliling alun-alun.
+berdiri di tempat pembuatnya meletakkannya: masing-masing di tempatnya
+sendiri, dengan ruang di sekelilingnya, di seluruh daratan yang luas (lihat
+[Tempat bangunan berdiri](04-PublishingAndForking.md#tempat-bangunan-berdiri)).
 
 ## Tampilan pengunjung, dan Lanjutan
 
@@ -458,8 +455,9 @@ sekelilingnya.
 
 Alun-alun dan bangunan siap pakai adalah bagian dari Dunia, seperti bukit
 dan pohonnya. Semuanya ada di sana untuk semua orang, dan bukan milik
-siapa pun. Bangunan yang diterbitkan membentuk desa tepat di luarnya, jadi
-rumah Anda sendiri punya tetangga. Sebuah panel mencantumkan karya minggu
+siapa pun. Karya minggu ini berdiri tepat di luarnya, dan hanya karya
+minggu itu: buka alun-alun minggu lalu dan Anda melihat karya minggu lalu.
+Sebuah panel mencantumkan karya minggu
 ini dan bangunan siap pakai (lihat
 [Alun-alun tantangan](04-PublishingAndForking.md#alun-alun-tantangan)).
 Tidak ada pohon yang tumbuh di sekeliling alun-alun, dan tidak ada

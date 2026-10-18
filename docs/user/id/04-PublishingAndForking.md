@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 04f6ffccd852efa9 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 02d4fa6f16b73299 -->
 # 04 — Penerbitan & Remix
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · [Español](../es/04-PublishingAndForking.md) · [Français](../fr/04-PublishingAndForking.md) · **Bahasa Indonesia** · [日本語](../ja/04-PublishingAndForking.md) · [한국어](../ko/04-PublishingAndForking.md) · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../04-PublishingAndForking.md).
-<!-- /stale -->
 
 Inilah inti ForkBuild. **Menerbitkan** membagikan bangunan Anda kepada
 dunia. **Remix** memungkinkan siapa pun membuat salinan sendiri dari sebuah
@@ -38,8 +34,7 @@ mencarinya, membukanya, dan me-remix-nya, dengan nama Anda sebagai
 pembuatnya. Orang lain melihatnya setelah Anda membagikan tautannya, atau
 langsung jika Anda memilih **Semua orang** di
 [Siapa yang bisa menemukannya?](#siapa-yang-bisa-menemukannya). Karya itu
-juga diberi tempat di dunia bersama, di samping apa yang menjadi
-pasangannya (lihat
+juga diberi tempatnya sendiri di dunia bersama (lihat
 [Tempat bangunan berdiri](#tempat-bangunan-berdiri)), sehingga **Jelajahi** selalu
 punya tempat untuk dituju — lihat
 [Menemukan dunia](03-WorldView.md#menemukan-dunia).
@@ -127,7 +122,14 @@ bawah **Dunia Bersama Saya** di Tampilan Dunia.
   lama setengah menit) lalu disimpan ke unduhan; tidak ada yang diunggah.
   Setelah itu **Salin judul** dan **Salin deskripsi** memberi teks untuk
   ditempel di sampingnya: siapa yang membangunnya, tautan ke bangunan Anda,
-  tautan ke ForkBuild, dan lisensinya. Biarkan tab tetap di depan selama
+  tautan ke ForkBuild, dan lisensinya. Video sebuah remix juga menyebut
+  siapa yang membangun aslinya, dan deskripsi bangunan nonkomersial
+  menyebutkan bahwa bangunan itu tidak boleh dijadikan sumber penghasilan.
+  **Buat video** tersedia pada bangunan terbitan siapa pun, jadi sebelum
+  Anda membuatnya, ia memberi tahu apa yang diminta lisensi bangunan itu
+  jika orang lain yang membangunnya: pencantuman nama, tidak menghasilkan
+  uang darinya (CC BY-NC), atau bertanya dulu kepadanya (Hak Cipta
+  Dilindungi atau tanpa lisensi). Biarkan tab tetap di depan selama
   merekam; perekaman berhenti sejenak saat tab tersembunyi.
   Jika **Dengan musik** dicentang, seperti bawaannya kecuali Anda menghapus
   centangnya, musik ForkBuild ikut direkam dan memudar di bawah kartu penutup.
@@ -259,21 +261,32 @@ di bawah. Bangunan yang diterbitkan tanpa nama tidak bisa dikirim. Lihat
 
 ### Tempat bangunan berdiri
 
-Bangunan terbitan berdiri di Dunia bersama di samping apa yang menjadi
-pasangannya:
+Bangunan terbitan mendapat tempatnya sendiri di Dunia bersama, dengan
+ruang di sekelilingnya, sehingga Dunia terasa seperti daratan yang luas dan
+terbuka:
 
-- **remix** berdiri di samping bangunan yang di-remix-nya, sehingga pohon
-  keluarga menjadi sebuah jalan;
-- **yang lainnya** bergabung dengan desa yang tumbuh di sekeliling
-  alun-alun tantangan, cincin demi cincin dari dalam ke luar, mulai tepat
-  di luar bangunan siap pakai yang berdiri mengelilingi lapangannya,
-  sehingga bangunan yang diterbitkan sekitar waktu yang sama bertetangga,
-  dan yang pertama terlihat dari lapangan;
-- **Bangun di sini** tetap menaruh bangunan di tempat yang Anda pilih, dan
-  menerbitkan ulang bangunan tidak pernah memindahkannya.
+- **Bangun di sini** menaruh bangunan di tempat yang Anda pilih;
+- **yang lainnya**, termasuk remix, mendapat titiknya sendiri di grid
+  Dunia, dipilih dari bangunan itu sendiri, sehingga setiap perangkat
+  menaruhnya di tempat yang sama;
+- menerbitkan ulang bangunan tidak pernah memindahkannya.
+
+Karya tantangan ditempatkan dengan cara yang sama. Selama seseorang
+mengunjungi [alun-alun tantangan](#alun-alun-tantangan) minggu itu, karya
+tersebut juga ditampilkan di sekeliling alun-alun di samping karya lain
+minggu itu, tanpa memindahkannya.
+
+Untuk menaruh remix di samping bangunan yang di-remix-nya, pindahkan ke
+sana: **Pindahkan…**, di
+[alat lanjutan](WorldViewAdvancedTools.md#penempatan) Tampilan Dunia.
 
 Semua orang yang menemukan bangunan itu melihatnya di tempat yang sama,
-karena tempatnya ikut bersamanya, ditandatangani oleh Anda.
+karena tempatnya ikut bersamanya, ditandatangani oleh Anda. Bangunan yang
+diterbitkan dari 12 sampai 17 Oktober 2026 justru ditempatkan di sekeliling
+alun-alun tantangan, dan tetap di sana sampai pembuatnya memindahkannya:
+**Pindahkan ke titik gridnya**, di **Pindahkan Penempatan**, membawa
+bangunan ke titik gridnya (lihat
+[Posisi di dunia](WorldViewAdvancedTools.md#posisi-di-dunia)).
 
 ## Ke mana dikirim — mengirim bangunan saat menerbitkan
 
@@ -417,6 +430,62 @@ dialog **Properti Bangunan**:
 Jika Anda membiarkan karya tanpa lisensi, orang tetap dapat membuka dan
 menjelajahinya — mereka hanya tidak dapat me-remix-nya sampai Anda memilih
 lisensi yang mengizinkannya.
+
+### Remix tetap menyebut nama Anda dan memegang syarat Anda
+
+Remix dari bangunan Anda menyebut nama Anda, dan tetap memegang syarat
+lisensi Anda, bagaimanapun pembuat barunya mengubah lisensinya di
+**Properti Bangunan**:
+
+| Lisensi Anda | Remix-nya boleh memakai |
+|---|---|
+| **CC0 1.0** | Lisensi apa pun |
+| **CC BY 4.0** | Lisensi apa pun kecuali CC0, yang akan menghapus nama Anda |
+| **CC BY-SA 4.0** | Hanya CC BY-SA 4.0 |
+| **CC BY-NC 4.0** | Hanya CC BY-NC 4.0, Hak Cipta Dilindungi, atau tanpa lisensi, sehingga remix dari bangunan nonkomersial tidak pernah boleh dijual siapa pun |
+
+**Properti Bangunan** hanya menawarkan lisensi-lisensi ini untuk remix,
+menyebutkan bangunan siapa yang di-remix-nya, dan tetap mencantumkan nama
+Anda lisensi mana pun yang dipilih. Me-remix bangunan Anda sendiri tidak
+mengikat Anda pada apa pun: salinan Anda boleh memakai lisensi apa pun.
+Gambar dan video bangunan yang disimpan memuat nama pembuatnya.
+
+### Jika seseorang memakai bangunan Anda dengan cara yang tidak diizinkan lisensinya
+
+ForkBuild tidak punya perusahaan atau moderator di tengah: bangunan
+berpindah dari perangkat ke perangkat, dan video atau gambar dibuat dan
+diunggah oleh orang yang memasangnya, di situs yang tidak dijalankan
+ForkBuild. ForkBuild tidak dapat menurunkan video atau membayar Anda
+darinya. Yang dilakukannya adalah membuat syarat Anda sulit terlewat dan
+sulit dihapus: setiap bangunan terbitan menampilkan lisensinya, setiap
+remix dan video menyebut nama Anda, dan siapa pun yang membuat video
+bangunan Anda diberi tahu lebih dulu apa yang diminta lisensi Anda. Setiap
+salinan ForkBuild mematuhinya, tetapi itu bukan kunci: orang yang mengubah
+kode aplikasi bisa mengabaikannya, dan apa yang dilakukan seseorang di luar
+ForkBuild terserah dirinya.
+
+Jika seseorang memasang bangunan Anda atau menghasilkan uang darinya
+bertentangan dengan lisensi Anda:
+
+1. **Tanyakan dulu kepadanya.** Banyak orang tidak tahu lisensinya dan
+   dengan senang hati akan menambahkan nama dan tautan Anda, menurunkan
+   video, atau membagi hasilnya.
+2. **Simpan buktinya.** Publikasi bangunan Anda adalah klaim yang
+   ditandatangani identitas Anda, membawa lisensinya, dan dapat ditambatkan
+   di Arweave untuk tanggal yang tidak bisa diubah siapa pun kemudian
+   (lihat [Publikasi & Bukti Eksternal](09-PublicationsAndEvidence.md)).
+   Simpan juga salinan tersimpan Anda dan tautan ke sana.
+3. **Gunakan proses situs itu sendiri.** YouTube, TikTok, dan lainnya
+   menerima keluhan hak cipta dari orang yang memiliki karya itu. Ajukan
+   hanya jika penggunaannya memang tidak diizinkan: video *tentang* sebuah
+   bangunan, seperti ulasan, mungkin diperbolehkan tanpa izin di banyak
+   negara.
+4. **Untuk hal yang serius, tanyakan pengacara.** Hak cipta berlaku berbeda
+   di setiap negara, dan panduan ini bukan nasihat hukum.
+
+Di ForkBuild sendiri Anda dapat memakai **Blokir** pada seseorang (lihat
+[Koneksi Rekan & Teman](07-PeerConnectionsAndFriends.md)) agar perangkat
+Anda berhenti terhubung dengannya.
 
 ## Memilih siapa yang dapat menempatkannya
 
@@ -712,17 +781,22 @@ Minggu yang belum punya entri menampilkan contoh keluarga sebagai gantinya (liha
 pula **Jelajahi alun-alun** di halaman tantangan begitu satu minggu punya
 karya. Itulah alun-alun desa di dunia bersama: enam bangunan siap pakai
 berdiri mengelilinginya untuk semua orang, selalu, masing-masing dengan
-**Remix**, dan desa bangunan terbitan tumbuh tepat di luarnya, dengan karya
-minggu itu di antaranya. Berjalanlah di antaranya, atau pilih satu di panel: **Navigasi** terbang ke
+**Remix**, dan karya minggu itu berdiri tepat di luarnya. Berjalanlah di antaranya, atau pilih satu di panel: **Navigasi** terbang ke
 sana, **Buka** membukanya seperti **Jelajahi**, dan **Edit Salinan** memulai
 salinanmu sendiri.
 
-- Setiap karya berdiri di desa. Karya yang tempatnya diketahui perangkat
-  ini berada di desa berdiri di sana, tempat ia menetap saat diterbitkan.
-  Karya lainnya (yang ditempatkan jauh, seperti bangunan yang diterbitkan
-  sebelum bangunan menetap di desa, atau yang tempatnya tidak diketahui
-  perangkat ini) ditampilkan, selama kamu berada di alun-alun, di tempat
-  ia akan menetap di desa; tempatnya sendiri tetap di tempatnya.
+- Hanya karya minggu itu yang berdiri di sekeliling alun-alun: alun-alun
+  minggu lalu menampilkan karya minggu lalu, dan alun-alun minggu ini
+  menampilkan karya minggu ini.
+- Setiap karya ditampilkan, selama kamu berada di alun-alun, di sebuah
+  tempat di sekeliling alun-alun. Itu salinan untuk pameran: tempat
+  bangunan itu sendiri, di luar sana di Dunia, tetap di tempatnya. Karya
+  yang memang ditempatkan di sekeliling alun-alun (seperti bangunan yang
+  diterbitkan dari 12 sampai 17 Oktober 2026) berdiri sendiri di sana.
+- Bangunan lain yang ditempatkan di dekat alun-alun tidak ditampilkan
+  selama kamu berada di alun-alun, agar alun-alun hanya menampilkan
+  minggunya. Tidak ada yang terjadi pada bangunan itu: mereka kembali saat
+  kamu pergi.
 - Panel mendaftar 24 karya pertama yang diterbitkan. Sisanya ada di
   halaman tantangan.
 - Karya yang ditemukan di jaringan diambil dan diperiksa seperti saat

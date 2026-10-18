@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 545a8b3fca4e1167 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 3895abf811fef371 -->
 # 01 — Primeiros passos
 
 <!-- languages -->
 [English](../01-GettingStarted.md) · [Deutsch](../de/01-GettingStarted.md) · [Español](../es/01-GettingStarted.md) · [Français](../fr/01-GettingStarted.md) · [Bahasa Indonesia](../id/01-GettingStarted.md) · [日本語](../ja/01-GettingStarted.md) · [한국어](../ko/01-GettingStarted.md) · **Português (Brasil)**
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../01-GettingStarted.md).
-<!-- /stale -->
 
 Boas-vindas! Este guia leva você de "acabei de abrir o aplicativo" a
 "construí alguma coisa" em uns cinco minutos. Você não precisa de conta,
@@ -71,7 +67,7 @@ A barra no alto está sempre visível:
 | **Construir** | O Editor, onde você constrói (veja [O Editor](02-TheEditor.md)) |
 | **Explorar** | As construções publicadas de todo mundo, para abrir, remixar ou visitar (veja [Publicar e remixar](04-PublishingAndForking.md#explorar)) |
 | **Desafio** | O desafio de construção desta semana e suas participações (veja [O desafio de construção semanal](04-PublishingAndForking.md#o-desafio-de-construção-semanal)) |
-| **Passear** | A Visão do mundo na praça do desafio desta semana, para andar pela vila de construções publicadas (veja [Visão do mundo](03-WorldView.md)) |
+| **Passear** | A Visão do mundo na praça do desafio desta semana, para passear entre as participações da semana em volta da praça da vila (veja [Visão do mundo](03-WorldView.md)) |
 | **Meus mundos** | Os Mundos que você visitou neste dispositivo (veja [Meus mundos](03-WorldView.md#meus-mundos--os-mundos-em-que-você-realmente-esteve)) |
 | **🔔** | Suas notificações: comentários, remixes e construções novas de quem você segue (veja [Orientação e locais](03-WorldView.md#orientação-e-locais)) |
 | **Escolher um nome** | Escolher o nome com que você publica e passeia; quando você tem um, ele aparece aqui no lugar (veja [Escolhendo um nome](#escolhendo-um-nome)) |
@@ -254,7 +250,7 @@ aplicativos, ou o ForkBuild já está instalado, o botão não aparece.
   **[O Editor](02-TheEditor.md)**.
 - Pronto para compartilhar? Vá para
   **[Publicar e remixar](04-PublishingAndForking.md)**.
-- Passeie pela vila de construções publicadas na
+- Passeie entre as construções de outras pessoas na
   **[Visão do mundo](03-WorldView.md)**.
 - Configure seu avatar e conheça pessoas em
   **[Avatares e presença](06-AvatarsAndPresence.md)** e

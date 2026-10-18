@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 04f6ffccd852efa9 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 02d4fa6f16b73299 -->
 # 04 — Publier et remixer
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · [Español](../es/04-PublishingAndForking.md) · **Français** · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · [한국어](../ko/04-PublishingAndForking.md) · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../04-PublishingAndForking.md).
-<!-- /stale -->
 
 C’est le cœur de ForkBuild. **Publier** partage votre construction avec le
 monde. **Remixer** permet à n’importe qui de faire sa propre copie d’une
@@ -38,7 +34,7 @@ vous pouvez la chercher, l’ouvrir et la remixer, avec votre nom comme
 auteur. Les autres la voient dès que vous partagez son lien, ou tout de
 suite si vous avez choisi **Tout le monde** sous
 [Qui peut la trouver ?](#qui-peut-la-trouver-). Elle reçoit aussi une
-place dans le monde partagé, à côté de ce avec quoi elle va (voir
+place à elle dans le monde partagé (voir
 [Où se dresse une construction](#où-se-dresse-une-construction)), pour qu’**Explorer**
 ait toujours un endroit où emmener les gens — voir
 [Trouver des mondes](03-WorldView.md#trouver-des-mondes).
@@ -128,7 +124,14 @@ boutons se trouvent sous **Mon Monde partagé** dans la Vue du monde.
   (une demi-minute au plus), et enregistrée dans vos téléchargements ; rien
   n’est envoyé. Ensuite, **Copier le titre** et **Copier la description**
   donnent le texte à coller à côté : qui l’a construite, le lien vers votre
-  construction, un lien vers ForkBuild et la licence. Gardez l’onglet au
+  construction, un lien vers ForkBuild et la licence. La vidéo d’un remix
+  crédite aussi l’auteur de son original, et la description d’une
+  construction non commerciale indique qu’on ne peut pas en tirer d’argent.
+  **Faire une vidéo** est proposé sur n’importe quelle construction publiée,
+  donc avant que vous en fassiez une, il indique ce que demande la licence
+  de la construction si quelqu’un d’autre l’a construite : la mention de
+  l’auteur, aucun argent tiré d’elle (CC BY-NC), ou de lui demander d’abord
+  (Tous droits réservés ou sans licence). Gardez l’onglet au
   premier plan pendant l’enregistrement ; il se met en pause quand l’onglet
   est caché.
   Avec **Avec musique** coché, ce qu’il est sauf si vous le décochez, la
@@ -264,21 +267,34 @@ envoyées. Voir [Confidentialité](Privacy.md).
 
 ### Où se dresse une construction
 
-Une construction publiée se dresse dans le Monde partagé à côté de ce avec
-quoi elle va :
+Une construction publiée reçoit un emplacement à elle dans le Monde
+partagé, avec de la place autour, pour que le Monde donne l’impression
+d’une vaste terre ouverte :
 
-- **un remix** se dresse à côté de la construction qu’il remixe, si bien
-  qu’un arbre généalogique devient une rue ;
-- **tout le reste** rejoint le village qui grandit autour de la place du
-  défi, anneau par anneau de l’intérieur vers l’extérieur, en commençant
-  juste à l’extérieur des constructions toutes prêtes qui entourent sa
-  place, si bien que des constructions publiées à peu près en même temps
-  sont voisines, et que les premières sont en vue de la place ;
-- **Construire ici** pose toujours une construction à l’endroit que vous
-  avez choisi, et publier de nouveau une construction ne la déplace jamais.
+- **Construire ici** pose une construction à l’endroit que vous avez
+  choisi ;
+- **tout le reste**, un remix aussi, reçoit son propre emplacement sur la
+  grille du Monde, choisi à partir de la construction elle-même, si bien
+  que chaque appareil la place au même endroit ;
+- publier de nouveau une construction ne la déplace jamais.
+
+Une participation au défi est placée de la même façon. Tant que quelqu’un
+visite la [place du défi](#la-place-du-défi) de la semaine, elle est aussi
+montrée autour de la place à côté des autres participations de la semaine,
+sans être déplacée.
+
+Pour placer un remix à côté de la construction qu’il remixe, déplacez-le
+là : **Déplacer…**, dans les
+[outils avancés](WorldViewAdvancedTools.md#placements) de la Vue du
+Monde.
 
 Tous ceux qui trouvent la construction la voient au même endroit, puisque
-sa place voyage avec elle, signée par vous.
+sa place voyage avec elle, signée par vous. Les constructions publiées du
+12 au 17 octobre 2026 ont plutôt été placées autour de la place du défi,
+et y restent jusqu’à ce que leurs auteurs les déplacent : **Placer
+sur sa case de la grille**, dans **Déplacer le placement**, en ramène une
+à son emplacement sur la grille (voir
+[Position dans le Monde](WorldViewAdvancedTools.md#position-dans-le-monde)).
 
 ## Où elle va — envoyer une construction en publiant
 
@@ -428,6 +444,64 @@ la boîte de dialogue **Propriétés de la construction** :
 Si vous laissez une construction sans licence, les gens peuvent toujours
 l’ouvrir et l’explorer — ils ne peuvent simplement pas la remixer tant que
 vous ne choisissez pas une licence qui le permet.
+
+### Un remix garde votre mention et vos conditions
+
+Un remix de votre construction vous crédite, et il garde les conditions de
+votre licence, quelle que soit la façon dont son nouvel auteur change sa
+licence dans **Propriétés de la construction** :
+
+| Votre licence | Un remix peut porter |
+|---|---|
+| **CC0 1.0** | N’importe quelle licence |
+| **CC BY 4.0** | N’importe quelle licence sauf CC0, qui ferait disparaître votre mention |
+| **CC BY-SA 4.0** | Seulement CC BY-SA 4.0 |
+| **CC BY-NC 4.0** | Seulement CC BY-NC 4.0, Tous droits réservés ou sans licence, si bien qu’un remix d’une construction non commerciale n’est jamais quelque chose que quelqu’un peut vendre |
+
+**Propriétés de la construction** ne propose à un remix que ces licences,
+indique de qui il remixe la construction, et garde votre mention quelle que
+soit celle choisie. Remixer votre propre construction ne vous engage à
+rien : votre copie peut prendre n’importe quelle licence. Les images et
+vidéos enregistrées d’une construction portent le nom de son auteur.
+
+### Quand quelqu’un utilise votre construction d’une façon que sa licence ne permet pas
+
+ForkBuild n’a ni entreprise ni modération au milieu : les constructions
+voyagent d’appareil en appareil, et une vidéo ou une image est faite et
+mise en ligne par la personne qui la publie, sur un site que ForkBuild ne
+gère pas. ForkBuild ne peut pas retirer une vidéo ni vous en reverser les
+gains. Ce qu’il fait, c’est rendre vos conditions difficiles à manquer et
+difficiles à effacer : chaque construction publiée affiche sa licence,
+chaque remix et chaque vidéo vous crédite, et quiconque fait une vidéo de
+votre construction apprend d’abord ce que demande votre licence. Chaque
+copie de ForkBuild le respecte, mais ce n’est pas un verrou : quelqu’un qui
+modifierait le code de l’application pourrait l’ignorer, et ce que
+quelqu’un fait en dehors de ForkBuild ne dépend que de lui.
+
+Si quelqu’un publie votre construction ou en tire de l’argent contre votre
+licence :
+
+1. **Demandez-lui d’abord.** Beaucoup de gens ne connaissent pas la
+   licence et ajouteront volontiers votre nom et votre lien, retireront une
+   vidéo ou partageront ce qu’elle rapporte.
+2. **Gardez les preuves.** La Publication de votre construction est une
+   revendication signée par votre identité, portant sa licence, et elle
+   peut être ancrée sur Arweave pour une date que personne ne peut changer
+   plus tard (voir
+   [Publications et preuves externes](09-PublicationsAndEvidence.md)).
+   Gardez aussi votre copie enregistrée et un lien vers elle.
+3. **Passez par la procédure du site.** YouTube, TikTok et les autres
+   reçoivent les plaintes pour droit d’auteur de la personne dont c’est
+   l’œuvre. N’en déposez une que si l’usage n’est vraiment pas permis : une
+   vidéo *sur* une construction, comme une critique, peut être permise sans
+   autorisation dans de nombreux pays.
+4. **Pour tout ce qui est sérieux, consultez un avocat.** Le droit d’auteur
+   fonctionne différemment d’un pays à l’autre, et ce guide n’est pas un
+   conseil juridique.
+
+Dans ForkBuild même, vous pouvez **Bloquer** quelqu’un (voir
+[Connexions entre pairs et amis](07-PeerConnectionsAndFriends.md)) pour que
+votre appareil cesse de se connecter à lui.
 
 ## Choisir qui peut le placer
 
@@ -727,19 +801,22 @@ Une semaine encore sans participation montre à la place les familles d’exempl
 semaine, et **Parcourir la place** sur la page du défi aussi, dès qu’une
 semaine a des participations. C’est la place du village du monde partagé :
 les six constructions toutes prêtes se dressent autour pour tout le monde,
-toujours, chacune avec **Remixer**, et le village des constructions
-publiées grandit juste à l’extérieur, les participations de la semaine
-parmi elles. Promenez-vous parmi elles ou choisissez-en une dans le panneau :
+toujours, chacune avec **Remixer**, et les participations de la semaine se
+dressent juste à l’extérieur. Promenez-vous parmi elles ou choisissez-en une dans le panneau :
 **Naviguer** vole jusqu’à elle, **Ouvrir** l’ouvre comme le ferait
 **Explorer**, et **Modifier une copie** commence votre propre copie.
 
-- Chaque participation se dresse dans le village. Celle dont cet appareil
-  sait que l’emplacement est dans le village s’y dresse, là où elle s’est
-  installée à sa publication. Toute autre (une placée loin, comme les
-  constructions publiées avant qu’elles ne s’installent dans le village, ou
-  une dont cet appareil ne connaît pas l’emplacement) est montrée, tant que
-  vous êtes sur la place, à l’endroit où elle s’installerait dans le
-  village ; son propre emplacement reste où il est.
+- Seules les participations de la semaine se dressent autour de la place :
+  la place de la semaine dernière montre les participations de la semaine
+  dernière, et celle de cette semaine, celles de cette semaine.
+- Chaque participation est montrée, tant que vous êtes sur la place, à un
+  emplacement autour de la place. C’est une copie pour l’exposition :
+  l’emplacement propre de la construction, là-bas dans le Monde, reste où
+  il est. Une participation qui a été placée autour de la place (comme les
+  constructions publiées du 12 au 17 octobre 2026) s’y dresse elle-même.
+- Les autres constructions placées près de la place sont laissées de côté
+  tant que vous êtes sur la place, pour que la place montre sa semaine
+  seule. Il ne leur arrive rien : elles reviennent quand vous partez.
 - Le panneau liste les 24 premières participations publiées. Les autres
   sont sur la page du défi.
 - Les participations trouvées sur les réseaux sont récupérées et vérifiées

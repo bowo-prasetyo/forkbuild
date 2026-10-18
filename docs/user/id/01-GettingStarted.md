@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 545a8b3fca4e1167 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 3895abf811fef371 -->
 # 01 — Memulai
 
 <!-- languages -->
 [English](../01-GettingStarted.md) · [Deutsch](../de/01-GettingStarted.md) · [Español](../es/01-GettingStarted.md) · [Français](../fr/01-GettingStarted.md) · **Bahasa Indonesia** · [日本語](../ja/01-GettingStarted.md) · [한국어](../ko/01-GettingStarted.md) · [Português (Brasil)](../pt-BR/01-GettingStarted.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../01-GettingStarted.md).
-<!-- /stale -->
 
 Selamat datang! Panduan ini membawa Anda dari "baru membuka aplikasi" ke
 "saya sudah membangun sesuatu" dalam sekitar lima menit. Anda tidak perlu
@@ -73,7 +69,7 @@ Bilah di atas selalu terlihat:
 | **Bangun** | Editor, tempat Anda membangun (lihat [Editor](02-TheEditor.md)) |
 | **Jelajahi** | Bangunan terbitan semua orang, untuk dibuka, di-remix, atau dikunjungi (lihat [Penerbitan & Remix](04-PublishingAndForking.md#jelajahi)) |
 | **Tantangan** | Tantangan membangun minggu ini dan karya-karyanya (lihat [Tantangan membangun mingguan](04-PublishingAndForking.md#tantangan-membangun-mingguan)) |
-| **Jalan-jalan** | Tampilan Dunia di alun-alun tantangan minggu ini, untuk berjalan di desa bangunan terbitan (lihat [Tampilan Dunia](03-WorldView.md)) |
+| **Jalan-jalan** | Tampilan Dunia di alun-alun tantangan minggu ini, untuk berjalan di antara karya minggu ini di sekeliling alun-alun desa (lihat [Tampilan Dunia](03-WorldView.md)) |
 | **Dunia Saya** | Dunia yang pernah Anda kunjungi di perangkat ini (lihat [Dunia Saya](03-WorldView.md#dunia-saya--dunia-yang-benar-benar-pernah-anda-kunjungi)) |
 | **🔔** | Notifikasi Anda: komentar, remix, dan bangunan baru dari orang yang Anda ikuti (lihat [Orientasi dan lokasi](03-WorldView.md#orientasi-dan-lokasi)) |
 | **Pilih nama** | Memilih nama untuk menerbitkan dan berjalan-jalan; setelah Anda punya nama, nama itu tampil di sini (lihat [Memilih nama](#memilih-nama)) |
@@ -254,7 +250,7 @@ atau ForkBuild sudah terpasang, tombol itu tidak ditampilkan.
 
 - Pelajari semua alat membangun di **[Editor](02-TheEditor.md)**.
 - Siap berbagi? Lanjut ke **[Penerbitan & Remix](04-PublishingAndForking.md)**.
-- Jalan-jalan di desa bangunan terbitan di
+- Jalan-jalan di antara bangunan orang lain di
   **[Tampilan Dunia](03-WorldView.md)**.
 - Atur avatar Anda dan bertemu orang di
   **[Avatar & Kehadiran](06-AvatarsAndPresence.md)** dan

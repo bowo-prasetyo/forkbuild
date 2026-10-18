@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 545a8b3fca4e1167 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 3895abf811fef371 -->
 # 01 — Premiers pas
 
 <!-- languages -->
 [English](../01-GettingStarted.md) · [Deutsch](../de/01-GettingStarted.md) · [Español](../es/01-GettingStarted.md) · **Français** · [Bahasa Indonesia](../id/01-GettingStarted.md) · [日本語](../ja/01-GettingStarted.md) · [한국어](../ko/01-GettingStarted.md) · [Português (Brasil)](../pt-BR/01-GettingStarted.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../01-GettingStarted.md).
-<!-- /stale -->
 
 Bienvenue ! Ce guide vous emmène de « je viens d’ouvrir l’application » à
 « j’ai construit quelque chose » en cinq minutes environ. Pas besoin de
@@ -75,7 +71,7 @@ La barre du haut est toujours visible :
 | **Construire** | L’Éditeur, où vous construisez (voir [L’Éditeur](02-TheEditor.md)) |
 | **Explorer** | Les constructions publiées de tout le monde, à ouvrir, remixer ou visiter (voir [Publier et remixer](04-PublishingAndForking.md#explorer)) |
 | **Défi** | Le défi de construction de la semaine et ses participations (voir [Le défi de construction hebdomadaire](04-PublishingAndForking.md#le-défi-de-construction-hebdomadaire)) |
-| **Se promener** | La Vue du Monde sur la place du défi de la semaine, pour parcourir le village des constructions publiées (voir [La Vue du Monde](03-WorldView.md)) |
+| **Se promener** | La Vue du Monde sur la place du défi de la semaine, pour se promener parmi les participations de la semaine autour de la place du village (voir [La Vue du Monde](03-WorldView.md)) |
 | **Mes mondes** | Les Mondes que vous avez visités sur cet appareil (voir [Mes mondes](03-WorldView.md#mes-mondes--les-mondes-où-vous-êtes-vraiment-allé)) |
 | **🔔** | Vos notifications : commentaires, remix et nouvelles constructions des personnes que vous suivez (voir [Orientation et emplacements](03-WorldView.md#orientation-et-emplacements)) |
 | **Choisir un nom** | Choisir le nom sous lequel vous publiez et vous promenez ; une fois que vous en avez un, il s’affiche ici à la place (voir [Choisir un nom](#choisir-un-nom)) |
@@ -267,7 +263,7 @@ si ForkBuild est déjà installé, le bouton n’apparaît pas.
   **[L’Éditeur](02-TheEditor.md)**.
 - Prêt à partager ? Passez à
   **[Publier et remixer](04-PublishingAndForking.md)**.
-- Promenez-vous dans le village des constructions publiées avec
+- Promenez-vous parmi les constructions des autres avec
   **[La Vue du Monde](03-WorldView.md)**.
 - Réglez votre avatar et rencontrez du monde dans
   **[Avatars et présence](06-AvatarsAndPresence.md)** et

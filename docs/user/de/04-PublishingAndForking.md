@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 04f6ffccd852efa9 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 02d4fa6f16b73299 -->
 # 04 — Veröffentlichen & Remixen
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · **Deutsch** · [Español](../es/04-PublishingAndForking.md) · [Français](../fr/04-PublishingAndForking.md) · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · [한국어](../ko/04-PublishingAndForking.md) · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../04-PublishingAndForking.md).
-<!-- /stale -->
 
 Das ist das Herz von ForkBuild. **Veröffentlichen** teilt Ihr Bauwerk mit
 der Welt. **Remixen** erlaubt jedem, eine eigene Kopie eines Bauwerks zu
@@ -37,8 +33,7 @@ Ihr Bauwerk erscheint jetzt unter **Entdecken** auf diesem Gerät, wo Sie
 sie suchen, öffnen und remixen können, mit Ihrem Namen als Autor. Andere
 sehen sie, sobald Sie ihren Link teilen, oder sofort, wenn Sie unter
 [Wer kann es finden?](#wer-kann-es-finden) **Alle** gewählt haben. Sie
-erhält außerdem einen Platz in der geteilten Welt, neben dem, wozu sie
-gehört (siehe [Wo ein Bauwerk steht](#wo-ein-bauwerk-steht)), sodass
+erhält außerdem einen eigenen Platz in der geteilten Welt (siehe [Wo ein Bauwerk steht](#wo-ein-bauwerk-steht)), sodass
 **Erkunden** immer ein Ziel hat — siehe
 [Welten finden](03-WorldView.md#welten-finden).
 
@@ -126,7 +121,13 @@ Weltansicht unter **Meine Geteilte Welt**.
   landet in Ihren Downloads; nichts wird hochgeladen. **Titel kopieren** und
   **Beschreibung kopieren** geben Ihnen dann Text zum Einfügen: wer es gebaut
   hat, den Link zu Ihrem Bauwerk, einen Link zu ForkBuild und die Lizenz.
-  Lassen Sie den Tab während der Aufnahme im Vordergrund; ist er verdeckt,
+  Das Video eines Remixes nennt auch, wer sein Original gebaut hat, und die
+  Beschreibung eines nicht kommerziellen Bauwerks sagt, dass damit kein Geld
+  verdient werden darf. **Video machen** gibt es bei jedem veröffentlichten
+  Bauwerk; hat es jemand anderes gebaut, sagt es Ihnen deshalb vor der
+  Aufnahme, was die Lizenz des Bauwerks verlangt: Namensnennung, kein damit
+  verdientes Geld (CC BY-NC) oder vorher zu fragen (Alle Rechte vorbehalten
+  oder keine Lizenz). Lassen Sie den Tab während der Aufnahme im Vordergrund; ist er verdeckt,
   pausiert sie.
   Ist **Mit Musik** angehakt, wie es ist, solange Sie es nicht abwählen, wird
   die Musik von ForkBuild mit aufgenommen und klingt unter der Schlusskarte
@@ -256,21 +257,33 @@ Bauwerke lassen sich nicht senden. Siehe [Datenschutz](Privacy.md).
 
 ### Wo ein Bauwerk steht
 
-Ein veröffentlichtes Bauwerk steht in der geteilten Welt neben dem, wozu es
-gehört:
+Ein veröffentlichtes Bauwerk erhält einen eigenen Platz in der geteilten
+Welt, mit Raum darum herum, sodass sich die Welt wie ein weites, offenes
+Land anfühlt:
 
-- **ein Remix** steht neben dem Bauwerk, das er remixt, sodass ein
-  Stammbaum zu einer Straße wird;
-- **alles andere** kommt in das Dorf, das rund um den Challenge-Platz
-  wächst, Ring für Ring von innen nach außen, beginnend gleich außerhalb der
-  fertigen Bauwerke rund um den Platz, sodass ungefähr gleichzeitig
-  veröffentlichte Bauwerke Nachbarn sind und die ersten vom Platz aus zu
-  sehen sind;
-- **Hier bauen** setzt ein Bauwerk weiterhin an die gewählte Stelle, und ein
-  erneutes Veröffentlichen verschiebt es nie.
+- **Hier bauen** setzt ein Bauwerk an die gewählte Stelle;
+- **alles andere**, auch ein Remix, erhält seinen eigenen Platz im Raster
+  der Welt, gewählt anhand des Bauwerks selbst, sodass jedes Gerät es an
+  dieselbe Stelle setzt;
+- ein erneutes Veröffentlichen verschiebt ein Bauwerk nie.
+
+Eine Einsendung zur Challenge wird genauso platziert. Solange jemand den
+[Challenge-Platz](#der-challenge-platz) der Woche besucht, wird sie
+außerdem rund um den Platz neben den anderen Einsendungen der Woche
+gezeigt, ohne sie zu verschieben.
+
+Um einen Remix neben das Bauwerk zu stellen, das er remixt, verschieben Sie
+ihn dorthin: **Verschieben …** in den
+[erweiterten Werkzeugen](WorldViewAdvancedTools.md#platzierungen) der
+Weltansicht.
 
 Alle, die das Bauwerk finden, sehen es an derselben Stelle, da sein Platz
-mit ihm reist, von Ihnen signiert.
+mit ihm reist, von Ihnen signiert. Bauwerke, die vom 12. bis 17. Oktober
+2026 veröffentlicht wurden, kamen stattdessen rund um den Challenge-Platz
+und bleiben dort, bis ihre Erbauer sie verschieben: **Auf seinen
+Rasterplatz** in **Platzierung verschieben** bringt eines auf seinen
+Rasterplatz (siehe
+[Position in der Welt](WorldViewAdvancedTools.md#position-in-der-welt)).
 
 ## Wohin es geht — ein Bauwerk beim Veröffentlichen senden
 
@@ -415,6 +428,64 @@ gewählt im Dialog **Bauwerkeigenschaften**:
 Lassen Sie ein Bauwerk ohne Lizenz, können andere es trotzdem öffnen
 und erkunden — sie können es nur nicht remixen, bis Sie eine Lizenz
 wählen, die es erlaubt.
+
+### Ein Remix behält Ihre Nennung und Ihre Bedingungen
+
+Ein Remix Ihres Bauwerks nennt Sie und behält die Bedingungen Ihrer Lizenz,
+wie auch immer sein neuer Erbauer seine Lizenz in
+**Bauwerkeigenschaften** ändert:
+
+| Ihre Lizenz | Ein Remix davon darf tragen |
+|---|---|
+| **CC0 1.0** | Jede Lizenz |
+| **CC BY 4.0** | Jede Lizenz außer CC0, die Ihre Nennung wegfallen ließe |
+| **CC BY-SA 4.0** | Nur CC BY-SA 4.0 |
+| **CC BY-NC 4.0** | Nur CC BY-NC 4.0, Alle Rechte vorbehalten oder keine Lizenz, sodass ein Remix eines nicht kommerziellen Bauwerks nie eines ist, das jemand verkaufen darf |
+
+**Bauwerkeigenschaften** bietet einem Remix nur diese Lizenzen an, sagt,
+wessen Bauwerk er remixt, und behält Ihre Nennung, welche auch gewählt
+wird. Ihr eigenes Bauwerk zu remixen bindet Sie an nichts: Ihre Kopie darf
+jede Lizenz tragen. Gespeicherte Bilder und Videos eines Bauwerks tragen
+den Namen seines Erbauers.
+
+### Wenn jemand Ihr Bauwerk so nutzt, wie es seine Lizenz nicht erlaubt
+
+ForkBuild hat kein Unternehmen und keine Moderation in der Mitte: Bauwerke
+reisen von Gerät zu Gerät, und ein Video oder Bild wird von der Person
+gemacht und hochgeladen, die es postet, auf einer Seite, die ForkBuild
+nicht betreibt. ForkBuild kann kein Video entfernen und Sie nicht daran
+beteiligen. Was es tut: Es macht Ihre Bedingungen schwer zu übersehen und
+schwer zu entfernen. Jedes veröffentlichte Bauwerk zeigt seine Lizenz,
+jeder Remix und jedes Video nennt Sie, und wer ein Video Ihres Bauwerks
+macht, erfährt vorher, was Ihre Lizenz verlangt. Jede Kopie von ForkBuild
+hält sich daran, aber es ist kein Schloss: Wer den Code der App ändert,
+könnte es übergehen, und was jemand außerhalb von ForkBuild tut, liegt bei
+ihm.
+
+Wenn jemand Ihr Bauwerk entgegen Ihrer Lizenz postet oder damit Geld
+verdient:
+
+1. **Fragen Sie zuerst.** Viele kennen die Lizenz nicht und fügen gern
+   Ihren Namen und Link hinzu, nehmen ein Video herunter oder teilen, was es
+   einbringt.
+2. **Sichern Sie die Nachweise.** Die Veröffentlichung Ihres Bauwerks ist ein
+   von Ihrer Identität signierter Anspruch mit seiner Lizenz, und sie kann
+   auf Arweave verankert werden, für ein Datum, das niemand später ändern
+   kann (siehe
+   [Veröffentlichungen & externe Nachweise](09-PublicationsAndEvidence.md)).
+   Bewahren Sie auch Ihre gespeicherte Kopie und einen Link dazu auf.
+3. **Nutzen Sie das Verfahren der Seite.** YouTube, TikTok und die anderen
+   nehmen Urheberrechtsbeschwerden von der Person entgegen, deren Werk es
+   ist. Reichen Sie nur eine ein, wenn die Nutzung wirklich nicht erlaubt
+   ist: Ein Video *über* ein Bauwerk, etwa eine Rezension, kann in vielen
+   Ländern auch ohne Erlaubnis zulässig sein.
+4. **Fragen Sie bei Ernstem eine Anwältin oder einen Anwalt.** Das
+   Urheberrecht ist von Land zu Land verschieden, und diese Anleitung ist
+   keine Rechtsberatung.
+
+In ForkBuild selbst können Sie jemanden **Blockieren** (siehe
+[Peer-Verbindungen & Freunde](07-PeerConnectionsAndFriends.md)), sodass
+Ihr Gerät keine Verbindung mehr zu dieser Person aufbaut.
 
 ## Wählen, wer es platzieren darf
 
@@ -715,18 +786,21 @@ Eine Woche ohne Einsendungen zeigt stattdessen die Beispielfamilien (siehe [Fert
 ebenso **Über den Platz gehen** auf der Challenge-Seite, sobald eine Woche
 Beiträge hat. Er ist der Dorfplatz der geteilten Welt: Die sechs fertigen
 Bauwerke stehen für alle immer darum herum, jedes mit **Remixen**, und
-gleich außerhalb davon wächst das Dorf der veröffentlichten Bauwerke, die
-Beiträge der Woche darunter. Geh zwischen ihnen umher oder wähle einen im
+gleich außerhalb davon stehen die Beiträge der Woche. Geh zwischen ihnen umher oder wähle einen im
 Panel: **Navigieren** fliegt hin, **Öffnen** öffnet ihn wie **Erkunden**,
 und **Eine Kopie bearbeiten** beginnt deine eigene Kopie.
 
-- Jeder Beitrag steht im Dorf. Einer, von dem dieses Gerät weiß, dass sein
-  Platz im Dorf liegt, steht dort, wo er sich beim Veröffentlichen
-  niedergelassen hat. Jeder andere (einer, der weit weg platziert wurde, wie
-  Bauwerke, die veröffentlicht wurden, bevor sie sich im Dorf niederließen,
-  oder einer, dessen Platz dieses Gerät nicht kennt) wird, solange du auf
-  dem Platz bist, an der Stelle gezeigt, an der er sich im Dorf niederlassen
-  würde; sein eigener Platz bleibt, wo er ist.
+- Nur die Beiträge der Woche stehen rund um den Platz: Der Platz der
+  letzten Woche zeigt die Beiträge der letzten Woche, der dieser Woche die
+  dieser Woche.
+- Jeder Beitrag wird, solange du auf dem Platz bist, an einer Stelle rund
+  um den Platz gezeigt. Das ist eine Kopie für die Ausstellung: Der eigene
+  Platz des Bauwerks, draußen in der Welt, bleibt, wo er ist. Ein Beitrag,
+  der rund um den Platz platziert wurde (wie Bauwerke, die vom 12. bis
+  17. Oktober 2026 veröffentlicht wurden), steht dort selbst.
+- Andere Bauwerke, die in der Nähe des Platzes stehen, werden weggelassen,
+  solange du auf dem Platz bist, damit er nur seine Woche zeigt. Ihnen
+  passiert nichts: Sie sind wieder da, wenn du gehst.
 - Das Panel listet die ersten 24 veröffentlichten Beiträge. Die übrigen
   sind auf der Challenge-Seite.
 - Beiträge aus den Netzwerken werden geladen und geprüft, so wie beim
