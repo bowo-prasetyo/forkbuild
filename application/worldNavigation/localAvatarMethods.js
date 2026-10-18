@@ -17,6 +17,8 @@ import { AvatarTerrainConstraint } from '../avatar/AvatarTerrainConstraint.js';
 import { AvatarStepConstraint } from '../avatar/AvatarStepConstraint.js';
 import { AvatarTreeConstraint } from '../avatar/AvatarTreeConstraint.js';
 import { AvatarWaterConstraint } from '../avatar/AvatarWaterConstraint.js';
+import { isLakeAt } from '../../core/Hydrology.js';
+import { isLakeFrozenAt } from '../../core/Season.js';
 import { VehicleWaterConstraint } from '../avatar/VehicleWaterConstraint.js';
 import { AvatarSwimMode } from '../../core/AvatarSwimming.js';
 import { AvatarWildlifeConstraint } from '../avatar/AvatarWildlifeConstraint.js';
@@ -337,18 +339,28 @@ export const localAvatarMethods = {
     // state; the constraint's defaults (DEFAULT_WORLD_SEED, default slope limit)
     // are what a real session wants.
     _buildAvatarTerrainConstraint() {
-        return new AvatarTerrainConstraint();
+        return new AvatarTerrainConstraint({ frozenAt: (x, z) => this._isLakeFrozenAt(x, z) });
+    },
+
+    // Whether the lake at (x, z) is frozen hard now, on the world's clock, the
+    // one everyone shares (core/Season.js#isLakeFrozenAt()), so everyone
+    // agrees where the ice will hold: never a season this device keeps.
+    _isLakeFrozenAt(x, z) {
+        return isLakeFrozenAt(this._wildlifeClock()) && isLakeAt(this.getWorldSeed(), x, z);
     },
 
     // Derived from the same streamed-in geometry as the movement constraint.
     // With nothing loaded, terrain alone decides support height.
     _buildAvatarStepConstraint() {
+        const ice = new AvatarWaterConstraint({ frozenAt: (x, z) => this._isLakeFrozenAt(x, z) });
         return new AvatarStepConstraint({
             loadedDocuments: this._solidDocuments(),
             getWorldPosition: (documentId) => this._solidWorldPosition(documentId),
             brickRegistry: this._registry,
             // Structure tops must be as walkable as ordinary buildings.
-            structureResolver: this._structureResolver
+            structureResolver: this._structureResolver,
+            // A frozen lake is a floor at its surface.
+            floorAt: (x, z) => ice.iceTopAt(x, z)
         });
     },
 
@@ -359,7 +371,7 @@ export const localAvatarMethods = {
 
     // Water depth is a pure function of (seed, x, z); defaults suffice.
     _buildAvatarWaterConstraint() {
-        return new AvatarWaterConstraint();
+        return new AvatarWaterConstraint({ frozenAt: (x, z) => this._isLakeFrozenAt(x, z) });
     },
 
     // Animals block the avatar where they are now (the session's wildlife
@@ -885,7 +897,13 @@ export const localAvatarMethods = {
             verticalState: this._avatarMovementController ? this._avatarMovementController.verticalState() : null,
             vehicleType: vehicle ? vehicle.type : null,
             braking: this._avatarMovementController ? this._avatarMovementController.movementState().brakingRequested : false,
-            swimMode: this._avatarMovementController ? this._avatarMovementController.swimState().mode : AvatarSwimMode.NONE
+            swimMode: this._avatarMovementController ? this._avatarMovementController.swimState().mode : AvatarSwimMode.NONE,
+            // What crunches or taps underfoot: snow lying (none under a roof)
+            // and a frozen lake.
+            onIce: this._isLakeFrozenAt(current.position.x, current.position.z),
+            snowCover: typeof this.weather === 'function' && !(typeof this.isSheltered === 'function' && this.isSheltered())
+                ? this.weather().snowCover || 0
+                : 0
         };
     },
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 02d4fa6f16b73299 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 9b71eb25ac00047d -->
 # 04 — Veröffentlichen & Remixen
 
 <!-- languages -->
@@ -752,6 +752,14 @@ Jede vierte Woche ist stattdessen eine Remix-Woche (siehe unten).
    wenn Sie anders begonnen haben).
 3. Veröffentlichen Sie es vor Ende der Woche und teilen Sie den Link. Der
    Text des Links nennt die Challenge und ihren Tag, bereit für einen Post.
+
+**Jahreszeiten-Themen.** Manche Themen gehören zu einer Jahreszeit: ein
+Garten im Frühling, ein Sommerfest, ein Erntespeicher im Herbst, eine
+Winterhütte oder ein Eislaufteich. Die Jahreszeiten der Weltansicht wechseln
+viel schneller als die Wochen, darum wartet die Woche nicht auf ihre
+Jahreszeit; stattdessen schlägt die Seite der Challenge vor, diese
+Jahreszeit in der Weltansicht unter **Jahreszeit** zu wählen, um die
+Beiträge so zu sehen, wie sie gemeint sind.
 
 **Remix-Wochen.** Jede vierte Woche, beginnend mit der Woche vom
 2. November 2026, ist eine Remix-Woche (`#remix-20261102`): Statt eines

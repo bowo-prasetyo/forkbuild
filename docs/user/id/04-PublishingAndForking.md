@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 02d4fa6f16b73299 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 9b71eb25ac00047d -->
 # 04 — Penerbitan & Remix
 
 <!-- languages -->
@@ -747,6 +747,13 @@ bawah).
    dengan cara lain).
 3. Terbitkan sebelum minggu berakhir, lalu bagikan tautannya. Teks
    tautannya menyebut tantangan dan tagnya, siap untuk sebuah postingan.
+
+**Tema musiman.** Beberapa tema termasuk dalam satu musim: taman di musim
+semi, pasar malam musim panas, lumbung di musim gugur, pondok musim dingin,
+atau kolam seluncur. Musim di Tampilan Dunia berganti jauh lebih cepat
+daripada minggu, jadi minggu itu tidak menunggu musimnya; sebagai gantinya
+halaman tantangan menyarankan memilih musim itu di **Musim** di Tampilan
+Dunia, untuk melihat karya peserta sebagaimana mestinya.
 
 **Minggu remix.** Setiap minggu keempat, mulai dari minggu 2 November
 2026, adalah minggu remix (`#remix-20261102`): alih-alih sebuah tema,

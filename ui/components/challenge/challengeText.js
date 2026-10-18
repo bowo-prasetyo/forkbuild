@@ -22,6 +22,20 @@ export function challengeThemeTwist(challenge) {
     return isRemixChallenge(challenge) ? '' : t(`challenge.theme.${themeKey(challenge)}.twist`);
 }
 
+// For a theme that belongs to a season, a suggestion to keep World View in
+// it to see the entries as they are meant to be seen; '' otherwise.
+const SEASON_HINT = Object.freeze({
+    SPRING: 'challenge.seasonHint.spring',
+    SUMMER: 'challenge.seasonHint.summer',
+    AUTUMN: 'challenge.seasonHint.autumn',
+    WINTER: 'challenge.seasonHint.winter'
+});
+
+export function challengeSeasonHint(challenge) {
+    const key = challenge && SEASON_HINT[challenge.season];
+    return key ? t(key) : '';
+}
+
 // The week's last day, such as "Sunday, 18 October": the week ends at the
 // next Monday 00:00 UTC, so the day is read in UTC.
 export function challengeLastDayText(challenge) {

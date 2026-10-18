@@ -246,6 +246,15 @@ bottom of the panel, just below **Detailed trees**; **The world's year** follows
 the world again. With **Always day** on, the seasons still turn, under a
 clear sky.
 
+The sun follows the seasons too. In summer it climbs high and the days are
+long; in winter it stays low, casting long shadows, and night comes sooner.
+In the depth of winter the lakes freeze hard enough to walk across (the sea
+and rivers never do); while the ice is still forming, or breaking up at the
+end of winter, it won't hold you. Everyone sees the same ice at the same
+moment, whatever season they keep. Snow crunches underfoot and ice taps, and
+walking through snow your avatar leaves footprints that fade after a minute.
+Only you see your footprints.
+
 ## Sound
 
 **Controls**, at the top right of the view (bottom right on a phone):

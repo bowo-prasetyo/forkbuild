@@ -1,5 +1,6 @@
 import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../../core/TerrainHeightField.js';
 import { isWalkableSlope, DEFAULT_MAX_WALKABLE_SLOPE } from '../../core/TerrainWalkability.js';
+import { LAKE_SURFACE_HEIGHT } from '../../core/Hydrology.js';
 
 // 0.2.77 — the application-layer half of terrain-aware movement,
 // mirroring exactly the split 0.2.42 already established for building
@@ -37,8 +38,14 @@ import { isWalkableSlope, DEFAULT_MAX_WALKABLE_SLOPE } from '../../core/TerrainW
 // to go hunting through real generated terrain for a coordinate steep
 // enough to exercise the walkable/unwalkable boundary.
 export class AvatarTerrainConstraint {
-    constructor({ seed = DEFAULT_WORLD_SEED, maxSlope = DEFAULT_MAX_WALKABLE_SLOPE, heightAt } = {}) {
-        this._heightAt = typeof heightAt === 'function' ? heightAt : (x, z) => terrainHeightAt(seed, x, z);
+    // `frozenAt(x, z)`, when given, says where a lake is frozen hard: there
+    // the avatar walks on the ice, level at the lake's surface, whatever the
+    // bed below does (core/Season.js#lakeIceAt()).
+    constructor({ seed = DEFAULT_WORLD_SEED, maxSlope = DEFAULT_MAX_WALKABLE_SLOPE, heightAt, frozenAt = null } = {}) {
+        const groundAt = typeof heightAt === 'function' ? heightAt : (x, z) => terrainHeightAt(seed, x, z);
+        this._heightAt = typeof frozenAt === 'function'
+            ? (x, z) => (frozenAt(x, z) ? Math.max(groundAt(x, z), LAKE_SURFACE_HEIGHT) : groundAt(x, z))
+            : groundAt;
         this._maxSlope = maxSlope;
     }
 

@@ -50,7 +50,9 @@ const WATER_ROUGHNESS = 0.4; // glossy enough that the sun glints off the ripple
 // renderer/WaterWaveMaterial.js); a tile built without one stays still.
 // `rain` is the { value } of how hard it is raining, 0 to 1, that rings the
 // water (renderer/RainRings.js); a tile built without one stays dry.
-export function buildWaterTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE, waveTime = { value: 0 }, rain = { value: 0 }) {
+// `ice` (renderer/WaterWaveMaterial.js#createLakeIce()), when given, freezes
+// the lakes in the depth of winter.
+export function buildWaterTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE, waveTime = { value: 0 }, rain = { value: 0 }, ice = null) {
     const geometry = new THREE.PlaneGeometry(tileSize, tileSize, TILE_SEGMENTS, TILE_SEGMENTS);
     geometry.rotateX(-Math.PI / 2);
 
@@ -102,7 +104,7 @@ export function buildWaterTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE, w
         transparent: true,
         opacity: WATER_OPACITY,
         depthWrite: false // standard transparent-water convention — avoids self-sorting artifacts between overlapping lake tiles
-    }), waveTime, { rain });
+    }), waveTime, { rain, ice });
     const mesh = new THREE.Mesh(geometry, material);
     // Vertex Y already holds the ABSOLUTE world elevation (sampled at
     // worldX/worldZ above) — the exact same convention
@@ -118,7 +120,7 @@ export function buildWaterTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE, w
         opacity: UNDERSIDE_OPACITY,
         depthWrite: false,
         side: THREE.BackSide
-    }), waveTime, { lit: false }));
+    }), waveTime, { lit: false, ice }));
     mesh.add(underside);
     return mesh;
 }
@@ -128,9 +130,9 @@ export function buildWaterTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE, w
 // any river running through (renderer/RiverTileMesh.js), both moving with
 // the one shared `waveTime` and rung alike by the one shared `rain`. An empty
 // group when the tile is dry.
-export function buildWaterTile(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE, waveTime = { value: 0 }, rain = { value: 0 }) {
+export function buildWaterTile(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE, waveTime = { value: 0 }, rain = { value: 0 }, ice = null) {
     const tile = new THREE.Group();
-    const standing = buildWaterTileMesh(tx, tz, seed, tileSize, waveTime, rain);
+    const standing = buildWaterTileMesh(tx, tz, seed, tileSize, waveTime, rain, ice);
     if (standing.isMesh) tile.add(standing);
     const river = buildRiverTileMesh(tx, tz, seed, tileSize, waveTime, rain);
     if (river) tile.add(river);

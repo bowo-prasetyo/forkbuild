@@ -127,7 +127,9 @@ for (let slot = Math.floor(FROM / STRIKE_SLOT_SECONDS); slot < Math.floor(TO / S
     const clock = { now: strike.at + 0.04 };
     const nav = new WorldNavigationSession({ registry: new CreateBrickRegistryUseCase().execute(), wildlifeClock: () => clock.now });
     const lit = nav.skyLook();
-    const unlit = overcastLook(moonlitLook(skyLookAt(clock.now), moonPhaseAt(clock.now)), weatherAt(clock.now).overcast);
+    // In the season's sky (core/Season.js's sky: the day's length and the sun's path).
+    const sky = nav.season().sky;
+    const unlit = overcastLook(moonlitLook(skyLookAt(clock.now, sky), moonPhaseAt(clock.now, sky)), weatherAt(clock.now).overcast);
     assert(lit.hemisphereIntensity > unlit.hemisphereIntensity, 'the sky flashes when lightning strikes');
     nav.setNoFlashes(true);
     assert(nav.skyLook().hemisphereIntensity === unlit.hemisphereIntensity, 'asking for reduced motion, it doesn\'t flash');

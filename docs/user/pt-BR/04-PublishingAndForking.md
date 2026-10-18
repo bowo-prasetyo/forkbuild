@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 02d4fa6f16b73299 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 9b71eb25ac00047d -->
 # 04 — Publicar e remixar
 
 <!-- languages -->
@@ -727,6 +727,13 @@ abaixo).
    outro jeito).
 3. Publique antes do fim da semana e compartilhe o link. O texto do link
    cita o desafio e a tag, pronto para um post.
+
+**Temas da estação.** Alguns temas pertencem a uma estação: um jardim na
+primavera, uma festa de verão, um celeiro no outono, uma cabana de inverno
+ou um lago de patinação. As estações da Visão do mundo mudam muito mais
+rápido que as semanas, então a semana não espera pela sua estação; em vez
+disso, a página do desafio sugere escolher essa estação em **Estação** na
+Visão do mundo, para ver as participações como devem ser vistas.
 
 **Semanas de remix.** Uma em cada quatro semanas, a partir da semana de
 2 de novembro de 2026, é uma semana de remix (`#remix-20261102`): em vez de

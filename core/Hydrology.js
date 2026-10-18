@@ -263,6 +263,15 @@ export function seaShareAt(seed, x, z) {
     return clamp01(seaBasinAt(seed, x, z) / SEA_BASIN_MIN);
 }
 
+// Where the standing water at (x, z) is a lake rather than the sea: inland
+// of the middle of the shelf. Lakes freeze in the depth of winter
+// (core/Season.js#lakeIceAt()); the sea never does.
+export const LAKE_SEA_SHARE = 0.5;
+
+export function isLakeAt(seed, x, z) {
+    return surfaceCategoryAt(seed, x, z) === SURFACE_CATEGORY.WATER && seaShareAt(seed, x, z) < LAKE_SEA_SHARE;
+}
+
 // Surface color of standing water at (x, z): the lake tone inland,
 // easing to SEA_SURFACE_COLOR across the shelf so a coast never shows a
 // hard color seam. Meaningful only where SURFACE_CATEGORY.WATER holds.

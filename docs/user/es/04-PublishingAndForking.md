@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 02d4fa6f16b73299 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 9b71eb25ac00047d -->
 # 04 — Publicar y remezclar
 
 <!-- languages -->
@@ -743,6 +743,14 @@ el carro de heno.»* Una de cada cuatro semanas es una semana de remezcla
    empezó de otra forma).
 3. Publíquela antes de que acabe la semana y comparta su enlace. El texto
    del enlace nombra el desafío y su etiqueta, listo para una publicación.
+
+**Temas de temporada.** Algunos temas pertenecen a una estación: un jardín
+en primavera, una feria de verano, un granero en otoño, una cabaña de
+invierno o un estanque para patinar. Las estaciones de la Vista del mundo
+cambian mucho más rápido que las semanas, así que la semana no espera a su
+estación; en cambio, la página del desafío sugiere elegir esa estación en
+**Estación** en la Vista del mundo, para ver las participaciones como deben
+verse.
 
 **Semanas de remezcla.** Una de cada cuatro semanas, empezando por la del
 2 de noviembre de 2026, es una semana de remezcla (`#remix-20261102`): en

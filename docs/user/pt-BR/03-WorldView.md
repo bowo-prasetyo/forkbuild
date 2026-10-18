@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 20804c154b4aaf3d -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 3b35ccdb4d528c27 -->
 # 03 — Visão do mundo
 
 <!-- languages -->
@@ -257,6 +257,15 @@ estação no mesmo momento. As coníferas continuam verdes o ano todo. Para mant
 uma estação no seu dispositivo, escolha-a em **Estação**, perto do fim do painel,
 logo abaixo de **Árvores detalhadas**; **O ano do mundo** volta a seguir o mundo.
 Com **Sempre de dia** ligado, as estações continuam mudando, sob um céu limpo.
+
+O sol também acompanha as estações. No verão ele sobe alto e os dias são
+longos; no inverno fica baixo, projeta sombras longas e a noite chega mais
+cedo. No auge do inverno os lagos congelam o bastante para atravessá-los a
+pé (o mar e os rios nunca); enquanto o gelo ainda se forma, ou se quebra no
+fim do inverno, ele não aguenta você. Todos veem o mesmo gelo no mesmo
+momento, seja qual for a estação que mantêm. A neve range sob os pés e o
+gelo estala, e andando na neve seu avatar deixa pegadas que somem depois de
+um minuto. Só você vê suas pegadas.
 
 ## Som
 

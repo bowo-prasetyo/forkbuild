@@ -7734,3 +7734,47 @@ one season on this device.
   don't change with the season; lakes and rivers don't freeze, and snow has no depth (it is a colour on the ground,
   not a layer that footprints could mark); fallen leaves don't lie on the ground; no challenge or achievement uses
   the seasons yet ("your build in winter" would be a natural weekly challenge).
+
+
+## Winter, and the sun through the year (unnumbered, 2026-10-18)
+
+**What the four seasons left out.** After the seasons, the sun still followed the same path all year, lakes stayed
+open in the depth of winter, and snow made no sound and kept no trace. Now the sun climbs high on long summer days and
+hangs low over short winter ones, lakes freeze hard enough to walk across, snow crunches underfoot and keeps your
+footprints for a minute, and the weekly challenge gains themes that belong to a season. Pillar: **Your work is yours,
+and lives in a world** (a winter's long shadows across a build, a walk across a frozen lake to a build on the far
+shore), and, through the seasonal themes, **Every build has a family tree** (the challenge). A newcomer has nothing to
+learn.
+
+- **The sun through the year** (core/DayCycle.js): `seasonalSky()`, `seasonalFraction()`, `EQUINOX_SKY`; the sun's arc
+  12° higher at midsummer and lower at midwinter, the moon's the other way; the day up to 5% of the cycle longer or
+  shorter, dusk and night moving, dawn fixed. Each season look carries its `sky` (core/Season.js#summerAt()); the
+  session hands it to `skyLookAt()`, `skyBodiesAt()` and `moonPhaseAt()`, which with none behave exactly as before.
+- **Frozen lakes** (core/Season.js#lakeIceAt(), `isLakeFrozenAt()`; core/Hydrology.js#isLakeAt()): from the world's
+  clock only, never a kept season, so everyone agrees where the ice holds. The avatar walks on the ice
+  (AvatarWaterConstraint `frozenAt`/`iceTopAt()`, AvatarStepConstraint `floorAt`, AvatarTerrainConstraint `frozenAt`);
+  a swimmer caught under new ice swims on to the shore. renderer/WaterWaveMaterial.js `createLakeIce()`/`setLakeIce()`:
+  flat, still, opaque, pale blue, duller than water, snow lying on it, compiled in only while there is ice.
+- **Snow and ice underfoot** (core/AvatarSoundCues.js `FOOTSTEP_SURFACE.SNOW`/`ICE`, audio/AvatarSoundSynth.js).
+- **Footprints** (core/Footprints.js, renderer/FootprintTrail.js; this device only, nothing sent or stored).
+- **Seasonal challenge themes** (core/BuildChallenge.js): `season` on garden (spring) and harvest (autumn), and four new
+  themes at the end of the list (winter cabin, blossom walk, summer fair, skating pond), so every week already worked
+  out keeps its theme and older copies of the app agree until June 2027, when the first comes round; the challenge page
+  suggests keeping World View in the theme's season (`challengeSeasonHint()`). New messages for the themes and hints in
+  every language.
+- **Cost**: measured in software rendering (SwiftShader, as the bundled site's filmed walk-through draws), a frame costs
+  the same as before within 3%: the sun path is all CPU, the ice and footprints compile in only when there are any.
+- docs/Architecture.md gains **The sun through the year**, **Frozen lakes** and **Snow underfoot and footprints**, and
+  its challenge notes the seasonal themes; the World View guide's seasons section gains them, in every language; its
+  World View pictures are retaken (their winter moment now has a low sun).
+- Tests: `WinterAndSun` (the sun's peak and the day's length by season, the long winter night bounded, the moon riding
+  high in winter, the light never low, no season as before, the phase turning only while the moon is down; lakes
+  freezing on the world's clock for everyone, kept season or not, never the sea; walking out over a frozen lake level
+  and at full speed while open water is swum, and a swimmer under new ice swimming on; snow and ice underfoot;
+  footprints every stride, alternate, only on snowy open ground, fading, drawn and forgotten; the ice compiled in only
+  while there is some; seasonal themes leaving earlier weeks alone), `WinterBrowser` (real WebGL: a frozen lake pale and
+  opaque while the sea stays open, thawed back; footprints pressed in and faded; the shaders compile).
+  `BuildChallenge` now counts 30 themes and checks the weeks before them keep theirs; `Storms` passes the season's sky.
+- Not done: snow has no depth and footprints aren't seen by others; the ice doesn't crack or creak; vehicles can't
+  cross the ice; the seasonal themes wait their turn rather than coming round now.
+

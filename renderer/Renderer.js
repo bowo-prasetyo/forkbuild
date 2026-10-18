@@ -8,6 +8,7 @@ import { TerrainStreamingController } from './TerrainStreamingController.js';
 import { buildTerrainTileMesh } from './TerrainTileMesh.js';
 import { TreeForest, TREE_DETAIL } from './TreeForest.js';
 import { buildWaterTile } from './WaterTileMesh.js';
+import { createLakeIce, setLakeIce } from './WaterWaveMaterial.js';
 import { buildWildlifeTileMesh, updateWildlifeTileMesh } from './WildlifeTileMesh.js';
 import { disposeOwnedTile, disposeInstancedTile } from './TileDisposal.js';
 import { terrainHeightAt as computeTerrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
@@ -25,6 +26,7 @@ import { RainFall } from './RainFall.js';
 import { BRICK_WET, createWetSurfaces, makeWet, setSnowCover, setWetShelter, setWetness } from './WetSurfaces.js';
 import { createSeasonSurfaces, setSeason } from './SeasonalSurfaces.js';
 import { Drift, DRIFT } from './SeasonDrift.js';
+import { FootprintTrail } from './FootprintTrail.js';
 import { SunShadows } from './SunShadows.js';
 
 // Under water the view closes in to a blue-green haze: murkier and greener in a
@@ -105,6 +107,12 @@ export class Renderer {
         this._seasonSurfaces = createSeasonSurfaces();
         this._seasonLook = null;
         this._drifts = { [DRIFT.SNOW]: null, [DRIFT.LEAVES]: null, [DRIFT.PETALS]: null };
+        // The local avatar's footprints in the snow (renderer/FootprintTrail.js),
+        // made the first time one is pressed in.
+        this._footprints = null;
+        // The ice on the lakes (renderer/WaterWaveMaterial.js), shared by every
+        // water tile, with the snow lying on it.
+        this._lakeIce = createLakeIce(this._wetSurfaces.snowCover);
         // How hard it rains, 0 to 1: every water tile's rain rings read it
         // (renderer/RainRings.js).
         this._rainLevel = { value: 0 };
@@ -174,7 +182,7 @@ export class Renderer {
         this._waterWaveTime = { value: 0 };
         this._waterStreaming = new TerrainStreamingController(
             this._sceneManager,
-            (tx, tz) => buildWaterTile(tx, tz, DEFAULT_WORLD_SEED, TERRAIN_TILE_SIZE, this._waterWaveTime, this._rainLevel),
+            (tx, tz) => buildWaterTile(tx, tz, DEFAULT_WORLD_SEED, TERRAIN_TILE_SIZE, this._waterWaveTime, this._rainLevel, this._lakeIce),
             { disposeTile: disposeOwnedTile }
         );
         this._waterStreaming.update(
@@ -360,6 +368,35 @@ export class Renderer {
 
     get seasonLook() {
         return this._seasonLook;
+    }
+
+    // Freezes the lakes as far as `ice` says (core/Season.js#lakeIceAt()), 0
+    // (open water) to 1 (frozen hard).
+    setLakeIce(ice) {
+        setLakeIce(this._lakeIce, ice);
+    }
+
+    get lakeIce() {
+        return this._lakeIce.ice.value;
+    }
+
+    // Presses footprints (core/Footprints.js) into the snow, made at `now`
+    // on the world's clock.
+    addFootprints(prints) {
+        if (!Array.isArray(prints) || prints.length === 0) return;
+        if (!this._footprints) {
+            this._footprints = new FootprintTrail(this._sceneManager, { heightAt: (x, z) => this.terrainHeightAt(x, z) });
+        }
+        for (const print of prints) this._footprints.add(print);
+    }
+
+    // Fades the footprints for `now` on the world's clock.
+    updateFootprints(now) {
+        if (this._footprints) this._footprints.update(now, this._wetSurfaces.snowCover.value);
+    }
+
+    get footprintCount() {
+        return this._footprints ? this._footprints.count : 0;
     }
 
     // How much snow lies here, 0 to 1, as last set by setWeather().
@@ -549,6 +586,7 @@ export class Renderer {
         for (const drift of Object.values(this._drifts)) {
             if (drift) drift.dispose();
         }
+        if (this._footprints) this._footprints.dispose();
         window.removeEventListener('resize', this._onResize);
         this._cameraController.dispose();
         this._container.removeChild(this._webglRenderer.domElement);

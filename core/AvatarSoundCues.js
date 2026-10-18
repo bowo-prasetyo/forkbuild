@@ -17,8 +17,14 @@ export const FOOTSTEP_SURFACE = Object.freeze({
     SAND: 'sand',
     STONE: 'stone',
     WATER: 'water',
-    STRUCTURE: 'structure'
+    STRUCTURE: 'structure',
+    SNOW: 'snow',
+    ICE: 'ice'
 });
+
+// Snow lying at least this deep (core/Weather.js's snowCover) crunches
+// underfoot on open ground.
+export const SNOW_FOOTSTEP_COVER = 0.35;
 
 export const AVATAR_SOUND_CUE = Object.freeze({
     FOOTSTEP: 'footstep',
@@ -52,13 +58,21 @@ const TELEPORT_DISTANCE = 10;
 const MIN_LANDING_AIRBORNE_SECONDS = 0.15;
 const HARD_LANDING_AIRBORNE_SECONDS = 1;
 
-export function footstepSurfaceAt(seed, x, z, { onStructure = false } = {}) {
+// `onIce`: standing on a frozen lake (core/Season.js#lakeIceAt()); `snowCover`:
+// how much snow lies here (none under a roof).
+export function footstepSurfaceAt(seed, x, z, { onStructure = false, onIce = false, snowCover = 0 } = {}) {
     if (onStructure) {
         return FOOTSTEP_SURFACE.STRUCTURE;
+    }
+    if (onIce) {
+        return FOOTSTEP_SURFACE.ICE;
     }
     const zone = ecologyZoneAt(seed, x, z);
     if (zone === ECOLOGY_ZONE.WATER || isRiverAt(seed, x, z)) {
         return FOOTSTEP_SURFACE.WATER;
+    }
+    if (snowCover >= SNOW_FOOTSTEP_COVER) {
+        return FOOTSTEP_SURFACE.SNOW;
     }
     switch (zone) {
         case ECOLOGY_ZONE.BEACH:
@@ -101,7 +115,7 @@ function engineFor(vehicleType, speed) {
 }
 
 // `observation` is { position, animation, verticalState, vehicleType,
-// braking } for the local avatar, or null without one. Returns the next state, the one-off
+// braking, swimMode, onIce, snowCover } for the local avatar, or null without one. Returns the next state, the one-off
 // cues to play this frame, and the engine to hear (null on foot).
 export function advanceAvatarSound(state, observation, deltaSeconds, seed) {
     if (!observation || !observation.position) {
@@ -157,7 +171,9 @@ export function advanceAvatarSound(state, observation, deltaSeconds, seed) {
     }
     const swimming = observation.swimMode === AvatarSwimMode.SURFACE;
     const surface = () => (swimming ? FOOTSTEP_SURFACE.WATER : footstepSurfaceAt(seed, position.x, position.z, {
-        onStructure: position.y > ON_STRUCTURE_HEIGHT
+        onStructure: !observation.onIce && position.y > ON_STRUCTURE_HEIGHT,
+        onIce: Boolean(observation.onIce),
+        snowCover: Number.isFinite(observation.snowCover) ? observation.snowCover : 0
     }));
     const wasSupported = state.verticalState === AvatarVerticalState.SUPPORTED;
     const isSupported = verticalState === AvatarVerticalState.SUPPORTED;
