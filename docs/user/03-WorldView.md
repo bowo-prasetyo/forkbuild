@@ -182,6 +182,16 @@ across them, and fade again at dawn. The whole starry sky turns slowly round
 a point high in the north, so the stars rise in the east and set in the west
 with the moon, and everyone sees the same stars at the same moment.
 
+The moon goes through its phases, one a night: from a dark new moon through
+a thin crescent, a half moon and a gibbous moon to a full moon, and back
+again, every eight days of World View (a little over five hours). A waxing
+moon is lit on its western side, a waning one on its eastern side. The phase
+changes the night too: under a full moon the night is a little brighter and
+shadows are crisper; around a new moon the light is softer, the sky a deeper
+blue, and the stars and the Milky Way shine their brightest. Like the rest of
+the sky, everyone sees the same moon at the same moment, and it's never so
+dark that builds are hard to see.
+
 Clouds come and go, the same for everyone at the same moment. Most of the
 time a few white clouds drift over; now and then the sky clouds over, and
 sometimes it turns grey and overcast, with softer light and fainter shadows.

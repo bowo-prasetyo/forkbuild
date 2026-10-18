@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 9ef1584b89ce019e -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 8c2cb52a55e5dbab -->
 # 03 — Weltansicht
 
 <!-- languages -->
@@ -199,6 +199,17 @@ Milchstraße quer darüber, und verblassen in der Morgendämmerung wieder. Der
 ganze Sternenhimmel dreht sich langsam um einen Punkt hoch im Norden, sodass
 die Sterne mit dem Mond im Osten aufgehen und im Westen untergehen, und alle
 sehen im selben Moment dieselben Sterne.
+
+Der Mond durchläuft seine Phasen, eine pro Nacht: vom dunklen Neumond über
+eine schmale Sichel, den Halbmond und den dreiviertelvollen Mond bis zum
+Vollmond und wieder zurück, alle acht Tage der Weltansicht (etwas mehr als
+fünf Stunden). Ein zunehmender Mond ist auf seiner westlichen Seite
+beleuchtet, ein abnehmender auf seiner östlichen. Die Phase verändert auch
+die Nacht: Bei Vollmond ist die Nacht etwas heller und die Schatten sind
+schärfer; um Neumond ist das Licht weicher, der Himmel tiefer blau, und die
+Sterne und die Milchstraße leuchten am hellsten. Wie den übrigen Himmel sehen
+alle im selben Moment denselben Mond, und es wird nie so dunkel, dass
+Bauwerke schwer zu erkennen sind.
 
 Wolken kommen und gehen, für alle im selben Moment dieselben. Meistens
 ziehen ein paar weiße Wolken vorüber; ab und zu bewölkt sich der Himmel, und

@@ -1514,6 +1514,30 @@ it, and under water neither shows. Always day (and no clock) is `DAY_SKY_BODIES`
 through the morning, low in the south-east. A renderer never given sky bodies (the Editor, thumbnails) draws neither
 and keeps renderer/Lights.js's fixed daytime direction, the one it always had.
 
+**The moon's phases.** The moon goes from new to full and back in `MOON_CYCLE_DAYS` (8) of World View's days, one
+of the eight `MOON_PHASES` a night (new, waxing crescent, first quarter, waxing gibbous, full, waning gibbous, third
+quarter, waning crescent), each with its phase angle (0 new, pi full) and the share of its disc lit,
+(1 - cos angle) / 2. `moonPhaseAt(seconds)` works the night out from the clock alone, from the same day fraction the
+moon's arc is, so the phase turns on the frame the moon rises and never while it is up. The moon still crosses the
+whole night whatever its phase, unlike the real one (up by day around new moon): the night has to stay moonlit, so
+only how it looks and lights changes. `skyBodiesAt()` carries the night's `moonPhase` and `moonLitFrom`, the
+direction its light falls on the moon from: where the sun would stand for that phase, the phase angle further west
+along the same arc, so a waxing moon is lit on its western side and a waning one on its east (the real sun, set or
+rising, stands elsewhere; only in the few minutes both are up at dusk and dawn could the two be compared).
+`renderer/SkyBodies.js` faces the moon's disc straight at the viewer, upright as the camera is, and shades it with a
+small `ShaderMaterial`: each point stands for a point on a ball, lit where it faces `moonLitFrom`, with a soft
+terminator, a few soft darker seas and a little limb darkening; the dark side is the sky's colour 7% of the way
+towards a pale earthshine (blended as the colours are written), so a new moon is barely there but still hides the
+stars behind it, and a faint halo grows with the share lit. `moonlitLook(look, phase)` relights the night: NIGHT is a
+half-lit moon's; towards new, the moon's direct light falls to 30% of NIGHT's and all it loses goes to the fill from
+above, so the night is exactly as bright, only flatter, with fainter shadows, under a deeper sky; towards full, it
+rises to 125%, silver, with a little more fill and a paler sky. It comes in only from dusk's glow (0.6) to night's,
+so the sun at dusk and dawn and the whole day are untouched, and the same night gives back the same frozen look.
+The session applies it before overcast (`overcastLook(moonlitLook(skyLookAt(now), moonPhaseAt(now)), …)`).
+renderer/StarSky.js dims the stars by up to 45% and the Milky Way by up to 75% with the share of the moon lit while
+it is up, so a new moon's night shows them as they always were and a full moon's washes them out. Always day has
+no moon; the Editor and thumbnails never draw one.
+
 **The stars and the Milky Way.** core/StarField.js makes, from a fixed seed, 1500 stars spread evenly over the sphere
 (many faint, few bright, a few blue-white or warm) and 1600 fainter ones crowded in the Milky Way's band, plus the
 band's glow as a ribbon round its great circle, all in the sky's own frame. That frame turns once a day

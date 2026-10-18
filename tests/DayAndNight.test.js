@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { DAY, NIGHT, DAY_CYCLE_SECONDS, DAY_SKY_BODIES, dayFractionAt, skyBodiesAt, skyBodiesAtFraction, skyLookAt, skyLookAtFraction } from '../core/DayCycle.js';
+import { DAY, NIGHT, DAY_CYCLE_SECONDS, DAY_SKY_BODIES, dayFractionAt, moonPhaseAt, moonlitLook, skyBodiesAt, skyBodiesAtFraction, skyLookAt, skyLookAtFraction } from '../core/DayCycle.js';
 import { NIGHT_GLOW, WINDOW_LIGHT, nightGlowColor } from '../core/NightGlow.js';
 import { ambientMixAt, ambientMixAtNight, AMBIENT_LAYER } from '../core/AmbientSoundscape.js';
 import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
@@ -103,7 +103,7 @@ const brightness = (look) => look.hemisphereIntensity + look.sunIntensity;
         }
         previous = bodies;
     }
-    assert(JSON.stringify(skyBodiesAt(at(0.3) + DAY_CYCLE_SECONDS * 7)) === JSON.stringify(skyBodiesAtFraction(0.3)),
+    assert(JSON.stringify(skyBodiesAt(at(0.3) + DAY_CYCLE_SECONDS * 7)) === JSON.stringify(skyBodiesAtFraction(0.3, moonPhaseAt(at(0.3) + DAY_CYCLE_SECONDS * 7))),
         'the sun and the moon follow the clock like the sky');
     assert(skyBodiesAt(NaN) === DAY_SKY_BODIES && DAY_SKY_BODIES.moon === null && compass(DAY_SKY_BODIES.sun) === 'SE'
         && DAY_SKY_BODIES.sun.y > 0.2 && DAY_SKY_BODIES.sun.y < 0.5 && DAY_SKY_BODIES.light.y >= 0.25,
@@ -121,7 +121,7 @@ const brightness = (look) => look.hemisphereIntensity + look.sunIntensity;
     camera.position.set(5, 2, -3);
     camera.lookAt(0, 30, 50);
     bodies.update(camera);
-    assert(added.length === 3 && added.every((o) => o.visible === false), 'nothing shows until it is told where the sun is');
+    assert(added.length === 4 && added.every((o) => o.visible === false), 'nothing shows until it is told where the sun is');
     const midday = skyBodiesAtFraction(0.34);
     bodies.set(midday);
     bodies.update(camera);
@@ -342,7 +342,8 @@ const brightness = (look) => look.hemisphereIntensity + look.sunIntensity;
     assert(skies.length === 1 && skies[0].sun && skies[0].moon === null, 'and the sun in it');
     clock.now = at(0.8);
     for (const frame of frames) frame(1 / 60);
-    assert(looks[looks.length - 1] === NIGHT && nav.nightLevel() === 1, 'each frame follows the clock into the night');
+    const tonight = moonlitLook(NIGHT, moonPhaseAt(clock.now));
+    assert(looks[looks.length - 1] === tonight && nav.nightLevel() === 1, 'each frame follows the clock into the night, by its moon');
     assert(skies[skies.length - 1].moon && skies[skies.length - 1].sun === null, 'with the moon up and the sun down');
     assert(nav.setAlwaysDay(true) === true && looks[looks.length - 1] === DAY && nav.nightLevel() === 0,
         'Always day brings the day back at once');
@@ -350,7 +351,7 @@ const brightness = (look) => look.hemisphereIntensity + look.sunIntensity;
     for (const frame of frames) frame(1 / 60);
     assert(looks[looks.length - 1] === DAY, 'and keeps it, whatever the clock');
     nav.setAlwaysDay(false);
-    assert(looks[looks.length - 1] === NIGHT, 'turning it off returns to the world\'s own time');
+    assert(looks[looks.length - 1] === tonight, 'turning it off returns to the world\'s own time');
     nav._session.dispose = () => {};
     nav.dispose();
     assert(frames.size === 0, 'closing World View stops following the clock');

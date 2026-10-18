@@ -147,7 +147,7 @@ export function skyBodiesAt(seconds) {
     if (!Number.isFinite(seconds)) {
         return DAY_SKY_BODIES;
     }
-    return skyBodiesAtFraction(dayFractionAt(seconds));
+    return skyBodiesAtFraction(dayFractionAt(seconds), moonPhaseAt(seconds));
 }
 
 // { sun, moon, light, lightStrength }: unit directions from the viewer, sun
@@ -160,9 +160,13 @@ export function skyBodiesAt(seconds) {
 // back, so shadows fade out and in rather than swinging across the ground
 // (the rest of the light is spread as fill instead; renderer/Lights.js).
 // skyTurn is how far the starry sky has turned round its pole since dawn,
-// once round a day, in radians (core/StarField.js).
-export function skyBodiesAtFraction(fraction) {
+// once round a day, in radians (core/StarField.js). moonPhase is the night's
+// phase (MOON_PHASES; a full moon unless `phase` says otherwise), and
+// moonLitFrom the unit direction its light falls on the moon from, where the
+// sun would stand for that phase, null while the moon is down.
+export function skyBodiesAtFraction(fraction, phase = FULL_MOON) {
     const f = Number.isFinite(fraction) ? fraction - Math.floor(fraction) : KEYFRAMES[1].at;
+    const moonPhase = phase && Number.isFinite(phase.angle) ? phase : FULL_MOON;
     const sun = bodyOnArc(SUN_ARC, f);
     const moon = bodyOnArc(MOON_ARC, f);
     const up = [sun, moon].filter(Boolean);
@@ -175,7 +179,9 @@ export function skyBodiesAtFraction(fraction) {
         moon: moon ? arcDirection(moon.angle) : null,
         light: lightDirection(arcDirection(lightAngle)),
         lightStrength: handoverStrength(sun, moon),
-        skyTurn: f * Math.PI * 2
+        skyTurn: f * Math.PI * 2,
+        moonPhase,
+        moonLitFrom: moon ? arcDirection(moon.angle + moonPhase.angle) : null
     });
 }
 
@@ -218,6 +224,97 @@ function lightDirection(dir) {
     const flat = Math.hypot(dir.x, dir.z);
     const across = Math.sqrt(1 - MIN_LIGHT_HEIGHT * MIN_LIGHT_HEIGHT) / flat;
     return Object.freeze({ x: dir.x * across, y: MIN_LIGHT_HEIGHT, z: dir.z * across });
+}
+
+// The moon's phases. The moon goes from new to full and back in
+// MOON_CYCLE_DAYS of World View's days, one phase a night, so a visit of an
+// hour or two sees it change and a player coming back sees another. Each
+// night's phase is set from the clock alone as the moon rises (MOON_ARC.rise)
+// and holds until the next moonrise, so it never changes while the moon is up.
+//
+// The moon still crosses the whole night, whatever its phase (unlike the real
+// one, which is up by day around new moon): the night must stay moonlit, so
+// only how much of it is lit changes. Its lit side faces where the sun would
+// stand for that phase: angle (0 new, pi full) further west along the same
+// arc, so a waxing moon is lit on its western side, a waning one on its east.
+// illumination is the share of the disc lit, (1 - cos angle) / 2.
+export const MOON_CYCLE_DAYS = 8;
+
+export const MOON_PHASES = Object.freeze([
+    'newMoon',
+    'waxingCrescent',
+    'firstQuarter',
+    'waxingGibbous',
+    'fullMoon',
+    'waningGibbous',
+    'thirdQuarter',
+    'waningCrescent'
+].map((name, index) => {
+    const angle = (index / MOON_CYCLE_DAYS) * Math.PI * 2;
+    return Object.freeze({
+        index,
+        name,
+        angle,
+        // Rounded so a quarter is exactly half lit.
+        illumination: Math.round(((1 - Math.cos(angle)) / 2) * 1e9) / 1e9,
+        waxing: index > 0 && index < MOON_CYCLE_DAYS / 2
+    });
+}));
+
+export const FULL_MOON = MOON_PHASES[MOON_CYCLE_DAYS / 2];
+
+// The moon's phase on the night under way at `seconds` (Unix time): the one
+// it took at the last moonrise. With no clock, a full moon.
+export function moonPhaseAt(seconds) {
+    if (!Number.isFinite(seconds)) {
+        return FULL_MOON;
+    }
+    // From the same fraction of the day the moon's arc is worked out from, so
+    // the phase turns on the very frame the moon rises.
+    const fraction = dayFractionAt(seconds);
+    const day = Math.round(seconds / DAY_CYCLE_SECONDS - fraction);
+    const night = fraction >= MOON_ARC.rise ? day : day - 1;
+    return MOON_PHASES[((night % MOON_CYCLE_DAYS) + MOON_CYCLE_DAYS) % MOON_CYCLE_DAYS];
+}
+
+// How a night looks under `phase`'s moon. NIGHT is a half-lit moon's (a
+// first or third quarter): towards new, less of the moon's light comes
+// straight from it, and what it doesn't give goes to the fill from above
+// instead, so the night is never darker than NIGHT (builds stay readable),
+// only flatter, with fainter shadows and a deeper blue sky; towards full, the
+// moonlight grows brighter and more silver, and the sky a little paler. Only full night is touched: from dusk's
+// glow (0.6) to night's (1) it comes in, so the sun at dusk and dawn is as it
+// was, and day is untouched. The same look comes back for the same night.
+const MOONLIGHT_FROM_GLOW = DUSK.glow;
+const NEW_MOON_LIGHT = 0.3;
+const FULL_MOON_LIGHT = 1.25;
+const FULL_MOON_FILL = 0.05;
+const NEW_MOON_SKY = 0x111c38;
+const FULL_MOON_SKY = 0x22345c;
+const FULL_MOON_COLOR = 0xc4d2ff;
+
+let lastMoonlit = null;
+
+export function moonlitLook(look, phase = FULL_MOON) {
+    const weight = look ? Math.min(Math.max((look.glow - MOONLIGHT_FROM_GLOW) / (1 - MOONLIGHT_FROM_GLOW), 0), 1) : 0;
+    if (weight === 0 || !phase) return look;
+    if (lastMoonlit && lastMoonlit.look === look && lastMoonlit.phase === phase) return lastMoonlit.result;
+    const lit = phase.illumination;
+    // From new (0) to half lit (1), and from half lit (0) to full (1).
+    const waxing = Math.min(lit * 2, 1);
+    const fuller = Math.max(lit * 2 - 1, 0);
+    const light = lit < 0.5 ? lerp(NEW_MOON_LIGHT, 1, waxing) : lerp(1, FULL_MOON_LIGHT, fuller);
+    const sunIntensity = look.sunIntensity * lerp(1, light, weight);
+    const sky = lit < 0.5 ? blendColor(NEW_MOON_SKY, look.sky, waxing) : blendColor(look.sky, FULL_MOON_SKY, fuller);
+    const result = Object.freeze({
+        ...look,
+        sky: blendColor(look.sky, sky, weight),
+        hemisphereIntensity: look.hemisphereIntensity + Math.max(look.sunIntensity - sunIntensity, 0) + FULL_MOON_FILL * fuller * weight,
+        sunColor: blendColor(look.sunColor, FULL_MOON_COLOR, fuller * weight),
+        sunIntensity
+    });
+    lastMoonlit = { look, phase, result };
+    return result;
 }
 
 // Always day's sun and light (see ALWAYS_DAY_FRACTION).

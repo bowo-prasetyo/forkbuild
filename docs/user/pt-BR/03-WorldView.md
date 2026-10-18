@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 9ef1584b89ce019e -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 8c2cb52a55e5dbab -->
 # 03 — Visão do mundo
 
 <!-- languages -->
@@ -193,6 +193,16 @@ Láctea atravessando o céu, e somem de novo ao amanhecer. Todo o céu estrelado
 gira devagar em torno de um ponto alto no norte, então as estrelas nascem no
 leste e se põem no oeste junto com a lua, e todos veem as mesmas estrelas no
 mesmo momento.
+
+A lua passa por suas fases, uma por noite: de uma lua nova escura a um fino
+crescente, uma meia-lua e uma lua gibosa até a lua cheia, e de volta, a cada
+oito dias da Visão do mundo (pouco mais de cinco horas). Uma lua crescente é
+iluminada do lado oeste, e uma minguante do lado leste. A fase também muda a
+noite: na lua cheia a noite fica um pouco mais clara e as sombras mais
+nítidas; perto da lua nova a luz é mais suave, o céu de um azul mais
+profundo, e as estrelas e a Via Láctea brilham mais. Como o resto do céu,
+todos veem a mesma lua no mesmo momento, e nunca fica tão escuro a ponto de
+as construções ficarem difíceis de ver.
 
 As nuvens vêm e vão, as mesmas para todos no mesmo momento. Quase sempre
 passam algumas nuvens brancas; de vez em quando o céu fica nublado, e às

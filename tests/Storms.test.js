@@ -3,7 +3,7 @@ import {
     storminessAt, strikeInSlot, lightningAt, lightningLook, thunderBetween
 } from '../core/Storms.js';
 import { WEATHER_SPELL_SECONDS, overcastLook, rainAt, spellRain, weatherAt } from '../core/Weather.js';
-import { DAY, NIGHT, skyLookAt } from '../core/DayCycle.js';
+import { DAY, NIGHT, moonPhaseAt, moonlitLook, skyLookAt } from '../core/DayCycle.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { WorldSoundscapeService } from '../application/world/WorldSoundscapeService.js';
@@ -127,7 +127,7 @@ for (let slot = Math.floor(FROM / STRIKE_SLOT_SECONDS); slot < Math.floor(TO / S
     const clock = { now: strike.at + 0.04 };
     const nav = new WorldNavigationSession({ registry: new CreateBrickRegistryUseCase().execute(), wildlifeClock: () => clock.now });
     const lit = nav.skyLook();
-    const unlit = overcastLook(skyLookAt(clock.now), weatherAt(clock.now).overcast);
+    const unlit = overcastLook(moonlitLook(skyLookAt(clock.now), moonPhaseAt(clock.now)), weatherAt(clock.now).overcast);
     assert(lit.hemisphereIntensity > unlit.hemisphereIntensity, 'the sky flashes when lightning strikes');
     nav.setNoFlashes(true);
     assert(nav.skyLook().hemisphereIntensity === unlit.hemisphereIntensity, 'asking for reduced motion, it doesn\'t flash');
