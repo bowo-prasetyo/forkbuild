@@ -1818,6 +1818,8 @@ export default Object.freeze({
     'worldView.alwaysDayHint': 'Hier wechselt der Himmel alle {minutes} Minuten von Tag zu Nacht und zurück, Wolken kommen und gehen, und im Dunkeln leuchten Fenster und Laternen. „Immer Tag“ hält ihn klar und sonnig. Wird auf diesem Gerät gespeichert.',
     'worldView.shadows': 'Schatten',
     'worldView.shadowsHint': 'Sonne und Mond werfen in Ihrer Nähe Schatten. Auf Smartphones sind sie zunächst aus, damit die Weltansicht flüssig bleibt. Wird auf diesem Gerät gespeichert.',
+    'worldView.detailedTrees': 'Detaillierte Bäume',
+    'worldView.detailedTreesHint': 'Bäume in Ihrer Nähe zeigen jeden Ast und jedes Blatt, wiegen sich im Wind und werfen belaubte Schatten; weiter weg sind sie einfachere Formen. Auf Smartphones sind sie zunächst aus, damit die Weltansicht flüssig bleibt. Wird auf diesem Gerät gespeichert.',
     'worldView.askTheResidentNextTo': 'Den Bewohner neben Ihnen fragen, was es in der Umgebung gibt (T)',
     'worldView.avatar': 'Avatar',
     'worldView.showMyAvatar': 'Meinen Avatar zeigen',

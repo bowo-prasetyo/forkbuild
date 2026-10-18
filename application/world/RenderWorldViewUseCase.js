@@ -1,4 +1,5 @@
 import { Renderer } from '../../renderer/Renderer.js';
+import { TREE_DETAIL } from '../../renderer/TreeForest.js';
 import { WorldRenderer } from '../../renderer/WorldRenderer.js';
 import { ClaimedBuildGhostRenderer } from '../../renderer/ClaimedBuildGhostRenderer.js';
 import { CutawayClipping } from '../../renderer/CutawayClipping.js';
@@ -828,6 +829,10 @@ export class RenderWorldViewUseCase {
             // Whether the sun and the moon cast shadows (renderer/SunShadows.js).
             setShadowsEnabled: (enabled) => {
                 renderer.setShadowsEnabled(enabled);
+            },
+            // Whether nearby trees show every branch and leaf (renderer/TreeForest.js).
+            setTreesDetailed: (detailed) => {
+                renderer.setTreeDetail(detailed ? TREE_DETAIL.HIGH : TREE_DETAIL.LOW);
             },
             // A pure client rendering preference, exactly like
             // setLocalAvatarVisible — never touches presence sync or

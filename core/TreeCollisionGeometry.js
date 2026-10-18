@@ -19,14 +19,13 @@
 // back to the identical upstream computation.
 //
 // Deliberately a CIRCLE around the trunk, not the full visual canopy —
-// renderer/NaturalFeatureTileMesh.js's own CANOPY_RADIUS (0.85) describes
-// how wide a tree looks, not how much space an avatar's body should
-// actually be blocked from occupying; a canopy-sized hitbox would read as
-// the avatar bumping into invisible walls well outside a tree's own
-// trunk. TREE_TRUNK_COLLISION_RADIUS is chosen to roughly match that same
-// file's own TRUNK_RADIUS_BOTTOM (0.14), scaled up to a hitbox an avatar
-// can actually feel brushing against, WITHOUT importing that renderer
-// constant directly — the same "roughly match, never import, deliberately
+// a crown (core/TreeForm.js) describes how wide a tree looks, not how
+// much space an avatar's body should actually be blocked from occupying;
+// a canopy-sized hitbox would read as the avatar bumping into invisible
+// walls well outside a tree's own trunk. TREE_TRUNK_COLLISION_RADIUS
+// roughly matches the trunks core/TreeForm.js grows (0.11 to 0.27 at
+// the base), a hitbox an avatar can actually feel brushing against,
+// WITHOUT importing those values — the same "roughly match, never import, deliberately
 // allowed to diverge" precedent core/AvatarCollision.js's own
 // AVATAR_COLLISION_RADIUS header already established for the avatar's own
 // hitbox versus renderer/AvatarRenderer.js's visual proportions. Rendering
@@ -35,8 +34,7 @@
 //
 // A returned circle's radius scales with the tree's own `feature.scale`
 // ([0.7, 1.3), core/NaturalFeatureField.js) by the same uniform factor
-// renderer/NaturalFeatureTileMesh.js already applies to its instance
-// transform — so a visually larger tree also occupies a proportionally
+// renderer/TreeForest.js applies to its instance transform — so a visually larger tree also occupies a proportionally
 // larger physical footprint, and the collision world never disagrees with
 // what the rendered world actually shows standing at that position.
 
@@ -62,11 +60,8 @@ export const COLLISION_SHAPE = Object.freeze({
     CIRCLE: 'CIRCLE'
 });
 
-// Roughly matches renderer/NaturalFeatureTileMesh.js's own
-// TRUNK_RADIUS_BOTTOM (0.14), scaled up for a hitbox an avatar can
-// actually feel — see this file's own header for why this is a
-// deliberately independent constant, never an import of that renderer
-// value.
+// Roughly matches the trunks core/TreeForm.js grows — see this file's
+// own header for why this is a deliberately independent constant.
 export const TREE_TRUNK_COLLISION_RADIUS = 0.3;
 
 // The one per-tree entry point: turns a single natural-feature record
@@ -94,7 +89,7 @@ export function treeCollisionCircleFor(feature) {
 // COLLISION GEOMETRY for the identical region with the identical
 // arguments, never a second coordinate convention to keep in sync. Filters
 // to FEATURE_TYPE.TREE explicitly (matching renderer/
-// NaturalFeatureTileMesh.js's own identical filter) so a future second
+// TreeForest.js's own identical filter) so a future second
 // FEATURE_TYPE never silently gains a circular tree hitbox of its own.
 //
 // This performs no detection and no response — it returns WHAT collision

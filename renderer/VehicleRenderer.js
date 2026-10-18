@@ -18,9 +18,8 @@ import { castShadows } from './ShadowRoles.js';
 // DELIBERATELY A PROCEDURAL PLACEHOLDER, NOT A REAL ASSET — matching this
 // milestone's own brief. Two torus wheels, three simple frame members, a
 // seat post, and a handlebar: legible as "a bicycle" at a glance, built
-// from the same low-poly primitives renderer/NaturalFeatureTileMesh.js's
-// own trees and renderer/AvatarRenderer.js's own avatar bodies already
-// use, never a loaded mesh/texture of any kind. Which concrete shape a
+// from the same low-poly primitives renderer/AvatarRenderer.js's own
+// avatar bodies already use, never a loaded mesh/texture of any kind. Which concrete shape a
 // real bicycle asset should eventually use is explicitly NOT decided
 // here — see this milestone's own roadmap entry for why that decision
 // stays downstream.

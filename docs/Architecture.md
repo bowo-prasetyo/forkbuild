@@ -1450,7 +1450,8 @@ wildlife. Each is a pure function of `(seed, x, z)`:
 - `TerrainSurface`: what it looks like
 - `TerrainEcology`: which zone
 - `Hydrology`: lakes and rivers; `RiverFlow`: a river's current, rapids, and the water in its bed
-- `NaturalFeatureField`: trees, with CONIFER, BROADLEAF or SCRUB chosen by moisture
+- `NaturalFeatureField`: trees, with CONIFER, BROADLEAF or SCRUB chosen by moisture; `TreeForm` is what each species
+  looks like (below)
 - `WildlifeField`: animals, where they were placed (`WildlifeMotion` adds time: where they have wandered to)
 - `UnderwaterLifeField`: seaweed rooted on lake and sea beds, and fish schools circling where the water is deep over
   their whole circle (`fishPoseAt()` adds time)
@@ -1630,6 +1631,37 @@ moon do neither. Off, as in the Editor and thumbnails, these flags draw nothing.
 loses to the hemisphere fill, so shadows fade out and in instead of swinging across the ground. Shadows are this
 device's choice (application/settings/WorldViewShadowStore.js, `world-view-shadows`): on by default unless the main
 pointer is coarse (phones, tablets), decided in ui/main.js. Turning them on or off rebuilds the lit materials once.
+
+**Trees.** Each species has four forms grown from a fixed seed (core/TreeForm.js): a conifer is a straight trunk with
+whorls of drooping branches under sprays of needles; a broadleaf a trunk forking into limbs and twigs under clusters
+of leaves; scrub a few crooked stems parting low. A form is branches (polylines with radii and `flex`, how far each
+point sways, measured along the wood from the root so a branch sways exactly as its parent does where it joins) and
+leaf clusters. Every tree `NaturalFeatureField` places wears one form (`treeShapeOf()`, from its position): a little
+taller or wider than the form, leaned up to about 3°, its leaves and bark a shade lighter or darker. Trunks stay
+inside `TREE_TRUNK_COLLISION_RADIUS`; crowns keep clear of `SETTLEMENT_TREE_CLEARANCE`. renderer/TreeGeometry.js
+builds each form three ways: **near** (every branch as a tapered tube, leaves as crossed cards cut out by a leaf
+texture, their normals pointing out of the crown so cards shade as a rounded mass), **mid** (trunk and main limbs
+under a few solid lumps, tiers of cones for a conifer) and **far** (one trunk under one crown shape). Textures are
+painted pixel by pixel from a seed (renderer/TreeMaterials.js): nothing is downloaded. renderer/TreeForest.js draws
+every tree from one pool: tiles stream on the ground's grid as before, but a tile only adds its trees to the pool,
+which keeps one InstancedMesh per form, part and way of drawing (at most 96 draw calls, 40 to 80 in a forest).
+Which level a tree gets is decided on the CPU by its distance from the camera, re-sorted only after the camera moves
+2 m or turns 8°. Only trees inside a slightly widened view get their level; of the rest, those close enough to shade
+the view are drawn as the solid mid shapes, which cast shadows, and the others are skipped. HIGH detail draws near
+trees within 45 m (the reach of the shadows) and mid within 100 m; LOW draws no leaf cards, which phones feel most as
+overdraw, only mid shapes within 40 m and far beyond. Only trees close by cast shadows (near ones, the mid shapes
+standing in for them out of view, and under LOW the mid shapes within 40 m): the shadow pass draws every caster, so
+casting mid trees out to 100 m cost it nearly as much as the near ones, for shadows beyond the shadow map. The
+shadow pass uses each part's own swaying depth material, and leaf cards are cut out there too, so leaves in view cast
+dappled shadows. Drawing full detail only in view keeps the cost close to the old trees': a walk-through filmed in
+software rendering (tests/run-bundle.mjs) takes about as long as before. The wind is a vertex patch: each
+vertex is pushed downwind by its flex, in gusts that roll across the forest, with leaf cards fluttering on top; the
+push is made in world space and turned into the tree's own, so it is the same however a tree is turned, leaned or
+stretched. Its strength (`Renderer#setWeather()`) is a breeze in fair weather, rising with cloud and rain; trees
+darken in the rain with the rest of the world (renderer/WetSurfaces.js). Detail is this device's choice
+(application/settings/WorldViewTreeDetailStore.js, `world-view-tree-detail`, **Detailed trees** in World View's
+settings): on by default unless the main pointer is coarse, like shadows; the Editor's renderer makes the same choice
+from the pointer.
 
 **What shines.** A brick type's `nightGlow` (core/NightGlow.js; docs/BrickLibrary.md) gives the light its bricks
 give off: `BrickRenderer#describe()` adds it to a brick's visual as `glow`. Instanced bricks carry it in an

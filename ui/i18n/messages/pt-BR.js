@@ -1819,6 +1819,8 @@ export default Object.freeze({
     'worldView.alwaysDayHint': 'Aqui o céu passa do dia para a noite e volta a cada {minutes} minutos, as nuvens vêm e vão, e janelas e lanternas se acendem quando escurece. “Sempre de dia” deixa o dia claro e ensolarado. Lembrado neste dispositivo.',
     'worldView.shadows': 'Sombras',
     'worldView.shadowsHint': 'O sol e a lua projetam sombras perto de você. Nos celulares elas começam desligadas, para a Visão do mundo continuar fluida. Lembrado neste dispositivo.',
+    'worldView.detailedTrees': 'Árvores detalhadas',
+    'worldView.detailedTreesHint': 'As árvores perto de você mostram cada galho e cada folha, balançam ao vento e projetam sombras de folhagem; mais longe, são formas mais simples. Nos celulares elas começam desligadas, para a Visão do mundo continuar fluida. Lembrado neste dispositivo.',
     'worldView.askTheResidentNextTo': 'Pergunte ao morador ao seu lado o que há por perto (T)',
     'worldView.avatar': 'Avatar',
     'worldView.showMyAvatar': 'Mostrar meu avatar',

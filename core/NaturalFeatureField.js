@@ -227,7 +227,7 @@ function featureForCell(seed, cellX, cellZ) {
 
 // The one public entry point: every natural feature whose position falls
 // within [minX, maxX) x [minZ, maxZ) — a half-open interval so that
-// tile-aligned adjacent queries (renderer/NaturalFeatureTileMesh.js
+// tile-aligned adjacent queries (renderer/TreeForest.js
 // always passes exact tile bounds, themselves exact multiples of
 // TREE_LATTICE_SPACING per this file's own header) partition the world
 // with no gap and no overlap, the same half-open convention

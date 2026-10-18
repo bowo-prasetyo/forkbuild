@@ -19,9 +19,8 @@ export function disposeOwnedTile(object) {
     });
 }
 
-// Vegetation and wildlife tiles are InstancedMeshes over geometry and
-// materials SHARED by every tile (the species presets in
-// renderer/NaturalFeatureTileMesh.js and renderer/WildlifeTileMesh.js).
+// Wildlife tiles are InstancedMeshes over geometry and materials SHARED by
+// every tile (the species presets in renderer/WildlifeTileMesh.js).
 // Only each mesh's own per-instance buffers belong to the tile; disposing
 // the shared geometry or material would blank every other tile.
 export function disposeInstancedTile(object) {
