@@ -1,10 +1,11 @@
-import { parseDescription } from '../../core/DescriptionMarkup.js';
+import { parseDescription, previewDescription } from '../../core/DescriptionMarkup.js';
 
 // A build's description with the little formatting it may use
 // (core/DescriptionMarkup.js): paragraphs, headings, bullet lists, bold and
 // italic. Everything is drawn as elements around plain text, never as HTML,
 // so a description can't inject markup or links. A description without
-// formatting reads as before.
+// formatting reads as before. With `preview`, only its start
+// (previewDescription()): the caller offers the rest.
 
 // One line's runs, each in <strong> and/or <em> as it asks.
 const RUNS = (runs) => `<template v-for="(run, r) in ${runs}" :key="r"><strong v-if="run.bold && run.italic"><em>{{ run.text }}</em></strong><strong v-else-if="run.bold">{{ run.text }}</strong><em v-else-if="run.italic">{{ run.text }}</em><template v-else>{{ run.text }}</template></template>`;
@@ -12,11 +13,12 @@ const RUNS = (runs) => `<template v-for="(run, r) in ${runs}" :key="r"><strong v
 export default {
     name: 'FormattedDescription',
     props: {
-        text: { type: String, default: '' }
+        text: { type: String, default: '' },
+        preview: { type: Boolean, default: false }
     },
     computed: {
         blocks() {
-            return parseDescription(this.text);
+            return this.preview ? previewDescription(this.text).blocks : parseDescription(this.text);
         }
     },
     template: `

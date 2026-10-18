@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 88c9c021db48f898 -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: d01b776520c0b684 -->
 # La Vue du Monde : outils avancés
 
 <!-- languages -->
@@ -106,6 +106,9 @@ cliqué :
   mots-clés, sa licence, son statut, son auteur et ce dont elle est un
   remix. **Modifier les métadonnées** change le titre, la description, la
   licence et qui peut la placer.
+  D’une longue description, on voit ici le début ; **Lire la suite**
+  l’ouvre en entier dans un panneau plus large à côté (par le bas, sur un
+  téléphone), le Monde toujours visible. **Échap** ou **✕** le ferme.
 - **Placement** : où la construction se trouve dans le Monde, en **unités
   du Monde**. Ce sont les coordonnées propres à ForkBuild, pas du GPS ; une
   unité du Monde vaut un mètre. **Centrer** vous y emmène. **Déplacer**

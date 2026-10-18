@@ -2,7 +2,7 @@ import { describeLicense } from '../../application/document/LicenseLabels.js';
 import { describePlacementPolicy } from '../../application/document/PlacementPolicyLabels.js';
 import { LifecycleStatus } from '../../application/document/DocumentLifecycleStatus.js';
 import { displayText, t } from '../i18n/i18n.js';
-import { descriptionPlainText } from '../../core/DescriptionMarkup.js';
+import { descriptionPlainText, previewDescription } from '../../core/DescriptionMarkup.js';
 import FormattedDescription from './FormattedDescription.js';
 import { builtWithNames } from './remix/builtWithText.js';
 import BuiltWithNames from './remix/BuiltWithNames.js';
@@ -27,6 +27,11 @@ import I18nText from '../i18n/I18nText.js';
 // fork origin and the editability notice only when they apply. Only a
 // Draft is marked: the toolbar's Saved / Unsaved indicator covers the rest,
 // but it also says "Saved" for a document that was never saved.
+//
+// The full form leads with the title and the start of the description, the
+// width of the panel, before the details. A description longer than that
+// start ends in "Read more", which emits 'read-description' for the caller
+// to show all of it somewhere wider (DescriptionReaderSheet in World View).
 export default {
     name: 'DocumentInfoPanel',
     components: { FormattedDescription, BuiltWithNames, I18nText },
@@ -40,7 +45,13 @@ export default {
             default: false
         }
     },
-    emits: ['edit-metadata'],
+    emits: ['edit-metadata', 'read-description'],
+    computed: {
+        // Whether the panel's start of the description leaves anything out.
+        descriptionTruncated() {
+            return Boolean(this.info && previewDescription(this.info.description).truncated);
+        }
+    },
     methods: {
         descriptionPlainText,
         t,
@@ -97,13 +108,17 @@ export default {
         <div v-else-if="info" class="document-info-panel">
             <h4>{{ t('documentInfo.title') }}</h4>
 
-            <div class="info-row">
-                <span class="info-label">{{ t('documentInfo.fieldTitle') }}</span>
-                <span class="info-value">{{ info.title }}</span>
-            </div>
-            <div class="info-row" v-if="info.description">
-                <span class="info-label">{{ t('documentInfo.description') }}</span>
-                <div class="info-value info-value--wrap"><formatted-description :text="info.description" /></div>
+            <p class="document-info-name">{{ info.title }}</p>
+            <div v-if="info.description" class="document-info-description">
+                <formatted-description :text="info.description" preview />
+                <button
+                    v-if="descriptionTruncated"
+                    type="button"
+                    class="document-info-read-more"
+                    aria-haspopup="dialog"
+                    :aria-label="t('documentInfo.readMoreLabel', { title: info.title })"
+                    @click="$emit('read-description')"
+                >{{ t('documentInfo.readMore') }}</button>
             </div>
             <div class="info-row" v-if="info.tags && info.tags.length > 0">
                 <span class="info-label">{{ t('documentInfo.tags') }}</span>

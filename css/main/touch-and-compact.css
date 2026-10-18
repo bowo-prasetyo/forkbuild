@@ -313,6 +313,41 @@
         max-height: 60dvh;
     }
 
+    /* The reading sheet rises from the bottom, over the panel and touch pad. */
+    .description-reader-sheet {
+        position: fixed;
+        top: auto;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 45;
+        width: auto;
+        max-height: 85vh;
+        max-height: 85dvh;
+        border-radius: 12px 12px 0 0;
+        border-bottom: none;
+        padding-bottom: env(safe-area-inset-bottom);
+        animation-name: description-reader-up;
+    }
+
+    @keyframes description-reader-up {
+        from { opacity: 0; transform: translateY(24px); }
+        to { opacity: 1; transform: none; }
+    }
+
+    .description-reader-header {
+        padding: 0.9rem 1rem 0.6rem;
+    }
+
+    .description-reader-body {
+        padding: 0.9rem 1rem 1rem;
+    }
+
+    .description-reader-close {
+        width: 2.75rem;
+        height: 2.75rem;
+    }
+
     .world-view-overlay--collapsed {
         right: auto;
         z-index: 20;

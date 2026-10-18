@@ -725,8 +725,6 @@ export default Object.freeze({
     'documentInfo.editLabel': 'この作品の詳細を編集',
     'documentInfo.forkedFromCompact': 'リミックス元: {origin}',
     'documentInfo.builtWith': '一緒に作った人',
-    'documentInfo.fieldTitle': 'タイトル',
-    'documentInfo.description': '説明',
     'documentInfo.tags': 'タグ',
     'documentInfo.license': 'ライセンス',
     'documentInfo.placement': '配置',
@@ -735,6 +733,12 @@ export default Object.freeze({
     'documentInfo.forkedFrom': 'リミックス元',
     'documentInfo.forkedFromStructure': 'リミックス元の構造物',
     'documentInfo.editMetadata': 'メタデータを編集',
+    'documentInfo.readMore': '続きを読む',
+    'documentInfo.readMoreLabel': '{title}の説明をすべて読む',
+
+    // World View: a build's whole description (ui/components/DescriptionReaderSheet.js).
+    'descriptionReader.by': '作者: {author}',
+    'descriptionReader.close': '閉じる',
 
     // Editor and World View: editing document details (ui/components/MetadataEditorDialog.js).
     'metadataEditor.label': '作品のプロパティ',

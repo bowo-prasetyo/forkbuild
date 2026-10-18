@@ -14,6 +14,7 @@ import ActionFeedback from '../components/ActionFeedback.js';
 import { useArrival } from './worldView/useArrival.js';
 import { useWalkThroughFilm } from './worldView/useWalkThroughFilm.js';
 import DocumentInfoPanel from '../components/DocumentInfoPanel.js';
+import DescriptionReaderSheet from '../components/DescriptionReaderSheet.js';
 import MetadataEditorDialog from '../components/MetadataEditorDialog.js';
 import PlacementInfoPanel from '../components/PlacementInfoPanel.js';
 import PlacementEditorDialog from '../components/PlacementEditorDialog.js';
@@ -123,7 +124,7 @@ export default {
     name: 'WorldView',
     components: {
         ActionFeedback,
-        DocumentInfoPanel, MetadataEditorDialog,
+        DocumentInfoPanel, DescriptionReaderSheet, MetadataEditorDialog,
         PlacementInfoPanel, PlacementEditorDialog,
         WorldSearchPanel, LocationDocumentsDialog, WorldLocationBrowser,
         AvatarInfoPanel, NearbyAvatarsPanel,
@@ -157,6 +158,19 @@ export default {
         const documentInfo = ref(null);
         const showMetadataEditor = ref(false);
         const metadataEditTarget = ref(null);
+        // The build whose whole description is open beside the panel
+        // (DescriptionReaderSheet), or null. It closes when another build, or
+        // none, is inspected, so it never reopens on its own later.
+        const descriptionReaderDocumentId = ref(null);
+        function openDescriptionReader(info) {
+            descriptionReaderDocumentId.value = info ? info.documentId : null;
+        }
+        function closeDescriptionReader() {
+            descriptionReaderDocumentId.value = null;
+        }
+        watch(() => documentInfo.value && documentInfo.value.documentId, (documentId) => {
+            if (documentId !== descriptionReaderDocumentId.value) closeDescriptionReader();
+        });
         // Where the active/inspected world sits in shared space. Unrelated to
         // `spatialPlacement` (brick placement preview): "placement" means different
         // things at the two layers.
@@ -1410,6 +1424,9 @@ export default {
             showMetadataEditor,
             metadataEditTarget,
             openMetadataEditor,
+            descriptionReaderDocumentId,
+            openDescriptionReader,
+            closeDescriptionReader,
             placementInfo,
             activePlacementInfo,
             ownPublication,
