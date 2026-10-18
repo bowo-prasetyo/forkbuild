@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 7e020f4bc9aa862c -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 20804c154b4aaf3d -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
@@ -238,6 +238,32 @@ didengar: sungai tidak meluap, dan Anda tetap berjalan secepat biasa.
 Jika Anda lebih suka selalu siang, centang **Selalu siang** di bagian bawah
 panel, tepat di atas **Bayangan**. Langit pun tetap
 cerah. Pilihan ini diingat di perangkat ini dan tidak mengubah apa pun bagi orang lain.
+
+## Musim
+
+Dunia melewati empat musim, masing-masing delapan hari World View (sedikit
+lebih dari lima jam), satu untuk setiap putaran bulan:
+
+- **Musim semi**: pohon-pohon berbunga merah muda dan putih lalu berdaun baru
+  yang hijau muda; bunga liar menghiasi rumput, dan kelopak bunga melayang
+  turun di antara pepohonan.
+- **Musim panas**: semuanya hijau dan rimbun, buah matang di beberapa pohon,
+  dan ladang menjadi keemasan.
+- **Musim gugur**: daun berubah merah, oranye, dan kuning, setiap pohon pada
+  waktunya sendiri, lalu berguguran di sekitar Anda sampai pohon gundul; ladang
+  dipanen.
+- **Musim dingin**: pohon-pohon gundul, rumput kusam, dan saat langit mendung
+  turun salju, bukan hujan. Salju mengendap berupa bercak yang lama-lama
+  menjadi hamparan putih, menutupi atap dan puncak pohon (tidak pernah dinding,
+  dan tidak pernah di dalam bangunan tempat Anda berdiri), lalu mencair di musim
+  semi. Burung lebih jarang berkicau, dan serangga menghilang.
+
+Daratan berubah sedikit demi sedikit setiap hari, bukan sekaligus, dan semua
+orang melihat musim yang sama pada saat yang sama. Pohon jarum tetap hijau
+sepanjang tahun. Untuk tetap memakai satu musim di perangkat Anda, pilih di
+**Musim** di bagian bawah panel, tepat di bawah **Pohon terperinci**; **Tahun
+dunia** kembali mengikuti dunia. Dengan **Selalu siang** menyala, musim tetap
+berganti, di bawah langit cerah.
 
 ## Suara
 

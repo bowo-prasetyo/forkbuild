@@ -5,6 +5,9 @@ import { treeForm, treeShapeOf, TREE_FORMS_PER_SPECIES } from '../core/TreeForm.
 import { buildTreeGeometries } from './TreeGeometry.js';
 import { createTreeMaterials, createTreeWind, disposeTreeMaterials } from './TreeMaterials.js';
 import { makeWet } from './WetSurfaces.js';
+import {
+    DECIDUOUS, TREE_PART, makeSeasonalTree, seasonedTreeColour, setTreeSeasonFlags, treeNumbers, treeSeasonFlags, treeSeasonOf
+} from './SeasonalSurfaces.js';
 
 // Every tree World View draws. Trees are streamed by terrain tile
 // (renderer/TerrainStreamingController.js calls loadTile()/unloadTile()), but
@@ -74,8 +77,20 @@ const SPECIES_LOOK = Object.freeze({
 // brings the trees back to the palette's brightness.
 const LEAF_GAIN = 1.45;
 const BARK_GAIN = 1.5;
-// Wet trees darken less than bare ground: leaves shed the rain.
-const TREE_WET = Object.freeze({ darken: 0.22, roughness: 0.5 });
+// Wet trees darken less than bare ground: leaves shed the rain. Snow lies on
+// the tops of crowns and boughs.
+const TREE_WET = Object.freeze({ darken: 0.22, roughness: 0.5, snow: 0.9 });
+// How much each species sheds its leaves (renderer/SeasonalSurfaces.js).
+const SPECIES_DECIDUOUS = Object.freeze({
+    [TREE_SPECIES.CONIFER]: DECIDUOUS.NEVER,
+    [TREE_SPECIES.BROADLEAF]: DECIDUOUS.FULLY,
+    [TREE_SPECIES.SCRUB]: DECIDUOUS.PARTLY
+});
+// Leaves blow about where trees that shed them stand: within this many
+// metres of the camera, and as many as this make it a wood
+// (deciduousNearby).
+const NEARBY_METRES = 22;
+const NEARBY_WOOD = 14;
 
 const SPECIES_ORDER = Object.values(TREE_SPECIES);
 // How the pool draws a tree: a level, or SHADE, the mid shape for a tree
@@ -120,6 +135,8 @@ function treeRecord(feature) {
     const reach = Math.max(form.crown.radius, 0.5) * shape.widthScale;
     return {
         slot: formSlot(form.species, shape.form),
+        deciduous: SPECIES_DECIDUOUS[form.species] ?? 0,
+        numbers: treeNumbers(feature.x, feature.z),
         x: feature.x,
         z: feature.z,
         middleY: feature.y + height / 2,
@@ -127,14 +144,44 @@ function treeRecord(feature) {
         matrix: Float32Array.from(_matrix.elements),
         leafColor: leaves.map((c) => c * shape.shade * LEAF_GAIN),
         crownColor: leaves.map((c) => c * shape.shade * LEAF_GAIN * look.crown),
-        barkColor: look.bark.map((c) => c * barkShade * BARK_GAIN)
+        barkColor: look.bark.map((c) => c * barkShade * BARK_GAIN),
+        // As the season colours it (TreeForest#setSeason()), and what it
+        // does to its leaves (renderer/SeasonalSurfaces.js's treeSeason).
+        seasonLeafColor: null,
+        seasonCrownColor: null,
+        season: NO_SEASON
     };
+}
+
+// A tree's `treeSeason` with no season: in full leaf, no fruit.
+const NO_SEASON = Object.freeze([1, 0, 0]);
+
+// Colours `tree` for the season `look`, or takes the season off it.
+function seasonTree(tree, look) {
+    if (!look) {
+        tree.seasonLeafColor = null;
+        tree.seasonCrownColor = null;
+        tree.season = NO_SEASON;
+        return;
+    }
+    const season = treeSeasonOf(look, tree.numbers, tree.deciduous);
+    tree.seasonLeafColor = seasonedTreeColour(tree.leafColor, season);
+    tree.seasonCrownColor = seasonedTreeColour(tree.crownColor, season, { crown: true });
+    tree.season = [season.leaf, season.fruit, season.fruitKind];
+}
+
+// The season's numbers that change what trees look like, rounded so a
+// forest is recoloured only once the change would show.
+function seasonKey(look) {
+    if (!look) return '';
+    return ['leaves', 'fresh', 'blossom', 'autumn', 'fruit'].map((key) => Math.round((look[key] || 0) * 100)).join();
 }
 
 export class TreeForest {
     // `sink` takes the forest's one group (add/remove, like
     // renderer/SceneManager.js). `wetSurfaces` (renderer/WetSurfaces.js), when
-    // given, darkens trees in the rain with the rest of the world.
+    // given, darkens trees in the rain with the rest of the world and lays
+    // snow on them. setSeason() dresses them for the season.
     constructor(sink, { seed, detail = TREE_DETAIL.HIGH, tileSize = TERRAIN_TILE_SIZE, wetSurfaces = null } = {}) {
         this._sink = sink;
         this._seed = seed;
@@ -147,6 +194,16 @@ export class TreeForest {
                 makeWet(this._materials[key].material, wetSurfaces, TREE_WET);
             }
         }
+        // After the wet, so the snow lies on top of the fruit.
+        this._seasonal = [];
+        const parts = { broadLeaves: TREE_PART.LEAVES, needles: TREE_PART.LEAVES, crown: TREE_PART.CROWN };
+        for (const [key, part] of Object.entries(parts)) {
+            this._seasonal.push(makeSeasonalTree(this._materials[key].material, { part }));
+            this._seasonal.push(makeSeasonalTree(this._materials[key].depth, { part, depth: true }));
+        }
+        this._look = null;
+        this._seasonKey = '';
+        this._deciduousNearby = 0;
         this._group = new THREE.Group();
         this._group.name = 'trees';
         this._sink.add(this._group);
@@ -182,6 +239,13 @@ export class TreeForest {
         return { ...this._lodCounts };
     }
 
+    // How much of a wood of leaf-shedding trees stands round the camera, 0
+    // (none) to 1, as of the last time update() sorted the trees: what
+    // falling leaves and petals are scaled by.
+    get deciduousNearby() {
+        return this._deciduousNearby;
+    }
+
     // The meshes drawing at least one tree: one draw call each.
     get drawnMeshCount() {
         let count = 0;
@@ -198,6 +262,23 @@ export class TreeForest {
         this._dirty = true;
     }
 
+    // Dresses every tree for the season `look` (core/Season.js's
+    // seasonLookAt()): fresh leaves, blossom, fruit, autumn colours, leaves
+    // dropping (renderer/SeasonalSurfaces.js). The colours are worked out
+    // here, once the change would show, and drawn at the next update().
+    setSeason(look) {
+        const key = seasonKey(look);
+        if (key === this._seasonKey) return;
+        this._seasonKey = key;
+        this._look = look || null;
+        for (const records of this._tiles.values()) {
+            for (const tree of records) seasonTree(tree, this._look);
+        }
+        const flags = treeSeasonFlags(this._look);
+        for (const material of this._seasonal) setTreeSeasonFlags(material, flags);
+        this._dirty = true;
+    }
+
     // How hard the wind blows, 0 (still) to 1 (a gale).
     setWind(strength) {
         this._wind.strength.value = Number.isFinite(strength) ? Math.min(Math.max(strength, 0), 1) : 0;
@@ -205,6 +286,14 @@ export class TreeForest {
 
     get windStrength() {
         return this._wind.strength.value;
+    }
+
+    // The way the wind blows on the ground, as long as it is strong: what
+    // carries falling snow and leaves along (renderer/SeasonDrift.js).
+    get windDirection() {
+        const { x, y } = this._wind.direction.value;
+        const strength = this._wind.strength.value;
+        return { x: x * strength, y: y * strength };
     }
 
     // The clock the wind sways by, in seconds.
@@ -219,6 +308,7 @@ export class TreeForest {
         const records = naturalFeaturesInRegion(this._seed, minX, minZ, minX + this._tileSize, minZ + this._tileSize)
             .filter((feature) => feature.type === FEATURE_TYPE.TREE)
             .map(treeRecord);
+        if (this._look) for (const tree of records) seasonTree(tree, this._look);
         const token = { tx, tz };
         this._tiles.set(token, records);
         if (records.length > 0) this._dirty = true;
@@ -251,11 +341,13 @@ export class TreeForest {
         const counts = { [TREE_LOD.NEAR]: 0, [TREE_LOD.MID]: 0, [TREE_LOD.FAR]: 0 };
         const { x: cx, y: cy, z: cz } = camera.position;
         const low = TREE_LOD_DISTANCES[this._detail].near === 0;
+        let nearby = 0;
         for (const records of this._tiles.values()) {
             for (const tree of records) {
                 const dx = tree.x - cx;
                 const dy = tree.middleY - cy;
                 const dz = tree.z - cz;
+                if (tree.deciduous > 0 && dx * dx + dz * dz < NEARBY_METRES * NEARBY_METRES) nearby += tree.deciduous;
                 const lod = treeLodAt(Math.sqrt(dx * dx + dy * dy + dz * dz), this._detail);
                 // Close enough that its shadow may fall in view.
                 const shading = lod === TREE_LOD.NEAR || (lod === TREE_LOD.MID && low);
@@ -273,6 +365,7 @@ export class TreeForest {
             }
         }
         this._lodCounts = counts;
+        this._deciduousNearby = Math.min(1, nearby / NEARBY_WOOD);
 
         for (let slot = 0; slot < FORM_COUNT; slot++) {
             for (let k = 0; k < KINDS.length; k++) {
@@ -334,9 +427,9 @@ export class TreeForest {
         if (entry && entry.capacity >= needed) return entry.parts;
 
         const capacity = Math.max(MIN_CAPACITY, 2 ** Math.ceil(Math.log2(needed)));
-        if (!this._geometries[slot]) this._geometries[slot] = buildTreeGeometries(this._formOf(slot));
-        const geometries = this._geometries[slot];
         const form = this._formOf(slot);
+        if (!this._geometries[slot]) this._geometries[slot] = buildTreeGeometries(form);
+        const geometries = this._geometries[slot];
         const leaves = form.species === TREE_SPECIES.CONIFER ? this._materials.needles : this._materials.broadLeaves;
         const specs = kind === 'NEAR'
             ? [[geometries.near.bark, this._materials.bark, 'barkColor'], [geometries.near.leaves, leaves, 'leafColor']]
@@ -350,7 +443,13 @@ export class TreeForest {
                 part.mesh.dispose();
             }
         }
-        const parts = specs.map(([geometry, look, colour]) => {
+        const parts = specs.map(([shared, look, colour]) => {
+            // Leaves and crowns carry each tree's `treeSeason`, an attribute of
+            // their own on a geometry sharing the form's buffers.
+            const seasonal = colour !== 'barkColor';
+            const geometry = seasonal ? viewOf(shared) : shared;
+            const season = seasonal ? new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3) : null;
+            if (season) geometry.setAttribute('treeSeason', season);
             const mesh = new THREE.InstancedMesh(geometry, look.material, capacity);
             mesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3);
             mesh.customDepthMaterial = look.depth;
@@ -361,7 +460,7 @@ export class TreeForest {
             mesh.receiveShadow = kind !== 'FAR';
             mesh.name = `tree-${form.species.toLowerCase()}-${form.index}-${kind.toLowerCase()}`;
             this._group.add(mesh);
-            return { mesh, colour };
+            return { mesh, colour, season, seasonColour: SEASON_COLOUR[colour] ?? null };
         });
         entry = { capacity, parts };
         this._meshes.set(key, entry);
@@ -369,17 +468,34 @@ export class TreeForest {
     }
 
     _fill(parts, trees) {
-        for (const { mesh, colour } of parts) {
+        for (const { mesh, colour, season, seasonColour } of parts) {
             const matrices = mesh.instanceMatrix.array;
             const colours = mesh.instanceColor.array;
             for (let i = 0; i < trees.length; i++) {
-                matrices.set(trees[i].matrix, i * 16);
-                colours.set(trees[i][colour], i * 3);
+                const tree = trees[i];
+                matrices.set(tree.matrix, i * 16);
+                colours.set((seasonColour && tree[seasonColour]) || tree[colour], i * 3);
+                if (season) season.array.set(tree.season, i * 3);
             }
             mesh.count = trees.length;
             mesh.visible = true;
             mesh.instanceMatrix.needsUpdate = true;
             mesh.instanceColor.needsUpdate = true;
+            if (season) season.needsUpdate = true;
         }
     }
+}
+
+// Which seasoned colour stands for each part's colour.
+const SEASON_COLOUR = Object.freeze({ leafColor: 'seasonLeafColor', crownColor: 'seasonCrownColor' });
+
+// A geometry drawing `geometry`'s very buffers, to which one mesh can add an
+// attribute of its own.
+function viewOf(geometry) {
+    const view = new THREE.BufferGeometry();
+    for (const [name, attribute] of Object.entries(geometry.attributes)) view.setAttribute(name, attribute);
+    view.setIndex(geometry.index);
+    view.boundingSphere = geometry.boundingSphere;
+    view.boundingBox = geometry.boundingBox;
+    return view;
 }

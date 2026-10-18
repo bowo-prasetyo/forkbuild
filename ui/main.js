@@ -73,6 +73,7 @@ import { ExperimentalToolsSettingsStore } from '../application/settings/Experime
 import { NetworkWriterSettingsStore } from '../application/settings/NetworkWriterSettingsStore.js';
 import { WorldViewDetailStore } from '../application/settings/WorldViewDetailStore.js';
 import { WorldViewSkyStore } from '../application/settings/WorldViewSkyStore.js';
+import { WorldViewSeasonStore } from '../application/settings/WorldViewSeasonStore.js';
 import { WorldViewShadowStore } from '../application/settings/WorldViewShadowStore.js';
 import { WorldViewTreeDetailStore } from '../application/settings/WorldViewTreeDetailStore.js';
 import { PublishDestinationStore } from '../application/settings/PublishDestinationStore.js';
@@ -378,6 +379,7 @@ app.provide('devicePairing', new DevicePairing({ deviceBackup: deviceBackupUseCa
 app.provide('publishDestinationStore', new PublishDestinationStore({ storageProvider: new LocalStorageProvider() }));
 app.provide('worldViewDetailStore', new WorldViewDetailStore({ storageProvider: new LocalStorageProvider() }));
 app.provide('worldViewSkyStore', new WorldViewSkyStore({ storageProvider: new LocalStorageProvider() }));
+app.provide('worldViewSeasonStore', new WorldViewSeasonStore({ storageProvider: new LocalStorageProvider() }));
 // Shadows start off where the main pointer is a finger (phones, tablets),
 // whose GPUs feel a second pass over the scene most, and on elsewhere.
 const touchFirst = typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;

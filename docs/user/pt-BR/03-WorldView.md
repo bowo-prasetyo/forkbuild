@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 7e020f4bc9aa862c -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 20804c154b4aaf3d -->
 # 03 — Visão do mundo
 
 <!-- languages -->
@@ -232,6 +232,31 @@ rápido quanto antes.
 Se você preferir que seja sempre dia, marque **Sempre de dia** no fim do
 painel, logo acima de **Sombras**. O céu também fica
 limpo. A escolha fica lembrada neste dispositivo e não muda nada para mais ninguém.
+
+## Estações
+
+O mundo passa por quatro estações, cada uma com oito dias do World View (pouco
+mais de cinco horas), uma para cada volta da lua:
+
+- **Primavera**: as árvores florescem em rosa e branco e ganham folhas novas
+  de um verde claro; flores silvestres pontilham a grama, e pétalas caem entre
+  as árvores.
+- **Verão**: tudo fica verde e viçoso, frutas amadurecem em algumas árvores e
+  os campos ficam dourados.
+- **Outono**: as folhas ficam vermelhas, laranjas e amarelas, cada árvore no
+  seu tempo, e caem ao seu redor enquanto as árvores ficam nuas; os campos são
+  colhidos.
+- **Inverno**: as árvores ficam nuas, a grama perde a cor e, quando o céu
+  fecha, neva em vez de chover. A neve se acumula em manchas que se juntam num
+  manto branco, cobre telhados e copas (nunca as paredes, nem o interior da
+  construção onde você está) e derrete na primavera. Os pássaros cantam menos
+  e os insetos somem.
+
+A paisagem muda um pouco a cada dia, e não de uma vez, e todos veem a mesma
+estação no mesmo momento. As coníferas continuam verdes o ano todo. Para manter
+uma estação no seu dispositivo, escolha-a em **Estação**, perto do fim do painel,
+logo abaixo de **Árvores detalhadas**; **O ano do mundo** volta a seguir o mundo.
+Com **Sempre de dia** ligado, as estações continuam mudando, sob um céu limpo.
 
 ## Som
 

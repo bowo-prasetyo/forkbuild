@@ -3,7 +3,7 @@ import { ThreeBrickFactory, DEFAULT_COLOR } from './ThreeBrickFactory.js';
 import { doorSwingOffset } from '../core/DoorSwing.js';
 import { castShadows } from './ShadowRoles.js';
 import { applyBrickSurface, withBrickBounds } from './BrickSurfaceMaterial.js';
-import { BRICK_WET, createWetSurfaces, makeWet, setWetShelter, setWetness } from './WetSurfaces.js';
+import { BRICK_WET, createWetSurfaces, makeWet, setSnowCover, setWetShelter, setWetness } from './WetSurfaces.js';
 import { brickSurfaceOf } from '../core/BrickSurface.js';
 
 // Edge length of the cube of space one batch covers.
@@ -240,6 +240,15 @@ export class BrickInstanceRegistry {
 
     get wetness() {
         return this._wetSurfaces.wetness.value;
+    }
+
+    // How much snow lies on the bricks' tops, 0 to 1 (renderer/WetSurfaces.js).
+    setSnowCover(cover) {
+        setSnowCover(this._wetSurfaces, cover);
+    }
+
+    get snowCover() {
+        return this._wetSurfaces.snowCover.value;
     }
 
     // The light the brick gives off at full night (0xRRGGBB), 0 for none, or

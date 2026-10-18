@@ -141,6 +141,25 @@ export function ambientMixAtNight(mix, nightLevel) {
     return next;
 }
 
+// The same mix in a season (core/Season.js's look): more birdsong in spring,
+// the insects of summer, and a hush in winter, when the insects are gone and
+// few birds sing. `season.birds` and `season.insects` scale them; with no
+// season, the mix as it is.
+export function ambientMixInSeason(mix, season) {
+    if (!season) {
+        return mix;
+    }
+    const birds = Number.isFinite(season.birds) ? Math.max(season.birds, 0) : 1;
+    const insects = Number.isFinite(season.insects) ? Math.max(season.insects, 0) : 1;
+    if (birds === 1 && insects === 1) {
+        return mix;
+    }
+    const next = { ...mix };
+    next[AMBIENT_LAYER.BIRDS] = Math.min(1, mix[AMBIENT_LAYER.BIRDS] * birds);
+    next[AMBIENT_LAYER.INSECTS] = Math.min(1, mix[AMBIENT_LAYER.INSECTS] * insects);
+    return next;
+}
+
 // The same mix in the rain (core/Weather.js): `rain` from 0 (dry) to 1 (a
 // downpour) is heard as it falls, and birds and insects mostly fall quiet.
 // `sheltered` under a roof, it drums on the roof instead, and the rain

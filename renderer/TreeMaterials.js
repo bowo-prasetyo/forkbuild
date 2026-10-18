@@ -265,7 +265,10 @@ export function createTreeMaterials(wind) {
         broadLeaves: paintBroadLeaves().texture(),
         needles: paintNeedles().texture()
     };
-    const depth = () => makeSwaying(new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking }), wind);
+    // A leaf card's shadow is cut out by its leaves, as the card is.
+    const depth = (map = null) => makeSwaying(new THREE.MeshDepthMaterial(map
+        ? { depthPacking: THREE.RGBADepthPacking, map, alphaTest: 0.5 }
+        : { depthPacking: THREE.RGBADepthPacking }), wind);
     const leafMaterial = (map) => makeSwaying(new THREE.MeshStandardMaterial({
         map,
         alphaTest: 0.5,
@@ -275,8 +278,8 @@ export function createTreeMaterials(wind) {
     return {
         textures,
         bark: { material: makeSwaying(new THREE.MeshStandardMaterial({ map: textures.bark, roughness: 0.95 }), wind), depth: depth() },
-        broadLeaves: { material: leafMaterial(textures.broadLeaves), depth: depth() },
-        needles: { material: leafMaterial(textures.needles), depth: depth() },
+        broadLeaves: { material: leafMaterial(textures.broadLeaves), depth: depth(textures.broadLeaves) },
+        needles: { material: leafMaterial(textures.needles), depth: depth(textures.needles) },
         // About as bright as the leaf textures are on average, so a tree
         // doesn't change shade as it changes detail.
         crown: { material: makeSwaying(new THREE.MeshStandardMaterial({ color: new THREE.Color(0.58, 0.58, 0.58), roughness: 0.9 }), wind), depth: depth() }

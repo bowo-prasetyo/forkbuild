@@ -4,9 +4,10 @@ import { terrainHeightAt } from '../core/TerrainHeightField.js';
 import {
     hydrologyGroundColorAt, riverTintAt, withRiverTint, riverChannelDistanceAt, RIVER_CHANNEL_THRESHOLD
 } from '../core/Hydrology.js';
-import { ecologyGroundColorAt } from '../core/TerrainEcology.js';
+import { ecologyGroundColorAt, groundCoverAt } from '../core/TerrainEcology.js';
 import { TERRAIN_TILE_SIZE, tileCenter } from '../core/TerrainTiling.js';
 import { receiveShadows } from './ShadowRoles.js';
+import { makeSeasonalGround } from './SeasonalSurfaces.js';
 
 // The renderer-side counterpart to core/TerrainHeightField.js and
 // core/TerrainSurface.js: it knows nothing about WHAT elevation or
@@ -79,8 +80,12 @@ export function tileHasRiverDetail(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE) {
 }
 
 // `wetSurfaces` (renderer/WetSurfaces.js#createWetSurfaces()), when given,
-// lets the ground soak up the rain and dry again.
-export function buildTerrainTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE, wetSurfaces = null) {
+// lets the ground soak up the rain and dry again, and snow lie on it.
+// `seasonSurfaces` (renderer/SeasonalSurfaces.js#createSeasonSurfaces()),
+// when given, colours its grass and fields for the season: every vertex
+// carries how much grass and how much field it is (`groundCover`,
+// core/TerrainEcology.js#groundCoverAt()).
+export function buildTerrainTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE, wetSurfaces = null, seasonSurfaces = null) {
     const fine = tileHasRiverDetail(tx, tz, seed, tileSize);
     const segments = fine ? TILE_SEGMENTS * RIVER_SUBDIVISIONS : TILE_SEGMENTS;
     const geometry = new THREE.PlaneGeometry(tileSize, tileSize, segments, segments);
@@ -91,6 +96,8 @@ export function buildTerrainTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE,
     const colors = new Float32Array(position.count * 3);
     const heightAt = fine ? fineEdgeHeights(tx, tz, seed, tileSize) : (x, z) => terrainHeightAt(seed, x, z);
     const colorAt = fine ? fineColors(tx, tz, seed, tileSize) : (x, z) => hydrologyGroundColorAt(seed, x, z);
+    const cover = seasonSurfaces ? new Float32Array(position.count * 2) : null;
+    const coverAt = !seasonSurfaces ? null : fine ? fineGroundCover(tx, tz, seed, tileSize) : (x, z) => groundCoverAt(seed, x, z);
     for (let i = 0; i < position.count; i++) {
         const worldX = center.x + position.getX(i);
         const worldZ = center.z + position.getZ(i);
@@ -100,9 +107,15 @@ export function buildTerrainTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE,
         colors[i * 3] = color.r;
         colors[i * 3 + 1] = color.g;
         colors[i * 3 + 2] = color.b;
+        if (cover) {
+            const ground = coverAt(worldX, worldZ);
+            cover[i * 2] = ground.grass;
+            cover[i * 2 + 1] = ground.field;
+        }
     }
     position.needsUpdate = true;
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    if (cover) geometry.setAttribute('groundCover', new THREE.BufferAttribute(cover, 2));
     geometry.computeVertexNormals();
 
     // vertexColors: true, no material.color override — the per-vertex
@@ -110,6 +123,8 @@ export function buildTerrainTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE,
     // material tint layered on top of it.
     const material = new THREE.MeshStandardMaterial({ vertexColors: true });
     if (wetSurfaces) makeWet(material, wetSurfaces, TERRAIN_WET);
+    // After the wet, so the snow lies on top of the season's colours.
+    if (seasonSurfaces) makeSeasonalGround(material, seasonSurfaces);
     const mesh = new THREE.Mesh(geometry, material);
     // Vertex Y already holds the ABSOLUTE world elevation (sampled at
     // worldX/worldZ above), so the mesh's own position.y stays 0 — only
@@ -149,6 +164,30 @@ function fineColors(tx, tz, seed, tileSize) {
         if (riverChannelDistanceAt(seed, x, z) >= RIVER_CHANNEL_THRESHOLD) return base;
         return withRiverTint(base, riverTintAt(seed, x, z));
     };
+}
+
+// What grows on a fine tile's ground, laid across it from the ordinary
+// grid's points as its colour is (fineColors()).
+function fineGroundCover(tx, tz, seed, tileSize) {
+    const spacing = tileSize / TILE_SEGMENTS;
+    const side = TILE_SEGMENTS + 1;
+    const i0 = tx * TILE_SEGMENTS;
+    const j0 = tz * TILE_SEGMENTS;
+    const lattice = new Float32Array(side * side * 2);
+    for (let j = 0; j < side; j++) {
+        for (let i = 0; i < side; i++) {
+            const ground = groundCoverAt(seed, (i0 + i) * spacing, (j0 + j) * spacing);
+            lattice.set([ground.grass, ground.field], (j * side + i) * 2);
+        }
+    }
+    const at = (component) => (i, j) => {
+        const li = Math.min(side - 1, Math.max(0, i - i0));
+        const lj = Math.min(side - 1, Math.max(0, j - j0));
+        return lattice[(lj * side + li) * 2 + component];
+    };
+    const grass = at(0);
+    const field = at(1);
+    return (x, z) => ({ grass: onGroundTriangle(x, z, spacing, grass), field: onGroundTriangle(x, z, spacing, field) });
 }
 
 // A value laid across the ordinary ground grid (spacing `spacing`,

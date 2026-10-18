@@ -15,7 +15,7 @@
 // follows the day: warm by day, slow and low after dark (core/MusicScore.js).
 // Browsers keep audio silent until the user interacts with the page, so the
 // view calls unlock() from its first key press or tap.
-import { ambientMixAt, ambientMixAtNight, ambientMixInRain, silentAmbientMix } from '../../core/AmbientSoundscape.js';
+import { ambientMixAt, ambientMixAtNight, ambientMixInRain, ambientMixInSeason, silentAmbientMix } from '../../core/AmbientSoundscape.js';
 import { advanceAvatarSound, createAvatarSoundState } from '../../core/AvatarSoundCues.js';
 import { advanceCreatureSound, createCreatureSoundState } from '../../core/CreatureSoundCues.js';
 import { SoundPreference } from '../settings/SoundPreference.js';
@@ -29,6 +29,7 @@ const RESAMPLE_DISTANCE = 0.5;
 // than this.
 const RESAMPLE_NIGHT_STEP = 0.05;
 const RESAMPLE_RAIN_STEP = 0.05;
+const RESAMPLE_SEASON_STEP = 0.05;
 // An engine's load changes smaller than this aren't worth a new ramp.
 const ENGINE_LOAD_STEP = 0.02;
 // Animals and residents are looked at this often: often enough to catch a
@@ -49,6 +50,7 @@ export class WorldSoundscapeService {
         nightLevel = null,
         rainLevel = null,
         sheltered = null,
+        season = null,
         weatherClock = null,
         thunderBetween = null,
         sampleIntervalMs = DEFAULT_SAMPLE_INTERVAL_MS,
@@ -76,6 +78,10 @@ export class WorldSoundscapeService {
         // Whether the listener is under a roof, where rain drums on it; absent, never.
         this._sheltered = typeof sheltered === 'function' ? sheltered : () => false;
         this._lastSampledSheltered = false;
+        // The season's look (core/Season.js), whose birdsong and insects are
+        // heard; absent, high summer's.
+        this._season = typeof season === 'function' ? season : () => null;
+        this._lastSampledSeason = null;
         // Thunder (core/Storms.js): what is heard between one sample and the
         // next, on the weather's clock; absent, none.
         this._weatherClock = typeof weatherClock === 'function' ? weatherClock : null;
@@ -200,20 +206,24 @@ export class WorldSoundscapeService {
         const night = this._nightLevel();
         const rain = this._rainLevel();
         const underRoof = Boolean(this._sheltered());
+        const season = this._season();
         this._provider.setMusicMood?.(musicMoodFor({ view: 'world', nightLevel: night }));
         if (this._lastSampledAt
             && Math.hypot(position.x - this._lastSampledAt.x, position.z - this._lastSampledAt.z) < RESAMPLE_DISTANCE
             && Math.abs(night - this._lastSampledNight) < RESAMPLE_NIGHT_STEP
             && Math.abs(rain - this._lastSampledRain) < RESAMPLE_RAIN_STEP
             && (rain === 0) === (this._lastSampledRain === 0)
-            && underRoof === this._lastSampledSheltered) {
+            && underRoof === this._lastSampledSheltered
+            && !seasonChanged(season, this._lastSampledSeason)) {
             return;
         }
         this._lastSampledAt = { x: position.x, z: position.z };
         this._lastSampledNight = night;
         this._lastSampledRain = rain;
         this._lastSampledSheltered = underRoof;
-        this._provider.setLayerLevels(ambientMixInRain(ambientMixAtNight(ambientMixAt(this._seed, position.x, position.z), night), rain, underRoof));
+        this._lastSampledSeason = season;
+        const mix = ambientMixInSeason(ambientMixAt(this._seed, position.x, position.z), season);
+        this._provider.setLayerLevels(ambientMixInRain(ambientMixAtNight(mix, night), rain, underRoof));
     }
 
     // Plays the thunder that has come since the last sample, if any.
@@ -286,4 +296,11 @@ export class WorldSoundscapeService {
         }
         this._provider.dispose();
     }
+}
+
+// Whether the season's birdsong or insects have changed enough to be heard.
+function seasonChanged(season, last) {
+    if (!season || !last) return season !== last;
+    return Math.abs((season.birds ?? 1) - (last.birds ?? 1)) >= RESAMPLE_SEASON_STEP
+        || Math.abs((season.insects ?? 1) - (last.insects ?? 1)) >= RESAMPLE_SEASON_STEP;
 }

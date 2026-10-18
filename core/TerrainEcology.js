@@ -240,13 +240,32 @@ export function ecologyGroundColorAt(seed, x, z) {
     return base;
 }
 
-// Deliberately not yet: rivers, hydrology/flow simulation, seasons,
-// weather, snow, erosion, per-World/per-Document ecology (today's
+// What grows on the ground at (x, z), for the seasons (core/Season.js) to
+// colour: `grass`, how much of it is grass that greens, browns and flowers
+// with them (grassland and forest floor fully, the hardy highland and the
+// edge of a beach a little), and `field`, how much is a field of crops that
+// grow, ripen and are harvested. Rock, water and bare soil take neither.
+const HIGHLAND_GRASS = 0.6;
+const BEACH_GRASS = 0.25;
+
+export function groundCoverAt(seed, x, z) {
+    const zone = ecologyZoneAt(seed, x, z);
+    if (zone === ECOLOGY_ZONE.FIELD) return { grass: 0, field: 1 };
+    if (zone === ECOLOGY_ZONE.FOREST || zone === ECOLOGY_ZONE.GRASSLAND) return { grass: 1, field: 0 };
+    if (zone === ECOLOGY_ZONE.BEACH) return { grass: BEACH_GRASS, field: 0 };
+    if (zone === ECOLOGY_ZONE.HIGHLAND && surfaceCategoryAt(seed, x, z) === SURFACE_CATEGORY.GRASS) {
+        return { grass: HIGHLAND_GRASS, field: 0 };
+    }
+    return { grass: 0, field: 0 };
+}
+
+// Deliberately not yet: hydrology/flow simulation (core/Hydrology.js has
+// rivers), erosion, per-World/per-Document ecology (today's
 // thresholds are the one shared ecology every document's terrain uses,
 // the same posture core/TerrainHeightField.js's own DEFAULT_WORLD_SEED
 // and core/TerrainSurface.js's own SURFACE_PALETTE already established);
-// simulated agriculture (FIELD is a deterministic ground-cover zone, not
-// a crop/growth system); consulting this file from
+// simulated agriculture (FIELD is a deterministic ground-cover zone; its
+// crops grow and ripen only as a colour the seasons give it); consulting this file from
 // core/TerrainWalkability.js or application/avatar/AvatarTerrainConstraint.js
 // (walkability stays exactly the slope-only decision 0.2.77 established
 // — no ecology zone is "this ground is unwalkable"); and any change to

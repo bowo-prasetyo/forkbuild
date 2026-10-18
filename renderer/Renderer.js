@@ -22,7 +22,9 @@ import { SkyBodies } from './SkyBodies.js';
 import { StarSky } from './StarSky.js';
 import { CloudSky } from './CloudSky.js';
 import { RainFall } from './RainFall.js';
-import { BRICK_WET, createWetSurfaces, makeWet, setWetShelter, setWetness } from './WetSurfaces.js';
+import { BRICK_WET, createWetSurfaces, makeWet, setSnowCover, setWetShelter, setWetness } from './WetSurfaces.js';
+import { createSeasonSurfaces, setSeason } from './SeasonalSurfaces.js';
+import { Drift, DRIFT } from './SeasonDrift.js';
 import { SunShadows } from './SunShadows.js';
 
 // Under water the view closes in to a blue-green haze: murkier and greener in a
@@ -40,11 +42,13 @@ function defaultTreeDetail() {
     return touchFirst ? TREE_DETAIL.LOW : TREE_DETAIL.HIGH;
 }
 
-// A breeze in fair weather, stronger as the clouds gather and the rain comes.
+// A breeze in fair weather, stronger as the clouds gather and the rain or
+// snow comes.
 function windStrengthOf(weather) {
     const cover = Number.isFinite(weather.cloudCover) ? weather.cloudCover : 0;
     const rain = Number.isFinite(weather.rain) ? weather.rain : 0;
-    return Math.min(1, 0.25 + 0.3 * cover + 0.45 * rain);
+    const snow = Number.isFinite(weather.snow) ? weather.snow : 0;
+    return Math.min(1, 0.25 + 0.3 * cover + 0.45 * rain + 0.3 * snow);
 }
 
 // Renderer owns the visualization pipeline only: scene, camera, lights, grid,
@@ -89,9 +93,18 @@ export class Renderer {
         this._rainFall = null;
         this._weather = null;
         this._rainShelter = null;
-        // How wet the ground and the bricks are (renderer/WetSurfaces.js),
-        // shared by the terrain and every brick this adds.
+        // How wet the ground and the bricks are, and how much snow lies on
+        // them (renderer/WetSurfaces.js), shared by the terrain, the trees
+        // and every brick this adds.
         this._wetSurfaces = createWetSurfaces();
+        // The season on the ground (renderer/SeasonalSurfaces.js), shared by
+        // every terrain tile; the trees colour themselves
+        // (renderer/TreeForest.js#setSeason()). Plain until setSeason() is
+        // called. What drifts down with it (snow, leaves, petals;
+        // renderer/SeasonDrift.js) is made the first time there is any.
+        this._seasonSurfaces = createSeasonSurfaces();
+        this._seasonLook = null;
+        this._drifts = { [DRIFT.SNOW]: null, [DRIFT.LEAVES]: null, [DRIFT.PETALS]: null };
         // How hard it rains, 0 to 1: every water tile's rain rings read it
         // (renderer/RainRings.js).
         this._rainLevel = { value: 0 };
@@ -121,7 +134,7 @@ export class Renderer {
         // second, independently-computed terrain function anywhere else.
         this._terrainStreaming = new TerrainStreamingController(
             this._sceneManager,
-            (tx, tz) => buildTerrainTileMesh(tx, tz, DEFAULT_WORLD_SEED, TERRAIN_TILE_SIZE, this._wetSurfaces),
+            (tx, tz) => buildTerrainTileMesh(tx, tz, DEFAULT_WORLD_SEED, TERRAIN_TILE_SIZE, this._wetSurfaces, this._seasonSurfaces),
             { disposeTile: disposeOwnedTile }
         );
         this._terrainStreaming.update(
@@ -325,7 +338,64 @@ export class Renderer {
         this._rainFall.set(rain);
         this._rainLevel.value = rain;
         setWetness(this._wetSurfaces, weather.wetness);
+        setSnowCover(this._wetSurfaces, weather.snowCover);
+        const snow = Number.isFinite(weather.snow) ? weather.snow : 0;
+        if (snow > 0 || this._drifts[DRIFT.SNOW]) this._drift(DRIFT.SNOW).set(snow);
         this._trees.setWind(windStrengthOf(weather));
+    }
+
+    // Dresses the land for the season `look` says (core/Season.js's
+    // seasonLookAt()): the grass, the fields and the trees
+    // (renderer/SeasonalSurfaces.js), and leaves or petals drifting down
+    // among the trees that shed them (renderer/SeasonDrift.js). A renderer
+    // never given one (the Editor, thumbnails) keeps high summer's look.
+    setSeason(look) {
+        if (!look || look === this._seasonLook) {
+            return;
+        }
+        this._seasonLook = look;
+        setSeason(this._seasonSurfaces, look);
+        this._trees.setSeason(look);
+    }
+
+    get seasonLook() {
+        return this._seasonLook;
+    }
+
+    // How much snow lies here, 0 to 1, as last set by setWeather().
+    get snowCover() {
+        return this._wetSurfaces.snowCover.value;
+    }
+
+    // How much snow, leaves (DRIFT.LEAVES) or petals are falling round the
+    // camera right now, 0 to 1.
+    driftAmount(kind) {
+        return this._drifts[kind] ? this._drifts[kind].amount : 0;
+    }
+
+    _drift(kind) {
+        if (!this._drifts[kind]) {
+            this._drifts[kind] = new Drift(this._sceneManager, kind);
+            this._drifts[kind].setShelter(this._rainShelter);
+        }
+        return this._drifts[kind];
+    }
+
+    // Leaves and petals drift down only among the trees that shed them.
+    _updateDrifts(underwater) {
+        const look = this._seasonLook;
+        if (look) {
+            const nearby = this._trees.deciduousNearby;
+            const leaves = (look.leafDrift || 0) * nearby;
+            const petals = (look.petalDrift || 0) * nearby;
+            if (leaves > 0 || this._drifts[DRIFT.LEAVES]) this._drift(DRIFT.LEAVES).set(leaves);
+            if (petals > 0 || this._drifts[DRIFT.PETALS]) this._drift(DRIFT.PETALS).set(petals);
+        }
+        const camera = this._cameraController.camera;
+        const options = { wind: this._trees.windDirection, pixelHeight: this._webglRenderer.domElement.height };
+        for (const drift of Object.values(this._drifts)) {
+            if (drift) drift.update(camera, this._waterWaveTime.value, this._skyLook, underwater, options);
+        }
     }
 
     // Keeps the rain off `shelter` (`{ minX, maxX, minZ, maxZ, top }` in world
@@ -335,6 +405,9 @@ export class Renderer {
         this._rainShelter = shelter || null;
         if (this._rainFall) {
             this._rainFall.setShelter(this._rainShelter);
+        }
+        for (const drift of Object.values(this._drifts)) {
+            if (drift) drift.setShelter(this._rainShelter);
         }
         setWetShelter(this._wetSurfaces, this._rainShelter);
     }
@@ -473,6 +546,9 @@ export class Renderer {
             this._cloudSky.dispose();
             this._rainFall.dispose();
         }
+        for (const drift of Object.values(this._drifts)) {
+            if (drift) drift.dispose();
+        }
         window.removeEventListener('resize', this._onResize);
         this._cameraController.dispose();
         this._container.removeChild(this._webglRenderer.domElement);
@@ -508,6 +584,7 @@ export class Renderer {
             this._cloudSky.update(this._cameraController.camera, this._wildlifeClock(), this._skyLook, underwater);
             this._rainFall.update(this._cameraController.camera, this._waterWaveTime.value, this._skyLook, underwater);
         }
+        this._updateDrifts(Boolean(UNDERWATER_LOOK[this._underwaterView]));
         for (const listener of this._frameListeners) {
             listener(deltaSeconds);
         }

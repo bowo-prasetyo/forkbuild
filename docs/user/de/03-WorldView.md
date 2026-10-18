@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 7e020f4bc9aa862c -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 20804c154b4aaf3d -->
 # 03 — Weltansicht
 
 <!-- languages -->
@@ -239,6 +239,32 @@ steigen nicht, und Sie gehen genauso schnell.
 Wenn Sie lieber immer Tag hätten, setzen Sie unten im Bereich, direkt über
 **Schatten**, das Häkchen bei **Immer Tag**. Dann bleibt auch der
 Himmel klar. Das wird auf diesem Gerät gespeichert und ändert für niemanden sonst etwas.
+
+## Jahreszeiten
+
+Die Welt durchläuft vier Jahreszeiten, jede acht Tage von World View lang
+(etwas mehr als fünf Stunden), eine für jeden Mondumlauf:
+
+- **Frühling**: Bäume blühen rosa und weiß und treiben frisches, hellgrünes
+  Laub aus; Wildblumen sprenkeln das Gras, und Blütenblätter schweben zwischen
+  den Bäumen herab.
+- **Sommer**: Alles ist üppig grün, an manchen Bäumen reift Obst, und die
+  Felder werden golden.
+- **Herbst**: Das Laub färbt sich rot, orange und gelb, jeder Baum zu seiner
+  Zeit, und weht um Sie herum herab, bis die Bäume kahl sind; die Felder werden
+  abgeerntet.
+- **Winter**: Die Bäume stehen kahl, das Gras ist matt, und wenn sich der
+  Himmel zuzieht, schneit es statt zu regnen. Der Schnee bleibt erst in
+  Flecken liegen, die zu einer weißen Decke zusammenwachsen, liegt auf Dächern
+  und Baumkronen (nie auf Wänden und nie in dem Bauwerk, in dem Sie stehen) und
+  taut im Frühling weg. Vögel singen weniger, und die Insekten sind fort.
+
+Das Land ändert sich jeden Tag ein wenig statt auf einen Schlag, und alle sehen
+im selben Moment dieselbe Jahreszeit. Nadelbäume bleiben das ganze Jahr grün.
+Um auf Ihrem Gerät stattdessen eine Jahreszeit zu behalten, wählen Sie sie unten
+im Bereich unter **Jahreszeit**, direkt unter **Detaillierte Bäume**; **Das Jahr der
+Welt** folgt wieder der Welt. Mit **Immer Tag** wechseln die Jahreszeiten
+weiter, unter klarem Himmel.
 
 ## Ton
 

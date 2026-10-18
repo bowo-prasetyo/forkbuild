@@ -469,6 +469,9 @@ export class WorldNavigationSession {
         this._vehicleRenderFrameSubscription = null;
         // Day and night (application/worldNavigation/dayCycleMethods.js).
         this._alwaysDay = false;
+        // A season this device keeps (core/Season.js's SEASON), or null to
+        // follow the world's year.
+        this._keptSeason = null;
         this._shadowsOn = false;
         // Null until this device's choice is given: the renderer keeps its own default.
         this._detailedTreesOn = null;
