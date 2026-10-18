@@ -97,7 +97,7 @@ export const observerLocalEncounterPanelTemplate = `<!--
                                 :key="commentary.commentaryId"
                                 class="world-encounter-observer-local-commentary-entry"
                             >
-                                <span class="world-encounter-observer-local-commentary-author">{{ commentary.authorIdentityId }}</span>
+                                <span class="world-encounter-observer-local-commentary-author"><IdentityName :identity-id="commentary.authorIdentityId" /></span>
                                 <p class="world-encounter-observer-local-commentary-content">{{ commentary.content }}</p>
                                 <CommentaryNetworkDistribution :commentary="commentary" />
                             </li>

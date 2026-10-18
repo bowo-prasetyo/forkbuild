@@ -231,6 +231,8 @@ export default Object.freeze({
     'notificationText.remixedNoName': '누군가 내 작품을 리믹스했습니다',
     'notificationText.remixedBody': '내 “{remixed}”의 리믹스 “{title}”',
     'notificationText.commented': '내 작품에 새 댓글',
+    'notificationText.hearted': '{author} 님이 내 작품에 하트를 보냈습니다',
+    'notificationText.heartedNoName': '누군가 내 작품에 하트를 보냈습니다',
     'notificationText.commentedBody': '어느 작품인지 종 아이콘을 열어 확인하세요.',
     'toolbar.exportModel': '3D 모델',
     'modelExport.title': '3D 모델로 내려받기',
@@ -745,6 +747,20 @@ export default Object.freeze({
     'descriptionReader.by': '{author} 님 작성',
     'descriptionReader.close': '닫기',
     'descriptionReader.comments': '댓글',
+
+    // Hearts on a build (ui/components/BuildHeart.js) and a person's name (ui/components/IdentityName.js).
+    'heart.give': '이 작품에 하트 보내기',
+    'heart.takeBack': '하트 거두기',
+    'heart.lovedByOne': '{a}의 하트',
+    'heart.lovedByTwo': '{a}, {b}의 하트',
+    'heart.lovedByMany': '{a} 외 {count}명의 하트',
+    'heart.you': '나',
+    'heart.explain': '하트는 공개됩니다. 내 이름으로 서명되어 연결된 피어와 설정에서 하트용으로 고른 네트워크(바꾸지 않으면 Nostr)로 보내집니다. 다시 탭하면 거둘 수 있습니다.',
+    'heart.giveIt': '하트 보내기',
+    'heart.cancel': '취소',
+    'heart.failed': '하트를 저장하지 못했습니다.',
+    'heart.signInFirst': '하트를 보내려면 먼저 이름을 정하세요.',
+    'identityName.title': '신원 {id}',
 
     // Editor and World View: editing document details (ui/components/MetadataEditorDialog.js).
     'metadataEditor.label': '작품 속성',
@@ -4041,6 +4057,9 @@ export default Object.freeze({
     'announcementDiscoveryProviderSettingsView.comments': '댓글',
     'announcementDiscoveryProviderSettingsView.commentsFollow': '위의 공지 / 발견 제공자와 같음',
     'announcementDiscoveryProviderSettingsView.commentsHint': '각 댓글 양식이 처음 선택하는 네트워크입니다. 댓글마다 ‘댓글 게시’ 옆에서 계속 바꿀 수 있습니다. ‘로컬 및 피어만’을 고르면 댓글이 어떤 네트워크에도 올라가지 않으므로 네트워크 계정이 필요 없습니다. 위의 선택처럼, 저장한 내용은 다음에 앱을 불러올 때 적용됩니다.',
+    'announcementDiscoveryProviderSettingsView.hearts': '하트',
+    'announcementDiscoveryProviderSettingsView.heartsHint': '작품에서 ♥를 탭했을 때 지금 연결된 피어 말고 하트를 보낼 곳입니다. Nostr에서는 반응으로 보내지며 다른 Nostr 앱에도 보입니다. 저장하면 바로 적용됩니다.',
+    'announcementDiscoveryProviderSettingsView.heartsCostHint': '하트를 보내거나 거둘 때마다 네트워크에 기록이 하나씩 생깁니다. Nostr에서는 비용이 없습니다. Arweave, Steem, Blurt에서는 지갑이나 Keychain으로 승인하는 거래나 게시물이 되고, Arweave와 Blurt는 수수료가 듭니다. Steem과 Blurt에서도 하트는 투표가 아닙니다. “로컬 및 피어만”은 지금 연결된 피어에게만 닿습니다.',
 
     // Identity, Peers, Chat and settings: arweaveGatewaySettingsView.
     'arweaveGatewaySettingsView.arweaveGateway': 'Arweave 게이트웨이',

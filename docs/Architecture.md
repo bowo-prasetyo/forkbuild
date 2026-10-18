@@ -2143,6 +2143,18 @@ pick the substrate with `ui/components/CommentaryDistributionPicker.js`, which a
 commenters with no network account. A peers-only comment reaches only the peers connected when it is posted: the peer
 exchange is announce-only, with no catch-up for peers that connect later.
 
+Hearts (docs/Protocol.md, "Publication Hearts") reuse this machinery. `CreatePublicationCommentaryDistributionPeerExchangeUseCase`
+also builds the `PublicationHeartStore` and `PublicationHeartExchange`, and wraps the comment exchange with
+`withHeartRouting()`, so the peer exchange and every comment reader send a heart envelope to the heart store by its
+`kind`. `ui/main.js` gives one tap through `SetPublicationHeartUseCase` (kept first), then
+`createPublicationHeartDistributor()` (peers, then the network `HeartDistributionPreferenceStore` names: Nostr through
+`NostrPublicationHeartDistribution` as kind-7 reactions and kind-5 deletion requests, any other through that network's
+comment carrier). `PublicationHeartNotificationBridge` tells a builder of a new heart (`publication.hearted`).
+`ui/components/BuildHeart.js` shows a build's hearts in World View's About this build panel and reading sheet and in
+Explore's cards and rows. People are named by `application/publication/identityNames.js` (provided as
+`identityNames`): this device's own name, else the name of their newest verified build, else a credit's name, else the
+name the record carries; `ui/components/IdentityName.js` shows it, comment authors included, never a bare key.
+
 Every comment form starts on `defaultCommentaryDistributionProvider`, and the distributor falls back to it when a
 comment carries no choice. `ui/main/composeContentAndSnapshots.js` resolves it once at boot with
 `resolveCommentaryDistributionProvider()` (`core/CommentaryDistributionProvider.js`): the saved comment default from

@@ -1,6 +1,7 @@
 import { FOLLOWED_AUTHOR_PUBLISHED_EVENT_TYPE } from '../../application/publication/FollowedAuthorPublicationNotifier.js';
 import { BUILD_REMIXED_EVENT_TYPE } from '../../application/publication/RemixedBuildNotifier.js';
 import { PUBLICATION_COMMENTED_EVENT_TYPE } from '../../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
+import { PUBLICATION_HEARTED_EVENT_TYPE } from '../../application/publication/heart/PublicationHeartNotifications.js';
 import { t } from '../i18n/i18n.js';
 
 // A notification in words: `{ title, body }` for the kinds ForkBuild makes,
@@ -26,6 +27,11 @@ export function describeNotification(event) {
                     : (title ? t('notificationText.quotedTitle', { title }) : '')
             });
         }
+        case PUBLICATION_HEARTED_EVENT_TYPE:
+            return Object.freeze({
+                title: author ? t('notificationText.hearted', { author }) : t('notificationText.heartedNoName'),
+                body: title ? t('notificationText.quotedTitle', { title }) : ''
+            });
         case PUBLICATION_COMMENTED_EVENT_TYPE:
             return Object.freeze({ title: t('notificationText.commented'), body: t('notificationText.commentedBody') });
         default:

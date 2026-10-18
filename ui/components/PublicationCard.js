@@ -1,5 +1,6 @@
 import PublicationPreview from './PublicationPreview.js';
 import PublicationCommentarySection from './PublicationCommentarySection.js';
+import BuildHeart from './BuildHeart.js';
 import SharePublicationButton from './SharePublicationButton.js';
 import FollowButton from './FollowButton.js';
 import { publicationDateText } from '../i18n/dateText.js';
@@ -37,7 +38,7 @@ import { remixCountText, remixedFromText } from './remix/remixText.js';
 // gate every optional capability in this codebase's UI layer follows.
 export default {
     name: 'PublicationCard',
-    components: { I18nText, PublicationPreview, PublicationCommentarySection, SharePublicationButton, FollowButton },
+    components: { I18nText, PublicationPreview, PublicationCommentarySection, SharePublicationButton, FollowButton, BuildHeart },
     inject: {
         // Read only to decide whether to offer the Comment toggle.
         getPublicationCommentariesCommand: { default: null },
@@ -132,6 +133,7 @@ export default {
                 {{ publishedAtLabel }} · {{ licenseLabel }}
             </p>
             <p class="publication-forks" v-if="remixes">{{ remixes }}</p>
+            <BuildHeart :publication-id="publication.id" class="publication-hearts" />
             <p v-if="distribution && distribution.recorded" class="publication-distribution">
                 <template v-if="distribution.stored.length">{{ t('publicationCard.storedOn') }}
                     <template v-for="(entry, index) in distribution.stored" :key="'s' + entry.label"><template v-if="index">{{ ' ' + t('publicationCard.and') + ' ' }}</template><span class="publication-distribution-item" :title="entry.detail">{{ entry.label }}</span></template>

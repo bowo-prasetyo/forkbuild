@@ -228,6 +228,8 @@ export default Object.freeze({
     'notificationText.remixedNoName': '誰かがあなたの作品をリミックスしました',
     'notificationText.remixedBody': 'あなたの「{remixed}」のリミックス「{title}」',
     'notificationText.commented': 'あなたの作品に新しいコメント',
+    'notificationText.hearted': '{author}があなたの作品にハートを贈りました',
+    'notificationText.heartedNoName': '誰かがあなたの作品にハートを贈りました',
     'notificationText.commentedBody': 'どの作品かはベルを開いて確認してください。',
     'toolbar.exportModel': '3D モデル',
     'modelExport.title': '3D モデルとしてダウンロード',
@@ -742,6 +744,20 @@ export default Object.freeze({
     'descriptionReader.by': '作者: {author}',
     'descriptionReader.close': '閉じる',
     'descriptionReader.comments': 'コメント',
+
+    // Hearts on a build (ui/components/BuildHeart.js) and a person's name (ui/components/IdentityName.js).
+    'heart.give': 'この作品にハートを贈る',
+    'heart.takeBack': 'ハートを取り消す',
+    'heart.lovedByOne': '{a}がハートを贈りました',
+    'heart.lovedByTwo': '{a}と{b}がハートを贈りました',
+    'heart.lovedByMany': '{a}ほか{count}人がハートを贈りました',
+    'heart.you': 'あなた',
+    'heart.explain': 'ハートは公開されます。あなたの名前で署名され、接続中のピアと、設定でハート用に選んだネットワーク（変更しなければ Nostr）に送られます。もう一度タップすると取り消せます。',
+    'heart.giveIt': 'ハートを贈る',
+    'heart.cancel': 'キャンセル',
+    'heart.failed': 'ハートを保存できませんでした。',
+    'heart.signInFirst': 'ハートを贈るには、まず名前を決めてください。',
+    'identityName.title': 'ID {id}',
 
     // Editor and World View: editing document details (ui/components/MetadataEditorDialog.js).
     'metadataEditor.label': '作品のプロパティ',
@@ -4038,6 +4054,9 @@ export default Object.freeze({
     'announcementDiscoveryProviderSettingsView.comments': 'コメント',
     'announcementDiscoveryProviderSettingsView.commentsFollow': '上の告知 / 発見サービスと同じ',
     'announcementDiscoveryProviderSettingsView.commentsHint': '各コメント欄で最初に選ばれているネットワークです。コメントごとに コメントを投稿 の横で変更できます。「ローカルとピアのみ」を選ぶと、コメントはどのネットワークにも載らないため、ネットワークのアカウントは不要です。上の選択と同じく、保存は次にアプリを読み込んだときに反映されます。',
+    'announcementDiscoveryProviderSettingsView.hearts': 'ハート',
+    'announcementDiscoveryProviderSettingsView.heartsHint': '作品の ♥ をタップしたとき、いま接続中のピアのほかにハートを送る先です。Nostr ではリアクションとして送られ、ほかの Nostr アプリにも表示されます。保存するとすぐに反映されます。',
+    'announcementDiscoveryProviderSettingsView.heartsCostHint': 'ハートを贈るたび、取り消すたびに、ネットワークに記録が1件できます。Nostr では費用はかかりません。Arweave・Steem・Blurt ではウォレットか Keychain で承認するトランザクションや投稿になり、Arweave と Blurt では手数料がかかります。Steem と Blurt でもハートが投票になることはありません。「ローカルとピアのみ」はいま接続中のピアにだけ届きます。',
 
     // Identity, Peers, Chat and settings: arweaveGatewaySettingsView.
     'arweaveGatewaySettingsView.arweaveGateway': 'Arweaveゲートウェイ',

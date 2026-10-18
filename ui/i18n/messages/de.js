@@ -231,6 +231,8 @@ export default Object.freeze({
     'notificationText.remixedNoName': 'Jemand hat Ihr Bauwerk geremixt',
     'notificationText.remixedBody': '„{title}“, ein Remix Ihres „{remixed}“',
     'notificationText.commented': 'Neuer Kommentar zu Ihrem Bauwerk',
+    'notificationText.hearted': '{author} mag Ihr Bauwerk',
+    'notificationText.heartedNoName': 'Jemand mag Ihr Bauwerk',
     'notificationText.commentedBody': 'Öffnen Sie die Glocke, um zu sehen, zu welchem Bauwerk.',
     'toolbar.exportModel': '3D-Modell',
     'modelExport.title': 'Als 3D-Modell herunterladen',
@@ -745,6 +747,20 @@ export default Object.freeze({
     'descriptionReader.by': 'von {author}',
     'descriptionReader.close': 'Schließen',
     'descriptionReader.comments': 'Kommentare',
+
+    // Hearts on a build (ui/components/BuildHeart.js) and a person's name (ui/components/IdentityName.js).
+    'heart.give': 'Dieses Bauwerk mögen',
+    'heart.takeBack': 'Herz zurücknehmen',
+    'heart.lovedByOne': 'Gefällt {a}',
+    'heart.lovedByTwo': 'Gefällt {a} und {b}',
+    'heart.lovedByMany': 'Gefällt {a} und {count} anderen',
+    'heart.you': 'Ihnen',
+    'heart.explain': 'Ein Herz ist öffentlich: Es wird mit Ihrem Namen signiert und an verbundene Peers und an das in den Einstellungen für Herzen gewählte Netzwerk gesendet (Nostr, solange Sie nichts ändern). Ein weiterer Tipp nimmt es zurück.',
+    'heart.giveIt': 'Herz geben',
+    'heart.cancel': 'Abbrechen',
+    'heart.failed': 'Das Herz konnte nicht gespeichert werden.',
+    'heart.signInFirst': 'Wählen Sie zuerst einen Namen, um ein Herz zu geben.',
+    'identityName.title': 'Identität {id}',
 
     // Editor and World View: editing document details (ui/components/MetadataEditorDialog.js).
     'metadataEditor.label': 'Bauwerkeigenschaften',
@@ -4040,6 +4056,9 @@ export default Object.freeze({
     'announcementDiscoveryProviderSettingsView.comments': 'Kommentare',
     'announcementDiscoveryProviderSettingsView.commentsFollow': 'Wie der Anbieter für Ankündigung / Entdeckung oben',
     'announcementDiscoveryProviderSettingsView.commentsHint': 'Das Netzwerk, mit dem jedes Kommentarformular beginnt. Neben „Kommentar senden“ können Sie es für jeden Kommentar weiterhin ändern. „Nur lokal & Peers“ hält Ihre Kommentare aus allen Netzwerken heraus, daher brauchen Sie kein Netzwerkkonto. Wie bei der Auswahl oben wirkt das Speichern beim nächsten Laden dieser App.',
+    'announcementDiscoveryProviderSettingsView.hearts': 'Herzen',
+    'announcementDiscoveryProviderSettingsView.heartsHint': 'Wohin ein Herz geht, wenn Sie bei einem Bauwerk auf ♥ tippen, außer an die gerade verbundenen Peers. Auf Nostr ist es eine Reaktion, die auch andere Nostr-Apps zeigen. Speichern wirkt sofort.',
+    'announcementDiscoveryProviderSettingsView.heartsCostHint': 'Jedes Herz und jedes zurückgenommene Herz ist ein Eintrag im Netzwerk. Auf Nostr kostet das nichts. Auf Arweave, Steem und Blurt ist es eine Transaktion oder ein Beitrag, den Ihre Wallet oder Keychain bestätigen lässt, und Arweave und Blurt berechnen dafür Gebühren; auf Steem und Blurt ist ein Herz nie eine Stimme. Nur lokal & Peers erreicht nur die gerade verbundenen Peers.',
 
     // Identity, Peers, Chat and settings: arweaveGatewaySettingsView.
     'arweaveGatewaySettingsView.arweaveGateway': 'Arweave-Gateway',

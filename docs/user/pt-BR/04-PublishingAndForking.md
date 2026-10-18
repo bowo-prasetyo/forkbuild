@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 292532b0feafed52 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 1a00088b7f29f33c -->
 # 04 — Publicar e remixar
 
 <!-- languages -->
@@ -680,6 +680,22 @@ Quando este dispositivo encontra o remix que outra pessoa fez de uma das
 suas construções, seu 🔔 ganha uma entrada **… remixou sua construção**,
 uma vez por remix (e seu dispositivo também a mostra, se você ativou
 [Notificações neste dispositivo](03-WorldView.md#notificações-neste-dispositivo)).
+
+### Curtidas
+
+Toque em **♡** numa construção que você adora: no painel **Sobre esta
+construção** da Visão do Mundo ou no cartão dela em **Explorar**. Ele vira
+**♥** e diz quem curtiu: **Curtido por você e mais 11**. Clique nessa linha
+para ver todo mundo, cada nome um link para a página da pessoa. Toque em
+**♥** de novo para retirar sua curtida.
+
+Uma curtida é pública. Ela é assinada com o nome com que você entrou,
+enviada às pessoas conectadas a você e à rede escolhida para curtidas em
+**Configurações → Anúncio / Descoberta → Curtidas** (Nostr, se você não
+mudar, onde outros apps do Nostr a mostram como um like), e quem construiu
+recebe no 🔔 a entrada **… curtiu sua construção**. Na primeira vez, o
+ForkBuild avisa antes de enviar. Como a contagem de remixes, o número é só o
+que este dispositivo encontrou, e nunca decide o que aparece primeiro.
 
 ### Quando um remix não pode ser concluído
 

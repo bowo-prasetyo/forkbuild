@@ -6,6 +6,7 @@ import { descriptionPlainText, previewDescription } from '../../core/Description
 import FormattedDescription from './FormattedDescription.js';
 import { builtWithNames } from './remix/builtWithText.js';
 import BuiltWithNames from './remix/BuiltWithNames.js';
+import BuildHeart from './BuildHeart.js';
 import I18nText from '../i18n/I18nText.js';
 
 // 0.2.21: the "Document Information" panel from the milestone design
@@ -34,10 +35,11 @@ import I18nText from '../i18n/I18nText.js';
 // to show all of it somewhere wider (DescriptionReaderSheet in World View).
 // Given a `commentCount` (World View, for a build with a Publication), a
 // line under it says how many comments there are and emits 'read-comments'
-// to show them in that same sheet.
+// to show them in that same sheet; given its `publicationId`, its hearts
+// show there too.
 export default {
     name: 'DocumentInfoPanel',
-    components: { FormattedDescription, BuiltWithNames, I18nText },
+    components: { FormattedDescription, BuiltWithNames, I18nText, BuildHeart },
     props: {
         info: {
             type: Object,
@@ -52,6 +54,12 @@ export default {
         // comments): then no comments line shows.
         commentCount: {
             type: Number,
+            default: null
+        },
+        // The build's Publication id, when it has one: its hearts
+        // (BuildHeart) show under the description.
+        publicationId: {
+            type: String,
             default: null
         }
     },
@@ -130,6 +138,7 @@ export default {
                     @click="$emit('read-description')"
                 >{{ t('documentInfo.readMore') }}</button>
             </div>
+            <BuildHeart v-if="publicationId" :publication-id="publicationId" refresh class="document-info-hearts" />
             <button
                 v-if="commentCount !== null"
                 type="button"

@@ -640,6 +640,21 @@ gets a **… remixed your build** entry, once per remix (and your device
 shows it too, if you turned on
 [Notifications on this device](03-WorldView.md#notifications-on-this-device)).
 
+### Hearts
+
+Tap **♡** on a build you love: in World View's **About this build** panel
+or on its card in **Explore**. It turns into **♥** and says who loves the
+build: **Loved by you and 11 others**. Click that line to see everyone, each
+name a link to their page. Tap **♥** again to take your heart back.
+
+A heart is public. It's signed with the name you signed in with, sent to
+the people connected to you and to the network chosen for hearts in
+**Settings → Announcement / Discovery → Hearts** (Nostr unless you change
+it, where other Nostr apps show it as a like), and the builder gets a
+**… loves your build** entry in their 🔔. The first time, ForkBuild says so
+before sending it. Like the remix count, the number is only what this
+device has found, and it never decides what is shown first.
+
 ### When a remix can't complete
 
 Occasionally a remix can't go through — most often when remixing a Shared World

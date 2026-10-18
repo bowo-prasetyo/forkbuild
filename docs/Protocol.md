@@ -1067,6 +1067,53 @@ every verified envelope under the shared tag, whichever Publication it is about.
 A Nostr relay OK means "accepted," not durably stored. On Arweave, "not yet mined," "never published" and "gateway
 unreachable" all surface as `ContentUnavailableError`, and are never reported as "absent."
 
+## Publication Hearts
+
+A heart is one identity saying it loves a Publication, or taking that back (`core/PublicationHeart.js`). Every tap is
+a new record, and **each person's latest record for a Publication is what counts** (`currentHeartsFor()`: the later
+`createdAt`, and between two at the same moment the greater `heartId`, so every device settles on the same one). A
+heart is therefore taken back by sending a newer record, which works on every carrier, permanent ones included.
+Distribution wraps it in a signed envelope (`core/PublicationHeartDistributionEnvelope.js`):
+
+    {
+      kind: 'forkbuild.publication-heart-distribution',
+      schemaVersion: 1,
+      heartId, publicationId, authorIdentityId,
+      authorName,              // the name the person chose, or null; unverified
+      hearted,                 // true: a heart; false: taken back
+      createdAt,
+      signature                // core/Signature.js JSON
+    }
+
+The signature has type `publication-heart-distribution` and covers every field above but `kind`, `schemaVersion` and
+the signature (`id` = `heartId`, `revision` = `createdAt`).
+`LocalAuthorizationVerifier#verifyPublicationHeartDistributionEnvelope()` requires the signer to be
+`authorIdentityId` and never accepts an unsigned envelope. `PublicationHeartStore` keeps every record and deduplicates
+by `heartId`. A heart is never a comment: it has its own record, store and signature type, and comment lists, counts
+and notifications never see one. A count of hearts is what this device has found, never a score, rank or sort order
+(docs/principles/achievements.md).
+
+Hearts ride the comment carriers. Peers, Arweave, Steem and Blurt carry the heart envelope exactly as they carry a
+comment's (the table above), and every reader hands what it finds to one exchange that sends a heart envelope to the
+heart store by its `kind` (`application/publication/heart/withHeartRouting.js`). A copy of ForkBuild from before
+hearts reads one as a malformed comment and skips it, so it never shows an empty comment. Nostr is the exception, so
+that other Nostr apps show a heart as a like:
+
+| Record | Nostr event |
+|--------|-------------|
+| a heart (`hearted: true`) | kind 7 (NIP-25 reaction), `content` = `❤️` |
+| taken back (`hearted: false`) | kind 5 (NIP-09 deletion request) with an `e` tag for each kind-7 event this device sent for that heart, and `['k', '7']` |
+
+Both carry tags `['t', 'forkbuild-heart']`, `['t', 'forkbuild-heart:<publicationId>']` and `['forkbuild', <envelope
+JSON>]`, and are published on every configured relay. A relay may or may not honour a deletion request; ForkBuild goes
+by the signed records alone.
+
+A tap keeps the record locally first, announces it over WebRTC second, then publishes it to the one network chosen
+for hearts (`HeartDistributionPreferenceStore`, Settings → Announcement / Discovery → Hearts): Nostr unless changed,
+or Arweave, Steem, Blurt, or "Local & peers only". On Steem and Blurt a heart is a ForkBuild record in the usual
+commentary place, never a vote. Readers fetch a Publication's hearts with its comments: Nostr under the heart tags,
+the other networks with their comments.
+
 ## Proposed: Steem Announcement Substrate
 
 **Status: built, Experimental.** The discovery threads exist on the chain (from 2026-09), and the app reads and

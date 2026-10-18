@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 292532b0feafed52 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 1a00088b7f29f33c -->
 # 04 — Publier et remixer
 
 <!-- languages -->
@@ -719,6 +719,23 @@ Quand cet appareil trouve le remix, par quelqu’un d’autre, de l’une de vos
 constructions, votre 🔔 reçoit une entrée **… a remixé votre
 construction**, une fois par remix (et votre appareil l’affiche aussi, si
 vous avez activé [Notifications sur cet appareil](03-WorldView.md#notifications-sur-cet-appareil)).
+
+### Cœurs
+
+Touchez **♡** sur une construction que vous aimez : dans le panneau **À
+propos de cette construction** de la Vue du Monde ou sur sa carte dans
+**Explorer**. Il devient **♥** et dit qui l’aime : **Aimé par vous et 11
+autres**. Cliquez sur cette ligne pour voir tout le monde, chaque nom un
+lien vers sa page. Touchez de nouveau **♥** pour retirer votre cœur.
+
+Un cœur est public. Il est signé du nom avec lequel vous êtes connecté,
+envoyé aux personnes connectées à vous et au réseau choisi pour les cœurs
+dans **Réglages → Annonce / Découverte → Cœurs** (Nostr si vous ne le
+changez pas, où d’autres applis Nostr l’affichent comme un j’aime), et le
+bâtisseur reçoit dans sa 🔔 l’entrée **… aime votre construction**. La
+première fois, ForkBuild vous le dit avant de l’envoyer. Comme le nombre de
+remix, le nombre n’est que ce que cet appareil a trouvé, et il ne décide
+jamais de ce qui s’affiche en premier.
 
 ### Quand un remix ne peut pas aboutir
 

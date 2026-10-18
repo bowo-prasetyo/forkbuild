@@ -2,6 +2,7 @@ import { describeLicense } from '../../application/document/LicenseLabels.js';
 import { t } from '../i18n/i18n.js';
 import FormattedDescription from './FormattedDescription.js';
 import PublicationCommentarySection from './PublicationCommentarySection.js';
+import BuildHeart from './BuildHeart.js';
 
 // A build's whole description and its comments, wide enough to read:
 // opened from "Read more" or the comments line in the About this build panel
@@ -24,7 +25,7 @@ import PublicationCommentarySection from './PublicationCommentarySection.js';
 // 'edit-metadata'. `info` is the panel's own (getDocumentInfo()).
 export default {
     name: 'DescriptionReaderSheet',
-    components: { FormattedDescription, PublicationCommentarySection },
+    components: { FormattedDescription, PublicationCommentarySection, BuildHeart },
     props: {
         info: { type: Object, required: true },
         // The build's Publication, or null when it has none to comment on.
@@ -97,6 +98,7 @@ export default {
                     <p class="description-reader-kicker">{{ t('documentInfo.title') }}</p>
                     <h3 id="description-reader-title" class="description-reader-title">{{ info.title }}</h3>
                     <p class="description-reader-meta">{{ meta }}</p>
+                    <BuildHeart v-if="publication" :publication-id="publication.id" class="description-reader-hearts" />
                 </div>
                 <button
                     type="button"

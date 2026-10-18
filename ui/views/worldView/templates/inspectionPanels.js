@@ -141,6 +141,7 @@ export const inspectionPanelsTemplate = `<div v-if="spatialInspection" class="sp
                     v-if="documentInfo"
                     :info="documentInfo"
                     :comment-count="documentCommentCount"
+                    :publication-id="documentPublication ? documentPublication.id : null"
                     @edit-metadata="openMetadataEditor(documentInfo)"
                     @read-description="openDescriptionReader(documentInfo)"
                     @read-comments="openDescriptionReader(documentInfo, 'comments')"

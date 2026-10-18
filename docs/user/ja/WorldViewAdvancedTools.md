@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: a22a2e4bd16629ee -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: af50373d663c56e2 -->
 # ワールドビュー：詳細ツール
 
 <!-- languages -->
@@ -102,6 +102,8 @@
   **Esc** か **✕** で閉じます。
   公開された作品には **💬 コメント** も表示されます。同じパネルの説明の下に
   開き、**さがす** のカードと同じように読んだり書き込んだりできます。
+  公開された作品にはハート（**♡** と、ハートを贈った人）も表示されます。
+  [ハート](04-PublishingAndForking.md#ハート) を参照してください。
 - **配置**：作品がワールドのどこに立っているか。単位は
   **ワールド単位** です。GPS ではなく ForkBuild 独自の座標で、1 ワールド
   単位は 1 メートルです。**フォーカス** でそこへ行きます。**移動** で

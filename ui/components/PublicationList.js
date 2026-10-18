@@ -1,5 +1,6 @@
 import PublicationPreview from './PublicationPreview.js';
 import PublicationCommentarySection from './PublicationCommentarySection.js';
+import BuildHeart from './BuildHeart.js';
 import SharePublicationButton from './SharePublicationButton.js';
 import { publicationDateText } from '../i18n/dateText.js';
 import { License } from '../../core/License.js';
@@ -26,7 +27,7 @@ import { remixedFromText } from './remix/remixText.js';
 // never share or bleed state.
 export default {
     name: 'PublicationList',
-    components: { PublicationPreview, PublicationCommentarySection, SharePublicationButton },
+    components: { PublicationPreview, PublicationCommentarySection, SharePublicationButton, BuildHeart },
     inject: {
         // Read only to decide whether to offer the Comment toggle.
         getPublicationCommentariesCommand: { default: null }
@@ -103,6 +104,7 @@ export default {
                                 <span v-if="descriptions[pub.documentId]" class="publication-description publication-description--list">
                                     {{ descriptions[pub.documentId] }}
                                 </span>
+                                <BuildHeart :publication-id="pub.id" compact class="publication-hearts" />
                             </td>
                             <td>
                                 <template v-if="pub.author">

@@ -90,9 +90,33 @@ export default {
             }
         }
 
+        // Hearts: their own network, Nostr unless changed, read on every tap
+        // (ui/main.js), so saving takes effect at once.
+        const heartPreferenceStore = inject('heartDistributionPreferenceStore', null);
+        const heartOptions = [
+            ...sortOptionsByLabel(only(AVAILABLE_PROVIDER_KEYS).map((providerKey) => ({ providerKey, label: commentaryDistributionProviderLabel(providerKey) }))),
+            { providerKey: LOCAL_AND_PEERS_ONLY, label: commentaryDistributionProviderLabel(LOCAL_AND_PEERS_ONLY) }
+        ];
+        const selectedHeartProviderKey = ref(heartPreferenceStore ? heartPreferenceStore.get() : 'nostr');
+        const heartSaveError = ref(null);
+        const heartSaveStatus = ref('idle'); // 'idle' | 'saved'
+        function saveHeart() {
+            if (!heartPreferenceStore) return;
+            heartSaveError.value = null;
+            try {
+                heartPreferenceStore.save(selectedHeartProviderKey.value);
+                heartSaveStatus.value = 'saved';
+            } catch (error) {
+                heartSaveStatus.value = 'idle';
+                heartSaveError.value = errorText(error);
+            }
+        }
+
         return {
             t,
             displayText,
+            heartOptions, selectedHeartProviderKey, heartSaveError, heartSaveStatus, saveHeart,
+            hasHeartPreferenceStore: !!heartPreferenceStore,
             settings, selectedProviderKey: form.selectedProviderKey,
             saveError: form.saveError, saveStatus: form.saveStatus, save: form.save,
             commentaryOptions, selectedCommentaryProviderKey, commentarySaveError, commentarySaveStatus, saveCommentary,
@@ -140,6 +164,24 @@ export default {
                     <p v-if="commentarySaveStatus === 'saved'" class="form-hint form-hint--neutral">{{ t('announcementDiscoveryProviderSettingsView.saved') }}</p>
 
                     <button class="action-btn action-btn--primary commentary-distribution-preference-save" @click="saveCommentary">{{ t('announcementDiscoveryProviderSettingsView.save') }}</button>
+                </div>
+            </template>
+
+            <template v-if="hasHeartPreferenceStore">
+                <h2>{{ t('announcementDiscoveryProviderSettingsView.hearts') }}</h2>
+                <p class="form-hint form-hint--neutral">{{ t('announcementDiscoveryProviderSettingsView.heartsHint') }}</p>
+                <p class="form-hint form-hint--neutral">{{ t('announcementDiscoveryProviderSettingsView.heartsCostHint') }}</p>
+
+                <div class="announcement-discovery-provider-settings-form heart-distribution-preference-form">
+                    <label v-for="opt in heartOptions" :key="opt.providerKey" class="announcement-discovery-provider-option">
+                        <input type="radio" name="heart-distribution-preference" :value="opt.providerKey" v-model="selectedHeartProviderKey" />
+                        {{ opt.label }}
+                    </label>
+
+                    <p v-if="heartSaveError" class="form-hint">{{ heartSaveError }}</p>
+                    <p v-if="heartSaveStatus === 'saved'" class="form-hint form-hint--neutral">{{ t('announcementDiscoveryProviderSettingsView.saved') }}</p>
+
+                    <button class="action-btn action-btn--primary heart-distribution-preference-save" @click="saveHeart">{{ t('announcementDiscoveryProviderSettingsView.save') }}</button>
                 </div>
             </template>
         </section>

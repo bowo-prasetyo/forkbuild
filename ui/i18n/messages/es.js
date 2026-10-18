@@ -232,6 +232,8 @@ export default Object.freeze({
     'notificationText.remixedNoName': 'Alguien remezcló su construcción',
     'notificationText.remixedBody': '“{title}”, remezcla de su “{remixed}”',
     'notificationText.commented': 'Nuevo comentario en su construcción',
+    'notificationText.hearted': 'A {author} le encanta tu construcción',
+    'notificationText.heartedNoName': 'A alguien le encanta tu construcción',
     'notificationText.commentedBody': 'Abra la campana para ver en cuál.',
     'toolbar.exportModel': 'Modelo 3D',
     'modelExport.title': 'Descargar como modelo 3D',
@@ -746,6 +748,20 @@ export default Object.freeze({
     'descriptionReader.by': 'de {author}',
     'descriptionReader.close': 'Cerrar',
     'descriptionReader.comments': 'Comentarios',
+
+    // Hearts on a build (ui/components/BuildHeart.js) and a person's name (ui/components/IdentityName.js).
+    'heart.give': 'Me encanta esta construcción',
+    'heart.takeBack': 'Retirar tu corazón',
+    'heart.lovedByOne': 'Corazón de {a}',
+    'heart.lovedByTwo': 'Corazones de {a} y {b}',
+    'heart.lovedByMany': 'Corazones de {a} y {count} más',
+    'heart.you': 'ti',
+    'heart.explain': 'Un corazón es público: se firma con tu nombre y se envía a los pares conectados y a la red elegida para los corazones en Ajustes (Nostr si no la cambias). Toca otra vez para retirarlo.',
+    'heart.giveIt': 'Me encanta',
+    'heart.cancel': 'Cancelar',
+    'heart.failed': 'No se pudo guardar el corazón.',
+    'heart.signInFirst': 'Elige primero un nombre para dar un corazón.',
+    'identityName.title': 'Identidad {id}',
 
     // Editor and World View: editing document details (ui/components/MetadataEditorDialog.js).
     'metadataEditor.label': 'Propiedades de la construcción',
@@ -4040,6 +4056,9 @@ export default Object.freeze({
     'announcementDiscoveryProviderSettingsView.comments': 'Comentarios',
     'announcementDiscoveryProviderSettingsView.commentsFollow': 'Igual que el proveedor de anuncio / descubrimiento de arriba',
     'announcementDiscoveryProviderSettingsView.commentsHint': 'La red con la que empieza cada formulario de comentarios. Puede cambiarla junto a «Publicar comentario» en cualquier comentario. «Solo local y pares» mantiene sus comentarios fuera de toda red, así que no necesita cuenta en ninguna red. Igual que la opción de arriba, lo que guarde tendrá efecto la próxima vez que se cargue la app.',
+    'announcementDiscoveryProviderSettingsView.hearts': 'Corazones',
+    'announcementDiscoveryProviderSettingsView.heartsHint': 'Adónde va un corazón cuando tocas ♥ en una construcción, además de a los pares conectados ahora. En Nostr es una reacción, que también muestran otras apps de Nostr. Guardar tiene efecto al momento.',
+    'announcementDiscoveryProviderSettingsView.heartsCostHint': 'Cada corazón, y cada corazón retirado, es un registro en la red. En Nostr no cuesta nada. En Arweave, Steem y Blurt es una transacción o publicación que tu monedero o Keychain te pide aprobar, y Arweave y Blurt cobran por ello; en Steem y Blurt un corazón nunca es un voto. Solo local y pares llega solo a los pares conectados ahora.',
 
     // Identity, Peers, Chat and settings: arweaveGatewaySettingsView.
     'arweaveGatewaySettingsView.arweaveGateway': 'Gateway de Arweave',
