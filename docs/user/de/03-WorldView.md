@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 20804c154b4aaf3d -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 3b35ccdb4d528c27 -->
 # 03 — Weltansicht
 
 <!-- languages -->
@@ -265,6 +265,15 @@ Um auf Ihrem Gerät stattdessen eine Jahreszeit zu behalten, wählen Sie sie unt
 im Bereich unter **Jahreszeit**, direkt unter **Detaillierte Bäume**; **Das Jahr der
 Welt** folgt wieder der Welt. Mit **Immer Tag** wechseln die Jahreszeiten
 weiter, unter klarem Himmel.
+
+Auch die Sonne folgt den Jahreszeiten. Im Sommer steigt sie hoch, und die
+Tage sind lang; im Winter bleibt sie tief, wirft lange Schatten, und die
+Nacht kommt früher. Im tiefsten Winter frieren die Seen so fest zu, dass man
+über sie gehen kann (das Meer und die Flüsse nie); solange das Eis sich noch
+bildet oder am Ende des Winters aufbricht, trägt es Sie nicht. Alle sehen im
+selben Moment dasselbe Eis, welche Jahreszeit sie auch behalten. Schnee
+knirscht unter den Füßen, Eis klackt, und im Schnee hinterlässt Ihr Avatar
+Fußspuren, die nach einer Minute verblassen. Nur Sie sehen Ihre Fußspuren.
 
 ## Ton
 

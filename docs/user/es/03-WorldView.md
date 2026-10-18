@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 20804c154b4aaf3d -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 3b35ccdb4d528c27 -->
 # 03 — Vista del mundo
 
 <!-- languages -->
@@ -265,6 +265,15 @@ Para mantener una estación en su dispositivo, elíjala en **Estación**, cerca 
 final del panel, justo debajo de **Árboles detallados**; **El año del mundo** vuelve a
 seguir al mundo. Con **Siempre de día** activado, las estaciones siguen
 cambiando, bajo un cielo despejado.
+
+El sol también sigue las estaciones. En verano sube alto y los días son
+largos; en invierno se queda bajo, proyecta sombras largas y la noche llega
+antes. En pleno invierno los lagos se hielan lo bastante como para cruzarlos
+a pie (el mar y los ríos nunca); mientras el hielo aún se forma, o se rompe
+al final del invierno, no lo aguantará. Todos ven el mismo hielo en el mismo
+momento, sea cual sea la estación que mantengan. La nieve cruje bajo los pies
+y el hielo suena seco, y al caminar por la nieve su avatar deja huellas que
+se borran al cabo de un minuto. Solo usted ve sus huellas.
 
 ## Sonido
 

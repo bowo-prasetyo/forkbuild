@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 20804c154b4aaf3d -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 3b35ccdb4d528c27 -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
@@ -274,6 +274,16 @@ Pour garder une saison sur votre appareil, choisissez-la sous **Saison**, en
 bas du panneau, juste sous **Arbres détaillés** ; **L’année du monde** suit de
 nouveau le monde. Avec **Toujours le jour**, les saisons continuent de tourner,
 sous un ciel dégagé.
+
+Le soleil suit aussi les saisons. En été, il monte haut et les jours sont
+longs ; en hiver, il reste bas, projette de longues ombres, et la nuit tombe
+plus tôt. Au cœur de l’hiver, les lacs gèlent assez pour qu’on les traverse
+à pied (la mer et les rivières jamais) ; tant que la glace se forme encore,
+ou se brise à la fin de l’hiver, elle ne vous porte pas. Tout le monde voit
+la même glace au même moment, quelle que soit la saison qu’il garde. La neige
+crisse sous les pas, la glace claque, et dans la neige votre avatar laisse
+des empreintes qui s’effacent au bout d’une minute. Vous seul voyez vos
+empreintes.
 
 ## Son
 

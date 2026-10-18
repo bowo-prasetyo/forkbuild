@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 20804c154b4aaf3d -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 3b35ccdb4d528c27 -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
@@ -264,6 +264,16 @@ sepanjang tahun. Untuk tetap memakai satu musim di perangkat Anda, pilih di
 **Musim** di bagian bawah panel, tepat di bawah **Pohon terperinci**; **Tahun
 dunia** kembali mengikuti dunia. Dengan **Selalu siang** menyala, musim tetap
 berganti, di bawah langit cerah.
+
+Matahari juga mengikuti musim. Di musim panas ia naik tinggi dan siang
+panjang; di musim dingin ia tetap rendah, membentuk bayangan panjang, dan
+malam datang lebih cepat. Di puncak musim dingin danau membeku cukup keras
+untuk diseberangi dengan berjalan (laut dan sungai tidak pernah); selama es
+masih terbentuk, atau mulai pecah di akhir musim dingin, es tidak akan
+menahan Anda. Semua orang melihat es yang sama pada saat yang sama, musim apa
+pun yang mereka pilih. Salju berderak di bawah kaki dan es berbunyi tak, dan
+saat berjalan di salju avatar Anda meninggalkan jejak kaki yang memudar
+setelah semenit. Hanya Anda yang melihat jejak kaki Anda.
 
 ## Suara
 

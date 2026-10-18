@@ -4,15 +4,20 @@
 // when they finish.
 
 // Per surface: the filter that shapes a burst of noise, how long the burst
-// rings, how loud it is, and any extras (a second crunch for leaves, a low
-// knock for brick, a splash sweep for water).
+// rings, how loud it is, and any extras (a second crunch for leaves and
+// snow, a low knock for brick, a ringing tap for ice, a splash sweep for
+// water).
 const SURFACE_VOICE = Object.freeze({
     grass: { type: 'bandpass', frequency: 1100, q: 0.8, seconds: 0.09, gain: 0.5 },
     leaves: { type: 'highpass', frequency: 1800, q: 0.7, seconds: 0.11, gain: 0.45, crunch: true },
     sand: { type: 'lowpass', frequency: 800, q: 0.7, seconds: 0.14, gain: 0.55 },
     stone: { type: 'bandpass', frequency: 2400, q: 1.6, seconds: 0.05, gain: 0.7 },
     water: { type: 'lowpass', frequency: 1400, q: 0.9, seconds: 0.22, gain: 0.6, splash: true },
-    structure: { type: 'bandpass', frequency: 520, q: 1.1, seconds: 0.07, gain: 0.7, knock: 130 }
+    structure: { type: 'bandpass', frequency: 520, q: 1.1, seconds: 0.07, gain: 0.7, knock: 130 },
+    // Snow: a soft, low crunch that squeaks a little as it packs down.
+    snow: { type: 'bandpass', frequency: 750, q: 0.6, seconds: 0.17, gain: 0.55, crunch: true },
+    // Ice: a short, hard tap with a faint ring.
+    ice: { type: 'bandpass', frequency: 3200, q: 2.2, seconds: 0.045, gain: 0.6, knock: 340 }
 });
 
 // Footsteps sit at half the level the surface voices above were first tuned

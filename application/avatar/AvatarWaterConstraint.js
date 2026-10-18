@@ -17,10 +17,18 @@ import { waterDepthSpeedFactor, DEFAULT_MAX_WALKING_DEPTH } from '../../core/Ava
 // but at most about half a unit deep it is never deep enough to swim, so it
 // has no surface for swimming (waterSurfaceAt()).
 //
-// `heightAt`/`isWaterAt`/`riverDepthAt` are injectable so tests can
-// substitute synthetic values.
+// A lake frozen hard (`frozenAt(x, z)`, core/Season.js#lakeIceAt()) is
+// walked on, not waded: it slows no one (depthAt() is 0) and it has a top,
+// level with the surface, for the avatar to stand on (iceTopAt(); the step
+// constraint stands it there). Under the ice the water is still there: a
+// swimmer caught beneath it as it froze swims on (waterSurfaceAt()) until it
+// comes out at the shore.
+//
+// `heightAt`/`isWaterAt`/`riverDepthAt`/`frozenAt` are injectable so tests
+// can substitute synthetic values.
 export class AvatarWaterConstraint {
-    constructor({ seed = DEFAULT_WORLD_SEED, maxWalkingDepth = DEFAULT_MAX_WALKING_DEPTH, heightAt, isWaterAt, riverDepthAt } = {}) {
+    constructor({ seed = DEFAULT_WORLD_SEED, maxWalkingDepth = DEFAULT_MAX_WALKING_DEPTH, heightAt, isWaterAt, riverDepthAt, frozenAt = null } = {}) {
+        this._frozenAt = typeof frozenAt === 'function' ? frozenAt : () => false;
         this._heightAt = typeof heightAt === 'function' ? heightAt : (x, z) => terrainHeightAt(seed, x, z);
         this._isWaterAt = typeof isWaterAt === 'function'
             ? isWaterAt
@@ -39,9 +47,17 @@ export class AvatarWaterConstraint {
 
     // In standing water `LAKE_SURFACE_HEIGHT - groundHeight`, floored at 0 so a
     // shoreline sample above the surface never reports a negative depth; in a
-    // river, the water in its bed; 0 on dry ground.
+    // river, the water in its bed; 0 on dry ground and on ice.
     depthAt(x, z) {
         if (!this._isWaterAt(x, z)) return this._riverDepthAt(x, z);
+        if (this._frozenAt(x, z)) return 0;
+        return Math.max(0, LAKE_SURFACE_HEIGHT - this._heightAt(x, z));
+    }
+
+    // The top of the ice on a frozen lake, in the terrain-relative frame, or
+    // null where there is none.
+    iceTopAt(x, z) {
+        if (!this._isWaterAt(x, z) || !this._frozenAt(x, z)) return null;
         return Math.max(0, LAKE_SURFACE_HEIGHT - this._heightAt(x, z));
     }
 

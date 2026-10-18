@@ -19,6 +19,18 @@ import { normalizeBuildTag } from './BuildTags.js';
 // one of the week before's entries (`remixOf`), so older builds get a
 // second life and the family tree grows. The themes keep their turn around
 // it.
+//
+// Some themes belong to a season (`season`, core/Season.js's SEASON): a
+// winter cabin, a summer fair. The world's seasons turn far faster than the
+// weeks, so the week doesn't wait for its season; the challenge page
+// suggests keeping World View in it (its Season setting) to see the entries
+// as they are meant to be seen.
+//
+// New themes are only ever added at the end: the themes in turn are taken
+// modulo the list's length, so adding to the end leaves every week up to
+// the old length's worth of themed weeks from CHALLENGE_EPOCH as it was, and
+// a copy of the app from before the addition still agrees with a newer one
+// on every week until then.
 
 export const CHALLENGE_THEMES = Object.freeze([
     Object.freeze({ id: 'lighthouse', starterStructureId: 'collection:lighthouse', ideaStructureIds: Object.freeze(['collection:lighthouse', 'collection:keepers_lighthouse', 'showcase:harbor_island']) }),
@@ -34,7 +46,7 @@ export const CHALLENGE_THEMES = Object.freeze([
     Object.freeze({ id: 'well', starterStructureId: 'village:well', ideaStructureIds: Object.freeze(['village:well', 'showcase:village_square', 'village:pavilion']) }),
     Object.freeze({ id: 'harbor', starterStructureId: 'village:dock', ideaStructureIds: Object.freeze(['village:dock', 'showcase:harbor_island', 'collection:keepers_lighthouse']) }),
     Object.freeze({ id: 'barn', starterStructureId: 'village:barn', ideaStructureIds: Object.freeze(['village:barn', 'collection:farmstead', 'village:fence_segment']) }),
-    Object.freeze({ id: 'garden', starterStructureId: 'village:garden_cottage', ideaStructureIds: Object.freeze(['village:garden_cottage', 'collection:house_with_garden', 'village:fence_segment']) }),
+    Object.freeze({ id: 'garden', season: 'SPRING', starterStructureId: 'village:garden_cottage', ideaStructureIds: Object.freeze(['village:garden_cottage', 'collection:house_with_garden', 'village:fence_segment']) }),
     Object.freeze({ id: 'workshop', starterStructureId: 'village:tool_shed', ideaStructureIds: Object.freeze(['village:tool_shed', 'village:barn', 'village:stable']) }),
     Object.freeze({ id: 'fortress', starterStructureId: 'showcase:castle', ideaStructureIds: Object.freeze(['showcase:castle', 'village:round_tower', 'village:village_gate']) }),
     Object.freeze({ id: 'bandstand', starterStructureId: 'village:pavilion', ideaStructureIds: Object.freeze(['village:pavilion', 'village:market', 'showcase:village_square']) }),
@@ -42,13 +54,18 @@ export const CHALLENGE_THEMES = Object.freeze([
     Object.freeze({ id: 'stables', starterStructureId: 'village:stable', ideaStructureIds: Object.freeze(['village:stable', 'village:barn', 'village:fence_segment']) }),
     Object.freeze({ id: 'round-tower', starterStructureId: 'village:round_tower', ideaStructureIds: Object.freeze(['village:round_tower', 'collection:house_with_tower', 'showcase:castle']) }),
     Object.freeze({ id: 'island', starterStructureId: 'showcase:harbor_island', ideaStructureIds: Object.freeze(['showcase:harbor_island', 'village:dock', 'collection:keepers_lighthouse']) }),
-    Object.freeze({ id: 'harvest', starterStructureId: 'village:granary', ideaStructureIds: Object.freeze(['village:granary', 'collection:mill_and_granary', 'village:silo']) }),
+    Object.freeze({ id: 'harvest', season: 'AUTUMN', starterStructureId: 'village:granary', ideaStructureIds: Object.freeze(['village:granary', 'collection:mill_and_granary', 'village:silo']) }),
     Object.freeze({ id: 'village-hall', starterStructureId: 'village:village_hall', ideaStructureIds: Object.freeze(['village:village_hall', 'village:small_chapel', 'showcase:village_square']) }),
     Object.freeze({ id: 'grand-house', starterStructureId: 'village:large_house', ideaStructureIds: Object.freeze(['village:large_house', 'collection:house_with_tower', 'village:house']) }),
     Object.freeze({ id: 'walls', starterStructureId: 'village:fence_segment', ideaStructureIds: Object.freeze(['village:fence_segment', 'village:village_gate', 'collection:house_with_garden']) }),
     Object.freeze({ id: 'village-square', starterStructureId: 'showcase:village_square', ideaStructureIds: Object.freeze(['showcase:village_square', 'village:well', 'village:market']) }),
     Object.freeze({ id: 'silo', starterStructureId: 'village:silo', ideaStructureIds: Object.freeze(['village:silo', 'village:granary', 'village:mill']) }),
-    Object.freeze({ id: 'family-home', starterStructureId: 'village:house', ideaStructureIds: Object.freeze(['village:house', 'collection:house_with_garden', 'village:large_house']) })
+    Object.freeze({ id: 'family-home', starterStructureId: 'village:house', ideaStructureIds: Object.freeze(['village:house', 'collection:house_with_garden', 'village:large_house']) }),
+    // Added 2026-10-18, with the world's seasons: themes that belong to one.
+    Object.freeze({ id: 'winter-cabin', season: 'WINTER', starterStructureId: 'collection:farmstead', ideaStructureIds: Object.freeze(['collection:farmstead', 'village:cottage', 'village:tool_shed']) }),
+    Object.freeze({ id: 'blossom-walk', season: 'SPRING', starterStructureId: 'collection:house_with_garden', ideaStructureIds: Object.freeze(['collection:house_with_garden', 'village:garden_cottage', 'village:pavilion']) }),
+    Object.freeze({ id: 'summer-fair', season: 'SUMMER', starterStructureId: 'village:market', ideaStructureIds: Object.freeze(['village:market', 'village:market_stall', 'village:pavilion']) }),
+    Object.freeze({ id: 'skating-pond', season: 'WINTER', starterStructureId: 'collection:keepers_lighthouse', ideaStructureIds: Object.freeze(['collection:keepers_lighthouse', 'village:dock', 'village:pavilion']) })
 ]);
 
 export const CHALLENGE_KIND = Object.freeze({
@@ -107,6 +124,7 @@ function challengeStartingAt(startMs) {
             startsAt: new Date(startMs),
             endsAt: new Date(startMs + WEEK_MS),
             remixOf: isoDate(startMs - WEEK_MS),
+            season: null,
             starterStructureId: null,
             ideaStructureIds: Object.freeze([])
         });
@@ -120,6 +138,7 @@ function challengeStartingAt(startMs) {
         startsAt: new Date(startMs),
         endsAt: new Date(startMs + WEEK_MS),
         remixOf: null,
+        season: theme.season ?? null,
         starterStructureId: theme.starterStructureId,
         ideaStructureIds: theme.ideaStructureIds
     });

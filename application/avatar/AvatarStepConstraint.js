@@ -92,9 +92,14 @@ export class AvatarStepConstraint {
         brickRegistry,
         queryRadius = DEFAULT_QUERY_RADIUS,
         maxStepHeight = DEFAULT_MAX_STEP_HEIGHT,
-        structureResolver = null
+        structureResolver = null,
+        floorAt = null
     } = {}) {
         this._groundHeight = Number.isFinite(groundHeight) ? groundHeight : FLAT_GROUND_Y;
+        // A floor above the ground at (x, z) in the same frame, or null: the
+        // ice on a frozen lake (AvatarWaterConstraint#iceTopAt()). Stood on
+        // like a brick's top: only from within a step below it.
+        this._floorAt = typeof floorAt === 'function' ? floorAt : null;
         this._loadedDocuments = loadedDocuments;
         this._getWorldPosition = getWorldPosition;
         this._brickRegistry = brickRegistry;
@@ -166,6 +171,10 @@ export class AvatarStepConstraint {
     supportHeightAt(x, z, referenceHeight) {
         let height = this._groundHeight;
         const hasReference = Number.isFinite(referenceHeight);
+        const floor = this._floorAt ? this._floorAt(x, z) : null;
+        if (Number.isFinite(floor) && floor > height && (!hasReference || floor - referenceHeight <= this._maxStepHeight)) {
+            height = floor;
+        }
         if (!this._loadedDocuments || !this._getWorldPosition) {
             return height;
         }

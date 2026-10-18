@@ -76,13 +76,70 @@ export function dayFractionAt(seconds) {
     return into / DAY_CYCLE_SECONDS;
 }
 
-// The sky's look at `seconds`: a frozen object shaped like DAY.
-export function skyLookAt(seconds) {
-    return skyLookAtFraction(dayFractionAt(seconds));
+// The sky through the seasons (core/Season.js hands one in, seasonalSky()):
+// `dayShift`, how much longer the day lasts, as a share of the cycle (a
+// shorter one below 0), and `sunTilt` and `moonTilt`, how far the sun's and
+// the moon's arcs lean south of overhead, in radians. EQUINOX_SKY changes
+// nothing, and is what every function here assumes when given none.
+//
+// A longer day ends later: the dusk, the night and the moonrise all come
+// later and the night is shorter, while dawn stays at the start of the
+// cycle (seasonalFraction()). In summer the sun climbs higher and the full
+// moon rides low; in winter the sun stays low, with long shadows, and the
+// moon rides high, as they do. Kept modest (SEASON_DAY_SHIFT,
+// SEASON_TILT_DEGREES): the longest winter night is about a quarter of the
+// cycle, and the light never comes from lower than it ever did
+// (MIN_LIGHT_HEIGHT), so builds stay readable.
+export const SEASON_DAY_SHIFT = 0.05;
+export const SEASON_TILT_DEGREES = 12;
+const ARC_TILT_DEGREES = 50;
+// Where in the cycle the day's light gives way to the dusk's: the part of
+// the cycle before it stretches or shrinks with the day, the rest the other
+// way.
+const DAY_PIVOT = 0.6;
+
+export const EQUINOX_SKY = Object.freeze({
+    dayShift: 0,
+    sunTilt: (ARC_TILT_DEGREES * Math.PI) / 180,
+    moonTilt: (ARC_TILT_DEGREES * Math.PI) / 180
+});
+
+// The sky for `summer`, from -1 (midwinter) through 0 (the equinoxes) to 1
+// (midsummer).
+export function seasonalSky(summer) {
+    const s = Number.isFinite(summer) ? Math.min(Math.max(summer, -1), 1) : 0;
+    if (s === 0) return EQUINOX_SKY;
+    const tilt = (degrees) => (degrees * Math.PI) / 180;
+    return Object.freeze({
+        dayShift: SEASON_DAY_SHIFT * s,
+        sunTilt: tilt(ARC_TILT_DEGREES - SEASON_TILT_DEGREES * s),
+        moonTilt: tilt(ARC_TILT_DEGREES + SEASON_TILT_DEGREES * s)
+    });
 }
 
-export function skyLookAtFraction(fraction) {
-    const f = Number.isFinite(fraction) ? Math.min(Math.max(fraction, 0), 1) : 0;
+// The point of an equinox day that `fraction` of a day lengthened by
+// `dayShift` stands for: what the looks and the arcs are worked out at.
+export function seasonalFraction(fraction, dayShift = 0) {
+    const d = Number.isFinite(dayShift) ? dayShift : 0;
+    if (d === 0) return fraction;
+    const split = DAY_PIVOT + d;
+    return fraction < split
+        ? (fraction * DAY_PIVOT) / split
+        : DAY_PIVOT + ((fraction - split) * (1 - DAY_PIVOT)) / (1 - split);
+}
+
+function skyOf(sky) {
+    return sky && Number.isFinite(sky.dayShift) && Number.isFinite(sky.sunTilt) && Number.isFinite(sky.moonTilt) ? sky : EQUINOX_SKY;
+}
+
+// The sky's look at `seconds`, in the season's `sky`: a frozen object
+// shaped like DAY.
+export function skyLookAt(seconds, sky = EQUINOX_SKY) {
+    return skyLookAtFraction(dayFractionAt(seconds), sky);
+}
+
+export function skyLookAtFraction(fraction, sky = EQUINOX_SKY) {
+    const f = seasonalFraction(Number.isFinite(fraction) ? Math.min(Math.max(fraction, 0), 1) : 0, skyOf(sky).dayShift);
     for (let i = 1; i < KEYFRAMES.length; i++) {
         const to = KEYFRAMES[i];
         if (f <= to.at) {
@@ -129,10 +186,11 @@ function blendColor(a, b, t) {
 // only low down at either end.
 const SUN_ARC = Object.freeze({ rise: -0.02, set: 0.7 });
 const MOON_ARC = Object.freeze({ rise: 0.64, set: 1.02 });
-// How far the arc leans south of straight overhead: its highest point is
-// 90° - 50° = 40° up. World View's camera sees at most about 30° above the
-// horizon looking level (First Person), and less looking down at an avatar.
-const ARC_TILT = (50 * Math.PI) / 180;
+// How far the arc leans south of straight overhead (EQUINOX_SKY's tilts):
+// its highest point is 90° - 50° = 40° up at the equinoxes, 52° at
+// midsummer and 28° at midwinter. World View's camera sees at most about
+// 30° above the horizon looking level (First Person), and less looking down
+// at an avatar.
 // The light never comes from lower than this (the sine of about 14.5°), so a
 // sun or moon on the horizon doesn't light builds from underneath.
 const MIN_LIGHT_HEIGHT = 0.25;
@@ -141,13 +199,13 @@ const MIN_LIGHT_HEIGHT = 0.25;
 // partway through the morning, about 19° up and in view.
 const ALWAYS_DAY_FRACTION = 0.1;
 
-// Where the sun and the moon are at `seconds` (Unix time); with no clock,
-// Always day's still morning sun (DAY_SKY_BODIES).
-export function skyBodiesAt(seconds) {
+// Where the sun and the moon are at `seconds` (Unix time), in the season's
+// `sky`; with no clock, Always day's still morning sun (DAY_SKY_BODIES).
+export function skyBodiesAt(seconds, sky = EQUINOX_SKY) {
     if (!Number.isFinite(seconds)) {
         return DAY_SKY_BODIES;
     }
-    return skyBodiesAtFraction(dayFractionAt(seconds), moonPhaseAt(seconds));
+    return skyBodiesAtFraction(dayFractionAt(seconds), moonPhaseAt(seconds, sky), sky);
 }
 
 // { sun, moon, light, lightStrength }: unit directions from the viewer, sun
@@ -164,24 +222,28 @@ export function skyBodiesAt(seconds) {
 // phase (MOON_PHASES; a full moon unless `phase` says otherwise), and
 // moonLitFrom the unit direction its light falls on the moon from, where the
 // sun would stand for that phase, null while the moon is down.
-export function skyBodiesAtFraction(fraction, phase = FULL_MOON) {
-    const f = Number.isFinite(fraction) ? fraction - Math.floor(fraction) : KEYFRAMES[1].at;
+export function skyBodiesAtFraction(fraction, phase = FULL_MOON, sky = EQUINOX_SKY) {
+    const season = skyOf(sky);
+    const f = Number.isFinite(fraction) ? seasonalFraction(fraction - Math.floor(fraction), season.dayShift) : KEYFRAMES[1].at;
     const moonPhase = phase && Number.isFinite(phase.angle) ? phase : FULL_MOON;
     const sun = bodyOnArc(SUN_ARC, f);
     const moon = bodyOnArc(MOON_ARC, f);
+    if (sun) sun.tilt = season.sunTilt;
+    if (moon) moon.tilt = season.moonTilt;
     const up = [sun, moon].filter(Boolean);
     const weight = up.reduce((sum, body) => sum + body.weight, 0);
-    const lightAngle = weight > 0
-        ? up.reduce((sum, body) => sum + body.angle * body.weight, 0) / weight
-        : up.reduce((sum, body) => sum + body.angle, 0) / Math.max(up.length, 1);
+    const mean = (key) => (weight > 0
+        ? up.reduce((sum, body) => sum + body[key] * body.weight, 0) / weight
+        : up.reduce((sum, body) => sum + body[key], 0) / Math.max(up.length, 1));
     return Object.freeze({
-        sun: sun ? arcDirection(sun.angle) : null,
-        moon: moon ? arcDirection(moon.angle) : null,
-        light: lightDirection(arcDirection(lightAngle)),
+        sun: sun ? arcDirection(sun.angle, sun.tilt) : null,
+        moon: moon ? arcDirection(moon.angle, moon.tilt) : null,
+        light: lightDirection(arcDirection(mean('angle'), up.length > 0 ? mean('tilt') : season.sunTilt)),
         lightStrength: handoverStrength(sun, moon),
         skyTurn: f * Math.PI * 2,
         moonPhase,
-        moonLitFrom: moon ? arcDirection(moon.angle + moonPhase.angle) : null
+        // Its light falls from where the sun would stand, on the sun's arc.
+        moonLitFrom: moon ? arcDirection(moon.angle + moonPhase.angle, season.sunTilt) : null
     });
 }
 
@@ -211,10 +273,11 @@ function bodyOnArc(arc, f) {
     return { angle: (into / length) * Math.PI, weight: Math.min(into, length - into) };
 }
 
-// East (-x) at 0, up and to the south (-z) by pi/2, west (+x) at pi.
-function arcDirection(angle) {
+// East (-x) at 0, up and to the south (-z) by pi/2, west (+x) at pi, on an
+// arc leaning `tilt` south of overhead.
+function arcDirection(angle, tilt = EQUINOX_SKY.sunTilt) {
     const up = Math.sin(angle);
-    return Object.freeze({ x: -Math.cos(angle), y: up * Math.cos(ARC_TILT), z: -up * Math.sin(ARC_TILT) });
+    return Object.freeze({ x: -Math.cos(angle), y: up * Math.cos(tilt), z: -up * Math.sin(tilt) });
 }
 
 function lightDirection(dir) {
@@ -264,8 +327,9 @@ export const MOON_PHASES = Object.freeze([
 export const FULL_MOON = MOON_PHASES[MOON_CYCLE_DAYS / 2];
 
 // The moon's phase on the night under way at `seconds` (Unix time): the one
-// it took at the last moonrise. With no clock, a full moon.
-export function moonPhaseAt(seconds) {
+// it took at the last moonrise (later in a longer day: `sky`). With no
+// clock, a full moon.
+export function moonPhaseAt(seconds, sky = EQUINOX_SKY) {
     if (!Number.isFinite(seconds)) {
         return FULL_MOON;
     }
@@ -273,7 +337,7 @@ export function moonPhaseAt(seconds) {
     // the phase turns on the very frame the moon rises.
     const fraction = dayFractionAt(seconds);
     const day = Math.round(seconds / DAY_CYCLE_SECONDS - fraction);
-    const night = fraction >= MOON_ARC.rise ? day : day - 1;
+    const night = seasonalFraction(fraction, skyOf(sky).dayShift) >= MOON_ARC.rise ? day : day - 1;
     return MOON_PHASES[((night % MOON_CYCLE_DAYS) + MOON_CYCLE_DAYS) % MOON_CYCLE_DAYS];
 }
 

@@ -40,8 +40,16 @@
 //                  (core/Weather.js#snowCoverAt()) is what lies otherwise
 //   birds          how much birdsong there is, insects how many insects are
 //                  heard (core/AmbientSoundscape.js#ambientMixInSeason())
+//   sky            the sun's and the moon's paths and how long the day is
+//                  (core/DayCycle.js#seasonalSky()): a high sun and a long
+//                  day at midsummer, a low sun and a short one at midwinter,
+//                  the equinoxes in the middle of spring and autumn
+//
+// Lakes freeze in the depth of winter (lakeIceAt()): that follows the
+// world's clock alone, never a season kept on a device, because people walk
+// on the ice, and everyone must agree where they can.
 
-import { DAY_CYCLE_SECONDS, MOON_CYCLE_DAYS } from './DayCycle.js';
+import { DAY_CYCLE_SECONDS, MOON_CYCLE_DAYS, seasonalSky } from './DayCycle.js';
 
 export const SEASON = Object.freeze({
     SPRING: 'SPRING',
@@ -230,10 +238,42 @@ export function seasonLookAtYearDay(yearDay) {
         season,
         day: Math.floor(d - SEASONS.indexOf(season) * SEASON_DAYS),
         yearDay: d,
-        ...blendLooks(from.look, to.look, t)
+        ...blendLooks(from.look, to.look, t),
+        sky: seasonalSky(summerAt(d))
     });
     lastLook = { yearDay: d, result };
     return result;
+}
+
+// How far towards midsummer (1) or midwinter (-1) the year is on `yearDay`:
+// a smooth wave, 0 at the middle of spring and of autumn.
+const MIDSUMMER_DAY = 12;
+
+export function summerAt(yearDay) {
+    return Math.cos((2 * Math.PI * (yearDay - MIDSUMMER_DAY)) / WORLD_YEAR_DAYS);
+}
+
+// How much ice lies on the lakes at `seconds`, 0 (open water) to 1 (frozen
+// hard): it forms over the half day before winter's third day, and breaks
+// up over the first half of its last. Only frozen hard (isLakeFrozenAt()) can
+// it be walked on; while it forms or breaks up it only shows. Never on the
+// sea or on rivers (core/Hydrology.js#isLakeAt()).
+export const LAKE_FREEZE_DAY = 2;
+export const LAKE_THAW_DAY = 7;
+const LAKE_ICE_CHANGE_DAYS = 0.5;
+
+export function lakeIceAt(seconds) {
+    if (!Number.isFinite(seconds)) return 0;
+    const yearDay = yearDayAt(seconds);
+    const winterDay = yearDay - 3 * SEASON_DAYS;
+    if (winterDay < LAKE_FREEZE_DAY - LAKE_ICE_CHANGE_DAYS || winterDay >= LAKE_THAW_DAY + LAKE_ICE_CHANGE_DAYS) return 0;
+    if (winterDay < LAKE_FREEZE_DAY) return smooth01((winterDay - (LAKE_FREEZE_DAY - LAKE_ICE_CHANGE_DAYS)) / LAKE_ICE_CHANGE_DAYS);
+    if (winterDay < LAKE_THAW_DAY) return 1;
+    return 1 - smooth01((winterDay - LAKE_THAW_DAY) / LAKE_ICE_CHANGE_DAYS);
+}
+
+export function isLakeFrozenAt(seconds) {
+    return lakeIceAt(seconds) >= 1;
 }
 
 function blendLooks(from, to, t) {

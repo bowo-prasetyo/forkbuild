@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 02d4fa6f16b73299 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 9b71eb25ac00047d -->
 # 04 — Publier et remixer
 
 <!-- languages -->
@@ -766,6 +766,14 @@ semaine du remix (voir plus bas).
    → Étiquettes** si vous avez commencé autrement).
 3. Publiez-la avant la fin de la semaine et partagez son lien. Le texte du
    lien nomme le défi et son étiquette, prêt pour une publication.
+
+**Thèmes de saison.** Certains thèmes appartiennent à une saison : un
+jardin au printemps, une fête d’été, une réserve pour la récolte en
+automne, une cabane d’hiver ou un étang de patinage. Les saisons de la Vue
+du Monde tournent bien plus vite que les semaines, la semaine n’attend donc
+pas sa saison ; la page du défi suggère plutôt de choisir cette saison sous
+**Saison** dans la Vue du Monde, pour voir les participations comme elles
+doivent être vues.
 
 **Semaines du remix.** Une semaine sur quatre, à partir de celle du
 2 novembre 2026, est une semaine du remix (`#remix-20261102`) : au lieu

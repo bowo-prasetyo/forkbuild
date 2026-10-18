@@ -664,7 +664,7 @@ build on.
 
 Every week ForkBuild sets a theme to build (a lighthouse, a bridge, a tiny
 home, a harbor, a front porch, …), from Monday to the end of Sunday (UTC).
-There are 26 themes, so half a year passes before one comes round again,
+There are 30 themes, so well over half a year passes before one comes round again,
 each with ideas to start from and a twist that makes the week's entries
 differ, such as *"Make it wide enough for the hay wagon to cross."* Every
 fourth week is a remix week instead (see below). Home shows it, and **Challenge** in
@@ -682,6 +682,13 @@ the top bar opens its page.
    **Build Properties → Tags** if you started some other way).
 3. Publish it before the week ends, and share its link. The link's text
    names the challenge and its tag, ready for a post.
+
+**Seasonal themes.** Some themes belong to a season: a garden in spring, a
+summer fair, a harvest store in autumn, a winter cabin or a skating pond.
+World View's seasons turn much faster than the weeks, so the week doesn't
+wait for its season; instead the challenge page suggests choosing that
+season under **Season** in World View, to see the entries as they're meant
+to be seen.
 
 **Remix weeks.** Every fourth week, starting with the week of 2 November
 2026, is a remix week (`#remix-20261102`): instead of a theme, an entry

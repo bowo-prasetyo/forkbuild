@@ -826,6 +826,18 @@ export class RenderWorldViewUseCase {
             setSeason: (look) => {
                 renderer.setSeason(look);
             },
+            // The local avatar's footprints in the snow (core/Footprints.js),
+            // drawn on this screen only, faded for `now` on the world's clock.
+            addFootprints: (prints) => {
+                renderer.addFootprints(prints);
+            },
+            updateFootprints: (now) => {
+                renderer.updateFootprints(now);
+            },
+            // How much ice lies on the lakes (core/Season.js#lakeIceAt()).
+            setLakeIce: (ice) => {
+                renderer.setLakeIce(ice);
+            },
             // The build the avatar stands in, which the rain falls round
             // (renderer/RainFall.js), or null under open sky.
             setRainShelter: (shelter) => {

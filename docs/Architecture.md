@@ -289,7 +289,15 @@ the detailed references; in short:
   week before; the themes keep their turn round it): its Join goes to its
   page, which lists the week before's entries, and Remix on one opens
   `/editor?fork=<doc>&publication=<id>&challenge=<Monday>`, tagged once the
-  copy opens. Home shows the week
+  copy opens. Some themes belong to a season (`season`, core/Season.js's
+  SEASON): garden and harvest, and the four added on 2026-10-18 (a winter
+  cabin, a blossom walk, a summer fair, a skating pond); the world's seasons
+  turn far faster than the weeks, so the challenge page only suggests
+  keeping World View in that season (`challengeSeasonHint()`). Themes are
+  only ever added at the end of CHALLENGE_THEMES: taken in turn modulo its
+  length, every themed week up to the old length from CHALLENGE_EPOCH keeps
+  its theme, so copies from before an addition agree with newer ones until
+  then (the seasonal four first come round in June 2027). Home shows the week
   (ui/components/challenge/ChallengeCard.js), and ui/views/ChallengeView.js
   (`/challenge`, `/challenge/<Monday>`) lists the entries:
   application/challenge/ChallengeEntries.js takes the Publications the
@@ -1690,6 +1698,41 @@ shaders only while any lies: the first snow of winter and the last of it melting
 (`setSnowCover()`; the patched materials are kept, and let go when disposed), so the rest of the year, and the
 Editor, pay nothing for it. Seasonal colour goes on a material after the wet patch, so it comes before the darkening
 and the snow in the shader.
+
+**The sun through the year.** Each season look carries a `sky` (core/DayCycle.js#seasonalSky(), from
+core/Season.js#summerAt(): a smooth wave, 1 at midsummer, day 12, -1 at midwinter, day 28, 0 in the middle of spring
+and autumn): `dayShift`, up to `SEASON_DAY_SHIFT` (0.05 of the cycle) longer or shorter, and the arcs' tilts, the sun's
+50° less or more `SEASON_TILT_DEGREES` (12°) and the moon's the other way, so the midsummer sun climbs to 52° and the
+midwinter one only to 28°, with long shadows, while the winter full moon rides high. A longer day ends later:
+`seasonalFraction()` stretches the part of the cycle before the day's pivot (0.6, between day and dusk) and squeezes the
+rest, so dawn stays at the cycle's start and dusk, night and moonrise come later; the full night runs from about a fifth
+of the cycle at midsummer to a quarter at midwinter. `skyLookAt()`, `skyBodiesAt()` and `moonPhaseAt()` take the sky
+(the moon's phase still turns at its own moonrise, now the season's), and with none, or EQUINOX_SKY, give exactly what
+they always did. dayCycleMethods hands them `season().sky`, so a kept season keeps its middle's sun; Always day keeps its
+still morning sun. The light never comes from lower than `MIN_LIGHT_HEIGHT`, so builds stay readable in any season.
+
+**Frozen lakes.** core/Season.js#lakeIceAt() freezes the lakes from the world's clock alone, never a season kept on a
+device, since the ice is walked on and everyone must agree where it holds: ice forms over the half day before winter's
+third day, holds hard (`isLakeFrozenAt()`) until its last, and breaks up over half a day. Only lakes
+(core/Hydrology.js#isLakeAt(): standing water inland of the shelf's middle, `seaShareAt()` under LAKE_SEA_SHARE), never
+the sea or rivers. Frozen hard, the avatar walks on it: application/worldNavigation/localAvatarMethods.js gives its
+constraints a `frozenAt(x, z)` on the session's clock; AvatarWaterConstraint reports no depth there (no wading slowdown)
+and an `iceTopAt()`, the surface in the terrain-relative frame; AvatarStepConstraint takes that as a `floorAt()`, stood on
+like a brick's top, only from within a step below it, so a swimmer caught under new ice swims on beneath it to the shore;
+AvatarTerrainConstraint measures slopes on the ice's level, not the bed's. The water's surface is still there for swimming
+under the ice, and ground vehicles stay off it, as they stay out of water. renderer/WaterWaveMaterial.js freezes the lake's
+water (`createLakeIce()`, set from `setLakeIce()` by the session each frame): flat, still, opaque and pale blue, grained,
+duller than water, with no foam, ripples or rain rings, and the snow lying patchily on it; its code is compiled in only
+while there is ice, so the rest of the year pays nothing for it. Underfoot it taps (`FOOTSTEP_SURFACE.ICE`).
+
+**Snow underfoot and footprints.** With snow lying at least `SNOW_FOOTSTEP_COVER` (0.35) and no roof overhead, open
+ground crunches (`FOOTSTEP_SURFACE.SNOW`: a soft, low crunch; core/AvatarSoundCues.js reads `snowCover` and `onIce` from
+`avatarSoundObservation()`). And the local avatar leaves footprints there (core/Footprints.js#advanceFootprints(), each
+frame from the same observation): one every `FOOTPRINT_STRIDE` (0.75 m), left and right in turn, 0.13 m to either side,
+pointing the way it walks; none on bricks, ice, in the water, in the air, riding or indoors. They are this device's own:
+nothing is sent or stored, and other players see none. renderer/FootprintTrail.js draws the newest 96 as one instanced
+mesh of sole-sized ovals lying on the ground's slope, blue-grey as a dent in snow, fading over the last third of a
+minute and with the snow as it melts (`footprintFade()`), and draws nothing once none shows.
 
 **Shadows.** The directional light casts them when World View turns them on (`Renderer#setShadowsEnabled()`,
 renderer/SunShadows.js): one 2048² PCF-soft shadow map over a square 45 m each way round the camera's target (the

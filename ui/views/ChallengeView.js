@@ -8,7 +8,7 @@ import PublicationCard from '../components/PublicationCard.js';
 import RemixFamilyTree from '../components/remix/RemixFamilyTree.js';
 import { exploreRouteFor } from '../components/publicationCatalog/useRepositoryNetworkDiscovery.js';
 import {
-    challengeDatesText, challengeJoinRoute, challengeRemixRoute, challengeThemeBrief, challengeThemeTitle, challengeThemeTwist, challengeTimeText
+    challengeDatesText, challengeJoinRoute, challengeRemixRoute, challengeThemeBrief, challengeSeasonHint, challengeThemeTitle, challengeThemeTwist, challengeTimeText
 } from '../components/challenge/challengeText.js';
 import { t } from '../i18n/i18n.js';
 
@@ -51,6 +51,7 @@ export default {
                 title: challengeThemeTitle(shown),
                 brief: challengeThemeBrief(shown),
                 twist: challengeThemeTwist(shown),
+                seasonHint: challengeSeasonHint(shown),
                 dates: challengeDatesText(shown),
                 time: challengeTimeText(shown, now),
                 joinRoute: challengeJoinRoute(shown),
@@ -157,6 +158,7 @@ export default {
                     <p class="challenge-dates">{{ view.dates }}</p>
                     <p class="challenge-brief">{{ view.brief }}</p>
                     <p v-if="view.twist" class="challenge-twist"><strong>{{ t('challenge.twistLabel') }}</strong> {{ view.twist }}</p>
+                    <p v-if="view.seasonHint" class="form-hint form-hint--neutral challenge-season-hint">{{ view.seasonHint }}</p>
                     <p class="challenge-card-tag">#{{ challenge.tag }}</p>
                     <div class="challenge-card-actions">
                         <router-link v-if="view.open" :to="view.joinRoute" class="cta-button challenge-join">{{ t('challenge.join') }}</router-link>

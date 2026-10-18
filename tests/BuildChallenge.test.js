@@ -21,9 +21,30 @@ import { assert } from './support/Assert.js';
     assert(challengeAt(Date.parse('2026-10-18T23:59:59Z')).id === '2026-10-12', 'Sunday night is still that week');
     const second = challengeAt(Date.parse('2026-10-19T00:00:00Z'));
     assert(second.id === '2026-10-19' && second.themeId === CHALLENGE_THEMES[1].id, 'Monday starts the next theme');
-    // Every fourth week is a remix week, so the 26 themes take 34 weeks.
-    const wrapped = challengeAt(Date.parse('2026-10-12T00:00:00Z') + 34 * 7 * 86400000);
+    // Every fourth week is a remix week, so the 30 themes take 40 weeks.
+    assert(CHALLENGE_THEMES.length === 30, 'thirty themes');
+    const wrapped = challengeAt(Date.parse('2026-10-12T00:00:00Z') + 40 * 7 * 86400000);
     assert(wrapped.themeId === CHALLENGE_THEMES[0].id, `the themes come round again after the themed weeks (got ${wrapped.themeId})`);
+    // Themes are only added at the end, so the weeks the 26 themes before the
+    // seasonal ones covered keep their themes: a copy of the app from before
+    // agrees with this one on every one of them.
+    const themesBefore = ['lighthouse', 'bridge', 'tiny-home', 'castle-gate', 'windmill', 'market', 'tower', 'chapel', 'well', 'harbor',
+        'barn', 'garden', 'workshop', 'fortress', 'bandstand', 'porch', 'stables', 'round-tower', 'island', 'harvest',
+        'village-hall', 'grand-house', 'walls', 'village-square', 'silo', 'family-home'];
+    let themed = 0;
+    for (let week = 0; week < 34; week++) {
+        const challenge = challengeAt(Date.parse('2026-10-12T00:00:00Z') + week * 7 * 86400000);
+        if (challenge.kind === 'remix') continue;
+        assert(challenge.themeId === themesBefore[themed % themesBefore.length], `week ${week} keeps its theme (got ${challenge.themeId})`);
+        themed++;
+    }
+    // Some belong to a season, whose look the challenge page suggests.
+    const seasonal = CHALLENGE_THEMES.filter((theme) => theme.season);
+    assert(seasonal.map((theme) => `${theme.id}:${theme.season}`).join() === 'garden:SPRING,harvest:AUTUMN,winter-cabin:WINTER,blossom-walk:SPRING,summer-fair:SUMMER,skating-pond:WINTER',
+        'garden, harvest and the four added with the seasons belong to one');
+    const winter = challengeAt(Date.parse('2026-10-12T00:00:00Z') + 34 * 7 * 86400000);
+    assert(winter.themeId === 'winter-cabin' && winter.season === 'WINTER', `the first seasonal week carries its season (got ${winter.themeId}, ${winter.season})`);
+    assert(first.season === null, 'a theme of no season carries none');
     const before = challengeAt(Date.parse('2026-10-08T12:00:00Z'));
     // Weeks before the first keep the themes they ran with when there were
     // eight, so their entries' tags still name them.

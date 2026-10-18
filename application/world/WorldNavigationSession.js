@@ -476,6 +476,9 @@ export class WorldNavigationSession {
         // Null until this device's choice is given: the renderer keeps its own default.
         this._detailedTreesOn = null;
         this._dayCycleFrameSubscription = null;
+        // Where the local avatar's footprints in the snow fall
+        // (core/Footprints.js); see dayCycleMethods.
+        this._footprintState = null;
         // Runtime vehicle positions (see application/world/VehicleRuntimeInstances.js).
         // Built unconditionally: a vehicle's position is a fact about the World,
         // independent of whether a local avatar exists (see docs/Principles.md,

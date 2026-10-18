@@ -16,6 +16,14 @@ import { RAIN_RINGS_GLSL } from './RainRings.js';
 // `rain` is a shared { value } too, how hard it is raining (0 to 1): rain
 // rings the lit surface (renderer/RainRings.js).
 //
+// `ice` (createLakeIce()), when given, freezes the lakes as far as its value
+// says (core/Season.js#lakeIceAt()), never the sea (by `aSeaShare`, at
+// core/Hydrology.js's LAKE_SEA_SHARE): frozen water lies flat and still, pale
+// and opaque, grained, with no foam or rain rings, and snow lies on it as on
+// the ground (its `snow`, renderer/WetSurfaces.js's snowCover). Its code is
+// in the shaders only while there is ice (setLakeIce()), so the rest of the
+// year pays nothing for it.
+//
 // Positions are taken in world space, never tile space, so two tiles
 // sharing an edge move that edge identically: no seam, the same discipline
 // renderer/WaterTileMesh.js already keeps for the still surface.
@@ -23,6 +31,36 @@ import { RAIN_RINGS_GLSL } from './RainRings.js';
 function glslFloat(v) {
     return v.toPrecision(8);
 }
+
+// The ice every water tile's material reads; `snow` is the { value } of how
+// much snow lies (renderer/WetSurfaces.js), so it lies on the ice too.
+export function createLakeIce(snow = { value: 0 }) {
+    return { ice: { value: 0 }, snow, compiled: false, materials: new Set() };
+}
+
+// How much ice lies on the lakes, 0 to 1. The first ice of winter and the
+// last of it breaking up rebuild the water's shaders.
+export function setLakeIce(lakeIce, value) {
+    lakeIce.ice.value = Number.isFinite(value) ? Math.min(Math.max(value, 0), 1) : 0;
+    const frozen = lakeIce.ice.value > 0;
+    if (frozen === lakeIce.compiled) return;
+    lakeIce.compiled = frozen;
+    for (const material of lakeIce.materials) material.needsUpdate = true;
+}
+
+// Ice is duller than open water: it doesn't throw the sun back like a mirror.
+const ICE_ROUGHNESS = 0.75;
+
+const ICE_VERTEX = /* glsl */ `
+    vWaterFrozen = uLakeIce * (1.0 - smoothstep(0.45, 0.55, aSeaShare));
+    waterSwellNow *= 1.0 - vWaterFrozen;`;
+
+const ICE_FRAGMENT = /* glsl */ `
+	float iceGrain = foamNoise(vWaterXZ * 0.6) * 0.6 + foamNoise(vWaterXZ * 2.7 + 9.0) * 0.4;
+	vec3 iceColour = mix(vec3(0.58, 0.71, 0.82), vec3(0.76, 0.86, 0.93), iceGrain);
+	iceColour = mix(iceColour, vec3(0.80, 0.83, 0.88), smoothstep(iceGrain - 0.1, iceGrain + 0.1, uLakeSnow * 1.2 - 0.1));
+	diffuseColor.rgb = mix(diffuseColor.rgb, iceColour, vWaterFrozen);
+	diffuseColor.a = mix(diffuseColor.a, 1.0, vWaterFrozen);`;
 
 function waveTerms(waves, weight, kind) {
     return waves
@@ -111,33 +149,46 @@ ${RAIN_RINGS_GLSL}
 // `lit` for the top surface (a MeshStandardMaterial: swell, tilted normals,
 // ripples, rain rings); false for the unlit underside a diver sees, which only
 // needs to follow the swell so it stays glued to the top.
-export function makeWaterWaving(material, waveTime, { lit = true, rain = { value: 0 } } = {}) {
+export function makeWaterWaving(material, waveTime, { lit = true, rain = { value: 0 }, ice = null } = {}) {
+    if (ice) {
+        ice.materials.add(material);
+        material.addEventListener('dispose', () => ice.materials.delete(material));
+    }
     material.onBeforeCompile = (shader) => {
+        const frozen = Boolean(ice && ice.compiled);
         shader.uniforms.uWaveTime = waveTime;
         shader.uniforms.uRain = rain;
+        if (frozen) {
+            shader.uniforms.uLakeIce = ice.ice;
+            shader.uniforms.uLakeSnow = ice.snow;
+        }
+        const iceHead = frozen ? '\nuniform float uLakeIce;\nvarying float vWaterFrozen;' : '';
         shader.vertexShader = shader.vertexShader
-            .replace('#include <common>', `#include <common>\n${VERTEX_HEAD}`)
+            .replace('#include <common>', `#include <common>\n${VERTEX_HEAD}${iceHead}`)
             .replace('void main() {', `void main() {
     vWaterXZ = (modelMatrix * vec4(position, 1.0)).xz;
     vSeaShare = aSeaShare;
-    vec3 waterSwellNow = waterSwell(vWaterXZ, aSeaShare);
+    vec3 waterSwellNow = waterSwell(vWaterXZ, aSeaShare);${frozen ? ICE_VERTEX : ''}
     vShoreDepth = aShoreDepth + waterSwellNow.x;`)
             .replace('#include <beginnormal_vertex>', '#include <beginnormal_vertex>\n\tobjectNormal = normalize(vec3(-waterSwellNow.y, 1.0, -waterSwellNow.z));')
             .replace('#include <begin_vertex>', '#include <begin_vertex>\n\ttransformed.y += waterSwellNow.x;');
         if (lit) {
+            const still = frozen ? ' * (1.0 - vWaterFrozen)' : '';
             shader.fragmentShader = shader.fragmentShader
-                .replace('#include <common>', `#include <common>\n${FRAGMENT_HEAD}`)
+                .replace('#include <common>', `#include <common>\n${FRAGMENT_HEAD}${frozen ? '\nuniform float uLakeSnow;\nvarying float vWaterFrozen;' : ''}`)
                 .replace('#include <color_fragment>', `#include <color_fragment>
 \tfloat waterNear = 1.0 - smoothstep(RIPPLE_FADE_NEAR, RIPPLE_FADE_FAR, length(vViewPosition));
 \tdiffuseColor.rgb = mix(diffuseColor.rgb, vec3(${FOAM_COLOR.map(glslFloat).join(', ')}), shoreFoam(waterNear) * ${glslFloat(FOAM_STRENGTH)});
-\tvec3 waterRain = rainRings(vWaterXZ, uWaveTime, rainNear(length(vViewPosition)));
-\tdiffuseColor.rgb = mix(diffuseColor.rgb, vec3(${FOAM_COLOR.map(glslFloat).join(', ')}), min(1.0, waterRain.x) * ${glslFloat(RAIN_RING_LIGHTEN)});`)
+\tvec3 waterRain = rainRings(vWaterXZ, uWaveTime, rainNear(length(vViewPosition)))${still};
+\tdiffuseColor.rgb = mix(diffuseColor.rgb, vec3(${FOAM_COLOR.map(glslFloat).join(', ')}), min(1.0, waterRain.x) * ${glslFloat(RAIN_RING_LIGHTEN)});${frozen ? ICE_FRAGMENT : ''}`)
                 .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
-\tvec3 waterRippleNow = waterRipple(vWaterXZ, vSeaShare) * (1.0 - smoothstep(RIPPLE_FADE_NEAR, RIPPLE_FADE_FAR, length(vViewPosition)));
-\tnormal = normalize(normal + mat3(viewMatrix) * vec3(-waterRippleNow.y - waterRain.y, 0.0, -waterRippleNow.z - waterRain.z));`);
+\tvec3 waterRippleNow = waterRipple(vWaterXZ, vSeaShare) * (1.0 - smoothstep(RIPPLE_FADE_NEAR, RIPPLE_FADE_FAR, length(vViewPosition)))${still};
+\tnormal = normalize(normal + mat3(viewMatrix) * vec3(-waterRippleNow.y - waterRain.y, 0.0, -waterRippleNow.z - waterRain.z));`)
+                .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>${frozen ? `
+\troughnessFactor = mix(roughnessFactor, ${glslFloat(ICE_ROUGHNESS)}, vWaterFrozen);` : ''}`);
         }
     };
-    material.customProgramCacheKey = () => (lit ? 'forkbuild-water-waves-lit' : 'forkbuild-water-waves-unlit');
+    material.customProgramCacheKey = () => `${lit ? 'forkbuild-water-waves-lit' : 'forkbuild-water-waves-unlit'}${ice && ice.compiled ? '-ice' : ''}`;
     material.needsUpdate = true;
     return material;
 }
