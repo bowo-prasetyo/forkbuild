@@ -7778,3 +7778,19 @@ learn.
 - Not done: snow has no depth and footprints aren't seen by others; the ice doesn't crack or creak; vehicles can't
   cross the ice; the seasonal themes wait their turn rather than coming round now.
 
+**The seasonal themes waited until June 2027.** The four seasonal challenge themes had been added at the end of the
+list so that no week already worked out changed, which left them over half a year away, and garden and harvest fell
+wherever the list put them. Now the six seasonal themes are spread through the list, every fifth theme, so the first,
+the winter cabin, runs the week of 16 November 2026 and one comes round every six or seven weeks after, the seasons in
+turn. Pillar: **Every build has a family tree** (the challenge). A newcomer has nothing to learn.
+
+- core/BuildChallenge.js: CHALLENGE_THEMES reordered from its fifth theme on: winter cabin, blossom walk, summer fair,
+  harvest, skating pond and garden every fifth, the others in their order between. The weeks up to 9 November 2026
+  (lighthouse, bridge, tiny home, the remix week, castle gate) keep their themes and tags; a copy of the app not
+  updated by 16 November shows other themes from then on. The weeks before CHALLENGE_EPOCH take theirs from the eight
+  original themes by name now, not by place. The rule for the list is now that a theme that has already run is never
+  moved, rather than that themes are only added at the end.
+- docs/Architecture.md's challenge notes and the publishing guide's **Seasonal themes**, in every language, say how
+  often a seasonal theme comes round.
+- Tests: `BuildChallenge` checks the weeks up to 9 November keep their themes, that every fifth themed week and only
+  those has a season, and the dates of the first six; `WinterAndSun` that the first seasonal week is 16 November.

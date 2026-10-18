@@ -685,6 +685,8 @@ the top bar opens its page.
 
 **Seasonal themes.** Some themes belong to a season: a garden in spring, a
 summer fair, a harvest store in autumn, a winter cabin or a skating pond.
+They're spread among the other themes, so one comes round about every six
+weeks, the seasons in turn.
 World View's seasons turn much faster than the weeks, so the week doesn't
 wait for its season; instead the challenge page suggests choosing that
 season under **Season** in World View, to see the entries as they're meant

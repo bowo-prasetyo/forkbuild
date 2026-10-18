@@ -25,25 +25,33 @@ import { assert } from './support/Assert.js';
     assert(CHALLENGE_THEMES.length === 30, 'thirty themes');
     const wrapped = challengeAt(Date.parse('2026-10-12T00:00:00Z') + 40 * 7 * 86400000);
     assert(wrapped.themeId === CHALLENGE_THEMES[0].id, `the themes come round again after the themed weeks (got ${wrapped.themeId})`);
-    // Themes are only added at the end, so the weeks the 26 themes before the
-    // seasonal ones covered keep their themes: a copy of the app from before
-    // agrees with this one on every one of them.
-    const themesBefore = ['lighthouse', 'bridge', 'tiny-home', 'castle-gate', 'windmill', 'market', 'tower', 'chapel', 'well', 'harbor',
-        'barn', 'garden', 'workshop', 'fortress', 'bandstand', 'porch', 'stables', 'round-tower', 'island', 'harvest',
-        'village-hall', 'grand-house', 'walls', 'village-square', 'silo', 'family-home'];
+    // The weeks that had run or were set by the time the seasonal themes were
+    // spread through the list keep their themes: a copy of the app from
+    // before agrees with this one up to the week of 9 November 2026.
+    const themesBefore = ['lighthouse', 'bridge', 'tiny-home', 'remix', 'castle-gate'];
+    themesBefore.forEach((themeId, week) => {
+        const challenge = challengeAt(Date.parse('2026-10-12T00:00:00Z') + week * 7 * 86400000);
+        assert(challenge.themeId === themeId, `week ${week} keeps its theme (got ${challenge.themeId})`);
+    });
+    // Some belong to a season, whose look the challenge page suggests: every
+    // fifth themed week from 16 November 2026, the seasons in turn.
+    const seasonal = CHALLENGE_THEMES.filter((theme) => theme.season);
+    assert(seasonal.map((theme) => `${theme.id}:${theme.season}`).join() === 'winter-cabin:WINTER,blossom-walk:SPRING,summer-fair:SUMMER,harvest:AUTUMN,skating-pond:WINTER,garden:SPRING',
+        'six themes belong to a season, taken in the seasons\' turn');
+    const seasonalWeeks = [];
     let themed = 0;
-    for (let week = 0; week < 34; week++) {
+    for (let week = 0; week < 80; week++) {
         const challenge = challengeAt(Date.parse('2026-10-12T00:00:00Z') + week * 7 * 86400000);
         if (challenge.kind === 'remix') continue;
-        assert(challenge.themeId === themesBefore[themed % themesBefore.length], `week ${week} keeps its theme (got ${challenge.themeId})`);
+        assert(Boolean(challenge.season) === (themed % 5 === 4), `every fifth themed week, and only those, has a season (week ${week}, ${challenge.themeId})`);
+        if (challenge.season && seasonalWeeks.length < 6) seasonalWeeks.push(`${challenge.id}:${challenge.themeId}`);
         themed++;
     }
-    // Some belong to a season, whose look the challenge page suggests.
-    const seasonal = CHALLENGE_THEMES.filter((theme) => theme.season);
-    assert(seasonal.map((theme) => `${theme.id}:${theme.season}`).join() === 'garden:SPRING,harvest:AUTUMN,winter-cabin:WINTER,blossom-walk:SPRING,summer-fair:SUMMER,skating-pond:WINTER',
-        'garden, harvest and the four added with the seasons belong to one');
-    const winter = challengeAt(Date.parse('2026-10-12T00:00:00Z') + 34 * 7 * 86400000);
-    assert(winter.themeId === 'winter-cabin' && winter.season === 'WINTER', `the first seasonal week carries its season (got ${winter.themeId}, ${winter.season})`);
+    assert(seasonalWeeks.join() === '2026-11-16:winter-cabin,2027-01-04:blossom-walk,2027-02-15:summer-fair,2027-04-05:harvest,2027-05-24:skating-pond,2027-07-05:garden',
+        `the seasonal weeks come round every six or seven weeks (got ${seasonalWeeks.join()})`);
+    const winter = challengeAt(Date.parse('2026-11-18T12:00:00Z'));
+    assert(winter.themeId === 'winter-cabin' && winter.season === 'WINTER' && winter.tag === 'winter-cabin-20261116',
+        `the first seasonal week carries its season (got ${winter.themeId}, ${winter.season})`);
     assert(first.season === null, 'a theme of no season carries none');
     const before = challengeAt(Date.parse('2026-10-08T12:00:00Z'));
     // Weeks before the first keep the themes they ran with when there were

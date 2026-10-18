@@ -290,14 +290,16 @@ the detailed references; in short:
   page, which lists the week before's entries, and Remix on one opens
   `/editor?fork=<doc>&publication=<id>&challenge=<Monday>`, tagged once the
   copy opens. Some themes belong to a season (`season`, core/Season.js's
-  SEASON): garden and harvest, and the four added on 2026-10-18 (a winter
-  cabin, a blossom walk, a summer fair, a skating pond); the world's seasons
-  turn far faster than the weeks, so the challenge page only suggests
-  keeping World View in that season (`challengeSeasonHint()`). Themes are
-  only ever added at the end of CHALLENGE_THEMES: taken in turn modulo its
-  length, every themed week up to the old length from CHALLENGE_EPOCH keeps
-  its theme, so copies from before an addition agree with newer ones until
-  then (the seasonal four first come round in June 2027). Home shows the week
+  SEASON): a winter cabin, a blossom walk, a summer fair, a harvest store, a
+  skating pond and a garden, every fifth theme of CHALLENGE_THEMES from the
+  week of 2026-11-16, so one comes round every six or seven weeks, the
+  seasons in turn; the world's seasons turn far faster than the weeks, so
+  the challenge page only suggests keeping World View in that season
+  (`challengeSeasonHint()`). The themes are taken in turn modulo the list's
+  length, so a theme that has already run is never moved: themes are added
+  or moved only after the week now running, a few weeks ahead, and copies
+  from before a change agree with newer ones up to the first week it
+  touches. Home shows the week
   (ui/components/challenge/ChallengeCard.js), and ui/views/ChallengeView.js
   (`/challenge`, `/challenge/<Monday>`) lists the entries:
   application/challenge/ChallengeEntries.js takes the Publications the

@@ -289,5 +289,6 @@ function buildProfile(username) {
     assert(winterThemes.includes('winter-cabin') && winterThemes.includes('skating-pond'), 'winter brings a cabin in the snow and a skating pond');
     const firstWeek = challengeAt(Date.parse('2026-10-14T12:00:00Z'));
     assert(firstWeek.themeId === 'lighthouse', 'the weeks already under way keep their themes');
-    console.log('✓ seasonal challenge themes, added without changing the weeks before');
+    assert(challengeAt(Date.parse('2026-11-16T12:00:00Z')).themeId === 'winter-cabin', 'and the first seasonal week is soon after');
+    console.log('✓ seasonal challenge themes, spread through the weeks after those already set');
 }
