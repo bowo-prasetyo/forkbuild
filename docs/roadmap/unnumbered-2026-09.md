@@ -7823,3 +7823,29 @@ builder wrote about their build reads well where people meet it). A newcomer has
   items, a heading alone), `DescriptionReaderBrowser` (real CSS: the panel's name and start, not beside a label, Read
   more only when there's more; the sheet beside the 280-pixel panel, its width and type, all of the description,
   focus in and back, keys kept from the World, Escape, Edit Metadata).
+
+**A build's comments could only be read and written in Explore.** World View's About this build panel showed what a
+build is, but its comments, the conversation around it, were only on its card in Explore, or in World View's My
+Shared World and World Encounter panels for builds reached that way. Now a build inspected in World View that has a
+Publication shows **💬 Comments (n)** (or **Leave a comment**) under its description, and opens them in the reading
+sheet, under the description, to read and add to. Pillar: **Your work is yours, and lives in a world** (people talk
+about a build where they meet it). A newcomer has nothing new to learn: it's the same comment box as in Explore.
+
+- ui/components/DescriptionReaderSheet.js: a Comments section under the description, drawn by Explore's own
+  `PublicationCommentarySection`, for a build with a Publication; it also opens for a build with comments but no
+  description, and `section: 'comments'` opens it scrolled to them. Escape in the comment box only leaves the box, so
+  a draft isn't lost; Escape again closes the sheet.
+- ui/components/DocumentInfoPanel.js: a `commentCount` prop; when given, a **💬 Comments (n)** line under the
+  description emits `read-comments`.
+- ui/views/WorldView.js: the inspected build's Publication (`getPublicationForDocument()`) and comment count, re-read
+  with its details; WorldView provides its session-backed comment commands to the sheet, so a comment is saved and
+  distributed like its other panels' and the count is re-read after a post.
+- The sheet now ends above the bar of actions at the foot of the view, which drew over its bottom.
+- New messages `documentInfo.comments`, `documentInfo.commentFirst` and `descriptionReader.comments` in every
+  language; docs/Architecture.md's Publication Commentary and the advanced tools guide's About this build, in every
+  language, say where World View shows a build's comments.
+- Tests: `DescriptionReaderBrowser` (the comments line only with a Publication, inviting the first or counting them,
+  and opening them; the sheet's comments under the description, opened scrolled to them, posted to the build's
+  Publication through the provided commands and listed, Escape in the box keeping the draft, a build with no
+  description still showing its comments and one without a Publication none).
+- Not done: comments still name their author by identity key, as in Explore.

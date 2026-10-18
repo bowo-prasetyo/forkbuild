@@ -738,10 +738,13 @@ export default Object.freeze({
     'documentInfo.editMetadata': '메타데이터 편집',
     'documentInfo.readMore': '더 보기',
     'documentInfo.readMoreLabel': '{title}의 설명 전체 읽기',
+    'documentInfo.comments': '댓글 ({count})',
+    'documentInfo.commentFirst': '댓글 남기기',
 
     // World View: a build's whole description (ui/components/DescriptionReaderSheet.js).
     'descriptionReader.by': '{author} 님 작성',
     'descriptionReader.close': '닫기',
+    'descriptionReader.comments': '댓글',
 
     // Editor and World View: editing document details (ui/components/MetadataEditorDialog.js).
     'metadataEditor.label': '작품 속성',

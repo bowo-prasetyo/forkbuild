@@ -32,6 +32,9 @@ import I18nText from '../i18n/I18nText.js';
 // width of the panel, before the details. A description longer than that
 // start ends in "Read more", which emits 'read-description' for the caller
 // to show all of it somewhere wider (DescriptionReaderSheet in World View).
+// Given a `commentCount` (World View, for a build with a Publication), a
+// line under it says how many comments there are and emits 'read-comments'
+// to show them in that same sheet.
 export default {
     name: 'DocumentInfoPanel',
     components: { FormattedDescription, BuiltWithNames, I18nText },
@@ -43,9 +46,16 @@ export default {
         compact: {
             type: Boolean,
             default: false
+        },
+        // How many comments the build's Publication has, or null when it
+        // has none to comment on (no Publication, or a surface without
+        // comments): then no comments line shows.
+        commentCount: {
+            type: Number,
+            default: null
         }
     },
-    emits: ['edit-metadata', 'read-description'],
+    emits: ['edit-metadata', 'read-description', 'read-comments'],
     computed: {
         // Whether the panel's start of the description leaves anything out.
         descriptionTruncated() {
@@ -120,6 +130,13 @@ export default {
                     @click="$emit('read-description')"
                 >{{ t('documentInfo.readMore') }}</button>
             </div>
+            <button
+                v-if="commentCount !== null"
+                type="button"
+                class="document-info-comments"
+                aria-haspopup="dialog"
+                @click="$emit('read-comments')"
+            >💬 {{ commentCount > 0 ? t('documentInfo.comments', { count: commentCount }) : t('documentInfo.commentFirst') }}</button>
             <div class="info-row" v-if="info.tags && info.tags.length > 0">
                 <span class="info-label">{{ t('documentInfo.tags') }}</span>
                 <span class="info-value">{{ info.tags.map((tag) => '#' + tag).join(' ') }}</span>

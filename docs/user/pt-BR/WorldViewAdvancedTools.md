@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: d01b776520c0b684 -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: a22a2e4bd16629ee -->
 # Visão do mundo: ferramentas avançadas
 
 <!-- languages -->
@@ -104,6 +104,9 @@ clicou:
   De uma descrição longa aparece aqui o começo; **Ler mais** abre ela
   inteira num painel mais largo ao lado (de baixo, no celular), com o Mundo
   ainda à vista. **Esc** ou **✕** fecha.
+  Uma construção publicada mostra também **💬 Comentários**: eles abrem no
+  mesmo painel, embaixo da descrição, onde você lê e deixa os seus, como no
+  cartão dela em **Explorar**.
 - **Posicionamento**: onde a construção fica no Mundo, em **unidades do
   Mundo**. São as coordenadas do próprio ForkBuild, não GPS; uma unidade
   do Mundo é um metro. **Focar** leva você até lá. **Mover** abre **Mover

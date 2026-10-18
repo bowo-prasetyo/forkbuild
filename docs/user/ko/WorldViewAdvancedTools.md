@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: d01b776520c0b684 -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: a22a2e4bd16629ee -->
 # 월드 보기: 고급 도구
 
 <!-- languages -->
@@ -97,6 +97,8 @@
   긴 설명은 여기서 앞부분만 보이고, **더 보기**를 누르면 옆의 더 넓은
   패널(휴대폰에서는 아래에서)에 전체가 열립니다. 월드는 계속 보입니다.
   **Esc**나 **✕**로 닫습니다.
+  게시된 작품에는 **💬 댓글**도 보입니다. 같은 패널의 설명 아래에 열리며,
+  **둘러보기**의 카드에서처럼 읽고 직접 남길 수 있습니다.
 - **배치**: 작품이 월드의 어디에 서 있는지를 **월드 단위**로 보여 줍니다.
   GPS가 아니라 ForkBuild 고유의 좌표이며, 1월드 단위는 1미터입니다.
   **초점**으로 그곳에 갑니다. **이동**은 **배치 이동**을 열어, 새 X, Y,

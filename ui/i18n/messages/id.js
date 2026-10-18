@@ -735,10 +735,13 @@ export default Object.freeze({
     'documentInfo.editMetadata': 'Edit Metadata',
     'documentInfo.readMore': 'Baca selengkapnya',
     'documentInfo.readMoreLabel': 'Baca seluruh deskripsi {title}',
+    'documentInfo.comments': 'Komentar ({count})',
+    'documentInfo.commentFirst': 'Tulis komentar',
 
     // World View: a build's whole description (ui/components/DescriptionReaderSheet.js).
     'descriptionReader.by': 'oleh {author}',
     'descriptionReader.close': 'Tutup',
+    'descriptionReader.comments': 'Komentar',
 
     // Editor and World View: editing document details (ui/components/MetadataEditorDialog.js).
     'metadataEditor.label': 'Properti bangunan',

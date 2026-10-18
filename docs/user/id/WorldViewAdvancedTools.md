@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: d01b776520c0b684 -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: a22a2e4bd16629ee -->
 # Tampilan Dunia: Alat Lanjutan
 
 <!-- languages -->
@@ -107,6 +107,9 @@ terbuka di bawah bagian kepala, untuk bangunan yang Anda klik:
   selengkapnya** membuka seluruhnya di panel yang lebih lebar di
   sebelahnya (dari bawah, di ponsel), dengan Dunia tetap terlihat. **Esc**
   atau **✕** menutupnya.
+  Bangunan yang sudah diterbitkan juga menampilkan **💬 Komentar**: komentar
+  terbuka di panel yang sama, di bawah deskripsi, tempat Anda membacanya dan
+  menambahkan komentar sendiri, sama seperti di kartunya di **Jelajahi**.
 - **Penempatan**: tempat bangunan berdiri di Dunia, dalam **Satuan Dunia**.
   Ini koordinat ForkBuild sendiri, bukan GPS; satu Satuan Dunia sama dengan
   satu meter. **Fokus** membawa Anda ke sana. **Pindahkan** membuka
