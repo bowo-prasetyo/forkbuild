@@ -7667,3 +7667,62 @@ nothing to learn; a phone starts with plainer trees, and **Detailed trees** in W
   and the shadow pass; leaves let the sky through; still air is still and a gale moves them; wet trees are darker).
 - Not done: levels switch without a cross-fade, so a tree changes shape as it crosses 45 m or 100 m; far trees are
   low-poly shapes, not rendered billboards (impostors); no seasons, no falling leaves, no felling or planting.
+
+
+## Four seasons (unnumbered, 2026-10-18)
+
+**The land never changed.** World View had day and night, the moon's phases and weather, but its grass, fields and
+trees looked the same all year. Now the world turns through spring, summer, autumn and winter: blossom and fresh
+leaves, then flowers in the grass; lush green, ripening fields and fruit; leaves turning red, orange and yellow and
+blowing down; bare trees, and snow that falls and lies. Pillar: **Your work is yours, and lives in a world** (the
+land round a build is worth coming back to: the same village in four seasons, a build to photograph under snow).
+How a player notices: the woods change colour from one visit to the next, leaves drift down among the trees, snow
+settles on the ground and a build's roof. A newcomer has nothing to learn; **Season** in World View's settings keeps
+one season on this device.
+
+- **A world year from the clock** (core/Season.js): `WORLD_YEAR_DAYS` 32 of World View's days, `SEASON_DAYS` 8 to a
+  season, one to each turn of the moon, so each season starts at dawn on a new moon's day and lasts 5 h 20 min. The
+  year doesn't divide a real day, so the seasons go round whatever hour someone plays. `seasonAt()`,
+  `seasonLookAt()` (eleven looks blended through the year, taken every thousandth of a day), `seasonLookOf()` (a
+  season's middle), `snowShareAt()`. The world's year, not the calendar's: no hemisphere, the same for everyone.
+- **Weather by season** (core/Weather.js): each season its own shares of fair, cloudy and overcast spells (the
+  year's as before); `precipitationAt()` is what falls, `rainAt()` its rain and `snowAt()` its snow, all snow in
+  winter; `snowCoverAt()` follows it from the end of autumn, rising as it snows and melting slowly in winter and
+  fast in spring; `weatherAt()` carries `snow` and `snowCover`; `weatherInSeason()` and `fairWeatherIn()` for a kept
+  season and Always day. No thunder in snow (core/Storms.js reads `rainAt()`).
+- **What grows where** (core/TerrainEcology.js#groundCoverAt()): grass and field shares, carried on every terrain
+  vertex as `groundCover`.
+- **The land's colours** (renderer/SeasonalSurfaces.js): one set of uniforms shared by the terrain and the trees,
+  set by `Renderer#setSeason()`; nothing streamed is rebuilt. Grass graded and saturated by season and dotted with
+  wild flowers in spring and summer; fields from bare soil to green to gold to stubble, keeping their rows. Trees
+  carry `treeDeciduous` and hash their place, so each turns, blooms and drops its leaves on its own: fresh leaves,
+  blossom (pink or white), fruit, autumn colours, leaf cards dropping whole sprays, mid and far crowns thinning to
+  twigs. Conifers stay green; scrub keeps some leaves. The tree shadow materials take the same patch, and leaf cards
+  are now cut out by the leaf texture in the shadow pass too (before, each card cast a square).
+- **Snow lying** (renderer/WetSurfaces.js): `setSnowCover()`; on what faces the sky, patches growing into a blanket
+  as the cover deepens, the ground fully, trees 0.9, bricks at most 0.45 so a roof keeps its colour; walls clear;
+  not in the room the avatar stands in. Through `setWeather()` for the terrain and trees, and
+  `BrickInstanceRegistry#setSnowCover()` (the render facade's `setWeather`) for instanced bricks.
+- **What drifts down** (renderer/SeasonDrift.js): snowflakes, leaves and petals, as rain is drawn: point sprites in
+  a box round the camera, swaying, spinning, carried by the wind, one draw each and only while any fall. Leaves
+  and petals fall among trees that shed them (`TreeForest#deciduousNearby`).
+- **The sound of the seasons** (core/AmbientSoundscape.js#ambientMixInSeason()): more birdsong in spring, summer's
+  insects, winter's hush; WorldSoundscapeService samples `season` from the session.
+- **This device's choice** (application/settings/WorldViewSeasonStore.js, `world-view-season`): **Season** in World
+  View's settings, the world's year or one season kept; `WorldNavigationSession#setKeptSeason()`, `season()`,
+  `keptSeason()`. New messages `worldView.season`, `worldView.seasonWorld`, `worldView.seasonSpring/Summer/Autumn/
+  Winter` and `worldView.seasonHint` in every language.
+- docs/Architecture.md gains **Seasons** and **Snow**; the World View guide gains a section on the seasons, in
+  every language; its World View pictures are retaken (their fixed moment falls in winter, so they show snow).
+- Tests: `Seasons` (a 32-day year of eight-day seasons, each starting with a new moon; what each season shows,
+  changing a little each day all round the year; snow only in winter, the year's weather shares as before; snow
+  building up, lying and melting, the same however it is reached; a kept season's rain or snow and Always day's;
+  the session follows the world or the kept season and hands it to the renderer; the store; ground cover; the
+  sound; the renderer's uniforms, snow, drifts and deciduous trees), `SeasonsBrowser` (real WebGL: the shaders
+  compile with the shadow pass; no season looks as before; spring's grass greener, autumn's warmer, winter's dull,
+  fields ripening; snow on the ground, less on a roof, none on walls or indoors; leaves turning, falling, gone,
+  conifers green; flakes, leaves and petals drawn). `Rain` now counts snow as what falls.
+- Not done: ground flowers are dots on the terrain, not instanced plants; the sun's arc and the length of the day
+  don't change with the season; lakes and rivers don't freeze, and snow has no depth (it is a colour on the ground,
+  not a layer that footprints could mark); fallen leaves don't lie on the ground; no challenge or achievement uses
+  the seasons yet ("your build in winter" would be a natural weekly challenge).

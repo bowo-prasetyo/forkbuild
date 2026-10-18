@@ -4,9 +4,12 @@
 // own choice (application/settings/WorldViewSkyStore.js) and changes nothing
 // for anyone else. The weather (core/Weather.js) and its storms
 // (core/Storms.js) follow the same clock, and Always day keeps it fair as
-// well.
+// well. So do the seasons (core/Season.js), unless this device keeps one
+// (application/settings/WorldViewSeasonStore.js): then the land stays in it,
+// and the world's weather falls as that season's rain or snow.
 import { DAY, DAY_SKY_BODIES, moonPhaseAt, moonlitLook, skyBodiesAt, skyLookAt } from '../../core/DayCycle.js';
-import { FAIR_WEATHER, overcastLook, weatherAt } from '../../core/Weather.js';
+import { fairWeatherIn, overcastLook, weatherAt, weatherInSeason } from '../../core/Weather.js';
+import { SEASON, seasonLookAt, seasonLookOf } from '../../core/Season.js';
 import { lightningAt, lightningLook, thunderBetween } from '../../core/Storms.js';
 
 export const dayCycleMethods = {
@@ -39,9 +42,31 @@ export const dayCycleMethods = {
         return this._alwaysDay ? [] : thunderBetween(from, to);
     },
 
-    // The weather right now (core/Weather.js): fair while Always day is on.
+    // The weather right now (core/Weather.js): fair while Always day is on,
+    // over whatever snow the season brings; in the season this device keeps,
+    // if it keeps one.
     weather() {
-        return this._alwaysDay ? FAIR_WEATHER : weatherAt(this._wildlifeClock());
+        if (this._alwaysDay) return fairWeatherIn(this.season());
+        const weather = weatherAt(this._wildlifeClock());
+        return this._keptSeason ? weatherInSeason(weather, this.season()) : weather;
+    },
+
+    // The season's look on the land right now (core/Season.js): the
+    // world's, or the middle of the one this device keeps.
+    season() {
+        return this._keptSeason ? seasonLookOf(this._keptSeason) : seasonLookAt(this._wildlifeClock());
+    },
+
+    // The season this device keeps (core/Season.js's SEASON), or null when it
+    // follows the world's year.
+    keptSeason() {
+        return this._keptSeason;
+    },
+
+    setKeptSeason(season) {
+        this._keptSeason = SEASON[season] ? season : null;
+        this._applySkyLook();
+        return this._keptSeason;
     },
 
     // Where the sun and the moon are right now, the moon's phase, and where
@@ -113,6 +138,10 @@ export const dayCycleMethods = {
         // A render facade that can't draw clouds draws none.
         if (this._session && typeof this._session.setWeather === 'function') {
             this._session.setWeather(this.weather());
+        }
+        // One that can't show the seasons keeps its summer.
+        if (this._session && typeof this._session.setSeason === 'function') {
+            this._session.setSeason(this.season());
         }
     },
 

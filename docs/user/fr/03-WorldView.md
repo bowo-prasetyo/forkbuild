@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 7e020f4bc9aa862c -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 20804c154b4aaf3d -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
@@ -248,6 +248,32 @@ aussi vite.
 Si vous préférez qu’il fasse toujours jour, cochez **Toujours le jour** en
 bas du panneau, juste au-dessus de **Ombres**. Le ciel reste
 alors dégagé. Ce choix est mémorisé sur cet appareil et ne change rien pour les autres.
+
+## Saisons
+
+Le monde passe par quatre saisons, chacune de huit jours de World View (un peu
+plus de cinq heures), une par tour de la lune :
+
+- **Printemps** : les arbres fleurissent en rose et blanc et se couvrent de
+  jeunes feuilles d’un vert tendre ; des fleurs sauvages parsèment l’herbe, et
+  des pétales tombent entre les arbres.
+- **Été** : tout est vert et luxuriant, des fruits mûrissent sur certains
+  arbres et les champs deviennent dorés.
+- **Automne** : les feuilles virent au rouge, à l’orange et au jaune, chaque
+  arbre à son heure, et tombent autour de vous tandis que les arbres se
+  dénudent ; les champs sont moissonnés.
+- **Hiver** : les arbres sont nus, l’herbe est terne et, quand le ciel se
+  couvre, il neige au lieu de pleuvoir. La neige se pose par plaques qui se
+  rejoignent en un manteau blanc, couvre les toits et la cime des arbres
+  (jamais les murs, ni l’intérieur de la construction où vous êtes) et fond au
+  printemps. Les oiseaux chantent moins et les insectes ont disparu.
+
+Le paysage change un peu chaque jour plutôt que d’un coup, et tout le monde
+voit la même saison au même moment. Les conifères restent verts toute l’année.
+Pour garder une saison sur votre appareil, choisissez-la sous **Saison**, en
+bas du panneau, juste sous **Arbres détaillés** ; **L’année du monde** suit de
+nouveau le monde. Avec **Toujours le jour**, les saisons continuent de tourner,
+sous un ciel dégagé.
 
 ## Son
 

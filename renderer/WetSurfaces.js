@@ -3,7 +3,10 @@ import * as THREE from 'three';
 // Wet ground and bricks in the rain (core/Weather.js's wetness): a surface
 // gets darker as it soaks up the rain, and what faces the sky gets a sheen,
 // its roughness falling as if a film of water lay on it; once the rain stops
-// it dries back, as slowly as core/Weather.js#wetnessAt() says.
+// it dries back, as slowly as core/Weather.js#wetnessAt() says. And snow
+// lying (core/Weather.js#snowCoverAt()): on what faces the sky it settles in
+// patches that grow into a blanket as the cover deepens, and melts back the
+// same way; walls stay clear.
 //
 // A patch onto a lit material (MeshStandardMaterial), on top of whatever it
 // already does (a brick's surface, its night glow): the terrain
@@ -15,11 +18,17 @@ import * as THREE from 'three';
 // Under the roof over the avatar (its shelter: the build's footprint, below
 // the roof's underside, application/worldNavigation/avatarPresenceMethods.js)
 // nothing is wet: the room it stands in stays dry, as the rain stays out of
-// it (renderer/RainFall.js). Its roof is above that, and gets wet.
+// it (renderer/RainFall.js). Its roof is above that, and gets wet. Snow
+// keeps out of the room the same way.
 
-// How much darker a soaked surface is, and the roughness of a film of water.
-export const TERRAIN_WET = Object.freeze({ darken: 0.32, roughness: 0.62 });
-export const BRICK_WET = Object.freeze({ darken: 0.2, roughness: 0.42 });
+// How much darker a soaked surface is, the roughness of a film of water,
+// and how much of what faces the sky snow can cover: bricks never wholly, so
+// a build's roof still shows its colour under snow.
+export const TERRAIN_WET = Object.freeze({ darken: 0.32, roughness: 0.62, snow: 1 });
+export const BRICK_WET = Object.freeze({ darken: 0.2, roughness: 0.42, snow: 0.45 });
+// Snow, a little blue in its shadows, and how rough it is.
+const SNOW_COLOUR = '0.80, 0.83, 0.88';
+const SNOW_ROUGHNESS = 0.9;
 // Walls get wet too, but less than what faces the sky, and take no sheen.
 const WALL_SHARE = 0.45;
 const NO_SHELTER_TOP = -1e9;
@@ -32,6 +41,7 @@ function glslFloat(v) {
 export function createWetSurfaces() {
     return {
         wetness: { value: 0 },
+        snowCover: { value: 0 },
         // (minX, maxX, minZ, maxZ) and the height below which it is dry.
         shelter: { value: new THREE.Vector4(0, 0, 0, 0) },
         shelterBelow: { value: NO_SHELTER_TOP }
@@ -40,6 +50,10 @@ export function createWetSurfaces() {
 
 export function setWetness(surfaces, wetness) {
     surfaces.wetness.value = Number.isFinite(wetness) ? Math.min(Math.max(wetness, 0), 1) : 0;
+}
+
+export function setSnowCover(surfaces, cover) {
+    surfaces.snowCover.value = Number.isFinite(cover) ? Math.min(Math.max(cover, 0), 1) : 0;
 }
 
 // `shelter`: `{ minX, maxX, minZ, maxZ, ceiling }` in world coordinates, the
@@ -75,28 +89,54 @@ const VERTEX_BODY = /* glsl */ `
 
 const FRAGMENT_HEAD = /* glsl */ `
 uniform float uWetness;
+uniform float uSnowCover;
 uniform vec4 uWetShelter;
 uniform float uWetShelterBelow;
 varying vec3 vWetWorld;
 varying float vWetUp;
+bool wetSheltered() {
+	return vWetWorld.y < uWetShelterBelow && vWetWorld.x > uWetShelter.x && vWetWorld.x < uWetShelter.y
+		&& vWetWorld.z > uWetShelter.z && vWetWorld.z < uWetShelter.w;
+}
 float wetHere() {
-	if (uWetness <= 0.0) return 0.0;
-	if (vWetWorld.y < uWetShelterBelow && vWetWorld.x > uWetShelter.x && vWetWorld.x < uWetShelter.y
-		&& vWetWorld.z > uWetShelter.z && vWetWorld.z < uWetShelter.w) return 0.0;
+	if (uWetness <= 0.0 || wetSheltered()) return 0.0;
 	return uWetness;
+}
+float snowNoise(vec2 p) {
+	vec2 i = floor(p);
+	vec2 f = fract(p);
+	f = f * f * (3.0 - 2.0 * f);
+	vec2 k = vec2(127.1, 311.7);
+	float a = fract(sin(dot(mod(i, 289.0), k)) * 43758.5453);
+	float b = fract(sin(dot(mod(i + vec2(1.0, 0.0), 289.0), k)) * 43758.5453);
+	float c = fract(sin(dot(mod(i + vec2(0.0, 1.0), 289.0), k)) * 43758.5453);
+	float d = fract(sin(dot(mod(i + vec2(1.0, 1.0), 289.0), k)) * 43758.5453);
+	return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+// How much snow lies here, 0 to 1, out of 'most' at the deepest: on what
+// faces the sky, first in patches, which grow and join as it deepens.
+float snowHere(float most) {
+	if (uSnowCover <= 0.0 || wetSheltered()) return 0.0;
+	float up = smoothstep(0.45, 0.8, vWetUp);
+	if (up <= 0.0) return 0.0;
+	float patches = snowNoise(vWetWorld.xz * 0.45) * 0.6 + snowNoise(vWetWorld.xz * 1.9 + 17.0) * 0.4;
+	return up * most * smoothstep(patches - 0.08, patches + 0.08, uSnowCover * 1.2 - 0.1);
 }`;
 
 // Patches `material` to soak and dry with `surfaces` (createWetSurfaces()),
-// `look` saying how dark and glossy it gets (TERRAIN_WET or BRICK_WET).
+// `look` saying how dark and glossy it gets and how much snow can cover it
+// (TERRAIN_WET or BRICK_WET).
 // Patching twice does nothing. Returns it.
 export function makeWet(material, surfaces, look = BRICK_WET) {
     if (!material || material.userData.wet) return material;
     material.userData.wet = true;
+    const snow = Number.isFinite(look.snow) ? look.snow : 1;
     const previous = material.onBeforeCompile;
     const previousKey = material.customProgramCacheKey;
     material.onBeforeCompile = (shader, renderer) => {
         if (typeof previous === 'function') previous.call(material, shader, renderer);
         shader.uniforms.uWetness = surfaces.wetness;
+        shader.uniforms.uSnowCover = surfaces.snowCover;
         shader.uniforms.uWetShelter = surfaces.shelter;
         shader.uniforms.uWetShelterBelow = surfaces.shelterBelow;
         shader.vertexShader = shader.vertexShader
@@ -107,11 +147,14 @@ export function makeWet(material, surfaces, look = BRICK_WET) {
             .replace('#include <color_fragment>', `#include <color_fragment>
 	float wetNow = wetHere();
 	float wetSky = smoothstep(0.3, 0.8, vWetUp);
-	diffuseColor.rgb *= 1.0 - ${glslFloat(look.darken)} * wetNow * mix(${glslFloat(WALL_SHARE)}, 1.0, wetSky);`)
+	diffuseColor.rgb *= 1.0 - ${glslFloat(look.darken)} * wetNow * mix(${glslFloat(WALL_SHARE)}, 1.0, wetSky);
+	float snowLying = snowHere(${glslFloat(snow)});
+	diffuseColor.rgb = mix(diffuseColor.rgb, vec3(${SNOW_COLOUR}), snowLying);`)
             .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
-	roughnessFactor = mix(roughnessFactor, min(roughnessFactor, ${glslFloat(look.roughness)}), wetNow * wetSky);`);
+	roughnessFactor = mix(roughnessFactor, min(roughnessFactor, ${glslFloat(look.roughness)}), wetNow * wetSky);
+	roughnessFactor = mix(roughnessFactor, ${glslFloat(SNOW_ROUGHNESS)}, snowLying);`);
     };
-    material.customProgramCacheKey = () => `${previousKey ? previousKey.call(material) : ''}|forkbuild-wet-${look.darken}`;
+    material.customProgramCacheKey = () => `${previousKey ? previousKey.call(material) : ''}|forkbuild-wet-${look.darken}-${snow}`;
     material.needsUpdate = true;
     return material;
 }

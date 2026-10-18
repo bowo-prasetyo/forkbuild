@@ -101,6 +101,15 @@ import WalkTogetherDialog from '../components/walkTogether/WalkTogetherDialog.js
 import LoginModal from '../components/LoginModal.js';
 import { compassText, spatialContextDescription } from '../i18n/worldText.js';
 import { DAY_CYCLE_SECONDS } from '../../core/DayCycle.js';
+import { SEASON, SEASON_SECONDS } from '../../core/Season.js';
+
+// The seasons World View can be kept in, in the year's order.
+const SEASON_OPTIONS = Object.freeze([
+    { season: SEASON.SPRING, label: 'worldView.seasonSpring' },
+    { season: SEASON.SUMMER, label: 'worldView.seasonSummer' },
+    { season: SEASON.AUTUMN, label: 'worldView.seasonAutumn' },
+    { season: SEASON.WINTER, label: 'worldView.seasonWinter' }
+]);
 
 // Snapshot fetches the automatic cascade runs at once.
 const AUTOMATIC_SNAPSHOT_FETCH_CONCURRENCY = 4;
@@ -970,6 +979,16 @@ export default {
             if (typeof session.setAlwaysDay === 'function') session.setAlwaysDay(alwaysDay.value);
         }
         if (typeof session.setAlwaysDay === 'function') session.setAlwaysDay(alwaysDay.value);
+        // The world's seasons, unless this device keeps one
+        // (application/settings/WorldViewSeasonStore.js): '' follows the world.
+        const worldViewSeasonStore = inject('worldViewSeasonStore', null);
+        const keptSeason = ref(worldViewSeasonStore ? worldViewSeasonStore.keptSeason() || '' : '');
+        function setKeptSeason(next) {
+            const season = SEASON[next] ? next : null;
+            keptSeason.value = (worldViewSeasonStore ? worldViewSeasonStore.setKeptSeason(season) : season) || '';
+            if (typeof session.setKeptSeason === 'function') session.setKeptSeason(keptSeason.value || null);
+        }
+        if (typeof session.setKeptSeason === 'function') session.setKeptSeason(keptSeason.value || null);
         // Lightning doesn't flash for anyone who asks for reduced motion
         // (core/Storms.js); its thunder is still heard.
         if (typeof session.setNoFlashes === 'function' && typeof window.matchMedia === 'function') {
@@ -1522,7 +1541,8 @@ export default {
             adoptNearbyPlaceNamingClaim,
             goHome,
             buildHere,
-            advanced, setAdvanced, alwaysDay, setAlwaysDay, shadowsOn, setShadowsOn, detailedTreesOn, setDetailedTreesOn, dayCycleMinutes: DAY_CYCLE_SECONDS / 60, editActiveCopy,
+            advanced, setAdvanced, alwaysDay, setAlwaysDay, keptSeason, setKeptSeason, seasonOptions: SEASON_OPTIONS,
+            seasonHours: Math.round(SEASON_SECONDS / 360) / 10, shadowsOn, setShadowsOn, detailedTreesOn, setDetailedTreesOn, dayCycleMinutes: DAY_CYCLE_SECONDS / 60, editActiveCopy,
             plaza, inPlaza, backToPlaza, focusExhibit, openExhibit, remixExhibit,
             openLocationsPanel,
             closeLocationsPanel,
@@ -1727,6 +1747,18 @@ export default {
                     {{ t('worldView.detailedTrees') }}
                 </label>
                 <p class="form-hint form-hint--neutral world-view-advanced-hint">{{ t('worldView.detailedTreesHint') }}</p>
+                <label class="world-view-advanced-toggle world-view-season">
+                    {{ t('worldView.season') }}
+                    <select
+                        class="form-select world-view-season-select"
+                        :value="keptSeason"
+                        @change="setKeptSeason($event.target.value)"
+                    >
+                        <option value="">{{ t('worldView.seasonWorld') }}</option>
+                        <option v-for="option in seasonOptions" :key="option.season" :value="option.season">{{ t(option.label) }}</option>
+                    </select>
+                </label>
+                <p class="form-hint form-hint--neutral world-view-advanced-hint">{{ t('worldView.seasonHint', { hours: seasonHours }) }}</p>
                 <!-- A visitor's view by default; this device can choose every tool. -->
                 <label class="world-view-advanced-toggle">
                     <input

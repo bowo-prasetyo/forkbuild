@@ -222,6 +222,30 @@ If you'd rather it were always day, tick **Always day** at the bottom of the
 panel, just above **Shadows**. It keeps the sky clear as well. It's
 remembered on this device and changes nothing for anyone else.
 
+## Seasons
+
+The world turns through four seasons, each lasting eight of World View's days
+(a little over five hours), one for every turn of the moon:
+
+- **Spring**: trees blossom pink and white and come into fresh, light green
+  leaf; wild flowers dot the grass, and petals drift down among the trees.
+- **Summer**: everything is lush and green, fruit ripens on some trees and
+  the fields turn gold.
+- **Autumn**: leaves turn red, orange and yellow, each tree in its own time,
+  and blow down around you as the trees go bare; the fields are harvested.
+- **Winter**: the trees stand bare, the grass is dull, and when the sky
+  clouds over it snows instead of raining. Snow settles in patches that
+  grow into a white blanket, lies on roofs and treetops (never on walls, and
+  never inside the build you're standing in), and melts away in spring.
+  Birds sing less, and the insects are gone.
+
+The land changes a little every day rather than all at once, and everyone
+sees the same season at the same moment. Conifers stay green all year. To
+keep one season on your device instead, choose it under **Season** near the
+bottom of the panel, just below **Detailed trees**; **The world's year** follows
+the world again. With **Always day** on, the seasons still turn, under a
+clear sky.
+
 ## Sound
 
 **Controls**, at the top right of the view (bottom right on a phone):

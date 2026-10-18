@@ -5,6 +5,7 @@ import { treeForm, treeShapeOf, TREE_FORMS_PER_SPECIES } from '../core/TreeForm.
 import { buildTreeGeometries } from './TreeGeometry.js';
 import { createTreeMaterials, createTreeWind, disposeTreeMaterials } from './TreeMaterials.js';
 import { makeWet } from './WetSurfaces.js';
+import { DECIDUOUS, TREE_PART, makeSeasonalTree, markDeciduous } from './SeasonalSurfaces.js';
 
 // Every tree World View draws. Trees are streamed by terrain tile
 // (renderer/TerrainStreamingController.js calls loadTile()/unloadTile()), but
@@ -74,8 +75,20 @@ const SPECIES_LOOK = Object.freeze({
 // brings the trees back to the palette's brightness.
 const LEAF_GAIN = 1.45;
 const BARK_GAIN = 1.5;
-// Wet trees darken less than bare ground: leaves shed the rain.
-const TREE_WET = Object.freeze({ darken: 0.22, roughness: 0.5 });
+// Wet trees darken less than bare ground: leaves shed the rain. Snow lies on
+// the tops of crowns and boughs.
+const TREE_WET = Object.freeze({ darken: 0.22, roughness: 0.5, snow: 0.9 });
+// How much each species sheds its leaves (renderer/SeasonalSurfaces.js).
+const SPECIES_DECIDUOUS = Object.freeze({
+    [TREE_SPECIES.CONIFER]: DECIDUOUS.NEVER,
+    [TREE_SPECIES.BROADLEAF]: DECIDUOUS.FULLY,
+    [TREE_SPECIES.SCRUB]: DECIDUOUS.PARTLY
+});
+// Leaves blow about where trees that shed them stand: within this many
+// metres of the camera, and as many as this make it a wood
+// (deciduousNearby).
+const NEARBY_METRES = 22;
+const NEARBY_WOOD = 14;
 
 const SPECIES_ORDER = Object.values(TREE_SPECIES);
 // How the pool draws a tree: a level, or SHADE, the mid shape for a tree
@@ -120,6 +133,7 @@ function treeRecord(feature) {
     const reach = Math.max(form.crown.radius, 0.5) * shape.widthScale;
     return {
         slot: formSlot(form.species, shape.form),
+        deciduous: SPECIES_DECIDUOUS[form.species] ?? 0,
         x: feature.x,
         z: feature.z,
         middleY: feature.y + height / 2,
@@ -134,8 +148,10 @@ function treeRecord(feature) {
 export class TreeForest {
     // `sink` takes the forest's one group (add/remove, like
     // renderer/SceneManager.js). `wetSurfaces` (renderer/WetSurfaces.js), when
-    // given, darkens trees in the rain with the rest of the world.
-    constructor(sink, { seed, detail = TREE_DETAIL.HIGH, tileSize = TERRAIN_TILE_SIZE, wetSurfaces = null } = {}) {
+    // given, darkens trees in the rain with the rest of the world and lays
+    // snow on them. `seasonSurfaces` (renderer/SeasonalSurfaces.js), when
+    // given, dresses them for the season.
+    constructor(sink, { seed, detail = TREE_DETAIL.HIGH, tileSize = TERRAIN_TILE_SIZE, wetSurfaces = null, seasonSurfaces = null } = {}) {
         this._sink = sink;
         this._seed = seed;
         this._tileSize = tileSize;
@@ -147,6 +163,15 @@ export class TreeForest {
                 makeWet(this._materials[key].material, wetSurfaces, TREE_WET);
             }
         }
+        // After the wet, so the snow lies on top of the season's colours.
+        if (seasonSurfaces) {
+            const parts = { broadLeaves: TREE_PART.LEAVES, needles: TREE_PART.LEAVES, crown: TREE_PART.CROWN };
+            for (const [key, part] of Object.entries(parts)) {
+                makeSeasonalTree(this._materials[key].material, seasonSurfaces, { part });
+                makeSeasonalTree(this._materials[key].depth, seasonSurfaces, { part, depth: true });
+            }
+        }
+        this._deciduousNearby = 0;
         this._group = new THREE.Group();
         this._group.name = 'trees';
         this._sink.add(this._group);
@@ -182,6 +207,13 @@ export class TreeForest {
         return { ...this._lodCounts };
     }
 
+    // How much of a wood of leaf-shedding trees stands round the camera, 0
+    // (none) to 1, as of the last time update() sorted the trees: what
+    // falling leaves and petals are scaled by.
+    get deciduousNearby() {
+        return this._deciduousNearby;
+    }
+
     // The meshes drawing at least one tree: one draw call each.
     get drawnMeshCount() {
         let count = 0;
@@ -205,6 +237,14 @@ export class TreeForest {
 
     get windStrength() {
         return this._wind.strength.value;
+    }
+
+    // The way the wind blows on the ground, as long as it is strong: what
+    // carries falling snow and leaves along (renderer/SeasonDrift.js).
+    get windDirection() {
+        const { x, y } = this._wind.direction.value;
+        const strength = this._wind.strength.value;
+        return { x: x * strength, y: y * strength };
     }
 
     // The clock the wind sways by, in seconds.
@@ -251,11 +291,13 @@ export class TreeForest {
         const counts = { [TREE_LOD.NEAR]: 0, [TREE_LOD.MID]: 0, [TREE_LOD.FAR]: 0 };
         const { x: cx, y: cy, z: cz } = camera.position;
         const low = TREE_LOD_DISTANCES[this._detail].near === 0;
+        let nearby = 0;
         for (const records of this._tiles.values()) {
             for (const tree of records) {
                 const dx = tree.x - cx;
                 const dy = tree.middleY - cy;
                 const dz = tree.z - cz;
+                if (tree.deciduous > 0 && dx * dx + dz * dz < NEARBY_METRES * NEARBY_METRES) nearby += tree.deciduous;
                 const lod = treeLodAt(Math.sqrt(dx * dx + dy * dy + dz * dz), this._detail);
                 // Close enough that its shadow may fall in view.
                 const shading = lod === TREE_LOD.NEAR || (lod === TREE_LOD.MID && low);
@@ -273,6 +315,7 @@ export class TreeForest {
             }
         }
         this._lodCounts = counts;
+        this._deciduousNearby = Math.min(1, nearby / NEARBY_WOOD);
 
         for (let slot = 0; slot < FORM_COUNT; slot++) {
             for (let k = 0; k < KINDS.length; k++) {
@@ -334,9 +377,12 @@ export class TreeForest {
         if (entry && entry.capacity >= needed) return entry.parts;
 
         const capacity = Math.max(MIN_CAPACITY, 2 ** Math.ceil(Math.log2(needed)));
-        if (!this._geometries[slot]) this._geometries[slot] = buildTreeGeometries(this._formOf(slot));
-        const geometries = this._geometries[slot];
         const form = this._formOf(slot);
+        if (!this._geometries[slot]) {
+            this._geometries[slot] = buildTreeGeometries(form);
+            markDeciduous(Object.values(this._geometries[slot]).flatMap((level) => Object.values(level)), SPECIES_DECIDUOUS[form.species] ?? 0);
+        }
+        const geometries = this._geometries[slot];
         const leaves = form.species === TREE_SPECIES.CONIFER ? this._materials.needles : this._materials.broadLeaves;
         const specs = kind === 'NEAR'
             ? [[geometries.near.bark, this._materials.bark, 'barkColor'], [geometries.near.leaves, leaves, 'leafColor']]

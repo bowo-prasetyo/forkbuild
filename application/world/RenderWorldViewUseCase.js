@@ -815,10 +815,16 @@ export class RenderWorldViewUseCase {
             setSkyBodies: (bodies) => {
                 renderer.setSkyBodies(bodies);
             },
-            // How cloudy the sky is (core/Weather.js#weatherAt()).
+            // How cloudy the sky is, the rain or snow and the snow lying
+            // (core/Weather.js#weatherAt()).
             setWeather: (weather) => {
                 renderer.setWeather(weather);
                 worldRenderer.brickInstances.setWetness(weather.wetness);
+                worldRenderer.brickInstances.setSnowCover(weather.snowCover);
+            },
+            // The season on the land (core/Season.js#seasonLookAt()).
+            setSeason: (look) => {
+                renderer.setSeason(look);
             },
             // The build the avatar stands in, which the rain falls round
             // (renderer/RainFall.js), or null under open sky.

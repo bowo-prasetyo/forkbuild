@@ -1484,13 +1484,22 @@ geometry and materials are shared by every tile.
     application/worldNavigation/dayCycleMethods.js  setShadowsOn(): setShadowsEnabled(on) on the render facade
     renderer/Renderer.js#setShadowsEnabled()       renderer/SunShadows.js, which follows the camera's target each frame
 
-    core/Weather.js#weatherAt(seconds)             cloud cover 0..1, how overcast 0..1, rain 0..1 and wetness 0..1
-            │                                       (same clock; FAIR_WEATHER, clear and dry, while Always day); overcastLook() greys
-            │                                       skyLookAt()'s look
+    core/Weather.js#weatherAt(seconds)             cloud cover 0..1, how overcast 0..1, rain 0..1, wetness 0..1,
+            │                                       snow 0..1 and snow lying 0..1 (same clock; fair while Always day,
+            │                                       over the season's snow); overcastLook() greys skyLookAt()'s look
     application/worldNavigation/dayCycleMethods.js  every render frame: setWeather(weather) on the render facade
     renderer/Renderer.js#setWeather()              renderer/CloudSky.js and renderer/RainFall.js (made on first call),
                                                     placed each frame; the shared rain { value } every water material's
-                                                    rings read (renderer/RainRings.js)
+                                                    rings read (renderer/RainRings.js); snow lying on the terrain,
+                                                    trees and bricks (renderer/WetSurfaces.js) and snowflakes
+                                                    (renderer/SeasonDrift.js)
+
+    core/Season.js#seasonLookAt(seconds)           the season and the land's look: leaves, blossom, autumn, fruit,
+            │                                       flowers, grass and field colours, leaves and petals drifting
+            │  (same clock; the middle of a kept season, application/settings/WorldViewSeasonStore.js)
+    application/worldNavigation/dayCycleMethods.js  every render frame: setSeason(look) on the render facade
+    renderer/Renderer.js#setSeason()               renderer/SeasonalSurfaces.js' uniforms, shared by the terrain and
+                                                    the trees; leaves and petals drifting (renderer/SeasonDrift.js)
 
 World View's sky turns once every `DAY_CYCLE_SECONDS` (40 minutes): dawn, about half the cycle in day, dusk, a
 little over a fifth in full night, dawn again, each look blending into the next. It is worked out from the wall
@@ -1619,6 +1628,56 @@ roughness (to 0.62 for ground, 0.42 for bricks) for a sheen. Below the underside
 (the shelter's `ceiling`) and inside its footprint nothing is wet, so the room it stands in stays dry while its
 roof does not. At no wetness the patch changes nothing.
 
+**Seasons.** core/Season.js cuts the same clock into a world year of `WORLD_YEAR_DAYS` (32) of World View's
+days, `SEASON_DAYS` (8) to a season: one season to each turn of the moon, so spring, summer, autumn and winter each
+start at dawn on the day whose night brings a new moon, and last 5 h 20 min. The year doesn't divide a real day, so
+a player who always plays at the same hour still sees the seasons go round; it is the world's year, not the
+calendar's, the same for everyone wherever they live. `seasonLookAt()` blends between eleven looks set at points
+in the year (a thaw, blossom, late spring, high summer, harvest, early autumn, autumn colours, leaf fall, bare
+trees, deep and late winter), so the land changes a little every day, never at once at a season's start; a look is
+taken every thousandth of a day and comes back frozen in between. A look carries `leaves` (how much of a
+broadleaf's foliage it has), `fresh`, `blossom`, `autumn`, `fruit`, `flowers`, a `groundGrade` and
+`groundSaturation` for the grass, a `fieldColor` and `fieldAmount` for the fields (bare soil, young and green
+crops, ripe gold, stubble), `leafDrift` and `petalDrift`, a typical `snowCover`, and `birds` and `insects` for the
+sound (core/AmbientSoundscape.js#ambientMixInSeason(), sampled by WorldSoundscapeService from `session.season()`).
+renderer/SeasonalSurfaces.js patches the terrain and the trees with one shared set of uniforms (`Renderer#setSeason()`),
+so nothing streamed is rebuilt. Every terrain vertex carries `groundCover` (core/TerrainEcology.js#groundCoverAt():
+grass for grassland and forest floor, a little for highland grass and a beach's edge, field for FIELD, none for
+rock, soil and water); the grass is greyed or saturated and multiplied by the grade, the field's colour replaces
+the crops' at the row's own brightness, so the rows stay, and in spring and summer grass is dotted with wild flowers:
+a dot in some cells of a 0.7 m grid, in meadows a low noise lets through, faded out where a cell gets too small on
+screen. Trees carry `treeDeciduous` (a conifer 0, a broadleaf 1, scrub 0.6) and hash their own place into three
+numbers, so each tree turns, blooms and drops its leaves a little differently: new leaves lighten towards yellow-green;
+autumn gives each its own muted red, orange or yellow at the leaves' own brightness, at its own time; two in five
+broadleaves blossom pink or white; three in ten bear red or orange fruit. Leaf cards drop whole sprays, by a hash of
+where they are, as the tree's share of leaves falls, until a broadleaf is bare to its boughs; the solid mid and far
+crowns thin to a haze of twigs, keeping 18% of themselves and turning twig-brown. The same patch goes on each part's
+shadow material, whose leaf cards are cut out by the leaf texture, so a bare tree casts a bare tree's shadow.
+renderer/SeasonDrift.js draws what drifts down as renderer/RainFall.js draws rain: point sprites in a box round the
+camera, worked out in the vertex shader, swaying, spinning and carried by the wind (`TreeForest#windDirection`),
+only as many as is falling: 2600 snowflakes as hard as it snows, 600 leaves and 700 petals as much as the look's
+drift times how much of a wood of leaf-shedding trees stands within 22 m (`TreeForest#deciduousNearby`, counted as the
+trees are sorted). A season kept on a device (**Season** in World View's settings, application/settings/
+WorldViewSeasonStore.js, `world-view-season`, provided as `worldViewSeasonStore`) holds the middle of that season;
+`weatherInSeason()` lets the world's clouds and what falls through, as snow in a kept winter over that season's snow,
+as rain otherwise. Only World View is given a season: the Editor and thumbnails keep high summer, which is what the
+patches look like until `setSeason()` is called.
+
+**Snow.** core/Weather.js gives each season its own shares of fair, cloudy and overcast spells (summer 0.72 fair and
+0.08 overcast, winter 0.55 and 0.18, the year 0.6, 0.25 and 0.15 as before); a world year is 160 spells, a season
+40, so a spell never straddles two. What an overcast spell lets fall is `precipitationAt()`; through winter it falls
+as snow (`snowAt()`), the rest of the year as rain (`rainAt()`), turning over the 2 minutes before winter starts and
+before it ends (core/Season.js#snowShareAt()): there is no thunder in snow, and snow wets nothing. About one winter
+spell in six snows. `snowCoverAt()` follows the snow in 30-second steps from the end of autumn, when none lies:
+while it snows the cover rises towards twice the snowfall with a 150-second time constant, from patches to a
+blanket in a few minutes; once it stops it melts with a time constant of an hour in winter, so it lies from one
+snowfall to the next, 4 minutes once winter is over and 2 in the rain; an hour into spring, none is left. The last
+steps followed are kept, as for wetness. renderer/WetSurfaces.js lays it: on what faces the sky (normal 0.45 to 0.8
+up) snow covers patches of a two-scale value noise in world space below the cover, so they grow and join as it
+deepens, the ground wholly, trees 0.9 and bricks never more than 0.45, so a roof still shows its colour; walls stay
+clear, and the shelter keeps it out of the room the avatar stands in, as it does the wet. Seasonal colour goes on a
+material after the wet patch, so it comes before the darkening and the snow in the shader.
+
 **Shadows.** The directional light casts them when World View turns them on (`Renderer#setShadowsEnabled()`,
 renderer/SunShadows.js): one 2048² PCF-soft shadow map over a square 45 m each way round the camera's target (the
 avatar, or what the camera orbits), so things farther off cast none and the cost doesn't grow with the world. Every
@@ -1675,7 +1734,8 @@ point lights and no bloom pass.
 
 **Always day.** A per-device choice, application/settings/WorldViewSkyStore.js (`world-view-sky`), provided as
 `worldViewSkyStore`. WorldView passes it to `session.setAlwaysDay()` before the session starts and whenever it is
-ticked; while on, the session hands the renderer DAY and `nightLevel()` is 0, so sound stays daytime too.
+ticked; while on, the session hands the renderer DAY and `nightLevel()` is 0, so sound stays daytime too. The
+season still turns, and Always day's fair weather lies over its typical snow (core/Weather.js#fairWeatherIn()).
 
 ## Sound
 

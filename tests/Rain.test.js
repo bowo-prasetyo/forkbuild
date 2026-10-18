@@ -50,13 +50,15 @@ const FIRST = Math.floor(1_800_000_000 / WEATHER_SPELL_SECONDS);
         checked++;
         const start = (spell + 1) * WEATHER_SPELL_SECONDS - WEATHER_CHANGE_SECONDS;
         let previous = weatherAt(start);
+        // What falls: rain, or in winter snow (core/Season.js).
+        const falls = (weather) => weather.rain + weather.snow;
         for (let t = start; t <= start + WEATHER_CHANGE_SECONDS; t += 2) {
             const now = weatherAt(t);
-            if (now.rain > 0) assert(now.overcast > 0.5, `it rains only under a gathered sky (rain ${now.rain.toFixed(2)}, overcast ${now.overcast.toFixed(2)})`);
-            steepest = Math.max(steepest, Math.abs(now.rain - previous.rain));
+            if (falls(now) > 0) assert(now.overcast > 0.5, `it rains only under a gathered sky (rain ${falls(now).toFixed(2)}, overcast ${now.overcast.toFixed(2)})`);
+            steepest = Math.max(steepest, Math.abs(falls(now) - falls(previous)));
             previous = now;
         }
-        assert(Math.abs(previous.rain - spellRain(spell + 1)) < 1e-9, 'by the end of the change it rains as the next spell does');
+        assert(Math.abs(falls(previous) - spellRain(spell + 1)) < 1e-9, 'by the end of the change it rains as the next spell does');
     }
     assert(checked > 100, `rain came or went often enough to check (${checked})`);
     // 2 seconds of the steepest part of a smoothstep over RAIN_CHANGE_SHARE of the change.
