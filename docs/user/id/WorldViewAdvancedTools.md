@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 88c9c021db48f898 -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: d01b776520c0b684 -->
 # Tampilan Dunia: Alat Lanjutan
 
 <!-- languages -->
@@ -103,6 +103,10 @@ terbuka di bawah bagian kepala, untuk bangunan yang Anda klik:
 - **Tentang bangunan ini**: judul, deskripsi, tag, lisensi, status,
   pembuat, dan dari mana bangunan itu di-remix. **Edit Metadata** mengubah
   judul, deskripsi, lisensi, dan siapa yang boleh menempatkannya.
+  Deskripsi yang panjang hanya terlihat awalnya di sini; **Baca
+  selengkapnya** membuka seluruhnya di panel yang lebih lebar di
+  sebelahnya (dari bawah, di ponsel), dengan Dunia tetap terlihat. **Esc**
+  atau **✕** menutupnya.
 - **Penempatan**: tempat bangunan berdiri di Dunia, dalam **Satuan Dunia**.
   Ini koordinat ForkBuild sendiri, bukan GPS; satu Satuan Dunia sama dengan
   satu meter. **Fokus** membawa Anda ke sana. **Pindahkan** membuka

@@ -141,6 +141,7 @@ export const inspectionPanelsTemplate = `<div v-if="spatialInspection" class="sp
                     v-if="documentInfo"
                     :info="documentInfo"
                     @edit-metadata="openMetadataEditor(documentInfo)"
+                    @read-description="openDescriptionReader(documentInfo)"
                 />
                 <PlacementInfoPanel
                     v-if="placementInfo"

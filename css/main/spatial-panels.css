@@ -343,6 +343,202 @@
     margin-top: 0.75rem;
 }
 
+/* The panel leads with the build's name and the start of its description,
+   the panel's full width, before the label/value details. A longer
+   description ends in "Read more", which opens it in the reading sheet. */
+.document-info-name {
+    margin: 0 0 0.35rem !important;
+    font-size: 0.95rem !important;
+    font-weight: 600;
+    color: var(--ink) !important;
+    word-break: break-word;
+}
+
+.document-info-description {
+    margin: 0 0 0.6rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid rgba(var(--edge-rgb), 0.08);
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: var(--ink-soft);
+}
+
+.world-view-overlay .document-info-description .formatted-description > *,
+.document-info-description .formatted-description > * {
+    margin: 0 0 0.45em;
+    font-size: inherit;
+    color: inherit;
+}
+
+.world-view-overlay .document-info-description .formatted-description > :last-child,
+.document-info-description .formatted-description > :last-child {
+    margin-bottom: 0;
+}
+
+.document-info-description .formatted-description-heading {
+    color: var(--ink);
+}
+
+.document-info-read-more {
+    margin-top: 0.25rem;
+    padding: 0.15rem 0;
+    background: none;
+    border: none;
+    font: inherit;
+    font-weight: 600;
+    color: var(--accent-ink);
+    cursor: pointer;
+}
+
+.document-info-read-more::after {
+    content: ' →';
+}
+
+.document-info-read-more:hover {
+    text-decoration: underline;
+}
+
+.document-info-read-more:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+/* A build's whole description (ui/components/DescriptionReaderSheet.js):
+   beside the left panel (280px wide from 1rem in), clear of the navigation
+   HUD when there's room, the World still in view to its right. The text
+   keeps a reading measure of about 65 characters a line. */
+.description-reader-sheet {
+    position: absolute;
+    top: 1rem;
+    left: calc(1rem + 280px + 0.75rem);
+    z-index: 15;
+    width: clamp(20rem, calc(100% - 280px - 16.75rem), 38rem);
+    max-height: calc(100% - 2rem);
+    display: flex;
+    flex-direction: column;
+    background: rgb(var(--overlay-rgb));
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    box-shadow: 0 8px 28px rgba(var(--shade-rgb), 0.22);
+    animation: description-reader-in 160ms ease-out;
+}
+
+@keyframes description-reader-in {
+    from { opacity: 0; transform: translateX(-8px); }
+    to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .description-reader-sheet { animation: none; }
+}
+
+.description-reader-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem 0.75rem;
+    border-bottom: 1px solid var(--line-soft);
+}
+
+.description-reader-heading {
+    flex: 1;
+    min-width: 0;
+}
+
+.description-reader-kicker {
+    margin: 0 0 0.2rem;
+    font-size: 0.7rem;
+    color: var(--ink-subtle);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.description-reader-title {
+    margin: 0;
+    font-size: 1.15rem;
+    line-height: 1.3;
+    color: var(--ink);
+    word-break: break-word;
+}
+
+.description-reader-meta {
+    margin: 0.25rem 0 0;
+    font-size: 0.8rem;
+    color: var(--ink-subtle);
+}
+
+.description-reader-close {
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    font-size: 1rem;
+    color: var(--ink-subtle);
+    cursor: pointer;
+}
+
+.description-reader-close:hover {
+    background: var(--surface-hover);
+    color: var(--ink);
+}
+
+.description-reader-close:focus-visible,
+.description-reader-body:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+}
+
+/* Focus is put on the text when the sheet opens, so the keys scroll it;
+   it's outlined once the reader tabs to it themselves. */
+.description-reader-body--arrived:focus-visible {
+    outline: none;
+}
+
+.description-reader-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 1rem 1.25rem 1.25rem;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--ink-soft);
+}
+
+.description-reader-body .formatted-description {
+    max-width: 65ch;
+}
+
+.description-reader-body .formatted-description-paragraph,
+.description-reader-body .formatted-description-list {
+    margin: 0 0 0.9em;
+}
+
+.description-reader-body .formatted-description-heading {
+    margin: 1.25em 0 0.4em;
+    font-size: 1.05rem;
+    color: var(--ink);
+}
+
+.description-reader-body .formatted-description > :first-child {
+    margin-top: 0;
+}
+
+.description-reader-body .formatted-description-list li + li {
+    margin-top: 0.25em;
+}
+
+.description-reader-footer {
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid var(--line-soft);
+}
+
 /* Document Properties modal (ui/components/MetadataEditorDialog.js) —
    overlay/panel shape follows CommandPalette's existing convention. */
 .modal-overlay {

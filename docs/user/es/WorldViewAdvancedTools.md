@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 88c9c021db48f898 -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: d01b776520c0b684 -->
 # Vista del mundo: herramientas avanzadas
 
 <!-- languages -->
@@ -101,6 +101,9 @@ clic:
 - **Sobre esta construcción**: su título, descripción, etiquetas,
   licencia, estado, autor y de qué es remezcla. **Editar metadatos**
   cambia el título, la descripción, la licencia y quién puede colocarla.
+  De una descripción larga se ve aquí el principio; **Leer más** la abre
+  entera en un panel más ancho al lado (desde abajo, en un móvil), con el
+  Mundo aún a la vista. **Esc** o **✕** lo cierra.
 - **Colocación**: dónde está la construcción en el Mundo, en **unidades
   del Mundo**. Son las coordenadas propias de ForkBuild, no GPS; una unidad
   del Mundo es un metro. **Enfocar** lo lleva allí. **Mover** abre **Mover

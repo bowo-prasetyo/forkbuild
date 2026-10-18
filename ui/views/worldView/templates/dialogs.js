@@ -13,6 +13,13 @@ export const dialogsTemplate = `<ActionFeedback :message="feedbackMessage" :visi
             <div class="visually-hidden" aria-live="polite">
                 <template v-if="residentSpeech">{{ t('worldView.residentSays', { remarks: residentSpeech.remarks.join(' ') }) }}</template>
             </div>
+            <!-- The whole description, beside the panel that shows its start. -->
+            <DescriptionReaderSheet
+                v-if="documentInfo && documentInfo.description && descriptionReaderDocumentId === documentInfo.documentId"
+                :info="documentInfo"
+                @close="closeDescriptionReader"
+                @edit-metadata="openMetadataEditor(documentInfo)"
+            />
             <MetadataEditorDialog
                 v-if="showMetadataEditor"
                 :info="metadataEditTarget"

@@ -63,6 +63,102 @@ export function descriptionPlainText(text) {
     }).join(' ').replace(/\s+/g, ' ').trim();
 }
 
+// The start of the description, for a narrow panel that links to the rest:
+// its first blocks (at most `maxBlocks`, up to the next section's heading)
+// within about `maxChars` characters of text, the block that
+// runs past them cut at a word and ended with "…". `truncated` says whether
+// anything was left out, so the panel offers the rest only when there is
+// more to read.
+export function previewDescription(text, { maxChars = 180, maxBlocks = 2 } = {}) {
+    const blocks = parseDescription(text);
+    const preview = [];
+    let budget = maxChars;
+    let counted = 0;
+    let truncated = false;
+    for (const block of blocks) {
+        // A heading after the start begins the next section: the rest.
+        if (counted === maxBlocks || budget <= 0 || (block.type === 'heading' && counted > 0)) {
+            truncated = true;
+            break;
+        }
+        const cut = trimBlock(block, budget);
+        if (!cut) {
+            truncated = true;
+            break;
+        }
+        preview.push(cut.block);
+        budget -= cut.used;
+        if (block.type !== 'heading') counted += 1;
+        if (cut.truncated) {
+            truncated = true;
+            break;
+        }
+    }
+    while (preview.length > 1 && preview[preview.length - 1].type === 'heading') {
+        preview.pop();
+        truncated = true;
+    }
+    return { blocks: preview, truncated };
+}
+
+// Shorter than this, the end of a cut block isn't worth showing.
+const MIN_CUT = 40;
+
+const runsLength = (runs) => runs.reduce((sum, run) => sum + run.text.length, 0);
+
+// The block within `budget` characters: { block, used, truncated }, or null
+// when too little of it would fit to be worth showing.
+function trimBlock(block, budget) {
+    if (block.type === 'heading') {
+        const used = runsLength(block.runs);
+        return used <= budget ? { block, used, truncated: false } : null;
+    }
+    const parts = block.type === 'list' ? block.items : block.lines;
+    const kept = [];
+    let used = 0;
+    let truncated = false;
+    for (const runs of parts) {
+        const length = runsLength(runs);
+        if (used + length <= budget) {
+            kept.push(runs);
+            used += length;
+            continue;
+        }
+        truncated = true;
+        if (budget - used >= MIN_CUT) {
+            kept.push(trimRuns(runs, budget - used));
+            used = budget;
+        }
+        break;
+    }
+    if (kept.length === 0) return null;
+    const trimmed = block.type === 'list' ? { type: 'list', items: kept } : { type: 'paragraph', lines: kept };
+    return { block: trimmed, used, truncated };
+}
+
+// The runs cut to `budget` characters at the last space before it (or right
+// at it, for one long word), ending with "…".
+function trimRuns(runs, budget) {
+    const kept = [];
+    let left = budget;
+    let midWord = false;
+    for (const run of runs) {
+        if (run.text.length <= left) {
+            kept.push({ ...run });
+            left -= run.text.length;
+            continue;
+        }
+        midWord = !/\s/.test(run.text[left]);
+        if (left > 0) kept.push({ ...run, text: run.text.slice(0, left) });
+        break;
+    }
+    const last = kept[kept.length - 1];
+    const space = midWord ? last.text.search(/\s\S*$/) : -1;
+    if (space > 0) last.text = last.text.slice(0, space);
+    last.text = `${last.text.trimEnd().replace(/[.,;:!?]+$/, '')}…`;
+    return kept;
+}
+
 // **bold** and *italic*, each opening right before a non-space and closing
 // right after one, on the same line; *italic* may sit inside **bold** and
 // the other way round. A marker without its partner is plain text.

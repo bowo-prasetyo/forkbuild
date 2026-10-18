@@ -728,8 +728,6 @@ export default Object.freeze({
     'documentInfo.editLabel': 'Modifier les informations de cette construction',
     'documentInfo.forkedFromCompact': 'Remix de {origin}',
     'documentInfo.builtWith': 'Construit avec',
-    'documentInfo.fieldTitle': 'Titre',
-    'documentInfo.description': 'Description',
     'documentInfo.tags': 'Étiquettes',
     'documentInfo.license': 'Licence',
     'documentInfo.placement': 'Placement',
@@ -738,6 +736,12 @@ export default Object.freeze({
     'documentInfo.forkedFrom': 'Remix de',
     'documentInfo.forkedFromStructure': 'Remix de la structure',
     'documentInfo.editMetadata': 'Modifier les métadonnées',
+    'documentInfo.readMore': 'Lire la suite',
+    'documentInfo.readMoreLabel': 'Lire toute la description de {title}',
+
+    // World View: a build's whole description (ui/components/DescriptionReaderSheet.js).
+    'descriptionReader.by': 'par {author}',
+    'descriptionReader.close': 'Fermer',
 
     // Editor and World View: editing document details (ui/components/MetadataEditorDialog.js).
     'metadataEditor.label': 'Propriétés de la construction',

@@ -94,6 +94,9 @@ the header, for the build you clicked:
 - **About this build**: its title, description, tags, license, status,
   author, and what it was remixed from. **Edit Metadata** changes the
   title, description, license and who can place it.
+  A long description shows its start here; **Read more** opens all of it
+  in a wider panel beside this one (from the bottom, on a phone), with the
+  World still in view. **Esc** or **✕** closes it.
 - **Placement**: where the build stands in the World, in **World Units**.
   These are ForkBuild's own coordinates, not GPS; one World Unit is one
   metre. **Focus** takes you there. **Move** opens **Move Placement**,

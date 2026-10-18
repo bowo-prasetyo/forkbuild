@@ -725,8 +725,6 @@ export default Object.freeze({
     'documentInfo.editLabel': 'Edit detail bangunan ini',
     'documentInfo.forkedFromCompact': 'Remix dari {origin}',
     'documentInfo.builtWith': 'Dibangun bersama',
-    'documentInfo.fieldTitle': 'Judul',
-    'documentInfo.description': 'Deskripsi',
     'documentInfo.tags': 'Tag',
     'documentInfo.license': 'Lisensi',
     'documentInfo.placement': 'Penempatan',
@@ -735,6 +733,12 @@ export default Object.freeze({
     'documentInfo.forkedFrom': 'Remix dari',
     'documentInfo.forkedFromStructure': 'Remix dari Struktur',
     'documentInfo.editMetadata': 'Edit Metadata',
+    'documentInfo.readMore': 'Baca selengkapnya',
+    'documentInfo.readMoreLabel': 'Baca seluruh deskripsi {title}',
+
+    // World View: a build's whole description (ui/components/DescriptionReaderSheet.js).
+    'descriptionReader.by': 'oleh {author}',
+    'descriptionReader.close': 'Tutup',
 
     // Editor and World View: editing document details (ui/components/MetadataEditorDialog.js).
     'metadataEditor.label': 'Properti bangunan',

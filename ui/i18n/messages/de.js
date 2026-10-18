@@ -728,8 +728,6 @@ export default Object.freeze({
     'documentInfo.editLabel': 'Angaben zu diesem Bauwerk bearbeiten',
     'documentInfo.forkedFromCompact': 'Geremixt von {origin}',
     'documentInfo.builtWith': 'Gebaut mit',
-    'documentInfo.fieldTitle': 'Titel',
-    'documentInfo.description': 'Beschreibung',
     'documentInfo.tags': 'Tags',
     'documentInfo.license': 'Lizenz',
     'documentInfo.placement': 'Platzierung',
@@ -738,6 +736,12 @@ export default Object.freeze({
     'documentInfo.forkedFrom': 'Geremixt von',
     'documentInfo.forkedFromStructure': 'Geremixt von Struktur',
     'documentInfo.editMetadata': 'Metadaten bearbeiten',
+    'documentInfo.readMore': 'Weiterlesen',
+    'documentInfo.readMoreLabel': 'Die ganze Beschreibung von {title} lesen',
+
+    // World View: a build's whole description (ui/components/DescriptionReaderSheet.js).
+    'descriptionReader.by': 'von {author}',
+    'descriptionReader.close': 'Schließen',
 
     // Editor and World View: editing document details (ui/components/MetadataEditorDialog.js).
     'metadataEditor.label': 'Bauwerkeigenschaften',

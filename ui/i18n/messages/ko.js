@@ -728,8 +728,6 @@ export default Object.freeze({
     'documentInfo.editLabel': '이 작품 정보 편집',
     'documentInfo.forkedFromCompact': '{origin}에서 리믹스함',
     'documentInfo.builtWith': '함께 만든 사람',
-    'documentInfo.fieldTitle': '제목',
-    'documentInfo.description': '설명',
     'documentInfo.tags': '태그',
     'documentInfo.license': '라이선스',
     'documentInfo.placement': '배치',
@@ -738,6 +736,12 @@ export default Object.freeze({
     'documentInfo.forkedFrom': '리믹스 원본',
     'documentInfo.forkedFromStructure': '리믹스 원본 구조물',
     'documentInfo.editMetadata': '메타데이터 편집',
+    'documentInfo.readMore': '더 보기',
+    'documentInfo.readMoreLabel': '{title}의 설명 전체 읽기',
+
+    // World View: a build's whole description (ui/components/DescriptionReaderSheet.js).
+    'descriptionReader.by': '{author} 님 작성',
+    'descriptionReader.close': '닫기',
 
     // Editor and World View: editing document details (ui/components/MetadataEditorDialog.js).
     'metadataEditor.label': '작품 속성',

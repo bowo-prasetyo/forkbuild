@@ -7794,3 +7794,32 @@ turn. Pillar: **Every build has a family tree** (the challenge). A newcomer has 
   often a seasonal theme comes round.
 - Tests: `BuildChallenge` checks the weeks up to 9 November keep their themes, that every fifth themed week and only
   those has a season, and the dates of the first six; `WinterAndSun` that the first seasonal week is 16 November.
+
+**A long description was hard to read in World View's left panel.** The About this build panel showed a build's whole
+description as one of its label/value rows: beside the "Description" label, in about 140 pixels of a 280-pixel panel,
+at the details' small muted size, so a formatted description ran 15 to 20 characters a line and pushed the license,
+status and **Edit Metadata** far down. Now the panel leads with the build's name and the start of its description, the
+panel's full width, and a longer description ends in **Read more**, which opens all of it in a reading sheet beside the
+panel, wide enough to read, with the World still in view. Pillar: **Your work is yours, and lives in a world** (what a
+builder wrote about their build reads well where people meet it). A newcomer has nothing to learn: a short description looks as before.
+
+- core/DescriptionMarkup.js `previewDescription()`: the description's start for a narrow panel, its first two blocks
+  (a leading heading, then up to the next section's heading) within about 180 characters, the block that runs past
+  them cut at a word with "…", and whether anything was left out. ui/components/FormattedDescription.js draws it with
+  `preview`.
+- ui/components/DocumentInfoPanel.js: the full form shows the name and the start of the description first, with no
+  Title or Description label (their messages are gone), and **Read more** only when there is more, emitting
+  `read-description`.
+- ui/components/DescriptionReaderSheet.js, opened by WorldView (`descriptionReaderDocumentId`): beside the left panel
+  on a wide screen, up to 38rem wide with a 65-character measure and 1rem type, clear of the navigation HUD when there's
+  room; a sheet up from the bottom below 720 pixels. It's a non-modal dialog: focus moves to the text and comes back
+  to **Read more**, keys pressed while reading scroll it and never move the avatar or fly Home, **Esc** or **✕**
+  closes it, and inspecting another build (or none) closes it too. Its owner can **Edit Metadata** from it.
+- New messages `documentInfo.readMore`, `documentInfo.readMoreLabel`, `descriptionReader.by` and
+  `descriptionReader.close` in every language; the advanced tools guide's About this build says how a long description
+  reads, in every language.
+- Tests: `DescriptionMarkup` (the start: short ones whole, two blocks at most, a heading leading it and the next one
+  ending it, cut at a word without a stop before "…", within the budget with its formatting, a long list's first
+  items, a heading alone), `DescriptionReaderBrowser` (real CSS: the panel's name and start, not beside a label, Read
+  more only when there's more; the sheet beside the 280-pixel panel, its width and type, all of the description,
+  focus in and back, keys kept from the World, Escape, Edit Metadata).

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 88c9c021db48f898 -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: d01b776520c0b684 -->
 # Weltansicht: Erweiterte Werkzeuge
 
 <!-- languages -->
@@ -102,6 +102,9 @@ Klicken Sie auf einen Stein, freien Boden oder eine platzierte Struktur,
 - **Über dieses Bauwerk**: Titel, Beschreibung, Schlagwörter, Lizenz,
   Status, Autor und wovon es geremixt ist. **Metadaten bearbeiten** ändert
   Titel, Beschreibung, Lizenz und wer es platzieren darf.
+  Von einer langen Beschreibung steht hier der Anfang; **Weiterlesen**
+  öffnet sie ganz in einem breiteren Feld daneben (auf dem Handy von
+  unten), die Welt bleibt dabei sichtbar. **Esc** oder **✕** schließt es.
 - **Platzierung**: wo das Bauwerk in der Welt steht, in **Welteinheiten**.
   Das sind ForkBuilds eigene Koordinaten, kein GPS; eine Welteinheit ist
   ein Meter. **Fokussieren** bringt Sie hin. **Verschieben** öffnet
