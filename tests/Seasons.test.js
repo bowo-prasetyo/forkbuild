@@ -34,7 +34,7 @@ import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
 import { naturalFeaturesInRegion, FEATURE_TYPE, TREE_SPECIES } from '../core/NaturalFeatureField.js';
 import { ambientMixAt, ambientMixInSeason, AMBIENT_LAYER } from '../core/AmbientSoundscape.js';
 import {
-    DECIDUOUS, TREE_PART, createSeasonSurfaces, makeSeasonalTree, seasonedTreeColour, setSeason, setTreeSeasonFlags, treeNumbers, treeSeasonFlags, treeSeasonOf
+    DECIDUOUS, TREE_PART, createSeasonSurfaces, makeSeasonalGround, makeSeasonalTree, seasonedTreeColour, setSeason, setTreeSeasonFlags, treeNumbers, treeSeasonFlags, treeSeasonOf
 } from '../renderer/SeasonalSurfaces.js';
 import { createWetSurfaces, makeWet, setSnowCover } from '../renderer/WetSurfaces.js';
 import { Drift, DRIFT } from '../renderer/SeasonDrift.js';
@@ -299,8 +299,12 @@ const inYear = (day) => YEAR_START + day * DAY_CYCLE_SECONDS;
     const surfaces = createSeasonSurfaces();
     assert(surfaces.flowers.value === 0 && surfaces.groundSaturation.value === 1 && surfaces.fieldAmount.value === 0,
         'until told otherwise, the ground\'s plain look');
+    const ground = makeSeasonalGround(new THREE.MeshStandardMaterial(), surfaces);
+    const groundVersion = ground.version;
+    assert(!surfaces.shown && !ground.customProgramCacheKey().endsWith('-shown'), 'until a season is shown, the ground\'s shaders carry none of it');
     const autumn = seasonLookAtYearDay(20);
     setSeason(surfaces, autumn);
+    assert(surfaces.shown && ground.version > groundVersion && ground.customProgramCacheKey().endsWith('-shown'), 'the first season rebuilds them');
     assert(surfaces.groundSaturation.value === autumn.groundSaturation && surfaces.fieldAmount.value === autumn.fieldAmount, 'autumn\'s uniforms');
     assert(surfaces.groundGrade.value.x === autumn.groundGrade[0] && surfaces.fieldColor.value.z === autumn.fieldColor[2], 'its colours');
     setSeason(surfaces, null);

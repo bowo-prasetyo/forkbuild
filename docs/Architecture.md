@@ -1642,8 +1642,10 @@ crops, ripe gold, stubble), `leafDrift` and `petalDrift`, a typical `snowCover`,
 sound (core/AmbientSoundscape.js#ambientMixInSeason(), sampled by WorldSoundscapeService from `session.season()`).
 renderer/SeasonalSurfaces.js changes the land without rebuilding anything streamed, and leaves as little as it can
 to every pixel: the bundled site's filmed walk-through renders in software (SwiftShader), which runs every line of a
-shader for every pixel whatever the branches say, so code that changes nothing still costs. The terrain takes a
-patch with one shared set of uniforms (`Renderer#setSeason()`); every terrain vertex carries `groundCover` (core/TerrainEcology.js#groundCoverAt():
+shader for every pixel whatever the branches say, so code that changes nothing still costs, and compiles every
+shader in software for each new page, so code that never runs costs too. The terrain takes a patch with one shared
+set of uniforms (`Renderer#setSeason()`), whose code is compiled in only once a season has been shown (never in the
+Editor); every terrain vertex carries `groundCover` (core/TerrainEcology.js#groundCoverAt():
 grass for grassland and forest floor, a little for highland grass and a beach's edge, field for FIELD, none for
 rock, soil and water); the grass is greyed or saturated and multiplied by the grade, the field's colour replaces
 the crops' at the row's own brightness, so the rows stay, and in spring and summer grass is dotted with wild flowers:

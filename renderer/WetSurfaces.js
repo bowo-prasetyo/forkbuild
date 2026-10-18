@@ -113,7 +113,10 @@ bool wetSheltered() {
 float wetHere() {
 	if (uWetness <= 0.0 || wetSheltered()) return 0.0;
 	return uWetness;
-}
+}`;
+
+// The snow's own code, in the shaders only while any lies (setSnowCover()).
+const SNOW_HEAD = /* glsl */ `
 float snowCell(vec2 c) {
 	return fract(52.9829189 * fract(dot(c, vec2(0.06711056, 0.00583715))));
 }
@@ -158,16 +161,18 @@ export function makeWet(material, surfaces, look = BRICK_WET) {
             .replace('#include <common>', `#include <common>${VERTEX_HEAD}`)
             .replace('#include <project_vertex>', `${VERTEX_BODY}\n\t#include <project_vertex>`);
         shader.fragmentShader = shader.fragmentShader
-            .replace('#include <common>', `#include <common>${FRAGMENT_HEAD}`)
+            .replace('#include <common>', `#include <common>${FRAGMENT_HEAD}${snowing ? SNOW_HEAD : ''}`)
             .replace('#include <color_fragment>', `#include <color_fragment>
 	float wetNow = wetHere();
 	float wetSky = smoothstep(0.3, 0.8, vWetUp);
 	diffuseColor.rgb *= 1.0 - ${glslFloat(look.darken)} * wetNow * mix(${glslFloat(WALL_SHARE)}, 1.0, wetSky);
-	float snowLying = ${snowing ? `snowHere(${glslFloat(snow)})` : '0.0'};
-	diffuseColor.rgb = mix(diffuseColor.rgb, vec3(${SNOW_COLOUR}), snowLying);`)
+${snowing ? `
+	float snowLying = snowHere(${glslFloat(snow)});
+	diffuseColor.rgb = mix(diffuseColor.rgb, vec3(${SNOW_COLOUR}), snowLying);` : ''}`)
             .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
 	roughnessFactor = mix(roughnessFactor, min(roughnessFactor, ${glslFloat(look.roughness)}), wetNow * wetSky);
-	roughnessFactor = mix(roughnessFactor, ${glslFloat(SNOW_ROUGHNESS)}, snowLying);`);
+${snowing ? `
+	roughnessFactor = mix(roughnessFactor, ${glslFloat(SNOW_ROUGHNESS)}, snowLying);` : ''}`);
     };
     material.customProgramCacheKey = () => `${previousKey ? previousKey.call(material) : ''}|forkbuild-wet-${look.darken}-${snow}${surfaces.snowCompiled ? '-snow' : ''}`;
     material.needsUpdate = true;

@@ -49,6 +49,11 @@ function glslFloat(v) {
 
 export function createSeasonSurfaces() {
     return {
+        // Whether the ground's shaders carry the season's code: only once a
+        // season has been shown (never in the Editor), with every material
+        // patched so they can be rebuilt then.
+        shown: false,
+        materials: new Set(),
         flowers: { value: 0 },
         groundGrade: { value: new THREE.Vector3(1, 1, 1) },
         groundSaturation: { value: 1 },
@@ -61,6 +66,10 @@ export function createSeasonSurfaces() {
 // `surfaces`.
 export function setSeason(surfaces, look) {
     if (!look) return;
+    if (!surfaces.shown) {
+        surfaces.shown = true;
+        for (const material of surfaces.materials) material.needsUpdate = true;
+    }
     for (const key of ['flowers', 'groundSaturation', 'fieldAmount']) {
         surfaces[key].value = Number.isFinite(look[key]) ? look[key] : surfaces[key].value;
     }
@@ -162,9 +171,9 @@ const GROUND_FRAGMENT_BODY = /* glsl */ `
 		vec2 flowerGrid = vSeasonWorld / 0.7;
 		vec2 flowerCell = floor(flowerGrid);
 		float flowerChance = seasonCell(flowerCell);
-		float flowerKind = seasonCell(flowerCell + 17.0);
+		float flowerKind = fract(seasonCell(flowerCell.yx * 1.7 + 31.0) + flowerChance * 7.31);
 		vec2 flowerInto = fract(flowerGrid) - 0.5 - (vec2(flowerKind, fract(flowerKind * 7.0)) - 0.5) * 0.5;
-		float flowerSize = 0.29 + flowerKind * 0.14;
+		float flowerSize = 0.24 + flowerKind * 0.1;
 		float onScreen = 1.0 - smoothstep(0.1, 0.3, length(fwidth(vSeasonWorld)));
 		float petal = step(flowerChance, vSeasonMeadow) * (1.0 - smoothstep(flowerSize * 0.6, flowerSize, length(flowerInto))) * onScreen;
 		vec3 flower = flowerKind < 0.3 ? vec3(0.92, 0.90, 0.84)
@@ -176,9 +185,15 @@ const GROUND_FRAGMENT_BODY = /* glsl */ `
 `;
 
 // Patches the terrain's `material` to take the season's colour, read from
-// its geometry's `groundCover` attribute (vec2: grass, field). Returns it.
+// its geometry's `groundCover` attribute (vec2: grass, field), once
+// setSeason() has shown one. Returns it.
 export function makeSeasonalGround(material, surfaces) {
-    return chainPatch(material, 'forkbuild-season-ground', (shader) => {
+    if (surfaces.materials && !material.userData['forkbuild-season-ground']) {
+        surfaces.materials.add(material);
+        material.addEventListener('dispose', () => surfaces.materials.delete(material));
+    }
+    const patched = chainPatch(material, 'forkbuild-season-ground', (shader) => {
+        if (!surfaces.shown) return;
         bindUniforms(shader, surfaces, ['groundGrade', 'groundSaturation', 'fieldColor', 'fieldAmount', 'flowers']);
         shader.vertexShader = shader.vertexShader
             .replace('#include <common>', `#include <common>${GROUND_VERTEX_HEAD}`)
@@ -187,6 +202,9 @@ export function makeSeasonalGround(material, surfaces) {
             .replace('#include <common>', `#include <common>${GROUND_FRAGMENT_HEAD}`)
             .replace('#include <color_fragment>', `#include <color_fragment>${GROUND_FRAGMENT_BODY}`);
     });
+    const key = patched.customProgramCacheKey;
+    patched.customProgramCacheKey = () => `${key.call(patched)}${surfaces.shown ? '-shown' : ''}`;
+    return patched;
 }
 
 const LUMA = Object.freeze([0.299, 0.587, 0.114]);
