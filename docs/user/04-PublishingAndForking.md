@@ -112,8 +112,13 @@ picture** and **Embed**, with the link below them. The same buttons are under
   long as it plays (half a minute at most), and saved to your downloads;
   nothing is uploaded. Then **Copy title** and **Copy description** give you
   text to paste beside it: who built it, the link to your build, a link to
-  ForkBuild and the build's license. Keep the tab in front while it records;
-  it pauses while the tab is hidden.
+  ForkBuild and the build's license. A remix's video credits whoever built
+  its original too, and a non-commercial build's description says it may
+  not be earned from. **Make a video** is offered on anyone's published
+  build, so before you make one it says what the build's license asks if
+  someone else built it: credit, no money made from it (CC BY-NC), or to
+  ask them first (All Rights Reserved or no license). Keep the tab in front
+  while it records; it pauses while the tab is hidden.
   With **With music** ticked, as it is unless you untick it, the music
   ForkBuild plays is recorded with it and fades away under the end card.
 - A **Walk-through**, the third kind in **Make a video**, is filmed in World
@@ -387,6 +392,55 @@ A published build is always shown with a license, chosen from the
 
 If you leave a build unlicensed, people can still open and explore it —
 they just can't remix it until you pick a license that allows it.
+
+### A remix keeps your credit and your terms
+
+A remix of your build credits you, and it keeps your license's terms
+however its new builder changes its license in **Build Properties**:
+
+| Your license | A remix of it may carry |
+|---|---|
+| **CC0 1.0** | Any license |
+| **CC BY 4.0** | Any license except CC0, which would drop your credit |
+| **CC BY-SA 4.0** | Only CC BY-SA 4.0 |
+| **CC BY-NC 4.0** | Only CC BY-NC 4.0, All Rights Reserved or no license, so a remix of a non-commercial build is never one anyone may sell |
+
+**Build Properties** offers a remix only these licenses, says whose build
+it remixes, and keeps the credit to you whichever one is chosen. Remixing
+your own build doesn't hold you to anything: your copy takes any license.
+Saved pictures and videos of a build carry its builder's name.
+
+### When someone uses your build in a way its license doesn't allow
+
+ForkBuild has no company or moderator in the middle: builds travel from
+device to device, and a video or picture is made and uploaded by the person
+who posts it, on a site ForkBuild doesn't run. ForkBuild can't take a video
+down or pay you from it. What it does is make your terms hard to miss and
+hard to strip: every published build shows its license, every remix and
+video credits you, and anyone making a video of your build is told what
+your license asks first. Every copy of ForkBuild honors that, but it isn't
+a lock: someone who changed the app's code could ignore it, and what
+someone does outside ForkBuild is up to them.
+
+If someone posts or earns from your build against your license:
+
+1. **Ask them first.** Many people don't know the license and will gladly
+   add your name and link, take a video down, or share what it earns.
+2. **Keep the evidence.** Your build's Publication is a claim signed by
+   your identity, carrying its license, and it can be anchored on Arweave
+   for a date nobody can change later (see
+   [Publications and Evidence](09-PublicationsAndEvidence.md)). Keep your
+   saved copy and a link to it too.
+3. **Use the site's own process.** YouTube, TikTok and the others take
+   copyright complaints from the person whose work it is. Only file one when
+   the use really isn't allowed: a video *about* a build, such as a review,
+   may be allowed without permission in many countries.
+4. **For anything serious, ask a lawyer.** Copyright works differently
+   from country to country, and this guide isn't legal advice.
+
+In ForkBuild itself you can **Block** someone (see
+[Peer Connections and Friends](07-PeerConnectionsAndFriends.md)) so your
+device stops connecting to them.
 
 ## Choosing who can place it
 

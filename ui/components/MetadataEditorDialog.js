@@ -38,12 +38,21 @@ export default {
             tagsText: initialTags(this.info).join(' '),
             tagsSuggested: !(this.info && this.info.tags && this.info.tags.length > 0),
             licenseId: this.info && this.info.license ? this.info.license.id : LicenseId.UNSPECIFIED,
-            licenseOptions: LICENSE_OPTIONS,
+            licenseOptions: remixLicenseOptions(this.info),
             placementPolicy: this.info && this.info.placementPolicy ? this.info.placementPolicy : PlacementPolicy.ANYONE,
             placementPolicyOptions: PLACEMENT_POLICY_OPTIONS
         };
     },
     computed: {
+        // "A remix of … by …: its license allows only these", when the
+        // choice is narrowed to what the original's license allows.
+        remixHint() {
+            const attribution = this.info && this.info.license ? this.info.license.attribution : null;
+            if (!attribution || this.licenseOptions.length === LICENSE_OPTIONS.length) return '';
+            return attribution.author
+                ? t('metadataEditor.remixLicenseHintBy', { title: attribution.title || t('share.untitled'), author: attribution.author })
+                : t('metadataEditor.remixLicenseHint', { title: attribution.title || t('share.untitled') });
+        },
         // What Save will keep, so the field shows it as it is typed.
         tagsPreview() {
             return normalizeBuildTags(this.tagsText);
@@ -67,20 +76,19 @@ export default {
             if (!trimmedTitle) {
                 return;
             }
+            // A remix keeps crediting its original and keeps its terms
+            // (core/License.js, relicense()), here and again where the
+            // edit is applied (UpdateDocumentMetadataUseCase,
+            // WorldNavigationSession.updateDocumentMetadata).
             const priorLicense = this.info ? this.info.license : null;
-            // Attribution (sourcePublicationId etc. — see
-            // ForkDocumentUseCase) only makes sense for the license it
-            // was stamped under. Preserve it if the user left the
-            // license id untouched; a genuinely new choice starts
-            // clean rather than carrying stale provenance data.
-            const attribution = (priorLicense && priorLicense.id === this.licenseId)
-                ? priorLicense.attribution
-                : null;
+            const license = License.relicense(priorLicense, new License({ id: this.licenseId }), {
+                authorIdentityId: this.info ? this.info.authorIdentityId : null
+            });
             this.$emit('save', {
                 title: trimmedTitle,
                 description: this.description,
                 tags: this.tagsPreview,
-                license: new License({ id: this.licenseId, attribution }),
+                license,
                 placementPolicy: this.placementPolicy
             });
         },
@@ -158,6 +166,9 @@ export default {
                         </option>
                     </select>
                 </label>
+                <p class="form-hint form-hint--neutral metadata-editor-remix-license" v-if="remixHint">
+                    {{ remixHint }}
+                </p>
                 <p class="form-hint" v-if="licenseId === 'UNSPECIFIED'">
                     {{ t('metadataEditor.noLicenseHint') }}
                 </p>
@@ -189,4 +200,16 @@ function initialTags(info) {
     if (!info) return [];
     if (Array.isArray(info.tags) && info.tags.length > 0) return [...info.tags];
     return suggestBuildTags({ title: info.title, description: info.description });
+}
+
+// The licenses `info`'s build may move to: for a remix, those its original's
+// license allows (core/License.js, remixLicenseIds()), unless its builder
+// built the original too; otherwise every one.
+function remixLicenseOptions(info) {
+    const license = info && info.license;
+    const attribution = license && license.attribution;
+    if (!attribution) return LICENSE_OPTIONS;
+    if (info.authorIdentityId && info.authorIdentityId === attribution.sourceAuthorIdentityId) return LICENSE_OPTIONS;
+    const allowed = License.remixLicenseIds(attribution.sourceLicenseId || license.id);
+    return LICENSE_OPTIONS.filter((option) => allowed.includes(option.id) || option.id === license.id);
 }

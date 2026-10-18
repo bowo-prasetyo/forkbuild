@@ -1,3 +1,5 @@
+import { License } from '../../core/License.js';
+
 // 0.2.21: the Editor-side entry point for editing a document's
 // title/description/license through the Document Properties UI. The
 // World View equivalent is WorldNavigationSession.updateDocumentMetadata
@@ -19,7 +21,9 @@ export class UpdateDocumentMetadataUseCase {
         const metadata = document.metadata;
         if (title !== undefined) metadata.title = title;
         if (description !== undefined) metadata.description = description;
-        if (license !== undefined) metadata.license = license;
+        // A remix keeps crediting its original and keeps its terms
+        // (core/License.js, relicense()).
+        if (license !== undefined) metadata.license = License.relicense(metadata.license, license, { authorIdentityId: metadata.authorIdentityId });
         if (placementPolicy !== undefined) metadata.placementPolicy = placementPolicy;
         if (tags !== undefined) metadata.tags = tags;
         metadata.touch();

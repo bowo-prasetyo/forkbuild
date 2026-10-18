@@ -92,6 +92,11 @@ deserializing and serializing again gives byte-identical JSON):
 
     Brick: { id, definitionId, position: { x, y, z }, rotation, color, tilt? }   // in memory, and in schema 1
 
+- A remix's `license.attribution` names its original: `author`, `title`,
+  `sourcePublicationId`, `sourceDocumentId`, and, from 2026-10-18,
+  `sourceAuthorIdentityId` and `sourceLicenseId`, which hold a relicensed
+  remix to its original's terms (docs/Architecture.md). Older remixes
+  without them are held to the license they carry.
 - `rotation` is degrees around Y. `tilt`, present only when it isn't 0, is
   a quarter turn (90, 180 or 270) about the brick's own X axis, applied
   before `rotation` (see "Brick Tilt" below). Translate, rotate and tilt

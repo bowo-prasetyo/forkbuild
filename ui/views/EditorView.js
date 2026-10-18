@@ -1107,6 +1107,7 @@ export default {
                 description: document.metadata.description || '',
                 tags: document.metadata.tags,
                 author: document.metadata.author,
+                authorIdentityId: document.metadata.authorIdentityId || null,
                 builtWith: document.metadata.builtWith,
                 license: document.metadata.license,
                 placementPolicy: document.metadata.placementPolicy,

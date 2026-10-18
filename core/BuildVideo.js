@@ -166,14 +166,17 @@ export const DESCRIPTION_LINK_LIMIT = 3500;
 // The title and description to paste beside the video where it is uploaded,
 // as messages (core/Message.js) the UI turns into text: `{ title, lines }`,
 // an empty line where `lines` has null. Credits the author, everyone who built
-// it with them and the build it was remixed from, links to the build itself
+// it with them and the build it was remixed from (and, given
+// `remixedFromAuthor`, who built that), links to the build itself
 // (`buildUrl`, when it has one) and to ForkBuild (`appUrl`, tagged so a visit
 // from the video is counted as one: core/LaunchChannel.js), and names its
 // license. `title` and the names are plain text; `license` is a message or
-// text. A tall video is meant for Shorts, so its title says so. A link longer
+// text; `nonCommercial` adds a line saying the license doesn't allow earning
+// from it. A tall video is meant for Shorts, so its title says so. A link longer
 // than DESCRIPTION_LINK_LIMIT is left out, and `linkLeftOut` says so.
 export function describeBuildVideo({
-    title, author = '', builtWith = [], remixedFrom = '', license = null, buildUrl = null, appUrl, challengeTag = null, shape = BuildVideoShape.WIDE
+    title, author = '', builtWith = [], remixedFrom = '', remixedFromAuthor = '', license = null, nonCommercial = false, buildUrl = null, appUrl,
+    challengeTag = null, shape = BuildVideoShape.WIDE
 }) {
     const name = String(title || '').trim();
     const names = builtWith.map((entry) => String(entry || '').trim()).filter(Boolean);
@@ -183,12 +186,17 @@ export function describeBuildVideo({
     const lines = [
         author ? message('video.description.byAuthor', { title: name, author }) : message('video.description.built', { title: name }),
         ...(names.length ? [message('video.description.builtWith', { names: names.join(', ') })] : []),
-        ...(remixedFrom ? [message('video.description.remixedFrom', { title: remixedFrom })] : []),
+        ...(remixedFrom
+            ? [remixedFromAuthor
+                ? message('video.description.remixedFromBy', { title: remixedFrom, author: remixedFromAuthor })
+                : message('video.description.remixedFrom', { title: remixedFrom })]
+            : []),
         null,
         ...(link ? [message('video.description.remixLink', { url: link })] : []),
         message('video.description.appLink', { url: appUrl }),
         null,
         ...(license ? [message('video.description.license', { license })] : []),
+        ...(nonCommercial ? [message('video.description.nonCommercial')] : []),
         hashtags
     ];
     return Object.freeze({

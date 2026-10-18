@@ -108,14 +108,11 @@ export class ImportDocumentUseCase {
             author: currentUser ? currentUser.username : null,
             authorIdentityId: resolveSigningIdentityId(this._identityProvider),
             parentDocumentId: sourceDocument.world.id,
-            license: new License({
-                id: License.idOf(metadata.license),
-                attribution: {
-                    author: metadata.author,
-                    title: sourceTitle,
-                    sourcePublicationId: null,
-                    sourceDocumentId: sourceDocument.world.id
-                }
+            license: License.derivedFrom(metadata.license, {
+                author: metadata.author,
+                title: sourceTitle,
+                sourceDocumentId: sourceDocument.world.id,
+                sourceAuthorIdentityId: metadata.authorIdentityId
             })
         });
     }

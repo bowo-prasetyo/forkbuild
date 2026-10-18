@@ -162,6 +162,18 @@ const close = (a, b) => Math.abs(a - b) < 1e-9;
     assert(leftOut.linkLeftOut && !leftOut.lines.some((line) => line?.key === 'video.description.remixLink'),
         'a link that carries a large build is too long for a YouTube description: it is left out, and that is said');
 
+    // A remix credits whoever built its original; a non-commercial build says
+    // it may not be earned from.
+    const remix = describeBuildVideo({
+        title: 'Keep', author: 'ben', remixedFrom: 'Castle', remixedFromAuthor: 'ana', license: message('license.ccByNc'), nonCommercial: true, appUrl
+    });
+    const remixed = remix.lines.find((line) => line?.key === 'video.description.remixedFromBy');
+    assert(remixed && remixed.params.title === 'Castle' && remixed.params.author === 'ana', 'a remix names its original\'s builder');
+    const keysOfRemix = remix.lines.map((line) => (line === null ? null : line.key ?? line));
+    assert(keysOfRemix.indexOf('video.description.nonCommercial') === keysOfRemix.indexOf('video.description.license') + 1,
+        `the non-commercial line follows the license (${JSON.stringify(keysOfRemix)})`);
+    assert(!described.lines.some((line) => line?.key === 'video.description.nonCommercial'), 'only a non-commercial build says so');
+
     const long = describeBuildVideo({ title: 'x'.repeat(200), appUrl });
     assert(long.title.params.title.length === 60 && long.title.params.title.endsWith('…'), 'a long title is shortened to fit YouTube\'s limit');
     console.log('✓ the title and description');

@@ -1,5 +1,6 @@
 import { CommandHistory } from '../editor/CommandHistory.js';
 import { License } from '../../core/License.js';
+import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 import { SpatialSelectionState } from '../spatial-state/SpatialSelectionState.js';
 import { SpatialHoverState } from '../spatial-state/SpatialHoverState.js';
 import { message } from '../../core/Message.js';
@@ -54,7 +55,9 @@ export const forkOnWriteMethods = {
         const metadata = doc.metadata;
         if (title !== undefined) metadata.title = title;
         if (description !== undefined) metadata.description = description;
-        if (license !== undefined) metadata.license = license;
+        // A remix keeps crediting its original and keeps its terms
+        // (core/License.js, relicense()).
+        if (license !== undefined) metadata.license = License.relicense(metadata.license, license, { authorIdentityId: metadata.authorIdentityId });
         if (placementPolicy !== undefined) metadata.placementPolicy = placementPolicy;
         if (tags !== undefined) metadata.tags = tags;
         metadata.touch();
@@ -96,10 +99,23 @@ export const forkOnWriteMethods = {
         }
 
         const user = this._identityProvider ? this._identityProvider.currentUser() : null;
+        const sourceLicense = sourceDoc.metadata.license;
         const fork = this._documentCloneService.execute(sourceDoc, {
             title: forkTitle(sourceDoc.metadata.title),
             author: user ? user.username : null,
+            // The forker owns the copy (DocumentCloneService's 0.2.95 note).
+            authorIdentityId: resolveSigningIdentityId(this._identityProvider),
             parentDocumentId: sourceDoc.world.id,
+            // Credits the original, as ForkDocumentUseCase does, so the copy
+            // keeps its builder's name and terms if its license is changed.
+            license: sourceLicense && sourceLicense.id !== 'UNSPECIFIED'
+                ? License.derivedFrom(sourceLicense, {
+                    author: sourceDoc.metadata.author,
+                    title: sourceDoc.metadata.title || null,
+                    sourceDocumentId: sourceDoc.world.id,
+                    sourceAuthorIdentityId: sourceDoc.metadata.authorIdentityId
+                })
+                : undefined,
             // Without the eventBus the fork's later mutations update the model but never
             // reach the renderer, freezing the mesh. Same bus _loadWorld and the
             // WorldRenderer use.
