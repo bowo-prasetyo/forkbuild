@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 9ef1584b89ce019e -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 8c2cb52a55e5dbab -->
 # 03 — Vista del mundo
 
 <!-- languages -->
@@ -199,6 +199,17 @@ cruzándolas, y se apagan de nuevo al amanecer. Todo el cielo estrellado gira
 despacio alrededor de un punto alto en el norte, así que las estrellas salen
 por el este y se ponen por el oeste con la luna, y todos ven las mismas
 estrellas en el mismo momento.
+
+La luna pasa por sus fases, una cada noche: de una luna nueva oscura a un
+fino creciente, una media luna y una luna gibosa hasta la luna llena, y de
+vuelta, cada ocho días de la Vista del mundo (algo más de cinco horas). Una
+luna creciente está iluminada por su lado oeste, y una menguante por su lado
+este. La fase también cambia la noche: con luna llena la noche es un poco
+más clara y las sombras más nítidas; cerca de la luna nueva la luz es más
+suave, el cielo de un azul más profundo, y las estrellas y la Vía Láctea
+brillan más que nunca. Como el resto del cielo, todos ven la misma luna en
+el mismo momento, y nunca está tan oscuro como para que cueste ver las
+construcciones.
 
 Las nubes vienen y van, las mismas para todos en el mismo momento. Casi
 siempre pasan unas pocas nubes blancas; de vez en cuando el cielo se nubla, y

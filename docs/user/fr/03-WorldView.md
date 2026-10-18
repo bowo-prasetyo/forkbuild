@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 9ef1584b89ce019e -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 8c2cb52a55e5dbab -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
@@ -205,6 +205,17 @@ traversées par la Voie lactée, puis s’effacent à l’aube. Tout le ciel ét
 tourne lentement autour d’un point haut dans le nord : les étoiles se lèvent
 à l’est et se couchent à l’ouest avec la lune, et chacun voit les mêmes
 étoiles au même moment.
+
+La lune passe par ses phases, une par nuit : d’une nouvelle lune sombre à un
+mince croissant, une demi-lune et une lune gibbeuse jusqu’à la pleine lune,
+puis retour, tous les huit jours de la Vue du Monde (un peu plus de cinq
+heures). Une lune croissante est éclairée de son côté ouest, une lune
+décroissante de son côté est. La phase change aussi la nuit : sous la pleine
+lune, la nuit est un peu plus claire et les ombres plus nettes ; autour de
+la nouvelle lune, la lumière est plus douce, le ciel d’un bleu plus profond,
+et les étoiles et la Voie lactée brillent le plus. Comme le reste du ciel,
+tout le monde voit la même lune au même moment, et il ne fait jamais assez
+sombre pour que les constructions soient difficiles à voir.
 
 Les nuages vont et viennent, les mêmes pour tous au même moment. La plupart
 du temps, quelques nuages blancs passent ; de temps en temps le ciel se

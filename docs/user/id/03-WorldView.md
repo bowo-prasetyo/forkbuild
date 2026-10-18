@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 9ef1584b89ce019e -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 8c2cb52a55e5dbab -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
@@ -199,6 +199,17 @@ Sakti melintang di antaranya, lalu memudar lagi saat fajar. Seluruh langit
 berbintang berputar perlahan mengelilingi satu titik tinggi di utara, sehingga
 bintang terbit di timur dan terbenam di barat bersama bulan, dan semua orang
 melihat bintang yang sama pada saat yang sama.
+
+Bulan melewati fase-fasenya, satu fase setiap malam: dari bulan baru yang
+gelap, sabit tipis, bulan separuh, dan bulan cembung hingga bulan purnama,
+lalu kembali lagi, setiap delapan hari Tampilan Dunia (sedikit lebih dari
+lima jam). Bulan yang sedang membesar terang di sisi baratnya, bulan yang
+sedang mengecil di sisi timurnya. Fase bulan juga mengubah malam: saat bulan
+purnama malam sedikit lebih terang dan bayangan lebih tegas; sekitar bulan
+baru cahayanya lebih lembut, langit lebih biru pekat, dan bintang serta Bima
+Sakti bersinar paling terang. Seperti bagian langit lainnya, semua orang
+melihat bulan yang sama pada saat yang sama, dan tidak pernah terlalu gelap
+sampai bangunan sulit dilihat.
 
 Awan datang dan pergi, sama bagi semua orang pada saat yang sama.
 Biasanya beberapa awan putih melintas; sesekali langit berawan, dan kadang

@@ -7581,3 +7581,40 @@ earned from, and a saved picture names its builder.
   sharing or creator programme. Like every license rule here, a changed copy of the app could ignore it, and what
   happens outside ForkBuild (a video on YouTube) isn't ForkBuild's to enforce.
 
+
+## Moon phases (unnumbered, 2026-10-18)
+
+**The moon was always full.** World View's moon crossed every night as the same pale disc, lighting it the same
+way. Now it goes through its eight phases, one a night, over eight of World View's days (5 h 20 min), the same for
+everyone at the same moment. Pillar: **Your work is yours, and lives in a world** (the world around a build is worth
+coming back to: each visit's night is a little different, a full moon over a lighthouse is worth a picture, a new
+moon's sky is the one for the stars). How a player notices: the moon's shape, which side of it is lit, how crisp the
+night's shadows are and how many stars show. It changes nothing for a newcomer: there is nothing to learn or tick,
+no new words on screen, and Always day has no moon.
+
+- **Phases from the clock** (core/DayCycle.js): `MOON_PHASES`, `MOON_CYCLE_DAYS` and `moonPhaseAt(seconds)`, the
+  night's phase, turning as the moon rises; `skyBodiesAt()` carries `moonPhase` and `moonLitFrom`, where the phase's
+  sun would light the moon from (waxing lit on its western side, waning on its eastern). The moon still crosses the
+  whole night, as before, so the night stays moonlit; only its look and light follow the phase.
+- **The moon drawn in its phase** (renderer/SkyBodies.js): a small shader shades the disc as a ball lit from
+  `moonLitFrom`, with soft seas and a dark side a little paler than the sky (earthshine), so a new moon is a faint
+  silhouette that still hides the stars; a faint halo grows towards full.
+- **Moonlight by phase** (`moonlitLook()`, applied in application/worldNavigation/dayCycleMethods.js before
+  overcast): NIGHT is a half moon's; a new moon gives less direct light and the fill takes up all of it, so the
+  night is never darker than NIGHT, only flatter, with fainter shadows and a deeper sky; a full moon's is brighter
+  and more silver. Dusk, dawn and day are untouched.
+- **Stars under the moon** (renderer/StarSky.js): fainter the more of the moon is lit, the Milky Way more so; a new
+  moon's sky is the starry sky as it always was.
+- docs/Architecture.md gains **The moon's phases**; the World View guide gains a paragraph on them, in every
+  language.
+- Tests: `MoonPhases` (eight phases and how much of each is lit; one a night from the clock, changing only at
+  moonrise, round again every eight days; each lit from its sun's side; never darker than NIGHT, under overcast too,
+  a full moon brighter, dusk, dawn and day untouched; the session lights each night by its moon; the disc faces the
+  viewer and is lit from the right side, its dark side the sky, its halo by phase; the stars fade under a bright
+  moon), `MoonPhasesBrowser` (real WebGL: the shader compiles; quarters, a crescent, a gibbous and a full moon lit
+  where they should be; a new moon barely paler than the sky). `DayAndNight` and `Storms` now expect the night's
+  moonlit look.
+- Not done: the moon doesn't rise later each night as the real one does (Option B in the design notes), so in the
+  few minutes the sun and the moon are both up at dusk and dawn the moon's lit side needn't face the real sun. No
+  label names tonight's phase, and no challenge or achievement uses it yet ("photograph your build under a full
+  moon" would be a natural weekly challenge).

@@ -278,8 +278,9 @@ export class Renderer {
     }
 
     // Shows World View's sun and moon where `bodies` (core/DayCycle.js's
-    // skyBodiesAt()) puts them, and aims the light from them; at night the
-    // stars and the Milky Way come out, turned by bodies.skyTurn
+    // skyBodiesAt()) puts them, the moon in its phase, and aims the light
+    // from them; at night the stars and the Milky Way come out, turned by
+    // bodies.skyTurn and paler the more of the moon is lit
     // (renderer/StarSky.js). A renderer never given any (the Editor,
     // thumbnails) draws none of them and keeps the daytime light.
     setSkyBodies(bodies) {
@@ -474,8 +475,9 @@ export class Renderer {
         this._applyUnderwaterView(underwaterViewAt(DEFAULT_WORLD_SEED, this._cameraController.camera.position));
         if (this._skyBodies) {
             const underwater = Boolean(UNDERWATER_LOOK[this._underwaterView]);
-            this._skyBodies.update(this._cameraController.camera, underwater);
-            this._starSky.set(this._skyLook.glow, this._skyBodiesState.skyTurn);
+            this._skyBodies.update(this._cameraController.camera, underwater, this._skyLook.sky);
+            const bodies = this._skyBodiesState;
+            this._starSky.set(this._skyLook.glow, bodies.skyTurn, bodies.moon && bodies.moonPhase ? bodies.moonPhase.illumination : 0);
             this._starSky.update(this._cameraController.camera, performance.now() / 1000, underwater);
         }
         if (this._cloudSky) {

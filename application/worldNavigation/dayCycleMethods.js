@@ -5,18 +5,20 @@
 // for anyone else. The weather (core/Weather.js) and its storms
 // (core/Storms.js) follow the same clock, and Always day keeps it fair as
 // well.
-import { DAY, DAY_SKY_BODIES, skyBodiesAt, skyLookAt } from '../../core/DayCycle.js';
+import { DAY, DAY_SKY_BODIES, moonPhaseAt, moonlitLook, skyBodiesAt, skyLookAt } from '../../core/DayCycle.js';
 import { FAIR_WEATHER, overcastLook, weatherAt } from '../../core/Weather.js';
 import { lightningAt, lightningLook, thunderBetween } from '../../core/Storms.js';
 
 export const dayCycleMethods = {
-    // The sky's look right now, greyed as far as the weather is overcast and
-    // lit by any flash of lightning (core/Storms.js), unless this device asks
-    // for no flashes: core/DayCycle.js's DAY while Always day is on.
+    // The sky's look right now, lit by the night's moon
+    // (core/DayCycle.js#moonlitLook()), greyed as far as the weather is
+    // overcast and lit by any flash of lightning (core/Storms.js), unless
+    // this device asks for no flashes: core/DayCycle.js's DAY while Always
+    // day is on.
     skyLook() {
         if (this._alwaysDay) return DAY;
         const now = this._wildlifeClock();
-        const look = overcastLook(skyLookAt(now), weatherAt(now).overcast);
+        const look = overcastLook(moonlitLook(skyLookAt(now), moonPhaseAt(now)), weatherAt(now).overcast);
         return this._noFlashes ? look : lightningLook(look, lightningAt(now));
     },
 
@@ -42,8 +44,8 @@ export const dayCycleMethods = {
         return this._alwaysDay ? FAIR_WEATHER : weatherAt(this._wildlifeClock());
     },
 
-    // Where the sun and the moon are right now, and where the light comes
-    // from: a still morning sun while Always day is on.
+    // Where the sun and the moon are right now, the moon's phase, and where
+    // the light comes from: a still morning sun while Always day is on.
     skyBodies() {
         return this._alwaysDay ? DAY_SKY_BODIES : skyBodiesAt(this._wildlifeClock());
     },

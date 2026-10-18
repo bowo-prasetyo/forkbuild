@@ -8,6 +8,10 @@ import { CELESTIAL_POLE, starField, milkyWayRibbon } from '../core/StarField.js'
 // little, and thin out towards the horizon. Builds, hills and the moon in
 // front hide them; under water they don't show.
 //
+// The moon washes them out: the more of it is lit, the fainter the stars,
+// and the Milky Way fainter still, so a new moon's night shows the most of
+// them, as the night always did, and a full moon's the least.
+//
 // One draw for the stars and one for the Milky Way's glow, with additive
 // blending in the opaque pass before everything else (renderOrder), so
 // whatever is drawn after them, the moon among it, covers them.
@@ -22,6 +26,9 @@ const ALL_OUT_AT = 0.98;
 const MILKY_WAY_HALF_WIDTH = 0.2;
 const MILKY_WAY_GLOW = new THREE.Color(0x3a4468);
 const RIBBON_SEGMENTS = 180;
+// How much of the stars' and of the Milky Way's light a full moon takes away.
+const MOON_STAR_DIMMING = 0.45;
+const MOON_MILKY_WAY_DIMMING = 0.75;
 
 const STAR_VERTEX = /* glsl */ `
     attribute float aSize;
@@ -29,6 +36,7 @@ const STAR_VERTEX = /* glsl */ `
     attribute float aPhase;
     attribute vec3 aColor;
     uniform float uNight;
+    uniform float uStarLight;
     uniform float uTime;
     uniform float uPixelRatio;
     varying vec3 vColor;
@@ -36,7 +44,7 @@ const STAR_VERTEX = /* glsl */ `
         vec3 world = normalize(mat3(modelMatrix) * position);
         float horizon = smoothstep(-0.02, 0.18, world.y);
         float twinkle = 0.78 + 0.22 * sin(uTime * (1.3 + fract(aPhase * 7.0)) + aPhase);
-        vColor = aColor * aBrightness * twinkle * horizon * uNight;
+        vColor = aColor * aBrightness * twinkle * horizon * uNight * uStarLight;
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         gl_PointSize = aSize * uPixelRatio;
     }
@@ -54,10 +62,11 @@ const STAR_FRAGMENT = /* glsl */ `
 const GLOW_VERTEX = /* glsl */ `
     attribute float aGlow;
     uniform float uNight;
+    uniform float uGlowLight;
     varying float vGlow;
     void main() {
         vec3 world = normalize(mat3(modelMatrix) * position);
-        vGlow = aGlow * uNight * smoothstep(-0.02, 0.25, world.y);
+        vGlow = aGlow * uNight * uGlowLight * smoothstep(-0.02, 0.25, world.y);
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
     }
 `;
@@ -77,8 +86,11 @@ export class StarSky {
         this._sceneManager = sceneManager;
         this._night = 0;
         this._turn = 0;
+        this._moonlight = 0;
         this._uniforms = {
             uNight: { value: 0 },
+            uStarLight: { value: 1 },
+            uGlowLight: { value: 1 },
             uTime: { value: 0 },
             uPixelRatio: { value: pixelRatio }
         };
@@ -92,10 +104,13 @@ export class StarSky {
     }
 
     // How deep into the night it is (core/DayCycle.js's look.glow, 0..1),
-    // and how far the sky has turned (core/StarField.js#skyTurnAt()).
-    set(night, turn) {
+    // how far the sky has turned (core/StarField.js#skyTurnAt()), and how
+    // much of the moon is lit while it is up (its phase's illumination, 0
+    // with no moon up).
+    set(night, turn, moonlight = 0) {
         this._night = Number.isFinite(night) ? night : 0;
         this._turn = Number.isFinite(turn) ? turn : 0;
+        this._moonlight = Number.isFinite(moonlight) ? Math.min(Math.max(moonlight, 0), 1) : 0;
     }
 
     // Places the sky round `camera` for this frame at `timeSeconds` (for the
@@ -103,6 +118,8 @@ export class StarSky {
     update(camera, timeSeconds, hidden = false) {
         const strength = smoothstep(APPEAR_FROM, ALL_OUT_AT, this._night);
         this._uniforms.uNight.value = strength;
+        this._uniforms.uStarLight.value = 1 - MOON_STAR_DIMMING * this._moonlight;
+        this._uniforms.uGlowLight.value = 1 - MOON_MILKY_WAY_DIMMING * this._moonlight;
         this._uniforms.uTime.value = timeSeconds;
         this._group.visible = !hidden && strength > 0.001;
         if (!this._group.visible) {
