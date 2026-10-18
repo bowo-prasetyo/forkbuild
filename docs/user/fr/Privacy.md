@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 5b1a4648b8c09240 -->
+<!-- translation-of: docs/Privacy.md source-hash: 403ae8ce862b459d -->
 # Confidentialité
 
 <!-- languages -->
@@ -55,6 +55,11 @@ jamais l’appareil, sauf si vous le publiez, l’exportez ou l’envoyez :
   les copies que vous aviez distribuées.
 - à quels réseaux cet appareil a envoyé chacun de vos commentaires, et
   quand, pour que chaque commentaire puisse indiquer où il est allé.
+- chaque enregistrement de cœur que cet appareil a fait ou accepté, le réseau
+  choisi pour les cœurs, à quels réseaux chacun de vos propres cœurs a été
+  envoyé (avec l’événement Nostr, pour que retirer un cœur puisse demander
+  aux relais de le supprimer) et si l’explication du premier cœur a été
+  montrée.
 - pour chaque semaine du défi de construction que vous ouvrez, les
   identifiants des participations trouvées sur les réseaux, pour que sa page
   les affiche de nouveau avant de chercher.
@@ -114,6 +119,14 @@ notifications sur cet appareil soient activées est gardé avec vos réglages
   participations au défi d’une semaine.
   Une fois que vous avez choisi où vont vos constructions, chaque Publier y envoie aussi la construction ; jusque-là, Publier n’envoie rien.
 - **Qui peut la trouver ?** est demandé avant votre première publication. Avec **Tout le monde**, chaque construction signée que vous publiez est aussi envoyée, entière, aux relais Nostr publics des **Paramètres réseau** sous forme de note de construction (docs/Protocol.md, « Build notes », en anglais), avec ses étiquettes et sa place dans le Monde, pour que toute personne qui utilise ForkBuild la trouve dans Explorer, dans le défi et dans le Monde. La note est signée avec la clé porteuse de cet appareil, pas avec votre identité. Les relais gardent ce qu’on leur envoie : une note ne se reprend pas. Avec **Seulement les personnes à qui j’envoie le lien**, rien n’est envoyé et la construction ne voyage que dans son lien. Le choix est retenu sur cet appareil et se change dans le message qui suit la publication.
+- **Les cœurs que vous donnez** sont publics : chacun dit que votre identité
+  aime cette construction, ou ne l’aime plus, sous le nom avec lequel vous
+  êtes connecté, signé avec la clé de votre identité. Il va aux pairs
+  connectés et au réseau choisi pour les cœurs (Nostr si vous ne le changez
+  pas), où tout le monde peut le lire, et au bâtisseur sous forme de
+  notification. Retirer un cœur envoie un enregistrement plus récent ;
+  l’ancien peut rester là où il a été envoyé, et sur Nostr une demande de
+  suppression n’est qu’une demande.
 - **Les pairs auxquels vous vous connectez** apprennent la clé publique
   de votre identité, et votre adresse IP (une connexion directe en a
   besoin ; un relais TURN la cache au pair mais pas au relais). Les pairs

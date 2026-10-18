@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 5b1a4648b8c09240 -->
+<!-- translation-of: docs/Privacy.md source-hash: 403ae8ce862b459d -->
 # Datenschutz
 
 <!-- languages -->
@@ -54,6 +54,11 @@ veröffentlichen, exportieren oder senden es:
   früher verteilt haben, nicht wieder auflistet.
 - an welche Netzwerke dieses Gerät jeden Ihrer Kommentare gesendet hat, und
   wann, damit jeder Kommentar zeigen kann, wohin er ging.
+- jeder Herz-Eintrag, den dieses Gerät erstellt oder angenommen hat, das für
+  Herzen gewählte Netzwerk, an welche Netzwerke jedes Ihrer eigenen Herzen
+  gesendet wurde (mit dem Nostr-Ereignis, damit das Zurücknehmen die Relays
+  bitten kann, es zu löschen) und ob die Erklärung zum ersten Herz gezeigt
+  wurde.
 - für jede Woche der Bau-Challenge, die Sie öffnen, die IDs der in den
   Netzwerken gefundenen Beiträge, damit ihre Seite sie vor der Suche wieder
   anzeigt.
@@ -111,6 +116,14 @@ eingeschaltet sind, wird mit Ihren Einstellungen gespeichert (siehe
   einem Tag finden kann, etwa die Beiträge zur Challenge einer Woche.
   Sobald Sie wählen, wohin Ihre Bauwerke gehen, sendet jedes Veröffentlichen das Bauwerk auch dorthin; bis dahin sendet Veröffentlichen nichts.
 - **Wer kann es finden?** wird vor Ihrer ersten Veröffentlichung gefragt. Mit **Alle** wird jedes signierte Bauwerk, das Sie veröffentlichen, zusätzlich vollständig als Bauwerk-Notiz (docs/Protocol.md, „Build notes“, Englisch) an die öffentlichen Nostr-Relays unter **Netzwerkeinstellungen** gesendet, mit seinen Tags und seinem Platz in der Welt, damit alle, die ForkBuild nutzen, es unter „Entdecken“, in der Challenge und in der Welt finden. Die Notiz ist mit dem Trägerschlüssel dieses Geräts signiert, nicht mit Ihrer Identität. Relays behalten, was ihnen gesendet wird; eine Notiz lässt sich nicht zurückholen. Mit **Nur wer den Link von mir bekommt** wird nichts gesendet, und das Bauwerk reist nur in seinem Link. Die Wahl wird auf diesem Gerät gespeichert und lässt sich in der Meldung nach dem Veröffentlichen ändern.
+- **Herzen, die Sie geben**, sind öffentlich: Jedes sagt, dass Ihrer Identität
+  dieses Bauwerk gefällt oder nicht mehr gefällt, unter dem Namen, mit dem Sie
+  angemeldet sind, signiert mit dem Schlüssel Ihrer Identität. Es geht an
+  verbundene Peers und an das für Herzen gewählte Netzwerk (Nostr, solange Sie
+  nichts ändern), wo jeder es lesen kann, und als Benachrichtigung an den
+  Erbauer. Ein Herz zurückzunehmen sendet einen neueren Eintrag; der frühere
+  kann bleiben, wohin er gesendet wurde, und auf Nostr ist eine
+  Löschanfrage nur eine Bitte.
 - **Peers, mit denen Sie sich verbinden**, erfahren den öffentlichen
   Schlüssel Ihrer Identität und Ihre IP-Adresse (eine direkte Verbindung
   braucht sie; ein TURN-Relay verbirgt sie vor dem Peer, aber nicht vor dem

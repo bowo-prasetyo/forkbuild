@@ -274,6 +274,13 @@ export const SignatureType = Object.freeze({
     // getPublicationCommentaryDistributionSigningDescriptor() and this
     // file's own header, "no unsigned claims."
     PUBLICATION_COMMENTARY_DISTRIBUTION: 'publication-commentary-distribution',
+    // A heart given to a Publication, or taken back
+    // (core/PublicationHeartDistributionEnvelope.js): "identity X said it
+    // loves (or no longer loves) this Publication, under this name, then."
+    // Like a commentary distribution it authorizes nothing and needs no
+    // relationship to the Publication. The signer MUST equal the record's
+    // own `authorIdentityId`.
+    PUBLICATION_HEART_DISTRIBUTION: 'publication-heart-distribution',
     // A build's maker sealing the file File → Export writes (core/
     // DocumentSeal.js): "I made exactly this build, with these terms."
     // Import believes a file's author and license only when its seal

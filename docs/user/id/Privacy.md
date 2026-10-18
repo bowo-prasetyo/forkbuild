@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 5b1a4648b8c09240 -->
+<!-- translation-of: docs/Privacy.md source-hash: 403ae8ce862b459d -->
 # Privasi
 
 <!-- languages -->
@@ -55,6 +55,10 @@ perangkat kecuali Anda menerbitkan, mengekspor, atau mengirimnya:
   pernah Anda distribusikan.
 - jaringan mana saja yang menerima setiap komentar Anda dari perangkat ini,
   dan kapan, agar setiap komentar bisa menunjukkan ke mana ia dikirim.
+- setiap catatan hati yang dibuat atau diterima perangkat ini, jaringan yang
+  dipilih untuk hati, jaringan mana saja yang menerima setiap hati Anda
+  sendiri (dengan event Nostr-nya, agar menarik kembali hati bisa meminta
+  relay menghapusnya), dan apakah penjelasan hati pertama sudah ditampilkan.
 - untuk setiap minggu tantangan membangun yang Anda buka, ID karya peserta
   yang ditemukan di jaringan, agar halamannya menampilkannya lagi sebelum
   mencari.
@@ -112,6 +116,14 @@ Apakah notifikasi di perangkat ini aktif disimpan bersama pengaturan Anda
   tantangan suatu minggu.
   Setelah Anda memilih ke mana bangunan Anda dikirim, setiap Terbitkan juga mengirim bangunan ke sana; sampai saat itu, Terbitkan tidak mengirim apa pun.
 - **Siapa yang bisa menemukannya?** ditanyakan sebelum Anda menerbitkan pertama kali. Dengan **Semua orang**, setiap bangunan bertanda tangan yang Anda terbitkan juga dikirim utuh ke relay Nostr publik di **Pengaturan Jaringan** sebagai catatan bangunan (docs/Protocol.md, "Build notes", bahasa Inggris), bersama tag dan tempatnya di Dunia, agar siapa pun yang memakai ForkBuild menemukannya di Jelajahi, di tantangan, dan di Dunia. Catatan itu ditandatangani dengan kunci pembawa perangkat ini, bukan identitas Anda. Relay menyimpan apa yang dikirim kepadanya; catatan tidak bisa ditarik kembali. Dengan **Hanya orang yang saya kirimi tautannya**, tidak ada yang dikirim dan bangunan hanya berpindah lewat tautannya. Pilihan ini diingat di perangkat ini dan bisa diubah dari pesan setelah Terbitkan.
+- **Hati yang Anda berikan** bersifat publik: masing-masing menyatakan bahwa
+  identitas Anda menyukai bangunan itu, atau tidak lagi, dengan nama yang
+  Anda pakai untuk masuk, ditandatangani dengan kunci identitas Anda. Hati
+  dikirim ke rekan yang terhubung dan ke jaringan yang dipilih untuk hati
+  (Nostr kecuali Anda mengubahnya), tempat siapa pun bisa membacanya, dan ke
+  pembuatnya sebagai notifikasi. Menarik kembali hati mengirim catatan yang
+  lebih baru; yang lama bisa tetap berada di tempat ia dikirim, dan di Nostr
+  permintaan penghapusan hanyalah permintaan.
 - **Rekan yang terhubung dengan Anda** mengetahui kunci publik identitas
   Anda dan alamat IP Anda (koneksi langsung memerlukannya; relay TURN
   menyembunyikannya dari rekan tetapi tidak dari relay itu sendiri). Rekan

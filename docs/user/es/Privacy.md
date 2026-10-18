@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 5b1a4648b8c09240 -->
+<!-- translation-of: docs/Privacy.md source-hash: 403ae8ce862b459d -->
 # Privacidad
 
 <!-- languages -->
@@ -54,6 +54,11 @@ dispositivo a menos que usted lo publique, lo exporte o lo envíe:
   copias que distribuyó antes.
 - a qué redes envió este dispositivo cada uno de sus comentarios, y cuándo,
   para que cada comentario pueda indicar adónde fue.
+- cada registro de corazón que este dispositivo hizo o aceptó, la red
+  elegida para los corazones, a qué redes se envió cada uno de sus propios
+  corazones (con el evento de Nostr, para que retirar un corazón pueda pedir
+  a los relés que lo borren) y si ya se mostró la explicación del primer
+  corazón.
 - para cada semana del desafío de construcción que abre, los identificadores
   de las participaciones encontradas en las redes, para que su página las
   vuelva a mostrar antes de buscar.
@@ -111,6 +116,13 @@ dispositivo» más abajo).
   una semana.
   Cuando elige a dónde van sus construcciones, cada Publicar envía también la construcción allí; hasta entonces, Publicar no envía nada.
 - **¿Quién puede encontrarla?** se pregunta antes de su primera publicación. Con **Todos**, cada construcción firmada que publique se envía además, completa, a los relés públicos de Nostr de **Configuración de red** como una nota de construcción (docs/Protocol.md, «Build notes», en inglés), con sus etiquetas y el lugar donde está en el Mundo, para que cualquiera que use ForkBuild la encuentre en Explorar, en el desafío y en el Mundo. La nota se firma con la clave portadora de este dispositivo, no con su identidad. Los relés guardan lo que reciben; una nota no se puede retirar. Con **Solo quien reciba mi enlace**, no se envía nada y la construcción viaja solo en su enlace. La elección se recuerda en este dispositivo y se puede cambiar en el mensaje que aparece al publicar.
+- **Los corazones que da** son públicos: cada uno dice que su identidad ama
+  esa construcción, o que ya no, con el nombre con el que entró, firmado con
+  la clave de su identidad. Va a los pares conectados y a la red elegida para
+  los corazones (Nostr si no la cambia), donde cualquiera puede leerlo, y a
+  quien la construyó como notificación. Retirar un corazón envía un registro
+  más nuevo; el anterior puede quedarse donde se envió, y en Nostr una
+  solicitud de borrado es solo una solicitud.
 - **Los pares con los que se conecta** conocen la clave pública de su
   identidad y su dirección IP (una conexión directa la necesita; un relay
   TURN la oculta del par, pero no del relay). Los pares conectados pueden

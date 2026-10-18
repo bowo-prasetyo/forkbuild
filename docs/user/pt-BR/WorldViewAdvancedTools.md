@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: a22a2e4bd16629ee -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: af50373d663c56e2 -->
 # Visão do mundo: ferramentas avançadas
 
 <!-- languages -->
@@ -107,6 +107,8 @@ clicou:
   Uma construção publicada mostra também **💬 Comentários**: eles abrem no
   mesmo painel, embaixo da descrição, onde você lê e deixa os seus, como no
   cartão dela em **Explorar**.
+  Uma construção publicada mostra também suas curtidas (**♡** e quem
+  curtiu); veja [Curtidas](04-PublishingAndForking.md#curtidas).
 - **Posicionamento**: onde a construção fica no Mundo, em **unidades do
   Mundo**. São as coordenadas do próprio ForkBuild, não GPS; uma unidade
   do Mundo é um metro. **Focar** leva você até lá. **Mover** abre **Mover

@@ -24,6 +24,7 @@ import { getDecentralizedPublicationSigningDescriptor } from '../core/Decentrali
 import { getPublicationAnchorSigningDescriptor } from '../core/PublicationAnchor.js';
 import { getPublicationSnapshotPlacementSigningDescriptor } from '../core/PublicationSnapshotPlacement.js';
 import { getPublicationCommentaryDistributionSigningDescriptor } from '../core/PublicationCommentaryDistributionEnvelope.js';
+import { getPublicationHeartDistributionSigningDescriptor } from '../core/PublicationHeartDistributionEnvelope.js';
 import * as Ed25519 from './Ed25519.js';
 import { Delegation } from '../core/Delegation.js';
 import { identityForDidKey, verifySignedDescriptor } from './DescriptorSignature.js';
@@ -738,6 +739,30 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
         }
         const identity = { id: sig.signer, algorithm: 'Ed25519', publicKey: Ed25519.bytesToHex(publicKeyBytes) };
         return this.verifyDescriptor(getPublicationCommentaryDistributionSigningDescriptor(record), record.signature, identity);
+    }
+
+    // A heart envelope (core/PublicationHeartDistributionEnvelope.js) is
+    // valid only when signed by its own author, with the key that author's
+    // did:key encodes, over every field of the record.
+    verifyPublicationHeartDistributionEnvelope(record) {
+        if (!record) {
+            return { valid: false, signed: false, reason: 'no publication heart distribution envelope' };
+        }
+        if (!record.signature) {
+            return { valid: false, signed: false, reason: 'a publication heart distribution envelope must be signed' };
+        }
+        const sig = Signature.fromJSON(record.signature);
+        if (!sig) {
+            return { valid: false, signed: true, reason: 'malformed signature' };
+        }
+        if (sig.signer !== record.authorIdentityId) {
+            return { valid: false, signed: true, reason: 'signer does not match the heart\'s own author' };
+        }
+        const identity = identityForDidKey(sig.signer);
+        if (!identity) {
+            return { valid: false, signed: true, reason: 'unknown signer identity' };
+        }
+        return this.verifyDescriptor(getPublicationHeartDistributionSigningDescriptor(record), record.signature, identity);
     }
 
     // A Delegation is valid only when its issuer signed it, with the key the

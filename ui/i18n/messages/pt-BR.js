@@ -232,6 +232,8 @@ export default Object.freeze({
     'notificationText.remixedNoName': 'Alguém remixou sua construção',
     'notificationText.remixedBody': '“{title}”, remix da sua “{remixed}”',
     'notificationText.commented': 'Novo comentário na sua construção',
+    'notificationText.hearted': '{author} curtiu sua construção',
+    'notificationText.heartedNoName': 'Alguém curtiu sua construção',
     'notificationText.commentedBody': 'Abra o sino para ver em qual.',
     'toolbar.exportModel': 'Modelo 3D',
     'modelExport.title': 'Baixar como modelo 3D',
@@ -746,6 +748,20 @@ export default Object.freeze({
     'descriptionReader.by': 'de {author}',
     'descriptionReader.close': 'Fechar',
     'descriptionReader.comments': 'Comentários',
+
+    // Hearts on a build (ui/components/BuildHeart.js) and a person's name (ui/components/IdentityName.js).
+    'heart.give': 'Curtir esta construção',
+    'heart.takeBack': 'Retirar sua curtida',
+    'heart.lovedByOne': 'Curtido por {a}',
+    'heart.lovedByTwo': 'Curtido por {a} e {b}',
+    'heart.lovedByMany': 'Curtido por {a} e mais {count}',
+    'heart.you': 'você',
+    'heart.explain': 'Uma curtida é pública: ela é assinada com seu nome e enviada aos pares conectados e à rede escolhida para curtidas nas Configurações (Nostr, se você não mudar). Toque de novo para retirá-la.',
+    'heart.giveIt': 'Curtir',
+    'heart.cancel': 'Cancelar',
+    'heart.failed': 'Não foi possível salvar a curtida.',
+    'heart.signInFirst': 'Escolha um nome primeiro para curtir.',
+    'identityName.title': 'Identidade {id}',
 
     // Editor and World View: editing document details (ui/components/MetadataEditorDialog.js).
     'metadataEditor.label': 'Propriedades da construção',
@@ -4040,6 +4056,9 @@ export default Object.freeze({
     'announcementDiscoveryProviderSettingsView.comments': 'Comentários',
     'announcementDiscoveryProviderSettingsView.commentsFollow': 'Igual ao provedor de anúncio / descoberta acima',
     'announcementDiscoveryProviderSettingsView.commentsHint': 'A rede em que cada formulário de comentário começa. Você ainda pode mudá-la ao lado de “Publicar comentário” em qualquer comentário. “Somente local e pares” mantém seus comentários fora de qualquer rede, então não é preciso conta em nenhuma rede. Como a escolha acima, salvar passa a valer na próxima vez que este app carregar.',
+    'announcementDiscoveryProviderSettingsView.hearts': 'Curtidas',
+    'announcementDiscoveryProviderSettingsView.heartsHint': 'Para onde vai uma curtida quando você toca em ♥ numa construção, além dos pares conectados agora. No Nostr ela é uma reação, que outros apps do Nostr também mostram. Salvar vale na hora.',
+    'announcementDiscoveryProviderSettingsView.heartsCostHint': 'Cada curtida, e cada curtida retirada, é um registro na rede. No Nostr isso não custa nada. No Arweave, Steem e Blurt é uma transação ou postagem que sua carteira ou Keychain pede para aprovar, e Arweave e Blurt cobram por isso; no Steem e no Blurt uma curtida nunca é um voto. Só local e pares chega só aos pares conectados agora.',
 
     // Identity, Peers, Chat and settings: arweaveGatewaySettingsView.
     'arweaveGatewaySettingsView.arweaveGateway': 'Gateway do Arweave',

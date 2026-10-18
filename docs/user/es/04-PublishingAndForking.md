@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 292532b0feafed52 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 1a00088b7f29f33c -->
 # 04 — Publicar y remezclar
 
 <!-- languages -->
@@ -697,6 +697,23 @@ Cuando este dispositivo encuentra la remezcla de otra persona de una de
 sus construcciones, su 🔔 recibe una entrada **… remezcló su
 construcción**, una vez por remezcla (y su dispositivo también la muestra,
 si activó [Notificaciones en este dispositivo](03-WorldView.md#notificaciones-en-este-dispositivo)).
+
+### Corazones
+
+Toca **♡** en una construcción que te encante: en el panel **Sobre esta
+construcción** de la Vista del Mundo o en su tarjeta de **Explorar**. Se
+vuelve **♥** y dice a quién le encanta: **Corazones de ti y 11 más**. Haz
+clic en esa línea para ver a todos, cada nombre un enlace a su página.
+Vuelve a tocar **♥** para retirar tu corazón.
+
+Un corazón es público. Se firma con el nombre con el que entraste, se envía a
+quienes están conectados contigo y a la red elegida para los corazones en
+**Ajustes → Anuncio / Descubrimiento → Corazones** (Nostr si no la cambias,
+donde otras apps de Nostr lo muestran como un me gusta), y quien la
+construyó recibe en su 🔔 la entrada **A … le encanta tu construcción**. La
+primera vez, ForkBuild te lo dice antes de enviarlo. Como el recuento de
+remezclas, el número es solo lo que este dispositivo ha encontrado, y nunca
+decide qué se muestra primero.
 
 ### Cuando una remezcla no se puede completar
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 292532b0feafed52 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 1a00088b7f29f33c -->
 # 04 — Penerbitan & Remix
 
 <!-- languages -->
@@ -701,6 +701,23 @@ Saat perangkat ini menemukan remix dari orang lain atas salah satu
 bangunan Anda, 🔔 Anda mendapat entri **… me-remix bangunan Anda**, sekali
 per remix (dan perangkat Anda juga menampilkannya, jika Anda mengaktifkan
 [Notifikasi di perangkat ini](03-WorldView.md#notifikasi-di-perangkat-ini)).
+
+### Hati
+
+Ketuk **♡** pada bangunan yang Anda sukai: di panel **Tentang bangunan ini**
+di Tampilan Dunia atau pada kartunya di **Jelajahi**. Tombol itu berubah
+menjadi **♥** dan menunjukkan siapa yang menyukainya: **Disukai Anda dan 11
+lainnya**. Klik baris itu untuk melihat semuanya, setiap nama tautan ke
+halamannya. Ketuk **♥** lagi untuk menarik kembali hati Anda.
+
+Hati bersifat publik. Hati ditandatangani dengan nama yang Anda pakai untuk
+masuk, dikirim ke orang yang terhubung dengan Anda dan ke jaringan yang
+dipilih untuk hati di **Pengaturan → Pengumuman / Penemuan → Hati** (Nostr
+kecuali Anda mengubahnya, tempat aplikasi Nostr lain menampilkannya sebagai
+suka), dan pembuatnya mendapat entri **… menyukai bangunan Anda** di 🔔
+miliknya. Pertama kali, ForkBuild memberi tahu Anda sebelum mengirimnya.
+Seperti jumlah remix, angkanya hanya yang ditemukan perangkat ini, dan tidak
+pernah menentukan apa yang ditampilkan lebih dulu.
 
 ### Saat remix tidak dapat diselesaikan
 

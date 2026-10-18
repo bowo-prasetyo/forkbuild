@@ -1196,3 +1196,130 @@
 .editor-post-publish-share .publication-share-more[open] {
     flex-basis: 100%;
 }
+
+/* A build's hearts (ui/components/BuildHeart.js): the heart button with its
+   count, then who, one tap from the full list. Used in World View's About
+   this build panel and reading sheet and on Explore's cards and rows. */
+.build-heart {
+    margin: 0 0 0.5rem;
+    font-size: 0.85rem;
+}
+
+.build-heart-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.5rem;
+}
+
+.build-heart-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    min-height: 2rem;
+    padding: 0.2rem 0.6rem;
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    font: inherit;
+    font-weight: 600;
+    color: var(--ink-soft);
+    cursor: pointer;
+}
+
+.build-heart-toggle:hover {
+    border-color: var(--ink-rose);
+    color: var(--ink-rose);
+}
+
+.build-heart-toggle--on {
+    background: var(--tint-red);
+    border-color: var(--ink-rose);
+    color: var(--ink-rose);
+}
+
+.build-heart-toggle:focus-visible,
+.build-heart-who:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.build-heart-icon {
+    font-size: 1.05em;
+    line-height: 1;
+}
+
+.build-heart-who {
+    padding: 0;
+    background: none;
+    border: none;
+    font: inherit;
+    color: var(--ink-subtle);
+    text-align: left;
+    cursor: pointer;
+}
+
+.build-heart-who:hover {
+    color: var(--ink);
+}
+
+.build-heart-who .identity-name {
+    color: var(--ink-soft);
+    font-weight: 600;
+}
+
+.build-heart-list {
+    margin: 0.4rem 0 0;
+    padding: 0.4rem 0.6rem;
+    list-style: none;
+    border: 1px solid var(--line-soft);
+    border-radius: 4px;
+    max-height: 10rem;
+    overflow-y: auto;
+}
+
+.build-heart-list li + li {
+    margin-top: 0.2rem;
+}
+
+.build-heart-explain {
+    margin-top: 0.5rem;
+    padding: 0.5rem 0.6rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+}
+
+.build-heart-explain p {
+    margin: 0 0 0.5rem !important;
+    color: var(--ink-soft) !important;
+    font-size: 0.85rem !important;
+}
+
+.build-heart-explain .action-btn + .action-btn {
+    margin-left: 0.4rem;
+}
+
+.build-heart-error {
+    margin: 0.4rem 0 0 !important;
+    color: var(--ink-red) !important;
+    font-size: 0.8rem !important;
+}
+
+.build-heart--compact {
+    margin: 0.25rem 0 0;
+}
+
+.build-heart--compact .build-heart-toggle {
+    min-height: 1.6rem;
+    padding: 0.1rem 0.45rem;
+    font-size: 0.8rem;
+}
+
+.description-reader-hearts {
+    margin: 0.5rem 0 0;
+}
+
+.identity-name {
+    overflow-wrap: anywhere;
+}

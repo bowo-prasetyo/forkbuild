@@ -53,6 +53,10 @@ send it:
   the networks, so its page lists them again before searching.
 - which networks this device sent each of your comments to, and when, so
   each comment can say where it went.
+- every heart record this device made or accepted, the network chosen for
+  hearts, which networks each of your own hearts was sent to (with the
+  Nostr event, so taking a heart back can ask relays to delete it), and
+  whether the first heart's explanation was shown.
 - which builds this device knows are on the Nostr relays as build notes
   (your own, once a relay took the note, and others' it opened from one),
   so they can be shared by a short link.
@@ -111,6 +115,13 @@ settings (see "Notifications on this device" below).
   to Nostr or Arweave, its announcement also lists its tags (as
   `forkbuild-tag:<tag>`), so anyone can find the builds with a tag, such as a
   week's challenge entries.
+- **Hearts you give** are public: each says that your identity loves that
+  build, or no longer does, under the name you signed in with, signed with
+  your identity's key. It goes to connected peers and to the network chosen
+  for hearts (Nostr unless you change it), where anyone can read it, and to
+  the builder as a notification. Taking a heart back sends a newer record;
+  the earlier one may stay where it was sent, and on Nostr a deletion
+  request is only a request.
 - **Peers you connect to** learn your identity's public key, and your IP
   address (a direct connection needs it; a TURN relay hides it from the peer
   but not from the relay). Connected peers can see your avatar and presence

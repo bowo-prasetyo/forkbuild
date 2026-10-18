@@ -7849,3 +7849,46 @@ about a build where they meet it). A newcomer has nothing new to learn: it's the
   Publication through the provided commands and listed, Escape in the box keeping the draft, a build with no
   description still showing its comments and one without a Publication none).
 - Not done: comments still name their author by identity key, as in Explore.
+
+**There was no way to say you love a build, and comments named their authors by key.** A comment is a sentence; a
+visitor who simply liked a build had nothing lighter to give. And every comment list (Explore, World View, World
+Encounters) named its author as a raw `did:key:…`. Now a build has hearts: one tap on **♡** gives this identity's
+heart, a signed record sent to connected peers and, as a standard reaction, to Nostr (or to the network chosen under
+Settings → Announcement / Discovery → Hearts); another tap takes it back. A build says who loves it, "Loved by you and
+11 others", each name a link to their page, and the builder hears of it in the 🔔. Comment authors are named too.
+Pillar: **Your work is yours, and lives in a world** (people tell a builder they love what they made, where they meet
+it). A newcomer learns one thing: the heart.
+
+- core/PublicationHeart.js (a record per tap; each person's latest one counts, ties settled by `heartId` so every
+  device agrees), core/PublicationHeartDistributionEnvelope.js (`forkbuild.publication-heart-distribution`, signed
+  over every field with the new `publication-heart-distribution` signature type;
+  `LocalAuthorizationVerifier#verifyPublicationHeartDistributionEnvelope()`), storage/PublicationHeartStore.js.
+- Hearts ride the comment carriers rather than a protocol of their own: `withHeartRouting()` sends a heart envelope
+  to the heart store, by its `kind`, wherever comments are read (peers, Arweave, Steem, Blurt, the background sync).
+  A copy of ForkBuild without hearts reads one as a malformed comment and skips it, so it never shows an empty
+  comment. On Nostr a heart is a kind-7 ❤️ reaction and taking it back a kind-5 deletion request for this device's
+  reactions, each carrying the signed record in a `forkbuild` tag (application/nostr/NostrPublicationHeartDistribution.js);
+  ForkBuild goes by the records alone. docs/Protocol.md gains **Publication Hearts**.
+- One tap (`SetPublicationHeartUseCase`, kept first) then `createPublicationHeartDistributor()`: peers, then the network
+  `HeartDistributionPreferenceStore` names, Nostr unless changed, read on every tap. The settings page's new **Hearts**
+  section says what each network costs: nothing on Nostr; on Arweave, Steem and Blurt a transaction or post to approve,
+  paid on Arweave and Blurt, and never a vote.
+- `PublicationHeartNotificationBridge`: a new heart from someone else on your build, still their latest word, adds a
+  **… loves your build** entry to the 🔔 (`publication.hearted`); a heart taken back tells no one.
+- ui/components/BuildHeart.js in World View's About this build panel (which also asks the networks for that build's
+  hearts) and reading sheet, and on Explore's cards and (compact) rows: ♡/♥ with the count, "Loved by you, alice and
+  …", the whole list a click away, and an explanation that a heart is public before the first one is sent. Never a
+  "0", never a sort order or a rank (docs/principles/achievements.md).
+- Names: application/publication/identityNames.js (this device's own name, else the name of the newest build whose
+  signature verifies as theirs, else a signed credit's name, else the name the record carries) and
+  ui/components/IdentityName.js, used for hearts and for comment authors in Explore, My Shared World and both World
+  Encounter panels; the identity shows on hover.
+- New messages in every language; docs/Privacy.md, docs/Architecture.md, the publishing guide's new **Hearts** and the
+  advanced tools guide, in every language.
+- Tests: `PublicationHearts` (latest record wins, ties; signed over every field, forgeries and edits refused; one tap
+  and its no-op; routed with comments but never one, and skipped by a copy without hearts; the builder's
+  notification; Nostr reaction and deletion request, fan-out and reading; the distributor's networks and
+  replacements; the setting's default; names), `BuildHeartBrowser` (the first heart explained, given and taken back;
+  who, you first, by name; compact; signed out; comment authors named).
+- Not done: hearts on a build's earlier Publications aren't added to a republished one's; the count isn't checked
+  against the networks on every Explore card, only in World View and when a card's comments are opened.

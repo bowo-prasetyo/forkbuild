@@ -4,6 +4,7 @@ import CommentaryNetworkDistribution from './CommentaryNetworkDistribution.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 import { createId } from '../../core/createId.js';
 import { errorText, t } from '../i18n/i18n.js';
+import IdentityName from './IdentityName.js';
 
 // The Repository catalog's Commentary section for ONE Publication — the
 // single implementation both of the catalog's views mount:
@@ -49,7 +50,7 @@ import { errorText, t } from '../i18n/i18n.js';
 // delivery/receipt claim.
 export default {
     name: 'PublicationCommentarySection',
-    components: { PublicationCommentaryRemoteCheck, CommentaryDistributionPicker, CommentaryNetworkDistribution },
+    components: { PublicationCommentaryRemoteCheck, CommentaryDistributionPicker, CommentaryNetworkDistribution, IdentityName },
     inject: {
         getPublicationCommentariesCommand: { default: null },
         addPublicationCommentaryCommand: { default: null },
@@ -166,7 +167,7 @@ export default {
                     :key="commentary.commentaryId"
                     class="publication-commentary-entry"
                 >
-                    <span class="publication-commentary-author">{{ commentary.authorIdentityId }}</span>
+                    <span class="publication-commentary-author"><IdentityName :identity-id="commentary.authorIdentityId" /></span>
                     <p class="publication-commentary-content">{{ commentary.content }}</p>
                     <CommentaryNetworkDistribution :commentary="commentary" />
                 </li>

@@ -230,6 +230,8 @@ export default Object.freeze({
     'notificationText.remixedNoName': 'Someone remixed your build',
     'notificationText.remixedBody': '"{title}", remixed from your "{remixed}"',
     'notificationText.commented': 'New comment on your build',
+    'notificationText.hearted': '{author} loves your build',
+    'notificationText.heartedNoName': 'Someone loves your build',
     'notificationText.commentedBody': 'Open the bell to see which build.',
     'toolbar.exportModel': '3D model',
     'modelExport.title': 'Download as a 3D model',
@@ -744,6 +746,20 @@ export default Object.freeze({
     'descriptionReader.by': 'by {author}',
     'descriptionReader.close': 'Close',
     'descriptionReader.comments': 'Comments',
+
+    // Hearts on a build (ui/components/BuildHeart.js) and a person's name (ui/components/IdentityName.js).
+    'heart.give': 'Love this build',
+    'heart.takeBack': 'Take back your heart',
+    'heart.lovedByOne': 'Loved by {a}',
+    'heart.lovedByTwo': 'Loved by {a} and {b}',
+    'heart.lovedByMany': 'Loved by {a} and {count} others',
+    'heart.you': 'you',
+    'heart.explain': 'A heart is public: it\'s signed with your name and sent to connected peers and to the network chosen for hearts in Settings (Nostr unless you change it). Tap again to take it back.',
+    'heart.giveIt': 'Love it',
+    'heart.cancel': 'Cancel',
+    'heart.failed': 'The heart couldn\'t be saved.',
+    'heart.signInFirst': 'Choose a name first to give a heart.',
+    'identityName.title': 'Identity {id}',
 
     // Editor and World View: editing document details (ui/components/MetadataEditorDialog.js).
     'metadataEditor.label': 'Build properties',
@@ -4041,6 +4057,9 @@ export default Object.freeze({
     'announcementDiscoveryProviderSettingsView.comments': 'Comments',
     'announcementDiscoveryProviderSettingsView.commentsFollow': 'Same as the Announcement / Discovery provider above',
     'announcementDiscoveryProviderSettingsView.commentsHint': 'The network each comment form starts on. You can still change it beside Post Comment for any comment. Local & peers only keeps your comments off every network, so it needs no network account. Like the choice above, saving takes effect the next time this app loads.',
+    'announcementDiscoveryProviderSettingsView.hearts': 'Hearts',
+    'announcementDiscoveryProviderSettingsView.heartsHint': 'Where a heart goes when you tap ♥ on a build, besides the peers connected right now. On Nostr it\'s a reaction, which other Nostr apps show too. Saving takes effect at once.',
+    'announcementDiscoveryProviderSettingsView.heartsCostHint': 'Every heart, and every heart taken back, is one record on the network. On Nostr that costs nothing. On Arweave, Steem and Blurt it\'s a transaction or post your wallet or Keychain asks you to approve, and Arweave and Blurt charge for it; on Steem and Blurt a heart is never a vote. Local & peers only reaches only the peers connected right now.',
 
     // Identity, Peers, Chat and settings: arweaveGatewaySettingsView.
     'arweaveGatewaySettingsView.arweaveGateway': 'Arweave Gateway',

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 292532b0feafed52 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 1a00088b7f29f33c -->
 # 04 — Veröffentlichen & Remixen
 
 <!-- languages -->
@@ -706,6 +706,24 @@ Findet dieses Gerät den Remix eines Ihrer Bauwerke von jemand anderem,
 bekommt Ihre 🔔 einen Eintrag **… hat Ihr Bauwerk geremixt**, einmal pro
 Remix (und Ihr Gerät zeigt ihn auch an, wenn Sie
 [Benachrichtigungen auf diesem Gerät](03-WorldView.md#benachrichtigungen-auf-diesem-gerät) eingeschaltet haben).
+
+### Herzen
+
+Tippen Sie bei einem Bauwerk, das Ihnen gefällt, auf **♡**: im Feld
+**Über dieses Bauwerk** in der Weltansicht oder auf seiner Karte unter
+**Entdecken**. Es wird zu **♥** und zeigt, wem das Bauwerk gefällt:
+**Gefällt Ihnen und 11 anderen**. Ein Klick auf diese Zeile zeigt alle,
+jeder Name ein Link zu seiner Seite. Ein erneutes Tippen auf **♥** nimmt Ihr
+Herz zurück.
+
+Ein Herz ist öffentlich. Es wird mit dem Namen signiert, mit dem Sie
+angemeldet sind, an die mit Ihnen verbundenen Personen und an das unter
+**Einstellungen → Ankündigung / Entdeckung → Herzen** gewählte Netzwerk
+gesendet (Nostr, solange Sie nichts ändern; andere Nostr-Apps zeigen es dort
+als Like), und der Erbauer bekommt in seiner 🔔 den Eintrag **… mag Ihr
+Bauwerk**. Beim ersten Mal sagt ForkBuild das, bevor es gesendet wird. Wie der
+Remix-Zähler ist die Zahl nur, was dieses Gerät gefunden hat, und sie
+bestimmt nie, was zuerst gezeigt wird.
 
 ### Wenn ein Remix nicht möglich ist
 

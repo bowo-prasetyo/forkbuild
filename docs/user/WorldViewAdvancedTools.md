@@ -100,6 +100,8 @@ the header, for the build you clicked:
   A published build also shows **💬 Comments**: they open in the same panel,
   under the description, where you read them and add your own, just as on
   its card in **Explore**.
+  A published build also shows its hearts (**♡**, and who loves it); see
+  [Hearts](04-PublishingAndForking.md#hearts).
 - **Placement**: where the build stands in the World, in **World Units**.
   These are ForkBuild's own coordinates, not GPS; one World Unit is one
   metre. **Focus** takes you there. **Move** opens **Move Placement**,

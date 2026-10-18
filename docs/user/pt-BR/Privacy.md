@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 5b1a4648b8c09240 -->
+<!-- translation-of: docs/Privacy.md source-hash: 403ae8ce862b459d -->
 # Privacidade
 
 <!-- languages -->
@@ -53,6 +53,10 @@ que você publique, exporte ou envie:
   distribuiu antes.
 - para quais redes este dispositivo enviou cada comentário seu, e quando,
   para que cada comentário possa dizer para onde foi.
+- cada registro de curtida que este dispositivo fez ou aceitou, a rede
+  escolhida para curtidas, para quais redes cada curtida sua foi enviada (com
+  o evento do Nostr, para que retirar uma curtida possa pedir aos relays que
+  a apaguem) e se a explicação da primeira curtida já foi mostrada.
 - para cada semana do desafio de construção que você abre, os ids das
   participações encontradas nas redes, para que a página dele as mostre de
   novo antes de procurar.
@@ -107,6 +111,13 @@ com suas configurações (veja "Notificações neste dispositivo" abaixo).
   uma semana.
   Quando você escolhe para onde suas construções vão, cada Publicar também envia a construção para lá; até então, Publicar não envia nada.
 - **Quem pode encontrá-la?** é perguntado antes da sua primeira publicação. Com **Todo mundo**, cada construção assinada que você publica também é enviada, inteira, aos relays públicos do Nostr em **Configurações de rede** como uma nota de construção (docs/Protocol.md, "Build notes", em inglês), com as tags e o lugar onde ela fica no Mundo, para que qualquer pessoa que use o ForkBuild a encontre em Explorar, no desafio e no Mundo. A nota é assinada com a chave portadora deste dispositivo, não com a sua identidade. Os relays guardam o que recebem; uma nota não pode ser retirada. Com **Só quem receber o meu link**, nada é enviado e a construção viaja só no link. A escolha fica guardada neste dispositivo e pode ser mudada na mensagem depois de Publicar.
+- **As curtidas que você dá** são públicas: cada uma diz que sua identidade
+  curte aquela construção, ou deixou de curtir, com o nome com que você
+  entrou, assinada com a chave da sua identidade. Ela vai para os pares
+  conectados e para a rede escolhida para curtidas (Nostr, se você não
+  mudar), onde qualquer um pode ler, e para quem construiu como notificação.
+  Retirar uma curtida envia um registro mais novo; o anterior pode continuar
+  onde foi enviado, e no Nostr um pedido de exclusão é só um pedido.
 - **Os pares a que você se conecta** ficam sabendo a chave pública da sua
   identidade e seu endereço IP (uma conexão direta precisa dele; um relay
   TURN o esconde do par, mas não do relay). Os pares conectados podem ver seu

@@ -10,6 +10,15 @@ import { DiscoverPublicationCommentaryFromNostrUseCase } from '../application/pu
 import { PublicationCommentaryArweaveDistribution } from '../application/publication/commentary/PublicationCommentaryArweaveDistribution.js';
 import { DiscoverPublicationCommentaryFromArweaveUseCase } from '../application/publication/commentary/DiscoverPublicationCommentaryFromArweaveUseCase.js';
 import { DiscoverPublicationCommentaryUseCase } from '../application/publication/commentary/DiscoverPublicationCommentaryUseCase.js';
+import { SetPublicationHeartUseCase } from '../application/publication/heart/SetPublicationHeartUseCase.js';
+import { PublicationHeartDistributionLog, createPublicationHeartDistributor } from '../application/publication/heart/PublicationHeartDistributor.js';
+import { PublicationHeartNotificationBridge } from '../application/publication/heart/PublicationHeartNotifications.js';
+import { NostrPublicationHeartDistribution } from '../application/nostr/NostrPublicationHeartDistribution.js';
+import { HeartDistributionPreferenceStore } from '../storage/HeartDistributionPreferenceStore.js';
+import { createIdentityNames } from '../application/publication/identityNames.js';
+import { CreateDiscoveryUseCase } from '../application/discovery/CreateDiscoveryUseCase.js';
+import { createVerifiedPublisherResolver } from '../application/publication/FollowingFeed.js';
+import { Publication } from '../publisher/Publication.js';
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
 import { GetRecipientNotificationEventsUseCase } from '../application/chat/GetRecipientNotificationEventsUseCase.js';
 import { NotificationHistoryAccess } from '../application/chat/NotificationHistoryAccess.js';
@@ -197,14 +206,20 @@ decentralizedPublicationDiscoveryProvider.onAdded((publication) => {
 
 // Shares the commentary store's localStorage keys with
 // createPublicationCommentaryCommand. The store keeps no cache, so a saved
-// comment is immediately visible to announce().
+// comment is immediately visible to announce(). Hearts ride the same peer
+// messages and comment readers: `publicationCommentaryDistributionExchange`
+// is the routed exchange, which sends a heart envelope to the heart store
+// (application/publication/heart/withHeartRouting.js).
 const {
-    exchange: publicationCommentaryDistributionExchange,
-    peerExchange: publicationCommentaryDistributionPeerExchange
+    routedExchange: publicationCommentaryDistributionExchange,
+    peerExchange: publicationCommentaryDistributionPeerExchange,
+    heartStore: publicationHeartStore,
+    heartExchange: publicationHeartExchange
 } = new CreatePublicationCommentaryDistributionPeerExchangeUseCase().execute({
     identityProvider,
     peerMessageBus,
-    connectedPeerRegistry: peerSessionManager.registry
+    connectedPeerRegistry: peerSessionManager.registry,
+    onHeart: (result) => handleHeartReceived(result)
 });
 
 // Assigned later, once the Nostr host capabilities exist.
@@ -278,6 +293,82 @@ publicationCommentaryDistributionPeerExchange.onCommentaryReceived((result) => {
     } catch {
     }
 });
+
+// Hearts (docs/Protocol.md, "Publication Hearts"): one tap gives or takes back
+// this identity's heart, kept here first, then sent to connected peers and to
+// the network chosen for hearts in Settings (Nostr unless changed, as a
+// reaction). Each person's latest record counts.
+const heartDistributionPreferenceStore = new HeartDistributionPreferenceStore(new LocalStorageProvider());
+const publicationHeartDistributionLog = new PublicationHeartDistributionLog(new LocalStorageProvider());
+const setPublicationHeartUseCase = new SetPublicationHeartUseCase(publicationHeartStore, identityProvider);
+// Assigned once the Nostr host capabilities exist, like the comment carriers.
+let publicationHeartNostrDistribution = null;
+// Nostr carries hearts as reactions; every other network carries them as it
+// carries comments, told apart by the record's kind.
+function publicationHeartSubstrateFor(provider) {
+    return provider === 'nostr' ? publicationHeartNostrDistribution : publicationCommentarySubstrateFor(provider);
+}
+const distributePublicationHeart = createPublicationHeartDistributor({
+    peerExchange: publicationCommentaryDistributionPeerExchange,
+    heartExchange: publicationHeartExchange,
+    substrateFor: publicationHeartSubstrateFor,
+    // A network whose writer is switched off (Steem, Blurt) sends nothing
+    // there, like comments; peers still get the heart.
+    provider: () => {
+        const chosen = heartDistributionPreferenceStore.get();
+        return isWritable(chosen, networkWriterSettingsStore.get()) ? chosen : 'nostr';
+    },
+    distributionLog: publicationHeartDistributionLog
+});
+// Anything showing hearts re-reads them when they change here: a tap, or a
+// heart accepted from a peer or a network.
+const publicationHeartListeners = new Set();
+const publicationHeartsChanges = Object.freeze({
+    subscribe(listener) {
+        publicationHeartListeners.add(listener);
+        return () => publicationHeartListeners.delete(listener);
+    }
+});
+function notifyPublicationHeartsChanged(publicationId) {
+    for (const listener of publicationHeartListeners) {
+        try {
+            listener(publicationId);
+        } catch {
+        }
+    }
+}
+// Tells a builder of a new heart on their build.
+const publicationHeartNotificationBridge = new PublicationHeartNotificationBridge(
+    new LocalDiscoveryProvider(new LocalStorageProvider()),
+    identityProvider,
+    publicationHeartStore,
+    (notificationEvent) => new NotificationEventStore(new LocalStorageProvider()).save(notificationEvent)
+);
+function handleHeartReceived(result) {
+    if (!result || !result.heart) return;
+    try {
+        publicationHeartNotificationBridge.handleHeartReceived(result);
+    } catch {
+    }
+    if (result.isNew) notifyPublicationHeartsChanged(result.heart.publicationId);
+}
+// The people who love a build as far as this device knows (each person's
+// latest record), and whether this identity is one of them.
+function getPublicationHeartsCommand(publicationId) {
+    const hearts = publicationHeartStore.currentHearts(publicationId);
+    const me = resolveSigningIdentityId(identityProvider);
+    return Object.freeze({ hearts, mine: Boolean(me) && hearts.some((heart) => heart.authorIdentityId === me), ownIdentityId: me || null });
+}
+// Gives or takes back this identity's heart. Throws (a UserFacingError) when
+// nobody is signed in; sending it on never fails the tap.
+function setPublicationHeartCommand({ publicationId, hearted }) {
+    const heart = setPublicationHeartUseCase.execute({ publicationId, hearted });
+    if (heart) {
+        notifyPublicationHeartsChanged(publicationId);
+        distributePublicationHeart(heart);
+    }
+    return heart;
+}
 
 // The one anchor catalog and knowledge store. Anchors from peers are cataloged
 // on arrival; verification only runs on an explicit Verify click.
@@ -558,6 +649,25 @@ app.provide('defaultAnnouncementDiscoveryProvider', writableAnnouncementDiscover
 app.provide('defaultCommentaryDistributionProvider', writableCommentaryDistributionProvider);
 // The Announcement / Discovery settings page saves the comment default here.
 app.provide('commentaryDistributionPreferenceStore', commentaryDistributionPreferenceStore);
+// And the network for hearts.
+app.provide('heartDistributionPreferenceStore', heartDistributionPreferenceStore);
+app.provide('getPublicationHeartsCommand', getPublicationHeartsCommand);
+app.provide('setPublicationHeartCommand', setPublicationHeartCommand);
+app.provide('publicationHeartsChanges', publicationHeartsChanges);
+// People's names for hearts and comments (application/publication/
+// identityNames.js), from the builds this device knows and verifies.
+const identityNamesPublications = new CreateDiscoveryUseCase().execute({ decentralizedDiscoveryProvider: decentralizedPublicationDiscoveryProvider }).listPublicationsUseCase;
+const verifiedPublisherOf = createVerifiedPublisherResolver();
+app.provide('identityNames', createIdentityNames({
+    publications: () => identityNamesPublications.execute() || [],
+    signerOf: (publication) => verifiedPublisherOf(publication instanceof Publication ? publication : Publication.fromJSON(publication)),
+    ownIdentity: () => {
+        const id = resolveSigningIdentityId(identityProvider);
+        const user = id ? identityProvider.currentUser() : null;
+        const name = user && typeof user.username === 'string' ? user.username.trim() : '';
+        return id ? { id, name: name && name !== id ? name : null } : null;
+    }
+}));
 app.provide('localSnapshotContentAvailabilityUseCase', localSnapshotContentAvailabilityUseCase);
 app.provide('snapshotContentMaterializationCoordinator', snapshotContentMaterializationCoordinator);
 app.provide('exportSnapshotCommand', exportSnapshotCommand);
@@ -749,6 +859,27 @@ publicationCommentaryNostrDistribution = new NostrMultiRelayPublicationCommentar
     relayUrls: resolvedNostrRelayUrls
 });
 
+// Hearts on Nostr: reactions on the same relay set, under 'forkbuild-heart'.
+publicationHeartNostrDistribution = new NostrPublicationHeartDistribution({
+    publishImpl: nostrHostPublisher,
+    queryImpl: nostrRelayQueryClient,
+    relayUrls: resolvedNostrRelayUrls
+});
+// One build's hearts from Nostr, each verified and kept through the routed
+// exchange like any heart. Hearts from Arweave, Steem and Blurt arrive with
+// that network's comments.
+function discoverPublicationHeartsFromNostr(publicationId) {
+    return publicationHeartNostrDistribution.discover(publicationId).then((records) => {
+        for (const record of records) {
+            if (!record || record.publicationId !== publicationId) continue;
+            try {
+                publicationCommentaryDistributionExchange.importCommentaryEnvelope(record);
+            } catch {
+            }
+        }
+    });
+}
+
 // Separate, explicit acquisition, never part of
 // getPublicationCommentariesCommand.
 const discoverPublicationCommentaryFromNostrUseCase = new DiscoverPublicationCommentaryFromNostrUseCase(
@@ -757,8 +888,12 @@ const discoverPublicationCommentaryFromNostrUseCase = new DiscoverPublicationCom
 );
 // Feeds admitted comments into the same notification bridge WebRTC uses. One
 // failed notification must not stop the rest of the batch.
+// Checking a build's comments on Nostr also reads its hearts there (they are
+// reactions under their own tag); a failed heart read never fails the
+// comments.
 function discoverPublicationCommentaryFromNostrCommand(publicationId) {
-    return discoverPublicationCommentaryFromNostrUseCase.execute({ publicationId }).then((results) => {
+    const hearts = discoverPublicationHeartsFromNostr(publicationId).catch(() => {});
+    return Promise.all([discoverPublicationCommentaryFromNostrUseCase.execute({ publicationId }), hearts]).then(([results]) => {
         for (const result of results) {
             try {
                 publicationCommentaryRemoteNotificationBridge.handleCommentaryReceived(result);

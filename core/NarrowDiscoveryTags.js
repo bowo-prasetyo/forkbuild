@@ -10,6 +10,7 @@ export const COMMENTARY_PUBLICATION_TAG_PREFIX = 'forkbuild-commentary:';
 export const SNAPSHOT_CELL_TAG_PREFIX = 'forkbuild-snapshot:cell:';
 export const PUBLICATION_RECORD_TAG_PREFIX = 'forkbuild-publication:';
 export const BUILD_TAG_DISCOVERY_PREFIX = 'forkbuild-tag:';
+export const HEART_PUBLICATION_TAG_PREFIX = 'forkbuild-heart:';
 // World units per map cell side. Discovery reads a 3×3 block of cells around
 // the player, so this is also roughly how far ahead it looks.
 export const SNAPSHOT_CELL_SIZE = 1000;
@@ -18,6 +19,14 @@ export const SNAPSHOT_CELL_SIZE = 1000;
 export function commentaryPublicationTag(publicationId) {
     return typeof publicationId === 'string' && publicationId.length > 0
         ? COMMENTARY_PUBLICATION_TAG_PREFIX + publicationId
+        : null;
+}
+
+// A heart's narrow tag on Nostr, beside the global 'forkbuild-heart' tag; null
+// without a publication id, like commentaryPublicationTag().
+export function heartPublicationTag(publicationId) {
+    return typeof publicationId === 'string' && publicationId.length > 0
+        ? HEART_PUBLICATION_TAG_PREFIX + publicationId
         : null;
 }
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: a22a2e4bd16629ee -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: af50373d663c56e2 -->
 # Weltansicht: Erweiterte Werkzeuge
 
 <!-- languages -->
@@ -108,6 +108,8 @@ Klicken Sie auf einen Stein, freien Boden oder eine platzierte Struktur,
   Ein veröffentlichtes Bauwerk zeigt auch **💬 Kommentare**: Sie öffnen sich
   im selben Feld unter der Beschreibung, wo Sie sie lesen und eigene
   schreiben, wie auf seiner Karte unter **Entdecken**.
+  Ein veröffentlichtes Bauwerk zeigt auch seine Herzen (**♡**, und wem es
+  gefällt); siehe [Herzen](04-PublishingAndForking.md#herzen).
 - **Platzierung**: wo das Bauwerk in der Welt steht, in **Welteinheiten**.
   Das sind ForkBuilds eigene Koordinaten, kein GPS; eine Welteinheit ist
   ein Meter. **Fokussieren** bringt Sie hin. **Verschieben** öffnet

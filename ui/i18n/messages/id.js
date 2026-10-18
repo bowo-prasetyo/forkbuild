@@ -228,6 +228,8 @@ export default Object.freeze({
     'notificationText.remixedNoName': 'Seseorang me-remix bangunan Anda',
     'notificationText.remixedBody': '"{title}", remix dari "{remixed}" milik Anda',
     'notificationText.commented': 'Komentar baru pada bangunan Anda',
+    'notificationText.hearted': '{author} menyukai bangunan Anda',
+    'notificationText.heartedNoName': 'Seseorang menyukai bangunan Anda',
     'notificationText.commentedBody': 'Buka lonceng untuk melihat bangunan yang mana.',
     'toolbar.exportModel': 'Model 3D',
     'modelExport.title': 'Unduh sebagai model 3D',
@@ -742,6 +744,20 @@ export default Object.freeze({
     'descriptionReader.by': 'oleh {author}',
     'descriptionReader.close': 'Tutup',
     'descriptionReader.comments': 'Komentar',
+
+    // Hearts on a build (ui/components/BuildHeart.js) and a person's name (ui/components/IdentityName.js).
+    'heart.give': 'Sukai bangunan ini',
+    'heart.takeBack': 'Tarik kembali hati Anda',
+    'heart.lovedByOne': 'Disukai {a}',
+    'heart.lovedByTwo': 'Disukai {a} dan {b}',
+    'heart.lovedByMany': 'Disukai {a} dan {count} lainnya',
+    'heart.you': 'Anda',
+    'heart.explain': 'Hati bersifat publik: ditandatangani dengan nama Anda dan dikirim ke rekan yang terhubung dan ke jaringan yang dipilih untuk hati di Pengaturan (Nostr kecuali Anda mengubahnya). Ketuk lagi untuk menariknya kembali.',
+    'heart.giveIt': 'Sukai',
+    'heart.cancel': 'Batal',
+    'heart.failed': 'Hati tidak dapat disimpan.',
+    'heart.signInFirst': 'Pilih nama terlebih dahulu untuk memberi hati.',
+    'identityName.title': 'Identitas {id}',
 
     // Editor and World View: editing document details (ui/components/MetadataEditorDialog.js).
     'metadataEditor.label': 'Properti bangunan',
@@ -4038,6 +4054,9 @@ export default Object.freeze({
     'announcementDiscoveryProviderSettingsView.comments': 'Komentar',
     'announcementDiscoveryProviderSettingsView.commentsFollow': 'Sama dengan Penyedia Pengumuman / Penemuan di atas',
     'announcementDiscoveryProviderSettingsView.commentsHint': 'Jaringan awal setiap formulir komentar. Anda tetap bisa mengubahnya di samping Kirim Komentar untuk komentar mana pun. Lokal & rekan saja menjaga komentar Anda tidak masuk ke jaringan mana pun, jadi tidak perlu akun jaringan. Seperti pilihan di atas, menyimpan berlaku saat aplikasi ini dimuat berikutnya.',
+    'announcementDiscoveryProviderSettingsView.hearts': 'Hati',
+    'announcementDiscoveryProviderSettingsView.heartsHint': 'Ke mana hati dikirim saat Anda mengetuk ♥ pada sebuah bangunan, selain ke rekan yang terhubung saat ini. Di Nostr hati adalah reaksi, yang juga ditampilkan aplikasi Nostr lain. Penyimpanan langsung berlaku.',
+    'announcementDiscoveryProviderSettingsView.heartsCostHint': 'Setiap hati, dan setiap hati yang ditarik kembali, adalah satu catatan di jaringan. Di Nostr tidak ada biaya. Di Arweave, Steem, dan Blurt itu adalah transaksi atau postingan yang harus Anda setujui lewat dompet atau Keychain, dan Arweave serta Blurt memungut biaya; di Steem dan Blurt hati tidak pernah menjadi suara. Hanya lokal & rekan hanya menjangkau rekan yang terhubung saat ini.',
 
     // Identity, Peers, Chat and settings: arweaveGatewaySettingsView.
     'arweaveGatewaySettingsView.arweaveGateway': 'Gateway Arweave',

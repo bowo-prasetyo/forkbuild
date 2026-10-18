@@ -3,6 +3,9 @@ import { PublicationCommentaryStore } from '../../../storage/PublicationCommenta
 import { LocalAuthorizationVerifier } from '../../../identity/LocalAuthorizationVerifier.js';
 import { PublicationCommentaryDistributionExchange } from './PublicationCommentaryDistributionExchange.js';
 import { PublicationCommentaryDistributionPeerExchange } from './PublicationCommentaryDistributionPeerExchange.js';
+import { PublicationHeartStore } from '../../../storage/PublicationHeartStore.js';
+import { PublicationHeartExchange } from '../heart/PublicationHeartExchange.js';
+import { withHeartRouting } from '../heart/withHeartRouting.js';
 
 // 0.9.620 — Wire Publication Commentary Peer Distribution.
 //
@@ -50,14 +53,21 @@ import { PublicationCommentaryDistributionPeerExchange } from './PublicationComm
 // no CommentarySyncService, and no Commentary-specific lifecycle
 // framework of any kind — see docs/Roadmap.md's own 0.9.620 entry.
 export class CreatePublicationCommentaryDistributionPeerExchangeUseCase {
-    execute({ identityProvider, peerMessageBus, connectedPeerRegistry } = {}) {
+    // Hearts ride the same peer messages (application/publication/heart/
+    // withHeartRouting.js): `routedExchange` is what the peer exchange and
+    // every comment reader use, so a heart from anywhere reaches the heart
+    // store, and `onHeart(result)` hears of each one accepted.
+    execute({ identityProvider, peerMessageBus, connectedPeerRegistry, onHeart = null } = {}) {
         const storageProvider = new LocalStorageProvider();
         const store = new PublicationCommentaryStore(storageProvider);
         const verifier = new LocalAuthorizationVerifier();
 
         const exchange = new PublicationCommentaryDistributionExchange(store, identityProvider, verifier);
-        const peerExchange = new PublicationCommentaryDistributionPeerExchange(exchange, peerMessageBus, connectedPeerRegistry);
+        const heartStore = new PublicationHeartStore(storageProvider);
+        const heartExchange = new PublicationHeartExchange(heartStore, identityProvider, verifier);
+        const routedExchange = withHeartRouting(exchange, heartExchange, { onHeart });
+        const peerExchange = new PublicationCommentaryDistributionPeerExchange(routedExchange, peerMessageBus, connectedPeerRegistry);
 
-        return { store, exchange, peerExchange, verifier };
+        return { store, exchange, routedExchange, heartStore, heartExchange, peerExchange, verifier };
     }
 }
