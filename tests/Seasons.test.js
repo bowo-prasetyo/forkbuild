@@ -33,8 +33,10 @@ import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
 import { naturalFeaturesInRegion, FEATURE_TYPE, TREE_SPECIES } from '../core/NaturalFeatureField.js';
 import { ambientMixAt, ambientMixInSeason, AMBIENT_LAYER } from '../core/AmbientSoundscape.js';
-import { createSeasonSurfaces, setSeason, markDeciduous, DECIDUOUS } from '../renderer/SeasonalSurfaces.js';
-import { createWetSurfaces, setSnowCover } from '../renderer/WetSurfaces.js';
+import {
+    DECIDUOUS, TREE_PART, createSeasonSurfaces, makeSeasonalTree, seasonedTreeColour, setSeason, setTreeSeasonFlags, treeNumbers, treeSeasonFlags, treeSeasonOf
+} from '../renderer/SeasonalSurfaces.js';
+import { createWetSurfaces, makeWet, setSnowCover } from '../renderer/WetSurfaces.js';
 import { Drift, DRIFT } from '../renderer/SeasonDrift.js';
 import { TreeForest } from '../renderer/TreeForest.js';
 import { WorldViewSeasonStore } from '../application/settings/WorldViewSeasonStore.js';
@@ -290,20 +292,19 @@ const inYear = (day) => YEAR_START + day * DAY_CYCLE_SECONDS;
     console.log('✓ spring\'s birdsong and winter\'s hush');
 }
 
-// The renderer's side: the land's uniforms follow the look; snow lies as
-// the weather says; flakes, leaves and petals fall only when there are any;
-// trees know whether their species sheds its leaves.
+// The renderer's side: the ground's uniforms follow the look; each tree's
+// colours and leaves for the season; snow lies as the weather says; flakes,
+// leaves and petals fall only when there are any.
 {
     const surfaces = createSeasonSurfaces();
-    assert(surfaces.leaves.value === 1 && surfaces.autumn.value === 0 && surfaces.groundSaturation.value === 1 && surfaces.fieldAmount.value === 0,
-        'until told otherwise, high summer\'s plain look');
+    assert(surfaces.flowers.value === 0 && surfaces.groundSaturation.value === 1 && surfaces.fieldAmount.value === 0,
+        'until told otherwise, the ground\'s plain look');
     const autumn = seasonLookAtYearDay(20);
     setSeason(surfaces, autumn);
-    assert(surfaces.autumn.value === 1 && surfaces.leaves.value === autumn.leaves, 'autumn\'s uniforms');
+    assert(surfaces.groundSaturation.value === autumn.groundSaturation && surfaces.fieldAmount.value === autumn.fieldAmount, 'autumn\'s uniforms');
     assert(surfaces.groundGrade.value.x === autumn.groundGrade[0] && surfaces.fieldColor.value.z === autumn.fieldColor[2], 'its colours');
     setSeason(surfaces, null);
-    assert(surfaces.autumn.value === 1, 'no look changes nothing');
-
+    assert(surfaces.groundSaturation.value === autumn.groundSaturation, 'no look changes nothing');
     const wet = createWetSurfaces();
     assert(wet.snowCover.value === 0, 'no snow to begin with');
     setSnowCover(wet, 0.6);
@@ -333,13 +334,57 @@ const inYear = (day) => YEAR_START + day * DAY_CYCLE_SECONDS;
     }
     assert(added.length === 0, 'disposing takes them out of the scene');
 
-    const geometry = new THREE.BoxGeometry(1, 1, 1);
-    markDeciduous([geometry], DECIDUOUS.PARTLY);
-    const attribute = geometry.getAttribute('treeDeciduous');
-    assert(attribute.count === geometry.getAttribute('position').count && Math.abs(attribute.getX(5) - DECIDUOUS.PARTLY) < 1e-6, 'every vertex says how much its tree sheds');
+    // Each tree for the season, from its own numbers.
+    const numbers = treeNumbers(123.4, -56.7);
+    assert(JSON.stringify(numbers) === JSON.stringify(treeNumbers(123.4, -56.7)) && numbers.every((n) => n >= 0 && n < 1), 'a tree\'s own numbers, the same every time');
+    const green = [0.5, 0.7, 0.4];
+    const plain = treeSeasonOf(null, numbers, DECIDUOUS.FULLY);
+    assert(plain.leaf === 1 && plain.amount === 0 && plain.fruit === 0 && JSON.stringify(seasonedTreeColour(green, plain)) === JSON.stringify(green),
+        'with no season a tree is as it was');
+    const turned = treeSeasonOf(seasonLookAtYearDay(21), [0.5, 0.1, 0.1], DECIDUOUS.FULLY);
+    const red = seasonedTreeColour(green, turned);
+    assert(red[0] > red[1] && Math.abs((red[0] * 0.299 + red[1] * 0.587 + red[2] * 0.114) - (green[0] * 0.299 + green[1] * 0.587 + green[2] * 0.114) * 0.9) < 0.02,
+        'an autumn red at about the leaves\' own brightness');
+    const evergreen = treeSeasonOf(seasonLookAtYearDay(21), [0.5, 0.1, 0.1], DECIDUOUS.NEVER);
+    assert(evergreen.amount === 0 && evergreen.leaf === 1, 'a conifer neither turns nor drops its needles');
+    assert(treeSeasonOf(seasonLookAtYearDay(27), numbers, DECIDUOUS.FULLY).leaf === 0, 'in winter a broadleaf is bare');
+    assert(Math.abs(treeSeasonOf(seasonLookAtYearDay(27), numbers, DECIDUOUS.PARTLY).leaf - 0.4) < 1e-9, 'scrub keeps some');
+    const bareCrown = seasonedTreeColour(green, treeSeasonOf(seasonLookAtYearDay(27), numbers, DECIDUOUS.FULLY), { crown: true });
+    assert(bareCrown[0] > bareCrown[2] && bareCrown[1] < green[1], 'a bare crown turns twig-brown');
+    const blooming = treeSeasonOf(seasonLookAtYearDay(2.5), [0.2, 0.2, 0.5], DECIDUOUS.FULLY);
+    assert(blooming.amount > 0.8 && blooming.hue[0] > blooming.hue[1], 'two in five broadleaves blossom, pink here');
+    assert(treeSeasonOf(seasonLookAtYearDay(2.5), [0.2, 0.6, 0.5], DECIDUOUS.FULLY).amount === 0, 'the rest don\'t');
+    assert(treeSeasonOf(seasonLookAtYearDay(14.5), [0.2, 0.5, 0.5], DECIDUOUS.FULLY).fruit > 0.1, 'fruit on a fruiting tree at harvest');
+
+    // What the shaders need: dropping leaves and fruit, compiled in only then.
+    assert(JSON.stringify(treeSeasonFlags(seasonLookAtYearDay(10))) === '{"bare":false,"fruit":true}', 'summer: fruit');
+    assert(JSON.stringify(treeSeasonFlags(seasonLookAtYearDay(28))) === '{"bare":true,"fruit":false}', 'winter: bare trees');
+    assert(JSON.stringify(treeSeasonFlags(null)) === '{"bare":false,"fruit":false}', 'no season: nothing');
+    const leafMaterial = makeSeasonalTree(new THREE.MeshStandardMaterial(), { part: TREE_PART.LEAVES });
+    const version = leafMaterial.version;
+    setTreeSeasonFlags(leafMaterial, { bare: true, fruit: false });
+    assert('SEASON_BARE' in leafMaterial.defines && !('SEASON_FRUIT' in leafMaterial.defines) && leafMaterial.version > version, 'compiled with dropping leaves');
+    const again = leafMaterial.version;
+    setTreeSeasonFlags(leafMaterial, { bare: true, fruit: false });
+    assert(leafMaterial.version === again, 'and not again for the same');
+    assert(makeSeasonalTree(new THREE.MeshStandardMaterial(), { part: TREE_PART.BARK }).onBeforeCompile.toString().indexOf('SEASON') < 0, 'bark is left alone');
+
+    // Snow is compiled in only while it lies.
+    const snowyWet = createWetSurfaces();
+    const brick = makeWet(new THREE.MeshStandardMaterial(), snowyWet);
+    const before = brick.version;
+    setSnowCover(snowyWet, 0);
+    assert(brick.version === before && !brick.customProgramCacheKey().endsWith('-snow'), 'no snow, no snow in the shader');
+    setSnowCover(snowyWet, 0.2);
+    assert(brick.version > before && brick.customProgramCacheKey().endsWith('-snow'), 'the first snow rebuilds it');
+    const snowing = brick.version;
+    setSnowCover(snowyWet, 0.7);
+    assert(brick.version === snowing, 'deepening snow doesn\'t');
+    brick.dispose();
+    assert(!snowyWet.materials.has(brick), 'a disposed material is let go');
 
     // Trees that shed their leaves round the camera, for the leaves to fall from.
-    const forest = new TreeForest({ add() {}, remove() {} }, { seed: DEFAULT_WORLD_SEED, wetSurfaces: wet, seasonSurfaces: surfaces });
+    const forest = new TreeForest({ add() {}, remove() {} }, { seed: DEFAULT_WORLD_SEED, wetSurfaces: wet });
     assert(forest.deciduousNearby === 0, 'no trees loaded, no wood');
     let wood = null;
     for (let tx = -30; tx < 30 && !wood; tx++) {
@@ -355,6 +400,30 @@ const inYear = (day) => YEAR_START + day * DAY_CYCLE_SECONDS;
         forest.unloadTile(token);
     }
     assert(wood !== null, 'somewhere is a wood of trees that shed their leaves');
+    // The forest dressed for autumn: its broadleaves' colours turn, and its
+    // shaders drop leaves.
+    const token = forest.loadTile(wood, 0);
+    forest.update(camera);
+    const broadleafMeshes = () => forest.group.children.filter((m) => m.name.startsWith('tree-broadleaf') && m.visible && m.count > 0 && m.geometry.getAttribute('treeSeason'));
+    const warmth = () => {
+        let r = 0;
+        let g = 0;
+        for (const mesh of broadleafMeshes()) {
+            for (let i = 0; i < mesh.count; i++) {
+                r += mesh.instanceColor.getX(i);
+                g += mesh.instanceColor.getY(i);
+            }
+        }
+        return r / g;
+    };
+    const summerWarmth = warmth();
+    forest.setSeason(seasonLookAtYearDay(22));
+    forest.update(camera);
+    assert(warmth() > summerWarmth * 1.2, `the broadleaves turn (${summerWarmth.toFixed(2)} to ${warmth().toFixed(2)})`);
+    const someMesh = broadleafMeshes()[0];
+    assert(someMesh.geometry.getAttribute('treeSeason').getX(0) < 1, 'and drop their leaves');
+    assert('SEASON_BARE' in someMesh.material.defines && 'SEASON_BARE' in someMesh.customDepthMaterial.defines, 'which their shaders, shadows too, now draw');
+    forest.unloadTile(token);
     forest.dispose();
     console.log('✓ the renderer follows the season, the snow and what falls');
 }

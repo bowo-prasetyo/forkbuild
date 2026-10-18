@@ -4,22 +4,31 @@ import * as THREE from 'three';
 // change colour with them, and the trees come into blossom and leaf, carry
 // fruit, turn red, orange and yellow and stand bare.
 //
-// Patches onto lit materials, like renderer/WetSurfaces.js: every material
-// patched by one owner shares its uniforms (createSeasonSurfaces()), so the
-// whole land changes with one look a frame, and nothing streamed is rebuilt.
+// Nothing streamed is rebuilt, and as little as can be is left to every
+// pixel: a GPU without branching (a software one, as the tests film with)
+// runs every line of a shader for every pixel, whether it changes anything
+// or not.
 //
-//   makeSeasonalGround()  the terrain (renderer/TerrainTileMesh.js), whose
-//                         vertices say how much grass and how much field
-//                         they are (`groundCover`, core/TerrainEcology.js#
-//                         groundCoverAt()); grass dotted with wild flowers
-//                         in spring and summer
-//   makeSeasonalTree()    the trees (renderer/TreeForest.js), whose vertices
-//                         say how much their species sheds its leaves
-//                         (`treeDeciduous`: a conifer never, a broadleaf
-//                         fully, scrub partly) and whose place makes each
-//                         tree turn, bloom and drop its leaves a little
-//                         differently. Patched onto a tree's shadow material
-//                         too, so a bare tree casts a bare tree's shadow.
+//   makeSeasonalGround()  the terrain (renderer/TerrainTileMesh.js): a patch
+//                         sharing one set of uniforms (createSeasonSurfaces(),
+//                         setSeason()), reading how much grass and how much
+//                         field each vertex is (`groundCover`, core/
+//                         TerrainEcology.js#groundCoverAt()); grass dotted
+//                         with wild flowers in spring and summer
+//   treeSeasonOf(), seasonedTreeColour()
+//                         the trees (renderer/TreeForest.js): each tree's
+//                         colours for the season, worked out on the CPU
+//                         into its instance colour (fresh leaves, autumn,
+//                         blossom, a bare crown's twigs), from how much its
+//                         species sheds its leaves (DECIDUOUS) and its own
+//                         numbers, so each turns, blooms and drops its
+//                         leaves a little differently
+//   makeSeasonalTree()    what can't be a colour: leaves dropping and fruit
+//                         among them, read from each instance's
+//                         `treeSeason` and compiled in only while the season
+//                         has any (treeSeasonFlags(), setTreeSeasonFlags()).
+//                         Patched onto a tree's shadow material too, so a
+//                         bare tree casts a bare tree's shadow.
 //
 // Patch a material after renderer/WetSurfaces.js#makeWet(): this one's
 // colour then comes before the wet's darkening and the snow lying on top.
@@ -30,7 +39,7 @@ export const TREE_PART = Object.freeze({ LEAVES: 'LEAVES', CROWN: 'CROWN', BARK:
 // Leaves dropped on a solid mid or far crown (renderer/TreeGeometry.js)
 // leave this share of it standing, as a haze of twigs.
 const BARE_CROWN = 0.18;
-const TWIG_COLOUR = '0.40, 0.35, 0.30';
+const TWIG_COLOUR = Object.freeze([0.40, 0.35, 0.30]);
 // What a crop row's colour is measured against, so the fields keep their rows.
 const FIELD_LUMINANCE = 0.6;
 
@@ -40,11 +49,6 @@ function glslFloat(v) {
 
 export function createSeasonSurfaces() {
     return {
-        leaves: { value: 1 },
-        fresh: { value: 0 },
-        blossom: { value: 0 },
-        autumn: { value: 0 },
-        fruit: { value: 0 },
         flowers: { value: 0 },
         groundGrade: { value: new THREE.Vector3(1, 1, 1) },
         groundSaturation: { value: 1 },
@@ -53,11 +57,11 @@ export function createSeasonSurfaces() {
     };
 }
 
-// Shows `look` (core/Season.js#seasonLookAt()) on every material patched
-// with `surfaces`.
+// Shows `look` (core/Season.js#seasonLookAt()) on the ground patched with
+// `surfaces`.
 export function setSeason(surfaces, look) {
     if (!look) return;
-    for (const key of ['leaves', 'fresh', 'blossom', 'autumn', 'fruit', 'flowers', 'groundSaturation', 'fieldAmount']) {
+    for (const key of ['flowers', 'groundSaturation', 'fieldAmount']) {
         surfaces[key].value = Number.isFinite(look[key]) ? look[key] : surfaces[key].value;
     }
     if (Array.isArray(look.groundGrade)) surfaces.groundGrade.value.fromArray(look.groundGrade);
@@ -96,14 +100,43 @@ function chainPatch(material, key, patch) {
     return material;
 }
 
+// A cheap hash of a grid cell, 0 to 1 (interleaved gradient noise): the
+// fragment shaders run it for every pixel of grass and every leaf, so it is
+// kept to a few operations.
+const CELL_HASH = /* glsl */ `
+float seasonCell(vec2 c) {
+	return fract(52.9829189 * fract(dot(c, vec2(0.06711056, 0.00583715))));
+}`;
+
+// Everything that is the same all over a stretch of ground or a whole tree
+// is worked out per vertex, so each pixel only mixes colours.
 const GROUND_VERTEX_HEAD = /* glsl */ `
 attribute vec2 groundCover;
+uniform float uSeasonFlowers;
 varying vec2 vGroundCover;
-varying vec3 vSeasonWorld;`;
+varying vec2 vSeasonWorld;
+varying float vSeasonMeadow;
+${HASH}`;
 
+// Meadows: a noise of 9 m cells, where flowers grow.
 const GROUND_VERTEX_BODY = /* glsl */ `
-	vGroundCover = groundCover;
-	vSeasonWorld = (modelMatrix * vec4(transformed, 1.0)).xyz;
+	{
+		vec2 seasonXZ = (modelMatrix * vec4(transformed, 1.0)).xz;
+		vGroundCover = groundCover;
+		vSeasonWorld = seasonXZ;
+		vSeasonMeadow = 0.0;
+		if (uSeasonFlowers > 0.0) {
+			vec2 meadowCell = floor(seasonXZ / 9.0);
+			vec2 meadowT = fract(seasonXZ / 9.0);
+			meadowT = meadowT * meadowT * (3.0 - 2.0 * meadowT);
+			float m00 = seasonHash(vec3(meadowCell, 7.0));
+			float m10 = seasonHash(vec3(meadowCell + vec2(1.0, 0.0), 7.0));
+			float m01 = seasonHash(vec3(meadowCell + vec2(0.0, 1.0), 7.0));
+			float m11 = seasonHash(vec3(meadowCell + vec2(1.0, 1.0), 7.0));
+			float meadow = mix(mix(m00, m10, meadowT.x), mix(m01, m11, meadowT.x), meadowT.y);
+			vSeasonMeadow = uSeasonFlowers * smoothstep(0.3, 0.75, meadow) * 0.35 * smoothstep(0.5, 1.0, groundCover.x);
+		}
+	}
 `;
 
 const GROUND_FRAGMENT_HEAD = /* glsl */ `
@@ -111,39 +144,14 @@ uniform vec3 uSeasonGroundGrade;
 uniform float uSeasonGroundSaturation;
 uniform vec3 uSeasonFieldColor;
 uniform float uSeasonFieldAmount;
-uniform float uSeasonFlowers;
 varying vec2 vGroundCover;
-varying vec3 vSeasonWorld;
-${HASH}
-// Wild flowers: a dot in some of the cells of a fine grid, in meadows a low
-// noise lets through, fading out where a cell gets too small on screen to
-// draw cleanly.
-vec3 seasonFlowers(vec3 colour, float grass) {
-	if (uSeasonFlowers <= 0.0 || grass <= 0.5) return colour;
-	vec2 cellSize = vec2(0.7);
-	vec2 cell = floor(vSeasonWorld.xz / cellSize);
-	vec2 meadowCell = floor(vSeasonWorld.xz / 9.0);
-	vec2 meadowT = fract(vSeasonWorld.xz / 9.0);
-	meadowT = meadowT * meadowT * (3.0 - 2.0 * meadowT);
-	float m00 = seasonHash(vec3(meadowCell, 7.0));
-	float m10 = seasonHash(vec3(meadowCell + vec2(1.0, 0.0), 7.0));
-	float m01 = seasonHash(vec3(meadowCell + vec2(0.0, 1.0), 7.0));
-	float m11 = seasonHash(vec3(meadowCell + vec2(1.0, 1.0), 7.0));
-	float meadow = mix(mix(m00, m10, meadowT.x), mix(m01, m11, meadowT.x), meadowT.y);
-	vec3 h = seasonHash3(vec3(cell, 3.0));
-	float chance = uSeasonFlowers * smoothstep(0.3, 0.75, meadow) * 0.35;
-	if (h.x > chance) return colour;
-	vec2 into = fract(vSeasonWorld.xz / cellSize) - 0.5 - (h.yz - 0.5) * 0.5;
-	float dotSize = 0.2 + h.y * 0.1;
-	float onScreen = 1.0 - smoothstep(0.1, 0.3, length(fwidth(vSeasonWorld.xz)));
-	float petal = (1.0 - smoothstep(dotSize * 0.6, dotSize, length(into))) * onScreen * smoothstep(0.5, 1.0, grass);
-	vec3 flower = h.z < 0.3 ? vec3(0.92, 0.90, 0.84)
-		: h.z < 0.55 ? vec3(0.90, 0.78, 0.30)
-		: h.z < 0.8 ? vec3(0.78, 0.52, 0.72)
-		: vec3(0.55, 0.62, 0.86);
-	return mix(colour, flower, petal);
-}`;
+varying vec2 vSeasonWorld;
+varying float vSeasonMeadow;
+${CELL_HASH}`;
 
+// Wild flowers: a dot in some of the cells of a 0.7 m grid, as many as the
+// meadow lets through, fading out where a cell gets too small on screen to
+// draw cleanly.
 const GROUND_FRAGMENT_BODY = /* glsl */ `
 	{
 		float seasonGrey = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
@@ -151,7 +159,19 @@ const GROUND_FRAGMENT_BODY = /* glsl */ `
 		diffuseColor.rgb = mix(diffuseColor.rgb, seasonGraded, vGroundCover.x);
 		vec3 seasonCrops = uSeasonFieldColor * (seasonGrey / ${glslFloat(FIELD_LUMINANCE)});
 		diffuseColor.rgb = mix(diffuseColor.rgb, seasonCrops, vGroundCover.y * uSeasonFieldAmount);
-		diffuseColor.rgb = seasonFlowers(diffuseColor.rgb, vGroundCover.x);
+		vec2 flowerGrid = vSeasonWorld / 0.7;
+		vec2 flowerCell = floor(flowerGrid);
+		float flowerChance = seasonCell(flowerCell);
+		float flowerKind = seasonCell(flowerCell + 17.0);
+		vec2 flowerInto = fract(flowerGrid) - 0.5 - (vec2(flowerKind, fract(flowerKind * 7.0)) - 0.5) * 0.5;
+		float flowerSize = 0.29 + flowerKind * 0.14;
+		float onScreen = 1.0 - smoothstep(0.1, 0.3, length(fwidth(vSeasonWorld)));
+		float petal = step(flowerChance, vSeasonMeadow) * (1.0 - smoothstep(flowerSize * 0.6, flowerSize, length(flowerInto))) * onScreen;
+		vec3 flower = flowerKind < 0.3 ? vec3(0.92, 0.90, 0.84)
+			: flowerKind < 0.55 ? vec3(0.90, 0.78, 0.30)
+			: flowerKind < 0.8 ? vec3(0.78, 0.52, 0.72)
+			: vec3(0.55, 0.62, 0.86);
+		diffuseColor.rgb = mix(diffuseColor.rgb, flower, petal);
 	}
 `;
 
@@ -169,106 +189,153 @@ export function makeSeasonalGround(material, surfaces) {
     });
 }
 
+const LUMA = Object.freeze([0.299, 0.587, 0.114]);
+const luma = (c) => c[0] * LUMA[0] + c[1] * LUMA[1] + c[2] * LUMA[2];
+const FRESH = Object.freeze([1.06, 1.16, 0.80]);
+const AUTUMN_HUES = Object.freeze([[0.58, 0.16, 0.09], [0.78, 0.42, 0.12], [0.80, 0.66, 0.22]]);
+const BLOSSOM_HUES = Object.freeze([[0.98, 0.70, 0.74], [0.97, 0.93, 0.84]]);
+const FRUIT_COLOURS = Object.freeze([[0.72, 0.16, 0.10], [0.85, 0.48, 0.10]]);
+
+const lerp = (a, b, t) => a + (b - a) * t;
+const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
+
+// What the season `look` (core/Season.js) does to one tree, `numbers` its
+// own three numbers in [0, 1) and `deciduous` how much its species sheds
+// its leaves (DECIDUOUS):
+//   leaf    how much of its foliage it carries; each drops its leaves (and
+//           comes into leaf) a little before or after the season says, all
+//           bare in the depth of winter and all dressed in summer
+//   fresh   what its colour is multiplied by: new leaves light and
+//           yellow-green, a conifer's new shoots barely
+//   hue     a hue its leaves take at their own brightness (times the hue's
+//           length), and amount how far: its own red, orange or yellow in
+//           autumn, at its own time; blossom, pink or white, on two in five
+//           broadleaves
+//   fruit   the share of its leaves' specks that are fruit, on three in ten
+//           broadleaves, and fruitKind which fruit (0 red, 1 orange)
+export function treeSeasonOf(look, numbers, deciduous) {
+    const [x, y, z] = numbers;
+    const leaves = look && Number.isFinite(look.leaves) ? look.leaves : 1;
+    const own = leaves <= 0 ? 0 : leaves >= 1 ? 1 : clamp01(leaves + (x - 0.5) * 0.4);
+    const freshness = (look?.fresh || 0) * lerp(0.25, 1, deciduous);
+    const turn = clamp01((look?.autumn || 0) * 1.4 - y * 0.4) * deciduous;
+    const broadleaf = deciduous >= 0.99 ? 1 : 0;
+    const bloom = (look?.blossom || 0) * broadleaf * (y <= 0.4 ? 1 : 0) * 0.85;
+    let hue;
+    let amount;
+    if (bloom > turn) {
+        const b = BLOSSOM_HUES[x < 0.5 ? 0 : 1];
+        hue = b.map((c) => c * 1.7 / luma(b));
+        amount = bloom;
+    } else {
+        const a = AUTUMN_HUES[z < 0.3 ? 0 : z < 0.65 ? 1 : 2];
+        hue = a.map((c) => c * (z < 0.3 ? 0.9 : 1.1) / luma(a));
+        amount = turn;
+    }
+    const fruiting = broadleaf && y >= 0.4 && y <= 0.7 ? 1 : 0;
+    return {
+        leaf: lerp(1, own, deciduous),
+        fresh: FRESH.map((c) => lerp(1, c, freshness)),
+        hue,
+        amount,
+        fruit: (look?.fruit || 0) * 0.16 * fruiting,
+        fruitKind: z < 0.5 ? 0 : 1
+    };
+}
+
+// `base`, a tree's leaf (or, with `crown`, solid crown) colour, as
+// `season` (treeSeasonOf()) colours it: a bare crown turns twig-brown.
+export function seasonedTreeColour(base, season, { crown = false } = {}) {
+    const bright = luma(base);
+    let colour = base.map((c, i) => lerp(c * season.fresh[i], season.hue[i] * bright, season.amount));
+    if (crown && season.leaf < 1) {
+        const twig = TWIG_COLOUR.map((c) => c * (luma(colour) * 0.8 / luma(TWIG_COLOUR)));
+        colour = colour.map((c, i) => lerp(twig[i], c, season.leaf));
+    }
+    return colour;
+}
+
+// Which of makeSeasonalTree()'s code the season `look` needs: `bare` while
+// any tree has dropped leaves, `fruit` while fruit hangs.
+export function treeSeasonFlags(look) {
+    return {
+        bare: Boolean(look && Number.isFinite(look.leaves) && look.leaves < 1),
+        fruit: Boolean(look && look.fruit > 0)
+    };
+}
+
+// Compiles `material` (patched by makeSeasonalTree()) with just what `flags`
+// (treeSeasonFlags()) need; nothing happens unless they changed.
+export function setTreeSeasonFlags(material, flags) {
+    const defines = material.defines || (material.defines = {});
+    const bare = Boolean(flags?.bare);
+    const fruit = Boolean(flags?.fruit);
+    if (('SEASON_BARE' in defines) === bare && ('SEASON_FRUIT' in defines) === fruit) return;
+    delete defines.SEASON_BARE;
+    delete defines.SEASON_FRUIT;
+    if (bare) defines.SEASON_BARE = '';
+    if (fruit) defines.SEASON_FRUIT = '';
+    material.needsUpdate = true;
+}
+
 const TREE_VERTEX_HEAD = /* glsl */ `
-attribute float treeDeciduous;
+attribute vec3 treeSeason;
+#if defined( SEASON_BARE ) || defined( SEASON_FRUIT )
 varying vec3 vSeasonPos;
 varying vec2 vSeasonUv;
-varying vec3 vSeasonTree;
-varying float vSeasonDeciduous;
-${HASH}`;
+varying vec3 vTreeSeason;
+#endif`;
 
-// The tree's own numbers, from where it stands: the same for every part of
-// it and every frame.
 const TREE_VERTEX_BODY = /* glsl */ `
+#if defined( SEASON_BARE ) || defined( SEASON_FRUIT )
 	vSeasonPos = position;
 	vSeasonUv = uv;
-	vSeasonDeciduous = treeDeciduous;
-	#ifdef USE_INSTANCING
-		vSeasonTree = seasonHash3(vec3(instanceMatrix[3].xz, 1.0) * 1.7);
-	#else
-		vSeasonTree = vec3(0.5);
-	#endif
+	vTreeSeason = treeSeason;
+#endif
 `;
 
 const TREE_FRAGMENT_HEAD = /* glsl */ `
-uniform float uSeasonLeaves;
-uniform float uSeasonFresh;
-uniform float uSeasonBlossom;
-uniform float uSeasonAutumn;
-uniform float uSeasonFruit;
+#if defined( SEASON_BARE ) || defined( SEASON_FRUIT )
 varying vec3 vSeasonPos;
 varying vec2 vSeasonUv;
-varying vec3 vSeasonTree;
-varying float vSeasonDeciduous;
-${HASH}
-// How much of its foliage this tree carries: each drops its leaves (and
-// comes into leaf) a little before or after the season says, all bare in
-// the depth of winter and all dressed in summer.
-float seasonLeavesHere() {
-	float own = uSeasonLeaves <= 0.0 ? 0.0 : uSeasonLeaves >= 1.0 ? 1.0
-		: clamp(uSeasonLeaves + (vSeasonTree.x - 0.5) * 0.4, 0.0, 1.0);
-	return mix(1.0, own, vSeasonDeciduous);
-}
-// Colour with the hue of 'hue' and the brightness of 'colour'.
-vec3 seasonHued(vec3 colour, vec3 hue) {
-	float bright = dot(colour, vec3(0.299, 0.587, 0.114));
-	return hue * (bright / max(dot(hue, vec3(0.299, 0.587, 0.114)), 1e-3));
-}
-vec3 seasonFoliage(vec3 colour, vec3 speck) {
-	float deciduous = vSeasonDeciduous;
-	// New leaves, light and yellow-green; a conifer's new shoots barely.
-	colour = mix(colour, colour * vec3(1.06, 1.16, 0.80), uSeasonFresh * mix(0.25, 1.0, deciduous));
-	// Autumn: each tree its own red, orange or yellow, and its own time.
-	float turn = clamp(uSeasonAutumn * 1.4 - vSeasonTree.y * 0.4, 0.0, 1.0) * deciduous;
-	vec3 autumnHue = vSeasonTree.z < 0.3 ? vec3(0.58, 0.16, 0.09)
-		: vSeasonTree.z < 0.65 ? vec3(0.78, 0.42, 0.12)
-		: vec3(0.80, 0.66, 0.22);
-	colour = mix(colour, seasonHued(colour, autumnHue) * mix(0.9, 1.1, step(0.3, vSeasonTree.z)), turn);
-	// Blossom on the flowering broadleaf trees, pink or white.
-	float flowering = step(0.99, deciduous) * step(vSeasonTree.y, 0.4);
-	vec3 blossomHue = vSeasonTree.x < 0.5 ? vec3(0.98, 0.70, 0.74) : vec3(0.97, 0.93, 0.84);
-	colour = mix(colour, blossomHue * 0.85 * (0.75 + 0.5 * speck.x), uSeasonBlossom * flowering * 0.85);
-	// Fruit on the fruiting ones: red or orange specks among the leaves.
-	float fruiting = step(0.99, deciduous) * step(0.4, vSeasonTree.y) * step(vSeasonTree.y, 0.7);
-	float fruit = uSeasonFruit > 0.0 ? step(speck.y, uSeasonFruit * 0.16) * fruiting : 0.0;
-	colour = mix(colour, vSeasonTree.z < 0.5 ? vec3(0.72, 0.16, 0.10) : vec3(0.85, 0.48, 0.10), fruit);
-	return colour;
-}`;
+varying vec3 vTreeSeason;
+${CELL_HASH}
+#endif`;
 
+// Leaf cards drop whole sprays at a time, so a thinning crown shows its
+// boughs; a solid crown thins to a haze of twigs.
 const LEAVES_DISCARD = /* glsl */ `
-	{
-		float seasonLeaf = seasonLeavesHere();
-		// Whole sprays at a time, so a thinning crown shows its boughs.
-		if (seasonLeaf < 1.0 && seasonHash(floor(vSeasonPos * 1.3) * 7.0 + vec3(floor(vSeasonUv * 2.0), 0.0)) >= seasonLeaf) discard;
-	}
+#ifdef SEASON_BARE
+	if (vTreeSeason.x < 1.0 && seasonCell(floor(vSeasonPos.xz * 1.3) * 7.0 + floor(vSeasonPos.y * 1.3) * 3.0 + floor(vSeasonUv * 2.0)) >= vTreeSeason.x) discard;
+#endif
 `;
 
 const CROWN_DISCARD = /* glsl */ `
-	{
-		float seasonLeaf = seasonLeavesHere();
-		float seasonStanding = mix(${glslFloat(BARE_CROWN)}, 1.0, seasonLeaf);
-		if (seasonStanding < 1.0 && seasonHash(floor(vSeasonPos * 6.0)) >= seasonStanding) discard;
-	}
+#ifdef SEASON_BARE
+	if (vTreeSeason.x < 1.0 && seasonCell(floor(vSeasonPos.xz * 6.0) + floor(vSeasonPos.y * 6.0) * 5.0) >= mix(${glslFloat(BARE_CROWN)}, 1.0, vTreeSeason.x)) discard;
+#endif
 `;
 
-const LEAVES_COLOUR = /* glsl */ `
-	diffuseColor.rgb = seasonFoliage(diffuseColor.rgb, seasonHash3(vec3(floor(vSeasonUv * 9.0), 5.0) + floor(vSeasonPos * 1.7) * 3.0));
+// Fruit: red or orange specks among the leaves.
+const fruitColour = (speck) => /* glsl */ `
+#ifdef SEASON_FRUIT
+	if (seasonCell(${speck}) < vTreeSeason.y) diffuseColor.rgb = vTreeSeason.z < 0.5 ? vec3(${FRUIT_COLOURS[0].join(', ')}) : vec3(${FRUIT_COLOURS[1].join(', ')});
+#endif
 `;
 
-const CROWN_COLOUR = /* glsl */ `
-	diffuseColor.rgb = seasonFoliage(diffuseColor.rgb, seasonHash3(floor(vSeasonPos * 9.0) + 11.0));
-	diffuseColor.rgb = mix(seasonHued(diffuseColor.rgb, vec3(${TWIG_COLOUR})) * 0.8, diffuseColor.rgb, seasonLeavesHere());
-`;
+const LEAVES_COLOUR = fruitColour('floor(vSeasonUv * 9.0) + floor(vSeasonPos.xz * 1.7) * 13.0 + floor(vSeasonPos.y * 1.7) * 7.0');
+const CROWN_COLOUR = fruitColour('floor(vSeasonPos.xz * 9.0) + floor(vSeasonPos.y * 9.0) * 3.0');
 
-// Patches one of a tree's materials (`part`: TREE_PART) to change with the
-// seasons; its geometry carries `treeDeciduous`. `depth`: the part's shadow
-// material, which only drops leaves. Bark is left as it is (snow lies on it,
-// renderer/WetSurfaces.js). Returns the material.
-export function makeSeasonalTree(material, surfaces, { part = TREE_PART.LEAVES, depth = false } = {}) {
+// Patches one of a tree's materials (`part`: TREE_PART) to drop its leaves
+// and bear fruit, read from its instances' `treeSeason` (leaf, fruit,
+// fruitKind: treeSeasonOf()). `depth`: the part's shadow material, which
+// only drops leaves. Bark is left as it is (snow lies on it,
+// renderer/WetSurfaces.js). Until setTreeSeasonFlags() asks for some, it
+// adds nothing to the shaders. Returns the material.
+export function makeSeasonalTree(material, { part = TREE_PART.LEAVES, depth = false } = {}) {
     if (part === TREE_PART.BARK) return material;
     const leaves = part === TREE_PART.LEAVES;
     return chainPatch(material, `forkbuild-season-tree-${leaves ? 'leaves' : 'crown'}${depth ? '-depth' : ''}`, (shader) => {
-        bindUniforms(shader, surfaces, ['leaves', 'fresh', 'blossom', 'autumn', 'fruit']);
         shader.vertexShader = shader.vertexShader
             .replace('#include <common>', `#include <common>${TREE_VERTEX_HEAD}`)
             .replace('#include <begin_vertex>', `#include <begin_vertex>${TREE_VERTEX_BODY}`);
@@ -282,12 +349,15 @@ export function makeSeasonalTree(material, surfaces, { part = TREE_PART.LEAVES, 
     });
 }
 
-// Gives every geometry in `geometries` a `treeDeciduous` attribute of
-// `deciduous` (DECIDUOUS) at every vertex.
-export function markDeciduous(geometries, deciduous) {
-    for (const geometry of geometries) {
-        if (!geometry || geometry.getAttribute('treeDeciduous')) continue;
-        const count = geometry.getAttribute('position').count;
-        geometry.setAttribute('treeDeciduous', new THREE.Float32BufferAttribute(new Float32Array(count).fill(deciduous), 1));
-    }
+// A tree's own three numbers in [0, 1), from where it stands: the same on
+// every device and every visit.
+export function treeNumbers(x, z) {
+    const h = (salt) => {
+        let v = Math.imul(Math.round(x * 16) | 0, 0x27d4eb2d) ^ Math.imul(Math.round(z * 16) | 0, 0x165667b1) ^ Math.imul(salt, 0x9e3779b1);
+        v = Math.imul(v ^ (v >>> 15), 0x85ebca6b);
+        v = Math.imul(v ^ (v >>> 13), 0xc2b2ae35);
+        v ^= v >>> 16;
+        return (v >>> 0) / 4294967296;
+    };
+    return [h(1), h(2), h(3)];
 }

@@ -2,7 +2,9 @@
 import * as THREE from 'three';
 import { seasonLookAtYearDay } from '../core/Season.js';
 import { TERRAIN_WET, BRICK_WET, createWetSurfaces, makeWet, setSnowCover } from '../renderer/WetSurfaces.js';
-import { DECIDUOUS, TREE_PART, createSeasonSurfaces, makeSeasonalGround, makeSeasonalTree, markDeciduous, setSeason } from '../renderer/SeasonalSurfaces.js';
+import {
+    DECIDUOUS, TREE_PART, createSeasonSurfaces, makeSeasonalGround, makeSeasonalTree, seasonedTreeColour, setSeason, setTreeSeasonFlags, treeSeasonFlags, treeSeasonOf
+} from '../renderer/SeasonalSurfaces.js';
 import { Drift, DRIFT } from '../renderer/SeasonDrift.js';
 import { assert } from './support/Assert.js';
 
@@ -158,38 +160,63 @@ const GRASS = 0x94ab82;
     console.log('✓ snow lies on the ground and roofs, not on walls or indoors');
 }
 
-// Leaves: they turn in autumn, are gone in winter; a conifer's stay.
+// Leaves: they turn in autumn, are gone in winter; a conifer's stay; fruit
+// hangs among them.
 {
-    const season = createSeasonSurfaces();
-    const leafScene = (deciduous, depthOnly = false) => {
+    const BASE = [0.37, 0.54, 0.24];
+    const NUMBERS = [0.5, 0.1, 0.1];
+    const leafScene = (deciduous, day) => {
+        const look = day === null ? null : seasonLookAtYearDay(day);
+        const season = treeSeasonOf(look, NUMBERS, deciduous);
         const scene = new THREE.Scene();
         lit(scene);
-        const geometry = new THREE.PlaneGeometry(40, 40).rotateX(-Math.PI / 2);
-        markDeciduous([geometry], deciduous);
-        const material = makeSeasonalTree(new THREE.MeshStandardMaterial({ color: 0x5f8a3e, side: THREE.DoubleSide }), season, { part: TREE_PART.LEAVES });
+        const geometry = new THREE.PlaneGeometry(40, 40, 8, 8).rotateX(-Math.PI / 2);
+        const count = geometry.getAttribute('position').count;
+        const treeSeason = new Float32Array(count * 3);
+        for (let i = 0; i < count; i++) treeSeason.set([season.leaf, season.fruit, season.fruitKind], i * 3);
+        geometry.setAttribute('treeSeason', new THREE.BufferAttribute(treeSeason, 3));
+        const colour = seasonedTreeColour(BASE, season);
+        const material = makeSeasonalTree(new THREE.MeshStandardMaterial({ color: new THREE.Color(...colour), side: THREE.DoubleSide }), { part: TREE_PART.LEAVES });
+        const depth = makeSeasonalTree(new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking }), { part: TREE_PART.LEAVES, depth: true });
+        setTreeSeasonFlags(material, treeSeasonFlags(look));
+        setTreeSeasonFlags(depth, treeSeasonFlags(look));
         const leaves = new THREE.Mesh(geometry, material);
         leaves.position.set(300, 2, -500);
         leaves.castShadow = true;
-        leaves.customDepthMaterial = makeSeasonalTree(new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking }), season, { part: TREE_PART.LEAVES, depth: true });
+        leaves.customDepthMaterial = depth;
         scene.add(leaves);
-        return scene;
+        return mean(scene, groundCamera);
     };
-    const broadleaf = leafScene(DECIDUOUS.FULLY);
-    const summer = mean(broadleaf, groundCamera);
-    setSeason(season, seasonLookAtYearDay(20));
-    const autumn = mean(broadleaf, groundCamera);
-    assert(autumn.r / autumn.g > (summer.r / summer.g) * 1.3, `autumn turns the leaves (${JSON.stringify(summer)} to ${JSON.stringify(autumn)})`);
-    setSeason(season, seasonLookAtYearDay(22.5));
-    const thinning = mean(broadleaf, groundCamera);
+    const plain = leafScene(DECIDUOUS.FULLY, null);
+    const autumn = leafScene(DECIDUOUS.FULLY, 20);
+    assert(autumn.r / autumn.g > (plain.r / plain.g) * 1.3, `autumn turns the leaves (${JSON.stringify(plain)} to ${JSON.stringify(autumn)})`);
+    const thinning = leafScene(DECIDUOUS.FULLY, 22.5);
     assert(thinning.drawn < SIZE * SIZE * 0.85 && thinning.drawn > 0, `then they fall (${thinning.drawn} of ${SIZE * SIZE} pixels)`);
-    setSeason(season, seasonLookAtYearDay(27));
-    assert(mean(broadleaf, groundCamera).drawn === 0, 'in winter a broadleaf is bare');
-    const conifer = leafScene(DECIDUOUS.NEVER);
-    const needles = mean(conifer, groundCamera);
-    assert(needles.drawn === SIZE * SIZE && Math.abs(needles.g - summer.g) < 12, 'a conifer keeps its needles, green');
-    const scrub = mean(leafScene(DECIDUOUS.PARTLY), groundCamera);
+    assert(leafScene(DECIDUOUS.FULLY, 27).drawn === 0, 'in winter a broadleaf is bare');
+    const needles = leafScene(DECIDUOUS.NEVER, 27);
+    assert(needles.drawn === SIZE * SIZE && Math.abs(needles.g - plain.g) < 12, 'a conifer keeps its needles, green');
+    const scrub = leafScene(DECIDUOUS.PARTLY, 27);
     assert(scrub.drawn > 0 && scrub.drawn < SIZE * SIZE, 'scrub keeps some');
-    console.log('✓ leaves turn and fall; conifers stay green');
+
+    // Fruit: on a fruiting tree at harvest, red specks among the leaves.
+    const harvest = seasonLookAtYearDay(14.5);
+    const fruiting = treeSeasonOf(harvest, [0.2, 0.5, 0.2], DECIDUOUS.FULLY);
+    assert(fruiting.fruit > 0.1, 'setup: a fruiting tree');
+    const withFruit = (() => {
+        const scene = new THREE.Scene();
+        lit(scene);
+        const geometry = new THREE.PlaneGeometry(40, 40).rotateX(-Math.PI / 2);
+        const count = geometry.getAttribute('position').count;
+        geometry.setAttribute('treeSeason', new THREE.BufferAttribute(new Float32Array(count * 3).map((_, i) => [1, 1, 0][i % 3]), 3));
+        const material = makeSeasonalTree(new THREE.MeshStandardMaterial({ color: new THREE.Color(...BASE) }), { part: TREE_PART.LEAVES });
+        setTreeSeasonFlags(material, treeSeasonFlags(harvest));
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.position.set(300, 2, -500);
+        scene.add(mesh);
+        return mean(scene, groundCamera);
+    })();
+    assert(withFruit.r > withFruit.g * 1.5, `where every speck is fruit, it is red (${JSON.stringify(withFruit)})`);
+    console.log('✓ leaves turn and fall; conifers stay green; fruit hangs');
 }
 
 // Snowflakes, leaves and petals fall.

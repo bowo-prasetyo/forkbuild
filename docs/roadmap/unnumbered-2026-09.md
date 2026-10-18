@@ -7692,14 +7692,21 @@ one season on this device.
   season and Always day. No thunder in snow (core/Storms.js reads `rainAt()`).
 - **What grows where** (core/TerrainEcology.js#groundCoverAt()): grass and field shares, carried on every terrain
   vertex as `groundCover`.
-- **The land's colours** (renderer/SeasonalSurfaces.js): one set of uniforms shared by the terrain and the trees,
-  set by `Renderer#setSeason()`; nothing streamed is rebuilt. Grass graded and saturated by season and dotted with
-  wild flowers in spring and summer; fields from bare soil to green to gold to stubble, keeping their rows. Trees
-  carry `treeDeciduous` and hash their place, so each turns, blooms and drops its leaves on its own: fresh leaves,
-  blossom (pink or white), fruit, autumn colours, leaf cards dropping whole sprays, mid and far crowns thinning to
-  twigs. Conifers stay green; scrub keeps some leaves. The tree shadow materials take the same patch, and leaf cards
-  are now cut out by the leaf texture in the shadow pass too (before, each card cast a square).
-- **Snow lying** (renderer/WetSurfaces.js): `setSnowCover()`; on what faces the sky, patches growing into a blanket
+- **The land's colours** (renderer/SeasonalSurfaces.js); nothing streamed is rebuilt. The terrain takes a patch
+  with shared uniforms (`Renderer#setSeason()`): grass graded and saturated by season and dotted with wild flowers
+  in spring and summer; fields from bare soil to green to gold to stubble, keeping their rows. Trees are coloured on
+  the CPU into their instance colours (`TreeForest#setSeason()`), each from its species' share of shedding and its
+  own numbers, so each turns and blooms on its own: fresh leaves, blossom (pink or white), autumn colours, bare
+  crowns twig-brown. Dropping leaves (whole sprays; mid and far crowns thinning to twigs) and fruit specks read a
+  per-instance `treeSeason` in a patch compiled in only while the season has them. Conifers stay green; scrub keeps
+  some leaves. The tree shadow materials take the same patch, and leaf cards are now cut out by the leaf texture in
+  the shadow pass too (before, each card cast a square).
+- **Kept cheap for software rendering.** The first version did the trees' colouring in every pixel and carried
+  the snow's code in every terrain, tree and brick shader all year; the bundled site's filmed walk-through, drawn in
+  SwiftShader, which runs every line whatever the branches say, ran out of time in CI (a still frame took 40% longer
+  than before seasons). Now a frame costs a few percent more in summer and spring, 10 to 15% in autumn
+  (leaves dropping, and leaves blowing about), and about 15% while it snows (with 1600 flakes rather than 2600).
+- **Snow lying** (renderer/WetSurfaces.js): `setSnowCover()`, its code compiled into the shaders only while any lies; on what faces the sky, patches growing into a blanket
   as the cover deepens, the ground fully, trees 0.9, bricks at most 0.45 so a roof keeps its colour; walls clear;
   not in the room the avatar stands in. Through `setWeather()` for the terrain and trees, and
   `BrickInstanceRegistry#setSnowCover()` (the render facade's `setWeather`) for instanced bricks.
@@ -7718,10 +7725,11 @@ one season on this device.
   changing a little each day all round the year; snow only in winter, the year's weather shares as before; snow
   building up, lying and melting, the same however it is reached; a kept season's rain or snow and Always day's;
   the session follows the world or the kept season and hands it to the renderer; the store; ground cover; the
-  sound; the renderer's uniforms, snow, drifts and deciduous trees), `SeasonsBrowser` (real WebGL: the shaders
+  sound; the renderer's uniforms; each tree's season, colours and shader flags; snow compiled in only while it lies;
+  drifts; the forest dressed for autumn), `SeasonsBrowser` (real WebGL: the shaders
   compile with the shadow pass; no season looks as before; spring's grass greener, autumn's warmer, winter's dull,
   fields ripening; snow on the ground, less on a roof, none on walls or indoors; leaves turning, falling, gone,
-  conifers green; flakes, leaves and petals drawn). `Rain` now counts snow as what falls.
+  conifers green, fruit; flakes, leaves and petals drawn). `Rain` now counts snow as what falls.
 - Not done: ground flowers are dots on the terrain, not instanced plants; the sun's arc and the length of the day
   don't change with the season; lakes and rivers don't freeze, and snow has no depth (it is a colour on the ground,
   not a layer that footprints could mark); fallen leaves don't lie on the ground; no challenge or achievement uses

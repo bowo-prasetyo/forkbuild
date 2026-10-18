@@ -97,11 +97,11 @@ export class Renderer {
         // them (renderer/WetSurfaces.js), shared by the terrain, the trees
         // and every brick this adds.
         this._wetSurfaces = createWetSurfaces();
-        // The season on the land (renderer/SeasonalSurfaces.js), shared by
-        // the terrain and the trees: high summer's plain look until
-        // setSeason() is called. What drifts down with it (snow, leaves,
-        // petals; renderer/SeasonDrift.js) is made the first time there is
-        // any.
+        // The season on the ground (renderer/SeasonalSurfaces.js), shared by
+        // every terrain tile; the trees colour themselves
+        // (renderer/TreeForest.js#setSeason()). Plain until setSeason() is
+        // called. What drifts down with it (snow, leaves, petals;
+        // renderer/SeasonDrift.js) is made the first time there is any.
         this._seasonSurfaces = createSeasonSurfaces();
         this._seasonLook = null;
         this._drifts = { [DRIFT.SNOW]: null, [DRIFT.LEAVES]: null, [DRIFT.PETALS]: null };
@@ -146,7 +146,7 @@ export class Renderer {
         // Trees stream on the ground's own tile grid, but each tile only
         // hands its trees to one shared pool (renderer/TreeForest.js), which
         // draws them all and is the one thing in the scene.
-        this._trees = new TreeForest(this._sceneManager, { seed: DEFAULT_WORLD_SEED, detail: treeDetail, wetSurfaces: this._wetSurfaces, seasonSurfaces: this._seasonSurfaces });
+        this._trees = new TreeForest(this._sceneManager, { seed: DEFAULT_WORLD_SEED, detail: treeDetail, wetSurfaces: this._wetSurfaces });
         this._vegetationStreaming = new TerrainStreamingController(
             { add() {}, remove() {} },
             (tx, tz) => this._trees.loadTile(tx, tz),
@@ -355,6 +355,7 @@ export class Renderer {
         }
         this._seasonLook = look;
         setSeason(this._seasonSurfaces, look);
+        this._trees.setSeason(look);
     }
 
     get seasonLook() {

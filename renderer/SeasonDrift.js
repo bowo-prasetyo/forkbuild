@@ -27,7 +27,7 @@ export const DRIFT = Object.freeze({ SNOW: 'SNOW', LEAVES: 'LEAVES', PETALS: 'PE
 // falls, in metres. spin: how fast a leaf or petal turns. drift: how far it
 // is carried along by the wind for each metre it falls.
 const KINDS = Object.freeze({
-    [DRIFT.SNOW]: Object.freeze({ count: 2600, width: 32, height: 20, top: 14, speed: 1.4, size: 0.07, sway: 0.5, spin: 0, drift: 0.25, shape: 0 }),
+    [DRIFT.SNOW]: Object.freeze({ count: 1600, width: 32, height: 20, top: 14, speed: 1.4, size: 0.07, sway: 0.5, spin: 0, drift: 0.25, shape: 0 }),
     [DRIFT.LEAVES]: Object.freeze({ count: 600, width: 24, height: 12, top: 8, speed: 1.0, size: 0.2, sway: 1.1, spin: 2.6, drift: 0.35, shape: 1 }),
     [DRIFT.PETALS]: Object.freeze({ count: 700, width: 22, height: 10, top: 7, speed: 0.6, size: 0.1, sway: 0.8, spin: 3.2, drift: 0.45, shape: 2 })
 });

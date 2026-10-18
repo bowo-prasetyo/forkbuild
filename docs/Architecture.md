@@ -1640,22 +1640,30 @@ broadleaf's foliage it has), `fresh`, `blossom`, `autumn`, `fruit`, `flowers`, a
 `groundSaturation` for the grass, a `fieldColor` and `fieldAmount` for the fields (bare soil, young and green
 crops, ripe gold, stubble), `leafDrift` and `petalDrift`, a typical `snowCover`, and `birds` and `insects` for the
 sound (core/AmbientSoundscape.js#ambientMixInSeason(), sampled by WorldSoundscapeService from `session.season()`).
-renderer/SeasonalSurfaces.js patches the terrain and the trees with one shared set of uniforms (`Renderer#setSeason()`),
-so nothing streamed is rebuilt. Every terrain vertex carries `groundCover` (core/TerrainEcology.js#groundCoverAt():
+renderer/SeasonalSurfaces.js changes the land without rebuilding anything streamed, and leaves as little as it can
+to every pixel: the bundled site's filmed walk-through renders in software (SwiftShader), which runs every line of a
+shader for every pixel whatever the branches say, so code that changes nothing still costs. The terrain takes a
+patch with one shared set of uniforms (`Renderer#setSeason()`); every terrain vertex carries `groundCover` (core/TerrainEcology.js#groundCoverAt():
 grass for grassland and forest floor, a little for highland grass and a beach's edge, field for FIELD, none for
 rock, soil and water); the grass is greyed or saturated and multiplied by the grade, the field's colour replaces
 the crops' at the row's own brightness, so the rows stay, and in spring and summer grass is dotted with wild flowers:
-a dot in some cells of a 0.7 m grid, in meadows a low noise lets through, faded out where a cell gets too small on
-screen. Trees carry `treeDeciduous` (a conifer 0, a broadleaf 1, scrub 0.6) and hash their own place into three
-numbers, so each tree turns, blooms and drops its leaves a little differently: new leaves lighten towards yellow-green;
-autumn gives each its own muted red, orange or yellow at the leaves' own brightness, at its own time; two in five
-broadleaves blossom pink or white; three in ten bear red or orange fruit. Leaf cards drop whole sprays, by a hash of
-where they are, as the tree's share of leaves falls, until a broadleaf is bare to its boughs; the solid mid and far
-crowns thin to a haze of twigs, keeping 18% of themselves and turning twig-brown. The same patch goes on each part's
-shadow material, whose leaf cards are cut out by the leaf texture, so a bare tree casts a bare tree's shadow.
+a dot in some cells of a 0.7 m grid, as many as a meadow noise (9 m cells, worked out per vertex) lets through, faded
+out where a cell gets too small on screen. Trees are coloured on the CPU (`TreeForest#setSeason()`, once the season's
+numbers change by a hundredth, about once a minute): each has a species' `DECIDUOUS` share (a conifer 0, a
+broadleaf 1, scrub 0.6) and three numbers of its own from where it stands (`treeNumbers()`), and `treeSeasonOf()`
+and `seasonedTreeColour()` turn its leaf and crown instance colours: new leaves lighten towards yellow-green; autumn
+gives each its own muted red, orange or yellow at the leaves' own brightness, at its own time; two in five
+broadleaves blossom pink or white; a bare crown turns twig-brown. The leaf texture is grey, so this is exactly what
+the same work per pixel would give. What can't be a colour is a per-instance `treeSeason` (how much foliage the tree
+carries, its share of fruit specks, which fruit) on each leaf and crown mesh, read by `makeSeasonalTree()`'s patch,
+whose code is compiled in only while the season needs it (`SEASON_BARE` while any leaves have dropped, autumn to
+spring; `SEASON_FRUIT` while fruit hangs, summer into autumn): leaf cards drop whole sprays, by a cheap hash of where
+they are, until a broadleaf is bare to its boughs; solid mid and far crowns thin to a haze of twigs, keeping 18%;
+three in ten broadleaves show red or orange fruit among their leaves. The patch goes on each part's shadow material
+too, whose leaf cards are cut out by the leaf texture, so a bare tree casts a bare tree's shadow.
 renderer/SeasonDrift.js draws what drifts down as renderer/RainFall.js draws rain: point sprites in a box round the
 camera, worked out in the vertex shader, swaying, spinning and carried by the wind (`TreeForest#windDirection`),
-only as many as is falling: 2600 snowflakes as hard as it snows, 600 leaves and 700 petals as much as the look's
+only as many as is falling: 1600 snowflakes as hard as it snows, 600 leaves and 700 petals as much as the look's
 drift times how much of a wood of leaf-shedding trees stands within 22 m (`TreeForest#deciduousNearby`, counted as the
 trees are sorted). A season kept on a device (**Season** in World View's settings, application/settings/
 WorldViewSeasonStore.js, `world-view-season`, provided as `worldViewSeasonStore`) holds the middle of that season;
@@ -1675,8 +1683,11 @@ snowfall to the next, 4 minutes once winter is over and 2 in the rain; an hour i
 steps followed are kept, as for wetness. renderer/WetSurfaces.js lays it: on what faces the sky (normal 0.45 to 0.8
 up) snow covers patches of a two-scale value noise in world space below the cover, so they grow and join as it
 deepens, the ground wholly, trees 0.9 and bricks never more than 0.45, so a roof still shows its colour; walls stay
-clear, and the shelter keeps it out of the room the avatar stands in, as it does the wet. Seasonal colour goes on a
-material after the wet patch, so it comes before the darkening and the snow in the shader.
+clear, and the shelter keeps it out of the room the avatar stands in, as it does the wet. The snow's code is in the
+shaders only while any lies: the first snow of winter and the last of it melting rebuild every patched material
+(`setSnowCover()`; the patched materials are kept, and let go when disposed), so the rest of the year, and the
+Editor, pay nothing for it. Seasonal colour goes on a material after the wet patch, so it comes before the darkening
+and the snow in the shader.
 
 **Shadows.** The directional light casts them when World View turns them on (`Renderer#setShadowsEnabled()`,
 renderer/SunShadows.js): one 2048² PCF-soft shadow map over a square 45 m each way round the camera's target (the
