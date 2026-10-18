@@ -628,8 +628,15 @@ every building and brick, the current user as author, and
 `parentDocumentId` pointing at the source. ForkDocumentUseCase checks the
 source's license first (core/License.js, `forkAllowed`) and refuses with
 ForkFailureReason.LICENSE_DENIED rather than relying on a hidden button;
-a permitted fork's license carries the original attribution. World View's
-fork-on-write asks the same license question. Forking never creates a
+a permitted fork's license carries the original attribution
+(`License.derivedFrom()`: its builder, title, identity and license).
+Changing a remix's license goes through `License.relicense()` in
+UpdateDocumentMetadataUseCase and `updateDocumentMetadata()` alike: the
+attribution stays, and only a license `License.remixLicenseIds()` allows for
+the original's is taken (no CC0 for CC BY, nothing but CC BY-SA for
+CC BY-SA, nothing commercial for CC BY-NC) unless the original's builder is
+relicensing. World View's fork-on-write asks the same license question and
+stamps the same attribution. Forking never creates a
 WorldPlacement.
 
 In World View, a published snapshot that someone tries to change is

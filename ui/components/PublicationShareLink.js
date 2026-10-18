@@ -192,7 +192,8 @@ export default {
                 const blob = await renderBuildPicture(build, {
                     registry: new CreateBrickRegistryUseCase().execute(),
                     title,
-                    caption: t('share.pictureCaption')
+                    // Who built it travels with the picture, as with a video.
+                    caption: build.metadata.author ? t('share.pictureCaptionBy', { author: build.metadata.author }) : t('share.pictureCaption')
                 });
                 downloadBlob(blob, pictureFileName(title));
                 pictureState.value = 'saved';

@@ -5,7 +5,7 @@ import {
 import { WalkThroughCamera } from '../../../core/WalkThroughFilm.js';
 import { MUSIC_MOOD } from '../../../core/MusicScore.js';
 import BuildVideoSaved from './BuildVideoSaved.js';
-import { downloadVideo, videoDescription, videoOverlayText } from './buildVideoText.js';
+import { downloadVideo, videoDescription, videoLicenseNoticeKey, videoOverlayText } from './buildVideoText.js';
 import { requestWalkThroughFilm } from './walkThroughFilmRequest.js';
 import { displayText, t } from '../../i18n/i18n.js';
 
@@ -152,10 +152,21 @@ export default {
         }
         onBeforeUnmount(() => controller?.abort());
 
+        // What the build's license asks of a video of it, shown before it is
+        // made: Make a video is offered on anyone's published build.
+        const licenseNotice = computed(() => {
+            try {
+                const key = videoLicenseNoticeKey(JSON.parse(props.snapshotText)?.metadata ?? {});
+                return key ? t(key) : '';
+            } catch {
+                return '';
+            }
+        });
+
         const percent = computed(() => Math.round(progress.value * 100));
         const walkThrough = computed(() => kind.value === BuildVideoKind.WALKTHROUGH);
         return {
-            t, kindsFor, shapes: SHAPES, cameras: CAMERAS, kind, shape, camera, sweep, music, walkThrough, state, percent, fileName, description, record, cancel
+            t, licenseNotice, kindsFor, shapes: SHAPES, cameras: CAMERAS, kind, shape, camera, sweep, music, walkThrough, state, percent, fileName, description, record, cancel
         };
     },
     mounted() {
@@ -229,6 +240,7 @@ export default {
                     </label>
                     <p v-if="state === 'failed'" class="form-hint" role="alert">{{ t('video.failed') }}</p>
                     <p class="model-export-note">{{ t(walkThrough ? 'video.walkthroughNote' : 'video.note') }}</p>
+                    <p v-if="licenseNotice" class="form-hint form-hint--neutral build-video-license">{{ licenseNotice }}</p>
                 </template>
                 <template v-else-if="state === 'recording'">
                     <p class="model-export-lead" role="status">{{ t('video.recording', { percent }) }}</p>

@@ -69,30 +69,25 @@ export class ForkDocumentUseCase {
 
         // 2. ATTRIBUTION: Stamp derivative license if source is known.
         let derivativeLicense = null;
-        // 1. ENFORCEMENT: Hard reject if the publication license prohibits forking.
-    if (sourcePublication) {
-        const pubLicense = sourcePublication.license instanceof License 
-            ? sourcePublication.license 
-            : new License(sourcePublication.license || {});
-            
-        derivativeLicense = new License({
-            id: pubLicense.id, // Inherit license type
-            attribution: {
+        const original = {
+            sourceDocumentId: sourceDocument.world.id,
+            sourceAuthorIdentityId: sourceDocument.metadata.authorIdentityId
+        };
+        if (sourcePublication) {
+            const pubLicense = sourcePublication.license instanceof License
+                ? sourcePublication.license
+                : new License(sourcePublication.license || {});
+            derivativeLicense = License.derivedFrom(pubLicense, {
+                ...original,
                 author: sourcePublication.author || sourceDocument.metadata.author,
                 title: sourcePublication.title || sourceTitle,
-                sourcePublicationId: sourcePublication.id,
-                sourceDocumentId: sourceDocument.world.id
-            }
-        });
+                sourcePublicationId: sourcePublication.id
+            });
         } else if (sourceDocument.metadata.license && sourceDocument.metadata.license.id !== 'UNSPECIFIED') {
-            derivativeLicense = new License({
-                id: sourceDocument.metadata.license.id,
-                attribution: {
-                    author: sourceDocument.metadata.author,
-                    title: sourceTitle,
-                    sourcePublicationId: null,
-                    sourceDocumentId: sourceDocument.world.id
-                }
+            derivativeLicense = License.derivedFrom(sourceDocument.metadata.license, {
+                ...original,
+                author: sourceDocument.metadata.author,
+                title: sourceTitle
             });
         }
 

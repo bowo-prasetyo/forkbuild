@@ -1,5 +1,6 @@
 import { DocumentSerializer } from '../../serializer/DocumentSerializer.js';
 import { DocumentCloneService } from '../document/DocumentCloneService.js';
+import { License } from '../../core/License.js';
 import { LoadPublishedSnapshotUseCase } from '../snapshot/LoadPublishedSnapshotUseCase.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 import { forkTitle } from '../document/DocumentTitles.js';
@@ -80,7 +81,15 @@ export class ForkPublishedWorldUseCase {
             // 0.2.95 — see ForkDocumentUseCase.js's own comment: the
             // forker becomes the new owner.
             authorIdentityId: resolveSigningIdentityId(identityProvider),
-            parentDocumentId: sourceDocument.world.id
+            parentDocumentId: sourceDocument.world.id,
+            // Credits the original, as ForkDocumentUseCase does.
+            license: License.derivedFrom(sourceDocument.metadata.license, {
+                author: publication.author || sourceDocument.metadata.author,
+                title: publication.title || sourceDocument.metadata.title || null,
+                sourcePublicationId: publication.id,
+                sourceDocumentId: sourceDocument.world.id,
+                sourceAuthorIdentityId: sourceDocument.metadata.authorIdentityId
+            })
         });
     }
 }

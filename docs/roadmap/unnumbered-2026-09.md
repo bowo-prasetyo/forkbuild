@@ -7546,3 +7546,38 @@ spot**, which fills in the build's grid spot; **Move** takes it there.
 - Tests: `PlacementGridSpotBrowser` (the button fills in the grid spot and Move submits it; nothing moves before Move;
   already there, or with no Publication known, nothing is offered).
 - Not done: one placement at a time; no "move all my builds round the plaza" in one go.
+
+## Builders keep their credit and their terms (unnumbered, 2026-10-18)
+
+**A remix could strip its original's credit and terms, and Make a video said nothing about a build's license.** A
+remix of a CC BY-NC castle could be set to CC0 or CC BY in **Build Properties**, which also dropped the credit to its
+builder; a video of it then named the remixer alone under a license that allows selling. **Make a video** is offered
+on anyone's published build but read "your build" and never said what its license asks. Pillar served: your work is
+yours. How a player notices: Build Properties on a remix offers only licenses that keep the original's terms and says
+whose build it remixes; Make a video says what the license asks if someone else built it; a remix's video credits its
+original's builder on the end card and in the description, a non-commercial build's description says it may not be
+earned from, and a saved picture names its builder.
+
+- core/License.js: `remixLicenseIds()` (CC0 → any; CC BY → not CC0; CC BY-SA → only itself; CC BY-NC → itself, All
+  Rights Reserved or none), `derivedFrom()` (the attribution a copy carries, now with `sourceAuthorIdentityId` and
+  `sourceLicenseId`) and `relicense()` (keeps the attribution; refuses a license the original's doesn't allow unless
+  the original's builder relicenses). ForkDocumentUseCase, ImportDocumentUseCase, ForkPublishedWorldUseCase and World
+  View's `_forkForEdit()` stamp it; UpdateDocumentMetadataUseCase and `updateDocumentMetadata()` apply `relicense()`.
+- `_forkForEdit()` now makes the forker the copy's `authorIdentityId`, as every other fork does (DocumentCloneService's
+  0.2.95 note); it kept the source's.
+- ui/components/MetadataEditorDialog.js narrows a remix's license choices and says why; the Editor's document info
+  carries `authorIdentityId` for it.
+- ui/components/buildVideo/: the license notice before recording (`videoLicenseNoticeKey()`), the end card's
+  "remix of a build by …", and the description's "A remix of … by …" and non-commercial line (core/BuildVideo.js).
+  ui/components/PublicationShareLink.js: Save picture's caption names the builder.
+- docs/user/04 ("A remix keeps your credit and your terms", "When someone uses your build in a way its license doesn't
+  allow"), docs/Architecture.md and docs/Protocol.md say so; 04's translations carry the out-of-date banner. New
+  messages in every language.
+- Tests: `RemixLicense` (what a remix may move to; relicensing keeps credit and refuses laundering; the builder of the
+  original is free; a fork then Build Properties keeps credit and NC), `BuildVideo` (the original's builder and the
+  non-commercial line in the description).
+- Not done: no report button: ForkBuild has no moderator to report to, so the guide says what a builder can do
+  (ask, keep the signed Publication, the video site's copyright process) and that Block stops connections. No revenue
+  sharing or creator programme. Like every license rule here, a changed copy of the app could ignore it, and what
+  happens outside ForkBuild (a video on YouTube) isn't ForkBuild's to enforce.
+
