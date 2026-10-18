@@ -6,7 +6,7 @@ import { GridHelper } from './GridHelper.js';
 import { AnimationLoop } from './AnimationLoop.js';
 import { TerrainStreamingController } from './TerrainStreamingController.js';
 import { buildTerrainTileMesh } from './TerrainTileMesh.js';
-import { buildNaturalFeatureTileMesh } from './NaturalFeatureTileMesh.js';
+import { TreeForest, TREE_DETAIL } from './TreeForest.js';
 import { buildWaterTile } from './WaterTileMesh.js';
 import { buildWildlifeTileMesh, updateWildlifeTileMesh } from './WildlifeTileMesh.js';
 import { disposeOwnedTile, disposeInstancedTile } from './TileDisposal.js';
@@ -32,6 +32,21 @@ const UNDERWATER_LOOK = Object.freeze({
     [UNDERWATER_VIEW.SEA]: Object.freeze({ color: 0x135a8c, near: 1, far: 30 })
 });
 
+// Phones and tablets, whose GPUs feel leaves drawn over each other most, start
+// with plainer trees.
+function defaultTreeDetail() {
+    const touchFirst = typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+        && window.matchMedia('(pointer: coarse)').matches;
+    return touchFirst ? TREE_DETAIL.LOW : TREE_DETAIL.HIGH;
+}
+
+// A breeze in fair weather, stronger as the clouds gather and the rain comes.
+function windStrengthOf(weather) {
+    const cover = Number.isFinite(weather.cloudCover) ? weather.cloudCover : 0;
+    const rain = Number.isFinite(weather.rain) ? weather.rain : 0;
+    return Math.min(1, 0.25 + 0.3 * cover + 0.45 * rain);
+}
+
 // Renderer owns the visualization pipeline only: scene, camera, lights, grid,
 // and the render loop. It never owns game state (bricks, buildings, worlds).
 // Callers hand it THREE.Object3D instances via add()/remove() — everything
@@ -41,8 +56,9 @@ export class Renderer {
     // shortcut off. `wildlifeClock` returns wildlife time in seconds, the
     // moment at which wandering animals are drawn (core/WildlifeMotion.js);
     // World View passes its session's clock so animals are drawn where
-    // collision and catching find them.
-    constructor(container, { cameraResetKey, wildlifeClock = () => Date.now() / 1000 } = {}) {
+    // collision and catching find them. `treeDetail` (renderer/TreeForest.js)
+    // starts LOW where the main pointer is a finger, until setTreeDetail().
+    constructor(container, { cameraResetKey, wildlifeClock = () => Date.now() / 1000, treeDetail = defaultTreeDetail() } = {}) {
         this._container = container;
         this._wildlifeClock = wildlifeClock;
         // Who animals turn to watch; see setWildlifeObserver().
@@ -114,21 +130,14 @@ export class Renderer {
             true
         );
 
-        // 0.2.88 — Deterministic World Ecology. A SECOND, independent
-        // instance of the exact same TerrainStreamingController class
-        // just used for ground above — never a new streaming/tiling
-        // system of its own. Vegetation shares the ground's tile grid and
-        // load/unload orchestration entirely by construction (same
-        // TERRAIN_TILE_SIZE, same DEFAULT_STREAMING_RADIUS default), and
-        // differs only in what tileFactory builds: trees instead of
-        // colored ground. See core/NaturalFeatureField.js's own header
-        // for why natural features are recomputed per tile, never
-        // persisted, and renderer/NaturalFeatureTileMesh.js's own header
-        // for the trunk/canopy instancing this factory produces.
+        // Trees stream on the ground's own tile grid, but each tile only
+        // hands its trees to one shared pool (renderer/TreeForest.js), which
+        // draws them all and is the one thing in the scene.
+        this._trees = new TreeForest(this._sceneManager, { seed: DEFAULT_WORLD_SEED, detail: treeDetail, wetSurfaces: this._wetSurfaces });
         this._vegetationStreaming = new TerrainStreamingController(
-            this._sceneManager,
-            (tx, tz) => buildNaturalFeatureTileMesh(tx, tz, DEFAULT_WORLD_SEED),
-            { disposeTile: disposeInstancedTile }
+            { add() {}, remove() {} },
+            (tx, tz) => this._trees.loadTile(tx, tz),
+            { disposeTile: (token) => this._trees.unloadTile(token) }
         );
         this._vegetationStreaming.update(
             this._cameraController.camera.position.x,
@@ -316,6 +325,7 @@ export class Renderer {
         this._rainFall.set(rain);
         this._rainLevel.value = rain;
         setWetness(this._wetSurfaces, weather.wetness);
+        this._trees.setWind(windStrengthOf(weather));
     }
 
     // Keeps the rain off `shelter` (`{ minX, maxX, minZ, maxZ, top }` in world
@@ -348,6 +358,16 @@ export class Renderer {
 
     get shadowsEnabled() {
         return this._sunShadows.enabled;
+    }
+
+    // How much detail trees are drawn with close by (renderer/TreeForest.js's
+    // TREE_DETAIL).
+    setTreeDetail(detail) {
+        this._trees.setDetail(detail);
+    }
+
+    get treeDetail() {
+        return this._trees.detail;
     }
 
     resetCameraView() {
@@ -441,6 +461,7 @@ export class Renderer {
         this._renderedFrameListeners.clear();
         this._terrainStreaming.dispose();
         this._vegetationStreaming.dispose();
+        this._trees.dispose();
         this._waterStreaming.dispose();
         this._underwaterLifeStreaming.dispose();
         this._wildlifeStreaming.dispose();
@@ -466,6 +487,8 @@ export class Renderer {
         // Seconds since the page opened, not the wall clock: small enough to
         // keep full float precision in the shader for days.
         this._waterWaveTime.value = performance.now() / 1000;
+        this._trees.setTime(this._waterWaveTime.value);
+        this._trees.update(this._cameraController.camera);
         this._wildlifeStreaming.update(this._cameraController.camera.position.x, this._cameraController.camera.position.z);
         const wildlifeTime = this._wildlifeClock();
         const observer = this.wildlifeObserver();

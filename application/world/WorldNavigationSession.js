@@ -470,6 +470,8 @@ export class WorldNavigationSession {
         // Day and night (application/worldNavigation/dayCycleMethods.js).
         this._alwaysDay = false;
         this._shadowsOn = false;
+        // Null until this device's choice is given: the renderer keeps its own default.
+        this._detailedTreesOn = null;
         this._dayCycleFrameSubscription = null;
         // Runtime vehicle positions (see application/world/VehicleRuntimeInstances.js).
         // Built unconditionally: a vehicle's position is a fact about the World,

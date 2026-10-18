@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 8c2cb52a55e5dbab -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 7e020f4bc9aa862c -->
 # 03 — Vista del mundo
 
 <!-- languages -->
@@ -193,6 +193,16 @@ luna y al revés. Las sombras le cuestan más a un teléfono que a un
 ordenador, así que empiezan activadas con ratón y desactivadas en un teléfono
 o tableta; marque o desmarque **Sombras** al final del panel para cambiarlo
 en este dispositivo.
+
+Los árboles crecen como en la naturaleza: abetos con verticilos de ramas
+caídas en los bosques más húmedos, árboles de hoja ancha con ramas que se
+bifurcan y copas redondeadas donde es más seco, y matorral bajo y retorcido
+en los bordes de la pradera. De cerca se ve cada rama y cada hoja; se mecen
+con el viento, más cuando se acerca una tormenta, y proyectan sombras
+moteadas. Más lejos se convierten en formas más sencillas, para que hasta un
+bosque entero se recorra con fluidez. En un teléfono o una tableta los
+árboles empiezan más sencillos; marque **Árboles detallados**, justo debajo
+de **Sombras**, para ver cada hoja en este dispositivo.
 
 De noche, a medida que oscurece, salen las estrellas, con la Vía Láctea
 cruzándolas, y se apagan de nuevo al amanecer. Todo el cielo estrellado gira

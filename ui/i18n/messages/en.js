@@ -1817,6 +1817,8 @@ export default Object.freeze({
     'worldView.alwaysDayHint': 'Here the sky turns from day to night and back every {minutes} minutes, clouds come and go, and windows and lanterns light up after dark. Always day keeps it a clear, sunny day. Remembered on this device.',
     'worldView.shadows': 'Shadows',
     'worldView.shadowsHint': 'The sun and the moon cast shadows near you. On phones they start off, to keep World View smooth. Remembered on this device.',
+    'worldView.detailedTrees': 'Detailed trees',
+    'worldView.detailedTreesHint': 'Trees close to you show every branch and leaf, sway in the wind and cast leafy shadows; farther off they are simpler shapes. On phones they start off, to keep World View smooth. Remembered on this device.',
     'worldView.askTheResidentNextTo': 'Ask the resident next to you what\'s around (T)',
     'worldView.avatar': 'Avatar',
     'worldView.showMyAvatar': 'Show My Avatar',

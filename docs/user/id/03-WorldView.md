@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 8c2cb52a55e5dbab -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 7e020f4bc9aa862c -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
@@ -193,6 +193,16 @@ bulan dan sebaliknya. Bayangan lebih membebani ponsel daripada komputer,
 jadi mula-mula menyala bila memakai tetikus dan mati di ponsel atau tablet;
 centang atau hapus centang **Bayangan** di bagian bawah panel untuk
 mengubahnya di perangkat ini.
+
+Pohon tumbuh seperti di alam: cemara dengan lingkaran dahan yang terkulai di
+hutan paling basah, pohon berdaun lebar dengan dahan bercabang dan tajuk
+membulat di tempat yang lebih kering, serta semak rendah yang bengkok di
+tepi padang rumput. Dari dekat Anda melihat setiap dahan dan daun; pohon
+bergoyang tertiup angin, lebih kencang saat badai mendekat, dan menimbulkan
+bayangan berbintik. Di kejauhan pohon menjadi bentuk yang lebih sederhana,
+agar seluruh hutan tetap lancar dijelajahi. Di ponsel atau tablet, pohon
+mula-mula lebih sederhana; centang **Pohon terperinci**, tepat di bawah
+**Bayangan**, untuk melihat setiap daun di perangkat ini.
 
 Pada malam hari, bintang-bintang muncul saat senja makin gelap, dengan Bima
 Sakti melintang di antaranya, lalu memudar lagi saat fajar. Seluruh langit

@@ -23,8 +23,7 @@
 // chosen to roughly match, without importing that renderer constant
 // directly — the same "roughly match, never import" precedent
 // core/TreeCollisionGeometry.js's own header already established for
-// TREE_TRUNK_COLLISION_RADIUS versus renderer/NaturalFeatureTileMesh.js's
-// TRUNK_RADIUS_BOTTOM).
+// TREE_TRUNK_COLLISION_RADIUS versus the trunks core/TreeForm.js grows).
 //
 // A returned circle's radius scales with the animal's own `feature.scale`
 // ([0.85, 1.15), core/WildlifeField.js) by the same uniform factor

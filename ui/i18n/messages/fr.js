@@ -1818,6 +1818,8 @@ export default Object.freeze({
     'worldView.alwaysDayHint': 'Ici, le ciel passe du jour à la nuit et revient toutes les {minutes} minutes, les nuages vont et viennent, et les fenêtres et les lanternes s’allument à la nuit tombée. « Toujours le jour » le garde clair et ensoleillé. Mémorisé sur cet appareil.',
     'worldView.shadows': 'Ombres',
     'worldView.shadowsHint': 'Le soleil et la lune projettent des ombres autour de vous. Sur les téléphones, elles sont d’abord désactivées, pour que la Vue du Monde reste fluide. Mémorisé sur cet appareil.',
+    'worldView.detailedTrees': 'Arbres détaillés',
+    'worldView.detailedTreesHint': 'Les arbres proches de vous montrent chaque branche et chaque feuille, se balancent au vent et projettent des ombres feuillues ; plus loin, ce sont des formes plus simples. Sur les téléphones, ils sont d’abord désactivés, pour que la Vue du Monde reste fluide. Mémorisé sur cet appareil.',
     'worldView.askTheResidentNextTo': 'Demander à l’habitant à côté de vous ce qu’il y a autour (T)',
     'worldView.avatar': 'Avatar',
     'worldView.showMyAvatar': 'Afficher mon avatar',

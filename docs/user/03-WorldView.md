@@ -177,6 +177,15 @@ phone more than a computer, so they start on with a mouse and off on a
 phone or tablet; tick or untick **Shadows** at the bottom of the panel to
 change it on this device.
 
+Trees grow as they do in the wild: firs and spruces with whorls of drooping
+branches in the wettest forests, broad-leaved trees with spreading limbs and
+rounded crowns where it is drier, and low, crooked scrub on the edges of the
+grassland. Close by you see every branch and leaf; they sway in the wind,
+more as a storm gathers, and cast dappled shadows. Farther off they turn
+into simpler shapes, so even a whole forest stays smooth to walk through. On
+a phone or tablet the trees start plainer; tick **Detailed trees**, just
+below **Shadows**, to see every leaf on this device.
+
 At night the stars come out as the dusk deepens, with the Milky Way
 across them, and fade again at dawn. The whole starry sky turns slowly round
 a point high in the north, so the stars rise in the east and set in the west

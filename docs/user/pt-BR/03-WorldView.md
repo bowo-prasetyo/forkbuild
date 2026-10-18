@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 8c2cb52a55e5dbab -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 7e020f4bc9aa862c -->
 # 03 — Visão do mundo
 
 <!-- languages -->
@@ -187,6 +187,16 @@ enquanto o sol passa o céu para a lua e vice-versa. Sombras pesam mais num
 celular do que num computador, então começam ligadas com mouse e desligadas
 em celular ou tablet; marque ou desmarque **Sombras** no fim do painel para
 mudar isso neste dispositivo.
+
+As árvores crescem como na natureza: abetos com verticilos de galhos
+pendentes nas florestas mais úmidas, árvores de folhas largas com galhos que
+se bifurcam e copas arredondadas onde é mais seco, e um mato baixo e
+retorcido nas bordas do campo. De perto você vê cada galho e cada folha;
+elas balançam ao vento, mais quando uma tempestade se aproxima, e projetam
+sombras salpicadas. Mais longe, viram formas mais simples, para que até uma
+floresta inteira continue fluida. Em um celular ou tablet as árvores começam
+mais simples; marque **Árvores detalhadas**, logo abaixo de **Sombras**,
+para ver cada folha neste dispositivo.
 
 À noite, conforme o crepúsculo escurece, as estrelas aparecem, com a Via
 Láctea atravessando o céu, e somem de novo ao amanhecer. Todo o céu estrelado

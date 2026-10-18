@@ -111,9 +111,8 @@ async function runTests() {
     {
         // Every real tree's radius, across the whole [0.7, 1.3) scale
         // range naturalFeaturesInRegion() itself declares, stays well
-        // under the renderer's own visual canopy radius (0.85 — see
-        // renderer/NaturalFeatureTileMesh.js's own CANOPY_RADIUS,
-        // deliberately re-stated here as a literal rather than
+        // under a tree's visual canopy radius (0.85 at the least, the
+        // narrowest crown core/TreeForm.js grows is wider; deliberately re-stated here as a literal rather than
         // imported, matching this codebase's own "never import a
         // renderer constant into core" precedent) — this milestone's
         // own central design claim: a trunk-sized hitbox, never a

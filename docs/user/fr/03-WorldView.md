@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 8c2cb52a55e5dbab -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 7e020f4bc9aa862c -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
@@ -199,6 +199,17 @@ et inversement. Les ombres coûtent plus à un téléphone qu’à un ordinateur
 elles sont d’abord activées avec une souris et désactivées sur un téléphone
 ou une tablette ; cochez ou décochez **Ombres** en bas du panneau pour le
 changer sur cet appareil.
+
+Les arbres poussent comme dans la nature : sapins et épicéas aux verticilles
+de branches tombantes dans les forêts les plus humides, feuillus aux
+branches fourchues et aux couronnes arrondies là où c’est plus sec, et
+broussailles basses et tordues en bordure des prairies. De près, vous voyez
+chaque branche et chaque feuille ; ils se balancent au vent, davantage quand
+un orage se prépare, et projettent des ombres tachetées. Plus loin, ils
+deviennent des formes plus simples, pour que même une forêt entière reste
+fluide à parcourir. Sur un téléphone ou une tablette, les arbres sont
+d’abord plus simples ; cochez **Arbres détaillés**, juste sous **Ombres**,
+pour voir chaque feuille sur cet appareil.
 
 La nuit, à mesure que le crépuscule s’assombrit, les étoiles apparaissent,
 traversées par la Voie lactée, puis s’effacent à l’aube. Tout le ciel étoilé

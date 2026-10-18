@@ -7,16 +7,13 @@ import { idleOffsetsAt } from './AnimalIdle.js';
 import { reactToObserver } from './AnimalReaction.js';
 import { castShadows } from './ShadowRoles.js';
 
-// The renderer-side counterpart to core/WildlifeField.js — the identical
-// "core decides, renderer builds" split renderer/NaturalFeatureTileMesh.js
-// already establishes for trees: this file knows nothing about WHERE an
+// The renderer-side counterpart to core/WildlifeField.js — the
+// "core decides, renderer builds" split: this file knows nothing about WHERE an
 // animal stands or WHY, only how to turn one tile's worth of deterministic
 // animal candidates into stylized Three.js geometry.
 //
 // Deliberately TWO THREE.InstancedMesh objects PER SPECIES present in a
-// tile (body, then head) — the same batching discipline
-// renderer/NaturalFeatureTileMesh.js's own header established for
-// trunk/canopy pairs, applied here to body/head pairs. It scales with how
+// tile (body, then head). It scales with how
 // many SPECIES a tile mixes, never with how many individual animals it
 // holds.
 //
@@ -28,14 +25,11 @@ import { castShadows } from './ShadowRoles.js';
 // would visually compete with a building or an avatar. Ears and a tail are
 // small ellipsoids merged into the head's and body's own geometry, so they
 // cost no extra mesh or draw call and move with what they are attached
-// to. No legs are modeled — the same "no roots modeled" restraint
-// renderer/NaturalFeatureTileMesh.js's own trunk/canopy presets already
-// accept for trees. A walking animal's gait is therefore carried by the
+// to. No legs are modeled. A walking animal's gait is therefore carried by the
 // body and head transforms alone (renderer/AnimalGait.js): body and head
 // are separate InstancedMeshes precisely so the head can nod on its own.
 //
-// Unlike renderer/NaturalFeatureTileMesh.js, whose geometry-building glue
-// is deliberately untested, this file's per-frame motion
+// This file's per-frame motion
 // (updateWildlifeTileMesh()) is tested directly in
 // tests/WildlifeMotionIntegration.test.js: where each instance ends up and
 // that its bounding sphere always contains it are behavior worth pinning.
@@ -50,9 +44,7 @@ const APPENDAGE_SEGMENTS_HEIGHT = 4;
 // One geometry+color preset per core/WildlifeField.js#ANIMAL_SPECIES —
 // each pivoted at its own base (y=0, matching an animal standing at
 // ground Y) with its head translated forward and up from the body,
-// slightly overlapping, the same "canopy translated atop its own trunk"
-// convention renderer/NaturalFeatureTileMesh.js's own buildPreset()
-// already uses. Built once at module load and reused, unchanged, across
+// slightly overlapping. Built once at module load and reused, unchanged, across
 // every tile's InstancedMesh — geometry has no per-tile data, only
 // per-instance transforms do.
 //
@@ -171,10 +163,7 @@ function buildPreset({ bodyRadiusX, bodyRadiusY, bodyRadiusZ, headRadius, headHe
         // make the shader ALSO read a per-vertex 'color' geometry
         // attribute this geometry never defines; WebGL then supplies the
         // default (0,0,0) for that missing attribute, multiplying every
-        // instance's color to black regardless of instanceColor — the
-        // same "fixed head color, per-variant body/fur color" split
-        // renderer/NaturalFeatureTileMesh.js already uses, mirrored here
-        // as "fixed head color, per-variant body/fur color."
+        // instance's color to black regardless of instanceColor.
         bodyMaterial: new THREE.MeshStandardMaterial(),
         headMaterial: new THREE.MeshStandardMaterial({ color: headColor }),
         furColors,
@@ -220,8 +209,7 @@ function applyBoundingSphere(mesh) {
 
 // Writes one animal's transform, at `pose`, into instance `i` of both
 // meshes. Instance matrices hold ABSOLUTE world coordinates directly (the
-// group itself stays at the origin) — the same convention
-// renderer/NaturalFeatureTileMesh.js's own header documents for trees.
+// group itself stays at the origin), as renderer/TreeForest.js's do for trees.
 //
 // `offsets` (renderer/AnimalGait.js while walking, renderer/AnimalIdle.js
 // while standing) lifts and pitches the body, and turns and nods the head

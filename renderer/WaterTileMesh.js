@@ -11,8 +11,7 @@ import { buildRiverTileMesh } from './RiverTileMesh.js';
 // see docs/Roadmap.md, 0.2.89: it knows nothing about WHERE a lake is or
 // WHY, only how to turn one tile's worth of ground into a still, flat
 // water plane, the same core-decides/renderer-builds split
-// renderer/TerrainTileMesh.js already establishes for ground and
-// renderer/NaturalFeatureTileMesh.js establishes for trees.
+// renderer/TerrainTileMesh.js already establishes for ground.
 //
 // A lake gets ACTUAL flat geometry (a river's water is a separate thin
 // sheet that follows the ground instead, renderer/RiverTileMesh.js): still
@@ -42,7 +41,7 @@ const WATER_OPACITY = 0.78; // translucent, not a mirror — see core/TerrainSur
 const WATER_ROUGHNESS = 0.4; // glossy enough that the sun glints off the ripples, still far from a mirror
 
 // Deliberately untested directly, same posture as renderer/TerrainTileMesh.js
-// and renderer/NaturalFeatureTileMesh.js — see
+// — see
 // renderer/TerrainStreamingController.js's own header for why load/unload
 // ORCHESTRATION is unit-tested (with a fake tile factory, reused unchanged
 // for water — see renderer/Renderer.js) while the real Three.js
@@ -87,8 +86,7 @@ export function buildWaterTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE, w
 
     // No lake anywhere in this tile's sampled grid — every vertex sank
     // below ground, so the mesh would be entirely invisible anyway.
-    // Returning an empty group (the same "empty tile" contract
-    // renderer/NaturalFeatureTileMesh.js already uses) skips building a
+    // Returning an empty group skips building a
     // draw call the streaming ring would otherwise carry for nothing.
     if (!hasWater) return new THREE.Group();
 

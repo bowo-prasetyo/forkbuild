@@ -79,12 +79,25 @@ export const dayCycleMethods = {
         return this._shadowsOn;
     },
 
+    // Whether nearby trees are drawn with every branch and leaf: this
+    // device's choice (application/settings/WorldViewTreeDetailStore.js).
+    areDetailedTreesOn() {
+        return this._detailedTreesOn === true;
+    },
+
+    setDetailedTreesOn(on) {
+        this._detailedTreesOn = on === true;
+        this._applyTreeDetail();
+        return this._detailedTreesOn;
+    },
+
     // Absent when the render facade can't change its sky.
     _setupDayCycle() {
         if (!this._session || typeof this._session.setSkyLook !== 'function' || typeof this._session.onAnimationFrame !== 'function') {
             return;
         }
         this._applyShadows();
+        this._applyTreeDetail();
         this._applySkyLook();
         this._dayCycleFrameSubscription = this._session.onAnimationFrame(() => this._applySkyLook());
     },
@@ -107,6 +120,12 @@ export const dayCycleMethods = {
     _applyShadows() {
         if (this._session && typeof this._session.setShadowsEnabled === 'function') {
             this._session.setShadowsEnabled(this._shadowsOn === true);
+        }
+    },
+
+    _applyTreeDetail() {
+        if (typeof this._detailedTreesOn === 'boolean' && this._session && typeof this._session.setTreesDetailed === 'function') {
+            this._session.setTreesDetailed(this._detailedTreesOn);
         }
     }
 };

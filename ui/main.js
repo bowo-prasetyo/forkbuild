@@ -74,6 +74,7 @@ import { NetworkWriterSettingsStore } from '../application/settings/NetworkWrite
 import { WorldViewDetailStore } from '../application/settings/WorldViewDetailStore.js';
 import { WorldViewSkyStore } from '../application/settings/WorldViewSkyStore.js';
 import { WorldViewShadowStore } from '../application/settings/WorldViewShadowStore.js';
+import { WorldViewTreeDetailStore } from '../application/settings/WorldViewTreeDetailStore.js';
 import { PublishDestinationStore } from '../application/settings/PublishDestinationStore.js';
 import { NetworkWriterLoader } from './main/NetworkWriterLoader.js';
 import { followNetworkWriterSwitches } from './main/followNetworkWriterSwitches.js';
@@ -381,6 +382,9 @@ app.provide('worldViewSkyStore', new WorldViewSkyStore({ storageProvider: new Lo
 // whose GPUs feel a second pass over the scene most, and on elsewhere.
 const touchFirst = typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
 app.provide('worldViewShadowStore', new WorldViewShadowStore({ storageProvider: new LocalStorageProvider(), onByDefault: !touchFirst }));
+// Every branch and leaf close by, likewise: leaves drawn over each other cost
+// a phone's GPU most.
+app.provide('worldViewTreeDetailStore', new WorldViewTreeDetailStore({ storageProvider: new LocalStorageProvider(), onByDefault: !touchFirst }));
 // "Walk here with me": a link that connects a friend's peer session to this
 // one through a one-off meeting on the same rendezvous servers.
 app.provide('walkTogether', new WalkTogether({ peerSessionManager, identityProvider, peerConnectionProvider, rendezvousTransports }));

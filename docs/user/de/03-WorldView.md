@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 8c2cb52a55e5dbab -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 7e020f4bc9aa862c -->
 # 03 — Weltansicht
 
 <!-- languages -->
@@ -193,6 +193,16 @@ die Sonne den Himmel an den Mond übergibt und zurück. Schatten kosten ein
 Smartphone mehr als einen Computer, darum sind sie mit Maus zuerst an und auf
 Smartphone oder Tablet zuerst aus; mit dem Häkchen bei **Schatten** unten im
 Bereich ändern Sie das auf diesem Gerät.
+
+Bäume wachsen wie in der Natur: Tannen und Fichten mit Quirlen hängender
+Äste in den feuchtesten Wäldern, Laubbäume mit verzweigten Ästen und runden
+Kronen, wo es trockener ist, und niedriges, krummes Buschwerk am Rand des
+Graslands. Aus der Nähe sehen Sie jeden Ast und jedes Blatt; sie wiegen sich
+im Wind, stärker, wenn ein Sturm aufzieht, und werfen gesprenkelte Schatten.
+Weiter weg werden sie zu einfacheren Formen, damit selbst ein ganzer Wald
+flüssig bleibt. Auf einem Smartphone oder Tablet sind die Bäume zunächst
+schlichter; setzen Sie das Häkchen bei **Detaillierte Bäume**, gleich unter
+**Schatten**, um auf diesem Gerät jedes Blatt zu sehen.
 
 Nachts kommen mit der tiefer werdenden Dämmerung die Sterne heraus, mit der
 Milchstraße quer darüber, und verblassen in der Morgendämmerung wieder. Der

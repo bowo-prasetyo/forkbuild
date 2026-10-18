@@ -986,6 +986,16 @@ export default {
         }
         if (typeof session.setShadowsOn === 'function') session.setShadowsOn(shadowsOn.value);
 
+        // Every branch and leaf on nearby trees, as this device chose
+        // (application/settings/WorldViewTreeDetailStore.js).
+        const worldViewTreeDetailStore = inject('worldViewTreeDetailStore', null);
+        const detailedTreesOn = ref(worldViewTreeDetailStore ? worldViewTreeDetailStore.areDetailedTreesOn() : true);
+        function setDetailedTreesOn(next) {
+            detailedTreesOn.value = worldViewTreeDetailStore ? worldViewTreeDetailStore.setDetailedTreesOn(next) : next === true;
+            if (typeof session.setDetailedTreesOn === 'function') session.setDetailedTreesOn(detailedTreesOn.value);
+        }
+        if (typeof session.setDetailedTreesOn === 'function') session.setDetailedTreesOn(detailedTreesOn.value);
+
         // Edit a Copy of the build this World is, when it isn't yours to change.
         function editActiveCopy() {
             const documentId = session.getActiveDocumentId() || route.params.documentId || null;
@@ -1512,7 +1522,7 @@ export default {
             adoptNearbyPlaceNamingClaim,
             goHome,
             buildHere,
-            advanced, setAdvanced, alwaysDay, setAlwaysDay, shadowsOn, setShadowsOn, dayCycleMinutes: DAY_CYCLE_SECONDS / 60, editActiveCopy,
+            advanced, setAdvanced, alwaysDay, setAlwaysDay, shadowsOn, setShadowsOn, detailedTreesOn, setDetailedTreesOn, dayCycleMinutes: DAY_CYCLE_SECONDS / 60, editActiveCopy,
             plaza, inPlaza, backToPlaza, focusExhibit, openExhibit, remixExhibit,
             openLocationsPanel,
             closeLocationsPanel,
@@ -1707,6 +1717,16 @@ export default {
                     {{ t('worldView.shadows') }}
                 </label>
                 <p class="form-hint form-hint--neutral world-view-advanced-hint">{{ t('worldView.shadowsHint') }}</p>
+                <label class="world-view-advanced-toggle">
+                    <input
+                        type="checkbox"
+                        class="world-view-trees-toggle"
+                        :checked="detailedTreesOn"
+                        @change="setDetailedTreesOn($event.target.checked)"
+                    />
+                    {{ t('worldView.detailedTrees') }}
+                </label>
+                <p class="form-hint form-hint--neutral world-view-advanced-hint">{{ t('worldView.detailedTreesHint') }}</p>
                 <!-- A visitor's view by default; this device can choose every tool. -->
                 <label class="world-view-advanced-toggle">
                     <input

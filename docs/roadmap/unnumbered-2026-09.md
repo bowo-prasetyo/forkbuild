@@ -7618,3 +7618,50 @@ no new words on screen, and Always day has no moon.
   few minutes the sun and the moon are both up at dusk and dawn the moon's lit side needn't face the real sun. No
   label names tonight's phase, and no challenge or achievement uses it yet ("photograph your build under a full
   moon" would be a natural weekly challenge).
+
+
+## Realistic trees (unnumbered, 2026-10-18)
+
+**Trees were a cylinder under a cone or a ball.** World View's forests were low-poly lollipops, all the same shape,
+2.4 to 4.4 m tall next to a 1.6 m eye height. Now each species grows as it does in the wild: firs and spruces with
+whorls of drooping branches under sprays of needles, broad-leaved trees forking into limbs and twigs under rounded
+crowns of leaves, crooked scrub parting low; conifers about 9.5 m and broadleaves 7.5 m (each scaled 0.7 to 1.3 as
+before), scrub 3 m. Close by they show every branch and leaf, sway in the wind and cast dappled shadows; farther off
+they turn into simpler shapes. The look stays muted and stylised, so builds remain the focus. Pillar: **Your work
+is yours, and lives in a world** (the land round a build is worth walking through and photographing). How a player
+notices: forests to walk under, trees taller than a house, leaves moving more as a storm gathers. A newcomer has
+nothing to learn; a phone starts with plainer trees, and **Detailed trees** in World View's settings changes it.
+
+- **Forms from a seed** (core/TreeForm.js): `treeForm(species, index)`, four forms per species, each branches (with
+  radii and `flex`, how far each point sways, measured along the wood so joints stay joined) and leaf clusters, plus
+  the crown they fill; `treeShapeOf(feature)`, which form a tree wears and how it is stretched, leaned and shaded,
+  from where it stands. Placement (core/NaturalFeatureField.js) and collision (core/TreeCollisionGeometry.js) are
+  unchanged: trunks were sized to stay inside the hitbox, crowns to keep clear of settlement spots.
+- **Three levels of detail** (renderer/TreeGeometry.js): near, every branch as a tapered, capped tube and leaves as
+  crossed cards with normals pointing out of the crown; mid, trunk and main limbs under solid lumps (tiers of cones
+  for conifers); far, one trunk under one crown shape. Each vertex carries `treeWind` (flex, flutter).
+- **Painted, not downloaded** (renderer/TreeMaterials.js): a broad-leaf cluster, a needle spray and bark, painted
+  pixel by pixel from a seed into mipmapped textures; grey, so each tree's instance colour (the old muted palette)
+  gives the hue. The wind is one vertex patch on every tree material and its shadow material: downwind by flex, in
+  gusts rolling across the forest, leaves fluttering, made in world space and turned into the tree's own. Leaf
+  cards keep their crown normals from either side. Trees get wet in the rain (renderer/WetSurfaces.js).
+- **One pool** (renderer/TreeForest.js) replaces renderer/NaturalFeatureTileMesh.js: tiles stream as before but
+  only hand their trees to it; one InstancedMesh per form, part and level, so a forest of 2,000 trees is 40 to 60
+  draw calls. `treeLodAt()` by distance from the camera, re-sorted after 2 m or 8°; mid and far trees out of a
+  widened view are skipped; near ones never are, as they can shade what is in view. HIGH: near to 45 m (the
+  shadows' reach), mid to 100 m. LOW: no leaf cards, mid to 40 m. Far trees cast no shadows.
+- **Wind from the weather**: `Renderer#setWeather()` sets a breeze in fair weather, rising with cloud and rain.
+- **This device's choice** (application/settings/WorldViewTreeDetailStore.js, `world-view-tree-detail`): on unless
+  the main pointer is coarse, like shadows; `WorldNavigationSession#setDetailedTreesOn()` hands it to the renderer
+  (`setTreesDetailed` on the render facade, `Renderer#setTreeDetail()`). The Editor's renderer picks from the
+  pointer the same way. New messages `worldView.detailedTrees(Hint)` in every language.
+- docs/Architecture.md gains **Trees**; the World View guide gains a paragraph on them, in every language; the
+  guide's pictures are retaken (they now also show the rain the 2026-10-15 weather brings at their fixed moment).
+- Tests: `Trees` (forms the same every time, one piece, rooted, tapering, tree-sized, inside the hitbox and clear of
+  house spots; each tree's shape the same everywhere; every level built, lighter with distance, still at the root,
+  wound outwards; leaf textures with gaps and empty corners, bark that tiles; the pool streams, sorts by distance,
+  culls only mid and far, keeps draw calls few, re-sorts only on a real move, LOW draws no cards; the choice is
+  remembered and reaches the renderer), `TreesBrowser` (real WebGL: every level's shaders compile with wind, rain
+  and the shadow pass; leaves let the sky through; still air is still and a gale moves them; wet trees are darker).
+- Not done: levels switch without a cross-fade, so a tree changes shape as it crosses 45 m or 100 m; far trees are
+  low-poly shapes, not rendered billboards (impostors); no seasons, no falling leaves, no felling or planting.

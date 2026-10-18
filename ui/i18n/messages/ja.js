@@ -1815,6 +1815,8 @@ export default Object.freeze({
     'worldView.alwaysDayHint': 'ここでは空が{minutes}分ごとに昼から夜へ、また昼へと移り変わり、雲が流れては消え、暗くなると窓とランタンに灯りがともります。「常に昼」にすると、いつも晴れた昼になります。この端末に記憶されます。',
     'worldView.shadows': '影',
     'worldView.shadowsHint': '太陽と月があなたの近くに影を落とします。スマートフォンでは、ワールドビューを滑らかに保つため最初はオフです。この端末に記憶されます。',
+    'worldView.detailedTrees': '詳細な木',
+    'worldView.detailedTreesHint': '近くの木は枝や葉の一枚一枚まで描かれ、風に揺れ、葉の影を落とします。遠くの木はより簡単な形になります。スマートフォンでは、ワールドビューを滑らかに保つため最初はオフです。この端末に記憶されます。',
     'worldView.askTheResidentNextTo': '隣にいる住人に周りのことを聞く（T）',
     'worldView.avatar': 'アバター',
     'worldView.showMyAvatar': '自分のアバターを表示',

@@ -1815,6 +1815,8 @@ export default Object.freeze({
     'worldView.alwaysDayHint': 'Di sini langit berganti dari siang ke malam dan kembali setiap {minutes} menit, awan datang dan pergi, dan jendela serta lentera menyala setelah gelap. Selalu siang membuatnya tetap cerah. Diingat di perangkat ini.',
     'worldView.shadows': 'Bayangan',
     'worldView.shadowsHint': 'Matahari dan bulan menimbulkan bayangan di sekitar Anda. Di ponsel, bayangan mula-mula mati agar Tampilan Dunia tetap lancar. Diingat di perangkat ini.',
+    'worldView.detailedTrees': 'Pohon terperinci',
+    'worldView.detailedTreesHint': 'Pohon di dekat Anda menampilkan setiap dahan dan daun, bergoyang tertiup angin, dan menimbulkan bayangan daun; yang lebih jauh berupa bentuk yang lebih sederhana. Di ponsel, pilihan ini mula-mula mati agar Tampilan Dunia tetap lancar. Diingat di perangkat ini.',
     'worldView.askTheResidentNextTo': 'Tanyakan kepada penghuni di dekat Anda apa yang ada di sekitar (T)',
     'worldView.avatar': 'Avatar',
     'worldView.showMyAvatar': 'Tampilkan Avatar Saya',
