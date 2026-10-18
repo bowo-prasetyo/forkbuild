@@ -97,6 +97,9 @@ the header, for the build you clicked:
   A long description shows its start here; **Read more** opens all of it
   in a wider panel beside this one (from the bottom, on a phone), with the
   World still in view. **Esc** or **✕** closes it.
+  A published build also shows **💬 Comments**: they open in the same panel,
+  under the description, where you read them and add your own, just as on
+  its card in **Explore**.
 - **Placement**: where the build stands in the World, in **World Units**.
   These are ForkBuild's own coordinates, not GPS; one World Unit is one
   metre. **Focus** takes you there. **Move** opens **Move Placement**,

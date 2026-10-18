@@ -735,10 +735,13 @@ export default Object.freeze({
     'documentInfo.editMetadata': 'メタデータを編集',
     'documentInfo.readMore': '続きを読む',
     'documentInfo.readMoreLabel': '{title}の説明をすべて読む',
+    'documentInfo.comments': 'コメント（{count}）',
+    'documentInfo.commentFirst': 'コメントを書く',
 
     // World View: a build's whole description (ui/components/DescriptionReaderSheet.js).
     'descriptionReader.by': '作者: {author}',
     'descriptionReader.close': '閉じる',
+    'descriptionReader.comments': 'コメント',
 
     // Editor and World View: editing document details (ui/components/MetadataEditorDialog.js).
     'metadataEditor.label': '作品のプロパティ',

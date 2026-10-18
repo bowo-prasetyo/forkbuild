@@ -2133,7 +2133,12 @@ merged with `CompositeDiscoveryProvider` in both `CreatePublicationCommentaryUse
 
 `ui/components/PublicationCommentarySection.js` is the Repository's single Commentary component (card and list).
 World View's Commentary panels (My Shared World and both World Encounter panels) save through their session, then
-hand the saved comment to the same `distributePublicationCommentaryCommand`; all of them, the Repository's included,
+hand the saved comment to the same `distributePublicationCommentaryCommand`. World View also mounts
+`PublicationCommentarySection` itself, in the About this build reading sheet (`DescriptionReaderSheet`) for an
+inspected build that has a Publication (`getPublicationForDocument()`, the lookup `CanCommentOnPublicationUseCase`
+also uses): WorldView provides its own session-backed `getPublicationCommentariesCommand` and
+`addPublicationCommentaryCommand` to that subtree, so those comments are saved and distributed exactly like its other
+panels', and the panel's comment count is re-read after each post. All of them, the Repository's included,
 pick the substrate with `ui/components/CommentaryDistributionPicker.js`, which also offers "Local & peers only" for
 commenters with no network account. A peers-only comment reaches only the peers connected when it is posted: the peer
 exchange is announce-only, with no catch-up for peers that connect later.

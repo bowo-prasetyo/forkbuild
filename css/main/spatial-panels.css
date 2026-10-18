@@ -398,6 +398,29 @@
     text-decoration: underline;
 }
 
+/* How many comments the build has: opens them in the reading sheet. */
+.document-info-comments {
+    display: block;
+    margin: 0 0 0.6rem;
+    padding: 0.15rem 0;
+    background: none;
+    border: none;
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--accent-ink);
+    cursor: pointer;
+}
+
+.document-info-comments::after {
+    content: ' →';
+}
+
+.document-info-comments:hover {
+    text-decoration: underline;
+}
+
+.document-info-comments:focus-visible,
 .document-info-read-more:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
@@ -414,7 +437,8 @@
     left: calc(1rem + 280px + 0.75rem);
     z-index: 15;
     width: clamp(20rem, calc(100% - 280px - 16.75rem), 38rem);
-    max-height: calc(100% - 2rem);
+    /* Ends above the bar of actions at the foot of the view (.world-view-hud). */
+    max-height: calc(100% - 1rem - 4.25rem);
     display: flex;
     flex-direction: column;
     background: rgb(var(--overlay-rgb));
@@ -532,6 +556,96 @@
 
 .description-reader-body .formatted-description-list li + li {
     margin-top: 0.25em;
+}
+
+/* The build's comments, under its description: Explore's comment section
+   (PublicationCommentarySection) at the sheet's reading size. */
+.description-reader-comments {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--line-soft);
+    font-size: 0.95rem;
+}
+
+.description-reader-comments:first-child {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+}
+
+.description-reader-comments-title {
+    margin: 0 0 0.75rem;
+    font-size: 1.05rem;
+    color: var(--ink);
+}
+
+.description-reader-comments .publication-commentary-list {
+    margin: 0.75rem 0;
+    padding: 0;
+    list-style: none;
+}
+
+.description-reader-comments .publication-commentary-entry {
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--line-soft);
+}
+
+.description-reader-comments .publication-commentary-author {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--ink-subtle);
+    overflow-wrap: anywhere;
+}
+
+.description-reader-comments .publication-commentary-content {
+    margin: 0.2rem 0 0;
+    color: var(--ink-soft);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.description-reader-comments .publication-commentary-empty,
+.description-reader-comments .publication-commentary-signin-hint,
+.description-reader-comments .publication-commentary-distribution-status {
+    margin: 0.5rem 0;
+    font-size: 0.85rem;
+    color: var(--ink-subtle);
+}
+
+.description-reader-comments .publication-commentary-error {
+    margin: 0.5rem 0;
+    font-size: 0.85rem;
+    color: var(--ink-red);
+}
+
+.description-reader-comments .publication-commentary-form {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.description-reader-comments .publication-commentary-input {
+    width: 100%;
+    min-height: 4.5rem;
+    padding: 0.5rem 0.6rem;
+    font: inherit;
+    font-size: 0.95rem;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: 4px;
+    resize: vertical;
+}
+
+.description-reader-comments .publication-commentary-input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+
+.description-reader-comments .commentary-distribution-picker {
+    font-size: 0.85rem;
 }
 
 .description-reader-footer {

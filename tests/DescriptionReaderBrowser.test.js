@@ -6,7 +6,9 @@ import { t } from '../ui/i18n/i18n.js';
 import { assert } from './support/Assert.js';
 
 // A long description: World View's narrow panel shows its start and "Read
-// more", which opens all of it in a wider sheet beside the panel.
+// more", which opens all of it in a wider sheet beside the panel. A build
+// with a Publication shows how many comments it has; they open in the same
+// sheet, under the description, to read and add to.
 
 // The app's real stylesheet, so layout assertions see the shipped CSS.
 await new Promise((resolve, reject) => {
@@ -18,12 +20,13 @@ await new Promise((resolve, reject) => {
     document.head.appendChild(link);
 });
 
-function mount(render) {
+function mount(render, provides = {}) {
     const host = document.createElement('div');
     host.className = 'world-view';
     host.style.cssText = 'position: relative; width: 1280px; height: 720px;';
     document.body.appendChild(host);
     const app = createApp({ render });
+    for (const [key, value] of Object.entries(provides)) app.provide(key, value);
     app.mount(host);
     return { host, unmount: () => { app.unmount(); host.remove(); } };
 }
@@ -114,6 +117,80 @@ async function runTests() {
         unmount();
         opener.remove();
         console.log('✓ the reading sheet shows all of it, beside the panel, and keeps its keys');
+    }
+    // The panel's comments line: only for a build with comments to show.
+    {
+        const opened = [];
+        const none = mount(() => h(DocumentInfoPanel, { info: info('A hut.') }));
+        assert(!none.host.querySelector('.document-info-comments'), 'no comments line for a build without a Publication');
+        none.unmount();
+        const first = mount(() => h(DocumentInfoPanel, { info: info('A hut.'), commentCount: 0 }));
+        assert(first.host.querySelector('.document-info-comments').textContent.includes(t('documentInfo.commentFirst')), 'none yet invites the first');
+        first.unmount();
+        const some = mount(() => h(DocumentInfoPanel, { info: info('A hut.'), commentCount: 3, onReadComments: () => opened.push(1) }));
+        const line = some.host.querySelector('.document-info-comments');
+        assert(line.textContent.includes(t('documentInfo.comments', { count: 3 })), `how many there are (got ${line.textContent})`);
+        line.click();
+        assert(opened.length === 1, 'and it opens them');
+        some.unmount();
+        console.log('✓ the panel says how many comments a build has');
+    }
+
+    // The sheet's comments: listed under the description, read and posted
+    // through the commands the view provides.
+    {
+        const saved = [{ commentaryId: 'c1', authorIdentityId: 'did:key:alice', content: 'Lovely lamp.' }];
+        const posts = [];
+        const provides = {
+            getPublicationCommentariesCommand: (publicationId) => (publicationId === 'pub-1' ? saved.slice() : []),
+            addPublicationCommentaryCommand: (input) => {
+                posts.push(input);
+                saved.push({ commentaryId: input.commentaryId, authorIdentityId: 'did:key:me', content: input.content });
+                return { commentary: saved.at(-1) };
+            },
+            identityUseCase: { provider: { getSigningIdentity: () => ({ id: 'did:key:me' }) } },
+            defaultCommentaryDistributionProvider: 'peers'
+        };
+        const events = [];
+        const { host, unmount } = mount(() => h(DescriptionReaderSheet, {
+            info: info(LONG), publication: { id: 'pub-1' }, section: 'comments', onClose: () => events.push('close')
+        }), provides);
+        await nextTick();
+        await nextTick();
+        const body = host.querySelector('.description-reader-body');
+        const comments = host.querySelector('.description-reader-comments');
+        assert(comments && body.contains(comments) && body.querySelector('.formatted-description'), 'the comments follow the description');
+        assert(comments.querySelector('h4').textContent === t('descriptionReader.comments'), 'under their own heading');
+        assert(comments.querySelector('.publication-commentary-content').textContent === 'Lovely lamp.', 'the saved comments');
+        const atTop = Math.abs(comments.getBoundingClientRect().top - body.getBoundingClientRect().top) < 40;
+        const atEnd = Math.abs(body.scrollTop - (body.scrollHeight - body.clientHeight)) < 2;
+        assert(body.scrollTop > 0 && (atTop || atEnd), `opened scrolled to them (scrollTop ${body.scrollTop})`);
+
+        const box = comments.querySelector('textarea');
+        box.focus();
+        box.value = 'The steps are neat.';
+        box.dispatchEvent(new Event('input'));
+        box.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        assert(events.length === 0 && document.activeElement === body && box.value === 'The steps are neat.', 'Escape in the comment box leaves the box, keeping the draft');
+        await nextTick();
+        comments.querySelector('.publication-commentary-submit-action').click();
+        await nextTick();
+        assert(posts.length === 1 && posts[0].publicationId === 'pub-1' && posts[0].content === 'The steps are neat.' && posts[0].discoveryProvider === 'peers', `posted to the build's Publication (got ${JSON.stringify(posts[0])})`);
+        assert(comments.querySelectorAll('.publication-commentary-entry').length === 2, 'and listed');
+        body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        assert(events.join() === 'close', 'Escape outside the box closes the sheet');
+        unmount();
+
+        const plain = mount(() => h(DescriptionReaderSheet, { info: info(''), publication: { id: 'pub-1' } }), provides);
+        await nextTick();
+        assert(!plain.host.querySelector('.formatted-description') && plain.host.querySelector('.description-reader-comments'), 'a build with no description still shows its comments');
+        plain.unmount();
+
+        const unpublished = mount(() => h(DescriptionReaderSheet, { info: info(LONG) }), provides);
+        await nextTick();
+        assert(!unpublished.host.querySelector('.description-reader-comments'), 'and one without a Publication has none');
+        unpublished.unmount();
+        console.log('✓ the reading sheet lists a build\'s comments and takes new ones');
     }
 }
 

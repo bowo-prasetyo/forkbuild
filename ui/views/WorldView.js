@@ -1,4 +1,4 @@
-import { ref, computed, onMounted, onBeforeUnmount, inject, watch } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, inject, provide, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { CreateBrickRegistryUseCase } from '../../application/editor/CreateBrickRegistryUseCase.js';
 import { CreateWorldViewUseCase } from '../../application/world/CreateWorldViewUseCase.js';
@@ -158,12 +158,20 @@ export default {
         const documentInfo = ref(null);
         const showMetadataEditor = ref(false);
         const metadataEditTarget = ref(null);
-        // The build whose whole description is open beside the panel
-        // (DescriptionReaderSheet), or null. It closes when another build, or
-        // none, is inspected, so it never reopens on its own later.
+        // The inspected build's Publication (what its comments belong to) and how
+        // many comments it has, re-read with `documentInfo`; both null when it
+        // has no Publication, so the panel offers no comments.
+        const documentPublication = ref(null);
+        const documentCommentCount = ref(null);
+        // The build whose whole description and comments are open beside the
+        // panel (DescriptionReaderSheet), or null, and which part it shows. It
+        // closes when another build, or none, is inspected, so it never reopens
+        // on its own later.
         const descriptionReaderDocumentId = ref(null);
-        function openDescriptionReader(info) {
+        const descriptionReaderSection = ref('description');
+        function openDescriptionReader(info, section = 'description') {
             descriptionReaderDocumentId.value = info ? info.documentId : null;
+            descriptionReaderSection.value = section;
         }
         function closeDescriptionReader() {
             descriptionReaderDocumentId.value = null;
@@ -509,6 +517,29 @@ export default {
             session, showPlacementEditor
         });
 
+        // The inspected build's comments (DescriptionReaderSheet's
+        // PublicationCommentarySection) read and save through this session, like
+        // World View's other comment panels, rather than the app-wide commands
+        // Explore's cards inject. A comment posted there updates the panel's count.
+        function refreshDocumentCommentCount() {
+            const publication = documentPublication.value;
+            if (!publication) {
+                documentCommentCount.value = null;
+                return;
+            }
+            try {
+                documentCommentCount.value = session.getPublicationCommentaries(publication.id).length;
+            } catch {
+                documentCommentCount.value = 0;
+            }
+        }
+        provide('getPublicationCommentariesCommand', getPublicationCommentariesCommand);
+        provide('addPublicationCommentaryCommand', (input) => {
+            const result = addPublicationCommentaryCommand(input);
+            refreshDocumentCommentCount();
+            return result;
+        });
+
         const {
             claimedBuildRows, noteSnapshotCandidateResult, reconcileClaimedBuilds,
             navigateToClaimedBuild, verifyClaimedBuild, acceptClaimedBuild, dismissClaimedBuild, disposeClaimedBuilds
@@ -697,6 +728,8 @@ export default {
             documentInfo.value = (spatialInspection.value && spatialInspection.value.documentId)
                 ? session.getDocumentInfo(spatialInspection.value.documentId)
                 : null;
+            documentPublication.value = documentInfo.value ? session.getPublicationForDocument(documentInfo.value.documentId) : null;
+            refreshDocumentCommentCount();
 
             // The placement (WHERE) for the same world, kept separate from the document
             // info (WHAT); null when it has none.
@@ -1425,6 +1458,9 @@ export default {
             metadataEditTarget,
             openMetadataEditor,
             descriptionReaderDocumentId,
+            descriptionReaderSection,
+            documentPublication,
+            documentCommentCount,
             openDescriptionReader,
             closeDescriptionReader,
             placementInfo,

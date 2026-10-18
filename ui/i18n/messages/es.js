@@ -739,10 +739,13 @@ export default Object.freeze({
     'documentInfo.editMetadata': 'Editar metadatos',
     'documentInfo.readMore': 'Leer más',
     'documentInfo.readMoreLabel': 'Leer toda la descripción de {title}',
+    'documentInfo.comments': 'Comentarios ({count})',
+    'documentInfo.commentFirst': 'Dejar un comentario',
 
     // World View: a build's whole description (ui/components/DescriptionReaderSheet.js).
     'descriptionReader.by': 'de {author}',
     'descriptionReader.close': 'Cerrar',
+    'descriptionReader.comments': 'Comentarios',
 
     // Editor and World View: editing document details (ui/components/MetadataEditorDialog.js).
     'metadataEditor.label': 'Propiedades de la construcción',
