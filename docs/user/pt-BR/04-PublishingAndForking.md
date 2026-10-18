@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 9b71eb25ac00047d -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 292532b0feafed52 -->
 # 04 — Publicar e remixar
 
 <!-- languages -->
@@ -730,7 +730,8 @@ abaixo).
 
 **Temas da estação.** Alguns temas pertencem a uma estação: um jardim na
 primavera, uma festa de verão, um celeiro no outono, uma cabana de inverno
-ou um lago de patinação. As estações da Visão do mundo mudam muito mais
+ou um lago de patinação. Eles ficam espalhados entre os outros temas, então
+um deles aparece mais ou menos a cada seis semanas, uma estação de cada vez. As estações da Visão do mundo mudam muito mais
 rápido que as semanas, então a semana não espera pela sua estação; em vez
 disso, a página do desafio sugere escolher essa estação em **Estação** na
 Visão do mundo, para ver as participações como devem ser vistas.

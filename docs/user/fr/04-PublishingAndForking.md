@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 9b71eb25ac00047d -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 292532b0feafed52 -->
 # 04 — Publier et remixer
 
 <!-- languages -->
@@ -769,7 +769,9 @@ semaine du remix (voir plus bas).
 
 **Thèmes de saison.** Certains thèmes appartiennent à une saison : un
 jardin au printemps, une fête d’été, une réserve pour la récolte en
-automne, une cabane d’hiver ou un étang de patinage. Les saisons de la Vue
+automne, une cabane d’hiver ou un étang de patinage. Ils sont répartis
+parmi les autres thèmes, si bien qu’il en revient un environ toutes les six
+semaines, les saisons chacune à leur tour. Les saisons de la Vue
 du Monde tournent bien plus vite que les semaines, la semaine n’attend donc
 pas sa saison ; la page du défi suggère plutôt de choisir cette saison sous
 **Saison** dans la Vue du Monde, pour voir les participations comme elles

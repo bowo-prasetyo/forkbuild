@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 9b71eb25ac00047d -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 292532b0feafed52 -->
 # 04 — Publicar y remezclar
 
 <!-- languages -->
@@ -746,7 +746,9 @@ el carro de heno.»* Una de cada cuatro semanas es una semana de remezcla
 
 **Temas de temporada.** Algunos temas pertenecen a una estación: un jardín
 en primavera, una feria de verano, un granero en otoño, una cabaña de
-invierno o un estanque para patinar. Las estaciones de la Vista del mundo
+invierno o un estanque para patinar. Están repartidos entre los demás
+temas, así que llega uno más o menos cada seis semanas, con las estaciones
+por turno. Las estaciones de la Vista del mundo
 cambian mucho más rápido que las semanas, así que la semana no espera a su
 estación; en cambio, la página del desafío sugiere elegir esa estación en
 **Estación** en la Vista del mundo, para ver las participaciones como deben

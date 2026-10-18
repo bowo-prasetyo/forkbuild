@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 9b71eb25ac00047d -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 292532b0feafed52 -->
 # 04 — Penerbitan & Remix
 
 <!-- languages -->
@@ -750,7 +750,8 @@ bawah).
 
 **Tema musiman.** Beberapa tema termasuk dalam satu musim: taman di musim
 semi, pasar malam musim panas, lumbung di musim gugur, pondok musim dingin,
-atau kolam seluncur. Musim di Tampilan Dunia berganti jauh lebih cepat
+atau kolam seluncur. Tema-tema ini tersebar di antara tema lainnya, jadi
+satu muncul kira-kira setiap enam minggu, musim demi musim. Musim di Tampilan Dunia berganti jauh lebih cepat
 daripada minggu, jadi minggu itu tidak menunggu musimnya; sebagai gantinya
 halaman tantangan menyarankan memilih musim itu di **Musim** di Tampilan
 Dunia, untuk melihat karya peserta sebagaimana mestinya.
