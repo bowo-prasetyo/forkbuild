@@ -7646,10 +7646,12 @@ nothing to learn; a phone starts with plainer trees, and **Detailed trees** in W
   gusts rolling across the forest, leaves fluttering, made in world space and turned into the tree's own. Leaf
   cards keep their crown normals from either side. Trees get wet in the rain (renderer/WetSurfaces.js).
 - **One pool** (renderer/TreeForest.js) replaces renderer/NaturalFeatureTileMesh.js: tiles stream as before but
-  only hand their trees to it; one InstancedMesh per form, part and level, so a forest of 2,000 trees is 40 to 60
-  draw calls. `treeLodAt()` by distance from the camera, re-sorted after 2 m or 8°; mid and far trees out of a
-  widened view are skipped; near ones never are, as they can shade what is in view. HIGH: near to 45 m (the
-  shadows' reach), mid to 100 m. LOW: no leaf cards, mid to 40 m. Far trees cast no shadows.
+  only hand their trees to it; one InstancedMesh per form, part and way of drawing, so a forest of 2,000 trees is 40
+  to 80 draw calls. `treeLodAt()` by distance from the camera, re-sorted after 2 m or 8°; only trees in a widened
+  view get their level, and of the rest, those close enough to shade the view are drawn as casting mid shapes. HIGH:
+  near to 45 m (the shadows' reach), mid to 100 m. LOW: no leaf cards, mid to 40 m. Only trees close by cast
+  shadows. The first version drew every near tree in full detail, in view or not, and let mid trees cast too: the
+  bundled site's filmed walk-through, drawn in software, took half as long again and ran out of time in CI.
 - **Wind from the weather**: `Renderer#setWeather()` sets a breeze in fair weather, rising with cloud and rain.
 - **This device's choice** (application/settings/WorldViewTreeDetailStore.js, `world-view-tree-detail`): on unless
   the main pointer is coarse, like shadows; `WorldNavigationSession#setDetailedTreesOn()` hands it to the renderer

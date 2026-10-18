@@ -15,9 +15,11 @@ import { makeWet } from './WetSurfaces.js';
 // Which level each tree is drawn at is decided on the CPU, by its distance
 // from the camera (treeLodAt()), and re-decided only once the camera has
 // moved or turned enough to matter (REBUCKET_METRES, REBUCKET_DEGREES).
-// Mid and far trees outside a slightly widened view are skipped then too;
-// near trees never are, because a tree behind the camera can still cast a
-// shadow into view.
+// Only trees inside a slightly widened view get their level. Of the rest,
+// the ones close enough to shade what is in view are drawn as the solid mid
+// shapes, which still cast shadows; farther ones are skipped. So every leaf
+// drawn is one that can be seen, and the shadow pass, which draws every
+// caster, only meets full detail where it shows.
 //
 // The detail is this device's choice (application/settings/WorldViewTreeDetailStore.js):
 // HIGH draws near trees with every branch and leaf, which costs a phone the
@@ -76,7 +78,11 @@ const BARK_GAIN = 1.5;
 const TREE_WET = Object.freeze({ darken: 0.22, roughness: 0.5 });
 
 const SPECIES_ORDER = Object.values(TREE_SPECIES);
-const LODS = Object.values(TREE_LOD);
+// How the pool draws a tree: a level, or SHADE, the mid shape for a tree
+// close by that casts a shadow (out of view, or close by under LOW). Only
+// NEAR and SHADE cast: mid trees under HIGH stand beyond the shadows' reach.
+const KINDS = Object.freeze(['NEAR', 'MID', 'FAR', 'SHADE']);
+const CASTS = Object.freeze({ NEAR: true, MID: false, FAR: false, SHADE: true });
 const FORM_COUNT = SPECIES_ORDER.length * TREE_FORMS_PER_SPECIES;
 
 function formSlot(species, form) {
@@ -149,7 +155,7 @@ export class TreeForest {
         this._geometries = new Array(FORM_COUNT).fill(null);
         // Per form slot and level: { parts: [{ mesh, colour }] }.
         this._meshes = new Map();
-        this._buckets = Array.from({ length: FORM_COUNT * LODS.length }, () => []);
+        this._buckets = Array.from({ length: FORM_COUNT * KINDS.length }, () => []);
         this._dirty = true;
         this._lastPosition = new THREE.Vector3(Infinity, Infinity, Infinity);
         this._lastDirection = new THREE.Vector3();
@@ -244,33 +250,40 @@ export class TreeForest {
         for (const bucket of this._buckets) bucket.length = 0;
         const counts = { [TREE_LOD.NEAR]: 0, [TREE_LOD.MID]: 0, [TREE_LOD.FAR]: 0 };
         const { x: cx, y: cy, z: cz } = camera.position;
+        const low = TREE_LOD_DISTANCES[this._detail].near === 0;
         for (const records of this._tiles.values()) {
             for (const tree of records) {
                 const dx = tree.x - cx;
                 const dy = tree.middleY - cy;
                 const dz = tree.z - cz;
                 const lod = treeLodAt(Math.sqrt(dx * dx + dy * dy + dz * dz), this._detail);
-                if (lod !== TREE_LOD.NEAR) {
-                    _sphere.center.set(tree.x, tree.middleY, tree.z);
-                    _sphere.radius = tree.radius + margin;
-                    if (!frustum.intersectsSphere(_sphere)) continue;
+                // Close enough that its shadow may fall in view.
+                const shading = lod === TREE_LOD.NEAR || (lod === TREE_LOD.MID && low);
+                _sphere.center.set(tree.x, tree.middleY, tree.z);
+                _sphere.radius = tree.radius + margin;
+                let kind = lod;
+                if (!frustum.intersectsSphere(_sphere)) {
+                    if (!shading) continue;
+                    kind = 'SHADE';
+                } else if (shading && lod === TREE_LOD.MID) {
+                    kind = 'SHADE';
                 }
-                this._buckets[tree.slot * LODS.length + LODS.indexOf(lod)].push(tree);
-                counts[lod]++;
+                this._buckets[tree.slot * KINDS.length + KINDS.indexOf(kind)].push(tree);
+                counts[kind === 'SHADE' ? TREE_LOD.MID : lod]++;
             }
         }
         this._lodCounts = counts;
 
         for (let slot = 0; slot < FORM_COUNT; slot++) {
-            for (let l = 0; l < LODS.length; l++) {
-                const trees = this._buckets[slot * LODS.length + l];
-                const key = slot * LODS.length + l;
+            for (let k = 0; k < KINDS.length; k++) {
+                const key = slot * KINDS.length + k;
+                const trees = this._buckets[key];
                 if (trees.length === 0) {
                     const existing = this._meshes.get(key);
                     if (existing) for (const part of existing.parts) part.mesh.visible = false;
                     continue;
                 }
-                this._fill(this._partsFor(slot, LODS[l], trees.length), trees);
+                this._fill(this._partsFor(slot, KINDS[k], trees.length), trees);
             }
         }
         return true;
@@ -314,9 +327,9 @@ export class TreeForest {
         return treeForm(species, slot % TREE_FORMS_PER_SPECIES);
     }
 
-    // The meshes drawing one form at one level, with room for `needed` trees.
-    _partsFor(slot, lod, needed) {
-        const key = slot * LODS.length + LODS.indexOf(lod);
+    // The meshes drawing one form as one KINDS entry, with room for `needed` trees.
+    _partsFor(slot, kind, needed) {
+        const key = slot * KINDS.length + KINDS.indexOf(kind);
         let entry = this._meshes.get(key);
         if (entry && entry.capacity >= needed) return entry.parts;
 
@@ -325,9 +338,9 @@ export class TreeForest {
         const geometries = this._geometries[slot];
         const form = this._formOf(slot);
         const leaves = form.species === TREE_SPECIES.CONIFER ? this._materials.needles : this._materials.broadLeaves;
-        const specs = lod === TREE_LOD.NEAR
+        const specs = kind === 'NEAR'
             ? [[geometries.near.bark, this._materials.bark, 'barkColor'], [geometries.near.leaves, leaves, 'leafColor']]
-            : lod === TREE_LOD.MID
+            : kind === 'MID' || kind === 'SHADE'
                 ? [[geometries.mid.bark, this._materials.bark, 'barkColor'], [geometries.mid.crown, this._materials.crown, 'crownColor']]
                 : [[geometries.far.bark, this._materials.bark, 'barkColor'], [geometries.far.crown, this._materials.crown, 'crownColor']];
 
@@ -343,10 +356,10 @@ export class TreeForest {
             mesh.customDepthMaterial = look.depth;
             // Instances span the whole streamed ring: update() culls them.
             mesh.frustumCulled = false;
+            mesh.castShadow = CASTS[kind];
             // Far trees are beyond the reach of the sun's shadows.
-            mesh.castShadow = lod !== TREE_LOD.FAR;
-            mesh.receiveShadow = lod !== TREE_LOD.FAR;
-            mesh.name = `tree-${form.species.toLowerCase()}-${form.index}-${lod.toLowerCase()}`;
+            mesh.receiveShadow = kind !== 'FAR';
+            mesh.name = `tree-${form.species.toLowerCase()}-${form.index}-${kind.toLowerCase()}`;
             this._group.add(mesh);
             return { mesh, colour };
         });

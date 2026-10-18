@@ -1644,13 +1644,17 @@ texture, their normals pointing out of the crown so cards shade as a rounded mas
 under a few solid lumps, tiers of cones for a conifer) and **far** (one trunk under one crown shape). Textures are
 painted pixel by pixel from a seed (renderer/TreeMaterials.js): nothing is downloaded. renderer/TreeForest.js draws
 every tree from one pool: tiles stream on the ground's grid as before, but a tile only adds its trees to the pool,
-which keeps one InstancedMesh per form, part and level (at most 72 draw calls, about 40 to 60 in a forest). Which
-level a tree gets is decided on the CPU by its distance from the camera, re-sorted only after the camera moves 2 m
-or turns 8°; mid and far trees outside a slightly widened view are skipped then, while near ones never are, since a
-tree behind the camera can shade what is in view. HIGH detail draws near trees within 45 m (the reach of the
-shadows) and mid within 100 m; LOW draws no leaf cards, which phones feel most as overdraw, only mid shapes within
-40 m and far beyond. Near and mid trees cast and receive shadows; the shadow pass uses each part's own swaying depth
-material, and leaf cards are cut out there too, so leaves cast dappled shadows. The wind is a vertex patch: each
+which keeps one InstancedMesh per form, part and way of drawing (at most 96 draw calls, 40 to 80 in a forest).
+Which level a tree gets is decided on the CPU by its distance from the camera, re-sorted only after the camera moves
+2 m or turns 8°. Only trees inside a slightly widened view get their level; of the rest, those close enough to shade
+the view are drawn as the solid mid shapes, which cast shadows, and the others are skipped. HIGH detail draws near
+trees within 45 m (the reach of the shadows) and mid within 100 m; LOW draws no leaf cards, which phones feel most as
+overdraw, only mid shapes within 40 m and far beyond. Only trees close by cast shadows (near ones, the mid shapes
+standing in for them out of view, and under LOW the mid shapes within 40 m): the shadow pass draws every caster, so
+casting mid trees out to 100 m cost it nearly as much as the near ones, for shadows beyond the shadow map. The
+shadow pass uses each part's own swaying depth material, and leaf cards are cut out there too, so leaves in view cast
+dappled shadows. Drawing full detail only in view keeps the cost close to the old trees': a walk-through filmed in
+software rendering (tests/run-bundle.mjs) takes about as long as before. The wind is a vertex patch: each
 vertex is pushed downwind by its flex, in gusts that roll across the forest, with leaf cards fluttering on top; the
 push is made in world space and turned into the tree's own, so it is the same however a tree is turned, leaned or
 stretched. Its strength (`Renderer#setWeather()`) is a breeze in fair weather, rising with cloud and rain; trees

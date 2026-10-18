@@ -244,19 +244,36 @@ const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z);
     const counts = forest.lodCounts;
     assert(counts.NEAR > 20 && counts.MID > 0 && counts.FAR > 0, 'trees are drawn at every level');
     assert(counts.NEAR + counts.MID + counts.FAR < forest.treeCount, 'mid and far trees out of view are skipped');
-    assert(forest.drawnMeshCount <= 12 * 6 && forest.drawnMeshCount >= 6, `a few dozen draw calls however many trees (${forest.drawnMeshCount})`);
+    assert(forest.drawnMeshCount <= 12 * 8 && forest.drawnMeshCount >= 6, `a few dozen draw calls however many trees (${forest.drawnMeshCount})`);
 
-    // Every near tree within reach is drawn, in view or not: it may cast a
-    // shadow into view.
-    let nearAround = 0;
+    // Every tree close enough to shade the view is drawn, in view or not, and
+    // casts a shadow; only those in view are drawn leaf by leaf.
+    const drawn = (suffix) => {
+        let n = 0;
+        forest.group.traverse((node) => {
+            if (node.isInstancedMesh && node.visible && node.name.endsWith(suffix)) n += node.count;
+        });
+        return n / 2; // bark and leaves (or crown): two meshes a tree
+    };
+    let withinReach = 0;
+    for (const { tx, tz } of tilesWithinRadius(best.x, best.z, DEFAULT_STREAMING_RADIUS)) {
+        for (const tree of naturalFeaturesInRegion(DEFAULT_WORLD_SEED, tx * TERRAIN_TILE_SIZE, tz * TERRAIN_TILE_SIZE, (tx + 1) * TERRAIN_TILE_SIZE, (tz + 1) * TERRAIN_TILE_SIZE)) {
+            const height = treeForm(tree.species, treeShapeOf(tree).form).height * treeShapeOf(tree).heightScale;
+            if (Math.hypot(tree.x - camera.position.x, tree.y + height / 2 - camera.position.y, tree.z - camera.position.z) < TREE_LOD_DISTANCES[TREE_DETAIL.HIGH].near) withinReach++;
+        }
+    }
+    assert(drawn('-near') === counts.NEAR && counts.NEAR > 0, 'trees in view close by are drawn as leaves and bark');
+    assert(drawn('-near') + drawn('-shade') === withinReach && drawn('-shade') > 0, `every tree within reach is drawn, in view or not (${withinReach})`);
     forest.group.traverse((node) => {
-        if (node.isInstancedMesh && node.visible && node.name.endsWith('-near') && node.material.alphaTest > 0) nearAround += node.count;
+        if (!node.isInstancedMesh) return;
+        const casts = node.name.endsWith('-near') || node.name.endsWith('-shade');
+        assert(node.castShadow === casts, `${node.name}: only trees close by cast shadows`);
+        if (node.name.endsWith('-shade')) assert(node.material.alphaTest === 0, 'out of view, a tree casts its shadow as a solid shape, no leaf cards');
     });
-    assert(nearAround === counts.NEAR, 'near trees are drawn as leaves and bark');
     camera.lookAt(best.x - 30, 4, best.z);
     camera.updateMatrixWorld();
     forest.update(camera);
-    assert(forest.lodCounts.NEAR === counts.NEAR, 'near trees stay drawn whichever way the camera turns');
+    assert(drawn('-near') + drawn('-shade') === withinReach, 'turning round, every tree within reach is still drawn');
 
     // Small moves and turns change nothing; a real one re-sorts.
     camera.position.x += 0.5;
