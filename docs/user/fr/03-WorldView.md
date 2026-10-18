@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: fba04da122bf921c -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 9ef1584b89ce019e -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
 [English](../03-WorldView.md) · [Deutsch](../de/03-WorldView.md) · [Español](../es/03-WorldView.md) · **Français** · [Bahasa Indonesia](../id/03-WorldView.md) · [日本語](../ja/03-WorldView.md) · [한국어](../ko/03-WorldView.md) · [Português (Brasil)](../pt-BR/03-WorldView.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../03-WorldView.md).
-<!-- /stale -->
 
 La Vue du Monde est le monde 3D partagé où **toutes les constructions
 publiées se tiennent côte à côte**. Vous y marchez ou y volez, vous
@@ -51,16 +47,18 @@ Il y a deux façons d’entrer :
 - **Se promener**, dans la barre du haut, ouvre la Vue du Monde sur la
   place du défi de cette semaine. Pas besoin d’une construction à vous. La
   place est celle du village : les six constructions toutes prêtes
-  l’entourent, prêtes à être remixées, et juste à côté les constructions
-  publiées forment un village (voir
+  l’entourent, prêtes à être remixées, et juste à côté se tiennent les
+  participations de la semaine (voir
   [La place du défi](04-PublishingAndForking.md#la-place-du-défi)).
 - Sur la page **Explorer**, **Explorer** sur n’importe quelle construction
   vous place juste à côté. Ouvrir le lien d’un Monde fait de même.
 
 Les constructions que d’autres ont
 [envoyées à tout le monde](04-PublishingAndForking.md#qui-peut-la-trouver-)
-se tiennent là où leurs auteurs les ont mises : les remix à côté de ce
-qu’ils remixent, les autres dans le village autour de la place.
+se tiennent là où leurs auteurs les ont mises : chacune sur un
+emplacement à elle, avec de la place autour, à travers une vaste terre
+(voir
+[Où se dresse une construction](04-PublishingAndForking.md#où-se-dresse-une-construction)).
 
 ## Une vue de visiteur, et Avancé
 
@@ -474,8 +472,10 @@ constructions toutes prêtes tout autour.
 
 La place et les constructions toutes prêtes font partie du Monde, comme
 ses collines et ses arbres. Elles sont là pour tout le monde, et
-n’appartiennent à personne. Les constructions publiées forment un village
-juste à côté, ce qui donne des voisins à votre propre maison. Un panneau
+n’appartiennent à personne. Les participations de la semaine se tiennent
+juste à côté, et seulement celles de cette semaine : ouvrez la place de la
+semaine dernière et vous voyez les participations de la semaine dernière.
+Un panneau
 liste les participations de la semaine et les constructions toutes prêtes
 (voir [La place du défi](04-PublishingAndForking.md#la-place-du-défi)).
 Aucun arbre ne pousse autour de la place, et on n’y trouve pas

@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: fba04da122bf921c -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 9ef1584b89ce019e -->
 # 03 — Vista del mundo
 
 <!-- languages -->
 [English](../03-WorldView.md) · [Deutsch](../de/03-WorldView.md) · **Español** · [Français](../fr/03-WorldView.md) · [Bahasa Indonesia](../id/03-WorldView.md) · [日本語](../ja/03-WorldView.md) · [한국어](../ko/03-WorldView.md) · [Português (Brasil)](../pt-BR/03-WorldView.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés](../03-WorldView.md).
-<!-- /stale -->
 
 La Vista del mundo es el mundo 3D compartido donde **todas las
 construcciones publicadas están una junto a otra**. Usted camina o vuela,
@@ -49,15 +45,16 @@ Hay dos formas de entrar:
 - **Pasear** en la barra superior abre la Vista del mundo en la plaza del
   reto de esta semana. No necesita una construcción propia. La plaza es la
   plaza del pueblo: las seis construcciones listas la rodean, listas para
-  remezclar, y justo afuera las construcciones publicadas forman un pueblo
+  remezclar, y justo afuera están las participaciones de la semana
   (consulte [La plaza del reto](04-PublishingAndForking.md#la-plaza-del-reto)).
 - En la página **Explorar**, **Explorar** en cualquier construcción lo
   lleva justo a su lado. Abrir un enlace a un Mundo hace lo mismo.
 
 Las construcciones que otras personas
 [enviaron a todos](04-PublishingAndForking.md#quién-puede-encontrarla)
-están donde las pusieron sus constructores: las remezclas junto a lo que
-remezclan, y el resto en el pueblo alrededor de la plaza.
+están donde las pusieron sus constructores: cada una en un lugar propio,
+con espacio a su alrededor, a lo largo de una tierra amplia (consulte
+[Dónde se alza una construcción](04-PublishingAndForking.md#dónde-se-alza-una-construcción)).
 
 ## Una vista de visitante, y Avanzado
 
@@ -454,8 +451,9 @@ alrededor.
 
 La plaza y las construcciones listas forman parte del Mundo, como sus
 colinas y árboles. Están allí para todos, y no son de nadie. Las
-construcciones publicadas forman un pueblo justo afuera, así que su propia
-casa tiene vecinos. Un panel lista las entradas de la semana y las
+participaciones de la semana están justo afuera, y solo las de esa semana:
+abra la plaza de la semana pasada y verá las participaciones de la semana
+pasada. Un panel lista las entradas de la semana y las
 construcciones listas (consulte
 [La plaza del reto](04-PublishingAndForking.md#la-plaza-del-reto)). No
 crecen árboles alrededor de la plaza, y en ella no hay **Construir aquí**.

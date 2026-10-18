@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: fba04da122bf921c -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 9ef1584b89ce019e -->
 # 03 — Weltansicht
 
 <!-- languages -->
 [English](../03-WorldView.md) · **Deutsch** · [Español](../es/03-WorldView.md) · [Français](../fr/03-WorldView.md) · [Bahasa Indonesia](../id/03-WorldView.md) · [日本語](../ja/03-WorldView.md) · [한국어](../ko/03-WorldView.md) · [Português (Brasil)](../pt-BR/03-WorldView.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../03-WorldView.md).
-<!-- /stale -->
 
 Die Weltansicht ist die geteilte 3D-Welt, in der **jedes veröffentlichte
 Bauwerk Seite an Seite steht**. Sie gehen oder fliegen herum, finden Dinge,
@@ -49,16 +45,17 @@ Es gibt zwei Wege hinein:
 - **Spazieren** in der oberen Leiste öffnet die Weltansicht auf dem
   Challenge-Platz dieser Woche. Sie brauchen kein eigenes Bauwerk. Der
   Platz ist der Dorfplatz: Die sechs fertigen Bauwerke stehen darum herum,
-  bereit zum Remixen, und gleich daneben bilden veröffentlichte Bauwerke
-  ein Dorf (siehe
+  bereit zum Remixen, und gleich daneben stehen die Einsendungen der Woche
+  (siehe
   [Der Challenge-Platz](04-PublishingAndForking.md#der-challenge-platz)).
 - Auf der Seite **Entdecken** bringt Sie **Erkunden** bei einem beliebigen
   Bauwerk direkt daneben. Ein Link zu einer Welt tut dasselbe.
 
 Bauwerke, die andere
 [an alle gesendet haben](04-PublishingAndForking.md#wer-kann-es-finden),
-stehen dort, wo ihre Erbauer sie hingestellt haben: Remixe neben dem, was
-sie remixen, die übrigen im Dorf rund um den Platz.
+stehen dort, wo ihre Erbauer sie hingestellt haben: jedes auf einem
+eigenen Platz, mit Raum darum herum, über ein weites Land verteilt (siehe
+[Wo ein Bauwerk steht](04-PublishingAndForking.md#wo-ein-bauwerk-steht)).
 
 ## Ein Besucherblick und Erweitert
 
@@ -460,8 +457,9 @@ sechs fertigen Bauwerken rundherum.
 
 Der Platz und die fertigen Bauwerke gehören zur Welt, wie ihre Hügel und
 Bäume. Sie stehen dort für alle, und niemandem gehören sie.
-Veröffentlichte Bauwerke bilden gleich daneben ein Dorf, so hat Ihr eigenes
-Haus Nachbarn. Ein Feld listet die Einsendungen der Woche und die fertigen
+Die Einsendungen der Woche stehen gleich daneben, und nur die dieser Woche:
+Öffnen Sie den Platz der letzten Woche, sehen Sie die Einsendungen der
+letzten Woche. Ein Feld listet die Einsendungen der Woche und die fertigen
 Bauwerke (siehe
 [Der Challenge-Platz](04-PublishingAndForking.md#der-challenge-platz)).
 Um den Platz wachsen keine Bäume, und auf ihm gibt es kein **Hier bauen**.

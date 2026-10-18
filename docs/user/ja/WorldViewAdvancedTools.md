@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 29cdc8613dfca1c8 -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 88c9c021db48f898 -->
 # ワールドビュー：詳細ツール
 
 <!-- languages -->
 [English](../WorldViewAdvancedTools.md) · [Deutsch](../de/WorldViewAdvancedTools.md) · [Español](../es/WorldViewAdvancedTools.md) · [Français](../fr/WorldViewAdvancedTools.md) · [Bahasa Indonesia](../id/WorldViewAdvancedTools.md) · **日本語** · [한국어](../ko/WorldViewAdvancedTools.md) · [Português (Brasil)](../pt-BR/WorldViewAdvancedTools.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **注意:** このページの英語版は翻訳後に更新されているため、この翻訳は古くなっている可能性があります。[英語版](../WorldViewAdvancedTools.md)も参照してください。
-<!-- /stale -->
 
 このページでは、サイドパネルのいちばん下で **詳細ツールを表示** に
 チェックを入れたときだけ現れる、[ワールドビュー](03-WorldView.md) の
@@ -105,14 +101,22 @@
   **ワールド単位** です。GPS ではなく ForkBuild 独自の座標で、1 ワールド
   単位は 1 メートルです。**フォーカス** でそこへ行きます。**移動** で
   **配置を移動** が開き、新しい X、Y、Z の値を入力するか、作品を 1、10、
-  100 単位ずつずらせます。**ワールドから削除** で、この配置を取り除き
-  ます。
+  100 単位ずつずらせます。**グリッド上の位置へ** で、ワールドのグリッド
+  上にあるその作品自身の場所（公開したときに作品が置かれる場所）が入力
+  されます。**移動** を押すとそこへ移ります。**ワールドから削除** で、
+  この配置を取り除きます。
 
 パネルが 2 つあるのは、作品が *何か* と、*どこに* 立っているかが別の
 ことだからです。配置を動かしても作品は変わらず、作品を変えても配置は
 動きません。
 
 ### ワールドでの位置
+
+作品をワールドのグリッド上の自分の場所に戻すには（2026 年 10 月 12 日から
+17 日までに公開された作品は、代わりにチャレンジ広場の周りに置かれました）、
+**配置を移動** を開き、**グリッド上の位置へ** を押してから **移動** を
+押します。そのあと **自分の共有ワールド** の **配信** でもう一度送り出すと、
+ほかの端末でも作品が移動します。
 
 移動先にちょうど別の作品が立っていると、**配置を移動** は確定する前に
 警告し、そこにあるものを一覧にします。場所を共有することはできます。

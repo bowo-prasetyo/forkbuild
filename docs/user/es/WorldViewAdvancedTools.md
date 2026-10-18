@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 29cdc8613dfca1c8 -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 88c9c021db48f898 -->
 # Vista del mundo: herramientas avanzadas
 
 <!-- languages -->
 [English](../WorldViewAdvancedTools.md) · [Deutsch](../de/WorldViewAdvancedTools.md) · **Español** · [Français](../fr/WorldViewAdvancedTools.md) · [Bahasa Indonesia](../id/WorldViewAdvancedTools.md) · [日本語](../ja/WorldViewAdvancedTools.md) · [한국어](../ko/WorldViewAdvancedTools.md) · [Português (Brasil)](../pt-BR/WorldViewAdvancedTools.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés](../WorldViewAdvancedTools.md).
-<!-- /stale -->
 
 Esta página trata de las partes de la [Vista del mundo](03-WorldView.md)
 que solo aparecen cuando marca **Mostrar herramientas avanzadas** al final
@@ -109,14 +105,23 @@ clic:
   del Mundo**. Son las coordenadas propias de ForkBuild, no GPS; una unidad
   del Mundo es un metro. **Enfocar** lo lleva allí. **Mover** abre **Mover
   colocación**, donde escribe nuevos valores de X, Y y Z o empuja la
-  construcción 1, 10 o 100 unidades. **Quitar del Mundo** retira esta
-  colocación.
+  construcción 1, 10 o 100 unidades. **Mover a su lugar en la cuadrícula**
+  rellena el lugar propio de la construcción en la cuadrícula del Mundo,
+  donde se colocan las construcciones al publicarse; haga clic en **Mover**
+  para ir allí. **Quitar del Mundo** retira esta colocación.
 
 Son dos paneles porque *qué* es una construcción y *dónde* está son cosas
 distintas. Mover una colocación nunca cambia la construcción, y cambiar la
 construcción nunca la mueve.
 
 ### Posición en el Mundo
+
+Para devolver una construcción a su lugar propio en la cuadrícula del Mundo
+(una publicada del 12 al 17 de octubre de 2026 se colocó en cambio
+alrededor de la plaza del reto), abra **Mover colocación**, haga clic en
+**Mover a su lugar en la cuadrícula** y luego en **Mover**. Después vuelva
+a enviarla con **Distribuir** en **Mi Mundo compartido**, para que otros
+dispositivos también la muevan.
 
 Si otra construcción ya está exactamente donde la va a mover, **Mover
 colocación** le avisa y lista lo que hay antes de que confirme. Compartir

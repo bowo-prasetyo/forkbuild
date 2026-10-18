@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 04f6ffccd852efa9 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 02d4fa6f16b73299 -->
 # 04 — Publicar e remixar
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · [Español](../es/04-PublishingAndForking.md) · [Français](../fr/04-PublishingAndForking.md) · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · [한국어](../ko/04-PublishingAndForking.md) · **Português (Brasil)**
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../04-PublishingAndForking.md).
-<!-- /stale -->
 
 Este é o coração do ForkBuild. **Publicar** compartilha sua construção com
 o mundo. **Remixar** deixa qualquer pessoa fazer uma cópia sua de uma
@@ -37,8 +33,7 @@ Sua construção agora aparece em **Explorar** neste dispositivo, onde você pod
 pesquisá-la, abri-la e remixá-la, com seu nome como autor. As outras
 pessoas a veem quando você compartilha o link dela, ou na hora se você
 escolheu **Todo mundo** em [Quem pode encontrá-la?](#quem-pode-encontrá-la).
-Ela também recebe um lugar no mundo compartilhado, ao lado daquilo a que
-pertence (veja [Onde uma construção fica](#onde-uma-construção-fica)), para
+Ela também recebe um lugar só dela no mundo compartilhado (veja [Onde uma construção fica](#onde-uma-construção-fica)), para
 que **Explorar** sempre tenha aonde levar as pessoas —
 veja [Encontrando mundos](03-WorldView.md#encontrando-mundos).
 
@@ -121,7 +116,13 @@ ficam em **Meu Mundo compartilhado** na Visão do mundo.
   máximo), e salvo nos seus downloads; nada é enviado. Depois, **Copiar
   título** e **Copiar descrição** dão o texto para colar ao lado dele: quem
   construiu, o link da sua construção, um link para o ForkBuild e a licença.
-  Deixe a aba na frente enquanto grava; a gravação pausa enquanto a aba está
+  O vídeo de um remix também dá crédito a quem construiu o original, e a
+  descrição de uma construção não comercial diz que não se pode ganhar
+  dinheiro com ela. **Fazer um vídeo** é oferecido em qualquer construção
+  publicada, então, antes de você fazer um, ele diz o que a licença da
+  construção pede se outra pessoa a construiu: crédito, nada de ganhar
+  dinheiro com ela (CC BY-NC) ou pedir a ela primeiro (Todos os direitos
+  reservados ou sem licença). Deixe a aba na frente enquanto grava; a gravação pausa enquanto a aba está
   escondida.
   Com **Com música** marcado, como fica a não ser que você desmarque, a música
   do ForkBuild é gravada junto e some aos poucos sob o cartão final.
@@ -248,21 +249,31 @@ abaixo. Construções publicadas sem nome não podem ser enviadas. Veja
 
 ### Onde uma construção fica
 
-Uma construção publicada fica no Mundo compartilhado ao lado daquilo a que
-pertence:
+Uma construção publicada ganha um lugar só dela no Mundo compartilhado,
+com espaço em volta, para que o Mundo pareça uma terra ampla e aberta:
 
-- **um remix** fica ao lado da construção que ele remixa, então uma árvore
-  genealógica vira uma rua;
-- **todo o resto** entra na vila que cresce ao redor da praça do desafio,
-  anel por anel, de dentro para fora, começando logo do lado de fora das
-  construções prontas que ficam ao redor da praça, então construções
-  publicadas mais ou menos ao mesmo tempo são vizinhas, e as primeiras ficam
-  à vista da praça;
-- **Construir aqui** continua pondo uma construção no lugar que você
-  escolheu, e publicar uma construção de novo nunca a move.
+- **Construir aqui** põe uma construção no lugar que você escolheu;
+- **todo o resto**, um remix também, ganha seu próprio lugar na grade do
+  Mundo, escolhido a partir da própria construção, então todo dispositivo a
+  põe no mesmo lugar;
+- publicar uma construção de novo nunca a move.
+
+Uma participação no desafio é posicionada do mesmo jeito. Enquanto alguém
+visita a [praça do desafio](#a-praça-do-desafio) da semana, ela também
+aparece em volta da praça ao lado das outras participações da semana, sem
+ser movida.
+
+Para pôr um remix ao lado da construção que ele remixa, mova-o até lá:
+**Mover…**, nas
+[ferramentas avançadas](WorldViewAdvancedTools.md#posicionamentos) da
+Visão do mundo.
 
 Todos que encontram a construção a veem no mesmo lugar, já que o lugar dela
-viaja com ela, assinado por você.
+viaja com ela, assinado por você. As construções publicadas de 12 a 17 de
+outubro de 2026 foram posicionadas, em vez disso, em volta da praça do
+desafio, e ficam lá até quem as fez movê-las: **Mover para seu lugar na
+grade**, em **Mover posicionamento**, leva uma ao seu lugar na grade (veja
+[Posição no mundo](WorldViewAdvancedTools.md#posição-no-mundo)).
 
 ## Para onde vai — enviando uma construção ao publicar
 
@@ -405,6 +416,62 @@ diálogo **Propriedades da construção**:
 Se você deixar uma construção sem licença, as pessoas ainda podem abri-la e
 explorá-la — só não podem remixá-la até você escolher uma licença que
 permita.
+
+### Um remix mantém o seu crédito e as suas condições
+
+Um remix da sua construção dá crédito a você, e mantém as condições da sua
+licença, não importa como quem o fez mude a licença em **Propriedades da
+construção**:
+
+| A sua licença | Um remix dela pode ter |
+|---|---|
+| **CC0 1.0** | Qualquer licença |
+| **CC BY 4.0** | Qualquer licença, menos CC0, que tiraria o seu crédito |
+| **CC BY-SA 4.0** | Só CC BY-SA 4.0 |
+| **CC BY-NC 4.0** | Só CC BY-NC 4.0, Todos os direitos reservados ou sem licença, então um remix de uma construção não comercial nunca é algo que alguém possa vender |
+
+**Propriedades da construção** oferece a um remix só essas licenças, diz de
+quem é a construção que ele remixa e mantém o seu crédito qualquer que seja
+a escolhida. Remixar a sua própria construção não prende você a nada: a sua
+cópia aceita qualquer licença. Imagens e vídeos salvos de uma construção
+levam o nome de quem a construiu.
+
+### Quando alguém usa a sua construção de um jeito que a licença dela não permite
+
+O ForkBuild não tem uma empresa nem moderadores no meio: as construções
+viajam de dispositivo em dispositivo, e um vídeo ou uma imagem é feito e
+enviado pela pessoa que o publica, num site que o ForkBuild não administra.
+O ForkBuild não pode tirar um vídeo do ar nem pagar você por ele. O que ele
+faz é tornar as suas condições difíceis de ignorar e difíceis de remover:
+toda construção publicada mostra a sua licença, todo remix e todo vídeo dão
+crédito a você, e quem faz um vídeo da sua construção fica sabendo antes o
+que a sua licença pede. Toda cópia do ForkBuild respeita isso, mas não é uma
+tranca: alguém que mudasse o código do app poderia ignorar, e o que alguém
+faz fora do ForkBuild depende dessa pessoa.
+
+Se alguém publicar a sua construção ou ganhar dinheiro com ela contra a sua
+licença:
+
+1. **Pergunte primeiro.** Muita gente não conhece a licença e vai, com
+   prazer, adicionar o seu nome e link, tirar um vídeo do ar ou dividir o
+   que ele rende.
+2. **Guarde as provas.** A Publicação da sua construção é uma reivindicação
+   assinada pela sua identidade, com a licença dela, e pode ser ancorada no
+   Arweave para ter uma data que ninguém consegue mudar depois (veja
+   [Publicações e evidências externas](09-PublicationsAndEvidence.md)).
+   Guarde também a sua cópia salva e um link para ela.
+3. **Use o processo do próprio site.** YouTube, TikTok e os outros aceitam
+   reclamações de direitos autorais da pessoa dona da obra. Só faça uma
+   quando o uso realmente não for permitido: um vídeo *sobre* uma
+   construção, como uma análise, pode ser permitido sem autorização em
+   muitos países.
+4. **Para algo sério, consulte um advogado.** Direitos autorais funcionam de
+   um jeito diferente em cada país, e este guia não é aconselhamento
+   jurídico.
+
+No próprio ForkBuild você pode **Bloquear** alguém (veja
+[Conexões entre pares e amigos](07-PeerConnectionsAndFriends.md)) para que
+o seu dispositivo pare de se conectar a essa pessoa.
 
 ## Escolhendo quem pode posicioná-lo
 
@@ -695,17 +762,22 @@ Uma semana ainda sem participações mostra as famílias de exemplo no lugar (ve
 **Passear pela praça** na página do desafio também, assim que uma semana
 tem participações. Ela é a praça da vila do mundo compartilhado: as seis
 construções prontas ficam ao redor dela para todo mundo, sempre, cada uma
-com **Remixar**, e a vila de construções publicadas cresce logo do lado de
-fora delas, com as participações da semana entre elas. Passeie entre elas ou escolha uma no painel: **Navegar** voa até ela,
+com **Remixar**, e as participações da semana ficam logo do lado de fora
+delas. Passeie entre elas ou escolha uma no painel: **Navegar** voa até ela,
 **Abrir** a abre como **Explorar** faria, e **Editar uma cópia** começa a
 sua própria cópia.
 
-- Toda participação fica na vila. Uma cujo lugar este dispositivo sabe que
-  está na vila fica lá, onde se assentou quando foi publicada. Qualquer
-  outra (uma posicionada longe, como as construções publicadas antes de se
-  assentarem na vila, ou uma cujo lugar este dispositivo não conhece) é
-  mostrada, enquanto você está na praça, no lugar onde se assentaria na
-  vila; o lugar dela mesma continua onde está.
+- Só as participações da semana ficam em volta da praça: a praça da
+  semana passada mostra as participações da semana passada, e a desta
+  semana, as desta semana.
+- Cada participação é mostrada, enquanto você está na praça, num lugar em
+  volta da praça. É uma cópia para a exposição: o lugar próprio da
+  construção, lá fora no Mundo, continua onde está. Uma participação que
+  foi posicionada em volta da praça (como as construções publicadas de 12 a
+  17 de outubro de 2026) fica lá ela mesma.
+- Outras construções posicionadas perto da praça ficam de fora enquanto
+  você está na praça, para que a praça mostre só a sua semana. Nada
+  acontece com elas: voltam quando você sai.
 - O painel lista as primeiras 24 participações publicadas. As demais estão
   na página do desafio.
 - Participações encontradas nas redes são buscadas e conferidas como ao

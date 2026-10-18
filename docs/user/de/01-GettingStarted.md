@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 545a8b3fca4e1167 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 3895abf811fef371 -->
 # 01 — Erste Schritte
 
 <!-- languages -->
 [English](../01-GettingStarted.md) · **Deutsch** · [Español](../es/01-GettingStarted.md) · [Français](../fr/01-GettingStarted.md) · [Bahasa Indonesia](../id/01-GettingStarted.md) · [日本語](../ja/01-GettingStarted.md) · [한국어](../ko/01-GettingStarted.md) · [Português (Brasil)](../pt-BR/01-GettingStarted.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../01-GettingStarted.md).
-<!-- /stale -->
 
 Willkommen! Diese Anleitung bringt Sie in etwa fünf Minuten von „gerade die
 App geöffnet“ zu „ich habe etwas gebaut“. Sie brauchen kein Konto, keinen
@@ -74,7 +70,7 @@ Die Leiste oben ist immer sichtbar:
 | **Bauen** | Den Editor, in dem Sie bauen (siehe [Der Editor](02-TheEditor.md)) |
 | **Entdecken** | Die veröffentlichten Bauwerke aller, zum Öffnen, Remixen oder Besuchen (siehe [Veröffentlichen & Remixen](04-PublishingAndForking.md#entdecken)) |
 | **Challenge** | Die Bau-Challenge dieser Woche und ihre Beiträge (siehe [Die wöchentliche Bau-Challenge](04-PublishingAndForking.md#die-wöchentliche-bau-challenge)) |
-| **Spazieren** | Die Weltansicht am Platz der Challenge dieser Woche, um durch das Dorf der veröffentlichten Bauwerke zu gehen (siehe [Weltansicht](03-WorldView.md)) |
+| **Spazieren** | Die Weltansicht am Platz der Challenge dieser Woche, um zwischen den Einsendungen der Woche rund um den Dorfplatz umherzugehen (siehe [Weltansicht](03-WorldView.md)) |
 | **Meine Welten** | Welten, die Sie auf diesem Gerät besucht haben (siehe [Meine Welten](03-WorldView.md#meine-welten--welten-in-denen-sie-wirklich-waren)) |
 | **🔔** | Ihre Benachrichtigungen: Kommentare, Remixe und neue Bauwerke von Menschen, denen Sie folgen (siehe [Orientierung und Orte](03-WorldView.md#orientierung-und-orte)) |
 | **Namen wählen** | Den Namen wählen, unter dem Sie veröffentlichen und spazieren; sobald Sie einen haben, steht er hier (siehe [Einen Namen wählen](#einen-namen-wählen)) |
@@ -264,8 +260,8 @@ ForkBuild schon installiert ist, wird die Schaltfläche nicht gezeigt.
   kennen.
 - Bereit zum Teilen? Springen Sie zu
   **[Veröffentlichen & Remixen](04-PublishingAndForking.md)**.
-- Gehen Sie in der **[Weltansicht](03-WorldView.md)** durch das Dorf der
-  veröffentlichten Bauwerke.
+- Gehen Sie in der **[Weltansicht](03-WorldView.md)** zwischen den
+  Bauwerken anderer umher.
 - Richten Sie Ihren Avatar ein und lernen Sie Menschen kennen, in
   **[Avatare & Anwesenheit](06-AvatarsAndPresence.md)** und
   **[Peer-Verbindungen & Freunde](07-PeerConnectionsAndFriends.md)**.

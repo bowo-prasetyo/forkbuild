@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 29cdc8613dfca1c8 -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 88c9c021db48f898 -->
 # Visão do mundo: ferramentas avançadas
 
 <!-- languages -->
 [English](../WorldViewAdvancedTools.md) · [Deutsch](../de/WorldViewAdvancedTools.md) · [Español](../es/WorldViewAdvancedTools.md) · [Français](../fr/WorldViewAdvancedTools.md) · [Bahasa Indonesia](../id/WorldViewAdvancedTools.md) · [日本語](../ja/WorldViewAdvancedTools.md) · [한국어](../ko/WorldViewAdvancedTools.md) · **Português (Brasil)**
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../WorldViewAdvancedTools.md).
-<!-- /stale -->
 
 Esta página trata das partes da [Visão do mundo](03-WorldView.md) que só
 aparecem quando você marca **Mostrar ferramentas avançadas** no fim do
@@ -109,14 +105,23 @@ clicou:
   Mundo**. São as coordenadas do próprio ForkBuild, não GPS; uma unidade
   do Mundo é um metro. **Focar** leva você até lá. **Mover** abre **Mover
   posicionamento**, onde você digita novos valores de X, Y e Z ou empurra
-  a construção 1, 10 ou 100 unidades. **Remover do Mundo** tira este
-  posicionamento.
+  a construção 1, 10 ou 100 unidades. **Mover para seu lugar na grade**
+  preenche o lugar próprio da construção na grade do Mundo, onde as
+  construções são posicionadas ao serem publicadas; clique em **Mover**
+  para ir até lá. **Remover do Mundo** tira este posicionamento.
 
 São dois painéis porque *o que* uma construção é e *onde* ela fica são
 coisas diferentes. Mover um posicionamento nunca muda a construção, e
 mudar a construção nunca a move.
 
 ### Posição no mundo
+
+Para levar uma construção de volta ao seu lugar próprio na grade do Mundo
+(uma publicada de 12 a 17 de outubro de 2026 foi posicionada, em vez
+disso, em volta da praça do desafio), abra **Mover posicionamento**,
+clique em **Mover para seu lugar na grade** e depois em **Mover**. Depois
+envie-a de novo com **Distribuir** em **Meu Mundo compartilhado**, para que
+outros dispositivos também a movam.
 
 Se outra construção já está exatamente onde você vai movê-la, **Mover
 posicionamento** avisa e lista o que está lá antes de você confirmar.

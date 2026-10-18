@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 545a8b3fca4e1167 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 3895abf811fef371 -->
 # 01 — Primeros pasos
 
 <!-- languages -->
 [English](../01-GettingStarted.md) · [Deutsch](../de/01-GettingStarted.md) · **Español** · [Français](../fr/01-GettingStarted.md) · [Bahasa Indonesia](../id/01-GettingStarted.md) · [日本語](../ja/01-GettingStarted.md) · [한국어](../ko/01-GettingStarted.md) · [Português (Brasil)](../pt-BR/01-GettingStarted.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés](../01-GettingStarted.md).
-<!-- /stale -->
 
 ¡Bienvenido! Esta guía lo lleva de "acabo de abrir la aplicación" a "construí
 algo" en unos cinco minutos. No necesita cuenta, descarga ni nombre para
@@ -74,7 +70,7 @@ La barra de arriba siempre está visible:
 | **Construir** | El Editor, donde construye (consulte [El Editor](02-TheEditor.md)) |
 | **Explorar** | Las construcciones publicadas de todos, para abrirlas, remezclarlas o visitarlas (consulte [Publicar y remezclar](04-PublishingAndForking.md#explorar)) |
 | **Desafío** | El desafío de construcción de esta semana y sus participaciones (consulte [El desafío de construcción semanal](04-PublishingAndForking.md#el-desafío-de-construcción-semanal)) |
-| **Pasear** | La Vista del mundo en la plaza del desafío de esta semana, para recorrer el pueblo de construcciones publicadas (consulte [Vista del mundo](03-WorldView.md)) |
+| **Pasear** | La Vista del mundo en la plaza del desafío de esta semana, para pasear entre las participaciones de la semana alrededor de la plaza del pueblo (consulte [Vista del mundo](03-WorldView.md)) |
 | **Mis mundos** | Los Mundos que visitó en este dispositivo (consulte [Mis mundos](03-WorldView.md#mis-mundos--los-mundos-que-realmente-visitó)) |
 | **🔔** | Sus notificaciones: comentarios, remezclas y construcciones nuevas de personas que sigue (consulte [Orientación y ubicaciones](03-WorldView.md#orientación-y-ubicaciones)) |
 | **Elegir un nombre** | Elegir el nombre con el que publica y pasea; cuando ya tiene uno, aparece aquí en su lugar (consulte [Elegir un nombre](#elegir-un-nombre)) |
@@ -262,7 +258,7 @@ instalar aplicaciones, o ForkBuild ya está instalado, el botón no aparece.
   **[El Editor](02-TheEditor.md)**.
 - ¿Listo para compartir? Vaya a
   **[Publicar y remezclar](04-PublishingAndForking.md)**.
-- Recorra el pueblo de construcciones publicadas en la
+- Pasee entre las construcciones de otras personas en la
   **[Vista del mundo](03-WorldView.md)**.
 - Configure su avatar y conozca gente en
   **[Avatares y presencia](06-AvatarsAndPresence.md)** y

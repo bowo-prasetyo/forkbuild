@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 29cdc8613dfca1c8 -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 88c9c021db48f898 -->
 # Tampilan Dunia: Alat Lanjutan
 
 <!-- languages -->
 [English](../WorldViewAdvancedTools.md) · [Deutsch](../de/WorldViewAdvancedTools.md) · [Español](../es/WorldViewAdvancedTools.md) · [Français](../fr/WorldViewAdvancedTools.md) · **Bahasa Indonesia** · [日本語](../ja/WorldViewAdvancedTools.md) · [한국어](../ko/WorldViewAdvancedTools.md) · [Português (Brasil)](../pt-BR/WorldViewAdvancedTools.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../WorldViewAdvancedTools.md).
-<!-- /stale -->
 
 Halaman ini membahas bagian [Tampilan Dunia](03-WorldView.md) yang hanya
 muncul saat Anda mencentang **Tampilkan alat lanjutan** di bagian bawah
@@ -111,14 +107,23 @@ terbuka di bawah bagian kepala, untuk bangunan yang Anda klik:
   Ini koordinat ForkBuild sendiri, bukan GPS; satu Satuan Dunia sama dengan
   satu meter. **Fokus** membawa Anda ke sana. **Pindahkan** membuka
   **Pindahkan Penempatan**, tempat Anda mengetik nilai X, Y, dan Z baru
-  atau menggeser bangunan 1, 10, atau 100 satuan. **Hapus dari Dunia**
-  mengeluarkan penempatan ini.
+  atau menggeser bangunan 1, 10, atau 100 satuan. **Pindahkan ke titik
+  gridnya** mengisi titik bangunan itu sendiri di grid Dunia, tempat
+  bangunan ditempatkan saat diterbitkan; klik **Pindahkan** untuk ke sana.
+  **Hapus dari Dunia** mengeluarkan penempatan ini.
 
 Keduanya panel terpisah karena *apa* sebuah bangunan dan *di mana* ia
 berdiri adalah hal yang berbeda. Memindahkan penempatan tidak pernah
 mengubah bangunannya, dan mengubah bangunan tidak pernah memindahkannya.
 
 ### Posisi di dunia
+
+Untuk mengembalikan bangunan ke titiknya sendiri di grid Dunia (bangunan
+yang diterbitkan dari 12 sampai 17 Oktober 2026 justru ditempatkan di
+sekeliling alun-alun tantangan), buka **Pindahkan Penempatan**, klik
+**Pindahkan ke titik gridnya**, lalu **Pindahkan**. Setelah itu kirim lagi
+dengan **Distribusikan** di **Dunia Bersama Saya**, agar perangkat lain
+juga memindahkannya.
 
 Jika bangunan lain sudah berdiri tepat di tempat tujuan Anda, **Pindahkan
 Penempatan** memperingatkan Anda dan mencantumkan apa yang ada di sana

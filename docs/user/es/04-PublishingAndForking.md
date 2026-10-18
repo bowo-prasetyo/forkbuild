@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 04f6ffccd852efa9 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 02d4fa6f16b73299 -->
 # 04 — Publicar y remezclar
 
 <!-- languages -->
 [English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · **Español** · [Français](../fr/04-PublishingAndForking.md) · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · [한국어](../ko/04-PublishingAndForking.md) · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés](../04-PublishingAndForking.md).
-<!-- /stale -->
 
 Este es el corazón de ForkBuild. **Publicar** comparte su construcción con
 el mundo. **Remezclar** permite que cualquiera haga su propia copia de una
@@ -37,7 +33,7 @@ Su construcción aparece ahora en **Explorar** en este dispositivo, donde puede
 buscarla, abrirla y remezclarla, con su nombre como autor. Otras personas la
 ven cuando comparte su enlace, o enseguida si eligió **Todos** en
 [¿Quién puede encontrarla?](#quién-puede-encontrarla). También recibe un
-lugar en el mundo compartido, junto a aquello con lo que va (consulte
+lugar propio en el mundo compartido (consulte
 [Dónde se alza una construcción](#dónde-se-alza-una-construcción)), así que **Explorar** siempre tiene adónde llevar a la
 gente: consulte [Encontrar mundos](03-WorldView.md#encontrar-mundos).
 
@@ -124,7 +120,14 @@ están en **Mi Mundo compartido** en la Vista de mundo.
   que dura (medio minuto como mucho), y se guarda en sus descargas; no se sube
   nada. Después, **Copiar título** y **Copiar descripción** le dan el texto
   para pegar junto a él: quién la construyó, el enlace a su construcción, un
-  enlace a ForkBuild y la licencia. Deje la pestaña al frente mientras graba;
+  enlace a ForkBuild y la licencia. El video de una remezcla también da
+  crédito a quien construyó su original, y la descripción de una
+  construcción no comercial dice que no se puede ganar dinero con ella.
+  **Hacer un video** se ofrece en cualquier construcción publicada, así que,
+  antes de hacer uno, le dice lo que pide la licencia de la construcción si
+  la construyó otra persona: crédito, no ganar dinero con ella (CC BY-NC) o
+  preguntarle primero (Todos los derechos reservados o sin licencia). Deje
+  la pestaña al frente mientras graba;
   la grabación se pausa mientras está oculta.
   Con **Con música** marcado, como está a menos que lo desmarque, la música de
   ForkBuild se graba con él y se desvanece bajo la tarjeta final.
@@ -254,21 +257,33 @@ construcciones publicadas sin nombre no se pueden enviar. Consulte
 
 ### Dónde se alza una construcción
 
-Una construcción publicada se alza en el Mundo compartido junto a aquello
-con lo que va:
+Una construcción publicada recibe un lugar propio en el Mundo compartido,
+con espacio a su alrededor, para que el Mundo se sienta como una tierra
+amplia y abierta:
 
-- **un remix** se alza junto a la construcción que remezcla, así que un
-  árbol genealógico se convierte en una calle;
-- **todo lo demás** se suma al pueblo que crece alrededor de la plaza del
-  reto, anillo a anillo de dentro hacia fuera, empezando justo fuera de las
-  construcciones ya hechas que rodean su plaza, así que las construcciones
-  publicadas más o menos al mismo tiempo son vecinas, y las primeras se ven
-  desde la plaza;
-- **Construir aquí** sigue poniendo una construcción en el lugar que eligió,
-  y volver a publicar una construcción nunca la mueve.
+- **Construir aquí** pone una construcción en el lugar que eligió;
+- **todo lo demás**, también una remezcla, recibe su propio lugar en la
+  cuadrícula del Mundo, elegido a partir de la propia construcción, así que
+  todos los dispositivos la ponen en el mismo sitio;
+- volver a publicar una construcción nunca la mueve.
+
+Una participación en el reto se coloca de la misma forma. Mientras alguien
+visita la [plaza del reto](#la-plaza-del-reto) de la semana, también se
+muestra alrededor de la plaza junto a las demás participaciones de la
+semana, sin moverla.
+
+Para poner una remezcla junto a la construcción que remezcla, muévala allí:
+**Mover…**, en las
+[herramientas avanzadas](WorldViewAdvancedTools.md#colocaciones) de la
+Vista del mundo.
 
 Todos los que encuentran la construcción la ven en el mismo lugar, porque su
-sitio viaja con ella, firmado por usted.
+sitio viaja con ella, firmado por usted. Las construcciones publicadas del
+12 al 17 de octubre de 2026 se colocaron en cambio alrededor de la plaza del
+reto, y se quedan allí hasta que sus constructores las muevan: **Mover a su
+lugar en la cuadrícula**, en **Mover colocación**, lleva una a su lugar en
+la cuadrícula (consulte
+[Posición en el Mundo](WorldViewAdvancedTools.md#posición-en-el-mundo)).
 
 ## A dónde va — enviar una construcción al publicar
 
@@ -412,6 +427,63 @@ diálogo **Propiedades de la construcción**:
 Si deja una construcción sin licencia, la gente igual puede abrirla y
 explorarla; solo que no puede remezclarla hasta que elija una licencia que
 lo permita.
+
+### Una remezcla conserva su crédito y sus condiciones
+
+Una remezcla de su construcción le da crédito, y conserva las condiciones
+de su licencia, cambie como cambie su nuevo constructor la licencia en
+**Propiedades de la construcción**:
+
+| Su licencia | Una remezcla de ella puede llevar |
+|---|---|
+| **CC0 1.0** | Cualquier licencia |
+| **CC BY 4.0** | Cualquier licencia excepto CC0, que quitaría su crédito |
+| **CC BY-SA 4.0** | Solo CC BY-SA 4.0 |
+| **CC BY-NC 4.0** | Solo CC BY-NC 4.0, Todos los derechos reservados o sin licencia, así que una remezcla de una construcción no comercial nunca es algo que alguien pueda vender |
+
+**Propiedades de la construcción** solo ofrece estas licencias a una
+remezcla, dice de quién es la construcción que remezcla y mantiene su
+crédito sea cual sea la elegida. Remezclar su propia construcción no lo
+obliga a nada: su copia admite cualquier licencia. Las imágenes y los
+videos guardados de una construcción llevan el nombre de su constructor.
+
+### Cuando alguien usa su construcción de una forma que su licencia no permite
+
+ForkBuild no tiene una empresa ni moderadores en medio: las construcciones
+viajan de dispositivo en dispositivo, y un video o una imagen los hace y
+los sube la persona que los publica, en un sitio que ForkBuild no gestiona.
+ForkBuild no puede retirar un video ni pagarle por él. Lo que sí hace es
+que sus condiciones sean difíciles de pasar por alto y de quitar: cada
+construcción publicada muestra su licencia, cada remezcla y cada video le
+dan crédito, y a quien hace un video de su construcción se le dice antes lo
+que pide su licencia. Todas las copias de ForkBuild lo respetan, pero no es
+un candado: alguien que cambiara el código de la aplicación podría
+ignorarlo, y lo que alguien haga fuera de ForkBuild depende de esa persona.
+
+Si alguien publica su construcción o gana dinero con ella en contra de su
+licencia:
+
+1. **Pregúntele primero.** Mucha gente no conoce la licencia y con gusto
+   añadirá su nombre y su enlace, retirará un video o compartirá lo que
+   gane.
+2. **Guarde las pruebas.** La Publicación de su construcción es una
+   reclamación firmada por su identidad que lleva su licencia, y puede
+   anclarse en Arweave para tener una fecha que nadie pueda cambiar después
+   (consulte
+   [Publicaciones y evidencia externa](09-PublicationsAndEvidence.md)).
+   Guarde también su copia guardada y un enlace a ella.
+3. **Use el proceso del propio sitio.** YouTube, TikTok y los demás aceptan
+   reclamaciones de derechos de autor de la persona dueña de la obra.
+   Presente una solo cuando el uso de verdad no esté permitido: un video
+   *sobre* una construcción, como una reseña, puede estar permitido sin
+   permiso en muchos países.
+4. **Para algo serio, consulte a un abogado.** Los derechos de autor
+   funcionan de forma distinta en cada país, y esta guía no es asesoría
+   legal.
+
+En el propio ForkBuild puede **Bloquear** a alguien (consulte
+[Conexiones entre pares y amigos](07-PeerConnectionsAndFriends.md)) para
+que su dispositivo deje de conectarse con esa persona.
 
 ## Elegir quién puede colocarlo
 
@@ -708,17 +780,22 @@ Una semana sin entradas todavía muestra en su lugar las familias de ejemplo (ve
 también **Recorrer la plaza** en la página del reto en cuanto una semana
 tiene participaciones. Es la plaza del pueblo del mundo compartido: las seis
 construcciones ya hechas se alzan a su alrededor para todos, siempre, cada
-una con **Remezclar**, y el pueblo de construcciones publicadas crece justo
-fuera de ellas, con las participaciones de la semana entre ellas. Pasea entre ellas o elige una en el panel: **Navegar** vuela hasta
+una con **Remezclar**, y las participaciones de la semana se alzan justo
+fuera de ellas. Pasea entre ellas o elige una en el panel: **Navegar** vuela hasta
 ella, **Abrir** la abre como lo haría **Explorar**, y **Editar una copia**
 empieza tu propia copia.
 
-- Cada participación se alza en el pueblo. Una cuyo lugar sabe este
-  dispositivo que está en el pueblo se alza allí, donde se asentó al
-  publicarse. Cualquier otra (una colocada lejos, como las construcciones
-  publicadas antes de que se asentaran en el pueblo, o una cuyo lugar este
-  dispositivo no conoce) se muestra, mientras estás en la plaza, en el lugar
-  donde se asentaría en el pueblo; su propio lugar sigue donde está.
+- Solo las participaciones de la semana se alzan alrededor de la plaza: la
+  plaza de la semana pasada muestra las participaciones de la semana
+  pasada, y la de esta semana, las de esta semana.
+- Cada participación se muestra, mientras estás en la plaza, en un lugar
+  alrededor de la plaza. Es una copia para la exposición: el lugar propio
+  de la construcción, allá en el Mundo, sigue donde está. Una participación
+  que se colocó alrededor de la plaza (como las construcciones publicadas
+  del 12 al 17 de octubre de 2026) se alza allí ella misma.
+- Las demás construcciones colocadas cerca de la plaza se dejan fuera
+  mientras estás en la plaza, para que la plaza muestre solo su semana. No
+  les pasa nada: vuelven cuando te vas.
 - El panel enumera las primeras 24 participaciones publicadas. El resto
   está en la página del reto.
 - Las participaciones encontradas en las redes se obtienen y comprueban
