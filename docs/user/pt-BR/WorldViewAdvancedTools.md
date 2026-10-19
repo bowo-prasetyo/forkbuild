@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: af50373d663c56e2 -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 27c74ca95de369c9 -->
 # Visão do mundo: ferramentas avançadas
 
 <!-- languages -->
@@ -21,7 +21,7 @@ muda nada para mais ninguém.
 |---|---|---|
 | [Inspecionar](#inspecionando-um-bloco--ou-uma-estrutura-posicionada) | Clique num bloco ou numa estrutura posicionada | Ver o que é e de onde veio |
 | [Câmera e edição](#câmera-e-edição) | Uma linha no cabeçalho do painel | Ver em que construção a sua próxima mudança se aplica |
-| [Sobre esta construção, e Posicionamento](#informações-e-posicionamento-da-construção) | Embaixo do cabeçalho, depois de um clique | Os dados de uma construção e onde ela fica |
+| [Sobre esta construção, e Posicionamento](#informações-e-posicionamento-da-construção) | Embaixo do cabeçalho | Os dados de uma construção e onde ela fica |
 | Coordenadas e busca por **Local** | Sobre a visão, e em **Buscar** | Encontrar coisas pela posição X/Y/Z |
 | [Encontros no Mundo](#encontros-no-mundo--publicações-e-avatares-que-seus-pares-estão-compartilhando) | **Por perto**, em Explorar | O que as pessoas conectadas compartilham |
 | [Nomes de lugares](#nomes-de-lugares-por-perto--descobrindo-declarações-de-qualquer-pessoa) | **Por perto**, em Explorar | Nomes que outras pessoas deram aos lugares em volta |
@@ -93,6 +93,9 @@ câmera. Se também mudam o que você edita depende do painel (em
 Focar muda).
 
 ## Informações e posicionamento da construção
+
+**Sobre esta construção** mostra a construção que você está editando assim
+que você chega nela, antes de clicar em qualquer coisa.
 
 Clique num bloco, num chão vazio ou numa estrutura posicionada e dois
 painéis se abrem embaixo do cabeçalho, para a construção em que você

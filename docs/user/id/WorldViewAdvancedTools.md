@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: af50373d663c56e2 -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 27c74ca95de369c9 -->
 # Tampilan Dunia: Alat Lanjutan
 
 <!-- languages -->
@@ -21,7 +21,7 @@ apa pun bagi orang lain.
 |---|---|---|
 | [Memeriksa](#memeriksa-balok--atau-struktur-yang-ditempatkan) | Klik balok atau struktur yang ditempatkan | Melihat apa itu dan dari mana asalnya |
 | [Kamera vs. Mengedit](#kamera-vs-mengedit) | Satu baris di bagian kepala panel | Melihat bangunan mana yang dikenai perubahan Anda berikutnya |
-| [Tentang bangunan ini, dan Penempatan](#informasi-bangunan-dan-penempatan) | Di bawah bagian kepala, setelah klik | Detail bangunan dan tempatnya berdiri |
+| [Tentang bangunan ini, dan Penempatan](#informasi-bangunan-dan-penempatan) | Di bawah bagian kepala | Detail bangunan dan tempatnya berdiri |
 | Koordinat dan pencarian **Lokasi** | Di atas tampilan, dan di **Cari** | Menemukan sesuatu berdasarkan posisi X/Y/Z |
 | [Perjumpaan Dunia](#perjumpaan-dunia--publikasi-dan-avatar-yang-dibagikan-rekan-anda) | **Di Sekitar**, di Jelajahi | Apa yang dibagikan orang yang terhubung |
 | [Nama Tempat](#nama-tempat-di-sekitar--menemukan-klaim-dari-siapa-pun) | **Di Sekitar**, di Jelajahi | Nama yang diberikan orang lain untuk tempat di sekitar Anda |
@@ -96,6 +96,9 @@ bergantung pada panelnya (di
 mengubahnya).
 
 ## Informasi Bangunan dan Penempatan
+
+**Tentang bangunan ini** menampilkan bangunan yang sedang Anda sunting begitu
+Anda tiba di sana, sebelum Anda mengeklik apa pun.
 
 Klik balok, tanah kosong, atau struktur yang ditempatkan, dan dua panel
 terbuka di bawah bagian kepala, untuk bangunan yang Anda klik:

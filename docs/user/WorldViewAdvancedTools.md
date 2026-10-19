@@ -18,7 +18,7 @@ the box is remembered on this device and changes nothing for anyone else.
 |---|---|---|
 | [Inspecting](#inspecting-a-brick--or-a-placed-structure) | Click a brick or a placed structure | See what it is and where it came from |
 | [Camera vs. Editing](#camera-vs-editing) | A line in the panel's header | See which build your next change applies to |
-| [About this build, and Placement](#build-information-and-placement) | Below the header, after a click | A build's details, and where it stands |
+| [About this build, and Placement](#build-information-and-placement) | Below the header | A build's details, and where it stands |
 | Coordinates and **Location** search | Over the view, and in **Search** | Find things by X/Y/Z position |
 | [World Encounters](#world-encounters--publications-and-avatars-your-peers-are-sharing) | Explore's **Nearby** section | What connected people are sharing |
 | [Place Names](#nearby-place-names--discovering-claims-from-anyone) | Explore's **Nearby** section | Names other people gave the places around you |
@@ -87,6 +87,9 @@ camera. Whether they also change what you edit depends on the panel (in
 does).
 
 ## Build Information and Placement
+
+**About this build** shows the build you're editing as soon as you arrive
+at it, before you click anything.
 
 Click a brick, bare ground or a placed structure and two panels open below
 the header, for the build you clicked:

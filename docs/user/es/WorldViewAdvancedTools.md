@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: af50373d663c56e2 -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 27c74ca95de369c9 -->
 # Vista del mundo: herramientas avanzadas
 
 <!-- languages -->
@@ -21,7 +21,7 @@ nadie más.
 |---|---|---|
 | [Inspeccionar](#inspeccionar-un-bloque--o-una-estructura-colocada) | Clic en un bloque o una estructura colocada | Ver qué es y de dónde viene |
 | [Cámara y edición](#cámara-y-edición) | Una línea en el encabezado del panel | Ver a qué construcción se aplica su próximo cambio |
-| [Sobre esta construcción, y Colocación](#información-de-la-construcción-y-colocación) | Bajo el encabezado, tras un clic | Los datos de una construcción y dónde está |
+| [Sobre esta construcción, y Colocación](#información-de-la-construcción-y-colocación) | Bajo el encabezado | Los datos de una construcción y dónde está |
 | Coordenadas y búsqueda por **Ubicación** | Sobre la vista, y en **Buscar** | Encontrar cosas por su posición X/Y/Z |
 | [Encuentros en el Mundo](#encuentros-en-el-mundo--publicaciones-y-avatares-que-comparten-sus-pares) | **Cerca**, en Explorar | Lo que comparten las personas conectadas |
 | [Nombres de lugares](#nombres-de-lugares-cercanos--descubrir-declaraciones-de-cualquier-persona) | **Cerca**, en Explorar | Nombres que otras personas dieron a los lugares a su alrededor |
@@ -93,6 +93,9 @@ cámara. Que además cambien lo que edita depende del panel (en
 hace).
 
 ## Información de la construcción y colocación
+
+**Sobre esta construcción** muestra la construcción que está editando en
+cuanto llega a ella, antes de hacer clic en nada.
 
 Haga clic en un bloque, en suelo vacío o en una estructura colocada y se
 abren dos paneles bajo el encabezado, para la construcción en la que hizo

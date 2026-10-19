@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: af50373d663c56e2 -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 27c74ca95de369c9 -->
 # Weltansicht: Erweiterte Werkzeuge
 
 <!-- languages -->
@@ -21,7 +21,7 @@ für niemanden sonst etwas.
 |---|---|---|
 | [Untersuchen](#einen-stein-untersuchen--oder-eine-platzierte-struktur) | Klick auf einen Stein oder eine platzierte Struktur | Sehen, was es ist und woher es stammt |
 | [Kamera und Bearbeitung](#kamera-und-bearbeitung) | Eine Zeile im Kopfbereich des Feldes | Sehen, für welches Bauwerk Ihre nächste Änderung gilt |
-| [Über dieses Bauwerk, und Platzierung](#bauwerkinformationen-und-platzierung) | Unter dem Kopfbereich, nach einem Klick | Die Angaben eines Bauwerks und wo es steht |
+| [Über dieses Bauwerk, und Platzierung](#bauwerkinformationen-und-platzierung) | Unter dem Kopfbereich | Die Angaben eines Bauwerks und wo es steht |
 | Koordinaten und Suche nach **Ort** | Über der Ansicht und in der **Suche** | Dinge über ihre X/Y/Z-Position finden |
 | [Begegnungen in der Welt](#begegnungen-in-der-welt--veröffentlichungen-und-avatare-die-ihre-peers-teilen) | **In der Nähe** unter Erkunden | Was verbundene Menschen teilen |
 | [Ortsnamen](#ortsnamen-in-der-nähe--ansprüche-von-jedem-entdecken) | **In der Nähe** unter Erkunden | Namen, die andere den Orten um Sie gegeben haben |
@@ -95,6 +95,9 @@ der [Suche](03-WorldView.md#suche--welche-veröffentlichungen-passen-dazu)
 tut Fokussieren es).
 
 ## Bauwerkinformationen und Platzierung
+
+**Über dieses Bauwerk** zeigt das Bauwerk, das Sie bearbeiten, sobald Sie
+dort ankommen, noch bevor Sie etwas anklicken.
 
 Klicken Sie auf einen Stein, freien Boden oder eine platzierte Struktur,
 öffnen sich unter dem Kopfbereich zwei Felder für das angeklickte Bauwerk:
