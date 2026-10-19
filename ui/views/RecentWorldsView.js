@@ -3,11 +3,13 @@ import { useRouter } from 'vue-router';
 import { LocalStorageProvider } from '../../storage/LocalStorageProvider.js';
 import { LocalWorldExperienceStore } from '../../application/world/LocalWorldExperienceStore.js';
 import { CreateDiscoveryUseCase } from '../../application/discovery/CreateDiscoveryUseCase.js';
+import { descriptionSnippet } from '../../core/DescriptionMarkup.js';
 import WorldCard from '../components/WorldCard.js';
 import { t } from '../i18n/i18n.js';
 import I18nText from '../i18n/I18nText.js';
 import HelpedBuildsList from '../components/walkTogether/HelpedBuildsList.js';
 import { useBuilderData } from '../composables/useBuilderData.js';
+import { groupRecentWorlds } from './recentWorlds/recentWorldGroups.js';
 
 // The ready-made builds, offered while nothing has been visited yet. Loaded
 // when shown, since their thumbnails bring in Three.js.
@@ -42,7 +44,14 @@ const FeaturedBuilds = defineAsyncComponent(() => import('../components/featured
 // they're genuinely current as of the last time this replica itself
 // saved or synced that World — never a stale count baked into the
 // LocalWorldExperience record itself (which stores none of this; see
-// core/LocalWorldExperience.js's own header).
+// core/LocalWorldExperience.js's own header). The thumbnail and the
+// description snippet come from the same two lookups: the Publication
+// the World was found as (PublicationPreview renders from its content
+// hash) and the local copy's own metadata.
+//
+// The World visited last is offered on its own, wider, to pick up where
+// you left off; the rest are shelved by when they were visited (see
+// recentWorlds/recentWorldGroups.js).
 const RECENT_WORLDS_LIMIT = 20;
 
 export default {
@@ -71,29 +80,41 @@ export default {
             let title = null;
             let author = null;
             const publications = discoveryProvider.findByDocumentId(documentId);
-            if (publications.length > 0) {
-                title = publications[0].title;
-                author = publications[0].author;
+            const publication = publications.length > 0 ? publications[0] : null;
+            if (publication) {
+                title = publication.title;
+                author = publication.author;
             }
 
             let structureCount = null;
             let landmarkCount = null;
+            let description = '';
+            let hasLocalCopy = false;
             try {
                 const document = loadPublicationDocumentUseCase.execute(documentId);
                 if (!title) {
                     title = document.metadata.title;
                 }
+                description = descriptionSnippet(document.metadata.description);
                 structureCount = document.world.getStructurePlacements().length;
                 landmarkCount = document.world.getWorldLandmarks().length;
+                hasLocalCopy = true;
             } catch (err) {
                 // No local copy of this document anymore — the card
                 // still renders from the local experience record alone.
             }
 
+            const shownTitle = title || t('recentWorldsView.untitledWorld');
             return {
                 documentId,
-                title: title || t('recentWorldsView.untitledWorld'),
+                title: shownTitle,
                 author,
+                description,
+                // Never published: no content hash to render a thumbnail
+                // from, so PublicationPreview keeps to its placeholder,
+                // coloured by the World's id.
+                preview: publication || { id: documentId, documentId, title: shownTitle, contentHash: null },
+                hasLocalCopy,
                 structureCount,
                 landmarkCount,
                 lastVisitedAt: experience.lastVisitedAt,
@@ -105,16 +126,21 @@ export default {
         // synchronous and local (localStorage plus the in-memory discovery
         // provider), so there is no loading state to track.
         const worlds = localWorldExperienceStore.getRecentlyVisited(RECENT_WORLDS_LIMIT).map(resolveWorldSummary);
+        const { latest, groups } = groupRecentWorlds(worlds);
 
         function enterWorld(documentId) {
             router.push({ path: `/world/${documentId}` });
+        }
+
+        function openInEditor(documentId) {
+            router.push({ path: '/editor', query: { load: documentId } });
         }
 
         // The builds this identity helped make with friends (Build with me).
         const builderData = useBuilderData();
         const helped = builderData.helpedBy(builderData.ownIdentityId());
 
-        return { t, worlds, enterWorld, helped };
+        return { t, worlds, latest, groups, enterWorld, openInEditor, helped };
     },
     template: `
         <section class="recent-worlds-view">
@@ -134,14 +160,31 @@ export default {
                 </section>
             </template>
 
-            <ul v-else class="publication-list">
-                <WorldCard
-                    v-for="world in worlds"
-                    :key="world.documentId"
-                    :world="world"
-                    @enter="enterWorld"
-                />
-            </ul>
+            <template v-else>
+                <section class="recent-worlds-latest" aria-labelledby="recent-worlds-latest-title">
+                    <h2 id="recent-worlds-latest-title">{{ t('recentWorldsView.pickUpWhereYouLeftOff') }}</h2>
+                    <ul class="publication-list recent-worlds-latest-list">
+                        <WorldCard :world="latest" featured @enter="enterWorld" @open="openInEditor" />
+                    </ul>
+                </section>
+                <section
+                    v-for="group in groups"
+                    :key="group.id"
+                    :class="['recent-worlds-group', 'recent-worlds-group--' + group.id]"
+                    :aria-labelledby="'recent-worlds-group-' + group.id"
+                >
+                    <h2 :id="'recent-worlds-group-' + group.id">{{ t(group.titleKey) }}</h2>
+                    <ul class="publication-list">
+                        <WorldCard
+                            v-for="world in group.worlds"
+                            :key="world.documentId"
+                            :world="world"
+                            @enter="enterWorld"
+                            @open="openInEditor"
+                        />
+                    </ul>
+                </section>
+            </template>
 
             <section v-if="helped.length" class="helped-builds-shelf" aria-labelledby="recent-worlds-helped-title">
                 <h2 id="recent-worlds-helped-title">{{ t('helpedBuilds.title') }}</h2>

@@ -63,6 +63,14 @@ export function descriptionPlainText(text) {
     }).join(' ').replace(/\s+/g, ' ').trim();
 }
 
+// A card's snippet: the plain text, cut at `maxChars` and ended with "…"
+// when it runs past them. Empty for no description.
+export function descriptionSnippet(text, maxChars = 160) {
+    const plain = descriptionPlainText(text);
+    if (plain.length <= maxChars) return plain;
+    return plain.slice(0, maxChars).trim() + '…';
+}
+
 // The start of the description, for a narrow panel that links to the rest:
 // its first blocks (at most `maxBlocks`, up to the next section's heading)
 // within about `maxChars` characters of text, the block that

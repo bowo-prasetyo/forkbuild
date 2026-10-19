@@ -1,7 +1,7 @@
 import { ref, computed, onMounted, inject } from 'vue';
 import { useRouter } from 'vue-router';
 import { CreateDiscoveryUseCase } from '../../application/discovery/CreateDiscoveryUseCase.js';
-import { descriptionPlainText } from '../../core/DescriptionMarkup.js';
+import { descriptionSnippet } from '../../core/DescriptionMarkup.js';
 import { PublicationQuery } from '../../core/PublicationQuery.js';
 import { PublicationSort } from '../../core/PublicationSort.js';
 import { GroupBy, groupPublications } from '../../core/PublicationGrouping.js';
@@ -13,8 +13,6 @@ import PublicationList from './PublicationList.js';
 import PublicationPagination from './PublicationPagination.js';
 import { useRepositoryNetworkDiscovery, exploreRouteFor } from './publicationCatalog/useRepositoryNetworkDiscovery.js';
 import { t } from '../i18n/i18n.js';
-
-const DESCRIPTION_SNIPPET_LENGTH = 160;
 
 // 0.2.31 — the shared catalog RepositoryView and AuthorView both mount
 // (see docs/ArchitectureHistory.md, 0.2.31) rather than maintaining two
@@ -87,14 +85,6 @@ export default {
             });
         }
 
-        // A snippet: the description's words, without its formatting.
-        function truncate(text) {
-            const trimmed = descriptionPlainText(text);
-            if (!trimmed) return '';
-            if (trimmed.length <= DESCRIPTION_SNIPPET_LENGTH) return trimmed;
-            return trimmed.slice(0, DESCRIPTION_SNIPPET_LENGTH).trim() + '…';
-        }
-
         // Resolves description/remix source/remix count for exactly the
         // publications on the CURRENT page — bounded by pageSize, not
         // by catalog size, which is what makes this affordable even
@@ -110,7 +100,7 @@ export default {
                     let snippet = '';
                     try {
                         const document = loadPublicationDocumentUseCase.execute(pub.documentId);
-                        snippet = truncate(document && document.metadata ? document.metadata.description : '');
+                        snippet = descriptionSnippet(document && document.metadata ? document.metadata.description : '');
                     } catch (err) {
                         snippet = '';
                     }
