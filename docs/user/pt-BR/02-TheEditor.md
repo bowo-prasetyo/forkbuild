@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 044b3cba0265f86d -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: c9cf8ab76a5a2809 -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -35,6 +35,10 @@ selecionar e transformar blocos e como organizar sua construção com grupos.
 - **Título da construção** — o nome da construção aberta. Clique em **✎** para
   editar o título, a descrição e a licença. Se ela está salva aparece na
   barra de ferramentas.
+  Clique no próprio título (**▸**) para abrir o mesmo painel **Sobre esta
+  construção** que a Visão do Mundo mostra, com **Ler mais** para uma
+  descrição longa; **▾** fecha de novo, e o Editor lembra o que você
+  escolheu.
 - **Seleção** — mostra só o que pode agir sobre a seleção atual; veja
   [O painel Seleção](#o-painel-seleção) abaixo.
 - **Biblioteca de construção** — uma caixa de pesquisa e duas guias:

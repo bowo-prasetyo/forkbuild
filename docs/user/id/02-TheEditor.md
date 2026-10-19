@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 044b3cba0265f86d -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: c9cf8ab76a5a2809 -->
 # 02 — Editor
 
 <!-- languages -->
@@ -37,6 +37,10 @@ dengan grup.
 - **Judul bangunan** — nama karya yang terbuka. Klik **✎** untuk mengedit
   judul, deskripsi, dan lisensinya. Apakah sudah tersimpan ditampilkan di
   bilah alat.
+  Klik judulnya sendiri (**▸**) untuk membuka panel **Tentang bangunan
+  ini** yang sama dengan di Tampilan Dunia, dengan **Baca selengkapnya**
+  untuk deskripsi yang panjang; **▾** menutupnya lagi, dan Editor
+  mengingat pilihan Anda.
 - **Pilihan** — hanya menampilkan apa yang dapat bekerja pada pilihan Anda
   saat ini; lihat [Panel Pilihan](#panel-pilihan) di bawah.
 - **Pustaka Bangunan** — kotak pencarian dan dua tab:

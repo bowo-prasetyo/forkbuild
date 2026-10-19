@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 044b3cba0265f86d -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: c9cf8ab76a5a2809 -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -38,6 +38,10 @@ grupos.
 - **Título de la construcción**: el nombre de la construcción abierta. Haga clic en
   **✎** para editar su título, su descripción y su licencia. Si está
   guardada o no se muestra en la barra de herramientas.
+  Haga clic en el propio título (**▸**) para desplegar el mismo panel
+  **Sobre esta construcción** que muestra la Vista del Mundo, con **Leer
+  más** para una descripción larga; **▾** lo vuelve a plegar, y el Editor
+  recuerda lo que eligió.
 - **Selección**: solo muestra lo que puede actuar sobre su selección
   actual; consulte [El panel Selección](#el-panel-selección) más abajo.
 - **Biblioteca de construcción**: un cuadro de búsqueda y dos pestañas:
