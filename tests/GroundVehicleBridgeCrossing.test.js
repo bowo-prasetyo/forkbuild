@@ -17,6 +17,9 @@ import { LAKE_SURFACE_HEIGHT } from '../core/Hydrology.js';
 import { VehicleInstance } from '../core/VehicleInstance.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { Position } from '../core/Position.js';
+import { World } from '../core/World.js';
+import { Building } from '../core/Building.js';
+import { Brick } from '../core/Brick.js';
 import { assert } from './support/Assert.js';
 
 // Ground vehicles drive up ramps and across bridges, as an avatar on foot
@@ -33,6 +36,9 @@ import { assert } from './support/Assert.js';
 //              over the river the truss keeps it on the deck
 //   Section E: getting off on the deck leaves the avatar on the deck, and a
 //              vehicle put down on the deck stands on it
+//   Section F: on low ground (terrain well below zero) a wall still stops
+//              the wagon: bricks are measured from the ground, and so is
+//              the height it collides at
 //
 // The bridge's river is a few blue slabs, not world water, so the water
 // constraint is told the river is there: a bed a full unit below the lake
@@ -194,6 +200,34 @@ async function runTests() {
         assert(mount !== null, 'E4. setup: put the wagon down on the deck');
         const deployed = vehicleRuntimeInstances.get(mount.vehicleId);
         assert(Math.abs(liftOf(deployed.position) - DECK_TOP) < 1e-9, `E5. a wagon put down on the deck stands on the deck (lift ${liftOf(deployed.position)})`);
+    }
+
+    // -------------------------------------------------------------
+    // Section F — low ground, same walls
+    // -------------------------------------------------------------
+    {
+        const LOW = { x: -3000, y: 0, z: -2550 };
+        assert(terrainHeightAt(SEED, LOW.x, LOW.z) < -3, 'F setup: the ground here is more than 3 below zero');
+        const world = new World();
+        const building = new Building({ creator: 'test' });
+        building.addBrick(new Brick({ definitionId: 'core:block_2x2', position: new Position(0, 1, 0) }));
+        world.addBuilding(building);
+        const loadedDocuments = new Map([['h', { world }]]);
+        const getWorldPosition = () => LOW;
+        const movement = new AvatarMovementConstraint({ loadedDocuments, getWorldPosition, brickRegistry, maxStepHeight: 0.6 });
+        const step = new AvatarStepConstraint({ loadedDocuments, getWorldPosition, brickRegistry });
+        const start = { x: LOW.x - 6, y: terrainHeightAt(SEED, LOW.x - 6, LOW.z), z: LOW.z };
+        const wagon = new VehicleInstance({ id: 'h', type: VehicleType.CAR, spawnPosition: start, position: start, heading: 90 });
+        const vehicles = store([wagon]);
+        const controller = new AvatarVehicleMovementController(vehicles, movement, null, null, step);
+        const capability = resolveAvatarVehicleMovementCapability(VehicleType.CAR);
+        let collided = false;
+        for (let i = 0; i < 200; i++) {
+            controller.tick({ seed: SEED, vehicleId: 'h', capability, movementIntent: FORWARD, currentRotationY: 90, deltaSeconds: DT });
+            collided ||= controller.isCollided();
+        }
+        const x = vehicles.get('h').position.x - LOW.x;
+        assert(collided && x < -1.7, `F1. the wagon stops at a block 2 high instead of driving through it (x ${x.toFixed(2)})`);
     }
 
     console.log('✅ All Ground Vehicle Bridge Crossing tests passed.');
