@@ -258,6 +258,12 @@ balloon flies on over lakes and the sea, and lets you down on the water:
 land it and get off, and your avatar is swimming. You can't take a wheeled vehicle out of
 your inventory while you are in the water.
 
+On land they drive up ramps and onto bricks the way you walk onto them:
+anything no higher than a step, and any slope or stair. So a bridge
+someone has built carries a hay wagon over a river it couldn't otherwise
+cross. Drive off the edge of a deck and you drop back to the ground; get
+off on a bridge and you're standing on the deck.
+
 #### Carrying a vehicle
 
 Found a vehicle far from where you need it later? While mounted, press

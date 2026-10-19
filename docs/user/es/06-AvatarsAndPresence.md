@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 3b81c1f78e8542a3 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 2d751aee5c2fa769 -->
 # 06 — Avatares y presencia
 
 <!-- languages -->
@@ -269,6 +269,13 @@ volar no significa ignorar la geometría del mundo. No puede bajarse de un globo
 Las bicicletas, biciclos y carretas se detienen en la orilla. Un globo sigue volando sobre lagos y el mar, y lo deja sobre el agua: aterrícelo,
 bájese y su avatar estará nadando. No puede sacar un vehículo con ruedas
 de su inventario mientras está en el agua.
+
+En tierra suben rampas y se suben a los bloques igual que usted camina
+sobre ellos: cualquier cosa no más alta que un escalón, y cualquier rampa o
+escalera. Así, un puente que alguien haya construido lleva una carreta
+sobre un río que de otro modo no podría cruzar. Si sale por el borde de un
+tablero, cae de nuevo al suelo; si se baja sobre un puente, queda de pie en
+el tablero.
 
 #### Llevar un vehículo
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 3b81c1f78e8542a3 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 2d751aee5c2fa769 -->
 # 06 — Avatares e presença
 
 <!-- languages -->
@@ -264,6 +264,13 @@ Bicicletas, biciclos e carroças param na beira d’água. Um balão segue voand
 sobre lagos e o mar, e deixa você na água: pouse, desça, e seu avatar está
 nadando. Você não pode tirar um veículo com rodas do inventário enquanto
 está na água.
+
+Em terra, eles sobem rampas e sobem nos blocos do jeito que você anda sobre
+eles: qualquer coisa não mais alta que um degrau, e qualquer rampa ou
+escada. Assim, uma ponte que alguém construiu leva uma carroça por cima de
+um rio que ela não conseguiria atravessar de outro jeito. Saia pela borda
+de um tabuleiro e você cai de volta no chão; desça numa ponte e você fica
+de pé no tabuleiro.
 
 #### Carregando um veículo
 

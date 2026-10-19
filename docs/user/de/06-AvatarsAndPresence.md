@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 3b81c1f78e8542a3 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 2d751aee5c2fa769 -->
 # 06 — Avatare & Anwesenheit
 
 <!-- languages -->
@@ -278,6 +278,13 @@ können Sie nicht aus einem Ballon aussteigen — bringen Sie ihn zuerst zurück
 Fahrräder, Hochräder und Heuwagen halten am Ufer an. Ein Ballon fliegt über Seen und das Meer weiter und setzt Sie auf dem Wasser ab: Landen Sie ihn und
 steigen Sie ab, und Ihr Avatar schwimmt. Ein Fahrzeug mit Rädern können Sie
 nicht aus Ihrem Inventar holen, solange Sie im Wasser sind.
+
+An Land fahren sie Rampen hinauf und auf Steine, so wie Sie sie betreten:
+alles, was nicht höher als eine Stufe ist, und jede Schräge oder Treppe.
+So trägt eine gebaute Brücke einen Heuwagen über einen Fluss, den er sonst
+nicht überqueren könnte. Fahren Sie über den Rand einer Fahrbahn, fallen Sie
+zurück auf den Boden; steigen Sie auf einer Brücke ab, stehen Sie auf der
+Fahrbahn.
 
 #### Ein Fahrzeug mitnehmen
 

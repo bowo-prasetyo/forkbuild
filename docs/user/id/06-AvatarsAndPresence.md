@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 3b81c1f78e8542a3 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 2d751aee5c2fa769 -->
 # 06 — Avatar & Kehadiran
 
 <!-- languages -->
@@ -280,6 +280,13 @@ Sepeda, sepeda roda tinggi, dan gerobak berhenti di tepi air. Balon terus terban
 di atas danau dan laut, dan menurunkan Anda di atas air: daratkan, turun,
 dan avatar Anda pun berenang. Anda tidak dapat mengeluarkan kendaraan
 beroda dari inventaris saat berada di air.
+
+Di darat, kendaraan ini naik ke tanjakan dan ke atas balok seperti Anda
+berjalan di atasnya: apa pun yang tidak lebih tinggi dari satu anak tangga,
+serta setiap lereng atau tangga. Jadi jembatan yang dibangun seseorang
+membawa gerobak menyeberangi sungai yang tidak bisa diseberanginya dengan
+cara lain. Keluar dari tepi lantai jembatan dan Anda jatuh kembali ke tanah;
+turun di atas jembatan dan Anda berdiri di lantainya.
 
 #### Membawa kendaraan
 

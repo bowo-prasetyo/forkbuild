@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 3b81c1f78e8542a3 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 2d751aee5c2fa769 -->
 # 06 — Avatars et présence
 
 <!-- languages -->
@@ -286,6 +286,13 @@ dire ignorer la géométrie du monde. Vous ne pouvez pas descendre d’une montg
 Les vélos, grands-bis et charrettes s’arrêtent au bord de l’eau. Une montgolfière continue au-dessus des lacs et de la mer, et vous dépose sur l’eau : posez-la,
 descendez, et votre avatar nage. Vous ne pouvez pas sortir un véhicule à
 roues de votre inventaire tant que vous êtes dans l’eau.
+
+Sur la terre ferme, ils montent les rampes et grimpent sur les briques comme
+vous y marchez : tout ce qui n’est pas plus haut qu’une marche, et toute
+pente ou tout escalier. Un pont construit par quelqu’un porte donc une
+charrette au-dessus d’une rivière qu’elle ne pourrait pas traverser
+autrement. Sortez par le bord d’un tablier et vous retombez au sol ;
+descendez sur un pont et vous êtes debout sur le tablier.
 
 #### Emporter un véhicule
 
