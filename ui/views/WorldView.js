@@ -725,9 +725,12 @@ export default {
                 spatialInspection.value = null;
             }
 
-            documentInfo.value = (spatialInspection.value && spatialInspection.value.documentId)
-                ? session.getDocumentInfo(spatialInspection.value.documentId)
-                : null;
+            // The inspected build's properties; with no build inspected (just
+            // arrived by Explore, or only the ground picked), the active build's,
+            // so arriving at a build shows what it is. Selection is untouched.
+            const inspectedDocumentId = spatialInspection.value && spatialInspection.value.documentId;
+            const shownDocumentId = inspectedDocumentId || session.getActiveDocumentId();
+            documentInfo.value = shownDocumentId ? session.getDocumentInfo(shownDocumentId) : null;
             documentPublication.value = documentInfo.value ? session.getPublicationForDocument(documentInfo.value.documentId) : null;
             refreshDocumentCommentCount();
 

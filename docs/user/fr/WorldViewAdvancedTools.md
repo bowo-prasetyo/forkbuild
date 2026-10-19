@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: af50373d663c56e2 -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 27c74ca95de369c9 -->
 # La Vue du Monde : outils avancés
 
 <!-- languages -->
@@ -21,7 +21,7 @@ pour personne d’autre.
 |---|---|---|
 | [Inspecter](#inspecter-une-brique--ou-une-structure-placée) | Clic sur une brique ou une structure placée | Voir ce que c’est et d’où ça vient |
 | [Caméra et modification](#caméra-et-modification) | Une ligne dans l’en-tête du panneau | Voir à quelle construction s’applique votre prochain changement |
-| [À propos de cette construction, et Placement](#informations-sur-la-construction-et-placement) | Sous l’en-tête, après un clic | Les informations d’une construction et où elle se trouve |
+| [À propos de cette construction, et Placement](#informations-sur-la-construction-et-placement) | Sous l’en-tête | Les informations d’une construction et où elle se trouve |
 | Coordonnées et recherche par **Emplacement** | Au-dessus de la vue, et dans **Recherche** | Trouver des choses par leur position X/Y/Z |
 | [Rencontres dans le Monde](#rencontres-dans-le-monde--publications-et-avatars-que-vos-pairs-partagent) | **À proximité**, dans Explorer | Ce que partagent les personnes connectées |
 | [Noms de lieux](#noms-de-lieux-à-proximité--découvrir-les-propositions-de-nimporte-qui) | **À proximité**, dans Explorer | Les noms que d’autres ont donnés aux lieux autour de vous |
@@ -97,6 +97,9 @@ panneau (dans la
 Centrer le fait).
 
 ## Informations sur la construction et placement
+
+**À propos de cette construction** montre la construction que vous modifiez
+dès que vous y arrivez, avant même de cliquer.
 
 Cliquez sur une brique, un sol nu ou une structure placée, et deux panneaux
 s’ouvrent sous l’en-tête, pour la construction sur laquelle vous avez
