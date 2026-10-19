@@ -24,6 +24,7 @@ import { publicationDiscoveryPanelsTemplate } from './worldEncounterCanvas/templ
 import { remotePinningDraftFromSettings } from '../../application/ipfs/IpfsRemotePinningDraft.js';
 import { formatDate, t } from '../i18n/i18n.js';
 import IdentityName from './IdentityName.js';
+import NameNeededNotice from './NameNeededNotice.js';
 
 // World Encounter Canvas: a simple 2D World View of encounterable
 // publications and avatars, plus the Wanderer's own marker.
@@ -221,7 +222,7 @@ import IdentityName from './IdentityName.js';
 
 export default {
     name: 'WorldEncounterCanvas',
-    components: { WorldEncounterMarker, WandererMarker, WorldDistributionDialog, PublicationCommentaryRemoteCheck, CommentaryDistributionPicker, CommentaryNetworkDistribution, IdentityName },
+    components: { WorldEncounterMarker, WandererMarker, WorldDistributionDialog, PublicationCommentaryRemoteCheck, CommentaryDistributionPicker, CommentaryNetworkDistribution, IdentityName, NameNeededNotice },
     inject: {
         ipfsRemotePinningSettingsStore: { default: null }
     },

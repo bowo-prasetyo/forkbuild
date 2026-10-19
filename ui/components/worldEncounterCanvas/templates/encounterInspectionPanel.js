@@ -81,7 +81,7 @@ export const encounterInspectionPanelTemplate = `<div v-if="selectedEncounter" c
                         </ul>
 
                         <p v-if="addPublicationCommentaryCommand && !viewerIdentityId" class="world-encounter-commentary-signin-hint">
-                            {{ t('worldEncounterCanvas.signInToAddCommentary') }}
+                            <NameNeededNotice :no-name-text="t('worldEncounterCanvas.signInToAddCommentary')" />
                         </p>
                         <form
                             v-else-if="addPublicationCommentaryCommand"

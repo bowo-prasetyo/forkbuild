@@ -36,8 +36,8 @@ function sessionsOver(identityProvider, network) {
     identityProvider.lock(created.identityId);
     const network = new LocalRendezvousNetwork();
     const sessions = sessionsOver(identityProvider, network);
-    await rejects(sessions.publishSelf(), /unlock your identity to be discoverable/, 'a locked identity is asked to unlock');
-    await rejects(sessions.publishSelf(), /unlock your identity/, 'every attempt says the same');
+    await rejects(sessions.publishSelf(), /refusal\.nameLocked/, 'a locked identity is asked to unlock');
+    await rejects(sessions.publishSelf(), /refusal\.nameLocked/, 'every attempt says the same');
     assert(sessions.listPeers().length === 0, 'no pending connection is left behind, however many times it is tried');
     assert(!sessions.isPublishing(), 'nothing is published');
 

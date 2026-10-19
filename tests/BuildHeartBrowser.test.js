@@ -3,6 +3,10 @@ import { createApp, h, nextTick } from 'vue';
 import BuildHeart from '../ui/components/BuildHeart.js';
 import PublicationCommentarySection from '../ui/components/PublicationCommentarySection.js';
 import { UserFacingError } from '../core/UserFacingError.js';
+import NameNeededNotice from '../ui/components/NameNeededNotice.js';
+import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
+import { SigningRemedy } from '../identity/SigningReadiness.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { message } from '../core/Message.js';
 import { t } from '../ui/i18n/i18n.js';
 import { assert } from './support/Assert.js';
@@ -126,6 +130,61 @@ try {
     assert(host.querySelector('.build-heart-error').textContent.trim() === t('heart.signInFirst'), 'asks for a name first');
     unmount();
     console.log('✓ signed out, a heart asks for a name first');
+}
+
+// Locked: the tap says the name is locked, and its Unlock button asks the
+// header to open the unlock dialog.
+{
+    const requested = [];
+    const nameRemedy = { request: (remedy) => requested.push(remedy), pending: null };
+    const refuse = new UserFacingError(message('refusal.nameLocked', { name: 'Bowo' }), { remedy: SigningRemedy.UNLOCK });
+    const app = fakeApp({ refuse });
+    const { host, unmount } = mount(() => h(BuildHeart, { publicationId: 'pub-1' }), { ...app.provides, nameRemedy });
+    host.querySelector('.build-heart-toggle').click();
+    await nextTick();
+    const error = host.querySelector('.build-heart-error');
+    assert(error.textContent.includes(t('refusal.nameLocked', { name: 'Bowo' })), `says the name is locked (got ${error.textContent.trim()})`);
+    assert(!error.textContent.includes(t('heart.signInFirst')), 'never asks to choose a name');
+    const unlock = error.querySelector('.signing-remedy-button');
+    assert(unlock && unlock.textContent.trim() === t('userWidget.unlock'), 'offers Unlock');
+    unlock.click();
+    assert(requested.join() === SigningRemedy.UNLOCK, 'Unlock asks the header to unlock');
+    unmount();
+    console.log('✓ locked, a heart says so and offers Unlock');
+}
+
+// In place of a comment box: no name, a locked name, then unlocked.
+{
+    const passphrase = 'correct horse battery';
+    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
+    const listeners = new Set();
+    const identityUseCase = {
+        provider,
+        onUserChanged: (callback) => { listeners.add(callback); return () => listeners.delete(callback); },
+        onVaultLockChanged: (callback) => { listeners.add(callback); return () => listeners.delete(callback); }
+    };
+    const changed = async () => { listeners.forEach((callback) => callback()); await nextTick(); };
+    const requested = [];
+    const nameRemedy = { request: (remedy) => requested.push(remedy), pending: null };
+    const noNameText = t('publicationCommentarySection.signInToAddCommentary');
+    const { host, unmount } = mount(() => h(NameNeededNotice, { noNameText }), { identityUseCase, nameRemedy });
+    await nextTick();
+    assert(host.textContent.includes(noNameText) && host.querySelector('.signing-remedy-button').textContent.trim() === t('userWidget.chooseName'), 'no name: choose one');
+
+    const created = await provider.createProtectedLocalIdentity('Bowo', passphrase);
+    await provider.unlock(created.identityId, passphrase);
+    provider.authenticate(created.identityId);
+    provider.lock(created.identityId);
+    await changed();
+    assert(host.textContent.includes(t('refusal.nameLocked', { name: 'Bowo' })) && !host.textContent.includes(noNameText), `locked: says so, by name (got ${host.textContent.trim()})`);
+    host.querySelector('.signing-remedy-button').click();
+    assert(requested.join() === SigningRemedy.UNLOCK, 'and offers Unlock');
+
+    await provider.unlock(created.identityId, passphrase);
+    await changed();
+    assert(host.textContent.trim() === '' && !host.querySelector('.signing-remedy-button'), 'unlocked: nothing left to say');
+    unmount();
+    console.log('✓ in place of a comment box, the notice follows no name, locked and unlocked');
 }
 
 // A comment's author by name, never a raw identity key.

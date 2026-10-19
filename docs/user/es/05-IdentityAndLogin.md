@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 87bd554695c88554 -->
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: cf497f719abf3048 -->
 # 05 — Su nombre y su identidad
 
 <!-- languages -->
@@ -57,13 +57,14 @@ La clave descifrada de una identidad protegida vive en algo llamado su
 una pregunta realmente distinta de qué nombre usa:
 
 - **Con un nombre, desbloqueada**: todo funciona con normalidad.
-- **Con un nombre, bloqueada** (🔒 junto a su nombre, arriba a la
-  derecha): sigue siendo usted, y todavía puede explorar, construir y
-  guardar, pero cualquier cosa que necesite una firma nueva (publicar, ser
-  descubrible, unirse a una sala) falla con un mensaje de “identidad
-  bloqueada” hasta que la desbloquee. Haga clic en su nombre y luego en
-  **Desbloquear** para ingresar su frase de contraseña, y vuelva a
-  intentarlo.
+- **Con un nombre, bloqueada** (🔒 junto a su nombre, arriba a la derecha):
+  sigue siendo usted; todavía puede explorar, construir y guardar, y sigue
+  viendo sus propios corazones, a quién sigue y sus notificaciones. Cualquier
+  cosa que necesite una firma nueva (dar un corazón, comentar, seguir,
+  publicar, ser descubrible, unirse a una sala) dice **Su nombre "…" está
+  bloqueado** y ofrece allí mismo un botón **Desbloquear**, que abre la misma
+  petición de frase de contraseña que hacer clic en su nombre y luego en
+  **Desbloquear**. Después vuelva a intentarlo.
 - **Sin nombre**: tras **Cambiar de nombre → Seguir sin nombre** es un
   invitado; **Elegir un nombre** en la barra superior elige o desbloquea una
   identidad otra vez.

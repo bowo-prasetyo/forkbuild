@@ -1,7 +1,9 @@
 // @environment browser
-import { createApp, nextTick } from 'vue';
+import { createApp, nextTick, ref } from 'vue';
 import { createMemoryHistory, createRouter } from 'vue-router';
 import UserWidget from '../ui/components/UserWidget.js';
+import LoginModal from '../ui/components/LoginModal.js';
+import { SigningRemedy } from '../identity/SigningReadiness.js';
 import { t } from '../ui/i18n/i18n.js';
 import { assert } from './support/Assert.js';
 
@@ -48,13 +50,14 @@ function fakeIdentities({ identities = [], current = null, locked = false } = {}
     };
 }
 
-function mount(identityUseCase) {
+function mount(identityUseCase, { nameRemedy = null } = {}) {
     const host = document.createElement('div');
     document.body.appendChild(host);
     const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/:rest(.*)', component: { template: '<div></div>' } }] });
     const app = createApp({ components: { UserWidget }, template: '<UserWidget />' });
     app.use(router);
     app.provide('identityUseCase', identityUseCase);
+    if (nameRemedy) app.provide('nameRemedy', nameRemedy);
     app.mount(host);
     return { host, unmount: () => { app.unmount(); host.remove(); } };
 }
@@ -149,4 +152,38 @@ const noAccountWords = (host) => !/\blog ?(in|out)\b|\blogin\b|\blogout\b/i.test
     assert(host.querySelector('.identity-unlock-form'), 'which asks for that name\'s passphrase');
     unmount();
     console.log('✓ a locked name is unlocked from its menu');
+}
+
+// Unlock asked for beside a refusal elsewhere (SigningRemedyButton.js, through
+// App.js's nameRemedy) opens the header's own unlock prompt.
+{
+    const ana = { identityId: 'did:key:z6MkAna', label: 'Ana', isProtected: true, createdAt: 1 };
+    const identities = fakeIdentities({ identities: [ana], current: { identityId: ana.identityId, username: ana.identityId, displayName: 'Ana' }, locked: true });
+    const pending = ref(null);
+    const { host, unmount } = mount(identities, { nameRemedy: { request: (remedy) => { pending.value = { remedy }; }, pending } });
+    await nextTick();
+    assert(!host.querySelector('.identity-unlock-form'), 'nothing open at first');
+    pending.value = { remedy: SigningRemedy.UNLOCK };
+    await nextTick();
+    await nextTick();
+    assert(host.querySelector('.identity-unlock-form'), 'Unlock from a refusal asks for that name\'s passphrase');
+    unmount();
+    console.log('✓ Unlock beside a refusal opens the header\'s unlock prompt');
+}
+
+// Opened to walk while the name in use is locked, the dialog goes straight to
+// its passphrase rather than asking to pick a name.
+{
+    const ana = { identityId: 'did:key:z6MkAna', label: 'Ana', isProtected: true, createdAt: 1 };
+    const identities = fakeIdentities({ identities: [ana], current: { identityId: ana.identityId, username: ana.identityId, displayName: 'Ana' }, locked: true });
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    const app = createApp({ components: { LoginModal }, template: '<LoginModal purpose="walk" />' });
+    app.provide('identityUseCase', identities);
+    app.mount(host);
+    await nextTick();
+    assert(host.querySelector('.identity-unlock-form'), 'a locked name is asked for its passphrase straight away');
+    app.unmount();
+    host.remove();
+    console.log('✓ a locked name opening Walk with me is asked to unlock, not to pick a name');
 }

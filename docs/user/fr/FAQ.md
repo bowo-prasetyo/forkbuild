@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 53acfc3595aae824 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 58c380fc2151aa11 -->
 # Questions fréquentes
 
 <!-- languages -->
@@ -86,9 +86,9 @@ publiées gardent donc la licence qu’elles avaient. Voir
 - **a title is required before publishing** — donnez un titre à la
   construction dans **Propriétés de la construction**.
 - **cannot publish an empty world** — placez d’abord au moins une brique.
-- **cannot sign, identity is locked** — votre identité s’est verrouillée
-  d’elle-même ; cliquez sur **Déverrouiller** à côté de votre nom dans la
-  barre du haut et publiez de nouveau.
+- **Votre nom « … » est verrouillé** — votre nom s’est verrouillé de lui-même
+  ; cliquez sur **Déverrouiller** à côté du message (ou à côté de votre nom
+  dans la barre du haut) et publiez de nouveau.
 
 Ces messages sont aujourd’hui affichés en anglais.
 

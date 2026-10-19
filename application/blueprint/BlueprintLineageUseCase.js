@@ -4,6 +4,7 @@ import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityI
 import { lineageView as deriveLineageView } from '../../core/BlueprintLineageView.js';
 import { message } from '../../core/Message.js';
 import { UserFacingError } from '../../core/UserFacingError.js';
+import { requireSigningIdentityId } from '../../identity/SigningReadiness.js';
 
 // 0.6.8 — Blueprint Lineage & Revision Discovery.
 //
@@ -60,10 +61,7 @@ export class BlueprintLineageUseCase {
         if (!sourceFingerprint) {
             throw new UserFacingError(message('blueprint.sourceNoDesignContent'), { detail: 'BlueprintLineageUseCase: the source structure has no derivable design content' });
         }
-        const authorIdentityId = resolveSigningIdentityId(this._identityProvider);
-        if (!authorIdentityId) {
-            throw new UserFacingError(message('blueprint.signInToClaimLineage'), { detail: 'BlueprintLineageUseCase: sign in to claim a lineage relationship' });
-        }
+        const authorIdentityId = requireSigningIdentityId(this._identityProvider, message('blueprint.signInToClaimLineage'), { detail: 'BlueprintLineageUseCase: sign in to claim a lineage relationship' });
         if (typeof this._identityProvider.signCanonical !== 'function') {
             throw new UserFacingError(message('blueprint.cannotSignLineage'), { detail: 'BlueprintLineageUseCase: this identity provider cannot sign a lineage claim' });
         }

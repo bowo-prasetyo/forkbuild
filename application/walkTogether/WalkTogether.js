@@ -3,6 +3,7 @@ import { PartAssembler, sendInParts } from '../peer/ChunkedPeerTransfer.js';
 import { decodePublicationLinkPayload, encodePublicationLinkPayload } from '../publication/sharing/PublicationLinkPayload.js';
 import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
 import { signingIdentityId } from '../../peer/RendezvousPublicationSigning.js';
+import { SigningReadiness, signingReadiness } from '../../identity/SigningReadiness.js';
 import { EphemeralIdentityProvider } from '../../identity/EphemeralIdentityProvider.js';
 import { createWalkTogetherCode, parseWalkTogetherCode } from '../../core/WalkTogetherCode.js';
 
@@ -91,6 +92,9 @@ export const WalkTogetherFailure = Object.freeze({
     UNREACHABLE: 'unreachable',
     // Host: not signed in with an identity that can sign.
     NOT_SIGNED_IN: 'notSignedIn',
+    // Host: the name in use is locked, or was revoked, so it can't sign.
+    NAME_LOCKED: 'nameLocked',
+    NAME_REVOKED: 'nameRevoked',
     // Host: the World isn't a signed, published build this device holds.
     NOT_PUBLISHED: 'notPublished',
     // Guest: the link isn't a walk link.
@@ -142,6 +146,14 @@ export class WalkTogether {
     // connection that carries presence authenticates it.
     canWalk() {
         return Boolean(signingIdentityId(this._identityProvider));
+    }
+
+    // Why canWalk() is false, as a WalkTogetherFailure.
+    signingFailure() {
+        const { status } = signingReadiness(this._identityProvider);
+        if (status === SigningReadiness.LOCKED) return WalkTogetherFailure.NAME_LOCKED;
+        if (status === SigningReadiness.REVOKED) return WalkTogetherFailure.NAME_REVOKED;
+        return WalkTogetherFailure.NOT_SIGNED_IN;
     }
 
     // Invites guests into `world`: { claim, snapshotText }, the World's
@@ -245,7 +257,7 @@ export class WalkTogetherHost extends WalkSide {
 
     async start() {
         if (!this._walk.available) return this._fail(WalkTogetherFailure.UNREACHABLE);
-        if (!this._walk.canWalk()) return this._fail(WalkTogetherFailure.NOT_SIGNED_IN);
+        if (!this._walk.canWalk()) return this._fail(this._walk.signingFailure());
         if (this._build) {
             this._buildPayload = cleanBuild(this._build);
             if (!this._buildPayload) return this._fail(WalkTogetherFailure.NOT_PUBLISHED);

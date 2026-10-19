@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 53acfc3595aae824 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 58c380fc2151aa11 -->
 # Pertanyaan Umum
 
 <!-- languages -->
@@ -89,9 +89,9 @@ Alasan setelah "Gagal menerbitkan:" ditampilkan dalam bahasa Inggris.
   menerbitkan) — beri karya itu judul di **Properti Bangunan**.
 - **cannot publish an empty world** (dunia kosong tidak dapat diterbitkan)
   — tempatkan setidaknya satu balok terlebih dahulu.
-- **cannot sign, identity is locked** (tidak dapat menandatangani,
-  identitas terkunci) — identitas Anda terkunci dengan sendirinya; klik
-  **Buka Kunci** di samping nama Anda di bilah atas dan terbitkan lagi.
+- **Nama Anda "…" terkunci** — nama Anda terkunci dengan sendirinya; klik
+  **Buka Kunci** di samping pesan itu (atau di samping nama Anda di bilah
+  atas) dan terbitkan lagi.
 
 ### Apakah saya perlu nama untuk menerbitkan?
 

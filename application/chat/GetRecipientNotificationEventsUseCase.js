@@ -1,6 +1,6 @@
-import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 import { UserFacingError } from '../../core/UserFacingError.js';
 import { message } from '../../core/Message.js';
+import { currentIdentityId } from '../../identity/SigningReadiness.js';
 
 // 0.9.283 — Recipient Notification Query Boundary.
 //
@@ -46,11 +46,10 @@ import { message } from '../../core/Message.js';
 // THE CURRENT AUTHENTICATED IDENTITY IS THE ONLY RECIPIENT THIS CLASS WILL
 // EVER ASK ABOUT. `execute()` takes no arguments — there is no
 // `recipientIdentityId` parameter a caller could supply to read someone
-// else's notification history. The recipient is resolved exactly the way
-// `AddPublicationCommentaryUseCase` already resolves a commentary's
-// author: `resolveSigningIdentityId(identityProvider)`, reusing
-// `identity/resolveSigningIdentityId.js` rather than re-deriving identity
-// resolution here. 0.9.282's own Section D already named the isolation
+// else's notification history. The recipient is the name in use
+// (`currentIdentityId()`, identity/SigningReadiness.js), locked or not:
+// reading one's own notifications needs no signature. 0.9.282's own
+// Section D already named the isolation
 // this depends on as FIELD-LEVEL, not storage-level — this file does not
 // change that; it only makes the field-level fact reachable through an
 // authenticated boundary instead of a raw filter a caller could run
@@ -100,7 +99,7 @@ export class GetRecipientNotificationEventsUseCase {
     // plain Error when no identity is authenticated, before the store is
     // ever read. A genuine store read failure propagates unmodified.
     execute() {
-        const recipientIdentityId = resolveSigningIdentityId(this._identityProvider);
+        const recipientIdentityId = currentIdentityId(this._identityProvider);
         if (!recipientIdentityId) {
             throw new UserFacingError(message('refusal.signInToViewYour'), { detail: 'GetRecipientNotificationEventsUseCase: sign in to view your notifications' });
         }

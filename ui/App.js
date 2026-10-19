@@ -25,6 +25,17 @@ export default {
         const { previewService } = new CreatePreviewUseCase().execute();
         provide('previewService', previewService);
 
+        // A refusal anywhere on the page can offer Unlock or Choose a name
+        // (SigningRemedyButton.js); the header's UserWidget opens the dialog.
+        // Each request is a new object, so asking twice opens it twice.
+        const nameRemedyRequest = ref(null);
+        provide('nameRemedy', Object.freeze({
+            request(remedy) {
+                nameRemedyRequest.value = { remedy };
+            },
+            pending: nameRemedyRequest
+        }));
+
         // On phone-width screens the nav folds behind a Menu button; choosing a page
         // folds it again. The pages a newcomer needs are always in the nav; the
         // rest are grouped under More, which a phone's Menu shows open.

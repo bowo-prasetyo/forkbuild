@@ -2,6 +2,7 @@ import { Delegation } from '../../core/Delegation.js';
 import { SigningIdentity } from '../../identity/SigningIdentity.js';
 import { UserFacingError } from '../../core/UserFacingError.js';
 import { message } from '../../core/Message.js';
+import { requireSigningIdentityId } from '../../identity/SigningReadiness.js';
 
 // Issues a Delegation signed by the identity provider's own identity, through
 // the same canonical-envelope Ed25519 signing as every other record. The
@@ -17,6 +18,7 @@ export class CreateDelegationUseCase {
     }
 
     async execute({ delegateIdentity, action, subject, constraints = null, expiresAt = null }) {
+        requireSigningIdentityId(this._identityProvider, message('refusal.signInToIssueA'), { detail: 'CreateDelegationUseCase: sign in to issue a delegation' });
         const issuer = this._identityProvider.getSigningIdentity();
         if (!issuer) {
             throw new UserFacingError(message('refusal.signInToIssueA'), { detail: 'CreateDelegationUseCase: sign in to issue a delegation' });

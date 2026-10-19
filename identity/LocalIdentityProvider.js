@@ -4,6 +4,7 @@ import { SigningIdentity } from './SigningIdentity.js';
 import { LocalIdentity } from './LocalIdentity.js';
 import { AuthenticationSession } from './AuthenticationSession.js';
 import { VaultLock } from './VaultLock.js';
+import { SigningRemedy } from './SigningReadiness.js';
 import { FailedUnlockTracker } from './FailedUnlockTracker.js';
 import { isVaultExpired, DEFAULT_VAULT_TIMEOUT_MS } from './VaultTimeoutPolicy.js';
 import * as KeyEncryption from './KeyEncryption.js';
@@ -930,7 +931,7 @@ export class LocalIdentityProvider extends IdentityProvider {
     // unlocked first (await unlock(identityId, passphrase)).
     _requireUnlockedSeedHex(identity) {
         if (identity.isProtected && !this.isUnlocked(identity.identityId)) {
-            throw new Error('LocalIdentityProvider: this identity is protected and locked — unlock it with its passphrase first');
+            throw lockedRefusal(identity, 'LocalIdentityProvider: this identity is protected and locked — unlock it with its passphrase first');
         }
         return this._resolveSeedHex(identity.identityId);
     }
@@ -978,7 +979,7 @@ export class LocalIdentityProvider extends IdentityProvider {
             throw new Error('LocalIdentityProvider: cannot authenticate, no local identity with id ' + identityId);
         }
         if (identity.isProtected && !this.isUnlocked(identityId)) {
-            throw new Error('LocalIdentityProvider: this identity is protected and locked — unlock it with its passphrase before authenticating');
+            throw lockedRefusal(identity, 'LocalIdentityProvider: this identity is protected and locked — unlock it with its passphrase before authenticating');
         }
         const session = AuthenticationSession.authenticated(identityId, this._now());
         this._storageProvider.save(SESSION_KEY, session.toJSON());
@@ -1111,17 +1112,17 @@ export class LocalIdentityProvider extends IdentityProvider {
     _requireAuthenticatedIdentity() {
         const session = this.currentSession();
         if (!session.isAuthenticated) {
-            throw new Error('LocalIdentityProvider: cannot sign, no active authentication session');
+            throw new UserFacingError(message('refusal.noUserIsCurrentlyLogged'), { detail: 'LocalIdentityProvider: cannot sign, no active authentication session', remedy: SigningRemedy.CHOOSE_NAME });
         }
         const identity = this.getLocalIdentity(session.identityId);
         if (!identity) {
-            throw new Error('LocalIdentityProvider: cannot sign, authenticated identity not found on this device');
+            throw new UserFacingError(message('refusal.noUserIsCurrentlyLogged'), { detail: 'LocalIdentityProvider: cannot sign, authenticated identity not found on this device', remedy: SigningRemedy.CHOOSE_NAME });
         }
         if (identity.isRevoked) {
-            throw new Error('LocalIdentityProvider: cannot sign, identity has been revoked');
+            throw new UserFacingError(message('refusal.nameRevoked', { name: identity.label }), { detail: 'LocalIdentityProvider: cannot sign, identity has been revoked', remedy: SigningRemedy.SWITCH_NAME });
         }
         if (!this.isUnlocked(identity.identityId)) {
-            throw new Error('LocalIdentityProvider: cannot sign, identity is locked — unlock it with its passphrase first');
+            throw lockedRefusal(identity, 'LocalIdentityProvider: cannot sign, identity is locked — unlock it with its passphrase first');
         }
         return identity;
     }
@@ -1150,4 +1151,10 @@ export class LocalIdentityProvider extends IdentityProvider {
     _saveIndex(index) {
         this._storageProvider.save(IDENTITIES_INDEX_KEY, index);
     }
+}
+
+// A refusal a person can act on: it names the locked name and offers Unlock,
+// where a plain Error would reach the screen as developer English.
+function lockedRefusal(identity, detail) {
+    return new UserFacingError(message('refusal.nameLocked', { name: identity.label }), { detail, remedy: SigningRemedy.UNLOCK });
 }

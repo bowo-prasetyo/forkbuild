@@ -38,7 +38,7 @@ export const commentarySectionTemplate = `<div v-if="getPublicationCommentariesC
                 </ul>
 
                 <p v-if="addPublicationCommentaryCommand && !viewerIdentityId" class="own-publication-commentary-signin-hint">
-                    {{ t('ownPublicationPanel.signInToAddCommentary') }}
+                    <NameNeededNotice :no-name-text="t('ownPublicationPanel.signInToAddCommentary')" />
                 </p>
                 <form
                     v-else-if="addPublicationCommentaryCommand"

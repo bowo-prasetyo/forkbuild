@@ -297,7 +297,7 @@ async function runTests() {
         assert(!codeOnly.includes('classifyNotificationCollision') && !codeOnly.includes('notificationDeduplicationIdentity'), 'L6. no reimplementation of the deduplication policy');
         assert(!/new LocalStorageProvider|new LocalIdentityProvider/.test(codeOnly), 'L7. no direct provider construction — collaborators are injected, not instantiated');
         assert(!/execute\(\s*\{\s*recipientIdentityId/.test(codeOnly), 'L8. execute() accepts no caller-supplied recipientIdentityId parameter');
-        assert(/resolveSigningIdentityId/.test(codeOnly), 'L9. recipient identity is resolved through the existing identity infrastructure, not reinvented');
+        assert(/currentIdentityId/.test(codeOnly), 'L9. recipient identity is resolved through the existing identity infrastructure, not reinvented');
     }
 
     console.log('\n✅ All GetRecipientNotificationEventsUseCase tests passed.');
