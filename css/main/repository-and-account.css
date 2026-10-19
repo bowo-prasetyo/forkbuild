@@ -668,12 +668,120 @@
 /* 0.3.10 — World Persistence & Return Experience. ui/components/WorldCard.js
    reuses .publication-card/.publication-list/.action-btn--explore
    wholesale (same "a catalog of cards" language RecentWorldsView shares
-   with Repository/Author — see this file's own 0.3.10 comment above) —
-   this rule is the only genuinely new styling a World Card needs beyond
-   a plain Publication Card (its visit line already takes
-   .publication-date's own color). */
+   with Repository/Author — see this file's own 0.3.10 comment above);
+   the rules below are what a World Card adds to a plain Publication
+   Card (its visit line already takes .publication-date's own color). */
 .world-card-perspective {
     color: var(--ink-blue);
+}
+
+/* A World Card's thumbnail and description, as a Publication Card shows
+   them; the thumbnail also enters the World. The visit line sits apart,
+   above the actions, since it is about this device's visit rather than
+   the World. */
+.world-card-thumbnail {
+    display: block;
+    border-radius: 6px;
+    text-decoration: none;
+}
+
+.world-card-thumbnail .publication-preview {
+    transition: filter 0.15s ease;
+}
+
+.world-card-thumbnail:hover .publication-preview {
+    filter: brightness(1.08);
+}
+
+.world-card-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+
+.world-card .publication-description {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+}
+
+.world-card-visit {
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    margin-top: 0.75rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--line);
+}
+
+.world-card-visit-icon {
+    flex-shrink: 0;
+    align-self: center;
+}
+
+.world-card .publication-actions {
+    flex-wrap: wrap;
+}
+
+/* My Worlds' shelves: the World visited last, then Today / This week /
+   Earlier (ui/views/RecentWorldsView.js). */
+.recent-worlds-latest,
+.recent-worlds-group {
+    margin: 0 0 2rem;
+}
+
+.recent-worlds-latest h2,
+.recent-worlds-group h2 {
+    margin: 0 0 0.85rem;
+    color: var(--ink-strong);
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.recent-worlds-latest-list {
+    grid-template-columns: minmax(0, 960px);
+    container-type: inline-size;
+}
+
+.world-card--featured .publication-preview--card {
+    position: relative;
+    height: auto;
+    aspect-ratio: 16 / 9;
+}
+
+/* The picture fills the frame whatever its own shape. */
+.world-card--featured .publication-preview-image {
+    position: absolute;
+    inset: 0;
+}
+
+/* Wide enough for the picture beside the words: measured on the shelf,
+   not the window, so a sidebar beside the page counts too. */
+@container (min-width: 640px) {
+    .world-card--featured {
+        flex-direction: row;
+        gap: 1.5rem;
+    }
+
+    .world-card--featured .world-card-thumbnail {
+        flex: 0 0 45%;
+        align-self: flex-start;
+    }
+
+    .world-card--featured .publication-preview--card {
+        margin-bottom: 0;
+    }
+
+    .world-card--featured h3 {
+        font-size: 1.35rem;
+    }
+
+    .world-card--featured .publication-description {
+        font-size: 0.9rem;
+        -webkit-line-clamp: 5;
+    }
 }
 
 /* Toolbar */
