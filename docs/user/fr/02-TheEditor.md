@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 044b3cba0265f86d -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: c9cf8ab76a5a2809 -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -38,6 +38,10 @@ organiser votre construction avec des groupes.
 - **Titre de la construction** — le nom de la construction ouverte. Cliquez sur **✎**
   pour modifier son titre, sa description et sa licence. Son état
   d’enregistrement est affiché dans la barre d’outils.
+  Cliquez sur le titre lui-même (**▸**) pour déplier le même panneau
+  **À propos de cette construction** que la Vue du Monde, avec **Lire la
+  suite** pour une longue description ; **▾** le replie, et l’Éditeur
+  retient votre choix.
 - **Sélection** — n’affiche que ce qui peut agir sur votre sélection
   actuelle ; voir [Le panneau Sélection](#le-panneau-sélection)
   ci-dessous.

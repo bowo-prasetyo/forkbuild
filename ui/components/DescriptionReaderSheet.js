@@ -8,7 +8,9 @@ import BuildHeart from './BuildHeart.js';
 // opened from "Read more" or the comments line in the About this build panel
 // (DocumentInfoPanel), which only has room for the description's start.
 // Beside World View's left panel on a wide screen, leaving the World in view
-// and usable; a sheet up from the bottom on a narrow one.
+// and usable (beside the Editor's sidebar too, with
+// .description-reader-sheet--editor); a sheet up from the bottom on a narrow
+// one.
 //
 // Comments are the build's Publication's, drawn by the same
 // PublicationCommentarySection Explore's cards use; the commands it injects

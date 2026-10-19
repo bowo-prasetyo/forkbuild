@@ -50,6 +50,7 @@ import { PasteClipboardUseCase } from '../../application/editor/PasteClipboardUs
 import { UpdateDocumentMetadataUseCase } from '../../application/document/UpdateDocumentMetadataUseCase.js';
 import { computeLifecycleStatus, describeLifecycleStatus } from '../../application/document/DocumentLifecycleStatus.js';
 import DocumentInfoPanel from '../components/DocumentInfoPanel.js';
+import DescriptionReaderSheet from '../components/DescriptionReaderSheet.js';
 import MetadataEditorDialog from '../components/MetadataEditorDialog.js';
 import CreateBlueprintDialog from '../components/CreateBlueprintDialog.js';
 import StructureInfoPanel from '../components/StructureInfoPanel.js';
@@ -106,7 +107,7 @@ const PLACING_TOOLS = new Set([ToolId.PLACE, ToolId.PLACE_STRUCTURE, ToolId.COMP
 
 export default {
     name: 'EditorView',
-    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, CommandPalette, KeyboardShortcutsOverlay, NewDocumentDialog, ActionFeedback, RecoveryBanner, DocumentInfoPanel, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback, ForkFailureDialog, EditorDistributionDialog, PublicationShareLink, ProtectIdentityNote, FirstBuildGuide, StarterJobCard, BuildPlotBanner, EditorTouchActionBar, SoundControl, ModelExportDialog, WalkTogetherDialog, LoginModal, BuildTogetherStrip },
+    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, CommandPalette, KeyboardShortcutsOverlay, NewDocumentDialog, ActionFeedback, RecoveryBanner, DocumentInfoPanel, DescriptionReaderSheet, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback, ForkFailureDialog, EditorDistributionDialog, PublicationShareLink, ProtectIdentityNote, FirstBuildGuide, StarterJobCard, BuildPlotBanner, EditorTouchActionBar, SoundControl, ModelExportDialog, WalkTogetherDialog, LoginModal, BuildTogetherStrip },
     template: `
         <div class="editor-view">
             <Toolbar
@@ -289,7 +290,14 @@ export default {
                     </template>
                     <!-- What a ready-made build asks of its builder (core/StarterJob.js); over the 3D view on a phone. -->
                     <StarterJobCard v-if="starterCardStage && !compactLayout" :stage="starterCardStage" @pick="pickStarterJobBrick" @publish="publishFromStarterCard" @hide="hideStarterCard" />
-                    <DocumentInfoPanel compact :info="documentInfo" @edit-metadata="showMetadataEditor = true" />
+                    <DocumentInfoPanel
+                        compact
+                        :expanded="documentInfoExpanded"
+                        :info="documentInfo"
+                        @toggle="toggleDocumentInfo"
+                        @edit-metadata="showMetadataEditor = true"
+                        @read-description="descriptionReaderOpen = true"
+                    />
                     <!-- Build with me: a link that lets friends build this with you, live. -->
                     <button
                         v-if="buildAvailable && buildRole !== 'guest'"
@@ -346,6 +354,14 @@ export default {
                 </div>
                 <div :style="{ position: 'relative', flex: 1, minWidth: 0, display: 'flex' }">
                     <div ref="viewport" class="viewport"></div>
+                    <!-- Read more's whole description, beside the sidebar as in World View. -->
+                    <DescriptionReaderSheet
+                        v-if="descriptionReaderOpen && documentInfo && documentInfo.description"
+                        class="description-reader-sheet--editor"
+                        :info="documentInfo"
+                        @close="descriptionReaderOpen = false"
+                        @edit-metadata="showMetadataEditor = true"
+                    />
                     <!-- Shown only on phone-width screens (css/main/touch-and-compact.css). -->
                     <button
                         type="button"
@@ -1002,6 +1018,19 @@ export default {
         const updateDocumentMetadataUseCase = new UpdateDocumentMetadataUseCase();
         const documentInfo = ref(null);
         const showMetadataEditor = ref(false);
+        // The panel folded to its title or unfolded into World View's full
+        // About this build, as this device last left it.
+        const editorBuildInfoStore = inject('editorBuildInfoStore', null);
+        const documentInfoExpanded = ref(editorBuildInfoStore ? editorBuildInfoStore.isExpanded() : false);
+        function toggleDocumentInfo() {
+            const next = !documentInfoExpanded.value;
+            documentInfoExpanded.value = editorBuildInfoStore ? editorBuildInfoStore.setExpanded(next) : next;
+            if (!next) descriptionReaderOpen.value = false;
+        }
+        // Read more's sheet (DescriptionReaderSheet); it closes when another
+        // build opens, so it never reopens on its own.
+        const descriptionReaderOpen = ref(false);
+        watch(() => documentInfo.value && documentInfo.value.documentId, () => { descriptionReaderOpen.value = false; });
         // Bumped on every document state change and read by getActionContext() so Vue
         // tracks it: otherwise the sidebar's groups and undo/redo would stay cached
         // when a group is created.
@@ -1103,6 +1132,7 @@ export default {
             const state = documentManager.state;
             const status = computeLifecycleStatus({ hasBeenSaved: !!state.lastSaved, isPublished: false });
             documentInfo.value = {
+                documentId: document.world.id,
                 title: document.metadata.title || 'Untitled',
                 description: document.metadata.description || '',
                 tags: document.metadata.tags,
@@ -1811,6 +1841,9 @@ export default {
             selectedAttributionDiscoveryProvider,
             selectedAttributionDistributionStorage,
             documentInfo,
+            documentInfoExpanded,
+            toggleDocumentInfo,
+            descriptionReaderOpen,
             showMetadataEditor,
             onSaveMetadata,
             setTool,

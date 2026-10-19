@@ -41,6 +41,45 @@
     color: var(--ink);
 }
 
+/* The title unfolds the panel (DocumentInfoPanel's `expanded`); the full
+   form's heading folds it again. */
+.document-info-compact-toggle,
+.document-info-collapse {
+    display: flex;
+    align-items: baseline;
+    gap: 0.35rem;
+    padding: 0;
+    background: none;
+    border: none;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    text-transform: inherit;
+    letter-spacing: inherit;
+    cursor: pointer;
+}
+
+.document-info-compact-toggle {
+    flex: 1;
+    min-width: 0;
+}
+
+.document-info-compact-toggle:hover .document-info-compact-title,
+.document-info-collapse:hover {
+    color: var(--ink-strong);
+}
+
+.document-info-toggle-mark {
+    flex-shrink: 0;
+    width: 0.7rem;
+    font-size: 0.7rem;
+    color: var(--ink-subtle);
+}
+
+.document-info-panel--expanded {
+    margin: 0.75rem 0 0;
+}
+
 .document-info-compact-edit {
     flex-shrink: 0;
     padding: 0.1rem 0.4rem;

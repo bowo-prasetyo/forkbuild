@@ -202,7 +202,7 @@ const emptyContext = (extra = {}) => ({ hasSelection: false, selectionCount: 0, 
     await nextTick();
     assert(compact.querySelector('.document-info-compact-draft') === null, 'a saved document carries no chip');
     assert(compact.getBoundingClientRect().height < 64, `compact header stays short, got ${compact.getBoundingClientRect().height}px`);
-    compact.querySelector('button').click();
+    compact.querySelector('.document-info-compact-edit').click();
     assert(edits.length === 1, 'the edit button opens the metadata editor');
     assert(host.querySelector('.full').textContent.includes('Draft — not yet saved'), 'the full panel (World View) still shows status');
 

@@ -34,6 +34,9 @@ transform bricks, and how to organize your build with groups.
 - **Build title** — the open build's name. Click **✎** to edit its
   title, description and license. Whether it's saved is shown in the
   toolbar.
+  Click the title itself (**▸**) to unfold the same **About this build**
+  panel World View shows, with **Read more** for a long description;
+  **▾** folds it again, and the Editor remembers which you chose.
 - **Selection** — only shows what can act on your current selection; see
   [The Selection panel](#the-selection-panel) below.
 - **Build Library** — a search box and two tabs:

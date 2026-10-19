@@ -27,7 +27,10 @@ import I18nText from '../i18n/I18nText.js';
 // `compact` is the Editor's one-line form: title and an edit button, plus
 // fork origin and the editability notice only when they apply. Only a
 // Draft is marked: the toolbar's Saved / Unsaved indicator covers the rest,
-// but it also says "Saved" for a document that was never saved.
+// but it also says "Saved" for a document that was never saved. Its title
+// unfolds it into the full form, the one World View shows, and the full
+// form's heading folds it again: both emit 'toggle', and `expanded` (the
+// caller's) says which form shows.
 //
 // The full form leads with the title and the start of the description, the
 // width of the panel, before the details. A description longer than that
@@ -49,6 +52,11 @@ export default {
             type: Boolean,
             default: false
         },
+        // With `compact`, show the full form instead (see above).
+        expanded: {
+            type: Boolean,
+            default: false
+        },
         // How many comments the build's Publication has, or null when it
         // has none to comment on (no Publication, or a surface without
         // comments): then no comments line shows.
@@ -63,7 +71,7 @@ export default {
             default: null
         }
     },
-    emits: ['edit-metadata', 'read-description', 'read-comments'],
+    emits: ['edit-metadata', 'read-description', 'read-comments', 'toggle'],
     computed: {
         // Whether the panel's start of the description leaves anything out.
         descriptionTruncated() {
@@ -97,9 +105,18 @@ export default {
         }
     },
     template: `
-        <div v-if="info && compact" class="document-info-panel document-info-panel--compact">
+        <div v-if="info && compact && !expanded" class="document-info-panel document-info-panel--compact">
             <div class="document-info-compact-row">
-                <span class="document-info-compact-title" :title="descriptionPlainText(info.description) || info.title">{{ info.title }}</span>
+                <button
+                    type="button"
+                    class="document-info-compact-toggle"
+                    aria-expanded="false"
+                    :title="descriptionPlainText(info.description) || info.title"
+                    @click="$emit('toggle')"
+                >
+                    <span class="document-info-toggle-mark" aria-hidden="true">▸</span>
+                    <span class="document-info-compact-title">{{ info.title }}</span>
+                </button>
                 <span v-if="isDraft(info)" class="document-info-compact-draft" :title="displayText(info.statusLabel)">{{ t('documentInfo.draft') }}</span>
                 <button
                     v-if="info.editable !== false"
@@ -123,8 +140,14 @@ export default {
                 {{ info.editabilityNotice.blocked ? '🔒' : 'ℹ️' }} {{ displayText(info.editabilityNotice.message) }}
             </p>
         </div>
-        <div v-else-if="info" class="document-info-panel">
-            <h4>{{ t('documentInfo.title') }}</h4>
+        <div v-else-if="info" :class="['document-info-panel', { 'document-info-panel--expanded': compact }]">
+            <h4 v-if="compact">
+                <button type="button" class="document-info-collapse" aria-expanded="true" @click="$emit('toggle')">
+                    <span class="document-info-toggle-mark" aria-hidden="true">▾</span>
+                    {{ t('documentInfo.title') }}
+                </button>
+            </h4>
+            <h4 v-else>{{ t('documentInfo.title') }}</h4>
 
             <p class="document-info-name">{{ info.title }}</p>
             <div v-if="info.description" class="document-info-description">

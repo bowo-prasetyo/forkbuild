@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 044b3cba0265f86d -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: c9cf8ab76a5a2809 -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -38,6 +38,10 @@ ordnen.
 - **Bauwerkstitel** — der Name des geöffneten Bauwerks. Klicken Sie auf
   **✎**, um Titel, Beschreibung und Lizenz zu bearbeiten. Ob sie
   gespeichert ist, zeigt die Werkzeugleiste.
+  Ein Klick auf den Titel selbst (**▸**) klappt dasselbe Feld **Über
+  dieses Bauwerk** auf, das die Weltansicht zeigt, mit **Weiterlesen**
+  für eine lange Beschreibung; **▾** klappt es wieder zu, und der Editor
+  merkt sich Ihre Wahl.
 - **Auswahl** — zeigt nur, was auf Ihre aktuelle Auswahl wirken kann;
   siehe [Das Feld Auswahl](#das-feld-auswahl) unten.
 - **Baubibliothek** — ein Suchfeld und zwei Reiter:
