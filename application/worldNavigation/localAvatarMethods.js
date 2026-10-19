@@ -137,8 +137,9 @@ export const localAvatarMethods = {
         // Control Mode). Absent when `_session` lacks onAnimationFrame.
         // `movementConstraint`/`treeConstraint` are built once and shared with
         // AvatarVehicleMovementController: building and tree collision are one
-        // system, parameterized by the moving body's radius. Terrain and step
-        // constraints stay avatar-only.
+        // system, parameterized by the moving body's radius. The terrain
+        // constraint stays avatar-only; ground vehicles get their own step
+        // constraint so they drive up ramps and across bridges.
         const movementConstraint = this._buildAvatarMovementConstraint();
         const treeConstraint = this._buildAvatarTreeConstraint();
         this._avatarMovementController = new AvatarMovementController(
@@ -190,7 +191,8 @@ export const localAvatarMethods = {
             this._vehicleRuntimeInstances,
             movementConstraint,
             treeConstraint,
-            new VehicleWaterConstraint({ seed: this.getWorldSeed() })
+            new VehicleWaterConstraint({ seed: this.getWorldSeed() }),
+            this._buildVehicleStepConstraint()
         );
         this._lastAvatarFollowPosition = this._avatarPresenceSession.current.position;
         if (typeof this._session.onAnimationFrame === 'function') {
@@ -361,6 +363,18 @@ export const localAvatarMethods = {
             structureResolver: this._structureResolver,
             // A frozen lake is a floor at its surface.
             floorAt: (x, z) => ice.iceTopAt(x, z)
+        });
+    },
+
+    // The bricks a ground vehicle stands on: the same streamed-in geometry and
+    // step height as on foot, so what the movement constraint lets it drive onto
+    // is what this lets it climb. No ice: wheels still stop at a frozen lake.
+    _buildVehicleStepConstraint() {
+        return new AvatarStepConstraint({
+            loadedDocuments: this._solidDocuments(),
+            getWorldPosition: (documentId) => this._solidWorldPosition(documentId),
+            brickRegistry: this._registry,
+            structureResolver: this._structureResolver
         });
     },
 

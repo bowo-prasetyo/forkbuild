@@ -25,6 +25,14 @@ import { AvatarDroneVerticalStateKind, deriveAvatarDroneVerticalState, stepDrone
 // on top of the same horizontal pipeline, measured from the water surface where
 // there is water. Wheeled vehicles stop at the waterline (VehicleWaterConstraint).
 //
+// With a stepConstraint (the avatar's AvatarStepConstraint), a ground vehicle
+// climbs and stands on bricks the way an avatar on foot does: up a ramp, onto a
+// bridge deck, off the far end. Bricks are measured from the ground under the
+// vehicle (the frame an avatar's position uses), while a vehicle's position is
+// a world height that already carries the terrain, so this class converts
+// between the two around the step. Without one, a ground vehicle follows the
+// raw terrain, as it always has.
+//
 // An optional steeringIntent redirects the already-resolved step along the
 // steered direction without recomputing its length.
 //
@@ -44,14 +52,16 @@ export function isMovableVehicleType(type) {
 export class AvatarVehicleMovementController {
     // All three collaborators are shared with the caller; this class never builds
     // its own store or constraints.
-    constructor(vehicleRuntimeInstances, movementConstraint = null, treeConstraint = null, waterConstraint = null) {
+    constructor(vehicleRuntimeInstances, movementConstraint = null, treeConstraint = null, waterConstraint = null, stepConstraint = null) {
         this._vehicleRuntimeInstances = vehicleRuntimeInstances;
         this._movementConstraint = movementConstraint;
         this._treeConstraint = treeConstraint;
         this._waterConstraint = waterConstraint;
+        this._stepConstraint = stepConstraint;
         this._collided = false;
         this._collidedWithTree = false;
         this._blockedByWater = false;
+        this._blockedByStepHeight = false;
         // Used only to detect a new ride so transient state can be reset; never the
         // source of truth for what is mounted.
         this._activeVehicleId = null;
@@ -102,12 +112,20 @@ export class AvatarVehicleMovementController {
         }
 
         const currentPosition = vehicleInstance.position;
-        // Ground vehicles follow raw terrain height, as at spawn, never the avatar's
-        // brick-aware support height. Sampled before stepping.
+        // Ground vehicles follow the terrain, raised onto whatever brick they stand
+        // on when a stepConstraint is wired. Sampled before stepping.
         const isDrone = vehicleInstance.type === VehicleType.DRONE;
+        const terrainHere = terrainHeightAt(seed, currentPosition.x, currentPosition.z);
+        const climbsBricks = !isDrone && this._stepConstraint !== null;
+        // How high the vehicle stands above the ground under it, the frame bricks
+        // are measured in. A vehicle just put down can sit below the terrain.
+        const liftHere = climbsBricks ? Math.max(0, currentPosition.y - terrainHere) : 0;
+        const supportHere = climbsBricks
+            ? this._stepConstraint.supportHeightAt(currentPosition.x, currentPosition.z, liftHere)
+            : undefined;
         const groundHeight = isDrone && this._waterConstraint
             ? this._waterConstraint.droneFloorAt(currentPosition.x, currentPosition.z)
-            : terrainHeightAt(seed, currentPosition.x, currentPosition.z);
+            : terrainHere + (climbsBricks ? supportHere : 0);
 
         const movementState = new AvatarMovementState({
             forwardAxis: movementIntent.direction,
@@ -174,8 +192,11 @@ export class AvatarVehicleMovementController {
         let finalPosition = candidatePosition;
         this._collided = false;
         if (this._movementConstraint) {
+            // supportHeight lets a brick within a step of the vehicle's support count
+            // as something to drive onto rather than a wall.
             const constrained = this._movementConstraint.apply(currentPosition, finalPosition, {
-                avatarRadius: capability.collisionRadius
+                avatarRadius: capability.collisionRadius,
+                supportHeight: supportHere
             });
             finalPosition = constrained.position;
             this._collided = constrained.collided;
@@ -192,12 +213,37 @@ export class AvatarVehicleMovementController {
             this._collidedWithTree = treeResult.collided;
         }
 
+        // Steps onto or off a brick exactly as an avatar on foot does, in the
+        // ground-relative frame, then returns to world height over the ground where
+        // the vehicle ends up. A drop too deep to step leaves it falling next tick.
+        this._blockedByStepHeight = false;
+        let liftThere = 0;
+        if (climbsBricks) {
+            const stepResult = this._stepConstraint.apply(
+                { x: currentPosition.x, y: liftHere, z: currentPosition.z },
+                { x: finalPosition.x, y: finalPosition.y - terrainHere, z: finalPosition.z },
+                { grounded: result.grounded }
+            );
+            const { x, z } = stepResult.position;
+            liftThere = Math.max(0, stepResult.position.y);
+            finalPosition = { x, y: terrainHeightAt(seed, x, z) + liftThere, z };
+            this._blockedByStepHeight = stepResult.blocked;
+            if (stepResult.falling) {
+                this._grounded = false;
+            }
+        }
+
         // Commits the constrained position, so the avatar that follows can never end
-        // up inside an obstacle the vehicle stopped short of.
+        // up inside an obstacle the vehicle stopped short of. Depth is measured from
+        // what the vehicle stands on, so a bridge deck carries it over the water.
         this._blockedByWater = false;
         if (this._waterConstraint && !isDrone) {
-            const waterResult = this._waterConstraint.apply(currentPosition, finalPosition);
-            finalPosition = waterResult.position;
+            const waterResult = climbsBricks
+                ? this._waterConstraint.apply(currentPosition, finalPosition, { fromLift: liftHere, toLift: liftThere })
+                : this._waterConstraint.apply(currentPosition, finalPosition);
+            finalPosition = waterResult.blocked && climbsBricks
+                ? { x: currentPosition.x, y: currentPosition.y, z: currentPosition.z }
+                : waterResult.position;
             this._blockedByWater = waterResult.blocked;
         }
 
@@ -227,6 +273,10 @@ export class AvatarVehicleMovementController {
         return this._blockedByWater;
     }
 
+    isBlockedByStepHeight() {
+        return this._blockedByStepHeight;
+    }
+
     // Called by the caller whenever intent is not routed here (unmounted, or an
     // immovable vehicle), so every later ride starts from rest.
     reset() {
@@ -237,6 +287,7 @@ export class AvatarVehicleMovementController {
         this._collided = false;
         this._collidedWithTree = false;
         this._blockedByWater = false;
+        this._blockedByStepHeight = false;
         this._droneAltitude = 0;
         this._droneVerticalStateKind = null;
     }

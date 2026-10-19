@@ -14,9 +14,11 @@ export class VehicleWaterConstraint {
             : (x, z) => surfaceCategoryAt(seed, x, z) === SURFACE_CATEGORY.WATER;
     }
 
-    depthAt(x, z) {
+    // `lift` is how high above the ground the vehicle stands (a bridge deck),
+    // so the depth is measured from its wheels, not the bed.
+    depthAt(x, z, lift = 0) {
         if (!this._isWaterAt(x, z)) return 0;
-        return Math.max(0, LAKE_SURFACE_HEIGHT - this._heightAt(x, z));
+        return Math.max(0, LAKE_SURFACE_HEIGHT - this._heightAt(x, z) - lift);
     }
 
     droneFloorAt(x, z) {
@@ -24,11 +26,12 @@ export class VehicleWaterConstraint {
     }
 
     // Reverts X/Z to where the vehicle stood when the step would take it into
-    // water; Y passes through.
-    apply(position, desiredPosition) {
+    // water; Y passes through. `fromLift`/`toLift` are how high above the ground
+    // the vehicle stands before and after the step (see depthAt()).
+    apply(position, desiredPosition, { fromLift = 0, toLift = 0 } = {}) {
         const allowed = isVehicleWaterStepAllowed(
-            this.depthAt(position.x, position.z),
-            this.depthAt(desiredPosition.x, desiredPosition.z)
+            this.depthAt(position.x, position.z, fromLift),
+            this.depthAt(desiredPosition.x, desiredPosition.z, toLift)
         );
         if (allowed) {
             return { position: desiredPosition, blocked: false };

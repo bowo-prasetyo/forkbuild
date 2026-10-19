@@ -32,6 +32,7 @@ import { deriveAvatarVehicleStoreTransition } from '../../core/AvatarVehicleStor
 import { deriveAvatarVehicleDeployTransition } from '../../core/AvatarVehicleDeployTransition.js';
 import { VehicleInstance } from '../../core/VehicleInstance.js';
 import { createId } from '../../core/createId.js';
+import { Position } from '../../core/Position.js';
 import { surfaceCategoryAt, SURFACE_CATEGORY } from '../../core/TerrainSurface.js';
 import { LAKE_SURFACE_HEIGHT } from '../../core/Hydrology.js';
 import { droneFloorHeight, VEHICLE_MAX_WATER_DEPTH } from '../../core/VehicleWaterline.js';
@@ -258,7 +259,7 @@ export class AvatarVehicleInteractionController {
             dismountRequested: airborne ? false : requested
         });
         const dismountPosition = vehicle
-            ? resolveAvatarVehicleDismountPosition(vehicle)
+            ? this._onVehicleFloor(resolveAvatarVehicleDismountPosition(vehicle), vehicle)
             : null;
         const destinationClearance = dismountPosition
             ? isAvatarVehicleDismountPositionClear({
@@ -353,14 +354,31 @@ export class AvatarVehicleInteractionController {
         this._storeKeyConsumed = true;
         this._selectedEntryId = null;
         const avatarPosition = this._avatarPresenceSession.current.position;
+        // A wheeled vehicle is put down where the avatar stands, deck or ground, in
+        // the world heights vehicles move in.
+        const vehiclePosition = transition.entry.type === VehicleType.DRONE
+            ? avatarPosition
+            : new Position(avatarPosition.x, terrainHeightAt(this._seed, avatarPosition.x, avatarPosition.z) + Math.max(0, avatarPosition.y), avatarPosition.z);
         const instance = new VehicleInstance({
             id: createId(),
             type: transition.entry.type,
-            spawnPosition: avatarPosition,
-            position: avatarPosition
+            spawnPosition: vehiclePosition,
+            position: vehiclePosition
         });
         this._vehicleRuntimeInstances.add(instance);
         this._mount = createAvatarVehicleMount(instance.id);
+    }
+
+    // Getting off a ground vehicle on a bridge deck leaves the avatar at the
+    // deck's height, in the terrain-relative frame AvatarPresence uses; off the
+    // edge of the deck, it then drops to the ground. A drone (only ever
+    // dismounted on its floor) and the ground itself keep the height 0.
+    _onVehicleFloor(position, vehicle) {
+        if (!position || vehicle.type === VehicleType.DRONE) {
+            return position;
+        }
+        const lift = vehicle.position.y - terrainHeightAt(this._seed, vehicle.position.x, vehicle.position.z);
+        return lift > 0 ? new Position(position.x, lift, position.z) : position;
     }
 
     _droneFloorAt(x, z) {

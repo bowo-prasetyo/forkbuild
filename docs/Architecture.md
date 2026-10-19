@@ -1356,6 +1356,10 @@ surface and stays silent under water. Presence keeps its existing `animation` va
   (`core/VehicleWaterline.js#droneFloorHeight()`), and `AvatarVehicleInteractionController` refuses to dismount a
   drone in mid-air; getting off one on the water leaves the avatar floating. Wheeled vehicles stop at the waterline
   (`application/avatar/VehicleWaterConstraint.js`, `VEHICLE_MAX_WATER_DEPTH`), and can't be deployed in water.
+  Ground vehicles climb bricks with their own `AvatarStepConstraint` (the avatar's, without the ice), so they drive up
+  ramps and across bridges; the water depth is measured from the deck they stand on. A vehicle's position is a world
+  height and bricks are measured from the ground under it, so the controller converts between the two around the step;
+  getting off on a deck, and putting a vehicle down on one, convert the same way.
 - **Persistence (0.9.701).** The inventory and both runtime stores persist through optional stores
   (`storage/*PersistenceStore.js`). Runtime positions are written at most once a second. Only released animals are
   saved; wild ones are recomputed.
