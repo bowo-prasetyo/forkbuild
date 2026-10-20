@@ -7892,3 +7892,41 @@ it). A newcomer learns one thing: the heart.
   who, you first, by name; compact; signed out; comment authors named).
 - Not done: hearts on a build's earlier Publications aren't added to a republished one's; the count isn't checked
   against the networks on every Explore card, only in World View and when a card's comments are opened.
+
+**A locked name was told to choose a name.** Giving a heart with a name whose key had locked itself said "Choose a
+name first to give a heart.", though the name was right there in the header; the person had to work out alone that it
+needed unlocking. `resolveSigningIdentityId()` answers "who can sign?" with an id or null, so every action that asks
+it heard null for no name, a locked name and a revoked one alike, and said "choose a name". Some reads went quietly
+wrong the same way while locked: your own heart showed as not given, whom you follow came back empty, and no
+notification arrived. Signing past those checks (chat, blocking) failed with the provider's developer English. Now a
+locked name is told so, by name, with an **Unlock** button beside the message, a revoked one is told to switch names,
+and reading what is your own no longer needs an unlock. Pillar: **Your work is yours, and lives in a world** (the name
+your work goes under stays yours, and the app says plainly what it needs). A newcomer learns nothing new: the Unlock
+button is the header's own.
+
+- identity/SigningReadiness.js: `signingReadiness()` says READY, NO_NAME, LOCKED or REVOKED, with the name in use even
+  when it can't sign; `requireSigningIdentityId()` throws the action's own "choose a name" message only with no name,
+  `refusal.nameLocked` ("Your name "{name}" is locked…") or `refusal.nameRevoked` otherwise, each carrying a
+  `remedy` (core/UserFacingError.js gains it). `currentIdentityId()` is the name in use, for reading.
+- The refusals for a heart, a landmark, decoration, region or resident, following, a blueprint claim or lineage, a
+  delegation, a comment, the lobby and being discoverable all go through it; walking together fails with
+  `nameLocked`/`nameRevoked` (`WalkTogether#signingFailure()`). LocalIdentityProvider's own locked, revoked and
+  no-session refusals are UserFacingErrors with the same messages and remedies, the English kept as their detail.
+- Reads use `currentIdentityId()`: your hearts (`getPublicationHeartsCommand`), whom you follow (`FollowUseCase`, whose
+  Follow button now shows while locked and asks to unlock), your notifications, heart, follow and remix notifications,
+  your builds' credit, and your own name for hearts and comments.
+- UI: ui/components/SigningRemedyButton.js (Unlock, Choose a name or Switch name, through App.js's new `nameRemedy`,
+  which the header's UserWidget answers with its own dialog) beside a heart's or a follow's refusal;
+  ui/components/NameNeededNotice.js in place of the four comment boxes, following lock changes; LoginModal opened to
+  walk, build or publish goes straight to the passphrase of a locked name in use. FollowButton shows a refusal's
+  translated text rather than its key.
+- Words: the lock and lobby messages say "name", not "identity" (`refusal.thisIdentityIsProtectedEnter`,
+  `refusal.signInAndUnlockYour`, `refusal.theRendezvousServerCouldNot`, `peerConnections.unlockYourIdentityOn`,
+  `peerConnections.yourIdentityIsLockedUnlock`); `refusal.unlockYourIdentityToBe` gives way to
+  `refusal.chooseANameToBeDiscoverable` plus the locked and revoked messages. In every language, with the identity
+  guide's locked vault and the FAQ's locked entry.
+- Tests: `SigningReadiness` (no name, ready, locked, revoked; signing while locked; a heart while locked asks to
+  unlock; a locked name still sees whom it follows), `BuildHeartBrowser` (a locked heart offers Unlock; the comment
+  box notice through no name, locked and unlocked), `HeaderNameBrowser` (Unlock beside a refusal opens the header's
+  prompt; Walk with me with a locked name asks for its passphrase).
+- Not done: a document begun while locked still records no author; the My Identities page keeps saying "identity".

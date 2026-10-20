@@ -59,6 +59,7 @@ import { RemixedBuildNotifier } from '../application/publication/RemixedBuildNot
 import { DeviceNotificationSettingsStore } from '../application/settings/DeviceNotificationSettingsStore.js';
 import { DeviceNotificationRelay } from '../application/notification/DeviceNotificationRelay.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
+import { currentIdentityId } from '../identity/SigningReadiness.js';
 import { registerServiceWorker, showDeviceNotification } from './pwa/serviceWorkerClient.js';
 import { browserNotificationPermission } from './components/DeviceNotificationSetting.js';
 import { describeNotification } from './notifications/notificationText.js';
@@ -357,11 +358,12 @@ function handleHeartReceived(result) {
 // latest record), and whether this identity is one of them.
 function getPublicationHeartsCommand(publicationId) {
     const hearts = publicationHeartStore.currentHearts(publicationId);
-    const me = resolveSigningIdentityId(identityProvider);
+    // A locked name still sees its own heart: reading needs no signature.
+    const me = currentIdentityId(identityProvider);
     return Object.freeze({ hearts, mine: Boolean(me) && hearts.some((heart) => heart.authorIdentityId === me), ownIdentityId: me || null });
 }
 // Gives or takes back this identity's heart. Throws (a UserFacingError) when
-// nobody is signed in; sending it on never fails the tap.
+// no name can sign (none, locked or revoked); sending it on never fails the tap.
 function setPublicationHeartCommand({ publicationId, hearted }) {
     const heart = setPublicationHeartUseCase.execute({ publicationId, hearted });
     if (heart) {
@@ -665,7 +667,7 @@ app.provide('identityNames', createIdentityNames({
     publications: () => identityNamesPublications.execute() || [],
     signerOf: (publication) => verifiedPublisherOf(publication instanceof Publication ? publication : Publication.fromJSON(publication)),
     ownIdentity: () => {
-        const id = resolveSigningIdentityId(identityProvider);
+        const id = currentIdentityId(identityProvider);
         const user = id ? identityProvider.currentUser() : null;
         const name = user && typeof user.username === 'string' ? user.username.trim() : '';
         return id ? { id, name: name && name !== id ? name : null } : null;

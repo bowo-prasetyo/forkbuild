@@ -1,6 +1,7 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount, inject } from 'vue';
 import { useRoute } from 'vue-router';
 import LoginModal from './LoginModal.js';
+import { SigningRemedy } from '../../identity/SigningReadiness.js';
 import { t } from '../i18n/i18n.js';
 
 // 0.2.46: reads the same AuthenticationSession every other subsystem
@@ -31,6 +32,7 @@ export default {
     components: { LoginModal },
     setup() {
         const identityUseCase = inject('identityUseCase');
+        const nameRemedy = inject('nameRemedy', null);
         const route = useRoute();
         const user = ref(identityUseCase.currentUser());
         const lockedIdentityId = ref(null);
@@ -77,6 +79,16 @@ export default {
         }
 
         watch(() => route.fullPath, () => { menuOpen.value = false; });
+
+        // Unlock, Choose a name or Switch name asked for next to a refusal.
+        if (nameRemedy) {
+            watch(nameRemedy.pending, (request) => {
+                if (!request) return;
+                refreshLockState();
+                if (request.remedy === SigningRemedy.SWITCH_NAME) switchName();
+                else openLoginOrUnlock();
+            });
+        }
 
         onMounted(() => {
             unsubscribeUser = identityUseCase.onUserChanged((u) => {

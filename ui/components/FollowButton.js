@@ -1,11 +1,14 @@
 import { ref, watch, inject, onBeforeUnmount } from 'vue';
-import { t } from '../i18n/i18n.js';
+import { errorText, t } from '../i18n/i18n.js';
+import SigningRemedyButton from './SigningRemedyButton.js';
 
 // Follow / Following for one identity (application/identity/FollowUseCase.js).
-// Hidden when nobody is signed in, for the signed-in identity itself, and for
-// anything but a did:key. Following is private to this device.
+// Hidden with no name, for the name in use itself, and for anything but a
+// did:key. A locked name sees it, and following asks it to unlock. Following
+// is private to this device.
 export default {
     name: 'FollowButton',
+    components: { SigningRemedyButton },
     props: {
         identityId: { type: String, default: null },
         // Shown for the follow until their work has been seen here; a label only.
@@ -18,6 +21,7 @@ export default {
     setup(props) {
         const followUseCase = inject('followUseCase', null);
         const error = ref('');
+        const errorRemedy = ref(null);
         const available = ref(false);
         const following = ref(false);
         function refresh() {
@@ -31,6 +35,7 @@ export default {
 
         function toggle() {
             error.value = '';
+            errorRemedy.value = null;
             try {
                 if (following.value) {
                     followUseCase.unfollow(props.identityId);
@@ -38,11 +43,12 @@ export default {
                     followUseCase.follow(props.identityId, { name: props.name });
                 }
             } catch (e) {
-                error.value = String(e.message || e).replace(/^FollowUseCase:\s*/, '');
+                error.value = errorText(e, String(e)).replace(/^FollowUseCase:\s*/, '');
+                errorRemedy.value = e && e.remedy ? e.remedy : null;
             }
         }
 
-        return { t, available, following, error, toggle };
+        return { t, available, following, error, errorRemedy, toggle };
     },
     template: `
         <span v-if="available" class="follow-button">
@@ -51,7 +57,7 @@ export default {
                     :aria-pressed="following ? 'true' : 'false'"
                     :title="following ? t('followButton.stopFollowingOnlyThisDevice') : t('followButton.seeTheirNewWorkUnder')"
                     @click="toggle">{{ following ? (followingLabel || t('followButton.following')) : (followLabel || t('followButton.follow')) }}</button>
-            <span v-if="error" class="identity-unlock-error">{{ error }}</span>
+            <span v-if="error" class="identity-unlock-error">{{ error }} <SigningRemedyButton :remedy="errorRemedy" /></span>
         </span>
     `
 };

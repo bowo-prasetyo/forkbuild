@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue';
+import { ref, computed, onBeforeUnmount } from 'vue';
 import { errorText, t } from '../../i18n/i18n.js';
 
 // The Place Naming panel: a region's naming claims and community view, this
@@ -10,7 +10,7 @@ import { errorText, t } from '../../i18n/i18n.js';
 // offered. `defaultDiscoveryProvider` is the saved Announcement / Discovery
 // preference the picker opens on.
 export function usePlaceNamingPanel({
-    defaultDiscoveryProvider = 'nostr', distributePlaceNamingClaimCommand, feedback, guarded, session
+    defaultDiscoveryProvider = 'nostr', distributePlaceNamingClaimCommand, feedback, guarded, session, identityUseCase = null
 }) {
     // The panel's data is re-derived from the session on open and after every
     // action, never cached.
@@ -38,7 +38,17 @@ export function usePlaceNamingPanel({
     // The claim just made with Publish A Name, which the panel offers to
     // distribute. Publishing never distributes on its own.
     const namingPanelDistributionOfferClaimId = ref(null);
-    const myIdentityId = computed(() => session.getMyIdentityId());
+    // Re-read when a name is chosen, locked or unlocked: what can be signed changes.
+    const identityVersion = ref(0);
+    const myIdentityId = computed(() => {
+        void identityVersion.value;
+        return session.getMyIdentityId();
+    });
+    if (identityUseCase && typeof identityUseCase.onVaultLockChanged === 'function') {
+        const bump = () => { identityVersion.value += 1; };
+        const unsubscribes = [identityUseCase.onUserChanged(bump), identityUseCase.onVaultLockChanged(bump)];
+        onBeforeUnmount(() => unsubscribes.forEach((unsubscribe) => unsubscribe()));
+    }
 
     // -----------------------------------------------------------------
     // Place Naming Claims

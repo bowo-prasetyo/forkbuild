@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 87bd554695c88554 -->
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: cf497f719abf3048 -->
 # 05 — Nama & Identitas Anda
 
 <!-- languages -->
@@ -57,12 +57,14 @@ terkunci**, dan itu benar-benar pertanyaan yang berbeda dari nama mana yang
 sedang Anda pakai:
 
 - **Dengan nama, tidak terkunci** — semuanya berfungsi seperti biasa.
-- **Dengan nama, terkunci** (🔒 di samping nama Anda di kanan atas) — Anda tetap
-  diri Anda sendiri, dan masih dapat menelusuri, membangun, dan menyimpan,
-  tetapi apa pun yang memerlukan tanda tangan baru (menerbitkan, menjadi
-  dapat ditemukan, bergabung ke lobi) gagal dengan pesan "identity is
-  locked" (identitas terkunci) sampai Anda membukanya. Klik nama Anda, lalu
-  **Buka Kunci**, untuk memasukkan frasa sandi, lalu coba lagi.
+- **Dengan nama, terkunci** (🔒 di samping nama Anda di kanan atas) — Anda
+  tetap diri Anda: Anda masih bisa menjelajah, membangun, dan menyimpan, dan
+  masih melihat hati, orang yang Anda ikuti, dan notifikasi Anda sendiri. Apa
+  pun yang memerlukan tanda tangan baru (memberi hati, berkomentar, mengikuti,
+  menerbitkan, dapat ditemukan, bergabung ke lobi) menampilkan **Nama Anda "…"
+  terkunci** dan langsung menawarkan tombol **Buka Kunci**, yang membuka
+  permintaan frasa sandi yang sama seperti mengeklik nama Anda lalu **Buka
+  Kunci**. Lalu coba lagi.
 - **Tanpa nama** — setelah **Ganti nama → Lanjut tanpa nama** Anda menjadi
   tamu; **Pilih nama** di bilah atas memilih atau membuka identitas lagi.
 

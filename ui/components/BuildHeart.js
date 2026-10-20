@@ -1,4 +1,5 @@
 import IdentityName from './IdentityName.js';
+import SigningRemedyButton from './SigningRemedyButton.js';
 import I18nText from '../i18n/I18nText.js';
 import { errorText, t } from '../i18n/i18n.js';
 
@@ -36,7 +37,7 @@ function rememberExplained() {
 
 export default {
     name: 'BuildHeart',
-    components: { IdentityName, I18nText },
+    components: { IdentityName, I18nText, SigningRemedyButton },
     inject: {
         getPublicationHeartsCommand: { default: null },
         setPublicationHeartCommand: { default: null },
@@ -49,7 +50,7 @@ export default {
         refresh: { type: Boolean, default: false }
     },
     data() {
-        return { hearts: [], mine: false, ownIdentityId: null, listOpen: false, explaining: false, error: null };
+        return { hearts: [], mine: false, ownIdentityId: null, listOpen: false, explaining: false, error: null, errorRemedy: null };
     },
     computed: {
         count() {
@@ -110,6 +111,7 @@ export default {
         },
         toggle() {
             this.error = null;
+            this.errorRemedy = null;
             if (!this.mine && !explainedAlready()) {
                 this.explaining = true;
                 return;
@@ -127,6 +129,7 @@ export default {
                 this.setPublicationHeartCommand({ publicationId: this.publicationId, hearted });
             } catch (error) {
                 this.error = errorText(error, t('heart.failed'));
+                this.errorRemedy = error && error.remedy ? error.remedy : null;
             }
             this.read();
         }
@@ -167,7 +170,7 @@ export default {
                 <button type="button" class="action-btn action-btn--primary build-heart-explain-go" @click="confirmFirst">♥ {{ t('heart.giveIt') }}</button>
                 <button type="button" class="action-btn build-heart-explain-cancel" @click="explaining = false">{{ t('heart.cancel') }}</button>
             </div>
-            <p v-if="error" class="build-heart-error" role="status">{{ error }}</p>
+            <p v-if="error" class="build-heart-error" role="status">{{ error }} <SigningRemedyButton :remedy="errorRemedy" /></p>
         </div>
     `
 };

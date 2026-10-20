@@ -1,5 +1,6 @@
 import { PublicationCommentary } from '../../../core/PublicationCommentary.js';
-import { resolveSigningIdentityId } from '../../../identity/resolveSigningIdentityId.js';
+import { requireSigningIdentityId } from '../../../identity/SigningReadiness.js';
+import { message } from '../../../core/Message.js';
 
 // 0.9.246 — Publication Commentary Authorization Boundary.
 //
@@ -138,8 +139,9 @@ export class AddPublicationCommentaryUseCase {
     // canCommentOnPublicationUseCase, constructs a PublicationCommentary,
     // and persists it through the injected store. `input.authorIdentityId`,
     // if present, is never read — see this file's own header. Returns
-    // `{ commentary, isNew }`, identically to 0.9.244. Throws a plain
-    // Error when no identity is authenticated (before authorizing,
+    // `{ commentary, isNew }`, identically to 0.9.244. Throws a
+    // UserFacingError when no name can sign — none chosen, locked or
+    // revoked, each with its own message (before authorizing,
     // constructing, or persisting anything), a plain Error when the
     // authenticated identity is not authorized to comment on
     // `publicationId` (before constructing or persisting anything), a
@@ -149,10 +151,7 @@ export class AddPublicationCommentaryUseCase {
     // commentaryId is already on file with different content. Never
     // catches a storage provider's own write failure.
     execute({ publicationId, content, createdAt, commentaryId } = {}) {
-        const authorIdentityId = resolveSigningIdentityId(this._identityProvider);
-        if (!authorIdentityId) {
-            throw new Error('AddPublicationCommentaryUseCase: sign in to comment on a publication');
-        }
+        const authorIdentityId = requireSigningIdentityId(this._identityProvider, message('publicationCommentarySection.signInToAddCommentary'), { detail: 'AddPublicationCommentaryUseCase: sign in to comment on a publication' });
         const isAuthorized = this._canCommentOnPublicationUseCase.execute({ identityId: authorIdentityId, publicationId });
         if (!isAuthorized) {
             throw new Error(`AddPublicationCommentaryUseCase: not authorized to comment on publication ${publicationId}`);

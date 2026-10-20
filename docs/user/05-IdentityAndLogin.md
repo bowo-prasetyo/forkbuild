@@ -51,11 +51,12 @@ question from which name you're using:
 
 - **Using a name, unlocked** — everything works normally.
 - **Using a name, locked** (🔒 next to your name in the top-right) — you're
-  still yourself, and you can still browse, build and save, but anything
-  that needs a fresh signature (publishing, being discoverable,
-  joining a lobby) fails with an "identity is locked"
-  message until you unlock. Click your name, then **Unlock**, to enter
-  your passphrase, then try again.
+  still yourself: you can still browse, build and save, and you still see your
+  own hearts, follows and notifications. Anything that needs a fresh signature
+  (giving a heart, commenting, following, publishing, being discoverable,
+  joining a lobby) says **Your name "…" is locked** and offers an **Unlock**
+  button right there, which opens the same passphrase prompt as clicking your
+  name, then **Unlock**. Then try again.
 - **No name** — after **Switch name → Go on without a name** you're a
   guest; **Choose a name** in the top bar picks or unlocks an identity
   again.

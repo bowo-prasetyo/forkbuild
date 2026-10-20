@@ -15,6 +15,7 @@ import CommentaryNetworkDistribution from './CommentaryNetworkDistribution.js';
 import { remotePinningDraftFromSettings } from '../../application/ipfs/IpfsRemotePinningDraft.js';
 import { errorText, t } from '../i18n/i18n.js';
 import IdentityName from './IdentityName.js';
+import NameNeededNotice from './NameNeededNotice.js';
 
 // Actions on the local user's own current Publication in World View:
 // distribute it and its Snapshot, export the Snapshot, place or unpublish it,
@@ -55,7 +56,7 @@ import IdentityName from './IdentityName.js';
 
 export default {
     name: 'OwnPublicationPanel',
-    components: { WorldDistributionDialog, PublicationCommentaryRemoteCheck, PublicationShareLink, CommentaryDistributionPicker, CommentaryNetworkDistribution, IdentityName },
+    components: { WorldDistributionDialog, PublicationCommentaryRemoteCheck, PublicationShareLink, CommentaryDistributionPicker, CommentaryNetworkDistribution, IdentityName, NameNeededNotice },
     inject: {
         identityUseCase: { default: null },
         ipfsRemotePinningSettingsStore: { default: null }

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 53acfc3595aae824 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 58c380fc2151aa11 -->
 # Häufige Fragen
 
 <!-- languages -->
@@ -92,10 +92,9 @@ Diese Meldungen zeigt die App nur auf Englisch:
   **Bauwerkeigenschaften** einen Titel.
 - **cannot publish an empty world** (eine leere Welt kann nicht
   veröffentlicht werden) — platzieren Sie zuerst mindestens einen Stein.
-- **cannot sign, identity is locked** (Signieren nicht möglich, Identität
-  gesperrt) — Ihre Identität hat sich selbst gesperrt; klicken Sie in der
-  oberen Leiste neben Ihrem Namen auf **Entsperren** und veröffentlichen
-  Sie erneut.
+- **Ihr Name „…“ ist gesperrt** — Ihr Name hat sich selbst gesperrt; klicken
+  Sie neben der Meldung (oder in der oberen Leiste neben Ihrem Namen) auf
+  **Entsperren** und veröffentlichen Sie erneut.
 
 ### Brauche ich zum Veröffentlichen einen Namen?
 

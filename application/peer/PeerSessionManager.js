@@ -4,9 +4,9 @@ import { PeerInvitation } from '../../peer/PeerInvitation.js';
 import { PeerConnectionState } from '../../peer/PeerConnectionState.js';
 import { ConnectToPeerUseCase } from './ConnectToPeerUseCase.js';
 import { DiscoverPeersUseCase } from './DiscoverPeersUseCase.js';
-import { signingIdentityId } from '../../peer/RendezvousPublicationSigning.js';
 import { UserFacingError } from '../../core/UserFacingError.js';
 import { message } from '../../core/Message.js';
+import { requireSigningIdentityId } from '../../identity/SigningReadiness.js';
 
 const DEFAULT_INVITATION_TTL_MS = 10 * 60 * 1000; // 10 minutes — matches peer/PeerInvitation.js's own default
 const SIGNAL_TIMEOUT_MS = 30 * 1000; // ICE gathering ordinarily resolves in well under this on a working network
@@ -241,9 +241,7 @@ export class PeerSessionManager {
     // nothing, the offer made for it is closed rather than left behind as
     // a pending "Unknown peer" nobody can ever answer.
     async publishSelf({ ttlMs = DEFAULT_INVITATION_TTL_MS, prepareRelay = true } = {}) {
-        if (!signingIdentityId(this._identityProvider)) {
-            throw new UserFacingError(message('refusal.unlockYourIdentityToBe'), { detail: 'PeerSessionManager: unlock your identity to be discoverable — a locked or signed-out identity cannot sign a publication' });
-        }
+        requireSigningIdentityId(this._identityProvider, message('refusal.chooseANameToBeDiscoverable'), { detail: 'PeerSessionManager: a locked or signed-out identity cannot sign a publication' });
         const { invitation, connectedPeer } = await this.createInvitation({ ttlMs, prepareRelay });
         let publication;
         try {

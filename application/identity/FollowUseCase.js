@@ -1,8 +1,8 @@
 import { EventBus } from '../../core/events/EventBus.js';
 import { FollowRecord, isFollowableIdentityId } from '../../core/FollowRecord.js';
-import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 import { UserFacingError } from '../../core/UserFacingError.js';
 import { message } from '../../core/Message.js';
+import { currentIdentityId, requireSigningIdentityId } from '../../identity/SigningReadiness.js';
 
 const FOLLOWING_CHANGED_EVENT = 'FollowingChanged';
 const STORAGE_KEY_PREFIX = 'follows:';
@@ -39,14 +39,16 @@ export class FollowUseCase {
         return this.getFollow(identityId) !== null;
     }
 
+    // A locked name counts: its follows are still its own to see, and
+    // following asks it to unlock (follow() refuses with that remedy).
     isSignedIn() {
-        return resolveSigningIdentityId(this._identityProvider) !== null;
+        return currentIdentityId(this._identityProvider) !== null;
     }
 
-    // Whether follow(identityId) would be accepted: someone is signed in, the id
-    // is a did:key, and it isn't the signed-in identity itself.
+    // Whether to offer follow(identityId): a name is in use, the id is a
+    // did:key, and it isn't that name itself.
     canFollow(identityId) {
-        const owner = resolveSigningIdentityId(this._identityProvider);
+        const owner = currentIdentityId(this._identityProvider);
         return Boolean(owner) && isFollowableIdentityId(identityId) && identityId !== owner;
     }
 
@@ -97,8 +99,9 @@ export class FollowUseCase {
         return () => subscription.unsubscribe();
     }
 
+    // Reading needs no signature: a locked name still sees whom it follows.
     _loadAll() {
-        const owner = resolveSigningIdentityId(this._identityProvider);
+        const owner = currentIdentityId(this._identityProvider);
         if (!owner) {
             return [];
         }
@@ -120,10 +123,6 @@ export class FollowUseCase {
     }
 
     _requireOwner() {
-        const owner = resolveSigningIdentityId(this._identityProvider);
-        if (!owner) {
-            throw new UserFacingError(message('refusal.signInToFollowPeople'), { detail: 'FollowUseCase: sign in to follow people' });
-        }
-        return owner;
+        return requireSigningIdentityId(this._identityProvider, message('refusal.signInToFollowPeople'), { detail: 'FollowUseCase: sign in to follow people' });
     }
 }

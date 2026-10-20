@@ -69,7 +69,10 @@ export default {
         const creating = ref(false);
         const createError = ref('');
 
-        const unlockingId = ref(props.unlockIdentityId);
+        // Opened to walk, build or publish while the name in use is only
+        // locked, it goes straight to that name's passphrase: asking to pick
+        // a name would send the person the wrong way.
+        const unlockingId = ref(props.unlockIdentityId || (props.purpose === 'switch' ? null : lockedSessionIdentityId(identityUseCase)));
         const unlockPassphrase = ref('');
         const unlockError = ref('');
         const unlocking = ref(false);
@@ -293,3 +296,9 @@ export default {
         </div>
     `
 };
+
+function lockedSessionIdentityId(identityUseCase) {
+    if (typeof identityUseCase.currentSession !== 'function' || typeof identityUseCase.isUnlocked !== 'function') return null;
+    const session = identityUseCase.currentSession();
+    return session && session.isAuthenticated && !identityUseCase.isUnlocked(session.identityId) ? session.identityId : null;
+}
