@@ -13,7 +13,7 @@ import { CreatePublicationCommentaryUseCase } from '../application/publication/c
 import { CreatePublicationCommentaryDistributionPeerExchangeUseCase } from '../application/publication/commentary/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js';
 
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
-import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
+import { LocalPeerNetwork, LocalPeerConnectionProvider } from './support/LocalPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { mainFiles } from './support/SourceFileGroups.js';

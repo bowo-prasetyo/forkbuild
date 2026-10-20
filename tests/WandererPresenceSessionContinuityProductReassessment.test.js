@@ -1,6 +1,6 @@
 
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
+import { LocalPeerNetwork, LocalPeerConnectionProvider } from './support/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
@@ -72,13 +72,13 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 // application/peer/AutoConnectKnownPeersUseCase.js, application/identity/SocialIdentityResolver.js,
 // application/peer/ConnectedIdentityPeers.js, presence/PeerAvatarPresenceBroadcastProvider.js,
 // application/presence/PresenceVisibilityUseCase.js, application/worldEncounter/ObserverLocalEncounterStore.js,
-// peer/PeerMessageBus.js, peer/LocalPeerConnectionProvider.js,
+// peer/PeerMessageBus.js, tests/support/LocalPeerConnectionProvider.js,
 // peer/PeerAuthenticationSession.js, identity/LocalIdentityProvider.js —
 // was confirmed, live, to import cleanly under plain `node` before this
 // file was written (none of them, nor their own transitive imports,
 // touch renderer/ or `three`). Every scenario below runs against these
 // real, unmodified classes, over REAL authenticated peer connections
-// (peer/LocalPeerConnectionProvider.js's in-memory transport,
+// (tests/support/LocalPeerConnectionProvider.js's in-memory transport,
 // peer/PeerAuthenticationSession.js's real handshake) exactly like
 // tests/WorldMembership.test.js, tests/CollaborativeSpatialPresence.test.js,
 // and tests/PeerAvatarPresence.test.js already do — never a hand-rolled
@@ -176,7 +176,7 @@ function makeDevice(label) {
 }
 
 // Mirrors the same three files' own connectAndAuthenticate() exactly — a
-// REAL in-memory transport (peer/LocalPeerConnectionProvider.js) and a
+// REAL in-memory transport (tests/support/LocalPeerConnectionProvider.js) and a
 // REAL handshake (peer/PeerAuthenticationSession.js), never a stand-in
 // for either.
 async function connectAndAuthenticate(network, addressA, deviceA, addressB, deviceB) {

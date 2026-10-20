@@ -1,5 +1,5 @@
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
+import { LocalPeerNetwork, LocalPeerConnectionProvider } from './support/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
@@ -29,7 +29,7 @@ import { assert } from './support/Assert.js';
 // tests/MultiDeviceSocialSemantics.test.js already established (real
 // LocalIdentityProvider instances standing in for physically distinct
 // devices, real peer/PeerAuthenticationSession.js handshakes over
-// peer/LocalPeerConnectionProvider.js, a real
+// tests/support/LocalPeerConnectionProvider.js, a real
 // DeviceAuthorizationPropagationUseCase whose resolveConnectionIdentity()
 // is wired straight into PeerPresenceUseCase's own new
 // `resolveSocialIdentity` collaborator) — extended with the one thing

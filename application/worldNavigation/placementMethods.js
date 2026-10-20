@@ -349,8 +349,8 @@ export const placementMethods = {
     // center/radius only for diagnostics; its PlacementRecords are discarded and
     // never replace exploreLocation's documents.
     //
-    // DecentralizedSpatialDiscoveryProvider.discover() throws for an untrusted
-    // root/authority, which is right for an authoritative caller. Exploration is
+    // A provider's discover() may throw for an untrusted root/authority,
+    // which is right for an authoritative caller. Exploration is
     // read-only, so the throw becomes `diagnostics.fatal` instead of escaping a
     // UI action.
     _runSpatialDiscoveryDiagnostics(center, radius) {

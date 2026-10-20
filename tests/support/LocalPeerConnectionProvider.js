@@ -1,7 +1,7 @@
-import { PeerConnectionProvider } from './PeerConnectionProvider.js';
-import { PeerConnection } from './PeerConnection.js';
-import { PeerConnectionState } from './PeerConnectionState.js';
-import { createId } from '../core/document/createId.js';
+import { PeerConnectionProvider } from '../../peer/PeerConnectionProvider.js';
+import { PeerConnection } from '../../peer/PeerConnection.js';
+import { PeerConnectionState } from '../../peer/PeerConnectionState.js';
+import { createId } from '../../core/document/createId.js';
 
 // 0.2.49's concrete transport: two (or more) LocalPeerConnectionProvider
 // instances sharing one LocalPeerNetwork connect to each other entirely

@@ -21,7 +21,7 @@ import { SnapshotPlacementResolver } from './SnapshotPlacementResolver.js';
 // CreatePublicationSnapshotPlacementCatalogUseCase.js (removed as unused) already wires
 // storage only and never signing. A caller obtains these from its own
 // existing composition roots (discovery/LocalDiscoveryProvider.js,
-// discovery/LocalContentResolver.js, application/
+// tests/support/LocalContentResolver.js, application/
 // CreatePublicationSnapshotPlacementCatalogUseCase.js (removed as unused)) and passes the
 // SAME instances here — never a second, disconnected set.
 //

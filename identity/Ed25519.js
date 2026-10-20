@@ -159,7 +159,7 @@ export function publicKeyMatchesDidKey(did, publicKeyHex) {
 
 // Recovers the raw public key from a did:key id — this is what lets a
 // bare signature (signer did only) be verified for objects that carry
-// no separate identity payload, such as the SpatialIndexRoot.
+// no separate identity payload, such as an avatar presence advertisement.
 export function didKeyToPublicKey(did) {
     if (typeof did !== 'string' || !did.startsWith('did:key:z')) {
         return null;

@@ -1,11 +1,10 @@
-// 0.2.30 — turns the raw counters `spatial/DiscoveryDiagnostics.js`
+// 0.2.30 — turns the raw counters `spatial/DiscoveryDiagnostics.js` (removed as unused)
 // (0.2.19) already accumulates during a decentralized discovery query
 // into the compact, honest shape a UI actually needs: "is there a
 // trust layer to ask at all, and if so, what does it say?"
 //
 // This is deliberately a PURE function over a plain, duck-typed
-// diagnostics-shaped object — not a class, not an import of
-// spatial/DiscoveryDiagnostics.js — so core/ stays dependency-free
+// diagnostics-shaped object — not a class — so core/ stays dependency-free
 // downward (see core/world/SpatialQuery.js, core/world/SpatialOverlap.js for the
 // same posture) and so a caller can pass either a real
 // DiscoveryDiagnostics instance or a plain object with the same
@@ -38,10 +37,9 @@
 //   available: true, fatal: msg -> a trust-capable provider WAS
 //                                   consulted, but the root/authority
 //                                   itself could not be trusted at all
-//                                   (DecentralizedSpatialDiscoveryProvider
-//                                   throws for exactly this case — an
-//                                   untrusted/equivocating/tampered
-//                                   root). Nothing about this region's
+//                                   (a provider throws for exactly this
+//                                   case — an untrusted/equivocating/
+//                                   tampered root). Nothing about this region's
 //                                   index could be verified this pass.
 //   available: true, complete: true
 //                                -> the trust layer ran and found

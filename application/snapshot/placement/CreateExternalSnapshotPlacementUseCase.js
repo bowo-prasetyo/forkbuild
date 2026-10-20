@@ -32,7 +32,7 @@ import { LEGACY_HASH_EXTERNAL_REASON, isLegacyContentHash } from '../../../seria
 // CreatePublicationSnapshotPlacementUseCase.js already puts them. It
 // also never re-serializes or re-validates the snapshot itself —
 // `contentResolver` (the same collaborator application/
-// ResolvePublicationUseCase.js already depends on) is the one and only
+// ResolvePublicationUseCase.js (removed as unused) already depends on) is the one and only
 // place this codebase reads a published snapshot's own bytes back.
 //
 // STORE FAILURE PREVENTS PLACEMENT CREATION. A store that cannot

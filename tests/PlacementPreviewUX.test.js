@@ -8,7 +8,6 @@ import { PreviewUseCase } from '../application/editor/PreviewUseCase.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { PlacementTool } from '../application/tools/PlacementTool.js';
 import { PreviewState } from '../application/editor-state/PreviewState.js';
-import { SpatialPlacementState } from '../application/spatial-state/SpatialPlacementState.js';
 import { assert } from './support/Assert.js';
 
 // 0.2.87 — World Building Interaction & Placement UX.
@@ -32,7 +31,7 @@ import { assert } from './support/Assert.js';
 // of this milestone) is deliberately NOT under test here: it is a
 // rendering-time-only offset applied in renderer/PreviewRenderer.js and
 // application/world/WorldNavigationSession.js#_presentPlacementPreview(), never
-// part of PreviewState/SpatialPlacementState's own position field — see
+// part of PreviewState's own position field — see
 // those two files' own headers.
 
 function buildTool({ occupied = [] } = {}) {
@@ -80,19 +79,6 @@ async function runTests() {
         previewUseCase.show('core:cube', { x: 1, y: 0.5, z: 2 }, 90);
         assert(editorContext.preview.valid === true,
             '4. omitting the 4th argument still defaults to valid:true — every pre-0.2.87 call site keeps working unmodified');
-    }
-
-    // -------------------------------------------------------------
-    // Section B: SpatialPlacementState — the new `blocked` field
-    // -------------------------------------------------------------
-    {
-        const empty = SpatialPlacementState.empty();
-        assert(empty.blocked === false && empty.valid === false,
-            '5. SpatialPlacementState.empty() defaults blocked to false alongside the pre-existing valid:false');
-
-        const blocked = new SpatialPlacementState({ valid: true, blocked: true, rotation: 180 });
-        assert(blocked.valid === true && blocked.blocked === true && blocked.rotation === 180,
-            '6. valid ("a target was resolved") and blocked ("that target is occupied") are independent fields, both readable');
     }
 
     // -------------------------------------------------------------

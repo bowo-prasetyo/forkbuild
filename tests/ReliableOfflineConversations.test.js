@@ -1,6 +1,6 @@
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
-import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
+import { LocalPeerNetwork, LocalPeerConnectionProvider } from './support/LocalPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { FriendRelationshipUseCase } from '../application/identity/FriendRelationshipUseCase.js';
@@ -30,7 +30,7 @@ import { assert } from './support/Assert.js';
 // own unmodified replay window doesn't reject a post-reload message as
 // stale) and its delivery-state history (QUEUED/SENT/DELIVERED/EXPIRED
 // survive the reload too). Built over the exact same
-// peer/LocalPeerConnectionProvider.js harness
+// tests/support/LocalPeerConnectionProvider.js harness
 // tests/OfflineMessagingDeliveryState.test.js already established.
 
 function wait(ms) {

@@ -29,7 +29,7 @@
 //     arc — and this milestone's own brief is explicit that commentary
 //     authorization must NOT be coupled to it: editing a Document and
 //     commenting on a Publication are different propositions.
-//   * identity/TrustPolicy.js's own AuthorityMode.DISCOVERED is the
+//   * identity/TrustPolicy.js (removed as unused)'s own AuthorityMode.DISCOVERED is the
 //     closest existing precedent for the shape this milestone needs: "no
 //     external trust source exists yet... accept any signer... the
 //     fallback when no authority is pinned" — a REAL decision point
@@ -51,7 +51,7 @@
 //
 // This is a real, enforced, testable authorization decision — not a
 // no-op — and it comes from REUSING the exact existing dependency shape
-// application/publication/ResolvePublicationUseCase.js, PlacePublicationUseCase.js,
+// application/publication/ResolvePublicationUseCase.js (removed as unused), PlacePublicationUseCase.js,
 // CreatePublicationSnapshotPlacementUseCase.js and
 // CreateExternalSnapshotPlacementUseCase.js already depend on
 // (`discoveryProvider.findById(publicationId)`, returning the

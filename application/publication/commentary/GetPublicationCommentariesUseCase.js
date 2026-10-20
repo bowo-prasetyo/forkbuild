@@ -40,7 +40,7 @@
 // unrecognized `publicationId` and a real Publication with no commentary
 // yet are answered identically: `[]`. A caller that needs to know
 // whether a Publication itself exists already has
-// `application/publication/ResolvePublicationUseCase.js` (or
+// `application/publication/ResolvePublicationUseCase.js` (removed as unused) (or
 // `CanCommentOnPublicationUseCase`) for that separate question.
 //
 // ORDERING IS WHATEVER THE INJECTED STORE RETURNS, NEVER RE-SORTED HERE.

@@ -1,6 +1,6 @@
 // Pure tile-grid math for streaming terrain around a moving camera — see
 // docs/Roadmap.md, 0.2.76. Deliberately its own small module, separate
-// from core/world/SpatialCell.js: SpatialCell answers a DIFFERENT question
+// from core/world/SpatialCell.js (removed as unused): SpatialCell answers a DIFFERENT question
 // (which 100-unit discovery bucket does a PlacementRecord fall into, for
 // the decentralized spatial index) at a different, larger scale. Terrain
 // tiling answers "which ground tiles does the renderer need loaded right

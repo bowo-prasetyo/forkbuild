@@ -19,7 +19,7 @@ import { assert } from './support/Assert.js';
 //
 // Deliberately uses a FAKE RTCPeerConnection, breaking with this
 // codebase's usual "prefer a real implementation over a mock" posture
-// (see e.g. peer/LocalPeerConnectionProvider.js's own header) for one
+// (see e.g. tests/support/LocalPeerConnectionProvider.js's own header) for one
 // specific reason: deterministically forcing a REAL RTCPeerConnection's
 // ICE gathering to hang forever, on demand, in a way that reproduces
 // identically in CI and in a browser tab, is not something a real

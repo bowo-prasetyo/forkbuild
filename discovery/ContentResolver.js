@@ -11,7 +11,7 @@
 //
 // The ContentResolver returns raw snapshot data. It does NOT
 // deserialize, validate, or wrap in a session — that is the
-// ResolvePublicationUseCase's job.
+// ResolvePublicationUseCase's (removed as unused) job.
 export class ContentResolver {
     // Returns the raw snapshot JSON for a publication.
     resolve(publicationId) {

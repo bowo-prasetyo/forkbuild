@@ -1,5 +1,5 @@
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { LocalRendezvousNetwork } from '../peer/LocalRendezvousNetwork.js';
+import { LocalRendezvousNetwork } from './support/LocalRendezvousNetwork.js';
 import { RendezvousDiscoveryProvider } from '../peer/RendezvousDiscoveryProvider.js';
 import { DiscoveryBootstrap } from '../peer/DiscoveryBootstrap.js';
 import { PeerSessionManager } from '../application/peer/PeerSessionManager.js';

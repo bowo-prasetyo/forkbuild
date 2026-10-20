@@ -14,7 +14,7 @@ import { PublicationCommentaryDistributionPeerExchange } from '../application/pu
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
 
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
-import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
+import { LocalPeerNetwork, LocalPeerConnectionProvider } from './support/LocalPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 

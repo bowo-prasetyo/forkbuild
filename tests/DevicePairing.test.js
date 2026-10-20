@@ -7,7 +7,7 @@ import {
 } from '../application/devicePairing/DevicePairing.js';
 import { DeviceBackupUseCase } from '../application/backup/DeviceBackupUseCase.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
-import { LocalRendezvousNetwork } from '../peer/LocalRendezvousNetwork.js';
+import { LocalRendezvousNetwork } from './support/LocalRendezvousNetwork.js';
 import { EphemeralIdentityProvider } from '../identity/EphemeralIdentityProvider.js';
 import {
     createDevicePairingCode, devicePairingLink, parseDevicePairingCode, randomDevicePairingSecret

@@ -6,7 +6,7 @@ import { createId } from '../core/document/createId.js';
 // layer sibling of peer/PeerInvitation.js: both are deliberately UNSIGNED,
 // deliberately opaque one layer up (a PeerInvitation's `endpoint` can BE a
 // serialized PeerConnectionOffer's JSON — peer/WebRtcPeerConnectionProvider.js
-// treats it exactly the same opaque string peer/LocalPeerConnectionProvider.js
+// treats it exactly the same opaque string tests/support/LocalPeerConnectionProvider.js
 // already does, so discovery never needs to change shape or know a real
 // transport is involved), and deliberately time-bounded so a captured offer
 // cannot be replayed indefinitely into a stale RTCPeerConnection. See docs/

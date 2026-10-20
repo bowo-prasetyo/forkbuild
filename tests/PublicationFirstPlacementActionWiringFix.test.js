@@ -90,7 +90,7 @@ function buildSession({ decentralizedPublicationDiscoveryProvider = null, wirePl
             identity
         )
         : null;
-    const moveWorldPlacementUseCase = new MoveWorldPlacementUseCase(spatialIndexProvider, placementRegistry, null, identity);
+    const moveWorldPlacementUseCase = new MoveWorldPlacementUseCase(spatialIndexProvider, placementRegistry, identity);
     const removeWorldPlacementUseCase = new RemoveWorldPlacementUseCase(spatialIndexProvider, placementRegistry);
 
     const session = new WorldNavigationSession({

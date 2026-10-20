@@ -8,7 +8,7 @@ import {
 // The reference rendezvous server (server/rendezvous-worker/) now refuses
 // unsigned publications and removals, so on a real network an unsigned
 // publication fails with a message asking the user to unlock their
-// identity. peer/LocalRendezvousNetwork.js still accepts them.
+// identity. tests/support/LocalRendezvousNetwork.js still accepts them.
 
 // 0.2.66 — the ONE place a peer/RendezvousPublication.js gains a real
 // Ed25519 signature before it ever reaches a peer/RendezvousTransport.js.

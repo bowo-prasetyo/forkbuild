@@ -45,7 +45,7 @@ const ICE_GATHERING_TIMEOUT_MS = 8000;
 // 0.2.51 — a real, two-different-browser-sessions peer/PeerConnection.js:
 // one RTCPeerConnection plus one RTCDataChannel, wired to the exact same
 // send()/onMessage()/onStateChange()/close() contract
-// peer/LocalPeerConnectionProvider.js's in-process implementation already
+// tests/support/LocalPeerConnectionProvider.js's in-process implementation already
 // satisfies. Nothing above peer/PeerConnection.js's own interface ever
 // needs to know which one it's holding — see that file's own header.
 //
@@ -67,7 +67,7 @@ const ICE_GATHERING_TIMEOUT_MS = 8000;
 // (`localSignal`/`onLocalSignalReady`/`acceptRemoteAnswer`) are the ONE
 // deliberate, documented widening beyond the base peer/PeerConnection.js
 // interface — the same "extra capability beyond the base contract"
-// precedent peer/LocalPeerConnectionProvider.js already set with its own
+// precedent tests/support/LocalPeerConnectionProvider.js already set with its own
 // `.address`/`.network`. They carry SDP and ICE candidates only, never
 // identity, never authentication state.
 //
@@ -352,7 +352,7 @@ export class WebRtcPeerConnection extends PeerConnection {
         await this._peerConnection.setRemoteDescription({ type: 'answer', sdp });
     }
 
-    // Real WebRTC has no equivalent of peer/LocalPeerConnectionProvider.js's
+    // Real WebRTC has no equivalent of tests/support/LocalPeerConnectionProvider.js's
     // instantly-mirrored close — an abrupt RTCPeerConnection#close() gives
     // the remote side nothing to react to promptly, leaving it to notice
     // only via ICE's own consent-freshness/failure timers, which can take

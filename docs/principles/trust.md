@@ -36,7 +36,8 @@ transport. It is never evidence of authority, freshness or causality.
 ### Identity Is Not Trust (0.2.19)
 
 A `did:key` identifies a public key; trust policy
-(`identity/TrustPolicy.js`) decides whether that key is trusted.
+(for presence, `core/avatar/PresenceTrustPolicy.js`) decides whether that
+key is trusted.
 Verifying who signed something is a prerequisite for trust, never a
 substitute for deciding whether to trust the signer.
 
@@ -55,9 +56,9 @@ checked and what happened, without changing what `discover()` returns.
 ### A Valid Signature Proves Authorship, Not Exclusivity (0.2.19)
 
 An authority can sign two different objects at the same causal position
-and both verify. That is equivocation (`core/world/IndexEquivocation.js`), not
-forgery. It is detected and reported, never resolved silently by keeping
-one side; whether to tolerate it is an explicit `TrustPolicy` decision.
+and both verify. That is equivocation (for presence, `core/avatar/PresenceEquivocation.js`),
+not forgery. It is detected and reported, never resolved silently by
+keeping one side; whether to tolerate it is an explicit policy decision.
 
 [Full text](history/0.1-0.2.md#a-valid-signature-proves-authorship-not-exclusivity-0219)
 

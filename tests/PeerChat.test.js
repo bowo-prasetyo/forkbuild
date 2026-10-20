@@ -1,6 +1,6 @@
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
-import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
+import { LocalPeerNetwork, LocalPeerConnectionProvider } from './support/LocalPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { FriendRelationshipUseCase } from '../application/identity/FriendRelationshipUseCase.js';
@@ -28,7 +28,7 @@ import { assert } from './support/Assert.js';
 // against exactly the attacks a live, direct-message protocol actually
 // needs to: duplication, forged sender, wrong-friendship, unfriend/
 // block during an already-open connection, reconnect, and offline
-// delivery. Built over peer/LocalPeerConnectionProvider.js, the same
+// delivery. Built over tests/support/LocalPeerConnectionProvider.js, the same
 // real, in-process, bidirectional transport every other flagship in
 // this suite (tests/FriendshipRevocationAndBlocking.test.js included)
 // already trusts for this purpose.

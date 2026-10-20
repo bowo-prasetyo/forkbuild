@@ -6,7 +6,7 @@ import { Position } from '../core/document/Position.js';
 import { World } from '../core/document/World.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
-import { LocalContentResolver } from '../discovery/LocalContentResolver.js';
+import { LocalContentResolver } from './support/LocalContentResolver.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 

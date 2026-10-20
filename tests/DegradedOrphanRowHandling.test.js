@@ -153,7 +153,7 @@ async function runTests() {
         spatialIndexProvider, discoveryProvider, loadPublicationDocumentUseCase, registry, placementRegistry, alice
     );
     const removeWorldPlacementUseCase = new RemoveWorldPlacementUseCase(spatialIndexProvider, placementRegistry);
-    const moveWorldPlacementUseCase = new MoveWorldPlacementUseCase(spatialIndexProvider, placementRegistry, null, alice);
+    const moveWorldPlacementUseCase = new MoveWorldPlacementUseCase(spatialIndexProvider, placementRegistry, alice);
     const unpublishDocumentUseCase = new UnpublishDocumentUseCase(publisher);
     const discoverUseCase = new DiscoverWorldsUseCase(spatialIndexProvider);
     const publishDocumentUseCase = new PublishDocumentUseCase(publisher, alice);

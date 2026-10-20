@@ -150,16 +150,10 @@ modules to preload; `tests/ModulePreload.test.js` fails until it is run.
 Not all of it. Some subsystems are built and tested but not wired into the
 running app, and are kept as documented design:
 
-- the decentralized spatial index and placement-first streaming
-  (`SpatialIndexRoot`, `SpatialIndexBuilder`,
-  `DecentralizedSpatialDiscoveryProvider`, `DiscoverWorldAreaUseCase`,
-  `world/WorldViewStreamingSession`);
 - delegation records (`core/publication/Delegation.js`; `DelegationVerifier` is the
   base class of every verifier, but nothing issues delegations);
 - peer placement replication (`CreateReplicationUseCase`,
-  `ReplicaMergeService`, `ConflictResolver`) and the trust-policy layer
-  around it;
-- the older collaboration protocol in `collaboration/`.
+  `ReplicaMergeService`, `ConflictResolver`).
 
 [Architecture](Architecture.md) marks each of these under "Built and
 tested, not wired into the running app" or "has no callers in the app".

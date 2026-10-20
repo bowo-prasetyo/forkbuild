@@ -162,7 +162,7 @@ async function runTests() {
     // keeps "who's logged in" as shared state on whatever storage it's
     // given, so two instances sharing one storage would just mean the
     // second login() silently signs the first one out (same pattern
-    // tests/TrustDiscoveryHardening.test.js's own createIdentity()
+    // tests/DelegationHardening.test.js's own createIdentity()
     // helper already established). The catalog's own storage (for
     // publications/content) stays shared, since it's the discovery
     // provider that needs to see everything published across authors.

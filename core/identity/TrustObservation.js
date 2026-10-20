@@ -9,8 +9,8 @@
 // apart over time. TrustObservation is that stable vocabulary.
 //
 // A TrustObservation is purely DESCRIPTIVE. It records what was
-// observed, not what should happen next — that is TrustPolicy's job
-// (identity/TrustPolicy.js). Two different policies can look at the
+// observed, not what should happen next — that is a policy's job.
+// Two different policies can look at the
 // same TrustObservation and make different decisions (e.g. one
 // tolerates LEGACY_UNSIGNED, another rejects it).
 export const TrustStatus = Object.freeze({
@@ -48,7 +48,7 @@ export const TrustStatus = Object.freeze({
 // A status counts as "acceptable by default" only for the two statuses
 // that represent a genuinely trustworthy object under the historical
 // 0.2.16 policy (valid signature, or tolerated pre-signing legacy).
-// TrustPolicy.accepts() is the real decision function — this is only a
+// A caller's own policy is the real decision function — this is only a
 // context-free fallback for callers that have no policy at hand.
 const DEFAULT_ACCEPTABLE = new Set([TrustStatus.VALID, TrustStatus.LEGACY_UNSIGNED]);
 
@@ -61,7 +61,7 @@ export class TrustObservation {
         this._subjectType = subjectType;   // 'placement-record' | 'spatial-index-root' | 'spatial-index-manifest' | 'delegation' | ...
         this._subjectId = subjectId;       // placementId, cell key, root hash, delegation id, ...
         this._reason = reason;             // human-readable detail, e.g. "signer identity mismatch"
-        this._freshness = freshness;       // FreshnessProof | null
+        this._freshness = freshness;       // freshness evidence | null
     }
 
     get status() { return this._status; }
@@ -70,8 +70,8 @@ export class TrustObservation {
     get reason() { return this._reason; }
     get freshness() { return this._freshness; }
 
-    // Context-free default; prefer TrustPolicy.accepts(this) whenever a
-    // policy is available.
+    // Context-free default; prefer a caller's own policy whenever one
+    // is available.
     get defaultAcceptable() { return DEFAULT_ACCEPTABLE.has(this._status); }
 
     toJSON() {

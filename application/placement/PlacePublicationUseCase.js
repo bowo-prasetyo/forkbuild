@@ -31,8 +31,7 @@ export class PlacePublicationUseCase {
         loadDocumentUseCase,
         brickRegistry,
         placementRegistry = null,
-		identityProvider = null,
-		spatialIndexBuilder = null // FIX: Add builder parameter
+        identityProvider = null
     ) {
         this._spatialIndexProvider = spatialIndexProvider;
         this._discoveryProvider = discoveryProvider;
@@ -40,7 +39,6 @@ export class PlacePublicationUseCase {
         this._brickRegistry = brickRegistry;
         this._placementRegistry = placementRegistry;
         this._identityProvider = identityProvider;
-		this._spatialIndexBuilder = spatialIndexBuilder; // FIX: Store builder
     }
 
     execute(publicationId, position, options = {}) {
@@ -141,10 +139,6 @@ export class PlacePublicationUseCase {
                 );
             }
             this._placementRegistry.add(record);
-			// FIX: Update the decentralized spatial index
-			if (this._spatialIndexBuilder) {
-				this._spatialIndexBuilder.addOrUpdatePlacement(record);
-			}
         }
         return placement;
     }

@@ -11,32 +11,25 @@ import { ReplayGuard } from '../../replication/ReplayGuard.js';
 // for this replica's exchanged immutable objects, and the
 // ReplicaMergeService that turns an incoming PlacementRecord into either
 // an updated presentation pointer or a recorded ConflictSet — never a
-// silent overwrite. Same DI pattern as CreatePlacementRegistryUseCase;
-// swapping the transport (HTTP, WebRTC, IPFS, libp2p) later means
+// silent overwrite. Swapping the transport (HTTP, WebRTC, IPFS, libp2p) later means
 // changing what backs `remoteStore`, never this wiring or the merge
 // pipeline itself (replication/ReplicationStore.js).
 //
-// spatialIndexBuilder is optional: wire it so a merge that changes the
-// presentation winner also republishes the decentralized spatial index
-// from the reconciled state (docs/Principles.md, 0.2.15 + 0.2.18).
-//
 // As of 0.2.19, a ReplayGuard is wired by default (pass `replayGuard:
 // null` to opt out) so repeatedly-seen objects skip re-verification
-// cheaply — see replication/ReplayGuard.js and identity/TrustPolicy.js.
+// cheaply — see replication/ReplayGuard.js.
 //
 // Pass `findPublicationById` so placements that break their Publication's
 // placement policy (core/publication/PlacementPolicy.js) are rejected at merge.
 export class CreateReplicationUseCase {
     execute(storageProvider, placementRegistry, {
-        spatialIndexBuilder = null,
-        indexAuthorityIdentity = null,
         replayGuard = new ReplayGuard(),
         findPublicationById = null
     } = {}) {
         const replicationStore = new LocalReplicationStore(storageProvider);
         const resolver = new ConflictResolver();
         const policy = new ConflictPolicy();
-        const verifier = new LocalAuthorizationVerifier({ indexAuthorityIdentity });
+        const verifier = new LocalAuthorizationVerifier();
 
         const mergeService = new ReplicaMergeService({
             resolver,
@@ -44,7 +37,6 @@ export class CreateReplicationUseCase {
             verifier,
             registry: placementRegistry,
             replicationStore,
-            spatialIndexBuilder,
             replayGuard,
             findPublicationById
         });

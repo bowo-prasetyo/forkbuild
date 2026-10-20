@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
-import { LocalContentResolver } from '../discovery/LocalContentResolver.js';
+import { LocalContentResolver } from './support/LocalContentResolver.js';
 import { Document } from '../core/document/Document.js';
 import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { World } from '../core/document/World.js';

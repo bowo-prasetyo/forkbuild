@@ -1,7 +1,7 @@
 import { FriendshipState } from '../core/social/FriendshipState.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
-import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
+import { LocalPeerNetwork, LocalPeerConnectionProvider } from './support/LocalPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerRelationshipUseCase } from '../application/peer/PeerRelationshipUseCase.js';
 import { PeerReconnectionUseCase } from '../application/peer/PeerReconnectionUseCase.js';
@@ -27,7 +27,7 @@ import { assert } from './support/Assert.js';
 //   expects, and finally wiring 0.2.56's own long-dormant
 //   noteAuthenticated() to the moment it was actually built for.
 //
-// Built over peer/LocalPeerConnectionProvider.js, the same real,
+// Built over tests/support/LocalPeerConnectionProvider.js, the same real,
 // in-process, bidirectional transport tests/PeerChat.test.js and
 // tests/FriendshipRevocationAndBlocking.test.js already trust for this
 // purpose; application/peer/PeerSessionManager.js's own real-WebRTC

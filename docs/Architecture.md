@@ -95,7 +95,7 @@ use is built in service groups when the first of those pages opens (see
 
 **Adapters** sit around the layers: storage/ (StorageProvider and the
 local stores), serializer/, publisher/, discovery/, identity/, peer/,
-presence/, collaboration/, replication/, placement/, spatial/,
+presence/, replication/, placement/, spatial/,
 world-layout/, content/ (content stores), anchoring/ (Bitcoin, Arweave
 and Base anchoring), base/ (Base/EVM transactions), nostr/ and arweave/
 (injected-wallet signers and the relay client), steem/ (the Steem API
@@ -816,24 +816,18 @@ collision resolution is deliberately not implemented
 (docs/Principles.md, "Automatic Collision Resolution Is Deferred, Not
 Solved").
 
-**Built and tested, not wired into the running app:**
-
-- the decentralized spatial index: SpatialCell, SpatialIndexManifest and
-  SpatialIndexRoot (core/), SpatialIndexStore, SpatialIndexBuilder and
-  DecentralizedSpatialDiscoveryProvider (spatial/), and
-  RebuildSpatialIndexUseCase. The index is an accelerator, never the
-  truth: an entry that points at an older revision is resolved and the
-  newer valid revision wins;
-- placement-first discovery with distance tiers (DiscoverWorldAreaUseCase,
-  LocalSpatialDiscoveryProvider);
-- the streaming session in world/ (WorldViewStreamingSession,
-  LoadedWorld, WorldLoadState, PublicationContentCache), with separate
-  load and unload radii and one content load per publication.
+**Removed as unused:** an earlier design built and tested but never wired
+into the app: a signed, cell-based decentralized spatial index with its
+own discovery provider, placement-first discovery with distance tiers,
+and a separate streaming session with load and unload radii. World View
+finds builds through the placement registry and streams them itself
+(application/worldNavigation/worldStreamingMethods.js). The removed code
+is at [48561d6](https://github.com/bowo-prasetyo/forkbuild/tree/48561d671b135b973ba0bc630cb6d8206fedddaf) (core/world/SpatialIndexRoot.js, spatial/,
+world/).
 
 WorldNavigationSession accepts an optional `spatialDiscoveryProvider`
-used only for trust diagnostics, but nothing passes one today, because
-no live replica builds a populated index root (see the comment in
-WorldNavigationSession's constructor).
+used only for trust diagnostics, but nothing passes one, so World
+Locations always shows the neutral "unavailable" diagnostics.
 
 Decentralized publications found through Nostr or Arweave, and Snapshots
 placed through the distribution flow, reach the World a different way:
@@ -902,11 +896,9 @@ the signer allowed.
   `findPublicationById`, the merge also rejects a placement its
   Publication's placement policy doesn't allow. Publisher placements from
   Snapshot announcements deliberately don't use it (see above);
-- the trust layer around it: core/identity/TrustObservation.js (what a check
-  found), identity/TrustPolicy.js (what to do about it; the defaults
-  reproduce the pre-0.2.19 behavior), core/publication/FreshnessProof.js and
-  core/world/IndexEquivocation.js (one authority signing two different roots
-  at the same causal position).
+- core/identity/TrustObservation.js (what a check found). The trust policy,
+  freshness proofs and index-root equivocation detection that served the
+  removed spatial index were removed with it.
 
 The world command protocol (0.2.96–0.2.97) has its own ordering in
 replication/WorldOperationOrdering.js and WorldConflictResolver.js; see
@@ -2072,10 +2064,9 @@ it over `forkbuild:document-operation-recovery`
 until it arrives (DocumentOperationDeferralUseCase).
 
 The earlier protocol from Collaboration Protocol Foundation (0.2.7) and
-Multi-client Synchronization (0.2.9) (collaboration/: CollaborationSession,
-DocumentAuthority and the transports, wired by
-application/document/CreateCollaborationUseCase.js) still exists but has no callers
-in the app; the design notes are in docs/ArchitectureHistory.md.
+Multi-client Synchronization (0.2.9), with a single ordering authority,
+was removed as unused; its code is at [48561d6](https://github.com/bowo-prasetyo/forkbuild/tree/48561d671b135b973ba0bc630cb6d8206fedddaf/collaboration) and
+the design notes are in docs/ArchitectureHistory.md.
 
 ## Places, landmarks and naming
 

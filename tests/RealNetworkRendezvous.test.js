@@ -17,7 +17,7 @@ import { assert } from './support/Assert.js';
 //
 // tests/DistributedPeerRendezvous.test.js already proved peer/
 // RendezvousDiscoveryProvider.js and peer/DiscoveryBootstrap.js against
-// an in-memory peer/LocalRendezvousNetwork.js. This file proves the piece
+// an in-memory tests/support/LocalRendezvousNetwork.js. This file proves the piece
 // 0.2.65 deliberately left as a named, deferred TODO: peer/
 // WebSocketRendezvousTransport.js, a REAL (if simulated — see FakeWebSocket
 // below) network transport speaking the actual wire protocol described in

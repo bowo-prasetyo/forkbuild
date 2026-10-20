@@ -1,8 +1,8 @@
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { PeerInvitation } from '../peer/PeerInvitation.js';
-import { LocalRendezvousNetwork } from '../peer/LocalRendezvousNetwork.js';
+import { LocalRendezvousNetwork } from './support/LocalRendezvousNetwork.js';
 import { RendezvousDiscoveryProvider } from '../peer/RendezvousDiscoveryProvider.js';
-import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
+import { LocalPeerNetwork, LocalPeerConnectionProvider } from './support/LocalPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerRelationshipUseCase } from '../application/peer/PeerRelationshipUseCase.js';
 import { FindPeerUseCase } from '../application/peer/FindPeerUseCase.js';
@@ -59,7 +59,7 @@ function wait(ms = 20) {
 // Same device shape tests/KnownPeerAutoConnectionBoundaryAudit.test.js
 // already established: a real identity, a real ConnectToPeerUseCase (and
 // therefore a real application/peer/ConnectedPeerRegistry.js), over an
-// in-process peer/LocalPeerConnectionProvider.js standing in only for real
+// in-process tests/support/LocalPeerConnectionProvider.js standing in only for real
 // WebRTC signaling — never for discovery, rendezvous, or authentication.
 function makeDevice(label, network) {
     const storage = new InMemoryStorageProvider();

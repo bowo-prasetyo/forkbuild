@@ -13,10 +13,10 @@
 //
 // ReplayGuard is content-hash keyed and object-type agnostic — the
 // same instance can track PlacementRecords, Delegations, and
-// SpatialIndexRoots, each under its own scope, without knowing
+// SpatialIndexRoots (removed as unused), each under its own scope, without knowing
 // anything about what those objects mean. It is intentionally NOT the
-// thing that decides what "current" is; ReplicaMergeService and
-// DecentralizedSpatialDiscoveryProvider keep owning that.
+// thing that decides what "current" is; ReplicaMergeService keeps
+// owning that.
 export class ReplayGuard {
     static DEFAULT_SCOPE = 'default';
 

@@ -1,4 +1,4 @@
-import { ContentResolver } from './ContentResolver.js';
+import { ContentResolver } from '../../discovery/ContentResolver.js';
 
 // The V0.1 concrete content resolver: reads snapshots from the
 // PublisherProvider's storage. This exercises the exact interface a

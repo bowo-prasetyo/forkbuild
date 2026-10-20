@@ -6,7 +6,7 @@ import { isValidIdentityRevocationRecord, toIdentityRevocationRecord } from '../
 import { isValidIdentitySuccessionRecord } from '../core/identity/IdentitySuccessionEnvelope.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { IncorrectPassphraseError } from '../identity/KeyEncryption.js';
-import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
+import { LocalPeerNetwork, LocalPeerConnectionProvider } from './support/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerAuthenticationState } from '../peer/PeerAuthenticationState.js';
 import * as Ed25519 from '../identity/Ed25519.js';

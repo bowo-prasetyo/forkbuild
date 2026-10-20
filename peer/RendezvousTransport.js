@@ -18,7 +18,7 @@
 // against reality only by peer/PeerAuthenticationSession.js's own
 // handshake, never here.
 //
-// 0.2.65 shipped one concrete implementation, peer/LocalRendezvousNetwork.js
+// 0.2.65 shipped one concrete implementation, tests/support/LocalRendezvousNetwork.js
 // — an in-memory stand-in for a real rendezvous SERVER, real working code
 // exercising the exact contract a future networked implementation would
 // also have to satisfy, but synchronous throughout, because an in-process
@@ -30,7 +30,7 @@
 // publish()/lookup()/remove() each return a Promise, resolving exactly to
 // what they always returned (a stored publication, an array of fresh
 // publications, a boolean), rejecting exactly where they always threw (the
-// transport is unreachable). peer/LocalRendezvousNetwork.js's own
+// transport is unreachable). tests/support/LocalRendezvousNetwork.js's own
 // implementation stays entirely synchronous internally — wrapping an
 // already-resolved value in a Promise costs it nothing and changes no
 // externally-visible behavior beyond requiring `await` at every call
@@ -42,7 +42,7 @@
 export class RendezvousTransport {
     // Publishes `publication` (a peer/RendezvousPublication.js), replacing
     // whatever this transport last had published for the SAME identityId
-    // — see peer/LocalRendezvousNetwork.js's own header on why the network
+    // — see tests/support/LocalRendezvousNetwork.js's own header on why the network
     // never accumulates history, only ever holds "where identityId is
     // reachable right now." Resolves to the stored publication.
     async publish(publication) {

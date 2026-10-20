@@ -1,6 +1,6 @@
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
+import { LocalPeerNetwork, LocalPeerConnectionProvider } from './support/LocalPeerConnectionProvider.js';
 import { PeerConnectionState } from '../peer/PeerConnectionState.js';
 import { PeerAuthenticationState } from '../peer/PeerAuthenticationState.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
@@ -20,7 +20,7 @@ import { assert } from './support/Assert.js';
 // LocalIdentityProvider instances — standing in for two separate
 // devices, exactly like tests/PortableIdentity.test.js's own
 // two-device setup — across a real in-process peer connection
-// (peer/LocalPeerConnectionProvider.js) to a full mutual
+// (tests/support/LocalPeerConnectionProvider.js) to a full mutual
 // authentication, then through close/reconnect.
 //
 // The forged-message tests (blocks 7-9) deliberately do NOT drive two

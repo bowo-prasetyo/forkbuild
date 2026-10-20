@@ -27,7 +27,7 @@ import { PlacementAcquisitionKind } from '../../placement/PlacementAcquisitionKi
 // PUBLICATION BINDING, NOT ADJUDICATION. This use case deliberately does
 // NOT accept a caller-supplied contentHash at all. It looks the
 // publication up (via a `discoveryProvider` — the same collaborator
-// application/publication/ResolvePublicationUseCase.js and application/
+// application/publication/ResolvePublicationUseCase.js (removed as unused) and application/
 // PlacePublicationUseCase.js already depend on) and derives contentHash
 // from the publication's OWN `contentReference.hash` — the one thing
 // this class can actually verify locally. That is not evidence

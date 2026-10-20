@@ -5,7 +5,6 @@ import { RevisionReference } from '../../core/document/RevisionReference.js';
 // Moves a placement to a new global position.
 //
 // As of 0.2.10 this creates a new revision of the PlacementRecord.
-// As of 0.2.15 the revision is published as immutable index content.
 // As of 0.2.16 the new revision is SIGNED: moving a placement is an
 // act of authorization, and the new immutable revision carries the
 // signer's signature. The previous revision's signature stays valid
@@ -21,10 +20,9 @@ import { RevisionReference } from '../../core/document/RevisionReference.js';
 // assuming whichever one it saw first (or whichever has the higher
 // revision number) is correct (replication/ReplicaMergeService.js).
 export class MoveWorldPlacementUseCase {
-    constructor(spatialIndexProvider, placementRegistry = null, spatialIndexBuilder = null, identityProvider = null) {
+    constructor(spatialIndexProvider, placementRegistry = null, identityProvider = null) {
         this._spatialIndexProvider = spatialIndexProvider;
         this._placementRegistry = placementRegistry;
-        this._spatialIndexBuilder = spatialIndexBuilder;
         this._identityProvider = identityProvider;
     }
 
@@ -82,12 +80,7 @@ export class MoveWorldPlacementUseCase {
                     prepared = prepared.withContentHash(prepared.computeContentHash());
                 }
 
-                const updatedRecord = this._placementRegistry.update(prepared);
-
-                // 0.2.15: publish the new immutable revision.
-                if (this._spatialIndexBuilder) {
-                    this._spatialIndexBuilder.addOrUpdatePlacement(updatedRecord);
-                }
+                this._placementRegistry.update(prepared);
             }
         }
         return updated;

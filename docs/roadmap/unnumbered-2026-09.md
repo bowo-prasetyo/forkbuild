@@ -2102,7 +2102,7 @@ is.
   forgeries: the old `mock-sig-…` format, a delegation in Alice's name signed by Bob, Alice's did:key paired with Bob's
   key, a stored delegation changed after signing, and a delegation signature replayed as an action's. It used to end
   in `runTests().catch(console.error)`, which reported success even when an assertion failed; it now uses top-level
-  `await`. `tests/TrustDiscoveryHardening.test.js` sections 13 and 17 use real identities.
+  `await`. `tests/DelegationHardening.test.js` sections 13 and 17 use real identities.
 - Still needed before delegation is wired in: a way for grants to travel between devices, signed revocation, a nonce
   check against replay, and a decision on chains (refused today). `docs/Architecture.md` lists them.
 

@@ -15,7 +15,7 @@ import { AnchorVerificationLifecycleState } from '../application/anchoring/Ancho
 import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerificationOutcome.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
-import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
+import { LocalPeerNetwork, LocalPeerConnectionProvider } from './support/LocalPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { assert } from './support/Assert.js';
@@ -129,7 +129,7 @@ function fakeAnchor(id, publicationId) {
 }
 
 // A pair of live, authenticated replicas over application/
-// PeerMessageBus.js/peer/LocalPeerConnectionProvider.js — sets up
+// PeerMessageBus.js/tests/support/LocalPeerConnectionProvider.js — sets up
 // everything Section C-F need: a real catalog, exchange, peer exchange,
 // anchor discovery coordinator, and the new evidence discovery
 // coordinator this milestone adds, wired to `connect.registry` exactly

@@ -7,7 +7,7 @@ import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityI
 // The explicit entry point for "publish/retract/read my own opinion
 // about what a region is called" — thin over LocalPlaceNamingClaimStore
 // (raw persistence) and core/world/PlaceNamingView.js (pure derivation), the
-// same three-layer split VerifyPublicationUseCase.js keeps over
+// same three-layer split VerifyPublicationUseCase.js (removed as unused) keeps over
 // identity/LocalAuthorizationVerifier.js: ui/ and
 // application/world/WorldNavigationSession.js talk to THIS class, never to
 // the store or the verifier directly.

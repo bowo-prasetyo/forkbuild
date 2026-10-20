@@ -126,7 +126,7 @@ function lerpColor(a, b, t) {
 // OWN tiny implementation, never importing TerrainHeightField's private
 // hash2D()/valueNoise2D(), the same "small dedicated pure module" split
 // core/nature/TerrainTiling.js's own header already justifies relative to
-// core/world/SpatialCell.js. A shared seed offset (far outside anything
+// core/world/SpatialCell.js (removed as unused). A shared seed offset (far outside anything
 // core/nature/TerrainHeightField.js's own OCTAVES use) keeps this fully
 // decorrelated from elevation, so patches of lighter/darker color never
 // visibly track hills/valleys.

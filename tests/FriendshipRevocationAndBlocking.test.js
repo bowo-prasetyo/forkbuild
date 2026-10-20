@@ -1,7 +1,7 @@
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { PeerIdentity } from '../peer/PeerIdentity.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
-import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
+import { LocalPeerNetwork, LocalPeerConnectionProvider } from './support/LocalPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { FriendRelationshipUseCase } from '../application/identity/FriendRelationshipUseCase.js';
@@ -61,7 +61,7 @@ import { assert } from './support/Assert.js';
 //     boundary's own isBlocked) independently, plus the friendship
 //     protocol itself (application/identity/FriendRelationshipUseCase.js).
 //
-// Deliberately built over peer/LocalPeerConnectionProvider.js (a real,
+// Deliberately built over tests/support/LocalPeerConnectionProvider.js (a real,
 // in-process, bidirectional transport — see that file's own header)
 // rather than a real RTCPeerConnection: this file exercises exactly the
 // same authenticated-connection, signed-protocol pipeline

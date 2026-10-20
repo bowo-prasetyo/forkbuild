@@ -1,6 +1,6 @@
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { PeerConnectionState } from '../peer/PeerConnectionState.js';
-import { LocalRendezvousNetwork } from '../peer/LocalRendezvousNetwork.js';
+import { LocalRendezvousNetwork } from './support/LocalRendezvousNetwork.js';
 import { RendezvousDiscoveryProvider } from '../peer/RendezvousDiscoveryProvider.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
 import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';

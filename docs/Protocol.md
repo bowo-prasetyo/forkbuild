@@ -481,9 +481,8 @@ refuses to create any other. Placements from other devices arrive only as a
 publisher's own signed record beside a Snapshot (see "Signed placement"
 under the discovery families), which the policy always allows. The retired
 peer replication (ReplicaMergeService) also rejects one that breaks the
-policy (reason `PLACEMENT_POLICY`). The spatial-index formats
-(SpatialCell, SpatialIndexManifest, SpatialIndexRoot) and Delegation
-records are defined in core/ but not produced by the running app. A
+policy (reason `PLACEMENT_POLICY`). Delegation records are defined in
+core/ but not produced by the running app. A
 Delegation is signed like every other record, under the signature type
 `delegation`, over `{ id, issuer, delegate, issuedFor, action, subject,
 constraints, expiresAt, issuedAt, nonce, parentDelegationId }` with
@@ -2108,7 +2107,6 @@ it. Messages carry no signature of their own; they rely on the authenticated pee
 
 ## Legacy collaboration envelope (0.2.7, 0.2.9)
 
-core/collaboration/CollaborationEnvelope.js and the collaboration/ transports define an
-older command-broadcast format with a single ordering authority. Nothing
-in the app uses it; see docs/ProtocolHistory.md, "Collaboration Protocol
+An older command-broadcast format with a single ordering authority was
+removed as unused (its code is at [48561d6](https://github.com/bowo-prasetyo/forkbuild/tree/48561d671b135b973ba0bc630cb6d8206fedddaf/collaboration)); see docs/ProtocolHistory.md, "Collaboration Protocol
 (0.2.7)" and "Multi-client Synchronization (0.2.9)".

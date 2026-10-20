@@ -1,5 +1,5 @@
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
+import { LocalPeerNetwork, LocalPeerConnectionProvider } from './support/LocalPeerConnectionProvider.js';
 import { PeerInvitation } from '../peer/PeerInvitation.js';
 import { PeerDiscoveryRecord } from '../peer/PeerDiscoveryRecord.js';
 import { PeerDiscoverySource } from '../peer/PeerDiscoverySource.js';

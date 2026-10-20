@@ -17,7 +17,7 @@ import { assert } from './support/Assert.js';
 // separate objects, signaling handed between them only as portable,
 // JSON-round-tripped payloads (exactly as if copy/pasted between two
 // browser tabs), never through any shared in-process registry the way
-// peer/LocalPeerConnectionProvider.js's own tests get to rely on. The
+// tests/support/LocalPeerConnectionProvider.js's own tests get to rely on. The
 // flagship (block 5) proves the whole chain the design doc asked for:
 // Offer -> portable payload -> Answer -> portable payload -> DataChannel ->
 // completely unmodified 0.2.49 mutual authentication -> proven

@@ -144,7 +144,7 @@ function buildHarness(storage, { decentralizedPublicationDiscoveryProvider = nul
     const placePublicationUseCase = new PlacePublicationUseCase(
         spatialIndexProvider, publicationActionDiscoveryProvider, loadPublicationDocumentUseCase, brickRegistry, placementRegistry, identity
     );
-    const moveWorldPlacementUseCase = new MoveWorldPlacementUseCase(spatialIndexProvider, placementRegistry, null, identity);
+    const moveWorldPlacementUseCase = new MoveWorldPlacementUseCase(spatialIndexProvider, placementRegistry, identity);
     const removeWorldPlacementUseCase = new RemoveWorldPlacementUseCase(spatialIndexProvider, placementRegistry);
     const publishDocumentUseCase = new PublishDocumentUseCase(publisher, identity, placePublicationUseCase, new GridPlacementStrategy());
     const session = new WorldNavigationSession({
