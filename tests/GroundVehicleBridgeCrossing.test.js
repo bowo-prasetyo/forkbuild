@@ -25,8 +25,9 @@ import { assert } from './support/Assert.js';
 // Ground vehicles drive up ramps and across bridges, as an avatar on foot
 // walks them: application/avatar/AvatarVehicleMovementController.js with a
 // stepConstraint, driven over the Hay Wain Bridge example build
-// (forkbuild-document-hay-wain-bridge.json) and, in Section F, the Packhorse
-// Arch (forkbuild-document-packhorse-arch.json).
+// (forkbuild-document-hay-wain-bridge.json), in Section F the Packhorse Arch
+// (forkbuild-document-packhorse-arch.json) and in Section H the Pontoon
+// Crossing (forkbuild-document-pontoon-crossing.json).
 //
 //   Section A: the wagon, bicycle and motorcycle each cross the bridge, deck
 //              over the river, back on the ground on the far bank
@@ -42,6 +43,8 @@ import { assert } from './support/Assert.js';
 //   Section G: on low ground (terrain well below zero) a wall still stops
 //              the wagon: bricks are measured from the ground, and so is
 //              the height it collides at
+//   Section H: every ground vehicle drives over the Pontoon Crossing's
+//              floating deck, and its rails keep the wagon on it
 //
 // The bridge's river is a few blue slabs, not world water, so the water
 // constraint is told the river is there: a bed a full unit below the lake
@@ -254,6 +257,27 @@ async function runTests() {
         }
         const x = vehicles.get('h').position.x - LOW.x;
         assert(collided && x < -1.7, `G1. the wagon stops at a block 2 high instead of driving through it (x ${x.toFixed(2)})`);
+    }
+
+    // -------------------------------------------------------------
+    // Section H — across the Pontoon Crossing
+    // -------------------------------------------------------------
+    {
+        const pontoonJson = JSON.parse(await readFile(new URL('../forkbuild-document-pontoon-crossing.json', import.meta.url), 'utf8'));
+        const withPontoon = constraints(new Map([['pontoon', new DocumentSerializer().deserialize(pontoonJson)]]), brickRegistry);
+        const PONTOON_DECK_TOP = 1;
+        const harbour = { water: riverWater(6), riverHalfWidth: 6 };
+        for (const type of GROUND_TYPES) {
+            const run = drive(vehicleAt(`h:${type}`, type, -11, 0, 90), { ...withPontoon, ...harbour }, 400);
+            assert(run.x > 10, `H1. a ${type} drives over the Pontoon Crossing from one quay to the other (ended at x ${run.x.toFixed(2)})`);
+            assert(run.liftsOverRiver.length > 0 && run.liftsOverRiver.every((lift) => Math.abs(lift - PONTOON_DECK_TOP) < 1e-6),
+                `H2. a ${type} is on the deck the whole way over the harbour`);
+            assert(!run.blockedByWater && Math.abs(run.maxLift - PONTOON_DECK_TOP) < 1e-6, `H3. a ${type} never meets the water and never climbs above the deck`);
+            assert(Math.abs(run.lift) < 1e-9 && Math.abs(run.z) < 1e-9, `H4. a ${type} comes down straight onto the far quay`);
+        }
+        const held = drive(vehicleAt('h:held', VehicleType.CAR, 0, 0, 0, PONTOON_DECK_TOP), { ...withPontoon, ...harbour }, 200);
+        assert(held.collided && held.z < 1.9 && Math.abs(held.lift - PONTOON_DECK_TOP) < 1e-6,
+            `H5. the rails keep the wagon on the deck (z ${held.z.toFixed(2)}, lift ${held.lift.toFixed(2)})`);
     }
 
     console.log('✅ All Ground Vehicle Bridge Crossing tests passed.');
