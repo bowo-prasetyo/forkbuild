@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 1a00088b7f29f33c -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 5d7f32b274cd71e9 -->
 # 04 — Publier et remixer
 
 <!-- languages -->
@@ -463,6 +463,40 @@ indique de qui il remixe la construction, et garde votre mention quelle que
 soit celle choisie. Remixer votre propre construction ne vous engage à
 rien : votre copie peut prendre n’importe quelle licence. Les images et
 vidéos enregistrées d’une construction portent le nom de son auteur.
+
+### Quand votre construction ressemble à celle de quelqu’un d’autre
+
+Quand vous appuyez sur **Publier** dans l’Éditeur, ForkBuild compare votre construction
+aux constructions d’autres personnes que cet appareil a déjà vues : celles
+que vous avez ouvertes, trouvées dans **Explorer** ou croisées dans le
+monde. Si la vôtre ressemble beaucoup à l’une d’elles, il le dit avant de
+publier : quelle construction, de qui, et quelle part en est identique. Si
+vous êtes parti de leur construction, ouvrez-la et choisissez plutôt
+**Modifier une copie**, pour que son auteur soit crédité et ses conditions
+gardées (voir [Comment remixer](#comment-remixer)). Si sa licence
+n’autorise pas les copies, demandez-lui d’abord. Si c’est votre propre
+travail, choisissez **C’est la mienne, publier**. La question n’est posée
+qu’une fois par visite, et ne vous empêche jamais de publier.
+
+Ce qui est comparé, et ce qu’il ne peut pas savoir :
+
+- Seules comptent les briques que vous avez placées vous-même : deux
+  constructions commencées avec la même maison toute faite ne se
+  ressemblent donc pas pour autant. Une construction de moins de 20 briques
+  à vous n’est pas comparée : les petites constructions se ressemblent trop
+  facilement.
+- Une brique compte comme identique quand c’est le même genre de brique au
+  même endroit, même si toute votre construction se trouve ailleurs ou est
+  tournée d’un quart de tour. Les couleurs, et l’orientation de chaque
+  brique, ne comptent pas.
+- Vos propres constructions, celle dont la vôtre est un remix, les remix de
+  la vôtre, les autres remix de la même construction et les constructions
+  publiées après la première publication de la vôtre sont laissés de côté.
+- Il ne connaît que les constructions que cet appareil a vues : ne rien
+  trouver ne veut donc pas dire que personne n’a rien construit de
+  semblable. C’est une indication, pas un jugement : des constructions
+  peuvent se ressembler par hasard, et vous seul savez comment vous avez
+  fait la vôtre. Rien n’est envoyé ni enregistré.
 
 ### Quand quelqu’un utilise votre construction d’une façon que sa licence ne permet pas
 

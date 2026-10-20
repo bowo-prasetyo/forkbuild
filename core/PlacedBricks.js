@@ -53,14 +53,19 @@ export function addReadyMadeBricks(into, bricks) {
 // standing as it was accounts for one brick with its signature. With no
 // record, every brick is the builder's own.
 export function countPlacedBricks(bricks, readyMade) {
+    return placedBricks(bricks, readyMade).length;
+}
+
+// The bricks of `bricks` that countPlacedBricks() counts: the builder's own.
+export function placedBricks(bricks, readyMade) {
     const left = { ...(readyMade && typeof readyMade === 'object' ? readyMade : {}) };
-    let placed = 0;
+    const placed = [];
     for (const brick of bricks || []) {
         const signature = brickSignature(brick);
         if (left[signature] > 0) {
             left[signature] -= 1;
         } else {
-            placed += 1;
+            placed.push(brick);
         }
     }
     return placed;

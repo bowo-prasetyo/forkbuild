@@ -2,6 +2,7 @@ import { ref, computed, watch, onMounted, onBeforeUnmount, inject } from 'vue';
 import LoginModal from './LoginModal.js';
 import RemixPermissionDialog from './RemixPermissionDialog.js';
 import FindabilityDialog from './FindabilityDialog.js';
+import SimilarBuildDialog from './SimilarBuildDialog.js';
 import { License, LicenseId } from '../../core/License.js';
 import { UpdateDocumentMetadataUseCase } from '../../application/document/UpdateDocumentMetadataUseCase.js';
 import { saveFailureMessage } from './saveFailureMessages.js';
@@ -34,6 +35,8 @@ const SEARCH_THRESHOLD = 8;
 // The builds Publish has already asked "nothing of your own yet?" about in
 // this visit: asked once each, never again however often it is published.
 const NOTHING_ADDED_ASKED = new Set();
+// The builds Publish has already pointed out look-alikes for in this visit.
+const SIMILAR_ASKED = new Set();
 
 // 0.9.653 — SaveDocumentUseCase.execute() performs multiple independent
 // StorageProvider writes (document blob, then manifest — see
@@ -121,11 +124,12 @@ export default {
     // never calls editorSession.importDocument() itself.
     // `saved` follows a successful Save, for the Editor's save sound.
     emits: ['back-to-world', 'open-shortcuts', 'published', 'saved', 'export-document', 'export-model', 'export-all-documents', 'import-document', 'new-document'],
-    components: { LoginModal, RemixPermissionDialog, FindabilityDialog },
+    components: { LoginModal, RemixPermissionDialog, FindabilityDialog, SimilarBuildDialog },
     setup(props, { emit }) {
         const identityUseCase = inject('identityUseCase', null);
         const findabilityStore = inject('findabilityStore', null);
         const readyMadeBricks = inject('readyMadeBricksStore', null);
+        const similarBuildFinder = inject('similarBuildFinder', null);
         const dirty = ref(props.documentManager.state.dirty);
         const recentDocuments = ref(props.loadDocumentUseCase.listSavedDocuments());
         const recentOpen = ref(false);
@@ -216,7 +220,10 @@ export default {
         // kindly: publishing it untouched isn't building it
         // (docs/reviews/CreativeDirection-2026-10-12b.md, finding 2).
         const askNothingAdded = ref(false);
+        const checkingSimilar = ref(false);
+        const similarBuilds = ref([]);
         function requestPublish() {
+            if (checkingSimilar.value) return;
             const world = props.documentManager.document?.world;
             if (world && readyMadeBricks && !NOTHING_ADDED_ASKED.has(world.id)) {
                 let untouched = false;
@@ -231,13 +238,50 @@ export default {
                     return;
                 }
             }
-            continueToPublish();
+            checkSimilarBuilds();
         }
         function keepBuilding() {
             askNothingAdded.value = false;
         }
         function publishAnyway() {
             askNothingAdded.value = false;
+            checkSimilarBuilds();
+        }
+        // A build that looks a lot like someone else's published build on
+        // this device is pointed out once a visit, with Edit a Copy as the way
+        // to credit them (SimilarBuildDialog). Only a hint: a failed or slow
+        // check publishes as before.
+        async function checkSimilarBuilds() {
+            const document = props.documentManager.document;
+            const world = document?.world;
+            if (!similarBuildFinder || !world || SIMILAR_ASKED.has(world.id)) {
+                continueToPublish();
+                return;
+            }
+            checkingSimilar.value = true;
+            let found = [];
+            try {
+                found = await similarBuildFinder.find(document, { readyMade: readyMadeBricks ? readyMadeBricks.get(world.id) : null });
+            } catch (err) {
+                console.warn('Looking for similar builds failed:', err);
+                found = [];
+            } finally {
+                checkingSimilar.value = false;
+            }
+            // Another build was opened while it looked.
+            if (props.documentManager.document !== document) return;
+            if (found.length > 0) {
+                SIMILAR_ASKED.add(world.id);
+                similarBuilds.value = found;
+                return;
+            }
+            continueToPublish();
+        }
+        function keepBuildingSimilar() {
+            similarBuilds.value = [];
+        }
+        function publishOwnWork() {
+            similarBuilds.value = [];
             continueToPublish();
         }
         function continueToPublish() {
@@ -401,6 +445,7 @@ export default {
             save, createNew, load, place, publish, saveAndReturnToWorld,
             signInToPublish, lockedIdentityId, requestPublish, publishAfterSignIn,
             askRemixPermission, chooseRemixPermission, askNothingAdded, keepBuilding, publishAnyway, askFindability, chooseFindability,
+            checkingSimilar, similarBuilds, keepBuildingSimilar, publishOwnWork,
             importFileInput, triggerImportDocument, onImportDocumentFileChosen, exportAllDocuments
         };
     },
@@ -427,7 +472,7 @@ export default {
             </template>
 
             <button class="toolbar-save" @click="save">{{ t('toolbar.save') }}</button>
-            <button class="toolbar-publish" @click="requestPublish">{{ t('toolbar.publish') }}</button>
+            <button class="toolbar-publish" :disabled="checkingSimilar" :aria-busy="checkingSimilar ? 'true' : 'false'" @click="requestPublish">{{ t('toolbar.publish') }}</button>
             <button class="toolbar-new" @click="createNew">{{ t('toolbar.new') }}</button>
             <!-- Files, under one menu so they don't sit beside Publish at the same
                  weight, nor push New off a phone's toolbar
@@ -477,6 +522,12 @@ export default {
                     </div>
                 </div>
             </div>
+            <SimilarBuildDialog
+                v-if="similarBuilds.length"
+                :matches="similarBuilds"
+                @publish="publishOwnWork"
+                @cancel="keepBuildingSimilar"
+            />
             <RemixPermissionDialog
                 v-if="askRemixPermission"
                 @choose="chooseRemixPermission"
