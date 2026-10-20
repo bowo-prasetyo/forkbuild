@@ -2,7 +2,7 @@ import { BitcoinWalletConnection } from '../../../anchoring/BitcoinWalletConnect
 
 // 0.8.58 — Explicit Bitcoin Wallet Connection & Signing UX.
 //
-// Mirrors application/anchoring/bitcoin/CreateBitcoinAnchorWalletSignerUseCase.js's own
+// Mirrors application/anchoring/bitcoin/CreateBitcoinAnchorWalletSignerUseCase.js (removed as unused)'s own
 // shape exactly, for the identical reason — a composition root ui/ or
 // tests/ uses to get a concrete BitcoinWalletConnection without ever
 // importing anchoring/BitcoinWalletConnection.js directly. The caller

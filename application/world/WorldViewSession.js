@@ -1,7 +1,7 @@
-import { CreateEventBusUseCase } from '../CreateEventBusUseCase.js';
 import { RenderWorldViewUseCase } from './RenderWorldViewUseCase.js';
 import { Position } from '../../core/Position.js';
 import { CameraState } from '../../renderer/CameraState.js';
+import { EventBus } from '../../core/events/EventBus.js';
 
 const CAMERA_HEIGHT_OFFSET = 25;
 const CAMERA_DISTANCE_OFFSET = 30;
@@ -18,7 +18,7 @@ export class WorldViewSession {
     viewDocument(container, documentId) {
         this.dispose();
 
-        const eventBus = new CreateEventBusUseCase().execute();
+        const eventBus = new EventBus();
         this._session = new RenderWorldViewUseCase().execute(container, eventBus, this._registry);
 
         const document = this._loadPublicationDocumentUseCase.execute(documentId, eventBus);

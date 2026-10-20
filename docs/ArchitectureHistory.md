@@ -7,19 +7,19 @@ system: later milestones changed or removed parts of what they describe.
 For how ForkBuild works now, read docs/Architecture.md. For why each
 change was made, read docs/Roadmap.md.
 
-Don't update these files to match the code. Correct them only when they
-are wrong about what was true at the time.
+They are kept in the repository's history rather than in its files: each
+link below opens a part as it was when it was frozen.
 
 ## Parts
 
-<!-- parts:start (tests read these in this order through tests/support/DocText.js) -->
+<!-- parts:start -->
 
 | Part | Covers |
 |---|---|
-| [0.1 to 0.2.14](architecture-history/0.1-0.2.14.md) | The layer overview (core, application, renderer, ui), transform and editing notes through 0.1.50, and durable documents, publishing, placement and collaboration foundations (0.2.0 to 0.2.14) |
-| [0.2.15 to 0.2.45](architecture-history/0.2.15-0.2.45.md) | Decentralized discovery, signatures and replication, fork-on-edit, world placement and navigation, the publication catalog and previews, and avatars and presence |
-| [0.2.46 to 0.2.83](architecture-history/0.2.46-0.2.83.md) | Local identity and keys, peer connections and messaging, friends, chat and voice, terrain, bricks and structures, and multi-device identity |
-| [0.3.0 to 0.3.4](architecture-history/0.3.md) | Collaborative spatial presence and awareness, camera perspectives, walkable structures and vertical navigation |
+| [0.1 to 0.2.14](https://github.com/bowo-prasetyo/forkbuild/blob/590fccf78895fde987795873bdda1f0e9b797665/docs/architecture-history/0.1-0.2.14.md) | The layer overview (core, application, renderer, ui), transform and editing notes through 0.1.50, and durable documents, publishing, placement and collaboration foundations (0.2.0 to 0.2.14) |
+| [0.2.15 to 0.2.45](https://github.com/bowo-prasetyo/forkbuild/blob/590fccf78895fde987795873bdda1f0e9b797665/docs/architecture-history/0.2.15-0.2.45.md) | Decentralized discovery, signatures and replication, fork-on-edit, world placement and navigation, the publication catalog and previews, and avatars and presence |
+| [0.2.46 to 0.2.83](https://github.com/bowo-prasetyo/forkbuild/blob/590fccf78895fde987795873bdda1f0e9b797665/docs/architecture-history/0.2.46-0.2.83.md) | Local identity and keys, peer connections and messaging, friends, chat and voice, terrain, bricks and structures, and multi-device identity |
+| [0.3.0 to 0.3.4](https://github.com/bowo-prasetyo/forkbuild/blob/590fccf78895fde987795873bdda1f0e9b797665/docs/architecture-history/0.3.md) | Collaborative spatial presence and awareness, camera perspectives, walkable structures and vertical navigation |
 
 <!-- parts:end -->
 

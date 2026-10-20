@@ -5,7 +5,7 @@ import { RestorePublicationAnchorCatalogUseCase } from './RestorePublicationAnch
 import { LocalAuthorizationVerifier } from '../../identity/LocalAuthorizationVerifier.js';
 import { PublicationAnchorExchange } from './PublicationAnchorExchange.js';
 import { PublicationAnchorPeerExchange } from './PublicationAnchorPeerExchange.js';
-import { CreateAnchorKnowledgeStoreUseCase } from './CreateAnchorKnowledgeStoreUseCase.js';
+import { LocalAnchorKnowledgeStore } from './LocalAnchorKnowledgeStore.js';
 
 // 0.8.4 — External Anchor Publication Over Peers.
 //
@@ -18,7 +18,7 @@ import { CreateAnchorKnowledgeStoreUseCase } from './CreateAnchorKnowledgeStoreU
 // publications.
 //
 // Returns its own `catalog` rather than reusing application/
-// CreatePublicationAnchorCatalogUseCase.js's — that use case pairs a
+// CreatePublicationAnchorCatalogUseCase.js (removed as unused)'s — that use case pairs a
 // catalog with `AddPublicationAnchorUseCase` (structural-only, no
 // signature check), while this one pairs the SAME kind of catalog with
 // `PublicationAnchorExchange` (structural AND signature verification,
@@ -50,7 +50,7 @@ import { CreateAnchorKnowledgeStoreUseCase } from './CreateAnchorKnowledgeStoreU
 //
 // 0.8.17 — Evidence Provenance & Observation Boundary. Also constructs
 // and returns `knowledgeStore` (application/
-// CreateAnchorKnowledgeStoreUseCase.js), wired into `peerExchange` so
+// CreateAnchorKnowledgeStoreUseCase.js (folded into its caller)), wired into `peerExchange` so
 // every anchor arriving over a live peer connection records how it
 // arrived. See that use case's own header.
 export class CreatePublicationAnchorPeerExchangeUseCase {
@@ -72,7 +72,7 @@ export class CreatePublicationAnchorPeerExchangeUseCase {
         // ImportPackageAnchorsUseCase.js (PACKAGE) — one store, fed by all
         // three acquisition paths, exactly the "one instance, threaded
         // everywhere" discipline `catalog` above already holds.
-        const { knowledgeStore } = new CreateAnchorKnowledgeStoreUseCase().execute();
+        const knowledgeStore = new LocalAnchorKnowledgeStore(new LocalStorageProvider());
 
         const exchange = new PublicationAnchorExchange(catalog, verifier);
         const peerExchange = new PublicationAnchorPeerExchange(exchange, peerMessageBus, connectedPeerRegistry, { knowledgeStore });

@@ -23,19 +23,14 @@ import { SharePublicationWithPeersUseCase } from '../../application/publication/
 import { RetrieveSharedPublicationUseCase } from '../../application/publication/sharing/RetrieveSharedPublicationUseCase.js';
 import { AutoRetrieveSharedPublicationsUseCase } from '../../application/publication/sharing/AutoRetrieveSharedPublicationsUseCase.js';
 import { CreatePublicationResolverUseCase } from '../../application/publication/CreatePublicationResolverUseCase.js';
-import { CreateFindOwnSharedPublicationUseCase } from '../../application/publication/sharing/CreateFindOwnSharedPublicationUseCase.js';
-import { CreatePublisherPlacementClaimLookupUseCase } from '../../application/placement/CreatePublisherPlacementClaimLookupUseCase.js';
 import { CreatePublicationPeerExchangeUseCase } from '../../application/publication/CreatePublicationPeerExchangeUseCase.js';
-import { CreatePeerContentExchangeUseCase } from '../../application/peer/CreatePeerContentExchangeUseCase.js';
 import { CreatePublicationResolutionCoordinatorUseCase } from '../../application/publication/CreatePublicationResolutionCoordinatorUseCase.js';
 import { CreatePublicationDisplayKindRegistryUseCase } from '../../application/publication/CreatePublicationDisplayKindRegistryUseCase.js';
 import { ReconstructPublicationDiscoveryUseCase } from '../../application/publication/ReconstructPublicationDiscoveryUseCase.js';
 import { CreateWorldEncounterPublicationAdmissionLogUseCase } from '../../application/worldEncounter/CreateWorldEncounterPublicationAdmissionLogUseCase.js';
 import { ReconstructWorldEncounterPublicationDiscoveryUseCase } from '../../application/worldEncounter/ReconstructWorldEncounterPublicationDiscoveryUseCase.js';
 import { CreatePublicationAnchorPeerExchangeUseCase } from '../../application/anchoring/CreatePublicationAnchorPeerExchangeUseCase.js';
-import { CreatePublicationAnchorDiscoveryCoordinatorUseCase } from '../../application/anchoring/CreatePublicationAnchorDiscoveryCoordinatorUseCase.js';
 import { CreatePublicationSnapshotPlacementPeerExchangeUseCase } from '../../application/snapshot/placement/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js';
-import { CreatePublicationSnapshotPlacementDiscoveryCoordinatorUseCase } from '../../application/snapshot/placement/CreatePublicationSnapshotPlacementDiscoveryCoordinatorUseCase.js';
 import { LocalStorageProvider } from '../../storage/LocalStorageProvider.js';
 import { OwnPublicationDistributionRecord } from '../../application/publication/OwnPublicationDistributionRecord.js';
 import { OwnSnapshotDistributionLog } from '../../application/snapshot/OwnSnapshotDistributionLog.js';
@@ -74,6 +69,13 @@ import { RepositoryNetworkDiscovery } from '../../application/publication/Reposi
 import { ChallengeEntryDiscovery } from '../../application/challenge/ChallengeEntryDiscovery.js';
 import { ChallengeEntryLog } from '../../application/challenge/ChallengeEntryLog.js';
 import { NetworkPublicationLocatorStore } from '../../application/publication/NetworkPublicationLocatorStore.js';
+import { PublisherPlacementClaimLookup } from '../../application/placement/PublisherPlacementClaim.js';
+import { LocalPlacementRegistry } from '../../placement/LocalPlacementRegistry.js';
+import { FindOwnSharedPublicationUseCase } from '../../application/publication/sharing/FindOwnSharedPublicationUseCase.js';
+import { LocalPublisherProvider } from '../../publisher/LocalPublisherProvider.js';
+import { PublicationSnapshotPlacementDiscoveryCoordinator } from '../../application/snapshot/placement/PublicationSnapshotPlacementDiscoveryCoordinator.js';
+import { PublicationAnchorDiscoveryCoordinator } from '../../application/anchoring/PublicationAnchorDiscoveryCoordinator.js';
+import { PeerContentExchange } from '../../application/peer/PeerContentExchange.js';
 
 // The network runtime: everything that talks to other devices and networks,
 // built after the app's shell (ui/main.js) has drawn the first page. Peer
@@ -103,12 +105,7 @@ export async function composeNetwork({ app, decentralizedPublicationDiscoveryPro
         peerMessageBus,
         connectedPeerRegistry: peerSessionManager.registry
     });
-    const { peerContentExchange: publicationPeerContentExchange } = new CreatePeerContentExchangeUseCase().execute({
-        contentStore: publicationContentStore,
-        peerMessageBus,
-        connectedPeerRegistry: peerSessionManager.registry,
-        publicationCatalog
-    });
+    const publicationPeerContentExchange = new PeerContentExchange(publicationContentStore, peerMessageBus, peerSessionManager.registry, publicationCatalog);
     const { coordinator: publicationResolutionCoordinator } = new CreatePublicationResolutionCoordinatorUseCase().execute({
         publicationResolver,
         peerContentExchange: publicationPeerContentExchange
@@ -338,9 +335,7 @@ export async function composeNetwork({ app, decentralizedPublicationDiscoveryPro
         connectedPeerRegistry: peerSessionManager.registry
     });
 
-    const { discoveryCoordinator: publicationAnchorDiscoveryCoordinator } = new CreatePublicationAnchorDiscoveryCoordinatorUseCase().execute({
-        peerExchange: publicationAnchorPeerExchange
-    });
+    const publicationAnchorDiscoveryCoordinator = new PublicationAnchorDiscoveryCoordinator(publicationAnchorPeerExchange);
 
     // The one placement catalog. Persisted records that no longer validate are
     // pruned at construction. Resolution stays a separate, on-demand call.
@@ -352,9 +347,7 @@ export async function composeNetwork({ app, decentralizedPublicationDiscoveryPro
         peerMessageBus,
         connectedPeerRegistry: peerSessionManager.registry
     });
-    const { discoveryCoordinator: publicationSnapshotPlacementDiscoveryCoordinator } = new CreatePublicationSnapshotPlacementDiscoveryCoordinatorUseCase().execute({
-        peerExchange: publicationSnapshotPlacementPeerExchange
-    });
+    const publicationSnapshotPlacementDiscoveryCoordinator = new PublicationSnapshotPlacementDiscoveryCoordinator(publicationSnapshotPlacementPeerExchange);
 
     const {
         ipfsGatewayConfigurationStore, ipfsNodeConfigurationStore, ipfsRemotePinningSettingsStore, resolvedIpfsNodeApiUrl, resolvedIpfsGatewayUrls,
@@ -459,10 +452,10 @@ export async function composeNetwork({ app, decentralizedPublicationDiscoveryPro
     app.provide('sharePublicationWithPeersUseCase', sharePublicationWithPeersUseCase);
     // Which of this device's own Worlds an unresolvable catalog entry shares, for
     // the Publications page's "Open in Editor" on an old, legacy-hash entry.
-    app.provide('findOwnSharedPublicationUseCase', new CreateFindOwnSharedPublicationUseCase().execute({ contentStore: publicationContentStore }));
+    app.provide('findOwnSharedPublicationUseCase', new FindOwnSharedPublicationUseCase({ contentStore: publicationContentStore, publisherProvider: new LocalPublisherProvider(new LocalStorageProvider()) }));
     // The publisher's signed placement of a World, announced beside its Snapshot
     // when the Publications page distributes it, as World View does.
-    const publisherPlacementClaimLookup = new CreatePublisherPlacementClaimLookupUseCase().execute();
+    const publisherPlacementClaimLookup = new PublisherPlacementClaimLookup(new LocalPlacementRegistry(new LocalStorageProvider()));
     app.provide('publisherPlacementClaimLookup', publisherPlacementClaimLookup);
     app.provide('retrieveSharedPublicationUseCase', retrieveSharedPublicationUseCase);
     app.provide('autoRetrieveSharedPublicationsUseCase', autoRetrieveSharedPublicationsUseCase);

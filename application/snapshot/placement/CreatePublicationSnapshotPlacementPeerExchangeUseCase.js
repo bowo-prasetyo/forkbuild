@@ -5,7 +5,7 @@ import { RestorePublicationSnapshotPlacementCatalogUseCase } from './RestorePubl
 import { LocalAuthorizationVerifier } from '../../../identity/LocalAuthorizationVerifier.js';
 import { PublicationSnapshotPlacementExchange } from './PublicationSnapshotPlacementExchange.js';
 import { PublicationSnapshotPlacementPeerExchange } from './PublicationSnapshotPlacementPeerExchange.js';
-import { CreatePlacementKnowledgeStoreUseCase } from '../../placement/CreatePlacementKnowledgeStoreUseCase.js';
+import { LocalPlacementKnowledgeStore } from '../../placement/LocalPlacementKnowledgeStore.js';
 
 // 0.8.19 — Snapshot Placement Discovery & Peer Synchronization.
 //
@@ -18,7 +18,7 @@ import { CreatePlacementKnowledgeStoreUseCase } from '../../placement/CreatePlac
 // already established for anchors.
 //
 // Returns its own `catalog` rather than reusing application/
-// CreatePublicationSnapshotPlacementCatalogUseCase.js's (0.8.18) — that
+// CreatePublicationSnapshotPlacementCatalogUseCase.js (removed as unused)'s (0.8.18) — that
 // use case pairs a catalog with `AddPublicationSnapshotPlacementUseCase`
 // (structural-only, no signature check), while this one pairs the SAME
 // kind of catalog with `PublicationSnapshotPlacementExchange` (structural
@@ -55,7 +55,7 @@ import { CreatePlacementKnowledgeStoreUseCase } from '../../placement/CreatePlac
 //
 // 0.8.24 — Snapshot Placement Provenance & Observation Boundary. Also
 // constructs and returns `knowledgeStore` (application/
-// CreatePlacementKnowledgeStoreUseCase.js), wired into `peerExchange` so
+// CreatePlacementKnowledgeStoreUseCase.js (folded into its caller)), wired into `peerExchange` so
 // every placement arriving over a live peer connection records how it
 // arrived — the identical addition application/
 // CreatePublicationAnchorPeerExchangeUseCase.js already made for anchors
@@ -79,7 +79,7 @@ export class CreatePublicationSnapshotPlacementPeerExchangeUseCase {
         // (PACKAGE) — one store, fed by all three acquisition paths,
         // exactly the "one instance, threaded everywhere" discipline
         // `catalog` above already holds.
-        const { knowledgeStore } = new CreatePlacementKnowledgeStoreUseCase().execute();
+        const knowledgeStore = new LocalPlacementKnowledgeStore(new LocalStorageProvider());
 
         const exchange = new PublicationSnapshotPlacementExchange(catalog, verifier);
         const peerExchange = new PublicationSnapshotPlacementPeerExchange(exchange, peerMessageBus, connectedPeerRegistry, { knowledgeStore });

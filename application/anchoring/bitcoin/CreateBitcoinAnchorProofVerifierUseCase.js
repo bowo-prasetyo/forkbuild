@@ -6,7 +6,7 @@ import { BitcoinOpReturnProofVerifierFailover } from '../../../anchoring/Bitcoin
 // The proof of application/anchoring/CreateExternalAnchorVerifierUseCase.js's own
 // 0.8.0 promise: "a real proofVerifier plugs in later without changing
 // this pipeline." Mirrors application/
-// CreateIpfsPublicationResolverUseCase.js's own shape, for the identical
+// CreateIpfsPublicationResolverUseCase.js (removed as unused)'s own shape, for the identical
 // reason — a composition root ui/ or tests/ uses to get a concrete,
 // real-network-backed proofVerifier without ever importing anchoring/
 // BitcoinOpReturnProofVerifier.js directly. The result plugs straight

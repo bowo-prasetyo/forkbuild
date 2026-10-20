@@ -3,7 +3,7 @@ import { BaseTransactionBroadcaster } from '../../../base/BaseTransactionBroadca
 // 0.8.95 — Explicit Base Transaction Broadcast.
 //
 // The identical composition-root shape `application/
-// CreateBaseNetworkObserverUseCase.js` (0.8.90) already established, so a
+// CreateBaseNetworkObserverUseCase.js (folded into its caller)` (0.8.90) already established, so a
 // caller can obtain a real `BaseTransactionBroadcaster` without ever
 // importing `base/BaseTransactionBroadcaster.js` directly. `rpcSource` is
 // taken as a parameter, never constructed here — the SAME, already-shared

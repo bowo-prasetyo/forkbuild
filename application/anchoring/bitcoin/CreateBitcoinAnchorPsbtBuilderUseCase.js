@@ -3,7 +3,7 @@ import { BitcoinAnchorPsbtBuilder } from '../../../anchoring/BitcoinAnchorPsbtBu
 // 0.8.48 — Bitcoin Anchor PSBT Construction.
 //
 // The identical composition-root shape application/
-// CreateBitcoinAnchorTransactionBuilderUseCase.js already established, so
+// CreateBitcoinAnchorTransactionBuilderUseCase.js (folded into its caller) already established, so
 // a caller can obtain a real BitcoinAnchorPsbtBuilder without ever
 // importing anchoring/BitcoinAnchorPsbtBuilder.js directly. Unlike its
 // 0.8.47 sibling, this builder carries no fee/dust policy of its own —

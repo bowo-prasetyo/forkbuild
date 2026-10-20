@@ -11,7 +11,7 @@ import { PublicationResolver } from './PublicationResolver.js';
 // composition-root shape application/publisher/CreatePublisherUseCase.js and
 // application/blueprint/CreateBlueprintAttributionUseCase.js already established.
 // 0.7.1 proved the claim this file's own header made: application/
-// CreateIpfsPublicationResolverUseCase.js wires content/
+// CreateIpfsPublicationResolverUseCase.js (removed as unused) wires content/
 // IpfsContentStore.js into the identical shape, and application/
 // PublicationResolver.js, every kindPlugin, and every caller of either
 // use case stay completely untouched — none of them ever import a

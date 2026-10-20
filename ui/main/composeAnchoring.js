@@ -7,14 +7,14 @@ import { CreatePublicationAnchorCreationCoordinatorUseCase } from '../../applica
 import { CreateBitcoinAnchorEvidenceViewUseCase } from '../../application/anchoring/bitcoin/CreateBitcoinAnchorEvidenceViewUseCase.js';
 import { CreateExternalAnchorEvidenceViewRegistryUseCase } from '../../application/anchoring/CreateExternalAnchorEvidenceViewRegistryUseCase.js';
 import { CreateBitcoinEsploraTransactionConfirmationObserverUseCase } from '../../application/anchoring/bitcoin/CreateBitcoinEsploraTransactionConfirmationObserverUseCase.js';
-import { CreateBitcoinAnchorConfirmationObserverUseCase } from '../../application/anchoring/bitcoin/CreateBitcoinAnchorConfirmationObserverUseCase.js';
-import { CreateBitcoinAnchorProofReconciliationViewUseCase } from '../../application/anchoring/bitcoin/CreateBitcoinAnchorProofReconciliationViewUseCase.js';
 import { CreatePreferredPublicationAnchorCreationCoordinatorUseCase } from '../../application/anchoring/CreatePreferredPublicationAnchorCreationCoordinatorUseCase.js';
 import { CreateArweaveAnchorPublisherUseCase } from '../../application/anchoring/CreateArweaveAnchorPublisherUseCase.js';
 import { CreateArweaveAnchorProofVerifierUseCase } from '../../application/anchoring/CreateArweaveAnchorProofVerifierUseCase.js';
 import { CreateArweaveAnchorEvidenceViewUseCase } from '../../application/anchoring/CreateArweaveAnchorEvidenceViewUseCase.js';
 import { CreateBaseAnchorEvidenceViewUseCase } from '../../application/anchoring/base/CreateBaseAnchorEvidenceViewUseCase.js';
 import { CreateBaseAnchorProofVerifierUseCase } from '../../application/anchoring/base/CreateBaseAnchorProofVerifierUseCase.js';
+import { BitcoinAnchorProofReconciliationView } from '../../application/anchoring/bitcoin/BitcoinAnchorProofReconciliationView.js';
+import { BitcoinAnchorConfirmationObserver } from '../../anchoring/BitcoinAnchorConfirmationObserver.js';
 
 // Composition root: publication evidence and external anchoring, and every
 // network's anchor reader: checking and describing Arweave, Steem, Blurt,
@@ -121,10 +121,8 @@ export function composeAnchoring({
     externalAnchorEvidenceViewRegistry.register(baseAnchorEvidenceView);
 
     const { bitcoinEsploraTransactionConfirmationObserver } = new CreateBitcoinEsploraTransactionConfirmationObserverUseCase().execute({ apiUrls: resolvedBitcoinEsploraApiUrls });
-    const { bitcoinAnchorConfirmationObserver } = new CreateBitcoinAnchorConfirmationObserverUseCase().execute({
-        confirmationSource: bitcoinEsploraTransactionConfirmationObserver
-    });
-    const { bitcoinAnchorProofReconciliationView } = new CreateBitcoinAnchorProofReconciliationViewUseCase().execute({
+    const bitcoinAnchorConfirmationObserver = new BitcoinAnchorConfirmationObserver({ confirmationSource: bitcoinEsploraTransactionConfirmationObserver });
+    const bitcoinAnchorProofReconciliationView = new BitcoinAnchorProofReconciliationView({
         bitcoinAnchorConfirmationObserver, bitcoinProofVerifier
     });
 

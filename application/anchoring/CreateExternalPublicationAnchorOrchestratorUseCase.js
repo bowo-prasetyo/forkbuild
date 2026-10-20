@@ -16,10 +16,10 @@ import { ExternalAnchorPublisherRegistry } from './ExternalAnchorPublisherRegist
 //
 // `publicationCatalog` and `anchorCatalog` are always caller-supplied —
 // this use case wires signing/orchestration only, never storage, exactly
-// as application/anchoring/CreatePublicationAnchorCatalogUseCase.js already wires
+// as application/anchoring/CreatePublicationAnchorCatalogUseCase.js (removed as unused) already wires
 // storage only and never signing. A caller obtains both from their own
 // existing composition roots (application/publication/CreatePublicationCatalogUseCase.js,
-// application/anchoring/CreatePublicationAnchorCatalogUseCase.js) and passes the
+// application/anchoring/CreatePublicationAnchorCatalogUseCase.js (removed as unused)) and passes the
 // SAME instances here — never a second, disconnected pair of catalogs.
 //
 // `publishers` (mirroring `proofVerifiers` on application/

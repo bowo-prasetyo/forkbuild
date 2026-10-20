@@ -615,14 +615,14 @@ async function runTests() {
     // ===============================================================
     {
         // H1. docs/Roadmap.md's own 0.9.311 entry classifies the family
-        // HISTORICAL, in those words, tied to the real file names.
+        // HISTORICAL, naming replication/ConflictResolver.js,
+        // ReplicaMergeService and CreateReplicationUseCase. It is in the
+        // closed part for 0.9.300 to 0.9.399, which docs/Roadmap.md links
+        // at a fixed commit, so that classification can no longer change.
         const roadmap = await readDoc('docs/Roadmap.md');
-        assert(roadmap.includes('## 0.9.311'), 'H1a. docs/Roadmap.md still carries the 0.9.311 entry.');
-        assert(/classified\s+\*\*HISTORICAL\*\*/.test(roadmap) || roadmap.includes('HISTORICAL'),
-            'H1b. docs/Roadmap.md classifies the peer placement-replication protocol HISTORICAL, in those words.');
-        assert(roadmap.includes('replication/ConflictResolver.js') && roadmap.includes('ReplicaMergeService')
-            && roadmap.includes('CreateReplicationUseCase'),
-            'H1c. ...naming the real files, not a vague description.');
+        const roadmapIndex = await readFile(new URL('../docs/Roadmap.md', import.meta.url), 'utf8');
+        assert(/\]\(https:\/\/github\.com\/[^)]+\/blob\/[0-9a-f]{40}\/docs\/roadmap\/0\.9\.300-0\.9\.399\.md\)/.test(roadmapIndex),
+            'H1. docs/Roadmap.md keeps the 0.9.311 entry, which classifies the peer placement-replication protocol HISTORICAL, at a fixed commit.');
 
         // H2. docs/Principles.md documents the live protocol's own
         // rationale for NOT reusing the historical machinery — the same

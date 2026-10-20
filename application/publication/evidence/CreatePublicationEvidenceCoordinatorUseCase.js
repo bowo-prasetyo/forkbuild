@@ -7,7 +7,7 @@ import { PublicationEvidenceCoordinator } from './PublicationEvidenceCoordinator
 // CreatePublicationResolutionCoordinatorUseCase.js's own header already
 // established, for the identical reason: `anchorCatalog` and
 // `externalAnchorVerifier` already exist, produced by application/
-// CreatePublicationAnchorCatalogUseCase.js and application/
+// CreatePublicationAnchorCatalogUseCase.js (removed as unused) and application/
 // CreateExternalAnchorVerifierUseCase.js. Reconstructing separate
 // instances here would give this coordinator its own, disconnected view
 // of evidence this replica's real catalog/verifier never see. ui/main.js

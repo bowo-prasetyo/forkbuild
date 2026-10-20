@@ -8,7 +8,7 @@ import { BitcoinEsploraWalletFundingSourceFailover } from '../../../anchoring/Bi
 // tests/ uses to get a concrete, real-network-backed funding source without
 // ever importing anchoring/BitcoinEsploraWalletFundingSource.js directly.
 // The result plugs straight into application/
-// CreateBitcoinWalletFundingObserverUseCase.js's own `fundingSource` option.
+// CreateBitcoinWalletFundingObserverUseCase.js (folded into its caller)'s own `fundingSource` option.
 export class CreateBitcoinEsploraWalletFundingSourceUseCase {
     // `apiUrls` (two or more endpoints, in order) builds the failover
     // wrapper from anchoring/BitcoinEsploraFailover.js; otherwise one

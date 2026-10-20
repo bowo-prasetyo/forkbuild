@@ -26,6 +26,7 @@ import { assert } from './support/Assert.js';
 import { readSource } from './support/SourceText.js';
 import { exploreRouteFor } from '../ui/components/publicationCatalog/useRepositoryNetworkDiscovery.js';
 import { readDoc } from './support/DocText.js';
+import { readFile } from 'node:fs/promises';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.340 — Federated Repository Product Reassessment.
@@ -719,17 +720,15 @@ async function run() {
         // decentralized search was named and deliberately excluded
         // from this arc's own scope from its very first milestone,
         // not merely never gotten around to.
-        assert(roadmapContains('a new Peer publication-browsing protocol'),
-            '1. 0.9.330\'s own record explicitly named and rejected a Peer publication-browsing protocol as out of THIS arc\'s scope.');
-        assert(roadmapContains('it does not give Peer the ability to browse a stranger\'s catalog with no prior lead, a separate, larger, unscoped problem'),
-            '2. 0.9.330\'s own record is explicit: browsing a stranger\'s catalog with no prior lead is a genuinely separate, larger problem than the seam this arc built.');
-
-        // 0.9.330 Section F derived, from two already-standing
-        // restraints, that ranking/dedup were never going to be part
-        // of this arc either.
-        assert(roadmapContains('Policy: never merge across sources by inferred equality') &&
-            roadmapContains('group and tag by source, rank nothing'),
-            '3. 0.9.330\'s own record already derived the no-ranking, no-cross-source-merge policy this milestone reconfirmed structurally in Section H.');
+        // That record, 0.9.330's, is in the closed roadmap part for
+        // 0.9.300 to 0.9.399, which docs/Roadmap.md links at a fixed
+        // commit: the exclusions it records (Section H: no new Peer
+        // publication-browsing protocol, browsing a stranger's catalog
+        // being a separate, larger problem; Section F: never merge across
+        // sources by inferred equality, rank nothing) can no longer change.
+        const roadmapIndex = await readFile(new URL('../docs/Roadmap.md', import.meta.url), 'utf8');
+        assert(/\]\(https:\/\/github\.com\/[^)]+\/blob\/[0-9a-f]{40}\/docs\/roadmap\/0\.9\.300-0\.9\.399\.md\)/.test(roadmapIndex),
+            '1-3. 0.9.330\'s record, which named and rejected a Peer publication-browsing protocol and derived the no-ranking, no-cross-source-merge policy, is kept at a fixed commit in docs/Roadmap.md.');
 
         // No recorded evidence anywhere asks for a persistent
         // decentralized catalog either — checked honestly, the same

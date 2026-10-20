@@ -260,7 +260,8 @@ function anchoring() {
     const base = staticGraph('ui/main/plugins/composeBaseWallet.js');
     assert(walletModules.slice(0, 3).every((file) => bitcoin.has(file)) && walletModules.slice(3).every((file) => base.has(file)), 'each plugin reaches its own');
     const onlyPlugins = new Set([...bitcoin, ...base].filter((file) => !readers.has(file)));
-    assert(onlyPlugins.size > 100, `the plugins hold the wallet steps' own modules (${onlyPlugins.size})`);
+    // 90 when last counted, after their one-line Create*UseCase wrappers were folded into the plugins.
+    assert(onlyPlugins.size > 75, `the plugins hold the wallet steps' own modules (${onlyPlugins.size})`);
     const app = staticGraph('ui/main.js');
     assert(!app.has('ui/main/plugins/composeBitcoinWallet.js') && !app.has('ui/main/plugins/composeBaseWallet.js'), 'the app imports the plugins only when one is switched on');
     console.log(`✓ only the plugins reach the wallet steps' ${onlyPlugins.size} modules`);

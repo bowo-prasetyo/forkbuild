@@ -50,8 +50,8 @@ import { setDocumentTitles } from '../application/document/DocumentTitles.js';
 import { t } from './i18n/i18n.js';
 import { defineServiceGroup } from './serviceGroups.js';
 import { importWithRetry } from './importWithRetry.js';
-import { CreateIdentityProviderUseCase } from '../application/identity/CreateIdentityProviderUseCase.js';
 import { IdentityUseCase } from '../application/identity/IdentityUseCase.js';
+import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 
 // A new World, a fork or a copy gets its title in the chosen language, saved
 // like any other title (application/document/DocumentTitles.js).
@@ -67,7 +67,7 @@ setDocumentTitles({
 // its index from the durable catalog.
 const decentralizedPublicationDiscoveryProvider = new DecentralizedPublicationDiscoveryProvider();
 // The local identity: the header shows who is signed in on every page.
-const identityProvider = new CreateIdentityProviderUseCase().execute();
+const identityProvider = new LocalIdentityProvider(new LocalStorageProvider());
 const identityUseCase = new IdentityUseCase(identityProvider);
 const app = createApp(App);
 const backupStatusStore = new BackupStatusStore(new LocalStorageProvider());

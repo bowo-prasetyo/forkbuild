@@ -9,7 +9,7 @@ import { BitcoinEsploraTransactionConfirmationObserverFailover } from '../../../
 // without ever importing anchoring/
 // BitcoinEsploraTransactionConfirmationObserver.js directly. The result
 // plugs straight into application/
-// CreateBitcoinAnchorConfirmationObserverUseCase.js's own
+// CreateBitcoinAnchorConfirmationObserverUseCase.js (folded into its caller)'s own
 // `confirmationSource` option.
 export class CreateBitcoinEsploraTransactionConfirmationObserverUseCase {
     // `apiUrls` (two or more endpoints, in order) builds the failover

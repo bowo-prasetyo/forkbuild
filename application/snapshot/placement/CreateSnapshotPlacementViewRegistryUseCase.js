@@ -6,7 +6,7 @@ import { SnapshotPlacementViewRegistry } from './SnapshotPlacementViewRegistry.j
 // own `evidenceViews` composition exactly, one axis over: a caller
 // (ui/main.js) hands in whichever concrete application/
 // SnapshotPlacementViewRegistry.js plugins it has — e.g. `new
-// CreateIpfsSnapshotPlacementViewUseCase().execute().ipfsSnapshotPlacementView`
+// CreateIpfsSnapshotPlacementViewUseCase (folded into its caller)().execute().ipfsSnapshotPlacementView`
 // — without this use case ever importing content/
 // IpfsSnapshotPlacementView.js or any other concrete adapter itself.
 // Passing none still returns a perfectly usable, empty registry: every
