@@ -26,8 +26,9 @@ import { assert } from './support/Assert.js';
 // walks them: application/avatar/AvatarVehicleMovementController.js with a
 // stepConstraint, driven over the Hay Wain Bridge example build
 // (forkbuild-document-hay-wain-bridge.json), in Section F the Packhorse Arch
-// (forkbuild-document-packhorse-arch.json) and in Section H the Pontoon
-// Crossing (forkbuild-document-pontoon-crossing.json).
+// (forkbuild-document-packhorse-arch.json), in Section H the Pontoon
+// Crossing (forkbuild-document-pontoon-crossing.json) and in Section I the
+// Harp Stay (forkbuild-document-harp-stay.json).
 //
 //   Section A: the wagon, bicycle and motorcycle each cross the bridge, deck
 //              over the river, back on the ground on the far bank
@@ -45,6 +46,8 @@ import { assert } from './support/Assert.js';
 //              the height it collides at
 //   Section H: every ground vehicle drives over the Pontoon Crossing's
 //              floating deck, and its rails keep the wagon on it
+//   Section I: every ground vehicle drives over the Harp Stay, past its
+//              tower, and over the river its stays keep the wagon on the deck
 //
 // The bridge's river is a few blue slabs, not world water, so the water
 // constraint is told the river is there: a bed a full unit below the lake
@@ -278,6 +281,27 @@ async function runTests() {
         const held = drive(vehicleAt('h:held', VehicleType.CAR, 0, 0, 0, PONTOON_DECK_TOP), { ...withPontoon, ...harbour }, 200);
         assert(held.collided && held.z < 1.9 && Math.abs(held.lift - PONTOON_DECK_TOP) < 1e-6,
             `H5. the rails keep the wagon on the deck (z ${held.z.toFixed(2)}, lift ${held.lift.toFixed(2)})`);
+    }
+
+    // -------------------------------------------------------------
+    // Section I — across the Harp Stay
+    // -------------------------------------------------------------
+    {
+        const harpJson = JSON.parse(await readFile(new URL('../forkbuild-document-harp-stay.json', import.meta.url), 'utf8'));
+        const withHarp = constraints(new Map([['harp', new DocumentSerializer().deserialize(harpJson)]]), brickRegistry);
+        const HARP_DECK_TOP = 1;
+        const river = { water: riverWater(4), riverHalfWidth: 4 };
+        for (const type of GROUND_TYPES) {
+            const run = drive(vehicleAt(`i:${type}`, type, -11, 0, 90), { ...withHarp, ...river }, 400);
+            assert(run.x > 10, `I1. a ${type} drives over the Harp Stay, past the tower, from one bank to the other (ended at x ${run.x.toFixed(2)})`);
+            assert(run.liftsOverRiver.length > 0 && run.liftsOverRiver.every((lift) => Math.abs(lift - HARP_DECK_TOP) < 1e-6),
+                `I2. a ${type} is on the deck the whole way over the river`);
+            assert(!run.blockedByWater && Math.abs(run.maxLift - HARP_DECK_TOP) < 1e-6, `I3. a ${type} never meets the water and never climbs above the deck`);
+            assert(Math.abs(run.lift) < 1e-9 && Math.abs(run.z) < 1e-9, `I4. a ${type} comes down straight onto the far bank`);
+        }
+        const held = drive(vehicleAt('i:held', VehicleType.CAR, 2, 0, 0, HARP_DECK_TOP), { ...withHarp, ...river }, 200);
+        assert(held.collided && held.z < 2 && Math.abs(held.lift - HARP_DECK_TOP) < 1e-6,
+            `I5. over the river the stays keep the wagon on the deck (z ${held.z.toFixed(2)}, lift ${held.lift.toFixed(2)})`);
     }
 
     console.log('✅ All Ground Vehicle Bridge Crossing tests passed.');
