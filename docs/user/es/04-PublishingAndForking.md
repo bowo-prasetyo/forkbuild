@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 25738ff466939f65 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ad4cbc60b8459553 -->
 # 04 — Publicar y remezclar
 
 <!-- languages -->
@@ -465,7 +465,7 @@ Qué compara y qué no puede saber:
 - Solo cuentan los bloques que colocó usted, así que dos construcciones que
   empezaron con la misma casa ya hecha no se parecen por eso. Tampoco
   cuentan, en ninguno de los dos lados, las estructuras ya hechas de la
-  Biblioteca de construcción, estén donde estén y como estén giradas. Una
+  Biblioteca de construcción, estén donde estén y como estén giradas, aunque se hayan cambiado algunos de sus bloques: los bloques cambiados cuentan como suyos. Una
   construcción con menos de 20 bloques propios no se compara: las
   construcciones pequeñas se parecen con demasiada facilidad.
 - Un bloque cuenta como igual cuando es el mismo tipo de bloque en el mismo
@@ -904,8 +904,7 @@ encontrar una copia de su construcción: abra la página de la copia y, si la
 suya se publicó antes y se le parece, aparecerá ahí. Las construcciones se
 comparan como al publicar (vea
 [Cuando su construcción se parece a la de otra persona](#cuando-su-construcción-se-parece-a-la-de-otra-persona)),
-salvo que cuenta cada bloque que no forme parte de una estructura ya hecha
-completa de la Biblioteca de construcción, ya que solo el dispositivo de
+salvo que cuenta cada bloque que no forme parte de una estructura ya hecha de la Biblioteca de construcción (aunque se haya cambiado en parte), ya que solo el dispositivo de
 quien construye sabe qué bloques colocó.
 
 Se dejan fuera las construcciones de quien la construyó (y de quienes la

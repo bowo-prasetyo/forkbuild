@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 25738ff466939f65 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ad4cbc60b8459553 -->
 # 04 — Veröffentlichen & Remixen
 
 <!-- languages -->
@@ -467,7 +467,7 @@ Was verglichen wird und was es nicht wissen kann:
 - Es zählen nur die Steine, die Sie selbst platziert haben, also ähneln sich
   zwei Bauwerke, die mit demselben fertigen Haus begonnen haben, dafür
   nicht. Fertige Strukturen aus der Baubibliothek zählen auf keiner Seite
-  mit, wo auch immer sie stehen und wie auch immer sie gedreht sind. Ein
+  mit, wo auch immer sie stehen und wie auch immer sie gedreht sind, auch wenn einige ihrer Steine verändert wurden: Die veränderten Steine zählen als Ihre. Ein
   Bauwerk mit weniger als 20 eigenen Steinen wird nicht
   verglichen: Kleine Bauwerke ähneln sich zu leicht.
 - Ein Stein gilt als gleich, wenn es dieselbe Art Stein an derselben Stelle
@@ -910,8 +910,7 @@ finden: Öffnen Sie die Seite der Kopie, und wenn Ihres zuerst veröffentlicht
 wurde und ihr ähnelt, steht es dort. Bauwerke werden so verglichen wie beim
 Veröffentlichen (siehe
 [Wenn Ihr Bauwerk dem eines anderen ähnelt](#wenn-ihr-bauwerk-dem-eines-anderen-ähnelt)),
-nur dass jeder Stein zählt, der nicht zu einer ganzen fertigen Struktur aus
-der Baubibliothek gehört, denn nur das Gerät des Bauenden weiß, welche
+nur dass jeder Stein zählt, der nicht zu einer fertigen Struktur aus der Baubibliothek (auch einer teilweise veränderten) gehört, denn nur das Gerät des Bauenden weiß, welche
 Steine er selbst platziert hat.
 
 Außen vor bleiben Bauwerke desselben Bauenden (und aller, die es mit ihm

@@ -8144,3 +8144,32 @@ published a build that looks like yours** also arrives for a build whose bytes c
 - Not done: a ready-made structure
   changed by more than a tenth still counts as the builder's own bricks; measuring that against the Collection library
   is the next step.
+
+
+## Ready-made structures changed by their builder (unnumbered, 2026-10-20)
+
+**A changed ready-made structure counted as the builder's own bricks.** Look-alike hints take ready-made structures
+from the Build Library out of both builds first, but only when 90% of a structure stood there, so anyone who changed a
+fifth of the same house as someone else could be told their builds look alike. Measured with the new script (a
+structure changed by 20%: found 18% of the time), the old share was far stricter than it needed to be. Pillar served:
+your work is yours (credit travels with the work). How a player notices: fewer "looks very similar to…" hints, Similar
+builds published earlier entries and 🔔 look-alike notifications that come only from a ready-made structure both
+builders changed.
+
+- core/BuildSimilarity.js: `readyMadeCoverage(size)` replaces `READY_MADE_COVERAGE`: 80% of a small structure (6 to
+  11 bricks), 70% of a medium one (12 to 29), 50% of one of 30 or more, since the larger a pattern the less chance it
+  turns up by hand. Only the bricks that match the structure are taken out, so what its builder changed stays theirs.
+  `withoutReadyMade()` takes a `coverageFor` option for the script.
+- scripts/evaluate-ready-made-detection.mjs (new): seeded, a few minutes; prints a Markdown report (or writes
+  it with `--out`) comparing the shipped shares with others: how much of its base each Collection remix keeps; how
+  often a structure changed by 5% to 50% (scattered, or in one region) is still found; bricks wrongly taken out of the
+  example builds at the repository root, 300 generated hand-built builds and 300 built by hand in a library
+  structure's own palette; and, end to end at the 60% threshold, false hints between two builds on the same changed
+  structure and real copies still found. With the new shares a structure changed by 20% is found 89% of the time
+  (93% when the change is in one region), and no hand-placed brick is taken out in any of those builds; a flat 60%
+  starts to.
+- docs/Architecture.md; docs/user/04 (changed structures don't count either) in every language.
+- Tests: each size class at and just under its share; a structure with 2 in 5 bricks changed loses only its
+  unchanged bricks; `readyMadeCoverage()` by size; a `coverageFor` given.
+- Not done: the Collection's lighthouse keeps only 64% of the watchtower it was built from, which no share safe for
+  hand-built builds catches; builds made by hand from other people's published builds are not ready-made.

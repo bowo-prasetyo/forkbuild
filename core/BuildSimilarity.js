@@ -10,10 +10,10 @@
 // are first lined up: a copy built two studs over, higher up, or turned a
 // quarter turn compares as what it is.
 //
-// Bricks that form a whole ready-made structure from the Build Library can be
-// taken out of a shape first (withoutReadyMade()): two builds that both stand
-// the same ready-made house look alike for it, not for anything their builders
-// placed.
+// Bricks of a ready-made structure from the Build Library, even one its
+// builder changed in part, can be taken out of a shape first
+// (withoutReadyMade()): two builds that both stand the same ready-made house
+// look alike for it, not for anything their builders placed.
 //
 // Pure: bricks in, numbers out.
 
@@ -31,13 +31,25 @@ const PRECISION = 1000;
 const MAX_ANCHORS = 48;
 const MAX_PAIRS_PER_ANCHOR = 64;
 const OFFSETS_TRIED_PER_TURN = 3;
-// A ready-made structure counts as standing in a build when this share of its
-// bricks are there, lined up as it is anywhere and at any quarter turn.
 // Smaller structures than MIN_READY_MADE_POINTS (a fence segment) are too
 // plain to tell from bricks placed by hand, and are left in.
-export const READY_MADE_COVERAGE = 0.9;
 export const MIN_READY_MADE_POINTS = 6;
 const MAX_COPIES_OF_ONE_STRUCTURE = 12;
+
+// The share of a ready-made structure's bricks that must stand in a build,
+// lined up as it is anywhere and at any quarter turn, for it to count as
+// there, though its builder changed the rest; null for one too small to tell.
+// The larger the structure, the less chance a pattern that big turns up by
+// hand, so the more of it may have been changed: measured with
+// scripts/evaluate-ready-made-detection.mjs, these find a structure changed
+// by a fifth nine times in ten and take out no brick placed by hand, where
+// lower shares (0.6 for every size) start to.
+export function readyMadeCoverage(size) {
+    if (!(size >= MIN_READY_MADE_POINTS)) return null;
+    if (size < 12) return 0.8;
+    if (size < 30) return 0.7;
+    return 0.5;
+}
 
 function rounded(value) {
     const number = Number(value);
@@ -172,19 +184,22 @@ export function compareBuildShapes(mine, theirs) {
     });
 }
 
-// `shape` without the bricks that form a whole ready-made structure (each of
-// `readyMadeShapes`, buildShape()s of the Build Library's structures), however
-// it was moved or turned, as many times as it stands there. Larger structures
-// are taken first, so a house with a porch goes as one, not as a house and
-// some steps.
-export function withoutReadyMade(shape, readyMadeShapes) {
+// `shape` without the bricks of each ready-made structure that stands in it
+// (each of `readyMadeShapes`, buildShape()s of the Build Library's
+// structures), however it was moved or turned, as many times as it stands
+// there: the bricks still as the structure has them, while the ones its
+// builder changed stay theirs. Larger structures are taken first, so a house
+// with a porch goes as one, not as a house and some steps. `coverageFor(size)`
+// is how much of a structure must be there (readyMadeCoverage(), unless the
+// measuring script tries another).
+export function withoutReadyMade(shape, readyMadeShapes, { coverageFor = readyMadeCoverage } = {}) {
     if (!shape?.size || !Array.isArray(readyMadeShapes) || readyMadeShapes.length === 0) return shape;
     const structures = readyMadeShapes
-        .filter((structure) => structure?.size >= MIN_READY_MADE_POINTS)
+        .filter((structure) => structure?.size && coverageFor(structure.size) !== null)
         .sort((a, b) => b.size - a.size);
     let rest = shape;
     for (const structure of structures) {
-        const needed = Math.ceil(structure.size * READY_MADE_COVERAGE);
+        const needed = Math.ceil(structure.size * coverageFor(structure.size));
         for (let copy = 0; copy < MAX_COPIES_OF_ONE_STRUCTURE; copy += 1) {
             if (rest.size < needed || containedAtMost(structure, rest) < needed) break;
             const alignment = bestAlignment(rest, structure);

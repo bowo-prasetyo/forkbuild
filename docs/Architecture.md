@@ -417,11 +417,16 @@ the builder is the identity that signed the Publication (and Built with),
 whoever is looking, and "before" is the signed `publishedAt`. World View's
 About this build shows the same list for the shown build's Publication
 (ui/views/worldView/useSimilarEarlierBuilds.js, looked up once per
-Publication shown). On both sides of every comparison, bricks that form a
-whole ready-made structure from the Build Library are taken out first
+Publication shown). On both sides of every comparison, bricks of a
+ready-made structure from the Build Library are taken out first
 (core/BuildSimilarity.js `withoutReadyMade()`: each structure of at least
 `MIN_READY_MADE_POINTS` distinct bricks, largest first, lined up as above
-and taken while `READY_MADE_COVERAGE` of it is there, every copy of it); the
+and taken while `readyMadeCoverage()` of it is there, every copy of it:
+80% of a small structure, 70% of a medium one, 50% of one of 30 bricks or
+more; only the bricks that match go, so a builder's changes stay theirs.
+scripts/evaluate-ready-made-detection.mjs measures those shares against
+changed structures and builds made by hand, and is run before changing
+them); the
 finder loads the structures with a dynamic import of
 CreateStructureRegistryUseCase on first use (`readyMadeStructures`), since
 the libraries aren't in the first load. An Explore card for the person's

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 25738ff466939f65 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ad4cbc60b8459553 -->
 # 04 — Publicar e remixar
 
 <!-- languages -->
@@ -454,7 +454,7 @@ O que ele compara, e o que ele não tem como saber:
 - Só contam os blocos que você mesmo colocou, então duas construções que
   começaram com a mesma casa pronta não ficam parecidas por isso. Também
   não contam, de nenhum dos lados, as estruturas prontas da Biblioteca de
-  construção, estejam onde estiverem e giradas como estiverem. Uma
+  construção, estejam onde estiverem e giradas como estiverem, mesmo quando alguns dos seus blocos foram mudados: os blocos mudados contam como seus. Uma
   construção com menos de 20 blocos seus não é comparada: construções
   pequenas se parecem fácil demais.
 - Um bloco conta como igual quando é o mesmo tipo de bloco no mesmo lugar,
@@ -883,8 +883,7 @@ sua construção: abra a página da cópia e, se a sua foi publicada antes e se
 parece com ela, a sua aparece ali. As construções são comparadas como na
 hora de publicar (veja
 [Quando a sua construção se parece com a de outra pessoa](#quando-a-sua-construção-se-parece-com-a-de-outra-pessoa)),
-só que conta todo bloco que não faz parte de uma estrutura pronta inteira
-da Biblioteca de construção, já que só o aparelho de quem construiu sabe
+só que conta todo bloco que não faz parte de uma estrutura pronta da Biblioteca de construção (mesmo mudada em parte), já que só o aparelho de quem construiu sabe
 quais blocos colocou.
 
 Ficam de fora as construções do mesmo autor (e de quem a construiu com
