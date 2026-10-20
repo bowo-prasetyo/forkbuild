@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 64eabe993a5d0f63 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 195bfda527c3a111 -->
 # 04 — Publicar e remixar
 
 <!-- languages -->
@@ -882,6 +882,11 @@ dela, até onde este dispositivo sabe. A página do desafio mostra uma para
 cada cadeia de participações. Cada construção da árvore traz o nome do autor
 e dos amigos que a construíram com ele; o título abre a construção, e cada
 nome abre a página dessa pessoa.
+
+Abaixo de cada remix da árvore, uma linha diz o que ele mudou em relação à
+construção acima (*Adicionou 2 arbustos, 4 pedaços de grama e mais 6
+blocos*), quando este dispositivo consegue ler as duas. As famílias
+prontas da página do desafio mostram o mesmo.
 
 ### Construções parecidas publicadas antes
 

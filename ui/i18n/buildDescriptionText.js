@@ -6,7 +6,7 @@ import { intlLocale, t } from './i18n.js';
 import { libraryItemName } from './libraryText.js';
 
 // "A, B and C", the language's way.
-function joined(items) {
+export function joined(items) {
     try {
         return new Intl.ListFormat(intlLocale(), { type: 'conjunction', style: 'long' }).format(items);
     } catch {
@@ -15,11 +15,12 @@ function joined(items) {
 }
 
 // Sentences one after another; Japanese and Chinese ones need no space.
-function sentences(list) {
+export function sentences(list) {
     return list.join(' ').replace(/([。！？]) /g, '$1');
 }
 
-function thingsOf({ structures = [], parts = [] }) {
+// The structures and parts of a build or of what a remix added, each named.
+export function thingsOf({ structures = [], parts = [] }) {
     return [
         ...structures.map(({ id, count }) => t('buildDescription.structure', { count, name: libraryItemName({ id, name: id }) })),
         ...parts.map(({ part, count }) => t(`buildDescription.part.${part}`, { count }))
@@ -41,8 +42,9 @@ export function buildDescriptionText(facts) {
     return sentences(said);
 }
 
-// What a remix changed, in a sentence or three; null when it isn't known.
-export function remixChangesText(changes) {
+// What a remix changed, in a sentence or three, after "What changed:" unless
+// `lead` is false; null when it isn't known.
+export function remixChangesText(changes, { lead = true } = {}) {
     if (!changes) return null;
     if (!changes.changed) return t('remixChanges.none');
     const said = [];
@@ -62,5 +64,5 @@ export function remixChangesText(changes) {
             : t('remixChanges.repainted', { count: repainted.brickCount }));
     }
     if (removed.brickCount > 0) said.push(t('remixChanges.removed', { count: removed.brickCount }));
-    return t('remixChanges.lead', { changes: sentences(said) });
+    return lead ? t('remixChanges.lead', { changes: sentences(said) }) : sentences(said);
 }

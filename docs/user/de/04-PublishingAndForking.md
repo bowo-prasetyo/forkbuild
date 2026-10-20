@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 64eabe993a5d0f63 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 195bfda527c3a111 -->
 # 04 — Veröffentlichen & Remixen
 
 <!-- languages -->
@@ -909,6 +909,11 @@ Original, dann den Bau selbst, dann die Remixe daraus, soweit dieses Gerät
 sie kennt. Die Challenge-Seite zeigt einen für jede Kette von Beiträgen. Jeder
 Bau im Stammbaum nennt seinen Autor und die Freunde, die ihn mit ihm gebaut
 haben; sein Titel öffnet den Bau, und jeder Name die Seite dieser Person.
+
+Unter jedem Remix im Stammbaum sagt eine Zeile, was er gegenüber dem
+Bauwerk darüber geändert hat (*2 Büsche, 4 Rasenstücke und 6 weitere
+Steine hinzugefügt*), wenn dieses Gerät beide lesen kann. Die fertigen
+Familien auf der Seite der Herausforderung zeigen dasselbe.
 
 ### Ähnliche Bauwerke, die früher veröffentlicht wurden
 

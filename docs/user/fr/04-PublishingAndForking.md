@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 64eabe993a5d0f63 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 195bfda527c3a111 -->
 # 04 — Publier et remixer
 
 <!-- languages -->
@@ -928,6 +928,11 @@ ont été faits, pour autant que cet appareil les connaisse. La page du défi
 en montre un pour chaque chaîne de participations. Chaque construction de
 l’arbre nomme son auteur et les amis qui l’ont construite avec lui ; son
 titre ouvre la construction, et chaque nom la page de cette personne.
+
+Sous chaque remix de l’arbre, une ligne dit ce qu’il a changé par rapport
+à la construction au-dessus (*Ajout de 2 buissons, 4 carrés de pelouse et
+6 autres briques*), quand cet appareil peut lire les deux. Les familles
+toutes faites de la page du défi montrent la même chose.
 
 ### Constructions semblables publiées avant
 

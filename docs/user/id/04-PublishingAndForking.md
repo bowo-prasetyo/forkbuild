@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 64eabe993a5d0f63 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 195bfda527c3a111 -->
 # 04 — Penerbitan & Remix
 
 <!-- languages -->
@@ -903,6 +903,11 @@ darinya, sejauh yang diketahui perangkat ini. Halaman tantangan
 menampilkan satu silsilah untuk setiap rantai peserta. Setiap bangunan dalam
 silsilah menyebut pembuatnya dan teman-teman yang membangunnya bersamanya;
 judulnya membuka bangunan itu, dan setiap nama membuka halaman orang itu.
+
+Di bawah setiap remix di silsilah, satu baris menyebutkan apa yang
+diubahnya dari bangunan di atasnya (*Menambahkan 2 semak, 4 petak rumput,
+dan 6 balok lain*), jika perangkat ini dapat membaca keduanya. Keluarga
+siap pakai di halaman tantangan menampilkan hal yang sama.
 
 ### Bangunan mirip yang diterbitkan lebih dulu
 

@@ -21,6 +21,11 @@ import { displayText, t } from '../i18n/i18n.js';
 // getRedoLabel()) and falls back to the static action.label. Search
 // still matches on the static label only, in the chosen language — this is
 // a display override, not a second label.
+//
+// `plan(query)` (optional) reads the query as a request in plain words
+// (core/building/PlainCommand.js, "paint the roof red") and returns
+// `{ label, enabled, reason, run }` or null; when it reads one, that row
+// comes first, under its own heading, and Enter runs it.
 export default {
     name: 'CommandPalette',
     props: {
@@ -31,6 +36,10 @@ export default {
         getContext: {
             type: Function,
             required: true
+        },
+        plan: {
+            type: Function,
+            default: null
         }
     },
     emits: ['close'],
@@ -47,9 +56,20 @@ export default {
         filtered() {
             return this.registry.findMatching(this.query, t);
         },
+        planned() {
+            return this.plan ? this.plan(this.query) : null;
+        },
+        // The planned row takes index 0, before the actions.
+        offset() {
+            return this.planned ? 1 : 0;
+        },
         rows() {
             const rows = [];
-            let index = 0;
+            let index = this.offset;
+            if (this.planned) {
+                rows.push({ header: true, planned: true });
+                rows.push({ header: false, planned: true, index: 0 });
+            }
             for (const group of EditorActionRegistry.groupByCategory(this.filtered)) {
                 rows.push({ header: true, category: group.category });
                 for (const action of group.actions) {
@@ -79,6 +99,9 @@ export default {
         },
         actionEnabled(action) {
             return action.enabled(this.context);
+        },
+        rowEnabled(row) {
+            return row.planned ? this.planned.enabled : this.actionEnabled(row.action);
         },
         reasonFor(action) {
             if (!action.disabledReason) {
@@ -110,7 +133,7 @@ export default {
                     color: 'var(--ink-faint)'
                 };
             }
-            const enabled = this.actionEnabled(row.action);
+            const enabled = this.rowEnabled(row);
             const active = row.index === this.activeIndex;
             return {
                 display: 'flex',
@@ -133,7 +156,7 @@ export default {
             if (event.key === 'ArrowDown') {
                 event.preventDefault();
                 event.stopPropagation();
-                this.activeIndex = Math.min(this.activeIndex + 1, this.filtered.length - 1);
+                this.activeIndex = Math.min(this.activeIndex + 1, this.filtered.length + this.offset - 1);
             } else if (event.key === 'ArrowUp') {
                 event.preventDefault();
                 event.stopPropagation();
@@ -149,7 +172,14 @@ export default {
             }
         },
         executeAt(index) {
-            const action = this.filtered[index];
+            if (this.planned && index === 0) {
+                if (this.planned.enabled) {
+                    this.planned.run();
+                    this.$emit('close');
+                }
+                return;
+            }
+            const action = this.filtered[index - this.offset];
             if (!action || !this.actionEnabled(action)) {
                 return;
             }
@@ -210,7 +240,25 @@ export default {
                         {{ t('commandPalette.noMatches') }}
                     </div>
                     <template v-for="(row, rowIndex) in rows" :key="rowIndex">
-                        <div v-if="row.header" :style="rowStyle(row)">{{ categoryName(row.category) }}</div>
+                        <div v-if="row.header" :style="rowStyle(row)">{{ row.planned ? t('commandPalette.fromYourWords') : categoryName(row.category) }}</div>
+                        <button
+                            v-else-if="row.planned"
+                            type="button"
+                            class="command-palette-plain"
+                            :disabled="!planned.enabled"
+                            :aria-disabled="!planned.enabled"
+                            :style="rowStyle(row)"
+                            @click="executeAt(0)"
+                            @mouseenter="activeIndex = 0"
+                        >
+                            <span>
+                                {{ planned.label }}
+                                <span
+                                    v-if="!planned.enabled && planned.reason"
+                                    :style="{ marginLeft: '8px', fontSize: '11px', color: 'var(--ink-amber)' }"
+                                >— {{ planned.reason }}</span>
+                            </span>
+                        </button>
                         <button
                             v-else
                             type="button"

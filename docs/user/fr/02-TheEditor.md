@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: a6b88e4e92839dec -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: f36d402077c24e76 -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -581,6 +581,15 @@ comment — d’autres personnes peuvent la remixer. Voir
 [Publier et remixer](04-PublishingAndForking.md) pour la signification de
 chaque licence.
 
+Les boutons **Suggérer un titre** et **Suggérer une description** sous le
+titre proposent des idées tirées des briques de la construction : ses
+structures de la Bibliothèque de construction, ses principales pièces et
+couleurs et, pour un remix, ce qu’il a ajouté à la construction d’origine
+(*Moulin et grenier avec Grange*). Appuyez de nouveau sur **Suggérer un
+titre** pour l’idée suivante. Une description suggérée remplit une
+description vide, ou se place après ce que vous avez écrit. Ce ne sont que
+des suggestions, calculées sur votre appareil ; modifiez-les à votre guise.
+
 Une longue description se lit mieux avec un peu de mise en forme, que
 montrent le panneau d’informations de la construction, le navigateur de lieux de la
 Vue du monde et les articles Steem et Blurt :
@@ -779,6 +788,22 @@ rapide de vérifier une construction sans faire tourner la caméra autour.
 Elle est calculée sur votre appareil à partir des briques : rien n’est
 envoyé nulle part. L’image d’une construction sur son lien partagé et dans
 une intégration porte la même description pour les lecteurs d’écran.
+
+## Des commandes avec vos mots
+
+Tapez ce que vous voulez dans la palette de commandes (`Ctrl/Cmd+K`) avec
+vos propres mots, comme *peins le toit en rouge*, *sélectionne toutes les
+fenêtres* ou *supprime les arbres*, et sa première ligne, **D’après vos
+mots**, dit ce qu’elle fera et sur combien de briques : *Peindre 4
+fenêtres en Bleu du port*. Appuyez sur `Entrée`, ou cliquez dessus, pour le
+faire en une seule étape annulable. Elle comprend peindre, sélectionner et
+supprimer ; les parties d’une construction (fenêtres, portes, toits,
+escaliers, arches, barrières, cheminées, meubles, lanternes, arbres,
+buissons, rochers et pelouse), *tout*, ou ce qui est sélectionné (*ceci*,
+*ces*) ; et les couleurs du village par leur nom ou par des mots de tous
+les jours (*rouge*, *gris foncé*, *bleu clair*). Cela marche dans toutes
+les langues de ForkBuild, sur votre appareil ; tout le reste cherche parmi
+les actions comme avant.
 
 ## Commandes de la caméra
 

@@ -28,6 +28,13 @@ export default {
         info: {
             type: Object,
             default: null
+        },
+        // `suggest(currentTitle)` -> Promise<{ titles, description }>
+        // (ui/i18n/buildSuggestionText.js): what Suggest offers, made from the
+        // build's bricks. Without it there is no Suggest.
+        suggest: {
+            type: Function,
+            default: null
         }
     },
     emits: ['save', 'cancel'],
@@ -40,7 +47,12 @@ export default {
             licenseId: this.info && this.info.license ? this.info.license.id : LicenseId.UNSPECIFIED,
             licenseOptions: remixLicenseOptions(this.info),
             placementPolicy: this.info && this.info.placementPolicy ? this.info.placementPolicy : PlacementPolicy.ANYONE,
-            placementPolicyOptions: PLACEMENT_POLICY_OPTIONS
+            placementPolicyOptions: PLACEMENT_POLICY_OPTIONS,
+            // Suggest's ideas, asked for once; each press of Suggest a title
+            // shows the next title.
+            ideas: null,
+            nextTitleIdea: 0,
+            noIdeas: false
         };
     },
     computed: {
@@ -67,6 +79,34 @@ export default {
     },
     methods: {
         t,
+        async loadIdeas() {
+            if (!this.ideas) {
+                try {
+                    this.ideas = await this.suggest(this.info ? this.info.title : '');
+                } catch {
+                    this.ideas = { titles: [], description: '' };
+                }
+            }
+            return this.ideas;
+        },
+        async suggestTitle() {
+            const { titles } = await this.loadIdeas();
+            this.noIdeas = titles.length === 0;
+            if (this.noIdeas) return;
+            this.title = titles[this.nextTitleIdea % titles.length];
+            this.nextTitleIdea += 1;
+        },
+        // Fills an empty description; under what is written, it goes after it.
+        async suggestDescription() {
+            const { description } = await this.loadIdeas();
+            this.noIdeas = !description;
+            if (this.noIdeas) return;
+            if (!this.description.trim()) {
+                this.description = description;
+            } else if (!this.description.includes(description)) {
+                this.description = `${this.description.trimEnd()}\n\n${description}`;
+            }
+        },
         addTag(tag) {
             this.tagsText = [...this.tagsPreview, tag].join(' ');
             this.tagsSuggested = false;
@@ -120,6 +160,11 @@ export default {
                         maxlength="200"
                     />
                 </label>
+                <div v-if="suggest" class="metadata-editor-suggest">
+                    <button type="button" class="action-btn" @click="suggestTitle">{{ t('metadataEditor.suggestTitle') }}</button>
+                    <button type="button" class="action-btn" @click="suggestDescription">{{ t('metadataEditor.suggestDescription') }}</button>
+                    <span v-if="noIdeas" class="form-hint form-hint--neutral" role="status">{{ t('metadataEditor.noSuggestions') }}</span>
+                </div>
 
                 <label class="form-field">
                     <span class="form-label">{{ t('metadataEditor.description') }}</span>

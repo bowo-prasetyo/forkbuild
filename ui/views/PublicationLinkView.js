@@ -13,6 +13,7 @@ import { License } from '../../core/document/License.js';
 import { EditorEntryContext, EditorEntryReason, editorEntryContextToQuery } from '../../core/document/EditorEntryContext.js';
 import { remixCountText, remixedFromText } from '../components/remix/remixText.js';
 import RemixFamilyTree from '../components/remix/RemixFamilyTree.js';
+import { familyChangesText } from '../components/remix/familyChangesText.js';
 import SimilarEarlierBuilds from '../components/remix/SimilarEarlierBuilds.js';
 import { builtWithNames, builderRoute } from '../components/remix/builtWithText.js';
 import BuiltWithNames from '../components/remix/BuiltWithNames.js';
@@ -79,6 +80,8 @@ export default {
         // changed from the build it remixes; worked out after it opens.
         const buildDescription = ref('');
         const remixChanges = ref(null);
+        // What each remix in the family tree changed.
+        const familyChanges = ref(new Map());
         const payload = typeof route.params.payload === 'string' ? route.params.payload : null;
         // A short link's id is the Publication's (its note's `d` tag).
         const notePublicationId = typeof route.params.noteId === 'string' && isNoteLinkPublicationId(route.params.noteId)
@@ -205,6 +208,12 @@ export default {
         async function describe(opened, bricks) {
             buildDescription.value = '';
             remixChanges.value = null;
+            familyChanges.value = new Map();
+            if (arrived.value?.family) {
+                familyChangesText(buildDescriber, [arrived.value.family], { contentStore }).then((texts) => {
+                    if (arrived.value?.publication?.id === opened.id) familyChanges.value = texts;
+                });
+            }
             if (!buildDescriber || !Array.isArray(bricks)) return;
             try {
                 const facts = await buildDescriber.describe(bricks);
@@ -296,7 +305,7 @@ export default {
 
         return {
             t, state, message, publication, arrived, label, network, open, buildBricks, showTurntable, editCopy, walkAround,
-            downloadModel, modelMessage, modelFormats: BUILD_MODEL_FORMATS, familyRoute, similarEarlier, similarRoute, buildDescription, remixChanges
+            downloadModel, modelMessage, modelFormats: BUILD_MODEL_FORMATS, familyRoute, similarEarlier, similarRoute, buildDescription, remixChanges, familyChanges
         };
     },
     template: `
@@ -328,7 +337,7 @@ export default {
                     <p v-if="arrived.remixAllowed" class="shared-build-hint">{{ t('publicationLink.editCopyHint') }}</p>
                     <p v-else class="shared-build-hint">{{ t('publicationLink.noRemix') }}</p>
                     <p class="shared-build-license">{{ t('publicationLink.license', { license: arrived.licenseLabel }) }}</p>
-                    <RemixFamilyTree :family="arrived.family" :route-for="familyRoute" heading="h2" />
+                    <RemixFamilyTree :family="arrived.family" :route-for="familyRoute" :changes="familyChanges" heading="h2" />
                     <SimilarEarlierBuilds :matches="similarEarlier" :route-for="similarRoute" heading="h2" />
                     <p v-if="arrived.remixAllowed" class="shared-build-model">
                         {{ t('modelExport.sharedLead') }}
