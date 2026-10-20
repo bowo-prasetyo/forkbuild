@@ -106,7 +106,7 @@
 }
 
 /* 0.2.94 — ui/components/LocationsPanel.js: same modal convention as
-   WorldLocationBrowser just above, minus the diagnostics banner and
+   WorldLocationBrowser just above, minus the
    radius form — a WorldLocation list is never a spatial-region query. */
 .locations-panel-hint {
     margin: 0 0 0.85rem;
@@ -436,44 +436,6 @@
 
 .world-location-browser-radius-input {
     flex: 1;
-}
-
-/* 0.2.30: trust-aware discovery diagnostics banner — see
-   core/world/DiscoveryDiagnosticsSummary.js. Neutral (no trust layer
-   consulted, today's default) reads as informational, not alarming;
-   complete reuses the same green .action-btn--primary/.spatial-type
-   already means "good" throughout this UI; fatal/warning reuse the
-   same amber/red tokens .editability-notice--blocked and
-   .world-search-item-note already established, so a person doesn't
-   have to learn a new color language for this milestone. */
-.world-location-browser-diagnostics {
-    margin: 0 0 0.85rem;
-    font-size: 0.78rem;
-    line-height: 1.4;
-}
-
-.world-location-browser-diagnostics-line {
-    margin: 0 0 0.2rem;
-}
-
-.world-location-browser-diagnostics-line:last-child {
-    margin-bottom: 0;
-}
-
-.world-location-browser-diagnostics-line--neutral {
-    color: var(--ink-subtle);
-}
-
-.world-location-browser-diagnostics--complete .world-location-browser-diagnostics-line {
-    color: var(--accent-ink);
-}
-
-.world-location-browser-diagnostics--warning .world-location-browser-diagnostics-line {
-    color: var(--ink-amber);
-}
-
-.world-location-browser-diagnostics--fatal .world-location-browser-diagnostics-line {
-    color: var(--ink-red);
 }
 
 .world-location-browser-empty {

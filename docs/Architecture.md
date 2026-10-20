@@ -825,9 +825,9 @@ finds builds through the placement registry and streams them itself
 is at [48561d6](https://github.com/bowo-prasetyo/forkbuild/tree/48561d671b135b973ba0bc630cb6d8206fedddaf) (core/world/SpatialIndexRoot.js, spatial/,
 world/).
 
-WorldNavigationSession accepts an optional `spatialDiscoveryProvider`
-used only for trust diagnostics, but nothing passes one, so World
-Locations always shows the neutral "unavailable" diagnostics.
+World Locations shows what was found and nothing about trust: its
+discovery diagnostics, which only that removed index could ever have fed,
+were removed too.
 
 Decentralized publications found through Nostr or Arweave, and Snapshots
 placed through the distribution flow, reach the World a different way:

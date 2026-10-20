@@ -140,21 +140,19 @@ loads the document; it only bundles `getDocumentInfo()` and
 
 "Did I find it?" and "should I trust it?" are answered by different
 layers. Found documents come from ordinary resolution and are never
-hidden, filtered or reordered by trust. Diagnostics are an additional,
-parallel observation from an optional trust-capable provider, so even an
-unverifiable region still shows its documents.
+hidden, filtered or reordered by trust. Any trust diagnostics are an
+additional, parallel observation, so even an unverifiable region still
+shows its documents.
 
 [Full text](history/0.1-0.2.md#discovery-and-trust-are-related-but-they-are-not-the-same-operation-0230)
 
 ### Diagnostics Are Received From The Discovery Layer, Never Invented By The UI (0.2.30)
 
-`DiscoveryDiagnosticsSummary` is a pure function of real counters
-recorded during discovery and never fabricates a "valid" or "complete"
-claim. It has four states: not available (no trust-capable provider
-consulted, the default today), fatal (the index root could not be
-trusted), complete (no issues) and incomplete (itemized warnings). "No
-documents here", "I know of no documents here" and "documents here, some
-untrusted" stay distinct.
+Diagnostics come from real counters recorded during discovery; the UI
+never fabricates a "valid" or "complete" claim. "No documents here", "I
+know of no documents here" and "documents here, some untrusted" stay
+distinct. World Locations' own discovery diagnostics, which nothing ever
+fed, were removed.
 
 [Full text](history/0.1-0.2.md#diagnostics-are-received-from-the-discovery-layer-never-invented-by-the-ui-0230)
 

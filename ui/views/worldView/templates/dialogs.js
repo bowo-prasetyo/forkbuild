@@ -58,7 +58,6 @@ export const dialogsTemplate = `<ActionFeedback :message="feedbackMessage" :visi
                 :center="locationBrowserCenter"
                 :radius="locationBrowserRadius"
                 :documents="locationBrowserDocuments"
-                :diagnostics="locationBrowserDiagnostics"
                 :inspected="locationBrowserInspected"
                 :catalog-empty="catalogEmpty"
                 @explore="reExploreLocationBrowser"

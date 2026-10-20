@@ -35,15 +35,9 @@ import { assert } from './support/Assert.js';
 // never fork, load-and-mutate, or otherwise touch a document. See
 // WorldNavigationSession's "World Location Browser (0.2.29)" section.
 //
-// 0.2.30: exploreLocation/exploreHere/whatsHere now return
-// { documents, diagnostics } rather than a bare array (see
-// core/world/DiscoveryDiagnosticsSummary.js) — every assertion below reads
-// `.documents` for the result list. No test in this file wires a
-// spatialDiscoveryProvider, so diagnostics.available is false
-// throughout; the trust-aware scenarios (available/complete/warnings/
-// fatal, with a REAL DecentralizedSpatialDiscoveryProvider) live in
-// tests/DiscoveryDiagnosticsSummary.test.js instead, alongside this
-// file's own no-provider-wired baseline assertions (1b, 5f, 11).
+// exploreLocation/exploreHere/whatsHere return { documents } rather
+// than a bare array — every assertion below reads `.documents` for the
+// result list.
 
 function makeDocument(title, author = 'alice') {
     const world = new World();
@@ -135,20 +129,15 @@ async function runTests() {
 
     // -------------------------------------------------------------
     // 1. Explore an empty location — nowhere near anything fixtures
-    //    placed. 0.2.30: exploreLocation now returns an envelope
-    //    { documents, diagnostics } rather than a bare array — see
-    //    core/world/DiscoveryDiagnosticsSummary.js. No spatialDiscoveryProvider
-    //    is wired anywhere in this file, so diagnostics.available is
-    //    false throughout — the honest "no trust layer consulted"
-    //    default this milestone establishes for the plain local path.
+    //    placed.
     // -------------------------------------------------------------
     {
         const session = buildSession();
         const envelope = session.exploreLocation({ center: { x: -9999, y: -9999, z: -9999 }, radius: 5 });
         assert(Array.isArray(envelope.documents) && envelope.documents.length === 0,
             '1. exploring an empty location returns an empty result, not an error');
-        assert(envelope.diagnostics.available === false && envelope.diagnostics.fatal === null,
-            '1b. no spatialDiscoveryProvider wired -> diagnostics honestly report unavailable, not a fabricated "complete"');
+        assert(Object.keys(envelope).join() === 'documents',
+            '1b. the envelope carries only the documents found, no trust diagnostics');
     }
 
     // -------------------------------------------------------------
@@ -222,8 +211,8 @@ async function runTests() {
             '5d. the active document is completely untouched by Inspect — still Alice\'s Tower');
         assert(session.getDocument(carolsShed.documentId) === null,
             '5e. Carol\'s Shed was never loaded as a side effect of inspecting it');
-        assert(inspected.trust === null,
-            '5f. no diagnostics-capable provider was ever consulted -> trust is honestly null, not a fabricated status');
+        assert(!('trust' in inspected),
+            '5f. Inspect reports Document Info and Placement Info only, no trust status');
     }
 
     // -------------------------------------------------------------
@@ -356,7 +345,7 @@ async function runTests() {
             // no searchWorldUseCase, no _session/_spatialCameraController wired
         });
         const noSearchUseCase = bareSession.exploreLocation({ center: { x: 0, y: 0, z: 0 }, radius: 100 });
-        assert(noSearchUseCase.documents.length === 0 && noSearchUseCase.diagnostics.available === false,
+        assert(noSearchUseCase.documents.length === 0,
             '11. no SearchWorldUseCase wired -> exploreLocation degrades to an empty envelope, not a throw');
         assert(bareSession.exploreHere(25).documents.length === 0,
             '11b. no camera state yet -> exploreHere degrades to an empty envelope, not a throw');

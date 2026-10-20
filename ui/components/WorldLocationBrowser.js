@@ -1,60 +1,6 @@
-import { TrustStatus } from '../../core/identity/TrustObservation.js';
 import { displayText, formatNumber, t } from '../i18n/i18n.js';
 import FormattedDescription from './FormattedDescription.js';
 
-// 0.9.521 — Close Remaining Raw Status Rendering Boundaries.
-//
-// 0.9.520's own Finding 2 (Section D/I): the Inspect panel's "Discovery
-// status" row rendered `inspected.trust.status` — a raw
-// `core/identity/TrustObservation.js` `TrustStatus` constant — straight to a
-// Wanderer, unhumanized. `TrustStatus.VALID` is literally the bare word
-// "VALID," and `inspectDocument()` (application/world/WorldNavigationSession.js)
-// populates `trust` from exactly that enum (see this file's own `inspected`
-// prop comment, above/below: "the specific TrustObservation... recorded for
-// this document's placement").
-//
-// 0.9.520's own recommended follow-up assumed the fix was to route this
-// call site through `describeTrustStatus`
-// (application/avatar/AvatarPresenceLabels.js), an already-existing humanizer for
-// the identical `TrustStatus` enum. Investigating that assumption is this
-// milestone's own job before writing a label (per its own requesting
-// brief) — and it does NOT hold: `describeTrustStatus` maps
-// `TrustStatus.VALID` to the word **"Trusted."** `core/identity/TrustObservation.js`'s
-// own header is explicit that a TrustObservation is "purely DESCRIPTIVE...
-// not what should happen next" — never a trust verdict. Rendering "Trusted"
-// here would not close the SEMANTIC_BOUNDARY_GAP 0.9.520 found; it would
-// widen it, trading a raw enum for a stronger, unearned claim — exactly the
-// overclaim `docs/Principles.md`'s "Known Evidence Is Not Verified
-// Evidence" line and this codebase's own banned-vocabulary sweep
-// (tests/PublicationEvidenceTrustExperienceProductReassessment.test.js's
-// `trusted|safe|permanent|guaranteed|owns?|owned|authored?|authorship`)
-// both warn against.
-//
-// WHAT `inspected.trust` ACTUALLY MEANS AT THIS CALL SITE. This is not a
-// general "is this Wanderer's discovery trustworthy" verdict — it is one
-// `TrustObservation` about one `placement-record`
-// (`WorldNavigationSession._lookupTrustObservation()`), describing exactly
-// what `core/identity/TrustObservation.js`'s own per-status comments already say:
-// whether that placement record's integrity/signature/authorization
-// checked out, is stale, conflicts with another observation, etc. The
-// labels below describe THAT — the same narrower, WHAT-WAS-CHECKED framing
-// `application/worldEncounter/WorldEncounterMaterialInspectionView.js` (0.9.519) already
-// established for a different enum, continued here rather than reinvented.
-//
-// A LOCAL, NARROW FUNCTION — DELIBERATELY NOT A NEW SHARED "TrustView."
-// This component had no `application/` import before this milestone, and
-// gains none: `describeInspectedTrustStatusLabel()`, below, is a plain,
-// pure, read-only function scoped to exactly this one call site, mirroring
-// how `ui/components/WorldEncounterCanvas.js` already defines
-// `describeSelectionOriginLabel()`/`describeDecentralizedLeadUriLabel()`
-// directly as component methods rather than spinning off a file for every
-// one-off label. Inventing a generic, reusable "TrustView" abstraction
-// here — just because the backing enum happens to be named `TrustStatus`
-// — would turn this presentation fix into a new architectural concept
-// nobody asked for; this file's own vocabulary (the row is already labeled
-// "Discovery status," never "Trust status") deliberately stays exactly
-// that narrow.
-//
 // 0.2.29 — World Location Browser: browsing the world by CAMERA
 // POSITION, not by already knowing a document's name or typing raw
 // coordinates. Opened by "Explore Here" / "What's Here?" (WorldView's
@@ -98,47 +44,6 @@ import FormattedDescription from './FormattedDescription.js';
 // currently configured discovery provider can find within the
 // requested region, not a claim that this node has omniscient
 // knowledge of the whole world.
-//
-// 0.2.30: `diagnostics` — the WorldNavigationSession.exploreLocation
-// envelope's other half (core/world/DiscoveryDiagnosticsSummary.js), shown
-// as a banner above the result list. Four states, and this component
-// renders exactly what it is given, nothing more:
-//   unavailable (diagnostics.available === false) — no trust-capable
-//     discovery provider was consulted for this query. Neutral, NOT a
-//     warning — this is today's default (see docs/Principles.md).
-//   fatal (diagnostics.fatal) — a provider WAS consulted but its root/
-//     authority could not be trusted at all this pass.
-//   complete (diagnostics.available && diagnostics.complete) — the
-//     trust layer ran and found nothing to flag.
-//   warnings (diagnostics.available && !diagnostics.complete) —
-//     itemized real issues (stale/missing/rejected/conflicting/
-//     equivocating), each with its own real count.
-// The result list itself is UNAFFECTED by any of this — a stale or
-// conflicting document still appears, exactly as findable as before;
-// diagnostics annotate, they never filter. See docs/Principles.md,
-// "Discovery And Trust Are Related, But They Are Not The Same
-// Operation (0.2.30)."
-// 0.9.521 — see this file's own header. Every current `TrustStatus`
-// member (`core/identity/TrustObservation.js`), labeled by what that status
-// actually establishes about the inspected placement record — never a
-// verdict word ("Trusted"/"Safe"/"Verified"), never a fabricated fourth
-// state. An unrecognized future status falls through to the raw value
-// itself, exactly like every other label map in this codebase
-// (LOAD_STATUS_LABELS, STORAGE_TYPE_LABELS, ...) degrades an unknown key.
-const TRUST_OBSERVATION_LABELS = Object.freeze({
-    [TrustStatus.VALID]: 'worldLocationBrowser.trust.valid',
-    [TrustStatus.LEGACY_UNSIGNED]: 'worldLocationBrowser.trust.legacyUnsigned',
-    [TrustStatus.INVALID_SIGNATURE]: 'worldLocationBrowser.trust.invalidSignature',
-    [TrustStatus.UNAUTHORIZED]: 'worldLocationBrowser.trust.unauthorized',
-    [TrustStatus.STALE]: 'worldLocationBrowser.trust.stale',
-    [TrustStatus.CONFLICTING]: 'worldLocationBrowser.trust.conflicting',
-    [TrustStatus.EQUIVOCATING]: 'worldLocationBrowser.trust.equivocating',
-    [TrustStatus.MISSING]: 'worldLocationBrowser.trust.missing',
-    [TrustStatus.UNAVAILABLE]: 'worldLocationBrowser.trust.unavailable',
-    [TrustStatus.INTEGRITY_FAILURE]: 'worldLocationBrowser.trust.integrityFailure',
-    [TrustStatus.REPLAYED]: 'worldLocationBrowser.trust.replayed',
-    [TrustStatus.BLOCKED]: 'worldLocationBrowser.trust.blocked'
-});
 
 // One decimal, in the chosen language's number format.
 function round1(value) {
@@ -161,23 +66,12 @@ export default {
             type: Array,
             default: () => []
         },
-        // { available, fatal, complete, warnings[] } — see
-        // core/world/DiscoveryDiagnosticsSummary.js. Defaults to the
-        // "unavailable" shape so a host that hasn't been updated to
-        // pass one yet degrades to the neutral banner rather than a
-        // crash.
-        diagnostics: {
-            type: Object,
-            default: () => ({ available: false, fatal: null, complete: false, warnings: [] })
-        },
         // The single result currently expanded via Inspect, in the
         // shape WorldNavigationSession.inspectDocument returns
-        // ({ documentId, documentInfo, placementInfo, trust }), or null
-        // when nothing is expanded. documentInfo/placementInfo/trust
-        // may themselves be null — see inspectDocument's own comment
-        // for why (an unloaded document has no Document Info to show;
-        // trust is only ever populated from the last exploration's own
-        // observations).
+        // ({ documentId, documentInfo, placementInfo }), or null
+        // when nothing is expanded. documentInfo/placementInfo may
+        // themselves be null — see inspectDocument's own comment for
+        // why (an unloaded document has no Document Info to show).
         inspected: {
             type: Object,
             default: null
@@ -229,12 +123,6 @@ export default {
         isInspecting(documentId) {
             return !!this.inspected && this.inspected.documentId === documentId;
         },
-        // 0.9.521 — see this file's own header. Pure; degrades an
-        // unrecognized status to the raw value itself, never a fabricated
-        // label.
-        describeInspectedTrustStatusLabel(status) {
-            return TRUST_OBSERVATION_LABELS[status] ? t(TRUST_OBSERVATION_LABELS[status]) : (status || null);
-        },
         onKeydown(event) {
             if (event.key === 'Escape') {
                 event.stopPropagation();
@@ -268,30 +156,6 @@ export default {
                     />
                     <button type="submit" class="action-btn">{{ t('worldLocationBrowser.explore') }}</button>
                 </form>
-
-                <div
-                    class="world-location-browser-diagnostics"
-                    :class="{
-                        'world-location-browser-diagnostics--fatal': diagnostics.fatal,
-                        'world-location-browser-diagnostics--complete': diagnostics.available && !diagnostics.fatal && diagnostics.complete,
-                        'world-location-browser-diagnostics--warning': diagnostics.available && !diagnostics.fatal && !diagnostics.complete
-                    }"
-                >
-                    <p v-if="diagnostics.fatal" class="world-location-browser-diagnostics-line">
-                        {{ t('worldLocationBrowser.indexUnverified', { reason: diagnostics.fatal }) }}
-                    </p>
-                    <template v-else-if="diagnostics.available">
-                        <p v-if="diagnostics.complete" class="world-location-browser-diagnostics-line">
-                            {{ t('worldLocationBrowser.discoveryComplete') }}
-                        </p>
-                        <p v-else v-for="w in diagnostics.warnings" :key="w.status" class="world-location-browser-diagnostics-line">
-                            ⚠ {{ w.message }}
-                        </p>
-                    </template>
-                    <p v-else class="world-location-browser-diagnostics-line world-location-browser-diagnostics-line--neutral">
-                        {{ t('worldLocationBrowser.discoveryDiagnosticsUnavailableShowingLocally') }}
-                    </p>
-                </div>
 
                 <p v-if="documents.length === 0" class="world-location-browser-empty">{{ emptyMessage }}</p>
                 <template v-else>
@@ -356,13 +220,6 @@ export default {
                                 </template>
                                 <p v-else-if="r.position" class="world-location-browser-inspect-note">
                                     {{ t(r.hasPlacement ? 'worldLocationBrowser.positionRecorded' : 'worldLocationBrowser.positionFallback') }}
-                                </p>
-                                <div v-if="inspected.trust" class="inspection-row">
-                                    <span class="inspection-label">{{ t('worldLocationBrowser.discoveryStatus') }}</span>
-                                    <span class="inspection-value">{{ describeInspectedTrustStatusLabel(inspected.trust.status) }}</span>
-                                </div>
-                                <p v-if="inspected.trust && inspected.trust.reason" class="world-location-browser-inspect-note">
-                                    {{ inspected.trust.reason }}
                                 </p>
                             </div>
                         </li>

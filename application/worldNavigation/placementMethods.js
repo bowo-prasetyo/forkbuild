@@ -2,7 +2,6 @@ import { computeLifecycleStatus, describeLifecycleStatus } from '../document/Doc
 import { detectSpatialOverlap } from '../../core/world/SpatialOverlap.js';
 import { evaluateSpatialAllocation } from '../../core/world/SpatialAllocationPolicy.js';
 import { isWithinRadius, distanceBetween } from '../../core/world/SpatialQuery.js';
-import { summarizeDiscoveryDiagnostics } from '../../core/world/DiscoveryDiagnosticsSummary.js';
 import { latestPublisherPlacementRecord } from '../placement/PublisherPlacementClaim.js';
 import { SpatialBounds } from '../../core/world/SpatialBounds.js';
 import { plazaFootprint } from '../../core/challenge/ChallengePlaza.js';
@@ -314,26 +313,18 @@ export const placementMethods = {
         };
     },
 
-    // Center/radius exploration. `searchWorldByLocation` decides which
-    // documents come back; the result is `{ documents, diagnostics }` so a
-    // caller can show what was found and what the trust layer says about it
-    // without confusing the two (see docs/Principles.md, "Discovery And Trust
-    // Are Related, But They Are Not The Same Operation"). searchWorld/
-    // searchWorldByLocation still return plain arrays; see
-    // docs/ArchitectureHistory.md for why the shapes weren't unified.
+    // Center/radius exploration: `{ documents }`, the documents
+    // `searchWorldByLocation` finds there.
     exploreLocation({ center, radius }) {
-        const documents = this.searchWorldByLocation({ center, radius });
-        const diagnostics = this._runSpatialDiscoveryDiagnostics(center, radius);
-        return { documents, diagnostics };
+        return { documents: this.searchWorldByLocation({ center, radius }) };
     },
 
     // "Explore Here": centered on the camera, not the active document's
     // placement; the camera may be over empty space with no active document.
-    // Returns an empty envelope (diagnostics.available false) before any camera
-    // state exists.
+    // Returns no documents before any camera state exists.
     exploreHere(radius = DEFAULT_EXPLORE_RADIUS) {
         const center = this.getSpatialState().cameraPosition;
-        if (!center) return { documents: [], diagnostics: summarizeDiscoveryDiagnostics(null) };
+        if (!center) return { documents: [] };
         return this.exploreLocation({ center, radius });
     },
 
@@ -345,67 +336,17 @@ export const placementMethods = {
         return this.exploreHere(NEARBY_RADIUS);
     },
 
-    // Runs the optional trust-capable spatialDiscoveryProvider over the same
-    // center/radius only for diagnostics; its PlacementRecords are discarded and
-    // never replace exploreLocation's documents.
-    //
-    // A provider's discover() may throw for an untrusted root/authority,
-    // which is right for an authoritative caller. Exploration is
-    // read-only, so the throw becomes `diagnostics.fatal` instead of escaping a
-    // UI action.
-    _runSpatialDiscoveryDiagnostics(center, radius) {
-        if (!this._spatialDiscoveryProvider || typeof this._spatialDiscoveryProvider.discover !== 'function') {
-            this._lastDiscoveryDiagnosticsRaw = null;
-            return summarizeDiscoveryDiagnostics(null);
-        }
-        let raw = null;
-        try {
-            this._spatialDiscoveryProvider.discover(center, radius);
-            raw = typeof this._spatialDiscoveryProvider.getLastDiagnostics === 'function'
-                ? this._spatialDiscoveryProvider.getLastDiagnostics()
-                : null;
-            this._lastDiscoveryDiagnosticsRaw = raw;
-            return summarizeDiscoveryDiagnostics(raw);
-        } catch (err) {
-            this._lastDiscoveryDiagnosticsRaw = null;
-            return summarizeDiscoveryDiagnostics(null, { fatal: err.message });
-        }
-    },
-
     // Read-only bundle for the Location Browser's "Inspect": Document Info and
     // Placement Info, never forcing a load. Results are usually not loaded, and
     // loading just to inspect would be a real side effect, so documentInfo may
     // be null; WorldLocationBrowser then falls back to the result's own fields.
     // placementInfo comes from the registry and is often available anyway.
-    //
-    // `trust` is the TrustObservation for this document's placement from the
-    // most recent explore/whatsHere call's cached raw diagnostics, or null. Not
-    // a fresh query.
     inspectDocument(documentId) {
         const placementInfo = this.getPlacementInfo(documentId);
         return {
             documentId,
             documentInfo: this.getDocumentInfo(documentId),
-            placementInfo,
-            trust: this._lookupTrustObservation(placementInfo)
-        };
-    },
-
-    _lookupTrustObservation(placementInfo) {
-        if (!placementInfo || !this._lastDiscoveryDiagnosticsRaw) {
-            return null;
-        }
-        const match = this._lastDiscoveryDiagnosticsRaw.observations.find((o) =>
-            o.subjectType === 'placement-record' && o.subjectId === placementInfo.placementId);
-        if (!match) {
-            return null;
-        }
-        return {
-            status: match.status,
-            reason: match.reason,
-            freshness: match.freshness && typeof match.freshness.toJSON === 'function'
-                ? match.freshness.toJSON()
-                : match.freshness
+            placementInfo
         };
     },
 

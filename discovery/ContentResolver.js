@@ -5,7 +5,7 @@
 // any content-addressed store. The application layer never knows which.
 //
 // Distinct from:
-//   SpatialDiscoveryProvider — "Where are things?"
+//   SpatialIndexProvider     — "Where are things?"
 //   PlacementRegistry        — "What placement records exist?"
 //   Snapshot loader          — "How do I turn content into a session?"
 //
