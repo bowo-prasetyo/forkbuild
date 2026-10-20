@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 0696773bd0742d8b -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: fb0dd38e1538e747 -->
 # 04 — Publicar e remixar
 
 <!-- languages -->
@@ -895,6 +895,16 @@ a licença dela não permite, veja
 [Quando alguém usa a sua construção de um jeito que a licença dela não permite](#quando-alguém-usa-a-sua-construção-de-um-jeito-que-a-licença-dela-não-permite).
 Nada aparece quando este aparelho não viu nenhuma construção assim, o que
 não quer dizer que não existam.
+
+O painel **Sobre esta construção** da Visão do mundo também as lista, abaixo
+dos detalhes da construção. E quando este aparelho encontra uma construção
+de outra pessoa muito parecida com uma das suas e publicada depois dela, o
+seu 🔔 recebe uma entrada **… publicou uma construção parecida com a sua**,
+uma vez por construção, dizendo quanto é igual; ela abre essa construção,
+cuja página lista a sua (o seu aparelho também mostra, se você ligou as
+[Notificações neste dispositivo](03-WorldView.md#notificações-neste-dispositivo)).
+Remixes das suas construções não contam aqui: eles dão crédito a você e têm
+[uma notificação própria](#contagem-de-remixes).
 
 ## Um ciclo criativo típico
 

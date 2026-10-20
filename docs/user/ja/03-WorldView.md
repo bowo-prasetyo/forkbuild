@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 3b35ccdb4d528c27 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 356a48136117ec0e -->
 # 03 — ワールドビュー
 
 <!-- languages -->
@@ -317,6 +317,9 @@
 - 誰かがあなたの作品をリミックスしたとき
   （[リミックスの回数](04-PublishingAndForking.md#リミックスの回数) を
   参照）
+- あなたの作品のあとに、誰かがそれによく似た作品を公開したとき
+  （[先に公開された似ている作品](04-PublishingAndForking.md#先に公開された似ている作品)
+  を参照）
 
 それぞれ、何がいつ起きたかを示します。**探索** でその作品のワールドに
 行けます。これは受信箱ではなく、ただの一覧です。既読にはならず、消す

@@ -224,6 +224,9 @@ async function run() {
         assert((await finder({ limit: 10 }).findEarlier(later)).map((f) => f.publication.documentId).sort().join() === 'copy,helped,mallory-older,original',
             '23. a later build lists every earlier look-alike, its own builder\'s excepted');
 
+        const byAlice = await finder({ limit: 10 }).findEarlier(later, { by: ['alice'] });
+        assert(byAlice.length === 1 && byAlice[0].publication === original, '23a. with `by`, only those builders\' builds are compared');
+
         const undated = new Publication({ ...copy.toJSON(), id: 'undated', publishedAt: 'not a date' });
         assert((await finder().findEarlier(undated)).length === 0, '24. a build with no date has nothing earlier');
         const absent = published(contentStore, documentOf(cottageBricks(), { id: 'absent' }), { identityId: 'quinn', publishedAt: '2026-10-07T00:00:00Z', onDevice: false });

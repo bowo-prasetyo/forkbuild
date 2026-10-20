@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 0696773bd0742d8b -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: fb0dd38e1538e747 -->
 # 04 — Publier et remixer
 
 <!-- languages -->
@@ -941,6 +941,17 @@ utilisé votre construction d’une façon que sa licence ne permet pas, voir
 [Quand quelqu’un utilise votre construction d’une façon que sa licence ne permet pas](#quand-quelquun-utilise-votre-construction-dune-façon-que-sa-licence-ne-permet-pas).
 Rien n’est listé quand cet appareil n’a vu aucune construction de ce genre,
 ce qui ne veut pas dire qu’il n’y en a pas.
+
+Le panneau **À propos de cette construction** de la Vue du Monde les liste
+aussi, sous les détails de la construction. Et quand cet appareil trouve une
+construction de quelqu’un d’autre qui ressemble beaucoup à l’une des vôtres
+et a été publiée après elle, votre 🔔 reçoit une entrée
+**… a publié une construction qui ressemble à la vôtre**, une fois par
+construction, avec la part identique ; elle ouvre cette construction, dont
+la page liste la vôtre (votre appareil l’affiche aussi si vous avez activé
+les [Notifications sur cet appareil](03-WorldView.md#notifications-sur-cet-appareil)).
+Les remix de vos constructions ne comptent pas ici : ils vous créditent et
+ont [leur propre notification](#nombre-de-remix).
 
 ## Une boucle créative typique
 

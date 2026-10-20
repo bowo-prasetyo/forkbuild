@@ -105,6 +105,9 @@ the header, for the build you clicked:
   its card in **Explore**.
   A published build also shows its hearts (**♡**, and who loves it); see
   [Hearts](04-PublishingAndForking.md#hearts).
+  When builds by other people, published before it, look a lot like it, a
+  panel under it lists them, as the build's page does; see
+  [Similar builds published earlier](04-PublishingAndForking.md#similar-builds-published-earlier).
 - **Placement**: where the build stands in the World, in **World Units**.
   These are ForkBuild's own coordinates, not GPS; one World Unit is one
   metre. **Focus** takes you there. **Move** opens **Move Placement**,

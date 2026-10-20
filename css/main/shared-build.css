@@ -597,3 +597,8 @@
 .walk-through-film-panel .modal-actions {
     margin-top: 0.6rem;
 }
+
+/* The same list in World View, in a panel under About this build. */
+.world-similar-earlier .similar-earlier {
+    margin: 0;
+}

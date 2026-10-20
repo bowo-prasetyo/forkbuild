@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 27c74ca95de369c9 -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 49b3a123cec42c7e -->
 # Weltansicht: Erweiterte Werkzeuge
 
 <!-- languages -->
@@ -113,6 +113,9 @@ Klicken Sie auf einen Stein, freien Boden oder eine platzierte Struktur,
   schreiben, wie auf seiner Karte unter **Entdecken**.
   Ein veröffentlichtes Bauwerk zeigt auch seine Herzen (**♡**, und wem es
   gefällt); siehe [Herzen](04-PublishingAndForking.md#herzen).
+  Ähneln ihm Bauwerke anderer, die vor ihm veröffentlicht wurden, sehr,
+  listet ein Feld darunter sie auf, wie die Seite des Bauwerks; siehe
+  [Ähnliche Bauwerke, die früher veröffentlicht wurden](04-PublishingAndForking.md#ähnliche-bauwerke-die-früher-veröffentlicht-wurden).
 - **Platzierung**: wo das Bauwerk in der Welt steht, in **Welteinheiten**.
   Das sind ForkBuilds eigene Koordinaten, kein GPS; eine Welteinheit ist
   ein Meter. **Fokussieren** bringt Sie hin. **Verschieben** öffnet

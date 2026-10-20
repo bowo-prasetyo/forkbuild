@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 3b35ccdb4d528c27 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 356a48136117ec0e -->
 # 03 — 월드 보기
 
 <!-- languages -->
@@ -317,6 +317,8 @@
   참고)
 - 누군가 내 작품을 리믹스했을 때
   ([리믹스 횟수](04-PublishingAndForking.md#리믹스-횟수) 참고)
+- 내 작품보다 나중에 누군가 그것과 아주 비슷한 작품을 게시했을 때
+  ([먼저 게시된 비슷한 작품](04-PublishingAndForking.md#먼저-게시된-비슷한-작품) 참고)
 
 각 알림은 무슨 일이 언제 있었는지 알려 줍니다. **탐색**은 그 작품의
 월드로 데려갑니다. 받은편지함이 아니라 단순한 목록입니다. 읽음 표시도,

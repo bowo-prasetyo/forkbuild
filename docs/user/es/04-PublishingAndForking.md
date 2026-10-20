@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 0696773bd0742d8b -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: fb0dd38e1538e747 -->
 # 04 — Publicar y remezclar
 
 <!-- languages -->
@@ -917,6 +917,17 @@ construcción de una forma que su licencia no permite, vea
 [Cuando alguien usa su construcción de una forma que su licencia no permite](#cuando-alguien-usa-su-construcción-de-una-forma-que-su-licencia-no-permite).
 Si este dispositivo no ha visto ninguna construcción así, no aparece nada,
 lo que no significa que no las haya.
+
+El panel **Sobre esta construcción** de la Vista del mundo también las
+enumera, bajo los datos de la construcción. Y cuando este dispositivo
+encuentra una construcción de otra persona que se parece mucho a una de las
+suyas y se publicó después, su 🔔 recibe una entrada
+**… publicó una construcción que se parece a la suya**, una vez por
+construcción, con cuánto es igual; abre esa construcción, cuya página
+enumera la suya (su dispositivo también la muestra si activó
+[Notificaciones en este dispositivo](03-WorldView.md#notificaciones-en-este-dispositivo)).
+Las remezclas de sus construcciones no cuentan aquí: le dan el crédito y
+tienen [su propia notificación](#recuentos-de-remezclas).
 
 ## Un ciclo creativo típico
 

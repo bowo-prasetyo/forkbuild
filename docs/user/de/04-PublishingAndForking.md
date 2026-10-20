@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 0696773bd0742d8b -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: fb0dd38e1538e747 -->
 # 04 — Veröffentlichen & Remixen
 
 <!-- languages -->
@@ -923,6 +923,17 @@ es seine Lizenz nicht erlaubt, siehe
 [Wenn jemand Ihr Bauwerk so nutzt, wie es seine Lizenz nicht erlaubt](#wenn-jemand-ihr-bauwerk-so-nutzt-wie-es-seine-lizenz-nicht-erlaubt).
 Hat dieses Gerät kein solches Bauwerk gesehen, wird nichts aufgelistet; das
 heißt nicht, dass es keine gibt.
+
+Das Feld **Über dieses Bauwerk** in der Weltansicht listet sie auch auf,
+unter den Angaben zum Bauwerk. Und wenn dieses Gerät ein Bauwerk von jemand
+anderem findet, das einem Ihrer sehr ähnelt und nach ihm veröffentlicht
+wurde, bekommt Ihre 🔔 einen Eintrag
+**… hat ein Bauwerk veröffentlicht, das Ihrem ähnelt**, einmal pro Bauwerk,
+mit dem Anteil, der gleich ist; er öffnet dieses Bauwerk, dessen Seite Ihres
+auflistet (Ihr Gerät zeigt ihn auch, wenn Sie
+[Benachrichtigungen auf diesem Gerät](03-WorldView.md#benachrichtigungen-auf-diesem-gerät)
+eingeschaltet haben). Remixe Ihrer Bauwerke zählen hier nicht: Sie nennen
+Sie und haben [eine eigene Benachrichtigung](#remix-zähler).
 
 ## Ein typischer kreativer Kreislauf
 
