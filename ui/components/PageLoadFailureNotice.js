@@ -13,12 +13,13 @@ export default {
         reload: { type: Function, default: reloadOnPage }
     },
     setup(props) {
-        const voiceUseCase = inject('voiceUseCase', null);
+        // The call in progress, if any (ui/main.js).
+        const activeVoiceCall = inject('activeVoiceCall', null);
         const failure = computed(() => pageLoadFailure.value);
 
         function inCall() {
             try {
-                return Boolean(voiceUseCase && voiceUseCase.getActiveCall());
+                return Boolean(activeVoiceCall && activeVoiceCall());
             } catch {
                 return false;
             }

@@ -816,6 +816,29 @@ async function offlineAndNotifications(browser, base, precacheFiles, publishedDi
     }
 }
 
+// Home draws without the network runtime (ui/main/composeNetwork.js: peers,
+// publications, World discovery, Steem and Blurt), which then starts on its
+// own: a visitor who only reads Home still gets their peers and notifications.
+async function homeStartsNetwork(browser, base) {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    const problems = [];
+    page.on('pageerror', (error) => problems.push(error.message));
+    page.on('console', (message) => {
+        if (message.type() === 'error' && !NETWORK_NOISE.test(message.text())) problems.push(message.text());
+    });
+    try {
+        const network = page.waitForRequest((request) => /\/bundle\/chunks\/composeNetwork-[A-Z0-9]+\.js$/.test(request.url()), { timeout: 30_000 });
+        await page.goto(`${base}/#/`);
+        await page.waitForSelector('.home-view', { timeout: 60_000 });
+        await network;
+        await page.waitForTimeout(1500);
+    } finally {
+        await context.close();
+    }
+    assert(problems.length === 0, `Home starts the network runtime without errors:\n  ${problems.slice(0, 20).join('\n  ')}`);
+}
+
 // The Steem operator pages (scripts/steem-threads/), bundled on their own,
 // open and draw their page with no error.
 async function openOperatorPages(browser, base) {
@@ -862,12 +885,14 @@ try {
     assert(html.includes(`href="${published.stylesheet}"`), 'index.html loads the bundled stylesheet');
     assert(published.firstLoadFiles < 150, `the first load is a few dozen files, not hundreds (${published.firstLoadFiles})`);
     // A budget, so the first load only grows when someone decides it should:
-    // 1238 KiB when it was set, with Vue's runtime-only build and no
-    // translation (each visitor downloads only their own, English included).
-    const FIRST_LOAD_BUDGET_KIB = 1300;
+    // 518 KiB when it was set, with Vue's runtime-only build, no translation
+    // (each visitor downloads only their own, English included) and no network
+    // runtime (ui/main/composeNetwork.js, loaded once Home is on screen).
+    const FIRST_LOAD_BUDGET_KIB = 560;
     assert(published.firstLoadBytes <= FIRST_LOAD_BUDGET_KIB * 1024,
         `the first load stays within ${FIRST_LOAD_BUDGET_KIB} KiB, minified (${(published.firstLoadBytes / 1024).toFixed(0)} KiB): load what Home doesn't need with import(), or raise the budget on purpose`);
     assert(!/bundle\/chunks\/(en|de|es|fr|id|ja|ko|pt-BR)-[A-Z0-9]+\.js/.test(html), 'no translation is preloaded: each visitor downloads only their own');
+    assert(!html.includes('chunks/composeNetwork-'), 'the network runtime is not preloaded: it loads once Home is on screen');
     console.log(`✓ built: ${published.files} script files, ${published.firstLoadFiles} in the first load; no 'unsafe-eval', no source, docs or source maps`);
 
     const server = await serve(published.outdir);
@@ -879,6 +904,8 @@ try {
     const pagesAtHome = result.homeRequests.filter((url) => /\/bundle\/chunks\/(EditorView|WorldView|DecentralizedPublicationsView|composeAnchoring)-/.test(url));
     assert(pagesAtHome.length === 0, `Home does not load other pages or service groups:\n  ${pagesAtHome.join('\n  ')}`);
     console.log(`✓ the published build opens all ${paths.length} pages with no page error, and Home loads only what it needs`);
+    await homeStartsNetwork(browser, `http://127.0.0.1:${server.address().port}`);
+    console.log('✓ Home draws before the network runtime, which then starts on its own');
 
     for (const tag of ['<meta name="description"', '<meta property="og:image" content="https://', '<meta name="twitter:card"', '<link rel="manifest" href="manifest.webmanifest">']) {
         assert(html.includes(tag), `the published index.html keeps ${tag}`);

@@ -2090,7 +2090,8 @@ in the app; the design notes are in docs/ArchitectureHistory.md.
 
 ## Publication presence across restarts
 
-At startup, before the app mounts, `ui/main.js` rebuilds the in-memory `DecentralizedPublicationDiscoveryProvider`
+At startup the network runtime (`ui/main/composeNetwork.js`) rebuilds the in-memory
+`DecentralizedPublicationDiscoveryProvider` that the shell (`ui/main.js`) constructs, before it provides it to any page,
 from two durable records:
 
 - `ReconstructPublicationDiscoveryUseCase` replays `LocalPublicationCatalog`, which holds signed decentralized
@@ -2386,31 +2387,42 @@ applies it with ui/look.js#applyLook() before the app loads, which sets or
 clears `data-look` on `<html>` and points both `theme-color` metas at the
 chosen paper; ui/components/LookChoice.js offers it in the More menu.
 
-ui/main.js builds every store, adapter and use case once, reads the
-saved settings, and provides them to the Vue app. The compose functions in
-ui/main/ build the larger subsystems (identity and peers, content and
-Snapshots, anchoring, World discovery, injected-wallet services, publication
-distribution, Snapshot discovery) and return what ui/main.js provides; every
-app.provide() call stays in ui/main.js.
+The composition root builds every store, adapter and use case once, reads
+the saved settings, and provides them to the Vue app, in two parts.
+ui/main.js is the shell: the local identity, backups, the settings stores,
+the header's notifications, the router and the mount, everything the header
+and Home need. ui/main/composeNetwork.js is the network runtime: peers, the
+publication catalogs and their exchanges, comments and hearts, World
+discovery over Nostr, Arweave, IPFS, Steem and Blurt, and background
+announcement sync. Its module is imported once the first page has been drawn
+(or after a second, for a tab opened in the background), or first by a page
+that needs it, so most of the app's code never holds Home back; it provides
+its services as it builds them. The compose functions in ui/main/ build the
+larger subsystems (identity and peers, content and Snapshots, anchoring,
+World discovery, injected-wallet services, publication distribution, Snapshot
+discovery) and return what the two parts provide.
 
 Services that only some pages inject are built in service groups
-(ui/serviceGroups.js) rather than at startup. ui/main.js defines each group
-as a function that imports its modules, builds its services from the ones
-already running and provides them; ui/router/pageServiceGroups.js lists the
-groups each page needs, and the router loads them beside the page's own
-modules, so they are provided before it renders (a provide added after the
-app mounted reaches every component created later). There are four:
+(ui/serviceGroups.js) rather than with the shell. The network runtime is one,
+`network`, which most pages list; ui/main.js defines the others as functions
+that wait for the network runtime, import their modules, build their services
+from the ones already running and provide them. ui/router/pageServiceGroups.js
+lists the groups each page needs, and the router loads them beside the page's
+own modules, so they are provided before it renders (a provide added after the
+app mounted reaches every component created later). Besides `network`, there
+are six:
 `anchoring` (publication evidence, and Bitcoin, Base, Arweave, Steem and
 Blurt anchoring: the Publications page and the Proof & Anchoring settings),
 `distribution` (publication and Snapshot distribution,
 Snapshot and place-name discovery, remote IPFS pinning, IPFS content checks
 and Publication links: the Editor, World View, the Publications page and a
-Publication link), `observationArchive` (the Publications page) and `sound` (World View and the Editor). What must run from
-the start stays at startup: the stores, the peer exchanges that listen for
-peers' messages, background announcement sync, backups, and everything the
-header shows. tests/ServiceGroupCoverage.test.js fails if a page injects a
-service from a group not listed for it, if a listed group goes unused, or if
-the header injects a group's service.
+Publication link), `observationArchive` (the Publications page), `sound` (World View and the Editor), `walkTogether`
+(World View, the Editor and a walk link) and `devicePairing` (pairing another device). What must run from the start,
+the peer exchanges that listen for peers' messages, background announcement sync and the notifiers, is in the network
+runtime, which starts by itself even if no page asks for it; backups and everything the header shows are in the shell.
+tests/ServiceGroupCoverage.test.js fails if a page injects a service from a group not listed for it, if a listed group
+goes unused, or if the header injects a group's service; tests/InitialLoadModuleGraph.test.js fails if the network
+runtime's modules are imported statically again.
 
 Bitcoin's and Base's wallet steps are network writers (core/NetworkWriters.js,
 docs/Pillars.md "Networks: readers and writers"), built only when switched on

@@ -301,7 +301,8 @@ async function run() {
             'application/settings/ResolvePreferredRoleProviderUseCase.js',
             'application/snapshot/placement/PreferredSnapshotPlacementCreationCoordinator.js',
             'application/snapshot/placement/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js',
-            'ui/main.js',
+            // The network runtime, built after the app's shell (ui/main.js).
+            'ui/main/composeNetwork.js',
             'ui/main/composeContentAndSnapshots.js',
             'ui/main/composeSnapshotDiscovery.js',
             'application/snapshot/placement/SnapshotPlacementCreationView.js',

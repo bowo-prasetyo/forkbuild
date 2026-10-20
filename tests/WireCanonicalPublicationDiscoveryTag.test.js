@@ -71,9 +71,10 @@ async function run() {
         // the distribution wiring reads it — confirming this is one linear
         // definition, never a forward reference or a second declaration.
         // The constant is declared in composeWorldDiscovery() and read in
-        // composePublicationDistribution(), so the order is ui/main.js's
-        // call order around its provide().
-        const rootSource = await readSource('ui/main.js');
+        // composePublicationDistribution(), so the order is the network
+        // runtime's call order around its provide(), then the 'distribution'
+        // service group's (ui/main.js), which is built on the network runtime.
+        const rootSource = `${await readSource('ui/main/composeNetwork.js')}\n${await readSource('ui/main.js')}`;
         const worldDiscoverySource = await readSource('ui/main/composeWorldDiscovery.js');
         const distributionSource = await readSource('ui/main/composePublicationDistribution.js');
         const constantIndex = rootSource.indexOf('composeWorldDiscovery({');

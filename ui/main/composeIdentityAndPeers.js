@@ -1,5 +1,3 @@
-import { CreateIdentityProviderUseCase } from '../../application/identity/CreateIdentityProviderUseCase.js';
-import { IdentityUseCase } from '../../application/identity/IdentityUseCase.js';
 import { CreatePublicationCommentaryUseCase } from '../../application/publication/commentary/CreatePublicationCommentaryUseCase.js';
 import { PeerSessionManager } from '../../application/peer/PeerSessionManager.js';
 import { WebRtcPeerConnectionProvider } from '../../peer/WebRtcPeerConnectionProvider.js';
@@ -41,12 +39,12 @@ import { DEFAULT_BITCOIN_ESPLORA_API_URLS } from '../../core/BitcoinEsploraConfi
 import { BitcoinEsploraConfigurationStore } from '../../storage/BitcoinEsploraConfigurationStore.js';
 import { SetBitcoinEsploraConfigurationUseCase } from '../../application/settings/SetBitcoinEsploraConfigurationUseCase.js';
 
-// Composition root, part 1: the local identity, the saved network settings
-// (STUN, TURN, rendezvous, Bitcoin Esplora), peer sessions and discovery,
-// relationships, follows, blocking, device authorization, chat, presence and voice.
-export function composeIdentityAndPeers({ decentralizedPublicationDiscoveryProvider = null } = {}) {
-    const identityProvider = new CreateIdentityProviderUseCase().execute();
-    const identityUseCase = new IdentityUseCase(identityProvider);
+// Composition root, for the network runtime (ui/main/composeNetwork.js):
+// around the local identity (ui/main.js builds it, for the header), the saved
+// network settings (STUN, TURN, rendezvous, Bitcoin Esplora), peer sessions
+// and discovery, relationships, follows, blocking, device authorization,
+// chat, presence and voice.
+export function composeIdentityAndPeers({ identityProvider, decentralizedPublicationDiscoveryProvider = null }) {
     // Bound as createPublicationCommentaryCommand: addPublicationCommentaryCommand,
     // below, wraps it with distribution.
     const { getPublicationCommentariesCommand, addPublicationCommentaryCommand: createPublicationCommentaryCommand } =
@@ -198,7 +196,7 @@ export function composeIdentityAndPeers({ decentralizedPublicationDiscoveryProvi
     });
 
     return {
-        identityProvider, identityUseCase, createPublicationCommentaryCommand,
+        createPublicationCommentaryCommand,
         getPublicationCommentariesCommand, iceServerConfigurationStore, turnServerConfigurationStore,
         setTurnServerConfigurationUseCase, setIceServerConfigurationUseCase, rendezvousConfigurationStore,
         setRendezvousConfigurationUseCase, bitcoinEsploraConfigurationStore, resolvedBitcoinEsploraApiUrls,

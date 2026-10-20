@@ -57,4 +57,17 @@ const eagerGroups = serviceGroupModules.filter((file) => initialLoad.has(file));
 assert(eagerGroups.length === 0, `service-group modules load with the pages that use them, not with the app; statically reached:\n  ${eagerGroups.join('\n  ')}`);
 console.log('✓ no service group\'s modules are in the first load');
 
+// The network runtime (ui/main/composeNetwork.js: peers, the publication
+// catalogs, World discovery, Nostr, Arweave, IPFS, Steem and Blurt) is built
+// once Home is on screen, from a module imported then; a static import of it,
+// or of what only it uses, puts most of the app back in front of Home.
+{
+    const eagerNetwork = [...initialLoad].filter((file) => file === 'ui/main/composeNetwork.js'
+        || /^(peer|nostr|arweave|steem|blurt|anchoring|replication|presence)\//.test(file)
+        || /^application\/(peer|worldEncounter|worldNavigation|anchoring|snapshot|nostr|steem|blurt|ipfs|arweave)\//.test(file)
+        || /^ui\/main\/compose/.test(file));
+    assert(eagerNetwork.length === 0, `the network runtime loads once Home is on screen, not with it; statically reached:\n  ${eagerNetwork.join('\n  ')}`);
+    console.log(`✓ the network runtime is not in the first load (${initialLoad.size} modules)`);
+}
+
 console.log('\n✅ All InitialLoadModuleGraph tests passed.');
