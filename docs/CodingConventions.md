@@ -6,6 +6,8 @@ Vue 3, components as plain objects with a template string (no build step). Views
 
 One class (or module) per file
 
+Don't add a Create…UseCase class whose execute() only constructs one object: construct it where the app is put together (ui/main.js and ui/main/) or in the application code that owns it. A factory earns its own file when it holds logic of its own, or when a view (which doesn't import storage/ or renderer/) needs something built for it.
+
 camelCase for variables
 
 PascalCase for classes

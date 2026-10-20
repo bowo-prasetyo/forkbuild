@@ -4,7 +4,7 @@ import { CreateAvatarTemplateRegistryUseCase } from './CreateAvatarTemplateRegis
 
 // Wires the concrete storage backend and the built-in template
 // registry, so ui/ never imports storage/ or core/library/ directly —
-// same shape as CreateIdentityProviderUseCase and
+// same shape as CreateIdentityProviderUseCase (folded into its caller) and
 // CreatePersistenceUseCase. Takes the already-logged-in
 // identityProvider as a parameter rather than constructing its own,
 // same convention CreatePublisherUseCase.execute(identityProvider)

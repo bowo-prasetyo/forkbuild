@@ -2,7 +2,7 @@ import { IpfsRemotePublicationCoordinator } from './IpfsRemotePublicationCoordin
 
 // 0.8.68 — Explicit Remote IPFS Publishing Configuration & UX.
 //
-// Mirrors application/anchoring/bitcoin/CreateBitcoinAnchorBroadcastCoordinatorUseCase.js's
+// Mirrors application/anchoring/bitcoin/CreateBitcoinAnchorBroadcastCoordinatorUseCase.js (folded into its caller)'s
 // own shape, for the identical reason — a composition root (ui/main.js,
 // or a test) uses this to get a real IpfsRemotePublicationCoordinator
 // without ever importing application/ipfs/IpfsRemotePublicationCoordinator.js

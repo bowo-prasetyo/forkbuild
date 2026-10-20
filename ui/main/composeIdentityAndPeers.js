@@ -13,7 +13,6 @@ import { SetTurnServerConfigurationUseCase } from '../../application/settings/Se
 import { DEFAULT_RENDEZVOUS_URLS } from '../../peer/RendezvousConfig.js';
 import { RendezvousConfigurationStore } from '../../storage/RendezvousConfigurationStore.js';
 import { SetRendezvousConfigurationUseCase } from '../../application/settings/SetRendezvousConfigurationUseCase.js';
-import { CreatePeerRelationshipUseCase } from '../../application/peer/CreatePeerRelationshipUseCase.js';
 import { PeerReconnectionUseCase } from '../../application/peer/PeerReconnectionUseCase.js';
 import { FindPeerUseCase } from '../../application/peer/FindPeerUseCase.js';
 import { AutoConnectKnownPeersUseCase } from '../../application/peer/AutoConnectKnownPeersUseCase.js';
@@ -21,23 +20,24 @@ import { PublicLobbyUseCase } from '../../application/peer/PublicLobbyUseCase.js
 import { CreateFriendRelationshipUseCase } from '../../application/identity/CreateFriendRelationshipUseCase.js';
 import { CreateIdentityLifecyclePropagationUseCase } from '../../application/identity/CreateIdentityLifecyclePropagationUseCase.js';
 import { CreateDeviceAuthorizationUseCase } from '../../application/identity/CreateDeviceAuthorizationUseCase.js';
-import { CreatePeerBlockUseCase } from '../../application/peer/CreatePeerBlockUseCase.js';
-import { CreateFollowUseCase } from '../../application/identity/CreateFollowUseCase.js';
 import { ChatUseCase } from '../../application/chat/ChatUseCase.js';
-import { CreateChatOutboxUseCase } from '../../application/chat/CreateChatOutboxUseCase.js';
-import { CreateConversationStoreUseCase } from '../../application/chat/CreateConversationStoreUseCase.js';
-import { CreateConversationReadTrackerUseCase } from '../../application/chat/CreateConversationReadTrackerUseCase.js';
-import { CreateConversationReadOutboxUseCase } from '../../application/chat/CreateConversationReadOutboxUseCase.js';
-import { CreateRemoteReadReceiptStoreUseCase } from '../../application/chat/CreateRemoteReadReceiptStoreUseCase.js';
 import { PeerPresenceUseCase } from '../../application/presence/PeerPresenceUseCase.js';
 import { VoiceUseCase } from '../../application/chat/VoiceUseCase.js';
 import { PeerMessageBus } from '../../peer/PeerMessageBus.js';
-import { CreateSiblingReadStateStoreUseCase } from '../../application/chat/CreateSiblingReadStateStoreUseCase.js';
 import { DeviceConversationSyncUseCase } from '../../application/chat/DeviceConversationSyncUseCase.js';
 import { LocalStorageProvider } from '../../storage/LocalStorageProvider.js';
 import { DEFAULT_BITCOIN_ESPLORA_API_URLS } from '../../core/BitcoinEsploraConfiguration.js';
 import { BitcoinEsploraConfigurationStore } from '../../storage/BitcoinEsploraConfigurationStore.js';
 import { SetBitcoinEsploraConfigurationUseCase } from '../../application/settings/SetBitcoinEsploraConfigurationUseCase.js';
+import { SiblingReadStateStore } from '../../application/chat/SiblingReadStateStore.js';
+import { FollowUseCase } from '../../application/identity/FollowUseCase.js';
+import { RemoteReadReceiptStore } from '../../application/chat/RemoteReadReceiptStore.js';
+import { PeerBlockUseCase } from '../../application/peer/PeerBlockUseCase.js';
+import { ConversationReadOutbox } from '../../application/chat/ConversationReadOutbox.js';
+import { ConversationStore } from '../../application/chat/ConversationStore.js';
+import { ConversationReadTracker } from '../../application/chat/ConversationReadTracker.js';
+import { ChatOutbox } from '../../application/chat/ChatOutbox.js';
+import { PeerRelationshipUseCase } from '../../application/peer/PeerRelationshipUseCase.js';
 
 // Composition root, for the network runtime (ui/main/composeNetwork.js):
 // around the local identity (ui/main.js builds it, for the header), the saved
@@ -94,7 +94,7 @@ export function composeIdentityAndPeers({ identityProvider, decentralizedPublica
     });
     // App-wide, so live peers survive navigating away from /peers.
     const peerSessionManager = new PeerSessionManager({ identityProvider, peerConnectionProvider, discoveryProvider: discoveryBootstrap });
-    const peerRelationshipUseCase = new CreatePeerRelationshipUseCase().execute(identityProvider);
+    const peerRelationshipUseCase = new PeerRelationshipUseCase(new LocalStorageProvider(), identityProvider);
     // Reads friendRelationshipUseCase lazily: it is composed further down.
     const peerReconnectionUseCase = new PeerReconnectionUseCase({
         peerSessionManager,
@@ -105,8 +105,8 @@ export function composeIdentityAndPeers({ identityProvider, decentralizedPublica
     const peerMessageBus = new PeerMessageBus();
     // Built before friendRelationshipUseCase so its isBlocked predicate can gate
     // the friendship protocol.
-    const peerBlockUseCase = new CreatePeerBlockUseCase().execute(identityProvider);
-    const followUseCase = new CreateFollowUseCase().execute(identityProvider);
+    const peerBlockUseCase = new PeerBlockUseCase(new LocalStorageProvider(), identityProvider);
+    const followUseCase = new FollowUseCase(new LocalStorageProvider(), identityProvider);
     const publicLobbyUseCase = new PublicLobbyUseCase({
         transports: Array.from(rendezvousTransports.values()),
         identityProvider,
@@ -147,10 +147,10 @@ export function composeIdentityAndPeers({ identityProvider, decentralizedPublica
         peerRelationshipUseCase,
         friendRelationshipUseCase
     });
-    const chatOutbox = new CreateChatOutboxUseCase().execute(identityProvider);
-    const conversationStore = new CreateConversationStoreUseCase().execute(identityProvider);
-    const conversationReadOutbox = new CreateConversationReadOutboxUseCase().execute(identityProvider);
-    const remoteReadReceiptStore = new CreateRemoteReadReceiptStoreUseCase().execute(identityProvider);
+    const chatOutbox = new ChatOutbox(new LocalStorageProvider(), identityProvider);
+    const conversationStore = new ConversationStore(new LocalStorageProvider(), identityProvider);
+    const conversationReadOutbox = new ConversationReadOutbox(new LocalStorageProvider(), identityProvider);
+    const remoteReadReceiptStore = new RemoteReadReceiptStore(new LocalStorageProvider(), identityProvider);
     const chatUseCase = new ChatUseCase(identityProvider, {
         peerMessageBus,
         connectedPeerRegistry: peerSessionManager.registry,
@@ -163,7 +163,7 @@ export function composeIdentityAndPeers({ identityProvider, decentralizedPublica
         // One conversation per person, whichever authorized device sent each message.
         resolveSocialIdentity
     });
-    const conversationReadTracker = new CreateConversationReadTrackerUseCase().execute(identityProvider);
+    const conversationReadTracker = new ConversationReadTracker(new LocalStorageProvider(), identityProvider);
     const peerPresenceUseCase = new PeerPresenceUseCase({
         connectedPeerRegistry: peerSessionManager.registry,
         peerRelationshipUseCase,
@@ -176,7 +176,7 @@ export function composeIdentityAndPeers({ identityProvider, decentralizedPublica
 
     // What a sibling device reports about its own reads is a different fact from
     // this device's read marker, so it has its own store.
-    const siblingReadStateStore = new CreateSiblingReadStateStoreUseCase().execute(identityProvider);
+    const siblingReadStateStore = new SiblingReadStateStore(new LocalStorageProvider(), identityProvider);
     const deviceConversationSyncUseCase = new DeviceConversationSyncUseCase({
         peerMessageBus,
         connectedPeerRegistry: peerSessionManager.registry,

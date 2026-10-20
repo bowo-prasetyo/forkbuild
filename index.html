@@ -96,8 +96,8 @@
     <link rel="modulepreload" href="application/challenge/PublishedBuildTags.js">
     <link rel="modulepreload" href="application/document/DocumentTitles.js">
     <link rel="modulepreload" href="ui/serviceGroups.js">
-    <link rel="modulepreload" href="application/identity/CreateIdentityProviderUseCase.js">
     <link rel="modulepreload" href="application/identity/IdentityUseCase.js">
+    <link rel="modulepreload" href="identity/LocalIdentityProvider.js">
     <link rel="modulepreload" href="storage/IndexedDbStorageBackend.js">
     <link rel="modulepreload" href="storage/StorageProvider.js">
     <link rel="modulepreload" href="storage/StorageFullError.js">
@@ -142,8 +142,26 @@
     <link rel="modulepreload" href="core/FirstBuildChecklist.js">
     <link rel="modulepreload" href="core/PlacedBricks.js">
     <link rel="modulepreload" href="core/BuildTags.js">
-    <link rel="modulepreload" href="identity/LocalIdentityProvider.js">
     <link rel="modulepreload" href="core/events/EventBus.js">
+    <link rel="modulepreload" href="identity/IdentityProvider.js">
+    <link rel="modulepreload" href="identity/Identity.js">
+    <link rel="modulepreload" href="identity/SigningIdentity.js">
+    <link rel="modulepreload" href="identity/LocalIdentity.js">
+    <link rel="modulepreload" href="identity/AuthenticationSession.js">
+    <link rel="modulepreload" href="identity/VaultLock.js">
+    <link rel="modulepreload" href="identity/FailedUnlockTracker.js">
+    <link rel="modulepreload" href="identity/VaultTimeoutPolicy.js">
+    <link rel="modulepreload" href="identity/KeyEncryption.js">
+    <link rel="modulepreload" href="core/Signature.js">
+    <link rel="modulepreload" href="serializer/contentHash.js">
+    <link rel="modulepreload" href="identity/Ed25519.js">
+    <link rel="modulepreload" href="identity/IdentityExport.js">
+    <link rel="modulepreload" href="identity/IdentityRecovery.js">
+    <link rel="modulepreload" href="identity/IdentityLifecycleTransfer.js">
+    <link rel="modulepreload" href="core/IdentityLifecycleState.js">
+    <link rel="modulepreload" href="core/IdentityRevocationEnvelope.js">
+    <link rel="modulepreload" href="core/IdentitySuccessionEnvelope.js">
+    <link rel="modulepreload" href="core/DeviceAuthorizationEnvelope.js">
     <link rel="modulepreload" href="vendor/vue-devtools-api/lib/esm/index.js">
     <link rel="modulepreload" href="ui/components/LoginModal.js">
     <link rel="modulepreload" href="application/publication/LoadPublicationDocumentUseCase.js">
@@ -157,29 +175,15 @@
     <link rel="modulepreload" href="core/PublicationHeart.js">
     <link rel="modulepreload" href="core/License.js">
     <link rel="modulepreload" href="core/ContentReference.js">
-    <link rel="modulepreload" href="core/Signature.js">
     <link rel="modulepreload" href="core/BuiltWith.js">
     <link rel="modulepreload" href="core/DayCycle.js">
     <link rel="modulepreload" href="core/DescriptionMarkup.js">
-    <link rel="modulepreload" href="identity/IdentityProvider.js">
-    <link rel="modulepreload" href="identity/Identity.js">
-    <link rel="modulepreload" href="identity/SigningIdentity.js">
-    <link rel="modulepreload" href="identity/LocalIdentity.js">
-    <link rel="modulepreload" href="identity/AuthenticationSession.js">
-    <link rel="modulepreload" href="identity/VaultLock.js">
-    <link rel="modulepreload" href="identity/FailedUnlockTracker.js">
-    <link rel="modulepreload" href="identity/VaultTimeoutPolicy.js">
-    <link rel="modulepreload" href="identity/KeyEncryption.js">
-    <link rel="modulepreload" href="serializer/contentHash.js">
-    <link rel="modulepreload" href="identity/Ed25519.js">
-    <link rel="modulepreload" href="identity/IdentityExport.js">
-    <link rel="modulepreload" href="identity/IdentityRecovery.js">
-    <link rel="modulepreload" href="identity/IdentityLifecycleTransfer.js">
-    <link rel="modulepreload" href="core/IdentityLifecycleState.js">
-    <link rel="modulepreload" href="core/IdentityRevocationEnvelope.js">
-    <link rel="modulepreload" href="core/IdentitySuccessionEnvelope.js">
-    <link rel="modulepreload" href="core/DeviceAuthorizationEnvelope.js">
     <link rel="modulepreload" href="core/events/EventListener.js">
+    <link rel="modulepreload" href="vendor/noble-hashes/sha2.js">
+    <link rel="modulepreload" href="vendor/noble-hashes/utils.js">
+    <link rel="modulepreload" href="vendor/noble-curves/ed25519.js">
+    <link rel="modulepreload" href="identity/IdentityImport.js">
+    <link rel="modulepreload" href="identity/LocalAuthorizationVerifier.js">
     <link rel="modulepreload" href="vendor/vue-devtools-api/lib/esm/env.js">
     <link rel="modulepreload" href="vendor/vue-devtools-api/lib/esm/const.js">
     <link rel="modulepreload" href="vendor/vue-devtools-api/lib/esm/proxy.js">
@@ -200,11 +204,35 @@
     <link rel="modulepreload" href="core/World.js">
     <link rel="modulepreload" href="core/ReadyMadeHome.js">
     <link rel="modulepreload" href="ui/components/challenge/challengeText.js">
-    <link rel="modulepreload" href="identity/LocalAuthorizationVerifier.js">
-    <link rel="modulepreload" href="vendor/noble-hashes/sha2.js">
-    <link rel="modulepreload" href="vendor/noble-hashes/utils.js">
-    <link rel="modulepreload" href="vendor/noble-curves/ed25519.js">
-    <link rel="modulepreload" href="identity/IdentityImport.js">
+    <link rel="modulepreload" href="vendor/noble-hashes/_md.js">
+    <link rel="modulepreload" href="vendor/noble-hashes/_u64.js">
+    <link rel="modulepreload" href="vendor/noble-curves/abstract/curve.js">
+    <link rel="modulepreload" href="vendor/noble-curves/abstract/edwards.js">
+    <link rel="modulepreload" href="vendor/noble-curves/abstract/frost.js">
+    <link rel="modulepreload" href="vendor/noble-curves/abstract/hash-to-curve.js">
+    <link rel="modulepreload" href="vendor/noble-curves/abstract/modular.js">
+    <link rel="modulepreload" href="vendor/noble-curves/abstract/montgomery.js">
+    <link rel="modulepreload" href="vendor/noble-curves/abstract/oprf.js">
+    <link rel="modulepreload" href="vendor/noble-curves/utils.js">
+    <link rel="modulepreload" href="identity/AuthorizationVerifier.js">
+    <link rel="modulepreload" href="core/AvatarPresenceAdvertisement.js">
+    <link rel="modulepreload" href="core/AvatarProfileAdvertisement.js">
+    <link rel="modulepreload" href="core/AvatarInteractionAdvertisement.js">
+    <link rel="modulepreload" href="core/AvatarVehicleAdvertisement.js">
+    <link rel="modulepreload" href="core/FriendshipAdvertisement.js">
+    <link rel="modulepreload" href="core/RendezvousPublicationEnvelope.js">
+    <link rel="modulepreload" href="core/LobbyCard.js">
+    <link rel="modulepreload" href="core/WorldEditAuthorizationEnvelope.js">
+    <link rel="modulepreload" href="core/PlaceNamingClaim.js">
+    <link rel="modulepreload" href="core/BlueprintAttribution.js">
+    <link rel="modulepreload" href="core/BlueprintLineageClaim.js">
+    <link rel="modulepreload" href="core/DecentralizedPublication.js">
+    <link rel="modulepreload" href="core/PublicationAnchor.js">
+    <link rel="modulepreload" href="core/PublicationSnapshotPlacement.js">
+    <link rel="modulepreload" href="core/PublicationCommentaryDistributionEnvelope.js">
+    <link rel="modulepreload" href="core/PublicationHeartDistributionEnvelope.js">
+    <link rel="modulepreload" href="core/Delegation.js">
+    <link rel="modulepreload" href="identity/DescriptorSignature.js">
     <link rel="modulepreload" href="vendor/vue-devtools-api/lib/esm/api/api.js">
     <link rel="modulepreload" href="vendor/vue-devtools-api/lib/esm/api/app.js">
     <link rel="modulepreload" href="vendor/vue-devtools-api/lib/esm/api/component.js">
@@ -229,35 +257,12 @@
     <link rel="modulepreload" href="core/WorldResident.js">
     <link rel="modulepreload" href="core/events/Event.js">
     <link rel="modulepreload" href="core/BuildEntrance.js">
-    <link rel="modulepreload" href="identity/AuthorizationVerifier.js">
-    <link rel="modulepreload" href="core/AvatarPresenceAdvertisement.js">
-    <link rel="modulepreload" href="core/AvatarProfileAdvertisement.js">
-    <link rel="modulepreload" href="core/AvatarInteractionAdvertisement.js">
-    <link rel="modulepreload" href="core/AvatarVehicleAdvertisement.js">
-    <link rel="modulepreload" href="core/FriendshipAdvertisement.js">
-    <link rel="modulepreload" href="core/RendezvousPublicationEnvelope.js">
-    <link rel="modulepreload" href="core/LobbyCard.js">
-    <link rel="modulepreload" href="core/WorldEditAuthorizationEnvelope.js">
-    <link rel="modulepreload" href="core/PlaceNamingClaim.js">
-    <link rel="modulepreload" href="core/BlueprintAttribution.js">
-    <link rel="modulepreload" href="core/BlueprintLineageClaim.js">
-    <link rel="modulepreload" href="core/DecentralizedPublication.js">
-    <link rel="modulepreload" href="core/PublicationAnchor.js">
-    <link rel="modulepreload" href="core/PublicationSnapshotPlacement.js">
-    <link rel="modulepreload" href="core/PublicationCommentaryDistributionEnvelope.js">
-    <link rel="modulepreload" href="core/PublicationHeartDistributionEnvelope.js">
-    <link rel="modulepreload" href="core/Delegation.js">
-    <link rel="modulepreload" href="identity/DescriptorSignature.js">
-    <link rel="modulepreload" href="vendor/noble-hashes/_md.js">
-    <link rel="modulepreload" href="vendor/noble-hashes/_u64.js">
-    <link rel="modulepreload" href="vendor/noble-curves/abstract/curve.js">
-    <link rel="modulepreload" href="vendor/noble-curves/abstract/edwards.js">
-    <link rel="modulepreload" href="vendor/noble-curves/abstract/frost.js">
-    <link rel="modulepreload" href="vendor/noble-curves/abstract/hash-to-curve.js">
-    <link rel="modulepreload" href="vendor/noble-curves/abstract/modular.js">
-    <link rel="modulepreload" href="vendor/noble-curves/abstract/montgomery.js">
-    <link rel="modulepreload" href="vendor/noble-curves/abstract/oprf.js">
-    <link rel="modulepreload" href="vendor/noble-curves/utils.js">
+    <link rel="modulepreload" href="vendor/noble-curves/abstract/fft.js">
+    <link rel="modulepreload" href="identity/DelegationVerifier.js">
+    <link rel="modulepreload" href="core/AvatarInteractionKind.js">
+    <link rel="modulepreload" href="core/VehicleType.js">
+    <link rel="modulepreload" href="core/FriendshipAction.js">
+    <link rel="modulepreload" href="core/PublicationCommentary.js">
     <link rel="modulepreload" href="core/DocumentMetadata.js">
     <link rel="modulepreload" href="core/documentSchema.js">
     <link rel="modulepreload" href="core/protocolVersion.js">
@@ -267,12 +272,6 @@
     <link rel="modulepreload" href="core/AvatarCollision.js">
     <link rel="modulepreload" href="core/BrickWalkability.js">
     <link rel="modulepreload" href="core/BrickPassage.js">
-    <link rel="modulepreload" href="identity/DelegationVerifier.js">
-    <link rel="modulepreload" href="core/AvatarInteractionKind.js">
-    <link rel="modulepreload" href="core/VehicleType.js">
-    <link rel="modulepreload" href="core/FriendshipAction.js">
-    <link rel="modulepreload" href="core/PublicationCommentary.js">
-    <link rel="modulepreload" href="vendor/noble-curves/abstract/fft.js">
     <link rel="modulepreload" href="core/version.js">
     <link rel="modulepreload" href="core/PlacementPolicy.js">
     <link rel="modulepreload" href="core/AvatarFacing.js">

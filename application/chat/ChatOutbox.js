@@ -19,7 +19,7 @@ const STORAGE_KEY_PREFIX = 'chat-outbox:';
 // injected — see that file's own header) is the ONE place this class
 // is ever constructed without a real backend; every other caller,
 // starting with `ui/main.js` via
-// application/chat/CreateChatOutboxUseCase.js, supplies a genuine one.
+// application/chat/CreateChatOutboxUseCase.js (folded into its caller), supplies a genuine one.
 //
 // A Durable Outbox Is Addressed To An Identity, Never A Connection
 // (0.2.63): every entry is keyed by `peerIdentityId` — a

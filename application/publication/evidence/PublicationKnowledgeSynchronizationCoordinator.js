@@ -33,7 +33,7 @@ import { PeerLifecycleState } from '../../../peer/PeerLifecycleState.js';
 // application-facing wrapper for that at 0.8.16 (application/
 // PublicationEvidenceDiscoveryCoordinator.js — "every currently
 // AUTHENTICATED peer, in registry order"); application/
-// CreatePublicationSnapshotPlacementDiscoveryCoordinatorUseCase.js's own
+// CreatePublicationSnapshotPlacementDiscoveryCoordinatorUseCase.js (folded into its caller)'s own
 // 0.8.19 header named the identical wrapper for placements and
 // deliberately left it unwired: "this milestone adds no such button
 // itself." This class is that wrapper, applied to BOTH dimensions at

@@ -1,8 +1,5 @@
-import { CreatePublicationEvidenceDiscoveryCoordinatorUseCase } from '../../application/publication/evidence/CreatePublicationEvidenceDiscoveryCoordinatorUseCase.js';
 import { CreatePublicationKnowledgeSynchronizationCoordinatorUseCase } from '../../application/publication/evidence/CreatePublicationKnowledgeSynchronizationCoordinatorUseCase.js';
 import { CreateSnapshotPlacementResolutionCoordinatorUseCase } from '../../application/snapshot/placement/CreateSnapshotPlacementResolutionCoordinatorUseCase.js';
-import { CreateIpfsSnapshotPlacementViewUseCase } from '../../application/ipfs/CreateIpfsSnapshotPlacementViewUseCase.js';
-import { CreateLocalSnapshotPlacementViewUseCase } from '../../application/snapshot/placement/CreateLocalSnapshotPlacementViewUseCase.js';
 import { CreateSnapshotPlacementViewRegistryUseCase } from '../../application/snapshot/placement/CreateSnapshotPlacementViewRegistryUseCase.js';
 import { IpfsContentStore } from '../../content/IpfsContentStore.js';
 import { IpfsGatewayContentStore } from '../../content/IpfsGatewayContentStore.js';
@@ -24,10 +21,8 @@ import { BuildPublicationSnapshotTransferPackageUseCase } from '../../applicatio
 import { SnapshotContentMaterializationCoordinator } from '../../application/snapshot/materialization/SnapshotContentMaterializationCoordinator.js';
 import { MaterializeSnapshotFromPlacementUseCase } from '../../application/snapshot/materialization/MaterializeSnapshotFromPlacementUseCase.js';
 import { SnapshotPlacementMaterializationCoordinator } from '../../application/snapshot/placement/SnapshotPlacementMaterializationCoordinator.js';
-import { CreatePublicationSnapshotContentPeerExchangeUseCase } from '../../application/snapshot/materialization/CreatePublicationSnapshotContentPeerExchangeUseCase.js';
 import { MaterializeSnapshotFromPeerUseCase } from '../../application/snapshot/materialization/MaterializeSnapshotFromPeerUseCase.js';
 import { SnapshotPeerMaterializationCoordinator } from '../../application/snapshot/materialization/SnapshotPeerMaterializationCoordinator.js';
-import { CreatePublicationSnapshotPossessionPeerExchangeUseCase } from '../../application/snapshot/possession/CreatePublicationSnapshotPossessionPeerExchangeUseCase.js';
 import { ObservePeerSnapshotPossessionUseCase } from '../../application/snapshot/possession/ObservePeerSnapshotPossessionUseCase.js';
 import { SnapshotPeerPossessionCoordinator } from '../../application/snapshot/possession/SnapshotPeerPossessionCoordinator.js';
 import { SnapshotMaterializationSelectionCoordinator } from '../../application/snapshot/materialization/SnapshotMaterializationSelectionCoordinator.js';
@@ -38,6 +33,11 @@ import { DEFAULT_IPFS_NODE_API_URL } from '../../core/IpfsNodeConfiguration.js';
 import { IpfsNodeConfigurationStore } from '../../storage/IpfsNodeConfigurationStore.js';
 import { IpfsRemotePinningSettingsStore } from '../../storage/IpfsRemotePinningSettingsStore.js';
 import { SavedRemotePinningContentStore } from '../../application/ipfs/SavedRemotePinningContentStore.js';
+import { LocalSnapshotPlacementView } from '../../content/LocalSnapshotPlacementView.js';
+import { PublicationSnapshotPossessionPeerExchange } from '../../application/snapshot/possession/PublicationSnapshotPossessionPeerExchange.js';
+import { PublicationEvidenceDiscoveryCoordinator } from '../../application/publication/evidence/PublicationEvidenceDiscoveryCoordinator.js';
+import { PublicationSnapshotContentPeerExchange } from '../../application/snapshot/materialization/PublicationSnapshotContentPeerExchange.js';
+import { IpfsSnapshotPlacementView } from '../../content/IpfsSnapshotPlacementView.js';
 
 const SNAPSHOT_IPFS_TIMEOUT_MS = 30000;
 
@@ -77,8 +77,8 @@ export function composeContentAndSnapshots({
         stores: [publicationContentStore, composeIpfsGatewayContentStore(resolvedIpfsGatewayUrls)]
     });
 
-    const { localSnapshotPlacementView } = new CreateLocalSnapshotPlacementViewUseCase().execute();
-    const { ipfsSnapshotPlacementView } = new CreateIpfsSnapshotPlacementViewUseCase().execute();
+    const localSnapshotPlacementView = new LocalSnapshotPlacementView();
+    const ipfsSnapshotPlacementView = new IpfsSnapshotPlacementView();
     const { placementViewRegistry: snapshotPlacementViewRegistry } = new CreateSnapshotPlacementViewRegistryUseCase().execute({
         placementViews: [localSnapshotPlacementView, ipfsSnapshotPlacementView]
     });
@@ -180,11 +180,7 @@ export function composeContentAndSnapshots({
 
     // Rides its own 'forkbuild:snapshot-content-transfer' namespace, independent of
     // publicationPeerContentExchange.
-    const { peerExchange: publicationSnapshotContentPeerExchange } = new CreatePublicationSnapshotContentPeerExchangeUseCase().execute({
-        contentStore: publicationContentStore,
-        peerMessageBus,
-        connectedPeerRegistry: peerSessionManager.registry
-    });
+    const publicationSnapshotContentPeerExchange = new PublicationSnapshotContentPeerExchange(publicationContentStore, peerMessageBus, peerSessionManager.registry);
     const materializeSnapshotFromPeerUseCase = new MaterializeSnapshotFromPeerUseCase(
         publicationSnapshotContentPeerExchange, storeSnapshotContentUseCase, publicationCatalog
     );
@@ -192,11 +188,9 @@ export function composeContentAndSnapshots({
 
     // Answers a peer's possession question with the same local check "Check Local
     // Snapshot" uses, never a second definition of possession.
-    const { peerExchange: publicationSnapshotPossessionPeerExchange } = new CreatePublicationSnapshotPossessionPeerExchangeUseCase().execute({
-        checkLocalSnapshotContentAvailabilityUseCase: localSnapshotContentAvailabilityUseCase,
-        peerMessageBus,
-        connectedPeerRegistry: peerSessionManager.registry
-    });
+    const publicationSnapshotPossessionPeerExchange = new PublicationSnapshotPossessionPeerExchange(
+        localSnapshotContentAvailabilityUseCase, peerMessageBus, peerSessionManager.registry
+    );
     const observePeerSnapshotPossessionUseCase = new ObservePeerSnapshotPossessionUseCase(publicationSnapshotPossessionPeerExchange);
     const snapshotPeerPossessionCoordinator = new SnapshotPeerPossessionCoordinator(observePeerSnapshotPossessionUseCase);
 
@@ -206,10 +200,7 @@ export function composeContentAndSnapshots({
         peerCoordinator: snapshotPeerMaterializationCoordinator
     });
 
-    const { coordinator: publicationEvidenceDiscoveryCoordinator } = new CreatePublicationEvidenceDiscoveryCoordinatorUseCase().execute({
-        anchorDiscoveryCoordinator: publicationAnchorDiscoveryCoordinator,
-        connectedPeerRegistry: peerSessionManager.registry
-    });
+    const publicationEvidenceDiscoveryCoordinator = new PublicationEvidenceDiscoveryCoordinator(publicationAnchorDiscoveryCoordinator, peerSessionManager.registry);
 
     const { coordinator: publicationKnowledgeSynchronizationCoordinator } = new CreatePublicationKnowledgeSynchronizationCoordinatorUseCase().execute({
         anchorDiscoveryCoordinator: publicationAnchorDiscoveryCoordinator,

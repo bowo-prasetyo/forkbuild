@@ -18,11 +18,11 @@ import { SnapshotPlacementResolver } from './SnapshotPlacementResolver.js';
 // `discoveryProvider`, `contentResolver`, and `placementCatalog` are
 // always caller-supplied — this use case wires signing/orchestration
 // only, never storage, exactly as application/
-// CreatePublicationSnapshotPlacementCatalogUseCase.js already wires
+// CreatePublicationSnapshotPlacementCatalogUseCase.js (removed as unused) already wires
 // storage only and never signing. A caller obtains these from its own
 // existing composition roots (discovery/LocalDiscoveryProvider.js,
 // discovery/LocalContentResolver.js, application/
-// CreatePublicationSnapshotPlacementCatalogUseCase.js) and passes the
+// CreatePublicationSnapshotPlacementCatalogUseCase.js (removed as unused)) and passes the
 // SAME instances here — never a second, disconnected set.
 //
 // `stores` is where a caller plugs in whichever real content/

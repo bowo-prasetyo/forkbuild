@@ -3,12 +3,12 @@ import { PublicationResolutionCoordinator } from './PublicationResolutionCoordin
 // 0.7.5 — Decentralized Publication UX & Resolution.
 //
 // Takes both collaborators as parameters, constructing neither — the
-// identical shape application/peer/CreatePeerContentExchangeUseCase.js's own
+// identical shape application/peer/CreatePeerContentExchangeUseCase.js (folded into its caller)'s own
 // header already established, for the identical reason:
 // `publicationResolver` and `peerContentExchange` already exist,
 // produced by application/publication/CreatePublicationResolverUseCase.js (or
-// application/ipfs/CreateIpfsPublicationResolverUseCase.js) and application/
-// CreatePeerContentExchangeUseCase.js. Reconstructing separate instances
+// application/ipfs/CreateIpfsPublicationResolverUseCase.js (removed as unused)) and application/
+// CreatePeerContentExchangeUseCase.js (folded into its caller). Reconstructing separate instances
 // here would give this coordinator its own, disconnected view of
 // content this replica's real resolver/exchange never see. `ui/main.js`
 // is the one place all three composition roots run together.

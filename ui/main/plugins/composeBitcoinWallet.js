@@ -2,19 +2,19 @@ import { CreateBitcoinAnchorPublisherUseCase } from '../../../application/anchor
 import { CreateBitcoinInjectedProviderWalletAdapterUseCase } from '../../../application/anchoring/bitcoin/CreateBitcoinInjectedProviderWalletAdapterUseCase.js';
 import { CreateBitcoinWalletConnectionUseCase } from '../../../application/anchoring/bitcoin/CreateBitcoinWalletConnectionUseCase.js';
 import { CreateBitcoinEsploraWalletFundingSourceUseCase } from '../../../application/anchoring/bitcoin/CreateBitcoinEsploraWalletFundingSourceUseCase.js';
-import { CreateBitcoinWalletFundingObserverUseCase } from '../../../application/anchoring/bitcoin/CreateBitcoinWalletFundingObserverUseCase.js';
-import { CreateBitcoinAnchorTransactionBuilderUseCase } from '../../../application/anchoring/bitcoin/CreateBitcoinAnchorTransactionBuilderUseCase.js';
-import { CreateBitcoinAnchorTransactionConstructionCoordinatorUseCase } from '../../../application/anchoring/bitcoin/CreateBitcoinAnchorTransactionConstructionCoordinatorUseCase.js';
 import { CreateBitcoinAnchorPsbtBuilderUseCase } from '../../../application/anchoring/bitcoin/CreateBitcoinAnchorPsbtBuilderUseCase.js';
-import { CreateBitcoinAnchorTransactionReviewCoordinatorUseCase } from '../../../application/anchoring/bitcoin/CreateBitcoinAnchorTransactionReviewCoordinatorUseCase.js';
-import { CreateBitcoinAnchorReviewedSigningCoordinatorUseCase } from '../../../application/anchoring/bitcoin/CreateBitcoinAnchorReviewedSigningCoordinatorUseCase.js';
-import { CreateBitcoinAnchorSignedPsbtFinalizerUseCase } from '../../../application/anchoring/bitcoin/CreateBitcoinAnchorSignedPsbtFinalizerUseCase.js';
-import { CreateBitcoinAnchorSignedPsbtFinalizationCoordinatorUseCase } from '../../../application/anchoring/bitcoin/CreateBitcoinAnchorSignedPsbtFinalizationCoordinatorUseCase.js';
 import { CreateBitcoinEsploraTransactionBroadcasterUseCase } from '../../../application/anchoring/bitcoin/CreateBitcoinEsploraTransactionBroadcasterUseCase.js';
-import { CreateBitcoinAnchorTransactionBroadcasterUseCase } from '../../../application/anchoring/bitcoin/CreateBitcoinAnchorTransactionBroadcasterUseCase.js';
-import { CreateBitcoinAnchorBroadcastCoordinatorUseCase } from '../../../application/anchoring/bitcoin/CreateBitcoinAnchorBroadcastCoordinatorUseCase.js';
 import { CreateBitcoinAnchorPublicationCoordinatorUseCase } from '../../../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationCoordinatorUseCase.js';
-import { CreateBitcoinAnchorConfirmationCoordinatorUseCase } from '../../../application/anchoring/bitcoin/CreateBitcoinAnchorConfirmationCoordinatorUseCase.js';
+import { BitcoinAnchorTransactionBroadcaster } from '../../../anchoring/BitcoinAnchorTransactionBroadcaster.js';
+import { BitcoinAnchorBroadcastCoordinator } from '../../../application/anchoring/bitcoin/BitcoinAnchorBroadcastCoordinator.js';
+import { BitcoinAnchorTransactionConstructionCoordinator } from '../../../application/anchoring/bitcoin/BitcoinAnchorTransactionConstructionCoordinator.js';
+import { BitcoinAnchorConfirmationCoordinator } from '../../../application/anchoring/bitcoin/BitcoinAnchorConfirmationCoordinator.js';
+import { BitcoinAnchorReviewedSigningCoordinator } from '../../../application/anchoring/bitcoin/BitcoinAnchorReviewedSigningCoordinator.js';
+import { BitcoinAnchorSignedPsbtFinalizationCoordinator } from '../../../application/anchoring/bitcoin/BitcoinAnchorSignedPsbtFinalizationCoordinator.js';
+import { BitcoinAnchorSignedPsbtFinalizer } from '../../../anchoring/BitcoinAnchorSignedPsbtFinalizer.js';
+import { BitcoinAnchorTransactionBuilder } from '../../../anchoring/BitcoinAnchorTransactionBuilder.js';
+import { BitcoinAnchorTransactionReviewCoordinator } from '../../../application/anchoring/bitcoin/BitcoinAnchorTransactionReviewCoordinator.js';
+import { BitcoinWalletFundingObserver } from '../../../anchoring/BitcoinWalletFundingObserver.js';
 
 // Bitcoin's writer (core/NetworkWriters.js): the wallet steps that build,
 // review, sign, finalize, broadcast and confirm a Bitcoin anchor, and the
@@ -56,33 +56,21 @@ export function composeBitcoinWallet({ anchoring, resolvedBitcoinEsploraApiUrls 
     });
 
     const { bitcoinEsploraWalletFundingSource } = new CreateBitcoinEsploraWalletFundingSourceUseCase().execute({ apiUrls: resolvedBitcoinEsploraApiUrls });
-    const { bitcoinWalletFundingObserver } = new CreateBitcoinWalletFundingObserverUseCase().execute({
-        fundingSource: bitcoinEsploraWalletFundingSource
-    });
+    const bitcoinWalletFundingObserver = new BitcoinWalletFundingObserver({ fundingSource: bitcoinEsploraWalletFundingSource });
 
-    const { bitcoinAnchorTransactionBuilder } = new CreateBitcoinAnchorTransactionBuilderUseCase().execute({ network: 'mainnet' });
-    const { coordinator: bitcoinAnchorTransactionConstructionCoordinator } = new CreateBitcoinAnchorTransactionConstructionCoordinatorUseCase().execute({
-        bitcoinAnchorTransactionBuilder
-    });
+    const bitcoinAnchorTransactionBuilder = new BitcoinAnchorTransactionBuilder({ network: 'mainnet' });
+    const bitcoinAnchorTransactionConstructionCoordinator = new BitcoinAnchorTransactionConstructionCoordinator({ bitcoinAnchorTransactionBuilder });
 
     const { bitcoinAnchorPsbtBuilder } = new CreateBitcoinAnchorPsbtBuilderUseCase().execute();
-    const { coordinator: bitcoinAnchorTransactionReviewCoordinator } = new CreateBitcoinAnchorTransactionReviewCoordinatorUseCase().execute({
-        bitcoinAnchorPsbtBuilder
-    });
-    const { coordinator: bitcoinAnchorReviewedSigningCoordinator } = new CreateBitcoinAnchorReviewedSigningCoordinatorUseCase().execute();
+    const bitcoinAnchorTransactionReviewCoordinator = new BitcoinAnchorTransactionReviewCoordinator({ bitcoinAnchorPsbtBuilder });
+    const bitcoinAnchorReviewedSigningCoordinator = new BitcoinAnchorReviewedSigningCoordinator();
 
-    const { bitcoinAnchorSignedPsbtFinalizer } = new CreateBitcoinAnchorSignedPsbtFinalizerUseCase().execute();
-    const { coordinator: bitcoinAnchorSignedPsbtFinalizationCoordinator } = new CreateBitcoinAnchorSignedPsbtFinalizationCoordinatorUseCase().execute({
-        bitcoinAnchorSignedPsbtFinalizer
-    });
+    const bitcoinAnchorSignedPsbtFinalizer = new BitcoinAnchorSignedPsbtFinalizer();
+    const bitcoinAnchorSignedPsbtFinalizationCoordinator = new BitcoinAnchorSignedPsbtFinalizationCoordinator({ bitcoinAnchorSignedPsbtFinalizer });
 
     const { bitcoinEsploraTransactionBroadcaster } = new CreateBitcoinEsploraTransactionBroadcasterUseCase().execute({ apiUrls: resolvedBitcoinEsploraApiUrls });
-    const { bitcoinAnchorTransactionBroadcaster } = new CreateBitcoinAnchorTransactionBroadcasterUseCase().execute({
-        broadcaster: bitcoinEsploraTransactionBroadcaster
-    });
-    const { coordinator: bitcoinAnchorBroadcastCoordinator } = new CreateBitcoinAnchorBroadcastCoordinatorUseCase().execute({
-        bitcoinAnchorTransactionBroadcaster
-    });
+    const bitcoinAnchorTransactionBroadcaster = new BitcoinAnchorTransactionBroadcaster({ broadcaster: bitcoinEsploraTransactionBroadcaster });
+    const bitcoinAnchorBroadcastCoordinator = new BitcoinAnchorBroadcastCoordinator({ bitcoinAnchorTransactionBroadcaster });
 
     // The production UI only calls publishBroadcastedAnchor(), which records the
     // anchor once the granular pipeline above broadcasts; so the one-shot
@@ -93,9 +81,7 @@ export function composeBitcoinWallet({ anchoring, resolvedBitcoinEsploraApiUrls 
         publicationAnchorCatalog
     });
 
-    const { coordinator: bitcoinAnchorConfirmationCoordinator } = new CreateBitcoinAnchorConfirmationCoordinatorUseCase().execute({
-        bitcoinAnchorConfirmationObserver
-    });
+    const bitcoinAnchorConfirmationCoordinator = new BitcoinAnchorConfirmationCoordinator({ bitcoinAnchorConfirmationObserver });
 
     return {
         bitcoinWalletConnection, bitcoinWalletFundingObserver, bitcoinAnchorTransactionConstructionCoordinator,

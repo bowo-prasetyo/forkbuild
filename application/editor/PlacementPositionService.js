@@ -1,8 +1,7 @@
 import { orientedSize } from '../../core/BrickOrientation.js';
 import { Position } from '../../core/Position.js';
 
-// Shared placement logic used by both PlacementTool (EditorView) and
-// SpatialPlacementService (WorldView). Calculates document-local positions
+// Placement logic used by PlacementTool (EditorView). Calculates document-local positions
 // from ground hits or brick surface hits, using actual brick dimensions.
 export class PlacementPositionService {
     constructor(registry) {

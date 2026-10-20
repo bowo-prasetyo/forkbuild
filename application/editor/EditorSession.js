@@ -1,7 +1,6 @@
 import { World } from '../../core/World.js';
 import { Document } from '../../core/Document.js';
 import { EditorEvent } from '../../core/events/EditorEvent.js';
-import { CreateEventBusUseCase } from '../CreateEventBusUseCase.js';
 import { CreateDemoWorldUseCase } from '../world/CreateDemoWorldUseCase.js';
 import { CreateEmptyWorldUseCase } from '../world/CreateEmptyWorldUseCase.js';
 import { CreateDocumentManagerUseCase } from '../document/CreateDocumentManagerUseCase.js';
@@ -39,6 +38,7 @@ import { transformMethods } from '../editorSession/transformMethods.js';
 import { clipboardAndGroupMethods } from '../editorSession/clipboardAndGroupMethods.js';
 import { structureAndBlueprintMethods } from '../editorSession/structureAndBlueprintMethods.js';
 import { pointerInputMethods } from '../editorSession/pointerInputMethods.js';
+import { EventBus } from '../../core/events/EventBus.js';
 
 // Owns the live runtime graph (render session, World, CommandHistory,
 // ToolManager, InputDispatcher) as one unit, so nothing else has to know how
@@ -577,7 +577,7 @@ export class EditorSession {
         if (this._compositionPreviewUseCase) {
             this._compositionPreviewUseCase.hide();
         }
-        const eventBus = new CreateEventBusUseCase().execute();
+        const eventBus = new EventBus();
         this._session = new RenderWorldUseCase().execute(
             this._container,
             eventBus,

@@ -10,7 +10,7 @@ import { LoadPublicationDocumentUseCase } from '../publication/LoadPublicationDo
 import { CreateBrickRegistryUseCase } from '../editor/CreateBrickRegistryUseCase.js';
 
 // Wires the concrete placement registry backend and the use cases that
-// depend on it. Same DI pattern as CreateSpatialIndexUseCase.
+// depend on it.
 //
 // The LocalPlacementRegistry writes to both the registry AND the
 // spatial index, so the existing DiscoverWorldsUseCase continues to

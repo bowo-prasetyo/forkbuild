@@ -15,7 +15,7 @@ import { PublicationExchange } from './PublicationExchange.js';
 // own `catalog` alongside a separately constructed application/
 // PublicationResolver.js (via application/
 // CreatePublicationResolverUseCase.js or application/
-// CreateIpfsPublicationResolverUseCase.js) — this class deliberately
+// CreateIpfsPublicationResolverUseCase.js (removed as unused)) — this class deliberately
 // wires discovery only, never resolution, mirroring the same restraint
 // application/publication/LocalPublicationCatalog.js's own header draws between the
 // two.

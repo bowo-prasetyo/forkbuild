@@ -3,27 +3,29 @@
 Every milestone ForkBuild has shipped, and why it was chosen, in the
 order it happened. The full text is split into parts by version range,
 because as one file it grew past 6 MB and could no longer be read or
-opened comfortably.
+opened comfortably. Only the part still being written is in the
+repository; the closed parts are kept in its history, and the table links
+to each as it was when it was closed, so its text never changes.
 
 When another document says "see docs/Roadmap.md, 0.8.26", look up that
 version in the table below and search its part for `## 0.8.26`.
 
 ## Parts
 
-<!-- parts:start (tests read these in this order through tests/support/DocText.js) -->
+<!-- parts:start (tests read the parts in this repository, in this order, through tests/support/DocText.js) -->
 
 | Part | Covers |
 |---|---|
-| [0.1 and 0.2](roadmap/0.1-0.2.md) | The milestone list for 0.1.1 to 0.2.51, deferred work, notes for 0.2.30 to 0.2.92, the 0.1.50 summary, and 0.2.95 to 0.2.99 |
-| [0.3 to 0.7](roadmap/0.3-0.7.md) | Collaborative presence, structures and blueprints, place naming, World View exploration and the decentralized publication protocol |
-| [0.8.0 to 0.8.49](roadmap/0.8.0-0.8.49.md) | Publication anchoring, external evidence, snapshot placement and Bitcoin anchoring |
-| [0.8.50 to 0.8.99](roadmap/0.8.50-0.8.99.md) | Bitcoin wallet signing, IPFS gateways, publication archives and Base network observation |
-| [0.8.100 onward](roadmap/0.8.100-0.8.x.md) | Publication identity, publisher association, claims, reconciliation and leaderboards |
-| [0.9.0 to 0.9.99](roadmap/0.9.0-0.9.99.md) | World View discovery, World Encounters, publication distribution and avatar movement |
-| [0.9.100 to 0.9.199](roadmap/0.9.100-0.9.199.md) | Distribution in World View, Nostr and Arweave, vehicles and snapshot materialization |
-| [0.9.200 to 0.9.299](roadmap/0.9.200-0.9.299.md) | Placement and history audits, remote document operations, commentary and place naming |
-| [0.9.300 to 0.9.399](roadmap/0.9.300-0.9.399.md) | Content provider preferences, multi-placement, diagnostics, federated repositories and gateway settings |
-| [0.9.587 onward](roadmap/0.9.587-0.9.x.md) | Navigation history, publication actionability, water traversal, commentary distribution, inventory and animals |
+| [0.1 and 0.2](https://github.com/bowo-prasetyo/forkbuild/blob/590fccf78895fde987795873bdda1f0e9b797665/docs/roadmap/0.1-0.2.md) | The milestone list for 0.1.1 to 0.2.51, deferred work, notes for 0.2.30 to 0.2.92, the 0.1.50 summary, and 0.2.95 to 0.2.99 |
+| [0.3 to 0.7](https://github.com/bowo-prasetyo/forkbuild/blob/590fccf78895fde987795873bdda1f0e9b797665/docs/roadmap/0.3-0.7.md) | Collaborative presence, structures and blueprints, place naming, World View exploration and the decentralized publication protocol |
+| [0.8.0 to 0.8.49](https://github.com/bowo-prasetyo/forkbuild/blob/590fccf78895fde987795873bdda1f0e9b797665/docs/roadmap/0.8.0-0.8.49.md) | Publication anchoring, external evidence, snapshot placement and Bitcoin anchoring |
+| [0.8.50 to 0.8.99](https://github.com/bowo-prasetyo/forkbuild/blob/590fccf78895fde987795873bdda1f0e9b797665/docs/roadmap/0.8.50-0.8.99.md) | Bitcoin wallet signing, IPFS gateways, publication archives and Base network observation |
+| [0.8.100 onward](https://github.com/bowo-prasetyo/forkbuild/blob/590fccf78895fde987795873bdda1f0e9b797665/docs/roadmap/0.8.100-0.8.x.md) | Publication identity, publisher association, claims, reconciliation and leaderboards |
+| [0.9.0 to 0.9.99](https://github.com/bowo-prasetyo/forkbuild/blob/590fccf78895fde987795873bdda1f0e9b797665/docs/roadmap/0.9.0-0.9.99.md) | World View discovery, World Encounters, publication distribution and avatar movement |
+| [0.9.100 to 0.9.199](https://github.com/bowo-prasetyo/forkbuild/blob/590fccf78895fde987795873bdda1f0e9b797665/docs/roadmap/0.9.100-0.9.199.md) | Distribution in World View, Nostr and Arweave, vehicles and snapshot materialization |
+| [0.9.200 to 0.9.299](https://github.com/bowo-prasetyo/forkbuild/blob/590fccf78895fde987795873bdda1f0e9b797665/docs/roadmap/0.9.200-0.9.299.md) | Placement and history audits, remote document operations, commentary and place naming |
+| [0.9.300 to 0.9.399](https://github.com/bowo-prasetyo/forkbuild/blob/590fccf78895fde987795873bdda1f0e9b797665/docs/roadmap/0.9.300-0.9.399.md) | Content provider preferences, multi-placement, diagnostics, federated repositories and gateway settings |
+| [0.9.587 onward](https://github.com/bowo-prasetyo/forkbuild/blob/590fccf78895fde987795873bdda1f0e9b797665/docs/roadmap/0.9.587-0.9.x.md) | Navigation history, publication actionability, water traversal, commentary distribution, inventory and animals |
 | [Unnumbered, September 2026](roadmap/unnumbered-2026-09.md) | Distribution settings, wallets, vehicles, wildlife, cleanup passes, and the security and release work for 1.0 |
 
 <!-- parts:end -->
@@ -43,5 +45,6 @@ version in the table below and search its part for `## 0.8.26`.
 
 Add new milestones at the end of the last part. When a part passes about
 800 KB, start a new part file under `docs/roadmap/` and add it as the
-last row of the table above; the tests pick parts up from this table,
-so no test needs to change.
+last row of the table above, then close the old one: delete it from
+`docs/roadmap/` and point its row at the file in the last commit that
+has it (`https://github.com/bowo-prasetyo/forkbuild/blob/<commit>/docs/roadmap/<part>.md`).

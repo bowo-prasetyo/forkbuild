@@ -8,7 +8,7 @@ import { BitcoinEsploraTransactionBroadcasterFailover } from '../../../anchoring
 // tests/ uses to get a concrete, real-network-backed broadcasting
 // capability without ever importing anchoring/
 // BitcoinEsploraTransactionBroadcaster.js directly. The result plugs
-// straight into application/anchoring/bitcoin/CreateBitcoinAnchorTransactionBroadcasterUseCase.js's
+// straight into application/anchoring/bitcoin/CreateBitcoinAnchorTransactionBroadcasterUseCase.js (folded into its caller)'s
 // own `broadcaster` option.
 export class CreateBitcoinEsploraTransactionBroadcasterUseCase {
     // `apiUrls` (two or more endpoints, in order) builds the failover
