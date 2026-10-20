@@ -862,10 +862,12 @@ export class RendezvousNode {
             return reply(200, { iceServers, expiresAt });
         } catch (err) {
             // `detail` names the failing step and the provider's status or
-            // error text; it never contains the secret key.
+            // error text, for the operator's log only: a visitor learns no
+            // more than that the provider didn't answer. The secret key is
+            // taken out of it all the same.
             const detail = String((err && err.message) || err).split(provider.secret).join('<secret>');
             console.error('turn-credentials:', detail);
-            return reply(502, { error: 'the TURN provider did not answer', detail });
+            return reply(502, { error: 'the TURN provider did not answer' });
         }
     }
 

@@ -12,6 +12,14 @@ import { mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource as source } from './support/SourceText.js';
 
+// Whether `text` names a URL whose origin is `origin`, compared as parsed
+// URLs rather than as a substring of the text.
+function namesOrigin(text, origin) {
+    return (String(text).match(/https?:\/\/[^\s'"`)]+/g) || []).some((url) => {
+        try { return new URL(url).origin === origin; } catch { return false; }
+    });
+}
+
 // 0.9.440 — Arweave Gateway Read Failover.
 //
 // 0.9.439's own audit classified Arweave gateway read/retrieval as this
@@ -250,7 +258,7 @@ async function run() {
         });
         const store = new ArweaveGatewayFailoverContentStore({ gatewayUrls: [A, B, C], signer: makeFakeArweaveSigner(), fetchImpl });
         const error = await expectRejects(store.get(arReference), 'E1. get() rejects once every configured gateway has failed', ContentUnavailableError);
-        assert(error.message.includes(C), 'E2. the propagated error names the LAST gateway tried, not the first — the failure a caller sees reflects the final attempt');
+        assert(namesOrigin(error.message, C), 'E2. the propagated error names the LAST gateway tried, not the first — the failure a caller sees reflects the final attempt');
 
         const resolver = new ArweaveGatewayFailoverWorldEncounterMaterialResolver({ gatewayUrls: [A, B], fetchImpl: makeMultiGatewayFetch({ [A]: { reject: true }, [B]: { reject: true, rejectMessage: 'b is down' } }).fetchImpl });
         await expectRejects(resolver.retrieveByUri(arUri), 'E3. retrieveByUri() rejects once every configured gateway genuinely fails — never silently returns null for a real network failure');

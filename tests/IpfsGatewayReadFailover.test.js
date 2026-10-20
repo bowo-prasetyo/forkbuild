@@ -8,6 +8,14 @@ import { mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource as source } from './support/SourceText.js';
 
+// Whether `text` names a URL whose origin is `origin`, compared as parsed
+// URLs rather than as a substring of the text.
+function namesOrigin(text, origin) {
+    return (String(text).match(/https?:\/\/[^\s'"`)]+/g) || []).some((url) => {
+        try { return new URL(url).origin === origin; } catch { return false; }
+    });
+}
+
 // 0.9.666 — IPFS Gateway Read Failover.
 //
 // Mirrors tests/ArweaveGatewayReadFailover.test.js's own structure, one
@@ -173,7 +181,7 @@ async function run() {
         });
         const store = new IpfsGatewayFailoverContentStore({ gatewayUrls: [A, B, C], fetchImpl });
         const error = await expectRejects(store.get(ipfsReference), 'E1. get() rejects once every configured gateway has failed', ContentUnavailableError);
-        assert(error.message.includes(C), 'E2. the propagated error names the LAST gateway tried, not the first');
+        assert(namesOrigin(error.message, C), 'E2. the propagated error names the LAST gateway tried, not the first');
         assert(await store.has(ipfsReference) === false, 'E3. has() degrades to false rather than throwing, once every configured gateway has failed');
         console.log('✓ Section E: once every configured gateway has genuinely failed, the existing unavailable outcome is preserved unchanged — never swallowed into a fabricated success');
     }

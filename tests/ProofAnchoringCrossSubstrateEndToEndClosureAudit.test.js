@@ -393,12 +393,12 @@ async function run() {
 
         const baseDescribed = evidenceViewRegistry.get(baseAnchor.anchorType).describe(baseAnchor);
         assert(baseDescribed.summary === 'Base', n('D1[base]. describe() recognizes the anchor as Base'));
-        assert(baseDescribed.externalLocator && baseDescribed.externalLocator.url.includes(BASE_TXID) && baseDescribed.externalLocator.url.includes('basescan.org'),
+        assert(baseDescribed.externalLocator && baseDescribed.externalLocator.url.includes(BASE_TXID) && new URL(baseDescribed.externalLocator.url).hostname === 'basescan.org',
             n('D2[base]. describe() derives a followable basescan.org destination naming the real transaction hash'));
 
         const arweaveDescribed = evidenceViewRegistry.get(arweaveAnchor.anchorType).describe(arweaveAnchor);
         assert(arweaveDescribed.summary === 'Arweave', n('D1[arweave]. describe() recognizes the anchor as Arweave'));
-        assert(arweaveDescribed.externalLocator && arweaveDescribed.externalLocator.url.includes(ARWEAVE_TXID) && arweaveDescribed.externalLocator.url.includes('viewblock.io'),
+        assert(arweaveDescribed.externalLocator && arweaveDescribed.externalLocator.url.includes(ARWEAVE_TXID) && new URL(arweaveDescribed.externalLocator.url).hostname === 'viewblock.io',
             n('D2[arweave]. describe() derives a followable viewblock.io destination naming the real transaction id'));
 
         // D3: purity — describe() is synchronous, side-effect-free, and
