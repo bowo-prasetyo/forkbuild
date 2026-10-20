@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 403ae8ce862b459d -->
+<!-- translation-of: docs/Privacy.md source-hash: 48b83be51fa03585 -->
 # Privacidade
 
 <!-- languages -->
@@ -66,6 +66,12 @@ que você publique, exporte ou envie:
   por um link curto.
 - para cada construção que você começou com **Construir aqui**, o Mundo e o
   lugar escolhidos, para que ao publicar ela fique ali.
+- os identificadores e hashes de conteúdo das construções de outras pessoas
+  cujos bytes ainda não chegaram a este aparelho, e desde quando (no máximo
+  500, cada um por 30 dias), para que cada uma ainda possa ser comparada com
+  as suas próprias construções quando os bytes chegarem, mesmo depois de
+  fechar o ForkBuild (a entrada do 🔔 **… publicou uma construção parecida
+  com a sua**).
 - para cada construção começada a partir de uma estrutura pronta ou como
   cópia de outra, e para cada estrutura pronta colocada nela, quais blocos
   eram e onde estavam, para que ao publicar se distingam os blocos que você

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 403ae8ce862b459d -->
+<!-- translation-of: docs/Privacy.md source-hash: 48b83be51fa03585 -->
 # Privacidad
 
 <!-- languages -->
@@ -68,6 +68,12 @@ dispositivo a menos que usted lo publique, lo exporte o lo envíe:
   corto.
 - para cada construcción que empezó con **Construir aquí**, el mundo y el
   lugar que eligió, para que al publicarla quede allí.
+- los identificadores y hashes de contenido de las construcciones de otras
+  personas cuyos bytes aún no han llegado a este dispositivo, y desde cuándo
+  (como mucho 500, cada uno durante 30 días), para que cada una pueda
+  compararse con sus propias construcciones cuando lleguen sus bytes, incluso
+  después de cerrar ForkBuild (la entrada de la 🔔 **… publicó una
+  construcción que se parece a la suya**).
 - para cada construcción empezada con una estructura prefabricada o como
   copia de otra, y para cada estructura prefabricada añadida, qué bloques
   eran y dónde estaban, para que al publicar se distingan los bloques que

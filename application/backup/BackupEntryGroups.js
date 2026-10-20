@@ -107,6 +107,7 @@ const EXACT_NAMES = new Map([
 
     ['publication-catalog:entries', BackupEntryGroup.DOWNLOADED],
     ['world-encounter-publication-admission-log:entries', BackupEntryGroup.DOWNLOADED],
+    ['look-alike-waiting:entries', BackupEntryGroup.DOWNLOADED],
     ['spatial-index', BackupEntryGroup.DOWNLOADED],
     ['spatial-index-root', BackupEntryGroup.DOWNLOADED]
 ]);

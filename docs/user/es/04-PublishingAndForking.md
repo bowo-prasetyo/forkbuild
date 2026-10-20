@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ed04e9dc0ae7ffa3 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 25738ff466939f65 -->
 # 04 — Publicar y remezclar
 
 <!-- languages -->
@@ -932,11 +932,12 @@ enumera la suya (su dispositivo también la muestra si activó
 Las remezclas de sus construcciones no cuentan aquí: le dan el crédito y
 tienen [su propia notificación](#recuentos-de-remezclas).
 
-En las construcciones que publicó desde este dispositivo, y solo en ellas,
-su tarjeta en **Explorar** también dice cuántas construcciones de otras
+En sus propias construcciones, y solo en ellas, su tarjeta en **Explorar** también dice cuántas construcciones de otras
 personas, publicadas después de la suya, se le parecen mucho
 (**2 construcciones publicadas después de la suya se le parecen**); haga
-clic para verlas. Solo usted ve esto: ninguna tarjeta ajena se marca en la
+clic para verlas. Sus propias construcciones son las que publicó desde este
+dispositivo y, desde sus otros dispositivos, las firmadas con un nombre cuya
+clave tiene este dispositivo. Solo usted ve esto: ninguna tarjeta ajena se marca en la
 lista que todos recorren.
 
 ## Un ciclo creativo típico

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ed04e9dc0ae7ffa3 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 25738ff466939f65 -->
 # 04 — Publicar e remixar
 
 <!-- languages -->
@@ -909,11 +909,13 @@ cuja página lista a sua (o seu aparelho também mostra, se você ligou as
 Remixes das suas construções não contam aqui: eles dão crédito a você e têm
 [uma notificação própria](#contagem-de-remixes).
 
-Nas construções que você publicou deste aparelho, e só nelas, o seu cartão
+Nas suas próprias construções, e só nelas, o seu cartão
 em **Explorar** também diz quantas construções de outras pessoas,
 publicadas depois da sua, se parecem muito com ela
 (**2 construções publicadas depois da sua se parecem com ela**); clique
-para vê-las. Só você vê isto: nenhum cartão de outra pessoa é marcado na
+para vê-las. As suas próprias construções são as que você publicou deste
+aparelho e, dos seus outros aparelhos, as assinadas com um nome cuja chave
+este aparelho tem. Só você vê isto: nenhum cartão de outra pessoa é marcado na
 lista que todo mundo percorre.
 
 ## Um ciclo criativo típico

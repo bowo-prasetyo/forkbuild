@@ -62,6 +62,11 @@ send it:
   so they can be shared by a short link.
 - for each build you started with **Build here**, the World and the spot
   you chose, so publishing it stands it there.
+- the ids and content hashes of other people's builds whose bytes haven't
+  reached this device yet, and since when (at most 500, each for 30 days),
+  so each can still be compared with your own builds when its bytes arrive,
+  even after ForkBuild was closed (the 🔔's **… published a build that looks
+  like yours**).
 - for each build started from a ready-made structure or as a copy of a
   build, and for each ready-made structure dropped into one, what its
   bricks were and where they stood, so publishing can tell the bricks you

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 403ae8ce862b459d -->
+<!-- translation-of: docs/Privacy.md source-hash: 48b83be51fa03585 -->
 # Privasi
 
 <!-- languages -->
@@ -69,6 +69,11 @@ perangkat kecuali Anda menerbitkan, mengekspor, atau mengirimnya:
 - untuk setiap bangunan yang Anda mulai dengan **Bangun di sini**, Dunia dan
   tempat yang Anda pilih, agar saat diterbitkan bangunan itu berdiri di
   sana.
+- ID dan hash konten bangunan orang lain yang byte-nya belum sampai ke
+  perangkat ini, dan sejak kapan (paling banyak 500, masing-masing selama
+  30 hari), agar masing-masing tetap bisa dibandingkan dengan bangunan Anda
+  sendiri saat byte-nya tiba, bahkan setelah ForkBuild ditutup (entri 🔔
+  **… menerbitkan bangunan yang mirip dengan milik Anda**).
 - untuk setiap bangunan yang dimulai dari struktur siap pakai atau sebagai
   salinan bangunan, dan untuk setiap struktur siap pakai yang ditambahkan,
   balok apa saja dan di mana letaknya, agar saat menerbitkan balok yang Anda

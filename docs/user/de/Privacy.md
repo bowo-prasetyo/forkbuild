@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 403ae8ce862b459d -->
+<!-- translation-of: docs/Privacy.md source-hash: 48b83be51fa03585 -->
 # Datenschutz
 
 <!-- languages -->
@@ -68,6 +68,11 @@ veröffentlichen, exportieren oder senden es:
   können.
 - für jeden Bau, den Sie mit **Hier bauen** begonnen haben, die Welt und die
   gewählte Stelle, damit er beim Veröffentlichen dort steht.
+- die IDs und Inhalts-Hashes der Bauwerke anderer, deren Bytes dieses Gerät
+  noch nicht erreicht haben, und seit wann (höchstens 500, jedes 30 Tage
+  lang), damit jedes noch mit Ihren eigenen Bauwerken verglichen werden kann,
+  wenn seine Bytes ankommen, auch nachdem ForkBuild geschlossen wurde (der
+  🔔-Eintrag **… hat ein Bauwerk veröffentlicht, das Ihrem ähnelt**).
 - für jedes Bauwerk, das mit einer vorgefertigten Struktur oder als Kopie
   eines Bauwerks begann, und für jede eingesetzte vorgefertigte Struktur,
   welche Steine es waren und wo sie standen, damit das Veröffentlichen die

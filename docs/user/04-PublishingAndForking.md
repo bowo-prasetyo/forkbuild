@@ -850,11 +850,12 @@ device shows it too, if you turned on
 Remixes of your builds aren't counted here: they credit you, and have
 [their own notification](#remix-counts).
 
-On the builds you published from this device, and only there, your card in
-**Explore** also says how many builds by other people, published after
+On your own builds, and only there, your card in **Explore** also says how many builds by other people, published after
 yours, look a lot like it (**2 builds published after yours look like it**);
-click it to see them. Only you see this: nobody else's card is labelled in
-the list everyone browses.
+click it to see them. Your own builds are the ones you published from this
+device and, from your other devices, the ones signed with a name this device
+holds the key for. Only you see this: nobody else's card is labelled in the
+list everyone browses.
 
 ## A typical creative loop
 

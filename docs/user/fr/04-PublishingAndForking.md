@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ed04e9dc0ae7ffa3 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 25738ff466939f65 -->
 # 04 — Publier et remixer
 
 <!-- languages -->
@@ -957,11 +957,12 @@ les [Notifications sur cet appareil](03-WorldView.md#notifications-sur-cet-appar
 Les remix de vos constructions ne comptent pas ici : ils vous créditent et
 ont [leur propre notification](#nombre-de-remix).
 
-Sur les constructions que vous avez publiées depuis cet appareil, et
-seulement là, votre carte dans **Explorer** dit aussi combien de
+Sur vos propres constructions, et seulement là, votre carte dans **Explorer** dit aussi combien de
 constructions d’autres personnes, publiées après la vôtre, lui ressemblent
 beaucoup (**2 constructions publiées après la vôtre lui ressemblent**) ;
-cliquez pour les voir. Vous seul voyez ceci : aucune carte d’autrui n’est
+cliquez pour les voir. Vos propres constructions sont celles que vous avez
+publiées depuis cet appareil et, depuis vos autres appareils, celles signées
+d’un nom dont cet appareil détient la clé. Vous seul voyez ceci : aucune carte d’autrui n’est
 marquée dans la liste que tout le monde parcourt.
 
 ## Une boucle créative typique
