@@ -7,6 +7,7 @@ import { LocalAuthorizationVerifier } from '../../identity/LocalAuthorizationVer
 import * as Ed25519 from '../../identity/Ed25519.js';
 import { UserFacingError } from '../../core/UserFacingError.js';
 import { message } from '../../core/Message.js';
+import { refusalFor, requireSigningIdentityId, signingReadiness } from '../../identity/SigningReadiness.js';
 
 const CHANGED_EVENT = 'PublicLobbyChanged';
 const JOINED_EVENT = 'PublicLobbyJoined';
@@ -130,10 +131,7 @@ export class PublicLobbyUseCase {
         if (!this.isAvailable()) {
             throw new UserFacingError(message('refusal.noRendezvousServerIsConfigured'), { detail: 'PublicLobbyUseCase: no rendezvous server is configured; add one under Network Settings' });
         }
-        const identityId = signingIdentityId(this._identityProvider);
-        if (!identityId) {
-            throw new UserFacingError(message('refusal.signInAndUnlockYour'), { detail: 'PublicLobbyUseCase: sign in and unlock your identity to join the lobby' });
-        }
+        const identityId = requireSigningIdentityId(this._identityProvider, message('refusal.signInAndUnlockYour'), { detail: 'PublicLobbyUseCase: sign in and unlock your identity to join the lobby' });
         const name = normalizeDisplayName(displayName);
         const card = await this._sendCard(LobbyCard.create({ identityId, lobby, displayName: name, ttlMs: this._cardTtlMs, now: this._now() }));
         this._joined.set(lobby, card);
@@ -240,7 +238,7 @@ export class PublicLobbyUseCase {
         const { connectedPeer, delivered } = await this._findPeerUseCase.connect(candidates[0], identityId);
         if (!delivered) {
             connectedPeer.close();
-            throw new UserFacingError(message('refusal.theRendezvousServerCouldNot'), { detail: 'PublicLobbyUseCase: the rendezvous server could not pass your reply on; unlock your identity and try again' });
+            throw new UserFacingError(message('refusal.theRendezvousServerCouldNot'), { detail: 'PublicLobbyUseCase: the rendezvous server could not pass your reply on' });
         }
         return { connectedPeer, alreadyConnected: false };
     }
@@ -302,7 +300,7 @@ export class PublicLobbyUseCase {
     async _sendCard(unsigned) {
         const card = signLobbyCard(unsigned, this._identityProvider);
         if (!card) {
-            throw new UserFacingError(message('refusal.signInAndUnlockYour'), { detail: 'PublicLobbyUseCase: sign in and unlock your identity to join the lobby' });
+            throw refusalFor(signingReadiness(this._identityProvider), message('refusal.signInAndUnlockYour'), 'PublicLobbyUseCase: sign in and unlock your identity to join the lobby');
         }
         const settled = await Promise.allSettled(this._transports.map((transport) => transport.joinLobby(card)));
         if (!settled.some((outcome) => outcome.status === 'fulfilled')) {

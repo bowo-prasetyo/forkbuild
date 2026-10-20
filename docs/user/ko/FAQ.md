@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 53acfc3595aae824 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 58c380fc2151aa11 -->
 # 자주 묻는 질문
 
 <!-- languages -->
@@ -73,8 +73,8 @@ Arweave는 Wander, Nostr는 nos2x)이 필요합니다. [작품 배포하기](Dis
 - **a title is required before publishing** — **작품 속성**에서 작품에 제목을
   붙이세요.
 - **cannot publish an empty world** — 먼저 블록을 하나 이상 놓으세요.
-- **cannot sign, identity is locked** — 신원이 스스로 잠겼습니다. 맨 위 막대에서
-  이름 옆의 **잠금 해제**를 클릭하고 다시 게시하세요.
+- **이름 "…"이(가) 잠겨 있습니다** — 이름이 스스로 잠겼습니다. 메시지 옆(또는 맨 위 막대의
+  이름 옆)의 **잠금 해제**를 클릭하고 다시 게시하세요.
 
 ### 게시하려면 이름이 있어야 하나요?
 

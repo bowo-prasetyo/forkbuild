@@ -1,5 +1,5 @@
 import { NotificationEvent } from '../../core/NotificationEvent.js';
-import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
+import { currentIdentityId } from '../../identity/SigningReadiness.js';
 import { createVerifiedPublisherResolver } from './FollowingFeed.js';
 
 export const FOLLOWED_AUTHOR_PUBLISHED_EVENT_TYPE = 'publication.followed-author-published';
@@ -30,7 +30,7 @@ export class FollowedAuthorPublicationNotifier {
 
     // Returns the NotificationEvent handed to the sink, or null.
     handlePublicationAdmitted(publication) {
-        const recipientIdentityId = resolveSigningIdentityId(this._identityProvider);
+        const recipientIdentityId = currentIdentityId(this._identityProvider);
         if (!recipientIdentityId) return null;
         const signer = this._signerOf(publication);
         if (!signer || signer === recipientIdentityId || !this._isFollowing(signer) || this._isBlocked(signer)) {

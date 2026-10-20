@@ -3,7 +3,7 @@ import { CreateDiscoveryUseCase } from '../../application/discovery/CreateDiscov
 import { createVerifiedPublisherResolver } from '../../application/publication/FollowingFeed.js';
 import { Publication } from '../../publisher/Publication.js';
 import { LocalStorageProvider } from '../../storage/LocalStorageProvider.js';
-import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
+import { currentIdentityId } from '../../identity/SigningReadiness.js';
 import { helpedBuilds } from '../../application/buildTogether/helpedBuilds.js';
 import { builderRoute } from '../components/remix/builtWithText.js';
 
@@ -28,7 +28,7 @@ export function useBuilderData() {
     // This device's key, and the identity it acts for (its own, or the one
     // it is an authorized device of), which credits name.
     function ownIdentityIds() {
-        const device = resolveSigningIdentityId(identityUseCase ? identityUseCase.provider : null);
+        const device = currentIdentityId(identityUseCase ? identityUseCase.provider : null);
         const social = safe(() => deviceAuthorization?.resolveOwnSocialIdentity()?.identityId) || null;
         return [...new Set([social, device].filter(Boolean))];
     }

@@ -80,8 +80,8 @@ so builds you already published keep the license they had. See
 - **a title is required before publishing** — give the build a title in
   **Build Properties**.
 - **cannot publish an empty world** — place at least one brick first.
-- **cannot sign, identity is locked** — your identity locked itself; click
-  **Unlock** next to your name in the top bar and publish again.
+- **Your name "…" is locked** — your name locked itself; click **Unlock**
+  beside the message (or next to your name in the top bar) and publish again.
 
 ### Do I need a name to publish?
 

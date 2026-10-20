@@ -927,7 +927,7 @@ export default {
             exportNamingClaim, importNamingClaim, distributeNamingClaim, dismissNamingClaimDistributionOffer
         } = usePlaceNamingPanel({
             defaultDiscoveryProvider: defaultAnnouncementDiscoveryProvider, distributePlaceNamingClaimCommand,
-            feedback, guarded, session
+            feedback, guarded, session, identityUseCase
         });
 
         // -----------------------------------------------------------------

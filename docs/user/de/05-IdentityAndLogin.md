@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 87bd554695c88554 -->
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: cf497f719abf3048 -->
 # 05 — Ihr Name & Ihre Identität
 
 <!-- languages -->
@@ -60,12 +60,13 @@ verwenden:
 
 - **Mit Namen, entsperrt** — alles funktioniert normal.
 - **Mit Namen, gesperrt** (🔒 neben Ihrem Namen oben rechts) — Sie sind
-  weiterhin Sie selbst und können weiter stöbern, bauen und speichern, aber
-  alles, was eine frische Signatur braucht (Veröffentlichen, Auffindbar
-  sein, einer Lobby beitreten), schlägt mit einer Meldung „identity is
-  locked“ (Identität gesperrt) fehl, bis Sie entsperren. Klicken Sie auf
-  Ihren Namen und dann auf **Entsperren**, geben Sie Ihre Passphrase ein und
-  versuchen Sie es dann erneut.
+  weiterhin Sie selbst: Sie können weiter stöbern, bauen und speichern und
+  sehen weiterhin Ihre eigenen Herzen, Ihre Gefolgten und Ihre
+  Benachrichtigungen. Alles, was eine frische Signatur braucht (ein Herz
+  geben, kommentieren, folgen, veröffentlichen, auffindbar sein, einer Lobby
+  beitreten), meldet **Ihr Name „…“ ist gesperrt** und bietet gleich daneben
+  **Entsperren** an; das öffnet dieselbe Passphrase-Abfrage wie ein Klick auf
+  Ihren Namen und dann auf **Entsperren**. Versuchen Sie es dann erneut.
 - **Kein Name** — nach **Namen wechseln → Ohne Namen weiter** sind Sie ein
   Gast; **Namen wählen** in der oberen Leiste wählt oder entsperrt wieder
   eine Identität.

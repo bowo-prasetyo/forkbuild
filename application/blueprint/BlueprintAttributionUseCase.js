@@ -4,6 +4,7 @@ import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityI
 import { attributionView } from '../../core/BlueprintAttributionView.js';
 import { message } from '../../core/Message.js';
 import { UserFacingError } from '../../core/UserFacingError.js';
+import { requireSigningIdentityId } from '../../identity/SigningReadiness.js';
 
 // 0.6.5 — Blueprint Identity & Attribution.
 //
@@ -66,10 +67,7 @@ export class BlueprintAttributionUseCase {
         if (!fingerprint) {
             throw new UserFacingError(message('blueprint.noDesignContent'), { detail: 'BlueprintAttributionUseCase: structure has no derivable design content' });
         }
-        const authorIdentityId = resolveSigningIdentityId(this._identityProvider);
-        if (!authorIdentityId) {
-            throw new UserFacingError(message('blueprint.signInToAttribute'), { detail: 'BlueprintAttributionUseCase: sign in to claim authorship of a blueprint' });
-        }
+        const authorIdentityId = requireSigningIdentityId(this._identityProvider, message('blueprint.signInToAttribute'), { detail: 'BlueprintAttributionUseCase: sign in to claim authorship of a blueprint' });
         if (typeof this._identityProvider.signCanonical !== 'function') {
             throw new UserFacingError(message('blueprint.cannotSignAttribution'), { detail: 'BlueprintAttributionUseCase: this identity provider cannot sign an attribution' });
         }

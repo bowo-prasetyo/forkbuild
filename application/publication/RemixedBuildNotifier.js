@@ -1,5 +1,5 @@
 import { NotificationEvent } from '../../core/NotificationEvent.js';
-import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
+import { currentIdentityId } from '../../identity/SigningReadiness.js';
 import { createVerifiedPublisherResolver } from './FollowingFeed.js';
 
 export const BUILD_REMIXED_EVENT_TYPE = 'publication.remixed';
@@ -36,7 +36,7 @@ export class RemixedBuildNotifier {
     handlePublicationAdmitted(publication) {
         const parentDocumentId = publication?.parentDocumentId;
         if (typeof parentDocumentId !== 'string' || !parentDocumentId || parentDocumentId === publication.documentId) return null;
-        const recipientIdentityId = resolveSigningIdentityId(this._identityProvider);
+        const recipientIdentityId = currentIdentityId(this._identityProvider);
         if (!recipientIdentityId) return null;
         const remixer = this._signerOf(publication);
         if (!remixer || remixer === recipientIdentityId || this._isBlocked(remixer)) return null;

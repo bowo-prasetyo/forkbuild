@@ -21,6 +21,7 @@ import { terrainHeightAt } from '../../core/TerrainHeightField.js';
 import { regionsContaining } from '../../core/WorldRegionGeography.js';
 import { message } from '../../core/Message.js';
 import { UserFacingError } from '../../core/UserFacingError.js';
+import { requireSigningIdentityId } from '../../identity/SigningReadiness.js';
 
 // World Residents in World View: where they are drawn and collided with,
 // and how a World's author adds and removes them (the 'R' key).
@@ -162,10 +163,7 @@ export const residentMethods = {
         if (!this.canEditDocument(worldId)) {
             throw new UserFacingError(message('worldRefusal.notAuthorized'), { detail: 'WorldNavigationSession: not authorized to add a resident to this World' });
         }
-        const authorIdentityId = resolveSigningIdentityId(this._identityProvider);
-        if (!authorIdentityId) {
-            throw new UserFacingError(message('worldRefusal.signIn'), { detail: 'WorldNavigationSession: sign in to add a resident' });
-        }
+        const authorIdentityId = requireSigningIdentityId(this._identityProvider, message('worldRefusal.signIn'), { detail: 'WorldNavigationSession: sign in to add a resident' });
         const layoutPosition = this.getDocumentPosition(worldId);
         const cmd = new CreateWorldResidentCommand({
             worldId,

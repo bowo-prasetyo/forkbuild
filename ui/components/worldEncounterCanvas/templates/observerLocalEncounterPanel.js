@@ -104,7 +104,7 @@ export const observerLocalEncounterPanelTemplate = `<!--
                         </ul>
 
                         <p v-if="addPublicationCommentaryCommand && !viewerIdentityId" class="world-encounter-observer-local-commentary-signin-hint">
-                            {{ t('worldEncounterCanvas.signInToAddCommentary') }}
+                            <NameNeededNotice :no-name-text="t('worldEncounterCanvas.signInToAddCommentary')" />
                         </p>
                         <form
                             v-else-if="addPublicationCommentaryCommand"

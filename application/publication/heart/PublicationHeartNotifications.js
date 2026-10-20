@@ -1,6 +1,6 @@
 import { NotificationEvent } from '../../../core/NotificationEvent.js';
 import { isLaterHeart } from '../../../core/PublicationHeart.js';
-import { resolveSigningIdentityId } from '../../../identity/resolveSigningIdentityId.js';
+import { currentIdentityId } from '../../../identity/SigningReadiness.js';
 
 export const PUBLICATION_HEARTED_EVENT_TYPE = 'publication.hearted';
 
@@ -33,7 +33,7 @@ export class PublicationHeartNotificationBridge {
         if (latest && latest.heartId !== heart.heartId && isLaterHeart(latest, heart)) {
             return;
         }
-        const me = resolveSigningIdentityId(this._identityProvider);
+        const me = currentIdentityId(this._identityProvider);
         if (!me || me === heart.authorIdentityId) {
             return;
         }

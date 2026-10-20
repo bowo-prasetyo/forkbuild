@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 87bd554695c88554 -->
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: cf497f719abf3048 -->
 # 05 — Seu nome e sua identidade
 
 <!-- languages -->
@@ -56,11 +56,13 @@ uma pergunta realmente diferente de qual nome você está usando:
 
 - **Com um nome, desbloqueado** — tudo funciona normalmente.
 - **Com um nome, bloqueado** (🔒 ao lado do seu nome, no canto superior
-  direito) — você continua sendo você e ainda pode navegar, construir e
-  salvar, mas tudo o que precisa de uma assinatura nova (publicar, ficar
-  visível, entrar numa sala) falha com uma mensagem de "identidade
-  bloqueada" até você desbloquear. Clique no seu nome e depois em
-  **Desbloquear** para digitar a frase secreta e tente de novo.
+  direito) — você continua sendo você: ainda pode navegar, construir e salvar,
+  e continua vendo seus próprios corações, quem você segue e suas
+  notificações. Tudo o que precisa de uma assinatura nova (dar um coração,
+  comentar, seguir, publicar, ficar visível, entrar numa sala) diz **Seu nome
+  "…" está bloqueado** e oferece ali mesmo um botão **Desbloquear**, que abre
+  o mesmo pedido de frase secreta que clicar no seu nome e depois em
+  **Desbloquear**. Depois tente de novo.
 - **Sem nome** — depois de **Trocar de nome → Seguir sem nome** você é um
   convidado; **Escolher um nome** na barra superior escolhe ou desbloqueia
   uma identidade de novo.

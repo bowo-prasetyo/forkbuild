@@ -193,8 +193,14 @@ export class AvatarVehicleMovementController {
         this._collided = false;
         if (this._movementConstraint) {
             // supportHeight lets a brick within a step of the vehicle's support count
-            // as something to drive onto rather than a wall.
-            const constrained = this._movementConstraint.apply(currentPosition, finalPosition, {
+            // as something to drive onto rather than a wall. Bricks are measured from
+            // the ground, so the height they are tested against is the vehicle's own
+            // above the ground, not its world height: on a hill the wagon would
+            // otherwise pass over or under every wall.
+            const collisionFrom = climbsBricks
+                ? { x: currentPosition.x, y: liftHere, z: currentPosition.z }
+                : currentPosition;
+            const constrained = this._movementConstraint.apply(collisionFrom, finalPosition, {
                 avatarRadius: capability.collisionRadius,
                 supportHeight: supportHere
             });

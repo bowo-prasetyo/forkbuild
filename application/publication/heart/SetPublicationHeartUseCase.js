@@ -1,7 +1,6 @@
 import { PublicationHeart } from '../../../core/PublicationHeart.js';
-import { UserFacingError } from '../../../core/UserFacingError.js';
 import { message } from '../../../core/Message.js';
-import { resolveSigningIdentityId } from '../../../identity/resolveSigningIdentityId.js';
+import { requireSigningIdentityId } from '../../../identity/SigningReadiness.js';
 
 // Gives the signed-in identity's heart to a Publication, or takes it back:
 // a new record under the name the identity goes by, kept here first.
@@ -22,10 +21,7 @@ export class SetPublicationHeartUseCase {
         if (!publicationId || typeof publicationId !== 'string') {
             throw new Error('SetPublicationHeartUseCase: a publicationId is required');
         }
-        const authorIdentityId = resolveSigningIdentityId(this._identityProvider);
-        if (!authorIdentityId) {
-            throw new UserFacingError(message('heart.signInFirst'));
-        }
+        const authorIdentityId = requireSigningIdentityId(this._identityProvider, message('heart.signInFirst'));
         const latest = this._store.latestFor(publicationId, authorIdentityId);
         const current = latest ? latest.hearted : false;
         if (current === (hearted === true)) {

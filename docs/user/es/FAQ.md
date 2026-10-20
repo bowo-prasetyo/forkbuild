@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 53acfc3595aae824 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: 58c380fc2151aa11 -->
 # Preguntas frecuentes
 
 <!-- languages -->
@@ -89,10 +89,9 @@ Estos mensajes aparecen en inglés en la app:
   construcción**.
 - **cannot publish an empty world** (no se puede publicar un mundo vacío):
   primero coloque al menos un bloque.
-- **cannot sign, identity is locked** (no se puede firmar, la identidad
-  está bloqueada): su identidad se bloqueó sola; haga clic en
-  **Desbloquear** junto a su nombre en la barra superior y vuelva a
-  publicar.
+- **Su nombre "…" está bloqueado**: su nombre se bloqueó solo; haga clic en
+  **Desbloquear** junto al mensaje (o junto a su nombre en la barra superior)
+  y vuelva a publicar.
 
 ### ¿Necesito un nombre para publicar?
 

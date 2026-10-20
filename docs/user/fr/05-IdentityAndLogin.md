@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 87bd554695c88554 -->
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: cf497f719abf3048 -->
 # 05 — Votre nom et votre identité
 
 <!-- languages -->
@@ -59,13 +59,14 @@ c’est une question réellement différente de celle de savoir quel nom vous
 utilisez :
 
 - **Avec un nom, déverrouillé** — tout fonctionne normalement.
-- **Avec un nom, verrouillé** (🔒 à côté de votre nom en haut à droite) —
-  vous êtes toujours vous-même, et vous pouvez toujours parcourir,
-  construire et enregistrer, mais tout ce qui demande une nouvelle
-  signature (publier, être découvrable, rejoindre un salon) échoue avec
-  un message indiquant que l’identité est verrouillée jusqu’à ce que vous
-  la déverrouilliez. Cliquez sur votre nom, puis sur **Déverrouiller**, pour
-  saisir votre phrase secrète, puis réessayez.
+- **Avec un nom, verrouillé** (🔒 à côté de votre nom en haut à droite) — vous
+  êtes toujours vous-même : vous pouvez toujours parcourir, construire et
+  enregistrer, et vous voyez toujours vos propres cœurs, les personnes que
+  vous suivez et vos notifications. Tout ce qui demande une nouvelle signature
+  (donner un cœur, commenter, suivre, publier, être découvrable, rejoindre un
+  salon) indique **Votre nom « … » est verrouillé** et propose aussitôt un
+  bouton **Déverrouiller**, qui ouvre la même demande de phrase secrète qu’un
+  clic sur votre nom puis sur **Déverrouiller**. Réessayez ensuite.
 - **Sans nom** — après **Changer de nom → Continuer sans nom**, vous êtes
   un invité ; **Choisir un nom** dans la barre du haut choisit ou
   déverrouille de nouveau une identité.

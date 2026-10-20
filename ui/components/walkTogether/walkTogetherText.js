@@ -7,6 +7,8 @@ import { t } from '../../i18n/i18n.js';
 const FAILURE_KEYS = Object.freeze({
     [WalkTogetherFailure.UNREACHABLE]: 'walkTogether.failure.unreachable',
     [WalkTogetherFailure.NOT_SIGNED_IN]: 'walkTogether.failure.notSignedIn',
+    [WalkTogetherFailure.NAME_LOCKED]: 'walkTogether.failure.nameLocked',
+    [WalkTogetherFailure.NAME_REVOKED]: 'walkTogether.failure.nameRevoked',
     [WalkTogetherFailure.NOT_PUBLISHED]: 'walkTogether.failure.notPublished',
     [WalkTogetherFailure.INVALID_CODE]: 'walkTogether.failure.invalidCode',
     [WalkTogetherFailure.NOT_FOUND]: 'walkTogether.failure.notFound',

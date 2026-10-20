@@ -2,6 +2,7 @@ import PublicationCommentaryRemoteCheck from './PublicationCommentaryRemoteCheck
 import CommentaryDistributionPicker, { commentarySavedText } from './CommentaryDistributionPicker.js';
 import CommentaryNetworkDistribution from './CommentaryNetworkDistribution.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
+import NameNeededNotice from './NameNeededNotice.js';
 import { createId } from '../../core/createId.js';
 import { errorText, t } from '../i18n/i18n.js';
 import IdentityName from './IdentityName.js';
@@ -50,7 +51,7 @@ import IdentityName from './IdentityName.js';
 // delivery/receipt claim.
 export default {
     name: 'PublicationCommentarySection',
-    components: { PublicationCommentaryRemoteCheck, CommentaryDistributionPicker, CommentaryNetworkDistribution, IdentityName },
+    components: { PublicationCommentaryRemoteCheck, CommentaryDistributionPicker, CommentaryNetworkDistribution, IdentityName, NameNeededNotice },
     inject: {
         getPublicationCommentariesCommand: { default: null },
         addPublicationCommentaryCommand: { default: null },
@@ -80,7 +81,10 @@ export default {
             selectedDiscoveryProvider: this.defaultCommentaryDistributionProvider || 'nostr',
             // 0.9.638 — which substrate the most recent successful
             // submission requested; `null` until one succeeds.
-            lastCommentaryDistributionProvider: null
+            lastCommentaryDistributionProvider: null,
+            // Bumped when a name is chosen, locked or unlocked, so the form
+            // and the notice in its place follow along.
+            identityVersion: 0
         };
     },
     computed: {
@@ -88,6 +92,7 @@ export default {
         // tolerant lookup application/world/WorldNavigationSession.js's own
         // getMyIdentityId() wraps.
         viewerIdentityId() {
+            void this.identityVersion;
             if (!this.identityUseCase) {
                 return null;
             }
@@ -100,6 +105,13 @@ export default {
     },
     mounted() {
         this.refreshCommentaries();
+        if (this.identityUseCase && typeof this.identityUseCase.onVaultLockChanged === 'function') {
+            const bump = () => { this.identityVersion += 1; };
+            this.identityUnsubscribes = [this.identityUseCase.onUserChanged(bump), this.identityUseCase.onVaultLockChanged(bump)];
+        }
+    },
+    beforeUnmount() {
+        (this.identityUnsubscribes || []).forEach((unsubscribe) => unsubscribe());
     },
     methods: {
         t,
@@ -174,7 +186,7 @@ export default {
             </ul>
 
             <p v-if="addPublicationCommentaryCommand && !viewerIdentityId" class="publication-commentary-signin-hint">
-                {{ t('publicationCommentarySection.signInToAddCommentary') }}
+                <NameNeededNotice :no-name-text="t('publicationCommentarySection.signInToAddCommentary')" />
             </p>
             <form
                 v-else-if="addPublicationCommentaryCommand"

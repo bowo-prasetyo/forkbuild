@@ -152,7 +152,9 @@ function groundedBrickCenter(x, z) {
 function installSyntheticBrickObstacle(session, docId, worldCenter) {
     const world = new World();
     const building = new Building();
-    building.addBrick(new Brick({ definitionId: 'core:cube', position: new Position(0, worldCenter.y, 0) }));
+    // On the ground: a building's bricks are measured from the ground under
+    // it, not in world heights, so the cube sits at 0.5 whatever the terrain.
+    building.addBrick(new Brick({ definitionId: 'core:cube', position: new Position(0, 0.5, 0) }));
     world.addBuilding(building);
     session._loadedDocuments.set(docId, { world });
     session._localPositions.set(docId, { x: worldCenter.x, y: 0, z: worldCenter.z });
