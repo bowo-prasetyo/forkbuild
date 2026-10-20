@@ -7,7 +7,7 @@ const NEARBY_RADIUS = 5;
 
 // Same shape exploreLocation returns, so callers never special-case a call
 // that did not happen.
-const EMPTY_DISCOVERY_ENVELOPE = { documents: [], diagnostics: { available: false, fatal: null, complete: false, warnings: [] } };
+const EMPTY_DISCOVERY_ENVELOPE = { documents: [] };
 
 // World search, the documents-at-a-location list, and the location browser
 // (explore here / what's here / inspect).
@@ -24,9 +24,6 @@ export function useLocationBrowser({
     const locationBrowserCenter = ref(null);
     const locationBrowserRadius = ref(DEFAULT_EXPLORE_RADIUS);
     const locationBrowserDocuments = ref([]);
-    // Defaults to the "unavailable" shape so the banner always has well-formed
-    // data.
-    const locationBrowserDiagnostics = ref(EMPTY_DISCOVERY_ENVELOPE.diagnostics);
     const locationBrowserInspected = ref(null);
 
     function performSearch(options) {
@@ -64,7 +61,6 @@ export function useLocationBrowser({
         locationBrowserCenter.value = cameraPosition.value;
         locationBrowserRadius.value = radius;
         locationBrowserDocuments.value = envelope.documents || [];
-        locationBrowserDiagnostics.value = envelope.diagnostics || EMPTY_DISCOVERY_ENVELOPE.diagnostics;
         locationBrowserInspected.value = null;
         showLocationBrowser.value = true;
     }
@@ -99,7 +95,6 @@ export function useLocationBrowser({
         showLocationBrowser.value = false;
         locationBrowserCenter.value = null;
         locationBrowserDocuments.value = [];
-        locationBrowserDiagnostics.value = EMPTY_DISCOVERY_ENVELOPE.diagnostics;
         locationBrowserInspected.value = null;
     }
 
@@ -129,7 +124,7 @@ export function useLocationBrowser({
     return {
         searchResults, showLocationDocuments, locationDocumentsPosition, locationDocumentsOccupants,
         showLocationBrowser, locationBrowserCenter, locationBrowserRadius, locationBrowserDocuments,
-        locationBrowserDiagnostics, locationBrowserInspected, performSearch, openLocationDocuments,
+        locationBrowserInspected, performSearch, openLocationDocuments,
         closeLocationDocuments, focusLocationDocument, openLocationBrowser, exploreHere, whatsHere,
         reExploreLocationBrowser, closeLocationBrowser, focusLocationBrowserResult,
         selectLocationBrowserResult, inspectLocationBrowserResult

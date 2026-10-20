@@ -102,7 +102,6 @@ export class WorldNavigationSession {
         getRecipientNotificationEventsUseCase = null,
         spatialAllocationPolicy = SpatialAllocationPolicy.WARN,
         searchWorldUseCase = null,
-        spatialDiscoveryProvider = null,
         avatarProfileUseCase = null,
         avatarPresenceSession = null,
         presenceBroadcastProvider = null,
@@ -200,13 +199,6 @@ export class WorldNavigationSession {
         this._spatialAllocationPolicy = spatialAllocationPolicy;
         // Without it a session can't search.
         this._searchWorldUseCase = searchWorldUseCase;
-        // Optional trust-capable provider, consulted only for diagnostics in
-        // exploreLocation/exploreHere/whatsHere, never to resolve documents (live
-        // placement data comes from the placement registry). A replica with a real
-        // decentralized index can report on it; others report "no trust layer
-        // available". See docs/Principles.md, "Diagnostics Are Received From The
-        // Discovery Layer, Never Invented By The UI".
-        this._spatialDiscoveryProvider = spatialDiscoveryProvider;
         // A guest's when nobody is logged in (application/avatar/GuestAvatar.js);
         // both null only without avatar wiring, when the session renders no local
         // avatar. adoptLocalAvatar() swaps them.
@@ -342,14 +334,6 @@ export class WorldNavigationSession {
         this._vehicleAdvertisementSequence = 0;
         this._localInteractionSequence = 0;
         this._remoteAvatarGestureExpiry = new Map();
-        // Raw DiscoveryDiagnostics from the most recent
-        // exploreLocation/exploreHere/whatsHere call — kept alongside
-        // the summarized version so inspectDocument can look up a
-        // specific document's own TrustObservation (summarizing throws
-        // away per-record detail on purpose; the raw copy is what makes
-        // that detail available again, on demand, without re-querying).
-        this._lastDiscoveryDiagnosticsRaw = null;
-
         this._structureResolver = structureResolver;
         this._loadDocumentUseCase = loadDocumentUseCase;
 

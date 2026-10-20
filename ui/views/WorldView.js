@@ -1123,7 +1123,7 @@ export default {
         const {
             searchResults, showLocationDocuments, locationDocumentsPosition, locationDocumentsOccupants,
             showLocationBrowser, locationBrowserCenter, locationBrowserRadius, locationBrowserDocuments,
-            locationBrowserDiagnostics, locationBrowserInspected, performSearch, openLocationDocuments,
+            locationBrowserInspected, performSearch, openLocationDocuments,
             closeLocationDocuments, focusLocationDocument, openLocationBrowser, exploreHere, whatsHere,
             reExploreLocationBrowser, closeLocationBrowser, focusLocationBrowserResult,
             selectLocationBrowserResult, inspectLocationBrowserResult
@@ -1507,7 +1507,6 @@ export default {
             locationBrowserCenter,
             locationBrowserRadius,
             locationBrowserDocuments,
-            locationBrowserDiagnostics,
             locationBrowserInspected,
             exploreHere,
             whatsHere,
