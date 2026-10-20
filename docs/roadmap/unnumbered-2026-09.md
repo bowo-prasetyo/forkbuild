@@ -8109,3 +8109,38 @@ list.
   showcase builds Home offers are Build Library structures too, so they are covered, but builds made from other
   people's published builds by hand are not ready-made. Explore cards show the count only on this device's own
   publications, not on the same builder's builds published from another device.
+
+
+## Your builds from your other devices, and builds still waiting after a restart (unnumbered, 2026-10-20)
+
+**Two gaps in the look-alike hints.** The owner-only line on Explore cards ("2 builds published after yours look like
+it") appeared only on builds this device had published, so the builds you published from your phone showed nothing on
+your laptop. And a look-alike whose bytes hadn't arrived when ForkBuild closed was forgotten: its waiting list was kept
+in memory only. Pillar served: your work is yours (credit travels with the work). How a player notices: their Explore
+cards show later look-alikes for every build signed with their name, from any of their devices; and the 🔔's **…
+published a build that looks like yours** also arrives for a build whose bytes came in after a restart.
+
+- application/publication/OwnPublicationCheck.js (new): a Publication is the person's own when this device published
+  it (same id and content hash), or when its signature checks out against an identity this device holds a key for,
+  or acts for as an authorized device (`deviceAuthorizationUseCase.resolveOwnSocialIdentity()`). Only that key's
+  holder could have signed it; a typed name, or a Publication that only names the identity, counts for nothing.
+  ui/main.js provides it as `isOwnPublication`; ui/components/remix/OwnLookAlikes.js is unchanged.
+- application/publication/LookAlikeWaitingStore.js (new): the waiting list as `{ publicationId, contentHash, since }`,
+  under `look-alike-waiting:entries` (backed up with downloaded data); a full or blocked storage only loses it.
+- application/publication/LookAlikeBuildNotifier.js: saves the list on each change; `restoreWaiting(findPublication)`
+  at startup takes back each build whose Publication this device still has, with the same bytes, that has waited less
+  than `MAX_WAITING_FOR_BYTES_MS` (30 days); each is checked at once (its bytes may have arrived) and otherwise waits
+  on with its first `since`. Restoring never forgets a build that started waiting in this visit.
+- docs/Privacy.md (what stays on your device) and docs/user/04 (whose builds count as your own) in every language;
+  docs/Architecture.md.
+- Tests: `OwnPublicationCheck` (published here; signed by an identity held here, wherever published; someone else's;
+  only claiming your identity; only your name; no identities; any identity given; failures), `LookAlikeWaitingStore`
+  (round trip, ids and times only, malformed entries, a broken storage, its backup group), `LookAlikeBuildNotifier`
+  (saved with when it started; at the next start compared when its bytes are here and notified, else waits on keeping
+  `since`; let go when heard of, after 30 days, when its Publication is gone or names other bytes; a build waiting
+  from this visit kept; no store).
+- A build checked while nobody is signed in (at startup, before a session is restored) waits instead of being let go,
+  and is compared once someone is.
+- Not done: a ready-made structure
+  changed by more than a tenth still counts as the builder's own bricks; measuring that against the Collection library
+  is the next step.

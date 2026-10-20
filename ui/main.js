@@ -101,6 +101,8 @@ import { ReadyMadeBricksStore } from '../application/document/ReadyMadeBricksSto
 import { ownIdentityIdsOf } from '../application/document/DocumentImportPolicy.js';
 import { SimilarBuildFinder } from '../application/publication/SimilarBuildFinder.js';
 import { LookAlikeBuildNotifier } from '../application/publication/LookAlikeBuildNotifier.js';
+import { LookAlikeWaitingStore } from '../application/publication/LookAlikeWaitingStore.js';
+import { createOwnPublicationCheck } from '../application/publication/OwnPublicationCheck.js';
 import { HelpedBuildsStore } from '../application/buildTogether/HelpedBuildsStore.js';
 import { HelpedBuildsSyncUseCase } from '../application/buildTogether/HelpedBuildsSyncUseCase.js';
 import { browserPrivacySignals, sendCounterHit } from './counterHit.js';
@@ -633,19 +635,29 @@ const similarBuildFinder = new SimilarBuildFinder({
     }
 });
 app.provide('similarBuildFinder', similarBuildFinder);
-// Whether this device published `publication` itself: its own card in Explore
-// lists the look-alikes published after it.
-app.provide('isOwnPublication', (publication) => {
-    const own = publication?.id ? new LocalDiscoveryProvider(new LocalStorageProvider()).findById(publication.id) : null;
-    return Boolean(own && own.contentHash && own.contentHash === publication.contentHash);
-});
+// Whether `publication` is the person's own (published here, or signed by an
+// identity this device holds or acts for): its card in Explore lists the
+// look-alikes published after it.
+app.provide('isOwnPublication', createOwnPublicationCheck({
+    findPublishedHere: (id) => new LocalDiscoveryProvider(new LocalStorageProvider()).findById(id),
+    ownIdentityIds: () => {
+        let actingFor = null;
+        try {
+            actingFor = deviceAuthorizationUseCase?.resolveOwnSocialIdentity?.()?.identityId || null;
+        } catch {
+            actingFor = null;
+        }
+        return ownIdentityIdsOf(identityProvider, actingFor ? [actingFor] : []);
+    }
+}));
 // A build admitted here that looks like one of the signed-in identity's own,
 // published before it, goes to the 🔔, as a remix of theirs does.
 const lookAlikeBuildNotifier = new LookAlikeBuildNotifier({
     identityProvider,
     similarBuildFinder,
     isBlocked: (identityId) => peerBlockUseCase.isBlocked(identityId),
-    notificationSink: (notificationEvent) => new NotificationEventStore(new LocalStorageProvider()).save(notificationEvent)
+    notificationSink: (notificationEvent) => new NotificationEventStore(new LocalStorageProvider()).save(notificationEvent),
+    waitingStore: new LookAlikeWaitingStore({ storageProvider: new LocalStorageProvider() })
 });
 decentralizedPublicationDiscoveryProvider.onAdded((publication) => {
     lookAlikeBuildNotifier.handlePublicationAdmitted(publication);
@@ -659,6 +671,10 @@ storeSnapshotContentUseCase.onStored(({ contentHash }) => {
 publicationPeerContentExchange.onContentReceived(({ hash }) => {
     lookAlikeBuildNotifier.handleContentStored(hash);
 });
+// Builds a past visit left waiting for their bytes, from the Publications
+// rebuilt above.
+lookAlikeBuildNotifier.restoreWaiting((publicationId) => decentralizedPublicationDiscoveryProvider.findById(publicationId)
+    || new LocalDiscoveryProvider(new LocalStorageProvider()).findById(publicationId));
 // The builds each identity helped make with friends (Build with me).
 const helpedBuildsStore = new HelpedBuildsStore({ storageProvider: new LocalStorageProvider() });
 app.provide('helpedBuildsStore', helpedBuildsStore);

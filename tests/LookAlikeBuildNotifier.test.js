@@ -11,8 +11,9 @@ import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { SimilarBuildFinder } from '../application/publication/SimilarBuildFinder.js';
-import { LookAlikeBuildNotifier, BUILD_LOOKS_LIKE_YOURS_EVENT_TYPE, MAX_BUILDS_WAITING_FOR_BYTES } from '../application/publication/LookAlikeBuildNotifier.js';
+import { LookAlikeBuildNotifier, BUILD_LOOKS_LIKE_YOURS_EVENT_TYPE, MAX_BUILDS_WAITING_FOR_BYTES, MAX_WAITING_FOR_BYTES_MS } from '../application/publication/LookAlikeBuildNotifier.js';
 import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { LookAlikeWaitingStore } from '../application/publication/LookAlikeWaitingStore.js';
 import { NotificationEventStore, NotificationPersistenceOutcome } from '../storage/NotificationEventStore.js';
 import { describeNotification } from '../ui/notifications/notificationText.js';
 import { t } from '../ui/i18n/i18n.js';
@@ -231,5 +232,80 @@ console.log('✓ only verifiably hers; signed out, failures and bursts');
     assert(asked.join() === 'crowd-1', `27. the oldest was let go to make room; the next still waited (${asked.join()})`);
 }
 console.log('✓ a build admitted before its bytes is compared when they arrive');
+
+// The waiting list outlives the visit: a build still waiting when the app
+// closes is checked at the next start, and waits on if its bytes still aren't
+// here, until it has waited too long.
+{
+    const storage = new InMemoryStorageProvider();
+    const waitingStore = new LookAlikeWaitingStore({ storageProvider: storage });
+    let nowMs = new Date('2026-10-20T00:00:00Z').getTime();
+    const notified = [];
+    const visit = () => new LookAlikeBuildNotifier({
+        identityProvider: alice, similarBuildFinder: finder, waitingStore,
+        notificationSink: (event) => notified.push(event), now: () => new Date(nowMs)
+    });
+    const find = (id) => known.find((publication) => publication.id === id) || null;
+
+    const first = visit();
+    const arrivesLater = publish(bob, { documentId: 'bob-restart', title: 'After restart', bricks: cottageBricks({ dx: 300 }), publishedAt: '2026-10-15T00:00:00Z', onDevice: false });
+    const stillMissing = publish(bob, { documentId: 'bob-missing', title: 'Still missing', bricks: cottageBricks({ dx: 400 }), publishedAt: '2026-10-15T00:00:00Z', onDevice: false });
+    await first.handlePublicationAdmitted(arrivesLater);
+    await first.handlePublicationAdmitted(stillMissing);
+    const saved = waitingStore.load();
+    assert(saved.length === 2 && saved.every((entry) => entry.since === nowMs), '28. builds waiting for their bytes are saved, with when they started');
+
+    // The app closes; one build's bytes arrive while it is closed (or before
+    // anything hears of them at the next start).
+    contentStore.put(lateBytes.get(arrivesLater.id));
+    nowMs += 24 * 60 * 60 * 1000;
+    const second = visit();
+    await second.restoreWaiting(find);
+    assert(notified.length === 1 && notified[0].payload.publicationId === arrivesLater.id, `29. at the next start, a build whose bytes are now here is compared and notifies (${notified.length})`);
+    const afterRestart = waitingStore.load();
+    assert(second.waitingCount === 1 && afterRestart.length === 1 && afterRestart[0].publicationId === stillMissing.id,
+        '30. one whose bytes still aren\'t here waits on');
+    assert(afterRestart[0].since === new Date('2026-10-20T00:00:00Z').getTime(), '31. keeping when it first started waiting');
+
+    await second.handleContentStored(stillMissing.contentReference.hash);
+    assert(waitingStore.load().length === 0, '32. a build let go is no longer saved');
+
+    // Too long, unknown or changed: let go at the start.
+    await second.handlePublicationAdmitted(stillMissing);
+    nowMs += MAX_WAITING_FOR_BYTES_MS + 1;
+    const third = visit();
+    await third.restoreWaiting(find);
+    assert(third.waitingCount === 0 && waitingStore.load().length === 0, '33. a build that has waited too long is let go');
+
+    await third.handlePublicationAdmitted(stillMissing);
+    const fourth = visit();
+    await fourth.restoreWaiting(() => null);
+    assert(fourth.waitingCount === 0 && waitingStore.load().length === 0, '34. so is one whose Publication this device no longer knows');
+    await fourth.handlePublicationAdmitted(stillMissing);
+    const fifth = visit();
+    await fifth.restoreWaiting(() => known.find((p) => p.documentId === 'bob-cottage'));
+    assert(fifth.waitingCount === 0, '35. or whose Publication now names other bytes');
+
+    // Restoring never forgets a build that started waiting in this visit.
+    const sixth = visit();
+    const thisVisit = publish(bob, { documentId: 'bob-this-visit', title: 'This visit', bricks: cottageBricks({ dx: 500 }), publishedAt: '2026-10-16T00:00:00Z', onDevice: false });
+    await sixth.handlePublicationAdmitted(thisVisit);
+    await sixth.restoreWaiting(find);
+    assert(sixth.waitingCount === 1 && waitingStore.load().some((entry) => entry.publicationId === thisVisit.id), '36. a build waiting from this visit stays waiting, and saved');
+
+    // Signed out, a build waits for someone to tell, and is compared at the
+    // next start once someone is signed in.
+    const signedOut = new LookAlikeBuildNotifier({ identityProvider: new LocalIdentityProvider(new InMemoryStorageProvider()), similarBuildFinder: finder, waitingStore, notificationSink: () => { throw new Error('nobody to tell'); }, now: () => new Date(nowMs) });
+    const whileOut = publish(bob, { documentId: 'bob-while-out', title: 'While out', bricks: cottageBricks({ dx: 600 }), publishedAt: '2026-10-17T00:00:00Z' });
+    await signedOut.handlePublicationAdmitted(whileOut);
+    assert(signedOut.waitingCount === 1 && waitingStore.load().some((entry) => entry.publicationId === whileOut.id), '37a. signed out, a build waits instead of being let go');
+    notified.length = 0;
+    await visit().restoreWaiting(find);
+    assert(notified.some((event) => event.payload.publicationId === whileOut.id), '37b. and is compared at the next start, once someone is signed in');
+
+    const plain = new LookAlikeBuildNotifier({ identityProvider: alice, similarBuildFinder: finder, notificationSink: () => {} });
+    assert((await plain.restoreWaiting(find)).length === 0, '37. with no store, there is nothing to restore');
+}
+console.log('✓ the waiting list outlives the visit');
 
 console.log('✅ All look-alike build notifier tests passed.');

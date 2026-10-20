@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 403ae8ce862b459d -->
+<!-- translation-of: docs/Privacy.md source-hash: 48b83be51fa03585 -->
 # Confidentialité
 
 <!-- languages -->
@@ -69,6 +69,12 @@ jamais l’appareil, sauf si vous le publiez, l’exportez ou l’envoyez :
   pouvoir les partager par un lien court.
 - pour chaque construction commencée avec **Construire ici**, le monde et
   l’emplacement choisis, pour qu’une fois publiée elle s’y dresse.
+- les identifiants et empreintes de contenu des constructions d’autres
+  personnes dont les octets ne sont pas encore arrivés sur cet appareil, et
+  depuis quand (500 au plus, chacune pendant 30 jours), pour que chacune
+  puisse encore être comparée à vos propres constructions quand ses octets
+  arrivent, même après la fermeture de ForkBuild (l’entrée 🔔 **… a publié
+  une construction qui ressemble à la vôtre**).
 - pour chaque construction commencée à partir d’une structure toute faite ou
   comme copie d’une construction, et pour chaque structure toute faite
   ajoutée, quelles briques c’étaient et où elles se trouvaient, pour que la

@@ -424,8 +424,10 @@ whole ready-made structure from the Build Library are taken out first
 and taken while `READY_MADE_COVERAGE` of it is there, every copy of it); the
 finder loads the structures with a dynamic import of
 CreateStructureRegistryUseCase on first use (`readyMadeStructures`), since
-the libraries aren't in the first load. An Explore card for a build this
-device published (`isOwnPublication`, provided by ui/main.js) asks
+the libraries aren't in the first load. An Explore card for the person's
+own build (`isOwnPublication`, application/publication/OwnPublicationCheck.js
+provided by ui/main.js: published here, or verifiably signed by an identity
+this device holds a key for or acts for as an authorized device) asks
 `findLater()`, the builds published after it, and shows their count, opening
 the same list (ui/components/remix/OwnLookAlikes.js, mounted by
 PublicationCard, which itself stays the same for every build); nobody else's
@@ -1207,7 +1209,13 @@ Repository cards and ui/components/SharedWithYouPanel.js above the catalog.
     verification: StoreSnapshotContentUseCase (`onStored()`; networks, shared
     links, build notes, placements, transfer packages) or PeerContentExchange
     (`onContentReceived()`; a connected peer's answer), both wired in
-    ui/main.js; bytes still unreadable then let it go.
+    ui/main.js; bytes still unreadable then let it go. The list is saved
+    (application/publication/LookAlikeWaitingStore.js, ids, hashes and
+    since when) and `restoreWaiting()` takes it back at startup from the
+    rebuilt Publications: each is checked at once, waits on with its first
+    `since` if its bytes still aren't here, and is let go after
+    `MAX_WAITING_FOR_BYTES_MS` (30 days) or when its Publication is gone or
+    names other bytes.
   - application/announcementIndex/FollowedAnnouncementRetention.js is the
     Announcement Index's `isKeptFirst`: Snapshot records with a followed
     publisher's signed placement, and Place Naming claims a followed author

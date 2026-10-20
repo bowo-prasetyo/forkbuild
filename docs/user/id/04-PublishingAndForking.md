@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ed04e9dc0ae7ffa3 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 25738ff466939f65 -->
 # 04 — Penerbitan & Remix
 
 <!-- languages -->
@@ -934,11 +934,12 @@ menampilkannya jika Anda menyalakan
 Remix dari bangunan Anda tidak dihitung di sini: remix mencantumkan nama
 Anda dan punya [notifikasinya sendiri](#jumlah-remix).
 
-Pada bangunan yang Anda terbitkan dari perangkat ini, dan hanya di sana,
-kartu Anda di **Jelajahi** juga menyebut berapa banyak bangunan orang lain,
+Pada bangunan Anda sendiri, dan hanya di sana, kartu Anda di **Jelajahi** juga menyebut berapa banyak bangunan orang lain,
 yang diterbitkan setelah milik Anda, yang sangat mirip dengannya
 (**2 bangunan yang diterbitkan setelah milik Anda mirip dengannya**); klik
-untuk melihatnya. Hanya Anda yang melihat ini: tidak ada kartu milik orang
+untuk melihatnya. Bangunan Anda sendiri adalah yang Anda terbitkan dari
+perangkat ini dan, dari perangkat Anda yang lain, yang ditandatangani dengan
+nama yang kuncinya dimiliki perangkat ini. Hanya Anda yang melihat ini: tidak ada kartu milik orang
 lain yang ditandai di daftar yang dijelajahi semua orang.
 
 ## Alur kreatif yang umum

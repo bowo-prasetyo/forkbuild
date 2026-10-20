@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ed04e9dc0ae7ffa3 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 25738ff466939f65 -->
 # 04 — Veröffentlichen & Remixen
 
 <!-- languages -->
@@ -939,11 +939,12 @@ auflistet (Ihr Gerät zeigt ihn auch, wenn Sie
 eingeschaltet haben). Remixe Ihrer Bauwerke zählen hier nicht: Sie nennen
 Sie und haben [eine eigene Benachrichtigung](#remix-zähler).
 
-Bei den Bauwerken, die Sie von diesem Gerät aus veröffentlicht haben, und
-nur dort, sagt Ihre Karte unter **Entdecken** außerdem, wie viele Bauwerke
+Bei Ihren eigenen Bauwerken, und nur dort, sagt Ihre Karte unter **Entdecken** außerdem, wie viele Bauwerke
 anderer, die nach Ihrem veröffentlicht wurden, ihm sehr ähneln
 (**2 später veröffentlichte Bauwerke ähneln diesem**); ein Klick zeigt sie.
-Nur Sie sehen das: Keine fremde Karte wird in der Liste, die alle
+Ihre eigenen Bauwerke sind die, die Sie von diesem Gerät aus veröffentlicht
+haben, und von Ihren anderen Geräten die, die mit einem Namen signiert sind,
+dessen Schlüssel dieses Gerät hat. Nur Sie sehen das: Keine fremde Karte wird in der Liste, die alle
 durchsehen, gekennzeichnet.
 
 ## Ein typischer kreativer Kreislauf
