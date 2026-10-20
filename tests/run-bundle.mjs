@@ -680,17 +680,23 @@ async function firstVisit(browser, base) {
         await film.click('.editor-post-publish-share .publication-share-link-video');
         await film.click('.build-video-dialog [data-kind="walkthrough"] input');
         await film.click('.build-video-dialog [data-shape="tall"] input');
-        const filmed = film.waitForEvent('download', { timeout: 120_000 });
+        // Saved when waitForFilmSaved() says so; its own checks decide how long that may take.
+        const filmed = film.waitForEvent('download', { timeout: 0 });
+        filmed.catch(() => {});
         await film.click('.build-video-record');
-        await film.waitForSelector('.walk-through-film-panel', { timeout: 60_000 });
+        // World View opens and loads the house first, slowly where WebGL is
+        // slow (waitForFilmSaved()); the app itself gives up waiting to film
+        // after 30 s of not being able to.
+        await film.waitForSelector('.walk-through-film-panel', { timeout: 180_000 });
         // A tall video is drawn at its own shape, fitted into the view, not cropped from it.
-        await film.waitForSelector('.walk-through-film-panel[data-stage="filming"]', { timeout: 60_000 });
+        await film.waitForSelector('.walk-through-film-panel[data-stage="filming"]', { timeout: 180_000 });
         const framed = await film.evaluate(() => {
             const canvas = document.querySelector('.world-viewport canvas');
             return { width: canvas.width, height: canvas.height, framed: Boolean(document.querySelector('.world-viewport--framed')), shown: canvas.getBoundingClientRect().height };
         });
         assert(framed.width === 720 && framed.height === 1280 && framed.framed && framed.shown > 0, `World View draws the tall video at 720 × 1280 while it films (${JSON.stringify(framed)})`);
         assert(film.url().includes('#/world/') && !film.url().includes('film='), `World View films it, leaving the address clean (${film.url()})`);
+        await waitForFilmSaved(film);
         const video = await filmed;
         assert(/^forkbuild-house-walkthrough\.(webm|mp4)$/.test(video.suggestedFilename()), `the walk-through is saved, named after the house (${video.suggestedFilename()})`);
         await film.waitForSelector('.walk-through-film-panel[data-stage="saved"] .build-video-description', { timeout: 30_000 });
@@ -837,6 +843,39 @@ async function homeStartsNetwork(browser, base) {
         await context.close();
     }
     assert(problems.length === 0, `Home starts the network runtime without errors:\n  ${problems.slice(0, 20).join('\n  ')}`);
+}
+
+// Waits for the walk-through being filmed on `page` to be saved. The film
+// runs on World View's own clock, which counts at most a quarter of a second
+// a frame (renderer/AnimationLoop.js), so where WebGL draws only a frame or
+// two a second, as on a CI runner without a GPU, a twenty-second film takes
+// minutes. A fixed deadline would fail a slow machine as surely as a hang;
+// this one fails when the film stops getting further (its progress bar, or
+// saving, unchanged for STALL_MS), when it says it failed, or after LIMIT_MS
+// in all.
+async function waitForFilmSaved(page) {
+    const STALL_MS = 60_000;
+    const LIMIT_MS = 6 * 60_000;
+    const started = Date.now();
+    let last = null;
+    let lastChange = started;
+    for (;;) {
+        const now = await page.evaluate(() => {
+            const panel = document.querySelector('.walk-through-film-panel');
+            const bar = panel?.querySelector('.build-video-progress');
+            return { stage: panel?.dataset.stage ?? null, progress: bar ? Number(bar.value) : null };
+        });
+        if (now.stage === 'saved') return;
+        assert(now.stage !== 'failed', 'World View films the walk-through without failing');
+        const time = Date.now();
+        if (!last || now.stage !== last.stage || now.progress !== last.progress) {
+            last = now;
+            lastChange = time;
+        }
+        assert(time - lastChange < STALL_MS, `the walk-through keeps getting further while it films (stuck at ${JSON.stringify(now)} for ${STALL_MS / 1000} s)`);
+        assert(time - started < LIMIT_MS, `the walk-through is saved within ${LIMIT_MS / 60_000} minutes (at ${JSON.stringify(now)})`);
+        await page.waitForTimeout(1000);
+    }
 }
 
 // The Steem operator pages (scripts/steem-threads/), bundled on their own,
