@@ -50,7 +50,7 @@ const IDENTITY_MISMATCH_EVENT = 'PeerIdentityMismatch';
 // one layer over.
 //
 // 0.2.51 note: `_authenticate()` no longer assumes `connection` is already
-// CONNECTED the instant it exists. `peer/LocalPeerConnectionProvider.js`
+// CONNECTED the instant it exists. `tests/support/LocalPeerConnectionProvider.js`
 // always was — pairing two in-process connections is instant — so
 // `session.start()` used to run synchronously, same tick, right here. A
 // real transport (`peer/WebRtcPeerConnectionProvider.js`) cannot make that

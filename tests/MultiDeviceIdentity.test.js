@@ -1,6 +1,6 @@
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
+import { LocalPeerNetwork, LocalPeerConnectionProvider } from './support/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
@@ -69,7 +69,7 @@ function makeDevice(label) {
 
 // Drives one real, in-process peer/PeerAuthenticationSession.js
 // handshake to completion between two devices over a fresh
-// peer/LocalPeerConnectionProvider.js connection, then wraps both ends
+// tests/support/LocalPeerConnectionProvider.js connection, then wraps both ends
 // as application/peer/ConnectedPeer.js — exactly the "raw transport +
 // PeerAuthenticationSession, no PeerSessionManager/invitation layer"
 // pattern tests/PeerAuthentication.test.js's own flagship already uses.

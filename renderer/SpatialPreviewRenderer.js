@@ -9,7 +9,7 @@ const INVALID_COLOR = 0xe05252;
 //
 // 0.2.87 — `valid` (new 4th param, default true) tints the ghost red
 // when WorldNavigationSession has determined the hovered position is
-// occupied (SpatialPlacementState#blocked) — mirrors
+// occupied (SpatialPlacementState#blocked (removed as unused)) — mirrors
 // renderer/PreviewRenderer.js's own identical addition for the Editor.
 // Deliberately NO terrain awareness here, unlike PreviewRenderer: the
 // `position` this class receives has already had the document's own

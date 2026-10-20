@@ -1,12 +1,10 @@
 import { BaseAnchorPublicationRecord } from '../application/anchoring/base/BaseAnchorPublicationRecord.js';
 import { describeBaseAnchorPublicationObservations } from '../application/anchoring/base/BaseAnchorPublicationObservation.js';
-import { describeBaseAnchorPublicationObservationProjection } from '../application/anchoring/base/BaseAnchorPublicationObservationView.js';
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 import { CreateBaseAnchorPublicationRecordUseCase } from '../application/anchoring/base/CreateBaseAnchorPublicationRecordUseCase.js';
 import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
 import { BaseTransactionInclusionObservationState } from '../application/anchoring/base/BaseTransactionInclusionObservationState.js';
 import { assert } from './support/Assert.js';
-import { displayText } from '../ui/i18n/i18n.js';
 
 // 0.8.100 — Publication Identity–Scoped Observation Correlation.
 //
@@ -273,33 +271,14 @@ async function run() {
     console.log('✓ Section F: real archive integration — correlation over the actual PublicationObservationArchive collections behaves identically to the isolated flagship scenario');
 
     // ---------------------------------------------------------------
-    // Section G — the view layer.
-    // ---------------------------------------------------------------
-    {
-        const publicationA = record({ contentHash: CONTENT_HASH, txid: TX_A, createdAt: CREATED_AT });
-        const observation = included({ txid: TX_A, blockNumber: 100, confirmationCount: 1, observedAt: new Date('2026-08-20T00:10:00Z') });
-        const projection = describeBaseAnchorPublicationObservations(publicationA, { [TX_A]: [observation] });
-
-        const described = describeBaseAnchorPublicationObservationProjection(projection);
-
-        assert(described.publication.contentHash === CONTENT_HASH && described.publication.txid === TX_A, '29. the described publication carries the identity fields unchanged');
-        assert(described.observations.count === 1, '30. the described observations section carries the correct count');
-        assert(displayText(described.observations.observations[0].stateLabel) === 'Transaction included', '31. the described observation reuses application/anchoring/base/BaseTransactionInclusionObservationView.js\'s own, already-established labels — no new vocabulary');
-
-        assert(describeBaseAnchorPublicationObservationProjection(null) === null, '32. a null projection describes as null, never throwing');
-    }
-    console.log('✓ Section G: the view layer composes only already-existing describe functions — no new vocabulary');
-
-    // ---------------------------------------------------------------
     // Section H — no verdict vocabulary anywhere.
     // ---------------------------------------------------------------
     {
         const publicationA = record({ contentHash: CONTENT_HASH, txid: TX_A, createdAt: CREATED_AT });
         const observation = included({ txid: TX_A, blockNumber: 100, confirmationCount: 1, observedAt: new Date('2026-08-20T00:10:00Z') });
         const projection = describeBaseAnchorPublicationObservations(publicationA, { [TX_A]: [observation] });
-        const described = describeBaseAnchorPublicationObservationProjection(projection);
 
-        assertNeverScored(described, 'describeBaseAnchorPublicationObservationProjection()');
+        assertNeverScored(projection, 'describeBaseAnchorPublicationObservations()');
         assert(!('status' in projection), '33. the raw projection itself never carries an aggregate publication status field');
     }
     console.log('✓ Section H: no trust/confidence/verdict vocabulary exists anywhere in this milestone\'s own new surface');

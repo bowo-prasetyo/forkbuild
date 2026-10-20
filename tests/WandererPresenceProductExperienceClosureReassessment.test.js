@@ -1,6 +1,6 @@
 
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
+import { LocalPeerNetwork, LocalPeerConnectionProvider } from './support/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
@@ -79,7 +79,7 @@ const readSource = async (relativePath) => withEnglish(await readRawSource(relat
 // file was written (none of them, nor their own transitive imports, touch
 // `vue`, the DOM, or `three`). Every scenario below runs against these
 // real, unmodified (except Section K's own fix) classes, over REAL
-// authenticated peer connections (peer/LocalPeerConnectionProvider.js's
+// authenticated peer connections (tests/support/LocalPeerConnectionProvider.js's
 // in-memory transport, peer/PeerAuthenticationSession.js's real
 // handshake) — never a hand-rolled mock of presence/trust itself.
 //

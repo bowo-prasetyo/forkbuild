@@ -3,7 +3,7 @@ import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { PeerInvitation } from '../peer/PeerInvitation.js';
 import { PeerDiscoveryRecord } from '../peer/PeerDiscoveryRecord.js';
 import { LocalPeerDiscoveryProvider } from '../peer/LocalPeerDiscoveryProvider.js';
-import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
+import { LocalPeerNetwork, LocalPeerConnectionProvider } from './support/LocalPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerRelationshipUseCase } from '../application/peer/PeerRelationshipUseCase.js';
 import { FindPeerUseCase } from '../application/peer/FindPeerUseCase.js';
@@ -31,7 +31,7 @@ import { assert } from './support/Assert.js';
 //   device has never met at all, not just for reconnecting to a known
 //   one.
 //
-// Built over peer/LocalPeerConnectionProvider.js, the same real,
+// Built over tests/support/LocalPeerConnectionProvider.js, the same real,
 // in-process, bidirectional transport tests/PeerConnectionResilience.test.js
 // already trusts for this purpose. application/peer/PeerSessionManager.js's own
 // real-WebRTC connectToDiscovered()/importCandidate()/discoverCandidates()
@@ -61,7 +61,7 @@ function makeDevice(label, network) {
 // connectToDiscovered()/onIdentityMismatch() surface — the only four
 // methods application/peer/FindPeerUseCase.js ever calls on it. Backed by a
 // REAL peer/LocalPeerDiscoveryProvider.js and a REAL
-// application/peer/ConnectToPeerUseCase.js over peer/LocalPeerConnectionProvider.js
+// application/peer/ConnectToPeerUseCase.js over tests/support/LocalPeerConnectionProvider.js
 // — see this file's own header on why this stands in only for the
 // WebRTC-specific two-step signal relay, never for discovery or
 // authentication themselves.

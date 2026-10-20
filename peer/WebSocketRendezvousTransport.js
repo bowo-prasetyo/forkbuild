@@ -7,13 +7,13 @@ import { createId } from '../core/document/createId.js';
 // The networked peer/RendezvousTransport.js implementation 0.2.65's own
 // header already named and deferred: a REAL rendezvous SERVER, reached
 // over an ordinary WebSocket, satisfying the exact same PUBLISH/LOOKUP/
-// REMOVE contract peer/LocalRendezvousNetwork.js already proved out
+// REMOVE contract tests/support/LocalRendezvousNetwork.js already proved out
 // in-process. Everything above this class — peer/RendezvousDiscoveryProvider.js,
 // peer/DiscoveryBootstrap.js, application/peer/FindPeerUseCase.js,
 // application/peer/PeerSessionManager.js — needed ZERO changes beyond the
 // contract already becoming async in 0.2.66 (see peer/RendezvousTransport.js's
 // own header); this class is a drop-in alternative to
-// peer/LocalRendezvousNetwork.js, nothing more.
+// tests/support/LocalRendezvousNetwork.js, nothing more.
 //
 // Deliberately, and by the same discipline peer/RendezvousTransport.js's
 // own header has held since 0.2.65: this class authenticates NO ONE. It
@@ -22,7 +22,7 @@ import { createId } from '../core/document/createId.js';
 // who Bob is — see peer/PeerAuthenticationSession.js, still the only
 // thing that ever proves that, completely unaware this transport exists.
 // The server on the other end of `url` is intentionally as "stupid" as
-// peer/LocalRendezvousNetwork.js's own in-memory Map: identityId maps to
+// tests/support/LocalRendezvousNetwork.js's own in-memory Map: identityId maps to
 // one current publication, expiring on its own, nothing else — this class
 // ships no reference server ITSELF, only the CLIENT half of a small wire
 // protocol any server that wants to be found by this codebase can
@@ -202,7 +202,7 @@ export class WebSocketRendezvousTransport extends RendezvousTransport {
     }
 
     // Not part of peer/RendezvousTransport.js's own formal contract —
-    // peer/LocalRendezvousNetwork.js needs no equivalent, since an
+    // tests/support/LocalRendezvousNetwork.js needs no equivalent, since an
     // in-memory Map holds no live socket to release. Mirrors peer/
     // WebRtcPeerConnectionProvider.js's own dispose(): closes the socket
     // and rejects every still-pending request rather than leaving it to

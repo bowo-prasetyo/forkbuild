@@ -15,7 +15,7 @@ const DUPLICATE_WINDOW_SIZE = 256;
 // a future World Event or chat) subscribes here ONCE, by a namespaced
 // `protocol` string, and receives messages from every attached peer that
 // sends under that name — without ever importing peer/PeerConnection.js,
-// peer/WebRtcPeerConnection.js, or peer/LocalPeerConnectionProvider.js,
+// peer/WebRtcPeerConnection.js, or tests/support/LocalPeerConnectionProvider.js,
 // and without knowing or caring which one is underneath. See docs/
 // Principles.md, "A Peer Connection Transports Messages; It Does Not
 // Interpret Them" (0.2.52) — this class is the one place that rule is

@@ -9,7 +9,7 @@ import { mergeIceServers } from './IceServerConfig.js';
 // ("no commitment to WebRTC or any other real network transport is made
 // here") and again in 0.2.50's ("Real Browser Peer Transport," proposed,
 // unscheduled). Satisfies the exact same peer/PeerConnectionProvider.js
-// contract peer/LocalPeerConnectionProvider.js already does —
+// contract tests/support/LocalPeerConnectionProvider.js already does —
 // `connect(remoteAddress)` / `onIncomingConnection()` / `dispose()` — so
 // application/peer/ConnectToPeerUseCase.js and application/
 // DiscoverPeersUseCase.js needed NO changes to their own logic to drive a
@@ -97,7 +97,7 @@ export class WebRtcPeerConnectionProvider extends PeerConnectionProvider {
     // gathering completes; use `onLocalSignalReady()` to wait for it. Not
     // part of the base peer/PeerConnectionProvider.js contract — WebRTC's
     // asymmetric offer/answer handshake has no "just dial an address"
-    // active half the way peer/LocalPeerConnectionProvider.js's shared
+    // active half the way tests/support/LocalPeerConnectionProvider.js's shared
     // in-process registry does, so this method exists to be that half
     // instead.
     createOffer({ ttlMs } = {}) {

@@ -92,7 +92,7 @@ export class ConnectedPeer {
         // notification time is called exactly once, regardless of what a
         // listener does to this object in response — 0.2.51's real,
         // network-timed WebRtcPeerConnection is what first exposed this;
-        // peer/LocalPeerConnectionProvider.js's instant, synchronous close
+        // tests/support/LocalPeerConnectionProvider.js's instant, synchronous close
         // never left a test with an external listener still needing to
         // observe CLOSED after registry disposal.
         for (const listener of Array.from(this._stateListeners)) {

@@ -125,7 +125,7 @@ async function runTests() {
     const placePublicationUseCase = new PlacePublicationUseCase(
         spatialIndexProvider, discoveryProvider, loadPublicationDocumentUseCase, registry, placementRegistry, alice
     );
-    const moveWorldPlacementUseCase = new MoveWorldPlacementUseCase(spatialIndexProvider, placementRegistry, null, alice);
+    const moveWorldPlacementUseCase = new MoveWorldPlacementUseCase(spatialIndexProvider, placementRegistry, alice);
     const removeWorldPlacementUseCase = new RemoveWorldPlacementUseCase(spatialIndexProvider, placementRegistry);
     // The one new collaborator this milestone wires in — otherwise
     // completely unmodified UnpublishDocumentUseCase, given the exact

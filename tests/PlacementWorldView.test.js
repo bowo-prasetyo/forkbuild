@@ -103,7 +103,7 @@ async function runTests() {
     const placePublicationUseCase = new PlacePublicationUseCase(
         spatialIndexProvider, discoveryProvider, loadPublicationDocumentUseCase, registry, placementRegistry, alice
     );
-    const moveWorldPlacementUseCase = new MoveWorldPlacementUseCase(spatialIndexProvider, placementRegistry, null, alice);
+    const moveWorldPlacementUseCase = new MoveWorldPlacementUseCase(spatialIndexProvider, placementRegistry, alice);
     const initialPlacementStrategy = new GridPlacementStrategy();
     const publishDocumentUseCase = new PublishDocumentUseCase(publisher, alice, placePublicationUseCase, initialPlacementStrategy);
     const documentCloneService = new DocumentCloneService();

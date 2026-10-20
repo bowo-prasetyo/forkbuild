@@ -1,8 +1,8 @@
-import { RendezvousTransport } from './RendezvousTransport.js';
+import { RendezvousTransport } from '../../peer/RendezvousTransport.js';
 
 // 0.2.65's concrete rendezvous transport: an in-memory, shared "node" that
 // any number of peer/RendezvousDiscoveryProvider.js instances can point at
-// — the rendezvous-layer analogue of peer/LocalPeerConnectionProvider.js's
+// — the rendezvous-layer analogue of tests/support/LocalPeerConnectionProvider.js's
 // own LocalPeerNetwork (several providers sharing one in-process network,
 // standing in for a future networked implementation without pretending to
 // be a mock of one).

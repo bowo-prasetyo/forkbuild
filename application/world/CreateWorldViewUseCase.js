@@ -110,7 +110,6 @@ export class CreateWorldViewUseCase {
         const moveWorldPlacementUseCase = new MoveWorldPlacementUseCase(
             spatialIndexProvider,
             placementRegistry,
-            null,
             identityProvider
         );
         const removeWorldPlacementUseCase = new RemoveWorldPlacementUseCase(

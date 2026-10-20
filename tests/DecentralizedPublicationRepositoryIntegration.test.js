@@ -23,7 +23,7 @@ import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
-import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
+import { LocalPeerNetwork, LocalPeerConnectionProvider } from './support/LocalPeerConnectionProvider.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
 import { BlueprintAttribution, BLUEPRINT_ATTRIBUTION_KIND, CURRENT_SCHEMA_VERSION as ATTRIBUTION_SCHEMA_VERSION } from '../core/building/BlueprintAttribution.js';
@@ -222,7 +222,7 @@ async function run() {
         const bobConnectedPeer = bobConnect.connect({ candidateEndpoint: 'alice-repo-integration' });
         await wait(20);
         assert(bobConnectedPeer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED,
-            '1. setup: a real, live, authenticated peer connection (peer/LocalPeerConnectionProvider.js + application/peer/ConnectToPeerUseCase.js, unmodified).');
+            '1. setup: a real, live, authenticated peer connection (tests/support/LocalPeerConnectionProvider.js + application/peer/ConnectToPeerUseCase.js, unmodified).');
 
         const verifier = new LocalAuthorizationVerifier();
         const sharedContentStorage = new InMemoryStorageProvider();

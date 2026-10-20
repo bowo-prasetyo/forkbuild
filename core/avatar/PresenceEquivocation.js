@@ -10,7 +10,7 @@ import { computeContentHash } from '../../serializer/contentHash.js';
 // index roots.
 //
 // Deliberately a pure, STATELESS comparison rather than an
-// accumulating detector like `core/world/IndexEquivocation.js`'s
+// accumulating detector like `core/world/IndexEquivocation.js`'s (removed as unused)
 // `EquivocationDetector`. That class needs to accumulate because a
 // SpatialIndexRoot has no single "current" slot to compare against —
 // many roots can coexist across the discovery layer. A presence

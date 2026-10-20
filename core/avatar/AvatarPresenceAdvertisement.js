@@ -73,7 +73,7 @@ export function isValidAvatarPresenceAdvertisement(value) {
 // position/rotation/animation while keeping it verifying — exactly
 // the causal-history signing bug 0.2.18 fixed, recreated one level up
 // if this shape ever shrank. `type`/`id`/`revision` follow the same
-// convention Publication/PlacementRecord/SpatialIndexRoot already use
+// convention Publication/PlacementRecord/SpatialIndexRoot (removed as unused) already use
 // (see core/publication/Signature.js's own header): `id` is the object this
 // signature is about (the avatarId), `revision` is which version of
 // it (the sequence — the presence analogue of a PlacementRecord's

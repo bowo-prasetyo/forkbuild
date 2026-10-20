@@ -6,7 +6,7 @@ import { DiscoveryProvider } from './DiscoveryProvider.js';
 // CreatePublicationSnapshotPlacementUseCase.js (both 0.8.18) were built
 // and tested against THIS file's own base class — discovery/
 // DiscoveryProvider.js#findById() — mirroring application/
-// PlacePublicationUseCase.js's and application/ResolvePublicationUseCase
+// PlacePublicationUseCase.js's and application/ResolvePublicationUseCase (removed as unused)
 // .js's identical collaborator from the older, pre-0.7.0 `Publication`/
 // `Publisher` world discovery/LocalDiscoveryProvider.js still serves.
 //

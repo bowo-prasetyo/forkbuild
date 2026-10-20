@@ -4,7 +4,7 @@
 // lobby is the one place that lists identities, and only those that chose
 // to join it with a signed core/social/LobbyCard.js.
 //
-// peer/WebSocketRendezvousTransport.js and peer/LocalRendezvousNetwork.js
+// peer/WebSocketRendezvousTransport.js and tests/support/LocalRendezvousNetwork.js
 // implement both contracts over the same connection or map.
 export class RendezvousLobbyTransport {
     // Stores a signed card, replacing its identity's card in that lobby.

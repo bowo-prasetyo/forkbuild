@@ -9,9 +9,6 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
-import { LocalSpatialIndexStore } from '../spatial/LocalSpatialIndexStore.js';
-import { SpatialIndexBuilder } from '../spatial/SpatialIndexBuilder.js';
-import { DecentralizedSpatialDiscoveryProvider } from '../spatial/DecentralizedSpatialDiscoveryProvider.js';
 import { ConflictResolver, ConflictRelation } from '../replication/ConflictResolver.js';
 import { ConflictPolicy } from '../replication/ConflictPolicy.js';
 import { ReplicaMergeService, MergeResult } from '../replication/ReplicaMergeService.js';
@@ -78,25 +75,20 @@ function nextRevision(provider, parentRecord, { x, y, z }, actorKey = null) {
 // One replica: its own storage, registry, spatial index, decentralized
 // index, and merge pipeline. Two InMemoryStorageProviders never share
 // data, exactly like two disconnected nodes.
-function buildReplica({ indexAuthorityIdentity = null } = {}) {
+function buildReplica() {
     const storage = new InMemoryStorageProvider();
     const spatialIndexProvider = new LocalSpatialIndexProvider(storage);
     const registry = new LocalPlacementRegistry(storage, spatialIndexProvider);
     const replicationStore = new LocalReplicationStore(storage);
-    const spatialIndexStore = new LocalSpatialIndexStore(storage);
-    const spatialIndexBuilder = new SpatialIndexBuilder(spatialIndexStore, { cellSize: 100 });
-    const verifier = new LocalAuthorizationVerifier({ indexAuthorityIdentity });
+    const verifier = new LocalAuthorizationVerifier();
     const resolver = new ConflictResolver();
     const policy = new ConflictPolicy();
     const mergeService = new ReplicaMergeService({
-        resolver, policy, verifier, registry, replicationStore, spatialIndexBuilder
-    });
-    const discoveryProvider = new DecentralizedSpatialDiscoveryProvider({
-        spatialIndexStore, placementRegistry: registry, authorizationVerifier: verifier
+        resolver, policy, verifier, registry, replicationStore
     });
     return {
-        storage, spatialIndexProvider, registry, replicationStore, spatialIndexBuilder,
-        verifier, resolver, policy, mergeService, discoveryProvider,
+        storage, spatialIndexProvider, registry, replicationStore,
+        verifier, resolver, policy, mergeService,
         replicatePlacementUseCase: new ReplicatePlacementUseCase(mergeService),
         syncFrom: (remoteStore) => new SynchronizeReplicaUseCase({
             localStore: replicationStore, remoteStore, mergeService
@@ -408,41 +400,30 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // 19-20. Spatial index reflects reconciled state; a stale
-    //        decentralized index entry never resurrects a losing
-    //        revision (0.2.15's "index is an accelerator, not truth"
-    //        carried into 0.2.18's conflict resolution).
+    // 19. The local spatial index reflects the reconciled state.
     // -------------------------------------------------------------
     {
         const replica = buildReplica();
         const base = genesisRecord(alice, { placementId: 'pl-index', publicationId: 'pub-1', x: 0, y: 0, z: 0 });
         await replica.mergeService.merge(base);
-        // Publish the decentralized index once, capturing revision 1.
-        replica.spatialIndexBuilder.addOrUpdatePlacement(replica.registry.get('pl-index'));
 
         const editA = nextRevision(alice, base, { x: 20, y: 0, z: 0 });
         const editB = nextRevision(alice, base, { x: 0, y: 20, z: 0 });
-        await replica.mergeService.merge(editA); // UPDATED, and rebuilds the decentralized index
+        await replica.mergeService.merge(editA); // UPDATED
         const conflict = await replica.mergeService.merge(editB); // CONCURRENT
 
         const winnerRecord = conflict.winner === editA.contentHash ? editA : editB;
-        const loserRecord = conflict.winner === editA.contentHash ? editB : editA;
 
         assert(replica.spatialIndexProvider.get('pl-index').position.x === winnerRecord.position.x
             && replica.spatialIndexProvider.get('pl-index').position.y === winnerRecord.position.y,
             '19. The local spatial index reflects the reconciled winner, not whichever revision arrived first');
 
-        const found = replica.discoveryProvider.discover(winnerRecord.position, 1);
-        assert(found.some((r) => r.placementId === 'pl-index' && r.contentHash === winnerRecord.contentHash),
-            '20a. Discovery through the decentralized index resolves to the reconciled winner');
-        assert(!found.some((r) => r.contentHash === loserRecord.contentHash),
-            '20b. A stale/losing revision is never resurrected by discovery');
     }
 
     // -------------------------------------------------------------
     // FLAGSHIP: publish -> sign -> place -> concurrent move on two
     // disconnected replicas of the SAME owner -> exchange -> detect
-    // conflict -> deterministic convergence -> spatial index rebuilt
+    // conflict -> deterministic convergence
     // -------------------------------------------------------------
     {
         const replicaA = buildReplica();
@@ -451,7 +432,7 @@ async function runTests() {
         // Alice places a publication on "her phone" (replica A).
         const placeOnA = new PlacePublicationUseCase(
             replicaA.spatialIndexProvider, { findById: () => ({ id: 'pub-flagship' }) },
-            null, null, replicaA.registry, alice, replicaA.spatialIndexBuilder
+            null, null, replicaA.registry, alice
         );
         const placement = placeOnA.execute('pub-flagship', new Position(0, 0, 0), { bounds: BOUNDS });
         const genesis = replicaA.registry.get(placement.id);
@@ -464,8 +445,8 @@ async function runTests() {
             'flagship-b. Replica B receives the genesis placement via replication');
 
         // Alice moves the placement independently on both devices while disconnected.
-        const moveOnA = new MoveWorldPlacementUseCase(replicaA.spatialIndexProvider, replicaA.registry, replicaA.spatialIndexBuilder, alice);
-        const moveOnB = new MoveWorldPlacementUseCase(replicaB.spatialIndexProvider, replicaB.registry, replicaB.spatialIndexBuilder, alice);
+        const moveOnA = new MoveWorldPlacementUseCase(replicaA.spatialIndexProvider, replicaA.registry, alice);
+        const moveOnB = new MoveWorldPlacementUseCase(replicaB.spatialIndexProvider, replicaB.registry, alice);
         moveOnA.execute(placement.id, new Position(12, 0, 0));
         moveOnB.execute(placement.id, new Position(0, 12, 0));
 
@@ -496,13 +477,10 @@ async function runTests() {
         const finalB = replicaB.registry.get(placement.id);
         assert(finalA.contentHash === finalB.contentHash, 'flagship-f. Both replicas present the identical winning revision');
 
-        // The decentralized spatial index was rebuilt from the reconciled state on both sides.
-        const discoveredA = replicaA.discoveryProvider.discover(finalA.position, 1);
-        const discoveredB = replicaB.discoveryProvider.discover(finalB.position, 1);
-        assert(discoveredA.some((r) => r.contentHash === finalA.contentHash),
-            'flagship-g. Replica A discovers the reconciled placement at its winning position');
-        assert(discoveredB.some((r) => r.contentHash === finalB.contentHash),
-            'flagship-h. Replica B discovers the reconciled placement at its winning position');
+        // The local spatial index follows the reconciled state on both sides.
+        assert(replicaA.spatialIndexProvider.get(placement.id).position.x === finalA.position.x
+            && replicaB.spatialIndexProvider.get(placement.id).position.x === finalB.position.x,
+            'flagship-g. Both replicas show the placement at its winning position');
 
         // Neither disconnected edit was destroyed — both remain independently verifiable.
         assert(replicaA.registry.getConflictSet(placement.id).revisions.length === 2

@@ -9,7 +9,7 @@ import {
 import { LIMITS as RENDEZVOUS_LIMITS } from '../server/rendezvous-worker/worker.js';
 import { PeerSessionManager } from '../application/peer/PeerSessionManager.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
-import { LocalRendezvousNetwork } from '../peer/LocalRendezvousNetwork.js';
+import { LocalRendezvousNetwork } from './support/LocalRendezvousNetwork.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { EphemeralIdentityProvider } from '../identity/EphemeralIdentityProvider.js';
 import { createWalkTogetherCode, parseWalkTogetherCode, walkTogetherLink } from '../core/social/WalkTogetherCode.js';

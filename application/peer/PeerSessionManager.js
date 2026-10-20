@@ -216,7 +216,7 @@ export class PeerSessionManager {
     // publication after a first has already completed the handshake finds
     // the underlying WebRTC offer already consumed. Call publishSelf()
     // again (a fresh offer, a fresh publication, overwriting the old one
-    // — see peer/LocalRendezvousNetwork.js's own header on why the
+    // — see tests/support/LocalRendezvousNetwork.js's own header on why the
     // network holds only "reachable right now," never a history) to be
     // findable for a NEXT connection. Solving many-peers-per-publication
     // would mean a real signaling relay that hands out a fresh offer per

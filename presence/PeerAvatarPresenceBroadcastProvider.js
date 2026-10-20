@@ -19,7 +19,7 @@ import { PresenceVisibilityPolicy } from '../core/avatar/PresenceVisibilityPolic
 //
 // Sits on peer/PeerMessageBus.js and application/peer/ConnectedPeerRegistry.js
 // — nothing lower. Never imports peer/PeerConnection.js,
-// peer/WebRtcPeerConnection.js, or peer/LocalPeerConnectionProvider.js
+// peer/WebRtcPeerConnection.js, or tests/support/LocalPeerConnectionProvider.js
 // directly, exactly like every other PeerMessageBus consumer (see
 // docs/Principles.md, "A Peer Connection Transports Messages; It Does
 // Not Interpret Them," 0.2.52) — this class has no idea, and no need

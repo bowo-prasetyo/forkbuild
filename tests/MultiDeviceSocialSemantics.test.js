@@ -1,5 +1,5 @@
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
+import { LocalPeerNetwork, LocalPeerConnectionProvider } from './support/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
@@ -46,7 +46,7 @@ function makeDevice(label) {
 
 // Mirrors tests/MultiDeviceIdentity.test.js's own connectAndAuthenticate()
 // exactly — a real, in-process peer/PeerAuthenticationSession.js
-// handshake over a fresh peer/LocalPeerConnectionProvider.js connection.
+// handshake over a fresh tests/support/LocalPeerConnectionProvider.js connection.
 async function connectAndAuthenticate(network, addressA, deviceA, addressB, deviceB) {
     const transportA = new LocalPeerConnectionProvider(addressA, network);
     const transportB = new LocalPeerConnectionProvider(addressB, network);

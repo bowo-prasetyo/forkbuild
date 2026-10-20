@@ -25,7 +25,7 @@ const PUBLICATION_RECEIVED_EVENT = 'PublicationPeerExchangeReceived';
 // protocols safely share one authenticated peer connection" — a namespaced
 // protocol string, delivery gated on PeerLifecycleState.AUTHENTICATED,
 // malformed/oversized/duplicate hygiene, transport-agnostic by
-// construction (peer/LocalPeerConnectionProvider.js today, peer/
+// construction (tests/support/LocalPeerConnectionProvider.js today, peer/
 // WebRtcPeerConnectionProvider.js already proven over the SAME bus by
 // tests/PeerMessaging.test.js's own flagship). Every propagation use case
 // built since (application/identity/IdentityLifecyclePropagationUseCase.js,

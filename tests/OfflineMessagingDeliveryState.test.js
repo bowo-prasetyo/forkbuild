@@ -1,6 +1,6 @@
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
-import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
+import { LocalPeerNetwork, LocalPeerConnectionProvider } from './support/LocalPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { FriendRelationshipUseCase } from '../application/identity/FriendRelationshipUseCase.js';
@@ -29,7 +29,7 @@ import { assert } from './support/Assert.js';
 // connectedPeerRegistry.onChange() subscription 0.2.61 already used to
 // attach() every peer — delivers it the instant the recipient's
 // PROVEN identity is AUTHENTICATED again. Built over
-// peer/LocalPeerConnectionProvider.js and the exact
+// tests/support/LocalPeerConnectionProvider.js and the exact
 // connectDevices()/authenticate()/makeFriends() harness
 // tests/PeerChat.test.js and tests/PeerConnectionResilience.test.js
 // already trust for this purpose.

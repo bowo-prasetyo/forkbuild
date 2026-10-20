@@ -28,8 +28,4 @@ export class AuthorizationVerifier extends DelegationVerifier {
     verifyPlacement(record) {
         throw new Error('AuthorizationVerifier.verifyPlacement() must be implemented by a subclass');
     }
-
-    verifyIndexRoot(root) {
-        throw new Error('AuthorizationVerifier.verifyIndexRoot() must be implemented by a subclass');
-    }
 }

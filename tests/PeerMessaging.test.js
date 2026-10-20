@@ -1,5 +1,5 @@
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
+import { LocalPeerNetwork, LocalPeerConnectionProvider } from './support/LocalPeerConnectionProvider.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
@@ -29,7 +29,7 @@ import { assert } from './support/Assert.js';
 // The flagship (`runFlagship`) then runs the identical application-level
 // scenario — mutual authentication, then Alice sends test.alpha/
 // test.beta/test.unknown, Bob (subscribed only to alpha/beta) receives
-// exactly those two — over BOTH `peer/LocalPeerConnectionProvider.js`
+// exactly those two — over BOTH `tests/support/LocalPeerConnectionProvider.js`
 // and `peer/WebRtcPeerConnectionProvider.js`, unmodified, to prove the
 // multiplexing layer is transport-agnostic rather than an interface with
 // one implementation underneath. The WebRTC half only runs where a real

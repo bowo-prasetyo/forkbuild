@@ -60,7 +60,7 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 //   fields, garbage JSON — exactly what a broken or hostile rendezvous
 //   node could hand back) is skipped, never allowed to crash the whole
 //   query — the same failure-isolation discipline spatial/
-//   DecentralizedSpatialDiscoveryProvider.js already established for a
+//   DecentralizedSpatialDiscoveryProvider.js (removed as unused) already established for a
 //   different, and much larger, trust pipeline.
 //
 // 0.2.66 — Real Network Rendezvous & NAT Traversal. Two changes, both
@@ -69,7 +69,7 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 //   publish()/unpublish()/discover() are now ASYNC — see peer/
 //   RendezvousTransport.js's own header on why a REAL network round trip
 //   (peer/WebSocketRendezvousTransport.js, this milestone's own concrete
-//   transport, alongside peer/LocalRendezvousNetwork.js) cannot stay
+//   transport, alongside tests/support/LocalRendezvousNetwork.js) cannot stay
 //   synchronous the way 0.2.65's in-memory-only world could get away
 //   with. `list()`/`importInvitation()`/`forget()`/`onDiscovered()` are
 //   UNCHANGED and still fully synchronous — they only ever read/write

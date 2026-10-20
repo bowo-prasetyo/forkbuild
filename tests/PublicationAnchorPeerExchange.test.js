@@ -14,7 +14,7 @@ import {
 } from '../application/anchoring/PublicationAnchorPeerProtocol.js';
 import { PublicationAnchorPeerExchange } from '../application/anchoring/PublicationAnchorPeerExchange.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
-import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
+import { LocalPeerNetwork, LocalPeerConnectionProvider } from './support/LocalPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { exceedsMaxPeerMessageSize } from '../peer/PeerMessage.js';
@@ -56,7 +56,7 @@ import { makeIdentity } from './support/TestIdentity.js';
 //              reports VALID — for the SAME anchor — and no outcome ever
 //              crosses the wire.
 //   Section E: FLAGSHIP — Alice, Bob, and Carol over real, live,
-//              authenticated connections (peer/LocalPeerConnectionProvider
+//              authenticated connections (tests/support/LocalPeerConnectionProvider
 //              .js + application/peer/ConnectToPeerUseCase.js, unmodified).
 //              Alice signs one anchor; Bob receives and catalogs it, then
 //              relays it onward; Carol receives it from Bob, never from

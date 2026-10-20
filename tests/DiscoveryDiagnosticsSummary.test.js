@@ -8,21 +8,15 @@ import { License, LicenseId } from '../core/document/License.js';
 import { CausalStamp } from '../core/collaboration/CausalStamp.js';
 import { RevisionReference } from '../core/document/RevisionReference.js';
 import { PlacementRecord } from '../core/publication/PlacementRecord.js';
-import { SpatialIndexRoot } from '../core/world/SpatialIndexRoot.js';
 import { TrustStatus } from '../core/identity/TrustObservation.js';
 import { summarizeDiscoveryDiagnostics } from '../core/world/DiscoveryDiagnosticsSummary.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
-import { LocalSpatialIndexStore } from '../spatial/LocalSpatialIndexStore.js';
-import { SpatialIndexBuilder } from '../spatial/SpatialIndexBuilder.js';
-import { DecentralizedSpatialDiscoveryProvider } from '../spatial/DecentralizedSpatialDiscoveryProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { TrustPolicy } from '../identity/TrustPolicy.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
@@ -40,18 +34,16 @@ import { assert } from './support/Assert.js';
 // present?" This file tests two layers of the answer:
 //
 //   1. core/world/DiscoveryDiagnosticsSummary.js — the pure function that
-//      turns spatial/DiscoveryDiagnostics.js's raw counters (0.2.19)
+//      turns a trust-capable discovery provider's raw counters
 //      into the compact, UI-ready shape WorldLocationBrowser renders.
 //      Every state it can produce is exercised directly, with plain
 //      hand-built counter objects — no discovery machinery needed.
 //
 //   2. WorldNavigationSession's OPTIONAL spatialDiscoveryProvider
 //      wiring — exploreLocation/exploreHere/whatsHere's diagnostics
-//      half, exercised against a REAL DecentralizedSpatialDiscoveryProvider
-//      (not a stub), reusing the buildReplica/makeSignedRecord patterns
-//      from tests/TrustDiscoveryHardening.test.js, so these scenarios
-//      are testing actual trust code, not a hand-waved simulation of
-//      it. Central claim under test throughout: discovery and trust
+//      half, exercised against a provider that reports fixed
+//      diagnostics (the decentralized spatial index that once produced
+//      them was removed as unused). Central claim under test throughout: discovery and trust
 //      are related but not the same operation — a document a session
 //      finds through the (separate) local placement registry is never
 //      hidden by what the trust layer says about it; diagnostics only
@@ -75,15 +67,9 @@ function createIdentity(username) {
     return provider;
 }
 
-// A single storage-backed replica used for BOTH halves of a session:
-// document/position resolution (LocalWorldLayoutProvider/
-// LocalPlacementRegistry, exactly as every other WorldNavigationSession
-// test wires it) AND the decentralized trust layer
-// (DecentralizedSpatialDiscoveryProvider, wired against the SAME
-// placementRegistry so a PlacementRecord's placementId matches on both
-// sides — the only way to prove inspectDocument's trust lookup finds
-// the RIGHT observation for a specific document, not just any).
-function buildIntegratedReplica(identityProvider, { indexAuthorityIdentity = null, builderIdentity = null, trustPolicy = null } = {}) {
+// A storage-backed replica, wired exactly as every other
+// WorldNavigationSession test wires it.
+function buildIntegratedReplica() {
     const storage = new InMemoryStorageProvider();
     const discoveryProvider = new LocalDiscoveryProvider(storage);
     const contentStore = new LocalContentStore(storage);
@@ -91,16 +77,23 @@ function buildIntegratedReplica(identityProvider, { indexAuthorityIdentity = nul
     const spatialIndexProvider = new LocalSpatialIndexProvider(storage);
     const worldLayoutProvider = new LocalWorldLayoutProvider(spatialIndexProvider, discoveryProvider);
     const placementRegistry = new LocalPlacementRegistry(storage, spatialIndexProvider);
-    const spatialIndexStore = new LocalSpatialIndexStore(storage);
-    const builder = new SpatialIndexBuilder(spatialIndexStore, { cellSize: 100, identityProvider: builderIdentity || identityProvider });
-    const verifier = new LocalAuthorizationVerifier({ indexAuthorityIdentity });
-    const spatialDiscoveryProvider = new DecentralizedSpatialDiscoveryProvider({
-        spatialIndexStore, placementRegistry, authorizationVerifier: verifier,
-        trustPolicy: trustPolicy || new TrustPolicy()
-    });
+    return { storage, discoveryProvider, publisher, spatialIndexProvider, worldLayoutProvider, placementRegistry };
+}
+
+const CLEAN_COUNTERS = Object.freeze({
+    cellsQueried: 1, manifestsLoaded: 1, manifestsMissing: 0, manifestsInvalid: 0,
+    recordsChecked: 1, recordsRejected: 0, conflicts: 0, staleEntries: 0, equivocations: 0
+});
+
+// A trust-capable spatialDiscoveryProvider that reports `diagnostics`,
+// or throws `fatal` the way an untrusted index root did.
+function reportingProvider({ diagnostics = null, fatal = null } = {}) {
     return {
-        storage, discoveryProvider, publisher, spatialIndexProvider, worldLayoutProvider,
-        placementRegistry, spatialIndexStore, builder, verifier, spatialDiscoveryProvider
+        discover() {
+            if (fatal) throw new Error(fatal);
+            return [];
+        },
+        getLastDiagnostics: () => diagnostics
     };
 }
 
@@ -166,7 +159,6 @@ async function runTests() {
     const alice = createIdentity('alice');
     const bob = createIdentity('bob');
     const aliceIdentity = alice.getSigningIdentity();
-    const bobIdentity = bob.getSigningIdentity();
     const registry = new CreateBrickRegistryUseCase().execute();
 
     function buildSession(replica, spatialDiscoveryProvider) {
@@ -190,18 +182,21 @@ async function runTests() {
     //       specific document's Inspect trust status reads VALID.
     // -------------------------------------------------------------
     {
-        const replica = buildIntegratedReplica(alice);
+        const replica = buildIntegratedReplica();
         const publication = replica.publisher.publish(makeDocument("Trusted Hall", 'alice'), alice);
         const record = makeSignedRecord(alice, { placementId: 'p-valid', publicationId: publication.id, x: 50, y: 0, z: 50 });
         replica.placementRegistry.add(record);
-        replica.builder.build(replica.placementRegistry.list());
+        const provider = reportingProvider({ diagnostics: {
+            ...CLEAN_COUNTERS,
+            observations: [{ subjectType: 'placement-record', subjectId: 'p-valid', status: TrustStatus.VALID, reason: null, freshness: null }]
+        } });
 
-        const session = buildSession(replica, replica.spatialDiscoveryProvider);
+        const session = buildSession(replica, provider);
         const envelope = session.exploreLocation({ center: { x: 50, y: 0, z: 50 }, radius: 10 });
         assert(envelope.documents.length === 1 && envelope.documents[0].documentId === publication.documentId,
             '9. the trusted index scenario still resolves the document through the ordinary local path');
         assert(envelope.diagnostics.available === true && envelope.diagnostics.fatal === null && envelope.diagnostics.complete === true,
-            '10. a real, clean DecentralizedSpatialDiscoveryProvider reports complete:true — not fabricated, actually run');
+            '10. a provider reporting no issues gives complete:true');
 
         const inspected = session.inspectDocument(publication.documentId);
         assert(inspected.trust !== null && inspected.trust.status === TrustStatus.VALID,
@@ -217,11 +212,10 @@ async function runTests() {
     //        not allowed to hide or wrongly-position the result.
     // -------------------------------------------------------------
     {
-        const replica = buildIntegratedReplica(alice);
+        const replica = buildIntegratedReplica();
         const publication = replica.publisher.publish(makeDocument('Stale Tower', 'alice'), alice);
         const rev1 = makeSignedRecord(alice, { placementId: 'p-stale', publicationId: publication.id, x: 60, y: 0, z: 60, revision: 1 });
         replica.placementRegistry.add(rev1);
-        replica.builder.build(replica.placementRegistry.list()); // index now has revision 1
 
         let rev2 = rev1.withPosition(new Position(65, 0, 60));
         rev2 = rev2.withCausalHistory(rev1.causalStamp.advance(aliceIdentity.id), [
@@ -229,9 +223,9 @@ async function runTests() {
         ]);
         rev2 = rev2.withContentHash(rev2.computeContentHash());
         rev2 = rev2.withSignature(alice.signCanonical(rev2.getSigningDescriptor()));
-        replica.placementRegistry.update(rev2); // live truth moves; index NOT rebuilt (simulates lag)
+        replica.placementRegistry.update(rev2); // live truth moves; the provider's index still names revision 1
 
-        const session = buildSession(replica, replica.spatialDiscoveryProvider);
+        const session = buildSession(replica, reportingProvider({ diagnostics: { ...CLEAN_COUNTERS, staleEntries: 1, observations: [] } }));
         const envelope = session.exploreLocation({ center: { x: 65, y: 0, z: 60 }, radius: 10 });
         assert(envelope.documents.length === 1 && envelope.documents[0].position.x === 65,
             '12. the document still resolves at its CURRENT (live) position through the ordinary local path, unaffected by index lag');
@@ -249,16 +243,12 @@ async function runTests() {
     //        must still be found through the independent local path.
     // -------------------------------------------------------------
     {
-        const replica = buildIntegratedReplica(bob, {
-            builderIdentity: bob, // bob signs the root (cryptographically valid on its own)...
-            trustPolicy: TrustPolicy.pinnedTo(aliceIdentity) // ...but only alice's authority is trusted
-        });
+        const replica = buildIntegratedReplica();
         const publication = replica.publisher.publish(makeDocument('Untrusted Root Plaza', 'bob'), alice);
         const record = makeSignedRecord(bob, { placementId: 'p-untrusted-root', publicationId: publication.id, x: 70, y: 0, z: 70 });
         replica.placementRegistry.add(record);
-        replica.builder.build(replica.placementRegistry.list());
 
-        const session = buildSession(replica, replica.spatialDiscoveryProvider);
+        const session = buildSession(replica, reportingProvider({ fatal: 'index root signer is not a trusted authority' }));
         const envelope = session.exploreLocation({ center: { x: 70, y: 0, z: 70 }, radius: 10 });
         assert(envelope.documents.length === 1 && envelope.documents[0].documentId === publication.documentId,
             '14. the document is still found via the local path — an untrusted index root never hides a locally-known document');
@@ -275,12 +265,11 @@ async function runTests() {
     //     nothing throws.
     // -------------------------------------------------------------
     {
-        const replica = buildIntegratedReplica(alice);
+        const replica = buildIntegratedReplica();
         const publication = replica.publisher.publish(makeDocument('Plain Local Cottage', 'alice'), alice);
         const record = makeSignedRecord(alice, { placementId: 'p-plain', publicationId: publication.id, x: 80, y: 0, z: 80 });
         replica.placementRegistry.add(record);
-        // Deliberately never call replica.builder.build(...) or pass a
-        // spatialDiscoveryProvider — this is the plain 0.2.26/0.2.28/
+        // Deliberately never pass a spatialDiscoveryProvider — this is the plain 0.2.26/0.2.28/
         // 0.2.29 path, unchanged.
         const session = buildSession(replica, null);
         const envelope = session.exploreLocation({ center: { x: 80, y: 0, z: 80 }, radius: 10 });

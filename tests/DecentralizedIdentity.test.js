@@ -6,7 +6,6 @@ import { Signature, SignatureType } from '../core/publication/Signature.js';
 import { Position } from '../core/document/Position.js';
 import { SpatialBounds } from '../core/world/SpatialBounds.js';
 import { PlacementRecord } from '../core/publication/PlacementRecord.js';
-import { SpatialIndexRoot } from '../core/world/SpatialIndexRoot.js';
 import { Document } from '../core/document/Document.js';
 import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { World } from '../core/document/World.js';
@@ -15,25 +14,13 @@ import { Brick } from '../core/building/Brick.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
-import { LocalContentResolver } from '../discovery/LocalContentResolver.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
-import { LocalSpatialIndexStore } from '../spatial/LocalSpatialIndexStore.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
-import { SpatialIndexBuilder } from '../spatial/SpatialIndexBuilder.js';
-import { DecentralizedSpatialDiscoveryProvider } from '../spatial/DecentralizedSpatialDiscoveryProvider.js';
 import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
 import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
-import { RebuildSpatialIndexUseCase } from '../application/world/RebuildSpatialIndexUseCase.js';
-import { DiscoverWorldAreaUseCase } from '../application/discovery/DiscoverWorldAreaUseCase.js';
-import { ResolvePublicationUseCase } from '../application/publication/ResolvePublicationUseCase.js';
-import { VerifyPublicationUseCase } from '../application/publication/VerifyPublicationUseCase.js';
-import { VerifyPlacementUseCase } from '../application/placement/VerifyPlacementUseCase.js';
 import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
-import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { PublicationContentCache } from '../world/PublicationContentCache.js';
-import { WorldViewStreamingSession } from '../world/WorldViewStreamingSession.js';
 import { Publication } from '../publisher/Publication.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
@@ -46,15 +33,6 @@ const stubIdentityProvider = {
     currentUser: () => ({ username: 'stub', displayName: 'stub', providerId: 'stub' }),
     sign: (data) => ({ signedBy: 'stub', providerId: 'stub', data })
 };
-
-function assertThrows(fn, expectedMessage, message) {
-    try {
-        fn();
-        assert(false, message);
-    } catch (e) {
-        assert(e.message.includes(expectedMessage), `${message}: ${e.message}`);
-    }
-}
 
 function createIdentity(username) {
     const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
@@ -93,21 +71,6 @@ function signRecord(provider, record) {
         prepared = prepared.withOwnerIdentity(provider.getSigningIdentity().toJSON());
     }
     return prepared.withSignature(provider.signCanonical(prepared.getSigningDescriptor()));
-}
-
-function buildSignedStack(ownerProvider, { authorityIdentity = null } = {}) {
-    const storage = new InMemoryStorageProvider();
-    const spatialIndexProvider = new LocalSpatialIndexProvider(storage);
-    const placementRegistry = new LocalPlacementRegistry(storage, spatialIndexProvider);
-    const spatialIndexStore = new LocalSpatialIndexStore(storage);
-    const builder = new SpatialIndexBuilder(spatialIndexStore, { cellSize: 100, identityProvider: ownerProvider });
-    const verifier = new LocalAuthorizationVerifier({ indexAuthorityIdentity: authorityIdentity });
-    const provider = new DecentralizedSpatialDiscoveryProvider({
-        spatialIndexStore,
-        placementRegistry,
-        authorizationVerifier: verifier
-    });
-    return { storage, spatialIndexProvider, placementRegistry, spatialIndexStore, builder, verifier, provider };
 }
 
 // ---------------------------------------------------------------------
@@ -244,8 +207,6 @@ let signedPublication;
 
     const result = verifier.verifyPublication(signedPublication);
     assert(result.valid === true && result.signed === true, 'publication signature verifies');
-    assert(new VerifyPublicationUseCase(verifier).execute(signedPublication).valid === true,
-        'VerifyPublicationUseCase verifies');
 
     // Reloaded through discovery, still verifiable.
     const discovery = new LocalDiscoveryProvider(storage);
@@ -278,8 +239,6 @@ const signedRecord = signRecord(aliceProvider, makeRecord({ placementId: 'p-1', 
 {
     const check = verifier.verifyPlacement(signedRecord);
     assert(check.valid === true && check.signed === true, 'placement signature verifies');
-    assert(new VerifyPlacementUseCase(verifier).execute(signedRecord).valid === true,
-        'VerifyPlacementUseCase verifies');
     const legacy = makeRecord({ placementId: 'p-legacy', publicationId: 'pub-1', x: 20 });
     const legacyCheck = verifier.verifyPlacement(legacy);
     assert(legacyCheck.valid === true && legacyCheck.signed === false, 'unsigned legacy placement tolerated');
@@ -302,98 +261,7 @@ const signedRecord = signRecord(aliceProvider, makeRecord({ placementId: 'p-1', 
 }
 
 // ---------------------------------------------------------------------
-// 10. Newer VALID revision beats older valid revision
-// ---------------------------------------------------------------------
-{
-    const stack = buildSignedStack(aliceProvider);
-    const rev1 = signRecord(aliceProvider, makeRecord({ placementId: 'p-rev', publicationId: 'pub-r', x: 10 }));
-    stack.placementRegistry.add(rev1);
-    stack.builder.build([rev1]);
-
-    const rev2 = signRecord(aliceProvider, rev1.withPosition(new Position(20, 0, 0)));
-    stack.builder.build([rev2]); // index now references rev 2; registry still rev 1
-
-    const found = stack.provider.discover(new Position(20, 0, 0), 60);
-    assert(found.length === 1 && found[0].revision === 2, 'newer VALID revision wins');
-    console.log('✓ newer valid revision beats older valid revision');
-}
-
-// ---------------------------------------------------------------------
-// 11. Newer INVALID revision does NOT beat older valid revision
-// ---------------------------------------------------------------------
-{
-    const stack = buildSignedStack(aliceProvider);
-    const rev4 = signRecord(aliceProvider, makeRecord({
-        placementId: 'p-stale', publicationId: 'pub-s', x: 10, revision: 4
-    }));
-    stack.placementRegistry.add(rev4); // live, valid revision 4
-
-    // Bob publishes a forged revision 5 into the index. Bob can compute
-    // a correct content hash (hashes are public), so the record's
-    // integrity checks out — but he cannot sign as Alice.
-    const forged5Unsigned = rev4.withPosition(new Position(15, 0, 0));
-    const forged5 = new PlacementRecord({
-        ...forged5Unsigned.toJSON(),
-        contentHash: forged5Unsigned.computeContentHash()
-    });
-    const forged5Signed = forged5.withSignature(bobProvider.signCanonical(forged5.getSigningDescriptor()));
-    stack.builder.build([forged5Signed]);
-
-    const found = stack.provider.discover(new Position(12, 0, 0), 60);
-    assert(found.length === 1, 'placement still discovered');
-    assert(found[0].revision === 4, 'older VALID revision beats newer INVALID revision');
-    assert(found[0].verifyIntegrity(), 'returned revision is authentic');
-    assert(stack.provider.lastQueryStats.signaturesInvalid >= 1, 'invalid signature counted, not fatal');
-    console.log('✓ newer INVALID revision does NOT beat older valid revision');
-}
-
-// ---------------------------------------------------------------------
-// 12. Signed spatial-index root verifies
-// ---------------------------------------------------------------------
-{
-    const stack = buildSignedStack(aliceProvider);
-    stack.placementRegistry.add(signRecord(aliceProvider,
-        makeRecord({ placementId: 'p-root', publicationId: 'pub-x', x: 5 })));
-    const built = new RebuildSpatialIndexUseCase(stack.builder, stack.placementRegistry).execute();
-
-    const root = SpatialIndexRoot.fromJSON(stack.spatialIndexStore.get(built.rootReference));
-    assert(root.signature !== null, 'index root is signed');
-    const check = stack.verifier.verifyIndexRoot(root);
-    assert(check.valid === true && check.signed === true, 'signed index root verifies');
-    console.log('✓ signed spatial-index root verifies');
-}
-
-// ---------------------------------------------------------------------
-// 13. Tampered / unauthorized index root rejected
-// ---------------------------------------------------------------------
-{
-    // (a) Tampered root content -> integrity check rejects (fatal).
-    const stackA = buildSignedStack(aliceProvider);
-    stackA.placementRegistry.add(signRecord(aliceProvider,
-        makeRecord({ placementId: 'p-a', publicationId: 'pub-a', x: 5 })));
-    new RebuildSpatialIndexUseCase(stackA.builder, stackA.placementRegistry).execute();
-    const refA = stackA.spatialIndexStore.getRootReference();
-    const tamperedRoot = stackA.storage.load('spatial-index-content:' + refA.hash);
-    tamperedRoot.cellSize = 999;
-    stackA.storage.save('spatial-index-content:' + refA.hash, tamperedRoot);
-    assertThrows(() => stackA.provider.discover(new Position(0, 0, 0), 50),
-        'integrity', 'tampered root rejected');
-
-    // (b) Root signed by a non-authority -> signature authorization rejects.
-    const aliceId = aliceProvider.getSigningIdentity();
-    const stackB = buildSignedStack(bobProvider, { authorityIdentity: aliceId });
-    stackB.placementRegistry.add(signRecord(bobProvider,
-        makeRecord({ placementId: 'p-b', publicationId: 'pub-b', x: 5 })));
-    new RebuildSpatialIndexUseCase(stackB.builder, stackB.placementRegistry).execute();
-    assertThrows(() => stackB.provider.discover(new Position(0, 0, 0), 50),
-        'signature', 'unauthorized index root rejected');
-    console.log('✓ tampered / unauthorized index root rejected');
-}
-
-// ---------------------------------------------------------------------
-// 14. FLAGSHIP: identity -> publish -> sign -> place -> sign -> index
-//     -> sign root -> discover -> verify -> resolve -> content hash
-//     -> stream
+// 10. FLAGSHIP: identity -> publish -> sign -> place -> sign -> verify
 // ---------------------------------------------------------------------
 {
     const alice = createIdentity('alice');
@@ -403,28 +271,13 @@ const signedRecord = signRecord(aliceProvider, makeRecord({ placementId: 'p-1', 
     const discoveryProvider = new LocalDiscoveryProvider(storage);
     const spatialIndexProvider = new LocalSpatialIndexProvider(storage);
     const placementRegistry = new LocalPlacementRegistry(storage, spatialIndexProvider);
-    const spatialIndexStore = new LocalSpatialIndexStore(storage);
-    const builder = new SpatialIndexBuilder(spatialIndexStore, { cellSize: 100, identityProvider: alice });
     const trustVerifier = new LocalAuthorizationVerifier();
-    const spatialDiscovery = new DecentralizedSpatialDiscoveryProvider({
-        spatialIndexStore,
-        placementRegistry,
-        authorizationVerifier: trustVerifier
-    });
-    const serializer = new DocumentSerializer();
-    const cache = new PublicationContentCache();
 
-    // Publish two signed worlds.
     const castleManager = new DocumentManager();
     castleManager.load(createTestDocument('Castle'), 'castle-doc');
-    const villageManager = new DocumentManager();
-    villageManager.load(createTestDocument('Village'), 'village-doc');
     const castlePub = new PublishDocumentUseCase(publisher, alice).execute(castleManager);
-    const villagePub = new PublishDocumentUseCase(publisher, alice).execute(villageManager);
     assert(trustVerifier.verifyPublication(castlePub).valid === true, 'castle publication signed & valid');
-    assert(trustVerifier.verifyPublication(villagePub).valid === true, 'village publication signed & valid');
 
-    // Place both — signed placement revisions.
     const placeUseCase = new PlacePublicationUseCase(
         spatialIndexProvider, discoveryProvider,
         new LoadPublicationDocumentUseCase(storage),
@@ -432,47 +285,11 @@ const signedRecord = signRecord(aliceProvider, makeRecord({ placementId: 'p-1', 
         placementRegistry, alice
     );
     placeUseCase.execute(castlePub.id, new Position(50, 0, 50));
-    placeUseCase.execute(villagePub.id, new Position(350, 0, 50));
     const castleRecord = placementRegistry.findByPublicationId(castlePub.id)[0];
     assert(castleRecord.signature !== null && castleRecord.ownerIdentity !== null, 'placement revision signed');
     assert(trustVerifier.verifyPlacement(castleRecord).valid === true, 'placement signature valid');
-
-    // Build + sign the spatial index.
-    new RebuildSpatialIndexUseCase(builder, placementRegistry).execute();
-    const rootRef = spatialIndexStore.getRootReference();
-    const root = SpatialIndexRoot.fromJSON(spatialIndexStore.get(rootRef));
-    assert(trustVerifier.verifyIndexRoot(root).valid === true, 'index root signed & valid');
-
-    // Discover through the signed pipeline.
-    const discoverArea = new DiscoverWorldAreaUseCase(spatialDiscovery);
-    const verifyPlacement = new VerifyPlacementUseCase(trustVerifier);
-    const found = discoverArea.execute(new Position(50, 0, 50), 120);
-    assert(found.length === 1 && found[0].publicationId === castlePub.id, 'viewport discovers the castle');
-    assert(found[0].signature !== null, 'discovered record carries its signature');
-    assert(verifyPlacement.execute(found[0]).valid === true, 'discovered placement verifies');
-
-    // Resolve content and verify the content hash.
-    const resolveUseCase = new ResolvePublicationUseCase(
-        new LocalContentResolver(publisher), discoveryProvider, serializer, cache
-    );
-    const session = resolveUseCase.executeFromPlacement(found[0]);
-    assert(session.getDocument().metadata.title === 'Castle', 'snapshot loaded');
-    assert(session.capabilities.canEdit === false, 'session read-only');
     assert(publisher.verifySnapshot(castlePub.id, castlePub.contentHash) === true, 'content hash verified');
-
-    // Stream through the unchanged 0.2.12 runtime.
-    const streaming = new WorldViewStreamingSession({
-        discoverWorldAreaUseCase: discoverArea,
-        resolvePublicationUseCase: resolveUseCase,
-        loadRadius: 200,
-        unloadRadius: 300
-    });
-    streaming.updateView(new Position(50, 0, 50));
-    assert(streaming.getLoadedWorlds().length === 1, 'castle streams at the origin viewport');
-    streaming.updateView(new Position(350, 0, 50));
-    assert(streaming.getLoadedWorlds().some((w) => w.publicationId === villagePub.id),
-        'village streams after moving');
-    console.log('✓ FLAGSHIP: identity -> publish -> place -> index -> discover -> verify -> resolve -> stream');
+    console.log('✓ FLAGSHIP: identity -> publish -> sign -> place -> sign -> verify');
 }
 
 console.log('\nAll decentralized identity tests passed.');

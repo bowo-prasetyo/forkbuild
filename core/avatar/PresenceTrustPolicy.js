@@ -5,7 +5,7 @@
 // different-content claim — is never a matter of policy; see
 // docs/Principles.md, "Presence Trust Has One Real Policy Axis."
 //
-// Mirrors `identity/TrustPolicy.js`'s permissive/hardened shape
+// Mirrors `identity/TrustPolicy.js`'s (removed as unused) permissive/hardened shape
 // (0.2.19) deliberately, but stays its own, narrower class:
 // TrustPolicy's other options (`requireSignedRoot`,
 // `requireAuthorizedPlacements`, `pinnedAuthorityIdentity`, ...)
@@ -36,7 +36,7 @@ export class PresenceTrustPolicy {
     // The target configuration for an operator who wants to stop
     // accepting anonymous presence claims entirely — every advertisement
     // must carry a valid signature or it is rejected outright, the
-    // same way `identity/TrustPolicy.hardened()` stops tolerating
+    // same way `identity/TrustPolicy.hardened()` (removed as unused) stopped tolerating
     // unsigned roots/placements.
     static hardened() {
         return new PresenceTrustPolicy({ requireSignedPresence: true });

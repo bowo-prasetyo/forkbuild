@@ -10,7 +10,7 @@ import { World } from '../core/document/World.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
-import { LocalContentResolver } from '../discovery/LocalContentResolver.js';
+import { LocalContentResolver } from './support/LocalContentResolver.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
 
 import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
@@ -27,7 +27,7 @@ import { WorldSnapshotDiscoveryMonitor } from '../application/snapshot/WorldSnap
 import { PublicationSnapshotPlacementPeerMessageKind } from '../application/snapshot/placement/PublicationSnapshotPlacementPeerProtocol.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
+import { LocalPeerNetwork, LocalPeerConnectionProvider } from './support/LocalPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';

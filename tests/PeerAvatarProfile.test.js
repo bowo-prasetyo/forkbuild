@@ -27,7 +27,7 @@ import { World } from '../core/document/World.js';
 import { Building } from '../core/building/Building.js';
 import { Brick } from '../core/building/Brick.js';
 import { License, LicenseId } from '../core/document/License.js';
-import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
+import { LocalPeerNetwork, LocalPeerConnectionProvider } from './support/LocalPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
@@ -236,7 +236,7 @@ async function runTests() {
 
     // -------------------------------------------------------------
     // Section C — FLAGSHIP: Alice, Bob, and Charlie over a REAL peer
-    // network (peer/LocalPeerConnectionProvider.js + peer/
+    // network (tests/support/LocalPeerConnectionProvider.js + peer/
     // PeerMessageBus.js), the full 0.2.49-0.2.53 stack, completely
     // unmodified.
     // -------------------------------------------------------------

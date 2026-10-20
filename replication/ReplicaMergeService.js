@@ -30,7 +30,7 @@ export const MergeResult = Object.freeze({
 // what happens once two revisions are BOTH valid).
 export class ReplicaMergeService {
     constructor({
-        resolver, policy, verifier = null, registry, replicationStore, spatialIndexBuilder = null,
+        resolver, policy, verifier = null, registry, replicationStore,
         replayGuard = null, findPublicationById = null
     }) {
         this._resolver = resolver;
@@ -38,7 +38,6 @@ export class ReplicaMergeService {
         this._verifier = verifier;
         this._registry = registry;
         this._replicationStore = replicationStore;
-        this._spatialIndexBuilder = spatialIndexBuilder;
         this._replayGuard = replayGuard;
         this._findPublicationById = findPublicationById;
     }
@@ -107,7 +106,6 @@ export class ReplicaMergeService {
         if (!current) {
             this._registry.add(incomingRecord);
             this._registry.setLatest(placementId, incomingRecord);
-            this._rebuildSpatialIndex(incomingRecord);
             return { result: MergeResult.UPDATED, winner: incomingRecord.contentHash };
         }
 
@@ -123,7 +121,6 @@ export class ReplicaMergeService {
             // current happens-before incoming: incoming is causally newer.
             this._registry.add(incomingRecord);
             this._registry.setLatest(placementId, incomingRecord);
-            this._rebuildSpatialIndex(incomingRecord);
             return { result: MergeResult.UPDATED, winner: incomingRecord.contentHash };
         }
 
@@ -171,7 +168,6 @@ export class ReplicaMergeService {
         const winnerRecord = this._resolveRecord(winnerHash, current, incomingRecord);
 
         this._registry.setLatest(placementId, winnerRecord);
-        this._rebuildSpatialIndex(winnerRecord);
 
         const conflictSet = new ConflictSet({
             placementId,
@@ -196,16 +192,5 @@ export class ReplicaMergeService {
         }
         const json = this._replicationStore.get(hash);
         return json ? PlacementRecord.fromJSON(json) : candidates[candidates.length - 1];
-    }
-
-    // Replication state is authoritative; the spatial index is an
-    // accelerator rebuilt/updated FROM the reconciled placement state
-    // (docs/Principles.md, 0.2.15 + 0.2.18) — never the other way
-    // around. Optional: a replica with no SpatialIndexBuilder wired
-    // (e.g. a pure storage node) still merges and reconciles correctly.
-    _rebuildSpatialIndex(winnerRecord) {
-        if (this._spatialIndexBuilder) {
-            this._spatialIndexBuilder.addOrUpdatePlacement(winnerRecord);
-        }
     }
 }

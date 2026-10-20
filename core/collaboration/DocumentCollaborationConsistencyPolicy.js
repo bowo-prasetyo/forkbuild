@@ -136,7 +136,7 @@
 export const DeliveryOrderGuarantee = Object.freeze({
     // 0.9.225's own "Transport observation": two operations sent
     // back-to-back happened to arrive in send order only because
-    // `peer/LocalPeerConnectionProvider.js#send()` queues each message via
+    // `tests/support/LocalPeerConnectionProvider.js#send()` queues each message via
     // its own `queueMicrotask()` call, and microtasks run FIFO — an
     // accident of ONE in-memory transport, never a property
     // `core/collaboration/DocumentOperationEnvelope.js` declares (it carries no

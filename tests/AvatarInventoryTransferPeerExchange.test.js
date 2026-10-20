@@ -11,7 +11,7 @@ import { createAvatarInventoryEntry, InventoryEntryKind, withEntryAdded } from '
 import { VehicleType } from '../core/vehicles/VehicleType.js';
 import { ANIMAL_SPECIES } from '../core/nature/WildlifeField.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
-import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
+import { LocalPeerNetwork, LocalPeerConnectionProvider } from './support/LocalPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { assert } from './support/Assert.js';
@@ -35,7 +35,7 @@ import { makeIdentity } from './support/TestIdentity.js';
 //              malformed/forged/duplicate wire message is always dropped
 //              silently.
 //   Section C: FLAGSHIP — Alice and Bob over real, live, authenticated
-//              connections (peer/LocalPeerConnectionProvider.js +
+//              connections (tests/support/LocalPeerConnectionProvider.js +
 //              application/peer/ConnectToPeerUseCase.js, unmodified). Alice
 //              sends a carried vehicle to Bob and Bob accepts it — the
 //              entry actually moves, once, between two independent

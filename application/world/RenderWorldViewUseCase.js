@@ -47,7 +47,7 @@ export class RenderWorldViewUseCase {
         // rendering path is uniform across both modes (see its header),
         // but no World View bootstrap wires a real one yet: resolving a
         // structure placement against DECENTRALIZED/published content
-        // (application/PublicationContentCache.js et al.) is a
+        // (application/PublicationContentCache.js (removed as unused) et al.) is a
         // different resolution path than the local-storage-by-
         // documentId one application/editor/StructureDocumentResolver.js
         // implements, and nothing in 0.2.90's own flagship exercises

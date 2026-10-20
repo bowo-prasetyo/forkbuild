@@ -45,18 +45,10 @@ import { identityForDidKey, verifySignedDescriptor } from './DescriptorSignature
 //                  signer must BE that identity. (Bob placing Alice's
 //                  castle is a POLICY question for 0.2.17; here the
 //                  placer must own the placement revision they sign.)
-//   Index root   — signer's key is recovered from the did:key in the
-//                  signature itself; if an indexAuthorityIdentity is
-//                  configured, the signer must match it.
 //
 // Unsigned (pre-0.2.16) objects are tolerated and reported as
 // signed: false — the deployed corpus must keep working.
 export class LocalAuthorizationVerifier extends AuthorizationVerifier {
-    constructor({ indexAuthorityIdentity = null } = {}) {
-        super();
-        this._indexAuthorityIdentity = indexAuthorityIdentity;
-    }
-
     verifyPublication(publication) {
         if (!publication) {
             return { valid: false, signed: false, reason: 'no publication' };
@@ -91,38 +83,9 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
         );
     }
 
-    verifyIndexRoot(root) {
-        if (!root) {
-            return { valid: false, signed: false, reason: 'no index root' };
-        }
-        const signature = root.signature;
-        if (!signature) {
-            return { valid: true, signed: false, reason: 'unsigned index root (legacy)' };
-        }
-        // The root carries no identity payload — the did:key signer IS
-        // the public key.
-        const publicKeyBytes = Ed25519.didKeyToPublicKey(signature.signer);
-        if (!publicKeyBytes) {
-            return { valid: false, signed: true, reason: 'unknown signer identity' };
-        }
-        const identity = {
-            id: signature.signer,
-            algorithm: 'Ed25519',
-            publicKey: Ed25519.bytesToHex(publicKeyBytes)
-        };
-        const result = this.verifyDescriptor(root.getSigningDescriptor(), signature, identity);
-        if (!result.valid) {
-            return result;
-        }
-        if (this._indexAuthorityIdentity && signature.signer !== this._indexAuthorityIdentity.id) {
-            return { valid: false, signed: true, reason: 'signer is not the index authority' };
-        }
-        return result;
-    }
-
     // 0.2.38 — an AvatarPresenceAdvertisement (core/
     // AvatarPresenceAdvertisement.js) carries no identity payload of
-    // its own, exactly like a SpatialIndexRoot above: the did:key
+    // its own: the did:key
     // signer of a valid signature IS the public key. Unsigned is
     // tolerated at THIS layer (structural verification only) — see
     // core/avatar/PresenceTrustPolicy.js for whether a receiver's policy
