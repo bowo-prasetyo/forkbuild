@@ -11,6 +11,7 @@ import { CopyStructureIntoDocumentUseCase } from '../application/editor/CopyStru
 import { PasteBricksCommand } from '../application/commands/PasteBricksCommand.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { VillageLibrary } from '../core/library/VillageLibrary.js';
+import { Structure } from '../core/Structure.js';
 import { Document } from '../core/Document.js';
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
@@ -117,6 +118,45 @@ const brick = (x, y = 0.5, z = 0, extra = {}) => new Brick({ definitionId: 'core
     session.noteReadyMadeStart();
     assert(store.placedCount(copy.world) === 0, 'a copy of a build starts all ready-made');
     console.log('✓ the Editor records ready-made bricks as they come in');
+}
+
+// One of My Structures (saved from a selection, maybe of someone else's build,
+// or a shared blueprint) isn't ready-made: dropped in or started from, its
+// bricks count as the builder's, so the look-alike hint at publish still
+// compares them (application/publication/SimilarBuildFinder.js).
+{
+    const store = new ReadyMadeBricksStore({ storageProvider: new InMemoryStorageProvider() });
+    const documentManager = new DocumentManager();
+    const builtIn = new Set(VillageLibrary.structures.map((structure) => structure.id));
+    const session = new EditorSession({
+        registry, editorContext: null, toolRegistry: null, documentManager, selectionUseCase: null,
+        previewUseCase: null, loadDocumentUseCase: null, identityProvider: { currentUser: () => ({ username: 'ana' }) },
+        readyMadeBricks: store,
+        isReadyMadeStructure: (id) => builtIn.has(id)
+    });
+    session.openDocument = (document) => documentManager.newDocument(document);
+    const mine = Structure.fromJSON({ ...house.toJSON(), id: 'a1b2c3d4-personal', name: 'Saved house' });
+
+    assert(session.forkStructure(mine) === true, 'one of My Structures is forked');
+    const world = documentManager.document.world;
+    assert(store.placedCount(world) === worldBricks(world).length, `started from one of My Structures, every brick is the builder's (${store.placedCount(world)})`);
+
+    const buildingId = world.getBuildings()[0].id;
+    const before = store.placedCount(world);
+    const paste = new CopyStructureIntoDocumentUseCase().execute(mine, { worldId: world.id, buildingId, world, registry });
+    assert(paste.isLibraryStructure && paste.structureId === mine.id, 'the paste names the structure it came from');
+    paste.execute({ world });
+    session._noteReadyMadePaste(paste);
+    assert(store.placedCount(world) === before + paste.executedBrickIds.length, 'dropped in, its bricks are the builder\'s too');
+
+    const well = VillageLibrary.structures.find((structure) => structure.id === 'village:well');
+    const wellPaste = new CopyStructureIntoDocumentUseCase().execute(well, { worldId: world.id, buildingId, world, registry });
+    wellPaste.execute({ world });
+    session._noteReadyMadePaste(wellPaste);
+    assert(store.placedCount(world) === before + paste.executedBrickIds.length, 'a Build Library well beside it is still ready-made');
+
+    assert(session.forkStructure(house) === true && store.placedCount(documentManager.document.world) === 0, 'and a Build Library house still starts all ready-made');
+    console.log('✓ My Structures are the builder\'s bricks, not ready-made');
 }
 
 // The counter reports the placed range beside the brick range, once per build.

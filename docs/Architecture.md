@@ -312,11 +312,16 @@ the detailed references; in short:
   also reports the announced ids it already knew. An entry's share text
   names the challenge (ui/components/PublicationShareLink.js).
 - Ready-made bricks: application/document/ReadyMadeBricksStore.js keeps, per
-  World id on this device, the bricks a build was started with (a structure
-  forked, `EditorSession#forkStructure()`, or a copy of a build,
-  `noteReadyMadeStart()` after a `?fork=`) and the bricks of Build Library
-  structures pasted in (a PasteBricksCommand whose `isLibraryStructure`,
-  noted as it executes). core/PlacedBricks.js compares bricks by signature
+  World id on this device, the bricks a build was started with (a Build
+  Library structure forked, `EditorSession#forkStructure()`, or a copy of a
+  build, `noteReadyMadeStart()` after a `?fork=`) and the bricks of Build
+  Library structures pasted in (a PasteBricksCommand whose
+  `isLibraryStructure`, noted as it executes). One of My Structures, saved
+  from a selection or imported as a blueprint, is not ready-made, forked or
+  pasted: EditorView's `isReadyMadeStructure(id)` is true only for an id in
+  the built-in StructureRegistry that no personal structure has (the paste
+  carries `structureId`, in memory only), so bricks saved from someone else's
+  build still count at the look-alike hint at publish. core/PlacedBricks.js compares bricks by signature
   (definition, position, turn, tilt, colour), never by id, so a ready-made
   brick moved or recoloured is the builder's own. Publishing reports the
   placed count's range (core/VisitorCount.js, `publish-placed-*`) beside the

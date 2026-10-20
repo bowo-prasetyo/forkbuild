@@ -68,7 +68,8 @@ export class CopyStructureIntoDocumentUseCase {
             worldId,
             buildingId,
             items,
-            description: message('history.copyStructureIntoDocument', { name: structure.name })
+            description: message('history.copyStructureIntoDocument', { name: structure.name }),
+            structureId: structure.id
         });
     }
 
