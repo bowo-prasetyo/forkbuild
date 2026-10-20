@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 4a1027c916706bd6 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: d826f595608a7d2e -->
 # Steuerungsreferenz
 
 <!-- languages -->
@@ -31,6 +31,7 @@ der folgenden Bearbeitungsvorgänge nach Namen zu suchen.
 | Eingabe | Aktion |
 |---|---|
 | `Strg/Cmd+K` | Befehlspalette |
+| `I` | Bauwerk beschreiben: woraus es besteht, angezeigt und von einem Screenreader vorgelesen — siehe [Das Bauwerk beschreiben](02-TheEditor.md#das-bauwerk-beschreiben) |
 | `?` | Übersicht Tastenkürzel (auch über die Schaltfläche „⌨ Tastenkürzel“ in der Werkzeugleiste erreichbar) — alle Tastenkürzel des Editors |
 
 ## Entdecken (Weltansicht)

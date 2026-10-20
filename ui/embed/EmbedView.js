@@ -4,6 +4,8 @@ import { EmbeddedBuildOutcome, openEmbeddedBuild } from '../../application/publi
 import { bricksOfDocument } from '../../application/publication/sharing/ReadSharedBuild.js';
 import { linkOnlyPublicationViewUrl } from '../../core/app/ForkBuildAppLinks.js';
 import { License } from '../../core/document/License.js';
+import { BuildDescriber } from '../../application/publication/BuildDescriber.js';
+import { buildDescriptionText } from '../i18n/buildDescriptionText.js';
 import { t } from '../i18n/i18n.js';
 
 // A build on another site's page (ui/embed/embedBoot.js): the build turning,
@@ -25,6 +27,8 @@ export default {
         const message = ref('');
         const build = ref(null);
         const turned = ref(false);
+        // What the build is made of, for a screen reader; worked out once it opens.
+        const description = ref('');
 
         async function open() {
             const result = await openEmbeddedBuild({ payload: props.payload, verifier: props.verifier });
@@ -43,6 +47,11 @@ export default {
             });
             state.value = 'opened';
             props.funnel?.embedViewed();
+            try {
+                description.value = buildDescriptionText(await new BuildDescriber().describe(build.value.bricks));
+            } catch {
+                description.value = '';
+            }
         }
 
         const appLink = computed(() => (props.payload ? linkOnlyPublicationViewUrl(props.payload, props.appUrl) : props.appUrl));
@@ -55,7 +64,7 @@ export default {
 
         onMounted(open);
 
-        return { t, state, message, build, turned, appLink, buildBricks, showTurntable, openedInForkBuild };
+        return { t, state, message, build, turned, description, appLink, buildBricks, showTurntable, openedInForkBuild };
     },
     template: `
         <div :class="['embed', 'embed--' + state]">
@@ -65,6 +74,7 @@ export default {
                         v-if="showTurntable"
                         :bricks="buildBricks"
                         :label="t('embed.turntableLabel', { title: build.title })"
+                        :description="description"
                         draggable
                         @turned="turned = true"
                     />

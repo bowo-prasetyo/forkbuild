@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: e059fcfef844d10c -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 64eabe993a5d0f63 -->
 # 04 — Publicar y remezclar
 
 <!-- languages -->
@@ -174,6 +174,11 @@ dónde está guardada, abre la página propia de esa construcción:
 - **Remezcla de “…” de …** cuando es una remezcla, y **Remezclada N veces**
   cuando este dispositivo ha encontrado remezclas de ella (vea
   [Recuentos de remezclas](#recuentos-de-remezclas));
+- **Qué cambió**, debajo de **Remezcla de** en una remezcla: lo que agregó
+  (las estructuras de la Biblioteca de construcción y las ventanas, puertas,
+  árboles y otras piezas entre sus bloques nuevos), repintó y quitó,
+  calculado a partir de los bloques de ambas construcciones cuando este
+  dispositivo puede leer la construcción que remezcla;
 - su **Árbol familiar**: las construcciones de las que se remezcló,
   hasta la original, y las remezclas hechas de ella y de esas, cada una
   como enlace cuando este dispositivo puede abrirla;

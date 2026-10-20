@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 4a1027c916706bd6 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: d826f595608a7d2e -->
 # Referencia de controles
 
 <!-- languages -->
@@ -32,6 +32,7 @@ por su nombre todas las operaciones de edición de abajo.
 | Entrada | Acción |
 |---|---|
 | `Ctrl/Cmd+K` | Paleta de comandos |
+| `I` | Describir la construcción: de qué está hecha, mostrado y leído por un lector de pantalla — vea [Describir la construcción](02-TheEditor.md#describir-la-construcción) |
 | `?` | Superposición Atajos de teclado (también desde el botón “⌨ Atajos” de la barra de herramientas): todos los atajos del Editor |
 
 ## Descubrimiento (Vista del mundo)

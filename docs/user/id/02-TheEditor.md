@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2c43bd99f1b022e2 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: a6b88e4e92839dec -->
 # 02 — Editor
 
 <!-- languages -->
@@ -724,6 +724,19 @@ pembuatnya, lisensinya, dan sumber remix-nya: di copyright dan extras glTF,
 di header STL, dan sebagai komentar di OBJ. Halaman bangunan yang dibagikan
 menawarkan unduhan yang sama jika lisensinya mengizinkan salinan (lihat
 [Apa yang dibuka sebuah tautan](04-PublishingAndForking.md#apa-yang-dibuka-sebuah-tautan)).
+
+## Jelaskan bangunan
+
+Tekan `I`, atau pilih **Jelaskan Bangunan** di Palet Perintah, dan Editor
+menyebutkan isi bangunan Anda: berapa balok, kira-kira seberapa lebar,
+dalam, dan tinggi, struktur Pustaka Bangunan yang ada di dalamnya, jendela,
+pintu, atap, pohon, dan bagian lain di antara balok lainnya, serta warna
+utamanya, dinamai menurut warna desa. Pembaca layar membacakannya; teksnya
+juga tetap di atas tampilan 3D sampai Anda menekan **Tutup**, cara cepat
+memeriksa bangunan tanpa memutar kamera mengelilinginya. Semua dihitung di
+perangkat Anda dari baloknya, jadi tidak ada yang dikirim ke mana pun.
+Gambar bangunan di tautan bagikannya dan di sematan membawa penjelasan yang
+sama untuk pembaca layar.
 
 ## Kontrol kamera
 

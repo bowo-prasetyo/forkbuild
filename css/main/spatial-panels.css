@@ -1333,3 +1333,27 @@
 .identity-name {
     overflow-wrap: anywhere;
 }
+
+/* Describe the Build (I) in the Editor: what the build is made of, at the
+   top of the 3D view under See inside, clear of the first-build guide,
+   until closed. */
+.editor-build-description {
+    position: absolute;
+    left: 16px;
+    top: 56px;
+    z-index: 30;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    max-width: min(440px, calc(100% - 24px));
+    padding: 10px 12px;
+    background: var(--surface);
+    color: var(--ink);
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+}
+
+.editor-build-description p {
+    margin: 0;
+    line-height: 1.45;
+}

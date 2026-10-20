@@ -20,6 +20,7 @@ import I18nText from '../i18n/I18nText.js';
 import { normalizeBuiltWith } from '../../core/catalog/BuiltWith.js';
 import { exploreRouteFor } from '../components/publicationCatalog/useRepositoryNetworkDiscovery.js';
 import { displayText, errorText, t } from '../i18n/i18n.js';
+import { buildDescriptionText, remixChangesText } from '../i18n/buildDescriptionText.js';
 
 // The turning build needs Three.js, which the first load leaves out, so it
 // loads once the build is known.
@@ -64,6 +65,7 @@ export default {
         const contentStore = inject('publicationContentStore', null);
         const networkPublicationLocatorStore = inject('networkPublicationLocatorStore', null);
         const similarBuildFinder = inject('similarBuildFinder', null);
+        const buildDescriber = inject('buildDescriber', null);
         const { discoveryProvider } = new CreateDiscoveryUseCase().execute({
             decentralizedDiscoveryProvider: inject('decentralizedPublicationDiscoveryProvider', null)
         });
@@ -73,6 +75,10 @@ export default {
         // The build as opened: what the arrival screen shows.
         const arrived = ref(null);
         const similarEarlier = ref([]);
+        // What the build is made of, for a screen reader, and what a remix
+        // changed from the build it remixes; worked out after it opens.
+        const buildDescription = ref('');
+        const remixChanges = ref(null);
         const payload = typeof route.params.payload === 'string' ? route.params.payload : null;
         // A short link's id is the Publication's (its note's `d` tag).
         const notePublicationId = typeof route.params.noteId === 'string' && isNoteLinkPublicationId(route.params.noteId)
@@ -151,6 +157,7 @@ export default {
                 arrived.value = Object.freeze({ ...arrival, bricks });
                 state.value = 'arrived';
                 findSimilarEarlier(result.publication);
+                describe(result.publication, bricks);
                 return;
             }
             publication.value = result.publication
@@ -192,6 +199,25 @@ export default {
                 found = [];
             }
             if (arrived.value?.publication?.id === opened.id) similarEarlier.value = found;
+        }
+
+        // Shown when worked out; a failed one says nothing.
+        async function describe(opened, bricks) {
+            buildDescription.value = '';
+            remixChanges.value = null;
+            if (!buildDescriber || !Array.isArray(bricks)) return;
+            try {
+                const facts = await buildDescriber.describe(bricks);
+                if (arrived.value?.publication?.id === opened.id) buildDescription.value = buildDescriptionText(facts);
+                if (!opened.parentDocumentId) return;
+                const changes = await buildDescriber.remixChangesOf(opened, bricks, {
+                    parentPublications: lookUp(() => discoveryProvider.findByDocumentId(opened.parentDocumentId), []),
+                    contentStore
+                });
+                if (arrived.value?.publication?.id === opened.id) remixChanges.value = remixChangesText(changes);
+            } catch {
+                // The page stands without them.
+            }
         }
 
         // The bricks the turntable draws: the build's own, read when it opened.
@@ -270,14 +296,14 @@ export default {
 
         return {
             t, state, message, publication, arrived, label, network, open, buildBricks, showTurntable, editCopy, walkAround,
-            downloadModel, modelMessage, modelFormats: BUILD_MODEL_FORMATS, familyRoute, similarEarlier, similarRoute
+            downloadModel, modelMessage, modelFormats: BUILD_MODEL_FORMATS, familyRoute, similarEarlier, similarRoute, buildDescription, remixChanges
         };
     },
     template: `
         <section v-if="state === 'arrived' && arrived" class="shared-build-view">
             <div class="shared-build-inner">
                 <div class="shared-build-stage">
-                    <BuildTurntable v-if="showTurntable" :bricks="buildBricks" :label="t('publicationLink.turntableLabel', { title: arrived.title })" />
+                    <BuildTurntable v-if="showTurntable" :bricks="buildBricks" :label="t('publicationLink.turntableLabel', { title: arrived.title })" :description="buildDescription" />
                     <img v-else class="build-turntable-fallback" src="favicon.svg" :alt="t('publicationLink.turntableLabel', { title: arrived.title })">
                 </div>
                 <div class="shared-build-info">
@@ -292,6 +318,7 @@ export default {
                     </p>
                     <ul v-if="arrived.remixedFrom || arrived.remixes" class="shared-build-lineage">
                         <li v-if="arrived.remixedFrom" class="shared-build-remixed-from">{{ arrived.remixedFrom }}</li>
+                        <li v-if="arrived.remixedFrom && remixChanges" class="shared-build-remix-changes">{{ remixChanges }}</li>
                         <li v-if="arrived.remixes" class="shared-build-remix-count">{{ arrived.remixes }}</li>
                     </ul>
                     <div class="shared-build-actions">

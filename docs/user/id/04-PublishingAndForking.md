@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: e059fcfef844d10c -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 64eabe993a5d0f63 -->
 # 04 — Penerbitan & Remix
 
 <!-- languages -->
@@ -176,6 +176,11 @@ menyebut tempat ia disimpan, membuka halaman bangunan itu sendiri:
 - **Remix dari "…" oleh …** jika itu remix, dan **Di-remix N kali** jika
   perangkat ini telah menemukan remix-nya (lihat
   [Jumlah remix](#jumlah-remix));
+- **Yang berubah**, di bawah **Remix dari** pada remix: apa yang
+  ditambahkannya (struktur Pustaka Bangunan, serta jendela, pintu, pohon,
+  dan bagian lain di antara balok barunya), dicat ulang, dan dibuang,
+  dihitung dari balok kedua bangunan jika perangkat ini dapat membaca
+  bangunan yang di-remix;
 - **Silsilah**-nya: bangunan asal remix-nya, sampai yang asli, dan
   remix yang dibuat darinya dan dari remix itu, masing-masing berupa
   tautan jika perangkat ini dapat membukanya;

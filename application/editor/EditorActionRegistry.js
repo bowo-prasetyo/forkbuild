@@ -655,6 +655,20 @@ export function createStandardActions({ session, feedback, ui = {} }) {
                 }
             }
         }),
+        // Says what the build is made of (ui/i18n/buildDescriptionText.js),
+        // for a screen reader or to check it; I for "information".
+        define({
+            id: 'ui.describeBuild',
+            category: 'interface',
+            shortcut: 'I',
+            keys: [{ key: 'i' }],
+            enabled: () => typeof ui.describeBuild === 'function',
+            execute: () => {
+                if (typeof ui.describeBuild === 'function') {
+                    ui.describeBuild();
+                }
+            }
+        }),
         // Brings back the guided first build after it was hidden.
         define({
             id: 'ui.firstBuildGuide',

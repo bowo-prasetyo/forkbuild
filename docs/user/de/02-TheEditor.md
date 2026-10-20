@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2c43bd99f1b022e2 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: a6b88e4e92839dec -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -751,6 +751,20 @@ seine Lizenz und wovon es ein Remix ist: im Copyright und den Extras von
 glTF, im STL-Header und als Kommentare im OBJ. Die Seite eines geteilten
 Bauwerks bietet dieselben Downloads an, wenn seine Lizenz Kopien erlaubt
 (siehe [Was ein Link öffnet](04-PublishingAndForking.md#was-ein-link-öffnet)).
+
+## Das Bauwerk beschreiben
+
+Drücken Sie `I` oder wählen Sie **Bauwerk beschreiben** in der
+Befehlspalette, und der Editor sagt, woraus Ihr Bauwerk besteht: wie viele
+Steine, etwa wie breit, tief und hoch es ist, welche Strukturen der
+Baubibliothek darin stehen, die Fenster, Türen, Dächer, Bäume und anderen
+Teile unter den übrigen Steinen und seine Hauptfarben, benannt nach den
+Dorffarben. Ein Screenreader liest es vor; es bleibt auch oben in der
+3D-Ansicht, bis Sie **Schließen** drücken, ein schneller Weg, ein Bauwerk zu
+prüfen, ohne die Kamera darum herumzudrehen. Es wird auf Ihrem Gerät aus den
+Steinen ermittelt, daher wird nichts gesendet. Das Bild eines Bauwerks auf
+seinem geteilten Link und in einer Einbettung trägt dieselbe Beschreibung
+für Screenreader.
 
 ## Kamerasteuerung
 

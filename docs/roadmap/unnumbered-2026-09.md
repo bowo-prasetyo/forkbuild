@@ -8225,3 +8225,45 @@ build). How a player notices: describing what they need finds it, in any of the 
 - Not done: personal structures have only their own name and tags to be found by; a phrase nobody listed finds
   nothing until a word is added. An optional on-device model stays a later step, if the counters say searches still
   come up empty.
+
+
+## What a remix changed, and builds described for screen readers (unnumbered, 2026-10-20)
+
+**Credit said who, never what; and a build was a picture a screen reader couldn't read.** A remix's page named the
+build it came from but not what its builder added, and the turning picture of a build on its shared link, in an embed
+and in the Editor said only its title. Pillars served: every build has a family tree (credit says what each builder
+added) and building feels joyful for people who can't see the 3D view. How a player notices: *What changed: Added a
+Barn, 2 pieces of furniture, and 12 other bricks* under a remix's Remixed from; **Describe the Build** (`I`) in the
+Editor; a screen reader reading what a shared or embedded build is made of.
+
+These were ranked first among the tasks an optional on-device model could help with. Both rest on facts worked out
+exactly from the bricks, written as messages in all eight languages, so this needs no model and no download; a small
+model's wording, if one is added later, would start from these facts and could be checked against them. The small
+models considered (SmolLM2, SmolVLM) are English-only, which these sentences are not.
+
+- core/catalog/BuildDescription.js (new, pure): `describeBricks()` gives a build's brick count, size, the Build Library
+  structures standing in it, its parts (windows, doors, roof pieces, stairs and ladders, arches, fences, chimneys,
+  furniture, lanterns, trees, bushes, rocks, lawn) besides those structures' own, the bricks that are neither, and up to
+  two main colours named after the nearest village palette colour. `describeRemixChanges()` compares a remix with its
+  original brick by brick (kind, place, turn and tilt): bricks only in the remix are added (and described the same
+  way), only in the original taken away, and in both with another colour repainted.
+- core/catalog/BuildSimilarity.js: `findReadyMade()` says which structures `withoutReadyMade()` takes out. A
+  structure is named only when 95% of it stands there (the look-alike hint takes out half of a large one), or a House
+  would be named as the House with a Porch that holds it.
+- core/publication/RemixLineage.js: `remixParentPublication()`, the version of the original published no later than
+  the remix.
+- application/publication/BuildDescriber.js (new): loads the brick and structure registries once, when first needed;
+  `remixChangesOf()` reads the original's bricks as a shared link reads a build's.
+- ui/i18n/buildDescriptionText.js (new) and 29 messages in every language; ui/views/PublicationLinkView.js (What
+  changed, and the turntable's description), ui/embed/EmbedView.js, ui/components/featured/BuildTurntable.js
+  (`description`, read with the label), ui/views/EditorView.js and application/editor/EditorActionRegistry.js
+  (Describe the Build, on `I`).
+- docs/user/02 (Describe the build), 04 (What changed) and ControlsReference (`I`), in every language;
+  docs/Architecture.md.
+- Tests: parts and colour names; the House named as the House; a build's structures, parts, size and colours; the
+  Collection's own remixes (the porch's bench, the garden's bushes and lawns, the Farmstead's Barn), repainting and
+  taking away; the version a remix was made from; the English sentences; every language with every placeholder filled;
+  the action on `I`.
+- Not done: a remix whose original this device can't read says nothing of what changed; a build moved or turned as a
+  whole reads as every brick taken away and added; the family tree doesn't yet say what each member changed; Save
+  picture's PNG carries no description.
