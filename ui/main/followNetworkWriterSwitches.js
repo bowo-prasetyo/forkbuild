@@ -1,6 +1,6 @@
 // Keeps something in step with network writer switches (core/publication/NetworkWriters.js)
-// whose writer has no plugin to load, only a part of a runtime every copy
-// builds (Steem's and Blurt's): `on(runtime, id)` now for each switched on,
+// whose writer is part of a runtime every copy builds (Steem's and Blurt's,
+// whose code that posts that runtime loads itself): `on(runtime, id)` now for each switched on,
 // and `on`/`off` as each switch changes. `runtimes` maps a writer to its
 // runtime, or null where it wasn't built. Returns a function that stops
 // following.
