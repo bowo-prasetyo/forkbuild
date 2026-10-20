@@ -427,7 +427,8 @@ What it compares, and what it can't know:
 - Only the bricks you placed yourself count, so two builds started from the
   same ready-made house don't look alike. Nor do ready-made structures from
   the Build Library, on either side, wherever they stand and however they're
-  turned. A build with fewer than 20 bricks of your own isn't compared:
+  turned, even when some of their bricks were changed: the changed bricks
+  count as yours. A build with fewer than 20 bricks of your own isn't compared:
   small builds look alike too easily.
 - A brick counts as the same when it is the same kind of brick in the same
   place, even if your whole build stands somewhere else or is turned a
@@ -823,8 +824,8 @@ was published. It is how you can find a copy of your build: open the copy's
 page, and if yours was published first and looks like it, yours is listed
 there. Builds compare as they do when you publish (see
 [When your build looks like someone else's](#when-your-build-looks-like-someone-elses)),
-except that every brick counts that isn't part of a whole ready-made
-structure from the Build Library, since only the builder's own device knows
+except that every brick counts that isn't part of a ready-made structure
+from the Build Library (even one changed in part), since only the builder's own device knows
 which bricks they placed themselves.
 
 Left out: builds by the same builder (and anyone who built it with them),

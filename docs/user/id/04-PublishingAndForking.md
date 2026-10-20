@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 25738ff466939f65 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ad4cbc60b8459553 -->
 # 04 — Penerbitan & Remix
 
 <!-- languages -->
@@ -469,7 +469,7 @@ Apa yang dibandingkan, dan apa yang tidak bisa diketahuinya:
 - Hanya balok yang Anda letakkan sendiri yang dihitung, jadi dua bangunan
   yang dimulai dari rumah siap pakai yang sama tidak dianggap mirip karena
   itu. Struktur siap pakai dari Pustaka Bangunan juga tidak dihitung, di
-  kedua sisi, di mana pun letaknya dan bagaimanapun diputarnya. Bangunan
+  kedua sisi, di mana pun letaknya dan bagaimanapun diputarnya, meskipun sebagian baloknya diubah: balok yang diubah dihitung sebagai milik Anda. Bangunan
   dengan kurang dari 20 balok milik Anda sendiri tidak
   dibandingkan: bangunan kecil terlalu mudah terlihat mirip.
 - Sebuah balok dianggap sama jika jenisnya sama dan berada di tempat yang
@@ -904,8 +904,7 @@ bangunan Anda: buka halaman salinan itu, dan jika bangunan Anda diterbitkan
 lebih dulu dan mirip dengannya, bangunan Anda tercantum di sana. Bangunan
 dibandingkan seperti saat menerbitkan (lihat
 [Jika bangunan Anda mirip dengan bangunan orang lain](#jika-bangunan-anda-mirip-dengan-bangunan-orang-lain)),
-hanya saja setiap balok dihitung kecuali yang menjadi bagian dari struktur
-siap pakai utuh dari Pustaka Bangunan, karena hanya perangkat pembuatnya
+hanya saja setiap balok dihitung kecuali yang menjadi bagian dari struktur siap pakai dari Pustaka Bangunan (meskipun sebagian telah diubah), karena hanya perangkat pembuatnya
 yang tahu balok mana yang ia letakkan sendiri.
 
 Tidak diikutkan: bangunan dari pembuat yang sama (dan siapa pun yang

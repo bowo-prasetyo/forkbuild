@@ -4,7 +4,7 @@
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import {
-    MIN_COMPARED_BRICKS, MIN_READY_MADE_POINTS, SIMILAR_BUILD_THRESHOLD, buildShape, compareBuildShapes, isSimilarBuild, similarityUpperBound, withoutReadyMade
+    MIN_COMPARED_BRICKS, MIN_READY_MADE_POINTS, SIMILAR_BUILD_THRESHOLD, buildShape, compareBuildShapes, isSimilarBuild, readyMadeCoverage, similarityUpperBound, withoutReadyMade
 } from '../core/BuildSimilarity.js';
 import { VillageLibrary } from '../core/library/VillageLibrary.js';
 import { assert } from './support/Assert.js';
@@ -147,8 +147,39 @@ console.log('✓ edge cases');
 
     const almost = buildShape([...ownA, ...house.slice(0, Math.ceil(house.length * 0.95))]);
     assert(withoutReadyMade(almost, readyMade).size === buildShape(ownA).size, '21. a copy missing a brick or two still counts as the structure');
-    const half = buildShape([...ownA, ...house.slice(0, Math.floor(house.length / 2))]);
-    assert(withoutReadyMade(half, readyMade).size === half.size, '22. half of one doesn\'t: those bricks were placed, not dropped in');
+    // How much of a structure must be there grows as the structure shrinks.
+    const points = (structure) => buildShape(structure.bricks).points.map((p) => brick(p.definitionId, p.x, p.y, p.z));
+    const sized = (from, to) => VillageLibrary.structures.find((structure) => {
+        const size = buildShape(structure.bricks).size;
+        return size >= from && size < to;
+    });
+    for (const [label, structure, enough, tooFew] of [
+        ['large (30+ bricks): half', sized(30, Infinity), 0.5, 0.45],
+        ['medium (12 to 29): 70%', sized(12, 30), 0.7, 0.6],
+        ['small (6 to 11): 80%', sized(6, 12), 0.8, 0.7]
+    ]) {
+        const all = points(structure);
+        const keep = (share) => all.slice(0, Math.ceil(all.length * share));
+        const changed = buildShape([...ownA, ...turnedAndMoved(keep(enough), 90, { x: 7, y: 0, z: -3 })]);
+        assert(withoutReadyMade(changed, readyMade).size === buildShape(ownA).size,
+            `22. a ${label} of it still standing counts as ${structure.id} (${withoutReadyMade(changed, readyMade).size - buildShape(ownA).size} left)`);
+        const fewer = buildShape([...ownA, ...keep(tooFew)]);
+        assert(withoutReadyMade(fewer, readyMade).size === fewer.size, `22a. less of ${structure.id} doesn't: those bricks were placed by hand`);
+    }
+
+    // The bricks its builder changed stay theirs.
+    const houseAll = points(VillageLibrary.structures.find((structure) => structure.id === 'village:house'));
+    const reworked = houseAll.map((b, i) => (i % 5 < 2 ? brick(b.definitionId === 'core:cube' ? 'core:roof_cone' : 'core:cube', b.position.x, b.position.y, b.position.z) : b));
+    const reworkedShape = buildShape([...ownA, ...reworked]);
+    const changedOnes = buildShape(reworked.filter((_, i) => i % 5 < 2));
+    assert(withoutReadyMade(reworkedShape, readyMade).size === buildShape(ownA).size + changedOnes.size,
+        '22b. a house with two bricks in five changed loses the bricks still as the house has them, and keeps the changed ones');
+
+    assert([3, 5, 6, 11, 12, 29, 30, 144].map(readyMadeCoverage).join() === ',,0.8,0.8,0.7,0.7,0.5,0.5', '22c. 80%, 70% and half, by size; none under six bricks');
+    assert(withoutReadyMade(changed(), readyMade, { coverageFor: () => 1 }).size > buildShape(ownA).size, '22d. another coverage can be tried (the measuring script does)');
+    function changed() {
+        return buildShape([...ownA, ...houseAll.slice(0, 40)]);
+    }
 
     assert(withoutReadyMade(buildShape(original), readyMade).size === buildShape(original).size, '23. a build made by hand keeps every brick');
     const fence = VillageLibrary.structures.find((structure) => buildShape(structure.bricks).size < MIN_READY_MADE_POINTS);

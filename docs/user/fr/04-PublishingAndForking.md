@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 25738ff466939f65 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ad4cbc60b8459553 -->
 # 04 — Publier et remixer
 
 <!-- languages -->
@@ -484,7 +484,7 @@ Ce qui est comparé, et ce qu’il ne peut pas savoir :
   constructions commencées avec la même maison toute faite ne se
   ressemblent donc pas pour autant. Les structures toutes faites de la
   Bibliothèque de construction ne comptent pas non plus, d’un côté comme de
-  l’autre, où qu’elles soient et quelle que soit leur orientation. Une
+  l’autre, où qu’elles soient et quelle que soit leur orientation, même quand certaines de leurs briques ont été modifiées : les briques modifiées comptent comme les vôtres. Une
   construction de moins de 20 briques
   à vous n’est pas comparée : les petites constructions se ressemblent trop
   facilement.
@@ -929,8 +929,7 @@ vous pouvez trouver une copie de votre construction : ouvrez la page de la
 copie, et si la vôtre a été publiée avant et lui ressemble, elle y est
 listée. Les constructions sont comparées comme à la publication (voir
 [Quand votre construction ressemble à celle de quelqu’un d’autre](#quand-votre-construction-ressemble-à-celle-de-quelquun-dautre)),
-sauf que compte chaque brique qui ne fait pas partie d’une structure toute
-faite entière de la Bibliothèque de construction, puisque seul l’appareil de
+sauf que compte chaque brique qui ne fait pas partie d’une structure toute faite de la Bibliothèque de construction (même modifiée en partie), puisque seul l’appareil de
 son auteur sait quelles briques il a placées lui-même.
 
 Sont laissés de côté les constructions du même auteur (et de ceux qui l’ont
