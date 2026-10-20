@@ -1,5 +1,5 @@
 import { LocalStorageProvider } from '../../storage/LocalStorageProvider.js';
-import { SNAPSHOT_CELL_TAG_PREFIX } from '../../core/NarrowDiscoveryTags.js';
+import { SNAPSHOT_CELL_TAG_PREFIX } from '../../core/publication/NarrowDiscoveryTags.js';
 import { AnnouncementKind } from '../../application/announcementIndex/AnnouncementKinds.js';
 import { AnnouncementSync } from '../../application/announcementIndex/AnnouncementSync.js';
 import { AnnouncementSyncCursorStore } from '../../application/announcementIndex/AnnouncementSyncCursorStore.js';

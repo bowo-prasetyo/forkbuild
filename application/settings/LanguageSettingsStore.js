@@ -1,7 +1,7 @@
 // Keeps this device's language choice. Personal and local: never published,
 // shared or part of any World.
 import { StorageProvider } from '../../storage/StorageProvider.js';
-import { normalizeLanguageSettings } from '../../core/LanguageSettings.js';
+import { normalizeLanguageSettings } from '../../core/app/LanguageSettings.js';
 
 const STORAGE_KEY = 'language-settings';
 

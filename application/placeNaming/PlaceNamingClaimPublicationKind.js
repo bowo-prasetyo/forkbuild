@@ -1,4 +1,4 @@
-import { PlaceNamingClaim } from '../../core/PlaceNamingClaim.js';
+import { PlaceNamingClaim } from '../../core/world/PlaceNamingClaim.js';
 import { PLACE_NAMING_CLAIM_PUBLICATION_KIND } from './PlaceNamingClaimPublication.js';
 import { validatePlaceNamingClaimPublication } from './PlaceNamingClaimPublicationValidator.js';
 
@@ -7,7 +7,7 @@ import { validatePlaceNamingClaimPublication } from './PlaceNamingClaimPublicati
 // The second `kindPlugin` for application/publication/PublicationResolver.js, and
 // the one that actually PROVES the pipeline is generic rather than
 // merely reusable: application/blueprint/BlueprintAttributionPublicationKind.js
-// wraps a self-describing object (`core/BlueprintAttribution.js#toJSON()`
+// wraps a self-describing object (`core/building/BlueprintAttribution.js#toJSON()`
 // already carries its own `kind`/`schemaVersion`), while a
 // `PlaceNamingClaim` does not — 0.5.3 wraps it in a completely separate
 // envelope module instead (`application/placeNaming/PlaceNamingClaimPublication.js`'s

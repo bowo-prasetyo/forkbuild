@@ -1,5 +1,5 @@
 import { CollaborationTransport } from './CollaborationTransport.js';
-import { CollaborationEnvelope } from '../core/CollaborationEnvelope.js';
+import { CollaborationEnvelope } from '../core/collaboration/CollaborationEnvelope.js';
 
 // The V0.1 concrete collaboration transport: an in-memory broadcast
 // bus. All connected sessions share the same transport instance, and

@@ -466,7 +466,7 @@ byte-identical content, never verified or trusted, and a fingerprint is
 not a signature.
 
 *Changed by the code-size cleanup (2026-09-24):* SHA-256 is no longer
-copied into each fingerprint file; it lives once in `core/Sha256.js`.
+copied into each fingerprint file; it lives once in `core/document/Sha256.js`.
 
 [Full text](history/0.8.md#an-archive-fingerprint-identifies-durable-contents-it-does-not-establish-their-truth-or-origin-0884)
 

@@ -26,7 +26,7 @@ import { t } from '../i18n/i18n.js';
 //
 // `targetVehicleId` itself is read only for `visible` — it is never
 // displayed. A raw vehicle id is an internal, deterministic identity
-// string (core/VehicleIdentity.js's own `vehicle:<seed>:<cellX>,<cellZ>`
+// string (core/vehicles/VehicleIdentity.js's own `vehicle:<seed>:<cellX>,<cellZ>`
 // shape), never a player-facing label.
 
 export default {

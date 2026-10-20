@@ -7,7 +7,7 @@ import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
 import { FriendRelationshipUseCase } from '../application/identity/FriendRelationshipUseCase.js';
-import { FriendshipState } from '../core/FriendshipState.js';
+import { FriendshipState } from '../core/social/FriendshipState.js';
 import { ChatUseCase } from '../application/chat/ChatUseCase.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';

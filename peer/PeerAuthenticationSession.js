@@ -10,7 +10,7 @@ import {
     toProofMessage,
     isValidProofMessage,
     getPeerAuthenticationSigningDescriptor
-} from '../core/PeerAuthenticationEnvelope.js';
+} from '../core/social/PeerAuthenticationEnvelope.js';
 
 // How long start() waits for a PROOF that answers OUR OWN challenge
 // before giving up. Without this, a handshake that stalls for any

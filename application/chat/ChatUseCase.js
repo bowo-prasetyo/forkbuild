@@ -1,14 +1,14 @@
 import { EventBus } from '../../core/events/EventBus.js';
 import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
-import { FriendshipState } from '../../core/FriendshipState.js';
-import { toChatMessage, isValidChatMessage, deriveConversationId, MAX_CHAT_BODY_LENGTH } from '../../core/ChatMessage.js';
-import { ChatReplayWindow } from '../../core/ChatReplayWindow.js';
-import { resolveIncomingChatMessage } from '../../core/ChatMessageIngestion.js';
-import { ChatDeliveryState } from '../../core/ChatDeliveryState.js';
-import { toChatDeliveryAck, isValidChatDeliveryAck } from '../../core/ChatDeliveryAck.js';
-import { toChatReadReceipt, isValidChatReadReceipt } from '../../core/ChatReadReceipt.js';
-import { isDeliveryStateAdvancement } from '../../core/ChatDeliveryState.js';
-import { isValidChatMessageDirection } from '../../core/ConversationEntry.js';
+import { FriendshipState } from '../../core/social/FriendshipState.js';
+import { toChatMessage, isValidChatMessage, deriveConversationId, MAX_CHAT_BODY_LENGTH } from '../../core/social/ChatMessage.js';
+import { ChatReplayWindow } from '../../core/social/ChatReplayWindow.js';
+import { resolveIncomingChatMessage } from '../../core/social/ChatMessageIngestion.js';
+import { ChatDeliveryState } from '../../core/social/ChatDeliveryState.js';
+import { toChatDeliveryAck, isValidChatDeliveryAck } from '../../core/social/ChatDeliveryAck.js';
+import { toChatReadReceipt, isValidChatReadReceipt } from '../../core/social/ChatReadReceipt.js';
+import { isDeliveryStateAdvancement } from '../../core/social/ChatDeliveryState.js';
+import { isValidChatMessageDirection } from '../../core/social/ConversationEntry.js';
 import { StorageProvider } from '../../storage/StorageProvider.js';
 import { LiveConversation } from './LiveConversation.js';
 import { ChatOutbox } from './ChatOutbox.js';
@@ -16,8 +16,8 @@ import { ConversationStore } from './ConversationStore.js';
 import { ConversationReadOutbox } from './ConversationReadOutbox.js';
 import { RemoteReadReceiptStore } from './RemoteReadReceiptStore.js';
 import { resolveDirectSocialIdentity } from '../identity/SocialIdentityResolver.js';
-import { UserFacingError } from '../../core/UserFacingError.js';
-import { message } from '../../core/Message.js';
+import { UserFacingError } from '../../core/app/UserFacingError.js';
+import { message } from '../../core/app/Message.js';
 
 const MESSAGE_EVENT = 'ChatMessage';
 const READ_RECEIPT_EVENT = 'ChatReadReceipt';
@@ -326,7 +326,7 @@ export class ChatUseCase {
     }
 
     // Nothing from the wire is trusted until, in order:
-    //   1. it is well formed (core/ChatMessage.js)
+    //   1. it is well formed (core/social/ChatMessage.js)
     //   2. its senderIdentity is the identity this connection proved, not what the
     //      payload claims (defeats forged senders)
     //   3. the sender is not blocked

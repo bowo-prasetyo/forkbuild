@@ -1,7 +1,7 @@
-import { normalizeBuiltWith } from '../../../core/BuiltWith.js';
+import { normalizeBuiltWith } from '../../../core/catalog/BuiltWith.js';
 import { intlLocale, t } from '../../i18n/i18n.js';
 
-// The friends who built a build with its author (core/BuiltWith.js), as one
+// The friends who built a build with its author (core/catalog/BuiltWith.js), as one
 // phrase in the app's language: "Kim, Sam and Lee". Empty for none.
 export function builtWithNames(list) {
     return builtWithParts(list).map((part) => part.text).join('');

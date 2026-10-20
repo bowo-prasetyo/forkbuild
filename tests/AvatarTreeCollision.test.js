@@ -1,14 +1,14 @@
 import { readFile } from 'node:fs/promises';
 import {
     circlesIntersect, avatarTreeCollision, avatarCollisionCircleAt
-} from '../core/AvatarTreeCollision.js';
-import { AVATAR_COLLISION_RADIUS } from '../core/AvatarCollision.js';
-import { treeCollisionCircleFor, treeCollisionGeometryInRegion } from '../core/TreeCollisionGeometry.js';
-import { naturalFeaturesInRegion, FEATURE_TYPE } from '../core/NaturalFeatureField.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+} from '../core/avatar/AvatarTreeCollision.js';
+import { AVATAR_COLLISION_RADIUS } from '../core/avatar/AvatarCollision.js';
+import { treeCollisionCircleFor, treeCollisionGeometryInRegion } from '../core/nature/TreeCollisionGeometry.js';
+import { naturalFeaturesInRegion, FEATURE_TYPE } from '../core/nature/NaturalFeatureField.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.60 — Avatar-Tree Collision Detection, core/AvatarTreeCollision.js.
+// 0.9.60 — Avatar-Tree Collision Detection, core/avatar/AvatarTreeCollision.js.
 //
 //   Section A: circlesIntersect() — the generic circle-circle primitive,
 //              covering outside/touching/inside/same-center/different-radii
@@ -82,7 +82,7 @@ async function runTests() {
         const circle = avatarCollisionCircleAt({ x: 3, y: 1.2, z: -4 });
         assert(circle.center.x === 3 && circle.center.z === -4, '8. avatarCollisionCircleAt: center matches the position\'s own x/z exactly');
         assert(!('y' in circle.center), '9. avatarCollisionCircleAt: center is purely horizontal (x/z) — no vertical component');
-        assert(circle.radius === AVATAR_COLLISION_RADIUS, '10. avatarCollisionCircleAt: radius is exactly core/AvatarCollision.js\'s own AVATAR_COLLISION_RADIUS, never a second constant');
+        assert(circle.radius === AVATAR_COLLISION_RADIUS, '10. avatarCollisionCircleAt: radius is exactly core/avatar/AvatarCollision.js\'s own AVATAR_COLLISION_RADIUS, never a second constant');
     }
     {
         const circle = avatarCollisionCircleAt({ x: 0, y: 0, z: 0 });
@@ -176,7 +176,7 @@ async function runTests() {
     // randomness, the clock, or storage
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../core/AvatarTreeCollision.js', import.meta.url);
+        const sourceUrl = new URL('../core/avatar/AvatarTreeCollision.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -194,18 +194,18 @@ async function runTests() {
             'localStorage', 'StorageProvider', 'fetch(', 'WebSocket'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `25. core/AvatarTreeCollision.js's own code never references "${term}" — geometry-only detection, never placement/movement/response/rendering/randomness/clock/storage`);
+            assert(!codeOnly.includes(term), `25. core/avatar/AvatarTreeCollision.js's own code never references "${term}" — geometry-only detection, never placement/movement/response/rendering/randomness/clock/storage`);
         }
-        assert(codeOnly.includes('AVATAR_COLLISION_RADIUS'), '26. core/AvatarTreeCollision.js does consume AVATAR_COLLISION_RADIUS from core/AvatarCollision.js — the one deliberate, already-defined geometric fact it is allowed to import');
+        assert(codeOnly.includes('AVATAR_COLLISION_RADIUS'), '26. core/avatar/AvatarTreeCollision.js does consume AVATAR_COLLISION_RADIUS from core/avatar/AvatarCollision.js — the one deliberate, already-defined geometric fact it is allowed to import');
     }
     {
         // A detected collision is never itself used to move anything —
         // the exported surface is exactly these three functions, no
         // avatar-mutating side effect hiding among them.
-        const exportsModule = await import('../core/AvatarTreeCollision.js');
+        const exportsModule = await import('../core/avatar/AvatarTreeCollision.js');
         const exportedNames = Object.keys(exportsModule).sort();
         assert(JSON.stringify(exportedNames) === JSON.stringify(['avatarCollisionCircleAt', 'avatarTreeCollision', 'circlesIntersect']),
-            '27. core/AvatarTreeCollision.js exports exactly circlesIntersect, avatarTreeCollision, and avatarCollisionCircleAt — nothing else');
+            '27. core/avatar/AvatarTreeCollision.js exports exactly circlesIntersect, avatarTreeCollision, and avatarCollisionCircleAt — nothing else');
     }
 
     console.log('✅ All Avatar-Tree Collision Detection tests passed.');

@@ -1,4 +1,4 @@
-import { message } from '../../core/Message.js';
+import { message } from '../../core/app/Message.js';
 
 // 0.2.21: one place that names the three tiers a document moves
 // through — Draft -> Saved -> Published — so the Editor's Document
@@ -41,7 +41,7 @@ export function computeLifecycleStatus({ hasBeenSaved = false, isPublished = fal
     return hasBeenSaved ? LifecycleStatus.SAVED : LifecycleStatus.DRAFT;
 }
 
-// A message (core/Message.js) for the UI to show.
+// A message (core/app/Message.js) for the UI to show.
 export function describeLifecycleStatus(status, { dirty = false } = {}) {
     switch (status) {
         case LifecycleStatus.PUBLISHED:

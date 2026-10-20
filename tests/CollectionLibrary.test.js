@@ -4,10 +4,10 @@
 // structure goes through are in tests/VillageLibraryExpansion.test.js; this
 // file checks what is particular to these.
 import { CollectionLibrary, COLLECTION_REMIXED_FROM, collectionFamilies } from '../core/library/CollectionLibrary.js';
-import { SpatialBounds } from '../core/SpatialBounds.js';
+import { SpatialBounds } from '../core/world/SpatialBounds.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';
-import { CHALLENGE_THEMES } from '../core/BuildChallenge.js';
+import { CHALLENGE_THEMES } from '../core/challenge/BuildChallenge.js';
 import { libraryCategoryName, libraryItemDescription, libraryItemKey, libraryItemName } from '../ui/i18n/libraryText.js';
 import { hasMessage } from '../ui/i18n/i18n.js';
 import { assert } from './support/Assert.js';

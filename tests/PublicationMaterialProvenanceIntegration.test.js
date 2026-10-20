@@ -11,7 +11,7 @@ import { composeWorldEncounterMaterialVerifier } from '../application/worldEncou
 import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js';
 import { PublicationMaterialProvenanceOrigin } from '../application/publication/distribution/PublicationMaterialProvenance.js';
 import { LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/worldEncounter/WorldEncounterIntegration.js';
-import { WorldEncounterKind } from '../core/WorldEncounter.js';
+import { WorldEncounterKind } from '../core/world/WorldEncounter.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { assert } from './support/Assert.js';

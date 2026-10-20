@@ -1,4 +1,4 @@
-import { describePublicationClaimLocator, publicationClaimLocatorFromViewPath, publicationShareUrl, publicationViewUrl } from '../core/ForkBuildAppLinks.js';
+import { describePublicationClaimLocator, publicationClaimLocatorFromViewPath, publicationShareUrl, publicationViewUrl } from '../core/app/ForkBuildAppLinks.js';
 import { describePublicationShare as describePublicationShareMessages } from '../application/publication/PublicationShareLink.js';
 import { openPublicationLink, OpenPublicationLinkOutcome as Outcome } from '../application/publication/OpenPublicationLink.js';
 import { createPublicationClaimRetriever } from '../application/publication/PublicationClaimRetriever.js';
@@ -13,12 +13,12 @@ import { PublishDocumentUseCase } from '../application/publication/PublishDocume
 import { DocumentManager } from '../application/document/DocumentManager.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 import { displayText, errorText, t } from '../ui/i18n/i18n.js';

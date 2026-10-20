@@ -2,8 +2,8 @@ import * as THREE from 'three';
 import { BuildingRenderer } from './BuildingRenderer.js';
 import { SceneManager } from './SceneManager.js';
 import { Lights } from './Lights.js';
-import { SpatialBounds } from '../core/SpatialBounds.js';
-import { computeThumbnailCamera } from '../core/PreviewCameraFraming.js';
+import { SpatialBounds } from '../core/world/SpatialBounds.js';
+import { computeThumbnailCamera } from '../core/catalog/PreviewCameraFraming.js';
 
 // Matches renderer/Renderer.js's SKY_COLOR, so the showcase looks like the
 // world the Editor and World View draw.

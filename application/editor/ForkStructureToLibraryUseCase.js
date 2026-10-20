@@ -1,7 +1,7 @@
-import { Brick } from '../../core/Brick.js';
-import { Position } from '../../core/Position.js';
-import { Structure } from '../../core/Structure.js';
-import { createId } from '../../core/createId.js';
+import { Brick } from '../../core/building/Brick.js';
+import { Position } from '../../core/document/Position.js';
+import { Structure } from '../../core/building/Structure.js';
+import { createId } from '../../core/document/createId.js';
 
 // 0.6.3 — Blueprint Authoring & Versioning UX.
 //

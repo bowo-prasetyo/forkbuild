@@ -1,14 +1,14 @@
-import { brickAabb, footprintHalfExtents } from '../core/AvatarCollision.js';
-import { resolveWalkableSurfaceAt, walkableSurfaceKindFor } from '../core/WalkableSurface.js';
+import { brickAabb, footprintHalfExtents } from '../core/avatar/AvatarCollision.js';
+import { resolveWalkableSurfaceAt, walkableSurfaceKindFor } from '../core/building/WalkableSurface.js';
 import { AvatarMovementConstraint } from '../application/avatar/AvatarMovementConstraint.js';
 import { AvatarStepConstraint } from '../application/avatar/AvatarStepConstraint.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
-import { DEFAULT_MAX_STEP_HEIGHT } from '../core/BrickWalkability.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { StructurePlacement } from '../core/StructurePlacement.js';
+import { DEFAULT_MAX_STEP_HEIGHT } from '../core/building/BrickWalkability.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { StructurePlacement } from '../core/building/StructurePlacement.js';
 import { assert } from './support/Assert.js';
 
 // A brick collides and is walked on where it is drawn: its footprint turns

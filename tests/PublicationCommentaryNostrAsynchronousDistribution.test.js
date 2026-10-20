@@ -3,7 +3,7 @@ import { execSync } from 'node:child_process';
 
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 
-import { PublicationCommentary } from '../core/PublicationCommentary.js';
+import { PublicationCommentary } from '../core/publication/PublicationCommentary.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
 import { PublicationCommentaryDistributionExchange } from '../application/publication/commentary/PublicationCommentaryDistributionExchange.js';
 import { PublicationCommentaryNostrDistribution } from '../application/publication/commentary/PublicationCommentaryNostrDistribution.js';
@@ -14,7 +14,7 @@ import {
     PUBLICATION_COMMENTARY_DELIVERY_STATUS_SEQUENCE,
     isValidPublicationCommentaryDeliveryStatusTransition,
     describesConformingPublicationCommentaryAsynchronousDeliverySubstrate
-} from '../core/PublicationCommentaryAsynchronousDeliveryContract.js';
+} from '../core/publication/PublicationCommentaryAsynchronousDeliveryContract.js';
 
 import { createNostrInjectedProviderPublisher } from '../nostr/NostrInjectedProviderPublisher.js';
 import { createNostrRelayQueryClient } from '../nostr/NostrRelayQueryClient.js';
@@ -191,7 +191,7 @@ async function run() {
         const relay = makeSharedFakeRelay();
         const distribution = makeDistribution({ relay, discoveryTag: '0.9.628-conformance' });
         assert(describesConformingPublicationCommentaryAsynchronousDeliverySubstrate(distribution) === true,
-            n('the new, real, permanent PublicationCommentaryNostrDistribution class — never a test-local composition — duck-type-conforms to core/PublicationCommentaryAsynchronousDeliveryContract.js\'s own publish()/retrieve() contract'));
+            n('the new, real, permanent PublicationCommentaryNostrDistribution class — never a test-local composition — duck-type-conforms to core/publication/PublicationCommentaryAsynchronousDeliveryContract.js\'s own publish()/retrieve() contract'));
         assert(distribution.relayUrl === 'wss://relay.example' && distribution.discoveryTag === '0.9.628-conformance',
             n('relayUrl/discoveryTag are exposed exactly as constructed, mirroring application/nostr/NostrPublicationDiscoveryPublisher.js\'s own getters'));
 
@@ -419,7 +419,7 @@ async function run() {
         // directly; it constructs application/nostr/NostrMultiRelayPublicationCommentaryDistribution.js
         // instead, which itself constructs one PublicationCommentaryNostrDistribution
         // instance per configured relay (fan-out across the unified Nostr
-        // relay set — see core/NostrRelayConfiguration.js's own "unified"
+        // relay set — see core/networks/NostrRelayConfiguration.js's own "unified"
         // header). So the real construction site for the single-relay class
         // moved from ui/main.js to that one sibling file — still exactly
         // one production file, never a second, ad hoc construction anywhere
@@ -612,7 +612,7 @@ async function run() {
         console.log('                                     claiming otherwise.');
         console.log('  Multi-relay fan-out/resilience  -> CLOSED. application/nostr/NostrMultiRelayPublicationCommentaryDistribution.js');
         console.log('                                     fans publish/retrieve/discover out across the unified Nostr relay');
-        console.log('                                     set — see core/NostrRelayConfiguration.js\'s own "unified" header.');
+        console.log('                                     set — see core/networks/NostrRelayConfiguration.js\'s own "unified" header.');
         console.log(`\n✅ All Publication Commentary Nostr Asynchronous Distribution tests passed (${assertionCount} assertions).`);
     }
 }

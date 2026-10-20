@@ -64,7 +64,7 @@ riding, or an animal they caught.
 
 Every third conversation, and whenever it has nothing else to say, a
 resident may wonder aloud about something the ground nearby has never had
-(core/ResidentWish.js): a bridge over a river, a dock on still water, a
+(core/world/ResidentWish.js): a bridge over a river, a dock on still water, a
 lookout on high ground, or a well, pavilion, stall or cottage on open
 ground, with where that spot is. It is still a statement of what is (and
 isn't) there, never a request: no question, no "you should", no reward,
@@ -72,7 +72,7 @@ nothing tracked, remembered or checked, and nobody is told whether it was
 built. It comes from the terrain and the builds nearby only, so the same
 ground gives the same thought to everyone, and a spot already built on gives
 none. The viewer may choose **Build a … there**, which opens the Editor on a
-plot for that spot (core/BuildPlot.js) started from the matching Village
+plot for that spot (core/world/BuildPlot.js) started from the matching Village
 structure, exactly as Build here would; choosing it, or not, changes nothing
 for the resident. This is how the world gives reasons to build
 (docs/Pillars.md) without becoming a quest game.

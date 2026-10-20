@@ -1,6 +1,6 @@
-import { ConversationEntry, isValidChatMessageDirection } from '../../core/ConversationEntry.js';
-import { UserFacingError } from '../../core/UserFacingError.js';
-import { message } from '../../core/Message.js';
+import { ConversationEntry, isValidChatMessageDirection } from '../../core/social/ConversationEntry.js';
+import { UserFacingError } from '../../core/app/UserFacingError.js';
+import { message } from '../../core/app/Message.js';
 
 const STORAGE_KEY_PREFIX = 'conversation-history:';
 
@@ -116,7 +116,7 @@ export class ConversationStore {
     // message it appends to a LiveConversation — outgoing or incoming
     // alike — immediately after that in-memory append. Idempotent by
     // `(peerIdentityId, messageId)`: a duplicate append (the realistic
-    // case being a retransmit that core/ChatReplayWindow.js's own
+    // case being a retransmit that core/social/ChatReplayWindow.js's own
     // bounded, in-memory window no longer recognizes after a reload —
     // see application/chat/ChatUseCase.js's own header) is a harmless no-op
     // that returns the ALREADY-stored entry, never a second copy.

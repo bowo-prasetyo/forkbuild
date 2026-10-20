@@ -4,7 +4,7 @@ import {
     parseDecentralizedDiscoveryEnvelope,
     DECENTRALIZED_DISCOVERY_ENVELOPE_PROTOCOL,
     DECENTRALIZED_DISCOVERY_ENVELOPE_VERSION
-} from '../core/DecentralizedDiscoveryEnvelope.js';
+} from '../core/publication/DecentralizedDiscoveryEnvelope.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.30 — Decentralized Discovery Envelope.
@@ -129,7 +129,7 @@ function envelopeOf(overrides = {}) {
 //    this file never reads or produces a discoveryTag.
 // ---------------------------------------------------------------------
 {
-    const sourceUrl = new URL('../core/DecentralizedDiscoveryEnvelope.js', import.meta.url);
+    const sourceUrl = new URL('../core/publication/DecentralizedDiscoveryEnvelope.js', import.meta.url);
     const source = await readFile(sourceUrl, 'utf8');
     const codeOnly = source
         .split('\n')
@@ -144,7 +144,7 @@ function envelopeOf(overrides = {}) {
         'DecentralizedWorldEncounterLeadAssociation', 'DecentralizedWorldDiscoveryLead'
     ];
     for (const term of forbidden) {
-        assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `core/DecentralizedDiscoveryEnvelope.js code must never use the word "${term}"`);
+        assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `core/publication/DecentralizedDiscoveryEnvelope.js code must never use the word "${term}"`);
     }
 
     console.log('✓ Vocabulary boundary: no trust, signature, or association vocabulary; no discoveryTag/origin of its own');

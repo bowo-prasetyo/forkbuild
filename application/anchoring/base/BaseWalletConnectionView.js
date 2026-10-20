@@ -1,5 +1,5 @@
 import { BaseWalletConnectionState } from './BaseWalletConnectionState.js';
-import { message } from '../../../core/Message.js';
+import { message } from '../../../core/app/Message.js';
 
 const STATE_LABELS = {
     [BaseWalletConnectionState.DISCONNECTED]: message('baseWalletConnection.disconnected'),

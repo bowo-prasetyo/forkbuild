@@ -46,7 +46,7 @@
 // how this value is produced.
 //
 // THIS IS UI STATE, NEVER DOMAIN STATE. No value here is ever written
-// onto a core/PublicationAnchor.js, stored in application/
+// onto a core/publication/PublicationAnchor.js, stored in application/
 // LocalPublicationAnchorCatalog.js, or persisted anywhere at all — it
 // lives only in whatever ephemeral object a caller (ui/views/
 // DecentralizedPublicationsView.js) keeps in its own component state for

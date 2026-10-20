@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import { DEFAULT_STAIR_STEP_COUNT } from '../core/WalkableSurface.js';
-import { ARCH_OPENINGS } from '../core/BrickPassage.js';
-import { brickSurfaceOf } from '../core/BrickSurface.js';
+import { DEFAULT_STAIR_STEP_COUNT } from '../core/building/WalkableSurface.js';
+import { ARCH_OPENINGS } from '../core/building/BrickPassage.js';
+import { brickSurfaceOf } from '../core/building/BrickSurface.js';
 import { applyBrickSurface, withBrickBounds } from './BrickSurfaceMaterial.js';
 
 // The renderer-side counterpart to core/BrickRegistry: it knows nothing
@@ -101,7 +101,7 @@ function same(a, b) {
 // several separate meshes, so it stays one primitive, one mesh, one
 // definitionId — never a hidden composite of smaller bricks.
 //
-// 0.3.3 — `steps` now defaults to core/WalkableSurface.js's own
+// 0.3.3 — `steps` now defaults to core/building/WalkableSurface.js's own
 // DEFAULT_STAIR_STEP_COUNT rather than a locally hardcoded `4` — the
 // SAME constant that file's own stepped walkable-surface profile reads,
 // so the treads rendered here and the treads an avatar actually climbs
@@ -133,7 +133,7 @@ function stairGeometry(width, height, depth, steps = DEFAULT_STAIR_STEP_COUNT) {
 
 // A right-triangle profile extruded along depth — core:slope_45. Rises
 // along local +X, from nothing at the front face to the full height at the
-// back, the same direction core/WalkableSurface.js's SLOPE profile climbs
+// back, the same direction core/building/WalkableSurface.js's SLOPE profile climbs
 // and core:stair rises, so what is drawn is what an avatar walks on.
 function wedgeGeometry(width, height, depth) {
     return () => {
@@ -176,7 +176,7 @@ function braceGeometry(width, height, depth, barWidth) {
 
 // A rectangular frame with a round-topped passage through it, extruded
 // along depth — core:arch and core:arch_small. The opening's shape is
-// core/BrickPassage.js#ARCH_OPENINGS, the same one an avatar's collision
+// core/building/BrickPassage.js#ARCH_OPENINGS, the same one an avatar's collision
 // with the arch follows, so the way through that is drawn is the way
 // through that walks. The curve is faceted (straight segments) rather than
 // a true curve, matching every other factory's "single mesh, single

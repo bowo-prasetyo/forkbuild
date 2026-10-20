@@ -1,10 +1,10 @@
-import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../../core/TerrainHeightField.js';
-import { surfaceCategoryAt, SURFACE_CATEGORY } from '../../core/TerrainSurface.js';
-import { LAKE_SURFACE_HEIGHT } from '../../core/Hydrology.js';
-import { isVehicleWaterStepAllowed, droneFloorHeight } from '../../core/VehicleWaterline.js';
+import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../../core/nature/TerrainHeightField.js';
+import { surfaceCategoryAt, SURFACE_CATEGORY } from '../../core/nature/TerrainSurface.js';
+import { LAKE_SURFACE_HEIGHT } from '../../core/nature/Hydrology.js';
+import { isVehicleWaterStepAllowed, droneFloorHeight } from '../../core/vehicles/VehicleWaterline.js';
 
 // Real world water for a mounted vehicle, in world heights (vehicle positions
-// already carry terrain elevation). The rules are core/VehicleWaterline.js's.
+// already carry terrain elevation). The rules are core/vehicles/VehicleWaterline.js's.
 // `heightAt`/`isWaterAt` are injectable for tests.
 export class VehicleWaterConstraint {
     constructor({ seed = DEFAULT_WORLD_SEED, heightAt, isWaterAt } = {}) {

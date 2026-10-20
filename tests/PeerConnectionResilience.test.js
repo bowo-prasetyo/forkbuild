@@ -1,4 +1,4 @@
-import { FriendshipState } from '../core/FriendshipState.js';
+import { FriendshipState } from '../core/social/FriendshipState.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';

@@ -1,6 +1,6 @@
 import { computed, inject, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue';
 import { DevicePairingStatus } from '../../application/devicePairing/DevicePairing.js';
-import { devicePairingLink } from '../../core/DevicePairingCode.js';
+import { devicePairingLink } from '../../core/identity/DevicePairingCode.js';
 import QrCodeImage from '../components/QrCodeImage.js';
 import { devicePairingFailureText } from '../components/devicePairing/devicePairingText.js';
 import { backupGroupRows } from '../i18n/backupGroupLabel.js';

@@ -1,7 +1,7 @@
 // @environment browser
 import { CameraController } from '../renderer/CameraController.js';
 import { CameraState } from '../renderer/CameraState.js';
-import { Position } from '../core/Position.js';
+import { Position } from '../core/document/Position.js';
 import { assert } from './support/Assert.js';
 
 // The Editor's Home key resets the camera. A view that gives Home its own

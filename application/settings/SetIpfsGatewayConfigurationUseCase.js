@@ -1,4 +1,4 @@
-import { IpfsGatewayConfiguration } from '../../core/IpfsGatewayConfiguration.js';
+import { IpfsGatewayConfiguration } from '../../core/networks/IpfsGatewayConfiguration.js';
 import { IpfsGatewayConfigurationStore } from '../../storage/IpfsGatewayConfigurationStore.js';
 
 // 0.9.665 — IPFS Gateway Settings Write Use Case. Mirrors application/

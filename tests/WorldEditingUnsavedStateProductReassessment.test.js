@@ -1,11 +1,11 @@
 
-import { World } from '../core/World.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { License, LicenseId } from '../core/License.js';
+import { World } from '../core/document/World.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { License, LicenseId } from '../core/document/License.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
@@ -23,7 +23,7 @@ import { RecoverDocumentUseCase } from '../application/document/RecoverDocumentU
 import { DiscardRecoveryUseCase } from '../application/document/DiscardRecoveryUseCase.js';
 import { RecoveryObserver } from '../application/document/RecoveryObserver.js';
 import { DocumentManifest } from '../application/document/DocumentManifest.js';
-import { DocumentRevision } from '../core/DocumentRevision.js';
+import { DocumentRevision } from '../core/document/DocumentRevision.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { ForkPublishedWorldUseCase } from '../application/publication/ForkPublishedWorldUseCase.js';
@@ -60,7 +60,7 @@ import { readSource } from './support/SourceText.js';
 // LoadDocumentUseCase.js, AutosaveScheduler.js, AutosaveDocumentUseCase.js,
 // CheckRecoveryUseCase.js, RecoverDocumentUseCase.js, DiscardRecoveryUseCase.js,
 // RecoveryObserver.js, PublishDocumentUseCase.js, DocumentLifecycleStatus.js,
-// DocumentManifest.js, core/DocumentRevision.js, publisher/
+// DocumentManifest.js, core/document/DocumentRevision.js, publisher/
 // LocalPublisherProvider.js, persistence/LocalRecoveryStore.js,
 // discovery/LocalDiscoveryProvider.js — real, unmodified production
 // classes are imported and exercised live, wired together in the SAME
@@ -214,9 +214,9 @@ async function main() {
         // truth; reconfirmed from 0.9.577's own starting premise (its
         // own header states this identically) since this milestone
         // leans on it throughout Sections B-D.
-        const revisionSource = await readSource('core/DocumentRevision.js');
+        const revisionSource = await readSource('core/document/DocumentRevision.js');
         assert(/persistence metadata, NOT domain truth[\s\S]*?never travels with a Publication/.test(revisionSource),
-            'A4. core/DocumentRevision.js\'s own header confirms, verbatim, that revision is persistence metadata, not domain truth, and never travels with a Publication.');
+            'A4. core/document/DocumentRevision.js\'s own header confirms, verbatim, that revision is persistence metadata, not domain truth, and never travels with a Publication.');
 
         // A5. A recovery checkpoint is a genuine FOURTH persistence
         // concept — its own key namespace, strictly separate from the

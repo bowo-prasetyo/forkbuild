@@ -1,6 +1,6 @@
 import { ref } from 'vue';
-import { BLUEPRINT_ATTRIBUTION_KIND } from '../../../core/BlueprintAttribution.js';
-import { compareBlueprintSimilarity, isPossibleLineageCandidate } from '../../../core/BlueprintSimilarity.js';
+import { BLUEPRINT_ATTRIBUTION_KIND } from '../../../core/building/BlueprintAttribution.js';
+import { compareBlueprintSimilarity, isPossibleLineageCandidate } from '../../../core/building/BlueprintSimilarity.js';
 import { errorText, t } from '../../i18n/i18n.js';
 import { libraryItemName } from '../../i18n/libraryText.js';
 

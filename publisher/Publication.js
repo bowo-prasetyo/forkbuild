@@ -1,8 +1,8 @@
-import { createId } from '../core/createId.js';
-import { License } from '../core/License.js';
-import { ContentReference } from '../core/ContentReference.js';
-import { Signature, SignatureType } from '../core/Signature.js';
-import { normalizeBuiltWith } from '../core/BuiltWith.js';
+import { createId } from '../core/document/createId.js';
+import { License } from '../core/document/License.js';
+import { ContentReference } from '../core/document/ContentReference.js';
+import { Signature, SignatureType } from '../core/publication/Signature.js';
+import { normalizeBuiltWith } from '../core/catalog/BuiltWith.js';
 
 // Written only when set, so a Publication without one signs and serializes
 // exactly as it did before the field existed.
@@ -11,7 +11,7 @@ function placementPolicyField(placementPolicy) {
 }
 
 // Signed, and stored, only when someone built it with its author
-// (core/BuiltWith.js), so every older Publication's signature still holds.
+// (core/catalog/BuiltWith.js), so every older Publication's signature still holds.
 function builtWithField(builtWith) {
     return builtWith.length > 0 ? { builtWith: builtWith.map((entry) => ({ name: entry.name, identityId: entry.identityId })) } : {};
 }
@@ -71,7 +71,7 @@ export class Publication {
             : (contentReference ? ContentReference.fromJSON(contentReference) : null);
         this._publisherIdentity = publisherIdentity ? { ...publisherIdentity } : null;
         this._signature = signature instanceof Signature ? signature : Signature.fromJSON(signature);
-        // Null (not stored) means "anyone may place it": see core/PlacementPolicy.js.
+        // Null (not stored) means "anyone may place it": see core/publication/PlacementPolicy.js.
         this._placementPolicy = typeof placementPolicy === 'string' && placementPolicy.length > 0 ? placementPolicy : null;
         this._builtWith = normalizeBuiltWith(builtWith);
     }

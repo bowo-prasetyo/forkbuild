@@ -12,7 +12,7 @@ import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvid
 import { LocalRendezvousNetwork } from '../peer/LocalRendezvousNetwork.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { EphemeralIdentityProvider } from '../identity/EphemeralIdentityProvider.js';
-import { createWalkTogetherCode, parseWalkTogetherCode, walkTogetherLink } from '../core/WalkTogetherCode.js';
+import { createWalkTogetherCode, parseWalkTogetherCode, walkTogetherLink } from '../core/social/WalkTogetherCode.js';
 import { assert } from './support/Assert.js';
 
 const WORLD_DOCUMENT_ID = '33333333-3333-4333-8333-333333333333';

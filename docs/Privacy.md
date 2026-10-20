@@ -275,7 +275,7 @@ anyway. So `/e/embed-view` and `/e/embed-open` follow only the other two
 rules: never with Global Privacy Control or Do Not Track, and only from the
 official site.
 
-The code is `core/VisitorCount.js`, `core/LaunchChannel.js`,
+The code is `core/app/VisitorCount.js`, `core/app/LaunchChannel.js`,
 `application/settings/CountDailyVisit.js`,
 `application/settings/CountLaunchChannel.js`,
 `application/settings/FunnelEventCounter.js`, `ui/counterHit.js`,
@@ -403,7 +403,7 @@ A deployment decides the defaults above: its rendezvous server
 (`server/rendezvous-worker/README.md`), and the other defaults under
 **Network Settings**. The visitor count only runs on the official site, so
 a copy hosted elsewhere counts nothing; to count your own visitors, change
-the addresses in `core/VisitorCount.js` and the `img-src` entry in
+the addresses in `core/app/VisitorCount.js` and the `img-src` entry in
 `index.html`'s Content Security Policy. The default rendezvous server
 accepts only the official site's origin, so a copy hosted elsewhere needs
 its own (see

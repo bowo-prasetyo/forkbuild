@@ -1,4 +1,4 @@
-import { PlaceNamingClaim } from '../../core/PlaceNamingClaim.js';
+import { PlaceNamingClaim } from '../../core/world/PlaceNamingClaim.js';
 
 const STORAGE_KEY_PREFIX = 'place-naming-claims:';
 
@@ -36,7 +36,7 @@ export class LocalPlaceNamingClaimStore {
     // authorIdentityId) — the same author claiming the same name twice
     // is two distinct, independently-timestamped claims, exactly like
     // two identical Publications of the same document would be two
-    // distinct publications; see core/PlaceNamingClaim.js's own header.
+    // distinct publications; see core/world/PlaceNamingClaim.js's own header.
     save(claim) {
         const all = this._loadAll(claim.worldId);
         all.push(claim.toJSON());
@@ -45,7 +45,7 @@ export class LocalPlaceNamingClaimStore {
 
     // Every claim on file for `worldId`, most recent first. Returns
     // PlaceNamingClaim instances, never raw JSON — the one boundary
-    // every caller (core/PlaceNamingView.js#namingView(), a UI listing)
+    // every caller (core/world/PlaceNamingView.js#namingView(), a UI listing)
     // can rely on without re-parsing dates/signatures itself.
     list(worldId) {
         return this._loadAll(worldId)
@@ -56,7 +56,7 @@ export class LocalPlaceNamingClaimStore {
 
     // Every claim on file for one region across the whole World — a
     // thin filter over list(), never a second storage key. Mirrors
-    // core/PlaceNamingView.js#claimsForRegion()'s own filter, applied
+    // core/world/PlaceNamingView.js#claimsForRegion()'s own filter, applied
     // here to what THIS replica has actually persisted rather than an
     // in-memory list a caller already holds.
     listForRegion(worldId, regionId) {
@@ -72,7 +72,7 @@ export class LocalPlaceNamingClaimStore {
     // importClaim() is the exact same signed fact, not a new one — see
     // that class's own header on why identity there is checked by
     // `claim.id` alone (already bound into the signed payload — see
-    // core/PlaceNamingClaim.js#getSigningDescriptor()) rather than by
+    // core/world/PlaceNamingClaim.js#getSigningDescriptor()) rather than by
     // re-deriving some second, redundant content hash.
     has(worldId, claimId) {
         return this._loadAll(worldId).some((json) => json.id === claimId);

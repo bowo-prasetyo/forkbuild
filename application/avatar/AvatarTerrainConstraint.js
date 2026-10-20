@@ -1,16 +1,16 @@
-import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../../core/TerrainHeightField.js';
-import { isWalkableSlope, DEFAULT_MAX_WALKABLE_SLOPE } from '../../core/TerrainWalkability.js';
-import { LAKE_SURFACE_HEIGHT } from '../../core/Hydrology.js';
+import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../../core/nature/TerrainHeightField.js';
+import { isWalkableSlope, DEFAULT_MAX_WALKABLE_SLOPE } from '../../core/nature/TerrainWalkability.js';
+import { LAKE_SURFACE_HEIGHT } from '../../core/nature/Hydrology.js';
 
 // 0.2.77 — the application-layer half of terrain-aware movement,
 // mirroring exactly the split 0.2.42 already established for building
 // collision: application/avatar/AvatarMovementConstraint.js supplies the
-// REAL loaded-world geometry, core/AvatarCollision.js supplies the
+// REAL loaded-world geometry, core/avatar/AvatarCollision.js supplies the
 // pure math applied to it. Here: this class supplies the real world
 // coordinates and the real terrain height field, core/
 // TerrainWalkability.js supplies the pure slope math.
 //
-// Deliberately reads core/TerrainHeightField.js's own
+// Deliberately reads core/nature/TerrainHeightField.js's own
 // terrainHeightAt(seed, x, z) directly — never through
 // renderer.terrainHeightAt(). renderer/Renderer.js's own
 // terrainHeightAt() has always been a thin pass-through to that same
@@ -40,7 +40,7 @@ import { LAKE_SURFACE_HEIGHT } from '../../core/Hydrology.js';
 export class AvatarTerrainConstraint {
     // `frozenAt(x, z)`, when given, says where a lake is frozen hard: there
     // the avatar walks on the ice, level at the lake's surface, whatever the
-    // bed below does (core/Season.js#lakeIceAt()).
+    // bed below does (core/nature/Season.js#lakeIceAt()).
     constructor({ seed = DEFAULT_WORLD_SEED, maxSlope = DEFAULT_MAX_WALKABLE_SLOPE, heightAt, frozenAt = null } = {}) {
         const groundAt = typeof heightAt === 'function' ? heightAt : (x, z) => terrainHeightAt(seed, x, z);
         this._heightAt = typeof frozenAt === 'function'
@@ -59,7 +59,7 @@ export class AvatarTerrainConstraint {
     // walkable, the same "only X/Z are ever constrained here" contract
     // AvatarMovementConstraint.apply() already documents — vertical
     // kinematics (jumping, falling, snapping to the flat Y=0 ground
-    // plane) stay entirely core/AvatarMovementSimulation.js's own
+    // plane) stay entirely core/avatar/AvatarMovementSimulation.js's own
     // concern, never rewritten here. When the step is BLOCKED, X/Z
     // revert to where the avatar already stood, but Y still passes
     // through from `desiredPosition` — a rejected horizontal step must
@@ -75,7 +75,7 @@ export class AvatarTerrainConstraint {
             return { position: desiredPosition, blocked: false };
         }
         // A simple movement constraint, not physical sliding — see
-        // core/TerrainWalkability.js's own header. The whole horizontal
+        // core/nature/TerrainWalkability.js's own header. The whole horizontal
         // step is rejected outright; there is no partial slide along a
         // slope's contour, matching the design doc's explicit
         // instruction to keep this the smallest useful concept, not a

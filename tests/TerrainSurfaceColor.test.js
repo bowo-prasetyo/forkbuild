@@ -1,8 +1,8 @@
 import {
     surfaceCategoryAt, surfaceColorAt, SURFACE_CATEGORY, SURFACE_PALETTE
-} from '../core/TerrainSurface.js';
-import { terrainHeightAt, baseTerrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { TERRAIN_TILE_SIZE, tileCenter } from '../core/TerrainTiling.js';
+} from '../core/nature/TerrainSurface.js';
+import { terrainHeightAt, baseTerrainHeightAt, DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { TERRAIN_TILE_SIZE, tileCenter } from '../core/nature/TerrainTiling.js';
 import { assert } from './support/Assert.js';
 
 // 0.2.79 — Terrain Surface & Natural Color.
@@ -16,14 +16,14 @@ import { assert } from './support/Assert.js';
 // Central architectural claim under test throughout: surfaceColorAt(seed,
 // x, z) is a PURE function of continuous world coordinates — never tile
 // coordinates, never persisted state — layered on top of
-// core/TerrainHeightField.js's own pure elevation without changing it.
+// core/nature/TerrainHeightField.js's own pure elevation without changing it.
 // Nothing in this file ever asserts on a hardcoded color or category at a
 // fixed coordinate (the exact palette/thresholds are implementation
 // detail); every assertion is about determinism, boundedness, continuity,
 // and the elevation/slope relationship that DEFINES classification.
 
 // The ground is classified by the lie of the land, before river beds are
-// cut (core/TerrainHeightField.js#baseTerrainHeightAt()).
+// cut (core/nature/TerrainHeightField.js#baseTerrainHeightAt()).
 function slopeAt(seed, x, z) {
     const h = baseTerrainHeightAt(seed, x, z);
     const dx = baseTerrainHeightAt(seed, x + 1, z) - h;

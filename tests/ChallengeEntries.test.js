@@ -1,10 +1,10 @@
 // A week's challenge entries: the tags a Publication's announcement carries
-// for its build (core/NarrowDiscoveryTags.js, the Nostr and Arweave
+// for its build (core/publication/NarrowDiscoveryTags.js, the Nostr and Arweave
 // announcement publishers), finding entries under a week's tag
 // (application/challenge/ChallengeEntryDiscovery.js), the per-tag log of
 // what was found, and the list the challenge page shows
 // (application/challenge/ChallengeEntries.js).
-import { buildTagDiscoveryTag, buildTagDiscoveryTags, announcedBuildTagDiscoveryTags } from '../core/NarrowDiscoveryTags.js';
+import { buildTagDiscoveryTag, buildTagDiscoveryTags, announcedBuildTagDiscoveryTags } from '../core/publication/NarrowDiscoveryTags.js';
 import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
 import { NostrMultiRelayPublicationDiscoveryPublisher } from '../application/nostr/NostrMultiRelayPublicationDiscoveryPublisher.js';
 import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
@@ -15,9 +15,9 @@ import { listChallengeEntries } from '../application/challenge/ChallengeEntries.
 import { publishedBuildTags } from '../application/challenge/PublishedBuildTags.js';
 import { composeWorldEncounterMaterialVerifier } from '../application/worldEncounter/WorldEncounterMaterialVerifierRuntimeComposition.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
-import { Document } from '../core/Document.js';
-import { WorldEncounterKind } from '../core/WorldEncounter.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { Document } from '../core/document/Document.js';
+import { WorldEncounterKind } from '../core/world/WorldEncounter.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { assert } from './support/Assert.js';

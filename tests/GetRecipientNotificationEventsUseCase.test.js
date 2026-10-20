@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
-import { NotificationEvent } from '../core/NotificationEvent.js';
+import { NotificationEvent } from '../core/social/NotificationEvent.js';
 import { GetRecipientNotificationEventsUseCase } from '../application/chat/GetRecipientNotificationEventsUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';

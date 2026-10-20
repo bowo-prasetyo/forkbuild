@@ -1,16 +1,16 @@
 import { WorldRenderer } from '../renderer/WorldRenderer.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { StructurePlacement } from '../core/StructurePlacement.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { StructurePlacement } from '../core/building/StructurePlacement.js';
 import { EventBus } from '../core/events/EventBus.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { StructureDocumentResolver } from '../application/editor/StructureDocumentResolver.js';
 import { TransformMath } from '../application/editor/TransformMath.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 

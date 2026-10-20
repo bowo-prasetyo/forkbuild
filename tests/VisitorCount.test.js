@@ -1,7 +1,7 @@
 import {
     DEFAULT_VISITOR_COUNT_SETTINGS, VISITOR_COUNT_ENDPOINT, VISITOR_COUNT_SITE_ORIGIN,
     asksNotToBeTracked, localDayOf, normalizeVisitorCountSettings, shouldCountVisit, visitorCountHitUrl
-} from '../core/VisitorCount.js';
+} from '../core/app/VisitorCount.js';
 import { VisitorCountSettingsStore } from '../application/settings/VisitorCountSettingsStore.js';
 import { countDailyVisit } from '../application/settings/CountDailyVisit.js';
 import { StorageProvider } from '../storage/StorageProvider.js';

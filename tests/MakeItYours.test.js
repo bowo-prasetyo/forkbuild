@@ -1,31 +1,31 @@
-import { addReadyMadeBricks, brickSignature, countPlacedBricks, worldBricks } from '../core/PlacedBricks.js';
+import { addReadyMadeBricks, brickSignature, countPlacedBricks, worldBricks } from '../core/building/PlacedBricks.js';
 import { ReadyMadeBricksStore } from '../application/document/ReadyMadeBricksStore.js';
 import { backupEntryGroupOf, BackupEntryGroup } from '../application/backup/BackupEntryGroups.js';
-import { FunnelEvent, publishedBuildEvents, publishedPlacedRangeEvent } from '../core/VisitorCount.js';
-import { residentWishNear, residentWishFulfilledNear, phraseWishFulfilled, WISH_CLEAR_RADIUS } from '../core/ResidentWish.js';
-import { describeWhere } from '../core/ResidentTalk.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+import { FunnelEvent, publishedBuildEvents, publishedPlacedRangeEvent } from '../core/app/VisitorCount.js';
+import { residentWishNear, residentWishFulfilledNear, phraseWishFulfilled, WISH_CLEAR_RADIUS } from '../core/world/ResidentWish.js';
+import { describeWhere } from '../core/world/ResidentTalk.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
 import { EditorSession } from '../application/editor/EditorSession.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
 import { CopyStructureIntoDocumentUseCase } from '../application/editor/CopyStructureIntoDocumentUseCase.js';
 import { PasteBricksCommand } from '../application/commands/PasteBricksCommand.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { VillageLibrary } from '../core/library/VillageLibrary.js';
-import { Structure } from '../core/Structure.js';
-import { Document } from '../core/Document.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
+import { Structure } from '../core/building/Structure.js';
+import { Document } from '../core/document/Document.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
 import { displayText } from '../ui/i18n/i18n.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
 // "Make it yours" (docs/reviews/CreativeDirection-2026-10-11.md): publishing
 // counts the bricks a builder placed or changed, not the ready-made ones a
-// build started with or had dropped in (core/PlacedBricks.js,
+// build started with or had dropped in (core/building/PlacedBricks.js,
 // application/document/ReadyMadeBricksStore.js), and residents notice what
-// now stands where they wondered (core/ResidentWish.js). The challenge's
+// now stands where they wondered (core/world/ResidentWish.js). The challenge's
 // empty plot and remix weeks are tested in BuildChallenge and
 // ChallengeViewBrowser.
 

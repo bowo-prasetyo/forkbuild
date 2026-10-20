@@ -1,6 +1,6 @@
-import { StructurePlacement } from '../../core/StructurePlacement.js';
+import { StructurePlacement } from '../../core/building/StructurePlacement.js';
 import { Command } from './Command.js';
-import { message } from '../../core/Message.js';
+import { message } from '../../core/app/Message.js';
 
 // Mirrors application/commands/DeleteBrickCommand.js exactly, one rung
 // up — placement and removal are near-inverses here too. Constructor
@@ -15,7 +15,7 @@ import { message } from '../../core/Message.js';
 // should be indistinguishable from "the delete never happened."
 //
 // The one semantic this command exists to make explicit (see the 0.2.90
-// design conversation and core/StructurePlacement.js's own header):
+// design conversation and core/building/StructurePlacement.js's own header):
 // removing a placement NEVER touches the Document it referenced.
 // Nothing here calls into storage, ForkStructureUseCase, or any
 // Document-lifecycle use case — deleting a WorldPlacement-shaped

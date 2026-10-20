@@ -1,11 +1,11 @@
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
-import { Position } from '../../core/Position.js';
+import { Position } from '../../core/document/Position.js';
 import { CreateWorldResidentCommand } from '../commands/CreateWorldResidentCommand.js';
 import { RemoveWorldResidentCommand } from '../commands/RemoveWorldResidentCommand.js';
 import { AvatarMovementConstraint } from '../avatar/AvatarMovementConstraint.js';
 import { AvatarResidentConstraint } from '../avatar/AvatarResidentConstraint.js';
-import { DEFAULT_MAX_STEP_HEIGHT } from '../../core/BrickWalkability.js';
-import { isResidentGroundAt, RESIDENT_COLLISION_RADIUS } from '../../core/ResidentPath.js';
+import { DEFAULT_MAX_STEP_HEIGHT } from '../../core/building/BrickWalkability.js';
+import { isResidentGroundAt, RESIDENT_COLLISION_RADIUS } from '../../core/world/ResidentPath.js';
 import {
     ResidentRuntime,
     RESIDENT_RENDER_RADIUS,
@@ -14,13 +14,13 @@ import {
     RESIDENT_OBSTACLE_QUERY_RADIUS
 } from '../world/ResidentRuntime.js';
 import { gatherResidentFacts, RESIDENT_KNOWLEDGE_RADIUS } from '../world/ResidentSurroundings.js';
-import { pickResidentRemarkFacts, phraseFact, focusTargetsFor, speechSecondsFor, describeWhere, sanitizeSpokenText, MAX_SPOKEN_TITLE_LENGTH, QUIET_REMARK, RESIDENT_FACT_KIND } from '../../core/ResidentTalk.js';
-import { residentWishNear, residentWishFulfilledNear, phraseWish, phraseWishFulfilled, wishBuildLabel, isWishTurn } from '../../core/ResidentWish.js';
-import { directionLabelBetween } from '../../core/GeographicPlaceNavigation.js';
-import { terrainHeightAt } from '../../core/TerrainHeightField.js';
-import { regionsContaining } from '../../core/WorldRegionGeography.js';
-import { message } from '../../core/Message.js';
-import { UserFacingError } from '../../core/UserFacingError.js';
+import { pickResidentRemarkFacts, phraseFact, focusTargetsFor, speechSecondsFor, describeWhere, sanitizeSpokenText, MAX_SPOKEN_TITLE_LENGTH, QUIET_REMARK, RESIDENT_FACT_KIND } from '../../core/world/ResidentTalk.js';
+import { residentWishNear, residentWishFulfilledNear, phraseWish, phraseWishFulfilled, wishBuildLabel, isWishTurn } from '../../core/world/ResidentWish.js';
+import { directionLabelBetween } from '../../core/world/GeographicPlaceNavigation.js';
+import { terrainHeightAt } from '../../core/nature/TerrainHeightField.js';
+import { regionsContaining } from '../../core/world/WorldRegionGeography.js';
+import { message } from '../../core/app/Message.js';
+import { UserFacingError } from '../../core/app/UserFacingError.js';
 import { requireSigningIdentityId } from '../../identity/SigningReadiness.js';
 
 // World Residents in World View: where they are drawn and collided with,
@@ -30,7 +30,7 @@ import { requireSigningIdentityId } from '../../identity/SigningReadiness.js';
 // landmark (and appears there, see ResidentRuntime#newResidentIdNear()),
 // through CreateWorldResidentCommand (undoable, saved, published
 // and forked with the World). It must be added on open, dry ground: a
-// resident walks on the ground (core/WorldResident.js), so a home up on a
+// resident walks on the ground (core/world/WorldResident.js), so a home up on a
 // roof or in a lake is refused.
 
 // The 'R' key: add a resident here, or remove the one right here.
@@ -255,7 +255,7 @@ export const residentMethods = {
         this._residentDisplayNameResolver = typeof resolveDisplayName === 'function' ? resolveDisplayName : null;
     },
 
-    // `(message) => string`: how a remark (a core/Message.js message) becomes
+    // `(message) => string`: how a remark (a core/app/Message.js message) becomes
     // words in the viewer's language. The UI passes its displayText(). The
     // renderer draws text, so remarks are translated here, before it gets
     // them. Without one, a remark reads as its message key.
@@ -266,7 +266,7 @@ export const residentMethods = {
     // Talks to the resident nearest the avatar (within
     // RESIDENT_INTERACTION_RADIUS of where it is now): gathers what it knows
     // about its surroundings and returns { residentId, remarks } — one or two
-    // sentences (core/ResidentTalk.js, translated by
+    // sentences (core/world/ResidentTalk.js, translated by
     // setResidentSpeechTranslator()), which the facade also shows over the
     // resident's head. Each conversation with the same resident moves on to
     // other things. Null when nobody is close enough.
@@ -289,7 +289,7 @@ export const residentMethods = {
         const picked = pickResidentRemarkFacts(facts, { turn });
         const translate = this._residentSpeechTranslator || String;
         // Every third conversation, and whenever it has nothing else to say, it
-        // may wonder what the ground nearby has never had (core/ResidentWish.js).
+        // may wonder what the ground nearby has never had (core/world/ResidentWish.js).
         // Once something stands where it wondered, it says so instead.
         const wishTurn = isWishTurn(turn, { quiet: picked.length === 0 });
         const wish = wishTurn ? this._residentWishAround(nearest, facts) : null;
@@ -369,7 +369,7 @@ export const residentMethods = {
         return null;
     },
 
-    // What the ground near a resident has never had, as core/ResidentWish.js
+    // What the ground near a resident has never had, as core/world/ResidentWish.js
     // finds it, with its remark and button label (messages): { wish,
     // structureId, spot, remark, label }, or null. `facts` are
     // _residentFactsAround()'s, whose builds and structures, with the loaded
@@ -390,7 +390,7 @@ export const residentMethods = {
         return { ...wish, remark: phraseWish(wish, where), label: wishBuildLabel(wish) };
     },
 
-    // What stands now where a resident would have wondered (core/ResidentWish.js,
+    // What stands now where a resident would have wondered (core/world/ResidentWish.js,
     // residentWishFulfilledNear()), with its remark and, when it has a title, a
     // Focus target on it: { remark, focusTargets }, or null.
     _residentWishFulfilledAround(pose, facts) {

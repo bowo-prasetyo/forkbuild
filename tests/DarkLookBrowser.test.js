@@ -3,7 +3,7 @@ import { createApp, nextTick } from 'vue';
 import LookChoice from '../ui/components/LookChoice.js';
 import { applyLook } from '../ui/look.js';
 import { LookSettingsStore } from '../application/settings/LookSettingsStore.js';
-import { LOOK } from '../core/LookSettings.js';
+import { LOOK } from '../core/app/LookSettings.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 

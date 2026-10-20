@@ -2,10 +2,10 @@ import {
     AvatarAnimalReleaseIntent,
     isValidAvatarAnimalReleaseIntent,
     deriveAvatarAnimalReleaseIntent
-} from '../core/AvatarAnimalReleaseIntent.js';
+} from '../core/avatar/AvatarAnimalReleaseIntent.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.700 — Avatar Animal Release Intent, core/AvatarAnimalReleaseIntent.js.
+// 0.9.700 — Avatar Animal Release Intent, core/avatar/AvatarAnimalReleaseIntent.js.
 // Mirrors tests/AvatarAnimalCatchIntent.test.js's own shape exactly, for
 // the mirror-image vocabulary.
 

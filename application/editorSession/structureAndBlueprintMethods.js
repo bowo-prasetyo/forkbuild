@@ -1,5 +1,5 @@
 import { ToolId } from '../editor-state/ToolId.js';
-import { deriveBlueprintFingerprint } from '../../core/BlueprintFingerprint.js';
+import { deriveBlueprintFingerprint } from '../../core/building/BlueprintFingerprint.js';
 import { RemoveStructurePlacementCommand } from '../commands/RemoveStructurePlacementCommand.js';
 
 // EditorSession structures, blueprints and documents: forking and composing

@@ -1,9 +1,9 @@
-import { animalPresenceInRegion } from '../core/AnimalPlacement.js';
-import { wildlifeInRegion, WILDLIFE_FEATURE_TYPE } from '../core/WildlifeField.js';
-import { AnimalPresence } from '../core/AnimalPresence.js';
+import { animalPresenceInRegion } from '../core/nature/AnimalPlacement.js';
+import { wildlifeInRegion, WILDLIFE_FEATURE_TYPE } from '../core/nature/WildlifeField.js';
+import { AnimalPresence } from '../core/nature/AnimalPresence.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.700 — Animal Placement Adapter, core/AnimalPlacement.js.
+// 0.9.700 — Animal Placement Adapter, core/nature/AnimalPlacement.js.
 //
 //   Section A: wraps wildlifeInRegion() into real AnimalPresence objects
 //   Section B: deterministic — same call, same result

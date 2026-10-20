@@ -2,7 +2,7 @@ import { LocalAuthorizationVerifier } from '../../identity/LocalAuthorizationVer
 import { createBlueprintAttributionPublicationKind } from '../blueprint/BlueprintAttributionPublicationKind.js';
 import { createPlaceNamingClaimPublicationKind } from '../placeNaming/PlaceNamingClaimPublicationKind.js';
 import { createPublicationContentKind } from './PublicationContentKind.js';
-import { message } from '../../core/Message.js';
+import { message } from '../../core/app/Message.js';
 
 function shortId(identityId) {
     return identityId ? identityId.slice(-14) : 'an unknown identity';

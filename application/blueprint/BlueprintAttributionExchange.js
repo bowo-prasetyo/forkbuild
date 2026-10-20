@@ -1,5 +1,5 @@
-import { BlueprintAttribution } from '../../core/BlueprintAttribution.js';
-import { LEGACY_BLUEPRINT_FINGERPRINT_REASON, blueprintFingerprintsEqual, isCurrentBlueprintFingerprint } from '../../core/BlueprintFingerprint.js';
+import { BlueprintAttribution } from '../../core/building/BlueprintAttribution.js';
+import { LEGACY_BLUEPRINT_FINGERPRINT_REASON, blueprintFingerprintsEqual, isCurrentBlueprintFingerprint } from '../../core/building/BlueprintFingerprint.js';
 import { validateBlueprintAttributionPublication } from './BlueprintAttributionPublicationValidator.js';
 
 // 0.6.6 — Decentralized Blueprint Exchange.
@@ -107,7 +107,7 @@ export class BlueprintAttributionExchange {
     //
     //   1. validate  — application/blueprint/BlueprintAttributionPublicationValidator.js
     //                   (is this even a well-formed publication?)
-    //   2. construct — a real core/BlueprintAttribution.js from the
+    //   2. construct — a real core/building/BlueprintAttribution.js from the
     //                   package's own fields (never trusted as-is)
     //   3. verify    — identity/LocalAuthorizationVerifier.js#
     //                   verifyBlueprintAttribution() (does it actually

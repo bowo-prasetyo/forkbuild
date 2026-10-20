@@ -1,5 +1,5 @@
 import { WorldEncounterMaterialVerifier } from './WorldEncounterMaterialVerification.js';
-import { WorldEncounterKind } from '../../core/WorldEncounter.js';
+import { WorldEncounterKind } from '../../core/world/WorldEncounter.js';
 
 // 0.9.38 — World Encounter Material Identity Verifier.
 //
@@ -35,7 +35,7 @@ import { WorldEncounterKind } from '../../core/WorldEncounter.js';
 //   milestone either.
 //
 // ONE STRUCTURAL COMPARISON, KIND-SPECIFIC, NEVER A GENERIC `objectId`
-// PROPERTY INVENTED ON MATERIAL. 0.9.16 (`core/WorldEncounter.js`'s own
+// PROPERTY INVENTED ON MATERIAL. 0.9.16 (`core/world/WorldEncounter.js`'s own
 // `describeEncounterablePublication()`/`describeEncounterableAvatar()`)
 // already drew the line this file continues: a `Publication` names itself by
 // `id`; an `AvatarProfile` names itself by `avatarId`. Those are two
@@ -105,7 +105,7 @@ import { WorldEncounterKind } from '../../core/WorldEncounter.js';
 // DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
 // - **Signature verification, hash verification, or any cryptographic
 //   scheme.** This file never reads `material.signature`, never imports
-//   `core/Signature.js`, `core/SigningIdentity.js`, or `identity/
+//   `core/publication/Signature.js`, `core/SigningIdentity.js`, or `identity/
 //   LocalAuthorizationVerifier.js`. It answers "is this the object I
 //   selected," never "does its signature verify" or "does the signature
 //   identify the claimed publisher" — separate, later, unscheduled work.

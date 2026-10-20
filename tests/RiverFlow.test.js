@@ -1,22 +1,22 @@
 import {
     riverFlowAt, riverWaterAt, riverWaterDepthAt, riverSurfaceHeightAt, riverRapidsAt,
     MAX_RIVER_SPEED, FULL_SPEED_SLOPE, FLOW_BASELINE, RIVER_FILL, RAPIDS_FROM_SLOPE, RAPIDS_FULL_SLOPE
-} from '../core/RiverFlow.js';
+} from '../core/nature/RiverFlow.js';
 import {
     riverProximityAt, riverChannelTangentAt, riverChannelDistanceAt, isRiverAt, hydrologyGroundColorAt
-} from '../core/Hydrology.js';
-import { ecologyGroundColorAt } from '../core/TerrainEcology.js';
+} from '../core/nature/Hydrology.js';
+import { ecologyGroundColorAt } from '../core/nature/TerrainEcology.js';
 import {
     terrainHeightAt, baseTerrainHeightAt, riverBedDepthAt, riverBedAt, riverPoolReachAt, RIVER_BED_DEPTH, WATER_LEVEL, DEFAULT_WORLD_SEED
-} from '../core/TerrainHeightField.js';
-import { POOL_DEPTH } from '../core/RiverBed.js';
+} from '../core/nature/TerrainHeightField.js';
+import { POOL_DEPTH } from '../core/nature/RiverBed.js';
 import { buildRiverTileMesh, RIVER_SURFACE_LIFT } from '../renderer/RiverTileMesh.js';
 import { buildTerrainTileMesh, tileHasRiverDetail, TILE_SEGMENTS, RIVER_SUBDIVISIONS } from '../renderer/TerrainTileMesh.js';
 import { buildWaterTile } from '../renderer/WaterTileMesh.js';
-import { tileCenter } from '../core/TerrainTiling.js';
+import { tileCenter } from '../core/nature/TerrainTiling.js';
 import { assert } from './support/Assert.js';
 
-// Rivers that run (core/RiverFlow.js): the water covers the channel and
+// Rivers that run (core/nature/RiverFlow.js): the water covers the channel and
 // fades at its banks, runs along the channel and downhill, smoothly, never
 // past MAX_RIVER_SPEED; and its sheet (renderer/RiverTileMesh.js) lies
 // exactly over the ground the terrain mesh draws.
@@ -144,7 +144,7 @@ async function runTests() {
     }
 
     {
-        // Carved beds (core/TerrainHeightField.js): the ground is the lie of the
+        // Carved beds (core/nature/TerrainHeightField.js): the ground is the lie of the
         // land with the bed cut into it, only where a river is, never deeper
         // than RIVER_BED_DEPTH, never down to the water line, and smooth.
         let deep = 0;

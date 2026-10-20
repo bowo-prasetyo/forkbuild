@@ -1116,7 +1116,7 @@
     color: var(--ink-purple);
 }
 
-/* 0.2.87 — the hovered position is occupied (core/PlacementValidator.js);
+/* 0.2.87 — the hovered position is occupied (core/publication/PlacementValidator.js);
    the panel stays visible, tinted red, rather than disappearing, so
    the user sees WHY clicking won't do anything. */
 .spatial-panel--placement.spatial-panel--blocked {

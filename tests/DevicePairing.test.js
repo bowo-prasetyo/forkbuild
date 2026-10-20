@@ -11,7 +11,7 @@ import { LocalRendezvousNetwork } from '../peer/LocalRendezvousNetwork.js';
 import { EphemeralIdentityProvider } from '../identity/EphemeralIdentityProvider.js';
 import {
     createDevicePairingCode, devicePairingLink, parseDevicePairingCode, randomDevicePairingSecret
-} from '../core/DevicePairingCode.js';
+} from '../core/identity/DevicePairingCode.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 

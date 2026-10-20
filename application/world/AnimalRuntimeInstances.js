@@ -1,6 +1,6 @@
-import { animalPresenceInRegion } from '../../core/AnimalPlacement.js';
-import { AnimalPresence } from '../../core/AnimalPresence.js';
-import { withinRadiusXZ } from '../../core/AvatarVehicleProximity.js';
+import { animalPresenceInRegion } from '../../core/nature/AnimalPlacement.js';
+import { AnimalPresence } from '../../core/nature/AnimalPresence.js';
+import { withinRadiusXZ } from '../../core/vehicles/AvatarVehicleProximity.js';
 
 // 0.9.701 — Released Animal Rendering. Deliberately the same value
 // application/world/NearbyVehicleInstances.js#VEHICLE_RENDER_RADIUS already
@@ -14,17 +14,17 @@ export const ANIMAL_RENDER_RADIUS = 50;
 //
 // The animal counterpart of application/world/VehicleRuntimeInstances.js —
 // this session's own authority on "which animals currently exist,
-// discoverable for catching, right now." core/AnimalPlacement.js keeps
+// discoverable for catching, right now." core/nature/AnimalPlacement.js keeps
 // answering a narrower, still-true question, exactly like
-// core/VehiclePlacement.js does for vehicles: "which animals exist
+// core/vehicles/VehiclePlacement.js does for vehicles: "which animals exist
 // deterministically, and where do they start." This store is the ONE
-// place two facts core/AnimalPlacement.js has no way to know about ever
+// place two facts core/nature/AnimalPlacement.js has no way to know about ever
 // get layered on top of that deterministic answer:
 //
 //   CAUGHT — a deterministic animal that has been caught must never be
 //   rediscovered at its own spawn slot again. Exactly the same bug
 //   application/world/VehicleRuntimeInstances.js's own header names for a
-//   stored-then-walked-away-from vehicle: core/AnimalPlacement.js's own
+//   stored-then-walked-away-from vehicle: core/nature/AnimalPlacement.js's own
 //   (seed, x, z) formula has no memory of a catch ever happening, so a
 //   naive "just requery" approach would let the avatar walk back near a
 //   caught rabbit's old spawn point and find a "new" one standing there.
@@ -40,7 +40,7 @@ export const ANIMAL_RENDER_RADIUS = 50;
 // SIMPLER THAN VehicleRuntimeInstances IN ONE REAL WAY: no `setPosition()`.
 // A vehicle can be RIDDEN, so its runtime position is a fact only this
 // session knows. A wild animal's position is never that: it wanders on a
-// deterministic path (core/WildlifeMotion.js), so sync() simply replaces
+// deterministic path (core/nature/WildlifeMotion.js), so sync() simply replaces
 // each wild animal's AnimalPresence with a fresh one at its current pose.
 // A released animal stays exactly where it was released.
 export class AnimalRuntimeInstances {
@@ -151,7 +151,7 @@ export class AnimalRuntimeInstances {
     // of nearby() above, scoped to RELEASED animals only — see this
     // file's own header, "Released," and renderer/AnimalFieldRenderer.js's
     // own header for why that scoping is load-bearing, not cosmetic.
-    // core/WildlifeField.js's own decorative animals already render
+    // core/nature/WildlifeField.js's own decorative animals already render
     // through their own tile system (renderer/WildlifeTileMesh.js),
     // completely independently of this store; a caller
     // (application/world/WorldNavigationSession.js's own
@@ -171,7 +171,7 @@ export class AnimalRuntimeInstances {
     // application/world/WorldNavigationSession.js#decorateNearestReleasedAnimalHere()
     // needs to resolve a single decoration target, the identical
     // nearest-by-squared-XZ-distance-then-ascending-id policy
-    // core/AvatarAnimalCatchTarget.js#resolveAvatarAnimalCatchTarget()
+    // core/avatar/AvatarAnimalCatchTarget.js#resolveAvatarAnimalCatchTarget()
     // already establishes for catching (Y ignored for the same reason:
     // an animal's Y is a terrain/perch sample, not a meaningful
     // interaction boundary). Scoped to releasedNearby() above, never
@@ -277,5 +277,5 @@ export class AnimalRuntimeInstances {
 // movement for a released animal (see this file's own header, "Simpler
 // than VehicleRuntimeInstances"); a capacity or eviction policy beyond plain
 // distance-from-center; resolving WHICH animal an avatar is carrying
-// (that stays core/AvatarInventory.js's own job, entirely untouched by
+// (that stays core/avatar/AvatarInventory.js's own job, entirely untouched by
 // this file).

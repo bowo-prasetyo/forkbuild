@@ -1,6 +1,6 @@
 import { ref, computed, onMounted, onBeforeUnmount, inject } from 'vue';
 import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
-import { FriendshipState } from '../../core/FriendshipState.js';
+import { FriendshipState } from '../../core/social/FriendshipState.js';
 import { LIFECYCLE_LABELS, LIFECYCLE_CLASSES, PROGRESSION_STEPS, formatDuration, shortId } from './peerConnections/presentation.js';
 import { buildPeople, filterPeople, PEOPLE_FILTERS } from './peerConnections/people.js';
 import { useKnownPeers } from './peerConnections/useKnownPeers.js';
@@ -16,7 +16,7 @@ import { attentionSectionTemplate } from './peerConnections/templates/attentionS
 import { peopleSectionTemplate } from './peerConnections/templates/peopleSection.js';
 import { connectSectionTemplate } from './peerConnections/templates/connectSection.js';
 import PublicLobbyPanel from '../components/PublicLobbyPanel.js';
-import { PUBLIC_LOBBY } from '../../core/LobbyCard.js';
+import { PUBLIC_LOBBY } from '../../core/social/LobbyCard.js';
 import { errorText, formatDate as formatLocaleDate, t } from '../i18n/i18n.js';
 import I18nText from '../i18n/I18nText.js';
 

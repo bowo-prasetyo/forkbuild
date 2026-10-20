@@ -1,5 +1,5 @@
-import { STEEM_ANCHOR_TYPE, parseSteemAnchorProof, steemAnchorTarget, steemTransactionAnchors } from '../core/SteemAnchor.js';
-import { checkSteemBlockEvidence } from '../core/SteemBlockEvidence.js';
+import { STEEM_ANCHOR_TYPE, parseSteemAnchorProof, steemAnchorTarget, steemTransactionAnchors } from '../core/networks/SteemAnchor.js';
+import { checkSteemBlockEvidence } from '../core/networks/SteemBlockEvidence.js';
 
 // Describes a `steem` anchor for the anchor evidence panel, like
 // anchoring/ArweaveAnchorEvidenceView.js. It never calls a node and never
@@ -8,7 +8,7 @@ import { checkSteemBlockEvidence } from '../core/SteemBlockEvidence.js';
 // than a Bitcoin one (docs/Protocol.md, "Proposed: Steem Anchoring").
 //
 // When the proof keeps block evidence, `describe()` checks it offline
-// (core/SteemBlockEvidence.js) and shows the block's own time, witness and
+// (core/networks/SteemBlockEvidence.js) and shows the block's own time, witness and
 // signing key from it. `describeVerification()` and `describeFinality()`
 // turn what the verifier and the finality observer report into sentences.
 export class SteemAnchorEvidenceView {

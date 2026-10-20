@@ -1,5 +1,5 @@
 import { LocalSnapshotContentAvailabilityOutcome } from './LocalSnapshotContentAvailabilityOutcome.js';
-import { message } from '../../../core/Message.js';
+import { message } from '../../../core/app/Message.js';
 
 // 0.8.33 — Local Snapshot Content Availability & Integrity UX.
 //

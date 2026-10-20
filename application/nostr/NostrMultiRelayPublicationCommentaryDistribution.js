@@ -7,7 +7,7 @@ import { normalizeRelayUrls } from './NostrRelayUrls.js';
 // scoped to "one relay, one discovery tag, per instance — no fan-out, no
 // relay selection," naming multi-relay resilience for Commentary a
 // NEW_SUBSTRATE_BOUNDARY, deliberately unbuilt at the time. Following the
-// decision recorded in core/NostrRelayConfiguration.js's own header (this
+// decision recorded in core/networks/NostrRelayConfiguration.js's own header (this
 // codebase now has exactly ONE Nostr relay set, used for fan-out
 // everywhere Nostr is used), this file is that boundary closed: the direct
 // structural mirror of application/nostr/NostrMultiRelaySnapshotDiscoveryPublisher.js

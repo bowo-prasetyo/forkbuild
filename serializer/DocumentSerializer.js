@@ -1,6 +1,6 @@
 import { Serializer } from './Serializer.js';
 import { ValidationResult } from './ValidationResult.js';
-import { Document } from '../core/Document.js';
+import { Document } from '../core/document/Document.js';
 import { DocumentValidator } from './DocumentValidator.js';
 import { DocumentSchemaMigrator } from './DocumentSchemaMigrator.js';
 import { WorldSerializer } from './WorldSerializer.js';

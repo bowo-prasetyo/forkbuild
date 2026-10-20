@@ -10,7 +10,7 @@
 // show" (ExternalAnchorCreationUiState), but "given every verification
 // attempt this replica has made for one anchor so far, what should a
 // person be told RIGHT NOW about whether it holds up." This value is
-// never stored on core/PublicationAnchor.js, never persisted, and never
+// never stored on core/publication/PublicationAnchor.js, never persisted, and never
 // treated as a new kind of domain truth — see this file's own
 // deliberately un-domain-sounding names below, and docs/Principles.md,
 // "A Verification Result Describes What Can Be Established Now; It Does

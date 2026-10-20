@@ -1,4 +1,4 @@
-import { PreviewType, derivePlaceholderPreview } from '../../core/DocumentPreview.js';
+import { PreviewType, derivePlaceholderPreview } from '../../core/catalog/DocumentPreview.js';
 
 // "Near viewport" pre-fetch distance — see ui/components/PublicationPreview.js's
 // own identical constant; this component follows that one's lazy/
@@ -11,7 +11,7 @@ const ROOT_MARGIN = '200px';
 // same way ui/components/PublicationPreview.js is built on
 // application/editor/PreviewService.js. The deterministic PLACEHOLDER (a
 // color + initial derived from the item's own id/name — reusing
-// core/DocumentPreview.js#derivePlaceholderPreview() verbatim, since it
+// core/catalog/DocumentPreview.js#derivePlaceholderPreview() verbatim, since it
 // only ever reads `.id`/`.title` and a BrickDefinition/Structure's
 // `.id`/`.name` satisfy that shape directly) shows immediately and
 // doubles as the permanent fallback if no previewService is wired or

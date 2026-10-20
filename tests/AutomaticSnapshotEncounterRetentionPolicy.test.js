@@ -63,7 +63,7 @@ async function runTests() {
             wandererPosition: pos(0, 0, 0),
             snapshotPosition: pos(100, 0, 0),
             retentionRadius: 100
-        }) === true, '3. exactly on the retention radius — retained (inclusive boundary, matching core/SpatialQuery.js#isWithinRadius)');
+        }) === true, '3. exactly on the retention radius — retained (inclusive boundary, matching core/world/SpatialQuery.js#isWithinRadius)');
 
         assert(shouldRetainAutomaticSnapshotEncounter({
             wandererPosition: pos(0, 0, 0),

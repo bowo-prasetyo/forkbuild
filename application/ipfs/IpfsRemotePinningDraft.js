@@ -2,7 +2,7 @@ import { IpfsRemotePublishingConfiguration } from './IpfsRemotePublishingConfigu
 import { recallIpfsRemotePublishingCredential } from './IpfsRemotePublishingCredentialMemory.js';
 
 // What every remote-pinning form starts with: the service saved on the
-// Content Provider page (core/IpfsRemotePinningSettings.js, through the
+// Content Provider page (core/networks/IpfsRemotePinningSettings.js, through the
 // store's get()), and the token typed earlier in this visit, if any. The
 // person can still change any of it before using it; nothing here saves.
 export function remotePinningDraftFromSettings(settings) {

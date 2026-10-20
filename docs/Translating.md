@@ -529,7 +529,7 @@ done yet.
 Those layers can't import the UI, so they name their text instead of writing
 it:
 
-- **A message descriptor**, from `message(key, params)` in `core/Message.js`,
+- **A message descriptor**, from `message(key, params)` in `core/app/Message.js`,
   is what a use case, label module or result returns wherever it used to
   return an English string: `message('passphrase.tooShort', { count: 8 })`.
   The UI shows it with `t(descriptor)`, or `displayText(value)` where a value
@@ -540,7 +540,7 @@ it:
   first (`{ author: message('publicationLink.unknownAuthor') }`) and a list is
   joined the language's way ("a, b, c"). Use these rather than joining
   translated pieces yourself.
-- **A `UserFacingError`** (`core/UserFacingError.js`) is an error meant for
+- **A `UserFacingError`** (`core/app/UserFacingError.js`) is an error meant for
   the person using the app: a refused action or an invalid input. It carries
   a descriptor, and its own `.message` stays the key plus a developer detail
   for logs. The UI shows any error with `errorText(error)`, which uses the
@@ -549,7 +549,7 @@ it:
   them.
 - **Text the 3D view draws** (a resident's speech bubble) can't be translated
   by the renderer, which never imports the UI. The code that makes it returns
-  messages (`core/ResidentTalk.js`), and World View hands the session a
+  messages (`core/world/ResidentTalk.js`), and World View hands the session a
   translator (`setResidentSpeechTranslator(displayText)`) so the words are
   turned into text before the renderer gets them. Each sentence is one
   message with its parts as parameters (`{where}`, itself a message holding

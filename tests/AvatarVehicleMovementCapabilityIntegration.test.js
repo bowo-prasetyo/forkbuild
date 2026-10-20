@@ -2,32 +2,32 @@ import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 import { readFile } from 'node:fs/promises';
 import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
 import { AvatarTreeConstraint } from '../application/avatar/AvatarTreeConstraint.js';
-import { AvatarContinuousMovementIntent } from '../core/AvatarContinuousMovementIntent.js';
-import { AvatarContinuousMovementMode } from '../core/AvatarContinuousMovementMode.js';
-import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
-import { treeCollisionGeometryInRegion } from '../core/TreeCollisionGeometry.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { AVATAR_COLLISION_RADIUS } from '../core/AvatarCollision.js';
-import { VehicleType } from '../core/VehicleType.js';
-import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
+import { AvatarContinuousMovementIntent } from '../core/avatar/AvatarContinuousMovementIntent.js';
+import { AvatarContinuousMovementMode } from '../core/avatar/AvatarContinuousMovementMode.js';
+import { AvatarAnimationState } from '../core/avatar/AvatarAnimationState.js';
+import { treeCollisionGeometryInRegion } from '../core/nature/TreeCollisionGeometry.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { AVATAR_COLLISION_RADIUS } from '../core/avatar/AvatarCollision.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
+import { vehiclePresenceInRegion } from '../core/vehicles/VehiclePlacement.js';
 import {
     AvatarMovementCapabilityKind,
     resolveAvatarVehicleMovementCapability
-} from '../core/AvatarVehicleMovementCapability.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+} from '../core/vehicles/AvatarVehicleMovementCapability.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
-import { Position } from '../core/Position.js';
+import { Position } from '../core/document/Position.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.85 — Vehicle Movement Capability Integration.
 //
-// 0.9.84 (core/AvatarVehicleMovementCapability.js) resolved "which
+// 0.9.84 (core/vehicles/AvatarVehicleMovementCapability.js) resolved "which
 // AvatarMovementCapabilityKind does the avatar's current vehicle
 // relationship imply" as a pure function, and deliberately stopped
 // there. This milestone answers the question 0.9.84's own closing
@@ -133,7 +133,7 @@ function buildSession(registry, avatarProfileUseCase, avatarPresenceSession) {
 
 // The same real, deterministic bicycle
 // tests/AvatarVehicleRuntimeIntegration.test.js already anchors on —
-// core/VehiclePlacement.js (0.9.72) only ever places BICYCLE so far, so
+// core/vehicles/VehiclePlacement.js (0.9.72) only ever places BICYCLE so far, so
 // this is the one vehicle type an actual WorldNavigationSession can
 // mount today. Motorcycle/car/drone are proven at the
 // AvatarMovementController level instead (Sections C, D, F) — that
@@ -146,7 +146,7 @@ function findRealVehicle() {
     const vehicles = vehiclePresenceInRegion(DEFAULT_WORLD_SEED, -500, -500, 500, 500);
     const vehicle = vehicles.find((v) => v.id === REAL_VEHICLE_ID);
     if (!vehicle) {
-        throw new Error(`Test fixture vehicle ${REAL_VEHICLE_ID} not found under DEFAULT_WORLD_SEED — has core/VehiclePlacement.js changed?`);
+        throw new Error(`Test fixture vehicle ${REAL_VEHICLE_ID} not found under DEFAULT_WORLD_SEED — has core/vehicles/VehiclePlacement.js changed?`);
     }
     return vehicle;
 }
@@ -305,7 +305,7 @@ async function runTests() {
             controller.keyDown('shift');
         }
         // 0.9.91 note: bumped from 30 ticks (1.5s) to 150 (7.5s). CAR is
-        // now RATE_LIMITED (core/AvatarVehicleMovementCapability.js,
+        // now RATE_LIMITED (core/vehicles/AvatarVehicleMovementCapability.js,
         // 0.9.90) and only reaches its own (running-doubled) 24 units/
         // second target after ramping at 4 units/second^2 for 6 seconds
         // — over a short window it can still trail WALK's own INSTANT,
@@ -356,7 +356,7 @@ async function runTests() {
     // -------------------------------------------------------------
     // Section F — drone. Aerial Movement Pipeline milestone: AERIAL_VEHICLE
     // is no longer permanently unsupported (see
-    // core/AvatarVehicleMovementCapability.js's own "AERIAL_VEHICLE Is Now
+    // core/vehicles/AvatarVehicleMovementCapability.js's own "AERIAL_VEHICLE Is Now
     // A Real, Supported Capability" header) — a resolved DRONE capability
     // fed directly to this controller now moves the avatar exactly like
     // MOTORCYCLE/CAR already do in Sections C/D, above. The real
@@ -519,8 +519,8 @@ async function runTests() {
 
         // 0.9.96 note: application/world/WorldNavigationSession.js now
         // legitimately binds a real Control key to
-        // core/AvatarVehicleBrakingIntent.js's own NONE/BRAKE
-        // vocabulary and core/AvatarVehicleBrakingInputAdapter.js (see
+        // core/vehicles/AvatarVehicleBrakingIntent.js's own NONE/BRAKE
+        // vocabulary and core/vehicles/AvatarVehicleBrakingInputAdapter.js (see
         // that milestone's own header) — every identifier that seam
         // needs (setVehicleBrakingIntent, _processVehicleBrakingInput,
         // AvatarVehicleBrakingIntent, ...) contains "VehicleBraking" as

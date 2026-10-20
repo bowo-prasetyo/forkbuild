@@ -6,7 +6,7 @@ import { AnimalRenderer } from './AnimalRenderer.js';
 import { AnimalVisual } from './AnimalVisual.js';
 import { DoorSwingAnimator } from './DoorSwingAnimator.js';
 import { DomainEvent } from '../core/events/Event.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
 
 // WorldRenderer has no render(world) sweep. It subscribes to the domain
 // events World publishes and reacts incrementally — one event, one brick
@@ -29,7 +29,7 @@ import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 // without WorldRenderer needing to know either exists.
 //
 // 0.2.90 — Structure Placement & World Instances. A StructurePlacement
-// (core/StructurePlacement.js) is rendered by resolving its documentId
+// (core/building/StructurePlacement.js) is rendered by resolving its documentId
 // FRESH, every add, through `structureResolver`
 // (application/editor/StructureDocumentResolver.js) — never a snapshot copied
 // into the World at placement time. This is what makes "edit the
@@ -97,7 +97,7 @@ export class WorldRenderer {
         // own initial load, per those fields' own header), this can
         // ALSO be populated straight from a LIVE `ANIMAL_DECORATION_ADDED`
         // event's own payload — an AnimalDecoration already carries its
-        // own `worldId` (core/AnimalDecoration.js), unlike a Brick or a
+        // own `worldId` (core/nature/AnimalDecoration.js), unlike a Brick or a
         // StructurePlacement, so `_onAnimalDecorationAdded()` below never
         // needs a pre-existing lookup entry to resolve which document's
         // layout offset applies, the way `_onStructurePlacementAdded()`'s
@@ -148,7 +148,7 @@ export class WorldRenderer {
             // already make for a whole building.
             eventBus.subscribe(DomainEvent.STRUCTURE_PLACEMENT_UPDATED, ({ placement }) => this._onStructurePlacementUpdated(placement)),
             // 0.9.702 — World Animal Decorations. No UPDATED counterpart
-            // — decorative only, v1 (core/AnimalDecoration.js's own
+            // — decorative only, v1 (core/nature/AnimalDecoration.js's own
             // header): a decoration is only ever added or removed, never
             // edited in place.
             eventBus.subscribe(DomainEvent.ANIMAL_DECORATION_ADDED, ({ decoration }) => this._onAnimalDecorationAdded(decoration)),
@@ -361,7 +361,7 @@ export class WorldRenderer {
     }
 
     // 0.9.702 — World Animal Decorations. An AnimalDecoration already
-    // carries its own worldId (core/AnimalDecoration.js) — unlike
+    // carries its own worldId (core/nature/AnimalDecoration.js) — unlike
     // _onStructurePlacementAdded() above, this needs no pre-populated
     // lookup table to know which document's layout offset applies, so a
     // LIVE add (application/world/WorldNavigationSession.js#
@@ -385,7 +385,7 @@ export class WorldRenderer {
     // _renderStructurePlacement() composes a placement's own bricks —
     // `decoration.position` is LOCAL to this World, lifted as a rigid
     // whole, never re-sampled per decoration (see
-    // core/AnimalDecoration.js's own header for why Y is authoritative
+    // core/nature/AnimalDecoration.js's own header for why Y is authoritative
     // here, unlike a WorldLandmark's). A species this renderer has no
     // visual for (AnimalVisual#isSupported false) is silently skipped —
     // the identical graceful-degradation posture

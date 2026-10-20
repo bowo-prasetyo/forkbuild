@@ -1,12 +1,12 @@
-import { CameraPerspective } from '../core/CameraPerspective.js';
+import { CameraPerspective } from '../core/avatar/CameraPerspective.js';
 import { SpatialCameraController } from '../application/world/SpatialCameraController.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { ORIGIN_LOCATION_ID } from '../application/world/WorldLocationDirectory.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
-import { AvatarPresence } from '../core/AvatarPresence.js';
+import { AvatarPresence } from '../core/avatar/AvatarPresence.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';

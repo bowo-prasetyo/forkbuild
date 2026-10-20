@@ -1,12 +1,12 @@
 import { StorageProvider } from './StorageProvider.js';
 import { LocalStorageProvider } from './LocalStorageProvider.js';
-import { NostrRelayConfiguration, isValidNostrRelayUrl } from '../core/NostrRelayConfiguration.js';
+import { NostrRelayConfiguration, isValidNostrRelayUrl } from '../core/networks/NostrRelayConfiguration.js';
 
 const NOSTR_RELAY_CONFIGURATION_STORE_KEY = 'nostr-relay-configuration';
 
 // 0.9.369 — Nostr Relay Configuration Persistence.
 //
-// core/NostrRelayConfiguration.js (this same milestone, sibling file) gave
+// core/networks/NostrRelayConfiguration.js (this same milestone, sibling file) gave
 // a user's own Nostr relay choice a real, validated, immutable shape —
 // deliberately unconsumed by anything, with no storage key of any kind,
 // the same restraint storage/ArweaveGatewayConfigurationStore.js's own
@@ -14,7 +14,7 @@ const NOSTR_RELAY_CONFIGURATION_STORE_KEY = 'nostr-relay-configuration';
 // direct, named answer, mirroring that store's shape exactly, one field
 // instead of a gateway URL.
 //
-//   core/NostrRelayConfiguration.js   (this milestone, unmodified by this
+//   core/networks/NostrRelayConfiguration.js   (this milestone, unmodified by this
 //        file — toJSON()/the constructor's own validation, reused
 //        verbatim)
 //                    │
@@ -56,7 +56,7 @@ const NOSTR_RELAY_CONFIGURATION_STORE_KEY = 'nostr-relay-configuration';
 // `null` — never a `NostrRelayConfiguration` holding
 // `DEFAULT_NOSTR_RELAY_URL` — when the user has never saved an override. A
 // caller resolving the EFFECTIVE relay to actually use is the one that
-// falls back to `DEFAULT_NOSTR_RELAY_URL` (core/NostrRelayConfiguration.js's
+// falls back to `DEFAULT_NOSTR_RELAY_URL` (core/networks/NostrRelayConfiguration.js's
 // own export) when `get()` returns `null` — this store never performs that
 // fallback itself. This is the one rule this milestone's own brief calls
 // out by name: "store.get() === null means no user override, rather than
@@ -67,7 +67,7 @@ const NOSTR_RELAY_CONFIGURATION_STORE_KEY = 'nostr-relay-configuration';
 // REPLACES whatever was previously on file outright. There is no
 // per-region or per-purpose dimension here at all — this store gives
 // Nostr discovery exactly one relay preference, application-wide (which may
-// itself name several relays — see core/NostrRelayConfiguration.js's own
+// itself name several relays — see core/networks/NostrRelayConfiguration.js's own
 // "relay multiplicity — fan-out, never ordered failover" header).
 //
 // MALFORMED DATA DEGRADES; A GENUINE STORAGE FAILURE PROPAGATES — the

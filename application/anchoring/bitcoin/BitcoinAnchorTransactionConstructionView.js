@@ -1,5 +1,5 @@
 import { BitcoinAnchorTransactionConstructionState } from './BitcoinAnchorTransactionConstructionState.js';
-import { message } from '../../../core/Message.js';
+import { message } from '../../../core/app/Message.js';
 
 const STATE_LABELS = {
     [BitcoinAnchorTransactionConstructionState.IDLE]: message('bitcoinAnchorTransactionConstruction.notYetConstructed'),

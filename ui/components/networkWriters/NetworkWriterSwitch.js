@@ -1,7 +1,7 @@
 import { inject, ref } from 'vue';
 import { t } from '../../i18n/i18n.js';
 
-// One network writer's switch (core/NetworkWriters.js), on that network's own
+// One network writer's switch (core/publication/NetworkWriters.js), on that network's own
 // settings page: "Post to Steem from this device". Saved as soon as it
 // changes; what the app offers follows at once (useWritableNetworks.js).
 export default {

@@ -1,4 +1,4 @@
-import { PublicationSnapshotPlacement } from '../../../core/PublicationSnapshotPlacement.js';
+import { PublicationSnapshotPlacement } from '../../../core/publication/PublicationSnapshotPlacement.js';
 import { validatePublicationSnapshotPlacement } from './PublicationSnapshotPlacementValidator.js';
 
 // 0.8.19 — Snapshot Placement Discovery & Peer Synchronization.
@@ -9,7 +9,7 @@ import { validatePublicationSnapshotPlacement } from './PublicationSnapshotPlace
 //   1. validate  — application/snapshot/placement/PublicationSnapshotPlacementValidator.js
 //                   (is this even a well-formed
 //                   PublicationSnapshotPlacement envelope?)
-//   2. construct — a real core/PublicationSnapshotPlacement.js instance,
+//   2. construct — a real core/publication/PublicationSnapshotPlacement.js instance,
 //                   never trusted as-is
 //   3. verify    — identity/LocalAuthorizationVerifier.js#
 //                   verifyPublicationSnapshotPlacement() (did the claimed
@@ -55,7 +55,7 @@ export class PublicationSnapshotPlacementExchange {
     // passthrough to `placement.toJSON()`, the same shape application/
     // PublicationAnchorExchange.js#exportAnchor() already establishes one
     // domain over. Throws for anything that isn't a signed
-    // core/PublicationSnapshotPlacement.js instance.
+    // core/publication/PublicationSnapshotPlacement.js instance.
     exportPlacement(placement) {
         if (!placement || !(placement instanceof PublicationSnapshotPlacement)) {
             throw new Error('PublicationSnapshotPlacementExchange: a PublicationSnapshotPlacement instance is required');

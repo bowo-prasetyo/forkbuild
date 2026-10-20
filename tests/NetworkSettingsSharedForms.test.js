@@ -18,12 +18,12 @@ import { SetIceServerConfigurationUseCase } from '../application/settings/SetIce
 import { SetTurnServerConfigurationUseCase } from '../application/settings/SetTurnServerConfigurationUseCase.js';
 import { SetRendezvousConfigurationUseCase } from '../application/settings/SetRendezvousConfigurationUseCase.js';
 import { SetRoleProviderPreferenceUseCase } from '../application/settings/SetRoleProviderPreferenceUseCase.js';
-import { RoleProviderRole } from '../core/RoleProviderRole.js';
+import { RoleProviderRole } from '../core/publication/RoleProviderRole.js';
 import { splitNonEmptyLines } from '../utils/splitNonEmptyLines.js';
-import { DEFAULT_ARWEAVE_GATEWAY_URLS } from '../core/ArweaveGatewayConfiguration.js';
-import { DEFAULT_IPFS_GATEWAY_URLS } from '../core/IpfsGatewayConfiguration.js';
-import { DEFAULT_BITCOIN_ESPLORA_API_URLS } from '../core/BitcoinEsploraConfiguration.js';
-import { DEFAULT_NOSTR_RELAY_URLS } from '../core/NostrRelayConfiguration.js';
+import { DEFAULT_ARWEAVE_GATEWAY_URLS } from '../core/networks/ArweaveGatewayConfiguration.js';
+import { DEFAULT_IPFS_GATEWAY_URLS } from '../core/networks/IpfsGatewayConfiguration.js';
+import { DEFAULT_BITCOIN_ESPLORA_API_URLS } from '../core/networks/BitcoinEsploraConfiguration.js';
+import { DEFAULT_NOSTR_RELAY_URLS } from '../core/networks/NostrRelayConfiguration.js';
 import { DEFAULT_ICE_SERVERS } from '../peer/IceServerConfig.js';
 import { DEFAULT_RENDEZVOUS_URLS } from '../peer/RendezvousConfig.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';

@@ -9,7 +9,7 @@ import { describePublicationSnapshotAcquisition } from '../application/snapshot/
 import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
 import { CheckLocalSnapshotContentAvailabilityUseCase } from '../application/snapshot/materialization/CheckLocalSnapshotContentAvailabilityUseCase.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';

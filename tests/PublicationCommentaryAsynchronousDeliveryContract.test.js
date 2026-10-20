@@ -1,8 +1,8 @@
 
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 
-import { PublicationCommentary } from '../core/PublicationCommentary.js';
-import { PublicationCommentaryDistributionEnvelope } from '../core/PublicationCommentaryDistributionEnvelope.js';
+import { PublicationCommentary } from '../core/publication/PublicationCommentary.js';
+import { PublicationCommentaryDistributionEnvelope } from '../core/publication/PublicationCommentaryDistributionEnvelope.js';
 import { PublicationCommentaryStore, PublicationCommentaryConflictError } from '../storage/PublicationCommentaryStore.js';
 import { PublicationCommentaryDistributionExchange } from '../application/publication/commentary/PublicationCommentaryDistributionExchange.js';
 
@@ -16,14 +16,14 @@ import {
     isValidPublicationCommentaryDeliveryStatusTransition,
     describePublicationCommentaryAsynchronousDeliverySubstrateContract,
     describesConformingPublicationCommentaryAsynchronousDeliverySubstrate
-} from '../core/PublicationCommentaryAsynchronousDeliveryContract.js';
+} from '../core/publication/PublicationCommentaryAsynchronousDeliveryContract.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.626 — Publication Commentary Asynchronous Delivery Contract.
 //
 // TYPE: narrow production implementation (one new, pure, substrate-neutral
-// file — core/PublicationCommentaryAsynchronousDeliveryContract.js) plus
+// file — core/publication/PublicationCommentaryAsynchronousDeliveryContract.js) plus
 // comprehensive tests. Implements none of: Nostr relay publishing, Arweave
 // uploading, historical sync, relay/substrate selection or fallback,
 // global indexing, subscriptions, fan-out, delivery guarantees, read
@@ -87,7 +87,7 @@ import { makeIdentity } from './support/TestIdentity.js';
 //
 //   (1) Section G's own "new production file" detection used
 //       `git status --porcelain` filtered for `??` (untracked) lines —
-//       correct ONLY while core/PublicationCommentaryAsynchronousDeliveryContract.js
+//       correct ONLY while core/publication/PublicationCommentaryAsynchronousDeliveryContract.js
 //       itself was still an uncommitted, untracked file in THIS milestone's
 //       own original working tree. Once 0.9.626 was committed (immediately
 //       after this file was first written), that same file is no longer
@@ -455,7 +455,7 @@ async function run() {
         assert(reconstructed.publicationId === 'pub-0.9.626-bobs-publication-alice-never-touched',
             n('the envelope names a publicationId Alice has no recorded relationship to whatsoever in this test'));
         assert(!('publisherIdentity' in reconstructed.toJSON()) && !('publicationAuthorId' in reconstructed.toJSON()),
-            n('nothing about VERIFIED establishes, checks, or even represents Publication authorship/ownership — the envelope carries no such field to check, exactly as core/PublicationCommentaryDistributionEnvelope.js\'s own header states ("A narrow, structural claim, never Publication ownership"), reconfirmed here for an envelope that traveled through an asynchronous substrate rather than a live peer connection'));
+            n('nothing about VERIFIED establishes, checks, or even represents Publication authorship/ownership — the envelope carries no such field to check, exactly as core/publication/PublicationCommentaryDistributionEnvelope.js\'s own header states ("A narrow, structural claim, never Publication ownership"), reconfirmed here for an envelope that traveled through an asynchronous substrate rather than a live peer connection'));
 
         console.log('✓ F: VERIFIED, even for a Commentary delivered asynchronously, establishes only "this identity really signed this exact tuple" — never that the signer authored, publishes, or has any standing relationship to the named Publication. The security property the requesting brief named holds unchanged across this new delivery path.');
     }

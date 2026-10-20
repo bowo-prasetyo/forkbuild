@@ -1,7 +1,7 @@
 // Keeps this device's sound preference. Personal and local: never published,
 // shared or part of any World.
 import { StorageProvider } from '../../storage/StorageProvider.js';
-import { normalizeSoundSettings } from '../../core/SoundSettings.js';
+import { normalizeSoundSettings } from '../../core/app/SoundSettings.js';
 
 const STORAGE_KEY = 'sound-settings';
 

@@ -34,7 +34,7 @@ export class LocalReplicationStore extends ReplicationStore {
     // The address IS the object's own declared contentHash when it has
     // one (every PlacementRecord that reaches here does — merge()
     // requires integrity to pass first) — this is what lets a
-    // RevisionReference (core/RevisionReference.js) built from
+    // RevisionReference (core/document/RevisionReference.js) built from
     // record.contentHash resolve directly through get()/has(), instead
     // of the store inventing a second, unrelated hash of its own.
     // Objects with no contentHash of their own fall back to a hash of

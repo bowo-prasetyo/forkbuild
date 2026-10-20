@@ -1,6 +1,6 @@
 import { worldStreamingMethods } from '../application/worldNavigation/worldStreamingMethods.js';
 import { StorageEntryNotLoadedError } from '../storage/StorageEntryNotLoadedError.js';
-import { World } from '../core/World.js';
+import { World } from '../core/document/World.js';
 import { assert } from './support/Assert.js';
 
 // World View streaming and published content kept on disk: a world whose

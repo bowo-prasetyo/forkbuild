@@ -1,6 +1,6 @@
-import { Structure } from '../Structure.js';
-import { Brick } from '../Brick.js';
-import { Position } from '../Position.js';
+import { Structure } from '../building/Structure.js';
+import { Brick } from '../building/Brick.js';
+import { Position } from '../document/Position.js';
 import { VillageLibrary } from './VillageLibrary.js';
 
 // The built-in "collection" library: ready-made builds that are remixes of
@@ -18,7 +18,7 @@ import { VillageLibrary } from './VillageLibrary.js';
 //   village:watchtower ─ lighthouse ─ keepers_lighthouse
 //   village:mill ─ mill_and_granary ─ farmstead
 //
-// A Structure never stores where it came from (core/Structure.js), so the
+// A Structure never stores where it came from (core/building/Structure.js), so the
 // family lives here, beside the library, and nowhere in the bricks.
 
 function b(definitionId, x, y, z, rotation = 0, color = null) {

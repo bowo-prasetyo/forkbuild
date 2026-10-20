@@ -1,14 +1,14 @@
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
-import { PLAZA_CENTER } from '../core/ChallengePlaza.js';
-import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../core/TerrainHeightField.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
+import { PLAZA_CENTER } from '../core/challenge/ChallengePlaza.js';
+import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../core/nature/TerrainHeightField.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
 import { assert } from './support/Assert.js';
 
-// The challenge plaza's exhibits (core/ChallengePlaza.js) are solid to walk
+// The challenge plaza's exhibits (core/challenge/ChallengePlaza.js) are solid to walk
 // into while they stand: the avatar's collision, its step-up and the
 // residents' obstacles read them beside the loaded documents, at the ground
 // height they are drawn at, and stop once they are hidden.

@@ -1,12 +1,12 @@
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { WorldRegion } from '../core/WorldRegion.js';
-import { RegionKind } from '../core/RegionKind.js';
-import { StructurePlacement } from '../core/StructurePlacement.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { WorldRegion } from '../core/world/WorldRegion.js';
+import { RegionKind } from '../core/world/RegionKind.js';
+import { StructurePlacement } from '../core/building/StructurePlacement.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
@@ -20,14 +20,14 @@ import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase
 import { EditorSession } from '../application/editor/EditorSession.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
-import { WorldFocusKind, deriveWorldFocusContext } from '../core/WorldFocusContext.js';
+import { WorldFocusKind, deriveWorldFocusContext } from '../core/world/WorldFocusContext.js';
 import {
     EditorEntryContext,
     EditorEntryReason,
     withReturnWorld,
     editorEntryContextToQuery,
     editorEntryContextFromQuery
-} from '../core/EditorEntryContext.js';
+} from '../core/document/EditorEntryContext.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
@@ -37,7 +37,7 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 // (camera framing, and for a STRUCTURE, a selection) but drew no return
 // trip at all — "Edit a Copy" was a one-way door. This milestone reuses
 // the SAME object for the way back out, rather than inventing a second
-// "return context" shape — see core/EditorEntryContext.js's own 0.6.1
+// "return context" shape — see core/document/EditorEntryContext.js's own 0.6.1
 // header. The flagship scenario:
 //
 //   Alice's World "Green Valley" contains a Barn (a placed Document —
@@ -49,7 +49,7 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 //   A. returnWorldId/returnWorldTitle — EditorEntryContext's own new
 //      fields: construction, getters, toJSON.
 //   B. withReturnWorld() — the one place they're ever attached to an
-//      already-derived context (core/WorldFocusContext.js#editCopyContext
+//      already-derived context (core/world/WorldFocusContext.js#editCopyContext
 //      has no way to know "which World is on screen" itself). Pure,
 //      never mutates its input, graceful with nothing to attach.
 //   C. Router-query round-trip — entryReturnWorld/entryReturnWorldTitle

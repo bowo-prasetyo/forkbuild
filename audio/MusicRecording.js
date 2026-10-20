@@ -1,6 +1,6 @@
-// The music for a time-lapse or turntable video (core/BuildVideo.js): the same
+// The music for a time-lapse or turntable video (core/app/BuildVideo.js): the same
 // synthesized music World View and the Editor play (audio/MusicPlayer.js,
-// core/MusicScore.js), in its own AudioContext, played into a stream a
+// core/app/MusicScore.js), in its own AudioContext, played into a stream a
 // recorder takes (renderer/BuildVideoRecorder.js) rather than to the
 // speakers, so making a video is silent. Nothing is downloaded.
 
@@ -8,7 +8,7 @@
 // volume, as a walk-through records it.
 const RECORDING_LEVEL = 0.5;
 
-// Gets music in `mood` (core/MusicScore.js's MUSIC_MOOD) ready to record and
+// Gets music in `mood` (core/app/MusicScore.js's MUSIC_MOOD) ready to record and
 // returns `{ stream, play(), fadeOut(), pause(), resume(), stop() }`: `stream`
 // has one audio track; play() starts the music from the top of a phrase, as
 // recording starts; fadeOut() fades it away over about a second; pause() and

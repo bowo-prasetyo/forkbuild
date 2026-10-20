@@ -1,7 +1,7 @@
 import { register } from 'node:module';
 import util from 'node:util';
 
-import { TurnServerConfiguration } from '../core/TurnServerConfiguration.js';
+import { TurnServerConfiguration } from '../core/networks/TurnServerConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { TurnServerConfigurationStore } from '../storage/TurnServerConfigurationStore.js';
 import { SetTurnServerConfigurationUseCase } from '../application/settings/SetTurnServerConfigurationUseCase.js';
@@ -13,7 +13,7 @@ import { withEnglish } from './support/EnglishSource.js';
 
 // 0.9.456 — TURN Server Settings UI.
 //
-// 0.9.453 (contract audit) -> 0.9.454 (core/TurnServerConfiguration.js +
+// 0.9.453 (contract audit) -> 0.9.454 (core/networks/TurnServerConfiguration.js +
 // storage/TurnServerConfigurationStore.js + application/
 // TurnServerConfigurationProvider.js) -> 0.9.455 (composition into
 // ui/main.js's own resolvedIceServers) built a complete, real TURN

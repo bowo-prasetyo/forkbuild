@@ -1,7 +1,7 @@
-import { vehiclePresenceInRegion } from '../../core/VehiclePlacement.js';
-import { wildlifeInRegionAt } from '../../core/WildlifeMotion.js';
-import { directionLabelBetween } from '../../core/GeographicPlaceNavigation.js';
-import { RESIDENT_FACT_KIND } from '../../core/ResidentTalk.js';
+import { vehiclePresenceInRegion } from '../../core/vehicles/VehiclePlacement.js';
+import { wildlifeInRegionAt } from '../../core/nature/WildlifeMotion.js';
+import { directionLabelBetween } from '../../core/world/GeographicPlaceNavigation.js';
+import { RESIDENT_FACT_KIND } from '../../core/world/ResidentTalk.js';
 
 // How far around itself a resident knows about each kind of thing. Nearby
 // things are what you could walk to; builds are what you might have heard
@@ -16,7 +16,7 @@ export const RESIDENT_KNOWLEDGE_RADIUS = Object.freeze({
 });
 
 // What a World Resident standing at `position` ({ x, z }, shared space) knows
-// about its surroundings: an array of facts for core/ResidentTalk.js, each
+// about its surroundings: an array of facts for core/world/ResidentTalk.js, each
 // { kind, key, distance, direction, position, ... } with distance and
 // compass direction seen from the resident, and the thing's own position
 // ({ x, z }, shared space) so the viewer can be offered a look at it.

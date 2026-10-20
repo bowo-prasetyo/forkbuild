@@ -2,7 +2,7 @@
 import { createApp, h } from 'vue';
 import DocumentInfoPanel from '../ui/components/DocumentInfoPanel.js';
 import RemixFamilyTree from '../ui/components/remix/RemixFamilyTree.js';
-import { remixFamily } from '../core/RemixFamily.js';
+import { remixFamily } from '../core/publication/RemixFamily.js';
 import { t } from '../ui/i18n/i18n.js';
 import { assert } from './support/Assert.js';
 import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
@@ -10,15 +10,15 @@ import { DocumentManager } from '../application/document/DocumentManager.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
-// Credit co-builders (core/BuiltWith.js), rendered by real Vue: the Editor's
+// Credit co-builders (core/catalog/BuiltWith.js), rendered by real Vue: the Editor's
 // build panel and the family tree say who built a build with its author.
 // The share page is in PublicationLinkViewBrowser.
 

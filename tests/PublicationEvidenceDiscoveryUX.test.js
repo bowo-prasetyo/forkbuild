@@ -1,4 +1,4 @@
-import { PublicationAnchor } from '../core/PublicationAnchor.js';
+import { PublicationAnchor } from '../core/publication/PublicationAnchor.js';
 import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
 import { LocalPublicationAnchorStore } from '../application/anchoring/LocalPublicationAnchorStore.js';
 import { RestorePublicationAnchorCatalogUseCase } from '../application/anchoring/RestorePublicationAnchorCatalogUseCase.js';

@@ -1,4 +1,4 @@
-import { parseSnapshotDiscoveryEnvelope, snapshotCandidateFromEnvelope } from '../../core/SnapshotDiscoveryEnvelope.js';
+import { parseSnapshotDiscoveryEnvelope, snapshotCandidateFromEnvelope } from '../../core/publication/SnapshotDiscoveryEnvelope.js';
 import { SnapshotCandidateDiscoveryOutcome } from '../snapshot/SnapshotCandidateDiscoveryOutcome.js';
 import { responseContentLength, byteLength } from '../../utils/responseSize.js';
 
@@ -27,7 +27,7 @@ const DEFAULT_MAX_ENVELOPE_BYTES = 48 * 1024;
 // 0.9.499 — Arweave Snapshot Discovery Query Service.
 //
 // The reading counterpart of application/arweave/ArweaveSnapshotDiscoveryPublisher.js
-// (0.9.498) — that file writes a `core/SnapshotDiscoveryEnvelope.js` into a
+// (0.9.498) — that file writes a `core/publication/SnapshotDiscoveryEnvelope.js` into a
 // tagged Arweave transaction; this file queries Arweave's own public GraphQL
 // gateway for transactions carrying that tag and reads the same envelope
 // back out, so a caller who only holds a `discoveryTag` can learn where an
@@ -37,7 +37,7 @@ const DEFAULT_MAX_ENVELOPE_BYTES = 48 * 1024;
 // ArweaveSnapshotDiscoveryCapabilityBoundaryAudit.test.js, Section H) proved,
 // live, that the existing `application/arweave/ArweaveGraphqlDiscoveryQueryService.js`
 // is genuinely, structurally incapable of this: it re-decodes every
-// candidate through `core/DecentralizedDiscoveryEnvelope.js#parseDecentralizedDiscoveryEnvelope()`,
+// candidate through `core/publication/DecentralizedDiscoveryEnvelope.js#parseDecentralizedDiscoveryEnvelope()`,
 // which a real Snapshot Discovery Envelope always fails (wrong protocol, no
 // `kind`/`objectId`) — a real, well-formed Snapshot announcement fed through
 // that class's own gateway step is silently dropped, reporting zero
@@ -61,7 +61,7 @@ const DEFAULT_MAX_ENVELOPE_BYTES = 48 * 1024;
 //   GET <gatewayUrl>/<announcement-transaction-id>
 //         │
 //         ▼
-//   parseSnapshotDiscoveryEnvelope(rawText)   (core/SnapshotDiscoveryEnvelope.js,
+//   parseSnapshotDiscoveryEnvelope(rawText)   (core/publication/SnapshotDiscoveryEnvelope.js,
 //        │                                     0.9.133, UNMODIFIED)
 //         ▼
 //   application/arweave/ArweaveSnapshotDiscoveryQueryService.js   ★ (THIS)
@@ -171,7 +171,7 @@ const DEFAULT_MAX_ENVELOPE_BYTES = 48 * 1024;
 // produces candidates in exactly the shape that section fed it directly.
 //
 // 0.9.171 `publicationId`/`claimedPosition` — PRESERVED, NEVER CONSUMED,
-// NEVER VALIDATED BY THIS FILE. `core/SnapshotDiscoveryEnvelope.js#parseSnapshotDiscoveryEnvelope()`
+// NEVER VALIDATED BY THIS FILE. `core/publication/SnapshotDiscoveryEnvelope.js#parseSnapshotDiscoveryEnvelope()`
 // already enforces both-or-neither and shape; when a decoded envelope
 // carries them, this file's own `search()` forwards both onto the reported
 // candidate unchanged, exactly as `application/
@@ -196,7 +196,7 @@ const DEFAULT_MAX_ENVELOPE_BYTES = 48 * 1024;
 // - **Any change to `application/arweave/ArweaveGraphqlDiscoveryQueryService.js`,
 //   `application/arweave/ArweaveSnapshotDiscoveryPublisher.js`,
 //   `application/arweave/ArweaveTaggedTransactionUpload.js`,
-//   `content/ArweaveContentStore.js`, or `core/SnapshotDiscoveryEnvelope.js`.**
+//   `content/ArweaveContentStore.js`, or `core/publication/SnapshotDiscoveryEnvelope.js`.**
 //   Every one is consumed only through its own already-public, already-
 //   proven contract, or not at all.
 // - **Pagination beyond one page of results, caching, batching, or

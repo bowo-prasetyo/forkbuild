@@ -7,9 +7,9 @@ import { MoveWorldPlacementUseCase } from '../application/placement/MoveWorldPla
 import { RemoveWorldPlacementUseCase } from '../application/placement/RemoveWorldPlacementUseCase.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
-import { WorldPlacement } from '../core/WorldPlacement.js';
-import { PlacementRecord } from '../core/PlacementRecord.js';
-import { Position } from '../core/Position.js';
+import { WorldPlacement } from '../core/publication/WorldPlacement.js';
+import { PlacementRecord } from '../core/publication/PlacementRecord.js';
+import { Position } from '../core/document/Position.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 

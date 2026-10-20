@@ -1,4 +1,4 @@
-import { IpfsNodeConfiguration, isValidIpfsNodeApiUrl, DEFAULT_IPFS_NODE_API_URL } from '../core/IpfsNodeConfiguration.js';
+import { IpfsNodeConfiguration, isValidIpfsNodeApiUrl, DEFAULT_IPFS_NODE_API_URL } from '../core/networks/IpfsNodeConfiguration.js';
 import { assert } from './support/Assert.js';
 
 // User-Configurable IPFS Node API URL Boundary.

@@ -1,7 +1,7 @@
-import { Document } from '../../core/Document.js';
-import { DocumentMetadata } from '../../core/DocumentMetadata.js';
-import { World } from '../../core/World.js';
-import { createBrickId } from '../../core/createId.js';
+import { Document } from '../../core/document/Document.js';
+import { DocumentMetadata } from '../../core/document/DocumentMetadata.js';
+import { World } from '../../core/document/World.js';
+import { createBrickId } from '../../core/document/createId.js';
 import { copyTitle } from './DocumentTitles.js';
 
 // The single cloning mechanism for Documents (0.1.42). Deep-clones with
@@ -64,7 +64,7 @@ export class DocumentCloneService {
                 brickJson.id = newBrickId;
             }
         }
-        // A Group's membership is referential (core/Group.js), so a brick
+        // A Group's membership is referential (core/building/Group.js), so a brick
         // id with no entry in the map (already a dangling reference in the
         // source) is left as-is rather than dropped — cloning must not
         // change what a group's membership resolves to beyond following
@@ -88,7 +88,7 @@ export class DocumentCloneService {
             tags: sourceDocument.metadata.tags,
             author: author === undefined ? sourceDocument.metadata.author : author,
             authorIdentityId: nextAuthorIdentityId,
-            // Who built it with its author (core/BuiltWith.js) stays with the
+            // Who built it with its author (core/catalog/BuiltWith.js) stays with the
             // author's own builds: a copy someone else makes starts with none.
             builtWith: nextAuthorIdentityId && nextAuthorIdentityId === sourceDocument.metadata.authorIdentityId
                 ? sourceDocument.metadata.builtWith

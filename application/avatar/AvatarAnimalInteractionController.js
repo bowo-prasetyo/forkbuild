@@ -1,20 +1,20 @@
-import { DEFAULT_WORLD_SEED } from '../../core/TerrainHeightField.js';
-import { InventoryEntryKind } from '../../core/AvatarInventory.js';
+import { DEFAULT_WORLD_SEED } from '../../core/nature/TerrainHeightField.js';
+import { InventoryEntryKind } from '../../core/avatar/AvatarInventory.js';
 import { AvatarInventoryStore } from './AvatarInventoryStore.js';
-import { AvatarAnimalCatchIntent, deriveAvatarAnimalCatchIntent } from '../../core/AvatarAnimalCatchIntent.js';
-import { ANIMAL_INTERACTION_RADIUS, resolveAvatarAnimalCatchTarget } from '../../core/AvatarAnimalCatchTarget.js';
-import { deriveAvatarAnimalCatchTransition } from '../../core/AvatarAnimalCatchTransition.js';
-import { AvatarAnimalReleaseIntent, deriveAvatarAnimalReleaseIntent } from '../../core/AvatarAnimalReleaseIntent.js';
-import { deriveAvatarAnimalReleaseTransition } from '../../core/AvatarAnimalReleaseTransition.js';
-import { AnimalPresence } from '../../core/AnimalPresence.js';
-import { animalPresenceInRegion } from '../../core/AnimalPlacement.js';
-import { createId } from '../../core/createId.js';
+import { AvatarAnimalCatchIntent, deriveAvatarAnimalCatchIntent } from '../../core/avatar/AvatarAnimalCatchIntent.js';
+import { ANIMAL_INTERACTION_RADIUS, resolveAvatarAnimalCatchTarget } from '../../core/avatar/AvatarAnimalCatchTarget.js';
+import { deriveAvatarAnimalCatchTransition } from '../../core/avatar/AvatarAnimalCatchTransition.js';
+import { AvatarAnimalReleaseIntent, deriveAvatarAnimalReleaseIntent } from '../../core/avatar/AvatarAnimalReleaseIntent.js';
+import { deriveAvatarAnimalReleaseTransition } from '../../core/avatar/AvatarAnimalReleaseTransition.js';
+import { AnimalPresence } from '../../core/nature/AnimalPresence.js';
+import { animalPresenceInRegion } from '../../core/nature/AnimalPlacement.js';
+import { createId } from '../../core/document/createId.js';
 
 // 0.9.700 — Avatar-Animal Catch/Release Runtime Integration.
 //
 // The animal counterpart of application/avatar/AvatarVehicleInteractionController.js
 // — but structurally SIMPLER, for a reason named throughout
-// core/AvatarAnimalCatchTransition.js and core/AvatarAnimalReleaseTransition.js's
+// core/avatar/AvatarAnimalCatchTransition.js and core/avatar/AvatarAnimalReleaseTransition.js's
 // own headers: catching has no mount-then-store two-step, and releasing
 // has no mount-state gate. This controller therefore has no `_mount`
 // field at all, and its ONE key ('F') is not "mount vs. dismount" but
@@ -39,14 +39,14 @@ import { createId } from '../../core/createId.js';
 //
 // NO CYCLE-SELECTION KEYS YET. Vehicles got '['/']' only once
 // cycle-through-what's-carried was an actual, separately reported need
-// (see core/AvatarVehicleStoreTransition.js's own commit history) — this
+// (see core/vehicles/AvatarVehicleStoreTransition.js's own commit history) — this
 // controller ships with the identical "most recent by default" release
 // behavior 0.9.670 first shipped for vehicles, ready for the same
 // follow-on later without a signature change (see
-// core/AvatarAnimalReleaseTransition.js's own header).
+// core/avatar/AvatarAnimalReleaseTransition.js's own header).
 //
 // SHARES THE SAME AvatarInventoryStore AvatarVehicleInteractionController
-// USES — one avatar, one backpack. See core/AvatarInventory.js's own
+// USES — one avatar, one backpack. See core/avatar/AvatarInventory.js's own
 // header, "A shared inventory, not two parallel ones," and
 // application/avatar/AvatarInventoryStore.js's own header for why ownership of
 // the current AvatarInventory value moved out of either controller and
@@ -157,8 +157,8 @@ export class AvatarAnimalInteractionController {
         }
     }
 
-    // Composes core/AvatarAnimalCatchIntent.js + core/AvatarAnimalCatchTarget.js
-    // + core/AvatarAnimalCatchTransition.js, then performs the one
+    // Composes core/avatar/AvatarAnimalCatchIntent.js + core/avatar/AvatarAnimalCatchTarget.js
+    // + core/avatar/AvatarAnimalCatchTransition.js, then performs the one
     // EFFECT that pure transition deliberately leaves to its caller:
     // removing the caught animal from the world via
     // application/world/AnimalRuntimeInstances.js#discard(). Returns whether a
@@ -170,7 +170,7 @@ export class AvatarAnimalInteractionController {
     // unlike vehicle deploy (which has literally nowhere for a new
     // vehicle to exist without a runtime store), catching a
     // deterministically-placed animal can still be evaluated from
-    // core/AnimalPlacement.js alone; only the "never rediscover this one
+    // core/nature/AnimalPlacement.js alone; only the "never rediscover this one
     // again" exclusion needs the store. A caller with no store wired (an
     // older test) can still catch once, but the same animal could be
     // "caught" again on a later, fresh region query — an accepted,
@@ -199,13 +199,13 @@ export class AvatarAnimalInteractionController {
         return true;
     }
 
-    // Composes core/AvatarAnimalReleaseIntent.js + core/AvatarAnimalReleaseTransition.js,
+    // Composes core/avatar/AvatarAnimalReleaseIntent.js + core/avatar/AvatarAnimalReleaseTransition.js,
     // then performs the one EFFECT that pure transition deliberately
-    // leaves to its caller: minting a fresh id via core/createId.js —
+    // leaves to its caller: minting a fresh id via core/document/createId.js —
     // the identical choice
     // application/avatar/AvatarVehicleInteractionController.js#_tickDeploy()
     // already makes for a deployed vehicle, and for the same reason
-    // (see that method's own header): core/AnimalIdentity.js's own
+    // (see that method's own header): core/nature/AnimalIdentity.js's own
     // `animalIdFor()` names a DETERMINISTIC lattice slot, and a released
     // animal was never placed by the deterministic field — reusing that
     // formula here would risk colliding with a real future animal at the
@@ -251,7 +251,7 @@ export class AvatarAnimalInteractionController {
     // already takes.
     //
     // Wild animals move, so they always come from a fresh query at this
-    // controller's clock (core/WildlifeMotion.js), never from the store,
+    // controller's clock (core/nature/WildlifeMotion.js), never from the store,
     // whose copies are only as fresh as its last sync(). Only RELEASED
     // animals, which exist nowhere else, come from the store.
     _nearbyAnimals(avatarPosition) {

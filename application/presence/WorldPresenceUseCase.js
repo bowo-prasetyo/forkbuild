@@ -1,7 +1,7 @@
 import { EventBus } from '../../core/events/EventBus.js';
 import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
-import { toWorldPresenceAdvertisement, isValidWorldPresenceAdvertisement } from '../../core/WorldPresenceAdvertisement.js';
-import { WorldPresenceActivity, isValidWorldPresenceActivity } from '../../core/WorldPresenceActivity.js';
+import { toWorldPresenceAdvertisement, isValidWorldPresenceAdvertisement } from '../../core/collaboration/WorldPresenceAdvertisement.js';
+import { WorldPresenceActivity, isValidWorldPresenceActivity } from '../../core/collaboration/WorldPresenceActivity.js';
 
 const PRESENCE_CHANGED_EVENT = 'WorldPresenceChanged';
 
@@ -17,7 +17,7 @@ const PRESENCE_CHANGED_EVENT = 'WorldPresenceChanged';
 // `forkbuild:avatar-presence` (presence/PeerAvatarPresenceBroadcastProvider.js)
 // — that protocol answers "where is this avatar's BODY in 3D space,"
 // many times a second, always signed-optionally through
-// core/AvatarPresenceAdvertisement.js. This one answers a coarser,
+// core/avatar/AvatarPresenceAdvertisement.js. This one answers a coarser,
 // much lower-frequency question — "is this SOCIAL IDENTITY here at
 // all, and what are they broadly doing" — completely independent of
 // whether that identity even has an avatar rendered. Also separate
@@ -28,8 +28,8 @@ const PRESENCE_CHANGED_EVENT = 'WorldPresenceChanged';
 // The central architectural rule, worth stating once: World Presence is
 // COMPUTED from currently live, authenticated peer connections, never
 // PERSISTED. There is no `WorldPresence` row saved anywhere in
-// storage/, and core/WorldPresenceAdvertisement.js is permanently
-// unsigned, exactly like core/AvatarPresence.js's own — see that file's
+// storage/, and core/collaboration/WorldPresenceAdvertisement.js is permanently
+// unsigned, exactly like core/avatar/AvatarPresence.js's own — see that file's
 // own header for the identical reasoning applied here. A participant
 // who disconnects simply stops appearing in getRoster()'s next call;
 // nothing needs to be told they left, the same way nothing needs to be
@@ -50,7 +50,7 @@ const PRESENCE_CHANGED_EVENT = 'WorldPresenceChanged';
 // Crucially, `canEdit` on each roster entry is NEVER read off the
 // remote party's own self-reported `activity` — a participant claiming
 // EDITING proves nothing about whether they actually HOLD EDIT
-// authority (see core/WorldPresenceActivity.js's own header, "Being
+// authority (see core/collaboration/WorldPresenceActivity.js's own header, "Being
 // online is not the same as being authorized to edit"). It is always
 // RECOMPUTED locally, fresh on every getRoster() call, through the
 // injected `resolveCanEdit(worldDocumentId, identityId)` — the exact
@@ -239,9 +239,9 @@ export class WorldPresenceUseCase {
     // Identity is resolved from the LIVE CONNECTION only
     // (`meta.connectedPeer.remoteIdentity`, device-resolved through
     // `resolveConnectionIdentity`) — never from anything the payload
-    // itself claims, exactly the same discipline core/AvatarPresence.js
+    // itself claims, exactly the same discipline core/avatar/AvatarPresence.js
     // already established for avatar movement, and consistent with
-    // core/WorldPresenceAdvertisement.js's own permanently-unsigned
+    // core/collaboration/WorldPresenceAdvertisement.js's own permanently-unsigned
     // wire shape (see that file's header).
     _handleIncoming(payload, meta) {
         if (!isValidWorldPresenceAdvertisement(payload)) {

@@ -1,4 +1,4 @@
-import { TrustStatus } from '../core/TrustObservation.js';
+import { TrustStatus } from '../core/identity/TrustObservation.js';
 
 // did:key identifies a public key. Trust policy decides whether that
 // key is trusted. A perfectly valid Ed25519 signature can belong to an
@@ -25,7 +25,7 @@ export const AuthorityMode = Object.freeze({
 // trusted, whether unsigned legacy content is tolerated, and whether a
 // detected equivocation is merely reported or rejected outright.
 //
-// TrustPolicy makes a DECISION given a core/TrustObservation.js — it
+// TrustPolicy makes a DECISION given a core/identity/TrustObservation.js — it
 // never performs verification itself (that stays in
 // identity/LocalAuthorizationVerifier.js and the discovery provider).
 // Two different policies can look at the identical observation and

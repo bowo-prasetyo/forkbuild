@@ -1,11 +1,11 @@
-import { WorldAccessLevel } from '../../core/WorldAccessLevel.js';
-import { WorldPresenceActivity } from '../../core/WorldPresenceActivity.js';
-import { deriveWorldSpatialActivity } from '../../core/WorldSpatialActivity.js';
-import { AvatarVerticalState } from '../../core/AvatarVerticalState.js';
-import { WorldSpatialSelection } from '../../core/WorldSpatialSelection.js';
-import { deriveWorldSpatialAnchor } from '../../core/WorldSpatialAnchor.js';
-import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../../core/TerrainHeightField.js';
-import { computeCameraFraming } from '../../core/CameraPerspective.js';
+import { WorldAccessLevel } from '../../core/collaboration/WorldAccessLevel.js';
+import { WorldPresenceActivity } from '../../core/collaboration/WorldPresenceActivity.js';
+import { deriveWorldSpatialActivity } from '../../core/collaboration/WorldSpatialActivity.js';
+import { AvatarVerticalState } from '../../core/avatar/AvatarVerticalState.js';
+import { WorldSpatialSelection } from '../../core/collaboration/WorldSpatialSelection.js';
+import { deriveWorldSpatialAnchor } from '../../core/collaboration/WorldSpatialAnchor.js';
+import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../../core/nature/TerrainHeightField.js';
+import { computeCameraFraming } from '../../core/avatar/CameraPerspective.js';
 import { LOCATION_FOCUS_OFFSET } from './constants.js';
 
 // WorldNavigationSession collaboration methods: edit authorization, World
@@ -17,7 +17,7 @@ export const collaborationMethods = {
     // -----------------------------------------------------------------
     //
     // Three public queries, never an "isOwner" or role name (see
-    // core/WorldAccessLevel.js, application/identity/WorldAuthorizationService.js).
+    // core/collaboration/WorldAccessLevel.js, application/identity/WorldAuthorizationService.js).
     // Without a worldAuthorizationService every loaded document is editable,
     // and getWorldAccessLevel() returns EDIT even for an unresolvable id, so a
     // typo or not-yet-loaded document never looks more restrictive than having
@@ -110,7 +110,7 @@ export const collaborationMethods = {
     //
     // Declares this replica present in `documentId`. `activity` defaults to a
     // fresh canEditDocument() read; it is a self-reported UI hint, never an
-    // authorization claim (see core/WorldPresenceActivity.js). No-op when not
+    // authorization claim (see core/collaboration/WorldPresenceActivity.js). No-op when not
     // wired.
     enterWorldPresence(documentId, activity = null) {
         if (!this._worldPresenceUseCase) {
@@ -185,7 +185,7 @@ export const collaborationMethods = {
 
     // Called on a fast interval by the UI while this World is active. The one
     // place local interaction state becomes a network fact; `activity` is always
-    // derived here, never passed in (see core/WorldSpatialActivity.js). No-op
+    // derived here, never passed in (see core/collaboration/WorldSpatialActivity.js). No-op
     // for a World not entered.
     syncWorldSpatialPresence(documentId) {
         if (!this._worldSpatialPresenceUseCase || !this._presentSpatialWorldDocumentIds.has(documentId)) {
@@ -197,7 +197,7 @@ export const collaborationMethods = {
         // World View has no gizmo, so this is always inactive; the shape stays
         // because deriveWorldSpatialActivity() expects gizmoActive/gizmoMode.
         const gizmoState = { active: false, mode: null };
-        // The avatar's vertical motion (core/AvatarVerticalState.js), for the
+        // The avatar's vertical motion (core/avatar/AvatarVerticalState.js), for the
         // JUMPING/FALLING activities. Without a controller neither fires.
         const verticalState = this._avatarMovementController ? this._avatarMovementController.verticalState() : null;
         const activity = deriveWorldSpatialActivity({
@@ -245,7 +245,7 @@ export const collaborationMethods = {
     },
 
     // Translates this session's local selection into the read-only observation
-    // shape core/WorldSpatialSelection.js defines. Only a selection in this
+    // shape core/collaboration/WorldSpatialSelection.js defines. Only a selection in this
     // World, and only brick or structure-placement kinds, is reported.
     _resolveWorldSpatialSelection(documentId) {
         const selection = this._spatialSelection;
@@ -343,7 +343,7 @@ export const collaborationMethods = {
     // The one place a WorldSpatialSelection becomes display text. A placement
     // resolves through `document.world.getStructurePlacement()` to its document
     // title via getSavedDocumentTitle(), in any loaded document. A brick has no
-    // name (core/Building.js has no title), so it resolves to null and
+    // name (core/building/Building.js has no title), so it resolves to null and
     // describeSpatialActivity() shows the plain phrase ("Building"). Null, never
     // a throw, for an empty or unresolvable selection or no
     // loadDocumentUseCase.

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { BuildingRenderer } from './BuildingRenderer.js';
-import { SpatialBounds } from '../core/SpatialBounds.js';
-import { computeThumbnailCamera } from '../core/PreviewCameraFraming.js';
+import { SpatialBounds } from '../core/world/SpatialBounds.js';
+import { computeThumbnailCamera } from '../core/catalog/PreviewCameraFraming.js';
 
 // Matches renderer/Renderer.js's own SKY_COLOR (not imported — that
 // constant is private to Renderer.js) so a thumbnail reads as a small
@@ -81,7 +81,7 @@ export class DocumentThumbnailRenderer {
     }
 
     // 0.2.84 (Building Library & Palette UX) — the same one-shot render
-    // pipeline, for a flat list of core/Brick.js instances that don't
+    // pipeline, for a flat list of core/building/Brick.js instances that don't
     // belong to a Document/World at all: a Structure's own `bricks`, or
     // a single synthetic Brick standing in for one BrickDefinition. Both
     // a Build Library brick/structure thumbnail and a Document thumbnail
@@ -98,7 +98,7 @@ export class DocumentThumbnailRenderer {
         }
 
         // The framing decision — position, target, field of view —
-        // comes ENTIRELY from core/PreviewCameraFraming.js's pure
+        // comes ENTIRELY from core/catalog/PreviewCameraFraming.js's pure
         // function; this class only ever applies whatever that
         // function decided, it never makes a framing choice of its own.
         const bounds = SpatialBounds.fromBricks(bricks, this._registry);

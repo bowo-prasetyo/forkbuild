@@ -1,8 +1,8 @@
 import { ValidationResult } from './ValidationResult.js';
-import { PROTOCOL_VERSION } from '../core/protocolVersion.js';
-import { DOCUMENT_SCHEMA_VERSION } from '../core/documentSchema.js';
-import { brickTableErrors } from '../core/BrickTable.js';
-import { isValidTilt } from '../core/BrickOrientation.js';
+import { PROTOCOL_VERSION } from '../core/app/protocolVersion.js';
+import { DOCUMENT_SCHEMA_VERSION } from '../core/document/documentSchema.js';
+import { brickTableErrors } from '../core/building/BrickTable.js';
+import { isValidTilt } from '../core/building/BrickOrientation.js';
 
 // Pure structural validation of a document JSON envelope. No Vue, no
 // Three.js, no EditorSession, no WorldNavigationSession, no browser

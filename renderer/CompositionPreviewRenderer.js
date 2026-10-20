@@ -1,6 +1,6 @@
 import { editorFloorHeight } from './EditorFloor.js';
 import { applyBrickOrientation } from './applyBrickOrientation.js';
-import { normalizeTilt } from '../core/BrickOrientation.js';
+import { normalizeTilt } from '../core/building/BrickOrientation.js';
 import { EditorEvent } from '../core/events/EditorEvent.js';
 import { ThreeBrickFactory } from './ThreeBrickFactory.js';
 

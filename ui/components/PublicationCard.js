@@ -4,7 +4,7 @@ import BuildHeart from './BuildHeart.js';
 import SharePublicationButton from './SharePublicationButton.js';
 import FollowButton from './FollowButton.js';
 import { publicationDateText } from '../i18n/dateText.js';
-import { License } from '../../core/License.js';
+import { License } from '../../core/document/License.js';
 import { describeLicense } from '../../application/document/LicenseLabels.js';
 import { DISTRIBUTION_KIND_LABELS } from '../../application/publication/OwnPublicationDistributionRecord.js';
 import { displayText, t } from '../i18n/i18n.js';
@@ -52,10 +52,10 @@ export default {
     props: {
         publication: { type: Object, required: true },
         description: { type: String, default: '' },
-        // What this build was remixed from (core/RemixLineage.js), or null.
+        // What this build was remixed from (core/publication/RemixLineage.js), or null.
         remixSource: { type: Object, default: null },
         remixCount: { type: Number, default: 0 },
-        // 0.9.539 — see core/PublicationDateAmbiguity.js's own header.
+        // 0.9.539 — see core/catalog/PublicationDateAmbiguity.js's own header.
         // True only when the host (PublicationCatalog.js) detected
         // another Publication for the SAME document, published the
         // same calendar day, also visible on the current page — the
@@ -101,7 +101,7 @@ export default {
         },
         // 0.9.539 — the SAME `publishedAt` field, at finer precision,
         // never a new one. See needsPreciseDate's own comment above and
-        // core/PublicationDateAmbiguity.js's formatPublicationDate().
+        // core/catalog/PublicationDateAmbiguity.js's formatPublicationDate().
         publishedAtLabel() {
             return publicationDateText(this.publication.publishedAt, this.needsPreciseDate);
         }

@@ -11,7 +11,7 @@ import { AvatarPresenceBroadcastProvider } from './AvatarPresenceBroadcastProvid
 //
 // Unlike those other Local*Providers, this one is not built on
 // localStorage — presence is explicitly never persisted (see
-// core/AvatarPresence.js), and BroadcastChannel is a purpose-built,
+// core/avatar/AvatarPresence.js), and BroadcastChannel is a purpose-built,
 // non-persistent, same-origin pub/sub primitive: every other
 // same-origin browsing context (another tab, another window) that
 // opens a channel with the SAME name hears every message, and a
@@ -21,7 +21,7 @@ import { AvatarPresenceBroadcastProvider } from './AvatarPresenceBroadcastProvid
 //
 // Delivery is fire-and-forget and inherently unordered/lossy across
 // tabs exactly the way a real network would be — 0.2.37's whole
-// design (core/PresenceIngestion.js's monotonic-sequence acceptance)
+// design (core/avatar/PresenceIngestion.js's monotonic-sequence acceptance)
 // is built to tolerate that, not to assume it away.
 const DEFAULT_CHANNEL_NAME = 'forkbuild:avatar-presence';
 

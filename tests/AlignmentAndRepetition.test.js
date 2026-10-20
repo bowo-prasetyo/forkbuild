@@ -1,12 +1,12 @@
-import { Brick } from '../core/Brick.js';
-import { Building } from '../core/Building.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { Position } from '../core/Position.js';
-import { World } from '../core/World.js';
-import { Group } from '../core/Group.js';
+import { Brick } from '../core/building/Brick.js';
+import { Building } from '../core/building/Building.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { Position } from '../core/document/Position.js';
+import { World } from '../core/document/World.js';
+import { Group } from '../core/building/Group.js';
 import { EventBus } from '../core/events/EventBus.js';
-import { SnapMath } from '../core/SnapMath.js';
+import { SnapMath } from '../core/building/SnapMath.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
@@ -31,7 +31,7 @@ import { LoadPublicationDocumentUseCase } from '../application/publication/LoadP
 import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
 import { ReplayDocumentUseCase } from '../application/document/ReplayDocumentUseCase.js';
 import { RestoreHistoryStateUseCase } from '../application/document/RestoreHistoryStateUseCase.js';
-import { WorldPosition } from '../core/WorldPosition.js';
+import { WorldPosition } from '../core/document/WorldPosition.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { assert } from './support/Assert.js';
 
@@ -50,7 +50,7 @@ import { assert } from './support/Assert.js';
 // snapping (deliberately deferred — see docs/Roadmap.md's own 0.4.9
 // section), no persistent "RepeatingStructure" World concept.
 //
-//   Section 1: core/SnapMath.js — deterministic absolute-position
+//   Section 1: core/building/SnapMath.js — deterministic absolute-position
 //              snapping, in isolation
 //   Section 2: SpatialEditingService#snapSelectionToGrid() — preserves a
 //              multi-brick selection's own relative geometry, one
@@ -104,7 +104,7 @@ function createWorldWithBricks(specs, worldId, buildingId) {
 }
 
 // ---------------------------------------------------------------------
-// 1. core/SnapMath.js — deterministic absolute-position snapping
+// 1. core/building/SnapMath.js — deterministic absolute-position snapping
 // ---------------------------------------------------------------------
 
 {
@@ -131,7 +131,7 @@ function createWorldWithBricks(specs, worldId, buildingId) {
 
     // Rotation + snapping: a rotated brick's coordinate can arrive as
     // 1.9999999999999998 rather than exactly 2 (the exact float
-    // core/SelectionTransformValidator.js's own header cites from
+    // core/building/SelectionTransformValidator.js's own header cites from
     // application/editor/TransformMath.js's sin/cos output) — snapping that
     // value must still land cleanly on the grid line, not on some
     // drifted neighbor.

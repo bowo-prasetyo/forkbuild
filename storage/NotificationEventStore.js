@@ -1,11 +1,11 @@
 import { StorageProvider } from './StorageProvider.js';
 import { LocalStorageProvider } from './LocalStorageProvider.js';
-import { NotificationEvent } from '../core/NotificationEvent.js';
+import { NotificationEvent } from '../core/social/NotificationEvent.js';
 import {
     NotificationCollisionOutcome,
     notificationDeduplicationIdentity,
     classifyNotificationCollision
-} from '../core/NotificationDeduplicationPolicy.js';
+} from '../core/social/NotificationDeduplicationPolicy.js';
 
 const NOTIFICATION_EVENT_STORE_KEY = 'notification-events:entries';
 
@@ -32,18 +32,18 @@ const NOTIFICATION_EVENT_STORE_KEY = 'notification-events:entries';
 //                                        storage/PublicationCommentaryStore.js
 //                                        already established)
 //
-// THE DEPENDENCY DIRECTION RUNS ONE WAY. `core/NotificationEvent.js` and
-// `core/NotificationDeduplicationPolicy.js` import nothing from `storage/`
+// THE DEPENDENCY DIRECTION RUNS ONE WAY. `core/social/NotificationEvent.js` and
+// `core/social/NotificationDeduplicationPolicy.js` import nothing from `storage/`
 // and know nothing of persistence, retries, or conflicts — this file is
 // the only thing that imports THEM. Neither file is modified by this
 // milestone.
 //
 // THIS STORE PERSISTS FACTS; IT DOES NOT INVENT NOTIFICATION SEMANTICS.
 // Every identity and equivalence decision this file makes is delegated to
-// `core/NotificationDeduplicationPolicy.js` — `save()` never recomputes,
+// `core/social/NotificationDeduplicationPolicy.js` — `save()` never recomputes,
 // approximates, or special-cases what "the same notification" means. This
 // mirrors `storage/PublicationCommentaryStore.js`'s own restraint (that
-// file reuses `core/PublicationCommentaryCollection.js`'s functions rather
+// file reuses `core/publication/PublicationCommentaryCollection.js`'s functions rather
 // than reimplementing them) applied to the policy 0.9.280 already adopted.
 //
 // SAVE() OUTCOMES — an explicit three-way result, not a boolean plus a
@@ -148,7 +148,7 @@ export class NotificationEventStore {
     }
 
     // The on-file NotificationEvent sharing `event`'s own deduplication
-    // identity (per `core/NotificationDeduplicationPolicy.js`), or `null`
+    // identity (per `core/social/NotificationDeduplicationPolicy.js`), or `null`
     // when none is on file. `event` need not itself be persisted, or even
     // previously seen — this is how a reconstructed or independently
     // produced event (0.9.277 Section F/0.9.280 Section F's own scenario)

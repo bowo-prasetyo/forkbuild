@@ -1,6 +1,6 @@
 import { PeerSnapshotMaterializationOutcome } from './PeerSnapshotMaterializationOutcome.js';
 import { SnapshotPeerMaterializationUiState } from './SnapshotPeerMaterializationUiState.js';
-import { message } from '../../../core/Message.js';
+import { message } from '../../../core/app/Message.js';
 
 // 0.8.37 — Explicit Peer Snapshot Content Transfer.
 //

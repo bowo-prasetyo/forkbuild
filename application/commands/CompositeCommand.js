@@ -1,6 +1,6 @@
 import { Command } from './Command.js';
 import { descriptionFromJSON, descriptionToJSON } from './HistoryDescription.js';
-import { isMessage, message } from '../../core/Message.js';
+import { isMessage, message } from '../../core/app/Message.js';
 
 // A Command made of other Commands, treated as one atomic unit by
 // CommandHistory — one undo step regardless of how many child commands

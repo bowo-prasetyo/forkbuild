@@ -2,10 +2,10 @@ import {
     AvatarAnimalCatchIntent,
     isValidAvatarAnimalCatchIntent,
     deriveAvatarAnimalCatchIntent
-} from '../core/AvatarAnimalCatchIntent.js';
+} from '../core/avatar/AvatarAnimalCatchIntent.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.700 — Avatar Animal Catch Intent, core/AvatarAnimalCatchIntent.js.
+// 0.9.700 — Avatar Animal Catch Intent, core/avatar/AvatarAnimalCatchIntent.js.
 // Mirrors tests/AvatarVehicleStoreIntent.test.js's own shape.
 
 function runTests() {

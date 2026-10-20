@@ -16,10 +16,10 @@ import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/
 import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
-import { PlacementRecord } from '../core/PlacementRecord.js';
-import { Position } from '../core/Position.js';
+import { PlacementRecord } from '../core/publication/PlacementRecord.js';
+import { Position } from '../core/document/Position.js';
 import { computeContentHash } from '../serializer/contentHash.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';

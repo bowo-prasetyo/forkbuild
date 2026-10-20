@@ -1,4 +1,4 @@
-import { BlurtAnnouncingConfiguration } from '../../core/BlurtAnnouncingConfiguration.js';
+import { BlurtAnnouncingConfiguration } from '../../core/networks/BlurtAnnouncingConfiguration.js';
 import { BlurtAnnouncingConfigurationStore } from '../../storage/BlurtAnnouncingConfigurationStore.js';
 
 export class SetBlurtAnnouncingConfigurationUseCase {

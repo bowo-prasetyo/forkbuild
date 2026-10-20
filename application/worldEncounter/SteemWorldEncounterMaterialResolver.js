@@ -1,5 +1,5 @@
 import { SteemContentStore } from '../../content/SteemContentStore.js';
-import { parseSteemContentLocator } from '../../core/SteemContentManifest.js';
+import { parseSteemContentLocator } from '../../core/networks/SteemContentManifest.js';
 
 // The same ceiling ArweaveWorldEncounterMaterialResolver.js puts on a
 // Signed Claim: one is a few kilobytes.

@@ -1,6 +1,6 @@
-import { normalizeTilt } from '../../core/BrickOrientation.js';
-import { Brick } from '../../core/Brick.js';
-import { Position } from '../../core/Position.js';
+import { normalizeTilt } from '../../core/building/BrickOrientation.js';
+import { Brick } from '../../core/building/Brick.js';
+import { Position } from '../../core/document/Position.js';
 import { Command } from './Command.js';
 import { bricksMessage } from './HistoryDescription.js';
 
@@ -42,7 +42,7 @@ export class PlaceBrickCommand extends Command {
         this._definitionId = definitionId;
         this._position = position;
         this._rotation = rotation;
-        // A quarter turn laying the brick on another side (core/BrickOrientation.js).
+        // A quarter turn laying the brick on another side (core/building/BrickOrientation.js).
         this._tilt = normalizeTilt(tilt);
         // Choose Your Brick Color: the color the palette had active when
         // this placement was made, or null to use the definition's own

@@ -62,9 +62,9 @@ import { isNonEmptyString, isPlainObject } from '../../utils/typeGuards.js';
 // candidate vocabulary over.
 //
 // EVERY CANDIDATE IS VALIDATED BY SHAPE, NOT BY SOURCE. Unlike Place
-// Naming's own `core/PlaceNamingDiscoveryEnvelope.js`, no single
+// Naming's own `core/world/PlaceNamingDiscoveryEnvelope.js`, no single
 // `parseSnapshotCandidate()` function already exists for this vocabulary —
-// `core/SnapshotDiscoveryEnvelope.js#parseSnapshotDiscoveryEnvelope()`
+// `core/publication/SnapshotDiscoveryEnvelope.js#parseSnapshotDiscoveryEnvelope()`
 // additionally requires a `protocol`/`version` pair that only a Nostr wire
 // event ever carries, and a Local candidate (see
 // `application/snapshot/LocalSnapshotCandidateDiscoveryQueryService.js`'s own
@@ -85,7 +85,7 @@ import { isNonEmptyString, isPlainObject } from '../../utils/typeGuards.js';
 // NEVER `contentHash` ALONE. This is the one architectural decision this
 // milestone's own brief asked to be settled by the EXISTING candidate/
 // placement identity semantics, not by intuition — and
-// `core/PublicationSnapshotPlacement.js`'s own header already settles it:
+// `core/publication/PublicationSnapshotPlacement.js`'s own header already settles it:
 // "Multiple independent placements — different placing identities,
 // different storage backends, different locators, even different
 // placement ids naming the SAME publicationId/contentHash — all coexist
@@ -100,7 +100,7 @@ import { isNonEmptyString, isPlainObject } from '../../utils/typeGuards.js';
 // brief names: a Local catalog entry and a Nostr announcement both
 // describing the identical locator). `publicationId` is deliberately NOT
 // part of this key: it travels as supplementary, optional metadata on a
-// candidate (see `core/SnapshotDiscoveryEnvelope.js`'s own 0.9.171 header,
+// candidate (see `core/publication/SnapshotDiscoveryEnvelope.js`'s own 0.9.171 header,
 // "preserved, never consumed... optional"), never as part of what makes a
 // LOCATOR CLAIM the same claim — the identical reasoning
 // `application/snapshot/placement/PublicationSnapshotPlacementConvergence.js`'s own header

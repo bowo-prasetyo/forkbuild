@@ -1,11 +1,11 @@
 import { ref, computed, onBeforeUnmount } from 'vue';
 import { TouchMovementInput, cruiseChord } from '../../application/avatar/TouchMovementInput.js';
-import { AvatarContinuousMovementIntent } from '../../core/AvatarContinuousMovementIntent.js';
-import { AvatarContinuousMovementMode } from '../../core/AvatarContinuousMovementMode.js';
-import { clampTouchJoystickOffset } from '../../core/TouchJoystickKeys.js';
+import { AvatarContinuousMovementIntent } from '../../core/avatar/AvatarContinuousMovementIntent.js';
+import { AvatarContinuousMovementMode } from '../../core/avatar/AvatarContinuousMovementMode.js';
+import { clampTouchJoystickOffset } from '../../core/avatar/TouchJoystickKeys.js';
 import { describeAnimalDecorationAction, describeVehicleStoreAction } from './avatarInteractionLabels.js';
 import { t } from '../i18n/i18n.js';
-import { AvatarSwimMode } from '../../core/AvatarSwimming.js';
+import { AvatarSwimMode } from '../../core/avatar/AvatarSwimming.js';
 
 // World View's on-screen controls for touch screens: a joystick for W/A/S/D
 // (pushed to the rim, it runs) and buttons for the other avatar keys. It only

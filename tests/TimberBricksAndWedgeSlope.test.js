@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
 import { VillageLibrary } from '../core/library/VillageLibrary.js';
-import { resolveWalkableSurfaceAt, walkableSurfaceKindFor, WalkableSurfaceKind } from '../core/WalkableSurface.js';
+import { resolveWalkableSurfaceAt, walkableSurfaceKindFor, WalkableSurfaceKind } from '../core/building/WalkableSurface.js';
 import { BrickRenderer } from '../renderer/BrickRenderer.js';
 import { ThreeBrickFactory } from '../renderer/ThreeBrickFactory.js';
 import { assert } from './support/Assert.js';
@@ -56,7 +56,7 @@ function approx(actual, expected, tolerance, message) {
 
 // The slope is drawn exactly where an avatar walks on it, at every
 // rotation the placement tools offer: a ray straight down meets the wedge
-// at the height core/WalkableSurface.js reports.
+// at the height core/building/WalkableSurface.js reports.
 {
     const slope = registry.get('core:slope_45');
     const center = new Position(3, slope.height / 2, -2);

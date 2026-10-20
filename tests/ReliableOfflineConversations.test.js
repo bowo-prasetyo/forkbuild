@@ -9,9 +9,9 @@ import { PeerReconnectionUseCase } from '../application/peer/PeerReconnectionUse
 import { ChatUseCase } from '../application/chat/ChatUseCase.js';
 import { ChatOutbox } from '../application/chat/ChatOutbox.js';
 import { ConversationStore, MAX_STORED_MESSAGES_PER_PEER } from '../application/chat/ConversationStore.js';
-import { ConversationEntry, ChatMessageDirection, isValidChatMessageDirection } from '../core/ConversationEntry.js';
-import { toChatMessage, deriveConversationId } from '../core/ChatMessage.js';
-import { ChatDeliveryState } from '../core/ChatDeliveryState.js';
+import { ConversationEntry, ChatMessageDirection, isValidChatMessageDirection } from '../core/social/ConversationEntry.js';
+import { toChatMessage, deriveConversationId } from '../core/social/ChatMessage.js';
+import { ChatDeliveryState } from '../core/social/ChatDeliveryState.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
@@ -99,7 +99,7 @@ function makeFakeSessionManager(connect, targetAddress) {
 async function runTests() {
 
 // ---------------------------------------------------------------------
-// 1. core/ConversationEntry.js — construction, immutability, JSON round-trip.
+// 1. core/social/ConversationEntry.js — construction, immutability, JSON round-trip.
 // ---------------------------------------------------------------------
 {
     assert(isValidChatMessageDirection(ChatMessageDirection.OUTGOING), 'outgoing is a valid direction');
@@ -123,7 +123,7 @@ async function runTests() {
     let threw = false;
     try { new ConversationEntry({ message, peerIdentityId: 'bob', direction: 'sideways' }); } catch { threw = true; }
     assert(threw, 'an unrecognized direction is refused at construction');
-    console.log('✓ core/ConversationEntry.js: immutable transitions and graceful degradation on corrupted storage');
+    console.log('✓ core/social/ConversationEntry.js: immutable transitions and graceful degradation on corrupted storage');
 }
 
 // ---------------------------------------------------------------------

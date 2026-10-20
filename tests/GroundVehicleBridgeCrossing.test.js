@@ -9,17 +9,17 @@ import { AvatarInventoryStore } from '../application/avatar/AvatarInventoryStore
 import { VehicleRuntimeInstances } from '../application/world/VehicleRuntimeInstances.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
-import { createAvatarInventoryEntry, emptyAvatarInventory, withEntryAdded, InventoryEntryKind } from '../core/AvatarInventory.js';
-import { BICYCLE_DISMOUNT_OFFSET_X } from '../core/AvatarVehicleDismountPosition.js';
-import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../core/TerrainHeightField.js';
-import { LAKE_SURFACE_HEIGHT } from '../core/Hydrology.js';
-import { VehicleInstance } from '../core/VehicleInstance.js';
-import { VehicleType } from '../core/VehicleType.js';
-import { Position } from '../core/Position.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
+import { resolveAvatarVehicleMovementCapability } from '../core/vehicles/AvatarVehicleMovementCapability.js';
+import { createAvatarInventoryEntry, emptyAvatarInventory, withEntryAdded, InventoryEntryKind } from '../core/avatar/AvatarInventory.js';
+import { BICYCLE_DISMOUNT_OFFSET_X } from '../core/vehicles/AvatarVehicleDismountPosition.js';
+import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../core/nature/TerrainHeightField.js';
+import { LAKE_SURFACE_HEIGHT } from '../core/nature/Hydrology.js';
+import { VehicleInstance } from '../core/vehicles/VehicleInstance.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
+import { Position } from '../core/document/Position.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
 import { assert } from './support/Assert.js';
 
 // Ground vehicles drive up ramps and across bridges, as an avatar on foot

@@ -67,8 +67,8 @@ export class CheckLocalSnapshotContentAvailabilityUseCase {
     }
 
     // `publication`: anything carrying `id` and a `contentReference`
-    // (core/ContentReference.js instance or its JSON shape with a
-    // `hash`) — ordinarily a core/DecentralizedPublication.js instance
+    // (core/document/ContentReference.js instance or its JSON shape with a
+    // `hash`) — ordinarily a core/publication/DecentralizedPublication.js instance
     // this caller already has in hand.
     //
     // Returns `{ publicationId, contentHash, contentReference, outcome }`

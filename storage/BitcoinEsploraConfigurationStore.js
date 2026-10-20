@@ -1,6 +1,6 @@
 import { StorageProvider } from './StorageProvider.js';
 import { LocalStorageProvider } from './LocalStorageProvider.js';
-import { BitcoinEsploraConfiguration, isValidBitcoinEsploraApiUrl } from '../core/BitcoinEsploraConfiguration.js';
+import { BitcoinEsploraConfiguration, isValidBitcoinEsploraApiUrl } from '../core/networks/BitcoinEsploraConfiguration.js';
 
 const BITCOIN_ESPLORA_CONFIGURATION_STORE_KEY = 'bitcoin-esplora-configuration';
 
@@ -49,7 +49,7 @@ export class BitcoinEsploraConfigurationStore {
     }
 
     // The one way back to "no override, use the deployment default" — see
-    // core/BitcoinEsploraConfiguration.js's own header, "a value object,
+    // core/networks/BitcoinEsploraConfiguration.js's own header, "a value object,
     // never a default-injecting one."
     clear() {
         this._storageProvider.remove(BITCOIN_ESPLORA_CONFIGURATION_STORE_KEY);

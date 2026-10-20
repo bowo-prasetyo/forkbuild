@@ -54,7 +54,7 @@ import NameNeededNotice from './NameNeededNotice.js';
 // INPUT: A `view` OR A LIVE `registry`. `view` is exactly
 // application/worldEncounter/WorldEncounterView.js's describeWorldEncounterView() result;
 // this component never joins, fetches or recomputes encounter data (see
-// application/worldEncounter/WorldEncounterReadModel.js, core/WorldEncounter.js). A live
+// application/worldEncounter/WorldEncounterReadModel.js, core/world/WorldEncounter.js). A live
 // WorldDiscoverySourceRegistry may be passed as `registry` instead:
 // `effectiveView` uses the registry-derived `worldView` when `registry` is
 // supplied, else `view`, never both. mounted() seeds, then subscribes;
@@ -114,7 +114,7 @@ import NameNeededNotice from './NameNeededNotice.js';
 // origin). Association evidence is the caller's own
 // (`decentralizedLeadAssociations`, or live via `leadAssociationsQuery`);
 // this component never derives evidence from a lead's tag or uri
-// (see core/DecentralizedWorldEncounterLeadAssociation.js) and never calls
+// (see core/world/DecentralizedWorldEncounterLeadAssociation.js) and never calls
 // queryDecentralizedWorldDiscovery(). `resolvedLead` mirrors
 // resolvedEncounterSelection (automatic when RESOLVED, explicit
 // chooseDecentralizedLead() when AMBIGUOUS) and, once set, is forwarded to
@@ -304,7 +304,7 @@ export default {
         // Optional durable `{ add(publication) }` sink, in production a
         // LocalWorldEncounterPublicationAdmissionLog rebuilt into
         // `decentralizedPublicationDiscoveryProvider` at startup. Never
-        // LocalPublicationCatalog: that stores signed core/DecentralizedPublication.js
+        // LocalPublicationCatalog: that stores signed core/publication/DecentralizedPublication.js
         // envelopes, and handing it a plain Publication is unsafe (see
         // tests/DistributionResultPublicationCenterDeepLinkAudit.test.js).
         // Independent of the provider above; each is admitted into separately.

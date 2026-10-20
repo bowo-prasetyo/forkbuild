@@ -1,5 +1,5 @@
 // Vehicles other players ride, and telling them what the local avatar rides
-// (core/AvatarVehicleAdvertisement.js, on `forkbuild:avatar-vehicle`).
+// (core/vehicles/AvatarVehicleAdvertisement.js, on `forkbuild:avatar-vehicle`).
 //
 // Where a vehicle is when nobody rides it stays each replica's own
 // (application/world/VehicleRuntimeInstances.js): while another player rides
@@ -7,7 +7,7 @@
 // get off, it reappears wherever this replica last had it.
 import { AvatarVehicleSyncService } from '../avatar/AvatarVehicleSyncService.js';
 import { AvatarVehicleTrustBoundary } from '../avatar/AvatarVehicleTrustBoundary.js';
-import { toAvatarVehicleAdvertisement } from '../../core/AvatarVehicleAdvertisement.js';
+import { toAvatarVehicleAdvertisement } from '../../core/vehicles/AvatarVehicleAdvertisement.js';
 import { signAvatarVehicleAdvertisement } from '../avatar/AvatarVehicleSigning.js';
 
 // Sent again this often while nothing changes, so a player who arrives later

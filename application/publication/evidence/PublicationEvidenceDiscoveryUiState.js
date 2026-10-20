@@ -26,7 +26,7 @@
 //
 // THIS IS UI STATE, NEVER DOMAIN STATE — mirroring application/
 // ExternalAnchorCreationUiState.js's own restraint exactly. No value here
-// is ever written onto a core/PublicationAnchor.js, stored in
+// is ever written onto a core/publication/PublicationAnchor.js, stored in
 // application/anchoring/LocalPublicationAnchorCatalog.js, or persisted anywhere;
 // it lives only in whatever ephemeral object a caller keeps for the
 // lifetime of the page. Reopening the Publication Center always starts

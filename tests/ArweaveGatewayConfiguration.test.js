@@ -1,11 +1,11 @@
 
-import { ArweaveGatewayConfiguration, isValidArweaveGatewayUrl, DEFAULT_ARWEAVE_GATEWAY_URL } from '../core/ArweaveGatewayConfiguration.js';
+import { ArweaveGatewayConfiguration, isValidArweaveGatewayUrl, DEFAULT_ARWEAVE_GATEWAY_URL } from '../core/networks/ArweaveGatewayConfiguration.js';
 import { assert } from './support/Assert.js';
 import { readSource as source } from './support/SourceText.js';
 
 // 0.9.364 — User-Configurable Arweave Gateway Configuration Boundary.
 // See docs/Roadmap.md, "0.9.364 — User-Configurable Arweave Gateway," and
-// core/ArweaveGatewayConfiguration.js's own header for the full seam this
+// core/networks/ArweaveGatewayConfiguration.js's own header for the full seam this
 // milestone closes.
 //
 // Section A: construction — a valid absolute http(s) URL round-trips
@@ -148,7 +148,7 @@ async function run() {
     // source file, never a guess from this file's own prose.
     // ===============================================================
     {
-        const configSource = await source('core/ArweaveGatewayConfiguration.js');
+        const configSource = await source('core/networks/ArweaveGatewayConfiguration.js');
         const configExecutable = configSource.replace(/\/\/.*$/gm, '');
         assert(!/localStorage|StorageProvider/.test(configExecutable), 'H1. no persistence of any kind — no localStorage, no StorageProvider reference in this file\'s own executable code');
         assert(!/\bfetch\s*\(/.test(configExecutable), 'H2. no fetch() call anywhere — this file never makes a network request');

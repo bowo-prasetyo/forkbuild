@@ -1,5 +1,5 @@
 import { BitcoinAnchorFundingObservationState } from './BitcoinAnchorFundingObservationState.js';
-import { message } from '../../../core/Message.js';
+import { message } from '../../../core/app/Message.js';
 
 const STATE_LABELS = {
     [BitcoinAnchorFundingObservationState.OBSERVED]: message('bitcoinAnchorFunding.fundingObserved'),

@@ -1,12 +1,12 @@
 import { ref, computed, onMounted, inject } from 'vue';
 import { useRouter } from 'vue-router';
 import { CreateDiscoveryUseCase } from '../../application/discovery/CreateDiscoveryUseCase.js';
-import { descriptionSnippet } from '../../core/DescriptionMarkup.js';
-import { PublicationQuery } from '../../core/PublicationQuery.js';
-import { PublicationSort } from '../../core/PublicationSort.js';
-import { GroupBy, groupPublications } from '../../core/PublicationGrouping.js';
-import { computeAmbiguousPublishedDateIds } from '../../core/PublicationDateAmbiguity.js';
-import { countRemixes, describeRemixSource } from '../../core/RemixLineage.js';
+import { descriptionSnippet } from '../../core/document/DescriptionMarkup.js';
+import { PublicationQuery } from '../../core/catalog/PublicationQuery.js';
+import { PublicationSort } from '../../core/catalog/PublicationSort.js';
+import { GroupBy, groupPublications } from '../../core/catalog/PublicationGrouping.js';
+import { computeAmbiguousPublishedDateIds } from '../../core/catalog/PublicationDateAmbiguity.js';
+import { countRemixes, describeRemixSource } from '../../core/publication/RemixLineage.js';
 import PublicationCatalogToolbar from './PublicationCatalogToolbar.js';
 import PublicationCard from './PublicationCard.js';
 import PublicationList from './PublicationList.js';
@@ -171,7 +171,7 @@ export default {
             return groupPublications(pageResult.value.items, groupBy.value);
         });
 
-        // 0.9.539 — see core/PublicationDateAmbiguity.js's own header:
+        // 0.9.539 — see core/catalog/PublicationDateAmbiguity.js's own header:
         // the ids (never a documentId — the same document is exactly
         // what collides) needing the full timestamp instead of the
         // usual day-level label, scoped to whatever is actually visible

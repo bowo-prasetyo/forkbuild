@@ -1,13 +1,13 @@
 import { readFile } from 'node:fs/promises';
 import {
     resolveAvatarVehicleDismountPosition, BICYCLE_DISMOUNT_OFFSET_X
-} from '../core/AvatarVehicleDismountPosition.js';
-import { VehiclePresence } from '../core/VehiclePresence.js';
-import { VehicleType } from '../core/VehicleType.js';
-import { Position } from '../core/Position.js';
+} from '../core/vehicles/AvatarVehicleDismountPosition.js';
+import { VehiclePresence } from '../core/vehicles/VehiclePresence.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
+import { Position } from '../core/document/Position.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.80 — Vehicle Dismount Position Resolution, core/AvatarVehicleDismountPosition.js.
+// 0.9.80 — Vehicle Dismount Position Resolution, core/vehicles/AvatarVehicleDismountPosition.js.
 //
 //   Section A: deterministic destination — same input, same output
 //   Section B: bicycle/motorcycle resolution — the exact candidate each produces
@@ -68,7 +68,7 @@ async function runTests() {
     {
         // 0.9.668 — a MOTORCYCLE resolves identically to a BICYCLE at the
         // same position, sharing the exact same offset (see
-        // core/AvatarVehicleDismountPosition.js's own 0.9.668 header).
+        // core/vehicles/AvatarVehicleDismountPosition.js's own 0.9.668 header).
         const vehicle = new VehiclePresence({ id: 'vehicle:1:0,0', type: VehicleType.MOTORCYCLE, position: new Position(5, 1.2, 7) });
         const result = resolveAvatarVehicleDismountPosition(vehicle);
         assert(result instanceof Position, '5b. a valid motorcycle produces a Position instance');
@@ -79,7 +79,7 @@ async function runTests() {
     {
         // 0.9.669 — a CAR resolves identically to a BICYCLE/MOTORCYCLE at
         // the same position, sharing the exact same offset (see
-        // core/AvatarVehicleDismountPosition.js's own 0.9.669 header).
+        // core/vehicles/AvatarVehicleDismountPosition.js's own 0.9.669 header).
         const vehicle = new VehiclePresence({ id: 'vehicle:1:0,0', type: VehicleType.CAR, position: new Position(5, 1.2, 7) });
         const result = resolveAvatarVehicleDismountPosition(vehicle);
         assert(result instanceof Position, '5f. a valid car produces a Position instance');
@@ -90,7 +90,7 @@ async function runTests() {
     {
         // A DRONE resolves identically to a BICYCLE/MOTORCYCLE/CAR at the
         // same position, sharing the exact same offset (see
-        // core/AvatarVehicleDismountPosition.js's own header) — a
+        // core/vehicles/AvatarVehicleDismountPosition.js's own header) — a
         // ground-level candidate position, the same as any other vehicle
         // this file has a rule for. Whether it is actually safe to
         // dismount a currently-airborne drone there is a mount-state
@@ -127,7 +127,7 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         // The vehicle's own Y is a nonzero terrain sample
-        // (core/VehiclePlacement.js) — proving the result does not
+        // (core/vehicles/VehiclePlacement.js) — proving the result does not
         // blindly copy it is the entire point of this section.
         const vehicle = bicycleAt(3, 17.5, 9);
         const result = resolveAvatarVehicleDismountPosition(vehicle);
@@ -217,7 +217,7 @@ async function runTests() {
     // Section I — architectural regression
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../core/AvatarVehicleDismountPosition.js', import.meta.url);
+        const sourceUrl = new URL('../core/vehicles/AvatarVehicleDismountPosition.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -241,15 +241,15 @@ async function runTests() {
             'localStorage', 'StorageProvider', 'fetch(', 'WebSocket'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `25. core/AvatarVehicleDismountPosition.js's own code never references "${term}" — a pure spatial resolver only, never mount-state/transition/vehicle-lookup/terrain-sampling/collision/input/rendering/persistence/networking`);
+            assert(!codeOnly.includes(term), `25. core/vehicles/AvatarVehicleDismountPosition.js's own code never references "${term}" — a pure spatial resolver only, never mount-state/transition/vehicle-lookup/terrain-sampling/collision/input/rendering/persistence/networking`);
         }
     }
     {
-        const exportsModule = await import('../core/AvatarVehicleDismountPosition.js');
+        const exportsModule = await import('../core/vehicles/AvatarVehicleDismountPosition.js');
         const exportedNames = Object.keys(exportsModule).sort();
         assert(
             JSON.stringify(exportedNames) === JSON.stringify(['BICYCLE_DISMOUNT_OFFSET_X', 'resolveAvatarVehicleDismountPosition']),
-            '26. core/AvatarVehicleDismountPosition.js exports exactly the offset constant and the one resolver function — nothing else'
+            '26. core/vehicles/AvatarVehicleDismountPosition.js exports exactly the offset constant and the one resolver function — nothing else'
         );
     }
 
@@ -258,7 +258,7 @@ async function runTests() {
     // from its CURRENT `position`, never its `spawnPosition`.
     // -------------------------------------------------------------
     {
-        const { VehicleInstance } = await import('../core/VehicleInstance.js');
+        const { VehicleInstance } = await import('../core/vehicles/VehicleInstance.js');
 
         // A VehicleInstance whose position has diverged from its
         // spawnPosition — exactly what riding a mounted bicycle
@@ -280,7 +280,7 @@ async function runTests() {
         // A VehicleInstance that has never moved — position still equals
         // spawnPosition — resolves identically to the pre-0.9.117
         // VehiclePresence-only behavior. Stationary regression.
-        const { VehicleInstance } = await import('../core/VehicleInstance.js');
+        const { VehicleInstance } = await import('../core/vehicles/VehicleInstance.js');
         const stationary = new VehicleInstance({
             id: 'vehicle:1:0,0', type: VehicleType.BICYCLE,
             spawnPosition: new Position(5, 1.2, 7)
@@ -292,7 +292,7 @@ async function runTests() {
     {
         // A DRONE VehicleInstance resolves a real Position, exactly like
         // a DRONE VehiclePresence already does (Section E).
-        const { VehicleInstance } = await import('../core/VehicleInstance.js');
+        const { VehicleInstance } = await import('../core/vehicles/VehicleInstance.js');
         const instance = new VehicleInstance({ id: 'vehicle:1:0,0', type: VehicleType.DRONE, spawnPosition: new Position(1, 1, 1) });
         assert(resolveAvatarVehicleDismountPosition(instance) instanceof Position,
             '32. a DRONE VehicleInstance resolves to a real Position, exactly like a DRONE VehiclePresence already does');

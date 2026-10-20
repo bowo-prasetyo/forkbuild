@@ -3,8 +3,8 @@ import * as THREE from 'three';
 import { makeNightGlowing } from '../renderer/NightGlowMaterial.js';
 import { BrickRenderer } from '../renderer/BrickRenderer.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
 import { assert } from './support/Assert.js';
 
 // Standalone brick meshes (plaza exhibits, claimed builds, structure

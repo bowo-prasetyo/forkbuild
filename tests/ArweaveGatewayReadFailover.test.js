@@ -1,9 +1,9 @@
 
-import { ArweaveGatewayConfiguration } from '../core/ArweaveGatewayConfiguration.js';
+import { ArweaveGatewayConfiguration } from '../core/networks/ArweaveGatewayConfiguration.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { ArweaveGatewayFailoverContentStore } from '../content/ArweaveGatewayFailoverContentStore.js';
 import { ContentUnavailableError } from '../content/IpfsContentStore.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { ArweaveWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js';
 import { ArweaveGatewayFailoverWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js';
 import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
@@ -11,6 +11,14 @@ import { composeArweaveDecentralizedWorldEncounterMaterialSource } from '../appl
 import { mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource as source } from './support/SourceText.js';
+
+// Whether `text` names a URL whose origin is `origin`, compared as parsed
+// URLs rather than as a substring of the text.
+function namesOrigin(text, origin) {
+    return (String(text).match(/https?:\/\/[^\s'"`)]+/g) || []).some((url) => {
+        try { return new URL(url).origin === origin; } catch { return false; }
+    });
+}
 
 // 0.9.440 — Arweave Gateway Read Failover.
 //
@@ -20,7 +28,7 @@ import { readSource as source } from './support/SourceText.js';
 // the resilience benefit with none of fan-out's complexity. This file
 // covers the real production change that audit recommended:
 //
-//   core/ArweaveGatewayConfiguration.js — `gatewayUrl` (a string) OR
+//   core/networks/ArweaveGatewayConfiguration.js — `gatewayUrl` (a string) OR
 //     `gatewayUrls` (a non-empty, ordered array) — never both — with the
 //     single-string shape remaining exactly a one-element list.
 //   content/ArweaveGatewayFailoverContentStore.js /
@@ -250,7 +258,7 @@ async function run() {
         });
         const store = new ArweaveGatewayFailoverContentStore({ gatewayUrls: [A, B, C], signer: makeFakeArweaveSigner(), fetchImpl });
         const error = await expectRejects(store.get(arReference), 'E1. get() rejects once every configured gateway has failed', ContentUnavailableError);
-        assert(error.message.includes(C), 'E2. the propagated error names the LAST gateway tried, not the first — the failure a caller sees reflects the final attempt');
+        assert(namesOrigin(error.message, C), 'E2. the propagated error names the LAST gateway tried, not the first — the failure a caller sees reflects the final attempt');
 
         const resolver = new ArweaveGatewayFailoverWorldEncounterMaterialResolver({ gatewayUrls: [A, B], fetchImpl: makeMultiGatewayFetch({ [A]: { reject: true }, [B]: { reject: true, rejectMessage: 'b is down' } }).fetchImpl });
         await expectRejects(resolver.retrieveByUri(arUri), 'E3. retrieveByUri() rejects once every configured gateway genuinely fails — never silently returns null for a real network failure');

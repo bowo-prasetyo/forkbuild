@@ -1,11 +1,11 @@
 import { EventBus } from '../../core/events/EventBus.js';
-import { DocumentOperationCausalGapDetector } from '../../core/DocumentOperationCausalGapDetector.js';
+import { DocumentOperationCausalGapDetector } from '../../core/collaboration/DocumentOperationCausalGapDetector.js';
 
 const GAP_OBSERVED_EVENT = 'DocumentOperationCausalGapObserved';
 
 // 0.9.229 — Causal Gap Observation at the Propagation Boundary.
 //
-// 0.9.228 (`core/DocumentOperationCausalGapDetector.js`) made causal
+// 0.9.228 (`core/collaboration/DocumentOperationCausalGapDetector.js`) made causal
 // completeness QUERYABLE — `detect()` answers, for one operation's own
 // predecessor list, whether this replica currently knows every predecessor
 // it names. But it is only ever exercised directly, by a caller that
@@ -32,7 +32,7 @@ const GAP_OBSERVED_EVENT = 'DocumentOperationCausalGapObserved';
 // and never gates the OTHER subscriber's own call to `apply()`.
 //
 // A causal gap is an observation, not an application decision — the same
-// restraint `core/DocumentOperationCausalGapDetector.js`'s own header
+// restraint `core/collaboration/DocumentOperationCausalGapDetector.js`'s own header
 // already names. This class adds no new vocabulary on top of
 // `CausalGapStatus` (`NO_GAP`/`GAP`) and no lifecycle: no `WAITING`, no
 // `BLOCKED`, no `PENDING`, no `RECOVERING`. It only makes the existing
@@ -46,10 +46,10 @@ const GAP_OBSERVED_EVENT = 'DocumentOperationCausalGapObserved';
 // detecting its own gap would risk B's own identity accidentally
 // satisfying its own predecessor reference in some future, more exotic
 // causal shape — `detect()`'s own contract already forbids an operation
-// naming itself (`core/DocumentOperationEnvelope.js#isValidCausalPredecessorList()`),
+// naming itself (`core/collaboration/DocumentOperationEnvelope.js#isValidCausalPredecessorList()`),
 // but this ordering is what keeps that guarantee meaningful for the
 // actual receive sequence, not merely for the pure, single-call unit
-// tests `core/DocumentOperationCausalGapDetector.js`'s own suite already
+// tests `core/collaboration/DocumentOperationCausalGapDetector.js`'s own suite already
 // covers.
 //
 // The result descriptor is deliberately small and flat:
@@ -66,7 +66,7 @@ const GAP_OBSERVED_EVENT = 'DocumentOperationCausalGapObserved';
 //
 // Failure isolation. `causalGapDetector.record()` throws for a genuine
 // contract violation (the SAME operationId recorded twice with a
-// DIFFERENT predecessor set — see `core/DocumentOperationCausality.js#record()`'s
+// DIFFERENT predecessor set — see `core/collaboration/DocumentOperationCausality.js#record()`'s
 // own header). That should never happen for a well-behaved sender once
 // ReplayGuard has already deduplicated `operationId`, but this class does
 // not get to assume a well-behaved sender, a bug-free detector, or a

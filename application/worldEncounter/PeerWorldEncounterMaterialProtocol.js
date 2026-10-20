@@ -1,4 +1,4 @@
-import { WorldEncounterKind } from '../../core/WorldEncounter.js';
+import { WorldEncounterKind } from '../../core/world/WorldEncounter.js';
 
 // 0.9.23 — Peer World Encounter Material Source.
 //
@@ -26,7 +26,7 @@ import { WorldEncounterKind } from '../../core/WorldEncounter.js';
 // module introduces no wire state whose only purpose would be to describe
 // absence.
 //
-// `encounterKind` IS ALWAYS `core/WorldEncounter.js`'s OWN
+// `encounterKind` IS ALWAYS `core/world/WorldEncounter.js`'s OWN
 // `WorldEncounterKind.PUBLICATION`/`AVATAR` — NEVER A THIRD VALUE OF THIS
 // MODULE'S OWN INVENTION. Reused, never re-declared, so a future third
 // encounter kind never has to be taught to two separate vocabularies.

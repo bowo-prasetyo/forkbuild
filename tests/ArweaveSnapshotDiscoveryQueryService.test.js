@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 
 import { ArweaveSnapshotDiscoveryQueryService } from '../application/arweave/ArweaveSnapshotDiscoveryQueryService.js';
-import { describeSnapshotDiscoveryEnvelope, SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../core/SnapshotDiscoveryEnvelope.js';
+import { describeSnapshotDiscoveryEnvelope, SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../core/publication/SnapshotDiscoveryEnvelope.js';
 import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
 import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
 import { computeContentHash } from '../serializer/contentHash.js';
@@ -372,7 +372,7 @@ async function run() {
         assert(!/\brank|\bsort\(|\.sort\b/i.test(codeOnly), '40. no ranking or sorting of candidates is performed');
         assert(!/dedup|Set\(\)/i.test(codeOnly), '41. no deduplication (across transactions or across sources) is performed by this file');
         assert(!codeOnly.includes('DecentralizedSnapshotResolver'), '42. never imports the resolver it feeds — resolution stays entirely the caller\'s own, later concern');
-        assert(codeOnly.includes("import { parseSnapshotDiscoveryEnvelope, snapshotCandidateFromEnvelope } from '../../core/SnapshotDiscoveryEnvelope.js';"), '43. the ONE envelope import is the Snapshot vocabulary, unmodified');
+        assert(codeOnly.includes("import { parseSnapshotDiscoveryEnvelope, snapshotCandidateFromEnvelope } from '../../core/publication/SnapshotDiscoveryEnvelope.js';"), '43. the ONE envelope import is the Snapshot vocabulary, unmodified');
 
         console.log('✓ Section J: source-boundary audit confirms this file resolves no Snapshot material, calculates no hash, uploads no content, publishes no announcement, queries no Nostr, and performs no walking-distance filtering, ranking, or deduplication of any kind');
     }

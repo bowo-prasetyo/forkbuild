@@ -1,6 +1,6 @@
 import { register } from 'node:module';
 
-import { ArweaveGatewayConfiguration, DEFAULT_ARWEAVE_GATEWAY_URL } from '../core/ArweaveGatewayConfiguration.js';
+import { ArweaveGatewayConfiguration, DEFAULT_ARWEAVE_GATEWAY_URL } from '../core/networks/ArweaveGatewayConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { ArweaveGatewayConfigurationStore } from '../storage/ArweaveGatewayConfigurationStore.js';
 import { SetArweaveGatewayConfigurationUseCase } from '../application/settings/SetArweaveGatewayConfigurationUseCase.js';
@@ -9,9 +9,9 @@ import { ArweaveGatewayFailoverContentStore } from '../content/ArweaveGatewayFai
 import { ArweaveWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js';
 import { ArweaveGatewayFailoverWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js';
 import { ContentUnavailableError } from '../content/IpfsContentStore.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { computeContentHash } from '../serializer/contentHash.js';
-import { WorldEncounterKind } from '../core/WorldEncounter.js';
+import { WorldEncounterKind } from '../core/world/WorldEncounter.js';
 import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
 import { composeSnapshotDistributionRuntime } from '../application/snapshot/SnapshotDistributionRuntimeComposition.js';
 import { composeArweaveDecentralizedWorldEncounterMaterialSource } from '../application/worldEncounter/DecentralizedWorldEncounterMaterialRuntimeComposition.js';
@@ -619,7 +619,7 @@ async function run() {
         const failoverSources = await Promise.all([
             source('content/ArweaveGatewayFailoverContentStore.js'),
             source('application/worldEncounter/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js'),
-            source('core/ArweaveGatewayConfiguration.js')
+            source('core/networks/ArweaveGatewayConfiguration.js')
         ]);
         for (const src of failoverSources) {
             const executable = src.replace(/^\s*\/\/.*$/gm, '');

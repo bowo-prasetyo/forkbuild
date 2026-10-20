@@ -1,5 +1,5 @@
 import { BaseNetworkObservationState } from './BaseNetworkObservationState.js';
-import { message } from '../../../core/Message.js';
+import { message } from '../../../core/app/Message.js';
 
 const STATE_LABELS = {
     [BaseNetworkObservationState.OBSERVED]: message('baseAccountObservation.baseAccountObserved'),

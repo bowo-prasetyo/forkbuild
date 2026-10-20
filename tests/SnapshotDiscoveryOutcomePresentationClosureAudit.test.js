@@ -424,14 +424,14 @@ async function runTests() {
 
         // PlaceNamingPanel.js's own "Nobody has published..." empty state
         // looked similar at first grep, but its `namingView` prop is
-        // documented, live, as core/PlaceNamingView.js#namingView()'s own
+        // documented, live, as core/world/PlaceNamingView.js#namingView()'s own
         // shape — a LOCAL, pure view over already-known claims, never a
         // network search() result that can itself fail. "Nobody has
         // published a naming claim for this place yet" is an accurate
         // statement about local knowledge, the same category of honesty
         // this codebase already draws elsewhere — ruled out, not a match.
         const placeNamingPanelSource = withEnglish(await readSource('ui/components/PlaceNamingPanel.js'));
-        assert(/core\/PlaceNamingView\.js#namingView\(\)/.test(placeNamingPanelSource),
+        assert(/core\/world\/PlaceNamingView\.js#namingView\(\)/.test(placeNamingPanelSource),
             '47. PlaceNamingPanel.js\'s namingView is documented as a local, pure view — not a network discovery result, ruled OUT as a match');
 
         // DecentralizedPublicationsView.js's "Nothing cataloged yet." empty

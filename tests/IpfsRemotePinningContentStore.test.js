@@ -2,7 +2,7 @@ import { IpfsRemotePinningContentStore } from '../content/IpfsRemotePinningConte
 import { IpfsGatewayContentStore } from '../content/IpfsGatewayContentStore.js';
 import { HttpPinningProvider, PinningRejectedError } from '../content/HttpPinningProvider.js';
 import { ContentUnavailableError } from '../content/IpfsContentStore.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { assert } from './support/Assert.js';
 

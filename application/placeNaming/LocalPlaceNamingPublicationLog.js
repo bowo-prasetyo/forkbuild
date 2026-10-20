@@ -18,7 +18,7 @@ const STORAGE_KEY_PREFIX = 'place-naming-publication-log:';
 // known about this for a while" — every time an old, already-known claim
 // happened to be re-delivered.
 //
-// Deliberately NEVER read by core/PlaceNamingView.js#namingView() and
+// Deliberately NEVER read by core/world/PlaceNamingView.js#namingView() and
 // NEVER allowed to change a naming view's ranking — see this milestone's
 // own docs/Roadmap.md entry, "Deliberately excluded": freshness is
 // preserved for a FUTURE policy to consume, not wired into 0.5.2's

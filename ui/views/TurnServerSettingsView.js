@@ -5,7 +5,7 @@ import { t } from '../i18n/i18n.js';
 
 // 0.9.456 — TURN Server Settings UI.
 //
-// 0.9.453 (contract audit) -> 0.9.454 (core/TurnServerConfiguration.js +
+// 0.9.453 (contract audit) -> 0.9.454 (core/networks/TurnServerConfiguration.js +
 // storage/TurnServerConfigurationStore.js + application/
 // TurnServerConfigurationProvider.js) -> 0.9.455 (composition into
 // WebRtcPeerConnectionProvider's own resolvedIceServers, ui/main.js) built a
@@ -67,7 +67,7 @@ import { t } from '../i18n/i18n.js';
 // `TurnServerConfiguration`'s own job, never re-implemented here), one
 // username `<input>`, and one password-style credential `<input>` — never a
 // dynamic repeatable-input list of independently-credentialed servers (see
-// core/TurnServerConfiguration.js's own header, "one shared credential
+// core/networks/TurnServerConfiguration.js's own header, "one shared credential
 // pair").
 //
 // THE CREDENTIAL IS NEVER SHOWN IN DIAGNOSTIC TEXT. This view's own
@@ -111,7 +111,7 @@ import { t } from '../i18n/i18n.js';
 // no OAuth/REST credential acquisition, no per-connection credentials, no
 // multiple credential pairs, no TURN provider registries, no generic
 // ICE-server configuration UI, no WebRTC diagnostics, no connection-quality
-// indicators — see core/TurnServerConfiguration.js's own header and this
+// indicators — see core/networks/TurnServerConfiguration.js's own header and this
 // milestone's own request for the full list.
 export default {
     name: 'TurnServerSettingsView',

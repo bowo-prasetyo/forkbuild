@@ -1,7 +1,7 @@
 // @environment browser
 import { createApp, nextTick, reactive } from 'vue';
 import StarterJobCard from '../ui/components/StarterJobCard.js';
-import { StarterCardStage } from '../core/StarterJob.js';
+import { StarterCardStage } from '../core/challenge/StarterJob.js';
 import { t } from '../ui/i18n/i18n.js';
 import { assert } from './support/Assert.js';
 

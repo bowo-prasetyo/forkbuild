@@ -7,7 +7,7 @@
 // residents and other players (audio/CreatureSoundSynth.js, and the same
 // vehicle sounds, placed where each rider is) and edits
 // (audio/EditorSoundSynth.js), and the music under them all
-// (audio/MusicPlayer.js, core/MusicScore.js), in the mood the view asks for.
+// (audio/MusicPlayer.js, core/app/MusicScore.js), in the mood the view asks for.
 // Every sound is synthesized from noise, oscillators and rendered drops
 // (audio/RainSynth.js), so nothing is downloaded and there are no audio files
 // to license. What to play comes from the services in application/; these
@@ -17,17 +17,17 @@
 // user gesture: browsers refuse to start audio before one. While the page is
 // hidden or sound is muted the context is suspended, so it costs no CPU.
 
-import { AVATAR_SOUND_CUE } from '../core/AvatarSoundCues.js';
+import { AVATAR_SOUND_CUE } from '../core/avatar/AvatarSoundCues.js';
 import { playFootstep, playJump, playLanding } from './AvatarSoundSynth.js';
 import { VehicleEngineVoice, hasEngineVoice } from './VehicleEngineVoice.js';
-import { CREATURE_SOUND_CUE } from '../core/CreatureSoundCues.js';
+import { CREATURE_SOUND_CUE } from '../core/app/CreatureSoundCues.js';
 import {
     playAnimalCall, playAnimalStep, playCatchOrRelease, playResidentGreet, playResidentSpeech, playResidentStep
 } from './CreatureSoundSynth.js';
 import { playEditorSound, hasEditorSound } from './EditorSoundSynth.js';
 import { playMount, playDismount, playBrake } from './VehicleEventSynth.js';
 import { MusicPlayer } from './MusicPlayer.js';
-import { MUSIC_MOOD } from '../core/MusicScore.js';
+import { MUSIC_MOOD } from '../core/app/MusicScore.js';
 import { dropRandom, renderDropBed, renderDropBank, playDrop } from './RainSynth.js';
 
 const LAYERS = ['wind', 'birds', 'insects', 'water', 'stream', 'leaves', 'pines', 'spring', 'rain', 'roof'];
@@ -194,7 +194,7 @@ export class WebAudioSoundscapeProvider {
         this._syncMusic();
     }
 
-    // The music's mood (core/MusicScore.js): the Editor's, or World View's by
+    // The music's mood (core/app/MusicScore.js): the Editor's, or World View's by
     // day or night. It changes at the next phrase.
     setMusicMood(mood) {
         if (!mood) return;
@@ -273,7 +273,7 @@ export class WebAudioSoundscapeProvider {
         }
     }
 
-    // A footstep, jump or landing (core/AvatarSoundCues.js). Dropped unless
+    // A footstep, jump or landing (core/avatar/AvatarSoundCues.js). Dropped unless
     // audio is playing: a suspended context would otherwise play every queued
     // cue at once when it resumes.
     playCue(cue) {
@@ -296,7 +296,7 @@ export class WebAudioSoundscapeProvider {
         }
     }
 
-    // Thunder rolling in the distance (core/Storms.js): a low rumble that swells
+    // Thunder rolling in the distance (core/nature/Storms.js): a low rumble that swells
     // over half a second and rolls away over a few, in uneven rolls, as loud
     // as `thunder.loudness` (0 to 1) says. Never a crack: the storm is always
     // far off. Dropped unless audio is playing.
@@ -332,7 +332,7 @@ export class WebAudioSoundscapeProvider {
         source.stop(now + THUNDER_SECONDS + 0.1);
     }
 
-    // An animal's or resident's sound (core/CreatureSoundCues.js), at the
+    // An animal's or resident's sound (core/app/CreatureSoundCues.js), at the
     // loudness and left/right position the cue carries. Dropped, like every
     // cue, unless audio is playing.
     playCreatureCue(cue) {
@@ -396,7 +396,7 @@ export class WebAudioSoundscapeProvider {
     // Where a placed cue is heard from. In 3D, a PannerNode at the cue's
     // position (HRTF: in front or behind, above or below); its own distance
     // rolloff is off, because the cue's gain already fades with distance
-    // (core/CreatureSoundCues.js#placeSound()). Otherwise, or for a cue with no
+    // (core/app/CreatureSoundCues.js#placeSound()). Otherwise, or for a cue with no
     // position, a stereo pan.
     _placeOutput(level, cue) {
         const context = this._context;
@@ -451,7 +451,7 @@ export class WebAudioSoundscapeProvider {
         }
     }
 
-    // An Editor edit's sound (core/EditorSoundCues.js).
+    // An Editor edit's sound (core/app/EditorSoundCues.js).
     playEditorCue(cue) {
         if (!hasEditorSound(cue) || !this._isPlaying()) {
             return;
@@ -478,7 +478,7 @@ export class WebAudioSoundscapeProvider {
         this._engineVoice.setLoad(this._engine.load);
     }
 
-    // Other riders' engines (core/CreatureSoundCues.js): each
+    // Other riders' engines (core/app/CreatureSoundCues.js): each
     // { id, vehicleType, load, gain, pan, position }, placed like a cue and
     // held until a list leaves it out. A rider who changes vehicle, or a
     // switch between 3D and stereo, gets a fresh voice.

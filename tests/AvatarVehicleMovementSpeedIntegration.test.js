@@ -1,26 +1,26 @@
 import { readFile } from 'node:fs/promises';
 import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
 import { AvatarTreeConstraint } from '../application/avatar/AvatarTreeConstraint.js';
-import { AvatarContinuousMovementIntent } from '../core/AvatarContinuousMovementIntent.js';
-import { AvatarContinuousMovementMode } from '../core/AvatarContinuousMovementMode.js';
-import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
-import { treeCollisionGeometryInRegion } from '../core/TreeCollisionGeometry.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { AVATAR_COLLISION_RADIUS } from '../core/AvatarCollision.js';
-import { VehicleType } from '../core/VehicleType.js';
-import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
+import { AvatarContinuousMovementIntent } from '../core/avatar/AvatarContinuousMovementIntent.js';
+import { AvatarContinuousMovementMode } from '../core/avatar/AvatarContinuousMovementMode.js';
+import { AvatarAnimationState } from '../core/avatar/AvatarAnimationState.js';
+import { treeCollisionGeometryInRegion } from '../core/nature/TreeCollisionGeometry.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { AVATAR_COLLISION_RADIUS } from '../core/avatar/AvatarCollision.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
+import { vehiclePresenceInRegion } from '../core/vehicles/VehiclePlacement.js';
 import {
     AvatarMovementCapabilityKind,
     resolveAvatarVehicleMovementCapability
-} from '../core/AvatarVehicleMovementCapability.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+} from '../core/vehicles/AvatarVehicleMovementCapability.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
-import { Position } from '../core/Position.js';
+import { Position } from '../core/document/Position.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
@@ -58,7 +58,7 @@ import { assert } from './support/Assert.js';
 //              branching (VehicleType.BICYCLE/MOTORCYCLE/CAR/DRONE, or
 //              a movementKind-branched speed multiplier) anywhere in
 //              application/avatar/AvatarMovementController.js or
-//              core/AvatarMovementSimulation.js
+//              core/avatar/AvatarMovementSimulation.js
 //
 // Central architectural claim under test throughout: movement
 // CAPABILITY, never vehicle IDENTITY, controls movement behavior.
@@ -68,13 +68,13 @@ import { assert } from './support/Assert.js';
 // motorcycle, a car, or a drone exists. See docs/Roadmap.md, 0.9.86.
 //
 // 0.9.87 note: Section C below now asserts BICYCLE < MOTORCYCLE < CAR
-// (core/AvatarVehicleMovementCapability.js now hands each its own
+// (core/vehicles/AvatarVehicleMovementCapability.js now hands each its own
 // `movementSpeed`), superseding this file's own original "all three
 // produce byte-identical positions" assertion. Section H's own
 // architectural regression sweep is otherwise unchanged and still
 // passes unmodified — 0.9.87 changed zero lines in
 // application/avatar/AvatarMovementController.js or
-// core/AvatarMovementSimulation.js, exactly as this milestone's own
+// core/avatar/AvatarMovementSimulation.js, exactly as this milestone's own
 // brief requires. See docs/Roadmap.md, 0.9.87.
 
 function buildRegistry() {
@@ -138,7 +138,7 @@ function findRealVehicle() {
     const vehicles = vehiclePresenceInRegion(DEFAULT_WORLD_SEED, -500, -500, 500, 500);
     const vehicle = vehicles.find((v) => v.id === REAL_VEHICLE_ID);
     if (!vehicle) {
-        throw new Error(`Test fixture vehicle ${REAL_VEHICLE_ID} not found under DEFAULT_WORLD_SEED — has core/VehiclePlacement.js changed?`);
+        throw new Error(`Test fixture vehicle ${REAL_VEHICLE_ID} not found under DEFAULT_WORLD_SEED — has core/vehicles/VehiclePlacement.js changed?`);
     }
     return vehicle;
 }
@@ -288,7 +288,7 @@ async function runTests() {
         // A SHORT burst only — dismounting below relies on
         // `AvatarVehicleInteractionController#_findMountedVehicle()`
         // still finding the mounted vehicle within
-        // core/AvatarVehicleProximity.js's own VEHICLE_INTERACTION_RADIUS
+        // core/vehicles/AvatarVehicleProximity.js's own VEHICLE_INTERACTION_RADIUS
         // (1.5 world units) of the avatar's CURRENT position (see that
         // controller's own "known boundary" header) — riding far enough
         // away first would make the next dismount attempt a legitimate
@@ -316,7 +316,7 @@ async function runTests() {
         // 0.9.91 note: this used to assert `mountedDistance > walkDistance`
         // — true when GROUND_VEHICLE reached its own movementSpeed the
         // instant W was pressed (0.9.86-0.9.90's own world). BICYCLE is
-        // now RATE_LIMITED (core/AvatarVehicleMovementCapability.js,
+        // now RATE_LIMITED (core/vehicles/AvatarVehicleMovementCapability.js,
         // 0.9.90): starting from rest, it only overtakes WALK's own
         // already-at-full-speed pace after ramping for a couple of
         // seconds — far longer than the SHORT burst this block is
@@ -365,7 +365,7 @@ async function runTests() {
         // seconds respectively. Over a SHORT window (this assertion's
         // original 2s), MOTORCYCLE's own faster acceleration can
         // legitimately put it ahead of CAR despite CAR's higher eventual
-        // top speed — see core/AvatarVehicleMovementCapability.js's own
+        // top speed — see core/vehicles/AvatarVehicleMovementCapability.js's own
         // 0.9.90 header ("acceleration is an independent dimension from
         // movementSpeed") and
         // tests/AvatarVehicleAccelerationStateIntegration.test.js's own
@@ -455,7 +455,7 @@ async function runTests() {
         // measured burst) sidesteps that deficit entirely — once
         // cruising, resolveMovementSpeed() is an exact no-op every tick
         // (currentSpeed === targetSpeed, see
-        // core/AvatarMovementAccelerationSimulation.js's own header), so
+        // core/avatar/AvatarMovementAccelerationSimulation.js's own header), so
         // the measured distance is exactly `targetSpeed * measureTime`
         // for both, and the ratio between them is exactly the ratio of
         // their own target speeds — RUN_SPEED_MULTIPLIER, 2, verbatim.
@@ -505,7 +505,7 @@ async function runTests() {
     // Section F — AERIAL_VEHICLE/DRONE now moves, and running doubles
     // its own target speed exactly like it does for any other vehicle
     // (Aerial Movement Pipeline milestone — see
-    // core/AvatarVehicleMovementCapability.js's own "AERIAL_VEHICLE Is
+    // core/vehicles/AvatarVehicleMovementCapability.js's own "AERIAL_VEHICLE Is
     // Now A Real, Supported Capability" header)
     // -------------------------------------------------------------
     {
@@ -581,10 +581,10 @@ async function runTests() {
         assert(codeOnly.includes('_resolvedMovementSpeed') && codeOnly.includes('movementSpeed'),
             '26. application/avatar/AvatarMovementController.js does expose the _resolvedMovementSpeed() seam this milestone exists to add');
         assert(!/\*\s*2\b|\*=\s*2\b/.test(codeOnly),
-            '27. application/avatar/AvatarMovementController.js contains no hardcoded "double the speed" arithmetic of its own — running\'s own multiplier still lives entirely in core/AvatarMovementSimulation.js');
+            '27. application/avatar/AvatarMovementController.js contains no hardcoded "double the speed" arithmetic of its own — running\'s own multiplier still lives entirely in core/avatar/AvatarMovementSimulation.js');
     }
     {
-        const sourceUrl = new URL('../core/AvatarMovementSimulation.js', import.meta.url);
+        const sourceUrl = new URL('../core/avatar/AvatarMovementSimulation.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -592,12 +592,12 @@ async function runTests() {
             .join('\n');
 
         assert(!/VehicleType|BICYCLE|MOTORCYCLE|\bCAR\b|DRONE|GROUND_VEHICLE|AERIAL_VEHICLE/.test(codeOnly),
-            '28. core/AvatarMovementSimulation.js never references a vehicle or a capability kind of any kind — it only ever receives a plain movementSpeed number, exactly as it already receives every other parameter');
+            '28. core/avatar/AvatarMovementSimulation.js never references a vehicle or a capability kind of any kind — it only ever receives a plain movementSpeed number, exactly as it already receives every other parameter');
         assert(codeOnly.includes('movementSpeed'),
-            '29. core/AvatarMovementSimulation.js does expose the movementSpeed parameter this milestone adds');
+            '29. core/avatar/AvatarMovementSimulation.js does expose the movementSpeed parameter this milestone adds');
     }
     {
-        const sourceUrl = new URL('../core/AvatarVehicleMovementCapability.js', import.meta.url);
+        const sourceUrl = new URL('../core/vehicles/AvatarVehicleMovementCapability.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -605,7 +605,7 @@ async function runTests() {
             .join('\n');
 
         assert(!codeOnly.includes('AvatarMovementSimulation') && !codeOnly.includes('AvatarMovementController'),
-            '30. core/AvatarVehicleMovementCapability.js still never imports core/AvatarMovementSimulation.js or application/avatar/AvatarMovementController.js — the base WALK speed it carries is a documented, independent constant, never a cross-module coupling');
+            '30. core/vehicles/AvatarVehicleMovementCapability.js still never imports core/avatar/AvatarMovementSimulation.js or application/avatar/AvatarMovementController.js — the base WALK speed it carries is a documented, independent constant, never a cross-module coupling');
     }
 
     console.log('✅ All Ground Vehicle Movement Speed Capability Integration tests passed.');

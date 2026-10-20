@@ -29,7 +29,7 @@ import { isValidTransferPart } from './ChunkedPeerTransfer.js';
 // by its content hash, not its storage location" (0.2.14): the peer on either end of this
 // protocol needs to know WHAT is being asked for, never WHERE it might
 // also be found. `isValidContentHash()` below is deliberately
-// algorithm-agnostic (core/ContentReference.js already supports more than
+// algorithm-agnostic (core/document/ContentReference.js already supports more than
 // one `algorithm`) — it only rejects the empty string, a non-string, and
 // anything absurdly long, the same "reject something absurd before it
 // reaches a handler" transport hygiene peer/PeerMessage.js's own

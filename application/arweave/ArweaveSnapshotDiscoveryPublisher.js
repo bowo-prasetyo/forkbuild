@@ -1,5 +1,5 @@
-import { describeSnapshotDiscoveryEnvelope, SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../../core/SnapshotDiscoveryEnvelope.js';
-import { snapshotCellTag } from '../../core/NarrowDiscoveryTags.js';
+import { describeSnapshotDiscoveryEnvelope, SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../../core/publication/SnapshotDiscoveryEnvelope.js';
+import { snapshotCellTag } from '../../core/publication/NarrowDiscoveryTags.js';
 import { withTimeout } from '../../utils/withTimeout.js';
 
 const DEFAULT_GATEWAY_URL = 'https://arweave.net';
@@ -23,7 +23,7 @@ const TRANSACTION_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
 //
 // 0.9.497's own capability boundary audit (tests/
 // ArweaveSnapshotDiscoveryCapabilityBoundaryAudit.test.js) proved, live,
-// that Arweave can legitimately carry `core/SnapshotDiscoveryEnvelope.js`
+// that Arweave can legitimately carry `core/publication/SnapshotDiscoveryEnvelope.js`
 // semantics — a real `contentHash`/`locator`/`storage` candidate, placed by
 // `content/ArweaveContentStore.js`, resolves and verifies correctly through
 // the existing, UNMODIFIED `application/snapshot/DecentralizedSnapshotResolver.js` —
@@ -190,7 +190,7 @@ const TRANSACTION_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
 // successful `publish()` means only "the gateway accepted this for
 // broadcast" — never that the announced locator actually serves the
 // announced content, never that whoever published it is trusted. See
-// `core/SnapshotDiscoveryEnvelope.js`'s own header, "a self-declared
+// `core/publication/SnapshotDiscoveryEnvelope.js`'s own header, "a self-declared
 // claim, never evidence, never verification."
 //
 // DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
@@ -200,7 +200,7 @@ const TRANSACTION_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
 // - **Any change to `application/arweave/ArweaveAnnouncementPublisher.js`,
 //   `application/arweave/ArweaveTaggedTransactionUpload.js`, `application/
 //   ArweaveGraphqlDiscoveryQueryService.js`, `content/ArweaveContentStore.js`,
-//   or `core/SnapshotDiscoveryEnvelope.js`.** Every one is consumed only
+//   or `core/publication/SnapshotDiscoveryEnvelope.js`.** Every one is consumed only
 //   through its own already-public, already-proven contract.
 // - **A composition-root wiring this class together with `content/
 //   ArweaveContentStore.js` at a real production entry point, or automatic

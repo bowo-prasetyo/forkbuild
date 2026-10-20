@@ -1,4 +1,4 @@
-import { normalizeBuildTags } from '../../core/BuildTags.js';
+import { normalizeBuildTags } from '../../core/document/BuildTags.js';
 
 const SNAPSHOT_KEY_PREFIX = 'snapshot:';
 

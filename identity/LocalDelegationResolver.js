@@ -1,5 +1,5 @@
 import { DelegationResolver } from './DelegationResolver.js';
-import { Delegation } from '../core/Delegation.js';
+import { Delegation } from '../core/publication/Delegation.js';
 
 const DELEGATIONS_KEY = 'forkbuild-delegations';
 

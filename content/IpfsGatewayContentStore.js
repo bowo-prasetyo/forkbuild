@@ -53,7 +53,7 @@ const DEFAULT_TIMEOUT_MS = 5000;
 //   - has() is best-effort and never throws, degrading to `false`
 //
 // This class never validates the retrieved bytes against any expected
-// hash — that discipline belongs, unchanged, to core/ContentReference.js
+// hash — that discipline belongs, unchanged, to core/document/ContentReference.js
 // #verify() and to the callers that already invoke it (application/
 // PublicationResolver.js, application/snapshot/placement/SnapshotPlacementResolver.js). A
 // gateway is one more untrusted source of bytes, structurally no

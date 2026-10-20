@@ -1,6 +1,6 @@
 import { builtWithParts, builderRoute } from './builtWithText.js';
 
-// The friends who built a build with its author (core/BuiltWith.js), each
+// The friends who built a build with its author (core/catalog/BuiltWith.js), each
 // name a link to their page (ui/views/BuilderView.js) when the credit names
 // an identity.
 export default {

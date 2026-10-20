@@ -2,12 +2,12 @@ import { readFile } from 'node:fs/promises';
 import {
     treeCollisionCircleFor, treeCollisionGeometryInRegion,
     COLLISION_OBJECT_KIND, COLLISION_SHAPE, TREE_TRUNK_COLLISION_RADIUS
-} from '../core/TreeCollisionGeometry.js';
-import { naturalFeaturesInRegion, FEATURE_TYPE } from '../core/NaturalFeatureField.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+} from '../core/nature/TreeCollisionGeometry.js';
+import { naturalFeaturesInRegion, FEATURE_TYPE } from '../core/nature/NaturalFeatureField.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.59 — Deterministic World Tree Collision Geometry, core/TreeCollisionGeometry.js.
+// 0.9.59 — Deterministic World Tree Collision Geometry, core/nature/TreeCollisionGeometry.js.
 //
 //   Section A: treeCollisionCircleFor() — per-tree geometry derivation
 //   Section B: treeCollisionGeometryInRegion() — determinism and
@@ -20,7 +20,7 @@ import { assert } from './support/Assert.js';
 //
 // Central architectural claim under test throughout: tree collision
 // geometry is a PURE function of exactly the same deterministic tree
-// placement core/NaturalFeatureField.js already establishes — never a
+// placement core/nature/NaturalFeatureField.js already establishes — never a
 // second, independently-seeded placement decision, and never anything
 // that detects, blocks, or otherwise resolves movement. See docs/Roadmap.md,
 // 0.9.59, for the full milestone story.
@@ -112,7 +112,7 @@ async function runTests() {
         // Every real tree's radius, across the whole [0.7, 1.3) scale
         // range naturalFeaturesInRegion() itself declares, stays well
         // under a tree's visual canopy radius (0.85 at the least, the
-        // narrowest crown core/TreeForm.js grows is wider; deliberately re-stated here as a literal rather than
+        // narrowest crown core/nature/TreeForm.js grows is wider; deliberately re-stated here as a literal rather than
         // imported, matching this codebase's own "never import a
         // renderer constant into core" precedent) — this milestone's
         // own central design claim: a trunk-sized hitbox, never a
@@ -132,7 +132,7 @@ async function runTests() {
     // vocabularies stay exactly one member each.
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../core/TreeCollisionGeometry.js', import.meta.url);
+        const sourceUrl = new URL('../core/nature/TreeCollisionGeometry.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -148,7 +148,7 @@ async function runTests() {
             'localStorage', 'StorageProvider', 'fetch(', 'WebSocket'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `20. core/TreeCollisionGeometry.js's own code never references "${term}" — geometry only, never movement/detection/response/rendering/persistence`);
+            assert(!codeOnly.includes(term), `20. core/nature/TreeCollisionGeometry.js's own code never references "${term}" — geometry only, never movement/detection/response/rendering/persistence`);
         }
     }
     {

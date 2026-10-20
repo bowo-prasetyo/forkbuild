@@ -1,9 +1,9 @@
 import { readFile } from 'node:fs/promises';
 import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
-import { VehicleType } from '../core/VehicleType.js';
-import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
-import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
+import { resolveAvatarVehicleMovementCapability } from '../core/vehicles/AvatarVehicleMovementCapability.js';
+import { AvatarAnimationState } from '../core/avatar/AvatarAnimationState.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
@@ -13,14 +13,14 @@ import { assert } from './support/Assert.js';
 
 // 0.9.91 — Vehicle Acceleration State Integration.
 //
-// 0.9.90 (core/AvatarMovementAccelerationCapability.js +
-// core/AvatarMovementAccelerationSimulation.js) built the acceleration
+// 0.9.90 (core/avatar/AvatarMovementAccelerationCapability.js +
+// core/avatar/AvatarMovementAccelerationSimulation.js) built the acceleration
 // vocabulary and its pure math half, and deliberately stopped short of
 // ever calling it — see that milestone's own closing paragraph, "next: a
 // future milestone integrates this seam into
 // application/avatar/AvatarMovementController.js." This is that milestone: the
 // controller now maintains a transient, SIGNED "current movement speed"
-// between ticks and feeds it through core/AvatarMovementSimulation.js's
+// between ticks and feeds it through core/avatar/AvatarMovementSimulation.js's
 // own newly-wired resolveMovementSpeed() call to approach the active
 // capability's target speed, rather than reaching it in a single tick.
 //
@@ -49,7 +49,7 @@ import { assert } from './support/Assert.js';
 //              acceleration pipeline too (Aerial Movement Pipeline
 //              milestone), reaching its own resolved cruise speed
 //   Section K: architectural regression — the integration seam lives
-//              exactly where core/AvatarMovementSimulation.js's and
+//              exactly where core/avatar/AvatarMovementSimulation.js's and
 //              application/avatar/AvatarMovementController.js's own 0.9.91
 //              headers say it does
 //
@@ -77,7 +77,7 @@ function buildAvatarStack(registry, username) {
 }
 
 // The discrete "never overshoots" recurrence
-// core/AvatarMovementAccelerationSimulation.js#resolveMovementSpeed()
+// core/avatar/AvatarMovementAccelerationSimulation.js#resolveMovementSpeed()
 // itself implements (see that file's own header) — reproduced here,
 // bit-for-bit the same operations in the same order, purely to compute
 // EXPECTED per-tick speeds for this file's own assertions. Never
@@ -126,7 +126,7 @@ async function runTests() {
     // Section A — WALK regression
     // -------------------------------------------------------------
     {
-        // WALK's own resolved acceleration is INSTANT/0 (core/AvatarMovementAccelerationCapability.js)
+        // WALK's own resolved acceleration is INSTANT/0 (core/avatar/AvatarMovementAccelerationCapability.js)
         // — every tick still reaches its target speed immediately, byte-
         // for-byte the same as every milestone before this one. Two
         // otherwise-identical controllers — one that never hears about a
@@ -257,7 +257,7 @@ async function runTests() {
         // CAR: maximum 12, acceleration 4. MOTORCYCLE: maximum 9,
         // acceleration 5. Over a SHORT window, MOTORCYCLE's own faster
         // acceleration lets it pull ahead of CAR despite CAR's higher
-        // eventual top speed — see core/AvatarVehicleMovementCapability.js's
+        // eventual top speed — see core/vehicles/AvatarVehicleMovementCapability.js's
         // own 0.9.90 header, "acceleration is an independent dimension
         // from movementSpeed."
         const { avatarPresenceSession: motorcycleShortSession } = buildAvatarStack(registry, 'accel-e1-motorcycle-short');
@@ -309,7 +309,7 @@ async function runTests() {
         controller.keyUp('w');
 
         // Now release W entirely and observe deceleration toward 0 — the
-        // exact SAME acceleration rate, per core/AvatarMovementAccelerationSimulation.js's
+        // exact SAME acceleration rate, per core/avatar/AvatarMovementAccelerationSimulation.js's
         // own "no separate braking rate" design (0.9.90's own header).
         const ticks = 80; // 4s — comfortably past the 3s needed to decay 12 -> 0 at 4 units/second^2
         const observed = tickSpeeds(controller, avatarPresenceSession, null, ticks, DT);
@@ -515,7 +515,7 @@ async function runTests() {
 
         // Vehicle-to-vehicle (via an intermediate WALK stop, since this
         // codebase still has no direct vehicle-to-vehicle mount —
-        // core/AvatarVehicleMovementCapability.js's own 0.9.84 header):
+        // core/vehicles/AvatarVehicleMovementCapability.js's own 0.9.84 header):
         // BICYCLE (ramped up) -> WALK -> BICYCLE again. The SECOND
         // bicycle ride's own first tick must be a fresh ramp value too —
         // no leakage survives an intermediate capability, however brief.
@@ -566,7 +566,7 @@ async function runTests() {
     // -------------------------------------------------------------
     // Section J — AERIAL_VEHICLE/DRONE. Aerial Movement Pipeline
     // milestone: AERIAL_VEHICLE is no longer permanently blocked (see
-    // core/AvatarVehicleMovementCapability.js's own "AERIAL_VEHICLE Is
+    // core/vehicles/AvatarVehicleMovementCapability.js's own "AERIAL_VEHICLE Is
     // Now A Real, Supported Capability" header) — DRONE now ramps
     // through this exact same acceleration pipeline, exactly like
     // BICYCLE/MOTORCYCLE/CAR, and mounting it resets transient speed
@@ -621,19 +621,19 @@ async function runTests() {
         assert(!controllerCodeOnly.includes('AvatarMovementAccelerationKind') && !controllerCodeOnly.includes('.kind'),
             '40. application/avatar/AvatarMovementController.js never reads AvatarMovementAccelerationCapability\'s own .kind — the bare acceleration rate alone (always exactly 0 for INSTANT, always > 0 for RATE_LIMITED) already carries the distinction');
         assert(!controllerCodeOnly.includes('AvatarMovementAccelerationSimulation') && !controllerCodeOnly.includes('resolveMovementSpeed'),
-            '41. application/avatar/AvatarMovementController.js never imports core/AvatarMovementAccelerationSimulation.js or calls resolveMovementSpeed() directly — it only ever hands bare numbers to core/AvatarMovementSimulation.js, which is the one place this seam is actually wired in');
+            '41. application/avatar/AvatarMovementController.js never imports core/avatar/AvatarMovementAccelerationSimulation.js or calls resolveMovementSpeed() directly — it only ever hands bare numbers to core/avatar/AvatarMovementSimulation.js, which is the one place this seam is actually wired in');
         assert(controllerCodeOnly.includes('_resolvedAcceleration') && controllerCodeOnly.includes('_currentMovementSpeed'),
             '42. application/avatar/AvatarMovementController.js exposes the _resolvedAcceleration()/_currentMovementSpeed seam this milestone exists to add');
         assert(!/VehicleMovementController/.test(controllerCodeOnly),
             '43. no second, per-vehicle movement controller was introduced — application/avatar/AvatarMovementController.js remains the one movement executor');
 
-        const simulationSource = await readFile(new URL('../core/AvatarMovementSimulation.js', import.meta.url), 'utf8');
+        const simulationSource = await readFile(new URL('../core/avatar/AvatarMovementSimulation.js', import.meta.url), 'utf8');
         assert(simulationSource.includes('AvatarMovementAccelerationSimulation') && simulationSource.includes('resolveMovementSpeed'),
-            '44. core/AvatarMovementSimulation.js now imports and calls resolveMovementSpeed() — this is the "future milestone" tests/AvatarMovementAccelerationSimulation.test.js\'s own header originally named as wiring this seam in');
+            '44. core/avatar/AvatarMovementSimulation.js now imports and calls resolveMovementSpeed() — this is the "future milestone" tests/AvatarMovementAccelerationSimulation.test.js\'s own header originally named as wiring this seam in');
 
-        const capabilitySource = await readFile(new URL('../core/AvatarVehicleMovementCapability.js', import.meta.url), 'utf8');
+        const capabilitySource = await readFile(new URL('../core/vehicles/AvatarVehicleMovementCapability.js', import.meta.url), 'utf8');
         assert(!capabilitySource.includes('_currentMovementSpeed') && !capabilitySource.includes('currentSpeed'),
-            '45. core/AvatarVehicleMovementCapability.js still carries no transient current-speed state of any kind — the capability remains immutable; the controller alone owns transient simulation state');
+            '45. core/vehicles/AvatarVehicleMovementCapability.js still carries no transient current-speed state of any kind — the capability remains immutable; the controller alone owns transient simulation state');
     }
 
     console.log('✅ All Vehicle Acceleration State Integration tests passed.');

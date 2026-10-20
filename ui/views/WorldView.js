@@ -33,7 +33,7 @@ import LandmarkFormModal from '../components/LandmarkFormModal.js';
 import RegionFormModal from '../components/RegionFormModal.js';
 import WorldMembersPanel from '../components/WorldMembersPanel.js';
 import PublicLobbyPanel from '../components/PublicLobbyPanel.js';
-import { worldLobby } from '../../core/LobbyCard.js';
+import { worldLobby } from '../../core/social/LobbyCard.js';
 import WorldPresenceIndicator from '../components/WorldPresenceIndicator.js';
 import WorldCollaboratorIndicator from '../components/WorldCollaboratorIndicator.js';
 import { buildWorldCollaborationRoster } from '../components/WorldCollaborationRoster.js';
@@ -55,11 +55,11 @@ import HistoryTimelinePanel from '../components/HistoryTimelinePanel.js';
 import TouchMovementPad from '../components/TouchMovementPad.js';
 import BreathMeter from '../components/BreathMeter.js';
 import { useMediaQuery, COMPACT_LAYOUT_QUERY, TOUCH_INPUT_QUERY } from '../composables/useMediaQuery.js';
-import { CameraPerspective } from '../../core/CameraPerspective.js';
+import { CameraPerspective } from '../../core/avatar/CameraPerspective.js';
 import { WorldViewNavigationState, WorldViewPrimaryMode } from '../../application/world/WorldViewNavigationState.js';
 import { PlaceNamingDiscoveryMonitor } from '../../application/placeNaming/PlaceNamingDiscoveryMonitor.js';
 import { executeDiscoverPlaceNamingClaimsCommand } from '../../application/placeNaming/DiscoverPlaceNamingClaimsCommand.js';
-import { derivePlaceNamingDiscoveryTag } from '../../core/PlaceNamingDiscoveryEnvelope.js';
+import { derivePlaceNamingDiscoveryTag } from '../../core/world/PlaceNamingDiscoveryEnvelope.js';
 import { usePlaceNamingPanel } from './worldView/usePlaceNamingPanel.js';
 import { useWorldHistoryPanel } from './worldView/useWorldHistoryPanel.js';
 import { useLandmarkAndRegionForms } from './worldView/useLandmarkAndRegionForms.js';
@@ -95,16 +95,16 @@ import { useStarterVillage } from './worldView/useStarterVillage.js';
 import { useLocalAvatarOwner } from './worldView/useLocalAvatarOwner.js';
 import { useNeighbourCount } from './worldView/useNeighbourCount.js';
 import { useSideSystemCount } from './worldView/useSideSystemCount.js';
-import { buildCreditName } from '../../core/BuildCredit.js';
+import { buildCreditName } from '../../core/catalog/BuildCredit.js';
 import { hoverCardTemplate } from './worldView/templates/hoverCard.js';
 import { displayText, errorText, t } from '../i18n/i18n.js';
-import { plotQuery } from '../../core/BuildPlot.js';
+import { plotQuery } from '../../core/world/BuildPlot.js';
 import { useWalkTogether } from './worldView/useWalkTogether.js';
 import WalkTogetherDialog from '../components/walkTogether/WalkTogetherDialog.js';
 import LoginModal from '../components/LoginModal.js';
 import { compassText, spatialContextDescription } from '../i18n/worldText.js';
-import { DAY_CYCLE_SECONDS } from '../../core/DayCycle.js';
-import { SEASON, SEASON_SECONDS } from '../../core/Season.js';
+import { DAY_CYCLE_SECONDS } from '../../core/nature/DayCycle.js';
+import { SEASON, SEASON_SECONDS } from '../../core/nature/Season.js';
 
 // The seasons World View can be kept in, in the year's order.
 const SEASON_OPTIONS = Object.freeze([
@@ -234,7 +234,7 @@ export default {
         // Raw facts for the ACTIVE document, re-read on each refresh and on live
         // membership/presence changes; joined into rows only by worldCollaborationRoster.
         const showMembersPanel = ref(false);
-        // This World's public lobby (core/LobbyCard.js), following the
+        // This World's public lobby (core/social/LobbyCard.js), following the
         // active document like the header does.
         const activeWorldLobby = ref(null);
         const showLobbyPanel = ref(false);
@@ -321,7 +321,7 @@ export default {
             decentralizedPublicationDiscoveryProvider: decentralizedDiscoveryProviderForEnrichment
         });
         const session = worldViewFactory.createSession(registry);
-        // The village at the plaza, standing in every World View (core/StarterVillage.js).
+        // The village at the plaza, standing in every World View (core/challenge/StarterVillage.js).
         const village = useStarterVillage({ session });
         // Whether visitors see someone else's build, counted (useNeighbourCount.js).
         const neighbourCount = useNeighbourCount({ session });
@@ -422,7 +422,7 @@ export default {
         // beside it; empty otherwise.
         const residentFocusTargets = ref([]);
         // Build there for what that resident wondered about
-        // (core/ResidentWish.js): shown on the same terms as the Focus buttons.
+        // (core/world/ResidentWish.js): shown on the same terms as the Focus buttons.
         const residentWish = ref(null);
         const cruiseState = ref(null);
         // The local avatar's swim mode and air, for the air meter and touch pad.
@@ -451,7 +451,7 @@ export default {
 
         // ----------------------------- action surface -------------
 
-        // `message` is text or a message descriptor (core/Message.js).
+        // `message` is text or a message descriptor (core/app/Message.js).
         const feedback = {
             show(message) {
                 feedbackMessage.value = displayText(message);
@@ -855,7 +855,7 @@ export default {
             return pub ? (pub.title || t('worldView.untitled')) : null;
         }
 
-        // One name for whose a build is (core/BuildCredit.js), in the hover card
+        // One name for whose a build is (core/catalog/BuildCredit.js), in the hover card
         // and the inspection alike.
         function creditFor(documentId, documentAuthor = null) {
             const pub = allPublications.value.find((p) => p.documentId === documentId);
@@ -1044,7 +1044,7 @@ export default {
         }
         if (typeof session.setKeptSeason === 'function') session.setKeptSeason(keptSeason.value || null);
         // Lightning doesn't flash for anyone who asks for reduced motion
-        // (core/Storms.js); its thunder is still heard.
+        // (core/nature/Storms.js); its thunder is still heard.
         if (typeof session.setNoFlashes === 'function' && typeof window.matchMedia === 'function') {
             session.setNoFlashes(window.matchMedia('(prefers-reduced-motion: reduce)').matches);
         }
@@ -1076,7 +1076,7 @@ export default {
             editInspectedCopy({ type: 'world', documentId, worldTitle: title.value, worldPosition: null });
         }
 
-        // Build here (core/BuildPlot.js): a new build in the Editor for the spot
+        // Build here (core/world/BuildPlot.js): a new build in the Editor for the spot
         // the avatar stands on (else the camera's), in this World; publishing
         // it stands it here.
         function buildHere() {
@@ -1199,7 +1199,7 @@ export default {
 
         // Build there: a new build of the viewer's own for the spot the resident
         // meant, started from the wish's ready-made structure, the same plot
-        // Build here makes (core/BuildPlot.js). Only ever the viewer's choice.
+        // Build here makes (core/world/BuildPlot.js). Only ever the viewer's choice.
         function buildResidentWish() {
             const wish = residentWish.value;
             if (!wish || !wish.worldDocumentId) return;

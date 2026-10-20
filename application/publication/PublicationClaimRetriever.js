@@ -1,6 +1,6 @@
-import { describePublicationClaimLocator } from '../../core/ForkBuildAppLinks.js';
-import { message } from '../../core/Message.js';
-import { UserFacingError } from '../../core/UserFacingError.js';
+import { describePublicationClaimLocator } from '../../core/app/ForkBuildAppLinks.js';
+import { message } from '../../core/app/Message.js';
+import { UserFacingError } from '../../core/app/UserFacingError.js';
 import { buildArweaveWorldEncounterMaterialResolver } from '../worldEncounter/DecentralizedWorldEncounterMaterialRuntimeComposition.js';
 import { IpfsWorldEncounterMaterialResolver } from '../worldEncounter/IpfsWorldEncounterMaterialResolver.js';
 import { IpfsGatewayContentStore } from '../../content/IpfsGatewayContentStore.js';

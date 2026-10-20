@@ -3,8 +3,8 @@ import { executeSnapshotDistributionCommand } from '../application/snapshot/Snap
 import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
 import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
-import { PlacementRecord } from '../core/PlacementRecord.js';
-import { Position } from '../core/Position.js';
+import { PlacementRecord } from '../core/publication/PlacementRecord.js';
+import { Position } from '../core/document/Position.js';
 import { Publication } from '../publisher/Publication.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
@@ -24,7 +24,7 @@ import { readSource } from './support/SourceText.js';
 // getPlacementInfoForPublication()` to supply either field. This
 // milestone closes both points and nothing else — no new position
 // algorithm, no automatic placement, no change to `application/
-// SnapshotWorldPositionClaim.js`, `core/SnapshotDiscoveryEnvelope.js`, or
+// SnapshotWorldPositionClaim.js`, `core/publication/SnapshotDiscoveryEnvelope.js`, or
 // either discovery publisher.
 //
 // Section A: existing claim acquisition — WorldNavigationSession#

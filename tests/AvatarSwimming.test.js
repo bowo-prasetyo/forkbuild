@@ -1,30 +1,30 @@
-import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { surfaceCategoryAt, SURFACE_CATEGORY } from '../core/TerrainSurface.js';
-import { LAKE_SURFACE_HEIGHT } from '../core/Hydrology.js';
+import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { surfaceCategoryAt, SURFACE_CATEGORY } from '../core/nature/TerrainSurface.js';
+import { LAKE_SURFACE_HEIGHT } from '../core/nature/Hydrology.js';
 import {
     AvatarSwimMode, AVATAR_SWIM_DEPTH, SURFACE_SWIM_FEET_DEPTH, AVATAR_BREATH_HEIGHT, BREATH_CAPACITY_SECONDS,
     SWIM_VERTICAL_SPEED, FORCED_ASCENT_SPEED, BUOYANCY_SPEED,
     deriveAvatarSwimMode, isSwimmableDepth, surfaceSwimFeetHeight, isHeadUnderwater, stepSwimFeetHeight,
     createAvatarBreathState, stepAvatarBreath
-} from '../core/AvatarSwimming.js';
-import { getAvatarPoseOffsets } from '../core/AvatarPoseOffsets.js';
-import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
-import { advanceAvatarSound, createAvatarSoundState, AVATAR_SOUND_CUE, FOOTSTEP_SURFACE } from '../core/AvatarSoundCues.js';
-import { AvatarVerticalState } from '../core/AvatarVerticalState.js';
-import { VEHICLE_MAX_WATER_DEPTH, isVehicleWaterStepAllowed, droneFloorHeight } from '../core/VehicleWaterline.js';
-import { VehicleType } from '../core/VehicleType.js';
-import { VehicleInstance } from '../core/VehicleInstance.js';
-import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
-import { underwaterViewAt, UNDERWATER_VIEW } from '../core/UnderwaterView.js';
+} from '../core/avatar/AvatarSwimming.js';
+import { getAvatarPoseOffsets } from '../core/avatar/AvatarPoseOffsets.js';
+import { AvatarAnimationState } from '../core/avatar/AvatarAnimationState.js';
+import { advanceAvatarSound, createAvatarSoundState, AVATAR_SOUND_CUE, FOOTSTEP_SURFACE } from '../core/avatar/AvatarSoundCues.js';
+import { AvatarVerticalState } from '../core/avatar/AvatarVerticalState.js';
+import { VEHICLE_MAX_WATER_DEPTH, isVehicleWaterStepAllowed, droneFloorHeight } from '../core/vehicles/VehicleWaterline.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
+import { VehicleInstance } from '../core/vehicles/VehicleInstance.js';
+import { resolveAvatarVehicleMovementCapability } from '../core/vehicles/AvatarVehicleMovementCapability.js';
+import { underwaterViewAt, UNDERWATER_VIEW } from '../core/nature/UnderwaterView.js';
 import {
     seaweedInRegion, fishSchoolsInRegion, fishPoseAt, waterDepthAt, UNDERWATER_LIFE_TYPE
-} from '../core/UnderwaterLifeField.js';
+} from '../core/nature/UnderwaterLifeField.js';
 import { AvatarWaterConstraint } from '../application/avatar/AvatarWaterConstraint.js';
 import { VehicleWaterConstraint } from '../application/avatar/VehicleWaterConstraint.js';
 import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
 import { AvatarVehicleMovementController } from '../application/avatar/AvatarVehicleMovementController.js';
 import { VehicleRuntimeInstances } from '../application/world/VehicleRuntimeInstances.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';

@@ -5,9 +5,9 @@ import {
     steemDiscoveryPeriodOf,
     steemDiscoveryPeriodsFrom,
     steemDiscoveryThreadPermlink
-} from '../../core/SteemDiscoveryThread.js';
-import { parseSteemDiscoveryAnnouncement } from '../../core/SteemDiscoveryAnnouncement.js';
-import { DEFAULT_STEEM_EARLIEST_PERIOD } from '../../core/SteemReadingConfiguration.js';
+} from '../../core/networks/SteemDiscoveryThread.js';
+import { parseSteemDiscoveryAnnouncement } from '../../core/networks/SteemDiscoveryAnnouncement.js';
+import { DEFAULT_STEEM_EARLIEST_PERIOD } from '../../core/networks/SteemReadingConfiguration.js';
 
 // Reads one family's announcements from every configured thread account's
 // monthly discovery threads (docs/Protocol.md, "Proposed: Steem Announcement

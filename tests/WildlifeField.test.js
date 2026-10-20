@@ -1,13 +1,13 @@
 import {
     wildlifeInRegion, wildlifeDensityAt, WILDLIFE_FEATURE_TYPE, WILDLIFE_LATTICE_SPACING, ANIMAL_SPECIES
-} from '../core/WildlifeField.js';
-import { ecologyZoneAt, ECOLOGY_ZONE } from '../core/TerrainEcology.js';
-import { isRiverAt } from '../core/Hydrology.js';
-import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { TERRAIN_TILE_SIZE, tileCoordinateForPosition } from '../core/TerrainTiling.js';
+} from '../core/nature/WildlifeField.js';
+import { ecologyZoneAt, ECOLOGY_ZONE } from '../core/nature/TerrainEcology.js';
+import { isRiverAt } from '../core/nature/Hydrology.js';
+import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { TERRAIN_TILE_SIZE, tileCoordinateForPosition } from '../core/nature/TerrainTiling.js';
 import { assert } from './support/Assert.js';
 
-// Deterministic World Wildlife, core/WildlifeField.js — the identical
+// Deterministic World Wildlife, core/nature/WildlifeField.js — the identical
 // section shape tests/NaturalFeatureField.test.js already established for
 // trees, re-proven here for animals:
 //
@@ -184,7 +184,7 @@ async function runTests() {
         for (const a of animals) {
             if (isRiverAt(DEFAULT_WORLD_SEED, a.x, a.z)) riverAnimalsFound++;
         }
-        assert(riverAnimalsFound === 0, `27. core/Hydrology.js's river veto holds over a wide scan: no animal stands in a river channel (found ${riverAnimalsFound})`);
+        assert(riverAnimalsFound === 0, `27. core/nature/Hydrology.js's river veto holds over a wide scan: no animal stands in a river channel (found ${riverAnimalsFound})`);
     }
 
     console.log('✅ All Deterministic World Wildlife (WildlifeField) tests passed.');

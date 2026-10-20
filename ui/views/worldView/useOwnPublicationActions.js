@@ -1,5 +1,5 @@
 import { ref } from 'vue';
-import { detectSpatialOverlap } from '../../../core/SpatialOverlap.js';
+import { detectSpatialOverlap } from '../../../core/world/SpatialOverlap.js';
 import { formatNumber, t } from '../../i18n/i18n.js';
 
 function formatPosition(position) {

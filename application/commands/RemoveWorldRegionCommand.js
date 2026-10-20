@@ -1,6 +1,6 @@
-import { WorldRegion } from '../../core/WorldRegion.js';
+import { WorldRegion } from '../../core/world/WorldRegion.js';
 import { Command } from './Command.js';
-import { message } from '../../core/Message.js';
+import { message } from '../../core/app/Message.js';
 
 // 0.5.0 — World Regions & Decentralized Place Naming.
 //
@@ -9,7 +9,7 @@ import { message } from '../../core/Message.js';
 // tracks what was removed for undo() correctness, following the same
 // pattern as RemoveWorldLandmarkCommand. Removing a region never
 // touches any other region that happens to name it as a
-// parentRegionId — see core/WorldRegion.js's own header on why that
+// parentRegionId — see core/world/WorldRegion.js's own header on why that
 // field is informational only, never cascade-enforced.
 export class RemoveWorldRegionCommand extends Command {
     constructor({ worldId, regionId, id, timestamp } = {}) {

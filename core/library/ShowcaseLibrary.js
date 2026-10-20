@@ -1,6 +1,6 @@
-import { Structure } from '../Structure.js';
-import { Brick } from '../Brick.js';
-import { Position } from '../Position.js';
+import { Structure } from '../building/Structure.js';
+import { Brick } from '../building/Brick.js';
+import { Position } from '../document/Position.js';
 import { VillageLibrary } from './VillageLibrary.js';
 
 // The built-in "showcase" structure library: a few larger, finished builds

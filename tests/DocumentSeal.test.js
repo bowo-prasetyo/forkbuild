@@ -1,16 +1,16 @@
-// Sealed exports and whose build an import becomes (core/DocumentSeal.js,
+// Sealed exports and whose build an import becomes (core/document/DocumentSeal.js,
 // identity/DocumentSealing.js, application/document/DocumentImportPolicy.js):
 // a maker's export carries their seal; importing someone else's build makes
 // the importer's credited copy only when its license allows remixes, and is
 // refused when it doesn't or when the file was changed after it was sealed.
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { License, LicenseId } from '../core/License.js';
-import { DOCUMENT_SEAL_KIND } from '../core/DocumentSeal.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { License, LicenseId } from '../core/document/License.js';
+import { DOCUMENT_SEAL_KIND } from '../core/document/DocumentSeal.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { DocumentSealStatus, sealDocumentJson, verifyDocumentSeal } from '../identity/DocumentSealing.js';
 import { ExportDocumentUseCase } from '../application/document/ExportDocumentUseCase.js';

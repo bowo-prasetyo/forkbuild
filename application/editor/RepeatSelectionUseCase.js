@@ -2,8 +2,8 @@ import { CopySelectionUseCase } from './CopySelectionUseCase.js';
 import { PasteClipboardUseCase } from './PasteClipboardUseCase.js';
 import { CompositeCommand } from '../commands/CompositeCommand.js';
 import { RepetitionMath } from './RepetitionMath.js';
-import { SelectionTransformValidator } from '../../core/SelectionTransformValidator.js';
-import { message } from '../../core/Message.js';
+import { SelectionTransformValidator } from '../../core/building/SelectionTransformValidator.js';
+import { message } from '../../core/app/Message.js';
 
 // 0.4.9 — Alignment, Snapping & Repetition. "Repeat" is duplication
 // generalized from one offset copy to N — see
@@ -28,7 +28,7 @@ import { message } from '../../core/Message.js';
 // gesture either produces the complete requested result or produces no
 // mutation") one rung over, for creation instead of movement.
 //
-// core/SelectionTransformValidator.js is reused UNCHANGED for that
+// core/building/SelectionTransformValidator.js is reused UNCHANGED for that
 // check: it treats any transform whose brickId isn't already present in
 // the target building as landing on a "non-member" cell if occupied —
 // exactly the right rule for brand-new bricks that don't exist in the

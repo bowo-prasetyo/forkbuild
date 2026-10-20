@@ -1,5 +1,5 @@
-import { distanceXZ } from '../../core/WorldSpatialAnchor.js';
-import { isFiniteXZPosition } from '../../core/FiniteCoordinates.js';
+import { distanceXZ } from '../../core/collaboration/WorldSpatialAnchor.js';
+import { isFiniteXZPosition } from '../../core/document/FiniteCoordinates.js';
 
 // 0.9.256 — Automatic Place Naming Discovery Orchestration.
 //
@@ -32,9 +32,9 @@ import { isFiniteXZPosition } from '../../core/FiniteCoordinates.js';
 // X/Z ONLY, INCLUSIVE BOUNDARY, MATCHING PLACE NAMING'S OWN CONVENTION —
 // NOT `ShouldRefreshSnapshotDiscovery.js`'S 3D `distanceBetween()`. Every
 // other Place Naming spatial computation in this codebase
-// (`core/PlaceNamingProximitySelection.js#selectNearbyPlaceNamingClaims()`,
-// `core/WorldRegion.js#contains()`) already ignores Y and uses
-// `core/WorldSpatialAnchor.js#distanceXZ()` with a `>=`/`<=` inclusive
+// (`core/world/PlaceNamingProximitySelection.js#selectNearbyPlaceNamingClaims()`,
+// `core/world/WorldRegion.js#contains()`) already ignores Y and uses
+// `core/collaboration/WorldSpatialAnchor.js#distanceXZ()` with a `>=`/`<=` inclusive
 // boundary — reused here verbatim rather than reintroducing a fourth X/Z
 // distance formula, or a 3D one that would disagree with how "nearby" is
 // defined everywhere else in this feature.

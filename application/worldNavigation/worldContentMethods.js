@@ -1,18 +1,18 @@
 import { CreateWorldLandmarkCommand } from '../commands/CreateWorldLandmarkCommand.js';
-import { Position } from '../../core/Position.js';
+import { Position } from '../../core/document/Position.js';
 import { UpdateWorldLandmarkCommand } from '../commands/UpdateWorldLandmarkCommand.js';
 import { RemoveWorldLandmarkCommand } from '../commands/RemoveWorldLandmarkCommand.js';
-import { ANIMAL_INTERACTION_RADIUS } from '../../core/AvatarAnimalCatchTarget.js';
+import { ANIMAL_INTERACTION_RADIUS } from '../../core/avatar/AvatarAnimalCatchTarget.js';
 import { CreateWorldAnimalDecorationCommand } from '../commands/CreateWorldAnimalDecorationCommand.js';
 import { RemoveWorldAnimalDecorationCommand } from '../commands/RemoveWorldAnimalDecorationCommand.js';
-import { AnimalPresence } from '../../core/AnimalPresence.js';
-import { createId } from '../../core/createId.js';
-import { RegionKind } from '../../core/RegionKind.js';
+import { AnimalPresence } from '../../core/nature/AnimalPresence.js';
+import { createId } from '../../core/document/createId.js';
+import { RegionKind } from '../../core/world/RegionKind.js';
 import { CreateWorldRegionCommand } from '../commands/CreateWorldRegionCommand.js';
 import { UpdateWorldRegionCommand } from '../commands/UpdateWorldRegionCommand.js';
 import { RemoveWorldRegionCommand } from '../commands/RemoveWorldRegionCommand.js';
-import { message } from '../../core/Message.js';
-import { UserFacingError } from '../../core/UserFacingError.js';
+import { message } from '../../core/app/Message.js';
+import { UserFacingError } from '../../core/app/UserFacingError.js';
 import { requireSigningIdentityId } from '../../identity/SigningReadiness.js';
 
 // WorldNavigationSession methods for explicit World content: landmarks,
@@ -26,7 +26,7 @@ export const worldContentMethods = {
     // section is the mutation surface (create, update, remove), each an ordinary
     // Command through `this._commandHistories.get(worldId).execute(cmd)`, so
     // propagation and undo/redo need no landmark-specific code. See
-    // core/WorldLandmark.js and docs/Principles.md, "A Landmark Is World
+    // core/world/WorldLandmark.js and docs/Principles.md, "A Landmark Is World
     // Content, Not Spatial Presence".
     //
     // getLandmark() reads the raw WorldLandmark, since a WorldLocation lacks
@@ -131,7 +131,7 @@ export const worldContentMethods = {
     // tile-baked) animal into the active document's World as durable content.
     // Same guard, authorization and layout-offset subtraction as
     // createLandmarkHere(), sourcing species and position from the animal. No
-    // update/remove counterpart beyond undecorate (see core/AnimalDecoration.js,
+    // update/remove counterpart beyond undecorate (see core/nature/AnimalDecoration.js,
     // decorative only).
     //
     // Unlike a landmark, Y is kept: avatarPos.y includes real height gained from
@@ -192,7 +192,7 @@ export const worldContentMethods = {
     },
 
     // Called after each animal decorated with (G), with the decoration's id:
-    // World View counts the side system's use (core/SideSystemUse.js).
+    // World View counts the side system's use (core/app/SideSystemUse.js).
     // Returns a function that stops the calls.
     onAnimalDecorated(listener) {
         if (!this._animalDecoratedListeners) this._animalDecoratedListeners = new Set();
@@ -286,7 +286,7 @@ export const worldContentMethods = {
     // -----------------------------------------------------------------
     // World Regions: a named area (center + radius) rather than a landmark's
     // point. Same Command chokepoint, world-wide resolution and
-    // canEditDocument() gate as landmarks. See core/WorldRegion.js and
+    // canEditDocument() gate as landmarks. See core/world/WorldRegion.js and
     // docs/Principles.md, "Users Name Places; The World Derives Geography From
     // Names".
     // -----------------------------------------------------------------

@@ -1,11 +1,11 @@
 import {
     FIRST_STEPS, LAUNCH_TARGETS, evaluateFirstSteps, NETWORK_GATE_TARGETS, TARGET_STATUS, evaluateLaunchTargets, medianBrickRange, medianPlacedRange, parseCounts
-} from '../core/LaunchTargets.js';
-import { FunnelEvent } from '../core/VisitorCount.js';
+} from '../core/app/LaunchTargets.js';
+import { FunnelEvent } from '../core/app/VisitorCount.js';
 import { formatScorecard } from '../scripts/launch-scorecard.mjs';
 import { assert } from './support/Assert.js';
 
-// The pillars' number targets (core/LaunchTargets.js; docs/Pillars.md,
+// The pillars' number targets (core/app/LaunchTargets.js; docs/Pillars.md,
 // "Measuring it"), read from a week of the visitor counter's totals.
 
 const byId = (results) => Object.fromEntries(results.map((result) => [result.id, result]));

@@ -1,4 +1,4 @@
-import { NETWORK_WRITERS, NetworkWriter, isNetworkWriter, isWritable, normalizeNetworkWriterSettings, writableKeys } from '../core/NetworkWriters.js';
+import { NETWORK_WRITERS, NetworkWriter, isNetworkWriter, isWritable, normalizeNetworkWriterSettings, writableKeys } from '../core/publication/NetworkWriters.js';
 import { NetworkWriterSettingsStore } from '../application/settings/NetworkWriterSettingsStore.js';
 import { backupEntryGroupOf, BackupEntryGroup } from '../application/backup/BackupEntryGroups.js';
 import { NetworkWriterLoader } from '../ui/main/NetworkWriterLoader.js';
@@ -17,7 +17,7 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { makeIdentity } from './support/TestIdentity.js';
 import { assert } from './support/Assert.js';
 
-// Network writers (core/NetworkWriters.js, docs/Pillars.md "Networks: readers
+// Network writers (core/publication/NetworkWriters.js, docs/Pillars.md "Networks: readers
 // and writers"): Bitcoin's and Base's wallets are plugins built only when this
 // device switches them on, on top of the anchoring readers every copy builds.
 

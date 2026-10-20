@@ -7,7 +7,7 @@ import { SnapshotContentTransferOutcome } from '../application/snapshot/material
 import { validatePublicationSnapshotTransferPackage } from '../application/snapshot/PublicationSnapshotTransferPackageValidator.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
-import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
+import { DecentralizedPublication } from '../core/publication/DecentralizedPublication.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { worldViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
@@ -324,7 +324,7 @@ async function runTests() {
         // POSSESSING, the same distinction 0.8.32 draws for import): a
         // publication whose contentReference names a hash this replica
         // never put() into its own content store.
-        const { ContentReference } = await import('../core/ContentReference.js');
+        const { ContentReference } = await import('../core/document/ContentReference.js');
         const neverStored = signPublication(alice, {
             id: 'pub-d-orphan', contentKind: 'forkbuild.structure',
             contentReference: new ContentReference({ hash: 'a'.repeat(64), uri: 'local:missing' })

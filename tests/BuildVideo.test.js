@@ -1,4 +1,4 @@
-// A video of a build (core/BuildVideo.js): how long each part lasts, what
+// A video of a build (core/app/BuildVideo.js): how long each part lasts, what
 // each moment shows, the order a time-lapse raises bricks in, the camera
 // standing back for a tall frame, the file it is saved as, the format asked
 // for, and the title and description pasted beside it.
@@ -6,9 +6,9 @@ import {
     BUILD_VIDEO_MIME_TYPES, BUILD_VIDEO_SIZES, BUILD_VIDEO_WITH_SOUND_MIME_TYPES, DESCRIPTION_LINK_LIMIT, BuildVideoKind, BuildVideoShape, END_CARD_FADE_SECONDS, TURN_SECONDS,
     buildVideoFileName, buildVideoFrame, buildVideoTimeline, canRecordBuildVideo, chooseVideoMimeType, describeBuildVideo,
     timelapseOrder, videoAppUrl, videoCameraDistanceScale, videoFileExtension
-} from '../core/BuildVideo.js';
-import { launchChannelOf } from '../core/LaunchChannel.js';
-import { message } from '../core/Message.js';
+} from '../core/app/BuildVideo.js';
+import { launchChannelOf } from '../core/app/LaunchChannel.js';
+import { message } from '../core/app/Message.js';
 import { assert } from './support/Assert.js';
 
 const close = (a, b) => Math.abs(a - b) < 1e-9;

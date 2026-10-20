@@ -8,11 +8,11 @@ import {
 import {
     BUILD_NOTE_CANDIDATE_LIMIT, BUILD_NOTE_KIND, MAX_BUILD_NOTE_PAYLOAD_LENGTH, buildNoteFilterForPublication, buildNoteTemplate,
     buildNotesForPublication
-} from '../core/BuildNote.js';
-import { DEFAULT_NOSTR_RELAY_URLS } from '../core/NostrRelayConfiguration.js';
+} from '../core/publication/BuildNote.js';
+import { DEFAULT_NOSTR_RELAY_URLS } from '../core/networks/NostrRelayConfiguration.js';
 import {
     FORKBUILD_LINK_PREVIEW_URL, isNoteLinkPublicationId, noteLinkUrl, noteLinkViewPath, publicationIdFromNoteLinkUrl
-} from '../core/ForkBuildAppLinks.js';
+} from '../core/app/ForkBuildAppLinks.js';
 import { FindableBuildsStore } from '../application/buildNotes/FindableBuildsStore.js';
 import { BuildNoteSendOutcome, PublishBuildNoteUseCase } from '../application/buildNotes/PublishBuildNoteUseCase.js';
 import { BuildNoteDiscovery } from '../application/buildNotes/BuildNoteDiscovery.js';
@@ -21,7 +21,7 @@ import {
 } from '../application/publication/PublicationShareLink.js';
 import { decodePublicationLinkPayload, encodePublicationLinkPayload } from '../application/publication/sharing/PublicationLinkPayload.js';
 import { FunnelEventCounter } from '../application/settings/FunnelEventCounter.js';
-import { FunnelEvent, VISITOR_COUNT_SITE_ORIGIN, funnelEventHitUrl } from '../core/VisitorCount.js';
+import { FunnelEvent, VISITOR_COUNT_SITE_ORIGIN, funnelEventHitUrl } from '../core/app/VisitorCount.js';
 import { BackupEntryGroup, backupEntryGroupOf } from '../application/backup/BackupEntryGroups.js';
 import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
@@ -29,13 +29,13 @@ import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { ShowcaseLibrary } from '../core/library/ShowcaseLibrary.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { License, LicenseId } from '../core/License.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { License, LicenseId } from '../core/document/License.js';
 import { displayText } from '../ui/i18n/i18n.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
@@ -70,7 +70,7 @@ async function payloadOf({ publication, contentStore }) {
     return encodePublicationLinkPayload({ claim, snapshotText: await readPublishedBuildText({ publication: claim, contentStore }) });
 }
 
-// A relay's event for a note, as core/BuildNote.js writes it.
+// A relay's event for a note, as core/publication/BuildNote.js writes it.
 function noteEvent(publicationId, payload, createdAt) {
     const template = buildNoteTemplate({ publicationId, payload });
     return { id: `e${createdAt}`, pubkey: 'carrier', created_at: createdAt, sig: 'x', ...template, tags: template.tags.map((tag) => [...tag]) };

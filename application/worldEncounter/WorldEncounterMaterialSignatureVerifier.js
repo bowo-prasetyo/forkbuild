@@ -1,5 +1,5 @@
 import { WorldEncounterMaterialVerifier } from './WorldEncounterMaterialVerification.js';
-import { WorldEncounterKind } from '../../core/WorldEncounter.js';
+import { WorldEncounterKind } from '../../core/world/WorldEncounter.js';
 import { Publication } from '../../publisher/Publication.js';
 import { LocalAuthorizationVerifier } from '../../identity/LocalAuthorizationVerifier.js';
 
@@ -61,7 +61,7 @@ import { LocalAuthorizationVerifier } from '../../identity/LocalAuthorizationVer
 // third verifier class that wraps both.
 //
 // ONLY `PUBLICATION` IS JUDGED — `AVATAR` ALWAYS ABSTAINS, NEVER A THIRD
-// KIND. `core/AvatarProfile.js` carries no `signature`/`publisherIdentity`
+// KIND. `core/avatar/AvatarProfile.js` carries no `signature`/`publisherIdentity`
 // fields at all today — there is no cryptographic layer over an avatar's own
 // material for this file to check, unlike `core/Publication.js`'s own
 // 0.2.16 trust layer. Per 0.9.37's own "abstaining is not failing," an
@@ -175,7 +175,7 @@ import { LocalAuthorizationVerifier } from '../../identity/LocalAuthorizationVer
 //   an already-produced signature; it never constructs one, and never
 //   imports `identity/LocalIdentityProvider.js` or anything that signs.
 // - **A cryptographic verifier for `AVATAR` material.** See "only PUBLICATION
-//   is judged," above — `core/AvatarProfile.js` carries no signature layer
+//   is judged," above — `core/avatar/AvatarProfile.js` carries no signature layer
 //   for this file to check today.
 // - **Trust, ranking, reputation, or preference of any kind.** See 0.9.37's
 //   own "no score, rank, trust... vocabulary of any kind," continued here.

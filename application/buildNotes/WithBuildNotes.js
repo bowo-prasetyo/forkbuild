@@ -1,5 +1,5 @@
 // The Repository's and the challenge's searches, with build notes
-// (core/BuildNote.js) searched beside the other networks. Each search runs
+// (core/publication/BuildNote.js) searched beside the other networks. Each search runs
 // on its own, so a slow or failing one never holds the other up, and the
 // results add together. Either side may be null.
 

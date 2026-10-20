@@ -5,7 +5,7 @@ import { selectionEditingMethods } from '../application/editorSession/selectionE
 import { ForkStructureUseCase } from '../application/editor/ForkStructureUseCase.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';
-import { SpatialBounds } from '../core/SpatialBounds.js';
+import { SpatialBounds } from '../core/world/SpatialBounds.js';
 import { assert } from './support/Assert.js';
 
 const registry = new CreateBrickRegistryUseCase().execute();

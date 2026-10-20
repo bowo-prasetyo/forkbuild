@@ -1,10 +1,10 @@
-import { Structure } from '../core/Structure.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { deriveBlueprintFingerprint, blueprintFingerprintsEqual } from '../core/BlueprintFingerprint.js';
+import { Structure } from '../core/building/Structure.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { deriveBlueprintFingerprint, blueprintFingerprintsEqual } from '../core/building/BlueprintFingerprint.js';
 import {
     attributionsForFingerprint, rankAttributionsByAuthor, attributionView, describeAttributionView
-} from '../core/BlueprintAttributionView.js';
+} from '../core/building/BlueprintAttributionView.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalBlueprintAttributionStore } from '../application/blueprint/LocalBlueprintAttributionStore.js';
 import { LocalBlueprintAttributionPublicationLog } from '../application/blueprint/LocalBlueprintAttributionPublicationLog.js';
@@ -25,7 +25,7 @@ import { makeIdentity } from './support/TestIdentity.js';
 // tests/PlaceNamingClaims.test.js's/tests/PlaceNamingExchange.test.js's
 // own shape one domain over:
 //
-//   Section A: core/BlueprintAttributionView.js — pure derivation,
+//   Section A: core/building/BlueprintAttributionView.js — pure derivation,
 //              distinct-author grouping, deterministic ranking
 //   Section B: application/blueprint/BlueprintAttributionUseCase.js#communityView() —
 //              wiring, receivedAt attachment, summarize() untouched
@@ -94,7 +94,7 @@ function communityShape(view) {
 
 async function run() {
     // ---------------------------------------------------------------
-    // Section A — core/BlueprintAttributionView.js: pure derivation
+    // Section A — core/building/BlueprintAttributionView.js: pure derivation
     // ---------------------------------------------------------------
     {
         assert(JSON.stringify(attributionsForFingerprint(null, [{ fingerprint: 'bp:a' }])) === '[]',
@@ -155,7 +155,7 @@ async function run() {
         assert(describeAttributionView(view) === 'Attributed to 2 authors', '21. plural phrasing for more than one');
         assert(describeAttributionView(null) === '', '22. describeAttributionView(null) never throws');
     }
-    console.log('✓ Section A: core/BlueprintAttributionView.js — distinct-author grouping, deterministic ranking, presentation-only summaries');
+    console.log('✓ Section A: core/building/BlueprintAttributionView.js — distinct-author grouping, deterministic ranking, presentation-only summaries');
 
     // ---------------------------------------------------------------
     // Section B — application/blueprint/BlueprintAttributionUseCase.js#communityView()

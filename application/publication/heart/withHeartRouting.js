@@ -1,5 +1,5 @@
-import { PublicationHeart } from '../../../core/PublicationHeart.js';
-import { isPublicationHeartEnvelope } from '../../../core/PublicationHeartDistributionEnvelope.js';
+import { PublicationHeart } from '../../../core/publication/PublicationHeart.js';
+import { isPublicationHeartEnvelope } from '../../../core/publication/PublicationHeartDistributionEnvelope.js';
 
 // Hearts ride the comment carriers (docs/Protocol.md, "Publication Hearts"):
 // the peer exchange, Arweave, Steem and Blurt carry whatever signed envelope

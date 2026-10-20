@@ -1,11 +1,11 @@
 import { computed, inject, ref } from 'vue';
 import { useWritableNetworks } from '../components/networkWriters/useWritableNetworks.js';
 import { useRoleProviderPreferenceForm } from '../composables/useRoleProviderPreferenceForm.js';
-import { RoleProviderRole } from '../../core/RoleProviderRole.js';
-import { ANNOUNCEMENT_DISCOVERY_PROVIDER_KEYS } from '../../core/AnnouncementDiscoveryProvider.js';
+import { RoleProviderRole } from '../../core/publication/RoleProviderRole.js';
+import { ANNOUNCEMENT_DISCOVERY_PROVIDER_KEYS } from '../../core/publication/AnnouncementDiscoveryProvider.js';
 import { describeRoleProviderPreferenceSettings } from '../../application/settings/RoleProviderPreferenceSettingsView.js';
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
-import { LOCAL_AND_PEERS_ONLY } from '../../core/CommentaryDistributionProvider.js';
+import { LOCAL_AND_PEERS_ONLY } from '../../core/publication/CommentaryDistributionProvider.js';
 import { commentaryDistributionProviderLabel } from '../components/CommentaryDistributionPicker.js';
 import { displayText, errorText, t } from '../i18n/i18n.js';
 
@@ -59,7 +59,7 @@ export default {
         });
 
         // Steem and Blurt only while this device's writer for them is switched
-        // on (core/NetworkWriters.js).
+        // on (core/publication/NetworkWriters.js).
         const { only } = useWritableNetworks();
         const settings = computed(() => sortOptionsByLabel(describeRoleProviderPreferenceSettings({
             availableProviderKeys: only(AVAILABLE_PROVIDER_KEYS)

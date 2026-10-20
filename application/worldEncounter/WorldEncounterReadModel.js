@@ -1,6 +1,6 @@
 // 0.9.1 — World Encounter Read Model.
 //
-// 0.9.0's `core/WorldEncounter.js#deriveWorldEncounters()` answered "what,
+// 0.9.0's `core/world/WorldEncounter.js#deriveWorldEncounters()` answered "what,
 // in the World, is even findable in the first place?" with two arrays of
 // per-object encounter records — a `position` object on every entry, a
 // `kind` tag repeated on every entry even though it is already implied by
@@ -19,7 +19,7 @@
 //        │                                        │
 //        └───────────────────┬────────────────────┘
 //                             ▼
-//                core/WorldEncounter.js  (0.9.0)
+//                core/world/WorldEncounter.js  (0.9.0)
 //                   deriveWorldEncounters()
 //                             │
 //                             ▼
@@ -106,7 +106,7 @@
 // produced by a seam that already guarantees a well-formed shape.
 //
 // ARCHITECTURAL BOUNDARY — THIS FILE IMPORTS NOTHING. It performs no join,
-// so it never needs `core/WorldEncounter.js`'s own `deriveWorldEncounters()`,
+// so it never needs `core/world/WorldEncounter.js`'s own `deriveWorldEncounters()`,
 // `describeEncounterablePublication()`, or `describeEncounterableAvatar()` —
 // a caller already holding 0.9.0's own result hands it here directly.
 //

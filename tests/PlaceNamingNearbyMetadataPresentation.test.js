@@ -1,8 +1,8 @@
-import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
-import { namingView as deriveNamingView } from '../core/PlaceNamingView.js';
+import { PlaceNamingClaim } from '../core/world/PlaceNamingClaim.js';
+import { namingView as deriveNamingView } from '../core/world/PlaceNamingView.js';
 import {
     buildPlaceNamingDiscoveryEnvelope, parsePlaceNamingDiscoveryEnvelope, derivePlaceNamingDiscoveryTag
-} from '../core/PlaceNamingDiscoveryEnvelope.js';
+} from '../core/world/PlaceNamingDiscoveryEnvelope.js';
 import { buildPlaceNamingClaimPublication } from '../application/placeNaming/PlaceNamingClaimPublication.js';
 import { PlaceNamingDiscoveryMonitor } from '../application/placeNaming/PlaceNamingDiscoveryMonitor.js';
 import { executeDiscoverPlaceNamingClaimsCommand } from '../application/placeNaming/DiscoverPlaceNamingClaimsCommand.js';
@@ -266,7 +266,7 @@ async function runTests() {
     // ---------------------------------------------------------------
     {
         // E1. A discovered envelope with a syntactically well-formed (a
-        // required non-empty string, per core/PlaceNamingDiscoveryEnvelope.js's
+        // required non-empty string, per core/world/PlaceNamingDiscoveryEnvelope.js's
         // own shape validation) but semantically unparseable createdAt —
         // the one shape that genuinely reaches presentation, since a
         // truly missing/empty createdAt is already rejected at the
@@ -473,15 +473,15 @@ async function runTests() {
         const view = deriveNamingView('region-1', [older, newer]);
         assert(view.length === 2 && view.every((e) => e.score === 1), '10c. namingView() still ranks both claims with equal, un-tiebroken score');
 
-        // 10d. core/PlaceNamingView.js does read createdAt — but only to
+        // 10d. core/world/PlaceNamingView.js does read createdAt — but only to
         // order the claims WITHIN one already-formed name entry ("most
         // recent first," so a UI can show "who said this" without a
         // second lookup, per that file's own header) — never to rank
         // ENTRIES against each other. The entry-level sort itself is
         // still strictly score, then name.
-        const viewSource = codeOnlyLines(await rawSource('core/PlaceNamingView.js'));
+        const viewSource = codeOnlyLines(await rawSource('core/world/PlaceNamingView.js'));
         assert(viewSource.includes('.sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));'),
-            '10d. core/PlaceNamingView.js still ranks entries by score then name only — createdAt never enters entry-level ranking');
+            '10d. core/world/PlaceNamingView.js still ranks entries by score then name only — createdAt never enters entry-level ranking');
 
         console.log('✓ Section J: rendering createdAt/author metadata implies no ranking, ordering, or preference — discovery order and namingView()\'s own equal-score model are both untouched');
     }

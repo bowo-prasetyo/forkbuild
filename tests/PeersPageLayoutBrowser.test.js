@@ -3,7 +3,7 @@ import { createApp, nextTick } from 'vue';
 import PeerConnectionsView from '../ui/views/PeerConnectionsView.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { PeerIdentity } from '../peer/PeerIdentity.js';
-import { FriendshipState } from '../core/FriendshipState.js';
+import { FriendshipState } from '../core/social/FriendshipState.js';
 import * as Ed25519 from '../identity/Ed25519.js';
 import { assert } from './support/Assert.js';
 

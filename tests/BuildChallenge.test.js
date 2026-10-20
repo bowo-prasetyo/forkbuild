@@ -1,11 +1,11 @@
-// The weekly build challenge (core/BuildChallenge.js): which theme runs
+// The weekly build challenge (core/challenge/BuildChallenge.js): which theme runs
 // when, the tag a week's entries carry, and reading a challenge back from
 // its id or its tag.
 import {
     CHALLENGE_KIND, CHALLENGE_THEMES, REMIX_WEEK_EVERY, challengeAt, challengeById, challengeDaysLeft, challengeForTag,
     challengeIdeaStructureIds, challengeOfTags, isChallengeOpen, isRemixChallenge, previousChallenge, withChallengeTag
-} from '../core/BuildChallenge.js';
-import { BUILD_TAG_MAX_COUNT, normalizeBuildTag } from '../core/BuildTags.js';
+} from '../core/challenge/BuildChallenge.js';
+import { BUILD_TAG_MAX_COUNT, normalizeBuildTag } from '../core/document/BuildTags.js';
 import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';
 import { assert } from './support/Assert.js';
 

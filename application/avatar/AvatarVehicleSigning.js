@@ -1,4 +1,4 @@
-import { getAvatarVehicleSigningDescriptor } from '../../core/AvatarVehicleAdvertisement.js';
+import { getAvatarVehicleSigningDescriptor } from '../../core/vehicles/AvatarVehicleAdvertisement.js';
 
 // Signs what an avatar rides when the identity provider can sign, as
 // presence and profiles are; otherwise sends it unsigned rather than not at

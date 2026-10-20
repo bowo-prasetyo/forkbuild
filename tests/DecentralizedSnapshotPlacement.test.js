@@ -1,9 +1,9 @@
-import { Brick } from '../core/Brick.js';
-import { Building } from '../core/Building.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { Position } from '../core/Position.js';
-import { World } from '../core/World.js';
+import { Brick } from '../core/building/Brick.js';
+import { Building } from '../core/building/Building.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { Position } from '../core/document/Position.js';
+import { World } from '../core/document/World.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
@@ -12,7 +12,7 @@ import { IpfsContentStore } from '../content/IpfsContentStore.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 
-import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
+import { PublicationSnapshotPlacement } from '../core/publication/PublicationSnapshotPlacement.js';
 import { validatePublicationSnapshotPlacement, PublicationSnapshotPlacementError } from '../application/snapshot/placement/PublicationSnapshotPlacementValidator.js';
 import { CreatePublicationSnapshotPlacementUseCase } from '../application/snapshot/placement/CreatePublicationSnapshotPlacementUseCase.js';
 import { AddPublicationSnapshotPlacementUseCase } from '../application/snapshot/placement/AddPublicationSnapshotPlacementUseCase.js';
@@ -39,7 +39,7 @@ import { makeIdentity } from './support/TestIdentity.js';
 // exercised here against a fake Kubo node — the identical technique
 // tests/IpfsPublicationResolution.test.js already established) via a
 // signed, cataloged, independently resolvable
-// core/PublicationSnapshotPlacement.js — without ever mutating the
+// core/publication/PublicationSnapshotPlacement.js — without ever mutating the
 // original Publication, without ever creating a second Publication, and
 // without content/IpfsContentStore.js needing to know any of this
 // exists.

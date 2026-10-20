@@ -1,21 +1,21 @@
-// A build as a 3D model (core/BuildModelFormats.js,
+// A build as a 3D model (core/building/BuildModelFormats.js,
 // renderer/BuildMeshExtraction.js, application/export/BuildModelExport.js):
 // its bricks and placed structures where the World View draws them, as
 // triangles grouped by color, written as glTF binary, STL and OBJ files that
 // say whose build it is.
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { StructurePlacement } from '../core/StructurePlacement.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { StructurePlacement } from '../core/building/StructurePlacement.js';
 import { ShowcaseLibrary } from '../core/library/ShowcaseLibrary.js';
 import {
     BuildModelFormat, STL_MILLIMETRES_PER_UNIT, countTriangles, describeBuildCredit, writeGlb, writeObj, writeStl
-} from '../core/BuildModelFormats.js';
+} from '../core/building/BuildModelFormats.js';
 import { extractBuildMeshes } from '../renderer/BuildMeshExtraction.js';
 import { buildModelFileName, collectModelBricks, writeBuildModel } from '../application/export/BuildModelExport.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
-import { isUserFacingError } from '../core/UserFacingError.js';
+import { isUserFacingError } from '../core/app/UserFacingError.js';
 import { assert } from './support/Assert.js';
 
 const registry = new CreateBrickRegistryUseCase().execute();

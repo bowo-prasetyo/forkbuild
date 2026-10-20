@@ -3,10 +3,10 @@ import {
     AvatarContinuousMovementIntent,
     isValidAvatarContinuousMovementIntent,
     deriveAvatarContinuousMovementIntent
-} from '../core/AvatarContinuousMovementIntent.js';
+} from '../core/avatar/AvatarContinuousMovementIntent.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.64 — Avatar Continuous Movement Intent, core/AvatarContinuousMovementIntent.js.
+// 0.9.64 — Avatar Continuous Movement Intent, core/avatar/AvatarContinuousMovementIntent.js.
 //
 //   Section A: the vocabulary itself — NONE/FORWARD/BACKWARD, isValid()
 //   Section B: activation — an activating press sets/switches the intent
@@ -186,7 +186,7 @@ async function runTests() {
     // controller, no timers, no raw keyboard handling
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../core/AvatarContinuousMovementIntent.js', import.meta.url);
+        const sourceUrl = new URL('../core/avatar/AvatarContinuousMovementIntent.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -203,14 +203,14 @@ async function runTests() {
             'velocity', 'acceleration', 'speed', 'position', 'rotation'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `37. core/AvatarContinuousMovementIntent.js's own code never references "${term}" — a pure vocabulary and transition rule only, never movement, never raw input handling`);
+            assert(!codeOnly.includes(term), `37. core/avatar/AvatarContinuousMovementIntent.js's own code never references "${term}" — a pure vocabulary and transition rule only, never movement, never raw input handling`);
         }
     }
     {
-        const exportsModule = await import('../core/AvatarContinuousMovementIntent.js');
+        const exportsModule = await import('../core/avatar/AvatarContinuousMovementIntent.js');
         const exportedNames = Object.keys(exportsModule).sort();
         assert(JSON.stringify(exportedNames) === JSON.stringify(['AvatarContinuousMovementIntent', 'deriveAvatarContinuousMovementIntent', 'isValidAvatarContinuousMovementIntent']),
-            '38. core/AvatarContinuousMovementIntent.js exports exactly the vocabulary, its validator, and the one transition function — nothing else');
+            '38. core/avatar/AvatarContinuousMovementIntent.js exports exactly the vocabulary, its validator, and the one transition function — nothing else');
     }
 
     console.log('✅ All Avatar Continuous Movement Intent tests passed.');

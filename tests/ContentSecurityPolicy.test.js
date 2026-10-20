@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
-import { VISITOR_COUNT_ENDPOINT } from '../core/VisitorCount.js';
+import { VISITOR_COUNT_ENDPOINT } from '../core/app/VisitorCount.js';
 import { assert } from './support/Assert.js';
 
 // index.html's Content Security Policy and import map. The browser refuses
@@ -58,7 +58,7 @@ const policy = parsePolicy(metas[0][1]);
     assert(!connect.includes('*') && !connect.includes('http:') && !connect.includes('ws:'),
         `connect-src allows no plain http:/ws: beyond local nodes (found ${JSON.stringify(connect)})`);
     // Images: the app's own, rendered thumbnails, and the daily visitor
-    // count's one image request (core/VisitorCount.js), nothing else.
+    // count's one image request (core/app/VisitorCount.js), nothing else.
     const counterOrigin = new URL(VISITOR_COUNT_ENDPOINT).origin;
     assert(JSON.stringify(policy.get('img-src')) === JSON.stringify(["'self'", 'data:', 'blob:', counterOrigin]),
         `img-src is 'self' data: blob: ${counterOrigin} (found ${JSON.stringify(policy.get('img-src'))})`);

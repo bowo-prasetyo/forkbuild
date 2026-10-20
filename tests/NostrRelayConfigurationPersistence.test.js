@@ -1,5 +1,5 @@
 
-import { NostrRelayConfiguration, DEFAULT_NOSTR_RELAY_URL } from '../core/NostrRelayConfiguration.js';
+import { NostrRelayConfiguration, DEFAULT_NOSTR_RELAY_URL } from '../core/networks/NostrRelayConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { NostrRelayConfigurationStore } from '../storage/NostrRelayConfigurationStore.js';
 import { assert } from './support/Assert.js';

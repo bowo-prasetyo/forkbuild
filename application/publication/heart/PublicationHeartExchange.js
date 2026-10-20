@@ -1,5 +1,5 @@
-import { PublicationHeart } from '../../../core/PublicationHeart.js';
-import { PublicationHeartDistributionEnvelope } from '../../../core/PublicationHeartDistributionEnvelope.js';
+import { PublicationHeart } from '../../../core/publication/PublicationHeart.js';
+import { PublicationHeartDistributionEnvelope } from '../../../core/publication/PublicationHeartDistributionEnvelope.js';
 import { resolveSigningIdentityId } from '../../../identity/resolveSigningIdentityId.js';
 
 // The one place a heart is signed for distribution and the one place a

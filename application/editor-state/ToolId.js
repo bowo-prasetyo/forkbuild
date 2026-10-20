@@ -18,7 +18,7 @@ export const ToolId = Object.freeze({
     // 0.4.1 — Interactive Structure Composition UX. A separate tool
     // from PLACE_STRUCTURE for the same reason PLACE_STRUCTURE is
     // separate from PLACE: what's being placed (a library
-    // core/Structure.js's own bricks vs. a Document reference) and what
+    // core/building/Structure.js's own bricks vs. a Document reference) and what
     // gets committed (a flattened PasteBricksCommand vs. a
     // PlaceStructureCommand StructurePlacement) diverge — see
     // application/tools/StructureCompositionTool.js's own header.

@@ -1,8 +1,8 @@
-import { License, LicenseId } from '../core/License.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
+import { License, LicenseId } from '../core/document/License.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
 import { Publication } from '../publisher/Publication.js';
 import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';

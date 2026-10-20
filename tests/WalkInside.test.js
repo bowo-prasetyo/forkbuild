@@ -1,10 +1,10 @@
-import { findBuildEntrance, hasWalkedInside, ENTRANCE_STAND_DISTANCES, INSIDE_DEPTH } from '../core/BuildEntrance.js';
+import { findBuildEntrance, hasWalkedInside, ENTRANCE_STAND_DISTANCES, INSIDE_DEPTH } from '../core/world/BuildEntrance.js';
 import { arrivalMethods } from '../application/worldNavigation/arrivalMethods.js';
-import { DEFAULT_MAX_STEP_HEIGHT } from '../core/BrickWalkability.js';
+import { DEFAULT_MAX_STEP_HEIGHT } from '../core/building/BrickWalkability.js';
 import { AvatarStepConstraint } from '../application/avatar/AvatarStepConstraint.js';
 import { AvatarMovementConstraint } from '../application/avatar/AvatarMovementConstraint.js';
 import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
@@ -14,15 +14,15 @@ import { STARTER_STRUCTURE_ID } from '../application/home/FeaturedBuilds.js';
 import { VillageLibrary } from '../core/library/VillageLibrary.js';
 import { CollectionLibrary } from '../core/library/CollectionLibrary.js';
 import { ShowcaseLibrary } from '../core/library/ShowcaseLibrary.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
 // Walk inside it: where a visitor arrives to walk into a published build
-// (core/BuildEntrance.js), World View putting them there
+// (core/world/BuildEntrance.js), World View putting them there
 // (application/worldNavigation/arrivalMethods.js), and knowing when they have
 // gone in, which finishes the guided first build.
 

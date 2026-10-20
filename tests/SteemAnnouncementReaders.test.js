@@ -8,7 +8,7 @@ import { queryDecentralizedWorldDiscovery } from '../application/discovery/Decen
 import { SnapshotCandidateDiscoveryQueryService } from '../application/snapshot/SnapshotCandidateDiscoveryQueryService.js';
 import { SnapshotCandidateDiscoveryOutcome } from '../application/snapshot/SnapshotCandidateDiscoveryOutcome.js';
 import { PlaceNamingDiscoveryQueryService } from '../application/placeNaming/PlaceNamingDiscoveryQueryService.js';
-import { derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
+import { derivePlaceNamingDiscoveryTag } from '../core/world/PlaceNamingDiscoveryEnvelope.js';
 import { assert } from './support/Assert.js';
 
 const NOW = new Date('2026-09-28T00:00:00Z');

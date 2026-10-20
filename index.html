@@ -54,7 +54,7 @@
     <link rel="modulepreload" href="application/settings/VisitorCountSettingsStore.js">
     <link rel="modulepreload" href="application/settings/CountDailyVisit.js">
     <link rel="modulepreload" href="application/settings/CountLaunchChannel.js">
-    <link rel="modulepreload" href="core/LaunchChannel.js">
+    <link rel="modulepreload" href="core/app/LaunchChannel.js">
     <link rel="modulepreload" href="ui/i18n/i18n.js">
     <link rel="modulepreload" href="ui/look.js">
     <link rel="modulepreload" href="ui/i18n/locales.js">
@@ -102,12 +102,12 @@
     <link rel="modulepreload" href="storage/StorageProvider.js">
     <link rel="modulepreload" href="storage/StorageFullError.js">
     <link rel="modulepreload" href="storage/StorageEntryNotLoadedError.js">
-    <link rel="modulepreload" href="core/LanguageSettings.js">
-    <link rel="modulepreload" href="core/LookSettings.js">
-    <link rel="modulepreload" href="core/VisitorCount.js">
+    <link rel="modulepreload" href="core/app/LanguageSettings.js">
+    <link rel="modulepreload" href="core/app/LookSettings.js">
+    <link rel="modulepreload" href="core/app/VisitorCount.js">
     <link rel="modulepreload" href="ui/i18n/Translator.js">
-    <link rel="modulepreload" href="core/Message.js">
-    <link rel="modulepreload" href="core/UserFacingError.js">
+    <link rel="modulepreload" href="core/app/Message.js">
+    <link rel="modulepreload" href="core/app/UserFacingError.js">
     <link rel="modulepreload" href="ui/i18n/pseudoLocalize.js">
     <link rel="modulepreload" href="vendor/vue-router/dist/vue-router.esm-browser.js">
     <link rel="modulepreload" href="ui/components/UserWidget.js">
@@ -122,26 +122,26 @@
     <link rel="modulepreload" href="ui/router/pageServiceGroups.js">
     <link rel="modulepreload" href="ui/pageLoadFailure.js">
     <link rel="modulepreload" href="ui/views/HomeView.js">
-    <link rel="modulepreload" href="core/BuildChallenge.js">
-    <link rel="modulepreload" href="core/NotificationEvent.js">
-    <link rel="modulepreload" href="core/NotificationDeduplicationPolicy.js">
+    <link rel="modulepreload" href="core/challenge/BuildChallenge.js">
+    <link rel="modulepreload" href="core/social/NotificationEvent.js">
+    <link rel="modulepreload" href="core/social/NotificationDeduplicationPolicy.js">
     <link rel="modulepreload" href="identity/SigningReadiness.js">
     <link rel="modulepreload" href="discovery/DiscoveryProvider.js">
     <link rel="modulepreload" href="application/backup/BackupEntryGroups.js">
     <link rel="modulepreload" href="application/backup/DeviceBackupFile.js">
     <link rel="modulepreload" href="application/backup/BackupFolder.js">
-    <link rel="modulepreload" href="core/DeviceNotifications.js">
+    <link rel="modulepreload" href="core/social/DeviceNotifications.js">
     <link rel="modulepreload" href="application/publication/FollowedAuthorPublicationNotifier.js">
     <link rel="modulepreload" href="application/publication/RemixedBuildNotifier.js">
     <link rel="modulepreload" href="application/publication/LookAlikeBuildNotifier.js">
     <link rel="modulepreload" href="application/publication/commentary/PublicationCommentaryNotificationProducer.js">
     <link rel="modulepreload" href="application/publication/heart/PublicationHeartNotifications.js">
     <link rel="modulepreload" href="publisher/Publication.js">
-    <link rel="modulepreload" href="core/Season.js">
-    <link rel="modulepreload" href="core/BuildPlot.js">
-    <link rel="modulepreload" href="core/FirstBuildChecklist.js">
-    <link rel="modulepreload" href="core/PlacedBricks.js">
-    <link rel="modulepreload" href="core/BuildTags.js">
+    <link rel="modulepreload" href="core/nature/Season.js">
+    <link rel="modulepreload" href="core/world/BuildPlot.js">
+    <link rel="modulepreload" href="core/challenge/FirstBuildChecklist.js">
+    <link rel="modulepreload" href="core/building/PlacedBricks.js">
+    <link rel="modulepreload" href="core/document/BuildTags.js">
     <link rel="modulepreload" href="core/events/EventBus.js">
     <link rel="modulepreload" href="identity/IdentityProvider.js">
     <link rel="modulepreload" href="identity/Identity.js">
@@ -152,16 +152,16 @@
     <link rel="modulepreload" href="identity/FailedUnlockTracker.js">
     <link rel="modulepreload" href="identity/VaultTimeoutPolicy.js">
     <link rel="modulepreload" href="identity/KeyEncryption.js">
-    <link rel="modulepreload" href="core/Signature.js">
+    <link rel="modulepreload" href="core/publication/Signature.js">
     <link rel="modulepreload" href="serializer/contentHash.js">
     <link rel="modulepreload" href="identity/Ed25519.js">
     <link rel="modulepreload" href="identity/IdentityExport.js">
     <link rel="modulepreload" href="identity/IdentityRecovery.js">
     <link rel="modulepreload" href="identity/IdentityLifecycleTransfer.js">
-    <link rel="modulepreload" href="core/IdentityLifecycleState.js">
-    <link rel="modulepreload" href="core/IdentityRevocationEnvelope.js">
-    <link rel="modulepreload" href="core/IdentitySuccessionEnvelope.js">
-    <link rel="modulepreload" href="core/DeviceAuthorizationEnvelope.js">
+    <link rel="modulepreload" href="core/identity/IdentityLifecycleState.js">
+    <link rel="modulepreload" href="core/identity/IdentityRevocationEnvelope.js">
+    <link rel="modulepreload" href="core/identity/IdentitySuccessionEnvelope.js">
+    <link rel="modulepreload" href="core/identity/DeviceAuthorizationEnvelope.js">
     <link rel="modulepreload" href="vendor/vue-devtools-api/lib/esm/index.js">
     <link rel="modulepreload" href="ui/components/LoginModal.js">
     <link rel="modulepreload" href="application/publication/LoadPublicationDocumentUseCase.js">
@@ -170,14 +170,14 @@
     <link rel="modulepreload" href="application/home/FeaturedBuilds.js">
     <link rel="modulepreload" href="ui/i18n/userGuide.js">
     <link rel="modulepreload" href="ui/components/challenge/ChallengeCard.js">
-    <link rel="modulepreload" href="core/createId.js">
+    <link rel="modulepreload" href="core/document/createId.js">
     <link rel="modulepreload" href="application/publication/FollowingFeed.js">
-    <link rel="modulepreload" href="core/PublicationHeart.js">
-    <link rel="modulepreload" href="core/License.js">
-    <link rel="modulepreload" href="core/ContentReference.js">
-    <link rel="modulepreload" href="core/BuiltWith.js">
-    <link rel="modulepreload" href="core/DayCycle.js">
-    <link rel="modulepreload" href="core/DescriptionMarkup.js">
+    <link rel="modulepreload" href="core/publication/PublicationHeart.js">
+    <link rel="modulepreload" href="core/document/License.js">
+    <link rel="modulepreload" href="core/document/ContentReference.js">
+    <link rel="modulepreload" href="core/catalog/BuiltWith.js">
+    <link rel="modulepreload" href="core/nature/DayCycle.js">
+    <link rel="modulepreload" href="core/document/DescriptionMarkup.js">
     <link rel="modulepreload" href="core/events/EventListener.js">
     <link rel="modulepreload" href="vendor/noble-hashes/sha2.js">
     <link rel="modulepreload" href="vendor/noble-hashes/utils.js">
@@ -194,15 +194,15 @@
     <link rel="modulepreload" href="application/identity/NewPassphrasePolicy.js">
     <link rel="modulepreload" href="ui/i18n/I18nText.js">
     <link rel="modulepreload" href="serializer/DocumentSerializer.js">
-    <link rel="modulepreload" href="core/BrickRegistry.js">
+    <link rel="modulepreload" href="core/building/BrickRegistry.js">
     <link rel="modulepreload" href="core/library/CoreLibrary.js">
-    <link rel="modulepreload" href="core/DocumentPreview.js">
-    <link rel="modulepreload" href="core/Brick.js">
-    <link rel="modulepreload" href="core/Position.js">
-    <link rel="modulepreload" href="core/SpatialBounds.js">
-    <link rel="modulepreload" href="core/Building.js">
-    <link rel="modulepreload" href="core/World.js">
-    <link rel="modulepreload" href="core/ReadyMadeHome.js">
+    <link rel="modulepreload" href="core/catalog/DocumentPreview.js">
+    <link rel="modulepreload" href="core/building/Brick.js">
+    <link rel="modulepreload" href="core/document/Position.js">
+    <link rel="modulepreload" href="core/world/SpatialBounds.js">
+    <link rel="modulepreload" href="core/building/Building.js">
+    <link rel="modulepreload" href="core/document/World.js">
+    <link rel="modulepreload" href="core/building/ReadyMadeHome.js">
     <link rel="modulepreload" href="ui/components/challenge/challengeText.js">
     <link rel="modulepreload" href="vendor/noble-hashes/_md.js">
     <link rel="modulepreload" href="vendor/noble-hashes/_u64.js">
@@ -215,23 +215,23 @@
     <link rel="modulepreload" href="vendor/noble-curves/abstract/oprf.js">
     <link rel="modulepreload" href="vendor/noble-curves/utils.js">
     <link rel="modulepreload" href="identity/AuthorizationVerifier.js">
-    <link rel="modulepreload" href="core/AvatarPresenceAdvertisement.js">
-    <link rel="modulepreload" href="core/AvatarProfileAdvertisement.js">
-    <link rel="modulepreload" href="core/AvatarInteractionAdvertisement.js">
-    <link rel="modulepreload" href="core/AvatarVehicleAdvertisement.js">
-    <link rel="modulepreload" href="core/FriendshipAdvertisement.js">
-    <link rel="modulepreload" href="core/RendezvousPublicationEnvelope.js">
-    <link rel="modulepreload" href="core/LobbyCard.js">
-    <link rel="modulepreload" href="core/WorldEditAuthorizationEnvelope.js">
-    <link rel="modulepreload" href="core/PlaceNamingClaim.js">
-    <link rel="modulepreload" href="core/BlueprintAttribution.js">
-    <link rel="modulepreload" href="core/BlueprintLineageClaim.js">
-    <link rel="modulepreload" href="core/DecentralizedPublication.js">
-    <link rel="modulepreload" href="core/PublicationAnchor.js">
-    <link rel="modulepreload" href="core/PublicationSnapshotPlacement.js">
-    <link rel="modulepreload" href="core/PublicationCommentaryDistributionEnvelope.js">
-    <link rel="modulepreload" href="core/PublicationHeartDistributionEnvelope.js">
-    <link rel="modulepreload" href="core/Delegation.js">
+    <link rel="modulepreload" href="core/avatar/AvatarPresenceAdvertisement.js">
+    <link rel="modulepreload" href="core/avatar/AvatarProfileAdvertisement.js">
+    <link rel="modulepreload" href="core/avatar/AvatarInteractionAdvertisement.js">
+    <link rel="modulepreload" href="core/vehicles/AvatarVehicleAdvertisement.js">
+    <link rel="modulepreload" href="core/social/FriendshipAdvertisement.js">
+    <link rel="modulepreload" href="core/social/RendezvousPublicationEnvelope.js">
+    <link rel="modulepreload" href="core/social/LobbyCard.js">
+    <link rel="modulepreload" href="core/collaboration/WorldEditAuthorizationEnvelope.js">
+    <link rel="modulepreload" href="core/world/PlaceNamingClaim.js">
+    <link rel="modulepreload" href="core/building/BlueprintAttribution.js">
+    <link rel="modulepreload" href="core/building/BlueprintLineageClaim.js">
+    <link rel="modulepreload" href="core/publication/DecentralizedPublication.js">
+    <link rel="modulepreload" href="core/publication/PublicationAnchor.js">
+    <link rel="modulepreload" href="core/publication/PublicationSnapshotPlacement.js">
+    <link rel="modulepreload" href="core/publication/PublicationCommentaryDistributionEnvelope.js">
+    <link rel="modulepreload" href="core/publication/PublicationHeartDistributionEnvelope.js">
+    <link rel="modulepreload" href="core/publication/Delegation.js">
     <link rel="modulepreload" href="identity/DescriptorSignature.js">
     <link rel="modulepreload" href="vendor/vue-devtools-api/lib/esm/api/api.js">
     <link rel="modulepreload" href="vendor/vue-devtools-api/lib/esm/api/app.js">
@@ -241,51 +241,51 @@
     <link rel="modulepreload" href="vendor/vue-devtools-api/lib/esm/api/util.js">
     <link rel="modulepreload" href="serializer/Serializer.js">
     <link rel="modulepreload" href="serializer/ValidationResult.js">
-    <link rel="modulepreload" href="core/Document.js">
+    <link rel="modulepreload" href="core/document/Document.js">
     <link rel="modulepreload" href="serializer/DocumentValidator.js">
     <link rel="modulepreload" href="serializer/DocumentSchemaMigrator.js">
     <link rel="modulepreload" href="serializer/WorldSerializer.js">
-    <link rel="modulepreload" href="core/BrickDefinition.js">
-    <link rel="modulepreload" href="core/NightGlow.js">
-    <link rel="modulepreload" href="core/BrickOrientation.js">
-    <link rel="modulepreload" href="core/BrickTable.js">
-    <link rel="modulepreload" href="core/Group.js">
-    <link rel="modulepreload" href="core/StructurePlacement.js">
-    <link rel="modulepreload" href="core/WorldLandmark.js">
-    <link rel="modulepreload" href="core/WorldRegion.js">
-    <link rel="modulepreload" href="core/AnimalDecoration.js">
-    <link rel="modulepreload" href="core/WorldResident.js">
+    <link rel="modulepreload" href="core/building/BrickDefinition.js">
+    <link rel="modulepreload" href="core/nature/NightGlow.js">
+    <link rel="modulepreload" href="core/building/BrickOrientation.js">
+    <link rel="modulepreload" href="core/building/BrickTable.js">
+    <link rel="modulepreload" href="core/building/Group.js">
+    <link rel="modulepreload" href="core/building/StructurePlacement.js">
+    <link rel="modulepreload" href="core/world/WorldLandmark.js">
+    <link rel="modulepreload" href="core/world/WorldRegion.js">
+    <link rel="modulepreload" href="core/nature/AnimalDecoration.js">
+    <link rel="modulepreload" href="core/world/WorldResident.js">
     <link rel="modulepreload" href="core/events/Event.js">
-    <link rel="modulepreload" href="core/BuildEntrance.js">
+    <link rel="modulepreload" href="core/world/BuildEntrance.js">
     <link rel="modulepreload" href="vendor/noble-curves/abstract/fft.js">
     <link rel="modulepreload" href="identity/DelegationVerifier.js">
-    <link rel="modulepreload" href="core/AvatarInteractionKind.js">
-    <link rel="modulepreload" href="core/VehicleType.js">
-    <link rel="modulepreload" href="core/FriendshipAction.js">
-    <link rel="modulepreload" href="core/PublicationCommentary.js">
-    <link rel="modulepreload" href="core/DocumentMetadata.js">
-    <link rel="modulepreload" href="core/documentSchema.js">
-    <link rel="modulepreload" href="core/protocolVersion.js">
-    <link rel="modulepreload" href="core/RegionKind.js">
-    <link rel="modulepreload" href="core/WorldSpatialAnchor.js">
-    <link rel="modulepreload" href="core/AnimalPresence.js">
-    <link rel="modulepreload" href="core/AvatarCollision.js">
-    <link rel="modulepreload" href="core/BrickWalkability.js">
-    <link rel="modulepreload" href="core/BrickPassage.js">
-    <link rel="modulepreload" href="core/version.js">
-    <link rel="modulepreload" href="core/PlacementPolicy.js">
-    <link rel="modulepreload" href="core/AvatarFacing.js">
-    <link rel="modulepreload" href="core/WorldSpatialActivity.js">
-    <link rel="modulepreload" href="core/WildlifeField.js">
-    <link rel="modulepreload" href="core/FiniteCoordinates.js">
-    <link rel="modulepreload" href="core/TerrainHeightField.js">
-    <link rel="modulepreload" href="core/TerrainEcology.js">
-    <link rel="modulepreload" href="core/Hydrology.js">
-    <link rel="modulepreload" href="core/AnimalIdentity.js">
+    <link rel="modulepreload" href="core/avatar/AvatarInteractionKind.js">
+    <link rel="modulepreload" href="core/vehicles/VehicleType.js">
+    <link rel="modulepreload" href="core/social/FriendshipAction.js">
+    <link rel="modulepreload" href="core/publication/PublicationCommentary.js">
+    <link rel="modulepreload" href="core/document/DocumentMetadata.js">
+    <link rel="modulepreload" href="core/document/documentSchema.js">
+    <link rel="modulepreload" href="core/app/protocolVersion.js">
+    <link rel="modulepreload" href="core/world/RegionKind.js">
+    <link rel="modulepreload" href="core/collaboration/WorldSpatialAnchor.js">
+    <link rel="modulepreload" href="core/nature/AnimalPresence.js">
+    <link rel="modulepreload" href="core/avatar/AvatarCollision.js">
+    <link rel="modulepreload" href="core/building/BrickWalkability.js">
+    <link rel="modulepreload" href="core/building/BrickPassage.js">
+    <link rel="modulepreload" href="core/app/version.js">
+    <link rel="modulepreload" href="core/publication/PlacementPolicy.js">
+    <link rel="modulepreload" href="core/avatar/AvatarFacing.js">
+    <link rel="modulepreload" href="core/collaboration/WorldSpatialActivity.js">
+    <link rel="modulepreload" href="core/nature/WildlifeField.js">
+    <link rel="modulepreload" href="core/document/FiniteCoordinates.js">
+    <link rel="modulepreload" href="core/nature/TerrainHeightField.js">
+    <link rel="modulepreload" href="core/nature/TerrainEcology.js">
+    <link rel="modulepreload" href="core/nature/Hydrology.js">
+    <link rel="modulepreload" href="core/nature/AnimalIdentity.js">
     <link rel="modulepreload" href="utils/interpolation.js">
-    <link rel="modulepreload" href="core/RiverBed.js">
-    <link rel="modulepreload" href="core/TerrainSurface.js">
-    <link rel="modulepreload" href="core/RiverChannel.js">
+    <link rel="modulepreload" href="core/nature/RiverBed.js">
+    <link rel="modulepreload" href="core/nature/TerrainSurface.js">
+    <link rel="modulepreload" href="core/nature/RiverChannel.js">
     <!-- modulepreload:end -->
 </head>
 <body>

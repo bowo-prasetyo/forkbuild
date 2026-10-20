@@ -1,12 +1,12 @@
-import { RemoteReadReceipt } from '../../core/RemoteReadReceipt.js';
-import { UserFacingError } from '../../core/UserFacingError.js';
-import { message } from '../../core/Message.js';
+import { RemoteReadReceipt } from '../../core/social/RemoteReadReceipt.js';
+import { UserFacingError } from '../../core/app/UserFacingError.js';
+import { message } from '../../core/app/Message.js';
 
 const STORAGE_KEY_PREFIX = 'chat-remote-read-receipts:';
 
 // 0.2.71 — Explicit Read Acknowledgement.
 //
-// The durable home for core/RemoteReadReceipt.js — "what has each peer
+// The durable home for core/social/RemoteReadReceipt.js — "what has each peer
 // told me they have seen of MY OWN messages." A FIFTH durable per-owner
 // store, alongside application/chat/ChatOutbox.js, application/chat/ConversationStore.js,
 // application/chat/ConversationReadTracker.js, and application/chat/ConversationReadOutbox.js
@@ -16,7 +16,7 @@ const STORAGE_KEY_PREFIX = 'chat-remote-read-receipts:';
 //
 // This class has exactly ONE writer in this codebase:
 // application/chat/ChatUseCase.js#_handleIncomingRead(), and only ever AFTER
-// a core/ChatReadReceipt.js has already passed every trust gate that
+// a core/social/ChatReadReceipt.js has already passed every trust gate that
 // method applies — the claimed `readerIdentity` matches the sending
 // connection's own already-proven remoteIdentity, the sender is not
 // blocked, the sender is currently a FRIEND, and the `conversationId`

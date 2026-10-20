@@ -1,5 +1,5 @@
-import { BlueprintAttribution, BLUEPRINT_ATTRIBUTION_KIND } from '../../core/BlueprintAttribution.js';
-import { LEGACY_BLUEPRINT_FINGERPRINT_REASON, blueprintFingerprintsEqual, isCurrentBlueprintFingerprint } from '../../core/BlueprintFingerprint.js';
+import { BlueprintAttribution, BLUEPRINT_ATTRIBUTION_KIND } from '../../core/building/BlueprintAttribution.js';
+import { LEGACY_BLUEPRINT_FINGERPRINT_REASON, blueprintFingerprintsEqual, isCurrentBlueprintFingerprint } from '../../core/building/BlueprintFingerprint.js';
 import { validateBlueprintAttributionPublication } from './BlueprintAttributionPublicationValidator.js';
 
 // 0.7.0 — Decentralized Publication Protocol & Content Addressing.
@@ -8,7 +8,7 @@ import { validateBlueprintAttributionPublication } from './BlueprintAttributionP
 // — proof that the generic ten-step pipeline that class's own header
 // describes needs nothing new from a domain to work with it: every
 // function this plugin hands over already existed before this milestone
-// (core/BlueprintAttribution.js#fromJSON, application/
+// (core/building/BlueprintAttribution.js#fromJSON, application/
 // BlueprintAttributionPublicationValidator.js, identity/
 // LocalAuthorizationVerifier.js#verifyBlueprintAttribution). 0.7.1 adds
 // application/placeNaming/PlaceNamingClaimPublicationKind.js as a second, deliberately
@@ -19,7 +19,7 @@ import { validateBlueprintAttributionPublication } from './BlueprintAttributionP
 // replacement for application/blueprint/BlueprintAttributionExchange.js's own
 // peer-gossip/pasted-file path built in 0.6.6 — the exact same
 // attribution can travel either way, and a receiver ends up with the
-// identical, independently-verifiable core/BlueprintAttribution.js
+// identical, independently-verifiable core/building/BlueprintAttribution.js
 // either way. What a PublicationResolver adds is a locator an
 // attribution can be FOUND at without a peer connection or a hand-off
 // file at all — a content/LocalContentStore.js, or, as of 0.7.1, a real

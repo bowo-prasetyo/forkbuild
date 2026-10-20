@@ -1,9 +1,9 @@
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { AnimalRuntimeInstancePersistenceStore } from '../storage/AnimalRuntimeInstancePersistenceStore.js';
 import { AnimalRuntimeInstances } from '../application/world/AnimalRuntimeInstances.js';
-import { AnimalPresence } from '../core/AnimalPresence.js';
-import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
-import { Position } from '../core/Position.js';
+import { AnimalPresence } from '../core/nature/AnimalPresence.js';
+import { ANIMAL_SPECIES } from '../core/nature/WildlifeField.js';
+import { Position } from '../core/document/Position.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 

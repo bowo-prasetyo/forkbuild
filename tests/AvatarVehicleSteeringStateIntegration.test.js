@@ -1,8 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
-import { VehicleType } from '../core/VehicleType.js';
-import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
+import { resolveAvatarVehicleMovementCapability } from '../core/vehicles/AvatarVehicleMovementCapability.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
@@ -12,12 +12,12 @@ import { assert } from './support/Assert.js';
 
 // 0.9.94 — Vehicle Steering State Integration.
 //
-// 0.9.93 (core/AvatarMovementSteeringCapability.js +
-// core/AvatarMovementSteeringSimulation.js) built the steering vocabulary
+// 0.9.93 (core/avatar/AvatarMovementSteeringCapability.js +
+// core/avatar/AvatarMovementSteeringSimulation.js) built the steering vocabulary
 // and its pure heading math, and deliberately stopped short of ever
 // calling it — see that milestone's own closing paragraph, "0.9.94
 // connects this milestone's pure heading math to an actual, stateful
-// vehicle heading." This is that milestone: core/AvatarMovementSimulation.js
+// vehicle heading." This is that milestone: core/avatar/AvatarMovementSimulation.js
 // now closes a held turn direction against resolveMovementHeading() at the
 // active capability's own steeringRate, rather than turning the avatar in
 // place at the fixed, instantaneous TURN_RATE_DEGREES_PER_SECOND every
@@ -43,7 +43,7 @@ import { assert } from './support/Assert.js';
 //   Section K: AERIAL_VEHICLE/DRONE now steers gradually too, at its
 //              own rate (Aerial Movement Pipeline milestone)
 //   Section L: architectural regression — the integration seam lives
-//              exactly where core/AvatarMovementSimulation.js's and
+//              exactly where core/avatar/AvatarMovementSimulation.js's and
 //              application/avatar/AvatarMovementController.js's own 0.9.94
 //              headers say it does, and no second heading/orientation
 //              vocabulary was introduced
@@ -74,7 +74,7 @@ function buildAvatarStack(registry, username) {
 // Drives `controller` by holding `key` (or no key at all, when `key` is
 // null) for `ticks` steps of `dt` seconds each, and returns the per-tick
 // `rotation.y` (degrees, already normalized into [0, 360) by
-// core/AvatarMovementSimulation.js's own normalizeDegrees()) — the direct
+// core/avatar/AvatarMovementSimulation.js's own normalizeDegrees()) — the direct
 // observable proxy for heading, without ever reading a private field.
 function tickHeadingsDegrees(controller, avatarPresenceSession, key, ticks, dt) {
     if (key) controller.keyDown(key);
@@ -89,7 +89,7 @@ function tickHeadingsDegrees(controller, avatarPresenceSession, key, ticks, dt) 
 
 // Normalizes an expected plain-degree value (which may be negative, or
 // past 360) into [0, 360) — a small test-only helper, kept separate from
-// core/AvatarMovementSimulation.js's own normalizeDegrees() so this suite
+// core/avatar/AvatarMovementSimulation.js's own normalizeDegrees() so this suite
 // never imports that file's internals.
 function normalizeExpectedDegrees(degrees) {
     const wrapped = degrees % 360;
@@ -99,7 +99,7 @@ function normalizeExpectedDegrees(degrees) {
 // The exact per-tick degrees a RATE_LIMITED capability turns while a turn
 // key is continuously held: `steeringRate` (radians/second) * `dt`,
 // converted to degrees — the SAME quantity
-// core/AvatarMovementSimulation.js's own new heading branch resolves to
+// core/avatar/AvatarMovementSimulation.js's own new heading branch resolves to
 // every tick a held turn's "requested heading" is farther away than one
 // tick could ever close (see that file's own 0.9.94 header,
 // STEERING_TARGET_HEADING_OFFSET_RADIANS). Reproduced here purely to
@@ -119,7 +119,7 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         // WALK's own resolved steering is INSTANT/0
-        // (core/AvatarMovementSteeringCapability.js) — every tick still
+        // (core/avatar/AvatarMovementSteeringCapability.js) — every tick still
         // turns at the existing, fixed TURN_RATE_DEGREES_PER_SECOND, byte-
         // for-byte the same as every milestone before this one. Two
         // otherwise-identical controllers — one that never hears about a
@@ -241,7 +241,7 @@ async function runTests() {
         // CAR's own movementSpeed (12) is the HIGHEST of the three ground
         // vehicles, yet its own steeringRate (2.5) is the LOWEST — turning
         // the SLOWEST of BICYCLE/MOTORCYCLE/CAR despite being the fastest
-        // mover. See core/AvatarVehicleMovementCapability.js's own 0.9.93
+        // mover. See core/vehicles/AvatarVehicleMovementCapability.js's own 0.9.93
         // header for why this ordering is deliberate.
         const { avatarPresenceSession: motorcycleSession } = buildAvatarStack(registry, 'steer-d2-motorcycle');
         const motorcycleController = new AvatarMovementController(motorcycleSession);
@@ -286,7 +286,7 @@ async function runTests() {
         // Seed the avatar facing 350°, then hold A (turning toward
         // increasing degrees) — the heading must cross 350° -> 360°/0° ->
         // upward smoothly, with no jump or reversal at the boundary,
-        // exactly like core/AvatarMovementSteeringSimulation.js's own
+        // exactly like core/avatar/AvatarMovementSteeringSimulation.js's own
         // Section B (tests/AvatarMovementSteeringSimulation.test.js).
         const bicycle = resolveAvatarVehicleMovementCapability(VehicleType.BICYCLE);
         const { avatarPresenceSession } = buildAvatarStack(registry, 'steer-f1');
@@ -469,7 +469,7 @@ async function runTests() {
     // -------------------------------------------------------------
     // Section K — AERIAL_VEHICLE/DRONE now steers gradually too, at its
     // own rate (Aerial Movement Pipeline milestone — see
-    // core/AvatarVehicleMovementCapability.js's own "AERIAL_VEHICLE Is
+    // core/vehicles/AvatarVehicleMovementCapability.js's own "AERIAL_VEHICLE Is
     // Now A Real, Supported Capability" header)
     // -------------------------------------------------------------
     {
@@ -514,7 +514,7 @@ async function runTests() {
         assert(!controllerCodeOnly.includes('AvatarMovementSteeringKind') && !/\.kind\b/.test(controllerCodeOnly.replace(/movementKind/g, '')),
             '26. application/avatar/AvatarMovementController.js never reads AvatarMovementSteeringCapability\'s own .kind — the bare steeringRate number alone (always exactly 0 for INSTANT, always > 0 for RATE_LIMITED) already carries the distinction');
         assert(!controllerCodeOnly.includes('AvatarMovementSteeringSimulation') && !controllerCodeOnly.includes('resolveMovementHeading'),
-            '27. application/avatar/AvatarMovementController.js never imports core/AvatarMovementSteeringSimulation.js or calls resolveMovementHeading() directly — it only ever hands a bare number to core/AvatarMovementSimulation.js, which is the one place this seam is actually wired in');
+            '27. application/avatar/AvatarMovementController.js never imports core/avatar/AvatarMovementSteeringSimulation.js or calls resolveMovementHeading() directly — it only ever hands a bare number to core/avatar/AvatarMovementSimulation.js, which is the one place this seam is actually wired in');
         assert(controllerCodeOnly.includes('_resolvedSteeringRate'),
             '28. application/avatar/AvatarMovementController.js exposes the _resolvedSteeringRate() seam this milestone exists to add');
         assert(!controllerCodeOnly.includes('_currentMovementHeading') && !controllerCodeOnly.includes('VehicleOrientation'),
@@ -522,13 +522,13 @@ async function runTests() {
         assert(!/VehicleMovementController/.test(controllerCodeOnly),
             '30. no second, per-vehicle movement controller was introduced — application/avatar/AvatarMovementController.js remains the one movement executor');
 
-        const simulationSource = await readFile(new URL('../core/AvatarMovementSimulation.js', import.meta.url), 'utf8');
+        const simulationSource = await readFile(new URL('../core/avatar/AvatarMovementSimulation.js', import.meta.url), 'utf8');
         assert(simulationSource.includes('AvatarMovementSteeringSimulation') && simulationSource.includes('resolveMovementHeading'),
-            '31. core/AvatarMovementSimulation.js now imports and calls resolveMovementHeading() — this is the "future milestone" tests/AvatarMovementSteeringSimulation.test.js\'s own header originally named as wiring this seam in');
+            '31. core/avatar/AvatarMovementSimulation.js now imports and calls resolveMovementHeading() — this is the "future milestone" tests/AvatarMovementSteeringSimulation.test.js\'s own header originally named as wiring this seam in');
 
-        const capabilitySource = await readFile(new URL('../core/AvatarVehicleMovementCapability.js', import.meta.url), 'utf8');
+        const capabilitySource = await readFile(new URL('../core/vehicles/AvatarVehicleMovementCapability.js', import.meta.url), 'utf8');
         assert(!capabilitySource.includes('_currentMovementHeading') && !capabilitySource.includes('currentHeading'),
-            '32. core/AvatarVehicleMovementCapability.js still carries no transient current-heading state of any kind — the capability remains immutable; heading remains AvatarPresence\'s own spatial state');
+            '32. core/vehicles/AvatarVehicleMovementCapability.js still carries no transient current-heading state of any kind — the capability remains immutable; heading remains AvatarPresence\'s own spatial state');
     }
 
     console.log('✅ All Vehicle Steering State Integration tests passed.');

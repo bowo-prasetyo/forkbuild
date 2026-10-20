@@ -1,6 +1,6 @@
-import { normalizeTilt } from '../core/BrickOrientation.js';
+import { normalizeTilt } from '../core/building/BrickOrientation.js';
 
-// Sets an object's rotation to a brick's tilt then turn (core/BrickOrientation.js,
+// Sets an object's rotation to a brick's tilt then turn (core/building/BrickOrientation.js,
 // Euler order 'YXZ'). Assigns the order and each axis on its own, so it also
 // works on any object whose rotation is a plain { x, y } holder.
 export function applyBrickOrientation(object, rotationDegrees = 0, tilt = 0) {

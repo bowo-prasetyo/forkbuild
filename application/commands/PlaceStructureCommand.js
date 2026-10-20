@@ -1,7 +1,7 @@
-import { StructurePlacement } from '../../core/StructurePlacement.js';
-import { Position } from '../../core/Position.js';
+import { StructurePlacement } from '../../core/building/StructurePlacement.js';
+import { Position } from '../../core/document/Position.js';
 import { Command } from './Command.js';
-import { message } from '../../core/Message.js';
+import { message } from '../../core/app/Message.js';
 
 // Mirrors application/commands/PlaceBrickCommand.js exactly, one rung
 // up: worldId, documentId (what to place — a REFERENCE, never bricks),

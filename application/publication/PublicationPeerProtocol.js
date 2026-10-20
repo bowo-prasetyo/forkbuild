@@ -2,7 +2,7 @@
 //
 // The WIRE shape carried over peer/PeerMessageBus.js under this file's own
 // DEFAULT_PROTOCOL — deliberately the same smallest-possible wrapper core/
-// DeviceAuthorizationGossip.js and core/IdentityLifecycleGossip.js already
+// DeviceAuthorizationGossip.js and core/identity/IdentityLifecycleGossip.js already
 // established for gossiping a signed record between authenticated peers: a
 // `kind` discriminator plus the record itself, completely unchanged from
 // what it already was. There is no new signature type invented here and no
@@ -21,7 +21,7 @@
 // milestone has no reason to answer prematurely. Adding REQUEST/RESPONSE
 // later means adding two new `kind` values here and two new handlers in
 // application/publication/PublicationPeerExchange.js — never touching ANNOUNCE's own
-// shape, the same additive-only shape core/DeviceAuthorizationGossip.js's
+// shape, the same additive-only shape core/identity/DeviceAuthorizationGossip.js's
 // own GRANT/REVOCATION pair already set as precedent.
 export const PublicationPeerMessageKind = Object.freeze({
     ANNOUNCE: 'ANNOUNCE'

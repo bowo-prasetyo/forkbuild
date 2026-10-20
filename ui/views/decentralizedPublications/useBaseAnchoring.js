@@ -41,7 +41,7 @@ export function useBaseAnchoring({
     archiveBaseAnchorPublicationRecord, archiveBaseTransactionInclusionObservation, loadEvidence,
     persistPublicationObservationArchive, publicationObservationArchive
 }) {
-    // Bitcoin's and Base's wallets are network writers (core/NetworkWriters.js):
+    // Bitcoin's and Base's wallets are network writers (core/publication/NetworkWriters.js):
     // their steps are offered only while Network Settings has this one switched
     // on, read when the page opens.
     const on = isNetworkWriterOn('base');

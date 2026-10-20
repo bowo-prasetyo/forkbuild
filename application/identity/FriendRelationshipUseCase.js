@@ -1,17 +1,17 @@
 import { EventBus } from '../../core/events/EventBus.js';
-import { FriendshipRecord } from '../../core/FriendshipRecord.js';
-import { FriendshipState } from '../../core/FriendshipState.js';
+import { FriendshipRecord } from '../../core/social/FriendshipRecord.js';
+import { FriendshipState } from '../../core/social/FriendshipState.js';
 import {
     FriendshipAction,
     toFriendshipAdvertisement,
     isValidFriendshipAdvertisement,
     getFriendshipSigningDescriptor
-} from '../../core/FriendshipAdvertisement.js';
+} from '../../core/social/FriendshipAdvertisement.js';
 import { LocalAuthorizationVerifier } from '../../identity/LocalAuthorizationVerifier.js';
 import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
 import { resolveDirectSocialIdentity } from './SocialIdentityResolver.js';
-import { UserFacingError } from '../../core/UserFacingError.js';
-import { message } from '../../core/Message.js';
+import { UserFacingError } from '../../core/app/UserFacingError.js';
+import { message } from '../../core/app/Message.js';
 
 const RELATIONSHIPS_CHANGED_EVENT = 'FriendRelationshipsChanged';
 const STORAGE_KEY_PREFIX = 'friend-relationships:';
@@ -24,15 +24,15 @@ const STORAGE_KEY_PREFIX = 'friend-relationships:';
 // This class answers it with a signed REQUEST/ACCEPT exchange, carried
 // directly over `peer/PeerMessageBus.js` between two already-
 // AUTHENTICATED (0.2.49) peers, and two independently persisted
-// `core/FriendshipRecord.js` halves — one on Alice's device, one on
+// `core/social/FriendshipRecord.js` halves — one on Alice's device, one on
 // Bob's — that never require a third party to agree with each other.
 // See docs/Principles.md, "A Friend Request Is Signed Evidence, Never A
 // Server Record" (0.2.57).
 //
 // Deliberately its own class, never folded into
-// application/peer/PeerRelationshipUseCase.js: a `core/PeerRelationship.js`
+// application/peer/PeerRelationshipUseCase.js: a `core/social/PeerRelationship.js`
 // is a one-sided local note requiring nothing from Bob; a
-// `core/FriendshipRecord.js` can only ever reach FRIEND once BOTH
+// `core/social/FriendshipRecord.js` can only ever reach FRIEND once BOTH
 // sides have produced a signature the other side can verify. Mixing
 // the two storage keys, or the two status vocabularies, would quietly
 // let "I remembered someone" and "we mutually agreed" drift toward
@@ -87,7 +87,7 @@ export class FriendRelationshipUseCase {
     // every incoming message, never cached — mirroring
     // presence/PeerAvatarPresenceBroadcastProvider.js's own `isFriend`
     // contract exactly. This class never imports
-    // application/peer/PeerBlockUseCase.js or core/PeerBlockRecord.js itself
+    // application/peer/PeerBlockUseCase.js or core/social/PeerBlockRecord.js itself
     // — it only ever asks the injected predicate, keeping the actual
     // block STORE entirely the caller's concern, the same "peer
     // selection/trust is a transport concern, the store lives
@@ -210,7 +210,7 @@ export class FriendRelationshipUseCase {
     // — see sendFriendRequest's own comment; a block recorded AFTER a
     // request already arrived must still stop Bob being accepted.
     // `inResponseTo` binds this ACCEPT to the SPECIFIC REQUEST
-    // instance being answered — see core/FriendshipAdvertisement.js's
+    // instance being answered — see core/social/FriendshipAdvertisement.js's
     // own header on why.
     acceptFriendRequest(connectedPeer) {
         const peerIdentity = this._requireAuthenticatedPeer(connectedPeer);
@@ -242,7 +242,7 @@ export class FriendRelationshipUseCase {
     // responded to) — rejecting is just as much an ANSWER as accepting
     // is, never available twice. Recording a REJECT collapses this
     // relationship straight back to NONE on both directions — see
-    // core/FriendshipRecord.js#withOutgoingAction's own header — so
+    // core/social/FriendshipRecord.js#withOutgoingAction's own header — so
     // Alice is free to send a fresh request later; a rejection is never
     // permanent.
     rejectFriendRequest(connectedPeer) {
@@ -374,7 +374,7 @@ export class FriendRelationshipUseCase {
     //      own "ACCEPT needs a matching outgoing REQUEST" check and
     //      extends it to REJECT/CANCEL/UNFRIEND (0.2.60), each bound to
     //      the SPECIFIC REQUEST instance it answers/ends via
-    //      `inResponseTo` — see core/FriendshipAdvertisement.js's own
+    //      `inResponseTo` — see core/social/FriendshipAdvertisement.js's own
     //      header for the replay this specifically prevents.
     // Only then is it stored as this relationship's incomingAction.
     _handleIncoming(payload, meta) {
@@ -506,7 +506,7 @@ function replaceById(relationships, relationship) {
     return withoutExisting;
 }
 
-// The exact fingerprint core/FriendshipAdvertisement.js's own
+// The exact fingerprint core/social/FriendshipAdvertisement.js's own
 // `inResponseTo` field references — see that file's header. `action`
 // here is a plain, already-verified advertisement object (or null).
 function requestSignatureOf(action) {
@@ -521,7 +521,7 @@ function requestSignatureOf(action) {
 // refused, unless it points (via `inResponseTo`) at the exact REQUEST
 // advertisement this replica is currently holding for the relevant
 // direction. REQUEST itself has no precondition — anyone may always
-// open a fresh cycle (see core/FriendshipRecord.js's own header on
+// open a fresh cycle (see core/social/FriendshipRecord.js's own header on
 // NONE -> REQUESTED being available again after a terminal action).
 function _isLegitimateTransition(payload, record) {
     switch (payload.action) {

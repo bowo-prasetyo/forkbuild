@@ -10,15 +10,15 @@ import { DecentralizedPublicationDiscoveryProvider } from '../discovery/Decentra
 import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
 import { FindPublicationUseCase } from '../application/publication/FindPublicationUseCase.js';
 import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
-import { PublicationQuery } from '../core/PublicationQuery.js';
-import { groupPublications, GroupBy } from '../core/PublicationGrouping.js';
-import { computeAmbiguousPublishedDateIds, formatPublicationDate } from '../core/PublicationDateAmbiguity.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { PublicationQuery } from '../core/catalog/PublicationQuery.js';
+import { groupPublications, GroupBy } from '../core/catalog/PublicationGrouping.js';
+import { computeAmbiguousPublishedDateIds, formatPublicationDate } from '../core/catalog/PublicationDateAmbiguity.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 
 import PublicationCard from '../ui/components/PublicationCard.js';
 import PublicationCommentarySection from '../ui/components/PublicationCommentarySection.js';
@@ -317,7 +317,7 @@ async function main() {
         assert(byId.items.length === 0, '19. LIVE: search text does NOT match a raw publicationId — typing an id into the search box finds nothing, exactly as it should for a title/author query.');
 
         // C2. CONTENT MATCHING (description) is opt-in, never silent —
-        // core/PublicationQuery.js's own "Description Search Is Opt-In"
+        // core/catalog/PublicationQuery.js's own "Description Search Is Opt-In"
         // boundary, reconfirmed live rather than merely read.
         const withoutDescriptions = backend.searchPublicationsUseCase.execute(new PublicationQuery({ text: 'gargoyle', includeDescriptions: false }));
         assert(withoutDescriptions.items.length === 0, '20. LIVE: a term that ONLY appears in a description is invisible to search by default — content matching is never silently on.');
@@ -399,7 +399,7 @@ async function main() {
         // Deterministic ordering under a tie (D1/D2's own same-title
         // pair) — re-running the identical query twice must return the
         // SAME order, or "page 3" would mean something different each
-        // time (core/PublicationSort.js's own documented invariant).
+        // time (core/catalog/PublicationSort.js's own documented invariant).
         const firstRun = backend.searchPublicationsUseCase.execute(new PublicationQuery({ sort: 'TITLE_ASC' })).items.map((p) => p.id);
         const secondRun = backend.searchPublicationsUseCase.execute(new PublicationQuery({ sort: 'TITLE_ASC' })).items.map((p) => p.id);
         assert(JSON.stringify(firstRun) === JSON.stringify(secondRun), '32. LIVE: re-running the identical query returns the identical order — multiplicity never introduces order nondeterminism.');

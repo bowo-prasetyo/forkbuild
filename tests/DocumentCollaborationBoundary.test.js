@@ -1,9 +1,9 @@
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
@@ -21,7 +21,7 @@ import {
 import {
     toDocumentOperationEnvelope,
     isValidDocumentOperationEnvelope
-} from '../core/DocumentOperationEnvelope.js';
+} from '../core/collaboration/DocumentOperationEnvelope.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
@@ -39,7 +39,7 @@ import { assert } from './support/Assert.js';
 // application/document/DocumentCommandPropagationUseCase.js's own header for the
 // full "boundary, not convergence" argument:
 //
-//   Section A: core/DocumentOperationEnvelope.js — the closed wire shape
+//   Section A: core/collaboration/DocumentOperationEnvelope.js — the closed wire shape
 //              in isolation.
 //   Section B: application/document/DocumentCommandPropagationUseCase.js's own
 //              constructor — every collaborator required.
@@ -147,7 +147,7 @@ function brickPosition(doc, buildingId, brickId) {
 async function runTests() {
 
 // ---------------------------------------------------------------------
-// Section A — core/DocumentOperationEnvelope.js
+// Section A — core/collaboration/DocumentOperationEnvelope.js
 // ---------------------------------------------------------------------
 {
     const command = { type: 'move-brick', id: 'cmd-1', worldId: 'doc-1' };
@@ -168,7 +168,7 @@ async function runTests() {
     assert(isValidDocumentOperationEnvelope({ ...envelope, kind: 'SNAPSHOT' }) === false, '10. an unknown kind is never valid — this protocol never carries a Document snapshot');
     assert(isValidDocumentOperationEnvelope({ ...envelope, operationId: '' }) === false, '11. an empty operationId is never valid');
     assert(isValidDocumentOperationEnvelope({ ...envelope, command: 'not-an-object' }) === false, '12. a non-object command is never valid');
-    console.log('✓ Section A: core/DocumentOperationEnvelope.js — closed OPERATION shape, required fields, malformed rejection');
+    console.log('✓ Section A: core/collaboration/DocumentOperationEnvelope.js — closed OPERATION shape, required fields, malformed rejection');
 }
 
 // ---------------------------------------------------------------------

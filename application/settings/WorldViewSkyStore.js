@@ -1,5 +1,5 @@
 // Keeps this device's choice to keep World View in daylight instead of
-// following its day and night (core/DayCycle.js), for anyone who finds the
+// following its day and night (core/nature/DayCycle.js), for anyone who finds the
 // dark hard to see in or a slow device that would rather skip the glow.
 // Personal and local: never published, shared or part of any World.
 import { StorageProvider } from '../../storage/StorageProvider.js';

@@ -5,12 +5,12 @@ import { isStorageEntryNotLoadedError } from '../storage/StorageEntryNotLoadedEr
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LoadPublishedWorldSessionUseCase } from '../application/publication/LoadPublishedWorldSessionUseCase.js';
-import { Document } from '../core/Document.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { Document } from '../core/document/Document.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { assert } from './support/Assert.js';
 
 // Published content and snapshots ('content:' and 'snapshot:' entries) stay

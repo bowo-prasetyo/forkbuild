@@ -1,8 +1,8 @@
 import { readFile } from 'node:fs/promises';
-import { VehicleType, isValidVehicleType } from '../core/VehicleType.js';
+import { VehicleType, isValidVehicleType } from '../core/vehicles/VehicleType.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.70 — Vehicle Type Vocabulary, core/VehicleType.js.
+// 0.9.70 — Vehicle Type Vocabulary, core/vehicles/VehicleType.js.
 //
 //   Section A: the vocabulary itself — NONE/BICYCLE/MOTORCYCLE/CAR/DRONE
 //   Section B: isValidVehicleType() accepts every member, rejects everything else
@@ -50,7 +50,7 @@ async function runTests() {
     // Section C — architectural regression
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../core/VehicleType.js', import.meta.url);
+        const sourceUrl = new URL('../core/vehicles/VehicleType.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -69,14 +69,14 @@ async function runTests() {
             'velocity', 'acceleration', 'speed', 'position', 'rotation', 'collision'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `19. core/VehicleType.js's own code never references "${term}" — a pure identity vocabulary only, never movement, mounting, or capability`);
+            assert(!codeOnly.includes(term), `19. core/vehicles/VehicleType.js's own code never references "${term}" — a pure identity vocabulary only, never movement, mounting, or capability`);
         }
     }
     {
-        const exportsModule = await import('../core/VehicleType.js');
+        const exportsModule = await import('../core/vehicles/VehicleType.js');
         const exportedNames = Object.keys(exportsModule).sort();
         assert(JSON.stringify(exportedNames) === JSON.stringify(['VehicleType', 'isValidVehicleType']),
-            '20. core/VehicleType.js exports exactly the vocabulary and its validator — no transition function, nothing else');
+            '20. core/vehicles/VehicleType.js exports exactly the vocabulary and its validator — no transition function, nothing else');
     }
 
     console.log('✅ All Vehicle Type tests passed.');

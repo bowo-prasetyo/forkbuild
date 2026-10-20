@@ -1,9 +1,9 @@
 
-import { NostrRelayConfiguration, DEFAULT_NOSTR_RELAY_URL, isValidNostrRelayUrl } from '../core/NostrRelayConfiguration.js';
+import { NostrRelayConfiguration, DEFAULT_NOSTR_RELAY_URL, isValidNostrRelayUrl } from '../core/networks/NostrRelayConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { NostrRelayConfigurationStore } from '../storage/NostrRelayConfigurationStore.js';
 import { SetNostrRelayConfigurationUseCase } from '../application/settings/SetNostrRelayConfigurationUseCase.js';
-import { ArweaveGatewayConfiguration } from '../core/ArweaveGatewayConfiguration.js';
+import { ArweaveGatewayConfiguration } from '../core/networks/ArweaveGatewayConfiguration.js';
 import { ArweaveGatewayConfigurationStore } from '../storage/ArweaveGatewayConfigurationStore.js';
 import { NostrDiscoveryQueryService } from '../application/nostr/NostrDiscoveryQueryService.js';
 import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
@@ -159,8 +159,8 @@ async function run() {
             '10. the view writes the configuration through the injected use case, never NostrRelayConfigurationStore.save() directly');
         assert(!/new NostrRelayConfiguration\(/.test(viewExecutable),
             '11. the view never constructs a NostrRelayConfiguration itself — validation and construction stay inside the use case');
-        assert(viewExecutable.includes("import { DEFAULT_NOSTR_RELAY_URLS } from '../../core/NostrRelayConfiguration.js';"),
-            '12. the ONE thing the view imports from core/NostrRelayConfiguration.js is the plain default constant, for display only');
+        assert(viewExecutable.includes("import { DEFAULT_NOSTR_RELAY_URLS } from '../../core/networks/NostrRelayConfiguration.js';"),
+            '12. the ONE thing the view imports from core/networks/NostrRelayConfiguration.js is the plain default constant, for display only');
         console.log('✓ Section 0: the settings entry point is really wired — nav link, route, shared store, shared use case, and a view that only ever goes through the injected collaborators');
     }
 

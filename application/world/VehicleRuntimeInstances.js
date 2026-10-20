@@ -1,6 +1,6 @@
 import { nearbyVehicleInstances, VEHICLE_RENDER_RADIUS } from './NearbyVehicleInstances.js';
-import { withinRadiusXZ } from '../../core/AvatarVehicleProximity.js';
-import { VehicleInstance } from '../../core/VehicleInstance.js';
+import { withinRadiusXZ } from '../../core/vehicles/AvatarVehicleProximity.js';
+import { VehicleInstance } from '../../core/vehicles/VehicleInstance.js';
 
 // 0.9.116 — Mounted Vehicle Movement. The runtime vehicle-instance
 // ownership boundary this milestone's own brief asked for.
@@ -19,7 +19,7 @@ import { VehicleInstance } from '../../core/VehicleInstance.js';
 // docs/Roadmap.md, 0.9.116, "One subtle issue to resolve."
 //
 // THIS FILE IS THE ONE PLACE "WHERE IS THIS VEHICLE RIGHT NOW" IS
-// ANSWERED, ONCE MOVEMENT EXISTS. core/VehiclePlacement.js (via
+// ANSWERED, ONCE MOVEMENT EXISTS. core/vehicles/VehiclePlacement.js (via
 // application/world/NearbyVehicleInstances.js) keeps answering a narrower,
 // still-true question — "which vehicles exist initially, and where do
 // they start" — and this file is that answer's ONLY consumer for
@@ -67,7 +67,7 @@ import { VehicleInstance } from '../../core/VehicleInstance.js';
 // distance-based visibility, no behavior change for the case 0.9.115
 // alone ever exercised.
 //
-// withinRadiusXZ() IS core/AvatarVehicleProximity.js's OWN PRIMITIVE,
+// withinRadiusXZ() IS core/vehicles/AvatarVehicleProximity.js's OWN PRIMITIVE,
 // REUSED, NEVER REIMPLEMENTED. That file's own header already names
 // exactly this: "a future proximity check against some other object
 // kind ... should be able to reuse this primitive without this file
@@ -93,7 +93,7 @@ import { VehicleInstance } from '../../core/VehicleInstance.js';
 // AND DOCUMENTED AS THE ONE WAY `position` EVER CHANGES. This file never
 // mutates a VehicleInstance, never assigns `.position` directly, and
 // never invents a second position-replacement path — see
-// core/VehicleInstance.js's own header. Returns `null` (never throws,
+// core/vehicles/VehicleInstance.js's own header. Returns `null` (never throws,
 // never invents an entry) for an id this store has not itself
 // discovered via `sync()` — mirroring
 // application/avatar/AvatarVehicleInteractionController.js's own
@@ -101,7 +101,7 @@ import { VehicleInstance } from '../../core/VehicleInstance.js';
 // rather than a crash or a silently-fabricated vehicle.
 //
 // SESSION-LOCAL, IN-MEMORY, NEVER PERSISTED OR NETWORKED. Exactly as
-// ephemeral as `core/VehiclePresence.js`'s own position always was
+// ephemeral as `core/vehicles/VehiclePresence.js`'s own position always was
 // before this milestone — every replica keeps its own independent copy
 // of "where is this vehicle right now," and nothing here broadcasts,
 // signs, or stores a runtime position anywhere. Reconciling two

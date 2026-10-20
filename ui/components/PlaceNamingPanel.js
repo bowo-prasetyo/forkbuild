@@ -5,9 +5,9 @@
 // this viewer's own past self) have said a region should be called.
 // RegionFormModal edits the region's own WorldRegion.name — World
 // content, gated by canEdit. This panel never touches that field at
-// all; it lists/publishes/retracts core/PlaceNamingClaim.js records and
+// all; it lists/publishes/retracts core/world/PlaceNamingClaim.js records and
 // sets a purely local preference, and every action here is available
-// to ANYONE, canEdit or not — see core/PlaceNamingClaim.js's own header
+// to ANYONE, canEdit or not — see core/world/PlaceNamingClaim.js's own header
 // on why a naming claim needs no World edit authority.
 //
 // Props are plain data this component never fetches itself — the host
@@ -43,7 +43,7 @@ export default {
             type: String,
             default: ''
         },
-        // core/PlaceNamingView.js#namingView()'s own shape:
+        // core/world/PlaceNamingView.js#namingView()'s own shape:
         // [{ name, score, claims: [...] }], most-agreed-on first.
         namingView: {
             type: Array,
@@ -73,11 +73,11 @@ export default {
         // 0.5.4 — Place Identity & Geographic Claim Resolution.
         // session.getGeographicNamingView(regionId)'s own `regions`:
         // every region this replica currently knows about whose
-        // geometry CANDIDATE-matches this one's (core/PlaceIdentity.js)
+        // geometry CANDIDATE-matches this one's (core/world/PlaceIdentity.js)
         // — always includes this region itself when it's known, so
         // length 1 means "no other candidate found." Never a claim that
         // any of these are actually the same World object — see this
-        // component's own template copy, and core/PlaceIdentity.js's
+        // component's own template copy, and core/world/PlaceIdentity.js's
         // header, on why "candidate" is the only word used anywhere
         // here.
         geographicRegions: {
@@ -193,7 +193,7 @@ export default {
             return this.geographicRegions.filter((region) => region.id !== this.regionId);
         },
         // 0.5.7 — the top 3 (most-agreed-on — namingView is already
-        // sorted, see core/PlaceNamingView.js#namingView()'s own
+        // sorted, see core/world/PlaceNamingView.js#namingView()'s own
         // header) unless the viewer explicitly asked to see the rest,
         // or there simply aren't more than 3 to hide.
         visibleNamingView() {

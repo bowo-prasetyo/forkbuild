@@ -2,8 +2,8 @@
 // different operator, but their anchor verifiers, which need every node
 // that answers to agree, ask only the first two of them. Any other list,
 // such as one someone saved, is asked as it is.
-import { DEFAULT_STEEM_API_NODES, DEFAULT_STEEM_PROOF_NODES, SteemReadingConfiguration } from '../core/SteemReadingConfiguration.js';
-import { DEFAULT_BLURT_API_NODES, DEFAULT_BLURT_PROOF_NODES, BlurtReadingConfiguration } from '../core/BlurtReadingConfiguration.js';
+import { DEFAULT_STEEM_API_NODES, DEFAULT_STEEM_PROOF_NODES, SteemReadingConfiguration } from '../core/networks/SteemReadingConfiguration.js';
+import { DEFAULT_BLURT_API_NODES, DEFAULT_BLURT_PROOF_NODES, BlurtReadingConfiguration } from '../core/networks/BlurtReadingConfiguration.js';
 import { composeSteemRuntime } from '../application/steem/SteemRuntimeComposition.js';
 import { composeBlurtRuntime } from '../application/blurt/BlurtRuntimeComposition.js';
 import { SteemProofVerifier } from '../anchoring/SteemProofVerifier.js';

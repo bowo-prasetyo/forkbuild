@@ -144,7 +144,7 @@ export class MaterializeSnapshotFromSelectedCandidateUseCase {
     //                        (`resolution.candidates[0].contentHash`), or
     //                        `null` when `resolution.candidates` is empty
     //                        (NOT_DISCOVERED).
-    //   contentReference  — the core/ContentReference.js this replica now
+    //   contentReference  — the core/document/ContentReference.js this replica now
     //                        holds bytes under (STORED/ALREADY_AVAILABLE),
     //                        or `null` otherwise.
     //   reason            — `resolution`'s own `reason`, unchanged, on any

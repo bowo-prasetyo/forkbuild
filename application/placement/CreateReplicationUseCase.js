@@ -25,7 +25,7 @@ import { ReplayGuard } from '../../replication/ReplayGuard.js';
 // cheaply — see replication/ReplayGuard.js and identity/TrustPolicy.js.
 //
 // Pass `findPublicationById` so placements that break their Publication's
-// placement policy (core/PlacementPolicy.js) are rejected at merge.
+// placement policy (core/publication/PlacementPolicy.js) are rejected at merge.
 export class CreateReplicationUseCase {
     execute(storageProvider, placementRegistry, {
         spatialIndexBuilder = null,

@@ -37,7 +37,7 @@ export const SHOTS = Object.freeze([
 const SIZE = { width: 1280, height: 800 };
 
 // Every run shows the same moment: a Tuesday (so the same weekly challenge),
-// mid-morning in World View's 40-minute day (core/DayCycle.js), when the sun
+// mid-morning in World View's 40-minute day (core/nature/DayCycle.js), when the sun
 // is up and casts shadows.
 const DAY_CYCLE_SECONDS = 40 * 60;
 const MOMENT_SECONDS = (() => {

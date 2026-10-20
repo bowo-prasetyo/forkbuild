@@ -1,5 +1,5 @@
 import { inspectWorldEncounterMaterial } from '../../../application/worldEncounter/WorldEncounterMaterialInspection.js';
-import { createId } from '../../../core/createId.js';
+import { createId } from '../../../core/document/createId.js';
 import { errorText, t } from '../../i18n/i18n.js';
 
 // WorldEncounterCanvas methods: observer-local ("Discovered here") encounters, their inspection and commentary.

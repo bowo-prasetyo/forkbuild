@@ -11,7 +11,7 @@ import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
-import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
+import { describeDecentralizedDiscoveryEnvelope } from '../core/publication/DecentralizedDiscoveryEnvelope.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
@@ -52,7 +52,7 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 // UPDATE (0.9.515): fixture fix, not a behavior change. 0.9.494 amended
 // `application/arweave/ArweaveGraphqlDiscoveryQueryService.js#search()` to perform
 // one additional gateway fetch per discovered transaction — decoding it as
-// a real `core/DecentralizedDiscoveryEnvelope.js` envelope and reporting
+// a real `core/publication/DecentralizedDiscoveryEnvelope.js` envelope and reporting
 // THAT envelope's own claimed `uri`, never the announcement transaction's
 // own id, as a candidate's `uri` (see that file's own header). This
 // file's own fake Arweave network boundary (`graphqlSearchFetch()` +

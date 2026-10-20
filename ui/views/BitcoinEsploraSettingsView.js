@@ -1,11 +1,11 @@
 import { inject } from 'vue';
 import { useEndpointListSettings } from '../composables/useEndpointListSettings.js';
-import { DEFAULT_BITCOIN_ESPLORA_API_URLS } from '../../core/BitcoinEsploraConfiguration.js';
+import { DEFAULT_BITCOIN_ESPLORA_API_URLS } from '../../core/networks/BitcoinEsploraConfiguration.js';
 import { t } from '../i18n/i18n.js';
 
 // Bitcoin Esplora Endpoint Settings UI.
 //
-// The missing user-facing seam over core/BitcoinEsploraConfiguration.js +
+// The missing user-facing seam over core/networks/BitcoinEsploraConfiguration.js +
 // storage/BitcoinEsploraConfigurationStore.js: every real Bitcoin-facing
 // network call in this codebase (transaction broadcast, confirmation
 // observation, wallet-funding UTXO lookup, OP_RETURN proof verification —

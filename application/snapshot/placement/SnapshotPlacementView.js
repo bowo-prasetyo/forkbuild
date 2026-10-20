@@ -1,5 +1,5 @@
 import { SnapshotPlacementResolutionOutcome } from './SnapshotPlacementResolutionOutcome.js';
-import { message } from '../../../core/Message.js';
+import { message } from '../../../core/app/Message.js';
 
 // 0.8.20 — Snapshot Placement Inspection & Explicit Resolution UX.
 //
@@ -7,7 +7,7 @@ import { message } from '../../../core/Message.js';
 // already-discovered PublicationAnchor instances plus an optional
 // per-anchor verification-result map into one flat, UI-ready shape. This
 // file is the identical idea applied to placements: it turns a list of
-// already-discovered core/PublicationSnapshotPlacement.js instances
+// already-discovered core/publication/PublicationSnapshotPlacement.js instances
 // (application/snapshot/placement/SnapshotPlacementResolutionCoordinator.js#discover(), a
 // synchronous local catalog read) plus an OPTIONAL, caller-supplied map
 // of resolution results (application/

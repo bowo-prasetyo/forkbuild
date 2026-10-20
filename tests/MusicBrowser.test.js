@@ -1,7 +1,7 @@
 // @environment browser — renders the music with a real OfflineAudioContext.
 import { MusicPlayer } from '../audio/MusicPlayer.js';
 import { WebAudioSoundscapeProvider } from '../audio/WebAudioSoundscapeProvider.js';
-import { MUSIC_MOOD } from '../core/MusicScore.js';
+import { MUSIC_MOOD } from '../core/app/MusicScore.js';
 import { assert } from './support/Assert.js';
 
 // The music (audio/MusicPlayer.js) is heard, soft and never clipping, in

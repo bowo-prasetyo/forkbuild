@@ -1,10 +1,10 @@
-import { deriveBlueprintFingerprint, describeBlueprintFingerprint, isLegacyBlueprintFingerprint } from '../../../core/BlueprintFingerprint.js';
-import { BLUEPRINT_ATTRIBUTION_KIND } from '../../../core/BlueprintAttribution.js';
-import { BLUEPRINT_LINEAGE_CLAIM_KIND } from '../../../core/BlueprintLineageClaim.js';
+import { deriveBlueprintFingerprint, describeBlueprintFingerprint, isLegacyBlueprintFingerprint } from '../../../core/building/BlueprintFingerprint.js';
+import { BLUEPRINT_ATTRIBUTION_KIND } from '../../../core/building/BlueprintAttribution.js';
+import { BLUEPRINT_LINEAGE_CLAIM_KIND } from '../../../core/building/BlueprintLineageClaim.js';
 import { buildBlueprintBundle, blueprintBundlePackages, isBlueprintBundle } from '../../../application/blueprint/BlueprintBundle.js';
 import { isDocumentBundle } from '../../../application/document/DocumentBundle.js';
 import { DocumentImportOutcome, DocumentImportRefusedError } from '../../../application/document/DocumentImportPolicy.js';
-import { message } from '../../../core/Message.js';
+import { message } from '../../../core/app/Message.js';
 import { errorText, t } from '../../i18n/i18n.js';
 import { libraryItemName } from '../../i18n/libraryText.js';
 

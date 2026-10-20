@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-// The seasons on the land (core/Season.js's look): the grass and the fields
+// The seasons on the land (core/nature/Season.js's look): the grass and the fields
 // change colour with them, and the trees come into blossom and leaf, carry
 // fruit, turn red, orange and yellow and stand bare.
 //
@@ -62,7 +62,7 @@ export function createSeasonSurfaces() {
     };
 }
 
-// Shows `look` (core/Season.js#seasonLookAt()) on the ground patched with
+// Shows `look` (core/nature/Season.js#seasonLookAt()) on the ground patched with
 // `surfaces`.
 export function setSeason(surfaces, look) {
     if (!look) return;
@@ -217,7 +217,7 @@ const FRUIT_COLOURS = Object.freeze([[0.72, 0.16, 0.10], [0.85, 0.48, 0.10]]);
 const lerp = (a, b, t) => a + (b - a) * t;
 const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 
-// What the season `look` (core/Season.js) does to one tree, `numbers` its
+// What the season `look` (core/nature/Season.js) does to one tree, `numbers` its
 // own three numbers in [0, 1) and `deciduous` how much its species sheds
 // its leaves (DECIDUOUS):
 //   leaf    how much of its foliage it carries; each drops its leaves (and

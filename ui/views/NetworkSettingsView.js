@@ -76,7 +76,7 @@ export default {
                          pages: "Nostr Relay" (Snapshot/Place Naming
                          discovery only) and "Nostr Publication Relays"
                          (Publication distribution/discovery only). See
-                         core/NostrRelayConfiguration.js's own "unified"
+                         core/networks/NostrRelayConfiguration.js's own "unified"
                          header for the full rationale — the two relay sets
                          were merged into this one page/store, used
                          everywhere Nostr is used (Publications, Snapshots,
@@ -110,7 +110,7 @@ export default {
                          configures STUN servers only (see core/
                          IceServerConfiguration.js's own "STUN ONLY — NEVER
                          TURN" header); this one configures a user's own TURN
-                         relay (core/TurnServerConfiguration.js, 0.9.454),
+                         relay (core/networks/TurnServerConfiguration.js, 0.9.454),
                          deliberately never folded into the STUN row — see
                          ui/views/TurnServerSettingsView.js's own header. -->
                     <router-link to="/settings/turn-server" class="network-settings-link">

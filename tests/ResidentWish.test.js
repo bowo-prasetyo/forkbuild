@@ -1,18 +1,18 @@
 import {
     RESIDENT_WISH, RESIDENT_WISH_STARTER, OPEN_GROUND_DISTANCE, WISH_CLEAR_RADIUS, WISH_SEARCH_RADIUS,
     residentWishNear, phraseWish, wishBuildLabel, isWishTurn
-} from '../core/ResidentWish.js';
-import { describeWhere } from '../core/ResidentTalk.js';
+} from '../core/world/ResidentWish.js';
+import { describeWhere } from '../core/world/ResidentTalk.js';
 import { VillageLibrary } from '../core/library/VillageLibrary.js';
-import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../core/TerrainHeightField.js';
-import { HIGHLAND_ELEVATION } from '../core/TerrainSurface.js';
-import { hydrologyFeatureAt, HYDROLOGY_FEATURE } from '../core/Hydrology.js';
-import { isResidentGroundAt } from '../core/ResidentPath.js';
+import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../core/nature/TerrainHeightField.js';
+import { HIGHLAND_ELEVATION } from '../core/nature/TerrainSurface.js';
+import { hydrologyFeatureAt, HYDROLOGY_FEATURE } from '../core/nature/Hydrology.js';
+import { isResidentGroundAt } from '../core/world/ResidentPath.js';
 import { displayText } from '../ui/i18n/i18n.js';
 import { assert } from './support/Assert.js';
 
 // What a World Resident wonders the ground nearby has never had
-// (core/ResidentWish.js): a statement about a real spot, with a ready-made
+// (core/world/ResidentWish.js): a statement about a real spot, with a ready-made
 // Village structure to start from there. Never a task: nothing here keeps,
 // tracks or rewards anything.
 

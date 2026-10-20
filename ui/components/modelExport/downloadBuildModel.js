@@ -3,7 +3,7 @@ import { extractBuildMeshes } from '../../../renderer/BuildMeshExtraction.js';
 
 // Downloads `world` (a build, with the structures placed in it that
 // `resolveWorld` finds on this device) as a 3D model in `format`
-// (core/BuildModelFormats.js). Brings in Three.js, so pages that don't
+// (core/building/BuildModelFormats.js). Brings in Three.js, so pages that don't
 // already have it import this when asked. Returns `{ fileName,
 // missingPlacements }`; throws a UserFacingError for a build with nothing
 // in it.

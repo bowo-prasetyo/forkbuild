@@ -31,7 +31,7 @@ export class PeerConnection {
     }
 
     // message: a plain, JSON-shaped object — a HELLO/PROOF from
-    // core/PeerAuthenticationEnvelope.js today, any future protocol
+    // core/social/PeerAuthenticationEnvelope.js today, any future protocol
     // message layered on top later. Fire-and-forget at this layer,
     // exactly like AvatarPresenceBroadcastProvider.advertise(): a
     // transport never acknowledges or retries, a protocol built on top

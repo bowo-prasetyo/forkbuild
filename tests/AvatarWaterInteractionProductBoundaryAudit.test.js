@@ -1,24 +1,24 @@
 import { AvatarTerrainConstraint } from '../application/avatar/AvatarTerrainConstraint.js';
 import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 
-import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { surfaceCategoryAt, SURFACE_CATEGORY, WATER_LEVEL } from '../core/TerrainSurface.js';
-import { ecologyZoneAt, ECOLOGY_ZONE } from '../core/TerrainEcology.js';
-import { hydrologyFeatureAt, HYDROLOGY_FEATURE, LAKE_SURFACE_HEIGHT, isRiverAt, hydrologyGroundColorAt } from '../core/Hydrology.js';
+import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { surfaceCategoryAt, SURFACE_CATEGORY, WATER_LEVEL } from '../core/nature/TerrainSurface.js';
+import { ecologyZoneAt, ECOLOGY_ZONE } from '../core/nature/TerrainEcology.js';
+import { hydrologyFeatureAt, HYDROLOGY_FEATURE, LAKE_SURFACE_HEIGHT, isRiverAt, hydrologyGroundColorAt } from '../core/nature/Hydrology.js';
 import { buildWaterTileMesh } from '../renderer/WaterTileMesh.js';
-import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
-import { deriveSpatialContext } from '../core/WorldSpatialContext.js';
+import { vehiclePresenceInRegion } from '../core/vehicles/VehiclePlacement.js';
+import { deriveSpatialContext } from '../core/world/WorldSpatialContext.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.613 — Avatar-Water Interaction Product Boundary Audit.
 //
-// core/Hydrology.js (0.2.89) has represented lakes and rivers for many
+// core/nature/Hydrology.js (0.2.89) has represented lakes and rivers for many
 // milestones, and that same file's own header already names, in its
 // "Deliberately not yet" list, "swimming or any avatar movement state
 // tied to water" as an explicit non-goal — but a comment describing an
@@ -43,7 +43,7 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 //              JSON shape, no swim-state field anywhere).
 //   Section C: an existing, working precedent for terrain-type awareness
 //              already exists elsewhere in this exact codebase
-//              (core/VehiclePlacement.js's own water/river ground gate)
+//              (core/vehicles/VehiclePlacement.js's own water/river ground gate)
 //              — and is never consulted for the avatar.
 //   Section D: water is discovery-layer flavor text (WorldSpatialContext's
 //              own `description` string), never a gameplay effect.
@@ -136,7 +136,7 @@ async function runTests() {
 
         // River: classified RIVER, but its own ground category is
         // never WATER — a river never overlaps a lake by construction
-        // (core/Hydrology.js's own fixed-evaluation-order guarantee).
+        // (core/nature/Hydrology.js's own fixed-evaluation-order guarantee).
         assert(hydrologyFeatureAt(seed, river.x, river.z) === HYDROLOGY_FEATURE.RIVER,
             '4. The scanned river coordinate is classified RIVER');
         assert(surfaceCategoryAt(seed, river.x, river.z) !== SURFACE_CATEGORY.WATER,
@@ -188,7 +188,7 @@ async function runTests() {
         let sawLakeSurfaceVertex = false;
         for (let i = 0; i < waterGeometryPosition.count; i++) {
             // Float32Array precision (a BufferAttribute's own storage,
-            // not core/Hydrology.js's double-precision LAKE_SURFACE_HEIGHT
+            // not core/nature/Hydrology.js's double-precision LAKE_SURFACE_HEIGHT
             // itself) — a generous-but-still-exacting tolerance for it.
             if (Math.abs(waterGeometryPosition.getY(i) - LAKE_SURFACE_HEIGHT) < 1e-4) { sawLakeSurfaceVertex = true; break; }
         }
@@ -281,7 +281,7 @@ async function runTests() {
         const avatarPresenceSession = new AvatarPresenceSession(profile, {
             position: { x: shoreline.shoreX, y: 0, z: shoreline.shoreZ },
             // rotationY chosen so forward movement (dx=sin, dz=cos, see
-            // core/AvatarMovementSimulation.js) walks along the exact
+            // core/avatar/AvatarMovementSimulation.js) walks along the exact
             // shoreline->lake direction this scan found, whichever axis
             // that happens to be.
             rotation: { x: 0, y: Math.atan2(shoreline.dirX, shoreline.dirZ) * (180 / Math.PI), z: 0 }
@@ -321,7 +321,7 @@ async function runTests() {
     // never consulted for the avatar.
     // -------------------------------------------------------------
     {
-        // core/VehiclePlacement.js's own real, production ground gate
+        // core/vehicles/VehiclePlacement.js's own real, production ground gate
         // (documented in that file's own header: "A bicycle standing in
         // open water or a river channel is wrong") genuinely holds over
         // a wide real region — this is enforced behavior, not merely a

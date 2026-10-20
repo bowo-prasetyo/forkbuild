@@ -4,7 +4,7 @@ import { observeBitcoinAnchorChainPlacementChanges } from './BitcoinAnchorChainP
 import { analyzeBitcoinAnchorObservationConsistency } from './BitcoinAnchorObservationConsistencyAnalyzer.js';
 import { PublicationObservationArchive } from '../../publication/observationArchive/PublicationObservationArchive.js';
 import { findBitcoinAnchorPublicationRecordByAnchorId } from './BitcoinAnchorPublicationRecordHistory.js';
-import { message } from '../../../core/Message.js';
+import { message } from '../../../core/app/Message.js';
 
 // 0.8.81 — Bitcoin Anchor Publication Lifecycle Timeline.
 //

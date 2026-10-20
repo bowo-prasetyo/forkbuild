@@ -1,5 +1,5 @@
 import { DecentralizedDiscoveryQueryService } from '../discovery/DecentralizedWorldDiscoveryQuery.js';
-import { parseDecentralizedDiscoveryEnvelope } from '../../core/DecentralizedDiscoveryEnvelope.js';
+import { parseDecentralizedDiscoveryEnvelope } from '../../core/publication/DecentralizedDiscoveryEnvelope.js';
 import { responseContentLength, byteLength } from '../../utils/responseSize.js';
 
 const DEFAULT_GRAPHQL_URL = 'https://arweave.net/graphql';
@@ -50,7 +50,7 @@ const URI_SCHEME_PATTERN = /^([a-zA-Z][a-zA-Z0-9+.-]*):\/\//;
 // ArweaveWorldEncounterMaterialResolver.js` already ships and this codebase
 // has already proven correct for content retrieval — decodes the signed
 // publication envelope it returns via the existing, unmodified
-// `core/DecentralizedDiscoveryEnvelope.js#parseDecentralizedDiscoveryEnvelope()`,
+// `core/publication/DecentralizedDiscoveryEnvelope.js#parseDecentralizedDiscoveryEnvelope()`,
 // and reports THAT envelope's own claimed `uri`, never the announcement
 // transaction's id, as the candidate's `uri`:
 //
@@ -145,7 +145,7 @@ const URI_SCHEME_PATTERN = /^([a-zA-Z][a-zA-Z0-9+.-]*):\/\//;
 //   ever reads; see "A ForkBuild publisher... this class never writes,"
 //   above. `application/arweave/ArweaveAnnouncementPublisher.js` and `application/
 //   ArweaveTaggedTransactionUpload.js` are untouched by 0.9.494.
-// - **Any change to `core/DecentralizedWorldDiscoveryLead.js`'s own
+// - **Any change to `core/world/DecentralizedWorldDiscoveryLead.js`'s own
 //   schema.** 0.9.493 Section D already proved none is required for
 //   `announcementId` to ride alongside a candidate's `uri`.
 // - **Any change to `application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js`

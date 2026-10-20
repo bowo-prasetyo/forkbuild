@@ -1,10 +1,10 @@
 import * as THREE from 'three';
-import { DAY } from '../core/DayCycle.js';
+import { DAY } from '../core/nature/DayCycle.js';
 import { rainColor } from './RainFall.js';
 
 // What drifts down round the camera with the seasons: snowflakes in winter
-// (core/Weather.js's snow), leaves in autumn and blossom petals in spring
-// (core/Season.js's leafDrift and petalDrift, where trees that shed them
+// (core/nature/Weather.js's snow), leaves in autumn and blossom petals in spring
+// (core/nature/Season.js's leafDrift and petalDrift, where trees that shed them
 // stand: renderer/TreeForest.js#deciduousNearby).
 //
 // Drawn as renderer/RainFall.js draws the rain, in one draw: every flake's

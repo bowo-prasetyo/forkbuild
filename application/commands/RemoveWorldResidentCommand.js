@@ -1,6 +1,6 @@
-import { WorldResident } from '../../core/WorldResident.js';
+import { WorldResident } from '../../core/world/WorldResident.js';
 import { Command } from './Command.js';
-import { message } from '../../core/Message.js';
+import { message } from '../../core/app/Message.js';
 
 // World Residents: removes a resident from its World. Undo restores the
 // exact resident (same id, same home), so it walks exactly as it did.

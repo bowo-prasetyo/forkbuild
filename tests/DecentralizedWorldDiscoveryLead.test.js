@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
-import { describeDecentralizedWorldDiscoveryLead } from '../core/DecentralizedWorldDiscoveryLead.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { describeDecentralizedWorldDiscoveryLead } from '../core/world/DecentralizedWorldDiscoveryLead.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.24 — Decentralized World Discovery Source Boundary.
@@ -99,7 +99,7 @@ function leadOf(overrides = {}) {
 }
 
 // ---------------------------------------------------------------------
-// 6. `uri`/`storage` line up with core/ContentReference.js's own field names,
+// 6. `uri`/`storage` line up with core/document/ContentReference.js's own field names,
 //    so an eventual, verified ContentReference can be built without renaming
 // ---------------------------------------------------------------------
 {
@@ -113,14 +113,14 @@ function leadOf(overrides = {}) {
     assert(reference.uri === lead.uri, 'lead.uri lines up with ContentReference#uri');
     assert(reference.storage === lead.storage, 'lead.storage lines up with ContentReference#storage');
 
-    console.log('✓ uri/storage line up with core/ContentReference.js\'s own field names');
+    console.log('✓ uri/storage line up with core/document/ContentReference.js\'s own field names');
 }
 
 // ---------------------------------------------------------------------
 // 7. Vocabulary boundary: no trust, network, storage-persistence, envelope, or backend vocabulary
 // ---------------------------------------------------------------------
 {
-    const sourceUrl = new URL('../core/DecentralizedWorldDiscoveryLead.js', import.meta.url);
+    const sourceUrl = new URL('../core/world/DecentralizedWorldDiscoveryLead.js', import.meta.url);
     const source = await readFile(sourceUrl, 'utf8');
     const codeOnly = source
         .split('\n')
@@ -136,7 +136,7 @@ function leadOf(overrides = {}) {
         'ContentReference', 'DecentralizedPublication', 'hash'
     ];
     for (const term of forbidden) {
-        assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `core/DecentralizedWorldDiscoveryLead.js code must never use the word "${term}"`);
+        assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `core/world/DecentralizedWorldDiscoveryLead.js code must never use the word "${term}"`);
     }
 
     console.log('✓ Vocabulary boundary: no trust, network, storage-persistence, envelope, or backend vocabulary');

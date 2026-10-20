@@ -3,7 +3,7 @@ import NetworkWriterSwitch from '../components/networkWriters/NetworkWriterSwitc
 import { useWritableNetworks } from '../components/networkWriters/useWritableNetworks.js';
 import { useEndpointSettingsForm } from '../composables/useEndpointSettingsForm.js';
 import { splitNonEmptyLines } from '../../utils/splitNonEmptyLines.js';
-import { DEFAULT_BLURT_API_NODES } from '../../core/BlurtReadingConfiguration.js';
+import { DEFAULT_BLURT_API_NODES } from '../../core/networks/BlurtReadingConfiguration.js';
 import { t } from '../i18n/i18n.js';
 
 // Where Blurt posts are read from (applies on the next load, like the other
@@ -15,7 +15,7 @@ export default {
     name: 'BlurtSettingsView',
     components: { NetworkWriterSwitch },
     setup() {
-        // The account form only while this device posts to Blurt (core/NetworkWriters.js).
+        // The account form only while this device posts to Blurt (core/publication/NetworkWriters.js).
         const { blurtOn: postingOn } = useWritableNetworks();
         const store = inject('blurtReadingConfigurationStore', null);
         const useCase = inject('setBlurtReadingConfigurationUseCase', null);

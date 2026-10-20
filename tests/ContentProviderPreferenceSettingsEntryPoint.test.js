@@ -1,5 +1,5 @@
-import { RoleProviderRole } from '../core/RoleProviderRole.js';
-import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
+import { RoleProviderRole } from '../core/publication/RoleProviderRole.js';
+import { RoleProviderPreference } from '../core/publication/RoleProviderPreference.js';
 import { RoleProviderPreferenceStore } from '../storage/RoleProviderPreferenceStore.js';
 import { RoleAwareProviderResolver, RoleProviderResolutionStatus } from '../application/settings/RoleAwareProviderResolver.js';
 import { ResolvePreferredRoleProviderUseCase } from '../application/settings/ResolvePreferredRoleProviderUseCase.js';
@@ -192,7 +192,7 @@ async function run() {
             '7. the view reads the preference through the injected store, never a store it constructs itself');
         assert(/inject\('setRoleProviderPreferenceUseCase',\s*null\)/.test(viewSource),
             '8. the view writes the preference through the injected use case, never RoleProviderPreferenceStore.save() directly');
-        assert(!/from '..\/..\/core\/RoleProviderPreference\.js'/.test(viewSource),
+        assert(!/from '..\/..\/core\/publication\/RoleProviderPreference\.js'/.test(viewSource),
             '9. the view never even imports RoleProviderPreference, let alone constructs one itself — see this milestone\'s own architectural rule');
         assert(!/inject\('snapshotPlacementCreationCoordinator'/.test(viewSource),
             '10. the view never touches the EXPLICIT placement coordinator — saving a preference here can never be confused with an explicit Local/IPFS placement action');
@@ -403,9 +403,9 @@ async function run() {
         const store = new RoleProviderPreferenceStore(new InMemoryStorageProvider());
         const setUseCase = new SetRoleProviderPreferenceUseCase({ preferenceStore: store });
         await expectThrows(() => setUseCase.execute({ role: RoleProviderRole.CONTENT, providerKey: '' }),
-            '41. an empty providerKey is refused, exactly as core/RoleProviderPreference.js already refuses one');
+            '41. an empty providerKey is refused, exactly as core/publication/RoleProviderPreference.js already refuses one');
         await expectThrows(() => setUseCase.execute({ role: RoleProviderRole.CONTENT, providerKey: 'Not-Valid' }),
-            '42. an uppercase-leading providerKey is refused, exactly as core/RoleProviderPreference.js already refuses one');
+            '42. an uppercase-leading providerKey is refused, exactly as core/publication/RoleProviderPreference.js already refuses one');
         await expectThrows(() => setUseCase.execute({ role: 'NOT_A_REAL_ROLE', providerKey: 'ipfs' }),
             '43. an unknown role is refused');
     }

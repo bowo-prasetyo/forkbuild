@@ -1,12 +1,12 @@
 import { readFile } from 'node:fs/promises';
 import { describePublicationDistribution } from '../application/publication/distribution/PublicationDistributionDescriptor.js';
 import { Publication } from '../publisher/Publication.js';
-import { ContentReference } from '../core/ContentReference.js';
-import { Signature } from '../core/Signature.js';
+import { ContentReference } from '../core/document/ContentReference.js';
+import { Signature } from '../core/publication/Signature.js';
 import {
     describeDecentralizedDiscoveryEnvelope,
     parseDecentralizedDiscoveryEnvelope
-} from '../core/DecentralizedDiscoveryEnvelope.js';
+} from '../core/publication/DecentralizedDiscoveryEnvelope.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.44 — Publication Discovery Distribution Model.
@@ -38,7 +38,7 @@ async function run() {
     // ---------------------------------------------------------------
     // 1. Flagship: a signed publication + a supplied materialUri
     //    describes a real distribution, whose own discoveryEnvelope is
-    //    exactly what core/DecentralizedDiscoveryEnvelope.js already
+    //    exactly what core/publication/DecentralizedDiscoveryEnvelope.js already
     //    validates and a consumer can already parse.
     // ---------------------------------------------------------------
     {

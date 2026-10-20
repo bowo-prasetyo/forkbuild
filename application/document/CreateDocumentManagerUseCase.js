@@ -1,5 +1,5 @@
-import { Document } from '../../core/Document.js';
-import { DocumentMetadata } from '../../core/DocumentMetadata.js';
+import { Document } from '../../core/document/Document.js';
+import { DocumentMetadata } from '../../core/document/DocumentMetadata.js';
 import { DocumentManager } from './DocumentManager.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 import { untitledWorldTitle } from './DocumentTitles.js';
@@ -30,7 +30,7 @@ export class CreateDocumentManagerUseCase {
     // actually logged in.
     // 0.2.95 — `authorIdentityId` is stamped the SAME way `author`
     // already is, just from the stronger signing surface instead of
-    // the login-label one — see core/DocumentMetadata.js's own 0.2.95
+    // the login-label one — see core/document/DocumentMetadata.js's own 0.2.95
     // comment on why both are recorded, and identity/
     // resolveSigningIdentityId.js on why this never throws even when
     // identityProvider has no crypto surface (or nobody is logged in).

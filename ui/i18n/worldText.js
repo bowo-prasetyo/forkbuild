@@ -2,7 +2,7 @@
 // kinds ("village") and what a collaborator is doing ("building"). core/ uses
 // them as values, so they are translated here, where they reach the screen.
 // A value without a message (one a newer client sent) is shown as it came.
-import { WorldSpatialActivity } from '../../core/WorldSpatialActivity.js';
+import { WorldSpatialActivity } from '../../core/collaboration/WorldSpatialActivity.js';
 import { hasMessage, t } from './i18n.js';
 
 function textFor(key, fallback) {
@@ -10,7 +10,7 @@ function textFor(key, fallback) {
 }
 
 // The derived reading of where the camera is, e.g. "Forest · lake · near
-// House": the same parts core/WorldSpatialContext.js#description joins, in
+// House": the same parts core/world/WorldSpatialContext.js#description joins, in
 // the chosen language.
 export function spatialContextDescription(context) {
     if (!context) {
@@ -47,7 +47,7 @@ const ACTIVITY_KEYS = {
     [WorldSpatialActivity.WALKING]: 'walking'
 };
 
-// The words core/WorldSpatialAnchor.js#describeSpatialActivity() uses for
+// The words core/collaboration/WorldSpatialAnchor.js#describeSpatialActivity() uses for
 // the 3D marker, in the chosen language: "Building", or "Building House"
 // when what they are working on is known. Walking never names a target,
 // and anything else reads "Here".

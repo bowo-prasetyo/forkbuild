@@ -3,8 +3,8 @@ import {
     parseSnapshotDiscoveryEnvelope,
     SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL,
     SNAPSHOT_DISCOVERY_ENVELOPE_VERSION
-} from '../core/SnapshotDiscoveryEnvelope.js';
-import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
+} from '../core/publication/SnapshotDiscoveryEnvelope.js';
+import { describeDecentralizedDiscoveryEnvelope } from '../core/publication/DecentralizedDiscoveryEnvelope.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.133 — Snapshot Discovery Envelope.

@@ -7,7 +7,7 @@
 // cell, so they don't land in step), each at its own place in the cell, and
 // a ring spreads from it out to RING_RADIUS, fading as it grows. How many of
 // those drops actually fall is the rain's strength (`uRain`, 0 to 1,
-// core/Weather.js's rain), so a shower dots the water and a downpour covers
+// core/nature/Weather.js's rain), so a shower dots the water and a downpour covers
 // it. Each pixel looks at its own cell and the eight round it, since a ring
 // can reach over a cell's edge.
 //

@@ -329,7 +329,7 @@ export class WebRtcPeerConnection extends PeerConnection {
     }
 
     // The receiving side of a renegotiation: applies a remote offer
-    // (raw SDP text, from a core/VoiceMediaSignal.js the caller already
+    // (raw SDP text, from a core/social/VoiceMediaSignal.js the caller already
     // validated) and produces a local answer. Resolves with the raw SDP
     // answer text for the caller to relay back.
     async applyRemoteOffer(sdp) {

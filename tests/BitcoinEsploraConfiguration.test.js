@@ -1,5 +1,5 @@
 
-import { BitcoinEsploraConfiguration, isValidBitcoinEsploraApiUrl, DEFAULT_BITCOIN_ESPLORA_API_URL, DEFAULT_BITCOIN_ESPLORA_API_URLS } from '../core/BitcoinEsploraConfiguration.js';
+import { BitcoinEsploraConfiguration, isValidBitcoinEsploraApiUrl, DEFAULT_BITCOIN_ESPLORA_API_URL, DEFAULT_BITCOIN_ESPLORA_API_URLS } from '../core/networks/BitcoinEsploraConfiguration.js';
 import { assert } from './support/Assert.js';
 import { readSource as source } from './support/SourceText.js';
 
@@ -8,7 +8,7 @@ import { readSource as source } from './support/SourceText.js';
 // Section G for the seven-times-reconfirmed DEFER this milestone reopens,
 // on the concrete "no way for a user to route around a down default" gap
 // that audit itself named as the one thing that would legitimately reopen
-// it, and core/BitcoinEsploraConfiguration.js's own header for the full
+// it, and core/networks/BitcoinEsploraConfiguration.js's own header for the full
 // seam this closes.
 //
 // Section A: construction — a valid absolute http(s) URL round-trips
@@ -136,7 +136,7 @@ async function run() {
     // Section H — architecture sweep.
     // ===============================================================
     {
-        const configSource = await source('core/BitcoinEsploraConfiguration.js');
+        const configSource = await source('core/networks/BitcoinEsploraConfiguration.js');
         const configExecutable = configSource.replace(/\/\/.*$/gm, '');
         assert(!/localStorage|StorageProvider/.test(configExecutable), 'H1. no persistence of any kind');
         assert(!/\bfetch\s*\(/.test(configExecutable), 'H2. no fetch() call anywhere');

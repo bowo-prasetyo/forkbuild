@@ -1,5 +1,5 @@
 import { IpfsContentStore, ContentUnavailableError } from '../content/IpfsContentStore.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { assert } from './support/Assert.js';
 

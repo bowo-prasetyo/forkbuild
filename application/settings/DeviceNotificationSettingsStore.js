@@ -1,8 +1,8 @@
 // Keeps whether this browser shows ForkBuild's notifications through the
-// operating system (core/DeviceNotifications.js). Personal and local: never
+// operating system (core/social/DeviceNotifications.js). Personal and local: never
 // published, shared or part of any World.
 import { StorageProvider } from '../../storage/StorageProvider.js';
-import { normalizeDeviceNotificationSettings } from '../../core/DeviceNotifications.js';
+import { normalizeDeviceNotificationSettings } from '../../core/social/DeviceNotifications.js';
 
 const STORAGE_KEY = 'device-notification-settings';
 

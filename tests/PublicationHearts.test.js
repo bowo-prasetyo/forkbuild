@@ -1,6 +1,6 @@
-import { PublicationHeart, currentHeartsFor } from '../core/PublicationHeart.js';
-import { PublicationHeartDistributionEnvelope, PUBLICATION_HEART_DISTRIBUTION_KIND } from '../core/PublicationHeartDistributionEnvelope.js';
-import { PublicationCommentary } from '../core/PublicationCommentary.js';
+import { PublicationHeart, currentHeartsFor } from '../core/publication/PublicationHeart.js';
+import { PublicationHeartDistributionEnvelope, PUBLICATION_HEART_DISTRIBUTION_KIND } from '../core/publication/PublicationHeartDistributionEnvelope.js';
+import { PublicationCommentary } from '../core/publication/PublicationCommentary.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
 import { PublicationHeartStore } from '../storage/PublicationHeartStore.js';
@@ -14,7 +14,7 @@ import { PublicationHeartDistributionLog, createPublicationHeartDistributor } fr
 import { NostrPublicationHeartDistribution, HEART_DISCOVERY_TAG } from '../application/nostr/NostrPublicationHeartDistribution.js';
 import { PublicationCommentaryDistributionExchange } from '../application/publication/commentary/PublicationCommentaryDistributionExchange.js';
 import { createIdentityNames } from '../application/publication/identityNames.js';
-import { isUserFacingError } from '../core/UserFacingError.js';
+import { isUserFacingError } from '../core/app/UserFacingError.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { makeIdentity } from './support/TestIdentity.js';
 import { assert } from './support/Assert.js';

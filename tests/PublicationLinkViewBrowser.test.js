@@ -12,13 +12,13 @@ import { Publication } from '../publisher/Publication.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { ShowcaseLibrary } from '../core/library/ShowcaseLibrary.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { License, LicenseId } from '../core/License.js';
-import { EditorEntryReason } from '../core/EditorEntryContext.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { License, LicenseId } from '../core/document/License.js';
+import { EditorEntryReason } from '../core/document/EditorEntryContext.js';
 import { SimilarBuildFinder } from '../application/publication/SimilarBuildFinder.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { t } from '../ui/i18n/i18n.js';
@@ -208,7 +208,7 @@ const text = (host, selector) => host.querySelector(selector)?.textContent.trim(
 }
 
 // A build made together credits the friends who built it with its author
-// (core/BuiltWith.js), here and in its family tree.
+// (core/catalog/BuiltWith.js), here and in its family tree.
 {
     const castle = publishCastle({ remix: false, builtWith: [{ name: 'Kim', identityId: 'did:key:z6MkKim' }, { name: 'Sam', identityId: 'did:key:z6MkSam' }] });
     const discovery = new DecentralizedPublicationDiscoveryProvider();

@@ -1,8 +1,8 @@
-import { WorldResident } from '../core/WorldResident.js';
-import { World } from '../core/World.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { Position } from '../core/Position.js';
+import { WorldResident } from '../core/world/WorldResident.js';
+import { World } from '../core/document/World.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { Position } from '../core/document/Position.js';
 import { DomainEvent } from '../core/events/Event.js';
 import { EventBus } from '../core/events/EventBus.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
@@ -11,10 +11,10 @@ import { CreateWorldResidentCommand } from '../application/commands/CreateWorldR
 import { RemoveWorldResidentCommand } from '../application/commands/RemoveWorldResidentCommand.js';
 import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
 import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
-import { createSecureId } from '../core/createId.js';
+import { createSecureId } from '../core/document/createId.js';
 import { assert } from './support/Assert.js';
 
-// World Residents as World content: core/WorldResident.js, core/World.js,
+// World Residents as World content: core/world/WorldResident.js, core/document/World.js,
 // the two commands, and the document envelope.
 //
 //   Section A: the value object

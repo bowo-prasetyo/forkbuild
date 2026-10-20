@@ -1,7 +1,7 @@
 // @environment browser
 import { createApp, h, nextTick } from 'vue';
 import PlacementEditorDialog from '../ui/components/PlacementEditorDialog.js';
-import { computeDeterministicGridPosition } from '../core/DeterministicGridPlacement.js';
+import { computeDeterministicGridPosition } from '../core/world/DeterministicGridPlacement.js';
 import { assert } from './support/Assert.js';
 
 // Move Placement's "Move to its grid spot", rendered by real Vue: it fills the

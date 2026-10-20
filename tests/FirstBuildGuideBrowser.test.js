@@ -1,7 +1,7 @@
 // @environment browser
 import { createApp, nextTick, reactive } from 'vue';
 import FirstBuildGuide from '../ui/components/FirstBuildGuide.js';
-import { FIRST_BUILD_STEPS, normalizeFirstBuildProgress } from '../core/FirstBuildChecklist.js';
+import { FIRST_BUILD_STEPS, normalizeFirstBuildProgress } from '../core/challenge/FirstBuildChecklist.js';
 import { t } from '../ui/i18n/i18n.js';
 import { assert } from './support/Assert.js';
 

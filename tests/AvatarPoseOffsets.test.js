@@ -1,5 +1,5 @@
-import { getAvatarPoseOffsets } from '../core/AvatarPoseOffsets.js';
-import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
+import { getAvatarPoseOffsets } from '../core/avatar/AvatarPoseOffsets.js';
+import { AvatarAnimationState } from '../core/avatar/AvatarAnimationState.js';
 import { assert } from './support/Assert.js';
 
 // 0.2.35 — pure pose math, no Three.js, no rendering. Same "pure

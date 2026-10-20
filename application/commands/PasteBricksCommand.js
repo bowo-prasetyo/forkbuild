@@ -1,6 +1,6 @@
-import { Brick } from '../../core/Brick.js';
-import { Group } from '../../core/Group.js';
-import { Position } from '../../core/Position.js';
+import { Brick } from '../../core/building/Brick.js';
+import { Group } from '../../core/building/Group.js';
+import { Position } from '../../core/document/Position.js';
 import { Command } from './Command.js';
 import { descriptionFromJSON, descriptionToJSON, bricksMessage } from './HistoryDescription.js';
 
@@ -70,7 +70,7 @@ export class PasteBricksCommand extends Command {
     get type() { return 'paste-bricks'; }
     // Whether these are a ready-made Build Library structure's bricks
     // (application/editor/CopyStructureIntoDocumentUseCase.js) rather than
-    // the builder's own, copied and pasted (core/PlacedBricks.js).
+    // the builder's own, copied and pasted (core/building/PlacedBricks.js).
     get isLibraryStructure() { return this._description?.key === 'history.copyStructureIntoDocument'; }
     get structureId() { return this._structureId; }
 

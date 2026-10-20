@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { describeWorldEncounterView } from '../application/worldEncounter/WorldEncounterView.js';
 import { describeWorldEncounterReadModel } from '../application/worldEncounter/WorldEncounterReadModel.js';
-import { deriveWorldEncounters } from '../core/WorldEncounter.js';
+import { deriveWorldEncounters } from '../core/world/WorldEncounter.js';
 import { assert } from './support/Assert.js';
 import { serialize } from './support/Serialize.js';
 

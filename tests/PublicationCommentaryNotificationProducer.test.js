@@ -8,7 +8,7 @@ import {
     PublicationCommentaryNotificationProducer,
     PUBLICATION_COMMENTED_EVENT_TYPE
 } from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
-import { NotificationEvent } from '../core/NotificationEvent.js';
+import { NotificationEvent } from '../core/social/NotificationEvent.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { makeIdentity } from './support/TestIdentity.js';
 import { assert } from './support/Assert.js';
@@ -384,8 +384,8 @@ async function runTests() {
             'N3. no delivery/retry/read-state/lifecycle vocabulary appears anywhere in the producer\'s own code');
 
         const importLines = producerSource.split('\n').filter((line) => line.trim().startsWith('import'));
-        assert(importLines.length === 1 && importLines[0].includes("'../../../core/NotificationEvent.js'"),
-            'N4. the producer file imports exactly one thing — core/NotificationEvent.js — and nothing else');
+        assert(importLines.length === 1 && importLines[0].includes("'../../../core/social/NotificationEvent.js'"),
+            'N4. the producer file imports exactly one thing — core/social/NotificationEvent.js — and nothing else');
     }
 
     // -------------------------------------------------------------
@@ -394,9 +394,9 @@ async function runTests() {
     // wiring in a real producer.
     // -------------------------------------------------------------
     {
-        const notificationEventSource = codeOnlyLines(await rawSource('core/NotificationEvent.js'));
+        const notificationEventSource = codeOnlyLines(await rawSource('core/social/NotificationEvent.js'));
         assert(!/PublicationCommentary|AddPublicationCommentaryUseCase|LocalDiscoveryProvider|Publication\.js|ChatOutbox/.test(notificationEventSource),
-            'O1. core/NotificationEvent.js still imports nothing Commentary/Publication/ChatOutbox-shaped — the dependency runs one way only, producer -> NotificationEvent, never the reverse');
+            'O1. core/social/NotificationEvent.js still imports nothing Commentary/Publication/ChatOutbox-shaped — the dependency runs one way only, producer -> NotificationEvent, never the reverse');
 
         const addUseCaseSource = codeOnlyLines(await rawSource('application/publication/commentary/AddPublicationCommentaryUseCase.js'));
         assert(!/NotificationEvent|notificationSink|PublicationCommentaryNotificationProducer/.test(addUseCaseSource),

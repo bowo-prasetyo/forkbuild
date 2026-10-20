@@ -1,5 +1,5 @@
-import { STEEM_DISCOVERY_THREAD_ACCOUNT, isSteemAccountName } from '../../core/SteemDiscoveryThread.js';
-import { parseSteemContentLocator } from '../../core/SteemContentManifest.js';
+import { STEEM_DISCOVERY_THREAD_ACCOUNT, isSteemAccountName } from '../../core/networks/SteemDiscoveryThread.js';
+import { parseSteemContentLocator } from '../../core/networks/SteemContentManifest.js';
 import { SteemContentStore } from '../../content/SteemContentStore.js';
 import { DEFAULT_STEEM_API_NODES, createSteemRpcClient } from '../../steem/SteemRpcClient.js';
 import { createSteemKeychainBroadcaster } from '../../steem/SteemKeychainBroadcaster.js';

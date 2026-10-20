@@ -2,7 +2,7 @@
 // each command names itself with one, a composite adds up children of one
 // kind, and a label a command carries travels as a message while one saved
 // by an older version is kept as the English it was written in.
-import { isMessage, message } from '../core/Message.js';
+import { isMessage, message } from '../core/app/Message.js';
 import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { CompositeCommand } from '../application/commands/CompositeCommand.js';
@@ -13,7 +13,7 @@ import { TransformSelectionCommand } from '../application/commands/TransformSele
 import { CreateWorldLandmarkCommand } from '../application/commands/CreateWorldLandmarkCommand.js';
 import { CreateWorldAnimalDecorationCommand } from '../application/commands/CreateWorldAnimalDecorationCommand.js';
 import { descriptionFromJSON, descriptionToJSON } from '../application/commands/HistoryDescription.js';
-import { World } from '../core/World.js';
+import { World } from '../core/document/World.js';
 import { displayText } from '../ui/i18n/i18n.js';
 import { Translator } from '../ui/i18n/Translator.js';
 import en from '../ui/i18n/messages/en.js';

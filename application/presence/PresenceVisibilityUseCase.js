@@ -1,11 +1,11 @@
-import { PresenceVisibilityPolicy } from '../../core/PresenceVisibilityPolicy.js';
-import { isValidPresenceVisibility } from '../../core/PresenceVisibility.js';
-import { UserFacingError } from '../../core/UserFacingError.js';
-import { message } from '../../core/Message.js';
+import { PresenceVisibilityPolicy } from '../../core/avatar/PresenceVisibilityPolicy.js';
+import { isValidPresenceVisibility } from '../../core/avatar/PresenceVisibility.js';
+import { UserFacingError } from '../../core/app/UserFacingError.js';
+import { message } from '../../core/app/Message.js';
 
 const STORAGE_KEY_PREFIX = 'presence-visibility:';
 
-// 0.2.40 — the persistence half of core/PresenceVisibilityPolicy.js,
+// 0.2.40 — the persistence half of core/avatar/PresenceVisibilityPolicy.js,
 // one policy per identity, loaded/created/saved through an injected
 // StorageProvider — the EXACT same "stable per-owner configuration,
 // created once with a safe default, reused after" shape

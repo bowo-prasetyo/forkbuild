@@ -9,7 +9,7 @@ import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placem
 import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
 import { describeWorldFromDiscoveryRegistry } from '../application/discovery/WorldDiscoveryRegistryProjection.js';
 import { Publication } from '../publisher/Publication.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.163 — Snapshot World Origin Collision Fix.
@@ -299,7 +299,7 @@ async function run() {
         const codeOnly = bridgeSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         assert(!/dedup|reconcil|merge|trust|ranking/i.test(codeOnly), '1. no deduplication/reconciliation/merging/trust/ranking vocabulary was introduced into the bridge\'s own executable code');
 
-        for (const relativePath of ['../core/WorldDiscoverySourceAssembly.js', '../application/discovery/WorldDiscoverySourceRegistry.js', '../core/WorldEncounter.js']) {
+        for (const relativePath of ['../core/world/WorldDiscoverySourceAssembly.js', '../application/discovery/WorldDiscoverySourceRegistry.js', '../core/world/WorldEncounter.js']) {
             const source = await readFile(new URL(relativePath, import.meta.url), 'utf8');
             const untouchedCodeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
             assert(!/snapshot:/.test(untouchedCodeOnly), `2. ${relativePath} contains no Snapshot-specific origin vocabulary of its own — the fix lives entirely inside the bridge (failed for ${relativePath})`);

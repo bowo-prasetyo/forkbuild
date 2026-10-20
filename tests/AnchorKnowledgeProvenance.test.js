@@ -1,4 +1,4 @@
-import { PublicationAnchor } from '../core/PublicationAnchor.js';
+import { PublicationAnchor } from '../core/publication/PublicationAnchor.js';
 import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
 import { PublicationAnchorExchange } from '../application/anchoring/PublicationAnchorExchange.js';
 import { PublicationAnchorPeerExchange } from '../application/anchoring/PublicationAnchorPeerExchange.js';
@@ -7,8 +7,8 @@ import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerifi
 import { CreatePublicationAnchorUseCase } from '../application/anchoring/CreatePublicationAnchorUseCase.js';
 import { ImportPackageAnchorsUseCase, PackageAnchorImportReason } from '../application/anchoring/ImportPackageAnchorsUseCase.js';
 import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
-import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { DecentralizedPublication } from '../core/publication/DecentralizedPublication.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { AnchorAcquisitionKind, isValidAnchorAcquisitionKind } from '../application/anchoring/AnchorAcquisitionKind.js';
 import { createAnchorKnowledgeRecord, anchorKnowledgeRecordFromJSON, anchorKnowledgeRecordToJSON } from '../application/anchoring/AnchorKnowledgeRecord.js';
 import { LocalAnchorKnowledgeStore } from '../application/anchoring/LocalAnchorKnowledgeStore.js';

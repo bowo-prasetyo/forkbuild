@@ -1,10 +1,10 @@
-import { indoorCutaway } from '../core/IndoorView.js';
-import { brickAabb } from '../core/AvatarCollision.js';
+import { indoorCutaway } from '../core/building/IndoorView.js';
+import { brickAabb } from '../core/avatar/AvatarCollision.js';
 import { CoreLibrary } from '../core/library/CoreLibrary.js';
 import { VillageLibrary } from '../core/library/VillageLibrary.js';
-import { AMBIENT_LAYER, ambientMixAt, ambientMixInRain } from '../core/AmbientSoundscape.js';
-import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../core/TerrainHeightField.js';
-import { CameraPerspective } from '../core/CameraPerspective.js';
+import { AMBIENT_LAYER, ambientMixAt, ambientMixInRain } from '../core/app/AmbientSoundscape.js';
+import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../core/nature/TerrainHeightField.js';
+import { CameraPerspective } from '../core/avatar/CameraPerspective.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { WorldSoundscapeService } from '../application/world/WorldSoundscapeService.js';

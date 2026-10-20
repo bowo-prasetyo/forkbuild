@@ -4,7 +4,7 @@ import {
     describeWorldEncounterSelectionOutcomeFromRegistry,
     WorldEncounterSelectionOutcomeStatus
 } from '../application/worldEncounter/WorldEncounterSelectionOutcome.js';
-import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
+import { describeWorldDiscoverySource } from '../core/world/WorldDiscoverySource.js';
 import { describeLocalWorldDiscoverySource } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
 import { assert } from './support/Assert.js';

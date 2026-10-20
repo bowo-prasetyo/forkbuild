@@ -1,12 +1,12 @@
 import { computeLifecycleStatus, describeLifecycleStatus } from '../document/DocumentLifecycleStatus.js';
-import { detectSpatialOverlap } from '../../core/SpatialOverlap.js';
-import { evaluateSpatialAllocation } from '../../core/SpatialAllocationPolicy.js';
-import { isWithinRadius, distanceBetween } from '../../core/SpatialQuery.js';
-import { summarizeDiscoveryDiagnostics } from '../../core/DiscoveryDiagnosticsSummary.js';
+import { detectSpatialOverlap } from '../../core/world/SpatialOverlap.js';
+import { evaluateSpatialAllocation } from '../../core/world/SpatialAllocationPolicy.js';
+import { isWithinRadius, distanceBetween } from '../../core/world/SpatialQuery.js';
+import { summarizeDiscoveryDiagnostics } from '../../core/world/DiscoveryDiagnosticsSummary.js';
 import { latestPublisherPlacementRecord } from '../placement/PublisherPlacementClaim.js';
-import { SpatialBounds } from '../../core/SpatialBounds.js';
-import { plazaFootprint } from '../../core/ChallengePlaza.js';
-import { terrainHeightAt } from '../../core/TerrainHeightField.js';
+import { SpatialBounds } from '../../core/world/SpatialBounds.js';
+import { plazaFootprint } from '../../core/challenge/ChallengePlaza.js';
+import { terrainHeightAt } from '../../core/nature/TerrainHeightField.js';
 
 // Location-browser radii. NEARBY_RADIUS is small but non-zero: the camera
 // essentially never lands exactly on a placement's position (Focus parks it
@@ -434,7 +434,7 @@ export const placementMethods = {
     },
 
     // { allowed, reason } for placing this Publication as the current user,
-    // per its publisher's placement policy (core/PlacementPolicy.js). Allowed
+    // per its publisher's placement policy (core/publication/PlacementPolicy.js). Allowed
     // when no PlacePublicationUseCase is wired: placing would fail anyway.
     // Takes a Publication or its id.
     getPublicationPlacementPermission(publication) {
@@ -550,7 +550,7 @@ export const placementMethods = {
         this._session.hideClaimedBuild(key);
     },
 
-    // The challenge plaza's exhibits (core/ChallengePlaza.js): drawn solid but
+    // The challenge plaza's exhibits (core/challenge/ChallengePlaza.js): drawn solid but
     // unpickable, never as a Placement. Solid to walk into, too: while shown,
     // an exhibit is one of the solid builds the avatar's collision and
     // step-up read (_solidDocuments() below), at the ground height it is
@@ -568,7 +568,7 @@ export const placementMethods = {
         this._session.hidePlazaExhibit(key);
     },
 
-    // While a challenge plaza is visited (core/PlazaEntrySpots.js,
+    // While a challenge plaza is visited (core/challenge/PlazaEntrySpots.js,
     // PLAZA_QUIET_RADIUS): placed builds within `radius` of `center` whose
     // document isn't in `keep` (the week's entries) are left out of what
     // streams in (_findVisibleDocuments()), so the square shows that week

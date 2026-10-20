@@ -1,7 +1,7 @@
-import { familyTreesOf, remixFamily, remixFamilySize } from '../core/RemixFamily.js';
+import { familyTreesOf, remixFamily, remixFamilySize } from '../core/publication/RemixFamily.js';
 import { assert } from './support/Assert.js';
 
-// A build's family (core/RemixFamily.js): the builds it was remixed from,
+// A build's family (core/publication/RemixFamily.js): the builds it was remixed from,
 // back to the original, and the remixes made of it, from what Publications
 // state, as far as this device knows.
 

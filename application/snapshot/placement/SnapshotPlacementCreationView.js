@@ -1,7 +1,7 @@
 import { SnapshotPlacementCreationOutcome } from './SnapshotPlacementCreationOutcome.js';
 import { SnapshotPlacementCreationUiState } from './SnapshotPlacementCreationUiState.js';
 import { RoleProviderResolutionStatus } from '../../settings/RoleAwareProviderResolver.js';
-import { message } from '../../../core/Message.js';
+import { message } from '../../../core/app/Message.js';
 
 // 0.8.25 — Explicit Snapshot Placement Creation UX.
 //

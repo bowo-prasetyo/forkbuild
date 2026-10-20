@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 48b83be51fa03585 -->
+<!-- translation-of: docs/Privacy.md source-hash: 822c93745b70c626 -->
 # Confidentialité
 
 <!-- languages -->
@@ -297,8 +297,8 @@ toute façon le stockage d’un site à l’intérieur des pages d’autres site
 règles : jamais avec Global Privacy Control ou Do Not Track, et seulement
 depuis le site officiel.
 
-Le code se trouve dans `core/VisitorCount.js`,
-`core/LaunchChannel.js`, `application/settings/CountDailyVisit.js`,
+Le code se trouve dans `core/app/VisitorCount.js`,
+`core/app/LaunchChannel.js`, `application/settings/CountDailyVisit.js`,
 `application/settings/CountLaunchChannel.js`,
 `application/settings/FunnelEventCounter.js`, `ui/counterHit.js`,
 `ui/start.js` et `ui/embed/embedBoot.js`.
@@ -444,5 +444,5 @@ serveurs.
 
 Le comptage des visiteurs ne fonctionne que sur le site officiel, donc une
 copie hébergée ailleurs ne compte rien. Pour compter vos propres visiteurs,
-changez les adresses dans `core/VisitorCount.js` et l’entrée `img-src` de la
+changez les adresses dans `core/app/VisitorCount.js` et l’entrée `img-src` de la
 Content Security Policy de `index.html`.

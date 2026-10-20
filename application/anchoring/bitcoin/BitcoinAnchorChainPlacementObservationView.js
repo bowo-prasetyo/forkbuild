@@ -1,5 +1,5 @@
 import { BitcoinAnchorChainPlacementObservationOutcome } from './BitcoinAnchorChainPlacementObservation.js';
-import { message } from '../../../core/Message.js';
+import { message } from '../../../core/app/Message.js';
 
 // 0.8.76 — Bitcoin Anchor Chain Placement Change Observation.
 //

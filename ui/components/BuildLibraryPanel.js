@@ -2,8 +2,8 @@ import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 import BuildLibraryPreview from './BuildLibraryPreview.js';
 import StructureLibraryCard from './StructureLibraryCard.js';
 import VillagePaletteSwatches from './VillagePaletteSwatches.js';
-import { sortStructures, STRUCTURE_SORT_OPTIONS } from '../../core/sortStructures.js';
-import { toCssHex, fromCssHex } from '../../core/ColorHex.js';
+import { sortStructures, STRUCTURE_SORT_OPTIONS } from '../../core/building/sortStructures.js';
+import { toCssHex, fromCssHex } from '../../core/building/ColorHex.js';
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 import { libraryCategoryName, libraryItemDescription, libraryItemName } from '../i18n/libraryText.js';
 import { t } from '../i18n/i18n.js';
@@ -38,7 +38,7 @@ export function matches(query, ...fields) {
 // number of [{ category, structures }] group arrays (built-in, then
 // personal) and preserves first-seen order across all of them, the
 // same "first category to appear wins its position" rule
-// core/groupStructuresByCategory.js already established for a single
+// core/building/groupStructuresByCategory.js already established for a single
 // source, extended here to a vocabulary spanning two.
 export function buildCategoryOptions(...groupsLists) {
     const order = [];
@@ -209,7 +209,7 @@ export function groupBricksForDisplay(groups) {
 //     (buildCategoryOptions(), above) — `category` stays an ordinary
 //     string on Structure itself; no hard-coded taxonomy is added
 //     anywhere in core/.
-//   - A sort dropdown (core/sortStructures.js) — presentation-only
+//   - A sort dropdown (core/building/sortStructures.js) — presentation-only
 //     ordering, applied within each rendered category group; a
 //     Structure's id/serialized form never changes based on how the
 //     library happens to be sorted right now.
@@ -231,7 +231,7 @@ export default {
             required: true
         },
         // Ordered [{ category, structures }] — see
-        // core/StructureRegistry.js#groupByCategory(). Read once by the
+        // core/building/StructureRegistry.js#groupByCategory(). Read once by the
         // caller (a registry's contents never change at runtime, the
         // same reasoning BrickPalette's own `groups` already applied),
         // so this panel takes the already-grouped result rather than a
@@ -256,8 +256,8 @@ export default {
             default: null
         },
         // 0.6.4 — the brick registry, needed only for the 'footprint'/
-        // 'height' sort keys (core/sortStructures.js delegates to
-        // core/SpatialBounds.js#fromBricks(), same as
+        // 'height' sort keys (core/building/sortStructures.js delegates to
+        // core/world/SpatialBounds.js#fromBricks(), same as
         // ui/components/StructureInfoPanel.js already does). Optional —
         // sorting degrades gracefully (a 1x1x1-per-brick estimate)
         // without one; see sortStructures()'s own header.
@@ -269,7 +269,7 @@ export default {
         // only (application/editor/LocalStructureLibraryStore.js#getSavedAtById()),
         // consulted solely by the 'recent' sort key. A built-in
         // Structure never appears in this map — see
-        // core/sortStructures.js's own header on why that's correct.
+        // core/building/sortStructures.js's own header on why that's correct.
         personalSavedAtById: {
             type: Object,
             default: () => ({})

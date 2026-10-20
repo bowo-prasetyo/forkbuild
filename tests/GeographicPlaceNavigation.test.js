@@ -5,15 +5,15 @@ import {
     directionLabelBetween,
     deriveNearbyGeographicPlaces, DEFAULT_NEARBY_GEOGRAPHIC_PLACE_RADIUS,
     searchGeographicPlaces
-} from '../core/GeographicPlaceNavigation.js';
-import { buildGeographicPlaceView } from '../core/GeographicPlaceView.js';
-import { resolveGeographicPlaces } from '../core/GeographicPlaceResolution.js';
+} from '../core/world/GeographicPlaceNavigation.js';
+import { buildGeographicPlaceView } from '../core/world/GeographicPlaceView.js';
+import { resolveGeographicPlaces } from '../core/world/GeographicPlaceResolution.js';
 import { WorldLocationDirectory, ORIGIN_LOCATION_ID } from '../application/world/WorldLocationDirectory.js';
-import { WorldLocationKind } from '../core/WorldLocationKind.js';
-import { WorldRegion } from '../core/WorldRegion.js';
-import { RegionKind } from '../core/RegionKind.js';
-import { Position } from '../core/Position.js';
-import { World } from '../core/World.js';
+import { WorldLocationKind } from '../core/world/WorldLocationKind.js';
+import { WorldRegion } from '../core/world/WorldRegion.js';
+import { RegionKind } from '../core/world/RegionKind.js';
+import { Position } from '../core/document/Position.js';
+import { World } from '../core/document/World.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
 import { LocalPlaceNamingPublicationLog } from '../application/placeNaming/LocalPlaceNamingPublicationLog.js';
@@ -41,7 +41,7 @@ import { makeIdentity } from './support/TestIdentity.js';
 // WITHOUT a geographic place ever becoming a fourth stored object or a
 // new kind of World content:
 //
-// Section A: core/GeographicPlaceNavigation.js — the derived id space
+// Section A: core/world/GeographicPlaceNavigation.js — the derived id space
 //            (`place:<fingerprintKey>`), deriveGeographicPlaceNavigationTarget()'s
 //            deterministic representative pick, deriveNearbyGeographicPlaces()'s
 //            distance/direction math, searchGeographicPlaces()
@@ -116,7 +116,7 @@ function setAvatarPosition(session, x, z) {
 
 async function run() {
     // -------------------------------------------------------------
-    // Section A: core/GeographicPlaceNavigation.js
+    // Section A: core/world/GeographicPlaceNavigation.js
     // -------------------------------------------------------------
     {
         // Id space round-trip.
@@ -144,7 +144,7 @@ async function run() {
         const target = deriveGeographicPlaceNavigationTarget(place);
         assert(target && target.regionId === place.representativeRegion.id && target.worldId === place.representativeRegion.worldId,
             '11. the navigation target IS the place\'s own deterministic representativeRegion — never re-derived or re-picked');
-        assert(target.regionId === 'a', '12. representativeRegion is the worldId:id-sorted first region ("w1:a" < "w2:b") — matches core/GeographicPlaceView.js exactly');
+        assert(target.regionId === 'a', '12. representativeRegion is the worldId:id-sorted first region ("w1:a" < "w2:b") — matches core/world/GeographicPlaceView.js exactly');
         assert(target.title === place.displayName, '13. the target\'s title is the place\'s own displayName, never the representative region\'s raw WorldRegion.name when a better one exists');
         assert(target.fingerprintKey === place.fingerprintKey, '14. the target carries the place\'s own fingerprintKey through');
 
@@ -153,13 +153,13 @@ async function run() {
         assert(deriveGeographicPlaceNavigationTarget({ representativeRegion: {} }) === null, '17. a representativeRegion with no id at all is null');
 
         // Purely a presentation pick, never authority — the SAME
-        // restraint core/GeographicPlaceView.js's own representativeRegion
+        // restraint core/world/GeographicPlaceView.js's own representativeRegion
         // already holds to; this function adds no new opinion.
         assert(regionA.name === 'Unnamed Region' && regionB.name === 'Kawahara Village',
             '18. deriving a navigation target never writes back into either WorldRegion');
 
         // directionLabelBetween()
-        assert(directionLabelBetween({ x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 10 }) === 'N', '19. due +Z is North, matching core/CompassHeading.js\'s own convention');
+        assert(directionLabelBetween({ x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 10 }) === 'N', '19. due +Z is North, matching core/world/CompassHeading.js\'s own convention');
         assert(directionLabelBetween({ x: 0, y: 0, z: 0 }, { x: 10, y: 0, z: 0 }) === 'W', '20. due +X is West (on your left facing North)');
         assert(directionLabelBetween({ x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: -10 }) === 'S', '21. due -Z is South');
         assert(directionLabelBetween({ x: 0, y: 0, z: 0 }, { x: -10, y: 0, z: 0 }) === 'E', '22. due -X is East (on your right facing North)');
@@ -207,7 +207,7 @@ async function run() {
         assert(searchGeographicPlaces([], 'anything').length === 0, '39. searching an empty directory is []');
         assert(searchGeographicPlaces(undefined, 'x').length === 0, '40. searchGeographicPlaces(undefined, ...) is [], never a throw');
     }
-    console.log('✓ Section A: core/GeographicPlaceNavigation.js — id space, deterministic navigation target, distance/direction math, search');
+    console.log('✓ Section A: core/world/GeographicPlaceNavigation.js — id space, deterministic navigation target, distance/direction math, search');
 
     // -------------------------------------------------------------
     // Section B: application/world/WorldLocationDirectory.js (isolated)
@@ -286,7 +286,7 @@ async function run() {
         const nearby = session.getNearbyGeographicPlaces();
         assert(nearby.length === 1 && nearby[0].displayName === 'Solitary Hamlet', '57. once a position is known, the loaded place is found nearby');
         assert(nearby[0].distance > 0 && nearby[0].distance < 10, '58. the reported distance is the real XZ distance to the SAME position focusLocation() itself resolves to (see phase below)');
-        assert(session.getNearbyGeographicPlaces(1).length === 0, '59. a radius tighter than the actual distance excludes it, same as core/GeographicPlaceNavigation.js\'s own filter');
+        assert(session.getNearbyGeographicPlaces(1).length === 0, '59. a radius tighter than the actual distance excludes it, same as core/world/GeographicPlaceNavigation.js\'s own filter');
 
         const directory = session.getGeographicPlaceDirectory();
         assert(directory.length === 1, 'sanity: exactly one candidate place');
@@ -450,7 +450,7 @@ async function run() {
     // is representative) is a pure function of GEOMETRY alone, entirely
     // independent of naming claims: changing which name currently ranks
     // first changes the DISPLAYED title, never the destination or the
-    // grouping. Proven directly against core/GeographicPlaceResolution.js,
+    // grouping. Proven directly against core/world/GeographicPlaceResolution.js,
     // no replica plumbing required.
     {
         const rawRegions = [

@@ -1,4 +1,4 @@
-import { createId } from '../core/createId.js';
+import { createId } from '../core/document/createId.js';
 import { PeerInvitation } from './PeerInvitation.js';
 
 // 0.2.65 — the ONE message shape the rendezvous protocol ever sends over
@@ -20,7 +20,7 @@ import { PeerInvitation } from './PeerInvitation.js';
 // rendezvous network.
 //
 // 0.2.66 adds one OPTIONAL field beyond what 0.2.65 shipped: `signature`,
-// an Ed25519 signature (core/RendezvousPublicationEnvelope.js's own
+// an Ed25519 signature (core/social/RendezvousPublicationEnvelope.js's own
 // getRendezvousPublicationSigningDescriptor()) over the ENTIRE publication
 // — never a credential, still: it proves "whoever holds identityHint's own
 // private key produced this specific PUBLISH," nothing about who actually

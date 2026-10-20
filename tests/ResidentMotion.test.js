@@ -1,21 +1,21 @@
-import { residentPoseAt, RESIDENT_MOTION } from '../core/ResidentMotion.js';
-import { isResidentWalkClear, isResidentGroundAt, RESIDENT_COLLISION_RADIUS } from '../core/ResidentPath.js';
-import { residentAppearanceFor, RESIDENT_TEMPLATE_ID } from '../core/ResidentAppearance.js';
-import { surfaceCategoryAt, SURFACE_CATEGORY } from '../core/TerrainSurface.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+import { residentPoseAt, RESIDENT_MOTION } from '../core/world/ResidentMotion.js';
+import { isResidentWalkClear, isResidentGroundAt, RESIDENT_COLLISION_RADIUS } from '../core/world/ResidentPath.js';
+import { residentAppearanceFor, RESIDENT_TEMPLATE_ID } from '../core/world/ResidentAppearance.js';
+import { surfaceCategoryAt, SURFACE_CATEGORY } from '../core/nature/TerrainSurface.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { residentFacingFor, RESIDENT_REACTION } from '../renderer/ResidentReaction.js';
 import { assert } from './support/Assert.js';
 
-// Where a World Resident walks (core/ResidentMotion.js, core/ResidentPath.js),
-// what it looks like (core/ResidentAppearance.js) and how it notices the
+// Where a World Resident walks (core/world/ResidentMotion.js, core/world/ResidentPath.js),
+// what it looks like (core/world/ResidentAppearance.js) and how it notices the
 // viewer (renderer/ResidentReaction.js).
 //
 //   Section A: determinism and bounds
 //   Section B: continuity — position and facing never jump, over hours
 //   Section C: obstacles — a wall is never crossed; a blocked straight walk
 //              detours by way of home; a blocked waypoint is home itself
-//   Section D: core/ResidentPath.js — boxes, circles, water, slopes
+//   Section D: core/world/ResidentPath.js — boxes, circles, water, slopes
 //   Section E: appearance — deterministic, and always the template's own options
 //   Section F: noticing the viewer — only while settled, never behind, and
 //              never a jump in facing
@@ -158,7 +158,7 @@ function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section D — core/ResidentPath.js
+    // Section D — core/world/ResidentPath.js
     // -------------------------------------------------------------
     {
         const box = { min: { x: 0, z: 0 }, max: { x: 1, z: 1 } };

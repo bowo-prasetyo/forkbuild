@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { describeDecentralizedPublicationLocationClaim } from '../core/DecentralizedPublicationLocationClaim.js';
+import { describeDecentralizedPublicationLocationClaim } from '../core/publication/DecentralizedPublicationLocationClaim.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.29 — Decentralized Association Evidence Ingress.
@@ -79,21 +79,21 @@ function publicationOf(overrides = {}) {
 //    vocabulary; never imports the Publication class or ContentReference.
 // ---------------------------------------------------------------------
 {
-    const sourceUrl = new URL('../core/DecentralizedPublicationLocationClaim.js', import.meta.url);
+    const sourceUrl = new URL('../core/publication/DecentralizedPublicationLocationClaim.js', import.meta.url);
     const source = await readFile(sourceUrl, 'utf8');
     const codeOnly = source
         .split('\n')
         .filter((line) => !line.trim().startsWith('//'))
         .join('\n');
 
-    assert(!codeOnly.includes("from '../publisher/Publication.js'") && !codeOnly.includes('publisher/Publication'), 'core/DecentralizedPublicationLocationClaim.js must never import the Publication class — duck-typed only');
-    assert(!codeOnly.includes('ContentReference'), 'core/DecentralizedPublicationLocationClaim.js must never reference ContentReference');
-    assert(!codeOnly.includes('LocalAuthorizationVerifier'), 'core/DecentralizedPublicationLocationClaim.js must never verify a signature');
-    assert(!codeOnly.includes('AVATAR'), 'core/DecentralizedPublicationLocationClaim.js must never produce an AVATAR claim');
+    assert(!codeOnly.includes("from '../publisher/Publication.js'") && !codeOnly.includes('publisher/Publication'), 'core/publication/DecentralizedPublicationLocationClaim.js must never import the Publication class — duck-typed only');
+    assert(!codeOnly.includes('ContentReference'), 'core/publication/DecentralizedPublicationLocationClaim.js must never reference ContentReference');
+    assert(!codeOnly.includes('LocalAuthorizationVerifier'), 'core/publication/DecentralizedPublicationLocationClaim.js must never verify a signature');
+    assert(!codeOnly.includes('AVATAR'), 'core/publication/DecentralizedPublicationLocationClaim.js must never produce an AVATAR claim');
 
     const forbidden = ['trust', 'verified', 'authority', 'priority', 'weight', 'confidence', 'rank', 'preferred', 'best', 'fetch(', 'websocket', 'WebSocket', 'StorageProvider'];
     for (const term of forbidden) {
-        assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `core/DecentralizedPublicationLocationClaim.js code must never use the word "${term}"`);
+        assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `core/publication/DecentralizedPublicationLocationClaim.js code must never use the word "${term}"`);
     }
 
     console.log('✓ Vocabulary boundary: no verification, retrieval, avatar, or trust vocabulary');

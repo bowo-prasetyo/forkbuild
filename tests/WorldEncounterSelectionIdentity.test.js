@@ -3,12 +3,12 @@ import {
     describeWorldEncounterSelectionIdentity,
     worldEncounterSelectionIdentitiesMatch,
     deriveWorldEncounterSelectionIdentities
-} from '../core/WorldEncounterSelectionIdentity.js';
+} from '../core/world/WorldEncounterSelectionIdentity.js';
 import {
     describeWorldEncounterSelectionCandidates,
     describeWorldEncounterSelectionCandidatesFromRegistry
 } from '../application/worldEncounter/WorldEncounterSelectionResolution.js';
-import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
+import { describeWorldDiscoverySource } from '../core/world/WorldDiscoverySource.js';
 import { describeLocalWorldDiscoverySource } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
@@ -274,7 +274,7 @@ function peerSourceOf(origin, { publications = [], placements = [], avatarProfil
 // ---------------------------------------------------------------------
 {
     const filesToCheck = [
-        '../core/WorldEncounterSelectionIdentity.js',
+        '../core/world/WorldEncounterSelectionIdentity.js',
         '../application/worldEncounter/WorldEncounterSelectionResolution.js'
     ];
 
@@ -315,7 +315,7 @@ function peerSourceOf(origin, { publications = [], placements = [], avatarProfil
     const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
     const markerSource = await readFile(new URL('../ui/components/WorldEncounterMarker.js', import.meta.url), 'utf8');
 
-    assert(!canvasSource.includes('WorldEncounterSelectionIdentity'), '41. WorldEncounterCanvas.js never imports core/WorldEncounterSelectionIdentity.js');
+    assert(!canvasSource.includes('WorldEncounterSelectionIdentity'), '41. WorldEncounterCanvas.js never imports core/world/WorldEncounterSelectionIdentity.js');
     assert(!canvasSource.includes('WorldEncounterSelectionResolution'), '42. WorldEncounterCanvas.js never imports application/worldEncounter/WorldEncounterSelectionResolution.js');
     assert(!markerSource.includes('origin'), '43. WorldEncounterMarker.js carries no origin vocabulary of any kind');
 

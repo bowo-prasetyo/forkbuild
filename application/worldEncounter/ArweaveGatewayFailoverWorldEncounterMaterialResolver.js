@@ -70,7 +70,7 @@ import { ArweaveWorldEncounterMaterialResolver } from './ArweaveWorldEncounterMa
 // persistent failure scoring across calls.
 export class ArweaveGatewayFailoverWorldEncounterMaterialResolver {
     // gatewayUrls: a non-empty array of gateway URLs, in the order they
-    //   should be tried — see core/ArweaveGatewayConfiguration.js's own
+    //   should be tried — see core/networks/ArweaveGatewayConfiguration.js's own
     //   `.gatewayUrls`, this same milestone.
     // fetchImpl / timeoutMs / maxResponseBytes: forwarded verbatim to
     //   every underlying `ArweaveWorldEncounterMaterialResolver` — see

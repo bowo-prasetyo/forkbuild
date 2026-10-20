@@ -2,7 +2,7 @@ import { register } from 'node:module';
 import {
     LOCAL_AND_PEERS_ONLY, COMMENTARY_DISTRIBUTION_PROVIDER_KEYS,
     isValidCommentaryDistributionProvider, resolveCommentaryDistributionProvider
-} from '../core/CommentaryDistributionProvider.js';
+} from '../core/publication/CommentaryDistributionProvider.js';
 import { CommentaryDistributionPreferenceStore } from '../storage/CommentaryDistributionPreferenceStore.js';
 import { createPublicationCommentaryDistributor } from '../application/publication/commentary/PublicationCommentaryDistributor.js';
 import { backupEntryGroupOf, BackupEntryGroup } from '../application/backup/BackupEntryGroups.js';

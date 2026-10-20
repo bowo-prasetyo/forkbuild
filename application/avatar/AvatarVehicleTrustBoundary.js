@@ -4,9 +4,9 @@
 // blocked signer, the same authority already bound to this avatarId (its own
 // binding, as presence, profile and interaction keep theirs), not a replay,
 // not two different claims at one sequence, and newer than what is held.
-import { isValidAvatarVehicleAdvertisement, getAvatarVehicleSigningDescriptor } from '../../core/AvatarVehicleAdvertisement.js';
-import { PresenceAuthorityRegistry } from '../../core/PresenceAuthority.js';
-import { TrustObservation, TrustStatus } from '../../core/TrustObservation.js';
+import { isValidAvatarVehicleAdvertisement, getAvatarVehicleSigningDescriptor } from '../../core/vehicles/AvatarVehicleAdvertisement.js';
+import { PresenceAuthorityRegistry } from '../../core/avatar/PresenceAuthority.js';
+import { TrustObservation, TrustStatus } from '../../core/identity/TrustObservation.js';
 import { computeContentHash } from '../../serializer/contentHash.js';
 import { LocalAuthorizationVerifier } from '../../identity/LocalAuthorizationVerifier.js';
 import { ReplayGuard } from '../../replication/ReplayGuard.js';

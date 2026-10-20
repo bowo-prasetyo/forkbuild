@@ -1,26 +1,26 @@
 import { readFile } from 'node:fs/promises';
 import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
 import { AvatarTreeConstraint } from '../application/avatar/AvatarTreeConstraint.js';
-import { AvatarContinuousMovementIntent } from '../core/AvatarContinuousMovementIntent.js';
-import { AvatarContinuousMovementMode } from '../core/AvatarContinuousMovementMode.js';
-import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
-import { treeCollisionGeometryInRegion } from '../core/TreeCollisionGeometry.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { AVATAR_COLLISION_RADIUS } from '../core/AvatarCollision.js';
-import { VehicleType } from '../core/VehicleType.js';
-import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
+import { AvatarContinuousMovementIntent } from '../core/avatar/AvatarContinuousMovementIntent.js';
+import { AvatarContinuousMovementMode } from '../core/avatar/AvatarContinuousMovementMode.js';
+import { AvatarAnimationState } from '../core/avatar/AvatarAnimationState.js';
+import { treeCollisionGeometryInRegion } from '../core/nature/TreeCollisionGeometry.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { AVATAR_COLLISION_RADIUS } from '../core/avatar/AvatarCollision.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
+import { vehiclePresenceInRegion } from '../core/vehicles/VehiclePlacement.js';
 import {
     AvatarMovementCapabilityKind,
     resolveAvatarVehicleMovementCapability
-} from '../core/AvatarVehicleMovementCapability.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+} from '../core/vehicles/AvatarVehicleMovementCapability.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
-import { Position } from '../core/Position.js';
+import { Position } from '../core/document/Position.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
@@ -124,7 +124,7 @@ function findRealVehicle() {
     const vehicles = vehiclePresenceInRegion(DEFAULT_WORLD_SEED, -500, -500, 500, 500);
     const vehicle = vehicles.find((v) => v.id === REAL_VEHICLE_ID);
     if (!vehicle) {
-        throw new Error(`Test fixture vehicle ${REAL_VEHICLE_ID} not found under DEFAULT_WORLD_SEED — has core/VehiclePlacement.js changed?`);
+        throw new Error(`Test fixture vehicle ${REAL_VEHICLE_ID} not found under DEFAULT_WORLD_SEED — has core/vehicles/VehiclePlacement.js changed?`);
     }
     return vehicle;
 }
@@ -320,7 +320,7 @@ async function runTests() {
     // Section E — drone. Aerial Movement Pipeline milestone: AERIAL_VEHICLE
     // is no longer permanently blocked, and its own movementDirections
     // now permits both directions too, exactly like every other
-    // supported capability (see core/AvatarVehicleMovementCapability.js's
+    // supported capability (see core/vehicles/AvatarVehicleMovementCapability.js's
     // own "AERIAL_VEHICLE Is Now A Real, Supported Capability" header).
     // -------------------------------------------------------------
     {
@@ -370,12 +370,12 @@ async function runTests() {
     {
         // A synthetic capability (this milestone's own seam does not
         // yet feed a real vehicle a restricted value — see
-        // core/AvatarVehicleMovementCapability.js's own 0.9.89 header —
+        // core/vehicles/AvatarVehicleMovementCapability.js's own 0.9.89 header —
         // but the controller-level mechanism must already work for
         // whichever future milestone constructs one).
         const forwardOnly = resolveAvatarVehicleMovementCapability(VehicleType.CAR);
-        const { AvatarVehicleMovementCapability } = await import('../core/AvatarVehicleMovementCapability.js');
-        const { AvatarMovementDirectionCapability } = await import('../core/AvatarMovementDirectionCapability.js');
+        const { AvatarVehicleMovementCapability } = await import('../core/vehicles/AvatarVehicleMovementCapability.js');
+        const { AvatarMovementDirectionCapability } = await import('../core/avatar/AvatarMovementDirectionCapability.js');
         const forwardOnlyCapability = new AvatarVehicleMovementCapability(
             forwardOnly.movementKind, forwardOnly.vehicleType, forwardOnly.supported,
             forwardOnly.movementSpeed, forwardOnly.collisionRadius,
@@ -561,7 +561,7 @@ async function runTests() {
             '38. application/avatar/AvatarMovementController.js contains no per-vehicle movement controller of any kind — there remains exactly one movement controller');
     }
     {
-        const sourceUrl = new URL('../core/AvatarVehicleMovementCapability.js', import.meta.url);
+        const sourceUrl = new URL('../core/vehicles/AvatarVehicleMovementCapability.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -569,10 +569,10 @@ async function runTests() {
             .join('\n');
 
         assert(!codeOnly.includes('AvatarMovementController') && !codeOnly.includes('AvatarMovementSimulation'),
-            '39. core/AvatarVehicleMovementCapability.js still never imports application/avatar/AvatarMovementController.js or core/AvatarMovementSimulation.js — the movement-directions seam is a pure capability field, never a cross-module coupling');
+            '39. core/vehicles/AvatarVehicleMovementCapability.js still never imports application/avatar/AvatarMovementController.js or core/avatar/AvatarMovementSimulation.js — the movement-directions seam is a pure capability field, never a cross-module coupling');
     }
     {
-        const sourceUrl = new URL('../core/AvatarMovementDirectionCapability.js', import.meta.url);
+        const sourceUrl = new URL('../core/avatar/AvatarMovementDirectionCapability.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -580,7 +580,7 @@ async function runTests() {
             .join('\n');
 
         assert(!/\bleft\b|\bright\b/.test(codeOnly),
-            '40. core/AvatarMovementDirectionCapability.js introduces no left/right field — forward/backward only, exactly as this milestone\'s own brief asks');
+            '40. core/avatar/AvatarMovementDirectionCapability.js introduces no left/right field — forward/backward only, exactly as this milestone\'s own brief asks');
     }
 
     console.log('✅ All Vehicle Movement Direction Semantics Integration tests passed.');

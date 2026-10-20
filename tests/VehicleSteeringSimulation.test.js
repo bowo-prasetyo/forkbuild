@@ -2,15 +2,15 @@ import { readFile } from 'node:fs/promises';
 import {
     resolveVehicleMovementDirectionFromSteering,
     DEFAULT_VEHICLE_STEERING_TURN_DEGREES
-} from '../core/VehicleSteeringSimulation.js';
-import { VehicleSteeringIntent, VehicleSteeringDirection } from '../core/VehicleSteeringIntent.js';
-import { VehicleInstance, vehicleInstanceFromPresence } from '../core/VehicleInstance.js';
-import { VehiclePresence } from '../core/VehiclePresence.js';
-import { VehicleType } from '../core/VehicleType.js';
-import { resolveVehicleHeadingFromMovement } from '../core/VehicleMovementHeading.js';
+} from '../core/vehicles/VehicleSteeringSimulation.js';
+import { VehicleSteeringIntent, VehicleSteeringDirection } from '../core/vehicles/VehicleSteeringIntent.js';
+import { VehicleInstance, vehicleInstanceFromPresence } from '../core/vehicles/VehicleInstance.js';
+import { VehiclePresence } from '../core/vehicles/VehiclePresence.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
+import { resolveVehicleHeadingFromMovement } from '../core/vehicles/VehicleMovementHeading.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.126 — Vehicle Steering Simulation, core/VehicleSteeringSimulation.js.
+// 0.9.126 — Vehicle Steering Simulation, core/vehicles/VehicleSteeringSimulation.js.
 //
 //   Section A: NONE preserves the current travel direction
 //   Section B: RIGHT — deterministic rightward directional transformation
@@ -24,11 +24,11 @@ import { assert } from './support/Assert.js';
 //              buildings, trees, terrain, or vehicle-vs-world constraints
 //   Section H: flagship — intent -> attempted direction -> realized
 //              movement -> heading, open path and fully-blocked, composed
-//              from this file plus core/VehicleMovementHeading.js alone
+//              from this file plus core/vehicles/VehicleMovementHeading.js alone
 //
 // Central architectural claim under test throughout: this file produces
 // an ATTEMPTED movement direction, never a vehicle FACT — only
-// core/VehicleMovementHeading.js's own resolveVehicleHeadingFromMovement(),
+// core/vehicles/VehicleMovementHeading.js's own resolveVehicleHeadingFromMovement(),
 // fed REALIZED displacement, ever resolves a new heading. See
 // docs/Roadmap.md, 0.9.126.
 
@@ -47,7 +47,7 @@ function assertClose(actual, expected, message, epsilon = 1e-9) {
 }
 
 // Turns a heading (degrees, 0 = +Z, 90 = +X — the exact representation
-// core/VehicleMovementHeading.js's own header documents) into a unit-step
+// core/vehicles/VehicleMovementHeading.js's own header documents) into a unit-step
 // (dx, dz) displacement — the direct inverse of that file's own
 // `Math.atan2(dx, dz)`, used only by this test's own Section H to compose
 // "attempted direction -> realized displacement" without importing any
@@ -225,12 +225,12 @@ async function runTests() {
         assertClose(a, b, '36. two independently constructed but equivalent steering intents produce the identical result');
     }
     {
-        const sourceUrl = new URL('../core/VehicleSteeringSimulation.js', import.meta.url);
+        const sourceUrl = new URL('../core/vehicles/VehicleSteeringSimulation.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         const forbidden = ['Math.random', 'Date.now', 'performance.now', 'setTimeout', 'setInterval', 'requestAnimationFrame'];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `37. core/VehicleSteeringSimulation.js's own code never references "${term}" — no hidden time or randomness dependence`);
+            assert(!codeOnly.includes(term), `37. core/vehicles/VehicleSteeringSimulation.js's own code never references "${term}" — no hidden time or randomness dependence`);
         }
     }
 
@@ -250,19 +250,19 @@ async function runTests() {
         assert(typeof vehicle.withHeading === 'function', '40. VehicleInstance#withHeading() still exists — this function never replaces the caller\'s own responsibility to call it explicitly, with realized displacement, later');
     }
     {
-        const sourceUrl = new URL('../core/VehicleSteeringSimulation.js', import.meta.url);
+        const sourceUrl = new URL('../core/vehicles/VehicleSteeringSimulation.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-        assert(!codeOnly.includes('VehicleInstance'), '41. core/VehicleSteeringSimulation.js never references VehicleInstance');
-        assert(!codeOnly.includes('VehicleRuntimeInstances'), '42. core/VehicleSteeringSimulation.js never references VehicleRuntimeInstances');
-        assert(!codeOnly.includes('withHeading') && !codeOnly.includes('setHeading'), '43. core/VehicleSteeringSimulation.js never calls withHeading()/setHeading() — it produces an attempted direction, never a heading mutation');
-        assert(!codeOnly.includes('resolveVehicleHeadingFromMovement'), '44. core/VehicleSteeringSimulation.js never calls resolveVehicleHeadingFromMovement() — heading resolution stays entirely downstream');
+        assert(!codeOnly.includes('VehicleInstance'), '41. core/vehicles/VehicleSteeringSimulation.js never references VehicleInstance');
+        assert(!codeOnly.includes('VehicleRuntimeInstances'), '42. core/vehicles/VehicleSteeringSimulation.js never references VehicleRuntimeInstances');
+        assert(!codeOnly.includes('withHeading') && !codeOnly.includes('setHeading'), '43. core/vehicles/VehicleSteeringSimulation.js never calls withHeading()/setHeading() — it produces an attempted direction, never a heading mutation');
+        assert(!codeOnly.includes('resolveVehicleHeadingFromMovement'), '44. core/vehicles/VehicleSteeringSimulation.js never calls resolveVehicleHeadingFromMovement() — heading resolution stays entirely downstream');
     }
     {
-        const exportsModule = await import('../core/VehicleSteeringSimulation.js');
+        const exportsModule = await import('../core/vehicles/VehicleSteeringSimulation.js');
         const exportedNames = Object.keys(exportsModule).sort();
         assert(JSON.stringify(exportedNames) === JSON.stringify(['DEFAULT_VEHICLE_STEERING_TURN_DEGREES', 'resolveVehicleMovementDirectionFromSteering']),
-            '45. core/VehicleSteeringSimulation.js exports exactly the pure resolver function and its one named default constant — nothing else');
+            '45. core/vehicles/VehicleSteeringSimulation.js exports exactly the pure resolver function and its one named default constant — nothing else');
     }
 
     // -------------------------------------------------------------
@@ -274,7 +274,7 @@ async function runTests() {
         assert(!('collisionRadius' in options), '47. sanity: this test\'s own call never supplies a collision parameter either, because none exists to supply');
     }
     {
-        const sourceUrl = new URL('../core/VehicleSteeringSimulation.js', import.meta.url);
+        const sourceUrl = new URL('../core/vehicles/VehicleSteeringSimulation.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         const forbidden = [
@@ -285,7 +285,7 @@ async function runTests() {
             'wheelbase', 'friction', 'banking', 'momentum', 'THREE', 'from \'three\''
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `48. core/VehicleSteeringSimulation.js's own code never references "${term}" — no collision, world-geometry, or vehicle-physics knowledge of any kind`);
+            assert(!codeOnly.includes(term), `48. core/vehicles/VehicleSteeringSimulation.js's own code never references "${term}" — no collision, world-geometry, or vehicle-physics knowledge of any kind`);
         }
     }
     {
@@ -344,7 +344,7 @@ async function runTests() {
         // A fully-blocked tick: the collision constraint (not this file)
         // absorbs the entire attempted step, so realized displacement is
         // (0, 0) — exactly the "no genuine horizontal movement" case
-        // core/VehicleMovementHeading.js's own header already documents.
+        // core/vehicles/VehicleMovementHeading.js's own header already documents.
         const blockedHeading = resolveVehicleHeadingFromMovement({ dx: 0, dz: 0, previousHeading: startingHeading });
         assertClose(blockedHeading, startingHeading, '56. a fully-blocked RIGHT turn leaves heading completely unchanged, even though the attempted direction (155) differed from it');
         assert(blockedHeading !== attempted, '57. the vehicle\'s own realized heading and this file\'s own attempted direction are two genuinely different numbers here — the flagship proof that steering never becomes a disguised heading setter');
@@ -357,7 +357,7 @@ async function runTests() {
 // means "to" is reached by increasing angle (a LEFT-style rotation),
 // negative means decreasing angle (a RIGHT-style rotation). Used only by
 // this test's own Section D to compare RIGHT/LEFT rotations without
-// duplicating core/VehicleSteeringSimulation.js's own normalization.
+// duplicating core/vehicles/VehicleSteeringSimulation.js's own normalization.
 function shortestSignedGap(from, to) {
     let diff = (to - from) % 360;
     if (diff > 180) diff -= 360;

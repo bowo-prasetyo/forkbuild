@@ -2,7 +2,7 @@ import { composePublicationMaterialUploader } from '../application/publication/d
 import { executePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommand.js';
 import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
 import { SteemContentStore } from '../content/SteemContentStore.js';
-import { steemContentLocator } from '../core/SteemContentManifest.js';
+import { steemContentLocator } from '../core/networks/SteemContentManifest.js';
 import { createSteemAnnouncer } from '../application/steem/SteemAnnouncer.js';
 import { createSteemDiscoveryThreadReader } from '../application/steem/SteemDiscoveryThreadReader.js';
 import { SteemPublicationDiscoveryPublisher } from '../application/steem/SteemPublicationDiscoveryPublisher.js';

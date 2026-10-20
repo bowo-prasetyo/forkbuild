@@ -1,8 +1,8 @@
 import { ref } from 'vue';
 import { WorldViewPrimaryMode } from '../../../application/world/WorldViewNavigationState.js';
-import { geographicPlaceLocationId } from '../../../core/GeographicPlaceNavigation.js';
-import { WorldFocusKind } from '../../../core/WorldFocusContext.js';
-import { withReturnWorld, editorEntryContextToQuery } from '../../../core/EditorEntryContext.js';
+import { geographicPlaceLocationId } from '../../../core/world/GeographicPlaceNavigation.js';
+import { WorldFocusKind } from '../../../core/world/WorldFocusContext.js';
+import { withReturnWorld, editorEntryContextToQuery } from '../../../core/document/EditorEntryContext.js';
 import { t } from '../../i18n/i18n.js';
 
 // The map panel, the geographic place directory and detail panel, and the

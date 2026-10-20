@@ -29,7 +29,7 @@ import { ExternalAnchorCreationOutcome } from './ExternalAnchorCreationOutcome.j
 //            signed, cataloged PublicationAnchor
 //
 // REUSES 0.8.8; NEVER RE-IMPLEMENTS IT. This class never constructs a
-// `core/PublicationAnchor.js` itself, never signs anything, and never
+// `core/publication/PublicationAnchor.js` itself, never signs anything, and never
 // touches an anchor catalog directly — every one of those responsibilities
 // stays exactly where 0.8.8 already put them. See tests/
 // ExternalAnchorCreationOrchestration.test.js's own spy-use-case section,

@@ -1,16 +1,16 @@
 import { readFile } from 'node:fs/promises';
 import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
 import { AvatarTreeConstraint } from '../application/avatar/AvatarTreeConstraint.js';
-import { VehicleType } from '../core/VehicleType.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
 import {
     AvatarMovementCapabilityKind,
     resolveAvatarVehicleMovementCapability
-} from '../core/AvatarVehicleMovementCapability.js';
-import { treeCollisionGeometryInRegion } from '../core/TreeCollisionGeometry.js';
-import { treeCollisionCandidatesForMovement, CANDIDATE_QUERY_MARGIN, MAX_TREE_COLLISION_RADIUS } from '../core/AvatarTreeCollisionQuery.js';
-import { AVATAR_COLLISION_RADIUS } from '../core/AvatarCollision.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+} from '../core/vehicles/AvatarVehicleMovementCapability.js';
+import { treeCollisionGeometryInRegion } from '../core/nature/TreeCollisionGeometry.js';
+import { treeCollisionCandidatesForMovement, CANDIDATE_QUERY_MARGIN, MAX_TREE_COLLISION_RADIUS } from '../core/avatar/AvatarTreeCollisionQuery.js';
+import { AVATAR_COLLISION_RADIUS } from '../core/avatar/AvatarCollision.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
@@ -25,9 +25,9 @@ import { assert } from './support/Assert.js';
 // but left every vehicle collision-tested at the avatar's own 0.35-radius
 // body, regardless of how fast, or how physically large, it actually was.
 // This milestone closes that gap: `AvatarVehicleMovementCapability` now
-// carries a `collisionRadius` (core/AvatarVehicleMovementCapability.js,
+// carries a `collisionRadius` (core/vehicles/AvatarVehicleMovementCapability.js,
 // 0.9.88) that reaches the SAME existing tree-collision pipeline
-// (core/AvatarTreeCollisionQuery.js -> core/AvatarTreeMovement.js ->
+// (core/avatar/AvatarTreeCollisionQuery.js -> core/avatar/AvatarTreeMovement.js ->
 // application/avatar/AvatarTreeConstraint.js -> application/avatar/AvatarMovementController.js)
 // every other movement capability already reaches — never a second
 // collision system, never a rectangular or oriented footprint, never a
@@ -89,7 +89,7 @@ function buildAvatarStack(registry, username, initialPresence) {
 // A real, deterministic, genuinely ISOLATED tree under DEFAULT_WORLD_SEED
 // — the single tree, among every real tree in a wide region, with the
 // LARGEST distance to its own nearest neighboring tree. This world is
-// densely planted (see core/NaturalFeatureField.js): most real trees sit
+// densely planted (see core/nature/NaturalFeatureField.js): most real trees sit
 // well within reach of at least one neighbor once CAR's own larger
 // collisionRadius (0.80) is added to the candidate-query margin, which
 // would let this suite's own multi-tick approaches genuinely graze a
@@ -168,7 +168,7 @@ async function runTests() {
     {
         const walk = resolveAvatarVehicleMovementCapability(VehicleType.NONE);
         assert(walk.collisionRadius === AVATAR_COLLISION_RADIUS,
-            '6. WALK\'s own collisionRadius equals core/AvatarCollision.js\'s own AVATAR_COLLISION_RADIUS exactly — the avatar\'s own existing hitbox, byte for byte');
+            '6. WALK\'s own collisionRadius equals core/avatar/AvatarCollision.js\'s own AVATAR_COLLISION_RADIUS exactly — the avatar\'s own existing hitbox, byte for byte');
     }
     {
         // A controller that never had setMovementCapability() called at
@@ -320,7 +320,7 @@ async function runTests() {
         // isolating "does switching capability change the boundary
         // immediately" from the separate, already-covered "what happens
         // if you grow the radius while already resting at a smaller
-        // vehicle's own boundary" question core/AvatarTreeMovement.js's
+        // vehicle's own boundary" question core/avatar/AvatarTreeMovement.js's
         // own "already touching" rule (0.9.60/0.9.61) governs, which
         // this section is not testing.
         const registry = buildRegistry();
@@ -364,7 +364,7 @@ async function runTests() {
     // -------------------------------------------------------------
     // Section I — drone. Aerial Movement Pipeline milestone: AERIAL_VEHICLE
     // is no longer permanently blocked (see
-    // core/AvatarVehicleMovementCapability.js's own "AERIAL_VEHICLE Is Now
+    // core/vehicles/AvatarVehicleMovementCapability.js's own "AERIAL_VEHICLE Is Now
     // A Real, Supported Capability" header), and this section's own
     // AvatarMovementController — the ON-FOOT pipeline, never
     // application/avatar/AvatarVehicleMovementController.js's own dedicated
@@ -372,7 +372,7 @@ async function runTests() {
     // A DRONE capability driven through THIS pipeline therefore collides
     // with a real tree exactly like any other vehicle here, at its own
     // combined radius — the "hover above trees" bypass
-    // (core/AvatarDroneVerticalState.js) only ever applies to a genuinely
+    // (core/avatar/AvatarDroneVerticalState.js) only ever applies to a genuinely
     // mounted, moving, HOVERING drone through the dedicated vehicle
     // controller, never this one.
     // -------------------------------------------------------------
@@ -399,9 +399,9 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         const filesToCheck = [
-            '../core/AvatarVehicleMovementCapability.js',
-            '../core/AvatarTreeCollisionQuery.js',
-            '../core/AvatarTreeMovement.js',
+            '../core/vehicles/AvatarVehicleMovementCapability.js',
+            '../core/avatar/AvatarTreeCollisionQuery.js',
+            '../core/avatar/AvatarTreeMovement.js',
             '../application/avatar/AvatarTreeConstraint.js',
             '../application/avatar/AvatarMovementController.js'
         ];
@@ -423,17 +423,17 @@ async function runTests() {
         // The capability class itself carries exactly the fields this
         // milestone's own progression establishes — no shape/orientation
         // vocabulary has crept in. 0.9.89 note: this now includes
-        // `movementDirections` (core/AvatarMovementDirectionCapability.js)
+        // `movementDirections` (core/avatar/AvatarMovementDirectionCapability.js)
         // — a forward/backward permission pair, still not a shape,
         // orientation, or dimension field — superseding this assertion's
         // own original four-field list. 0.9.90 note: this now also
-        // includes `acceleration` (core/AvatarMovementAccelerationCapability.js)
+        // includes `acceleration` (core/avatar/AvatarMovementAccelerationCapability.js)
         // — a kind/rate pair, still not a shape, orientation, or
         // dimension field. 0.9.92 note: this now also includes `braking`
-        // (core/AvatarMovementBrakingCapability.js) — the direct
+        // (core/avatar/AvatarMovementBrakingCapability.js) — the direct
         // structural twin of `acceleration`, still not a shape,
         // orientation, or dimension field. 0.9.93 note: this now also
-        // includes `steering` (core/AvatarMovementSteeringCapability.js) —
+        // includes `steering` (core/avatar/AvatarMovementSteeringCapability.js) —
         // the angular counterpart of `acceleration`/`braking`, still not a
         // shape, orientation, or dimension field: a rate only, never a
         // current heading.

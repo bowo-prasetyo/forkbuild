@@ -1,7 +1,7 @@
 import { computed, inject, ref } from 'vue';
-import { challengeById } from '../../../core/BuildChallenge.js';
-import { PLAZA_CENTER, PLAZA_MAX_EXHIBITS, plazaEntryOrder } from '../../../core/ChallengePlaza.js';
-import { PLAZA_QUIET_RADIUS, plazaEntrySpots } from '../../../core/PlazaEntrySpots.js';
+import { challengeById } from '../../../core/challenge/BuildChallenge.js';
+import { PLAZA_CENTER, PLAZA_MAX_EXHIBITS, plazaEntryOrder } from '../../../core/challenge/ChallengePlaza.js';
+import { PLAZA_QUIET_RADIUS, plazaEntrySpots } from '../../../core/challenge/PlazaEntrySpots.js';
 import { CreateChallengeEntriesUseCase } from '../../../application/challenge/CreateChallengeEntriesUseCase.js';
 import { OpenPublicationLinkOutcome } from '../../../application/publication/OpenPublicationLink.js';
 import { readSharedBuildDocument } from '../../../application/publication/sharing/ReadSharedBuild.js';
@@ -9,15 +9,15 @@ import { exploreRouteFor } from '../../components/publicationCatalog/useReposito
 import { challengeThemeTitle } from '../../components/challenge/challengeText.js';
 import { t } from '../../i18n/i18n.js';
 
-// The challenge plaza (core/ChallengePlaza.js), when World View opens on
+// The challenge plaza (core/challenge/ChallengePlaza.js), when World View opens on
 // `/plaza/<week>`: takes the visitor to the village square
 // (useStarterVillage.js, standing in every World View), and lists the
 // week's entries and the village's ready-made builds. Only that week's
-// entries stand round the square (core/PlazaEntrySpots.js): where it is
+// entries stand round the square (core/challenge/PlazaEntrySpots.js): where it is
 // placed, for one placed there while builds still settled round the plaza;
 // otherwise, placed elsewhere (published builds take their spot on the
 // id-keyed grid) or not at all, it is shown, as an exhibit, on the spot it
-// would settle on round the square (core/BuildSettlement.js). Other placed
+// would settle on round the square (core/challenge/BuildSettlement.js). Other placed
 // builds near the square are left out of World View while the plaza is
 // visited (session.setPlazaQuiet()), so the square shows its week alone. An
 // entry's build is read from this device, or fetched and checked the way

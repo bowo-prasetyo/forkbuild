@@ -2,14 +2,14 @@ import * as THREE from 'three';
 import { BuildingRenderer } from './BuildingRenderer.js';
 import { SceneManager } from './SceneManager.js';
 import { Lights } from './Lights.js';
-import { SpatialBounds } from '../core/SpatialBounds.js';
-import { computeThumbnailCamera } from '../core/PreviewCameraFraming.js';
+import { SpatialBounds } from '../core/world/SpatialBounds.js';
+import { computeThumbnailCamera } from '../core/catalog/PreviewCameraFraming.js';
 import { drawEndCard, drawStrip } from './BuildVideoOverlay.js';
 import {
     BUILD_VIDEO_SIZES, buildVideoFrame, chooseVideoMimeType, timelapseOrder, videoCameraDistanceScale, videoFileExtension
-} from '../core/BuildVideo.js';
+} from '../core/app/BuildVideo.js';
 
-// Records a video of a build on this device (core/BuildVideo.js says what it
+// Records a video of a build on this device (core/app/BuildVideo.js says what it
 // shows): the bricks drawn as Home's turntable draws them, on a patch of
 // grass under the sky, with the build's name along the bottom and an end card
 // saying who built it and where to remix it. The frames are drawn into a
@@ -26,7 +26,7 @@ const AUDIO_BITS_PER_SECOND = 128_000;
 // The soundtrack fades away this long before the video ends, under the end card.
 const SOUNDTRACK_FADE_SECONDS = 1.6;
 
-// Records `bricks` (core/Brick.js) as a `timeline` (buildVideoTimeline())
+// Records `bricks` (core/building/Brick.js) as a `timeline` (buildVideoTimeline())
 // video in `shape`. `text` is in the viewer's language: `{ title, credit,
 // badge, call, address, hint }`, the strip naming the build and the end card
 // (the build's title and `credit` above `call`, `address` and `hint`).

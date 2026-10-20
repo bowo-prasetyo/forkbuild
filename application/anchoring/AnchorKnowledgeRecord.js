@@ -15,7 +15,7 @@ import { AnchorAcquisitionKind, isValidAnchorAcquisitionKind } from './AnchorAcq
 //
 //   { anchorId, firstSeenAt, acquisition: { kind } }
 //
-// NOT PART OF THE ANCHOR. core/PublicationAnchor.js's own signed payload
+// NOT PART OF THE ANCHOR. core/publication/PublicationAnchor.js's own signed payload
 // is untouched by this file — an AnchorKnowledgeRecord is never attached
 // to a PublicationAnchor instance, never serialized inside one, and
 // never carried across application/anchoring/PublicationAnchorExchange.js's own

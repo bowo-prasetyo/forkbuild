@@ -1,11 +1,11 @@
 import PlaceNamingPanel from '../ui/components/PlaceNamingPanel.js';
 import { usePlaceNamingPanel } from '../ui/views/worldView/usePlaceNamingPanel.js';
-import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
+import { PlaceNamingClaim } from '../core/world/PlaceNamingClaim.js';
 import { composePlaceNamingPublicationRuntime } from '../application/placeNaming/PlaceNamingPublicationRuntimeComposition.js';
 import { NostrPlaceNamingDiscoverySource } from '../application/placeNaming/NostrPlaceNamingDiscoverySource.js';
 import { PlaceNamingDiscoveryQueryService } from '../application/placeNaming/PlaceNamingDiscoveryQueryService.js';
 import { executeDiscoverPlaceNamingClaimsCommand } from '../application/placeNaming/DiscoverPlaceNamingClaimsCommand.js';
-import { derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
+import { derivePlaceNamingDiscoveryTag } from '../core/world/PlaceNamingDiscoveryEnvelope.js';
 import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
 import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';

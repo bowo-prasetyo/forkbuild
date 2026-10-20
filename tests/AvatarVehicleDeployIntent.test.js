@@ -2,10 +2,10 @@ import {
     AvatarVehicleDeployIntent,
     isValidAvatarVehicleDeployIntent,
     deriveAvatarVehicleDeployIntent
-} from '../core/AvatarVehicleDeployIntent.js';
+} from '../core/vehicles/AvatarVehicleDeployIntent.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.670 — Avatar Vehicle Deploy Intent, core/AvatarVehicleDeployIntent.js.
+// 0.9.670 — Avatar Vehicle Deploy Intent, core/vehicles/AvatarVehicleDeployIntent.js.
 // Mirrors tests/AvatarVehicleStoreIntent.test.js's own shape exactly, for
 // the mirror-image vocabulary.
 

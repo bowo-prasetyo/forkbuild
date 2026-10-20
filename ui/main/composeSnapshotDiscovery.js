@@ -1,10 +1,10 @@
 import { resolveSavedProviderDefault } from '../../application/settings/SavedProviderDefaultChoice.js';
-import { snapshotCellTag, snapshotCellTagsAround } from '../../core/NarrowDiscoveryTags.js';
+import { snapshotCellTag, snapshotCellTagsAround } from '../../core/publication/NarrowDiscoveryTags.js';
 import { SNAPSHOT_DISCOVERY_TAG } from '../../application/announcementIndex/AnnouncementSyncTargets.js';
-import { RoleProviderRole } from '../../core/RoleProviderRole.js';
+import { RoleProviderRole } from '../../core/publication/RoleProviderRole.js';
 import { composePlaceNamingPublicationRuntime } from '../../application/placeNaming/PlaceNamingPublicationRuntimeComposition.js';
 import { AnnouncementDiscoveryServiceKind } from '../../application/discovery/AnnouncementDiscoveryProviderRegistry.js';
-import { ANNOUNCEMENT_DISCOVERY_PROVIDER_KEYS } from '../../core/AnnouncementDiscoveryProvider.js';
+import { ANNOUNCEMENT_DISCOVERY_PROVIDER_KEYS } from '../../core/publication/AnnouncementDiscoveryProvider.js';
 import { composeDiscoverSnapshotRuntime } from '../../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
 import { executeDiscoverSnapshotCommand } from '../../application/snapshot/DiscoverSnapshotCommand.js';
 import { executeDiscoverSnapshotCandidatesCommand, executeDiscoverSnapshotCandidatesCommandWithOutcome } from '../../application/snapshot/DiscoverSnapshotCandidatesCommand.js';

@@ -8,8 +8,8 @@ import { PublicationDistributionState } from '../application/publication/distrib
 import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
 import { describePublicationDistribution } from '../application/publication/distribution/PublicationDistributionDescriptor.js';
 import { Publication } from '../publisher/Publication.js';
-import { ContentReference } from '../core/ContentReference.js';
-import { Signature } from '../core/Signature.js';
+import { ContentReference } from '../core/document/ContentReference.js';
+import { Signature } from '../core/publication/Signature.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.108 — Nostr Publication Discovery Runtime Adapter.

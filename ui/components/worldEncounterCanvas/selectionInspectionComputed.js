@@ -93,7 +93,7 @@ export const selectionInspectionComputed = {
         return loading.material;
     },
     // The publicationId commentary uses for the observer-local selection.
-    // Independent of material inspection: a core/ObserverLocalPublicationEncounter.js
+    // Independent of material inspection: a core/publication/ObserverLocalPublicationEncounter.js
     // already carries a complete publicationId, which is all the commentary
     // commands need (like PublicationCard.js's `this.publication.id`).
     observerLocalEncounterCommentaryPublicationId() {

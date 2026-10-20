@@ -2,27 +2,27 @@ import { PresenceSyncService } from '../presence/PresenceSyncService.js';
 import { LocalPresenceStore } from '../presence/LocalPresenceStore.js';
 import { PresenceTrustBoundary } from '../presence/PresenceTrustBoundary.js';
 import { RemoteAvatarRegistry } from '../avatar/RemoteAvatarRegistry.js';
-import { DEFAULT_AVATAR_TEMPLATE_ID } from '../../core/AvatarProfile.js';
+import { DEFAULT_AVATAR_TEMPLATE_ID } from '../../core/avatar/AvatarProfile.js';
 import { AvatarProfileSyncService } from '../avatar/AvatarProfileSyncService.js';
 import { LocalAvatarProfileStore } from '../avatar/LocalAvatarProfileStore.js';
 import { AvatarProfileTrustBoundary } from '../avatar/AvatarProfileTrustBoundary.js';
 import { RemoteAvatarAppearanceRegistry } from '../avatar/RemoteAvatarAppearanceRegistry.js';
 import { AvatarInteractionSyncService } from '../avatar/AvatarInteractionSyncService.js';
 import { AvatarInteractionTrustBoundary } from '../avatar/AvatarInteractionTrustBoundary.js';
-import { summarizePresenceDiagnostics } from '../../core/PresenceDiagnosticsSummary.js';
-import { computeNearbyAvatars } from '../../core/AvatarProximity.js';
+import { summarizePresenceDiagnostics } from '../../core/avatar/PresenceDiagnosticsSummary.js';
+import { computeNearbyAvatars } from '../../core/avatar/AvatarProximity.js';
 import { AvatarInteractionState } from '../spatial-state/AvatarInteractionState.js';
 import { SpatialSelectionState } from '../spatial-state/SpatialSelectionState.js';
-import { isValidInteractionKind, AvatarInteractionKind } from '../../core/AvatarInteractionKind.js';
-import { canPerformInteraction } from '../../core/AvatarInteractionCooldown.js';
-import { toAvatarInteractionAdvertisement } from '../../core/AvatarInteractionAdvertisement.js';
+import { isValidInteractionKind, AvatarInteractionKind } from '../../core/avatar/AvatarInteractionKind.js';
+import { canPerformInteraction } from '../../core/avatar/AvatarInteractionCooldown.js';
+import { toAvatarInteractionAdvertisement } from '../../core/avatar/AvatarInteractionAdvertisement.js';
 import { signAvatarInteractionAdvertisement } from '../avatar/AvatarInteractionSigning.js';
-import { toAvatarProfileAdvertisement } from '../../core/AvatarProfileAdvertisement.js';
+import { toAvatarProfileAdvertisement } from '../../core/avatar/AvatarProfileAdvertisement.js';
 import { signAvatarProfileAdvertisement } from '../avatar/AvatarProfileSigning.js';
-import { CameraPerspective, computeCameraFraming, isValidCameraPerspective } from '../../core/CameraPerspective.js';
-import { computeIndoorFraming, indoorCutaway } from '../../core/IndoorView.js';
-import { computeFacingYawDegrees } from '../../core/AvatarFacing.js';
-import { terrainHeightAt } from '../../core/TerrainHeightField.js';
+import { CameraPerspective, computeCameraFraming, isValidCameraPerspective } from '../../core/avatar/CameraPerspective.js';
+import { computeIndoorFraming, indoorCutaway } from '../../core/building/IndoorView.js';
+import { computeFacingYawDegrees } from '../../core/avatar/AvatarFacing.js';
+import { terrainHeightAt } from '../../core/nature/TerrainHeightField.js';
 
 // Default radius for getNearbyAvatars(). Separate from NEARBY_RADIUS: that
 // asks "is a document at this camera position", this asks "who is close
@@ -143,7 +143,7 @@ export const avatarPresenceMethods = {
 
     // Plays one accepted interaction on the sender's own avatar, keyed by
     // `event.avatarId`, never `targetAvatarId`: a wave is rendered on the
-    // waver (see core/AvatarInteractionAdvertisement.js). No-op if the sender
+    // waver (see core/avatar/AvatarInteractionAdvertisement.js). No-op if the sender
     // isn't a known remote avatar or the facade lacks gestures.
     _applyRemoteAvatarInteraction(event, now) {
         if (!this._remoteAvatarRegistry || !this._remoteAvatarRegistry.has(event.avatarId)) {
@@ -247,7 +247,7 @@ export const avatarPresenceMethods = {
     // it is rendered on the performer's own avatar.
     //
     // Requires a remote target and is rate-limited by
-    // core/AvatarInteractionCooldown.js. Returns true when accepted, false when
+    // core/avatar/AvatarInteractionCooldown.js. Returns true when accepted, false when
     // there's no target, the kind is invalid, or it's on cooldown.
     performAvatarInteraction(kind) {
         if (this._avatarInteraction.isEmpty || this.isLocalAvatarId(this._avatarInteraction.avatarId)) {
@@ -348,7 +348,7 @@ export const avatarPresenceMethods = {
     _followAvatarIfEnabled(presence) {
         const previous = this._lastAvatarFollowPosition;
         this._lastAvatarFollowPosition = presence.position;
-        // Indoors (core/IndoorView.js), the build above the avatar's head is
+        // Indoors (core/building/IndoorView.js), the build above the avatar's head is
         // cut away and, unless the player looks through the avatar's eyes or
         // from overhead, the camera comes in with it.
         if (this._followIndoors(presence)) {
@@ -356,7 +356,7 @@ export const avatarPresenceMethods = {
         }
         // A selected Camera Perspective takes over on every presence update with a
         // fixed offset from the avatar, superseding plain follow (see
-        // core/CameraPerspective.js and docs/Principles.md, "Camera Perspective
+        // core/avatar/CameraPerspective.js and docs/Principles.md, "Camera Perspective
         // Determines An Offset; It Never Replaces The Camera Machinery"). Applies
         // whether or not `_followAvatarEnabled` is set.
         if (this._cameraPerspective && this._spatialCameraController) {
@@ -400,7 +400,7 @@ export const avatarPresenceMethods = {
     // Under a roof: cuts away the build above the avatar's head and, for the
     // free camera following the avatar or the third-person view, frames the
     // room from just behind and above, in front of any wall
-    // (core/IndoorView.js). Returns true when it framed the camera itself.
+    // (core/building/IndoorView.js). Returns true when it framed the camera itself.
     // Stepping back outside restores the build and hands the camera back to
     // what it was doing, from where the indoor view left it.
     _followIndoors(presence) {
@@ -521,7 +521,7 @@ export const avatarPresenceMethods = {
         return this._cameraPerspective;
     },
 
-    // Sets the Camera Perspective (a core/CameraPerspective.js value), or clears
+    // Sets the Camera Perspective (a core/avatar/CameraPerspective.js value), or clears
     // it with `null`. Anything else is rejected (returns false).
     //
     // Turning one on re-frames immediately, so choosing "Bird's-Eye" while
@@ -621,7 +621,7 @@ export const avatarPresenceMethods = {
 
     // Runs every frame after movement: expires a finished gesture, then pushes
     // gesture kind and facing override to the render facade. Local presentation
-    // only (see core/AvatarGesturePoseOffsets.js, core/AvatarFacing.js).
+    // only (see core/avatar/AvatarGesturePoseOffsets.js, core/avatar/AvatarFacing.js).
     _updateLocalAvatarInteractionPresentation(now) {
         if (!this._session || typeof this._session.setLocalAvatarGesture !== 'function') {
             return;

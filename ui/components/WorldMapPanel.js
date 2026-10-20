@@ -7,7 +7,7 @@ import {
     suggestMapExtent,
     MIN_MAP_SPAN,
     MAX_MAP_SPAN
-} from '../../core/WorldMapProjection.js';
+} from '../../core/world/WorldMapProjection.js';
 import { formatNumber, t } from '../i18n/i18n.js';
 
 // 0.5.1 — World Maps & Geographic Navigation.
@@ -15,7 +15,7 @@ import { formatNumber, t } from '../i18n/i18n.js';
 // A top-down 2D reading of exactly the World content
 // `session.getMapContent()` already returns — regions, landmarks,
 // structures, collaborators, and the viewer's own position — projected
-// through core/WorldMapProjection.js's pure math. Like
+// through core/world/WorldMapProjection.js's pure math. Like
 // ui/components/CompassIndicator.js before it, this component is a
 // DERIVED VIEW, not a second World: it never receives raw World/Command
 // access, only the already-gathered `content` prop, and it never emits
@@ -59,7 +59,7 @@ export default {
         },
         // 0.5.5 — Geographic Place Directory & Identity UX. An optional
         // array of `${worldId}:${id}` keys (the exact format
-        // core/GeographicPlaceResolution.js#buildPlaceGroup() already
+        // core/world/GeographicPlaceResolution.js#buildPlaceGroup() already
         // sorts its own regions by) — every region matching one of these
         // keys draws with an extra highlight class. This is the ONLY
         // thing "Show on Map" from ui/components/GeographicPlacePanel.js
@@ -123,7 +123,7 @@ export default {
                 .filter((region) => region.visible)
                 // Broadest first, so a CONTINENT never paints over and
                 // hides a VILLAGE drawn inside it — purely a z-order
-                // convenience, see core/WorldMapProjection.js's own
+                // convenience, see core/world/WorldMapProjection.js's own
                 // header on presentation tiers never affecting geometry.
                 .sort((a, b) => b.radius - a.radius);
         },

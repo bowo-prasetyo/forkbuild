@@ -1,4 +1,4 @@
-import { PublicationAnchor } from '../../core/PublicationAnchor.js';
+import { PublicationAnchor } from '../../core/publication/PublicationAnchor.js';
 import { validatePublicationAnchor } from './PublicationAnchorValidator.js';
 
 // 0.8.2 — Anchor Catalog & Evidence Discovery.
@@ -10,7 +10,7 @@ import { validatePublicationAnchor } from './PublicationAnchorValidator.js';
 //
 //   1. validate  — application/anchoring/PublicationAnchorValidator.js (is this
 //                   even a well-formed PublicationAnchor envelope?)
-//   2. construct — a real core/PublicationAnchor.js instance
+//   2. construct — a real core/publication/PublicationAnchor.js instance
 //
 //   → catalog    — application/anchoring/LocalPublicationAnchorCatalog.js#add()
 //

@@ -1,4 +1,4 @@
-import { BlueprintLineageClaim } from '../../core/BlueprintLineageClaim.js';
+import { BlueprintLineageClaim } from '../../core/building/BlueprintLineageClaim.js';
 
 const STORAGE_KEY_PREFIX = 'blueprint-lineage-claims:';
 
@@ -25,7 +25,7 @@ const STORAGE_KEY_PREFIX = 'blueprint-lineage-claims:';
 // save(), two removals on retract(), keeping the two copies in lockstep.
 //
 // A claim's own `sourceFingerprint` and `derivedFingerprint` are always
-// different (core/BlueprintLineageClaim.js's own constructor enforces
+// different (core/building/BlueprintLineageClaim.js's own constructor enforces
 // this), so a claim is always stored under exactly two distinct keys,
 // never one key twice.
 export class LocalBlueprintLineageClaimStore {
@@ -39,7 +39,7 @@ export class LocalBlueprintLineageClaimStore {
     // Persists `claim` (a BlueprintLineageClaim) under BOTH of its own
     // fingerprints. Never deduplicates — the same author redundantly
     // republishing a claim is two distinct, independently-timestamped
-    // facts, exactly like core/BlueprintAttribution.js's own identical
+    // facts, exactly like core/building/BlueprintAttribution.js's own identical
     // header describes one concept over.
     save(claim) {
         const json = claim.toJSON();

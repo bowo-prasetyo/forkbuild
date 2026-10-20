@@ -8,9 +8,9 @@ import { CreateSnapshotPlacementOrchestratorUseCase } from '../../application/sn
 import { CreateSnapshotPlacementCreationCoordinatorUseCase } from '../../application/snapshot/placement/CreateSnapshotPlacementCreationCoordinatorUseCase.js';
 import { CreatePreferredSnapshotPlacementCreationCoordinatorUseCase } from '../../application/snapshot/placement/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js';
 import { SetRoleProviderPreferenceUseCase } from '../../application/settings/SetRoleProviderPreferenceUseCase.js';
-import { RoleProviderRole } from '../../core/RoleProviderRole.js';
-import { announcementDiscoveryProviderOrDefault } from '../../core/AnnouncementDiscoveryProvider.js';
-import { resolveCommentaryDistributionProvider } from '../../core/CommentaryDistributionProvider.js';
+import { RoleProviderRole } from '../../core/publication/RoleProviderRole.js';
+import { announcementDiscoveryProviderOrDefault } from '../../core/publication/AnnouncementDiscoveryProvider.js';
+import { resolveCommentaryDistributionProvider } from '../../core/publication/CommentaryDistributionProvider.js';
 import { CommentaryDistributionPreferenceStore } from '../../storage/CommentaryDistributionPreferenceStore.js';
 import { PublicationCatalogDiscoveryProvider } from '../../discovery/PublicationCatalogDiscoveryProvider.js';
 import { PublicationCatalogContentResolver } from '../../discovery/PublicationCatalogContentResolver.js';
@@ -27,9 +27,9 @@ import { ObservePeerSnapshotPossessionUseCase } from '../../application/snapshot
 import { SnapshotPeerPossessionCoordinator } from '../../application/snapshot/possession/SnapshotPeerPossessionCoordinator.js';
 import { SnapshotMaterializationSelectionCoordinator } from '../../application/snapshot/materialization/SnapshotMaterializationSelectionCoordinator.js';
 import { LocalStorageProvider } from '../../storage/LocalStorageProvider.js';
-import { DEFAULT_IPFS_GATEWAY_URLS } from '../../core/IpfsGatewayConfiguration.js';
+import { DEFAULT_IPFS_GATEWAY_URLS } from '../../core/networks/IpfsGatewayConfiguration.js';
 import { IpfsGatewayConfigurationStore } from '../../storage/IpfsGatewayConfigurationStore.js';
-import { DEFAULT_IPFS_NODE_API_URL } from '../../core/IpfsNodeConfiguration.js';
+import { DEFAULT_IPFS_NODE_API_URL } from '../../core/networks/IpfsNodeConfiguration.js';
 import { IpfsNodeConfigurationStore } from '../../storage/IpfsNodeConfigurationStore.js';
 import { IpfsRemotePinningSettingsStore } from '../../storage/IpfsRemotePinningSettingsStore.js';
 import { SavedRemotePinningContentStore } from '../../application/ipfs/SavedRemotePinningContentStore.js';

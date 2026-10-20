@@ -3,28 +3,28 @@ import {
     DEFAULT_STAIR_STEP_COUNT,
     walkableSurfaceKindFor,
     resolveWalkableSurfaceAt
-} from '../core/WalkableSurface.js';
-import { isStepClimbable, DEFAULT_MAX_STEP_HEIGHT } from '../core/BrickWalkability.js';
+} from '../core/building/WalkableSurface.js';
+import { isStepClimbable, DEFAULT_MAX_STEP_HEIGHT } from '../core/building/BrickWalkability.js';
 import { AvatarStepConstraint } from '../application/avatar/AvatarStepConstraint.js';
 import { AvatarMovementConstraint } from '../application/avatar/AvatarMovementConstraint.js';
 import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
 // 0.3.3 — Walkable Structures.
 //
-//   Section A: core/WalkableSurface.js — pure per-shape surface geometry
+//   Section A: core/building/WalkableSurface.js — pure per-shape surface geometry
 //   Section B: walkableSurfaceKindFor() — the definitionId -> shape lookup
 //   Section C: application/avatar/AvatarStepConstraint.js — real stair/slope support height
 //   Section D: application/avatar/AvatarMovementConstraint.js — a directional shape is
@@ -35,8 +35,8 @@ import { assert } from './support/Assert.js';
 //
 // Central architectural claim under test throughout — see
 // docs/Principles.md, "Walkability Is Not Collision (0.3.3)":
-// core/SpatialBounds.js and core/AvatarCollision.js keep answering "what
-// occupies this space," entirely unchanged; core/WalkableSurface.js
+// core/world/SpatialBounds.js and core/avatar/AvatarCollision.js keep answering "what
+// occupies this space," entirely unchanged; core/building/WalkableSurface.js
 // answers a different question, "where may an avatar stand," and a
 // stair/slope's own non-uniform walkable height is never reduced to a
 // single AABB scalar anywhere in this pipeline. No physics engine, no
@@ -108,7 +108,7 @@ async function runTests() {
     const slab = brickRegistry.get('core:slab_4x4');
 
     // -------------------------------------------------------------
-    // Section A — core/WalkableSurface.js: pure per-shape geometry
+    // Section A — core/building/WalkableSurface.js: pure per-shape geometry
     // -------------------------------------------------------------
     {
         // FLAT delegates straight back to walkableTopAt() — identical
@@ -325,7 +325,7 @@ async function runTests() {
         const { avatarPresenceSession } = buildAvatarStack(registry, 'walkable-stair-climb');
         // Rotated -90 so the stair's own climb axis (LOCAL +X) aligns
         // with WORLD +Z — the avatar's own default walking direction
-        // (rotation 0 faces +Z, see core/AvatarMovementSimulation.js).
+        // (rotation 0 faces +Z, see core/avatar/AvatarMovementSimulation.js).
         // A flat landing immediately beyond the stair's own far edge
         // (flush with its own top) lets the avatar actually WALK OFF
         // the top once climbed, onto more flat, valid support — proving
@@ -572,7 +572,7 @@ async function runTests() {
     }
     {
         // The footprint's own boundary is inclusive on the surface
-        // side, matching core/BrickWalkability.js#walkableTopAt()'s
+        // side, matching core/building/BrickWalkability.js#walkableTopAt()'s
         // own documented convention — verified for a directional shape
         // too, not just FLAT.
         const geometry = { shapeKind: WalkableSurfaceKind.STEP, center: { x: 0, y: 0.5, z: 0 }, width: 1, height: 1, depth: 1 };

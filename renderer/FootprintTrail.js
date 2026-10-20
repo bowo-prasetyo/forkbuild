@@ -1,9 +1,9 @@
 import * as THREE from 'three';
-import { footprintFade } from '../core/Footprints.js';
+import { footprintFade } from '../core/avatar/Footprints.js';
 
-// The local avatar's footprints in the snow (core/Footprints.js), drawn on
+// The local avatar's footprints in the snow (core/avatar/Footprints.js), drawn on
 // this device only: a little dent pressed into the snow for each, lying on
-// the ground as it slopes, fading out as core/Footprints.js#footprintFade()
+// the ground as it slopes, fading out as core/avatar/Footprints.js#footprintFade()
 // says. One draw call for the whole trail, and none at all while there is
 // no print to show.
 //
@@ -76,7 +76,7 @@ export class FootprintTrail {
         return this._prints.length;
     }
 
-    // Presses `print` (core/Footprints.js#advanceFootprints()'s) into the snow.
+    // Presses `print` (core/avatar/Footprints.js#advanceFootprints()'s) into the snow.
     add(print) {
         if (!print || !Number.isFinite(print.x) || !Number.isFinite(print.z)) return;
         const slot = this._prints.length < MAX_PRINTS ? this._prints.length : this._next;

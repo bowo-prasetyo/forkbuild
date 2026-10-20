@@ -1,5 +1,5 @@
-import { UserFacingError } from '../../core/UserFacingError.js';
-import { message } from '../../core/Message.js';
+import { UserFacingError } from '../../core/app/UserFacingError.js';
+import { message } from '../../core/app/Message.js';
 import { currentIdentityId } from '../../identity/SigningReadiness.js';
 
 // 0.9.283 — Recipient Notification Query Boundary.
@@ -78,7 +78,7 @@ import { currentIdentityId } from '../../identity/SigningReadiness.js';
 // `getRecentNotifications()`, `markAsRead()`, `deleteNotification()`,
 // `acknowledge()`, any UI, any delivery mechanism, any lifecycle/read
 // state, any new deduplication logic (already owned by
-// `core/NotificationDeduplicationPolicy.js` and enforced by
+// `core/social/NotificationDeduplicationPolicy.js` and enforced by
 // `NotificationEventStore.save()`), and any caller-supplied recipient
 // parameter.
 export class GetRecipientNotificationEventsUseCase {

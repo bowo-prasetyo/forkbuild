@@ -1,10 +1,10 @@
-import { DEFAULT_LOOK_SETTINGS, LOOK, normalizeLookSettings } from '../core/LookSettings.js';
+import { DEFAULT_LOOK_SETTINGS, LOOK, normalizeLookSettings } from '../core/app/LookSettings.js';
 import { LookSettingsStore } from '../application/settings/LookSettingsStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
-// The choice of look (core/LookSettings.js): like this device until chosen,
+// The choice of look (core/app/LookSettings.js): like this device until chosen,
 // read leniently, and kept on this device only.
 {
     assert(DEFAULT_LOOK_SETTINGS.look === LOOK.AUTO, 'the look follows the device by default');

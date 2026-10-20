@@ -1,5 +1,5 @@
 import { inspectWorldEncounterMaterial } from '../worldEncounter/WorldEncounterMaterialInspection.js';
-import { WorldEncounterKind } from '../../core/WorldEncounter.js';
+import { WorldEncounterKind } from '../../core/world/WorldEncounter.js';
 import { Publication } from '../../publisher/Publication.js';
 
 // Finds Publications other players distributed on the decentralized

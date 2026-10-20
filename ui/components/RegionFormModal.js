@@ -1,4 +1,4 @@
-import { RegionKind } from '../../core/RegionKind.js';
+import { RegionKind } from '../../core/world/RegionKind.js';
 import { t } from '../i18n/i18n.js';
 import { regionKindText } from '../i18n/worldText.js';
 
@@ -7,13 +7,13 @@ import { regionKindText } from '../i18n/worldText.js';
 // The "Name This Area"/"Edit Region" form — the region counterpart to
 // ui/components/LandmarkFormModal.js, extended with the two fields a
 // named AREA needs beyond a landmark's single point: Kind (a semantic
-// label only, never a behavior — see core/RegionKind.js's own header)
+// label only, never a behavior — see core/world/RegionKind.js's own header)
 // and Radius. One component serves both modes exactly like
 // LandmarkFormModal: `region: null` is Add (centered on the avatar's
 // own current position, which this component never sees or computes);
 // `region: {...}` is Edit (fields prefilled; center/radius-at-creation
 // are shown as read-only context, never editable here — see
-// core/World.js#updateWorldRegion()'s own comment on why relocating a
+// core/document/World.js#updateWorldRegion()'s own comment on why relocating a
 // region is remove + recreate, not an in-place edit... except radius
 // itself, which — unlike a landmark's position — IS editable in place:
 // "make my region bigger" doesn't require moving anything).
@@ -24,7 +24,7 @@ import { regionKindText } from '../i18n/worldText.js';
 // depending on which mode opened this dialog. Emits cancel with nothing
 // applied.
 //
-// Deliberately excluded: a parentRegionId picker. core/WorldRegion.js
+// Deliberately excluded: a parentRegionId picker. core/world/WorldRegion.js
 // and the command/session layer beneath this form already support it
 // (informational grouping only, never required — see that class's own
 // header), but a UI to browse/pick an existing region as a parent is

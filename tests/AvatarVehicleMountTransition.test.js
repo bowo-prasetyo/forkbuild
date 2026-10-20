@@ -1,10 +1,10 @@
 import { readFile } from 'node:fs/promises';
-import { deriveAvatarVehicleMount } from '../core/AvatarVehicleMountTransition.js';
-import { AvatarVehicleMount, createAvatarVehicleMount } from '../core/AvatarVehicleMount.js';
-import { AvatarVehicleInteractionIntent } from '../core/AvatarVehicleInteractionIntent.js';
+import { deriveAvatarVehicleMount } from '../core/vehicles/AvatarVehicleMountTransition.js';
+import { AvatarVehicleMount, createAvatarVehicleMount } from '../core/vehicles/AvatarVehicleMount.js';
+import { AvatarVehicleInteractionIntent } from '../core/vehicles/AvatarVehicleInteractionIntent.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.78 — Avatar-Vehicle Mount Transition, core/AvatarVehicleMountTransition.js.
+// 0.9.78 — Avatar-Vehicle Mount Transition, core/vehicles/AvatarVehicleMountTransition.js.
 //
 //   Section A: initial mounting — null + MOUNT + target -> a valid mount
 //   Section B: no intent — NONE leaves the existing state unchanged
@@ -204,7 +204,7 @@ async function runTests() {
     // Section L — architectural regression
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../core/AvatarVehicleMountTransition.js', import.meta.url);
+        const sourceUrl = new URL('../core/vehicles/AvatarVehicleMountTransition.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -226,14 +226,14 @@ async function runTests() {
             'localStorage', 'StorageProvider', 'fetch(', 'WebSocket'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `31. core/AvatarVehicleMountTransition.js's own code never references "${term}" — a mount transition only, never proximity/target-resolution internals/vehicle placement/vehicle or avatar movement/dismounting/input/rendering/physics/persistence/networking/randomness/clock`);
+            assert(!codeOnly.includes(term), `31. core/vehicles/AvatarVehicleMountTransition.js's own code never references "${term}" — a mount transition only, never proximity/target-resolution internals/vehicle placement/vehicle or avatar movement/dismounting/input/rendering/physics/persistence/networking/randomness/clock`);
         }
     }
     {
-        const exportsModule = await import('../core/AvatarVehicleMountTransition.js');
+        const exportsModule = await import('../core/vehicles/AvatarVehicleMountTransition.js');
         const exportedNames = Object.keys(exportsModule).sort();
         assert(JSON.stringify(exportedNames) === JSON.stringify(['deriveAvatarVehicleMount']),
-            '32. core/AvatarVehicleMountTransition.js exports exactly deriveAvatarVehicleMount — nothing else');
+            '32. core/vehicles/AvatarVehicleMountTransition.js exports exactly deriveAvatarVehicleMount — nothing else');
     }
     {
         // Confirms this file truly does not re-derive proximity: a

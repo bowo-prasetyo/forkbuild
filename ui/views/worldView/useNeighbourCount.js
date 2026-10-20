@@ -1,10 +1,10 @@
 import { inject } from 'vue';
-import { seesNeighbour } from '../../../core/NeighbourSight.js';
+import { seesNeighbour } from '../../../core/world/NeighbourSight.js';
 
 // Counting what finding 1 of docs/reviews/CreativeDirection-2026-10-12b.md
 // asks of the village: of World View visits (`/e/world-visit`), how many see
 // someone else's build (`/e/world-neighbour`, once a visit;
-// core/NeighbourSight.js). Under the visitor count's rules and setting
+// core/world/NeighbourSight.js). Under the visitor count's rules and setting
 // (application/settings/FunnelEventCounter.js); nothing about the build or
 // the visitor is sent.
 export function useNeighbourCount({ session }) {

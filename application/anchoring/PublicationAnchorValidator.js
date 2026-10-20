@@ -1,4 +1,4 @@
-import { PUBLICATION_ANCHOR_KIND, CURRENT_SCHEMA_VERSION } from '../../core/PublicationAnchor.js';
+import { PUBLICATION_ANCHOR_KIND, CURRENT_SCHEMA_VERSION } from '../../core/publication/PublicationAnchor.js';
 import { isNonBlankString } from '../../utils/typeGuards.js';
 
 // 0.8.0 — Decentralized Publication Anchoring & External Evidence.

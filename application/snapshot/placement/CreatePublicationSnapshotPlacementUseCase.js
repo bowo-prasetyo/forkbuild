@@ -1,4 +1,4 @@
-import { PublicationSnapshotPlacement } from '../../../core/PublicationSnapshotPlacement.js';
+import { PublicationSnapshotPlacement } from '../../../core/publication/PublicationSnapshotPlacement.js';
 import { resolveSigningIdentityId } from '../../../identity/resolveSigningIdentityId.js';
 import { PlacementAcquisitionKind } from '../../placement/PlacementAcquisitionKind.js';
 
@@ -6,11 +6,11 @@ import { PlacementAcquisitionKind } from '../../placement/PlacementAcquisitionKi
 //
 // The placement-side counterpart of application/
 // CreatePublicationAnchorUseCase.js (0.8.8), mirrored deliberately: it
-// orchestrates core/PublicationSnapshotPlacement.js, an identityProvider,
+// orchestrates core/publication/PublicationSnapshotPlacement.js, an identityProvider,
 // identity/LocalAuthorizationVerifier.js, and application/
 // LocalPublicationSnapshotPlacementCatalog.js exactly the way that class
-// orchestrates core/PublicationAnchor.js — no new domain model beyond
-// core/PublicationSnapshotPlacement.js itself, and no change to it here.
+// orchestrates core/publication/PublicationAnchor.js — no new domain model beyond
+// core/publication/PublicationSnapshotPlacement.js itself, and no change to it here.
 //
 // CREATING A PLACEMENT CLAIM IS NOT PLACING CONTENT. This class produces
 // a signed assertion — "the current identity attests this publicationId/

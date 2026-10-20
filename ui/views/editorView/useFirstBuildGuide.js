@@ -1,5 +1,5 @@
 import { computed, inject, onBeforeUnmount, ref } from 'vue';
-import { normalizeFirstBuildProgress, shouldShowFirstBuildGuide } from '../../../core/FirstBuildChecklist.js';
+import { normalizeFirstBuildProgress, shouldShowFirstBuildGuide } from '../../../core/challenge/FirstBuildChecklist.js';
 import { FirstBuildChecklistTracker } from '../../../application/onboarding/FirstBuildChecklistTracker.js';
 
 // Stands in when no store is provided, as in a bare test mount: the guide

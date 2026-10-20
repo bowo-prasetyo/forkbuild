@@ -1,7 +1,7 @@
 
 import { Publication } from '../publisher/Publication.js';
-import { ContentReference } from '../core/ContentReference.js';
-import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
+import { ContentReference } from '../core/document/ContentReference.js';
+import { DecentralizedPublication } from '../core/publication/DecentralizedPublication.js';
 import { PublicationResolver } from '../application/publication/PublicationResolver.js';
 import { PublicationResolutionCoordinator } from '../application/publication/PublicationResolutionCoordinator.js';
 import { ReconstructPublicationDiscoveryUseCase } from '../application/publication/ReconstructPublicationDiscoveryUseCase.js';

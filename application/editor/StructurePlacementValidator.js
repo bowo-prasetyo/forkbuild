@@ -1,20 +1,20 @@
-import { SpatialBounds } from '../../core/SpatialBounds.js';
+import { SpatialBounds } from '../../core/world/SpatialBounds.js';
 
 // "Would this structure placement overlap anything already here?" — the
-// structure-placement counterpart to core/PlacementValidator.js's
+// structure-placement counterpart to core/publication/PlacementValidator.js's
 // exact-position brick check, one rung up, per the 0.2.90 design
 // conversation: "Use the same spatial abstraction already used for
 // building collision... initially, conservative bounds are perfectly
 // reasonable."
 //
 // Deliberately AABB-only, translated by position and NOT rotated —
-// exactly the simplification core/SpatialBounds.js's own header already
+// exactly the simplification core/world/SpatialBounds.js's own header already
 // established for whole-World bounds ("Rotation and scale are not
 // applied to the bounds in V1"). A rotated structure's true footprint is
 // smaller than its axis-aligned box in most orientations, so this is
 // conservative (may refuse a placement a tighter oriented-bounding-box
 // check would allow) rather than permissive — the same posture
-// core/PlacementValidator.js already takes toward exact-cell brick
+// core/publication/PlacementValidator.js already takes toward exact-cell brick
 // collision. Real oriented/mesh-level collision is future work, not a
 // gap introduced here.
 //
@@ -23,9 +23,9 @@ import { SpatialBounds } from '../../core/SpatialBounds.js';
 // documents' content (application/editor/StructureDocumentResolver.js) — an
 // I/O-touching concern core/ never has. Checking against ordinary
 // bricks needs nothing but the current World + BrickRegistry, exactly
-// like core/PlacementValidator.js.
+// like core/publication/PlacementValidator.js.
 export class StructurePlacementValidator {
-    // world: the CONTAINING World (core/World.js) the placement would
+    // world: the CONTAINING World (core/document/World.js) the placement would
     //   join. registry: BrickRegistry, for existing bricks' real
     //   dimensions. resolver: StructureDocumentResolver, for other
     //   placements' own bounds. localBounds: the SpatialBounds of the
@@ -36,7 +36,7 @@ export class StructurePlacementValidator {
     // position: the candidate position, local to `world`.
     // excludePlacementId: omit a placement from consideration against
     //   itself — unused today (0.2.90 never moves an existing
-    //   placement) but kept for symmetry with core/SpatialOverlap.js's
+    //   placement) but kept for symmetry with core/world/SpatialOverlap.js's
     //   own detectSpatialOverlap(), and so 0.2.91's move/duplicate work
     //   doesn't need a second signature.
     canPlace(world, registry, resolver, { localBounds, position, excludePlacementId = null } = {}) {

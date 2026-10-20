@@ -5,7 +5,7 @@ import { createArweavePublicationDistributionRuntimeAdapter } from '../../applic
 import { createArweaveTaggedTransactionUpload } from '../../application/arweave/ArweaveTaggedTransactionUpload.js';
 import { composeSnapshotDistributionRuntime } from '../../application/snapshot/SnapshotDistributionRuntimeComposition.js';
 import { AnnouncementDiscoveryProviderRegistry, AnnouncementDiscoveryServiceKind } from '../../application/discovery/AnnouncementDiscoveryProviderRegistry.js';
-import { announcementDiscoveryProviderOrDefault } from '../../core/AnnouncementDiscoveryProvider.js';
+import { announcementDiscoveryProviderOrDefault } from '../../core/publication/AnnouncementDiscoveryProvider.js';
 import { executeSnapshotDistributionCommand } from '../../application/snapshot/SnapshotDistributionCommand.js';
 import { availableSnapshotDistributionStorageTypes, resolveSnapshotDistributionContentStore } from '../../application/snapshot/SnapshotDistributionContentBackendSelection.js';
 

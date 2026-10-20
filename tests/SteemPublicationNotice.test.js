@@ -1,7 +1,7 @@
 import {
     STEEM_NOTICE_DESCRIPTION_MAX, STEEM_NOTICE_TITLE_MAX,
     isSteemNoticeImageUrl, steemContentManifestOperations, steemContentNotice, steemNoticeText
-} from '../core/SteemContentManifest.js';
+} from '../core/networks/SteemContentManifest.js';
 import { createSteemPublicationNoticeDescriber } from '../application/steem/SteemPublicationNoticeCard.js';
 import { describeSteemContentUploadProgress as describeSteemContentUploadProgressMessage, describeSteemNoticePictureProblem } from '../application/steem/SteemContentUploadProgressText.js';
 import { displayText } from '../ui/i18n/i18n.js';
@@ -11,12 +11,12 @@ const describeSteemContentUploadProgress = (state) => displayText(describeSteemC
 import { SteemContentStore } from '../content/SteemContentStore.js';
 import { createSteemAnnouncer } from '../application/steem/SteemAnnouncer.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
 import { assert } from './support/Assert.js';
 
 // The card on a Signed Claim's Steem notice: user-written text made safe for

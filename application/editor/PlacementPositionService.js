@@ -1,5 +1,5 @@
-import { orientedSize } from '../../core/BrickOrientation.js';
-import { Position } from '../../core/Position.js';
+import { orientedSize } from '../../core/building/BrickOrientation.js';
+import { Position } from '../../core/document/Position.js';
 
 // Placement logic used by PlacementTool (EditorView). Calculates document-local positions
 // from ground hits or brick surface hits, using actual brick dimensions.
@@ -8,7 +8,7 @@ export class PlacementPositionService {
         this._registry = registry;
     }
 
-    // `tilt` lays the new brick on another side (core/BrickOrientation.js):
+    // `tilt` lays the new brick on another side (core/building/BrickOrientation.js):
     // it rests on the ground by its tilted height.
     calculateGround(worldPosition, definitionId, settings = {}, tilt = 0) {
         const def = this._registry.get(definitionId);

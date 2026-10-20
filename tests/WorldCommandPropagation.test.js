@@ -1,9 +1,9 @@
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
@@ -21,7 +21,7 @@ import {
 import {
     toWorldOperationEnvelope,
     isValidWorldOperationEnvelope
-} from '../core/WorldOperationEnvelope.js';
+} from '../core/collaboration/WorldOperationEnvelope.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
@@ -36,7 +36,7 @@ import { assert } from './support/Assert.js';
 // and without ever solving concurrent/conflicting edits (explicitly
 // 0.2.97's question).
 //
-//   Section A: core/WorldOperationEnvelope.js — the closed wire shape in
+//   Section A: core/collaboration/WorldOperationEnvelope.js — the closed wire shape in
 //              isolation.
 //   Section B: application/document/WorldCommandPropagationUseCase.js's own
 //              constructor — every collaborator is required, exactly like
@@ -147,7 +147,7 @@ function brickPosition(doc, buildingId, brickId) {
 async function runTests() {
 
 // ---------------------------------------------------------------------
-// Section A — core/WorldOperationEnvelope.js
+// Section A — core/collaboration/WorldOperationEnvelope.js
 // ---------------------------------------------------------------------
 {
     const command = { type: 'move-brick', id: 'cmd-1', worldId: 'world-1' };
@@ -167,7 +167,7 @@ async function runTests() {
     assert(isValidWorldOperationEnvelope({ ...envelope, kind: 'SNAPSHOT' }) === false, '9. an unknown kind is never valid — this protocol never carries a World snapshot');
     assert(isValidWorldOperationEnvelope({ ...envelope, operationId: '' }) === false, '10. an empty operationId is never valid');
     assert(isValidWorldOperationEnvelope({ ...envelope, command: 'not-an-object' }) === false, '11. a non-object command is never valid');
-    console.log('✓ Section A: core/WorldOperationEnvelope.js — closed OPERATION shape, required fields, malformed rejection');
+    console.log('✓ Section A: core/collaboration/WorldOperationEnvelope.js — closed OPERATION shape, required fields, malformed rejection');
 }
 
 // ---------------------------------------------------------------------

@@ -4,7 +4,7 @@ import { BitcoinEsploraTransactionBroadcaster } from './BitcoinEsploraTransactio
 import { BitcoinEsploraTransactionConfirmationObserver } from './BitcoinEsploraTransactionConfirmationObserver.js';
 import { BitcoinEsploraWalletFundingSource } from './BitcoinEsploraWalletFundingSource.js';
 
-// Failover across several Esplora endpoints (core/BitcoinEsploraConfiguration.js's
+// Failover across several Esplora endpoints (core/networks/BitcoinEsploraConfiguration.js's
 // `apiUrls`), one wrapper per Esplora adapter. Each wrapper speaks exactly
 // the protocol of the adapter it wraps, builds one of those adapters per
 // endpoint, and asks them in order:

@@ -1,14 +1,14 @@
 import {
     flowDirectionAt, riverChannelDistanceAt, isRiverAt, hydrologyFeatureAt, hydrologyGroundColorAt,
     HYDROLOGY_FEATURE, LAKE_SURFACE_HEIGHT, LAKE_SURFACE_COLOR
-} from '../core/Hydrology.js';
-import { surfaceCategoryAt, SURFACE_CATEGORY, WATER_LEVEL, HIGHLAND_ELEVATION } from '../core/TerrainSurface.js';
-import { ecologyGroundColorAt } from '../core/TerrainEcology.js';
-import { terrainHeightAt, baseTerrainHeightAt, riverPoolReachAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
+} from '../core/nature/Hydrology.js';
+import { surfaceCategoryAt, SURFACE_CATEGORY, WATER_LEVEL, HIGHLAND_ELEVATION } from '../core/nature/TerrainSurface.js';
+import { ecologyGroundColorAt } from '../core/nature/TerrainEcology.js';
+import { terrainHeightAt, baseTerrainHeightAt, riverPoolReachAt, DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { TERRAIN_TILE_SIZE } from '../core/nature/TerrainTiling.js';
 import { assert } from './support/Assert.js';
 
-// 0.2.89 — World Water & Hydrology Foundation, core/Hydrology.js.
+// 0.2.89 — World Water & Hydrology Foundation, core/nature/Hydrology.js.
 //
 //   Section A: determinism, boundedness, and feature completeness
 //   Section B: LAKE mirrors surfaceCategoryAt() WATER exactly; RIVER
@@ -241,9 +241,9 @@ async function runTests() {
         // LAKE_SURFACE_HEIGHT/LAKE_SURFACE_COLOR — the constants
         // renderer/WaterTileMesh.js builds its flat lake plane from — are
         // exactly WATER_LEVEL and the SAME still-water tone
-        // core/TerrainSurface.js#SURFACE_PALETTE.WATER already defines,
+        // core/nature/TerrainSurface.js#SURFACE_PALETTE.WATER already defines,
         // never a second, independently-tuned copy.
-        assert(LAKE_SURFACE_HEIGHT === WATER_LEVEL, '25. LAKE_SURFACE_HEIGHT is exactly core/TerrainSurface.js\'s own WATER_LEVEL, never a re-derived copy');
+        assert(LAKE_SURFACE_HEIGHT === WATER_LEVEL, '25. LAKE_SURFACE_HEIGHT is exactly core/nature/TerrainSurface.js\'s own WATER_LEVEL, never a re-derived copy');
         assert(Number.isFinite(LAKE_SURFACE_COLOR.r) && Number.isFinite(LAKE_SURFACE_COLOR.g) && Number.isFinite(LAKE_SURFACE_COLOR.b),
             '26. LAKE_SURFACE_COLOR is a well-formed {r, g, b} color');
     }

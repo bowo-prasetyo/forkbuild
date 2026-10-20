@@ -1,6 +1,6 @@
-import { derivePlaceNamingDiscoveryTag, parsePlaceNamingDiscoveryEnvelope } from '../../core/PlaceNamingDiscoveryEnvelope.js';
-import { snapshotCellTag, SNAPSHOT_CELL_TAG_PREFIX } from '../../core/NarrowDiscoveryTags.js';
-import { describeSnapshotPlacementRecord } from '../../core/SnapshotDiscoveryEnvelope.js';
+import { derivePlaceNamingDiscoveryTag, parsePlaceNamingDiscoveryEnvelope } from '../../core/world/PlaceNamingDiscoveryEnvelope.js';
+import { snapshotCellTag, SNAPSHOT_CELL_TAG_PREFIX } from '../../core/publication/NarrowDiscoveryTags.js';
+import { describeSnapshotPlacementRecord } from '../../core/publication/SnapshotDiscoveryEnvelope.js';
 import { isNonEmptyString, isPlainObject } from '../../utils/typeGuards.js';
 
 // Each kind turns one raw discovery result into the payload the Announcement

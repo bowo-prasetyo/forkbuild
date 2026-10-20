@@ -1,6 +1,6 @@
 import { Command } from './Command.js';
-import { Position } from '../../core/Position.js';
-import { message } from '../../core/Message.js';
+import { Position } from '../../core/document/Position.js';
+import { message } from '../../core/app/Message.js';
 
 // 0.2.97 — Shared World Ordering & Conflict Resolution.
 //
@@ -24,7 +24,7 @@ import { message } from '../../core/Message.js';
 // winner" example this milestone's own design conversation used). This
 // command is what makes that scenario expressible at all: whichever of
 // two concurrent SetStructurePlacementTransformCommands is canonically
-// LATER (core/WorldOperationOrder.js) is the one whose exact target
+// LATER (core/collaboration/WorldOperationOrder.js) is the one whose exact target
 // value survives, on every replica, regardless of arrival order — see
 // replication/WorldConflictResolver.js's own header for the mechanism.
 export class SetStructurePlacementTransformCommand extends Command {

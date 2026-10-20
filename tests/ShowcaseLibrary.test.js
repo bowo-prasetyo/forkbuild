@@ -6,7 +6,7 @@
 // file checks what is particular to these three.
 import { ShowcaseLibrary } from '../core/library/ShowcaseLibrary.js';
 import { VillageLibrary } from '../core/library/VillageLibrary.js';
-import { SpatialBounds } from '../core/SpatialBounds.js';
+import { SpatialBounds } from '../core/world/SpatialBounds.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';
 import { libraryCategoryName, libraryItemDescription, libraryItemKey, libraryItemName } from '../ui/i18n/libraryText.js';

@@ -1,10 +1,10 @@
-import { wildlifeCollisionCandidatesForMovement } from '../../core/AvatarWildlifeCollisionQuery.js';
-import { resolveAvatarTreeMovement } from '../../core/AvatarTreeMovement.js';
-import { DEFAULT_WORLD_SEED } from '../../core/TerrainHeightField.js';
+import { wildlifeCollisionCandidatesForMovement } from '../../core/avatar/AvatarWildlifeCollisionQuery.js';
+import { resolveAvatarTreeMovement } from '../../core/avatar/AvatarTreeMovement.js';
+import { DEFAULT_WORLD_SEED } from '../../core/nature/TerrainHeightField.js';
 
 // The application-layer half of avatar/animal collision, mirroring exactly
 // the split application/avatar/AvatarTreeConstraint.js already established for
-// trees: core/AvatarWildlifeCollisionQuery.js supplies the pure candidate
+// trees: core/avatar/AvatarWildlifeCollisionQuery.js supplies the pure candidate
 // geometry, this class supplies only the one thing it deliberately never
 // touches — the world seed a real session actually runs under — plus the
 // thin `apply(position, desiredPosition)` shape
@@ -12,12 +12,12 @@ import { DEFAULT_WORLD_SEED } from '../../core/TerrainHeightField.js';
 // of every constraint in it.
 //
 // THIS FILE CONTAINS NO COLLISION MATHEMATICS OF ITS OWN. Resolution reuses
-// core/AvatarTreeMovement.js#resolveAvatarTreeMovement() UNCHANGED, rather
+// core/avatar/AvatarTreeMovement.js#resolveAvatarTreeMovement() UNCHANGED, rather
 // than a cloned copy — that function is already a pure function of any
 // list of `{ center, radius }` circles (it never reads a tree-specific
 // field), the same "one reusable geometric primitive, never a near-identical
-// copy per object kind" precedent core/AvatarTreeCollision.js#circlesIntersect()'s
-// own header establishes and core/AvatarVehicleDismountClearance.js already
+// copy per object kind" precedent core/avatar/AvatarTreeCollision.js#circlesIntersect()'s
+// own header establishes and core/vehicles/AvatarVehicleDismountClearance.js already
 // puts into practice for an entirely different, non-tree concern:
 //
 //   const animals = wildlifeCollisionCandidatesForMovement({ seed, currentPosition, requestedPosition, avatarRadius });
@@ -33,7 +33,7 @@ import { DEFAULT_WORLD_SEED } from '../../core/TerrainHeightField.js';
 // `collided` is DERIVED by comparing the resolved X/Z against the
 // requested X/Z, matching AvatarTreeConstraint's own identical posture.
 //
-// Animals move (core/WildlifeMotion.js). `clock()` returns the wildlife time
+// Animals move (core/nature/WildlifeMotion.js). `clock()` returns the wildlife time
 // in seconds, the same clock the renderer draws animals with, so an avatar
 // collides with an animal where it is seen; without a clock every animal
 // stays at its placed position. `isExcluded(id)` names caught animals,

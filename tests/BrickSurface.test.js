@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { BrickSurface, brickSurfaceOf, SURFACE_ROUGHNESS } from '../core/BrickSurface.js';
-import { VILLAGE_PALETTE } from '../core/VillagePalette.js';
+import { BrickSurface, brickSurfaceOf, SURFACE_ROUGHNESS } from '../core/building/BrickSurface.js';
+import { VILLAGE_PALETTE } from '../core/building/VillagePalette.js';
 import { CoreLibrary } from '../core/library/CoreLibrary.js';
 import { applyBrickSurface, withBrickBounds } from '../renderer/BrickSurfaceMaterial.js';
 import { makeNightGlowing } from '../renderer/NightGlowMaterial.js';
@@ -8,7 +8,7 @@ import { ThreeBrickFactory } from '../renderer/ThreeBrickFactory.js';
 import { BrickInstanceRegistry } from '../renderer/BrickInstanceRegistry.js';
 import { assert } from './support/Assert.js';
 
-// The brick look (core/BrickSurface.js, renderer/BrickSurfaceMaterial.js):
+// The brick look (core/building/BrickSurface.js, renderer/BrickSurfaceMaterial.js):
 // what each brick is made of, read by type and, for the plain blocks, by
 // colour; every brick material drawn with its surface, on top of the night
 // glow and the instanced highlight; and bricks of different surfaces drawn

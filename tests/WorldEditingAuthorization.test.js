@@ -1,9 +1,9 @@
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
@@ -16,7 +16,7 @@ import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { SpatialSelectionState } from '../application/spatial-state/SpatialSelectionState.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { WorldAuthorizationService } from '../application/identity/WorldAuthorizationService.js';
-import { WorldAccessLevel, worldAccessAtLeast, isValidWorldAccessLevel } from '../core/WorldAccessLevel.js';
+import { WorldAccessLevel, worldAccessAtLeast, isValidWorldAccessLevel } from '../core/collaboration/WorldAccessLevel.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
 import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
 import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
@@ -32,13 +32,13 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 // (0.2.95) attachable to one clean seam later." This file proves that
 // seam actually exists and actually holds:
 //
-//   Section A: core/WorldAccessLevel.js — the closed NONE/READ/EDIT
+//   Section A: core/collaboration/WorldAccessLevel.js — the closed NONE/READ/EDIT
 //              vocabulary and its total order.
 //   Section B: application/identity/WorldAuthorizationService.js in isolation —
 //              ownership by cryptographic identity, legacy label
 //              fallback, blocking overrides ownership, graceful
 //              defaults for an absent document/viewer.
-//   Section C: core/DocumentMetadata.js#authorIdentityId — construction,
+//   Section C: core/document/DocumentMetadata.js#authorIdentityId — construction,
 //              JSON round-trip, and tolerant degrade for a document
 //              saved before this milestone.
 //   Section D: identity/resolveSigningIdentityId.js — tolerant of a
@@ -116,7 +116,7 @@ function makeIdentityProvider({ identityId = null, username = null, throwsOnSign
 
 async function run() {
     // -------------------------------------------------------------
-    // Section A: core/WorldAccessLevel.js
+    // Section A: core/collaboration/WorldAccessLevel.js
     // -------------------------------------------------------------
     {
         assert(WorldAccessLevel.NONE === 'none' && WorldAccessLevel.READ === 'read' && WorldAccessLevel.EDIT === 'edit',
@@ -206,7 +206,7 @@ async function run() {
     }
 
     // -------------------------------------------------------------
-    // Section C: core/DocumentMetadata.js#authorIdentityId
+    // Section C: core/document/DocumentMetadata.js#authorIdentityId
     // -------------------------------------------------------------
     {
         const meta = new DocumentMetadata({ author: 'alice', authorIdentityId: 'did:key:alice' });
@@ -477,9 +477,9 @@ async function run() {
         }
     }
 
-    console.log('✓ Section A: core/WorldAccessLevel.js — closed NONE/READ/EDIT vocabulary and total order');
+    console.log('✓ Section A: core/collaboration/WorldAccessLevel.js — closed NONE/READ/EDIT vocabulary and total order');
     console.log('✓ Section B: application/identity/WorldAuthorizationService.js — ownership, blocking, legacy fallback, graceful defaults');
-    console.log('✓ Section C: core/DocumentMetadata.js#authorIdentityId — construction, round-trip, tolerant degrade');
+    console.log('✓ Section C: core/document/DocumentMetadata.js#authorIdentityId — construction, round-trip, tolerant degrade');
     console.log('✓ Section D: identity/resolveSigningIdentityId.js — tolerant of every absence, correct when present');
     console.log('✓ Section E: application/editor/SpatialEditingService.js — one predicate gates every real mutation chokepoint');
     console.log('✓ Section F: application/document/ForkDocumentUseCase.js — the forker becomes the new owner, cryptographically');

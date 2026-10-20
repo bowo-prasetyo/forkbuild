@@ -12,9 +12,9 @@ import {
     toChatMessage,
     isValidChatMessage,
     MAX_CHAT_BODY_LENGTH
-} from '../core/ChatMessage.js';
-import { ChatReplayWindow } from '../core/ChatReplayWindow.js';
-import { resolveIncomingChatMessage } from '../core/ChatMessageIngestion.js';
+} from '../core/social/ChatMessage.js';
+import { ChatReplayWindow } from '../core/social/ChatReplayWindow.js';
+import { resolveIncomingChatMessage } from '../core/social/ChatMessageIngestion.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
@@ -87,7 +87,7 @@ async function becomeFriends(aFriends, aPeer, bFriends, bPeer) {
 async function runTests() {
 
 // ---------------------------------------------------------------------
-// 1. core/ChatMessage.js — wire vocabulary and structural validation.
+// 1. core/social/ChatMessage.js — wire vocabulary and structural validation.
 // ---------------------------------------------------------------------
 {
     const conversationId = deriveConversationId('alice', 'bob');
@@ -116,11 +116,11 @@ async function runTests() {
     let threw = false;
     try { toChatMessage({ conversationId, senderIdentity: 'alice', sequence: 1, body: '' }); } catch { threw = true; }
     assert(threw, 'toChatMessage refuses an empty body');
-    console.log('✓ core/ChatMessage.js: wire vocabulary is structurally validated and bounded');
+    console.log('✓ core/social/ChatMessage.js: wire vocabulary is structurally validated and bounded');
 }
 
 // ---------------------------------------------------------------------
-// 2. core/ChatReplayWindow.js + core/ChatMessageIngestion.js — identity
+// 2. core/social/ChatReplayWindow.js + core/social/ChatMessageIngestion.js — identity
 //    vs. sequence vs. delivery ordering, kept genuinely distinct.
 // ---------------------------------------------------------------------
 {
@@ -142,13 +142,13 @@ async function runTests() {
     window.recordAccepted(key, 'msg-2', 2);
 
     // Sequence ordering tolerates GAPS — this protocol never assumes a
-    // contiguous stream (see core/ChatMessageIngestion.js's own header).
+    // contiguous stream (see core/social/ChatMessageIngestion.js's own header).
     const gapDecision = resolveIncomingChatMessage(window.highestSequence(key), { sequence: 10 });
     assert(gapDecision.accepted, 'a message that skips sequence numbers (3..9 never sent/seen) is still accepted — no contiguity is assumed');
 
     // Different keys (different conversations/senders) never interfere.
     assert(resolveIncomingChatMessage(window.highestSequence('conv:bob'), { sequence: 1 }).accepted, 'a different key starts with its own independent highwater mark');
-    console.log('✓ core/ChatReplayWindow.js + core/ChatMessageIngestion.js: message identity, sequence ordering, and delivery ordering are kept genuinely distinct');
+    console.log('✓ core/social/ChatReplayWindow.js + core/social/ChatMessageIngestion.js: message identity, sequence ordering, and delivery ordering are kept genuinely distinct');
 }
 
 // ---------------------------------------------------------------------

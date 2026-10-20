@@ -1,9 +1,9 @@
 import { readFile } from 'node:fs/promises';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { nearbyVehicleInstances, VEHICLE_RENDER_RADIUS } from '../application/world/NearbyVehicleInstances.js';
-import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
-import { vehicleInstanceFromPresence, isValidVehicleInstance } from '../core/VehicleInstance.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+import { vehiclePresenceInRegion } from '../core/vehicles/VehiclePlacement.js';
+import { vehicleInstanceFromPresence, isValidVehicleInstance } from '../core/vehicles/VehicleInstance.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';

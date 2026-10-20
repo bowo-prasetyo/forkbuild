@@ -1,18 +1,18 @@
 import { t } from '../../i18n/i18n.js';
 import I18nText from '../../i18n/I18nText.js';
-import { remixFamilySize } from '../../../core/RemixFamily.js';
+import { remixFamilySize } from '../../../core/publication/RemixFamily.js';
 import { createVerifiedPublisherResolver } from '../../../application/publication/FollowingFeed.js';
 import { Publication } from '../../../publisher/Publication.js';
 import { builtWithNames, builderRoute } from './builtWithText.js';
 import BuiltWithNames from './BuiltWithNames.js';
 
-// A build's family tree (core/RemixFamily.js): what it was remixed from,
+// A build's family tree (core/publication/RemixFamily.js): what it was remixed from,
 // back to the original, then this build, then the remixes made from it.
 // `routeFor(member)` gives a member's route, or null to show it as text.
 
 // One member's line: its title, a link to the build; its author, a link to
 // their page when the build's signature verifies (ui/views/BuilderView.js);
-// and who built it with them, each name a link (core/BuiltWith.js).
+// and who built it with them, each name a link (core/catalog/BuiltWith.js).
 const RemixFamilyMemberLabel = {
     name: 'RemixFamilyMemberLabel',
     components: { I18nText, BuiltWithNames },

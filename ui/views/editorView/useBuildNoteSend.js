@@ -3,7 +3,7 @@ import { Findability } from '../../../application/settings/FindabilityStore.js';
 import { BuildNoteSendOutcome } from '../../../application/buildNotes/PublishBuildNoteUseCase.js';
 
 // After a publish, sends the build to everyone as a build note
-// (core/BuildNote.js) when this device's builder chose "Everyone" under
+// (core/publication/BuildNote.js) when this device's builder chose "Everyone" under
 // Who can find it? (application/settings/FindabilityStore.js), and says how
 // it went in the Publish notice. Page-local state only.
 //

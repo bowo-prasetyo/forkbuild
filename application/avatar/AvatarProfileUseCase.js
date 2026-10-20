@@ -1,14 +1,14 @@
 import { EventBus } from '../../core/events/EventBus.js';
-import { AvatarProfile, DEFAULT_AVATAR_TEMPLATE_ID } from '../../core/AvatarProfile.js';
-import { validateAvatarAppearance } from '../../core/AvatarAppearanceValidator.js';
-import { UserFacingError } from '../../core/UserFacingError.js';
-import { message } from '../../core/Message.js';
+import { AvatarProfile, DEFAULT_AVATAR_TEMPLATE_ID } from '../../core/avatar/AvatarProfile.js';
+import { validateAvatarAppearance } from '../../core/avatar/AvatarAppearanceValidator.js';
+import { UserFacingError } from '../../core/app/UserFacingError.js';
+import { message } from '../../core/app/Message.js';
 
 const AVATAR_PROFILE_EVENT = 'AvatarProfileChanged';
 const STORAGE_KEY_PREFIX = 'avatar-profile:';
 
 // 0.2.33 — the persistent-profile half of the Identity/AvatarProfile/
-// Presence split (see core/AvatarProfile.js). One profile per
+// Presence split (see core/avatar/AvatarProfile.js). One profile per
 // identity, loaded/created/saved through an injected StorageProvider,
 // exactly the way LocalIdentityProvider lazily loads-or-creates a
 // signing keypair per username (identity/LocalIdentityProvider.js,

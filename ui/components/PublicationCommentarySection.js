@@ -3,7 +3,7 @@ import CommentaryDistributionPicker, { commentarySavedText } from './CommentaryD
 import CommentaryNetworkDistribution from './CommentaryNetworkDistribution.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 import NameNeededNotice from './NameNeededNotice.js';
-import { createId } from '../../core/createId.js';
+import { createId } from '../../core/document/createId.js';
 import { errorText, t } from '../i18n/i18n.js';
 import IdentityName from './IdentityName.js';
 

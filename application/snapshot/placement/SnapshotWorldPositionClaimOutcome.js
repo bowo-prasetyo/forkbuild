@@ -5,7 +5,7 @@
 // structurally" restraint `application/snapshot/placement/SnapshotWorldPlacementOutcome.js`
 // (0.9.159) and `application/snapshot/SnapshotPublicationAttributionOutcome.js`
 // (0.9.143) already hold, one seam over: a self-declared position claim
-// (`core/SnapshotDiscoveryEnvelope.js`'s own optional `publicationId`/
+// (`core/publication/SnapshotDiscoveryEnvelope.js`'s own optional `publicationId`/
 // `claimedPosition`, 0.9.171) is either absent, bound to a DIFFERENT
 // Publication than the one being placed, or genuinely bound to THIS one.
 export const SnapshotWorldPositionClaimOutcome = Object.freeze({

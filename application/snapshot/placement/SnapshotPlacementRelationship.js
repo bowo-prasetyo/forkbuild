@@ -24,7 +24,7 @@
 //
 // A SEPARATE FILE FROM application/publication/evidence/ContentBindingSetRelationship.js,
 // deliberately, even though the two vocabularies are structurally
-// identical — the same restraint core/PublicationSnapshotPlacement.js's
+// identical — the same restraint core/publication/PublicationSnapshotPlacement.js's
 // own header already draws between a placement and an anchor as domain
 // concepts ("PLACEMENT IS NOT ANCHORING"). An anchor asks "what external
 // evidence claims do I know?"; a placement asks "what locations do I

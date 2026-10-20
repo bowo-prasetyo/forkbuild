@@ -1,5 +1,5 @@
-import { UserFacingError } from '../core/UserFacingError.js';
-import { message } from '../core/Message.js';
+import { UserFacingError } from '../core/app/UserFacingError.js';
+import { message } from '../core/app/Message.js';
 import { resolveSigningIdentityId } from './resolveSigningIdentityId.js';
 
 // Why the current identity can or can't sign right now. resolveSigningIdentityId()

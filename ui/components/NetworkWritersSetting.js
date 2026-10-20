@@ -1,9 +1,9 @@
 import { inject, ref } from 'vue';
-import { NetworkWriter } from '../../core/NetworkWriters.js';
+import { NetworkWriter } from '../../core/publication/NetworkWriters.js';
 import { t } from '../i18n/i18n.js';
 
 // Network Settings' wallet switches: which network writers this device
-// builds (core/NetworkWriters.js, docs/Pillars.md "Networks: readers and
+// builds (core/publication/NetworkWriters.js, docs/Pillars.md "Networks: readers and
 // writers"). Each is saved as soon as it changes; the Publications page reads
 // it when it opens. Turning one off stops the Publications page offering its
 // wallet steps; what it built stays loaded until the page is reloaded.

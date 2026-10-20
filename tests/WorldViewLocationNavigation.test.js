@@ -1,8 +1,8 @@
-import { World } from '../core/World.js';
-import { Position } from '../core/Position.js';
-import { StructurePlacement } from '../core/StructurePlacement.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Position } from '../core/document/Position.js';
+import { StructurePlacement } from '../core/building/StructurePlacement.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
@@ -14,12 +14,12 @@ import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { SpatialCameraController } from '../application/world/SpatialCameraController.js';
-import { WorldLocation } from '../core/WorldLocation.js';
-import { WorldLocationKind, isValidWorldLocationKind } from '../core/WorldLocationKind.js';
+import { WorldLocation } from '../core/world/WorldLocation.js';
+import { WorldLocationKind, isValidWorldLocationKind } from '../core/world/WorldLocationKind.js';
 import { WorldLocationDirectory, ORIGIN_LOCATION_ID } from '../application/world/WorldLocationDirectory.js';
 import { CameraFocusAnimator } from '../application/editor/CameraFocusAnimator.js';
 import { Publication } from '../publisher/Publication.js';
-import { computeCompassHeading, resolveCompassLabel } from '../core/CompassHeading.js';
+import { computeCompassHeading, resolveCompassLabel } from '../core/world/CompassHeading.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
@@ -31,11 +31,11 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 // without gaining a single new capacity to MUTATE anything. This file
 // proves that claim at every layer it touches:
 //
-//   Section A: core/WorldLocation.js + core/WorldLocationKind.js — the
+//   Section A: core/world/WorldLocation.js + core/world/WorldLocationKind.js — the
 //              closed vocabulary and the value object, including that
 //              an invalid kind is rejected rather than silently
 //              accepted.
-//   Section B: core/CompassHeading.js — the pure, reused-convention
+//   Section B: core/world/CompassHeading.js — the pure, reused-convention
 //              heading computation, including its "no meaningful
 //              heading" null case.
 //   Section C: application/editor/CameraFocusAnimator.js — pure interpolation:
@@ -106,7 +106,7 @@ async function run() {
     {
         assert(isValidWorldLocationKind(WorldLocationKind.ORIGIN) === true, '1. ORIGIN is a valid kind');
         assert(isValidWorldLocationKind(WorldLocationKind.STRUCTURE) === true, '2. STRUCTURE is a valid kind');
-        // 0.3.7 shipped LANDMARK — see core/WorldLocationKind.js and
+        // 0.3.7 shipped LANDMARK — see core/world/WorldLocationKind.js and
         // tests/WorldLandmarks.test.js. 'not-a-real-kind' below still
         // proves the vocabulary stays closed, just no longer excluding
         // 'landmark' specifically.
@@ -138,7 +138,7 @@ async function run() {
     }
 
     // -------------------------------------------------------------
-    // Section B: core/CompassHeading.js
+    // Section B: core/world/CompassHeading.js
     // -------------------------------------------------------------
     {
         // `degrees` is the raw yaw (0 = +Z, 90 = +X); `bearing` and `label`
@@ -321,7 +321,7 @@ async function run() {
         // never wires a placementRegistry, matching WorldViewInstanceInspection's
         // own flagship) — LocalWorldLayoutProvider falls back to its
         // own deterministic, documentId-keyed grid position for it
-        // (core/DeterministicGridPlacement.js), not (0,0,0). The
+        // (core/world/DeterministicGridPlacement.js), not (0,0,0). The
         // House's own WORLD position is that layout offset plus its
         // LOCAL (800, 0, 1200) — read the offset back the same way
         // WorldLocationDirectory itself does, rather than assuming a
@@ -389,7 +389,7 @@ async function run() {
         // context" behavior, which read as "Home" but actually meant
         // "teleport to an unrelated, usually-empty part of the shared
         // map" for anyone whose own content (as basically everyone's
-        // is — core/DeterministicGridPlacement.js scatters it across a
+        // is — core/world/DeterministicGridPlacement.js scatters it across a
         // huge shared grid) wasn't itself near true origin. True origin
         // remains reachable exactly as before, just no longer through
         // this shortcut — WorldLocationDirectory's own list() still
@@ -447,8 +447,8 @@ async function run() {
             '60. flagship: the framing is applied instantly, landing on the SAME deterministic destination as the animated path');
     }
 
-    console.log('✓ Section A: core/WorldLocation.js + core/WorldLocationKind.js — closed vocabulary, invalid kinds rejected');
-    console.log('✓ Section B: core/CompassHeading.js — pure heading computation, reused yaw convention, null when meaningless');
+    console.log('✓ Section A: core/world/WorldLocation.js + core/world/WorldLocationKind.js — closed vocabulary, invalid kinds rejected');
+    console.log('✓ Section B: core/world/CompassHeading.js — pure heading computation, reused yaw convention, null when meaningless');
     console.log('✓ Section C: application/editor/CameraFocusAnimator.js — deterministic interpolation, clamped, never jumps mid-path');
     console.log('✓ Section D: application/world/WorldLocationDirectory.js — Origin-first, correct world-space positions, find() agrees with list()');
     console.log('✓ Section E: FLAGSHIP — two replicas agree on locations, Focus/Home glide deterministically, compass reads correctly, zero document/placement/history mutation');

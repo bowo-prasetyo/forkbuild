@@ -3,7 +3,7 @@ import {
     deriveDecentralizedWorldEncounterLeadAssociationEvidence,
     deriveDecentralizedWorldEncounterLeadAssociationEvidenceFromRegistry
 } from '../application/worldEncounter/DecentralizedWorldEncounterLeadAssociationEvidenceIngress.js';
-import { describeDecentralizedWorldDiscoveryLead } from '../core/DecentralizedWorldDiscoveryLead.js';
+import { describeDecentralizedWorldDiscoveryLead } from '../core/world/DecentralizedWorldDiscoveryLead.js';
 import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js';
 import {
     resolveDecentralizedWorldEncounterLead,

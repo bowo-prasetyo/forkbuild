@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
-import { parseSnapshotDiscoveryEnvelope } from '../core/SnapshotDiscoveryEnvelope.js';
+import { parseSnapshotDiscoveryEnvelope } from '../core/publication/SnapshotDiscoveryEnvelope.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.133 — Nostr Snapshot Discovery Publisher.

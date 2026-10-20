@@ -1,7 +1,7 @@
-import { describeDecentralizedDiscoveryEnvelope } from '../../core/DecentralizedDiscoveryEnvelope.js';
+import { describeDecentralizedDiscoveryEnvelope } from '../../core/publication/DecentralizedDiscoveryEnvelope.js';
 import { withTimeout } from '../../utils/withTimeout.js';
-import { announcedBuildTagDiscoveryTags, publicationRecordTag } from '../../core/NarrowDiscoveryTags.js';
-import { WorldEncounterKind } from '../../core/WorldEncounter.js';
+import { announcedBuildTagDiscoveryTags, publicationRecordTag } from '../../core/publication/NarrowDiscoveryTags.js';
+import { WorldEncounterKind } from '../../core/world/WorldEncounter.js';
 
 const DEFAULT_RELAY_URL = 'wss://relay.damus.io';
 const DEFAULT_TAG_NAME = 't';
@@ -29,7 +29,7 @@ const EVENT_ID_PATTERN = /^[0-9a-f]{64}$/i;
 // 0.9.46 — Nostr Publication Discovery Publisher.
 //
 // 0.9.44's own `PublicationDistributionDescriptor.js` already produces a
-// `discoveryEnvelope` — a real `core/DecentralizedDiscoveryEnvelope.js`
+// `discoveryEnvelope` — a real `core/publication/DecentralizedDiscoveryEnvelope.js`
 // value naming where a Publication's material claims to live. 0.9.45 gave
 // that envelope's own `uri` a real Arweave transaction behind it. Neither
 // file announces the envelope anywhere. This is the publishing counterpart
@@ -59,7 +59,7 @@ const EVENT_ID_PATTERN = /^[0-9a-f]{64}$/i;
 //
 // ONE PROTOCOL ENVELOPE, NEVER TWO. This file never builds its own
 // "publication announcement" shape. `publish()` re-validates its own
-// `envelope` argument through `core/DecentralizedDiscoveryEnvelope.js`'s own
+// `envelope` argument through `core/publication/DecentralizedDiscoveryEnvelope.js`'s own
 // `describeDecentralizedDiscoveryEnvelope()`, unmodified, and serializes
 // exactly THAT canonical, already-frozen result via `JSON.stringify()` —
 // never the caller's raw argument, never a hand-picked subset of its
@@ -194,7 +194,7 @@ const EVENT_ID_PATTERN = /^[0-9a-f]{64}$/i;
 // reported, nothing else. It never carries a `verified`, `trusted`,
 // `confidence`, or `status` field of any kind; whether an announced
 // envelope's own CLAIM is ever believed remains entirely the consuming
-// side's own concern, exactly as `core/DecentralizedDiscoveryEnvelope.js`'s
+// side's own concern, exactly as `core/publication/DecentralizedDiscoveryEnvelope.js`'s
 // own header already draws that line one layer over.
 //
 // NEVER DISCOVERY, NEVER VERIFICATION, NEVER MATERIAL UPLOAD, NEVER
@@ -265,7 +265,7 @@ export class NostrPublicationDiscoveryPublisher {
     //   genuine transport/signing failure propagates."
     // buildTagsFor: optional `(publicationId) -> string[]`, the build's own
     //   tags, each announced as a `forkbuild-tag:` tag
-    //   (core/NarrowDiscoveryTags.js) so the builds with one tag can be found.
+    //   (core/publication/NarrowDiscoveryTags.js) so the builds with one tag can be found.
     constructor({
         relayUrl = DEFAULT_RELAY_URL,
         tagName = DEFAULT_TAG_NAME,

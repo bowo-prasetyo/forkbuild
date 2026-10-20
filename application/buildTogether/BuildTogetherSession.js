@@ -226,7 +226,7 @@ export class BuildTogetherSession {
 
     // An operation by `identityId` on `documentId` was accepted (the command
     // protocol's onOperationReceived): a friend allowed on the hosted build
-    // built something, so the build credits them (core/BuiltWith.js,
+    // built something, so the build credits them (core/catalog/BuiltWith.js,
     // through the editor's creditBuilder). True when they were credited.
     noteEdit(documentId, identityId) {
         if (!this.allows(documentId, identityId) || typeof this._editor.creditBuilder !== 'function') return false;
@@ -241,7 +241,7 @@ export class BuildTogetherSession {
     }
 
     // The hosted build's credits, to each co-builder: their copies follow
-    // the author's list (core/BuiltWith.js), so every copy says who built it.
+    // the author's list (core/catalog/BuiltWith.js), so every copy says who built it.
     _sendCredits() {
         const document = this._editor.openDocument();
         if (!this._hosted || !document || document.world.id !== this._hosted) return;

@@ -1,19 +1,19 @@
-import { findBuildEntrance } from '../../core/BuildEntrance.js';
-import { CameraPerspective } from '../../core/CameraPerspective.js';
-import { terrainHeightAt } from '../../core/TerrainHeightField.js';
+import { findBuildEntrance } from '../../core/world/BuildEntrance.js';
+import { CameraPerspective } from '../../core/avatar/CameraPerspective.js';
+import { terrainHeightAt } from '../../core/nature/TerrainHeightField.js';
 import {
     EYES_FIELD_OF_VIEW, planWalkThrough, startWalkThrough, stepWalkThrough, estimateWalkThroughSeconds, WalkThroughCamera, WalkThroughPhase
-} from '../../core/WalkThroughFilm.js';
+} from '../../core/app/WalkThroughFilm.js';
 
 // The key that walks the avatar ahead (application/avatar/AvatarMovementController.js).
 const FORWARD_KEY = 'w';
 
-// Filming a walk-through (core/WalkThroughFilm.js says what it shows): the
+// Filming a walk-through (core/app/WalkThroughFilm.js says what it shows): the
 // avatar is put a few steps back from a build's door, and every render frame
 // it is turned and walked ahead as the film says, through World View's own
 // movement, so it bumps into what is there, the door swings open, its
 // footsteps are heard and the camera follows it in: World View's third-person
-// camera (indoors, core/IndoorView.js frames the room), or its first-person
+// camera (indoors, core/building/IndoorView.js frames the room), or its first-person
 // one, seeing through the avatar's eyes. A sweep round the outside, when
 // asked for, comes first: the camera is moved round the build each frame
 // while the avatar waits, with no perspective taking it over until the walk. The person's own movement keys do
@@ -29,7 +29,7 @@ export const walkThroughFilmMethods = {
     },
 
     // Starts filming `documentId`'s walk-through, seen from `camera`
-    // (core/WalkThroughFilm.js's WalkThroughCamera), opening on a sweep round
+    // (core/app/WalkThroughFilm.js's WalkThroughCamera), opening on a sweep round
     // the outside when `sweep` is set, framed for a video `aspect` (width /
     // height). Returns `{ kind, seconds }`
     // (a build entered by a door or walked up to, and about how long the film
@@ -63,7 +63,7 @@ export const walkThroughFilmMethods = {
             layout,
             state: startWalkThrough(plan),
             perspectiveForWalk: camera === WalkThroughCamera.EYES ? CameraPerspective.FIRST_PERSON : CameraPerspective.THIRD_PERSON,
-            // Through its eyes, the walk has a wide lens (core/WalkThroughFilm.js),
+            // Through its eyes, the walk has a wide lens (core/app/WalkThroughFilm.js),
             // and the camera's own comes back after; null when the render
             // facade can't change it.
             fovForWalk: camera === WalkThroughCamera.EYES ? EYES_FIELD_OF_VIEW : null,
@@ -126,7 +126,7 @@ export const walkThroughFilmMethods = {
     },
 
     // One render frame of the film: turn the avatar and walk it ahead or stop
-    // it, as core/WalkThroughFilm.js says.
+    // it, as core/app/WalkThroughFilm.js says.
     _stepWalkThroughFilm(deltaSeconds) {
         const film = this._walkThroughFilm;
         if (!film || !this._avatarPresenceSession) {

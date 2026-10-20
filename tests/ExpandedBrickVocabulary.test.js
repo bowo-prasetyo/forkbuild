@@ -1,16 +1,16 @@
 import * as THREE from 'three';
-import { BrickRegistry } from '../core/BrickRegistry.js';
+import { BrickRegistry } from '../core/building/BrickRegistry.js';
 import { CoreLibrary } from '../core/library/CoreLibrary.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { PaletteUseCase } from '../application/editor/PaletteUseCase.js';
 import { EditorContext } from '../application/editor/EditorContext.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { PlacementValidator } from '../core/PlacementValidator.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { PlacementValidator } from '../core/publication/PlacementValidator.js';
 import { SelectionBoundsService } from '../application/editor/SelectionBoundsService.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { BrickRenderer } from '../renderer/BrickRenderer.js';
@@ -28,7 +28,7 @@ import { assert } from './support/Assert.js';
 // Central architectural claim under test: adding eleven new
 // BrickDefinitions (structural, wall, floor, roof, stairs, column, beam,
 // arch, window, door, decorative) required no change whatsoever to
-// core/Brick.js, core/documentSchema.js, or
+// core/building/Brick.js, core/document/documentSchema.js, or
 // serializer/DocumentSchemaMigrator.js — a Brick is still nothing but
 // { id, definitionId, position, rotation }, and a document's own
 // serialization shape is untouched. Every new definition is a genuine
@@ -190,7 +190,7 @@ async function runRendererTests() {
 
         // Every id builds a real mesh whose bounding box
         // approximately matches its BrickDefinition's own width/height/depth
-        // — the same AABB approximation core/AvatarCollision.js and
+        // — the same AABB approximation core/avatar/AvatarCollision.js and
         // application/editor/SelectionBoundsService.js already rely on for every
         // brick, proving the new geometry (boxes, a cylinder, a cone, and
         // two Shape/ExtrudeGeometry primitives) is actually sized the way

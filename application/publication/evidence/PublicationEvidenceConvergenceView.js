@@ -1,5 +1,5 @@
 import { ContentBindingSetRelationship } from './ContentBindingSetRelationship.js';
-import { message } from '../../../core/Message.js';
+import { message } from '../../../core/app/Message.js';
 
 // 0.8.13 — Multi-Evidence Comparison & Conflict UX.
 //

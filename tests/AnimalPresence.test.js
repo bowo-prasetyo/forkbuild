@@ -1,9 +1,9 @@
-import { AnimalPresence, isValidAnimalSpecies } from '../core/AnimalPresence.js';
-import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
-import { Position } from '../core/Position.js';
+import { AnimalPresence, isValidAnimalSpecies } from '../core/nature/AnimalPresence.js';
+import { ANIMAL_SPECIES } from '../core/nature/WildlifeField.js';
+import { Position } from '../core/document/Position.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.700 — Animal Presence Descriptor, core/AnimalPresence.js.
+// 0.9.700 — Animal Presence Descriptor, core/nature/AnimalPresence.js.
 // Mirrors tests/VehiclePresence.test.js's own shape.
 
 function runTests() {

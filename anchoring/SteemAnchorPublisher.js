@@ -7,8 +7,8 @@ import {
     steemAnchorBatch,
     steemAnchorLocator,
     steemTransactionAnchors
-} from '../core/SteemAnchor.js';
-import { captureSteemBlockEvidence } from '../core/SteemBlockEvidence.js';
+} from '../core/networks/SteemAnchor.js';
+import { captureSteemBlockEvidence } from '../core/networks/SteemBlockEvidence.js';
 
 // Creates `steem` anchors (docs/Protocol.md, "Proposed: Steem Anchoring",
 // "Anchoring"): broadcasts a `forkbuild-anchor` custom_json through the
@@ -24,7 +24,7 @@ import { captureSteemBlockEvidence } from '../core/SteemBlockEvidence.js';
 // blocks produced since just before the broadcast and finds the operation
 // by account and contentHash (or root).
 //
-// Each proof also keeps the block as evidence (core/SteemBlockEvidence.js)
+// Each proof also keeps the block as evidence (core/networks/SteemBlockEvidence.js)
 // when it can: the signed header, the transaction and its Merkle path. A
 // block this code can't check (an operation it can't serialize) is still a
 // valid anchor, only without kept evidence.

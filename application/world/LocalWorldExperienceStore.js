@@ -16,7 +16,7 @@
 // See docs/Principles.md, "Personal Experience Is Not Shared World
 // State (0.3.10)."
 import { StorageProvider } from '../../storage/StorageProvider.js';
-import { LocalWorldExperience } from '../../core/LocalWorldExperience.js';
+import { LocalWorldExperience } from '../../core/world/LocalWorldExperience.js';
 
 const STORAGE_KEY_PREFIX = 'world-experience:';
 

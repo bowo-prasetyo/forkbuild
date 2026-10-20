@@ -1,7 +1,7 @@
 import { plazaSquareBricks, plazaSquareWorld } from '../core/library/PlazaSquare.js';
-import { PLAZA_OPEN_RADIUS, plazaFootprint } from '../core/ChallengePlaza.js';
-import { orientedSize } from '../core/BrickOrientation.js';
-import { SpatialBounds } from '../core/SpatialBounds.js';
+import { PLAZA_OPEN_RADIUS, plazaFootprint } from '../core/challenge/ChallengePlaza.js';
+import { orientedSize } from '../core/building/BrickOrientation.js';
+import { SpatialBounds } from '../core/world/SpatialBounds.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { assert } from './support/Assert.js';
 

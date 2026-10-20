@@ -3,7 +3,7 @@ import { describeBaseAnchorPublicationObservations } from './BaseAnchorPublicati
 import { describeBaseTransactionInclusionObservationHistory } from './BaseTransactionInclusionObservationView.js';
 import { PublicationObservationArchive } from '../../publication/observationArchive/PublicationObservationArchive.js';
 import { findBaseAnchorPublicationRecordByTxid } from './BaseAnchorPublicationRecordHistory.js';
-import { message } from '../../../core/Message.js';
+import { message } from '../../../core/app/Message.js';
 
 // 0.8.101 — Base Anchor Publication Lifecycle Timeline.
 //

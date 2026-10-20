@@ -1,13 +1,13 @@
 // 0.5.5 — Geographic Place Directory & Identity UX.
 //
 // The place a ui/components/GeographicPlaceDirectoryPanel.js row opens
-// into: a read-only exploration of ONE core/GeographicPlaceView.js
+// into: a read-only exploration of ONE core/world/GeographicPlaceView.js
 // entry — every region that fingerprint-matched into it, the combined
 // community naming view across all of them, and a plain-language
 // answer to "why do we think these are the same place?" Deliberately
 // captioned "Other descriptions of this place," never "other regions
 // that are this place" — the latter would claim an identity this
-// architecture has never established. See core/PlaceIdentity.js's own
+// architecture has never established. See core/world/PlaceIdentity.js's own
 // header, and docs/Principles.md, "Geographic Similarity Suggests
 // Identity; It Never Mutates Identity (0.5.4)," which this panel exists
 // purely to make VISIBLE, not to go any further than.
@@ -25,7 +25,7 @@
 // the host handles the emit by calling the exact same
 // session.focusLocation() every other destination in this codebase
 // already uses, addressed by this place's own derived
-// `place:<fingerprintKey>` id (see core/GeographicPlaceNavigation.js)
+// `place:<fingerprintKey>` id (see core/world/GeographicPlaceNavigation.js)
 // — never a second camera mechanism, never a `focusGeographicPlace()`.
 import { t } from '../i18n/i18n.js';
 export default {

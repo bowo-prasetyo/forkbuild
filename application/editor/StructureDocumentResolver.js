@@ -1,12 +1,12 @@
 import { DocumentSerializer } from '../../serializer/DocumentSerializer.js';
 
-// Resolves a StructurePlacement's documentId to the live core/World.js
+// Resolves a StructurePlacement's documentId to the live core/document/World.js
 // content it currently points to — reading FRESH from storage every
 // call, never a cache taken at placement time. This is the whole
 // mechanism behind "edit the Document, every placement reflects it":
 // there is exactly one authoritative representation of a structure's
 // bricks (the Document itself), and a placement never holds a second
-// one. See core/StructurePlacement.js's own header and docs/Principles.md,
+// one. See core/building/StructurePlacement.js's own header and docs/Principles.md,
 // "A Structure Placement References Content, It Never Copies It."
 //
 // Deliberately ONE level of indirection: resolve() returns the
@@ -37,7 +37,7 @@ export class StructureDocumentResolver {
         this._documentSerializer = documentSerializer;
     }
 
-    // Returns the referenced Document's core/World.js, or null if
+    // Returns the referenced Document's core/document/World.js, or null if
     // documentId is falsy, unknown to storage, or fails to deserialize
     // (a corrupt/foreign blob under that id is treated exactly like
     // "not found," not thrown).

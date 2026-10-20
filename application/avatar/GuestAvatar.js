@@ -1,4 +1,4 @@
-import { AvatarProfile } from '../../core/AvatarProfile.js';
+import { AvatarProfile } from '../../core/avatar/AvatarProfile.js';
 import { AvatarPresenceSession } from './AvatarPresenceSession.js';
 import { AvatarProfileUseCase } from './AvatarProfileUseCase.js';
 import { CreateAvatarTemplateRegistryUseCase } from './CreateAvatarTemplateRegistryUseCase.js';

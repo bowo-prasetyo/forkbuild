@@ -1,7 +1,7 @@
 import { ArweavePlaceNamingDiscoverySource } from '../application/placeNaming/ArweavePlaceNamingDiscoverySource.js';
 import { ArweavePlaceNamingDiscoveryPublisher } from '../application/placeNaming/ArweavePlaceNamingDiscoveryPublisher.js';
 import { PlaceNamingDiscoveryQueryService } from '../application/placeNaming/PlaceNamingDiscoveryQueryService.js';
-import { derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
+import { derivePlaceNamingDiscoveryTag } from '../core/world/PlaceNamingDiscoveryEnvelope.js';
 import { assert } from './support/Assert.js';
 
 // Arweave Place Naming Discovery Source: reads back what

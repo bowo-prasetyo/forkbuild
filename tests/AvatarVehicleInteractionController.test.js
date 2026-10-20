@@ -1,7 +1,7 @@
 import { AvatarVehicleInteractionController } from '../application/avatar/AvatarVehicleInteractionController.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
-import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
-import { Position } from '../core/Position.js';
+import { vehiclePresenceInRegion } from '../core/vehicles/VehiclePlacement.js';
+import { Position } from '../core/document/Position.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.83 — Avatar-Vehicle Mount/Dismount Runtime Integration,
@@ -23,13 +23,13 @@ import { assert } from './support/Assert.js';
 // Central architectural claim under test throughout: this controller
 // adds NO mount/dismount policy of its own. It only connects the
 // already-complete, already independently tested chain —
-// core/AvatarVehicleInteractionIntent.js (0.9.75),
-// core/AvatarVehicleInteractionTarget.js (0.9.76),
-// core/AvatarVehicleMountTransition.js (0.9.78),
-// core/AvatarVehicleDismountIntent.js (0.9.79),
-// core/AvatarVehicleDismountPosition.js (0.9.80),
-// core/AvatarVehicleDismountClearance.js (0.9.81), and
-// core/AvatarVehicleDismountTransition.js (0.9.82) — to a real
+// core/vehicles/AvatarVehicleInteractionIntent.js (0.9.75),
+// core/vehicles/AvatarVehicleInteractionTarget.js (0.9.76),
+// core/vehicles/AvatarVehicleMountTransition.js (0.9.78),
+// core/vehicles/AvatarVehicleDismountIntent.js (0.9.79),
+// core/vehicles/AvatarVehicleDismountPosition.js (0.9.80),
+// core/vehicles/AvatarVehicleDismountClearance.js (0.9.81), and
+// core/vehicles/AvatarVehicleDismountTransition.js (0.9.82) — to a real
 // AvatarPresenceSession and a real, deterministic vehicle field. See
 // docs/Roadmap.md, 0.9.83, for the full milestone story.
 
@@ -61,7 +61,7 @@ function findVehicle(id) {
     const vehicles = vehiclePresenceInRegion(SEED, -300, -300, 300, 300);
     const vehicle = vehicles.find((v) => v.id === id);
     if (!vehicle) {
-        throw new Error(`Test fixture vehicle ${id} not found under seed ${SEED} — has core/VehiclePlacement.js changed?`);
+        throw new Error(`Test fixture vehicle ${id} not found under seed ${SEED} — has core/vehicles/VehiclePlacement.js changed?`);
     }
     return vehicle;
 }

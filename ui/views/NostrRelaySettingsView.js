@@ -1,12 +1,12 @@
 import { inject } from 'vue';
 import { useEndpointListSettings } from '../composables/useEndpointListSettings.js';
-import { DEFAULT_NOSTR_RELAY_URLS } from '../../core/NostrRelayConfiguration.js';
+import { DEFAULT_NOSTR_RELAY_URLS } from '../../core/networks/NostrRelayConfiguration.js';
 import { t } from '../i18n/i18n.js';
 
 // 0.9.371 — Nostr Relay Settings UI.
 //
 // The missing user-facing seam over 0.9.369's own configuration boundary
-// (core/NostrRelayConfiguration.js + storage/NostrRelayConfigurationStore.js)
+// (core/networks/NostrRelayConfiguration.js + storage/NostrRelayConfigurationStore.js)
 // and 0.9.370's own convergence proof that boundary already reaches all
 // three read paths at the concrete WebSocket construction. Nothing about
 // that boundary changes here — this view only ever makes it REACHABLE, the
@@ -45,7 +45,7 @@ import { t } from '../i18n/i18n.js';
 // NostrSnapshotDiscoveryQueryService.js, application/
 // NostrPlaceNamingDiscoverySource.js, nostr/NostrRelayQueryClient.js, or any
 // of the three Nostr WRITE-path publishers. `DEFAULT_NOSTR_RELAY_URL` is the
-// one thing imported from core/NostrRelayConfiguration.js — a plain
+// one thing imported from core/networks/NostrRelayConfiguration.js — a plain
 // constant, consulted only to LABEL the deployment default when no override is
 // on file, never to construct anything or open a connection. A change saved
 // here only reaches its consumers — every Nostr read and publish path (see
@@ -66,13 +66,13 @@ import { t } from '../i18n/i18n.js';
 // ONE RELAY PER LINE, EVERY LINE FANNED OUT TO, NEVER TRIED IN ORDER. The
 // single text input became a multi-line field: each non-empty line is one
 // relay URL, and every configured relay is queried/published to
-// independently — see core/NostrRelayConfiguration.js's own header, "fan-out,
+// independently — see core/networks/NostrRelayConfiguration.js's own header, "fan-out,
 // never ordered failover." A single line still behaves exactly as the
 // single input always did. This view still performs no ordering or
 // selection decision of its own: it only ever splits the textarea into
 // lines and hands the resulting array to
 // `setNostrRelayConfigurationUseCase.execute({ relayUrls })`, which is
-// itself a thin, unvalidating forward to core/NostrRelayConfiguration.js's
+// itself a thin, unvalidating forward to core/networks/NostrRelayConfiguration.js's
 // own constructor.
 //
 // OPENING THIS PAGE NEVER WRITES ANYTHING. The shared `load()` (ui/composables/
@@ -94,7 +94,7 @@ import { t } from '../i18n/i18n.js';
 //
 // DELIBERATELY EXCLUDED. No Test Connection, no health indicator, no
 // automatic fallback, no priority or ranking among configured relays (fan-out
-// treats every one identically — see core/NostrRelayConfiguration.js's own
+// treats every one identically — see core/networks/NostrRelayConfiguration.js's own
 // header), no relay health history, no retry/timeout configuration, no
 // credentials, no generic "Infrastructure Settings" page, and no new
 // discovery-error framework distinguishing "nothing discovered" from "relay
@@ -106,7 +106,7 @@ import { t } from '../i18n/i18n.js';
 // `NostrPublicationRelaySetConfiguration`/`ui/views/NostrPublicationRelaySettingsView.js`
 // pair, reasoning that Publications (broad discovery by strangers) and
 // Snapshot/Place-Naming discovery (a narrower, personal need) might want
-// different relays. See core/NostrRelayConfiguration.js's own "unified"
+// different relays. See core/networks/NostrRelayConfiguration.js's own "unified"
 // header for why that divergence never materialized and the two
 // configurations were merged back into this one — this page, this store,
 // this use case. `ui/views/NostrPublicationRelaySettingsView.js` and its
@@ -122,7 +122,7 @@ export default {
             entriesOf: (configuration) => configuration.relayUrls,
             // Splitting the textarea into lines is the ONLY interpretation
             // this view performs; every other rule (what counts as a valid
-            // URL) stays inside core/NostrRelayConfiguration.js's own
+            // URL) stays inside core/networks/NostrRelayConfiguration.js's own
             // constructor, reached through the use case.
             toRequest: (relayUrls) => ({ relayUrls })
         });

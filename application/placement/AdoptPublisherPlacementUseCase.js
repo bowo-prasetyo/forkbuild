@@ -1,5 +1,5 @@
-import { PlacementRecord } from '../../core/PlacementRecord.js';
-import { evaluatePlacementPermission } from '../../core/PlacementPolicy.js';
+import { PlacementRecord } from '../../core/publication/PlacementRecord.js';
+import { evaluatePlacementPermission } from '../../core/publication/PlacementPolicy.js';
 import * as Ed25519 from '../../identity/Ed25519.js';
 
 export const PublisherPlacementAdoption = Object.freeze({

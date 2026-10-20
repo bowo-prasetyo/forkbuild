@@ -2,7 +2,7 @@ import {
     describeSnapshotDiscoveryEnvelope,
     SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL,
     SNAPSHOT_DISCOVERY_ENVELOPE_VERSION
-} from '../../core/SnapshotDiscoveryEnvelope.js';
+} from '../../core/publication/SnapshotDiscoveryEnvelope.js';
 import { BLURT_SNAPSHOT_DISCOVERY_TAG } from './BlurtSnapshotDiscoveryQueryService.js';
 
 // Announces where a Snapshot's bytes are, in a Blurt build post, with the

@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 import { ThreeBrickFactory, DEFAULT_COLOR } from './ThreeBrickFactory.js';
-import { doorSwingOffset } from '../core/DoorSwing.js';
+import { doorSwingOffset } from '../core/building/DoorSwing.js';
 import { castShadows } from './ShadowRoles.js';
 import { applyBrickSurface, withBrickBounds } from './BrickSurfaceMaterial.js';
 import { BRICK_WET, createWetSurfaces, makeWet, setSnowCover, setWetShelter, setWetness } from './WetSurfaces.js';
-import { brickSurfaceOf } from '../core/BrickSurface.js';
+import { brickSurfaceOf } from '../core/building/BrickSurface.js';
 
 // Edge length of the cube of space one batch covers.
 export const CHUNK_SIZE = 16;
@@ -14,7 +14,7 @@ const INITIAL_CAPACITY = 64;
 // the same definition within the same CHUNK_SIZE cube of space share one
 // THREE.InstancedMesh (a "chunk"), so a scene costs one draw call per
 // chunk instead of one per brick, and all chunks of one surface (masonry,
-// wood, tiles…; core/BrickSurface.js, renderer/BrickSurfaceMaterial.js)
+// wood, tiles…; core/building/BrickSurface.js, renderer/BrickSurfaceMaterial.js)
 // share one material and, per definition, one geometry shape. Chunks are spatial so that the
 // renderer's frustum culling and the raycaster's bounding-sphere test can
 // skip whole regions at once: a large build stays cheap to draw and to
@@ -24,7 +24,7 @@ const INITIAL_CAPACITY = 64;
 // (instanceColor, multiplied into a white material) and a highlight
 // (the `instanceEmissive` attribute, added to the material's emissive
 // light by onBeforeCompile), so selection glows exactly as a mesh's
-// material.emissive did. Bricks that shine after dark (core/NightGlow.js)
+// material.emissive did. Bricks that shine after dark (core/nature/NightGlow.js)
 // carry their light in `instanceGlow`, scaled by one strength the whole
 // registry shares (setNightGlow()), so night falls with one uniform.
 //
@@ -184,7 +184,7 @@ export class BrickInstanceRegistry {
     }
 
     // Swings a door open `angle` radians about its hinge
-    // (core/DoorSwing.js), 0 to close it; `width` is the door's. Only how it
+    // (core/building/DoorSwing.js), 0 to close it; `width` is the door's. Only how it
     // is drawn and picked changes, never where the brick is.
     setSwing(brickId, angle, width) {
         const entry = this._entries.get(brickId);
@@ -509,7 +509,7 @@ function colorOf(visual) {
     return visual.color !== null && visual.color !== undefined ? visual.color : DEFAULT_COLOR;
 }
 
-// The brick's turn and tilt (Euler 'YXZ', core/BrickOrientation.js), then its position.
+// The brick's turn and tilt (Euler 'YXZ', core/building/BrickOrientation.js), then its position.
 const _orientation = new THREE.Euler(0, 0, 0, 'YXZ');
 function matrixOf(visual, target) {
     _orientation.set(visual.rotationX || 0, visual.rotationY || 0, 0, 'YXZ');

@@ -1,14 +1,14 @@
 import {
     BEATS_PER_PHRASE, MUSIC_MOOD, MUSIC_MOODS, PHRASES_PER_PIECE, isRestPhrase, musicMoodFor, musicPhrase, secondsPerBeat
-} from '../core/MusicScore.js';
-import { normalizeSoundSettings, DEFAULT_SOUND_SETTINGS } from '../core/SoundSettings.js';
+} from '../core/app/MusicScore.js';
+import { normalizeSoundSettings, DEFAULT_SOUND_SETTINGS } from '../core/app/SoundSettings.js';
 import { SoundSettingsStore } from '../application/settings/SoundSettingsStore.js';
 import { WorldSoundscapeService } from '../application/world/WorldSoundscapeService.js';
 import { EditorSoundService } from '../application/editor/EditorSoundService.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
-// The music (core/MusicScore.js): generated phrases in three moods, the
+// The music (core/app/MusicScore.js): generated phrases in three moods, the
 // same notes for the same seed, rests between pieces; the device's choice
 // whether it plays; and the moods World View and the Editor ask for.
 // tests/MusicBrowser.test.js renders it with a real OfflineAudioContext.

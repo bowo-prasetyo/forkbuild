@@ -1,4 +1,4 @@
-import { parseSteemDiscoveryAnnouncement } from '../core/SteemDiscoveryAnnouncement.js';
+import { parseSteemDiscoveryAnnouncement } from '../core/networks/SteemDiscoveryAnnouncement.js';
 import {
     SteemDiscoveryReadOutcome,
     createSteemDiscoveryThreadReader,

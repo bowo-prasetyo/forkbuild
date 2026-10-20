@@ -172,7 +172,7 @@ const PREFIXES = [
     ['device-authority:', BackupEntryGroup.DOWNLOADED]
 ];
 
-// A saved document is stored under its World's id, a UUID (core/createId.js).
+// A saved document is stored under its World's id, a UUID (core/document/createId.js).
 const DOCUMENT_NAME = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // The group an entry belongs to, or null for a name this version doesn't

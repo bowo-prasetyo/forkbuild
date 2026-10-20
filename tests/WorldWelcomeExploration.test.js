@@ -1,17 +1,17 @@
-import { World } from '../core/World.js';
-import { WorldLandmark } from '../core/WorldLandmark.js';
-import { StructurePlacement } from '../core/StructurePlacement.js';
-import { Position } from '../core/Position.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { derivePlaceContexts } from '../core/WorldCurationContext.js';
+import { World } from '../core/document/World.js';
+import { WorldLandmark } from '../core/world/WorldLandmark.js';
+import { StructurePlacement } from '../core/building/StructurePlacement.js';
+import { Position } from '../core/document/Position.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { derivePlaceContexts } from '../core/collaboration/WorldCurationContext.js';
 import { 
     WorldWelcomeContext, 
     WorldExplorationSuggestion, 
     deriveWorldWelcomeContext 
-} from '../core/WorldWelcomeContext.js';
+} from '../core/world/WorldWelcomeContext.js';
 import { assert } from './support/Assert.js';
 import { displayText } from '../ui/i18n/i18n.js';
 

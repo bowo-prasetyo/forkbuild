@@ -1,8 +1,8 @@
-import { SpatialBounds } from '../../core/SpatialBounds.js';
-import { describeBlueprintFingerprint } from '../../core/BlueprintFingerprint.js';
+import { SpatialBounds } from '../../core/world/SpatialBounds.js';
+import { describeBlueprintFingerprint } from '../../core/building/BlueprintFingerprint.js';
 import { displayText, formatDate, t } from '../i18n/i18n.js';
 import { libraryCategoryName, libraryItemDescription, libraryItemName } from '../i18n/libraryText.js';
-import { describeBlueprintSimilarity } from '../../core/BlueprintSimilarity.js';
+import { describeBlueprintSimilarity } from '../../core/building/BlueprintSimilarity.js';
 
 // 0.6.3 — Blueprint Authoring & Versioning UX. A read-only detail
 // surface for one Build Library entry — the Structure-catalog
@@ -21,9 +21,9 @@ import { describeBlueprintSimilarity } from '../../core/BlueprintSimilarity.js';
 // the card's own "⋮" menu — never folded into this panel.
 //
 // Footprint/height are computed the same way every other Structure
-// dimension in this codebase always has been — core/SpatialBounds.js
+// dimension in this codebase always has been — core/world/SpatialBounds.js
 // #fromBricks(structure.bricks, registry), never a second, cached
-// "dimensions" field (see core/Structure.js's own header on why a
+// "dimensions" field (see core/building/Structure.js's own header on why a
 // Structure never stores its own bounds).
 //
 // `source` ('built-in' | 'personal') is supplied by the caller
@@ -62,7 +62,7 @@ import { describeBlueprintSimilarity } from '../../core/BlueprintSimilarity.js';
 // `{ fingerprint, attributions, mine }`. The single "N known authors"
 // fact this panel used to show is now a real "Community Attribution"
 // list, one row per DISTINCT attributing identity (never "Alice wins" —
-// see core/BlueprintAttributionView.js's own header on why authors never
+// see core/building/BlueprintAttributionView.js's own header on why authors never
 // compete the way place names do), plus an optional, collapsed
 // "Attribution Claims" history naming exactly when THIS replica first
 // received each claim. Deliberately still never renders "Created by" —
@@ -110,7 +110,7 @@ export default {
         // application/blueprint/BlueprintLineageUseCase.js#lineageView()'s own
         // shape, or null while nothing has been derived yet.
         lineage: { type: Object, default: null },
-        // core/BlueprintSimilarity.js evidence, pre-filtered/sorted by
+        // core/building/BlueprintSimilarity.js evidence, pre-filtered/sorted by
         // the caller — never computed in this panel (see this panel's
         // own 0.6.3 "Inspect ≠ edit" header).
         similarityCandidates: { type: Array, default: () => [] },
@@ -155,7 +155,7 @@ export default {
             return this.hasAttribution ? describeBlueprintFingerprint(this.attribution.fingerprint) : '—';
         },
         // Every distinct attributing identity, most-supported first —
-        // core/BlueprintAttributionView.js#rankAttributionsByAuthor()'s
+        // core/building/BlueprintAttributionView.js#rankAttributionsByAuthor()'s
         // own output, already computed by the host. Never re-ranked or
         // filtered here.
         authors() {
@@ -302,7 +302,7 @@ export default {
                      Identity. A real list, one row per DISTINCT
                      attributing identity — never a single "N authors"
                      count, and never a claim that any one of these
-                     "wins." See core/BlueprintAttributionView.js's own
+                     "wins." See core/building/BlueprintAttributionView.js's own
                      header. -->
                 <section v-if="hasAttribution" class="naming-panel-section structure-info-attribution">
                     <h4 class="locations-panel-section-title">{{ t('structureInfo.communityAttribution') }}</h4>
@@ -369,7 +369,7 @@ export default {
                      Collapsed by default, exactly like the "Attribution
                      Claims" history above — lineage is derived,
                      never authoritative, and never a mutable version
-                     history (see core/BlueprintLineageClaim.js's own
+                     history (see core/building/BlueprintLineageClaim.js's own
                      header). -->
                 <section v-if="hasLineageContent" class="naming-panel-section structure-info-lineage">
                     <button

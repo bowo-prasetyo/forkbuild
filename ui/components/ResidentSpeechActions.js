@@ -5,7 +5,7 @@
 // above the key prompts, while the words are up.
 //
 // When the resident wondered what the ground nearby has never had
-// (core/ResidentWish.js), one Build there button instead: `wish` is { label }
+// (core/world/ResidentWish.js), one Build there button instead: `wish` is { label }
 // (a message),
 // and clicking emits 'build'; the host opens the Editor on that spot.
 //

@@ -1,6 +1,6 @@
 import { AvatarPresenceBroadcastProvider } from './AvatarPresenceBroadcastProvider.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
-import { PresenceVisibilityPolicy } from '../core/PresenceVisibilityPolicy.js';
+import { PresenceVisibilityPolicy } from '../core/avatar/PresenceVisibilityPolicy.js';
 
 // 0.2.53 — the SECOND real implementation of
 // presence/AvatarPresenceBroadcastProvider.js's interface, alongside
@@ -10,9 +10,9 @@ import { PresenceVisibilityPolicy } from '../core/PresenceVisibilityPolicy.js';
 // entire 0.2.38 presence trust model." Nothing above this file's
 // interface changed to make that true — application/presence/PresenceSyncService.js,
 // application/presence/LocalPresenceStore.js, application/presence/PresenceTrustBoundary.js,
-// core/PresenceIngestion.js, core/PresenceAuthority.js,
-// core/PresenceReplayWindow.js, core/PresenceEquivocation.js, and
-// core/PresenceFreshness.js are every one of them completely
+// core/avatar/PresenceIngestion.js, core/avatar/PresenceAuthority.js,
+// core/avatar/PresenceReplayWindow.js, core/avatar/PresenceEquivocation.js, and
+// core/avatar/PresenceFreshness.js are every one of them completely
 // untouched by this milestone — the same "transport is a pluggable
 // substitution, not a redesign" contract 0.2.37 already established
 // when BroadcastChannel itself was introduced.
@@ -31,7 +31,7 @@ import { PresenceVisibilityPolicy } from '../core/PresenceVisibilityPolicy.js';
 // this origin," it is N independent one-to-one sends, one per
 // AUTHENTICATED peer connection this replica currently has — and
 // WHICH of those N sends actually happens is decided HERE, per peer,
-// by core/PresenceVisibilityPolicy.js#shouldAdvertiseToPeer(), never
+// by core/avatar/PresenceVisibilityPolicy.js#shouldAdvertiseToPeer(), never
 // inside AvatarPresenceAdvertisement (the wire shape stays exactly
 // what 0.2.37 defined — no recipient, no visibility tier, no friend
 // list ever travels on it) and never inside PresenceSyncService/
@@ -77,8 +77,8 @@ export class PeerAvatarPresenceBroadcastProvider extends AvatarPresenceBroadcast
     // `(peerIdentityId) => boolean`, called fresh on every advertise()
     // for every candidate peer, never cached, mirroring
     // getVisibilityPolicy's own "always current, never stale" contract.
-    // This transport never imports core/FriendshipRecord.js,
-    // core/FriendshipState.js, or application/identity/FriendRelationshipUseCase.js
+    // This transport never imports core/social/FriendshipRecord.js,
+    // core/social/FriendshipState.js, or application/identity/FriendRelationshipUseCase.js
     // itself — it only knows how to ask the injected predicate and pass
     // its answer straight through as `shouldAdvertiseToPeer`'s
     // `{ isFriend }` context, keeping the actual friendship STORE

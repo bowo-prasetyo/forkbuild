@@ -1,4 +1,4 @@
-import { BLUEPRINT_LINEAGE_CLAIM_KIND, CURRENT_SCHEMA_VERSION, BlueprintLineageRelationship } from '../../core/BlueprintLineageClaim.js';
+import { BLUEPRINT_LINEAGE_CLAIM_KIND, CURRENT_SCHEMA_VERSION, BlueprintLineageRelationship } from '../../core/building/BlueprintLineageClaim.js';
 import { isNonBlankString } from '../../utils/typeGuards.js';
 
 // 0.6.8 — Blueprint Lineage & Revision Discovery.
@@ -12,7 +12,7 @@ import { isNonBlankString } from '../../utils/typeGuards.js';
 // identity/LocalAuthorizationVerifier.js#verifyBlueprintLineageClaim() —
 // "well-formed" and "authentic" stay two separate checks, never conflated.
 //
-// No separate envelope module here either — core/BlueprintLineageClaim.js
+// No separate envelope module here either — core/building/BlueprintLineageClaim.js
 // #toJSON() already carries its own `kind`/`schemaVersion`, so the
 // publication IS `claim.toJSON()`, unwrapped, and this validator checks
 // exactly that shape.

@@ -2,7 +2,7 @@
 // RendezvousTransport.js on purpose: that contract answers only "where is
 // this identity I already know reachable?" and can never list anyone. A
 // lobby is the one place that lists identities, and only those that chose
-// to join it with a signed core/LobbyCard.js.
+// to join it with a signed core/social/LobbyCard.js.
 //
 // peer/WebSocketRendezvousTransport.js and peer/LocalRendezvousNetwork.js
 // implement both contracts over the same connection or map.
@@ -14,7 +14,7 @@ export class RendezvousLobbyTransport {
     }
 
     // Withdraws one card. `signature` is the identity's signature over
-    // core/LobbyCard.js#getLobbyLeaveSigningDescriptor. Resolves to true if
+    // core/social/LobbyCard.js#getLobbyLeaveSigningDescriptor. Resolves to true if
     // a card was withdrawn.
     async leaveLobby({ identityId, lobby, cardId, signature }) {
         throw new Error('RendezvousLobbyTransport.leaveLobby() must be implemented by a subclass');

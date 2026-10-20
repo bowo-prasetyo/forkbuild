@@ -1,11 +1,11 @@
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { StructurePlacement } from '../core/StructurePlacement.js';
-import { RegionKind } from '../core/RegionKind.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { StructurePlacement } from '../core/building/StructurePlacement.js';
+import { RegionKind } from '../core/world/RegionKind.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
@@ -22,7 +22,7 @@ import { PreviewUseCase } from '../application/editor/PreviewUseCase.js';
 import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase.js';
 import { EditorSession } from '../application/editor/EditorSession.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
-import { WorldFocusKind, WorldFocusAction, deriveWorldFocusContext } from '../core/WorldFocusContext.js';
+import { WorldFocusKind, WorldFocusAction, deriveWorldFocusContext } from '../core/world/WorldFocusContext.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
@@ -139,7 +139,7 @@ async function run() {
     {
         // A second, independent document — the "structure" a
         // StructurePlacement in Alice's World points at (never the
-        // containing World's own document — see core/WorldFocusContext.js).
+        // containing World's own document — see core/world/WorldFocusContext.js).
         const structureWorld = new World({});
         const structureBuilding = new Building({});
         structureBuilding.addBrick(new Brick({ definitionId: 'core:cube', position: new Position(0, 0.5, 0) }));

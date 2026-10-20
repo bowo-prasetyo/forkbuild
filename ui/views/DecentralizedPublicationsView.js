@@ -43,7 +43,7 @@ import { BaseTransactionBroadcastState } from '../../application/anchoring/base/
 import { BaseTransactionInclusionObservationState } from '../../application/anchoring/base/BaseTransactionInclusionObservationState.js';
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 import { isLegacyContentHash } from '../../serializer/contentHash.js';
-import { RoleProviderRole } from '../../core/RoleProviderRole.js';
+import { RoleProviderRole } from '../../core/publication/RoleProviderRole.js';
 import {
     humanizeContentKind, humanizeStorageType, humanizeAnchorType, shortId, shortHash, OUTCOME_BADGE_CLASSES, republishAdviceFor,
     preferredDistributionChoice, WALLET_GUIDED_ANCHOR_TYPES, oneClickAnchorTypes, humanizeDiscoveryProvider,
@@ -77,7 +77,7 @@ import { snapshotTabTemplate } from './decentralizedPublications/templates/snaps
 import { evidenceTabTemplate } from './decentralizedPublications/templates/evidenceTab.js';
 import { placementsTabTemplate } from './decentralizedPublications/templates/placementsTab.js';
 import { displayText, t } from '../i18n/i18n.js';
-import { ANNOUNCEMENT_DISCOVERY_PROVIDER_KEYS, DEFAULT_ANNOUNCEMENT_DISCOVERY_PROVIDER } from '../../core/AnnouncementDiscoveryProvider.js';
+import { ANNOUNCEMENT_DISCOVERY_PROVIDER_KEYS, DEFAULT_ANNOUNCEMENT_DISCOVERY_PROVIDER } from '../../core/publication/AnnouncementDiscoveryProvider.js';
 import I18nText from '../i18n/I18nText.js';
 
 // Publications page (/publications). Lists every DecentralizedPublication in
@@ -109,7 +109,7 @@ export default {
     components: { I18nText, PublicationShareLink },
     setup() {
         // Steem and Blurt are offered only while this device's writer for them
-        // is switched on (core/NetworkWriters.js).
+        // is switched on (core/publication/NetworkWriters.js).
         const { steemOn, blurtOn } = useWritableNetworks();
         // Groups the page-level tool cards into three tabs. Presentation only:
         // panels use v-show, so no card state changes.

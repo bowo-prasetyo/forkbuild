@@ -1,10 +1,10 @@
 import { EventBus } from '../../core/events/EventBus.js';
-import { AvatarPresence } from '../../core/AvatarPresence.js';
+import { AvatarPresence } from '../../core/avatar/AvatarPresence.js';
 
 const PRESENCE_EVENT = 'LocalPresenceChanged';
 
 // 0.2.33 — the live half of the Identity/AvatarProfile/Presence split
-// (see core/AvatarProfile.js and core/AvatarPresence.js). Tracks ONE
+// (see core/avatar/AvatarProfile.js and core/avatar/AvatarPresence.js). Tracks ONE
 // user's own live presence for the duration of a World View session.
 //
 // Deliberately constructed with NO StorageProvider at all — not "a
@@ -39,7 +39,7 @@ export class AvatarPresenceSession {
 
     // Applies a partial update (any of position/rotation/animation),
     // advancing `sequence` by exactly one regardless of how many
-    // fields changed — see core/AvatarPresence.js's `next()` for why.
+    // fields changed — see core/avatar/AvatarPresence.js's `next()` for why.
     update({ position, rotation, animation } = {}) {
         this._presence = this._presence.next({ position, rotation, animation });
         this._eventBus.publish(PRESENCE_EVENT, { presence: this._presence });

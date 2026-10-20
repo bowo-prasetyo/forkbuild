@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { WorldSpatialPresentationMode, abbreviateIdentityLabel } from '../core/WorldSpatialAnchor.js';
+import { WorldSpatialPresentationMode, abbreviateIdentityLabel } from '../core/collaboration/WorldSpatialAnchor.js';
 
 const MARKER_HEIGHT = 1.9; // roughly eye height — reads as "a camera is here," not a full avatar
 const OUTLINE_COLOR_FALLBACK = 0xffffff;
@@ -105,7 +105,7 @@ export class RemoteSpatialPresenceRenderer {
         this._entries = new Map(); // deviceId -> { group, marker, label, outline, sprite }
     }
 
-    // `presence`: a `core/WorldSpatialAnchor.js` (or, for a caller that
+    // `presence`: a `core/collaboration/WorldSpatialAnchor.js` (or, for a caller that
     // hasn't derived one, a plain object shaped like its own getters) —
     // { identityId, label, activityLabel, position: {x,z}|null, heading:
     // number|null, selection: WorldSpatialSelection|null, activity:
@@ -154,7 +154,7 @@ export class RemoteSpatialPresenceRenderer {
         const groundY = this._terrainHeightAt(presence.position.x, presence.position.z);
         entry.group.position.set(presence.position.x, groundY, presence.position.z);
         if (Number.isFinite(presence.heading)) {
-            // core/CompassHeading.js's own convention: 0 faces +Z, 90
+            // core/world/CompassHeading.js's own convention: 0 faces +Z, 90
             // faces +X, clockwise from above — matches THREE's own
             // right-handed Y-up rotation when negated.
             entry.marker.rotation.z = THREE.MathUtils.degToRad(-presence.heading);
@@ -167,7 +167,7 @@ export class RemoteSpatialPresenceRenderer {
     // actually draws; everything else about the marker (position,
     // heading, selection outline) is unaffected by tier. MARKER_FULL
     // shows the full name plus `activityLabel` (already contextual —
-    // see core/WorldSpatialAnchor.js#describeSpatialActivity()) exactly
+    // see core/collaboration/WorldSpatialAnchor.js#describeSpatialActivity()) exactly
     // like 0.3.0 showed the name alone; MARKER_ABBREVIATED shows a
     // shortened name and nothing else; MARKER_ONLY draws no text (the
     // sprite is hidden entirely just above) — a caller that reaches this

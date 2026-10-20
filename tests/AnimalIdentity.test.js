@@ -1,7 +1,7 @@
-import { animalIdFor } from '../core/AnimalIdentity.js';
+import { animalIdFor } from '../core/nature/AnimalIdentity.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.700 — Deterministic Animal Identity, core/AnimalIdentity.js.
+// 0.9.700 — Deterministic Animal Identity, core/nature/AnimalIdentity.js.
 // Mirrors tests/VehicleIdentity.test.js's own shape.
 
 function runTests() {

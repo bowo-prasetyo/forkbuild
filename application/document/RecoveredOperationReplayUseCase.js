@@ -1,4 +1,4 @@
-import { DocumentOperationProvenance } from '../../core/DocumentOperationProvenance.js';
+import { DocumentOperationProvenance } from '../../core/collaboration/DocumentOperationProvenance.js';
 
 // 0.9.236 — Recovered Operation Replay Boundary.
 //
@@ -70,7 +70,7 @@ import { DocumentOperationProvenance } from '../../core/DocumentOperationProvena
 // Idempotency without a second source of truth. A caller invoking
 // `replay()` twice for the same operation must not execute it twice — but
 // this class deliberately does NOT add its own "already replayed" flag,
-// the same restraint `core/DocumentOperationProvenance.js`'s own header
+// the same restraint `core/collaboration/DocumentOperationProvenance.js`'s own header
 // already applied for exactly this reason: a second piece of tracked state
 // that could itself drift out of sync with the one real source of truth.
 // `application/editor/CommandHistory.js#getExecutedCommands()` already answers

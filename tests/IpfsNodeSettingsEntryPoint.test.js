@@ -1,5 +1,5 @@
 
-import { IpfsNodeConfiguration, isValidIpfsNodeApiUrl } from '../core/IpfsNodeConfiguration.js';
+import { IpfsNodeConfiguration, isValidIpfsNodeApiUrl } from '../core/networks/IpfsNodeConfiguration.js';
 import { IpfsNodeConfigurationStore } from '../storage/IpfsNodeConfigurationStore.js';
 import { SetIpfsNodeConfigurationUseCase } from '../application/settings/SetIpfsNodeConfigurationUseCase.js';
 import { mainFiles } from './support/SourceFileGroups.js';
@@ -56,8 +56,8 @@ async function run() {
             '10. the view writes the configuration through the injected use case, never IpfsNodeConfigurationStore.save() directly');
         assert(!/new IpfsNodeConfiguration\(/.test(viewExecutable),
             '11. the view never constructs an IpfsNodeConfiguration itself — validation and construction stay inside the use case');
-        assert(viewExecutable.includes("import { DEFAULT_IPFS_NODE_API_URL } from '../../core/IpfsNodeConfiguration.js';"),
-            '12. the ONE thing the view imports from core/IpfsNodeConfiguration.js is the plain default constant, for display only');
+        assert(viewExecutable.includes("import { DEFAULT_IPFS_NODE_API_URL } from '../../core/networks/IpfsNodeConfiguration.js';"),
+            '12. the ONE thing the view imports from core/networks/IpfsNodeConfiguration.js is the plain default constant, for display only');
         console.log('✓ Section 0: the settings entry point is really wired — shared store, shared use case, the real write-path construction site consuming it, and a view that only ever goes through the injected collaborators');
     }
 
@@ -134,9 +134,9 @@ async function run() {
     // publishing (which stays deliberately ephemeral/unpersisted).
     // ===============================================================
     {
-        const nodeConfigExecutable = (await source('core/IpfsNodeConfiguration.js')).replace(/\/\/.*$/gm, '');
+        const nodeConfigExecutable = (await source('core/networks/IpfsNodeConfiguration.js')).replace(/\/\/.*$/gm, '');
         assert(!/IpfsGatewayConfiguration/.test(nodeConfigExecutable),
-            '25. core/IpfsNodeConfiguration.js never imports or references the separate, read-path gateway configuration class in executable code');
+            '25. core/networks/IpfsNodeConfiguration.js never imports or references the separate, read-path gateway configuration class in executable code');
 
         const remotePublishingExecutable = (await source('application/ipfs/IpfsRemotePublishingConfiguration.js')).replace(/\/\/.*$/gm, '');
         assert(!/IpfsNodeConfiguration|IpfsNodeConfigurationStore/.test(remotePublishingExecutable),

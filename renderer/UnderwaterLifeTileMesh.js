@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 import {
     seaweedInRegion, fishSchoolsInRegion, fishPoseAt, seaweedSwayAt, FISH_MAX_ORBIT_RADIUS
-} from '../core/UnderwaterLifeField.js';
-import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
+} from '../core/nature/UnderwaterLifeField.js';
+import { TERRAIN_TILE_SIZE } from '../core/nature/TerrainTiling.js';
 
-// One terrain tile's seaweed and fish (core/UnderwaterLifeField.js), as two
+// One terrain tile's seaweed and fish (core/nature/UnderwaterLifeField.js), as two
 // instanced meshes each so a whole tile costs a handful of draw calls. Built once
 // per tile by the streaming ring; updateUnderwaterLifeTileMesh() then moves the
 // fish and sways the seaweed every frame from elapsed time alone.

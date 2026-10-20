@@ -143,7 +143,7 @@ import { ContentTooLargeError } from '../../content/ContentStore.js';
 // `application/PublicationDistribution*.js`,
 // `application/arweave/ArweavePublicationMaterialUploader.js`,
 // `application/nostr/NostrPublicationDiscoveryPublisher.js`,
-// `core/PublicationSnapshotPlacement.js`,
+// `core/publication/PublicationSnapshotPlacement.js`,
 // `application/snapshot/placement/SnapshotPlacementResolver.js`, or
 // `application/snapshot/placement/SnapshotPlacementStoreRegistry.js` — distributing a
 // Snapshot through this command is never itself a Signed Claim
@@ -234,7 +234,7 @@ import { ContentTooLargeError } from '../../content/ContentStore.js';
 //   Promise<{ contentReference, announcement }>.
 //
 // `publicationId`/`claimedPosition` (0.9.566, both optional, and travel
-// together or not at all — see `core/SnapshotDiscoveryEnvelope.js`'s own
+// together or not at all — see `core/publication/SnapshotDiscoveryEnvelope.js`'s own
 // header) pass straight through to `discoveryPublisher.publish()`
 // unmodified; this file neither computes nor validates either.
 //

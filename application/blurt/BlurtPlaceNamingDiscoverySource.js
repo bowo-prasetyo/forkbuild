@@ -1,4 +1,4 @@
-import { derivePlaceNamingDiscoveryTag, describePlaceNamingDiscoveryEnvelope } from '../../core/PlaceNamingDiscoveryEnvelope.js';
+import { derivePlaceNamingDiscoveryTag, describePlaceNamingDiscoveryEnvelope } from '../../core/world/PlaceNamingDiscoveryEnvelope.js';
 import { BlurtDiscoveryReadOutcome } from './BlurtDiscoveryReader.js';
 
 // Place naming claims from Blurt. Every region shares one tag on Blurt, so

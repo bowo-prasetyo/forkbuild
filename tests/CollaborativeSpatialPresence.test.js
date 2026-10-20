@@ -1,9 +1,9 @@
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
@@ -13,15 +13,15 @@ import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry
 import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
 import { WorldMembershipUseCase } from '../application/identity/WorldMembershipUseCase.js';
 import { WorldAuthorizationService } from '../application/identity/WorldAuthorizationService.js';
-import { WorldAccessLevel } from '../core/WorldAccessLevel.js';
+import { WorldAccessLevel } from '../core/collaboration/WorldAccessLevel.js';
 import { WorldSpatialPresenceUseCase } from '../application/presence/WorldSpatialPresenceUseCase.js';
-import { WorldSpatialSelection } from '../core/WorldSpatialSelection.js';
-import { WorldSpatialActivity, isValidWorldSpatialActivity, deriveWorldSpatialActivity } from '../core/WorldSpatialActivity.js';
+import { WorldSpatialSelection } from '../core/collaboration/WorldSpatialSelection.js';
+import { WorldSpatialActivity, isValidWorldSpatialActivity, deriveWorldSpatialActivity } from '../core/collaboration/WorldSpatialActivity.js';
 import { SpatialSelectionState } from '../application/spatial-state/SpatialSelectionState.js';
 import {
     toWorldSpatialPresenceAdvertisement,
     isValidWorldSpatialPresenceAdvertisement
-} from '../core/WorldSpatialPresenceAdvertisement.js';
+} from '../core/collaboration/WorldSpatialPresenceAdvertisement.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
@@ -34,8 +34,8 @@ import { assert } from './support/Assert.js';
 // participant is looking/working, device-aware, throttled, and STILL
 // completely ephemeral and observation-only:
 //
-//   Section A: core/WorldSpatialActivity.js / core/WorldSpatialSelection.js
-//              / core/WorldSpatialPresenceAdvertisement.js — closed
+//   Section A: core/collaboration/WorldSpatialActivity.js / core/collaboration/WorldSpatialSelection.js
+//              / core/collaboration/WorldSpatialPresenceAdvertisement.js — closed
 //              vocabulary, the read-only remote-selection value object,
 //              and the unsigned wire shape, all in isolation.
 //   Section B: WorldSpatialPresenceUseCase constructor — every
@@ -136,8 +136,8 @@ function buildOneBrickWorld({ worldId, buildingId, brickId, authorIdentityId, ti
 async function runTests() {
 
 // ---------------------------------------------------------------------
-// Section A — core/WorldSpatialActivity.js / core/WorldSpatialSelection.js
-// / core/WorldSpatialPresenceAdvertisement.js
+// Section A — core/collaboration/WorldSpatialActivity.js / core/collaboration/WorldSpatialSelection.js
+// / core/collaboration/WorldSpatialPresenceAdvertisement.js
 // ---------------------------------------------------------------------
 {
     assert(isValidWorldSpatialActivity(WorldSpatialActivity.BUILDING), '1. BUILDING is a valid activity');
@@ -170,7 +170,7 @@ async function runTests() {
     assert(isValidWorldSpatialPresenceAdvertisement(null) === false, '17. null is never valid');
     assert(!('identityId' in enter), '18. the wire shape never carries an identityId — identity is resolved from the live connection, never the payload');
 
-    console.log('✓ Section A: core/WorldSpatialActivity.js / core/WorldSpatialSelection.js / core/WorldSpatialPresenceAdvertisement.js — closed vocabulary, read-only selection, unsigned wire shape');
+    console.log('✓ Section A: core/collaboration/WorldSpatialActivity.js / core/collaboration/WorldSpatialSelection.js / core/collaboration/WorldSpatialPresenceAdvertisement.js — closed vocabulary, read-only selection, unsigned wire shape');
 }
 
 // ---------------------------------------------------------------------

@@ -15,7 +15,7 @@ const STORAGE_KEY_PREFIX = 'blueprint-usage:';
 //         |                              |
 //     immutable reusable value      local UI/session metadata
 //
-// core/Structure.js, core/StructureRegistry.js, and
+// core/building/Structure.js, core/building/StructureRegistry.js, and
 // application/editor/LocalStructureLibraryStore.js stay completely unaware
 // this store exists — nothing here adds a field to Structure, and
 // nothing here is exported/imported alongside a blueprint package (see

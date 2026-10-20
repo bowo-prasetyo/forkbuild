@@ -1,35 +1,35 @@
 import { readFile } from 'node:fs/promises';
-import { VehicleType } from '../core/VehicleType.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
 import {
     AvatarMovementCapabilityKind,
     isValidAvatarMovementCapabilityKind,
     AvatarVehicleMovementCapability,
     isValidAvatarVehicleMovementCapability,
     resolveAvatarVehicleMovementCapability
-} from '../core/AvatarVehicleMovementCapability.js';
+} from '../core/vehicles/AvatarVehicleMovementCapability.js';
 import {
     AvatarMovementDirectionCapability,
     isValidAvatarMovementDirectionCapability
-} from '../core/AvatarMovementDirectionCapability.js';
+} from '../core/avatar/AvatarMovementDirectionCapability.js';
 import {
     AvatarMovementAccelerationKind,
     AvatarMovementAccelerationCapability,
     isValidAvatarMovementAccelerationCapability
-} from '../core/AvatarMovementAccelerationCapability.js';
+} from '../core/avatar/AvatarMovementAccelerationCapability.js';
 import {
     AvatarMovementBrakingKind,
     AvatarMovementBrakingCapability,
     isValidAvatarMovementBrakingCapability
-} from '../core/AvatarMovementBrakingCapability.js';
+} from '../core/avatar/AvatarMovementBrakingCapability.js';
 import {
     AvatarMovementSteeringKind,
     AvatarMovementSteeringCapability,
     isValidAvatarMovementSteeringCapability
-} from '../core/AvatarMovementSteeringCapability.js';
+} from '../core/avatar/AvatarMovementSteeringCapability.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.84 — Avatar-Vehicle Movement Capability Resolution,
-// core/AvatarVehicleMovementCapability.js.
+// core/vehicles/AvatarVehicleMovementCapability.js.
 //
 //   Section A: unmounted (VehicleType.NONE) -> WALK capability
 //   Section B: BICYCLE -> GROUND_VEHICLE capability
@@ -54,7 +54,7 @@ import { assert } from './support/Assert.js';
 //
 // 0.9.86 note: every constructor call below now passes a fourth
 // `movementSpeed` argument (the class's own new required field — see
-// core/AvatarVehicleMovementCapability.js's own 0.9.86 header), and
+// core/vehicles/AvatarVehicleMovementCapability.js's own 0.9.86 header), and
 // each section's own expected-shape assertions now include it.
 //
 // 0.9.87 note: BICYCLE/MOTORCYCLE/CAR no longer share one number —
@@ -64,7 +64,7 @@ import { assert } from './support/Assert.js';
 //
 // 0.9.88 note: every constructor call below now passes a fifth
 // `collisionRadius` argument (the class's own new required field — see
-// core/AvatarVehicleMovementCapability.js's own 0.9.88 header), and
+// core/vehicles/AvatarVehicleMovementCapability.js's own 0.9.88 header), and
 // each section's own expected-shape assertions now include it. Section
 // K's own forbidden-term sweep no longer forbids "collision" — this
 // file's entire point, as of 0.9.88, is to carry a collision-radius
@@ -73,7 +73,7 @@ import { assert } from './support/Assert.js';
 // 0.9.89 note: every constructor call below now passes a sixth
 // `movementDirections` argument (an `AvatarMovementDirectionCapability`
 // — the class's own new required field, see
-// core/AvatarVehicleMovementCapability.js's own 0.9.89 header), and
+// core/vehicles/AvatarVehicleMovementCapability.js's own 0.9.89 header), and
 // each section's own expected-shape assertions now include it. Every
 // currently-defined, supported capability (WALK, and GROUND_VEHICLE via
 // BICYCLE/MOTORCYCLE/CAR) permits both directions; AERIAL_VEHICLE/DRONE's
@@ -82,7 +82,7 @@ import { assert } from './support/Assert.js';
 // 0.9.90 note: every constructor call below now passes a seventh
 // `acceleration` argument (an `AvatarMovementAccelerationCapability` —
 // the class's own new required field, see
-// core/AvatarVehicleMovementCapability.js's own 0.9.90 header), and each
+// core/vehicles/AvatarVehicleMovementCapability.js's own 0.9.90 header), and each
 // section's own expected-shape assertions now include it. WALK is
 // `INSTANT`/`0`; BICYCLE/MOTORCYCLE/CAR are each `RATE_LIMITED` with
 // their own strictly positive, deliberately NON-monotonic rates (see
@@ -92,7 +92,7 @@ import { assert } from './support/Assert.js';
 // 0.9.92 note: every constructor call below now passes an eighth
 // `braking` argument (an `AvatarMovementBrakingCapability` — the
 // class's own new required field, see
-// core/AvatarVehicleMovementCapability.js's own 0.9.92 header), and each
+// core/vehicles/AvatarVehicleMovementCapability.js's own 0.9.92 header), and each
 // section's own expected-shape assertions now include it. WALK is
 // `INSTANT`/`0`, the identical shared instance AERIAL_VEHICLE/DRONE also
 // reuses; BICYCLE/MOTORCYCLE/CAR are each `RATE_LIMITED`, with their own
@@ -102,7 +102,7 @@ import { assert } from './support/Assert.js';
 // 0.9.93 note: every constructor call below now passes a ninth
 // `steering` argument (an `AvatarMovementSteeringCapability` — the
 // class's own new required field, see
-// core/AvatarVehicleMovementCapability.js's own 0.9.93 header), and each
+// core/vehicles/AvatarVehicleMovementCapability.js's own 0.9.93 header), and each
 // section's own expected-shape assertions now include it. WALK is
 // `INSTANT`/`0`, the identical shared instance AERIAL_VEHICLE/DRONE also
 // reuses; BICYCLE/MOTORCYCLE/CAR are each `RATE_LIMITED`, with their own
@@ -137,8 +137,8 @@ async function runTests() {
         assert(capability.movementKind === AvatarMovementCapabilityKind.WALK, '1. VehicleType.NONE resolves to the WALK capability kind');
         assert(capability.vehicleType === VehicleType.NONE, '2. the resolved capability carries the exact VehicleType it was resolved from');
         assert(capability.supported === true, '3. WALK is a supported capability — it is the avatar\'s own existing movement');
-        assert(capability.movementSpeed === 3, '3a. WALK\'s own movementSpeed is 3 world units/second — MUST equal core/AvatarMovementSimulation.js\'s own WALK_SPEED (see this file\'s own 0.9.86 header)');
-        assert(capability.collisionRadius === 0.35, '3b. WALK\'s own collisionRadius is 0.35 world units — MUST equal core/AvatarCollision.js\'s own AVATAR_COLLISION_RADIUS (see this file\'s own 0.9.88 header)');
+        assert(capability.movementSpeed === 3, '3a. WALK\'s own movementSpeed is 3 world units/second — MUST equal core/avatar/AvatarMovementSimulation.js\'s own WALK_SPEED (see this file\'s own 0.9.86 header)');
+        assert(capability.collisionRadius === 0.35, '3b. WALK\'s own collisionRadius is 0.35 world units — MUST equal core/avatar/AvatarCollision.js\'s own AVATAR_COLLISION_RADIUS (see this file\'s own 0.9.88 header)');
         assert(capability.movementDirections.forward === true && capability.movementDirections.backward === true,
             '3c. WALK\'s own movementDirections permits both forward and backward — the avatar\'s existing on-foot movement has always allowed both (0.9.89)');
         assert(capability.acceleration.kind === AvatarMovementAccelerationKind.INSTANT, '3d. WALK\'s own acceleration kind is INSTANT — on-foot movement has always reached movementSpeed in a single tick (0.9.90)');
@@ -246,7 +246,7 @@ async function runTests() {
         // the three ground vehicles, yet its own acceleration rate is
         // strictly LOWER than MOTORCYCLE's — a faster vehicle does not
         // automatically accelerate faster. See
-        // core/AvatarVehicleMovementCapability.js's own 0.9.90 header.
+        // core/vehicles/AvatarVehicleMovementCapability.js's own 0.9.90 header.
         assert(motorcycleCapability.movementSpeed < capability.movementSpeed,
             '13d. MOTORCYCLE\'s own movementSpeed is strictly less than CAR\'s (re-confirming 0.9.87\'s own ordering, as the baseline this independence claim is measured against)');
         assert(motorcycleCapability.acceleration.acceleration > capability.acceleration.acceleration,
@@ -315,7 +315,7 @@ async function runTests() {
         // Aerial Movement Pipeline milestone — AERIAL_VEHICLE is now a
         // real, supported capability (see this file's own header,
         // "AERIAL_VEHICLE Is Now A Real, Supported Capability").
-        assert(capability.supported === true, '17. AERIAL_VEHICLE is now supported — core/AvatarDroneVerticalState.js gives it a real altitude pipeline');
+        assert(capability.supported === true, '17. AERIAL_VEHICLE is now supported — core/avatar/AvatarDroneVerticalState.js gives it a real altitude pipeline');
         const carCapability = resolveAvatarVehicleMovementCapability(VehicleType.CAR);
         assert(capability.movementSpeed > carCapability.movementSpeed, '17a. DRONE\'s own movementSpeed is strictly greater than CAR\'s — the fastest of all four vehicles, matching the World View\'s own drone brief');
         assert(capability.collisionRadius > 0, '17b. DRONE\'s own collisionRadius is a real, positive value now that it is supported');
@@ -477,7 +477,7 @@ async function runTests() {
         assertThrows(() => new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.WALK, VehicleType.NONE, true, NaN, 0.35, BOTH_DIRECTIONS), '32e. constructing with a NaN movementSpeed throws');
         assertThrows(() => new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.WALK, VehicleType.NONE, true, Infinity, 0.35, BOTH_DIRECTIONS), '32f. constructing with an infinite movementSpeed throws');
         // A movementSpeed of exactly 0 is valid (DRONE's own inert value
-        // — see core/AvatarVehicleMovementCapability.js's own 0.9.86
+        // — see core/vehicles/AvatarVehicleMovementCapability.js's own 0.9.86
         // header) — never rejected merely for being falsy.
         const zeroSpeedCapability = new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.AERIAL_VEHICLE, VehicleType.DRONE, false, 0, 0, NO_DIRECTIONS, INSTANT_ACCEL, INSTANT_BRAKE, INSTANT_STEER);
         assert(zeroSpeedCapability.movementSpeed === 0, '32g. a movementSpeed of exactly 0 is accepted, not rejected as falsy');
@@ -492,7 +492,7 @@ async function runTests() {
         assertThrows(() => new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.WALK, VehicleType.NONE, true, 3, NaN, BOTH_DIRECTIONS), '32l. constructing with a NaN collisionRadius throws');
         assertThrows(() => new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.WALK, VehicleType.NONE, true, 3, Infinity, BOTH_DIRECTIONS), '32m. constructing with an infinite collisionRadius throws');
         // A collisionRadius of exactly 0 is valid (DRONE's own inert
-        // value — see core/AvatarVehicleMovementCapability.js's own
+        // value — see core/vehicles/AvatarVehicleMovementCapability.js's own
         // 0.9.88 header) — never rejected merely for being falsy.
         const zeroRadiusCapability = new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.AERIAL_VEHICLE, VehicleType.DRONE, false, 0, 0, NO_DIRECTIONS, INSTANT_ACCEL, INSTANT_BRAKE, INSTANT_STEER);
         assert(zeroRadiusCapability.collisionRadius === 0, '32n. a collisionRadius of exactly 0 is accepted, not rejected as falsy');
@@ -521,7 +521,7 @@ async function runTests() {
         assertThrows(() => new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.WALK, VehicleType.NONE, true, 3, 0.35, BOTH_DIRECTIONS, { kind: 'instant', acceleration: 0 }), '32x. constructing with a plain object shaped like acceleration (not an actual instance) throws');
 
         // AvatarMovementAccelerationCapability's own constructor
-        // invariants (core/AvatarMovementAccelerationCapability.js).
+        // invariants (core/avatar/AvatarMovementAccelerationCapability.js).
         assertThrows(() => new AvatarMovementAccelerationCapability('not-a-kind', 0), '32y. AvatarMovementAccelerationCapability rejects an invalid kind');
         assertThrows(() => new AvatarMovementAccelerationCapability(), '32z. AvatarMovementAccelerationCapability rejects being constructed with no arguments at all');
         assertThrows(() => new AvatarMovementAccelerationCapability(AvatarMovementAccelerationKind.RATE_LIMITED, undefined), '32aa. constructing with acceleration omitted (undefined) throws');
@@ -549,7 +549,7 @@ async function runTests() {
         assertThrows(() => new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.WALK, VehicleType.NONE, true, 3, 0.35, BOTH_DIRECTIONS, INSTANT_ACCEL, { kind: 'instant', braking: 0 }), '32am. constructing with a plain object shaped like braking (not an actual instance) throws');
 
         // AvatarMovementBrakingCapability's own constructor invariants
-        // (core/AvatarMovementBrakingCapability.js) — the direct
+        // (core/avatar/AvatarMovementBrakingCapability.js) — the direct
         // structural twin of AvatarMovementAccelerationCapability's own,
         // above.
         assertThrows(() => new AvatarMovementBrakingCapability('not-a-kind', 0), '32an. AvatarMovementBrakingCapability rejects an invalid kind');
@@ -579,7 +579,7 @@ async function runTests() {
         assertThrows(() => new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.WALK, VehicleType.NONE, true, 3, 0.35, BOTH_DIRECTIONS, INSTANT_ACCEL, INSTANT_BRAKE, { kind: 'instant', steeringRate: 0 }), '32bb. constructing with a plain object shaped like steering (not an actual instance) throws');
 
         // AvatarMovementSteeringCapability's own constructor invariants
-        // (core/AvatarMovementSteeringCapability.js) — the direct
+        // (core/avatar/AvatarMovementSteeringCapability.js) — the direct
         // structural twin of AvatarMovementAccelerationCapability's/
         // AvatarMovementBrakingCapability's own, above.
         assertThrows(() => new AvatarMovementSteeringCapability('not-a-kind', 0), '32bc. AvatarMovementSteeringCapability rejects an invalid kind');
@@ -704,7 +704,7 @@ async function runTests() {
     // Section K — architectural regression
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../core/AvatarVehicleMovementCapability.js', import.meta.url);
+        const sourceUrl = new URL('../core/vehicles/AvatarVehicleMovementCapability.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -779,11 +779,11 @@ async function runTests() {
             'localStorage', 'StorageProvider', 'fetch(', 'WebSocket'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `46. core/AvatarVehicleMovementCapability.js's own code never references "${term}" — a pure capability resolver only, never movement/runtime/rendering/collision mathematics/physics/turning/persistence/networking`);
+            assert(!codeOnly.includes(term), `46. core/vehicles/AvatarVehicleMovementCapability.js's own code never references "${term}" — a pure capability resolver only, never movement/runtime/rendering/collision mathematics/physics/turning/persistence/networking`);
         }
     }
     {
-        const exportsModule = await import('../core/AvatarVehicleMovementCapability.js');
+        const exportsModule = await import('../core/vehicles/AvatarVehicleMovementCapability.js');
         const exportedNames = Object.keys(exportsModule).sort();
         assert(JSON.stringify(exportedNames) === JSON.stringify([
             'AvatarMovementCapabilityKind',
@@ -791,12 +791,12 @@ async function runTests() {
             'isValidAvatarMovementCapabilityKind',
             'isValidAvatarVehicleMovementCapability',
             'resolveAvatarVehicleMovementCapability'
-        ]), '47. core/AvatarVehicleMovementCapability.js exports exactly the capability kind vocabulary, the descriptor class, its two validators, and the one resolver — nothing else');
+        ]), '47. core/vehicles/AvatarVehicleMovementCapability.js exports exactly the capability kind vocabulary, the descriptor class, its two validators, and the one resolver — nothing else');
     }
     {
         // 0.9.89 — the new sibling file gets the identical architectural
         // sweep: a small, closed value vocabulary, nothing more.
-        const sourceUrl = new URL('../core/AvatarMovementDirectionCapability.js', import.meta.url);
+        const sourceUrl = new URL('../core/avatar/AvatarMovementDirectionCapability.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -818,15 +818,15 @@ async function runTests() {
             'localStorage', 'StorageProvider', 'fetch(', 'WebSocket'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `48. core/AvatarMovementDirectionCapability.js's own code never references "${term}" — a small, closed forward/backward value, nothing else`);
+            assert(!codeOnly.includes(term), `48. core/avatar/AvatarMovementDirectionCapability.js's own code never references "${term}" — a small, closed forward/backward value, nothing else`);
         }
 
-        const exportsModule = await import('../core/AvatarMovementDirectionCapability.js');
+        const exportsModule = await import('../core/avatar/AvatarMovementDirectionCapability.js');
         const exportedNames = Object.keys(exportsModule).sort();
         assert(JSON.stringify(exportedNames) === JSON.stringify([
             'AvatarMovementDirectionCapability',
             'isValidAvatarMovementDirectionCapability'
-        ]), '49. core/AvatarMovementDirectionCapability.js exports exactly the descriptor class and its one validator — nothing else');
+        ]), '49. core/avatar/AvatarMovementDirectionCapability.js exports exactly the descriptor class and its one validator — nothing else');
     }
     {
         // 0.9.90 — the new AvatarMovementAccelerationCapability sibling
@@ -834,10 +834,10 @@ async function runTests() {
         // value vocabulary, nothing more. Unlike the two sweeps above,
         // bare "acceleration" is NOT forbidden here — it is this file's
         // entire subject — but the ACTUAL SIMULATION MATH that consumes
-        // it (core/AvatarMovementAccelerationSimulation.js) still is:
+        // it (core/avatar/AvatarMovementAccelerationSimulation.js) still is:
         // this file only ever resolves a kind/rate pair, never computes
         // a next-tick speed.
-        const sourceUrl = new URL('../core/AvatarMovementAccelerationCapability.js', import.meta.url);
+        const sourceUrl = new URL('../core/avatar/AvatarMovementAccelerationCapability.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -861,17 +861,17 @@ async function runTests() {
             'localStorage', 'StorageProvider', 'fetch(', 'WebSocket'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `50. core/AvatarMovementAccelerationCapability.js's own code never references "${term}" — a small, closed kind/rate value, nothing else`);
+            assert(!codeOnly.includes(term), `50. core/avatar/AvatarMovementAccelerationCapability.js's own code never references "${term}" — a small, closed kind/rate value, nothing else`);
         }
 
-        const exportsModule = await import('../core/AvatarMovementAccelerationCapability.js');
+        const exportsModule = await import('../core/avatar/AvatarMovementAccelerationCapability.js');
         const exportedNames = Object.keys(exportsModule).sort();
         assert(JSON.stringify(exportedNames) === JSON.stringify([
             'AvatarMovementAccelerationCapability',
             'AvatarMovementAccelerationKind',
             'isValidAvatarMovementAccelerationCapability',
             'isValidAvatarMovementAccelerationKind'
-        ]), '51. core/AvatarMovementAccelerationCapability.js exports exactly the kind vocabulary, the descriptor class, and its two validators — nothing else');
+        ]), '51. core/avatar/AvatarMovementAccelerationCapability.js exports exactly the kind vocabulary, the descriptor class, and its two validators — nothing else');
     }
     {
         // 0.9.92 — the new AvatarMovementBrakingCapability sibling file
@@ -882,9 +882,9 @@ async function runTests() {
         // forbidden (the mirror image of that file's own sweep
         // forbidding "braking"): this file commits no opinion about the
         // OTHER rate, and the ACTUAL SIMULATION MATH that consumes
-        // either one (core/AvatarMovementAccelerationSimulation.js) is
+        // either one (core/avatar/AvatarMovementAccelerationSimulation.js) is
         // still forbidden too.
-        const sourceUrl = new URL('../core/AvatarMovementBrakingCapability.js', import.meta.url);
+        const sourceUrl = new URL('../core/avatar/AvatarMovementBrakingCapability.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -909,17 +909,17 @@ async function runTests() {
             'localStorage', 'StorageProvider', 'fetch(', 'WebSocket'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `52. core/AvatarMovementBrakingCapability.js's own code never references "${term}" — a small, closed kind/rate value, nothing else`);
+            assert(!codeOnly.includes(term), `52. core/avatar/AvatarMovementBrakingCapability.js's own code never references "${term}" — a small, closed kind/rate value, nothing else`);
         }
 
-        const exportsModule = await import('../core/AvatarMovementBrakingCapability.js');
+        const exportsModule = await import('../core/avatar/AvatarMovementBrakingCapability.js');
         const exportedNames = Object.keys(exportsModule).sort();
         assert(JSON.stringify(exportedNames) === JSON.stringify([
             'AvatarMovementBrakingCapability',
             'AvatarMovementBrakingKind',
             'isValidAvatarMovementBrakingCapability',
             'isValidAvatarMovementBrakingKind'
-        ]), '53. core/AvatarMovementBrakingCapability.js exports exactly the kind vocabulary, the descriptor class, and its two validators — nothing else');
+        ]), '53. core/avatar/AvatarMovementBrakingCapability.js exports exactly the kind vocabulary, the descriptor class, and its two validators — nothing else');
     }
     {
         // 0.9.93 — the new AvatarMovementSteeringCapability sibling file
@@ -930,12 +930,12 @@ async function runTests() {
         // file's entire subject — but bare "acceleration"/"braking" ARE
         // forbidden (this file commits no opinion about either sibling
         // rate), and the ACTUAL HEADING SIMULATION MATH that consumes a
-        // steering rate (core/AvatarMovementSteeringSimulation.js) is
+        // steering rate (core/avatar/AvatarMovementSteeringSimulation.js) is
         // forbidden too, along with any notion of a current/target
         // heading or vehicle orientation — this file only ever resolves
         // a kind/rate pair, never simulates a tick of turning or stores a
         // heading.
-        const sourceUrl = new URL('../core/AvatarMovementSteeringCapability.js', import.meta.url);
+        const sourceUrl = new URL('../core/avatar/AvatarMovementSteeringCapability.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -965,17 +965,17 @@ async function runTests() {
             'localStorage', 'StorageProvider', 'fetch(', 'WebSocket'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `54. core/AvatarMovementSteeringCapability.js's own code never references "${term}" — a small, closed kind/rate value, nothing else`);
+            assert(!codeOnly.includes(term), `54. core/avatar/AvatarMovementSteeringCapability.js's own code never references "${term}" — a small, closed kind/rate value, nothing else`);
         }
 
-        const exportsModule = await import('../core/AvatarMovementSteeringCapability.js');
+        const exportsModule = await import('../core/avatar/AvatarMovementSteeringCapability.js');
         const exportedNames = Object.keys(exportsModule).sort();
         assert(JSON.stringify(exportedNames) === JSON.stringify([
             'AvatarMovementSteeringCapability',
             'AvatarMovementSteeringKind',
             'isValidAvatarMovementSteeringCapability',
             'isValidAvatarMovementSteeringKind'
-        ]), '55. core/AvatarMovementSteeringCapability.js exports exactly the kind vocabulary, the descriptor class, and its two validators — nothing else');
+        ]), '55. core/avatar/AvatarMovementSteeringCapability.js exports exactly the kind vocabulary, the descriptor class, and its two validators — nothing else');
     }
 
     console.log('✅ All Avatar-Vehicle Movement Capability tests passed.');

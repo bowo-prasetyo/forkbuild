@@ -40,7 +40,7 @@
 // restraint application/snapshot/possession/SnapshotPeerPossessionObservation.js's own header
 // already holds for a single observation, now extended to the sequence
 // as a whole. This history is never written onto a core/
-// DecentralizedPublication.js, a core/PublicationSnapshotPlacement.js, a
+// DecentralizedPublication.js, a core/publication/PublicationSnapshotPlacement.js, a
 // catalog, or a Publication Replica Package. It lives only in whatever
 // ephemeral component state a caller keeps for the lifetime of the
 // page — reset to empty the moment the Publication Center is reopened.

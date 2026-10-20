@@ -1,15 +1,15 @@
 import * as THREE from 'three';
-import { riverChannelTangentAt, RIVER_SURFACE_COLOR } from '../core/Hydrology.js';
-import { riverWaterAt, riverCurrentAt, riverRapidsAt, riverSurfaceHeightAt } from '../core/RiverFlow.js';
-import { TERRAIN_TILE_SIZE, tileCenter } from '../core/TerrainTiling.js';
+import { riverChannelTangentAt, RIVER_SURFACE_COLOR } from '../core/nature/Hydrology.js';
+import { riverWaterAt, riverCurrentAt, riverRapidsAt, riverSurfaceHeightAt } from '../core/nature/RiverFlow.js';
+import { TERRAIN_TILE_SIZE, tileCenter } from '../core/nature/TerrainTiling.js';
 import { TILE_SEGMENTS, RIVER_SUBDIVISIONS, tileHasRiverDetail } from './TerrainTileMesh.js';
 import { makeRiverFlowing } from './RiverFlowMaterial.js';
 
-// A river's water: a sheet filling the river's bed (core/TerrainHeightField.js
-// #riverBedDepthAt()) up to its surface (core/RiverFlow.js#riverSurfaceHeightAt()),
+// A river's water: a sheet filling the river's bed (core/nature/TerrainHeightField.js
+// #riverBedDepthAt()) up to its surface (core/nature/RiverFlow.js#riverSurfaceHeightAt()),
 // carrying at each vertex how much water covers it (riverWaterAt(), as
 // alpha, so the banks are soft), which way it runs (riverFlowAt()), which
-// way the channel lies (core/Hydrology.js#riverChannelTangentAt()) and how
+// way the channel lies (core/nature/Hydrology.js#riverChannelTangentAt()) and how
 // much it breaks into rapids (riverRapidsAt()) and how strongly it wells up
 // as a spring, with the way to the spring's centre (riverSpringAt()), for
 // renderer/RiverFlowMaterial.js.

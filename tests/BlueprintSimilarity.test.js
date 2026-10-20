@@ -1,16 +1,16 @@
-import { Structure } from '../core/Structure.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
+import { Structure } from '../core/building/Structure.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
 import {
     compareBlueprintSimilarity, isPossibleLineageCandidate, describeBlueprintSimilarity,
     DEFAULT_SIMILARITY_THRESHOLD
-} from '../core/BlueprintSimilarity.js';
+} from '../core/building/BlueprintSimilarity.js';
 import { assert } from './support/Assert.js';
 import { t } from '../ui/i18n/i18n.js';
 
 // 0.6.8 — Blueprint Lineage & Revision Discovery.
 //
-// Pure unit coverage for core/BlueprintSimilarity.js — the evidence
+// Pure unit coverage for core/building/BlueprintSimilarity.js — the evidence
 // module this milestone's own design conversation was explicit stays
 // separate from, and never becomes, an assertion of lineage. See that
 // module's own header and docs/Principles.md, "Similarity Is Evidence;
@@ -124,7 +124,7 @@ async function run() {
     // ---------------------------------------------------------------
     {
         const empty1 = new Structure({ id: 'e1', name: 'Empty', category: 'misc', description: '', bricks: [] });
-        // core/Structure.js may itself refuse zero bricks; if it does,
+        // core/building/Structure.js may itself refuse zero bricks; if it does,
         // this section still holds because compareBlueprintSimilarity()
         // degrades to null for any structure with no derivable content
         // — proven generally in Section A already. Guard defensively.

@@ -14,7 +14,7 @@ import { ContentStore, ContentTooLargeError } from '../content/ContentStore.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { ArweaveGatewayFailoverContentStore } from '../content/ArweaveGatewayFailoverContentStore.js';
 import { uploadTimeoutMs } from '../utils/uploadTimeout.js';
-import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
+import { DecentralizedPublication } from '../core/publication/DecentralizedPublication.js';
 import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';

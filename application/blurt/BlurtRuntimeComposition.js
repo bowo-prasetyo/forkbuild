@@ -1,4 +1,4 @@
-import { BlurtReadingConfiguration, blurtProofNodesFor } from '../../core/BlurtReadingConfiguration.js';
+import { BlurtReadingConfiguration, blurtProofNodesFor } from '../../core/networks/BlurtReadingConfiguration.js';
 import { createBlurtRpcClient } from '../../blurt/BlurtRpcClient.js';
 import { createBlurtDiscoveryReader } from './BlurtDiscoveryReader.js';
 import { createBlurtPoster } from './BlurtPoster.js';
@@ -44,7 +44,7 @@ export function composeBlurtRuntime({
     const rpc = createBlurtRpcClient({ nodes: [...configuration.apiNodes], fetchImpl });
     const reader = createBlurtDiscoveryReader({ rpc, knownAuthors });
     // Nothing is posted while this device's Blurt writer is switched off
-    // (core/NetworkWriters.js); reading never asks.
+    // (core/publication/NetworkWriters.js); reading never asks.
     const poster = createBlurtPoster({ rpc, getAccount, getBroadcaster, isEnabled: isWriterEnabled, appVersion, records: postRecords, onWaiting });
     return Object.freeze({
         configuration,

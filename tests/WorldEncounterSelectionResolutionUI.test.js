@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { WorldEncounterSelectionOutcomeStatus } from '../application/worldEncounter/WorldEncounterSelectionOutcome.js';
-import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
+import { describeWorldDiscoverySource } from '../core/world/WorldDiscoverySource.js';
 import { describeLocalWorldDiscoverySource } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';

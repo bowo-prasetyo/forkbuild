@@ -298,7 +298,7 @@ export default Object.freeze({
     'publicationLink.buildMismatch': 'la construction trouvée ne correspond pas à sa signature',
     'publicationLink.noStoreCouldRead': 'aucun stockage n’a pu la lire',
 
-    // The World welcome panel (core/WorldWelcomeContext.js): why a place is
+    // The World welcome panel (core/world/WorldWelcomeContext.js): why a place is
     // suggested, and what collaborators are doing, with and without a target.
     'welcome.reason.nearbyLandmark': 'Point de repère proche',
     'welcome.reason.youAreHere': 'Vous êtes ici',
@@ -1323,7 +1323,7 @@ export default Object.freeze({
     'distribution.explore': 'Explorer',
     'distribution.close': 'Fermer',
 
-    // Editor: a structure's details (ui/components/StructureInfoPanel.js, core/BlueprintSimilarity.js).
+    // Editor: a structure's details (ui/components/StructureInfoPanel.js, core/building/BlueprintSimilarity.js).
     'structureInfo.bricks': 'Briques',
     'structureInfo.footprint': 'Emprise',
     'structureInfo.footprintValue': '{width} × {depth}',
@@ -1368,7 +1368,7 @@ export default Object.freeze({
     'blueprintSimilarity.identical': 'Design identique',
     'blueprintSimilarity.percent': 'Design similaire à {percent} %',
 
-    // Editor: the Build Library (ui/components/BuildLibraryPanel.js, core/sortStructures.js).
+    // Editor: the Build Library (ui/components/BuildLibraryPanel.js, core/building/sortStructures.js).
     'buildLibrary.title': 'Bibliothèque de construction',
     'buildLibrary.bricks': 'Briques',
     'buildLibrary.structures': 'Structures',
@@ -2307,7 +2307,7 @@ export default Object.freeze({
     'residentPrompt.talk': '[T] Parler',
     'residentPrompt.remove': '[R] Retirer l’habitant',
 
-    // What a resident says about its surroundings (core/ResidentTalk.js). A
+    // What a resident says about its surroundings (core/world/ResidentTalk.js). A
     // {title} or {name} is someone else's text, shown as written; {where} is
     // one of the resident.where.* messages, {distance} a resident.distance.* one.
     'resident.quiet': 'C’est calme par ici. Je ne connais rien à proximité.',
@@ -2426,7 +2426,7 @@ export default Object.freeze({
     'worldEncounterCanvas.peerSource': 'Pair {id}',
     'worldEncounterCanvas.snapshotSource': 'Snapshot {hash}',
 
-    // World View: words core/ keeps as ids (ui/i18n/worldText.js) and the focus panel's core-built text (core/WorldFocusContext.js).
+    // World View: words core/ keeps as ids (ui/i18n/worldText.js) and the focus panel's core-built text (core/world/WorldFocusContext.js).
     'compass.n': 'N',
     'compass.ne': 'NE',
     'compass.e': 'E',
@@ -4707,7 +4707,7 @@ export default Object.freeze({
     'chatView.couldNotSwitchSpeaker': 'Impossible de passer à ce haut-parleur.',
     'chatView.microphoneDisappeared': 'Votre microphone a disparu — l’appel continue sans votre son.',
 
-    // Refusals a person reads, thrown as UserFacingError (core/UserFacingError.js) by Identity, Peers, Chat and settings.
+    // Refusals a person reads, thrown as UserFacingError (core/app/UserFacingError.js) by Identity, Peers, Chat and settings.
     'refusal.noUserIsCurrentlyLogged': 'Choisissez d’abord un nom.',
     'refusal.nameLocked': 'Votre nom « {name} » est verrouillé. Déverrouillez-le avec sa phrase secrète pour continuer.',
     'refusal.nameRevoked': 'Votre nom « {name} » a été révoqué et ne peut plus signer. Passez à un autre nom pour continuer.',

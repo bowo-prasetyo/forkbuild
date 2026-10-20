@@ -1,6 +1,6 @@
 import { DocumentSerializer } from '../../serializer/DocumentSerializer.js';
 import { DocumentManifest } from './DocumentManifest.js';
-import { DocumentRevision } from '../../core/DocumentRevision.js';
+import { DocumentRevision } from '../../core/document/DocumentRevision.js';
 import { computeContentHash } from '../../serializer/contentHash.js';
 
 // Document -> DocumentSerializer -> StorageProvider. UI never touches

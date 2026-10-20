@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { NotificationEvent, isValidEventType, MAX_EVENT_TYPE_LENGTH, MAX_RECIPIENT_ID_LENGTH } from '../core/NotificationEvent.js';
+import { NotificationEvent, isValidEventType, MAX_EVENT_TYPE_LENGTH, MAX_RECIPIENT_ID_LENGTH } from '../core/social/NotificationEvent.js';
 import { assert } from './support/Assert.js';
 
 function throws(fn, message) {
@@ -171,10 +171,10 @@ async function runTests() {
     // Section 8 — No ChatOutbox coupling.
     // ---------------------------------------------------------------
     {
-        const code = await codeOnlySource('core/NotificationEvent.js');
+        const code = await codeOnlySource('core/social/NotificationEvent.js');
         const forbidden = ['ChatOutbox', 'ChatMessage', 'ChatDeliveryState', 'peerIdentityId', 'DeliveryState', 'expiresAt', 'TTL'];
         for (const term of forbidden) {
-            assert(!code.includes(term), `8. core/NotificationEvent.js code must never reference "${term}"`);
+            assert(!code.includes(term), `8. core/social/NotificationEvent.js code must never reference "${term}"`);
         }
         console.log('✓ Section 8: no ChatOutbox coupling');
     }
@@ -183,14 +183,14 @@ async function runTests() {
     // Section 9 — No Publication/Place Naming/Collaboration coupling.
     // ---------------------------------------------------------------
     {
-        const code = await codeOnlySource('core/NotificationEvent.js');
+        const code = await codeOnlySource('core/social/NotificationEvent.js');
         const forbidden = [
             'Publication', 'Commentary', 'PlaceNaming', 'PlaceNamingClaim',
             'Collaboration', 'CollaborationSession', 'Presence', 'AvatarPresence',
             'WorldView', 'WorldRegion'
         ];
         for (const term of forbidden) {
-            assert(!code.includes(term), `9. core/NotificationEvent.js code must never reference "${term}"`);
+            assert(!code.includes(term), `9. core/social/NotificationEvent.js code must never reference "${term}"`);
         }
         console.log('✓ Section 9: no Publication/Place Naming/Collaboration/Presence coupling');
     }
@@ -245,10 +245,10 @@ async function runTests() {
     // Section 12 — Architectural import-boundary regression.
     // ---------------------------------------------------------------
     {
-        const rawText = await readFile(new URL('../core/NotificationEvent.js', import.meta.url), 'utf8');
+        const rawText = await readFile(new URL('../core/social/NotificationEvent.js', import.meta.url), 'utf8');
         const importLines = rawText.split('\n').filter((line) => line.trim().startsWith('import '));
-        assert(importLines.length === 1, '12. core/NotificationEvent.js has exactly one import statement');
-        assert(importLines[0].includes("from './createId.js'"), '12. the sole import is core/createId.js');
+        assert(importLines.length === 1, '12. core/social/NotificationEvent.js has exactly one import statement');
+        assert(importLines[0].includes("from '../document/createId.js'"), '12. the sole import is core/document/createId.js');
 
         // Constructing a NotificationEvent must not require Chat,
         // Publication Commentary, Place Naming, World Presence, or

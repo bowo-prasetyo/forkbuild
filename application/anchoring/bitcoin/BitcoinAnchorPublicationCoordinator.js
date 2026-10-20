@@ -8,7 +8,7 @@ import { LEGACY_HASH_EXTERNAL_REASON, isLegacyContentHash } from '../../../seria
 // submit a Bitcoin transaction — plan, PSBT, wallet signature, independent
 // inspection, cryptographic finalization, broadcast — but left them
 // unconnected, six separate classes a caller had to wire by hand, and
-// wired to nothing that produces a real `core/PublicationAnchor.js`. This
+// wired to nothing that produces a real `core/publication/PublicationAnchor.js`. This
 // class is that connective tissue, and NOTHING else: it adds no new
 // Bitcoin primitive, no new cryptography, no new wire format. It composes
 // the existing ones into ONE explicit publication action, exactly as
@@ -49,7 +49,7 @@ import { LEGACY_HASH_EXTERNAL_REASON, isLegacyContentHash } from '../../../seria
 // ORCHESTRATION ONLY — NEVER A SECOND IMPLEMENTATION. This class never
 // selects UTXOs, never encodes a byte of PSBT, never checks a signature,
 // never talks to a network itself, and never constructs a
-// `core/PublicationAnchor.js` by hand. Every one of those responsibilities
+// `core/publication/PublicationAnchor.js` by hand. Every one of those responsibilities
 // stays exactly where 0.8.8 and 0.8.47→0.8.52 already put them; this class
 // only sequences calls to them and translates each one's own result into
 // application/anchoring/bitcoin/BitcoinAnchorPublicationLifecycleState.js's own vocabulary.
@@ -76,7 +76,7 @@ import { LEGACY_HASH_EXTERNAL_REASON, isLegacyContentHash } from '../../../seria
 // `BROADCASTED` — and the PublicationAnchor this class creates the moment
 // it is reached — means only "ForkBuild associated this content hash with
 // this Bitcoin transaction and the network accepted it for broadcast." The
-// created anchor is exactly `core/PublicationAnchor.js` already is: a
+// created anchor is exactly `core/publication/PublicationAnchor.js` already is: a
 // signed, durable, catalogued RECORD of that association — this class
 // invents no second, parallel "anchor record" schema, because 0.8.0
 // already built the one this milestone needed. Whether the transaction
@@ -327,7 +327,7 @@ export class BitcoinAnchorPublicationCoordinator {
     // (0.8.63) → application/anchoring/bitcoin/BitcoinAnchorBroadcastCoordinator.js (0.8.64).
     // That pipeline could always reach a real BROADCASTED outcome — a real
     // txid, from a real, already-reviewed UniSat signature — but nothing
-    // ever turned that fact into a `core/PublicationAnchor.js`; only into
+    // ever turned that fact into a `core/publication/PublicationAnchor.js`; only into
     // application/anchoring/bitcoin/BitcoinAnchorPublicationRecord.js, a local, UI-level
     // observation-history bookkeeping record (0.8.80), never the generic
     // anchor lifecycle Evidence/Verification already read. This method is
@@ -378,7 +378,7 @@ export class BitcoinAnchorPublicationCoordinator {
     //
     // THE LIFECYCLE BOUNDARY THIS METHOD REQUIRES IS EXACTLY BROADCASTED —
     // NEVER EARLIER, NEVER A SEPARATE CONFIRMATION. Mirrors `publishAnchor()`
-    // above precisely: a `core/PublicationAnchor.js` is minted the moment
+    // above precisely: a `core/publication/PublicationAnchor.js` is minted the moment
     // broadcast is accepted, never delayed for confirmation — see this
     // file's own header, "BROADCAST ACCEPTANCE IS RECORDED; IT IS NEVER
     // PROMOTED TO CONFIRMATION." Whether the transaction later gets mined

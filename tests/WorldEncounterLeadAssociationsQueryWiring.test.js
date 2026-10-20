@@ -5,7 +5,7 @@ import { WorldEncounterMaterialVerifier } from '../application/worldEncounter/Wo
 import { describeLocalWorldDiscoverySource } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
 import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js';
-import { describeDecentralizedWorldDiscoveryLead } from '../core/DecentralizedWorldDiscoveryLead.js';
+import { describeDecentralizedWorldDiscoveryLead } from '../core/world/DecentralizedWorldDiscoveryLead.js';
 import { composeWorldEncounterLeadAssociationsQuery } from '../application/worldEncounter/WorldEncounterLeadAssociationsQueryComposition.js';
 import { worldEncounterCanvasFiles, worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
@@ -62,7 +62,7 @@ function leadRegistryOf(leads) {
 }
 
 // The minimal signed-Publication shape
-// core/DecentralizedPublicationLocationClaim.js reads a claim from.
+// core/publication/DecentralizedPublicationLocationClaim.js reads a claim from.
 function signedPublication(id, uri) {
     return { id, signature: 'sig-' + id, contentReference: { hash: 'hash-' + id, uri } };
 }

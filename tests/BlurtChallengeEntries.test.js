@@ -1,5 +1,5 @@
 // Challenge entries distributed to Blurt: a build post lists the build's own
-// tags (core/BlurtPost.js), the reader passes them on
+// tags (core/networks/BlurtPost.js), the reader passes them on
 // (application/blurt/BlurtDiscoveryReader.js), and the Blurt publication
 // query answers a build-tag discovery tag (`forkbuild-tag:<tag>`) with the
 // posts that list it, so the weekly challenge finds Blurt entries as it finds
@@ -8,9 +8,9 @@ import { createBlurtDiscoveryReader } from '../application/blurt/BlurtDiscoveryR
 import { createBlurtRpcClient } from '../blurt/BlurtRpcClient.js';
 import { BlurtPublicationDiscoveryQueryService } from '../application/blurt/BlurtPublicationDiscoveryQueryService.js';
 import { BlurtKnownAuthorStore } from '../storage/BlurtKnownAuthorStore.js';
-import { blurtBuildPostOperation, emptyBlurtBuildPost, parseBlurtBuildPost } from '../core/BlurtPost.js';
-import { buildTagDiscoveryTag, buildTagOfDiscoveryTag } from '../core/NarrowDiscoveryTags.js';
-import { WorldEncounterKind } from '../core/WorldEncounter.js';
+import { blurtBuildPostOperation, emptyBlurtBuildPost, parseBlurtBuildPost } from '../core/networks/BlurtPost.js';
+import { buildTagDiscoveryTag, buildTagOfDiscoveryTag } from '../core/publication/NarrowDiscoveryTags.js';
+import { WorldEncounterKind } from '../core/world/WorldEncounter.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { blurtChainTime, fakeBlurtChain } from './support/FakeBlurtChain.js';
 import { assert } from './support/Assert.js';

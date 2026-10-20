@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { ArweaveSnapshotDiscoveryPublisher } from '../application/arweave/ArweaveSnapshotDiscoveryPublisher.js';
 import { createArweaveTaggedTransactionUpload } from '../application/arweave/ArweaveTaggedTransactionUpload.js';
-import { parseSnapshotDiscoveryEnvelope } from '../core/SnapshotDiscoveryEnvelope.js';
+import { parseSnapshotDiscoveryEnvelope } from '../core/publication/SnapshotDiscoveryEnvelope.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { assert } from './support/Assert.js';
@@ -24,7 +24,7 @@ import { assert } from './support/Assert.js';
 //              transaction id, never confused with contentHash, a content
 //              transaction id, or locator
 //   Section E: malformed envelope rejected before publishing, per
-//              core/SnapshotDiscoveryEnvelope.js's own validation
+//              core/publication/SnapshotDiscoveryEnvelope.js's own validation
 //   Section F: failure propagation — the underlying upload adapter's
 //              established failure behavior (decline -> null, transport
 //              failure/timeout -> rejection, contract violation -> throw)
@@ -201,7 +201,7 @@ async function run() {
 
     // ---------------------------------------------------------------
     // Section E — malformed envelope rejected before publishing, per
-    // core/SnapshotDiscoveryEnvelope.js's own validation.
+    // core/publication/SnapshotDiscoveryEnvelope.js's own validation.
     // ---------------------------------------------------------------
     {
         const upload = makeFakeUpload({ handler: () => ({ id: FAKE_TX_ID }) });

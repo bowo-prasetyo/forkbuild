@@ -1,5 +1,5 @@
 import { ContentStore } from './ContentStore.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { CONTENT_HASH_ALGORITHM, computeContentHash } from '../serializer/contentHash.js';
 
 const CONTENT_KEY_PREFIX = 'content:';

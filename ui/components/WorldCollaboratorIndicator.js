@@ -1,4 +1,4 @@
-import { WorldSpatialActivity } from '../../core/WorldSpatialActivity.js';
+import { WorldSpatialActivity } from '../../core/collaboration/WorldSpatialActivity.js';
 import { t } from '../i18n/i18n.js';
 import { spatialActivityText } from '../i18n/worldText.js';
 

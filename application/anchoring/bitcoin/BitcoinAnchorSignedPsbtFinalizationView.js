@@ -1,5 +1,5 @@
 import { BitcoinAnchorSignedPsbtFinalizationState } from './BitcoinAnchorSignedPsbtFinalizationState.js';
-import { message } from '../../../core/Message.js';
+import { message } from '../../../core/app/Message.js';
 
 const STATE_LABELS = {
     [BitcoinAnchorSignedPsbtFinalizationState.IDLE]: message('bitcoinAnchorSignedPsbtFinalization.notYetFinalized'),

@@ -6,7 +6,7 @@ export default {
     props: {
         publications: { type: Array, required: true },
         rootDocumentId: { type: String, required: true },
-        // 0.9.572 — see core/PublicationDateAmbiguity.js's own header
+        // 0.9.572 — see core/catalog/PublicationDateAmbiguity.js's own header
         // and ui/components/PublicationList.js's own identical prop.
         // AuthorView.js computes this once, over the SAME `publications`
         // array this whole tree already renders from, and passes it

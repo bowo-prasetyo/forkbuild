@@ -1,13 +1,13 @@
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Position } from '../core/Position.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Position } from '../core/document/Position.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
 import { ReplayDocumentUseCase } from '../application/document/ReplayDocumentUseCase.js';
 import { PlaceBrickCommand } from '../application/commands/PlaceBrickCommand.js';
 import { DeleteBrickCommand } from '../application/commands/DeleteBrickCommand.js';
 import { UndoOperationCommand, RedoOperationCommand, isSharedStepCommand } from '../application/commands/SharedUndoCommands.js';
-import { editorSoundCueFor, EDITOR_ACTIVITY, EDITOR_SOUND_CUE } from '../core/EditorSoundCues.js';
+import { editorSoundCueFor, EDITOR_ACTIVITY, EDITOR_SOUND_CUE } from '../core/app/EditorSoundCues.js';
 import { assert } from './support/Assert.js';
 
 // Undo and Redo while building together, as operations

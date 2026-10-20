@@ -1,9 +1,9 @@
 import { StorageProvider } from './StorageProvider.js';
 import { LocalStorageProvider } from './LocalStorageProvider.js';
-import { PublicationHeart, currentHeartsFor, latestHeartsFor } from '../core/PublicationHeart.js';
+import { PublicationHeart, currentHeartsFor, latestHeartsFor } from '../core/publication/PublicationHeart.js';
 
 // Every heart record this device has made or accepted
-// (core/PublicationHeart.js), kept so a person's latest one decides. The
+// (core/publication/PublicationHeart.js), kept so a person's latest one decides. The
 // records are small and every tap makes one, so all are kept: an old one
 // arriving again is then known and never counts as new. No cache, so every
 // store over the same storage sees the same records.

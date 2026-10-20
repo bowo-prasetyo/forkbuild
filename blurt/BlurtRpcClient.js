@@ -1,4 +1,4 @@
-import { DEFAULT_BLURT_API_NODES } from '../core/BlurtReadingConfiguration.js';
+import { DEFAULT_BLURT_API_NODES } from '../core/networks/BlurtReadingConfiguration.js';
 
 // A minimal Blurt JSON-RPC client: the few condenser_api calls ForkBuild
 // needs, tried against each configured API node in turn.

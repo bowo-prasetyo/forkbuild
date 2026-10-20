@@ -1,10 +1,10 @@
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { Group } from '../core/Group.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { Group } from '../core/building/Group.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
@@ -16,15 +16,15 @@ import { CreateCommandRegistryUseCase } from '../application/editor/CreateComman
 import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
 import { DocumentCommandPropagationUseCase } from '../application/document/DocumentCommandPropagationUseCase.js';
-import { DocumentOperationCausalGapDetector } from '../core/DocumentOperationCausalGapDetector.js';
+import { DocumentOperationCausalGapDetector } from '../core/collaboration/DocumentOperationCausalGapDetector.js';
 import { DocumentOperationCausalGapObservationUseCase } from '../application/document/DocumentOperationCausalGapObservationUseCase.js';
 import { DocumentOperationRecoveryUseCase } from '../application/document/DocumentOperationRecoveryUseCase.js';
-import { DocumentOperationProvenance } from '../core/DocumentOperationProvenance.js';
+import { DocumentOperationProvenance } from '../core/collaboration/DocumentOperationProvenance.js';
 import {
     RecoveredOperationReplayUseCase,
     DocumentOperationReplayOutcome
 } from '../application/document/RecoveredOperationReplayUseCase.js';
-import { evaluateApplicationReadiness, DocumentOperationApplicationReadiness } from '../core/DocumentOperationApplicationReadiness.js';
+import { evaluateApplicationReadiness, DocumentOperationApplicationReadiness } from '../core/collaboration/DocumentOperationApplicationReadiness.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 

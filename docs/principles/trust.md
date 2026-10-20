@@ -55,7 +55,7 @@ checked and what happened, without changing what `discover()` returns.
 ### A Valid Signature Proves Authorship, Not Exclusivity (0.2.19)
 
 An authority can sign two different objects at the same causal position
-and both verify. That is equivocation (`core/IndexEquivocation.js`), not
+and both verify. That is equivocation (`core/world/IndexEquivocation.js`), not
 forgery. It is detected and reported, never resolved silently by keeping
 one side; whether to tolerate it is an explicit `TrustPolicy` decision.
 

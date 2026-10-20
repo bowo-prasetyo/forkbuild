@@ -1,12 +1,20 @@
 
-import { IpfsGatewayConfiguration } from '../core/IpfsGatewayConfiguration.js';
+import { IpfsGatewayConfiguration } from '../core/networks/IpfsGatewayConfiguration.js';
 import { IpfsGatewayContentStore } from '../content/IpfsGatewayContentStore.js';
 import { IpfsGatewayFailoverContentStore } from '../content/IpfsGatewayFailoverContentStore.js';
 import { ContentUnavailableError } from '../content/IpfsContentStore.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource as source } from './support/SourceText.js';
+
+// Whether `text` names a URL whose origin is `origin`, compared as parsed
+// URLs rather than as a substring of the text.
+function namesOrigin(text, origin) {
+    return (String(text).match(/https?:\/\/[^\s'"`)]+/g) || []).some((url) => {
+        try { return new URL(url).origin === origin; } catch { return false; }
+    });
+}
 
 // 0.9.666 — IPFS Gateway Read Failover.
 //
@@ -173,7 +181,7 @@ async function run() {
         });
         const store = new IpfsGatewayFailoverContentStore({ gatewayUrls: [A, B, C], fetchImpl });
         const error = await expectRejects(store.get(ipfsReference), 'E1. get() rejects once every configured gateway has failed', ContentUnavailableError);
-        assert(error.message.includes(C), 'E2. the propagated error names the LAST gateway tried, not the first');
+        assert(namesOrigin(error.message, C), 'E2. the propagated error names the LAST gateway tried, not the first');
         assert(await store.has(ipfsReference) === false, 'E3. has() degrades to false rather than throwing, once every configured gateway has failed');
         console.log('✓ Section E: once every configured gateway has genuinely failed, the existing unavailable outcome is preserved unchanged — never swallowed into a fabricated success');
     }
@@ -237,7 +245,7 @@ async function run() {
         assert(!pinningSource.includes('IpfsGatewayFailoverContentStore'), 'I2. content/IpfsRemotePinningContentStore.js (remote pinning) never references the new failover class either');
 
         const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
-        // A later, sibling milestone (core/IpfsNodeConfiguration.js) gave
+        // A later, sibling milestone (core/networks/IpfsNodeConfiguration.js) gave
         // this construction site a real apiUrl argument, from its own
         // separate resolvedIpfsNodeApiUrl — never this milestone's own
         // read-path gatewayUrls/failover resolution.

@@ -1,7 +1,7 @@
-import { describeDecentralizedDiscoveryEnvelope } from '../../core/DecentralizedDiscoveryEnvelope.js';
+import { describeDecentralizedDiscoveryEnvelope } from '../../core/publication/DecentralizedDiscoveryEnvelope.js';
 import { withTimeout } from '../../utils/withTimeout.js';
-import { announcedBuildTagDiscoveryTags, publicationRecordTag } from '../../core/NarrowDiscoveryTags.js';
-import { WorldEncounterKind } from '../../core/WorldEncounter.js';
+import { announcedBuildTagDiscoveryTags, publicationRecordTag } from '../../core/publication/NarrowDiscoveryTags.js';
+import { WorldEncounterKind } from '../../core/world/WorldEncounter.js';
 
 const DEFAULT_GATEWAY_URL = 'https://arweave.net';
 // Deliberately the exact literal application/arweave/ArweaveGraphqlDiscoveryQueryService.js's
@@ -67,7 +67,7 @@ const TRANSACTION_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
 // ONE PROTOCOL ENVELOPE, NEVER TWO — THE SAME RESTRAINT `application/
 // NostrPublicationDiscoveryPublisher.js`'s OWN HEADER ALREADY HOLDS. This
 // file never builds its own "announcement" shape. `publish()` re-validates
-// its own `envelope` argument through `core/DecentralizedDiscoveryEnvelope.js`'s
+// its own `envelope` argument through `core/publication/DecentralizedDiscoveryEnvelope.js`'s
 // own `describeDecentralizedDiscoveryEnvelope()`, unmodified, and serializes
 // exactly THAT canonical, already-frozen result via `JSON.stringify()` —
 // never the caller's raw argument, never a hand-picked subset of its fields.
@@ -276,7 +276,7 @@ export class ArweaveAnnouncementPublisher {
         uploadTaggedTransaction = null,
         timeoutMs = DEFAULT_TIMEOUT_MS,
         // Optional `(publicationId) -> string[]`: the build's own tags, each
-        // announced as a `forkbuild-tag:` tag (core/NarrowDiscoveryTags.js).
+        // announced as a `forkbuild-tag:` tag (core/publication/NarrowDiscoveryTags.js).
         buildTagsFor = null
     } = {}) {
         if (typeof discoveryTag !== 'string' || discoveryTag.length === 0) {

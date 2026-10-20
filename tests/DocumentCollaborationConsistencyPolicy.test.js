@@ -1,10 +1,10 @@
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Group } from '../core/Group.js';
-import { Position } from '../core/Position.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Group } from '../core/building/Group.js';
+import { Position } from '../core/document/Position.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
@@ -33,18 +33,18 @@ import {
     LocalUndoPropagation,
     DocumentIsolationGuarantee,
     ReplicaConvergenceGuarantee
-} from '../core/DocumentCollaborationConsistencyPolicy.js';
+} from '../core/collaboration/DocumentCollaborationConsistencyPolicy.js';
 import {
     DocumentOperationDeferralUseCase,
     DocumentOperationDeferralOutcome
 } from '../application/document/DocumentOperationDeferralUseCase.js';
-import { DocumentOperationCausalGapDetector } from '../core/DocumentOperationCausalGapDetector.js';
+import { DocumentOperationCausalGapDetector } from '../core/collaboration/DocumentOperationCausalGapDetector.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.226 — Document Collaboration Consistency Policy Boundary.
 //
-// This file has one job: prove that `core/DocumentCollaborationConsistencyPolicy.js`
+// This file has one job: prove that `core/collaboration/DocumentCollaborationConsistencyPolicy.js`
 // describes the REAL, currently-running behavior of the 0.9.222-0.9.225
 // chain, never an aspiration. It is deliberately much smaller than
 // `tests/ConcurrentDocumentOperationBehaviorAudit.test.js` (0.9.225) — that
@@ -54,7 +54,7 @@ import { assert } from './support/Assert.js';
 // CommandHistory) to demonstrate each policy field once, then points back
 // at 0.9.225's own section letters for the full evidence. No production
 // code changes as part of this milestone; this file and
-// core/DocumentCollaborationConsistencyPolicy.js are the entire diff.
+// core/collaboration/DocumentCollaborationConsistencyPolicy.js are the entire diff.
 //
 // Topology mirrors 0.9.225's own exactly, for the same reason: one owner
 // identity (Alice) with two authorized devices (Laptop, Phone), each
@@ -183,7 +183,7 @@ async function runTests() {
         assert(Object.isFrozen(enumObject), '3. every exported vocabulary enum is frozen (closed, not an open string)');
     }
     assert(DOCUMENT_COLLABORATION_CONSISTENCY_POLICY.delivery.order === DeliveryOrderGuarantee.NOT_GUARANTEED,
-        '4. delivery.order names NOT_GUARANTEED — no logicalClock exists anywhere in core/DocumentOperationEnvelope.js');
+        '4. delivery.order names NOT_GUARANTEED — no logicalClock exists anywhere in core/collaboration/DocumentOperationEnvelope.js');
     assert(DOCUMENT_COLLABORATION_CONSISTENCY_POLICY.convergence.guaranteed === ReplicaConvergenceGuarantee.NOT_GUARANTEED,
         '5. convergence.guaranteed names NOT_GUARANTEED — the composite finding of 0.9.225 Sections D1 and F');
     console.log('✓ Section 1: the policy is a closed, frozen vocabulary, not a mutable config object');

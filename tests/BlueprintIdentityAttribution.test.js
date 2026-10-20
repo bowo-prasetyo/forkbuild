@@ -1,10 +1,10 @@
-import { Structure } from '../core/Structure.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
+import { Structure } from '../core/building/Structure.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
 import {
     canonicalizeBlueprint, deriveBlueprintFingerprint, blueprintFingerprintsEqual, describeBlueprintFingerprint
-} from '../core/BlueprintFingerprint.js';
-import { BlueprintAttribution, getBlueprintAttributionSigningDescriptor } from '../core/BlueprintAttribution.js';
+} from '../core/building/BlueprintFingerprint.js';
+import { BlueprintAttribution, getBlueprintAttributionSigningDescriptor } from '../core/building/BlueprintAttribution.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalBlueprintAttributionStore } from '../application/blueprint/LocalBlueprintAttributionStore.js';
 import { BlueprintAttributionUseCase } from '../application/blueprint/BlueprintAttributionUseCase.js';
@@ -53,7 +53,7 @@ function farmstead({ id = 'farmstead-1', name = 'Farmstead', category = 'Archite
 
 async function run() {
     // -------------------------------------------------------------
-    // Section A: core/BlueprintFingerprint.js — canonicalization & determinism
+    // Section A: core/building/BlueprintFingerprint.js — canonicalization & determinism
     // -------------------------------------------------------------
     {
         assert(canonicalizeBlueprint(null) === null, 'canonicalizeBlueprint(null) is null, never throws');
@@ -114,7 +114,7 @@ async function run() {
         assert(!blueprintFingerprintsEqual(fpA, deriveBlueprintFingerprint(farmstead({ id: 'J777', category: 'Agriculture' }))), 'a different category changes the fingerprint');
         assert(!blueprintFingerprintsEqual(fpA, deriveBlueprintFingerprint(farmstead({ id: 'K888', description: 'Something else entirely.' }))), 'a different description changes the fingerprint');
 
-        // tags are deliberately excluded — see core/BlueprintFingerprint.js's own header.
+        // tags are deliberately excluded — see core/building/BlueprintFingerprint.js's own header.
         const withTags = new Structure({ id: 'L999', name: a.name, category: a.category, description: a.description, tags: ['unused', 'today'], bricks: a.bricks.map((br) => br.clone()) });
         assert(blueprintFingerprintsEqual(fpA, deriveBlueprintFingerprint(withTags)), 'tags never participate in the fingerprint (0.6.3 never gave them an authoring UI)');
 
@@ -123,10 +123,10 @@ async function run() {
         assert(describeBlueprintFingerprint(fpA).startsWith('bp2:') && describeBlueprintFingerprint(fpA).length < fpA.length + 1, 'describeBlueprintFingerprint() is a short display form');
         assert(describeBlueprintFingerprint(null) === '', 'describeBlueprintFingerprint(null) is the empty string');
     }
-    console.log('✓ Section A: core/BlueprintFingerprint.js — order/id-independent, noise-tolerant, sensitive to real design changes');
+    console.log('✓ Section A: core/building/BlueprintFingerprint.js — order/id-independent, noise-tolerant, sensitive to real design changes');
 
     // -------------------------------------------------------------
-    // Section B: core/BlueprintAttribution.js — construction & validation
+    // Section B: core/building/BlueprintAttribution.js — construction & validation
     // -------------------------------------------------------------
     {
         let threw = false;
@@ -152,7 +152,7 @@ async function run() {
         assert(JSON.stringify(descriptorFromInstance) === JSON.stringify(descriptorFromFreeFn), 'instance getSigningDescriptor() matches the standalone free function exactly');
         assert(BlueprintAttribution.fromJSON(null) === null, 'fromJSON(null) is null, never throws');
     }
-    console.log('✓ Section B: core/BlueprintAttribution.js — construction, validation, signing descriptor parity');
+    console.log('✓ Section B: core/building/BlueprintAttribution.js — construction, validation, signing descriptor parity');
 
     // -------------------------------------------------------------
     // Section C: identity/LocalAuthorizationVerifier.js#verifyBlueprintAttribution

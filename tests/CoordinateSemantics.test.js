@@ -1,6 +1,6 @@
-import { Position } from '../core/Position.js';
-import { WorldPlacement } from '../core/WorldPlacement.js';
-import { computeDeterministicGridPosition } from '../core/DeterministicGridPlacement.js';
+import { Position } from '../core/document/Position.js';
+import { WorldPlacement } from '../core/publication/WorldPlacement.js';
+import { computeDeterministicGridPosition } from '../core/world/DeterministicGridPlacement.js';
 import { GridPlacementStrategy } from '../application/placement/InitialPlacementStrategy.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
@@ -73,7 +73,7 @@ async function runTests() {
 
     // -------------------------------------------------------------
     // 4. Distinct publications ordinarily land at distinct positions
-    //    (not a guarantee — see core/DeterministicGridPlacement.js —
+    //    (not a guarantee — see core/world/DeterministicGridPlacement.js —
     //    but true for these two ids, confirming the grid actually
     //    spreads placements rather than collapsing everything to one
     //    slot).

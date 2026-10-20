@@ -1,5 +1,5 @@
 import { BitcoinAnchorContentProofState } from './BitcoinAnchorContentProofState.js';
-import { message } from '../../../core/Message.js';
+import { message } from '../../../core/app/Message.js';
 
 // 0.8.57 — Bitcoin Anchor Proof & Confirmation Inspection UI.
 //

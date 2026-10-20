@@ -10,7 +10,7 @@ const STORAGE_KEY_PREFIX = 'place-name-preference:';
 //                                Valley" — personal, never published.
 //   Published naming claim    — application/placeNaming/PlaceNamingClaimUseCase.js
 //                                — signed, publicly discoverable.
-//   Community-preferred name  — core/PlaceNamingView.js's own derived
+//   Community-preferred name  — core/world/PlaceNamingView.js's own derived
 //                                ranking of whatever claims a replica
 //                                knows about.
 //
@@ -25,7 +25,7 @@ const STORAGE_KEY_PREFIX = 'place-name-preference:';
 // storageProvider never see each other's preferences.
 //
 // A preference is a pure UI convenience, never a fact: setting one
-// changes nothing about which name core/PlaceNamingView.js#namingView()
+// changes nothing about which name core/world/PlaceNamingView.js#namingView()
 // ranks first, and clearing one simply falls back to that ranking (or,
 // if nobody has claimed anything at all, to whatever the caller already
 // used before this milestone — see application/world/WorldNavigationSession.js#

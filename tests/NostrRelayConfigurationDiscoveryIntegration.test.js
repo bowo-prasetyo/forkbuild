@@ -1,5 +1,5 @@
 
-import { NostrRelayConfiguration, DEFAULT_NOSTR_RELAY_URL } from '../core/NostrRelayConfiguration.js';
+import { NostrRelayConfiguration, DEFAULT_NOSTR_RELAY_URL } from '../core/networks/NostrRelayConfiguration.js';
 import { NostrRelayConfigurationStore } from '../storage/NostrRelayConfigurationStore.js';
 import { NostrDiscoveryQueryService } from '../application/nostr/NostrDiscoveryQueryService.js';
 import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
@@ -126,7 +126,7 @@ async function run() {
         const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
 
         assert(mainSource.includes("import { NostrRelayConfigurationStore } from '../../storage/NostrRelayConfigurationStore.js';"), 'D1. ui/main.js imports NostrRelayConfigurationStore');
-        assert(mainSource.includes("import { DEFAULT_NOSTR_RELAY_URLS } from '../../core/NostrRelayConfiguration.js';"), 'D2. ui/main.js imports DEFAULT_NOSTR_RELAY_URLS');
+        assert(mainSource.includes("import { DEFAULT_NOSTR_RELAY_URLS } from '../../core/networks/NostrRelayConfiguration.js';"), 'D2. ui/main.js imports DEFAULT_NOSTR_RELAY_URLS');
         assert(mainSource.includes('new NostrRelayConfigurationStore('), 'D3. ui/main.js actually constructs a NostrRelayConfigurationStore, never just imports the class unused');
         assert(/nostrRelayConfigurationStore\.get\(\)\s*\|\|\s*\{\s*relayUrls:\s*DEFAULT_NOSTR_RELAY_URLS\s*\}/.test(mainSource), 'D4. ui/main.js resolves "absent -> default, present -> override" exactly — never a merge, never silently dropping the persisted store\'s own value');
 
@@ -143,7 +143,7 @@ async function run() {
         assert(/new NostrPlaceNamingDiscoverySource\(\{\s*queryImpl:\s*nostrRelayQueryClient,\s*relayUrl:\s*resolvedNostrRelayUrls\[0\]\s*\}\)/.test(mainSource), 'D8. NostrPlaceNamingDiscoverySource (Place Naming discovery, single-relay case) still receives the resolved relayUrl, untouched by 0.9.451 — now sourced from resolvedNostrRelayUrls[0]');
 
         // Publishing (write-path) call sites: none may reference
-        // resolvedNostrRelayUrl — see core/NostrRelayConfiguration.js's own
+        // resolvedNostrRelayUrl — see core/networks/NostrRelayConfiguration.js's own
         // header, "applied only to read/discovery." Publisher class names
         // DO appear in this file's own prose comments (including this
         // milestone's own 0.9.369 comment, explaining the boundary by
@@ -207,9 +207,9 @@ async function run() {
     // declared, minimal seam.
     // ===============================================================
     {
-        const configSource = await source('core/NostrRelayConfiguration.js');
+        const configSource = await source('core/networks/NostrRelayConfiguration.js');
         const configExecutable = configSource.replace(/\/\/.*$/gm, '');
-        assert(!/Arweave|Ipfs|IPFS|Bitcoin|Base\b|peer\//i.test(configExecutable.replace(/PlaceNaming/g, '')), 'F1. core/NostrRelayConfiguration.js has no Arweave/IPFS/Bitcoin/Base/peer dependency of any kind');
+        assert(!/Arweave|Ipfs|IPFS|Bitcoin|Base\b|peer\//i.test(configExecutable.replace(/PlaceNaming/g, '')), 'F1. core/networks/NostrRelayConfiguration.js has no Arweave/IPFS/Bitcoin/Base/peer dependency of any kind');
 
         const storeSource = await source('storage/NostrRelayConfigurationStore.js');
         const storeExecutable = storeSource.replace(/\/\/.*$/gm, '');
@@ -217,7 +217,7 @@ async function run() {
 
         // Isolation from Nostr PUBLISHING specifically: the value object and
         // store never import any of the three Nostr write-path publishers.
-        assert(!/Publisher/.test(configExecutable), 'F3. core/NostrRelayConfiguration.js has no Publisher dependency of any kind');
+        assert(!/Publisher/.test(configExecutable), 'F3. core/networks/NostrRelayConfiguration.js has no Publisher dependency of any kind');
         assert(!/Publisher/.test(storeExecutable), 'F4. storage/NostrRelayConfigurationStore.js has no Publisher dependency of any kind');
 
         console.log('✓ Section F: neither the configuration value object nor its persistence store imports anything Arweave/IPFS/Bitcoin/Base/peer-connectivity-shaped, or any Nostr publishing collaborator');

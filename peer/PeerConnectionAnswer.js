@@ -2,7 +2,7 @@
 // handoff. Answers "here is the session description and candidates needed
 // to complete the connection YOU offered" — carries the offer's own
 // `connectionId` back verbatim rather than minting a new one, the same way
-// a PROOF message (core/PeerAuthenticationEnvelope.js) carries back the
+// a PROOF message (core/social/PeerAuthenticationEnvelope.js) carries back the
 // challenge it is answering rather than leaving that implicit: a receiver
 // can then check this answer is actually completing the specific offer it
 // made, not merely trusting the responder's say-so about which round this

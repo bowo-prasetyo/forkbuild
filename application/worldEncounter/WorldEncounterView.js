@@ -15,7 +15,7 @@
 //            │                                       │
 //            └───────────────────┬───────────────────┘
 //                                 ▼
-//                    core/WorldEncounter.js   (0.9.0)
+//                    core/world/WorldEncounter.js   (0.9.0)
 //                       deriveWorldEncounters()
 //                                 ▼
 //          application/worldEncounter/WorldEncounterReadModel.js   (0.9.1)
@@ -107,7 +107,7 @@
 //
 // ARCHITECTURAL BOUNDARY — THIS FILE IMPORTS NOTHING. Exactly like 0.9.1's
 // own module, it performs no join and no reconstruction, so it never needs
-// `core/WorldEncounter.js` or `application/worldEncounter/WorldEncounterReadModel.js`
+// `core/world/WorldEncounter.js` or `application/worldEncounter/WorldEncounterReadModel.js`
 // themselves — a caller already holding 0.9.1's own result hands it here
 // directly. Definitely no dependency on `Publication`, `WorldPlacement`,
 // `AvatarProfile`, `AvatarPresence`, archive/storage, or network — this

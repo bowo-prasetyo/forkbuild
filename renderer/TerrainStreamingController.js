@@ -1,4 +1,4 @@
-import { tilesWithinRadius, tileKey, TERRAIN_TILE_SIZE, DEFAULT_STREAMING_RADIUS } from '../core/TerrainTiling.js';
+import { tilesWithinRadius, tileKey, TERRAIN_TILE_SIZE, DEFAULT_STREAMING_RADIUS } from '../core/nature/TerrainTiling.js';
 
 // Keeps a ring of terrain tiles loaded around wherever the camera
 // currently is, so the ground is never missing beneath it no matter how

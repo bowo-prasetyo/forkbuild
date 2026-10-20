@@ -1,4 +1,4 @@
-import { PreviewType, derivePlaceholderPreview } from '../../core/DocumentPreview.js';
+import { PreviewType, derivePlaceholderPreview } from '../../core/catalog/DocumentPreview.js';
 
 // "Near viewport" pre-fetch distance for IntersectionObserver — a card
 // doesn't need to be literally on screen before its preview starts
@@ -12,7 +12,7 @@ const ROOT_MARGIN = '200px';
 
 // 0.2.31/0.2.32 — renders whatever preview is currently available for
 // a publication. The deterministic PLACEHOLDER (a color + initial
-// derived from the publication itself — see core/DocumentPreview.js)
+// derived from the publication itself — see core/catalog/DocumentPreview.js)
 // is shown immediately and unconditionally; it doubles as the loading
 // state AND the permanent fallback if generation fails or no
 // PreviewService is available, on purpose — a person browsing doesn't

@@ -4,8 +4,8 @@ import { WorldNavigationSession } from '../application/world/WorldNavigationSess
 import { DiscoverPlacementsUseCase } from '../application/placement/DiscoverPlacementsUseCase.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
-import { PlacementRecord } from '../core/PlacementRecord.js';
-import { Position } from '../core/Position.js';
+import { PlacementRecord } from '../core/publication/PlacementRecord.js';
+import { Position } from '../core/document/Position.js';
 import { worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';

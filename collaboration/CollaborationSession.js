@@ -1,5 +1,5 @@
-import { createId } from '../core/createId.js';
-import { CollaborationEnvelope } from '../core/CollaborationEnvelope.js';
+import { createId } from '../core/document/createId.js';
+import { CollaborationEnvelope } from '../core/collaboration/CollaborationEnvelope.js';
 import { CommandHistoryEvent } from '../application/events/CommandHistoryEvent.js';
 
 // The local collaboration participant (0.2.7).

@@ -4,7 +4,7 @@ import {
     DRONE_HOVER_ALTITUDE,
     deriveAvatarDroneVerticalState,
     stepDroneAltitude
-} from '../core/AvatarDroneVerticalState.js';
+} from '../core/avatar/AvatarDroneVerticalState.js';
 import { assert } from './support/Assert.js';
 
 async function runTests() {
@@ -55,7 +55,7 @@ async function runTests() {
 
     // Section F — export surface
     {
-        const exportsModule = await import('../core/AvatarDroneVerticalState.js');
+        const exportsModule = await import('../core/avatar/AvatarDroneVerticalState.js');
         const exportedNames = Object.keys(exportsModule).sort();
         assert(JSON.stringify(exportedNames) === JSON.stringify([
             'AvatarDroneVerticalStateKind',

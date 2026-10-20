@@ -1,6 +1,6 @@
-import { DecentralizedPublication } from '../../../core/DecentralizedPublication.js';
-import { PublicationAnchor } from '../../../core/PublicationAnchor.js';
-import { PublicationSnapshotPlacement } from '../../../core/PublicationSnapshotPlacement.js';
+import { DecentralizedPublication } from '../../../core/publication/DecentralizedPublication.js';
+import { PublicationAnchor } from '../../../core/publication/PublicationAnchor.js';
+import { PublicationSnapshotPlacement } from '../../../core/publication/PublicationSnapshotPlacement.js';
 
 // 0.8.29 — Publication Replica Export & Offline Transfer.
 //
@@ -8,10 +8,10 @@ import { PublicationSnapshotPlacement } from '../../../core/PublicationSnapshotP
 // of one publication to another replica, entirely offline — the inverse
 // of 0.8.28's own question ("what can this replica reconstruct without
 // the network?"). Where application/blueprint/BlueprintPackage.js (0.4.6) bundles a
-// core/Structure.js plus whatever signed claims happen to travel
+// core/building/Structure.js plus whatever signed claims happen to travel
 // alongside it, this file bundles no Structure at all: its ONE subject is
-// a core/DecentralizedPublication.js envelope, plus the signed
-// core/PublicationAnchor.js/core/PublicationSnapshotPlacement.js claims
+// a core/publication/DecentralizedPublication.js envelope, plus the signed
+// core/publication/PublicationAnchor.js/core/PublicationSnapshotPlacement.js claims
 // that name the SAME publicationId.
 //
 //   Publication Replica Package
@@ -44,9 +44,9 @@ export const CURRENT_SCHEMA_VERSION = 1;
 export const PUBLICATION_REPLICA_PACKAGE_KIND = 'forkbuild.publication-replica-package';
 
 // Builds the plain, JSON-safe replica package for one publication.
-// `publication` must be a SIGNED core/DecentralizedPublication.js
+// `publication` must be a SIGNED core/publication/DecentralizedPublication.js
 // instance; `anchors`/`placements` (both optional, default empty) must be
-// arrays of SIGNED core/PublicationAnchor.js/core/
+// arrays of SIGNED core/publication/PublicationAnchor.js/core/
 // PublicationSnapshotPlacement.js instances, each naming
 // `publication.id`. Refusing to package an unsigned envelope mirrors
 // every export*() method in this codebase already refusing to export one

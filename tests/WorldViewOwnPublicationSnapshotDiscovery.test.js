@@ -9,7 +9,7 @@ import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnaps
 import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { worldViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 

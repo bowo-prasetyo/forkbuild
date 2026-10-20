@@ -5,8 +5,8 @@ import { PublicationDistributionLifecycleMemoryStore } from '../application/publ
 import { PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
 import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { Publication } from '../publisher/Publication.js';
-import { ContentReference } from '../core/ContentReference.js';
-import { Signature } from '../core/Signature.js';
+import { ContentReference } from '../core/document/ContentReference.js';
+import { Signature } from '../core/publication/Signature.js';
 import { worldViewFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 

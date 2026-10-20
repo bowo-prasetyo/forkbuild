@@ -1,12 +1,12 @@
 import { StorageProvider } from './StorageProvider.js';
 import { LocalStorageProvider } from './LocalStorageProvider.js';
-import { ArweaveGatewayConfiguration, isValidArweaveGatewayUrl } from '../core/ArweaveGatewayConfiguration.js';
+import { ArweaveGatewayConfiguration, isValidArweaveGatewayUrl } from '../core/networks/ArweaveGatewayConfiguration.js';
 
 const ARWEAVE_GATEWAY_CONFIGURATION_STORE_KEY = 'arweave-gateway-configuration';
 
 // 0.9.364 — User-Configurable Arweave Gateway Configuration Persistence.
 //
-// core/ArweaveGatewayConfiguration.js (this same milestone, sibling file)
+// core/networks/ArweaveGatewayConfiguration.js (this same milestone, sibling file)
 // gave a user's own Arweave gateway choice a real, validated, immutable
 // shape — deliberately unconsumed by anything, with no storage key of any
 // kind, the same restraint the 0.9.293 per-role provider preference
@@ -14,7 +14,7 @@ const ARWEAVE_GATEWAY_CONFIGURATION_STORE_KEY = 'arweave-gateway-configuration';
 // mirroring the shape of that boundary's own 0.9.294 persistence store
 // exactly, one field instead of a per-role map.
 //
-//   core/ArweaveGatewayConfiguration.js   (this milestone, unmodified by
+//   core/networks/ArweaveGatewayConfiguration.js   (this milestone, unmodified by
 //        this file — toJSON()/the constructor's own validation, reused
 //        verbatim)
 //                    │

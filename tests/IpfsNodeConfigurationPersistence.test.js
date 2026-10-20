@@ -1,4 +1,4 @@
-import { IpfsNodeConfiguration } from '../core/IpfsNodeConfiguration.js';
+import { IpfsNodeConfiguration } from '../core/networks/IpfsNodeConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { IpfsNodeConfigurationStore } from '../storage/IpfsNodeConfigurationStore.js';
 import { assert } from './support/Assert.js';

@@ -412,7 +412,7 @@
     cursor: pointer;
 }
 
-/* The village colour palette (core/VillagePalette.js), beside the colour pickers. */
+/* The village colour palette (core/building/VillagePalette.js), beside the colour pickers. */
 .village-palette {
     display: flex;
     flex-wrap: wrap;

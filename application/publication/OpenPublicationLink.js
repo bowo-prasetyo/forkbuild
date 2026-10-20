@@ -1,14 +1,14 @@
 import { Publication } from '../../publisher/Publication.js';
-import { ContentReference } from '../../core/ContentReference.js';
-import { WorldEncounterKind } from '../../core/WorldEncounter.js';
-import { describePublicationClaimLocator } from '../../core/ForkBuildAppLinks.js';
+import { ContentReference } from '../../core/document/ContentReference.js';
+import { WorldEncounterKind } from '../../core/world/WorldEncounter.js';
+import { describePublicationClaimLocator } from '../../core/app/ForkBuildAppLinks.js';
 import { verifyWorldEncounterMaterial, WorldEncounterMaterialVerificationStatus } from '../worldEncounter/WorldEncounterMaterialVerification.js';
 import { SnapshotCandidateDiscoveryOutcome } from '../snapshot/SnapshotCandidateDiscoveryOutcome.js';
 import { DecentralizedSnapshotResolutionOutcome } from '../snapshot/DecentralizedSnapshotResolutionOutcome.js';
 import { StoreSnapshotContentOutcome } from '../snapshot/materialization/StoreSnapshotContentOutcome.js';
 import { PublisherPlacementAdoption } from '../placement/AdoptPublisherPlacementUseCase.js';
-import { message } from '../../core/Message.js';
-import { isUserFacingError } from '../../core/UserFacingError.js';
+import { message } from '../../core/app/Message.js';
+import { isUserFacingError } from '../../core/app/UserFacingError.js';
 
 // Opening a Publication from a link (`#/view/steem/<author>/<permlink>`,
 // `#/view/blurt/<author>/<permlink>`, `#/view/ar/<id>` or `#/view/ipfs/<cid>`:
@@ -49,7 +49,7 @@ export const OpenPublicationLinkOutcome = Object.freeze({
 });
 
 const Outcome = OpenPublicationLinkOutcome;
-// Every result's `message` is a descriptor (core/Message.js), with a message
+// Every result's `message` is a descriptor (core/app/Message.js), with a message
 // per network where what to say differs (publicationLink.<outcome>.<network>).
 // `detail` is the network's own error text, which is not translated.
 const CANDIDATE_STORAGE_ORDER = ['steem', 'blurt', 'ar', 'ipfs'];

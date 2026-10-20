@@ -1,9 +1,9 @@
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
@@ -19,11 +19,11 @@ import {
     toDocumentOperationEnvelope,
     isValidDocumentOperationEnvelope,
     isValidCausalPredecessorList
-} from '../core/DocumentOperationEnvelope.js';
+} from '../core/collaboration/DocumentOperationEnvelope.js';
 import {
     CausalRelationship,
     DocumentOperationCausalGraph
-} from '../core/DocumentOperationCausality.js';
+} from '../core/collaboration/DocumentOperationCausality.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
@@ -35,7 +35,7 @@ import { assert } from './support/Assert.js';
 // deliberately scoped to ONLY the metadata seam: can this codebase
 // distinguish "B happened because of A" from "B merely arrived after
 // A"? Sections 1-9 below are pure — no peers, no network, no documents
-// — and exercise `core/DocumentOperationCausality.js` directly. Section
+// — and exercise `core/collaboration/DocumentOperationCausality.js` directly. Section
 // 10 proves the one production behavior this milestone actually adds
 // (`application/document/DocumentCommandPropagationUseCase.js`'s own
 // `causalPredecessors` stamping and relay) against the REAL, unmodified
@@ -45,7 +45,7 @@ import { assert } from './support/Assert.js';
 // Deliberately NOT tested here, because it deliberately does not exist:
 // reordering `application/editor/CommandHistory.js`, buffering, retransmission,
 // missing-operation requests, conflict resolution, or any claim of
-// convergence. See `core/DocumentOperationCausality.js`'s own header.
+// convergence. See `core/collaboration/DocumentOperationCausality.js`'s own header.
 
 function assertThrows(fn, message) {
     let threw = false;
@@ -140,7 +140,7 @@ async function runTests() {
 // ===================================================================
 // Section 1 — Envelope validation: causalPredecessors is OPTIONAL and
 // additive, following the SAME "absent is valid, present-and-malformed
-// is refused" discipline core/WorldOperationEnvelope.js's own 0.2.97
+// is refused" discipline core/collaboration/WorldOperationEnvelope.js's own 0.2.97
 // logicalClock field established.
 // ===================================================================
 {
@@ -291,7 +291,7 @@ async function runTests() {
 // Section 9 — Missing-predecessor tolerance: recording an operation
 // whose predecessor was never itself recorded must NOT be rejected —
 // exactly this milestone's own "causal metadata != missing-operation
-// detection" boundary (see core/DocumentOperationCausality.js's own
+// detection" boundary (see core/collaboration/DocumentOperationCausality.js's own
 // header). It compares as UNKNOWN, never as an error and never as
 // CONCURRENT (which would falsely claim independence).
 // ===================================================================

@@ -10,7 +10,7 @@ import {
     exceedsMaxPeerMessageSize,
     MAX_PEER_MESSAGE_BYTES
 } from '../peer/PeerMessage.js';
-import { toHelloMessage } from '../core/PeerAuthenticationEnvelope.js';
+import { toHelloMessage } from '../core/social/PeerAuthenticationEnvelope.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 

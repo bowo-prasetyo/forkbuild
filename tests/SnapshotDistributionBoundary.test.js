@@ -3,12 +3,12 @@ import { readFile } from 'node:fs/promises';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalContentResolver } from '../discovery/LocalContentResolver.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 
 import { executePublicationDistribution } from '../application/publication/distribution/PublicationDistributionExecutor.js';
@@ -206,7 +206,7 @@ const CLAIM_DISTRIBUTION_FILES = [
 ];
 
 const SNAPSHOT_PLACEMENT_FILES = [
-    'core/PublicationSnapshotPlacement.js',
+    'core/publication/PublicationSnapshotPlacement.js',
     'application/snapshot/placement/CreatePublicationSnapshotPlacementUseCase.js',
     'application/snapshot/placement/CreateExternalSnapshotPlacementUseCase.js',
     'application/snapshot/placement/SnapshotPlacementResolver.js',

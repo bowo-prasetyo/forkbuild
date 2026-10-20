@@ -1,10 +1,10 @@
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { StructurePlacement } from '../core/StructurePlacement.js';
-import { Position } from '../core/Position.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { StructurePlacement } from '../core/building/StructurePlacement.js';
+import { Position } from '../core/document/Position.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
@@ -26,8 +26,8 @@ import { MoveStructurePlacementCommand } from '../application/commands/MoveStruc
 import { RemoveStructurePlacementCommand } from '../application/commands/RemoveStructurePlacementCommand.js';
 import { SetStructurePlacementTransformCommand } from '../application/commands/SetStructurePlacementTransformCommand.js';
 import { WorldCommandPropagationUseCase } from '../application/document/WorldCommandPropagationUseCase.js';
-import { LogicalClock } from '../core/LogicalClock.js';
-import { compareWorldOperations, worldOperationSortKey } from '../core/WorldOperationOrder.js';
+import { LogicalClock } from '../core/collaboration/LogicalClock.js';
+import { compareWorldOperations, worldOperationSortKey } from '../core/collaboration/WorldOperationOrder.js';
 import { WorldConflictResolver, WorldOperationOutcome } from '../replication/WorldConflictResolver.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
@@ -43,7 +43,7 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 //   operations eventually derives the SAME World state, regardless of
 //   arrival order or retransmission order.
 //
-//   Section A: core/LogicalClock.js + core/WorldOperationOrder.js — the
+//   Section A: core/collaboration/LogicalClock.js + core/collaboration/WorldOperationOrder.js — the
 //              ordering primitives, in isolation.
 //   Section B: replication/WorldConflictResolver.js — the reordering/
 //              rebase mechanism, in isolation: independent edits
@@ -93,7 +93,7 @@ function buildThreePlacementWorld({ worldId, houseId, barnId, siloId }) {
 async function runTests() {
 
 // ---------------------------------------------------------------------
-// Section A — core/LogicalClock.js + core/WorldOperationOrder.js
+// Section A — core/collaboration/LogicalClock.js + core/collaboration/WorldOperationOrder.js
 // ---------------------------------------------------------------------
 {
     const clock = new LogicalClock();
@@ -121,7 +121,7 @@ async function runTests() {
     assert(worldOperationSortKey({ operationId: 'x', logicalClock: 'nope' }).logicalClock === 0, '14. a non-integer logicalClock degrades to 0');
     assert(worldOperationSortKey({ operationId: 'x', logicalClock: 7 }).logicalClock === 7, '15. a real logicalClock passes through unchanged');
 
-    console.log('✓ Section A: core/LogicalClock.js + core/WorldOperationOrder.js — the ordering primitives');
+    console.log('✓ Section A: core/collaboration/LogicalClock.js + core/collaboration/WorldOperationOrder.js — the ordering primitives');
 }
 
 // ---------------------------------------------------------------------

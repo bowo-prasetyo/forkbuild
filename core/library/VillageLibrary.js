@@ -1,6 +1,6 @@
-import { Structure } from '../Structure.js';
-import { Brick } from '../Brick.js';
-import { Position } from '../Position.js';
+import { Structure } from '../building/Structure.js';
+import { Brick } from '../building/Brick.js';
+import { Position } from '../document/Position.js';
 
 // The built-in "village" structure library — the first, deliberately
 // curated Structure collection, per the 0.2.81 design conversation
@@ -33,7 +33,7 @@ import { Position } from '../Position.js';
 // Coordinates are each Structure's own LOCAL space — position (0,0,0) is
 // ground level at the structure's own footprint center. Y is measured
 // from the ground up (brick.position.y is a brick's CENTER, matching
-// every other Brick in the engine — see core/Brick.js). None of this
+// every other Brick in the engine — see core/building/Brick.js). None of this
 // knows or cares where a fork of it eventually gets edited or placed;
 // see docs/Principles.md, "A Structure Is The Next Rung On The Brick
 // Ladder, Not An Escape From It (0.2.81)."
@@ -54,7 +54,7 @@ function b(definitionId, x, y, z, rotation = 0, color = null, tilt = 0) {
 // they read as part of the roof.
 const ROOF_COLOR = 0xd08a3e;
 
-// Floors and platforms of oak, paths and steps of stone (core/VillagePalette.js).
+// Floors and platforms of oak, paths and steps of stone (core/building/VillagePalette.js).
 const OAK = 0x8b5a2b;
 const STONE = 0x9a9a9a;
 
@@ -171,7 +171,7 @@ const marketBricks = [
     b('core:trim', 1.5, 3.625, 0, 90)
 ];
 
-// Sandstone for the Mill's tower and cream sailcloth (core/VillagePalette.js).
+// Sandstone for the Mill's tower and cream sailcloth (core/building/VillagePalette.js).
 const SANDSTONE = 0xd9c08c;
 const SAILCLOTH = 0xf2ead3;
 

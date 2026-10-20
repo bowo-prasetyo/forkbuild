@@ -1,9 +1,9 @@
-import { describeDecentralizedPublicationLocationClaim } from '../../core/DecentralizedPublicationLocationClaim.js';
-import { describeDecentralizedWorldEncounterLeadAssociation } from '../../core/DecentralizedWorldEncounterLeadAssociation.js';
+import { describeDecentralizedPublicationLocationClaim } from '../../core/publication/DecentralizedPublicationLocationClaim.js';
+import { describeDecentralizedWorldEncounterLeadAssociation } from '../../core/world/DecentralizedWorldEncounterLeadAssociation.js';
 
 // 0.9.29 — Decentralized Association Evidence Ingress.
 //
-// `core/DecentralizedPublicationLocationClaim.js` (this same milestone)
+// `core/publication/DecentralizedPublicationLocationClaim.js` (this same milestone)
 // reads what a signed Publication's own fields already claim about where
 // its content lives. `application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js`
 // (0.9.28, unmodified) already knows how to resolve a requested material
@@ -22,7 +22,7 @@ import { describeDecentralizedWorldEncounterLeadAssociation } from '../../core/D
 //      retrieves one itself)                                    │
 //              │                                                 │
 //              ▼                                                 │
-//   core/DecentralizedPublicationLocationClaim.js  (THIS milestone,
+//   core/publication/DecentralizedPublicationLocationClaim.js  (THIS milestone,
 //        describeDecentralizedPublicationLocationClaim()   other half)
 //              │                                                 │
 //              └───────────────────────┬─────────────────────────┘
@@ -124,10 +124,10 @@ import { describeDecentralizedWorldEncounterLeadAssociation } from '../../core/D
 //   a caller should even supply.** A caller already has its own
 //   Publications in hand — from a `PublisherProvider`, a local store, a
 //   peer sync — exactly the same "handed already-fetched records" posture
-//   `core/WorldEncounter.js`'s own `deriveWorldEncounters()` already holds
+//   `core/world/WorldEncounter.js`'s own `deriveWorldEncounters()` already holds
 //   for Publications generally.
 // - **Producing association evidence for `WorldEncounterKind.AVATAR`.**
-//   See `core/DecentralizedPublicationLocationClaim.js`'s own header,
+//   See `core/publication/DecentralizedPublicationLocationClaim.js`'s own header,
 //   "Only WorldEncounterKind.PUBLICATION" — unchanged here, since this
 //   file's only claim producer is that one.
 // - **A second evidence producer — reading `core/

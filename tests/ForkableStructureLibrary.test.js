@@ -1,5 +1,5 @@
-import { Structure } from '../core/Structure.js';
-import { SpatialBounds } from '../core/SpatialBounds.js';
+import { Structure } from '../core/building/Structure.js';
+import { SpatialBounds } from '../core/world/SpatialBounds.js';
 import { VillageLibrary } from '../core/library/VillageLibrary.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';

@@ -1,10 +1,10 @@
-import { challengeOfTags } from '../../core/BuildChallenge.js';
-import { snapshotBrickCount } from '../../core/BuilderStamps.js';
+import { challengeOfTags } from '../../core/challenge/BuildChallenge.js';
+import { snapshotBrickCount } from '../../core/catalog/BuilderStamps.js';
 import { publishedBuildTags } from '../challenge/PublishedBuildTags.js';
 
 const SNAPSHOT_KEY_PREFIX = 'snapshot:';
 
-// The facts builder stamps (core/BuilderStamps.js) are earned from, read from
+// The facts builder stamps (core/catalog/BuilderStamps.js) are earned from, read from
 // this device's own records:
 // - ownPublications: the Publications this device published
 //   (LocalDiscoveryProvider#list());

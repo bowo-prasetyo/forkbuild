@@ -1,4 +1,4 @@
-import { NotificationEvent } from '../../core/NotificationEvent.js';
+import { NotificationEvent } from '../../core/social/NotificationEvent.js';
 import { currentIdentityId } from '../../identity/SigningReadiness.js';
 import { createVerifiedPublisherResolver } from './FollowingFeed.js';
 
@@ -10,7 +10,7 @@ export const BUILD_REMIXED_EVENT_TYPE = 'publication.remixed';
 // Publication of, verifiably signed by them. The remix must be verifiably
 // signed by someone else they haven't blocked. The notification store
 // deduplicates by the remix's Publication id
-// (core/NotificationDeduplicationPolicy.js).
+// (core/social/NotificationDeduplicationPolicy.js).
 export class RemixedBuildNotifier {
     // findPublicationsOfDocument(documentId): the Publications of that build
     // this device knows.

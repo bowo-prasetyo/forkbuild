@@ -1,4 +1,4 @@
-import { TrustStatus } from '../../core/TrustObservation.js';
+import { TrustStatus } from '../../core/identity/TrustObservation.js';
 import { displayText, formatNumber, t } from '../i18n/i18n.js';
 import FormattedDescription from './FormattedDescription.js';
 
@@ -6,7 +6,7 @@ import FormattedDescription from './FormattedDescription.js';
 //
 // 0.9.520's own Finding 2 (Section D/I): the Inspect panel's "Discovery
 // status" row rendered `inspected.trust.status` — a raw
-// `core/TrustObservation.js` `TrustStatus` constant — straight to a
+// `core/identity/TrustObservation.js` `TrustStatus` constant — straight to a
 // Wanderer, unhumanized. `TrustStatus.VALID` is literally the bare word
 // "VALID," and `inspectDocument()` (application/world/WorldNavigationSession.js)
 // populates `trust` from exactly that enum (see this file's own `inspected`
@@ -19,7 +19,7 @@ import FormattedDescription from './FormattedDescription.js';
 // the identical `TrustStatus` enum. Investigating that assumption is this
 // milestone's own job before writing a label (per its own requesting
 // brief) — and it does NOT hold: `describeTrustStatus` maps
-// `TrustStatus.VALID` to the word **"Trusted."** `core/TrustObservation.js`'s
+// `TrustStatus.VALID` to the word **"Trusted."** `core/identity/TrustObservation.js`'s
 // own header is explicit that a TrustObservation is "purely DESCRIPTIVE...
 // not what should happen next" — never a trust verdict. Rendering "Trusted"
 // here would not close the SEMANTIC_BOUNDARY_GAP 0.9.520 found; it would
@@ -34,7 +34,7 @@ import FormattedDescription from './FormattedDescription.js';
 // general "is this Wanderer's discovery trustworthy" verdict — it is one
 // `TrustObservation` about one `placement-record`
 // (`WorldNavigationSession._lookupTrustObservation()`), describing exactly
-// what `core/TrustObservation.js`'s own per-status comments already say:
+// what `core/identity/TrustObservation.js`'s own per-status comments already say:
 // whether that placement record's integrity/signature/authorization
 // checked out, is stale, conflicts with another observation, etc. The
 // labels below describe THAT — the same narrower, WHAT-WAS-CHECKED framing
@@ -100,7 +100,7 @@ import FormattedDescription from './FormattedDescription.js';
 // knowledge of the whole world.
 //
 // 0.2.30: `diagnostics` — the WorldNavigationSession.exploreLocation
-// envelope's other half (core/DiscoveryDiagnosticsSummary.js), shown
+// envelope's other half (core/world/DiscoveryDiagnosticsSummary.js), shown
 // as a banner above the result list. Four states, and this component
 // renders exactly what it is given, nothing more:
 //   unavailable (diagnostics.available === false) — no trust-capable
@@ -119,7 +119,7 @@ import FormattedDescription from './FormattedDescription.js';
 // "Discovery And Trust Are Related, But They Are Not The Same
 // Operation (0.2.30)."
 // 0.9.521 — see this file's own header. Every current `TrustStatus`
-// member (`core/TrustObservation.js`), labeled by what that status
+// member (`core/identity/TrustObservation.js`), labeled by what that status
 // actually establishes about the inspected placement record — never a
 // verdict word ("Trusted"/"Safe"/"Verified"), never a fabricated fourth
 // state. An unrecognized future status falls through to the raw value
@@ -162,7 +162,7 @@ export default {
             default: () => []
         },
         // { available, fatal, complete, warnings[] } — see
-        // core/DiscoveryDiagnosticsSummary.js. Defaults to the
+        // core/world/DiscoveryDiagnosticsSummary.js. Defaults to the
         // "unavailable" shape so a host that hasn't been updated to
         // pass one yet degrades to the neutral banner rather than a
         // crash.

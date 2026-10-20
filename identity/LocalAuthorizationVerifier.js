@@ -1,32 +1,32 @@
 import { AuthorizationVerifier } from './AuthorizationVerifier.js';
-import { Signature } from '../core/Signature.js';
-import { getAvatarPresenceSigningDescriptor } from '../core/AvatarPresenceAdvertisement.js';
-import { getAvatarProfileSigningDescriptor } from '../core/AvatarProfileAdvertisement.js';
-import { getAvatarInteractionSigningDescriptor } from '../core/AvatarInteractionAdvertisement.js';
-import { getAvatarVehicleSigningDescriptor } from '../core/AvatarVehicleAdvertisement.js';
-import { getFriendshipSigningDescriptor } from '../core/FriendshipAdvertisement.js';
-import { getRendezvousPublicationSigningDescriptor } from '../core/RendezvousPublicationEnvelope.js';
-import { getLobbyCardSigningDescriptor } from '../core/LobbyCard.js';
-import { getIdentityRevocationSigningDescriptor } from '../core/IdentityRevocationEnvelope.js';
-import { getIdentitySuccessionSigningDescriptor } from '../core/IdentitySuccessionEnvelope.js';
+import { Signature } from '../core/publication/Signature.js';
+import { getAvatarPresenceSigningDescriptor } from '../core/avatar/AvatarPresenceAdvertisement.js';
+import { getAvatarProfileSigningDescriptor } from '../core/avatar/AvatarProfileAdvertisement.js';
+import { getAvatarInteractionSigningDescriptor } from '../core/avatar/AvatarInteractionAdvertisement.js';
+import { getAvatarVehicleSigningDescriptor } from '../core/vehicles/AvatarVehicleAdvertisement.js';
+import { getFriendshipSigningDescriptor } from '../core/social/FriendshipAdvertisement.js';
+import { getRendezvousPublicationSigningDescriptor } from '../core/social/RendezvousPublicationEnvelope.js';
+import { getLobbyCardSigningDescriptor } from '../core/social/LobbyCard.js';
+import { getIdentityRevocationSigningDescriptor } from '../core/identity/IdentityRevocationEnvelope.js';
+import { getIdentitySuccessionSigningDescriptor } from '../core/identity/IdentitySuccessionEnvelope.js';
 import {
     getDeviceAuthorizationGrantSigningDescriptor,
     getDeviceAuthorizationRevocationSigningDescriptor
-} from '../core/DeviceAuthorizationEnvelope.js';
+} from '../core/identity/DeviceAuthorizationEnvelope.js';
 import {
     getWorldEditAuthorizationGrantSigningDescriptor,
     getWorldEditAuthorizationRevocationSigningDescriptor
-} from '../core/WorldEditAuthorizationEnvelope.js';
-import { getPlaceNamingClaimSigningDescriptor } from '../core/PlaceNamingClaim.js';
-import { getBlueprintAttributionSigningDescriptor } from '../core/BlueprintAttribution.js';
-import { getBlueprintLineageClaimSigningDescriptor } from '../core/BlueprintLineageClaim.js';
-import { getDecentralizedPublicationSigningDescriptor } from '../core/DecentralizedPublication.js';
-import { getPublicationAnchorSigningDescriptor } from '../core/PublicationAnchor.js';
-import { getPublicationSnapshotPlacementSigningDescriptor } from '../core/PublicationSnapshotPlacement.js';
-import { getPublicationCommentaryDistributionSigningDescriptor } from '../core/PublicationCommentaryDistributionEnvelope.js';
-import { getPublicationHeartDistributionSigningDescriptor } from '../core/PublicationHeartDistributionEnvelope.js';
+} from '../core/collaboration/WorldEditAuthorizationEnvelope.js';
+import { getPlaceNamingClaimSigningDescriptor } from '../core/world/PlaceNamingClaim.js';
+import { getBlueprintAttributionSigningDescriptor } from '../core/building/BlueprintAttribution.js';
+import { getBlueprintLineageClaimSigningDescriptor } from '../core/building/BlueprintLineageClaim.js';
+import { getDecentralizedPublicationSigningDescriptor } from '../core/publication/DecentralizedPublication.js';
+import { getPublicationAnchorSigningDescriptor } from '../core/publication/PublicationAnchor.js';
+import { getPublicationSnapshotPlacementSigningDescriptor } from '../core/publication/PublicationSnapshotPlacement.js';
+import { getPublicationCommentaryDistributionSigningDescriptor } from '../core/publication/PublicationCommentaryDistributionEnvelope.js';
+import { getPublicationHeartDistributionSigningDescriptor } from '../core/publication/PublicationHeartDistributionEnvelope.js';
 import * as Ed25519 from './Ed25519.js';
-import { Delegation } from '../core/Delegation.js';
+import { Delegation } from '../core/publication/Delegation.js';
 import { identityForDidKey, verifySignedDescriptor } from './DescriptorSignature.js';
 
 // The V0.1 concrete verifier.
@@ -125,7 +125,7 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
     // its own, exactly like a SpatialIndexRoot above: the did:key
     // signer of a valid signature IS the public key. Unsigned is
     // tolerated at THIS layer (structural verification only) — see
-    // core/PresenceTrustPolicy.js for whether a receiver's policy
+    // core/avatar/PresenceTrustPolicy.js for whether a receiver's policy
     // actually accepts an unsigned claim, and
     // application/presence/PresenceTrustBoundary.js for the identity-binding
     // check ("is this signer allowed to speak for this avatarId at
@@ -154,7 +154,7 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
     // carries no identity payload of its own, so the did:key signer of
     // a valid signature IS the public key. Unsigned is tolerated at
     // THIS layer (structural verification only) — 0.2.41 introduces no
-    // policy knob equivalent to core/PresenceTrustPolicy.js, so
+    // policy knob equivalent to core/avatar/PresenceTrustPolicy.js, so
     // application/avatar/AvatarProfileTrustBoundary.js always tolerates an
     // unsigned profile claim, exactly like presence's own permissive
     // default.
@@ -183,7 +183,7 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
     // identity payload of its own, so the did:key signer of a valid
     // signature IS the public key. Unsigned is tolerated at THIS layer
     // (structural verification only) — see
-    // core/AvatarInteractionTrustPolicy.js for whether a receiver's
+    // core/avatar/AvatarInteractionTrustPolicy.js for whether a receiver's
     // policy actually accepts an unsigned claim, and
     // application/avatar/AvatarInteractionTrustBoundary.js for the
     // identity-binding check a merely-VALID signature does not by
@@ -207,7 +207,7 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
         return this.verifyDescriptor(getAvatarInteractionSigningDescriptor(advertisement), advertisement.signature, identity);
     }
 
-    // What an avatar rides (core/AvatarVehicleAdvertisement.js): the same shape
+    // What an avatar rides (core/vehicles/AvatarVehicleAdvertisement.js): the same shape
     // as verifyAvatarProfileAdvertisement(), the did:key signer being the
     // public key. Unsigned is tolerated here, as for presence;
     // application/avatar/AvatarVehicleTrustBoundary.js decides the rest.
@@ -233,7 +233,7 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
     // 0.2.57 — unlike verifyPresenceAdvertisement()/
     // verifyAvatarProfileAdvertisement()/verifyAvatarInteractionAdvertisement()
     // above, a friendship advertisement is NEVER tolerated unsigned —
-    // see core/FriendshipAdvertisement.js's own header on why there is
+    // see core/social/FriendshipAdvertisement.js's own header on why there is
     // no server anywhere that could otherwise vouch for "Bob accepted
     // Alice's request." It also, uniquely among this file's verify*
     // methods, checks the signer against a claim CARRIED ON the
@@ -242,7 +242,7 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
     // the payload happens to say about it — a REQUEST/ACCEPT is
     // meaningless unless it is provably FROM the identity it claims to
     // be from, every single time, with no trust-on-first-use binding
-    // the way core/PresenceAuthority.js allows one layer down.
+    // the way core/avatar/PresenceAuthority.js allows one layer down.
     verifyFriendshipAdvertisement(advertisement) {
         if (!advertisement) {
             return { valid: false, signed: false, reason: 'no advertisement' };
@@ -268,7 +268,7 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
     // 0.2.66 — a peer/RendezvousPublication.js signature is OPTIONAL,
     // exactly like verifyPresenceAdvertisement()/verifyAvatarProfileAdvertisement()
     // above and unlike verifyFriendshipAdvertisement()'s REQUIRED one — see
-    // core/Signature.js's own RENDEZVOUS_PUBLICATION header. Unlike those
+    // core/publication/Signature.js's own RENDEZVOUS_PUBLICATION header. Unlike those
     // two permissive checks, though, this one DOES cross-check the signer
     // against the publication's own claimed identity (`identityHint`),
     // the same binding verifyFriendshipAdvertisement() already does against
@@ -362,7 +362,7 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
     // 0.2.67 — the same REQUIRED-signature discipline as
     // verifyIdentityRevocation() above, applied to a successor
     // declaration: the signer MUST equal the record's own
-    // `predecessorIdentityId` (see core/IdentitySuccessionEnvelope.js's
+    // `predecessorIdentityId` (see core/identity/IdentitySuccessionEnvelope.js's
     // own header on why only the predecessor ever signs one — the
     // successor never counter-signs).
     verifyIdentitySuccession(record) {
@@ -389,7 +389,7 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
 
     // 0.2.78 — like verifyIdentityRevocation()/verifyIdentitySuccession()
     // above, a device authorization grant is NEVER tolerated unsigned:
-    // see core/DeviceAuthorizationEnvelope.js's own header on why only
+    // see core/identity/DeviceAuthorizationEnvelope.js's own header on why only
     // the PARENT identity's own key can ever produce a meaningful one.
     // The signer MUST equal the record's own `identityId` — a grant is
     // pointless unless the identity it claims authorizes the device is
@@ -506,8 +506,8 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
 
     // 0.5.2 — a PlaceNamingClaim is NEVER tolerated unsigned, the same
     // REQUIRED discipline as verifyWorldEditAuthorizationGrant() above —
-    // see core/PlaceNamingClaim.js's own header on why "distinct
-    // authors" (core/PlaceNamingView.js#namingView()'s own score) only
+    // see core/world/PlaceNamingClaim.js's own header on why "distinct
+    // authors" (core/world/PlaceNamingView.js#namingView()'s own score) only
     // means anything if each claim is provably a different identity's
     // own assertion. Unlike a World edit grant, the signer MUST equal
     // the claim's own `authorIdentityId` rather than some separate
@@ -516,7 +516,7 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
     // only: whether authorIdentityId holds EDIT on the region's World,
     // or membership in it at all, is never asked here, and never asked
     // anywhere else either — see this file's own header comment on
-    // core/PlaceNamingClaim.js for why a naming claim deliberately needs
+    // core/world/PlaceNamingClaim.js for why a naming claim deliberately needs
     // no such authority.
     verifyPlaceNamingClaim(record) {
         if (!record) {
@@ -542,7 +542,7 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
 
     // 0.6.5 — a BlueprintAttribution is NEVER tolerated unsigned, the
     // same REQUIRED discipline as verifyPlaceNamingClaim() above — see
-    // core/BlueprintAttribution.js's own header on why "N known
+    // core/building/BlueprintAttribution.js's own header on why "N known
     // authors" only means anything if each attribution is provably a
     // different identity's own assertion. The signer MUST equal the
     // attribution's own `authorIdentityId`, exactly like a naming
@@ -552,7 +552,7 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
     // created the Structure it was derived from is never asked here,
     // and never asked anywhere else either — a fingerprint match is
     // never proof, only a candidate, exactly the same restraint
-    // core/PlaceIdentity.js's own header already applies one domain
+    // core/world/PlaceIdentity.js's own header already applies one domain
     // over.
     verifyBlueprintAttribution(record) {
         if (!record) {
@@ -583,7 +583,7 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
     // the derivation. STRUCTURAL verification only: whether
     // sourceFingerprint/derivedFingerprint actually describe a real
     // derivation is never asked here, and never asked anywhere else
-    // either — core/BlueprintSimilarity.js's own evidence is the closest
+    // either — core/building/BlueprintSimilarity.js's own evidence is the closest
     // this codebase ever comes to that question, and even it only ever
     // produces a number for a human to weigh. See core/
     // BlueprintLineageClaim.js's own header.
@@ -713,7 +713,7 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
     // commentary distribution has exactly one party to it, the identity
     // that wrote the comment. STRUCTURAL verification only: this method
     // never reads, checks, or even knows about a Publication's own
-    // publisherIdentity — see core/PublicationCommentaryDistributionEnvelope.js's
+    // publisherIdentity — see core/publication/PublicationCommentaryDistributionEnvelope.js's
     // own header, "a narrow, structural claim, never Publication
     // ownership." A signature that verifies here proves only that
     // `authorIdentityId` genuinely signed exactly this commentary tuple;
@@ -741,7 +741,7 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
         return this.verifyDescriptor(getPublicationCommentaryDistributionSigningDescriptor(record), record.signature, identity);
     }
 
-    // A heart envelope (core/PublicationHeartDistributionEnvelope.js) is
+    // A heart envelope (core/publication/PublicationHeartDistributionEnvelope.js) is
     // valid only when signed by its own author, with the key that author's
     // did:key encodes, over every field of the record.
     verifyPublicationHeartDistributionEnvelope(record) {

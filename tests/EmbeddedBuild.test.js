@@ -3,19 +3,19 @@ import { copyEmbedCode, prepareLinkOnlyShare } from '../application/publication/
 import { encodePublicationLinkPayload } from '../application/publication/sharing/PublicationLinkPayload.js';
 import { bricksOfDocument } from '../application/publication/sharing/ReadSharedBuild.js';
 import { composeWorldEncounterMaterialVerifier } from '../application/worldEncounter/WorldEncounterMaterialVerifierRuntimeComposition.js';
-import { EMBED_HEIGHT, EMBED_WIDTH, FORKBUILD_APP_URL, embedCode, embedUrl, payloadFromEmbedHash } from '../core/ForkBuildAppLinks.js';
+import { EMBED_HEIGHT, EMBED_WIDTH, FORKBUILD_APP_URL, embedCode, embedUrl, payloadFromEmbedHash } from '../core/app/ForkBuildAppLinks.js';
 import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { ShowcaseLibrary } from '../core/library/ShowcaseLibrary.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { License, LicenseId } from '../core/License.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { License, LicenseId } from '../core/document/License.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 

@@ -1,4 +1,4 @@
-import { DECENTRALIZED_PUBLICATION_KIND, CURRENT_SCHEMA_VERSION, normalizeContentTitle } from '../../core/DecentralizedPublication.js';
+import { DECENTRALIZED_PUBLICATION_KIND, CURRENT_SCHEMA_VERSION, normalizeContentTitle } from '../../core/publication/DecentralizedPublication.js';
 import { isNonBlankString } from '../../utils/typeGuards.js';
 
 // 0.7.0 — Decentralized Publication Protocol & Content Addressing.

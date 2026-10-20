@@ -1,4 +1,4 @@
-import { DecentralizedPublication } from '../../core/DecentralizedPublication.js';
+import { DecentralizedPublication } from '../../core/publication/DecentralizedPublication.js';
 
 const STORAGE_KEY = 'publication-catalog:entries';
 
@@ -37,7 +37,7 @@ const STORAGE_KEY = 'publication-catalog:entries';
 // PublicationResolver.js's own header has refused since 0.7.0.
 //
 // No PublicationCatalogEntry wrapper class exists here on purpose. A
-// core/DecentralizedPublication.js instance already IS the slim,
+// core/publication/DecentralizedPublication.js instance already IS the slim,
 // signed locator record this catalog is meant to index — id,
 // contentKind, contentReference, publisherIdentity, signature, nothing
 // more. Wrapping it in a second, catalog-specific value object would
@@ -98,7 +98,7 @@ export class LocalPublicationCatalog {
     // Deduplicates by the envelope's own `id`, never by content hash — a
     // second, independently signed envelope pointing at the identical
     // bytes (a mirror, a re-publish under a new locator) is a distinct
-    // publication, exactly the posture core/DecentralizedPublication.js's
+    // publication, exactly the posture core/publication/DecentralizedPublication.js's
     // own header already establishes; findByContentHash() below is how a
     // caller discovers such siblings, never how add() decides identity.
     // Returns `{ publication, isNew }`; a duplicate is never an error,

@@ -1,5 +1,5 @@
 import { RenderWorldViewUseCase } from './RenderWorldViewUseCase.js';
-import { Position } from '../../core/Position.js';
+import { Position } from '../../core/document/Position.js';
 import { CameraState } from '../../renderer/CameraState.js';
 import { EventBus } from '../../core/events/EventBus.js';
 

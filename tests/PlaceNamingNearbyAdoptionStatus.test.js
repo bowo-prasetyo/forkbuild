@@ -1,7 +1,7 @@
-import { World } from '../core/World.js';
-import { WorldRegion } from '../core/WorldRegion.js';
-import { RegionKind } from '../core/RegionKind.js';
-import { Position } from '../core/Position.js';
+import { World } from '../core/document/World.js';
+import { WorldRegion } from '../core/world/WorldRegion.js';
+import { RegionKind } from '../core/world/RegionKind.js';
+import { Position } from '../core/document/Position.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
@@ -9,9 +9,9 @@ import { LocalPlaceNamingPublicationLog } from '../application/placeNaming/Local
 import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
 import { PlaceNamingClaimExchange } from '../application/placeNaming/PlaceNamingClaimExchange.js';
 import { LocalNamePreferenceStore } from '../application/identity/LocalNamePreferenceStore.js';
-import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
+import { PlaceNamingClaim } from '../core/world/PlaceNamingClaim.js';
 import { PLACE_NAMING_CLAIM_PUBLICATION_KIND, CURRENT_SCHEMA_VERSION } from '../application/placeNaming/PlaceNamingClaimPublication.js';
-import { buildPlaceNamingDiscoveryEnvelope, parsePlaceNamingDiscoveryEnvelope, derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
+import { buildPlaceNamingDiscoveryEnvelope, parsePlaceNamingDiscoveryEnvelope, derivePlaceNamingDiscoveryTag } from '../core/world/PlaceNamingDiscoveryEnvelope.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';

@@ -1,4 +1,4 @@
-import { PublicationAnchor } from '../core/PublicationAnchor.js';
+import { PublicationAnchor } from '../core/publication/PublicationAnchor.js';
 import { BitcoinAnchorConfirmationObserver } from '../anchoring/BitcoinAnchorConfirmationObserver.js';
 import { BitcoinOpReturnProofVerifier } from '../anchoring/BitcoinOpReturnProofVerifier.js';
 import { BitcoinAnchorProofReconciliationView } from '../application/anchoring/bitcoin/BitcoinAnchorProofReconciliationView.js';
@@ -9,7 +9,7 @@ import { assert } from './support/Assert.js';
 // 0.8.55 — Bitcoin Anchor Proof Reconciliation.
 //
 // The flagship this milestone exists to prove: given a real
-// `core/PublicationAnchor.js`, `BitcoinAnchorProofReconciliationView` runs
+// `core/publication/PublicationAnchor.js`, `BitcoinAnchorProofReconciliationView` runs
 // the REAL `anchoring/BitcoinAnchorConfirmationObserver.js` (0.8.54) and
 // the REAL `anchoring/BitcoinOpReturnProofVerifier.js` (0.8.1) — only
 // their own network edges (`confirmationSource`/`fetchImpl`) are faked,

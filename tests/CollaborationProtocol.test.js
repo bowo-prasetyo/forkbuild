@@ -1,8 +1,8 @@
-import { Brick } from '../core/Brick.js';
-import { Building } from '../core/Building.js';
-import { Position } from '../core/Position.js';
-import { World } from '../core/World.js';
-import { CollaborationEnvelope } from '../core/CollaborationEnvelope.js';
+import { Brick } from '../core/building/Brick.js';
+import { Building } from '../core/building/Building.js';
+import { Position } from '../core/document/Position.js';
+import { World } from '../core/document/World.js';
+import { CollaborationEnvelope } from '../core/collaboration/CollaborationEnvelope.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
 import { PlaceBrickCommand } from '../application/commands/PlaceBrickCommand.js';

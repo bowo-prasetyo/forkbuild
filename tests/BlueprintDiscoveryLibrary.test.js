@@ -1,7 +1,7 @@
-import { Structure } from '../core/Structure.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { sortStructures, STRUCTURE_SORT_OPTIONS } from '../core/sortStructures.js';
+import { Structure } from '../core/building/Structure.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { sortStructures, STRUCTURE_SORT_OPTIONS } from '../core/building/sortStructures.js';
 import { buildCategoryOptions, matches, normalize } from '../ui/components/BuildLibraryPanel.js';
 import { LibraryUsageHistoryStore } from '../application/editor/LibraryUsageHistoryStore.js';
 import { LocalStructureLibraryStore } from '../application/editor/LocalStructureLibraryStore.js';
@@ -14,14 +14,14 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 //
 // 0.6.3 gave a personal Structure a real authoring workflow; what it
 // left unaddressed is what happens once a library holds dozens of
-// them. Nothing here adds a new domain concept — `core/Structure.js`
-// gains no fields, `core/StructureRegistry.js` and
+// them. Nothing here adds a new domain concept — `core/building/Structure.js`
+// gains no fields, `core/building/StructureRegistry.js` and
 // `application/editor/LocalStructureLibraryStore.js`'s existing methods are
 // untouched — this milestone is entirely new, pure PRESENTATION logic
 // over data those two already expose, plus one small new local store
 // for "what did I recently use."
 //
-//   Section A: core/sortStructures.js — every sort key, always
+//   Section A: core/building/sortStructures.js — every sort key, always
 //              deterministic (ties always fall back to id), never
 //              mutates its input
 //   Section B: ui/components/BuildLibraryPanel.js#buildCategoryOptions()
@@ -52,7 +52,7 @@ function makeStructure({ id, name, category = 'uncategorized', description = '',
 
 async function run() {
     // ---------------------------------------------------------------
-    // Section A: core/sortStructures.js
+    // Section A: core/building/sortStructures.js
     // ---------------------------------------------------------------
     {
         const registry = new CreateBrickRegistryUseCase().execute();
@@ -73,7 +73,7 @@ async function run() {
 
         // 3. Recent — consults ONLY the savedAtById map handed in, never
         //    the Structure itself; an id absent from the map sorts as
-        //    least recent (core/Structure.js has no createdAt field at
+        //    least recent (core/building/Structure.js has no createdAt field at
         //    all — see that class's own header).
         const byRecent = sortStructures([a, b, c], 'recent', {
             savedAtById: { 'a:bbb': 500, 'c:ccc': 900 }
@@ -107,7 +107,7 @@ async function run() {
         assert(STRUCTURE_SORT_OPTIONS.map((o) => o.key).join(',') === 'name,recent,brickCount,footprint,height',
             'STRUCTURE_SORT_OPTIONS: the exact five keys this milestone shipped, in menu order');
 
-        console.log('✓ Section A: core/sortStructures.js — every key deterministic, tie-broken by id, never mutates its input');
+        console.log('✓ Section A: core/building/sortStructures.js — every key deterministic, tie-broken by id, never mutates its input');
     }
 
     // ---------------------------------------------------------------

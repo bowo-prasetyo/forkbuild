@@ -1,9 +1,9 @@
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { SpatialBounds } from '../core/SpatialBounds.js';
-import { Structure } from '../core/Structure.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { SpatialBounds } from '../core/world/SpatialBounds.js';
+import { Structure } from '../core/building/Structure.js';
 import { SelectionState } from '../application/editor-state/SelectionState.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';
@@ -155,7 +155,7 @@ async function run() {
             '18. groupByCategory: agricultural group holds the one agricultural structure');
 
         assert(store.search('barn').map((s) => s.id).join(',') === 's-b',
-            '19. search(tags) matches by tag, mirroring core/StructureRegistry.js#search()');
+            '19. search(tags) matches by tag, mirroring core/building/StructureRegistry.js#search()');
         assert(store.search(['tower', 'barn']).length === 2,
             '20. search accepts an array and matches ANY of the queried tags');
 
@@ -331,7 +331,7 @@ async function run() {
     // re-extracting, saving again, reloading again — never once touched
     // the flagship World, because a Personal Structure Library operates
     // entirely over its own StorageProvider-backed records, structurally
-    // separate from core/World.js.
+    // separate from core/document/World.js.
     assert(serializeFlagshipWorld() === worldBeforeAnyLibraryOperation,
         '43. PHASE I: the flagship World\'s own serialization is byte-identical before and after every Personal Structure Library operation in this entire test — "a personal blueprint is reusable content, not shared World state," proven end to end, not merely by inspection of which fields exist');
     console.log('✓ Phase I: the flagship World\'s serialization never changed — Personal Structure Library operations touch only their own local storage');

@@ -106,7 +106,7 @@ export class MaterializeSnapshotFromPeerUseCase {
     //   outcome           — one of application/
     //                        PeerSnapshotMaterializationOutcome.js's own
     //                        four values
-    //   contentReference  — the core/ContentReference.js this replica now
+    //   contentReference  — the core/document/ContentReference.js this replica now
     //                        holds bytes under (STORED/ALREADY_AVAILABLE),
     //                        or null otherwise
     //   publicationKnown  — whether this replica's own publication catalog

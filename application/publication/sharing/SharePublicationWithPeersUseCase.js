@@ -1,5 +1,5 @@
 import { computeContentHash, isLegacyContentHash } from '../../../serializer/contentHash.js';
-import { normalizeContentTitle } from '../../../core/DecentralizedPublication.js';
+import { normalizeContentTitle } from '../../../core/publication/DecentralizedPublication.js';
 
 // The `code` of the error share() and RetrieveSharedPublicationUseCase#retrieve()
 // reject with for a World published with a legacy content hash, so a view

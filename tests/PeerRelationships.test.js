@@ -1,6 +1,6 @@
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { PeerIdentity } from '../peer/PeerIdentity.js';
-import { PeerRelationship } from '../core/PeerRelationship.js';
+import { PeerRelationship } from '../core/social/PeerRelationship.js';
 import { PeerRelationshipUseCase } from '../application/peer/PeerRelationshipUseCase.js';
 import { PeerSessionManager } from '../application/peer/PeerSessionManager.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
@@ -11,7 +11,7 @@ import { assert } from './support/Assert.js';
 //
 // "I successfully authenticated Bob once. How do I remember that I know
 // Bob without pretending the old connection is still alive?" This file
-// proves the answer core/PeerRelationship.js and application/
+// proves the answer core/social/PeerRelationship.js and application/
 // PeerRelationshipUseCase.js give, end to end over a REAL WebRTC
 // connection (application/peer/PeerSessionManager.js, 0.2.55, unmodified) —
 // not a mock, matching this codebase's standing rule that a real
@@ -67,7 +67,7 @@ async function connectAliceAndBob(aliceSessions, bobSessions) {
 async function runTests() {
 
 // ---------------------------------------------------------------------
-// 1. core/PeerRelationship.js — construction, validation, immutability.
+// 1. core/social/PeerRelationship.js — construction, validation, immutability.
 // ---------------------------------------------------------------------
 {
     const alice = makeDevice('Alice');
@@ -109,7 +109,7 @@ async function runTests() {
         && roundTripped.alias === relationship.alias
         && roundTripped.status === relationship.status, 'round-trips through toJSON/fromJSON');
 
-    console.log('✓ core/PeerRelationship.js: construction, validation, and immutability');
+    console.log('✓ core/social/PeerRelationship.js: construction, validation, and immutability');
 }
 
 // ---------------------------------------------------------------------

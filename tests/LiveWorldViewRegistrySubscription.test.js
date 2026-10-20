@@ -52,7 +52,7 @@ function connectedPeerOf(identityId) {
 }
 
 // A publication is only encounterable once it has a matching placement
-// (core/WorldEncounter.js's own `describeEncounterablePublication()`
+// (core/world/WorldEncounter.js's own `describeEncounterablePublication()`
 // requires one) — this helper exists purely so this file's own
 // scenarios never have to spell out a throwaway placement per
 // publication by hand.

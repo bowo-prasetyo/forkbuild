@@ -7,8 +7,8 @@ import {
     WorldEncounterMaterialSource
 } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { LocalWorldEncounterMaterialSource } from '../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
-import { WorldEncounterKind } from '../core/WorldEncounter.js';
-import { describeWorldEncounterSelectionIdentity } from '../core/WorldEncounterSelectionIdentity.js';
+import { WorldEncounterKind } from '../core/world/WorldEncounter.js';
+import { describeWorldEncounterSelectionIdentity } from '../core/world/WorldEncounterSelectionIdentity.js';
 import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
 import { describeWorldFromDiscoveryRegistry } from '../application/discovery/WorldDiscoveryRegistryProjection.js';
 import { LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/worldEncounter/WorldEncounterIntegration.js';
@@ -33,15 +33,15 @@ import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/
 import { executeMaterializeSelectedSnapshotCommand } from '../application/snapshot/materialization/MaterializeSelectedSnapshotCommand.js';
 import { SnapshotCandidateMaterializationOutcome } from '../application/snapshot/materialization/SnapshotCandidateMaterializationOutcome.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
-import { PlacementRecord } from '../core/PlacementRecord.js';
+import { PlacementRecord } from '../core/publication/PlacementRecord.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { Publication } from '../publisher/Publication.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';

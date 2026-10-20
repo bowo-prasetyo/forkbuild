@@ -45,7 +45,7 @@ import { materializedSnapshotWorldOrigin } from './materialization/MaterializedS
 //                         already pattern-matches for `sourceFamily`, one
 //                         layer further.
 //     - publicationId  — `presentation.objectId` IS the Publication's own
-//                         `id` (core/WorldEncounter.js#describeEncounterablePublication()'s
+//                         `id` (core/world/WorldEncounter.js#describeEncounterablePublication()'s
 //                         own `objectId: publication.id`, and
 //                         `MaterializedSnapshotWorldDiscoveryBridge.js`'s own
 //                         "the Publication object... its own `id` MUST
@@ -76,7 +76,7 @@ import { materializedSnapshotWorldOrigin } from './materialization/MaterializedS
 //       through registration (a new operational mechanism this milestone's
 //       own brief explicitly excludes), not joining facts that already
 //       exist at this boundary.
-//     - `locator`/`storage` — core/PublicationSnapshotPlacement.js's own
+//     - `locator`/`storage` — core/publication/PublicationSnapshotPlacement.js's own
 //       retrieval identity is never included in
 //       `registerMaterializedSnapshotWorldSource()`'s registered
 //       `WorldDiscoverySource` at all (only `publication` and one

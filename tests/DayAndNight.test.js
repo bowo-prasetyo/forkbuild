@@ -1,10 +1,10 @@
 import * as THREE from 'three';
-import { DAY, NIGHT, DAY_CYCLE_SECONDS, DAY_SKY_BODIES, dayFractionAt, moonPhaseAt, moonlitLook, skyBodiesAt, skyBodiesAtFraction, skyLookAt, skyLookAtFraction } from '../core/DayCycle.js';
-import { NIGHT_GLOW, WINDOW_LIGHT, nightGlowColor } from '../core/NightGlow.js';
-import { ambientMixAt, ambientMixAtNight, AMBIENT_LAYER } from '../core/AmbientSoundscape.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
+import { DAY, NIGHT, DAY_CYCLE_SECONDS, DAY_SKY_BODIES, dayFractionAt, moonPhaseAt, moonlitLook, skyBodiesAt, skyBodiesAtFraction, skyLookAt, skyLookAtFraction } from '../core/nature/DayCycle.js';
+import { NIGHT_GLOW, WINDOW_LIGHT, nightGlowColor } from '../core/nature/NightGlow.js';
+import { ambientMixAt, ambientMixAtNight, AMBIENT_LAYER } from '../core/app/AmbientSoundscape.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
 import { BrickRenderer } from '../renderer/BrickRenderer.js';
 import { BrickInstanceRegistry } from '../renderer/BrickInstanceRegistry.js';
 import { Lights } from '../renderer/Lights.js';
@@ -16,12 +16,12 @@ import { SoundSettingsStore } from '../application/settings/SoundSettingsStore.j
 import { WorldViewSkyStore } from '../application/settings/WorldViewSkyStore.js';
 import { WorldViewShadowStore } from '../application/settings/WorldViewShadowStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { compassBearingFromYaw, compassLabelBetween } from '../core/CompassHeading.js';
-import { computeFacingYawDegrees } from '../core/AvatarFacing.js';
+import { compassBearingFromYaw, compassLabelBetween } from '../core/world/CompassHeading.js';
+import { computeFacingYawDegrees } from '../core/avatar/AvatarFacing.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
-// World View's day and night (core/DayCycle.js): the sky follows the clock,
+// World View's day and night (core/nature/DayCycle.js): the sky follows the clock,
 // lamps and lit windows shine after dark, birds give way to crickets, and a
 // device can keep it day.
 
@@ -65,7 +65,7 @@ const brightness = (look) => look.hemisphereIntensity + look.sunIntensity;
 
 // The sun rises in the east, crosses the southern sky and sets in the west;
 // the moon does the same by night. East, south and west are what World View's
-// compass shows (core/CompassHeading.js). The light comes from them, never
+// compass shows (core/world/CompassHeading.js). The light comes from them, never
 // from below the horizon, and turns gradually, even as one hands over to the
 // other.
 {

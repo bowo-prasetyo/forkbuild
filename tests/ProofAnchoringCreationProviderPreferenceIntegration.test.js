@@ -1,8 +1,8 @@
-import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
-import { ContentReference } from '../core/ContentReference.js';
-import { PublicationAnchor } from '../core/PublicationAnchor.js';
-import { RoleProviderRole } from '../core/RoleProviderRole.js';
-import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
+import { DecentralizedPublication } from '../core/publication/DecentralizedPublication.js';
+import { ContentReference } from '../core/document/ContentReference.js';
+import { PublicationAnchor } from '../core/publication/PublicationAnchor.js';
+import { RoleProviderRole } from '../core/publication/RoleProviderRole.js';
+import { RoleProviderPreference } from '../core/publication/RoleProviderPreference.js';
 import { RoleProviderPreferenceStore } from '../storage/RoleProviderPreferenceStore.js';
 import { RoleProviderResolutionStatus } from '../application/settings/RoleAwareProviderResolver.js';
 import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';

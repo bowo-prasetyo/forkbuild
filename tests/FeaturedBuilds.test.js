@@ -8,7 +8,7 @@ import {
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';
 import { ForkStructureUseCase } from '../application/editor/ForkStructureUseCase.js';
-import { SpatialBounds } from '../core/SpatialBounds.js';
+import { SpatialBounds } from '../core/world/SpatialBounds.js';
 import { assert } from './support/Assert.js';
 
 const brickRegistry = new CreateBrickRegistryUseCase().execute();

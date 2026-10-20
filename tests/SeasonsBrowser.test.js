@@ -1,6 +1,6 @@
 // @environment browser
 import * as THREE from 'three';
-import { seasonLookAtYearDay } from '../core/Season.js';
+import { seasonLookAtYearDay } from '../core/nature/Season.js';
 import { TERRAIN_WET, BRICK_WET, createWetSurfaces, makeWet, setSnowCover } from '../renderer/WetSurfaces.js';
 import {
     DECIDUOUS, TREE_PART, createSeasonSurfaces, makeSeasonalGround, makeSeasonalTree, seasonedTreeColour, setSeason, setTreeSeasonFlags, treeSeasonFlags, treeSeasonOf

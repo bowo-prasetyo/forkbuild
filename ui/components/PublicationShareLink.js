@@ -3,8 +3,8 @@ import {
     ShareLinkKind, canUseShareSheet, copyEmbedCode, copyPublicationShareLink, describePublicationShare, prepareLinkOnlyShare, sharePublicationLink,
     shortShareUrl
 } from '../../application/publication/PublicationShareLink.js';
-import { embedCode } from '../../core/ForkBuildAppLinks.js';
-import { challengeOfTags } from '../../core/BuildChallenge.js';
+import { embedCode } from '../../core/app/ForkBuildAppLinks.js';
+import { challengeOfTags } from '../../core/challenge/BuildChallenge.js';
 import { challengeThemeTitle } from './challenge/challengeText.js';
 import BuildVideoDialog from './buildVideo/BuildVideoDialog.js';
 import { displayText, t } from '../i18n/i18n.js';
@@ -26,11 +26,11 @@ function feedbackText(outcome) {
 // (publicationDistributionLifecycleStore, restored from this browser's
 // storage when not yet in memory), which it follows, so the link changes as
 // soon as a distribution stores the claim. Before that, given `publication`,
-// a build sent to everyone as a build note (core/BuildNote.js) gets a short
+// a build sent to everyone as a build note (core/publication/BuildNote.js) gets a short
 // link that names the note, and otherwise a build small enough is shared
 // inside the link itself. A build that fits
 // in a link can also be embedded: Embed shows the <iframe> code to paste into
-// a blog post or web page (core/ForkBuildAppLinks.js, embedCode()).
+// a blog post or web page (core/app/ForkBuildAppLinks.js, embedCode()).
 export default {
     name: 'PublicationShareLink',
     components: { BuildVideoDialog },

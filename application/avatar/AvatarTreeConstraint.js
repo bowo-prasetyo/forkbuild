@@ -1,12 +1,12 @@
-import { treeCollisionCandidatesForMovement } from '../../core/AvatarTreeCollisionQuery.js';
-import { resolveAvatarTreeMovement } from '../../core/AvatarTreeMovement.js';
-import { DEFAULT_WORLD_SEED } from '../../core/TerrainHeightField.js';
+import { treeCollisionCandidatesForMovement } from '../../core/avatar/AvatarTreeCollisionQuery.js';
+import { resolveAvatarTreeMovement } from '../../core/avatar/AvatarTreeMovement.js';
+import { DEFAULT_WORLD_SEED } from '../../core/nature/TerrainHeightField.js';
 
 // 0.9.63 — the application-layer half of avatar/tree collision,
 // mirroring exactly the split 0.2.42 (application/avatar/AvatarMovementConstraint.js,
 // buildings) and 0.2.77 (application/avatar/AvatarTerrainConstraint.js, terrain
-// slope) already established: core/AvatarTreeCollisionQuery.js and
-// core/AvatarTreeMovement.js supply the pure geometry (0.9.59-0.9.62),
+// slope) already established: core/avatar/AvatarTreeCollisionQuery.js and
+// core/avatar/AvatarTreeMovement.js supply the pure geometry (0.9.59-0.9.62),
 // this class supplies only the one thing they deliberately never touch —
 // the world seed a real session actually runs under — plus the thin
 // `apply(position, desiredPosition)` shape
@@ -31,14 +31,14 @@ import { DEFAULT_WORLD_SEED } from '../../core/TerrainHeightField.js';
 //
 // Deliberately kept a fully separate class from AvatarTerrainConstraint,
 // never folded into it: tree occupancy is a purely horizontal (X/Z)
-// concern (core/TreeCollisionGeometry.js's own header), orthogonal to
+// concern (core/nature/TreeCollisionGeometry.js's own header), orthogonal to
 // terrain slope walkability, which this class never reads, computes, or
 // adjusts. This class has no Three.js dependency and no terrain
 // collaborator at all — it stays exactly as headlessly testable as its
 // two sibling constraints.
 //
 // `collided` is DERIVED by comparing the resolved X/Z against the
-// requested X/Z — never a new status vocabulary. core/AvatarTreeMovement.js
+// requested X/Z — never a new status vocabulary. core/avatar/AvatarTreeMovement.js
 // deliberately returns only a resolved position (see that file's own
 // header for why); this class's own `collided` flag exists purely to
 // match the same transient, debug-only posture
@@ -72,12 +72,12 @@ export class AvatarTreeConstraint {
     // resolveAvatarTreeMovement()'s own `avatarRadius` below — the exact
     // SAME value reaches the candidate query and the resolution step,
     // never two independently-computed radii that could silently
-    // disagree (see core/AvatarTreeCollisionQuery.js's own 0.9.88
+    // disagree (see core/avatar/AvatarTreeCollisionQuery.js's own 0.9.88
     // header for why that particular mismatch would be dangerous: an
     // incomplete candidate set the resolver could never recover from).
     //
     // Y passes through completely untouched, whether or not a tree was
-    // in the way — core/AvatarTreeMovement.js#resolveAvatarTreeMovement()
+    // in the way — core/avatar/AvatarTreeMovement.js#resolveAvatarTreeMovement()
     // already guarantees this (it copies `requestedPosition.y` straight
     // through); this class adds no Y logic of its own on top, matching
     // its own "tree collision never acquires responsibility for vertical
@@ -107,7 +107,7 @@ export class AvatarTreeConstraint {
 // tree interaction, sound effects, collision animations, network
 // synchronization, multiplayer collision authority, physics/velocity/
 // mass, acceleration, jumping, sliding friction, continuous collision
-// detection beyond the swept segment core/AvatarTreeCollisionQuery.js
+// detection beyond the swept segment core/avatar/AvatarTreeCollisionQuery.js
 // already covers, spatial indexing, collision caching, persistence, or
 // collision events (no generic `CollisionEvent` abstraction — this class
 // reuses the same derived-boolean posture its two sibling constraints

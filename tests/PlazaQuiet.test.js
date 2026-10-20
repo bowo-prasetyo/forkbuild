@@ -1,18 +1,18 @@
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
-import { PLAZA_CENTER } from '../core/ChallengePlaza.js';
-import { PLAZA_QUIET_RADIUS } from '../core/PlazaEntrySpots.js';
-import { settleInVillage } from '../core/BuildSettlement.js';
-import { computeDeterministicGridPosition } from '../core/DeterministicGridPlacement.js';
+import { PLAZA_CENTER } from '../core/challenge/ChallengePlaza.js';
+import { PLAZA_QUIET_RADIUS } from '../core/challenge/PlazaEntrySpots.js';
+import { settleInVillage } from '../core/challenge/BuildSettlement.js';
+import { computeDeterministicGridPosition } from '../core/world/DeterministicGridPlacement.js';
 import { STREAMING_RADIUS } from '../application/worldNavigation/constants.js';
-import { WorldPosition } from '../core/WorldPosition.js';
+import { WorldPosition } from '../core/document/WorldPosition.js';
 import { assert } from './support/Assert.js';
 
 // While a week's plaza is visited, only that week's entries stand round the
 // square: placed builds near it from other weeks (placed there while builds
 // still settled round the plaza) are left out of World View, on screen only,
 // and stream in again once the visitor leaves (session.setPlazaQuiet(),
-// core/PlazaEntrySpots.js).
+// core/challenge/PlazaEntrySpots.js).
 
 const positions = {
     'doc-this-week': settleInVillage({ publicationId: 'pub-this-week' }),
@@ -39,7 +39,7 @@ const quiet = { center: PLAZA_CENTER, radius: PLAZA_QUIET_RADIUS, keep: ['doc-th
 
 {
     assert(PLAZA_QUIET_RADIUS === STREAMING_RADIUS, 'a camera in the square sees none of the builds left out');
-    // The grid covers x, z >= 0 (core/DeterministicGridPlacement.js).
+    // The grid covers x, z >= 0 (core/world/DeterministicGridPlacement.js).
     assert(-PLAZA_CENTER.x > PLAZA_QUIET_RADIUS, `no grid spot is near enough to be left out (the grid starts ${-PLAZA_CENTER.x} off)`);
     console.log('✓ the square is quiet as far as World View streams, and never reaches the grid');
 }

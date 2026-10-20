@@ -1,4 +1,4 @@
-import { WorldAccessLevel } from '../../core/WorldAccessLevel.js';
+import { WorldAccessLevel } from '../../core/collaboration/WorldAccessLevel.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 
 // 0.2.95 — World Editing Authorization Foundation.
@@ -32,7 +32,7 @@ import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityI
 //
 // Ownership resolution, in order of strength:
 //   1. Cryptographic: `document.metadata.authorIdentityId` (a did:key,
-//      set at document-creation time — see core/DocumentMetadata.js's
+//      set at document-creation time — see core/document/DocumentMetadata.js's
 //      own 0.2.95 comment) compared against the VIEWER's own resolved
 //      identityId. This is the only comparison that survives two
 //      different people typing the same display name, and the only

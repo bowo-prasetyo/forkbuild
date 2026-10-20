@@ -1,11 +1,11 @@
 import { storedBricks, corruptFirstBrickPosition } from './support/StoredDocumentBricks.js';
-import { Brick } from '../core/Brick.js';
-import { Building } from '../core/Building.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { Position } from '../core/Position.js';
-import { World } from '../core/World.js';
-import { WorldPlacement } from '../core/WorldPlacement.js';
+import { Brick } from '../core/building/Brick.js';
+import { Building } from '../core/building/Building.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { Position } from '../core/document/Position.js';
+import { World } from '../core/document/World.js';
+import { WorldPlacement } from '../core/publication/WorldPlacement.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
 import { DocumentManifest } from '../application/document/DocumentManifest.js';
@@ -79,7 +79,7 @@ function buildStack(storage) {
 // 1. Revision computation is monotonic and stateless
 // ---------------------------------------------------------------------
 {
-    const { DocumentRevision } = await import('../core/DocumentRevision.js');
+    const { DocumentRevision } = await import('../core/document/DocumentRevision.js');
     assert(DocumentRevision.nextRevision(0, 0) === 1, 'first revision is 1');
     assert(DocumentRevision.nextRevision(1, 0) === 2, 'save advances');
     assert(DocumentRevision.nextRevision(1, 3) === 4, 'recovery ahead advances');

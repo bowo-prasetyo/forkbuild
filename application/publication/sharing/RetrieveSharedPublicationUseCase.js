@@ -1,6 +1,6 @@
 import { resolvePublicationView } from '../PublicationResolutionView.js';
 import { Publication } from '../../../publisher/Publication.js';
-import { normalizeContentTitle } from '../../../core/DecentralizedPublication.js';
+import { normalizeContentTitle } from '../../../core/publication/DecentralizedPublication.js';
 import { PeerLifecycleState } from '../../../peer/PeerLifecycleState.js';
 import { PeerSnapshotMaterializationOutcome } from '../../snapshot/materialization/PeerSnapshotMaterializationOutcome.js';
 import { isStorageEntryNotLoadedError } from '../../../storage/StorageEntryNotLoadedError.js';

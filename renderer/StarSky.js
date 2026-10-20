@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import { CELESTIAL_POLE, starField, milkyWayRibbon } from '../core/StarField.js';
+import { CELESTIAL_POLE, starField, milkyWayRibbon } from '../core/nature/StarField.js';
 
-// World View's stars and the Milky Way (core/StarField.js), drawn as far off
+// World View's stars and the Milky Way (core/nature/StarField.js), drawn as far off
 // as the camera sees and kept there as it moves, like the sun and the moon
 // (renderer/SkyBodies.js), and turned with the sky once a day round the
 // celestial pole. They come out as dusk deepens and fade at dawn, twinkle a
@@ -103,8 +103,8 @@ export class StarSky {
         sceneManager.add(this._group);
     }
 
-    // How deep into the night it is (core/DayCycle.js's look.glow, 0..1),
-    // how far the sky has turned (core/StarField.js#skyTurnAt()), and how
+    // How deep into the night it is (core/nature/DayCycle.js's look.glow, 0..1),
+    // how far the sky has turned (core/nature/StarField.js#skyTurnAt()), and how
     // much of the moon is lit while it is up (its phase's illumination, 0
     // with no moon up).
     set(night, turn, moonlight = 0) {

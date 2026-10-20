@@ -1,4 +1,4 @@
-import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
+import { ANIMAL_SPECIES } from '../core/nature/WildlifeField.js';
 import { ANIMAL_IDLE, idleEnvelope } from './AnimalIdle.js';
 import { smoothstep } from '../utils/interpolation.js';
 
@@ -8,7 +8,7 @@ import { smoothstep } from '../utils/interpolation.js';
 // (renderer/AnimalGait.js) or idle action (renderer/AnimalIdle.js).
 //
 // PURELY VISUAL, AND ONLY FOR THE VIEWER'S OWN AVATAR. Where an animal is
-// stays the same for everyone (core/WildlifeMotion.js), because collision
+// stays the same for everyone (core/nature/WildlifeMotion.js), because collision
 // and catching depend on it; this only turns heads and changes posture,
 // so it can safely differ between viewers. Other players' avatars arrive
 // late over the network, so reacting to them would not match what they
@@ -59,7 +59,7 @@ function lerp(a, b, t) {
 }
 
 // `offsets` (from AnimalGait/AnimalIdle), adjusted for an animal of
-// `species` standing at (`x`, `z`) in `pose` (as core/WildlifeMotion.js
+// `species` standing at (`x`, `z`) in `pose` (as core/nature/WildlifeMotion.js
 // reports it: rotationY, plus idleSeconds/idleDuration while standing)
 // being watched by `observer` ({ x, z }, or null for no avatar). Returns
 // `offsets` itself when there is nothing to react to.

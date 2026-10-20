@@ -4,10 +4,10 @@ import {
     createAvatarVehicleMount,
     isValidAvatarVehicleMount,
     clearAvatarVehicleMount
-} from '../core/AvatarVehicleMount.js';
+} from '../core/vehicles/AvatarVehicleMount.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.77 — Avatar-Vehicle Mount Relationship, core/AvatarVehicleMount.js.
+// 0.9.77 — Avatar-Vehicle Mount Relationship, core/vehicles/AvatarVehicleMount.js.
 //
 //   Section A: valid vehicle id — a non-empty string produces a valid
 //              relationship
@@ -53,7 +53,7 @@ async function runTests() {
     }
     {
         const mount = new AvatarVehicleMount('anything-non-empty');
-        assert(mount.vehicleId === 'anything-non-empty', '3. an arbitrarily-shaped non-empty string id is accepted verbatim — this file enforces no format on the id, matching core/VehiclePresence.js\'s own restraint');
+        assert(mount.vehicleId === 'anything-non-empty', '3. an arbitrarily-shaped non-empty string id is accepted verbatim — this file enforces no format on the id, matching core/vehicles/VehiclePresence.js\'s own restraint');
     }
 
     // -------------------------------------------------------------
@@ -171,7 +171,7 @@ async function runTests() {
     // Section K — architectural regression
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../core/AvatarVehicleMount.js', import.meta.url);
+        const sourceUrl = new URL('../core/vehicles/AvatarVehicleMount.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -191,14 +191,14 @@ async function runTests() {
             'localStorage', 'StorageProvider', 'fetch(', 'WebSocket'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `39. core/AvatarVehicleMount.js's own code never references "${term}" — a relationship descriptor only, never proximity/intent/target-resolution/input/rendering/movement/collision/physics/persistence/networking/randomness/clock`);
+            assert(!codeOnly.includes(term), `39. core/vehicles/AvatarVehicleMount.js's own code never references "${term}" — a relationship descriptor only, never proximity/intent/target-resolution/input/rendering/movement/collision/physics/persistence/networking/randomness/clock`);
         }
     }
     {
-        const exportsModule = await import('../core/AvatarVehicleMount.js');
+        const exportsModule = await import('../core/vehicles/AvatarVehicleMount.js');
         const exportedNames = Object.keys(exportsModule).sort();
         assert(JSON.stringify(exportedNames) === JSON.stringify(['AvatarVehicleMount', 'clearAvatarVehicleMount', 'createAvatarVehicleMount', 'isValidAvatarVehicleMount']),
-            '40. core/AvatarVehicleMount.js exports exactly the descriptor class, its factory, its validator, and clearAvatarVehicleMount — nothing else');
+            '40. core/vehicles/AvatarVehicleMount.js exports exactly the descriptor class, its factory, its validator, and clearAvatarVehicleMount — nothing else');
     }
     {
         // No mutation of a vehicleId string passed in — strings are

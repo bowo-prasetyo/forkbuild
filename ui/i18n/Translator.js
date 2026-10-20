@@ -7,7 +7,7 @@
 // is always required, since every locale has it.
 //
 // `{name}` in a message is replaced by params.name; numbers are formatted for
-// the locale, a message descriptor (core/Message.js) is translated first, and
+// the locale, a message descriptor (core/app/Message.js) is translated first, and
 // a list is joined the locale's way ("a, b, c"). A placeholder with no
 // matching parameter is left as written, so a missing value shows up instead
 // of silently vanishing.
@@ -15,7 +15,7 @@
 // A key missing from the locale's messages falls back to the source
 // (English) messages, then to the key itself, and is reported once to
 // `onMissing`.
-import { isMessage } from '../../core/Message.js';
+import { isMessage } from '../../core/app/Message.js';
 
 const PLACEHOLDER = /\{([A-Za-z0-9_]+)\}/g;
 

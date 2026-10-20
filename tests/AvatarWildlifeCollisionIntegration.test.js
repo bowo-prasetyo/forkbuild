@@ -1,12 +1,12 @@
 import { readFile } from 'node:fs/promises';
 import { AvatarWildlifeConstraint } from '../application/avatar/AvatarWildlifeConstraint.js';
 import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
-import { wildlifeCollisionGeometryInRegion } from '../core/WildlifeCollisionGeometry.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { AVATAR_COLLISION_RADIUS } from '../core/AvatarCollision.js';
-import { VehicleType } from '../core/VehicleType.js';
-import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { wildlifeCollisionGeometryInRegion } from '../core/nature/WildlifeCollisionGeometry.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { AVATAR_COLLISION_RADIUS } from '../core/avatar/AvatarCollision.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
+import { resolveAvatarVehicleMovementCapability } from '../core/vehicles/AvatarVehicleMovementCapability.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
@@ -28,10 +28,10 @@ import { assert } from './support/Assert.js';
 //              no new status vocabulary
 //
 // Central architectural claim under test throughout: this adds NO new
-// collision mathematics of its own — it reuses core/AvatarTreeMovement.js's
+// collision mathematics of its own — it reuses core/avatar/AvatarTreeMovement.js's
 // own resolveAvatarTreeMovement() (already generic over any list of
 // `{ center, radius }` circles) against a wildlife-specific candidate set
-// from core/AvatarWildlifeCollisionQuery.js, wired into the same
+// from core/avatar/AvatarWildlifeCollisionQuery.js, wired into the same
 // application/avatar/AvatarMovementController.js pipeline
 // application/avatar/AvatarTreeConstraint.js already plugs into.
 
@@ -387,9 +387,9 @@ async function runTests() {
             assert(!codeOnly.includes(term), `32. application/avatar/AvatarWildlifeConstraint.js's own code never references "${term}" — a thin adapter only, never a second collision algorithm`);
         }
         assert(codeOnly.includes('wildlifeCollisionCandidatesForMovement'),
-            '33. application/avatar/AvatarWildlifeConstraint.js does consume wildlifeCollisionCandidatesForMovement() from core/AvatarWildlifeCollisionQuery.js');
+            '33. application/avatar/AvatarWildlifeConstraint.js does consume wildlifeCollisionCandidatesForMovement() from core/avatar/AvatarWildlifeCollisionQuery.js');
         assert(codeOnly.includes('resolveAvatarTreeMovement'),
-            '34. application/avatar/AvatarWildlifeConstraint.js reuses resolveAvatarTreeMovement() from core/AvatarTreeMovement.js — never a cloned copy of the same resolution math');
+            '34. application/avatar/AvatarWildlifeConstraint.js reuses resolveAvatarTreeMovement() from core/avatar/AvatarTreeMovement.js — never a cloned copy of the same resolution math');
     }
     {
         const exportsModule = await import('../application/avatar/AvatarWildlifeConstraint.js');

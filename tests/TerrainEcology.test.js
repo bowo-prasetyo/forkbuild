@@ -1,14 +1,14 @@
 import {
     ecologyZoneAt, ecologyGroundColorAt, moistureAt, cultivationAt, ECOLOGY_ZONE
-} from '../core/TerrainEcology.js';
+} from '../core/nature/TerrainEcology.js';
 import {
     surfaceCategoryAt, surfaceColorAt, SURFACE_CATEGORY, WATER_LEVEL, HIGHLAND_ELEVATION
-} from '../core/TerrainSurface.js';
-import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
+} from '../core/nature/TerrainSurface.js';
+import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { TERRAIN_TILE_SIZE } from '../core/nature/TerrainTiling.js';
 import { assert } from './support/Assert.js';
 
-// 0.2.88 — Deterministic World Ecology, core/TerrainEcology.js.
+// 0.2.88 — Deterministic World Ecology, core/nature/TerrainEcology.js.
 //
 //   Section A: determinism, boundedness, and zone completeness
 //   Section B: zone classification tracks surface/elevation, never a

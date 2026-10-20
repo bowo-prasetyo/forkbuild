@@ -5,7 +5,7 @@ import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
 import { EphemeralIdentityProvider } from '../../identity/EphemeralIdentityProvider.js';
 import {
     createDevicePairingCode, devicePairingPassphrase, parseDevicePairingCode, randomDevicePairingSecret
-} from '../../core/DevicePairingCode.js';
+} from '../../core/identity/DevicePairingCode.js';
 
 // Copies this device's builds to another device through a code (core/
 // DevicePairingCode.js), shown as a QR code and a link:

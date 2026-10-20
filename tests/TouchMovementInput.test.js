@@ -1,9 +1,9 @@
 import {
     deriveTouchJoystickKeys, clampTouchJoystickOffset, TOUCH_JOYSTICK_DEAD_ZONE, TOUCH_JOYSTICK_RUN_THRESHOLD
-} from '../core/TouchJoystickKeys.js';
+} from '../core/avatar/TouchJoystickKeys.js';
 import { TouchMovementInput, BUTTON_MIN_HOLD_MS, cruiseChord } from '../application/avatar/TouchMovementInput.js';
-import { AvatarContinuousMovementIntent as Intent } from '../core/AvatarContinuousMovementIntent.js';
-import { AvatarContinuousMovementMode as Mode } from '../core/AvatarContinuousMovementMode.js';
+import { AvatarContinuousMovementIntent as Intent } from '../core/avatar/AvatarContinuousMovementIntent.js';
+import { AvatarContinuousMovementMode as Mode } from '../core/avatar/AvatarContinuousMovementMode.js';
 import { assert } from './support/Assert.js';
 
 function pressed(keys) {

@@ -1,4 +1,4 @@
-import { LOOK } from '../core/LookSettings.js';
+import { LOOK } from '../core/app/LookSettings.js';
 
 // Puts the chosen look on the page: data-look="light" or "dark" on <html>
 // picks css/main/theme.css's colours; none follows the device's dark mode.

@@ -1,4 +1,4 @@
-import { getLobbyLeaveSigningDescriptor } from '../core/LobbyCard.js';
+import { getLobbyLeaveSigningDescriptor } from '../core/social/LobbyCard.js';
 import { signingIdentityId } from './RendezvousPublicationSigning.js';
 
 // Signs `card` as the signed-in identity. Returns the signed card, or null

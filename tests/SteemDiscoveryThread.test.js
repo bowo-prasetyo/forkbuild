@@ -7,7 +7,7 @@ import {
     steemDiscoveryPeriodsFrom,
     steemDiscoveryThreadOperations,
     steemDiscoveryThreadPermlink
-} from '../core/SteemDiscoveryThread.js';
+} from '../core/networks/SteemDiscoveryThread.js';
 import { assert } from './support/Assert.js';
 
 function throws(fn) {

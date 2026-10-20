@@ -1,18 +1,18 @@
-import { CameraPerspective } from '../core/CameraPerspective.js';
-import { LocalWorldExperience } from '../core/LocalWorldExperience.js';
+import { CameraPerspective } from '../core/avatar/CameraPerspective.js';
+import { LocalWorldExperience } from '../core/world/LocalWorldExperience.js';
 import { LocalWorldExperienceStore } from '../application/world/LocalWorldExperienceStore.js';
 import { SpatialCameraController } from '../application/world/SpatialCameraController.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
@@ -25,7 +25,7 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 // milestones' central claims:
 //
 //   Section A: LocalWorldExperience — the value object's own validation
-//              and round-tripping (core/LocalWorldExperience.js)
+//              and round-tripping (core/world/LocalWorldExperience.js)
 //   Section B: LocalWorldExperienceStore — per-world records, recency
 //              ordering, and the perspective-clearing edge case
 //              (application/world/LocalWorldExperienceStore.js)
@@ -347,7 +347,7 @@ async function runTests() {
         // Camera Perspective: restoring re-frames from the CURRENT
         // avatar position, never the STALE saved camera coordinate — a
         // perspective is always an avatar-relative offset
-        // (core/CameraPerspective.js), so this must stay correct even
+        // (core/avatar/CameraPerspective.js), so this must stay correct even
         // when the avatar has moved between visits.
         const replica = buildReplica(registry, 'perspective-alice');
         const leaving = buildSession(brickRegistry, replica);

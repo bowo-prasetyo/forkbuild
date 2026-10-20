@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 
-// Wet ground and bricks in the rain (core/Weather.js's wetness): a surface
+// Wet ground and bricks in the rain (core/nature/Weather.js's wetness): a surface
 // gets darker as it soaks up the rain, and what faces the sky gets a sheen,
 // its roughness falling as if a film of water lay on it; once the rain stops
-// it dries back, as slowly as core/Weather.js#wetnessAt() says. And snow
-// lying (core/Weather.js#snowCoverAt()): on what faces the sky it settles in
+// it dries back, as slowly as core/nature/Weather.js#wetnessAt() says. And snow
+// lying (core/nature/Weather.js#snowCoverAt()): on what faces the sky it settles in
 // patches that grow into a blanket as the cover deepens, and melts back the
 // same way; walls stay clear.
 //

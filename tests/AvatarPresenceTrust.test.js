@@ -1,14 +1,14 @@
-import { PresenceAuthorityRegistry } from '../core/PresenceAuthority.js';
-import { PresenceEquivocation, detectPresenceEquivocation } from '../core/PresenceEquivocation.js';
-import { PresenceReplayWindow } from '../core/PresenceReplayWindow.js';
-import { PresenceTrustPolicy } from '../core/PresenceTrustPolicy.js';
-import { summarizePresenceDiagnostics } from '../core/PresenceDiagnosticsSummary.js';
-import { PresenceLifecycleState } from '../core/PresenceLifecycleState.js';
-import { TrustStatus } from '../core/TrustObservation.js';
-import { SignatureType, Signature } from '../core/Signature.js';
-import { getAvatarPresenceSigningDescriptor } from '../core/AvatarPresenceAdvertisement.js';
-import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { PresenceAuthorityRegistry } from '../core/avatar/PresenceAuthority.js';
+import { PresenceEquivocation, detectPresenceEquivocation } from '../core/avatar/PresenceEquivocation.js';
+import { PresenceReplayWindow } from '../core/avatar/PresenceReplayWindow.js';
+import { PresenceTrustPolicy } from '../core/avatar/PresenceTrustPolicy.js';
+import { summarizePresenceDiagnostics } from '../core/avatar/PresenceDiagnosticsSummary.js';
+import { PresenceLifecycleState } from '../core/avatar/PresenceLifecycleState.js';
+import { TrustStatus } from '../core/identity/TrustObservation.js';
+import { SignatureType, Signature } from '../core/publication/Signature.js';
+import { getAvatarPresenceSigningDescriptor } from '../core/avatar/AvatarPresenceAdvertisement.js';
+import { AvatarAnimationState } from '../core/avatar/AvatarAnimationState.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
@@ -30,27 +30,27 @@ import { GridPlacementStrategy } from '../application/placement/InitialPlacement
 import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
 import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { License, LicenseId } from '../core/License.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { License, LicenseId } from '../core/document/License.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
 // 0.2.38 — Presence Trust, Replay & Conflict Handling.
 //
-//   Section A: core/PresenceAuthority.js — identity binding (TOFU)
-//   Section B: core/PresenceEquivocation.js — equal-sequence conflict detection
-//   Section C: core/PresenceReplayWindow.js — bounded replay memory
-//   Section D: core/PresenceTrustPolicy.js — the one real policy axis
-//   Section E: core/AvatarPresenceAdvertisement.js — signing descriptor
+//   Section A: core/avatar/PresenceAuthority.js — identity binding (TOFU)
+//   Section B: core/avatar/PresenceEquivocation.js — equal-sequence conflict detection
+//   Section C: core/avatar/PresenceReplayWindow.js — bounded replay memory
+//   Section D: core/avatar/PresenceTrustPolicy.js — the one real policy axis
+//   Section E: core/avatar/AvatarPresenceAdvertisement.js — signing descriptor
 //   Section F: identity/LocalAuthorizationVerifier.verifyPresenceAdvertisement — REAL Ed25519
 //   Section G: application/presence/PresenceSigning.js
 //   Section H: application/presence/PresenceTrustBoundary.js — the orchestrated gate
 //   Section I: application/presence/LocalPresenceStore.js — trust surfaced through ingest()/list()
-//   Section J: core/PresenceDiagnosticsSummary.js
+//   Section J: core/avatar/PresenceDiagnosticsSummary.js
 //   Section K: WorldNavigationSession integration (signing, diagnostics)
 //   Section L: FLAGSHIP — the design doc's own malicious scripted scenario
 //
@@ -140,7 +140,7 @@ async function runTests() {
     const registry = buildRegistry();
 
     // -------------------------------------------------------------
-    // Section A — core/PresenceAuthority.js
+    // Section A — core/avatar/PresenceAuthority.js
     // -------------------------------------------------------------
     {
         const authority = new PresenceAuthorityRegistry();
@@ -184,14 +184,14 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section B — core/PresenceEquivocation.js
+    // Section B — core/avatar/PresenceEquivocation.js
     // -------------------------------------------------------------
     {
         assert(detectPresenceEquivocation(null, makeAdvertisement()) === null, '13. nothing stored yet is never an equivocation');
         assert(detectPresenceEquivocation(makeAdvertisement({ avatarId: 'x' }), makeAdvertisement({ avatarId: 'y' })) === null,
             '14. different avatarIds are never compared against each other');
         assert(detectPresenceEquivocation(makeAdvertisement({ sequence: 1 }), makeAdvertisement({ sequence: 2 })) === null,
-            '15. different sequences are never an equivocation — that is core/PresenceIngestion.js\'s job');
+            '15. different sequences are never an equivocation — that is core/avatar/PresenceIngestion.js\'s job');
         assert(detectPresenceEquivocation(makeAdvertisement({ sequence: 5 }), makeAdvertisement({ sequence: 5 })) === null,
             '16. identical content at an equal sequence is a REPLAY, not an equivocation');
 
@@ -205,7 +205,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section C — core/PresenceReplayWindow.js
+    // Section C — core/avatar/PresenceReplayWindow.js
     // -------------------------------------------------------------
     {
         const window_ = new PresenceReplayWindow();
@@ -231,7 +231,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section D — core/PresenceTrustPolicy.js
+    // Section D — core/avatar/PresenceTrustPolicy.js
     // -------------------------------------------------------------
     {
         assert(PresenceTrustPolicy.permissive().requireSignedPresence === false, '28. permissive() tolerates unsigned presence');
@@ -241,7 +241,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section E — core/AvatarPresenceAdvertisement.js signing descriptor
+    // Section E — core/avatar/AvatarPresenceAdvertisement.js signing descriptor
     // -------------------------------------------------------------
     {
         const ad = makeAdvertisement({ position: { x: 1, y: 2, z: 3 } });
@@ -424,7 +424,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section J — core/PresenceDiagnosticsSummary.js
+    // Section J — core/avatar/PresenceDiagnosticsSummary.js
     // -------------------------------------------------------------
     {
         assert(JSON.stringify(summarizePresenceDiagnostics([])) === JSON.stringify({ total: 0, trusted: 0, stale: 0, conflicting: 0, unavailable: 0 }),
@@ -520,7 +520,7 @@ async function runTests() {
     //   Attacker tampers with a captured packet's position while
     //     keeping its old signature -> Bob's signature check fails
     //     outright (a STRONGER outcome than mere conflict-detection —
-    //     see core/PresenceEquivocation.js's own header for why this
+    //     see core/avatar/PresenceEquivocation.js's own header for why this
     //     milestone treats a forged claim from a non-owning attacker
     //     as INVALID_SIGNATURE/UNAUTHORIZED, never EQUIVOCATING).
     //   Alice's OWN key double-signs a conflicting claim at her
@@ -636,7 +636,7 @@ async function runTests() {
         // point, never itself published, so its hash was never
         // accepted). Older than Bob's current sequence 2, and not a
         // duplicate of anything Bob HAS seen: STALE, not REPLAYED —
-        // see core/TrustObservation.js's own distinction between the
+        // see core/identity/TrustObservation.js's own distinction between the
         // two.
         const neverSeenOldClaim = signAvatarPresenceAdvertisement(
             makeAdvertisement({ avatarId: aliceProfile.avatarId, ownerIdentity: 'alice', position: { x: 0, y: 0, z: 0 }, sequence: 0 }),

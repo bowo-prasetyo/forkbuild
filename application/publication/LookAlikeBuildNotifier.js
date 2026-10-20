@@ -1,4 +1,4 @@
-import { NotificationEvent } from '../../core/NotificationEvent.js';
+import { NotificationEvent } from '../../core/social/NotificationEvent.js';
 import { currentIdentityId } from '../../identity/SigningReadiness.js';
 import { createVerifiedPublisherResolver } from './FollowingFeed.js';
 
@@ -20,7 +20,7 @@ export const MAX_WAITING_FOR_BYTES_MS = 30 * 24 * 60 * 60 * 1000;
 // must be verifiably signed by them; remixes of theirs are left out (the
 // finder leaves out the remix family, and RemixedBuildNotifier tells of
 // those). The notification store deduplicates by the new build's
-// Publication id (core/NotificationDeduplicationPolicy.js).
+// Publication id (core/social/NotificationDeduplicationPolicy.js).
 //
 // A build can be admitted before its bytes reach this device (Explore lists a
 // signed record and fetches the build later). Such a build waits by its

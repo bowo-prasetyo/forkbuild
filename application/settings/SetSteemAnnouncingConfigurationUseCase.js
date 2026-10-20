@@ -1,4 +1,4 @@
-import { SteemAnnouncingConfiguration } from '../../core/SteemAnnouncingConfiguration.js';
+import { SteemAnnouncingConfiguration } from '../../core/networks/SteemAnnouncingConfiguration.js';
 import { SteemAnnouncingConfigurationStore } from '../../storage/SteemAnnouncingConfigurationStore.js';
 
 export class SetSteemAnnouncingConfigurationUseCase {

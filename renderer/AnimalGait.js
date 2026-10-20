@@ -1,7 +1,7 @@
-import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
+import { ANIMAL_SPECIES } from '../core/nature/WildlifeField.js';
 
 // How a walking animal's body moves with each stride — the renderer-side
-// half of wildlife motion. core/WildlifeMotion.js says WHERE an animal is
+// half of wildlife motion. core/nature/WildlifeMotion.js says WHERE an animal is
 // and how many strides into its current walk it is (`gaitPhase`); this
 // file turns that phase into how the body looks mid-stride. It is purely
 // visual: nothing here changes where an animal is for collision or

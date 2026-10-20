@@ -1,13 +1,13 @@
 import {
     naturalFeaturesInRegion, forestDensityAt, FEATURE_TYPE, TREE_LATTICE_SPACING, TREE_SPECIES
-} from '../core/NaturalFeatureField.js';
-import { ecologyZoneAt, ECOLOGY_ZONE, moistureAt } from '../core/TerrainEcology.js';
-import { isRiverAt } from '../core/Hydrology.js';
-import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { TERRAIN_TILE_SIZE, tileCoordinateForPosition } from '../core/TerrainTiling.js';
+} from '../core/nature/NaturalFeatureField.js';
+import { ecologyZoneAt, ECOLOGY_ZONE, moistureAt } from '../core/nature/TerrainEcology.js';
+import { isRiverAt } from '../core/nature/Hydrology.js';
+import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { TERRAIN_TILE_SIZE, tileCoordinateForPosition } from '../core/nature/TerrainTiling.js';
 import { assert } from './support/Assert.js';
 
-// 0.2.88 — Deterministic World Ecology, core/NaturalFeatureField.js.
+// 0.2.88 — Deterministic World Ecology, core/nature/NaturalFeatureField.js.
 //
 //   Section A: determinism and well-formedness of every returned feature
 //   Section B: tile-aligned regions partition the world — no duplicate
@@ -227,7 +227,7 @@ async function runTests() {
             '23. FLAGSHIP: a fixed tile\'s trees are byte-identical before and after streaming an entire journey across the world — reproducible across any replica');
 
         // forestDensityAt() itself is deterministic and decorrelated from
-        // core/TerrainEcology.js#moistureAt() — spot-check it directly
+        // core/nature/TerrainEcology.js#moistureAt() — spot-check it directly
         // rather than only through naturalFeaturesInRegion()'s own
         // thresholding.
         const d1 = forestDensityAt(DEFAULT_WORLD_SEED, 55.5, -66.6);
@@ -250,7 +250,7 @@ async function runTests() {
         for (const f of features) {
             if (isRiverAt(DEFAULT_WORLD_SEED, f.x, f.z)) riverTreesFound++;
         }
-        assert(riverTreesFound === 0, `26. core/Hydrology.js's river veto holds over a wide scan: no tree stands in a river channel (found ${riverTreesFound})`);
+        assert(riverTreesFound === 0, `26. core/nature/Hydrology.js's river veto holds over a wide scan: no tree stands in a river channel (found ${riverTreesFound})`);
     }
 
     console.log('✅ All Deterministic World Ecology (NaturalFeatureField) tests passed.');

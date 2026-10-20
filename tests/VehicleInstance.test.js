@@ -3,15 +3,15 @@ import {
     VehicleInstance,
     vehicleInstanceFromPresence,
     isValidVehicleInstance
-} from '../core/VehicleInstance.js';
-import { VehiclePresence } from '../core/VehiclePresence.js';
-import { VehicleType } from '../core/VehicleType.js';
-import { Position } from '../core/Position.js';
-import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+} from '../core/vehicles/VehicleInstance.js';
+import { VehiclePresence } from '../core/vehicles/VehiclePresence.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
+import { Position } from '../core/document/Position.js';
+import { vehiclePresenceInRegion } from '../core/vehicles/VehiclePlacement.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.114 — Vehicle Runtime Instance State, core/VehicleInstance.js.
+// 0.9.114 — Vehicle Runtime Instance State, core/vehicles/VehicleInstance.js.
 //
 //   Section A: valid construction — spawnPosition/position, defaulting
 //   Section B: vehicleInstanceFromPresence() — the bridge from a real,
@@ -34,7 +34,7 @@ import { assert } from './support/Assert.js';
 // construction) from a mutable-by-replacement RUNTIME fact (position) —
 // and changing the latter can never, even indirectly, change the former,
 // the vehicle's own identity, or the deterministic lattice
-// core/VehiclePlacement.js computes independently. See docs/Roadmap.md,
+// core/vehicles/VehiclePlacement.js computes independently. See docs/Roadmap.md,
 // 0.9.114.
 
 function assertThrows(fn, message) {
@@ -323,7 +323,7 @@ async function runTests() {
     // Section I — architectural regression
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../core/VehicleInstance.js', import.meta.url);
+        const sourceUrl = new URL('../core/vehicles/VehicleInstance.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -351,22 +351,22 @@ async function runTests() {
             'collision', 'terrain', 'seed'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `80. core/VehicleInstance.js's own code never references "${term}" — a pure runtime-state wrapper, never a placement/mount/movement/rendering/persistence/networking dependency`);
+            assert(!codeOnly.includes(term), `80. core/vehicles/VehicleInstance.js's own code never references "${term}" — a pure runtime-state wrapper, never a placement/mount/movement/rendering/persistence/networking dependency`);
         }
     }
     {
-        const exportsModule = await import('../core/VehicleInstance.js');
+        const exportsModule = await import('../core/vehicles/VehicleInstance.js');
         const exportedNames = Object.keys(exportsModule).sort();
         assert(JSON.stringify(exportedNames) === JSON.stringify(['VehicleInstance', 'isValidVehicleInstance', 'vehicleInstanceFromPresence']),
-            '81. core/VehicleInstance.js exports exactly the runtime class, its VehiclePresence bridge, and its validator — nothing else');
+            '81. core/vehicles/VehicleInstance.js exports exactly the runtime class, its VehiclePresence bridge, and its validator — nothing else');
     }
     {
         // The existing deterministic placement/identity files are
         // themselves entirely untouched by this milestone.
-        const placementSource = await readFile(new URL('../core/VehiclePlacement.js', import.meta.url), 'utf8');
-        assert(!placementSource.includes('VehicleInstance'), '82. core/VehiclePlacement.js has no knowledge of VehicleInstance — the bridge is one-directional, built entirely on top of it');
-        const presenceSource = await readFile(new URL('../core/VehiclePresence.js', import.meta.url), 'utf8');
-        assert(!presenceSource.includes('VehicleInstance'), '83. core/VehiclePresence.js has no knowledge of VehicleInstance either');
+        const placementSource = await readFile(new URL('../core/vehicles/VehiclePlacement.js', import.meta.url), 'utf8');
+        assert(!placementSource.includes('VehicleInstance'), '82. core/vehicles/VehiclePlacement.js has no knowledge of VehicleInstance — the bridge is one-directional, built entirely on top of it');
+        const presenceSource = await readFile(new URL('../core/vehicles/VehiclePresence.js', import.meta.url), 'utf8');
+        assert(!presenceSource.includes('VehicleInstance'), '83. core/vehicles/VehiclePresence.js has no knowledge of VehicleInstance either');
     }
 
     console.log('✅ All Vehicle Runtime Instance State tests passed.');

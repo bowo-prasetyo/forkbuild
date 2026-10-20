@@ -1,16 +1,16 @@
-import { AvatarInteractionKind } from '../core/AvatarInteractionKind.js';
+import { AvatarInteractionKind } from '../core/avatar/AvatarInteractionKind.js';
 import {
     toAvatarInteractionAdvertisement,
     isValidAvatarInteractionAdvertisement,
     getAvatarInteractionSigningDescriptor
-} from '../core/AvatarInteractionAdvertisement.js';
-import { resolveIncomingInteraction } from '../core/AvatarInteractionIngestion.js';
-import { AvatarInteractionReplayWindow } from '../core/AvatarInteractionReplayWindow.js';
-import { AvatarInteractionTrustPolicy } from '../core/AvatarInteractionTrustPolicy.js';
-import { SignatureType, Signature } from '../core/Signature.js';
-import { TrustStatus } from '../core/TrustObservation.js';
-import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+} from '../core/avatar/AvatarInteractionAdvertisement.js';
+import { resolveIncomingInteraction } from '../core/avatar/AvatarInteractionIngestion.js';
+import { AvatarInteractionReplayWindow } from '../core/avatar/AvatarInteractionReplayWindow.js';
+import { AvatarInteractionTrustPolicy } from '../core/avatar/AvatarInteractionTrustPolicy.js';
+import { SignatureType, Signature } from '../core/publication/Signature.js';
+import { TrustStatus } from '../core/identity/TrustObservation.js';
+import { AvatarAnimationState } from '../core/avatar/AvatarAnimationState.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
@@ -33,21 +33,21 @@ import { GridPlacementStrategy } from '../application/placement/InitialPlacement
 import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
 import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { License, LicenseId } from '../core/License.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { License, LicenseId } from '../core/document/License.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
 // 0.2.45 — Ephemeral Avatar Interaction Synchronization.
 //
-//   Section A: core/AvatarInteractionAdvertisement.js — wire shape/validity/signing descriptor
-//   Section B: core/AvatarInteractionIngestion.js — pure monotonic-sequence decision
-//   Section C: core/AvatarInteractionReplayWindow.js — bounded id+sequence bookkeeping
-//   Section D: core/AvatarInteractionTrustPolicy.js — the one real policy axis
+//   Section A: core/avatar/AvatarInteractionAdvertisement.js — wire shape/validity/signing descriptor
+//   Section B: core/avatar/AvatarInteractionIngestion.js — pure monotonic-sequence decision
+//   Section C: core/avatar/AvatarInteractionReplayWindow.js — bounded id+sequence bookkeeping
+//   Section D: core/avatar/AvatarInteractionTrustPolicy.js — the one real policy axis
 //   Section E: identity/LocalAuthorizationVerifier.verifyAvatarInteractionAdvertisement — REAL Ed25519
 //   Section F: application/avatar/AvatarInteractionSigning.js
 //   Section G: application/avatar/AvatarInteractionTrustBoundary.js — the orchestrated gate
@@ -166,7 +166,7 @@ async function runTests() {
     const registry = buildRegistry();
 
     // -------------------------------------------------------------
-    // Section A — core/AvatarInteractionAdvertisement.js
+    // Section A — core/avatar/AvatarInteractionAdvertisement.js
     // -------------------------------------------------------------
     {
         const ad = toAvatarInteractionAdvertisement({
@@ -200,7 +200,7 @@ async function runTests() {
         // Every field participates in the signature — tampering with
         // ANY of them changes the canonical signed bytes, the same
         // "never sign only a narrow subset" discipline
-        // core/AvatarPresenceAdvertisement.js's own header establishes.
+        // core/avatar/AvatarPresenceAdvertisement.js's own header establishes.
         const tamperedKind = getAvatarInteractionSigningDescriptor(makeAdvertisement({ kind: AvatarInteractionKind.GREET }));
         assert(Signature.canonicalBytes(descriptor) !== Signature.canonicalBytes(tamperedKind), '17. changing ONLY kind changes the canonical signed bytes');
         const tamperedTarget = getAvatarInteractionSigningDescriptor(makeAdvertisement({ targetAvatarId: 'someone-else' }));
@@ -210,7 +210,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section B — core/AvatarInteractionIngestion.js
+    // Section B — core/avatar/AvatarInteractionIngestion.js
     // -------------------------------------------------------------
     {
         assert(resolveIncomingInteraction(null, makeAdvertisement({ sequence: 1 })).accepted === true, '20. first-seen (no highwater yet) is always accepted');
@@ -222,7 +222,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section C — core/AvatarInteractionReplayWindow.js
+    // Section C — core/avatar/AvatarInteractionReplayWindow.js
     // -------------------------------------------------------------
     {
         const w = new AvatarInteractionReplayWindow();
@@ -255,7 +255,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section D — core/AvatarInteractionTrustPolicy.js
+    // Section D — core/avatar/AvatarInteractionTrustPolicy.js
     // -------------------------------------------------------------
     {
         assert(AvatarInteractionTrustPolicy.permissive().requireSignedInteraction === false, '39. permissive() tolerates unsigned interactions');

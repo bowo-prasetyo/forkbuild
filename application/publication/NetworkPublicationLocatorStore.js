@@ -1,4 +1,4 @@
-import { describePublicationClaimLocator } from '../../core/ForkBuildAppLinks.js';
+import { describePublicationClaimLocator } from '../../core/app/ForkBuildAppLinks.js';
 
 const STORAGE_KEY = 'forkbuild-network-publication-locators';
 // The admission log keeps the Publications themselves; this only remembers

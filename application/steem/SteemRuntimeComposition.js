@@ -1,4 +1,4 @@
-import { SteemReadingConfiguration, steemProofNodesFor } from '../../core/SteemReadingConfiguration.js';
+import { SteemReadingConfiguration, steemProofNodesFor } from '../../core/networks/SteemReadingConfiguration.js';
 import { createSteemRpcClient } from '../../steem/SteemRpcClient.js';
 import { createSteemDiscoveryThreadReader } from './SteemDiscoveryThreadReader.js';
 import { createSteemAnnouncer } from './SteemAnnouncer.js';
@@ -50,7 +50,7 @@ export function composeSteemRuntime({
     });
     // Announcements go to the first thread account's threads.
     // Nothing is posted while this device's Steem writer is switched off
-    // (core/NetworkWriters.js); reading never asks.
+    // (core/publication/NetworkWriters.js); reading never asks.
     const announcer = createSteemAnnouncer({ rpc, getAccount, getBroadcaster, isEnabled: isWriterEnabled, threadAccount: configuration.threadAccounts[0], appVersion });
     return Object.freeze({
         configuration,

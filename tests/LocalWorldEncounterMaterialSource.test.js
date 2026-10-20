@@ -1,9 +1,9 @@
 import { readFile } from 'node:fs/promises';
 import { LocalWorldEncounterMaterialSource } from '../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
 import { WorldEncounterMaterialSource, loadWorldEncounterMaterial } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
-import { WorldEncounterKind } from '../core/WorldEncounter.js';
+import { WorldEncounterKind } from '../core/world/WorldEncounter.js';
 import { Publication } from '../publisher/Publication.js';
-import { AvatarProfile } from '../core/AvatarProfile.js';
+import { AvatarProfile } from '../core/avatar/AvatarProfile.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 

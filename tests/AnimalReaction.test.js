@@ -1,11 +1,11 @@
 import * as THREE from 'three';
-import { wildlifeInRegion, ANIMAL_SPECIES } from '../core/WildlifeField.js';
-import { animalPoseAt, stationaryAnimalPoseAt, IDLE_ACTION } from '../core/WildlifeMotion.js';
-import { AnimalPresence } from '../core/AnimalPresence.js';
-import { AnimalDecoration } from '../core/AnimalDecoration.js';
-import { Position } from '../core/Position.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
+import { wildlifeInRegion, ANIMAL_SPECIES } from '../core/nature/WildlifeField.js';
+import { animalPoseAt, stationaryAnimalPoseAt, IDLE_ACTION } from '../core/nature/WildlifeMotion.js';
+import { AnimalPresence } from '../core/nature/AnimalPresence.js';
+import { AnimalDecoration } from '../core/nature/AnimalDecoration.js';
+import { Position } from '../core/document/Position.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { TERRAIN_TILE_SIZE } from '../core/nature/TerrainTiling.js';
 import { reactToObserver, ANIMAL_REACTION } from '../renderer/AnimalReaction.js';
 import { idleOffsetsAt, ANIMAL_IDLE } from '../renderer/AnimalIdle.js';
 import { gaitOffsetsAt, REST_GAIT } from '../renderer/AnimalGait.js';

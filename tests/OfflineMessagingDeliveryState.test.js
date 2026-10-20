@@ -8,10 +8,10 @@ import { PeerRelationshipUseCase } from '../application/peer/PeerRelationshipUse
 import { PeerReconnectionUseCase } from '../application/peer/PeerReconnectionUseCase.js';
 import { ChatUseCase } from '../application/chat/ChatUseCase.js';
 import { ChatOutbox } from '../application/chat/ChatOutbox.js';
-import { toChatMessage, deriveConversationId } from '../core/ChatMessage.js';
-import { ChatOutboxEntry } from '../core/ChatOutboxEntry.js';
-import { ChatDeliveryState, isValidChatDeliveryState } from '../core/ChatDeliveryState.js';
-import { toChatDeliveryAck, isValidChatDeliveryAck } from '../core/ChatDeliveryAck.js';
+import { toChatMessage, deriveConversationId } from '../core/social/ChatMessage.js';
+import { ChatOutboxEntry } from '../core/social/ChatOutboxEntry.js';
+import { ChatDeliveryState, isValidChatDeliveryState } from '../core/social/ChatDeliveryState.js';
+import { toChatDeliveryAck, isValidChatDeliveryAck } from '../core/social/ChatDeliveryAck.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
@@ -24,7 +24,7 @@ import { assert } from './support/Assert.js';
 // immediately for an offline peer (see Scenario A below, mirroring
 // tests/PeerChat.test.js's own Scenario G verbatim), while
 // `sendOrQueue()` writes a durable, identity-addressed
-// core/ChatOutboxEntry.js instead, and application/chat/ChatUseCase.js's
+// core/social/ChatOutboxEntry.js instead, and application/chat/ChatUseCase.js's
 // own reconnect-triggered flush — riding the SAME
 // connectedPeerRegistry.onChange() subscription 0.2.61 already used to
 // attach() every peer — delivers it the instant the recipient's
@@ -115,7 +115,7 @@ function makeFakeSessionManager(connect, targetAddress) {
 async function runTests() {
 
 // ---------------------------------------------------------------------
-// 1. core/ChatDeliveryState.js — closed vocabulary.
+// 1. core/social/ChatDeliveryState.js — closed vocabulary.
 // ---------------------------------------------------------------------
 {
     assert(isValidChatDeliveryState(ChatDeliveryState.QUEUED), 'QUEUED is a valid delivery state');
@@ -124,11 +124,11 @@ async function runTests() {
     assert(isValidChatDeliveryState(ChatDeliveryState.EXPIRED), 'EXPIRED is a valid delivery state');
     assert(!isValidChatDeliveryState('READ'), 'read receipts are not part of this closed vocabulary');
     assert(!isValidChatDeliveryState(undefined), 'undefined is not a valid delivery state');
-    console.log('✓ core/ChatDeliveryState.js: a closed, four-value delivery vocabulary');
+    console.log('✓ core/social/ChatDeliveryState.js: a closed, four-value delivery vocabulary');
 }
 
 // ---------------------------------------------------------------------
-// 2. core/ChatOutboxEntry.js — construction, expiry, immutable transitions.
+// 2. core/social/ChatOutboxEntry.js — construction, expiry, immutable transitions.
 // ---------------------------------------------------------------------
 {
     const message = toChatMessage({ conversationId: deriveConversationId('alice', 'bob'), senderIdentity: 'alice', sequence: 1, body: 'Hi' });
@@ -137,7 +137,7 @@ async function runTests() {
     assert(!entry.isExpired(), 'an entry well within its TTL is not expired');
 
     const sent = entry.withState(ChatDeliveryState.SENT, { sentAt: new Date() });
-    assert(sent.state === ChatDeliveryState.SENT && entry.state === ChatDeliveryState.QUEUED, 'withState() returns a NEW entry, never mutates the original — immutable, like core/PeerRelationship.js');
+    assert(sent.state === ChatDeliveryState.SENT && entry.state === ChatDeliveryState.QUEUED, 'withState() returns a NEW entry, never mutates the original — immutable, like core/social/PeerRelationship.js');
     assert(sent.message === entry.message, 'withState() never touches the underlying message');
 
     const alreadyExpired = new ChatOutboxEntry({ message, peerIdentityId: 'bob', queuedAt: new Date(Date.now() - 20000), expiresAt: new Date(Date.now() - 10000) });
@@ -154,11 +154,11 @@ async function runTests() {
     let threw = false;
     try { new ChatOutboxEntry({ message, peerIdentityId: 'bob', state: 'READ' }); } catch { threw = true; }
     assert(threw, 'an unrecognized delivery state is refused at construction');
-    console.log('✓ core/ChatOutboxEntry.js: immutable transitions, TTL expiry, and graceful degradation on corrupted storage');
+    console.log('✓ core/social/ChatOutboxEntry.js: immutable transitions, TTL expiry, and graceful degradation on corrupted storage');
 }
 
 // ---------------------------------------------------------------------
-// 3. core/ChatDeliveryAck.js — the tiny, separate ack vocabulary.
+// 3. core/social/ChatDeliveryAck.js — the tiny, separate ack vocabulary.
 // ---------------------------------------------------------------------
 {
     const ack = toChatDeliveryAck({ messageId: 'msg-1', conversationId: 'conv-1', recipientIdentity: 'bob' });
@@ -169,7 +169,7 @@ async function runTests() {
     let threw = false;
     try { toChatDeliveryAck({ conversationId: 'conv-1', recipientIdentity: 'bob' }); } catch { threw = true; }
     assert(threw, 'toChatDeliveryAck refuses a missing messageId');
-    console.log('✓ core/ChatDeliveryAck.js: a small, independent wire shape, never folded into ChatMessage');
+    console.log('✓ core/social/ChatDeliveryAck.js: a small, independent wire shape, never folded into ChatMessage');
 }
 
 // ---------------------------------------------------------------------

@@ -1,6 +1,6 @@
-import { describeWorldDiscoverySource } from '../../core/WorldDiscoverySource.js';
-import { assembleWorldDiscoveryInputs } from '../../core/WorldDiscoverySourceAssembly.js';
-import { deriveWorldEncounters } from '../../core/WorldEncounter.js';
+import { describeWorldDiscoverySource } from '../../core/world/WorldDiscoverySource.js';
+import { assembleWorldDiscoveryInputs } from '../../core/world/WorldDiscoverySourceAssembly.js';
+import { deriveWorldEncounters } from '../../core/world/WorldEncounter.js';
 import { describeWorldEncounterReadModel } from './WorldEncounterReadModel.js';
 import { describeWorldEncounterView } from './WorldEncounterView.js';
 
@@ -50,8 +50,8 @@ import { describeWorldEncounterView } from './WorldEncounterView.js';
 // indistinguishable to this file — and returns exactly what 0.9.2's own
 // `describeWorldEncounterView()` returns. A caller (a future,
 // unscheduled page-level container for `ui/views/WorldView.js`) never has
-// to import `core/WorldDiscoverySourceAssembly.js`,
-// `core/WorldEncounter.js`, or either application-layer projection itself
+// to import `core/world/WorldDiscoverySourceAssembly.js`,
+// `core/world/WorldEncounter.js`, or either application-layer projection itself
 // — this file is the one seam the UI is meant to depend on instead. See
 // "Dependency direction," below.
 //
@@ -103,7 +103,7 @@ import { describeWorldEncounterView } from './WorldEncounterView.js';
 // unscheduled work — this file has no subscription mechanism, no
 // "current sources" state of its own, and no memory between calls.
 //
-// DEPENDENCY DIRECTION — THE UI NEVER IMPORTS `core/WorldEncounter.js`
+// DEPENDENCY DIRECTION — THE UI NEVER IMPORTS `core/world/WorldEncounter.js`
 // DIRECTLY. This file is what lets a future page-level container write
 // `describeWorldFromDiscoverySources(currentWorldDiscoverySources)` and
 // nothing else, rather than manually calling

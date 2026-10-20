@@ -6,7 +6,7 @@ import { t } from '../i18n/i18n.js';
 // 0.9.386 — STUN Settings UI.
 //
 // The missing user-facing seam over this same milestone's own configuration
-// boundary (core/IceServerConfiguration.js + storage/
+// boundary (core/networks/IceServerConfiguration.js + storage/
 // IceServerConfigurationStore.js) — the direct structural mirror of
 // ui/views/ArweaveGatewaySettingsView.js / ui/views/NostrRelaySettingsView.js,
 // applied to a list of STUN server URLs instead of a single gateway/relay

@@ -1,4 +1,4 @@
-import { VERSION } from '../../core/version.js';
+import { VERSION } from '../../core/app/version.js';
 import { currentLocale, t } from '../i18n/i18n.js';
 import { REPOSITORY_URL, userGuideUrl } from '../i18n/userGuide.js';
 

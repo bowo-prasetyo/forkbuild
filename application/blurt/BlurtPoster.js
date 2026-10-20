@@ -16,9 +16,9 @@ import {
     emptyBlurtBuildPost,
     isBlurtAccountName,
     isBlurtFamily
-} from '../../core/BlurtPost.js';
-import { blurtBatchAnchorOperations } from '../../core/BlurtAnchor.js';
-import { blurtPublicationViewUrl, publicationViewUrl } from '../../core/ForkBuildAppLinks.js';
+} from '../../core/networks/BlurtPost.js';
+import { blurtBatchAnchorOperations } from '../../core/networks/BlurtAnchor.js';
+import { blurtPublicationViewUrl, publicationViewUrl } from '../../core/app/ForkBuildAppLinks.js';
 import { parseBlurtTime } from '../../blurt/BlurtRpcClient.js';
 
 // Posts everything ForkBuild puts on Blurt from the poster's own account
@@ -61,7 +61,7 @@ export function createBlurtPoster({
     rpc,
     getBroadcaster,
     getAccount,
-    // Whether this device's Blurt writer is switched on (core/NetworkWriters.js);
+    // Whether this device's Blurt writer is switched on (core/publication/NetworkWriters.js);
     // nothing is posted while it is off.
     isEnabled = () => true,
     appVersion = null,

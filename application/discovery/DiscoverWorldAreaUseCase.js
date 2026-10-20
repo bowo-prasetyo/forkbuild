@@ -1,4 +1,4 @@
-import { Position } from '../../core/Position.js';
+import { Position } from '../../core/document/Position.js';
 
 // Orchestrates spatial discovery for the World View.
 //

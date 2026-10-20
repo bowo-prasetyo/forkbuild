@@ -3,7 +3,7 @@ import worker, { RendezvousNode, LIMITS, handleBlurtImageUpload, handleSteemImag
 // Runs RendezvousNode against small fakes of the two Cloudflare surfaces it
 // uses: Durable Object storage and hibernatable WebSockets. Identities and
 // signatures are real (Node's WebCrypto Ed25519), built the same way the
-// app builds them (core/Signature.js, identity/Ed25519.js), so this file
+// app builds them (core/publication/Signature.js, identity/Ed25519.js), so this file
 // stays as self-contained as worker.js itself. tests/RendezvousWorkerInterop.test.js
 // checks the worker against the app's own client code.
 
@@ -49,6 +49,18 @@ function fakeSocket() {
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
+}
+
+// Runs `run`, collecting what it logs with console.error instead of printing it.
+async function loggingErrors(run) {
+    const errors = [];
+    const original = console.error;
+    console.error = (...args) => errors.push(args.join(' '));
+    try {
+        return { result: await run(), errors };
+    } finally {
+        console.error = original;
+    }
 }
 
 async function assertRejects(promise, pattern, message) {
@@ -565,10 +577,11 @@ async function lobbyLeave(identity, card, signer = identity) {
 
     const failing = new RendezvousNode(fakeDurableObjectState(), env);
     failing.fetchImpl = async () => new Response('{"message":"Invalid secretKey secret-key-value"}', { status: 401 });
-    const failed = await failing.fetch(request());
+    const { result: failed, errors } = await loggingErrors(() => failing.fetch(request()));
     const failure = await failed.json();
-    assert(failed.status === 502 && /creating a credential: .* answered 401/.test(failure.detail), `a provider failure answers 502 naming the step and status (got ${failure.detail})`);
-    assert(!JSON.stringify(failure).includes('secret-key-value'), '...without echoing the secret key');
+    assert(failed.status === 502 && failure.detail === undefined, `a provider failure answers 502, without the provider's error text (got ${JSON.stringify(failure)})`);
+    assert(errors.some((line) => /creating a credential: .* answered 401/.test(line)), `the log names the failing step and status (got ${errors.join(' | ')})`);
+    assert(!JSON.stringify(failure).includes('secret-key-value') && !errors.join(' ').includes('secret-key-value'), '...and neither echoes the secret key');
 
     const noListing = new RendezvousNode(fakeDurableObjectState(), env);
     noListing.fetchImpl = async (url) => url.includes('/credential?')
@@ -617,8 +630,10 @@ async function lobbyLeave(identity, card, signer = identity) {
 
     const rejecting = new RendezvousNode(fakeDurableObjectState(), env);
     rejecting.fetchImpl = async () => new Response('{"errors":[{"message":"Authentication error api-token-value"}]}', { status: 401 });
-    const failure = await (await rejecting.fetch(request('192.0.2.5'))).json();
-    assert(/Cloudflare answered 401/.test(failure.detail) && !failure.detail.includes('api-token-value'), 'a rejected token is reported without echoing it');
+    const { result: rejected, errors } = await loggingErrors(() => rejecting.fetch(request('192.0.2.5')));
+    const failure = await rejected.json();
+    assert(failure.detail === undefined && errors.some((line) => /Cloudflare answered 401/.test(line)) && !errors.join(' ').includes('api-token-value'),
+        'a rejected token is logged for the operator without echoing it, and not told to the visitor');
     console.log('✓ Cloudflare TURN credentials, port 53 filtering and the monthly allowance');
 }
 

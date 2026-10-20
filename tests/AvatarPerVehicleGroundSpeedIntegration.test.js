@@ -1,11 +1,11 @@
 import { readFile } from 'node:fs/promises';
 import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
-import { VehicleType } from '../core/VehicleType.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
 import {
     AvatarMovementCapabilityKind,
     resolveAvatarVehicleMovementCapability
-} from '../core/AvatarVehicleMovementCapability.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+} from '../core/vehicles/AvatarVehicleMovementCapability.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
@@ -27,7 +27,7 @@ import { assert } from './support/Assert.js';
 // — while `AvatarMovementCapabilityKind` still has only THREE values,
 // and BICYCLE/MOTORCYCLE/CAR still all resolve to the exact same
 // GROUND_VEHICLE kind. The change is confined entirely to
-// core/AvatarVehicleMovementCapability.js's own resolution data — this
+// core/vehicles/AvatarVehicleMovementCapability.js's own resolution data — this
 // file exists to prove that confinement, not to re-test what 0.9.85/
 // 0.9.86's own suites already cover.
 //
@@ -36,7 +36,7 @@ import { assert } from './support/Assert.js';
 //   Section C: BICYCLE/MOTORCYCLE/CAR still share one GROUND_VEHICLE
 //              movement kind
 //   Section D: controller independence — AvatarMovementController.js
-//              and core/AvatarMovementSimulation.js contain no
+//              and core/avatar/AvatarMovementSimulation.js contain no
 //              BICYCLE/MOTORCYCLE/CAR literal anywhere
 //   Section E: end-to-end movement — identical input + elapsed time,
 //              driven through the real movement pipeline, covers
@@ -93,7 +93,7 @@ function forwardDistance(controller, avatarPresenceSession, ticks, dt) {
 // exactly to its movementSpeed (the ramp-up itself contributes a
 // duration-dependent "deficit" — see the callers' own 0.9.91 comments),
 // but once a capability has already reached its own cruise movementSpeed,
-// core/AvatarMovementAccelerationSimulation.js#resolveMovementSpeed()'s
+// core/avatar/AvatarMovementAccelerationSimulation.js#resolveMovementSpeed()'s
 // own `currentSpeed === targetSpeed` case is an exact no-op every tick —
 // so distance measured ENTIRELY after that point is exactly
 // `movementSpeed * measureTime`, discarding `warmupTicks` worth of ramp
@@ -163,10 +163,10 @@ async function runTests() {
         assert(!/\bBICYCLE\b|\bMOTORCYCLE\b|\bCAR\b/.test(controllerCodeOnly),
             '9. application/avatar/AvatarMovementController.js contains no BICYCLE/MOTORCYCLE/CAR literal of any kind, per-vehicle numeric differentiation included');
 
-        const simulationSource = await readFile(new URL('../core/AvatarMovementSimulation.js', import.meta.url), 'utf8');
+        const simulationSource = await readFile(new URL('../core/avatar/AvatarMovementSimulation.js', import.meta.url), 'utf8');
         const simulationCodeOnly = simulationSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         assert(!/BICYCLE|MOTORCYCLE|\bCAR\b|VehicleType/.test(simulationCodeOnly),
-            '10. core/AvatarMovementSimulation.js contains no vehicle literal of any kind — this milestone changed zero lines of the movement simulation itself');
+            '10. core/avatar/AvatarMovementSimulation.js contains no vehicle literal of any kind — this milestone changed zero lines of the movement simulation itself');
     }
 
     // -------------------------------------------------------------
@@ -189,7 +189,7 @@ async function runTests() {
         // (BICYCLE/MOTORCYCLE/CAR: 3/5/4 units/second^2) — over a short
         // window, MOTORCYCLE's own faster ramp can legitimately put it
         // ahead of CAR despite CAR's higher eventual top speed (see
-        // core/AvatarVehicleMovementCapability.js's own 0.9.90 header,
+        // core/vehicles/AvatarVehicleMovementCapability.js's own 0.9.90 header,
         // "acceleration is an independent dimension from movementSpeed",
         // and tests/AvatarVehicleAccelerationStateIntegration.test.js's
         // own dedicated coverage of exactly that relationship) — and the
@@ -200,7 +200,7 @@ async function runTests() {
         // reached its own cruise movementSpeed) followed by a measured
         // burst sidesteps both problems at once: once cruising,
         // resolveMovementSpeed() is an exact no-op every tick (see
-        // core/AvatarMovementAccelerationSimulation.js's own header), so
+        // core/avatar/AvatarMovementAccelerationSimulation.js's own header), so
         // the measured distance is exactly `movementSpeed * measureTime`
         // for each — both the strict ordering and the exact resolved-
         // speed ratios this section exists to prove.
@@ -306,7 +306,7 @@ async function runTests() {
     // -------------------------------------------------------------
     // Section H — drone. Aerial Movement Pipeline milestone: AERIAL_VEHICLE
     // is no longer permanently blocked (see
-    // core/AvatarVehicleMovementCapability.js's own "AERIAL_VEHICLE Is Now
+    // core/vehicles/AvatarVehicleMovementCapability.js's own "AERIAL_VEHICLE Is Now
     // A Real, Supported Capability" header) — a resolved DRONE capability
     // now drives real horizontal ground-speed movement through this exact
     // same simulateAvatarMovement() pipeline, exactly like BICYCLE/
@@ -323,7 +323,7 @@ async function runTests() {
         bicycleController2.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.BICYCLE));
 
         // DRONE's own acceleration (5 world units/s^2, per
-        // core/AvatarVehicleMovementCapability.js) reaches its own 16
+        // core/vehicles/AvatarVehicleMovementCapability.js) reaches its own 16
         // movementSpeed in 3.2s — comfortably inside this same 4s warmup
         // window every other vehicle in this file already uses.
         const WARMUP_TICKS = 80;

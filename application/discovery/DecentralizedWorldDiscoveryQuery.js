@@ -1,4 +1,4 @@
-import { describeDecentralizedWorldDiscoveryLead } from '../../core/DecentralizedWorldDiscoveryLead.js';
+import { describeDecentralizedWorldDiscoveryLead } from '../../core/world/DecentralizedWorldDiscoveryLead.js';
 
 // 0.9.25 — Decentralized Discovery Query Adapter.
 //
@@ -27,7 +27,7 @@ import { describeDecentralizedWorldDiscoveryLead } from '../../core/Decentralize
 //                                 that service's own wire format)
 //         │
 //         ▼
-//   core/DecentralizedWorldDiscoveryLead.js   (0.9.24, unmodified)
+//   core/world/DecentralizedWorldDiscoveryLead.js   (0.9.24, unmodified)
 //        describeDecentralizedWorldDiscoveryLead()
 //         │
 //         ▼
@@ -85,9 +85,9 @@ import { describeDecentralizedWorldDiscoveryLead } from '../../core/Decentralize
 // here across calls instead of across leads.
 //
 // NO REGISTRY, NO WORLD ENCOUNTER, NO UI. This file never imports
-// `application/discovery/WorldDiscoverySourceRegistry.js`, `core/WorldEncounter.js`,
+// `application/discovery/WorldDiscoverySourceRegistry.js`, `core/world/WorldEncounter.js`,
 // or any UI component — an accepted lead becoming a real
-// `core/WorldDiscoverySource.js` contribution is 0.9.26, unscheduled.
+// `core/world/WorldDiscoverySource.js` contribution is 0.9.26, unscheduled.
 //
 // DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
 // - **Querying more than one service, or combining/ranking/deduplicating
@@ -97,7 +97,7 @@ import { describeDecentralizedWorldDiscoveryLead } from '../../core/Decentralize
 //   concrete adapter is free to do any of this internally; this
 //   orchestration layer never does it on the adapter's behalf.
 // - **Wiring an accepted lead into `application/
-//   WorldDiscoverySourceRegistry.js` or `core/WorldEncounter.js`.** 0.9.26,
+//   WorldDiscoverySourceRegistry.js` or `core/world/WorldEncounter.js`.** 0.9.26,
 //   unscheduled.
 // - **Retrieving content from a lead's own `uri`, or hash-verifying
 //   anything.** 0.9.27+, unscheduled — see 0.9.24's own header.

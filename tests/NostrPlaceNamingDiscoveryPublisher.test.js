@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 
 import { NostrPlaceNamingDiscoveryPublisher } from '../application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js';
-import { parsePlaceNamingDiscoveryEnvelope, derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
+import { parsePlaceNamingDiscoveryEnvelope, derivePlaceNamingDiscoveryTag } from '../core/world/PlaceNamingDiscoveryEnvelope.js';
 import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
 import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';

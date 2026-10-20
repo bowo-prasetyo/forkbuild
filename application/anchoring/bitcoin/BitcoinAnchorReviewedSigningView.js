@@ -1,5 +1,5 @@
 import { BitcoinAnchorReviewedSigningState } from './BitcoinAnchorReviewedSigningState.js';
-import { message } from '../../../core/Message.js';
+import { message } from '../../../core/app/Message.js';
 
 const STATE_LABELS = {
     [BitcoinAnchorReviewedSigningState.IDLE]: message('bitcoinAnchorReviewedSigning.notYetSigned'),

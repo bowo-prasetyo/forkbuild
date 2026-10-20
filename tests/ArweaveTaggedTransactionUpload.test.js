@@ -4,7 +4,7 @@ import { createArweaveTaggedTransactionUpload } from '../application/arweave/Arw
 import { createArweaveInjectedProviderSigner } from '../arweave/ArweaveInjectedProviderSigner.js';
 import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
 import { ArweaveGraphqlDiscoveryQueryService } from '../application/arweave/ArweaveGraphqlDiscoveryQueryService.js';
-import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
+import { describeDecentralizedDiscoveryEnvelope } from '../core/publication/DecentralizedDiscoveryEnvelope.js';
 import { assert } from './support/Assert.js';
 import { readSource as source } from './support/SourceText.js';
 
@@ -335,7 +335,7 @@ async function run() {
         const ledgerEntry = ledger.get(published.id);
         assert(JSON.parse(decodeBase64Url(ledgerEntry.data)).objectId === 'pub-g-flagship', 'G4. the announced envelope\'s own data, base64url-decoded off the real transaction, is byte-identical to what was published');
         // Amended: a Publication announcement also carries its narrow record tag
-        // (core/NarrowDiscoveryTags.js#publicationRecordTag) as a second tag.
+        // (core/publication/NarrowDiscoveryTags.js#publicationRecordTag) as a second tag.
         assert(ledgerEntry.tags.length === 2, 'G5. exactly two Arweave Tags reached the real signed transaction: the discovery tag and the Publication\'s record tag');
         assert(decodeBase64Url(ledgerEntry.tags[1].name) === ArweaveAnnouncementPublisher.DEFAULT_TAG_NAME
             && decodeBase64Url(ledgerEntry.tags[1].value) === 'forkbuild-publication:pub-g-flagship',

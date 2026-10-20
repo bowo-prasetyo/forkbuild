@@ -95,7 +95,7 @@ export class RenderWorldUseCase {
             // the camera frames the build where it is drawn.
             floorHeight: () => editorFloorHeight(renderer),
             // See inside: `cutaway` in the build's own coordinates
-            // (core/IndoorView.js, seeInsideCutaway()), or null.
+            // (core/building/IndoorView.js, seeInsideCutaway()), or null.
             setCutaway: (cutaway) => cutawayClipping.set(cutaway ? { ...cutaway, y: cutaway.y + editorFloorHeight(renderer) } : null),
             // 0.2.91 — resolves a screen position to { placementId,
             // point } | null, completely independent of pick()'s brick

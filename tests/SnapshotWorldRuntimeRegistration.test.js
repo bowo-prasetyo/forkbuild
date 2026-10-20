@@ -8,8 +8,8 @@ import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placem
 import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
 import { resolveSnapshotWorldPlacement } from '../application/snapshot/placement/SnapshotWorldPlacement.js';
 import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
-import { assembleWorldDiscoveryInputs } from '../core/WorldDiscoverySourceAssembly.js';
-import { deriveWorldEncounters } from '../core/WorldEncounter.js';
+import { assembleWorldDiscoveryInputs } from '../core/world/WorldDiscoverySourceAssembly.js';
+import { deriveWorldEncounters } from '../core/world/WorldEncounter.js';
 import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
 import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
 import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
@@ -21,10 +21,10 @@ import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/
 import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
-import { PlacementRecord } from '../core/PlacementRecord.js';
-import { Position } from '../core/Position.js';
+import { PlacementRecord } from '../core/publication/PlacementRecord.js';
+import { Position } from '../core/document/Position.js';
 import { Publication } from '../publisher/Publication.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
@@ -539,7 +539,7 @@ async function run() {
         const sources = worldDiscoverySourceRegistry.listSources();
         const inputs = assembleWorldDiscoveryInputs(sources);
         const encounters = deriveWorldEncounters(inputs);
-        assert(encounters.publications.length === 1, '5. FLAGSHIP — the registered Snapshot\'s own Publication is now encounterable through the SAME, unmodified core/WorldEncounter.js#deriveWorldEncounters() pipeline WorldEncounterCanvas already renders from');
+        assert(encounters.publications.length === 1, '5. FLAGSHIP — the registered Snapshot\'s own Publication is now encounterable through the SAME, unmodified core/world/WorldEncounter.js#deriveWorldEncounters() pipeline WorldEncounterCanvas already renders from');
         const [encounter] = encounters.publications;
         assert(encounter.objectId === publicationId, '6. the encounter names the correct Publication');
         assert(encounter.position.x === 64 && encounter.position.y === 2 && encounter.position.z === -8,

@@ -1,7 +1,7 @@
 
 import { Publication } from '../publisher/Publication.js';
-import { ContentReference } from '../core/ContentReference.js';
-import { License, LicenseId } from '../core/License.js';
+import { ContentReference } from '../core/document/ContentReference.js';
+import { License, LicenseId } from '../core/document/License.js';
 import { PublicationResolver } from '../application/publication/PublicationResolver.js';
 import { PublicationResolutionCoordinator } from '../application/publication/PublicationResolutionCoordinator.js';
 import { resolvePublicationView } from '../application/publication/PublicationResolutionView.js';
@@ -10,9 +10,9 @@ import { PUBLICATION_CONTENT_KIND } from '../application/publication/Publication
 import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
 import { ForkFailureReason } from '../application/document/ForkFailureReason.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { Document } from '../core/Document.js';
-import { World } from '../core/World.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { Document } from '../core/document/Document.js';
+import { World } from '../core/document/World.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -425,9 +425,9 @@ async function run() {
         const publicationSource = await readSource('publisher/Publication.js');
         assert(!/forkFailure|ForkFailureReason/.test(publicationSource),
             '3. publisher/Publication.js carries no forkFailure-shaped field — 0.9.353 adds no durable Publication state.');
-        const documentMetadataSource = await readSource('core/DocumentMetadata.js');
+        const documentMetadataSource = await readSource('core/document/DocumentMetadata.js');
         assert(!/forkFailure|ForkFailureReason/.test(documentMetadataSource),
-            '4. core/DocumentMetadata.js carries no forkFailure-shaped field either.');
+            '4. core/document/DocumentMetadata.js carries no forkFailure-shaped field either.');
     }
     console.log('✓ Section J: no retry system, persistent lifecycle state, or Publication/Document field was introduced anywhere — forkFailure stays exactly what the milestone brief asked for, a presentation outcome for one attempted action.');
 

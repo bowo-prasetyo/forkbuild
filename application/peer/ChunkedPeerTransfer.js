@@ -1,4 +1,4 @@
-import { createId } from '../../core/createId.js';
+import { createId } from '../../core/document/createId.js';
 import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
 
 // Moves a text larger than one peer message (peer/PeerMessage.js's

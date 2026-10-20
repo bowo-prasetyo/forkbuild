@@ -1,8 +1,8 @@
-import { doorSwingTarget, stepDoorSwing, doorSwingOffset } from '../core/DoorSwing.js';
-import { isPassableDoor } from '../core/BrickPassage.js';
+import { doorSwingTarget, stepDoorSwing, doorSwingOffset } from '../core/building/DoorSwing.js';
+import { isPassableDoor } from '../core/building/BrickPassage.js';
 
 // Swings World View's doors open as people walk up to them, and shut behind
-// them (core/DoorSwing.js decides how far; this draws it). Two kinds of
+// them (core/building/DoorSwing.js decides how far; this draws it). Two kinds of
 // door are drawn: a World's own bricks, as instances in the
 // BrickInstanceRegistry, and the bricks of structure placements, each a mesh
 // of its own (renderer/WorldRenderer.js#_renderStructurePlacement()), which

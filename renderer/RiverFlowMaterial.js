@@ -1,5 +1,5 @@
 // Makes a river's water material run with its current: each vertex carries
-// the water's velocity (`aFlow`, core/RiverFlow.js#riverFlowAt()) and the
+// the water's velocity (`aFlow`, core/nature/RiverFlow.js#riverFlowAt()) and the
 // channel's direction (`aChannel`), how much it breaks into rapids
 // (`aRapids`) and how strongly it wells up as a spring (`aSpring`), and the
 // fragment shader drifts a soft noise pattern along it, tilting the light
@@ -9,7 +9,7 @@
 // velocity that varies from place to place smears more the longer it runs,
 // so two copies run on cycles FLOW_CYCLE seconds long, half a cycle apart,
 // each faded out as it resets. The velocity varies smoothly
-// (core/RiverFlow.js keeps it continuous), so the current speeds up, slows
+// (core/nature/RiverFlow.js keeps it continuous), so the current speeds up, slows
 // and turns with the river without a seam.
 //
 // `waveTime` is the shared { value } in seconds the lakes' waves read
@@ -31,14 +31,14 @@ const NORMAL_STRENGTH = 0.3;
 // How much a raindrop's ring lightens the water.
 const RAIN_RING_LIGHTEN = 0.35;
 const CREST_LIGHTEN = 0.12;
-// Rapids (core/RiverFlow.js#riverRapidsAt(), per vertex as `aRapids`) break
+// Rapids (core/nature/RiverFlow.js#riverRapidsAt(), per vertex as `aRapids`) break
 // white: the crests of the drifting pattern turn to foam, more of them the
 // rougher the water. Far off, where the pattern fades, a steady share of
 // foam stands in for it, so rapids still read from a distance.
 const FOAM_COLOR = [0.92, 0.95, 0.96];
 const FOAM_STRENGTH = 0.85;
 const FAR_FOAM_SHARE = 0.35;
-// A spring (core/RiverFlow.js#riverSpringAt(), per vertex as `aSpring`: its
+// A spring (core/nature/RiverFlow.js#riverSpringAt(), per vertex as `aSpring`: its
 // strength and the way to its centre) wells up: rings spread outward from
 // its centre, RING_SPACING apart at RING_SPEED, fading to its rim, and a
 // few bubbles break the surface at the middle.

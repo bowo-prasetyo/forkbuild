@@ -1,11 +1,11 @@
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { FIRST_EDIT_BRICK_ID, STARTER_JOBS, StarterCardStage, StarterJobId, isStarterJobDone, starterCardStage, starterJobById, starterJobGuide, unfinishedStructure } from '../core/StarterJob.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { FIRST_EDIT_BRICK_ID, STARTER_JOBS, StarterCardStage, StarterJobId, isStarterJobDone, starterCardStage, starterJobById, starterJobGuide, unfinishedStructure } from '../core/challenge/StarterJob.js';
 import { FEATURED_STRUCTURE_IDS } from '../application/home/FeaturedBuilds.js';
-import { restingHeight } from '../core/BrickResting.js';
-import { addReadyMadeBricks, countPlacedBricks, worldBricks } from '../core/PlacedBricks.js';
+import { restingHeight } from '../core/building/BrickResting.js';
+import { addReadyMadeBricks, countPlacedBricks, worldBricks } from '../core/building/PlacedBricks.js';
 import { STARTER_JOB_ID, STARTER_STRUCTURE_ID } from '../application/home/FeaturedBuilds.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';
@@ -20,8 +20,8 @@ import { assert } from './support/Assert.js';
 
 // Make it yours, in the village (docs/reviews/CreativeDirection-2026-10-12b.md,
 // findings 2 and 3): Home's main button opens the House with its roof left
-// to do (core/StarterJob.js), a roof dropped on it rests on its walls
-// (core/BrickResting.js), and Place with nothing chosen places a cube.
+// to do (core/challenge/StarterJob.js), a roof dropped on it rests on its walls
+// (core/building/BrickResting.js), and Place with nothing chosen places a cube.
 
 const registry = new CreateBrickRegistryUseCase().execute();
 const structures = new CreateStructureRegistryUseCase().execute();

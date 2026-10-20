@@ -2,8 +2,8 @@ import {
     DecentralizedPublication,
     DECENTRALIZED_PUBLICATION_KIND,
     CURRENT_SCHEMA_VERSION as PUBLICATION_SCHEMA_VERSION
-} from '../core/DecentralizedPublication.js';
-import { ContentReference } from '../core/ContentReference.js';
+} from '../core/publication/DecentralizedPublication.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import {
     validateDecentralizedPublication,
     DecentralizedPublicationError
@@ -12,7 +12,7 @@ import { PublicationResolver } from '../application/publication/PublicationResol
 import { PublicationResolutionOutcome } from '../application/publication/PublicationResolutionOutcome.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { BlueprintAttribution, BLUEPRINT_ATTRIBUTION_KIND, CURRENT_SCHEMA_VERSION as ATTRIBUTION_SCHEMA_VERSION } from '../core/BlueprintAttribution.js';
+import { BlueprintAttribution, BLUEPRINT_ATTRIBUTION_KIND, CURRENT_SCHEMA_VERSION as ATTRIBUTION_SCHEMA_VERSION } from '../core/building/BlueprintAttribution.js';
 import { LocalBlueprintAttributionStore } from '../application/blueprint/LocalBlueprintAttributionStore.js';
 import { createBlueprintAttributionPublicationKind } from '../application/blueprint/BlueprintAttributionPublicationKind.js';
 import { assert } from './support/Assert.js';

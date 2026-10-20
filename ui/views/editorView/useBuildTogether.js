@@ -1,7 +1,7 @@
 import { computed, inject, onBeforeUnmount, ref, shallowRef } from 'vue';
 import { WalkTogetherGuestStatus, WalkTogetherStatus } from '../../../application/walkTogether/WalkTogether.js';
 import { BuildTogetherOutcome, BuildTogetherRole } from '../../../application/buildTogether/BuildTogetherSession.js';
-import { buildTogetherLink } from '../../../core/WalkTogetherCode.js';
+import { buildTogetherLink } from '../../../core/social/WalkTogetherCode.js';
 import { resolveSigningIdentityId } from '../../../identity/resolveSigningIdentityId.js';
 import { EditorEvent } from '../../../core/events/EditorEvent.js';
 import { displayText, t } from '../../i18n/i18n.js';

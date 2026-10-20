@@ -10,10 +10,10 @@ import { ChatUseCase } from '../application/chat/ChatUseCase.js';
 import { ChatOutbox } from '../application/chat/ChatOutbox.js';
 import { ConversationStore } from '../application/chat/ConversationStore.js';
 import { ConversationReadTracker } from '../application/chat/ConversationReadTracker.js';
-import { ConversationReadMarker } from '../core/ConversationReadMarker.js';
+import { ConversationReadMarker } from '../core/social/ConversationReadMarker.js';
 import { PeerPresenceUseCase } from '../application/presence/PeerPresenceUseCase.js';
-import { toChatMessage, deriveConversationId } from '../core/ChatMessage.js';
-import { FriendshipState } from '../core/FriendshipState.js';
+import { toChatMessage, deriveConversationId } from '../core/social/ChatMessage.js';
+import { FriendshipState } from '../core/social/FriendshipState.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
@@ -124,7 +124,7 @@ function makeChatStack(device, registry, friends) {
 async function runTests() {
 
 // ---------------------------------------------------------------------
-// 1. core/ConversationReadMarker.js — construction, monotonic
+// 1. core/social/ConversationReadMarker.js — construction, monotonic
 //    withLastReadSequence(), JSON round-trip, graceful degradation.
 // ---------------------------------------------------------------------
 {
@@ -148,7 +148,7 @@ async function runTests() {
     let threw = false;
     try { new ConversationReadMarker({ peerIdentityId: '' }); } catch { threw = true; }
     assert(threw, 'an empty peerIdentityId is refused at construction');
-    console.log('✓ core/ConversationReadMarker.js: monotonic transitions, immutability, and graceful degradation on corrupted storage');
+    console.log('✓ core/social/ConversationReadMarker.js: monotonic transitions, immutability, and graceful degradation on corrupted storage');
 }
 
 // ---------------------------------------------------------------------

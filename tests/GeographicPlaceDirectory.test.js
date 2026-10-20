@@ -1,14 +1,14 @@
 import {
     GeographicPlaceView, buildGeographicPlaceView, describeCandidacyReasons, CANDIDACY_CAVEAT
-} from '../core/GeographicPlaceView.js';
+} from '../core/world/GeographicPlaceView.js';
 import {
     buildGeographicPlaceDirectory, geographicPlaceByKey, geographicPlaceForRegionId
-} from '../core/GeographicPlaceDirectory.js';
-import { resolveGeographicPlaces } from '../core/GeographicPlaceResolution.js';
-import { WorldRegion } from '../core/WorldRegion.js';
-import { RegionKind } from '../core/RegionKind.js';
-import { Position } from '../core/Position.js';
-import { World } from '../core/World.js';
+} from '../core/world/GeographicPlaceDirectory.js';
+import { resolveGeographicPlaces } from '../core/world/GeographicPlaceResolution.js';
+import { WorldRegion } from '../core/world/WorldRegion.js';
+import { RegionKind } from '../core/world/RegionKind.js';
+import { Position } from '../core/document/Position.js';
+import { World } from '../core/document/World.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
 import { LocalPlaceNamingPublicationLog } from '../application/placeNaming/LocalPlaceNamingPublicationLog.js';
@@ -38,10 +38,10 @@ import { makeIdentity } from './support/TestIdentity.js';
 //   WorldRegion -> PlaceFingerprint -> PlaceIdentity ->
 //   GeographicPlaceView -> UI
 //
-// Section A: core/GeographicPlaceView.js — buildGeographicPlaceView(),
+// Section A: core/world/GeographicPlaceView.js — buildGeographicPlaceView(),
 //            displayName priority, deterministic representative pick,
 //            worldCount/authorCount dedup, describeCandidacyReasons()
-// Section B: core/GeographicPlaceDirectory.js — buildGeographicPlaceDirectory()
+// Section B: core/world/GeographicPlaceDirectory.js — buildGeographicPlaceDirectory()
 //            ordering, geographicPlaceByKey(), geographicPlaceForRegionId(),
 //            graceful degradation on empty/unknown input
 // Section C: application/world/WorldNavigationSession.js wiring —
@@ -87,7 +87,7 @@ function region({ id, worldId, authorIdentityId, name = 'Unnamed Region', kind =
 
 async function run() {
     // -------------------------------------------------------------
-    // Section A: core/GeographicPlaceView.js
+    // Section A: core/world/GeographicPlaceView.js
     // -------------------------------------------------------------
     {
         const regionA = region({ id: 'a', worldId: 'w1', authorIdentityId: 'alice', x: 100, z: 200, radius: 50 });
@@ -108,7 +108,7 @@ async function run() {
         assert(view.displayName === 'Kawahara Village', '6. displayName is the top-ranked COMBINED name (score 2) over a lone single-author name (score 1)');
         assert(view.descriptionCount === 2, '7. descriptionCount mirrors regions.length exactly');
         // Deterministic representative: regions arrive pre-sorted by
-        // `${worldId}:${id}` (core/GeographicPlaceResolution.js#buildPlaceGroup())
+        // `${worldId}:${id}` (core/world/GeographicPlaceResolution.js#buildPlaceGroup())
         // — 'w1:a' sorts before 'w2:b'.
         assert(view.representativeRegion.id === 'a', '8. representativeRegion is the deterministic worldId:id-sorted first region, never an "authoritative" pick');
 
@@ -143,10 +143,10 @@ async function run() {
         assert(regionA.name === 'Unnamed Region' && regionB.name === 'Unnamed Region',
             '19. building a GeographicPlaceView NEVER writes back to either WorldRegion\'s own name');
     }
-    console.log('✓ Section A: core/GeographicPlaceView.js — derived rows, deterministic representative, never mutates a WorldRegion');
+    console.log('✓ Section A: core/world/GeographicPlaceView.js — derived rows, deterministic representative, never mutates a WorldRegion');
 
     // -------------------------------------------------------------
-    // Section B: core/GeographicPlaceDirectory.js
+    // Section B: core/world/GeographicPlaceDirectory.js
     // -------------------------------------------------------------
     {
         const kawaharaA = region({ id: 'kw-a', worldId: 'w1', authorIdentityId: 'alice', x: 100, z: 200, radius: 50 });
@@ -195,7 +195,7 @@ async function run() {
         assert(buildGeographicPlaceDirectory([], []).length === 0, '31. an empty directory for no regions, never a throw');
         assert(buildGeographicPlaceDirectory().length === 0, '32. buildGeographicPlaceDirectory() with no arguments at all is still []');
     }
-    console.log('✓ Section B: core/GeographicPlaceDirectory.js — deterministic alphabetical ordering, byKey/forRegionId lookups, same name never merges different ground');
+    console.log('✓ Section B: core/world/GeographicPlaceDirectory.js — deterministic alphabetical ordering, byKey/forRegionId lookups, same name never merges different ground');
 
     // -------------------------------------------------------------
     // Section C: application/world/WorldNavigationSession.js wiring

@@ -1,6 +1,6 @@
 // @environment browser
 import * as THREE from 'three';
-import { FULL_MOON, MOON_PHASES, NIGHT, skyBodiesAtFraction } from '../core/DayCycle.js';
+import { FULL_MOON, MOON_PHASES, NIGHT, skyBodiesAtFraction } from '../core/nature/DayCycle.js';
 import { SkyBodies } from '../renderer/SkyBodies.js';
 import { assert } from './support/Assert.js';
 

@@ -2,35 +2,35 @@ import { AvatarMovementController } from '../avatar/AvatarMovementController.js'
 import { AvatarVehicleInteractionController } from '../avatar/AvatarVehicleInteractionController.js';
 import { AvatarAnimalInteractionController } from '../avatar/AvatarAnimalInteractionController.js';
 import { AvatarVehicleMovementController } from '../avatar/AvatarVehicleMovementController.js';
-import { toAvatarPresenceAdvertisement } from '../../core/AvatarPresenceAdvertisement.js';
+import { toAvatarPresenceAdvertisement } from '../../core/avatar/AvatarPresenceAdvertisement.js';
 import { signAvatarPresenceAdvertisement } from '../presence/PresenceSigning.js';
-import { resolveAvatarVehicleMovementCapability } from '../../core/AvatarVehicleMovementCapability.js';
+import { resolveAvatarVehicleMovementCapability } from '../../core/vehicles/AvatarVehicleMovementCapability.js';
 import {
     VehicleSteeringIntent, isValidVehicleSteeringIntent, createVehicleSteeringIntent
-} from '../../core/VehicleSteeringIntent.js';
+} from '../../core/vehicles/VehicleSteeringIntent.js';
 import { AvatarMovementConstraint } from '../avatar/AvatarMovementConstraint.js';
 
 // How far round the avatar the indoor view looks for the build it is in.
 const INDOOR_QUERY_RADIUS = 20;
-import { DEFAULT_MAX_STEP_HEIGHT } from '../../core/BrickWalkability.js';
+import { DEFAULT_MAX_STEP_HEIGHT } from '../../core/building/BrickWalkability.js';
 import { AvatarTerrainConstraint } from '../avatar/AvatarTerrainConstraint.js';
 import { AvatarStepConstraint } from '../avatar/AvatarStepConstraint.js';
 import { AvatarTreeConstraint } from '../avatar/AvatarTreeConstraint.js';
 import { AvatarWaterConstraint } from '../avatar/AvatarWaterConstraint.js';
-import { isLakeAt } from '../../core/Hydrology.js';
-import { isLakeFrozenAt } from '../../core/Season.js';
+import { isLakeAt } from '../../core/nature/Hydrology.js';
+import { isLakeFrozenAt } from '../../core/nature/Season.js';
 import { VehicleWaterConstraint } from '../avatar/VehicleWaterConstraint.js';
-import { AvatarSwimMode } from '../../core/AvatarSwimming.js';
+import { AvatarSwimMode } from '../../core/avatar/AvatarSwimming.js';
 import { AvatarWildlifeConstraint } from '../avatar/AvatarWildlifeConstraint.js';
-import { ANIMAL_INTERACTION_RADIUS } from '../../core/AvatarAnimalCatchTarget.js';
-import { AvatarVehicleBrakingIntent, deriveAvatarVehicleBrakingIntent } from '../../core/AvatarVehicleBrakingIntent.js';
-import { deriveAvatarContinuousMovementInputEvent } from '../../core/AvatarContinuousMovementInputAdapter.js';
-import { deriveAvatarContinuousMovementIntent } from '../../core/AvatarContinuousMovementIntent.js';
-import { deriveAvatarContinuousMovementMode } from '../../core/AvatarContinuousMovementMode.js';
-import { deriveAvatarVehicleBrakingInputFact } from '../../core/AvatarVehicleBrakingInputAdapter.js';
-import { deriveVehicleSteeringInputEvent } from '../../core/VehicleSteeringInputAdapter.js';
-import { SpatialBounds } from '../../core/SpatialBounds.js';
-import { AvatarAnimationState } from '../../core/AvatarAnimationState.js';
+import { ANIMAL_INTERACTION_RADIUS } from '../../core/avatar/AvatarAnimalCatchTarget.js';
+import { AvatarVehicleBrakingIntent, deriveAvatarVehicleBrakingIntent } from '../../core/vehicles/AvatarVehicleBrakingIntent.js';
+import { deriveAvatarContinuousMovementInputEvent } from '../../core/avatar/AvatarContinuousMovementInputAdapter.js';
+import { deriveAvatarContinuousMovementIntent } from '../../core/avatar/AvatarContinuousMovementIntent.js';
+import { deriveAvatarContinuousMovementMode } from '../../core/avatar/AvatarContinuousMovementMode.js';
+import { deriveAvatarVehicleBrakingInputFact } from '../../core/vehicles/AvatarVehicleBrakingInputAdapter.js';
+import { deriveVehicleSteeringInputEvent } from '../../core/vehicles/VehicleSteeringInputAdapter.js';
+import { SpatialBounds } from '../../core/world/SpatialBounds.js';
+import { AvatarAnimationState } from '../../core/avatar/AvatarAnimationState.js';
 
 // How often the local avatar's profile re-advertises even when unchanged.
 // Appearance is low-frequency state; this only lets a replica that joined
@@ -41,7 +41,7 @@ const PROFILE_REPUBLISH_INTERVAL_MS = 15000;
 // receiver's LocalPresenceStore stale/absent window (2500ms/6000ms), or a
 // standing-still avatar is pruned from every other replica and reads as
 // "they vanished". Each republish bumps `sequence`, since a resend of the same
-// sequence is rejected by core/PresenceIngestion.js.
+// sequence is rejected by core/avatar/PresenceIngestion.js.
 const PRESENCE_HEARTBEAT_INTERVAL_MS = 2000;
 
 // Control is the one modifier-row key with no existing meaning: WASD, Shift,
@@ -319,7 +319,7 @@ export const localAvatarMethods = {
     },
 
     // Every brick's box near `position`, the roofs and floors a walk steps
-    // over included, out to INDOOR_QUERY_RADIUS: what core/IndoorView.js
+    // over included, out to INDOOR_QUERY_RADIUS: what core/building/IndoorView.js
     // looks for a ceiling, a build and the walls in a camera's way among. The
     // same documents and positions collision uses (_solidDocuments()).
     _indoorBoxesNear(position) {
@@ -345,7 +345,7 @@ export const localAvatarMethods = {
     },
 
     // Whether the lake at (x, z) is frozen hard now, on the world's clock, the
-    // one everyone shares (core/Season.js#isLakeFrozenAt()), so everyone
+    // one everyone shares (core/nature/Season.js#isLakeFrozenAt()), so everyone
     // agrees where the ice will hold: never a season this device keeps.
     _isLakeFrozenAt(x, z) {
         return isLakeFrozenAt(this._wildlifeClock()) && isLakeAt(this.getWorldSeed(), x, z);
@@ -680,12 +680,12 @@ export const localAvatarMethods = {
 
     // The one seam from a raw key to setContinuousMovementIntent() and
     // setContinuousMovementMode(). This session carries `_altDown`/`_shiftDown`,
-    // the only state core/AvatarContinuousMovementInputAdapter.js needs a caller
+    // the only state core/avatar/AvatarContinuousMovementInputAdapter.js needs a caller
     // to hold, and reads the current intent from the controller rather than
     // keeping a copy. Every decision is made by the pure adapter and transition
     // functions; nothing here re-implements them. Direction and mode come from
     // the same `transition`, so one key event updates both together. Mode needs
-    // no current value fed back (see core/AvatarContinuousMovementMode.js).
+    // no current value fed back (see core/avatar/AvatarContinuousMovementMode.js).
     _processContinuousMovementInput(key, type) {
         const { altDown, shiftDown, transition } = deriveAvatarContinuousMovementInputEvent({
             altDown: this._altDown,
@@ -717,13 +717,13 @@ export const localAvatarMethods = {
     // VEHICLE_BRAKE_KEY for why Control.
     //
     // A thin translation, not a decision layer: it turns Control's down/up into
-    // the `type: 'brakedown'/'brakeup'` core/AvatarVehicleBrakingInputAdapter.js
+    // the `type: 'brakedown'/'brakeup'` core/vehicles/AvatarVehicleBrakingInputAdapter.js
     // expects. Everything after that (what BRAKE means, whether it reaches the
     // simulation) is decided by the braking intent chain.
     //
     // Stateless across calls: there is no chord to resolve, so holding Control
     // reports BRAKE on every repeat keydown and releasing reports NONE, the
-    // level-driven shape core/AvatarVehicleBrakingIntent.js requires.
+    // level-driven shape core/vehicles/AvatarVehicleBrakingIntent.js requires.
     //
     // Never vehicle- or movement-aware: it doesn't check the mount, the
     // capability or whether the avatar is moving. An unrelated key returns
@@ -781,7 +781,7 @@ export const localAvatarMethods = {
     //
     // A thin translation, not a decision layer: it turns an arrow key's down/up
     // into the `type: 'steerleftdown'/'steerleftup'/'steerrightdown'/
-    // 'steerrightup'` core/VehicleSteeringInputAdapter.js expects, threading the
+    // 'steerrightup'` core/vehicles/VehicleSteeringInputAdapter.js expects, threading the
     // `leftHeld`/`rightHeld` bits through `_vehicleSteerLeftHeld`/
     // `_vehicleSteerRightHeld`. Whether a press is new, what LEFT/RIGHT means and
     // whether it reaches the simulation are decided downstream.
@@ -894,7 +894,7 @@ export const localAvatarMethods = {
         return this._localAvatarVisible;
     },
 
-    // What the local avatar is doing, for its sounds (core/AvatarSoundCues.js):
+    // What the local avatar is doing, for its sounds (core/avatar/AvatarSoundCues.js):
     // where it is, its animation and vertical state, the type of vehicle it
     // rides (null on foot) and whether it is braking. Null without a local
     // avatar.
@@ -969,7 +969,7 @@ export const localAvatarMethods = {
     // A spawn point must clear the document's real content. The fixed
     // AVATAR_SPAWN_OFFSET lands inside structures built around their own origin
     // ("Home dropped me inside my own pyramid"). When the content is loaded, this
-    // measures its local bounds (core/SpatialBounds.js#fromWorld()) and spawns
+    // measures its local bounds (core/world/SpatialBounds.js#fromWorld()) and spawns
     // just past the farthest corner plus a clearance; otherwise it falls back to
     // the fixed offset.
     _safeSpawnPosition(documentId, position) {

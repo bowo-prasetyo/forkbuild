@@ -1,6 +1,6 @@
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { FunnelEvent, VISITOR_COUNT_SITE_ORIGIN, funnelEventHitUrl } from '../core/VisitorCount.js';
+import { FunnelEvent, VISITOR_COUNT_SITE_ORIGIN, funnelEventHitUrl } from '../core/app/VisitorCount.js';
 import { CreateGuestAvatarUseCase, GuestAvatarProfileUseCase } from '../application/avatar/GuestAvatar.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
@@ -10,7 +10,7 @@ import { FunnelEventCounter } from '../application/settings/FunnelEventCounter.j
 import { VisitorCountSettingsStore } from '../application/settings/VisitorCountSettingsStore.js';
 import { LocalAvatarPresenceBroadcastProvider } from '../presence/LocalAvatarPresenceBroadcastProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { UserFacingError } from '../core/UserFacingError.js';
+import { UserFacingError } from '../core/app/UserFacingError.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 

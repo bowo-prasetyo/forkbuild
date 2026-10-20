@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { RainFall } from '../renderer/RainFall.js';
 import { makeWaterWaving } from '../renderer/WaterWaveMaterial.js';
 import { makeRiverFlowing } from '../renderer/RiverFlowMaterial.js';
-import { DAY, NIGHT } from '../core/DayCycle.js';
+import { DAY, NIGHT } from '../core/nature/DayCycle.js';
 import { assert } from './support/Assert.js';
 
 // Rain drawn with real WebGL: the streaks fall round the camera, more the

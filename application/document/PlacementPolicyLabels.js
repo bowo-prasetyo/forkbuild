@@ -1,9 +1,9 @@
-import { PlacementPolicy } from '../../core/PlacementPolicy.js';
-import { message } from '../../core/Message.js';
+import { PlacementPolicy } from '../../core/publication/PlacementPolicy.js';
+import { message } from '../../core/app/Message.js';
 
 // Labels for the placement setting, shared by the Document Properties editor
 // and the Document Info panel so the two never describe it differently. Each
-// label is a message (core/Message.js).
+// label is a message (core/app/Message.js).
 const PLACEMENT_POLICY_KEYS = Object.freeze({
     [PlacementPolicy.ANYONE]: 'placementPolicy.anyone',
     [PlacementPolicy.PUBLISHER_ONLY]: 'placementPolicy.publisherOnly'

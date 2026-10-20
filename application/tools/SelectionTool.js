@@ -6,9 +6,9 @@ import { MoveStructurePlacementCommand } from '../commands/MoveStructurePlacemen
 import { RotateStructurePlacementCommand } from '../commands/RotateStructurePlacementCommand.js';
 import { StructurePlacementValidator } from '../editor/StructurePlacementValidator.js';
 import { PlacementPositionService } from '../editor/PlacementPositionService.js';
-import { SpatialBounds } from '../../core/SpatialBounds.js';
-import { Position } from '../../core/Position.js';
-import { message } from '../../core/Message.js';
+import { SpatialBounds } from '../../core/world/SpatialBounds.js';
+import { Position } from '../../core/document/Position.js';
+import { message } from '../../core/app/Message.js';
 
 const DELETE_KEYS = new Set(['Delete', 'Backspace']);
 

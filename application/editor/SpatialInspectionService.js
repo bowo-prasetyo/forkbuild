@@ -1,6 +1,6 @@
 import { SpatialInspectionState } from '../spatial-state/SpatialInspectionState.js';
-import { Position } from '../../core/Position.js';
-import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../../core/TerrainHeightField.js';
+import { Position } from '../../core/document/Position.js';
+import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../../core/nature/TerrainHeightField.js';
 
 // Resolves SpatialSelectionState into domain metadata by reaching into
 // the loaded Document/World model. Keeps all Three.js knowledge out

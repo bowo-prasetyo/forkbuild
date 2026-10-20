@@ -1,4 +1,4 @@
-import { RoleProviderRole, isValidRoleProviderRole } from '../../core/RoleProviderRole.js';
+import { RoleProviderRole, isValidRoleProviderRole } from '../../core/publication/RoleProviderRole.js';
 import { RoleProviderPreferenceStore } from '../../storage/RoleProviderPreferenceStore.js';
 
 // 0.9.295 — Role-Aware Provider Resolution Boundary.
@@ -46,7 +46,7 @@ import { RoleProviderPreferenceStore } from '../../storage/RoleProviderPreferenc
 // `proofRegistry` straight to whichever of those a caller passes in, and
 // never re-implements, wraps, or second-guesses either one's own `get()`.
 // Discovery's is application/discovery/AnnouncementDiscoveryProviderRegistry.js,
-// keyed by provider key (core/AnnouncementDiscoveryProvider.js), whose get()
+// keyed by provider key (core/publication/AnnouncementDiscoveryProvider.js), whose get()
 // has the same "null for an unregistered key" shape, so it can be passed as
 // `discoveryRegistry` as is.
 //
@@ -76,7 +76,7 @@ import { RoleProviderPreferenceStore } from '../../storage/RoleProviderPreferenc
 // made-up key would get; see this file's own tests, Section G).
 // Manufacturing a distinction the registries themselves cannot make would
 // be inventing vocabulary ahead of the architecture — the same restraint
-// core/RoleProviderPreference.js's own header already held for capability
+// core/publication/RoleProviderPreference.js's own header already held for capability
 // validation, carried forward here for resolution outcomes.
 //
 // NO FALLBACK, IN EITHER DIRECTION. When `resolve()` reports
@@ -97,7 +97,7 @@ import { RoleProviderPreferenceStore } from '../../storage/RoleProviderPreferenc
 // `save()`, no mutation, no re-persisting a "resolved" value back. A
 // RoleProviderPreference read out of the store is also never mutated by
 // this file; `preference.providerKey` is read, never reassigned (the class
-// is frozen at construction anyway — see core/RoleProviderPreference.js).
+// is frozen at construction anyway — see core/publication/RoleProviderPreference.js).
 //
 // NOT WIRED INTO ANY COMPOSITION ROOT. No existing file — application/
 // PublicationDistributionRuntimeComposition.js, application/
@@ -108,7 +108,7 @@ import { RoleProviderPreferenceStore } from '../../storage/RoleProviderPreferenc
 // anchoring behavior is unchanged by this milestone, on purpose: this
 // resolver is a real, independently testable capability that CAN exist
 // without yet being consumed by production workflows, exactly like
-// core/RoleProviderPreference.js's own 0.9.293 header held the identical
+// core/publication/RoleProviderPreference.js's own 0.9.293 header held the identical
 // line one milestone earlier ("nothing constructs one yet").
 export const RoleProviderResolutionStatus = Object.freeze({
     RESOLVED: 'RESOLVED',

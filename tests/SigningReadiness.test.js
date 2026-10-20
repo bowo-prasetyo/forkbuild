@@ -5,8 +5,8 @@ import {
 import { SetPublicationHeartUseCase } from '../application/publication/heart/SetPublicationHeartUseCase.js';
 import { FollowUseCase } from '../application/identity/FollowUseCase.js';
 import { PublicationHeartStore } from '../storage/PublicationHeartStore.js';
-import { message } from '../core/Message.js';
-import { isUserFacingError } from '../core/UserFacingError.js';
+import { message } from '../core/app/Message.js';
+import { isUserFacingError } from '../core/app/UserFacingError.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 

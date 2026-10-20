@@ -6,12 +6,12 @@
 //
 // Heights (`y`) are where things are drawn (terrain height added), so a 3D
 // listener and its sources agree; horizontal positions are the session's own.
-import { wildlifeInRegionAt, stationaryAnimalPoseAt } from '../../core/WildlifeMotion.js';
-import { InventoryEntryKind } from '../../core/AvatarInventory.js';
-import { terrainHeightAt } from '../../core/TerrainHeightField.js';
-import { RIDER_RANGE } from '../../core/CreatureSoundCues.js';
+import { wildlifeInRegionAt, stationaryAnimalPoseAt } from '../../core/nature/WildlifeMotion.js';
+import { InventoryEntryKind } from '../../core/avatar/AvatarInventory.js';
+import { terrainHeightAt } from '../../core/nature/TerrainHeightField.js';
+import { RIDER_RANGE } from '../../core/app/CreatureSoundCues.js';
 
-// Nothing farther than this is heard (core/CreatureSoundCues.js).
+// Nothing farther than this is heard (core/app/CreatureSoundCues.js).
 export const CREATURE_EARSHOT = 30;
 // Ears above the feet, and a resident's mouth.
 const EAR_HEIGHT = 1.6;
@@ -157,7 +157,7 @@ export const soundObservationMethods = {
         return heard;
     },
 
-    // Everything the creature sounds read in one go (core/CreatureSoundCues.js).
+    // Everything the creature sounds read in one go (core/app/CreatureSoundCues.js).
     creatureSoundObservation() {
         const listener = this.soundListener();
         if (!listener) {

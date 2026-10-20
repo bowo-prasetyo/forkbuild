@@ -1,10 +1,10 @@
 import util from 'node:util';
 
-import { TurnServerConfiguration, isValidTurnUrl } from '../core/TurnServerConfiguration.js';
+import { TurnServerConfiguration, isValidTurnUrl } from '../core/networks/TurnServerConfiguration.js';
 import { TurnServerConfigurationStore } from '../storage/TurnServerConfigurationStore.js';
 import { resolveTurnServerConfiguration } from '../application/settings/TurnServerConfigurationProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { IceServerConfiguration, isValidStunUrl } from '../core/IceServerConfiguration.js';
+import { IceServerConfiguration, isValidStunUrl } from '../core/networks/IceServerConfiguration.js';
 import { IceServerConfigurationStore } from '../storage/IceServerConfigurationStore.js';
 import { DEFAULT_ICE_SERVERS } from '../peer/IceServerConfig.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
@@ -15,7 +15,7 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 //
 // 0.9.453's own Contract Audit proved, live, against real (and
 // realistically prototyped) code, the exact shape this milestone promotes
-// to production: core/TurnServerConfiguration.js (the value object),
+// to production: core/networks/TurnServerConfiguration.js (the value object),
 // storage/TurnServerConfigurationStore.js (its dedicated persistence), and
 // application/settings/TurnServerConfigurationProvider.js (the narrow read seam).
 // This file is the real regression suite for all three, run against the
@@ -287,8 +287,8 @@ async function run() {
         expectThrows(() => new IceServerConfiguration({ servers: [{ urls: 'turn:relay.example:3478' }] }), n('H5. IceServerConfiguration itself still refuses to construct with a turn: entry'));
         expectThrows(() => new TurnServerConfiguration({ urls: 'stun:stun.l.google.com:19302', username: 'a', credential: 'b' }), n('H6. TurnServerConfiguration itself refuses to construct with a stun: entry'));
 
-        const stunConfigSource = await source('core/IceServerConfiguration.js');
-        assert(stunConfigSource.includes('STUN ONLY — NEVER TURN'), n('H7. core/IceServerConfiguration.js remains STUN-only, unmodified by this milestone'));
+        const stunConfigSource = await source('core/networks/IceServerConfiguration.js');
+        assert(stunConfigSource.includes('STUN ONLY — NEVER TURN'), n('H7. core/networks/IceServerConfiguration.js remains STUN-only, unmodified by this milestone'));
 
         console.log('\n=== SECTION H: turn: BOUNDARY ===');
         console.log('✓ Section H: the STUN/TURN scheme boundary holds in both directions, at both the validator level and the constructor level.');

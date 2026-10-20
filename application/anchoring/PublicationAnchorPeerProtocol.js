@@ -45,7 +45,7 @@
 // identical defensive posture application/peer/PeerContentProtocol.js's own
 // MAX_CONTENT_BYTES already applies to content bytes, extended here to a
 // COUNT rather than a byte size, because an anchor envelope's own byte
-// size is already small and bounded (see core/PublicationAnchor.js) while
+// size is already small and bounded (see core/publication/PublicationAnchor.js) while
 // its COUNT per publication is the actual unbounded axis a peer with
 // hundreds or thousands of cataloged anchors for one publication could
 // otherwise use to build an outsized reply. This is not pagination — a

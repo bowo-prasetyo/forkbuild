@@ -38,12 +38,12 @@ export const NECK = 'neck';
 // cheap, safe to dispose independently, and never shared with the tile
 // system's own bodyMaterial/headMaterial instances.
 //
-// NO SCALE, ROTATION, OR VARIANT — core/AnimalPresence.js carries only
-// id/species/position, unlike core/WildlifeField.js's own decorative
+// NO SCALE, ROTATION, OR VARIANT — core/nature/AnimalPresence.js carries only
+// id/species/position, unlike core/nature/WildlifeField.js's own decorative
 // record (which also has rotationY/scale/variant, baked in at
 // placement time by a deterministic formula this file has no access to
 // for a caught-then-released animal, which was never placed by that
-// formula at all — see core/AvatarAnimalCatchTransition.js's own
+// formula at all — see core/avatar/AvatarAnimalCatchTransition.js's own
 // header). A released animal therefore always renders at this preset's
 // own first fur color, unscaled, at zero rotation — a real but
 // deliberately minor visual regression versus its tile-baked

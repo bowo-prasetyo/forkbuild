@@ -1,4 +1,4 @@
-import { Position } from '../../core/Position.js';
+import { Position } from '../../core/document/Position.js';
 import { SpatialHoverState } from '../spatial-state/SpatialHoverState.js';
 import { CommandHistory } from '../editor/CommandHistory.js';
 import { STREAMING_RADIUS } from './constants.js';

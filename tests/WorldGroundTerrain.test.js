@@ -1,18 +1,18 @@
 import {
     terrainHeightAt, DEFAULT_WORLD_SEED, TERRAIN_HEIGHT_BOUND, TERRAIN_DEPTH_BOUND
-} from '../core/TerrainHeightField.js';
+} from '../core/nature/TerrainHeightField.js';
 import {
     tileCoordinateForPosition, tileKey, tileCenter, tilesWithinRadius,
     TERRAIN_TILE_SIZE, DEFAULT_STREAMING_RADIUS
-} from '../core/TerrainTiling.js';
+} from '../core/nature/TerrainTiling.js';
 import { TerrainStreamingController } from '../renderer/TerrainStreamingController.js';
 import { WorldRenderer } from '../renderer/WorldRenderer.js';
 import { PreviewRenderer } from '../renderer/PreviewRenderer.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
 import { PreviewState } from '../application/editor-state/PreviewState.js';
 import { EventBus } from '../core/events/EventBus.js';
 import { EditorEvent } from '../core/events/EditorEvent.js';
@@ -20,15 +20,15 @@ import { assert } from './support/Assert.js';
 
 // 0.2.76 — World Ground & Terrain Foundation.
 //
-//   Section A: core/TerrainHeightField.js — pure, deterministic elevation
-//   Section B: core/TerrainTiling.js — pure tile-grid math
+//   Section A: core/nature/TerrainHeightField.js — pure, deterministic elevation
+//   Section B: core/nature/TerrainTiling.js — pure tile-grid math
 //   Section C: renderer/TerrainStreamingController.js — camera-follow load/unload
 //   Section D: renderer/WorldRenderer.js — building ground placement
 //   Section E: FLAGSHIP — the design doc's own scripted scenario
 //
 // Central architectural claim under test throughout: terrain is a PURE
 // function of world coordinates and a single shared world seed, never
-// persisted state — see core/TerrainHeightField.js's own header. Nothing
+// persisted state — see core/nature/TerrainHeightField.js's own header. Nothing
 // in this file ever asserts on a hardcoded elevation VALUE (the exact
 // noise shape is an implementation detail); every assertion is about
 // determinism, continuity, boundedness, and streaming correctness —
@@ -37,7 +37,7 @@ import { assert } from './support/Assert.js';
 
 async function runTests() {
     // -------------------------------------------------------------
-    // Section A: core/TerrainHeightField.js
+    // Section A: core/nature/TerrainHeightField.js
     // -------------------------------------------------------------
     {
         const h1 = terrainHeightAt(DEFAULT_WORLD_SEED, 123.456, -789.01);
@@ -87,7 +87,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section B: core/TerrainTiling.js
+    // Section B: core/nature/TerrainTiling.js
     // -------------------------------------------------------------
     {
         assert(
@@ -298,7 +298,7 @@ async function runTests() {
 
         // Return toward the original position: the exact same tile key
         // reappears, and its terrain height (computed independently
-        // from core/TerrainHeightField.js, not from the streaming
+        // from core/nature/TerrainHeightField.js, not from the streaming
         // controller) is byte-identical to what it was at the start —
         // "same world seed + same coordinates -> same terrain."
         const heightAtOriginBefore = terrainHeightAt(DEFAULT_WORLD_SEED, 5, 5);

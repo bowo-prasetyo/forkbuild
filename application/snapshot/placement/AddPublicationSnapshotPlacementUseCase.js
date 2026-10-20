@@ -1,4 +1,4 @@
-import { PublicationSnapshotPlacement } from '../../../core/PublicationSnapshotPlacement.js';
+import { PublicationSnapshotPlacement } from '../../../core/publication/PublicationSnapshotPlacement.js';
 import { validatePublicationSnapshotPlacement } from './PublicationSnapshotPlacementValidator.js';
 
 // 0.8.18 — Decentralized Snapshot Placement Foundation.
@@ -11,7 +11,7 @@ import { validatePublicationSnapshotPlacement } from './PublicationSnapshotPlace
 //   1. validate  — application/snapshot/placement/PublicationSnapshotPlacementValidator.js
 //                   (is this even a well-formed
 //                   PublicationSnapshotPlacement envelope?)
-//   2. construct — a real core/PublicationSnapshotPlacement.js instance
+//   2. construct — a real core/publication/PublicationSnapshotPlacement.js instance
 //
 //   → catalog    — application/
 //                   LocalPublicationSnapshotPlacementCatalog.js#add()

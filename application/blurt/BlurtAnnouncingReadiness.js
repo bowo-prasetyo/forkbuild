@@ -1,4 +1,4 @@
-import { isBlurtAccountName } from '../../core/BlurtPost.js';
+import { isBlurtAccountName } from '../../core/networks/BlurtPost.js';
 
 // Why posting on Blurt would be refused right now, or null when it can be
 // tried. Shown where a failed post would otherwise go unnoticed.

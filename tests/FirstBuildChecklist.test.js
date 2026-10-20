@@ -1,7 +1,7 @@
 import {
     FIRST_BUILD_STEPS, FirstBuildStep, firstBuildStepsForEdit, isFirstBuildComplete, nextFirstBuildStep,
     normalizeFirstBuildProgress, shouldShowFirstBuildGuide
-} from '../core/FirstBuildChecklist.js';
+} from '../core/challenge/FirstBuildChecklist.js';
 import { FirstBuildChecklistStore } from '../application/onboarding/FirstBuildChecklistStore.js';
 import { FirstBuildChecklistTracker } from '../application/onboarding/FirstBuildChecklistTracker.js';
 import { describeCommand } from '../application/commands/describeCommand.js';
@@ -11,8 +11,8 @@ import { PasteBricksCommand } from '../application/commands/PasteBricksCommand.j
 import { CompositeCommand } from '../application/commands/CompositeCommand.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
-import { EDITOR_ACTIVITY } from '../core/EditorSoundCues.js';
-import { Position } from '../core/Position.js';
+import { EDITOR_ACTIVITY } from '../core/app/EditorSoundCues.js';
+import { Position } from '../core/document/Position.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 

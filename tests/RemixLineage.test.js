@@ -1,10 +1,10 @@
-// A build's remix lineage (core/RemixLineage.js): how many builds remix it,
+// A build's remix lineage (core/publication/RemixLineage.js): how many builds remix it,
 // counted once per remixed document, and what it was remixed from, from the
 // parent's own Publication when this device has one, else from the credit
 // the remix's license carries.
-import { countRemixes, describeRemixSource } from '../core/RemixLineage.js';
+import { countRemixes, describeRemixSource } from '../core/publication/RemixLineage.js';
 import { Publication } from '../publisher/Publication.js';
-import { License, LicenseId } from '../core/License.js';
+import { License, LicenseId } from '../core/document/License.js';
 import { assert } from './support/Assert.js';
 
 function publication({ id, documentId, parentDocumentId = null, title = 'A build', author = 'alice', publishedAt = '2026-10-01T00:00:00Z', license = null }) {

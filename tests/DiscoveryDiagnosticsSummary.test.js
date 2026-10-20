@@ -1,16 +1,16 @@
-import { Position } from '../core/Position.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { License, LicenseId } from '../core/License.js';
-import { CausalStamp } from '../core/CausalStamp.js';
-import { RevisionReference } from '../core/RevisionReference.js';
-import { PlacementRecord } from '../core/PlacementRecord.js';
-import { SpatialIndexRoot } from '../core/SpatialIndexRoot.js';
-import { TrustStatus } from '../core/TrustObservation.js';
-import { summarizeDiscoveryDiagnostics } from '../core/DiscoveryDiagnosticsSummary.js';
+import { Position } from '../core/document/Position.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { License, LicenseId } from '../core/document/License.js';
+import { CausalStamp } from '../core/collaboration/CausalStamp.js';
+import { RevisionReference } from '../core/document/RevisionReference.js';
+import { PlacementRecord } from '../core/publication/PlacementRecord.js';
+import { SpatialIndexRoot } from '../core/world/SpatialIndexRoot.js';
+import { TrustStatus } from '../core/identity/TrustObservation.js';
+import { summarizeDiscoveryDiagnostics } from '../core/world/DiscoveryDiagnosticsSummary.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
@@ -39,7 +39,7 @@ import { assert } from './support/Assert.js';
 // what it found is trustworthy, current, and complete enough to
 // present?" This file tests two layers of the answer:
 //
-//   1. core/DiscoveryDiagnosticsSummary.js — the pure function that
+//   1. core/world/DiscoveryDiagnosticsSummary.js — the pure function that
 //      turns spatial/DiscoveryDiagnostics.js's raw counters (0.2.19)
 //      into the compact, UI-ready shape WorldLocationBrowser renders.
 //      Every state it can produce is exercised directly, with plain

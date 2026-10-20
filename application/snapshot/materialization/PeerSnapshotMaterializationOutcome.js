@@ -7,7 +7,7 @@
 // applied here to the PEER-backed path.
 export const PeerSnapshotMaterializationOutcome = Object.freeze({
     // The selected peer answered with bytes that verified against
-    // `contentHash` (`core/ContentReference.js#verify()`, run inside
+    // `contentHash` (`core/document/ContentReference.js#verify()`, run inside
     // application/snapshot/materialization/StoreSnapshotContentUseCase.js — never here), and those
     // bytes were newly written to this replica's own local
     // content/ContentStore.js.

@@ -1,5 +1,5 @@
 
-import { IceServerConfiguration, isValidStunUrl } from '../core/IceServerConfiguration.js';
+import { IceServerConfiguration, isValidStunUrl } from '../core/networks/IceServerConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { IceServerConfigurationStore } from '../storage/IceServerConfigurationStore.js';
 import { SetIceServerConfigurationUseCase } from '../application/settings/SetIceServerConfigurationUseCase.js';
@@ -60,7 +60,7 @@ import { readSource as source } from './support/SourceText.js';
 //               WebRtcPeerConnection.js's own ICE-gathering timeout is
 //               untouched, and this milestone's classes never import it.
 //
-// See core/IceServerConfiguration.js, storage/IceServerConfigurationStore.js,
+// See core/networks/IceServerConfiguration.js, storage/IceServerConfigurationStore.js,
 // application/settings/SetIceServerConfigurationUseCase.js, and
 // ui/views/StunSettingsView.js for the full design rationale this
 // milestone carries out.
@@ -428,7 +428,7 @@ async function run() {
         // Explicitly saving the default entries by hand still leaves a
         // real, distinct saved entry — never silently treated as
         // "nothing to persist," the identical rule
-        // core/ArweaveGatewayConfiguration.js's own settings view holds.
+        // core/networks/ArweaveGatewayConfiguration.js's own settings view holds.
         const saved = setUseCase.execute({ servers: DEFAULT_ICE_SERVERS.map((entry) => ({ urls: entry.urls })) });
         assert(store.get() !== null, '65. explicitly saving entries matching the deployment default still leaves a real, explicit entry on file');
         assert(saved.servers.length === DEFAULT_ICE_SERVERS.length, '66. …with the same entry count as the deployment default, confirming this is a genuine explicit save, not a no-op');
@@ -474,13 +474,13 @@ async function run() {
         assert(!/IceServerConfiguration|IceServerConfigurationStore|iceServers|WebRtcPeerConnectionProvider/.test(authSource),
             '76. peer/PeerAuthenticationSession.js — the sole authority on peer identity — imports none of this milestone\'s STUN configuration or connectivity classes; a change of which STUN server carries the bytes cannot change who those bytes are proven to belong to');
 
-        // core/IceServerConfiguration.js itself never IMPORTS anything
+        // core/networks/IceServerConfiguration.js itself never IMPORTS anything
         // Rendezvous-shaped (design-rationale comments may still mention
         // Rendezvous by name, e.g. citing the sibling 0.9.385 audit —
         // code-only lines are checked here, the same exclusion this
         // codebase's other convergence audits already establish).
-        const iceConfigurationExecutable = (await source('core/IceServerConfiguration.js')).replace(/\/\/.*$/gm, '');
-        assert(!/Rendezvous/.test(iceConfigurationExecutable), '77. core/IceServerConfiguration.js never imports or references Rendezvous in executable code');
+        const iceConfigurationExecutable = (await source('core/networks/IceServerConfiguration.js')).replace(/\/\/.*$/gm, '');
+        assert(!/Rendezvous/.test(iceConfigurationExecutable), '77. core/networks/IceServerConfiguration.js never imports or references Rendezvous in executable code');
     }
     console.log('✓ Section K: Rendezvous\'s own configuration/bootstrap and the sole authority on peer identity are both untouched by this milestone\'s STUN configuration boundary');
 
@@ -566,7 +566,7 @@ async function run() {
 
         const providerSource = await source('peer/WebRtcPeerConnectionProvider.js');
         assert(!/IceServerConfiguration|core\/IceServerConfiguration/.test(providerSource),
-            '86. peer/WebRtcPeerConnectionProvider.js itself is untouched — it still accepts a plain iceServers array/setIceServers(), with no awareness of core/IceServerConfiguration.js at all; ui/main.js alone bridges the two');
+            '86. peer/WebRtcPeerConnectionProvider.js itself is untouched — it still accepts a plain iceServers array/setIceServers(), with no awareness of core/networks/IceServerConfiguration.js at all; ui/main.js alone bridges the two');
     }
     console.log('✓ Section N: the existing ICE-gathering timeout and the peer connection provider/connection classes are completely untouched by this milestone — the new configuration boundary is entirely a composition-root/settings concern layered on top');
 }

@@ -154,7 +154,7 @@ running app, and are kept as documented design:
   (`SpatialIndexRoot`, `SpatialIndexBuilder`,
   `DecentralizedSpatialDiscoveryProvider`, `DiscoverWorldAreaUseCase`,
   `world/WorldViewStreamingSession`);
-- delegation records (`core/Delegation.js`; `DelegationVerifier` is the
+- delegation records (`core/publication/Delegation.js`; `DelegationVerifier` is the
   base class of every verifier, but nothing issues delegations);
 - peer placement replication (`CreateReplicationUseCase`,
   `ReplicaMergeService`, `ConflictResolver`) and the trust-policy layer
@@ -224,7 +224,7 @@ the table in [Protocol](Protocol.md), "Peer messages".
 
 ### How do I add a signed record?
 
-Sign through `core/Signature.js`, which signs the canonical envelope
+Sign through `core/publication/Signature.js`, which signs the canonical envelope
 `{ domain: 'forkbuild', type, id, revision, payload }`. Give the record its
 own `type` string so its signatures can't be replayed as another kind, and
 verify with `identity/LocalAuthorizationVerifier.js`. Signing and hashing
@@ -264,14 +264,14 @@ prefer `setup()` in new code, and sort choice lists by label with
 
 There are three, and they are independent:
 
-- `VERSION` in `core/version.js` (and `version` in `package.json`) is the
+- `VERSION` in `core/app/version.js` (and `version` in `package.json`) is the
   app's version. It is shown on the About page and stamped into each
   document's `engineVersion`; changing it changes nothing else.
-- `PROTOCOL_VERSION` in `core/protocolVersion.js` (`'0.1'`) is stamped into
+- `PROTOCOL_VERSION` in `core/app/protocolVersion.js` (`'0.1'`) is stamped into
   every document, and a document must match it **exactly** to load. There
   is no migration for it yet, so changing it would make every existing
   document and publication unreadable.
-- `DOCUMENT_SCHEMA_VERSION` in `core/documentSchema.js` (`2`) versions the
+- `DOCUMENT_SCHEMA_VERSION` in `core/document/documentSchema.js` (`2`) versions the
   document envelope. To change the envelope, bump it and register one pure
   migration (schema N to N+1) in `serializer/DocumentSchemaMigrator.js`;
   domain classes only ever see the current schema. Older copies of the app

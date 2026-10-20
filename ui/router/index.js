@@ -4,7 +4,7 @@ import { loadServiceGroups } from '../serviceGroups.js';
 import { PAGE_SERVICE_GROUPS } from './pageServiceGroups.js';
 import { watchPageLoads } from '../pageLoadFailure.js';
 import HomeView from '../views/HomeView.js';
-import { challengeAt } from '../../core/BuildChallenge.js';
+import { challengeAt } from '../../core/challenge/BuildChallenge.js';
 
 // Each page but Home (a few lines, and the page most visits open) loads its
 // modules the first time it is opened, not with the app: together they are
@@ -84,7 +84,7 @@ const routes = [
     // is the one canonical, user-facing World surface from this
     // milestone forward.
     { path: '/world/:documentId', name: 'world', component: WorldView },
-    // A week's challenge plaza (core/ChallengePlaza.js), in World View.
+    // A week's challenge plaza (core/challenge/ChallengePlaza.js), in World View.
     { path: '/plaza/:challengeId', name: 'plaza', component: PlazaView },
     // Walk, in the main menu: this week's plaza, its entries round the
     // village square, worth a walk with no build of your own.
@@ -99,7 +99,7 @@ const routes = [
     // A link-only share: the Signed Claim and the build travel in the link
     // itself (application/publication/sharing/PublicationLinkPayload.js).
     { path: '/s/:payload', name: 'link-only-publication-link', component: PublicationLinkView },
-    // A short link: a build sent to everyone, read from its build note (core/BuildNote.js).
+    // A short link: a build sent to everyone, read from its build note (core/publication/BuildNote.js).
     { path: '/n/:noteId', name: 'note-publication-link', component: PublicationLinkView },
     // 0.9.15 — Mount Live World View. Superseded as a top-nav, user-
     // facing destination by 0.9.17 above (`WorldEncounterCanvas` now
@@ -140,11 +140,11 @@ const routes = [
     { path: '/settings', name: 'network-settings', component: NetworkSettingsView },
     { path: '/settings/data', name: 'your-data', component: YourDataView },
     // Copy everything to another device by a one-off code; the other device
-    // opens /pair/<code> (core/DevicePairingCode.js).
+    // opens /pair/<code> (core/identity/DevicePairingCode.js).
     { path: '/settings/data/pair', name: 'device-pairing', component: DevicePairingView },
     { path: '/pair/:code', name: 'device-pairing-receive', component: DevicePairingReceiveView },
     // A "Walk here with me" link: join the friend who made it, in their World
-    // (core/WalkTogetherCode.js, application/walkTogether/WalkTogether.js).
+    // (core/social/WalkTogetherCode.js, application/walkTogether/WalkTogether.js).
     { path: '/walk/:code', name: 'walk-together', component: WalkTogetherJoinView },
     // A "Build with me" link: join the friend who made it, building their
     // build in the Editor (application/buildTogether/).
@@ -152,7 +152,7 @@ const routes = [
     { path: '/settings/language', name: 'language-settings', component: LanguageSettingsView },
     // 0.9.302 — Content Provider Preference Settings Entry Point. The one
     // ordinary product path to create/change the persisted CONTENT role
-    // provider preference (core/RoleProviderPreference.js, 0.9.293) that
+    // provider preference (core/publication/RoleProviderPreference.js, 0.9.293) that
     // /publications' own "Use Preferred Provider" trigger (0.9.301)
     // consumes — see ui/views/ContentProviderSettingsView.js's own header.
     // Deliberately its own top-nav destination, not folded into
@@ -174,7 +174,7 @@ const routes = [
     { path: '/settings/anchor-provider', name: 'anchor-provider-settings', component: AnchorProviderSettingsView },
     // 0.9.366 — Arweave Gateway Settings UI. The one ordinary product path
     // to create/change/clear the persisted Arweave gateway retrieval
-    // override (core/ArweaveGatewayConfiguration.js, storage/
+    // override (core/networks/ArweaveGatewayConfiguration.js, storage/
     // ArweaveGatewayConfigurationStore.js, both 0.9.364) — see
     // ui/views/ArweaveGatewaySettingsView.js's own header. Deliberately its
     // own top-nav destination, the identical "not folded into a growing
@@ -186,7 +186,7 @@ const routes = [
     // (ipfs.io's public gateway now blocks ordinary programmatic
     // requests behind a bot-detection check) that reopened the question.
     // The one ordinary product path to create/change/clear the persisted
-    // IPFS gateway retrieval override (core/IpfsGatewayConfiguration.js,
+    // IPFS gateway retrieval override (core/networks/IpfsGatewayConfiguration.js,
     // storage/IpfsGatewayConfigurationStore.js), mirroring
     // /settings/arweave-gateway's own shape exactly.
     { path: '/settings/ipfs-gateway', name: 'ipfs-gateway-settings', component: IpfsGatewaySettingsView },
@@ -199,7 +199,7 @@ const routes = [
     // had no user-facing override — if the deployment default ever goes
     // down, there was no way for a person to route around it. The one
     // ordinary product path to create/change/clear the persisted override
-    // (core/BitcoinEsploraConfiguration.js, storage/
+    // (core/networks/BitcoinEsploraConfiguration.js, storage/
     // BitcoinEsploraConfigurationStore.js) — see ui/views/
     // BitcoinEsploraSettingsView.js's own header. Mirrors
     // /settings/arweave-gateway's own shape, one field instead of an
@@ -207,7 +207,7 @@ const routes = [
     { path: '/settings/bitcoin-esplora', name: 'bitcoin-esplora-settings', component: BitcoinEsploraSettingsView, meta: { experimental: true } },
     // 0.9.371 — Nostr Relay Settings UI. The one ordinary product path to
     // create/change/clear the persisted Nostr relay set
-    // (core/NostrRelayConfiguration.js, storage/NostrRelayConfigurationStore.js,
+    // (core/networks/NostrRelayConfiguration.js, storage/NostrRelayConfigurationStore.js,
     // both 0.9.369) — see ui/views/NostrRelaySettingsView.js's own header.
     // Deliberately its own top-nav destination, the identical "not folded
     // into a growing dashboard" shape /settings/arweave-gateway already
@@ -217,14 +217,14 @@ const routes = [
     // application. A separate route, /settings/nostr-publication-relays
     // (0.9.447, ui/views/NostrPublicationRelaySettingsView.js), used to hold
     // an independent relay SET for Publication distribution/discovery
-    // only — removed; see core/NostrRelayConfiguration.js's own header,
+    // only — removed; see core/networks/NostrRelayConfiguration.js's own header,
     // "unified," for the full rationale and what changed.
     { path: '/settings/nostr-relay', name: 'nostr-relay-settings', component: NostrRelaySettingsView },
     { path: '/settings/steem', name: 'steem-reading-settings', component: SteemReadingSettingsView },
     { path: '/settings/blurt', name: 'blurt-settings', component: BlurtSettingsView },
     // 0.9.386 — STUN Settings UI. The one ordinary product path to
     // create/change/clear the persisted STUN server configuration
-    // override (core/IceServerConfiguration.js, storage/
+    // override (core/networks/IceServerConfiguration.js, storage/
     // IceServerConfigurationStore.js, both this same milestone) — see
     // ui/views/StunSettingsView.js's own header. Deliberately its own
     // top-nav destination, the identical "not folded into a growing
@@ -235,7 +235,7 @@ const routes = [
     // use case from /settings/stun directly above — see ui/views/
     // TurnServerSettingsView.js's own header, "STUN CONFIGURATION ≠ TURN
     // CONFIGURATION." The one ordinary product path to create/change/clear
-    // the persisted TURN server configuration (core/TurnServerConfiguration.js,
+    // the persisted TURN server configuration (core/networks/TurnServerConfiguration.js,
     // storage/TurnServerConfigurationStore.js, application/
     // SetTurnServerConfigurationUseCase.js) that 0.9.454/0.9.455 built with
     // no settings surface of its own. Deliberately its own top-nav
@@ -244,7 +244,7 @@ const routes = [
     { path: '/settings/turn-server', name: 'turn-server-settings', component: TurnServerSettingsView },
     // 0.9.388 — Rendezvous Settings UI. The one ordinary product path to
     // create/change/clear the persisted rendezvous server configuration
-    // override (core/RendezvousConfiguration.js, storage/
+    // override (core/networks/RendezvousConfiguration.js, storage/
     // RendezvousConfigurationStore.js, both this same milestone) — see
     // ui/views/RendezvousSettingsView.js's own header. Deliberately its
     // own top-nav destination, the identical "not folded into a growing

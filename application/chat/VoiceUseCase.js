@@ -1,16 +1,16 @@
 import { EventBus } from '../../core/events/EventBus.js';
 import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
-import { FriendshipState } from '../../core/FriendshipState.js';
-import { VoiceSessionState } from '../../core/VoiceSessionState.js';
-import { VoiceCallEndReason } from '../../core/VoiceCallEndReason.js';
-import { VoiceCallSignalType, toVoiceCallSignal, isValidVoiceCallSignal } from '../../core/VoiceCallSignal.js';
-import { VoiceMediaSignalKind, toVoiceMediaSignal, isValidVoiceMediaSignal } from '../../core/VoiceMediaSignal.js';
+import { FriendshipState } from '../../core/social/FriendshipState.js';
+import { VoiceSessionState } from '../../core/social/VoiceSessionState.js';
+import { VoiceCallEndReason } from '../../core/social/VoiceCallEndReason.js';
+import { VoiceCallSignalType, toVoiceCallSignal, isValidVoiceCallSignal } from '../../core/social/VoiceCallSignal.js';
+import { VoiceMediaSignalKind, toVoiceMediaSignal, isValidVoiceMediaSignal } from '../../core/social/VoiceMediaSignal.js';
 import { LocalAudioTrackProvider } from './LocalAudioTrackProvider.js';
-import { createId } from '../../core/createId.js';
+import { createId } from '../../core/document/createId.js';
 import { resolveDirectSocialIdentity } from '../identity/SocialIdentityResolver.js';
 import { findLiveConnectedPeers } from '../peer/ConnectedIdentityPeers.js';
-import { UserFacingError } from '../../core/UserFacingError.js';
-import { message } from '../../core/Message.js';
+import { UserFacingError } from '../../core/app/UserFacingError.js';
+import { message } from '../../core/app/Message.js';
 
 const CALL_STATE_EVENT = 'VoiceCallStateChanged';
 const INCOMING_CALL_EVENT = 'VoiceIncomingCall';

@@ -26,7 +26,7 @@ import { VoiceUseCase } from '../../application/chat/VoiceUseCase.js';
 import { PeerMessageBus } from '../../peer/PeerMessageBus.js';
 import { DeviceConversationSyncUseCase } from '../../application/chat/DeviceConversationSyncUseCase.js';
 import { LocalStorageProvider } from '../../storage/LocalStorageProvider.js';
-import { DEFAULT_BITCOIN_ESPLORA_API_URLS } from '../../core/BitcoinEsploraConfiguration.js';
+import { DEFAULT_BITCOIN_ESPLORA_API_URLS } from '../../core/networks/BitcoinEsploraConfiguration.js';
 import { BitcoinEsploraConfigurationStore } from '../../storage/BitcoinEsploraConfigurationStore.js';
 import { SetBitcoinEsploraConfigurationUseCase } from '../../application/settings/SetBitcoinEsploraConfigurationUseCase.js';
 import { SiblingReadStateStore } from '../../application/chat/SiblingReadStateStore.js';

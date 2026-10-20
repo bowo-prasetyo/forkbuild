@@ -1,4 +1,4 @@
-import { describeWorldEncounterSelectionIdentity } from '../../core/WorldEncounterSelectionIdentity.js';
+import { describeWorldEncounterSelectionIdentity } from '../../core/world/WorldEncounterSelectionIdentity.js';
 
 // 0.9.37 — World Encounter Material Verification Boundary.
 //
@@ -176,7 +176,7 @@ import { describeWorldEncounterSelectionIdentity } from '../../core/WorldEncount
 //   verification, hash verification, or content authentication of any
 //   kind.** This file ships with no verifier of its own; a caller injects
 //   one. Separate, later, unscheduled work (0.9.38, using this codebase's
-//   existing `core/Signature.js` / `core/SigningIdentity.js` / `identity/
+//   existing `core/publication/Signature.js` / `core/SigningIdentity.js` / `identity/
 //   LocalAuthorizationVerifier.js` machinery).
 // - **Wiring this boundary into `application/
 //   DecentralizedWorldEncounterLeadAwareMaterialLoading.js`, `application/

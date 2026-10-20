@@ -2,7 +2,7 @@ import { describeLicense } from '../../application/document/LicenseLabels.js';
 import { describePlacementPolicy } from '../../application/document/PlacementPolicyLabels.js';
 import { LifecycleStatus } from '../../application/document/DocumentLifecycleStatus.js';
 import { displayText, t } from '../i18n/i18n.js';
-import { descriptionPlainText, previewDescription } from '../../core/DescriptionMarkup.js';
+import { descriptionPlainText, previewDescription } from '../../core/document/DescriptionMarkup.js';
 import FormattedDescription from './FormattedDescription.js';
 import { builtWithNames } from './remix/builtWithText.js';
 import BuiltWithNames from './remix/BuiltWithNames.js';
@@ -88,7 +88,7 @@ export default {
         licenseLabel(license) {
             return t(describeLicense(license ? license.id : null));
         },
-        // Who built it with its author (core/BuiltWith.js), as a phrase.
+        // Who built it with its author (core/catalog/BuiltWith.js), as a phrase.
         builtWith(info) {
             return builtWithNames(info.builtWith);
         },

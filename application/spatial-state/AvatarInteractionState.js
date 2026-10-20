@@ -1,4 +1,4 @@
-import { AvatarInteractionKind, isValidInteractionKind } from '../../core/AvatarInteractionKind.js';
+import { AvatarInteractionKind, isValidInteractionKind } from '../../core/avatar/AvatarInteractionKind.js';
 
 // 0.2.39 — what avatar (if any) is currently the target of user
 // interaction. Deliberately a SEPARATE, minimal state slice from
@@ -23,7 +23,7 @@ import { AvatarInteractionKind, isValidInteractionKind } from '../../core/Avatar
 //
 // 0.2.44 — Local Avatar Interaction & Social Presence adds two more
 // fields, `interaction`/`interactionStartedAt`: which LOCAL gesture
-// (core/AvatarInteractionKind.js — NONE/GREET/WAVE/POINT) the user is
+// (core/avatar/AvatarInteractionKind.js — NONE/GREET/WAVE/POINT) the user is
 // currently performing at this target, and when it started. Kept on
 // THIS class rather than a third, separate state slice — a gesture is
 // meaningless without a target, so the two travel together exactly
@@ -34,7 +34,7 @@ import { AvatarInteractionKind, isValidInteractionKind } from '../../core/Avatar
 // tests), and renaming it would be pure churn with no behavior change;
 // "the exact vocabulary can remain small" applies here too. A gesture
 // is still local-only and never reaches AvatarPresence or the wire —
-// see core/AvatarInteractionKind.js's own header for why that split is
+// see core/avatar/AvatarInteractionKind.js's own header for why that split is
 // enforced by construction, not convention.
 export class AvatarInteractionState {
     constructor({

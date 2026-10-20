@@ -1,11 +1,11 @@
 import { AvatarWaterConstraint } from '../application/avatar/AvatarWaterConstraint.js';
-import { waterDepthSpeedFactor } from '../core/AvatarWaterWalkability.js';
-import { riverWaterDepthAt, RIVER_FILL } from '../core/RiverFlow.js';
-import { riverProximityAt } from '../core/Hydrology.js';
-import { RIVER_BED_DEPTH, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { AVATAR_SWIM_DEPTH, AvatarSwimMode } from '../core/AvatarSwimming.js';
+import { waterDepthSpeedFactor } from '../core/avatar/AvatarWaterWalkability.js';
+import { riverWaterDepthAt, RIVER_FILL } from '../core/nature/RiverFlow.js';
+import { riverProximityAt } from '../core/nature/Hydrology.js';
+import { RIVER_BED_DEPTH, DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { AVATAR_SWIM_DEPTH, AvatarSwimMode } from '../core/avatar/AvatarSwimming.js';
 import { AvatarVisual } from '../renderer/AvatarVisual.js';
-import { POOL_DEPTH } from '../core/RiverBed.js';
+import { POOL_DEPTH } from '../core/nature/RiverBed.js';
 import { assert } from './support/Assert.js';
 
 // Wading through a river slows an avatar by the water in its carved bed,

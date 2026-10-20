@@ -1,12 +1,12 @@
 // application/publication/LookAlikeBuildNotifier.js: a build admitted on this
 // device that looks a lot like one of the signed-in builder's own, published
 // before it, tells them in the 🔔, once; with the real SimilarBuildFinder.
-import { Brick } from '../core/Brick.js';
-import { Building } from '../core/Building.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { Position } from '../core/Position.js';
-import { World } from '../core/World.js';
+import { Brick } from '../core/building/Brick.js';
+import { Building } from '../core/building/Building.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { Position } from '../core/document/Position.js';
+import { World } from '../core/document/World.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';

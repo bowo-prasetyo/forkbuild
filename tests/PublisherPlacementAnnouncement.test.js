@@ -1,27 +1,27 @@
 // A publisher's own signed placement travels beside its Snapshot announcement
-// (core/SnapshotDiscoveryEnvelope.js), and a receiving device adopts it
+// (core/publication/SnapshotDiscoveryEnvelope.js), and a receiving device adopts it
 // (AdoptPublisherPlacementUseCase) so World View shows the build where its
 // publisher put it. Only a record signed with the known Publication's own key
 // is adopted; a later move replaces an earlier one.
 import {
     describeSnapshotDiscoveryEnvelope, parseSnapshotDiscoveryEnvelope, snapshotCandidateFromEnvelope,
     SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION
-} from '../core/SnapshotDiscoveryEnvelope.js';
+} from '../core/publication/SnapshotDiscoveryEnvelope.js';
 import { ANNOUNCEMENT_KINDS, AnnouncementKind } from '../application/announcementIndex/AnnouncementKinds.js';
 import { AdoptPublisherPlacementUseCase, PublisherPlacementAdoption } from '../application/placement/AdoptPublisherPlacementUseCase.js';
 import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
 import { placementMethods } from '../application/worldNavigation/placementMethods.js';
 import { useClaimedBuilds } from '../ui/views/worldView/useClaimedBuilds.js';
-import { PlacementPolicy } from '../core/PlacementPolicy.js';
-import { PlacementRecord } from '../core/PlacementRecord.js';
-import { Position } from '../core/Position.js';
-import { CausalStamp } from '../core/CausalStamp.js';
-import { RevisionReference } from '../core/RevisionReference.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
+import { PlacementPolicy } from '../core/publication/PlacementPolicy.js';
+import { PlacementRecord } from '../core/publication/PlacementRecord.js';
+import { Position } from '../core/document/Position.js';
+import { CausalStamp } from '../core/collaboration/CausalStamp.js';
+import { RevisionReference } from '../core/document/RevisionReference.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';

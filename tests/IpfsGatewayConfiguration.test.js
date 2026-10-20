@@ -1,12 +1,12 @@
 
-import { IpfsGatewayConfiguration, isValidIpfsGatewayUrl, DEFAULT_IPFS_GATEWAY_URL } from '../core/IpfsGatewayConfiguration.js';
+import { IpfsGatewayConfiguration, isValidIpfsGatewayUrl, DEFAULT_IPFS_GATEWAY_URL } from '../core/networks/IpfsGatewayConfiguration.js';
 import { assert } from './support/Assert.js';
 import { readSource as source } from './support/SourceText.js';
 
 // 0.9.665 — User-Configurable IPFS Gateway Configuration Boundary.
 // 0.9.666 — IPFS Gateway Read Failover. Mirrors tests/
 // ArweaveGatewayConfiguration.test.js's own Sections A-I exactly, in full
-// now — see core/IpfsGatewayConfiguration.js's own header for how this
+// now — see core/networks/IpfsGatewayConfiguration.js's own header for how this
 // class came to mirror Arweave Gateway's own 0.9.440 gatewayUrls/failover
 // shape one axis over.
 
@@ -130,7 +130,7 @@ async function run() {
     // no extra fields, no generic abstraction.
     // ===============================================================
     {
-        const configSource = await source('core/IpfsGatewayConfiguration.js');
+        const configSource = await source('core/networks/IpfsGatewayConfiguration.js');
         const configExecutable = configSource.replace(/\/\/.*$/gm, '');
         assert(!/localStorage|StorageProvider/.test(configExecutable), 'H1. no persistence of any kind in this file\'s own executable code');
         assert(!/\bfetch\s*\(/.test(configExecutable), 'H2. no fetch() call anywhere — this file never makes a network request');

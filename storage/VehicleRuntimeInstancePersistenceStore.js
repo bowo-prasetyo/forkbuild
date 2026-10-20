@@ -1,6 +1,6 @@
 import { StorageProvider } from './StorageProvider.js';
 import { LocalStorageProvider } from './LocalStorageProvider.js';
-import { VehicleInstance } from '../core/VehicleInstance.js';
+import { VehicleInstance } from '../core/vehicles/VehicleInstance.js';
 
 const VEHICLE_RUNTIME_INSTANCE_STORE_KEY = 'vehicle-runtime-instances';
 

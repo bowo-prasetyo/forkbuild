@@ -6,8 +6,8 @@ import {
     steemTransactionPackedSize,
     steemTransactionResourceCost,
     steemTransactionResourceUsage
-} from '../core/SteemResourceCredits.js';
-import { steemDeclinedPayoutOptions } from '../core/SteemDiscoveryThread.js';
+} from '../core/networks/SteemResourceCredits.js';
+import { steemDeclinedPayoutOptions } from '../core/networks/SteemDiscoveryThread.js';
 import { createSteemResourceCreditEstimator } from '../application/steem/SteemResourceCreditEstimator.js';
 import { assert } from './support/Assert.js';
 

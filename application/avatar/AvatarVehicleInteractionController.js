@@ -1,42 +1,42 @@
-import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../../core/TerrainHeightField.js';
-import { VehicleType } from '../../core/VehicleType.js';
+import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../../core/nature/TerrainHeightField.js';
+import { VehicleType } from '../../core/vehicles/VehicleType.js';
 import {
     AvatarVehicleInteractionIntent,
     deriveAvatarVehicleInteractionIntent
-} from '../../core/AvatarVehicleInteractionIntent.js';
+} from '../../core/vehicles/AvatarVehicleInteractionIntent.js';
 import {
     resolveAvatarVehicleInteractionTarget
-} from '../../core/AvatarVehicleInteractionTarget.js';
-import { createAvatarVehicleMount } from '../../core/AvatarVehicleMount.js';
-import { deriveAvatarVehicleMount } from '../../core/AvatarVehicleMountTransition.js';
+} from '../../core/vehicles/AvatarVehicleInteractionTarget.js';
+import { createAvatarVehicleMount } from '../../core/vehicles/AvatarVehicleMount.js';
+import { deriveAvatarVehicleMount } from '../../core/vehicles/AvatarVehicleMountTransition.js';
 import {
     deriveAvatarVehicleDismountIntent
-} from '../../core/AvatarVehicleDismountIntent.js';
+} from '../../core/vehicles/AvatarVehicleDismountIntent.js';
 import {
     resolveAvatarVehicleDismountPosition
-} from '../../core/AvatarVehicleDismountPosition.js';
+} from '../../core/vehicles/AvatarVehicleDismountPosition.js';
 import {
     isAvatarVehicleDismountPositionClear
-} from '../../core/AvatarVehicleDismountClearance.js';
+} from '../../core/vehicles/AvatarVehicleDismountClearance.js';
 import {
     deriveAvatarVehicleDismountTransition
-} from '../../core/AvatarVehicleDismountTransition.js';
-import { VEHICLE_INTERACTION_RADIUS } from '../../core/AvatarVehicleProximity.js';
-import { vehiclePresenceInRegion } from '../../core/VehiclePlacement.js';
-import { treeCollisionCandidatesForMovement } from '../../core/AvatarTreeCollisionQuery.js';
-import { InventoryEntryKind, withEntryRemoved } from '../../core/AvatarInventory.js';
+} from '../../core/vehicles/AvatarVehicleDismountTransition.js';
+import { VEHICLE_INTERACTION_RADIUS } from '../../core/vehicles/AvatarVehicleProximity.js';
+import { vehiclePresenceInRegion } from '../../core/vehicles/VehiclePlacement.js';
+import { treeCollisionCandidatesForMovement } from '../../core/avatar/AvatarTreeCollisionQuery.js';
+import { InventoryEntryKind, withEntryRemoved } from '../../core/avatar/AvatarInventory.js';
 import { AvatarInventoryStore } from './AvatarInventoryStore.js';
-import { deriveAvatarVehicleStoreIntent } from '../../core/AvatarVehicleStoreIntent.js';
-import { deriveAvatarVehicleDeployIntent } from '../../core/AvatarVehicleDeployIntent.js';
-import { deriveAvatarVehicleStoreTransition } from '../../core/AvatarVehicleStoreTransition.js';
-import { deriveAvatarVehicleDeployTransition } from '../../core/AvatarVehicleDeployTransition.js';
-import { VehicleInstance } from '../../core/VehicleInstance.js';
-import { createId } from '../../core/createId.js';
-import { Position } from '../../core/Position.js';
-import { surfaceCategoryAt, SURFACE_CATEGORY } from '../../core/TerrainSurface.js';
-import { LAKE_SURFACE_HEIGHT } from '../../core/Hydrology.js';
-import { droneFloorHeight, VEHICLE_MAX_WATER_DEPTH } from '../../core/VehicleWaterline.js';
-import { isSwimmableDepth, surfaceSwimFeetHeight } from '../../core/AvatarSwimming.js';
+import { deriveAvatarVehicleStoreIntent } from '../../core/vehicles/AvatarVehicleStoreIntent.js';
+import { deriveAvatarVehicleDeployIntent } from '../../core/vehicles/AvatarVehicleDeployIntent.js';
+import { deriveAvatarVehicleStoreTransition } from '../../core/vehicles/AvatarVehicleStoreTransition.js';
+import { deriveAvatarVehicleDeployTransition } from '../../core/vehicles/AvatarVehicleDeployTransition.js';
+import { VehicleInstance } from '../../core/vehicles/VehicleInstance.js';
+import { createId } from '../../core/document/createId.js';
+import { Position } from '../../core/document/Position.js';
+import { surfaceCategoryAt, SURFACE_CATEGORY } from '../../core/nature/TerrainSurface.js';
+import { LAKE_SURFACE_HEIGHT } from '../../core/nature/Hydrology.js';
+import { droneFloorHeight, VEHICLE_MAX_WATER_DEPTH } from '../../core/vehicles/VehicleWaterline.js';
+import { isSwimmableDepth, surfaceSwimFeetHeight } from '../../core/avatar/AvatarSwimming.js';
 
 // Runs the core mount/dismount (and store/deploy) chain at runtime. It holds no
 // policy of its own: every decision is made by the pure core/ functions it
@@ -50,7 +50,7 @@ import { isSwimmableDepth, surfaceSwimFeetHeight } from '../../core/AvatarSwimmi
 // immediately remount the vehicle still within reach.
 //
 // `mount` lives here: growing AvatarPresence with a `mountedVehicleId` was explicitly
-// rejected (see core/AvatarVehicleMount.js), and AvatarMovementController only
+// rejected (see core/vehicles/AvatarVehicleMount.js), and AvatarMovementController only
 // owns movement keys and kinematics.
 //
 // Once mounted, the vehicle is found by identity in VehicleRuntimeInstances (its

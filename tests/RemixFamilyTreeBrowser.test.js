@@ -1,7 +1,7 @@
 // @environment browser
 import { createApp, h } from 'vue';
 import RemixFamilyTree from '../ui/components/remix/RemixFamilyTree.js';
-import { remixFamily } from '../core/RemixFamily.js';
+import { remixFamily } from '../core/publication/RemixFamily.js';
 import { assert } from './support/Assert.js';
 
 // The family tree, rendered by real Vue: ancestors in order down to this

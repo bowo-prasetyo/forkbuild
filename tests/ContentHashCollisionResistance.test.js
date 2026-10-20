@@ -3,14 +3,14 @@
 // content hash, can be matched by anyone in milliseconds: a legacy hash is
 // honored only for this device's own data, and never for bytes from a
 // peer, gateway or announcement.
-import { Brick } from '../core/Brick.js';
-import { Building } from '../core/Building.js';
-import { ContentReference } from '../core/ContentReference.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { Position } from '../core/Position.js';
-import { World } from '../core/World.js';
-import { computeDeterministicGridPosition } from '../core/DeterministicGridPlacement.js';
+import { Brick } from '../core/building/Brick.js';
+import { Building } from '../core/building/Building.js';
+import { ContentReference } from '../core/document/ContentReference.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { Position } from '../core/document/Position.js';
+import { World } from '../core/document/World.js';
+import { computeDeterministicGridPosition } from '../core/world/DeterministicGridPlacement.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import {
     computeContentHash, computeFnv1a32, contentHashAlgorithm, contentHashMatches

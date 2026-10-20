@@ -8,7 +8,7 @@ import { t } from '../i18n/i18n.js';
 // A notification in words: `{ title, body }` for the kinds ForkBuild makes,
 // or null for a kind it doesn't know (the bell's history then names it from
 // its event type, as before). Shown in the bell's history and, when turned
-// on, by the operating system (core/DeviceNotifications.js).
+// on, by the operating system (core/social/DeviceNotifications.js).
 export function describeNotification(event) {
     const payload = event?.payload || {};
     const title = text(payload.title);

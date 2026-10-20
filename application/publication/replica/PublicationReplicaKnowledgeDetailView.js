@@ -5,7 +5,7 @@ import { AnchorVerificationLifecycleState } from '../../anchoring/AnchorVerifica
 import { describePlacementKnowledge } from '../../snapshot/placement/PublicationSnapshotPlacementKnowledgeView.js';
 import { deriveSnapshotPlacementLifecycle } from '../../snapshot/placement/SnapshotPlacementLifecycleView.js';
 import { SnapshotPlacementLifecycleState } from '../../snapshot/placement/SnapshotPlacementLifecycleState.js';
-import { message } from '../../../core/Message.js';
+import { message } from '../../../core/app/Message.js';
 
 // 0.8.31 — Replica Knowledge Provenance & Synchronization Inspection.
 //

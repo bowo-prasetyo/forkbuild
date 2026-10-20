@@ -15,7 +15,7 @@
 //   HASH_MATCH    — `content/IpfsGatewayContentStore.js` or `content/
 //                   IpfsContentStore.js` returned bytes, and those bytes
 //                   hash to the record's own `contentHash` (checked by
-//                   `core/ContentReference.js#verify()`, unmodified).
+//                   `core/document/ContentReference.js#verify()`, unmodified).
 //   HASH_MISMATCH — bytes were retrieved, but they do NOT hash to the
 //                   claimed `contentHash`. A REAL, definite fact about
 //                   what is presently being served at that locator —

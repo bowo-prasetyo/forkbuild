@@ -38,7 +38,7 @@ import { SnapshotMaterializationSourceKind } from './SnapshotMaterializationSour
 // NEVER PERSISTED, NEVER SHARED — the identical restraint application/
 // SnapshotPlacementResolutionObservation.js's own header already holds one
 // axis over. This record is never written onto a core/
-// DecentralizedPublication.js, a core/PublicationSnapshotPlacement.js, an
+// DecentralizedPublication.js, a core/publication/PublicationSnapshotPlacement.js, an
 // application/placement/LocalPlacementKnowledgeStore.js entry, a convergence result,
 // a replica synchronization, or an application/publication/replica/PublicationReplicaPackage.js
 // — it lives only in whatever ephemeral component state ui/views/

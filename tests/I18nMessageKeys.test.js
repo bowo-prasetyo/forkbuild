@@ -1,8 +1,8 @@
 // Text from core/ and application/ as message keys: the descriptor and error
 // types, how the UI turns them into text, and that everything the converted
 // modules can say has an English message (so nothing shows up as a key).
-import { isMessage, message } from '../core/Message.js';
-import { UserFacingError, isUserFacingError } from '../core/UserFacingError.js';
+import { isMessage, message } from '../core/app/Message.js';
+import { UserFacingError, isUserFacingError } from '../core/app/UserFacingError.js';
 import { EditorActionRegistry, actionCategoryLabel, actionLabel, createStandardActions } from '../application/editor/EditorActionRegistry.js';
 import { EditorActionContext } from '../application/editor/EditorActionContext.js';
 import { LICENSE_OPTIONS, describeLicense } from '../application/document/LicenseLabels.js';
@@ -12,10 +12,10 @@ import { describeAnimationState, describeLifecycleState, describeTrustStatus } f
 import { evaluateNewPassphrase } from '../application/identity/NewPassphrasePolicy.js';
 import { OpenPublicationLinkOutcome, openPublicationLink } from '../application/publication/OpenPublicationLink.js';
 import { createPublicationClaimRetriever } from '../application/publication/PublicationClaimRetriever.js';
-import { describePublicationClaimLocator } from '../core/ForkBuildAppLinks.js';
-import { PresenceLifecycleState } from '../core/PresenceLifecycleState.js';
-import { TrustStatus } from '../core/TrustObservation.js';
-import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
+import { describePublicationClaimLocator } from '../core/app/ForkBuildAppLinks.js';
+import { PresenceLifecycleState } from '../core/avatar/PresenceLifecycleState.js';
+import { TrustStatus } from '../core/identity/TrustObservation.js';
+import { AvatarAnimationState } from '../core/avatar/AvatarAnimationState.js';
 import { CoreLibrary } from '../core/library/CoreLibrary.js';
 import { VillageLibrary } from '../core/library/VillageLibrary.js';
 import { displayText, errorText, hasMessage, setAppLocale, t } from '../ui/i18n/i18n.js';

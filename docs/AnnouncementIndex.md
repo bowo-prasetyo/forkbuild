@@ -294,7 +294,7 @@ connection to a friend gives it everything that friend has seen.
 
 Narrower tags make each backfill smaller and each query more complete.
 They also keep nearby Snapshots in the index when the global Snapshot tag
-reaches its 2,000-record cap. The tags come from `core/NarrowDiscoveryTags.js`.
+reaches its 2,000-record cap. The tags come from `core/publication/NarrowDiscoveryTags.js`.
 
 - **Commentary.** Each Commentary announcement also carries the tag
   `forkbuild-commentary:<publicationId>`.

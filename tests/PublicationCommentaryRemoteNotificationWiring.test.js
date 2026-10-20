@@ -4,7 +4,7 @@ import { LocalStorageProvider } from '../storage/LocalStorageProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 
-import { PublicationCommentary } from '../core/PublicationCommentary.js';
+import { PublicationCommentary } from '../core/publication/PublicationCommentary.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
 import { Publication } from '../publisher/Publication.js';
@@ -63,7 +63,7 @@ import { makeIdentity } from './support/TestIdentity.js';
 //      wrapped in the identical best-effort try/catch idiom
 //      addPublicationCommentaryCommand already uses around announce().
 //
-// NEITHER core/NotificationEvent.js, storage/NotificationEventStore.js,
+// NEITHER core/social/NotificationEvent.js, storage/NotificationEventStore.js,
 // application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js,
 // application/publication/commentary/PublicationCommentaryDistributionExchange.js, nor
 // application/publication/commentary/CreatePublicationCommentaryUseCase.js is modified by this

@@ -7,7 +7,7 @@
 // (`{ degrees, label }` or `null`), re-read and re-rendered by the host
 // on its own existing spatial-refresh cadence — this component never
 // computes a heading itself, never touches Three.js, and owns no
-// polling of its own. See core/CompassHeading.js's own header for why
+// polling of its own. See core/world/CompassHeading.js's own header for why
 // "N" here means +Z, a fixed reference direction, not a real-world
 // bearing.
 //
@@ -16,7 +16,7 @@
 // locations" (the design conversation's own words). `markers` is a
 // small, pre-filtered array — `{ id, direction, kind, label }`, at most
 // a handful — the HOST (ui/views/WorldView.js's own `compassMarkers`)
-// already derived from core/WorldSpatialContext.js's nearbyStructures/
+// already derived from core/world/WorldSpatialContext.js's nearbyStructures/
 // nearbyCollaborators. This component still computes nothing about the
 // World itself: `direction` is an N/NE/E/SE/S/SW/W/NW label it only
 // ever positions, exactly the same "never touches Three.js, never
@@ -35,7 +35,7 @@ const MARKER_DIRECTION_DEGREES = {
 export default {
     name: 'CompassIndicator',
     props: {
-        // { degrees, label } from core/CompassHeading.js, or null
+        // { degrees, label } from core/world/CompassHeading.js, or null
         // before a camera exists / while position and target coincide.
         heading: {
             type: Object,
@@ -52,7 +52,7 @@ export default {
             const degrees = this.heading ? this.heading.bearing : 0;
             // The needle points toward the heading; N is drawn at the
             // top (rotate(0)) so a heading of 0° (facing +Z / "N")
-            // needs no rotation, matching core/CompassHeading.js's own
+            // needs no rotation, matching core/world/CompassHeading.js's own
             // 0°-faces-+Z convention directly, no offset to remember.
             return { transform: `rotate(${degrees}deg)` };
         }

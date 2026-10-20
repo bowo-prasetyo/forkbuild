@@ -1,7 +1,7 @@
-// Keeps this device's choice of look (core/LookSettings.js). Personal and
+// Keeps this device's choice of look (core/app/LookSettings.js). Personal and
 // local: never published, shared or part of any World.
 import { StorageProvider } from '../../storage/StorageProvider.js';
-import { normalizeLookSettings } from '../../core/LookSettings.js';
+import { normalizeLookSettings } from '../../core/app/LookSettings.js';
 
 const STORAGE_KEY = 'look-settings';
 

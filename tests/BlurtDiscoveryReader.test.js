@@ -4,7 +4,7 @@ import { createBlurtRpcClient } from '../blurt/BlurtRpcClient.js';
 import { BlurtSnapshotDiscoveryQueryService } from '../application/blurt/BlurtSnapshotDiscoveryQueryService.js';
 import { BlurtPublicationDiscoveryQueryService } from '../application/blurt/BlurtPublicationDiscoveryQueryService.js';
 import { BlurtKnownAuthorStore } from '../storage/BlurtKnownAuthorStore.js';
-import { blurtBuildPostOperation, emptyBlurtBuildPost } from '../core/BlurtPost.js';
+import { blurtBuildPostOperation, emptyBlurtBuildPost } from '../core/networks/BlurtPost.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { blurtChainTime, fakeBlurtChain } from './support/FakeBlurtChain.js';
 import { assert } from './support/Assert.js';

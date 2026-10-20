@@ -1,10 +1,10 @@
-import { LicenseId } from '../../core/License.js';
-import { message } from '../../core/Message.js';
+import { LicenseId } from '../../core/document/License.js';
+import { message } from '../../core/app/Message.js';
 
 // 0.2.21: human-readable labels for LicenseId, shared by the license
 // selector (Document Properties editor) and the Document Info panel's
 // read view — one place, so the two never drift apart, same reasoning
-// as DocumentLifecycleStatus. Each label is a message (core/Message.js); a
+// as DocumentLifecycleStatus. Each label is a message (core/app/Message.js); a
 // license id this version doesn't know is shown as the id itself.
 const LICENSE_KEYS = Object.freeze({
     [LicenseId.CC0_1_0]: 'license.cc0',

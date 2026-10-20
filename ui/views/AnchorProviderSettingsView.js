@@ -1,6 +1,6 @@
 import { computed, inject } from 'vue';
 import { useRoleProviderPreferenceForm } from '../composables/useRoleProviderPreferenceForm.js';
-import { RoleProviderRole } from '../../core/RoleProviderRole.js';
+import { RoleProviderRole } from '../../core/publication/RoleProviderRole.js';
 import { describeRoleProviderPreferenceSettings } from '../../application/settings/RoleProviderPreferenceSettingsView.js';
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 import { displayText, t } from '../i18n/i18n.js';

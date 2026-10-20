@@ -6,8 +6,8 @@ import {
     steemContentManifestOperations,
     steemContentManifestPermlink,
     STEEM_CONTENT_MAX_PARTS
-} from '../core/SteemContentManifest.js';
-import { describeSteemDiscoveryThreadPost, STEEM_DISCOVERY_FAMILIES } from '../core/SteemDiscoveryThread.js';
+} from '../core/networks/SteemContentManifest.js';
+import { describeSteemDiscoveryThreadPost, STEEM_DISCOVERY_FAMILIES } from '../core/networks/SteemDiscoveryThread.js';
 import {
     SteemContentStore,
     SteemContentTooLargeError,
@@ -18,7 +18,7 @@ import {
 } from '../content/SteemContentStore.js';
 import { ContentTooLargeError } from '../content/ContentStore.js';
 import { ContentUnavailableError } from '../content/IpfsContentStore.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { createSteemAnnouncer } from '../application/steem/SteemAnnouncer.js';
 import { SteemSnapshotDiscoveryPublisher } from '../application/steem/SteemSnapshotDiscoveryPublisher.js';

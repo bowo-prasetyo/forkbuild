@@ -1,14 +1,14 @@
 import { SpatialDiscoveryProvider } from '../discovery/SpatialDiscoveryProvider.js';
-import { SpatialCell } from '../core/SpatialCell.js';
-import { SpatialIndexRoot } from '../core/SpatialIndexRoot.js';
-import { SpatialIndexManifest } from '../core/SpatialIndexManifest.js';
-import { PlacementRecord } from '../core/PlacementRecord.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { SpatialCell } from '../core/world/SpatialCell.js';
+import { SpatialIndexRoot } from '../core/world/SpatialIndexRoot.js';
+import { SpatialIndexManifest } from '../core/world/SpatialIndexManifest.js';
+import { PlacementRecord } from '../core/publication/PlacementRecord.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { TrustPolicy } from '../identity/TrustPolicy.js';
-import { TrustObservation, TrustStatus } from '../core/TrustObservation.js';
-import { FreshnessProof } from '../core/FreshnessProof.js';
-import { EquivocationDetector } from '../core/IndexEquivocation.js';
+import { TrustObservation, TrustStatus } from '../core/identity/TrustObservation.js';
+import { FreshnessProof } from '../core/publication/FreshnessProof.js';
+import { EquivocationDetector } from '../core/world/IndexEquivocation.js';
 import { DiscoveryDiagnosticsBuilder } from './DiscoveryDiagnostics.js';
 
 // The decentralized implementation of the 0.2.11 discovery interface.
@@ -23,7 +23,7 @@ import { DiscoveryDiagnosticsBuilder } from './DiscoveryDiagnostics.js';
 //
 // As of 0.2.19 the root layer itself gains three more questions before
 // a single manifest is even read (identity/TrustPolicy.js,
-// core/IndexEquivocation.js):
+// core/world/IndexEquivocation.js):
 //
 //   root -> verify authenticity -> verify authority is TRUSTED
 //        -> detect equivocation (same authority, same causal

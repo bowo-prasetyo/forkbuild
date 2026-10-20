@@ -1,5 +1,5 @@
-import { PublicationCommentary } from '../../../core/PublicationCommentary.js';
-import { PublicationCommentaryDistributionEnvelope } from '../../../core/PublicationCommentaryDistributionEnvelope.js';
+import { PublicationCommentary } from '../../../core/publication/PublicationCommentary.js';
+import { PublicationCommentaryDistributionEnvelope } from '../../../core/publication/PublicationCommentaryDistributionEnvelope.js';
 import { resolveSigningIdentityId } from '../../../identity/resolveSigningIdentityId.js';
 
 // 0.9.618 — Publication Commentary Distribution Envelope.
@@ -11,10 +11,10 @@ import { resolveSigningIdentityId } from '../../../identity/resolveSigningIdenti
 // precedent, on the export side: a PublicationAnchor is already signed
 // by the time anything calls exportAnchor() (application/
 // CreatePublicationAnchorUseCase.js signs at construction). A
-// core/PublicationCommentary.js is not — 0.9.617's own audit measured
+// core/publication/PublicationCommentary.js is not — 0.9.617's own audit measured
 // this directly (Section A, assertions 2-3): the domain object carries
 // no signature field at all, and 0.9.618 deliberately never adds one to
-// it (see core/PublicationCommentaryDistributionEnvelope.js's own
+// it (see core/publication/PublicationCommentaryDistributionEnvelope.js's own
 // header). So THIS class's own exportCommentary() is where signing
 // actually happens — the one new responsibility this exchange carries
 // that PublicationAnchorExchange never needed.

@@ -8,7 +8,7 @@
 // testable without a fake command or a fake World session — see this
 // file's own test coverage in tests/WorldSnapshotBackgroundDiscovery.test.js.
 //
-// THE THRESHOLD REUSES `core/WorldSpatialContext.js#deriveSpatialContext()`'s
+// THE THRESHOLD REUSES `core/world/WorldSpatialContext.js#deriveSpatialContext()`'s
 // OWN EXISTING `streamingRadius` DEFAULT (100), RATHER THAN INVENTING A NEW
 // ARBITRARY NUMBER. That radius already names the area a Wanderer's current
 // position is treated as "nearby" for — once the Wanderer has moved farther
@@ -19,7 +19,7 @@
 // named export, so this file declares its own copy rather than importing
 // it — the two are independent constants that happen to agree today, not a
 // shared reference.
-import { distanceBetween } from '../../core/SpatialQuery.js';
+import { distanceBetween } from '../../core/world/SpatialQuery.js';
 
 export const DEFAULT_DISCOVERY_REFRESH_RADIUS = 100;
 

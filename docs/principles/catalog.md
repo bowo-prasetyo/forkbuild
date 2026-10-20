@@ -25,7 +25,7 @@ decentralized providers without changing callers.
 ### Ordering Must Be Deterministic Across Replicas (0.2.31)
 
 Two replicas holding the same publications must sort them identically,
-or "page 5" means nothing. Every sort order in `core/PublicationSort.js`
+or "page 5" means nothing. Every sort order in `core/catalog/PublicationSort.js`
 falls back to `publicationId` when the primary key ties, and every
 string comparison is ordinal, never `localeCompare`, whose result
 depends on the runtime's locale.
@@ -80,7 +80,7 @@ replication or discoverability.
 
 ### A Preview's Camera Framing Is Deterministic; Its Pixels Are Not (0.2.32)
 
-`core/PreviewCameraFraming.js` guarantees that the same document bounds
+`core/catalog/PreviewCameraFraming.js` guarantees that the same document bounds
 always give the same camera position, target and field of view: pure
 geometry with no randomness or clock. Two people see the same shot of
 the same content, even though rendered pixels may differ between

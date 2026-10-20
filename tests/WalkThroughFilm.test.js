@@ -1,24 +1,24 @@
-// A walk-through video, filmed in World View (core/WalkThroughFilm.js): where
+// A walk-through video, filmed in World View (core/app/WalkThroughFilm.js): where
 // the walk starts and goes, what each frame of the film does, that the real
 // movement pipeline walks every ready-made build with a door from the start
 // to inside, World View's session applying it to the avatar
 // (application/worldNavigation/walkThroughFilmMethods.js), and how a frame is
 // cropped to the video's shape (renderer/WorldFilmRecorder.js).
-import { findBuildEntrance, hasWalkedInside } from '../core/BuildEntrance.js';
+import { findBuildEntrance, hasWalkedInside } from '../core/world/BuildEntrance.js';
 import {
     APPROACH_DISTANCES, END_CARD_SECONDS, EYES_FIELD_OF_VIEW, SWEEP_DEGREES, SWEEP_SECONDS, WalkThroughCamera, sweepFraming, FRONT_LOOK_SECONDS, LOOK_DEGREES, LOOK_SECONDS, OPENING_SECONDS, WALK_LIMIT_SECONDS, WalkThroughPhase,
     estimateWalkThroughSeconds, planWalkThrough, startWalkThrough, stepWalkThrough, turnToward
-} from '../core/WalkThroughFilm.js';
+} from '../core/app/WalkThroughFilm.js';
 import { walkThroughFilmMethods } from '../application/worldNavigation/walkThroughFilmMethods.js';
 import { coverCrop } from '../renderer/WorldFilmRecorder.js';
-import { videoCameraDistanceScale } from '../core/BuildVideo.js';
-import { CameraPerspective } from '../core/CameraPerspective.js';
-import { brickCollisionBoxes } from '../core/BrickPassage.js';
-import { DEFAULT_MAX_STEP_HEIGHT } from '../core/BrickWalkability.js';
+import { videoCameraDistanceScale } from '../core/app/BuildVideo.js';
+import { CameraPerspective } from '../core/avatar/CameraPerspective.js';
+import { brickCollisionBoxes } from '../core/building/BrickPassage.js';
+import { DEFAULT_MAX_STEP_HEIGHT } from '../core/building/BrickWalkability.js';
 import { AvatarStepConstraint } from '../application/avatar/AvatarStepConstraint.js';
 import { AvatarMovementConstraint } from '../application/avatar/AvatarMovementConstraint.js';
 import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
@@ -28,10 +28,10 @@ import { STARTER_STRUCTURE_ID } from '../application/home/FeaturedBuilds.js';
 import { VillageLibrary } from '../core/library/VillageLibrary.js';
 import { CollectionLibrary } from '../core/library/CollectionLibrary.js';
 import { ShowcaseLibrary } from '../core/library/ShowcaseLibrary.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 

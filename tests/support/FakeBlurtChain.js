@@ -21,8 +21,8 @@ import {
     blurtTransactionId,
     blurtTransactionMerkleDigest,
     bytesToHex
-} from '../../core/BlurtBinary.js';
-import { blurtFeeSchedule, blurtTransactionFee, formatBlurtAmount, parseBlurtAmount } from '../../core/BlurtFees.js';
+} from '../../core/networks/BlurtBinary.js';
+import { blurtFeeSchedule, blurtTransactionFee, formatBlurtAmount, parseBlurtAmount } from '../../core/networks/BlurtFees.js';
 
 export const BLURT_WITNESS = 'blurt-witness';
 export const BLURT_WITNESS_SECRET = sha256(new TextEncoder().encode('forkbuild blurt test witness'));

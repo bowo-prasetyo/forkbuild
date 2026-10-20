@@ -1,6 +1,6 @@
-import { describeDecentralizedDiscoveryEnvelope } from '../../core/DecentralizedDiscoveryEnvelope.js';
+import { describeDecentralizedDiscoveryEnvelope } from '../../core/publication/DecentralizedDiscoveryEnvelope.js';
 import { STEEM_PUBLICATION_DISCOVERY_TAG } from './SteemPublicationDiscoveryQueryService.js';
-import { normalizeBuildTags } from '../../core/BuildTags.js';
+import { normalizeBuildTags } from '../../core/document/BuildTags.js';
 
 // Announces a Publication's discovery envelope on Steem, with the publish()
 // shape the Nostr and Arweave publication publishers have: a malformed

@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { NostrPlaceNamingDiscoverySource } from '../application/placeNaming/NostrPlaceNamingDiscoverySource.js';
 import { PlaceNamingDiscoveryQueryService } from '../application/placeNaming/PlaceNamingDiscoveryQueryService.js';
 import { createNostrRelayQueryClient } from '../nostr/NostrRelayQueryClient.js';
-import { derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
+import { derivePlaceNamingDiscoveryTag } from '../core/world/PlaceNamingDiscoveryEnvelope.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.254 — Nostr Place Naming Discovery Source.

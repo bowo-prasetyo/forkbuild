@@ -19,8 +19,8 @@ import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { PUBLICATION_CONTENT_KIND } from '../application/publication/PublicationContentValidator.js';
 import { Publication } from '../publisher/Publication.js';
-import { ContentReference } from '../core/ContentReference.js';
-import { License, LicenseId } from '../core/License.js';
+import { ContentReference } from '../core/document/ContentReference.js';
+import { License, LicenseId } from '../core/document/License.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 

@@ -1,6 +1,6 @@
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';
-import { orientedSize } from '../core/BrickOrientation.js';
+import { orientedSize } from '../core/building/BrickOrientation.js';
 import { assert } from './support/Assert.js';
 
 // Nothing in a built-in structure floats above a hipped roof. A hip roof

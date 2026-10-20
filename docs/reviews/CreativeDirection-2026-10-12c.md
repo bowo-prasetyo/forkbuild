@@ -191,7 +191,7 @@ afternoon, in exactly the window the previous audit set aside for a
 playtest and a launch date.
 
 The filter needs a question with a number behind it. Pillars already has
-eleven targets in core/LaunchTargets.js. None of them can move yet,
+eleven targets in core/app/LaunchTargets.js. None of them can move yet,
 because nobody outside the project is playing.
 
 **Fix, both small:**
@@ -312,7 +312,7 @@ What it needs now is people.
   entries. SwiftShader washes out the terrain colours.
 - Read Pillars.md, VISION.md, the README, the three earlier audits, the
   roadmap from "Make it yours, in the village" to "Stars and the Milky Way",
-  docs/launch/README.md, core/DayCycle.js, core/BuildChallenge.js, the
+  docs/launch/README.md, core/nature/DayCycle.js, core/challenge/BuildChallenge.js, the
   English catalogue's challenge and resident strings, EditorView.js's
   starter-job wiring and World View's avatar section.
 - Counted commits since the second audit (twelve non-merge, six of them

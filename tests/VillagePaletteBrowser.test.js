@@ -1,7 +1,7 @@
 // @environment browser
 import { createApp, h, nextTick, ref } from 'vue';
 import VillagePaletteSwatches from '../ui/components/VillagePaletteSwatches.js';
-import { VILLAGE_PALETTE } from '../core/VillagePalette.js';
+import { VILLAGE_PALETTE } from '../core/building/VillagePalette.js';
 import { assert } from './support/Assert.js';
 
 // The village palette's swatches, rendered by real Vue: one named button per

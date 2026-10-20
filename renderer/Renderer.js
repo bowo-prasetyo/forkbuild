@@ -11,13 +11,13 @@ import { buildWaterTile } from './WaterTileMesh.js';
 import { createLakeIce, setLakeIce } from './WaterWaveMaterial.js';
 import { buildWildlifeTileMesh, updateWildlifeTileMesh } from './WildlifeTileMesh.js';
 import { disposeOwnedTile, disposeInstancedTile } from './TileDisposal.js';
-import { terrainHeightAt as computeTerrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
-import { underwaterViewAt, UNDERWATER_VIEW } from '../core/UnderwaterView.js';
-import { seaShareAt } from '../core/Hydrology.js';
-import { waterWaveAt } from '../core/WaterWaves.js';
+import { terrainHeightAt as computeTerrainHeightAt, DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { TERRAIN_TILE_SIZE } from '../core/nature/TerrainTiling.js';
+import { underwaterViewAt, UNDERWATER_VIEW } from '../core/nature/UnderwaterView.js';
+import { seaShareAt } from '../core/nature/Hydrology.js';
+import { waterWaveAt } from '../core/nature/WaterWaves.js';
 import { buildUnderwaterLifeTileMesh, updateUnderwaterLifeTileMesh } from './UnderwaterLifeTileMesh.js';
-import { DAY } from '../core/DayCycle.js';
+import { DAY } from '../core/nature/DayCycle.js';
 import { makeNightGlowing } from './NightGlowMaterial.js';
 import { SkyBodies } from './SkyBodies.js';
 import { StarSky } from './StarSky.js';
@@ -60,7 +60,7 @@ function windStrengthOf(weather) {
 export class Renderer {
     // `cameraResetKey` is passed to CameraController; null turns its reset
     // shortcut off. `wildlifeClock` returns wildlife time in seconds, the
-    // moment at which wandering animals are drawn (core/WildlifeMotion.js);
+    // moment at which wandering animals are drawn (core/nature/WildlifeMotion.js);
     // World View passes its session's clock so animals are drawn where
     // collision and catching find them. `treeDetail` (renderer/TreeForest.js)
     // starts LOW where the main pointer is a finger, until setTreeDetail().
@@ -134,7 +134,7 @@ export class Renderer {
         // Editor's precise, origin-relative snapping reference,
         // completely unchanged; terrain is the new, camera-following
         // SOLID ground underneath both Editor and World View — see
-        // docs/Roadmap.md, 0.2.76, and core/TerrainHeightField.js's own
+        // docs/Roadmap.md, 0.2.76, and core/nature/TerrainHeightField.js's own
         // header. terrainHeightAt() below is the ONE shared query point
         // every ground-placement site in this codebase reads from
         // (renderer/WorldRenderer.js for buildings,
@@ -175,9 +175,9 @@ export class Renderer {
         // tileFactory builds: a flat lake plane (renderer/WaterTileMesh.js)
         // instead of colored ground or trees. A river's water
         // (renderer/RiverTileMesh.js) rides in the same tile, over the
-        // tint core/Hydrology.js#hydrologyGroundColorAt() lays on its bed.
-        // Lakes ripple, the sea swells (core/WaterWaves.js) and rivers run
-        // (core/RiverFlow.js): every water tile's material reads this one
+        // tint core/nature/Hydrology.js#hydrologyGroundColorAt() lays on its bed.
+        // Lakes ripple, the sea swells (core/nature/WaterWaves.js) and rivers run
+        // (core/nature/RiverFlow.js): every water tile's material reads this one
         // time, which _renderFrame() advances.
         this._waterWaveTime = { value: 0 };
         this._waterStreaming = new TerrainStreamingController(
@@ -199,7 +199,7 @@ export class Renderer {
         // grid and load/unload orchestration by construction, differing
         // only in what its tileFactory builds: deer/rabbit
         // decorations (renderer/WildlifeTileMesh.js) instead of colored
-        // ground, trees, or water. See core/WildlifeField.js's own header
+        // ground, trees, or water. See core/nature/WildlifeField.js's own header
         // for why animals are recomputed per tile, never persisted, the
         // identical "sampled, never stored" discipline vegetation already
         // established.
@@ -208,10 +208,10 @@ export class Renderer {
         // (re)build of every wildlife tile, forever after — see
         // markAnimalCaught() below for the only place anything is ever
         // added to it.
-        // Animals wander (core/WildlifeMotion.js): a tile is built already
+        // Animals wander (core/nature/WildlifeMotion.js): a tile is built already
         // posed at the current wildlife time, and _renderFrame() moves every
         // loaded tile's animals on from there.
-        // Fish and seaweed (core/UnderwaterLifeField.js); fish swim every frame.
+        // Fish and seaweed (core/nature/UnderwaterLifeField.js); fish swim every frame.
         this._underwaterLifeStreaming = new TerrainStreamingController(
             this._sceneManager,
             (tx, tz) => buildUnderwaterLifeTileMesh(tx, tz, DEFAULT_WORLD_SEED, TERRAIN_TILE_SIZE, this._wildlifeClock()),
@@ -289,7 +289,7 @@ export class Renderer {
     }
 
     // Colors the sky and lights the scene as `look` (shaped like
-    // core/DayCycle.js's DAY) says. Under water, the haze stays until the
+    // core/nature/DayCycle.js's DAY) says. Under water, the haze stays until the
     // camera surfaces into this sky.
     setSkyLook(look) {
         if (!look || look === this._skyLook) {
@@ -307,7 +307,7 @@ export class Renderer {
         return this._skyLook;
     }
 
-    // Shows World View's sun and moon where `bodies` (core/DayCycle.js's
+    // Shows World View's sun and moon where `bodies` (core/nature/DayCycle.js's
     // skyBodiesAt()) puts them, the moon in its phase, and aims the light
     // from them; at night the stars and the Milky Way come out, turned by
     // bodies.skyTurn and paler the more of the moon is lit
@@ -327,7 +327,7 @@ export class Renderer {
     }
 
     // Draws World View's clouds and rain as `weather`
-    // (core/Weather.js#weatherAt()) says: the clouds drifting by the world's
+    // (core/nature/Weather.js#weatherAt()) says: the clouds drifting by the world's
     // clock (renderer/CloudSky.js), the rain falling round the camera
     // (renderer/RainFall.js) and ringing the water (renderer/RainRings.js).
     // A renderer never given any (the Editor, thumbnails) draws none.
@@ -352,7 +352,7 @@ export class Renderer {
         this._trees.setWind(windStrengthOf(weather));
     }
 
-    // Dresses the land for the season `look` says (core/Season.js's
+    // Dresses the land for the season `look` says (core/nature/Season.js's
     // seasonLookAt()): the grass, the fields and the trees
     // (renderer/SeasonalSurfaces.js), and leaves or petals drifting down
     // among the trees that shed them (renderer/SeasonDrift.js). A renderer
@@ -370,7 +370,7 @@ export class Renderer {
         return this._seasonLook;
     }
 
-    // Freezes the lakes as far as `ice` says (core/Season.js#lakeIceAt()), 0
+    // Freezes the lakes as far as `ice` says (core/nature/Season.js#lakeIceAt()), 0
     // (open water) to 1 (frozen hard).
     setLakeIce(ice) {
         setLakeIce(this._lakeIce, ice);
@@ -380,7 +380,7 @@ export class Renderer {
         return this._lakeIce.ice.value;
     }
 
-    // Presses footprints (core/Footprints.js) into the snow, made at `now`
+    // Presses footprints (core/avatar/Footprints.js) into the snow, made at `now`
     // on the world's clock.
     addFootprints(prints) {
         if (!Array.isArray(prints) || prints.length === 0) return;
@@ -503,13 +503,13 @@ export class Renderer {
     }
 
     // 0.2.76 — deterministic ground elevation at world (x, z). A thin
-    // pass-through to core/TerrainHeightField.js's own pure function
+    // pass-through to core/nature/TerrainHeightField.js's own pure function
     // with this renderer's fixed DEFAULT_WORLD_SEED — see that file's
     // header for why one shared seed, and docs/Principles.md, "Terrain
     // Elevation Is A Rendering-Time Offset, Never A Presence Or
     // Placement Fact," for how callers are expected to use the result.
     // How far the swell lifts the lake or sea at (x, z) right now: the very
-    // waves the water tiles draw (core/WaterWaves.js, the same time), for
+    // waves the water tiles draw (core/nature/WaterWaves.js, the same time), for
     // whatever floats there to ride them.
     waterSwellAt(x, z) {
         return waterWaveAt(seaShareAt(DEFAULT_WORLD_SEED, x, z), x, z, this._waterWaveTime.value).height;

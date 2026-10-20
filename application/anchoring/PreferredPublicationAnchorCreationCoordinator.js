@@ -1,4 +1,4 @@
-import { RoleProviderRole } from '../../core/RoleProviderRole.js';
+import { RoleProviderRole } from '../../core/publication/RoleProviderRole.js';
 import { ResolvePreferredRoleProviderUseCase } from '../settings/ResolvePreferredRoleProviderUseCase.js';
 import { RoleProviderResolutionStatus } from '../settings/RoleAwareProviderResolver.js';
 

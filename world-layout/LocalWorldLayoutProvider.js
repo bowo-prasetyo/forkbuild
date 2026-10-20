@@ -1,6 +1,6 @@
 import { WorldLayoutProvider } from './WorldLayoutProvider.js';
-import { WorldPosition } from '../core/WorldPosition.js';
-import { computeDeterministicGridPosition } from '../core/DeterministicGridPlacement.js';
+import { WorldPosition } from '../core/document/WorldPosition.js';
+import { computeDeterministicGridPosition } from '../core/world/DeterministicGridPlacement.js';
 
 // Deterministic local layout with explicit spatial index override.
 //
@@ -12,7 +12,7 @@ import { computeDeterministicGridPosition } from '../core/DeterministicGridPlace
 // 0.2.24: that fallback grid used to be computed from a publication's
 // INDEX in discoveryProvider.list() — the same locally-observed-order
 // dependence GridPlacementStrategy had (see
-// core/DeterministicGridPlacement.js). A publication that predates
+// core/world/DeterministicGridPlacement.js). A publication that predates
 // 0.2.23 and therefore has no recorded PlacementRecord could resolve
 // to a different fallback position on two replicas that had
 // discovered it in a different order. Both fallbacks below now go

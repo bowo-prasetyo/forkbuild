@@ -1,9 +1,9 @@
-import { parsePlaceNamingDiscoveryEnvelope } from '../../core/PlaceNamingDiscoveryEnvelope.js';
+import { parsePlaceNamingDiscoveryEnvelope } from '../../core/world/PlaceNamingDiscoveryEnvelope.js';
 import { isPlainObject } from '../../utils/typeGuards.js';
 
 // 0.9.253 — Place Naming Discovery Boundary.
 //
-// core/PlaceNamingDiscoveryEnvelope.js (0.9.253, sibling) named the wire
+// core/world/PlaceNamingDiscoveryEnvelope.js (0.9.253, sibling) named the wire
 // shape a source hands back; this file is the SOURCE-INDEPENDENT
 // aggregator the recommendation that opened this milestone asked for by
 // name — "if the existing import/peer paths already expose the claim
@@ -22,7 +22,7 @@ import { isPlainObject } from '../../utils/typeGuards.js';
 //   application/placeNaming/PlaceNamingDiscoveryQueryService.js   ★ (THIS)
 //        search(discoveryTag) — calls every source, in order, isolates a
 //        failing source from the others, parses each raw payload through
-//        core/PlaceNamingDiscoveryEnvelope.js#parsePlaceNamingDiscoveryEnvelope(),
+//        core/world/PlaceNamingDiscoveryEnvelope.js#parsePlaceNamingDiscoveryEnvelope(),
 //        discards whatever fails to parse, deduplicates by claim.id
 //                    │
 //                    ▼
@@ -63,10 +63,10 @@ import { isPlainObject } from '../../utils/typeGuards.js';
 //
 // NEVER VERIFIES A SIGNATURE, NEVER RANKS, NEVER TRUSTS. Every returned
 // envelope is exactly what
-// `core/PlaceNamingDiscoveryEnvelope.js#parsePlaceNamingDiscoveryEnvelope()`
+// `core/world/PlaceNamingDiscoveryEnvelope.js#parsePlaceNamingDiscoveryEnvelope()`
 // already validated — shape only. This file never imports `identity/
 // LocalAuthorizationVerifier.js`, `application/placeNaming/LocalPlaceNamingClaimStore.js`,
-// or `core/PlaceNamingView.js` — whether a returned envelope's own claim
+// or `core/world/PlaceNamingView.js` — whether a returned envelope's own claim
 // is authentic, and whether/how it should ever become visible in World
 // View, are entirely later, separate questions (see this milestone's own
 // docs/Roadmap.md entry, "discovery vs. selection vs. presentation").

@@ -1,12 +1,12 @@
 // Wheels roll the way the vehicle goes. For each wheeled vehicle, drawn
 // through the real VehicleVisual at several headings, every wheel stands
 // upright with its axle across the direction of travel (heading 0 = +Z,
-// core/VehicleInstance.js). A quarter turn in the wheel builders once stood
+// core/vehicles/VehicleInstance.js). A quarter turn in the wheel builders once stood
 // every wheel sideways, so the vehicles drove perpendicular to their tyres.
 import * as THREE from 'three';
 import { VehicleRenderer } from '../renderer/VehicleRenderer.js';
 import { VehicleVisual } from '../renderer/VehicleVisual.js';
-import { VehicleType } from '../core/VehicleType.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
 import { assert } from './support/Assert.js';
 
 const renderer = new VehicleRenderer();

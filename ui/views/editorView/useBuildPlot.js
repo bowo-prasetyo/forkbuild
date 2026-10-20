@@ -1,8 +1,8 @@
 import { computed, inject, ref } from 'vue';
-import { plotPositionFromQuery } from '../../../core/BuildPlot.js';
+import { plotPositionFromQuery } from '../../../core/world/BuildPlot.js';
 import { t } from '../../i18n/i18n.js';
 
-// Build here (core/BuildPlot.js): World View opens the Editor on
+// Build here (core/world/BuildPlot.js): World View opens the Editor on
 // `/editor?plot=<world>&x=&y=&z=&title=` to start a new build for that spot.
 // The plot is remembered for the new build, so that publishing it stands it
 // there (application/plot/BuildPlotPlacementStrategy.js), and a banner says
@@ -28,7 +28,7 @@ export function useBuildPlot({ documentManager, documentVersion, router, feedbac
 
     // Starts a build for the plot a Build here link names: empty, or a copy
     // of `structure` when the link names a ready-made one (a resident's Build
-    // there, core/ResidentWish.js). False when the link names no plot.
+    // there, core/world/ResidentWish.js). False when the link names no plot.
     function startBuildPlot(query, editorSession, { structure = null } = {}) {
         const worldDocumentId = typeof query?.plot === 'string' ? query.plot : null;
         const position = plotPositionFromQuery(query);

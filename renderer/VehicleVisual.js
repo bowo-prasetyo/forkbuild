@@ -8,7 +8,7 @@ import * as THREE from 'three';
 // kind (see docs/Roadmap.md, 0.9.115, "Do not change movement yet"), so
 // there is no gait clock, no pose group, no diff/rebuild-on-change
 // lifecycle to manage. A VehicleInstance's own `type` never changes for
-// the life of a vehicle (core/VehicleInstance.js's own header, "identity
+// the life of a vehicle (core/vehicles/VehicleInstance.js's own header, "identity
 // never changes") — so unlike AvatarVisual's setAppearance(), which can
 // be called many times against a changing appearance, this class's
 // geometry is built exactly ONCE, at construction, from the `type` it is
@@ -33,9 +33,9 @@ import * as THREE from 'three';
 //
 // 0.9.123 — Vehicle Orientation. setHeading(headingDegrees) is the
 // direct structural twin of setPosition() above: it ONLY EVER APPLIES a
-// heading this class is handed — see core/VehicleInstance.js's own
+// heading this class is handed — see core/vehicles/VehicleInstance.js's own
 // `heading` (degrees, 0 = facing +Z) and
-// core/VehicleMovementHeading.js's own header — never computes one
+// core/vehicles/VehicleMovementHeading.js's own header — never computes one
 // itself. This is the "renderer remains an observer" seam
 // docs/Roadmap.md, 0.9.123 asks for explicitly: heading flows
 // VehicleInstance -> VehicleVisual, never the reverse.
@@ -44,7 +44,7 @@ import * as THREE from 'three';
 // ABOUT HEADING ITSELF. renderer/VehicleRenderer.js's own buildBicycle()
 // places the front wheel/handlebar at LOCAL +X (see that file's own
 // header) — but heading 0 means "facing world +Z" (the same convention
-// core/AvatarMovementSimulation.js's own rotationY already uses, and
+// core/avatar/AvatarMovementSimulation.js's own rotationY already uses, and
 // renderer/AvatarVisual.js's own `_applyFacing()` applies with NO offset,
 // because an avatar's own body is modeled facing local +Z). Three.js's
 // own right-handed Y-axis rotation maps local +X to world

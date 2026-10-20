@@ -1,7 +1,7 @@
-import { CameraPerspective, isValidCameraPerspective, computeCameraFraming } from '../core/CameraPerspective.js';
+import { CameraPerspective, isValidCameraPerspective, computeCameraFraming } from '../core/avatar/CameraPerspective.js';
 import { SpatialCameraController } from '../application/world/SpatialCameraController.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
@@ -12,7 +12,7 @@ import { assert } from './support/Assert.js';
 
 // 0.3.2 — Avatar & Camera Experience: Camera Perspective.
 //
-//   Section A: core/CameraPerspective.js — pure offset derivation
+//   Section A: core/avatar/CameraPerspective.js — pure offset derivation
 //   Section B: WorldNavigationSession — getCameraPerspective/setCameraPerspective
 //   Section C: a set perspective re-frames on every avatar presence update
 //   Section D: turning a perspective OFF never snaps the camera anywhere
@@ -89,7 +89,7 @@ async function runTests() {
     const brickRegistry = new CreateBrickRegistryUseCase().execute();
 
     // -------------------------------------------------------------
-    // Section A — core/CameraPerspective.js: pure offset derivation
+    // Section A — core/avatar/CameraPerspective.js: pure offset derivation
     // -------------------------------------------------------------
     {
         assert(isValidCameraPerspective(CameraPerspective.FIRST_PERSON) === true, '1. FIRST_PERSON is a valid perspective');

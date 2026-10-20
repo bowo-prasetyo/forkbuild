@@ -1,4 +1,4 @@
-import { compareWorldOperations, worldOperationSortKey } from '../core/WorldOperationOrder.js';
+import { compareWorldOperations, worldOperationSortKey } from '../core/collaboration/WorldOperationOrder.js';
 
 export const WorldOperationOutcome = Object.freeze({
     // Executed cleanly, and its effect is currently present in the World.

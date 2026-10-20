@@ -1,7 +1,7 @@
 import { ref } from 'vue';
 import { DocumentSerializer } from '../../../serializer/DocumentSerializer.js';
 import { contentHashMatches } from '../../../serializer/contentHash.js';
-import { distanceBetween } from '../../../core/SpatialQuery.js';
+import { distanceBetween } from '../../../core/world/SpatialQuery.js';
 import { SnapshotWorldPlacementOutcome } from '../../../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
 import {
     ClaimedBuildStore, ClaimedBuildAcceptance, describeClaimedBuildAcceptance, selectVisibleClaimedBuilds

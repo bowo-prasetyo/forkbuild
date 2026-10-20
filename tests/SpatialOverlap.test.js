@@ -1,12 +1,12 @@
-import { Position } from '../core/Position.js';
-import { SpatialOverlap, detectSpatialOverlap } from '../core/SpatialOverlap.js';
-import { SpatialAllocationPolicy, evaluateSpatialAllocation } from '../core/SpatialAllocationPolicy.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { License, LicenseId } from '../core/License.js';
+import { Position } from '../core/document/Position.js';
+import { SpatialOverlap, detectSpatialOverlap } from '../core/world/SpatialOverlap.js';
+import { SpatialAllocationPolicy, evaluateSpatialAllocation } from '../core/world/SpatialAllocationPolicy.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { License, LicenseId } from '../core/document/License.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
@@ -48,7 +48,7 @@ function makeDocument(title) {
 
 async function runTests() {
     // -------------------------------------------------------------
-    // 1-4. core/SpatialOverlap.js — pure geometric fact-finding.
+    // 1-4. core/world/SpatialOverlap.js — pure geometric fact-finding.
     // -------------------------------------------------------------
     {
         const empty = detectSpatialOverlap(new Position(0, 0, 0), []);
@@ -71,7 +71,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // 5-10. core/SpatialAllocationPolicy.js — policy is independent
+    // 5-10. core/world/SpatialAllocationPolicy.js — policy is independent
     //       of the overlap's existence; only what happens NEXT differs.
     // -------------------------------------------------------------
     {

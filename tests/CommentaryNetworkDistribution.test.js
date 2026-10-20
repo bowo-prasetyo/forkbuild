@@ -1,7 +1,7 @@
 import { register } from 'node:module';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { PublicationCommentary } from '../core/PublicationCommentary.js';
-import { isUserFacingError } from '../core/UserFacingError.js';
+import { PublicationCommentary } from '../core/publication/PublicationCommentary.js';
+import { isUserFacingError } from '../core/app/UserFacingError.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
 import { PublicationCommentaryDistributionExchange } from '../application/publication/commentary/PublicationCommentaryDistributionExchange.js';
 import { PublicationCommentaryDistributionLog, OWN_COMMENTARY_DISTRIBUTIONS_KEY } from '../application/publication/commentary/PublicationCommentaryDistributionLog.js';
@@ -206,8 +206,8 @@ async function run() {
         await ctx.send();
         assert(ctx.error === 'Couldn\'t send the comment to Blurt: relay [redacted] refused' && ctx.sentProvider === null && ctx.sending === false,
             `a failure is shown with its reason, server names removed (got ${ctx.error})`);
-        const { UserFacingError } = await import('../core/UserFacingError.js');
-        const { message } = await import('../core/Message.js');
+        const { UserFacingError } = await import('../core/app/UserFacingError.js');
+        const { message } = await import('../core/app/Message.js');
         outcome = new UserFacingError(message('commentaryNetworkDistribution.networkUnavailable', { network: 'Steem' }));
         ctx.selectedProvider = 'steem';
         await ctx.send();

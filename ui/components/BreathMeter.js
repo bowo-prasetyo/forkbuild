@@ -2,7 +2,7 @@
 // it dives and until its breath has filled again. Presentational only: the host
 // passes the session's avatarSwimState().
 import { t, formatNumber } from '../i18n/i18n.js';
-import { AvatarSwimMode } from '../../core/AvatarSwimming.js';
+import { AvatarSwimMode } from '../../core/avatar/AvatarSwimming.js';
 
 // Below this share of a full breath the bar turns to a warning colour.
 const LOW_AIR_FRACTION = 0.25;

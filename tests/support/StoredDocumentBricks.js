@@ -1,8 +1,8 @@
-import { decodeBrickTable } from '../../core/BrickTable.js';
+import { decodeBrickTable } from '../../core/building/BrickTable.js';
 
 // Test-support only. The bricks of a stored/published document's
 // building, as brick JSON objects, whichever form it holds them in: a
-// schema 2 `brickTable` (core/BrickTable.js) or a schema 1 `bricks` array.
+// schema 2 `brickTable` (core/building/BrickTable.js) or a schema 1 `bricks` array.
 export function storedBricks(documentJson, buildingIndex = 0) {
     const building = documentJson.world.buildings[buildingIndex];
     return building.brickTable ? decodeBrickTable(building.brickTable) : building.bricks;

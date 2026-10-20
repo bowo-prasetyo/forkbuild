@@ -2,7 +2,7 @@
 //
 // Shared "how long ago" formatting for a local visit timestamp — used
 // wherever this replica shows its OWN last-visit record for a World
-// (see core/LocalWorldExperience.js). Deliberately coarse (today /
+// (see core/world/LocalWorldExperience.js). Deliberately coarse (today /
 // yesterday / N days ago), never more precise than a day and never a
 // live-updating countdown — a local visit history has no need for
 // minute-level precision, and re-rendering a card every minute just to

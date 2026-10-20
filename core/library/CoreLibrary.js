@@ -1,5 +1,5 @@
-import { BrickDefinition } from '../BrickDefinition.js';
-import { NIGHT_GLOW } from '../NightGlow.js';
+import { BrickDefinition } from '../building/BrickDefinition.js';
+import { NIGHT_GLOW } from '../nature/NightGlow.js';
 
 // The built-in "core" library — the minimal set of primitive shapes every
 // world can rely on, namespaced per docs/BrickIDs.md. Community libraries
@@ -672,7 +672,7 @@ export const CoreLibrary = {
             depth: 2,
             color: 0x7cb342
         }),
-        // Lit after dark in World View (core/DayCycle.js), for lighthouses,
+        // Lit after dark in World View (core/nature/DayCycle.js), for lighthouses,
         // lamp posts and porches.
         new BrickDefinition({
             id: 'core:lantern',

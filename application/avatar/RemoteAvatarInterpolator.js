@@ -1,9 +1,9 @@
-import { interpolatePresence } from '../../core/PresenceInterpolation.js';
+import { interpolatePresence } from '../../core/avatar/PresenceInterpolation.js';
 
 // 0.2.37 — ONE remote avatar's interpolation state: where we were
 // last rendering it (`from`), the latest AUTHORITATIVE presence we've
 // actually received (`to`), and when that target last changed. See
-// core/PresenceInterpolation.js's own header for why `to` — never the
+// core/avatar/PresenceInterpolation.js's own header for why `to` — never the
 // interpolated output — is the authoritative value; this class is the
 // only thing that ever reads `to` as ground truth, and it never
 // writes it anywhere else.

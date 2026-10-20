@@ -5,7 +5,7 @@
 // its own) and its steps. Each call builds short-lived nodes into
 // `destination`, which the caller has already placed (gain and pan).
 
-import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
+import { ANIMAL_SPECIES } from '../core/nature/WildlifeField.js';
 
 function releaseAfter(last, nodes) {
     last.onended = () => {

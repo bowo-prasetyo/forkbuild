@@ -16,10 +16,10 @@ import {
     blurtPostCommitments,
     emptyBlurtBuildPost,
     parseBlurtBuildPost
-} from '../core/BlurtPost.js';
-import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
-import { WorldEncounterKind } from '../core/WorldEncounter.js';
-import { derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
+} from '../core/networks/BlurtPost.js';
+import { PlaceNamingClaim } from '../core/world/PlaceNamingClaim.js';
+import { WorldEncounterKind } from '../core/world/WorldEncounter.js';
+import { derivePlaceNamingDiscoveryTag } from '../core/world/PlaceNamingDiscoveryEnvelope.js';
 import { BlurtPostRecordStore } from '../storage/BlurtPostRecordStore.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { fakeBlurtChain } from './support/FakeBlurtChain.js';
@@ -144,7 +144,7 @@ async function rejection(promise) {
     console.log('✓ one build post per Distribute');
 }
 
-// With this device's Blurt writer switched off (core/NetworkWriters.js),
+// With this device's Blurt writer switched off (core/publication/NetworkWriters.js),
 // nothing is posted; switched back on, it posts again.
 {
     const chain = fakeBlurtChain();

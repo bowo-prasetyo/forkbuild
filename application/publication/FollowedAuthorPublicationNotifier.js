@@ -1,4 +1,4 @@
-import { NotificationEvent } from '../../core/NotificationEvent.js';
+import { NotificationEvent } from '../../core/social/NotificationEvent.js';
 import { currentIdentityId } from '../../identity/SigningReadiness.js';
 import { createVerifiedPublisherResolver } from './FollowingFeed.js';
 
@@ -7,7 +7,7 @@ export const FOLLOWED_AUTHOR_PUBLISHED_EVENT_TYPE = 'publication.followed-author
 // Turns a Publication newly admitted on this device into a notification for
 // the signed-in identity, when its verified signer is someone they follow and
 // haven't blocked. The notification store deduplicates by Publication id
-// (core/NotificationDeduplicationPolicy.js), so hearing of the same
+// (core/social/NotificationDeduplicationPolicy.js), so hearing of the same
 // Publication again, from another source or another session, adds nothing.
 export class FollowedAuthorPublicationNotifier {
     constructor({ identityProvider, isFollowing, isBlocked = () => false, notificationSink, verifier = undefined, now = () => new Date() }) {

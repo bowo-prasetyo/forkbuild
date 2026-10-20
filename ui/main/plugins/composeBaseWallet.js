@@ -14,7 +14,7 @@ import { BaseTransactionBroadcastCoordinator } from '../../../application/anchor
 import { BaseTransactionInclusionObservationCoordinator } from '../../../application/anchoring/base/BaseTransactionInclusionObservationCoordinator.js';
 import { BaseTransactionInclusionObserver } from '../../../base/BaseTransactionInclusionObserver.js';
 
-// Base's writer (core/NetworkWriters.js): connecting a Base wallet, observing
+// Base's writer (core/publication/NetworkWriters.js): connecting a Base wallet, observing
 // its account, and planning, signing, finalizing, broadcasting and watching a
 // Base anchor transaction. Built only when this device switches Base's writer
 // on (ui/main/NetworkWriterLoader.js); Base's reader (proof checks and

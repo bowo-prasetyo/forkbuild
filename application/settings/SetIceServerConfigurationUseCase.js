@@ -1,9 +1,9 @@
-import { IceServerConfiguration } from '../../core/IceServerConfiguration.js';
+import { IceServerConfiguration } from '../../core/networks/IceServerConfiguration.js';
 import { IceServerConfigurationStore } from '../../storage/IceServerConfigurationStore.js';
 
 // 0.9.386 — User-Configurable STUN Server Configuration Settings UI.
 //
-// core/IceServerConfiguration.js already named the one thing missing
+// core/networks/IceServerConfiguration.js already named the one thing missing
 // between a user's own STUN server list and a durable, validated
 // configuration: a settings surface. This class is that missing WRITE
 // seam, the direct structural mirror of `application/
@@ -68,7 +68,7 @@ export class SetIceServerConfigurationUseCase {
     // HISTORY" header for why that replacement is a structural property of
     // the store itself). Returns the new, persisted IceServerConfiguration.
     //
-    // Throws for anything core/IceServerConfiguration.js's own constructor
+    // Throws for anything core/networks/IceServerConfiguration.js's own constructor
     // rejects (empty, not stun:/stuns:, a turn: entry, ...) — before this
     // method ever calls `save()`.
     execute({ servers } = {}) {

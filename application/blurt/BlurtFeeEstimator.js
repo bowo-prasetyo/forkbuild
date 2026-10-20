@@ -1,4 +1,4 @@
-import { blurtFeeSchedule, blurtTransactionFee, formatBlurtAmount, parseBlurtAmount } from '../../core/BlurtFees.js';
+import { blurtFeeSchedule, blurtTransactionFee, formatBlurtAmount, parseBlurtAmount } from '../../core/networks/BlurtFees.js';
 
 // Estimates whether an account can pay the fees of some transactions, from
 // the witnesses' median fees and the account's liquid BLURT

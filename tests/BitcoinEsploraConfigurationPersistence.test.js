@@ -1,5 +1,5 @@
 
-import { BitcoinEsploraConfiguration, DEFAULT_BITCOIN_ESPLORA_API_URL } from '../core/BitcoinEsploraConfiguration.js';
+import { BitcoinEsploraConfiguration, DEFAULT_BITCOIN_ESPLORA_API_URL } from '../core/networks/BitcoinEsploraConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { BitcoinEsploraConfigurationStore } from '../storage/BitcoinEsploraConfigurationStore.js';
 import { assert } from './support/Assert.js';

@@ -1,8 +1,8 @@
 import { computed, defineAsyncComponent, inject, onBeforeUnmount, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { challengeAt, challengeById, isChallengeOpen, isRemixChallenge, previousChallenge } from '../../core/BuildChallenge.js';
-import { countRemixes, describeRemixSource } from '../../core/RemixLineage.js';
-import { familyTreesOf } from '../../core/RemixFamily.js';
+import { challengeAt, challengeById, isChallengeOpen, isRemixChallenge, previousChallenge } from '../../core/challenge/BuildChallenge.js';
+import { countRemixes, describeRemixSource } from '../../core/publication/RemixLineage.js';
+import { familyTreesOf } from '../../core/publication/RemixFamily.js';
 import { CreateChallengeEntriesUseCase } from '../../application/challenge/CreateChallengeEntriesUseCase.js';
 import PublicationCard from '../components/PublicationCard.js';
 import RemixFamilyTree from '../components/remix/RemixFamilyTree.js';
@@ -15,11 +15,11 @@ import { t } from '../i18n/i18n.js';
 const FeaturedBuilds = defineAsyncComponent(() => import('../components/featured/FeaturedBuilds.js'));
 const CollectionFamilies = defineAsyncComponent(() => import('../components/featured/CollectionFamilies.js'));
 
-// A week's build challenge (core/BuildChallenge.js): this week's at
+// A week's build challenge (core/challenge/BuildChallenge.js): this week's at
 // /challenge, an earlier one at /challenge/<its Monday>. How to enter, Join
 // while it runs, the entries (published builds carrying the week's tag,
 // this device's own and those found on Nostr and Arweave when the page
-// opens), Walk the plaza once there are some (core/ChallengePlaza.js), and
+// opens), Walk the plaza once there are some (core/challenge/ChallengePlaza.js), and
 // built-in builds to start from. A remix week lists the week before's
 // entries instead, each one Remix this away from an entry of its own.
 export default {

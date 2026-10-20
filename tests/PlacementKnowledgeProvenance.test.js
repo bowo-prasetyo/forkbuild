@@ -1,4 +1,4 @@
-import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
+import { PublicationSnapshotPlacement } from '../core/publication/PublicationSnapshotPlacement.js';
 import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
 import { PublicationSnapshotPlacementExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementExchange.js';
 import { PublicationSnapshotPlacementPeerExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementPeerExchange.js';

@@ -1,12 +1,12 @@
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { StructurePlacement } from '../core/StructurePlacement.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { StructurePlacement } from '../core/building/StructurePlacement.js';
 import { DomainEvent } from '../core/events/Event.js';
 import { EventBus } from '../core/events/EventBus.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { VillageLibrary } from '../core/library/VillageLibrary.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';
@@ -46,7 +46,7 @@ import { assert } from './support/Assert.js';
 //   Section A: SelectionState — a structure-placement item, dedupe,
 //              isStructurePlacementSelection/selectedPlacementId
 //   Section B: SelectionUseCase#selectPlacement()
-//   Section C: core/World.js#updateStructurePlacement() — in-place
+//   Section C: core/document/World.js#updateStructurePlacement() — in-place
 //              mutation, STRUCTURE_PLACEMENT_UPDATED, graceful no-op
 //   Section D: MoveStructurePlacementCommand — execute/undo/redo,
 //              worldId guard, CommandRegistry round trip
@@ -165,7 +165,7 @@ async function run() {
     }
 
     // -------------------------------------------------------------
-    // Section C: core/World.js#updateStructurePlacement()
+    // Section C: core/document/World.js#updateStructurePlacement()
     // -------------------------------------------------------------
     {
         const events = [];

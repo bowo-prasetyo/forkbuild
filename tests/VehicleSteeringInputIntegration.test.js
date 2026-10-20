@@ -1,18 +1,18 @@
 import { readFile } from 'node:fs/promises';
-import { VehicleSteeringIntent } from '../core/VehicleSteeringIntent.js';
-import { deriveVehicleSteeringInputEvent } from '../core/VehicleSteeringInputAdapter.js';
-import { VehicleType } from '../core/VehicleType.js';
-import { VehicleInstance } from '../core/VehicleInstance.js';
-import { createAvatarVehicleMount } from '../core/AvatarVehicleMount.js';
-import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
-import { AvatarVehicleBrakingIntent } from '../core/AvatarVehicleBrakingIntent.js';
-import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../core/TerrainHeightField.js';
-import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { VehicleSteeringIntent } from '../core/vehicles/VehicleSteeringIntent.js';
+import { deriveVehicleSteeringInputEvent } from '../core/vehicles/VehicleSteeringInputAdapter.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
+import { VehicleInstance } from '../core/vehicles/VehicleInstance.js';
+import { createAvatarVehicleMount } from '../core/vehicles/AvatarVehicleMount.js';
+import { resolveAvatarVehicleMovementCapability } from '../core/vehicles/AvatarVehicleMovementCapability.js';
+import { AvatarVehicleBrakingIntent } from '../core/vehicles/AvatarVehicleBrakingIntent.js';
+import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../core/nature/TerrainHeightField.js';
+import { vehiclePresenceInRegion } from '../core/vehicles/VehiclePlacement.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
@@ -39,7 +39,7 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 //   Keyboard input (ArrowRight/ArrowLeft)
 //           |
 //           v
-//   core/VehicleSteeringInputAdapter.js        <- "what happened"
+//   core/vehicles/VehicleSteeringInputAdapter.js        <- "what happened"
 //           |
 //           v
 //   VehicleSteeringIntent                      <- "what the driver requests"
@@ -171,7 +171,7 @@ function findRealVehicle() {
     const vehicles = vehiclePresenceInRegion(DEFAULT_WORLD_SEED, -500, -500, 500, 500);
     const vehicle = vehicles.find((v) => v.id === REAL_VEHICLE_ID);
     if (!vehicle) {
-        throw new Error(`Test fixture vehicle ${REAL_VEHICLE_ID} not found under DEFAULT_WORLD_SEED — has core/VehiclePlacement.js changed?`);
+        throw new Error(`Test fixture vehicle ${REAL_VEHICLE_ID} not found under DEFAULT_WORLD_SEED — has core/vehicles/VehiclePlacement.js changed?`);
     }
     return vehicle;
 }
@@ -211,7 +211,7 @@ async function runTests() {
     }
     {
         // Case-insensitivity, matching every other raw-key comparison
-        // already in this codebase (core/AvatarContinuousMovementInputAdapter.js,
+        // already in this codebase (core/avatar/AvatarContinuousMovementInputAdapter.js,
         // application/avatar/AvatarMovementController.js#_setKey, and 0.9.96's own
         // brake-key binding).
         const registry = buildRegistry();
@@ -227,7 +227,7 @@ async function runTests() {
         // keydown('ArrowRight') over and over with no keyup in between —
         // turns the vehicle exactly ONCE, never a further compounding turn
         // on every repeated keydown. See
-        // core/VehicleSteeringInputAdapter.js's own header for exactly why
+        // core/vehicles/VehicleSteeringInputAdapter.js's own header for exactly why
         // the held bit that makes this possible exists at all.
         const registry = buildRegistry();
         const VEHICLE_ID = 'vehicle:steer-a3-hold';
@@ -423,10 +423,10 @@ async function runTests() {
     // 45 degrees, and never calls VehicleSteeringSimulation directly.
     // -------------------------------------------------------------
     {
-        const adapterCode = await sourceOf('../core/VehicleSteeringInputAdapter.js');
+        const adapterCode = await sourceOf('../core/vehicles/VehicleSteeringInputAdapter.js');
         const forbidden = ['heading', 'Heading', '45', 'VehicleSteeringSimulation', 'resolveVehicleMovementDirectionFromSteering', 'VehicleInstance', 'THREE', 'three', 'position', 'Position', 'collision', 'Collision'];
         for (const term of forbidden) {
-            assert(!adapterCode.includes(term), `25. core/VehicleSteeringInputAdapter.js never references "${term}" — its only job is input -> VehicleSteeringIntent`);
+            assert(!adapterCode.includes(term), `25. core/vehicles/VehicleSteeringInputAdapter.js never references "${term}" — its only job is input -> VehicleSteeringIntent`);
         }
         assert(adapterCode.includes('import') && adapterCode.split('import').length - 1 === 1,
             '26. sanity: exactly one import (VehicleSteeringDirection) — no Three.js, no heading math, no vehicle runtime access');
@@ -544,7 +544,7 @@ async function runTests() {
     // Section H — structural exclusion audit.
     // -------------------------------------------------------------
     {
-        const adapterCode = await sourceOf('../core/VehicleSteeringInputAdapter.js');
+        const adapterCode = await sourceOf('../core/vehicles/VehicleSteeringInputAdapter.js');
         const rawSessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const methodMatch = rawSessionSource.match(/_processVehicleSteeringInput\(key, type\)\s*\{([\s\S]*?)\n {4}\}/);
         const methodBody = methodMatch[1];
@@ -558,7 +558,7 @@ async function runTests() {
             'localStorage', 'StorageProvider', 'fetch(', 'WebSocket', 'broadcast'
         ];
         for (const term of forbidden) {
-            assert(!adapterCode.includes(term), `45. core/VehicleSteeringInputAdapter.js never references "${term}"`);
+            assert(!adapterCode.includes(term), `45. core/vehicles/VehicleSteeringInputAdapter.js never references "${term}"`);
             assert(!methodBody.includes(term), `46. _processVehicleSteeringInput() never references "${term}" either`);
         }
 
@@ -567,19 +567,19 @@ async function runTests() {
         // function parameters, fed back in by the caller every time, never
         // a variable this module remembers between calls itself.
         assert(!adapterCode.includes('let ') && !adapterCode.includes('var ') && !/^\s*class\s/m.test(adapterCode),
-            '47. core/VehicleSteeringInputAdapter.js declares no mutable module-level state and no class of its own — every call is independently pure');
+            '47. core/vehicles/VehicleSteeringInputAdapter.js declares no mutable module-level state and no class of its own — every call is independently pure');
         assert(adapterCode.split('export function').length - 1 === 1,
-            '48. core/VehicleSteeringInputAdapter.js exports exactly one function — no class, no hidden singleton, no second entry point');
+            '48. core/vehicles/VehicleSteeringInputAdapter.js exports exactly one function — no class, no hidden singleton, no second entry point');
 
-        // core/VehicleSteeringIntent.js and core/VehicleSteeringSimulation.js
+        // core/vehicles/VehicleSteeringIntent.js and core/vehicles/VehicleSteeringSimulation.js
         // remain exactly as 0.9.126/0.9.127 right them — untouched by this
         // milestone's own input layer.
-        const intentSource = await sourceOf('../core/VehicleSteeringIntent.js');
+        const intentSource = await sourceOf('../core/vehicles/VehicleSteeringIntent.js');
         assert(!intentSource.includes('key') && !intentSource.includes('KeyboardEvent') && !intentSource.includes('Arrow'),
-            '49. core/VehicleSteeringIntent.js remains completely untouched by this milestone — still no keyboard awareness of any kind');
-        const simulationSource = await sourceOf('../core/VehicleSteeringSimulation.js');
+            '49. core/vehicles/VehicleSteeringIntent.js remains completely untouched by this milestone — still no keyboard awareness of any kind');
+        const simulationSource = await sourceOf('../core/vehicles/VehicleSteeringSimulation.js');
         assert(!simulationSource.includes('key') && !simulationSource.includes('KeyboardEvent') && !simulationSource.includes('Arrow'),
-            '50. core/VehicleSteeringSimulation.js remains completely untouched too');
+            '50. core/vehicles/VehicleSteeringSimulation.js remains completely untouched too');
         const controllerCodeOnly = await sourceOf('../application/avatar/AvatarVehicleMovementController.js');
         assert(!controllerCodeOnly.includes('Arrow') && !controllerCodeOnly.includes('VehicleSteeringInputAdapter'),
             '51. application/avatar/AvatarVehicleMovementController.js never learns a key exists — steering still reaches it only as an already-resolved VehicleSteeringIntent parameter');

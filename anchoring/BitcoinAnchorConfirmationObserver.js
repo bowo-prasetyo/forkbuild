@@ -53,7 +53,7 @@ const TXID_PATTERN = /^[0-9a-f]{64}$/i;
 // like anchoring/BitcoinAnchorTransactionBroadcaster.js's own `txid`
 // parameter, the txid this class is asked to observe is always one this
 // codebase already derived and stored itself — ordinarily a
-// `core/PublicationAnchor.js` instance's own `proof.txid` (0.8.9,
+// `core/publication/PublicationAnchor.js` instance's own `proof.txid` (0.8.9,
 // unchanged). A malformed txid is therefore a caller-contract violation,
 // checked before the injected `confirmationSource` is ever consulted —
 // never a network-observation outcome of its own.

@@ -39,7 +39,7 @@ rules as the daily count (official site only, never with Global Privacy
 Control or Do Not Track, never when **Count this browser** is off; see
 [Privacy](../Privacy.md#visitor-count)). The app then takes `ref` out of the
 address, so a reload or a copied address doesn't count it again. Only the
-values above are counted (core/LaunchChannel.js); anything else is ignored.
+values above are counted (core/app/LaunchChannel.js); anything else is ignored.
 Links to one build (a shared link or an embed) don't need a `ref`: they
 already have their own counts (`/e/opened-shared-link`, `/e/embed-open`).
 
@@ -117,7 +117,7 @@ the week after, by day:
   `/e/publish-placed-…` paths count the same builds by the bricks their
   builder placed or changed, ready-made ones left out: a ready-made build
   published untouched is `-0` there. That is the median the gate on new
-  networks reads (core/LaunchTargets.js, `median-placed`).
+  networks reads (core/app/LaunchTargets.js, `median-placed`).
 - **Did they come back?** `/e/second-build` against the builds published:
   the share of builders who published a second one.
 - **Do entrants look at each other's builds?** `/e/plaza-visit` against

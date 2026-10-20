@@ -223,7 +223,7 @@ async function run() {
         const discoveryProviderSelectMatch = dialogSource.match(/<select\s+v-model="discoveryProviderModel"[\s\S]*?<\/select>/);
         assert(discoveryProviderSelectMatch !== null, n('A4a. the discoveryProviderModel <select> element is isolable'));
         // Blurt and Steem carry a v-if: offered only while this device's
-        // writer for them is switched on (core/NetworkWriters.js).
+        // writer for them is switched on (core/publication/NetworkWriters.js).
         const optionMatches = (discoveryProviderSelectMatch ? discoveryProviderSelectMatch[0] : '').match(/<option(?: v-if="[^"]*")? value="[^"]*">/g) || [];
         assert(optionMatches.includes('<option v-if="blurtOn" value="blurt">') && optionMatches.includes('<option v-if="steemOn" value="steem">'),
             n('A4b. Blurt and Steem are offered only while switched on'));
@@ -245,7 +245,7 @@ async function run() {
         assert(/const defaultAnnouncementDiscoveryProvider = inject\('defaultAnnouncementDiscoveryProvider',\s*'nostr'\);/.test(editorSource),
             n('A5a. defaultAnnouncementDiscoveryProvider is injected with an explicit \'nostr\' fallback'));
         // ...unless it names a network whose writer has since been switched
-        // off (core/NetworkWriters.js), when it opens on 'nostr' instead.
+        // off (core/publication/NetworkWriters.js), when it opens on 'nostr' instead.
         assert(/const selectedDiscoveryProvider = ref\(writableOr\(defaultAnnouncementDiscoveryProvider\)\);/.test(editorSource),
             n('A5b. selectedDiscoveryProvider opens on that injected default — matching PublicationDistributionRuntimeComposition.js\'s own \'nostr\' default whenever nothing has been saved, so a mount that never touches the control, and whose parent injects nothing, behaves exactly as every pre-0.9.502 mount already did'));
 

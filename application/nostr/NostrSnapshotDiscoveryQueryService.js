@@ -1,4 +1,4 @@
-import { parseSnapshotDiscoveryEnvelope, snapshotCandidateFromEnvelope } from '../../core/SnapshotDiscoveryEnvelope.js';
+import { parseSnapshotDiscoveryEnvelope, snapshotCandidateFromEnvelope } from '../../core/publication/SnapshotDiscoveryEnvelope.js';
 import { SnapshotCandidateDiscoveryOutcome } from '../snapshot/SnapshotCandidateDiscoveryOutcome.js';
 import { withTimeout } from '../../utils/withTimeout.js';
 
@@ -11,7 +11,7 @@ const DEFAULT_MAX_RESULTS = 20;
 // 0.9.133 — Nostr Snapshot Discovery Query Service.
 //
 // The reading counterpart of application/nostr/NostrSnapshotDiscoveryPublisher.js
-// — that file writes a `core/SnapshotDiscoveryEnvelope.js` into a Nostr
+// — that file writes a `core/publication/SnapshotDiscoveryEnvelope.js` into a Nostr
 // event's own `content`; this file queries a relay for events carrying a
 // given discovery tag and reads that same envelope back out, so a caller
 // who only holds a `discoveryTag` and, optionally, a `contentReference.hash`
@@ -26,7 +26,7 @@ const DEFAULT_MAX_RESULTS = 20;
 //        │
 //        │   events, each carrying its own `.content`
 //        ▼
-//   core/SnapshotDiscoveryEnvelope.js   (0.9.133; optional publicationId/
+//   core/publication/SnapshotDiscoveryEnvelope.js   (0.9.133; optional publicationId/
 //        parseSnapshotDiscoveryEnvelope(event.content)   claimedPosition, 0.9.171)
 //        │
 //        ▼
@@ -113,7 +113,7 @@ const DEFAULT_MAX_RESULTS = 20;
 // The identical restraint every sibling in this family already holds.
 //
 // NO SIGNATURE, NO PUBKEY, NO NIP-01 `id`/`sig` VERIFICATION OF ANY KIND.
-// See `core/SnapshotDiscoveryEnvelope.js`'s own header, "a self-declared
+// See `core/publication/SnapshotDiscoveryEnvelope.js`'s own header, "a self-declared
 // claim, never evidence" — this class never checks a Nostr event's own
 // `sig`, and never imports anything that would.
 //
@@ -137,7 +137,7 @@ const DEFAULT_MAX_RESULTS = 20;
 //   placement/resolution family stays peer-based and never references
 //   Nostr — tests/SnapshotDistributionBoundary.test.js's own point 4.
 //
-// 0.9.171 — PRESERVED, NEVER CONSUMED. `core/SnapshotDiscoveryEnvelope.js`
+// 0.9.171 — PRESERVED, NEVER CONSUMED. `core/publication/SnapshotDiscoveryEnvelope.js`
 // now optionally carries `publicationId`/`claimedPosition` — a publisher's
 // own claim about which Publication a Snapshot represents and where that
 // publisher's own World currently places it (see that file's own header

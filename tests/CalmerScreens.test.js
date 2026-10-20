@@ -1,10 +1,10 @@
 import * as THREE from 'three';
-import { buildCreditName } from '../core/BuildCredit.js';
-import { seesNeighbour } from '../core/NeighbourSight.js';
-import { FunnelEvent, VISITOR_COUNT_SITE_ORIGIN, funnelEventHitUrl } from '../core/VisitorCount.js';
-import { LAUNCH_TARGETS, TARGET_STATUS, evaluateTarget } from '../core/LaunchTargets.js';
-import { CUT_ABOVE_FEET, seeInsideCutaway } from '../core/IndoorView.js';
-import { SpatialBounds } from '../core/SpatialBounds.js';
+import { buildCreditName } from '../core/catalog/BuildCredit.js';
+import { seesNeighbour } from '../core/world/NeighbourSight.js';
+import { FunnelEvent, VISITOR_COUNT_SITE_ORIGIN, funnelEventHitUrl } from '../core/app/VisitorCount.js';
+import { LAUNCH_TARGETS, TARGET_STATUS, evaluateTarget } from '../core/app/LaunchTargets.js';
+import { CUT_ABOVE_FEET, seeInsideCutaway } from '../core/building/IndoorView.js';
+import { SpatialBounds } from '../core/world/SpatialBounds.js';
 import { VillageLibrary } from '../core/library/VillageLibrary.js';
 import { CutawayClipping } from '../renderer/CutawayClipping.js';
 import { PickingService } from '../renderer/PickingService.js';

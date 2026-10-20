@@ -1,10 +1,10 @@
-import { PlaceNamingClaim } from '../../core/PlaceNamingClaim.js';
+import { PlaceNamingClaim } from '../../core/world/PlaceNamingClaim.js';
 
 // 0.5.3 — Decentralized Place Name Exchange.
 //
 // The portable wire envelope for moving ONE PlaceNamingClaim between
 // replicas — the exact same shape application/blueprint/BlueprintPackage.js
-// already established one domain over for a core/Structure.js: a small,
+// already established one domain over for a core/building/Structure.js: a small,
 // versioned, plain-JSON wrapper around the one signed fact that needs to
 // survive the trip, never a live reference to the store or device it was
 // exported from. See docs/Principles.md, "Naming Exchange
@@ -13,7 +13,7 @@ import { PlaceNamingClaim } from '../../core/PlaceNamingClaim.js';
 // Deliberately just `{ kind, schemaVersion, claim }` — no separate
 // envelope-level "publishedAt." A claim's own `createdAt` is ALREADY the
 // signed publication timestamp (it is part of
-// core/PlaceNamingClaim.js#getSigningDescriptor()'s own payload); adding
+// core/world/PlaceNamingClaim.js#getSigningDescriptor()'s own payload); adding
 // a second, unsigned "publishedAt" alongside it would only invite a
 // spoofable shadow fact that disagrees with the one the signature
 // actually covers. What genuinely cannot be known ahead of time — when

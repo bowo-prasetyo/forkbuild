@@ -1,12 +1,12 @@
 import { execSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 
-import { Brick } from '../core/Brick.js';
-import { Building } from '../core/Building.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { Position } from '../core/Position.js';
-import { World } from '../core/World.js';
+import { Brick } from '../core/building/Brick.js';
+import { Building } from '../core/building/Building.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { Position } from '../core/document/Position.js';
+import { World } from '../core/document/World.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
@@ -267,7 +267,7 @@ async function run() {
     // ===============================================================
     {
         const constructionSites = grepFiles('new PublicationSnapshotPlacement\\(', ['application', 'ui'])
-            .filter((f) => f !== 'core/PublicationSnapshotPlacement.js');
+            .filter((f) => f !== 'core/publication/PublicationSnapshotPlacement.js');
         assert(constructionSites.length === 1 && constructionSites[0] === 'application/snapshot/placement/CreatePublicationSnapshotPlacementUseCase.js',
             `1. exactly one production file constructs a new PublicationSnapshotPlacement (found: ${JSON.stringify(constructionSites)}).`);
 

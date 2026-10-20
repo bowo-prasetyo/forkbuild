@@ -1,4 +1,4 @@
-import { NETWORK_WRITERS } from '../../core/NetworkWriters.js';
+import { NETWORK_WRITERS } from '../../core/publication/NetworkWriters.js';
 
 // Builds the network writers this device has switched on (core/
 // NetworkWriters.js, docs/Pillars.md "Networks: readers and writers") and

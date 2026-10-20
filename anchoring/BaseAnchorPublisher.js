@@ -171,7 +171,7 @@ export class BaseAnchorPublisher {
     //
     //   { published: true, locator: 'base:<txid>', proof: { txid, network },
     //     anchor, archive }
-    //       — anchor: the cataloged, signed core/PublicationAnchor.js
+    //       — anchor: the cataloged, signed core/publication/PublicationAnchor.js
     //         instance `application/anchoring/CreatePublicationAnchorUseCase.js`
     //         itself returns.
     //       — archive: a NEW application/publication/observationArchive/PublicationObservationArchive.js,

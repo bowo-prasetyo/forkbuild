@@ -1,11 +1,11 @@
 import { TransformMath } from '../editor/TransformMath.js';
 import {
     BUILD_MODEL_FORMATS, BUILD_MODEL_MIME_TYPES, BuildModelFormat, countTriangles, writeGlb, writeObj, writeStl
-} from '../../core/BuildModelFormats.js';
-import { UserFacingError } from '../../core/UserFacingError.js';
-import { message } from '../../core/Message.js';
+} from '../../core/building/BuildModelFormats.js';
+import { UserFacingError } from '../../core/app/UserFacingError.js';
+import { message } from '../../core/app/Message.js';
 
-// Exporting a build as a 3D model (core/BuildModelFormats.js): its own
+// Exporting a build as a 3D model (core/building/BuildModelFormats.js): its own
 // bricks, and the bricks of each structure placed in it, where the World
 // View draws them (renderer/WorldRenderer.js: a placement's bricks turned
 // about its origin by its rotation, then moved to its position, one level

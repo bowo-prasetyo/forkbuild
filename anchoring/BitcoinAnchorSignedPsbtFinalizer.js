@@ -1,6 +1,6 @@
 import { BitcoinAnchorPsbtSerializer } from './BitcoinAnchorPsbtSerializer.js';
 import { BitcoinAnchorSignedPsbtInspector } from './BitcoinAnchorSignedPsbtInspector.js';
-import { sha256 } from '../core/Sha256.js';
+import { sha256 } from '../core/document/Sha256.js';
 import { bytesToHex, hexToBytes, concatBytes, reverseBytes } from '../utils/bytes.js';
 
 const HEX_PATTERN = /^[0-9a-f]+$/i;
@@ -93,7 +93,7 @@ const P2WPKH_SCRIPT_PUBKEY_LENGTH = 22; // 0x00 0x14 <20-byte-hash>
 // codebase has no package manager, no node_modules, and no external crypto
 // library anywhere in it. Everything this class needs to verify a real
 // secp256k1 ECDSA signature over a real BIP143 sighash — SHA-256 (shared,
-// in core/Sha256.js), RIPEMD-160, secp256k1 point arithmetic, DER signature
+// in core/document/Sha256.js), RIPEMD-160, secp256k1 point arithmetic, DER signature
 // decoding — is implemented in plain JavaScript, and cross-checked (during this
 // milestone's own development, never at runtime) against Node's own
 // `crypto` module across dozens of independently generated real keys and
@@ -497,7 +497,7 @@ function countUnsignedTxOutputs(raw) {
 }
 
 // ---------------------------------------------------------------------
-// Cryptography: double SHA-256 over core/Sha256.js, then RIPEMD-160 and
+// Cryptography: double SHA-256 over core/document/Sha256.js, then RIPEMD-160 and
 // secp256k1 ECDSA verification, implemented from first principles — see
 // this file's own header,
 // "REAL CRYPTOGRAPHY, FROM FIRST PRINCIPLES, ZERO DEPENDENCIES."

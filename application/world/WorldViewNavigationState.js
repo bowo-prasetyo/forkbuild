@@ -78,7 +78,7 @@ export class WorldViewNavigationState {
     // where two modes are simultaneously "current." An unknown mode is
     // rejected (returns false, leaves the current mode untouched)
     // rather than silently accepted — the same "closed vocabulary"
-    // discipline core/WorldLocationKind.js already established for
+    // discipline core/world/WorldLocationKind.js already established for
     // WorldLocation kinds.
     setPrimaryMode(mode) {
         if (!VALID_PRIMARY_MODES.has(mode)) {

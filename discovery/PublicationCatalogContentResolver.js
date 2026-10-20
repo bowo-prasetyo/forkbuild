@@ -57,7 +57,7 @@ export class PublicationCatalogContentResolver extends ContentResolver {
     // hash to `expectedHash` — always the publication's OWN
     // contentReference.hash, per application/
     // CreateExternalSnapshotPlacementUseCase.js's own header. Delegates to
-    // core/ContentReference.js#verify(), the identical recomputation
+    // core/document/ContentReference.js#verify(), the identical recomputation
     // application/publication/PublicationResolver.js#resolve() step 5 already runs.
     verify(publicationId, expectedHash) {
         const publication = this._publicationCatalog.get(publicationId);

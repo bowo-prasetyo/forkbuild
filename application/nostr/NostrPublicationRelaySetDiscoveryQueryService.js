@@ -13,10 +13,10 @@ import { normalizeRelayUrls } from './NostrRelayUrls.js';
 // discovery composition (`application/
 // DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js`) has
 // only ever queried ONE Nostr relay — the general discovery-relay
-// preference (`core/NostrRelayConfiguration.js`) — never the relay SET a
+// preference (`core/networks/NostrRelayConfiguration.js`) — never the relay SET a
 // Wanderer configures for publication distribution
 // (`core/NostrPublicationRelaySetConfiguration.js`, 0.9.447, since REMOVED
-// and merged back into `core/NostrRelayConfiguration.js` — see that file's
+// and merged back into `core/networks/NostrRelayConfiguration.js` — see that file's
 // own "unified" header; this class's own `relayUrls` constructor argument
 // is unaffected by that merge, since it always accepted a plain array
 // regardless of where a caller resolved it from). This class is
@@ -113,7 +113,7 @@ import { normalizeRelayUrls } from './NostrRelayUrls.js';
 // string equality) are collapsed to their first occurrence, preserving
 // configured order. Per-entry URL SHAPE validation (ws:/wss:) is
 // deliberately NOT this file's job — every entry already reaching this
-// class was validated once already, at `core/NostrRelayConfiguration.js`'s
+// class was validated once already, at `core/networks/NostrRelayConfiguration.js`'s
 // own construction time (or is ui/main.js's own one-element
 // `DEFAULT_NOSTR_RELAY_URL` fallback); a malformed string here is simply handed, unmodified, to
 // `NostrDiscoveryQueryService`'s own constructor, which performs no URL
@@ -125,7 +125,7 @@ import { normalizeRelayUrls } from './NostrRelayUrls.js';
 //   0.9.449's own reassessment explicitly named all four as premature; this
 //   class inherits that restraint unchanged. Every configured relay is
 //   queried, every time, with no preference given to any one of them.
-// - **Reading `core/NostrRelayConfiguration.js` or
+// - **Reading `core/networks/NostrRelayConfiguration.js` or
 //   `storage/NostrRelayConfigurationStore.js` itself.** This class only
 //   ever accepts an already-resolved `relayUrls` array — resolving it from
 //   persisted configuration is entirely its caller's own job
@@ -140,7 +140,7 @@ import { normalizeRelayUrls } from './NostrRelayUrls.js';
 //   (`application/nostr/NostrSnapshotDiscoveryQueryService.js`) or place-naming
 //   discovery (`application/placeNaming/NostrPlaceNamingDiscoverySource.js`).** Both
 //   remain wired to the general single discovery-relay preference
-//   (`core/NostrRelayConfiguration.js`), untouched — this milestone's own
+//   (`core/networks/NostrRelayConfiguration.js`), untouched — this milestone's own
 //   scope is Publication discovery only.
 export class NostrPublicationRelaySetDiscoveryQueryService extends DecentralizedDiscoveryQueryService {
     // relayUrls: a non-empty array of relay URL strings — see this file's

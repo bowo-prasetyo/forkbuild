@@ -1,8 +1,8 @@
-import { WorldLandmark } from '../../core/WorldLandmark.js';
-import { Position } from '../../core/Position.js';
-import { createId } from '../../core/createId.js';
+import { WorldLandmark } from '../../core/world/WorldLandmark.js';
+import { Position } from '../../core/document/Position.js';
+import { createId } from '../../core/document/createId.js';
 import { Command } from './Command.js';
-import { message } from '../../core/Message.js';
+import { message } from '../../core/app/Message.js';
 
 // 0.3.7 — World Landmarks & Personal Waypoints.
 //
@@ -11,7 +11,7 @@ import { message } from '../../core/Message.js';
 // execute() creates the landmark's identity, it doesn't receive one,
 // following the same pattern as PlaceStructureCommand and PlaceBrickCommand.
 // Unlike Brick/StructurePlacement, WorldLandmark does not default its own
-// id (core/WorldLandmark.js requires one explicitly), so this command
+// id (core/world/WorldLandmark.js requires one explicitly), so this command
 // mints one itself via createId() on first execute().
 //
 // _executedLandmarkId tracks what was created for undo() correctness AND

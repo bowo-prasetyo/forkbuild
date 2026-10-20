@@ -45,7 +45,7 @@ export { PUBLICATION_CONTENT_KIND };
 // trip completely unmodified, because it is simply a field on
 // publisher/Publication.js's own already-existing `toJSON()`/`fromJSON()`
 // — never renamed, never re-derived, never replaced by
-// core/DecentralizedPublication.js's own, unrelated `id`.
+// core/publication/DecentralizedPublication.js's own, unrelated `id`.
 //
 // Deliberately NO `store` option, unlike the other two kind plugins.
 // Both of those already had an established local domain store ready to

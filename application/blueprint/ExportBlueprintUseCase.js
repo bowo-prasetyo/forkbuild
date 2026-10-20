@@ -1,4 +1,4 @@
-import { Structure } from '../../core/Structure.js';
+import { Structure } from '../../core/building/Structure.js';
 import { buildBlueprintPackage } from './BlueprintPackage.js';
 
 // 0.4.6 — Blueprint Sharing & Exchange. The smallest possible use case
@@ -25,11 +25,11 @@ import { buildBlueprintPackage } from './BlueprintPackage.js';
 // 0.8.7 — External Evidence Import & Publication Package Integration.
 // `anchors` is the identical additive passthrough, one concept further —
 // see application/blueprint/BlueprintPackage.js's own header for why this stays a
-// signed core/PublicationAnchor.js array, never a verification result.
+// signed core/publication/PublicationAnchor.js array, never a verification result.
 //
 // 0.8.22 — Snapshot Placement Package Integration. `placements` is the
 // identical additive passthrough, one locator layer further — a signed
-// core/PublicationSnapshotPlacement.js array, never a resolution result.
+// core/publication/PublicationSnapshotPlacement.js array, never a resolution result.
 export class ExportBlueprintUseCase {
     execute(structure, { attributions = [], lineageClaims = [], anchors = [], placements = [] } = {}) {
         if (!structure || !(structure instanceof Structure)) {

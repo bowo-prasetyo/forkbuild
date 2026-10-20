@@ -1,10 +1,10 @@
-import { Position } from '../core/Position.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { StructurePlacement } from '../core/StructurePlacement.js';
+import { Position } from '../core/document/Position.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { StructurePlacement } from '../core/building/StructurePlacement.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
@@ -17,13 +17,13 @@ import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvid
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { SpatialCameraController } from '../application/world/SpatialCameraController.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
-import { WorldLocationKind } from '../core/WorldLocationKind.js';
+import { WorldLocationKind } from '../core/world/WorldLocationKind.js';
 import { WorldSpatialContextService } from '../application/world/WorldSpatialContextService.js';
-import { deriveSpatialContext } from '../core/WorldSpatialContext.js';
-import { HYDROLOGY_FEATURE } from '../core/Hydrology.js';
+import { deriveSpatialContext } from '../core/world/WorldSpatialContext.js';
+import { HYDROLOGY_FEATURE } from '../core/nature/Hydrology.js';
 import { Publication } from '../publisher/Publication.js';
-import { WorldPlacement } from '../core/WorldPlacement.js';
-import { SpatialBounds } from '../core/SpatialBounds.js';
+import { WorldPlacement } from '../core/publication/WorldPlacement.js';
+import { SpatialBounds } from '../core/world/SpatialBounds.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
@@ -109,7 +109,7 @@ async function run() {
 
     // Three structures, each its own saved Document (a StructurePlacement
     // is a spatial REFERENCE to a Document, never a copy of its bricks —
-    // see core/StructurePlacement.js's own header).
+    // see core/building/StructurePlacement.js's own header).
     const houseDoc = makeStructureDocument('House');
     const barnDoc = makeStructureDocument('Barn');
     const marketDoc = makeStructureDocument('Market');

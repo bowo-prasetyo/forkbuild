@@ -1,4 +1,4 @@
-import { thumbnailPreview } from '../../core/DocumentPreview.js';
+import { thumbnailPreview } from '../../core/catalog/DocumentPreview.js';
 
 const DEFAULT_MAX_CACHE_ENTRIES = 100;
 

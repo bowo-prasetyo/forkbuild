@@ -1,4 +1,4 @@
-import { describeDecentralizedDiscoveryEnvelope } from '../../core/DecentralizedDiscoveryEnvelope.js';
+import { describeDecentralizedDiscoveryEnvelope } from '../../core/publication/DecentralizedDiscoveryEnvelope.js';
 import { BLURT_PUBLICATION_DISCOVERY_TAG } from './BlurtPublicationDiscoveryQueryService.js';
 
 // Announces a Publication's discovery envelope in a Blurt build post, with

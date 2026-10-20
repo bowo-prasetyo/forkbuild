@@ -1,14 +1,14 @@
 import { readFile } from 'node:fs/promises';
 import {
     avatarVehicleProximity, withinRadiusXZ, VEHICLE_INTERACTION_RADIUS
-} from '../core/AvatarVehicleProximity.js';
-import { AVATAR_COLLISION_RADIUS } from '../core/AvatarCollision.js';
-import { VehiclePresence } from '../core/VehiclePresence.js';
-import { VehicleType } from '../core/VehicleType.js';
-import { Position } from '../core/Position.js';
+} from '../core/vehicles/AvatarVehicleProximity.js';
+import { AVATAR_COLLISION_RADIUS } from '../core/avatar/AvatarCollision.js';
+import { VehiclePresence } from '../core/vehicles/VehiclePresence.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
+import { Position } from '../core/document/Position.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.73 — Avatar-Vehicle Proximity Detection, core/AvatarVehicleProximity.js.
+// 0.9.73 — Avatar-Vehicle Proximity Detection, core/vehicles/AvatarVehicleProximity.js.
 //
 //   Section A: basic proximity — far/within/exactly-at-range
 //   Section B: X/Z-only behavior — Y is ignored entirely
@@ -55,7 +55,7 @@ async function runTests() {
     {
         // Exactly at the boundary counts as within range — the same
         // inclusive-boundary convention already used by
-        // core/AvatarTreeCollision.js#circlesIntersect().
+        // core/avatar/AvatarTreeCollision.js#circlesIntersect().
         const vehicle = bicycleAt(0, 0, 0);
         const exactlyAtRange = { x: VEHICLE_INTERACTION_RADIUS, y: 0, z: 0 };
         assert(avatarVehicleProximity(exactlyAtRange, vehicle).withinRange === true, '3. an avatar exactly at VEHICLE_INTERACTION_RADIUS is within range (inclusive boundary)');
@@ -141,7 +141,7 @@ async function runTests() {
     }
     {
         // No "nearest vehicle" function exists on this module's surface.
-        const module = await import('../core/AvatarVehicleProximity.js');
+        const module = await import('../core/vehicles/AvatarVehicleProximity.js');
         assert(!('nearestVehicleToAvatar' in module), '16. no nearestVehicleToAvatar export exists — selection among candidates is deliberately not this milestone\'s job');
     }
 
@@ -173,7 +173,7 @@ async function runTests() {
     // Section F — architectural regression
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../core/AvatarVehicleProximity.js', import.meta.url);
+        const sourceUrl = new URL('../core/vehicles/AvatarVehicleProximity.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -193,15 +193,15 @@ async function runTests() {
             'localStorage', 'StorageProvider', 'fetch(', 'WebSocket'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `27. core/AvatarVehicleProximity.js's own code never references "${term}" — proximity-only, never collision/mounting/input/rendering/movement/animation/randomness/clock/storage`);
+            assert(!codeOnly.includes(term), `27. core/vehicles/AvatarVehicleProximity.js's own code never references "${term}" — proximity-only, never collision/mounting/input/rendering/movement/animation/randomness/clock/storage`);
         }
-        assert(codeOnly.includes('VEHICLE_INTERACTION_RADIUS'), '28. core/AvatarVehicleProximity.js does define its own VEHICLE_INTERACTION_RADIUS — the one constant this seam is built around');
+        assert(codeOnly.includes('VEHICLE_INTERACTION_RADIUS'), '28. core/vehicles/AvatarVehicleProximity.js does define its own VEHICLE_INTERACTION_RADIUS — the one constant this seam is built around');
     }
     {
-        const exportsModule = await import('../core/AvatarVehicleProximity.js');
+        const exportsModule = await import('../core/vehicles/AvatarVehicleProximity.js');
         const exportedNames = Object.keys(exportsModule).sort();
         assert(JSON.stringify(exportedNames) === JSON.stringify(['VEHICLE_INTERACTION_RADIUS', 'avatarVehicleProximity', 'withinRadiusXZ']),
-            '29. core/AvatarVehicleProximity.js exports exactly VEHICLE_INTERACTION_RADIUS, avatarVehicleProximity, and withinRadiusXZ — nothing else');
+            '29. core/vehicles/AvatarVehicleProximity.js exports exactly VEHICLE_INTERACTION_RADIUS, avatarVehicleProximity, and withinRadiusXZ — nothing else');
     }
     {
         // A detected proximity fact is never itself used to move or

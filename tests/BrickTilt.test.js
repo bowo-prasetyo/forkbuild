@@ -1,15 +1,15 @@
 import * as THREE from 'three';
-import { Brick } from '../core/Brick.js';
-import { Building } from '../core/Building.js';
-import { Position } from '../core/Position.js';
-import { World } from '../core/World.js';
-import { BRICK_TILTS, nextTilt, normalizeTilt, orientedSize } from '../core/BrickOrientation.js';
-import { encodeBrickTable, decodeBrickTable, brickTableErrors } from '../core/BrickTable.js';
-import { brickAabb } from '../core/AvatarCollision.js';
-import { SpatialBounds } from '../core/SpatialBounds.js';
-import { walkableSurfaceKindFor, WalkableSurfaceKind } from '../core/WalkableSurface.js';
-import { deriveBlueprintFingerprint } from '../core/BlueprintFingerprint.js';
-import { Structure } from '../core/Structure.js';
+import { Brick } from '../core/building/Brick.js';
+import { Building } from '../core/building/Building.js';
+import { Position } from '../core/document/Position.js';
+import { World } from '../core/document/World.js';
+import { BRICK_TILTS, nextTilt, normalizeTilt, orientedSize } from '../core/building/BrickOrientation.js';
+import { encodeBrickTable, decodeBrickTable, brickTableErrors } from '../core/building/BrickTable.js';
+import { brickAabb } from '../core/avatar/AvatarCollision.js';
+import { SpatialBounds } from '../core/world/SpatialBounds.js';
+import { walkableSurfaceKindFor, WalkableSurfaceKind } from '../core/building/WalkableSurface.js';
+import { deriveBlueprintFingerprint } from '../core/building/BlueprintFingerprint.js';
+import { Structure } from '../core/building/Structure.js';
 import { DocumentValidator } from '../serializer/DocumentValidator.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
@@ -26,7 +26,7 @@ import { extractBuildMeshes } from '../renderer/BuildMeshExtraction.js';
 import { BRICK_SHAPES } from '../server/rendezvous-worker/buildPreview.js';
 import { assert } from './support/Assert.js';
 
-// Tilting (core/BrickOrientation.js): a quarter turn about a brick's own
+// Tilting (core/building/BrickOrientation.js): a quarter turn about a brick's own
 // width axis, laying it on another side. Stored only when set, so every
 // untilted build keeps its bytes and hashes; sized, collided with, walked
 // on, drawn and exported as tilted; placed tilted with T, and tilted in

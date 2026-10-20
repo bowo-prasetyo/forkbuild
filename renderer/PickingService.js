@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { Position } from '../core/Position.js';
-import { WorldPosition } from '../core/WorldPosition.js';
+import { Position } from '../core/document/Position.js';
+import { WorldPosition } from '../core/document/WorldPosition.js';
 
 // Answers three questions, all from screen coordinates: what brick (if
 // any) is under this position (pick), where would a ray hit the ground

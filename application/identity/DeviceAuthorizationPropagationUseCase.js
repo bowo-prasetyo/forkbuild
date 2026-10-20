@@ -1,11 +1,11 @@
 import { EventBus } from '../../core/events/EventBus.js';
-import { DeviceAuthority } from '../../core/DeviceAuthority.js';
+import { DeviceAuthority } from '../../core/identity/DeviceAuthority.js';
 import {
     DeviceAuthorizationGossipKind,
     toDeviceAuthorizationGossipMessage,
     isValidDeviceAuthorizationGossipMessage
-} from '../../core/DeviceAuthorizationGossip.js';
-import { isValidDeviceAuthorizationGrant, isValidDeviceAuthorizationRevocation } from '../../core/DeviceAuthorizationEnvelope.js';
+} from '../../core/identity/DeviceAuthorizationGossip.js';
+import { isValidDeviceAuthorizationGrant, isValidDeviceAuthorizationRevocation } from '../../core/identity/DeviceAuthorizationEnvelope.js';
 import { LocalAuthorizationVerifier } from '../../identity/LocalAuthorizationVerifier.js';
 import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
 import * as Ed25519 from '../../identity/Ed25519.js';
@@ -39,7 +39,7 @@ const STORAGE_KEY_PREFIX = 'device-authority:';
 // device facts about identities it has no other relationship with.
 //
 // The one genuinely new question this class answers, that identity
-// lifecycle propagation never needed to: core/DeviceAuthority.js is
+// lifecycle propagation never needed to: core/identity/DeviceAuthority.js is
 // keyed by the PAIR (identityId, deviceIdentityId), never merely
 // identityId — because the entire point of a device authorization is
 // telling MULTIPLE devices of the same identity apart from each other
@@ -173,7 +173,7 @@ export class DeviceAuthorizationPropagationUseCase {
     // names out of band") — is adopted here, ONCE, so this device can
     // answer resolveOwnSocialIdentity() below without ever needing a
     // second, independent "who am I" mechanism: it is stored in the
-    // EXACT SAME core/DeviceAuthority.js list every other grant/
+    // EXACT SAME core/identity/DeviceAuthority.js list every other grant/
     // revocation this class tracks already lives in, keyed by the same
     // (identityId, deviceIdentityId) pair — this device's OWN record is
     // structurally indistinguishable from one it learned about some
@@ -288,7 +288,7 @@ export class DeviceAuthorizationPropagationUseCase {
     // returns, a deliberate divergence from that method's own leaner shape:
     // a caller here (application/identity/FriendRelationshipUseCase.js,
     // application/chat/ChatUseCase.js, application/chat/VoiceUseCase.js) generally
-    // needs to construct a NEW core/FriendshipRecord.js/core/
+    // needs to construct a NEW core/social/FriendshipRecord.js/core/
     // PeerBlockRecord.js for the resolved parent identity, which requires
     // its publicKey — recoverable directly from its did:key identityId
     // (see identity/Ed25519.js#didKeyToPublicKey), never a second lookup.
@@ -371,7 +371,7 @@ export class DeviceAuthorizationPropagationUseCase {
     // The ingestion boundary. Every incoming gossip message passes every
     // one of these checks, IN ORDER, before it can change anything this
     // device stores:
-    //   1. well-formed shape (core/DeviceAuthorizationGossip.js)
+    //   1. well-formed shape (core/identity/DeviceAuthorizationGossip.js)
     //   2. the record's OWN signature verifies (identity/
     //      LocalAuthorizationVerifier.js's verifyDeviceAuthorizationGrant()/
     //      verifyDeviceAuthorizationRevocation() — REQUIRED, never
@@ -385,7 +385,7 @@ export class DeviceAuthorizationPropagationUseCase {
     //   4. freshness: a grant only replaces an existing one when its
     //      `authorizedAt` is strictly newer; a revocation only replaces
     //      an existing one when its `revokedAt` is strictly newer — see
-    //      core/DeviceAuthority.js's own header on why BOTH slots are
+    //      core/identity/DeviceAuthority.js's own header on why BOTH slots are
     //      independently "newer wins," never "permanent, first-wins"
     //      the way identity revocation itself is.
     _handleIncoming(payload) {
@@ -435,7 +435,7 @@ export class DeviceAuthorizationPropagationUseCase {
         const all = this._loadAll();
         const existing = all.find((a) => a.identityId === record.identityId && a.deviceIdentityId === record.deviceIdentityId) || null;
         if (existing && existing.grant && new Date(existing.grant.authorizedAt).getTime() >= new Date(record.authorizedAt).getTime()) {
-            return; // not newer — see core/DeviceAuthority.js's own header
+            return; // not newer — see core/identity/DeviceAuthority.js's own header
         }
         const base = existing || new DeviceAuthority({ identityId: record.identityId, deviceIdentityId: record.deviceIdentityId });
         this._saveAll(owner, replaceByPair(all, base.withGrant(record)));

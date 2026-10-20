@@ -308,7 +308,7 @@
 
 /* 0.2.99 — ui/components/WorldMembersPanel.js: same modal convention
    as .locations-panel above. `access` styling is a thin left border
-   only — never a role badge system, matching core/WorldAccessLevel.js's
+   only — never a role badge system, matching core/collaboration/WorldAccessLevel.js's
    own closed NONE/READ/EDIT vocabulary (there is no fourth "collaborator"
    look to invent). */
 .world-members-panel-hint {
@@ -439,7 +439,7 @@
 }
 
 /* 0.2.30: trust-aware discovery diagnostics banner — see
-   core/DiscoveryDiagnosticsSummary.js. Neutral (no trust layer
+   core/world/DiscoveryDiagnosticsSummary.js. Neutral (no trust layer
    consulted, today's default) reads as informational, not alarming;
    complete reuses the same green .action-btn--primary/.spatial-type
    already means "good" throughout this UI; fatal/warning reuse the

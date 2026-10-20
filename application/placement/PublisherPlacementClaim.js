@@ -26,7 +26,7 @@ export class PublisherPlacementClaimLookup {
     // its publisher placed, as executeSnapshotDistributionCommand() takes
     // them; `{}` when this device holds no such placement, since
     // publicationId and claimedPosition travel together or not at all
-    // (core/SnapshotDiscoveryEnvelope.js). Never throws.
+    // (core/publication/SnapshotDiscoveryEnvelope.js). Never throws.
     claimFor(publication) {
         if (!publication || !publication.id) return {};
         const publisherId = publication.publisherIdentity ? publication.publisherIdentity.id : null;

@@ -83,7 +83,7 @@ space:laser
 city:streetlight
 
 0.2.81 — Forkable Structure Library adds a second, parallel namespace
-for Structures (core/Structure.js), one rung up from bricks — same
+for Structures (core/building/Structure.js), one rung up from bricks — same
 "library:name" shape, its own id space, never colliding with a brick id:
 
 village:house

@@ -1,4 +1,4 @@
-import { createId } from '../core/createId.js';
+import { createId } from '../core/document/createId.js';
 
 // 0.2.50 — a portable RENDEZVOUS HINT, nothing more. Answers "where might
 // Bob be reachable, and roughly how long is this worth trying" — never "this

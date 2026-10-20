@@ -1,10 +1,10 @@
 import { WorldSoundscapeService } from '../application/world/WorldSoundscapeService.js';
 import { SoundSettingsStore } from '../application/settings/SoundSettingsStore.js';
-import { ambientMixAt } from '../core/AmbientSoundscape.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
-import { AvatarVerticalState } from '../core/AvatarVerticalState.js';
-import { VehicleType } from '../core/VehicleType.js';
+import { ambientMixAt } from '../core/app/AmbientSoundscape.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { AvatarAnimationState } from '../core/avatar/AvatarAnimationState.js';
+import { AvatarVerticalState } from '../core/avatar/AvatarVerticalState.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 

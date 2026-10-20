@@ -8,23 +8,23 @@ import { SigningRemedy } from './SigningReadiness.js';
 import { FailedUnlockTracker } from './FailedUnlockTracker.js';
 import { isVaultExpired, DEFAULT_VAULT_TIMEOUT_MS } from './VaultTimeoutPolicy.js';
 import * as KeyEncryption from './KeyEncryption.js';
-import { Signature, SIGNING_DOMAIN } from '../core/Signature.js';
+import { Signature, SIGNING_DOMAIN } from '../core/publication/Signature.js';
 import { computeFnv1a32 } from '../serializer/contentHash.js';
 import * as Ed25519 from './Ed25519.js';
 import * as IdentityExport from './IdentityExport.js';
 import * as IdentityRecovery from './IdentityRecovery.js';
 import { buildLifecycleRecords, verifiedLifecycleRecords, mergeDeviceAuthorizations } from './IdentityLifecycleTransfer.js';
-import { IdentityLifecycleState } from '../core/IdentityLifecycleState.js';
-import { toIdentityRevocationRecord, getIdentityRevocationSigningDescriptor } from '../core/IdentityRevocationEnvelope.js';
-import { toIdentitySuccessionRecord, getIdentitySuccessionSigningDescriptor } from '../core/IdentitySuccessionEnvelope.js';
+import { IdentityLifecycleState } from '../core/identity/IdentityLifecycleState.js';
+import { toIdentityRevocationRecord, getIdentityRevocationSigningDescriptor } from '../core/identity/IdentityRevocationEnvelope.js';
+import { toIdentitySuccessionRecord, getIdentitySuccessionSigningDescriptor } from '../core/identity/IdentitySuccessionEnvelope.js';
 import {
     toDeviceAuthorizationGrant,
     getDeviceAuthorizationGrantSigningDescriptor,
     toDeviceAuthorizationRevocation,
     getDeviceAuthorizationRevocationSigningDescriptor
-} from '../core/DeviceAuthorizationEnvelope.js';
-import { UserFacingError } from '../core/UserFacingError.js';
-import { message } from '../core/Message.js';
+} from '../core/identity/DeviceAuthorizationEnvelope.js';
+import { UserFacingError } from '../core/app/UserFacingError.js';
+import { message } from '../core/app/Message.js';
 
 const IDENTITIES_INDEX_KEY = 'local-identities';
 const IDENTITY_KEY_PREFIX = 'local-identity-key:';
@@ -101,7 +101,7 @@ const PROVIDER_ID = 'local';
 // The Identity"); `declareSuccessor` produces a signed, cryptographically
 // verifiable statement that one identity names another as its
 // successor, WITHOUT collapsing them into one mutable identity (see
-// core/IdentitySuccessionEnvelope.js's own header); `revokeIdentity`
+// core/identity/IdentitySuccessionEnvelope.js's own header); `revokeIdentity`
 // produces a signed, PERMANENT self-revocation and closes the one gate
 // that matters everywhere else in this codebase — `signCanonical()`/
 // `getSigningIdentity()` refuse a revoked identity from that point on,
@@ -769,14 +769,14 @@ export class LocalIdentityProvider extends IdentityProvider {
     // authorizeDevice() signs with identityId's OWN key (this device
     // must be able to unlock it — same passphrase discipline as
     // declareSuccessor()/revokeIdentity()), producing a portable,
-    // signed core/DeviceAuthorizationEnvelope.js grant record — meant to
+    // signed core/identity/DeviceAuthorizationEnvelope.js grant record — meant to
     // be handed to the device it names (out of band, exactly like
     // 0.2.48's exported identity package) and/or gossiped to peers who
     // already know identityId (application/
     // DeviceAuthorizationPropagationUseCase.js). Calling it again for a
     // device identityId already authorized simply re-signs a fresh grant
     // (a later authorizedAt), which is also how a previously revoked
-    // device is re-authorized — see core/DeviceAuthorizationEnvelope.js's
+    // device is re-authorized — see core/identity/DeviceAuthorizationEnvelope.js's
     // own header on why that's a deliberate, safe difference from
     // identity revocation's own permanent, one-way latch.
     authorizeDevice(identityId, deviceIdentityId, devicePublicKey, { deviceLabel = null } = {}) {
@@ -817,7 +817,7 @@ export class LocalIdentityProvider extends IdentityProvider {
     // Withdraws a grant already made above — identityId must again be
     // able to unlock its own key (revocation, like authorization, is
     // only ever self-attested by the PARENT, never by the device or by
-    // anyone else — see core/DeviceAuthorizationEnvelope.js's own
+    // anyone else — see core/identity/DeviceAuthorizationEnvelope.js's own
     // header). Refuses a device that was never authorized in the first
     // place; revoking an already-revoked device is a no-op that simply
     // re-signs a fresher revocation timestamp.
@@ -858,7 +858,7 @@ export class LocalIdentityProvider extends IdentityProvider {
     }
 
     // Authorized RIGHT NOW: a grant is on file, it is not superseded by
-    // a later revocation (see core/DeviceAuthority.js's own timestamp-
+    // a later revocation (see core/identity/DeviceAuthority.js's own timestamp-
     // comparison rule, mirrored here for the LOCAL/authoring side), and
     // the parent identity itself has not been revoked — an identity
     // that can no longer sign anything (see _requireAuthenticatedIdentity()

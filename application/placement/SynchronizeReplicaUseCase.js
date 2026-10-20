@@ -1,4 +1,4 @@
-import { PlacementRecord } from '../../core/PlacementRecord.js';
+import { PlacementRecord } from '../../core/publication/PlacementRecord.js';
 import { LocalReplicationStore } from '../../replication/LocalReplicationStore.js';
 
 const SCOPE = LocalReplicationStore.DEFAULT_SCOPE;

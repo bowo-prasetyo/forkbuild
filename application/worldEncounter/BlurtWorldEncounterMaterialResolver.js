@@ -1,5 +1,5 @@
 import { BlurtContentStore } from '../../content/BlurtContentStore.js';
-import { parseBlurtContentLocator } from '../../core/BlurtPost.js';
+import { parseBlurtContentLocator } from '../../core/networks/BlurtPost.js';
 
 // The same ceiling ArweaveWorldEncounterMaterialResolver.js puts on a
 // Signed Claim: one is a few kilobytes.

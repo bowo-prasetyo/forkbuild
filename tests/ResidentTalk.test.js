@@ -1,25 +1,25 @@
 import * as THREE from 'three';
-import * as ResidentTalk from '../core/ResidentTalk.js';
-import { sanitizeSpokenText, RESIDENT_FACT_KIND, MAX_SPOKEN_TITLE_LENGTH } from '../core/ResidentTalk.js';
-import { isMessage } from '../core/Message.js';
+import * as ResidentTalk from '../core/world/ResidentTalk.js';
+import { sanitizeSpokenText, RESIDENT_FACT_KIND, MAX_SPOKEN_TITLE_LENGTH } from '../core/world/ResidentTalk.js';
+import { isMessage } from '../core/app/Message.js';
 import { displayText, errorText } from '../ui/i18n/i18n.js';
 import { Translator } from '../ui/i18n/Translator.js';
 import en from '../ui/i18n/messages/en.js';
 import { gatherResidentFacts, RESIDENT_KNOWLEDGE_RADIUS } from '../application/world/ResidentSurroundings.js';
-import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
-import { wildlifeInRegionAt } from '../core/WildlifeMotion.js';
+import { vehiclePresenceInRegion } from '../core/vehicles/VehiclePlacement.js';
+import { wildlifeInRegionAt } from '../core/nature/WildlifeMotion.js';
 import { VehicleRuntimeInstances } from '../application/world/VehicleRuntimeInstances.js';
 import { AnimalRuntimeInstances } from '../application/world/AnimalRuntimeInstances.js';
-import { AnimalPresence } from '../core/AnimalPresence.js';
-import { World } from '../core/World.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { Position } from '../core/Position.js';
-import { WorldResident } from '../core/WorldResident.js';
-import { WorldLandmark } from '../core/WorldLandmark.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { isResidentWalkClear } from '../core/ResidentPath.js';
-import { RESIDENT_MOTION } from '../core/ResidentMotion.js';
+import { AnimalPresence } from '../core/nature/AnimalPresence.js';
+import { World } from '../core/document/World.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { Position } from '../core/document/Position.js';
+import { WorldResident } from '../core/world/WorldResident.js';
+import { WorldLandmark } from '../core/world/WorldLandmark.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { isResidentWalkClear } from '../core/world/ResidentPath.js';
+import { RESIDENT_MOTION } from '../core/world/ResidentMotion.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
@@ -28,18 +28,18 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { ResidentFieldRenderer, speechSecondsFor } from '../renderer/ResidentFieldRenderer.js';
 import { createSpeechBubble } from '../renderer/ResidentSpeechBubble.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { residentAppearanceFor, RESIDENT_TEMPLATE_ID } from '../core/ResidentAppearance.js';
+import { residentAppearanceFor, RESIDENT_TEMPLATE_ID } from '../core/world/ResidentAppearance.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
-import { StructurePlacement } from '../core/StructurePlacement.js';
-import { terrainHeightAt } from '../core/TerrainHeightField.js';
+import { StructurePlacement } from '../core/building/StructurePlacement.js';
+import { terrainHeightAt } from '../core/nature/TerrainHeightField.js';
 import {
     pickResidentRemarkFacts, focusTargetsFor, speechSecondsFor as coreSpeechSecondsFor, FOCUSABLE_FACT_KINDS
-} from '../core/ResidentTalk.js';
+} from '../core/world/ResidentTalk.js';
 import { assert } from './support/Assert.js';
 
 // Talking to World Residents: they tell you what's around, never what to do.
 //
-//   Section A: core/ResidentTalk.js — distances, directions, plain text, one
+//   Section A: core/world/ResidentTalk.js — distances, directions, plain text, one
 //              sentence per fact, what gets said on each turn
 //   Section B: application/world/ResidentSurroundings.js — what a resident
 //              knows, from this replica's view, never what is no longer there
@@ -50,7 +50,7 @@ import { assert } from './support/Assert.js';
 //   Section E: placed structures, named by the document they place (never a
 //              bare id), and Focus: a camera-only look at what was mentioned
 
-// core/ResidentTalk.js speaks in messages; these read them in English, the
+// core/world/ResidentTalk.js speaks in messages; these read them in English, the
 // words a person sees with the app in English.
 const english = (remark) => (remark === null ? null : displayText(remark));
 const phraseFact = (fact) => english(ResidentTalk.phraseFact(fact));
@@ -80,7 +80,7 @@ function openHome() {
 
 function runTests() {
     // -------------------------------------------------------------
-    // Section A — core/ResidentTalk.js
+    // Section A — core/world/ResidentTalk.js
     // -------------------------------------------------------------
     {
         assert(describeDistance(4) === 'just a few steps' && describeDistance(NaN) === 'just a few steps', '1. Very close is "just a few steps"');
@@ -248,7 +248,7 @@ function runTests() {
         assert(new Set(heard).size > 1, '45. Talking again, it moves on to other things');
 
         // Every third conversation it may wonder what the ground nearby has
-        // never had (core/ResidentWish.js), with a Build there to choose.
+        // never had (core/world/ResidentWish.js), with a Build there to choose.
         const later = [];
         for (let i = 0; i < 6; i++) later.push(session.talkToNearestResident());
         const wishTurns = later.map((speech, i) => (speech.wish ? 5 + i : null)).filter((turn) => turn !== null);

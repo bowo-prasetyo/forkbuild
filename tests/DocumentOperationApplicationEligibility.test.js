@@ -1,17 +1,17 @@
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
-import { DocumentOperationCausalGapDetector, CausalGapStatus } from '../core/DocumentOperationCausalGapDetector.js';
+import { DocumentOperationCausalGapDetector, CausalGapStatus } from '../core/collaboration/DocumentOperationCausalGapDetector.js';
 import {
     DocumentOperationApplicationEligibility,
     isDocumentOperationApplicationEligibility,
     evaluateApplicationEligibility
-} from '../core/DocumentOperationApplicationEligibility.js';
+} from '../core/collaboration/DocumentOperationApplicationEligibility.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.232 — Causal Application Eligibility Boundary.
@@ -129,7 +129,7 @@ function runTests() {
 // Section F — Recovered predecessor: A is made known WITHOUT ever being
 // executed (simulating 0.9.230's own recovery path, which records causal
 // evidence but never touches CommandHistory — see
-// core/DocumentOperationProvenance.js). B -> A must still be ELIGIBLE:
+// core/collaboration/DocumentOperationProvenance.js). B -> A must still be ELIGIBLE:
 // causal knowledge, not execution history, is what eligibility reads.
 // ===================================================================
 {
@@ -190,7 +190,7 @@ function runTests() {
 // ===================================================================
 // Section I — Eligibility evaluation != history repair. B is applied
 // (today\'s ARRIVAL_ORDER policy applies remote operations immediately,
-// regardless of gap status — see core/DocumentCollaborationConsistencyPolicy.js
+// regardless of gap status — see core/collaboration/DocumentCollaborationConsistencyPolicy.js
 // and 0.9.228\'s own Section H) BEFORE its own predecessor A is known.
 // A later becomes known (e.g. via recovery). Re-evaluating B\'s
 // eligibility now answers ELIGIBLE, but CommandHistory — where B already

@@ -54,7 +54,7 @@ import { SnapshotMaterializationSourceKind } from './SnapshotMaterializationSour
 // no "best source." Handing resolution's own already-verified bytes to
 // application/snapshot/materialization/StoreSnapshotContentUseCase.js means that boundary verifies
 // the hash a second time; this is not a second, independent trust
-// decision — it is the SAME check (core/ContentReference.js#verify())
+// decision — it is the SAME check (core/document/ContentReference.js#verify())
 // applied once, at the one place bytes are ever written, regardless of
 // which caller reached it, exactly the discipline application/
 // StoreSnapshotContentUseCase.js's own header exists to guarantee. See
@@ -112,7 +112,7 @@ export class MaterializeSnapshotFromPlacementUseCase {
     //   outcome            — one of application/
     //                         SnapshotPlacementMaterializationOutcome.js's
     //                         own five values, UNCHANGED from before 0.8.36
-    //   contentReference   — the core/ContentReference.js this replica
+    //   contentReference   — the core/document/ContentReference.js this replica
     //                         now holds bytes under (STORED/
     //                         ALREADY_AVAILABLE), or null otherwise
     //   publicationKnown   — whether this replica's own publication

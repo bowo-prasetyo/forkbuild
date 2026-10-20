@@ -2,7 +2,7 @@ import { SnapshotWorldPositionClaimOutcome } from './SnapshotWorldPositionClaimO
 
 // 0.9.172 — Decentralized Snapshot Position Claim Consumption.
 //
-// 0.9.171 taught `core/SnapshotDiscoveryEnvelope.js` (and, downstream,
+// 0.9.171 taught `core/publication/SnapshotDiscoveryEnvelope.js` (and, downstream,
 // `application/nostr/NostrSnapshotDiscoveryQueryService.js#search()`) to carry an
 // OPTIONAL publisher claim — `publicationId` + `claimedPosition` — on a
 // Snapshot discovery candidate, then deliberately stopped: nothing in that
@@ -47,7 +47,7 @@ import { SnapshotWorldPositionClaimOutcome } from './SnapshotWorldPositionClaimO
 // This file performs no network access, no storage access, no signature
 // check, and no re-validation of `candidate.contentHash`/`locator`/
 // `storage` against anything. Whether a `claimedPosition` is itself
-// well-shaped was already `core/SnapshotDiscoveryEnvelope.js`'s own job
+// well-shaped was already `core/publication/SnapshotDiscoveryEnvelope.js`'s own job
 // (0.9.171) — a real candidate reaching this function already carries a
 // valid `{x,y,z}` or carries no claim at all. This function decides only
 // the ONE remaining question: does the claim, if any, belong to the
@@ -82,8 +82,8 @@ import { SnapshotWorldPositionClaimOutcome } from './SnapshotWorldPositionClaimO
 //
 // NEVER A DOMAIN OBJECT — `position` ON A `CLAIMED` RESULT IS A FRESH,
 // FROZEN, PLAIN `{x,y,z}`, copied field by field from `candidate.claimedPosition`,
-// never the input reference and never a `core/Position.js`/`core/
-// WorldPlacement.js` instance. Mirrors `core/SnapshotDiscoveryEnvelope.js`'s
+// never the input reference and never a `core/document/Position.js`/`core/
+// WorldPlacement.js` instance. Mirrors `core/publication/SnapshotDiscoveryEnvelope.js`'s
 // own "never a domain object" restraint, held here for the identical
 // reason one seam downstream.
 //

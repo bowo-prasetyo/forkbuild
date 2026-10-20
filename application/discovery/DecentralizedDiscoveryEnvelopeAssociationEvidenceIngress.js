@@ -1,10 +1,10 @@
-import { describeDecentralizedDiscoveryEnvelope } from '../../core/DecentralizedDiscoveryEnvelope.js';
-import { describeDecentralizedWorldEncounterLeadAssociation } from '../../core/DecentralizedWorldEncounterLeadAssociation.js';
+import { describeDecentralizedDiscoveryEnvelope } from '../../core/publication/DecentralizedDiscoveryEnvelope.js';
+import { describeDecentralizedWorldEncounterLeadAssociation } from '../../core/world/DecentralizedWorldEncounterLeadAssociation.js';
 
 // 0.9.32 — Decentralized Discovery Envelope Association Evidence.
 //
 // 0.9.30's own header left a piece of itself explicitly for later: "wiring
-// a described envelope into `core/DecentralizedWorldEncounterLeadAssociation.js`
+// a described envelope into `core/world/DecentralizedWorldEncounterLeadAssociation.js`
 // or `application/worldEncounter/DecentralizedWorldEncounterLeadAssociationEvidenceIngress.js`
 // as a second evidence producer... is unscheduled, later work — a
 // deliberate, explicit decision this milestone declines to make by
@@ -84,12 +84,12 @@ import { describeDecentralizedWorldEncounterLeadAssociation } from '../../core/D
 // does.
 //
 // THE LEAD ITSELF IS NEVER MODIFIED, AND NEVER GAINS `kind`/`objectId` OF
-// ITS OWN — THE EXACT RESTRAINT `core/DecentralizedWorldDiscoveryLead.js`'s
+// ITS OWN — THE EXACT RESTRAINT `core/world/DecentralizedWorldDiscoveryLead.js`'s
 // OWN HEADER ALREADY NAMED: "NO PUBLICATION ENVELOPE FIELDS OF ITS OWN —
 // NO `kind`, NO `objectId`." A lead and the envelope(s) that might describe
 // what lives at its `uri` are kept as two separate objects for as long as
 // they exist — a lead answers "where," an envelope answers "what, self-
-// declared." This file never imports `core/DecentralizedWorldDiscoveryLead.js`,
+// declared." This file never imports `core/world/DecentralizedWorldDiscoveryLead.js`,
 // never constructs one, and never mutates one; it only ever reads a
 // caller-supplied lead's own `origin`/`discoveryTag`/`uri` fields
 // structurally, exactly as 0.9.29's own ingress already does for the
@@ -138,7 +138,7 @@ import { describeDecentralizedWorldEncounterLeadAssociation } from '../../core/D
 //
 // A SECOND PRODUCER, NEVER A MERGE INTO THE FIRST. This file never imports
 // `application/worldEncounter/DecentralizedWorldEncounterLeadAssociationEvidenceIngress.js`,
-// `core/DecentralizedPublicationLocationClaim.js`, or `publisher/
+// `core/publication/DecentralizedPublicationLocationClaim.js`, or `publisher/
 // Publication.js`, and that file is left completely unmodified by this
 // milestone. Both files produce the identical `associations[]` shape
 // `application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js` already

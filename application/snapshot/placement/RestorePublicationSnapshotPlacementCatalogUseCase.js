@@ -1,4 +1,4 @@
-import { PublicationSnapshotPlacement } from '../../../core/PublicationSnapshotPlacement.js';
+import { PublicationSnapshotPlacement } from '../../../core/publication/PublicationSnapshotPlacement.js';
 import { validatePublicationSnapshotPlacement, PublicationSnapshotPlacementError } from './PublicationSnapshotPlacementValidator.js';
 
 // 0.8.21 — Persistent Snapshot Placement Catalog & Restart Recovery.
@@ -35,7 +35,7 @@ import { validatePublicationSnapshotPlacement, PublicationSnapshotPlacementError
 //   1. validate  — application/snapshot/placement/PublicationSnapshotPlacementValidator.js
 //                   (is this even a well-formed
 //                   PublicationSnapshotPlacement envelope?)
-//   2. construct — a real core/PublicationSnapshotPlacement.js instance
+//   2. construct — a real core/publication/PublicationSnapshotPlacement.js instance
 //   3. verify    — identity/LocalAuthorizationVerifier.js#
 //                   verifyPublicationSnapshotPlacement() (did the claimed
 //                   placerIdentity really sign exactly this

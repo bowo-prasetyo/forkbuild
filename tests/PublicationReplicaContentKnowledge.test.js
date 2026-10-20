@@ -38,7 +38,7 @@ import { PublicationExchange } from '../application/publication/PublicationExcha
 import { PublicationAnchorExchange } from '../application/anchoring/PublicationAnchorExchange.js';
 import { PublicationSnapshotPlacementExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementExchange.js';
 
-import { PublicationAnchor } from '../core/PublicationAnchor.js';
+import { PublicationAnchor } from '../core/publication/PublicationAnchor.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';

@@ -1,4 +1,4 @@
-import { descriptionPlainText, parseDescription, previewDescription } from '../core/DescriptionMarkup.js';
+import { descriptionPlainText, parseDescription, previewDescription } from '../core/document/DescriptionMarkup.js';
 import { assert } from './support/Assert.js';
 
 // Runs as [text, 'b' | 'i' | 'bi' | ''] pairs, for comparing.

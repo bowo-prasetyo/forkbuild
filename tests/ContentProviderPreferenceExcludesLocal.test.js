@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
-import { RoleProviderRole } from '../core/RoleProviderRole.js';
-import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
+import { RoleProviderRole } from '../core/publication/RoleProviderRole.js';
+import { RoleProviderPreference } from '../core/publication/RoleProviderPreference.js';
 import { RoleProviderPreferenceStore } from '../storage/RoleProviderPreferenceStore.js';
 import { RoleAwareProviderResolver } from '../application/settings/RoleAwareProviderResolver.js';
 import { ResolvePreferredRoleProviderUseCase } from '../application/settings/ResolvePreferredRoleProviderUseCase.js';

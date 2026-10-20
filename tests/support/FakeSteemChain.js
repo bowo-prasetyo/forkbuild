@@ -1,7 +1,7 @@
 // Test-support only. A fake Steem chain whose blocks are real: every
 // transaction has its true id, every header its true transaction Merkle
 // root and block id, and is signed by a witness key, so kept block evidence
-// (core/SteemBlockEvidence.js) checks out exactly as on the chain. It serves
+// (core/networks/SteemBlockEvidence.js) checks out exactly as on the chain. It serves
 // the JSON-RPC calls ForkBuild makes per node URL; `overrides[node]`
 // replaces one node's answers (a function per method, or an Error to be
 // unreachable).
@@ -15,7 +15,7 @@ import {
     steemPublicKeyString,
     steemTransactionId,
     steemTransactionMerkleDigest
-} from '../../core/SteemBinary.js';
+} from '../../core/networks/SteemBinary.js';
 
 export const WITNESS = 'witness-one';
 export const WITNESS_SECRET = sha256(new TextEncoder().encode('forkbuild test witness'));

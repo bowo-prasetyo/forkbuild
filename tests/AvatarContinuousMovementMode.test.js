@@ -3,10 +3,10 @@ import {
     AvatarContinuousMovementMode,
     isValidAvatarContinuousMovementMode,
     deriveAvatarContinuousMovementMode
-} from '../core/AvatarContinuousMovementMode.js';
+} from '../core/avatar/AvatarContinuousMovementMode.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.67 — Continuous Movement Mode Vocabulary, core/AvatarContinuousMovementMode.js.
+// 0.9.67 — Continuous Movement Mode Vocabulary, core/avatar/AvatarContinuousMovementMode.js.
 //
 //   Section A: the vocabulary itself — NONE/WALK/RUN, isValid()
 //   Section B: activation — an activating press sets/switches the mode
@@ -178,7 +178,7 @@ async function runTests() {
     // controller, no timers, no raw keyboard handling, no speed values
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../core/AvatarContinuousMovementMode.js', import.meta.url);
+        const sourceUrl = new URL('../core/avatar/AvatarContinuousMovementMode.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -196,14 +196,14 @@ async function runTests() {
             'velocity', 'acceleration', 'speed', 'position', 'rotation'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `34. core/AvatarContinuousMovementMode.js's own code never references "${term}" — a pure vocabulary and transition rule only, never movement, never raw input handling, never a speed number`);
+            assert(!codeOnly.includes(term), `34. core/avatar/AvatarContinuousMovementMode.js's own code never references "${term}" — a pure vocabulary and transition rule only, never movement, never raw input handling, never a speed number`);
         }
     }
     {
-        const exportsModule = await import('../core/AvatarContinuousMovementMode.js');
+        const exportsModule = await import('../core/avatar/AvatarContinuousMovementMode.js');
         const exportedNames = Object.keys(exportsModule).sort();
         assert(JSON.stringify(exportedNames) === JSON.stringify(['AvatarContinuousMovementMode', 'deriveAvatarContinuousMovementMode', 'isValidAvatarContinuousMovementMode']),
-            '35. core/AvatarContinuousMovementMode.js exports exactly the vocabulary, its validator, and the one transition function — nothing else');
+            '35. core/avatar/AvatarContinuousMovementMode.js exports exactly the vocabulary, its validator, and the one transition function — nothing else');
     }
 
     console.log('✅ All Avatar Continuous Movement Mode tests passed.');

@@ -1,8 +1,8 @@
-import { deriveWorldEncounterSelectionIdentities } from '../../core/WorldEncounterSelectionIdentity.js';
+import { deriveWorldEncounterSelectionIdentities } from '../../core/world/WorldEncounterSelectionIdentity.js';
 
 // 0.9.19 — World Encounter Selection Candidate Resolution.
 //
-// `core/WorldEncounterSelectionIdentity.js` (this same milestone) named
+// `core/world/WorldEncounterSelectionIdentity.js` (this same milestone) named
 // every currently-derivable `{ kind, objectId, origin }` identity across a
 // set of sources — but a Wanderer never selects an origin. Selecting a
 // marker has meant exactly `{ kind, objectId }` since 0.9.4, and stays
@@ -23,7 +23,7 @@ import { deriveWorldEncounterSelectionIdentities } from '../../core/WorldEncount
 //        describeWorldEncounterSelectionCandidates()
 //                       │
 //                       ▼
-//   core/WorldEncounterSelectionIdentity.js   (THIS milestone)
+//   core/world/WorldEncounterSelectionIdentity.js   (THIS milestone)
 //        deriveWorldEncounterSelectionIdentities()
 //                       │
 //                       ▼

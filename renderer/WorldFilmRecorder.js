@@ -1,7 +1,7 @@
-import { BUILD_VIDEO_SIZES, chooseVideoMimeType, videoFileExtension } from '../core/BuildVideo.js';
+import { BUILD_VIDEO_SIZES, chooseVideoMimeType, videoFileExtension } from '../core/app/BuildVideo.js';
 import { drawEndCard, drawStrip } from './BuildVideoOverlay.js';
 
-// Records a walk-through filmed in World View (core/WalkThroughFilm.js): each
+// Records a walk-through filmed in World View (core/app/WalkThroughFilm.js): each
 // frame World View draws is copied, cropped to the video's shape from the
 // middle of the view, into a canvas of the video's size, with the build's name
 // along the bottom and, at the end, its end card (renderer/BuildVideoOverlay.js),
@@ -28,7 +28,7 @@ export function coverCrop(sourceWidth, sourceHeight, width, height) {
 }
 
 export class WorldFilmRecorder {
-    // `shape`: core/BuildVideo.js's BuildVideoShape. `text`: the overlay's
+    // `shape`: core/app/BuildVideo.js's BuildVideoShape. `text`: the overlay's
     // words, in the viewer's language (renderer/BuildVideoOverlay.js).
     // `audioStream`: the sound to record, or null for none.
     constructor({ shape, text, audioStream = null }) {

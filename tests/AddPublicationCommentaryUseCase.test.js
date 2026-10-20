@@ -1,5 +1,5 @@
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { PublicationCommentary } from '../core/PublicationCommentary.js';
+import { PublicationCommentary } from '../core/publication/PublicationCommentary.js';
 import {
     PublicationCommentaryStore,
     PublicationCommentaryConflictError

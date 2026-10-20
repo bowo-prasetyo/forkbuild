@@ -1,4 +1,4 @@
-import { isValidRoleProviderRole } from '../../core/RoleProviderRole.js';
+import { isValidRoleProviderRole } from '../../core/publication/RoleProviderRole.js';
 import { RoleProviderPreferenceStore } from '../../storage/RoleProviderPreferenceStore.js';
 import { RoleAwareProviderResolver, RoleProviderResolutionStatus } from './RoleAwareProviderResolver.js';
 

@@ -1,4 +1,4 @@
-import { publicationShareUrl } from '../core/ForkBuildAppLinks.js';
+import { publicationShareUrl } from '../core/app/ForkBuildAppLinks.js';
 import {
     canUseShareSheet, copyPublicationShareLink, describePublicationShare as describePublicationShareMessages, sharePublicationLink
 } from '../application/publication/PublicationShareLink.js';

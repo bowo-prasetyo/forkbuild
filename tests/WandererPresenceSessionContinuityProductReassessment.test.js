@@ -12,26 +12,26 @@ import { PeerReconnectionUseCase } from '../application/peer/PeerReconnectionUse
 import { AutoConnectKnownPeersUseCase } from '../application/peer/AutoConnectKnownPeersUseCase.js';
 import { resolveDirectSocialIdentity } from '../application/identity/SocialIdentityResolver.js';
 
-import { AvatarProfile } from '../core/AvatarProfile.js';
+import { AvatarProfile } from '../core/avatar/AvatarProfile.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { PresenceSyncService } from '../application/presence/PresenceSyncService.js';
 import { LocalPresenceStore } from '../application/presence/LocalPresenceStore.js';
 import { PresenceTrustBoundary } from '../application/presence/PresenceTrustBoundary.js';
 import { RemoteAvatarRegistry } from '../application/avatar/RemoteAvatarRegistry.js';
-import { toAvatarPresenceAdvertisement } from '../core/AvatarPresenceAdvertisement.js';
-import { PresenceLifecycleState } from '../core/PresenceLifecycleState.js';
+import { toAvatarPresenceAdvertisement } from '../core/avatar/AvatarPresenceAdvertisement.js';
+import { PresenceLifecycleState } from '../core/avatar/PresenceLifecycleState.js';
 import { PeerAvatarPresenceBroadcastProvider } from '../presence/PeerAvatarPresenceBroadcastProvider.js';
-import { PresenceVisibility } from '../core/PresenceVisibility.js';
+import { PresenceVisibility } from '../core/avatar/PresenceVisibility.js';
 import { PresenceVisibilityUseCase } from '../application/presence/PresenceVisibilityUseCase.js';
 
 import { WorldPresenceUseCase } from '../application/presence/WorldPresenceUseCase.js';
-import { WorldPresenceActivity } from '../core/WorldPresenceActivity.js';
+import { WorldPresenceActivity } from '../core/collaboration/WorldPresenceActivity.js';
 import { WorldSpatialPresenceUseCase } from '../application/presence/WorldSpatialPresenceUseCase.js';
-import { WorldSpatialActivity } from '../core/WorldSpatialActivity.js';
-import { isValidWorldSpatialPresenceAdvertisement } from '../core/WorldSpatialPresenceAdvertisement.js';
+import { WorldSpatialActivity } from '../core/collaboration/WorldSpatialActivity.js';
+import { isValidWorldSpatialPresenceAdvertisement } from '../core/collaboration/WorldSpatialPresenceAdvertisement.js';
 
-import { WorldPlacement } from '../core/WorldPlacement.js';
-import { Position } from '../core/Position.js';
+import { WorldPlacement } from '../core/publication/WorldPlacement.js';
+import { Position } from '../core/document/Position.js';
 import { ObserverLocalEncounterStore } from '../application/worldEncounter/ObserverLocalEncounterStore.js';
 import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
@@ -112,7 +112,7 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 //       enters World B never leaks into B's roster and never lingers in
 //       A's.
 //   G — Avatar/vehicle boundary: a real, cited architectural decision
-//       (core/AvatarVehicleMount.js) that a mount relationship is
+//       (core/vehicles/AvatarVehicleMount.js) that a mount relationship is
 //       deliberately NEVER folded into AvatarPresence — live-confirmed
 //       an avatar's presence identity never changes on mount/dismount.
 //   H — Spatial relationship: avatar-presence and World spatial presence
@@ -230,7 +230,7 @@ function spyRenderFacade() {
 
 // A minimal, real (never stand-in) local avatar body: a persistent
 // AvatarProfile plus an ephemeral AvatarPresenceSession, exactly the
-// split core/AvatarProfile.js's own header names.
+// split core/avatar/AvatarProfile.js's own header names.
 function makeAvatarBody(ownerIdentity, { position = { x: 0, y: 0, z: 0 } } = {}) {
     const profile = new AvatarProfile({ ownerIdentity, displayName: ownerIdentity });
     const session = new AvatarPresenceSession(profile, { position });
@@ -256,11 +256,11 @@ async function main() {
 
         // A2. Each answers a genuinely different question, by its own
         // header's own stated words — never three names for one idea.
-        assert(/WHERE is each present participant/.test(spatialSource) && /answers a purely\s*\n\/\/ COSMETIC, higher-frequency question/.test(await readSource('core/WorldSpatialActivity.js')),
+        assert(/WHERE is each present participant/.test(spatialSource) && /answers a purely\s*\n\/\/ COSMETIC, higher-frequency question/.test(await readSource('core/collaboration/WorldSpatialActivity.js')),
             'A2a. World Spatial Presence answers WHERE/what a participant appears to be doing — a cosmetic, high-frequency fact.');
         assert(/is this SOCIAL IDENTITY here at\s*\n\/\/ all, and what are they broadly doing/.test(worldSource),
             'A2b. World Presence answers a coarser, lower-frequency "is this identity here at all" fact.');
-        const avatarPresenceSource = await readSource('core/AvatarPresence.js');
+        const avatarPresenceSource = await readSource('core/avatar/AvatarPresence.js');
         assert(/answers "where is this user RIGHT NOW"/.test(avatarPresenceSource),
             'A2c. AvatarPresence answers "where is this user\'s BODY right now" — a third, independent question none of the World-scoped protocols ask at all.');
 
@@ -296,11 +296,11 @@ async function main() {
     {
         // B1. AvatarProfile (persistent, WHAT) vs. AvatarPresence
         // (ephemeral, WHERE) are two different classes by construction —
-        // core/AvatarProfile.js's own header states the full identity
+        // core/avatar/AvatarProfile.js's own header states the full identity
         // stack directly.
-        const profileSource = await readSource('core/AvatarProfile.js');
+        const profileSource = await readSource('core/avatar/AvatarProfile.js');
         assert(/Identity   -> Who is this\?/.test(profileSource) && /Presence   -> Where is the user/.test(profileSource),
-            'B1. core/AvatarProfile.js\'s own header enumerates Identity / Avatar Profile / Presence / Document / World Placement as five distinct concepts, none folded into another.');
+            'B1. core/avatar/AvatarProfile.js\'s own header enumerates Identity / Avatar Profile / Presence / Document / World Placement as five distinct concepts, none folded into another.');
 
         // B2. Live: a Wanderer's avatarId, a peer connection's
         // connectionId, and its resolved social identityId are three
@@ -373,19 +373,19 @@ async function main() {
         // C1. The coarse World-membership protocols have an EXPLICIT
         // leave, stated as a design rule in their own wire-shape headers
         // — never merely inferred from silence.
-        const worldPresenceAdSource = await readSource('core/WorldPresenceAdvertisement.js');
+        const worldPresenceAdSource = await readSource('core/collaboration/WorldPresenceAdvertisement.js');
         assert(/an explicit LEAVE, never merely\s*\n\/\/\s*inferred from silence/.test(worldPresenceAdSource),
-            'C1. core/WorldPresenceAdvertisement.js\'s own header states LEAVE is explicit, never inferred from silence.');
-        const spatialAdSource = await readSource('core/WorldSpatialPresenceAdvertisement.js');
+            'C1. core/collaboration/WorldPresenceAdvertisement.js\'s own header states LEAVE is explicit, never inferred from silence.');
+        const spatialAdSource = await readSource('core/collaboration/WorldSpatialPresenceAdvertisement.js');
         // (Confirmed independently, live, in C3 below via leaveWorld().)
 
         // C2. AvatarPresence (the fine-grained 3D body protocol) has NO
         // leave concept whatsoever — absence is a RECEIVER-SIDE judgment
         // derived purely from elapsed time, never a message a sender
         // transmits.
-        const lifecycleSource = await readSource('core/PresenceLifecycleState.js');
+        const lifecycleSource = await readSource('core/avatar/PresenceLifecycleState.js');
         assert(/Presence Lifecycle State Is A Derived\s*\n\/\/ Observation, Not A Stored Fact/.test(lifecycleSource),
-            'C2a. core/PresenceLifecycleState.js\'s own header: absence is a derived observation the RECEIVER computes, never a fact a sender declares.');
+            'C2a. core/avatar/PresenceLifecycleState.js\'s own header: absence is a derived observation the RECEIVER computes, never a fact a sender declares.');
         const sessionSource = await readSource('application/avatar/AvatarPresenceSession.js');
         assert(!/leave\(/.test(sessionSource) && !/\bdispose\(/.test(sessionSource),
             'C2b. application/avatar/AvatarPresenceSession.js itself exposes no leave()/dispose() at all — there is structurally nothing to call to announce departure.');
@@ -560,7 +560,7 @@ async function main() {
         // inside one throttle window is coalesced to at most one
         // broadcast, never one per call — confirmed by sequence: the
         // LOCAL sequence counter still advances on every logical call
-        // (core/AvatarPresence.js's own "sequence is the sender's own
+        // (core/avatar/AvatarPresence.js's own "sequence is the sender's own
         // monotonic clock" discipline, reused unmodified for spatial
         // presence per that file's own header), even though only the
         // latest is ever actually sent.
@@ -670,9 +670,9 @@ async function main() {
         const controllerSource = await readSource('application/avatar/AvatarVehicleInteractionController.js');
         assert(/growing AvatarPresence with a `mountedVehicleId` was explicitly\s*\n\/\/ rejected/.test(controllerSource),
             "G1. application/avatar/AvatarVehicleInteractionController.js's own header states, in these words, that folding mount state into AvatarPresenceSession/AvatarPresence 'was explicitly rejected' — this is a decision on record, not an omission this milestone is the first to notice.");
-        const mountSource = await readSource('core/AvatarVehicleMount.js');
+        const mountSource = await readSource('core/vehicles/AvatarVehicleMount.js');
         assert(/never `vehicleType`/.test(mountSource),
-            'G1b. core/AvatarVehicleMount.js itself carries only a `vehicleId` reference — never even a vehicle TYPE, let alone folding into the avatar\'s own identity/presence model.');
+            'G1b. core/vehicles/AvatarVehicleMount.js itself carries only a `vehicleId` reference — never even a vehicle TYPE, let alone folding into the avatar\'s own identity/presence model.');
 
         // G2. Live: AvatarPresence's own field set never gains a vehicle
         // reference regardless of what an application-layer caller does
@@ -686,17 +686,17 @@ async function main() {
         assert(after.avatarId === before.avatarId && after.avatarId === profile.avatarId,
             'G2a. Mounting/dismounting (simulated here as an update carrying an extraneous vehicle-shaped field) never changes the Wanderer\'s own avatarId — a vehicle never becomes the Wanderer\'s identity.');
         assert(!('mountedVehicleId' in after) && after.mountedVehicleId === undefined,
-            'G2b. ...and the extraneous field is simply not part of AvatarPresence\'s own shape at all — core/AvatarPresence.js\'s constructor has no such parameter to accept it into, structurally, not merely by omission in this one call.');
+            'G2b. ...and the extraneous field is simply not part of AvatarPresence\'s own shape at all — core/avatar/AvatarPresence.js\'s constructor has no such parameter to accept it into, structurally, not merely by omission in this one call.');
         const advertisement = toAvatarPresenceAdvertisement(after);
         assert(!('mountedVehicleId' in advertisement), 'G2c. The wire advertisement built from this presence likewise carries no vehicle reference — nothing downstream (another replica\'s RemoteAvatarRegistry) could ever learn a vehicle identity through this channel even if it wanted to.');
 
         // G3. Replacing what an avatar is mounted on is app-layer,
-        // session-local state (core/AvatarVehicleMount.js), never a new
+        // session-local state (core/vehicles/AvatarVehicleMount.js), never a new
         // participant identity — confirmed structurally: the descriptor
         // is a single-field value object with no id/avatarId of its own
         // to mint.
         assert(/exactly one field —\s*\n\/\/ `vehicleId`/.test(mountSource),
-            'G3. core/AvatarVehicleMount.js\'s own header: the descriptor carries exactly one field, never an identity of its own — mounting a different vehicle is a change of THAT one field, never the creation of a new participant.');
+            'G3. core/vehicles/AvatarVehicleMount.js\'s own header: the descriptor carries exactly one field, never an identity of its own — mounting a different vehicle is a change of THAT one field, never the creation of a new participant.');
 
         console.log('✓ Section G: folding vehicle-mount state into AvatarPresence was a real, deliberate, cited architectural decision this codebase explicitly rejected (G1); live, an avatar\'s own identity (avatarId) is completely unaffected by mounting, and AvatarPresence structurally has no field to carry a vehicle reference through even if a caller tried (G2); and the mount relationship itself is a single-field, no-identity-of-its-own value, never a second participant (G3).');
     }
@@ -707,11 +707,11 @@ async function main() {
     {
         // H1. Both protocols share the identical heading convention —
         // cited directly from World Spatial Presence's own wire-shape
-        // header, which names core/CompassHeading.js's own fixed
+        // header, which names core/world/CompassHeading.js's own fixed
         // convention explicitly rather than inventing a second one.
-        const spatialAdSource = await readSource('core/WorldSpatialPresenceAdvertisement.js');
-        assert(/using\s*\n\/\/ core\/CompassHeading\.js's own fixed convention \(0° faces \+Z, 90° faces\s*\n\/\/ \+X\)/.test(spatialAdSource),
-            'H1. World Spatial Presence\'s own header states it reuses core/CompassHeading.js\'s existing 0°=+Z/90°=+X convention — never a second, competing interpretation for remote presence.');
+        const spatialAdSource = await readSource('core/collaboration/WorldSpatialPresenceAdvertisement.js');
+        assert(/using\s*\n\/\/ core\/world\/CompassHeading\.js's own fixed convention \(0° faces \+Z, 90° faces\s*\n\/\/ \+X\)/.test(spatialAdSource),
+            'H1. World Spatial Presence\'s own header states it reuses core/world/CompassHeading.js\'s existing 0°=+Z/90°=+X convention — never a second, competing interpretation for remote presence.');
 
         // H2. Deliberately DIFFERENT position resolutions for two
         // different questions: AvatarPresence carries a full (x, y, z);
@@ -719,7 +719,7 @@ async function main() {
         // live-confirmed on the actual wire shapes.
         assert(/`position` is `\{ x, z \}` only — never `y`/.test(spatialAdSource),
             'H2a. World Spatial Presence\'s own header: position is (x, z) only, on purpose — terrain elevation is a rendering-time fact recomputed locally, never broadcast.');
-        const avatarPresenceSource = await readSource('core/AvatarPresence.js');
+        const avatarPresenceSource = await readSource('core/avatar/AvatarPresence.js');
         assert(/position = new Position\(\)/.test(avatarPresenceSource),
             'H2b. AvatarPresence, by contrast, carries a full 3D Position — the two protocols genuinely differ in spatial resolution because they answer different questions (a rendered body vs. a coarse camera marker), never by accident.');
         const { session } = makeAvatarBody('frank-h2', { position: { x: 1, y: 9, z: 3 } });
@@ -735,7 +735,7 @@ async function main() {
         // same participant, avoiding exactly the "another coordinate
         // interpretation" risk this section's own brief named.
         assert(/`heading` is a raw camera-orientation float in DEGREES/.test(spatialAdSource),
-            'H3. World Spatial Presence carries exactly one orientation fact (camera heading in degrees) — AvatarPresence\'s own separate `rotation` field (core/AvatarPresence.js) describes the rendered BODY\'s pose, a different, complementary fact about the same Wanderer, never a competing claim about the same one.');
+            'H3. World Spatial Presence carries exactly one orientation fact (camera heading in degrees) — AvatarPresence\'s own separate `rotation` field (core/avatar/AvatarPresence.js) describes the rendered BODY\'s pose, a different, complementary fact about the same Wanderer, never a competing claim about the same one.');
 
         console.log('✓ Section H: World Spatial Presence explicitly reuses the existing CompassHeading convention rather than inventing a second interpretation (H1); AvatarPresence and World Spatial Presence deliberately carry different position resolutions (full 3D vs. x/z-only) because they serve different questions, confirmed both by cited header text and live wire-shape validation (H2); and orientation stays one real fact per protocol, never duplicated into a competing coordinate system (H3).');
     }
@@ -810,7 +810,7 @@ async function main() {
 
         // J3. Stale and duplicate sequence numbers never regress or
         // duplicate an already-displayed spatial-presence entry — reuses
-        // core/PresenceIngestion.js's own monotonic rule, live.
+        // core/avatar/PresenceIngestion.js's own monotonic rule, live.
         const network = new LocalPeerNetwork();
         const bob = makeDevice('bob-j3');
         const aliceStack2 = makeStack(alice, { minIntervalMs: 5 });
@@ -936,7 +936,7 @@ async function main() {
         // place before a viewer ever sees them, never the raw constant
         // string leaking through.
         const { describeLifecycleState, describeTrustStatus } = await import('../application/avatar/AvatarPresenceLabels.js');
-        const { TrustStatus: LabelTrustStatus } = await import('../core/TrustObservation.js');
+        const { TrustStatus: LabelTrustStatus } = await import('../core/identity/TrustObservation.js');
         const { t } = await import('../ui/i18n/i18n.js');
         assert(t(describeLifecycleState(PresenceLifecycleState.PRESENT)) === 'Present' && t(describeLifecycleState(PresenceLifecycleState.STALE)) === 'Stale'
             && t(describeTrustStatus(LabelTrustStatus.VALID)) === 'Trusted',
@@ -948,9 +948,9 @@ async function main() {
         // identityId-free wire shape — identity is never something the
         // payload itself claims, so there is no raw claimed-identity
         // string a UI could accidentally surface unverified.
-        const spatialAdSource = await readSource('core/WorldSpatialPresenceAdvertisement.js');
+        const spatialAdSource = await readSource('core/collaboration/WorldSpatialPresenceAdvertisement.js');
         assert(/there is no\s*\n\/\/ `identityId` field below on purpose/.test(spatialAdSource),
-            'L3. core/WorldSpatialPresenceAdvertisement.js\'s own header: no identityId field exists on the wire payload at all — a UI can only ever show an identity this replica itself resolved and verified from the live connection, never an unverified claim.');
+            'L3. core/collaboration/WorldSpatialPresenceAdvertisement.js\'s own header: no identityId field exists on the wire payload at all — a UI can only ever show an identity this replica itself resolved and verified from the live connection, never an unverified claim.');
 
         console.log('✓ Section L: the one real presence UI surface keys off resolved identityId, never a raw connectionId/peerId (L1); PresenceLifecycleState/TrustStatus are translated into plain words in one place, degrading safely on an unrecognized value (L2); and the wire protocol itself carries no self-claimed identity field for a UI to accidentally trust (L3).');
     }

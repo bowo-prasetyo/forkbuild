@@ -37,7 +37,7 @@ import FollowButton from './FollowButton.js';
 //
 // 0.2.44 — three more buttons join Follow, also REMOTE-avatar-only:
 // Greet/Wave/Point, emitting a single 'interact' event carrying the
-// core/AvatarInteractionKind.js value. This panel has no opinion about
+// core/avatar/AvatarInteractionKind.js value. This panel has no opinion about
 // cooldowns or whether the click actually took effect — it just asks;
 // WorldNavigationSession.performAvatarInteraction() is the one place
 // that decides yes/no (see docs/Principles.md, "Observation

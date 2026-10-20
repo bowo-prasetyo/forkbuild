@@ -1,4 +1,4 @@
-import { ContentReference } from '../../../core/ContentReference.js';
+import { ContentReference } from '../../../core/document/ContentReference.js';
 import { StoreSnapshotContentOutcome } from './StoreSnapshotContentOutcome.js';
 
 // 0.8.36 — Unified Explicit Snapshot Materialization Sources.
@@ -25,7 +25,7 @@ import { StoreSnapshotContentOutcome } from './StoreSnapshotContentOutcome.js';
 //   contentHash + bytes
 //        │
 //        ▼
-//   verify hash                (core/ContentReference.js#verify() —
+//   verify hash                (core/document/ContentReference.js#verify() —
 //        │                      UNCHANGED, the identical check both
 //        │                      callers already performed themselves)
 //   ┌────┴──────────────┐
@@ -97,7 +97,7 @@ export class StoreSnapshotContentUseCase {
     //   outcome           — one of application/
     //                        StoreSnapshotContentOutcome.js's own three
     //                        values
-    //   contentReference  — the core/ContentReference.js this replica now
+    //   contentReference  — the core/document/ContentReference.js this replica now
     //                        holds bytes under (STORED/ALREADY_AVAILABLE),
     //                        or null (HASH_MISMATCH — nothing stored)
     async execute({ contentHash, bytes } = {}) {

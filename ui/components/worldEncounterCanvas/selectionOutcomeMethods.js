@@ -154,7 +154,7 @@ export const selectionOutcomeMethods = {
         }
         return origin;
     },
-    // Friendly label for a lead's core/ContentReference.js uri ('ipfs://' + CID or
+    // Friendly label for a lead's core/document/ContentReference.js uri ('ipfs://' + CID or
     // 'ar://' + transactionId): STORAGE_TYPE_LABELS for the scheme plus the
     // truncated identifier. Unrecognized shapes render verbatim.
     describeDecentralizedLeadUriLabel(uri) {

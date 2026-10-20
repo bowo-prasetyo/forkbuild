@@ -1,14 +1,14 @@
 import * as THREE from 'three';
 import {
     ARCH_OPENINGS, archOpening, archOpeningHeightAt, brickCollisionBoxes, isPassableDoor, localCollisionBoxes, passageFloorAt
-} from '../core/BrickPassage.js';
-import { DOOR_OPEN_ANGLE, DOOR_OPEN_RADIUS, doorSwingOffset, doorSwingTarget, stepDoorSwing } from '../core/DoorSwing.js';
-import { AVATAR_COLLISION_HEIGHT, AVATAR_COLLISION_RADIUS, aabbsOverlap, avatarAabbAt, brickAabb } from '../core/AvatarCollision.js';
-import { DEFAULT_MAX_STEP_HEIGHT } from '../core/BrickWalkability.js';
+} from '../core/building/BrickPassage.js';
+import { DOOR_OPEN_ANGLE, DOOR_OPEN_RADIUS, doorSwingOffset, doorSwingTarget, stepDoorSwing } from '../core/building/DoorSwing.js';
+import { AVATAR_COLLISION_HEIGHT, AVATAR_COLLISION_RADIUS, aabbsOverlap, avatarAabbAt, brickAabb } from '../core/avatar/AvatarCollision.js';
+import { DEFAULT_MAX_STEP_HEIGHT } from '../core/building/BrickWalkability.js';
 import { AvatarStepConstraint } from '../application/avatar/AvatarStepConstraint.js';
 import { AvatarMovementConstraint } from '../application/avatar/AvatarMovementConstraint.js';
 import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
@@ -21,18 +21,18 @@ import { ShowcaseLibrary } from '../core/library/ShowcaseLibrary.js';
 import { BrickInstanceRegistry } from '../renderer/BrickInstanceRegistry.js';
 import { ThreeBrickFactory } from '../renderer/ThreeBrickFactory.js';
 import { WorldRenderer } from '../renderer/WorldRenderer.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { StructurePlacement } from '../core/StructurePlacement.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { StructurePlacement } from '../core/building/StructurePlacement.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
 // Walking inside what you build: doors don't collide and swing open in World
 // View, and an arch collides as the jambs and lintel it is drawn with, so an
-// avatar can walk into the ready-made buildings (core/BrickPassage.js,
-// core/DoorSwing.js; docs/reviews/CreativeDirection-2026-10-11.md, finding 1).
+// avatar can walk into the ready-made buildings (core/building/BrickPassage.js,
+// core/building/DoorSwing.js; docs/reviews/CreativeDirection-2026-10-11.md, finding 1).
 
 const brickRegistry = new CreateBrickRegistryUseCase().execute();
 const definition = (id) => brickRegistry.get(id);

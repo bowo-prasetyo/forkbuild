@@ -1,12 +1,12 @@
-import { Structure } from '../../core/Structure.js';
-import { BlueprintAttribution } from '../../core/BlueprintAttribution.js';
-import { BlueprintLineageClaim } from '../../core/BlueprintLineageClaim.js';
-import { PublicationAnchor } from '../../core/PublicationAnchor.js';
-import { PublicationSnapshotPlacement } from '../../core/PublicationSnapshotPlacement.js';
+import { Structure } from '../../core/building/Structure.js';
+import { BlueprintAttribution } from '../../core/building/BlueprintAttribution.js';
+import { BlueprintLineageClaim } from '../../core/building/BlueprintLineageClaim.js';
+import { PublicationAnchor } from '../../core/publication/PublicationAnchor.js';
+import { PublicationSnapshotPlacement } from '../../core/publication/PublicationSnapshotPlacement.js';
 
 // 0.4.6 — Blueprint Sharing & Exchange.
 //
-// The portable package format for moving a core/Structure.js between
+// The portable package format for moving a core/building/Structure.js between
 // installations/devices — the exact same shape identity/IdentityExport.js
 // already established one domain over for a LocalIdentity (0.2.48):
 // a small, versioned, JSON-safe envelope around the one thing that needs
@@ -78,12 +78,12 @@ export const BLUEPRINT_KIND = 'forkbuild.blueprint';
 // omit-when-empty shape as `attributions` above, for signed
 // BlueprintLineageClaim instances instead. A Blueprint Package,
 // bundled attributions, and bundled lineage claims stay THREE
-// independent portable things — see core/BlueprintLineageClaim.js's own
+// independent portable things — see core/building/BlueprintLineageClaim.js's own
 // header — this field is only ever the convenience of moving all of
 // them in one file at once, never a merger into one domain concept.
 //
 // `anchors` (0.8.7): the identical additive, optional, omit-when-empty
-// shape once more, for signed core/PublicationAnchor.js instances. Named
+// shape once more, for signed core/publication/PublicationAnchor.js instances. Named
 // "External Evidence Import & Publication Package Integration" — before
 // adding this field, this milestone's own design conversation inspected
 // whether a separate PublicationPackage container should exist instead
@@ -102,13 +102,13 @@ export const BLUEPRINT_KIND = 'forkbuild.blueprint';
 // living).
 //
 // `placements` (0.8.22): the identical additive, optional, omit-when-
-// empty shape once more, for signed core/PublicationSnapshotPlacement.js
+// empty shape once more, for signed core/publication/PublicationSnapshotPlacement.js
 // instances. Named "Snapshot Placement Package Integration" — the
 // missing transport path 0.8.7 already opened for anchors, drawn one
 // evidence layer over for locators: `anchors` bundles signed claims
 // about a publication's EXTERNAL EVIDENCE, `placements` bundles signed
 // claims about a publication's RETRIEVABILITY. The two stay orthogonal —
-// see core/PublicationSnapshotPlacement.js's own header, "PLACEMENT IS
+// see core/publication/PublicationSnapshotPlacement.js's own header, "PLACEMENT IS
 // NOT ANCHORING" — and this field merges neither into the other, nor
 // into the Structure itself. Each entry is exactly `placement.toJSON()`
 // — never a resolution outcome, an availability state, or any other

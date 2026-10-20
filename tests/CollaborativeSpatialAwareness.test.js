@@ -1,8 +1,8 @@
-import { World } from '../core/World.js';
-import { Position } from '../core/Position.js';
-import { StructurePlacement } from '../core/StructurePlacement.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Position } from '../core/document/Position.js';
+import { StructurePlacement } from '../core/building/StructurePlacement.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
@@ -22,10 +22,10 @@ import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
 import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
 import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
 import { WorldSpatialPresenceUseCase } from '../application/presence/WorldSpatialPresenceUseCase.js';
-import { WorldSpatialSelection } from '../core/WorldSpatialSelection.js';
-import { WorldSpatialActivity } from '../core/WorldSpatialActivity.js';
+import { WorldSpatialSelection } from '../core/collaboration/WorldSpatialSelection.js';
+import { WorldSpatialActivity } from '../core/collaboration/WorldSpatialActivity.js';
 import { SpatialSelectionState } from '../application/spatial-state/SpatialSelectionState.js';
-import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
 import {
     WorldSpatialAnchor,
     WorldSpatialProximityTier,
@@ -37,7 +37,7 @@ import {
     abbreviateIdentityLabel,
     describeSpatialActivity,
     deriveWorldSpatialAnchor
-} from '../core/WorldSpatialAnchor.js';
+} from '../core/collaboration/WorldSpatialAnchor.js';
 import { buildSpatialCollaboratorRows } from '../ui/components/WorldCollaboratorIndicator.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
@@ -50,7 +50,7 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 // fact: a presentation-only reading of what that observation MEANS from
 // the viewer's own vantage point.
 //
-//   Section A: core/WorldSpatialAnchor.js — every pure derivation in
+//   Section A: core/collaboration/WorldSpatialAnchor.js — every pure derivation in
 //              isolation: distance, proximity tier, the view-cone
 //              visibility heuristic, presentation mode, label
 //              abbreviation, and contextual activity phrasing.
@@ -156,7 +156,7 @@ function capturingWorldRenderSession() {
 async function runTests() {
 
 // ---------------------------------------------------------------------
-// Section A — core/WorldSpatialAnchor.js, every pure derivation in isolation
+// Section A — core/collaboration/WorldSpatialAnchor.js, every pure derivation in isolation
 // ---------------------------------------------------------------------
 {
     assert(distanceXZ({ x: 0, z: 0 }, { x: 3, z: 4 }) === 5, '1. distanceXZ is plain 2D Euclidean distance, ignoring Y entirely');
@@ -208,7 +208,7 @@ async function runTests() {
     assert(anchor.isHidden === false, '34. isHidden reflects presentationMode directly');
     assert(!(anchor.selection instanceof SpatialSelectionState), '35. an anchor\'s carried selection is never a SpatialSelectionState — the 0.3.0 type separation holds one layer higher');
 
-    console.log('✓ Section A: core/WorldSpatialAnchor.js — distance, proximity tier, view-cone visibility, presentation mode, abbreviation, and contextual activity phrasing, all pure and in isolation');
+    console.log('✓ Section A: core/collaboration/WorldSpatialAnchor.js — distance, proximity tier, view-cone visibility, presentation mode, abbreviation, and contextual activity phrasing, all pure and in isolation');
 }
 
 // ---------------------------------------------------------------------

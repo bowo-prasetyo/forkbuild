@@ -1,5 +1,5 @@
 import { DecentralizedSnapshotResolutionOutcome } from './DecentralizedSnapshotResolutionOutcome.js';
-import { message } from '../../core/Message.js';
+import { message } from '../../core/app/Message.js';
 
 // 0.9.528 — Snapshot Encounter & Placement Product Experience
 // Reassessment, Section C/I.

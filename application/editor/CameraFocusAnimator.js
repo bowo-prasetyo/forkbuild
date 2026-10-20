@@ -6,7 +6,7 @@ import { lerp } from '../../utils/interpolation.js';
 // framing ({ position: {x,y,z}, target: {x,y,z} }) and a duration, what
 // framing should the camera show at some elapsed time? No Three.js, no
 // wall-clock reads, no session state — this is the SAME "pure function
-// of its inputs" posture core/TerrainHeightField.js established for
+// of its inputs" posture core/nature/TerrainHeightField.js established for
 // terrain: `stateAt(0)` always equals `from`, `stateAt(durationMs)` (or
 // later) always equals `to`, and the same (from, to, durationMs,
 // elapsed) always produces the same intermediate framing, on any

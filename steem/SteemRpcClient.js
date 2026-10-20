@@ -1,4 +1,4 @@
-import { DEFAULT_STEEM_API_NODES } from '../core/SteemReadingConfiguration.js';
+import { DEFAULT_STEEM_API_NODES } from '../core/networks/SteemReadingConfiguration.js';
 
 // A minimal Steem JSON-RPC client: the few condenser_api calls ForkBuild
 // needs, tried against each configured API node in turn.

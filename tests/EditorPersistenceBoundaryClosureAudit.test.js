@@ -2,13 +2,13 @@ import { storedBricks, corruptFirstBrickPosition } from './support/StoredDocumen
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-import { World } from '../core/World.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { License, LicenseId } from '../core/License.js';
+import { World } from '../core/document/World.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { License, LicenseId } from '../core/document/License.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalRecoveryStore } from '../persistence/LocalRecoveryStore.js';

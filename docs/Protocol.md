@@ -13,11 +13,11 @@ are because code comments cite them by title.
 
 ## Versions and identifiers
 
-- `PROTOCOL_VERSION` (core/protocolVersion.js) is `'0.1'`. It is
+- `PROTOCOL_VERSION` (core/app/protocolVersion.js) is `'0.1'`. It is
   versioned independently of the application and stamped into
   DocumentMetadata as `protocolVersion`; a document must match it
   exactly.
-- `DOCUMENT_SCHEMA_VERSION` (core/documentSchema.js) is `2`. It versions
+- `DOCUMENT_SCHEMA_VERSION` (core/document/documentSchema.js) is `2`. It versions
   the JSON envelope only, and serializer/DocumentSchemaMigrator.js
   migrates older envelopes forward before anything reads them. Documents
   written before 0.2.0 have no `schemaVersion` and are treated as 0;
@@ -27,7 +27,7 @@ are because code comments cite them by title.
 - Most other formats carry their own `formatVersion` or `schemaVersion`
   (currently 1) and a `kind` string where several formats share a carrier.
 - Instance ids (World, Building, Group, Publication, …) are UUIDs from
-  core/createId.js, opaque and never reused. Brick ids created since
+  core/document/createId.js, opaque and never reused. Brick ids created since
   schema 2 are 12 random characters from `[0-9A-Za-z]`
   (`createBrickId()`); older bricks keep their UUIDs, and nothing may
   assume either shape. Definition ids
@@ -109,7 +109,7 @@ deserializing and serializing again gives byte-identical JSON):
   it isn't `'anyone'`, so documents that never set it hash as before.
 - The content hash of a document is serializer/contentHash.js over the
   canonical JSON: SHA-256 of its UTF-8 bytes, as 64 lowercase hex
-  characters (`sha256`). `core/ContentReference.js` records the algorithm.
+  characters (`sha256`). `core/document/ContentReference.js` records the algorithm.
   A signed record commits to its content through this hash, so a reader
   accepts bytes from anywhere else only when they match a SHA-256 hash.
 - Content published before 2026-09-28 carries a 32-bit FNV-1a hash
@@ -129,7 +129,7 @@ deserializing and serializing again gives byte-identical JSON):
 ### Brick table (schema 2)
 
 A building's bricks are stored as one table rather than one object each
-(core/BrickTable.js):
+(core/building/BrickTable.js):
 
     BrickTable: {
       definitions: [ definitionId ],   // each definitionId used, in first-use order
@@ -162,7 +162,7 @@ A brick's orientation is its `rotation`, degrees about the vertical, and its
 `tilt`, a quarter turn about its own width axis that lays it on another
 side: 0 (upright), 90 (its top toward its front, +Z), 180 (upside down) or
 270. The tilt is applied first, so the orientation is Ry(rotation) ·
-Rx(tilt), a Three.js Euler of order `YXZ` (core/BrickOrientation.js). A tilt
+Rx(tilt), a Three.js Euler of order `YXZ` (core/building/BrickOrientation.js). A tilt
 of 90 or 270 swaps the brick's height and depth for its bounds, collision
 and stacking, and a tilted brick is walked on as the flat top of that box.
 
@@ -217,7 +217,7 @@ without the field reads as having none. `DocumentValidator` rejects a `residents
 entry without string `id`, `worldId` and `authorIdentityId` or without a finite `position.x` and `position.z`.
 
 Nothing else about a resident is stored or sent. Where it is at a moment is computed by every replica from its id,
-its home, the time and the loaded Worlds' geometry (`core/ResidentMotion.js`), and it never appears in avatar
+its home, the time and the loaded Worlds' geometry (`core/world/ResidentMotion.js`), and it never appears in avatar
 presence or any other message.
 
 ### Editor Document Export File (0.9.641–0.9.642)
@@ -233,7 +233,7 @@ remapped group membership. A file's own `world.id` is never reused as a storage 
 rejected. `protocolVersion` must still match exactly; there is no migration path for it yet. Copies of ForkBuild
 from before seals ignore `seal`.
 
-**Seal** (core/DocumentSeal.js, identity/DocumentSealing.js): the maker's signed statement that they made exactly
+**Seal** (core/document/DocumentSeal.js, identity/DocumentSealing.js): the maker's signed statement that they made exactly
 this build, with these terms.
 
     { kind: 'forkbuild.document-seal', schemaVersion: 1, documentId, authorIdentityId, contentHash, sealedAt, signature }
@@ -291,7 +291,7 @@ A Publication (publisher/Publication.js) is pure data about one publish:
 
     contentReference: { hash, algorithm, mediaType, size, uri, storage }
 
-`placementPolicy` (core/PlacementPolicy.js) is who may place the
+`placementPolicy` (core/publication/PlacementPolicy.js) is who may place the
 Publication in shared space: absent means `'anyone'`, and
 `'publisher-only'` means only the identity in `publisherIdentity` (or, for
 an unsigned legacy Publication, the same `author` name). It is copied from
@@ -357,7 +357,7 @@ grid position. When the Publication has been distributed, Share offers the
 network link instead, as the shorter one.
 
 The same payload embeds the build in another site's page, as an `<iframe>`
-of the app's embed page (ui/embed/, core/ForkBuildAppLinks.js `embedCode()`):
+of the app's embed page (ui/embed/, core/app/ForkBuildAppLinks.js `embedCode()`):
 
     <iframe src="https://bowo-prasetyo.github.io/forkbuild/embed.html#<payload>"
             width="640" height="480" title="<title> on ForkBuild"
@@ -381,7 +381,7 @@ is 501. The `/b/` page of such a build names it with
 ### Build notes
 
 A build note sends a Publication and its snapshot to everyone over Nostr,
-with no wallet or extension (core/BuildNote.js,
+with no wallet or extension (core/publication/BuildNote.js,
 application/buildNotes/). It is a NIP-78 event carrying a link-only
 payload (above):
 
@@ -410,7 +410,7 @@ is logged under a week's tag only when the snapshot itself carries that tag.
 ### Short links
 
 A build sent to everyone as a build note can be shared by a link that names
-its note instead of carrying it (core/ForkBuildAppLinks.js, noteLinkUrl()):
+its note instead of carrying it (core/app/ForkBuildAppLinks.js, noteLinkUrl()):
 
     https://forkbuild-rendezvous.prazjp.workers.dev/n/<publicationId>
     https://forkbuild-rendezvous.prazjp.workers.dev/n/<publicationId>/preview.png
@@ -441,12 +441,12 @@ and keeps its link-only share.
 ## Signatures
 
 Every signed object is signed over a canonical envelope built in fixed
-property order (core/Signature.js):
+property order (core/publication/Signature.js):
 
     { domain: 'forkbuild', type, id, revision, payload }
 
 `type` separates object kinds, so a signature over one kind can never be
-replayed as another. core/Signature.js's `SignatureType` lists the first
+replayed as another. core/publication/Signature.js's `SignatureType` lists the first
 types (`publication`, `placement-record`, `spatial-index-root`,
 `avatar-presence`, `avatar-profile`, `avatar-interaction`,
 `avatar-vehicle`, `peer-authentication`); each later envelope defines its own type in its
@@ -464,7 +464,7 @@ identity pairs one did:key with another key is refused.
 ## Placement records
 
 A published world's position in shared space is a PlacementRecord
-(core/PlacementRecord.js):
+(core/publication/PlacementRecord.js):
 
     { placementId, publicationId, owner, ownerIdentity,
       authorizedBy: { identity, delegationId },
@@ -495,12 +495,12 @@ the protocol: a reader only adopts the signed record. ForkBuild's own choice
 application/placement/StandingPlacementStrategy.js) is a Build here plot
 when there is one; else the position an earlier Publication of the same
 world already has; else the id-keyed grid
-(core/DeterministicGridPlacement.js), remix or not. From 2026-10-12 to
+(core/world/DeterministicGridPlacement.js), remix or not. From 2026-10-12 to
 2026-10-17 a remix was placed on a ring round the world it remixes and
-anything else in rings round the challenge plaza (core/BuildSettlement.js);
+anything else in rings round the challenge plaza (core/challenge/BuildSettlement.js);
 those placements stand as they were signed. The rings round the plaza now
 only lay out a week's entries while its plaza is visited, as exhibits that
-are never placements (core/PlazaEntrySpots.js).
+are never placements (core/challenge/PlazaEntrySpots.js).
 
 ## Rendezvous
 
@@ -523,7 +523,7 @@ only identities that joined it.
 | `REMOVE` | `identityId`, `publicationId`, `signature` | whether one was withdrawn |
 | `POST_ANSWER` | `identityId`, `publicationId`, `answer` (a PeerConnectionAnswer's JSON), `answererId`, `signature` | `true`; refused if the publication is not current or already answered |
 | `FETCH_ANSWER` | `identityId`, `publicationId`, `signature`, optional `watch: true` | `{ answer, answererId }`, or `null` while none has arrived; with `watch`, always `{ answer, answererId, watching }` (`answer` null while none has arrived) |
-| `JOIN_LOBBY` | `card`: a signed core/LobbyCard.js | the stored card |
+| `JOIN_LOBBY` | `card`: a signed core/social/LobbyCard.js | the stored card |
 | `LEAVE_LOBBY` | `identityId`, `lobby`, `cardId`, `signature` | whether one was withdrawn |
 | `LIST_LOBBY` | `lobby` | `{ cards, total }`: at most 50 current cards, a random sample, and how many there are |
 
@@ -531,7 +531,7 @@ Signatures use the canonical envelope (see "Signatures"), with these types:
 
 | Type | Signed by | `id` | `revision` | `payload` |
 | --- | --- | --- | --- | --- |
-| `rendezvous-publication` | the publishing identity | its did:key | `publicationId` | the publication (core/RendezvousPublicationEnvelope.js) |
+| `rendezvous-publication` | the publishing identity | its did:key | `publicationId` | the publication (core/social/RendezvousPublicationEnvelope.js) |
 | `rendezvous-removal` | the publishing identity | its did:key | `publicationId` | `{ publicationId, identityHint }` |
 | `rendezvous-answer` | the answering identity | its did:key | `publicationId` | `{ publicationId, identityHint, answer }`; `identityHint` is the publisher |
 | `rendezvous-answer-fetch` | the publishing identity | its did:key | `publicationId` | `{ publicationId, identityHint }` |
@@ -541,7 +541,7 @@ Signatures use the canonical envelope (see "Signatures"), with these types:
 A lobby is `public` or `world:<documentId>` (`documentId` of 1 to 128
 characters from `A-Z a-z 0-9 . _ -`). A display name is at most 40
 characters, whitespace collapsed and trimmed, with no control characters
-(core/LobbyCard.js#normalizeDisplayName). A card carries no offer or
+(core/social/LobbyCard.js#normalizeDisplayName). A card carries no offer or
 address. Publications and cards last at most 15 minutes; an older one
 cannot replace a newer one for the same identity (and lobby), and a
 withdrawn one cannot be sent again. Receivers verify every listed card by
@@ -570,7 +570,7 @@ itself.
 ## Peer messages
 
 Peers talk over one authenticated WebRTC data channel per connection.
-Authentication (`forkbuild-peer-auth/1`, core/PeerAuthenticationEnvelope.js)
+Authentication (`forkbuild-peer-auth/1`, core/social/PeerAuthenticationEnvelope.js)
 is a HELLO `{ type, sessionNonce, identityId, publicKey, challenge }`
 from each side, then a PROOF that adds a signature over the other side's
 challenge. The proof is bound to that one connection.
@@ -585,29 +585,29 @@ reads `payload`.
 
 | Protocol id | Payload defined in | Purpose |
 |-------------|--------------------|---------|
-| `forkbuild:avatar-presence` | core/AvatarPresenceAdvertisement.js | where an avatar is |
-| `forkbuild:avatar-profile` | core/AvatarProfileAdvertisement.js | what an avatar looks like |
-| `forkbuild:avatar-interaction` | core/AvatarInteractionAdvertisement.js | gestures |
-| `forkbuild:avatar-vehicle` | core/AvatarVehicleAdvertisement.js | what an avatar rides |
+| `forkbuild:avatar-presence` | core/avatar/AvatarPresenceAdvertisement.js | where an avatar is |
+| `forkbuild:avatar-profile` | core/avatar/AvatarProfileAdvertisement.js | what an avatar looks like |
+| `forkbuild:avatar-interaction` | core/avatar/AvatarInteractionAdvertisement.js | gestures |
+| `forkbuild:avatar-vehicle` | core/vehicles/AvatarVehicleAdvertisement.js | what an avatar rides |
 | `forkbuild:avatar-inventory-transfer` | application/avatar/AvatarInventoryTransferPeerProtocol.js | see "Avatar Inventory Transfer (0.9.702)" |
-| `forkbuild:identity-lifecycle` | core/IdentityLifecycleGossip.js | succession and revocation records |
-| `forkbuild:device-authorization` | core/DeviceAuthorizationGossip.js | device grants and revocations |
-| `forkbuild:friendship` | core/FriendshipAdvertisement.js | friend requests and answers |
-| `forkbuild:chat` | core/ChatMessage.js | chat messages |
-| `forkbuild:chat-delivery-ack` | core/ChatDeliveryAck.js | delivery acknowledgements |
-| `forkbuild:chat-read` | core/ChatReadReceipt.js | read receipts |
-| `forkbuild:device-conversation-sync` | core/ConversationSyncEnvelope.js | history and read state between one identity's devices |
-| `forkbuild:voice-call` | core/VoiceCallSignal.js | call signalling |
+| `forkbuild:identity-lifecycle` | core/identity/IdentityLifecycleGossip.js | succession and revocation records |
+| `forkbuild:device-authorization` | core/identity/DeviceAuthorizationGossip.js | device grants and revocations |
+| `forkbuild:friendship` | core/social/FriendshipAdvertisement.js | friend requests and answers |
+| `forkbuild:chat` | core/social/ChatMessage.js | chat messages |
+| `forkbuild:chat-delivery-ack` | core/social/ChatDeliveryAck.js | delivery acknowledgements |
+| `forkbuild:chat-read` | core/social/ChatReadReceipt.js | read receipts |
+| `forkbuild:device-conversation-sync` | core/social/ConversationSyncEnvelope.js | history and read state between one identity's devices |
+| `forkbuild:voice-call` | core/social/VoiceCallSignal.js | call signalling |
 | `forkbuild:voice-media` | application/chat/VoiceUseCase.js | in-band renegotiation for audio |
-| `forkbuild:world-sync` | core/WorldOperationEnvelope.js | World commands |
-| `forkbuild:world-membership` | core/WorldEditAuthorizationEnvelope.js | World edit grants |
-| `forkbuild:world-presence` | core/WorldPresenceAdvertisement.js | who is in a World |
-| `forkbuild:world-spatial-presence` | core/WorldSpatialPresenceAdvertisement.js | where they are looking |
+| `forkbuild:world-sync` | core/collaboration/WorldOperationEnvelope.js | World commands |
+| `forkbuild:world-membership` | core/collaboration/WorldEditAuthorizationEnvelope.js | World edit grants |
+| `forkbuild:world-presence` | core/collaboration/WorldPresenceAdvertisement.js | who is in a World |
+| `forkbuild:world-spatial-presence` | core/collaboration/WorldSpatialPresenceAdvertisement.js | where they are looking |
 | `forkbuild:world-discovery` | application/discovery/WorldDiscoveryRuntimeBootstrap.js | World Encounter discovery |
 | `forkbuild:document-sync` | application/document/DocumentCommandPropagationUseCase.js | Editor document commands |
 | `forkbuild:build-together-sync` | application/buildTogether/BuildTogetherSession.js | see "Build links" |
 | `forkbuild:helped-builds` | application/buildTogether/HelpedBuildsSyncUseCase.js | see "Build links" |
-| `forkbuild:document-operation-recovery` | core/DocumentOperationRecoveryProtocol.js | fetching missed Editor operations |
+| `forkbuild:document-operation-recovery` | core/collaboration/DocumentOperationRecoveryProtocol.js | fetching missed Editor operations |
 | `forkbuild:publication` | application/publication/PublicationPeerExchange.js | Publications |
 | `forkbuild:content` | application/peer/PeerContentProtocol.js | content bytes by hash |
 | `forkbuild:anchor` | application/anchoring/PublicationAnchorPeerProtocol.js | anchor claims (a RESPONSE holds at most 64 anchors, and only as many as fit one message) |
@@ -615,12 +615,12 @@ reads `payload`.
 | `forkbuild:snapshot-possession` | application/snapshot/possession/PublicationSnapshotPossessionPeerExchange.js | see "Snapshot possession exchange" |
 | `forkbuild:snapshot-content-transfer` | application/snapshot/materialization/PublicationSnapshotContentPeerExchange.js | Snapshot bytes |
 | `forkbuild:world-encounter-material` | application/worldEncounter/PeerWorldEncounterMaterialSource.js | encounter content |
-| `forkbuild:commentary-distribution` | core/PublicationCommentaryDistributionEnvelope.js | see "Publication Commentary Distribution" |
+| `forkbuild:commentary-distribution` | core/publication/PublicationCommentaryDistributionEnvelope.js | see "Publication Commentary Distribution" |
 | `forkbuild:announcement-index` | application/announcementIndex/AnnouncementIndexPeerProtocol.js | see "Announcement Index exchange" |
 
 ### Walk links
 
-A "Walk here with me" link (core/WalkTogetherCode.js) names a one-off
+A "Walk here with me" link (core/social/WalkTogetherCode.js) names a one-off
 meeting, not a person:
 
     https://bowo-prasetyo.github.io/forkbuild/#/walk/<code>
@@ -681,7 +681,7 @@ operation) until Stop; it relays each guest's operations to the other
 guests under its own identity. Presence is ephemeral and never stored.
 
 Each guest whose operation the host accepts is credited on the build
-(DocumentMetadata `builtWith`, core/BuiltWith.js): `[{ name, identityId }]`,
+(DocumentMetadata `builtWith`, core/catalog/BuiltWith.js): `[{ name, identityId }]`,
 at most 12, never the author. Publishing copies it onto the Publication,
 where it is part of the signed payload only when present (as
 `placementPolicy` is), so every older Publication's signature holds:
@@ -968,19 +968,19 @@ the third substrate, groups them by discovery thread instead; see below):
 
 | Family | Tag | Envelope |
 |--------|-----|----------|
-| Publications | `forkbuild-publication`, plus `forkbuild-publication:<publicationId>` and `forkbuild-tag:<tag>` for each of its build's tags, for a Publication (not an avatar) | `{ protocol: 'forkbuild', version: 1, kind, objectId, uri }` (core/DecentralizedDiscoveryEnvelope.js) |
-| Snapshots | `forkbuild-snapshot`, plus `forkbuild-snapshot:cell:<cx>:<cz>` when there is a `claimedPosition` | `{ protocol: 'forkbuild-snapshot-discovery', version: 1, publicationId, contentHash, storage, locator, claimedPosition, placementRecord }` (core/SnapshotDiscoveryEnvelope.js; `placementRecord` optional, see below) |
-| Place naming | per region, from `derivePlaceNamingDiscoveryTag(worldId, regionId)` | `{ protocol: 'forkbuild-place-naming-discovery', version: 1, worldId, regionId, claim }` (core/PlaceNamingDiscoveryEnvelope.js) |
+| Publications | `forkbuild-publication`, plus `forkbuild-publication:<publicationId>` and `forkbuild-tag:<tag>` for each of its build's tags, for a Publication (not an avatar) | `{ protocol: 'forkbuild', version: 1, kind, objectId, uri }` (core/publication/DecentralizedDiscoveryEnvelope.js) |
+| Snapshots | `forkbuild-snapshot`, plus `forkbuild-snapshot:cell:<cx>:<cz>` when there is a `claimedPosition` | `{ protocol: 'forkbuild-snapshot-discovery', version: 1, publicationId, contentHash, storage, locator, claimedPosition, placementRecord }` (core/publication/SnapshotDiscoveryEnvelope.js; `placementRecord` optional, see below) |
+| Place naming | per region, from `derivePlaceNamingDiscoveryTag(worldId, regionId)` | `{ protocol: 'forkbuild-place-naming-discovery', version: 1, worldId, regionId, claim }` (core/world/PlaceNamingDiscoveryEnvelope.js) |
 | Commentary | `forkbuild-commentary`, plus `forkbuild-commentary:<publicationId>` | see "Publication Commentary Distribution" |
 
-The second tags are narrow tags (core/NarrowDiscoveryTags.js). They are
+The second tags are narrow tags (core/publication/NarrowDiscoveryTags.js). They are
 carried on the same Nostr event (a second `t` tag) or Arweave transaction
 (a second transaction tag), never as a second announcement.
 
 - **Build tags.** `forkbuild-tag:<tag>` names one of the build's own tags
-  (core/BuildTags.js: lowercase letters, digits and inner hyphens), at most
+  (core/document/BuildTags.js: lowercase letters, digits and inner hyphens), at most
   five, as the snapshot published on the announcing device has them. A
-  week's build challenge (core/BuildChallenge.js) is the tag
+  week's build challenge (core/challenge/BuildChallenge.js) is the tag
   `<theme>-<yyyymmdd>`, its Monday in UTC, so every copy of the app names
   the same week the same way. The tag is the announcer's claim: a reader
   still fetches and verifies the signed record, and nothing checks that the
@@ -1031,14 +1031,14 @@ The Steem substrate groups by discovery thread instead of by tag; see
 
 ## Publication Commentary Distribution
 
-`core/PublicationCommentary.js` stays unsigned. Distribution wraps it in a signed envelope
-(`core/PublicationCommentaryDistributionEnvelope.js`):
+`core/publication/PublicationCommentary.js` stays unsigned. Distribution wraps it in a signed envelope
+(`core/publication/PublicationCommentaryDistributionEnvelope.js`):
 
     {
       kind: 'forkbuild.publication-commentary-distribution',
       schemaVersion: 1,
       commentaryId, publicationId, authorIdentityId, content, createdAt,
-      signature                // core/Signature.js JSON
+      signature                // core/publication/Signature.js JSON
     }
 
 The signature has type `publication-commentary-distribution` and covers `{ commentaryId, publicationId,
@@ -1069,11 +1069,11 @@ unreachable" all surface as `ContentUnavailableError`, and are never reported as
 
 ## Publication Hearts
 
-A heart is one identity saying it loves a Publication, or taking that back (`core/PublicationHeart.js`). Every tap is
+A heart is one identity saying it loves a Publication, or taking that back (`core/publication/PublicationHeart.js`). Every tap is
 a new record, and **each person's latest record for a Publication is what counts** (`currentHeartsFor()`: the later
 `createdAt`, and between two at the same moment the greater `heartId`, so every device settles on the same one). A
 heart is therefore taken back by sending a newer record, which works on every carrier, permanent ones included.
-Distribution wraps it in a signed envelope (`core/PublicationHeartDistributionEnvelope.js`):
+Distribution wraps it in a signed envelope (`core/publication/PublicationHeartDistributionEnvelope.js`):
 
     {
       kind: 'forkbuild.publication-heart-distribution',
@@ -1082,7 +1082,7 @@ Distribution wraps it in a signed envelope (`core/PublicationHeartDistributionEn
       authorName,              // the name the person chose, or null; unverified
       hearted,                 // true: a heart; false: taken back
       createdAt,
-      signature                // core/Signature.js JSON
+      signature                // core/publication/Signature.js JSON
     }
 
 The signature has type `publication-heart-distribution` and covers every field above but `kind`, `schemaVersion` and
@@ -1139,10 +1139,10 @@ querying a tag. A discovery thread is a root post by a thread account, `@forkbui
 
 | Family | Discovery thread (September 2026) | Envelope |
 |--------|-----------------------------------|----------|
-| Publications | `@forkbuild/forkbuild-publication-2026-09` | core/DecentralizedDiscoveryEnvelope.js |
-| Snapshots | `@forkbuild/forkbuild-snapshot-2026-09` | core/SnapshotDiscoveryEnvelope.js |
-| Place naming | `@forkbuild/forkbuild-place-naming-2026-09` | core/PlaceNamingDiscoveryEnvelope.js |
-| Commentary | `@forkbuild/forkbuild-commentary-2026-09` | core/PublicationCommentaryDistributionEnvelope.js |
+| Publications | `@forkbuild/forkbuild-publication-2026-09` | core/publication/DecentralizedDiscoveryEnvelope.js |
+| Snapshots | `@forkbuild/forkbuild-snapshot-2026-09` | core/publication/SnapshotDiscoveryEnvelope.js |
+| Place naming | `@forkbuild/forkbuild-place-naming-2026-09` | core/world/PlaceNamingDiscoveryEnvelope.js |
+| Commentary | `@forkbuild/forkbuild-commentary-2026-09` | core/publication/PublicationCommentaryDistributionEnvelope.js |
 
 Place naming uses one thread for every region, not one per region as its Nostr tag does. Readers filter by the
 envelope's `worldId` and `regionId`.
@@ -1172,7 +1172,7 @@ turns replies off on a current or future thread. Turning them off is the operato
 announcements on that thread, but cannot remove existing ones, since the chain refuses to delete a post that has
 replies.
 
-`core/SteemDiscoveryThread.js` names and describes threads (permlinks, periods, the post and its operations, and the
+`core/networks/SteemDiscoveryThread.js` names and describes threads (permlinks, periods, the post and its operations, and the
 checks a thread must pass). `scripts/steem-threads/index.html` is the operator page that creates them: served with
 the app (`python3 -m http.server`) and opened in a browser with Steem Keychain, it checks which threads exist, shows
 the operations, and creates the missing ones five minutes apart, confirming each on the chain. It stops at the first
@@ -1198,7 +1198,7 @@ its options:
       allow_votes: true, allow_curation_rewards: true, extensions: []
     }]
 
-- A publication's announcement may also carry `forkbuild.tags`: its build's own tags (core/BuildTags.js, at most
+- A publication's announcement may also carry `forkbuild.tags`: its build's own tags (core/document/BuildTags.js, at most
   five), read from the snapshot published on the announcing device. It is in ForkBuild's own metadata rather than
   Steem's `tags`, which mean nothing on a reply. A reader that asks for `forkbuild-tag:<tag>` (a week's challenge)
   keeps the replies listing it (application/steem/SteemPublicationDiscoveryQueryService.js); readers that predate
@@ -1212,7 +1212,7 @@ its options:
 - The transaction is signed with the announcer's posting key through Steem Keychain
   (`steem_keychain.requestBroadcast(account, operations, 'Posting', callback)`), the injected signer that plays the
   part NIP-07 plays for Nostr. ForkBuild never holds a Steem key.
-- The announcer's account is a per-device setting (Network Settings → Steem, `core/SteemAnnouncingConfiguration.js`,
+- The announcer's account is a per-device setting (Network Settings → Steem, `core/networks/SteemAnnouncingConfiguration.js`,
   stored under `steem-announcing-configuration`), because Keychain doesn't tell a page which accounts it holds. It
   and Keychain are looked up each time something is announced, so an account set later, or an extension that
   injects itself after load, is picked up without a reload.
@@ -1268,7 +1268,7 @@ its options:
    version as the candidate. An edit can only replace one signed envelope with another, because anything unsigned
    or altered fails verification. Earlier versions stay in the chain's history, but readers don't scan it.
 
-Where reading is configured: Network Settings → Steem (`/settings/steem`, `core/SteemReadingConfiguration.js`,
+Where reading is configured: Network Settings → Steem (`/settings/steem`, `core/networks/SteemReadingConfiguration.js`,
 stored under `steem-reading-configuration`) holds the API nodes, thread accounts and first month; a change applies
 the next time the app loads. The code is `application/steem/`: `SteemDiscoveryThreadReader.js` reads threads, and
 one adapter per family presents what it finds in that family's existing shape
@@ -1291,8 +1291,8 @@ separate substrate choice, never merged with Steem results.
 
 ## Proposed: Steem Content Storage
 
-**Status: built, Experimental.** Code: `core/SteemContentManifest.js` (the manifest, part and locator formats),
-`core/SteemResourceCredits.js` (the RC cost formula), `content/SteemContentStore.js` (encoding, `put()` with parts,
+**Status: built, Experimental.** Code: `core/networks/SteemContentManifest.js` (the manifest, part and locator formats),
+`core/networks/SteemResourceCredits.js` (the RC cost formula), `content/SteemContentStore.js` (encoding, `put()` with parts,
 resuming and the RC check, and `get()`), `storage/SteemContentUploadStore.js` (unfinished uploads),
 `application/steem/SteemResourceCreditEstimator.js` (asking a node), and `postContent()` and `postContentPart()` in
 `application/steem/SteemAnnouncer.js`. `composeSteemRuntime()` builds the store, and `ui/main.js` registers it for
@@ -1316,7 +1316,7 @@ Arweave (see "Limits" below).
 ### Content threads
 
 Content is kept out of Steem feeds and away from the discovery threads by a fifth thread family, `content` in
-`STEEM_DISCOVERY_FAMILIES` (`core/SteemDiscoveryThread.js`), created by the thread account with the same operator
+`STEEM_DISCOVERY_FAMILIES` (`core/networks/SteemDiscoveryThread.js`), created by the thread account with the same operator
 page, post shape and rules as the other four. Its title and body say that replies store content rather than
 announce it:
 
@@ -1357,7 +1357,7 @@ A Publication's Signed Claim (`put(bytes, { kind: 'publication' })`, which `Cont
 passes and other stores ignore) gets a notice with a link instead: "A build published with ForkBuild: [see it in
 3D](…). This reply holds its signed record for the ForkBuild app, and its payout is declined." The link is
 `https://bowo-prasetyo.github.io/forkbuild/#/view/steem/<author>/<permlink>`, naming the claim's own post
-(`core/ForkBuildAppLinks.js`, `FORKBUILD_APP_URL`). The Snapshot's posts keep the plain notice: they are posted first
+(`core/app/ForkBuildAppLinks.js`, `FORKBUILD_APP_URL`). The Snapshot's posts keep the plain notice: they are posted first
 and can't know the claim's permlink, and only a signed Publication can be shown in World View. Since version 2 keeps
 the data out of the body, an author can edit the notice later (for example if the app moves) without touching what
 is stored.
@@ -1382,7 +1382,7 @@ and `json_metadata.image` lists the picture, so front ends can show a preview. T
 `steemNoticeText()` first: one line; links, control and direction-override characters removed; HTML and Markdown
 characters escaped; `@` and `#` followed by a zero-width space so they neither notify an account nor add a tag; at
 most 100 characters for the title and 40 for the author. The description is shown whole, with the formatting it may
-use (`core/DescriptionMarkup.js`: paragraphs, line breaks, headings, bullet lists, bold, italic) written as Markdown
+use (`core/document/DescriptionMarkup.js`: paragraphs, line breaks, headings, bullet lists, bold, italic) written as Markdown
 (`### ` headings) and every piece of its text made safe the same way (`steemNoticeDescription()`), cut with "…" only
 past 2,000 characters of text (`STEEM_NOTICE_DESCRIPTION_MAX`); a line that would read as a numbered list stays text.
 A description that says the same as the title (ignoring case, spacing and punctuation) is left out. A picture address must be an https
@@ -1615,9 +1615,9 @@ The view then opens `/world/<documentId>`, and World View loads it like any disc
 or at its deterministic grid position when it has none.
 
 Sharing. The same link is what the app offers to share once the Publication is distributed (before that, a
-link-only share; see "Link-only shares") (`core/ForkBuildAppLinks.js` `publicationShareUrl()`,
+link-only share; see "Link-only shares") (`core/app/ForkBuildAppLinks.js` `publicationShareUrl()`,
 `application/publication/PublicationShareLink.js`, `ui/components/PublicationShareLink.js`): it is derived from a
-Publication's distribution record (`material.uri`, a `steem://`, `ar://` or `ipfs://` locator; `core/ForkBuildAppLinks.js`
+Publication's distribution record (`material.uri`, a `steem://`, `ar://` or `ipfs://` locator; `core/app/ForkBuildAppLinks.js`
 `publicationViewUrl()` makes the link and `publicationClaimLocatorFromViewPath()` reads it back), so it needs no
 network call. Share adds a note for an Arweave claim (a new upload can take minutes to reach the gateways) and for
 one on the builder's own IPFS node (reachable only while that node is online). Every
@@ -1633,8 +1633,8 @@ the search was unreachable or the build wasn't found. Nothing is admitted withou
 
 ## Proposed: Steem Anchoring
 
-**Status: built, Experimental.** Code: `core/SteemAnchor.js` (the operation, proof, locator and batch formats),
-`core/SteemBinary.js` (Steem's binary serialization, ids and Merkle tree), `core/SteemBlockEvidence.js` (kept block
+**Status: built, Experimental.** Code: `core/networks/SteemAnchor.js` (the operation, proof, locator and batch formats),
+`core/networks/SteemBinary.js` (Steem's binary serialization, ids and Merkle tree), `core/networks/SteemBlockEvidence.js` (kept block
 evidence), `anchoring/SteemProofVerifier.js`, `anchoring/SteemAnchorPublisher.js`,
 `anchoring/SteemAnchorFinalityObserver.js`, `anchoring/SteemAnchorEvidenceView.js`, and `postAnchor()` in
 `application/steem/SteemAnnouncer.js`. `composeSteemRuntime()` builds them, and `ui/main.js` registers them with the
@@ -1644,7 +1644,7 @@ or a real Keychain.
 
 Steem is a fourth Proof/Anchoring choice next to Bitcoin, Arweave and Base: an anchor type `steem` whose
 evidence is the Publication's `contentHash` in an irreversible Steem block. As with the other anchor types, the
-anchor claims only that the anchoring identity recorded this hash where `locator` says (`core/PublicationAnchor.js`).
+anchor claims only that the anchoring identity recorded this hash where `locator` says (`core/publication/PublicationAnchor.js`).
 Checking that claim against the chain is a separate step, done by a `ProofVerifier`. Steem anchoring is separate
 from the Steem announcement substrate and from Steem content storage. An anchor is not an announcement, and none of
 the three needs either of the others.
@@ -1716,7 +1716,7 @@ ForkBuild never holds a Steem key.
 ### Batches
 
 `publishBatch(contentHashes)` anchors up to 64 distinct contentHashes (`STEEM_ANCHOR_MAX_BATCH`) with one operation
-carrying their Merkle root, as OpenTimestamps does. The tree (`steemAnchorBatch()` in `core/SteemAnchor.js`) is built
+carrying their Merkle root, as OpenTimestamps does. The tree (`steemAnchorBatch()` in `core/networks/SteemAnchor.js`) is built
 over the distinct contentHashes in the order given:
 
     leaf  = SHA-256(0x00 ‖ UTF-8(contentHash))
@@ -1776,11 +1776,11 @@ The evidence view (`SteemAnchorEvidenceView`) never calls a node. It shows the b
 whether it is a batch anchor, and "Attested by: Steem witnesses (elected by stake, not proof of work)", and links to
 the block on SteemWorld (`https://steemworld.org/block/<blockNum>`). When the proof keeps block evidence, it checks
 it offline and shows the block's own time, witness and signing key from it, so the time the block was recorded is
-shown without any network, rather than the anchor's `anchoredAt` (only a report, see `core/PublicationAnchor.js`).
+shown without any network, rather than the anchor's `anchoredAt` (only a report, see `core/publication/PublicationAnchor.js`).
 
 ### Keeping evidence
 
-The publisher keeps the block it found in the proof, as `evidence` (`core/SteemBlockEvidence.js`), so the anchor
+The publisher keeps the block it found in the proof, as `evidence` (`core/networks/SteemBlockEvidence.js`), so the anchor
 carries it wherever it goes and it is covered by the anchor's signature:
 
     evidence: {
@@ -1805,7 +1805,7 @@ It is about 1–2 KB whatever the block's size, since only the anchor transactio
 What it can't show offline is that `signingKey` was the named witness's key at that time, or that the block is on
 the chain and irreversible; that still needs a node, and the verifier checks it there.
 
-To keep evidence, the publisher must reproduce the block exactly: `core/SteemBinary.js` serializes transactions and
+To keep evidence, the publisher must reproduce the block exactly: `core/networks/SteemBinary.js` serializes transactions and
 every operation current Steem blocks carry (ids 0–13, 15–29 and 31–46 of steemit/steem's `operations.hpp`; not the
 retired `pow`/`pow2`) as `fc::raw::pack` does, and the block header with its version and hardfork-vote extensions.
 Its output matches dsteem 0.11.3 byte for byte for every one of those operations (dsteem signs real Steem
@@ -1837,8 +1837,8 @@ person who clicked; it proves nothing to anyone else, and verifying is still wha
 
 ## Proposed: Blurt Substrate
 
-**Status: built, Experimental.** Code: `core/BlurtPost.js` (posts, tags, metadata, the content manifest, locators and
-what a post anchors), `core/BlurtBinary.js` (Blurt's binary serialization), `core/BlurtFees.js` (the fee formula),
+**Status: built, Experimental.** Code: `core/networks/BlurtPost.js` (posts, tags, metadata, the content manifest, locators and
+what a post anchors), `core/networks/BlurtBinary.js` (Blurt's binary serialization), `core/networks/BlurtFees.js` (the fee formula),
 `blurt/BlurtRpcClient.js`, `application/blurt/` (the poster, the reader, one adapter per family, the fee estimator
 and `BlurtRuntimeComposition.js`), `content/BlurtContentStore.js`, and `anchoring/Blurt*.js`. Tried against live
 nodes and a real Blurt Keychain before release 1.3.0.
@@ -1892,7 +1892,7 @@ Everything ForkBuild posts on Blurt hangs off a **build post**: a top-level post
   `forkbuild-place-naming`, `forkbuild-commentary`). The chain's tags plugin indexes at most five tags, which is
   exactly `forkbuild` and the four families. After them come the build's own tags, when the post announces a
   Publication whose card is known: at most five, from `DocumentMetadata.tags`, which its author sets (with
-  suggestions from the title and description) in Document Properties (`core/BuildTags.js`: lowercase `a–z`, `0–9`
+  suggestions from the title and description) in Document Properties (`core/document/BuildTags.js`: lowercase `a–z`, `0–9`
   and inner hyphens, 2 to 24 characters, starting with a letter, never starting with `forkbuild`, so none can pass
   as a family tag). Nexus indexes every tag; readers only ever look for ForkBuild's own.
 - `announcements` holds at most 16 entries and `anchors` at most 16 contentHashes. Either may be empty.
@@ -2020,7 +2020,7 @@ From `process_tx_fee()` in Blurt's `database.cpp`:
 
 in BLURT's smallest unit (0.001 BLURT), where `size` is the packed size of the signed transaction and the fees are
 the witnesses' median (`condenser_api.get_chain_properties`). The fee is burned and paid by each account whose
-authority the transaction needs. `core/BlurtFees.js` computes it from the operations packed by `core/BlurtBinary.js`
+authority the transaction needs. `core/networks/BlurtFees.js` computes it from the operations packed by `core/networks/BlurtBinary.js`
 with one signature, which is exact for a single-signature transaction. A build post with a Signed Claim's card is
 about 3 KiB, a full content part about 49 KiB.
 
@@ -2056,7 +2056,7 @@ edited later, but the verifier reads the operation from its block, so an edit ne
 ### Keeping evidence
 
 As on Steem ("Keeping evidence"), the publisher keeps the block header, the anchor transaction and its Merkle path,
-and `checkBlurtBlockEvidence()` checks them offline. `core/BlurtBinary.js` serializes Blurt's operations 0–36
+and `checkBlurtBlockEvidence()` checks them offline. `core/networks/BlurtBinary.js` serializes Blurt's operations 0–36
 (`blurt/protocol/operations.hpp`: Steem's list without the market, SBD and feed operations, so the numbers differ;
 `comment_options` is 13 and `custom_json` 12, and `comment_options` has no `percent_steem_dollars`), the
 `legacy_chain_properties` of `witness_update`, the header extension `fee_info` (variant 3, two `int64`s), and keys
@@ -2073,8 +2073,8 @@ Blurt stays Experimental, as Steem does.
 
 ### Deterministic Animal Identity (0.9.700)
 
-Wildlife from `core/WildlifeField.js` is a pure function of `(seed, x, z)` and is never stored. Each animal's id is
-derived from its lattice cell (`core/AnimalIdentity.js`):
+Wildlife from `core/nature/WildlifeField.js` is a pure function of `(seed, x, z)` and is never stored. Each animal's id is
+derived from its lattice cell (`core/nature/AnimalIdentity.js`):
 
     animal:<seed>:<cellX>,<cellZ>
 
@@ -2108,7 +2108,7 @@ it. Messages carry no signature of their own; they rely on the authenticated pee
 
 ## Legacy collaboration envelope (0.2.7, 0.2.9)
 
-core/CollaborationEnvelope.js and the collaboration/ transports define an
+core/collaboration/CollaborationEnvelope.js and the collaboration/ transports define an
 older command-broadcast format with a single ordering authority. Nothing
 in the app uses it; see docs/ProtocolHistory.md, "Collaboration Protocol
 (0.2.7)" and "Multi-client Synchronization (0.2.9)".

@@ -1,9 +1,9 @@
 import { readFile } from 'node:fs/promises';
 import { VehicleRuntimeInstances } from '../application/world/VehicleRuntimeInstances.js';
 import { nearbyVehicleInstances, VEHICLE_RENDER_RADIUS } from '../application/world/NearbyVehicleInstances.js';
-import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { isValidVehicleInstance } from '../core/VehicleInstance.js';
+import { vehiclePresenceInRegion } from '../core/vehicles/VehiclePlacement.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { isValidVehicleInstance } from '../core/vehicles/VehicleInstance.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.116 — Mounted Vehicle Movement, application/world/VehicleRuntimeInstances.js.
@@ -30,7 +30,7 @@ import { assert } from './support/Assert.js';
 //              math of its own
 //
 // Central architectural claim under test throughout: once a vehicle is
-// tracked, its CURRENT runtime position — never core/VehiclePlacement.js's
+// tracked, its CURRENT runtime position — never core/vehicles/VehiclePlacement.js's
 // own deterministic spawn point — is the one thing that decides whether
 // it is still visible. See docs/Roadmap.md, 0.9.116, "One subtle issue
 // to resolve."
@@ -41,7 +41,7 @@ function findRealVehicle() {
     const vehicles = vehiclePresenceInRegion(DEFAULT_WORLD_SEED, -500, -500, 500, 500);
     const vehicle = vehicles.find((v) => v.id === REAL_VEHICLE_ID);
     if (!vehicle) {
-        throw new Error(`Test fixture vehicle ${REAL_VEHICLE_ID} not found under DEFAULT_WORLD_SEED — has core/VehiclePlacement.js changed?`);
+        throw new Error(`Test fixture vehicle ${REAL_VEHICLE_ID} not found under DEFAULT_WORLD_SEED — has core/vehicles/VehiclePlacement.js changed?`);
     }
     return vehicle;
 }
@@ -239,8 +239,8 @@ async function runTests() {
                 `21. application/world/VehicleRuntimeInstances.js's own CODE (comments aside) never references "${term}" — identity, direct mutation, and rendering all stay entirely someone else's job`);
         }
         assert(!codeOnly.includes('vehiclePresenceInRegion'),
-            '21b. application/world/VehicleRuntimeInstances.js\'s own code never calls core/VehiclePlacement.js directly — discovery is exclusively through application/world/NearbyVehicleInstances.js\'s own bridge, never a second placement query');
-        assert(codeOnly.includes('withinRadiusXZ'), '22. removal reuses core/AvatarVehicleProximity.js\'s own withinRadiusXZ(), never a second distance primitive');
+            '21b. application/world/VehicleRuntimeInstances.js\'s own code never calls core/vehicles/VehiclePlacement.js directly — discovery is exclusively through application/world/NearbyVehicleInstances.js\'s own bridge, never a second placement query');
+        assert(codeOnly.includes('withinRadiusXZ'), '22. removal reuses core/vehicles/AvatarVehicleProximity.js\'s own withinRadiusXZ(), never a second distance primitive');
         assert(codeOnly.includes('withPosition'), '23. position replacement reuses VehicleInstance#withPosition(), never a direct field assignment');
         assert(codeOnly.includes('withHeading'), '23b. heading replacement reuses VehicleInstance#withHeading(), never a direct field assignment');
         assert(!codeOnly.includes('.heading ='), '23c. heading is never assigned directly either');

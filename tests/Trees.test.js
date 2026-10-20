@@ -1,10 +1,10 @@
 import * as THREE from 'three';
-import { naturalFeaturesInRegion, TREE_SPECIES } from '../core/NaturalFeatureField.js';
-import { treeForm, allTreeForms, treeShapeOf, flexAt, TREE_FORMS_PER_SPECIES, TRUNK_ROOT_DEPTH, MAX_FLEX } from '../core/TreeForm.js';
-import { TREE_TRUNK_COLLISION_RADIUS } from '../core/TreeCollisionGeometry.js';
-import { SETTLEMENT_TREE_CLEARANCE } from '../core/BuildSettlement.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { tilesWithinRadius, DEFAULT_STREAMING_RADIUS, TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
+import { naturalFeaturesInRegion, TREE_SPECIES } from '../core/nature/NaturalFeatureField.js';
+import { treeForm, allTreeForms, treeShapeOf, flexAt, TREE_FORMS_PER_SPECIES, TRUNK_ROOT_DEPTH, MAX_FLEX } from '../core/nature/TreeForm.js';
+import { TREE_TRUNK_COLLISION_RADIUS } from '../core/nature/TreeCollisionGeometry.js';
+import { SETTLEMENT_TREE_CLEARANCE } from '../core/challenge/BuildSettlement.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { tilesWithinRadius, DEFAULT_STREAMING_RADIUS, TERRAIN_TILE_SIZE } from '../core/nature/TerrainTiling.js';
 import { buildTreeGeometries } from '../renderer/TreeGeometry.js';
 import { paintBroadLeaves, paintNeedles, paintBark, LEAF_TEXTURE_SIZE } from '../renderer/TreeMaterials.js';
 import { TreeForest, TREE_DETAIL, TREE_LOD, TREE_LOD_DISTANCES, treeLodAt } from '../renderer/TreeForest.js';
@@ -16,7 +16,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
-// World View's trees: grown from a seed (core/TreeForm.js), built at three
+// World View's trees: grown from a seed (core/nature/TreeForm.js), built at three
 // levels of detail (renderer/TreeGeometry.js), drawn from one pool
 // (renderer/TreeForest.js), in as much detail as this device chose
 // (application/settings/WorldViewTreeDetailStore.js).
@@ -69,7 +69,7 @@ const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z);
         }
         (heights[form.species] ||= []).push(form.height);
         // A crown never reaches a settlement spot's house from a tree the
-        // clearance let stand (core/BuildSettlement.js), even at the largest scale.
+        // clearance let stand (core/challenge/BuildSettlement.js), even at the largest scale.
         assert(form.crown.radius * 1.3 * 1.1 < SETTLEMENT_TREE_CLEARANCE, `${form.species} ${form.index}: the crown keeps clear of a house spot`);
     }
     const mean = (list) => list.reduce((a, b) => a + b, 0) / list.length;

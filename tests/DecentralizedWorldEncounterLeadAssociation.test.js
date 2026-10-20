@@ -2,8 +2,8 @@ import { readFile } from 'node:fs/promises';
 import {
     describeDecentralizedWorldEncounterLeadAssociation,
     decentralizedWorldEncounterLeadAssociationMatchesLead
-} from '../core/DecentralizedWorldEncounterLeadAssociation.js';
-import { describeDecentralizedWorldDiscoveryLead } from '../core/DecentralizedWorldDiscoveryLead.js';
+} from '../core/world/DecentralizedWorldEncounterLeadAssociation.js';
+import { describeDecentralizedWorldDiscoveryLead } from '../core/world/DecentralizedWorldDiscoveryLead.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.28 — Decentralized Lead → Encounter Resolution Boundary.
@@ -111,7 +111,7 @@ function leadOf(overrides = {}) {
 //    reading of a lead's own discoveryTag/uri to guess an association.
 // ---------------------------------------------------------------------
 {
-    const sourceUrl = new URL('../core/DecentralizedWorldEncounterLeadAssociation.js', import.meta.url);
+    const sourceUrl = new URL('../core/world/DecentralizedWorldEncounterLeadAssociation.js', import.meta.url);
     const source = await readFile(sourceUrl, 'utf8');
     const codeOnly = source
         .split('\n')
@@ -125,7 +125,7 @@ function leadOf(overrides = {}) {
         'ContentReference', 'DecentralizedPublication', 'hash'
     ];
     for (const term of forbidden) {
-        assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `core/DecentralizedWorldEncounterLeadAssociation.js code must never use the word "${term}"`);
+        assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `core/world/DecentralizedWorldEncounterLeadAssociation.js code must never use the word "${term}"`);
     }
 
     console.log('✓ Vocabulary boundary: no trust, ranking, inference, or retrieval vocabulary');

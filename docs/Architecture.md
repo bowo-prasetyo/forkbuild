@@ -22,7 +22,27 @@ DomainEvent, EditorEvent, EventListener), plus the pure value types and
 functions later subsystems added (terrain, identity envelopes,
 placements, evidence records and so on). No Three.js, no Vue, no browser
 APIs. Never imports anything from
-application/, renderer/, or ui/.
+application/, renderer/, or ui/. Its modules are grouped by what they model:
+
+| Folder | Holds |
+| --- | --- |
+| core/document/ | The World and Document model (World, Document, DocumentMetadata, Position, createId, License) |
+| core/building/ | Bricks, buildings, groups, structures and blueprints |
+| core/collaboration/ | Shared editing: operation envelopes, ordering, causality and world edit authority |
+| core/publication/ | Publications, placements, anchors, signatures, comments, hearts, remixes and network roles |
+| core/catalog/ | Catalog queries, sorting and grouping, previews, credit and look-alikes |
+| core/world/ | World View discovery, encounters, locations, regions and places, the spatial index, residents |
+| core/nature/ | Terrain, rivers and water, weather, seasons, day and night, trees and wildlife |
+| core/avatar/ | The avatar: movement, pose, collision, presence, profile and interaction |
+| core/vehicles/ | Vehicles and riding them |
+| core/identity/ | Identity lifecycle, devices and trust |
+| core/social/ | Peers, friends, chat, voice and notifications |
+| core/networks/ | Steem and Blurt formats, and every network's endpoint configuration |
+| core/challenge/ | The weekly challenge, its plaza and the first build |
+| core/app/ | Device settings, sound, links, messages and versions |
+
+core/events/ and core/library/ (the built-in brick, structure and avatar
+libraries) keep their own folders.
 
 Every World, Building, and Brick has a UUID identity (createId(),
 defaulted in each constructor), never an array index or a caller-chosen
@@ -32,7 +52,7 @@ definitionId, not geometry; BrickRegistry resolves it to a
 BrickDefinition (metadata only), and libraries register their
 definitions at startup (docs/BrickLibrary.md).
 
-Document (core/Document.js) is the publishable unit: a World plus
+Document (core/document/Document.js) is the publishable unit: a World plus
 DocumentMetadata (title, description, author, authorIdentityId,
 created, modified, protocolVersion, engineVersion, license, and the
 lineage fields parentDocumentId and parentStructureId). World is the aggregate root: addBuilding(),
@@ -203,7 +223,7 @@ docs/CapabilityMatrix.md for exactly what each surface may do.
     ImportDocumentUseCase, reached from the Toolbar. Import always clones
     to a fresh identity through DocumentCloneService, which also remaps
     group membership (0.9.644). Export seals the file when the identity
-    exporting is the build's author (core/DocumentSeal.js,
+    exporting is the build's author (core/document/DocumentSeal.js,
     identity/DocumentSealing.js), and DocumentImportPolicy decides whose
     build an import becomes: one's own opens as itself, someone else's as
     the importer's credited copy when its license allows remixes, and is
@@ -220,7 +240,7 @@ docs/CapabilityMatrix.md for exactly what each surface may do.
     carries the color for the next placement.
   - Save failures (0.9.653): both Save entry points catch errors and show
     SAVE_FAILURE_MESSAGE. The sidebar scrolls inside `.sidebar-scroll`.
-  - The guided first build: core/FirstBuildChecklist.js decides which
+  - The guided first build: core/challenge/FirstBuildChecklist.js decides which
     of five steps an edit completes (from describeCommand(), which now
     carries a placed brick's definition and position, so a brick off the
     ground is a stack); FirstBuildChecklistTracker
@@ -239,7 +259,7 @@ docs/BrickLibrary.md, docs/BrickIDs.md and docs/StructureLibrary.md are
 the detailed references; in short:
 
 - BrickRegistry (core/) holds brick definitions from core/library/CoreLibrary.js.
-  StructureRegistry (core/StructureRegistry.js) holds Structures from
+  StructureRegistry (core/building/StructureRegistry.js) holds Structures from
   core/library/VillageLibrary.js and core/library/ShowcaseLibrary.js (three
   larger builds, partly made of copies of Village structures). A Structure
   is only ordinary bricks in local coordinates.
@@ -256,7 +276,7 @@ the detailed references; in short:
   (EditorSession.forkStructure()). The Editor's New offers them beside an
   empty plot (ui/components/NewDocumentDialog.js). Either way the camera is
   then framed on the whole document (EditorSession.frameDocument(), the
-  thumbnail framing from core/PreviewCameraFraming.js), so a large build is
+  thumbnail framing from core/catalog/PreviewCameraFraming.js), so a large build is
   seen whole. Home's 3D showcase (ui/components/home/HomeShowcase.js,
   renderer/ShowcaseTurntableRenderer.js) and the cards are loaded with
   defineAsyncComponent(), since they bring in Three.js and the brick
@@ -270,7 +290,7 @@ the detailed references; in short:
   ui/components/featured/CollectionFamilies.js shows them in the
   Repository's ready-made shelf and on a challenge week with no entries,
   each name opening `/editor?start=<id>`. They are never Publications.
-- The weekly build challenge: core/BuildChallenge.js turns a time into the
+- The weekly build challenge: core/challenge/BuildChallenge.js turns a time into the
   week's challenge (Monday 00:00 UTC to the next, themes taken in turn from
   CHALLENGE_THEMES starting the week of CHALLENGE_EPOCH; weeks before it
   keep the turn of the first eight themes they ran with, so their tags
@@ -289,7 +309,7 @@ the detailed references; in short:
   week before; the themes keep their turn round it): its Join goes to its
   page, which lists the week before's entries, and Remix on one opens
   `/editor?fork=<doc>&publication=<id>&challenge=<Monday>`, tagged once the
-  copy opens. Some themes belong to a season (`season`, core/Season.js's
+  copy opens. Some themes belong to a season (`season`, core/nature/Season.js's
   SEASON): a winter cabin, a blossom walk, a summer fair, a harvest store, a
   skating pond and a garden, every fifth theme of CHALLENGE_THEMES from the
   week of 2026-11-16, so one comes round every six or seven weeks, the
@@ -321,19 +341,19 @@ the detailed references; in short:
   pasted: EditorView's `isReadyMadeStructure(id)` is true only for an id in
   the built-in StructureRegistry that no personal structure has (the paste
   carries `structureId`, in memory only), so bricks saved from someone else's
-  build still count at the look-alike hint at publish. core/PlacedBricks.js compares bricks by signature
+  build still count at the look-alike hint at publish. core/building/PlacedBricks.js compares bricks by signature
   (definition, position, turn, tilt, colour), never by id, so a ready-made
   brick moved or recoloured is the builder's own. Publishing reports the
-  placed count's range (core/VisitorCount.js, `publish-placed-*`) beside the
-  brick range, and core/LaunchTargets.js's gate reads its median
+  placed count's range (core/app/VisitorCount.js, `publish-placed-*`) beside the
+  brick range, and core/app/LaunchTargets.js's gate reads its median
   (`median-placed`).
-- A StructurePlacement (core/StructurePlacement.js) places a whole saved
+- A StructurePlacement (core/building/StructurePlacement.js) places a whole saved
   Document inside another one by reference, resolved fresh by
   application/editor/StructureDocumentResolver.js; placements can be moved,
   rotated, duplicated and removed with their own commands.
 - Blueprints: a personal structure library (LocalStructureLibraryStore,
   local to the device), BlueprintPackage export and import, and
-  fingerprints, attribution and lineage claims (core/BlueprintFingerprint.js,
+  fingerprints, attribution and lineage claims (core/building/BlueprintFingerprint.js,
   BlueprintAttribution*, BlueprintLineage*) that describe a design without
   becoming part of it.
 
@@ -362,7 +382,7 @@ newest that checks out; application/buildNotes/FindableBuildsStore.js says
 which Publications are on the relays. Either comes with Save picture
 (renderer/BuildPicture.js, a 1200 × 630 PNG drawn by
 DocumentThumbnailRenderer), Make a video
-(ui/components/buildVideo/BuildVideoDialog.js: core/BuildVideo.js plans a
+(ui/components/buildVideo/BuildVideoDialog.js: core/app/BuildVideo.js plans a
 build time-lapse or a turntable, wide or tall, and its end card, title and
 description; renderer/BuildVideoRecorder.js draws it into a canvas, with
 audio/MusicRecording.js's music when asked, and
@@ -371,7 +391,7 @@ nothing; a walk-through hands World View the request
 (ui/components/buildVideo/walkThroughFilmRequest.js) and opens it at
 `/world/<id>?film=walk`, where ui/views/worldView/useWalkThroughFilm.js
 waits for the build, application/worldNavigation/walkThroughFilmMethods.js
-walks the avatar through core/WalkThroughFilm.js's plan (after a sweep of
+walks the avatar through core/app/WalkThroughFilm.js's plan (after a sweep of
 the camera round the outside, when asked), from behind it or through its eyes
 with a wider lens, with World View's own
 movement and its third-person or first-person camera, and renderer/WorldFilmRecorder.js copies
@@ -389,8 +409,8 @@ own screen: turning (ui/components/featured/BuildTurntable.js over
 renderer/ShowcaseTurntableRenderer.js, its bricks read from the content
 store and checked against the signed hash by
 application/publication/sharing/ReadSharedBuild.js), with its remix
-lineage and count (core/RemixLineage.js, over the Publications the
-discovery providers know) and its whole family tree (core/RemixFamily.js,
+lineage and count (core/publication/RemixLineage.js, over the Publications the
+discovery providers know) and its whole family tree (core/publication/RemixFamily.js,
 drawn by ui/components/remix/RemixFamilyTree.js, which the challenge page
 also uses, one tree per chain of entries), Edit a Copy (`/editor?fork=` with an
 EditorEntryContext of reason `shared_link_edit_copy`) and a walk into
@@ -406,13 +426,13 @@ ui/components/SimilarBuildDialog.js, which points to Edit a Copy; the
 builder can publish anyway. The finder reads the Publications the
 Repository's discovery providers list, takes each one's bytes from the
 publication content store only when they match its signed hash, and
-compares bricks with core/BuildSimilarity.js: one point per definition and
+compares bricks with core/catalog/BuildSimilarity.js: one point per definition and
 position, the two builds lined up over four quarter turns by offsets voted
 for by pairs of same-kind bricks, scored as shared over all distinct
-bricks. Only the builder's own bricks (core/PlacedBricks.js
+bricks. Only the builder's own bricks (core/building/PlacedBricks.js
 `placedBricks()`) count on their side; their own identities' builds, the
 whole remix family (every build connected through `parentDocumentId`, not
-cut off where core/RemixFamily.js stops drawing), and builds published after
+cut off where core/publication/RemixFamily.js stops drawing), and builds published after
 this one's first Publication are left out; it gives up after a time budget,
 and nothing is sent or stored. A build's page (PublicationLinkView) asks the
 same finder's `findEarlier()` for builds published before it that look like
@@ -424,7 +444,7 @@ About this build shows the same list for the shown build's Publication
 (ui/views/worldView/useSimilarEarlierBuilds.js, looked up once per
 Publication shown). On both sides of every comparison, bricks of a
 ready-made structure from the Build Library are taken out first
-(core/BuildSimilarity.js `withoutReadyMade()`: each structure of at least
+(core/catalog/BuildSimilarity.js `withoutReadyMade()`: each structure of at least
 `MIN_READY_MADE_POINTS` distinct bricks, largest first, lined up as above
 and taken while `readyMadeCoverage()` of it is there, every copy of it:
 80% of a small structure, 70% of a medium one, 50% of one of 30 bricks or
@@ -443,13 +463,13 @@ the same list (ui/components/remix/OwnLookAlikes.js, mounted by
 PublicationCard, which itself stays the same for every build); nobody else's
 card is looked up. The
 finder answers one look at a time.
-It is a hint like core/BlueprintSimilarity.js ("Similarity Is Evidence; It
+It is a hint like core/building/BlueprintSimilarity.js ("Similarity Is Evidence; It
 Never Becomes Lineage"), never a finding of copying. Build here in World View
 opens `/editor?plot=<world>&x=&y=&z=`: the Editor starts a new build and
-keeps its plot (core/BuildPlot.js, application/plot/BuildPlotStore.js), and
+keeps its plot (core/world/BuildPlot.js, application/plot/BuildPlotStore.js), and
 CreatePublisherUseCase hands PublishDocumentUseCase a
 BuildPlotPlacementStrategy, so that build's first placement is its plot
-rather than a grid spot. Home's Your stamps (core/BuilderStamps.js) are
+rather than a grid spot. Home's Your stamps (core/catalog/BuilderStamps.js) are
 worked out from this device's own publications, snapshots and plots by
 application/stamps/BuilderStampFacts.js. WorldNavigationSession owns its runtime:
 camera positioning (SpatialCameraController), which documents are
@@ -479,7 +499,7 @@ Finding things: searchWorld() is text search over the same discovery
 catalog every surface reads; searchWorldByLocation({ center, radius }) is
 the spatial half. The Explore / Map / Places panels (WorldMapPanel,
 LocationsPanel, GeographicPlaceDirectoryPanel), WorldFocusPanel (over
-core/WorldFocusContext.js) and WorldSearchPanel sit on those queries.
+core/world/WorldFocusContext.js) and WorldSearchPanel sit on those queries.
 World Encounters (ui/components/WorldEncounterCanvas.js, also mounted
 alone at `/live-world`) show decentralized publications met while
 walking; see "Publication presence across restarts".
@@ -631,14 +651,14 @@ re-sign one for a design they are looking at
 (`BlueprintAttributionUseCase#resignLegacyAttribution()`).
 
 Stored, published and exported documents use document schema 2, which
-keeps each building's bricks as one table (core/BrickTable.js: palettes of
+keeps each building's bricks as one table (core/building/BrickTable.js: palettes of
 definitions and colors, the ids, and six numbers per brick) rather than
 one object per brick; Building/World/Document `toJSON()` write it when
 asked for `compactBricks`, and `Building.fromJSON()` reads either form.
 New bricks get 12-character ids (`createBrickId()`). Together these make
 a large build about a fifth of its former size, and serializing,
 hashing and parsing it several times faster. A table with a tilted brick
-adds a `tilts` column (core/BrickOrientation.js holds the orientation
+adds a `tilts` column (core/building/BrickOrientation.js holds the orientation
 rules: the Euler order renderers use, and `orientedSize()`, which bounds,
 collision, walking and stacking ask instead of reading a definition's
 height and depth).
@@ -686,7 +706,7 @@ Editor's `/editor?fork=` route) and ForkPublishedWorldUseCase clone the
 source through DocumentCloneService: a new document id, fresh ids for
 every building and brick, the current user as author, and
 `parentDocumentId` pointing at the source. ForkDocumentUseCase checks the
-source's license first (core/License.js, `forkAllowed`) and refuses with
+source's license first (core/document/License.js, `forkAllowed`) and refuses with
 ForkFailureReason.LICENSE_DENIED rather than relying on a hidden button;
 a permitted fork's license carries the original attribution
 (`License.derivedFrom()`: its builder, title, identity and license).
@@ -717,11 +737,11 @@ hasNext/hasPrevious). The discovery provider it searches merges local
 publications with the application-wide decentralized discovery provider
 (application/discovery/CreateDiscoveryUseCase.js).
 
-- Sorting (core/PublicationSort.js) always falls back to an ordinal
+- Sorting (core/catalog/PublicationSort.js) always falls back to an ordinal
   publicationId tiebreak, so every replica orders the same way.
 - Searching descriptions is opt-in, because it loads each candidate's
   document.
-- Grouping (core/PublicationGrouping.js) only regroups the current page.
+- Grouping (core/catalog/PublicationGrouping.js) only regroups the current page.
 - Pagination is explicit (PublicationPagination.js); there is no
   infinite scroll.
 - Repository network discovery: when the catalog mounts, it runs
@@ -759,8 +779,8 @@ Is What; A Placement Is Where"):
 - a Publication: which immutable version was released;
 - a placement: where that version sits in shared space.
 
-core/WorldPlacement.js is the spatial reference (publicationId, position,
-rotation, local SpatialBounds). core/PlacementRecord.js wraps it as a
+core/publication/WorldPlacement.js is the spatial reference (publicationId, position,
+rotation, local SpatialBounds). core/publication/PlacementRecord.js wraps it as a
 publishable record with its own id, owner, revision, content hash, owner
 signature and causal stamp. Several placements may point at one
 publication, and a document's author, its publisher and its placement's
@@ -774,7 +794,7 @@ wires:
 - LocalWorldLayoutProvider (world-layout/). It answers "which documents
   are near the camera, and where" from each publication's placement, and
   falls back to a deterministic, id-keyed grid position
-  (core/DeterministicGridPlacement.js) for a publication with none.
+  (core/world/DeterministicGridPlacement.js) for a publication with none.
 - PlacePublicationUseCase with GridPlacementStrategy
   (application/placement/InitialPlacementStrategy.js): the automatic first
   placement after publishing. Its position is a pure function of the
@@ -788,7 +808,7 @@ wires:
   whatsHere() build on the same spatial query.
 
 Two placements may share a position. That is a derived observation (an
-overlap), not an error. What to do about it is core/SpatialAllocationPolicy.js
+overlap), not an error. What to do about it is core/world/SpatialAllocationPolicy.js
 (ALLOW/WARN/REJECT). An explicit move uses WARN
 (WorldNavigationSession#checkPlacementOverlap()); automatic placement
 always behaves as ALLOW. AUTO_OFFSET is declared but throws: automatic
@@ -828,7 +848,7 @@ the audited noble-curves and noble-hashes libraries, which are copied into
 vendor/ by scripts/vendor.mjs (a test fails if vendor/ ever differs from
 the pinned npm packages). It has no fallback random source: without
 crypto.getRandomValues no key is created. identity/SigningIdentity.js is a public-key identity
-(did:key). core/Signature.js signs a canonical envelope
+(did:key). core/publication/Signature.js signs a canonical envelope
 `{ domain: 'forkbuild', type, id, revision, payload }`, so a signature
 for one object type can never be replayed as another.
 identity/LocalAuthorizationVerifier.js answers three questions for every
@@ -839,19 +859,19 @@ the signer allowed.
 
 - Publications carry `publisherIdentity` and `signature`
   (publisher/LocalPublisherProvider.js). A Publication's
-  `contentReference` (core/ContentReference.js) names the bytes by
+  `contentReference` (core/document/ContentReference.js) names the bytes by
   content hash; where they are stored is a separate, retrievable detail,
   and bytes are always checked against the hash.
 - PlacementRecords carry `ownerIdentity`, `signature`, `causalStamp`
-  (core/CausalStamp.js, a vector clock) and `parents`, all inside the
+  (core/collaboration/CausalStamp.js, a vector clock) and `parents`, all inside the
   signed envelope (PlacePublicationUseCase, MoveWorldPlacementUseCase).
 - A Publication may carry a signed `placementPolicy`
-  (core/PlacementPolicy.js), copied from the document's metadata at
+  (core/publication/PlacementPolicy.js), copied from the document's metadata at
   publish. PlacePublicationUseCase refuses a placement it doesn't allow
   (`PlacementNotPermittedError`), and `checkPermission()` lets World View
   disable Accept Position before anyone clicks.
 - A publisher's own signed PlacementRecord travels beside its Snapshot
-  announcement (`placementRecord` in core/SnapshotDiscoveryEnvelope.js;
+  announcement (`placementRecord` in core/publication/SnapshotDiscoveryEnvelope.js;
   World View's `placementClaimFor()` picks it through
   `getPublisherPlacementRecord()`). A receiving World View adopts it
   (application/placement/AdoptPublisherPlacementUseCase.js, from
@@ -863,7 +883,7 @@ the signer allowed.
 
 **Built and tested, not wired into the running app:**
 
-- delegation: core/Delegation.js grants one PLACE or MOVE capability.
+- delegation: core/publication/Delegation.js grants one PLACE or MOVE capability.
   The issuer signs it through `signCanonical()` (signature type
   `delegation`, CreateDelegationUseCase), and
   identity/DelegationVerifier.js and
@@ -877,15 +897,15 @@ the signer allowed.
   replication/ReplicaMergeService.js and LocalReplicationStore.js).
   ConflictResolver compares two causal stamps (EQUAL, BEFORE, AFTER,
   CONCURRENT), ConflictPolicy picks a deterministic presentation winner
-  among concurrent revisions (smallest content hash), and core/ConflictSet.js
+  among concurrent revisions (smallest content hash), and core/collaboration/ConflictSet.js
   records the competitors without discarding either history. Given a
   `findPublicationById`, the merge also rejects a placement its
   Publication's placement policy doesn't allow. Publisher placements from
   Snapshot announcements deliberately don't use it (see above);
-- the trust layer around it: core/TrustObservation.js (what a check
+- the trust layer around it: core/identity/TrustObservation.js (what a check
   found), identity/TrustPolicy.js (what to do about it; the defaults
-  reproduce the pre-0.2.19 behavior), core/FreshnessProof.js and
-  core/IndexEquivocation.js (one authority signing two different roots
+  reproduce the pre-0.2.19 behavior), core/publication/FreshnessProof.js and
+  core/world/IndexEquivocation.js (one authority signing two different roots
   at the same causal position).
 
 The world command protocol (0.2.96–0.2.97) has its own ordering in
@@ -934,8 +954,8 @@ top of it.
   never overwrites its key: it only adds lifecycle records that verify
   and are missing.
 - **Lifecycle.** An identity can declare a successor
-  (core/IdentitySuccessionEnvelope.js, signed by the predecessor) and can
-  be revoked permanently (core/IdentityRevocationEnvelope.js,
+  (core/identity/IdentitySuccessionEnvelope.js, signed by the predecessor) and can
+  be revoked permanently (core/identity/IdentityRevocationEnvelope.js,
   self-signed). Revocation stops new signing; it doesn't undo old
   signatures. IdentityLifecyclePropagationUseCase relays these records to
   connected peers over `forkbuild:identity-lifecycle`; a receiver trusts
@@ -1003,7 +1023,7 @@ invitation) the reply is returned to hand over as before.
 
 **Public lobby.** application/peer/PublicLobbyUseCase.js lets people who
 don't know each other's identity ids meet: one global lobby (`public`) and
-one per World (`world:<documentId>`). Joining signs a core/LobbyCard.js
+one per World (`world:<documentId>`). Joining signs a core/social/LobbyCard.js
 (identity, lobby, display name; no address) and sends it to every
 rendezvous server through peer/RendezvousLobbyTransport.js, a contract kept
 separate from identity lookup so that lookup still cannot list anyone.
@@ -1026,7 +1046,7 @@ ui/components/PublicLobbyPanel.js, on the Peers page and behind World
 View's Lobby button.
 
 **Walk here with me.** application/walkTogether/WalkTogether.js brings a
-friend into the World on screen through one link (core/WalkTogetherCode.js,
+friend into the World on screen through one link (core/social/WalkTogetherCode.js,
 `#/walk/<code>`), so walking together needs neither the Peers page nor a
 lobby. The meeting runs on a peer session of its own around a one-off
 identity (application/peer/OneOffPeerSession.js, shared with device
@@ -1093,13 +1113,13 @@ ui/components/walkTogether/BuildTogetherStrip.js.
 
 **Credit co-builders.** When the host's command protocol accepts a guest's
 operation, BuildTogetherSession#noteEdit() credits that guest on the open
-build (DocumentMetadata#creditBuilder(), core/BuiltWith.js: name and
+build (DocumentMetadata#creditBuilder(), core/catalog/BuiltWith.js: name and
 identity, at most 12, never the author), saved with the build.
 LocalPublisherProvider copies the credits onto the Publication, signed only
 when present, and the rendezvous worker's link preview mirrors the same
 signing fields (server/rendezvous-worker/buildPreview.js). DocumentCloneService
 keeps them only for a copy by the same author. The share page, the family
-tree (core/RemixFamily.js members carry `builtWith`) and the Editor's build
+tree (core/publication/RemixFamily.js members carry `builtWith`) and the Editor's build
 panel name them (ui/components/remix/builtWithText.js).
 
 The host sends the list to its co-builders whenever it changes (`credits`),
@@ -1190,7 +1210,7 @@ Repository cards and ui/components/SharedWithYouPanel.js above the catalog.
 - PeerBlockUseCase: a one-sided, silent block, enforced in both
   directions by this device.
 - FollowUseCase (application/identity/): identities this identity follows,
-  as core/FollowRecord.js entries under `follows:<identityId>`. One-sided and
+  as core/social/FollowRecord.js entries under `follows:<identityId>`. One-sided and
   never sent; it grants the followed identity nothing. A follow is matched
   only against verified signatures, never a typed author name:
   - application/publication/FollowingFeed.js lists the Publications the
@@ -1264,9 +1284,9 @@ goes on the wire.
 Identity, avatar profile and presence answer three different questions:
 who you are, what your avatar looks like, and where it is right now.
 
-- **Profile.** core/AvatarProfile.js holds a template id and an
+- **Profile.** core/avatar/AvatarProfile.js holds a template id and an
   appearance, validated strictly on write and resolved leniently on read
-  (core/AvatarTemplate.js, templates from
+  (core/avatar/AvatarTemplate.js, templates from
   core/library/CoreAvatarTemplateLibrary.js via AvatarTemplateRegistry).
   AvatarProfileUseCase stores it durably per identity; the Avatar page
   (`/avatar`) edits it. AvatarProfileSyncService shares it over
@@ -1279,11 +1299,11 @@ who you are, what your avatar looks like, and where it is right now.
   constraint pipeline") and produces new presence. Touch screens drive it
   through the same keys: TouchMovementInput
   (application/avatar/TouchMovementInput.js) turns World View's joystick
-  (core/TouchJoystickKeys.js) and buttons into the session's
+  (core/avatar/TouchJoystickKeys.js) and buttons into the session's
   avatarKeyDown/avatarKeyUp calls, holding each button for at least one
   frame's sampling. Its Cruise button sends the Alt+W chords, choosing the
   next one from avatarContinuousMovementState(). PresenceSyncService
-  broadcasts it as a core/AvatarPresenceAdvertisement.js, signed when the
+  broadcasts it as a core/avatar/AvatarPresenceAdvertisement.js, signed when the
   identity provider can sign (PresenceSigning), through a
   presence/ broadcast provider: PeerAvatarPresenceBroadcastProvider over
   authenticated peers (`forkbuild:avatar-presence`) when peers are
@@ -1306,22 +1326,22 @@ who you are, what your avatar looks like, and where it is right now.
   remote avatars, RemoteAvatarInterpolator smooths their movement, and
   RemoteAvatarAppearanceRegistry their appearance. Lifecycle (fresh,
   stale, gone) is derived, never stored.
-- **Visibility.** core/PresenceVisibilityPolicy.js (PUBLIC, FRIENDS,
+- **Visibility.** core/avatar/PresenceVisibilityPolicy.js (PUBLIC, FRIENDS,
   LOCAL, HIDDEN, plus explicitly authorized identities) is applied before
   broadcasting, never after; PresenceVisibilityUseCase stores the choice
   and ui/components/VisibilityPolicyForm.js edits it. Withholding future
   presence is not remote deletion.
 - **Interaction.** Selecting an avatar (0.2.39) opens AvatarInfoPanel;
-  proximity (core/AvatarProximity.js) is derived, never announced.
-  Gestures (core/AvatarInteractionKind.js: GREET, WAVE, POINT) are
+  proximity (core/avatar/AvatarProximity.js) is derived, never announced.
+  Gestures (core/avatar/AvatarInteractionKind.js: GREET, WAVE, POINT) are
   their own vocabulary, separate from animation state, rate-limited by
-  core/AvatarInteractionCooldown.js. AvatarInteractionSyncService sends
+  core/avatar/AvatarInteractionCooldown.js. AvatarInteractionSyncService sends
   them as signed events over `forkbuild:avatar-interaction`, checked by
   AvatarInteractionTrustBoundary with a bounded replay window; a
   claimed target is never an instruction to the target. Facing a target
-  (core/AvatarFacing.js) is a local rendering override only.
+  (core/avatar/AvatarFacing.js) is a local rendering override only.
 - **Riding.** What an avatar rides is its own signed message
-  (core/AvatarVehicleAdvertisement.js over `forkbuild:avatar-vehicle`,
+  (core/vehicles/AvatarVehicleAdvertisement.js over `forkbuild:avatar-vehicle`,
   not a presence field, so older clients keep accepting presence).
   application/worldNavigation/remoteVehicleMethods.js sends it on getting
   on or off and every 2 s (`_publishLocalVehicle()`), through the same
@@ -1339,11 +1359,11 @@ who you are, what your avatar looks like, and where it is right now.
   AvatarVehicleInteractionController (`isTakenByOther`), never the local
   mount's. Unridden vehicle positions stay local, so after a dismount a
   vehicle reappears where this replica last had it.
-- **Camera and movement modes.** core/CameraPerspective.js gives each
+- **Camera and movement modes.** core/avatar/CameraPerspective.js gives each
   camera perspective an offset from the avatar; it never replaces the
   camera machinery, and the chosen avatar control mode persists locally.
-  Step-up, walkable stairs and slopes (core/WalkableSurface.js), jumping
-  and falling (core/AvatarVerticalState.js) are height constraints, not
+  Step-up, walkable stairs and slopes (core/building/WalkableSurface.js), jumping
+  and falling (core/avatar/AvatarVerticalState.js) are height constraints, not
   physics.
 
 ## Avatar movement constraint pipeline
@@ -1359,30 +1379,30 @@ this order. Each is a separate class, and each can be left out:
       -> AvatarWildlifeConstraint   slide around deer/rabbits
       -> AvatarResidentConstraint   slide around World Residents
 
-The brick constraints ask core/BrickPassage.js what each brick collides as: one box (`brickAabb()`) for nearly
+The brick constraints ask core/building/BrickPassage.js what each brick collides as: one box (`brickAabb()`) for nearly
 every brick, nothing for a standing door, and for a standing arch its jambs and a lintel stepped down to follow the
 opening (`ARCH_OPENINGS`, which renderer/ThreeBrickFactory.js draws the arch with too). Over a doorway or an arch's
 opening, `AvatarStepConstraint` takes a top out of a step's reach as a roof, not as ground to climb, so the avatar
 stands on the passage's floor (`passageFloorAt()`). Tilted, a door or an arch is one box again. In World View, doors
-swing open away from whoever walks up and shut behind them (core/DoorSwing.js; renderer/DoorSwingAnimator.js through
+swing open away from whoever walks up and shut behind them (core/building/DoorSwing.js; renderer/DoorSwingAnimator.js through
 `WorldRenderer#animateDoors()`, fed every frame with where the local avatar, the remote avatars and the residents are
 drawn). The swing is drawing only: the build still holds a shut door, and the Editor never swings one.
 
 **Arriving at a build's door** (Walk inside it, after Publish): the Editor opens `/world/:id?arrive=door`, and
 World View calls `arriveAtEntrance()` (application/worldNavigation/arrivalMethods.js) instead of a plain
-`navigateToDocument()`. core/BuildEntrance.js picks the spot: the build's ground-level doors and doorway arches,
+`navigateToDocument()`. core/world/BuildEntrance.js picks the spot: the build's ground-level doors and doorway arches,
 each with outside found by flooding a plan of where an avatar can stand (doorways shut) from its edge, and room to
 stand on both sides of it; a door that leads in wins over a free-standing arch. The avatar is put a few steps in
 front of it, facing it, and the camera behind them; a build with no way in is arrived at from its -z side. An arrival
 asked for before the document is loaded finishes in `_loadWorld()`, it skips the automatic Welcome panel, and its
 framing wins over the World's remembered camera. `arrivalState()` says when the avatar has gone in
 (`hasWalkedInside()`: past the doorway and within the build), which ui/views/worldView/useArrival.js turns into the
-guided first build's last step (core/FirstBuildChecklist.js), on World View's existing 100 ms presence tick.
+guided first build's last step (core/challenge/FirstBuildChecklist.js), on World View's existing 100 ms presence tick.
 
 `AvatarWaterConstraint` is not a step in that chain. It supplies water to the controller: the depth that slows wading
-(`core/AvatarWaterWalkability.js`), in a lake or the sea or in a river's bed (`core/RiverFlow.js#riverWaterDepthAt()`,
+(`core/avatar/AvatarWaterWalkability.js`), in a lake or the sea or in a river's bed (`core/nature/RiverFlow.js#riverWaterDepthAt()`,
 never deep enough to swim), and where the surface of standing water lies in the presence frame. On foot, water deeper than half
-the avatar's height over whatever it would stand on (`core/AvatarSwimming.js#isSwimmableDepth()`) makes the avatar
+the avatar's height over whatever it would stand on (`core/avatar/AvatarSwimming.js#isSwimmableDepth()`) makes the avatar
 swim: the simulation still steers and moves it, at `SWIM_SPEED_FACTOR`, but its height comes from
 `stepSwimFeetHeight()` (Space rises, C dives, otherwise it drifts up) between the bed and the floating height, carried
 from column to column at a constant world height. Breath (`stepAvatarBreath()`, 150 s) drains while the mouth is under
@@ -1403,13 +1423,13 @@ released animals use `withGroundElevation()`, which also floors them at the lake
 
 Swimming is derived, not sent: `deriveAvatarSwimMode()` answers NONE, SURFACE or DIVING from a position and the water
 surface above its column, so `RenderWorldViewUseCase` poses local and remote avatars alike
-(`AvatarVisual#setSwimMode()`, swim poses in `core/AvatarPoseOffsets.js`) and `core/AvatarSoundCues.js` splashes at the
+(`AvatarVisual#setSwimMode()`, swim poses in `core/avatar/AvatarPoseOffsets.js`) and `core/avatar/AvatarSoundCues.js` splashes at the
 surface and stays silent under water. Presence keeps its existing `animation` values.
 
 ## Vehicles, inventory and animals
 
-    core/VehiclePlacement.js      deterministic spawn: bicycle 65% / motorcycle 25% / car 8% / drone 2%
-    core/WildlifeField.js         deterministic deer (FOREST) / rabbit (GRASSLAND), id animal:<seed>:<x>,<z>
+    core/vehicles/VehiclePlacement.js      deterministic spawn: bicycle 65% / motorcycle 25% / car 8% / drone 2%
+    core/nature/WildlifeField.js         deterministic deer (FOREST) / rabbit (GRASSLAND), id animal:<seed>:<x>,<z>
             │                                   │
     VehicleRuntimeInstances            AnimalRuntimeInstances
       (placed, ridden, deployed;          (caught ids excluded; released
@@ -1423,8 +1443,8 @@ surface and stays silent under water. Presence keeps its existing `animation` va
                             every read and cycle scoped by kind)
 
 - **Movement.** `AvatarVehicleMovementController` moves every vehicle type in `MOVABLE_VEHICLE_TYPES` (all four).
-  Drone altitude comes from `core/AvatarDroneVerticalState.js`, measured from the water surface over water
-  (`core/VehicleWaterline.js#droneFloorHeight()`), and `AvatarVehicleInteractionController` refuses to dismount a
+  Drone altitude comes from `core/avatar/AvatarDroneVerticalState.js`, measured from the water surface over water
+  (`core/vehicles/VehicleWaterline.js#droneFloorHeight()`), and `AvatarVehicleInteractionController` refuses to dismount a
   drone in mid-air; getting off one on the water leaves the avatar floating. Wheeled vehicles stop at the waterline
   (`application/avatar/VehicleWaterConstraint.js`, `VEHICLE_MAX_WATER_DEPTH`), and can't be deployed in water.
   Ground vehicles climb bricks with their own `AvatarStepConstraint` (the avatar's, without the ice), so they drive up
@@ -1434,7 +1454,7 @@ surface and stays silent under water. Presence keeps its existing `animation` va
 - **Persistence (0.9.701).** The inventory and both runtime stores persist through optional stores
   (`storage/*PersistenceStore.js`). Runtime positions are written at most once a second. Only released animals are
   saved; wild ones are recomputed.
-- **Wandering (2026-09-29).** `core/WildlifeMotion.js#animalPoseAt(seed, animal, time)` says where a wild animal is
+- **Wandering (2026-09-29).** `core/nature/WildlifeMotion.js#animalPoseAt(seed, animal, time)` says where a wild animal is
   at a moment: pausing, turning and walking between hashed waypoints inside its own lattice cell, within its
   species' wander radius of where it was placed. `WorldNavigationSession`'s `wildlifeClock` (wall-clock seconds by
   default) is the one time source, handed to the renderer, `AvatarWildlifeConstraint`,
@@ -1472,13 +1492,13 @@ surface and stays silent under water. Presence keeps its existing `animation` va
 
 ## World Residents
 
-    core/WorldResident.js         World content: { id, worldId, authorIdentityId, position (home) }
+    core/world/WorldResident.js         World content: { id, worldId, authorIdentityId, position (home) }
             │  (loaded Worlds, homes lifted by each World's position)
     application/world/ResidentRuntime.js ── obstacles per home: AvatarMovementConstraint#obstaclesNear()
             │                                (bricks an avatar on the ground bumps into) + tree trunks,
             │                                gathered again every 2 s, one resident at a time
-    core/ResidentMotion.js#residentPoseAt(resident, time, { isClear })
-            │                     isClear = core/ResidentPath.js#isResidentWalkClear()
+    core/world/ResidentMotion.js#residentPoseAt(resident, time, { isClear })
+            │                     isClear = core/world/ResidentPath.js#isResidentWalkClear()
             ├── WorldNavigationSession._setupResidentRendering() → facade.syncResidents(poses)
             │      → renderer/ResidentFieldRenderer.js (one AvatarVisual each, at most 16, nearest first)
             └── AvatarResidentConstraint (last in AvatarMovementController's pipeline)
@@ -1492,7 +1512,7 @@ surface and stays silent under water. Presence keeps its existing `animation` va
   keyed by id. A waypoint is kept only if the walk from home to it is clear; a walk between waypoints goes straight
   if clear and by way of home otherwise, turning in place there. `isClear` checks brick footprints (grown by the
   resident's 0.3 radius), tree trunks, lakes, rivers and slope. The session's `wildlifeClock` is the one clock.
-- **Rendering.** Each resident is an ordinary `AvatarVisual` dressed by `core/ResidentAppearance.js` (template
+- **Rendering.** Each resident is an ordinary `AvatarVisual` dressed by `core/world/ResidentAppearance.js` (template
   `humanoid-01`, options and an earthy palette picked from the id), kept apart from `remoteAvatarVisuals`: never
   picked, listed or hidden as a player. Its feet use the same `withGroundElevation()` as the avatar's; its walking
   legs advance with the ground it covered. `renderer/ResidentReaction.js#residentFacingFor()` turns a settled
@@ -1506,7 +1526,7 @@ surface and stays silent under water. Presence keeps its existing `animation` va
   place — a known publication's title and author, else this device's saved title, else not at all
   (`_residentStructureName()`); present collaborators by their shown name (500 m); other builds from
   `searchWorldByLocation()` excluding the resident's own World and its parent (5 km); the innermost region it stands
-  in. `core/ResidentTalk.js#composeResidentRemarks()` turns them into one nearby sentence (kinds take turns, then
+  in. `core/world/ResidentTalk.js#composeResidentRemarks()` turns them into one nearby sentence (kinds take turns, then
   each kind's next-nearest) and one build sentence, with rounded distances, compass words and sanitized plain-text
   titles and names. A per-resident turn counter makes each conversation move on. The facade's
   `showResidentSpeech()` puts a canvas-text sprite over the resident (`renderer/ResidentSpeechBubble.js`), gone
@@ -1517,7 +1537,7 @@ surface and stays silent under water. Presence keeps its existing `animation` va
   with `spokenAt` and `seconds` (`speechSecondsFor()`, shared with the bubble). `ui/components/ResidentSpeechActions.js`
   shows a Focus button per target while that speech is current and the viewer is beside the resident;
   `focusResidentMention(index)` calls the camera-only `focusPosition()` at the ground there.
-- **Wishes, and what came of them.** On a wish turn (`isWishTurn()`), `core/ResidentWish.js#residentWishNear()` names
+- **Wishes, and what came of them.** On a wish turn (`isWishTurn()`), `core/world/ResidentWish.js#residentWishNear()` names
   what the ground nearby lacks, with a Build there. Once a build, a structure or a loaded World stands within
   `WISH_CLEAR_RADIUS` of the spot it would wish for, `residentWishFulfilledNear()` finds it instead and the resident
   says so as a fact (`phraseWishFulfilled()`, by the build's title when it has one, with a Focus on it). Nothing is
@@ -1529,7 +1549,7 @@ surface and stays silent under water. Presence keeps its existing `animation` va
 wildlife. Each is a pure function of `(seed, x, z)`:
 
 - `TerrainHeightField`: how high. `terrainHeightAt()` is the ground as it lies, with river beds cut into it
-  (`core/RiverBed.js`, handed the land so it imports neither: a bowl along `core/RiverChannel.js`'s channels, stepped
+  (`core/nature/RiverBed.js`, handed the land so it imports neither: a bowl along `core/nature/RiverChannel.js`'s channels, stepped
   cascades down the steepest of them, and a pool where a channel meets highland); `baseTerrainHeightAt()` is the land
   before the beds, which everything below classifies by, so a bed's banks never read as rock nor its floor as a lake
 - `TerrainSurface`: what it looks like
@@ -1541,7 +1561,7 @@ wildlife. Each is a pure function of `(seed, x, z)`:
 - `UnderwaterLifeField`: seaweed rooted on lake and sea beds, and fish schools circling where the water is deep over
   their whole circle (`fishPoseAt()` adds time)
 
-Each frame the renderer also asks `core/UnderwaterView.js` whether the camera is under a lake or the sea, and if so
+Each frame the renderer also asks `core/nature/UnderwaterView.js` whether the camera is under a lake or the sea, and if so
 swaps the sky for a blue-green background and fog, until it surfaces into whatever sky day and night has made. Water tiles carry a back-face-only underside, so a diver looking
 up sees a bright surface.
 
@@ -1552,7 +1572,7 @@ geometry and materials are shared by every tile.
 
 ## Day and night
 
-    core/DayCycle.js#skyLookAt(seconds)            the sky's look: background, hemisphere sky/ground color and
+    core/nature/DayCycle.js#skyLookAt(seconds)            the sky's look: background, hemisphere sky/ground color and
             │                                       intensity, sun (moon) color and intensity, glow 0..1
             │  (WorldNavigationSession's wildlife clock: wall-clock seconds)
     application/worldNavigation/dayCycleMethods.js  every render frame, unless Always day: setSkyLook(look)
@@ -1561,7 +1581,7 @@ geometry and materials are shared by every tile.
             │                                       under water, nightGlow uniform for standalone meshes
     renderer/BrickInstanceRegistry.js#setNightGlow()  the instanced bricks' nightGlow uniform
 
-    core/DayCycle.js#skyBodiesAt(seconds)          where the sun and the moon are, and where the light comes from
+    core/nature/DayCycle.js#skyBodiesAt(seconds)          where the sun and the moon are, and where the light comes from
             │  (same clock; DAY_SKY_BODIES, a still morning sun, while Always day)
     application/worldNavigation/dayCycleMethods.js  every render frame: setSkyBodies(bodies) on the render facade
     renderer/Renderer.js#setSkyBodies()            renderer/SkyBodies.js (made on first call) and
@@ -1569,7 +1589,7 @@ geometry and materials are shared by every tile.
     application/worldNavigation/dayCycleMethods.js  setShadowsOn(): setShadowsEnabled(on) on the render facade
     renderer/Renderer.js#setShadowsEnabled()       renderer/SunShadows.js, which follows the camera's target each frame
 
-    core/Weather.js#weatherAt(seconds)             cloud cover 0..1, how overcast 0..1, rain 0..1, wetness 0..1,
+    core/nature/Weather.js#weatherAt(seconds)             cloud cover 0..1, how overcast 0..1, rain 0..1, wetness 0..1,
             │                                       snow 0..1 and snow lying 0..1 (same clock; fair while Always day,
             │                                       over the season's snow); overcastLook() greys skyLookAt()'s look
     application/worldNavigation/dayCycleMethods.js  every render frame: setWeather(weather) on the render facade
@@ -1579,7 +1599,7 @@ geometry and materials are shared by every tile.
                                                     trees and bricks (renderer/WetSurfaces.js) and snowflakes
                                                     (renderer/SeasonDrift.js)
 
-    core/Season.js#seasonLookAt(seconds)           the season and the land's look: leaves, blossom, autumn, fruit,
+    core/nature/Season.js#seasonLookAt(seconds)           the season and the land's look: leaves, blossom, autumn, fruit,
             │                                       flowers, grass and field colours, leaves and petals drifting
             │  (same clock; the middle of a kept season, application/settings/WorldViewSeasonStore.js)
     application/worldNavigation/dayCycleMethods.js  every render frame: setSeason(look) on the render facade
@@ -1595,7 +1615,7 @@ readable. Only World View follows the clock: the Editor, thumbnails, the Home tu
 DAY, which is what `Renderer` starts with.
 
 **The sun and the moon.** Both cross the sky from east to west on one arc leaning 50° south of overhead, by the
-compass World View shows (core/CompassHeading.js: North is +z, so East is -x, South -z, West +x), so neither climbs
+compass World View shows (core/world/CompassHeading.js: North is +z, so East is -x, South -z, West +x), so neither climbs
 above 40°. The camera's view is 60° tall, so it sees at most about 30° above the horizon looking level (First
 Person) and about 15° in Third Person, which looks down at the avatar: there the sun is in view only for its first
 and last few minutes, near the horizon. The sun is up from just before dawn until it sets in the dusk
@@ -1633,7 +1653,7 @@ renderer/StarSky.js dims the stars by up to 45% and the Milky Way by up to 75% w
 it is up, so a new moon's night shows them as they always were and a full moon's washes them out. Always day has
 no moon; the Editor and thumbnails never draw one.
 
-**The stars and the Milky Way.** core/StarField.js makes, from a fixed seed, 1500 stars spread evenly over the sphere
+**The stars and the Milky Way.** core/nature/StarField.js makes, from a fixed seed, 1500 stars spread evenly over the sphere
 (many faint, few bright, a few blue-white or warm) and 1600 fainter ones crowded in the Milky Way's band, plus the
 band's glow as a ribbon round its great circle, all in the sky's own frame. That frame turns once a day
 (`skyBodiesAt().skyTurn`, from dawn) round the celestial pole, due north and 50° up, so the celestial equator is the
@@ -1645,7 +1665,7 @@ as the look's glow goes from 0.72 to 0.98 (deep dusk to night) and fade the same
 phase, thin out towards the horizon, and hide under water and in Always day. Made with the sun and the moon on the
 first `setSkyBodies()`, so the Editor and thumbnails never draw them.
 
-**Clouds and overcast.** core/Weather.js cuts the same clock into spells of 8 minutes, each with its own cloud
+**Clouds and overcast.** core/nature/Weather.js cuts the same clock into spells of 8 minutes, each with its own cloud
 cover from a hash of its number: about three in five fair (a few clouds, cover 0.06 to 0.22), one in four cloudy
 (0.38 to 0.62) and about one in seven overcast (0.88 to 1). Over the last 2 minutes of a spell the cover blends into
 the next one's, so clouds gather and clear. It is one weather for the whole world, so everyone at a build, and
@@ -1677,7 +1697,7 @@ evenly from 0 to 1) is below the rain's strength; the rest are folded behind the
 sky's light paled, fainter at night, thinning at the box's edges, depth-tested but not written, so walls and hills
 in front hide them; under water, and dry, nothing is drawn. Under a roof the rain stays outside:
 application/worldNavigation/avatarPresenceMethods.js#_setRainShelter() hands the renderer (`setRainShelter()`) the
-build the avatar stands in (core/IndoorView.js's `indoorCutaway()`: its footprint, and its `top`, the highest of its
+build the avatar stands in (core/building/IndoorView.js's `indoorCutaway()`: its footprint, and its `top`, the highest of its
 boxes, lifted onto the ground), whatever the camera perspective, only when that changes, and null under open sky or
 riding; RainFall folds away every streak any part of which is inside that footprint and below that top, so the room
 stays dry while it still rains outside its windows. Other builds' roofs it knows nothing of, but their walls hide
@@ -1688,7 +1708,7 @@ and a ring spreads from it to 0.55 m, fading, lightening the water and tilting i
 cell and the eight round it; the rings fade out from 10 to 28 m away, and at no rain the chunk returns at once. Its
 `rain` is one { value } `Renderer` hands every water tile, as it does `waveTime`.
 
-**Storms.** core/Storms.js storms in the heaviest downpours: `storminessAt()` rises from rain 0.75 to 0.9 (about a
+**Storms.** core/nature/Storms.js storms in the heaviest downpours: `storminessAt()` rises from rain 0.75 to 0.9 (about a
 third of rainy spells). Time is cut into 30-second slots; in each, a strike may fall within its first 10 s (so
 strikes are at least 20 s apart), with a chance of 0.4 times the storminess: one about every 75 s at the height of
 a storm. Each strike hashes its distance, which sets its brightness, and how soon (2.5 to 7 s) and how loud its
@@ -1701,7 +1721,7 @@ after a long gap; WorldSoundscapeService asks for it on every sample (`weatherCl
 session, none in Always day) and the provider's `playThunder()` plays a low, low-passed brown-noise rumble that
 swells over half a second and rolls away over five in uneven rolls, never a crack.
 
-**Wet ground.** `core/Weather.js#wetnessAt(seconds)` follows the rain (`rainAt()`) in 5-second steps on a grid fixed
+**Wet ground.** `core/nature/Weather.js#wetnessAt(seconds)` follows the rain (`rainAt()`) in 5-second steps on a grid fixed
 in time, from dry at the start of the spell before last, towards 2.5 × the rain (so a light shower soaks too) with a
 40-second time constant while it rises and a 150-second one while it dries: half dry in under two minutes, nearly in
 eight. The steps followed last are kept, so a frame costs a step or two, and the answer is the same however it is
@@ -1713,7 +1733,7 @@ roughness (to 0.62 for ground, 0.42 for bricks) for a sheen. Below the underside
 (the shelter's `ceiling`) and inside its footprint nothing is wet, so the room it stands in stays dry while its
 roof does not. At no wetness the patch changes nothing.
 
-**Seasons.** core/Season.js cuts the same clock into a world year of `WORLD_YEAR_DAYS` (32) of World View's
+**Seasons.** core/nature/Season.js cuts the same clock into a world year of `WORLD_YEAR_DAYS` (32) of World View's
 days, `SEASON_DAYS` (8) to a season: one season to each turn of the moon, so spring, summer, autumn and winter each
 start at dawn on the day whose night brings a new moon, and last 5 h 20 min. The year doesn't divide a real day, so
 a player who always plays at the same hour still sees the seasons go round; it is the world's year, not the
@@ -1724,13 +1744,13 @@ taken every thousandth of a day and comes back frozen in between. A look carries
 broadleaf's foliage it has), `fresh`, `blossom`, `autumn`, `fruit`, `flowers`, a `groundGrade` and
 `groundSaturation` for the grass, a `fieldColor` and `fieldAmount` for the fields (bare soil, young and green
 crops, ripe gold, stubble), `leafDrift` and `petalDrift`, a typical `snowCover`, and `birds` and `insects` for the
-sound (core/AmbientSoundscape.js#ambientMixInSeason(), sampled by WorldSoundscapeService from `session.season()`).
+sound (core/app/AmbientSoundscape.js#ambientMixInSeason(), sampled by WorldSoundscapeService from `session.season()`).
 renderer/SeasonalSurfaces.js changes the land without rebuilding anything streamed, and leaves as little as it can
 to every pixel: the bundled site's filmed walk-through renders in software (SwiftShader), which runs every line of a
 shader for every pixel whatever the branches say, so code that changes nothing still costs, and compiles every
 shader in software for each new page, so code that never runs costs too. The terrain takes a patch with one shared
 set of uniforms (`Renderer#setSeason()`), whose code is compiled in only once a season has been shown (never in the
-Editor); every terrain vertex carries `groundCover` (core/TerrainEcology.js#groundCoverAt():
+Editor); every terrain vertex carries `groundCover` (core/nature/TerrainEcology.js#groundCoverAt():
 grass for grassland and forest floor, a little for highland grass and a beach's edge, field for FIELD, none for
 rock, soil and water); the grass is greyed or saturated and multiplied by the grade, the field's colour replaces
 the crops' at the row's own brightness, so the rows stay, and in spring and summer grass is dotted with wild flowers:
@@ -1758,11 +1778,11 @@ WorldViewSeasonStore.js, `world-view-season`, provided as `worldViewSeasonStore`
 as rain otherwise. Only World View is given a season: the Editor and thumbnails keep high summer, which is what the
 patches look like until `setSeason()` is called.
 
-**Snow.** core/Weather.js gives each season its own shares of fair, cloudy and overcast spells (summer 0.72 fair and
+**Snow.** core/nature/Weather.js gives each season its own shares of fair, cloudy and overcast spells (summer 0.72 fair and
 0.08 overcast, winter 0.55 and 0.18, the year 0.6, 0.25 and 0.15 as before); a world year is 160 spells, a season
 40, so a spell never straddles two. What an overcast spell lets fall is `precipitationAt()`; through winter it falls
 as snow (`snowAt()`), the rest of the year as rain (`rainAt()`), turning over the 2 minutes before winter starts and
-before it ends (core/Season.js#snowShareAt()): there is no thunder in snow, and snow wets nothing. About one winter
+before it ends (core/nature/Season.js#snowShareAt()): there is no thunder in snow, and snow wets nothing. About one winter
 spell in six snows. `snowCoverAt()` follows the snow in 30-second steps from the end of autumn, when none lies:
 while it snows the cover rises towards twice the snowfall with a 150-second time constant, from patches to a
 blanket in a few minutes; once it stops it melts with a time constant of an hour in winter, so it lies from one
@@ -1776,8 +1796,8 @@ shaders only while any lies: the first snow of winter and the last of it melting
 Editor, pay nothing for it. Seasonal colour goes on a material after the wet patch, so it comes before the darkening
 and the snow in the shader.
 
-**The sun through the year.** Each season look carries a `sky` (core/DayCycle.js#seasonalSky(), from
-core/Season.js#summerAt(): a smooth wave, 1 at midsummer, day 12, -1 at midwinter, day 28, 0 in the middle of spring
+**The sun through the year.** Each season look carries a `sky` (core/nature/DayCycle.js#seasonalSky(), from
+core/nature/Season.js#summerAt(): a smooth wave, 1 at midsummer, day 12, -1 at midwinter, day 28, 0 in the middle of spring
 and autumn): `dayShift`, up to `SEASON_DAY_SHIFT` (0.05 of the cycle) longer or shorter, and the arcs' tilts, the sun's
 50° less or more `SEASON_TILT_DEGREES` (12°) and the moon's the other way, so the midsummer sun climbs to 52° and the
 midwinter one only to 28°, with long shadows, while the winter full moon rides high. A longer day ends later:
@@ -1788,10 +1808,10 @@ of the cycle at midsummer to a quarter at midwinter. `skyLookAt()`, `skyBodiesAt
 they always did. dayCycleMethods hands them `season().sky`, so a kept season keeps its middle's sun; Always day keeps its
 still morning sun. The light never comes from lower than `MIN_LIGHT_HEIGHT`, so builds stay readable in any season.
 
-**Frozen lakes.** core/Season.js#lakeIceAt() freezes the lakes from the world's clock alone, never a season kept on a
+**Frozen lakes.** core/nature/Season.js#lakeIceAt() freezes the lakes from the world's clock alone, never a season kept on a
 device, since the ice is walked on and everyone must agree where it holds: ice forms over the half day before winter's
 third day, holds hard (`isLakeFrozenAt()`) until its last, and breaks up over half a day. Only lakes
-(core/Hydrology.js#isLakeAt(): standing water inland of the shelf's middle, `seaShareAt()` under LAKE_SEA_SHARE), never
+(core/nature/Hydrology.js#isLakeAt(): standing water inland of the shelf's middle, `seaShareAt()` under LAKE_SEA_SHARE), never
 the sea or rivers. Frozen hard, the avatar walks on it: application/worldNavigation/localAvatarMethods.js gives its
 constraints a `frozenAt(x, z)` on the session's clock; AvatarWaterConstraint reports no depth there (no wading slowdown)
 and an `iceTopAt()`, the surface in the terrain-relative frame; AvatarStepConstraint takes that as a `floorAt()`, stood on
@@ -1803,8 +1823,8 @@ duller than water, with no foam, ripples or rain rings, and the snow lying patch
 while there is ice, so the rest of the year pays nothing for it. Underfoot it taps (`FOOTSTEP_SURFACE.ICE`).
 
 **Snow underfoot and footprints.** With snow lying at least `SNOW_FOOTSTEP_COVER` (0.35) and no roof overhead, open
-ground crunches (`FOOTSTEP_SURFACE.SNOW`: a soft, low crunch; core/AvatarSoundCues.js reads `snowCover` and `onIce` from
-`avatarSoundObservation()`). And the local avatar leaves footprints there (core/Footprints.js#advanceFootprints(), each
+ground crunches (`FOOTSTEP_SURFACE.SNOW`: a soft, low crunch; core/avatar/AvatarSoundCues.js reads `snowCover` and `onIce` from
+`avatarSoundObservation()`). And the local avatar leaves footprints there (core/avatar/Footprints.js#advanceFootprints(), each
 frame from the same observation): one every `FOOTPRINT_STRIDE` (0.75 m), left and right in turn, 0.13 m to either side,
 pointing the way it walks; none on bricks, ice, in the water, in the air, riding or indoors. They are this device's own:
 nothing is sent or stored, and other players see none. renderer/FootprintTrail.js draws the newest 96 as one instanced
@@ -1819,12 +1839,12 @@ shimmer as you walk; the light stands 120 m towards the sun or the moon from it 
 who receives is set where meshes are made (renderer/ShadowRoles.js): bricks, standalone and instanced, and trees cast
 and receive; avatars, vehicles and animals cast; terrain receives; water, life under water, markers and the sun and
 moon do neither. Off, as in the Editor and thumbnails, these flags draw nothing. Through each handover the light's
-`lightStrength` (core/DayCycle.js) eases from 1 to 0 and back, and `Lights` gives half of what the directional light
+`lightStrength` (core/nature/DayCycle.js) eases from 1 to 0 and back, and `Lights` gives half of what the directional light
 loses to the hemisphere fill, so shadows fade out and in instead of swinging across the ground. Shadows are this
 device's choice (application/settings/WorldViewShadowStore.js, `world-view-shadows`): on by default unless the main
 pointer is coarse (phones, tablets), decided in ui/main.js. Turning them on or off rebuilds the lit materials once.
 
-**Trees.** Each species has four forms grown from a fixed seed (core/TreeForm.js): a conifer is a straight trunk with
+**Trees.** Each species has four forms grown from a fixed seed (core/nature/TreeForm.js): a conifer is a straight trunk with
 whorls of drooping branches under sprays of needles; a broadleaf a trunk forking into limbs and twigs under clusters
 of leaves; scrub a few crooked stems parting low. A form is branches (polylines with radii and `flex`, how far each
 point sways, measured along the wood from the root so a branch sways exactly as its parent does where it joins) and
@@ -1855,7 +1875,7 @@ darken in the rain with the rest of the world (renderer/WetSurfaces.js). Detail 
 settings): on by default unless the main pointer is coarse, like shadows; the Editor's renderer makes the same choice
 from the pointer.
 
-**What shines.** A brick type's `nightGlow` (core/NightGlow.js; docs/BrickLibrary.md) gives the light its bricks
+**What shines.** A brick type's `nightGlow` (core/nature/NightGlow.js; docs/BrickLibrary.md) gives the light its bricks
 give off: `BrickRenderer#describe()` adds it to a brick's visual as `glow`. Instanced bricks carry it in an
 `instanceGlow` attribute beside the selection highlight's `instanceEmissive`, and the shader adds
 `instanceGlow × uNightGlow` to the emissive light, one uniform per registry, so night falls with one number per
@@ -1868,19 +1888,19 @@ point lights and no bloom pass.
 **Always day.** A per-device choice, application/settings/WorldViewSkyStore.js (`world-view-sky`), provided as
 `worldViewSkyStore`. WorldView passes it to `session.setAlwaysDay()` before the session starts and whenever it is
 ticked; while on, the session hands the renderer DAY and `nightLevel()` is 0, so sound stays daytime too. The
-season still turns, and Always day's fair weather lies over its typical snow (core/Weather.js#fairWeatherIn()).
+season still turns, and Always day's fair weather lies over its typical snow (core/nature/Weather.js#fairWeatherIn()).
 
 ## Sound
 
-    core/AmbientSoundscape.js#ambientMixAt(seed, x, z)   level 0..1 per layer: wind, birds, insects, water, stream,
+    core/app/AmbientSoundscape.js#ambientMixAt(seed, x, z)   level 0..1 per layer: wind, birds, insects, water, stream,
             │                                             leaves, pines
             │  (ecologyZoneAt() and isRiverAt() underfoot, on a ring at 12 m and one at 30 m)
-    core/AvatarSoundCues.js#advanceAvatarSound()         per frame: footstep / jump / land cues, engine { vehicleType, load }
+    core/avatar/AvatarSoundCues.js#advanceAvatarSound()         per frame: footstep / jump / land cues, engine { vehicleType, load }
             │  (from WorldNavigationSession#avatarSoundObservation(): position, animation, verticalState, vehicleType)
     application/world/WorldSoundscapeService.js          samples 4×/s at the avatar (else the camera); cues and engine
             │                                             every render frame (onRenderFrame()); mute/volume
-            │                                             ↔ SoundSettingsStore ('sound-settings', core/SoundSettings.js)
-    core/CreatureSoundCues.js#advanceCreatureSound()     10×/s: animal calls and steps, catch/release, resident
+            │                                             ↔ SoundSettingsStore ('sound-settings', core/app/SoundSettings.js)
+    core/app/CreatureSoundCues.js#advanceCreatureSound()     10×/s: animal calls and steps, catch/release, resident
             │  greet, speech and steps, each with { gain, pan } (soundObservationMethods.js#creatureSoundObservation())
     audio/WebAudioSoundscapeProvider.js                  Web Audio graph: ambient layers, then an effects bus for
             ├── audio/AvatarSoundSynth.js                  footsteps per surface, jump whoosh, landing thud
@@ -1888,10 +1908,10 @@ season still turns, and Always day's fair weather lies over its typical snow (co
             ├── audio/CreatureSoundSynth.js                animal and resident sounds, through a gain and stereo pan
             ├── audio/EditorSoundSynth.js                  the Editor's edit sounds
             ├── audio/RainSynth.js                         rain's drops: looped beds and a bank of near drops
-            └── audio/MusicPlayer.js                       the music: core/MusicScore.js#musicPhrase() scheduled on the
+            └── audio/MusicPlayer.js                       the music: core/app/MusicScore.js#musicPhrase() scheduled on the
                                                            audio clock, a phrase at a time, under the master volume
 
-    Editor: EditorSession#onCommandActivity() → core/EditorSoundCues.js#editorSoundCueFor()
+    Editor: EditorSession#onCommandActivity() → core/app/EditorSoundCues.js#editorSoundCueFor()
             → application/editor/EditorSoundService.js → WebAudioSoundscapeProvider({ ambience: false })
 
 - **Mix.** Each ecology zone contributes a fixed level to each layer (forest: birds, sheltered from wind; highland
@@ -1899,7 +1919,7 @@ season still turns, and Always day's fair weather lies over its typical snow (co
   spot underfoot weighs 0.4, the near ring 0.4 and the far ring 0.2, so a lake or forest is heard before it is
   reached. LEAVES and PINES come from the trees themselves: every tree `naturalFeaturesInRegion()` puts within 20 m
   adds its nearness (1 − distance / 20) over 6 to its layer, BROADLEAF fully and SCRUB at 0.4 to LEAVES, CONIFER to
-  PINES. SPRING is a spring bubbling where a river rises (`core/RiverFlow.js#riverSpringAt()`): the loudest spring
+  PINES. SPRING is a spring bubbling where a river rises (`core/nature/RiverFlow.js#riverSpringAt()`): the loudest spring
   found underfoot or on rings at 6 m and 12 m, by its strength times its nearness (1 − distance to its centre / 16).
   Like the terrain it is a pure function of place: nothing is stored or sent, and every viewer at a spot
   hears the same land. After dark `ambientMixAtNight(mix, nightLevel)` turns birds down to a tenth and crickets up
@@ -1931,7 +1951,7 @@ season still turns, and Always day's fair weather lies over its typical snow (co
   first `resume()`, and suspended while muted or while the page is hidden, so it costs nothing then.
 - **Avatar sounds.** `advanceAvatarSound(state, observation, deltaSeconds, seed)` is pure; the service keeps its
   state between frames. Footsteps are counted by distance, one per stride (0.75 m walking, 0.94 m running: one per
-  leg swing of `core/AvatarPoseOffsets.js`'s 2 Hz and 3.2 Hz gaits at 3 and 6 m/s), so pushing against a wall is
+  leg swing of `core/avatar/AvatarPoseOffsets.js`'s 2 Hz and 3.2 Hz gaits at 3 and 6 m/s), so pushing against a wall is
   silent, and a move over 10 m in one frame (a teleport) makes none. Only a grounded, walking or running, on-foot
   avatar steps. `footstepSurfaceAt()` picks the surface: STRUCTURE when the avatar's simulated Y is above 0.05 (it
   stands on bricks), else WATER in a lake or on a river, SAND on a beach, STONE on rock or highland, LEAVES in a
@@ -1990,14 +2010,14 @@ season still turns, and Always day's fair weather lies over its typical snow (co
   VehicleEngineVoice per rider id behind its own gain and PannerNode (or stereo panner), gliding loudness and place
   between the ten-a-second updates, and fades out a rider left out of the list.
 - **3D.** Every placed cue carries `position` (`{ x, y, z }`, heights where things are drawn: terrain plus the
-  presence's own `y`, or just that `y` for a rider, animals 0.5 m and residents 1.5 m up). With `spatial` on (`core/SoundSettings.js`, default
+  presence's own `y`, or just that `y` for a rider, animals 0.5 m and residents 1.5 m up). With `spatial` on (`core/app/SoundSettings.js`, default
   true, the World View **3D**/**Stereo** button), the provider places it with a PannerNode (`panningModel` HRTF,
   `rolloffFactor` 0, since the cue's own gain already fades with distance); otherwise, or without a position, with
   the stereo `pan`. `WorldNavigationSession#soundListenerPose()` gives the AudioListener, set every render frame:
   the avatar's ears (drawn ground plus `y` plus 1.6 m; a rider's position already includes the ground), else the
   camera, facing the camera's full direction with up made perpendicular to it. The deprecated
   `setPosition()`/`setOrientation()` are used where AudioParams are missing (older Safari).
-- **Music.** `core/MusicScore.js#musicPhrase(mood, index, seed)` is pure: four bars over a chord progression, a pad
+- **Music.** `core/app/MusicScore.js#musicPhrase(mood, index, seed)` is pure: four bars over a chord progression, a pad
   holding each chord, a bass on the bar and a melody of chord tones and steps (folded between a fifth and two octaves
   above the tonic), in one of three moods (EDITOR in C major at 88 bpm, DAY in F major at 72, NIGHT in A minor at 56,
   sparser). Phrases 6 and 7 of every 8 are rests. `audio/MusicPlayer.js` schedules a phrase at a time 0.6 s ahead on
@@ -2019,13 +2039,13 @@ Several people can edit one World at the same time. The live design
   this identity may edit this World: by owning it, or through a signed
   grant. Nothing is cached, so a revocation takes effect on the next try.
 - WorldMembershipUseCase issues and gossips grants and revocations
-  (core/WorldEditAuthorizationEnvelope.js, owner-signed only) over
+  (core/collaboration/WorldEditAuthorizationEnvelope.js, owner-signed only) over
   `forkbuild:world-membership`.
 - WorldCommandPropagationUseCase sends each local command as a
-  core/WorldOperationEnvelope.js over `forkbuild:world-sync`, checks the
+  core/collaboration/WorldOperationEnvelope.js over `forkbuild:world-sync`, checks the
   sender's authority for that specific World, and applies remote
   operations idempotently. Operations are totally ordered by a Lamport
-  clock and operation id (core/LogicalClock.js,
+  clock and operation id (core/collaboration/LogicalClock.js,
   replication/WorldOperationOrdering.js), never by wall-clock time;
   replication/WorldConflictResolver.js reorders rather than rewrites,
   and delete is terminal. Remote operations never enter the local undo
@@ -2059,19 +2079,19 @@ in the app; the design notes are in docs/ArchitectureHistory.md.
 
 ## Places, landmarks and naming
 
-- **Regions and landmarks** (core/WorldRegion.js, core/WorldLandmark.js,
-  core/RegionKind.js) are World content: World View creates, updates and
+- **Regions and landmarks** (core/world/WorldRegion.js, core/world/WorldLandmark.js,
+  core/world/RegionKind.js) are World content: World View creates, updates and
   removes them with commands at the avatar's position, so they are
   undoable and follow the World's authorization. World Animal
   Decorations follow the same path.
-- **Derived structure.** core/WorldCurationContext.js groups content
-  near landmarks; core/WorldRegionGeography.js and the
+- **Derived structure.** core/collaboration/WorldCurationContext.js groups content
+  near landmarks; core/world/WorldRegionGeography.js and the
   core/GeographicPlace*.js modules derive geographic places from region
   names. Places are computed views: they highlight existing geometry and
   are navigable, but never become stored objects. WorldLocationDirectory
   lists locations from existing identity data, and WorldFocusContext
   describes what is being looked at.
-- **Naming claims.** A name is a claim, not a fact: core/PlaceNamingClaim.js
+- **Naming claims.** A name is a claim, not a fact: core/world/PlaceNamingClaim.js
   is a signed claim, managed by PlaceNamingClaimUseCase, shared by file
   (PlaceNamingClaimExchange) or published and discovered over Nostr or
   Arweave (PlaceNaming*Discovery* and *RuntimeComposition files) with a
@@ -2110,7 +2130,7 @@ Distributing a Publication or a Snapshot involves separate choices, each with it
 | Choice | Values | Seam |
 |--------|--------|------|
 | Where the bytes go | Arweave, IPFS (Local Kubo), IPFS (Remote Pinning, Experimental), Steem and Blurt (Experimental, small builds) | `PublicationMaterialUploaderComposition` (Publication material); `SnapshotPlacementStoreRegistry` + `ipfsRemotePublicationCoordinator` (Snapshot) |
-| Where it is announced | Nostr (fan-out to every configured relay), Arweave (tagged transaction), Steem (Experimental; a reply to a monthly discovery thread) or Blurt (Experimental; the poster's own top-level build post, found by tag and by authors' histories) | `AnnouncementDiscoveryProviderRegistry`, keyed by `nostr`/`arweave`/`steem`/`blurt` (`core/AnnouncementDiscoveryProvider.js`), for Snapshot and Place Naming (`resolveSnapshotDiscoveryPublisher()`, `distributePlaceNamingClaimCommand`); `*RuntimeComposition` `discoveryProvider` for Publication and Commentary |
+| Where it is announced | Nostr (fan-out to every configured relay), Arweave (tagged transaction), Steem (Experimental; a reply to a monthly discovery thread) or Blurt (Experimental; the poster's own top-level build post, found by tag and by authors' histories) | `AnnouncementDiscoveryProviderRegistry`, keyed by `nostr`/`arweave`/`steem`/`blurt` (`core/publication/AnnouncementDiscoveryProvider.js`), for Snapshot and Place Naming (`resolveSnapshotDiscoveryPublisher()`, `distributePlaceNamingClaimCommand`); `*RuntimeComposition` `discoveryProvider` for Publication and Commentary |
 | Proof / anchoring | Arweave; Bitcoin, Steem and Blurt (Experimental; Bitcoin and Base only through their wallet steps) | `PreferredPublicationAnchorCreationCoordinator` |
 
 The saved preferences live in `RoleProviderPreferenceStore` (`CONTENT`, `ANNOUNCEMENT_AND_DISCOVERY`,
@@ -2233,7 +2253,7 @@ name the record carries; `ui/components/IdentityName.js` shows it, comment autho
 
 Every comment form starts on `defaultCommentaryDistributionProvider`, and the distributor falls back to it when a
 comment carries no choice. `ui/main/composeContentAndSnapshots.js` resolves it once at boot with
-`resolveCommentaryDistributionProvider()` (`core/CommentaryDistributionProvider.js`): the saved comment default from
+`resolveCommentaryDistributionProvider()` (`core/publication/CommentaryDistributionProvider.js`): the saved comment default from
 `CommentaryDistributionPreferenceStore`, else the Announcement / Discovery preference. It is kept apart from
 `RoleProviderPreferenceStore` because Local & peers only is a choice only comments have: Snapshots, claims and place
 names are always announced on a network.
@@ -2253,7 +2273,7 @@ above on publication presence, distribution, network settings and
 commentary describe what a user drives day to day; this is the map of
 the rest.
 
-- **Decentralized publication.** core/DecentralizedPublication.js is a
+- **Decentralized publication.** core/publication/DecentralizedPublication.js is a
   signed, protocol-neutral statement that a Publication's bytes can be
   found at a locator, verified by content hash wherever they came from.
   Peers exchange publications and content over `forkbuild:publication`
@@ -2270,7 +2290,7 @@ the rest.
 - **World Encounters.** The DecentralizedWorld*/WorldDiscovery*
   application files turn discovered publications and Snapshots into
   encounters shown by ui/components/WorldEncounterCanvas.js.
-- **Anchoring.** core/PublicationAnchor.js is a claim that external
+- **Anchoring.** core/publication/PublicationAnchor.js is a claim that external
   evidence (a Bitcoin OP_RETURN, an Arweave transaction or a Base
   transaction) exists for a publication. anchoring/ and base/ build,
   review, sign, broadcast and observe those transactions; proof verifiers
@@ -2288,7 +2308,7 @@ the rest.
   routes redirect to Home, and the observation archive reads and drops the
   collections they kept (application/publication/observationArchive/
   PublicationObservationArchive.js, "LEGACY_FIELDS").
-- **Notifications.** core/NotificationEvent.js,
+- **Notifications.** core/social/NotificationEvent.js,
   storage/NotificationEventStore.js, GetRecipientNotificationEventsUseCase
   and ui/components/NotificationHistoryPanel.js, which ui/App.js hosts from
   its header's 🔔 button through application/chat/NotificationHistoryAccess.js
@@ -2302,7 +2322,7 @@ the rest.
   recipient's new events through the operating system while the page is
   open but hidden: it takes what is stored at start (or on a change of
   identity) as seen, is checked after each admission and every 20 seconds,
-  and shows at most three at once (core/DeviceNotifications.js). There is no
+  and shows at most three at once (core/social/DeviceNotifications.js). There is no
   push service, so nothing shows while ForkBuild is closed.
 
 The user-facing entry point is the Publications page (`/publications`,
@@ -2338,7 +2358,7 @@ way, through RenderWorldUseCase and RenderWorldViewUseCase.
   with ThreeBrickFactory, builds standalone meshes for placements,
   previews and thumbnails; ThreeBrickFactory also supplies the geometry
   instances share.
-- The brick look (docs/Pillars.md, "Look"): core/BrickSurface.js says what
+- The brick look (docs/Pillars.md, "Look"): core/building/BrickSurface.js says what
   each brick is made of (masonry, plaster, wood, tile, glass, foliage,
   stone or plain; the plain blocks by their colour), and
   renderer/BrickSurfaceMaterial.js draws it. `withBrickBounds()` gives a
@@ -2381,7 +2401,7 @@ miss.
 The dark look redefines every name, once under
 `@media (prefers-color-scheme: dark)` for `:root:not([data-look="light"])`
 and again, identically, for `:root[data-look="dark"]`. The choice
-(core/LookSettings.js: auto, light or dark) is kept by
+(core/app/LookSettings.js: auto, light or dark) is kept by
 application/settings/LookSettingsStore.js (`look-settings`); ui/start.js
 applies it with ui/look.js#applyLook() before the app loads, which sets or
 clears `data-look` on `<html>` and points both `theme-color` metas at the
@@ -2424,7 +2444,7 @@ tests/ServiceGroupCoverage.test.js fails if a page injects a service from a grou
 goes unused, or if the header injects a group's service; tests/InitialLoadModuleGraph.test.js fails if the network
 runtime's modules are imported statically again.
 
-Bitcoin's and Base's wallet steps are network writers (core/NetworkWriters.js,
+Bitcoin's and Base's wallet steps are network writers (core/publication/NetworkWriters.js,
 docs/Pillars.md "Networks: readers and writers"), built only when switched on
 in Network Settings (application/settings/NetworkWriterSettingsStore.js,
 ui/components/NetworkWritersSetting.js). `anchoring` (ui/main/composeAnchoring.js)
@@ -2483,7 +2503,7 @@ lookup, Intl.PluralRules plural forms, `{name}`
 parameters, and Intl number and date formatting); components import t()
 from it and expose it to their template. ui/i18n/locales.js lists the
 shipped locales and picks one: the saved choice
-(LanguageSettingsStore, 'language-settings', core/LanguageSettings.js),
+(LanguageSettingsStore, 'language-settings', core/app/LanguageSettings.js),
 else the browser's languages, else English. ui/start.js sets it, and the
 page's `lang` and `dir`, after opening storage and before importing the
 app, so text is in that language from the first render. Only the chosen
@@ -2493,8 +2513,8 @@ changes while the app runs: the Language page (`/settings/language`)
 saves the choice and reloads. The pseudo-locale `en-XA`
 (ui/i18n/pseudoLocalize.js) shows English accented and padded, to find
 text not yet moved to t(). core/ and application/ never write text for the
-screen: they return message descriptors (core/Message.js, a key and its
-parameters) and throw UserFacingError (core/UserFacingError.js) for refusals
+screen: they return message descriptors (core/app/Message.js, a key and its
+parameters) and throw UserFacingError (core/app/UserFacingError.js) for refusals
 a person should read, and the UI shows them with t(), displayText() or
 errorText(). The Editor action registry, the license, placement, document
 status and presence label modules, the passphrase rules, opening a
@@ -2560,7 +2580,7 @@ collects its bricks and, one level deep, its placed structures' bricks
 where renderer/WorldRenderer.js draws them (TransformMath's rotation about
 the placement's origin); renderer/BuildMeshExtraction.js turns them into
 triangles with ThreeBrickFactory's own geometry, grouped by color; and
-core/BuildModelFormats.js, with no Three.js, writes glTF binary (one
+core/building/BuildModelFormats.js, with no Three.js, writes glTF binary (one
 primitive per color, linear-light materials), binary STL (Z up, 10 mm a
 unit, on the bed) or OBJ (vertex colors), each carrying the credit.
 ui/components/modelExport/downloadBuildModel.js hands the file to the
@@ -2590,7 +2610,7 @@ More (or Safari's Add to Home Screen hint); `appinstalled` is counted as
 | `content/` | `ContentStore` implementations: local, Arweave, IPFS (Kubo, gateway, remote pinning), Steem (`SteemContentStore`: Snapshots and Signed Claims in a manifest post and up to 20 part posts), Blurt (`BlurtContentStore`: the same format, in replies under the poster's own build post) and the gateway-failover wrappers | `docs/Roadmap.md` 0.7.0 onward; "Distribution" and "Network endpoint configuration" above |
 | `nostr/`, `arweave/` | Injected-wallet signers (NIP-07, Arweave) and the Nostr relay query client | "Distribution: independent choices, one dialog" above |
 | `steem/` | The Steem JSON-RPC client (API node failover) and the Steem Keychain broadcaster. The app reads and announces on Steem through `application/steem/` (a discovery thread reader, an announcer that also posts stored content and its parts, a reader and publisher per announcement family, a Resource Credits estimator, and `content/SteemContentStore.js`, composed by `SteemRuntimeComposition.js` in `ui/main/composeWorldDiscovery.js`; `ui/main.js` registers the content store for Snapshot storage, and Publication distribution stores Signed Claims through it; `application/worldEncounter/SteemWorldEncounterMaterialResolver.js` reads Signed Claims back for World discovery); `scripts/steem-threads/` uses the same client and broadcaster to create the threads | `docs/Protocol.md`, "Proposed: Steem Announcement Substrate" and "Proposed: Steem Content Storage" |
-| `blurt/` | The Blurt JSON-RPC client (API node failover, tag listings and authors' histories) and Blurt Keychain, which offers Steem Keychain's interface, so signing and image uploads reuse `steem/`. The app reads, posts, stores and anchors on Blurt through `application/blurt/` (a reader over the tag and authors' histories, a poster that groups everything one Distribute makes into one build post, a reader and publisher per announcement family and a fee estimator), `content/BlurtContentStore.js` and `anchoring/Blurt*.js`, composed by `BlurtRuntimeComposition.js` in `ui/main/composeWorldDiscovery.js`. Steem's and Blurt's binary serialization and kept block evidence share `core/GrapheneBinary.js` and `core/GrapheneBlockEvidence.js` | `docs/Protocol.md`, "Proposed: Blurt Substrate" |
+| `blurt/` | The Blurt JSON-RPC client (API node failover, tag listings and authors' histories) and Blurt Keychain, which offers Steem Keychain's interface, so signing and image uploads reuse `steem/`. The app reads, posts, stores and anchors on Blurt through `application/blurt/` (a reader over the tag and authors' histories, a poster that groups everything one Distribute makes into one build post, a reader and publisher per announcement family and a fee estimator), `content/BlurtContentStore.js` and `anchoring/Blurt*.js`, composed by `BlurtRuntimeComposition.js` in `ui/main/composeWorldDiscovery.js`. Steem's and Blurt's binary serialization and kept block evidence share `core/networks/GrapheneBinary.js` and `core/networks/GrapheneBlockEvidence.js` | `docs/Protocol.md`, "Proposed: Blurt Substrate" |
 | `scripts/steem-threads/` | Operator pages, not part of the app: one creates the monthly Steem discovery threads, and `content-check.html` checks that API nodes return content stored on Steem in full, and that an image can be uploaded to a Steem image host from this site | `docs/Protocol.md`, "Proposed: Steem Announcement Substrate" |
 | `server/rendezvous-worker/` | Reference rendezvous server (Cloudflare Worker) for `peer/WebSocketRendezvousTransport.js` | `server/rendezvous-worker/README.md` |
 | `utils/` | Small shared helpers (e.g. `sortOptionsByLabel.js`) | `docs/CodingConventions.md` |

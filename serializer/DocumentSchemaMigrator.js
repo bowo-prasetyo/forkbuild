@@ -1,5 +1,5 @@
-import { DOCUMENT_SCHEMA_VERSION } from '../core/documentSchema.js';
-import { encodeBrickTable } from '../core/BrickTable.js';
+import { DOCUMENT_SCHEMA_VERSION } from '../core/document/documentSchema.js';
+import { encodeBrickTable } from '../core/building/BrickTable.js';
 
 // Schema migration infrastructure for document envelopes.
 //
@@ -19,7 +19,7 @@ import { encodeBrickTable } from '../core/BrickTable.js';
 //   1            — { schemaVersion: 1, world, metadata }. World may
 //                  have a groups field.
 //   2 (current)  — each building's `bricks` array becomes a
-//                  `brickTable` (core/BrickTable.js); nothing else
+//                  `brickTable` (core/building/BrickTable.js); nothing else
 //                  changes.
 //
 // The migration from 0 → 1 adds the schemaVersion field. Pre-0.1.43

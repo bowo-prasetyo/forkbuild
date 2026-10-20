@@ -19,7 +19,7 @@
 // /b/ page names for a build that checks out: sites and editors that embed
 // links they are given (Notion, Ghost, WordPress plugins and others) get the
 // <iframe> of the app's embed.html, the same code the app's Embed copies
-// (core/ForkBuildAppLinks.js, embedCode()).
+// (core/app/ForkBuildAppLinks.js, embedCode()).
 //
 // GET /n/<publication id> and /n/<publication id>/preview.png are short links
 // to builds sent to everyone: the same page and picture, for the build whose
@@ -42,7 +42,7 @@ const MAX_DRAWN_BRICKS = 4000;
 export const PREVIEW_WIDTH = 600;
 export const PREVIEW_HEIGHT = 315;
 export const DEFAULT_APP_URL = 'https://bowo-prasetyo.github.io/forkbuild/';
-// The embed's size, as core/ForkBuildAppLinks.js's EMBED_WIDTH and EMBED_HEIGHT.
+// The embed's size, as core/app/ForkBuildAppLinks.js's EMBED_WIDTH and EMBED_HEIGHT.
 export const EMBED_WIDTH = 640;
 export const EMBED_HEIGHT = 480;
 
@@ -188,7 +188,7 @@ function publicationDescriptor(claim) {
 
 // Every brick of every building in a published document, as
 // { definitionId, x, y, z, rotation, color }: schema 2's brick tables
-// (core/BrickTable.js) or schema 1's brick objects.
+// (core/building/BrickTable.js) or schema 1's brick objects.
 export function bricksOf(snapshotText) {
     let document;
     try {
@@ -201,7 +201,7 @@ export function bricksOf(snapshotText) {
         const table = building?.brickTable;
         if (table && Array.isArray(table.values) && Array.isArray(table.definitions)) {
             const colors = Array.isArray(table.colors) ? table.colors : [];
-            // A build with tilted bricks carries one tilt per brick (core/BrickTable.js).
+            // A build with tilted bricks carries one tilt per brick (core/building/BrickTable.js).
             const tilts = Array.isArray(table.tilts) ? table.tilts : [];
             for (let i = 0; i + 5 < table.values.length; i += 6) {
                 const v = table.values;
@@ -257,7 +257,7 @@ function addBrick(triangles, brick) {
     const angle = (Number(brick.rotation) || 0) * Math.PI / 180;
     const cos = Math.cos(angle);
     const sin = Math.sin(angle);
-    // The brick's tilt about its own +x (core/BrickOrientation.js), then
+    // The brick's tilt about its own +x (core/building/BrickOrientation.js), then
     // Three.js's rotation about +y, then the brick's position.
     const tilt = (Number(brick.tilt) || 0) * Math.PI / 180;
     const tcos = Math.cos(tilt);
@@ -675,7 +675,7 @@ function embedSize(maxWidth, maxHeight) {
     return { width: Math.max(1, Math.floor(EMBED_WIDTH * scale)), height: Math.max(1, Math.floor(EMBED_HEIGHT * scale)) };
 }
 
-// Mirrors core/ForkBuildAppLinks.js's embedCode() (tests/LinkPreview.test.js
+// Mirrors core/app/ForkBuildAppLinks.js's embedCode() (tests/LinkPreview.test.js
 // checks they agree).
 export function embedHtml({ payload, frameTitle, appUrl, width = EMBED_WIDTH, height = EMBED_HEIGHT }) {
     return `<iframe src="${appUrl}embed.html#${payload}" width="${width}" height="${height}" title="${escapeHtml(frameTitle)}" `

@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { worldViewSourceWithTemplate, mainFiles } from './support/SourceFileGroups.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
-import { WorldEncounterKind } from '../core/WorldEncounter.js';
+import { WorldEncounterKind } from '../core/world/WorldEncounter.js';
 import { LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { LocalWorldEncounterMaterialSource } from '../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
 import { composeWorldEncounterMaterialVerifier } from '../application/worldEncounter/WorldEncounterMaterialVerifierRuntimeComposition.js';

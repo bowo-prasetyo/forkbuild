@@ -1,10 +1,10 @@
-import { nextTilt } from '../../core/BrickOrientation.js';
-import { restingHeight } from '../../core/BrickResting.js';
+import { nextTilt } from '../../core/building/BrickOrientation.js';
+import { restingHeight } from '../../core/building/BrickResting.js';
 import { Tool } from './Tool.js';
-import { PlacementValidator } from '../../core/PlacementValidator.js';
+import { PlacementValidator } from '../../core/publication/PlacementValidator.js';
 import { PlaceBrickCommand } from '../commands/PlaceBrickCommand.js';
 import { PlacementPositionService } from '../editor/PlacementPositionService.js';
-import { Position } from '../../core/Position.js';
+import { Position } from '../../core/document/Position.js';
 
 export const DEFAULT_BRICK_ID = 'core:cube';
 
@@ -59,7 +59,7 @@ export class PlacementTool extends Tool {
         this._placementValidator = new PlacementValidator();
         this._positionService = new PlacementPositionService(context.registry);
         this._rotation = 0;
-        // The pending brick's tilt (core/BrickOrientation.js): T lays it
+        // The pending brick's tilt (core/building/BrickOrientation.js): T lays it
         // on another side, Shift+T the other way.
         this._tilt = 0;
         this._lastPointer = null;
@@ -114,7 +114,7 @@ export class PlacementTool extends Tool {
                     this._tilt
                 );
                 // On top of a brick, a wider one rests on whatever else is
-                // under it (core/BrickResting.js): a roof on the walls.
+                // under it (core/building/BrickResting.js): a roof on the walls.
                 if (position && pointerEvent.pickedBrick.normal.y > 0.5) {
                     position = this._restOnTop(building, definitionId, position);
                 }

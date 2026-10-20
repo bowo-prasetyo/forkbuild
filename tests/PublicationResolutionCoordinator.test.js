@@ -1,4 +1,4 @@
-import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
+import { DecentralizedPublication } from '../core/publication/DecentralizedPublication.js';
 import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { PublicationExchange } from '../application/publication/PublicationExchange.js';
 import { PublicationResolver } from '../application/publication/PublicationResolver.js';
@@ -10,7 +10,7 @@ import { CreatePublicationDisplayKindRegistryUseCase } from '../application/publ
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { BlueprintAttribution, BLUEPRINT_ATTRIBUTION_KIND } from '../core/BlueprintAttribution.js';
+import { BlueprintAttribution, BLUEPRINT_ATTRIBUTION_KIND } from '../core/building/BlueprintAttribution.js';
 import { LocalBlueprintAttributionStore } from '../application/blueprint/LocalBlueprintAttributionStore.js';
 import { createBlueprintAttributionPublicationKind } from '../application/blueprint/BlueprintAttributionPublicationKind.js';
 import { PeerContentExchange } from '../application/peer/PeerContentExchange.js';

@@ -1,7 +1,7 @@
-import { parseDescription, previewDescription } from '../../core/DescriptionMarkup.js';
+import { parseDescription, previewDescription } from '../../core/document/DescriptionMarkup.js';
 
 // A build's description with the little formatting it may use
-// (core/DescriptionMarkup.js): paragraphs, headings, bullet lists, bold and
+// (core/document/DescriptionMarkup.js): paragraphs, headings, bullet lists, bold and
 // italic. Everything is drawn as elements around plain text, never as HTML,
 // so a description can't inject markup or links. A description without
 // formatting reads as before. With `preview`, only its start

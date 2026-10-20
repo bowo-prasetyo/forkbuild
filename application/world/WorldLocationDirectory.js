@@ -1,11 +1,11 @@
-import { WorldLocation } from '../../core/WorldLocation.js';
-import { WorldLocationKind } from '../../core/WorldLocationKind.js';
-import { Position } from '../../core/Position.js';
+import { WorldLocation } from '../../core/world/WorldLocation.js';
+import { WorldLocationKind } from '../../core/world/WorldLocationKind.js';
+import { Position } from '../../core/document/Position.js';
 import {
     isGeographicPlaceLocationId,
     geographicPlaceFingerprintKeyFromLocationId,
     deriveGeographicPlaceNavigationTarget
-} from '../../core/GeographicPlaceNavigation.js';
+} from '../../core/world/GeographicPlaceNavigation.js';
 
 // 0.2.94 — World View Location & Navigation.
 // 0.3.7 — World Landmarks & Personal Waypoints: added landmark locations.
@@ -19,7 +19,7 @@ import {
 // class never mutates `session`, never touches a Document, and never
 // persists anything of its own: list() is a query, safe to call as
 // often as the UI likes, always reflecting exactly what's currently
-// loaded — see core/WorldLocation.js's own header for why there is no
+// loaded — see core/world/WorldLocation.js's own header for why there is no
 // store to keep in sync.
 //
 // Deliberately WORLD-WIDE in scope, not streaming-radius-limited: a
@@ -88,7 +88,7 @@ export class WorldLocationDirectory {
     // `place:<fingerprintKey>` id the SAME way "Show on Map" already
     // has since 0.5.5 (ui/views/WorldView.js#showGeographicPlaceOnMap()):
     // the place's own deterministic representative region
-    // (core/GeographicPlaceNavigation.js#deriveGeographicPlaceNavigationTarget())
+    // (core/world/GeographicPlaceNavigation.js#deriveGeographicPlaceNavigationTarget())
     // IS the navigation target, and that region's already-computed,
     // layout-offset WorldLocation (from list() — the SAME position
     // _regionLocationsFor() below produces for it under its OWN id) is

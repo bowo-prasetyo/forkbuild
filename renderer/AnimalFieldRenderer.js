@@ -1,6 +1,6 @@
 import { AnimalRenderer } from './AnimalRenderer.js';
 import { AnimalVisual } from './AnimalVisual.js';
-import { AnimalPresence } from '../core/AnimalPresence.js';
+import { AnimalPresence } from '../core/nature/AnimalPresence.js';
 
 // 0.9.701 — Released Animal Rendering. The direct structural twin of
 // renderer/VehicleFieldRenderer.js, applied to released animals instead

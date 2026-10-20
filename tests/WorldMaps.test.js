@@ -7,15 +7,15 @@ import {
     suggestMapExtent,
     MIN_MAP_SPAN,
     MAX_MAP_SPAN
-} from '../core/WorldMapProjection.js';
-import { RegionKind } from '../core/RegionKind.js';
-import { World } from '../core/World.js';
-import { WorldRegion } from '../core/WorldRegion.js';
-import { WorldLandmark } from '../core/WorldLandmark.js';
-import { StructurePlacement } from '../core/StructurePlacement.js';
-import { Position } from '../core/Position.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+} from '../core/world/WorldMapProjection.js';
+import { RegionKind } from '../core/world/RegionKind.js';
+import { World } from '../core/document/World.js';
+import { WorldRegion } from '../core/world/WorldRegion.js';
+import { WorldLandmark } from '../core/world/WorldLandmark.js';
+import { StructurePlacement } from '../core/building/StructurePlacement.js';
+import { Position } from '../core/document/Position.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
@@ -33,13 +33,13 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 //
 // This suite proves that a World Map is a DERIVED presentation layer,
 // never a second World:
-//   - core/WorldMapProjection.js is pure arithmetic — project/unproject
+//   - core/world/WorldMapProjection.js is pure arithmetic — project/unproject
 //     round-trip exactly, a region's screen radius always scales with
 //     the viewport, presentation tiers are labels only
 //   - application/world/WorldNavigationSession.js#getMapContent() gathers
 //     exactly what already exists (regions/landmarks/structures/
 //     collaborators), WORLD-WIDE — never limited to a streaming/
-//     proximity radius the way core/WorldSpatialContext.js's
+//     proximity radius the way core/world/WorldSpatialContext.js's
 //     nearbyLandmarks etc. deliberately are
 //
 // See docs/Principles.md, "A World Map Is A Derived View, Never A
@@ -71,13 +71,13 @@ async function run() {
         assert(center.x === 300 && center.y === 300, '4. the viewport center projects to the map center');
         assert(center.visible === true, '5. the map center is visible');
 
-        // North (+Z, exactly core/CompassHeading.js's own 0°-faces-+Z
+        // North (+Z, exactly core/world/CompassHeading.js's own 0°-faces-+Z
         // convention) is drawn UP — increasing Z means DECREASING map Y.
         const north = projectPosition({ x: 0, z: 50 }, viewport);
         assert(north.y < center.y, '6. +Z (north) projects to a SMALLER map y (drawn up)');
         assert(Math.abs(north.x - center.x) < 1e-9, '7. moving only in Z does not move map x');
 
-        // East is -X (core/CompassHeading.js): the map is the World seen
+        // East is -X (core/world/CompassHeading.js): the map is the World seen
         // from above, so what is on your right facing North is drawn right.
         const east = projectPosition({ x: -50, z: 0 }, viewport);
         assert(east.x > center.x, '8. -X (east) projects to a LARGER map x (drawn right)');
@@ -155,7 +155,7 @@ async function run() {
 
         // Two regions of the SAME kind but different radius still
         // resolve to the SAME tier — tier is a property of `kind` alone,
-        // exactly like core/RegionKind.js's own "labels only" header.
+        // exactly like core/world/RegionKind.js's own "labels only" header.
         assert(regionPresentationTier(RegionKind.VILLAGE) === regionPresentationTier(RegionKind.VILLAGE), '27. tier depends only on kind');
 
         console.log('✓ Section C: regionPresentationTier');
@@ -214,7 +214,7 @@ async function run() {
         mapWorld.addWorldLandmark(new WorldLandmark({
             id: 'lm-map', worldId: 'map-world', authorIdentityId: 'alice',
             title: 'Old Mill',
-            // Deliberately FAR beyond core/WorldSpatialContext.js's own
+            // Deliberately FAR beyond core/world/WorldSpatialContext.js's own
             // streaming radius (100m default) — a map is world-wide, not
             // proximity-limited, per getMapContent()'s own header.
             position: new Position(5000, 0, 5000)

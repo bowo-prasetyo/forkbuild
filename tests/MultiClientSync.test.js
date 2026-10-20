@@ -1,9 +1,9 @@
-import { Brick } from '../core/Brick.js';
-import { Building } from '../core/Building.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { Position } from '../core/Position.js';
-import { World } from '../core/World.js';
+import { Brick } from '../core/building/Brick.js';
+import { Building } from '../core/building/Building.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { Position } from '../core/document/Position.js';
+import { World } from '../core/document/World.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { PlaceBrickCommand } from '../application/commands/PlaceBrickCommand.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
@@ -16,7 +16,7 @@ import { AuthorityCollaborationTransport } from '../collaboration/AuthorityColla
 import { CollaborationSession } from '../collaboration/CollaborationSession.js';
 import { CreateCollaborationUseCase } from '../application/document/CreateCollaborationUseCase.js';
 import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
-import { CollaborationEnvelope } from '../core/CollaborationEnvelope.js';
+import { CollaborationEnvelope } from '../core/collaboration/CollaborationEnvelope.js';
 import { TransformSelectionCommand } from '../application/commands/TransformSelectionCommand.js';
 import { DeleteGroupCommand } from '../application/commands/DeleteGroupCommand.js';
 import { RenameGroupCommand } from '../application/commands/RenameGroupCommand.js';

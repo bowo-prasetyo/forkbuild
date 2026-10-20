@@ -6,7 +6,7 @@ import { CreatePublicationDisplayKindRegistryUseCase } from '../application/publ
 import { republishAdviceFor } from '../ui/views/decentralizedPublications/presentation.js';
 import { PUBLICATION_CONTENT_KIND } from '../application/publication/PublicationContentValidator.js';
 import { PLACE_NAMING_CLAIM_PUBLICATION_KIND } from '../application/placeNaming/PlaceNamingClaimPublication.js';
-import { BLUEPRINT_ATTRIBUTION_KIND } from '../core/BlueprintAttribution.js';
+import { BLUEPRINT_ATTRIBUTION_KIND } from '../core/building/BlueprintAttribution.js';
 import { assert } from './support/Assert.js';
 import { displayText } from '../ui/i18n/i18n.js';
 

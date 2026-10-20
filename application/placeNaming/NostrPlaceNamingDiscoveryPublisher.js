@@ -1,4 +1,4 @@
-import { buildPlaceNamingDiscoveryEnvelope, derivePlaceNamingDiscoveryTag } from '../../core/PlaceNamingDiscoveryEnvelope.js';
+import { buildPlaceNamingDiscoveryEnvelope, derivePlaceNamingDiscoveryTag } from '../../core/world/PlaceNamingDiscoveryEnvelope.js';
 import { withTimeout } from '../../utils/withTimeout.js';
 
 const DEFAULT_RELAY_URL = 'wss://relay.damus.io';
@@ -24,7 +24,7 @@ const EVENT_ID_PATTERN = /^[0-9a-f]{64}$/i;
 // Naming's own claim/envelope vocabulary instead of Snapshot's
 // contentHash/locator/storage vocabulary.
 //
-//   PlaceNamingClaim (core/PlaceNamingClaim.js, 0.5.2, already signed,
+//   PlaceNamingClaim (core/world/PlaceNamingClaim.js, 0.5.2, already signed,
 //   already locally saved by application/placeNaming/PlaceNamingClaimUseCase.js#publish() —
 //   UNMODIFIED by this milestone; see "never a second producer," below)
 //                    │
@@ -69,7 +69,7 @@ const EVENT_ID_PATTERN = /^[0-9a-f]{64}$/i;
 // publisher must both agree on, taking exactly `worldId`/`regionId` — both
 // of which a claim always already carries. Accepting a separately-supplied
 // `discoveryTag` from a caller here would only invite the exact mismatch
-// `core/PlaceNamingDiscoveryEnvelope.js`'s own header already refuses at
+// `core/world/PlaceNamingDiscoveryEnvelope.js`'s own header already refuses at
 // the envelope level ("an envelope claiming to be about one region while
 // embedding a claim about another") one layer earlier, for no benefit —
 // there is never a legitimate reason for a claim to publish under any tag
@@ -125,7 +125,7 @@ const EVENT_ID_PATTERN = /^[0-9a-f]{64}$/i;
 // event" — never that any other device has actually discovered the
 // claim, never that the claim's signature has been checked by anyone,
 // and never that the claim is now somehow more authoritative than it was
-// before. See `core/PlaceNamingDiscoveryEnvelope.js`'s own header, "a
+// before. See `core/world/PlaceNamingDiscoveryEnvelope.js`'s own header, "a
 // self-declared claim, never evidence, never verification." There is no
 // PENDING/RETRYING/PUBLISHED/CONFIRMED/DISTRIBUTED lifecycle anywhere in
 // this file, and none is introduced by it — a claim is either handed to
@@ -145,7 +145,7 @@ const EVENT_ID_PATTERN = /^[0-9a-f]{64}$/i;
 // NostrPlaceNamingDiscoverySource.js`, `application/
 // PlaceNamingDiscoveryQueryService.js`, or `application/
 // DiscoverPlaceNamingClaimsCommand.js` — publishing and discovering share
-// only the passive wire contract `core/PlaceNamingDiscoveryEnvelope.js`
+// only the passive wire contract `core/world/PlaceNamingDiscoveryEnvelope.js`
 // already named, never a code dependency in either direction. See
 // `tests/PlaceNamingClaimPublication.test.js` Section H for the live
 // structural proof.

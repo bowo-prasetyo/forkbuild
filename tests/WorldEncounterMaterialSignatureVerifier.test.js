@@ -6,7 +6,7 @@ import {
     WorldEncounterMaterialVerificationStatus,
     WorldEncounterMaterialVerifier
 } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
-import { WorldEncounterKind } from '../core/WorldEncounter.js';
+import { WorldEncounterKind } from '../core/world/WorldEncounter.js';
 import { Publication } from '../publisher/Publication.js';
 import { assert } from './support/Assert.js';
 import { serialize } from './support/Serialize.js';

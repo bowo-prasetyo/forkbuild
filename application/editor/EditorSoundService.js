@@ -1,10 +1,10 @@
 // The Editor's sound: a short cue for each edit the user makes
-// (core/EditorSoundCues.js), heard through the same kind of provider as World
+// (core/app/EditorSoundCues.js), heard through the same kind of provider as World
 // View's (audio/WebAudioSoundscapeProvider.js, without ambience), with the
-// same device mute and volume, and the Editor's own music (core/MusicScore.js).
-import { editorSoundCueFor, EDITOR_SOUND_CUE } from '../../core/EditorSoundCues.js';
+// same device mute and volume, and the Editor's own music (core/app/MusicScore.js).
+import { editorSoundCueFor, EDITOR_SOUND_CUE } from '../../core/app/EditorSoundCues.js';
 import { SoundPreference } from '../settings/SoundPreference.js';
-import { MUSIC_MOOD } from '../../core/MusicScore.js';
+import { MUSIC_MOOD } from '../../core/app/MusicScore.js';
 
 export class EditorSoundService {
     constructor({ provider, settingsStore, editorSession }) {

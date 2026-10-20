@@ -1,5 +1,5 @@
-// A command as the edit sounds (core/EditorSoundCues.js) and the guided first
-// build (core/FirstBuildChecklist.js) see it: its type, a composite's
+// A command as the edit sounds (core/app/EditorSoundCues.js) and the guided first
+// build (core/challenge/FirstBuildChecklist.js) see it: its type, a composite's
 // children the same way, and for a placed brick its definition and position.
 const MAX_DEPTH = 8;
 

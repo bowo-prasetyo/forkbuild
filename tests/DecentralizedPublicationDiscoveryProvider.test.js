@@ -1,8 +1,8 @@
 
 import { Publication } from '../publisher/Publication.js';
-import { ContentReference } from '../core/ContentReference.js';
-import { License } from '../core/License.js';
-import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
+import { ContentReference } from '../core/document/ContentReference.js';
+import { License } from '../core/document/License.js';
+import { DecentralizedPublication } from '../core/publication/DecentralizedPublication.js';
 import { PublicationResolver } from '../application/publication/PublicationResolver.js';
 import { PublicationResolutionOutcome } from '../application/publication/PublicationResolutionOutcome.js';
 import { PUBLICATION_CONTENT_KIND } from '../application/publication/PublicationContentValidator.js';

@@ -1,6 +1,6 @@
 import { usePostPublishDistribution } from '../ui/views/editorView/usePostPublishDistribution.js';
 import { PublishDestinationStore, normalizePublishDestination } from '../application/settings/PublishDestinationStore.js';
-import { normalizeNetworkWriterSettings } from '../core/NetworkWriters.js';
+import { normalizeNetworkWriterSettings } from '../core/publication/NetworkWriters.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { mountComponent } from './support/MinimalVueCompositionApiShim.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';

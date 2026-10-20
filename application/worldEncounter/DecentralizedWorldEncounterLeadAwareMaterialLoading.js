@@ -1,4 +1,4 @@
-import { describeWorldEncounterSelectionIdentity } from '../../core/WorldEncounterSelectionIdentity.js';
+import { describeWorldEncounterSelectionIdentity } from '../../core/world/WorldEncounterSelectionIdentity.js';
 import { WorldEncounterMaterialLoadStatus } from './WorldEncounterMaterialLoading.js';
 
 // 0.9.34 — Lead-Aware Decentralized Material Loading Boundary.

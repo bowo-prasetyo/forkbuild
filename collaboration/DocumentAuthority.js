@@ -1,6 +1,6 @@
 import { CommandHistory } from '../application/editor/CommandHistory.js';
-import { PlacementValidator } from '../core/PlacementValidator.js';
-import { CollaborationEnvelope } from '../core/CollaborationEnvelope.js';
+import { PlacementValidator } from '../core/publication/PlacementValidator.js';
+import { CollaborationEnvelope } from '../core/collaboration/CollaborationEnvelope.js';
 
 // The central ordering service for multi-client document synchronization
 // (0.2.9).

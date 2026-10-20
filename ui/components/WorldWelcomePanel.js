@@ -4,7 +4,7 @@ import { compassText } from '../i18n/worldText.js';
 
 // 0.3.9 — World Welcome & Guided Exploration.
 //
-// The presentation layer for core/WorldWelcomeContext.js: a newcomer's
+// The presentation layer for core/world/WorldWelcomeContext.js: a newcomer's
 // first few seconds in a World, and the same content reopenable at any
 // time through the "Explore" toolbar button (see ui/views/WorldView.js's
 // openWelcomePanel()/reopenExplorePanel()). Purely presentational — this
@@ -26,7 +26,7 @@ import { compassText } from '../i18n/worldText.js';
 export default {
     name: 'WorldWelcomePanel',
     props: {
-        // WorldWelcomeContext#toJSON() shape — see core/WorldWelcomeContext.js.
+        // WorldWelcomeContext#toJSON() shape — see core/world/WorldWelcomeContext.js.
         context: {
             type: Object,
             default: null

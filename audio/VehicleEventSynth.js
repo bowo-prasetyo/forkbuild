@@ -7,7 +7,7 @@
 // (brake pads squealing on a bicycle, a spoon brake scraping a tyre, wooden
 // wheels grinding, a vent puffing on the balloon), louder the faster it was
 // going. Each call builds short-lived nodes that disconnect themselves.
-import { VehicleType } from '../core/VehicleType.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
 
 function releaseAfter(last, nodes) {
     last.onended = () => {

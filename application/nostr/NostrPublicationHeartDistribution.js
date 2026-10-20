@@ -1,5 +1,5 @@
 import { withTimeout } from '../../utils/withTimeout.js';
-import { heartPublicationTag } from '../../core/NarrowDiscoveryTags.js';
+import { heartPublicationTag } from '../../core/publication/NarrowDiscoveryTags.js';
 import { normalizeRelayUrls } from './NostrRelayUrls.js';
 
 // Hearts on Nostr, as the reactions other Nostr apps already show

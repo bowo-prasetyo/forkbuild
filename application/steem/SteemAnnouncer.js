@@ -4,16 +4,16 @@ import {
     isSteemAccountName,
     steemDiscoveryPeriodOf,
     steemDiscoveryThreadPermlink
-} from '../../core/SteemDiscoveryThread.js';
+} from '../../core/networks/SteemDiscoveryThread.js';
 import {
     STEEM_MAX_TRANSACTION_BYTES,
     steemDiscoveryAnnouncementOperations,
     steemDiscoveryAnnouncementPermlink,
     steemOperationsByteLength
-} from '../../core/SteemDiscoveryAnnouncement.js';
-import { steemPublicationViewUrl } from '../../core/ForkBuildAppLinks.js';
-import { steemContentManifestOperations, steemContentManifestPermlink, steemContentPartOperations, steemContentPartPermlink } from '../../core/SteemContentManifest.js';
-import { steemAnchorOperations } from '../../core/SteemAnchor.js';
+} from '../../core/networks/SteemDiscoveryAnnouncement.js';
+import { steemPublicationViewUrl } from '../../core/app/ForkBuildAppLinks.js';
+import { steemContentManifestOperations, steemContentManifestPermlink, steemContentPartOperations, steemContentPartPermlink } from '../../core/networks/SteemContentManifest.js';
+import { steemAnchorOperations } from '../../core/networks/SteemAnchor.js';
 import { parseSteemTime } from '../../steem/SteemRpcClient.js';
 
 // Posts one family's envelope as a reply to the current month's discovery
@@ -47,7 +47,7 @@ export function createSteemAnnouncer({
     rpc,
     getBroadcaster,
     getAccount,
-    // Whether this device's Steem writer is switched on (core/NetworkWriters.js);
+    // Whether this device's Steem writer is switched on (core/publication/NetworkWriters.js);
     // nothing is posted while it is off.
     isEnabled = () => true,
     threadAccount = STEEM_DISCOVERY_THREAD_ACCOUNT,

@@ -31,8 +31,8 @@
 //
 // THIS IS UI STATE, NEVER DOMAIN STATE — mirroring application/
 // PublicationEvidenceDiscoveryUiState.js's own restraint exactly. No
-// value here is ever written onto a core/PublicationAnchor.js or
-// core/PublicationSnapshotPlacement.js, stored in either catalog, or
+// value here is ever written onto a core/publication/PublicationAnchor.js or
+// core/publication/PublicationSnapshotPlacement.js, stored in either catalog, or
 // persisted anywhere; it lives only in whatever ephemeral object a
 // caller keeps for the lifetime of the page. Reopening the Publication
 // Center always starts back at IDLE.

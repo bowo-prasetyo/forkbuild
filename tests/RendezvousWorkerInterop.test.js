@@ -4,7 +4,7 @@ import { RendezvousDiscoveryProvider } from '../peer/RendezvousDiscoveryProvider
 import { PeerInvitation } from '../peer/PeerInvitation.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { LobbyCard, PUBLIC_LOBBY, worldLobby } from '../core/LobbyCard.js';
+import { LobbyCard, PUBLIC_LOBBY, worldLobby } from '../core/social/LobbyCard.js';
 import { signLobbyCard, signLobbyLeave } from '../peer/LobbyCardSigning.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';

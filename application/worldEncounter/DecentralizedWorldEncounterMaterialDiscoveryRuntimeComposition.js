@@ -11,7 +11,7 @@ import {
 import { inspectWorldEncounterMaterial } from './WorldEncounterMaterialInspection.js';
 import { composeWorldEncounterMaterialSources } from './DecentralizedWorldEncounterMaterialRuntimeComposition.js';
 import { describePublicationMaterialProvenanceFromInspection } from '../publication/distribution/PublicationMaterialProvenance.js';
-import { WorldEncounterKind } from '../../core/WorldEncounter.js';
+import { WorldEncounterKind } from '../../core/world/WorldEncounter.js';
 
 // 0.9.110 — Decentralized Material Retrieval Runtime Composition.
 //

@@ -1,5 +1,5 @@
 
-import { BitcoinEsploraConfiguration, DEFAULT_BITCOIN_ESPLORA_API_URL, isValidBitcoinEsploraApiUrl } from '../core/BitcoinEsploraConfiguration.js';
+import { BitcoinEsploraConfiguration, DEFAULT_BITCOIN_ESPLORA_API_URL, isValidBitcoinEsploraApiUrl } from '../core/networks/BitcoinEsploraConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { BitcoinEsploraConfigurationStore } from '../storage/BitcoinEsploraConfigurationStore.js';
 import { SetBitcoinEsploraConfigurationUseCase } from '../application/settings/SetBitcoinEsploraConfigurationUseCase.js';
@@ -109,8 +109,8 @@ async function run() {
             '11. the view writes the configuration through the injected use case, never BitcoinEsploraConfigurationStore.save() directly');
         assert(!/new BitcoinEsploraConfiguration\(/.test(viewExecutable),
             '12. the view never constructs a BitcoinEsploraConfiguration itself');
-        assert(viewExecutable.includes("import { DEFAULT_BITCOIN_ESPLORA_API_URLS } from '../../core/BitcoinEsploraConfiguration.js';"),
-            '13. the ONE thing the view imports from core/BitcoinEsploraConfiguration.js is the plain default constant, for display only');
+        assert(viewExecutable.includes("import { DEFAULT_BITCOIN_ESPLORA_API_URLS } from '../../core/networks/BitcoinEsploraConfiguration.js';"),
+            '13. the ONE thing the view imports from core/networks/BitcoinEsploraConfiguration.js is the plain default constant, for display only');
         assert(!/BitcoinEsploraTransactionBroadcaster|BitcoinEsploraTransactionConfirmationObserver|BitcoinEsploraWalletFundingSource|BitcoinOpReturnProofVerifier/.test(viewExecutable),
             '14. the view never imports or constructs a real Bitcoin Esplora adapter');
         console.log('✓ Section 0: the settings entry point is really wired — nav link, route, shared store, shared use case, all four consumer sites, and a view that only ever goes through the injected collaborators');

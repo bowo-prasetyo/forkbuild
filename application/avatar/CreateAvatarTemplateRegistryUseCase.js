@@ -1,4 +1,4 @@
-import { AvatarTemplateRegistry } from '../../core/AvatarTemplateRegistry.js';
+import { AvatarTemplateRegistry } from '../../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../../core/library/CoreAvatarTemplateLibrary.js';
 
 // Builds the AvatarTemplateRegistry and registers every built-in

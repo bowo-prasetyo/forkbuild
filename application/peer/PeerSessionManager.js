@@ -4,8 +4,8 @@ import { PeerInvitation } from '../../peer/PeerInvitation.js';
 import { PeerConnectionState } from '../../peer/PeerConnectionState.js';
 import { ConnectToPeerUseCase } from './ConnectToPeerUseCase.js';
 import { DiscoverPeersUseCase } from './DiscoverPeersUseCase.js';
-import { UserFacingError } from '../../core/UserFacingError.js';
-import { message } from '../../core/Message.js';
+import { UserFacingError } from '../../core/app/UserFacingError.js';
+import { message } from '../../core/app/Message.js';
 import { requireSigningIdentityId } from '../../identity/SigningReadiness.js';
 
 const DEFAULT_INVITATION_TTL_MS = 10 * 60 * 1000; // 10 minutes — matches peer/PeerInvitation.js's own default

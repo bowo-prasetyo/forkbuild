@@ -1,5 +1,5 @@
 import { Command } from './Command.js';
-import { message } from '../../core/Message.js';
+import { message } from '../../core/app/Message.js';
 
 // 0.2.91 — World Instance Editing & Placement Management. The
 // StructurePlacement counterpart to RotateBrickCommand.js, one rung up.
@@ -12,7 +12,7 @@ import { message } from '../../core/Message.js';
 // instance turns as one rigid unit, composed at render time exactly the
 // way renderer/WorldRenderer.js#_renderStructurePlacement() already
 // does for the FIRST placement (rotation set once at PlaceStructureCommand
-// time). Rotating never needs a collision check: core/SpatialBounds.js's
+// time). Rotating never needs a collision check: core/world/SpatialBounds.js's
 // own V1 simplification computes a placement's AABB translate-only,
 // never rotated, so a placement's bounding box is identical at every
 // rotation — see application/editor/StructurePlacementValidator.js's own header.

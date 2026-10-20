@@ -1,7 +1,7 @@
 
 import { Publication } from '../publisher/Publication.js';
-import { ContentReference } from '../core/ContentReference.js';
-import { License, LicenseId } from '../core/License.js';
+import { ContentReference } from '../core/document/ContentReference.js';
+import { License, LicenseId } from '../core/document/License.js';
 import { PublicationResolver } from '../application/publication/PublicationResolver.js';
 import { PublicationResolutionCoordinator } from '../application/publication/PublicationResolutionCoordinator.js';
 import { resolvePublicationView } from '../application/publication/PublicationResolutionView.js';

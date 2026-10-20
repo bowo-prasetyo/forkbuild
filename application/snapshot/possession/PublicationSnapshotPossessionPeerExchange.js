@@ -1,5 +1,5 @@
 import { EventBus } from '../../../core/events/EventBus.js';
-import { ContentReference } from '../../../core/ContentReference.js';
+import { ContentReference } from '../../../core/document/ContentReference.js';
 import { LocalSnapshotContentAvailabilityOutcome } from '../materialization/LocalSnapshotContentAvailabilityOutcome.js';
 import {
     PeerSnapshotPossessionMessageKind,

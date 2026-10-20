@@ -2,7 +2,7 @@ import { TransformMath } from './TransformMath.js';
 
 // 0.4.1 — Interactive Structure Composition UX. The single pure function
 // behind "rotate and move a Structure before it lands" — turns a
-// core/Structure.js's own bricks (authored in the Structure's LOCAL
+// core/building/Structure.js's own bricks (authored in the Structure's LOCAL
 // space, per that class's own header) into plain PasteBricksCommand
 // items, transformed as ONE rigid unit by a { position, rotation }.
 //

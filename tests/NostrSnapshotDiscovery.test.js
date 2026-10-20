@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { ContentUnavailableError } from '../content/IpfsContentStore.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 
 import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
@@ -134,7 +134,7 @@ async function codeOnlySource(relativePath) {
 }
 
 const NOSTR_SNAPSHOT_DISCOVERY_FILES = [
-    'core/SnapshotDiscoveryEnvelope.js',
+    'core/publication/SnapshotDiscoveryEnvelope.js',
     'application/nostr/NostrSnapshotDiscoveryPublisher.js',
     'application/nostr/NostrSnapshotDiscoveryQueryService.js'
 ];

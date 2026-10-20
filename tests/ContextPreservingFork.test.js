@@ -1,9 +1,9 @@
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
@@ -14,15 +14,15 @@ import { PreviewUseCase } from '../application/editor/PreviewUseCase.js';
 import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase.js';
 import { EditorSession } from '../application/editor/EditorSession.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
-import { RegionKind } from '../core/RegionKind.js';
-import { WorldFocusKind, WorldFocusAction, deriveWorldFocusContext } from '../core/WorldFocusContext.js';
+import { RegionKind } from '../core/world/RegionKind.js';
+import { WorldFocusKind, WorldFocusAction, deriveWorldFocusContext } from '../core/world/WorldFocusContext.js';
 import {
     EditorEntryContext,
     EditorEntryReason,
     deriveEditorEntryContext,
     editorEntryContextToQuery,
     editorEntryContextFromQuery
-} from '../core/EditorEntryContext.js';
+} from '../core/document/EditorEntryContext.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
@@ -50,7 +50,7 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 //   D. Selection — a STRUCTURE focus produces `selectAllBricks: true`,
 //      and applying it after the fork actually selects every brick now
 //      in the fork (never the SOURCE's own brick ids — see
-//      core/EditorEntryContext.js's own header on why that would be a
+//      core/document/EditorEntryContext.js's own header on why that would be a
 //      category error).
 //   E. Landmark — camera context only, never an arbitrary selection.
 //   F. Geographic place — never offers Edit a Copy itself; resolution
@@ -242,7 +242,7 @@ async function run() {
 
         // D. Selection — every brick NOW IN THE FORK is selected (never
         // the source's own brick ids, which the clone already discarded
-        // — see core/EditorEntryContext.js's own header).
+        // — see core/document/EditorEntryContext.js's own header).
         const forkedBrickId = forked.world.getBuildings()[0].getBricks()[0].id;
         assert(editorContext.selection.items.length === 1, '22. exactly one item is selected after applying the entry context');
         assert(editorContext.selection.items[0].brickId === forkedBrickId, '23. ...and it\'s the FORK\'s own (freshly-minted) brick id, not the source\'s');

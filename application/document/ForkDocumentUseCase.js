@@ -1,10 +1,10 @@
 import { DocumentSerializer } from '../../serializer/DocumentSerializer.js';
 import { DocumentCloneService } from './DocumentCloneService.js';
-import { License } from '../../core/License.js';
+import { License } from '../../core/document/License.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 import { ForkFailureReason } from './ForkFailureReason.js';
 import { forkTitle, untitledWorldTitle } from './DocumentTitles.js';
-import { ContentReference } from '../../core/ContentReference.js';
+import { ContentReference } from '../../core/document/ContentReference.js';
 import { isStorageEntryNotLoadedError, retryWhenLoaded } from '../../storage/StorageEntryNotLoadedError.js';
 
 // Creates a new Document derived from an existing one. The source is
@@ -94,7 +94,7 @@ export class ForkDocumentUseCase {
         return this._documentCloneService.execute(sourceDocument, {
             title: forkTitle(sourceTitle),
             author: currentUser ? currentUser.username : null,
-            // 0.2.95 — see core/DocumentMetadata.js's own comment: the
+            // 0.2.95 — see core/document/DocumentMetadata.js's own comment: the
             // FORKER becomes the new owner, never the source document's
             // original author, so this is resolved fresh here rather
             // than falling through DocumentCloneService's own

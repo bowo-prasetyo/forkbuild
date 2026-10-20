@@ -55,7 +55,7 @@ export function usePlaceNamingPanel({
     // -----------------------------------------------------------------
     //
     // Not gated by canEditActiveWorld: naming claims need no World edit authority
-    // (see core/PlaceNamingClaim.js).
+    // (see core/world/PlaceNamingClaim.js).
     function refreshNamingPanel() {
         const regionId = namingPanelRegionId.value;
         if (!regionId) return;

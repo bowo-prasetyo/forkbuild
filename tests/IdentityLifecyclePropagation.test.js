@@ -6,14 +6,14 @@ import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry
 import { PeerSessionManager } from '../application/peer/PeerSessionManager.js';
 import { PeerRelationshipUseCase } from '../application/peer/PeerRelationshipUseCase.js';
 import { IdentityLifecyclePropagationUseCase } from '../application/identity/IdentityLifecyclePropagationUseCase.js';
-import { RemoteIdentityLifecycle } from '../core/RemoteIdentityLifecycle.js';
+import { RemoteIdentityLifecycle } from '../core/identity/RemoteIdentityLifecycle.js';
 import {
     IdentityLifecycleGossipKind,
     toIdentityLifecycleGossipMessage,
     isValidIdentityLifecycleGossipMessage
-} from '../core/IdentityLifecycleGossip.js';
-import { toIdentitySuccessionRecord, getIdentitySuccessionSigningDescriptor } from '../core/IdentitySuccessionEnvelope.js';
-import { toIdentityRevocationRecord } from '../core/IdentityRevocationEnvelope.js';
+} from '../core/identity/IdentityLifecycleGossip.js';
+import { toIdentitySuccessionRecord, getIdentitySuccessionSigningDescriptor } from '../core/identity/IdentitySuccessionEnvelope.js';
+import { toIdentityRevocationRecord } from '../core/identity/IdentityRevocationEnvelope.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
@@ -82,7 +82,7 @@ function makeDevice() {
 async function runTests() {
 
 // ---------------------------------------------------------------------
-// 1. core/RemoteIdentityLifecycle.js + core/IdentityLifecycleGossip.js —
+// 1. core/identity/RemoteIdentityLifecycle.js + core/identity/IdentityLifecycleGossip.js —
 //    construction, immutability, and wire-shape validation.
 // ---------------------------------------------------------------------
 {
@@ -120,7 +120,7 @@ async function runTests() {
     assert(!isValidIdentityLifecycleGossipMessage({ kind: 'NOT-A-KIND', record: {} }), 'an unknown kind is rejected');
     assert(!isValidIdentityLifecycleGossipMessage(null), 'null is rejected');
     assert(!isValidIdentityLifecycleGossipMessage({ kind: IdentityLifecycleGossipKind.REVOCATION, record: { not: 'a real record' } }), 'a structurally malformed record is rejected even with a recognized kind');
-    console.log('✓ core/RemoteIdentityLifecycle.js + core/IdentityLifecycleGossip.js: construction, immutability, wire-shape validation');
+    console.log('✓ core/identity/RemoteIdentityLifecycle.js + core/identity/IdentityLifecycleGossip.js: construction, immutability, wire-shape validation');
 }
 
 // ---------------------------------------------------------------------

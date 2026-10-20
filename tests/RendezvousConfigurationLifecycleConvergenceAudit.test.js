@@ -1,8 +1,8 @@
 
-import { RendezvousConfiguration, isValidRendezvousUrl } from '../core/RendezvousConfiguration.js';
-import { IceServerConfiguration } from '../core/IceServerConfiguration.js';
-import { ArweaveGatewayConfiguration } from '../core/ArweaveGatewayConfiguration.js';
-import { NostrRelayConfiguration } from '../core/NostrRelayConfiguration.js';
+import { RendezvousConfiguration, isValidRendezvousUrl } from '../core/networks/RendezvousConfiguration.js';
+import { IceServerConfiguration } from '../core/networks/IceServerConfiguration.js';
+import { ArweaveGatewayConfiguration } from '../core/networks/ArweaveGatewayConfiguration.js';
+import { NostrRelayConfiguration } from '../core/networks/NostrRelayConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { RendezvousConfigurationStore } from '../storage/RendezvousConfigurationStore.js';
 import { IceServerConfigurationStore } from '../storage/IceServerConfigurationStore.js';
@@ -26,7 +26,7 @@ import { readSource as source } from './support/SourceText.js';
 // Type: test-only. Production changes: NONE.
 //
 // 0.9.388 gave a user's own rendezvous server list a real value object
-// (core/RendezvousConfiguration.js), a durable store (storage/
+// (core/networks/RendezvousConfiguration.js), a durable store (storage/
 // RendezvousConfigurationStore.js), a write use case, a settings view, and
 // one composition-root wiring in ui/main.js — tests/
 // UserConfigurableRendezvousConfiguration.test.js already proved every one
@@ -206,7 +206,7 @@ async function run() {
     // site, no adapter self-decides.
     // ===============================================================
     {
-        const configSource = await source('core/RendezvousConfiguration.js');
+        const configSource = await source('core/networks/RendezvousConfiguration.js');
         const storeSource = await source('storage/RendezvousConfigurationStore.js');
         const useCaseSource = await source('application/settings/SetRendezvousConfigurationUseCase.js');
         const viewSource = await source('ui/views/RendezvousSettingsView.js');
@@ -218,19 +218,19 @@ async function run() {
             ['peer/RendezvousDiscoveryProvider.js', await source('peer/RendezvousDiscoveryProvider.js')],
             ['peer/WebSocketRendezvousTransport.js', await source('peer/WebSocketRendezvousTransport.js')],
             ['peer/PeerAuthenticationSession.js', await source('peer/PeerAuthenticationSession.js')],
-            ['core/IceServerConfiguration.js', await source('core/IceServerConfiguration.js')]
+            ['core/networks/IceServerConfiguration.js', await source('core/networks/IceServerConfiguration.js')]
         ]);
 
-        assert(configSource.includes('export class RendezvousConfiguration '), 'A1. core/RendezvousConfiguration.js is the one place the value object is defined');
+        assert(configSource.includes('export class RendezvousConfiguration '), 'A1. core/networks/RendezvousConfiguration.js is the one place the value object is defined');
         for (const [label, src] of otherFiles) {
             assert(!src.includes('class RendezvousConfiguration'), `A2 (${label}). no second definition of the value object exists`);
-            assert(!/from\s*['"][^'"]*core\/RendezvousConfiguration\.js['"]/.test(src), `A3 (${label}). no unrelated file imports the value object directly — only the use case, the store, and ui/main.js may`);
+            assert(!/from\s*['"][^'"]*core\/networks\/RendezvousConfiguration\.js['"]/.test(src), `A3 (${label}). no unrelated file imports the value object directly — only the use case, the store, and ui/main.js may`);
             assert(!/from\s*['"][^'"]*storage\/RendezvousConfigurationStore\.js['"]/.test(src), `A4 (${label}). no unrelated file imports the persistence store directly — no adapter independently decides whether to use the default`);
             assert(!src.includes('new RendezvousConfigurationStore('), `A5 (${label}). no unrelated file constructs its own store instance`);
         }
 
         assert(storeSource.includes("'rendezvous-configuration'"), 'A6. the store owns the one storage key literal');
-        for (const [label, src] of [['core/RendezvousConfiguration.js', configSource], ['application/settings/SetRendezvousConfigurationUseCase.js', useCaseSource], ['ui/views/RendezvousSettingsView.js', viewSource], ...otherFiles]) {
+        for (const [label, src] of [['core/networks/RendezvousConfiguration.js', configSource], ['application/settings/SetRendezvousConfigurationUseCase.js', useCaseSource], ['ui/views/RendezvousSettingsView.js', viewSource], ...otherFiles]) {
             assert(!src.includes('rendezvous-configuration'), `A7 (${label}). no second file hardcodes the storage key — one key, one owner`);
         }
 
@@ -317,7 +317,7 @@ async function run() {
         assert(orderedConfiguration.urls.every((url, i) => url === orderedUrls[i]), 'C2. a multi-URL configuration preserves the exact given order');
 
         // Duplicate behavior according to the actual configuration
-        // contract: core/RendezvousConfiguration.js's own constructor
+        // contract: core/networks/RendezvousConfiguration.js's own constructor
         // performs no deduplication — the same URL appearing twice is
         // accepted and preserved twice, exactly the "shape validation,
         // never a hidden normalization policy" restraint this file's own
@@ -775,24 +775,24 @@ async function run() {
             'I9. clearing STUN, Arweave, and Nostr in turn leaves the Rendezvous configuration completely untouched — isolation genuinely holds in both directions');
 
         // Structural sweep, both directions.
-        const rendezvousConfigSource = executableOf(await source('core/RendezvousConfiguration.js'));
+        const rendezvousConfigSource = executableOf(await source('core/networks/RendezvousConfiguration.js'));
         const rendezvousStoreSource = executableOf(await source('storage/RendezvousConfigurationStore.js'));
         const isolationPattern = /IceServerConfiguration|Arweave|Nostr|Ipfs|IPFS|Bitcoin|Base\b|RoleProvider|ProviderSelection|providerRanking/;
-        assert(!isolationPattern.test(rendezvousConfigSource), 'I10. core/RendezvousConfiguration.js references none of STUN/Arweave/Nostr/IPFS/Bitcoin/Base/RoleProviderPreference');
+        assert(!isolationPattern.test(rendezvousConfigSource), 'I10. core/networks/RendezvousConfiguration.js references none of STUN/Arweave/Nostr/IPFS/Bitcoin/Base/RoleProviderPreference');
         assert(!isolationPattern.test(rendezvousStoreSource), 'I11. storage/RendezvousConfigurationStore.js references none of STUN/Arweave/Nostr/IPFS/Bitcoin/Base/RoleProviderPreference');
 
-        const stunConfigSource = executableOf(await source('core/IceServerConfiguration.js'));
+        const stunConfigSource = executableOf(await source('core/networks/IceServerConfiguration.js'));
         const stunStoreSource = executableOf(await source('storage/IceServerConfigurationStore.js'));
-        const arweaveConfigSource = executableOf(await source('core/ArweaveGatewayConfiguration.js'));
+        const arweaveConfigSource = executableOf(await source('core/networks/ArweaveGatewayConfiguration.js'));
         const arweaveStoreSource = executableOf(await source('storage/ArweaveGatewayConfigurationStore.js'));
-        const nostrConfigSource = executableOf(await source('core/NostrRelayConfiguration.js'));
+        const nostrConfigSource = executableOf(await source('core/networks/NostrRelayConfiguration.js'));
         const nostrStoreSource = executableOf(await source('storage/NostrRelayConfigurationStore.js'));
         for (const [label, src] of [
-            ['core/IceServerConfiguration.js', stunConfigSource],
+            ['core/networks/IceServerConfiguration.js', stunConfigSource],
             ['storage/IceServerConfigurationStore.js', stunStoreSource],
-            ['core/ArweaveGatewayConfiguration.js', arweaveConfigSource],
+            ['core/networks/ArweaveGatewayConfiguration.js', arweaveConfigSource],
             ['storage/ArweaveGatewayConfigurationStore.js', arweaveStoreSource],
-            ['core/NostrRelayConfiguration.js', nostrConfigSource],
+            ['core/networks/NostrRelayConfiguration.js', nostrConfigSource],
             ['storage/NostrRelayConfigurationStore.js', nostrStoreSource]
         ]) {
             assert(!/RendezvousConfiguration|RendezvousConfigurationStore|SetRendezvousConfigurationUseCase|RendezvousSettingsView/.test(src), `I12 (${label}). no reverse reference to Rendezvous's own configuration boundary exists either — isolation holds in both directions`);
@@ -809,12 +809,12 @@ async function run() {
     // configuration's own files.
     // ===============================================================
     {
-        const configSource = executableOf(await source('core/RendezvousConfiguration.js'));
+        const configSource = executableOf(await source('core/networks/RendezvousConfiguration.js'));
         const storeSource = executableOf(await source('storage/RendezvousConfigurationStore.js'));
         const useCaseSource = executableOf(await source('application/settings/SetRendezvousConfigurationUseCase.js'));
         const viewSource = executableOf(await source('ui/views/RendezvousSettingsView.js'));
         const filesUnderAudit = [
-            ['core/RendezvousConfiguration.js', configSource],
+            ['core/networks/RendezvousConfiguration.js', configSource],
             ['storage/RendezvousConfigurationStore.js', storeSource],
             ['application/settings/SetRendezvousConfigurationUseCase.js', useCaseSource],
             ['ui/views/RendezvousSettingsView.js', viewSource]

@@ -1,7 +1,7 @@
-import { World } from '../core/World.js';
-import { WorldRegion } from '../core/WorldRegion.js';
-import { RegionKind } from '../core/RegionKind.js';
-import { Position } from '../core/Position.js';
+import { World } from '../core/document/World.js';
+import { WorldRegion } from '../core/world/WorldRegion.js';
+import { RegionKind } from '../core/world/RegionKind.js';
+import { Position } from '../core/document/Position.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
@@ -9,11 +9,11 @@ import { LocalPlaceNamingPublicationLog } from '../application/placeNaming/Local
 import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
 import { PlaceNamingClaimExchange } from '../application/placeNaming/PlaceNamingClaimExchange.js';
 import { LocalNamePreferenceStore } from '../application/identity/LocalNamePreferenceStore.js';
-import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
+import { PlaceNamingClaim } from '../core/world/PlaceNamingClaim.js';
 import { PLACE_NAMING_CLAIM_PUBLICATION_KIND, CURRENT_SCHEMA_VERSION } from '../application/placeNaming/PlaceNamingClaimPublication.js';
 import { validatePlaceNamingClaimPublication } from '../application/placeNaming/PlaceNamingClaimPublicationValidator.js';
-import { buildPlaceNamingDiscoveryEnvelope, parsePlaceNamingDiscoveryEnvelope, derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
-import { namingView as deriveNamingView } from '../core/PlaceNamingView.js';
+import { buildPlaceNamingDiscoveryEnvelope, parsePlaceNamingDiscoveryEnvelope, derivePlaceNamingDiscoveryTag } from '../core/world/PlaceNamingDiscoveryEnvelope.js';
+import { namingView as deriveNamingView } from '../core/world/PlaceNamingView.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
@@ -379,7 +379,7 @@ async function runTests() {
 
         // Compared against the DISCOVERED envelope's own signature (what
         // the row itself actually carries) rather than the pre-discovery
-        // claim: core/PlaceNamingDiscoveryEnvelope.js's own describeClaim()
+        // claim: core/world/PlaceNamingDiscoveryEnvelope.js's own describeClaim()
         // already narrows a signature to its five required fields
         // (dropping the optional signedAt) as part of discovery itself,
         // unrelated to this milestone — adoption's own job is to carry
@@ -550,15 +550,15 @@ async function runTests() {
     // Section J — discovery alone never invokes adoption.
     // -------------------------------------------------------------
     {
-        const proximitySource = codeOnlyLines(await rawSource('core/PlaceNamingProximitySelection.js'));
+        const proximitySource = codeOnlyLines(await rawSource('core/world/PlaceNamingProximitySelection.js'));
         const monitorSource = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingDiscoveryMonitor.js'));
-        const envelopeSource = codeOnlyLines(await rawSource('core/PlaceNamingDiscoveryEnvelope.js'));
+        const envelopeSource = codeOnlyLines(await rawSource('core/world/PlaceNamingDiscoveryEnvelope.js'));
         const orchestrationSource = codeOnlyLines(await rawSource('application/placeNaming/DiscoverPlaceNamingClaimsCommand.js'));
 
         for (const [name, source] of [
-            ['core/PlaceNamingProximitySelection.js', proximitySource],
+            ['core/world/PlaceNamingProximitySelection.js', proximitySource],
             ['application/placeNaming/PlaceNamingDiscoveryMonitor.js', monitorSource],
-            ['core/PlaceNamingDiscoveryEnvelope.js', envelopeSource],
+            ['core/world/PlaceNamingDiscoveryEnvelope.js', envelopeSource],
             ['application/placeNaming/DiscoverPlaceNamingClaimsCommand.js', orchestrationSource]
         ]) {
             assert(!/adoptNearbyPlaceNamingClaim|importPlaceNamingClaim|importClaim\(/.test(source),
@@ -569,7 +569,7 @@ async function runTests() {
         // with no Adopt click at all, leaves the claim store untouched.
         const alice = makeIdentity('Alice');
         const claim = signedClaim(alice, { worldId: 'world-1', regionId: 'region-1', name: 'Never Clicked' });
-        const { selectNearbyPlaceNamingClaims } = await import('../core/PlaceNamingProximitySelection.js');
+        const { selectNearbyPlaceNamingClaims } = await import('../core/world/PlaceNamingProximitySelection.js');
         const envelope = discoverAsEnvelope(claim);
         const discovered = [{ ...envelope, position: { x: 0, z: 0 } }];
         const nearby = selectNearbyPlaceNamingClaims(discovered, { x: 0, z: 0 }, 100);

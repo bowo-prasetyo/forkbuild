@@ -1,4 +1,4 @@
-import { PublicationCommentary } from '../core/PublicationCommentary.js';
+import { PublicationCommentary } from '../core/publication/PublicationCommentary.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
 import { GetPublicationCommentariesUseCase } from '../application/publication/commentary/GetPublicationCommentariesUseCase.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';

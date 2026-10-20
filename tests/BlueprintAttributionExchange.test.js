@@ -1,8 +1,8 @@
-import { Structure } from '../core/Structure.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { deriveBlueprintFingerprint, blueprintFingerprintsEqual } from '../core/BlueprintFingerprint.js';
-import { BlueprintAttribution, BLUEPRINT_ATTRIBUTION_KIND, CURRENT_SCHEMA_VERSION as ATTRIBUTION_SCHEMA_VERSION } from '../core/BlueprintAttribution.js';
+import { Structure } from '../core/building/Structure.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { deriveBlueprintFingerprint, blueprintFingerprintsEqual } from '../core/building/BlueprintFingerprint.js';
+import { BlueprintAttribution, BLUEPRINT_ATTRIBUTION_KIND, CURRENT_SCHEMA_VERSION as ATTRIBUTION_SCHEMA_VERSION } from '../core/building/BlueprintAttribution.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalBlueprintAttributionStore } from '../application/blueprint/LocalBlueprintAttributionStore.js';
 import { LocalBlueprintAttributionPublicationLog } from '../application/blueprint/LocalBlueprintAttributionPublicationLog.js';

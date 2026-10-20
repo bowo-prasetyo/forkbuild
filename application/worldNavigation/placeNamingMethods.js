@@ -1,5 +1,5 @@
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
-import { preferredClaimedName } from '../../core/PlaceNamingView.js';
+import { preferredClaimedName } from '../../core/world/PlaceNamingView.js';
 
 // WorldNavigationSession place naming: signed naming claims, their exchange,
 // and this replica's local preferred names.
@@ -14,7 +14,7 @@ export const placeNamingMethods = {
     // Place Naming & Naming Claims: a separate, additive layer. A WorldRegion's
     // own `name` is untouched. Any identity, not only the region's author or an
     // EDIT member, may publish a signed opinion about what a region is called
-    // (core/PlaceNamingClaim.js), and this replica may prefer a name locally.
+    // (core/world/PlaceNamingClaim.js), and this replica may prefer a name locally.
     // See docs/Principles.md, "A Name Is A Claim, Not A Fact".
     //
     // Without placeNamingClaimUseCase/localNamePreferenceStore, publish/retract
@@ -24,7 +24,7 @@ export const placeNamingMethods = {
 
     // Signs and publishes "I claim region `regionId` is called `name`,"
     // scoped to whichever World that region actually belongs to (see
-    // _resolveRegionOwner() above and core/PlaceNamingClaim.js's own
+    // _resolveRegionOwner() above and core/world/PlaceNamingClaim.js's own
     // header on why a claim always carries an explicit worldId). Throws
     // if the region is unknown to this replica, or if naming claims were
     // never wired — never a canEditDocument() check, unlike every
@@ -70,7 +70,7 @@ export const placeNamingMethods = {
         return this._placeNamingClaimUseCase.claimsForRegion(owner.world.id, regionId);
     },
 
-    // core/PlaceNamingView.js#namingView() for one region — ranked by
+    // core/world/PlaceNamingView.js#namingView() for one region — ranked by
     // distinct-author score, most-agreed-on name first. [] under the
     // same "nothing wired, nothing known" conditions as
     // getPlaceNamingClaims() above.

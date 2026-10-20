@@ -1,11 +1,11 @@
 // Where a build stands when it is published: where an earlier publish of the
 // same build already stands it, so republishing never moves a build; else
 // wherever `fallback` puts it (the id-keyed grid,
-// core/DeterministicGridPlacement.js, so builds have room round them and
+// core/world/DeterministicGridPlacement.js, so builds have room round them and
 // every device agrees on the spot from the id alone). A Build here build is
 // put on its plot before this is asked (BuildPlotPlacementStrategy). A
 // challenge entry is shown at the plaza only as an exhibit
-// (core/PlazaEntrySpots.js), never placed there.
+// (core/challenge/PlazaEntrySpots.js), never placed there.
 //
 // `findPublicationsByDocumentId(documentId)` lists the Publications this
 // device knows of for a build, its own and others'; `spatialIndexProvider`

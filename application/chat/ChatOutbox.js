@@ -1,7 +1,7 @@
-import { ChatOutboxEntry } from '../../core/ChatOutboxEntry.js';
-import { ChatDeliveryState } from '../../core/ChatDeliveryState.js';
-import { UserFacingError } from '../../core/UserFacingError.js';
-import { message } from '../../core/Message.js';
+import { ChatOutboxEntry } from '../../core/social/ChatOutboxEntry.js';
+import { ChatDeliveryState } from '../../core/social/ChatDeliveryState.js';
+import { UserFacingError } from '../../core/app/UserFacingError.js';
+import { message } from '../../core/app/Message.js';
 
 const STORAGE_KEY_PREFIX = 'chat-outbox:';
 
@@ -23,7 +23,7 @@ const STORAGE_KEY_PREFIX = 'chat-outbox:';
 //
 // A Durable Outbox Is Addressed To An Identity, Never A Connection
 // (0.2.63): every entry is keyed by `peerIdentityId` — a
-// core/ChatOutboxEntry.js never carries a connectionId, an endpoint,
+// core/social/ChatOutboxEntry.js never carries a connectionId, an endpoint,
 // or anything else that could go stale the instant the connection it
 // was written against closes. This is what makes
 // application/chat/ChatUseCase.js's own reconnect-triggered flush correct
@@ -90,7 +90,7 @@ export class ChatOutbox {
     // QUEUED -> SENT, once application/chat/ChatUseCase.js has actually
     // handed this exact message to peer/PeerMessageBus.js#send() over
     // a live, AUTHENTICATED connection. Deliberately refuses to move
-    // anything but a QUEUED entry — see core/ChatDeliveryState.js's own
+    // anything but a QUEUED entry — see core/social/ChatDeliveryState.js's own
     // header on why "handed to the wire" and "accepted by the
     // recipient" are kept genuinely distinct facts; this is the first
     // of those two, never the second.
@@ -102,7 +102,7 @@ export class ChatOutbox {
         ));
     }
 
-    // A core/ChatDeliveryAck.js landed for this (peerIdentityId,
+    // A core/social/ChatDeliveryAck.js landed for this (peerIdentityId,
     // messageId) — application/chat/ChatUseCase.js#_handleIncomingAck() is
     // the only caller. Only a SENT entry can ever be acknowledged: a
     // still-QUEUED one was never actually transmitted, so there is
@@ -131,7 +131,7 @@ export class ChatOutbox {
 
     // Drops every entry (for the current owner, optionally scoped to
     // one peer identity) whose TTL has elapsed without ever being
-    // acknowledged — see core/ChatOutboxEntry.js#isExpired(). Run
+    // acknowledged — see core/social/ChatOutboxEntry.js#isExpired(). Run
     // lazily, on every read and on every
     // application/chat/ChatUseCase.js#_attemptFlush() pass, rather than on
     // a background timer — the same lazy-check-on-read posture every
@@ -162,7 +162,7 @@ export class ChatOutbox {
     // the sole caller, invoked the INSTANT block()/unfriend() actually
     // happens, never lazily on the next reconnect attempt a peer who
     // never comes back online would make impossible to ever reach. See
-    // core/ChatDeliveryState.js's own header on why CANCELLED and
+    // core/social/ChatDeliveryState.js's own header on why CANCELLED and
     // EXPIRED are kept genuinely distinct facts (authorization vs.
     // time). Deliberately scoped to QUEUED entries only — a SENT one
     // already left this device's own outbox and reached the wire;

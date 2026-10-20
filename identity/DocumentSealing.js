@@ -3,11 +3,11 @@ import {
     sealedDocumentHash,
     unsignedDocumentSeal,
     DOCUMENT_SEAL_KIND
-} from '../core/DocumentSeal.js';
+} from '../core/document/DocumentSeal.js';
 import { resolveSigningIdentityId } from './resolveSigningIdentityId.js';
 import { identityForDidKey, verifySignedDescriptor } from './DescriptorSignature.js';
 
-// Signs and checks the seal core/DocumentSeal.js describes.
+// Signs and checks the seal core/document/DocumentSeal.js describes.
 
 // `documentJson` with a seal signed by `identityProvider`'s identity, or
 // null when that identity can't seal it: nobody is signed in, the

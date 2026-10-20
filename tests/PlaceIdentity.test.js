@@ -1,16 +1,16 @@
 import {
     deriveFingerprint, fingerprintKey, fingerprintsEqual, describeFingerprint,
     DEFAULT_POSITION_QUANTUM, DEFAULT_RADIUS_QUANTUM
-} from '../core/PlaceFingerprint.js';
-import { PlaceIdentity, derivePlaceIdentity, groupRegionsByPlaceIdentity } from '../core/PlaceIdentity.js';
+} from '../core/world/PlaceFingerprint.js';
+import { PlaceIdentity, derivePlaceIdentity, groupRegionsByPlaceIdentity } from '../core/world/PlaceIdentity.js';
 import {
     resolveGeographicPlaces, geographicPlaceForRegion, describeGeographicPlace
-} from '../core/GeographicPlaceResolution.js';
-import { namingView, rankClaimsByName } from '../core/PlaceNamingView.js';
-import { WorldRegion } from '../core/WorldRegion.js';
-import { RegionKind } from '../core/RegionKind.js';
-import { Position } from '../core/Position.js';
-import { World } from '../core/World.js';
+} from '../core/world/GeographicPlaceResolution.js';
+import { namingView, rankClaimsByName } from '../core/world/PlaceNamingView.js';
+import { WorldRegion } from '../core/world/WorldRegion.js';
+import { RegionKind } from '../core/world/RegionKind.js';
+import { Position } from '../core/document/Position.js';
+import { World } from '../core/document/World.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
 import { LocalPlaceNamingPublicationLog } from '../application/placeNaming/LocalPlaceNamingPublicationLog.js';
@@ -32,10 +32,10 @@ import { makeIdentity } from './support/TestIdentity.js';
 // naming purposes, still two separate places. This suite proves the two
 // halves of the answer the design conversation asked for:
 //
-//   Level 1 — core/PlaceFingerprint.js / core/PlaceIdentity.js: given
+//   Level 1 — core/world/PlaceFingerprint.js / core/world/PlaceIdentity.js: given
 //             regions a client already has, are any of them geographic
 //             CANDIDATES for the same place? Pure geometry, no claims.
-//   Level 2 — core/GeographicPlaceResolution.js: given those candidate
+//   Level 2 — core/world/GeographicPlaceResolution.js: given those candidate
 //             groups and the claims a client knows about, what does the
 //             combined community naming view look like?
 //
@@ -45,12 +45,12 @@ import { makeIdentity } from './support/TestIdentity.js';
 // than a candidate grouping hint. See docs/Principles.md, "Geographic
 // Similarity Suggests Identity; It Never Mutates Identity (0.5.4)."
 //
-// Section A: core/PlaceFingerprint.js — quantization, key, equality
-// Section B: core/PlaceIdentity.js — derivePlaceIdentity(), grouping,
+// Section A: core/world/PlaceFingerprint.js — quantization, key, equality
+// Section B: core/world/PlaceIdentity.js — derivePlaceIdentity(), grouping,
 //            the full adversarial matrix the design conversation named
-// Section C: core/PlaceNamingView.js — rankClaimsByName() regression:
+// Section C: core/world/PlaceNamingView.js — rankClaimsByName() regression:
 //            namingView() is byte-identical to its pre-0.5.4 behavior
-// Section D: core/GeographicPlaceResolution.js — cross-region combined
+// Section D: core/world/GeographicPlaceResolution.js — cross-region combined
 //            ranking, never touching a WorldRegion or a single-region
 //            naming view
 // Section E: application/world/WorldNavigationSession.js wiring — graceful
@@ -99,7 +99,7 @@ function region({ id, worldId, authorIdentityId, name = 'Unnamed Region', kind =
 
 async function run() {
     // -------------------------------------------------------------
-    // Section A: core/PlaceFingerprint.js
+    // Section A: core/world/PlaceFingerprint.js
     // -------------------------------------------------------------
     {
         assert(DEFAULT_POSITION_QUANTUM > 0 && DEFAULT_RADIUS_QUANTUM > 0, '1. default quanta are positive');
@@ -127,10 +127,10 @@ async function run() {
         assert(describeFingerprint(fpA) === 'village @ (100, 200), radius 50', '9. describeFingerprint() is a plain, presentation-only string');
         assert(describeFingerprint(null) === '', '10. describeFingerprint(null) is empty, never a placeholder');
     }
-    console.log('✓ Section A: core/PlaceFingerprint.js — quantization absorbs noise, never collapses genuinely different geometry');
+    console.log('✓ Section A: core/world/PlaceFingerprint.js — quantization absorbs noise, never collapses genuinely different geometry');
 
     // -------------------------------------------------------------
-    // Section B: core/PlaceIdentity.js — the full adversarial matrix
+    // Section B: core/world/PlaceIdentity.js — the full adversarial matrix
     // -------------------------------------------------------------
     {
         const base = region({ id: 'base', worldId: 'w1', authorIdentityId: 'alice', kind: RegionKind.VILLAGE, x: 100, z: 200, radius: 50 });
@@ -152,7 +152,7 @@ async function run() {
         assert(result.candidate === false, '14. ADVERSARIAL same radius, wildly different center is NOT a candidate match');
 
         // Adversarial: two circles that geometrically OVERLAP despite
-        // having clearly different centers — core/WorldRegionGeography.js's
+        // having clearly different centers — core/world/WorldRegionGeography.js's
         // own "contains"/overlap question is a completely different
         // question from "is this a candidate for the same place"; see
         // this module's own header on why only near-identical geometry
@@ -168,7 +168,7 @@ async function run() {
 
         // Adversarial: different region kinds, otherwise identical
         // geometry — a deliberate, documented, conservative limitation
-        // (see core/PlaceFingerprint.js's own header): `kind` is a HARD
+        // (see core/world/PlaceFingerprint.js's own header): `kind` is a HARD
         // gate, never a soft signal, in this milestone.
         const differentKind = region({ id: 'diff-kind', worldId: 'w7', authorIdentityId: 'grace', kind: RegionKind.TOWN, x: 100, z: 200, radius: 50 });
         result = derivePlaceIdentity(base, differentKind);
@@ -209,10 +209,10 @@ async function run() {
         const groupsWithBroken = groupRegionsByPlaceIdentity([base, brokenRegion]);
         assert(groupsWithBroken.every((g) => g.regions.every((r) => r.id !== 'broken')), '24. a region with no usable geometry is silently omitted');
     }
-    console.log('✓ Section B: core/PlaceIdentity.js — full adversarial matrix, symmetry, transitive equivalence classes, deterministic ordering');
+    console.log('✓ Section B: core/world/PlaceIdentity.js — full adversarial matrix, symmetry, transitive equivalence classes, deterministic ordering');
 
     // -------------------------------------------------------------
-    // Section C: core/PlaceNamingView.js — rankClaimsByName() regression
+    // Section C: core/world/PlaceNamingView.js — rankClaimsByName() regression
     // -------------------------------------------------------------
     {
         const alice = makeIdentity('Alice');
@@ -247,10 +247,10 @@ async function run() {
         assert(riverbendEntry.score === 3, '27. rankClaimsByName() counts DISTINCT AUTHORS across ANY region — Alice+Bob (original region) plus Carol (a different region entirely) all claimed "Riverbend" -> 3 distinct authors, the exact cross-region behavior namingView() itself never offers');
         assert(riverbendEntry.claims.length === 3, '28. all 3 claims actually named "Riverbend" contribute, regardless of which region each one names; "Havenmoor" never leaks in');
     }
-    console.log('✓ Section C: core/PlaceNamingView.js — namingView() unchanged; rankClaimsByName() is a pure, additive extraction');
+    console.log('✓ Section C: core/world/PlaceNamingView.js — namingView() unchanged; rankClaimsByName() is a pure, additive extraction');
 
     // -------------------------------------------------------------
-    // Section D: core/GeographicPlaceResolution.js
+    // Section D: core/world/GeographicPlaceResolution.js
     // -------------------------------------------------------------
     {
         const alice = makeIdentity('Alice');
@@ -300,7 +300,7 @@ async function run() {
         assert(regionA.name === 'Unnamed Region' && regionB.name === 'Unnamed Region',
             '42. resolving a geographic place NEVER writes back to either WorldRegion\'s own name');
     }
-    console.log('✓ Section D: core/GeographicPlaceResolution.js — cross-region combined ranking, regions never merged or mutated');
+    console.log('✓ Section D: core/world/GeographicPlaceResolution.js — cross-region combined ranking, regions never merged or mutated');
 
     // -------------------------------------------------------------
     // Section E: application/world/WorldNavigationSession.js wiring
@@ -389,7 +389,7 @@ async function run() {
 
     // Both replicas already have BOTH World documents loaded — this
     // milestone's own design conversation scoped Level 1 to "regions
-    // already available to one client" (core/PlaceIdentity.js's own
+    // already available to one client" (core/world/PlaceIdentity.js's own
     // header); how a region's geometry actually reaches a second
     // replica (World discovery/replication) is existing, unrelated
     // machinery this milestone does not touch.

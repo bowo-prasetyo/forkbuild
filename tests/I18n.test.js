@@ -3,7 +3,7 @@ import { pseudoLocalize, pseudoLocalizeMessages } from '../ui/i18n/pseudoLocaliz
 import { LOCALES, PSEUDO_LOCALE, SOURCE_LOCALE, findLocale, negotiateLocale } from '../ui/i18n/locales.js';
 import SOURCE_MESSAGES from '../ui/i18n/messages/en.js';
 import { applyDocumentLanguage, currentLocale, formatDate, formatNumber, setAppLocale, t } from '../ui/i18n/i18n.js';
-import { DEFAULT_LANGUAGE_SETTINGS, normalizeLanguageSettings } from '../core/LanguageSettings.js';
+import { DEFAULT_LANGUAGE_SETTINGS, normalizeLanguageSettings } from '../core/app/LanguageSettings.js';
 import { LanguageSettingsStore } from '../application/settings/LanguageSettingsStore.js';
 import LanguageSettingsView from '../ui/views/LanguageSettingsView.js';
 import { StorageProvider } from '../storage/StorageProvider.js';

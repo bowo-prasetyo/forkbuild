@@ -1,7 +1,7 @@
 import { Publication } from '../publisher/Publication.js';
-import { ContentReference } from '../core/ContentReference.js';
-import { License } from '../core/License.js';
-import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
+import { ContentReference } from '../core/document/ContentReference.js';
+import { License } from '../core/document/License.js';
+import { DecentralizedPublication } from '../core/publication/DecentralizedPublication.js';
 import { PublicationResolver } from '../application/publication/PublicationResolver.js';
 import { PublicationResolutionOutcome } from '../application/publication/PublicationResolutionOutcome.js';
 import {
@@ -11,7 +11,7 @@ import {
 } from '../application/publication/PublicationContentValidator.js';
 import { createPublicationContentKind } from '../application/publication/PublicationContentKind.js';
 
-import { BlueprintAttribution, BLUEPRINT_ATTRIBUTION_KIND, CURRENT_SCHEMA_VERSION as ATTRIBUTION_SCHEMA_VERSION } from '../core/BlueprintAttribution.js';
+import { BlueprintAttribution, BLUEPRINT_ATTRIBUTION_KIND, CURRENT_SCHEMA_VERSION as ATTRIBUTION_SCHEMA_VERSION } from '../core/building/BlueprintAttribution.js';
 import { createBlueprintAttributionPublicationKind } from '../application/blueprint/BlueprintAttributionPublicationKind.js';
 
 import { LocalContentStore } from '../content/LocalContentStore.js';

@@ -8,7 +8,7 @@ import { useBuildTogether } from '../ui/views/editorView/useBuildTogether.js';
 import { WalkTogetherGuestStatus, WalkTogetherStatus } from '../application/walkTogether/WalkTogether.js';
 import { BuildTogetherOutcome, BuildTogetherRole, coBuilderColor } from '../application/buildTogether/BuildTogetherSession.js';
 import { EventBus } from '../core/events/EventBus.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { t } from '../ui/i18n/i18n.js';
 import { assert } from './support/Assert.js';
 

@@ -2,13 +2,13 @@ import { EventBus } from '../../core/events/EventBus.js';
 import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
 import { ReplayGuard } from '../../replication/ReplayGuard.js';
 import { WorldAuthorizationService } from '../identity/WorldAuthorizationService.js';
-import { WorldAccessLevel } from '../../core/WorldAccessLevel.js';
+import { WorldAccessLevel } from '../../core/collaboration/WorldAccessLevel.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 import { CommandHistoryEvent } from '../events/CommandHistoryEvent.js';
 import {
     toWorldOperationEnvelope,
     isValidWorldOperationEnvelope
-} from '../../core/WorldOperationEnvelope.js';
+} from '../../core/collaboration/WorldOperationEnvelope.js';
 import { WorldOperationOrdering } from '../../replication/WorldOperationOrdering.js';
 import { WorldConflictResolver, WorldOperationOutcome } from '../../replication/WorldConflictResolver.js';
 
@@ -59,7 +59,7 @@ export const WorldOperationRejectionReason = Object.freeze({
 // exactly the way `application/editor/CommandHistory.js` already persists it
 // (`command.toJSON()`) and reconstructed on the far side through the SAME
 // `application/commands/CommandRegistry.js` every local undo/redo/replay
-// path already uses. See core/WorldOperationEnvelope.js's own header for
+// path already uses. See core/collaboration/WorldOperationEnvelope.js's own header for
 // the wire shape, and docs/Roadmap.md, 0.2.96, "do not synchronize the
 // whole document" — the command architecture already IS the mutation
 // kernel; this class only ever gives it a network boundary.

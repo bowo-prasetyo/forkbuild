@@ -8,15 +8,15 @@ import { WorldNavigationSession } from '../application/world/WorldNavigationSess
 import { AvatarVehicleTrustBoundary } from '../application/avatar/AvatarVehicleTrustBoundary.js';
 import { signAvatarVehicleAdvertisement } from '../application/avatar/AvatarVehicleSigning.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import {
     toAvatarVehicleAdvertisement, isValidAvatarVehicleAdvertisement, getAvatarVehicleSigningDescriptor
-} from '../core/AvatarVehicleAdvertisement.js';
-import { TrustStatus } from '../core/TrustObservation.js';
-import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { Position } from '../core/Position.js';
+} from '../core/vehicles/AvatarVehicleAdvertisement.js';
+import { TrustStatus } from '../core/identity/TrustObservation.js';
+import { vehiclePresenceInRegion } from '../core/vehicles/VehiclePlacement.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { Position } from '../core/document/Position.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';

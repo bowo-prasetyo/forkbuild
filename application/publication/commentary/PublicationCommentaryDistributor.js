@@ -1,6 +1,6 @@
-import { LOCAL_AND_PEERS_ONLY } from '../../../core/CommentaryDistributionProvider.js';
-import { UserFacingError } from '../../../core/UserFacingError.js';
-import { message } from '../../../core/Message.js';
+import { LOCAL_AND_PEERS_ONLY } from '../../../core/publication/CommentaryDistributionProvider.js';
+import { UserFacingError } from '../../../core/app/UserFacingError.js';
+import { message } from '../../../core/app/Message.js';
 
 // The discovery-provider value that keeps a comment off every network: it is
 // saved on this device and announced to connected peers, nothing more. For

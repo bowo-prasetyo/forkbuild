@@ -1,6 +1,6 @@
 import { StorageProvider } from './StorageProvider.js';
 import { LocalStorageProvider } from './LocalStorageProvider.js';
-import { AnimalPresence } from '../core/AnimalPresence.js';
+import { AnimalPresence } from '../core/nature/AnimalPresence.js';
 
 const ANIMAL_RUNTIME_INSTANCE_STORE_KEY = 'animal-runtime-instances';
 
@@ -9,7 +9,7 @@ const ANIMAL_RUNTIME_INSTANCE_STORE_KEY = 'animal-runtime-instances';
 // application/world/AnimalRuntimeInstances.js. See that file's own header for
 // the full rationale; this one differs only in the value type persisted
 // (AnimalPresence, which has no heading/spawnPosition of its own — see
-// core/AnimalPresence.js's own header) and in `excludedIds` meaning
+// core/nature/AnimalPresence.js's own header) and in `excludedIds` meaning
 // "caught," not "stored."
 export class AnimalRuntimeInstancePersistenceStore {
     constructor(storageProvider = new LocalStorageProvider()) {

@@ -1,16 +1,16 @@
 // Turning right goes to the right of the screen. Each turn is checked the
 // way a player sees it: the camera framed behind the avatar
-// (core/CameraPerspective.js), and the new facing projected through a real
+// (core/avatar/CameraPerspective.js), and the new facing projected through a real
 // Three.js camera. rotationY grows from +Z toward +X, which is the screen's
 // left from behind, so a sign mix-up here once made D turn left.
 import * as THREE from 'three';
-import { computeCameraFraming, CameraPerspective } from '../core/CameraPerspective.js';
-import { simulateAvatarMovement } from '../core/AvatarMovementSimulation.js';
-import { AvatarMovementState } from '../core/AvatarMovementState.js';
-import { resolveVehicleMovementDirectionFromSteering } from '../core/VehicleSteeringSimulation.js';
-import { VehicleSteeringIntent } from '../core/VehicleSteeringIntent.js';
-import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
-import { VehicleType } from '../core/VehicleType.js';
+import { computeCameraFraming, CameraPerspective } from '../core/avatar/CameraPerspective.js';
+import { simulateAvatarMovement } from '../core/avatar/AvatarMovementSimulation.js';
+import { AvatarMovementState } from '../core/avatar/AvatarMovementState.js';
+import { resolveVehicleMovementDirectionFromSteering } from '../core/vehicles/VehicleSteeringSimulation.js';
+import { VehicleSteeringIntent } from '../core/vehicles/VehicleSteeringIntent.js';
+import { resolveAvatarVehicleMovementCapability } from '../core/vehicles/AvatarVehicleMovementCapability.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
 import { assert } from './support/Assert.js';
 
 const HEADINGS = [0, 30, 90, 135, 180, 270, 350];

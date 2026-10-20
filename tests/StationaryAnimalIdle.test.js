@@ -1,10 +1,10 @@
 import * as THREE from 'three';
-import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
-import { stationaryAnimalPoseAt, IDLE_ACTION, ANIMAL_MOTION } from '../core/WildlifeMotion.js';
-import { AnimalPresence } from '../core/AnimalPresence.js';
-import { AnimalDecoration } from '../core/AnimalDecoration.js';
-import { Position } from '../core/Position.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+import { ANIMAL_SPECIES } from '../core/nature/WildlifeField.js';
+import { stationaryAnimalPoseAt, IDLE_ACTION, ANIMAL_MOTION } from '../core/nature/WildlifeMotion.js';
+import { AnimalPresence } from '../core/nature/AnimalPresence.js';
+import { AnimalDecoration } from '../core/nature/AnimalDecoration.js';
+import { Position } from '../core/document/Position.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
 import { AnimalRenderer, BODY_FRAME, NECK } from '../renderer/AnimalRenderer.js';
 import { AnimalVisual } from '../renderer/AnimalVisual.js';
 import { AnimalFieldRenderer } from '../renderer/AnimalFieldRenderer.js';
@@ -16,7 +16,7 @@ import { assert } from './support/Assert.js';
 // Released animals and animal decorations idle in place, and every animal
 // has ears and a tail.
 //
-//   Section A: core/WildlifeMotion.js#stationaryAnimalPoseAt() — idle
+//   Section A: core/nature/WildlifeMotion.js#stationaryAnimalPoseAt() — idle
 //              actions and turns in place, keyed by id
 //   Section B: renderer/AnimalRenderer.js + AnimalVisual.js — the joints,
 //              the pose, and the same head placement the tiles draw

@@ -7,7 +7,7 @@
 // HttpContentStore"), extended here to a different axis: checking a
 // PublicationAnchor's `proof` against whatever real external system its
 // `anchorType` names. Nothing in this file, or anything that extends it,
-// ever imports core/PublicationAnchor.js or application/
+// ever imports core/publication/PublicationAnchor.js or application/
 // ExternalAnchorVerifier.js — a proofVerifier only ever sees the plain
 // `proof` value and the caller-supplied context, never the anchor
 // envelope itself.

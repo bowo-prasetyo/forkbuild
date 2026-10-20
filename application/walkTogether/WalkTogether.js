@@ -5,7 +5,7 @@ import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
 import { signingIdentityId } from '../../peer/RendezvousPublicationSigning.js';
 import { SigningReadiness, signingReadiness } from '../../identity/SigningReadiness.js';
 import { EphemeralIdentityProvider } from '../../identity/EphemeralIdentityProvider.js';
-import { createWalkTogetherCode, parseWalkTogetherCode } from '../../core/WalkTogetherCode.js';
+import { createWalkTogetherCode, parseWalkTogetherCode } from '../../core/social/WalkTogetherCode.js';
 
 // "Walk here with me" (docs/Pillars.md, "Your work is yours, and lives in a
 // world"): a link that brings a friend into the World you are standing in,
@@ -16,7 +16,7 @@ import { createWalkTogetherCode, parseWalkTogetherCode } from '../../core/WalkTo
 //   a one-off identity publishes a
 //   standing offer on the rendezvous
 //   servers; the link names its key ──────► finds the offer by that key and
-//   (core/WalkTogetherCode.js)               connects, accepting only that key
+//   (core/social/WalkTogetherCode.js)               connects, accepting only that key
 //   sends, in parts: its name, the
 //   World (its Signed Claim and build,
 //   as a link-only share carries

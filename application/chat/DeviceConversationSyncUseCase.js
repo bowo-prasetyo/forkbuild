@@ -7,7 +7,7 @@ import {
     toConversationSyncReadStateEnvelope,
     isValidConversationSyncMessagesEnvelope,
     isValidConversationSyncReadStateEnvelope
-} from '../../core/ConversationSyncEnvelope.js';
+} from '../../core/social/ConversationSyncEnvelope.js';
 
 const SYNCED_MESSAGE_EVENT = 'DeviceConversationSyncedMessage';
 const SIBLING_READ_STATE_EVENT = 'SiblingReadStateChanged';
@@ -27,8 +27,8 @@ const SIBLING_READ_STATE_EVENT = 'SiblingReadStateChanged';
 // folded into it — see docs/Principles.md, "Conversation Synchronization
 // Is A Protocol Between A Device And Itself, Never A Wider Chat Feature"
 // (0.2.83): Bob's own ChatUseCase never subscribes to this protocol at
-// all, and nothing here ever produces a core/ChatDeliveryAck.js or
-// core/ChatReadReceipt.js — those remain exactly what 0.2.63/0.2.71 built
+// all, and nothing here ever produces a core/social/ChatDeliveryAck.js or
+// core/social/ChatReadReceipt.js — those remain exactly what 0.2.63/0.2.71 built
 // them to be, a conversation between this device and the PEER, never
 // between this device and one of its own siblings.
 //
@@ -63,7 +63,7 @@ const SIBLING_READ_STATE_EVENT = 'SiblingReadStateChanged';
 // Identity Comparison, Never A Device Allowlist" (0.2.83). Because both
 // sides of that comparison are freshly re-derived from
 // application/identity/DeviceAuthorizationPropagationUseCase.js's own
-// core/DeviceAuthority.js records — which a later revocation updates the
+// core/identity/DeviceAuthority.js records — which a later revocation updates the
 // instant it is learned, through the completely unmodified 0.2.78/0.2.82
 // gossip path — revocation isolation falls out for free: no code here
 // ever asks "has this device been revoked," because ineligibility IS
@@ -75,7 +75,7 @@ const SIBLING_READ_STATE_EVENT = 'SiblingReadStateChanged';
 // Deliberately a full-state push rather than an incremental delta sync:
 // every eligible reconnect resends every stored entry for every
 // conversation this device holds (batched under
-// core/ConversationSyncEnvelope.js's own SYNC_MESSAGES_BATCH_SIZE, never
+// core/social/ConversationSyncEnvelope.js's own SYNC_MESSAGES_BATCH_SIZE, never
 // one unbounded envelope), the same "resend everything, let idempotency
 // absorb the redundancy" posture 0.2.41's own periodic profile
 // republish already chose over computing a precise diff. A real

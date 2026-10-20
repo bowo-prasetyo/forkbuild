@@ -1,6 +1,6 @@
-import { PublicationCommentary } from '../../../core/PublicationCommentary.js';
+import { PublicationCommentary } from '../../../core/publication/PublicationCommentary.js';
 import { requireSigningIdentityId } from '../../../identity/SigningReadiness.js';
-import { message } from '../../../core/Message.js';
+import { message } from '../../../core/app/Message.js';
 
 // 0.9.246 — Publication Commentary Authorization Boundary.
 //

@@ -1,4 +1,4 @@
-// A week's challenge entries (core/BuildChallenge.js): the published builds
+// A week's challenge entries (core/challenge/BuildChallenge.js): the published builds
 // this device knows of that carry the week's tag, read from their snapshots
 // (`tagsOf`), plus those found on the networks under that tag (`loggedIds`,
 // application/challenge/ChallengeEntryLog.js), whose snapshots this device

@@ -1,5 +1,5 @@
 import { AnnouncementKind } from './AnnouncementKinds.js';
-import { PlacementRecord } from '../../core/PlacementRecord.js';
+import { PlacementRecord } from '../../core/publication/PlacementRecord.js';
 import { LocalAuthorizationVerifier } from '../../identity/LocalAuthorizationVerifier.js';
 
 const MAX_CACHED_VERDICTS = 5000;

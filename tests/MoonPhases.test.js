@@ -12,16 +12,16 @@ import {
     skyBodiesAt,
     skyBodiesAtFraction,
     skyLookAtFraction
-} from '../core/DayCycle.js';
-import { compassLabelBetween } from '../core/CompassHeading.js';
-import { overcastLook, weatherAt } from '../core/Weather.js';
+} from '../core/nature/DayCycle.js';
+import { compassLabelBetween } from '../core/world/CompassHeading.js';
+import { overcastLook, weatherAt } from '../core/nature/Weather.js';
 import { SkyBodies } from '../renderer/SkyBodies.js';
 import { StarSky } from '../renderer/StarSky.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { assert } from './support/Assert.js';
 
-// The moon's phases (core/DayCycle.js): new to full and back over
+// The moon's phases (core/nature/DayCycle.js): new to full and back over
 // MOON_CYCLE_DAYS of World View's days, one phase a night, from the clock
 // alone; lit on the side its sun would light; a new moon's night as bright
 // as ever but flatter, a full moon's brighter, and the stars fainter the more

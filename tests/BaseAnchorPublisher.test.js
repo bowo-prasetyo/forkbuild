@@ -13,8 +13,8 @@ import { encodeBasePublicationCommitment } from '../application/anchoring/base/B
 import { BaseProofVerifier } from '../anchoring/BaseProofVerifier.js';
 import { BitcoinAnchorPublisher } from '../anchoring/BitcoinAnchorPublisher.js';
 import { CreatePublicationAnchorUseCase } from '../application/anchoring/CreatePublicationAnchorUseCase.js';
-import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { DecentralizedPublication } from '../core/publication/DecentralizedPublication.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';

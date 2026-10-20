@@ -16,16 +16,16 @@ import { RemoteSpatialPresenceRenderer } from '../../renderer/RemoteSpatialPrese
 import { VehicleFieldRenderer } from '../../renderer/VehicleFieldRenderer.js';
 import { RemoteRiderVehicles } from '../../renderer/RemoteRiderVehicles.js';
 import { AnimalFieldRenderer } from '../../renderer/AnimalFieldRenderer.js';
-import { AnimalPresence } from '../../core/AnimalPresence.js';
+import { AnimalPresence } from '../../core/nature/AnimalPresence.js';
 import { ResidentFieldRenderer } from '../../renderer/ResidentFieldRenderer.js';
-import { residentAppearanceFor, RESIDENT_TEMPLATE_ID } from '../../core/ResidentAppearance.js';
+import { residentAppearanceFor, RESIDENT_TEMPLATE_ID } from '../../core/world/ResidentAppearance.js';
 import { CreateAvatarTemplateRegistryUseCase } from '../avatar/CreateAvatarTemplateRegistryUseCase.js';
-import { WorldSpatialPresentationMode } from '../../core/WorldSpatialAnchor.js';
-import { surfaceCategoryAt, SURFACE_CATEGORY } from '../../core/TerrainSurface.js';
-import { LAKE_SURFACE_HEIGHT } from '../../core/Hydrology.js';
-import { DEFAULT_WORLD_SEED } from '../../core/TerrainHeightField.js';
-import { DEFAULT_MAX_WALKING_DEPTH } from '../../core/AvatarWaterWalkability.js';
-import { deriveAvatarSwimMode, AvatarSwimMode } from '../../core/AvatarSwimming.js';
+import { WorldSpatialPresentationMode } from '../../core/collaboration/WorldSpatialAnchor.js';
+import { surfaceCategoryAt, SURFACE_CATEGORY } from '../../core/nature/TerrainSurface.js';
+import { LAKE_SURFACE_HEIGHT } from '../../core/nature/Hydrology.js';
+import { DEFAULT_WORLD_SEED } from '../../core/nature/TerrainHeightField.js';
+import { DEFAULT_MAX_WALKING_DEPTH } from '../../core/avatar/AvatarWaterWalkability.js';
+import { deriveAvatarSwimMode, AvatarSwimMode } from '../../core/avatar/AvatarSwimming.js';
 
 // World View's render wiring. Exposes the same narrow gizmo surface
 // RenderWorldUseCase does — one shared TransformGizmoController design,
@@ -63,10 +63,10 @@ export class RenderWorldViewUseCase {
         }
         // Claimed builds: translucent and never pickable, apart from worldRenderer.
         const claimedBuildGhostRenderer = new ClaimedBuildGhostRenderer(renderer, registry);
-        // The challenge plaza's exhibits (core/ChallengePlaza.js): drawn like a
+        // The challenge plaza's exhibits (core/challenge/ChallengePlaza.js): drawn like a
         // claimed build, but solid.
         // Inside a build, what is above the avatar's head is cut away
-        // (core/IndoorView.js, renderer/CutawayClipping.js): the Worlds' own
+        // (core/building/IndoorView.js, renderer/CutawayClipping.js): the Worlds' own
         // bricks, their placed structures and the plaza's exhibits.
         const cutawayClipping = new CutawayClipping();
         worldRenderer.useCutaway(cutawayClipping);
@@ -115,7 +115,7 @@ export class RenderWorldViewUseCase {
         // 0.9.115 — Vehicle Rendering. Deliberately NOT keyed off
         // worldRenderer.brickInstances/placementMeshRegistry the way
         // remoteSpatialPresenceRenderer above is — a VehicleInstance is
-        // never a document/placement fact (see core/VehicleInstance.js's
+        // never a document/placement fact (see core/vehicles/VehicleInstance.js's
         // own header), so this has nothing to look up a mesh for.
         const vehicleFieldRenderer = new VehicleFieldRenderer();
         // Vehicles other players ride, drawn under them.
@@ -194,7 +194,7 @@ export class RenderWorldViewUseCase {
             worldRenderer.animateDecorations(wildlifeTime, DEFAULT_WORLD_SEED, observer);
         });
         // Doors swing open for whoever walks up to them: you, the people
-        // you see, and residents (core/DoorSwing.js), where each is drawn.
+        // you see, and residents (core/building/DoorSwing.js), where each is drawn.
         renderer.addFrameListener((deltaSeconds) => {
             const observers = [];
             if (localAvatarVisual) observers.push(localAvatarVisual.root.position);
@@ -205,7 +205,7 @@ export class RenderWorldViewUseCase {
             }
             worldRenderer.animateDoors(observers, deltaSeconds);
         });
-        // A swimmer at the surface rides the swell (core/WaterWaves.js), where
+        // A swimmer at the surface rides the swell (core/nature/WaterWaves.js), where
         // it is drawn: its presence keeps the still level.
         function floatOnSwell(visual) {
             const atSurface = visual.swimMode === AvatarSwimMode.SURFACE;
@@ -228,7 +228,7 @@ export class RenderWorldViewUseCase {
         // 0.2.76 — avatar ground placement: a purely RENDERING-time lift
         // added on top of whatever AvatarPresence.position.y already
         // means (ground level = 0, plus a transient jump offset —
-        // core/AvatarMovementSimulation.js is completely untouched by
+        // core/avatar/AvatarMovementSimulation.js is completely untouched by
         // this milestone) — never written back to AvatarPresence, never
         // touching movement/collision. See docs/Principles.md, "Terrain
         // Elevation Is A Rendering-Time Offset, Never A Presence Or
@@ -241,7 +241,7 @@ export class RenderWorldViewUseCase {
         // renderer/WorldRenderer.js's buildings and this facade's
         // avatars both read from unmodified — see renderer/Renderer.js's
         // own header). Wherever the real ground at (x, z) is classified
-        // SURFACE_CATEGORY.WATER (a still LAKE — core/Hydrology.js's own
+        // SURFACE_CATEGORY.WATER (a still LAKE — core/nature/Hydrology.js's own
         // term; a river is deliberately never this category, see that
         // file's own "A River Is Ground Color" design), the avatar's
         // rendered floor is the HIGHER of the real terrain height and
@@ -323,7 +323,7 @@ export class RenderWorldViewUseCase {
         }
 
         // How an avatar on foot is in the water, worked out from its position alone
-        // (core/AvatarSwimming.js), so remote swimmers swim without any presence
+        // (core/avatar/AvatarSwimming.js), so remote swimmers swim without any presence
         // field for it.
         function avatarSwimModeFor(position, ridingVehicle) {
             if (ridingVehicle || surfaceCategoryAt(DEFAULT_WORLD_SEED, position.x, position.z) !== SURFACE_CATEGORY.WATER) {
@@ -404,7 +404,7 @@ export class RenderWorldViewUseCase {
             showClaimedBuild: (key, world, position) => claimedBuildGhostRenderer.show(key, world, position),
             hideClaimedBuild: (key) => claimedBuildGhostRenderer.hide(key),
             // What is cut away above someone's head inside a build
-            // (core/IndoorView.js), in world coordinates; null for none.
+            // (core/building/IndoorView.js), in world coordinates; null for none.
             setCutaway: (cutaway) => cutawayClipping.set(cutaway),
             showPlazaExhibit: (key, world, position) => plazaExhibitRenderer.show(key, world, position),
             hidePlazaExhibit: (key) => plazaExhibitRenderer.hide(key),
@@ -637,7 +637,7 @@ export class RenderWorldViewUseCase {
             // cheaply" shape.
             setRemoteSpatialPresence: (deviceId, presence) => {
                 // 0.3.1 — a HIDDEN presentation mode (outside the
-                // viewer's own view cone — core/WorldSpatialAnchor.js)
+                // viewer's own view cone — core/collaboration/WorldSpatialAnchor.js)
                 // removes the marker from the scene exactly like no
                 // position at all always has; see that file's own
                 // header, "outside the current camera/world view -> no
@@ -691,8 +691,8 @@ export class RenderWorldViewUseCase {
             // AvatarPresence.position. That theory was wrong: a
             // VehicleInstance's position has carried REAL, raw
             // terrainHeightAt() elevation since the very first bridge from
-            // a VehiclePresence (core/VehicleInstance.js#vehicleInstanceFromPresence()
-            // copies core/VehiclePlacement.js's own already-elevated spawn
+            // a VehiclePresence (core/vehicles/VehicleInstance.js#vehicleInstanceFromPresence()
+            // copies core/vehicles/VehiclePlacement.js's own already-elevated spawn
             // position verbatim), and application/
             // AvatarVehicleMovementController.js's own movement tick keeps
             // re-snapping a moving vehicle's Y to that same raw sample every
@@ -743,7 +743,7 @@ export class RenderWorldViewUseCase {
             // transient jump offset) resolveAvatarRenderPosition()'s own
             // header already documents for the avatar itself, never a
             // real terrain-elevated Y the way a deterministically-placed
-            // core/WildlifeField.js animal's own Y already is (baked in
+            // core/nature/WildlifeField.js animal's own Y already is (baked in
             // at placement time via terrainHeightAt()). Rendering it
             // verbatim, unlifted, put a released rabbit 1-2 meters below
             // the visible ground the moment the local terrain sat above
@@ -804,29 +804,29 @@ export class RenderWorldViewUseCase {
             markAnimalCaught: (animalId, position) => {
                 renderer.markAnimalCaught(animalId, position);
             },
-            // The sky and its light (core/DayCycle.js's look), and how
+            // The sky and its light (core/nature/DayCycle.js's look), and how
             // strongly lamps and lit windows shine with it.
             setSkyLook: (look) => {
                 renderer.setSkyLook(look);
                 worldRenderer.brickInstances.setNightGlow(look.glow);
             },
-            // Where the sun and the moon are (core/DayCycle.js#skyBodiesAt()),
+            // Where the sun and the moon are (core/nature/DayCycle.js#skyBodiesAt()),
             // and so where the light comes from.
             setSkyBodies: (bodies) => {
                 renderer.setSkyBodies(bodies);
             },
             // How cloudy the sky is, the rain or snow and the snow lying
-            // (core/Weather.js#weatherAt()).
+            // (core/nature/Weather.js#weatherAt()).
             setWeather: (weather) => {
                 renderer.setWeather(weather);
                 worldRenderer.brickInstances.setWetness(weather.wetness);
                 worldRenderer.brickInstances.setSnowCover(weather.snowCover);
             },
-            // The season on the land (core/Season.js#seasonLookAt()).
+            // The season on the land (core/nature/Season.js#seasonLookAt()).
             setSeason: (look) => {
                 renderer.setSeason(look);
             },
-            // The local avatar's footprints in the snow (core/Footprints.js),
+            // The local avatar's footprints in the snow (core/avatar/Footprints.js),
             // drawn on this screen only, faded for `now` on the world's clock.
             addFootprints: (prints) => {
                 renderer.addFootprints(prints);
@@ -834,7 +834,7 @@ export class RenderWorldViewUseCase {
             updateFootprints: (now) => {
                 renderer.updateFootprints(now);
             },
-            // How much ice lies on the lakes (core/Season.js#lakeIceAt()).
+            // How much ice lies on the lakes (core/nature/Season.js#lakeIceAt()).
             setLakeIce: (ice) => {
                 renderer.setLakeIce(ice);
             },

@@ -1,9 +1,9 @@
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
-import { ContentReference } from '../core/ContentReference.js';
-import { PublicationAnchor } from '../core/PublicationAnchor.js';
+import { DecentralizedPublication } from '../core/publication/DecentralizedPublication.js';
+import { ContentReference } from '../core/document/ContentReference.js';
+import { PublicationAnchor } from '../core/publication/PublicationAnchor.js';
 import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
 import { CreatePublicationAnchorUseCase } from '../application/anchoring/CreatePublicationAnchorUseCase.js';
@@ -393,12 +393,12 @@ async function run() {
 
         const baseDescribed = evidenceViewRegistry.get(baseAnchor.anchorType).describe(baseAnchor);
         assert(baseDescribed.summary === 'Base', n('D1[base]. describe() recognizes the anchor as Base'));
-        assert(baseDescribed.externalLocator && baseDescribed.externalLocator.url.includes(BASE_TXID) && baseDescribed.externalLocator.url.includes('basescan.org'),
+        assert(baseDescribed.externalLocator && baseDescribed.externalLocator.url.includes(BASE_TXID) && new URL(baseDescribed.externalLocator.url).hostname === 'basescan.org',
             n('D2[base]. describe() derives a followable basescan.org destination naming the real transaction hash'));
 
         const arweaveDescribed = evidenceViewRegistry.get(arweaveAnchor.anchorType).describe(arweaveAnchor);
         assert(arweaveDescribed.summary === 'Arweave', n('D1[arweave]. describe() recognizes the anchor as Arweave'));
-        assert(arweaveDescribed.externalLocator && arweaveDescribed.externalLocator.url.includes(ARWEAVE_TXID) && arweaveDescribed.externalLocator.url.includes('viewblock.io'),
+        assert(arweaveDescribed.externalLocator && arweaveDescribed.externalLocator.url.includes(ARWEAVE_TXID) && new URL(arweaveDescribed.externalLocator.url).hostname === 'viewblock.io',
             n('D2[arweave]. describe() derives a followable viewblock.io destination naming the real transaction id'));
 
         // D3: purity — describe() is synchronous, side-effect-free, and
@@ -720,7 +720,7 @@ async function run() {
         const viewSrc = codeOnly((await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n'));
 
         // I1-I2: Bitcoin — the activated 0.9.512 seam.
-        // Bitcoin's wallet is a network writer (core/NetworkWriters.js): its plugin
+        // Bitcoin's wallet is a network writer (core/publication/NetworkWriters.js): its plugin
         // returns the coordinator, and NetworkWriterLoader provides what a plugin
         // returns (tests/NetworkWriters.test.js).
         assert(/return \{[\s\S]*\bbitcoinAnchorPublicationCoordinator\b[\s\S]*\};\n\}/.test(codeOnly(await source('ui/main/plugins/composeBitcoinWallet.js'))),

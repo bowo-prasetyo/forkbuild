@@ -1,4 +1,4 @@
-// Short sounds for Editor edits (core/EditorSoundCues.js): a brick snapping
+// Short sounds for Editor edits (core/app/EditorSoundCues.js): a brick snapping
 // into place, a pop as one is removed, a tick for a move, a double tick for
 // a turn, a quick run of blips for a paste, a bright ping for a new color, a
 // two-note link for grouping, a bell for a named place, a falling blip for

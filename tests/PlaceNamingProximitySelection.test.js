@@ -1,7 +1,7 @@
 import {
     selectNearbyPlaceNamingClaims,
     isValidPlaceNamingProximityRadius
-} from '../core/PlaceNamingProximitySelection.js';
+} from '../core/world/PlaceNamingProximitySelection.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.255 — Place Naming Proximity Selection.

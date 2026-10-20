@@ -1,7 +1,7 @@
 import { ExternalAnchorCreationOutcome } from './ExternalAnchorCreationOutcome.js';
 import { ExternalAnchorCreationUiState } from './ExternalAnchorCreationUiState.js';
 import { RoleProviderResolutionStatus } from '../settings/RoleAwareProviderResolver.js';
-import { message } from '../../core/Message.js';
+import { message } from '../../core/app/Message.js';
 
 // 0.8.11 — Explicit External Anchoring UX.
 //

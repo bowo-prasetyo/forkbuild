@@ -1,4 +1,4 @@
-import { SteemReadingConfiguration } from '../../core/SteemReadingConfiguration.js';
+import { SteemReadingConfiguration } from '../../core/networks/SteemReadingConfiguration.js';
 import { SteemReadingConfigurationStore } from '../../storage/SteemReadingConfigurationStore.js';
 
 export class SetSteemReadingConfigurationUseCase {

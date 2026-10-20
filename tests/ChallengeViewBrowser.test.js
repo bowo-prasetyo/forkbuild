@@ -2,7 +2,7 @@
 import { createApp, nextTick } from 'vue';
 import { createMemoryHistory, createRouter } from 'vue-router';
 import ChallengeView from '../ui/views/ChallengeView.js';
-import { challengeAt, challengeById, previousChallenge } from '../core/BuildChallenge.js';
+import { challengeAt, challengeById, previousChallenge } from '../core/challenge/BuildChallenge.js';
 import { challengeJoinRoute } from '../ui/components/challenge/challengeText.js';
 import { ChallengeEntryLog } from '../application/challenge/ChallengeEntryLog.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';

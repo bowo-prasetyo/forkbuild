@@ -1,9 +1,9 @@
 import { Command } from './Command.js';
-import { Position } from '../../core/Position.js';
-import { normalizeTilt } from '../../core/BrickOrientation.js';
+import { Position } from '../../core/document/Position.js';
+import { normalizeTilt } from '../../core/building/BrickOrientation.js';
 import { bricksMessage } from './HistoryDescription.js';
 
-// Undoable tilt: lays one brick on another side (core/BrickOrientation.js).
+// Undoable tilt: lays one brick on another side (core/building/BrickOrientation.js).
 // Carries the brick's new tilt and the position it rests at once tilted
 // (EditorSession#tiltSelection() keeps its bottom where it was), both
 // absolute, so every replica applying it gets the same brick. Remembers

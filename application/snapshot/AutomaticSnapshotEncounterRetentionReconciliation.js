@@ -64,7 +64,7 @@ import {
 // function, producing an IDENTICAL origin either way. The registry itself
 // (by design — see its own header, "no trust vocabulary") cannot tell the
 // two apart, and this file adds no `automatic: true` field to change that:
-// a `WorldDiscoverySource`'s own shape (`core/WorldDiscoverySource.js`,
+// a `WorldDiscoverySource`'s own shape (`core/world/WorldDiscoverySource.js`,
 // 0.9.5) is untouched, and `registerMaterializedSnapshotWorldSource()`
 // itself is untouched. Instead, provenance lives ENTIRELY in this file's
 // own instance state: `noteAutomaticRegistration({ publicationId,

@@ -1,4 +1,4 @@
-import { StructureRegistry } from '../../core/StructureRegistry.js';
+import { StructureRegistry } from '../../core/building/StructureRegistry.js';
 import { VillageLibrary } from '../../core/library/VillageLibrary.js';
 import { ShowcaseLibrary } from '../../core/library/ShowcaseLibrary.js';
 import { CollectionLibrary } from '../../core/library/CollectionLibrary.js';

@@ -8,7 +8,7 @@ import { t } from '../i18n/i18n.js';
 // ui/components/MetadataEditorDialog.js (0.2.21) already established,
 // reused rather than inventing a second dialog pattern.
 //
-// `preview` is a throwaway core/Structure.js instance — the CURRENT
+// `preview` is a throwaway core/building/Structure.js instance — the CURRENT
 // selection already run through CreateStructureFromSelectionUseCase
 // with placeholder metadata (see ui/views/EditorView.js#actionUi
 // .openCreateBlueprintDialog()), purely so this dialog can show what

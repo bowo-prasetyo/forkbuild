@@ -1,14 +1,14 @@
-import { World } from '../../core/World.js';
-import { Building } from '../../core/Building.js';
-import { Brick } from '../../core/Brick.js';
-import { Document } from '../../core/Document.js';
-import { DocumentMetadata } from '../../core/DocumentMetadata.js';
+import { World } from '../../core/document/World.js';
+import { Building } from '../../core/building/Building.js';
+import { Brick } from '../../core/building/Brick.js';
+import { Document } from '../../core/document/Document.js';
+import { DocumentMetadata } from '../../core/document/DocumentMetadata.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
-import { moveInReadyMadeResident } from '../../core/ReadyMadeHome.js';
-import { createSecureId } from '../../core/createId.js';
+import { moveInReadyMadeResident } from '../../core/building/ReadyMadeHome.js';
+import { createSecureId } from '../../core/document/createId.js';
 import { CreateBrickRegistryUseCase } from './CreateBrickRegistryUseCase.js';
 
-// Forks a library Structure (core/Structure.js) into a new, independent,
+// Forks a library Structure (core/building/Structure.js) into a new, independent,
 // editable Document — the 0.2.81 flagship operation. Deliberately the
 // smallest possible version of what application/publication/ForkPublishedWorldUseCase.js
 // already does for a whole published World, one rung down:
@@ -73,14 +73,14 @@ export class ForkStructureUseCase {
 
         const world = new World();
         world.addBuilding(building);
-        // A ready-made home comes lived in (core/ReadyMadeHome.js).
+        // A ready-made home comes lived in (core/building/ReadyMadeHome.js).
         moveInReadyMadeResident(world, structure, this._brickRegistry(), createSecureId);
 
         const metadata = new DocumentMetadata({
             title: structure.name,
             description: structure.description,
             author: currentUser ? currentUser.username : null,
-            // 0.2.95 — see core/DocumentMetadata.js's own comment.
+            // 0.2.95 — see core/document/DocumentMetadata.js's own comment.
             authorIdentityId: resolveSigningIdentityId(identityProvider),
             created: new Date(),
             modified: new Date(),

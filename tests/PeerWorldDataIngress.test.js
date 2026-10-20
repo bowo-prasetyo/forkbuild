@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import {
     WorldDiscoveryInputKeys
-} from '../core/WorldDiscoverySource.js';
+} from '../core/world/WorldDiscoverySource.js';
 import { describePeerWorldDiscoverySource } from '../peer/PeerWorldDataIngress.js';
 import { assert } from './support/Assert.js';
 

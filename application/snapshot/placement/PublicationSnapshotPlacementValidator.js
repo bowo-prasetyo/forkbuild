@@ -1,4 +1,4 @@
-import { PUBLICATION_SNAPSHOT_PLACEMENT_KIND, CURRENT_SCHEMA_VERSION } from '../../../core/PublicationSnapshotPlacement.js';
+import { PUBLICATION_SNAPSHOT_PLACEMENT_KIND, CURRENT_SCHEMA_VERSION } from '../../../core/publication/PublicationSnapshotPlacement.js';
 import { isNonBlankString } from '../../../utils/typeGuards.js';
 
 // 0.8.18 — Decentralized Snapshot Placement Foundation.

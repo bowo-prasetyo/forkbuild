@@ -1,7 +1,7 @@
 import { LocalIdentity } from '../identity/LocalIdentity.js';
 import { AuthenticationSession, AuthenticationState } from '../identity/AuthenticationSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { Signature, SignatureType } from '../core/Signature.js';
+import { Signature, SignatureType } from '../core/publication/Signature.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';

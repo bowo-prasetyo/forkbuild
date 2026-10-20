@@ -1,14 +1,14 @@
 import { readFile } from 'node:fs/promises';
 import {
     treeCollisionCandidatesForMovement, MAX_TREE_COLLISION_RADIUS, CANDIDATE_QUERY_MARGIN
-} from '../core/AvatarTreeCollisionQuery.js';
-import { treeCollisionGeometryInRegion, TREE_TRUNK_COLLISION_RADIUS } from '../core/TreeCollisionGeometry.js';
-import { naturalFeaturesInRegion, FEATURE_TYPE } from '../core/NaturalFeatureField.js';
-import { AVATAR_COLLISION_RADIUS } from '../core/AvatarCollision.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+} from '../core/avatar/AvatarTreeCollisionQuery.js';
+import { treeCollisionGeometryInRegion, TREE_TRUNK_COLLISION_RADIUS } from '../core/nature/TreeCollisionGeometry.js';
+import { naturalFeaturesInRegion, FEATURE_TYPE } from '../core/nature/NaturalFeatureField.js';
+import { AVATAR_COLLISION_RADIUS } from '../core/avatar/AvatarCollision.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.62 — Deterministic Tree Collision Spatial Query, core/AvatarTreeCollisionQuery.js.
+// 0.9.62 — Deterministic Tree Collision Spatial Query, core/avatar/AvatarTreeCollisionQuery.js.
 //
 //   Section A: empty region — no trees nearby -> []
 //   Section B: deterministic agreement with treeCollisionGeometryInRegion()
@@ -45,7 +45,7 @@ import { assert } from './support/Assert.js';
 //              as its single most important technical detail
 //
 // Central architectural claim under test throughout: this file only ever
-// decides WHICH REGION to ask core/TreeCollisionGeometry.js's own
+// decides WHICH REGION to ask core/nature/TreeCollisionGeometry.js's own
 // treeCollisionGeometryInRegion() about — it never re-derives tree
 // placement or geometry, never detects a collision, and never resolves a
 // movement. See docs/Roadmap.md, 0.9.62, for the full milestone story.
@@ -309,7 +309,7 @@ async function runTests() {
         const wide = treeCollisionGeometryInRegion(DEFAULT_WORLD_SEED, -200, -200, 200, 200);
         const tree = wide[0];
         const tx = tree.center.x, tz = tree.center.z;
-        const carRadius = 0.80; // matches CAR_COLLISION_RADIUS, core/AvatarVehicleMovementCapability.js
+        const carRadius = 0.80; // matches CAR_COLLISION_RADIUS, core/vehicles/AvatarVehicleMovementCapability.js
         const carMargin = carRadius + MAX_TREE_COLLISION_RADIUS;
 
         // Positioned strictly between the old (AVATAR_COLLISION_RADIUS-
@@ -346,7 +346,7 @@ async function runTests() {
     // runtime integration
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../core/AvatarTreeCollisionQuery.js', import.meta.url);
+        const sourceUrl = new URL('../core/avatar/AvatarTreeCollisionQuery.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -364,18 +364,18 @@ async function runTests() {
             'localStorage', 'StorageProvider', 'fetch(', 'WebSocket'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `25. core/AvatarTreeCollisionQuery.js's own code never references "${term}" — spatial query only, never detection/resolution/mutation/rendering/a spatial index/randomness/clock/persistence/runtime integration`);
+            assert(!codeOnly.includes(term), `25. core/avatar/AvatarTreeCollisionQuery.js's own code never references "${term}" — spatial query only, never detection/resolution/mutation/rendering/a spatial index/randomness/clock/persistence/runtime integration`);
         }
         assert(codeOnly.includes('treeCollisionGeometryInRegion'),
-            '26. core/AvatarTreeCollisionQuery.js does consume treeCollisionGeometryInRegion() from core/TreeCollisionGeometry.js — the one deliberate, already-defined region query it is allowed to delegate to, never a second one it invents itself');
+            '26. core/avatar/AvatarTreeCollisionQuery.js does consume treeCollisionGeometryInRegion() from core/nature/TreeCollisionGeometry.js — the one deliberate, already-defined region query it is allowed to delegate to, never a second one it invents itself');
         assert(codeOnly.includes('AVATAR_COLLISION_RADIUS'),
-            '27. core/AvatarTreeCollisionQuery.js does consume AVATAR_COLLISION_RADIUS from core/AvatarCollision.js to size its own query margin');
+            '27. core/avatar/AvatarTreeCollisionQuery.js does consume AVATAR_COLLISION_RADIUS from core/avatar/AvatarCollision.js to size its own query margin');
     }
     {
-        const exportsModule = await import('../core/AvatarTreeCollisionQuery.js');
+        const exportsModule = await import('../core/avatar/AvatarTreeCollisionQuery.js');
         const exportedNames = Object.keys(exportsModule).sort();
         assert(JSON.stringify(exportedNames) === JSON.stringify(['CANDIDATE_QUERY_MARGIN', 'MAX_TREE_COLLISION_RADIUS', 'treeCollisionCandidatesForMovement']),
-            '28. core/AvatarTreeCollisionQuery.js exports exactly treeCollisionCandidatesForMovement, MAX_TREE_COLLISION_RADIUS, and CANDIDATE_QUERY_MARGIN — nothing else');
+            '28. core/avatar/AvatarTreeCollisionQuery.js exports exactly treeCollisionCandidatesForMovement, MAX_TREE_COLLISION_RADIUS, and CANDIDATE_QUERY_MARGIN — nothing else');
     }
 
     console.log('✅ All Deterministic Tree Collision Spatial Query tests passed.');

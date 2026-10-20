@@ -1,12 +1,12 @@
 import { Command } from './Command.js';
-import { message } from '../../core/Message.js';
+import { message } from '../../core/app/Message.js';
 
 // 0.5.0 — World Regions & Decentralized Place Naming.
 //
 // Updates an existing WorldRegion's name, description, kind, and/or
 // radius. The regionId is stored at construction and never reassigned.
 // Center and parentRegionId are deliberately not editable here — see
-// core/World.js#updateWorldRegion()'s own comment: relocating or
+// core/document/World.js#updateWorldRegion()'s own comment: relocating or
 // reparenting a region is remove + recreate, the same restraint
 // UpdateWorldLandmarkCommand already takes with a landmark's position.
 // _originalState tracks the prior values for undo() correctness.

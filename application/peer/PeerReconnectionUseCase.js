@@ -1,8 +1,8 @@
 import { EventBus } from '../../core/events/EventBus.js';
 import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
-import { FriendshipState } from '../../core/FriendshipState.js';
-import { UserFacingError } from '../../core/UserFacingError.js';
-import { message } from '../../core/Message.js';
+import { FriendshipState } from '../../core/social/FriendshipState.js';
+import { UserFacingError } from '../../core/app/UserFacingError.js';
+import { message } from '../../core/app/Message.js';
 
 const REJECTED_EVENT = 'PeerReconnectionRejected';
 

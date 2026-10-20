@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { DAY } from '../core/DayCycle.js';
+import { DAY } from '../core/nature/DayCycle.js';
 
 // Every lit surface in this codebase (terrain, trees, wildlife, bricks,
 // avatars) uses THREE.MeshStandardMaterial, a physically-based material
@@ -15,7 +15,7 @@ import { DAY } from '../core/DayCycle.js';
 // original values (0.6 ambient / 0.8 directional) to compensate for
 // MeshStandardMaterial's dimmer response.
 //
-// The daytime colors and intensities are core/DayCycle.js's DAY, which
+// The daytime colors and intensities are core/nature/DayCycle.js's DAY, which
 // World View's day and night (applyLook()) starts from. The light comes from
 // DEFAULT_DIRECTION, as it always has in the Editor and thumbnails, until
 // World View's sun and moon aim it (setDirection()).
@@ -55,7 +55,7 @@ export class Lights {
         sceneManager.add(this._directional.target);
     }
 
-    // Lights the scene as `look` (shaped like core/DayCycle.js's DAY) says.
+    // Lights the scene as `look` (shaped like core/nature/DayCycle.js's DAY) says.
     applyLook(look) {
         this._look = look;
         this._hemisphere.color.setHex(look.hemisphereSky);
@@ -65,7 +65,7 @@ export class Lights {
     }
 
     // Aims the directional light from `direction` (a unit vector towards the
-    // sun or the moon) with `strength` (0 to 1, core/DayCycle.js's
+    // sun or the moon) with `strength` (0 to 1, core/nature/DayCycle.js's
     // lightStrength) of the look's sun (moon) light.
     setDirection(direction, strength = 1) {
         this._direction.set(direction.x, direction.y, direction.z).normalize();

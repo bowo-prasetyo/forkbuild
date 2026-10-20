@@ -2,7 +2,7 @@ import { TurnServerConfigurationStore } from '../../storage/TurnServerConfigurat
 
 // 0.9.454 — TURN Server Configuration Provider.
 //
-// core/TurnServerConfiguration.js gives a user's own TURN relay a validated
+// core/networks/TurnServerConfiguration.js gives a user's own TURN relay a validated
 // shape; storage/TurnServerConfigurationStore.js gives it a durable home.
 // Neither ever resolves an EFFECTIVE TURN configuration — the store
 // deliberately returns `null` for "nothing configured" rather than
@@ -11,7 +11,7 @@ import { TurnServerConfigurationStore } from '../../storage/TurnServerConfigurat
 // "whatever is on file, or nothing" and a future WebRTC composition step
 // (0.9.455, NOT this milestone) — the "provider" box between a future TURN
 // Settings surface and the WebRTC runtime, mirroring the shape the
-// (since removed — see core/NostrRelayConfiguration.js's own "unified"
+// (since removed — see core/networks/NostrRelayConfiguration.js's own "unified"
 // header) NostrPublicationRelaySetConfigurationProvider's
 // `resolveNostrPublicationRelayUrls()` established for a sibling
 // configuration family:
@@ -56,7 +56,7 @@ import { TurnServerConfigurationStore } from '../../storage/TurnServerConfigurat
 //
 // DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
 // - **Health checking, credential refresh, failover, or server ranking.**
-//   See core/TurnServerConfiguration.js's own header, "one shared
+//   See core/networks/TurnServerConfiguration.js's own header, "one shared
 //   credential pair" — this provider resolves exactly one configuration or
 //   none, never chooses among several.
 // - **Automatic discovery of any kind.**

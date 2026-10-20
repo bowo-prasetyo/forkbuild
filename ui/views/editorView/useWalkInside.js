@@ -1,5 +1,5 @@
 import { computed, ref } from 'vue';
-import { findBuildEntrance } from '../../../core/BuildEntrance.js';
+import { findBuildEntrance } from '../../../core/world/BuildEntrance.js';
 
 // Walk inside it: once a build is published, a way from the Editor into
 // World View that arrives at its door (`/world/:id?arrive=door`, see

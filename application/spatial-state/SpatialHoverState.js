@@ -1,4 +1,4 @@
-import { WorldPosition } from '../../core/WorldPosition.js';
+import { WorldPosition } from '../../core/document/WorldPosition.js';
 
 // Runtime-only state: what is currently hovered in the spatial world?
 // Distinct from SpatialSelectionState — hover is transient observation,
