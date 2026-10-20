@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 1a00088b7f29f33c -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 5d7f32b274cd71e9 -->
 # 04 — Penerbitan & Remix
 
 <!-- languages -->
@@ -449,6 +449,39 @@ menyebutkan bangunan siapa yang di-remix-nya, dan tetap mencantumkan nama
 Anda lisensi mana pun yang dipilih. Me-remix bangunan Anda sendiri tidak
 mengikat Anda pada apa pun: salinan Anda boleh memakai lisensi apa pun.
 Gambar dan video bangunan yang disimpan memuat nama pembuatnya.
+
+### Jika bangunan Anda mirip dengan bangunan orang lain
+
+Saat Anda menekan **Terbitkan** di Editor, ForkBuild membandingkan bangunan Anda
+dengan bangunan orang lain yang sudah pernah dilihat perangkat ini: yang
+Anda buka, temukan di **Jelajahi**, atau lewati di dunia. Jika bangunan
+Anda sangat mirip dengan salah satunya, ForkBuild memberi tahu sebelum
+menerbitkan: bangunan yang mana, milik siapa, dan berapa banyak yang sama.
+Jika Anda memulai dari bangunan itu, buka bangunan itu dan pilih
+**Edit Salinan**, agar pembuatnya dicantumkan dan syaratnya tetap berlaku
+(lihat [Cara me-remix](#cara-me-remix)). Jika lisensinya tidak mengizinkan
+salinan, tanyakan dulu kepadanya. Jika itu karya Anda sendiri, pilih
+**Ini buatan saya, terbitkan**. Pertanyaan ini muncul sekali setiap
+kunjungan dan tidak pernah menghalangi Anda menerbitkan.
+
+Apa yang dibandingkan, dan apa yang tidak bisa diketahuinya:
+
+- Hanya balok yang Anda letakkan sendiri yang dihitung, jadi dua bangunan
+  yang dimulai dari rumah siap pakai yang sama tidak dianggap mirip karena
+  itu. Bangunan dengan kurang dari 20 balok milik Anda sendiri tidak
+  dibandingkan: bangunan kecil terlalu mudah terlihat mirip.
+- Sebuah balok dianggap sama jika jenisnya sama dan berada di tempat yang
+  sama, meskipun seluruh bangunan Anda berdiri di tempat lain atau diputar
+  seperempat putaran. Warna, dan arah hadap tiap balok, tidak dihitung.
+- Bangunan Anda sendiri, bangunan yang di-remix oleh bangunan Anda, remix
+  dari bangunan Anda, remix lain dari bangunan yang sama, dan bangunan yang
+  diterbitkan setelah bangunan Anda pertama kali diterbitkan tidak
+  diikutkan.
+- ForkBuild hanya mengenal bangunan yang pernah dilihat perangkat ini, jadi
+  tidak menemukan apa pun bukan berarti tidak ada yang membangun sesuatu
+  yang mirip. Ini petunjuk, bukan penilaian: bangunan bisa mirip secara
+  kebetulan, dan hanya Anda yang tahu bagaimana bangunan Anda dibuat. Tidak
+  ada yang dikirim atau disimpan.
 
 ### Jika seseorang memakai bangunan Anda dengan cara yang tidak diizinkan lisensinya
 

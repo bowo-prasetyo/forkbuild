@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 1a00088b7f29f33c -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 5d7f32b274cd71e9 -->
 # 04 — Publicar e remixar
 
 <!-- languages -->
@@ -435,6 +435,37 @@ quem é a construção que ele remixa e mantém o seu crédito qualquer que seja
 a escolhida. Remixar a sua própria construção não prende você a nada: a sua
 cópia aceita qualquer licença. Imagens e vídeos salvos de uma construção
 levam o nome de quem a construiu.
+
+### Quando a sua construção se parece com a de outra pessoa
+
+Quando você aperta **Publicar** no Editor, o ForkBuild compara a sua construção com
+construções de outras pessoas que este aparelho já viu: as que você abriu,
+encontrou em **Explorar** ou viu pelo mundo. Se a sua se parece muito com
+alguma delas, ele avisa antes de publicar: qual construção, de quem e
+quanto dela é igual. Se você começou a partir da construção dessa pessoa,
+abra-a e escolha **Editar uma cópia** em vez disso, para que ela receba o
+crédito e as condições dela sejam mantidas (veja
+[Como remixar](#como-remixar)). Se a licença dela não permite cópias,
+pergunte antes. Se é trabalho seu, escolha **É minha, publicar**. Ele
+pergunta uma vez por visita e nunca impede você de publicar.
+
+O que ele compara, e o que ele não tem como saber:
+
+- Só contam os blocos que você mesmo colocou, então duas construções que
+  começaram com a mesma casa pronta não ficam parecidas por isso. Uma
+  construção com menos de 20 blocos seus não é comparada: construções
+  pequenas se parecem fácil demais.
+- Um bloco conta como igual quando é o mesmo tipo de bloco no mesmo lugar,
+  mesmo que a sua construção inteira esteja em outro lugar ou girada um
+  quarto de volta. As cores, e para onde cada bloco está virado, não
+  contam.
+- Ficam de fora as suas próprias construções, a construção da qual a sua é
+  um remix, os remixes da sua, outros remixes da mesma construção e as
+  construções publicadas depois que a sua foi publicada pela primeira vez.
+- Ele só conhece as construções que este aparelho viu, então não encontrar
+  nada não quer dizer que ninguém construiu algo parecido. É uma dica, não
+  um julgamento: construções podem se parecer por acaso, e só você sabe
+  como fez a sua. Nada é enviado nem salvo.
 
 ### Quando alguém usa a sua construção de um jeito que a licença dela não permite
 

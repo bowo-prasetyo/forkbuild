@@ -410,6 +410,34 @@ it remixes, and keeps the credit to you whichever one is chosen. Remixing
 your own build doesn't hold you to anything: your copy takes any license.
 Saved pictures and videos of a build carry its builder's name.
 
+### When your build looks like someone else's
+
+When you press **Publish** in the Editor, ForkBuild compares your build
+with builds by other people that this device has already seen: ones you
+opened, found in **Explore** or passed in World View. If yours looks a lot
+like one of them, it says so before publishing: which build, whose, and how
+much of it is the same. If you started from their build, open it and choose **Edit a Copy**
+instead, so they are credited and their terms are kept (see
+[How to remix](#how-to-remix)). If their license doesn't allow copies, ask
+them first. If it's your own work, choose **It's my own, publish**. It asks
+once each visit, and never stops you publishing.
+
+What it compares, and what it can't know:
+
+- Only the bricks you placed yourself count, so two builds started from the
+  same ready-made house don't look alike. A build with fewer than 20 bricks
+  of your own isn't compared: small builds look alike too easily.
+- A brick counts as the same when it is the same kind of brick in the same
+  place, even if your whole build stands somewhere else or is turned a
+  quarter turn. Colours, and which way each brick faces, don't count.
+- Your own builds, the build yours is a remix of, remixes of yours, other
+  remixes of the same build, and builds published after yours was first
+  published are left out.
+- It only knows the builds this device has seen, so finding nothing doesn't
+  mean nobody has built anything like it. It is a hint, not a judgement:
+  builds can look alike by chance, and only you know how you made yours.
+  Nothing is sent anywhere or saved.
+
 ### When someone uses your build in a way its license doesn't allow
 
 ForkBuild has no company or moderator in the middle: builds travel from

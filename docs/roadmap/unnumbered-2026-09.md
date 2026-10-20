@@ -7892,3 +7892,43 @@ it). A newcomer learns one thing: the heart.
   who, you first, by name; compact; signed out; comment authors named).
 - Not done: hearts on a build's earlier Publications aren't added to a republished one's; the count isn't checked
   against the networks on every Explore card, only in World View and when a card's comments are opened.
+
+
+## A build that looks like someone else's is pointed out at publish (unnumbered, 2026-10-19)
+
+**Nothing told a builder their build looked like someone else's.** All Rights Reserved stops Edit a Copy and Import,
+but nothing stops a build being rebuilt by eye, and nothing told someone who had started from another person's build
+that Edit a Copy is how to credit them. A builder who found their All Rights Reserved house rebuilt under another
+name had nowhere to start. Pillar served: your work is yours (credit travels with the work). How a player notices:
+pressing Publish in the Editor on a build that looks a lot like someone else's, among the builds this device has seen, says which,
+whose and how much is the same, and that Edit a Copy credits them, or, when their license allows no copies, to ask
+first. **Keep building** waits; **It's my own, publish** publishes. It is asked once a visit and never blocks.
+
+- core/BuildSimilarity.js (new, pure): `buildShape()` (one point per definition and position; turn and colour left
+  out, since a rebuild by eye turns symmetric bricks and recolours), `compareBuildShapes()` (the two lined up over four
+  quarter turns by offsets voted for by pairs of same-kind bricks, rarest kinds first, bounded; scored as shared over
+  all distinct bricks), `similarityUpperBound()` (from counts per kind, to skip builds that can't match),
+  `MIN_COMPARED_BRICKS` (20) and `SIMILAR_BUILD_THRESHOLD` (0.6). core/BlueprintSimilarity.js is unchanged: it compares
+  structures in place for lineage suggestions.
+- core/PlacedBricks.js: `placedBricks()`, the bricks `countPlacedBricks()` counts, so only the builder's own bricks are
+  compared and two builds started from the same ready-made house don't look alike.
+- application/publication/SimilarBuildFinder.js (new): the Repository's Publications (this device's and those
+  admitted from peers and networks) whose bytes are in the publication content store and match their signed hash,
+  each read once a visit. Left out: any identity on this device or credited under Built with, the build's own
+  Publications, its original, its remixes, other remixes of its original, and builds published after its first
+  Publication. Up to three, most alike first, one per build; it stops after 1.5 seconds with what it has.
+- ui/components/SimilarBuildDialog.js (new) and ui/components/Toolbar.js: the check runs after "nothing of your own
+  yet" and before the license question; Publish is disabled while it looks, and a failed check publishes as before.
+  ui/main.js provides the finder. New `similarBuild.*` messages in every language.
+- docs/user/04 ("When your build looks like someone else's") in every language, and docs/Architecture.md.
+- Tests: `BuildSimilarity` (a copy moved, raised or turned lines up; colour and brick turns left out; a rebuild with
+  changes; a different build of the same bricks; the upper bound; edge cases), `SimilarBuildFinder` (found; the
+  builder's own builds and remix family left out; later builds left out; bytes absent, altered or unreadable; too few
+  own bricks and ready-made bricks; three at most, most alike and earliest first, one per build; time budget, one
+  read per build, failures), `SimilarBuildPublishBrowser` (shown before publishing with title, builder, percentage and
+  terms; Keep building, once a visit, It's my own; nothing alike or a failed check publishes; Publish waits).
+- Not done: only builds whose bytes are on this device are compared, so finding nothing proves nothing; there is no
+  network-wide index to ask. A copy rebuilt as a mirror image, or from different bricks, isn't recognised. A builder
+  is not told when someone else publishes a build like theirs; a "similar builds published earlier" list on a build's
+  page would be the next step. World View's Publish, which skips the Editor's other publish questions too, doesn't
+  check. Like every hint here, a changed copy of the app can skip it.

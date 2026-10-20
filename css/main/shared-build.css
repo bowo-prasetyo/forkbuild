@@ -223,6 +223,58 @@
     color: var(--ink-subtle);
 }
 
+/* Publish's "looks a lot like someone else's build"
+   (ui/components/SimilarBuildDialog.js). */
+.modal-panel.similar-build-dialog {
+    width: min(520px, calc(100vw - 2rem));
+    max-width: none;
+}
+
+.similar-build-lead {
+    margin: 0 0 0.75rem;
+    color: var(--ink-soft);
+    line-height: 1.45;
+}
+
+.similar-build-list {
+    margin: 0 0 0.75rem;
+    padding: 0;
+    list-style: none;
+}
+
+.similar-build-match {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    margin-bottom: 0.5rem;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+}
+
+.similar-build-name {
+    font-weight: 600;
+    color: var(--ink-strong);
+    overflow-wrap: anywhere;
+}
+
+.similar-build-percent {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+}
+
+.similar-build-terms {
+    font-size: 0.85rem;
+    line-height: 1.35;
+    color: var(--ink-muted);
+}
+
+.similar-build-note {
+    margin: 0 0 0.4rem;
+    font-size: 0.82rem;
+    color: var(--ink-subtle);
+}
+
 /* Download as a 3D model: the Editor's dialog
    (ui/components/modelExport/ModelExportDialog.js) and the links on a shared
    build's page. */

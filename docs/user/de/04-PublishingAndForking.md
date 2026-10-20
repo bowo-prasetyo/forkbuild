@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 1a00088b7f29f33c -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 5d7f32b274cd71e9 -->
 # 04 — Veröffentlichen & Remixen
 
 <!-- languages -->
@@ -447,6 +447,39 @@ wessen Bauwerk er remixt, und behält Ihre Nennung, welche auch gewählt
 wird. Ihr eigenes Bauwerk zu remixen bindet Sie an nichts: Ihre Kopie darf
 jede Lizenz tragen. Gespeicherte Bilder und Videos eines Bauwerks tragen
 den Namen seines Erbauers.
+
+### Wenn Ihr Bauwerk dem eines anderen ähnelt
+
+Wenn Sie im Editor **Veröffentlichen** drücken, vergleicht ForkBuild Ihr Bauwerk mit
+Bauwerken anderer, die dieses Gerät schon gesehen hat: solchen, die Sie
+geöffnet, unter **Entdecken** gefunden oder in der Welt gesehen haben. Sieht
+Ihres einem davon sehr ähnlich, sagt es das vor dem Veröffentlichen: welches
+Bauwerk, von wem und wie viel davon gleich ist. Wenn Sie von deren Bauwerk
+ausgegangen sind, öffnen Sie es und wählen Sie stattdessen
+**Eine Kopie bearbeiten**, damit die Person genannt wird und ihre
+Bedingungen erhalten bleiben (siehe [So remixen Sie](#so-remixen-sie)).
+Erlaubt ihre Lizenz keine Kopien, fragen Sie sie zuerst. Ist es Ihre eigene
+Arbeit, wählen Sie **Es ist meins, veröffentlichen**. Es fragt einmal pro
+Besuch und hält Sie nie vom Veröffentlichen ab.
+
+Was verglichen wird und was es nicht wissen kann:
+
+- Es zählen nur die Steine, die Sie selbst platziert haben, also ähneln sich
+  zwei Bauwerke, die mit demselben fertigen Haus begonnen haben, dafür
+  nicht. Ein Bauwerk mit weniger als 20 eigenen Steinen wird nicht
+  verglichen: Kleine Bauwerke ähneln sich zu leicht.
+- Ein Stein gilt als gleich, wenn es dieselbe Art Stein an derselben Stelle
+  ist, auch wenn Ihr ganzes Bauwerk woanders steht oder um eine
+  Vierteldrehung gedreht ist. Farben und die Richtung einzelner Steine
+  zählen nicht.
+- Ihre eigenen Bauwerke, das Bauwerk, von dem Ihres ein Remix ist, Remixe
+  von Ihrem, andere Remixe desselben Bauwerks und Bauwerke, die erst nach
+  der ersten Veröffentlichung von Ihrem veröffentlicht wurden, bleiben
+  außen vor.
+- Es kennt nur die Bauwerke, die dieses Gerät gesehen hat. Findet es nichts,
+  heißt das also nicht, dass niemand etwas Ähnliches gebaut hat. Es ist ein
+  Hinweis, kein Urteil: Bauwerke können sich zufällig ähneln, und nur Sie
+  wissen, wie Sie Ihres gebaut haben. Nichts wird gesendet oder gespeichert.
 
 ### Wenn jemand Ihr Bauwerk so nutzt, wie es seine Lizenz nicht erlaubt
 

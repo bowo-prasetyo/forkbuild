@@ -394,7 +394,22 @@ of this device, from that content store by its Publication's hash when
 there is no local document (`executeWhenLoaded()` waits for one still on
 disk). Publishing a build with no license first asks its maker whether
 others may remix it (ui/components/RemixPermissionDialog.js, from
-Toolbar), and saves the answer as its license. Build here in World View
+Toolbar), and saves the answer as its license. Before that, Publish asks
+application/publication/SimilarBuildFinder.js for published builds by
+other people that look a lot like this one, and when it finds any shows
+ui/components/SimilarBuildDialog.js, which points to Edit a Copy; the
+builder can publish anyway. The finder reads the Publications the
+Repository's discovery providers list, takes each one's bytes from the
+publication content store only when they match its signed hash, and
+compares bricks with core/BuildSimilarity.js: one point per definition and
+position, the two builds lined up over four quarter turns by offsets voted
+for by pairs of same-kind bricks, scored as shared over all distinct
+bricks. Only the builder's own bricks (core/PlacedBricks.js
+`placedBricks()`) count on their side; their own identities' builds, the
+remix family, and builds published after this one's first Publication are
+left out; it gives up after a time budget, and nothing is sent or stored.
+It is a hint like core/BlueprintSimilarity.js ("Similarity Is Evidence; It
+Never Becomes Lineage"), never a finding of copying. Build here in World View
 opens `/editor?plot=<world>&x=&y=&z=`: the Editor starts a new build and
 keeps its plot (core/BuildPlot.js, application/plot/BuildPlotStore.js), and
 CreatePublisherUseCase hands PublishDocumentUseCase a

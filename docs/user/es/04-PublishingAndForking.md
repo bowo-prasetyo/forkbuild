@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 1a00088b7f29f33c -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 5d7f32b274cd71e9 -->
 # 04 — Publicar y remezclar
 
 <!-- languages -->
@@ -446,6 +446,38 @@ remezcla, dice de quién es la construcción que remezcla y mantiene su
 crédito sea cual sea la elegida. Remezclar su propia construcción no lo
 obliga a nada: su copia admite cualquier licencia. Las imágenes y los
 videos guardados de una construcción llevan el nombre de su constructor.
+
+### Cuando su construcción se parece a la de otra persona
+
+Al pulsar **Publicar** en el Editor, ForkBuild compara su construcción con las
+construcciones de otras personas que este dispositivo ya ha visto: las que
+abrió, encontró en **Explorar** o vio en el mundo. Si la suya se parece
+mucho a alguna, lo dice antes de publicar: qué construcción, de quién y
+cuánto de ella es igual. Si partió de esa construcción, ábrala y elija
+**Editar una copia** en su lugar, para que se le dé el crédito y se
+conserven sus condiciones (vea [Cómo remezclar](#cómo-remezclar)). Si su
+licencia no permite copias, pregúntele primero. Si es obra suya, elija
+**Es mía, publicar**. Lo pregunta una vez por visita y nunca le impide
+publicar.
+
+Qué compara y qué no puede saber:
+
+- Solo cuentan los bloques que colocó usted, así que dos construcciones que
+  empezaron con la misma casa ya hecha no se parecen por eso. Una
+  construcción con menos de 20 bloques propios no se compara: las
+  construcciones pequeñas se parecen con demasiada facilidad.
+- Un bloque cuenta como igual cuando es el mismo tipo de bloque en el mismo
+  lugar, aunque toda su construcción esté en otro sitio o girada un cuarto
+  de vuelta. Los colores, y hacia dónde mira cada bloque, no cuentan.
+- Se dejan fuera sus propias construcciones, la construcción de la que la
+  suya es una remezcla, las remezclas de la suya, otras remezclas de la
+  misma construcción y las construcciones publicadas después de que la suya
+  se publicara por primera vez.
+- Solo conoce las construcciones que este dispositivo ha visto, así que no
+  encontrar nada no significa que nadie haya construido algo parecido. Es
+  una pista, no un juicio: las construcciones pueden parecerse por
+  casualidad, y solo usted sabe cómo hizo la suya. No se envía ni se guarda
+  nada.
 
 ### Cuando alguien usa su construcción de una forma que su licencia no permite
 
