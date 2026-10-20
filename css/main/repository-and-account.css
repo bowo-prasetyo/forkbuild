@@ -580,6 +580,27 @@
     font-size: 0.8rem;
 }
 
+/* On the builder's own card: look-alikes published after it
+   (ui/components/PublicationCard.js), a quiet line that opens their list. */
+.publication-look-alikes {
+    margin: 0.25rem 0;
+    font-size: 0.8rem;
+}
+
+.publication-look-alikes-toggle {
+    padding: 0;
+    background: none;
+    border: 0;
+    color: var(--accent-ink);
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.publication-card .similar-earlier {
+    margin: 0.4rem 0;
+}
+
 .publication-distribution {
     margin: 0.35rem 0;
     color: var(--ink-green);

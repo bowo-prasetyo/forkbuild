@@ -10,6 +10,11 @@
 // are first lined up: a copy built two studs over, higher up, or turned a
 // quarter turn compares as what it is.
 //
+// Bricks that form a whole ready-made structure from the Build Library can be
+// taken out of a shape first (withoutReadyMade()): two builds that both stand
+// the same ready-made house look alike for it, not for anything their builders
+// placed.
+//
 // Pure: bricks in, numbers out.
 
 // Builds smaller than this are too simple to tell a copy from a coincidence.
@@ -26,6 +31,13 @@ const PRECISION = 1000;
 const MAX_ANCHORS = 48;
 const MAX_PAIRS_PER_ANCHOR = 64;
 const OFFSETS_TRIED_PER_TURN = 3;
+// A ready-made structure counts as standing in a build when this share of its
+// bricks are there, lined up as it is anywhere and at any quarter turn.
+// Smaller structures than MIN_READY_MADE_POINTS (a fence segment) are too
+// plain to tell from bricks placed by hand, and are left in.
+export const READY_MADE_COVERAGE = 0.9;
+export const MIN_READY_MADE_POINTS = 6;
+const MAX_COPIES_OF_ONE_STRUCTURE = 12;
 
 function rounded(value) {
     const number = Number(value);
@@ -49,6 +61,11 @@ export function buildShape(bricks) {
         const key = pointKey(brick.definitionId, x, y, z);
         if (!points.has(key)) points.set(key, Object.freeze({ definitionId: brick.definitionId, x, y, z }));
     }
+    return shapeOf(points);
+}
+
+// `points`: key -> point.
+function shapeOf(points) {
     const kinds = {};
     for (const point of points.values()) {
         kinds[point.definitionId] = (kinds[point.definitionId] || 0) + 1;
@@ -111,14 +128,28 @@ function offsetsByVote(mine, turned) {
         .map((vote) => vote.offset);
 }
 
-function countShared(mine, turned, offset) {
-    let shared = 0;
+// The keys of `mine` that `turned`, moved by `offset`, lands on.
+function sharedKeys(mine, turned, offset) {
+    const keys = [];
     for (const point of turned) {
-        if (mine.keys.has(pointKey(point.definitionId, rounded(point.x + offset.x), rounded(point.y + offset.y), rounded(point.z + offset.z)))) {
-            shared += 1;
+        const key = pointKey(point.definitionId, rounded(point.x + offset.x), rounded(point.y + offset.y), rounded(point.z + offset.z));
+        if (mine.keys.has(key)) keys.push(key);
+    }
+    return keys;
+}
+
+// `theirs` turned and moved onto `mine` the way that makes the most bricks
+// meet: `{ shared, turn, keys }`, `keys` being those of `mine` they meet.
+function bestAlignment(mine, theirs) {
+    let best = { shared: -1, turn: 0, keys: [] };
+    for (const turn of TURNS) {
+        const turned = theirs.points.map((point) => turnPoint(point, turn));
+        for (const offset of offsetsByVote(mine, turned)) {
+            const keys = sharedKeys(mine, turned, offset);
+            if (keys.length > best.shared) best = { shared: keys.length, turn, keys };
         }
     }
-    return shared;
+    return best;
 }
 
 // How alike `theirs` is to `mine` (two buildShape()s), lined up the way that
@@ -129,14 +160,7 @@ export function compareBuildShapes(mine, theirs) {
     if (!mine?.size || !theirs?.size) {
         return Object.freeze({ similarity: 0, shared: 0, onlyMine: mine?.size || 0, onlyTheirs: theirs?.size || 0, turn: 0 });
     }
-    let best = { shared: -1, turn: 0 };
-    for (const turn of TURNS) {
-        const turned = theirs.points.map((point) => turnPoint(point, turn));
-        for (const offset of offsetsByVote(mine, turned)) {
-            const shared = countShared(mine, turned, offset);
-            if (shared > best.shared) best = { shared, turn };
-        }
-    }
+    const best = bestAlignment(mine, theirs);
     const shared = Math.max(best.shared, 0);
     const union = mine.size + theirs.size - shared;
     return Object.freeze({
@@ -146,6 +170,44 @@ export function compareBuildShapes(mine, theirs) {
         onlyTheirs: theirs.size - shared,
         turn: best.shared > 0 ? best.turn : 0
     });
+}
+
+// `shape` without the bricks that form a whole ready-made structure (each of
+// `readyMadeShapes`, buildShape()s of the Build Library's structures), however
+// it was moved or turned, as many times as it stands there. Larger structures
+// are taken first, so a house with a porch goes as one, not as a house and
+// some steps.
+export function withoutReadyMade(shape, readyMadeShapes) {
+    if (!shape?.size || !Array.isArray(readyMadeShapes) || readyMadeShapes.length === 0) return shape;
+    const structures = readyMadeShapes
+        .filter((structure) => structure?.size >= MIN_READY_MADE_POINTS)
+        .sort((a, b) => b.size - a.size);
+    let rest = shape;
+    for (const structure of structures) {
+        const needed = Math.ceil(structure.size * READY_MADE_COVERAGE);
+        for (let copy = 0; copy < MAX_COPIES_OF_ONE_STRUCTURE; copy += 1) {
+            if (rest.size < needed || containedAtMost(structure, rest) < needed) break;
+            const alignment = bestAlignment(rest, structure);
+            if (alignment.shared < needed) break;
+            const taken = new Set(alignment.keys);
+            const left = new Map();
+            for (const point of rest.points) {
+                const key = pointKey(point.definitionId, point.x, point.y, point.z);
+                if (!taken.has(key)) left.set(key, point);
+            }
+            rest = shapeOf(left);
+        }
+    }
+    return rest;
+}
+
+// The most bricks of `part` that `whole` could hold, from counts per kind.
+function containedAtMost(part, whole) {
+    let held = 0;
+    for (const [definitionId, count] of Object.entries(part.kinds)) {
+        held += Math.min(count, whole.kinds[definitionId] || 0);
+    }
+    return held;
 }
 
 // Whether `evidence` (compareBuildShapes()) is alike enough to point out.

@@ -13,6 +13,7 @@ import { addReadyMadeBricks, worldBricks } from '../core/PlacedBricks.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { Publication } from '../publisher/Publication.js';
 import { SimilarBuildFinder } from '../application/publication/SimilarBuildFinder.js';
+import { VillageLibrary } from '../core/library/VillageLibrary.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
@@ -224,6 +225,14 @@ async function run() {
         assert((await finder({ limit: 10 }).findEarlier(later)).map((f) => f.publication.documentId).sort().join() === 'copy,helped,mallory-older,original',
             '23. a later build lists every earlier look-alike, its own builder\'s excepted');
 
+        const afterOriginal = await finder({ limit: 10 }).findLater(original);
+        assert(afterOriginal.map((f) => f.publication.documentId).sort().join() === 'copy,later',
+            `23b. findLater() lists the look-alikes published after it, for its builder (${afterOriginal.map((f) => f.publication.documentId).join()})`);
+        assert((await finder().findLater(later)).length === 0, '23c. none for the newest');
+        const both = finder({ limit: 10 });
+        const [one, two] = await Promise.all([both.findLater(original), both.findEarlier(later)]);
+        assert(one.length === 2 && two.length === 4, '23d. looks asked at once each get their own answer');
+
         const byAlice = await finder({ limit: 10 }).findEarlier(later, { by: ['alice'] });
         assert(byAlice.length === 1 && byAlice[0].publication === original, '23a. with `by`, only those builders\' builds are compared');
 
@@ -242,6 +251,39 @@ async function run() {
         assert((await finder().findEarlier(small)).length === 0, '26. nor is one too small to tell');
     }
     console.log('✓ a build\'s page: builds published earlier that look like it');
+
+    {
+        // Two builds that are a ready-made house and a few bricks of their own.
+        const { contentStore, publications, finder } = setUp();
+        const house = VillageLibrary.structures.find((structure) => structure.id === 'village:house').bricks;
+        const moved = (dx) => house.map((b) => new Brick({ definitionId: b.definitionId, position: new Position(b.position.x + dx, b.position.y, b.position.z), rotation: b.rotation }));
+        const own = (kind, n) => Array.from({ length: n }, (_, i) => new Brick({ definitionId: kind, position: new Position(60 + i, 0.5, 60) }));
+        const theirs = published(contentStore, documentOf([...moved(30), ...own('core:cube', 8)], { title: 'Their house' }), { identityId: 'alice', publishedAt: '2026-09-01T00:00:00Z' });
+        publications.push(theirs);
+        const mine = documentOf([...moved(-30), ...own('core:plate_2x4', 8)], { authorIdentityId: 'me' });
+        assert((await finder().find(mine)).length === 1, '28. without the Build Library, two builds of the same ready-made house look alike');
+        const loads = [];
+        const knowing = finder({ readyMadeStructures: async () => { loads.push(1); return VillageLibrary.structures; } });
+        assert((await knowing.find(mine)).length === 0, '29. with it, they don\'t: the house is no one\'s own');
+        const later = published(contentStore, documentOf([...moved(90), ...own('core:plate_2x4', 8)], { title: 'Later house' }), { identityId: 'bob', publishedAt: '2026-10-01T00:00:00Z' });
+        assert((await knowing.findEarlier(later)).length === 0, '30. on a build\'s page too');
+        assert(loads.length === 1, `31. the structures are loaded once (${loads.length})`);
+
+        const copy = published(contentStore, documentOf([...moved(-90), ...cottageBricks({ dx: 200 })], { title: 'Copy' }), { identityId: 'bob', publishedAt: '2026-10-02T00:00:00Z' });
+        const original = published(contentStore, documentOf([...cottageBricks({ dx: -200 })], { title: 'Original' }), { identityId: 'carol', publishedAt: '2026-09-02T00:00:00Z' });
+        publications.push(copy, original);
+        const found = await knowing.findEarlier(copy);
+        assert(found.length === 1 && found[0].publication === original && found[0].evidence.similarity === 1,
+            `32. a copy with a ready-made house added beside it still looks like what it copied (${found.map((f) => f.evidence.similarity).join()})`);
+
+        const untouched = finder({ readyMadeStructures: async () => { loads.push('untouched'); return VillageLibrary.structures; } });
+        assert((await untouched.find(documentOf(moved(0), { authorIdentityId: 'me' }), { readyMade: addReadyMadeBricks(null, moved(0)) })).length === 0
+            && !loads.includes('untouched'), '32a. a build with too few bricks of its own never loads the library');
+
+        const failing = finder({ readyMadeStructures: async () => { throw new Error('offline'); } });
+        assert((await failing.find(mine)).length === 1, '33. when the structures can\'t be loaded, builds are compared as before');
+    }
+    console.log('✓ ready-made structures don\'t make builds look alike');
 
     console.log('✅ All similar build finder tests passed.');
 }

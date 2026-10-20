@@ -210,6 +210,8 @@ export default Object.freeze({
     'similarEarlier.percent': '{percent}% 같음',
     'similarEarlier.detail': '{percent}% 같음 · {date} 게시',
     'similarEarlier.note': '이 기기가 본 작품 가운데, 이 작품보다 먼저 다른 사람이 게시했고 이 작품과 아주 비슷한 작품이에요. 작품은 우연히, 또는 같은 완성된 구조물에서 시작해서 비슷할 수 있어요. 누군가 복사했다는 뜻은 아니에요.',
+    'similarLater.title': '나중에 게시된 비슷한 작품',
+    'similarLater.note': '이 기기에서 게시한 작품에서만, 나에게만 보입니다. 이 기기가 본 작품 가운데 내 작품보다 나중에 다른 사람이 게시했고 아주 비슷한 작품이에요. 작품은 우연히 비슷할 수 있으니 누군가 복사했다는 뜻은 아니에요.',
     'remix.count': { other: '{count}번 리믹스됨' },
     'remixPermission.title': '다른 사람이 리믹스하도록 허용할까요?',
     'remixPermission.lead': '링크가 있는 사람은 누구나 작품을 볼 수 있습니다. 자신만의 사본을 만들어 수정하는 것도 허용할지 선택하세요.',
@@ -2483,6 +2485,7 @@ export default Object.freeze({
 
     // Publications: publicationCard.
     'publicationCard.published': '🔒 게시됨',
+    'publicationCard.lookAlikes': { other: '내 작품 뒤에 게시된 작품 {count}개가 비슷해요' },
     'publicationCard.by': '{author} 님 작성',
     'publicationCard.anonymous': '익명',
     'publicationCard.storedOn': '저장 위치',

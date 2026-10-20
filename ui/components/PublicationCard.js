@@ -10,6 +10,7 @@ import { DISTRIBUTION_KIND_LABELS } from '../../application/publication/OwnPubli
 import { displayText, t } from '../i18n/i18n.js';
 import I18nText from '../i18n/I18nText.js';
 import { remixCountText, remixedFromText } from './remix/remixText.js';
+import OwnLookAlikes from './remix/OwnLookAlikes.js';
 
 // 0.2.31 — one publication, in card form. Pure presentation: every
 // piece of enriched data (description, parent title, fork count) is
@@ -36,9 +37,12 @@ import { remixCountText, remixedFromText } from './remix/remixText.js';
 // offered only when the app-wide `getPublicationCommentariesCommand` is
 // provided — the same "feature hidden when its collaborator is absent"
 // gate every optional capability in this codebase's UI layer follows.
+//
+// OwnLookAlikes adds, on the builder's own builds only, the look-alikes
+// published after it; the card itself stays the same for every build.
 export default {
     name: 'PublicationCard',
-    components: { I18nText, PublicationPreview, PublicationCommentarySection, SharePublicationButton, FollowButton, BuildHeart },
+    components: { I18nText, PublicationPreview, PublicationCommentarySection, SharePublicationButton, FollowButton, BuildHeart, OwnLookAlikes },
     inject: {
         // Read only to decide whether to offer the Comment toggle.
         getPublicationCommentariesCommand: { default: null },
@@ -134,6 +138,7 @@ export default {
             </p>
             <p class="publication-forks" v-if="remixes">{{ remixes }}</p>
             <BuildHeart :publication-id="publication.id" class="publication-hearts" />
+            <OwnLookAlikes :publication="publication" />
             <p v-if="distribution && distribution.recorded" class="publication-distribution">
                 <template v-if="distribution.stored.length">{{ t('publicationCard.storedOn') }}
                     <template v-for="(entry, index) in distribution.stored" :key="'s' + entry.label"><template v-if="index">{{ ' ' + t('publicationCard.and') + ' ' }}</template><span class="publication-distribution-item" :title="entry.detail">{{ entry.label }}</span></template>

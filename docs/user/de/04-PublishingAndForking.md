@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: fb0dd38e1538e747 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ed04e9dc0ae7ffa3 -->
 # 04 — Veröffentlichen & Remixen
 
 <!-- languages -->
@@ -466,7 +466,9 @@ Was verglichen wird und was es nicht wissen kann:
 
 - Es zählen nur die Steine, die Sie selbst platziert haben, also ähneln sich
   zwei Bauwerke, die mit demselben fertigen Haus begonnen haben, dafür
-  nicht. Ein Bauwerk mit weniger als 20 eigenen Steinen wird nicht
+  nicht. Fertige Strukturen aus der Baubibliothek zählen auf keiner Seite
+  mit, wo auch immer sie stehen und wie auch immer sie gedreht sind. Ein
+  Bauwerk mit weniger als 20 eigenen Steinen wird nicht
   verglichen: Kleine Bauwerke ähneln sich zu leicht.
 - Ein Stein gilt als gleich, wenn es dieselbe Art Stein an derselben Stelle
   ist, auch wenn Ihr ganzes Bauwerk woanders steht oder um eine
@@ -908,7 +910,8 @@ finden: Öffnen Sie die Seite der Kopie, und wenn Ihres zuerst veröffentlicht
 wurde und ihr ähnelt, steht es dort. Bauwerke werden so verglichen wie beim
 Veröffentlichen (siehe
 [Wenn Ihr Bauwerk dem eines anderen ähnelt](#wenn-ihr-bauwerk-dem-eines-anderen-ähnelt)),
-nur dass jeder Stein zählt, denn nur das Gerät des Bauenden weiß, welche
+nur dass jeder Stein zählt, der nicht zu einer ganzen fertigen Struktur aus
+der Baubibliothek gehört, denn nur das Gerät des Bauenden weiß, welche
 Steine er selbst platziert hat.
 
 Außen vor bleiben Bauwerke desselben Bauenden (und aller, die es mit ihm
@@ -916,8 +919,9 @@ gebaut haben), der ganze Stammbaum und Bauwerke, die danach veröffentlicht
 wurden. „Vorher“ richtet sich nach dem Datum, mit dem jedes Bauwerk beim
 Veröffentlichen signiert wurde.
 
-Bauwerke können sich zufällig ähneln oder weil sie mit derselben fertigen
-Struktur begonnen haben. Ein Bauwerk in dieser Liste heißt also nicht, dass
+Bauwerke können sich zufällig ähneln oder weil sie dieselbe fertige
+Struktur auf ähnliche Weise verändert haben. Ein Bauwerk in dieser Liste
+heißt also nicht, dass
 jemand kopiert hat. Wenn Sie glauben, dass jemand Ihr Bauwerk so nutzt, wie
 es seine Lizenz nicht erlaubt, siehe
 [Wenn jemand Ihr Bauwerk so nutzt, wie es seine Lizenz nicht erlaubt](#wenn-jemand-ihr-bauwerk-so-nutzt-wie-es-seine-lizenz-nicht-erlaubt).
@@ -934,6 +938,13 @@ auflistet (Ihr Gerät zeigt ihn auch, wenn Sie
 [Benachrichtigungen auf diesem Gerät](03-WorldView.md#benachrichtigungen-auf-diesem-gerät)
 eingeschaltet haben). Remixe Ihrer Bauwerke zählen hier nicht: Sie nennen
 Sie und haben [eine eigene Benachrichtigung](#remix-zähler).
+
+Bei den Bauwerken, die Sie von diesem Gerät aus veröffentlicht haben, und
+nur dort, sagt Ihre Karte unter **Entdecken** außerdem, wie viele Bauwerke
+anderer, die nach Ihrem veröffentlicht wurden, ihm sehr ähneln
+(**2 später veröffentlichte Bauwerke ähneln diesem**); ein Klick zeigt sie.
+Nur Sie sehen das: Keine fremde Karte wird in der Liste, die alle
+durchsehen, gekennzeichnet.
 
 ## Ein typischer kreativer Kreislauf
 

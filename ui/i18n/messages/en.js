@@ -209,6 +209,8 @@ export default Object.freeze({
     'similarEarlier.percent': '{percent}% the same',
     'similarEarlier.detail': '{percent}% the same · published {date}',
     'similarEarlier.note': 'Builds by other people, published before this one, that look a lot like it, among those this device has seen. Builds can look alike by chance or because they started from the same ready-made structure, so this doesn\'t mean anyone copied.',
+    'similarLater.title': 'Similar builds published later',
+    'similarLater.note': 'Only you see this, on builds you published from this device: builds by other people, published after yours, that look a lot like it, among those this device has seen. Builds can look alike by chance, so this doesn\'t mean anyone copied.',
     'remix.count': { one: 'Remixed once', other: 'Remixed {count} times' },
     'remixPermission.title': 'Let others remix it?',
     'remixPermission.lead': 'Anyone with your link can see your build. Choose whether they can also make a copy of their own and change it.',
@@ -2482,6 +2484,7 @@ export default Object.freeze({
 
     // Publications: publicationCard.
     'publicationCard.published': '🔒 Published',
+    'publicationCard.lookAlikes': { one: 'A build published after yours looks like it', other: '{count} builds published after yours look like it' },
     'publicationCard.by': 'by {author}',
     'publicationCard.anonymous': 'anonymous',
     'publicationCard.storedOn': 'Stored on',

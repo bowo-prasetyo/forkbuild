@@ -207,6 +207,8 @@ export default Object.freeze({
     'similarEarlier.percent': '{percent}% sama',
     'similarEarlier.detail': '{percent}% sama · diterbitkan {date}',
     'similarEarlier.note': 'Bangunan orang lain yang diterbitkan sebelum bangunan ini dan sangat mirip dengannya, di antara yang pernah dilihat perangkat ini. Bangunan bisa mirip secara kebetulan atau karena dimulai dari struktur siap pakai yang sama, jadi ini tidak berarti ada yang menyalin.',
+    'similarLater.title': 'Bangunan mirip yang diterbitkan kemudian',
+    'similarLater.note': 'Hanya Anda yang melihat ini, pada bangunan yang Anda terbitkan dari perangkat ini: bangunan orang lain yang diterbitkan setelah milik Anda dan sangat mirip dengannya, di antara yang pernah dilihat perangkat ini. Bangunan bisa mirip secara kebetulan, jadi ini tidak berarti ada yang menyalin.',
     'remix.count': { other: 'Di-remix {count} kali' },
     'remixPermission.title': 'Izinkan orang lain me-remix?',
     'remixPermission.lead': 'Siapa pun yang punya tautan Anda dapat melihat bangunan Anda. Pilih apakah mereka juga boleh membuat salinan sendiri dan mengubahnya.',
@@ -2480,6 +2482,7 @@ export default Object.freeze({
 
     // Publications: publicationCard.
     'publicationCard.published': '🔒 Diterbitkan',
+    'publicationCard.lookAlikes': { other: '{count} bangunan yang diterbitkan setelah milik Anda mirip dengannya' },
     'publicationCard.by': 'oleh {author}',
     'publicationCard.anonymous': 'anonim',
     'publicationCard.storedOn': 'Disimpan di',

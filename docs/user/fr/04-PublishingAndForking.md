@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: fb0dd38e1538e747 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ed04e9dc0ae7ffa3 -->
 # 04 — Publier et remixer
 
 <!-- languages -->
@@ -482,7 +482,10 @@ Ce qui est comparé, et ce qu’il ne peut pas savoir :
 
 - Seules comptent les briques que vous avez placées vous-même : deux
   constructions commencées avec la même maison toute faite ne se
-  ressemblent donc pas pour autant. Une construction de moins de 20 briques
+  ressemblent donc pas pour autant. Les structures toutes faites de la
+  Bibliothèque de construction ne comptent pas non plus, d’un côté comme de
+  l’autre, où qu’elles soient et quelle que soit leur orientation. Une
+  construction de moins de 20 briques
   à vous n’est pas comparée : les petites constructions se ressemblent trop
   facilement.
 - Une brique compte comme identique quand c’est le même genre de brique au
@@ -926,16 +929,17 @@ vous pouvez trouver une copie de votre construction : ouvrez la page de la
 copie, et si la vôtre a été publiée avant et lui ressemble, elle y est
 listée. Les constructions sont comparées comme à la publication (voir
 [Quand votre construction ressemble à celle de quelqu’un d’autre](#quand-votre-construction-ressemble-à-celle-de-quelquun-dautre)),
-sauf que chaque brique compte, puisque seul l’appareil de son auteur sait
-quelles briques il a placées lui-même.
+sauf que compte chaque brique qui ne fait pas partie d’une structure toute
+faite entière de la Bibliothèque de construction, puisque seul l’appareil de
+son auteur sait quelles briques il a placées lui-même.
 
 Sont laissés de côté les constructions du même auteur (et de ceux qui l’ont
 construite avec lui), tout l’arbre généalogique et les constructions
 publiées après. « Avant » se fonde sur la date avec laquelle chaque
 construction a été signée à sa publication.
 
-Des constructions peuvent se ressembler par hasard, ou parce qu’elles sont
-parties de la même structure toute faite : une construction listée ici ne
+Des constructions peuvent se ressembler par hasard, ou parce qu’elles ont
+modifié la même structure toute faite de façon semblable : une construction listée ici ne
 veut donc pas dire que quelqu’un a copié. Si vous pensez que quelqu’un a
 utilisé votre construction d’une façon que sa licence ne permet pas, voir
 [Quand quelqu’un utilise votre construction d’une façon que sa licence ne permet pas](#quand-quelquun-utilise-votre-construction-dune-façon-que-sa-licence-ne-permet-pas).
@@ -952,6 +956,13 @@ la page liste la vôtre (votre appareil l’affiche aussi si vous avez activé
 les [Notifications sur cet appareil](03-WorldView.md#notifications-sur-cet-appareil)).
 Les remix de vos constructions ne comptent pas ici : ils vous créditent et
 ont [leur propre notification](#nombre-de-remix).
+
+Sur les constructions que vous avez publiées depuis cet appareil, et
+seulement là, votre carte dans **Explorer** dit aussi combien de
+constructions d’autres personnes, publiées après la vôtre, lui ressemblent
+beaucoup (**2 constructions publiées après la vôtre lui ressemblent**) ;
+cliquez pour les voir. Vous seul voyez ceci : aucune carte d’autrui n’est
+marquée dans la liste que tout le monde parcourt.
 
 ## Une boucle créative typique
 

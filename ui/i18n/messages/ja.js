@@ -207,6 +207,8 @@ export default Object.freeze({
     'similarEarlier.percent': '{percent}% 同じ',
     'similarEarlier.detail': '{percent}% 同じ・{date} に公開',
     'similarEarlier.note': 'このデバイスが見た作品のうち、この作品より先にほかの人が公開した、よく似ている作品です。作品は偶然似ることも、同じできあいの構造物から始めたために似ることもあります。だれかがコピーしたという意味ではありません。',
+    'similarLater.title': 'あとから公開された似ている作品',
+    'similarLater.note': 'このデバイスから公開した作品にだけ、あなたにだけ表示されます。このデバイスが見た作品のうち、あなたの作品のあとにほかの人が公開した、よく似ている作品です。作品は偶然似ることもあるので、だれかがコピーしたという意味ではありません。',
     'remix.count': { other: '{count}回リミックスされました' },
     'remixPermission.title': 'ほかの人のリミックスを許可しますか？',
     'remixPermission.lead': 'リンクを知っている人は誰でも作品を見られます。自分用のコピーを作って変更することも許可するか選んでください。',
@@ -2480,6 +2482,7 @@ export default Object.freeze({
 
     // Publications: publicationCard.
     'publicationCard.published': '🔒 公開済み',
+    'publicationCard.lookAlikes': { other: 'あなたの作品のあとに公開された {count} 件の作品が似ています' },
     'publicationCard.by': '作者: {author}',
     'publicationCard.anonymous': '匿名',
     'publicationCard.storedOn': '保存先:',

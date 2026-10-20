@@ -8064,3 +8064,48 @@ look-alike's build reaches this device after its listing did.
   the cap, oldest first).
 - Not done: the waiting list is in memory, so builds still waiting when the app closes are not compared on the next
   visit; builds already known at startup still aren't compared. Explore's cards still don't show look-alikes.
+
+
+## Ready-made structures no longer make builds look alike, and your Explore cards show later look-alikes (unnumbered, 2026-10-20)
+
+**Builds that only shared a ready-made structure were pointed out as look-alikes, and a builder still had to go and
+open each copy's page.** On a build's page, in World View and in the 🔔 every brick counted, since only the builder's
+own device knows which bricks they placed: two builds that both stand the Build Library's house, moved or turned
+differently, could be listed together, a false hint that read like an accusation. And nothing showed a builder, where
+they keep their own builds, that copies of them had appeared. Pillar served: your work is yours (credit travels with
+the work, and a hint shouldn't wrong anyone). How a player notices: builds that share only ready-made structures are no
+longer listed or notified, wherever the structures stand and however they're turned; and on the builds they published
+from this device, and only there, their Explore card says **2 builds published after yours look like it**, opening the
+list.
+
+- core/BuildSimilarity.js: `withoutReadyMade(shape, readyMadeShapes)` takes out every copy of each ready-made structure
+  of at least `MIN_READY_MADE_POINTS` (6) distinct bricks, largest first (so a house with a porch goes whole), when
+  `READY_MADE_COVERAGE` (90%) of it is there, lined up as builds are (any quarter turn, any offset); smaller ones (a
+  fence segment) can't be told from bricks placed by hand and stay. `compareBuildShapes()` shares the line-up
+  (`bestAlignment()`), which now also says which bricks met. About 3 ms for the village square.
+- application/publication/SimilarBuildFinder.js: `readyMadeStructures` (an async loader, asked once; a failed load
+  compares as before) is applied to both sides of every comparison, so the build page, World View, the 🔔 and Publish
+  all leave ready-made structures out. `findLater(publication)`, the look-alikes published after it. Looks run one at a
+  time.
+- ui/main.js loads the Build Library's structures with a dynamic import of CreateStructureRegistryUseCase on first use
+  (the libraries aren't in the first load), and provides `isOwnPublication` (a Publication this device published, same
+  id and content hash).
+- ui/components/remix/OwnLookAlikes.js (new), mounted by ui/components/PublicationCard.js, which itself stays the same
+  for every build (tests/OtherPublicationCommentaryEntryPoint.test.js keeps the card free of an ownership gate): on a
+  build this device published, a quiet line with the count of later look-alikes
+  that opens ui/components/remix/SimilarEarlierBuilds.js, now with `titleKey` and `noteKey`, as **Similar builds
+  published later**, with a note that only its builder sees it and that it doesn't mean anyone copied. Nobody else's
+  card is looked up or labelled: a mark in the list everyone browses would read as an accusation, and a page or panel
+  the viewer opens carries the note beside it.
+- New `publicationCard.lookAlikes` and `similarLater.*` messages in every language; docs/user/04 (both look-alike
+  sections) in every language; docs/Architecture.md.
+- Tests: `BuildSimilarity` (a ready-made house taken out however moved or turned; every copy; a copy missing a brick or
+  two; not half of one; a build made by hand keeps every brick; a structure too small stays; none given),
+  `SimilarBuildFinder` (two builds of the same ready-made house look alike without the library and don't with it, on
+  a page too; loaded once; a copy with a ready-made house beside it still matches; a failed load compares as before;
+  `findLater()`; looks asked at once), `OwnLookAlikesCardBrowser` (your card's count, opened as the later list with its
+  note and links; nobody else's card looked up or labelled; nothing alike or a failed look says nothing).
+- Not done: a ready-made structure changed a lot (more than a tenth of it) counts as the builder's own bricks; the
+  showcase builds Home offers are Build Library structures too, so they are covered, but builds made from other
+  people's published builds by hand are not ready-made. Explore cards show the count only on this device's own
+  publications, not on the same builder's builds published from another device.

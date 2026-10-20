@@ -4,8 +4,9 @@
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import {
-    MIN_COMPARED_BRICKS, SIMILAR_BUILD_THRESHOLD, buildShape, compareBuildShapes, isSimilarBuild, similarityUpperBound
+    MIN_COMPARED_BRICKS, MIN_READY_MADE_POINTS, SIMILAR_BUILD_THRESHOLD, buildShape, compareBuildShapes, isSimilarBuild, similarityUpperBound, withoutReadyMade
 } from '../core/BuildSimilarity.js';
+import { VillageLibrary } from '../core/library/VillageLibrary.js';
 import { assert } from './support/Assert.js';
 
 function brick(definitionId, x, y, z, { rotation = 0, color = null } = {}) {
@@ -126,5 +127,35 @@ console.log('✓ the upper bound');
     assert(doubled.size === buildShape(original).size, '17. bricks standing in the same place as the same kind count once; malformed ones not at all');
 }
 console.log('✓ edge cases');
+
+// Ready-made structures from the Build Library are taken out before comparing.
+{
+    const readyMade = VillageLibrary.structures.map((structure) => buildShape(structure.bricks));
+    const house = VillageLibrary.structures.find((structure) => structure.id === 'village:house').bricks;
+    const ownA = Array.from({ length: 30 }, (_, i) => brick('core:cube', 40 + (i % 6), 0.5 + Math.floor(i / 6), 40));
+    const ownB = Array.from({ length: 30 }, (_, i) => brick('core:plate_2x4', -40, 0.5 + i, -40 + (i % 3)));
+    const a = buildShape([...turnedAndMoved(house, 90, { x: 5, y: 0, z: 7 }), ...ownA]);
+    const b = buildShape([...turnedAndMoved(house, 0, { x: -20, y: 0, z: 0 }), ...ownB]);
+    const strippedA = withoutReadyMade(a, readyMade);
+    const strippedB = withoutReadyMade(b, readyMade);
+    assert(strippedA.size === buildShape(ownA).size && strippedB.size === buildShape(ownB).size,
+        `18. a ready-made house is taken out however it was moved or turned, leaving the builder's own bricks (${strippedA.size}, ${strippedB.size})`);
+    assert(compareBuildShapes(strippedA, strippedB).similarity === 0, '19. two builds that share only a ready-made house don\'t look alike');
+
+    const both = buildShape([...ownA, ...turnedAndMoved(house, 0, { x: 100, y: 0, z: 0 }), ...turnedAndMoved(house, 180, { x: -100, y: 0, z: 9 })]);
+    assert(withoutReadyMade(both, readyMade).size === buildShape(ownA).size, '20. every copy of it is taken out');
+
+    const almost = buildShape([...ownA, ...house.slice(0, Math.ceil(house.length * 0.95))]);
+    assert(withoutReadyMade(almost, readyMade).size === buildShape(ownA).size, '21. a copy missing a brick or two still counts as the structure');
+    const half = buildShape([...ownA, ...house.slice(0, Math.floor(house.length / 2))]);
+    assert(withoutReadyMade(half, readyMade).size === half.size, '22. half of one doesn\'t: those bricks were placed, not dropped in');
+
+    assert(withoutReadyMade(buildShape(original), readyMade).size === buildShape(original).size, '23. a build made by hand keeps every brick');
+    const fence = VillageLibrary.structures.find((structure) => buildShape(structure.bricks).size < MIN_READY_MADE_POINTS);
+    assert(fence && withoutReadyMade(buildShape([...ownA, ...fence.bricks]), readyMade).size === buildShape([...ownA, ...fence.bricks]).size,
+        '24. a structure too small to tell from hand-placed bricks is left in');
+    assert(withoutReadyMade(a, []) === a && withoutReadyMade(a, null) === a, '25. with no structures, nothing is taken out');
+}
+console.log('✓ ready-made structures taken out');
 
 console.log('✅ All build similarity tests passed.');
