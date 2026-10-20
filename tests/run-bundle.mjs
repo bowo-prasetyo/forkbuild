@@ -13,11 +13,14 @@
 // Every page the router defines is opened, straight from its URL. Only this
 // origin is reachable: every other host fails to resolve, so the app's
 // network features fail as they do offline, and those failures are ignored.
+// A file of this origin that isn't there is not ignored: the published site
+// leaves most of the repository out (scripts/build.mjs, PUBLISHED), so every
+// file a page asks for must be one it kept.
 //
 // Chromium comes from `npx playwright-core install chromium`, or from the
 // executable named by the CHROMIUM_PATH environment variable.
 import { createServer } from 'node:http';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { extname, join, normalize } from 'node:path';
@@ -46,6 +49,9 @@ const MIME_TYPES = { '.js': 'text/javascript', '.css': 'text/css', '.html': 'tex
 // Console errors from the network features failing offline, not from the page.
 const NETWORK_NOISE = /net::|WebSocket|Failed to load resource|ERR_NAME_NOT_RESOLVED|Failed to fetch|NetworkError/i;
 
+// Every path a page asked for that the published site doesn't have.
+const missingFiles = new Set();
+
 function serve(dir) {
     const server = createServer(async (request, response) => {
         let path = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
@@ -57,6 +63,7 @@ function serve(dir) {
             response.writeHead(200, { 'Content-Type': MIME_TYPES[extname(file)] || 'application/octet-stream' });
             response.end(body);
         } catch {
+            missingFiles.add(path);
             response.writeHead(404).end();
         }
     });
@@ -809,6 +816,25 @@ async function offlineAndNotifications(browser, base, precacheFiles, publishedDi
     }
 }
 
+// The Steem operator pages (scripts/steem-threads/), bundled on their own,
+// open and draw their page with no error.
+async function openOperatorPages(browser, base) {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    const problems = [];
+    page.on('pageerror', (error) => problems.push(error.message));
+    try {
+        // Each page's script fills in the thread account when it runs.
+        for (const [file, account] of [['index.html', '#account'], ['content-check.html', '#threadAccount']]) {
+            await page.goto(`${base}/scripts/steem-threads/${file}`);
+            await page.waitForFunction((selector) => document.querySelector(selector)?.value, account, { timeout: 30_000 });
+        }
+    } finally {
+        await context.close();
+    }
+    assert(problems.length === 0, `the Steem operator pages open without errors:\n  ${problems.slice(0, 20).join('\n  ')}`);
+}
+
 const outdir = mkdtempSync(join(tmpdir(), 'forkbuild-bundle-'));
 const browser = await chromium.launch({
     executablePath: process.env.CHROMIUM_PATH || undefined,
@@ -824,9 +850,25 @@ try {
     const html = readFileSync(join(published.outdir, 'index.html'), 'utf8');
     assert(html.includes(`<script type="module" src="${published.entry}">`) && published.entry.startsWith('bundle/'), 'index.html loads the bundle');
     assert(!html.includes('importmap') && !/'sha256-/.test(html), 'the published index.html has no import map, and no hash for one');
+    const embedHtml = readFileSync(join(published.outdir, 'embed.html'), 'utf8');
+    for (const [name, page] of [['index.html', html], ['embed.html', embedHtml]]) {
+        const scriptSrc = page.match(/script-src ([^;"]*)/);
+        assert(scriptSrc && scriptSrc[1].trim() === "'self'", `the published ${name} runs only this site's scripts, with no 'unsafe-eval' (${scriptSrc && scriptSrc[1]})`);
+    }
+    for (const left of ['ui', 'application', 'core', 'docs', 'tests', 'css', 'vendor/vue/dist']) {
+        assert(!existsSync(join(published.outdir, left)), `the published site leaves out ${left}/`);
+    }
+    assert(!readdirSync(join(published.outdir, 'bundle'), { recursive: true }).some((file) => String(file).endsWith('.map')), 'the published site has no source maps');
     assert(html.includes(`href="${published.stylesheet}"`), 'index.html loads the bundled stylesheet');
     assert(published.firstLoadFiles < 150, `the first load is a few dozen files, not hundreds (${published.firstLoadFiles})`);
-    console.log(`✓ built: ${published.files} script files, ${published.firstLoadFiles} in the first load`);
+    // A budget, so the first load only grows when someone decides it should:
+    // 1238 KiB when it was set, with Vue's runtime-only build and no
+    // translation (each visitor downloads only their own, English included).
+    const FIRST_LOAD_BUDGET_KIB = 1300;
+    assert(published.firstLoadBytes <= FIRST_LOAD_BUDGET_KIB * 1024,
+        `the first load stays within ${FIRST_LOAD_BUDGET_KIB} KiB, minified (${(published.firstLoadBytes / 1024).toFixed(0)} KiB): load what Home doesn't need with import(), or raise the budget on purpose`);
+    assert(!/bundle\/chunks\/(en|de|es|fr|id|ja|ko|pt-BR)-[A-Z0-9]+\.js/.test(html), 'no translation is preloaded: each visitor downloads only their own');
+    console.log(`✓ built: ${published.files} script files, ${published.firstLoadFiles} in the first load; no 'unsafe-eval', no source, docs or source maps`);
 
     const server = await serve(published.outdir);
     servers.push(server);
@@ -859,6 +901,10 @@ try {
     console.log('✓ an entry published for the week stands in its plaza, reached from the challenge page, and World View stays there until Open takes you to the entry\'s World; an unknown week says so');
     await postingSwitches(browser, `http://127.0.0.1:${server.address().port}`);
     console.log('✓ posting to Steem and Blurt is off for a new visitor and offered once switched on; a device that already posted keeps it on');
+    await openOperatorPages(browser, `http://127.0.0.1:${server.address().port}`);
+    console.log('✓ the Steem operator pages open, bundled');
+    assert(missingFiles.size === 0, `every file the published site's pages ask for is published:\n  ${[...missingFiles].slice(0, 20).join('\n  ')}`);
+    console.log('✓ no page asked for a file the published site left out');
 
     const development = await build(join(outdir, 'development-vue'), { developmentVue: true });
     const devServer = await serve(development.outdir);

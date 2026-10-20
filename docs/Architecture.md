@@ -2467,14 +2467,16 @@ removing it from its list.
 
 Text the app shows goes through ui/i18n/ (see docs/Translating.md).
 ui/i18n/i18n.js holds the one Translator (ui/i18n/Translator.js: message
-lookup with an English fallback, Intl.PluralRules plural forms, `{name}`
+lookup, Intl.PluralRules plural forms, `{name}`
 parameters, and Intl number and date formatting); components import t()
 from it and expose it to their template. ui/i18n/locales.js lists the
 shipped locales and picks one: the saved choice
 (LanguageSettingsStore, 'language-settings', core/LanguageSettings.js),
 else the browser's languages, else English. ui/start.js sets it, and the
 page's `lang` and `dir`, after opening storage and before importing the
-app, so text is in that language from the first render. The locale never
+app, so text is in that language from the first render. Only the chosen
+locale's messages are downloaded, English's included: a shipped translation
+has every key, so it needs no English fallback. The locale never
 changes while the app runs: the Language page (`/settings/language`)
 saves the choice and reloads. The pseudo-locale `en-XA`
 (ui/i18n/pseudoLocalize.js) shows English accented and padded, to find
@@ -2534,7 +2536,9 @@ Vue is the full build because component templates are strings compiled in
 the browser. A Content Security Policy in index.html allows scripts only
 from the app's origin plus the import map by hash, with `'unsafe-eval'`
 for that template compiler; tests/ContentSecurityPolicy.test.js keeps the
-hash and the restrictive directives in step. docs/Deployment.md explains
+hash and the restrictive directives in step. The bundled site compiles the
+templates at build time instead (scripts/templatePlugin.mjs), runs Vue's
+runtime-only build, and drops `'unsafe-eval'`. docs/Deployment.md explains
 the policy and the headers a host should add.
 
 A build downloads as a 3D model (the Editor's **3D model**,

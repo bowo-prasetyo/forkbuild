@@ -6,6 +6,9 @@
 // - WebRTC: libdatachannel's RTCPeerConnection (node-datachannel) is
 //   installed as the browser globals, so peer tests open real connections.
 //
+// It also sets the app's locale to English, as the app sets one before it
+// draws anything (ui/i18n/i18n.js): the translator has no messages until then.
+//
 // To run one test file by hand:
 //
 //   node --import ./tests/support/NodePreload.mjs tests/WebRtcPeerTransport.test.js
@@ -65,6 +68,9 @@ if (NodeWebSocket) {
     };
     Object.assign(globalThis.WebSocket, { CONNECTING: 0, OPEN: 1, CLOSING: 2, CLOSED: 3 });
 }
+
+const { setAppLocale } = await import('../../ui/i18n/i18n.js');
+await setAppLocale('en');
 
 const nodeFetch = globalThis.fetch;
 globalThis.fetch = (input, init) => {

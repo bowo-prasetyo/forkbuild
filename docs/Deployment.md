@@ -27,24 +27,34 @@ set to **GitHub Actions**. The workflow builds with `npm run build`
 `dist/` only if that passes. It can also be run by hand from the Actions tab
 ("Deploy to GitHub Pages", Run workflow).
 
-`dist/` is the repository's files as they are (without `tests/`, `server/`
-and `.github/`), plus the app bundled by esbuild into `bundle/` and an
-`index.html` that loads it:
+`dist/` is the app bundled by esbuild into `bundle/`, an `index.html` and
+`embed.html` that load it, and the few files of the repository a browser
+asks for: the manifest, the favicon, `assets/`, and the licences (the
+vendored libraries' too, since their code is in the bundle). The rest of the
+repository (its source, `docs/`, `tests/`) is not published: the app links
+to the documentation on GitHub. `npm run test:bundle` fails if a page asks
+for a file the site left out.
 
-- The first load is about 80 minified files instead of about 600 modules;
-  every page, service group, translation and the thumbnail renderer is still
-  its own file, loaded when first needed.
+- The first load is about 120 minified files instead of about 750 modules;
+  every page, service group, translation (English too: each visitor
+  downloads only their own language) and the thumbnail renderer is still
+  its own file, loaded when first needed. `npm run test:bundle` holds the
+  first load to a budget.
 - Bare imports resolve through `index.html`'s import map, so the bundle runs
-  the same vendored files. The published `index.html` has no import map, so
-  its Content Security Policy has no hash for one; `'unsafe-eval'` stays, for
-  Vue's template compiler.
+  the same vendored files, with one exception: the components' templates are
+  compiled when the site is built (`scripts/templatePlugin.mjs`), so the
+  bundle uses Vue's runtime-only build. The published pages' Content
+  Security Policy therefore has no `'unsafe-eval'`, and, with no import map,
+  no hash for one: `script-src 'self'`.
 - File names carry a content hash, so a page opened after a new deployment
   never mixes old and new files. Someone with the old version open who then
   opens a page whose files are gone gets the "This page couldn't load" notice
   and reloads onto the new version.
-- Everything else is served unchanged, including `scripts/steem-threads/`.
-- Source maps (`.map`) sit beside the bundled files, so the browser's
-  developer tools show the original source.
+- The Steem operator pages (`scripts/steem-threads/`) are bundled too, each
+  into the script its page loads.
+- There are no source maps: the source they would show is this repository.
+  `node scripts/build.mjs dist --sourcemaps` builds a copy with them, for
+  debugging the bundle locally.
 
 To go back to publishing the repository as it is, set the Source to
 **Deploy from a branch** (`main`, `/ (root)`). The repository's empty
@@ -196,7 +206,9 @@ own rendezvous server (set it in `peer/RendezvousConfig.js` or under
 ## Content Security Policy
 
 `index.html` carries a Content Security Policy in a `<meta>` tag, so it
-applies on any host:
+applies on any host. This is the repository's, which compiles templates in
+the browser; the published site's (see "GitHub Pages") drops
+`'unsafe-eval'` and the hash, leaving `script-src 'self'`:
 
 | Directive | Value | Why |
 | --- | --- | --- |
@@ -211,11 +223,14 @@ applies on any host:
 | `object-src`, `frame-src` | `'none'` | Not used. |
 | `base-uri`, `form-action` | `'none'` | Every form is handled in script. |
 
-**`'unsafe-eval'` is a known limitation.** Vue compiles the components'
-string templates in the browser, which needs `new Function`. Removing it
-means precompiling templates, which needs a build step. What the policy
-still guarantees: no script from another origin, and no injected inline
-script or event handler attribute, can run.
+**`'unsafe-eval'` is only for the unbundled repository.** Served as it is,
+the app has Vue compile the components' string templates in the browser,
+which needs `new Function`. The published site is built with
+`scripts/build.mjs`, which compiles them beforehand, so its policy leaves
+`'unsafe-eval'` out; serve a build (`npm run build`) rather than the
+repository wherever that matters. What the repository's policy still
+guarantees: no script from another origin, and no injected inline script or
+event handler attribute, can run.
 
 ## Recommended HTTP headers
 

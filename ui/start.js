@@ -6,7 +6,7 @@ import { VisitorCountSettingsStore } from '../application/settings/VisitorCountS
 import { countDailyVisit } from '../application/settings/CountDailyVisit.js';
 import { countLaunchChannel } from '../application/settings/CountLaunchChannel.js';
 import { addressWithoutLaunchChannel } from '../core/LaunchChannel.js';
-import { applyDocumentLanguage, setAppLocale } from './i18n/i18n.js';
+import { applyDocumentLanguage, preloadLocale, setAppLocale } from './i18n/i18n.js';
 import { applyLook } from './look.js';
 import { negotiateLocale } from './i18n/locales.js';
 import { importWithRetry } from './importWithRetry.js';
@@ -19,6 +19,9 @@ import { watchInstallPrompt } from './pwa/installPrompt.js';
 // storage before it is ready. The browser's offer to install ForkBuild is
 // listened for first, since it can come before the app has loaded.
 watchInstallPrompt();
+// The browser's language is usually the one chosen (chooseLanguage() below),
+// so its messages download while storage opens rather than after.
+preloadLocale(negotiateLocale(null, navigator.languages));
 await openBrowserStorage();
 // The chosen look before anything is drawn (following the device needs nothing).
 applyLook(document, new LookSettingsStore({ storageProvider: new LocalStorageProvider() }).get().look);

@@ -1,8 +1,9 @@
 // Builds the site GitHub Pages publishes (.github/workflows/pages.yml): the
-// repository's files as they are, plus the app bundled into bundle/ and an
-// index.html that loads the bundle.
+// app bundled into bundle/, an index.html that loads the bundle, and the few
+// files of the repository a visitor's browser asks for (PUBLISHED below).
 //
-//   node scripts/build.mjs [outdir]     build into dist/ (or outdir)
+//   node scripts/build.mjs [outdir]               build into dist/ (or outdir)
+//   node scripts/build.mjs [outdir] --sourcemaps  with source maps beside the bundled files
 //
 // Nothing here is needed to work on ForkBuild: the repository still runs
 // unbundled (python3 -m http.server), and every other static host can serve
@@ -13,13 +14,20 @@
 // file, loaded when first needed as before.
 //
 // Bare imports ('vue', 'three', …) resolve through index.html's own import
-// map, so the bundle runs exactly the vendored files the unbundled app does.
+// map, so the bundle runs exactly the vendored files the unbundled app does,
+// with one exception: the components' templates are compiled here
+// (scripts/templatePlugin.mjs), so 'vue' is Vue's runtime-only build, and
+// the published pages' Content Security Policy drops 'unsafe-eval'.
 // The generated index.html drops the import map (nothing is left for it to
 // resolve) and its hash in the Content Security Policy, loads the bundled
 // stylesheet and entry point, and preloads the files of the first load.
-// Everything else is copied unchanged, so pages outside the app (such as
-// scripts/steem-threads/) keep working. tests/run-bundle.mjs opens the built
-// app in Chromium.
+// Nothing else of the repository is published: not its source (the bundle
+// is built from it), its documentation (the app links to it on GitHub) or
+// its tests. The Steem operator pages (scripts/steem-threads/) are bundled
+// on their own, each into the file its page already loads. Source maps are
+// left out unless asked for: the source they would show is the repository's,
+// which is public. tests/run-bundle.mjs opens the built site in Chromium and
+// fails if a page asks for a file that isn't there.
 //
 // embed.html, the page a build embedded on another site opens in
 // (ui/embed/), is bundled the same way, from its own entry point and
@@ -36,14 +44,24 @@ import { createHash } from 'node:crypto';
 import { copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { checkCompilerVersion, templatePlugin } from './templatePlugin.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BUNDLE_DIR = 'bundle';
 const SERVICE_WORKER_FILE = 'sw.js';
 const EMBED_PAGE = 'embed.html';
 const EMBED_ENTRY = 'ui/embed/embedBoot.js';
-// Left out of the published site, as docs/Deployment.md says.
-const NOT_PUBLISHED = ['tests/', 'server/', '.github/'];
+// Vue without its template compiler: every template is compiled at build time.
+const RUNTIME_VUE = 'vendor/vue/dist/vue.runtime.esm-browser.prod.js';
+// The repository's files the published site serves as they are, as
+// docs/Deployment.md says: the pages' own files, the images the app and the
+// manifest point at, and the licences, the vendored libraries' among them
+// (their code is in the bundle). A directory ends in '/'.
+const PUBLISHED = ['index.html', 'embed.html', 'manifest.webmanifest', 'favicon.svg', 'LICENSE', 'assets/',
+    'scripts/steem-threads/index.html', 'scripts/steem-threads/content-check.html', 'scripts/steem-threads/page.css'];
+const PUBLISHED_PATTERN = /^vendor\/[^/]+\/LICENSE$/;
+// The Steem operator pages' scripts, bundled to the paths their pages load.
+const OPERATOR_PAGE_ENTRIES = ['scripts/steem-threads/page.js', 'scripts/steem-threads/content-check.js'];
 // What the service worker keeps on install besides the bundle's own files.
 const APP_SHELL = ['index.html', 'manifest.webmanifest', 'favicon.svg', 'assets/icons/icon-192.png', 'assets/icons/icon-512.png',
     'assets/icons/icon-maskable-512.png', 'assets/icons/apple-touch-icon.png', 'assets/icons/logo.svg', 'assets/icons/logo-mark.svg'];
@@ -79,6 +97,12 @@ function withoutImportMap(page, file) {
     return replaceOnce(page, / 'sha256-[A-Za-z0-9+/=]+'/, '', 'import map hash in the Content Security Policy', file);
 }
 
+// A page's Content Security Policy without 'unsafe-eval', which only Vue's
+// template compiler needed.
+function withoutEval(page, file) {
+    return replaceOnce(page, /(script-src [^;"]*) 'unsafe-eval'/, '$1', "'unsafe-eval' in the Content Security Policy", file);
+}
+
 // The bundle's files the first load needs: the entry and every file it
 // reaches through static imports, and the same for the files it imports
 // with import() on the way to showing the app (ui/start.js, ui/main.js).
@@ -98,15 +122,20 @@ function firstLoadFiles(outputs, entryFile, startupEntries) {
 // `developmentVue` bundles Vue's development build, which warns about every
 // injection it cannot resolve; tests/run-bundle.mjs uses it to check that
 // bundling left every page's services in place. Never published.
-export async function build(outdir = path.join(ROOT, 'dist'), { developmentVue = false } = {}) {
+// `sourcemaps` writes a source map beside each bundled file; the published
+// site has none.
+export async function build(outdir = path.join(ROOT, 'dist'), { developmentVue = false, sourcemaps = false } = {}) {
     const html = readFileSync(path.join(ROOT, 'index.html'), 'utf8');
     const importMapText = html.match(/<script type="importmap">([\s\S]*?)<\/script>/)[1];
     const { imports } = JSON.parse(importMapText);
-    if (developmentVue) imports.vue = 'node_modules/vue/dist/vue.esm-browser.js';
+    imports.vue = developmentVue ? 'node_modules/vue/dist/vue.runtime.esm-browser.js' : RUNTIME_VUE;
+    checkCompilerVersion(ROOT);
 
     rmSync(outdir, { recursive: true, force: true });
     const tracked = execFileSync('git', ['ls-files', '-z'], { cwd: ROOT, encoding: 'utf8' }).split('\0').filter(Boolean);
-    for (const file of tracked.filter((f) => !NOT_PUBLISHED.some((dir) => f.startsWith(dir)))) {
+    const published = (file) => !file.endsWith('.gitkeep')
+        && (PUBLISHED.some((entry) => (entry.endsWith('/') ? file.startsWith(entry) : file === entry)) || PUBLISHED_PATTERN.test(file));
+    for (const file of tracked.filter(published)) {
         mkdirSync(path.join(outdir, path.dirname(file)), { recursive: true });
         copyFileSync(path.join(ROOT, file), path.join(outdir, file));
     }
@@ -117,7 +146,7 @@ export async function build(outdir = path.join(ROOT, 'dist'), { developmentVue =
         minify: true,
         // Class and function names stay as written: errors and log lines name them.
         keepNames: true,
-        sourcemap: 'linked',
+        sourcemap: sourcemaps ? 'linked' : false,
         target: 'es2022',
         outdir: path.join(outdir, BUNDLE_DIR),
         metafile: true,
@@ -130,13 +159,23 @@ export async function build(outdir = path.join(ROOT, 'dist'), { developmentVue =
         splitting: true,
         entryNames: '[name]-[hash]',
         chunkNames: 'chunks/[name]-[hash]',
-        plugins: [importMapPlugin(imports)]
+        // Templates first: a compiled template's import path is not a bare import.
+        plugins: [templatePlugin(ROOT), importMapPlugin(imports)]
     });
     const css = await esbuild.build({ ...shared, entryPoints: ['css/main.css', 'css/embed.css'], entryNames: '[name]-[hash]' });
+    const operatorPages = await esbuild.build({
+        ...shared,
+        entryPoints: OPERATOR_PAGE_ENTRIES,
+        outdir: path.join(outdir, path.dirname(OPERATOR_PAGE_ENTRIES[0])),
+        format: 'esm',
+        entryNames: '[name]',
+        metafile: false,
+        plugins: [importMapPlugin(imports)]
+    });
     // esbuild has printed each warning above. A warning is usually a mistake in
     // the code (a duplicate key, an import that doesn't exist), so the build,
     // and with it tests/run-bundle.mjs, fails rather than publishing it.
-    const warnings = js.warnings.length + css.warnings.length;
+    const warnings = js.warnings.length + css.warnings.length + operatorPages.warnings.length;
     if (warnings > 0) throw new Error(`esbuild reported ${warnings} warning${warnings === 1 ? '' : 's'}; fix ${warnings === 1 ? 'it' : 'them'} before building`);
 
     const relative = (file) => path.relative(outdir, path.resolve(ROOT, file)).split(path.sep).join('/');
@@ -148,9 +187,9 @@ export async function build(outdir = path.join(ROOT, 'dist'), { developmentVue =
 
     let page = html;
     page = replaceOnce(page, /<!-- Content Security Policy: [\s\S]*?-->/,
-        '<!-- Content Security Policy: see docs/Deployment.md. Generated by scripts/build.mjs, without the\n         import map index.html has in the repository, and so without its hash. -->', 'Content Security Policy comment');
+        '<!-- Content Security Policy: see docs/Deployment.md. Generated by scripts/build.mjs, without the\n         import map index.html has in the repository, and so without its hash, and without \'unsafe-eval\':\n         the templates were compiled when the site was built. -->', 'Content Security Policy comment');
     page = replaceOnce(page, /\s*<!-- Every module the first load needs[\s\S]*?-->/, '', 'module preload comment');
-    page = withoutImportMap(page, 'index.html');
+    page = withoutEval(withoutImportMap(page, 'index.html'), 'index.html');
     page = replaceOnce(page, /<link rel="stylesheet" href="css\/main\.css">/, `<link rel="stylesheet" href="${relative(stylesheet)}">`, 'stylesheet');
     page = replaceOnce(page, /<!-- modulepreload:start[\s\S]*?<!-- modulepreload:end -->/,
         ['<!-- The bundle\'s first load (generated by scripts/build.mjs) -->',
@@ -161,7 +200,7 @@ export async function build(outdir = path.join(ROOT, 'dist'), { developmentVue =
     writeFileSync(path.join(outdir, 'index.html'), page);
 
     const embedEntryFile = Object.keys(outputs).find((file) => outputs[file].entryPoint === EMBED_ENTRY);
-    let embedPage = withoutImportMap(readFileSync(path.join(ROOT, EMBED_PAGE), 'utf8'), EMBED_PAGE);
+    let embedPage = withoutEval(withoutImportMap(readFileSync(path.join(ROOT, EMBED_PAGE), 'utf8'), EMBED_PAGE), EMBED_PAGE);
     embedPage = replaceOnce(embedPage, /<link rel="stylesheet" href="css\/embed\.css">/,
         [`<link rel="stylesheet" href="${relative(stylesheetOf('css/embed.css'))}">`,
             ...firstLoadFiles(outputs, embedEntryFile, []).map((file) => `    <link rel="modulepreload" href="${relative(file)}">`)].join('\n'),
@@ -201,8 +240,9 @@ export async function build(outdir = path.join(ROOT, 'dist'), { developmentVue =
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-    const outdir = process.argv[2] ? path.resolve(process.argv[2]) : undefined;
-    const report = await build(outdir);
+    const args = process.argv.slice(2);
+    const outdirArg = args.find((arg) => !arg.startsWith('--'));
+    const report = await build(outdirArg ? path.resolve(outdirArg) : undefined, { sourcemaps: args.includes('--sourcemaps') });
     const kib = (n) => `${(n / 1024).toFixed(0)} KiB`;
     console.log(`Built ${path.relative(process.cwd(), report.outdir) || '.'}: ${report.files} script files (${kib(report.totalBytes)}); `
         + `the first load is ${report.firstLoadFiles} of them (${kib(report.firstLoadBytes)}), entry ${report.entry}.`);

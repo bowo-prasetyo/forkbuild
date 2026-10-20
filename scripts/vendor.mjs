@@ -24,8 +24,10 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const PACKAGES = {
     '@noble/curves': { target: 'vendor/noble-curves', entries: ['ed25519.js', 'secp256k1.js'], rewriteBareImports: true },
     '@noble/hashes': { target: 'vendor/noble-hashes', entries: ['sha2.js', 'legacy.js'], rewriteBareImports: true },
-    // The full build: templates are strings compiled in the browser.
-    'vue': { target: 'vendor/vue', entries: ['dist/vue.esm-browser.prod.js'] },
+    // The full build, for the unbundled app, whose templates are strings
+    // compiled in the browser; and the runtime-only build, for the bundle,
+    // whose templates scripts/build.mjs compiles (scripts/templatePlugin.mjs).
+    'vue': { target: 'vendor/vue', entries: ['dist/vue.esm-browser.prod.js', 'dist/vue.runtime.esm-browser.prod.js'] },
     // vue-router publishes no production browser build.
     'vue-router': { target: 'vendor/vue-router', entries: ['dist/vue-router.esm-browser.js'] },
     '@vue/devtools-api': { target: 'vendor/vue-devtools-api', entries: ['lib/esm/index.js'] },

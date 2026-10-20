@@ -1,6 +1,7 @@
 import { Translator } from '../ui/i18n/Translator.js';
 import { pseudoLocalize, pseudoLocalizeMessages } from '../ui/i18n/pseudoLocalize.js';
-import { LOCALES, PSEUDO_LOCALE, SOURCE_LOCALE, SOURCE_MESSAGES, findLocale, negotiateLocale } from '../ui/i18n/locales.js';
+import { LOCALES, PSEUDO_LOCALE, SOURCE_LOCALE, findLocale, negotiateLocale } from '../ui/i18n/locales.js';
+import SOURCE_MESSAGES from '../ui/i18n/messages/en.js';
 import { applyDocumentLanguage, currentLocale, formatDate, formatNumber, setAppLocale, t } from '../ui/i18n/i18n.js';
 import { DEFAULT_LANGUAGE_SETTINGS, normalizeLanguageSettings } from '../core/LanguageSettings.js';
 import { LanguageSettingsStore } from '../application/settings/LanguageSettingsStore.js';
@@ -110,7 +111,8 @@ function placeholders(text) {
 }
 
 // Every shipped locale has exactly English's keys, placeholders and plural
-// shapes, so no translation can drop or rename a parameter.
+// shapes, so no translation can drop or rename a parameter, and no key: the
+// app loads only the chosen locale's messages, with no English beside them.
 {
     for (const [key, message] of Object.entries(SOURCE_MESSAGES)) {
         assert(/^[a-z][A-Za-z0-9]*(\.[a-z][A-Za-z0-9]*)+$/.test(key), `"${key}" is a dotted camelCase key`);
@@ -124,9 +126,8 @@ function placeholders(text) {
         const keys = Object.keys(messages).sort();
         const extra = keys.filter((key) => !(key in SOURCE_MESSAGES));
         assert(extra.length === 0, `${locale.code} has no keys English lacks (extra: ${extra.join(', ')})`);
-        if (locale.pseudo) {
-            assert(keys.length === englishKeys.length, 'the pseudo-locale covers every key');
-        }
+        const missing = englishKeys.filter((key) => !(key in messages));
+        assert(missing.length === 0, `${locale.code} has every English key (missing: ${missing.slice(0, 5).join(', ')})`);
         for (const key of keys) {
             const source = SOURCE_MESSAGES[key];
             const translated = messages[key];
@@ -229,7 +230,8 @@ function placeholders(text) {
     console.log('✓ the Language page saves the choice, then reloads');
 }
 
-// The app-wide translator: English until a locale is set, and the page is told.
+// The app-wide translator: English, which the test runner sets before every
+// test as the app does before it draws anything; it switches, and the page is told.
 {
     assert(currentLocale().code === SOURCE_LOCALE, 'English before any locale is set');
     assert(t('app.nav.home') === 'Home', 'English text');

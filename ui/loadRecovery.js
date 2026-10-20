@@ -86,14 +86,17 @@ function sessionStorageOrNull() {
 
 // Replaces the blank page with a message and a Reload button, in the
 // chosen language when the translations loaded, else in English: this runs
-// when modules failed to download, and those may include the translations.
+// when modules failed to download, and those may include the translations
+// (the translator then has no messages at all).
 export async function showLoadFailure({ container = document.getElementById('app'), reload = () => window.location.reload() } = {}) {
     let message = 'ForkBuild couldn\'t finish loading. Check your connection, then reload the page.';
     let button = 'Reload';
     try {
-        const { t } = await import('./i18n/i18n.js');
-        message = t('app.loadFailed');
-        button = t('app.loadFailedReload');
+        const { hasMessage, t } = await import('./i18n/i18n.js');
+        if (hasMessage('app.loadFailed') && hasMessage('app.loadFailedReload')) {
+            message = t('app.loadFailed');
+            button = t('app.loadFailedReload');
+        }
     } catch {
         // The translations are among what did not download; English it is.
     }

@@ -1,6 +1,7 @@
 // Bahasa Indonesia (ui/i18n/messages/id.js): complete, chosen from the
 // browser, and read with Indonesian number formats and its single plural form.
-import { LOCALES, findLocale, negotiateLocale, SOURCE_MESSAGES } from '../ui/i18n/locales.js';
+import { LOCALES, findLocale, negotiateLocale } from '../ui/i18n/locales.js';
+import SOURCE_MESSAGES from '../ui/i18n/messages/en.js';
 import { Translator } from '../ui/i18n/Translator.js';
 import { message } from '../core/Message.js';
 import { assert } from './support/Assert.js';

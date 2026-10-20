@@ -77,6 +77,8 @@ async function runFile(browser, baseUrl, name) {
         const error = await page.evaluate(async ({ file, timeoutMs }) => {
             const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error(`timed out after ${timeoutMs / 1000}s`)), timeoutMs));
             try {
+                // English, as the app sets its locale before anything is drawn (ui/i18n/i18n.js).
+                await (await import('/ui/i18n/i18n.js')).setAppLocale('en');
                 await Promise.race([import(file), timeout]);
                 return null;
             } catch (e) {

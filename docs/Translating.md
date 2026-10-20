@@ -45,8 +45,10 @@ in.
 - Components call `t('app.nav.home')` from `ui/i18n/i18n.js` instead of
   writing the English text themselves.
 - A translation is a file `ui/i18n/messages/<code>.js` that gives the same
-  keys in another language. Any key it leaves out shows in English, so a
-  translation can be added before it's complete.
+  keys in another language. It ships only once it gives every key
+  (`tests/I18n.test.js` checks): the app downloads just the chosen
+  language's file, not English beside it, so a key left out would show as
+  the key itself.
 - The language is chosen on the **Language** page, or from the browser's
   languages when nothing is chosen (see `negotiateLocale()` in
   `ui/i18n/locales.js`). It is kept on the device only. Changing it reloads
