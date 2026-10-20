@@ -8033,3 +8033,34 @@ where yours is listed.
 - Not done: a build admitted before its bytes reach this device isn't compared, and isn't looked at again when they
   arrive; builds this device already knew at startup aren't (the notifiers subscribe after the rebuild, so old builds
   never notify). Explore's cards still don't show look-alikes.
+
+
+## A build whose bytes arrive late is still compared (unnumbered, 2026-10-20)
+
+**A look-alike of your build went unnoticed when its bytes came after its listing.** The 🔔's look-alike check ran
+once, when a Publication was admitted. Explore's network discovery admits a build's signed record and fetches the build
+itself later, so the check found nothing to compare and never looked again: exactly the copies a builder would most
+want to hear of, from people they had never met, slipped through. Pillar served: your work is yours (credit travels with
+the work). How a player notices: the **… published a build that looks like yours** entry now also arrives when the
+look-alike's build reaches this device after its listing did.
+
+- application/snapshot/materialization/StoreSnapshotContentUseCase.js: `onStored(listener)`, called with
+  `{ contentHash, outcome }` after each verified store (STORED or ALREADY_AVAILABLE, never HASH_MISMATCH); a failing
+  listener never fails the store. With application/peer/PeerContentExchange.js's existing `onContentReceived()`, it
+  covers both ways incoming bytes are stored: networks, shared links, build notes, placements and transfer packages
+  through the use case, and a connected peer's answer through the exchange.
+- application/publication/SimilarBuildFinder.js: `canCompare(publication)`, whether the build's verified bytes are here,
+  so "nothing alike" and "not here yet" no longer look the same.
+- application/publication/LookAlikeBuildNotifier.js: a build that passes the signer, block and Built with checks but
+  can't be compared yet waits by content hash, in memory, at most `MAX_BUILDS_WAITING_FOR_BYTES` (500), the oldest let
+  go first; `handleContentStored(contentHash)` compares it when its bytes land, in the same one-at-a-time queue, so
+  bytes that land while its own check is still running still reach it; bytes still unreadable then let it go.
+- ui/main.js wires `storeSnapshotContentUseCase.onStored()` and `publicationPeerContentExchange.onContentReceived()` to
+  the notifier. docs/Architecture.md says so.
+- Tests: `StoreSnapshotContentListeners` (heard after STORED and ALREADY_AVAILABLE, never after a mismatch; a failing
+  listener; unsubscribe), `SimilarBuildFinder` (`canCompare()`, before and after the bytes arrive),
+  `LookAlikeBuildNotifier` (waits once; other bytes change nothing; compared and notifies when its bytes are stored
+  through the real use case; unreadable bytes let it go; own and blocked builds never wait; bytes landing mid-check;
+  the cap, oldest first).
+- Not done: the waiting list is in memory, so builds still waiting when the app closes are not compared on the next
+  visit; builds already known at startup still aren't compared. Explore's cards still don't show look-alikes.

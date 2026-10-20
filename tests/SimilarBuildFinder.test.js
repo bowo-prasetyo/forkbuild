@@ -231,6 +231,13 @@ async function run() {
         assert((await finder().findEarlier(undated)).length === 0, '24. a build with no date has nothing earlier');
         const absent = published(contentStore, documentOf(cottageBricks(), { id: 'absent' }), { identityId: 'quinn', publishedAt: '2026-10-07T00:00:00Z', onDevice: false });
         assert((await finder().findEarlier(absent)).length === 0, '25. a build whose bytes aren\'t on this device is not compared');
+        assert(await finder().canCompare(absent) === false && await finder().canCompare(copy) === true, '25a. canCompare() says which builds\' bytes are here to compare');
+        const arrivingDocument = documentOf(cottageBricks(), { id: 'arriving' });
+        const arrivingBuild = published(contentStore, arrivingDocument, { identityId: 'quinn', publishedAt: '2026-10-07T00:00:00Z', onDevice: false });
+        const arriving = finder();
+        assert(await arriving.canCompare(arrivingBuild) === false, 'not yet');
+        contentStore.put(JSON.stringify(arrivingDocument.toJSON()));
+        assert(await arriving.canCompare(arrivingBuild) === true, '25b. and changes its answer once they arrive');
         const small = published(contentStore, documentOf(cottageBricks().slice(0, 12), { id: 'small' }), { identityId: 'quinn', publishedAt: '2026-10-07T00:00:00Z' });
         assert((await finder().findEarlier(small)).length === 0, '26. nor is one too small to tell');
     }

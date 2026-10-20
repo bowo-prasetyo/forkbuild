@@ -73,6 +73,18 @@ export class StoreSnapshotContentUseCase {
             throw new Error('StoreSnapshotContentUseCase: a local ContentStore is required');
         }
         this._localContentStore = localContentStore;
+        this._storedListeners = new Set();
+    }
+
+    // Calls `listener({ contentHash, outcome })` after each verified
+    // execute() (STORED or ALREADY_AVAILABLE), so a reader waiting for a
+    // build's bytes (application/publication/LookAlikeBuildNotifier.js) hears
+    // when they arrive, as application/peer/PeerContentExchange.js#
+    // onContentReceived() tells of bytes a peer sent. A listener's failure
+    // never fails the store. Returns an unsubscribe function.
+    onStored(listener) {
+        this._storedListeners.add(listener);
+        return () => this._storedListeners.delete(listener);
     }
 
     // `contentHash`: the hash the caller CLAIMS `bytes` satisfy — from a
@@ -103,9 +115,14 @@ export class StoreSnapshotContentUseCase {
 
         const alreadyStored = await this._localContentStore.has(reference);
         const storedReference = await this._localContentStore.put(bytes);
-        return {
-            outcome: alreadyStored ? StoreSnapshotContentOutcome.ALREADY_AVAILABLE : StoreSnapshotContentOutcome.STORED,
-            contentReference: storedReference
-        };
+        const outcome = alreadyStored ? StoreSnapshotContentOutcome.ALREADY_AVAILABLE : StoreSnapshotContentOutcome.STORED;
+        for (const listener of this._storedListeners) {
+            try {
+                listener({ contentHash, outcome });
+            } catch {
+                // See onStored().
+            }
+        }
+        return { outcome, contentReference: storedReference };
     }
 }
