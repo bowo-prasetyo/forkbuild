@@ -11,12 +11,20 @@ import { t } from '../../i18n/i18n.js';
 // for people who ask for reduced motion, and shows the ForkBuild cube instead
 // where WebGL can't draw or the bricks can't be drawn. With `draggable`, a
 // sideways drag turns it by hand (an embedded build, ui/embed/), and
-// `turned` is emitted on the first drag.
+// `turned` is emitted on the first drag. A `description` is read out with
+// the label by a screen reader.
+
+// Each turntable's description needs an id of its own on the page.
+let turntables = 0;
+
 export default {
     name: 'BuildTurntable',
     props: {
         bricks: { type: Function, required: true },
         label: { type: String, required: true },
+        // What the build is made of, for a screen reader
+        // (ui/i18n/buildDescriptionText.js); none to say only the label.
+        description: { type: String, default: '' },
         // What the cube stands for when shown instead; the label by default.
         fallbackLabel: { type: String, default: null },
         draggable: { type: Boolean, default: false }
@@ -25,6 +33,7 @@ export default {
     setup(props, { emit }) {
         const canvas = ref(null);
         const failed = ref(false);
+        const descriptionId = `build-turntable-description-${++turntables}`;
         let renderer = null;
         let resizeObserver = null;
         let visibilityObserver = null;
@@ -93,20 +102,22 @@ export default {
             renderer = null;
         });
 
-        return { t, canvas, failed, startDrag, drag, endDrag };
+        return { t, canvas, failed, descriptionId, startDrag, drag, endDrag };
     },
     template: `
-        <img v-if="failed" class="build-turntable-fallback" src="favicon.svg" :alt="fallbackLabel || label">
+        <img v-if="failed" class="build-turntable-fallback" src="favicon.svg" :alt="[fallbackLabel || label, description].filter(Boolean).join('. ')">
         <canvas
             v-else
             ref="canvas"
             :class="['build-turntable-canvas', { 'build-turntable-canvas--draggable': draggable }]"
             role="img"
             :aria-label="label"
+            :aria-describedby="description ? descriptionId : null"
             @pointerdown="startDrag"
             @pointermove="drag"
             @pointerup="endDrag"
             @pointercancel="endDrag"
         ></canvas>
+        <p v-if="description && !failed" :id="descriptionId" class="visually-hidden">{{ description }}</p>
     `
 };

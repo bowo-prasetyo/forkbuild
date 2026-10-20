@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: e059fcfef844d10c -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 64eabe993a5d0f63 -->
 # 04 — Publicar e remixar
 
 <!-- languages -->
@@ -167,6 +167,11 @@ onde ela está guardada, abre a página própria dessa construção:
 - **Remix de “…”, de …** quando é um remix, e **Remixada N vezes** quando
   este dispositivo encontrou remixes dela (veja
   [Contagem de remixes](#contagem-de-remixes));
+- **O que mudou**, abaixo de **Remix de** em um remix: o que ele adicionou
+  (as estruturas da Biblioteca de construção e as janelas, portas, árvores
+  e outras peças entre os blocos novos), repintou e tirou, calculado a
+  partir dos blocos das duas construções quando este dispositivo consegue
+  ler a construção remixada;
 - a **Árvore genealógica**: as construções de que ela é remix, até a
   original, e os remixes feitos dela e desses, cada um como link quando
   este dispositivo consegue abri-lo;

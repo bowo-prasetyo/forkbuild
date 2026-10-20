@@ -86,6 +86,8 @@ import { useStructureInspection } from './editorView/useStructureInspection.js';
 import { useSoundControls } from '../composables/useSoundControls.js';
 import SoundControl from '../components/SoundControl.js';
 import { displayText, errorText, t } from '../i18n/i18n.js';
+import { buildDescriptionText } from '../i18n/buildDescriptionText.js';
+import { BuildDescriber } from '../../application/publication/BuildDescriber.js';
 import { libraryItemName } from '../i18n/libraryText.js';
 import { FEATURED_STRUCTURE_IDS, featuredStructures, findStarterStructure } from '../../application/home/FeaturedBuilds.js';
 import { challengeAt, challengeById, challengeIdeaStructureIds, isChallengeOpen, isRemixChallenge, withChallengeTag } from '../../core/challenge/BuildChallenge.js';
@@ -362,6 +364,12 @@ export default {
                         @close="descriptionReaderOpen = false"
                         @edit-metadata="showMetadataEditor = true"
                     />
+                    <!-- Describe the Build (I): what the build is made of, until closed. -->
+                    <div v-if="buildDescriptionNote" class="editor-build-description">
+                        <p>{{ buildDescriptionNote }}</p>
+                        <button type="button" class="action-btn" @click="buildDescriptionNote = ''">{{ t('buildDescription.close') }}</button>
+                    </div>
+                    <p class="visually-hidden" aria-live="polite">{{ buildDescriptionNote }}</p>
                     <!-- Shown only on phone-width screens (css/main/touch-and-compact.css). -->
                     <button
                         type="button"
@@ -1227,7 +1235,19 @@ export default {
         });
 
         const paletteOpen = ref(false);
+        // Describe the Build's text, shown and read out until closed.
+        const buildDescriber = inject('buildDescriber', null) || new BuildDescriber();
+        const buildDescriptionNote = ref('');
         const actionUi = {
+            async describeBuild() {
+                buildDescriptionNote.value = '';
+                try {
+                    const facts = await buildDescriber.describe(worldBricks(documentManager.document?.world));
+                    buildDescriptionNote.value = buildDescriptionText(facts);
+                } catch (error) {
+                    feedback.show(errorText(error));
+                }
+            },
             togglePalette() {
                 paletteOpen.value = !paletteOpen.value;
             },
@@ -1706,6 +1726,7 @@ export default {
 
         return {
             t,
+            buildDescriptionNote,
             ...buildTogether,
             soundAvailable,
             soundMuted,

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 4a1027c916706bd6 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: d826f595608a7d2e -->
 # Référence des commandes
 
 <!-- languages -->
@@ -36,6 +36,7 @@ Les touches sont désignées par leur nom sur un clavier français : `Maj`
 | Entrée | Action |
 |---|---|
 | `Ctrl/Cmd+K` | Palette de commandes |
+| `I` | Décrire la construction : de quoi elle est faite, affiché et lu par un lecteur d’écran — voir [Décrire la construction](02-TheEditor.md#décrire-la-construction) |
 | `?` | Panneau des raccourcis clavier (aussi accessible par le bouton « ⌨ Raccourcis » de la barre d’outils) — tous les raccourcis de l’Éditeur |
 
 ## Découverte (Vue du Monde)

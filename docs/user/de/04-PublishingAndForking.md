@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: e059fcfef844d10c -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 64eabe993a5d0f63 -->
 # 04 — Veröffentlichen & Remixen
 
 <!-- languages -->
@@ -174,6 +174,11 @@ gespeichert ist, öffnet die eigene Seite dieses Bauwerks:
 - **Remix von „…“ von …**, wenn es ein Remix ist, und **N-mal geremixt**,
   wenn dieses Gerät Remixe davon gefunden hat (siehe
   [Remix-Zähler](#remix-zähler));
+- **Was sich geändert hat**, unter **Remix von** bei einem Remix: was es
+  hinzugefügt hat (die Strukturen der Baubibliothek und die Fenster, Türen,
+  Bäume und anderen Teile unter seinen neuen Steinen), umgefärbt und entfernt
+  hat, ermittelt aus den Steinen beider Bauwerke, wenn dieses Gerät das
+  remixte Bauwerk lesen kann;
 - sein **Stammbaum**: die Bauten, aus denen er geremixt wurde, bis zum
   Original, und die Remixe daraus und aus diesen, jeder als Link, wenn
   dieses Gerät ihn öffnen kann;

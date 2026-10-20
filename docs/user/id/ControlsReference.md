@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 4a1027c916706bd6 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: d826f595608a7d2e -->
 # Referensi Kontrol
 
 <!-- languages -->
@@ -30,6 +30,7 @@ operasi pengeditan di bawah ini berdasarkan nama.
 | Masukan | Tindakan |
 |---|---|
 | `Ctrl/Cmd+K` | Palet Perintah |
+| `I` | Jelaskan Bangunan: isinya, ditampilkan dan dibacakan pembaca layar — lihat [Jelaskan bangunan](02-TheEditor.md#jelaskan-bangunan) |
 | `?` | Daftar Pintasan Keyboard (juga dapat dibuka dari tombol "⌨ Pintasan" di bilah alat) — setiap pintasan Editor |
 
 ## Penemuan (Tampilan Dunia)

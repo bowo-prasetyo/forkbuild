@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 4a1027c916706bd6 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: d826f595608a7d2e -->
 # 조작 참조
 
 <!-- languages -->
@@ -32,6 +32,7 @@ ForkBuild의 모든 마우스와 키보드 조작입니다. 휴대폰과 태블�
 | 입력 | 작업 |
 |---|---|
 | `Ctrl/Cmd+K` | 명령 팔레트 |
+| `I` | 건물 설명: 무엇으로 되어 있는지 보여 주고 스크린 리더가 읽어 줍니다 — [건물 설명하기](02-TheEditor.md#건물-설명하기) 참고 |
 | `?` | 키보드 단축키 오버레이(툴바의 “⌨ 단축키” 버튼으로도 열림) — 에디터의 모든 단축키 |
 
 ## 발견 (월드 보기)

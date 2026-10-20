@@ -159,6 +159,10 @@ stored, opens on that build's own page:
 - **Remixed from "…" by …** when it is a remix, and **Remixed N times**
   when this device has found remixes of it (see
   [Remix counts](#remix-counts));
+- **What changed**, under **Remixed from** on a remix: what it added (the
+  Build Library structures, and the windows, doors, trees and other parts
+  among its new bricks), repainted and took away, worked out from the two
+  builds' bricks when this device can read the build it remixes;
 - its **Family tree**: the builds it was remixed from, back to the
   original, and the remixes made from it and from those, each one a link
   when this device can open it;

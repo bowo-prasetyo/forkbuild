@@ -42,6 +42,19 @@ export function describeRemixSource(publication, parentPublications = []) {
     return Object.freeze({ title: null, author: null });
 }
 
+// The version of the build `publication` remixes that it was most likely
+// made from: the newest of `parentPublications` published no later than it
+// (or the newest, when every one is dated after it); null when none is
+// that build.
+export function remixParentPublication(publication, parentPublications = []) {
+    const parentDocumentId = publication?.parentDocumentId;
+    if (typeof parentDocumentId !== 'string' || !parentDocumentId) return null;
+    const parents = (Array.isArray(parentPublications) ? parentPublications : [])
+        .filter((candidate) => candidate?.documentId === parentDocumentId);
+    const remixedAt = time(publication || {});
+    return newest(parents.filter((candidate) => !remixedAt || time(candidate) <= remixedAt)) || newest(parents);
+}
+
 function newest(publications) {
     let best = null;
     for (const publication of publications) {

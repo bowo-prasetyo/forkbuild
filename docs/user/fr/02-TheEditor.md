@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2c43bd99f1b022e2 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: a6b88e4e92839dec -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -764,6 +764,21 @@ copyright et les extras glTF, dans l’en-tête STL et en commentaires dans
 l’OBJ. La page d’une construction partagée propose les mêmes
 téléchargements quand sa licence autorise les copies (voir
 [Ce qu’ouvre un lien](04-PublishingAndForking.md#ce-quouvre-un-lien)).
+
+## Décrire la construction
+
+Appuyez sur `I`, ou choisissez **Décrire la construction** dans la palette
+de commandes, et l’Éditeur dit de quoi votre construction est faite :
+combien de briques, sa largeur, sa profondeur et sa hauteur approximatives,
+les structures de la Bibliothèque de construction qui s’y trouvent, les
+fenêtres, portes, toits, arbres et autres pièces parmi le reste de ses
+briques, et ses couleurs principales, nommées d’après les couleurs du
+village. Un lecteur d’écran la lit à voix haute ; elle reste aussi dans le
+haut de la vue 3D jusqu’à ce que vous appuyiez sur **Fermer**, une façon
+rapide de vérifier une construction sans faire tourner la caméra autour.
+Elle est calculée sur votre appareil à partir des briques : rien n’est
+envoyé nulle part. L’image d’une construction sur son lien partagé et dans
+une intégration porte la même description pour les lecteurs d’écran.
 
 ## Commandes de la caméra
 

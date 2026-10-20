@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2c43bd99f1b022e2 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: a6b88e4e92839dec -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -749,6 +749,21 @@ autor, su licencia y de qué es remezcla: en el copyright y los extras de
 glTF, en la cabecera del STL y como comentarios en el OBJ. La página propia
 de una construcción compartida ofrece las mismas descargas cuando su licencia
 permite copias (consulte [Lo que abre un enlace](04-PublishingAndForking.md#lo-que-abre-un-enlace)).
+
+## Describir la construcción
+
+Presione `I`, o elija **Describir la construcción** en la paleta de
+comandos, y el Editor dice de qué está hecha su construcción: cuántos
+bloques, aproximadamente qué tan ancha, profunda y alta es, las estructuras
+de la Biblioteca de construcción que hay en ella, las ventanas, puertas,
+techos, árboles y otras piezas entre el resto de sus bloques, y sus colores
+principales, con los nombres de los colores del pueblo. Un lector de
+pantalla la lee en voz alta; además se queda arriba en la vista 3D
+hasta que presione **Cerrar**, una forma rápida de revisar una construcción
+sin girar la cámara a su alrededor. Se calcula en su dispositivo a partir de
+los bloques, así que no se envía nada. La imagen de una construcción en su
+enlace compartido y en una inserción lleva la misma descripción para los
+lectores de pantalla.
 
 ## Controles de cámara
 

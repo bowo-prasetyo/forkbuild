@@ -275,6 +275,21 @@ the detailed references; in short:
   with the most. The player words are messages, `library.<…>.words` in
   each language (ui/i18n/libraryText.js), so search downloads nothing and
   needs no model.
+- What a build is made of and what a remix changed:
+  core/catalog/BuildDescription.js counts a build's bricks, the Build
+  Library structures that stand nearly whole in it
+  (BuildSimilarity.js#findReadyMade(), the detection the look-alike hint
+  uses), the parts a person would name among the rest (windows, doors,
+  roofs, trees …), its size and its main colours named after the village
+  palette; and, between a remix and the version of its original published
+  before it (RemixLineage.js#remixParentPublication()), what it added,
+  repainted and took away. application/publication/BuildDescriber.js loads
+  the brick and structure registries the first time; ui/i18n/
+  buildDescriptionText.js makes the sentences. The Editor's Describe the
+  Build (`I`) shows and announces it, a shared build's turntable and an
+  embed's carry it for screen readers (BuildTurntable's `description`),
+  and a remix's page says "What changed" under Remixed from. No model: the
+  facts are exact, and the sentences are messages in every language.
 - Ready-made builds: application/home/FeaturedBuilds.js lists six built-in
   structures (the three showcase ones first). Home, the Repository and My
   Worlds' empty state show them with ui/components/featured/FeaturedBuilds.js

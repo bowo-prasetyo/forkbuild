@@ -193,13 +193,23 @@ export function compareBuildShapes(mine, theirs) {
 // is how much of a structure must be there (readyMadeCoverage(), unless the
 // measuring script tries another).
 export function withoutReadyMade(shape, readyMadeShapes, { coverageFor = readyMadeCoverage } = {}) {
-    if (!shape?.size || !Array.isArray(readyMadeShapes) || readyMadeShapes.length === 0) return shape;
-    const structures = readyMadeShapes
-        .filter((structure) => structure?.size && coverageFor(structure.size) !== null)
-        .sort((a, b) => b.size - a.size);
+    if (!Array.isArray(readyMadeShapes)) return shape;
+    return findReadyMade(shape, readyMadeShapes.map((structureShape) => ({ id: null, shape: structureShape })), { coverageFor }).rest;
+}
+
+// The same, also saying which structures were found: `{ rest, found }`,
+// `found` being `[{ id, count }]` for each of `structures` (`[{ id, shape }]`)
+// that stands in `shape`, largest first.
+export function findReadyMade(shape, structures, { coverageFor = readyMadeCoverage } = {}) {
+    if (!shape?.size || !Array.isArray(structures) || structures.length === 0) return { rest: shape, found: [] };
+    const candidates = structures
+        .filter((structure) => structure?.shape?.size && coverageFor(structure.shape.size) !== null)
+        .sort((a, b) => b.shape.size - a.shape.size);
     let rest = shape;
-    for (const structure of structures) {
+    const found = [];
+    for (const { id, shape: structure } of candidates) {
         const needed = Math.ceil(structure.size * coverageFor(structure.size));
+        let count = 0;
         for (let copy = 0; copy < MAX_COPIES_OF_ONE_STRUCTURE; copy += 1) {
             if (rest.size < needed || containedAtMost(structure, rest) < needed) break;
             const alignment = bestAlignment(rest, structure);
@@ -211,9 +221,11 @@ export function withoutReadyMade(shape, readyMadeShapes, { coverageFor = readyMa
                 if (!taken.has(key)) left.set(key, point);
             }
             rest = shapeOf(left);
+            count += 1;
         }
+        if (count > 0) found.push(Object.freeze({ id, count }));
     }
-    return rest;
+    return { rest, found };
 }
 
 // The most bricks of `part` that `whole` could hold, from counts per kind.

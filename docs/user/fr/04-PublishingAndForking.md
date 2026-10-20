@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: e059fcfef844d10c -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 64eabe993a5d0f63 -->
 # 04 — Publier et remixer
 
 <!-- languages -->
@@ -179,6 +179,11 @@ est stockée, ouvre la page propre à cette construction :
 - **Remix de « … » par …** quand c’est un remix, et **Remixée N fois**
   quand cet appareil a trouvé des remix de celle-ci (voir
   [Nombre de remix](#nombre-de-remix)) ;
+- **Ce qui a changé**, sous **Remix de** pour un remix : ce qu’il a ajouté
+  (les structures de la Bibliothèque de construction, et les fenêtres,
+  portes, arbres et autres pièces parmi ses nouvelles briques), repeint et
+  retiré, calculé à partir des briques des deux constructions quand cet
+  appareil peut lire la construction remixée ;
 - son **Arbre généalogique** : les constructions dont elle est un remix,
   jusqu’à l’originale, et les remix faits d’elle et de ceux-ci, chacun en
   lien quand cet appareil peut l’ouvrir ;

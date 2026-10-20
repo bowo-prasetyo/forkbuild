@@ -59,6 +59,7 @@ import { SteemAnnouncingConfigurationStore } from '../../storage/SteemAnnouncing
 import { BlurtAnnouncingConfigurationStore } from '../../storage/BlurtAnnouncingConfigurationStore.js';
 import { ownIdentityIdsOf } from '../../application/document/DocumentImportPolicy.js';
 import { SimilarBuildFinder } from '../../application/publication/SimilarBuildFinder.js';
+import { BuildDescriber } from '../../application/publication/BuildDescriber.js';
 import { LookAlikeBuildNotifier } from '../../application/publication/LookAlikeBuildNotifier.js';
 import { LookAlikeWaitingStore } from '../../application/publication/LookAlikeWaitingStore.js';
 import { createOwnPublicationCheck } from '../../application/publication/OwnPublicationCheck.js';
@@ -521,6 +522,8 @@ export async function composeNetwork({ app, decentralizedPublicationDiscoveryPro
         }
     });
     app.provide('similarBuildFinder', similarBuildFinder);
+    // What a build is made of and what a remix changed, on a build's page and in the Editor.
+    app.provide('buildDescriber', new BuildDescriber());
     // Whether `publication` is the person's own (published here, or signed by an
     // identity this device holds or acts for): its card in Explore lists the
     // look-alikes published after it.

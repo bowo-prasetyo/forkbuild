@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 4a1027c916706bd6 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: d826f595608a7d2e -->
 # Referência de controles
 
 <!-- languages -->
@@ -31,6 +31,7 @@ nome todas as operações de edição abaixo.
 | Entrada | Ação |
 |---|---|
 | `Ctrl/Cmd+K` | Paleta de comandos |
+| `I` | Descrever a construção: do que ela é feita, mostrado e lido por um leitor de tela — veja [Descrever a construção](02-TheEditor.md#descrever-a-construção) |
 | `?` | Sobreposição Atalhos de teclado (também pelo botão "⌨ Atalhos" da barra de ferramentas) — todos os atalhos do Editor |
 
 ## Descoberta (Visão do mundo)

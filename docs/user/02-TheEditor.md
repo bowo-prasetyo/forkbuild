@@ -674,6 +674,19 @@ the STL header, and as comments in the OBJ. A shared build's own page offers
 the same downloads when its license allows copies (see
 [What a link opens on](04-PublishingAndForking.md#what-a-link-opens-on)).
 
+## Describe the build
+
+Press `I`, or pick **Describe the Build** in the Command Palette, and the
+Editor says what your build is made of: how many bricks, about how wide,
+deep and high it is, the Build Library structures that stand in it, the
+windows, doors, roofs, trees and other parts among the rest of its bricks,
+and its main colours, named after the village colours. A screen reader reads
+it out; it also stays at the top of the 3D view until you press
+**Close**, a quick way to check a build without turning the camera round
+it. It is worked out on your device from the bricks, so nothing is sent
+anywhere. A build's picture on its shared link and in an embed carries the
+same description for screen readers.
+
 ## Camera controls
 
 - **Drag** — orbit around the scene
