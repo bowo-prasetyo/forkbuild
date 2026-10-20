@@ -430,9 +430,9 @@ What it compares, and what it can't know:
 - A brick counts as the same when it is the same kind of brick in the same
   place, even if your whole build stands somewhere else or is turned a
   quarter turn. Colours, and which way each brick faces, don't count.
-- Your own builds, the build yours is a remix of, remixes of yours, other
-  remixes of the same build, and builds published after yours was first
-  published are left out.
+- Your own builds, every build in your build's family tree (what it was
+  remixed from, its remixes, and every other remix in the same family), and
+  builds published after yours was first published are left out.
 - It only knows the builds this device has seen, so finding nothing doesn't
   mean nobody has built anything like it. It is a hint, not a judgement:
   builds can look alike by chance, and only you know how you made yours.
@@ -811,6 +811,30 @@ build itself, then the remixes made from it, as far as this device knows.
 The challenge page shows one for each chain of entries. Each build in the
 tree names its author, and the friends who built it with them; its title
 opens the build, and each name opens that person's page.
+
+### Similar builds published earlier
+
+Under the family tree, a build's page lists builds by other people that were
+published before it and look a lot like it, among the builds this device has
+seen: each one's title and author, how much of it is the same, and when it
+was published. It is how you can find a copy of your build: open the copy's
+page, and if yours was published first and looks like it, yours is listed
+there. Builds compare as they do when you publish (see
+[When your build looks like someone else's](#when-your-build-looks-like-someone-elses)),
+except that every brick counts, since only the builder's own device knows
+which bricks they placed themselves.
+
+Left out: builds by the same builder (and anyone who built it with them),
+the whole family tree, and builds published after it. "Before" goes by the
+date each build was signed with when it was published.
+
+Builds can look alike by chance, or because they started from the same
+ready-made structure, so a build listed here doesn't mean anyone copied.
+If you think someone has used your build in a way its license doesn't
+allow, see
+[When someone uses your build in a way its license doesn't allow](#when-someone-uses-your-build-in-a-way-its-license-doesnt-allow).
+Nothing is listed when this device hasn't seen any such build, which doesn't
+mean there are none.
 
 ## A typical creative loop
 

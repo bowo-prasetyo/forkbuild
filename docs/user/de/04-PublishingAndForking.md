@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 5d7f32b274cd71e9 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 0696773bd0742d8b -->
 # 04 — Veröffentlichen & Remixen
 
 <!-- languages -->
@@ -472,10 +472,10 @@ Was verglichen wird und was es nicht wissen kann:
   ist, auch wenn Ihr ganzes Bauwerk woanders steht oder um eine
   Vierteldrehung gedreht ist. Farben und die Richtung einzelner Steine
   zählen nicht.
-- Ihre eigenen Bauwerke, das Bauwerk, von dem Ihres ein Remix ist, Remixe
-  von Ihrem, andere Remixe desselben Bauwerks und Bauwerke, die erst nach
-  der ersten Veröffentlichung von Ihrem veröffentlicht wurden, bleiben
-  außen vor.
+- Ihre eigenen Bauwerke, jedes Bauwerk im Stammbaum Ihres Bauwerks (woraus
+  es geremixt wurde, seine Remixe und jeder andere Remix derselben Familie)
+  und Bauwerke, die erst nach der ersten Veröffentlichung von Ihrem
+  veröffentlicht wurden, bleiben außen vor.
 - Es kennt nur die Bauwerke, die dieses Gerät gesehen hat. Findet es nichts,
   heißt das also nicht, dass niemand etwas Ähnliches gebaut hat. Es ist ein
   Hinweis, kein Urteil: Bauwerke können sich zufällig ähneln, und nur Sie
@@ -897,6 +897,32 @@ Original, dann den Bau selbst, dann die Remixe daraus, soweit dieses Gerät
 sie kennt. Die Challenge-Seite zeigt einen für jede Kette von Beiträgen. Jeder
 Bau im Stammbaum nennt seinen Autor und die Freunde, die ihn mit ihm gebaut
 haben; sein Titel öffnet den Bau, und jeder Name die Seite dieser Person.
+
+### Ähnliche Bauwerke, die früher veröffentlicht wurden
+
+Unter dem Stammbaum listet die Seite eines Bauwerks Bauwerke anderer auf,
+die vor ihm veröffentlicht wurden und ihm sehr ähneln, unter denen, die
+dieses Gerät gesehen hat: jeweils Titel und Autor, wie viel davon gleich ist
+und wann es veröffentlicht wurde. So können Sie eine Kopie Ihres Bauwerks
+finden: Öffnen Sie die Seite der Kopie, und wenn Ihres zuerst veröffentlicht
+wurde und ihr ähnelt, steht es dort. Bauwerke werden so verglichen wie beim
+Veröffentlichen (siehe
+[Wenn Ihr Bauwerk dem eines anderen ähnelt](#wenn-ihr-bauwerk-dem-eines-anderen-ähnelt)),
+nur dass jeder Stein zählt, denn nur das Gerät des Bauenden weiß, welche
+Steine er selbst platziert hat.
+
+Außen vor bleiben Bauwerke desselben Bauenden (und aller, die es mit ihm
+gebaut haben), der ganze Stammbaum und Bauwerke, die danach veröffentlicht
+wurden. „Vorher“ richtet sich nach dem Datum, mit dem jedes Bauwerk beim
+Veröffentlichen signiert wurde.
+
+Bauwerke können sich zufällig ähneln oder weil sie mit derselben fertigen
+Struktur begonnen haben. Ein Bauwerk in dieser Liste heißt also nicht, dass
+jemand kopiert hat. Wenn Sie glauben, dass jemand Ihr Bauwerk so nutzt, wie
+es seine Lizenz nicht erlaubt, siehe
+[Wenn jemand Ihr Bauwerk so nutzt, wie es seine Lizenz nicht erlaubt](#wenn-jemand-ihr-bauwerk-so-nutzt-wie-es-seine-lizenz-nicht-erlaubt).
+Hat dieses Gerät kein solches Bauwerk gesehen, wird nichts aufgelistet; das
+heißt nicht, dass es keine gibt.
 
 ## Ein typischer kreativer Kreislauf
 

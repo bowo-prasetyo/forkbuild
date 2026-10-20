@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 5d7f32b274cd71e9 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 0696773bd0742d8b -->
 # 04 — Penerbitan & Remix
 
 <!-- languages -->
@@ -473,10 +473,10 @@ Apa yang dibandingkan, dan apa yang tidak bisa diketahuinya:
 - Sebuah balok dianggap sama jika jenisnya sama dan berada di tempat yang
   sama, meskipun seluruh bangunan Anda berdiri di tempat lain atau diputar
   seperempat putaran. Warna, dan arah hadap tiap balok, tidak dihitung.
-- Bangunan Anda sendiri, bangunan yang di-remix oleh bangunan Anda, remix
-  dari bangunan Anda, remix lain dari bangunan yang sama, dan bangunan yang
-  diterbitkan setelah bangunan Anda pertama kali diterbitkan tidak
-  diikutkan.
+- Bangunan Anda sendiri, setiap bangunan dalam silsilah bangunan Anda
+  (yang di-remix olehnya, remix-remixnya, dan remix lain dalam keluarga yang
+  sama), dan bangunan yang diterbitkan setelah bangunan Anda pertama kali
+  diterbitkan tidak diikutkan.
 - ForkBuild hanya mengenal bangunan yang pernah dilihat perangkat ini, jadi
   tidak menemukan apa pun bukan berarti tidak ada yang membangun sesuatu
   yang mirip. Ini petunjuk, bukan penilaian: bangunan bisa mirip secara
@@ -891,6 +891,32 @@ darinya, sejauh yang diketahui perangkat ini. Halaman tantangan
 menampilkan satu silsilah untuk setiap rantai peserta. Setiap bangunan dalam
 silsilah menyebut pembuatnya dan teman-teman yang membangunnya bersamanya;
 judulnya membuka bangunan itu, dan setiap nama membuka halaman orang itu.
+
+### Bangunan mirip yang diterbitkan lebih dulu
+
+Di bawah silsilah, halaman sebuah bangunan mencantumkan bangunan orang lain
+yang diterbitkan sebelumnya dan sangat mirip dengannya, di antara yang
+pernah dilihat perangkat ini: judul dan pembuat masing-masing, berapa banyak
+yang sama, dan kapan diterbitkan. Dengan ini Anda bisa menemukan salinan
+bangunan Anda: buka halaman salinan itu, dan jika bangunan Anda diterbitkan
+lebih dulu dan mirip dengannya, bangunan Anda tercantum di sana. Bangunan
+dibandingkan seperti saat menerbitkan (lihat
+[Jika bangunan Anda mirip dengan bangunan orang lain](#jika-bangunan-anda-mirip-dengan-bangunan-orang-lain)),
+hanya saja setiap balok dihitung, karena hanya perangkat pembuatnya yang
+tahu balok mana yang ia letakkan sendiri.
+
+Tidak diikutkan: bangunan dari pembuat yang sama (dan siapa pun yang
+membangunnya bersama dia), seluruh silsilah, dan bangunan yang diterbitkan
+sesudahnya. "Sebelum" mengikuti tanggal yang ditandatangani tiap bangunan
+saat diterbitkan.
+
+Bangunan bisa mirip secara kebetulan atau karena dimulai dari struktur siap
+pakai yang sama, jadi bangunan yang tercantum di sini tidak berarti ada yang
+menyalin. Jika Anda merasa seseorang memakai bangunan Anda dengan cara yang
+tidak diizinkan lisensinya, lihat
+[Jika seseorang memakai bangunan Anda dengan cara yang tidak diizinkan lisensinya](#jika-seseorang-memakai-bangunan-anda-dengan-cara-yang-tidak-diizinkan-lisensinya).
+Tidak ada yang dicantumkan jika perangkat ini belum melihat bangunan seperti
+itu, dan itu tidak berarti tidak ada.
 
 ## Alur kreatif yang umum
 
