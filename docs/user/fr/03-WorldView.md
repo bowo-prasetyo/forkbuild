@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 3b35ccdb4d528c27 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 356a48136117ec0e -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
@@ -375,7 +375,10 @@ premier. Vous recevez une notification quand :
 - quelqu’un que vous suivez publie quelque chose de nouveau (voir
   [Suivre des personnes](07-PeerConnectionsAndFriends.md#suivre-des-personnes)) ;
 - quelqu’un remixe l’une de vos constructions (voir
-  [Nombre de remix](04-PublishingAndForking.md#nombre-de-remix)).
+  [Nombre de remix](04-PublishingAndForking.md#nombre-de-remix)) ;
+- quelqu’un publie après vous une construction qui ressemble beaucoup à
+  l’une des vôtres (voir
+  [Constructions semblables publiées avant](04-PublishingAndForking.md#constructions-semblables-publiées-avant)).
 
 Chacune dit ce qui s’est passé et quand. **Explorer** vous emmène au Monde
 de cette construction. C’est une simple liste, pas une boîte de réception :

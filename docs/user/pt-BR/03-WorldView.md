@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 3b35ccdb4d528c27 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 356a48136117ec0e -->
 # 03 — Visão do mundo
 
 <!-- languages -->
@@ -351,7 +351,10 @@ notificação quando:
 - alguém que você segue publica algo novo (veja
   [Seguindo pessoas](07-PeerConnectionsAndFriends.md#seguindo-pessoas));
 - alguém remixa uma das suas construções (veja
-  [Contagem de remixes](04-PublishingAndForking.md#contagem-de-remixes)).
+  [Contagem de remixes](04-PublishingAndForking.md#contagem-de-remixes));
+- alguém publica, depois de você, uma construção muito parecida com uma das
+  suas (veja
+  [Construções parecidas publicadas antes](04-PublishingAndForking.md#construções-parecidas-publicadas-antes)).
 
 Cada uma diz o que aconteceu e quando. **Explorar** leva você ao Mundo
 daquela construção. É uma lista simples, não uma caixa de entrada: nada é

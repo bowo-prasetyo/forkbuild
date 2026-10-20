@@ -1,5 +1,6 @@
 import { FOLLOWED_AUTHOR_PUBLISHED_EVENT_TYPE } from '../../application/publication/FollowedAuthorPublicationNotifier.js';
 import { BUILD_REMIXED_EVENT_TYPE } from '../../application/publication/RemixedBuildNotifier.js';
+import { BUILD_LOOKS_LIKE_YOURS_EVENT_TYPE } from '../../application/publication/LookAlikeBuildNotifier.js';
 import { PUBLICATION_COMMENTED_EVENT_TYPE } from '../../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
 import { PUBLICATION_HEARTED_EVENT_TYPE } from '../../application/publication/heart/PublicationHeartNotifications.js';
 import { t } from '../i18n/i18n.js';
@@ -24,6 +25,16 @@ export function describeNotification(event) {
                 title: author ? t('notificationText.remixed', { author }) : t('notificationText.remixedNoName'),
                 body: remixed && title
                     ? t('notificationText.remixedBody', { title, remixed })
+                    : (title ? t('notificationText.quotedTitle', { title }) : '')
+            });
+        }
+        case BUILD_LOOKS_LIKE_YOURS_EVENT_TYPE: {
+            const yours = text(payload.yourTitle);
+            const percent = Number.isFinite(payload.percent) ? payload.percent : null;
+            return Object.freeze({
+                title: author ? t('notificationText.looksLikeYours', { author }) : t('notificationText.looksLikeYoursNoName'),
+                body: yours && title && percent !== null
+                    ? t('notificationText.looksLikeYoursBody', { title, yours, percent })
                     : (title ? t('notificationText.quotedTitle', { title }) : '')
             });
         }

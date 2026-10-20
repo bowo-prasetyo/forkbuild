@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 27c74ca95de369c9 -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 49b3a123cec42c7e -->
 # ワールドビュー：詳細ツール
 
 <!-- languages -->
@@ -107,6 +107,10 @@
   開き、**さがす** のカードと同じように読んだり書き込んだりできます。
   公開された作品にはハート（**♡** と、ハートを贈った人）も表示されます。
   [ハート](04-PublishingAndForking.md#ハート) を参照してください。
+  先にほかの人が公開した、よく似ている作品があれば、作品のページと同じように
+  その下のパネルに並びます。
+  [先に公開された似ている作品](04-PublishingAndForking.md#先に公開された似ている作品)
+  を参照してください。
 - **配置**：作品がワールドのどこに立っているか。単位は
   **ワールド単位** です。GPS ではなく ForkBuild 独自の座標で、1 ワールド
   単位は 1 メートルです。**フォーカス** でそこへ行きます。**移動** で

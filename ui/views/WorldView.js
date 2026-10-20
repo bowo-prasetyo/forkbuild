@@ -14,6 +14,8 @@ import ActionFeedback from '../components/ActionFeedback.js';
 import { useArrival } from './worldView/useArrival.js';
 import { useWalkThroughFilm } from './worldView/useWalkThroughFilm.js';
 import DocumentInfoPanel from '../components/DocumentInfoPanel.js';
+import SimilarEarlierBuilds from '../components/remix/SimilarEarlierBuilds.js';
+import { useSimilarEarlierBuilds } from './worldView/useSimilarEarlierBuilds.js';
 import DescriptionReaderSheet from '../components/DescriptionReaderSheet.js';
 import MetadataEditorDialog from '../components/MetadataEditorDialog.js';
 import PlacementInfoPanel from '../components/PlacementInfoPanel.js';
@@ -124,7 +126,7 @@ export default {
     name: 'WorldView',
     components: {
         ActionFeedback,
-        DocumentInfoPanel, DescriptionReaderSheet, MetadataEditorDialog,
+        DocumentInfoPanel, SimilarEarlierBuilds, DescriptionReaderSheet, MetadataEditorDialog,
         PlacementInfoPanel, PlacementEditorDialog,
         WorldSearchPanel, LocationDocumentsDialog, WorldLocationBrowser,
         AvatarInfoPanel, NearbyAvatarsPanel,
@@ -163,6 +165,7 @@ export default {
         // has no Publication, so the panel offers no comments.
         const documentPublication = ref(null);
         const documentCommentCount = ref(null);
+        const { documentSimilarEarlier, refreshSimilarEarlier, similarEarlierRoute } = useSimilarEarlierBuilds();
         // The build whose whole description and comments are open beside the
         // panel (DescriptionReaderSheet), or null, and which part it shows. It
         // closes when another build, or none, is inspected, so it never reopens
@@ -733,6 +736,7 @@ export default {
             documentInfo.value = shownDocumentId ? session.getDocumentInfo(shownDocumentId) : null;
             documentPublication.value = documentInfo.value ? session.getPublicationForDocument(documentInfo.value.documentId) : null;
             refreshDocumentCommentCount();
+            refreshSimilarEarlier(documentPublication.value);
 
             // The placement (WHERE) for the same world, kept separate from the document
             // info (WHAT); null when it has none.
@@ -1464,6 +1468,8 @@ export default {
             descriptionReaderSection,
             documentPublication,
             documentCommentCount,
+            documentSimilarEarlier,
+            similarEarlierRoute,
             openDescriptionReader,
             closeDescriptionReader,
             placementInfo,

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 3b35ccdb4d528c27 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 356a48136117ec0e -->
 # 03 — Weltansicht
 
 <!-- languages -->
@@ -361,7 +361,10 @@ Benachrichtigung, wenn:
 - jemand, dem Sie folgen, etwas Neues veröffentlicht (siehe
   [Personen folgen](07-PeerConnectionsAndFriends.md#personen-folgen));
 - jemand eines Ihrer Bauwerke remixt (siehe
-  [Remix-Zähler](04-PublishingAndForking.md#remix-zähler)).
+  [Remix-Zähler](04-PublishingAndForking.md#remix-zähler));
+- jemand nach Ihnen ein Bauwerk veröffentlicht, das einem Ihrer sehr ähnelt
+  (siehe
+  [Ähnliche Bauwerke, die früher veröffentlicht wurden](04-PublishingAndForking.md#ähnliche-bauwerke-die-früher-veröffentlicht-wurden)).
 
 Jede sagt, was wann geschah. **Erkunden** bringt Sie zur Welt dieses
 Bauwerks. Es ist eine einfache Liste, kein Posteingang: Nichts wird als

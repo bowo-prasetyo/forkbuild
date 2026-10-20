@@ -836,6 +836,16 @@ allow, see
 Nothing is listed when this device hasn't seen any such build, which doesn't
 mean there are none.
 
+World View's **About this build** panel lists them too, under the build's
+details. And when this device finds a build by someone else that looks a lot
+like one of yours and was published after it, your 🔔 gets a
+**… published a build that looks like yours** entry, once per build, saying
+how much is the same; it opens that build, whose page lists yours (your
+device shows it too, if you turned on
+[Notifications on this device](03-WorldView.md#notifications-on-this-device)).
+Remixes of your builds aren't counted here: they credit you, and have
+[their own notification](#remix-counts).
+
 ## A typical creative loop
 
 Here's the whole journey in one flow:

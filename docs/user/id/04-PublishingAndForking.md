@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 0696773bd0742d8b -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: fb0dd38e1538e747 -->
 # 04 — Penerbitan & Remix
 
 <!-- languages -->
@@ -917,6 +917,18 @@ tidak diizinkan lisensinya, lihat
 [Jika seseorang memakai bangunan Anda dengan cara yang tidak diizinkan lisensinya](#jika-seseorang-memakai-bangunan-anda-dengan-cara-yang-tidak-diizinkan-lisensinya).
 Tidak ada yang dicantumkan jika perangkat ini belum melihat bangunan seperti
 itu, dan itu tidak berarti tidak ada.
+
+Panel **Tentang bangunan ini** di Tampilan Dunia juga mencantumkannya, di
+bawah detail bangunan. Dan saat perangkat ini menemukan bangunan orang lain
+yang sangat mirip dengan salah satu bangunan Anda dan diterbitkan
+sesudahnya, 🔔 Anda mendapat entri
+**… menerbitkan bangunan yang mirip dengan milik Anda**, sekali per
+bangunan, beserta berapa banyak yang sama; entri itu membuka bangunan
+tersebut, yang halamannya mencantumkan bangunan Anda (perangkat Anda juga
+menampilkannya jika Anda menyalakan
+[Notifikasi di perangkat ini](03-WorldView.md#notifikasi-di-perangkat-ini)).
+Remix dari bangunan Anda tidak dihitung di sini: remix mencantumkan nama
+Anda dan punya [notifikasinya sendiri](#jumlah-remix).
 
 ## Alur kreatif yang umum
 

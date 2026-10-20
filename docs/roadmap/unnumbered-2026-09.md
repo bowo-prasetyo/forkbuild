@@ -8000,3 +8000,36 @@ finds their own build listed there when it came first.
 - Not done: World View's About this build panel and the Repository's cards don't list look-alikes; a builder isn't
   notified when a look-alike of their build arrives; every brick counts on a page, so two builds started from the same
   ready-made structure can be listed (the note says so); only builds whose bytes are on this device are compared.
+
+
+## Look-alikes in World View, and the 🔔 tells a builder of one (unnumbered, 2026-10-20)
+
+**A builder still had to come across a copy of their build to learn of it.** A build's page listed similar builds
+published earlier, but only on that page: World View's About this build, where most builds are met, said nothing,
+and a builder whose house was rebuilt under another name heard of it only by opening the copy. Pillar served: your
+work is yours (credit travels with the work), and a build lives in a world. How a player notices: World View's About
+this build panel lists a published build's look-alikes published before it, under its details, as its page does; and
+when this device admits a build by someone else that looks a lot like one of yours and came after it, the 🔔 says
+**… published a build that looks like yours**, with how much is the same, once per build, opening that build's page,
+where yours is listed.
+
+- application/publication/LookAlikeBuildNotifier.js (new): on DecentralizedPublicationDiscoveryProvider#onAdded(), like
+  RemixedBuildNotifier. The new build must be verifiably signed by someone else the builder hasn't blocked and didn't
+  build it with; it is compared only with the signed-in identity's own builds (`SimilarBuildFinder#findEarlier(…,
+  { by })`, new), published before it, outside its remix family; the match must be verifiably signed by them.
+  Comparisons run one at a time, so a sync's burst of admissions never reads many builds at once. Event type
+  `publication.looks-like-yours`, deduplicated by Publication id (core/NotificationDeduplicationPolicy.js); worded in
+  ui/notifications/notificationText.js, so the bell's history and device notifications say it.
+- ui/views/worldView/useSimilarEarlierBuilds.js (new): About this build's look-alikes, looked up once per Publication
+  shown (World View refreshes its panels often), a newer build's dropping an older one's answer; rendered with
+  ui/components/remix/SimilarEarlierBuilds.js in a panel under DocumentInfoPanel.
+- New `notificationText.looksLikeYours*` messages in every language. docs/user/03 (what the 🔔 tells of), 04 (Similar
+  builds published earlier) and WorldViewAdvancedTools (About this build) in every language; docs/Architecture.md.
+- Tests: `LookAlikeBuildNotifier` (with the real finder and signed Publications: a later look-alike notifies once, in
+  words; unlike, earlier, remixes, built together, own, forged and blocked builds don't; a build claiming to be the
+  builder's but not signed by them doesn't count; signed out, failures, one comparison at a time),
+  `SimilarBuildFinder` (`by`), `WorldSimilarEarlierBrowser` (the panel; once per Publication however often refreshed;
+  a stale answer dropped; failures and unpublished builds show nothing).
+- Not done: a build admitted before its bytes reach this device isn't compared, and isn't looked at again when they
+  arrive; builds this device already knew at startup aren't (the notifiers subscribe after the rebuild, so old builds
+  never notify). Explore's cards still don't show look-alikes.

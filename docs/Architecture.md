@@ -414,7 +414,10 @@ same finder's `findEarlier()` for builds published before it that look like
 it and lists them under its family tree
 (ui/components/remix/SimilarEarlierBuilds.js): there every brick counts,
 the builder is the identity that signed the Publication (and Built with),
-whoever is looking, and "before" is the signed `publishedAt`.
+whoever is looking, and "before" is the signed `publishedAt`. World View's
+About this build shows the same list for the shown build's Publication
+(ui/views/worldView/useSimilarEarlierBuilds.js, looked up once per
+Publication shown).
 It is a hint like core/BlueprintSimilarity.js ("Similarity Is Evidence; It
 Never Becomes Lineage"), never a finding of copying. Build here in World View
 opens `/editor?plot=<world>&x=&y=&z=`: the Editor starts a new build and
@@ -1176,7 +1179,13 @@ Repository cards and ui/components/SharedWithYouPanel.js above the catalog.
     by Publication id. RemixedBuildNotifier, on the same onAdded(), saves a
     `publication.remixed` one when a verified Publication by someone else
     names as its parent a build this device has a Publication of signed by
-    the signed-in identity.
+    the signed-in identity. LookAlikeBuildNotifier, also on onAdded() (from
+    ui/main.js, where SimilarBuildFinder is made), saves a
+    `publication.looks-like-yours` one, deduplicated by Publication id, when
+    a verified Publication by someone else, unblocked and not built with
+    them, looks a lot like one of the signed-in identity's own published
+    before it (`SimilarBuildFinder#findEarlier(publication, { by })`, its
+    family left out), verifiably signed by them; one comparison at a time.
   - application/announcementIndex/FollowedAnnouncementRetention.js is the
     Announcement Index's `isKeptFirst`: Snapshot records with a followed
     publisher's signed placement, and Place Naming claims a followed author

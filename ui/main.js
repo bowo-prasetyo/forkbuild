@@ -100,6 +100,7 @@ import { FirstBuildChecklistStore } from '../application/onboarding/FirstBuildCh
 import { ReadyMadeBricksStore } from '../application/document/ReadyMadeBricksStore.js';
 import { ownIdentityIdsOf } from '../application/document/DocumentImportPolicy.js';
 import { SimilarBuildFinder } from '../application/publication/SimilarBuildFinder.js';
+import { LookAlikeBuildNotifier } from '../application/publication/LookAlikeBuildNotifier.js';
 import { HelpedBuildsStore } from '../application/buildTogether/HelpedBuildsStore.js';
 import { HelpedBuildsSyncUseCase } from '../application/buildTogether/HelpedBuildsSyncUseCase.js';
 import { browserPrivacySignals, sendCounterHit } from './counterHit.js';
@@ -616,16 +617,28 @@ app.provide('buildPlotStore', new BuildPlotStore({ storageProvider: new LocalSto
 app.provide('firstBuildChecklistStore', new FirstBuildChecklistStore({ storageProvider: new LocalStorageProvider() }));
 // The bricks each build started with, so publishing counts only the builder's own.
 app.provide('readyMadeBricksStore', new ReadyMadeBricksStore({ storageProvider: new LocalStorageProvider() }));
-// Publish points out a build that looks a lot like someone else's on this
-// device: theirs is read from the same places the Repository lists.
-app.provide('similarBuildFinder', new SimilarBuildFinder({
+// Publish, a build's page and World View point out builds that look a lot
+// like another; theirs are read from the same places the Repository lists.
+const similarBuildFinder = new SimilarBuildFinder({
     listPublications: () => new CompositeDiscoveryProvider([
         new LocalDiscoveryProvider(new LocalStorageProvider()),
         decentralizedPublicationDiscoveryProvider
     ]).list(),
     contentStore: publicationContentStore,
     ownIdentityIds: () => ownIdentityIdsOf(identityProvider)
-}));
+});
+app.provide('similarBuildFinder', similarBuildFinder);
+// A build admitted here that looks like one of the signed-in identity's own,
+// published before it, goes to the 🔔, as a remix of theirs does.
+const lookAlikeBuildNotifier = new LookAlikeBuildNotifier({
+    identityProvider,
+    similarBuildFinder,
+    isBlocked: (identityId) => peerBlockUseCase.isBlocked(identityId),
+    notificationSink: (notificationEvent) => new NotificationEventStore(new LocalStorageProvider()).save(notificationEvent)
+});
+decentralizedPublicationDiscoveryProvider.onAdded((publication) => {
+    lookAlikeBuildNotifier.handlePublicationAdmitted(publication);
+});
 // The builds each identity helped make with friends (Build with me).
 const helpedBuildsStore = new HelpedBuildsStore({ storageProvider: new LocalStorageProvider() });
 app.provide('helpedBuildsStore', helpedBuildsStore);

@@ -146,6 +146,9 @@ export const inspectionPanelsTemplate = `<div v-if="spatialInspection" class="sp
                     @read-description="openDescriptionReader(documentInfo)"
                     @read-comments="openDescriptionReader(documentInfo, 'comments')"
                 />
+                <div v-if="documentInfo && documentSimilarEarlier.length" class="document-info-panel world-similar-earlier">
+                    <SimilarEarlierBuilds :matches="documentSimilarEarlier" :route-for="similarEarlierRoute" heading="h4" />
+                </div>
                 <PlacementInfoPanel
                     v-if="placementInfo"
                     :info="placementInfo"

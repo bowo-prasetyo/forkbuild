@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 3b35ccdb4d528c27 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: 356a48136117ec0e -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
@@ -362,7 +362,10 @@ notifikasi saat:
 - seseorang yang Anda ikuti menerbitkan sesuatu yang baru (lihat
   [Mengikuti orang](07-PeerConnectionsAndFriends.md#mengikuti-orang));
 - seseorang me-remix salah satu bangunan Anda (lihat
-  [Jumlah remix](04-PublishingAndForking.md#jumlah-remix)).
+  [Jumlah remix](04-PublishingAndForking.md#jumlah-remix));
+- seseorang, setelah Anda, menerbitkan bangunan yang sangat mirip dengan
+  salah satu bangunan Anda (lihat
+  [Bangunan mirip yang diterbitkan lebih dulu](04-PublishingAndForking.md#bangunan-mirip-yang-diterbitkan-lebih-dulu)).
 
 Setiap notifikasi menyebut apa yang terjadi dan kapan. **Jelajahi**
 membawa Anda ke Dunia bangunan itu. Ini daftar sederhana, bukan kotak

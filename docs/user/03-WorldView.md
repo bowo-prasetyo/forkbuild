@@ -333,7 +333,10 @@ A row of buttons near the top of the panel helps you get around:
 - someone you follow publishes something new (see
   [Following people](07-PeerConnectionsAndFriends.md#following-people));
 - someone remixes one of your builds (see
-  [Remix counts](04-PublishingAndForking.md#remix-counts)).
+  [Remix counts](04-PublishingAndForking.md#remix-counts));
+- someone publishes a build that looks a lot like one of yours, after yours
+  (see
+  [Similar builds published earlier](04-PublishingAndForking.md#similar-builds-published-earlier)).
 
 Each one says what happened and when. **Explore** takes you to that build's
 World. It's a simple list, not an inbox: nothing is marked read, nothing is

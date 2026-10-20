@@ -8,7 +8,9 @@ import { placedBricks, worldBricks } from '../../core/PlacedBricks.js';
 // Finds published builds by other people that look a lot like a build
 // (core/BuildSimilarity.js), for two places: Publish, so it can point to Edit
 // a Copy, which credits them (find()), and a build's page, which lists the
-// builds published before it that look like it (findEarlier()). It only
+// builds published before it that look like it (findEarlier()), and the 🔔,
+// which tells a builder when a build like one of theirs arrives
+// (findEarlier() with `by`). It only
 // compares against builds whose bytes are already on this device: there is no
 // global index to ask, so finding nothing never means a build is original. It
 // never blocks anything and never records or signs anything.
@@ -74,7 +76,9 @@ export class SimilarBuildFinder {
     // it, by the date each was signed. All its bricks count: who placed which
     // is known only on its builder's device. Its builder is the identity that
     // signed it (and those credited under Built with), whoever is looking.
-    async findEarlier(publication) {
+    // With `by` (identity ids), only builds published by one of them are
+    // compared.
+    async findEarlier(publication, { by = null } = {}) {
         const mine = await this._shapeOf(publication);
         if (!mine || mine.size < MIN_COMPARED_BRICKS) return [];
         const published = publishedTime(publication);
@@ -83,7 +87,8 @@ export class SimilarBuildFinder {
             documentId: publication.documentId,
             parentDocumentId: publication.parentDocumentId || null,
             builderIds: [publication.publisherIdentity?.id, ...(publication.builtWith || []).map((entry) => entry?.identityId)],
-            before: published
+            before: published,
+            onlyBy: by
         });
         return this._matching(mine, candidates);
     }
@@ -109,9 +114,11 @@ export class SimilarBuildFinder {
 
     // The Publications of `all` worth comparing with the build `documentId`:
     // one per content hash, newest first, none by `builderIds` or in its
-    // family, and none published after `notAfter` or at or after `before`.
-    _eligible(all, { documentId, parentDocumentId, builderIds, notAfter = Infinity, before = Infinity }) {
+    // family, and none published after `notAfter` or at or after `before`;
+    // with `onlyBy`, only those published by one of its identities.
+    _eligible(all, { documentId, parentDocumentId, builderIds, notAfter = Infinity, before = Infinity, onlyBy = null }) {
         const builders = new Set(builderIds.filter(Boolean));
+        const publishers = Array.isArray(onlyBy) ? new Set(onlyBy.filter(Boolean)) : null;
         const family = remixFamilyIds(documentId, parentDocumentId, all);
         const seen = new Set();
         const candidates = [];
@@ -120,6 +127,7 @@ export class SimilarBuildFinder {
             if (!hash || seen.has(hash)) continue;
             seen.add(hash);
             if (family.has(publication.documentId)) continue;
+            if (publishers && !publishers.has(publication.publisherIdentity?.id)) continue;
             if (builders.has(publication.publisherIdentity?.id) || (publication.builtWith || []).some((entry) => builders.has(entry?.identityId))) continue;
             const time = publishedTime(publication);
             if (time > notAfter || time >= before) continue;
