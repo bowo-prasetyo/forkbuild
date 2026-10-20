@@ -7969,3 +7969,34 @@ button is the header's own.
   box notice through no name, locked and unlocked), `HeaderNameBrowser` (Unlock beside a refusal opens the header's
   prompt; Walk with me with a locked name asks for its passphrase).
 - Not done: a document begun while locked still records no author; the My Identities page keeps saying "identity".
+
+
+## A build's page lists similar builds published earlier (unnumbered, 2026-10-20)
+
+**A builder had no way to find a copy of their build.** Publish now points out a build that looks like someone
+else's, but only to the person publishing it, who can publish anyway; the builder whose house was rebuilt under
+another name was never told, and a visitor couldn't see where a build might have come from. Pillar served: every
+build has a family tree, and your work is yours (credit travels with the work). How a player notices: a build's page,
+under its family tree, lists **Similar builds published earlier**: builds by other people, published before it, that
+look a lot like it, among those this device has seen, each with its builder, how much is the same and when it was
+published, and a plain note that looking alike doesn't mean anyone copied. A builder who opens a look-alike's page
+finds their own build listed there when it came first.
+
+- application/publication/SimilarBuildFinder.js: `findEarlier(publication)` compares the build a Publication signed,
+  every brick of it (only the builder's device knows which bricks were placed or ready-made), with builds published
+  strictly before it by its signed `publishedAt`, leaving out the identity that signed it and those credited under
+  Built with (whoever is looking, so a builder sees their own build on a copy's page). Both it and `find()` now share
+  one candidate filter, and both leave out the whole remix family, every build connected through
+  `parentDocumentId` however distant, where `find()` left out only the original, the remixes and their siblings.
+- ui/components/remix/SimilarEarlierBuilds.js (new) in ui/views/PublicationLinkView.js, under RemixFamilyTree: found
+  after the build opens; nothing alike, or a failed look, shows no section. A title opens where the Repository would
+  open it; a builder's name links to their page only when the Publication's signature checks out. New
+  `similarEarlier.*` messages in every language.
+- docs/user/04 ("Similar builds published earlier") in every language, and docs/Architecture.md.
+- Tests: `SimilarBuildFinder` (the whole remix family left out; a page lists the earlier look-alike, the viewer's own
+  builds included; nothing later; its own builder's and Built with's left out; no date, bytes not here, too small),
+  `PublicationLinkViewBrowser` (the section under the family tree with title, builder, percentage, date and the note,
+  through the real finder; only the earlier copy listed; nothing alike or a failed look shows nothing).
+- Not done: World View's About this build panel and the Repository's cards don't list look-alikes; a builder isn't
+  notified when a look-alike of their build arrives; every brick counts on a page, so two builds started from the same
+  ready-made structure can be listed (the note says so); only builds whose bytes are on this device are compared.

@@ -19,6 +19,7 @@ import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { License, LicenseId } from '../core/License.js';
 import { EditorEntryReason } from '../core/EditorEntryContext.js';
+import { SimilarBuildFinder } from '../application/publication/SimilarBuildFinder.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { t } from '../ui/i18n/i18n.js';
 import { assert } from './support/Assert.js';
@@ -80,7 +81,7 @@ function remixOf(documentId, remixDocumentId, id, publishedAt) {
 
 // Mounts the view on `#/s/<payload>`, opening the link with a stand-in for
 // ui/main.js's openPublicationLink that has already checked it.
-async function mount({ publication, contentStore, discovery = new DecentralizedPublicationDiscoveryProvider(), outcome = OpenPublicationLinkOutcome.OPENED }) {
+async function mount({ publication, contentStore, discovery = new DecentralizedPublicationDiscoveryProvider(), outcome = OpenPublicationLinkOutcome.OPENED, similarBuildFinder = null }) {
     const payload = await encodePublicationLinkPayload({ claim: publication.toJSON(), snapshotText: await contentStore.get(publication.contentReference) });
     const counted = [];
     const router = createRouter({
@@ -108,6 +109,7 @@ async function mount({ publication, contentStore, discovery = new DecentralizedP
     app.provide('publicationContentStore', contentStore);
     app.provide('decentralizedPublicationDiscoveryProvider', discovery);
     app.provide('funnelEventCounter', { openedSharedLink: (documentId) => counted.push(documentId) });
+    if (similarBuildFinder) app.provide('similarBuildFinder', similarBuildFinder);
     app.mount(host);
     await nextTick();
     return { host, router, counted, unmount: () => { app.unmount(); host.remove(); } };
@@ -283,4 +285,66 @@ const text = (host, selector) => host.querySelector(selector)?.textContent.trim(
         app.unmount();
         host.remove();
     }
+}
+
+// Under the family tree, builds by other people published before this one that
+// look a lot like it (application/publication/SimilarBuildFinder.js), with the
+// plain word that looking alike doesn't mean anyone copied.
+{
+    const castle = publishCastle({ remix: false });
+    // The same castle, moved, published by dora before alice's, and by zed after.
+    function copyOf(documentId, author, publishedAt) {
+        const world = new World();
+        const building = new Building({ creator: author });
+        for (const brick of ShowcaseLibrary.structures.find((s) => s.id === 'showcase:castle').bricks) {
+            building.addBrick(new Brick({ definitionId: brick.definitionId, position: { x: brick.position.x + 7, y: brick.position.y, z: brick.position.z - 3 }, rotation: brick.rotation, color: brick.color }));
+        }
+        world.addBuilding(building);
+        const reference = castle.contentStore.put(JSON.stringify(new Document({ world, metadata: new DocumentMetadata({ title: `${author}'s castle`, author }) }).toJSON()));
+        return new Publication({
+            id: `pub-${documentId}`, documentId, title: `${author}'s castle`, author, providerId: 'local', publishedAt,
+            contentHash: reference.hash, contentReference: reference, publisherIdentity: { id: `did:key:${author}` }
+        });
+    }
+    const discovery = new DecentralizedPublicationDiscoveryProvider();
+    discovery.add(copyOf('doc-dora-castle', 'dora', '2026-01-02T00:00:00Z'));
+    discovery.add(copyOf('doc-zed-castle', 'zed', '2099-01-01T00:00:00Z'));
+    const finder = new SimilarBuildFinder({ listPublications: () => discovery.list(), contentStore: castle.contentStore });
+    const view = await mount({ ...castle, discovery, similarBuildFinder: finder });
+    try {
+        await until(() => view.host.querySelector('.similar-earlier'), 'the similar builds published earlier');
+        assert(text(view.host, '.similar-earlier-title') === t('similarEarlier.title'), 'it has its own heading');
+        const builds = [...view.host.querySelectorAll('.similar-earlier-build')];
+        assert(builds.length === 1, `only the build published before it is listed (${builds.length})`);
+        assert(builds[0].querySelector('.similar-earlier-name').textContent.replace(/\s+/g, ' ').trim() === t('similarEarlier.byAuthor', { title: 'dora\'s castle', author: 'dora' }),
+            `with its title and maker (${builds[0].textContent})`);
+        assert(builds[0].querySelector('a.similar-earlier-link').getAttribute('href').includes('/world/doc-dora-castle'), 'opening where the Repository would open it');
+        assert(!builds[0].querySelector('a.similar-earlier-author'), 'a maker whose signature doesn\'t check out isn\'t linked to a page');
+        assert(text(builds[0], '.similar-earlier-detail').startsWith(t('similarEarlier.percent', { percent: 100 })), `how alike, and when it was published (${text(builds[0], '.similar-earlier-detail')})`);
+        assert(text(view.host, '.similar-earlier-note') === t('similarEarlier.note'), 'and that looking alike doesn\'t mean anyone copied');
+        const tree = view.host.querySelector('.remix-family');
+        assert(!tree || (tree.compareDocumentPosition(view.host.querySelector('.similar-earlier')) & Node.DOCUMENT_POSITION_FOLLOWING), 'under the family tree');
+        console.log('✓ a build\'s page lists builds published earlier that look like it');
+    } finally {
+        view.unmount();
+    }
+
+    const failing = await mount({ ...castle, discovery, similarBuildFinder: { findEarlier: async () => { throw new Error('storage blocked'); } } });
+    try {
+        await until(() => failing.host.querySelector('.shared-build-view'), 'the arrival screen');
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        assert(!failing.host.querySelector('.similar-earlier'), 'a failed look shows nothing');
+        assert(text(failing.host, '.shared-build-title') === 'Castle on the hill', 'and the build shows as always');
+    } finally {
+        failing.unmount();
+    }
+    const none = await mount({ ...castle, similarBuildFinder: { findEarlier: async () => [] } });
+    try {
+        await until(() => none.host.querySelector('.shared-build-view'), 'the arrival screen');
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        assert(!none.host.querySelector('.similar-earlier'), 'with nothing alike, there is no section');
+    } finally {
+        none.unmount();
+    }
+    console.log('✓ nothing alike, or a failed look, shows no section');
 }

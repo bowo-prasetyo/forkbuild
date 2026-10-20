@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 5d7f32b274cd71e9 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 0696773bd0742d8b -->
 # 04 — Publicar y remezclar
 
 <!-- languages -->
@@ -469,10 +469,10 @@ Qué compara y qué no puede saber:
 - Un bloque cuenta como igual cuando es el mismo tipo de bloque en el mismo
   lugar, aunque toda su construcción esté en otro sitio o girada un cuarto
   de vuelta. Los colores, y hacia dónde mira cada bloque, no cuentan.
-- Se dejan fuera sus propias construcciones, la construcción de la que la
-  suya es una remezcla, las remezclas de la suya, otras remezclas de la
-  misma construcción y las construcciones publicadas después de que la suya
-  se publicara por primera vez.
+- Se dejan fuera sus propias construcciones, todas las del árbol
+  genealógico de la suya (de la que es una remezcla, sus remezclas y
+  cualquier otra remezcla de la misma familia) y las construcciones
+  publicadas después de que la suya se publicara por primera vez.
 - Solo conoce las construcciones que este dispositivo ha visto, así que no
   encontrar nada no significa que nadie haya construido algo parecido. Es
   una pista, no un juicio: las construcciones pueden parecerse por
@@ -891,6 +891,32 @@ ella, hasta donde sabe este dispositivo. La página del desafío muestra uno
 por cada cadena de participaciones. Cada construcción del árbol nombra a su
 autor y a los amigos que la construyeron con él; su título abre la
 construcción, y cada nombre abre la página de esa persona.
+
+### Construcciones parecidas publicadas antes
+
+Bajo el árbol genealógico, la página de una construcción enumera
+construcciones de otras personas que se publicaron antes que ella y se le
+parecen mucho, entre las que este dispositivo ha visto: el título y el autor
+de cada una, cuánto de ella es igual y cuándo se publicó. Así puede
+encontrar una copia de su construcción: abra la página de la copia y, si la
+suya se publicó antes y se le parece, aparecerá ahí. Las construcciones se
+comparan como al publicar (vea
+[Cuando su construcción se parece a la de otra persona](#cuando-su-construcción-se-parece-a-la-de-otra-persona)),
+salvo que cuenta cada bloque, ya que solo el dispositivo de quien construye
+sabe qué bloques colocó.
+
+Se dejan fuera las construcciones de quien la construyó (y de quienes la
+construyeron con esa persona), todo el árbol genealógico y las
+construcciones publicadas después. «Antes» se basa en la fecha con la que se
+firmó cada construcción al publicarse.
+
+Las construcciones pueden parecerse por casualidad o por haber empezado con
+la misma estructura ya hecha, así que una construcción en esta lista no
+significa que nadie haya copiado. Si cree que alguien ha usado su
+construcción de una forma que su licencia no permite, vea
+[Cuando alguien usa su construcción de una forma que su licencia no permite](#cuando-alguien-usa-su-construcción-de-una-forma-que-su-licencia-no-permite).
+Si este dispositivo no ha visto ninguna construcción así, no aparece nada,
+lo que no significa que no las haya.
 
 ## Un ciclo creativo típico
 

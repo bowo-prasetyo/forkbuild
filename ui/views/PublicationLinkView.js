@@ -13,6 +13,7 @@ import { License } from '../../core/License.js';
 import { EditorEntryContext, EditorEntryReason, editorEntryContextToQuery } from '../../core/EditorEntryContext.js';
 import { remixCountText, remixedFromText } from '../components/remix/remixText.js';
 import RemixFamilyTree from '../components/remix/RemixFamilyTree.js';
+import SimilarEarlierBuilds from '../components/remix/SimilarEarlierBuilds.js';
 import { builtWithNames, builderRoute } from '../components/remix/builtWithText.js';
 import BuiltWithNames from '../components/remix/BuiltWithNames.js';
 import I18nText from '../i18n/I18nText.js';
@@ -48,10 +49,12 @@ const NOTE_NOT_FOUND = 'note-not-found';
 // (core/RemixLineage.js), and one main action: Edit a Copy, which needs no
 // account and opens it in the Editor as the visitor's own. Walking around it
 // in World View is the second. A build whose license allows no copies says
-// so, and offers only the walk.
+// so, and offers only the walk. Under its family tree, builds by other people
+// published before it that look a lot like it, found after it opens
+// (SimilarEarlierBuilds).
 export default {
     name: 'PublicationLinkView',
-    components: { BuildTurntable, RemixFamilyTree, BuiltWithNames, I18nText },
+    components: { BuildTurntable, RemixFamilyTree, SimilarEarlierBuilds, BuiltWithNames, I18nText },
     setup() {
         const route = useRoute();
         const router = useRouter();
@@ -60,6 +63,7 @@ export default {
         const funnel = inject('funnelEventCounter', null);
         const contentStore = inject('publicationContentStore', null);
         const networkPublicationLocatorStore = inject('networkPublicationLocatorStore', null);
+        const similarBuildFinder = inject('similarBuildFinder', null);
         const { discoveryProvider } = new CreateDiscoveryUseCase().execute({
             decentralizedDiscoveryProvider: inject('decentralizedPublicationDiscoveryProvider', null)
         });
@@ -68,6 +72,7 @@ export default {
         const publication = ref(null);
         // The build as opened: what the arrival screen shows.
         const arrived = ref(null);
+        const similarEarlier = ref([]);
         const payload = typeof route.params.payload === 'string' ? route.params.payload : null;
         // A short link's id is the Publication's (its note's `d` tag).
         const notePublicationId = typeof route.params.noteId === 'string' && isNoteLinkPublicationId(route.params.noteId)
@@ -145,6 +150,7 @@ export default {
                 const bricks = await readSharedBuildBricks({ publication: result.publication, contentStore });
                 arrived.value = Object.freeze({ ...arrival, bricks });
                 state.value = 'arrived';
+                findSimilarEarlier(result.publication);
                 return;
             }
             publication.value = result.publication
@@ -173,6 +179,19 @@ export default {
                 last = opened;
             }
             return last || { outcome: NOTE_NOT_FOUND, message: t('publicationLink.noteNotFound'), publication: null };
+        }
+
+        // Shown when found; a failed look shows nothing.
+        async function findSimilarEarlier(opened) {
+            similarEarlier.value = [];
+            if (!similarBuildFinder) return;
+            let found = [];
+            try {
+                found = await similarBuildFinder.findEarlier(opened);
+            } catch {
+                found = [];
+            }
+            if (arrived.value?.publication?.id === opened.id) similarEarlier.value = found;
         }
 
         // The bricks the turntable draws: the build's own, read when it opened.
@@ -239,6 +258,10 @@ export default {
             return exploreRouteFor(member.publication, networkPublicationLocatorStore);
         }
 
+        function similarRoute(publication) {
+            return publication ? exploreRouteFor(publication, networkPublicationLocatorStore) : null;
+        }
+
         function walkAround() {
             if (arrived.value) router.push({ path: `/world/${arrived.value.documentId}` });
         }
@@ -247,7 +270,7 @@ export default {
 
         return {
             t, state, message, publication, arrived, label, network, open, buildBricks, showTurntable, editCopy, walkAround,
-            downloadModel, modelMessage, modelFormats: BUILD_MODEL_FORMATS, familyRoute
+            downloadModel, modelMessage, modelFormats: BUILD_MODEL_FORMATS, familyRoute, similarEarlier, similarRoute
         };
     },
     template: `
@@ -279,6 +302,7 @@ export default {
                     <p v-else class="shared-build-hint">{{ t('publicationLink.noRemix') }}</p>
                     <p class="shared-build-license">{{ t('publicationLink.license', { license: arrived.licenseLabel }) }}</p>
                     <RemixFamilyTree :family="arrived.family" :route-for="familyRoute" heading="h2" />
+                    <SimilarEarlierBuilds :matches="similarEarlier" :route-for="similarRoute" heading="h2" />
                     <p v-if="arrived.remixAllowed" class="shared-build-model">
                         {{ t('modelExport.sharedLead') }}
                         <template v-for="(format, index) in modelFormats" :key="format">

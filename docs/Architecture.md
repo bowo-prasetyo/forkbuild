@@ -406,8 +406,15 @@ position, the two builds lined up over four quarter turns by offsets voted
 for by pairs of same-kind bricks, scored as shared over all distinct
 bricks. Only the builder's own bricks (core/PlacedBricks.js
 `placedBricks()`) count on their side; their own identities' builds, the
-remix family, and builds published after this one's first Publication are
-left out; it gives up after a time budget, and nothing is sent or stored.
+whole remix family (every build connected through `parentDocumentId`, not
+cut off where core/RemixFamily.js stops drawing), and builds published after
+this one's first Publication are left out; it gives up after a time budget,
+and nothing is sent or stored. A build's page (PublicationLinkView) asks the
+same finder's `findEarlier()` for builds published before it that look like
+it and lists them under its family tree
+(ui/components/remix/SimilarEarlierBuilds.js): there every brick counts,
+the builder is the identity that signed the Publication (and Built with),
+whoever is looking, and "before" is the signed `publishedAt`.
 It is a hint like core/BlueprintSimilarity.js ("Similarity Is Evidence; It
 Never Becomes Lineage"), never a finding of copying. Build here in World View
 opens `/editor?plot=<world>&x=&y=&z=`: the Editor starts a new build and

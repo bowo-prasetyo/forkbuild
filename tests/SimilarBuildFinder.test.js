@@ -189,6 +189,50 @@ async function run() {
     }
     console.log('✓ time, caching and failures');
 
+    {
+        const { contentStore, publications, finder } = setUp();
+        // A whole family: an original, its remix, a remix of that, and a
+        // cousin through another remix of the original.
+        const mine = documentOf(cottageBricks(), { id: 'mine', authorIdentityId: 'me', parentDocumentId: 'child' });
+        publications.push(
+            published(contentStore, documentOf(cottageBricks(), { id: 'root' }), { identityId: 'alice' }),
+            published(contentStore, documentOf(cottageBricks(), { id: 'child', parentDocumentId: 'root' }), { identityId: 'bob' }),
+            published(contentStore, documentOf(cottageBricks(), { id: 'uncle', parentDocumentId: 'root' }), { identityId: 'carol' }),
+            published(contentStore, documentOf(cottageBricks(), { id: 'cousin', parentDocumentId: 'uncle' }), { identityId: 'dave' }),
+            published(contentStore, documentOf(cottageBricks(), { id: 'grandchild', parentDocumentId: 'mine' }), { identityId: 'erin' })
+        );
+        assert((await finder().find(mine)).length === 0, '19. every build in the remix family, however distant, is left out');
+    }
+    console.log('✓ the whole remix family left out');
+
+    {
+        const { contentStore, publications, finder } = setUp();
+        const original = published(contentStore, documentOf(cottageBricks({ dx: 4 }), { id: 'original', title: 'Original' }), { identityId: 'alice', publishedAt: '2026-10-01T00:00:00Z' });
+        const copy = published(contentStore, documentOf(cottageBricks(), { id: 'copy', title: 'Copy' }), { identityId: 'mallory', publishedAt: '2026-10-05T00:00:00Z' });
+        const later = published(contentStore, documentOf(cottageBricks(), { id: 'later' }), { identityId: 'zoe', publishedAt: '2026-10-09T00:00:00Z' });
+        const sameBuilder = published(contentStore, documentOf(cottageBricks(), { id: 'mallory-older' }), { identityId: 'mallory', publishedAt: '2026-09-01T00:00:00Z' });
+        const credited = published(contentStore, documentOf(cottageBricks(), { id: 'helped' }), { identityId: 'yan', publishedAt: '2026-09-02T00:00:00Z', builtWith: [{ name: 'mallory', identityId: 'mallory' }] });
+        publications.push(original, copy, later, sameBuilder, credited);
+
+        // The viewer is alice, the original's builder: her own build is
+        // listed on the copy's page all the same.
+        const found = await finder({ ownIdentityIds: () => ['alice'] }).findEarlier(copy);
+        assert(found.length === 1 && found[0].publication === original, `20. a build's page lists the build published before it that looks like it (got ${found.map((f) => f.publication.documentId).join(', ')})`);
+        assert(found[0].evidence.similarity === 1, '21. with how alike they are');
+        const beforeOriginal = (await finder().findEarlier(original)).map((f) => f.publication.documentId).sort().join();
+        assert(beforeOriginal === 'helped,mallory-older', `22. only builds published before it are listed, never later ones (got ${beforeOriginal})`);
+        assert((await finder({ limit: 10 }).findEarlier(later)).map((f) => f.publication.documentId).sort().join() === 'copy,helped,mallory-older,original',
+            '23. a later build lists every earlier look-alike, its own builder\'s excepted');
+
+        const undated = new Publication({ ...copy.toJSON(), id: 'undated', publishedAt: 'not a date' });
+        assert((await finder().findEarlier(undated)).length === 0, '24. a build with no date has nothing earlier');
+        const absent = published(contentStore, documentOf(cottageBricks(), { id: 'absent' }), { identityId: 'quinn', publishedAt: '2026-10-07T00:00:00Z', onDevice: false });
+        assert((await finder().findEarlier(absent)).length === 0, '25. a build whose bytes aren\'t on this device is not compared');
+        const small = published(contentStore, documentOf(cottageBricks().slice(0, 12), { id: 'small' }), { identityId: 'quinn', publishedAt: '2026-10-07T00:00:00Z' });
+        assert((await finder().findEarlier(small)).length === 0, '26. nor is one too small to tell');
+    }
+    console.log('✓ a build\'s page: builds published earlier that look like it');
+
     console.log('✅ All similar build finder tests passed.');
 }
 

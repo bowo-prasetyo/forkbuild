@@ -428,6 +428,43 @@
     opacity: 0.7;
 }
 
+/* A build page's look-alikes published before it
+   (ui/components/remix/SimilarEarlierBuilds.js), under its family tree. */
+.similar-earlier {
+    margin: 1rem 0;
+    font-size: 0.9rem;
+}
+
+.similar-earlier-title {
+    margin: 0 0 0.4rem;
+    font-size: 1rem;
+}
+
+.similar-earlier-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.similar-earlier-build {
+    display: flex;
+    flex-direction: column;
+    padding: 0.2rem 0;
+    overflow-wrap: anywhere;
+}
+
+.similar-earlier-detail {
+    font-size: 0.82rem;
+    color: var(--ink-muted);
+}
+
+.similar-earlier-note {
+    margin: 0.4rem 0 0;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    color: var(--ink-subtle);
+}
+
 /* The app's example remix families (ui/components/featured/CollectionFamilies.js),
    side by side in the Repository's ready-made shelf and on an empty challenge week. */
 .collection-families {

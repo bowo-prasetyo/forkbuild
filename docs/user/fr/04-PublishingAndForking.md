@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 5d7f32b274cd71e9 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 0696773bd0742d8b -->
 # 04 — Publier et remixer
 
 <!-- languages -->
@@ -489,9 +489,10 @@ Ce qui est comparé, et ce qu’il ne peut pas savoir :
   même endroit, même si toute votre construction se trouve ailleurs ou est
   tournée d’un quart de tour. Les couleurs, et l’orientation de chaque
   brique, ne comptent pas.
-- Vos propres constructions, celle dont la vôtre est un remix, les remix de
-  la vôtre, les autres remix de la même construction et les constructions
-  publiées après la première publication de la vôtre sont laissés de côté.
+- Vos propres constructions, toutes celles de l’arbre généalogique de la
+  vôtre (celle dont elle est un remix, ses remix et tout autre remix de la
+  même famille) et les constructions publiées après la première
+  publication de la vôtre sont laissés de côté.
 - Il ne connaît que les constructions que cet appareil a vues : ne rien
   trouver ne veut donc pas dire que personne n’a rien construit de
   semblable. C’est une indication, pas un jugement : des constructions
@@ -914,6 +915,32 @@ ont été faits, pour autant que cet appareil les connaisse. La page du défi
 en montre un pour chaque chaîne de participations. Chaque construction de
 l’arbre nomme son auteur et les amis qui l’ont construite avec lui ; son
 titre ouvre la construction, et chaque nom la page de cette personne.
+
+### Constructions semblables publiées avant
+
+Sous l’arbre généalogique, la page d’une construction liste les
+constructions d’autres personnes publiées avant elle qui lui ressemblent
+beaucoup, parmi celles que cet appareil a vues : pour chacune, son titre et
+son auteur, la part identique et la date de publication. C’est ainsi que
+vous pouvez trouver une copie de votre construction : ouvrez la page de la
+copie, et si la vôtre a été publiée avant et lui ressemble, elle y est
+listée. Les constructions sont comparées comme à la publication (voir
+[Quand votre construction ressemble à celle de quelqu’un d’autre](#quand-votre-construction-ressemble-à-celle-de-quelquun-dautre)),
+sauf que chaque brique compte, puisque seul l’appareil de son auteur sait
+quelles briques il a placées lui-même.
+
+Sont laissés de côté les constructions du même auteur (et de ceux qui l’ont
+construite avec lui), tout l’arbre généalogique et les constructions
+publiées après. « Avant » se fonde sur la date avec laquelle chaque
+construction a été signée à sa publication.
+
+Des constructions peuvent se ressembler par hasard, ou parce qu’elles sont
+parties de la même structure toute faite : une construction listée ici ne
+veut donc pas dire que quelqu’un a copié. Si vous pensez que quelqu’un a
+utilisé votre construction d’une façon que sa licence ne permet pas, voir
+[Quand quelqu’un utilise votre construction d’une façon que sa licence ne permet pas](#quand-quelquun-utilise-votre-construction-dune-façon-que-sa-licence-ne-permet-pas).
+Rien n’est listé quand cet appareil n’a vu aucune construction de ce genre,
+ce qui ne veut pas dire qu’il n’y en a pas.
 
 ## Une boucle créative typique
 
