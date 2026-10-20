@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: fb0dd38e1538e747 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ed04e9dc0ae7ffa3 -->
 # 04 — Penerbitan & Remix
 
 <!-- languages -->
@@ -468,7 +468,9 @@ Apa yang dibandingkan, dan apa yang tidak bisa diketahuinya:
 
 - Hanya balok yang Anda letakkan sendiri yang dihitung, jadi dua bangunan
   yang dimulai dari rumah siap pakai yang sama tidak dianggap mirip karena
-  itu. Bangunan dengan kurang dari 20 balok milik Anda sendiri tidak
+  itu. Struktur siap pakai dari Pustaka Bangunan juga tidak dihitung, di
+  kedua sisi, di mana pun letaknya dan bagaimanapun diputarnya. Bangunan
+  dengan kurang dari 20 balok milik Anda sendiri tidak
   dibandingkan: bangunan kecil terlalu mudah terlihat mirip.
 - Sebuah balok dianggap sama jika jenisnya sama dan berada di tempat yang
   sama, meskipun seluruh bangunan Anda berdiri di tempat lain atau diputar
@@ -902,16 +904,18 @@ bangunan Anda: buka halaman salinan itu, dan jika bangunan Anda diterbitkan
 lebih dulu dan mirip dengannya, bangunan Anda tercantum di sana. Bangunan
 dibandingkan seperti saat menerbitkan (lihat
 [Jika bangunan Anda mirip dengan bangunan orang lain](#jika-bangunan-anda-mirip-dengan-bangunan-orang-lain)),
-hanya saja setiap balok dihitung, karena hanya perangkat pembuatnya yang
-tahu balok mana yang ia letakkan sendiri.
+hanya saja setiap balok dihitung kecuali yang menjadi bagian dari struktur
+siap pakai utuh dari Pustaka Bangunan, karena hanya perangkat pembuatnya
+yang tahu balok mana yang ia letakkan sendiri.
 
 Tidak diikutkan: bangunan dari pembuat yang sama (dan siapa pun yang
 membangunnya bersama dia), seluruh silsilah, dan bangunan yang diterbitkan
 sesudahnya. "Sebelum" mengikuti tanggal yang ditandatangani tiap bangunan
 saat diterbitkan.
 
-Bangunan bisa mirip secara kebetulan atau karena dimulai dari struktur siap
-pakai yang sama, jadi bangunan yang tercantum di sini tidak berarti ada yang
+Bangunan bisa mirip secara kebetulan atau karena mengubah struktur siap
+pakai yang sama dengan cara yang mirip, jadi bangunan yang tercantum di sini
+tidak berarti ada yang
 menyalin. Jika Anda merasa seseorang memakai bangunan Anda dengan cara yang
 tidak diizinkan lisensinya, lihat
 [Jika seseorang memakai bangunan Anda dengan cara yang tidak diizinkan lisensinya](#jika-seseorang-memakai-bangunan-anda-dengan-cara-yang-tidak-diizinkan-lisensinya).
@@ -929,6 +933,13 @@ menampilkannya jika Anda menyalakan
 [Notifikasi di perangkat ini](03-WorldView.md#notifikasi-di-perangkat-ini)).
 Remix dari bangunan Anda tidak dihitung di sini: remix mencantumkan nama
 Anda dan punya [notifikasinya sendiri](#jumlah-remix).
+
+Pada bangunan yang Anda terbitkan dari perangkat ini, dan hanya di sana,
+kartu Anda di **Jelajahi** juga menyebut berapa banyak bangunan orang lain,
+yang diterbitkan setelah milik Anda, yang sangat mirip dengannya
+(**2 bangunan yang diterbitkan setelah milik Anda mirip dengannya**); klik
+untuk melihatnya. Hanya Anda yang melihat ini: tidak ada kartu milik orang
+lain yang ditandai di daftar yang dijelajahi semua orang.
 
 ## Alur kreatif yang umum
 

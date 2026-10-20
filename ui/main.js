@@ -625,9 +625,20 @@ const similarBuildFinder = new SimilarBuildFinder({
         decentralizedPublicationDiscoveryProvider
     ]).list(),
     contentStore: publicationContentStore,
-    ownIdentityIds: () => ownIdentityIdsOf(identityProvider)
+    ownIdentityIds: () => ownIdentityIdsOf(identityProvider),
+    // The Build Library's structures, whose bricks don't make builds look alike.
+    readyMadeStructures: async () => {
+        const { CreateStructureRegistryUseCase } = await import('../application/editor/CreateStructureRegistryUseCase.js');
+        return new CreateStructureRegistryUseCase().execute().getAll();
+    }
 });
 app.provide('similarBuildFinder', similarBuildFinder);
+// Whether this device published `publication` itself: its own card in Explore
+// lists the look-alikes published after it.
+app.provide('isOwnPublication', (publication) => {
+    const own = publication?.id ? new LocalDiscoveryProvider(new LocalStorageProvider()).findById(publication.id) : null;
+    return Boolean(own && own.contentHash && own.contentHash === publication.contentHash);
+});
 // A build admitted here that looks like one of the signed-in identity's own,
 // published before it, goes to the 🔔, as a remix of theirs does.
 const lookAlikeBuildNotifier = new LookAlikeBuildNotifier({

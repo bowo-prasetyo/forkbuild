@@ -210,6 +210,8 @@ export default Object.freeze({
     'similarEarlier.percent': 'Identique à {percent} %',
     'similarEarlier.detail': 'Identique à {percent} % · publiée le {date}',
     'similarEarlier.note': 'Des constructions d’autres personnes, publiées avant celle-ci, qui lui ressemblent beaucoup, parmi celles que cet appareil a vues. Des constructions peuvent se ressembler par hasard ou parce qu’elles sont parties de la même structure toute faite : cela ne veut donc pas dire que quelqu’un a copié.',
+    'similarLater.title': 'Constructions semblables publiées après',
+    'similarLater.note': 'Vous seul voyez ceci, sur les constructions publiées depuis cet appareil : des constructions d’autres personnes, publiées après la vôtre, qui lui ressemblent beaucoup, parmi celles que cet appareil a vues. Des constructions peuvent se ressembler par hasard : cela ne veut donc pas dire que quelqu’un a copié.',
     'remix.count': { one: 'Remixée une fois', other: 'Remixée {count} fois' },
     'remixPermission.title': 'Autoriser les autres à la remixer ?',
     'remixPermission.lead': 'Toute personne qui a votre lien peut voir votre construction. Choisissez si elle peut aussi en faire sa propre copie et la modifier.',
@@ -2483,6 +2485,7 @@ export default Object.freeze({
 
     // Publications: publicationCard.
     'publicationCard.published': '🔒 Publié',
+    'publicationCard.lookAlikes': { one: 'Une construction publiée après la vôtre lui ressemble', other: '{count} constructions publiées après la vôtre lui ressemblent' },
     'publicationCard.by': 'par {author}',
     'publicationCard.anonymous': 'anonyme',
     'publicationCard.storedOn': 'Stocké sur',

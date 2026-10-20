@@ -417,7 +417,20 @@ the builder is the identity that signed the Publication (and Built with),
 whoever is looking, and "before" is the signed `publishedAt`. World View's
 About this build shows the same list for the shown build's Publication
 (ui/views/worldView/useSimilarEarlierBuilds.js, looked up once per
-Publication shown).
+Publication shown). On both sides of every comparison, bricks that form a
+whole ready-made structure from the Build Library are taken out first
+(core/BuildSimilarity.js `withoutReadyMade()`: each structure of at least
+`MIN_READY_MADE_POINTS` distinct bricks, largest first, lined up as above
+and taken while `READY_MADE_COVERAGE` of it is there, every copy of it); the
+finder loads the structures with a dynamic import of
+CreateStructureRegistryUseCase on first use (`readyMadeStructures`), since
+the libraries aren't in the first load. An Explore card for a build this
+device published (`isOwnPublication`, provided by ui/main.js) asks
+`findLater()`, the builds published after it, and shows their count, opening
+the same list (ui/components/remix/OwnLookAlikes.js, mounted by
+PublicationCard, which itself stays the same for every build); nobody else's
+card is looked up. The
+finder answers one look at a time.
 It is a hint like core/BlueprintSimilarity.js ("Similarity Is Evidence; It
 Never Becomes Lineage"), never a finding of copying. Build here in World View
 opens `/editor?plot=<world>&x=&y=&z=`: the Editor starts a new build and

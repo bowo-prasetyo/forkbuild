@@ -1,29 +1,36 @@
 import { ContentReference } from '../../core/ContentReference.js';
 import { DocumentSerializer } from '../../serializer/DocumentSerializer.js';
 import {
-    MIN_COMPARED_BRICKS, SIMILAR_BUILD_THRESHOLD, buildShape, compareBuildShapes, isSimilarBuild, similarityUpperBound
+    MIN_COMPARED_BRICKS, SIMILAR_BUILD_THRESHOLD, buildShape, compareBuildShapes, isSimilarBuild, similarityUpperBound, withoutReadyMade
 } from '../../core/BuildSimilarity.js';
 import { placedBricks, worldBricks } from '../../core/PlacedBricks.js';
 
 // Finds published builds by other people that look a lot like a build
-// (core/BuildSimilarity.js), for two places: Publish, so it can point to Edit
-// a Copy, which credits them (find()), and a build's page, which lists the
-// builds published before it that look like it (findEarlier()), and the 🔔,
-// which tells a builder when a build like one of theirs arrives
-// (findEarlier() with `by`). It only
-// compares against builds whose bytes are already on this device: there is no
+// (core/BuildSimilarity.js), for four places: Publish, so it can point to
+// Edit a Copy, which credits them (find()); a build's page and World View,
+// which list the builds published before it that look like it
+// (findEarlier()); the 🔔, which tells a builder when a build like one of
+// theirs arrives (findEarlier() with `by`); and the builder's own cards in
+// Explore, which list the builds published after theirs (findLater()). It
+// only compares against builds whose bytes are already on this device: there is no
 // global index to ask, so finding nothing never means a build is original. It
 // never blocks anything and never records or signs anything.
 //
 // Left out, since they already credit, or are, the builder: their own builds
 // (and anyone credited under Built with), every build in the same remix
 // family (connected by `parentDocumentId`, which Edit a Copy records), and
-// builds published after the one compared.
+// builds published after the one compared. On both sides, bricks forming a
+// whole ready-made structure from the Build Library don't count
+// (core/BuildSimilarity.js#withoutReadyMade()), so builds that only share one,
+// however moved or turned, don't look alike. `readyMadeStructures` resolves to
+// those structures (each with its `bricks`); it is asked once, when first
+// needed, since the libraries aren't part of the app's first load.
 export class SimilarBuildFinder {
     constructor({
         listPublications,
         contentStore,
         ownIdentityIds = () => [],
+        readyMadeStructures = async () => [],
         documentSerializer = new DocumentSerializer(),
         threshold = SIMILAR_BUILD_THRESHOLD,
         limit = 3,
@@ -36,6 +43,8 @@ export class SimilarBuildFinder {
         this._listPublications = listPublications;
         this._contentStore = contentStore;
         this._ownIdentityIds = ownIdentityIds;
+        this._readyMadeStructures = readyMadeStructures;
+        this._readyMadeShapes = null;
         this._documentSerializer = documentSerializer;
         this._threshold = threshold;
         this._limit = limit;
@@ -45,6 +54,8 @@ export class SimilarBuildFinder {
         // Content hash -> shape: published bytes never change, so each is read
         // at most once a visit.
         this._shapes = new Map();
+        // One look at a time: Explore can ask for several cards at once.
+        this._queue = Promise.resolve();
     }
 
     // For Publish: up to `limit` { publication, evidence } for `document`, most
@@ -55,10 +66,18 @@ export class SimilarBuildFinder {
     // device are the builder's own, and so are builds published after this
     // one was first published. Stops early, with what it has, once its time
     // budget is spent.
-    async find(document, { readyMade = null } = {}) {
+    find(document, { readyMade = null } = {}) {
+        return this._serially(() => this._find(document, readyMade));
+    }
+
+    async _find(document, readyMade) {
         const world = document?.world;
         if (!world) return [];
-        const mine = buildShape(placedBricks(worldBricks(world), readyMade));
+        const placed = buildShape(placedBricks(worldBricks(world), readyMade));
+        // Taking ready-made structures out only shrinks it, so a build already
+        // too small needs no library loaded.
+        if (placed.size < MIN_COMPARED_BRICKS) return [];
+        const mine = withoutReadyMade(placed, await this._readyMade());
         if (mine.size < MIN_COMPARED_BRICKS) return [];
         const all = this._safeList();
         const firstPublished = Math.min(...all.filter((p) => p.documentId === world.id).map(publishedTime));
@@ -78,7 +97,17 @@ export class SimilarBuildFinder {
     // signed it (and those credited under Built with), whoever is looking.
     // With `by` (identity ids), only builds published by one of them are
     // compared.
-    async findEarlier(publication, { by = null } = {}) {
+    findEarlier(publication, { by = null } = {}) {
+        return this._serially(() => this._findAround(publication, { before: true, onlyBy: by }));
+    }
+
+    // For the builder's own card in Explore: as findEarlier(), but the builds
+    // published after `publication`, where a copy of it would be.
+    findLater(publication) {
+        return this._serially(() => this._findAround(publication, { before: false, onlyBy: null }));
+    }
+
+    async _findAround(publication, { before, onlyBy }) {
         const mine = await this._shapeOf(publication);
         if (!mine || mine.size < MIN_COMPARED_BRICKS) return [];
         const published = publishedTime(publication);
@@ -87,10 +116,16 @@ export class SimilarBuildFinder {
             documentId: publication.documentId,
             parentDocumentId: publication.parentDocumentId || null,
             builderIds: [publication.publisherIdentity?.id, ...(publication.builtWith || []).map((entry) => entry?.identityId)],
-            before: published,
-            onlyBy: by
+            ...(before ? { before: published } : { after: published }),
+            onlyBy
         });
         return this._matching(mine, candidates);
+    }
+
+    _serially(work) {
+        const result = this._queue.then(work);
+        this._queue = result.catch(() => {});
+        return result;
     }
 
     // Whether the build `publication` signed is on this device, as the bytes
@@ -122,9 +157,10 @@ export class SimilarBuildFinder {
 
     // The Publications of `all` worth comparing with the build `documentId`:
     // one per content hash, newest first, none by `builderIds` or in its
-    // family, and none published after `notAfter` or at or after `before`;
-    // with `onlyBy`, only those published by one of its identities.
-    _eligible(all, { documentId, parentDocumentId, builderIds, notAfter = Infinity, before = Infinity, onlyBy = null }) {
+    // family, none published after `notAfter`, at or after `before`, or at or
+    // before `after`; with `onlyBy`, only those published by one of its
+    // identities.
+    _eligible(all, { documentId, parentDocumentId, builderIds, notAfter = Infinity, before = Infinity, after = -Infinity, onlyBy = null }) {
         const builders = new Set(builderIds.filter(Boolean));
         const publishers = Array.isArray(onlyBy) ? new Set(onlyBy.filter(Boolean)) : null;
         const family = remixFamilyIds(documentId, parentDocumentId, all);
@@ -138,7 +174,7 @@ export class SimilarBuildFinder {
             if (publishers && !publishers.has(publication.publisherIdentity?.id)) continue;
             if (builders.has(publication.publisherIdentity?.id) || (publication.builtWith || []).some((entry) => builders.has(entry?.identityId))) continue;
             const time = publishedTime(publication);
-            if (time > notAfter || time >= before) continue;
+            if (time > notAfter || time >= before || time <= after) continue;
             candidates.push(publication);
         }
         return candidates
@@ -163,13 +199,25 @@ export class SimilarBuildFinder {
         let shape = null;
         try {
             if (reference.verify(bytes)) {
-                shape = buildShape(worldBricks(this._documentSerializer.deserialize(JSON.parse(bytes)).world));
+                shape = withoutReadyMade(buildShape(worldBricks(this._documentSerializer.deserialize(JSON.parse(bytes)).world)), await this._readyMade());
             }
         } catch {
             shape = null;
         }
         this._shapes.set(hash, shape);
         return shape;
+    }
+
+    // The Build Library's structures as shapes, loaded once; none when they
+    // can't be loaded, so nothing is taken out rather than nothing compared.
+    _readyMade() {
+        if (!this._readyMadeShapes) {
+            this._readyMadeShapes = Promise.resolve()
+                .then(() => this._readyMadeStructures())
+                .then((structures) => (Array.isArray(structures) ? structures : []).map((structure) => buildShape(structure?.bricks)))
+                .catch(() => []);
+        }
+        return this._readyMadeShapes;
     }
 
     _safeOwnIdentityIds() {

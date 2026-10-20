@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: fb0dd38e1538e747 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ed04e9dc0ae7ffa3 -->
 # 04 — Publicar e remixar
 
 <!-- languages -->
@@ -452,7 +452,9 @@ pergunta uma vez por visita e nunca impede você de publicar.
 O que ele compara, e o que ele não tem como saber:
 
 - Só contam os blocos que você mesmo colocou, então duas construções que
-  começaram com a mesma casa pronta não ficam parecidas por isso. Uma
+  começaram com a mesma casa pronta não ficam parecidas por isso. Também
+  não contam, de nenhum dos lados, as estruturas prontas da Biblioteca de
+  construção, estejam onde estiverem e giradas como estiverem. Uma
   construção com menos de 20 blocos seus não é comparada: construções
   pequenas se parecem fácil demais.
 - Um bloco conta como igual quando é o mesmo tipo de bloco no mesmo lugar,
@@ -881,15 +883,16 @@ sua construção: abra a página da cópia e, se a sua foi publicada antes e se
 parece com ela, a sua aparece ali. As construções são comparadas como na
 hora de publicar (veja
 [Quando a sua construção se parece com a de outra pessoa](#quando-a-sua-construção-se-parece-com-a-de-outra-pessoa)),
-só que todo bloco conta, já que só o aparelho de quem construiu sabe quais
-blocos colocou.
+só que conta todo bloco que não faz parte de uma estrutura pronta inteira
+da Biblioteca de construção, já que só o aparelho de quem construiu sabe
+quais blocos colocou.
 
 Ficam de fora as construções do mesmo autor (e de quem a construiu com
 ele), a árvore genealógica inteira e as construções publicadas depois.
 "Antes" segue a data com que cada construção foi assinada ao ser publicada.
 
-Construções podem se parecer por acaso ou por terem começado da mesma
-estrutura pronta, então uma construção nesta lista não quer dizer que
+Construções podem se parecer por acaso ou por terem mudado a mesma
+estrutura pronta de um jeito parecido, então uma construção nesta lista não quer dizer que
 alguém copiou. Se você acha que alguém usou a sua construção de um jeito que
 a licença dela não permite, veja
 [Quando alguém usa a sua construção de um jeito que a licença dela não permite](#quando-alguém-usa-a-sua-construção-de-um-jeito-que-a-licença-dela-não-permite).
@@ -905,6 +908,13 @@ cuja página lista a sua (o seu aparelho também mostra, se você ligou as
 [Notificações neste dispositivo](03-WorldView.md#notificações-neste-dispositivo)).
 Remixes das suas construções não contam aqui: eles dão crédito a você e têm
 [uma notificação própria](#contagem-de-remixes).
+
+Nas construções que você publicou deste aparelho, e só nelas, o seu cartão
+em **Explorar** também diz quantas construções de outras pessoas,
+publicadas depois da sua, se parecem muito com ela
+(**2 construções publicadas depois da sua se parecem com ela**); clique
+para vê-las. Só você vê isto: nenhum cartão de outra pessoa é marcado na
+lista que todo mundo percorre.
 
 ## Um ciclo criativo típico
 

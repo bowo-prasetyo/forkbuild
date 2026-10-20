@@ -11,7 +11,9 @@ import { builderRoute } from './builtWithText.js';
 // record either: looking alike is evidence for a person to weigh, so the
 // section says plainly that it doesn't mean anyone copied. `matches` are the
 // finder's { publication, evidence }; `routeFor(publication)` is where each
-// opens, or null.
+// opens, or null. `titleKey` and `noteKey` let the builder's own card in
+// Explore show, with the same list, the look-alikes published after theirs
+// (findLater()).
 const verifiedPublisherOf = createVerifiedPublisherResolver();
 
 export default {
@@ -20,7 +22,9 @@ export default {
     props: {
         matches: { type: Array, default: () => [] },
         routeFor: { type: Function, default: () => null },
-        heading: { type: String, default: 'h3' }
+        heading: { type: String, default: 'h3' },
+        titleKey: { type: String, default: 'similarEarlier.title' },
+        noteKey: { type: String, default: 'similarEarlier.note' }
     },
     setup() {
         function title(publication) {
@@ -45,8 +49,8 @@ export default {
         return { t, title, authorRoute, detail };
     },
     template: `
-        <section v-if="matches.length" class="similar-earlier" :aria-label="t('similarEarlier.title')">
-            <component :is="heading" class="similar-earlier-title">{{ t('similarEarlier.title') }}</component>
+        <section v-if="matches.length" class="similar-earlier" :aria-label="t(titleKey)">
+            <component :is="heading" class="similar-earlier-title">{{ t(titleKey) }}</component>
             <ul class="similar-earlier-list">
                 <li v-for="match in matches" :key="match.publication.id" class="similar-earlier-build">
                     <I18nText v-if="match.publication.author" keypath="similarEarlier.byAuthor" class="similar-earlier-name">
@@ -57,7 +61,7 @@ export default {
                     <span class="similar-earlier-detail">{{ detail(match) }}</span>
                 </li>
             </ul>
-            <p class="similar-earlier-note">{{ t('similarEarlier.note') }}</p>
+            <p class="similar-earlier-note">{{ t(noteKey) }}</p>
         </section>
     `
 };
