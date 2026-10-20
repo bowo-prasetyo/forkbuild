@@ -15,7 +15,6 @@ import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.
 import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource } from './support/SourceText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
@@ -325,27 +324,33 @@ async function run() {
     // Section G — ui/main.js composition wiring.
     // ===============================================================
     {
-        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
+        // The app's shell (ui/main.js) constructs the one provider and hands it
+        // to the network runtime (ui/main/composeNetwork.js), which rebuilds its
+        // index before providing it: every page that injects it loads the
+        // network runtime first (ui/router/pageServiceGroups.js), and Home and
+        // the header never list from it.
+        const shellSource = await readSource('ui/main.js');
+        const networkSource = await readSource('ui/main/composeNetwork.js');
 
-        assert(mainSource.includes("import { ReconstructPublicationDiscoveryUseCase } from '../application/publication/ReconstructPublicationDiscoveryUseCase.js';"),
-            '1. ui/main.js imports the production use case.');
+        assert(networkSource.includes("import { ReconstructPublicationDiscoveryUseCase } from '../../application/publication/ReconstructPublicationDiscoveryUseCase.js';"),
+            '1. the network runtime imports the production use case.');
 
-        const constructionIndex = mainSource.indexOf('const decentralizedPublicationDiscoveryProvider = new DecentralizedPublicationDiscoveryProvider();');
-        assert(constructionIndex !== -1, '2. the one provider instance this replica ever constructs is still built exactly as 0.9.607 identified.');
+        assert(shellSource.includes('const decentralizedPublicationDiscoveryProvider = new DecentralizedPublicationDiscoveryProvider();')
+            && /composeNetwork\(\{[^}]*decentralizedPublicationDiscoveryProvider/.test(shellSource)
+            && !networkSource.includes('new DecentralizedPublicationDiscoveryProvider('),
+            '2. the one provider instance this replica ever constructs is built by the shell and handed to the network runtime, never a second one.');
 
-        const wiringIndex = mainSource.indexOf('new ReconstructPublicationDiscoveryUseCase(');
-        assert(wiringIndex > constructionIndex, '3. reconstruction is wired AFTER the provider it populates is constructed.');
+        const wiringIndex = networkSource.indexOf('new ReconstructPublicationDiscoveryUseCase(');
+        assert(wiringIndex !== -1, '3. the network runtime wires reconstruction.');
 
-        const wiringWindow = mainSource.slice(constructionIndex, wiringIndex + 400);
-        assert(/await new ReconstructPublicationDiscoveryUseCase\(\s*publicationCatalog, publicationResolutionCoordinator, publicationDisplayKindPlugins, decentralizedPublicationDiscoveryProvider\s*\)\.execute\(\);/.test(wiringWindow),
+        assert(/await new ReconstructPublicationDiscoveryUseCase\(\s*publicationCatalog, publicationResolutionCoordinator, publicationDisplayKindPlugins, decentralizedPublicationDiscoveryProvider\s*\)\.execute\(\);/.test(networkSource),
             '4. reconstruction is awaited, and reuses the SAME publicationCatalog/publicationResolutionCoordinator/publicationDisplayKindPlugins this replica already composed above it — never a second catalog, resolver, or coordinator.');
 
-        const provideIndex = mainSource.indexOf("app.provide('decentralizedPublicationDiscoveryProvider', decentralizedPublicationDiscoveryProvider);");
-        const mountIndex = mainSource.indexOf("app.mount('#app');");
-        assert(wiringIndex < provideIndex && provideIndex < mountIndex,
-            '5. reconstruction runs before app.provide() hands the provider out, and well before the app mounts — the World never renders from an unreconstructed provider.');
+        const provideIndex = networkSource.indexOf("app.provide('decentralizedPublicationDiscoveryProvider', decentralizedPublicationDiscoveryProvider);");
+        assert(wiringIndex < provideIndex,
+            '5. reconstruction runs before app.provide() hands the provider out — no page renders from an unreconstructed provider.');
 
-        console.log('✓ Section G: ui/main.js wires reconstruction at exactly the seam 0.9.607 identified — right after the sole DecentralizedPublicationDiscoveryProvider instance is constructed, reusing the app\'s existing catalog/coordinator/kindPlugins, awaited before app.provide() and app.mount().');
+        console.log('✓ Section G: the network runtime wires reconstruction of the sole DecentralizedPublicationDiscoveryProvider the shell constructs, reusing the app\'s existing catalog/coordinator/kindPlugins, awaited before app.provide() hands it to any page.');
     }
 
     console.log('\nAll Reconstruct Publication Discovery Use Case tests passed.');

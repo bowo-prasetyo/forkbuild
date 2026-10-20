@@ -656,13 +656,13 @@ async function run() {
     // ===============================================================
     {
         const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
-        assert(mainSource.includes("import { PublicationCommentaryArweaveDistribution } from '../application/publication/commentary/PublicationCommentaryArweaveDistribution.js';")
-            && mainSource.includes("import { DiscoverPublicationCommentaryFromArweaveUseCase } from '../application/publication/commentary/DiscoverPublicationCommentaryFromArweaveUseCase.js';"),
-            n('ui/main.js imports both new classes'));
+        assert(mainSource.includes("import { PublicationCommentaryArweaveDistribution } from '../../application/publication/commentary/PublicationCommentaryArweaveDistribution.js';")
+            && mainSource.includes("import { DiscoverPublicationCommentaryFromArweaveUseCase } from '../../application/publication/commentary/DiscoverPublicationCommentaryFromArweaveUseCase.js';"),
+            n('the network runtime (ui/main/composeNetwork.js) imports both new classes'));
 
         const constructionSites = grepFiles('new PublicationCommentaryArweaveDistribution\\(', ['ui', 'application']);
-        assert(constructionSites.length === 1 && constructionSites[0].endsWith('ui/main.js'),
-            n('ui/main.js is the one and only production construction site for PublicationCommentaryArweaveDistribution'));
+        assert(constructionSites.length === 1 && constructionSites[0].endsWith('ui/main/composeNetwork.js'),
+            n('the network runtime (ui/main/composeNetwork.js) is the one and only production construction site for PublicationCommentaryArweaveDistribution'));
 
         assert(mainSource.includes('signer: arweaveHostSigner,') && mainSource.includes('gatewayUrl: resolvedArweaveGatewayUrl'),
             n('the Arweave Commentary distribution instance reuses the SAME arweaveHostSigner/resolvedArweaveGatewayUrl bindings every other Arweave capability in this file already reuses — no second signer/gateway resolution'));

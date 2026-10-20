@@ -35,10 +35,12 @@ repository (its source, `docs/`, `tests/`) is not published: the app links
 to the documentation on GitHub. `npm run test:bundle` fails if a page asks
 for a file the site left out.
 
-- The first load is about 120 minified files instead of about 750 modules;
+- The first load is about 70 minified files instead of about 250 modules;
   every page, service group, translation (English too: each visitor
   downloads only their own language) and the thumbnail renderer is still
-  its own file, loaded when first needed. `npm run test:bundle` holds the
+  its own file, loaded when first needed. So is the network runtime
+  (peers, publications, World discovery, Steem and Blurt), loaded once
+  Home is on screen. `npm run test:bundle` holds the
   first load to a budget.
 - Bare imports resolve through `index.html`'s import map, so the bundle runs
   the same vendored files, with one exception: the components' templates are

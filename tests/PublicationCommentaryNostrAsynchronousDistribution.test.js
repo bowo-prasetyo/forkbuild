@@ -428,12 +428,12 @@ async function run() {
         assert(distributionSites.length === 1 && distributionSites[0].includes('NostrMultiRelayPublicationCommentaryDistribution.js'),
             n(`exactly one production file constructs PublicationCommentaryNostrDistribution — application/nostr/NostrMultiRelayPublicationCommentaryDistribution.js — found: ${distributionSites.join(', ') || 'none'}`));
         const multiRelayConstructionSites = grepFiles('new NostrMultiRelayPublicationCommentaryDistribution\\(', ['ui', 'application']);
-        assert(multiRelayConstructionSites.length === 1 && multiRelayConstructionSites[0].includes('ui/main.js'),
-            n(`exactly one production file constructs NostrMultiRelayPublicationCommentaryDistribution — ui/main.js — found: ${multiRelayConstructionSites.join(', ') || 'none'}`));
+        assert(multiRelayConstructionSites.length === 1 && multiRelayConstructionSites[0].includes('ui/main/composeNetwork.js'),
+            n(`exactly one production file constructs NostrMultiRelayPublicationCommentaryDistribution — ui/main/composeNetwork.js — found: ${multiRelayConstructionSites.join(', ') || 'none'}`));
 
         const discoverSites = grepFiles('new DiscoverPublicationCommentaryFromNostrUseCase\\(', ['ui', 'application']);
-        assert(discoverSites.length === 1 && discoverSites[0].includes('ui/main.js'),
-            n(`exactly one production file constructs DiscoverPublicationCommentaryFromNostrUseCase — ui/main.js — found: ${discoverSites.join(', ') || 'none'}`));
+        assert(discoverSites.length === 1 && discoverSites[0].includes('ui/main/composeNetwork.js'),
+            n(`exactly one production file constructs DiscoverPublicationCommentaryFromNostrUseCase — ui/main/composeNetwork.js — found: ${discoverSites.join(', ') || 'none'}`));
 
         const exchangeConstructionSites = grepFiles('new PublicationCommentaryDistribution(Exchange|PeerExchange)\\(', ['ui', 'application']);
         assert(exchangeConstructionSites.length === 1 && exchangeConstructionSites[0].includes('CreatePublicationCommentaryDistributionPeerExchangeUseCase.js'),
@@ -443,9 +443,9 @@ async function run() {
         // the single-relay class directly; see this file's own "production
         // wiring census" amendment, above.
         const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
-        assert(mainSource.includes("import { NostrMultiRelayPublicationCommentaryDistribution } from '../application/nostr/NostrMultiRelayPublicationCommentaryDistribution.js';")
-            && mainSource.includes("import { DiscoverPublicationCommentaryFromNostrUseCase } from '../application/publication/commentary/DiscoverPublicationCommentaryFromNostrUseCase.js';"),
-            n('ui/main.js imports both new classes'));
+        assert(mainSource.includes("import { NostrMultiRelayPublicationCommentaryDistribution } from '../../application/nostr/NostrMultiRelayPublicationCommentaryDistribution.js';")
+            && mainSource.includes("import { DiscoverPublicationCommentaryFromNostrUseCase } from '../../application/publication/commentary/DiscoverPublicationCommentaryFromNostrUseCase.js';"),
+            n('the network runtime (ui/main/composeNetwork.js) imports both new classes'));
         assert(mainSource.includes('publishImpl: nostrHostPublisher,') && mainSource.includes('queryImpl: nostrRelayQueryClient,') && mainSource.includes('relayUrl: resolvedNostrRelayUrl'),
             n('the Nostr distribution instance reuses the SAME nostrHostPublisher/nostrRelayQueryClient/resolvedNostrRelayUrl bindings every other Nostr capability in this file already reuses — no second host-capability resolution, no second relay-configuration mechanism'));
         assert(mainSource.includes("app.provide('discoverPublicationCommentaryFromNostrCommand', discoverPublicationCommentaryFromNostrCommand)"),

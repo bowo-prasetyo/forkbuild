@@ -71,20 +71,31 @@ function topLevelEntries(body) {
 // ui/main.js's services: key -> null when provided at startup, or the name
 // of the service group that provides it. A group's body runs from
 // `defineServiceGroup('name', …` to the `});` that closes it at the start of
-// a line.
+// a line. The network runtime (ui/main/composeNetwork.js) is the "network"
+// group: everything it provides is there once that group has loaded.
+const NETWORK_GROUP = 'network';
+const NETWORK_RUNTIME = 'ui/main/composeNetwork.js';
 function mainServices() {
-    const code = stripComments(read('ui/main.js'));
+    // A group defined by a function named elsewhere, on one line, such as the network runtime's.
+    const namedPattern = /^defineServiceGroup\(\s*'([\w-]+)',\s*\w+\);$/gm;
+    const named = [...stripComments(read('ui/main.js')).matchAll(namedPattern)].map((m) => m[1]);
+    const code = stripComments(read('ui/main.js')).replace(namedPattern, '');
     const services = new Map();
     const groupPattern = /^defineServiceGroup\(\s*'([\w-]+)'[\s\S]*?^\}\);/gm;
     const groups = [...code.matchAll(groupPattern)];
     for (const [block, name] of groups) {
         for (const m of block.matchAll(/\bapp\.provide\(\s*'([^']+)'/g)) services.set(m[1], name);
     }
+    for (const m of stripComments(read(NETWORK_RUNTIME)).matchAll(/\bapp\.provide\(\s*'([^']+)'/g)) {
+        assert(!services.has(m[1]), `${m[1]} is provided both by ${NETWORK_RUNTIME} and in the ${services.get(m[1])} group`);
+        services.set(m[1], NETWORK_GROUP);
+    }
     for (const m of code.replace(groupPattern, '').matchAll(/\bapp\.provide\(\s*'([^']+)'/g)) {
         assert(!services.has(m[1]), `${m[1]} is provided both at startup and in the ${services.get(m[1])} group`);
         services.set(m[1], null);
     }
-    return { services, groupNames: new Set(groups.map((g) => g[1])) };
+    assert(named.includes(NETWORK_GROUP), `ui/main.js defines the "${NETWORK_GROUP}" group`);
+    return { services, groupNames: new Set([...named, ...groups.map((g) => g[1])]) };
 }
 
 function injectedBy(entry) {

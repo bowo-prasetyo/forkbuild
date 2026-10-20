@@ -217,8 +217,8 @@ async function run() {
     // ===============================================================
     {
         const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
-        assert(mainSource.includes("import { PublicationCommentaryRemoteNotificationBridge } from '../application/publication/commentary/PublicationCommentaryRemoteNotificationBridge.js';"),
-            n('ui/main.js imports the new bridge'));
+        assert(mainSource.includes("import { PublicationCommentaryRemoteNotificationBridge } from '../../application/publication/commentary/PublicationCommentaryRemoteNotificationBridge.js';"),
+            n('the network runtime (ui/main/composeNetwork.js) imports the new bridge'));
         assert(mainSource.includes("import { NotificationEventStore } from '../storage/NotificationEventStore.js';"),
             n('ui/main.js imports NotificationEventStore, needed to construct the bridge\'s own notificationSink'));
         assert(mainSource.includes('new PublicationCommentaryRemoteNotificationBridge(') &&

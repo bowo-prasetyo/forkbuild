@@ -64,18 +64,18 @@ const downloadFailure = new TypeError('Failed to fetch dynamically imported modu
 {
     pageLoadFailure.value = { fullPath: '/publications' };
     const reloaded = [];
-    const inCall = mountComponent(PageLoadFailureNotice, { voiceUseCase: { getActiveCall: () => ({ callId: 'c', state: 'ACTIVE' }) } }, { reload: (path) => reloaded.push(path) });
+    const inCall = mountComponent(PageLoadFailureNotice, { activeVoiceCall: () => ({ callId: 'c', state: 'ACTIVE' }) }, { reload: (path) => reloaded.push(path) });
     assert(inCall.failure.value.fullPath === '/publications', 'the notice shows the failure');
     assert(inCall.inCall() === true, 'it warns when a voice call would end');
     inCall.reload();
     assert(reloaded.join() === '/publications', 'Reload reloads on that page');
 
-    const noCall = mountComponent(PageLoadFailureNotice, { voiceUseCase: { getActiveCall: () => null } }, { reload: () => {} });
+    const noCall = mountComponent(PageLoadFailureNotice, { activeVoiceCall: () => null }, { reload: () => {} });
     assert(noCall.inCall() === false, 'no warning without a call');
-    const broken = mountComponent(PageLoadFailureNotice, { voiceUseCase: { getActiveCall: () => { throw new Error('x'); } } }, { reload: () => {} });
+    const broken = mountComponent(PageLoadFailureNotice, { activeVoiceCall: () => { throw new Error('x'); } }, { reload: () => {} });
     assert(broken.inCall() === false, 'no warning when the call state cannot be read');
     const noVoice = mountComponent(PageLoadFailureNotice, {}, { reload: () => {} });
-    assert(noVoice.inCall() === false, 'no warning without voice');
+    assert(noVoice.inCall() === false, 'no warning before voice is set up');
 
     noCall.dismiss();
     assert(pageLoadFailure.value === null, 'Dismiss hides the notice');

@@ -8,7 +8,6 @@ import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource } from './support/SourceText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
@@ -213,30 +212,32 @@ async function run() {
     // Section G — ui/main.js composition wiring.
     // ===============================================================
     {
-        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
+        // The shell (ui/main.js) constructs the provider; the network runtime
+        // (ui/main/composeNetwork.js) builds the log, rebuilds the provider from
+        // it, and only then provides the log.
+        const shellSource = await readSource('ui/main.js');
+        const networkSource = await readSource('ui/main/composeNetwork.js');
 
-        assert(mainSource.includes("import { CreateWorldEncounterPublicationAdmissionLogUseCase } from '../application/worldEncounter/CreateWorldEncounterPublicationAdmissionLogUseCase.js';"),
-            '1. ui/main.js imports the composition-root use case.');
-        assert(mainSource.includes("import { ReconstructWorldEncounterPublicationDiscoveryUseCase } from '../application/worldEncounter/ReconstructWorldEncounterPublicationDiscoveryUseCase.js';"),
-            '2. ui/main.js imports the production reconstruction use case.');
+        assert(networkSource.includes("import { CreateWorldEncounterPublicationAdmissionLogUseCase } from '../../application/worldEncounter/CreateWorldEncounterPublicationAdmissionLogUseCase.js';"),
+            '1. the network runtime imports the composition-root use case.');
+        assert(networkSource.includes("import { ReconstructWorldEncounterPublicationDiscoveryUseCase } from '../../application/worldEncounter/ReconstructWorldEncounterPublicationDiscoveryUseCase.js';"),
+            '2. the network runtime imports the production reconstruction use case.');
 
-        const providerConstructionIndex = mainSource.indexOf('const decentralizedPublicationDiscoveryProvider = new DecentralizedPublicationDiscoveryProvider();');
-        const logConstructionIndex = mainSource.indexOf('new CreateWorldEncounterPublicationAdmissionLogUseCase().execute();');
-        const reconstructIndex = mainSource.indexOf('new ReconstructWorldEncounterPublicationDiscoveryUseCase(');
-        assert(providerConstructionIndex !== -1 && logConstructionIndex > providerConstructionIndex,
-            '3. the admission log is constructed after the one provider instance this replica ever constructs.');
+        const logConstructionIndex = networkSource.indexOf('new CreateWorldEncounterPublicationAdmissionLogUseCase().execute();');
+        const reconstructIndex = networkSource.indexOf('new ReconstructWorldEncounterPublicationDiscoveryUseCase(');
+        assert(shellSource.includes('const decentralizedPublicationDiscoveryProvider = new DecentralizedPublicationDiscoveryProvider();') && logConstructionIndex !== -1,
+            '3. the admission log is constructed by the network runtime, which receives the one provider instance the shell constructs.');
         assert(reconstructIndex > logConstructionIndex, '4. reconstruction runs after both the provider and the admission log exist.');
 
-        const wiringWindow = mainSource.slice(logConstructionIndex, reconstructIndex + 300);
+        const wiringWindow = networkSource.slice(logConstructionIndex, reconstructIndex + 300);
         assert(/new ReconstructWorldEncounterPublicationDiscoveryUseCase\(\s*worldEncounterPublicationAdmissionLog, decentralizedPublicationDiscoveryProvider\s*\)\.execute\(\);/.test(wiringWindow),
             '5. reconstruction reuses the SAME worldEncounterPublicationAdmissionLog/decentralizedPublicationDiscoveryProvider — never a second log or provider.');
 
-        const provideIndex = mainSource.indexOf("app.provide('worldEncounterPublicationAdmissionLog', worldEncounterPublicationAdmissionLog);");
-        const mountIndex = mainSource.indexOf("app.mount('#app');");
-        assert(provideIndex !== -1 && reconstructIndex < provideIndex && provideIndex < mountIndex,
-            '6. reconstruction runs before app.provide() hands the log out, and well before the app mounts.');
+        const provideIndex = networkSource.indexOf("app.provide('worldEncounterPublicationAdmissionLog', worldEncounterPublicationAdmissionLog);");
+        assert(provideIndex !== -1 && reconstructIndex < provideIndex,
+            '6. reconstruction runs before app.provide() hands the log out to any page.');
 
-        console.log('✓ Section G: ui/main.js wires reconstruction right after both the durable log and the discovery provider it populates exist, awaited before app.provide() and app.mount().');
+        console.log('✓ Section G: the network runtime wires reconstruction right after both the durable log and the discovery provider it populates exist, before app.provide() hands the log to any page.');
     }
 
     console.log('\nAll ReconstructWorldEncounterPublicationDiscoveryUseCase tests passed.');

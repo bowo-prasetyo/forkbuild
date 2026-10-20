@@ -122,12 +122,14 @@ written in the class body (a name defined twice is an error). Search for
 
 ### Everything gets built in `ui/main.js`. Where do I wire a new service?
 
-`ui/main.js` is the composition root: it builds every store, adapter and
-use case once and `app.provide()`s them. Larger subsystems are built by the
-compose functions in `ui/main/` (`composeIdentityAndPeers.js`,
-`composeWorldDiscovery.js` and so on), which return what `ui/main.js` then
-provides; every `app.provide()` call stays in `ui/main.js`. Views get
-services with `inject`.
+The composition root builds every store, adapter and use case once and
+`app.provide()`s them, in two parts. `ui/main.js`, the shell, holds what the
+header and Home need (identity, backups, settings stores). Everything that
+talks to peers and networks is in `ui/main/composeNetwork.js`, the network
+runtime, built once the first page is on screen. Larger subsystems are built
+by the compose functions in `ui/main/` (`composeIdentityAndPeers.js`,
+`composeWorldDiscovery.js` and so on), which return what those two provide.
+Views get services with `inject`.
 
 If only some pages use the service and nothing needs it running before they
 open, build it in a service group instead, so the app doesn't load it at
@@ -135,8 +137,9 @@ startup: add it to an existing `defineServiceGroup(...)` in `ui/main.js` (or
 define a new one), and list the group for each page that injects it in
 `ui/router/pageServiceGroups.js`. `tests/ServiceGroupCoverage.test.js` names
 any page that injects a group's service without listing the group. A
-service that listens for peers' messages, runs in the background, or is used
-by the header belongs at startup.
+service that listens for peers' messages or runs in the background belongs
+in the network runtime (pages that inject it list the `network` group); one
+the header or Home uses belongs in the shell, and should stay small.
 
 A new static import in `ui/main.js` (or anything it loads at startup) also
 needs `node scripts/modulepreload.mjs`, which updates `index.html`'s list of

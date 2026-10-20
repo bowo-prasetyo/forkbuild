@@ -203,8 +203,8 @@ async function run() {
     // ===============================================================
     {
         const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
-        assert(mainSource.includes("import { CreatePublicationCommentaryDistributionPeerExchangeUseCase } from '../application/publication/commentary/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js';"),
-            n('ui/main.js imports the new composition root'));
+        assert(mainSource.includes("import { CreatePublicationCommentaryDistributionPeerExchangeUseCase } from '../../application/publication/commentary/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js';"),
+            n('the network runtime (ui/main/composeNetwork.js) imports the new composition root'));
         assert(mainSource.includes('new CreatePublicationCommentaryDistributionPeerExchangeUseCase().execute({') &&
                /identityProvider,\s*\n\s*peerMessageBus,\s*\n\s*connectedPeerRegistry: peerSessionManager\.registry/.test(mainSource),
             n('ui/main.js constructs it with the SAME app-wide identityProvider/peerMessageBus/peerSessionManager.registry every sibling capability already rides — never a second identity or transport'));
