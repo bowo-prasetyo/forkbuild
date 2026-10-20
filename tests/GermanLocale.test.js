@@ -1,6 +1,7 @@
 // German (ui/i18n/messages/de.js): complete, chosen from the browser, and
 // read with German number formats, its one/other plurals and its own word order.
-import { LOCALES, findLocale, negotiateLocale, SOURCE_MESSAGES } from '../ui/i18n/locales.js';
+import { LOCALES, findLocale, negotiateLocale } from '../ui/i18n/locales.js';
+import SOURCE_MESSAGES from '../ui/i18n/messages/en.js';
 import { Translator } from '../ui/i18n/Translator.js';
 import { message } from '../core/Message.js';
 import { assert } from './support/Assert.js';

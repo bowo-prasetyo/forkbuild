@@ -4,10 +4,12 @@
 // tests/ServiceGroupCoverage.test.js fails if a page injects a service from a
 // group not listed for it, or lists a group it does not use.
 export const PAGE_SERVICE_GROUPS = Object.freeze({
-    EditorView: ['distribution', 'sound'],
-    WorldView: ['distribution', 'sound'],
+    EditorView: ['distribution', 'sound', 'walkTogether'],
+    WorldView: ['distribution', 'sound', 'walkTogether'],
     PublicationLinkView: ['distribution'],
-    WalkTogetherJoinView: ['distribution'],
+    WalkTogetherJoinView: ['distribution', 'walkTogether'],
+    DevicePairingView: ['devicePairing'],
+    DevicePairingReceiveView: ['devicePairing'],
     DecentralizedPublicationsView: ['anchoring', 'distribution', 'observationArchive'],
     AnchorProviderSettingsView: ['anchoring']
 });

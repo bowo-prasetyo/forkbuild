@@ -1,7 +1,8 @@
 // Brazilian Portuguese (ui/i18n/messages/pt-BR.js): complete, chosen from any
 // Portuguese browser, and read with Brazilian number formats, its one/other
 // plurals and its own word order.
-import { LOCALES, findLocale, negotiateLocale, SOURCE_MESSAGES } from '../ui/i18n/locales.js';
+import { LOCALES, findLocale, negotiateLocale } from '../ui/i18n/locales.js';
+import SOURCE_MESSAGES from '../ui/i18n/messages/en.js';
 import { Translator } from '../ui/i18n/Translator.js';
 import { message } from '../core/Message.js';
 import { assert } from './support/Assert.js';

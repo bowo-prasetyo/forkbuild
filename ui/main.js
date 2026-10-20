@@ -42,8 +42,6 @@ import { CreatePublicationAnchorDiscoveryCoordinatorUseCase } from '../applicati
 import { CreatePublicationSnapshotPlacementPeerExchangeUseCase } from '../application/snapshot/placement/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js';
 import { CreatePublicationSnapshotPlacementDiscoveryCoordinatorUseCase } from '../application/snapshot/placement/CreatePublicationSnapshotPlacementDiscoveryCoordinatorUseCase.js';
 import { LocalStorageProvider, flushLocalStorage } from '../storage/LocalStorageProvider.js';
-import { DevicePairing } from '../application/devicePairing/DevicePairing.js';
-import { WalkTogether } from '../application/walkTogether/WalkTogether.js';
 import { DeviceBackupUseCase } from '../application/backup/DeviceBackupUseCase.js';
 import { BackupStatusStore } from '../application/backup/BackupStatusStore.js';
 import { BackupReminder } from '../application/backup/BackupReminder.js';
@@ -470,9 +468,6 @@ app.provide('deviceBackupUseCase', deviceBackupUseCase);
 app.provide('backupStatusStore', backupStatusStore);
 app.provide('backupReminder', new BackupReminder({ statusStore: backupStatusStore, deviceBackup: deviceBackupUseCase }));
 app.provide('backupDestinations', backupDestinations);
-// Copies everything to another device through a one-off code, over the same
-// peer connections and rendezvous servers as Peers.
-app.provide('devicePairing', new DevicePairing({ deviceBackup: deviceBackupUseCase, peerConnectionProvider, rendezvousTransports }));
 // World View's visitor's view or every tool, chosen per device.
 // Where Publish sends each build on this device, once chosen.
 app.provide('publishDestinationStore', new PublishDestinationStore({ storageProvider: new LocalStorageProvider() }));
@@ -488,9 +483,6 @@ app.provide('worldViewShadowStore', new WorldViewShadowStore({ storageProvider: 
 // Every branch and leaf close by, likewise: leaves drawn over each other cost
 // a phone's GPU most.
 app.provide('worldViewTreeDetailStore', new WorldViewTreeDetailStore({ storageProvider: new LocalStorageProvider(), onByDefault: !touchFirst }));
-// "Walk here with me": a link that connects a friend's peer session to this
-// one through a one-off meeting on the same rendezvous servers.
-app.provide('walkTogether', new WalkTogether({ peerSessionManager, identityProvider, peerConnectionProvider, rendezvousTransports }));
 app.provide('identityUseCase', identityUseCase);
 app.provide('peerSessionManager', peerSessionManager);
 app.provide('peerRelationshipUseCase', peerRelationshipUseCase);
@@ -1186,6 +1178,21 @@ defineServiceGroup('distribution', async () => {
         admissionLog: worldEncounterPublicationAdmissionLog,
         publisherPlacement: linkedPublisherPlacement
     }));
+});
+
+// "Walk here with me": a link that connects a friend's peer session to this
+// one through a one-off meeting on the same rendezvous servers, for World
+// View, the Editor's Build with me, and the page the link opens.
+defineServiceGroup('walkTogether', async () => {
+    const { WalkTogether } = await import('../application/walkTogether/WalkTogether.js');
+    app.provide('walkTogether', new WalkTogether({ peerSessionManager, identityProvider, peerConnectionProvider, rendezvousTransports }));
+});
+
+// Copies everything to another device through a one-off code, over the same
+// peer connections and rendezvous servers as Peers.
+defineServiceGroup('devicePairing', async () => {
+    const { DevicePairing } = await import('../application/devicePairing/DevicePairing.js');
+    app.provide('devicePairing', new DevicePairing({ deviceBackup: deviceBackupUseCase, peerConnectionProvider, rendezvousTransports }));
 });
 
 // Every observation of a publication this device has recorded, for the

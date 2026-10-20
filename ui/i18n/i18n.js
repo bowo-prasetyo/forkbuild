@@ -1,9 +1,12 @@
 // The app's one translator. Components import t() (and the formatters) from
-// here and expose it to their template; it answers in English until
-// setAppLocale() runs, which is what component tests that mount a component
-// on its own see.
+// here and expose it to their template. It has no messages until
+// setAppLocale() loads a locale's, so every entry point sets one first:
+// ui/start.js and ui/embed/embedBoot.js before anything is drawn, and the
+// tests (tests/support/NodePreload.mjs, tests/run-browser.mjs) English before
+// each test file, which is what component tests that mount a component on
+// their own see.
 //
-// ui/boot.js sets the locale before the app's modules are imported, so text
+// ui/start.js sets the locale before the app's modules are imported, so text
 // is in the chosen language from the first render. The locale is not
 // switched while the app runs: changing it saves the choice and reloads the
 // page (see ui/views/LanguageSettingsView.js), so no text computed earlier is
@@ -11,13 +14,13 @@
 import { Translator } from './Translator.js';
 import { isMessage } from '../../core/Message.js';
 import { isUserFacingError } from '../../core/UserFacingError.js';
-import { LOCALES, SOURCE_LOCALE, SOURCE_MESSAGES, findLocale } from './locales.js';
+import { LOCALES, SOURCE_LOCALE, findLocale } from './locales.js';
 
 function reportMissing(key, locale) {
     console.warn(`[i18n] "${key}" has no ${locale} message.`);
 }
 
-let translator = new Translator({ locale: SOURCE_LOCALE, messages: SOURCE_MESSAGES, onMissing: reportMissing });
+let translator = new Translator({ locale: SOURCE_LOCALE, messages: {}, onMissing: reportMissing });
 
 // `t('app.nav.home')`, `t('language.current', { language })`, or a message
 // descriptor from core/ or application/ (core/Message.js): `t(message)`.
@@ -74,26 +77,36 @@ export function availableLocales() {
     return LOCALES;
 }
 
-// Loads `code`'s messages and makes it the app's locale. An unknown code, or
-// one whose messages fail to load, leaves English in place.
+// Loads `code`'s messages and makes it the app's locale. An unknown code
+// changes nothing; a translation whose messages fail to load is replaced by
+// English, and when English fails to load too, so does this (the app's
+// modules did not download: ui/loadRecovery.js takes it from there).
 export async function setAppLocale(code) {
     const locale = findLocale(code);
     if (!locale) {
         return currentLocale();
     }
     try {
-        const messages = await locale.loadMessages();
-        translator = new Translator({
-            locale: locale.code,
-            intlLocale: locale.intlLocale || locale.code,
-            messages,
-            fallbackMessages: SOURCE_MESSAGES,
-            onMissing: reportMissing
-        });
+        await useLocale(locale);
     } catch (error) {
+        if (locale.code === SOURCE_LOCALE) throw error;
         console.warn(`[i18n] Could not load ${locale.code}; showing English.`, error);
+        await useLocale(findLocale(SOURCE_LOCALE));
     }
     return currentLocale();
+}
+
+// Starts downloading `code`'s messages without waiting for them, for a
+// locale setAppLocale() is likely to be asked for soon: it then reuses this
+// download. A failure here is left for setAppLocale() to meet.
+export function preloadLocale(code) {
+    const locale = findLocale(code);
+    if (locale) locale.loadMessages().catch(() => {});
+}
+
+async function useLocale(locale) {
+    const messages = await locale.loadMessages();
+    translator = new Translator({ locale: locale.code, intlLocale: locale.intlLocale || locale.code, messages, onMissing: reportMissing });
 }
 
 // Tells the browser (and screen readers, spell checkers and CSS) which

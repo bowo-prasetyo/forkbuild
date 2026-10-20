@@ -1,7 +1,8 @@
 // Korean (ui/i18n/messages/ko.js): complete, chosen from any Korean browser,
 // and read with Korean number formats, its single plural form (with an exact
 // form for one where English drops the number) and its own word order.
-import { LOCALES, findLocale, negotiateLocale, SOURCE_MESSAGES } from '../ui/i18n/locales.js';
+import { LOCALES, findLocale, negotiateLocale } from '../ui/i18n/locales.js';
+import SOURCE_MESSAGES from '../ui/i18n/messages/en.js';
 import { Translator } from '../ui/i18n/Translator.js';
 import { message } from '../core/Message.js';
 import { assert } from './support/Assert.js';

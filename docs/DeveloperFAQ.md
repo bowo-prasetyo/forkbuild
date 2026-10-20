@@ -23,8 +23,11 @@ load it from a CDN, and never edit `vendor/` by hand:
 script produces. See [Deployment](Deployment.md) and
 [CodingConventions](CodingConventions.md).
 
-Because Vue compiles the component templates in the browser, the policy
-has to allow `'unsafe-eval'`. Removing it would need a build step.
+Because Vue compiles the component templates in the browser, the
+repository's policy has to allow `'unsafe-eval'`. The published site
+doesn't: `scripts/build.mjs` compiles the templates when it bundles the app
+(`scripts/templatePlugin.mjs`), so its pages run Vue's runtime-only build
+with `script-src 'self'`.
 
 ### The page is blank, or the console fills with "Loading failed for the module"
 

@@ -1,7 +1,8 @@
 // Spanish (ui/i18n/messages/es.js): neutral Latin American Spanish, complete,
 // chosen from any Spanish browser, and read with Spanish number formats, its
 // one/other plurals and its own word order.
-import { LOCALES, findLocale, negotiateLocale, SOURCE_MESSAGES } from '../ui/i18n/locales.js';
+import { LOCALES, findLocale, negotiateLocale } from '../ui/i18n/locales.js';
+import SOURCE_MESSAGES from '../ui/i18n/messages/en.js';
 import { Translator } from '../ui/i18n/Translator.js';
 import { message } from '../core/Message.js';
 import { assert } from './support/Assert.js';
