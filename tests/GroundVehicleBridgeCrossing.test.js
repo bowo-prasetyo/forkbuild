@@ -17,12 +17,16 @@ import { LAKE_SURFACE_HEIGHT } from '../core/Hydrology.js';
 import { VehicleInstance } from '../core/VehicleInstance.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { Position } from '../core/Position.js';
+import { World } from '../core/World.js';
+import { Building } from '../core/Building.js';
+import { Brick } from '../core/Brick.js';
 import { assert } from './support/Assert.js';
 
 // Ground vehicles drive up ramps and across bridges, as an avatar on foot
 // walks them: application/avatar/AvatarVehicleMovementController.js with a
 // stepConstraint, driven over the Hay Wain Bridge example build
-// (forkbuild-document-hay-wain-bridge.json).
+// (forkbuild-document-hay-wain-bridge.json) and, in Section F, the Packhorse
+// Arch (forkbuild-document-packhorse-arch.json).
 //
 //   Section A: the wagon, bicycle and motorcycle each cross the bridge, deck
 //              over the river, back on the ground on the far bank
@@ -33,6 +37,11 @@ import { assert } from './support/Assert.js';
 //              over the river the truss keeps it on the deck
 //   Section E: getting off on the deck leaves the avatar on the deck, and a
 //              vehicle put down on the deck stands on it
+//   Section F: every ground vehicle drives over the Packhorse Arch's hump,
+//              and its fences keep the wagon on the crown
+//   Section G: on low ground (terrain well below zero) a wall still stops
+//              the wagon: bricks are measured from the ground, and so is
+//              the height it collides at
 //
 // The bridge's river is a few blue slabs, not world water, so the water
 // constraint is told the river is there: a bed a full unit below the lake
@@ -45,15 +54,17 @@ const DT = 0.05;
 const FORWARD = Object.freeze({ direction: 1, turnAxis: 0, running: false, brakingRequested: false });
 const GROUND_TYPES = [VehicleType.CAR, VehicleType.BICYCLE, VehicleType.MOTORCYCLE];
 
-function inRiver(x, z) {
-    return Math.abs(x - ORIGIN.x) < 4 && Math.abs(z - ORIGIN.z) < 4;
+// `halfWidth`: half the river's width along the road (x); it is 8 long (z).
+function inRiver(x, z, halfWidth = 4) {
+    return Math.abs(x - ORIGIN.x) < halfWidth && Math.abs(z - ORIGIN.z) < 4;
 }
 
-function riverWater() {
+function riverWater(halfWidth = 4) {
+    const wet = (x, z) => inRiver(x, z, halfWidth);
     return new VehicleWaterConstraint({
         seed: SEED,
-        isWaterAt: inRiver,
-        heightAt: (x, z) => (inRiver(x, z) ? LAKE_SURFACE_HEIGHT - 1 : terrainHeightAt(SEED, x, z))
+        isWaterAt: wet,
+        heightAt: (x, z) => (wet(x, z) ? LAKE_SURFACE_HEIGHT - 1 : terrainHeightAt(SEED, x, z))
     });
 }
 
@@ -87,7 +98,7 @@ function constraints(loadedDocuments, brickRegistry) {
 }
 
 // Drives `vehicle` forward and records what happened along the way.
-function drive(vehicle, { movement, step, water }, ticks) {
+function drive(vehicle, { movement, step, water, riverHalfWidth = 4 }, ticks) {
     const vehicles = store([vehicle]);
     const controller = new AvatarVehicleMovementController(vehicles, movement, null, water, step);
     const capability = resolveAvatarVehicleMovementCapability(vehicle.type);
@@ -95,7 +106,7 @@ function drive(vehicle, { movement, step, water }, ticks) {
     for (let i = 0; i < ticks; i++) {
         controller.tick({ seed: SEED, vehicleId: vehicle.id, capability, movementIntent: FORWARD, currentRotationY: vehicle.heading, deltaSeconds: DT });
         const p = vehicles.get(vehicle.id).position;
-        if (inRiver(p.x, p.z)) trace.liftsOverRiver.push(liftOf(p));
+        if (inRiver(p.x, p.z, riverHalfWidth)) trace.liftsOverRiver.push(liftOf(p));
         trace.maxLift = Math.max(trace.maxLift, liftOf(p));
         trace.blockedByWater ||= controller.isBlockedByWater();
         trace.collided ||= controller.isCollided();
@@ -194,6 +205,55 @@ async function runTests() {
         assert(mount !== null, 'E4. setup: put the wagon down on the deck');
         const deployed = vehicleRuntimeInstances.get(mount.vehicleId);
         assert(Math.abs(liftOf(deployed.position) - DECK_TOP) < 1e-9, `E5. a wagon put down on the deck stands on the deck (lift ${liftOf(deployed.position)})`);
+    }
+
+    // -------------------------------------------------------------
+    // Section F — over the Packhorse Arch's hump
+    // -------------------------------------------------------------
+    {
+        const archJson = JSON.parse(await readFile(new URL('../forkbuild-document-packhorse-arch.json', import.meta.url), 'utf8'));
+        const withArch = constraints(new Map([['arch', new DocumentSerializer().deserialize(archJson)]]), brickRegistry);
+        const CROWN_TOP = 2.5;
+        const river = { water: riverWater(2), riverHalfWidth: 2 };
+        for (const type of GROUND_TYPES) {
+            const run = drive(vehicleAt(`f:${type}`, type, -9, 0, 90), { ...withArch, ...river }, 400);
+            assert(run.x > 8, `F1. a ${type} drives up one side of the Packhorse Arch and down the other (ended at x ${run.x.toFixed(2)})`);
+            assert(run.liftsOverRiver.length > 0 && run.liftsOverRiver.every((lift) => Math.abs(lift - CROWN_TOP) < 1e-6),
+                `F2. a ${type} is on the crown the whole way over the river`);
+            assert(!run.blockedByWater && Math.abs(run.maxLift - CROWN_TOP) < 1e-6, `F3. a ${type} never meets the water and never climbs above the crown`);
+            assert(Math.abs(run.lift) < 1e-9 && Math.abs(run.z) < 1e-9, `F4. a ${type} comes down straight onto the far bank`);
+        }
+        const held = drive(vehicleAt('f:held', VehicleType.CAR, 0, 0, 0, CROWN_TOP), { ...withArch, ...river }, 200);
+        assert(held.collided && held.z < 1.8 && Math.abs(held.lift - CROWN_TOP) < 1e-6,
+            `F5. the fences keep the wagon on the crown (z ${held.z.toFixed(2)}, lift ${held.lift.toFixed(2)})`);
+    }
+
+    // -------------------------------------------------------------
+    // Section G — low ground, same walls
+    // -------------------------------------------------------------
+    {
+        const LOW = { x: -3000, y: 0, z: -2550 };
+        assert(terrainHeightAt(SEED, LOW.x, LOW.z) < -3, 'G setup: the ground here is more than 3 below zero');
+        const world = new World();
+        const building = new Building({ creator: 'test' });
+        building.addBrick(new Brick({ definitionId: 'core:block_2x2', position: new Position(0, 1, 0) }));
+        world.addBuilding(building);
+        const loadedDocuments = new Map([['h', { world }]]);
+        const getWorldPosition = () => LOW;
+        const movement = new AvatarMovementConstraint({ loadedDocuments, getWorldPosition, brickRegistry, maxStepHeight: 0.6 });
+        const step = new AvatarStepConstraint({ loadedDocuments, getWorldPosition, brickRegistry });
+        const start = { x: LOW.x - 6, y: terrainHeightAt(SEED, LOW.x - 6, LOW.z), z: LOW.z };
+        const wagon = new VehicleInstance({ id: 'h', type: VehicleType.CAR, spawnPosition: start, position: start, heading: 90 });
+        const vehicles = store([wagon]);
+        const controller = new AvatarVehicleMovementController(vehicles, movement, null, null, step);
+        const capability = resolveAvatarVehicleMovementCapability(VehicleType.CAR);
+        let collided = false;
+        for (let i = 0; i < 200; i++) {
+            controller.tick({ seed: SEED, vehicleId: 'h', capability, movementIntent: FORWARD, currentRotationY: 90, deltaSeconds: DT });
+            collided ||= controller.isCollided();
+        }
+        const x = vehicles.get('h').position.x - LOW.x;
+        assert(collided && x < -1.7, `G1. the wagon stops at a block 2 high instead of driving through it (x ${x.toFixed(2)})`);
     }
 
     console.log('✅ All Ground Vehicle Bridge Crossing tests passed.');
