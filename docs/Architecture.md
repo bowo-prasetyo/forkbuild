@@ -268,6 +268,13 @@ the detailed references; in short:
   a structure places a copy of its bricks
   (CopyStructureIntoDocumentUseCase through StructureCompositionTool);
   Fork opens it as a new document.
+  Its search box (core/library/LibrarySearch.js) looks for the text typed
+  inside each item's name, tags, description and player words, and when
+  that finds nothing, for each item's own words inside what was typed
+  ("something to cross the river" finds the Bridge), showing the items
+  with the most. The player words are messages, `library.<…>.words` in
+  each language (ui/i18n/libraryText.js), so search downloads nothing and
+  needs no model.
 - Ready-made builds: application/home/FeaturedBuilds.js lists six built-in
   structures (the three showcase ones first). Home, the Repository and My
   Worlds' empty state show them with ui/components/featured/FeaturedBuilds.js

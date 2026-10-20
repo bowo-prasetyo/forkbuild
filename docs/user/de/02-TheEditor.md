@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: c9cf8ab76a5a2809 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2c43bd99f1b022e2 -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -44,7 +44,11 @@ ordnen.
   merkt sich Ihre Wahl.
 - **Auswahl** — zeigt nur, was auf Ihre aktuelle Auswahl wirken kann;
   siehe [Das Feld Auswahl](#das-feld-auswahl) unten.
-- **Baubibliothek** — ein Suchfeld und zwei Reiter:
+- **Baubibliothek** — ein Suchfeld und zwei Reiter. Tippen Sie einen Teil
+  eines Namens ein, oder sagen Sie mit eigenen Worten, was Sie brauchen:
+  *über den Fluss* findet die Brücke, *schlafen* das Bett. Die Wörter, unter
+  denen jeder Stein und jede Struktur gefunden wird, kommen mit der App,
+  daher wird nichts irgendwohin gesendet.
   - **Steine** — alles, was Sie mit dem Platzierwerkzeug setzen können,
     als Kacheln in sechs Abschnitten (Grundformen, Tragwerk, Dächer &
     Treppen, Öffnungen, Details, Natur): neunundfünfzig Teile, von halben

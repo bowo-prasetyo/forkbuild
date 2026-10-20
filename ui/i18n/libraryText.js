@@ -5,6 +5,7 @@
 // `library.core.slope45` and `library.core.slope45.description`. Anything
 // without a message (a personal blueprint, a community library) shows its
 // own name, which is never translated.
+import { splitWordList } from '../../core/library/LibrarySearch.js';
 import { hasMessage, t } from './i18n.js';
 
 export function libraryItemKey(id) {
@@ -34,4 +35,18 @@ export function libraryItemName(item) {
 export function libraryItemDescription(item) {
     const key = item ? libraryItemKey(item.id) : null;
     return key && hasMessage(`${key}.description`) ? t(`${key}.description`) : (item ? item.description : '');
+}
+
+// The words a player might search for an item by, beyond its name (the
+// Bridge's "river, cross, stream …"), from `library.<…>.words`; none for an
+// item without them. See core/library/LibrarySearch.js.
+export function libraryItemWords(item) {
+    const key = item ? libraryItemKey(item.id) : null;
+    return key && hasMessage(`${key}.words`) ? splitWordList(t(`${key}.words`)) : [];
+}
+
+// Short words names are made of that say nothing about what an item is
+// ("and", "with"), which search doesn't count.
+export function librarySearchIgnoredWords() {
+    return splitWordList(t('buildLibrary.searchIgnoredWords'));
 }

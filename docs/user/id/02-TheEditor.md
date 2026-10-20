@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: c9cf8ab76a5a2809 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2c43bd99f1b022e2 -->
 # 02 — Editor
 
 <!-- languages -->
@@ -43,7 +43,11 @@ dengan grup.
   mengingat pilihan Anda.
 - **Pilihan** — hanya menampilkan apa yang dapat bekerja pada pilihan Anda
   saat ini; lihat [Panel Pilihan](#panel-pilihan) di bawah.
-- **Pustaka Bangunan** — kotak pencarian dan dua tab:
+- **Pustaka Bangunan** — kotak pencarian dan dua tab. Ketik sebagian nama,
+  atau katakan apa yang Anda perlukan dengan kata-kata Anda sendiri:
+  *menyeberang sungai* menemukan Jembatan, *tidur* menemukan Tempat Tidur.
+  Kata-kata untuk menemukan setiap balok dan struktur sudah ada di dalam
+  aplikasi, jadi tidak ada yang dikirim ke mana pun.
   - **Balok** — semua yang dapat Anda tempatkan dengan alat Tempatkan,
     sebagai ubin dalam enam bagian (Dasar, Struktur, Atap & Tangga,
     Bukaan, Detail, Alam): lima puluh sembilan keping, dari setengah

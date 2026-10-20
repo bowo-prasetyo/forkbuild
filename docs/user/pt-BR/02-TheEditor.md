@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: c9cf8ab76a5a2809 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2c43bd99f1b022e2 -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -41,7 +41,11 @@ selecionar e transformar blocos e como organizar sua construção com grupos.
   escolheu.
 - **Seleção** — mostra só o que pode agir sobre a seleção atual; veja
   [O painel Seleção](#o-painel-seleção) abaixo.
-- **Biblioteca de construção** — uma caixa de pesquisa e duas guias:
+- **Biblioteca de construção** — uma caixa de pesquisa e duas guias.
+  Digite parte de um nome, ou diga com suas palavras do que precisa:
+  *atravessar o rio* encontra a Ponte, *dormir* a Cama. As palavras pelas
+  quais cada bloco e cada estrutura são encontrados vêm com o aplicativo,
+  então nada é enviado a lugar nenhum.
   - **Blocos** — tudo o que você pode colocar com a ferramenta Colocar, em
     blocos de seis seções (Básicos, Estrutura, Telhados e escadas,
     Aberturas, Detalhes, Natureza): cinquenta e nove peças, de meios cubos,
