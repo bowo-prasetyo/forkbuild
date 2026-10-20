@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: c9cf8ab76a5a2809 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2c43bd99f1b022e2 -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -46,7 +46,10 @@ organiser votre construction avec des groupes.
   actuelle ; voir [Le panneau Sélection](#le-panneau-sélection)
   ci-dessous.
 - **Bibliothèque de construction** — un champ de recherche et deux
-  onglets :
+  onglets. Tapez une partie d’un nom, ou dites avec vos propres mots ce
+  qu’il vous faut : *traverser la rivière* trouve le Pont, *dormir* le Lit.
+  Les mots qui permettent de trouver chaque brique et chaque structure
+  sont fournis avec l’application : rien n’est envoyé nulle part.
   - **Briques** — tout ce que vous pouvez placer avec l’outil Placement,
     sous forme de vignettes réparties en six sections (Base, Structure,
     Toits et escaliers, Ouvertures, Détails, Nature) : cinquante-neuf

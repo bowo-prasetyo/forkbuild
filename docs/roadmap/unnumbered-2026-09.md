@@ -8199,3 +8199,29 @@ rebuilt by hand; the user guide says that a build copied without **Edit a Copy**
   out whole, also under a remix of it.
 - Not done: a build file imported as one's own when it names no author (or its author was deleted from it) keeps no
   link to where it came from; it is compared, as a copy by hand would be.
+
+
+## The Build Library finds what you describe (unnumbered, 2026-10-20)
+
+**Search found only names.** The Build Library's search box looked for the whole text typed inside an item's name,
+tags or description, so *something to cross the river* found nothing, and neither did *bridge* in another language's
+words for it. Considered first: a small language model running on the device (an embedding model of about 23 MB, or a
+generative one of 90 MB or more), downloaded on request. A list of player words per item gives most of that for a few
+KB, works offline from the first visit, is translated like every other message, and shows whether search by meaning
+is worth a download before anyone is asked for one. Pillar served: building feels joyful (a newcomer finds what to
+build). How a player notices: describing what they need finds it, in any of the eight languages.
+
+- core/library/LibrarySearch.js (new, pure): the text typed inside an item's text first, as before; when that finds
+  nothing, the item's own words (its name, tags and player words) inside what was typed, showing the items with the
+  most. A word matches a whole word typed or one up to two letters longer, ignoring accents; in Japanese, Chinese and
+  Korean anywhere in the text; words shorter than three letters and a language's ignored words never count.
+- ui/components/BuildLibraryPanel.js searches every list on a tab together (built-in, My Structures, recent and
+  pinned), so the best matches are the best across all of them. `matches()` and `normalize()` stay as the first rule.
+- Messages: `library.<…>.words` for all 32 built-in structures and 41 of the 59 bricks, and `buildLibrary.searchIgnoredWords`, in every
+  language; the Structures tab's placeholder says *Search, or say what you need*.
+- docs/user/02 (in every language), docs/Architecture.md, docs/Translating.md (how to write the words).
+- Tests: the rules on their own; English sentences finding the Bridge, the Well, the Stable, the Chapel, the Castle, the
+  Bed, the Lantern and the Pine Tree; in every language, the user guide's examples (crossing a river, sleeping).
+- Not done: personal structures have only their own name and tags to be found by; a phrase nobody listed finds
+  nothing until a word is added. An optional on-device model stays a later step, if the counters say searches still
+  come up empty.

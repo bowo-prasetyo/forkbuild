@@ -83,6 +83,16 @@ first:
 Translate whole sentences. Never build a sentence out of separately
 translated pieces: word order and grammar differ between languages.
 
+A Build Library item's `.words` message (`library.village.bridge.words`)
+is not shown: it is the words, separated by commas, that a player might
+search for the item by, beyond its name ("river, cross, stream"). Give the
+words people would type in your language rather than translating the
+English list, and for a language that joins endings or particles onto words,
+the part that stays the same (Korean `건너`, not `건너다`). Short words that
+names are made of and that say nothing about an item ("and", "with") go in
+`buildLibrary.searchIgnoredWords`. See core/library/LibrarySearch.js for
+how they are matched.
+
 What people write themselves is never translated: publication titles, names,
 chat messages, and anything signed or published.
 

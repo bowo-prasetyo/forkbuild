@@ -5,26 +5,22 @@ import VillagePaletteSwatches from './VillagePaletteSwatches.js';
 import { sortStructures, STRUCTURE_SORT_OPTIONS } from '../../core/building/sortStructures.js';
 import { toCssHex, fromCssHex } from '../../core/building/ColorHex.js';
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
-import { libraryCategoryName, libraryItemDescription, libraryItemName } from '../i18n/libraryText.js';
+import { normalizeQuery, searchLibrary, textMatches } from '../../core/library/LibrarySearch.js';
+import { libraryCategoryName, libraryItemDescription, libraryItemName, libraryItemWords, librarySearchIgnoredWords } from '../i18n/libraryText.js';
 import { t } from '../i18n/i18n.js';
 
 // Exported (not just module-local) so tests/BuildLibraryUX.test.js can
-// exercise the actual matching rule directly — the same "logic lives
-// in something headlessly testable, the component is a thin visual
-// layer over it" convention ui/components/CommandPalette.js's own
-// EditorActionRegistry.findMatching() already established, applied
-// here as two plain functions rather than a whole extra class, since
-// that is genuinely all the rule is.
+// exercise the actual matching rule directly. matches() is search's first
+// rule on its own: the text typed, inside an item's text. What the panel
+// shows comes from core/library/LibrarySearch.js's searchLibrary(), which
+// falls back to finding an item's own words in what was typed when that
+// rule finds nothing.
 export function normalize(query) {
-    return (query || '').trim().toLowerCase();
+    return normalizeQuery(query);
 }
 
 export function matches(query, ...fields) {
-    if (!query) {
-        return true;
-    }
-    const haystack = fields.join(' ').toLowerCase();
-    return haystack.includes(query);
+    return textMatches(query, fields);
 }
 
 // 0.6.4 — Blueprint Discovery, Search & Library Organization. Pure,
@@ -99,6 +95,24 @@ function brickSectionFor(definition) {
         return 'Openings';
     }
     return BRICK_SECTION_BY_CATEGORY[definition.category] || definition.category;
+}
+
+// What search looks in for a brick and a structure (rule 1), and the
+// words it counts (rule 2); see core/library/LibrarySearch.js.
+export const BRICK_SEARCH = {
+    text: (definition) => [libraryItemName(definition), definition.name, definition.category, brickSectionFor(definition), definition.tags.join(' '), ...libraryItemWords(definition)],
+    words: (definition) => [libraryItemName(definition), definition.name, ...definition.tags, ...libraryItemWords(definition)]
+};
+export const STRUCTURE_SEARCH = {
+    text: (structure) => [libraryItemName(structure), structure.name, structure.category, structure.tags.join(' '), libraryItemDescription(structure), structure.description, ...libraryItemWords(structure)],
+    words: (structure) => [libraryItemName(structure), structure.name, ...structure.tags, ...libraryItemWords(structure)]
+};
+
+// The ids of the items `query` finds among `items`, which may hold the same
+// item more than once (a structure both pinned and recent).
+export function foundIds(query, items, rules, ignoredWords) {
+    const unique = [...new Map(items.map((item) => [item.id, item])).values()];
+    return new Set(searchLibrary(query, unique, { ...rules, ignoredWords }).map((item) => item.id));
 }
 
 // Regroups [{ category, definitions }] into display sections, known
@@ -372,14 +386,18 @@ export default {
             chooseColor(fromCssHex(event.target.value));
         }
 
+        // The language doesn't change while the app runs (ui/i18n/i18n.js).
+        const ignoredWords = librarySearchIgnoredWords();
+
+        const foundBrickIds = computed(() => foundIds(
+            query.value, brickGroups.value.flatMap((group) => group.definitions), BRICK_SEARCH, ignoredWords));
+
         const filteredBrickGroups = computed(() => {
-            const normalized = normalize(query.value);
+            const found = foundBrickIds.value;
             return groupBricksForDisplay(brickGroups.value)
                 .map((group) => ({
                     category: group.category,
-                    definitions: group.definitions.filter((definition) =>
-                        matches(normalized, libraryItemName(definition), definition.name, definition.category, group.category, definition.tags.join(' '))
-                    )
+                    definitions: group.definitions.filter((definition) => found.has(definition.id))
                 }))
                 .filter((group) => group.definitions.length > 0);
         });
@@ -389,13 +407,23 @@ export default {
         // is exactly what buildCategoryOptions() counts, so picking one
         // category from the dropdown never changes any OTHER category's
         // own displayed count.
+        //
+        // Every list on the Structures tab is searched together, so when
+        // search falls back to counting words (core/library/LibrarySearch.js)
+        // the best matches are the best across all of them.
+        const foundStructureIds = computed(() => foundIds(query.value, [
+            ...props.structureGroups.flatMap((group) => group.structures),
+            ...(props.personalStructureGroups || []).flatMap((group) => group.structures),
+            ...(props.recentStructures || []).map(({ structure }) => structure),
+            ...(props.pinnedStructures || [])
+        ], STRUCTURE_SEARCH, ignoredWords));
+
         const searchedStructureGroups = computed(() => {
-            const normalized = normalize(query.value);
+            const found = foundStructureIds.value;
             return props.structureGroups
                 .map((group) => ({
                     category: group.category,
-                    structures: group.structures.filter((structure) =>
-                        matches(normalized, libraryItemName(structure), structure.name, structure.category, structure.tags.join(' '), libraryItemDescription(structure), structure.description))
+                    structures: group.structures.filter((structure) => found.has(structure.id))
                 }))
                 .filter((group) => group.structures.length > 0);
         });
@@ -403,15 +431,14 @@ export default {
         // 0.4.3 — Personal Blueprint Library. Same filtering rule as
         // searchedStructureGroups above, applied to the caller's own
         // personalStructureGroups prop instead — one shared query box,
-        // one shared matches() rule, for both the built-in and personal
-        // halves of the Structures tab.
+        // one shared search, for both the built-in and personal halves of
+        // the Structures tab.
         const searchedPersonalStructureGroups = computed(() => {
-            const normalized = normalize(query.value);
+            const found = foundStructureIds.value;
             return (props.personalStructureGroups || [])
                 .map((group) => ({
                     category: group.category,
-                    structures: group.structures.filter((structure) =>
-                        matches(normalized, libraryItemName(structure), structure.name, structure.category, structure.tags.join(' '), libraryItemDescription(structure), structure.description))
+                    structures: group.structures.filter((structure) => found.has(structure.id))
                 }))
                 .filter((group) => group.structures.length > 0);
         });
@@ -460,15 +487,13 @@ export default {
         // already-short list flickering in and out as someone browses
         // categories would defeat its own purpose.
         const filteredRecentStructures = computed(() => {
-            const normalized = normalize(query.value);
-            return (props.recentStructures || []).filter(({ structure }) =>
-                matches(normalized, libraryItemName(structure), structure.name, structure.category, structure.tags.join(' '), libraryItemDescription(structure), structure.description));
+            const found = foundStructureIds.value;
+            return (props.recentStructures || []).filter(({ structure }) => found.has(structure.id));
         });
 
         const filteredPinnedStructures = computed(() => {
-            const normalized = normalize(query.value);
-            return (props.pinnedStructures || []).filter((structure) =>
-                matches(normalized, libraryItemName(structure), structure.name, structure.category, structure.tags.join(' '), libraryItemDescription(structure), structure.description));
+            const found = foundStructureIds.value;
+            return (props.pinnedStructures || []).filter((structure) => found.has(structure.id));
         });
         watch(() => props.pinnedStructures, (pinned) => {
             if (pinned && pinned.length > 0) activeTab.value = 'structures';

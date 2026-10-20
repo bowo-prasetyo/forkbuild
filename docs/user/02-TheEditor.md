@@ -39,7 +39,10 @@ transform bricks, and how to organize your build with groups.
   **▾** folds it again, and the Editor remembers which you chose.
 - **Selection** — only shows what can act on your current selection; see
   [The Selection panel](#the-selection-panel) below.
-- **Build Library** — a search box and two tabs:
+- **Build Library** — a search box and two tabs. Type part of a name, or
+  say what you need in your own words: *something to cross the river*
+  finds the Bridge, *somewhere to sleep* the Bed. The words each brick and
+  structure is found by come with the app, so nothing is sent anywhere.
   - **Bricks** — everything you can place with the Place tool, as tiles in
     six sections (Basic, Structure, Roofs & Stairs, Openings, Details,
     Nature): fifty-nine pieces, from half cubes, round bricks and logs to

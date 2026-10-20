@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: c9cf8ab76a5a2809 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2c43bd99f1b022e2 -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -44,7 +44,11 @@ grupos.
   recuerda lo que eligió.
 - **Selección**: solo muestra lo que puede actuar sobre su selección
   actual; consulte [El panel Selección](#el-panel-selección) más abajo.
-- **Biblioteca de construcción**: un cuadro de búsqueda y dos pestañas:
+- **Biblioteca de construcción**: un cuadro de búsqueda y dos pestañas.
+  Escriba parte de un nombre, o diga con sus propias palabras lo que
+  necesita: *cruzar el río* encuentra el Puente, *dormir* la Cama. Las
+  palabras con las que se encuentra cada bloque y cada estructura vienen con
+  la aplicación, así que no se envía nada a ninguna parte.
   - **Bloques**: todo lo que puede colocar con la herramienta Colocar,
     como mosaicos en seis secciones (Básicos, Estructura, Techos y
     escaleras, Aberturas, Detalles, Naturaleza): cincuenta y nueve piezas,
