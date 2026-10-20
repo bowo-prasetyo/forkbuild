@@ -93,7 +93,11 @@ export class EditorSession {
         // Records the bricks each build starts with (application/document/
         // ReadyMadeBricksStore.js), so publishing can tell them from the
         // builder's own. Optional.
-        readyMadeBricks = null
+        readyMadeBricks = null,
+        // Whether the structure with this id is a ready-made one from the Build
+        // Library rather than one of My Structures (saved from a build, maybe
+        // someone else's): only a ready-made one's bricks are recorded above.
+        isReadyMadeStructure = () => true
     }) {
         this._registry = registry;
         this._editorContext = editorContext;
@@ -137,6 +141,7 @@ export class EditorSession {
         });
         this._documentOperationRecovery = documentOperationRecovery;
         this._readyMadeBricks = readyMadeBricks;
+        this._isReadyMadeStructure = isReadyMadeStructure;
 
         this._container = null;
         this._session = null;
@@ -638,9 +643,11 @@ export class EditorSession {
         if (this._readyMadeBricks && world) this._readyMadeBricks.started(world);
     }
 
-    // A Build Library structure dropped in: its bricks are ready-made too.
+    // A Build Library structure dropped in: its bricks are ready-made too. One
+    // of My Structures is not: its bricks count as placed by the builder.
     _noteReadyMadePaste(command) {
         if (!this._readyMadeBricks || !command || !command.isLibraryStructure) return;
+        if (!this._isReadyMadeStructure(command.structureId)) return;
         const world = this._documentManager.document?.world;
         if (!world || world.id !== command.worldId) return;
         const building = world.getBuilding(command.buildingId);

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ad4cbc60b8459553 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: e059fcfef844d10c -->
 # 04 — Publier et remixer
 
 <!-- languages -->
@@ -496,6 +496,11 @@ Ce qui est comparé, et ce qu’il ne peut pas savoir :
   vôtre (celle dont elle est un remix, ses remix et tout autre remix de la
   même famille) et les constructions publiées après la première
   publication de la vôtre sont laissés de côté.
+- Une construction refaite à la main d’après celle de quelqu’un d’autre,
+  ou faite de briques copiées depuis celle-ci ou enregistrées dans **Mes
+  structures**, n’est pas dans son arbre de famille : seul **Modifier une
+  copie** garde ce lien. Une telle construction est comparée comme les
+  autres, puisque c’est justement ce que ces indications doivent repérer.
 - Il ne connaît que les constructions que cet appareil a vues : ne rien
   trouver ne veut donc pas dire que personne n’a rien construit de
   semblable. C’est une indication, pas un jugement : des constructions

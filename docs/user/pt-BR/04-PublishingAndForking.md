@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ad4cbc60b8459553 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: e059fcfef844d10c -->
 # 04 — Publicar e remixar
 
 <!-- languages -->
@@ -465,6 +465,11 @@ O que ele compara, e o que ele não tem como saber:
   genealógica da sua (a construção da qual ela é remix, os remixes dela e
   qualquer outro remix da mesma família) e as construções publicadas depois
   que a sua foi publicada pela primeira vez.
+- Uma construção refeita à mão a partir da de outra pessoa, ou feita com
+  blocos copiados dela ou salvos dela em **Minhas estruturas**, não está na
+  árvore da família dela: só **Editar uma cópia** guarda esse vínculo. Uma
+  construção assim é comparada como qualquer outra, já que encontrá-la é
+  justamente para isso que servem estas dicas.
 - Ele só conhece as construções que este aparelho viu, então não encontrar
   nada não quer dizer que ninguém construiu algo parecido. É uma dica, não
   um julgamento: construções podem se parecer por acaso, e só você sabe

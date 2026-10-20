@@ -8173,3 +8173,29 @@ builders changed.
   unchanged bricks; `readyMadeCoverage()` by size; a `coverageFor` given.
 - Not done: the Collection's lighthouse keeps only 64% of the watchtower it was built from, which no share safe for
   hand-built builds catches; builds made by hand from other people's published builds are not ready-made.
+
+
+## Copies made through My Structures, and the lighthouse (unnumbered, 2026-10-20)
+
+**Bricks saved to My Structures slipped past the look-alike hint at publish.** Placing, or starting a build from, one
+of My Structures recorded its bricks as ready-made, as if it came from the Build Library. So someone could save a
+selection of another person's build (or import their shared blueprint), place it in a new build, and publish without
+the "looks very similar to…" hint. Pillar served: your work is yours (credit travels with the work). How a player
+notices: a build put together from someone else's bricks through My Structures is compared at publish like one
+rebuilt by hand; the user guide says that a build copied without **Edit a Copy** is what these hints are for.
+
+- An audit of every way bricks move between builds: Edit a Copy (and World View's fork on edit) and importing someone
+  else's build file keep the link to the original (`parentDocumentId`), so the family is left out; pasting between
+  builds, My Structures (saved or imported blueprints) and importing a file as one's own keep none, so those builds
+  are compared. Only My Structures were also hidden from the check at publish.
+- application/editor/EditorSession.js: `isReadyMadeStructure(id)` (EditorView: an id in the built-in
+  StructureRegistry that no personal structure has) decides whether `forkStructure()` and a structure's paste record
+  ready-made bricks; PasteBricksCommand carries `structureId` in memory, set by CopyStructureIntoDocumentUseCase.
+- docs/user/04 (a build rebuilt by hand, or from copied or saved bricks, is compared) in every language;
+  docs/Architecture.md.
+- Tests: My Structures forked and dropped in count as the builder's bricks, while a Build Library well beside it and a
+  Build Library house started from stay ready-made; the Collection's lighthouse keeps 7 of the watchtower's 11
+  bricks, too few to count as the watchtower (its changes are its builder's), while the lighthouse itself is taken
+  out whole, also under a remix of it.
+- Not done: a build file imported as one's own when it names no author (or its author was deleted from it) keeps no
+  link to where it came from; it is compared, as a copy by hand would be.

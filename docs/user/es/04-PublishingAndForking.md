@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ad4cbc60b8459553 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: e059fcfef844d10c -->
 # 04 — Publicar y remezclar
 
 <!-- languages -->
@@ -475,6 +475,11 @@ Qué compara y qué no puede saber:
   genealógico de la suya (de la que es una remezcla, sus remezclas y
   cualquier otra remezcla de la misma familia) y las construcciones
   publicadas después de que la suya se publicara por primera vez.
+- Una construcción rehecha a mano a partir de la de otra persona, o hecha
+  con bloques copiados de ella o guardados en **Mis estructuras**, no forma
+  parte de su árbol familiar: solo **Editar una copia** guarda ese vínculo.
+  Una construcción así se compara como cualquier otra, ya que detectarla es
+  justo para lo que sirven estos avisos.
 - Solo conoce las construcciones que este dispositivo ha visto, así que no
   encontrar nada no significa que nadie haya construido algo parecido. Es
   una pista, no un juicio: las construcciones pueden parecerse por

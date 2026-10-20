@@ -674,7 +674,8 @@ export default {
             blueprintLineageExchange,
             documentCommandPropagation,
             documentOperationRecovery,
-            readyMadeBricks
+            readyMadeBricks,
+            isReadyMadeStructure: (id) => structureRegistry.has(id) && !personalStructureLibraryStore.getStructure(id)
         });
 
         // Build with me (application/buildTogether/): this build, edited live

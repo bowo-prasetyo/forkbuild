@@ -436,6 +436,10 @@ What it compares, and what it can't know:
 - Your own builds, every build in your build's family tree (what it was
   remixed from, its remixes, and every other remix in the same family), and
   builds published after yours was first published are left out.
+- A build rebuilt by hand from someone else's, or made from bricks copied
+  from it or saved from it to **My Structures**, isn't in its family tree:
+  only **Edit a Copy** keeps that link. Such a build is compared like any
+  other, since spotting it is what these hints are for.
 - It only knows the builds this device has seen, so finding nothing doesn't
   mean nobody has built anything like it. It is a hint, not a judgement:
   builds can look alike by chance, and only you know how you made yours.

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ad4cbc60b8459553 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: e059fcfef844d10c -->
 # 04 — Penerbitan & Remix
 
 <!-- languages -->
@@ -479,6 +479,11 @@ Apa yang dibandingkan, dan apa yang tidak bisa diketahuinya:
   (yang di-remix olehnya, remix-remixnya, dan remix lain dalam keluarga yang
   sama), dan bangunan yang diterbitkan setelah bangunan Anda pertama kali
   diterbitkan tidak diikutkan.
+- Bangunan yang dibuat ulang dengan tangan dari bangunan orang lain, atau
+  dibuat dari balok yang disalin darinya atau disimpan darinya ke **Struktur
+  Saya**, tidak termasuk silsilahnya: hanya **Edit Salinan** yang menyimpan
+  tautan itu. Bangunan seperti itu dibandingkan seperti bangunan lain, karena
+  justru itulah gunanya petunjuk ini.
 - ForkBuild hanya mengenal bangunan yang pernah dilihat perangkat ini, jadi
   tidak menemukan apa pun bukan berarti tidak ada yang membangun sesuatu
   yang mirip. Ini petunjuk, bukan penilaian: bangunan bisa mirip secara

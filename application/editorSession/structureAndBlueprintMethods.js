@@ -8,14 +8,15 @@ import { RemoveStructurePlacementCommand } from '../commands/RemoveStructurePlac
 export const structureAndBlueprintMethods = {
     // Forks a library Structure into a new Document and opens it through the same
     // path as a Load; the library Structure is never touched. Returns false for a
-    // falsy structure.
+    // falsy structure. A Build Library structure's bricks are ready-made; one of
+    // My Structures' are the builder's.
     forkStructure(structure) {
         if (!structure) {
             return false;
         }
         const forkedDocument = this._forkStructureUseCase.execute(structure, this._identityProvider);
         this.openDocument(forkedDocument);
-        this.noteReadyMadeStart();
+        if (this._isReadyMadeStructure(structure.id)) this.noteReadyMadeStart();
         return true;
     },
 

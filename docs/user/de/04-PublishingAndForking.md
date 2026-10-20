@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ad4cbc60b8459553 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: e059fcfef844d10c -->
 # 04 — Veröffentlichen & Remixen
 
 <!-- languages -->
@@ -478,6 +478,11 @@ Was verglichen wird und was es nicht wissen kann:
   es geremixt wurde, seine Remixe und jeder andere Remix derselben Familie)
   und Bauwerke, die erst nach der ersten Veröffentlichung von Ihrem
   veröffentlicht wurden, bleiben außen vor.
+- Ein Bauwerk, das jemand von Hand nach einem fremden nachgebaut hat oder
+  aus Steinen, die daraus kopiert oder in **Meine Strukturen** gespeichert
+  wurden, gehört nicht zu dessen Stammbaum: Nur **Eine Kopie bearbeiten**
+  hält diese Verbindung fest. Ein solches Bauwerk wird wie jedes andere
+  verglichen, denn genau dafür sind diese Hinweise da.
 - Es kennt nur die Bauwerke, die dieses Gerät gesehen hat. Findet es nichts,
   heißt das also nicht, dass niemand etwas Ähnliches gebaut hat. Es ist ein
   Hinweis, kein Urteil: Bauwerke können sich zufällig ähneln, und nur Sie

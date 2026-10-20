@@ -24,8 +24,12 @@ import { descriptionFromJSON, descriptionToJSON, bricksMessage } from './History
 // renderer-ignorant: its job ends at World.addBrickToBuilding()/
 // removeBrickFromBuilding()/addGroup()/removeGroup().
 export class PasteBricksCommand extends Command {
-    constructor({ worldId, buildingId, items = [], groups = [], description = null, id, timestamp } = {}) {
+    constructor({ worldId, buildingId, items = [], groups = [], description = null, structureId = null, id, timestamp } = {}) {
         super({ id, timestamp });
+        // The structure these bricks were copied from, if any; kept in memory
+        // only, for EditorSession to tell a Build Library structure from a
+        // personal one.
+        this._structureId = structureId;
         this._worldId = worldId;
         this._buildingId = buildingId;
         this._items = items.map((item) => ({
@@ -68,6 +72,7 @@ export class PasteBricksCommand extends Command {
     // (application/editor/CopyStructureIntoDocumentUseCase.js) rather than
     // the builder's own, copied and pasted (core/PlacedBricks.js).
     get isLibraryStructure() { return this._description?.key === 'history.copyStructureIntoDocument'; }
+    get structureId() { return this._structureId; }
 
     execute(context) {
         this._assertWorldMatches(context);
