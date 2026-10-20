@@ -1,4 +1,4 @@
-// Plays core/MusicScore.js's phrases with the Web Audio API, into a gain the
+// Plays core/app/MusicScore.js's phrases with the Web Audio API, into a gain the
 // soundscape provider (audio/WebAudioSoundscapeProvider.js) connects under
 // its master volume. Three soft voices, synthesized like every other sound
 // in ForkBuild so nothing is downloaded: a music-box melody (a sine with a
@@ -8,7 +8,7 @@
 // never depends on when a JavaScript timer happens to run.
 import {
     BEATS_PER_PHRASE, MUSIC_MOOD, musicPhrase, secondsPerBeat
-} from '../core/MusicScore.js';
+} from '../core/app/MusicScore.js';
 
 // How far ahead of the audio clock notes are scheduled, and how often.
 const LOOKAHEAD_SECONDS = 0.6;

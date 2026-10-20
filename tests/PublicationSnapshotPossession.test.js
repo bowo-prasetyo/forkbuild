@@ -3,7 +3,7 @@ import { describePublicationReplicaContentKnowledge } from '../application/publi
 import { CheckLocalSnapshotContentAvailabilityUseCase } from '../application/snapshot/materialization/CheckLocalSnapshotContentAvailabilityUseCase.js';
 import { LocalSnapshotContentAvailabilityOutcome } from '../application/snapshot/materialization/LocalSnapshotContentAvailabilityOutcome.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
-import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
+import { DecentralizedPublication } from '../core/publication/DecentralizedPublication.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { makeIdentity } from './support/TestIdentity.js';

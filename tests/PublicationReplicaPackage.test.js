@@ -9,8 +9,8 @@ import { derivePublicationSnapshotPlacementConvergence } from '../application/sn
 import { publicationSnapshotPlacementConvergenceView } from '../application/snapshot/placement/PublicationSnapshotPlacementConvergenceView.js';
 import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { PublicationExchange } from '../application/publication/PublicationExchange.js';
-import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { DecentralizedPublication } from '../core/publication/DecentralizedPublication.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
 import { PublicationAnchorExchange } from '../application/anchoring/PublicationAnchorExchange.js';
 import { PublicationAnchorPeerExchange } from '../application/anchoring/PublicationAnchorPeerExchange.js';
@@ -21,8 +21,8 @@ import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapsho
 import { PublicationSnapshotPlacementExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementExchange.js';
 import { LocalPlacementKnowledgeStore } from '../application/placement/LocalPlacementKnowledgeStore.js';
 import { PlacementAcquisitionKind } from '../application/placement/PlacementAcquisitionKind.js';
-import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
-import { PublicationAnchor } from '../core/PublicationAnchor.js';
+import { PublicationSnapshotPlacement } from '../core/publication/PublicationSnapshotPlacement.js';
+import { PublicationAnchor } from '../core/publication/PublicationAnchor.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';

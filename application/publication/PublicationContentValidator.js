@@ -3,7 +3,7 @@ import { isNonBlankString } from '../../utils/typeGuards.js';
 // 0.9.331 — Publication Content Kind for Decentralized Discovery.
 //
 // Strict, side-effect-free STRUCTURAL validation of a Publication as it
-// travels wrapped inside a core/DecentralizedPublication.js envelope —
+// travels wrapped inside a core/publication/DecentralizedPublication.js envelope —
 // the exact same split every other publication validator in this
 // codebase already draws (see application/
 // BlueprintAttributionPublicationValidator.js's own header): this module
@@ -17,8 +17,8 @@ import { isNonBlankString } from '../../utils/typeGuards.js';
 // wrapper only earns its place when the wrapped domain object does not
 // already self-describe on the wire. A Publication does not carry its
 // own `kind`/`schemaVersion` self-descriptor the way a
-// core/BlueprintAttribution.js does — but it does not need one here,
-// because the ENCLOSING core/DecentralizedPublication.js envelope's own
+// core/building/BlueprintAttribution.js does — but it does not need one here,
+// because the ENCLOSING core/publication/DecentralizedPublication.js envelope's own
 // `contentKind`/`contentSchemaVersion` fields already answer "what kind
 // of content is this?" before application/publication/PublicationResolver.js ever
 // calls into this module (see that class's own header, step 1-2). So the
@@ -77,7 +77,7 @@ function validatePublisherIdentity(identity, prefix) {
 // already tolerates as absent (e.g. an anonymous publisher).
 //
 // `signature`/`publisherIdentity` stay OPTIONAL, unlike every publication
-// kind built since 0.2.16 (see core/Signature.js's own "no unsigned
+// kind built since 0.2.16 (see core/publication/Signature.js's own "no unsigned
 // claims" rule for BLUEPRINT_ATTRIBUTION/PLACE_NAMING_CLAIM/
 // DECENTRALIZED_PUBLICATION and every SignatureType after it). A
 // publisher/Publication.js has never followed that rule —

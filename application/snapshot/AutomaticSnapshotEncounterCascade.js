@@ -4,7 +4,7 @@ import { registerMaterializedSnapshotWorldSource } from './materialization/Mater
 import { StoreSnapshotContentOutcome } from './materialization/StoreSnapshotContentOutcome.js';
 import { DecentralizedSnapshotResolutionOutcome } from './DecentralizedSnapshotResolutionOutcome.js';
 import { AutomaticSnapshotEncounterCascadeOutcome } from './AutomaticSnapshotEncounterCascadeOutcome.js';
-import { describeObserverLocalPublicationEncounter } from '../../core/ObserverLocalPublicationEncounter.js';
+import { describeObserverLocalPublicationEncounter } from '../../core/publication/ObserverLocalPublicationEncounter.js';
 
 // 0.9.187 — Automatic Snapshot Encounter Cascade.
 //
@@ -102,7 +102,7 @@ import { describeObserverLocalPublicationEncounter } from '../../core/ObserverLo
 // no `RETRYING`/`FAILED`/`STOPPED` vocabulary of its own to wrap it in.
 //
 // PROCESSING IDENTITY: `publicationId + contentHash`, NEVER A NOSTR EVENT
-// ID, NEVER A NEW SNAPSHOT IDENTITY. `core/ContentReference.js`'s own
+// ID, NEVER A NEW SNAPSHOT IDENTITY. `core/document/ContentReference.js`'s own
 // `hash` already names WHAT a Snapshot's bytes are; `publicationId` names
 // WHICH Publication they belong to; together they name the ONE processing
 // subject this cascade ever needs to recognize as "the same work already
@@ -318,7 +318,7 @@ import { describeObserverLocalPublicationEncounter } from '../../core/ObserverLo
 //   Unchanged from every earlier milestone in this file — see
 //   "claimedPosition is never promoted," above.
 // - **Creating, reading, or touching a `PlacementRecord` or a
-//   `PlacementRegistry` of any kind.** See core/ObserverLocalPublicationEncounter.js's
+//   `PlacementRegistry` of any kind.** See core/publication/ObserverLocalPublicationEncounter.js's
 //   own header — this file inherits that restraint by construction, never
 //   importing either concept.
 // - **Retry of a failed `resolveEncounterPosition()` call, caching its

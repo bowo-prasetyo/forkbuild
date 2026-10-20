@@ -2,13 +2,13 @@ import { EventBus } from '../../core/events/EventBus.js';
 import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
 import { ReplayGuard } from '../../replication/ReplayGuard.js';
 import { WorldAuthorizationService } from '../identity/WorldAuthorizationService.js';
-import { WorldAccessLevel } from '../../core/WorldAccessLevel.js';
+import { WorldAccessLevel } from '../../core/collaboration/WorldAccessLevel.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 import { CommandHistoryEvent } from '../events/CommandHistoryEvent.js';
 import {
     toDocumentOperationEnvelope,
     isValidDocumentOperationEnvelope
-} from '../../core/DocumentOperationEnvelope.js';
+} from '../../core/collaboration/DocumentOperationEnvelope.js';
 
 const OPERATION_RECEIVED_EVENT = 'DocumentOperationReceived';
 const OPERATION_REJECTED_EVENT = 'DocumentOperationRejected';
@@ -102,7 +102,7 @@ export const DocumentOperationRejectionReason = Object.freeze({
 //                                      codebase's `application/commands/`
 //                                      carries one, whether the Document
 //                                      it targets is a World or a
-//                                      Structure — see core/Document.js's
+//                                      Structure — see core/document/Document.js's
 //                                      own header, a Document IS a World
 //                                      plus metadata), when present, must
 //                                      agree with the envelope's own
@@ -133,7 +133,7 @@ export const DocumentOperationRejectionReason = Object.freeze({
 //
 // 0.9.227 — Document Operation Identity & Causal Predecessor Boundary.
 // `broadcastCommand()` now accepts an optional `causalPredecessors` list
-// (see `core/DocumentOperationEnvelope.js`'s own header for the field's
+// (see `core/collaboration/DocumentOperationEnvelope.js`'s own header for the field's
 // exact semantics) and `attachCommandHistory()` derives it automatically
 // for every LOCALLY-authored command: whatever was on top of this
 // replica's own `commandHistory` immediately before the new command —
@@ -146,7 +146,7 @@ export const DocumentOperationRejectionReason = Object.freeze({
 // pre-0.9.227 sender) through `onOperationReceived()` UNCHANGED — never
 // interpreted, reordered, or used to decide acceptance — so a caller
 // that wants to reason about causal relationships (via
-// `core/DocumentOperationCausality.js#DocumentOperationCausalGraph`) has
+// `core/collaboration/DocumentOperationCausality.js#DocumentOperationCausalGraph`) has
 // the real data to do it with. Nothing in this class ever constructs or
 // consults a causal graph itself; see that file's own header for why.
 export class DocumentCommandPropagationUseCase {
@@ -223,7 +223,7 @@ export class DocumentCommandPropagationUseCase {
     // instance (never pre-serialized) — this method calls `toJSON()`
     // itself, exactly once, so every peer receives an identical envelope.
     // `causalPredecessors` (0.9.227) is optional and defaults to `[]` —
-    // see `core/DocumentOperationEnvelope.js`'s own header. Returns the
+    // see `core/collaboration/DocumentOperationEnvelope.js`'s own header. Returns the
     // operationId (== command.id) it sent.
     broadcastCommand({ documentId, command, causalPredecessors = [] }) {
         if (!documentId || typeof documentId !== 'string') {

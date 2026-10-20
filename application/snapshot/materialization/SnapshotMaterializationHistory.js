@@ -43,7 +43,7 @@ import { StoreSnapshotContentOutcome } from './StoreSnapshotContentOutcome.js';
 // NEVER PERSISTED, NEVER SHARED — the identical restraint application/
 // SnapshotMaterializationAttempt.js's own header already holds for each
 // individual entry, now extended to the sequence as a whole. This history
-// is never written onto a core/DecentralizedPublication.js, a core/
+// is never written onto a core/publication/DecentralizedPublication.js, a core/
 // PublicationSnapshotPlacement.js, a catalog, or a package — it lives only
 // in ui/views/DecentralizedPublicationsView.js's own ephemeral
 // `entry.materializationHistory`, reset to empty the moment the

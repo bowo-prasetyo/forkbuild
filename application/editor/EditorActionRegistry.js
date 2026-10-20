@@ -57,11 +57,11 @@
 // action is still reachable by search or shortcut regardless of tier,
 // per docs/Principles.md's own "no second, poorer surface" posture.
 // Unset defaults to 'common' via define()'s own spread below.
-import { message } from '../../core/Message.js';
-import { isUserFacingError } from '../../core/UserFacingError.js';
+import { message } from '../../core/app/Message.js';
+import { isUserFacingError } from '../../core/app/UserFacingError.js';
 
 // Text is never written here: every label, description, reason and bit of
-// feedback is a message named after the action's id (core/Message.js), which
+// feedback is a message named after the action's id (core/app/Message.js), which
 // the UI shows in the chosen language. See docs/Translating.md, "Editor
 // actions", for the key names.
 export function actionLabel(id) {
@@ -528,7 +528,7 @@ export function createStandardActions({ session, feedback, ui = {} }) {
                 feedback.show(done('transform.rotateCounterClockwise'));
             })
         }),
-        // Tilt (core/BrickOrientation.js): lays each selected brick on its next
+        // Tilt (core/building/BrickOrientation.js): lays each selected brick on its next
         // side, where it stands. Bricks only; a placed structure turns but
         // never tilts.
         define({

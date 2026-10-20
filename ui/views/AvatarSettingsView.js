@@ -25,7 +25,7 @@ import { errorText, hasMessage, t } from '../i18n/i18n.js';
 // Skin tone -> swatch color is a PRESENTATION-ONLY lookup local to
 // this view. It is not part of the appearance schema (a skin option
 // is validated as an opaque id, like "skin-03" — see
-// core/AvatarAppearanceValidator.js) and never leaves this file.
+// core/avatar/AvatarAppearanceValidator.js) and never leaves this file.
 const SKIN_TONE_SWATCHES = {
     'skin-01': '#ffe0bd',
     'skin-02': '#f1c27d',

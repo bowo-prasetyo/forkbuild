@@ -1,26 +1,26 @@
 import { SetArweaveGatewayConfigurationUseCase } from '../../application/settings/SetArweaveGatewayConfigurationUseCase.js';
 import { bootstrapWorldDiscoveryRuntime } from '../../application/discovery/WorldDiscoveryRuntimeBootstrap.js';
 import { LocalStorageProvider } from '../../storage/LocalStorageProvider.js';
-import { DEFAULT_ARWEAVE_GATEWAY_URLS } from '../../core/ArweaveGatewayConfiguration.js';
+import { DEFAULT_ARWEAVE_GATEWAY_URLS } from '../../core/networks/ArweaveGatewayConfiguration.js';
 import { ArweaveGatewayConfigurationStore } from '../../storage/ArweaveGatewayConfigurationStore.js';
 import { SetIpfsGatewayConfigurationUseCase } from '../../application/settings/SetIpfsGatewayConfigurationUseCase.js';
 import { SetIpfsNodeConfigurationUseCase } from '../../application/settings/SetIpfsNodeConfigurationUseCase.js';
-import { DEFAULT_NOSTR_RELAY_URLS } from '../../core/NostrRelayConfiguration.js';
+import { DEFAULT_NOSTR_RELAY_URLS } from '../../core/networks/NostrRelayConfiguration.js';
 import { NostrRelayConfigurationStore } from '../../storage/NostrRelayConfigurationStore.js';
 import { SetNostrRelayConfigurationUseCase } from '../../application/settings/SetNostrRelayConfigurationUseCase.js';
-import { SteemReadingConfiguration } from '../../core/SteemReadingConfiguration.js';
+import { SteemReadingConfiguration } from '../../core/networks/SteemReadingConfiguration.js';
 import { SteemReadingConfigurationStore } from '../../storage/SteemReadingConfigurationStore.js';
 import { SetSteemReadingConfigurationUseCase } from '../../application/settings/SetSteemReadingConfigurationUseCase.js';
 import { composeSteemRuntime } from '../../application/steem/SteemRuntimeComposition.js';
 import { publishedBuildTags } from '../../application/challenge/PublishedBuildTags.js';
 import { composeSteemPublicationNoticeDescriber } from '../../application/steem/SteemPublicationNoticeComposition.js';
 import { DISCOVERY_CLAIM_IPFS_TIMEOUT_MS, buildIpfsWorldEncounterMaterialResolver, composePublicationClaimRetriever } from '../../application/publication/PublicationClaimRetriever.js';
-import { DEFAULT_IPFS_GATEWAY_URLS } from '../../core/IpfsGatewayConfiguration.js';
+import { DEFAULT_IPFS_GATEWAY_URLS } from '../../core/networks/IpfsGatewayConfiguration.js';
 import { SteemAnnouncingConfigurationStore } from '../../storage/SteemAnnouncingConfigurationStore.js';
 import { SetSteemAnnouncingConfigurationUseCase } from '../../application/settings/SetSteemAnnouncingConfigurationUseCase.js';
 import { createSteemKeychainBroadcaster } from '../../steem/SteemKeychainBroadcaster.js';
 import { SteemContentUploadStore } from '../../storage/SteemContentUploadStore.js';
-import { BlurtReadingConfiguration } from '../../core/BlurtReadingConfiguration.js';
+import { BlurtReadingConfiguration } from '../../core/networks/BlurtReadingConfiguration.js';
 import { BlurtReadingConfigurationStore } from '../../storage/BlurtReadingConfigurationStore.js';
 import { BlurtAnnouncingConfigurationStore } from '../../storage/BlurtAnnouncingConfigurationStore.js';
 import { BlurtContentUploadStore } from '../../storage/BlurtContentUploadStore.js';
@@ -55,7 +55,7 @@ export function composeWorldDiscovery({
     peerSessionManager, peerMessageBus, publicationCatalog, ipfsGatewayConfigurationStore,
     ipfsNodeConfigurationStore, publicationContentStore = null, announcementIndex = null,
     // Whether this device's writer for a network is switched on
-    // (core/NetworkWriters.js): Steem and Blurt post nothing while theirs is off.
+    // (core/publication/NetworkWriters.js): Steem and Blurt post nothing while theirs is off.
     isNetworkWriterEnabled = () => true
 }) {
     // The one World discovery registry. A peer's World contribution registers when

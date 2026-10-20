@@ -1,9 +1,9 @@
 import { readFile } from 'node:fs/promises';
 import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
-import { VehicleType } from '../core/VehicleType.js';
-import { resolveAvatarVehicleMovementCapability, AvatarMovementCapabilityKind } from '../core/AvatarVehicleMovementCapability.js';
-import { AvatarVehicleBrakingIntent } from '../core/AvatarVehicleBrakingIntent.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
+import { resolveAvatarVehicleMovementCapability, AvatarMovementCapabilityKind } from '../core/vehicles/AvatarVehicleMovementCapability.js';
+import { AvatarVehicleBrakingIntent } from '../core/vehicles/AvatarVehicleBrakingIntent.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
@@ -104,7 +104,7 @@ function buildSession(registry, avatarProfileUseCase, avatarPresenceSession) {
 }
 
 // The exact discrete "never overshoots" recurrence
-// core/AvatarMovementAccelerationSimulation.js#resolveMovementSpeed()
+// core/avatar/AvatarMovementAccelerationSimulation.js#resolveMovementSpeed()
 // itself implements — reproduced here, bit-for-bit the same operations
 // in the same order, purely to compute EXPECTED per-tick speeds for this
 // file's own assertions. Never imported from production code: this file
@@ -318,7 +318,7 @@ async function runTests() {
 
     // -------------------------------------------------------------
     // Section 9 — DRONE now moves too (Aerial Movement Pipeline
-    // milestone — see core/AvatarVehicleMovementCapability.js's own
+    // milestone — see core/vehicles/AvatarVehicleMovementCapability.js's own
     // "AERIAL_VEHICLE Is Now A Real, Supported Capability" header), and
     // the observation seam reflects real movement rather than a
     // permanently-blocked capability

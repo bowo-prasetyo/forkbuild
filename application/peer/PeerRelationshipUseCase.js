@@ -1,8 +1,8 @@
 import { EventBus } from '../../core/events/EventBus.js';
 import { PeerIdentity } from '../../peer/PeerIdentity.js';
-import { PeerRelationship } from '../../core/PeerRelationship.js';
-import { UserFacingError } from '../../core/UserFacingError.js';
-import { message } from '../../core/Message.js';
+import { PeerRelationship } from '../../core/social/PeerRelationship.js';
+import { UserFacingError } from '../../core/app/UserFacingError.js';
+import { message } from '../../core/app/Message.js';
 
 const RELATIONSHIPS_CHANGED_EVENT = 'PeerRelationshipsChanged';
 const STORAGE_KEY_PREFIX = 'peer-relationships:';
@@ -12,7 +12,7 @@ const STORAGE_KEY_PREFIX = 'peer-relationships:';
 // "I successfully authenticated Bob once. How do I remember that I
 // know Bob without pretending the old connection is still alive?"
 // This class is the answer: the persistent-relationship half of the
-// split core/PeerRelationship.js's own header draws between a
+// split core/social/PeerRelationship.js's own header draws between a
 // peer/PeerIdentity.js (proven, but scoped to one connection), a
 // PeerRelationship (durable, but never a live connection), and
 // application/peer/ConnectedPeerRegistry.js (live, but never persisted).
@@ -72,7 +72,7 @@ export class PeerRelationshipUseCase {
     }
 
     // Alice's "Remember Bob" gesture. `peerIdentity` MUST be a real,
-    // verified peer/PeerIdentity.js — see core/PeerRelationship.js's
+    // verified peer/PeerIdentity.js — see core/social/PeerRelationship.js's
     // own header for why: only application/peer/ConnectedPeer.js#remoteIdentity,
     // populated exclusively by a completed peer/PeerAuthenticationSession.js
     // handshake, is eligible to become a persistent relationship. An

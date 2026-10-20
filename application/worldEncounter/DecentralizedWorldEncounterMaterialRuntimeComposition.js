@@ -1,8 +1,8 @@
 import { ArweaveWorldEncounterMaterialResolver } from './ArweaveWorldEncounterMaterialResolver.js';
 import { ArweaveGatewayFailoverWorldEncounterMaterialResolver } from './ArweaveGatewayFailoverWorldEncounterMaterialResolver.js';
 import { DecentralizedWorldEncounterMaterialSource } from './DecentralizedWorldEncounterMaterialSource.js';
-import { STEEM_CONTENT_URI_PREFIX } from '../../core/SteemContentManifest.js';
-import { BLURT_CONTENT_URI_PREFIX } from '../../core/BlurtPost.js';
+import { STEEM_CONTENT_URI_PREFIX } from '../../core/networks/SteemContentManifest.js';
+import { BLURT_CONTENT_URI_PREFIX } from '../../core/networks/BlurtPost.js';
 
 const IPFS_URI_PREFIX = 'ipfs://';
 

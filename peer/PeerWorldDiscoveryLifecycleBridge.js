@@ -91,7 +91,7 @@ import { describePeerWorldDiscoverySource, derivePeerWorldOrigin } from './PeerW
 // that invokes them, or any peer transport machinery underneath.
 //
 // NO WORLD ENCOUNTER DERIVATION OF ANY KIND. This file never imports
-// `core/WorldEncounter.js`, `core/WorldDiscoverySourceAssembly.js`,
+// `core/world/WorldEncounter.js`, `core/world/WorldDiscoverySourceAssembly.js`,
 // `application/worldEncounter/WorldEncounterIntegration.js`, or
 // `application/discovery/WorldDiscoveryRegistryProjection.js`, and never calls
 // `deriveWorldEncounters()`, `assembleWorldDiscoveryInputs()`,

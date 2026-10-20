@@ -85,7 +85,7 @@
 // NO RANKING, NO DEDUPLICATION, NO FILTERING BEYOND WHAT `list()` ITSELF
 // ALREADY RETURNS. Two cataloged placements sharing a `contentHash` but
 // naming different locators/storage backends — explicitly NOT collapsed by
-// `core/PublicationSnapshotPlacement.js`'s own header — are reported as two
+// `core/publication/PublicationSnapshotPlacement.js`'s own header — are reported as two
 // separate candidates here too; deduplication across sources is entirely
 // `application/snapshot/SnapshotCandidateDiscoveryQueryService.js`'s own, separate
 // concern.

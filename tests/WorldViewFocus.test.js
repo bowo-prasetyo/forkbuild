@@ -1,21 +1,21 @@
 import {
     WorldFocusContext, WorldFocusKind, WorldFocusAction,
     isValidWorldFocusKind, deriveWorldFocusContext
-} from '../core/WorldFocusContext.js';
-import { WorldRegion } from '../core/WorldRegion.js';
-import { RegionKind } from '../core/RegionKind.js';
-import { WorldLandmark } from '../core/WorldLandmark.js';
-import { Position } from '../core/Position.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { License, LicenseId } from '../core/License.js';
-import { StructurePlacement } from '../core/StructurePlacement.js';
+} from '../core/world/WorldFocusContext.js';
+import { WorldRegion } from '../core/world/WorldRegion.js';
+import { RegionKind } from '../core/world/RegionKind.js';
+import { WorldLandmark } from '../core/world/WorldLandmark.js';
+import { Position } from '../core/document/Position.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { License, LicenseId } from '../core/document/License.js';
+import { StructurePlacement } from '../core/building/StructurePlacement.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
-import { geographicPlaceLocationId } from '../core/GeographicPlaceNavigation.js';
+import { geographicPlaceLocationId } from '../core/world/GeographicPlaceNavigation.js';
 import { assert } from './support/Assert.js';
 import { displayText } from '../ui/i18n/i18n.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
@@ -30,7 +30,7 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 // answers it, entirely without becoming new World content or a new
 // navigation mechanism:
 //
-// Section A: core/WorldFocusContext.js — pure derivation for all five
+// Section A: core/world/WorldFocusContext.js — pure derivation for all five
 //            kinds, determinism, no mutation, arrival-phrase wording,
 //            graceful nulls.
 // Section B: application/world/WorldNavigationSession.js wiring —
@@ -98,7 +98,7 @@ function makeDocument(worldId, author = 'alice') {
 
 async function run() {
     // -------------------------------------------------------------
-    // Section A: core/WorldFocusContext.js — pure derivation
+    // Section A: core/world/WorldFocusContext.js — pure derivation
     // -------------------------------------------------------------
     {
         assert(isValidWorldFocusKind(WorldFocusKind.REGION), '1. REGION is a valid kind');
@@ -154,7 +154,7 @@ async function run() {
         assert(displayText(structureContext.arrivalPhrase) === 'Unmarked ground — no named place claims this yet.', '23. neutral wording when neither a region nor a geographic place is known');
 
         // COLLABORATOR — description reads the activity, in the same
-        // wording convention core/WorldWelcomeContext.js already uses.
+        // wording convention core/world/WorldWelcomeContext.js already uses.
         const collabEntity = { identityId: 'bob-id', deviceId: 'bob-device', displayName: 'Bob', activity: 'BUILDING', position: { x: 15, y: 0, z: 15 } };
         const collabContext = deriveWorldFocusContext({ kind: WorldFocusKind.COLLABORATOR, entity: collabEntity, viewerPosition: viewer, regions });
         assert(collabContext.title === 'Bob' && displayText(collabContext.subtitle) === 'Collaborator', '24. collaborator title/subtitle');
@@ -194,7 +194,7 @@ async function run() {
         assert(Array.isArray(json.regionPath) && json.regionPath.length === 2, '39. toJSON() carries regionPath as a plain array');
         assert(JSON.stringify(json) === JSON.stringify(landmarkContext.toJSON()), '40. two consecutive toJSON() reads of the SAME instance are byte-identical');
     }
-    console.log('✓ Section A: core/WorldFocusContext.js — all five kinds derive correctly, graceful nulls, byte-identical toJSON()');
+    console.log('✓ Section A: core/world/WorldFocusContext.js — all five kinds derive correctly, graceful nulls, byte-identical toJSON()');
 
     // -------------------------------------------------------------
     // Section B: application/world/WorldNavigationSession.js wiring
@@ -260,7 +260,7 @@ async function run() {
     const doc = makeDocument(worldId);
     // A small region (Willow Village) nested inside a larger one (Green
     // Valley) — proves regionPath reports BOTH, innermost first, for
-    // whatever is focused, exactly as core/WorldRegionGeography.js's own
+    // whatever is focused, exactly as core/world/WorldRegionGeography.js's own
     // convention already establishes.
     const greenValley = region({ id: 'green-valley', worldId, name: 'Green Valley', kind: RegionKind.COUNTRY, x: 0, z: 0, radius: 1000 });
     const willowVillage = region({ id: 'willow-village', worldId, name: 'Willow Village', kind: RegionKind.VILLAGE, x: 100, z: 200, radius: 50 });
@@ -292,7 +292,7 @@ async function run() {
         '58. the same landmark reached from two different surfaces produces byte-identical WorldFocusContext JSON');
     assert(displayText(fromExplore.arrivalPhrase) === 'You are in Willow Village · Green Valley', '59. the landmark\'s own regionPath breadcrumb reports innermost-first containment');
     assert(fromExplore.regionPath.length === 2 && fromExplore.regionPath[0].name === 'Willow Village' && fromExplore.regionPath[1].name === 'Green Valley',
-        '60. regionPath itself is innermost-first, matching core/WorldRegionGeography.js\'s own convention');
+        '60. regionPath itself is innermost-first, matching core/world/WorldRegionGeography.js\'s own convention');
     console.log('✓ Phase C: the same landmark reached from two different surfaces converges on one identical context');
 
     // Phase D — a region focusing on ITSELF still reports the larger

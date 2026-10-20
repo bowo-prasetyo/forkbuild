@@ -120,7 +120,7 @@ import { isNonEmptyString } from '../../../utils/typeGuards.js';
 // exact value `describePublicationDistribution()` (0.9.44) already built —
 // is what gets handed to `discoveryPublisher.publish()`, unmodified, un-
 // re-derived. This file contains no `protocol`/`version`/`kind`/`objectId`/
-// `uri` literal of its own and never imports `core/DecentralizedDiscoveryEnvelope.js`
+// `uri` literal of its own and never imports `core/publication/DecentralizedDiscoveryEnvelope.js`
 // — 0.9.44 remains the only file in this codebase that ever builds one.
 // Likewise, this file never re-infers `material.storage` from
 // `materialUri`'s own scheme once a descriptor call has succeeded — it

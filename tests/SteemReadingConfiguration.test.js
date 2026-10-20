@@ -1,4 +1,4 @@
-import { SteemReadingConfiguration, DEFAULT_STEEM_API_NODES, DEFAULT_STEEM_EARLIEST_PERIOD } from '../core/SteemReadingConfiguration.js';
+import { SteemReadingConfiguration, DEFAULT_STEEM_API_NODES, DEFAULT_STEEM_EARLIEST_PERIOD } from '../core/networks/SteemReadingConfiguration.js';
 import { SteemReadingConfigurationStore } from '../storage/SteemReadingConfigurationStore.js';
 import { SetSteemReadingConfigurationUseCase } from '../application/settings/SetSteemReadingConfigurationUseCase.js';
 import { composeSteemRuntime } from '../application/steem/SteemRuntimeComposition.js';

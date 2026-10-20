@@ -1,14 +1,14 @@
-import { PresenceVisibility } from '../core/PresenceVisibility.js';
-import { PresenceVisibilityPolicy } from '../core/PresenceVisibilityPolicy.js';
-import { AvatarProfileVisibilityPolicy } from '../core/AvatarProfileVisibilityPolicy.js';
+import { PresenceVisibility } from '../core/avatar/PresenceVisibility.js';
+import { PresenceVisibilityPolicy } from '../core/avatar/PresenceVisibilityPolicy.js';
+import { AvatarProfileVisibilityPolicy } from '../core/avatar/AvatarProfileVisibilityPolicy.js';
 import { PresenceVisibilityUseCase } from '../application/presence/PresenceVisibilityUseCase.js';
 import { AvatarProfileVisibilityUseCase } from '../application/avatar/AvatarProfileVisibilityUseCase.js';
 import { FriendRelationshipUseCase } from '../application/identity/FriendRelationshipUseCase.js';
-import { FriendshipState } from '../core/FriendshipState.js';
+import { FriendshipState } from '../core/social/FriendshipState.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { PeerAvatarPresenceBroadcastProvider } from '../presence/PeerAvatarPresenceBroadcastProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -22,12 +22,12 @@ import { GridPlacementStrategy } from '../application/placement/InitialPlacement
 import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
 import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { License, LicenseId } from '../core/License.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { License, LicenseId } from '../core/document/License.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
@@ -43,10 +43,10 @@ import { assert } from './support/Assert.js';
 // reference, never a bypass around one. This file proves the whole
 // boundary:
 //
-//   Section A: core/PresenceVisibilityPolicy.js#shouldAdvertiseToPeer()
+//   Section A: core/avatar/PresenceVisibilityPolicy.js#shouldAdvertiseToPeer()
 //              — the new `{ isFriend }` context, additive alongside the
 //              pre-existing manual authorizedPeerIdentities allow-list.
-//   Section B: core/AvatarProfileVisibilityPolicy.js — the full
+//   Section B: core/avatar/AvatarProfileVisibilityPolicy.js — the full
 //              PUBLIC/FRIENDS/LOCAL/HIDDEN vocabulary it gains this
 //              milestone, and its own independent `{ isFriend }`.
 //   Section C: application/avatar/AvatarProfileVisibilityUseCase.js —
@@ -149,7 +149,7 @@ async function runTests() {
     const registry = buildRegistry();
 
     // -------------------------------------------------------------
-    // Section A — core/PresenceVisibilityPolicy.js#shouldAdvertiseToPeer()
+    // Section A — core/avatar/PresenceVisibilityPolicy.js#shouldAdvertiseToPeer()
     // with { isFriend }
     // -------------------------------------------------------------
     {
@@ -193,7 +193,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section B — core/AvatarProfileVisibilityPolicy.js — full
+    // Section B — core/avatar/AvatarProfileVisibilityPolicy.js — full
     // PUBLIC/FRIENDS/LOCAL/HIDDEN vocabulary + { isFriend }
     // -------------------------------------------------------------
     {

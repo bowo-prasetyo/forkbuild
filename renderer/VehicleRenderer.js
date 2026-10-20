@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { VehicleType } from '../core/VehicleType.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
 import { castShadows } from './ShadowRoles.js';
 
 // 0.9.115 — Vehicle Rendering.
@@ -7,11 +7,11 @@ import { castShadows } from './ShadowRoles.js';
 // The renderer-side "dumb executor" for a VehicleType, the exact role
 // renderer/AvatarRenderer.js already plays for an AvatarTemplate +
 // appearance: it knows how to turn a closed vocabulary value
-// (core/VehicleType.js) into actual Three.js geometry, and nothing else.
+// (core/vehicles/VehicleType.js) into actual Three.js geometry, and nothing else.
 // It has no opinion on WHERE a vehicle is (that's
 // renderer/VehicleVisual.js's job, reading a VehicleInstance's own
 // `position`), WHICH vehicles currently exist (that's
-// core/VehiclePlacement.js/core/VehicleInstance.js's job), or whether one
+// core/vehicles/VehiclePlacement.js/core/VehicleInstance.js's job), or whether one
 // should be visible right now (that's renderer/VehicleFieldRenderer.js's
 // job). See docs/Roadmap.md, 0.9.115.
 //
@@ -24,7 +24,7 @@ import { castShadows } from './ShadowRoles.js';
 // here — see this milestone's own roadmap entry for why that decision
 // stays downstream.
 //
-// 0.9.668 — MOTORCYCLE NOW HAS A BUILDER TOO. core/VehiclePlacement.js's
+// 0.9.668 — MOTORCYCLE NOW HAS A BUILDER TOO. core/vehicles/VehiclePlacement.js's
 // own 0.9.668 update means a motorcycle can now actually exist in the
 // World, so a `null` visual for it stopped being honest the moment it
 // became reachable. buildMotorcycle() is the same "procedural placeholder,
@@ -33,7 +33,7 @@ import { castShadows } from './ShadowRoles.js';
 // rather than open frame tubes, and a distinct color — legible as "a
 // motorcycle, not a bicycle" at a glance, never a loaded mesh/texture.
 //
-// 0.9.669 — CAR NOW HAS A BUILDER TOO. core/VehiclePlacement.js's own
+// 0.9.669 — CAR NOW HAS A BUILDER TOO. core/vehicles/VehiclePlacement.js's own
 // 0.9.669 update means a car can now actually exist in the World, closing
 // the same gap for CAR that 0.9.668 already closed for MOTORCYCLE.
 // buildCar() keeps the identical "procedural placeholder, low-poly
@@ -45,12 +45,12 @@ import { castShadows } from './ShadowRoles.js';
 // as "a car, not a bicycle or a motorcycle" at a glance, never a loaded
 // mesh/texture. build() previously returned `null` for DRONE — see this
 // file's own git history for why — until the spawn/mount plan
-// (core/VehiclePlacement.js's own DRONE share) needed a real visual for
+// (core/vehicles/VehiclePlacement.js's own DRONE share) needed a real visual for
 // it to become reachable at all, closing the same gap 0.9.668/0.9.669
 // already closed for MOTORCYCLE/CAR. buildDrone() keeps the identical
 // "procedural placeholder, low-poly primitives" posture: a small body
 // box on short legs (so it reads as sitting on the ground while
-// GROUNDED — see core/AvatarDroneVerticalState.js), two crossed arms,
+// GROUNDED — see core/avatar/AvatarDroneVerticalState.js), two crossed arms,
 // and four flat cylinder rotors, its own distinct color — legible as "a
 // drone, not a bicycle/motorcycle/car" at a glance, never a loaded
 // mesh/texture. Any VehicleType this renderer still has no builder for
@@ -77,7 +77,7 @@ import { castShadows } from './ShadowRoles.js';
 // graph on every call — cheap enough for a placeholder this small, and
 // it never needs to be told when a vehicle "changes" because a
 // VehicleInstance's own `type` never changes for the life of a vehicle
-// (see core/VehicleInstance.js's own header, "identity never changes").
+// (see core/vehicles/VehicleInstance.js's own header, "identity never changes").
 const WHEEL_RADIUS = 0.33;
 const WHEEL_TUBE_RADIUS = 0.045;
 const WHEEL_RADIAL_SEGMENTS = 8; // low-poly on purpose
@@ -300,7 +300,7 @@ function buildHayWagon() {
 
 // DRONE is drawn as a hot-air balloon: a wicker basket the rider stands in,
 // ropes up to a burner and a striped envelope above the rider's head. It
-// hovers and climbs as the drone always has (core/AvatarDroneVerticalState.js).
+// hovers and climbs as the drone always has (core/avatar/AvatarDroneVerticalState.js).
 const BALLOON_BASKET_SIZE = { x: 0.9, y: 0.72, z: 0.9 };
 const BALLOON_BURNER_Y = 2.3;
 const BALLOON_ENVELOPE_RADIUS = 1.15;
@@ -381,7 +381,7 @@ export class VehicleRenderer {
     // Returns a fresh THREE.Group for a supported `type`, or `null` for
     // any VehicleType this renderer has no visual for yet. Never throws
     // on an unsupported-but-valid VehicleType — only a value
-    // core/VehicleType.js itself wouldn't recognize is this class's
+    // core/vehicles/VehicleType.js itself wouldn't recognize is this class's
     // caller's problem, not this method's.
     build(type) {
         const builder = VEHICLE_BUILDERS[type];

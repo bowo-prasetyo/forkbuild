@@ -1,11 +1,11 @@
 import { Publication } from '../publisher/Publication.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
-import { PublicationCommentary } from '../core/PublicationCommentary.js';
+import { PublicationCommentary } from '../core/publication/PublicationCommentary.js';
 import {
     PublicationCommentaryRemoteNotificationBridge
 } from '../application/publication/commentary/PublicationCommentaryRemoteNotificationBridge.js';
 import { PUBLICATION_COMMENTED_EVENT_TYPE } from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
-import { NotificationEvent } from '../core/NotificationEvent.js';
+import { NotificationEvent } from '../core/social/NotificationEvent.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { makeIdentity } from './support/TestIdentity.js';

@@ -1,10 +1,10 @@
-import { PresenceVisibility } from '../core/PresenceVisibility.js';
-import { PresenceVisibilityPolicy } from '../core/PresenceVisibilityPolicy.js';
+import { PresenceVisibility } from '../core/avatar/PresenceVisibility.js';
+import { PresenceVisibilityPolicy } from '../core/avatar/PresenceVisibilityPolicy.js';
 import { PresenceVisibilityUseCase } from '../application/presence/PresenceVisibilityUseCase.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { PeerAvatarPresenceBroadcastProvider } from '../presence/PeerAvatarPresenceBroadcastProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -18,17 +18,17 @@ import { GridPlacementStrategy } from '../application/placement/InitialPlacement
 import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
 import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { License, LicenseId } from '../core/License.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { License, LicenseId } from '../core/document/License.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { getAvatarPresenceSigningDescriptor } from '../core/AvatarPresenceAdvertisement.js';
+import { getAvatarPresenceSigningDescriptor } from '../core/avatar/AvatarPresenceAdvertisement.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
@@ -42,7 +42,7 @@ import { assert } from './support/Assert.js';
 // the peer authentication/messaging substrate itself (already proven,
 // unmodified, in tests/PeerAuthentication.test.js/PeerMessaging.test.js).
 //
-//   Section A: core/PresenceVisibilityPolicy.js#shouldAdvertiseToPeer()
+//   Section A: core/avatar/PresenceVisibilityPolicy.js#shouldAdvertiseToPeer()
 //              — the one new per-peer question this milestone adds
 //   Section B: presence/PeerAvatarPresenceBroadcastProvider.js
 //              construction, attach/detach, and dispose()
@@ -144,7 +144,7 @@ async function runTests() {
     const registry = buildRegistry();
 
     // -------------------------------------------------------------
-    // Section A — core/PresenceVisibilityPolicy.js#shouldAdvertiseToPeer()
+    // Section A — core/avatar/PresenceVisibilityPolicy.js#shouldAdvertiseToPeer()
     // -------------------------------------------------------------
     {
         const pub = new PresenceVisibilityPolicy({ visibility: PresenceVisibility.PUBLIC });

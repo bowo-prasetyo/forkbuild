@@ -15,7 +15,7 @@ through `ipfsRemotePublicationCoordinator` and announces through the Snapshot di
 same result shape. Failures in both World View panels now go through `sanitizeDistributionErrorMessage()`. A Nostr
 announcement failure after a successful pin is kept as `result.announcementError` and never fails the pin.
 
-**One Nostr relay set, with fan-out.** `core/NostrRelayConfiguration.js` accepts `relayUrls` (a list). New
+**One Nostr relay set, with fan-out.** `core/networks/NostrRelayConfiguration.js` accepts `relayUrls` (a list). New
 `NostrMultiRelaySnapshotDiscoveryPublisher`, `NostrMultiRelaySnapshotDiscoveryQueryService`,
 `NostrMultiRelayPlaceNamingDiscoverySource` and `NostrMultiRelayPublicationCommentaryDistribution` query and publish
 across every relay. Relays are independent stores, so this is fan-out, not ordered failover (the Arweave/IPFS
@@ -37,9 +37,9 @@ and a "Use Preferred Provider" button in the Publication Center use it. Base is 
 transaction), so the preference is Bitcoin or Arweave. A later fix returned `preferredAnchorCreationCoordinator`
 from the Publications page's `setup()`; the button had never actually rendered.
 
-**More endpoints are configurable.** `core/IpfsNodeConfiguration.js` (+ store and use case) sets the Kubo API URL for
+**More endpoints are configurable.** `core/networks/IpfsNodeConfiguration.js` (+ store and use case) sets the Kubo API URL for
 the IPFS write path, edited on the Content Provider page (previously always `127.0.0.1:5001`).
-`core/BitcoinEsploraConfiguration.js` (+ store, use case and `/settings/bitcoin-esplora`) sets the Esplora endpoint
+`core/networks/BitcoinEsploraConfiguration.js` (+ store, use case and `/settings/bitcoin-esplora`) sets the Esplora endpoint
 used for broadcast, confirmation, funding lookups and proof verification. Both follow the Arweave/IPFS Gateway
 pattern.
 
@@ -76,7 +76,7 @@ per line" parser into `utils/splitNonEmptyLines.js`. The never-visible `'saving'
 
 ## World View, vehicles and wildlife (unnumbered, 2026-09-21 to 2026-09-23)
 
-**Tree species.** `core/NaturalFeatureField.js#TREE_SPECIES` (CONIFER/BROADLEAF/SCRUB) is chosen from the moisture
+**Tree species.** `core/nature/NaturalFeatureField.js#TREE_SPECIES` (CONIFER/BROADLEAF/SCRUB) is chosen from the moisture
 field: grassland fringe trees are SCRUB, and forest splits into wetter CONIFER and drier BROADLEAF with a narrow blend
 band. `renderer/NaturalFeatureTileMesh.js` builds one instanced trunk/canopy pair per species present in a tile.
 
@@ -84,20 +84,20 @@ band. `renderer/NaturalFeatureTileMesh.js` builds one instanced trunk/canopy pai
 geometry with no color attribute. `renderer/Lights.js` also replaced its ambient light with a `HemisphereLight` and
 raised both intensities for `MeshStandardMaterial`.
 
-**Wildlife collision.** `core/WildlifeCollisionGeometry.js` (deer 0.5, rabbit 0.3 base radius, scaled per animal),
-`core/AvatarWildlifeCollisionQuery.js` and `application/avatar/AvatarWildlifeConstraint.js` (reusing
-`core/AvatarTreeMovement.js`'s circle resolution). The constraint runs after tree collision as a sixth optional
+**Wildlife collision.** `core/nature/WildlifeCollisionGeometry.js` (deer 0.5, rabbit 0.3 base radius, scaled per animal),
+`core/avatar/AvatarWildlifeCollisionQuery.js` and `application/avatar/AvatarWildlifeConstraint.js` (reusing
+`core/avatar/AvatarTreeMovement.js`'s circle resolution). The constraint runs after tree collision as a sixth optional
 constraint. It blocks walking, not riding.
 
 **Double elevation fix.** A mounted vehicle's domain position already carries real terrain height, so the render
 lift was adding it twice (sinking into valleys, floating over hills). `syncVehicles()` now renders the vehicle as is,
 and the avatar render path skips its own lift while riding (`ridingVehicle`, `_isRidingMovableVehicle()`).
 
-**Drones fly.** `core/AvatarDroneVerticalState.js` (GROUNDED/RISING/HOVERING/DESCENDING, `DRONE_HOVER_ALTITUDE = 4`,
+**Drones fly.** `core/avatar/AvatarDroneVerticalState.js` (GROUNDED/RISING/HOVERING/DESCENDING, `DRONE_HOVER_ALTITUDE = 4`,
 `stepDroneAltitude()`). Drones are placed (`VEHICLE_TYPE_DRONE_SHARE = 0.02`, the rarest type), rendered
 (`buildDrone()`), mountable, and movable as a real `AERIAL_VEHICLE` (speed 16). A drone can't be dismounted while
 meaningfully above the ground. Tree collision is skipped only while HOVERING. Building collision became
-height-aware for free by passing the drone's real Y into `core/AvatarCollision.js`. Ground vehicles now read
+height-aware for free by passing the drone's real Y into `core/avatar/AvatarCollision.js`. Ground vehicles now read
 BICYCLE 6 < MOTORCYCLE 9 < CAR 12 < DRONE 16.
 
 **Map, compass and styles.** The compass updates during an orbit drag. The `<style>` block `WorldView.js` injected at
@@ -112,9 +112,9 @@ this query.
 ## Editor, Commentary and cleanup passes (unnumbered, 2026-09-22 to 2026-09-23)
 
 **Brick colors.** Each brick type's default color moved from `renderer/ThreeBrickFactory.js` onto
-`BrickDefinition#color`. `core/Brick.js` gained an optional per-instance `color` (0xRRGGBB, `null` = the
+`BrickDefinition#color`. `core/building/Brick.js` gained an optional per-instance `color` (0xRRGGBB, `null` = the
 definition's color), set with the undoable `SetBrickColorCommand`. There is a swatch in the Build Library (for the
-next bricks placed) and one in the Selection Inspector (to recolor the selection). `core/ColorHex.js` converts to
+next bricks placed) and one in the Selection Inspector (to recolor the selection). `core/building/ColorHex.js` converts to
 and from CSS hex. `WorldRenderer#_onBrickUpdated` now also applies the color.
 
 **Commentary fetch-on-open.** `application/publication/commentary/RefreshPublicationCommentaryCommandComposition.js` checks Nostr and
@@ -169,7 +169,7 @@ the connection timer and the "Be Discoverable" state app-wide instead of per pag
 
 ## Code-size cleanup (unnumbered, 2026-09-24)
 
-**Shared SHA-256.** `core/Sha256.js` (`sha256()`, `sha256Hex()`) replaces five identical hand-written copies in
+**Shared SHA-256.** `core/document/Sha256.js` (`sha256()`, `sha256Hex()`) replaces five identical hand-written copies in
 `application/publication/observationArchive/PublicationObservationArchiveFingerprint.js`, `application/achievement/AchievementEvidenceFingerprint.js`,
 `application/leaderboard/snapshot/Fingerprint.js`,
 `application/claimSnapshotReconciliation/PlanIdentity.js` and
@@ -191,7 +191,7 @@ milestone tags, "AMENDED BY" notes or superseded reasoning. Line counts: `ui/com
 1781, `application/publication/observationArchive/PublicationObservationArchive.js` 2205 → 1159, `application/editor/EditorSession.js` 1963 → 1420,
 `application/chat/VoiceUseCase.js` 1489 → 854, `application/avatar/AvatarMovementController.js` 1424 → 406,
 `application/chat/ChatUseCase.js` 1179 → 630, `application/avatar/AvatarVehicleInteractionController.js` 1011 → 432,
-`core/AvatarVehicleMovementCapability.js` 854 → 200, `application/world/CreateWorldViewUseCase.js` 826 → 390,
+`core/vehicles/AvatarVehicleMovementCapability.js` 854 → 200, `application/world/CreateWorldViewUseCase.js` 826 → 390,
 `application/publication/distribution/PublicationDistributionLifecycleStore.js` 681 → 145 and
 `application/avatar/AvatarVehicleMovementController.js` 628 → 219. No code changed. Phrases that source-pinning tests quote
 were kept. Tests that used a version-tagged comment as an anchor now anchor on code or on the current comment text
@@ -275,7 +275,7 @@ code), and relative import paths quoted from source.
 
 **More shared helpers.** 102 identical local copies of 17 small helpers across 64 files now come from shared
 modules: `lerp()`/`smoothstep()` (`utils/interpolation.js`), `isFiniteCoordinate()`/`isFiniteXZPosition()`
-(`core/FiniteCoordinates.js`), `responseContentLength()`/`byteLength()` (`utils/responseSize.js`),
+(`core/document/FiniteCoordinates.js`), `responseContentLength()`/`byteLength()` (`utils/responseSize.js`),
 `bytesToHex()`/`hexToBytes()`/`concatBytes()`/`reverseBytes()` for the Bitcoin and Base codecs (`utils/bytes.js`;
 `identity/Ed25519.js` keeps its stricter versions), `hasOnlyKeys()` (`utils/typeGuards.js`), `normalizeRelayUrls()`
 (`application/nostr/NostrRelayUrls.js`), and, in `application/claimSnapshotReconciliation/`, `candidateIdentityKey()`
@@ -365,7 +365,7 @@ still passing, and they broke whenever code was moved or reworded.
   went outright. The other 30 each covered production lines no other test did (measured with V8 line coverage):
   27 stayed with their text-only sections taken out, one (`AvatarInventory`) only matched the naming pattern, and
   two went after their behaviour checks moved to a new test or turned out to come from re-running since-deleted
-  files. Seven more files that executed no production code at all went too. `ProductIntegrityBoundaryHardening` (which edited `core/CausalStamp.js` on disk mid-run) became
+  files. Seven more files that executed no production code at all went too. `ProductIntegrityBoundaryHardening` (which edited `core/collaboration/CausalStamp.js` on disk mid-run) became
   `tests/LayerBoundaries.test.js`, which reads real import statements: `core/` imports nothing from `application/`,
   `renderer/` or `ui/`, and `renderer/` nothing from `application/` or `ui/`. The behaviour checks of one closure
   audit moved to `tests/FailureOutcomeLabels.test.js`.
@@ -467,7 +467,7 @@ expiry decades away, and fill its storage.
   signs) and needs no accounts. The app already signed publications whenever it could; a locked identity is now told
   to unlock instead of publishing unsigned.
 - REMOVE carries the identity's signature over withdrawing that one publication: a new `rendezvous-removal` signature
-  type (`core/RendezvousPublicationEnvelope.js#getRendezvousRemovalSigningDescriptor`), produced by
+  type (`core/social/RendezvousPublicationEnvelope.js#getRendezvousRemovalSigningDescriptor`), produced by
   `peer/RendezvousPublicationSigning.js#signRendezvousRemoval` and sent by `RendezvousDiscoveryProvider.unpublish()`.
 - The server refuses a publication older than the stored one (no rollback to an old endpoint) and keeps a withdrawn
   entry as a tombstone until it expires (a withdrawn publication cannot be replayed).
@@ -542,7 +542,7 @@ block. Cloudflare is used when both providers are configured. Every provider now
 A failing provider's 502 names the step and status, with the key blanked; if Metered's credential listing fails, the
 new credential is used with Metered's standard relay addresses. `wrangler.toml` no longer sets `METERED_DOMAIN`.
 
-**1.0.0 (2026-09-25).** The version moves from 0.9.703 to 1.0.0 (`core/version.js`, shown on the About page, and
+**1.0.0 (2026-09-25).** The version moves from 0.9.703 to 1.0.0 (`core/app/version.js`, shown on the About page, and
 `package.json`), and `docs/ReleaseNotes-1.0.md` is no longer a draft. The release is tagged `v1.0.0`.
 
 **Watching the relay allowance.** The rendezvous worker gains `GET /turn-stats` (this month's credential count, the
@@ -656,7 +656,7 @@ publication record, never to a build, so they stay.
 stored or published document, 36 were its UUID and most of the rest repeated property names. The hollow 233-base
 pyramid was 7.49 MB.
 
-- `core/BrickTable.js`: each building's bricks are one `brickTable`: `definitions` and `colors` palettes in first-use
+- `core/building/BrickTable.js`: each building's bricks are one `brickTable`: `definitions` and `colors` palettes in first-use
   order, `ids`, and six numbers per brick (definition index, x, y, z, rotation, color index or 0). Bricks keep their
   order, so the form is canonical and content hashes stay meaningful. `Building`/`World#toJSON({ compactBricks })`
   write it and `Document#toJSON()` asks for it; `Building.fromJSON()` reads either form; `World#toJSON()` without the
@@ -736,7 +736,7 @@ announcements a durable, ordered and timestamped place at no per-post fee.
 announce, at least twelve months ahead. Posting 52 of them by hand, five minutes apart, each with votes off in the
 same transaction, is error-prone, and steemit.com's editor cannot turn votes off at all.
 
-- `core/SteemDiscoveryThread.js`: families, `YYYY-MM` periods, permlinks, the thread post and its `comment` +
+- `core/networks/SteemDiscoveryThread.js`: families, `YYYY-MM` periods, permlinks, the thread post and its `comment` +
   `comment_options` operations, and `checkSteemDiscoveryThreadContent()` for what `get_content` returns (author,
   root post, category, declined payout, votes and curation off, replies on, metadata). The app will reuse it when
   announcing and reading are built.
@@ -757,7 +757,7 @@ first thread failed with Steem Keychain's "Posting key is incorrect" although th
 all signed and broadcast, while the same reply with `allow_votes` and `allow_curation_rewards` false failed inside
 Keychain before anything was broadcast. Keychain cannot sign options that turn votes off.
 
-- `core/SteemDiscoveryThread.js`: `comment_options` sends `allow_votes: true` and `allow_curation_rewards: true`,
+- `core/networks/SteemDiscoveryThread.js`: `comment_options` sends `allow_votes: true` and `allow_curation_rewards: true`,
   and the thread check no longer requires votes to be off (a thread with them off still passes). The thread text
   says votes don't change whether an announcement is accepted.
 - `docs/Protocol.md`: the thread and announcement options, and why votes stay on. With payout declined a vote moves
@@ -772,7 +772,7 @@ Keychain before anything was broadcast. Keychain cannot sign options that turn v
 The four September 2026 threads exist on the chain, so readers can find announcements as soon as anyone replies;
 announcing from the app comes next.
 
-- `core/SteemDiscoveryAnnouncement.js`: reads one reply's shape (direct reply to the thread, `forkbuild.version` 1,
+- `core/networks/SteemDiscoveryAnnouncement.js`: reads one reply's shape (direct reply to the thread, `forkbuild.version` 1,
   the thread's family, an object envelope) and nothing more; the envelope is checked by its family.
 - `application/steem/SteemDiscoveryThreadReader.js`: reads one family from every thread account's monthly threads,
   from the first configured month (default 2026-09) to now, at most 36 months, four requests at a time. It keeps
@@ -783,7 +783,7 @@ announcing from the app comes next.
   search, with `searchWithOutcome()`), `SteemPlaceNamingDiscoverySource` (one thread for all regions, so it keeps only
   envelopes whose world and region derive the requested tag) and `PublicationCommentarySteemDistribution` (read by
   a new substrate-neutral `DiscoverPublicationCommentaryUseCase` and added to "Check for new comments").
-- Settings: `core/SteemReadingConfiguration.js`, `storage/SteemReadingConfigurationStore.js`,
+- Settings: `core/networks/SteemReadingConfiguration.js`, `storage/SteemReadingConfigurationStore.js`,
   `SetSteemReadingConfigurationUseCase` and Network Settings → Steem (`/settings/steem`): API nodes, thread
   accounts, first month. The commentary status line now lists three unreachable networks as "Nostr, Arweave or
   Steem".
@@ -799,9 +799,9 @@ announcing from the app comes next.
 **Publications, Snapshots, Place Naming claims and Commentary can now be announced on Steem**, completing the
 substrate: Steem is the third choice, next to Nostr and Arweave, wherever an announcement substrate is chosen.
 
-- `core/SteemDiscoveryAnnouncement.js` builds the reply and its `comment_options` (payout declined, votes on, shared
+- `core/networks/SteemDiscoveryAnnouncement.js` builds the reply and its `comment_options` (payout declined, votes on, shared
   with the threads through `steemDeclinedPayoutOptions()`), the reply permlink, and a size bound.
-- `application/steem/SteemAnnouncer.js` announces as the device's saved account (`core/SteemAnnouncingConfiguration.js`,
+- `application/steem/SteemAnnouncer.js` announces as the device's saved account (`core/networks/SteemAnnouncingConfiguration.js`,
   Network Settings → Steem → Posting), through Steem Keychain looked up at announce time. It checks the current
   month's thread exists and accepts replies (once per thread), refuses an announcement over 64 KiB, and reports
   what it broadcast with status "accepted". Every refusal has its own message: no account, no Keychain, a missing or
@@ -863,7 +863,7 @@ the 3-second reply interval make it suitable for small builds only.
 is the first step of `docs/Protocol.md`, "Proposed: Steem Content Storage". Parts, progress and resuming are not
 built yet.
 
-- `core/SteemContentManifest.js` builds and reads a manifest (a reply to `@forkbuild/forkbuild-content-<YYYY-MM>`
+- `core/networks/SteemContentManifest.js` builds and reads a manifest (a reply to `@forkbuild/forkbuild-content-<YYYY-MM>`
   whose body is the encoded content) and the `steem://<author>/<permlink>` locator. `content` joins
   `STEEM_DISCOVERY_FAMILIES`, so the operator page creates content threads too; their title and body say that
   replies store content.
@@ -891,7 +891,7 @@ built yet.
 and an upload the account can't afford is refused before anything is posted.** This finishes the order of work in
 `docs/Protocol.md`, "Proposed: Steem Content Storage", which is now marked built.
 
-- Parts: `core/SteemContentManifest.js` builds and checks parts (replies to the manifest at
+- Parts: `core/networks/SteemContentManifest.js` builds and checks parts (replies to the manifest at
   `<manifest permlink>-p<index>`), splits `gzip-base64` text into 48 KiB slices, and refuses manifests with more than
   20 parts, other part permlinks, or lengths that don't add up. `SteemContentStore.put()` posts the manifest (listing
   every part's length and SHA-256) and then each part through `SteemAnnouncer.postContentPart()`; `get()` reads the
@@ -904,7 +904,7 @@ and an upload the account can't afford is refused before anything is posted.** T
   hash. Storing the same content again reads the manifest back and posts only missing parts, editing any changed part
   without `comment_options`; a manifest that no longer matches starts a fresh upload. A failed part throws
   `SteemContentUploadIncompleteError`, saying how many posts are stored.
-- Resource Credits: `core/SteemResourceCredits.js` implements the chain's rc plugin (packed transaction size, resource
+- Resource Credits: `core/networks/SteemResourceCredits.js` implements the chain's rc plugin (packed transaction size, resource
   usage for `comment` and `comment_options`, the price curve, and manabar regeneration) in BigInt, from the steemit/steem
   source. `application/steem/SteemResourceCreditEstimator.js` reads the account and prices from `rc_api` and
   `condenser_api`. Too few RC throws `SteemResourceCreditsError` before posting; no estimate lets the upload go ahead;
@@ -941,7 +941,7 @@ as an addition to Bitcoin anchoring, never a replacement.
 Publication's contentHash through Steem Keychain, and "Verify Evidence" checks it in its irreversible block.** This
 is steps 1 and 2 of `docs/Protocol.md`, "Proposed: Steem Anchoring".
 
-- `core/SteemAnchor.js`: the `forkbuild-anchor` custom_json (`{ version: 1, contentHash }`, nothing else), the
+- `core/networks/SteemAnchor.js`: the `forkbuild-anchor` custom_json (`{ version: 1, contentHash }`, nothing else), the
   `{ blockNum, trxId, chain: 'steem' }` proof, the `steem:<trxId>` locator, and finding an anchor in a transaction
   (condenser and appbase operation shapes).
 - `anchoring/SteemProofVerifier.js`: asks each configured API node (at most three) separately for the last
@@ -981,10 +981,10 @@ approval.** This finishes `docs/Protocol.md`, "Proposed: Steem Anchoring", which
 - Block time: `ExternalAnchorVerifier` passes a proof verifier's `details` on (never deciding with them).
   `SteemProofVerifier` returns the block's time, witness and node agreement, and the Publications page shows them
   under the anchor after verifying. The evidence view shows the block time from kept evidence without any network.
-- Kept evidence: `core/SteemBinary.js` serializes transactions, every current operation and the block header as the
+- Kept evidence: `core/networks/SteemBinary.js` serializes transactions, every current operation and the block header as the
   chain does, and computes transaction ids, block ids and the transaction Merkle tree; it matches dsteem byte for
   byte for all 45 operations (checked during development, with dsteem's ids kept as test vectors).
-  `core/SteemBlockEvidence.js` keeps the signed header, the anchor transaction and its Merkle path in the proof, and
+  `core/networks/SteemBlockEvidence.js` keeps the signed header, the anchor transaction and its Merkle path in the proof, and
   checks offline the block id, the witness signature (secp256k1 recovery), the transaction id and its inclusion.
   Evidence is kept only after all of that checks out against the node's block, so a block this code can't read
   gives an anchor without evidence. The verifier and evidence view report evidence, and the chain still decides.
@@ -1039,7 +1039,7 @@ reads the posts, not people, so the body now says what the post is: "Data stored
 ForkBuild app, not meant to be read here, and its payout is declined." with a link to `docs/Protocol.md`.
 Resource Credits and the transaction limit count `body` and `json_metadata` the same way, so this costs nothing.
 
-- Format version 2 (`core/SteemContentManifest.js`): `forkbuild.data` carries an inline manifest's encoded text and
+- Format version 2 (`core/networks/SteemContentManifest.js`): `forkbuild.data` carries an inline manifest's encoded text and
   each part's slice; `steemContentNotice()` writes the body, which never repeats user-written text.
   `steemContentManifestOperations()` and `steemContentPartOperations()` take `data` instead of `body`, and so do the
   announcer's `postContent()` and `postContentPart()`. `steemContentPartData()` reads a part in its manifest's version.
@@ -1064,7 +1064,7 @@ Resource Credits and the transaction limit count `body` and `json_metadata` the 
 link went to the project on GitHub; someone reading Steemit gains far more from walking around the build itself.
 
 - The link: `https://bowo-prasetyo.github.io/forkbuild/#/view/steem/<author>/<permlink>`, naming the claim's own
-  post (`core/ForkBuildAppLinks.js`). `SteemContentStore.put(bytes, { kind: 'publication' })` writes it into the
+  post (`core/app/ForkBuildAppLinks.js`). `SteemContentStore.put(bytes, { kind: 'publication' })` writes it into the
   notice ("A build published with ForkBuild: [see it in 3D](…)"); `ContentStorePublicationMaterialUploader` passes
   `kind`, which other stores ignore. Snapshot posts keep the plain notice: they're posted before the claim, so they
   can't name it.
@@ -1116,7 +1116,7 @@ expects, and that the host accepts uploads from this site.
 **A Signed Claim's post on Steem now shows the build: its thumbnail, title, author and description, above the "See
 it in 3D" link.** A picture and a few words draw far more Steemit readers into World View than a line of text.
 
-- `core/SteemContentManifest.js`: `steemContentNotice({ viewUrl, card })` lays out the card (the picture links to the
+- `core/networks/SteemContentManifest.js`: `steemContentNotice({ viewUrl, card })` lays out the card (the picture links to the
   view too), and `json_metadata.image` lists the picture for front-end previews. `steemNoticeText()` makes
   user-written text safe for Markdown: one line, no links, no control or direction-override characters, HTML and
   Markdown escaped, `@` and `#` broken with a zero-width space so they neither notify nor tag, and capped (title
@@ -1150,7 +1150,7 @@ it in 3D" link.** A picture and a few words draw far more Steemit readers into W
 link that opens the build in 3D on any device.** The `#/world/<documentId>` address works only in a browser that
 already has the build; the `#/view/steem/…` link works anywhere, so it is the one to share.
 
-- `publicationShareUrl(material)` (`core/ForkBuildAppLinks.js`) turns a distribution's `steem://` material locator
+- `publicationShareUrl(material)` (`core/app/ForkBuildAppLinks.js`) turns a distribution's `steem://` material locator
   into the view link. `application/publication/PublicationShareLink.js`: `describePublicationShare()` (nothing
   before a distribution; the link, title and text for a Steem claim; a reason to distribute with Steem storage for a
   claim elsewhere), `sharePublicationLink()` (the Web Share API, falling back to the clipboard; closing the sheet
@@ -1195,7 +1195,7 @@ Steem.** The links are `#/view/ar/<transaction id>` and `#/view/ipfs/<cid>`, nex
 and open the same way: the claim is read and verified, the build found by content hash and checked, and World View
 opened on it.
 
-- `core/ForkBuildAppLinks.js`: `describePublicationClaimLocator()`, `publicationViewUrl()` and
+- `core/app/ForkBuildAppLinks.js`: `describePublicationClaimLocator()`, `publicationViewUrl()` and
   `publicationClaimLocatorFromViewPath()` turn a claim's locator into a link and back, accepting only an Arweave id of
   43 base64url characters and a bare CID, so nothing odd reaches a link or a gateway.
 - `application/publication/OpenPublicationLink.js` (moved from `application/steem/`, which keeps
@@ -1395,7 +1395,7 @@ This is Phase 6, the last phase of docs/AnnouncementIndex.md. Both global tags a
 in the network, so a capped query under them can miss exactly the Snapshots near the player or the comments on
 one Publication.
 
-- `core/NarrowDiscoveryTags.js`: `forkbuild-commentary:<publicationId>`, and
+- `core/publication/NarrowDiscoveryTags.js`: `forkbuild-commentary:<publicationId>`, and
   `forkbuild-snapshot:cell:<cx>:<cz>` for a Snapshot's claimed position in 1,000-unit cells.
 - Publishing: the narrow tag rides on the same Nostr event (a second `t` tag) or Arweave transaction.
   `createArweaveTaggedTransactionUpload()`'s `uploadTaggedTransaction(material, tag, extraTags = [])` signs every
@@ -1438,7 +1438,7 @@ layout at any width, so the nav, the World View panel and the Editor sidebar cov
 
 - World View touch pad (`ui/components/TouchMovementPad.js`), shown on touch screens while Avatar Control Mode is
   on, with a **Walk** button that toggles the mode:
-  - A joystick for W/A/S/D. `core/TouchJoystickKeys.js` maps the thumb's offset to keys in eight sectors, with a
+  - A joystick for W/A/S/D. `core/avatar/TouchJoystickKeys.js` maps the thumb's offset to keys in eight sectors, with a
     dead zone, and holds Shift (run) at the rim.
   - **Jump**, and context buttons shown under the same conditions as the on-screen prompts: Ride/Get Off (`E`),
     Store/Deploy (`Q`), Catch/Release (`F`), and, while riding, steering (`←`/`→`) and Brake (`Ctrl`).
@@ -1586,7 +1586,7 @@ existing rules: a list of only those who chose to join, holding no addresses.
   polls for one and completes the connection itself; an answer it cannot apply closes the pending connection, so
   the spent publication never looks available. Without a signing identity or a mailbox the reply is still
   returned to hand over.
-- Lobby cards (`core/LobbyCard.js`): identity, lobby (`public` or `world:<documentId>`), a self-chosen display
+- Lobby cards (`core/social/LobbyCard.js`): identity, lobby (`public` or `world:<documentId>`), a self-chosen display
   name of at most 40 characters, a lifetime of at most 15 minutes, signed by the identity. No offer and no
   address. The worker gains `JOIN_LOBBY`, `LEAVE_LOBBY` and `LIST_LOBBY` (a random sample of at most 50), with
   replay protection like PUBLISH and a total cap (`MAX_LOBBY_CARDS`, 20,000). Listing is a separate contract,
@@ -1859,7 +1859,7 @@ ways to connect into one tabbed panel.** Same approach as the World View and Edi
   "Save an invitation for later", folded under Find by ID. Invite, Paste and Reconnect share
   `peerConnections/InvitationExchange.js`, where Reconnect used to repeat the whole flow nested inside its card.
 - Copy: six explanatory paragraphs become one-line hints and a "How this works" link to the user guide. The Blocked
-  paragraph no longer names a source file (`core/PeerBlockRecord.js`). An action's error shows on the row it came
+  paragraph no longer names a source file (`core/social/PeerBlockRecord.js`). An action's error shows on the row it came
   from, or above the list if that row is filtered out.
 - Styles in `css/main/peers-page.css`; unused rules for the old page are removed from
   `identity-publications-and-peers.css`.
@@ -1875,7 +1875,7 @@ ways to connect into one tabbed panel.** Same approach as the World View and Edi
 Publication had no permission check at all (`placePublication()` called it "an open product decision"), so anyone
 who held a build could place a copy of it anywhere in their own World.
 
-- `core/PlacementPolicy.js` (new): `PlacementPolicy.ANYONE` (`'anyone'`, the default) and `PUBLISHER_ONLY`
+- `core/publication/PlacementPolicy.js` (new): `PlacementPolicy.ANYONE` (`'anyone'`, the default) and `PUBLISHER_ONLY`
   (`'publisher-only'`), `evaluatePlacementPermission()` and `PlacementNotPermittedError`. The placer is compared by
   did:key with the Publication's `publisherIdentity`, or by name for an unsigned legacy Publication. A value this
   version doesn't know is treated as publisher-only, so a newer, stricter setting is never read as permission.
@@ -1944,7 +1944,7 @@ them, so a walker saw someone else's build either as an unverified ghost at its 
 its deterministic fallback spot. Those differed whenever the publisher had moved it, and a build set to **Only I may
 place it** could then never appear at the publisher's real position for anyone else.
 
-- `core/SnapshotDiscoveryEnvelope.js`: an optional `placementRecord` beside `claimedPosition`, the publisher's signed
+- `core/publication/SnapshotDiscoveryEnvelope.js`: an optional `placementRecord` beside `claimedPosition`, the publisher's signed
   PlacementRecord. It is kept only when it names the same Publication at exactly the claimed position; otherwise it
   is left out and the claim stands. `snapshotCandidateFromEnvelope()` replaces the field-by-field copies in the Nostr,
   Arweave (two) and Steem query services and the Announcement Index sync. Readers that predate it ignore it.
@@ -1986,7 +1986,7 @@ privately as GHSA-8ggw-xpjf-w4rh.
   through the vendored noble-hashes. `computeFnv1a32()` is the old function under its own name.
   `contentHashMatches(text, hash, { allowLegacy })` picks the algorithm from the hash's length, never from a field an
   attacker could set, and refuses text with lone surrogates.
-- `core/ContentReference.js#verify()` refuses an FNV-1a hash unless the caller passes `allowLegacy`, and decodes bytes
+- `core/document/ContentReference.js#verify()` refuses an FNV-1a hash unless the caller passes `allowLegacy`, and decodes bytes
   as strict UTF-8 without dropping a byte-order mark, so different bytes can't decode to the same text. It is strict
   by default, so a path that forgets to choose fails closed.
 - Legacy hashes are honored only for this device's own data: `LocalPublisherProvider#isOwnPublication()` (same id and
@@ -2059,7 +2059,7 @@ this" showed on Mallory's design, and the import check against "the design on fi
 earlier the same day left fingerprints on FNV-1a because every stored claim is signed over its fingerprint; this entry
 is that transition. Part of GHSA-8ggw-xpjf-w4rh.
 
-- `core/BlueprintFingerprint.js`: `deriveBlueprintFingerprint()` is `"bp2:"` plus SHA-256 (64 hex characters).
+- `core/building/BlueprintFingerprint.js`: `deriveBlueprintFingerprint()` is `"bp2:"` plus SHA-256 (64 hex characters).
   `deriveLegacyBlueprintFingerprint()` gives the old `"bp:"` value, only to find claims made under it.
   `isCurrentBlueprintFingerprint()` and `isLegacyBlueprintFingerprint()` tell them apart by prefix and length.
 - Views: `BlueprintAttributionUseCase#communityView()` and `BlueprintLineageUseCase#lineageView()` add
@@ -2089,7 +2089,7 @@ anyone who knew a public key (which is public) could "sign" a delegation in its 
 used it, and delegation isn't wired into the running app, so nothing live was exposed; this removes the trap before it
 is.
 
-- `core/SigningIdentity.js` is deleted. `core/Delegation.js` uses the real public-key `identity/SigningIdentity.js`,
+- `core/SigningIdentity.js` is deleted. `core/publication/Delegation.js` uses the real public-key `identity/SigningIdentity.js`,
   and gains `getSigningDescriptor()` (signature type `delegation`) and `withSignature()`.
 - `CreateDelegationUseCase(resolver, identityProvider)` signs through `signCanonical()`; the issuer is always the
   provider's own identity.
@@ -2115,7 +2115,7 @@ affected and 1.1.0 as patched. It is a minor release rather than a patch because
 storage, the compact document format, touch controls, the public lobby, share links, background discovery and
 Steem).
 
-- `package.json`, `package-lock.json` and `core/version.js` (shown on the About page and stamped into new documents
+- `package.json`, `package-lock.json` and `core/app/version.js` (shown on the About page and stamped into new documents
   as `engineVersion`) say 1.1.0. `PROTOCOL_VERSION` is unchanged.
 - `docs/ReleaseNotes-1.1.md` is new: the two security fixes first (SHA-256 content hashes and blueprint
   fingerprints, and the did:key binding), then what's new, fixes, upgrading from 1.0.0 and known limitations. The
@@ -2130,7 +2130,7 @@ Friendship is mutual and exists to authorize chat, voice and visibility; there w
 person makes" without that. Following is that: private, one-sided, and granting the followed identity nothing (the
 principle "Following Is A Local Subscription, Never A Relationship").
 
-- Store: `core/FollowRecord.js` and `application/identity/FollowUseCase.js`, kept per signed-in identity under
+- Store: `core/social/FollowRecord.js` and `application/identity/FollowUseCase.js`, kept per signed-in identity under
   `follows:<identityId>`. Only a did:key can be followed, never a typed author name, and never yourself. Nothing is
   signed or sent.
 - Feed: `application/publication/FollowingFeed.js` lists the Repository's admitted Publications whose signature
@@ -2138,7 +2138,7 @@ principle "Following Is A Local Subscription, Never A Relationship").
   in the top bar) shows the people you follow, with **Unfollow**, and that feed. It fetches nothing by itself.
 - Notifications: `DecentralizedPublicationDiscoveryProvider#onAdded()` is new; `FollowedAuthorPublicationNotifier`
   listens to it, after the startup rebuild, and saves a `publication.followed-author-published` notification.
-  `core/NotificationDeduplicationPolicy.js` deduplicates that event type by `publicationId` instead of
+  `core/social/NotificationDeduplicationPolicy.js` deduplicates that event type by `publicationId` instead of
   `commentaryId`, so a Publication heard of again never notifies twice.
 - Announcement Index: an `isKeptFirst` option. `FollowedAnnouncementRetention.js` keeps Snapshot records carrying a
   followed publisher's signed placement, and Place Naming claims a followed author signed, ahead of the rest when a
@@ -2469,7 +2469,7 @@ no simulation and no networking: everyone looking at the same spot at the same m
 An audit of the animal code before this change found three systems (the renderer, collision and catching) each
 asking separately where an animal was, agreeing only because nothing moved; they now share one formula and one clock.
 
-- `core/WildlifeMotion.js`: `animalPoseAt(seed, animal, time)` and `wildlifeInRegionAt()`. Per-species segments
+- `core/nature/WildlifeMotion.js`: `animalPoseAt(seed, animal, time)` and `wildlifeInRegionAt()`. Per-species segments
   (deer 14 s, rabbits 7 s, offset per animal) of pause, turn, then an eased walk between hashed waypoints. Waypoints
   stay inside the animal's lattice cell and its species' wander radius (deer 3, rabbits 2), and one off its zone or
   in a river falls back to the spawn point. Staying in the cell keeps the tile partition, ids and catch exclusion
@@ -2484,7 +2484,7 @@ asking separately where an animal was, agreeing only because nothing moved; they
   skips caught animals.
 - Fixed: the runtime store saved every tracked animal, so after a reload wild animals came back as "released" copies
   drawn beside the real ones. Only released animals are saved now, and wild ones in an old save are skipped
-  (`core/AnimalIdentity.js#isDeterministicAnimalId()`).
+  (`core/nature/AnimalIdentity.js#isDeterministicAnimalId()`).
 - Fixed: streamed tiles were removed from the scene but never disposed, so GPU memory grew while roaming.
   `TerrainStreamingController` takes a `disposeTile` hook (`renderer/TileDisposal.js`): terrain and water tiles free
   their geometry and material, vegetation and wildlife tiles only their instance buffers.
@@ -2504,7 +2504,7 @@ asking separately where an animal was, agreeing only because nothing moved; they
 **Wandering animals no longer glide: rabbits hop and deer step along, nodding their heads.** No legs or new
 geometry: the gait is carried by the body and head transforms the wildlife tiles already rewrite every frame.
 
-- `core/WildlifeMotion.js`: `animalPoseAt()` also reports `gaitPhase`, the strides walked so far in the current walk
+- `core/nature/WildlifeMotion.js`: `animalPoseAt()` also reports `gaitPhase`, the strides walked so far in the current walk
   (0 when standing). Each species has a `strideLength` (deer 1.0, rabbit 0.5); a walk takes a whole number of
   strides, rounded down so a stride is never shorter than the species' own and the cadence never flutters, and the
   phase follows the eased walk's progress, so the gait speeds up and slows down with the animal and every walk ends
@@ -2528,7 +2528,7 @@ geometry: the gait is carried by the body and head transforms the wildlife tiles
 and look around, and rabbits nibble or sit up on their haunches.** Like the walk, it needs no new geometry and no
 extra draw calls, and every replica sees the same animal doing the same thing at the same moment.
 
-- `core/WildlifeMotion.js`: a new `IDLE_ACTION` vocabulary (NONE, GRAZE, ALERT) and per-species `idleChances` (deer
+- `core/nature/WildlifeMotion.js`: a new `IDLE_ACTION` vocabulary (NONE, GRAZE, ALERT) and per-species `idleChances` (deer
   55% graze, 25% alert; rabbits 50%, 30%; the rest just stand). `animalPoseAt()` picks one action per pause from
   (seed, cell, segment) and reports `idleAction`, `idleSeconds` and `idleDuration`. The idle window runs from arrival
   to the turn before the next walk, so an action never overlaps turning or walking; a window under 1.5 s is spent
@@ -2554,7 +2554,7 @@ extra draw calls, and every replica sees the same animal doing the same thing at
 every animal now has ears and a tail** — long upright ears and a cotton tail for rabbits, ears held out to the
 sides and a short cocked tail for deer.
 
-- `core/WildlifeMotion.js#stationaryAnimalPoseAt(seed, animalKey, species, time)`: the idle-in-place counterpart of
+- `core/nature/WildlifeMotion.js#stationaryAnimalPoseAt(seed, animalKey, species, time)`: the idle-in-place counterpart of
   `animalPoseAt()`, keyed by id (FNV-1a) instead of a lattice cell. Same per-species segments: one `IDLE_ACTION`
   per pause, then a 1.2 s turn in place to a new heading. These animals never wander: their Y is authoritative and
   can be the top of a structure, so a wander could leave them in mid-air. A decoration's id is World content, so
@@ -2610,20 +2610,20 @@ buildings, trees and water rather than through them. When one is standing and yo
 and it waves when you walk up to it.** A World's author adds one by standing where it should live and pressing `R`
 (or the Avatar panel's **Add Resident Here**); it is World content, saved, published and forked with the World.
 
-- `core/WorldResident.js`: `{ id, worldId, authorIdentityId, position }`, the position being the resident's home
+- `core/world/WorldResident.js`: `{ id, worldId, authorIdentityId, position }`, the position being the resident's home
   (World-local, y always 0). `World#addResident()`/`removeResident()`/`getResident(s)()`, `RESIDENT_ADDED`/`_REMOVED`
   events; `toJSON()` writes `residents` only when there is one, so other Worlds serialize byte for byte as before.
   `DocumentValidator` checks the field. `CreateWorldResidentCommand`/`RemoveWorldResidentCommand`, registered.
-- `core/ResidentMotion.js#residentPoseAt(resident, time, { isClear })`: sampled from time and keyed by id, like a
+- `core/world/ResidentMotion.js#residentPoseAt(resident, time, { isClear })`: sampled from time and keyed by id, like a
   wild animal (16 s segments, 1.1 m/s, 6 m wander radius). A waypoint is home unless home can see it; a walk goes
   straight when clear and by way of home (turning in place there) otherwise, so each segment depends only on
   (id, k) and the World.
-- `core/ResidentPath.js#isResidentWalkClear()`: brick footprints and tree trunks against the resident's 0.3 radius,
+- `core/world/ResidentPath.js#isResidentWalkClear()`: brick footprints and tree trunks against the resident's 0.3 radius,
   and dry, walkable ground all along. `application/world/ResidentRuntime.js` gathers each home's obstacles from
   `AvatarMovementConstraint#obstaclesNear()` (new: the bricks an avatar on the ground bumps into) and
   `treeCollisionGeometryInRegion()`, refreshed every 2 s one resident at a time, with each answer memoized.
 - Rendering: `renderer/ResidentFieldRenderer.js`, an `AvatarVisual` per resident (at most 16, nearest first), dressed
-  by `core/ResidentAppearance.js` from its id in an earthy palette; legs advance with the ground covered.
+  by `core/world/ResidentAppearance.js` from its id in an earthy palette; legs advance with the ground covered.
   `renderer/ResidentReaction.js#residentFacingFor()`: stateless, a settled resident within 6 turns to face the local
   avatar, fading out toward its back; one wave per approach within 3.5. Never in `remoteAvatarVisuals`, so never
   picked, listed or hidden as a player.
@@ -2657,7 +2657,7 @@ something else. It points at what exists; it never sets a goal, a quest or a rew
   NPC guides" means no character that sets tasks, and a resident saying what's around is allowed. The residents
   principle gets the same note, and a new principle states the rule: "A Resident Tells You What's Around, Never What
   To Do".
-- `core/ResidentTalk.js`: facts to sentences. `describeDistance()` rounds ("just a few steps", "about 80 m",
+- `core/world/ResidentTalk.js`: facts to sentences. `describeDistance()` rounds ("just a few steps", "about 80 m",
   "about 3.6 km"), `compassWord()` names the sector, `sanitizeSpokenText()` strips control and bidi-override
   characters, collapses whitespace and caps length (60 for titles, 40 for names). `composeResidentRemarks(facts,
   { turn })`: one nearby sentence (kinds take turns by nearest, the place last; a kind coming round again names its
@@ -2696,14 +2696,14 @@ the camera over for a look.**
 - Focus: `pickResidentRemarkFacts()` (what `composeResidentRemarks()` now speaks) and `focusTargetsFor()` for the kinds
   in `FOCUSABLE_FACT_KINDS` (vehicles, landmarks, structures, builds — not animals or people, who move on). Every
   gathered fact now carries its `position`. `lastResidentSpeech()` adds `focusTargets`, `spokenAt` and `seconds`;
-  `speechSecondsFor()` moved to `core/ResidentTalk.js` so the bubble and the buttons agree.
+  `speechSecondsFor()` moved to `core/world/ResidentTalk.js` so the bubble and the buttons agree.
   `focusResidentMention(index)` is the camera-only `focusPosition()` at the ground there: the avatar stays put and the
   active World is unchanged.
 - UI: `ui/components/ResidentSpeechActions.js`, bottom-center above the prompts, shown on touch screens too, while the
   speech is current and the viewer is beside that resident.
 - Principles: the talking principle gets a *Changed by* note — the viewer may choose Focus; a resident's words never
   move the camera by themselves.
-- Also: `core/ResidentTalk.js` and its test spelled the invisible direction-override characters they strip as literal
+- Also: `core/world/ResidentTalk.js` and its test spelled the invisible direction-override characters they strip as literal
   characters; they are `\u` escapes now.
 - Tests: `tests/ResidentTalk.test.js` Section E (structure sentences, turns, focus targets and what never gets one,
   structures within reach, naming by publication or saved title and never by id, Focus through `focusPosition()` on the
@@ -2722,11 +2722,11 @@ place, which is exactly what a background soundscape needs, and that everything 
 no audio files to download or license, no new server, no Content Security Policy change and no new library.
 Footsteps, vehicles, animals, residents and Editor sounds are later phases, built on the same provider.
 
-- Mix: `core/AmbientSoundscape.js#ambientMixAt(seed, x, z)` weighs each zone's level per layer underfoot and on rings
+- Mix: `core/app/AmbientSoundscape.js#ambientMixAt(seed, x, z)` weighs each zone's level per layer underfoot and on rings
   at 12 m and 30 m; `isRiverAt()` adds the stream layer.
 - Service: `application/world/WorldSoundscapeService.js` samples at the local avatar (or the camera) four times a
   second, only after a 0.5 m move, and owns mute and volume through `application/settings/SoundSettingsStore.js`
-  (`core/SoundSettings.js`, read leniently). Sound is on by default at half volume; browsers keep it silent until
+  (`core/app/SoundSettings.js`, read leniently). Sound is on by default at half volume; browsers keep it silent until
   the first click, tap or key press, which calls `unlock()`.
 - Provider: `audio/WebAudioSoundscapeProvider.js`, a new adapter directory. Noise loops and oscillators per layer,
   randomly timed bird calls, fades on every level change; the `AudioContext` is made on the first gesture and
@@ -2756,7 +2756,7 @@ Phase 2 of World View's sound, on the same synthesized Web Audio provider as the
 no server and no policy change. Everything is derived from what the avatar already does; nothing new is stored or
 sent, and other people don't hear your footsteps.
 
-- Cues: `core/AvatarSoundCues.js`. `advanceAvatarSound()` is a pure per-frame step over
+- Cues: `core/avatar/AvatarSoundCues.js`. `advanceAvatarSound()` is a pure per-frame step over
   `{ position, animation, verticalState, vehicleType }`. Footsteps are counted by distance at one per leg swing of
   the existing gait (0.75 m walking, 0.94 m running), so being blocked is silent and teleports make none;
   `footstepSurfaceAt()` reads the ecology zone, rivers, and whether the avatar stands on bricks. A jump is leaving the
@@ -2791,7 +2791,7 @@ View.**
 Phase 3 of sound, on the same synthesized provider. As before nothing is downloaded, stored (beyond the existing
 preference) or sent.
 
-- Creatures: `core/CreatureSoundCues.js#advanceCreatureSound()`, a pure step over
+- Creatures: `core/app/CreatureSoundCues.js#advanceCreatureSound()`, a pure step over
   `WorldNavigationSession#creatureSoundObservation()` (new `application/worldNavigation/soundObservationMethods.js`:
   `soundListener()`, `animalsForSound()`, `carriedAnimalsForSound()`, `residentsForSound()`). Calls come from the
   deterministic idle schedule (`idleAction` turning ALERT) and from approach within an animal's look radius; steps from
@@ -2800,7 +2800,7 @@ preference) or sent.
   `placeSound()` gives each cue its distance fade and pan. `WorldSoundscapeService` samples them every 0.1 s of render
   frames and plays them with `provider.playCreatureCue()` (`audio/CreatureSoundSynth.js`).
 - Editor: `EditorSession#onCommandActivity()` reports the user's own executed, undone and redone commands (a
-  collaborator's arrive through `_remoteApplyingHistory()` and are left out); `core/EditorSoundCues.js` maps every
+  collaborator's arrive through `_remoteApplyingHistory()` and are left out); `core/app/EditorSoundCues.js` maps every
   registered command type to one of eleven cues; `application/editor/EditorSoundService.js` plays them, and Save, on
   `WebAudioSoundscapeProvider({ ambience: false })` with `audio/EditorSoundSynth.js`. The Toolbar emits `saved`.
 - Shared: `application/settings/SoundPreference.js` (mute and volume, used by both services) and
@@ -2825,10 +2825,10 @@ down; brake pads or tyres squealing, louder the faster you were going); the tree
 (leaves rustling in broadleaf woods and scrub, wind sighing in conifers); and changes made to a World in World View
 (landmarks, regions, residents, decorations, undo and redo) make the same sounds as in the Editor.**
 
-- Vehicles: `core/AvatarSoundCues.js` adds MOUNT, DISMOUNT and BRAKE cues from the ridden vehicle type changing and
+- Vehicles: `core/avatar/AvatarSoundCues.js` adds MOUNT, DISMOUNT and BRAKE cues from the ridden vehicle type changing and
   from `braking` (`avatarSoundObservation()` now reports `movementState().brakingRequested`) turning on at 15% of top
   speed or more; `audio/VehicleEventSynth.js` plays them.
-- Trees: `core/AmbientSoundscape.js` adds LEAVES and PINES layers from `naturalFeaturesInRegion()` within 20 m,
+- Trees: `core/app/AmbientSoundscape.js` adds LEAVES and PINES layers from `naturalFeaturesInRegion()` within 20 m,
   weighted by nearness; the provider plays them as a gusting high rustle and a slow airy band.
 - World View edits: `WorldNavigationSession#onCommandActivity()` over each World's CommandHistory (a collaborator's
   operations never pass through it), played by `WorldSoundscapeService` with the Editor's cues.
@@ -2863,11 +2863,11 @@ PannerNode (HRTF) and AudioListener do the placement. Nothing new is sent; the 3
 preference. Other players' vehicles need a presence change and stay a separate milestone.
 
 - Players: `soundObservationMethods.js#remoteAvatarsForSound()` (over the new `RemoteAvatarRegistry#currentPresence()`)
-  feeds `core/CreatureSoundCues.js`, which runs each player through `advanceAvatarSound()`; PLAYER_FOOTSTEP, JUMP and
+  feeds `core/app/CreatureSoundCues.js`, which runs each player through `advanceAvatarSound()`; PLAYER_FOOTSTEP, JUMP and
   LAND cues, played through the same footstep synthesis. Hidden avatars aren't heard.
 - 3D: cues carry `position`; `soundListenerPose()` sets the AudioListener every frame through the new
   `listenerPose` option of `WorldSoundscapeService`; the provider's `setSpatial()`/`setListener()` and a PannerNode per
-  placed cue with its rolloff off. `core/SoundSettings.js` gains `spatial` (a choice saved before reads as on),
+  placed cue with its rolloff off. `core/app/SoundSettings.js` gains `spatial` (a choice saved before reads as on),
   `SoundPreference#setSpatial()`/`toggleSpatial()`, and `SoundControl`'s 3D/Stereo button in World View.
 - Docs: `docs/user/03-WorldView.md` (Sound), `docs/Architecture.md` (Sound), `docs/Privacy.md` (the stored choice).
 - Tests: `tests/CreatureSoundCues.test.js` (positions on placed cues; another player's steps, jump and landing, placed
@@ -2889,7 +2889,7 @@ What an avatar rides travels as its own signed message on `forkbuild:avatar-vehi
 older clients keep accepting presence and simply don't see riders. Where a vehicle stands unridden stays each
 replica's own, as before: after a dismount the vehicle reappears for others wherever their replica last had it.
 
-- Message: `core/AvatarVehicleAdvertisement.js` (`{ avatarId, ownerIdentity, riding, vehicleId, vehicleType,
+- Message: `core/vehicles/AvatarVehicleAdvertisement.js` (`{ avatarId, ownerIdentity, riding, vehicleId, vehicleType,
   sequence }`, signing type `avatar-vehicle`), `LocalAuthorizationVerifier#verifyAvatarVehicleAdvertisement()`,
   `AvatarVehicleTrustBoundary`, `AvatarVehicleSigning`, `AvatarVehicleSyncService`; wired in `CreateWorldViewUseCase`
   like the profile and interaction channels, gated by the presence visibility policy.
@@ -2899,7 +2899,7 @@ replica's own, as before: after a dismount the vehicle reappears for others wher
   `ResidentSurroundings`).
 - Drawing: `renderer/RemoteRiderVehicles.js` and `setRemoteAvatarVehicle()` on the render facade; a remote rider is no
   longer lifted by the ground height twice.
-- Sound: `core/CreatureSoundCues.js` runs each player through its vehicle, adds PLAYER_MOUNT/DISMOUNT/BRAKE (braking
+- Sound: `core/app/CreatureSoundCues.js` runs each player through its vehicle, adds PLAYER_MOUNT/DISMOUNT/BRAKE (braking
   estimated from a sharp slowdown) and returns the nearest three riders' engines within 40 m;
   `WebAudioSoundscapeProvider#setRemoteEngines()` keeps a placed engine voice per rider.
 - Docs: `docs/Protocol.md`, `docs/Privacy.md`, `docs/Architecture.md` (Riding, Sound), the principle "Others See What
@@ -2929,7 +2929,7 @@ over area by area, then resident speech and the hand-made plurals, then a first 
 - Locales: `ui/i18n/locales.js` lists English and the pseudo-locale `en-XA` (`ui/i18n/pseudoLocalize.js`: accented,
   30% longer, bracketed, placeholders kept) and chooses one from the saved setting, then the browser's languages
   (exact, then by language), then English. The pseudo-locale is never chosen automatically.
-- Setting: `core/LanguageSettings.js` and `application/settings/LanguageSettingsStore.js` (`language-settings`,
+- Setting: `core/app/LanguageSettings.js` and `application/settings/LanguageSettingsStore.js` (`language-settings`,
   read leniently). `ui/boot.js` sets the locale and the page's `lang`/`dir` after opening storage and before
   importing the app. Changing the language saves it and reloads, rather than switching live and leaving text
   computed earlier in the old language.
@@ -2956,8 +2956,8 @@ the messages for opening a Publication link, the fork-on-edit notice and refusal
 the Build Library's names. Those layers now name their text with a message key instead, and the UI shows it in the
 chosen language. English reads exactly as before.
 
-- Mechanism: `core/Message.js` (`message(key, params)`, a frozen descriptor whose `toString()` is its key, so one
-  that slips past `t()` is visible rather than `[object Object]`) and `core/UserFacingError.js` (an Error carrying a
+- Mechanism: `core/app/Message.js` (`message(key, params)`, a frozen descriptor whose `toString()` is its key, so one
+  that slips past `t()` is visible rather than `[object Object]`) and `core/app/UserFacingError.js` (an Error carrying a
   descriptor; its `.message` is the key plus a developer detail). `ui/i18n/i18n.js` adds `t(descriptor)`,
   `displayText()`, `errorText()` and `hasMessage()`; `Translator` translates descriptor parameters and joins lists
   with `Intl.ListFormat`.
@@ -2972,9 +2972,9 @@ chosen language. English reads exactly as before.
   `AvatarPresenceLabels.js` and `NewPassphrasePolicy.js` return descriptors; `forkOnWriteMethods.js`'s notice and
   refusal too.
 - Links: `OpenPublicationLink.js` says each outcome as one whole sentence per network, with the network's own error
-  as an untranslated `{detail}`; `core/ForkBuildAppLinks.js` labels and `PublicationClaimRetriever.js`'s missing-reader
+  as an untranslated `{detail}`; `core/app/ForkBuildAppLinks.js` labels and `PublicationClaimRetriever.js`'s missing-reader
   error are messages; `ui/views/PublicationLinkView.js` is fully translated.
-- `core/WorldWelcomeContext.js`: suggestion reasons and activity summaries are messages, one whole sentence per
+- `core/world/WorldWelcomeContext.js`: suggestion reasons and activity summaries are messages, one whole sentence per
   activity with and without a target.
 - Build Library: `ui/i18n/libraryText.js` looks up a built-in brick's or structure's name and description by id
   (`library.core.slope45`), falling back to the item's own name, so personal blueprints and community libraries are
@@ -3009,7 +3009,7 @@ the settings pages follow.
 - Build Library categories: `libraryCategoryName()` in `ui/i18n/libraryText.js` translates built-in structure
   categories and brick sections, and leaves a category a person typed as they typed it; the category filter is sorted
   by the names shown.
-- Below the UI: `core/BlueprintSimilarity.js#describeBlueprintSimilarity()`, `core/sortStructures.js`'s sort labels,
+- Below the UI: `core/building/BlueprintSimilarity.js#describeBlueprintSimilarity()`, `core/building/sortStructures.js`'s sort labels,
   `application/steem/SteemContentUploadProgressText.js` (one whole message per combination of resuming and Resource
   Credits) and `application/publication/PublicationShareLink.js` return messages. The refusals in
   `BlueprintAttributionUseCase` and `BlueprintLineageUseCase` (sign in first, nothing to claim, a claim that won't
@@ -3040,8 +3040,8 @@ now be shown in another language. The Publications page and Identity, Peers, Cha
 - Values core/ keeps as ids: `ui/i18n/worldText.js` translates compass directions (the dial, the legend and every
   "12m NE"), region kinds, terrain zones and lakes/rivers in the location reading, and what a collaborator is doing
   ("Building House"). `RegionFormModal`'s kind list uses the same messages.
-- Below the UI: `core/WorldFocusContext.js` returns messages for the focus panel's subtitle, a collaborator's
-  activity, a geographic place's summary and "You are in / near …". `core/WorldSpatialContext.js#description` and
+- Below the UI: `core/world/WorldFocusContext.js` returns messages for the focus panel's subtitle, a collaborator's
+  activity, a geographic place's summary and "You are in / near …". `core/world/WorldSpatialContext.js#description` and
   `describeSpatialActivity()` keep their English for the 3D markers, which the renderer draws and are not yet
   translated.
 - Fixes found on the way: coordinates are shown without digit grouping ("1095.0", not "1,095.0"), and the
@@ -3071,7 +3071,7 @@ pages can now be shown in another language. Identity, Peers, Chat, Following and
   `Intl.RelativeTimeFormat`, which also fixes World View's welcome panel); a card's license reads as its name.
 - A sentence with a link or button inside it is one message: `ui/i18n/I18nText.js` places each element, passed as a
   slot, where the message's `{placeholder}` sits, so a translation can move it.
-- Below the UI: the application views the page reads its states from return messages (core/Message.js), among them
+- Below the UI: the application views the page reads its states from return messages (core/app/Message.js), among them
   what a publication check found, how a retrieval went, each content kind's summary and republish advice, and the
   anchoring, evidence, snapshot, placement and IPFS views under `application/anchoring/`, `application/ipfs/`,
   `application/publication/` and `application/snapshot/`. A sentence with an optional part ("… between observation
@@ -3117,7 +3117,7 @@ history and the visibility form. With it every page of the app can be shown in a
 
 What a World Resident says can now be shown in another language, the first of the three gaps left after phase 3.
 
-- `core/ResidentTalk.js` returns messages, not English sentences: one message per kind of thing (a vehicle, an animal,
+- `core/world/ResidentTalk.js` returns messages, not English sentences: one message per kind of thing (a vehicle, an animal,
   a landmark, a person, a build, a placed structure, the place itself), with `{where}` ("about 3.2 km to the north")
   and `{distance}` as messages of their own, one per compass direction, so a language can word and order each part.
   Distances are numbers written the language's way ("3,2 km"). Titles and names stay as written. A vehicle's Focus
@@ -3505,7 +3505,7 @@ it adds features (five translations and the Language page, Following, Your Data 
 wildlife animation, other players' vehicles, loading on demand and the bundled GitHub Pages copy) and fixes, with no
 security fix and no protocol change.
 
-- `package.json`, `package-lock.json` and `core/version.js` (shown on the About page and stamped into new documents
+- `package.json`, `package-lock.json` and `core/app/version.js` (shown on the About page and stamped into new documents
   as `engineVersion`) say 1.2.0. `PROTOCOL_VERSION` is unchanged.
 - `docs/ReleaseNotes-1.2.md` is new: what's new, fixes, upgrading from 1.1.0 (what 1.1.0 does with residents and
   riders, and switching GitHub Pages to GitHub Actions) and known limitations. `docs/ReleaseNotes-1.1.md` points to
@@ -3584,7 +3584,7 @@ ForkBuild had no way to know how many people use it: GitHub Pages reports no vis
 counts visitors once a day with GoatCounter, in the least revealing way that still gives a daily number, and says so
 on the privacy page instead of "no analytics".
 
-- `core/VisitorCount.js` decides whether to count: only on the official origin (`https://bowo-prasetyo.github.io`, so
+- `core/app/VisitorCount.js` decides whether to count: only on the official origin (`https://bowo-prasetyo.github.io`, so
   copies hosted elsewhere and `localhost` never count), only when this browser hasn't turned it off, never when the
   browser sends Global Privacy Control or Do Not Track, and at most once per calendar day on the device. The hit is
   one image request to `forkbuild.goatcounter.com/count` with a fixed path (`/`) and a cache-buster, no referrer and
@@ -3612,12 +3612,12 @@ on the privacy page instead of "no analytics".
 World View had lakes and rivers but no sea. It now has open sea, generated like every other terrain layer: a pure
 function of the world seed and world coordinates, never stored.
 
-- `core/TerrainHeightField.js` gains `seaBasinAt(seed, x, z)`, a very slow noise field (1/2400) that eases from 0 on
+- `core/nature/TerrainHeightField.js` gains `seaBasinAt(seed, x, z)`, a very slow noise field (1/2400) that eases from 0 on
   land to 1 over open sea across a continental shelf. `terrainHeightAt()` subtracts `seaBasinAt() * SEA_BASIN_DEPTH`
   (14, deep enough that full-depth sea never breaks the surface). No basin forms within 900 units of the origin, fading
   in by 1600, so the land under existing structures is unchanged. `TERRAIN_HEIGHT_BOUND` stays the land bound, so
   `WATER_LEVEL` and `HIGHLAND_ELEVATION` do not move; the new `TERRAIN_DEPTH_BOUND` names the deepest sea floor.
-- `core/Hydrology.js` gains `HYDROLOGY_FEATURE.SEA`: water whose ground lies at least `SEA_BASIN_MIN` (0.25) into a
+- `core/nature/Hydrology.js` gains `HYDROLOGY_FEATURE.SEA`: water whose ground lies at least `SEA_BASIN_MIN` (0.25) into a
   basin; every other water is still `LAKE`. Sea and lake share one water line. `waterSurfaceColorAt()` eases from the
   lake tone to the deeper `SEA_SURFACE_COLOR` across the shelf, and `renderer/WaterTileMesh.js` now colors water per
   vertex so a coast shows no seam.
@@ -3633,7 +3633,7 @@ function of the world seed and world coordinates, never stored.
 An avatar used to keep wading until the water reached the top of its head: `DEFAULT_MAX_WALKING_DEPTH` was
 `AVATAR_COLLISION_HEIGHT` (1.8). It now stops at neck depth, so its head always stays above water.
 
-- `core/AvatarWaterWalkability.js` adds `AVATAR_NECK_HEIGHT` (1.5, about 83% of the avatar's 1.8 height, leaving the
+- `core/avatar/AvatarWaterWalkability.js` adds `AVATAR_NECK_HEIGHT` (1.5, about 83% of the avatar's 1.8 height, leaving the
   0.3-unit head clear) and makes it `DEFAULT_MAX_WALKING_DEPTH`. Exactly 1.5 so a depth computed from the water line
   lands on the limit without floating-point drift. The speed curve is unchanged in shape, so wading now slows to a
   stop over 1.5 units instead of 1.8, and the wading render (feet on the lakebed) follows the same limit through
@@ -3649,7 +3649,7 @@ An avatar used to stop wading once the water reached its neck. It now swims in w
 can dive, and holds its breath under water; the water has fish and seaweed to dive for; and vehicles stop at the
 waterline.
 
-- `core/AvatarSwimming.js` holds the pure rules: `AVATAR_SWIM_DEPTH` (half of `AVATAR_COLLISION_HEIGHT`), the floating
+- `core/avatar/AvatarSwimming.js` holds the pure rules: `AVATAR_SWIM_DEPTH` (half of `AVATAR_COLLISION_HEIGHT`), the floating
   height (feet 1.4 below the surface, mouth above it), `deriveAvatarSwimMode()` (NONE / SURFACE / DIVING from a
   position and a water surface), `stepSwimFeetHeight()` (Space rises, C dives, no input drifts up, out of air rises
   regardless) and `stepAvatarBreath()` (150 s of air, refilled in 5 s; out of air, the avatar is pushed up and held at
@@ -3661,16 +3661,16 @@ waterline.
   height. Falling or jumping into deep water lands on the surface. `swimState()` exposes the mode and air.
 - Swimming is derived from the position, never sent: presence keeps its wire shape and `animation` values, so peers
   pose remote swimmers through `RenderWorldViewUseCase` (`AvatarVisual#setSwimMode()`, swim poses with a hip pitch in
-  `core/AvatarPoseOffsets.js`). Avatars on foot are now lifted by the terrain alone at any depth; residents and
+  `core/avatar/AvatarPoseOffsets.js`). Avatars on foot are now lifted by the terrain alone at any depth; residents and
   released animals keep `withGroundElevation()`'s surface floor.
 - Camera perspectives are framed from the avatar's real height (terrain added), so first person sees the world above
-  the water while floating and below it once diving. `core/UnderwaterView.js` tells the renderer when the camera is
+  the water while floating and below it once diving. `core/nature/UnderwaterView.js` tells the renderer when the camera is
   under a lake or the sea; it then uses a blue-green background and fog (deeper blue at sea). Water tiles gain a
   back-face-only underside so the surface reads as bright daylight from below.
-- `core/UnderwaterLifeField.js` places seaweed on lake and sea beds and fish schools where the water is deep over the
+- `core/nature/UnderwaterLifeField.js` places seaweed on lake and sea beds and fish schools where the water is deep over the
   school's whole circle, deterministically from the seed; `renderer/UnderwaterLifeTileMesh.js` streams them as a fifth
   tile layer, swaying the seaweed and moving the fish every frame.
-- Vehicles: `core/VehicleWaterline.js` and `application/avatar/VehicleWaterConstraint.js` stop bicycles, motorcycles and
+- Vehicles: `core/vehicles/VehicleWaterline.js` and `application/avatar/VehicleWaterConstraint.js` stop bicycles, motorcycles and
   cars at 0.3 units of water (they can always drive out toward shallower water). A drone's floor over water is the
   surface, so it flies over lakes and the sea and can be landed on the water; getting off there leaves the avatar
   floating. Wheeled vehicles can't be deployed in water.
@@ -3702,14 +3702,14 @@ facing for both: a new ride starts from the vehicle's heading, A/D and steering 
 the facing it was driven along on a tick it really moved, and the returned `rotationY` is always that heading. A
 stopped or blocked vehicle doesn't turn, so a rider can no longer spin on the spot; reversing and sliding move the
 vehicle without turning it. `renderer/RemoteRiderVehicles.js` draws another player's vehicle facing that rider's
-facing instead of guessing from movement. `core/VehicleMovementHeading.js` stays only as the reference for the
+facing instead of guessing from movement. `core/vehicles/VehicleMovementHeading.js` stays only as the reference for the
 degrees convention.
 
 ## Left and right turns go the right way (unnumbered, 2026-10-02)
 
 D turned the avatar left and A turned it right, and the ←/→ steering pulses (and the touch pad's ↶/↷) were swapped
-the same way. `rotationY` grows from +Z toward +X, and with the camera behind the avatar (`core/CameraPerspective.js`)
-+X is on the screen's left, but a right turn added to it. `core/AvatarMovementSimulation.js` now subtracts for a right
+the same way. `rotationY` grows from +Z toward +X, and with the camera behind the avatar (`core/avatar/CameraPerspective.js`)
++X is on the screen's left, but a right turn added to it. `core/avatar/AvatarMovementSimulation.js` now subtracts for a right
 turn (`RIGHT_TURN_SIGN`), on foot and riding, and `resolveVehicleMovementDirectionFromSteering()` turns RIGHT by
 -45° and LEFT by +45°; the keys, the touch joystick and the touch buttons all go through these two. New
 `tests/TurnDirectionOnScreen.test.js` projects each turn through a real Three.js camera framed by
@@ -3720,11 +3720,11 @@ steering tests that asserted the old direction are mirrored.
 
 The compass, the world map and every spoken direction were mirrored: facing North, East was on your left. They
 treated the facing yaw (0° = +Z, growing toward +X) as a compass bearing, but +X is on the left of someone facing +Z,
-so a yaw grows anticlockwise. `core/CompassHeading.js` now converts with `compassBearingFromYaw()` (360° − yaw), so
+so a yaw grows anticlockwise. `core/world/CompassHeading.js` now converts with `compassBearingFromYaw()` (360° − yaw), so
 North stays +Z and East is −X; `computeCompassHeading()` adds `bearing`, which the compass needle and number show,
 while `degrees` stays the raw yaw that spatial presence carries and saved visits store, so nothing on the wire
 changes. New `compassLabelBetween()` names the direction between two points for place navigation, residents and
-the Nearby lists (`directionLabelBetween()`, `WorldSpatialContext#directionLabel()`). `core/WorldMapProjection.js`
+the Nearby lists (`directionLabelBetween()`, `WorldSpatialContext#directionLabel()`). `core/world/WorldMapProjection.js`
 draws −X (East) on the right, so the map is the World seen from above rather than its mirror. New
 `tests/CompassDirectionOnScreen.test.js` starts from a real Three.js camera behind the avatar and checks the
 compass, the map and spoken directions all agree with it.
@@ -3797,7 +3797,7 @@ redeployed (`wrangler deploy`). New cases in `server/rendezvous-worker/worker.te
 Building a German half-timbered house showed what the core bricks lacked. Bricks only turn about the vertical axis,
 so nothing could lean: diagonal braces had to be faked from overlapping trims. The only thin upright was the round
 column, and `core:slope_45` was drawn as a plain cube (`boxGeometry` in `renderer/ThreeBrickFactory.js`), although
-`core/WalkableSurface.js` has always let an avatar walk up it as a ramp. The slope is now a wedge
+`core/building/WalkableSurface.js` has always let an avatar walk up it as a ramp. The slope is now a wedge
 (`wedgeGeometry()`), rising along its local +X like the stair and like the walked surface, so what is drawn is what
 is walked on. Two primitives join `CoreLibrary`: `core:post`, a square 0.25 × 3 × 0.25 upright (column category), and
 `core:brace_2x2`, a 0.25-thick bar corner to corner across a 2 × 2 panel (beam category, `braceGeometry()`). A brace
@@ -3837,7 +3837,7 @@ Repository already has a second time. New `tests/RepositoryNetworkDiscovery.test
 ## Shared with you names each World (unnumbered, 2026-10-04)
 
 **Shared with you lists each World by its title.** Reported from a Repository showing eighteen identical rows, "A World
-shared by …G4u2HmQ2JN6KbN", with nothing to choose by: a share's envelope (`core/DecentralizedPublication.js`) carried
+shared by …G4u2HmQ2JN6KbN", with nothing to choose by: a share's envelope (`core/publication/DecentralizedPublication.js`) carried
 only a content reference, and the title lives in the Publication, which arrives only on Retrieve, from a sharer who
 must be connected.
 
@@ -3887,10 +3887,10 @@ from `core:wall_1x3` segments turned to run along Z therefore blocked as a row o
 gaps between them that the 0.7-wide avatar walked straight through, and the same segments stuck 0.5 into the room
 on either side. A turned door leaf blocked a doorway it was drawn beside, and a turned floor plate was walked on
 where it wasn't drawn, so an avatar fell through floors that looked solid. Found by walking a half-timbered house
-built with the app's own movement code. `core/AvatarCollision.js#brickAabb()` now takes the rotation (new
+built with the app's own movement code. `core/avatar/AvatarCollision.js#brickAabb()` now takes the rotation (new
 `footprintHalfExtents()`): a quarter turn swaps width and depth exactly, any other angle gets the box enclosing the
 turned footprint. `AvatarMovementConstraint` passes `brick.rotation` for building bricks and `brick.rotation +
-placement.rotation` for bricks of placed Structures, and `core/WalkableSurface.js`'s flat surfaces use the turned box
+placement.rotation` for bricks of placed Structures, and `core/building/WalkableSurface.js`'s flat surfaces use the turned box
 at quarter turns and the exact turned rectangle at other angles, as stairs and slopes already did. The principle
 "Start Simple: A Box Is A Good Enough Capsule" is updated to match. Editor bounds (selection, stacking, document
 bounds) are unchanged. New `tests/RotatedBrickCollision.test.js`.
@@ -3946,11 +3946,11 @@ when upvoted. The design is docs/Protocol.md, "Proposed: Blurt Substrate", check
   are one `forkbuild-anchor` custom_json, as on Steem. Verification, finality and kept block evidence work as for
   Steem.
 - **Fees.** Every Blurt transaction burns `operation_flat_fee` per operation plus `bandwidth_kbytes_fee` per KiB.
-  `core/BlurtFees.js` computes it exactly from the packed transaction, and the content store refuses before posting
+  `core/networks/BlurtFees.js` computes it exactly from the packed transaction, and the content store refuses before posting
   when the account's balance is short. In the tests the estimate equals what the fake chain charges.
-- **Shared with Steem.** Steem's binary serialization and block evidence became `core/GrapheneBinary.js` and
-  `core/GrapheneBlockEvidence.js`, with Steem's and Blurt's operation tables on top (Blurt renumbers its
-  operations). `core/BlurtBinary.js` matches `@beblurt/dblurt` 0.17.0 byte for byte; the test keeps its transaction
+- **Shared with Steem.** Steem's binary serialization and block evidence became `core/networks/GrapheneBinary.js` and
+  `core/networks/GrapheneBlockEvidence.js`, with Steem's and Blurt's operation tables on top (Blurt renumbers its
+  operations). `core/networks/BlurtBinary.js` matches `@beblurt/dblurt` 0.17.0 byte for byte; the test keeps its transaction
   ids. Blurt Keychain (and WhaleVault) offers Steem Keychain's interface, so signing and the image upload reuse
   `steem/` with Blurt's names. Content encoding, part splitting and decoding reuse Steem's.
 - **In the app.** Blurt appears wherever Steem does: the Distribute dialogs, the Publications page, the comment and
@@ -4051,18 +4051,18 @@ A build's description was cut to 300 characters and squashed into one line in it
 Steem's notices, which are short previews in replies. On Blurt the post is its author's own, rewarded post, and a
 long description read as one block of text everywhere.
 
-- A description may use a small part of Markdown (`core/DescriptionMarkup.js`): blank lines between paragraphs, a
+- A description may use a small part of Markdown (`core/document/DescriptionMarkup.js`): blank lines between paragraphs, a
   line break within one, `#`–`###` headings, `- ` or `* ` bullet lists, `**bold**` and `*italic*`, with `\` escaping
   a mark. Nothing else is markup; a description without any reads as before.
 - The app shows the formatting in the Document Information panel and World View's location browser, through
   `ui/components/FormattedDescription.js`, which draws elements around plain text and never inserts HTML.
   Repository card snippets, the compact panel's tooltip and Steem's one-line preview show the words only
   (`descriptionPlainText()`).
-- Blurt posts (`core/BlurtPost.js`) show the description whole, cut with "…" only past
+- Blurt posts (`core/networks/BlurtPost.js`) show the description whole, cut with "…" only past
   `BLURT_POST_DESCRIPTION_MAX` (2,000 characters of text), since every byte costs a bandwidth fee, on every edit of
   the build post too. The formatting is written as Markdown (`###` for headings); every piece of text is made safe as
   before, through `steemNoticeClean()` and `steemNoticeEscape()`, split out of `steemNoticeText()` in
-  `core/SteemContentManifest.js` so text can be escaped without being trimmed. A line that would read as a numbered
+  `core/networks/SteemContentManifest.js` so text can be escaped without being trimmed. A line that would read as a numbered
   list stays text.
 - The Document Properties dialog says which formatting a description can use, in every language.
 - docs/Protocol.md ("Proposed: Blurt Substrate"), the Editor guide (Document Properties) and the Blurt user guide
@@ -4077,7 +4077,7 @@ long description read as one block of text everywhere.
 After descriptions gained their formatting, a Signed Claim's Steem notice still showed the 300-character one-line
 preview, while the same build's Blurt post showed the whole formatted description.
 
-- The description writer moved from `core/BlurtPost.js` to `core/SteemContentManifest.js` as
+- The description writer moved from `core/networks/BlurtPost.js` to `core/networks/SteemContentManifest.js` as
   `steemNoticeDescription()`, and Steem's card uses it too: the description whole, with its formatting, cut with "…"
   only past `STEEM_NOTICE_DESCRIPTION_MAX`, now 2,000 characters (`BLURT_POST_DESCRIPTION_MAX` is the same limit).
   Steem charges Resource Credits rather than fees, and the reply already carries the build's data.
@@ -4093,7 +4093,7 @@ by tag never came across builds.
 
 - A build may have up to five tags of its own (`DocumentMetadata.tags`), saved only when it has some so older
   documents keep their content hash, kept by forks like the description, and set in Document Properties.
-- `core/BuildTags.js` makes a tag (lowercase `a–z`, `0–9` and inner hyphens, 2 to 24 characters, starting with a
+- `core/document/BuildTags.js` makes a tag (lowercase `a–z`, `0–9` and inner hyphens, 2 to 24 characters, starting with a
   letter, accents dropped) and refuses any starting with `forkbuild`, so none can pass as a family tag. It also
   suggests tags: the title's words, then the description's most frequent, without common words in the app's
   Latin-script languages; other scripts give none.
@@ -4115,7 +4115,7 @@ The reply holding a Signed Claim on Blurt showed the same card as the build post
 description included, so the description was paid for twice. That card comes from Steem, where the claim's reply
 stands alone in a content thread.
 
-- `blurtContentNotice()` (`core/BlurtPost.js`) now writes one line for a Signed Claim's manifest: the build's title
+- `blurtContentNotice()` (`core/networks/BlurtPost.js`) now writes one line for a Signed Claim's manifest: the build's title
   and the "see it in 3D" link. The build post keeps the card.
 - docs/Protocol.md ("Proposed: Blurt Substrate", content) updated.
 - Tests: `tests/BlurtContentStore.test.js` checks the reply names the build and links to it without the card, and
@@ -4133,7 +4133,7 @@ the protocol gains additive parts (the Blurt substrate, `contentTitle` in shares
 - Blurt was tried against live nodes and a real Blurt Keychain, the rendezvous worker was redeployed with the
   `/blurt-image` relay, and `scripts/check-network-defaults.mjs` was run from outside the development environment.
   docs/Protocol.md's "Proposed: Blurt Substrate" now says so; Blurt stays Experimental.
-- `package.json`, `package-lock.json` and `core/version.js` say 1.3.0.
+- `package.json`, `package-lock.json` and `core/app/version.js` say 1.3.0.
 - The release tag `v1.3.0` is on the merge of #1367, so 1.3.0 also ships Vue 3.5.43 (from 3.4.31, vendored by
   `scripts/vendor.mjs`); the release notes say so under Fixes.
 - `docs/ReleaseNotes-1.3.md` is new: what's new, fixes, privacy (the visitor count), upgrading from 1.2.0 (what
@@ -4171,7 +4171,7 @@ someone with no network account had to switch the picker on every comment.
 - The Announcement / Discovery Provider page gains a **Comments** section: **Same as the Announcement / Discovery
   provider above** (the default, nothing saved), a network, or **Local & peers only**, with its own Save. Like the
   rest of the page, it takes effect the next time the app loads.
-- `core/CommentaryDistributionProvider.js` holds the comment vocabulary (`LOCAL_AND_PEERS_ONLY` moves here from
+- `core/publication/CommentaryDistributionProvider.js` holds the comment vocabulary (`LOCAL_AND_PEERS_ONLY` moves here from
   `PublicationCommentaryDistributor.js`, which re-exports it) and `resolveCommentaryDistributionProvider()`: the
   comment default when one is saved, else the Announcement / Discovery preference.
 - `storage/CommentaryDistributionPreferenceStore.js` keeps it under `commentary-distribution-preference`, separate
@@ -4289,7 +4289,7 @@ preference did choose the default network, but every place that announced picked
 inert placeholder. Announcing a Snapshot on Steem or Blurt on a device without that runtime failed with an internal
 error ("a discoveryPublisher with a publish() method is required").
 
-- `core/AnnouncementDiscoveryProvider.js`: the provider keys (`nostr`, `arweave`, `steem`, `blurt`), the default
+- `core/publication/AnnouncementDiscoveryProvider.js`: the provider keys (`nostr`, `arweave`, `steem`, `blurt`), the default
   (`nostr`) and `announcementDiscoveryProviderOrDefault()`. The boot-time preference, the Announcement / Discovery
   settings page, the Publications page's two pickers and the comment networks
   (`COMMENTARY_DISTRIBUTION_PROVIDER_KEYS`) all read it.
@@ -4423,7 +4423,7 @@ always ended in "Preferred provider not found".
   says when nothing is recorded (`publications.historyEmpty`), and its hint (`publications.historyHint`, replacing
   `publications.everyIpfsAndBitcoinObservation`) says it is kept across visits. `useCrossDomainObservationTimeline()`
   no longer reads the in-memory wizard state.
-- Saved service: `core/IpfsRemotePinningSettings.js` (endpoint, optional request and response field) and
+- Saved service: `core/networks/IpfsRemotePinningSettings.js` (endpoint, optional request and response field) and
   `storage/IpfsRemotePinningSettingsStore.js` (key `ipfs-remote-pinning-settings`, backed up with the settings by
   Your Data). It has no place for a credential. Content Provider gains a Remote Pinning Service section (Experimental):
   Save, Forget Service, and a token field whose value only goes to the tab-lifetime
@@ -4543,7 +4543,7 @@ document the moment it is opened.
   `new-document` for the Editor to open the dialog, instead of opening an empty document itself; Escape, Cancel or a
   click outside closes it, and the Editor's shortcuts are off while it is open.
 - `EditorSession.frameDocument()` (`application/editorSession/selectionEditingMethods.js`) frames the camera on the
-  whole open document with the thumbnail framing from `core/PreviewCameraFraming.js` at the Editor's field of view.
+  whole open document with the thumbnail framing from `core/catalog/PreviewCameraFraming.js` at the Editor's field of view.
   The Editor calls it after opening a ready-made build from `?start=` or New; before, the fixed camera put a large
   build like the castle all round it.
 - Messages, in every language: `featuredBuilds.*` (the four card and heading messages moved from `homeView.*`),
@@ -4574,7 +4574,7 @@ costs nothing, and the counter could not tell whether any were made or opened.
   `{ claim, build }`)), made and read with `CompressionStream`; at most 12,000 characters offered (the showcase
   castle's 127 bricks take about 3,700, so about 500 bricks fit), at most 4 MB unpacked when read. docs/Protocol.md,
   "Link-only shares".
-- `core/ForkBuildAppLinks.js`: `linkOnlyPublicationViewPath()` / `linkOnlyPublicationViewUrl()`, route
+- `core/app/ForkBuildAppLinks.js`: `linkOnlyPublicationViewPath()` / `linkOnlyPublicationViewUrl()`, route
   `#/s/:payload` (ui/router/index.js) on the same `PublicationLinkView`.
 - `application/publication/OpenPublicationLink.js`: `openPublicationLink({ linkOnly })` takes the claim and build
   from the link, verifies the claim with the World discovery verifier, keeps the build only if it matches the
@@ -4586,7 +4586,7 @@ costs nothing, and the counter could not tell whether any were made or opened.
   post-publish notice as well as World View's **My Shared World**.
 - `renderer/BuildPicture.js`: the build drawn by `DocumentThumbnailRenderer` at 1200 × 630, with a strip naming it
   and "Remix it on ForkBuild"; the WebGL context is released before it returns.
-- `core/VisitorCount.js` `FunnelEvent` and `application/settings/FunnelEventCounter.js`: `/e/share-link`,
+- `core/app/VisitorCount.js` `FunnelEvent` and `application/settings/FunnelEventCounter.js`: `/e/share-link`,
   `/e/opened-shared-link` and `/e/remix-from-link`, each a fixed path sent like the daily count, under its setting,
   Global Privacy Control, Do Not Track and the official-site rule. Which builds were opened from a link is kept in
   the page's memory only. `ui/counterHit.js` sends both kinds of hit. docs/Privacy.md, the Your Data page's
@@ -4616,7 +4616,7 @@ blank Editor with no goal, sixteen links in the header, and identities, passphra
 before anything social worked; a creation published while logged out had no author and, since the link-only share,
 no link either.
 
-- `core/FirstBuildChecklist.js`: the steps, which edits complete which (a `place-brick` whose bottom is off the
+- `core/challenge/FirstBuildChecklist.js`: the steps, which edits complete which (a `place-brick` whose bottom is off the
   ground stacks; `place-structure`, or `paste-bricks` as composing from the Build Library makes, drops in a
   structure), and lenient progress (`{ completed, dismissed, celebrated }`). `describeCommand()` now carries a placed
   brick's definition and position.
@@ -4667,7 +4667,7 @@ people on to the app's `#/s/<payload>`.
   encoded with `CompressionStream`. Drawing one takes a few milliseconds of CPU (triangles filled by exact row spans,
   depth stepped without division), and it is kept in Cloudflare's edge cache, since a payload never changes. Builds
   of more than 4,000 bricks get the site's picture.
-- `core/ForkBuildAppLinks.js`: `FORKBUILD_LINK_PREVIEW_URL`, `linkPreviewUrl()` and `payloadFromLinkPreviewUrl()`;
+- `core/app/ForkBuildAppLinks.js`: `FORKBUILD_LINK_PREVIEW_URL`, `linkPreviewUrl()` and `payloadFromLinkPreviewUrl()`;
   `prepareLinkOnlyShare()` offers the preview link (`previewUrl: null` gives the app's own `#/s/` link). `#/s/`
   links keep working.
 - `wrangler.toml` gains `APP_URL`. The worker must be redeployed before the app that shares `/b/` links: an older
@@ -4698,7 +4698,7 @@ copies, so most shared builds could not have been remixed anyway.
   context, so the Editor frames the whole copy and offers Back to World) and **Walk around it in the World**. A
   build whose license allows no copies says so and offers only the walk. Failures read as before. On a phone the
   build comes first and Edit a Copy spans the screen.
-- `core/RemixLineage.js`: `countRemixes()` (distinct published documents naming a build as their parent) and
+- `core/publication/RemixLineage.js`: `countRemixes()` (distinct published documents naming a build as their parent) and
   `describeRemixSource()` (the parent's newest Publication this device knows, else the credit in the remix's
   license, which a link-only share carries). The Repository's cards and list use them too: "Remixed from "…" by …"
   replaces "↳ Fork of …", and "Remixed N times" replaces "N forks", now counted once per remixed build.
@@ -4744,7 +4744,7 @@ background or as an installed app.
   `ui/components/pwa/InstallAppButton.js` on Home (with "Opens like an app and works offline.") and under More → App,
   or Safari's Share → Add to Home Screen hint on an iPhone or iPad; hidden once installed. `appinstalled` counts
   `/e/installed` under the visitor count's rules.
-- Notifications on this device: `core/DeviceNotifications.js` (the setting, its state with the browser's permission,
+- Notifications on this device: `core/social/DeviceNotifications.js` (the setting, its state with the browser's permission,
   which events to show), `application/notification/DeviceNotificationRelay.js` (reads the store, takes what is there
   at start or on a change of identity as seen, shows new ones only while the page is hidden and turned on, at most
   three at once, never throws), `DeviceNotificationSettingsStore`, and `ui/components/DeviceNotificationSetting.js`
@@ -4774,7 +4774,7 @@ background or as an installed app.
 Builds could travel only as links and pictures, which reach nobody in the 3D-printing, Blender or game-modding
 communities, and give no reason to search for "design and 3D-print a brick model in the browser".
 
-- `core/BuildModelFormats.js` (pure, no Three.js): `writeGlb()` (glTF 2.0 binary, one node and mesh, one primitive
+- `core/building/BuildModelFormats.js` (pure, no Three.js): `writeGlb()` (glTF 2.0 binary, one node and mesh, one primitive
   of triangles per color, POSITION with its bounds and NORMAL, matte materials converted to linear light, the credit in
   `asset.copyright` and `asset.extras`), `writeStl()` (binary, Z up, `STL_MILLIMETRES_PER_UNIT` = 10 so a model is
   1:100, centred and standing on the bed, facet normals from the vertices, the credit in the header), `writeObj()` (one
@@ -4814,7 +4814,7 @@ article, for as long as it is up, with a way into ForkBuild beside it.
   build says so. Its own Content Security Policy: `index.html`'s, with `connect-src 'self'` and `worker-src 'none'`.
 - `application/publication/sharing/OpenEmbeddedBuild.js`: decode, verify with the World discovery verifier, check the
   build against the signed hash, deserialize; keeps and admits nothing.
-- `core/ForkBuildAppLinks.js`: `embedUrl()`, `payloadFromEmbedHash()`, `embedCode()` (640 × 480, escaped title, no
+- `core/app/ForkBuildAppLinks.js`: `embedUrl()`, `payloadFromEmbedHash()`, `embedCode()` (640 × 480, escaped title, no
   referrer, lazy). `prepareLinkOnlyShare()` also returns the payload; `copyEmbedCode()`.
 - The share strip gains **Embed** for a build that fits in a link: the `<iframe>` code, **Copy embed code** and where
   to paste it.
@@ -4844,7 +4844,7 @@ article, for as long as it is up, with a way into ForkBuild beside it.
 back each week, newcomers get a concrete first thing to make, and a launch post has a call to action ("this week's
 challenge ends Sunday"). Nothing new runs on a server: the week, its theme and its tag are worked out from the date.
 
-- `core/BuildChallenge.js`: weeks run Monday 00:00 UTC to the next; eight themes (lighthouse, bridge, tiny home,
+- `core/challenge/BuildChallenge.js`: weeks run Monday 00:00 UTC to the next; eight themes (lighthouse, bridge, tiny home,
   castle gate, windmill, market day, tower, quiet place) take turns from the week of 2026-10-12, each with a built-in
   starting structure and ideas. A week's tag is `<theme>-<yyyymmdd>` (its Monday), a valid build tag, so an entry is
   simply a build carrying it. `challengeAt()`, `challengeById()`, `challengeForTag()`, `withChallengeTag()`.
@@ -4855,7 +4855,7 @@ challenge ends Sunday"). Nothing new runs on a server: the week, its theme and i
   to enter, the entries with remix counts, ideas to start from, and last week's. Entries are the Publications this
   device knows whose published snapshot carries the tag, plus those found on the networks under it.
 - Finding others' entries: a Publication's Nostr and Arweave announcements now also carry `forkbuild-tag:<tag>` for
-  each build tag (`buildTagsFor`, read from the snapshot published on this device; `core/NarrowDiscoveryTags.js`).
+  each build tag (`buildTagsFor`, read from the snapshot published on this device; `core/publication/NarrowDiscoveryTags.js`).
   The page asks Nostr and Arweave for the week's tag (`application/challenge/ChallengeEntryDiscovery.js`, a
   `RepositoryNetworkDiscovery` on that tag, which now also reports the ids it already knew) and logs what it finds
   per tag (`ChallengeEntryLog`, `challenge-entries:<tag>`, backed up with downloaded data). Steem and Blurt don't
@@ -4887,7 +4887,7 @@ was the posts themselves and a way to read their results.
   phone, the castle, harbor island and village square in the Editor, the challenge; Product Hunt's 1270 × 760);
   `docs/launch/press/` holds them.
 - Launch-channel counts: a visit through `?ref=<channel>` (`hn`, `producthunt`, `reddit`, `itch`, `nostr`, `steem`,
-  `blurt`, `edu`, `github`; `core/LaunchChannel.js`) is counted once as `/r/<channel>`, under the funnel events'
+  `blurt`, `edu`, `github`; `core/app/LaunchChannel.js`) is counted once as `/r/<channel>`, under the funnel events'
   rules (`application/settings/CountLaunchChannel.js`, from `ui/start.js`); the app then takes `ref` out of the
   address. Any other value is ignored.
 - README: a **Try it now** link and a screenshot at the top, and the tagline the posts use.
@@ -4976,9 +4976,9 @@ QR code and link. Scanning it with a phone, or opening the link in another brows
 on this device there: builds, structures, identities and settings. The other device lists what arrived and adds it
 only when asked, keeping everything it already has.
 
-- `core/QrCode.js`: a QR Code encoder (byte mode, versions 1–40, mask by penalty), checked module for module against
+- `core/app/QrCode.js`: a QR Code encoder (byte mode, versions 1–40, mask by penalty), checked module for module against
   an independent encoder for every version and level; `ui/components/QrCodeImage.js` draws it as SVG.
-- `core/DevicePairingCode.js`: the code is one base64url segment after `#/pair/` holding a one-off Ed25519 public key
+- `core/identity/DevicePairingCode.js`: the code is one base64url segment after `#/pair/` holding a one-off Ed25519 public key
   and a 32-byte secret.
 - `identity/EphemeralIdentityProvider.js`: an in-memory signing identity, so pairing never uses (or needs unlocked)
   the person's own identity and the rendezvous servers never learn it.
@@ -5035,20 +5035,20 @@ the palette), every build has a family tree (family trees), and your work lives 
   roofs and a ridge cap, a wide stair and a ladder, framed and round windows and a fence you can see through, a double
   door, shutters, a small arch, a chimney, a barrel, a bench, and a `nature` category (bush, pine, rock, lawn) with its
   own Build Library section. Each is one geometry in renderer/ThreeBrickFactory.js at exactly its declared size; the
-  shallow slope and wide stair are walked as drawn (core/WalkableSurface.js); the link-preview worker draws them; all
+  shallow slope and wide stair are walked as drawn (core/building/WalkableSurface.js); the link-preview worker draws them; all
   are named in every language. Two Village structures, Garden Cottage and Round Tower, use them, so every core brick
   still has a ready-made example.
-- **Village colours.** core/VillagePalette.js: sixteen colours offered as swatches beside the colour picker in the
+- **Village colours.** core/building/VillagePalette.js: sixteen colours offered as swatches beside the colour picker in the
   Build Library and the Selection Inspector (ui/components/VillagePaletteSwatches.js).
-- **Family trees.** core/RemixFamily.js follows `parentDocumentId` back to the original and down through the remixes
+- **Family trees.** core/publication/RemixFamily.js follows `parentDocumentId` back to the original and down through the remixes
   this device knows of, within limits it counts rather than hides. A shared link shows the tree
   (ui/components/remix/RemixFamilyTree.js); the challenge page shows one tree per chain of entries.
 - **Build here.** World View's Build here opens the Editor on a new build for the spot the avatar stands on
-  (core/BuildPlot.js, application/plot/BuildPlotStore.js, backed up with Worlds visited). The Editor says so in a
+  (core/world/BuildPlot.js, application/plot/BuildPlotStore.js, backed up with Worlds visited). The Editor says so in a
   banner, and publishing places the build on that spot (application/plot/BuildPlotPlacementStrategy.js, which
   PublishDocumentUseCase now asks with the document's id); after publishing the banner offers Go and see it. A plot is
   the builder's own note and claims no land.
-- **Stamps.** core/BuilderStamps.js names six facts and their thresholds (builds published, remixes by others, builds
+- **Stamps.** core/catalog/BuilderStamps.js names six facts and their thresholds (builds published, remixes by others, builds
   remixed, challenges entered, the largest build's bricks, builds on a plot), gathered on this device by
   application/stamps/BuilderStampFacts.js. Home shows those earned, and nothing before the first. Facts, never points,
   levels or ranks (docs/principles/achievements.md).
@@ -5067,7 +5067,7 @@ the palette), every build has a family tree (family trees), and your work lives 
 a wall couldn't become a floor and a slope couldn't hang upside down as an overhang; the Brace was added only because a
 diagonal couldn't be built any other way. Pillar served: building feels joyful.
 
-- **Model.** core/BrickOrientation.js: a brick's `tilt` is a quarter turn about its own width axis, 0, 90, 180 or 270,
+- **Model.** core/building/BrickOrientation.js: a brick's `tilt` is a quarter turn about its own width axis, 0, 90, 180 or 270,
   applied before its `rotation`, so its orientation is Ry(rotation) · Rx(tilt) (a Three.js Euler of order `YXZ`).
   Every orientation a turn and a tilt make stays on the grid. A tilt of 90 or 270 swaps height and depth, which
   `orientedSize()` gives to everything that sizes a brick: SpatialBounds, SelectionBoundsService, AvatarCollision's
@@ -5107,8 +5107,8 @@ numbers that say whether the Builder's release changed anything. Pillar served: 
   one of five fixed paths named by its lowest count (`/e/publish-bricks-0`, `-1`, `-10`, `-50`, `-200`); `/e/second-build`
   when it is that browser's second build, which happens once; and `/e/remix-published` when it is a copy of a build the
   browser didn't publish. Publishing a build again sends nothing, so the ranges add up to the builds published.
-- **How.** `publishedBuildEvents()` and `publishedBrickRangeEvent()` in core/VisitorCount.js decide from the
-  Publication, its bricks (`worldBrickCount()` in core/BuilderStamps.js, structure placements aside, as the stamps
+- **How.** `publishedBuildEvents()` and `publishedBrickRangeEvent()` in core/app/VisitorCount.js decide from the
+  Publication, its bricks (`worldBrickCount()` in core/catalog/BuilderStamps.js, structure placements aside, as the stamps
   count) and the browser's own published builds (LocalDiscoveryProvider), which it already keeps; nothing new is
   stored. `FunnelEventCounter#publishedBuild()` sends them under the daily count's rules: the official site only,
   never with Global Privacy Control or Do Not Track, never with **Count this browser** off. Counted after a publish
@@ -5138,7 +5138,7 @@ creative-direction review (docs/Pillars.md, "Where this came from").
   themselves stay on the Publications page.
 - **Signed claims.** core/PublisherLeaderboardSnapshotClaim.js and `LocalAuthorizationVerifier#verifyPublisherLeaderboardSnapshotClaim()`
   are removed; nothing signs or accepts such a claim now. The signature purpose `publisher-leaderboard-snapshot-claim`
-  stays in core/Signature.js, retired, so the string is never reused.
+  stays in core/publication/Signature.js, retired, so the string is never reused.
 - **The observation archive keeps schema 10.** Its leaderboard claim, reconciliation decision and revalidation
   observation collections are gone from the model, the difference, the replacement review, the inspection and the
   import count. On reading, each must still be a list (as schema 10 has always required) and is dropped; on writing,
@@ -5219,7 +5219,7 @@ now the Publications page built both wallet pipelines (about 13,500 lines in 114
 even with the Experimental tools hidden. This is the first network split as docs/Pillars.md "Networks: readers and
 writers" describes. Pillar served: your work is yours (one identity; a chain is something a player adds, not the core).
 
-- **Switches.** core/NetworkWriters.js names the writers (`bitcoin`, `base`); NetworkWriterSettingsStore keeps which are
+- **Switches.** core/publication/NetworkWriters.js names the writers (`bitcoin`, `base`); NetworkWriterSettingsStore keeps which are
   on (`network-writer-settings`, off until switched on, in the backup's Network settings). Network Settings lists
   **Wallets**, with **Bitcoin wallet** and **Base wallet**, under Show experimental tools
   (ui/components/NetworkWritersSetting.js). Every language.
@@ -5253,7 +5253,7 @@ every publish, comment, place-name, storage and anchor picker, and a new player 
 before building anything. This finishes the split docs/Pillars.md "Networks: readers and writers" describes, after
 Bitcoin's and Base's wallets. Pillar served: your work is yours (a chain is something a player adds, not the core).
 
-- **Switches.** core/NetworkWriters.js adds `steem` and `blurt`, and says which networks can be written to
+- **Switches.** core/publication/NetworkWriters.js adds `steem` and `blurt`, and says which networks can be written to
   (`isWritable`, `writableKeys`). NetworkWriterSettingsStore takes defaults: Steem's and Blurt's start on where an account
   to post as is already saved, so a device that posted before keeps posting (adopted once as the app starts, so
   clearing the account later doesn't switch it off); a switch saves only itself. Each network's
@@ -5323,7 +5323,7 @@ creative-direction review of 2026-10-11 called it the weakest pillar. Pillar ser
 world (a build is a place you visit with friends).
 
 - **The link.** World View's **Walk here with me**, beside **Build here**, opens a dialog with a link (and its QR
-  code), who is on the way and who has arrived. A friend who opens it (`#/walk/<code>`, core/WalkTogetherCode.js) logs
+  code), who is on the way and who has arrived. A friend who opens it (`#/walk/<code>`, core/social/WalkTogetherCode.js) logs
   in if they haven't, is told that joining shows each side the other's IP address, clicks **Join**, and lands in the
   same World, where the two see each other. One link serves any number of friends for 30 minutes while the host stays
   in World View; **Stop the link** ends it, and friends who joined stay connected.
@@ -5444,7 +5444,7 @@ residents ask about builds without becoming quest-givers. Pillar served: your wo
 world back to building, so exploring gives you reasons to build"), with building feels joyful (one click from a thought
 to a ready-made start on that spot).
 
-- **What the ground lacks** (core/ResidentWish.js, pure). Looking out to 40 m, a resident finds a river (a bridge over
+- **What the ground lacks** (core/world/ResidentWish.js, pure). Looking out to 40 m, a resident finds a river (a bridge over
   it), still water (a dock on it), dry high ground (a lookout), or else open, dry ground 14 m past its home on the far
   side from its World (a well, pavilion, market stall or cottage, chosen by the ground's 50 m cell). A spot with a build,
   structure or loaded World within 10 m has nothing to wish for. Same ground, same thought, for everyone.
@@ -5453,7 +5453,7 @@ to a ready-made start on that spot).
   has ever built a bridge over the river about 30 m to the east."
 - **Build there** (ui/components/ResidentSpeechActions.js). While it is said, a **Build a bridge there** (dock,
   lookout…) button sits where the Focus buttons do. It opens the Editor on a plot for that spot in the resident's World
-  (`/editor?plot=…&start=village:bridge`, core/BuildPlot.js) whose new build starts as a copy of the Village structure
+  (`/editor?plot=…&start=village:bridge`, core/world/BuildPlot.js) whose new build starts as a copy of the Village structure
   (ui/views/editorView/useBuildPlot.js); publishing stands it there, as Build here does.
 - **Never a quest:** nothing is stored, tracked, checked or rewarded, and the resident is the same whether or not
   anyone builds it. docs/principles/vehicles.md gains "A Resident May Wonder What's Missing, Never Ask For It".
@@ -5477,7 +5477,7 @@ creative-direction review of 2026-10-11 asked for 26 or more themes, each with i
 empty shelves. Pillar served: remixing is how you play (the families show it before anyone has published), with
 building feels joyful (a fresh theme every week for half a year).
 
-- **26 themes** (core/BuildChallenge.js). Eighteen join the eight: village well, harbor, barn, garden, workshop,
+- **26 themes** (core/challenge/BuildChallenge.js). Eighteen join the eight: village well, harbor, barn, garden, workshop,
   fortress, bandstand, front porch, stables, round tower, island, harvest store, village hall, grand house, walls and
   fences, village square, silo and family home, each starting from a build of its own (no two themes share a starter),
   with three ideas. Lighthouse now starts from a real lighthouse. **Weeks before CHALLENGE_EPOCH keep the eight-theme
@@ -5509,7 +5509,7 @@ creative-direction review of 2026-10-11 asked for numeric targets and for the gu
 Advanced. Pillar served: all three (each now has a number to reach), with the guide's Play half serving building feels
 joyful (a newcomer reads only what playing needs).
 
-- **Targets** (core/LaunchTargets.js, pure): seven, each a pillar's question as a number over one week, with the fewest
+- **Targets** (core/app/LaunchTargets.js, pure): seven, each a pillar's question as a number over one week, with the fewest
   it must be counted from before it means anything — the median published build at 10 bricks or more and second builds
   at 20% of builds (both from 50 builds); links opened per link made at 100% (from 20 links), copies per opened link at
   10% (from 50 opens), remixes per build at 15% (from 50 builds); friends arrived per walk link at 50% and plaza visits
@@ -5539,7 +5539,7 @@ box, so a door panel filled the gap left for it and an arch, drawn with an openi
 on Home also had its entry stair turned sideways, its tread higher than the door's floor. Pillar served: your work
 lives in a world ("makes a build more worth visiting"), with building feels joyful (the doorway you place works).
 
-- **What a brick collides as** (core/BrickPassage.js, pure). One box for every brick but two: a standing door collides as
+- **What a brick collides as** (core/building/BrickPassage.js, pure). One box for every brick but two: a standing door collides as
   nothing, and a standing core:arch as its two jambs and a lintel cut into twelve strips that follow its curve without
   ever cutting into the masonry. Tilted onto its side, either is one box again. `AvatarMovementConstraint` pushes these
   boxes (broad phase and step exclusion still ask about the whole brick), so residents, whose obstacles come from it,
@@ -5551,7 +5551,7 @@ lives in a world ("makes a build more worth visiting"), with building feels joyf
   play either side. renderer/ThreeBrickFactory.js draws the arch from the same numbers, so what is drawn and what
   collides can't drift apart; its size, and every brick's position, are unchanged. core:arch_small keeps its sill and
   semicircle: at 1.5 tall it is a window.
-- **Doors swing** (core/DoorSwing.js, renderer/DoorSwingAnimator.js). In World View a door swings open, away from whoever
+- **Doors swing** (core/building/DoorSwing.js, renderer/DoorSwingAnimator.js). In World View a door swings open, away from whoever
   comes within 1.6 m, in a third of a second, keeps opening the same way while they pass, and shuts behind them. The
   local avatar, the remote avatars and the residents open doors, for a World's own bricks (instances, swung about their
   hinge in renderer/BrickInstanceRegistry.js) and for a structure placement's (meshes). Drawing only: nothing is stored
@@ -5578,7 +5578,7 @@ step, **Walk inside it**, and a button after Publish that opens World View at th
 work lives in a world (the first session now reaches all three beats of the fantasy: build, share, walk inside), with
 building feels joyful (the guide ends inside what you made).
 
-- **Where you arrive** (core/BuildEntrance.js, pure). The build's ground-level doors, and doorway arches an avatar fits
+- **Where you arrive** (core/world/BuildEntrance.js, pure). The build's ground-level doors, and doorway arches an avatar fits
   through, are candidates. Which side is outside comes from where an avatar can walk: a plan of the build on a 0.25
   grid (0.5 for big builds), every doorway shut, flooded from the edge. A door needs room to stand on both sides of
   it, so doors set into solid towers (the Silo, the Watchtower, the Lighthouse) and the Stable's shallow stalls aren't
@@ -5592,7 +5592,7 @@ building feels joyful (the guide ends inside what you made).
   avatar at the spot facing the door and the camera 5 behind and 2.5 above them, looking at it; for a build still
   loading it finishes in `_loadWorld()`. The arrival skips the automatic Welcome panel and wins over the World's
   remembered camera position. World View says "Here's the door. Walk in with W, or the joystick."
-- **The sixth step** (core/FirstBuildChecklist.js, `walk-inside`). ui/views/worldView/useArrival.js follows
+- **The sixth step** (core/challenge/FirstBuildChecklist.js, `walk-inside`). ui/views/worldView/useArrival.js follows
   `arrivalState()` on World View's existing 100 ms presence tick (no new timer) and ticks it off when the avatar walks
   in ("You're inside! Have a look around.", or a celebration when it finishes the guide); with no avatar, arriving is
   enough. While it's next and the build is published, the guide's hint has a Walk inside it button. A guide whose
@@ -5617,14 +5617,14 @@ a finished structure, so a week's entries could all be the stock lighthouse. Res
 but never noticed when someone built it. Pillar served: building feels joyful (the count and the challenge ask for the
 builder's own bricks), with every build has a family tree (remix weeks).
 
-- **Placed bricks** (core/PlacedBricks.js, application/document/ReadyMadeBricksStore.js). A device-local record, per
+- **Placed bricks** (core/building/PlacedBricks.js, application/document/ReadyMadeBricksStore.js). A device-local record, per
   World id, of a build's ready-made bricks: everything when it starts as a forked structure
   (`EditorSession#forkStructure()`) or a copy of a build (`noteReadyMadeStart()` after `?fork=`), plus each Build Library
   structure pasted in (`PasteBricksCommand#isLibraryStructure`, noted as it executes). Bricks are compared by
   signature (definition, position to 0.001, turn, tilt, colour), never id: a ready-made brick moved, turned or
   recoloured is the builder's; one deleted counts for nothing. A build with no record is all its builder's.
-- **The count** (core/VisitorCount.js). A build's first publish also sends `/e/publish-placed-0`, `-1`, `-10`, `-50` or
-  `-200`, from the Editor and from World View. core/LaunchTargets.js gains `median-placed` (10 or more), and the gate
+- **The count** (core/app/VisitorCount.js). A build's first publish also sends `/e/publish-placed-0`, `-1`, `-10`, `-50` or
+  `-200`, from the Editor and from World View. core/app/LaunchTargets.js gains `median-placed` (10 or more), and the gate
   on new networks now reads it with `second-build`; `median-build` stays as a reading. docs/Pillars.md,
   docs/launch/README.md and docs/Privacy.md (the new event and the local record) say so.
 - **Join opens an empty plot** (ui/views/EditorView.js). `/editor?challenge=<Monday>` (Home's and the challenge page's
@@ -5633,12 +5633,12 @@ builder's own bricks), with every build has a family tree (remix weeks).
   the tab) for as long as that build is open. An idea picked on the challenge page still opens as a copy.
 - **Twists.** Every theme has one line that makes the week's entries differ ("Make it wide enough for the hay wagon
   to cross.", "Use only three colours."), shown under the brief on Home's card and the challenge page.
-- **Remix weeks** (core/BuildChallenge.js). From CHALLENGE_EPOCH, every fourth week (2 November 2026, then every four)
+- **Remix weeks** (core/challenge/BuildChallenge.js). From CHALLENGE_EPOCH, every fourth week (2 November 2026, then every four)
   is a remix week, tag `remix-<yyyymmdd>`, `remixOf` the week before; the themes keep their turn round it, and weeks
   before the epoch are as they were. Its Join goes to its page, which lists last week's entries (searching the
   networks for both tags); Remix on one opens `/editor?fork=…&challenge=<Monday>`, tagged once the copy opens. With
   no entries last week, the example remix families are offered.
-- **Residents notice** (core/ResidentWish.js, `residentWishFulfilledNear()`). On a wish turn, once a build, structure or
+- **Residents notice** (core/world/ResidentWish.js, `residentWishFulfilledNear()`). On a wish turn, once a build, structure or
   loaded World stands within 10 m of the spot a resident would wonder about, it says so instead, as a fact: "“Ana's
   Well” stands about 14 m to the east, just where I always thought a well would go." With a title, a Focus on it;
   never a reward, and nothing is kept.
@@ -5718,7 +5718,7 @@ only its author: the friends' bricks vanished into someone else's credit, and th
 story is told, couldn't tell it. The creative-direction review of 2026-10-11 (Release C, item 3) asked that a shared
 build credit both builders. Pillars served: every build has a family tree, and your work is yours.
 
-- **Recorded as they build** (core/BuiltWith.js, `DocumentMetadata#creditBuilder()`). When the host's Editor accepts
+- **Recorded as they build** (core/catalog/BuiltWith.js, `DocumentMetadata#creditBuilder()`). When the host's Editor accepts
   a friend's edit (`BuildTogetherSession#noteEdit()`, on the command protocol's received operations), that friend is
   credited on the build: the name they built under and their identity, at most 12, never the author, in the order
   they first built. Joining without building credits nobody. The Editor says so the first time ("Kim is credited on
@@ -5865,7 +5865,7 @@ neighbours, and there is somewhere to walk).
   everyone…", then "Published! Anyone can find it now…", or that it didn't reach everyone yet, with **Try again**
   (ui/views/editorView/useBuildNoteSend.js). Kept to its link, the notice offers **Let everyone find it**; after a send,
   **Only by link from now on**. The wallet networks' dialog stays, as **More networks** once a build went to everyone.
-- **Build notes** (core/BuildNote.js, docs/Protocol.md "Build notes"). A NIP-78 event (kind 30078, `d` =
+- **Build notes** (core/publication/BuildNote.js, docs/Protocol.md "Build notes"). A NIP-78 event (kind 30078, `d` =
   `forkbuild-build:<publication>`, `t` = `forkbuild-build` and each `forkbuild-tag:<tag>`) whose content is the
   link-only payload a shared link carries, the signed claim and the build's bytes, up to 48,000 characters (about
   2,000 bricks), plus the publisher's signed placement. Sent to every relay under Network Settings
@@ -5883,7 +5883,7 @@ neighbours, and there is somewhere to walk).
   publisher signed; a challenge entry is logged under a week only when the signed build carries the tag. At most 40
   opened per visit; one that fails isn't tried again that visit. The signer, codec and link opener load only when a
   note is sent or opened, never with the first screen.
-- **Builds settle together** (core/BuildSettlement.js, application/placement/SettledPlacementStrategy.js). A publish
+- **Builds settle together** (core/challenge/BuildSettlement.js, application/placement/SettledPlacementStrategy.js). A publish
   places a build, after a Build here plot, where an earlier publish of it already stands (republishing never moves
   a build); beside the build it remixes, on a ring 18 or 36 units round it, where this device knows that build to
   stand (its placement, else its grid spot); else in the village round the challenge plaza, rings from 90 units out,
@@ -5901,7 +5901,7 @@ neighbours, and there is somewhere to walk).
   document, creation and Distribute. tests/WordsTable.test.js fails when one of those words returns to the menu,
   Home, the Editor, a shared link, Explore, the challenge or Publish's dialogs.
 - **Counting it.** `/e/publish-found` when a publish was sent to everyone, `/e/publish-link-only` when it was kept to
-  its link (core/VisitorCount.js).
+  its link (core/app/VisitorCount.js).
 - Every language: the dialog, the notice, the plaza's ready-made builds, the menu and every reworded message; the
   Privacy page (what is sent, the carrier key, the relays contacted, the counts). Guides 03 and 04 ("Who can find
   it?", "Where a build stands", the plaza and Walk) in English, their translations marked out of date. Pillars ("one
@@ -5931,7 +5931,7 @@ outside, in the wall; the House was about three bricks across and empty; nobody 
 the moment after Publish read as a form. This is its Release E. Pillars served: your work lives in a world (a build is
 somewhere to be), with building feels joyful (furniture, and a room to put it in).
 
-- **Seeing inside** (core/IndoorView.js, pure). Under a ceiling (a box above the head, within 7 of the feet) the build
+- **Seeing inside** (core/building/IndoorView.js, pure). Under a ceiling (a box above the head, within 7 of the feet) the build
   is every box connected to that ceiling, and everything of it higher than just above the head (`CUT_ABOVE_FEET`,
   2.1, or the ceiling if lower) is cut away. The indoor camera stands behind and above, looking down into the room
   through the cut; when a wall is in the way it tries steeper, nearer stands (`INDOOR_CAMERA_STANDS`) up to almost
@@ -5952,12 +5952,12 @@ somewhere to be), with building feels joyful (furniture, and a room to put it in
   door, a front window and windows on every side, a 3×3 hipped roof, a chimney over a hearth on the north wall, a
   table with a bench, a bed along the west wall, a shelf on the east wall and a barrel by the door, with room to walk
   round them. The House family (porch, garden, tower) moved out to fit.
-- **Lived in** (core/ReadyMadeHome.js). A copy of a ready-made home (a Structure tagged `dwelling`) starts with one
+- **Lived in** (core/building/ReadyMadeHome.js). A copy of a ready-made home (a Structure tagged `dwelling`) starts with one
   World Resident whose home is 2.5 beside the spot in front of its door, clear of the doorway
   (application/editor/ForkStructureUseCase.js); its author is `ready-made`, and the builder removes it with R like any
   resident. The plaza's ready-made exhibits are lived in the same way, and residents are read from the plaza's
   exhibits as well as loaded Worlds (residentMethods.js).
-- **Settling clear of trees** (core/BuildSettlement.js). A spot needs no tree within 7 (`SETTLEMENT_TREE_CLEARANCE`):
+- **Settling clear of trees** (core/challenge/BuildSettlement.js). A spot needs no tree within 7 (`SETTLEMENT_TREE_CLEARANCE`):
   checking the real app found a World tree in front of a settled house's door.
 - **A calmer panel** (ui/views/WorldView.js, templates/avatarSection.js). What a visitor came to do comes first, on its
   own row: Build here, **Walk here with me** (the primary one) and Edit a Copy; then Home, Locations, the online count,
@@ -5994,12 +5994,12 @@ the audit's recommendations on two open questions: the plaza is a place, and Try
 served: building feels joyful (a first click that works, a job, roofs that read as roofs), and your work lives in a
 world (a village it stands in from its first day).
 
-- **The village stands for everyone** (core/StarterVillage.js, ui/views/worldView/useStarterVillage.js). The square
+- **The village stands for everyone** (core/challenge/StarterVillage.js, ui/views/worldView/useStarterVillage.js). The square
   (core/library/PlazaSquare.js) and the six ready-made builds stand round `PLAZA_CENTER` in every World View, wherever
   it opens, laid out like the plaza's exhibits round the open square (`starterVillageLayout()`), drawn and walked into
   through the exhibits' path (`showPlazaExhibit()`), never placed, signed or stored. They reach about 40 from the
   middle, inside `PLAZA_VILLAGE_RADIUS` (48), where nothing settles; trees keep out to `PLAZA_CLEARING_RADIUS`, now 66.
-  The village's first ring (core/BuildSettlement.js, `VILLAGE_FIRST_RING_RADIUS`) is pulled in from 90 to 56, so the
+  The village's first ring (core/challenge/BuildSettlement.js, `VILLAGE_FIRST_RING_RADIUS`) is pulled in from 90 to 56, so the
   first published house stands beside a ready-made build and in sight of the square. Builds already published keep
   their signed placements.
 - **An entry stands in one place** (ui/views/worldView/useChallengePlaza.js). On the plaza, an entry whose placement
@@ -6007,7 +6007,7 @@ world (a village it stands in from its first day).
   gives it, clear of known placements and the entries before it, rather than on a ring of its own round the square.
   The panel lists the entries and, always, the village's ready-made builds; the ready-made "fillers" while a week has
   few entries are gone, since the ready-made builds now always stand.
-- **Try it now: a house to finish** (core/StarterJob.js, ui/components/StarterJobCard.js). Home's main button opens
+- **Try it now: a house to finish** (core/challenge/StarterJob.js, ui/components/StarterJobCard.js). Home's main button opens
   `/editor?start=village:house&job=roof`: the House without its roof and chimney, walls up and room furnished (and
   visible from the Editor's camera), with a **Your job: give it a roof** card at the top of the sidebar. **Pick the
   roof** chooses Hip Roof 6x6, turns Place on and sets a placement guide (EditorContext `placementGuide`,
@@ -6015,13 +6015,13 @@ world (a village it stands in from its first day).
   spot, by the brick's own position), its ghost goes to where the finished House has its roof, so a click on a wall
   puts the roof on, as checking it in the real app showed a click from the Editor's camera lands on the front wall's
   face, not the floor. The guide goes once the job is done or another build opens. Once any roof brick stands, the card says **It's yours now!** and
-  suggests what else to add. The roof is the builder's own brick, so the publish counts it (core/PlacedBricks.js).
+  suggests what else to add. The roof is the builder's own brick, so the publish counts it (core/building/PlacedBricks.js).
 - **Nothing of your own yet?** (ui/components/Toolbar.js). Publishing a build started from something ready-made with
   no brick of the builder's in it asks once per build per visit: **Keep building** or **Publish anyway**.
 - **Place places** (application/tools/PlacementTool.js `activate()`). Place with no brick chosen loads the Cube (the
   Build Library shows it chosen), so the hint's "click to place" is true from the first click; a brick already chosen
   is kept. The first-build guide's hint says so.
-- **A brick on top rests on what's under it** (core/BrickResting.js). Stacking on a brick's top face lifts the new
+- **A brick on top rests on what's under it** (core/building/BrickResting.js). Stacking on a brick's top face lifts the new
   brick until nothing its footprint overlaps is in its way, turned footprints included, so a 6x6 roof dropped on the
   middle of a house's floor rests on its walls, and a beam across two posts on the posts. A turn (R) works the resting
   height out again.
@@ -6103,20 +6103,20 @@ built in).
 - **A File menu** (ui/components/Toolbar.js). Save, Publish and New first; Export, 3D model and Import under **File**,
   placed on the page under its button so a phone's sideways-scrolling toolbar doesn't clip it. New is on a phone's
   screen again.
-- **See inside** (core/IndoorView.js `seeInsideCutaway()`, application/editorSession/selectionEditingMethods.js
+- **See inside** (core/building/IndoorView.js `seeInsideCutaway()`, application/editorSession/selectionEditingMethods.js
   `setSeeInside()`, application/world/RenderWorldUseCase.js). The Editor uses World View's cutaway planes
   (renderer/CutawayClipping.js): the whole build cut away above where a person on its lowest floor would be cut
   indoors, kept fitted as it changes. Picking passes over what is cut away (renderer/PickingService.js,
   `cutawayClipping`), in the Editor and, indoors, in World View, so a click goes into the room that shows.
 - **The camera frames the build where it is drawn** (frameDocument()). It already opened at a three-quarter angle,
   but aimed at the build's own coordinates, below the Editor's floor (renderer/EditorFloor.js); it now adds the floor.
-- **One name for whose a build is** (core/BuildCredit.js). The hover card's "by …" and the inspection's Author read the
+- **One name for whose a build is** (core/catalog/BuildCredit.js). The hover card's "by …" and the inspection's Author read the
   Publication's signed author, else whoever placed the build (the placement's Owner), else the name in the build,
   else "anonymous": no more "Author anonymous" beside "Owner Ana".
-- **Measuring the village** (core/VisitorCount.js `WORLD_VISIT` and `WORLD_NEIGHBOUR`, core/NeighbourSight.js,
+- **Measuring the village** (core/app/VisitorCount.js `WORLD_VISIT` and `WORLD_NEIGHBOUR`, core/world/NeighbourSight.js,
   ui/views/worldView/useNeighbourCount.js). `/e/world-visit` when World View opens; `/e/world-neighbour` once a visit
   when a build stands in view (loaded, or the plaza's entries) that this device didn't publish and can't edit. The
-  village's ready-made builds are drawn, never loaded, so they don't count. A launch target (core/LaunchTargets.js,
+  village's ready-made builds are drawn, never loaded, so they don't count. A launch target (core/app/LaunchTargets.js,
   `neighbours`): half of visits, once there are fifty. docs/Privacy.md and its translations say what is sent.
 - Every language: File, See inside, the bar's label and the plaza's line. Guides 02 (File, See inside, one bar) and 03
   (the bar, a phone's panel and plaza line, one name) in English, their translations marked out of date; Pillars.
@@ -6134,16 +6134,16 @@ built in).
 project owner to decide each of the systems that serve no pillar directly. The owner kept them all, to be looked at
 again if hardly anyone uses one (docs/Pillars.md, "The side systems").
 
-- **Seven counts** (core/VisitorCount.js; application/settings/FunnelEventCounter.js `countOnce()`), each at most once a
+- **Seven counts** (core/app/VisitorCount.js; application/settings/FunnelEventCounter.js `countOnce()`), each at most once a
   page load, under the visitor count's rules (official site only, the setting, Do Not Track and Global Privacy
   Control): `/e/swam` (into the water), `/e/animal-caught`, `/e/animal-decorated` (G), `/e/inventory-used` (an animal
   caught or a vehicle stored), `/e/chat-sent`, `/e/voice-call` (made or answered) and `/e/lobby-joined`. None says what
   was caught, said, called or joined.
-- **Where they're heard.** Swimming, catching and carrying from World View's avatar tick (core/SideSystemUse.js, pure:
+- **Where they're heard.** Swimming, catching and carrying from World View's avatar tick (core/app/SideSystemUse.js, pure:
   what changed between two moments, the first moment of a visit using nothing; ui/views/worldView/useSideSystemCount.js);
   decorating from the session (`onAnimalDecorated()` in application/worldNavigation/worldContentMethods.js); chat and
   voice in ui/views/ChatView.js; the lobby in ui/components/PublicLobbyPanel.js.
-- **Watched on the scorecard** (core/LaunchTargets.js `SIDE_SYSTEMS`, `evaluateSideSystems()`; scripts/launch-scorecard.mjs).
+- **Watched on the scorecard** (core/app/LaunchTargets.js `SIDE_SYSTEMS`, `evaluateSideSystems()`; scripts/launch-scorecard.mjs).
   The share of visits that used each, out of World View visits (`/e/world-visit`) for the World View ones and daily
   visits (`/`, which the scorecard now reads too) for chat, voice and the lobby; flagged rarely used under 2% once 50 or
   100 visits are counted. Not targets: nothing gates on them.
@@ -6163,7 +6163,7 @@ builds only within its streaming radius (150) of the camera, so the plaza said "
 nowhere near (**Navigate** went to it). Pillar served: your work lives in a world (entrants expect to see their entries
 in the village).
 
-- core/PlazaEntrySpots.js `plazaEntrySpots()` (pure, from ui/views/worldView/useChallengePlaza.js): an entry placed
+- core/challenge/PlazaEntrySpots.js `plazaEntrySpots()` (pure, from ui/views/worldView/useChallengePlaza.js): an entry placed
   within `PLAZA_IN_VIEW_RADIUS` (120, the first four village rings) of the middle stands there; one placed further
   away, or not known to be placed, is shown as an exhibit on the spot it would settle on in the village, clear of the
   placements and the entries before it. Its own spot never moves.
@@ -6184,7 +6184,7 @@ is nothing to learn, and **Always day** sits next to **Show advanced tools** for
 It doesn't lead a release: the creative-direction review's launch blockers (a wallet, a crowd, a place to meet) are
 still the next release's subject, and this is World View polish beside them.
 
-- **One sky for everyone, from the clock** (core/DayCycle.js). `skyLookAt(seconds)` gives the background, hemisphere
+- **One sky for everyone, from the clock** (core/nature/DayCycle.js). `skyLookAt(seconds)` gives the background, hemisphere
   and sun (moon) colors and intensities and a glow strength for any moment: dawn, day for about half the cycle, dusk,
   a little over a fifth in full night, dawn, each blending into the next. It is the wall clock, the same clock
   wildlife wanders by, so everyone at a build sees the same sky without anything being sent or stored. 40 minutes,
@@ -6193,7 +6193,7 @@ still the next release's subject, and this is World View polish beside them.
   `Lights#applyLook()`). The session hands the render facade the sky every frame; while it holds, the same frozen look
   comes back and nothing is redone. Under water the haze stays and surfacing returns to the current sky, not noon.
   The Editor, thumbnails, the Home turntable and link previews keep DAY, which is what the renderer starts with.
-- **What shines** (core/NightGlow.js, `BrickDefinition#nightGlow`). Glowing belongs to a brick type, not a brick, so
+- **What shines** (core/nature/NightGlow.js, `BrickDefinition#nightGlow`). Glowing belongs to a brick type, not a brick, so
   documents and the protocol are unchanged. core:window_small and core:window_large glow with warm lamplight whatever
   their glass (the framed and round windows have holes, and don't); the new **Lantern** shines in its own color.
   Instanced bricks carry their light in an `instanceGlow` attribute beside the selection highlight, scaled by one
@@ -6204,7 +6204,7 @@ still the next release's subject, and this is World View polish beside them.
 - **The Lantern** (core:lantern, the fifty-ninth core brick): an eight-sided glass lantern, 0.75 × 1 × 0.75, in
   Details. The built-in lighthouses (collection:lighthouse, Harbor Island's) and the challenge plaza's lamp posts use
   it instead of a plain yellow brick, and the Village Dock gains one at its far end.
-- **Crickets at night** (`ambientMixAtNight()` in core/AmbientSoundscape.js). Birds fall to a tenth and crickets rise,
+- **Crickets at night** (`ambientMixAtNight()` in core/app/AmbientSoundscape.js). Birds fall to a tenth and crickets rise,
   on land more than over open water; World View's sound resamples when night deepens or lifts by 0.05.
 - **Always day** (application/settings/WorldViewSkyStore.js, `world-view-sky`): a per-device choice at the bottom of
   World View's panel, which keeps DAY and daytime sound. The Privacy page lists it.
@@ -6228,7 +6228,7 @@ side at noon and at midnight. Pillar served: your work lives in a world, one whe
 morning and its west wall the evening. Nothing to learn and nothing to set: **Always day** keeps broad day's sun where
 the light always stood.
 
-- **Where they are, from the clock** (`skyBodiesAt()` in core/DayCycle.js). One arc from east (+x) to west (-x)
+- **Where they are, from the clock** (`skyBodiesAt()` in core/nature/DayCycle.js). One arc from east (+x) to west (-x)
   leaning 50° south, so neither climbs above 40°: World View's camera looks at most about 30° up, and a higher sun
   would be out of sight most of the day. The sun is up from just before dawn until it sets in the dusk, the moon from
   late in the dusk until just after dawn; while both are low in the sky the light sweeps steadily back over the
@@ -6248,10 +6248,10 @@ the light always stood.
 ## The sun and the moon follow the compass (unnumbered, 2026-10-12)
 
 **The sun now rises where World View's compass says East and sets where it says West.** The first version put east
-at +x and south at +z, but the compass (core/CompassHeading.js) has North at +z, so East is -x: watching the sun set,
+at +x and south at +z, but the compass (core/world/CompassHeading.js) has North at +z, so East is -x: watching the sun set,
 the compass read East. Pillar served: your work lives in a world whose directions agree with each other.
 
-- `arcDirection()` in core/DayCycle.js mirrors the arc: east -x, south -z, west +x. The light follows, so it is the
+- `arcDirection()` in core/nature/DayCycle.js mirrors the arc: east -x, south -z, west +x. The light follows, so it is the
   compass's east walls that catch the morning.
 - **Always day** (`DAY_SKY_BODIES`) is now the sun standing still partway through the morning, low in the
   south-east and in view, instead of the Editor's fixed light direction, which lay in the compass's north-west. The
@@ -6278,7 +6278,7 @@ anyone whose device would rather not draw them.
 - **Who casts, who receives** (renderer/ShadowRoles.js), set where meshes are made: bricks (instanced and standalone)
   and trees cast and receive, avatars, vehicles and animals cast, the ground receives; water, life under water,
   markers and the sun and moon do neither. The Editor and thumbnails never turn shadows on, so they are unchanged.
-- **Fading through the handover** (`lightStrength` in core/DayCycle.js, `Lights#setDirection()`). While the sun hands
+- **Fading through the handover** (`lightStrength` in core/nature/DayCycle.js, `Lights#setDirection()`). While the sun hands
   the sky to the moon and back, the light's direction sweeps over the southern sky; its strength now eases to nothing
   halfway and back, half of it spread as fill, so shadows fade out and in instead of swinging across the ground, and
   moonlit shadows are fainter because moonlight is.
@@ -6305,7 +6305,7 @@ east to west.** A moonlit night with an empty sky felt unfinished; a night worth
 walk a build after dark. Pillar served: your work lives in a world. Nothing to learn or set, and it costs one more
 draw of small points, so there is no setting; Always day shows none.
 
-- **One sky for everyone** (core/StarField.js): 1500 stars from a fixed seed, evenly over the sphere, many faint and
+- **One sky for everyone** (core/nature/StarField.js): 1500 stars from a fixed seed, evenly over the sphere, many faint and
   few bright, a few blue-white or warm; 1600 fainter ones and a soft glow in the Milky Way's band, which crosses the
   sky at a slant.
 - **Turning with the day** (`skyTurn` in `skyBodiesAt()`, `turnSky()`): once round a day round a pole due north and
@@ -6345,7 +6345,7 @@ needs nothing first), and building feels joyful (the screens round a build look 
   owner again (a lock or an unlock) keeps its avatar, whose sequence peers already know.
 - **The panel says so**: *"You're walking as a guest: only you can see yourself here. Choose a name (when you publish,
   or with Walk here with me) and friends can see you too."*, in every language.
-- **Counted**: `/e/guest-walk` (core/VisitorCount.js, `FunnelEventCounter#walkedAsGuest()`), once a page load, when a
+- **Counted**: `/e/guest-walk` (core/app/VisitorCount.js, `FunnelEventCounter#walkedAsGuest()`), once a page load, when a
   guest has walked more than a step from where they arrived; no target yet. The Privacy page lists it, and says a
   guest's avatar is kept and sent nowhere.
 - **The look** (css/main/theme.css; docs/Pillars.md, "Look"). The colours are named once: warm paper grounds
@@ -6406,7 +6406,7 @@ of.** A wall of flat-coloured boxes read as one panel, and a house as a toy; the
 for the look, and docs/Pillars.md's "Look" left them undecided. Pillar served: building feels joyful (what you build
 looks hand-built, and every screenshot and shared picture with it).
 
-- **What a brick is made of** (core/BrickSurface.js): bricks, arches, chimneys, hearths, pillars and steps are laid in
+- **What a brick is made of** (core/building/BrickSurface.js): bricks, arches, chimneys, hearths, pillars and steps are laid in
   masonry courses; walls are plastered; beams, posts, logs, doors, shutters, fences and furniture are wood; roofs and
   slopes are tiled; windows are glass; bushes, pines and lawns are leaves; the rock is rough stone; anything else
   (plates, round bricks, the lantern, a community library's bricks) is plain. The plain blocks (cube, half cube, 2×2
@@ -6438,7 +6438,7 @@ looks hand-built, and every screenshot and shared picture with it).
 2026-10-12 (docs/reviews/CreativeDirection-2026-10-12c.md) and docs/Pillars.md's "Look" left it undecided. A quiet,
 unhurried tune is what gives an afternoon of building its mood. Pillar served: building feels joyful.
 
-- **The score** (core/MusicScore.js): pure and seeded, so nothing is downloaded, stored or sent. A phrase is four bars
+- **The score** (core/app/MusicScore.js): pure and seeded, so nothing is downloaded, stored or sent. A phrase is four bars
   over a chord progression: a soft pad holding the chord, a bass on the bar, and a melody of chord tones and passing
   notes, kept within reach (never shrill, never muddy). Three moods: the Editor's (C major, a little lively), World
   View's by day (F major, warm and unhurried) and by night (A minor, slow, low and sparse). Every piece of eight
@@ -6449,7 +6449,7 @@ unhurried tune is what gives an afternoon of building its mood. Pillar served: b
 - **When it plays** (audio/WebAudioSoundscapeProvider.js): only while music is chosen, sound is on, audio is unlocked
   by a gesture and the page is shown; each visit draws its own seed, so the tune never repeats exactly. World View
   turns to the night's tune after dark (`musicMoodFor()`), at the next phrase.
-- **The choice** (core/SoundSettings.js, application/settings/SoundPreference.js): `music`, on by default, kept with
+- **The choice** (core/app/SoundSettings.js, application/settings/SoundPreference.js): `music`, on by default, kept with
   mute, volume and 3D in 'sound-settings'; an older saved choice reads as on. A **♪ Music** button beside the volume
   slider in both views turns it off or on; the **Sound** button and `M` mute it with everything else.
 - Docs: Pillars' "Look", Privacy, docs/Architecture.md, and the sound sections of the World View and Editor guides in
@@ -6475,7 +6475,7 @@ building feels joyful (comfortable at any hour, on any device).
   for information; purple, indigo, teal and rose for kinds of things), and the paper glass over the 3D view, faint
   lines and shadows as RGB triplets at any strength. Saturated buttons and markers with white words keep their colour
   in both looks.
-- **Auto, Light or Dark** (core/LookSettings.js, application/settings/LookSettingsStore.js, ui/look.js,
+- **Auto, Light or Dark** (core/app/LookSettings.js, application/settings/LookSettingsStore.js, ui/look.js,
   ui/components/LookChoice.js): under More → App, beside Language; Auto, the default, follows the device; the choice
   applies at once, needs no reload, and is applied before the app loads next time. Kept on this device only
   (`look-settings`).
@@ -6594,7 +6594,7 @@ newcomer reads after their first build is about what they can see and do).
   advanced tools on); the panel a click opens is **About this build**, with **Focus**, **Move** and **Remove from
   World** under Placement; faint see-through builds are explained on the visitor's page, since a visitor sees them.
 - Links from the index, the FAQ, Publishing & Remixing, Publications & External Evidence and Distributing Your Work
-  point at the new page, as do the comments in core/BuildPlot.js and core/BuildSettlement.js. The index lists the new
+  point at the new page, as do the comments in core/world/BuildPlot.js and core/challenge/BuildSettlement.js. The index lists the new
   page under Advanced.
 - **All seven translations** have both pages, in each language's own words from `ui/i18n/messages/`; each keeps its
   translated section titles, so its links keep working. Every translation is stamped.
@@ -6671,7 +6671,7 @@ switches, and fixes what the "Fix" entries above name, with no security fix. `PR
 protocol gains additive parts (Brick Tilt, link-only shares, build notes, walk and build links, `builtWith`, the
 Snapshot possession exchange).
 
-- `package.json`, `package-lock.json` and `core/version.js` say 1.4.0.
+- `package.json`, `package-lock.json` and `core/app/version.js` say 1.4.0.
 - `docs/ReleaseNotes-1.4.md` is new: what's new, removed, changed and fixed, privacy (the new counts, build notes and
   their carrier key, link previews, walking and building together), upgrading from 1.3.0 (switching a wallet back on,
   redeploying a self-hosted worker, and what 1.3.0 does with co-built Publications, which it refuses since their
@@ -6688,7 +6688,7 @@ carrying the build. The owner chose the audit's recommendation for its decision 
 nothing new is stored anywhere. Pillar served: every build has a family tree (a link that can be pasted anywhere gets
 opened and remixed).
 
-- **The link** (core/ForkBuildAppLinks.js `noteLinkUrl()`): the rendezvous worker's `/n/<publication id>`, and
+- **The link** (core/app/ForkBuildAppLinks.js `noteLinkUrl()`): the rendezvous worker's `/n/<publication id>`, and
   `#/n/<publication id>` in the app (ui/router/index.js, `/n/:noteId`). `<publication id>` is the note's `d` tag id.
 - **The worker** (server/rendezvous-worker/noteLink.js; buildPreview.js `resolveSharedBuild()`): asks the relays in
   `NOSTR_RELAYS` (the app's three defaults when unset) for `{"kinds":[30078],"#d":["forkbuild-build:<id>"],"limit":10}`
@@ -6709,13 +6709,13 @@ opened and remixed).
   (`ShareLinkKind.SHORT`, application/publication/PublicationShareLink.js `shortShareUrl()`). A build too large for its
   own link (12,000) but within a note (48,000, about 2,000 bricks) is now shareable by link. Embed and Save picture still
   use the build itself.
-- **Counting it.** `/e/share-link-short` beside `/e/share-link` when the link shared was short (core/VisitorCount.js,
+- **Counting it.** `/e/share-link-short` beside `/e/share-link` when the link shared was short (core/app/VisitorCount.js,
   `sharedShortLink()`); docs/launch/README.md says how to read it.
 - Every language: the short link's hint and the not-found message; guide 04's "Sharing a link" and the Privacy page
   (the local record, the count, the worker's and the app's relay requests, and what a short link holds), stamped up to
   date. docs/Protocol.md ("Short links"), docs/Architecture.md, docs/Deployment.md, the worker's README and
   `wrangler.toml` (`NOSTR_RELAYS`).
-- Tests: `ShortLinks` (the link; the worker's reading agreeing with core/BuildNote.js; its relay client over a
+- Tests: `ShortLinks` (the link; the worker's reading agreeing with core/publication/BuildNote.js; its relay client over a
   Worker-style WebSocket, with EOSE, a silent relay and a refusal; the /n/ page, picture and oEmbed for a real signed
   castle, a newer note carrying another build or a retitled claim passed over, none found, bad ids, a 1,500-brick build
   past /b/'s limit; the store, sending and opening noting builds; what the share offers; the count),
@@ -6734,7 +6734,7 @@ A week of the public counter showed visits but no `/e/…` path at all, and noth
 counted: a visitor who left Home, one who opened the Editor and got lost, and one who built but didn't publish all
 looked the same. Pillar: **Building** (do people who arrive start a build?).
 
-- **Counted** (core/VisitorCount.js, `EDITOR_OPEN`, `STARTER_OPEN`, `EDITOR_EDIT`; application/settings/
+- **Counted** (core/app/VisitorCount.js, `EDITOR_OPEN`, `STARTER_OPEN`, `EDITOR_EDIT`; application/settings/
   FunnelEventCounter.js `openedEditor()`, `openedStarter()`, `editedInEditor()`), at most once a page load each, under
   the other counts' rules (the official site, **Count this browser**, Global Privacy Control, Do Not Track):
   `/e/editor-open` when the Editor opens, whichever way in; `/e/starter-open` when a ready-made build opens in it as
@@ -6742,7 +6742,7 @@ looked the same. Pillar: **Building** (do people who arrive start a build?).
   first edit there (ui/views/EditorView.js, through `EditorSession#onCommandActivity()`: an executed command, so an
   undo or redo isn't one, and a collaborator's edits arriving from peers are left out). Nothing about the build or the
   edit is part of the path. No target yet.
-- **Reading them** (core/LaunchTargets.js `FIRST_STEPS`, `evaluateFirstSteps()`): the scorecard
+- **Reading them** (core/app/LaunchTargets.js `FIRST_STEPS`, `evaluateFirstSteps()`): the scorecard
   (scripts/launch-scorecard.mjs) now starts with FIRST STEPS, each step's total and its share of the daily visits,
   ending with the builds published. docs/launch/README.md says what each drop points at; docs/Pillars.md lists them.
 - The Privacy page, in every language: the counts, and their row in "Servers ForkBuild contacts", stamped up to date.
@@ -6782,18 +6782,18 @@ World View's lakes and sea were flat sheets that never moved, the one still thin
 fish swim and the sky turns. Pillar: **Your work is yours, and lives in a world** (the world around a build is worth
 walking to).
 
-- **The waves** (core/WaterWaves.js, new): a pure function of world (x, z), time and how much the water is sea
+- **The waves** (core/nature/WaterWaves.js, new): a pure function of world (x, z), time and how much the water is sea
   (`waterWaveAt()`). Each wave is a travelling sine whose speed follows from its wavelength as on deep water (longer
   runs faster), slowed alike by `WAVE_PACE`. A lake has barely any swell and a fine wind ripple; the sea a long swell,
   a cross swell and a choppier ripple. `SWELL` waves move the surface itself; `RIPPLE` waves, shorter than the water
   grid's 3.3-unit spacing could hold, only tilt the light.
-- **Lake to sea** (core/Hydrology.js `seaShareAt()`, new): the 0-to-1 share of sea the surface colour already eased
+- **Lake to sea** (core/nature/Hydrology.js `seaShareAt()`, new): the 0-to-1 share of sea the surface colour already eased
   by, now named and also carried by every water vertex, so the waves blend from lake to sea across a coast with no
   seam, as the colour does.
 - **Drawn** (renderer/WaterWaveMaterial.js, new): the water tiles' materials (renderer/WaterTileMesh.js) are patched
   to lift each vertex by the swell and tilt its normal, and, on the lit top, tilt each pixel by the ripples, fading
   them out from 12 to 40 units off so distant water doesn't shimmer as a moiré. The shader is written from
-  core/WaterWaves.js's own constants. Positions are taken in world space, so neighbouring tiles move their shared
+  core/nature/WaterWaves.js's own constants. Positions are taken in world space, so neighbouring tiles move their shared
   edge alike. The top is a little glossier (roughness 0.4) so the sun glints off the ripples; the underside a diver
   sees follows the swell. One shared time uniform, advanced once a frame by renderer/Renderer.js from
   `performance.now()` (not the wall clock, so it keeps float precision in the shader for days), moves all the water:
@@ -6817,9 +6817,9 @@ Lakes rippled and the sea swelled, but a river was still only a blue tint on the
 channel crossed a steeper stretch. Pillar: **Your work is yours, and lives in a world** (the world around a build is
 worth walking to).
 
-- **Which way, and how fast** (core/RiverFlow.js, new): `riverFlowAt()`, a pure function of place, gives the water's
+- **Which way, and how fast** (core/nature/RiverFlow.js, new): `riverFlowAt()`, a pure function of place, gives the water's
   velocity. A river here is a channel laid over the terrain with no source or mouth, so downstream is read from the
-  ground: the water runs along the channel (core/Hydrology.js `riverChannelTangentAt()`, new) the way the ground falls
+  ground: the water runs along the channel (core/nature/Hydrology.js `riverChannelTangentAt()`, new) the way the ground falls
   over `FLOW_BASELINE` (15 units) either side, faster the steeper, up to `MAX_RIVER_SPEED` (1.2 units a second) at a
   1% fall. Where a stretch levels out the water slows smoothly to still and runs the other way past the low point, two
   runs meeting in a dip; the speed passes through zero there, so the current never jumps. `riverWaterAt()` says how
@@ -6861,24 +6861,24 @@ Rivers ran, lakes rippled and the sea swelled, but a river was a sheet of water 
 through it as through grass, water met every shore without a trace, and a swimmer sat still on a moving sea. Pillar:
 **Your work is yours, and lives in a world** (the world around a build is worth walking to).
 
-- **Carved beds** (core/TerrainHeightField.js `riverBedDepthAt()`, new): a river runs in a shallow bowl cut along its
+- **Carved beds** (core/nature/TerrainHeightField.js `riverBedDepthAt()`, new): a river runs in a shallow bowl cut along its
   channel, `RIVER_BED_DEPTH` (0.6) deep on the centreline and easing to nothing at the banks, so the ground has no
   edge. `terrainHeightAt()` is now the land with its beds; `baseTerrainHeightAt()` (new) is the land before them, and
-  everything that CLASSIFIES ground reads it (core/TerrainSurface.js, core/TerrainEcology.js, core/Hydrology.js's
-  rivers, core/RiverFlow.js's fall), so a bed's own banks never turn to rock nor its floor to a lake, and every
+  everything that CLASSIFIES ground reads it (core/nature/TerrainSurface.js, core/nature/TerrainEcology.js, core/nature/Hydrology.js's
+  rivers, core/nature/RiverFlow.js's fall), so a bed's own banks never turn to rock nor its floor to a lake, and every
   place is classified exactly as before. The bed fades out, smoothly, before every limit a river has (the water line,
   highland, rock-steep ground), so wherever there is a bed there is a river, and nothing kept off rivers stands in
-  one. Its floor never comes down to `WATER_LEVEL`. The channel field moved, bit for bit, to core/RiverChannel.js
+  one. Its floor never comes down to `WATER_LEVEL`. The channel field moved, bit for bit, to core/nature/RiverChannel.js
   (new), and `WATER_LEVEL`, `HIGHLAND_ELEVATION` and `ROCK_SLOPE` to TerrainHeightField (TerrainSurface re-exports
   the first two), so the height field can cut beds without importing what reads it.
 - **Ground fine enough to show them** (renderer/TerrainTileMesh.js `tileHasRiverDetail()`, `RIVER_SUBDIVISIONS`): a
   bed is narrower than two ground cells, so a tile a river runs through is built four times finer each way. Its edge
   against an ordinary tile lies on that tile's own edge, so the two meet without a crack. Its ground colour is laid
   from the ordinary grid's points over the same triangles an ordinary tile draws, and only the river tint
-  (core/Hydrology.js `riverTintAt()`, new) is sampled at every point, so it looks like its neighbours away from the
+  (core/nature/Hydrology.js `riverTintAt()`, new) is sampled at every point, so it looks like its neighbours away from the
   river and stays cheap to build: about 4 ms a tile on average with its river, against about 2.7 before.
   `isRiverAt()` now tests the channel, its cheapest condition, first.
-- **The water fills the bed** (core/RiverFlow.js `riverSurfaceHeightAt()`, `riverWaterDepthAt()`): `RIVER_FILL` (0.8)
+- **The water fills the bed** (core/nature/RiverFlow.js `riverSurfaceHeightAt()`, `riverWaterDepthAt()`): `RIVER_FILL` (0.8)
   of the way up, just below the banks. renderer/RiverTileMesh.js now lays its sheet on the fine ground's own grid at
   that surface, above the bed at every vertex.
 - **Wading in rivers** (application/avatar/AvatarWaterConstraint.js): a river slows an avatar by the water in its bed,
@@ -6887,7 +6887,7 @@ through it as through grass, water met every shore without a trace, and a swimme
 - **Foam.** At a shore (renderer/WaterWaveMaterial.js): each lake and sea vertex carries how deep the ground lies
   below the still surface (`aShoreDepth`, negative on dry ground); within 0.35 of it, plus the swell there, the water
   foams in a broken, drifting pattern, so the foam line laps up and down the beach; less of it on a lake. On a river
-  (renderer/RiverFlowMaterial.js): where the river falls steeply (core/RiverFlow.js `riverRapidsAt()`, from 3.5% to
+  (renderer/RiverFlowMaterial.js): where the river falls steeply (core/nature/RiverFlow.js `riverRapidsAt()`, from 3.5% to
   5%, about a tenth of a river's length) the crests of its current break white, a steady share of foam standing in
   far off.
 - **Riding the swell** (renderer/AvatarVisual.js `setFloat()`, renderer/Renderer.js `waterSwellAt()`): a swimmer at
@@ -6915,11 +6915,11 @@ land against 184 at a lake or the sea; 90% of those were a river vanishing acros
 reappearing within 60 units, and nearly all the rest were where a channel met highland, with the water running away
 from it. Pillar: **Your work is yours, and lives in a world** (the world around a build is worth walking to).
 
-- **Over rock** (core/Hydrology.js `isRiverAt()`): a river now runs on any ground but standing water, below highland.
-  Its bed is carved there too, and the steep water already breaks white (core/RiverFlow.js `riverRapidsAt()`).
+- **Over rock** (core/nature/Hydrology.js `isRiverAt()`): a river now runs on any ground but standing water, below highland.
+  Its bed is carved there too, and the steep water already breaks white (core/nature/RiverFlow.js `riverRapidsAt()`).
   Everything that reads `isRiverAt()` (trees, animals, vehicles, residents, the plaza, the river's sound) follows.
-- **The bed, in one place** (core/RiverBed.js, new): the channel's bowl, now joined by cascades and pools, moved out of
-  core/TerrainHeightField.js, which hands it the land (the base height function, the water line, highland) so it
+- **The bed, in one place** (core/nature/RiverBed.js, new): the channel's bowl, now joined by cascades and pools, moved out of
+  core/nature/TerrainHeightField.js, which hands it the land (the base height function, the water line, highland) so it
   imports neither the height field nor what reads it. TerrainHeightField keeps `terrainHeightAt()`,
   `riverBedDepthAt()` and gains `riverBedAt()`, `riverPoolAt()`, `riverPoolReachAt()`, `riverChannelFallAt()` and
   `riverSurfaceHeightAt()`.
@@ -6954,7 +6954,7 @@ stretch: in an 8,000 × 8,000 sample a fifth of pools (79 of 386) were over 30 u
 about 10 for a round one. And a spring, though its water spread outward, looked and sounded like any other river.
 Pillar: **Your work is yours, and lives in a world** (the world around a build is worth walking to).
 
-- **Round pools** (core/RiverBed.js `poolAt()`): a pool forms only where the channel heads into the highland, fading
+- **Round pools** (core/nature/RiverBed.js `poolAt()`): a pool forms only where the channel heads into the highland, fading
   in as the cosine between the channel and straight uphill rises from 0.35 to 0.6 (`crossing`), and its distance
   past the edge is measured along the channel, so the pool is round about the river and centred on it. The slope it
   is laid out by is read 4 units either way, so the land's finest bumps don't make a grazing channel flicker in and
@@ -6962,12 +6962,12 @@ Pillar: **Your work is yours, and lives in a world** (the world around a build i
   (those left are a channel weaving in and out along the edge: a short chain of round pools, one at each crossing,
   not one smeared pool). River ends on land still end in a pool, but for one channel that runs exactly along the
   edge without ever crossing it squarely.
-- **Springs that look like springs** (core/RiverFlow.js `riverSpringAt()`, new: how strongly the water wells up,
+- **Springs that look like springs** (core/nature/RiverFlow.js `riverSpringAt()`, new: how strongly the water wells up,
   and where the spring's centre is): each river vertex carries it (`aSpring`, renderer/RiverTileMesh.js), and the
   river's shader (renderer/RiverFlowMaterial.js) spreads rings outward from the centre, 1.4 units apart at 0.6 units a
   second, fading out by 4.5 units, lightening the crests and tilting the light outward, with a few bubbles breaking
   the surface in the middle. A still pond has none.
-- **And sound like them** (core/AmbientSoundscape.js `AMBIENT_LAYER.SPRING`, audio/WebAudioSoundscapeProvider.js):
+- **And sound like them** (core/app/AmbientSoundscape.js `AMBIENT_LAYER.SPRING`, audio/WebAudioSoundscapeProvider.js):
   the loudest spring found underfoot or within 12 m, by its strength and nearness to its centre (heard within 16 m),
   plays short rising "plips", one to three at a time, more often the nearer you are. The bubbles are scheduled only
   while a spring is heard, so away from springs nothing runs.
@@ -6990,7 +6990,7 @@ rain, its rings on the water and its sound come next. Pillar: **Your work is you
 around a build is worth walking to). It changes nothing for a newcomer: there is nothing to learn, and Always day
 keeps the sky clear.
 
-- **A weather clock** (core/Weather.js, new): `weatherAt(seconds)` gives the cloud cover and how overcast it is, from
+- **A weather clock** (core/nature/Weather.js, new): `weatherAt(seconds)` gives the cloud cover and how overcast it is, from
   the wall clock alone, as the day and night are, so nothing is sent or stored. Spells of 8 minutes each settle on a
   cover from a hash of their number (about 60% fair with a few clouds, 25% cloudy, 15% overcast), and blend into the
   next over 2 minutes.
@@ -7018,7 +7018,7 @@ The second half of weather: now and then an overcast sky rains, for a few minute
 at the same moment. Pillar: **Your work is yours, and lives in a world** (the world around a build is worth walking
 to). Nothing to learn, and Always day keeps it dry.
 
-- **When it rains** (core/Weather.js `spellRain()`, and `rain` in every weather): about four overcast spells in five
+- **When it rains** (core/nature/Weather.js `spellRain()`, and `rain` in every weather): about four overcast spells in five
   rain, one spell in eight in all, each at its own strength. Rain starts only once the clouds have gathered and stops
   before they clear (over a quarter of the 2-minute change each way), so it never rains from a sky that isn't mostly
   overcast.
@@ -7030,7 +7030,7 @@ to). Nothing to learn, and Always day keeps it dry.
   renderer/RiverFlowMaterial.js): drops land in a grid of cells and rings spread from them, lightening the water and
   tilting its light, more the harder it rains, fading out by 28 m. Renderer hands every water tile one shared
   `rain` value, as it does the waves' time.
-- **The sound of rain** (core/AmbientSoundscape.js `AMBIENT_LAYER.RAIN`, `ambientMixInRain()`;
+- **The sound of rain** (core/app/AmbientSoundscape.js `AMBIENT_LAYER.RAIN`, `ambientMixInRain()`;
   audio/WebAudioSoundscapeProvider.js): a bright, pattering hiss over a soft wash, as loud as the rain is strong,
   wherever you stand; birds and insects mostly fall quiet. WorldSoundscapeService resamples as rain starts, stops or
   changes (`rainLevel`, from the session's weather).
@@ -7053,11 +7053,11 @@ the build you stand in stays dry, and you hear the rain drumming on its roof. Pi
 in a world** (a build is a place to shelter in).
 
 - **The rain stays outside** (renderer/RainFall.js `setShelter()`): the session hands the renderer the build the
-  avatar stands in, its footprint and its top (core/IndoorView.js's `indoorCutaway()` gains `top`), in every camera
+  avatar stands in, its footprint and its top (core/building/IndoorView.js's `indoorCutaway()` gains `top`), in every camera
   perspective, only when it changes (application/worldNavigation/avatarPresenceMethods.js `_setRainShelter()`,
   `isSheltered()`; `Renderer#setRainShelter()`). The rain's shader folds away every streak any part of which is inside
   that footprint and below that top, so the room is dry while it still rains outside its windows and doorway.
-- **Drumming on the roof** (core/AmbientSoundscape.js `AMBIENT_LAYER.ROOF`, `ambientMixInRain(mix, rain,
+- **Drumming on the roof** (core/app/AmbientSoundscape.js `AMBIENT_LAYER.ROOF`, `ambientMixInRain(mix, rain,
   sheltered)`; audio/WebAudioSoundscapeProvider.js): under a roof the rain drums on it, duller and closer, and the
   rain outside is heard faintly through the walls. WorldSoundscapeService resamples as you step in or out
   (`sheltered`, from the session).
@@ -7070,7 +7070,7 @@ in a world** (a build is a place to shelter in).
   `WebAudioSoundscapeProvider` (the drumming is audible; World View hands the soundscape whether you are sheltered).
   Checked by eye from inside a room looking out of its doorway.
 - Not done: only the build the avatar stands in shelters, and only under a roof within 7 m of its feet (what
-  core/IndoorView.js counts as indoors); a tree's canopy is open sky.
+  core/building/IndoorView.js counts as indoors); a tree's canopy is open sky.
 
 ## Wet ground (unnumbered, 2026-10-15)
 
@@ -7078,7 +7078,7 @@ In the rain the ground and builds looked as dry as on a sunny day. Now they dark
 rain, and dry off over a few minutes once it stops, the same for everyone at the same moment. Pillar: **Your work is
 yours, and lives in a world** (the world around a build is worth walking to). Always day keeps it dry.
 
-- **How wet it is** (core/Weather.js `wetnessAt()`, `rainAt()`, and `wetness` in every weather): the rain followed
+- **How wet it is** (core/nature/Weather.js `wetnessAt()`, `rainAt()`, and `wetness` in every weather): the rain followed
   in 5-second steps on a grid fixed in time, soaking in quickly (about a minute, even a light shower) and drying
   slowly (half in under two minutes, nearly in eight); the last steps are kept, so following it frame to frame is
   cheap and every device gets the same answer.
@@ -7102,7 +7102,7 @@ The last of the weather: the heaviest downpours now and then become a gentle sto
 and thunder rumbling far off a few seconds later, the same for everyone at the same moment. Pillar: **Your work is
 yours, and lives in a world** (the world around a build is worth walking to). Always day has none.
 
-- **Storms** (core/Storms.js, new): only rain from 0.75 up storms (about a third of rainy spells). A strike can fall
+- **Storms** (core/nature/Storms.js, new): only rain from 0.75 up storms (about a third of rainy spells). A strike can fall
   in each 30-second slot, never closer than 20 s to the last, about one every 75 s at the height of a storm; each has
   its own distance, setting how bright it is and how soon and loud its thunder.
 - **Kept gentle for anyone sensitive to flashing light**: a flash is at most two soft pulses within half a second,
@@ -7152,7 +7152,7 @@ place in its family tree. Export wrote plain, unsigned JSON, so the name and lic
 served: every build has a family tree (credit travels with the work), with your work is yours (a maker decides what
 others may do with it).
 
-- **A maker's export is sealed** (core/DocumentSeal.js, identity/DocumentSealing.js, new; `SignatureType.DOCUMENT_SEAL`):
+- **A maker's export is sealed** (core/document/DocumentSeal.js, identity/DocumentSealing.js, new; `SignatureType.DOCUMENT_SEAL`):
   when the identity exporting is the build's author, the file gains a `seal` beside `world` and `metadata`, signed
   over the SHA-256 of the document as written, so changing anything in it, its license included, breaks the seal.
   Someone else's export, or one made signed out or locked, is the plain document as before. Older copies of ForkBuild
@@ -7246,9 +7246,9 @@ newcomer finish a first build they're proud of), and every build has a family tr
 is published).
 
 - **Every ready-made build carries the starter card** (`ui/components/StarterJobCard.js`, its stage from
-  `starterCardStage()` in `core/StarterJob.js`): Home's cards, a challenge's ideas and the Editor's **New** as well as
+  `starterCardStage()` in `core/challenge/StarterJob.js`): Home's cards, a challenge's ideas and the Editor's **New** as well as
   Home's main button. With no job, it says **Make it yours** and **Pick a tree** picks a tree and turns Place on; one
-  brick the builder placed or changed (`core/PlacedBricks.js`) moves it on.
+  brick the builder placed or changed (`core/building/PlacedBricks.js`) moves it on.
 - **Then it asks to publish**: **It's yours now!** with **Publish it**, which starts the toolbar's own Publish with
   every question it asks (the remix permission, **Who can find it?** and a name to sign with), and **Keep building**,
   which puts the card away for that build. It goes once the build is published.
@@ -7270,7 +7270,7 @@ description to link from. Arrivals from any of them read as untagged visits, bec
 Pillar served: none directly; it is infrastructure for finding where builders come from, kept as small as the
 channels before it.
 
-- `gamejolt`, `indiedb` and `youtube` join `core/LaunchChannel.js`'s list, each counted once as `/r/<channel>` under
+- `gamejolt`, `indiedb` and `youtube` join `core/app/LaunchChannel.js`'s list, each counted once as `/r/<channel>` under
   the visitor count's rules, like the others. Any other value is still ignored and never sent.
 - The Privacy page names them, in all eight languages, and the launch kit lists each one's link.
 - Tests: `LaunchChannel` (the three are read from `?ref=` and counted as their own fixed paths).
@@ -7290,7 +7290,7 @@ picture**, and the file it saves is ready to upload.
   picture is, which in the Editor right after Publish is under **More ways to share**): a **Build time-lapse**, the
   build rising brick by brick from the ground up while the camera turns, or a **Turntable**, one slow turn; **Wide
   (16:9)** for YouTube or **Tall (9:16)** for Shorts, TikTok and Reels.
-- **What it shows** (`core/BuildVideo.js`, new, pure): one turn every 12 seconds; a time-lapse rises at about 12 bricks
+- **What it shows** (`core/app/BuildVideo.js`, new, pure): one turn every 12 seconds; a time-lapse rises at about 12 bricks
   a second, between 5 and 20 seconds, lowest bricks first and in the order they were placed at each height, then turns
   finished for 3 seconds; every video ends on a 3.5-second end card. The longest video is under half a minute. The
   build's name runs along the bottom with "Made in ForkBuild"; the end card gives the title, who built it and who built
@@ -7330,7 +7330,7 @@ That is the video most likely to stop someone scrolling Shorts. Pillar served: y
 (a build is shown as a place to walk into, not only a model), with every build has a family tree (the same credits and
 remix link as every video). How a player notices: **Walk-through** is the third kind in Make a video.
 
-- **The walk** (`core/WalkThroughFilm.js`, new, pure): from the build's entrance (`core/BuildEntrance.js`), the avatar
+- **The walk** (`core/app/WalkThroughFilm.js`, new, pure): from the build's entrance (`core/world/BuildEntrance.js`), the avatar
   starts 7, 5.5 or 4 steps back from the door, the farthest with a clear way to it, holds for a second, walks to the
   door and on in (2.2 units, less in a small build, keeping off the far wall), turning to face where it goes, then looks
   slowly all the way round (7 seconds, easing in and out) and the end card fades in. A build with no door is walked up
@@ -7339,7 +7339,7 @@ remix link as every video). How a player notices: **Walk-through** is the third 
 - **Walked by World View itself** (`application/worldNavigation/walkThroughFilmMethods.js`, new): the session puts the
   avatar at the start, turns it and holds its forward key each render frame, so it walks with World View's own
   movement, collisions, swinging doors, footsteps and third-person camera, which indoors frames the room with the roof
-  cut away (`core/IndoorView.js`). The person's movement keys do nothing while it films, no camera glide takes the view
+  cut away (`core/building/IndoorView.js`). The person's movement keys do nothing while it films, no camera glide takes the view
   away, and stopping gives the camera its perspective back.
 - **Recorded as drawn** (`renderer/WorldFilmRecorder.js`, new): `Renderer` gains an after-render hook
   (`addRenderedFrameListener`, through the render facade's `onRenderedFrame` and the session's), from which each frame
@@ -7391,7 +7391,7 @@ under every kind in Make a video, and **Camera** under Walk-through.
   starts with the recording, from the top of a phrase, pauses while the tab is hidden, and fades away under the end
   card. A video without music has no sound track, as before.
 - **Through its eyes**: **Camera** offers **Behind the avatar** (World View's third-person camera, which indoors cuts
-  the roof away) or **Through its eyes** (its first-person camera). `core/WalkThroughFilm.js` gains
+  the roof away) or **Through its eyes** (its first-person camera). `core/app/WalkThroughFilm.js` gains
   `WalkThroughCamera`; `startWalkThroughFilm(documentId, { camera })` films from it and gives the camera back its
   perspective after; the request from Make a video carries it.
 - 5 new messages, in all eight languages; the guide's Publishing chapter says so in every language, and README.md and
@@ -7414,7 +7414,7 @@ your work is yours, and lives in a world (a build shown whole, then as a place),
 player notices: **Start with a sweep round the outside** under Walk-through, and a room that shows whole through its
 eyes.
 
-- **The sweep** (`core/WalkThroughFilm.js`, `planWalkThrough(…, { sweep })`, `sweepFraming()`): the camera circles half
+- **The sweep** (`core/app/WalkThroughFilm.js`, `planWalkThrough(…, { sweep })`, `sweepFraming()`): the camera circles half
   way round the build in 6 seconds, eased, from far enough back to see it whole (at least 9 units, more for a wide or
   tall build) and above it, looking at its middle, and ends on the side the avatar starts from, behind it; then the
   film cuts to the avatar and walks in as before. The session (`walkThroughFilmMethods.js`) frames the camera itself
@@ -7512,7 +7512,7 @@ nothing else.
 - **Placement** (application/placement/StandingPlacementStrategy.js, replacing SettledPlacementStrategy.js): a Build
   here build goes on its plot (BuildPlotPlacementStrategy, unchanged), a republished build stays where an earlier
   publish of it stands, and anything else, a remix too, takes its spot on the id-keyed grid
-  (core/DeterministicGridPlacement.js). core/BuildSettlement.js keeps only the rings, which now lay out the plaza's
+  (core/world/DeterministicGridPlacement.js). core/challenge/BuildSettlement.js keeps only the rings, which now lay out the plaza's
   exhibits; `settleBeside()` and the remix rings are gone. Builds placed round the plaza from 2026-10-12 to 2026-10-17
   keep their signed spots.
 - **The plaza** (ui/views/worldView/useChallengePlaza.js): only the week's entries take spots round the square, so
@@ -7558,7 +7558,7 @@ whose build it remixes; Make a video says what the license asks if someone else 
 original's builder on the end card and in the description, a non-commercial build's description says it may not be
 earned from, and a saved picture names its builder.
 
-- core/License.js: `remixLicenseIds()` (CC0 → any; CC BY → not CC0; CC BY-SA → only itself; CC BY-NC → itself, All
+- core/document/License.js: `remixLicenseIds()` (CC0 → any; CC BY → not CC0; CC BY-SA → only itself; CC BY-NC → itself, All
   Rights Reserved or none), `derivedFrom()` (the attribution a copy carries, now with `sourceAuthorIdentityId` and
   `sourceLicenseId`) and `relicense()` (keeps the attribution; refuses a license the original's doesn't allow unless
   the original's builder relicenses). ForkDocumentUseCase, ImportDocumentUseCase, ForkPublishedWorldUseCase and World
@@ -7568,7 +7568,7 @@ earned from, and a saved picture names its builder.
 - ui/components/MetadataEditorDialog.js narrows a remix's license choices and says why; the Editor's document info
   carries `authorIdentityId` for it.
 - ui/components/buildVideo/: the license notice before recording (`videoLicenseNoticeKey()`), the end card's
-  "remix of a build by …", and the description's "A remix of … by …" and non-commercial line (core/BuildVideo.js).
+  "remix of a build by …", and the description's "A remix of … by …" and non-commercial line (core/app/BuildVideo.js).
   ui/components/PublicationShareLink.js: Save picture's caption names the builder.
 - docs/user/04 ("A remix keeps your credit and your terms", "When someone uses your build in a way its license doesn't
   allow"), docs/Architecture.md and docs/Protocol.md say so; 04's translations carry the out-of-date banner. New
@@ -7592,7 +7592,7 @@ moon's sky is the one for the stars). How a player notices: the moon's shape, wh
 night's shadows are and how many stars show. It changes nothing for a newcomer: there is nothing to learn or tick,
 no new words on screen, and Always day has no moon.
 
-- **Phases from the clock** (core/DayCycle.js): `MOON_PHASES`, `MOON_CYCLE_DAYS` and `moonPhaseAt(seconds)`, the
+- **Phases from the clock** (core/nature/DayCycle.js): `MOON_PHASES`, `MOON_CYCLE_DAYS` and `moonPhaseAt(seconds)`, the
   night's phase, turning as the moon rises; `skyBodiesAt()` carries `moonPhase` and `moonLitFrom`, where the phase's
   sun would light the moon from (waxing lit on its western side, waning on its eastern). The moon still crosses the
   whole night, as before, so the night stays moonlit; only its look and light follow the phase.
@@ -7632,10 +7632,10 @@ is yours, and lives in a world** (the land round a build is worth walking throug
 notices: forests to walk under, trees taller than a house, leaves moving more as a storm gathers. A newcomer has
 nothing to learn; a phone starts with plainer trees, and **Detailed trees** in World View's settings changes it.
 
-- **Forms from a seed** (core/TreeForm.js): `treeForm(species, index)`, four forms per species, each branches (with
+- **Forms from a seed** (core/nature/TreeForm.js): `treeForm(species, index)`, four forms per species, each branches (with
   radii and `flex`, how far each point sways, measured along the wood so joints stay joined) and leaf clusters, plus
   the crown they fill; `treeShapeOf(feature)`, which form a tree wears and how it is stretched, leaned and shaded,
-  from where it stands. Placement (core/NaturalFeatureField.js) and collision (core/TreeCollisionGeometry.js) are
+  from where it stands. Placement (core/nature/NaturalFeatureField.js) and collision (core/nature/TreeCollisionGeometry.js) are
   unchanged: trunks were sized to stay inside the hitbox, crowns to keep clear of settlement spots.
 - **Three levels of detail** (renderer/TreeGeometry.js): near, every branch as a tapered, capped tube and leaves as
   crossed cards with normals pointing out of the crown; mid, trunk and main limbs under solid lumps (tiers of cones
@@ -7680,17 +7680,17 @@ How a player notices: the woods change colour from one visit to the next, leaves
 settles on the ground and a build's roof. A newcomer has nothing to learn; **Season** in World View's settings keeps
 one season on this device.
 
-- **A world year from the clock** (core/Season.js): `WORLD_YEAR_DAYS` 32 of World View's days, `SEASON_DAYS` 8 to a
+- **A world year from the clock** (core/nature/Season.js): `WORLD_YEAR_DAYS` 32 of World View's days, `SEASON_DAYS` 8 to a
   season, one to each turn of the moon, so each season starts at dawn on a new moon's day and lasts 5 h 20 min. The
   year doesn't divide a real day, so the seasons go round whatever hour someone plays. `seasonAt()`,
   `seasonLookAt()` (eleven looks blended through the year, taken every thousandth of a day), `seasonLookOf()` (a
   season's middle), `snowShareAt()`. The world's year, not the calendar's: no hemisphere, the same for everyone.
-- **Weather by season** (core/Weather.js): each season its own shares of fair, cloudy and overcast spells (the
+- **Weather by season** (core/nature/Weather.js): each season its own shares of fair, cloudy and overcast spells (the
   year's as before); `precipitationAt()` is what falls, `rainAt()` its rain and `snowAt()` its snow, all snow in
   winter; `snowCoverAt()` follows it from the end of autumn, rising as it snows and melting slowly in winter and
   fast in spring; `weatherAt()` carries `snow` and `snowCover`; `weatherInSeason()` and `fairWeatherIn()` for a kept
-  season and Always day. No thunder in snow (core/Storms.js reads `rainAt()`).
-- **What grows where** (core/TerrainEcology.js#groundCoverAt()): grass and field shares, carried on every terrain
+  season and Always day. No thunder in snow (core/nature/Storms.js reads `rainAt()`).
+- **What grows where** (core/nature/TerrainEcology.js#groundCoverAt()): grass and field shares, carried on every terrain
   vertex as `groundCover`.
 - **The land's colours** (renderer/SeasonalSurfaces.js); nothing streamed is rebuilt. The terrain takes a patch
   with shared uniforms (`Renderer#setSeason()`): grass graded and saturated by season and dotted with wild flowers
@@ -7713,7 +7713,7 @@ one season on this device.
 - **What drifts down** (renderer/SeasonDrift.js): snowflakes, leaves and petals, as rain is drawn: point sprites in
   a box round the camera, swaying, spinning, carried by the wind, one draw each and only while any fall. Leaves
   and petals fall among trees that shed them (`TreeForest#deciduousNearby`).
-- **The sound of the seasons** (core/AmbientSoundscape.js#ambientMixInSeason()): more birdsong in spring, summer's
+- **The sound of the seasons** (core/app/AmbientSoundscape.js#ambientMixInSeason()): more birdsong in spring, summer's
   insects, winter's hush; WorldSoundscapeService samples `season` from the session.
 - **This device's choice** (application/settings/WorldViewSeasonStore.js, `world-view-season`): **Season** in World
   View's settings, the world's year or one season kept; `WorldNavigationSession#setKeptSeason()`, `season()`,
@@ -7746,18 +7746,18 @@ and lives in a world** (a winter's long shadows across a build, a walk across a 
 shore), and, through the seasonal themes, **Every build has a family tree** (the challenge). A newcomer has nothing to
 learn.
 
-- **The sun through the year** (core/DayCycle.js): `seasonalSky()`, `seasonalFraction()`, `EQUINOX_SKY`; the sun's arc
+- **The sun through the year** (core/nature/DayCycle.js): `seasonalSky()`, `seasonalFraction()`, `EQUINOX_SKY`; the sun's arc
   12° higher at midsummer and lower at midwinter, the moon's the other way; the day up to 5% of the cycle longer or
-  shorter, dusk and night moving, dawn fixed. Each season look carries its `sky` (core/Season.js#summerAt()); the
+  shorter, dusk and night moving, dawn fixed. Each season look carries its `sky` (core/nature/Season.js#summerAt()); the
   session hands it to `skyLookAt()`, `skyBodiesAt()` and `moonPhaseAt()`, which with none behave exactly as before.
-- **Frozen lakes** (core/Season.js#lakeIceAt(), `isLakeFrozenAt()`; core/Hydrology.js#isLakeAt()): from the world's
+- **Frozen lakes** (core/nature/Season.js#lakeIceAt(), `isLakeFrozenAt()`; core/nature/Hydrology.js#isLakeAt()): from the world's
   clock only, never a kept season, so everyone agrees where the ice holds. The avatar walks on the ice
   (AvatarWaterConstraint `frozenAt`/`iceTopAt()`, AvatarStepConstraint `floorAt`, AvatarTerrainConstraint `frozenAt`);
   a swimmer caught under new ice swims on to the shore. renderer/WaterWaveMaterial.js `createLakeIce()`/`setLakeIce()`:
   flat, still, opaque, pale blue, duller than water, snow lying on it, compiled in only while there is ice.
-- **Snow and ice underfoot** (core/AvatarSoundCues.js `FOOTSTEP_SURFACE.SNOW`/`ICE`, audio/AvatarSoundSynth.js).
-- **Footprints** (core/Footprints.js, renderer/FootprintTrail.js; this device only, nothing sent or stored).
-- **Seasonal challenge themes** (core/BuildChallenge.js): `season` on garden (spring) and harvest (autumn), and four new
+- **Snow and ice underfoot** (core/avatar/AvatarSoundCues.js `FOOTSTEP_SURFACE.SNOW`/`ICE`, audio/AvatarSoundSynth.js).
+- **Footprints** (core/avatar/Footprints.js, renderer/FootprintTrail.js; this device only, nothing sent or stored).
+- **Seasonal challenge themes** (core/challenge/BuildChallenge.js): `season` on garden (spring) and harvest (autumn), and four new
   themes at the end of the list (winter cabin, blossom walk, summer fair, skating pond), so every week already worked
   out keeps its theme and older copies of the app agree until June 2027, when the first comes round; the challenge page
   suggests keeping World View in the theme's season (`challengeSeasonHint()`). New messages for the themes and hints in
@@ -7784,7 +7784,7 @@ wherever the list put them. Now the six seasonal themes are spread through the l
 the winter cabin, runs the week of 16 November 2026 and one comes round every six or seven weeks after, the seasons in
 turn. Pillar: **Every build has a family tree** (the challenge). A newcomer has nothing to learn.
 
-- core/BuildChallenge.js: CHALLENGE_THEMES reordered from its fifth theme on: winter cabin, blossom walk, summer fair,
+- core/challenge/BuildChallenge.js: CHALLENGE_THEMES reordered from its fifth theme on: winter cabin, blossom walk, summer fair,
   harvest, skating pond and garden every fifth, the others in their order between. The weeks up to 9 November 2026
   (lighthouse, bridge, tiny home, the remix week, castle gate) keep their themes and tags; a copy of the app not
   updated by 16 November shows other themes from then on. The weeks before CHALLENGE_EPOCH take theirs from the eight
@@ -7803,7 +7803,7 @@ panel's full width, and a longer description ends in **Read more**, which opens 
 panel, wide enough to read, with the World still in view. Pillar: **Your work is yours, and lives in a world** (what a
 builder wrote about their build reads well where people meet it). A newcomer has nothing to learn: a short description looks as before.
 
-- core/DescriptionMarkup.js `previewDescription()`: the description's start for a narrow panel, its first two blocks
+- core/document/DescriptionMarkup.js `previewDescription()`: the description's start for a narrow panel, its first two blocks
   (a leading heading, then up to the next section's heading) within about 180 characters, the block that runs past
   them cut at a word with "…", and whether anything was left out. ui/components/FormattedDescription.js draws it with
   `preview`.
@@ -7859,8 +7859,8 @@ Settings → Announcement / Discovery → Hearts); another tap takes it back. A 
 Pillar: **Your work is yours, and lives in a world** (people tell a builder they love what they made, where they meet
 it). A newcomer learns one thing: the heart.
 
-- core/PublicationHeart.js (a record per tap; each person's latest one counts, ties settled by `heartId` so every
-  device agrees), core/PublicationHeartDistributionEnvelope.js (`forkbuild.publication-heart-distribution`, signed
+- core/publication/PublicationHeart.js (a record per tap; each person's latest one counts, ties settled by `heartId` so every
+  device agrees), core/publication/PublicationHeartDistributionEnvelope.js (`forkbuild.publication-heart-distribution`, signed
   over every field with the new `publication-heart-distribution` signature type;
   `LocalAuthorizationVerifier#verifyPublicationHeartDistributionEnvelope()`), storage/PublicationHeartStore.js.
 - Hearts ride the comment carriers rather than a protocol of their own: `withHeartRouting()` sends a heart envelope
@@ -7904,13 +7904,13 @@ pressing Publish in the Editor on a build that looks a lot like someone else's, 
 whose and how much is the same, and that Edit a Copy credits them, or, when their license allows no copies, to ask
 first. **Keep building** waits; **It's my own, publish** publishes. It is asked once a visit and never blocks.
 
-- core/BuildSimilarity.js (new, pure): `buildShape()` (one point per definition and position; turn and colour left
+- core/catalog/BuildSimilarity.js (new, pure): `buildShape()` (one point per definition and position; turn and colour left
   out, since a rebuild by eye turns symmetric bricks and recolours), `compareBuildShapes()` (the two lined up over four
   quarter turns by offsets voted for by pairs of same-kind bricks, rarest kinds first, bounded; scored as shared over
   all distinct bricks), `similarityUpperBound()` (from counts per kind, to skip builds that can't match),
-  `MIN_COMPARED_BRICKS` (20) and `SIMILAR_BUILD_THRESHOLD` (0.6). core/BlueprintSimilarity.js is unchanged: it compares
+  `MIN_COMPARED_BRICKS` (20) and `SIMILAR_BUILD_THRESHOLD` (0.6). core/building/BlueprintSimilarity.js is unchanged: it compares
   structures in place for lineage suggestions.
-- core/PlacedBricks.js: `placedBricks()`, the bricks `countPlacedBricks()` counts, so only the builder's own bricks are
+- core/building/PlacedBricks.js: `placedBricks()`, the bricks `countPlacedBricks()` counts, so only the builder's own bricks are
   compared and two builds started from the same ready-made house don't look alike.
 - application/publication/SimilarBuildFinder.js (new): the Repository's Publications (this device's and those
   admitted from peers and networks) whose bytes are in the publication content store and match their signed hash,
@@ -7946,7 +7946,7 @@ button is the header's own.
 - identity/SigningReadiness.js: `signingReadiness()` says READY, NO_NAME, LOCKED or REVOKED, with the name in use even
   when it can't sign; `requireSigningIdentityId()` throws the action's own "choose a name" message only with no name,
   `refusal.nameLocked` ("Your name "{name}" is locked…") or `refusal.nameRevoked` otherwise, each carrying a
-  `remedy` (core/UserFacingError.js gains it). `currentIdentityId()` is the name in use, for reading.
+  `remedy` (core/app/UserFacingError.js gains it). `currentIdentityId()` is the name in use, for reading.
 - The refusals for a heart, a landmark, decoration, region or resident, following, a blueprint claim or lineage, a
   delegation, a comment, the lobby and being discoverable all go through it; walking together fails with
   `nameLocked`/`nameRevoked` (`WalkTogether#signingFailure()`). LocalIdentityProvider's own locked, revoked and
@@ -8018,7 +8018,7 @@ where yours is listed.
   build it with; it is compared only with the signed-in identity's own builds (`SimilarBuildFinder#findEarlier(…,
   { by })`, new), published before it, outside its remix family; the match must be verifiably signed by them.
   Comparisons run one at a time, so a sync's burst of admissions never reads many builds at once. Event type
-  `publication.looks-like-yours`, deduplicated by Publication id (core/NotificationDeduplicationPolicy.js); worded in
+  `publication.looks-like-yours`, deduplicated by Publication id (core/social/NotificationDeduplicationPolicy.js); worded in
   ui/notifications/notificationText.js, so the bell's history and device notifications say it.
 - ui/views/worldView/useSimilarEarlierBuilds.js (new): About this build's look-alikes, looked up once per Publication
   shown (World View refreshes its panels often), a newer build's dropping an older one's answer; rendered with
@@ -8078,7 +8078,7 @@ longer listed or notified, wherever the structures stand and however they're tur
 from this device, and only there, their Explore card says **2 builds published after yours look like it**, opening the
 list.
 
-- core/BuildSimilarity.js: `withoutReadyMade(shape, readyMadeShapes)` takes out every copy of each ready-made structure
+- core/catalog/BuildSimilarity.js: `withoutReadyMade(shape, readyMadeShapes)` takes out every copy of each ready-made structure
   of at least `MIN_READY_MADE_POINTS` (6) distinct bricks, largest first (so a house with a porch goes whole), when
   `READY_MADE_COVERAGE` (90%) of it is there, lined up as builds are (any quarter turn, any offset); smaller ones (a
   fence segment) can't be told from bricks placed by hand and stay. `compareBuildShapes()` shares the line-up
@@ -8156,7 +8156,7 @@ your work is yours (credit travels with the work). How a player notices: fewer "
 builds published earlier entries and 🔔 look-alike notifications that come only from a ready-made structure both
 builders changed.
 
-- core/BuildSimilarity.js: `readyMadeCoverage(size)` replaces `READY_MADE_COVERAGE`: 80% of a small structure (6 to
+- core/catalog/BuildSimilarity.js: `readyMadeCoverage(size)` replaces `READY_MADE_COVERAGE`: 80% of a small structure (6 to
   11 bricks), 70% of a medium one (12 to 29), 50% of one of 30 or more, since the larger a pattern the less chance it
   turns up by hand. Only the bricks that match the structure are taken out, so what its builder changed stays theirs.
   `withoutReadyMade()` takes a `coverageFor` option for the script.

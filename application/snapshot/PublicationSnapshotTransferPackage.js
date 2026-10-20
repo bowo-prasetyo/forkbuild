@@ -1,4 +1,4 @@
-import { ContentReference } from '../../core/ContentReference.js';
+import { ContentReference } from '../../core/document/ContentReference.js';
 import { isValidContentHash } from '../peer/PeerContentProtocol.js';
 
 // 0.8.32 — Explicit Snapshot Content Transfer.
@@ -58,7 +58,7 @@ export const PUBLICATION_SNAPSHOT_TRANSFER_PACKAGE_KIND = 'forkbuild.snapshot-co
 
 // Builds the plain, JSON-safe snapshot transfer package for one
 // publication's content. `publicationId` must be a non-empty string;
-// `contentReference` must be (or parse into) a core/ContentReference.js
+// `contentReference` must be (or parse into) a core/document/ContentReference.js
 // carrying a `hash`; `content` must be a non-empty string. Structural
 // checks only — see this file's own header on why hash verification
 // happens one layer up, never here.

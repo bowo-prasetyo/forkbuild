@@ -1,16 +1,16 @@
-import { VehicleSteeringIntent } from '../core/VehicleSteeringIntent.js';
-import { DEFAULT_VEHICLE_STEERING_TURN_DEGREES } from '../core/VehicleSteeringSimulation.js';
-import { VehicleType } from '../core/VehicleType.js';
-import { VehicleInstance } from '../core/VehicleInstance.js';
-import { createAvatarVehicleMount } from '../core/AvatarVehicleMount.js';
-import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
-import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../core/TerrainHeightField.js';
-import { Position } from '../core/Position.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
+import { VehicleSteeringIntent } from '../core/vehicles/VehicleSteeringIntent.js';
+import { DEFAULT_VEHICLE_STEERING_TURN_DEGREES } from '../core/vehicles/VehicleSteeringSimulation.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
+import { VehicleInstance } from '../core/vehicles/VehicleInstance.js';
+import { createAvatarVehicleMount } from '../core/vehicles/AvatarVehicleMount.js';
+import { resolveAvatarVehicleMovementCapability } from '../core/vehicles/AvatarVehicleMovementCapability.js';
+import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../core/nature/TerrainHeightField.js';
+import { Position } from '../core/document/Position.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
 import { isMovableVehicleType, AvatarVehicleMovementController } from '../application/avatar/AvatarVehicleMovementController.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
@@ -37,13 +37,13 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 //   ArrowRight / ArrowLeft
 //             |
 //             v
-//   VehicleSteeringInputAdapter      (core/VehicleSteeringInputAdapter.js)
+//   VehicleSteeringInputAdapter      (core/vehicles/VehicleSteeringInputAdapter.js)
 //             |
 //             v
-//   VehicleSteeringIntent            (core/VehicleSteeringIntent.js)
+//   VehicleSteeringIntent            (core/vehicles/VehicleSteeringIntent.js)
 //             |
 //             v
-//   VehicleSteeringSimulation        (core/VehicleSteeringSimulation.js)
+//   VehicleSteeringSimulation        (core/vehicles/VehicleSteeringSimulation.js)
 //             |
 //             v
 //   attempted movement
@@ -55,7 +55,7 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 //   realized movement
 //             |
 //             v
-//   VehicleMovementHeading           (core/VehicleMovementHeading.js)
+//   VehicleMovementHeading           (core/vehicles/VehicleMovementHeading.js)
 //             |
 //             v
 //   VehicleInstance.heading
@@ -72,11 +72,11 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 //   2. Browser key-repeat does not generate repeated turns.
 //   3. A steering pulse rotates the attempted travel direction by 45
 //      degrees (`DEFAULT_VEHICLE_STEERING_TURN_DEGREES`,
-//      core/VehicleSteeringSimulation.js).
+//      core/vehicles/VehicleSteeringSimulation.js).
 //   4. NONE means no new steering operation — it never itself rotates
 //      anything, and it never expires into something else on its own.
 //   5. The vehicle's heading is still determined ONLY by realized
-//      displacement, exactly as core/VehicleMovementHeading.js established
+//      displacement, exactly as core/vehicles/VehicleMovementHeading.js established
 //      before steering existed at all (0.9.123) — never by the raw
 //      steering request.
 //   6. Collision can prevent the requested turn from becoming realized
@@ -89,7 +89,7 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 //      specific one by name — through 0.9.667 that meant BICYCLE alone
 //      had a runtime movement/rendering path; 0.9.668 gave MOTORCYCLE
 //      one too, and 0.9.669 gave CAR one as well
-//      (core/VehiclePlacement.js/renderer/VehicleRenderer.js), and the
+//      (core/vehicles/VehiclePlacement.js/renderer/VehicleRenderer.js), and the
 //      Aerial Movement Pipeline milestone gave DRONE one too — each
 //      steers identically, through the exact same generic gate.
 //

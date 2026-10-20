@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { DAY_CYCLE_SECONDS, MOON_CYCLE_DAYS, moonPhaseAt } from '../core/DayCycle.js';
+import { DAY_CYCLE_SECONDS, MOON_CYCLE_DAYS, moonPhaseAt } from '../core/nature/DayCycle.js';
 import {
     SEASON,
     SEASONS,
@@ -14,7 +14,7 @@ import {
     seasonLookOf,
     snowShareAt,
     yearDayAt
-} from '../core/Season.js';
+} from '../core/nature/Season.js';
 import {
     FAIR_WEATHER,
     WEATHER_SPELL_SECONDS,
@@ -26,13 +26,13 @@ import {
     spellSeason,
     weatherAt,
     weatherInSeason
-} from '../core/Weather.js';
-import { thunderBetween } from '../core/Storms.js';
-import { groundCoverAt, ecologyZoneAt, ECOLOGY_ZONE } from '../core/TerrainEcology.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
-import { naturalFeaturesInRegion, FEATURE_TYPE, TREE_SPECIES } from '../core/NaturalFeatureField.js';
-import { ambientMixAt, ambientMixInSeason, AMBIENT_LAYER } from '../core/AmbientSoundscape.js';
+} from '../core/nature/Weather.js';
+import { thunderBetween } from '../core/nature/Storms.js';
+import { groundCoverAt, ecologyZoneAt, ECOLOGY_ZONE } from '../core/nature/TerrainEcology.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { TERRAIN_TILE_SIZE } from '../core/nature/TerrainTiling.js';
+import { naturalFeaturesInRegion, FEATURE_TYPE, TREE_SPECIES } from '../core/nature/NaturalFeatureField.js';
+import { ambientMixAt, ambientMixInSeason, AMBIENT_LAYER } from '../core/app/AmbientSoundscape.js';
 import {
     DECIDUOUS, TREE_PART, createSeasonSurfaces, makeSeasonalGround, makeSeasonalTree, seasonedTreeColour, setSeason, setTreeSeasonFlags, treeNumbers, treeSeasonFlags, treeSeasonOf
 } from '../renderer/SeasonalSurfaces.js';
@@ -45,9 +45,9 @@ import { WorldNavigationSession } from '../application/world/WorldNavigationSess
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
-// World View's seasons (core/Season.js): a world year of 32 of its days, a
+// World View's seasons (core/nature/Season.js): a world year of 32 of its days, a
 // season to each turn of the moon, worked out from the clock alone; how the
-// land looks through it; winter's snow falling and lying (core/Weather.js);
+// land looks through it; winter's snow falling and lying (core/nature/Weather.js);
 // the renderer's side of it; and a device keeping one season.
 
 const YEAR = WORLD_YEAR_SECONDS;

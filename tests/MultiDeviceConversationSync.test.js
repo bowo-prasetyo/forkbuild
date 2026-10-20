@@ -7,7 +7,7 @@ import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
 import { FriendRelationshipUseCase } from '../application/identity/FriendRelationshipUseCase.js';
-import { FriendshipState } from '../core/FriendshipState.js';
+import { FriendshipState } from '../core/social/FriendshipState.js';
 import { ChatUseCase } from '../application/chat/ChatUseCase.js';
 import { ConversationReadTracker } from '../application/chat/ConversationReadTracker.js';
 import { SiblingReadStateStore } from '../application/chat/SiblingReadStateStore.js';
@@ -212,7 +212,7 @@ async function runTests() {
     console.log('✓ per-device local read state (Phone: untouched, Laptop: advanced) and identity-observed read state (max across devices) are three distinct, correctly-preserved facts');
 
     // Note: whether Bob himself learns "Alice read #3" over the wire
-    // (core/ChatReadReceipt.js, 0.2.71) is a SEPARATE, pre-existing axis
+    // (core/social/ChatReadReceipt.js, 0.2.71) is a SEPARATE, pre-existing axis
     // this milestone deliberately does not extend — sending a receipt
     // still requires the SENDING device's own completed friendship with
     // Bob, and the Laptop, having never independently friended him, hits

@@ -1,12 +1,12 @@
-import { ContentReference } from '../../core/ContentReference.js';
+import { ContentReference } from '../../core/document/ContentReference.js';
 import { DocumentSerializer } from '../../serializer/DocumentSerializer.js';
 import {
     MIN_COMPARED_BRICKS, SIMILAR_BUILD_THRESHOLD, buildShape, compareBuildShapes, isSimilarBuild, similarityUpperBound, withoutReadyMade
-} from '../../core/BuildSimilarity.js';
-import { placedBricks, worldBricks } from '../../core/PlacedBricks.js';
+} from '../../core/catalog/BuildSimilarity.js';
+import { placedBricks, worldBricks } from '../../core/building/PlacedBricks.js';
 
 // Finds published builds by other people that look a lot like a build
-// (core/BuildSimilarity.js), for four places: Publish, so it can point to
+// (core/catalog/BuildSimilarity.js), for four places: Publish, so it can point to
 // Edit a Copy, which credits them (find()); a build's page and World View,
 // which list the builds published before it that look like it
 // (findEarlier()); the 🔔, which tells a builder when a build like one of
@@ -21,7 +21,7 @@ import { placedBricks, worldBricks } from '../../core/PlacedBricks.js';
 // family (connected by `parentDocumentId`, which Edit a Copy records), and
 // builds published after the one compared. On both sides, bricks forming a
 // whole ready-made structure from the Build Library don't count
-// (core/BuildSimilarity.js#withoutReadyMade()), so builds that only share one,
+// (core/catalog/BuildSimilarity.js#withoutReadyMade()), so builds that only share one,
 // however moved or turned, don't look alike. `readyMadeStructures` resolves to
 // those structures (each with its `bricks`); it is asked once, when first
 // needed, since the libraries aren't part of the app's first load.
@@ -239,7 +239,7 @@ export class SimilarBuildFinder {
 
 // Every document id in the remix family of `documentId` that `publications`
 // tell of: back through `parentDocumentId` to the first build, then every
-// remix of any of them, however distant (unlike core/RemixFamily.js, which
+// remix of any of them, however distant (unlike core/publication/RemixFamily.js, which
 // stops where a page would stop drawing).
 function remixFamilyIds(documentId, parentDocumentId, publications) {
     const parentOf = new Map();

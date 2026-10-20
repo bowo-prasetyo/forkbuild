@@ -1,8 +1,8 @@
 import { computed, ref } from 'vue';
-import { FIRST_BUILD_STEPS, isFirstBuildComplete, nextFirstBuildStep } from '../../core/FirstBuildChecklist.js';
+import { FIRST_BUILD_STEPS, isFirstBuildComplete, nextFirstBuildStep } from '../../core/challenge/FirstBuildChecklist.js';
 import { t } from '../i18n/i18n.js';
 
-// The guided first build in the Editor (core/FirstBuildChecklist.js): six
+// The guided first build in the Editor (core/challenge/FirstBuildChecklist.js): six
 // steps with the next one's hint, ticked off as they are done, and a short
 // celebration once the build is shared and walked into. While walking inside
 // is next and the build is published, the hint has a Walk inside it button

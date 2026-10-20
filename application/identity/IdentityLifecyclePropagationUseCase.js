@@ -1,11 +1,11 @@
-import { RemoteIdentityLifecycle } from '../../core/RemoteIdentityLifecycle.js';
+import { RemoteIdentityLifecycle } from '../../core/identity/RemoteIdentityLifecycle.js';
 import {
     IdentityLifecycleGossipKind,
     toIdentityLifecycleGossipMessage,
     isValidIdentityLifecycleGossipMessage
-} from '../../core/IdentityLifecycleGossip.js';
-import { isValidIdentityRevocationRecord } from '../../core/IdentityRevocationEnvelope.js';
-import { isValidIdentitySuccessionRecord } from '../../core/IdentitySuccessionEnvelope.js';
+} from '../../core/identity/IdentityLifecycleGossip.js';
+import { isValidIdentityRevocationRecord } from '../../core/identity/IdentityRevocationEnvelope.js';
+import { isValidIdentitySuccessionRecord } from '../../core/identity/IdentitySuccessionEnvelope.js';
 import { LocalAuthorizationVerifier } from '../../identity/LocalAuthorizationVerifier.js';
 import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
 
@@ -34,8 +34,8 @@ const STORAGE_KEY_PREFIX = 'remote-identity-lifecycle:';
 // signed, without Charlie being Alice or even ever having been
 // directly connected to her. What makes a gossiped record trustworthy
 // is never WHO relayed it — it is the record's OWN signature, exactly
-// the same core/IdentityRevocationEnvelope.js /
-// core/IdentitySuccessionEnvelope.js signature identity/
+// the same core/identity/IdentityRevocationEnvelope.js /
+// core/identity/IdentitySuccessionEnvelope.js signature identity/
 // LocalAuthorizationVerifier.js already knows how to verify, produced
 // back in 0.2.67. See docs/Principles.md, "A Relayed Identity
 // Lifecycle Record Is Trusted By Its Own Signature, Never By Who
@@ -61,7 +61,7 @@ const STORAGE_KEY_PREFIX = 'remote-identity-lifecycle:';
 // `isBlocked` predicate contract exactly (a zero-arg-per-call
 // function, consulted fresh on every incoming message, never cached).
 // A record about an identity this device has never remembered as a
-// core/PeerRelationship.js or core/FriendshipRecord.js is dropped
+// core/social/PeerRelationship.js or core/social/FriendshipRecord.js is dropped
 // before it is ever stored — see docs/Principles.md, "Propagation
 // Reaches Identities This Device Already Knows, Never An Open
 // Revocation Directory" (0.2.68): without this gate, any two
@@ -174,7 +174,7 @@ export class IdentityLifecyclePropagationUseCase {
     // The ingestion boundary. Every incoming gossip message passes
     // every one of these checks, IN ORDER, before it can change
     // anything this device stores:
-    //   1. well-formed shape (core/IdentityLifecycleGossip.js)
+    //   1. well-formed shape (core/identity/IdentityLifecycleGossip.js)
     //   2. the record's OWN signature verifies (identity/
     //      LocalAuthorizationVerifier.js's verifyIdentityRevocation()/
     //      verifyIdentitySuccession() — REQUIRED, never tolerated
@@ -189,7 +189,7 @@ export class IdentityLifecyclePropagationUseCase {
     //      dropped (see this class's own header).
     //   4. freshness/single-successor: a REVOCATION already on file for
     //      this identityId is permanent — a second one is a no-op,
-    //      never overwritten (see core/RemoteIdentityLifecycle.js's own
+    //      never overwritten (see core/identity/RemoteIdentityLifecycle.js's own
     //      header). A SUCCESSION only replaces an existing one when its
     //      `declaredAt` is strictly newer — see core/
     //      RemoteIdentityLifecycle.js#withSuccession's own header on
@@ -243,7 +243,7 @@ export class IdentityLifecyclePropagationUseCase {
         const all = this._loadAll();
         const existing = all.find((r) => r.identityId === record.predecessorIdentityId) || null;
         if (existing && existing.succession && new Date(existing.succession.declaredAt) >= new Date(record.declaredAt)) {
-            return; // not newer — see core/RemoteIdentityLifecycle.js#withSuccession's own header
+            return; // not newer — see core/identity/RemoteIdentityLifecycle.js#withSuccession's own header
         }
         const next = (existing || new RemoteIdentityLifecycle({ identityId: record.predecessorIdentityId })).withSuccession(record);
         this._saveAll(owner, replaceById(all, next));

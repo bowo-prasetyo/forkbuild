@@ -5,15 +5,15 @@ import {
     VehicleSteeringIntent,
     createVehicleSteeringIntent,
     isValidVehicleSteeringIntent
-} from '../core/VehicleSteeringIntent.js';
-import { VehicleInstance, vehicleInstanceFromPresence } from '../core/VehicleInstance.js';
-import { VehiclePresence } from '../core/VehiclePresence.js';
-import { VehicleType } from '../core/VehicleType.js';
+} from '../core/vehicles/VehicleSteeringIntent.js';
+import { VehicleInstance, vehicleInstanceFromPresence } from '../core/vehicles/VehicleInstance.js';
+import { VehiclePresence } from '../core/vehicles/VehiclePresence.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
 import { VehicleRuntimeInstances } from '../application/world/VehicleRuntimeInstances.js';
-import { resolveVehicleHeadingFromMovement } from '../core/VehicleMovementHeading.js';
+import { resolveVehicleHeadingFromMovement } from '../core/vehicles/VehicleMovementHeading.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.125 — Vehicle Steering Intent, core/VehicleSteeringIntent.js.
+// 0.9.125 — Vehicle Steering Intent, core/vehicles/VehicleSteeringIntent.js.
 //
 //   Section A: vocabulary — NONE/LEFT/RIGHT, isValidVehicleSteeringDirection()
 //   Section B: immutability — getter-only, frozen, no mutation after
@@ -166,7 +166,7 @@ async function runTests() {
         assert(vehicle.heading === beforeHeading && vehicle.heading === 90, '40. the vehicle\'s own heading is unchanged after creating a RIGHT steering intent — heading = 90 still means 90, never 0 (heading - 90) or 180 (heading + 90)');
     }
     {
-        // core/VehicleMovementHeading.js's own resolver is entirely
+        // core/vehicles/VehicleMovementHeading.js's own resolver is entirely
         // unaffected by, and never consulted from, this file — feeding it
         // the exact same displacement before and after constructing a
         // steering intent produces the exact same heading either way.
@@ -206,24 +206,24 @@ async function runTests() {
         assert(!/[Ss]teering/.test(codeOnly), '48. application/world/VehicleRuntimeInstances.js\'s own code never mentions steering — this milestone leaves it byte-for-byte unchanged');
     }
     {
-        const sourceUrl = new URL('../core/VehicleInstance.js', import.meta.url);
+        const sourceUrl = new URL('../core/vehicles/VehicleInstance.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-        assert(!/[Ss]teering/.test(codeOnly), '49. core/VehicleInstance.js\'s own code never mentions steering — this milestone leaves it byte-for-byte unchanged');
+        assert(!/[Ss]teering/.test(codeOnly), '49. core/vehicles/VehicleInstance.js\'s own code never mentions steering — this milestone leaves it byte-for-byte unchanged');
     }
     {
-        const sourceUrl = new URL('../core/VehicleMovementHeading.js', import.meta.url);
+        const sourceUrl = new URL('../core/vehicles/VehicleMovementHeading.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-        assert(!/[Ss]teering/.test(codeOnly), '50. core/VehicleMovementHeading.js\'s own code never mentions steering, and never imports core/VehicleSteeringIntent.js — heading stays derived only from realized displacement');
-        assert(!codeOnly.includes('VehicleSteeringIntent'), '51. core/VehicleMovementHeading.js never imports or references VehicleSteeringIntent');
+        assert(!/[Ss]teering/.test(codeOnly), '50. core/vehicles/VehicleMovementHeading.js\'s own code never mentions steering, and never imports core/vehicles/VehicleSteeringIntent.js — heading stays derived only from realized displacement');
+        assert(!codeOnly.includes('VehicleSteeringIntent'), '51. core/vehicles/VehicleMovementHeading.js never imports or references VehicleSteeringIntent');
     }
 
     // -------------------------------------------------------------
     // Section F — structural audit of this milestone's own new file
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../core/VehicleSteeringIntent.js', import.meta.url);
+        const sourceUrl = new URL('../core/vehicles/VehicleSteeringIntent.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -244,16 +244,16 @@ async function runTests() {
             'Math.random', 'localStorage', 'StorageProvider', 'fetch(', 'WebSocket'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `52. core/VehicleSteeringIntent.js's own code never references "${term}" — a pure, closed steering-intent vocabulary and value object only, never steering angle/rate/turn-radius/angular-velocity/heading-mutation/wheel-rotation/oriented-collision/physics/vehicle-state/input/rendering/persistence/networking`);
+            assert(!codeOnly.includes(term), `52. core/vehicles/VehicleSteeringIntent.js's own code never references "${term}" — a pure, closed steering-intent vocabulary and value object only, never steering angle/rate/turn-radius/angular-velocity/heading-mutation/wheel-rotation/oriented-collision/physics/vehicle-state/input/rendering/persistence/networking`);
         }
     }
     {
-        const exportsModule = await import('../core/VehicleSteeringIntent.js');
+        const exportsModule = await import('../core/vehicles/VehicleSteeringIntent.js');
         const exportedNames = Object.keys(exportsModule).sort();
         assert(JSON.stringify(exportedNames) === JSON.stringify([
             'VehicleSteeringDirection', 'VehicleSteeringIntent',
             'createVehicleSteeringIntent', 'isValidVehicleSteeringDirection', 'isValidVehicleSteeringIntent'
-        ]), '53. core/VehicleSteeringIntent.js exports exactly the vocabulary, the value-object class, its factory, and both validators — nothing else');
+        ]), '53. core/vehicles/VehicleSteeringIntent.js exports exactly the vocabulary, the value-object class, its factory, and both validators — nothing else');
     }
 
     // -------------------------------------------------------------
@@ -296,7 +296,7 @@ async function runTests() {
         assert(isValidVehicleSteeringIntent(VehicleSteeringIntent.left()) === true, '68. a properly constructed LEFT intent is valid');
         assert(isValidVehicleSteeringIntent(VehicleSteeringIntent.right()) === true, '69. a properly constructed RIGHT intent is valid');
         assert(isValidVehicleSteeringIntent(undefined) === false, '70. undefined is not a valid steering intent');
-        assert(isValidVehicleSteeringIntent(null) === false, '71. null is not a valid steering intent — unlike core/AvatarVehicleMount.js\'s own mount value, there is no "absence" spelling here: NONE already names "not currently steering"');
+        assert(isValidVehicleSteeringIntent(null) === false, '71. null is not a valid steering intent — unlike core/vehicles/AvatarVehicleMount.js\'s own mount value, there is no "absence" spelling here: NONE already names "not currently steering"');
         assert(isValidVehicleSteeringIntent(LEFT) === false, '72. a bare direction string is not a valid steering intent — it must be a VehicleSteeringIntent instance');
         assert(isValidVehicleSteeringIntent({ direction: LEFT }) === false, '73. a plain object shaped like an intent is not a valid steering intent — object identity matters, not merely matching shape');
     }

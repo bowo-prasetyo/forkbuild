@@ -54,7 +54,7 @@
     overflow-wrap: anywhere;
 }
 
-/* Friends who built it with its author (core/BuiltWith.js). */
+/* Friends who built it with its author (core/catalog/BuiltWith.js). */
 .shared-build-author:has(+ .shared-build-built-with) {
     margin-bottom: 0.25rem;
 }

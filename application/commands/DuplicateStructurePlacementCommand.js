@@ -1,7 +1,7 @@
-import { StructurePlacement } from '../../core/StructurePlacement.js';
-import { Position } from '../../core/Position.js';
+import { StructurePlacement } from '../../core/building/StructurePlacement.js';
+import { Position } from '../../core/document/Position.js';
 import { Command } from './Command.js';
-import { message } from '../../core/Message.js';
+import { message } from '../../core/app/Message.js';
 
 // 0.2.91 — World Instance Editing & Placement Management. "Duplicate"
 // for a StructurePlacement creates a new StructurePlacement referencing

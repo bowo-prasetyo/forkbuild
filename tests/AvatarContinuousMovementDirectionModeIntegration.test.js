@@ -2,13 +2,13 @@ import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 import { readFile } from 'node:fs/promises';
 import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
 import { AvatarTreeConstraint } from '../application/avatar/AvatarTreeConstraint.js';
-import { AvatarContinuousMovementIntent } from '../core/AvatarContinuousMovementIntent.js';
-import { AvatarContinuousMovementMode } from '../core/AvatarContinuousMovementMode.js';
-import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
-import { treeCollisionGeometryInRegion } from '../core/TreeCollisionGeometry.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { AVATAR_COLLISION_RADIUS } from '../core/AvatarCollision.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { AvatarContinuousMovementIntent } from '../core/avatar/AvatarContinuousMovementIntent.js';
+import { AvatarContinuousMovementMode } from '../core/avatar/AvatarContinuousMovementMode.js';
+import { AvatarAnimationState } from '../core/avatar/AvatarAnimationState.js';
+import { treeCollisionGeometryInRegion } from '../core/nature/TreeCollisionGeometry.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { AVATAR_COLLISION_RADIUS } from '../core/avatar/AvatarCollision.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
@@ -27,9 +27,9 @@ import { assert } from './support/Assert.js';
 //              setContinuousMovementMode()/continuousMovementMode()
 //   Section B: application/world/WorldNavigationSession.js — real Alt +
 //              Shift + W/S keyboard chords, wired end to end through
-//              core/AvatarContinuousMovementInputAdapter.js (0.9.68),
-//              core/AvatarContinuousMovementIntent.js (0.9.64), and
-//              core/AvatarContinuousMovementMode.js (0.9.67), with NO
+//              core/avatar/AvatarContinuousMovementInputAdapter.js (0.9.68),
+//              core/avatar/AvatarContinuousMovementIntent.js (0.9.64), and
+//              core/avatar/AvatarContinuousMovementMode.js (0.9.67), with NO
 //              changes needed to avatarKeyDown/avatarKeyUp's own public
 //              shape or to ui/views/WorldView.js
 //   Section C: the five flagship cancellation/independence cases the
@@ -533,7 +533,7 @@ async function runTests() {
         assert(!codeOnly.includes('deriveAvatarContinuousMovementMode'),
             '53. application/avatar/AvatarMovementController.js never calls the 0.9.67 transition function itself — it only ever CONSUMES an already-resolved mode value via setContinuousMovementMode()');
         assert(!codeOnly.includes('RUN_SPEED') && !codeOnly.includes('WALK_SPEED'),
-            '54. application/avatar/AvatarMovementController.js defines no new continuous-running speed constant of its own — speed still lives entirely in core/AvatarMovementSimulation.js');
+            '54. application/avatar/AvatarMovementController.js defines no new continuous-running speed constant of its own — speed still lives entirely in core/avatar/AvatarMovementSimulation.js');
         const forbidden = ['THREE', 'from \'three\'', 'Renderer', 'Math.random', 'localStorage', 'fetch(', 'WebSocket', 'setTimeout', 'setInterval', 'requestAnimationFrame'];
         for (const term of forbidden) {
             assert(!codeOnly.includes(term), `55. application/avatar/AvatarMovementController.js's own code never references "${term}" — no new timers, no engine dependency, no persistence introduced by this milestone`);
@@ -546,7 +546,7 @@ async function runTests() {
             .filter((line) => !line.trim().startsWith('//'))
             .join('\n');
         assert(codeOnly.includes('deriveAvatarContinuousMovementMode'),
-            '56. application/world/WorldNavigationSession.js does consume core/AvatarContinuousMovementMode.js\'s own 0.9.67 transition function');
+            '56. application/world/WorldNavigationSession.js does consume core/avatar/AvatarContinuousMovementMode.js\'s own 0.9.67 transition function');
         assert(codeOnly.includes('setContinuousMovementMode'),
             '57. application/world/WorldNavigationSession.js feeds the resolved mode into AvatarMovementController through its own public setter, never by reaching into a private field');
         assert(codeOnly.includes('this._shiftDown'),

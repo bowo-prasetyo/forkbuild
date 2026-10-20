@@ -1,10 +1,10 @@
-import { createId } from '../core/createId.js';
+import { createId } from '../core/document/createId.js';
 
 // 0.2.52 — the wire shape carried over an AUTHENTICATED peer connection,
 // once peer/PeerAuthenticationSession.js's own handshake has already
 // finished. Deliberately boring, exactly the same "plain, JSON-shaped
 // object, no class identity, no application semantics" discipline
-// core/PeerAuthenticationEnvelope.js and core/AvatarPresenceAdvertisement.js
+// core/social/PeerAuthenticationEnvelope.js and core/avatar/AvatarPresenceAdvertisement.js
 // already established for their own wire shapes — this one travels over
 // the SAME peer/PeerConnection.js#send()/onMessage() a HELLO/PROOF
 // already does, so it has to survive the identical structured-clone-into-
@@ -33,7 +33,7 @@ import { createId } from '../core/createId.js';
 // signature here: the connection is already authenticated (peer/
 // PeerAuthenticationSession.js proved who controls it), and an
 // individual protocol that additionally needs cryptographic proof over
-// its OWN payload — the way core/AvatarPresenceAdvertisement.js and
+// its OWN payload — the way core/avatar/AvatarPresenceAdvertisement.js and
 // friends already do — signs at ITS layer, not this one.
 export const PEER_MESSAGE_ENVELOPE_VERSION_DEFAULT = 1;
 

@@ -1,12 +1,12 @@
-import { Structure } from '../core/Structure.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { deriveBlueprintFingerprint, blueprintFingerprintsEqual } from '../core/BlueprintFingerprint.js';
+import { Structure } from '../core/building/Structure.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { deriveBlueprintFingerprint, blueprintFingerprintsEqual } from '../core/building/BlueprintFingerprint.js';
 import {
     BlueprintLineageClaim, BlueprintLineageRelationship, BLUEPRINT_LINEAGE_CLAIM_KIND,
     getBlueprintLineageClaimSigningDescriptor
-} from '../core/BlueprintLineageClaim.js';
-import { claimsForFingerprint, lineageView, detectLocalLineageCycle, describeLineageView } from '../core/BlueprintLineageView.js';
+} from '../core/building/BlueprintLineageClaim.js';
+import { claimsForFingerprint, lineageView, detectLocalLineageCycle, describeLineageView } from '../core/building/BlueprintLineageView.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
 import { LocalBlueprintLineageClaimStore } from '../application/blueprint/LocalBlueprintLineageClaimStore.js';
@@ -33,14 +33,14 @@ import { makeIdentity } from './support/TestIdentity.js';
 // for attribution, folded into one suite here because this milestone
 // folds the model, exchange, and view layers into one milestone too:
 //
-//   Section A: core/BlueprintLineageClaim.js — construction/validation
+//   Section A: core/building/BlueprintLineageClaim.js — construction/validation
 //   Section B: signing descriptor parity + verifyBlueprintLineageClaim()
 //   Section C: application/blueprint/LocalBlueprintLineageClaimStore.js — the
 //              dual-indexed store, queryable from EITHER fingerprint
 //   Section D: application/blueprint/BlueprintLineageClaimPublicationValidator.js
 //   Section E: application/blueprint/BlueprintLineageExchange.js — export/import/
 //              dedup/tamper/both-sided fingerprint cross-check
-//   Section F: core/BlueprintLineageView.js — derivedFrom/derivedDesigns
+//   Section F: core/building/BlueprintLineageView.js — derivedFrom/derivedDesigns
 //              split, cycle detection, describeLineageView()
 //   Section G: application/blueprint/BlueprintLineageUseCase.js — publish/retract/
 //              lineageView wiring
@@ -95,7 +95,7 @@ function makeReplica(label) {
 
 async function run() {
     // ---------------------------------------------------------------
-    // Section A — core/BlueprintLineageClaim.js construction
+    // Section A — core/building/BlueprintLineageClaim.js construction
     // ---------------------------------------------------------------
     {
         let threw = false;
@@ -133,7 +133,7 @@ async function run() {
         assert(withSig.id === claim.id && withSig.signature, '11. withSignature() preserves identity, attaches a signature');
         assert(claim.signature === null, '12. the original claim instance is untouched — withSignature() never mutates');
     }
-    console.log('✓ Section A: core/BlueprintLineageClaim.js — construction, self-loop rejection, relationship vocabulary, round-trip');
+    console.log('✓ Section A: core/building/BlueprintLineageClaim.js — construction, self-loop rejection, relationship vocabulary, round-trip');
 
     // ---------------------------------------------------------------
     // Section B — signing descriptor + verifyBlueprintLineageClaim()
@@ -305,7 +305,7 @@ async function run() {
     console.log('✓ Section E: BlueprintLineageExchange — export/import/dedup, both-sided cross-check, tamper rejection');
 
     // ---------------------------------------------------------------
-    // Section F — core/BlueprintLineageView.js pure derivation
+    // Section F — core/building/BlueprintLineageView.js pure derivation
     // ---------------------------------------------------------------
     {
         assert(JSON.stringify(claimsForFingerprint(null, [{ sourceFingerprint: 'bp:a' }])) === '[]', '45. claimsForFingerprint(null, ...) is always []');
@@ -355,7 +355,7 @@ async function run() {
         assert(describeLineageView(viewA) === '2 derived designs', '61. describeLineageView phrases a derivedDesigns-only view correctly');
         assert(describeLineageView(viewB) === 'Derived from 1 design', '62. describeLineageView phrases a derivedFrom-only view correctly');
     }
-    console.log('✓ Section F: core/BlueprintLineageView.js — derivedFrom/derivedDesigns split, one-hop cycle detection, describeLineageView()');
+    console.log('✓ Section F: core/building/BlueprintLineageView.js — derivedFrom/derivedDesigns split, one-hop cycle detection, describeLineageView()');
 
     // ---------------------------------------------------------------
     // Section G — application/blueprint/BlueprintLineageUseCase.js wiring

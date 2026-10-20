@@ -2,7 +2,7 @@
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
 import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
-import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
+import { PublicationSnapshotPlacement } from '../core/publication/PublicationSnapshotPlacement.js';
 import { LocalSnapshotCandidateDiscoveryQueryService } from '../application/snapshot/LocalSnapshotCandidateDiscoveryQueryService.js';
 import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
 import { ArweaveSnapshotDiscoveryQueryService } from '../application/arweave/ArweaveSnapshotDiscoveryQueryService.js';
@@ -12,9 +12,9 @@ import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapsho
 import { WorldSnapshotDiscoveryMonitor } from '../application/snapshot/WorldSnapshotDiscoveryMonitor.js';
 import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
 import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
-import { describeDecentralizedWorldDiscoveryLead } from '../core/DecentralizedWorldDiscoveryLead.js';
+import { describeDecentralizedWorldDiscoveryLead } from '../core/world/DecentralizedWorldDiscoveryLead.js';
 import { resolveDecentralizedWorldEncounterLead } from '../application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js';
-import { SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../core/SnapshotDiscoveryEnvelope.js';
+import { SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../core/publication/SnapshotDiscoveryEnvelope.js';
 import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutcomeLabel } from '../application/snapshot/SnapshotOutcomeInspectionView.js';
 
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
@@ -122,7 +122,7 @@ function makeFakeArweaveDiscoveryGateway({ transactionIds = [], envelopes = {} }
 }
 
 // `publicationId` and `claimedPosition` travel together, or not at all —
-// core/SnapshotDiscoveryEnvelope.js's own 0.9.171 "both-or-neither" rule.
+// core/publication/SnapshotDiscoveryEnvelope.js's own 0.9.171 "both-or-neither" rule.
 // A caller here supplying `publicationId` gets a harmless placeholder
 // `claimedPosition` for free, so this test file's own fixtures never need
 // to care about that rule to exercise the fields that DO matter to it.
@@ -260,7 +260,7 @@ async function run() {
     // SECTION A — Lead identity: five concepts, never collapsed.
     // ===============================================================
     {
-        // A1. core/DecentralizedWorldDiscoveryLead.js (0.9.24) — the
+        // A1. core/world/DecentralizedWorldDiscoveryLead.js (0.9.24) — the
         // search-index "lead" vocabulary — treats origin/discoveryTag/uri
         // as three independent, both-required facts. Two leads sharing a
         // uri but reported by different services remain two distinct,
@@ -272,7 +272,7 @@ async function run() {
         assert(leadFromServiceOne.uri === leadFromServiceTwo.uri, 'A1b. they genuinely share a uri');
         assert(leadFromServiceOne.origin !== leadFromServiceTwo.origin, 'A1c. ...but never share an origin — provenance stays at the reporting service, never folded into the uri');
         assert(leadFromServiceOne !== leadFromServiceTwo, 'A1d. two distinct, independently-frozen lead objects — never one shared/merged instance');
-        const leadModuleSource = await codeOnlySource('core/DecentralizedWorldDiscoveryLead.js');
+        const leadModuleSource = await codeOnlySource('core/world/DecentralizedWorldDiscoveryLead.js');
         assert(!/combine|dedupe|deduplicate|rank/i.test(leadModuleSource), 'A1e. the lead-description module itself contains no combining/deduplication/ranking vocabulary — see its own header, "one lead per call"');
 
         // A2. A DIFFERENT identity vocabulary — the walking-triggered
@@ -297,7 +297,7 @@ async function run() {
             const code = await codeOnlySource(file);
             assert(!/import[^;]*DecentralizedWorldDiscoveryLead/.test(code), `A2. ${file} never IMPORTS the search-index lead vocabulary (may still mention it in a comment)`);
         }
-        const leadModuleAndSiblings = ['core/DecentralizedWorldDiscoveryLead.js', 'application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js', 'application/worldEncounter/DecentralizedWorldEncounterLeadSelection.js'];
+        const leadModuleAndSiblings = ['core/world/DecentralizedWorldDiscoveryLead.js', 'application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js', 'application/worldEncounter/DecentralizedWorldEncounterLeadSelection.js'];
         for (const file of leadModuleAndSiblings) {
             const code = await codeOnlySource(file);
             assert(!/import[^;]*(SnapshotCandidateDiscoveryQueryService|DecentralizedSnapshotResolver)/.test(code), `A2b. ${file} never IMPORTS the walking-triggered Snapshot candidate vocabulary`);
@@ -400,7 +400,7 @@ async function run() {
         assert(collided.length === 1, 'B4. the SAME storage+contentHash+locator triple, reported by two different sources, collapses to exactly one candidate — this is the one case that IS the same claim');
         assert(collided[0].publicationId === 'pub-b-nostr-claim' || collided[0].publicationId === 'pub-b-local-claim', 'B5. the surviving candidate keeps whichever source\'s own metadata arrived first in source order, never a merge of both');
     }
-    console.log('✓ Section B: candidate multiplicity is preserved exactly along the lines core/PublicationSnapshotPlacement.js and application/snapshot/SnapshotCandidateDiscoveryQueryService.js already establish (storage+contentHash+locator identity, contentHash-sharing across unrelated Publications preserved, publicationId never part of the dedup key) — reconfirms 0.9.150/0.9.485/0.9.500 with fresh, real, hash-derived data.');
+    console.log('✓ Section B: candidate multiplicity is preserved exactly along the lines core/publication/PublicationSnapshotPlacement.js and application/snapshot/SnapshotCandidateDiscoveryQueryService.js already establish (storage+contentHash+locator identity, contentHash-sharing across unrelated Publications preserved, publicationId never part of the dedup key) — reconfirms 0.9.150/0.9.485/0.9.500 with fresh, real, hash-derived data.');
 
     // ===============================================================
     // SECTION C — Discovery does not silently become verification.

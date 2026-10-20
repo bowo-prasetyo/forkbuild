@@ -1,12 +1,12 @@
 import {
     FAIR_WEATHER, WEATHER_SPELL_SECONDS, WEATHER_CHANGE_SECONDS, weatherAt, weatherOfCover, spellCover, overcastLook
-} from '../core/Weather.js';
-import { DAY, NIGHT, DAY_CYCLE_SECONDS, skyLookAtFraction } from '../core/DayCycle.js';
+} from '../core/nature/Weather.js';
+import { DAY, NIGHT, DAY_CYCLE_SECONDS, skyLookAtFraction } from '../core/nature/DayCycle.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { assert } from './support/Assert.js';
 
-// World View's weather (core/Weather.js): clouds come and go by the clock
+// World View's weather (core/nature/Weather.js): clouds come and go by the clock
 // alone, so everyone sees the same sky; overcast greys the sky and softens
 // its light without ever making it too dark to see; and Always day keeps it
 // fair.

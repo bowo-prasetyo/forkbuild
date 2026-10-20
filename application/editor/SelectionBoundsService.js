@@ -1,4 +1,4 @@
-import { orientedSize } from '../../core/BrickOrientation.js';
+import { orientedSize } from '../../core/building/BrickOrientation.js';
 // Computes world-space bounding boxes for selected bricks. Brick geometry
 // comes from BrickDefinition dimensions; brick positions are treated as
 // the center of the brick, matching the Three.js mesh placement model.

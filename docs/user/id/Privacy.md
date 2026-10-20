@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 48b83be51fa03585 -->
+<!-- translation-of: docs/Privacy.md source-hash: 822c93745b70c626 -->
 # Privasi
 
 <!-- languages -->
@@ -290,8 +290,8 @@ penyimpanan sebuah situs di dalam halaman situs lain. Jadi `/e/embed-view`
 dan `/e/embed-open` hanya mengikuti dua aturan lainnya: tidak pernah dengan
 Global Privacy Control atau Do Not Track, dan hanya dari situs resmi.
 
-Kodenya ada di `core/VisitorCount.js`,
-`core/LaunchChannel.js`, `application/settings/CountDailyVisit.js`,
+Kodenya ada di `core/app/VisitorCount.js`,
+`core/app/LaunchChannel.js`, `application/settings/CountDailyVisit.js`,
 `application/settings/CountLaunchChannel.js`,
 `application/settings/FunnelEventCounter.js`, `ui/counterHit.js`,
 `ui/start.js`, dan `ui/embed/embedBoot.js`.
@@ -433,5 +433,5 @@ Jika Anda meng-host ForkBuild untuk orang lain, perbarui halaman ini
 
 Hitungan pengunjung hanya berjalan di situs resmi, jadi salinan yang
 di-host di tempat lain tidak menghitung apa pun. Untuk menghitung pengunjung
-Anda sendiri, ubah alamat di `core/VisitorCount.js` dan entri `img-src` di
+Anda sendiri, ubah alamat di `core/app/VisitorCount.js` dan entri `img-src` di
 Content Security Policy `index.html`.

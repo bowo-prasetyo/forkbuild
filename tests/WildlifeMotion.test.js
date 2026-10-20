@@ -1,12 +1,12 @@
-import { wildlifeInRegion, WILDLIFE_LATTICE_SPACING, ANIMAL_SPECIES } from '../core/WildlifeField.js';
-import { animalPoseAt, wildlifeInRegionAt, ANIMAL_MOTION, MAX_WANDER_DISTANCE } from '../core/WildlifeMotion.js';
-import { ecologyZoneAt } from '../core/TerrainEcology.js';
-import { isRiverAt } from '../core/Hydrology.js';
-import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
+import { wildlifeInRegion, WILDLIFE_LATTICE_SPACING, ANIMAL_SPECIES } from '../core/nature/WildlifeField.js';
+import { animalPoseAt, wildlifeInRegionAt, ANIMAL_MOTION, MAX_WANDER_DISTANCE } from '../core/nature/WildlifeMotion.js';
+import { ecologyZoneAt } from '../core/nature/TerrainEcology.js';
+import { isRiverAt } from '../core/nature/Hydrology.js';
+import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { TERRAIN_TILE_SIZE } from '../core/nature/TerrainTiling.js';
 import { assert } from './support/Assert.js';
 
-// Deterministic wildlife motion, core/WildlifeMotion.js.
+// Deterministic wildlife motion, core/nature/WildlifeMotion.js.
 //
 //   Section A: determinism and well-formed poses
 //   Section B: an animal wanders, but never leaves its cell or wander radius

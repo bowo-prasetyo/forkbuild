@@ -1,7 +1,7 @@
 import { WorldEncounterMaterialSource } from './WorldEncounterMaterialLoading.js';
-import { WorldEncounterKind } from '../../core/WorldEncounter.js';
+import { WorldEncounterKind } from '../../core/world/WorldEncounter.js';
 import { Publication } from '../../publisher/Publication.js';
-import { AvatarProfile } from '../../core/AvatarProfile.js';
+import { AvatarProfile } from '../../core/avatar/AvatarProfile.js';
 import { EventBus } from '../../core/events/EventBus.js';
 import {
     PeerWorldEncounterMaterialMessageKind,

@@ -1,4 +1,4 @@
-import { Position } from '../core/Position.js';
+import { Position } from '../core/document/Position.js';
 
 // A pure data snapshot of where the camera is: position, the point it's
 // looking at, and zoom. No Three.js — this is what getState()/setState()

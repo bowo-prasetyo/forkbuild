@@ -1,5 +1,5 @@
 import { ArweaveContentStore } from '../../../content/ArweaveContentStore.js';
-import { commentaryPublicationTag } from '../../../core/NarrowDiscoveryTags.js';
+import { commentaryPublicationTag } from '../../../core/publication/NarrowDiscoveryTags.js';
 import { ContentUnavailableError } from '../../../content/IpfsContentStore.js';
 import { createArweaveTaggedTransactionUpload } from '../../arweave/ArweaveTaggedTransactionUpload.js';
 import { createArweaveTaggedTransactionSearch } from '../../arweave/ArweaveTaggedTransactionSearch.js';
@@ -19,7 +19,7 @@ const TRANSACTION_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
 // `content/ArweaveContentStore.js#get()` (read) — two already-existing,
 // already-production-wired transport primitives that never parse or care
 // what an uploaded transaction's own bytes hold — already duck-type-conforms
-// to `core/PublicationCommentaryAsynchronousDeliveryContract.js`'s own
+// to `core/publication/PublicationCommentaryAsynchronousDeliveryContract.js`'s own
 // `{ publish, retrieve }` contract (0.9.626), carrying a real, signed
 // `application/PublicationCommentaryDistributionEnvelope.js` through a live
 // Arweave upload/retrieval round trip, byte for byte. That audit's own
@@ -72,7 +72,7 @@ const TRANSACTION_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
 // AN OPAQUE ENVELOPE CARRIER, NEVER A SECOND COMMENTARY AUTHORITY — THE
 // IDENTICAL RESTRAINT `application/publication/commentary/PublicationCommentaryNostrDistribution.js`
 // (0.9.628) ALREADY HOLDS, ONE SUBSTRATE OVER. This class never imports
-// `core/PublicationCommentary.js`, `core/PublicationCommentaryDistributionEnvelope.js`,
+// `core/publication/PublicationCommentary.js`, `core/publication/PublicationCommentaryDistributionEnvelope.js`,
 // or `application/publication/commentary/PublicationCommentaryDistributionExchange.js`. It treats
 // `envelopeJson` as a plain, opaque object to serialize into a transaction's
 // own body and back — `uploadTaggedTransaction`/`ArweaveContentStore#get()`
@@ -129,7 +129,7 @@ const TRANSACTION_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
 // milestone's own requesting brief: "a successful upload/submission should
 // not automatically imply that the recipient can immediately discover the
 // Commentary" — `publish()` resolving is `PERSISTENTLY_PUBLISHED`, in
-// `core/PublicationCommentaryAsynchronousDeliveryContract.js`'s own sense,
+// `core/publication/PublicationCommentaryAsynchronousDeliveryContract.js`'s own sense,
 // never `DISCOVERABLE`; only a later, independent, successful `retrieve()`
 // or `discover()` call earns that.
 //

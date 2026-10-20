@@ -2,7 +2,7 @@
 import { createApp, nextTick } from 'vue';
 import VisitorCountSetting from '../ui/components/VisitorCountSetting.js';
 import { VisitorCountSettingsStore } from '../application/settings/VisitorCountSettingsStore.js';
-import { VISITOR_COUNT_DASHBOARD_URL } from '../core/VisitorCount.js';
+import { VISITOR_COUNT_DASHBOARD_URL } from '../core/app/VisitorCount.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 

@@ -1,6 +1,6 @@
 import { StorageProvider } from './StorageProvider.js';
 import { LocalStorageProvider } from './LocalStorageProvider.js';
-import { IpfsNodeConfiguration, isValidIpfsNodeApiUrl } from '../core/IpfsNodeConfiguration.js';
+import { IpfsNodeConfiguration, isValidIpfsNodeApiUrl } from '../core/networks/IpfsNodeConfiguration.js';
 
 const IPFS_NODE_CONFIGURATION_STORE_KEY = 'ipfs-node-configuration';
 
@@ -43,7 +43,7 @@ export class IpfsNodeConfigurationStore {
     }
 
     // The one way back to "no override, use the deployment default" — see
-    // core/IpfsNodeConfiguration.js's own header, "a value object, never a
+    // core/networks/IpfsNodeConfiguration.js's own header, "a value object, never a
     // default-injecting one."
     clear() {
         this._storageProvider.remove(IPFS_NODE_CONFIGURATION_STORE_KEY);

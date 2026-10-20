@@ -40,7 +40,7 @@ const GLYPH_BY_KIND = {
 export default {
     name: 'WorldEncounterMarker',
     props: {
-        // 'PUBLICATION' | 'AVATAR' — the ONLY two kinds core/WorldEncounter.js
+        // 'PUBLICATION' | 'AVATAR' — the ONLY two kinds core/world/WorldEncounter.js
         // (0.9.0) ever names. This component never invents a third.
         kind: {
             type: String,

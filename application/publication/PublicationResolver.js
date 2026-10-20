@@ -1,4 +1,4 @@
-import { DecentralizedPublication } from '../../core/DecentralizedPublication.js';
+import { DecentralizedPublication } from '../../core/publication/DecentralizedPublication.js';
 import { validateDecentralizedPublication } from './DecentralizedPublicationValidator.js';
 import { PublicationResolutionOutcome } from './PublicationResolutionOutcome.js';
 import { LEGACY_HASH_REASON, isLegacyContentHash } from '../../serializer/contentHash.js';
@@ -7,7 +7,7 @@ import { LEGACY_HASH_REASON, isLegacyContentHash } from '../../serializer/conten
 // 0.7.1 — IPFS Content Publication & Resolution.
 //
 // The one place this codebase publishes or resolves a
-// core/DecentralizedPublication.js envelope. Every exchange class built
+// core/publication/DecentralizedPublication.js envelope. Every exchange class built
 // since 0.5.3 (application/placeNaming/PlaceNamingClaimExchange.js,
 // application/blueprint/BlueprintAttributionExchange.js,
 // application/blueprint/BlueprintLineageExchange.js) already follows the same
@@ -114,7 +114,7 @@ export class PublicationResolver {
     // returns a freshly signed DecentralizedPublication wrapping the
     // resulting ContentReference. Signing is REQUIRED — a
     // DecentralizedPublication has no unsigned path, the same posture
-    // core/DecentralizedPublication.js's own header describes, so an
+    // core/publication/DecentralizedPublication.js's own header describes, so an
     // identityProvider that cannot sign fails loudly here rather than
     // producing an envelope nobody could ever trust. Still throws on
     // failure, unlike resolve() below: publishing has no "unavailable"

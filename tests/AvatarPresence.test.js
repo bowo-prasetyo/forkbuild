@@ -1,19 +1,19 @@
-import { AvatarPresence } from '../core/AvatarPresence.js';
-import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
-import { Position } from '../core/Position.js';
-import { AvatarProfile } from '../core/AvatarProfile.js';
+import { AvatarPresence } from '../core/avatar/AvatarPresence.js';
+import { AvatarAnimationState } from '../core/avatar/AvatarAnimationState.js';
+import { Position } from '../core/document/Position.js';
+import { AvatarProfile } from '../core/avatar/AvatarProfile.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { assert } from './support/Assert.js';
 
 // 0.2.33 — Avatar Identity & Presence Model. This file covers the
-// EPHEMERAL half: core/AvatarPresence.js (the live-state value
+// EPHEMERAL half: core/avatar/AvatarPresence.js (the live-state value
 // object) and application/avatar/AvatarPresenceSession.js (the in-memory,
 // no-storage-dependency session that tracks the local user's own
 // presence). See tests/AvatarProfile.test.js for the PERSISTENT half.
 
 async function runTests() {
     // -------------------------------------------------------------
-    // core/AvatarAnimationState.js
+    // core/avatar/AvatarAnimationState.js
     // -------------------------------------------------------------
     {
         let threw = false;
@@ -22,7 +22,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // core/AvatarPresence.js
+    // core/avatar/AvatarPresence.js
     // -------------------------------------------------------------
     {
         let threw = false;

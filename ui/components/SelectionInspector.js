@@ -1,4 +1,4 @@
-import { fromCssHex } from '../../core/ColorHex.js';
+import { fromCssHex } from '../../core/building/ColorHex.js';
 import { displayText, t } from '../i18n/i18n.js';
 import VillagePaletteSwatches from './VillagePaletteSwatches.js';
 

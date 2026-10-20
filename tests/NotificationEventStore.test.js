@@ -5,8 +5,8 @@ import {
     NotificationEventStore,
     NotificationPersistenceOutcome
 } from '../storage/NotificationEventStore.js';
-import { NotificationEvent } from '../core/NotificationEvent.js';
-import { NotificationCollisionOutcome } from '../core/NotificationDeduplicationPolicy.js';
+import { NotificationEvent } from '../core/social/NotificationEvent.js';
+import { NotificationCollisionOutcome } from '../core/social/NotificationDeduplicationPolicy.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
@@ -61,8 +61,8 @@ import { assert } from './support/Assert.js';
 //               proving persistence survives process/UI-instance
 //               reconstruction, not merely one instance's own memory.
 //   Section N — Architecture: no pre-existing production file this
-//               milestone depends on (`core/NotificationEvent.js`,
-//               `core/NotificationDeduplicationPolicy.js`,
+//               milestone depends on (`core/social/NotificationEvent.js`,
+//               `core/social/NotificationDeduplicationPolicy.js`,
 //               `storage/StorageProvider.js`,
 //               `storage/LocalStorageProvider.js`) was modified, and
 //               neither of the two core files imports this store — the
@@ -413,15 +413,15 @@ async function runTests() {
     // -------------------------------------------------------------
     {
 
-        const notificationEventSource = readFileSync(new URL('../core/NotificationEvent.js', import.meta.url), 'utf8');
-        const dedupPolicySource = readFileSync(new URL('../core/NotificationDeduplicationPolicy.js', import.meta.url), 'utf8');
+        const notificationEventSource = readFileSync(new URL('../core/social/NotificationEvent.js', import.meta.url), 'utf8');
+        const dedupPolicySource = readFileSync(new URL('../core/social/NotificationDeduplicationPolicy.js', import.meta.url), 'utf8');
         const importLinePattern = /^\s*import\b.*$/gm;
         const notificationEventImports = notificationEventSource.match(importLinePattern) || [];
         const dedupPolicyImports = dedupPolicySource.match(importLinePattern) || [];
-        assert(notificationEventImports.every((line) => !line.includes('NotificationEventStore')), 'N2. core/NotificationEvent.js does not import this store — the dependency direction runs one way');
-        assert(dedupPolicyImports.every((line) => !line.includes('NotificationEventStore')), 'N3. core/NotificationDeduplicationPolicy.js does not import this store either');
-        assert(notificationEventImports.every((line) => !line.includes('storage')), 'N4. core/NotificationEvent.js imports nothing from storage/');
-        assert(dedupPolicyImports.length === 0, 'N5. core/NotificationDeduplicationPolicy.js remains import-free, per its own 0.9.280 header');
+        assert(notificationEventImports.every((line) => !line.includes('NotificationEventStore')), 'N2. core/social/NotificationEvent.js does not import this store — the dependency direction runs one way');
+        assert(dedupPolicyImports.every((line) => !line.includes('NotificationEventStore')), 'N3. core/social/NotificationDeduplicationPolicy.js does not import this store either');
+        assert(notificationEventImports.every((line) => !line.includes('storage')), 'N4. core/social/NotificationEvent.js imports nothing from storage/');
+        assert(dedupPolicyImports.length === 0, 'N5. core/social/NotificationDeduplicationPolicy.js remains import-free, per its own 0.9.280 header');
     }
 
     console.log('\n✅ All NotificationEventStore tests passed.');

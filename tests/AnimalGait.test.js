@@ -1,8 +1,8 @@
 import * as THREE from 'three';
-import { wildlifeInRegion, ANIMAL_SPECIES } from '../core/WildlifeField.js';
-import { animalPoseAt, IDLE_ACTION } from '../core/WildlifeMotion.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
+import { wildlifeInRegion, ANIMAL_SPECIES } from '../core/nature/WildlifeField.js';
+import { animalPoseAt, IDLE_ACTION } from '../core/nature/WildlifeMotion.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { TERRAIN_TILE_SIZE } from '../core/nature/TerrainTiling.js';
 import { gaitOffsetsAt, ANIMAL_GAIT, REST_GAIT } from '../renderer/AnimalGait.js';
 import { buildWildlifeTileMesh, updateWildlifeTileMesh } from '../renderer/WildlifeTileMesh.js';
 import { assert } from './support/Assert.js';

@@ -1,4 +1,4 @@
-import { PublicationAnchor } from '../core/PublicationAnchor.js';
+import { PublicationAnchor } from '../core/publication/PublicationAnchor.js';
 import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
 import { AddPublicationAnchorUseCase } from '../application/anchoring/AddPublicationAnchorUseCase.js';
 import { ExternalAnchorVerifier } from '../application/anchoring/ExternalAnchorVerifier.js';
@@ -25,7 +25,7 @@ import { displayText } from '../ui/i18n/i18n.js';
 //              milestone was built for: PROOF_UNAVAILABLE after an
 //              earlier VALID reads as "currently unavailable," with a
 //              note that it was once independently verified — never as
-//              "invalid" or "revoked." core/PublicationAnchor.js#toJSON()
+//              "invalid" or "revoked." core/publication/PublicationAnchor.js#toJSON()
 //              is asserted byte-identical after all four calls.
 //   Section B: definite rejection — a confirmed transaction that simply
 //              does not carry this anchor's own contentHash reports

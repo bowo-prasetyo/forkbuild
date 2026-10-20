@@ -1,16 +1,16 @@
 import { readFile } from 'node:fs/promises';
-import { isAvatarVehicleDismountPositionClear } from '../core/AvatarVehicleDismountClearance.js';
-import { resolveAvatarVehicleDismountPosition } from '../core/AvatarVehicleDismountPosition.js';
-import { treeCollisionCandidatesForMovement } from '../core/AvatarTreeCollisionQuery.js';
-import { treeCollisionGeometryInRegion } from '../core/TreeCollisionGeometry.js';
-import { AVATAR_COLLISION_RADIUS } from '../core/AvatarCollision.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { VehiclePresence } from '../core/VehiclePresence.js';
-import { VehicleType } from '../core/VehicleType.js';
-import { Position } from '../core/Position.js';
+import { isAvatarVehicleDismountPositionClear } from '../core/vehicles/AvatarVehicleDismountClearance.js';
+import { resolveAvatarVehicleDismountPosition } from '../core/vehicles/AvatarVehicleDismountPosition.js';
+import { treeCollisionCandidatesForMovement } from '../core/avatar/AvatarTreeCollisionQuery.js';
+import { treeCollisionGeometryInRegion } from '../core/nature/TreeCollisionGeometry.js';
+import { AVATAR_COLLISION_RADIUS } from '../core/avatar/AvatarCollision.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { VehiclePresence } from '../core/vehicles/VehiclePresence.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
+import { Position } from '../core/document/Position.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.81 — Vehicle Dismount Destination Clearance, core/AvatarVehicleDismountClearance.js.
+// 0.9.81 — Vehicle Dismount Destination Clearance, core/vehicles/AvatarVehicleDismountClearance.js.
 //
 //   Section A: clear position — no nearby tree
 //   Section B: tree collision — an overlapping tree blocks
@@ -30,7 +30,7 @@ import { assert } from './support/Assert.js';
 // only "is this ALREADY-RESOLVED position clear of the trees it is
 // handed" — it never resolves a dismount position itself, never touches
 // a vehicle or mount state, and never builds any collision geometry
-// beyond composing core/AvatarTreeCollision.js's own existing
+// beyond composing core/avatar/AvatarTreeCollision.js's own existing
 // avatarCollisionCircleAt()/avatarTreeCollision() primitives. See
 // docs/Roadmap.md, 0.9.81.
 
@@ -45,7 +45,7 @@ function assertThrows(fn, message) {
 }
 
 // A synthetic tree circle, in exactly the frozen shape
-// core/TreeCollisionGeometry.js#treeCollisionCircleFor() produces —
+// core/nature/TreeCollisionGeometry.js#treeCollisionCircleFor() produces —
 // deliberately independent of any real seed, so most sections here
 // never need to depend on world generation to reason about a precise
 // distance.
@@ -214,7 +214,7 @@ async function runTests() {
     // -------------------------------------------------------------
     // Section H — every currently placeable vehicle type (BICYCLE,
     // MOTORCYCLE, CAR, DRONE) now resolves a real destination under
-    // core/AvatarVehicleDismountPosition.js — there is currently no
+    // core/vehicles/AvatarVehicleDismountPosition.js — there is currently no
     // unsupported type left to produce a null candidate from, though
     // 0.9.80's own null contract (see that file's own header) still
     // holds for a future, not-yet-placed vehicle type. A `null`
@@ -245,7 +245,7 @@ async function runTests() {
     // Section I — architectural regression
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../core/AvatarVehicleDismountClearance.js', import.meta.url);
+        const sourceUrl = new URL('../core/vehicles/AvatarVehicleDismountClearance.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -273,17 +273,17 @@ async function runTests() {
             'localStorage', 'StorageProvider', 'fetch(', 'WebSocket'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `28. core/AvatarVehicleDismountClearance.js's own code never references "${term}" — a pure adapter over the existing avatar-tree collision detector only, never mount-state/dismount-intent/vehicle-lookup/a-second-collision-system/spatial-index/terrain-sampling/input/rendering/persistence/networking`);
+            assert(!codeOnly.includes(term), `28. core/vehicles/AvatarVehicleDismountClearance.js's own code never references "${term}" — a pure adapter over the existing avatar-tree collision detector only, never mount-state/dismount-intent/vehicle-lookup/a-second-collision-system/spatial-index/terrain-sampling/input/rendering/persistence/networking`);
         }
-        assert(codeOnly.includes('avatarCollisionCircleAt'), '29. this file does consume avatarCollisionCircleAt() from core/AvatarTreeCollision.js — the existing avatar-circle primitive, never a reimplementation of it');
-        assert(codeOnly.includes('avatarTreeCollision'), '30. this file does consume avatarTreeCollision() from core/AvatarTreeCollision.js — the existing detector, never a second circlesIntersect() of its own');
+        assert(codeOnly.includes('avatarCollisionCircleAt'), '29. this file does consume avatarCollisionCircleAt() from core/avatar/AvatarTreeCollision.js — the existing avatar-circle primitive, never a reimplementation of it');
+        assert(codeOnly.includes('avatarTreeCollision'), '30. this file does consume avatarTreeCollision() from core/avatar/AvatarTreeCollision.js — the existing detector, never a second circlesIntersect() of its own');
     }
     {
-        const exportsModule = await import('../core/AvatarVehicleDismountClearance.js');
+        const exportsModule = await import('../core/vehicles/AvatarVehicleDismountClearance.js');
         const exportedNames = Object.keys(exportsModule).sort();
         assert(
             JSON.stringify(exportedNames) === JSON.stringify(['isAvatarVehicleDismountPositionClear']),
-            '31. core/AvatarVehicleDismountClearance.js exports exactly the one predicate — nothing else'
+            '31. core/vehicles/AvatarVehicleDismountClearance.js exports exactly the one predicate — nothing else'
         );
     }
 

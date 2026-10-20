@@ -4,11 +4,11 @@ import { PublicationResolutionOutcome } from '../application/publication/Publica
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 
-import { BlueprintAttribution, BLUEPRINT_ATTRIBUTION_KIND, CURRENT_SCHEMA_VERSION as ATTRIBUTION_SCHEMA_VERSION } from '../core/BlueprintAttribution.js';
+import { BlueprintAttribution, BLUEPRINT_ATTRIBUTION_KIND, CURRENT_SCHEMA_VERSION as ATTRIBUTION_SCHEMA_VERSION } from '../core/building/BlueprintAttribution.js';
 import { LocalBlueprintAttributionStore } from '../application/blueprint/LocalBlueprintAttributionStore.js';
 import { createBlueprintAttributionPublicationKind } from '../application/blueprint/BlueprintAttributionPublicationKind.js';
 
-import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
+import { PlaceNamingClaim } from '../core/world/PlaceNamingClaim.js';
 import { buildPlaceNamingClaimPublication, PLACE_NAMING_CLAIM_PUBLICATION_KIND, CURRENT_SCHEMA_VERSION as NAMING_SCHEMA_VERSION } from '../application/placeNaming/PlaceNamingClaimPublication.js';
 import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
 import { createPlaceNamingClaimPublicationKind } from '../application/placeNaming/PlaceNamingClaimPublicationKind.js';

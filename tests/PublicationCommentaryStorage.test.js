@@ -1,5 +1,5 @@
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { PublicationCommentary } from '../core/PublicationCommentary.js';
+import { PublicationCommentary } from '../core/publication/PublicationCommentary.js';
 import {
     PublicationCommentaryStore,
     PublicationCommentaryConflictError
@@ -9,8 +9,8 @@ import { assert } from './support/Assert.js';
 
 // 0.9.243 — Publication Commentary Storage Boundary. Covers
 // storage/PublicationCommentaryStore.js — the sole bridge between the pure
-// 0.9.242 domain (core/PublicationCommentary.js /
-// core/PublicationCommentaryCollection.js) and durable storage. No UI, no
+// 0.9.242 domain (core/publication/PublicationCommentary.js /
+// core/publication/PublicationCommentaryCollection.js) and durable storage. No UI, no
 // networking, no command/use-case layer exists yet for this milestone to
 // test.
 

@@ -1,6 +1,6 @@
 import { Serializer } from './Serializer.js';
 import { ValidationResult } from './ValidationResult.js';
-import { World } from '../core/World.js';
+import { World } from '../core/document/World.js';
 
 // World <-> JSON. Only geometry, identities, and relationships — no
 // Document-level metadata (title, author, protocol/engine version); that

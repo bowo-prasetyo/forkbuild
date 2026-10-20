@@ -13,7 +13,7 @@ import { PublicationMaterialProvenanceOrigin } from '../application/publication/
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
-import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
+import { describeDecentralizedDiscoveryEnvelope } from '../core/publication/DecentralizedDiscoveryEnvelope.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';

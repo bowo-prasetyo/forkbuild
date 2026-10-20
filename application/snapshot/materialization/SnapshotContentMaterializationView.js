@@ -1,6 +1,6 @@
 import { SnapshotContentTransferOutcome } from './SnapshotContentTransferOutcome.js';
 import { SnapshotContentMaterializationUiState } from './SnapshotContentMaterializationUiState.js';
-import { message } from '../../../core/Message.js';
+import { message } from '../../../core/app/Message.js';
 
 // 0.8.34 — Explicit Snapshot Materialization UX.
 //

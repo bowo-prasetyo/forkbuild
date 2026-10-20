@@ -1,12 +1,12 @@
-import { PLAZA_CENTER } from '../../../core/ChallengePlaza.js';
-import { starterVillageLayout } from '../../../core/StarterVillage.js';
+import { PLAZA_CENTER } from '../../../core/challenge/ChallengePlaza.js';
+import { starterVillageLayout } from '../../../core/challenge/StarterVillage.js';
 import { plazaSquareWorld } from '../../../core/library/PlazaSquare.js';
 import { FEATURED_STRUCTURE_IDS, featuredStructures, structureWorld } from '../../../application/home/FeaturedBuilds.js';
 import { CreateStructureRegistryUseCase } from '../../../application/editor/CreateStructureRegistryUseCase.js';
 import { CreateBrickRegistryUseCase } from '../../../application/editor/CreateBrickRegistryUseCase.js';
 import { libraryItemName } from '../../i18n/libraryText.js';
 
-// The village at the challenge plaza (core/StarterVillage.js): the square
+// The village at the challenge plaza (core/challenge/StarterVillage.js): the square
 // (core/library/PlazaSquare.js) and the six ready-made builds
 // (application/home/FeaturedBuilds.js) stand in every World View, wherever it
 // opens, drawn and walked into like the plaza's exhibits but never placed,

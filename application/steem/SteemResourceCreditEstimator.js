@@ -4,7 +4,7 @@ import {
     steemResourceCreditPercent,
     steemTransactionResourceCost,
     steemTransactionResourceUsage
-} from '../../core/SteemResourceCredits.js';
+} from '../../core/networks/SteemResourceCredits.js';
 
 // Estimates whether an account has the Resource Credits (RC) to post some
 // transactions, from the account's RC and the chain's current prices

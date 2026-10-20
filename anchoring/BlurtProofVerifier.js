@@ -1,8 +1,8 @@
 import { ProofVerifier } from './ProofVerifier.js';
-import { BLURT_ANCHOR_TYPE, blurtAnchorTarget, blurtBlockNumberOfId, blurtTransactionAnchors, parseBlurtAnchorProof } from '../core/BlurtAnchor.js';
-import { checkBlurtBlockEvidence } from '../core/BlurtBlockEvidence.js';
+import { BLURT_ANCHOR_TYPE, blurtAnchorTarget, blurtBlockNumberOfId, blurtTransactionAnchors, parseBlurtAnchorProof } from '../core/networks/BlurtAnchor.js';
+import { checkBlurtBlockEvidence } from '../core/networks/BlurtBlockEvidence.js';
 import { createBlurtRpcClient } from '../blurt/BlurtRpcClient.js';
-import { DEFAULT_BLURT_PROOF_NODES } from '../core/BlurtReadingConfiguration.js';
+import { DEFAULT_BLURT_PROOF_NODES } from '../core/networks/BlurtReadingConfiguration.js';
 
 // Checks a `blurt` PublicationAnchor's proof, `{ blockNum, trxId, chain }`,
 // against the chain (docs/Protocol.md, "Proposed: Blurt Substrate",

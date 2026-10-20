@@ -3,10 +3,10 @@ import {
     AvatarVehicleDismountIntent,
     isValidAvatarVehicleDismountIntent,
     deriveAvatarVehicleDismountIntent
-} from '../core/AvatarVehicleDismountIntent.js';
+} from '../core/vehicles/AvatarVehicleDismountIntent.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.79 — Avatar-Vehicle Dismount Intent, core/AvatarVehicleDismountIntent.js.
+// 0.9.79 — Avatar-Vehicle Dismount Intent, core/vehicles/AvatarVehicleDismountIntent.js.
 //
 //   Section A: the vocabulary itself — NONE/DISMOUNT, isValid()
 //   Section B: activation — a dismount request produces DISMOUNT
@@ -160,7 +160,7 @@ async function runTests() {
     // no keyboard, no rendering, no movement
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../core/AvatarVehicleDismountIntent.js', import.meta.url);
+        const sourceUrl = new URL('../core/vehicles/AvatarVehicleDismountIntent.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -182,23 +182,23 @@ async function runTests() {
             'velocity', 'acceleration', 'speed', 'position', 'rotation', 'collision', 'physics'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `28. core/AvatarVehicleDismountIntent.js's own code never references "${term}" — a pure vocabulary and transition rule only, never vehicle-aware, never mount-state-aware, never movement, never raw input handling`);
+            assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `28. core/vehicles/AvatarVehicleDismountIntent.js's own code never references "${term}" — a pure vocabulary and transition rule only, never vehicle-aware, never mount-state-aware, never movement, never raw input handling`);
         }
     }
     {
         // The strongest architectural regression: this file must not
         // even IMPORT AvatarVehicleMount — the intent must not need to
         // know whether the avatar is actually mounted.
-        const sourceUrl = new URL('../core/AvatarVehicleDismountIntent.js', import.meta.url);
+        const sourceUrl = new URL('../core/vehicles/AvatarVehicleDismountIntent.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         assert(!/^\s*import\b/m.test(source),
-            '29. core/AvatarVehicleDismountIntent.js has no import statements at all — it does not depend on AvatarVehicleMount, AvatarVehicleInteractionIntent, or anything else in this codebase');
+            '29. core/vehicles/AvatarVehicleDismountIntent.js has no import statements at all — it does not depend on AvatarVehicleMount, AvatarVehicleInteractionIntent, or anything else in this codebase');
     }
     {
-        const exportsModule = await import('../core/AvatarVehicleDismountIntent.js');
+        const exportsModule = await import('../core/vehicles/AvatarVehicleDismountIntent.js');
         const exportedNames = Object.keys(exportsModule).sort();
         assert(JSON.stringify(exportedNames) === JSON.stringify(['AvatarVehicleDismountIntent', 'deriveAvatarVehicleDismountIntent', 'isValidAvatarVehicleDismountIntent']),
-            '30. core/AvatarVehicleDismountIntent.js exports exactly the vocabulary, its validator, and the one transition function — nothing else');
+            '30. core/vehicles/AvatarVehicleDismountIntent.js exports exactly the vocabulary, its validator, and the one transition function — nothing else');
     }
 
     console.log('✅ All Avatar Vehicle Dismount Intent tests passed.');

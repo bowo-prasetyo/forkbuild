@@ -1,8 +1,8 @@
-import { VILLAGE_PALETTE } from '../../core/VillagePalette.js';
-import { toCssHex } from '../../core/ColorHex.js';
+import { VILLAGE_PALETTE } from '../../core/building/VillagePalette.js';
+import { toCssHex } from '../../core/building/ColorHex.js';
 import { t } from '../i18n/i18n.js';
 
-// A row of the village colour palette (core/VillagePalette.js). Clicking a
+// A row of the village colour palette (core/building/VillagePalette.js). Clicking a
 // swatch emits its colour; `selected` (0xRRGGBB or null) marks the one in use.
 export default {
     name: 'VillagePaletteSwatches',

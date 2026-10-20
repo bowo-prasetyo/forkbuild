@@ -1,7 +1,7 @@
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { CreateEditorContextUseCase } from '../application/editor/CreateEditorContextUseCase.js';
 import { PreviewUseCase } from '../application/editor/PreviewUseCase.js';
@@ -172,7 +172,7 @@ async function runTests() {
     // Section E: Collision — the preview shows blocked (invalid) at an
     // occupied position rather than silently doing nothing, and
     // clicking there is still refused, exactly matching
-    // core/PlacementValidator.js's own exact-position rule.
+    // core/publication/PlacementValidator.js's own exact-position rule.
     // -------------------------------------------------------------
     {
         const { tool, editorContext, world } = buildTool({ occupied: [{ x: 2, y: 0.5, z: 2 }] });

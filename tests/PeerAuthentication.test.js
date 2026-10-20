@@ -5,8 +5,8 @@ import { PeerConnectionState } from '../peer/PeerConnectionState.js';
 import { PeerAuthenticationState } from '../peer/PeerAuthenticationState.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerIdentity } from '../peer/PeerIdentity.js';
-import { toProofMessage, getPeerAuthenticationSigningDescriptor } from '../core/PeerAuthenticationEnvelope.js';
-import { getAvatarPresenceSigningDescriptor } from '../core/AvatarPresenceAdvertisement.js';
+import { toProofMessage, getPeerAuthenticationSigningDescriptor } from '../core/social/PeerAuthenticationEnvelope.js';
+import { getAvatarPresenceSigningDescriptor } from '../core/avatar/AvatarPresenceAdvertisement.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 

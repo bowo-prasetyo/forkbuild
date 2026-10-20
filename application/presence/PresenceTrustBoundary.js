@@ -1,10 +1,10 @@
-import { isValidAvatarPresenceAdvertisement, getAvatarPresenceSigningDescriptor } from '../../core/AvatarPresenceAdvertisement.js';
-import { resolveIncomingPresence } from '../../core/PresenceIngestion.js';
-import { detectPresenceEquivocation } from '../../core/PresenceEquivocation.js';
-import { PresenceAuthorityRegistry } from '../../core/PresenceAuthority.js';
-import { PresenceReplayWindow } from '../../core/PresenceReplayWindow.js';
-import { PresenceTrustPolicy } from '../../core/PresenceTrustPolicy.js';
-import { TrustObservation, TrustStatus } from '../../core/TrustObservation.js';
+import { isValidAvatarPresenceAdvertisement, getAvatarPresenceSigningDescriptor } from '../../core/avatar/AvatarPresenceAdvertisement.js';
+import { resolveIncomingPresence } from '../../core/avatar/PresenceIngestion.js';
+import { detectPresenceEquivocation } from '../../core/avatar/PresenceEquivocation.js';
+import { PresenceAuthorityRegistry } from '../../core/avatar/PresenceAuthority.js';
+import { PresenceReplayWindow } from '../../core/avatar/PresenceReplayWindow.js';
+import { PresenceTrustPolicy } from '../../core/avatar/PresenceTrustPolicy.js';
+import { TrustObservation, TrustStatus } from '../../core/identity/TrustObservation.js';
 import { computeContentHash } from '../../serializer/contentHash.js';
 import { LocalAuthorizationVerifier } from '../../identity/LocalAuthorizationVerifier.js';
 
@@ -21,14 +21,14 @@ import { LocalAuthorizationVerifier } from '../../identity/LocalAuthorizationVer
 // in an order that matters — later checks assume earlier ones already
 // held:
 //
-//   1. Is this even shaped like an advertisement?           (core/AvatarPresenceAdvertisement.js)
+//   1. Is this even shaped like an advertisement?           (core/avatar/AvatarPresenceAdvertisement.js)
 //   2. If signed, does the signature actually verify?        (identity/LocalAuthorizationVerifier.js)
-//      If unsigned, does policy tolerate that?                (core/PresenceTrustPolicy.js)
-//   3. Is the claimant allowed to speak for this avatarId?    (core/PresenceAuthority.js)
-//   4. Have I already accepted this EXACT claim before?       (core/PresenceReplayWindow.js)
-//   5. Does it conflict with what I currently have at the     (core/PresenceEquivocation.js)
+//      If unsigned, does policy tolerate that?                (core/avatar/PresenceTrustPolicy.js)
+//   3. Is the claimant allowed to speak for this avatarId?    (core/avatar/PresenceAuthority.js)
+//   4. Have I already accepted this EXACT claim before?       (core/avatar/PresenceReplayWindow.js)
+//   5. Does it conflict with what I currently have at the     (core/avatar/PresenceEquivocation.js)
 //      same sequence?
-//   6. Is it actually newer than what I currently have?       (core/PresenceIngestion.js)
+//   6. Is it actually newer than what I currently have?       (core/avatar/PresenceIngestion.js)
 //
 // A claim is only ever ACCEPTED (and only then remembered by the
 // replay window) after every one of those hold. Rejecting for any
@@ -36,7 +36,7 @@ import { LocalAuthorizationVerifier } from '../../identity/LocalAuthorizationVer
 // record — see docs/Principles.md, "Do Not Let Arrival Order Choose A
 // Winner": the CURRENTLY held state keeps being the currently held
 // state; a competing or hostile claim is recorded as a TrustObservation
-// for diagnostics (core/PresenceDiagnosticsSummary.js), never silently
+// for diagnostics (core/avatar/PresenceDiagnosticsSummary.js), never silently
 // swapped in.
 export class PresenceTrustBoundary {
     // 0.2.60 — `isBlocked`: a zero-arg-per-call predicate

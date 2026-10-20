@@ -1,6 +1,6 @@
-import { PublicationQuery } from '../../core/PublicationQuery.js';
-import { PublicationPage } from '../../core/PublicationPage.js';
-import { comparePublications } from '../../core/PublicationSort.js';
+import { PublicationQuery } from '../../core/catalog/PublicationQuery.js';
+import { PublicationPage } from '../../core/catalog/PublicationPage.js';
+import { comparePublications } from '../../core/catalog/PublicationSort.js';
 
 // 0.2.31 — the Repository/Author catalog's own search, answering a
 // genuinely different question than application/world/SearchWorldUseCase.js
@@ -17,7 +17,7 @@ import { comparePublications } from '../../core/PublicationSort.js';
 // to give spatial discovery its OWN query rather than shoehorning
 // coordinates into text search.
 //
-// Deliberately application-level pagination (see core/PublicationQuery.js's
+// Deliberately application-level pagination (see core/catalog/PublicationQuery.js's
 // own comment): this class receives the FULL candidate set from
 // discoveryProvider.list() and does the filtering/sorting/windowing
 // itself — the UI never computes an offset or assumes the storage

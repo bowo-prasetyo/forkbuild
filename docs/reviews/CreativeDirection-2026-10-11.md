@@ -74,7 +74,7 @@ The fantasy's third beat is *walk inside it*. In practice the avatar
 collides with every brick's axis-aligned box. That includes `core:door` (a
 solid 1×2×0.1 panel) and `core:arch` / `core:arch_small`, which are *drawn*
 with an opening (`renderer/ThreeBrickFactory.js`, `archGeometry`) but
-*collide* as solid 2×2×0.5 boxes (`core/AvatarCollision.js#brickAabb`,
+*collide* as solid 2×2×0.5 boxes (`core/avatar/AvatarCollision.js#brickAabb`,
 gathered by `application/avatar/AvatarMovementConstraint.js#obstaclesNear`,
 which skips only bricks the avatar can step onto).
 
@@ -269,7 +269,7 @@ Pillars' third question: does building get at least as much?
 - About 40 milestones landed in four days (2026-10-08 to 10-11), each with
   docs in up to 8 languages. None has met a real player at scale yet. Launch
   hasn't happened (the launch kit's checklist is open), so every target in
-  `core/LaunchTargets.js` is, by its own words, "a first guess".
+  `core/app/LaunchTargets.js` is, by its own words, "a first guess".
 - Over the project's history, around 300 of the roughly 1,000 roadmap
   milestones are about networks, anchoring, wallets and claims, about 180
   about building, and about **12** about remixing and the challenge (by
@@ -355,12 +355,12 @@ bricks beyond what the interior work in Release A needs.
 
 - Read Pillars.md, VISION.md, the README, the 1.3 release notes, the launch
   kit, the Play half of the user guide, the main navigation (`ui/App.js`),
-  Home, About, the challenge (`core/BuildChallenge.js`, `EditorView.js`'s
-  Join), residents' wishes (`core/ResidentWish.js`), the first-build
+  Home, About, the challenge (`core/challenge/BuildChallenge.js`, `EditorView.js`'s
+  Join), residents' wishes (`core/world/ResidentWish.js`), the first-build
   checklist, the structure libraries and the English message catalogue.
 - Measured roadmap effort by matching keywords against all 998 roadmap
   headings. These are rough counts, meant to show proportions.
-- Checked collision with the real `core/AvatarCollision.js` functions on
+- Checked collision with the real `core/avatar/AvatarCollision.js` functions on
   the real `VillageLibrary` brick lists, and counted structure bricks from
   the same libraries. Reproduce with:
 

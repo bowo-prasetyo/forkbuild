@@ -2,8 +2,8 @@ import { readFile } from 'node:fs/promises';
 
 import { composePlaceNamingPublicationRuntime } from '../application/placeNaming/PlaceNamingPublicationRuntimeComposition.js';
 import { NostrPlaceNamingDiscoveryPublisher } from '../application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js';
-import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
-import { derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
+import { PlaceNamingClaim } from '../core/world/PlaceNamingClaim.js';
+import { derivePlaceNamingDiscoveryTag } from '../core/world/PlaceNamingDiscoveryEnvelope.js';
 import { createNostrInjectedProviderPublisher } from '../nostr/NostrInjectedProviderPublisher.js';
 import { mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';

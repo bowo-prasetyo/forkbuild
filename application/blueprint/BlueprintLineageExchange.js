@@ -1,5 +1,5 @@
-import { BlueprintLineageClaim } from '../../core/BlueprintLineageClaim.js';
-import { LEGACY_BLUEPRINT_FINGERPRINT_REASON, blueprintFingerprintsEqual, isCurrentBlueprintFingerprint } from '../../core/BlueprintFingerprint.js';
+import { BlueprintLineageClaim } from '../../core/building/BlueprintLineageClaim.js';
+import { LEGACY_BLUEPRINT_FINGERPRINT_REASON, blueprintFingerprintsEqual, isCurrentBlueprintFingerprint } from '../../core/building/BlueprintFingerprint.js';
 import { validateBlueprintLineageClaimPublication } from './BlueprintLineageClaimPublicationValidator.js';
 
 // 0.6.8 — Blueprint Lineage & Revision Discovery.

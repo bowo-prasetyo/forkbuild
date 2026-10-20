@@ -7,19 +7,19 @@ import { GetPublicationCommentariesUseCase } from '../application/publication/co
 import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
 import { PublicationCommentaryNotificationProducer, PUBLICATION_COMMENTED_EVENT_TYPE } from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
-import { NotificationEvent } from '../core/NotificationEvent.js';
+import { NotificationEvent } from '../core/social/NotificationEvent.js';
 import { GetRecipientNotificationEventsUseCase } from '../application/chat/GetRecipientNotificationEventsUseCase.js';
-import { notificationDeduplicationIdentity } from '../core/NotificationDeduplicationPolicy.js';
+import { notificationDeduplicationIdentity } from '../core/social/NotificationDeduplicationPolicy.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource as rawSource } from './support/SourceText.js';
@@ -287,10 +287,10 @@ async function runTests() {
         // of Commentary, or of the producer that wraps it — the
         // dependency direction runs application -> core/storage, never
         // the reverse.
-        const notificationEventCode = await codeOnlySource('core/NotificationEvent.js');
+        const notificationEventCode = await codeOnlySource('core/social/NotificationEvent.js');
         const notificationStoreCode = await codeOnlySource('storage/NotificationEventStore.js');
         assert(!/Commentary|PublicationCommentaryNotificationProducer/i.test(notificationEventCode),
-            'A5a. core/NotificationEvent.js\'s own CODE references neither Commentary nor the producer that constructs one.');
+            'A5a. core/social/NotificationEvent.js\'s own CODE references neither Commentary nor the producer that constructs one.');
         assert(!/Commentary|PublicationCommentaryNotificationProducer/i.test(notificationStoreCode),
             'A5b. storage/NotificationEventStore.js\'s own CODE references neither Commentary nor the producer — it persists whatever NotificationEvent it is handed, agnostic to what produced it.');
 
@@ -504,7 +504,7 @@ async function runTests() {
             payload: { publicationId: publication.id, commentaryId: commentary.commentaryId, authorIdentityId: bob.getSigningIdentity().id }
         });
         assert(notificationDeduplicationIdentity(persisted) === notificationDeduplicationIdentity(independentlyConstructed),
-            'G2. the real, composed pipeline\'s own persisted event shares its deduplication identity with an independently constructed NotificationEvent describing the same Commentary — core/NotificationDeduplicationPolicy.js remains the one, unmodified authority.');
+            'G2. the real, composed pipeline\'s own persisted event shares its deduplication identity with an independently constructed NotificationEvent describing the same Commentary — core/social/NotificationDeduplicationPolicy.js remains the one, unmodified authority.');
 
         console.log('✓ G: eventType and deduplication identity are exactly what 0.9.275/0.9.280 already established — this milestone introduces no new notification vocabulary of its own.');
     }

@@ -1,7 +1,7 @@
-import { World } from '../core/World.js';
-import { Position } from '../core/Position.js';
-import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
-import { AnimalDecoration } from '../core/AnimalDecoration.js';
+import { World } from '../core/document/World.js';
+import { Position } from '../core/document/Position.js';
+import { ANIMAL_SPECIES } from '../core/nature/WildlifeField.js';
+import { AnimalDecoration } from '../core/nature/AnimalDecoration.js';
 import { CreateWorldAnimalDecorationCommand } from '../application/commands/CreateWorldAnimalDecorationCommand.js';
 import { RemoveWorldAnimalDecorationCommand } from '../application/commands/RemoveWorldAnimalDecorationCommand.js';
 import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';

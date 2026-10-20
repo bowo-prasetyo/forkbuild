@@ -60,9 +60,9 @@ import PublicationShareLink from '../components/PublicationShareLink.js';
 import ProtectIdentityNote from '../components/ProtectIdentityNote.js';
 import FirstBuildGuide from '../components/FirstBuildGuide.js';
 import StarterJobCard from '../components/StarterJobCard.js';
-import { EDITOR_ACTIVITY } from '../../core/EditorSoundCues.js';
-import { FIRST_EDIT_BRICK_ID, isStarterJobDone, starterCardStage as stageOfStarterCard, starterJobById, starterJobGuide, unfinishedStructure } from '../../core/StarterJob.js';
-import { worldBricks } from '../../core/PlacedBricks.js';
+import { EDITOR_ACTIVITY } from '../../core/app/EditorSoundCues.js';
+import { FIRST_EDIT_BRICK_ID, isStarterJobDone, starterCardStage as stageOfStarterCard, starterJobById, starterJobGuide, unfinishedStructure } from '../../core/challenge/StarterJob.js';
+import { worldBricks } from '../../core/building/PlacedBricks.js';
 import BuildPlotBanner from '../components/BuildPlotBanner.js';
 import { useBuildPlot } from './editorView/useBuildPlot.js';
 import { useFirstBuildGuide } from './editorView/useFirstBuildGuide.js';
@@ -73,7 +73,7 @@ import { BuildTogetherSession } from '../../application/buildTogether/BuildToget
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 import WalkTogetherDialog from '../components/walkTogether/WalkTogetherDialog.js';
 import LoginModal from '../components/LoginModal.js';
-import { editorEntryContextFromQuery } from '../../core/EditorEntryContext.js';
+import { editorEntryContextFromQuery } from '../../core/document/EditorEntryContext.js';
 import { usePostPublishDistribution } from './editorView/usePostPublishDistribution.js';
 import { useBuildNoteSend } from './editorView/useBuildNoteSend.js';
 import { useSelectionActions } from './editorView/useSelectionActions.js';
@@ -88,13 +88,13 @@ import SoundControl from '../components/SoundControl.js';
 import { displayText, errorText, t } from '../i18n/i18n.js';
 import { libraryItemName } from '../i18n/libraryText.js';
 import { FEATURED_STRUCTURE_IDS, featuredStructures, findStarterStructure } from '../../application/home/FeaturedBuilds.js';
-import { challengeAt, challengeById, challengeIdeaStructureIds, isChallengeOpen, isRemixChallenge, withChallengeTag } from '../../core/BuildChallenge.js';
-import { BUILD_TAG_MAX_COUNT } from '../../core/BuildTags.js';
+import { challengeAt, challengeById, challengeIdeaStructureIds, isChallengeOpen, isRemixChallenge, withChallengeTag } from '../../core/challenge/BuildChallenge.js';
+import { BUILD_TAG_MAX_COUNT } from '../../core/document/BuildTags.js';
 import { challengeLastDayText, challengeThemeBrief, challengeThemeTitle, challengeTimeText } from '../components/challenge/challengeText.js';
 import ModelExportDialog from '../components/modelExport/ModelExportDialog.js';
 import { downloadBuildModel } from '../components/modelExport/downloadBuildModel.js';
 import { describeLicense } from '../../application/document/LicenseLabels.js';
-import { worldBrickCount } from '../../core/BuilderStamps.js';
+import { worldBrickCount } from '../../core/catalog/BuilderStamps.js';
 
 // Editing shortcuts come from EditorActionRegistry, shared with the palette,
 // the sidebar and the controls docs. Escape priority: text input > shortcuts
@@ -288,7 +288,7 @@ export default {
                         {{ t('editor.composingHint', { title: activeCompositionTitle }) }}
                     </p>
                     </template>
-                    <!-- What a ready-made build asks of its builder (core/StarterJob.js); over the 3D view on a phone. -->
+                    <!-- What a ready-made build asks of its builder (core/challenge/StarterJob.js); over the 3D view on a phone. -->
                     <StarterJobCard v-if="starterCardStage && !compactLayout" :stage="starterCardStage" @pick="pickStarterJobBrick" @publish="publishFromStarterCard" @hide="hideStarterCard" />
                     <DocumentInfoPanel
                         compact
@@ -719,7 +719,7 @@ export default {
             })
             : null;
         // Each friend whose edit this build accepts is credited on it
-        // (core/BuiltWith.js), and so on its Publication.
+        // (core/catalog/BuiltWith.js), and so on its Publication.
         const unsubscribeBuildCredits = buildTogetherSession
             ? documentCommandPropagation.onOperationReceived((documentId, command, authorIdentityId) => buildTogetherSession.noteEdit(documentId, authorIdentityId))
             : null;
@@ -781,7 +781,7 @@ export default {
                     : null
             };
         }
-        // Tags the open document for a running challenge (core/BuildChallenge.js),
+        // Tags the open document for a running challenge (core/challenge/BuildChallenge.js),
         // which is how a build enters it once published. False for a week
         // that isn't running.
         function joinChallenge(challenge) {
@@ -799,7 +799,7 @@ export default {
         // Joining a themed week: an empty plot of the builder's own, named after
         // the theme and tagged for the week, with the theme's structures pinned at
         // the top of the Build Library's Structures. Dropping one in is the
-        // builder's choice, and counts as ready-made (core/PlacedBricks.js).
+        // builder's choice, and counts as ready-made (core/building/PlacedBricks.js).
         const challengePins = ref(null);
         function startChallengePlot(challenge) {
             if (!challenge || isRemixChallenge(challenge) || !isChallengeOpen(challenge, Date.now())) return false;
@@ -823,7 +823,7 @@ export default {
             return pins && documentManager.document?.world.id === pins.worldId ? pins.structures : [];
         });
         const pinnedTitle = computed(() => challengePins.value?.title ?? '');
-        // A build opened from something ready-made (core/StarterJob.js), with
+        // A build opened from something ready-made (core/challenge/StarterJob.js), with
         // the job Home's main button left to do or none, for as long as it is
         // the open build: its card, until it is published or hidden.
         const starterJob = ref(null);
@@ -878,7 +878,7 @@ export default {
             setTool(ToolId.PLACE);
         }
         // A copy just opened from ?fork=: its bricks are someone else's, not its
-        // builder's (core/PlacedBricks.js), and a remix week's entry (its
+        // builder's (core/building/PlacedBricks.js), and a remix week's entry (its
         // challenge page's Remix) is tagged for the week.
         function afterForkOpened() {
             editorSession.noteReadyMadeStart();
@@ -928,7 +928,7 @@ export default {
         const feedbackVisible = ref(false);
         let feedbackTimer = null;
         // Failures that ask the user to act stay up longer than a routine
-        // "Saved". `message` is text or a message descriptor (core/Message.js).
+        // "Saved". `message` is text or a message descriptor (core/app/Message.js).
         const feedback = {
             show(message, { durationMs = 2500 } = {}) {
                 feedbackMessage.value = displayText(message);
@@ -1045,7 +1045,7 @@ export default {
         }
         watch(documentVersion, () => { if (seeInside.value) editorSession.refreshSeeInside(); });
         const unwatchSeeInside = editorSession.onCommandActivity(() => { if (seeInside.value) editorSession.refreshSeeInside(); });
-        // A visit that edited, once a page load (core/VisitorCount.js,
+        // A visit that edited, once a page load (core/app/VisitorCount.js,
         // EDITOR_EDIT): the visitor's own edit, an undo or redo not one.
         const unwatchFirstEdit = funnelEventCounter
             ? editorSession.onCommandActivity((activity) => { if (activity === EDITOR_ACTIVITY.EXECUTED) funnelEventCounter.editedInEditor(); })
@@ -1366,7 +1366,7 @@ export default {
             editorSession.start(viewport.value);
             startSound();
             firstBuildGuide.followFirstBuildEdits();
-            // The Editor opened, whichever way in (core/VisitorCount.js, EDITOR_OPEN).
+            // The Editor opened, whichever way in (core/app/VisitorCount.js, EDITOR_OPEN).
             funnelEventCounter?.openedEditor();
 
             unsubTool = editorContext.eventBus.subscribe(
@@ -1495,7 +1495,7 @@ export default {
                 const structure = findStarterStructure(structureRegistry, route.query.start);
                 // Joining a week's challenge (the challenge page, Home) also tags the copy.
                 const challenge = typeof route.query.challenge === 'string' ? challengeById(route.query.challenge) : null;
-                // Home's main button: the House with its job left to do (core/StarterJob.js).
+                // Home's main button: the House with its job left to do (core/challenge/StarterJob.js).
                 const job = starterJobById(route.query.job);
                 const unfinished = job ? unfinishedStructure(job, structure) : null;
                 if (structure && editorSession.forkStructure(unfinished || structure)) {

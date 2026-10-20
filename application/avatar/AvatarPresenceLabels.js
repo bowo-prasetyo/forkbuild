@@ -1,13 +1,13 @@
-import { PresenceLifecycleState } from '../../core/PresenceLifecycleState.js';
-import { TrustStatus } from '../../core/TrustObservation.js';
-import { AvatarAnimationState } from '../../core/AvatarAnimationState.js';
-import { message } from '../../core/Message.js';
+import { PresenceLifecycleState } from '../../core/avatar/PresenceLifecycleState.js';
+import { TrustStatus } from '../../core/identity/TrustObservation.js';
+import { AvatarAnimationState } from '../../core/avatar/AvatarAnimationState.js';
+import { message } from '../../core/app/Message.js';
 
 // 0.2.39 — human-readable labels for PresenceLifecycleState/TrustStatus,
 // shared by ui/components/AvatarInfoPanel.js's read view. One place,
 // so a future diagnostics surface never drifts from the panel's own
 // wording — same reasoning as application/document/LicenseLabels.js. Every
-// label is a message (core/Message.js); anything unrecognized is "Unknown".
+// label is a message (core/app/Message.js); anything unrecognized is "Unknown".
 const UNKNOWN = 'presence.unknown';
 
 function describe(keys, value) {
@@ -25,7 +25,7 @@ export function describeLifecycleState(state) {
 }
 
 // Deliberately not a 1:1 echo of the raw TrustStatus constant — see
-// core/TrustObservation.js's own header for what each status actually
+// core/identity/TrustObservation.js's own header for what each status actually
 // means; these are the SAME concepts in the words a viewer (not a
 // developer) reads.
 const TRUST_KEYS = Object.freeze({
@@ -48,7 +48,7 @@ export function describeTrustStatus(status) {
 
 // 0.9.583 — the same "raw enum never reaches a viewer" discipline
 // LIFECYCLE_LABELS/TRUST_LABELS already enforce, extended to the one
-// status word this file had never covered: core/AvatarAnimationState.js's
+// status word this file had never covered: core/avatar/AvatarAnimationState.js's
 // own values ('walking', 'idle', ...) are an internal, lowercase,
 // typo-proof vocabulary (see that file's own header), never player-facing
 // copy — ui/components/AvatarInfoPanel.js's and

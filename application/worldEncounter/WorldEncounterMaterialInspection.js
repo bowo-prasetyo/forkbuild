@@ -49,7 +49,7 @@ import { verifyWorldEncounterMaterial } from './WorldEncounterMaterialVerificati
 // AN ORCHESTRATION BOUNDARY, NEVER A FOURTH LOADER AND NEVER A SECOND
 // VERIFIER. This file performs no retrieval and no identity judgment of its
 // own — it never reads `material.id`/`material.avatarId`, never imports
-// `core/WorldEncounter.js`, never constructs a `WorldEncounterMaterialSource`
+// `core/world/WorldEncounter.js`, never constructs a `WorldEncounterMaterialSource`
 // or `WorldEncounterMaterialVerifier`, and never touches
 // `materialSources.local`/`.peer`/`.decentralized` directly. It calls
 // exactly two already-existing, unmodified boundaries — a loading boundary,

@@ -1,7 +1,7 @@
-import { buildNoteFilter, buildNoteFilterForPublication, buildNotesForPublication, latestBuildNotes } from '../../core/BuildNote.js';
+import { buildNoteFilter, buildNoteFilterForPublication, buildNotesForPublication, latestBuildNotes } from '../../core/publication/BuildNote.js';
 import { buildTagsOf } from './PublishBuildNoteUseCase.js';
 
-// Finds the builds others sent to everyone (core/BuildNote.js): asks every
+// Finds the builds others sent to everyone (core/publication/BuildNote.js): asks every
 // Nostr relay this device reads for build notes, all of them or one tag's (a
 // week's challenge entries), and opens each new one exactly as a shared link
 // is opened (application/publication/OpenPublicationLink.js), which checks

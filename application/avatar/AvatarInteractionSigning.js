@@ -1,10 +1,10 @@
-import { getAvatarInteractionSigningDescriptor } from '../../core/AvatarInteractionAdvertisement.js';
+import { getAvatarInteractionSigningDescriptor } from '../../core/avatar/AvatarInteractionAdvertisement.js';
 
 // 0.2.45 — the ONE place a local interaction advertisement gains a real
 // Ed25519 signature before it ever reaches a transport, exactly
 // mirroring application/presence/PresenceSigning.js and
 // application/avatar/AvatarProfileSigning.js one layer over. Deliberately NOT
-// inside core/AvatarInteractionAdvertisement.js itself (a private
+// inside core/avatar/AvatarInteractionAdvertisement.js itself (a private
 // signing key must never be reachable from core/) and NOT a mutation
 // of the advertisement that already exists — a signed advertisement is
 // a brand NEW plain object.

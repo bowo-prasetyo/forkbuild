@@ -5,7 +5,7 @@ import {
     parseSnapshotDiscoveryEnvelope,
     SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL,
     SNAPSHOT_DISCOVERY_ENVELOPE_VERSION
-} from '../core/SnapshotDiscoveryEnvelope.js';
+} from '../core/publication/SnapshotDiscoveryEnvelope.js';
 import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
 import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
 import { assert } from './support/Assert.js';
@@ -110,7 +110,7 @@ async function codeOnlySource(relativePath) {
 }
 
 const CLAIM_FILES = [
-    'core/SnapshotDiscoveryEnvelope.js',
+    'core/publication/SnapshotDiscoveryEnvelope.js',
     'application/nostr/NostrSnapshotDiscoveryPublisher.js',
     'application/nostr/NostrSnapshotDiscoveryQueryService.js'
 ];
@@ -349,7 +349,7 @@ async function run() {
             const code = await codeOnlySource(file);
             assert(!code.includes('ArweaveContentStore'), `48. ${file} never imports content/ArweaveContentStore.js — a position claim is part of the discovery protocol, never material retrieval`);
             assert(!code.includes('SnapshotPlacementResolver') && !code.includes('SnapshotPlacementStoreRegistry'), `49. ${file} never references the Snapshot Placement family's own resolution/catalog machinery`);
-            assert(!code.includes('DecentralizedDiscoveryEnvelope') && !code.includes('PublicationDistribution'), `50. ${file} never references the Signed Claim distribution family — a deliberately distinct contract, per core/SnapshotDiscoveryEnvelope.js's own original header`);
+            assert(!code.includes('DecentralizedDiscoveryEnvelope') && !code.includes('PublicationDistribution'), `50. ${file} never references the Signed Claim distribution family — a deliberately distinct contract, per core/publication/SnapshotDiscoveryEnvelope.js's own original header`);
         }
 
         console.log('✓ Section H: the position claim lives entirely inside the Snapshot discovery protocol — no coupling to material retrieval, placement resolution, or the Signed Claim family');

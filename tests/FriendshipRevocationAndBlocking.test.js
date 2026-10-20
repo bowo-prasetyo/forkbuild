@@ -5,20 +5,20 @@ import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeer
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { FriendRelationshipUseCase } from '../application/identity/FriendRelationshipUseCase.js';
-import { FriendshipState } from '../core/FriendshipState.js';
-import { FriendshipRecord } from '../core/FriendshipRecord.js';
+import { FriendshipState } from '../core/social/FriendshipState.js';
+import { FriendshipRecord } from '../core/social/FriendshipRecord.js';
 import {
     FriendshipAction,
     isTerminalFriendshipAction,
     FRIENDSHIP_ACTION_SEQUENCE
-} from '../core/FriendshipAction.js';
+} from '../core/social/FriendshipAction.js';
 import {
     toFriendshipAdvertisement,
     isValidFriendshipAdvertisement,
     getFriendshipSigningDescriptor
-} from '../core/FriendshipAdvertisement.js';
+} from '../core/social/FriendshipAdvertisement.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { PeerBlockRecord } from '../core/PeerBlockRecord.js';
+import { PeerBlockRecord } from '../core/social/PeerBlockRecord.js';
 import { PeerBlockUseCase } from '../application/peer/PeerBlockUseCase.js';
 import { PresenceTrustBoundary } from '../application/presence/PresenceTrustBoundary.js';
 import { AvatarProfileTrustBoundary } from '../application/avatar/AvatarProfileTrustBoundary.js';
@@ -26,17 +26,17 @@ import { AvatarInteractionTrustBoundary } from '../application/avatar/AvatarInte
 import { PeerAvatarPresenceBroadcastProvider } from '../presence/PeerAvatarPresenceBroadcastProvider.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { toAvatarPresenceAdvertisement } from '../core/AvatarPresenceAdvertisement.js';
+import { toAvatarPresenceAdvertisement } from '../core/avatar/AvatarPresenceAdvertisement.js';
 import { signAvatarPresenceAdvertisement } from '../application/presence/PresenceSigning.js';
-import { toAvatarProfileAdvertisement } from '../core/AvatarProfileAdvertisement.js';
+import { toAvatarProfileAdvertisement } from '../core/avatar/AvatarProfileAdvertisement.js';
 import { signAvatarProfileAdvertisement } from '../application/avatar/AvatarProfileSigning.js';
-import { toAvatarInteractionAdvertisement } from '../core/AvatarInteractionAdvertisement.js';
+import { toAvatarInteractionAdvertisement } from '../core/avatar/AvatarInteractionAdvertisement.js';
 import { signAvatarInteractionAdvertisement } from '../application/avatar/AvatarInteractionSigning.js';
-import { AvatarInteractionKind } from '../core/AvatarInteractionKind.js';
-import { TrustStatus } from '../core/TrustObservation.js';
-import { PresenceVisibilityPolicy } from '../core/PresenceVisibilityPolicy.js';
+import { AvatarInteractionKind } from '../core/avatar/AvatarInteractionKind.js';
+import { TrustStatus } from '../core/identity/TrustObservation.js';
+import { PresenceVisibilityPolicy } from '../core/avatar/PresenceVisibilityPolicy.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
@@ -48,13 +48,13 @@ import { assert } from './support/Assert.js';
 //
 //   - REJECT/CANCEL/UNFRIEND: a signed, closed vocabulary extension,
 //     each one collapsing a FriendshipRecord straight back to a clean
-//     NONE (core/FriendshipRecord.js#withOutgoingAction/withIncomingAction),
+//     NONE (core/social/FriendshipRecord.js#withOutgoingAction/withIncomingAction),
 //     and each one bound via `inResponseTo` to the SPECIFIC REQUEST
 //     instance it answers/ends — proven directly against the exact
 //     replay this milestone's own cyclic vocabulary would otherwise
-//     reopen (see core/FriendshipAdvertisement.js's own header).
+//     reopen (see core/social/FriendshipAdvertisement.js's own header).
 //   - Blocking: a completely separate, LOCAL-ONLY, unilateral store
-//     (core/PeerBlockRecord.js/application/peer/PeerBlockUseCase.js) that
+//     (core/social/PeerBlockRecord.js/application/peer/PeerBlockUseCase.js) that
 //     never sends anything over the network, gating BOTH the sender
 //     side (presence/PeerAvatarPresenceBroadcastProvider.js's own
 //     isBlocked) and the receiver side (every avatar-social trust
@@ -83,7 +83,7 @@ function makeDevice(label, storage = new InMemoryStorageProvider()) {
 async function runTests() {
 
 // ---------------------------------------------------------------------
-// 1. core/FriendshipAction.js + core/FriendshipAdvertisement.js — the
+// 1. core/social/FriendshipAction.js + core/social/FriendshipAdvertisement.js — the
 //    extended vocabulary and its inResponseTo binding.
 // ---------------------------------------------------------------------
 {
@@ -131,11 +131,11 @@ async function runTests() {
     const tamperedInResponseTo = { ...signedRequest, inResponseTo: 'forged' };
     assert(!verifier.verifyFriendshipAdvertisement(tamperedInResponseTo).valid, 'tampering inResponseTo after signing invalidates the signature');
 
-    console.log('✓ core/FriendshipAction.js + core/FriendshipAdvertisement.js: REJECT/CANCEL/UNFRIEND vocabulary and inResponseTo binding');
+    console.log('✓ core/social/FriendshipAction.js + core/social/FriendshipAdvertisement.js: REJECT/CANCEL/UNFRIEND vocabulary and inResponseTo binding');
 }
 
 // ---------------------------------------------------------------------
-// 2. core/FriendshipRecord.js + core/FriendshipState.js — terminal
+// 2. core/social/FriendshipRecord.js + core/social/FriendshipState.js — terminal
 //    actions collapse BOTH directions to a clean NONE.
 // ---------------------------------------------------------------------
 {
@@ -165,11 +165,11 @@ async function runTests() {
     const requestedAgain = unfriended.withOutgoingAction({ action: FriendshipAction.REQUEST });
     assert(requestedAgain.status === FriendshipState.REQUESTED, 'a fresh REQUEST after UNFRIEND starts a clean new cycle at REQUESTED');
 
-    console.log('✓ core/FriendshipRecord.js: terminal actions collapse both directions; a relationship can cycle cleanly');
+    console.log('✓ core/social/FriendshipRecord.js: terminal actions collapse both directions; a relationship can cycle cleanly');
 }
 
 // ---------------------------------------------------------------------
-// 3. core/PeerBlockRecord.js + application/peer/PeerBlockUseCase.js — the
+// 3. core/social/PeerBlockRecord.js + application/peer/PeerBlockUseCase.js — the
 //    local-only, unilateral block store.
 // ---------------------------------------------------------------------
 {
@@ -213,7 +213,7 @@ async function runTests() {
     assert(threw, 'unblocking an identity that is not blocked is a clear error, never silent');
 
     unsubscribe();
-    console.log('✓ core/PeerBlockRecord.js + application/peer/PeerBlockUseCase.js: local-only, idempotent, persistent, never touches the network');
+    console.log('✓ core/social/PeerBlockRecord.js + application/peer/PeerBlockUseCase.js: local-only, idempotent, persistent, never touches the network');
 }
 
 // ---------------------------------------------------------------------
@@ -289,7 +289,7 @@ async function runTests() {
     // The attack: replay Bob's captured, genuinely-valid cycle-1 ACCEPT
     // directly onto Alice's connection, attempting to short-circuit
     // cycle 2's consent. Without inResponseTo binding this would
-    // silently manufacture FRIEND — see core/FriendshipAdvertisement.js's
+    // silently manufacture FRIEND — see core/social/FriendshipAdvertisement.js's
     // own header.
     const rawBusIntoAlice = new PeerMessageBus();
     rawBusIntoAlice.attach(bobPeer);

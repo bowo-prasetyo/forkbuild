@@ -1,6 +1,6 @@
 import { StorageProvider } from './StorageProvider.js';
 import { LocalStorageProvider } from './LocalStorageProvider.js';
-import { BlurtReadingConfiguration } from '../core/BlurtReadingConfiguration.js';
+import { BlurtReadingConfiguration } from '../core/networks/BlurtReadingConfiguration.js';
 
 const BLURT_READING_CONFIGURATION_STORE_KEY = 'blurt-reading-configuration';
 

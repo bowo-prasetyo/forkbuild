@@ -7,12 +7,12 @@ import { createSteemDiscoveryThreadReader } from '../application/steem/SteemDisc
 import { SteemPublicationDiscoveryQueryService } from '../application/steem/SteemPublicationDiscoveryQueryService.js';
 import { SteemSnapshotDiscoveryQueryService } from '../application/steem/SteemSnapshotDiscoveryQueryService.js';
 import { SteemPlaceNamingDiscoverySource } from '../application/steem/SteemPlaceNamingDiscoverySource.js';
-import { steemDiscoveryAnnouncementOperations, steemDiscoveryAnnouncementPermlink, STEEM_MAX_TRANSACTION_BYTES } from '../core/SteemDiscoveryAnnouncement.js';
-import { SteemAnnouncingConfiguration } from '../core/SteemAnnouncingConfiguration.js';
+import { steemDiscoveryAnnouncementOperations, steemDiscoveryAnnouncementPermlink, STEEM_MAX_TRANSACTION_BYTES } from '../core/networks/SteemDiscoveryAnnouncement.js';
+import { SteemAnnouncingConfiguration } from '../core/networks/SteemAnnouncingConfiguration.js';
 import { SteemAnnouncingConfigurationStore } from '../storage/SteemAnnouncingConfigurationStore.js';
 import { SetSteemAnnouncingConfigurationUseCase } from '../application/settings/SetSteemAnnouncingConfigurationUseCase.js';
-import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
-import { derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
+import { PlaceNamingClaim } from '../core/world/PlaceNamingClaim.js';
+import { derivePlaceNamingDiscoveryTag } from '../core/world/PlaceNamingDiscoveryEnvelope.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
@@ -96,7 +96,7 @@ async function rejection(promise) {
     console.log('✓ announcement operations');
 }
 
-// With this device's Steem writer switched off (core/NetworkWriters.js),
+// With this device's Steem writer switched off (core/publication/NetworkWriters.js),
 // nothing is posted and nothing on the chain is asked; switched back on, it
 // posts again.
 {

@@ -1,8 +1,8 @@
 import {
     CREATURE_SOUND_CUE, advanceCreatureSound, createCreatureSoundState, placeSound, voiceFor
-} from '../core/CreatureSoundCues.js';
-import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
-import { IDLE_ACTION } from '../core/WildlifeMotion.js';
+} from '../core/app/CreatureSoundCues.js';
+import { ANIMAL_SPECIES } from '../core/nature/WildlifeField.js';
+import { IDLE_ACTION } from '../core/nature/WildlifeMotion.js';
 import { assert } from './support/Assert.js';
 
 const NORTH = { x: 0, z: 1 };
@@ -168,8 +168,8 @@ function run(observations) {
 
 // Other players are heard walking, jumping and landing, from where they are.
 {
-    const { advanceCreatureSound: advance } = await import('../core/CreatureSoundCues.js');
-    const { DEFAULT_WORLD_SEED } = await import('../core/TerrainHeightField.js');
+    const { advanceCreatureSound: advance } = await import('../core/app/CreatureSoundCues.js');
+    const { DEFAULT_WORLD_SEED } = await import('../core/nature/TerrainHeightField.js');
     const seed = DEFAULT_WORLD_SEED;
     const step = (state, player) => advance(state, { listener: listenerAt(0, 0), animals: [], remoteAvatars: [player] }, { seed, deltaSeconds: 0.1 });
     let state = createCreatureSoundState();
@@ -209,8 +209,8 @@ function run(observations) {
 // getting on and off is heard, a sharp slowdown sounds as a brake, and only
 // the nearest few engines within 40 m play.
 {
-    const { resolveAvatarVehicleMovementCapability } = await import('../core/AvatarVehicleMovementCapability.js');
-    const { MAX_RIDER_ENGINES, RIDER_RANGE } = await import('../core/CreatureSoundCues.js');
+    const { resolveAvatarVehicleMovementCapability } = await import('../core/vehicles/AvatarVehicleMovementCapability.js');
+    const { MAX_RIDER_ENGINES, RIDER_RANGE } = await import('../core/app/CreatureSoundCues.js');
     const topSpeed = resolveAvatarVehicleMovementCapability('car').movementSpeed;
     const look = (state, players, listenerX = 0) => advanceCreatureSound(state, { listener: listenerAt(listenerX, 0), remoteAvatars: players }, { deltaSeconds: 0.1 });
     const rider = (id, x, z, vehicleType = 'car') => ({ id, position: { x, y: 2, z }, y: 2, animation: 'idle', vehicleType });

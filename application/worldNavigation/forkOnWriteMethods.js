@@ -1,10 +1,10 @@
 import { CommandHistory } from '../editor/CommandHistory.js';
-import { License } from '../../core/License.js';
+import { License } from '../../core/document/License.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 import { SpatialSelectionState } from '../spatial-state/SpatialSelectionState.js';
 import { SpatialHoverState } from '../spatial-state/SpatialHoverState.js';
-import { message } from '../../core/Message.js';
-import { UserFacingError } from '../../core/UserFacingError.js';
+import { message } from '../../core/app/Message.js';
+import { UserFacingError } from '../../core/app/UserFacingError.js';
 import { forkTitle, untitledWorldTitle } from '../document/DocumentTitles.js';
 
 // WorldNavigationSession fork-on-write: a published snapshot is never edited
@@ -28,7 +28,7 @@ export const forkOnWriteMethods = {
     // Otherwise:
     //   { blocked: false, message } — editable; first edit forks silently
     //   { blocked: true,  message } — fork policy forbids it
-    // `message` is a descriptor (core/Message.js).
+    // `message` is a descriptor (core/app/Message.js).
     getEditabilityNotice(documentId) {
         if (!documentId || !this._publishedDocumentIds.has(documentId)) {
             return null;
@@ -56,7 +56,7 @@ export const forkOnWriteMethods = {
         if (title !== undefined) metadata.title = title;
         if (description !== undefined) metadata.description = description;
         // A remix keeps crediting its original and keeps its terms
-        // (core/License.js, relicense()).
+        // (core/document/License.js, relicense()).
         if (license !== undefined) metadata.license = License.relicense(metadata.license, license, { authorIdentityId: metadata.authorIdentityId });
         if (placementPolicy !== undefined) metadata.placementPolicy = placementPolicy;
         if (tags !== undefined) metadata.tags = tags;

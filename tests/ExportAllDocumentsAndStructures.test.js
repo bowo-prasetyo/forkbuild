@@ -1,10 +1,10 @@
-import { Brick } from '../core/Brick.js';
-import { Building } from '../core/Building.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { Position } from '../core/Position.js';
-import { Structure } from '../core/Structure.js';
-import { World } from '../core/World.js';
+import { Brick } from '../core/building/Brick.js';
+import { Building } from '../core/building/Building.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { Position } from '../core/document/Position.js';
+import { Structure } from '../core/building/Structure.js';
+import { World } from '../core/document/World.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
 import { DocumentManifest } from '../application/document/DocumentManifest.js';
 import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';

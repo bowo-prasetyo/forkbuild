@@ -7,8 +7,8 @@ import {
     blurtTransactionAnchors,
     isBlurtAnchorContentHash,
     isBlurtTransactionId
-} from '../core/BlurtAnchor.js';
-import { captureBlurtBlockEvidence } from '../core/BlurtBlockEvidence.js';
+} from '../core/networks/BlurtAnchor.js';
+import { captureBlurtBlockEvidence } from '../core/networks/BlurtBlockEvidence.js';
 
 // Creates `blurt` anchors (docs/Protocol.md, "Proposed: Blurt Substrate",
 // "Anchoring"). A single anchor is a post: when this device already posted

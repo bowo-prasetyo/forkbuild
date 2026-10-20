@@ -1,5 +1,5 @@
 import { SpatialIndexStore } from './SpatialIndexStore.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { CONTENT_HASH_ALGORITHM, computeContentHash } from '../serializer/contentHash.js';
 
 const INDEX_CONTENT_KEY_PREFIX = 'spatial-index-content:';

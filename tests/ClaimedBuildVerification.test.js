@@ -9,18 +9,18 @@ import { NostrDiscoveryQueryService } from '../application/nostr/NostrDiscoveryQ
 import { NostrPublicationRelaySetDiscoveryQueryService } from '../application/nostr/NostrPublicationRelaySetDiscoveryQueryService.js';
 import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
 import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
-import { publicationRecordTag, PUBLICATION_RECORD_TAG_PREFIX } from '../core/NarrowDiscoveryTags.js';
-import { WorldEncounterKind } from '../core/WorldEncounter.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { publicationRecordTag, PUBLICATION_RECORD_TAG_PREFIX } from '../core/publication/NarrowDiscoveryTags.js';
+import { WorldEncounterKind } from '../core/world/WorldEncounter.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { useClaimedBuilds } from '../ui/views/worldView/useClaimedBuilds.js';
 import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
 import { computeContentHash } from '../serializer/contentHash.js';
-import { World } from '../core/World.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { License, LicenseId } from '../core/License.js';
+import { World } from '../core/document/World.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { License, LicenseId } from '../core/document/License.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 

@@ -1,4 +1,4 @@
-import { derivePlaceNamingDiscoveryTag, describePlaceNamingDiscoveryEnvelope } from '../../core/PlaceNamingDiscoveryEnvelope.js';
+import { derivePlaceNamingDiscoveryTag, describePlaceNamingDiscoveryEnvelope } from '../../core/world/PlaceNamingDiscoveryEnvelope.js';
 import { SteemDiscoveryReadOutcome } from './SteemDiscoveryThreadReader.js';
 
 // Place naming claims from Steem. Steem has one thread per month for every

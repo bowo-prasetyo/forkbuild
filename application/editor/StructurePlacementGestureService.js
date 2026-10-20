@@ -1,5 +1,5 @@
-import { Position } from '../../core/Position.js';
-import { SpatialBounds } from '../../core/SpatialBounds.js';
+import { Position } from '../../core/document/Position.js';
+import { SpatialBounds } from '../../core/world/SpatialBounds.js';
 import { TransformGizmoState } from '../spatial-state/TransformGizmoState.js';
 import { TransformSnap } from './TransformSnap.js';
 import { TransformMath } from './TransformMath.js';

@@ -1,9 +1,9 @@
 import {
     completeFirstBuildSteps, firstBuildStepsForEdit, FirstBuildStep, isFirstBuildComplete, normalizeFirstBuildProgress
-} from '../../core/FirstBuildChecklist.js';
-import { EDITOR_ACTIVITY } from '../../core/EditorSoundCues.js';
+} from '../../core/challenge/FirstBuildChecklist.js';
+import { EDITOR_ACTIVITY } from '../../core/app/EditorSoundCues.js';
 
-// Ticks off the guided first build (core/FirstBuildChecklist.js) as the
+// Ticks off the guided first build (core/challenge/FirstBuildChecklist.js) as the
 // person works in the Editor: its own edits (EditorSession#onCommandActivity,
 // so undo, redo and collaborators' edits never count), a save, a link
 // copied or shared, and, in World View, walking inside the published build. Saves each change to `store` and tells `subscribe()`

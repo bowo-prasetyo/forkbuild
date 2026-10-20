@@ -6,7 +6,7 @@ import { FindableBuildsStore } from '../../application/buildNotes/FindableBuilds
 import { LocalStorageProvider } from '../../storage/LocalStorageProvider.js';
 import { LocalDiscoveryProvider } from '../../discovery/LocalDiscoveryProvider.js';
 
-// Composition root for build notes (core/BuildNote.js): sending a published
+// Composition root for build notes (core/publication/BuildNote.js): sending a published
 // build to everyone with this device's carrier key, and finding the builds
 // others sent. The signer, the link opener and the payload codec load the
 // first time a note is sent or opened, never with the first screen

@@ -1,5 +1,5 @@
 import { ref, watch } from 'vue';
-import { PresenceVisibility } from '../../core/PresenceVisibility.js';
+import { PresenceVisibility } from '../../core/avatar/PresenceVisibility.js';
 import { errorText, t } from '../i18n/i18n.js';
 
 // One visibility-policy form: a Public → Hidden select, an optional

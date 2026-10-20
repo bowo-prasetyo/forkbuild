@@ -1,5 +1,5 @@
 import { CollaborationTransport } from './CollaborationTransport.js';
-import { CollaborationEnvelope } from '../core/CollaborationEnvelope.js';
+import { CollaborationEnvelope } from '../core/collaboration/CollaborationEnvelope.js';
 
 // A CollaborationTransport that routes all operations through a
 // DocumentAuthority (0.2.9). This is the transport used when multiple

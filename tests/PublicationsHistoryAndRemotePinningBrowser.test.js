@@ -6,7 +6,7 @@ import { PublicationResolutionOutcome } from '../application/publication/Publica
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 import { IpfsPublicationRecord, IpfsPublicationMethod } from '../application/ipfs/IpfsPublicationRecord.js';
 import { IpfsRemotePinningSettingsStore } from '../storage/IpfsRemotePinningSettingsStore.js';
-import { IpfsRemotePinningSettings } from '../core/IpfsRemotePinningSettings.js';
+import { IpfsRemotePinningSettings } from '../core/networks/IpfsRemotePinningSettings.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 

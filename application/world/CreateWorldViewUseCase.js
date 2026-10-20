@@ -34,7 +34,7 @@ import { CreateAvatarPresenceSessionUseCase } from '../avatar/CreateAvatarPresen
 import { CreateAvatarTemplateRegistryUseCase } from '../avatar/CreateAvatarTemplateRegistryUseCase.js';
 import { LocalAvatarPresenceBroadcastProvider } from '../../presence/LocalAvatarPresenceBroadcastProvider.js';
 import { PeerAvatarPresenceBroadcastProvider } from '../../presence/PeerAvatarPresenceBroadcastProvider.js';
-import { FriendshipState } from '../../core/FriendshipState.js';
+import { FriendshipState } from '../../core/social/FriendshipState.js';
 import { WorldAuthorizationService } from '../identity/WorldAuthorizationService.js';
 import { WorldMembershipUseCase } from '../identity/WorldMembershipUseCase.js';
 import { WorldPresenceUseCase } from '../presence/WorldPresenceUseCase.js';

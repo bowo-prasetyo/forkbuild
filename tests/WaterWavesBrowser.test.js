@@ -1,14 +1,14 @@
 // @environment browser
 import * as THREE from 'three';
 import { makeWaterWaving } from '../renderer/WaterWaveMaterial.js';
-import { waterWaveAt } from '../core/WaterWaves.js';
-import { seaShareAt, hydrologyFeatureAt, HYDROLOGY_FEATURE } from '../core/Hydrology.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+import { waterWaveAt } from '../core/nature/WaterWaves.js';
+import { seaShareAt, hydrologyFeatureAt, HYDROLOGY_FEATURE } from '../core/nature/Hydrology.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
 import { Renderer } from '../renderer/Renderer.js';
 import { assert } from './support/Assert.js';
 
 // The waves drawn with real WebGL (renderer/WaterWaveMaterial.js): the
-// shader lifts the surface exactly where core/WaterWaves.js says, the lit
+// shader lifts the surface exactly where core/nature/WaterWaves.js says, the lit
 // top glints differently as time passes, and every variant compiles.
 
 const shaderErrors = [];
@@ -70,7 +70,7 @@ function read() {
         assert(checked > 5, 'several columns were checked');
     }
     scene.remove(line);
-    console.log('✓ the drawn swell matches core/WaterWaves.js');
+    console.log('✓ the drawn swell matches core/nature/WaterWaves.js');
 }
 
 // --- Top view: the lit surface (as in renderer/WaterTileMesh.js) glints

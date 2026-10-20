@@ -1,13 +1,13 @@
 import { readFile } from 'node:fs/promises';
-import { resolveMovementHeading } from '../core/AvatarMovementSteeringSimulation.js';
+import { resolveMovementHeading } from '../core/avatar/AvatarMovementSteeringSimulation.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.93 — Vehicle Steering Capability: core/AvatarMovementSteeringSimulation.js,
+// 0.9.93 — Vehicle Steering Capability: core/avatar/AvatarMovementSteeringSimulation.js,
 // the pure mathematical half (see that file's own header). This suite
 // covers the ONE function it exports directly — no engine, no capability
 // vocabulary, no controller — matching the same "pure geometry/math,
 // independently testable" split tests/AvatarMovementAccelerationSimulation.test.js's
-// own suite already established for core/AvatarMovementAccelerationSimulation.js's
+// own suite already established for core/avatar/AvatarMovementAccelerationSimulation.js's
 // own `resolveMovementSpeed()`.
 //
 //   Section A: approaching a target heading, one tick at a time, never
@@ -27,7 +27,7 @@ import { assert } from './support/Assert.js';
 //              AvatarVehicleMount/WorldNavigationSession/capability-
 //              vocabulary/keyboard import anywhere in this file's own
 //              source; and (0.9.94 update — see that milestone's own note
-//              below) core/AvatarMovementSimulation.js now DOES call
+//              below) core/avatar/AvatarMovementSimulation.js now DOES call
 //              resolveMovementHeading(), gated on a real steeringRate, but
 //              application/avatar/AvatarMovementController.js still never
 //              references this file or the steering capability vocabulary
@@ -38,12 +38,12 @@ import { assert } from './support/Assert.js';
 // only "given a rate, a current heading, and a target heading, what is
 // the heading one simulation tick later," never "which vehicle, if any,
 // is involved" or "should a rate even apply here" — see
-// core/AvatarMovementSteeringSimulation.js's own header. See
+// core/avatar/AvatarMovementSteeringSimulation.js's own header. See
 // docs/Roadmap.md, 0.9.93.
 //
 // 0.9.94 note — Vehicle Steering State Integration. This file's own
 // Section H originally asserted (as of 0.9.93) that NEITHER
-// core/AvatarMovementSimulation.js NOR application/avatar/AvatarMovementController.js
+// core/avatar/AvatarMovementSimulation.js NOR application/avatar/AvatarMovementController.js
 // referenced this seam at all — "steering is resolved and testable, but
 // not yet wired into any real controller." 0.9.94 is that wiring, and
 // this suite's own architectural regression section is updated in place
@@ -200,7 +200,7 @@ async function runTests() {
     // Section H — architectural regression
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../core/AvatarMovementSteeringSimulation.js', import.meta.url);
+        const sourceUrl = new URL('../core/avatar/AvatarMovementSteeringSimulation.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -228,27 +228,27 @@ async function runTests() {
             'localStorage', 'StorageProvider', 'fetch(', 'WebSocket'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `29. core/AvatarMovementSteeringSimulation.js's own code never references "${term}" — pure heading math only, no vehicle/capability/runtime/rendering/collision knowledge whatsoever`);
+            assert(!codeOnly.includes(term), `29. core/avatar/AvatarMovementSteeringSimulation.js's own code never references "${term}" — pure heading math only, no vehicle/capability/runtime/rendering/collision knowledge whatsoever`);
         }
 
-        const exportsModule = await import('../core/AvatarMovementSteeringSimulation.js');
+        const exportsModule = await import('../core/avatar/AvatarMovementSteeringSimulation.js');
         const exportedNames = Object.keys(exportsModule).sort();
         assert(JSON.stringify(exportedNames) === JSON.stringify(['resolveMovementHeading']),
-            '30. core/AvatarMovementSteeringSimulation.js exports exactly the one resolution function — nothing else');
+            '30. core/avatar/AvatarMovementSteeringSimulation.js exports exactly the one resolution function — nothing else');
     }
     {
         // 0.9.94 update — Vehicle Steering State Integration. This seam is
         // now wired into real movement, EXACTLY one layer down from where
-        // 0.9.91 wired resolveMovementSpeed() in: core/AvatarMovementSimulation.js
+        // 0.9.91 wired resolveMovementSpeed() in: core/avatar/AvatarMovementSimulation.js
         // itself, never application/avatar/AvatarMovementController.js directly —
-        // see core/AvatarMovementSimulation.js's own 0.9.94 header for the
+        // see core/avatar/AvatarMovementSimulation.js's own 0.9.94 header for the
         // gate (a real, positive `steeringRate`) that keeps WALK's own
         // existing `TURN_RATE_DEGREES_PER_SECOND`/`rotationY` advance
         // completely untouched, byte-for-byte, whenever that gate is not
         // met.
-        const simulationSource = await readFile(new URL('../core/AvatarMovementSimulation.js', import.meta.url), 'utf8');
+        const simulationSource = await readFile(new URL('../core/avatar/AvatarMovementSimulation.js', import.meta.url), 'utf8');
         assert(simulationSource.includes('AvatarMovementSteeringSimulation') && simulationSource.includes('resolveMovementHeading'),
-            '31. (as of 0.9.94) core/AvatarMovementSimulation.js now imports and calls resolveMovementHeading() — this is the "future milestone" this file\'s own header originally named as wiring this seam in, the direct twin of resolveMovementSpeed()\'s own 0.9.91 wiring');
+            '31. (as of 0.9.94) core/avatar/AvatarMovementSimulation.js now imports and calls resolveMovementHeading() — this is the "future milestone" this file\'s own header originally named as wiring this seam in, the direct twin of resolveMovementSpeed()\'s own 0.9.91 wiring');
 
         const controllerSource = await readFile(new URL('../application/avatar/AvatarMovementController.js', import.meta.url), 'utf8');
         // Comment lines are excluded before checking — this class's own
@@ -261,7 +261,7 @@ async function runTests() {
             .filter((line) => !line.trim().startsWith('//'))
             .join('\n');
         assert(!controllerCodeOnly.includes('AvatarMovementSteeringSimulation') && !controllerCodeOnly.includes('resolveMovementHeading'),
-            '32. application/avatar/AvatarMovementController.js still never imports core/AvatarMovementSteeringSimulation.js or calls resolveMovementHeading() directly — it only ever hands a bare steeringRate number to core/AvatarMovementSimulation.js, which is the one place this seam is actually wired in (the direct twin of _resolvedAcceleration()\'s own 0.9.91 discipline)');
+            '32. application/avatar/AvatarMovementController.js still never imports core/avatar/AvatarMovementSteeringSimulation.js or calls resolveMovementHeading() directly — it only ever hands a bare steeringRate number to core/avatar/AvatarMovementSimulation.js, which is the one place this seam is actually wired in (the direct twin of _resolvedAcceleration()\'s own 0.9.91 discipline)');
         assert(!controllerCodeOnly.includes('AvatarMovementSteeringCapability') && !controllerCodeOnly.includes('AvatarMovementSteeringKind'),
             '33. application/avatar/AvatarMovementController.js never imports the AvatarMovementSteeringCapability vocabulary itself — it reads only a resolved capability\'s bare steering.steeringRate number (see its own _resolvedSteeringRate())');
     }
@@ -279,7 +279,7 @@ function accumulateHeadingTicks(startHeading, targetHeading, steeringRate, delta
 
 // Normalizes an expected plain-degree value (which may be negative) into
 // [0, 360) — a small test-only helper, kept separate from
-// core/AvatarMovementSteeringSimulation.js's own normalizeAngle() so this
+// core/avatar/AvatarMovementSteeringSimulation.js's own normalizeAngle() so this
 // suite never imports the module's internals, only its one public
 // function.
 function normalizeExpected(degrees) {

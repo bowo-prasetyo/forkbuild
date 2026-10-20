@@ -1,7 +1,7 @@
 import { Publication } from '../../../publisher/Publication.js';
-import { ContentReference } from '../../../core/ContentReference.js';
-import { WorldEncounterKind } from '../../../core/WorldEncounter.js';
-import { message } from '../../../core/Message.js';
+import { ContentReference } from '../../../core/document/ContentReference.js';
+import { WorldEncounterKind } from '../../../core/world/WorldEncounter.js';
+import { message } from '../../../core/app/Message.js';
 import { DocumentSerializer } from '../../../serializer/DocumentSerializer.js';
 import { verifyWorldEncounterMaterial, WorldEncounterMaterialVerificationStatus } from '../../worldEncounter/WorldEncounterMaterialVerification.js';
 import { decodePublicationLinkPayload } from './PublicationLinkPayload.js';
@@ -24,7 +24,7 @@ const Outcome = EmbeddedBuildOutcome;
 
 // `{ outcome, publication, document, message }`: on OPENED the verified
 // Publication and its build as a Document; otherwise `message` (a
-// descriptor, core/Message.js) says why it can't be shown. Never rejects.
+// descriptor, core/app/Message.js) says why it can't be shown. Never rejects.
 export async function openEmbeddedBuild({ payload, verifier, documentSerializer = new DocumentSerializer() }) {
     let linkOnly = null;
     try {

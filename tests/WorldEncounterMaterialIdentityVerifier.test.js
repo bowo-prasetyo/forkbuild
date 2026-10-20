@@ -5,7 +5,7 @@ import {
     WorldEncounterMaterialVerificationStatus,
     WorldEncounterMaterialVerifier
 } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
-import { WorldEncounterKind } from '../core/WorldEncounter.js';
+import { WorldEncounterKind } from '../core/world/WorldEncounter.js';
 import { assert } from './support/Assert.js';
 import { serialize } from './support/Serialize.js';
 
@@ -263,7 +263,7 @@ function leadOf({ uri = 'ar://tx-abc123', origin = 'nostr:wss://relay.example', 
     const fullSource = await readFile(sourceUrl, 'utf8');
     const codeOnly = fullSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
-    assert(!codeOnly.includes('core/Signature'), '19. never imports core/Signature.js — no concrete cryptographic scheme');
+    assert(!codeOnly.includes('core/Signature'), '19. never imports core/publication/Signature.js — no concrete cryptographic scheme');
     assert(!codeOnly.includes('SigningIdentity'), '20. never imports core/SigningIdentity.js');
     assert(!codeOnly.includes('AuthorizationVerifier'), '21. never imports identity/LocalAuthorizationVerifier.js or any AuthorizationVerifier');
     assert(!/\bmaterial\.signature\b/.test(codeOnly), '22. never reads material.signature — identity correspondence only, never cryptographic verification');

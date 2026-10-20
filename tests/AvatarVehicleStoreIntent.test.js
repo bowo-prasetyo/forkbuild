@@ -2,10 +2,10 @@ import {
     AvatarVehicleStoreIntent,
     isValidAvatarVehicleStoreIntent,
     deriveAvatarVehicleStoreIntent
-} from '../core/AvatarVehicleStoreIntent.js';
+} from '../core/vehicles/AvatarVehicleStoreIntent.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.670 — Avatar Vehicle Store Intent, core/AvatarVehicleStoreIntent.js.
+// 0.9.670 — Avatar Vehicle Store Intent, core/vehicles/AvatarVehicleStoreIntent.js.
 // Mirrors tests/AvatarVehicleDismountIntent.test.js's own shape: vocabulary,
 // activation, one-shot consumption, defensive input, purity.
 

@@ -1,4 +1,4 @@
-// Keeps something in step with network writer switches (core/NetworkWriters.js)
+// Keeps something in step with network writer switches (core/publication/NetworkWriters.js)
 // whose writer has no plugin to load, only a part of a runtime every copy
 // builds (Steem's and Blurt's): `on(runtime, id)` now for each switched on,
 // and `on`/`off` as each switch changes. `runtimes` maps a writer to its

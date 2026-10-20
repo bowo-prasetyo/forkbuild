@@ -5,10 +5,10 @@ import {
     derivePlaceNamingDiscoveryTag,
     PLACE_NAMING_DISCOVERY_ENVELOPE_PROTOCOL,
     PLACE_NAMING_DISCOVERY_ENVELOPE_VERSION
-} from '../core/PlaceNamingDiscoveryEnvelope.js';
-import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
-import { Signature } from '../core/Signature.js';
-import { describeSnapshotDiscoveryEnvelope } from '../core/SnapshotDiscoveryEnvelope.js';
+} from '../core/world/PlaceNamingDiscoveryEnvelope.js';
+import { PlaceNamingClaim } from '../core/world/PlaceNamingClaim.js';
+import { Signature } from '../core/publication/Signature.js';
+import { describeSnapshotDiscoveryEnvelope } from '../core/publication/SnapshotDiscoveryEnvelope.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.253 — Place Naming Discovery Boundary.

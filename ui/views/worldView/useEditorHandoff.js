@@ -1,5 +1,5 @@
-import { WorldFocusKind } from '../../../core/WorldFocusContext.js';
-import { EditorEntryContext, EditorEntryReason, editorEntryContextToQuery } from '../../../core/EditorEntryContext.js';
+import { WorldFocusKind } from '../../../core/world/WorldFocusContext.js';
+import { EditorEntryContext, EditorEntryReason, editorEntryContextToQuery } from '../../../core/document/EditorEntryContext.js';
 
 // Handing off to the Editor: opening or forking an encountered publication, opening
 // a structure's source document, or editing a copy of what the inspection panel shows.

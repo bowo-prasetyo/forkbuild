@@ -1,5 +1,5 @@
 import { PublicationObservationArchive } from './PublicationObservationArchive.js';
-import { sha256Hex } from '../../../core/Sha256.js';
+import { sha256Hex } from '../../../core/document/Sha256.js';
 
 // 0.8.84 — Durable Publication Archive Fingerprint.
 //
@@ -63,7 +63,7 @@ import { sha256Hex } from '../../../core/Sha256.js';
 // SYNCHRONOUS, PURE, DETERMINISTIC. `fingerprintPublicationObservationArchive()`
 // reads no clock, touches no storage, and performs no network operation —
 // calling it twice on byte-identical input produces a byte-identical
-// digest. SHA-256 comes from core/Sha256.js rather than the browser's own
+// digest. SHA-256 comes from core/document/Sha256.js rather than the browser's own
 // `crypto.subtle.digest()` — that API is Promise-only, and a fingerprint
 // computed for display alongside every other synchronous `describeXxx()`
 // projection has no honest use for an asynchronous one.

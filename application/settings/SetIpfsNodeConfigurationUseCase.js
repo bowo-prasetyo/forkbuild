@@ -1,4 +1,4 @@
-import { IpfsNodeConfiguration } from '../../core/IpfsNodeConfiguration.js';
+import { IpfsNodeConfiguration } from '../../core/networks/IpfsNodeConfiguration.js';
 import { IpfsNodeConfigurationStore } from '../../storage/IpfsNodeConfigurationStore.js';
 
 // IPFS Node Settings Write Use Case. Mirrors application/

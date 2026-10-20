@@ -1,4 +1,4 @@
-import { LogicalClock } from '../core/LogicalClock.js';
+import { LogicalClock } from '../core/collaboration/LogicalClock.js';
 
 // 0.2.97 — Shared World Ordering & Conflict Resolution.
 //
@@ -7,13 +7,13 @@ import { LogicalClock } from '../core/LogicalClock.js';
 //
 //   WorldCommandPropagationUseCase -> OperationOrdering -> ConflictResolver -> Command.execute()
 //
-// Owns exactly ONE core/LogicalClock.js per replica PROCESS — never per
+// Owns exactly ONE core/collaboration/LogicalClock.js per replica PROCESS — never per
 // World. A replica's sense of "how much have I seen" is global, the
 // same way a Lamport clock in any other system is a property of the
 // process, not of any one object it timestamps; every World this
 // replica ever broadcasts an operation for shares the SAME clock,
 // exactly like a single wall clock would if this milestone used one
-// (it deliberately does not — see core/LogicalClock.js's own header).
+// (it deliberately does not — see core/collaboration/LogicalClock.js's own header).
 //
 // Reduced to the only two questions application/
 // WorldCommandPropagationUseCase.js actually needs answered — this
@@ -39,7 +39,7 @@ export class WorldOperationOrdering {
     // incoming operation (see application/document/WorldCommandPropagationUseCase.js#
     // _handleIncoming()), BEFORE that operation is handed to
     // replication/WorldConflictResolver.js. Never mints a new value by
-    // itself — see core/LogicalClock.js#observe()'s own header.
+    // itself — see core/collaboration/LogicalClock.js#observe()'s own header.
     observeRemote(logicalClock) {
         this._clock.observe(logicalClock);
     }

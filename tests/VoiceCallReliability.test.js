@@ -7,8 +7,8 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { FriendRelationshipUseCase } from '../application/identity/FriendRelationshipUseCase.js';
 import { ChatUseCase } from '../application/chat/ChatUseCase.js';
 import { VoiceUseCase } from '../application/chat/VoiceUseCase.js';
-import { VoiceSessionState } from '../core/VoiceSessionState.js';
-import { VoiceCallEndReason } from '../core/VoiceCallEndReason.js';
+import { VoiceSessionState } from '../core/social/VoiceSessionState.js';
+import { VoiceCallEndReason } from '../core/social/VoiceCallEndReason.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
@@ -80,7 +80,7 @@ function waitForCallState(voiceUseCase, callId, targetStates, timeoutMs = 15000)
 }
 
 // Resolves with the `VoiceCallEndReason` this device's OWN call ended
-// with — see core/VoiceCallEndReason.js's own header on why this is
+// with — see core/social/VoiceCallEndReason.js's own header on why this is
 // always a LOCAL judgment, never something read off the wire.
 function waitForCallEnded(voiceUseCase, callId, timeoutMs = 15000) {
     return new Promise((resolve, reject) => {
@@ -262,7 +262,7 @@ async function makePairSuite(labelPrefix, { ringingTimeoutMs = 300, aliceAudio =
 async function runTests() {
 
 // ---------------------------------------------------------------------
-// 1. core/VoiceCallEndReason.js — a closed, ten-value vocabulary, never
+// 1. core/social/VoiceCallEndReason.js — a closed, ten-value vocabulary, never
 //    serialized onto the wire (structural only).
 // ---------------------------------------------------------------------
 {
@@ -272,7 +272,7 @@ async function runTests() {
         assert(values.includes(v), `includes ${v}`);
     }
     assert(Object.isFrozen(VoiceCallEndReason), 'the vocabulary is frozen');
-    console.log('✓ core/VoiceCallEndReason.js: closed, frozen, ten-value vocabulary');
+    console.log('✓ core/social/VoiceCallEndReason.js: closed, frozen, ten-value vocabulary');
 }
 
 // ---------------------------------------------------------------------

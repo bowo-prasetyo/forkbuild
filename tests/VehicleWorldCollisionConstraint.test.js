@@ -1,20 +1,20 @@
 import { readFile } from 'node:fs/promises';
-import { resolveHorizontalMovement, AVATAR_COLLISION_RADIUS } from '../core/AvatarCollision.js';
+import { resolveHorizontalMovement, AVATAR_COLLISION_RADIUS } from '../core/avatar/AvatarCollision.js';
 import { AvatarMovementConstraint } from '../application/avatar/AvatarMovementConstraint.js';
 import { AvatarTreeConstraint } from '../application/avatar/AvatarTreeConstraint.js';
 import { AvatarVehicleMovementController, isMovableVehicleType } from '../application/avatar/AvatarVehicleMovementController.js';
-import { VehicleInstance } from '../core/VehicleInstance.js';
-import { VehicleType } from '../core/VehicleType.js';
-import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
-import { treeCollisionGeometryInRegion } from '../core/TreeCollisionGeometry.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
-import { createAvatarVehicleMount } from '../core/AvatarVehicleMount.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { VehicleInstance } from '../core/vehicles/VehicleInstance.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
+import { resolveAvatarVehicleMovementCapability } from '../core/vehicles/AvatarVehicleMovementCapability.js';
+import { treeCollisionGeometryInRegion } from '../core/nature/TreeCollisionGeometry.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { vehiclePresenceInRegion } from '../core/vehicles/VehiclePlacement.js';
+import { createAvatarVehicleMount } from '../core/vehicles/AvatarVehicleMount.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
@@ -27,7 +27,7 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.119 — Vehicle–World Collision Constraint.
 //
-//   Section A: core/AvatarCollision.js — resolveHorizontalMovement()'s new
+//   Section A: core/avatar/AvatarCollision.js — resolveHorizontalMovement()'s new
 //              optional `radius` parameter
 //   Section B: application/avatar/AvatarMovementConstraint.js — apply()'s new
 //              optional `avatarRadius` option, against a REAL brick
@@ -45,7 +45,7 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 // Central architectural claim under test throughout: vehicle-vs-world
 // collision REUSES the avatar's own existing building/brick and tree
 // collision constraints, parameterized by the vehicle's own
-// capability.collisionRadius (core/AvatarVehicleMovementCapability.js,
+// capability.collisionRadius (core/vehicles/AvatarVehicleMovementCapability.js,
 // 0.9.88) — never a second collision system, never a rectangular or
 // oriented footprint, never vehicle-vs-vehicle collision. See
 // docs/Roadmap.md, 0.9.119.
@@ -113,7 +113,7 @@ function findRealVehicle() {
     const vehicles = vehiclePresenceInRegion(DEFAULT_WORLD_SEED, -500, -500, 500, 500);
     const vehicle = vehicles.find((v) => v.id === REAL_VEHICLE_ID);
     if (!vehicle) {
-        throw new Error(`Test fixture vehicle ${REAL_VEHICLE_ID} not found under DEFAULT_WORLD_SEED — has core/VehiclePlacement.js changed?`);
+        throw new Error(`Test fixture vehicle ${REAL_VEHICLE_ID} not found under DEFAULT_WORLD_SEED — has core/vehicles/VehiclePlacement.js changed?`);
     }
     return vehicle;
 }
@@ -176,7 +176,7 @@ async function sourceOf(relativePath) {
 
 async function runTests() {
     // -------------------------------------------------------------
-    // Section A — core/AvatarCollision.js: resolveHorizontalMovement()'s
+    // Section A — core/avatar/AvatarCollision.js: resolveHorizontalMovement()'s
     // new optional `radius`.
     // -------------------------------------------------------------
     {
@@ -464,7 +464,7 @@ async function runTests() {
         for (const path of [
             '../application/avatar/AvatarVehicleMovementController.js',
             '../application/avatar/AvatarMovementConstraint.js',
-            '../core/AvatarCollision.js'
+            '../core/avatar/AvatarCollision.js'
         ]) {
             const codeOnly = await sourceOf(path);
             for (const term of forbidden) {

@@ -1,17 +1,17 @@
 import { EventBus } from '../../core/events/EventBus.js';
 import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
-import { WorldAccessLevel } from '../../core/WorldAccessLevel.js';
+import { WorldAccessLevel } from '../../core/collaboration/WorldAccessLevel.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 import { CommandHistoryEvent } from '../events/CommandHistoryEvent.js';
-import { toDocumentOperationEnvelope } from '../../core/DocumentOperationEnvelope.js';
-import { CausalGapStatus } from '../../core/DocumentOperationCausalGapDetector.js';
-import { DocumentOperationProvenance } from '../../core/DocumentOperationProvenance.js';
+import { toDocumentOperationEnvelope } from '../../core/collaboration/DocumentOperationEnvelope.js';
+import { CausalGapStatus } from '../../core/collaboration/DocumentOperationCausalGapDetector.js';
+import { DocumentOperationProvenance } from '../../core/collaboration/DocumentOperationProvenance.js';
 import {
     DocumentOperationRecoveryMessageKind,
     toDocumentOperationRecoveryRequestMessage,
     toDocumentOperationRecoveryResponseMessage,
     isValidDocumentOperationRecoveryMessage
-} from '../../core/DocumentOperationRecoveryProtocol.js';
+} from '../../core/collaboration/DocumentOperationRecoveryProtocol.js';
 
 const OPERATION_RECEIVED_EVENT = 'DocumentOperationRecoveryOperationReceived';
 
@@ -70,7 +70,7 @@ const OPERATION_RECEIVED_EVENT = 'DocumentOperationRecoveryOperationReceived';
 // become a way to read operation contents out of a document the
 // requester couldn't otherwise submit edits to. If nothing requested is
 // known, or the requester isn't authorized, this replica sends no
-// RESPONSE at all — see `core/DocumentOperationRecoveryProtocol.js`'s own
+// RESPONSE at all — see `core/collaboration/DocumentOperationRecoveryProtocol.js`'s own
 // header on why there is no NOT_FOUND kind.
 //
 // Why only self-authored operations are ever served. This codebase's
@@ -110,7 +110,7 @@ const OPERATION_RECEIVED_EVENT = 'DocumentOperationRecoveryOperationReceived';
 //
 // 0.9.231 — RECOVERED provenance, named explicitly. `onOperationReceived()`
 // now fires a fifth argument, `provenance`, always
-// `DocumentOperationProvenance.RECOVERED` (`core/DocumentOperationProvenance.js`)
+// `DocumentOperationProvenance.RECOVERED` (`core/collaboration/DocumentOperationProvenance.js`)
 // — additive only, every pre-0.9.231 subscriber (reading just the first
 // four arguments) is unaffected. This exists to keep a subtle confusion
 // from ever creeping in: `DocumentOperationCausalGraph#isKnown()` becomes
@@ -120,7 +120,7 @@ const OPERATION_RECEIVED_EVENT = 'DocumentOperationRecoveryOperationReceived';
 // `application/editor/CommandHistory.js#getExecutedCommands()` remains the only
 // source of truth for what actually changed this replica's own document
 // state, and this class never adds an entry to it. See
-// `core/DocumentOperationProvenance.js`'s own header for the full
+// `core/collaboration/DocumentOperationProvenance.js`'s own header for the full
 // KNOWN/EXECUTED/RECOVERED vocabulary, and
 // `tests/DocumentOperationProvenance.test.js` for the observable-behavior
 // proof that recovering an operation never mutates document state, never
@@ -264,7 +264,7 @@ export class DocumentOperationRecoveryUseCase {
     // `DocumentCommandPropagationUseCase#onOperationReceived()` fires, on
     // purpose: see this file's own header, "Do not automatically apply,"
     // for why. `provenance` is the one addition, 0.9.231
-    // (`core/DocumentOperationProvenance.js`) — always
+    // (`core/collaboration/DocumentOperationProvenance.js`) — always
     // `DocumentOperationProvenance.RECOVERED`, since every operation this
     // feed ever fires for arrived through recovery, never execution. A
     // caller that only reads the first four arguments (every subscriber
@@ -333,7 +333,7 @@ export class DocumentOperationRecoveryUseCase {
     // boundary, independent of whatever the requester itself checked.
     // Silently sends nothing if the requester isn't authorized or if none
     // of the requested operationIds are known — see
-    // `core/DocumentOperationRecoveryProtocol.js`'s own header on why
+    // `core/collaboration/DocumentOperationRecoveryProtocol.js`'s own header on why
     // "not found" is never a message this protocol sends.
     _handleRequest({ documentId, operationIds }, meta) {
         const connectedPeer = meta && meta.connectedPeer;

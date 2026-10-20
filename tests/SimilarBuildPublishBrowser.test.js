@@ -1,7 +1,7 @@
 // @environment browser
 import { createApp, h, nextTick } from 'vue';
 import Toolbar from '../ui/components/Toolbar.js';
-import { License, LicenseId } from '../core/License.js';
+import { License, LicenseId } from '../core/document/License.js';
 import { setAppLocale } from '../ui/i18n/i18n.js';
 import en from '../ui/i18n/messages/en.js';
 import { assert } from './support/Assert.js';

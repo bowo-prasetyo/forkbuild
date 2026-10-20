@@ -1,16 +1,16 @@
 import * as THREE from 'three';
 import { makeWet, TERRAIN_WET } from './WetSurfaces.js';
-import { terrainHeightAt } from '../core/TerrainHeightField.js';
+import { terrainHeightAt } from '../core/nature/TerrainHeightField.js';
 import {
     hydrologyGroundColorAt, riverTintAt, withRiverTint, riverChannelDistanceAt, RIVER_CHANNEL_THRESHOLD
-} from '../core/Hydrology.js';
-import { ecologyGroundColorAt, groundCoverAt } from '../core/TerrainEcology.js';
-import { TERRAIN_TILE_SIZE, tileCenter } from '../core/TerrainTiling.js';
+} from '../core/nature/Hydrology.js';
+import { ecologyGroundColorAt, groundCoverAt } from '../core/nature/TerrainEcology.js';
+import { TERRAIN_TILE_SIZE, tileCenter } from '../core/nature/TerrainTiling.js';
 import { receiveShadows } from './ShadowRoles.js';
 import { makeSeasonalGround } from './SeasonalSurfaces.js';
 
-// The renderer-side counterpart to core/TerrainHeightField.js and
-// core/TerrainSurface.js: it knows nothing about WHAT elevation or
+// The renderer-side counterpart to core/nature/TerrainHeightField.js and
+// core/nature/TerrainSurface.js: it knows nothing about WHAT elevation or
 // surface a coordinate has, only how to turn one tile coordinate into a
 // displaced, colored-per-vertex Three.js mesh from those two pure
 // functions — the same split renderer/ThreeBrickFactory.js already
@@ -23,23 +23,23 @@ import { makeSeasonalGround } from './SeasonalSurfaces.js';
 // just above it. That is what keeps two neighboring tiles' shared edge
 // vertices the exact same color: both compute ecologyGroundColorAt() at
 // the identical world coordinate, independent of which tile happened to
-// stream in first. See core/TerrainSurface.js's own header.
+// stream in first. See core/nature/TerrainSurface.js's own header.
 //
-// 0.2.88 — samples core/TerrainEcology.js#ecologyGroundColorAt() rather
-// than core/TerrainSurface.js#surfaceColorAt() directly: the ecology
+// 0.2.88 — samples core/nature/TerrainEcology.js#ecologyGroundColorAt() rather
+// than core/nature/TerrainSurface.js#surfaceColorAt() directly: the ecology
 // layer starts from that exact same surfaceColorAt() result and adds a
 // BEACH sand tint or FIELD row tint on top for the two zones with a
 // genuinely distinct look, passing every other zone's color through
-// completely unchanged. See core/TerrainEcology.js's own header.
+// completely unchanged. See core/nature/TerrainEcology.js's own header.
 //
-// 0.2.89 — samples core/Hydrology.js#hydrologyGroundColorAt() instead,
+// 0.2.89 — samples core/nature/Hydrology.js#hydrologyGroundColorAt() instead,
 // the next layer up: it starts from that exact same ecologyGroundColorAt()
 // result and blends in a river tint on top, passing every other
 // coordinate through completely unchanged. Still surfaces flat lake
 // water as ordinary blue ground color here (unchanged from 0.2.79) —
 // renderer/WaterTileMesh.js is what gives a lake actual flat water-plane
 // geometry, layered as a separate streamed tile alongside this one. See
-// core/Hydrology.js's own header.
+// core/nature/Hydrology.js's own header.
 //
 // Deliberately untested directly, same posture as ThreeBrickFactory/
 // BrickRenderer/GridHelper/Lights — see
@@ -53,7 +53,7 @@ import { makeSeasonalGround } from './SeasonalSurfaces.js';
 // drift apart at a shared tile edge.
 export const TILE_SEGMENTS = 12; // vertices per edge = TILE_SEGMENTS + 1
 
-// A river's bed (core/TerrainHeightField.js#riverBedDepthAt()) is about six
+// A river's bed (core/nature/TerrainHeightField.js#riverBedDepthAt()) is about six
 // units across, narrower than two ground cells, so a tile a river runs
 // through is built RIVER_SUBDIVISIONS times finer each way, fine enough to
 // show the bed's bowl, and renderer/RiverTileMesh.js lays the river's water
@@ -84,7 +84,7 @@ export function tileHasRiverDetail(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE) {
 // `seasonSurfaces` (renderer/SeasonalSurfaces.js#createSeasonSurfaces()),
 // when given, colours its grass and fields for the season: every vertex
 // carries how much grass and how much field it is (`groundCover`,
-// core/TerrainEcology.js#groundCoverAt()).
+// core/nature/TerrainEcology.js#groundCoverAt()).
 export function buildTerrainTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE, wetSurfaces = null, seasonSurfaces = null) {
     const fine = tileHasRiverDetail(tx, tz, seed, tileSize);
     const segments = fine ? TILE_SEGMENTS * RIVER_SUBDIVISIONS : TILE_SEGMENTS;
@@ -134,10 +134,10 @@ export function buildTerrainTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE,
 }
 
 // Colours for a fine tile. Only the river's tint needs the fine grid; the
-// ground's own colour (core/TerrainEcology.js) is laid across it from the
+// ground's own colour (core/nature/TerrainEcology.js) is laid across it from the
 // ordinary grid's points, over the same triangles an ordinary tile draws,
 // so a fine tile looks like its neighbours away from the river and costs
-// little more than one to build. The tint (core/Hydrology.js#riverTintAt())
+// little more than one to build. The tint (core/nature/Hydrology.js#riverTintAt())
 // is sampled at every point, and only near a channel.
 function fineColors(tx, tz, seed, tileSize) {
     const spacing = tileSize / TILE_SEGMENTS;

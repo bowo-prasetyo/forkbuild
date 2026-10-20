@@ -1,11 +1,11 @@
 import { readFile } from 'node:fs/promises';
-import { resolveVehicleHeadingFromMovement } from '../core/VehicleMovementHeading.js';
+import { resolveVehicleHeadingFromMovement } from '../core/vehicles/VehicleMovementHeading.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.123 — Vehicle Orientation, core/VehicleMovementHeading.js.
+// 0.9.123 — Vehicle Orientation, core/vehicles/VehicleMovementHeading.js.
 //
 //   Section A: a cardinal-direction displacement produces the expected
-//              heading, matching core/AvatarMovementSimulation.js's own
+//              heading, matching core/avatar/AvatarMovementSimulation.js's own
 //              rotationY convention (0 = +Z, 90 = +X, 180 = -Z, 270 = -X)
 //   Section B: zero/degenerate displacement never invents a heading —
 //              previousHeading is returned unchanged
@@ -75,7 +75,7 @@ async function runTests() {
     // Section E — architectural regression
     // -------------------------------------------------------------
     {
-        const source = await readFile(new URL('../core/VehicleMovementHeading.js', import.meta.url), 'utf8');
+        const source = await readFile(new URL('../core/vehicles/VehicleMovementHeading.js', import.meta.url), 'utf8');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         const forbidden = [
             'VehicleInstance', 'VehicleRuntimeInstances', 'AvatarVehicleMovementController',
@@ -83,11 +83,11 @@ async function runTests() {
             'setTimeout', 'setInterval', 'requestAnimationFrame', 'Date.now', 'Math.random'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `16. core/VehicleMovementHeading.js's own code never references "${term}" — a pure geometry function, no domain or engine dependency`);
+            assert(!codeOnly.includes(term), `16. core/vehicles/VehicleMovementHeading.js's own code never references "${term}" — a pure geometry function, no domain or engine dependency`);
         }
-        const exportsModule = await import('../core/VehicleMovementHeading.js');
+        const exportsModule = await import('../core/vehicles/VehicleMovementHeading.js');
         assert(JSON.stringify(Object.keys(exportsModule).sort()) === JSON.stringify(['resolveVehicleHeadingFromMovement']),
-            '17. core/VehicleMovementHeading.js exports exactly the one pure function');
+            '17. core/vehicles/VehicleMovementHeading.js exports exactly the one pure function');
     }
 
     console.log('✅ All Vehicle Movement Heading tests passed.');

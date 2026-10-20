@@ -5,11 +5,11 @@ import { PlacementMeshRegistry } from '../renderer/PlacementMeshRegistry.js';
 import { PickingService } from '../renderer/PickingService.js';
 import { SelectionRenderer } from '../renderer/SelectionRenderer.js';
 import { StructurePreviewRenderer } from '../renderer/StructurePreviewRenderer.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { StructurePlacement } from '../core/StructurePlacement.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { StructurePlacement } from '../core/building/StructurePlacement.js';
 import { SelectionState } from '../application/editor-state/SelectionState.js';
 import { EventBus } from '../core/events/EventBus.js';
 import { EditorEvent } from '../core/events/EditorEvent.js';
@@ -19,8 +19,8 @@ import { StructurePreviewUseCase } from '../application/editor/StructurePreviewU
 import { CreateEditorContextUseCase } from '../application/editor/CreateEditorContextUseCase.js';
 import { TransformMath } from '../application/editor/TransformMath.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 

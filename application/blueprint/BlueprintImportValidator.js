@@ -1,4 +1,4 @@
-import { isValidTilt } from '../../core/BrickOrientation.js';
+import { isValidTilt } from '../../core/building/BrickOrientation.js';
 import { CURRENT_SCHEMA_VERSION, BLUEPRINT_KIND } from './BlueprintPackage.js';
 import {
     validateBlueprintAttributionPublication,
@@ -33,7 +33,7 @@ import { isNonBlankString } from '../../utils/typeGuards.js';
 // "A Blueprint Package Is Portable Data, Never A Live Dependency (0.4.6)."
 // Nothing here (or anywhere downstream of it) evaluates a field, runs a
 // script, or interprets a package as anything other than the plain
-// id/name/category/tags/description/bricks shape core/Structure.js
+// id/name/category/tags/description/bricks shape core/building/Structure.js
 // already defines.
 export class BlueprintPackageError extends Error {
     constructor(message) {
@@ -57,7 +57,7 @@ function validatePosition(position, index) {
     }
 }
 
-// registry: a BrickRegistry (core/BrickRegistry.js), used only to ask
+// registry: a BrickRegistry (core/building/BrickRegistry.js), used only to ask
 // `has(definitionId)` — the "supported brick definitions" check named in
 // this milestone's own design conversation. Optional so a caller that
 // genuinely has no registry available (a future headless validator, a

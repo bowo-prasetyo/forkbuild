@@ -1,9 +1,9 @@
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
@@ -17,16 +17,16 @@ import { WorldCommandPropagationUseCase, WorldOperationRejectionReason } from '.
 import { WorldMembershipUseCase } from '../application/identity/WorldMembershipUseCase.js';
 import { WorldPresenceUseCase } from '../application/presence/WorldPresenceUseCase.js';
 import { WorldAuthorizationService } from '../application/identity/WorldAuthorizationService.js';
-import { WorldAccessLevel } from '../core/WorldAccessLevel.js';
-import { WorldPresenceActivity, isValidWorldPresenceActivity } from '../core/WorldPresenceActivity.js';
+import { WorldAccessLevel } from '../core/collaboration/WorldAccessLevel.js';
+import { WorldPresenceActivity, isValidWorldPresenceActivity } from '../core/collaboration/WorldPresenceActivity.js';
 import {
     toWorldEditAuthorizationGrant,
     isValidWorldEditAuthorizationGrant,
     toWorldEditAuthorizationRevocation,
     isValidWorldEditAuthorizationRevocation,
     getWorldEditAuthorizationGrantSigningDescriptor
-} from '../core/WorldEditAuthorizationEnvelope.js';
-import { toWorldPresenceAdvertisement, isValidWorldPresenceAdvertisement } from '../core/WorldPresenceAdvertisement.js';
+} from '../core/collaboration/WorldEditAuthorizationEnvelope.js';
+import { toWorldPresenceAdvertisement, isValidWorldPresenceAdvertisement } from '../core/collaboration/WorldPresenceAdvertisement.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
@@ -40,7 +40,7 @@ import { assert } from './support/Assert.js';
 // collaborator model... not one this milestone quietly assumed into
 // existence." This file proves that gap is actually closed:
 //
-//   Section A: core/WorldEditAuthorizationEnvelope.js — the closed
+//   Section A: core/collaboration/WorldEditAuthorizationEnvelope.js — the closed
 //              GRANT/REVOCATION shapes in isolation.
 //   Section B: WorldMembershipUseCase constructor — every collaborator
 //              required.
@@ -53,7 +53,7 @@ import { assert } from './support/Assert.js';
 //              anything; Alice revokes Bob and BOTH his devices
 //              immediately lose EDIT, with no need to ever disconnect
 //              either.
-//   Section D: core/WorldPresenceActivity.js / core/WorldPresenceAdvertisement.js
+//   Section D: core/collaboration/WorldPresenceActivity.js / core/collaboration/WorldPresenceAdvertisement.js
 //              — closed vocabulary and wire shape in isolation.
 //   Section E: WorldPresenceUseCase FLAGSHIP — Alice sees Bob present
 //              with deviceCount growing as his second device joins,
@@ -167,7 +167,7 @@ function brickPosition(doc, buildingId, brickId) {
 async function runTests() {
 
 // ---------------------------------------------------------------------
-// Section A — core/WorldEditAuthorizationEnvelope.js
+// Section A — core/collaboration/WorldEditAuthorizationEnvelope.js
 // ---------------------------------------------------------------------
 {
     const grant = toWorldEditAuthorizationGrant({ worldDocumentId: 'world-1', subjectIdentityId: 'did:key:bob', grantingIdentityId: 'did:key:alice' });
@@ -179,7 +179,7 @@ async function runTests() {
     const revocation = toWorldEditAuthorizationRevocation({ worldDocumentId: 'world-1', subjectIdentityId: 'did:key:bob', grantingIdentityId: 'did:key:alice' });
     assert(isValidWorldEditAuthorizationRevocation(revocation), '5. a well-formed revocation validates');
     assert(isValidWorldEditAuthorizationRevocation({ ...revocation, grantingIdentityId: '' }) === false, '6. an empty grantingIdentityId is never valid');
-    console.log('✓ Section A: core/WorldEditAuthorizationEnvelope.js — closed GRANT/REVOCATION shapes, required fields');
+    console.log('✓ Section A: core/collaboration/WorldEditAuthorizationEnvelope.js — closed GRANT/REVOCATION shapes, required fields');
 }
 
 // ---------------------------------------------------------------------
@@ -343,7 +343,7 @@ async function runTests() {
 }
 
 // ---------------------------------------------------------------------
-// Section D — core/WorldPresenceActivity.js / core/WorldPresenceAdvertisement.js
+// Section D — core/collaboration/WorldPresenceActivity.js / core/collaboration/WorldPresenceAdvertisement.js
 // ---------------------------------------------------------------------
 {
     assert(isValidWorldPresenceActivity(WorldPresenceActivity.EDITING), '32. EDITING is a valid activity');
@@ -357,7 +357,7 @@ async function runTests() {
     const leave = toWorldPresenceAdvertisement({ worldDocumentId: 'world-1', present: false });
     assert(isValidWorldPresenceAdvertisement(leave), '37. a LEAVE (present: false) never needs a valid activity');
     assert(isValidWorldPresenceAdvertisement(null) === false, '38. null is never valid');
-    console.log('✓ Section D: core/WorldPresenceActivity.js / core/WorldPresenceAdvertisement.js — closed vocabulary, wire shape');
+    console.log('✓ Section D: core/collaboration/WorldPresenceActivity.js / core/collaboration/WorldPresenceAdvertisement.js — closed vocabulary, wire shape');
 }
 
 // ---------------------------------------------------------------------

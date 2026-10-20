@@ -1,6 +1,6 @@
-import { steemContentLocator } from '../../core/SteemContentManifest.js';
+import { steemContentLocator } from '../../core/networks/SteemContentManifest.js';
 import { OpenPublicationLinkOutcome, openPublicationLink } from '../publication/OpenPublicationLink.js';
-import { message } from '../../core/Message.js';
+import { message } from '../../core/app/Message.js';
 
 // Opening a Publication from its Steem post, by author and permlink: the
 // Steem case of application/publication/OpenPublicationLink.js.

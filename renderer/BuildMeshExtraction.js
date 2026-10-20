@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { BrickRenderer } from './BrickRenderer.js';
 import { ThreeBrickFactory } from './ThreeBrickFactory.js';
 
-// The triangles of some bricks, for a model file (core/BuildModelFormats.js):
+// The triangles of some bricks, for a model file (core/building/BuildModelFormats.js):
 // each brick's shape exactly as the Editor and World View draw it
 // (ThreeBrickFactory), moved and turned to where the brick stands, and
 // grouped by color. `bricks` are Bricks or anything shaped like one
@@ -31,7 +31,7 @@ export function extractBuildMeshes(bricks, registry, { factory = new ThreeBrickF
             if (!geometry.getAttribute('normal')) geometry.computeVertexNormals();
             geometries.set(definitionId, geometry);
         }
-        // Tilt then turn (Euler 'YXZ', core/BrickOrientation.js).
+        // Tilt then turn (Euler 'YXZ', core/building/BrickOrientation.js).
         rotation.setFromEuler(orientation.set(rotationX, rotationY, 0, 'YXZ'));
         matrix.compose(new THREE.Vector3(x, y, z), rotation, one);
         normalMatrix.getNormalMatrix(matrix);

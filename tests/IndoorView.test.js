@@ -2,11 +2,11 @@ import * as THREE from 'three';
 import {
     CUT_ABOVE_FEET, HEAD_HEIGHT, MIN_CAMERA_BACK, ceilingOver, clearCameraPosition, computeIndoorFraming,
     connectedBoxes, indoorCutaway, segmentEntersBox
-} from '../core/IndoorView.js';
+} from '../core/building/IndoorView.js';
 import { CutawayClipping } from '../renderer/CutawayClipping.js';
-import { brickAabb, resolveHorizontalMovement } from '../core/AvatarCollision.js';
-import { findBuildEntrance } from '../core/BuildEntrance.js';
-import { READY_MADE_RESIDENT_AUTHOR, isReadyMadeHome, readyMadeResidentHome } from '../core/ReadyMadeHome.js';
+import { brickAabb, resolveHorizontalMovement } from '../core/avatar/AvatarCollision.js';
+import { findBuildEntrance } from '../core/world/BuildEntrance.js';
+import { READY_MADE_RESIDENT_AUTHOR, isReadyMadeHome, readyMadeResidentHome } from '../core/building/ReadyMadeHome.js';
 import { CoreLibrary } from '../core/library/CoreLibrary.js';
 import { VillageLibrary } from '../core/library/VillageLibrary.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';

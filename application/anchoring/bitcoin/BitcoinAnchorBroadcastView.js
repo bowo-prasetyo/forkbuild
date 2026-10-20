@@ -1,5 +1,5 @@
 import { BitcoinAnchorBroadcastState } from './BitcoinAnchorBroadcastState.js';
-import { message } from '../../../core/Message.js';
+import { message } from '../../../core/app/Message.js';
 
 const STATE_LABELS = {
     [BitcoinAnchorBroadcastState.IDLE]: message('bitcoinAnchorBroadcast.notYetBroadcast'),

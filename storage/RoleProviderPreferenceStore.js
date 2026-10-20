@@ -1,7 +1,7 @@
 import { StorageProvider } from './StorageProvider.js';
 import { LocalStorageProvider } from './LocalStorageProvider.js';
-import { RoleProviderRole, isValidRoleProviderRole } from '../core/RoleProviderRole.js';
-import { RoleProviderPreference, isValidRoleProviderKey } from '../core/RoleProviderPreference.js';
+import { RoleProviderRole, isValidRoleProviderRole } from '../core/publication/RoleProviderRole.js';
+import { RoleProviderPreference, isValidRoleProviderKey } from '../core/publication/RoleProviderPreference.js';
 
 const ROLE_PROVIDER_PREFERENCE_STORE_KEY = 'role-provider-preference:by-role';
 
@@ -10,13 +10,13 @@ const ROLE_PROVIDER_PREFERENCE_STORE_KEY = 'role-provider-preference:by-role';
 // 0.9.293 deliberately left `RoleProviderPreference` unconsumed — "a real,
 // well-formed statement of what a user wants," constructible, comparable,
 // and serializable, but with no caller anywhere and no storage key of any
-// kind (see core/RoleProviderPreference.js's own header, "No persistence").
+// kind (see core/publication/RoleProviderPreference.js's own header, "No persistence").
 // This file is the direct, named answer to that restraint, and only that:
 // the seam that lets a `RoleProviderPreference` survive an application
 // restart, without making it operational.
 //
-//   core/RoleProviderRole.js          (0.9.293, unmodified)
-//   core/RoleProviderPreference.js    (0.9.293, unmodified)
+//   core/publication/RoleProviderRole.js          (0.9.293, unmodified)
+//   core/publication/RoleProviderPreference.js    (0.9.293, unmodified)
 //                    │
 //                    │   toJSON() / fromJSON() — the same plain-data
 //                    │   convenience every value object in this codebase
@@ -116,7 +116,7 @@ export class RoleProviderPreferenceStore {
     }
 
     // The RoleProviderPreference on file for `role`, re-hydrated through
-    // core/RoleProviderPreference.js's own constructor — never a plain
+    // core/publication/RoleProviderPreference.js's own constructor — never a plain
     // object, and never a record this class re-validates by any rule of
     // its own beyond what that constructor already enforces. Returns
     // `null` when nothing is on file for `role`, OR when what's on file

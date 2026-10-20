@@ -1,6 +1,6 @@
 import WorldDistributionDialog from './WorldDistributionDialog.js';
 import PublicationCommentaryRemoteCheck from './PublicationCommentaryRemoteCheck.js';
-import { createId } from '../../core/createId.js';
+import { createId } from '../../core/document/createId.js';
 import { resolveSavedProviderDefault } from '../../application/settings/SavedProviderDefaultChoice.js';
 // Most methods live in ./ownPublicationPanel/, grouped by concern.
 import { publicationActionMethods } from './ownPublicationPanel/publicationActionMethods.js';

@@ -3,14 +3,14 @@
 // remote-pinning form starts on it, with this visit's token if one was typed;
 // and a saved IPFS (Remote Pinning) Content preference places through it,
 // recording an ordinary IPFS placement, or says that no service is set up.
-import { IpfsRemotePinningSettings, isValidIpfsRemotePinningEndpoint } from '../core/IpfsRemotePinningSettings.js';
+import { IpfsRemotePinningSettings, isValidIpfsRemotePinningEndpoint } from '../core/networks/IpfsRemotePinningSettings.js';
 import { IpfsRemotePinningSettingsStore } from '../storage/IpfsRemotePinningSettingsStore.js';
 import { remotePinningDraftFromSettings, remotePinningConfigurationFromSettings } from '../application/ipfs/IpfsRemotePinningDraft.js';
 import { rememberIpfsRemotePublishingCredential } from '../application/ipfs/IpfsRemotePublishingCredentialMemory.js';
 import { SavedRemotePinningContentStore } from '../application/ipfs/SavedRemotePinningContentStore.js';
 import { backupEntryGroupOf, BackupEntryGroup } from '../application/backup/BackupEntryGroups.js';
-import { RoleProviderRole } from '../core/RoleProviderRole.js';
-import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
+import { RoleProviderRole } from '../core/publication/RoleProviderRole.js';
+import { RoleProviderPreference } from '../core/publication/RoleProviderPreference.js';
 import { RoleProviderPreferenceStore } from '../storage/RoleProviderPreferenceStore.js';
 import { RoleProviderResolutionStatus } from '../application/settings/RoleAwareProviderResolver.js';
 import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';

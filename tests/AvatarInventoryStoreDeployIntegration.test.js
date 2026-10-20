@@ -1,11 +1,11 @@
 import { AvatarVehicleInteractionController } from '../application/avatar/AvatarVehicleInteractionController.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { VehicleRuntimeInstances } from '../application/world/VehicleRuntimeInstances.js';
-import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
-import { Position } from '../core/Position.js';
-import { VehicleType } from '../core/VehicleType.js';
+import { vehiclePresenceInRegion } from '../core/vehicles/VehiclePlacement.js';
+import { Position } from '../core/document/Position.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
 import { AvatarInventoryStore } from '../application/avatar/AvatarInventoryStore.js';
-import { InventoryEntryKind, createAvatarInventoryEntry, emptyAvatarInventory, withEntryAdded } from '../core/AvatarInventory.js';
+import { InventoryEntryKind, createAvatarInventoryEntry, emptyAvatarInventory, withEntryAdded } from '../core/avatar/AvatarInventory.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.670 — Avatar Inventory (store/deploy) Runtime Integration.
@@ -60,7 +60,7 @@ function findVehicle(id) {
     const vehicles = vehiclePresenceInRegion(SEED, -300, -300, 300, 300);
     const vehicle = vehicles.find((v) => v.id === id);
     if (!vehicle) {
-        throw new Error(`Test fixture vehicle ${id} not found under seed ${SEED} — has core/VehiclePlacement.js changed?`);
+        throw new Error(`Test fixture vehicle ${id} not found under seed ${SEED} — has core/vehicles/VehiclePlacement.js changed?`);
     }
     return vehicle;
 }

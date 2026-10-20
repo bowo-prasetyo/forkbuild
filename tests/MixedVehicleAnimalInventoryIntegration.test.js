@@ -4,15 +4,15 @@ import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSessi
 import { AvatarInventoryStore } from '../application/avatar/AvatarInventoryStore.js';
 import { VehicleRuntimeInstances } from '../application/world/VehicleRuntimeInstances.js';
 import { AnimalRuntimeInstances } from '../application/world/AnimalRuntimeInstances.js';
-import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
-import { animalPresenceInRegion } from '../core/AnimalPlacement.js';
-import { Position } from '../core/Position.js';
-import { InventoryEntryKind } from '../core/AvatarInventory.js';
+import { vehiclePresenceInRegion } from '../core/vehicles/VehiclePlacement.js';
+import { animalPresenceInRegion } from '../core/nature/AnimalPlacement.js';
+import { Position } from '../core/document/Position.js';
+import { InventoryEntryKind } from '../core/avatar/AvatarInventory.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.700 — Mixed Vehicle/Animal Shared Inventory Integration.
 //
-// core/AvatarInventory.js's own header is explicit: "one avatar carries
+// core/avatar/AvatarInventory.js's own header is explicit: "one avatar carries
 // one backpack, vehicles and animals together." This is the ONE test
 // that actually proves it, end to end, through TWO real, independent
 // controllers sharing the SAME AvatarInventoryStore — never each

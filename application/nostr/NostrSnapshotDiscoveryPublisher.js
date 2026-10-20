@@ -1,5 +1,5 @@
-import { describeSnapshotDiscoveryEnvelope, SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../../core/SnapshotDiscoveryEnvelope.js';
-import { snapshotCellTag } from '../../core/NarrowDiscoveryTags.js';
+import { describeSnapshotDiscoveryEnvelope, SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../../core/publication/SnapshotDiscoveryEnvelope.js';
+import { snapshotCellTag } from '../../core/publication/NarrowDiscoveryTags.js';
 import { withTimeout } from '../../utils/withTimeout.js';
 
 const DEFAULT_RELAY_URL = 'wss://relay.damus.io';
@@ -41,9 +41,9 @@ const EVENT_ID_PATTERN = /^[0-9a-f]{64}$/i;
 // EXPLICITLY NOT A REUSE OF application/nostr/NostrPublicationDiscoveryPublisher.js
 // (0.9.46) — A DIFFERENT SEMANTIC CONTRACT, PER tests/
 // SnapshotDistributionBoundary.test.js's OWN POINT 4. That file announces a
-// `core/DecentralizedDiscoveryEnvelope.js` — a claim about which OBJECT
+// `core/publication/DecentralizedDiscoveryEnvelope.js` — a claim about which OBJECT
 // (a signed Publication, keyed by `objectId`) a uri is for. This file
-// announces a `core/SnapshotDiscoveryEnvelope.js` — a claim about which
+// announces a `core/publication/SnapshotDiscoveryEnvelope.js` — a claim about which
 // LOCATOR a `contentHash` is retrievable from, the identical
 // `contentHash`/`storage`/`locator` vocabulary `core/
 // PublicationSnapshotPlacement.js` (0.8.18) already uses for its own,
@@ -203,7 +203,7 @@ export class NostrSnapshotDiscoveryPublisher {
     //
     //   `publicationId`/`claimedPosition` (0.9.171, both optional) — a
     //   position claim explicitly bound to a Publication identity; see
-    //   `core/SnapshotDiscoveryEnvelope.js`'s own header. Omitting both
+    //   `core/publication/SnapshotDiscoveryEnvelope.js`'s own header. Omitting both
     //   publishes the identical envelope this file has always published.
     //   Supplying only one of the two fails validation and resolves to
     //   `null`, exactly like any other malformed candidate.

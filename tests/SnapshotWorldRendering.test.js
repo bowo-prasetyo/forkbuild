@@ -17,10 +17,10 @@ import { StoreSnapshotContentUseCase } from '../application/snapshot/materializa
 import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
-import { PlacementRecord } from '../core/PlacementRecord.js';
-import { Position } from '../core/Position.js';
+import { PlacementRecord } from '../core/publication/PlacementRecord.js';
+import { Position } from '../core/document/Position.js';
 import { Publication } from '../publisher/Publication.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
@@ -39,7 +39,7 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 //   THE INVESTIGATION THIS MILESTONE'S OWN BRIEF ASKED FOR, FIRST. "Does
 // WorldEncounterCanvas render an encounter from its World material
 // representation directly, or does it require an additional material/
-// runtime object?" — directly. `core/WorldEncounter.js#describeEncounterablePublication()`
+// runtime object?" — directly. `core/world/WorldEncounter.js#describeEncounterablePublication()`
 // (0.9.0) already builds a complete, drawable encounter row —
 // `{ objectId, title, publisherIdentity, isSigned, position, anchorCount,
 // placementCount }` — from nothing but a `Publication` and a placement's

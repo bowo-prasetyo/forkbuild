@@ -1,7 +1,7 @@
 import { Command } from './Command.js';
-import { Position } from '../../core/Position.js';
+import { Position } from '../../core/document/Position.js';
 import { descriptionFromJSON, descriptionToJSON } from './HistoryDescription.js';
-import { message } from '../../core/Message.js';
+import { message } from '../../core/app/Message.js';
 
 // Applies absolute post-gesture transforms for a selection as one atomic
 // history entry. Unlike incremental move/rotate commands, this preserves

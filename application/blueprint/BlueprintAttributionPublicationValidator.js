@@ -1,4 +1,4 @@
-import { BLUEPRINT_ATTRIBUTION_KIND, CURRENT_SCHEMA_VERSION } from '../../core/BlueprintAttribution.js';
+import { BLUEPRINT_ATTRIBUTION_KIND, CURRENT_SCHEMA_VERSION } from '../../core/building/BlueprintAttribution.js';
 import { isNonBlankString } from '../../utils/typeGuards.js';
 
 // 0.6.6 — Decentralized Blueprint Exchange.
@@ -18,12 +18,12 @@ import { isNonBlankString } from '../../utils/typeGuards.js';
 // shortcut for attributions specifically.
 //
 // Unlike application/placeNaming/PlaceNamingClaimPublication.js, THERE IS NO SEPARATE
-// envelope module here. core/BlueprintAttribution.js#toJSON() already
+// envelope module here. core/building/BlueprintAttribution.js#toJSON() already
 // carries its own `kind`/`schemaVersion` (that module's own 0.6.5 header
 // says as much: "free to include now and exactly what 0.6.6 will need") —
 // so the publication IS `attribution.toJSON()`, unwrapped, and this
 // validator checks exactly that shape. Reusing BLUEPRINT_ATTRIBUTION_KIND/
-// CURRENT_SCHEMA_VERSION straight from core/BlueprintAttribution.js rather
+// CURRENT_SCHEMA_VERSION straight from core/building/BlueprintAttribution.js rather
 // than redefining them here keeps there being exactly one place that owns
 // what "a current blueprint attribution" means.
 export class BlueprintAttributionPublicationError extends Error {

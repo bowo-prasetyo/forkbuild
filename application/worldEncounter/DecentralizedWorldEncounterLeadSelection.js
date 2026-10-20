@@ -46,7 +46,7 @@ import {
 //
 // A RENAMING SEAM, NEVER A SECOND RESOLUTION ALGORITHM. This file performs
 // no matching of its own — it never reads a lead's own `discoveryTag`/`uri`,
-// never imports `core/DecentralizedWorldEncounterLeadAssociation.js`, and
+// never imports `core/world/DecentralizedWorldEncounterLeadAssociation.js`, and
 // never touches `application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js`
 // directly. Both functions below do exactly one thing: adapt
 // `selectedEncounter` into 0.9.28's own `requestedMaterial` argument name,
@@ -61,7 +61,7 @@ import {
 // 0.9.28's own header, "`requestedMaterial` is `{ kind, objectId }` —
 // deliberately not a full `{ kind, objectId, origin }` selection identity"
 // — a decentralized lead's own provenance has never been part of the
-// local/peer `origin` vocabulary `core/WorldEncounterSelectionIdentity.js`
+// local/peer `origin` vocabulary `core/world/WorldEncounterSelectionIdentity.js`
 // names. This file accepts exactly 0.9.4's own `selectedEncounter` shape,
 // unmodified, and forwards only its `kind`/`objectId` fields onward (via
 // 0.9.28's own already-established validation, never re-validated here).
@@ -102,7 +102,7 @@ import {
 // DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
 // - **Producing, deriving, or validating association evidence of any
 //   kind.** See "evidence is supplied, never inferred," above — that
-//   remains `core/DecentralizedWorldEncounterLeadAssociation.js`'s (0.9.28)
+//   remains `core/world/DecentralizedWorldEncounterLeadAssociation.js`'s (0.9.28)
 //   and `application/worldEncounter/DecentralizedWorldEncounterLeadAssociationEvidenceIngress.js`'s
 //   (0.9.29) own job, unchanged.
 // - **Choosing one lead among an `AMBIGUOUS` result's own `candidates`.**

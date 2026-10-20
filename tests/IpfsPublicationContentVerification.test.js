@@ -14,7 +14,7 @@ import { assert } from './support/Assert.js';
 // IpfsGatewayContentStore.js` (0.8.66) — only its own network edge
 // (`fetchImpl`) is faked — and independently reports whether what the
 // gateway currently serves at that locator still hashes to the claimed
-// content identity, using the REAL `core/ContentReference.js#verify()`.
+// content identity, using the REAL `core/document/ContentReference.js#verify()`.
 //
 //   Section A: FLAGSHIP — a real gateway serving the original bytes ->
 //              HASH_MATCH

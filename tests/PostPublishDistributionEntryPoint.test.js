@@ -4,8 +4,8 @@ import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import { executePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommand.js';
 import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
 import { Publication } from '../publisher/Publication.js';
-import { ContentReference } from '../core/ContentReference.js';
-import { Signature } from '../core/Signature.js';
+import { ContentReference } from '../core/document/ContentReference.js';
+import { Signature } from '../core/publication/Signature.js';
 import { worldEncounterCanvasFiles, worldViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 

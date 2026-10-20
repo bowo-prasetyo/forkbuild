@@ -19,7 +19,7 @@ export const SnapshotWorldPlacementOutcome = Object.freeze({
     // Materialization succeeded, AND the Publication this Snapshot's bytes
     // belong to already has its own WorldPlacement — this replica's
     // pre-existing spatial authority for "where is this Publication in the
-    // World" (core/WorldPlacement.js, application/placement/PlacePublicationUseCase.js,
+    // World" (core/publication/WorldPlacement.js, application/placement/PlacePublicationUseCase.js,
     // both entirely unchanged by this milestone). The materialized
     // Snapshot's own World position is that SAME placement's own position,
     // borrowed verbatim — never recomputed, never a new spatial algorithm.

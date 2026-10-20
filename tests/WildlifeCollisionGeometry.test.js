@@ -2,14 +2,14 @@ import { readFile } from 'node:fs/promises';
 import {
     animalCollisionCircleFor, wildlifeCollisionGeometryInRegion,
     COLLISION_OBJECT_KIND, COLLISION_SHAPE, ANIMAL_COLLISION_RADIUS
-} from '../core/WildlifeCollisionGeometry.js';
-import { wildlifeInRegion, WILDLIFE_FEATURE_TYPE, ANIMAL_SPECIES } from '../core/WildlifeField.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+} from '../core/nature/WildlifeCollisionGeometry.js';
+import { wildlifeInRegion, WILDLIFE_FEATURE_TYPE, ANIMAL_SPECIES } from '../core/nature/WildlifeField.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
 import { assert } from './support/Assert.js';
 
-// Deterministic World Animal Collision Geometry, core/WildlifeCollisionGeometry.js
+// Deterministic World Animal Collision Geometry, core/nature/WildlifeCollisionGeometry.js
 // — the direct structural twin of tests/TreeCollisionGeometry.test.js,
-// applied to core/WildlifeField.js's own animal placement.
+// applied to core/nature/WildlifeField.js's own animal placement.
 //
 //   Section A: animalCollisionCircleFor() — per-animal, PER-SPECIES geometry derivation
 //   Section B: wildlifeCollisionGeometryInRegion() — determinism and
@@ -110,7 +110,7 @@ async function runTests() {
     // into movement, detection, response, or rendering
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../core/WildlifeCollisionGeometry.js', import.meta.url);
+        const sourceUrl = new URL('../core/nature/WildlifeCollisionGeometry.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -126,7 +126,7 @@ async function runTests() {
             'localStorage', 'StorageProvider', 'fetch(', 'WebSocket'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `21. core/WildlifeCollisionGeometry.js's own code never references "${term}" — geometry only, never movement/detection/response/rendering/persistence`);
+            assert(!codeOnly.includes(term), `21. core/nature/WildlifeCollisionGeometry.js's own code never references "${term}" — geometry only, never movement/detection/response/rendering/persistence`);
         }
     }
     {

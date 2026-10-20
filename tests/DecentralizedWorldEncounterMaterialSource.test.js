@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { DecentralizedWorldEncounterMaterialSource } from '../application/worldEncounter/DecentralizedWorldEncounterMaterialSource.js';
 import { WorldEncounterMaterialSource, loadWorldEncounterMaterial } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
-import { WorldEncounterKind } from '../core/WorldEncounter.js';
+import { WorldEncounterKind } from '../core/world/WorldEncounter.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.33 — Decentralized World Encounter Material Source.

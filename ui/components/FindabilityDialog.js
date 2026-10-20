@@ -3,7 +3,7 @@ import { t } from '../i18n/i18n.js';
 
 // Who can find it? Asked before this device's first publish
 // (ui/components/Toolbar.js): everyone, through a build note anyone's
-// ForkBuild reads (core/BuildNote.js), or only people sent the link. The
+// ForkBuild reads (core/publication/BuildNote.js), or only people sent the link. The
 // answer is kept for this device (application/settings/FindabilityStore.js)
 // and changed from the Publish notice. Emits choose(findability) or cancel.
 export default {

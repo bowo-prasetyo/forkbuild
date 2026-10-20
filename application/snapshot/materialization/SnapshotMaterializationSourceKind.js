@@ -46,7 +46,7 @@
 //                0.9.152) a person clicked "Materialize Selected Snapshot"
 //                on. Distinct from PLACEMENT the same way PLACEMENT is
 //                distinct from PACKAGE: a placement is a SIGNED claim
-//                (core/PublicationSnapshotPlacement.js); a Nostr-discovered
+//                (core/publication/PublicationSnapshotPlacement.js); a Nostr-discovered
 //                candidate carries no signature at all (see core/
 //                SnapshotDiscoveryEnvelope.js's own header, "a
 //                self-declared claim, never evidence") — its own bytes are

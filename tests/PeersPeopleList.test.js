@@ -1,6 +1,6 @@
 import { buildPeople, filterPeople } from '../ui/views/peerConnections/people.js';
 import { shortId } from '../ui/views/peerConnections/presentation.js';
-import { FriendshipState } from '../core/FriendshipState.js';
+import { FriendshipState } from '../core/social/FriendshipState.js';
 import { assert } from './support/Assert.js';
 
 // The Peers page's People list merges Known Peers, friendships and live

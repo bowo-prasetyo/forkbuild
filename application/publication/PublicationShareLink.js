@@ -1,16 +1,16 @@
-import { describePublicationClaimLocator, isNoteLinkPublicationId, linkOnlyPublicationViewUrl, linkPreviewUrl, noteLinkUrl, publicationShareUrl, FORKBUILD_APP_URL, FORKBUILD_LINK_PREVIEW_URL } from '../../core/ForkBuildAppLinks.js';
+import { describePublicationClaimLocator, isNoteLinkPublicationId, linkOnlyPublicationViewUrl, linkPreviewUrl, noteLinkUrl, publicationShareUrl, FORKBUILD_APP_URL, FORKBUILD_LINK_PREVIEW_URL } from '../../core/app/ForkBuildAppLinks.js';
 import { PublicationDistributionState } from './distribution/PublicationDistributionLifecycle.js';
-import { ContentReference } from '../../core/ContentReference.js';
+import { ContentReference } from '../../core/document/ContentReference.js';
 import { MAX_LINK_PAYLOAD_LENGTH, encodePublicationLinkPayload } from './sharing/PublicationLinkPayload.js';
-import { message } from '../../core/Message.js';
+import { message } from '../../core/app/Message.js';
 
 // Sharing a Publication with friends: the link that opens it in World View on
-// any device (core/ForkBuildAppLinks.js). Once the Publication is distributed,
+// any device (core/app/ForkBuildAppLinks.js). Once the Publication is distributed,
 // the link names where its Signed Claim was stored, as the distribution
 // lifecycle records it. Before that, a build small enough travels inside the
 // link itself (a link-only share), so sharing needs no network, wallet or
 // account anywhere. A build sent to everyone as a build note
-// (core/BuildNote.js) gets a short link instead, which names the note.
+// (core/publication/BuildNote.js) gets a short link instead, which names the note.
 
 export const ShareLinkKind = Object.freeze({
     NETWORK: 'network',
@@ -18,7 +18,7 @@ export const ShareLinkKind = Object.freeze({
     LINK_ONLY: 'link-only'
 });
 
-// The short link for `publicationId` (core/ForkBuildAppLinks.js, noteLinkUrl())
+// The short link for `publicationId` (core/app/ForkBuildAppLinks.js, noteLinkUrl())
 // when `findable` (it is known to be on the relays,
 // application/buildNotes/FindableBuildsStore.js), else null.
 export function shortShareUrl({ publicationId, findable, previewUrl = FORKBUILD_LINK_PREVIEW_URL }) {
@@ -34,7 +34,7 @@ export function shortShareUrl({ publicationId, findable, previewUrl = FORKBUILD_
 // `{ available: false, reason }` when no link reaches it. A distributed
 // Publication's network link comes first, then the short link, and the link
 // that carries the build last, as the longest. `reason`,
-// `hint`, `note` and `text` are messages (core/Message.js), and so is `title`
+// `hint`, `note` and `text` are messages (core/app/Message.js), and so is `title`
 // when the Publication has none; the UI hands the share functions below a copy
 // with them turned into text.
 export function describePublicationShare({ lifecycle, title = null, linkOnly = null, shortUrl = null }) {
@@ -67,7 +67,7 @@ export function describePublicationShare({ lifecycle, title = null, linkOnly = n
 
 // The link-only share for `publication` (a Publication, or its JSON), read
 // from `contentStore`: `{ url, payload, payloadLength, snapshotText }`
-// (`payload` also makes its embed code, core/ForkBuildAppLinks.js), or
+// (`payload` also makes its embed code, core/app/ForkBuildAppLinks.js), or
 // `{ reason, snapshotText }` (`reason` a message) when it can't be offered: unsigned, its
 // build not on this device (`snapshotText` then null), or too large for a
 // link. `snapshotText` is the build, for a picture of it. The link is
@@ -165,7 +165,7 @@ export async function copyPublicationShareLink(share, navigatorImpl = globalThis
     }
 }
 
-// Copies a build's embed code (core/ForkBuildAppLinks.js, embedCode()), as
+// Copies a build's embed code (core/app/ForkBuildAppLinks.js, embedCode()), as
 // copyPublicationShareLink() copies its link.
 export async function copyEmbedCode(code, navigatorImpl = globalThis.navigator) {
     if (typeof code !== 'string' || !code || typeof navigatorImpl?.clipboard?.writeText !== 'function') return 'unavailable';

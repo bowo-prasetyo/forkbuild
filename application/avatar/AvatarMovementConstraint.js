@@ -1,11 +1,11 @@
-import { brickAabb, resolveHorizontalMovement, AVATAR_COLLISION_RADIUS } from '../../core/AvatarCollision.js';
-import { brickCollisionBoxes } from '../../core/BrickPassage.js';
-import { WalkableSurfaceKind, walkableSurfaceKindFor } from '../../core/WalkableSurface.js';
+import { brickAabb, resolveHorizontalMovement, AVATAR_COLLISION_RADIUS } from '../../core/avatar/AvatarCollision.js';
+import { brickCollisionBoxes } from '../../core/building/BrickPassage.js';
+import { WalkableSurfaceKind, walkableSurfaceKindFor } from '../../core/building/WalkableSurface.js';
 import { TransformMath } from '../editor/TransformMath.js';
 
 // 0.2.42 — the application-layer half of avatar/world collision: this
 // class supplies "the world geometry currently available to this
-// replica," core/AvatarCollision.js supplies the pure math applied to
+// replica," core/avatar/AvatarCollision.js supplies the pure math applied to
 // it. See that file's own header for why the split exists at all.
 //
 // "Currently available" is load-bearing, not a performance shortcut —
@@ -34,7 +34,7 @@ import { TransformMath } from '../editor/TransformMath.js';
 // for collision as for everything else.
 //
 // Deliberately axis-aligned per-brick, ignoring `Brick.rotation` — the
-// same simplification core/AvatarCollision.js's own `brickAabb()`
+// same simplification core/avatar/AvatarCollision.js's own `brickAabb()`
 // documents; "start simple," per the design doc.
 //
 // 0.9.119 — Vehicle–World Collision Constraint. `apply()`/`_collectObstacles()`
@@ -46,7 +46,7 @@ import { TransformMath } from '../editor/TransformMath.js';
 // `resolveHorizontalMovement()`'s existing radius parameter and the
 // broad-phase distance cull to whatever radius a caller supplies.
 // Omitting it reproduces the exact pre-0.9.119 behavior, byte for
-// byte — see core/AvatarCollision.js's own 0.9.119 header.
+// byte — see core/avatar/AvatarCollision.js's own 0.9.119 header.
 const DEFAULT_QUERY_RADIUS = 12; // world units — see below
 
 export class AvatarMovementConstraint {
@@ -56,7 +56,7 @@ export class AvatarMovementConstraint {
     // STREAMING_RADIUS (150): "loaded" and "worth iterating every
     // single movement tick" are different concerns. A single tick can
     // move the avatar at most MAX_STEP_PER_TICK (2 world units —
-    // core/AvatarMovementSimulation.js); 12 leaves ample margin
+    // core/avatar/AvatarMovementSimulation.js); 12 leaves ample margin
     // without forcing every frame to walk every brick of every
     // streamed-in building, however far away.
     //
@@ -93,11 +93,11 @@ export class AvatarMovementConstraint {
     }
 
     // `position` — the avatar's position BEFORE this tick's movement.
-    // `desiredPosition` — where core/AvatarMovementSimulation.js's
+    // `desiredPosition` — where core/avatar/AvatarMovementSimulation.js's
     // pure kinematics would place it if nothing existed to collide
     // with. Y is trusted exactly as given back unchanged: vertical
     // ground/gravity stays entirely the simulation's own concern (see
-    // core/AvatarCollision.js's own header) — only X/Z are ever
+    // core/avatar/AvatarCollision.js's own header) — only X/Z are ever
     // constrained here.
     //
     // 0.3.2 — `supportHeight` (optional, the avatar's OWN current
@@ -118,7 +118,7 @@ export class AvatarMovementConstraint {
     // `avatarRadius` (0.9.119, optional) — the horizontal collision
     // radius of whatever body is actually moving this tick: `undefined`
     // (the walking avatar's own existing radius, via
-    // core/AvatarCollision.js's own default) when the caller omits it
+    // core/avatar/AvatarCollision.js's own default) when the caller omits it
     // entirely, or a mounted vehicle's own, larger
     // `AvatarVehicleMovementCapability#collisionRadius` when
     // application/avatar/AvatarVehicleMovementController.js supplies one — the
@@ -233,7 +233,7 @@ export class AvatarMovementConstraint {
 
     // The broad phase and the step exclusion ask about the brick as a whole
     // (its one enclosing box); what is pushed is what it collides as
-    // (core/BrickPassage.js): nothing for a standing door, the jambs and
+    // (core/building/BrickPassage.js): nothing for a standing door, the jambs and
     // lintel of a standing arch, and the whole box for every other brick.
     _pushBrickObstacles(obstacles, brick, definition, worldCenter, rotationDegrees, position, supportHeight, avatarRadius, canStep) {
         const worldAabb = brickAabb(worldCenter, definition, rotationDegrees, brick.tilt);
@@ -254,7 +254,7 @@ export class AvatarMovementConstraint {
     // below; whether any given tick's approach into it is actually
     // climbable is decided entirely by
     // application/avatar/AvatarStepConstraint.js's own PER-TICK height-delta
-    // check against core/WalkableSurface.js's real tread/ramp height
+    // check against core/building/WalkableSurface.js's real tread/ramp height
     // at the resolved (x, z) — see that class's own header. A
     // too-tall single-tick entry (e.g. walking straight at a stair's
     // own tall back face) is still genuinely blocked there, just
@@ -270,7 +270,7 @@ export class AvatarMovementConstraint {
     // — it must also not be a ceiling above the avatar's reach; the
     // plain `worldAabb.max.y - supportHeight` difference already
     // captures both directions symmetrically, matching
-    // core/BrickWalkability.js#isStepClimbable's own convention.
+    // core/building/BrickWalkability.js#isStepClimbable's own convention.
     _excludedByStep(worldAabb, definitionId, supportHeight, tilt = 0) {
         const shapeKind = walkableSurfaceKindFor(definitionId, tilt);
         if (shapeKind === WalkableSurfaceKind.STEP || shapeKind === WalkableSurfaceKind.SLOPE) {
@@ -285,7 +285,7 @@ export class AvatarMovementConstraint {
 // document whose OWN placement origin is far from the avatar but
 // whose bricks (built out from that origin) might still reach into
 // range. Deliberately generous rather than exact: this is a broad
-// phase, not the actual collision test — see core/AvatarCollision.js
+// phase, not the actual collision test — see core/avatar/AvatarCollision.js
 // for the real, precise geometry.
 //
 // Bug fix — was 64, which silently discarded an entire document's

@@ -1,9 +1,9 @@
-import { TurnServerConfiguration } from '../../core/TurnServerConfiguration.js';
+import { TurnServerConfiguration } from '../../core/networks/TurnServerConfiguration.js';
 import { TurnServerConfigurationStore } from '../../storage/TurnServerConfigurationStore.js';
 
 // 0.9.456 — TURN Server Configuration Write Seam.
 //
-// core/TurnServerConfiguration.js (0.9.454) gives a user's own TURN relay a
+// core/networks/TurnServerConfiguration.js (0.9.454) gives a user's own TURN relay a
 // validated shape; storage/TurnServerConfigurationStore.js (0.9.454) gives
 // it a durable home. Neither exposes a WRITE seam a settings view can call
 // without constructing a TurnServerConfiguration itself — the same missing
@@ -47,7 +47,7 @@ import { TurnServerConfigurationStore } from '../../storage/TurnServerConfigurat
 // NEVER LOGS, INSPECTS, OR RE-SHAPES THE CREDENTIAL. This class passes
 // `credential` straight through to `TurnServerConfiguration`'s own
 // constructor, and never itself reads `.credential` back off the
-// constructed instance — see core/TurnServerConfiguration.js's own header,
+// constructed instance — see core/networks/TurnServerConfiguration.js's own header,
 // "the credential is sensitive configuration," for the one narrow guarantee
 // that class holds and this one never weakens.
 export class SetTurnServerConfigurationUseCase {
@@ -68,7 +68,7 @@ export class SetTurnServerConfigurationUseCase {
     // NEVER A HISTORY" header). Returns the new, persisted
     // TurnServerConfiguration.
     //
-    // Throws for anything core/TurnServerConfiguration.js's own constructor
+    // Throws for anything core/networks/TurnServerConfiguration.js's own constructor
     // rejects (an empty/invalid url list, a stun: entry, an empty
     // username/credential, ...) — before this method ever calls `save()`.
     execute({ urls, username, credential } = {}) {

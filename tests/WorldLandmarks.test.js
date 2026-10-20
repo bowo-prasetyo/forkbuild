@@ -1,8 +1,8 @@
-import { World } from '../core/World.js';
-import { WorldLandmark } from '../core/WorldLandmark.js';
-import { Position } from '../core/Position.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { WorldLandmark } from '../core/world/WorldLandmark.js';
+import { Position } from '../core/document/Position.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
@@ -14,7 +14,7 @@ import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { WorldLocationDirectory, ORIGIN_LOCATION_ID } from '../application/world/WorldLocationDirectory.js';
-import { WorldLocationKind } from '../core/WorldLocationKind.js';
+import { WorldLocationKind } from '../core/world/WorldLocationKind.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
 import { CreateWorldLandmarkCommand } from '../application/commands/CreateWorldLandmarkCommand.js';
@@ -38,7 +38,7 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 async function run() {
     // -------------------------------------------------------------
-    // Section A: core/WorldLandmark.js
+    // Section A: core/world/WorldLandmark.js
     // -------------------------------------------------------------
     {
         const landmark = new WorldLandmark({
@@ -467,7 +467,7 @@ async function run() {
         assert(loadedLandmark.position.x === 75 && loadedLandmark.position.z === 125, '70. landmark position preserved');
     }
 
-    console.log('✓ Section A: core/WorldLandmark.js — value object, validation, mutation');
+    console.log('✓ Section A: core/world/WorldLandmark.js — value object, validation, mutation');
     console.log('✓ Section B: World.addWorldLandmark/getWorldLandmarks/removeWorldLandmark');
     console.log('✓ Section C: World.updateWorldLandmark');
     console.log('✓ Section D: World serialization with landmarks');

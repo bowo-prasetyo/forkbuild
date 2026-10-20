@@ -2,8 +2,8 @@ import { readFile } from 'node:fs/promises';
 import {
     WorldDiscoveryInputKeys,
     describeWorldDiscoverySource
-} from '../core/WorldDiscoverySource.js';
-import { deriveWorldEncounters } from '../core/WorldEncounter.js';
+} from '../core/world/WorldDiscoverySource.js';
+import { deriveWorldEncounters } from '../core/world/WorldEncounter.js';
 import { assert } from './support/Assert.js';
 
 function publicationOf(overrides = {}) {
@@ -119,7 +119,7 @@ function placementOf(overrides = {}) {
 // 6. Vocabulary boundary: no trust, network, or combination vocabulary
 // ---------------------------------------------------------------------
 {
-    const sourceUrl = new URL('../core/WorldDiscoverySource.js', import.meta.url);
+    const sourceUrl = new URL('../core/world/WorldDiscoverySource.js', import.meta.url);
     const source = await readFile(sourceUrl, 'utf8');
     const codeOnly = source
         .split('\n')
@@ -132,7 +132,7 @@ function placementOf(overrides = {}) {
         'fetch(', 'websocket', 'WebSocket', 'gossip', 'socket', 'StorageProvider'
     ];
     for (const term of forbidden) {
-        assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `core/WorldDiscoverySource.js code must never use the word "${term}"`);
+        assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `core/world/WorldDiscoverySource.js code must never use the word "${term}"`);
     }
 
     console.log('✓ Vocabulary boundary: no trust, network, or combination vocabulary');

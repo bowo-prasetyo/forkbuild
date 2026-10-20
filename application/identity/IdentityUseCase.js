@@ -1,6 +1,6 @@
 import { EventBus } from '../../core/events/EventBus.js';
-import { UserFacingError } from '../../core/UserFacingError.js';
-import { message } from '../../core/Message.js';
+import { UserFacingError } from '../../core/app/UserFacingError.js';
+import { message } from '../../core/app/Message.js';
 
 const IDENTITY_EVENT = 'IdentityChanged';
 const SESSION_EVENT = 'AuthenticationSessionChanged';

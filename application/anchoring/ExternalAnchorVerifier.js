@@ -1,11 +1,11 @@
-import { PublicationAnchor } from '../../core/PublicationAnchor.js';
+import { PublicationAnchor } from '../../core/publication/PublicationAnchor.js';
 import { validatePublicationAnchor } from './PublicationAnchorValidator.js';
 import { AnchorVerificationOutcome } from './AnchorVerificationOutcome.js';
 
 // 0.8.0 — Decentralized Publication Anchoring & External Evidence.
 // 0.8.1 — External Anchor Proof Adapters & Verification Registry.
 //
-// The one place this codebase checks a core/PublicationAnchor.js record.
+// The one place this codebase checks a core/publication/PublicationAnchor.js record.
 // Mirrors application/publication/PublicationResolver.js's own discipline — validate
 // the envelope, construct it, verify its signature, cross-check its
 // claims against what the caller already knows, never: retrieve/accept

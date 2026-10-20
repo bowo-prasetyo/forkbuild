@@ -1,12 +1,12 @@
 import { StorageProvider } from './StorageProvider.js';
 import { LocalStorageProvider } from './LocalStorageProvider.js';
-import { IceServerConfiguration, isValidStunUrl } from '../core/IceServerConfiguration.js';
+import { IceServerConfiguration, isValidStunUrl } from '../core/networks/IceServerConfiguration.js';
 
 const ICE_SERVER_CONFIGURATION_STORE_KEY = 'ice-server-configuration';
 
 // 0.9.386 — User-Configurable STUN Server Configuration Persistence.
 //
-// core/IceServerConfiguration.js (this same milestone, sibling file) gave a
+// core/networks/IceServerConfiguration.js (this same milestone, sibling file) gave a
 // user's own STUN server list a real, validated, immutable shape. This file
 // is the direct, named answer, mirroring `storage/
 // ArweaveGatewayConfigurationStore.js` / `storage/
@@ -14,7 +14,7 @@ const ICE_SERVER_CONFIGURATION_STORE_KEY = 'ice-server-configuration';
 // shape, same StorageProvider seam, same "absence stays meaningful" rule —
 // applied to a STUN server list instead of a single URL field.
 //
-//   core/IceServerConfiguration.js   (this milestone, unmodified by this
+//   core/networks/IceServerConfiguration.js   (this milestone, unmodified by this
 //        file — toJSON()/the constructor's own validation, reused verbatim)
 //                    │
 //                    ▼

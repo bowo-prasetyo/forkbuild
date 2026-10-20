@@ -1,8 +1,8 @@
-import { SpatialCell, DEFAULT_CELL_SIZE } from '../core/SpatialCell.js';
-import { SpatialIndexManifest } from '../core/SpatialIndexManifest.js';
-import { SpatialIndexRoot } from '../core/SpatialIndexRoot.js';
-import { ContentReference } from '../core/ContentReference.js';
-import { CausalStamp } from '../core/CausalStamp.js';
+import { SpatialCell, DEFAULT_CELL_SIZE } from '../core/world/SpatialCell.js';
+import { SpatialIndexManifest } from '../core/world/SpatialIndexManifest.js';
+import { SpatialIndexRoot } from '../core/world/SpatialIndexRoot.js';
+import { ContentReference } from '../core/document/ContentReference.js';
+import { CausalStamp } from '../core/collaboration/CausalStamp.js';
 
 // Turns authoritative PlacementRecords into immutable decentralized
 // index content (0.2.15).
@@ -18,7 +18,7 @@ import { CausalStamp } from '../core/CausalStamp.js';
 // As of 0.2.19 every signed rebuild also CHAINS onto the previous root
 // (previousRootReference) and advances the authority's own CausalStamp
 // — a verifiable history a consumer can walk backwards and a basis for
-// detecting equivocation (core/IndexEquivocation.js) — instead of each
+// detecting equivocation (core/world/IndexEquivocation.js) — instead of each
 // root being an unrelated, independently-signed snapshot. A full
 // build() and an incremental addOrUpdatePlacement() both continue the
 // SAME chain: a full rebuild is just another revision in an

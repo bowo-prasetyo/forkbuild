@@ -1,11 +1,11 @@
 import {
     AVATAR_COLLISION_RADIUS, AVATAR_COLLISION_HEIGHT,
     avatarAabbAt, brickAabb, translateAabb, aabbsOverlap, resolveHorizontalMovement
-} from '../core/AvatarCollision.js';
+} from '../core/avatar/AvatarCollision.js';
 import { AvatarMovementConstraint } from '../application/avatar/AvatarMovementConstraint.js';
 import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
-import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { AvatarAnimationState } from '../core/avatar/AvatarAnimationState.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
@@ -22,19 +22,19 @@ import { PlacePublicationUseCase } from '../application/placement/PlacePublicati
 import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
 import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { License, LicenseId } from '../core/License.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { License, LicenseId } from '../core/document/License.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
 // 0.2.42 — Avatar-World Collision & Movement Constraints.
 //
-//   Section A: core/AvatarCollision.js — pure geometry
+//   Section A: core/avatar/AvatarCollision.js — pure geometry
 //   Section B: application/avatar/AvatarMovementConstraint.js — supplies loaded-world geometry
 //   Section C: application/avatar/AvatarMovementController.js — collision wired into the movement pipeline
 //   Section D: WorldNavigationSession integration — loaded geometry only, never the whole world
@@ -42,7 +42,7 @@ import { assert } from './support/Assert.js';
 //
 // Central architectural claim under test throughout: collision is a
 // CONSTRAINT applied to movement, never a rewrite of the pure
-// kinematic simulation (core/AvatarMovementSimulation.js is untouched
+// kinematic simulation (core/avatar/AvatarMovementSimulation.js is untouched
 // this milestone), and the local avatar is constrained only by
 // collision geometry CURRENTLY AVAILABLE to this replica — never by
 // the entire decentralized world, published or not, loaded or not.
@@ -139,7 +139,7 @@ async function runTests() {
     const brickRegistry = new CreateBrickRegistryUseCase().execute();
 
     // -------------------------------------------------------------
-    // Section A — core/AvatarCollision.js: pure geometry
+    // Section A — core/avatar/AvatarCollision.js: pure geometry
     // -------------------------------------------------------------
     {
         const aabb = avatarAabbAt({ x: 5, y: 0, z: 5 });
@@ -235,7 +235,7 @@ async function runTests() {
         // Retreating: an obstacle the avatar is already flush against
         // must never block movement AWAY from it — only movement
         // heading TOWARD an obstacle should ever be constrained. See
-        // core/AvatarCollision.js's own comment on this exact edge
+        // core/avatar/AvatarCollision.js's own comment on this exact edge
         // case (the sweep check deliberately includes the origin, to
         // catch tunneling, which would otherwise also wrongly catch a
         // retreat from something already touched).

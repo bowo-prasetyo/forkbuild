@@ -1,6 +1,6 @@
 import { StorageProvider } from './StorageProvider.js';
 import { LocalStorageProvider } from './LocalStorageProvider.js';
-import { BlurtAnnouncingConfiguration } from '../core/BlurtAnnouncingConfiguration.js';
+import { BlurtAnnouncingConfiguration } from '../core/networks/BlurtAnnouncingConfiguration.js';
 
 const BLURT_ANNOUNCING_CONFIGURATION_STORE_KEY = 'blurt-announcing-configuration';
 

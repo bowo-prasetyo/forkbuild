@@ -1,11 +1,11 @@
 import * as THREE from 'three';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
 import { EventBus } from '../core/events/EventBus.js';
 import { EditorEvent } from '../core/events/EditorEvent.js';
-import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../core/TerrainHeightField.js';
+import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../core/nature/TerrainHeightField.js';
 import { editorFloorHeight } from '../renderer/EditorFloor.js';
 import { PickingService } from '../renderer/PickingService.js';
 import { PreviewRenderer } from '../renderer/PreviewRenderer.js';

@@ -8,7 +8,7 @@ import { NetworkWriterSettingsStore } from '../application/settings/NetworkWrite
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
-// Bitcoin's and Base's wallets are network writers (core/NetworkWriters.js,
+// Bitcoin's and Base's wallets are network writers (core/publication/NetworkWriters.js,
 // docs/Pillars.md "Networks: readers and writers"), rendered by real Vue: their
 // switches are on Network Settings under Show experimental tools, and the
 // Publications page offers a wallet only while its switch is on, pointing to

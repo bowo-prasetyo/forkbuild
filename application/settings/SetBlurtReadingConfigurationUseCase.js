@@ -1,4 +1,4 @@
-import { BlurtReadingConfiguration } from '../../core/BlurtReadingConfiguration.js';
+import { BlurtReadingConfiguration } from '../../core/networks/BlurtReadingConfiguration.js';
 import { BlurtReadingConfigurationStore } from '../../storage/BlurtReadingConfigurationStore.js';
 
 export class SetBlurtReadingConfigurationUseCase {

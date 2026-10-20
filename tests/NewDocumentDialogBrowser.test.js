@@ -3,7 +3,7 @@ import { createApp, nextTick } from 'vue';
 import NewDocumentDialog from '../ui/components/NewDocumentDialog.js';
 import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';
 import { FEATURED_STRUCTURE_IDS, featuredStructures } from '../application/home/FeaturedBuilds.js';
-import { message } from '../core/Message.js';
+import { message } from '../core/app/Message.js';
 import { t } from '../ui/i18n/i18n.js';
 import { assert } from './support/Assert.js';
 

@@ -1,8 +1,8 @@
 import { ref, computed, onMounted, onBeforeUnmount, inject, nextTick, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { FriendshipState } from '../../core/FriendshipState.js';
-import { VoiceSessionState } from '../../core/VoiceSessionState.js';
-import { VoiceCallEndReason } from '../../core/VoiceCallEndReason.js';
+import { FriendshipState } from '../../core/social/FriendshipState.js';
+import { VoiceSessionState } from '../../core/social/VoiceSessionState.js';
+import { VoiceCallEndReason } from '../../core/social/VoiceCallEndReason.js';
 import { errorText, t } from '../i18n/i18n.js';
 import I18nText from '../i18n/I18nText.js';
 
@@ -64,7 +64,7 @@ const VOICE_END_REASON_MESSAGE = Object.freeze({
 // this device's own "I looked" gesture — every mount and every incoming
 // message for this peer calls `peerPresenceUseCase.markRead()`, which
 // is a purely local, unsigned, never-transmitted note (see
-// core/ConversationReadMarker.js's own header on why this is never a
+// core/social/ConversationReadMarker.js's own header on why this is never a
 // read RECEIPT); the other participant has no way to observe it.
 //
 // 0.2.71 — the SAME "I looked" moment now ALSO calls
@@ -124,7 +124,7 @@ const VOICE_END_REASON_MESSAGE = Object.freeze({
 // to any other call once it reaches CONNECTING/ACTIVE — see
 // application/chat/VoiceUseCase.js's own 0.2.86 header, "Do Not Create A
 // Multi-Device VoiceSession."
-// The relationship's state (core/FriendshipState.js) in words.
+// The relationship's state (core/social/FriendshipState.js) in words.
 const FRIENDSHIP_STATE_KEYS = Object.freeze({
     [FriendshipState.NONE]: 'friendshipState.none',
     [FriendshipState.REQUESTED]: 'friendshipState.requested',
@@ -315,7 +315,7 @@ export default {
             try {
                 chatUseCase.sendOrQueue(peerIdentityId, draft.value);
                 draft.value = '';
-                // A kept side system used (core/SideSystemUse.js).
+                // A kept side system used (core/app/SideSystemUse.js).
                 funnel?.sentChat();
             } catch (e) {
                 sendError.value = errorText(e).replace(/^ChatUseCase:\s*/, '');

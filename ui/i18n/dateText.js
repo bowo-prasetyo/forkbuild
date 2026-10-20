@@ -1,6 +1,6 @@
 // Dates shown in the chosen language, for the helpers outside ui/ that
 // format a date for a person to read.
-import { formatPublicationDate } from '../../core/PublicationDateAmbiguity.js';
+import { formatPublicationDate } from '../../core/catalog/PublicationDateAmbiguity.js';
 import { intlLocale } from './i18n.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;

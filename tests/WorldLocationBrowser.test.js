@@ -1,10 +1,10 @@
-import { Position } from '../core/Position.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { License, LicenseId } from '../core/License.js';
+import { Position } from '../core/document/Position.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { License, LicenseId } from '../core/document/License.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
@@ -37,7 +37,7 @@ import { assert } from './support/Assert.js';
 //
 // 0.2.30: exploreLocation/exploreHere/whatsHere now return
 // { documents, diagnostics } rather than a bare array (see
-// core/DiscoveryDiagnosticsSummary.js) — every assertion below reads
+// core/world/DiscoveryDiagnosticsSummary.js) — every assertion below reads
 // `.documents` for the result list. No test in this file wires a
 // spatialDiscoveryProvider, so diagnostics.available is false
 // throughout; the trust-aware scenarios (available/complete/warnings/
@@ -137,7 +137,7 @@ async function runTests() {
     // 1. Explore an empty location — nowhere near anything fixtures
     //    placed. 0.2.30: exploreLocation now returns an envelope
     //    { documents, diagnostics } rather than a bare array — see
-    //    core/DiscoveryDiagnosticsSummary.js. No spatialDiscoveryProvider
+    //    core/world/DiscoveryDiagnosticsSummary.js. No spatialDiscoveryProvider
     //    is wired anywhere in this file, so diagnostics.available is
     //    false throughout — the honest "no trust layer consulted"
     //    default this milestone establishes for the plain local path.

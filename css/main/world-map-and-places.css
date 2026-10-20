@@ -208,7 +208,7 @@
 /* Regions are drawn broadest-first (see WorldMapPanel's own
    projectedRegions ordering) so a CONTINENT never visually buries a
    VILLAGE drawn inside it; tier only ever changes stroke/label
-   weight, never geometry — see core/WorldMapProjection.js's own header
+   weight, never geometry — see core/world/WorldMapProjection.js's own header
    on presentation tiers. */
 .world-map-region {
     fill: rgba(76, 175, 125, 0.08);

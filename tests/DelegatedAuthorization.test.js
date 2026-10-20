@@ -2,15 +2,15 @@
 // identity PLACE or MOVE on their behalf. Every signature here is a real
 // Ed25519 signature over a canonical envelope, checked with the key the
 // signer's did:key encodes; nothing a caller can write by hand passes.
-import { Delegation, DelegationAction } from '../core/Delegation.js';
-import { Signature } from '../core/Signature.js';
+import { Delegation, DelegationAction } from '../core/publication/Delegation.js';
+import { Signature } from '../core/publication/Signature.js';
 import { LocalDelegationResolver } from '../identity/LocalDelegationResolver.js';
 import { AuthorizationVerifier } from '../identity/AuthorizationVerifier.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { CreateDelegationUseCase } from '../application/identity/CreateDelegationUseCase.js';
 import { VerifyDelegationUseCase } from '../application/identity/VerifyDelegationUseCase.js';
-import { PlacementRecord } from '../core/PlacementRecord.js';
-import { Position } from '../core/Position.js';
+import { PlacementRecord } from '../core/publication/PlacementRecord.js';
+import { Position } from '../core/document/Position.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { makeIdentity } from './support/TestIdentity.js';
 import { assert } from './support/Assert.js';

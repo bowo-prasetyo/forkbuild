@@ -3,11 +3,11 @@ import {
     AvatarVehicleMovementController,
     isMovableVehicleType
 } from '../application/avatar/AvatarVehicleMovementController.js';
-import { VehicleInstance } from '../core/VehicleInstance.js';
-import { VehicleType } from '../core/VehicleType.js';
-import { VehicleSteeringIntent } from '../core/VehicleSteeringIntent.js';
-import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
-import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../core/TerrainHeightField.js';
+import { VehicleInstance } from '../core/vehicles/VehicleInstance.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
+import { VehicleSteeringIntent } from '../core/vehicles/VehicleSteeringIntent.js';
+import { resolveAvatarVehicleMovementCapability } from '../core/vehicles/AvatarVehicleMovementCapability.js';
+import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../core/nature/TerrainHeightField.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.116 — Mounted Vehicle Movement, application/avatar/AvatarVehicleMovementController.js.
@@ -183,7 +183,7 @@ async function runTests() {
         assert(lastResult.vehicleInstance.type === VehicleType.DRONE, '4j. the moved instance is still a DRONE, never silently re-typed');
         const finalPos = lastResult.vehicleInstance.position;
         const groundHeightAtFinalPos = terrainHeightAt(DEFAULT_WORLD_SEED, finalPos.x, finalPos.z);
-        assert(finalPos.y > groundHeightAtFinalPos + 1, '4k. a DRONE ridden forward for long enough is genuinely airborne — its own Y sits well above raw terrain height, hovering when moving, per core/AvatarDroneVerticalState.js');
+        assert(finalPos.y > groundHeightAtFinalPos + 1, '4k. a DRONE ridden forward for long enough is genuinely airborne — its own Y sits well above raw terrain height, hovering when moving, per core/avatar/AvatarDroneVerticalState.js');
     }
 
     // -------------------------------------------------------------
@@ -223,7 +223,7 @@ async function runTests() {
             });
         }
         assert(lastResult !== null, '6. sanity: a tracked, movable vehicle produces a result');
-        assert(lastResult.vehicleInstance.position.z > spawn.z, '7. forward intent (rotationY 0) increased Z — forward displacement, exactly as core/AvatarMovementSimulation.js already produces for the avatar');
+        assert(lastResult.vehicleInstance.position.z > spawn.z, '7. forward intent (rotationY 0) increased Z — forward displacement, exactly as core/avatar/AvatarMovementSimulation.js already produces for the avatar');
         assert(lastResult.vehicleInstance.position.x === spawn.x, '8. ...and never introduced any X drift with turnAxis === 0');
         assert(lastResult.vehicleInstance.spawnPosition.x === spawn.x && lastResult.vehicleInstance.spawnPosition.z === spawn.z,
             '9. spawnPosition is EXACTLY the original spawn point after 40 ticks of movement — 0.9.114\'s own withPosition() invariant, reused verbatim');
@@ -288,7 +288,7 @@ async function runTests() {
         // Diverge: one releases forward (plain coasting, decays at the
         // capability's own acceleration rate); the other explicitly
         // brakes (decays at the capability's own, strictly higher,
-        // braking rate — core/AvatarVehicleMovementCapability.js's own
+        // braking rate — core/vehicles/AvatarVehicleMovementCapability.js's own
         // BICYCLE_BRAKING > BICYCLE_ACCELERATION).
         for (let i = 0; i < 10; i++) {
             coastController.tick({ seed: DEFAULT_WORLD_SEED, vehicleId: 'vehicle:e1', capability: bicycleCapability, movementIntent: IDLE_INTENT, currentRotationY: 0, deltaSeconds: 0.05 });
@@ -521,7 +521,7 @@ async function runTests() {
             .filter((line) => !line.trim().startsWith('//'))
             .join('\n');
         assert(codeOnly.includes('simulateAvatarMovement'),
-            '22. reuses core/AvatarMovementSimulation.js\'s own simulateAvatarMovement() — never a duplicated kinematics implementation');
+            '22. reuses core/avatar/AvatarMovementSimulation.js\'s own simulateAvatarMovement() — never a duplicated kinematics implementation');
         for (const term of ['AvatarPresenceSession', 'THREE', 'renderer/', 'avatarPresenceSession.update', '.rotation.y =']) {
             assert(!codeOnly.includes(term),
                 `23. application/avatar/AvatarVehicleMovementController.js's own code never references "${term}" — it has no idea an AvatarPresence or a renderer exists; see application/world/WorldNavigationSession.js for where the vehicle's result is applied to the avatar`);

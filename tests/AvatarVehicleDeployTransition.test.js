@@ -1,11 +1,11 @@
-import { deriveAvatarVehicleDeployTransition } from '../core/AvatarVehicleDeployTransition.js';
-import { AvatarVehicleDeployIntent } from '../core/AvatarVehicleDeployIntent.js';
-import { createAvatarVehicleMount } from '../core/AvatarVehicleMount.js';
-import { emptyAvatarInventory, withEntryAdded, createAvatarInventoryEntry, InventoryEntryKind } from '../core/AvatarInventory.js';
-import { VehicleType } from '../core/VehicleType.js';
+import { deriveAvatarVehicleDeployTransition } from '../core/vehicles/AvatarVehicleDeployTransition.js';
+import { AvatarVehicleDeployIntent } from '../core/vehicles/AvatarVehicleDeployIntent.js';
+import { createAvatarVehicleMount } from '../core/vehicles/AvatarVehicleMount.js';
+import { emptyAvatarInventory, withEntryAdded, createAvatarInventoryEntry, InventoryEntryKind } from '../core/avatar/AvatarInventory.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.670 — Avatar Vehicle Deploy Transition, core/AvatarVehicleDeployTransition.js.
+// 0.9.670 — Avatar Vehicle Deploy Transition, core/vehicles/AvatarVehicleDeployTransition.js.
 //
 //   Section A: the one rule — not mounted + DEPLOY + a carried entry pops it
 //   Section B: every "nothing happens" branch returns the exact unchanged pair

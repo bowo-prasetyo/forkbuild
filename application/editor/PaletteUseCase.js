@@ -17,7 +17,7 @@ export class PaletteUseCase {
     }
 
     // Ordered [{ category, definitions }] — see
-    // core/BrickRegistry.js#groupByCategory().
+    // core/building/BrickRegistry.js#groupByCategory().
     getGroupedDefinitions() {
         return this._registry.groupByCategory();
     }

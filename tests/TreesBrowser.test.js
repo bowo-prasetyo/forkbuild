@@ -1,8 +1,8 @@
 // @environment browser
 import * as THREE from 'three';
-import { naturalFeaturesInRegion } from '../core/NaturalFeatureField.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
+import { naturalFeaturesInRegion } from '../core/nature/NaturalFeatureField.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { TERRAIN_TILE_SIZE } from '../core/nature/TerrainTiling.js';
 import { TreeForest, TREE_DETAIL } from '../renderer/TreeForest.js';
 import { createWetSurfaces, setWetness } from '../renderer/WetSurfaces.js';
 import { assert } from './support/Assert.js';

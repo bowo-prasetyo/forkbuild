@@ -1,11 +1,11 @@
-import { deriveAvatarAnimalReleaseTransition } from '../core/AvatarAnimalReleaseTransition.js';
-import { AvatarAnimalReleaseIntent } from '../core/AvatarAnimalReleaseIntent.js';
-import { emptyAvatarInventory, withEntryAdded, createAvatarInventoryEntry, InventoryEntryKind } from '../core/AvatarInventory.js';
-import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
-import { VehicleType } from '../core/VehicleType.js';
+import { deriveAvatarAnimalReleaseTransition } from '../core/avatar/AvatarAnimalReleaseTransition.js';
+import { AvatarAnimalReleaseIntent } from '../core/avatar/AvatarAnimalReleaseIntent.js';
+import { emptyAvatarInventory, withEntryAdded, createAvatarInventoryEntry, InventoryEntryKind } from '../core/avatar/AvatarInventory.js';
+import { ANIMAL_SPECIES } from '../core/nature/WildlifeField.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.700 — Avatar Animal Release Transition, core/AvatarAnimalReleaseTransition.js.
+// 0.9.700 — Avatar Animal Release Transition, core/avatar/AvatarAnimalReleaseTransition.js.
 //
 //   Section A: the one rule — RELEASE + at least one carried animal
 //              releases the resolved one

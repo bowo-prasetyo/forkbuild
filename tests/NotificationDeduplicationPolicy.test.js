@@ -9,14 +9,14 @@ import {
     PublicationCommentaryNotificationProducer,
     PUBLICATION_COMMENTED_EVENT_TYPE
 } from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
-import { NotificationEvent } from '../core/NotificationEvent.js';
+import { NotificationEvent } from '../core/social/NotificationEvent.js';
 import {
     NotificationCollisionOutcome,
     describeNotificationDeduplicationPolicy,
     notificationDeduplicationIdentity,
     haveSameNotificationDeduplicationIdentity,
     classifyNotificationCollision
-} from '../core/NotificationDeduplicationPolicy.js';
+} from '../core/social/NotificationDeduplicationPolicy.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { makeIdentity } from './support/TestIdentity.js';
 import { assert } from './support/Assert.js';
@@ -27,7 +27,7 @@ import { assert } from './support/Assert.js';
 // they characterized candidate dedup identities and collision outcomes
 // without ever writing an adopted answer down anywhere a real caller
 // could use it. This milestone is the first production consumer of
-// either audit's findings — `core/NotificationDeduplicationPolicy.js`,
+// either audit's findings — `core/social/NotificationDeduplicationPolicy.js`,
 // a pure, dependency-free module exposing exactly four functions:
 // `describeNotificationDeduplicationPolicy`,
 // `notificationDeduplicationIdentity`,
@@ -67,7 +67,7 @@ import { assert } from './support/Assert.js';
 //               invocation) from the identity model for good.
 //   Section K — Policy purity: no storage, provider, `NotificationEvent`
 //               mutation, time, random ID generation, or I/O anywhere in
-//               `core/NotificationDeduplicationPolicy.js`; deterministic
+//               `core/social/NotificationDeduplicationPolicy.js`; deterministic
 //               output for identical inputs; and no production file
 //               this milestone did not intend to touch was modified.
 //
@@ -520,17 +520,17 @@ async function runTests() {
     // -------------------------------------------------------------
     // Section K — Policy purity: no storage, provider, NotificationEvent
     // mutation, time, random ID generation, or I/O anywhere in
-    // core/NotificationDeduplicationPolicy.js; deterministic output for
+    // core/social/NotificationDeduplicationPolicy.js; deterministic output for
     // identical inputs; and no production file this milestone did not
     // intend to touch was modified.
     // -------------------------------------------------------------
     {
-        const policySource = readFileSync(new URL('../core/NotificationDeduplicationPolicy.js', import.meta.url), 'utf8');
+        const policySource = readFileSync(new URL('../core/social/NotificationDeduplicationPolicy.js', import.meta.url), 'utf8');
 
-        assert(!/^\s*import\s/m.test(policySource), 'K1. core/NotificationDeduplicationPolicy.js has zero imports — no storage, provider, or any other dependency');
+        assert(!/^\s*import\s/m.test(policySource), 'K1. core/social/NotificationDeduplicationPolicy.js has zero imports — no storage, provider, or any other dependency');
         const forbiddenTokens = ['Date.now(', 'new Date(', 'Math.random(', 'createId(', 'fetch(', 'require(', 'XMLHttpRequest', 'localStorage', 'setTimeout(', 'setInterval('];
         for (const token of forbiddenTokens) {
-            assert(!policySource.includes(token), `K2. core/NotificationDeduplicationPolicy.js contains no "${token}" — no time, randomness, or I/O of any kind`);
+            assert(!policySource.includes(token), `K2. core/social/NotificationDeduplicationPolicy.js contains no "${token}" — no time, randomness, or I/O of any kind`);
         }
 
         // Determinism / referential transparency: the same inputs
@@ -568,7 +568,7 @@ async function runTests() {
             'classify', 'classifyCollision'
         ];
         for (const name of forbiddenMethodNames) {
-            assert(typeof eventA[name] === 'undefined', `K7. NotificationEvent exposes no "${name}" — deduplication policy stays entirely external, in core/NotificationDeduplicationPolicy.js`);
+            assert(typeof eventA[name] === 'undefined', `K7. NotificationEvent exposes no "${name}" — deduplication policy stays entirely external, in core/social/NotificationDeduplicationPolicy.js`);
         }
 
         findings.policyPurityHolds = true;

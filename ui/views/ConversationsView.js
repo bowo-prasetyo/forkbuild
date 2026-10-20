@@ -1,5 +1,5 @@
 import { ref, onMounted, onBeforeUnmount, inject } from 'vue';
-import { FriendshipState } from '../../core/FriendshipState.js';
+import { FriendshipState } from '../../core/social/FriendshipState.js';
 import { t } from '../i18n/i18n.js';
 import I18nText from '../i18n/I18nText.js';
 

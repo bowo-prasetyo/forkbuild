@@ -18,7 +18,7 @@ import { createVerifiedPublisherResolver } from '../../application/publication/F
 import { Publication } from '../../publisher/Publication.js';
 import { NotificationEventStore } from '../../storage/NotificationEventStore.js';
 import { CompositeDiscoveryProvider } from '../../discovery/CompositeDiscoveryProvider.js';
-import { FriendshipState } from '../../core/FriendshipState.js';
+import { FriendshipState } from '../../core/social/FriendshipState.js';
 import { SharePublicationWithPeersUseCase } from '../../application/publication/sharing/SharePublicationWithPeersUseCase.js';
 import { RetrieveSharedPublicationUseCase } from '../../application/publication/sharing/RetrieveSharedPublicationUseCase.js';
 import { AutoRetrieveSharedPublicationsUseCase } from '../../application/publication/sharing/AutoRetrieveSharedPublicationsUseCase.js';
@@ -53,8 +53,8 @@ import { challengeDiscoveryWithBuildNotes, repositoryDiscoveryWithBuildNotes } f
 import { NetworkWriterSettingsStore } from '../../application/settings/NetworkWriterSettingsStore.js';
 import { NetworkWriterLoader } from './NetworkWriterLoader.js';
 import { followNetworkWriterSwitches } from './followNetworkWriterSwitches.js';
-import { isWritable } from '../../core/NetworkWriters.js';
-import { DEFAULT_ANNOUNCEMENT_DISCOVERY_PROVIDER } from '../../core/AnnouncementDiscoveryProvider.js';
+import { isWritable } from '../../core/publication/NetworkWriters.js';
+import { DEFAULT_ANNOUNCEMENT_DISCOVERY_PROVIDER } from '../../core/publication/AnnouncementDiscoveryProvider.js';
 import { SteemAnnouncingConfigurationStore } from '../../storage/SteemAnnouncingConfigurationStore.js';
 import { BlurtAnnouncingConfigurationStore } from '../../storage/BlurtAnnouncingConfigurationStore.js';
 import { ownIdentityIdsOf } from '../../application/document/DocumentImportPolicy.js';
@@ -474,7 +474,7 @@ export async function composeNetwork({ app, decentralizedPublicationDiscoveryPro
     app.provide('snapshotPlacementCreationCoordinator', snapshotPlacementCreationCoordinator);
     app.provide('preferredSnapshotPlacementCreationCoordinator', preferredSnapshotPlacementCreationCoordinator);
     app.provide('roleProviderPreferenceStore', roleProviderPreferenceStore);
-    // Network Settings' writer switches (core/NetworkWriters.js): which network
+    // Network Settings' writer switches (core/publication/NetworkWriters.js): which network
     // writers this device builds. Bitcoin's and Base's wallets are plugins, built
     // after the 'anchoring' group (ui/main.js), only when switched on. Steem's and
     // Blurt's share their readers' runtime: their switches decide what is offered
@@ -571,7 +571,7 @@ export async function composeNetwork({ app, decentralizedPublicationDiscoveryPro
     }
     app.provide('setRoleProviderPreferenceUseCase', setRoleProviderPreferenceUseCase);
     // The saved default networks, as seeds this device can write to: one naming
-    // Steem or Blurt with its writer switched off (core/NetworkWriters.js) seeds
+    // Steem or Blurt with its writer switched off (core/publication/NetworkWriters.js) seeds
     // Nostr instead. Read once, here, like the preferences themselves.
     const writableAnnouncementDiscoveryProvider = isWritable(resolvedAnnouncementDiscoveryProvider, networkWriterSettingsStore.get())
         ? resolvedAnnouncementDiscoveryProvider
@@ -739,7 +739,7 @@ export async function composeNetwork({ app, decentralizedPublicationDiscoveryPro
         isKnown: repositoryNetworkDiscoveryIsKnown,
         admit: repositoryNetworkDiscoveryAdmit
     });
-    // Builds others sent to everyone as build notes (core/BuildNote.js), found
+    // Builds others sent to everyone as build notes (core/publication/BuildNote.js), found
     // beside what the other networks hold, and this device's own sent the same
     // way when its builder chose so (application/settings/FindabilityStore.js).
     const challengeEntryLog = new ChallengeEntryLog(new LocalStorageProvider());
@@ -760,7 +760,7 @@ export async function composeNetwork({ app, decentralizedPublicationDiscoveryPro
     app.provide('publishBuildNoteUseCase', publishBuildNoteUseCase);
     app.provide('buildNoteDiscovery', buildNoteDiscovery);
     app.provide('repositoryNetworkDiscovery', repositoryDiscoveryWithBuildNotes(repositoryNetworkDiscovery, buildNoteDiscovery));
-    // A week's challenge entries (core/BuildChallenge.js): found under the week's
+    // A week's challenge entries (core/challenge/BuildChallenge.js): found under the week's
     // `forkbuild-tag:` tag on Nostr and Arweave, and by the tags Blurt build posts
     // list, when the challenge page opens,
     // verified and admitted as the Repository's own discovery does.

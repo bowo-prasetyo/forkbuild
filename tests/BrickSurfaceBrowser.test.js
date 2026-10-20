@@ -1,6 +1,6 @@
 // @environment browser
 import * as THREE from 'three';
-import { BrickSurface } from '../core/BrickSurface.js';
+import { BrickSurface } from '../core/building/BrickSurface.js';
 import { ThreeBrickFactory } from '../renderer/ThreeBrickFactory.js';
 import { BrickInstanceRegistry } from '../renderer/BrickInstanceRegistry.js';
 import { applyBrickSurface, withBrickBounds } from '../renderer/BrickSurfaceMaterial.js';

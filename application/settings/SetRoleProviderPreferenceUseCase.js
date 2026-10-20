@@ -1,5 +1,5 @@
-import { isValidRoleProviderRole } from '../../core/RoleProviderRole.js';
-import { RoleProviderPreference } from '../../core/RoleProviderPreference.js';
+import { isValidRoleProviderRole } from '../../core/publication/RoleProviderRole.js';
+import { RoleProviderPreference } from '../../core/publication/RoleProviderPreference.js';
 import { RoleProviderPreferenceStore } from '../../storage/RoleProviderPreferenceStore.js';
 
 // 0.9.302 — Content Provider Preference Settings Entry Point.
@@ -29,7 +29,7 @@ import { RoleProviderPreferenceStore } from '../../storage/RoleProviderPreferenc
 // does exactly three things, in this order, and nothing else: (1) checks
 // `role` is one of the closed RoleProviderRole values, (2) constructs a
 // RoleProviderPreference — which itself is what actually validates
-// `providerKey`'s SHAPE (core/RoleProviderPreference.js's own
+// `providerKey`'s SHAPE (core/publication/RoleProviderPreference.js's own
 // `isValidRoleProviderKey()`; this class re-implements none of that
 // check), (3) saves it, and returns the persisted instance. It never:
 //
@@ -76,7 +76,7 @@ export class SetRoleProviderPreferenceUseCase {
     // persisted RoleProviderPreference.
     //
     // Throws for `role` outside the closed RoleProviderRole vocabulary, or
-    // for a `providerKey` whose SHAPE core/RoleProviderPreference.js's own
+    // for a `providerKey` whose SHAPE core/publication/RoleProviderPreference.js's own
     // constructor rejects (not a string, empty, wrong casing, ...) — both
     // are programming errors, the identical split
     // ResolvePreferredRoleProviderUseCase.js's own header already draws

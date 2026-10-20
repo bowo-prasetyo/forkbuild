@@ -1,5 +1,5 @@
-import { computeNearbyAvatars } from '../core/AvatarProximity.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { computeNearbyAvatars } from '../core/avatar/AvatarProximity.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
@@ -7,14 +7,14 @@ import { WorldNavigationSession } from '../application/world/WorldNavigationSess
 import { LocalAvatarPresenceBroadcastProvider } from '../presence/LocalAvatarPresenceBroadcastProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
-import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
+import { AvatarAnimationState } from '../core/avatar/AvatarAnimationState.js';
 import { SpatialSelectionState } from '../application/spatial-state/SpatialSelectionState.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
 // 0.2.43 — Avatar-Avatar Proximity & Interaction Targets.
 //
-//   Section A: core/AvatarProximity.js — pure computation
+//   Section A: core/avatar/AvatarProximity.js — pure computation
 //   Section B: WorldNavigationSession.getNearbyAvatars()
 //   Section C: WorldNavigationSession.getAvatarDisplayName()
 //   Section D: WorldNavigationSession.targetAvatar()
@@ -90,7 +90,7 @@ async function runTests() {
     const brickRegistry = new CreateBrickRegistryUseCase().execute();
 
     // -------------------------------------------------------------
-    // Section A — core/AvatarProximity.js: pure computation
+    // Section A — core/avatar/AvatarProximity.js: pure computation
     // -------------------------------------------------------------
     {
         const result = computeNearbyAvatars({ localPosition: { x: 0, y: 0, z: 0 }, knownPresences: [], radius: 10 });

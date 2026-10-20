@@ -1,8 +1,8 @@
-import { getAvatarPresenceSigningDescriptor } from '../../core/AvatarPresenceAdvertisement.js';
+import { getAvatarPresenceSigningDescriptor } from '../../core/avatar/AvatarPresenceAdvertisement.js';
 
 // 0.2.38 — the ONE place a local advertisement gains a real Ed25519
 // signature before it ever reaches a transport. Deliberately NOT
-// inside core/AvatarPresenceAdvertisement.js itself (a private
+// inside core/avatar/AvatarPresenceAdvertisement.js itself (a private
 // signing key must never be reachable from core/ — see
 // identity/LocalIdentityProvider.js, the only thing that ever touches
 // one) and NOT a mutation of the advertisement that already exists —
@@ -16,7 +16,7 @@ import { getAvatarPresenceSigningDescriptor } from '../../core/AvatarPresenceAdv
 // simply returns the advertisement UNCHANGED. This is what keeps
 // presence signing "optional" at the wire level, per the design doc's
 // own instruction not to make signatures mandatory — see
-// core/PresenceTrustPolicy.js for how a RECEIVER decides whether to
+// core/avatar/PresenceTrustPolicy.js for how a RECEIVER decides whether to
 // tolerate that.
 export function signAvatarPresenceAdvertisement(advertisement, identityProvider) {
     if (!identityProvider

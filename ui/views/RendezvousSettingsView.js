@@ -6,7 +6,7 @@ import { t } from '../i18n/i18n.js';
 // 0.9.388 — Rendezvous Settings UI.
 //
 // The missing user-facing seam over this same milestone's own
-// configuration boundary (core/RendezvousConfiguration.js + storage/
+// configuration boundary (core/networks/RendezvousConfiguration.js + storage/
 // RendezvousConfigurationStore.js) — the direct structural mirror of
 // ui/views/StunSettingsView.js (0.9.386), applied to a list of rendezvous
 // server URLs instead of a list of STUN server entries, at its own

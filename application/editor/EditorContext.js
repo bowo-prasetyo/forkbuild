@@ -79,7 +79,7 @@ export class EditorContext {
         this._activeBrick = new ActiveBrickState(this._activeBrick.definitionId, color);
     }
 
-    // Where one brick is meant to go (a starter job's roof, core/StarterJob.js):
+    // Where one brick is meant to go (a starter job's roof, core/challenge/StarterJob.js):
     // `{ definitionId, position, radius }`, or null. While that brick is the
     // one being placed, PlacementTool puts its ghost there whenever the
     // pointer is within `radius` of it. Transient, like everything here.

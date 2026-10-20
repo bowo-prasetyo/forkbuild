@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { Position } from '../core/Position.js';
+import { Position } from '../core/document/Position.js';
 import { CameraState } from './CameraState.js';
 
 const DEFAULT_FOV = 60;

@@ -202,12 +202,12 @@ which looked like a developer's tool and read as a parcel at tab size.
 Bricks look like what they are made of (2026-10-13): a soft dark line
 along every brick's edges, a slight shade of its own, and the grain of its
 surface, masonry courses, plaster, wood, roof tiles, glass, leaves or rough
-stone (core/BrickSurface.js). A plain block is read by its colour: grass
+stone (core/building/BrickSurface.js). A plain block is read by its colour: grass
 green is grass, pale sand smooth, dark brown timber, the rest laid in
 courses. The brick's colour still decides its colour.
 
 Music plays softly under the world's sounds (2026-10-13): a gentle tune
-made up as it goes from a seed (core/MusicScore.js), a music-box melody over
+made up as it goes from a seed (core/app/MusicScore.js), a music-box melody over
 a warm pad and a round bass, synthesized like every other sound, so nothing
 is downloaded. It has three moods: the Editor's a little lively, World
 View's warm by day and slow and low after dark. Pieces end in quiet spells,
@@ -270,7 +270,7 @@ newcomers stop (`node scripts/launch-scorecard.mjs` prints them first).
 
 ### The numbers to reach
 
-Each question has a number, read over one week (core/LaunchTargets.js holds
+Each question has a number, read over one week (core/app/LaunchTargets.js holds
 them; `node scripts/launch-scorecard.mjs <counts>` prints a week's against
 them, from GoatCounter's export or a list of totals). Below its minimum, a
 number is "too few to say" rather than met or missed.
@@ -296,7 +296,7 @@ target says where to look next, not that a feature failed: a small median
 build points at the kit and the guided first build, few second builds at
 what brings a builder back, few copies per opened link at the shared link's
 **Edit a Copy**. The numbers are a first guess for launch; change them here
-and in core/LaunchTargets.js together, with the reason in the roadmap.
+and in core/app/LaunchTargets.js together, with the reason in the roadmap.
 
 ## The side systems
 
@@ -304,11 +304,11 @@ Catching and decorating with animals, the inventory, swimming, chat, voice
 and the public lobby serve no pillar directly, and the reviews of 2026-10-11
 and 2026-10-12 asked for a decision on each. The owner's decision
 (2026-10-12): **keep them, and watch them.** Each is counted when used, at
-most once a page load (core/SideSystemUse.js; `/e/swam`, `/e/animal-caught`,
+most once a page load (core/app/SideSystemUse.js; `/e/swam`, `/e/animal-caught`,
 `/e/animal-decorated`, `/e/inventory-used`, `/e/chat-sent`, `/e/voice-call`,
 `/e/lobby-joined`), and scripts/launch-scorecard.mjs shows what share of
 visits used each: World View visits for the first four, daily visits for the
-rest (core/LaunchTargets.js, `SIDE_SYSTEMS`). One that fewer than 2% of
+rest (core/app/LaunchTargets.js, `SIDE_SYSTEMS`). One that fewer than 2% of
 visits use, once 50 World View visits or 100 daily visits are counted, is
 flagged **rarely used**, and the owner looks at it again: fold it into
 building, move it under Advanced, or remove it. Until then they stay frozen

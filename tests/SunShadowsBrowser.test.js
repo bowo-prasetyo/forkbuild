@@ -6,9 +6,9 @@ import { receiveShadows } from '../renderer/ShadowRoles.js';
 import { BrickInstanceRegistry } from '../renderer/BrickInstanceRegistry.js';
 import { BrickRenderer } from '../renderer/BrickRenderer.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { DAY } from '../core/DayCycle.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { DAY } from '../core/nature/DayCycle.js';
 import { assert } from './support/Assert.js';
 
 // The sun's and the moon's shadows, drawn with real WebGL

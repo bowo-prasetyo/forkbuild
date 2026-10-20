@@ -1,4 +1,4 @@
-import { createId } from '../../../core/createId.js';
+import { createId } from '../../../core/document/createId.js';
 import { sanitizeDistributionErrorMessage } from '../../../application/publication/distribution/DistributionErrorMessageSanitizer.js';
 import { errorText, t } from '../../i18n/i18n.js';
 

@@ -1,4 +1,4 @@
-import { Document } from '../../core/Document.js';
+import { Document } from '../../core/document/Document.js';
 import { CommandHistory } from '../editor/CommandHistory.js';
 
 // WorldNavigationSession document history: the timeline, restoring a past

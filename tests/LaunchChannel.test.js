@@ -1,9 +1,9 @@
-// Counting which launch post a visit came through (core/LaunchChannel.js,
+// Counting which launch post a visit came through (core/app/LaunchChannel.js,
 // application/settings/CountLaunchChannel.js): only a listed `?ref=` value,
 // only under the visitor count's rules, as its own fixed path; and the
 // parameter taken out of the address.
-import { LAUNCH_CHANNELS, addressWithoutLaunchChannel, launchChannelHitUrl, launchChannelOf } from '../core/LaunchChannel.js';
-import { VISITOR_COUNT_SITE_ORIGIN } from '../core/VisitorCount.js';
+import { LAUNCH_CHANNELS, addressWithoutLaunchChannel, launchChannelHitUrl, launchChannelOf } from '../core/app/LaunchChannel.js';
+import { VISITOR_COUNT_SITE_ORIGIN } from '../core/app/VisitorCount.js';
 import { countLaunchChannel } from '../application/settings/CountLaunchChannel.js';
 import { assert } from './support/Assert.js';
 

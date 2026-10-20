@@ -7,14 +7,14 @@ import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
 import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
 import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
 
-import { AvatarProfile } from '../core/AvatarProfile.js';
+import { AvatarProfile } from '../core/avatar/AvatarProfile.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { PresenceSyncService } from '../application/presence/PresenceSyncService.js';
 import { LocalPresenceStore } from '../application/presence/LocalPresenceStore.js';
 import { RemoteAvatarRegistry } from '../application/avatar/RemoteAvatarRegistry.js';
-import { toAvatarPresenceAdvertisement } from '../core/AvatarPresenceAdvertisement.js';
+import { toAvatarPresenceAdvertisement } from '../core/avatar/AvatarPresenceAdvertisement.js';
 import { PeerAvatarPresenceBroadcastProvider } from '../presence/PeerAvatarPresenceBroadcastProvider.js';
-import { computeNearbyAvatars } from '../core/AvatarProximity.js';
+import { computeNearbyAvatars } from '../core/avatar/AvatarProximity.js';
 
 import { describeLifecycleState as describeLifecycleStateMessage, describeTrustStatus as describeTrustStatusMessage, describeAnimationState as describeAnimationStateMessage } from '../application/avatar/AvatarPresenceLabels.js';
 import { t } from '../ui/i18n/i18n.js';
@@ -70,7 +70,7 @@ const readSource = async (relativePath) => withEnglish(await readRawSource(relat
 // collaborator this file needs — application/avatar/RemoteAvatarRegistry.js,
 // application/avatar/RemoteAvatarInterpolator.js, application/presence/PresenceSyncService.js,
 // application/presence/LocalPresenceStore.js, application/avatar/AvatarPresenceSession.js,
-// core/AvatarProximity.js, presence/PeerAvatarPresenceBroadcastProvider.js,
+// core/avatar/AvatarProximity.js, presence/PeerAvatarPresenceBroadcastProvider.js,
 // application/avatar/AvatarPresenceLabels.js, and the plain-object UI components
 // (ui/components/NearbyAvatarsPanel.js, ui/components/AvatarInfoPanel.js,
 // ui/components/WorldMembersPanel.js, ui/components/WorldPresenceIndicator.js,
@@ -263,7 +263,7 @@ async function main() {
     // Section B — Identity presentation.
     //
     // displayName / avatarId / ownerIdentity / identityId must never
-    // collapse. core/AvatarProximity.js#computeNearbyAvatars() — the
+    // collapse. core/avatar/AvatarProximity.js#computeNearbyAvatars() — the
     // REAL function ui/views/WorldView.js's own getNearbyAvatars() path
     // feeds NearbyAvatarsPanel from — deliberately never computes a
     // displayName at all; ui/views/WorldView.js is cited (source) as the
@@ -553,10 +553,10 @@ async function main() {
         // H1 — cited, 0.9.582's own G finding: a mount relationship is a
         // real, separate, immutable descriptor — never folded into
         // AvatarPresence's own identity fields.
-        const mountSource = codeOnly(await readSource('core/AvatarVehicleMount.js'));
-        const presenceSource = codeOnly(await readSource('core/AvatarPresence.js'));
+        const mountSource = codeOnly(await readSource('core/vehicles/AvatarVehicleMount.js'));
+        const presenceSource = codeOnly(await readSource('core/avatar/AvatarPresence.js'));
         assert(!mountSource.includes('AvatarPresence') && !presenceSource.includes('AvatarVehicleMount'),
-            'H1. core/AvatarVehicleMount.js and core/AvatarPresence.js never import each other — structurally incapable of a mount relationship altering an avatar\'s own presence identity.');
+            'H1. core/vehicles/AvatarVehicleMount.js and core/avatar/AvatarPresence.js never import each other — structurally incapable of a mount relationship altering an avatar\'s own presence identity.');
 
         // H2 — the mount/dismount prompt is LOCAL-only presentation: it
         // is driven by the LOCAL avatar's own vehicle-interaction state,
@@ -568,13 +568,13 @@ async function main() {
 
         // H3 — a REMOTE avatar's own displayName/avatarId are read from
         // AvatarPresence fields alone (Section B already proved the
-        // fallback chain); core/AvatarAnimationState.js's own closed
+        // fallback chain); core/avatar/AvatarAnimationState.js's own closed
         // vocabulary (idle/walking/running/jumping) has no "mounted" or
         // "riding" entry, so a mounted remote avatar keeps presenting
         // under the SAME identity and the SAME closed animation
         // vocabulary as an unmounted one — never a different-looking
         // "new Wanderer."
-        const animationSource = codeOnly(await readSource('core/AvatarAnimationState.js'));
+        const animationSource = codeOnly(await readSource('core/avatar/AvatarAnimationState.js'));
         assert(!/mounted|riding/i.test(animationSource),
             'H3. The avatar animation vocabulary has no separate "mounted"/"riding" identity-adjacent state — mounting changes WHERE the body goes, never WHICH body/name a viewer is looking at.');
 
@@ -680,7 +680,7 @@ async function main() {
     // Section K — Vocabulary sweep.
     //
     // ONE real, narrow finding, classified PRESENTATION_GAP and fixed
-    // as the smallest possible seam: core/AvatarAnimationState.js's own
+    // as the smallest possible seam: core/avatar/AvatarAnimationState.js's own
     // internal, lowercase enum words ('walking', 'idle', 'running',
     // 'jumping') were reaching BOTH AvatarInfoPanel.js and
     // NearbyAvatarsPanel.js verbatim — the ONLY status field in either

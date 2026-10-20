@@ -1,10 +1,10 @@
 import * as THREE from 'three';
-import { DAY } from '../core/DayCycle.js';
+import { DAY } from '../core/nature/DayCycle.js';
 
 // World View's clouds: a layer CLOUD_HEIGHT up, covering as much of the sky
-// as the weather says (core/Weather.js's cloudCover), drifting with the wind
+// as the weather says (core/nature/Weather.js's cloudCover), drifting with the wind
 // by the world's clock, so everyone at a build sees the same clouds in the
-// same places. Coloured by the sky's look (core/DayCycle.js): white by day,
+// same places. Coloured by the sky's look (core/nature/DayCycle.js): white by day,
 // rosy at dusk and dawn, a dim moonlit grey at night, and greyer and heavier
 // the more overcast it is.
 //
@@ -130,14 +130,14 @@ export class CloudSky {
         sceneManager.add(this._mesh);
     }
 
-    // `weather` shaped like core/Weather.js's FAIR_WEATHER.
+    // `weather` shaped like core/nature/Weather.js's FAIR_WEATHER.
     set(weather) {
         this._weather = weather || null;
     }
 
     // Places the clouds round `camera` for this frame, where the wind has
     // carried them by `seconds` (the world's clock), coloured for `look`
-    // (core/DayCycle.js's, already overcast); `hidden` (under water) puts
+    // (core/nature/DayCycle.js's, already overcast); `hidden` (under water) puts
     // them out of sight.
     update(camera, seconds, look = DAY, hidden = false) {
         const weather = this._weather;

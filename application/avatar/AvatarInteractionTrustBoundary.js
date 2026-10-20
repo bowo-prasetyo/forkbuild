@@ -1,9 +1,9 @@
-import { isValidAvatarInteractionAdvertisement, getAvatarInteractionSigningDescriptor } from '../../core/AvatarInteractionAdvertisement.js';
-import { resolveIncomingInteraction } from '../../core/AvatarInteractionIngestion.js';
-import { PresenceAuthorityRegistry } from '../../core/PresenceAuthority.js';
-import { AvatarInteractionReplayWindow } from '../../core/AvatarInteractionReplayWindow.js';
-import { AvatarInteractionTrustPolicy } from '../../core/AvatarInteractionTrustPolicy.js';
-import { TrustObservation, TrustStatus } from '../../core/TrustObservation.js';
+import { isValidAvatarInteractionAdvertisement, getAvatarInteractionSigningDescriptor } from '../../core/avatar/AvatarInteractionAdvertisement.js';
+import { resolveIncomingInteraction } from '../../core/avatar/AvatarInteractionIngestion.js';
+import { PresenceAuthorityRegistry } from '../../core/avatar/PresenceAuthority.js';
+import { AvatarInteractionReplayWindow } from '../../core/avatar/AvatarInteractionReplayWindow.js';
+import { AvatarInteractionTrustPolicy } from '../../core/avatar/AvatarInteractionTrustPolicy.js';
+import { TrustObservation, TrustStatus } from '../../core/identity/TrustObservation.js';
 import { LocalAuthorizationVerifier } from '../../identity/LocalAuthorizationVerifier.js';
 
 // 0.2.45 — "I received this avatar-interaction claim; why should I
@@ -13,12 +13,12 @@ import { LocalAuthorizationVerifier } from '../../identity/LocalAuthorizationVer
 // automatically duplicate the entire presence protocol," the same
 // instruction 0.2.41 was given, applied one layer further:
 //
-//   1. Is this even shaped like an advertisement?           (core/AvatarInteractionAdvertisement.js)
+//   1. Is this even shaped like an advertisement?           (core/avatar/AvatarInteractionAdvertisement.js)
 //   2. If signed, does the signature actually verify?        (identity/LocalAuthorizationVerifier.js)
-//      If unsigned, does policy tolerate that?                (core/AvatarInteractionTrustPolicy.js)
-//   3. Is the claimant allowed to speak for this avatarId?    (core/PresenceAuthority.js — REUSED, own instance)
-//   4. Have I already accepted this EXACT event, or one       (core/AvatarInteractionReplayWindow.js +
-//      genuinely newer, from this avatarId?                    core/AvatarInteractionIngestion.js)
+//      If unsigned, does policy tolerate that?                (core/avatar/AvatarInteractionTrustPolicy.js)
+//   3. Is the claimant allowed to speak for this avatarId?    (core/avatar/PresenceAuthority.js — REUSED, own instance)
+//   4. Have I already accepted this EXACT event, or one       (core/avatar/AvatarInteractionReplayWindow.js +
+//      genuinely newer, from this avatarId?                    core/avatar/AvatarInteractionIngestion.js)
 //
 // A claim is only ever ACCEPTED (and only then remembered by the
 // replay window) after every one of those hold.
@@ -44,7 +44,7 @@ import { LocalAuthorizationVerifier } from '../../identity/LocalAuthorizationVer
 //     abuse controls" follow-up docs/Roadmap.md lists after 0.2.45 was
 //     never scheduled). What IS enforced
 //     here: `sequence` must strictly increase to be accepted at all
-//     (core/AvatarInteractionIngestion.js), so a second claim reusing
+//     (core/avatar/AvatarInteractionIngestion.js), so a second claim reusing
 //     an already-accepted sequence is at minimum rejected as STALE,
 //     never silently rendered as if it were new.
 //

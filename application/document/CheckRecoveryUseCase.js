@@ -1,5 +1,5 @@
 import { DocumentManifest } from './DocumentManifest.js';
-import { DocumentRevision } from '../../core/DocumentRevision.js';
+import { DocumentRevision } from '../../core/document/DocumentRevision.js';
 import { contentHashMatches } from '../../serializer/contentHash.js';
 
 // Decides whether a recovery checkpoint should be offered for a document

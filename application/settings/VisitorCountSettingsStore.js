@@ -1,8 +1,8 @@
 // Keeps whether this browser takes part in the daily visitor count, and the
-// day it last did (core/VisitorCount.js). Personal and local: never
+// day it last did (core/app/VisitorCount.js). Personal and local: never
 // published, shared or part of any World.
 import { StorageProvider } from '../../storage/StorageProvider.js';
-import { normalizeVisitorCountSettings } from '../../core/VisitorCount.js';
+import { normalizeVisitorCountSettings } from '../../core/app/VisitorCount.js';
 
 const STORAGE_KEY = 'visitor-count-settings';
 

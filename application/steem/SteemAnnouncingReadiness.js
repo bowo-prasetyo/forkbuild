@@ -1,4 +1,4 @@
-import { isSteemAccountName } from '../../core/SteemDiscoveryThread.js';
+import { isSteemAccountName } from '../../core/networks/SteemDiscoveryThread.js';
 
 // Why announcing on Steem would be refused right now, or null when it can be
 // tried. Shown where a failed announcement would otherwise go unnoticed.

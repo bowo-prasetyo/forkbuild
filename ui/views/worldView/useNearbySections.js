@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue';
-import { PlaceNamingClaim } from '../../../core/PlaceNamingClaim.js';
+import { PlaceNamingClaim } from '../../../core/world/PlaceNamingClaim.js';
 import { buildPlaceNamingClaimPublication } from '../../../application/placeNaming/PlaceNamingClaimPublication.js';
 import { formatDate, t } from '../../i18n/i18n.js';
 

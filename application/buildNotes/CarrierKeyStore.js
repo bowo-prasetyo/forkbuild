@@ -1,5 +1,5 @@
 // The carrier key this device signs build notes with (nostr/AppNostrSigner.js,
-// core/BuildNote.js): made the first time a build is sent to everyone, then
+// core/publication/BuildNote.js): made the first time a build is sent to everyone, then
 // kept, so each build's note is replaced rather than repeated. It is not the
 // builder's identity and signs nothing of theirs. Personal and local: never
 // published or shared.

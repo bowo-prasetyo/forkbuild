@@ -1,6 +1,6 @@
 
-import { RoleProviderRole, isValidRoleProviderRole } from '../core/RoleProviderRole.js';
-import { RoleProviderPreference, isValidRoleProviderKey } from '../core/RoleProviderPreference.js';
+import { RoleProviderRole, isValidRoleProviderRole } from '../core/publication/RoleProviderRole.js';
+import { RoleProviderPreference, isValidRoleProviderKey } from '../core/publication/RoleProviderPreference.js';
 import { assert } from './support/Assert.js';
 import { readSource as source } from './support/SourceText.js';
 
@@ -152,11 +152,11 @@ async function run() {
     // own prose.
     // ===============================================================
     {
-        const roleSource = await source('core/RoleProviderRole.js');
-        const preferenceSource = await source('core/RoleProviderPreference.js');
+        const roleSource = await source('core/publication/RoleProviderRole.js');
+        const preferenceSource = await source('core/publication/RoleProviderPreference.js');
         const forbiddenImportPattern = /^import\b[^\n]*from\s*['"][^'"]*(nostr|arweave|ipfs|bitcoin|anchoring|content\/|discovery\/|base\/)[^'"]*['"]/im;
-        assert(!forbiddenImportPattern.test(roleSource), 'H1. core/RoleProviderRole.js imports no provider implementation, no content/anchoring/discovery module, and no base/ module');
-        assert(!forbiddenImportPattern.test(preferenceSource), 'H2. core/RoleProviderPreference.js imports no provider implementation, no content/anchoring/discovery module, and no base/ module — its only import is its own sibling, core/RoleProviderRole.js');
+        assert(!forbiddenImportPattern.test(roleSource), 'H1. core/publication/RoleProviderRole.js imports no provider implementation, no content/anchoring/discovery module, and no base/ module');
+        assert(!forbiddenImportPattern.test(preferenceSource), 'H2. core/publication/RoleProviderPreference.js imports no provider implementation, no content/anchoring/discovery module, and no base/ module — its only import is its own sibling, core/publication/RoleProviderRole.js');
         const importLines = preferenceSource.split('\n').filter((line) => /^import\b/.test(line));
         assert(importLines.length === 1 && /RoleProviderRole\.js/.test(importLines[0]), 'H3. exactly one import statement in the preference file, and it names only its own sibling — no other collaborator of any kind');
         console.log('✓ Section H: neither boundary file imports Nostr, IPFS, Bitcoin, Base, Arweave, or any content/anchoring/discovery module — providerKey stays a plain string, never a live reference to an implementation');
@@ -256,7 +256,7 @@ async function run() {
     // `RoleProviderPreference` in prose, explaining why its
     // describeCreationAttempt() reads `attempt.preference.providerKey` for
     // a PROVIDER_NOT_FOUND result; it never imports core/
-    // RoleProviderPreference.js or core/RoleProviderRole.js, and never
+    // RoleProviderPreference.js or core/publication/RoleProviderRole.js, and never
     // constructs, reads, or writes either. This section is UPDATED, not
     // deleted, by each milestone in turn — it still holds the line that
     // matters: the ONLY production files allowed to reference this
@@ -278,7 +278,7 @@ async function run() {
                 const childRelative = `${relativeDir.replace(/\/+$/, '')}/${entry.name}`;
                 if (entry.isDirectory()) {
                     await listJsFiles(childRelative, results);
-                } else if (entry.name.endsWith('.js') && childRelative !== 'core/RoleProviderRole.js' && childRelative !== 'core/RoleProviderPreference.js') {
+                } else if (entry.name.endsWith('.js') && childRelative !== 'core/publication/RoleProviderRole.js' && childRelative !== 'core/publication/RoleProviderPreference.js') {
                     results.push(childRelative);
                 }
             }
@@ -291,7 +291,7 @@ async function run() {
         // Point. Four new legitimate references: the WRITE-side use case
         // and its own pure settings view-model, the new settings Vue view
         // that consumes both, and ui/router/index.js's own route comment
-        // naming core/RoleProviderPreference.js as the reason the route
+        // naming core/publication/RoleProviderPreference.js as the reason the route
         // exists — the identical "a comment naming the concept still
         // counts as a real, intentional reference" reading every earlier
         // entry in this set already gets.

@@ -1,4 +1,4 @@
-import { parseSnapshotDiscoveryEnvelope, snapshotCandidateFromEnvelope } from '../../core/SnapshotDiscoveryEnvelope.js';
+import { parseSnapshotDiscoveryEnvelope, snapshotCandidateFromEnvelope } from '../../core/publication/SnapshotDiscoveryEnvelope.js';
 import { SnapshotCandidateDiscoveryOutcome } from '../snapshot/SnapshotCandidateDiscoveryOutcome.js';
 import { BlurtDiscoveryReadOutcome } from './BlurtDiscoveryReader.js';
 

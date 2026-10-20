@@ -1,13 +1,13 @@
 
-import { World } from '../core/World.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { License, LicenseId } from '../core/License.js';
-import { PlacementRecord } from '../core/PlacementRecord.js';
-import { DocumentRevision } from '../core/DocumentRevision.js';
+import { World } from '../core/document/World.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { License, LicenseId } from '../core/document/License.js';
+import { PlacementRecord } from '../core/publication/PlacementRecord.js';
+import { DocumentRevision } from '../core/document/DocumentRevision.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
@@ -54,8 +54,8 @@ import { readSource } from './support/SourceText.js';
 // 0.9.574 onward stopped importing it live). Every claim about
 // WorldNavigationSession itself is therefore proven by direct source
 // citation (readSource() + exact line quotes), never by live import —
-// same discipline 0.9.576 already used. Everywhere else — core/Document.js,
-// core/World.js, core/DocumentMetadata.js, core/PlacementRecord.js,
+// same discipline 0.9.576 already used. Everywhere else — core/document/Document.js,
+// core/document/World.js, core/document/DocumentMetadata.js, core/publication/PlacementRecord.js,
 // application/document/CreateDocumentManagerUseCase.js, DocumentManager.js,
 // SaveDocumentUseCase.js, PublishDocumentUseCase.js,
 // ForkDocumentUseCase.js, ForkPublishedWorldUseCase.js,
@@ -238,7 +238,7 @@ async function main() {
         assert(afterFirstSave.world.buildings.length === 1, 'B1a. First save persisted the World as it stood: one building.');
         const entryAfterFirstSave = manifest.find(world.id);
         assert(entryAfterFirstSave.revision === 1, 'B1b. First explicit save advances revision to 1 — matching DocumentRevision.nextRevision(0, 0) === 1.');
-        assert(DocumentRevision.nextRevision(0, 0) === 1, 'B1b-cite. core/DocumentRevision.js\'s own nextRevision() confirms the value directly, not by assumption.');
+        assert(DocumentRevision.nextRevision(0, 0) === 1, 'B1b-cite. core/document/DocumentRevision.js\'s own nextRevision() confirms the value directly, not by assumption.');
         assert(manager.state.dirty === false, 'B1c. markSaved() (called by SaveDocumentUseCase itself) clears the dirty flag.');
 
         // Edit again: World identity is a stable, mutable in-memory
@@ -268,7 +268,7 @@ async function main() {
         assert(/is already a published snapshot — fork it to publish an edited copy/.test(sessionSource),
             'B3b. WorldNavigationSession.publishDocument() literally refuses to re-publish an already-published id directly — quoted verbatim from the real source.');
 
-        console.log('✓ Section B: World editing semantics — two genuinely distinct real pathways, not one glossed-over concept. An unpublished draft (DocumentManager + SaveDocumentUseCase) is exactly what PublishDocumentUseCase.js\'s own header calls it: "mutable, overwriteable" — the same World identity, edited and saved repeatedly, with each save advancing a real, cited revision counter (core/DocumentRevision.js) that never appears inside Document.toJSON() and never travels with a Publication. An already-published World cannot be saved or re-published in place AT ALL — both real guard methods throw, quoted verbatim from WorldNavigationSession.js — so "editing a World never mutates an already-published Publication" holds not by convention but by an explicit, load-bearing refusal.');
+        console.log('✓ Section B: World editing semantics — two genuinely distinct real pathways, not one glossed-over concept. An unpublished draft (DocumentManager + SaveDocumentUseCase) is exactly what PublishDocumentUseCase.js\'s own header calls it: "mutable, overwriteable" — the same World identity, edited and saved repeatedly, with each save advancing a real, cited revision counter (core/document/DocumentRevision.js) that never appears inside Document.toJSON() and never travels with a Publication. An already-published World cannot be saved or re-published in place AT ALL — both real guard methods throw, quoted verbatim from WorldNavigationSession.js — so "editing a World never mutates an already-published Publication" holds not by convention but by an explicit, load-bearing refusal.');
     }
 
     // ===============================================================
@@ -849,7 +849,7 @@ async function main() {
     // Section M — Deliberate exclusions.
     // ===============================================================
     {
-        const documentMetadataSource = await readSource('core/DocumentMetadata.js');
+        const documentMetadataSource = await readSource('core/document/DocumentMetadata.js');
         const metadataFieldMatches = documentMetadataSource.match(/this\._(\w+)\s*=/g) || [];
         const metadataFields = new Set(metadataFieldMatches.map((m) => m.replace(/this\.|\s*=/g, '')));
         const expectedMetadataFields = ['_title', '_description', '_author', '_created', '_modified', '_protocolVersion', '_engineVersion', '_parentDocumentId', '_parentStructureId', '_authorIdentityId', '_license', '_placementPolicy', '_tags', '_builtWith'];
@@ -873,7 +873,7 @@ async function main() {
   - No publication deduplication exists (M2) — Sections D/E's twin Publications prove this live; confirmed absent by source inspection too.
   - No World synchronization redesign — nothing in collaboration/ was touched, imported, or modified (Section J).
   - No collaboration conflict-resolution changes — Section J was deliberately kept to a small boundary check, per this milestone's own brief.
-  - No new World identity fields — core/World.js's field set (id/buildings/groups/placements/landmarks/regions/metadata/eventBus) is exactly what 0.9.576 already found it to be.
+  - No new World identity fields — core/document/World.js's field set (id/buildings/groups/placements/landmarks/regions/metadata/eventBus) is exactly what 0.9.576 already found it to be.
   - No World-specific Repository class was introduced (M3) — the Repository remains the same LocalDiscoveryProvider/"forkbuild-publications" pairing 0.9.574 established.
   - No publication ranking exists (M4).
   - No automatic republishing exists (M5).

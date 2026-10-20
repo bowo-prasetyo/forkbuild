@@ -1,4 +1,4 @@
-import { FriendshipState } from '../../../core/FriendshipState.js';
+import { FriendshipState } from '../../../core/social/FriendshipState.js';
 import { shortId } from './presentation.js';
 import { t } from '../../i18n/i18n.js';
 

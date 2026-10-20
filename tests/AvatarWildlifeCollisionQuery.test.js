@@ -1,14 +1,14 @@
 import { readFile } from 'node:fs/promises';
 import {
     wildlifeCollisionCandidatesForMovement, MAX_ANIMAL_COLLISION_RADIUS, CANDIDATE_QUERY_MARGIN
-} from '../core/AvatarWildlifeCollisionQuery.js';
-import { wildlifeCollisionGeometryInRegion, ANIMAL_COLLISION_RADIUS } from '../core/WildlifeCollisionGeometry.js';
-import { wildlifeInRegion, WILDLIFE_FEATURE_TYPE } from '../core/WildlifeField.js';
-import { AVATAR_COLLISION_RADIUS } from '../core/AvatarCollision.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+} from '../core/avatar/AvatarWildlifeCollisionQuery.js';
+import { wildlifeCollisionGeometryInRegion, ANIMAL_COLLISION_RADIUS } from '../core/nature/WildlifeCollisionGeometry.js';
+import { wildlifeInRegion, WILDLIFE_FEATURE_TYPE } from '../core/nature/WildlifeField.js';
+import { AVATAR_COLLISION_RADIUS } from '../core/avatar/AvatarCollision.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
 import { assert } from './support/Assert.js';
 
-// Deterministic Wildlife Collision Spatial Query, core/AvatarWildlifeCollisionQuery.js
+// Deterministic Wildlife Collision Spatial Query, core/avatar/AvatarWildlifeCollisionQuery.js
 // — the direct structural twin of tests/AvatarTreeCollisionQuery.test.js.
 //
 //   Section A: empty region — no animals nearby -> []
@@ -151,7 +151,7 @@ async function runTests() {
     // Section G: architectural regression
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../core/AvatarWildlifeCollisionQuery.js', import.meta.url);
+        const sourceUrl = new URL('../core/avatar/AvatarWildlifeCollisionQuery.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -167,10 +167,10 @@ async function runTests() {
             'localStorage', 'StorageProvider', 'fetch(', 'WebSocket'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `14. core/AvatarWildlifeCollisionQuery.js's own code never references "${term}" — spatial query only`);
+            assert(!codeOnly.includes(term), `14. core/avatar/AvatarWildlifeCollisionQuery.js's own code never references "${term}" — spatial query only`);
         }
         assert(codeOnly.includes('wildlifeCollisionGeometryInRegion'),
-            '15. core/AvatarWildlifeCollisionQuery.js does consume wildlifeCollisionGeometryInRegion() from core/WildlifeCollisionGeometry.js, never a second region query it invents itself');
+            '15. core/avatar/AvatarWildlifeCollisionQuery.js does consume wildlifeCollisionGeometryInRegion() from core/nature/WildlifeCollisionGeometry.js, never a second region query it invents itself');
     }
     {
         const wide = wildlifeCollisionGeometryInRegion(DEFAULT_WORLD_SEED, -300, -300, 300, 300);

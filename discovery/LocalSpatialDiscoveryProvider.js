@@ -1,5 +1,5 @@
 import { SpatialDiscoveryProvider } from './SpatialDiscoveryProvider.js';
-import { PlacementRecord } from '../core/PlacementRecord.js';
+import { PlacementRecord } from '../core/publication/PlacementRecord.js';
 
 // The V0.1 concrete spatial discovery provider: delegates spatial
 // queries to the SpatialIndexProvider and enriches results with

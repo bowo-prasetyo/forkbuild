@@ -1,4 +1,4 @@
-import { Signature, SIGNING_DOMAIN } from '../core/Signature.js';
+import { Signature, SIGNING_DOMAIN } from '../core/publication/Signature.js';
 import { computeFnv1a32 } from '../serializer/contentHash.js';
 import * as Ed25519 from './Ed25519.js';
 

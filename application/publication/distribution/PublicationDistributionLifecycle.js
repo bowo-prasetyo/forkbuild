@@ -39,7 +39,7 @@ export const PublicationDistributionState = Object.freeze({
 // and never re-derives a fact from anything other than the `result` it is
 // handed. It performs no I/O, no persistence, no retry, no clock read, and
 // causes no mutation of any kind — the identical restraint every boundary in
-// this family has held since `core/DecentralizedDiscoveryEnvelope.js` (0.9.30).
+// this family has held since `core/publication/DecentralizedDiscoveryEnvelope.js` (0.9.30).
 //
 // MATERIAL AND DISCOVERY STATE STAY INDEPENDENT — NEVER COLLAPSED INTO ONE
 // GLOBAL LIFECYCLE VALUE. This is the one design decision this whole milestone

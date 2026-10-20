@@ -1,5 +1,5 @@
-import { derivePresenceLifecycleState } from '../../core/PresenceFreshness.js';
-import { PresenceLifecycleState } from '../../core/PresenceLifecycleState.js';
+import { derivePresenceLifecycleState } from '../../core/avatar/PresenceFreshness.js';
+import { PresenceLifecycleState } from '../../core/avatar/PresenceLifecycleState.js';
 import { PresenceTrustBoundary } from './PresenceTrustBoundary.js';
 
 // 0.2.37 — avatarId -> latest known AvatarPresenceAdvertisement, plus
@@ -11,7 +11,7 @@ import { PresenceTrustBoundary } from './PresenceTrustBoundary.js';
 // 0.2.38 — every entry is now judged by a PresenceTrustBoundary
 // (signature verification, identity binding, replay detection,
 // equivocation detection, THEN the monotonic-sequence rule
-// core/PresenceIngestion.js already established) before it's allowed
+// core/avatar/PresenceIngestion.js already established) before it's allowed
 // to replace what's stored — see docs/Principles.md, "Never Let A
 // Transport Callback Write Directly Into Session State," which
 // specifically anticipated hardening happening exactly here. Defaults
@@ -39,7 +39,7 @@ export class LocalPresenceStore {
     // conflicting, or stale — see application/presence/PresenceTrustBoundary.js
     // for the exact rule. Either way, the trust boundary's
     // TrustObservation is remembered for diagnostics
-    // (core/PresenceDiagnosticsSummary.js) — a REJECTED claim still
+    // (core/avatar/PresenceDiagnosticsSummary.js) — a REJECTED claim still
     // updates what this replica knows about the avatar's trust state,
     // even though it never touches the avatar's displayed position.
     ingest(advertisement, receivedAt = Date.now()) {
@@ -86,7 +86,7 @@ export class LocalPresenceStore {
                 // REJECTED (e.g. EQUIVOCATING) even though the
                 // DISPLAYED advertisement above is still whatever was
                 // last legitimately accepted — see
-                // core/PresenceDiagnosticsSummary.js. Rendering and
+                // core/avatar/PresenceDiagnosticsSummary.js. Rendering and
                 // trust stay separate: this is diagnostics-only,
                 // application/avatar/RemoteAvatarRegistry.js never reads it.
                 trustObservation: this._observations.get(avatarId) || null

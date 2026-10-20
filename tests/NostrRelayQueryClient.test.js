@@ -2,9 +2,9 @@ import { readFile } from 'node:fs/promises';
 import { createNostrRelayQueryClient } from '../nostr/NostrRelayQueryClient.js';
 import { NostrDiscoveryQueryService } from '../application/nostr/NostrDiscoveryQueryService.js';
 import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
-import { describeDecentralizedDiscoveryEnvelope, DECENTRALIZED_DISCOVERY_ENVELOPE_PROTOCOL, DECENTRALIZED_DISCOVERY_ENVELOPE_VERSION } from '../core/DecentralizedDiscoveryEnvelope.js';
-import { describeSnapshotDiscoveryEnvelope, SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../core/SnapshotDiscoveryEnvelope.js';
-import { WorldEncounterKind } from '../core/WorldEncounter.js';
+import { describeDecentralizedDiscoveryEnvelope, DECENTRALIZED_DISCOVERY_ENVELOPE_PROTOCOL, DECENTRALIZED_DISCOVERY_ENVELOPE_VERSION } from '../core/publication/DecentralizedDiscoveryEnvelope.js';
+import { describeSnapshotDiscoveryEnvelope, SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../core/publication/SnapshotDiscoveryEnvelope.js';
+import { WorldEncounterKind } from '../core/world/WorldEncounter.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.147 — Decentralized Discovery Relay Query Client.

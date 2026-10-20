@@ -1,4 +1,4 @@
-import { buildPlaceNamingDiscoveryEnvelope, derivePlaceNamingDiscoveryTag } from '../../core/PlaceNamingDiscoveryEnvelope.js';
+import { buildPlaceNamingDiscoveryEnvelope, derivePlaceNamingDiscoveryTag } from '../../core/world/PlaceNamingDiscoveryEnvelope.js';
 
 // Announces a signed Place Naming claim in a Blurt build post, with the
 // publish(claim) shape the other place naming publishers have. Every region

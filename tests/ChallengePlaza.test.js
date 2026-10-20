@@ -1,15 +1,15 @@
 import {
     PLAZA_CENTER, PLAZA_GAP, PLAZA_OPEN_RADIUS, layoutPlazaExhibits, plazaEntryOrder, plazaFootprint
-} from '../core/ChallengePlaza.js';
-import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../core/TerrainHeightField.js';
-import { SURFACE_CATEGORY, surfaceCategoryAt } from '../core/TerrainSurface.js';
-import { computeDeterministicGridPosition } from '../core/DeterministicGridPlacement.js';
-import { HYDROLOGY_FEATURE, hydrologyFeatureAt } from '../core/Hydrology.js';
-import { naturalFeaturesInRegion } from '../core/NaturalFeatureField.js';
-import { PLAZA_CLEARING_RADIUS, isInPlazaClearing } from '../core/ChallengePlaza.js';
+} from '../core/challenge/ChallengePlaza.js';
+import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../core/nature/TerrainHeightField.js';
+import { SURFACE_CATEGORY, surfaceCategoryAt } from '../core/nature/TerrainSurface.js';
+import { computeDeterministicGridPosition } from '../core/world/DeterministicGridPlacement.js';
+import { HYDROLOGY_FEATURE, hydrologyFeatureAt } from '../core/nature/Hydrology.js';
+import { naturalFeaturesInRegion } from '../core/nature/NaturalFeatureField.js';
+import { PLAZA_CLEARING_RADIUS, isInPlazaClearing } from '../core/challenge/ChallengePlaza.js';
 import { assert } from './support/Assert.js';
 
-// The challenge plaza (core/ChallengePlaza.js): where a week's entries stand.
+// The challenge plaza (core/challenge/ChallengePlaza.js): where a week's entries stand.
 
 function footprint(width, depth, { x = 0, z = 0 } = {}) {
     return { minX: x - width / 2, maxX: x + width / 2, minZ: z - depth / 2, maxZ: z + depth / 2 };

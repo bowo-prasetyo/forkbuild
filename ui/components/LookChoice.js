@@ -1,5 +1,5 @@
 import { inject, ref } from 'vue';
-import { LOOK } from '../../core/LookSettings.js';
+import { LOOK } from '../../core/app/LookSettings.js';
 import { applyLook } from '../look.js';
 import { t } from '../i18n/i18n.js';
 

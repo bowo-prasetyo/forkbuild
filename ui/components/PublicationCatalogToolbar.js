@@ -1,6 +1,6 @@
-import { PublicationSort, PUBLICATION_SORT_LABELS } from '../../core/PublicationSort.js';
+import { PublicationSort, PUBLICATION_SORT_LABELS } from '../../core/catalog/PublicationSort.js';
 
-// core/PublicationSort.js keeps English labels next to its ids; the toolbar
+// core/catalog/PublicationSort.js keeps English labels next to its ids; the toolbar
 // shows each id's message, falling back to that English.
 const SORT_MESSAGES = {
     [PublicationSort.RECENTLY_PUBLISHED]: 'publicationSort.recentlyPublished',
@@ -9,7 +9,7 @@ const SORT_MESSAGES = {
     [PublicationSort.TITLE_DESC]: 'publicationSort.titleDesc',
     [PublicationSort.AUTHOR_ASC]: 'publicationSort.authorAsc'
 };
-import { GroupBy } from '../../core/PublicationGrouping.js';
+import { GroupBy } from '../../core/catalog/PublicationGrouping.js';
 import { t } from '../i18n/i18n.js';
 
 // 0.2.31 — search + sort + view + group controls for the Repository/

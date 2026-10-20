@@ -1,10 +1,10 @@
 import { inject, ref } from 'vue';
-import { DeviceNotificationPermission, DeviceNotificationState, deviceNotificationState } from '../../core/DeviceNotifications.js';
+import { DeviceNotificationPermission, DeviceNotificationState, deviceNotificationState } from '../../core/social/DeviceNotifications.js';
 import { t } from '../i18n/i18n.js';
 
 // "Notify me on this device", at the top of the bell's history: shows the
 // signed-in identity's new notifications through the operating system while
-// ForkBuild is open but not in view (core/DeviceNotifications.js). Off until
+// ForkBuild is open but not in view (core/social/DeviceNotifications.js). Off until
 // turned on here; turning it on asks the browser. Needs
 // `deviceNotificationSettingsStore` (ui/main.js); without one it shows nothing.
 export function browserNotificationPermission() {

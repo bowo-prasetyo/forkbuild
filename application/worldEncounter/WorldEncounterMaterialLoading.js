@@ -1,4 +1,4 @@
-import { describeWorldEncounterSelectionIdentity } from '../../core/WorldEncounterSelectionIdentity.js';
+import { describeWorldEncounterSelectionIdentity } from '../../core/world/WorldEncounterSelectionIdentity.js';
 import { LOCAL_WORLD_DISCOVERY_ORIGIN } from './WorldEncounterIntegration.js';
 
 // 0.9.21 — World Encounter Material Loading Boundary.

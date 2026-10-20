@@ -5,9 +5,9 @@ import { MoveStructurePlacementCommand } from '../commands/MoveStructurePlacemen
 import { RotateStructurePlacementCommand } from '../commands/RotateStructurePlacementCommand.js';
 import { DuplicateStructurePlacementCommand } from '../commands/DuplicateStructurePlacementCommand.js';
 import { StructurePlacementValidator } from '../editor/StructurePlacementValidator.js';
-import { SpatialBounds } from '../../core/SpatialBounds.js';
-import { Position } from '../../core/Position.js';
-import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../../core/TerrainHeightField.js';
+import { SpatialBounds } from '../../core/world/SpatialBounds.js';
+import { Position } from '../../core/document/Position.js';
+import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../../core/nature/TerrainHeightField.js';
 
 // EditorSession transforms: move, rotate, duplicate and repeat the selection,
 // the selection summary, and placed-structure moves, which have their own

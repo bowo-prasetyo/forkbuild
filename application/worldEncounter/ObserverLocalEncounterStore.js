@@ -1,6 +1,6 @@
 // 0.9.552 — Observer-Local Novel Publication Encounter Presentation.
 //
-// core/ObserverLocalPublicationEncounter.js describes ONE encounter, purely,
+// core/publication/ObserverLocalPublicationEncounter.js describes ONE encounter, purely,
 // with no memory of any other call. Nothing yet held one across the several
 // ticks a Wanderer's own `WorldView` mount lives through, or gave
 // `ui/components/WorldEncounterCanvas.js` a seam to subscribe to the way it

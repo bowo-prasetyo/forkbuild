@@ -1,10 +1,10 @@
 import * as THREE from 'three';
-import { BrickSurface, SURFACE_ROUGHNESS } from '../core/BrickSurface.js';
+import { BrickSurface, SURFACE_ROUGHNESS } from '../core/building/BrickSurface.js';
 
 // The brick look (docs/Pillars.md, "Look"): every brick gets a soft dark
 // line along its edges, so a wall reads as bricks laid together rather than
 // one flat panel, a slight shade of its own, so no two bricks are quite the
-// same, and the grain of what it is made of (core/BrickSurface.js): masonry
+// same, and the grain of what it is made of (core/building/BrickSurface.js): masonry
 // courses, plaster, wood grain, roof tiles, glass, leaves, rough stone.
 //
 // All of it is drawn by the shader from the brick's own (object-space)
@@ -158,7 +158,7 @@ float brickSurfaceShade() {
 	return shade;
 }`;
 
-// Gives `material` the look of `surface` (core/BrickSurface.js), on top of
+// Gives `material` the look of `surface` (core/building/BrickSurface.js), on top of
 // whatever its own onBeforeCompile already does (the instanced highlight,
 // the night glow, which call it in turn). Sets its roughness. Returns it.
 export function applyBrickSurface(material, surface = BrickSurface.PLAIN) {

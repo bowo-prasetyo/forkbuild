@@ -2,8 +2,8 @@ import { computed, onMounted, ref } from 'vue';
 import BuildTurntable from '../components/featured/BuildTurntable.js';
 import { EmbeddedBuildOutcome, openEmbeddedBuild } from '../../application/publication/sharing/OpenEmbeddedBuild.js';
 import { bricksOfDocument } from '../../application/publication/sharing/ReadSharedBuild.js';
-import { linkOnlyPublicationViewUrl } from '../../core/ForkBuildAppLinks.js';
-import { License } from '../../core/License.js';
+import { linkOnlyPublicationViewUrl } from '../../core/app/ForkBuildAppLinks.js';
+import { License } from '../../core/document/License.js';
 import { t } from '../i18n/i18n.js';
 
 // A build on another site's page (ui/embed/embedBoot.js): the build turning,

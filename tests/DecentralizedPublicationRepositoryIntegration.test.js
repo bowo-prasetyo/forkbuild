@@ -1,9 +1,9 @@
 import { execSync } from 'node:child_process';
 
 import { Publication } from '../publisher/Publication.js';
-import { ContentReference } from '../core/ContentReference.js';
-import { License } from '../core/License.js';
-import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
+import { ContentReference } from '../core/document/ContentReference.js';
+import { License } from '../core/document/License.js';
+import { DecentralizedPublication } from '../core/publication/DecentralizedPublication.js';
 import { PublicationExchange } from '../application/publication/PublicationExchange.js';
 import { PublicationResolver } from '../application/publication/PublicationResolver.js';
 import { PublicationResolutionOutcome } from '../application/publication/PublicationResolutionOutcome.js';
@@ -26,8 +26,8 @@ import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
-import { BlueprintAttribution, BLUEPRINT_ATTRIBUTION_KIND, CURRENT_SCHEMA_VERSION as ATTRIBUTION_SCHEMA_VERSION } from '../core/BlueprintAttribution.js';
-import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
+import { BlueprintAttribution, BLUEPRINT_ATTRIBUTION_KIND, CURRENT_SCHEMA_VERSION as ATTRIBUTION_SCHEMA_VERSION } from '../core/building/BlueprintAttribution.js';
+import { PlaceNamingClaim } from '../core/world/PlaceNamingClaim.js';
 import { buildPlaceNamingClaimPublication, PLACE_NAMING_CLAIM_PUBLICATION_KIND, CURRENT_SCHEMA_VERSION as NAMING_SCHEMA_VERSION } from '../application/placeNaming/PlaceNamingClaimPublication.js';
 import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';

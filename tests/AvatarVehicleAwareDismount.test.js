@@ -3,12 +3,12 @@ import { AvatarVehicleInteractionController } from '../application/avatar/Avatar
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { VehicleRuntimeInstances } from '../application/world/VehicleRuntimeInstances.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
-import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { BICYCLE_DISMOUNT_OFFSET_X } from '../core/AvatarVehicleDismountPosition.js';
-import { VehicleType } from '../core/VehicleType.js';
-import { Position } from '../core/Position.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { vehiclePresenceInRegion } from '../core/vehicles/VehiclePlacement.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { BICYCLE_DISMOUNT_OFFSET_X } from '../core/vehicles/AvatarVehicleDismountPosition.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
+import { Position } from '../core/document/Position.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -65,7 +65,7 @@ function findVehicle(seed, id) {
     const vehicles = vehiclePresenceInRegion(seed, -300, -300, 300, 300);
     const vehicle = vehicles.find((v) => v.id === id);
     if (!vehicle) {
-        throw new Error(`Test fixture vehicle ${id} not found under seed ${seed} — has core/VehiclePlacement.js changed?`);
+        throw new Error(`Test fixture vehicle ${id} not found under seed ${seed} — has core/vehicles/VehiclePlacement.js changed?`);
     }
     return vehicle;
 }
@@ -195,11 +195,11 @@ async function runTests() {
         assert(!/\.spawnPosition\b/.test(controllerCodeOnly),
             '8. ARCHITECTURAL: application/avatar/AvatarVehicleInteractionController.js\'s own code never reads `.spawnPosition` — the dismount path has no way to even reach for it');
 
-        const dismountPositionSourceUrl = new URL('../core/AvatarVehicleDismountPosition.js', import.meta.url);
+        const dismountPositionSourceUrl = new URL('../core/vehicles/AvatarVehicleDismountPosition.js', import.meta.url);
         const dismountPositionSource = await readFile(dismountPositionSourceUrl, 'utf8');
         const dismountPositionCodeOnly = dismountPositionSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         assert(!dismountPositionCodeOnly.includes('spawnPosition'),
-            '9. ARCHITECTURAL: core/AvatarVehicleDismountPosition.js\'s own code never reads `.spawnPosition` either — only `.position` and `.type`, on both a VehiclePresence and a VehicleInstance alike');
+            '9. ARCHITECTURAL: core/vehicles/AvatarVehicleDismountPosition.js\'s own code never reads `.spawnPosition` either — only `.position` and `.type`, on both a VehiclePresence and a VehicleInstance alike');
     }
 
     // -------------------------------------------------------------
@@ -365,7 +365,7 @@ async function runTests() {
             const vehicles = vehiclePresenceInRegion(DEFAULT_WORLD_SEED, -500, -500, 500, 500);
             const vehicle = vehicles.find((v) => v.id === REAL_VEHICLE_ID);
             if (!vehicle) {
-                throw new Error(`Test fixture vehicle ${REAL_VEHICLE_ID} not found under DEFAULT_WORLD_SEED — has core/VehiclePlacement.js changed?`);
+                throw new Error(`Test fixture vehicle ${REAL_VEHICLE_ID} not found under DEFAULT_WORLD_SEED — has core/vehicles/VehiclePlacement.js changed?`);
             }
             return vehicle;
         }
@@ -397,7 +397,7 @@ async function runTests() {
         // exactly 60 frames in close enough to a second nearby real tree
         // that the fixed dismount offset lands inside it, and the
         // PRE-EXISTING tree-clearance-only dismount system
-        // (core/AvatarVehicleDismountClearance.js, 0.9.81) correctly
+        // (core/vehicles/AvatarVehicleDismountClearance.js, 0.9.81) correctly
         // refuses it. This test's own flagship claim (pressing E after a
         // real ride genuinely dismounts, landing beside the vehicle's
         // CURRENT position) is untouched by shifting two frames clear of
@@ -461,16 +461,16 @@ async function runTests() {
         assert(controllerCodeOnly.includes('_vehicleRuntimeInstances') && controllerCodeOnly.includes('_currentMountedVehicle'),
             '27. the fix is real: application/avatar/AvatarVehicleInteractionController.js actually references its own vehicleRuntimeInstances collaborator and the new identity-first lookup');
 
-        const dismountPositionSourceUrl = new URL('../core/AvatarVehicleDismountPosition.js', import.meta.url);
+        const dismountPositionSourceUrl = new URL('../core/vehicles/AvatarVehicleDismountPosition.js', import.meta.url);
         const dismountPositionSource = await readFile(dismountPositionSourceUrl, 'utf8');
         const dismountPositionCodeOnly = dismountPositionSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-        const exportedNames = Object.keys(await import('../core/AvatarVehicleDismountPosition.js')).sort();
+        const exportedNames = Object.keys(await import('../core/vehicles/AvatarVehicleDismountPosition.js')).sort();
         assert(
             JSON.stringify(exportedNames) === JSON.stringify(['BICYCLE_DISMOUNT_OFFSET_X', 'resolveAvatarVehicleDismountPosition']),
-            '28. core/AvatarVehicleDismountPosition.js still exports exactly the offset constant and the one resolver function — the 0.9.117 fix widened its INPUT type, never its public surface'
+            '28. core/vehicles/AvatarVehicleDismountPosition.js still exports exactly the offset constant and the one resolver function — the 0.9.117 fix widened its INPUT type, never its public surface'
         );
         assert(dismountPositionCodeOnly.includes('VehicleInstance'),
-            '29. core/AvatarVehicleDismountPosition.js\'s own code does now reference VehicleInstance — the one real change this milestone makes there'
+            '29. core/vehicles/AvatarVehicleDismountPosition.js\'s own code does now reference VehicleInstance — the one real change this milestone makes there'
         );
     }
 

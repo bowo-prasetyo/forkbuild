@@ -1,5 +1,5 @@
 import { describeIpfsPublicationContentVerification } from './IpfsPublicationContentVerificationView.js';
-import { message } from '../../core/Message.js';
+import { message } from '../../core/app/Message.js';
 
 // 0.8.73 — IPFS Publication Observation Timeline.
 //

@@ -295,7 +295,7 @@ export default Object.freeze({
     'publicationLink.buildMismatch': 'bangunan yang ditemukan tidak cocok dengan tanda tangannya',
     'publicationLink.noStoreCouldRead': 'tidak ada penyimpanan yang dapat membacanya',
 
-    // The World welcome panel (core/WorldWelcomeContext.js): why a place is
+    // The World welcome panel (core/world/WorldWelcomeContext.js): why a place is
     // suggested, and what collaborators are doing, with and without a target.
     'welcome.reason.nearbyLandmark': 'Penanda terdekat',
     'welcome.reason.youAreHere': 'Anda di sini',
@@ -1320,7 +1320,7 @@ export default Object.freeze({
     'distribution.explore': 'Jelajahi',
     'distribution.close': 'Tutup',
 
-    // Editor: a structure's details (ui/components/StructureInfoPanel.js, core/BlueprintSimilarity.js).
+    // Editor: a structure's details (ui/components/StructureInfoPanel.js, core/building/BlueprintSimilarity.js).
     'structureInfo.bricks': 'Balok',
     'structureInfo.footprint': 'Tapak',
     'structureInfo.footprintValue': '{width} × {depth}',
@@ -1365,7 +1365,7 @@ export default Object.freeze({
     'blueprintSimilarity.identical': 'Desain identik',
     'blueprintSimilarity.percent': 'Kemiripan desain {percent}%',
 
-    // Editor: the Build Library (ui/components/BuildLibraryPanel.js, core/sortStructures.js).
+    // Editor: the Build Library (ui/components/BuildLibraryPanel.js, core/building/sortStructures.js).
     'buildLibrary.title': 'Pustaka Bangunan',
     'buildLibrary.bricks': 'Balok',
     'buildLibrary.structures': 'Struktur',
@@ -2304,7 +2304,7 @@ export default Object.freeze({
     'residentPrompt.talk': '[T] Bicara',
     'residentPrompt.remove': '[R] Hapus Penghuni',
 
-    // What a resident says about its surroundings (core/ResidentTalk.js). A
+    // What a resident says about its surroundings (core/world/ResidentTalk.js). A
     // {title} or {name} is someone else's text, shown as written; {where} is
     // one of the resident.where.* messages, {distance} a resident.distance.* one.
     'resident.quiet': 'Di sekitar sini sepi. Saya tidak tahu ada apa pun di dekat sini.',
@@ -2423,7 +2423,7 @@ export default Object.freeze({
     'worldEncounterCanvas.peerSource': 'Rekan {id}',
     'worldEncounterCanvas.snapshotSource': 'Snapshot {hash}',
 
-    // World View: words core/ keeps as ids (ui/i18n/worldText.js) and the focus panel's core-built text (core/WorldFocusContext.js).
+    // World View: words core/ keeps as ids (ui/i18n/worldText.js) and the focus panel's core-built text (core/world/WorldFocusContext.js).
     'compass.n': 'U',
     'compass.ne': 'TL',
     'compass.e': 'T',
@@ -4704,7 +4704,7 @@ export default Object.freeze({
     'chatView.couldNotSwitchSpeaker': 'Tidak dapat beralih ke speaker itu.',
     'chatView.microphoneDisappeared': 'Mikrofon Anda hilang — panggilan berlanjut tanpa audio Anda.',
 
-    // Refusals a person reads, thrown as UserFacingError (core/UserFacingError.js) by Identity, Peers, Chat and settings.
+    // Refusals a person reads, thrown as UserFacingError (core/app/UserFacingError.js) by Identity, Peers, Chat and settings.
     'refusal.noUserIsCurrentlyLogged': 'Pilih nama dulu.',
     'refusal.nameLocked': 'Nama Anda "{name}" terkunci. Buka kuncinya dengan frasa sandinya untuk melanjutkan.',
     'refusal.nameRevoked': 'Nama Anda "{name}" telah dicabut dan tidak bisa menandatangani lagi. Ganti ke nama lain untuk melanjutkan.',

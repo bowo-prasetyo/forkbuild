@@ -1,13 +1,13 @@
 // 0.5.8 — World View Contextual Focus & Information Hierarchy.
 //
 // The one, unified destination for "what am I looking at?" — a
-// read-only reading of a core/WorldFocusContext.js#WorldFocusContext
+// read-only reading of a core/world/WorldFocusContext.js#WorldFocusContext
 // (already reshaped to plain JSON by the host), regardless of which
 // surface it came from (Explore's own "Nearby ___" rows, the Locations
 // panel — see those components' own new `@inspect`-style emits).
 //
 // Deliberately three buttons, never more, and deliberately none of them
-// named "Focus" — see core/WorldFocusContext.js's own header on why:
+// named "Focus" — see core/world/WorldFocusContext.js's own header on why:
 // this component IS the "Focus" noun already; its own camera-move
 // button is labeled "Go" (matching Explore's own nearby-row wording),
 // and "Show on Map"/"Names" reuse the EXACT labels
@@ -17,7 +17,7 @@
 // Which buttons actually render is entirely driven by
 // `context.availableActions` — this component invents no per-kind
 // logic of its own, it only reflects what the derivation already
-// decided (see core/WorldFocusContext.js#deriveWorldFocusContext()'s
+// decided (see core/world/WorldFocusContext.js#deriveWorldFocusContext()'s
 // own per-kind action table).
 //
 // Never mutates anything, never calls a session method directly — like
@@ -37,7 +37,7 @@ const KIND_GLYPH = {
 export default {
     name: 'WorldFocusPanel',
     props: {
-        // A core/WorldFocusContext.js#WorldFocusContext.toJSON() shape, or null.
+        // A core/world/WorldFocusContext.js#WorldFocusContext.toJSON() shape, or null.
         context: {
             type: Object,
             default: null

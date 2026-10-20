@@ -3,7 +3,7 @@ import { useRouter } from 'vue-router';
 import { LocalStorageProvider } from '../../storage/LocalStorageProvider.js';
 import { LocalWorldExperienceStore } from '../../application/world/LocalWorldExperienceStore.js';
 import { CreateDiscoveryUseCase } from '../../application/discovery/CreateDiscoveryUseCase.js';
-import { descriptionSnippet } from '../../core/DescriptionMarkup.js';
+import { descriptionSnippet } from '../../core/document/DescriptionMarkup.js';
 import WorldCard from '../components/WorldCard.js';
 import { t } from '../i18n/i18n.js';
 import I18nText from '../i18n/I18nText.js';
@@ -44,7 +44,7 @@ const FeaturedBuilds = defineAsyncComponent(() => import('../components/featured
 // they're genuinely current as of the last time this replica itself
 // saved or synced that World — never a stale count baked into the
 // LocalWorldExperience record itself (which stores none of this; see
-// core/LocalWorldExperience.js's own header). The thumbnail and the
+// core/world/LocalWorldExperience.js's own header). The thumbnail and the
 // description snippet come from the same two lookups: the Publication
 // the World was found as (PublicationPreview renders from its content
 // hash) and the local copy's own metadata.

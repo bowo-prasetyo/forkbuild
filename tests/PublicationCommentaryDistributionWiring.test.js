@@ -2,7 +2,7 @@
 import { LocalStorageProvider } from '../storage/LocalStorageProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 
-import { PublicationCommentary } from '../core/PublicationCommentary.js';
+import { PublicationCommentary } from '../core/publication/PublicationCommentary.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
 import { Publication } from '../publisher/Publication.js';
@@ -50,7 +50,7 @@ import { makeIdentity } from './support/TestIdentity.js';
 //      distribution failure is swallowed and never turns local
 //      Commentary creation into a network-dependent operation.
 //
-// NEITHER core/PublicationCommentary.js, storage/PublicationCommentaryStore.js,
+// NEITHER core/publication/PublicationCommentary.js, storage/PublicationCommentaryStore.js,
 // application/publication/commentary/PublicationCommentaryDistributionExchange.js,
 // application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js, nor
 // application/publication/commentary/CreatePublicationCommentaryUseCase.js is modified by this

@@ -1,8 +1,8 @@
-import { normalizeBuiltWith } from '../../core/BuiltWith.js';
+import { normalizeBuiltWith } from '../../core/catalog/BuiltWith.js';
 
 // One person's builds, by identity (ui/views/BuilderView.js): the builds
 // they published and signed, and the builds others published crediting them
-// as having built it together (core/BuiltWith.js). Only what verifies counts:
+// as having built it together (core/catalog/BuiltWith.js). Only what verifies counts:
 // a build is theirs when their identity signed it, and a credit counts when
 // the author who signed the build gave it. Newest of each build only.
 //

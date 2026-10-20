@@ -1,4 +1,4 @@
-import { Delegation } from '../core/Delegation.js';
+import { Delegation } from '../core/publication/Delegation.js';
 import { identityForDidKey, verifySignedDescriptor } from './DescriptorSignature.js';
 
 // Decides whether `signerIdentity` may perform `requiredAction` on `subject`,

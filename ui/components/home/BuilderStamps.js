@@ -1,5 +1,5 @@
 import { inject, onMounted, ref } from 'vue';
-import { builderStamps } from '../../../core/BuilderStamps.js';
+import { builderStamps } from '../../../core/catalog/BuilderStamps.js';
 import { gatherBuilderStampFacts } from '../../../application/stamps/BuilderStampFacts.js';
 import { CreateDiscoveryUseCase } from '../../../application/discovery/CreateDiscoveryUseCase.js';
 import { LocalDiscoveryProvider } from '../../../discovery/LocalDiscoveryProvider.js';
@@ -15,7 +15,7 @@ const ICONS = Object.freeze({
     onPlot: '📍'
 });
 
-// Home's "Your stamps" (core/BuilderStamps.js): facts about this device's
+// Home's "Your stamps" (core/catalog/BuilderStamps.js): facts about this device's
 // own builds, shown only to their builder and only once one is earned.
 // `facts` stands in for this device's records (tests).
 export default {

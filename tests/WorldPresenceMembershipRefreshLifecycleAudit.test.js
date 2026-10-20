@@ -1,11 +1,11 @@
 import { readFile } from 'node:fs/promises';
 
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
@@ -16,7 +16,7 @@ import { DeviceAuthorizationPropagationUseCase } from '../application/identity/D
 import { WorldMembershipUseCase } from '../application/identity/WorldMembershipUseCase.js';
 import { WorldPresenceUseCase } from '../application/presence/WorldPresenceUseCase.js';
 import { WorldAuthorizationService } from '../application/identity/WorldAuthorizationService.js';
-import { WorldPresenceActivity } from '../core/WorldPresenceActivity.js';
+import { WorldPresenceActivity } from '../core/collaboration/WorldPresenceActivity.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
 import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';

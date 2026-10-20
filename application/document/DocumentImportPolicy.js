@@ -2,7 +2,7 @@ import { DocumentSealStatus } from '../../identity/DocumentSealing.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 
 // What Import does with a build file, decided from who the file says made
-// it, whether its seal holds (core/DocumentSeal.js), and its license.
+// it, whether its seal holds (core/document/DocumentSeal.js), and its license.
 //
 //   OWN          no maker named, or one of this device's own identities,
 //                or a build that credits one of them as having built it

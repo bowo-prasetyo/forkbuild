@@ -1,10 +1,10 @@
 import { readFile } from 'node:fs/promises';
-import { VehiclePresence } from '../core/VehiclePresence.js';
-import { VehicleType } from '../core/VehicleType.js';
-import { Position } from '../core/Position.js';
+import { VehiclePresence } from '../core/vehicles/VehiclePresence.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
+import { Position } from '../core/document/Position.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.71 — Vehicle Presence Descriptor, core/VehiclePresence.js.
+// 0.9.71 — Vehicle Presence Descriptor, core/vehicles/VehiclePresence.js.
 // Extended by 0.9.74 — Deterministic Vehicle Identity (adds `id`).
 //
 //   Section A: valid descriptors for every non-NONE VehicleType
@@ -51,7 +51,7 @@ async function runTests() {
         // id carries whatever string it is given — VehiclePresence never
         // inspects, parses, or validates its FORMAT, only its shape
         // (non-empty string). An id that looks nothing like
-        // core/VehicleIdentity.js's own convention is still accepted.
+        // core/vehicles/VehicleIdentity.js's own convention is still accepted.
         const arbitraryId = new VehiclePresence({ id: 'anything-at-all', type: VehicleType.CAR, position: { x: 0, y: 0, z: 0 } });
         assert(arbitraryId.id === 'anything-at-all', '9. an arbitrarily-shaped non-empty string id is accepted verbatim — this file enforces no format');
     }
@@ -132,7 +132,7 @@ async function runTests() {
     // Section E — architectural regression
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../core/VehiclePresence.js', import.meta.url);
+        const sourceUrl = new URL('../core/vehicles/VehiclePresence.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -153,14 +153,14 @@ async function runTests() {
             'VehicleIdentity', 'vehicleIdFor'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `43. core/VehiclePresence.js's own code never references "${term}" — a world-level existence-and-location descriptor that CARRIES an id, never derives one`);
+            assert(!codeOnly.includes(term), `43. core/vehicles/VehiclePresence.js's own code never references "${term}" — a world-level existence-and-location descriptor that CARRIES an id, never derives one`);
         }
     }
     {
-        const exportsModule = await import('../core/VehiclePresence.js');
+        const exportsModule = await import('../core/vehicles/VehiclePresence.js');
         const exportedNames = Object.keys(exportsModule).sort();
         assert(JSON.stringify(exportedNames) === JSON.stringify(['VehiclePresence']),
-            '44. core/VehiclePresence.js exports exactly the descriptor class, nothing else');
+            '44. core/vehicles/VehiclePresence.js exports exactly the descriptor class, nothing else');
     }
 
     console.log('✅ All Vehicle Presence tests passed.');

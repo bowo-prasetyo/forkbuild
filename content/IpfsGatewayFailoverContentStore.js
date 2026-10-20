@@ -77,7 +77,7 @@ const DEFAULT_START_NEXT_AFTER_MS = 3000;
 //   enforces, or persistent failure scoring across calls.**
 export class IpfsGatewayFailoverContentStore extends ContentStore {
     // gatewayUrls: a non-empty array of gateway URLs, in the order they
-    //   should be tried — see core/IpfsGatewayConfiguration.js's own
+    //   should be tried — see core/networks/IpfsGatewayConfiguration.js's own
     //   `.gatewayUrls` for where a caller usually gets this from.
     // fetchImpl / timeoutMs: forwarded verbatim to every underlying
     //   IpfsGatewayContentStore — see that file's own constructor for

@@ -1,12 +1,12 @@
 import { DecentralizedDiscoveryQueryService } from '../discovery/DecentralizedWorldDiscoveryQuery.js';
-import { parseDecentralizedDiscoveryEnvelope } from '../../core/DecentralizedDiscoveryEnvelope.js';
-import { buildTagOfDiscoveryTag } from '../../core/NarrowDiscoveryTags.js';
+import { parseDecentralizedDiscoveryEnvelope } from '../../core/publication/DecentralizedDiscoveryEnvelope.js';
+import { buildTagOfDiscoveryTag } from '../../core/publication/NarrowDiscoveryTags.js';
 
 // Publication leads from Steem discovery threads, for the same registry the
 // Nostr and Arweave services feed. The publication family's tag finds every
 // one; a build-tag discovery tag (`forkbuild-tag:<tag>`,
-// core/NarrowDiscoveryTags.js) finds those whose reply lists that build tag
-// (core/SteemDiscoveryAnnouncement.js), as a relay finds the events carrying
+// core/publication/NarrowDiscoveryTags.js) finds those whose reply lists that build tag
+// (core/networks/SteemDiscoveryAnnouncement.js), as a relay finds the events carrying
 // it. Any other tag finds nothing.
 
 export const STEEM_PUBLICATION_DISCOVERY_TAG = 'forkbuild-publication';

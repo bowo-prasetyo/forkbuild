@@ -1,6 +1,6 @@
 import { StorageProvider } from './StorageProvider.js';
 import { LocalStorageProvider } from './LocalStorageProvider.js';
-import { SteemReadingConfiguration } from '../core/SteemReadingConfiguration.js';
+import { SteemReadingConfiguration } from '../core/networks/SteemReadingConfiguration.js';
 
 const STEEM_READING_CONFIGURATION_STORE_KEY = 'steem-reading-configuration';
 

@@ -1,8 +1,8 @@
-import { residentPoseAt, RESIDENT_MOTION } from '../../core/ResidentMotion.js';
-import { isResidentWalkClear, RESIDENT_COLLISION_RADIUS } from '../../core/ResidentPath.js';
-import { treeCollisionGeometryInRegion } from '../../core/TreeCollisionGeometry.js';
-import { DEFAULT_WORLD_SEED } from '../../core/TerrainHeightField.js';
-import { createSecureId } from '../../core/createId.js';
+import { residentPoseAt, RESIDENT_MOTION } from '../../core/world/ResidentMotion.js';
+import { isResidentWalkClear, RESIDENT_COLLISION_RADIUS } from '../../core/world/ResidentPath.js';
+import { treeCollisionGeometryInRegion } from '../../core/nature/TreeCollisionGeometry.js';
+import { DEFAULT_WORLD_SEED } from '../../core/nature/TerrainHeightField.js';
+import { createSecureId } from '../../core/document/createId.js';
 
 // How far from the viewer residents are drawn, as ANIMAL_RENDER_RADIUS is
 // for animals: well beyond the range of any interaction.
@@ -37,10 +37,10 @@ const OBSTACLE_MARGIN = 1;
 // place the session asks, so the renderer draws a resident, and the
 // avatar collides with it, in the same spot.
 //
-// Residents are World content (core/WorldResident.js), so nothing here is
+// Residents are World content (core/world/WorldResident.js), so nothing here is
 // stored or synced: each resident is found in `loadedDocuments`, its home
 // lifted into shared space by its document's position, and its pose
-// computed by core/ResidentMotion.js from the clock. What this class adds
+// computed by core/world/ResidentMotion.js from the clock. What this class adds
 // is the World's geometry, as the `isClear` that motion needs: the brick
 // boxes an avatar on the ground would bump into (`obstaclesNear`, usually
 // AvatarMovementConstraint#obstaclesNear) and the trees, gathered once per
@@ -120,7 +120,7 @@ export class ResidentRuntime {
 
     // An id for a new resident homed at `home` (shared space) that, at
     // `timeSeconds`, is standing within `radius` of home: where a resident
-    // walks is fixed by its id (core/ResidentMotion.js), so choosing the id
+    // walks is fixed by its id (core/world/ResidentMotion.js), so choosing the id
     // is how a resident added at your feet appears at your feet, instead of
     // wherever its day would otherwise have taken it. Tries up to `tries`
     // fresh ids and keeps the nearest standing one; one within `radius` is

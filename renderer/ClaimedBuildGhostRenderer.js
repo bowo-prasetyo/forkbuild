@@ -16,7 +16,7 @@ import { BuildingRenderer } from './BuildingRenderer.js';
 // preview, not the build.
 //
 // With `translucent: false` it draws the challenge plaza's exhibits
-// (core/ChallengePlaza.js) the same way but solid: builds shown where no
+// (core/challenge/ChallengePlaza.js) the same way but solid: builds shown where no
 // placement puts them, which nothing can select or edit either.
 export const DEFAULT_MAX_GHOST_BRICKS = 4000;
 const GHOST_OPACITY = 0.35;

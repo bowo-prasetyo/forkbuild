@@ -1,0 +1,465 @@
+import { Building } from '../building/Building.js';
+import { Group } from '../building/Group.js';
+import { StructurePlacement } from '../building/StructurePlacement.js';
+import { WorldLandmark } from '../world/WorldLandmark.js';
+import { WorldRegion } from '../world/WorldRegion.js';
+import { AnimalDecoration } from '../nature/AnimalDecoration.js';
+import { WorldResident } from '../world/WorldResident.js';
+import { DomainEvent } from '../events/Event.js';
+import { createId } from './createId.js';
+
+// World is the aggregate root. It owns Buildings and Groups (0.1.43) and
+// publishes domain events whenever something changes, so nothing else —
+// not the renderer, not future undo/autosave/multiplayer/publisher
+// systems — needs to be called manually after a mutation. eventBus is
+// optional: a World created without one (e.g. during JSON hydration)
+// simply publishes nothing.
+export class World {
+    constructor({ id = createId(), metadata = {}, eventBus = null } = {}) {
+        this._id = id;
+        this._buildings = new Map();
+        this._groups = new Map();
+        this._placements = new Map();
+        this._landmarks = new Map();
+        this._regions = new Map();
+        this._animalDecorations = new Map();
+        this._residents = new Map();
+        this._metadata = metadata;
+        this._eventBus = eventBus;
+    }
+
+    get id() {
+        return this._id;
+    }
+
+    get metadata() {
+        return this._metadata;
+    }
+
+    addBuilding(building) {
+        this._buildings.set(building.id, building);
+        this._publish(DomainEvent.BUILDING_ADDED, { building });
+    }
+
+    removeBuilding(id) {
+        const building = this._buildings.get(id);
+        if (!building) {
+            return;
+        }
+        this._buildings.delete(id);
+        this._publish(DomainEvent.BUILDING_REMOVED, { building });
+    }
+
+    getBuilding(id) {
+        return this._buildings.get(id) || null;
+    }
+
+    getBuildings() {
+        return Array.from(this._buildings.values());
+    }
+
+    // Routes a brick mutation through the building it belongs to, then
+    // publishes the event. Prefer this over calling building.addBrick()
+    // directly whenever the rest of the engine needs to know about it —
+    // which, in practice, is almost always.
+    addBrickToBuilding(buildingId, brick) {
+        const building = this.getBuilding(buildingId);
+        if (!building) {
+            throw new Error(`Unknown building: ${buildingId}`);
+        }
+        building.addBrick(brick);
+        this._publish(DomainEvent.BRICK_ADDED, { buildingId, brick });
+    }
+
+    removeBrickFromBuilding(buildingId, brickId) {
+        const building = this.getBuilding(buildingId);
+        if (!building) {
+            throw new Error(`Unknown building: ${buildingId}`);
+        }
+        const brick = building.findBrick(brickId);
+        if (!brick) {
+            return;
+        }
+        building.removeBrick(brickId);
+        this._publish(DomainEvent.BRICK_REMOVED, { buildingId, brick });
+    }
+
+    // Mutates an existing brick and publishes BRICK_UPDATED so the
+    // renderer can react incrementally. changes: { position, rotation, color }.
+    updateBrick(buildingId, brickId, changes) {
+        const building = this.getBuilding(buildingId);
+        if (!building) {
+            throw new Error(`Unknown building: ${buildingId}`);
+        }
+        const brick = building.findBrick(brickId);
+        if (!brick) {
+            return;
+        }
+        if (changes.position) {
+            brick.position = changes.position;
+        }
+        if (changes.rotation !== undefined) {
+            brick.rotation = changes.rotation;
+        }
+        if (changes.tilt !== undefined) {
+            brick.tilt = changes.tilt;
+        }
+        if (changes.color !== undefined) {
+            brick.color = changes.color;
+        }
+        this._publish(DomainEvent.BRICK_UPDATED, { buildingId, brick });
+    }
+
+    // -----------------------------------------------------------------
+    // Groups (0.1.43) — document state, mediated exactly like bricks.
+    // -----------------------------------------------------------------
+
+    addGroup(group) {
+        this._groups.set(group.id, group);
+        this._publish(DomainEvent.GROUP_ADDED, { group });
+    }
+
+    removeGroup(groupId) {
+        const group = this._groups.get(groupId);
+        if (!group) {
+            return;
+        }
+        this._groups.delete(groupId);
+        this._publish(DomainEvent.GROUP_REMOVED, { group });
+    }
+
+    getGroup(groupId) {
+        return this._groups.get(groupId) || null;
+    }
+
+    getGroups() {
+        return Array.from(this._groups.values());
+    }
+
+    getGroupsContainingBrick(brickId) {
+        return this.getGroups().filter((group) => group.hasMember(brickId));
+    }
+
+    // Resolves a group's membership against the live world, skipping
+    // brick ids that no longer exist (membership is referential).
+    getGroupBricks(groupId) {
+        const group = this.getGroup(groupId);
+        if (!group) {
+            return [];
+        }
+        const bricks = [];
+        for (const brickId of group.brickIds) {
+            for (const building of this._buildings.values()) {
+                const brick = building.findBrick(brickId);
+                if (brick) {
+                    bricks.push(brick);
+                    break;
+                }
+            }
+        }
+        return bricks;
+    }
+
+    renameGroup(groupId, name) {
+        const group = this.getGroup(groupId);
+        if (!group) {
+            return;
+        }
+        group.setName(name);
+        this._publish(DomainEvent.GROUP_UPDATED, { group });
+    }
+
+    // Returns true if the brick was actually added (not already a member).
+    addMemberToGroup(groupId, brickId) {
+        const group = this.getGroup(groupId);
+        if (!group) {
+            return false;
+        }
+        const added = group.addMember(brickId);
+        if (added) {
+            this._publish(DomainEvent.GROUP_UPDATED, { group });
+        }
+        return added;
+    }
+
+    // Returns true if the brick was actually a member.
+    removeMemberFromGroup(groupId, brickId) {
+        const group = this.getGroup(groupId);
+        if (!group) {
+            return false;
+        }
+        const removed = group.removeMember(brickId);
+        if (removed) {
+            this._publish(DomainEvent.GROUP_UPDATED, { group });
+        }
+        return removed;
+    }
+
+    // -----------------------------------------------------------------
+    // Structure placements (0.2.90) — document state, mediated exactly
+    // like buildings and groups above. A StructurePlacement never owns
+    // bricks (core/building/StructurePlacement.js's own header); World only ever
+    // stores the reference + position/rotation, never the referenced
+    // Document's content.
+    // -----------------------------------------------------------------
+
+    addStructurePlacement(placement) {
+        this._placements.set(placement.id, placement);
+        this._publish(DomainEvent.STRUCTURE_PLACEMENT_ADDED, { placement });
+    }
+
+    removeStructurePlacement(id) {
+        const placement = this._placements.get(id);
+        if (!placement) {
+            return;
+        }
+        this._placements.delete(id);
+        this._publish(DomainEvent.STRUCTURE_PLACEMENT_REMOVED, { placement });
+    }
+
+    getStructurePlacement(id) {
+        return this._placements.get(id) || null;
+    }
+
+    // 0.2.91 — World Instance Editing & Placement Management. Mutates an
+    // EXISTING placement's position and/or rotation in place — the
+    // instance-manipulation counterpart to updateBrick() above. changes:
+    // { position, rotation }. Never touches documentId: moving or
+    // rotating a placement never changes what it references (see
+    // core/building/StructurePlacement.js's own header). A silent no-op for an
+    // unknown id, the same graceful-absence posture removeStructurePlacement()
+    // already takes.
+    updateStructurePlacement(id, changes) {
+        const placement = this._placements.get(id);
+        if (!placement) {
+            return;
+        }
+        if (changes.position) {
+            placement.position = changes.position;
+        }
+        if (changes.rotation !== undefined) {
+            placement.rotation = changes.rotation;
+        }
+        this._publish(DomainEvent.STRUCTURE_PLACEMENT_UPDATED, { placement });
+    }
+
+    getStructurePlacements() {
+        return Array.from(this._placements.values());
+    }
+
+    // -----------------------------------------------------------------
+    // World Landmarks (0.3.7) — explicit, persistent World content.
+    // Unlike StructurePlacement (a reference to external Document state),
+    // a WorldLandmark IS the stored state — a named point users create
+    // to mark places of interest. See core/world/WorldLandmark.js's own header.
+    // -----------------------------------------------------------------
+
+    addWorldLandmark(landmark) {
+        this._landmarks.set(landmark.id, landmark);
+        this._publish(DomainEvent.WORLD_LANDMARK_ADDED, { landmark });
+    }
+
+    removeWorldLandmark(id) {
+        const landmark = this._landmarks.get(id);
+        if (!landmark) {
+            return;
+        }
+        this._landmarks.delete(id);
+        this._publish(DomainEvent.WORLD_LANDMARK_REMOVED, { landmark });
+    }
+
+    getWorldLandmark(id) {
+        return this._landmarks.get(id) || null;
+    }
+
+    getWorldLandmarks() {
+        return Array.from(this._landmarks.values());
+    }
+
+    updateWorldLandmark(id, updates) {
+        const landmark = this._landmarks.get(id);
+        if (!landmark) {
+            return;
+        }
+        if (updates.title !== undefined) {
+            landmark.setTitle(updates.title);
+        }
+        if (updates.description !== undefined) {
+            landmark.setDescription(updates.description);
+        }
+        this._publish(DomainEvent.WORLD_LANDMARK_UPDATED, { landmark });
+    }
+
+    // -----------------------------------------------------------------
+    // World Regions (0.5.0) — explicit, persistent World content. A
+    // WorldRegion IS the stored state exactly like a WorldLandmark above
+    // — see core/world/WorldRegion.js's own header — except it names an AREA
+    // (center + radius) rather than a single point.
+    // -----------------------------------------------------------------
+
+    addWorldRegion(region) {
+        this._regions.set(region.id, region);
+        this._publish(DomainEvent.WORLD_REGION_ADDED, { region });
+    }
+
+    removeWorldRegion(id) {
+        const region = this._regions.get(id);
+        if (!region) {
+            return;
+        }
+        this._regions.delete(id);
+        this._publish(DomainEvent.WORLD_REGION_REMOVED, { region });
+    }
+
+    getWorldRegion(id) {
+        return this._regions.get(id) || null;
+    }
+
+    getWorldRegions() {
+        return Array.from(this._regions.values());
+    }
+
+    // updates: { name, description, kind, radius } — any subset. A
+    // region's center and parentRegionId are deliberately not
+    // reassignable here; relocating or reparenting one is remove +
+    // recreate, the same restraint updateWorldLandmark() above already
+    // takes with a landmark's position.
+    updateWorldRegion(id, updates) {
+        const region = this._regions.get(id);
+        if (!region) {
+            return;
+        }
+        if (updates.name !== undefined) {
+            region.setName(updates.name);
+        }
+        if (updates.description !== undefined) {
+            region.setDescription(updates.description);
+        }
+        if (updates.kind !== undefined) {
+            region.setKind(updates.kind);
+        }
+        if (updates.radius !== undefined) {
+            region.setRadius(updates.radius);
+        }
+        this._publish(DomainEvent.WORLD_REGION_UPDATED, { region });
+    }
+
+    // -----------------------------------------------------------------
+    // World Animal Decorations (0.9.702) — explicit, persistent World
+    // content. Unlike application/world/AnimalRuntimeInstances.js's own
+    // session-local, ephemeral released AnimalPresence, an
+    // AnimalDecoration IS stored World state — the same "IS the stored
+    // state" distinction the World Landmarks section above already
+    // draws against StructurePlacement. No update method: decorative
+    // only in v1 (see core/nature/AnimalDecoration.js's own header) — remove
+    // and re-decorate covers every real case a v1 consumer has.
+    // -----------------------------------------------------------------
+
+    addAnimalDecoration(decoration) {
+        this._animalDecorations.set(decoration.id, decoration);
+        this._publish(DomainEvent.ANIMAL_DECORATION_ADDED, { decoration });
+    }
+
+    removeAnimalDecoration(id) {
+        const decoration = this._animalDecorations.get(id);
+        if (!decoration) {
+            return;
+        }
+        this._animalDecorations.delete(id);
+        this._publish(DomainEvent.ANIMAL_DECORATION_REMOVED, { decoration });
+    }
+
+    getAnimalDecoration(id) {
+        return this._animalDecorations.get(id) || null;
+    }
+
+    getAnimalDecorations() {
+        return Array.from(this._animalDecorations.values());
+    }
+
+    // -----------------------------------------------------------------
+    // World Residents — ambient people who live in this World (see
+    // core/world/WorldResident.js). Stored World content like a decoration: added
+    // and removed by undoable commands, never updated in place (a resident's
+    // only field is its home; moving it is removing and adding again).
+    // -----------------------------------------------------------------
+
+    addResident(resident) {
+        this._residents.set(resident.id, resident);
+        this._publish(DomainEvent.RESIDENT_ADDED, { resident });
+    }
+
+    removeResident(id) {
+        const resident = this._residents.get(id);
+        if (!resident) {
+            return;
+        }
+        this._residents.delete(id);
+        this._publish(DomainEvent.RESIDENT_REMOVED, { resident });
+    }
+
+    getResident(id) {
+        return this._residents.get(id) || null;
+    }
+
+    getResidents() {
+        return Array.from(this._residents.values());
+    }
+
+    // compactBricks: see Building#toJSON().
+    toJSON({ compactBricks = false } = {}) {
+        return {
+            id: this._id,
+            metadata: this._metadata,
+            buildings: this.getBuildings().map((building) => building.toJSON({ compactBricks })),
+            groups: this.getGroups().map((group) => group.toJSON()),
+            placements: this.getStructurePlacements().map((placement) => placement.toJSON()),
+            landmarks: this.getWorldLandmarks().map((landmark) => landmark.toJSON()),
+            regions: this.getWorldRegions().map((region) => region.toJSON()),
+            animalDecorations: this.getAnimalDecorations().map((decoration) => decoration.toJSON()),
+            // Only written when there is one, so a World without residents
+            // serializes byte for byte as it did before residents existed.
+            ...(this._residents.size > 0
+                ? { residents: this.getResidents().map((resident) => resident.toJSON()) }
+                : {})
+        };
+    }
+
+    static fromJSON(json, eventBus = null) {
+        const world = new World({ id: json.id, metadata: json.metadata, eventBus });
+        for (const buildingJson of json.buildings) {
+            world.addBuilding(Building.fromJSON(buildingJson));
+        }
+        // Worlds serialized before 0.1.43 have no groups field.
+        for (const groupJson of json.groups || []) {
+            world.addGroup(Group.fromJSON(groupJson));
+        }
+        // Worlds serialized before 0.2.90 have no placements field.
+        for (const placementJson of json.placements || []) {
+            world.addStructurePlacement(StructurePlacement.fromJSON(placementJson));
+        }
+        // Worlds serialized before 0.3.7 have no landmarks field.
+        for (const landmarkJson of json.landmarks || []) {
+            world.addWorldLandmark(WorldLandmark.fromJSON(landmarkJson));
+        }
+        // Worlds serialized before 0.5.0 have no regions field.
+        for (const regionJson of json.regions || []) {
+            world.addWorldRegion(WorldRegion.fromJSON(regionJson));
+        }
+        // Worlds serialized before 0.9.702 have no animalDecorations field.
+        for (const decorationJson of json.animalDecorations || []) {
+            world.addAnimalDecoration(AnimalDecoration.fromJSON(decorationJson));
+        }
+        // A World with no residents has no residents field.
+        for (const residentJson of json.residents || []) {
+            world.addResident(WorldResident.fromJSON(residentJson));
+        }
+        return world;
+    }
+
+    _publish(eventType, payload) {
+        if (this._eventBus) {
+            this._eventBus.publish(eventType, payload);
+        }
+    }
+}

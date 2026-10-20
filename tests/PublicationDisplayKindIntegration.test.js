@@ -1,9 +1,9 @@
 import { execSync } from 'node:child_process';
 
 import { Publication } from '../publisher/Publication.js';
-import { ContentReference } from '../core/ContentReference.js';
-import { License } from '../core/License.js';
-import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
+import { ContentReference } from '../core/document/ContentReference.js';
+import { License } from '../core/document/License.js';
+import { DecentralizedPublication } from '../core/publication/DecentralizedPublication.js';
 import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { PublicationExchange } from '../application/publication/PublicationExchange.js';
 import { PublicationPeerExchange } from '../application/publication/PublicationPeerExchange.js';
@@ -14,8 +14,8 @@ import { resolvePublicationView } from '../application/publication/PublicationRe
 import { CreatePublicationDisplayKindRegistryUseCase } from '../application/publication/CreatePublicationDisplayKindRegistryUseCase.js';
 import { PUBLICATION_CONTENT_KIND } from '../application/publication/PublicationContentValidator.js';
 
-import { BlueprintAttribution, BLUEPRINT_ATTRIBUTION_KIND, CURRENT_SCHEMA_VERSION as ATTRIBUTION_SCHEMA_VERSION } from '../core/BlueprintAttribution.js';
-import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
+import { BlueprintAttribution, BLUEPRINT_ATTRIBUTION_KIND, CURRENT_SCHEMA_VERSION as ATTRIBUTION_SCHEMA_VERSION } from '../core/building/BlueprintAttribution.js';
+import { PlaceNamingClaim } from '../core/world/PlaceNamingClaim.js';
 import { buildPlaceNamingClaimPublication, PLACE_NAMING_CLAIM_PUBLICATION_KIND, CURRENT_SCHEMA_VERSION as NAMING_SCHEMA_VERSION } from '../application/placeNaming/PlaceNamingClaimPublication.js';
 
 import { LocalContentStore } from '../content/LocalContentStore.js';
@@ -257,7 +257,7 @@ async function run() {
         // No second identity: the resolved Publication keeps its OWN id
         // (documentId-keyed, per publisher/Publication.js), distinct from
         // but never confused with the enclosing envelope's own id
-        // (core/DecentralizedPublication.js's own, unrelated identity
+        // (core/publication/DecentralizedPublication.js's own, unrelated identity
         // space) — the view exposes both, never collapses them into one.
         assert(flagshipView.publication instanceof DecentralizedPublication && flagshipView.publication.id !== content.id,
             '9. the envelope (flagshipView.publication, its own DecentralizedPublication identity) and the resolved content (its own Publication identity) keep two structurally distinct identity spaces, never collapsed into one');

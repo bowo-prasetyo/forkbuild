@@ -61,7 +61,7 @@ const MESSAGE_KIND_ANNOUNCE = 'ANNOUNCE';
 // onCommentaryReceived() below fires a plain `{ commentary, isNew }`
 // fact for whatever LOCAL code wants to react to newly arrived
 // commentary (e.g. constructing a NotificationEvent) — this class
-// itself never imports core/NotificationEvent.js, never constructs one,
+// itself never imports core/social/NotificationEvent.js, never constructs one,
 // and never sends anything back out over the wire. See 0.9.617's own
 // Section D: the notification boundary was already correctly local-only
 // before this milestone, and stays exactly that way.

@@ -1,7 +1,7 @@
-import { BUILD_TAG_MAX_COUNT, normalizeBuildTag, normalizeBuildTags, suggestBuildTags } from '../core/BuildTags.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { Document } from '../core/Document.js';
-import { World } from '../core/World.js';
+import { BUILD_TAG_MAX_COUNT, normalizeBuildTag, normalizeBuildTags, suggestBuildTags } from '../core/document/BuildTags.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { Document } from '../core/document/Document.js';
+import { World } from '../core/document/World.js';
 import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
 import { assert } from './support/Assert.js';
 

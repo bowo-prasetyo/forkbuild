@@ -3,9 +3,9 @@
 import { setDocumentTitles, untitledWorldTitle, forkTitle, copyTitle } from '../application/document/DocumentTitles.js';
 import { CreateDocumentManagerUseCase } from '../application/document/CreateDocumentManagerUseCase.js';
 import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { World } from '../core/World.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
 import { Translator } from '../ui/i18n/Translator.js';
 import en from '../ui/i18n/messages/en.js';
 import { assert } from './support/Assert.js';

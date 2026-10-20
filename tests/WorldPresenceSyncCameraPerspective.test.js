@@ -1,4 +1,4 @@
-import { CameraPerspective } from '../core/CameraPerspective.js';
+import { CameraPerspective } from '../core/avatar/CameraPerspective.js';
 import { useWorldPresenceSync } from '../ui/views/worldView/useWorldPresenceSync.js';
 import { assert } from './support/Assert.js';
 

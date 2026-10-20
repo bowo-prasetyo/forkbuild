@@ -1,5 +1,5 @@
 import { EventBus } from '../../core/events/EventBus.js';
-import { WorldEditAuthority } from '../../core/WorldEditAuthority.js';
+import { WorldEditAuthority } from '../../core/collaboration/WorldEditAuthority.js';
 import {
     toWorldEditAuthorizationGrant,
     getWorldEditAuthorizationGrantSigningDescriptor,
@@ -7,13 +7,13 @@ import {
     getWorldEditAuthorizationRevocationSigningDescriptor,
     isValidWorldEditAuthorizationGrant,
     isValidWorldEditAuthorizationRevocation
-} from '../../core/WorldEditAuthorizationEnvelope.js';
+} from '../../core/collaboration/WorldEditAuthorizationEnvelope.js';
 import { LocalAuthorizationVerifier } from '../../identity/LocalAuthorizationVerifier.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
 import * as Ed25519 from '../../identity/Ed25519.js';
-import { UserFacingError } from '../../core/UserFacingError.js';
-import { message } from '../../core/Message.js';
+import { UserFacingError } from '../../core/app/UserFacingError.js';
+import { message } from '../../core/app/Message.js';
 
 const GRANT_CHANGED_EVENT = 'WorldEditGrantChanged';
 const STORAGE_KEY_PREFIX = 'world-membership:';
@@ -28,7 +28,7 @@ const STORAGE_KEY_PREFIX = 'world-membership:';
 // collaborator model... not one this milestone quietly assumed into
 // existence" (docs/Roadmap.md, 0.2.97). This class is the answer — a
 // SIGNED, REVOCABLE CAPABILITY an independent identity can hold, never a
-// new role, never a second kind of ownership. See core/WorldAccessLevel.js's
+// new role, never a second kind of ownership. See core/collaboration/WorldAccessLevel.js's
 // own header on why this stays NONE/READ/EDIT, never grows an
 // EDITOR/ADMIN/MODERATOR vocabulary.
 //
@@ -246,7 +246,7 @@ export class WorldMembershipUseCase {
     //   5. freshness — a grant only replaces an existing one when its
     //      `authorizedAt` is strictly newer; a revocation only replaces
     //      an existing one when its `revokedAt` is strictly newer — the
-    //      identical rule core/DeviceAuthority.js already applies.
+    //      identical rule core/identity/DeviceAuthority.js already applies.
     _handleIncoming(payload) {
         if (!payload || typeof payload !== 'object') {
             return;

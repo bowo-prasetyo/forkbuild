@@ -2,7 +2,7 @@ import {
     PublicationAnchor,
     PUBLICATION_ANCHOR_KIND,
     CURRENT_SCHEMA_VERSION as ANCHOR_SCHEMA_VERSION
-} from '../core/PublicationAnchor.js';
+} from '../core/publication/PublicationAnchor.js';
 import {
     validatePublicationAnchor,
     PublicationAnchorError

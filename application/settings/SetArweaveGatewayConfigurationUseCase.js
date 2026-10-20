@@ -1,9 +1,9 @@
-import { ArweaveGatewayConfiguration } from '../../core/ArweaveGatewayConfiguration.js';
+import { ArweaveGatewayConfiguration } from '../../core/networks/ArweaveGatewayConfiguration.js';
 import { ArweaveGatewayConfigurationStore } from '../../storage/ArweaveGatewayConfigurationStore.js';
 
 // 0.9.366 — Arweave Gateway Settings UI.
 //
-// core/ArweaveGatewayConfiguration.js (0.9.364) already named the one thing
+// core/networks/ArweaveGatewayConfiguration.js (0.9.364) already named the one thing
 // missing between a user's own gateway URL and a durable, validated
 // configuration: "a future settings surface — this file builds none." This
 // class is that missing WRITE seam: a settings view hands this class a
@@ -64,7 +64,7 @@ export class SetArweaveGatewayConfigurationUseCase {
     // property of the store itself). Returns the new, persisted
     // ArweaveGatewayConfiguration.
     //
-    // Throws for anything core/ArweaveGatewayConfiguration.js's own
+    // Throws for anything core/networks/ArweaveGatewayConfiguration.js's own
     // constructor rejects (not an absolute http(s) URL, empty, ...) — before
     // this method ever calls `save()`. This method adds no validation of its
     // own beyond forwarding verbatim.

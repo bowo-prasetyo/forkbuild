@@ -1,10 +1,10 @@
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 
-import { PublicationCommentary } from '../core/PublicationCommentary.js';
+import { PublicationCommentary } from '../core/publication/PublicationCommentary.js';
 import {
     PublicationCommentaryDistributionEnvelope,
     PUBLICATION_COMMENTARY_DISTRIBUTION_KIND
-} from '../core/PublicationCommentaryDistributionEnvelope.js';
+} from '../core/publication/PublicationCommentaryDistributionEnvelope.js';
 import {
     PublicationCommentaryStore,
     PublicationCommentaryConflictError
@@ -432,7 +432,7 @@ async function run() {
     // Section M — Notification remains a local, downstream concern.
     // -------------------------------------------------------------
     {
-        for (const file of ['application/publication/commentary/PublicationCommentaryDistributionExchange.js', 'application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js', 'core/PublicationCommentaryDistributionEnvelope.js']) {
+        for (const file of ['application/publication/commentary/PublicationCommentaryDistributionExchange.js', 'application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js', 'core/publication/PublicationCommentaryDistributionEnvelope.js']) {
             const src = codeOnly(await rawSource(file));
             assert(!/NotificationEvent|NotificationEventStore/.test(src),
                 `46. ${file} never imports or mentions NotificationEvent/NotificationEventStore — distribution stays structurally incapable of doing Notification's own job`);
@@ -471,10 +471,10 @@ async function run() {
         });
         assert(store.save(commentary) === true, '48. local, non-distributed commentary creation still works exactly as before');
         assert(store.getById(commentary.commentaryId).content === commentary.content, '49. local read-back is unchanged');
-        assert(typeof commentary.getSigningDescriptor !== 'function', '50. core/PublicationCommentary.js itself still carries no getSigningDescriptor() method — this milestone adds a signature to the DISTRIBUTION ENVELOPE only, never to the domain object 0.9.617\'s own audit measured as unsigned');
-        assert(!('signature' in commentary) && commentary._signature === undefined, '51. core/PublicationCommentary.js itself still carries no signature field of any kind — unmodified by this milestone, exactly as its own header promises');
+        assert(typeof commentary.getSigningDescriptor !== 'function', '50. core/publication/PublicationCommentary.js itself still carries no getSigningDescriptor() method — this milestone adds a signature to the DISTRIBUTION ENVELOPE only, never to the domain object 0.9.617\'s own audit measured as unsigned');
+        assert(!('signature' in commentary) && commentary._signature === undefined, '51. core/publication/PublicationCommentary.js itself still carries no signature field of any kind — unmodified by this milestone, exactly as its own header promises');
 
-        console.log('✓ N: existing, local, non-distributed Commentary behavior is completely unchanged — core/PublicationCommentary.js itself was never modified.');
+        console.log('✓ N: existing, local, non-distributed Commentary behavior is completely unchanged — core/publication/PublicationCommentary.js itself was never modified.');
     }
 
     console.log('✅ All Publication Commentary Distribution tests passed.');

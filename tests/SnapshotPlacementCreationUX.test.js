@@ -1,4 +1,4 @@
-import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
+import { PublicationSnapshotPlacement } from '../core/publication/PublicationSnapshotPlacement.js';
 import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
 import { PublicationResolver } from '../application/publication/PublicationResolver.js';

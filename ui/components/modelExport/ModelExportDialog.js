@@ -1,8 +1,8 @@
-import { BuildModelFormat } from '../../../core/BuildModelFormats.js';
+import { BuildModelFormat } from '../../../core/building/BuildModelFormats.js';
 import { t } from '../../i18n/i18n.js';
 
 // "Download as a 3D model", from the Editor's toolbar: the three file kinds
-// (core/BuildModelFormats.js), each saying what it is for. Emits
+// (core/building/BuildModelFormats.js), each saying what it is for. Emits
 // choose(format) or cancel; the Editor makes the file.
 const OPTIONS = Object.freeze([
     { format: BuildModelFormat.GLB, name: 'modelExport.glb', description: 'modelExport.glbDescription' },

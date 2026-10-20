@@ -3,7 +3,7 @@ import { stripPrefix } from './presentation.js';
 import { errorText } from '../../i18n/i18n.js';
 
 // Blocking is entirely local and never needs a live connection (see
-// core/PeerBlockRecord.js). `identity` is duck-typed (identityId,
+// core/social/PeerBlockRecord.js). `identity` is duck-typed (identityId,
 // publicKey, algorithm), so a live peer's remoteIdentity, a Known Peer or
 // a friendship record all work.
 export function useBlockedPeers({ peerBlockUseCase }) {

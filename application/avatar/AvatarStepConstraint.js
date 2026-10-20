@@ -1,12 +1,12 @@
-import { orientedSize } from '../../core/BrickOrientation.js';
-import { isStepClimbable, DEFAULT_MAX_STEP_HEIGHT } from '../../core/BrickWalkability.js';
-import { resolveWalkableSurfaceAt, walkableSurfaceKindFor } from '../../core/WalkableSurface.js';
-import { passageFloorAt } from '../../core/BrickPassage.js';
+import { orientedSize } from '../../core/building/BrickOrientation.js';
+import { isStepClimbable, DEFAULT_MAX_STEP_HEIGHT } from '../../core/building/BrickWalkability.js';
+import { resolveWalkableSurfaceAt, walkableSurfaceKindFor } from '../../core/building/WalkableSurface.js';
+import { passageFloorAt } from '../../core/building/BrickPassage.js';
 import { TransformMath } from '../editor/TransformMath.js';
 
-// The flat plane core/AvatarMovementSimulation.js has always walked on
+// The flat plane core/avatar/AvatarMovementSimulation.js has always walked on
 // — see that file's own (pre-0.3.2) GROUND_Y constant. Deliberately
-// NOT core/TerrainHeightField.js's real, hilly terrainHeightAt(): this
+// NOT core/nature/TerrainHeightField.js's real, hilly terrainHeightAt(): this
 // class answers ONE question (is there a brick to step onto HERE?),
 // never "what does the ground actually look like at this point" —
 // that remains application/avatar/AvatarTerrainConstraint.js's own, entirely
@@ -21,15 +21,15 @@ import { TransformMath } from '../editor/TransformMath.js';
 const FLAT_GROUND_Y = 0;
 
 // 0.3.2 — Step-Up Movement. The application-layer half of
-// core/BrickWalkability.js, mirroring exactly the split
+// core/building/BrickWalkability.js, mirroring exactly the split
 // application/avatar/AvatarMovementConstraint.js and
 // application/avatar/AvatarTerrainConstraint.js already established: this
 // class supplies the REAL loaded-world geometry (brick footprints,
-// terrain height), core/BrickWalkability.js supplies the pure "is this
+// terrain height), core/building/BrickWalkability.js supplies the pure "is this
 // a step or a climb" math applied to it.
 //
 // 0.3.3 — Walkable Structures. `supportHeightAt()`'s own per-brick
-// height now comes from core/WalkableSurface.js#resolveWalkableSurfaceAt()
+// height now comes from core/building/WalkableSurface.js#resolveWalkableSurfaceAt()
 // rather than walkableTopAt() directly — see that file's own header for
 // why a stair or a slope's own walkable height can never be an AABB
 // question. Nothing in THIS class changed conceptually: it still
@@ -58,7 +58,7 @@ const FLAT_GROUND_Y = 0;
 // Climb (0.3.2)." A step within maxStepHeight is taken in full, in one
 // tick, with no partial ascent; a step UP beyond it is simply not taken
 // — the avatar stops at the edge, exactly like a too-steep terrain
-// slope already stops it (core/TerrainWalkability.js).
+// slope already stops it (core/nature/TerrainWalkability.js).
 //
 // 0.3.4 — Vertical World Navigation. Stepping DOWN beyond maxStepHeight
 // no longer shares that same "blocked, symmetric with stepping up"
@@ -115,19 +115,19 @@ export class AvatarStepConstraint {
     // The highest walkable surface directly beneath/at (x, z): the
     // flat walking plane's own height, or any currently-loaded brick's
     // own walkable surface (its flat top face, a stair tread, or a
-    // slope's own ramp height — see core/WalkableSurface.js) whose
+    // slope's own ramp height — see core/building/WalkableSurface.js) whose
     // footprint contains the point — whichever is HIGHER. Taking the
     // max (rather than "the first brick found") is what makes standing
     // atop a stack of bricks well-defined: the ground beneath a stack
     // is never the relevant surface once something is sitting on top
     // of it. Public — this is also what
     // application/avatar/AvatarMovementController.js reads BEFORE simulating
-    // a tick, to tell core/AvatarMovementSimulation.js what surface
+    // a tick, to tell core/avatar/AvatarMovementSimulation.js what surface
     // the avatar is CURRENTLY standing on (its `groundHeight`).
     //
     // 0.3.3 — the per-brick height itself now comes from
-    // core/WalkableSurface.js#resolveWalkableSurfaceAt() rather than
-    // core/BrickWalkability.js#walkableTopAt() directly: an ordinary
+    // core/building/WalkableSurface.js#resolveWalkableSurfaceAt() rather than
+    // core/building/BrickWalkability.js#walkableTopAt() directly: an ordinary
     // flat-topped brick still resolves to EXACTLY the same top-face
     // height as before (that function still delegates straight back to
     // walkableTopAt() for the FLAT case — see its own header), while a
@@ -248,7 +248,7 @@ export class AvatarStepConstraint {
     // The height `brick` offers to stand on at (x, z), or null: its walkable
     // surface there, unless that is out of reach from `referenceHeight` (a
     // brick wholly above a step's reach is no support at all). In the way
-    // through a door or an arch (core/BrickPassage.js), a top out of reach is
+    // through a door or an arch (core/building/BrickPassage.js), a top out of reach is
     // a roof over a passer-by, so what they stand on is the passage's floor.
     _brickSupportAt(brick, definition, center, rotationDegrees, x, z, referenceHeight, hasReference) {
         const size = orientedSize(definition, brick.tilt);
@@ -290,7 +290,7 @@ export class AvatarStepConstraint {
     // of event. They aren't: a wall in front of the avatar is real
     // geometry actively occupying that space; a ledge is the ABSENCE of
     // a supporting surface, which is exactly what gravity — already
-    // sitting one layer down in core/AvatarMovementSimulation.js since
+    // sitting one layer down in core/avatar/AvatarMovementSimulation.js since
     // 0.2.36 — exists to answer. So the two directions now diverge:
     //
     //   toHeight - fromHeight >  maxStepHeight  -> still BLOCKED
@@ -300,7 +300,7 @@ export class AvatarStepConstraint {
     //       accepted, Y is left UNSNAPPED, and `falling: true` tells
     //       the caller — application/avatar/AvatarMovementController.js — to
     //       flip `grounded` to false for the NEXT tick, so
-    //       core/AvatarMovementSimulation.js's own existing gravity
+    //       core/avatar/AvatarMovementSimulation.js's own existing gravity
     //       integration takes over from here)
     //
     // Landing still reads the exact same `supportHeightAt()` — the

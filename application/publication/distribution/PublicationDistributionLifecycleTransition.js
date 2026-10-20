@@ -39,7 +39,7 @@ const INVALID_FACT = Symbol('PublicationDistributionLifecycleTransition.INVALID_
 // lifecycle description. It performs no I/O, no persistence, no retry, no
 // clock read, no scheduling, and causes no mutation of any kind — the
 // identical restraint every boundary in this family has held since
-// `core/DecentralizedDiscoveryEnvelope.js` (0.9.30).
+// `core/publication/DecentralizedDiscoveryEnvelope.js` (0.9.30).
 //
 // EXACTLY ONE EXPLICIT FACT PER CALL — NEVER BOTH DIMENSIONS AT ONCE, NEVER
 // NEITHER. A `transition` names a new fact for `material` XOR `discovery`,

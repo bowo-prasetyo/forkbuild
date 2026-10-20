@@ -1,9 +1,9 @@
-import { NostrRelayConfiguration } from '../../core/NostrRelayConfiguration.js';
+import { NostrRelayConfiguration } from '../../core/networks/NostrRelayConfiguration.js';
 import { NostrRelayConfigurationStore } from '../../storage/NostrRelayConfigurationStore.js';
 
 // 0.9.371 — Nostr Relay Settings UI.
 //
-// 0.9.369's own core/NostrRelayConfiguration.js already named the one thing
+// 0.9.369's own core/networks/NostrRelayConfiguration.js already named the one thing
 // missing between a user's own relay URL and a durable, validated
 // configuration: "a future settings surface — this file builds none." This
 // class is that missing WRITE seam, the direct structural mirror of
@@ -64,7 +64,7 @@ export class SetNostrRelayConfigurationUseCase {
     // of the store itself). Returns the new, persisted
     // NostrRelayConfiguration.
     //
-    // Throws for anything core/NostrRelayConfiguration.js's own constructor
+    // Throws for anything core/networks/NostrRelayConfiguration.js's own constructor
     // rejects (not a ws:/wss: URL, empty, ...) — before this method ever
     // calls `save()`. This method adds no validation of its own beyond
     // forwarding verbatim.

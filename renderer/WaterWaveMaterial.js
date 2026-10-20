@@ -1,24 +1,24 @@
-import { LAKE_WAVES, SEA_WAVES, WAVE_KIND, waveNumber, waveAngularSpeed } from '../core/WaterWaves.js';
+import { LAKE_WAVES, SEA_WAVES, WAVE_KIND, waveNumber, waveAngularSpeed } from '../core/nature/WaterWaves.js';
 import { RAIN_RINGS_GLSL } from './RainRings.js';
 
-// Makes a water tile's material move with core/WaterWaves.js: the swell
+// Makes a water tile's material move with core/nature/WaterWaves.js: the swell
 // lifts and drops the vertices and tilts their normals, and, on the lit top
 // surface, the ripples tilt the light per pixel. The waves are written into
-// the shader from the very constants core/WaterWaves.js tests, so the drawn
+// the shader from the very constants core/nature/WaterWaves.js tests, so the drawn
 // water and the tested water are the same water.
 //
 // `waveTime` is a shared { value } (seconds) every water tile's material
 // reads, so one write a frame (renderer/Renderer.js) moves all the water at
 // once with no per-tile work. Each vertex carries `aSeaShare`
-// (core/Hydrology.js#seaShareAt()), which blends lake waves into sea waves
+// (core/nature/Hydrology.js#seaShareAt()), which blends lake waves into sea waves
 // across a shelf exactly as the colour blends.
 //
 // `rain` is a shared { value } too, how hard it is raining (0 to 1): rain
 // rings the lit surface (renderer/RainRings.js).
 //
 // `ice` (createLakeIce()), when given, freezes the lakes as far as its value
-// says (core/Season.js#lakeIceAt()), never the sea (by `aSeaShare`, at
-// core/Hydrology.js's LAKE_SEA_SHARE): frozen water lies flat and still, pale
+// says (core/nature/Season.js#lakeIceAt()), never the sea (by `aSeaShare`, at
+// core/nature/Hydrology.js's LAKE_SEA_SHARE): frozen water lies flat and still, pale
 // and opaque, grained, with no foam or rain rings, and snow lies on it as on
 // the ground (its `snow`, renderer/WetSurfaces.js's snowCover). Its code is
 // in the shaders only while there is ice (setLakeIce()), so the rest of the

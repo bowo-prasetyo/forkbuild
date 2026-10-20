@@ -1,8 +1,8 @@
 import { AnimalRuntimeInstances } from '../application/world/AnimalRuntimeInstances.js';
-import { AnimalPresence } from '../core/AnimalPresence.js';
-import { Position } from '../core/Position.js';
-import { animalPresenceInRegion } from '../core/AnimalPlacement.js';
-import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
+import { AnimalPresence } from '../core/nature/AnimalPresence.js';
+import { Position } from '../core/document/Position.js';
+import { animalPresenceInRegion } from '../core/nature/AnimalPlacement.js';
+import { ANIMAL_SPECIES } from '../core/nature/WildlifeField.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.700 — Animal Runtime Instances, application/world/AnimalRuntimeInstances.js.
@@ -157,7 +157,7 @@ function runTests() {
     }
     {
         // Tie-break: equal distance, ascending id wins — the same policy
-        // core/AvatarAnimalCatchTarget.js#resolveAvatarAnimalCatchTarget()
+        // core/avatar/AvatarAnimalCatchTarget.js#resolveAvatarAnimalCatchTarget()
         // already establishes for catching.
         const store = new AnimalRuntimeInstances();
         const center = new Position(0, 0, 0);

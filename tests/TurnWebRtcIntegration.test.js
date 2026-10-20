@@ -4,16 +4,16 @@ import { join } from 'node:path';
 import { inspect } from 'node:util';
 
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { TurnServerConfiguration } from '../core/TurnServerConfiguration.js';
+import { TurnServerConfiguration } from '../core/networks/TurnServerConfiguration.js';
 import { TurnServerConfigurationStore } from '../storage/TurnServerConfigurationStore.js';
 import { resolveTurnServerConfiguration } from '../application/settings/TurnServerConfigurationProvider.js';
-import { IceServerConfiguration } from '../core/IceServerConfiguration.js';
+import { IceServerConfiguration } from '../core/networks/IceServerConfiguration.js';
 import { IceServerConfigurationStore } from '../storage/IceServerConfigurationStore.js';
-import { NostrRelayConfiguration } from '../core/NostrRelayConfiguration.js';
+import { NostrRelayConfiguration } from '../core/networks/NostrRelayConfiguration.js';
 import { NostrRelayConfigurationStore } from '../storage/NostrRelayConfigurationStore.js';
-import { ArweaveGatewayConfiguration } from '../core/ArweaveGatewayConfiguration.js';
+import { ArweaveGatewayConfiguration } from '../core/networks/ArweaveGatewayConfiguration.js';
 import { ArweaveGatewayConfigurationStore } from '../storage/ArweaveGatewayConfigurationStore.js';
-import { RendezvousConfiguration } from '../core/RendezvousConfiguration.js';
+import { RendezvousConfiguration } from '../core/networks/RendezvousConfiguration.js';
 import { RendezvousConfigurationStore } from '../storage/RendezvousConfigurationStore.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
 import { DEFAULT_ICE_SERVERS } from '../peer/IceServerConfig.js';
@@ -27,7 +27,7 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 // composition only (ui/main.js), exactly as commissioned. NOT this
 // milestone: any Settings UI (0.9.456), TURN health checking/failover/
 // ranking/credential refresh (0.9.453 Section C3, still deferred), and any
-// change to core/TurnServerConfiguration.js, storage/
+// change to core/networks/TurnServerConfiguration.js, storage/
 // TurnServerConfigurationStore.js, or application/
 // TurnServerConfigurationProvider.js (all 0.9.454, unmodified here).
 //
@@ -215,9 +215,9 @@ async function run() {
         assert(/SetTurnServerConfigurationUseCase/.test(mainSource) && /new SetTurnServerConfigurationUseCase\(\{\s*turnServerConfigurationStore\s*\}\)/.test(mainSource),
             n('12. 0.9.456 now wires a real SetTurnServerConfigurationUseCase against that same store — the write path 0.9.455 explicitly left absent'));
 
-        const turnConfigSource = await source('core/TurnServerConfiguration.js');
+        const turnConfigSource = await source('core/networks/TurnServerConfiguration.js');
         assert(!turnConfigSource.includes("import") || !/from '\.\.\/peer\//.test(turnConfigSource),
-            n('13. core/TurnServerConfiguration.js still never imports from peer/ — the composition step lives entirely in ui/main.js, not inside the value object'));
+            n('13. core/networks/TurnServerConfiguration.js still never imports from peer/ — the composition step lives entirely in ui/main.js, not inside the value object'));
 
         const providerSource = await source('peer/WebRtcPeerConnectionProvider.js');
         assert(!/TurnServerConfiguration/.test(providerSource),

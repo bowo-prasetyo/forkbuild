@@ -24,8 +24,8 @@ import { isNonEmptyString } from '../../utils/typeGuards.js';
 //                               ▼
 //              (future, unscheduled: deciding whether/how an
 //               accepted lead is actually retrieved, hash-verified
-//               into a real core/ContentReference.js, and turned
-//               into a core/WorldDiscoverySource.js contribution —
+//               into a real core/document/ContentReference.js, and turned
+//               into a core/world/WorldDiscoverySource.js contribution —
 //               see "Deliberately excluded," below)
 //
 // A LEAD REGISTRY, DELIBERATELY NOT A SECOND `WorldDiscoverySourceRegistry`
@@ -47,8 +47,8 @@ import { isNonEmptyString } from '../../utils/typeGuards.js';
 // EARLIER. This file answers exactly one question: "which decentralized
 // discovery leads are currently known?" It never decides whether a lead is
 // worth acting on, never retrieves anything a lead's own `uri` points at,
-// and never constructs a `core/ContentReference.js`,
-// `core/DecentralizedPublication.js`, or `core/WorldDiscoverySource.js`
+// and never constructs a `core/document/ContentReference.js`,
+// `core/publication/DecentralizedPublication.js`, or `core/world/WorldDiscoverySource.js`
 // from one. A caller reads `listLeads()` and decides what, if anything,
 // happens next — this file's own job stops at `leads[]`, exactly as
 // `WorldDiscoverySourceRegistry`'s own job stops at `sources[]`.
@@ -114,8 +114,8 @@ import { isNonEmptyString } from '../../utils/typeGuards.js';
 //
 // NO RETRIEVAL, NO VERIFICATION, NO `ContentReference` OR
 // `WorldDiscoverySource` CONSTRUCTION. This file never imports
-// `core/ContentReference.js`, `core/DecentralizedPublication.js`,
-// `core/WorldDiscoverySource.js`, or `core/WorldEncounter.js`, and never
+// `core/document/ContentReference.js`, `core/publication/DecentralizedPublication.js`,
+// `core/world/WorldDiscoverySource.js`, or `core/world/WorldEncounter.js`, and never
 // fetches bytes from a lead's own `uri`. A lead stays exactly what 0.9.24
 // already called it — a rumor about where material MIGHT live — for as
 // long as it lives in this registry.
@@ -161,15 +161,15 @@ import { isNonEmptyString } from '../../utils/typeGuards.js';
 //   its result into `setLead()` automatically.** This file is told; it
 //   never asks a query service on its own. Unscheduled follow-up work.
 // - **Deciding whether an accepted lead becomes a real
-//   `core/WorldDiscoverySource.js` contribution, or wiring anything into
+//   `core/world/WorldDiscoverySource.js` contribution, or wiring anything into
 //   `application/discovery/WorldDiscoverySourceRegistry.js`.** See "A lead registry,
 //   deliberately not a second WorldDiscoverySourceRegistry," above — this
 //   remains unscheduled, later work, approached only once something
 //   downstream has actually retrieved and hash-verified a lead's own
 //   bytes.
 // - **Retrieving content from a lead's own `uri`, or constructing a real,
-//   hash-verified `core/ContentReference.js`/
-//   `core/DecentralizedPublication.js`.** Unscheduled, per 0.9.24's own
+//   hash-verified `core/document/ContentReference.js`/
+//   `core/publication/DecentralizedPublication.js`.** Unscheduled, per 0.9.24's own
 //   header.
 // - **Deduplication, ranking, expiry, staleness, or any trust/authority
 //   judgment about a lead, including between two leads that share a
@@ -180,7 +180,7 @@ import { isNonEmptyString } from '../../utils/typeGuards.js';
 //   running session that owns it — nothing more.
 // - **Validating or re-describing a lead's own shape.** See "Leads are
 //   opaque beyond their own identity fields," above — that is
-//   `core/DecentralizedWorldDiscoveryLead.js`'s own job, already done
+//   `core/world/DecentralizedWorldDiscoveryLead.js`'s own job, already done
 //   before a lead ever reaches this file.
 
 function isDescribedLead(value) {

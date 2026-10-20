@@ -1,5 +1,5 @@
 import { computed, ref } from 'vue';
-import { BUILD_VIDEO_SIZES, BuildVideoKind, buildVideoFileName, canRecordBuildVideo } from '../../../core/BuildVideo.js';
+import { BUILD_VIDEO_SIZES, BuildVideoKind, buildVideoFileName, canRecordBuildVideo } from '../../../core/app/BuildVideo.js';
 import { takeWalkThroughFilmRequest } from '../../components/buildVideo/walkThroughFilmRequest.js';
 import { downloadVideo } from '../../components/buildVideo/buildVideoText.js';
 

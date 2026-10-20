@@ -1,13 +1,13 @@
-import { Brick } from '../../core/Brick.js';
-import { Position } from '../../core/Position.js';
-import { Structure } from '../../core/Structure.js';
-import { SpatialBounds } from '../../core/SpatialBounds.js';
-import { createId } from '../../core/createId.js';
+import { Brick } from '../../core/building/Brick.js';
+import { Position } from '../../core/document/Position.js';
+import { Structure } from '../../core/building/Structure.js';
+import { SpatialBounds } from '../../core/world/SpatialBounds.js';
+import { createId } from '../../core/document/createId.js';
 
 // 0.4.2 — Structure Extraction & Blueprint Creation. The other direction
 // 0.4.0/0.4.1 deliberately left open (docs/Roadmap.md, 0.4.1's own
 // "Deliberately excluded"): turning bricks a user has already composed
-// in a Document back into a reusable core/Structure.js — closing the
+// in a Document back into a reusable core/building/Structure.js — closing the
 // loop this milestone names:
 //
 //   Structure --copy/compose--> Document --extract--> Structure
@@ -32,8 +32,8 @@ import { createId } from '../../core/createId.js';
 //
 // Normalization (the one geometry rule this use case owns): the source
 // bricks' own minimum X/Z occupied bounds become the new Structure's
-// origin — computed with the exact same core/SpatialBounds.js#fromBricks()
-// math core/Structure.js and CopyStructureIntoDocumentUseCase already
+// origin — computed with the exact same core/world/SpatialBounds.js#fromBricks()
+// math core/building/Structure.js and CopyStructureIntoDocumentUseCase already
 // rely on, never a second bounds calculation. Y is left exactly as
 // authored — every built-in Structure (core/library/VillageLibrary.js)
 // already measures Y from the ground up (a brick's Y is the height its
@@ -45,7 +45,7 @@ import { createId } from '../../core/createId.js';
 // same Structure.
 export class CreateStructureFromSelectionUseCase {
     // metadata: { name, category, tags, description } — everything
-    // core/Structure.js accepts today. Author/version/thumbnail are
+    // core/building/Structure.js accepts today. Author/version/thumbnail are
     // deliberately not accepted here; they belong to the Personal
     // Blueprint Library (0.4.3), not this milestone.
     execute(selection, document, { registry = null, name, category = 'uncategorized', tags = [], description = '' } = {}) {

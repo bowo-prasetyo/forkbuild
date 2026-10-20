@@ -1,14 +1,14 @@
 // Challenge entries distributed to Steem: a publication's announcement reply
 // carries its build's tags in `json_metadata.forkbuild.tags`
-// (core/SteemDiscoveryAnnouncement.js), the publisher reads them from the
+// (core/networks/SteemDiscoveryAnnouncement.js), the publisher reads them from the
 // published snapshot, and the Steem publication query answers a build-tag
 // discovery tag (`forkbuild-tag:<tag>`) with the replies that list it, so the
 // weekly challenge finds Steem entries among the replies it already reads.
-import { steemDiscoveryAnnouncementOperations, parseSteemDiscoveryAnnouncement } from '../core/SteemDiscoveryAnnouncement.js';
+import { steemDiscoveryAnnouncementOperations, parseSteemDiscoveryAnnouncement } from '../core/networks/SteemDiscoveryAnnouncement.js';
 import { SteemPublicationDiscoveryPublisher } from '../application/steem/SteemPublicationDiscoveryPublisher.js';
 import { SteemPublicationDiscoveryQueryService } from '../application/steem/SteemPublicationDiscoveryQueryService.js';
-import { buildTagDiscoveryTag } from '../core/NarrowDiscoveryTags.js';
-import { WorldEncounterKind } from '../core/WorldEncounter.js';
+import { buildTagDiscoveryTag } from '../core/publication/NarrowDiscoveryTags.js';
+import { WorldEncounterKind } from '../core/world/WorldEncounter.js';
 import { assert } from './support/Assert.js';
 
 const TAG = 'chapel-20261005';

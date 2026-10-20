@@ -1,8 +1,8 @@
-import { message } from '../../core/Message.js';
+import { message } from '../../core/app/Message.js';
 
 // The line shown while something is being posted to Blurt, from the progress
 // BlurtContentStore reports (or the poster's wait for the chain's interval
-// between top-level posts), as a message (core/Message.js), or null when
+// between top-level posts), as a message (core/app/Message.js), or null when
 // nothing is in progress. Each combination of resuming and fees is its own
 // whole message, since sentences aren't joined the same way in every
 // language.

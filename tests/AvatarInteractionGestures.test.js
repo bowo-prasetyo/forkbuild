@@ -1,12 +1,12 @@
-import { AvatarInteractionKind, isValidInteractionKind } from '../core/AvatarInteractionKind.js';
-import { INTERACTION_COOLDOWN_MS, canPerformInteraction } from '../core/AvatarInteractionCooldown.js';
-import { computeFacingYawDegrees } from '../core/AvatarFacing.js';
-import { getGesturePoseOverride } from '../core/AvatarGesturePoseOffsets.js';
+import { AvatarInteractionKind, isValidInteractionKind } from '../core/avatar/AvatarInteractionKind.js';
+import { INTERACTION_COOLDOWN_MS, canPerformInteraction } from '../core/avatar/AvatarInteractionCooldown.js';
+import { computeFacingYawDegrees } from '../core/avatar/AvatarFacing.js';
+import { getGesturePoseOverride } from '../core/avatar/AvatarGesturePoseOffsets.js';
 import { AvatarInteractionState } from '../application/spatial-state/AvatarInteractionState.js';
 import { AvatarRenderer } from '../renderer/AvatarRenderer.js';
 import { AvatarVisual } from '../renderer/AvatarVisual.js';
-import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { AvatarAnimationState } from '../core/avatar/AvatarAnimationState.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
@@ -18,10 +18,10 @@ import { assert } from './support/Assert.js';
 
 // 0.2.44 — Local Avatar Interaction & Social Presence.
 //
-//   Section A: core/AvatarInteractionKind.js       — closed vocabulary
-//   Section B: core/AvatarInteractionCooldown.js    — pure rate-limit predicate
-//   Section C: core/AvatarFacing.js                 — pure yaw geometry
-//   Section D: core/AvatarGesturePoseOffsets.js      — pure gesture -> pose mapping
+//   Section A: core/avatar/AvatarInteractionKind.js       — closed vocabulary
+//   Section B: core/avatar/AvatarInteractionCooldown.js    — pure rate-limit predicate
+//   Section C: core/avatar/AvatarFacing.js                 — pure yaw geometry
+//   Section D: core/avatar/AvatarGesturePoseOffsets.js      — pure gesture -> pose mapping
 //   Section E: AvatarInteractionState                — the extended local state slice
 //   Section F: renderer/AvatarVisual.js               — gesture + facing overlays
 //   Section G: WorldNavigationSession.performAvatarInteraction()
@@ -29,7 +29,7 @@ import { assert } from './support/Assert.js';
 //
 // Central architectural claim under test throughout: a GREET/WAVE/POINT
 // gesture is entirely LOCAL — it never touches AvatarPresence, never
-// reaches core/AvatarPresenceAdvertisement.js's wire shape, and is
+// reaches core/avatar/AvatarPresenceAdvertisement.js's wire shape, and is
 // never rendered on anyone but the LOCAL avatar. See
 // docs/Principles.md, "Observation Does Not Imply Authority, And
 // Interaction Does Not Imply Control (0.2.44)."
@@ -94,7 +94,7 @@ async function runTests() {
     const humanoid01 = registry.get('humanoid-01');
 
     // -------------------------------------------------------------
-    // Section A — core/AvatarInteractionKind.js
+    // Section A — core/avatar/AvatarInteractionKind.js
     // -------------------------------------------------------------
     {
         assert(isValidInteractionKind(AvatarInteractionKind.NONE), '1. NONE is a valid interaction kind');
@@ -106,7 +106,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section B — core/AvatarInteractionCooldown.js
+    // Section B — core/avatar/AvatarInteractionCooldown.js
     // -------------------------------------------------------------
     {
         assert(canPerformInteraction(0, Date.now()) === true, '7. never-yet-performed (0) is always allowed');
@@ -120,7 +120,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section C — core/AvatarFacing.js
+    // Section C — core/avatar/AvatarFacing.js
     // -------------------------------------------------------------
     {
         const origin = { x: 0, y: 0, z: 0 };
@@ -136,7 +136,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section D — core/AvatarGesturePoseOffsets.js
+    // Section D — core/avatar/AvatarGesturePoseOffsets.js
     // -------------------------------------------------------------
     {
         assert(getGesturePoseOverride(AvatarInteractionKind.NONE) === null, '21. NONE -> no pose override');

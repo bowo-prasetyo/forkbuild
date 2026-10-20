@@ -1,5 +1,5 @@
 import { PublicationKnowledgeSynchronizationUiState } from './PublicationKnowledgeSynchronizationUiState.js';
-import { message } from '../../../core/Message.js';
+import { message } from '../../../core/app/Message.js';
 
 // 0.8.30 — Explicit Replica Knowledge Synchronization.
 //

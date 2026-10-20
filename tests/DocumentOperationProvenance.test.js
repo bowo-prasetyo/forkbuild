@@ -1,9 +1,9 @@
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
@@ -16,10 +16,10 @@ import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
 import { DocumentCommandPropagationUseCase } from '../application/document/DocumentCommandPropagationUseCase.js';
 import { RemoteDocumentOperationApplicationUseCase, DocumentOperationApplicationOutcome } from '../application/document/RemoteDocumentOperationApplicationUseCase.js';
-import { CausalGapStatus } from '../core/DocumentOperationCausalGapDetector.js';
+import { CausalGapStatus } from '../core/collaboration/DocumentOperationCausalGapDetector.js';
 import { DocumentOperationCausalGapObservationUseCase } from '../application/document/DocumentOperationCausalGapObservationUseCase.js';
 import { DocumentOperationRecoveryUseCase } from '../application/document/DocumentOperationRecoveryUseCase.js';
-import { DocumentOperationProvenance, isDocumentOperationProvenance } from '../core/DocumentOperationProvenance.js';
+import { DocumentOperationProvenance, isDocumentOperationProvenance } from '../core/collaboration/DocumentOperationProvenance.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
@@ -35,9 +35,9 @@ import { assert } from './support/Assert.js';
 // execution history), `DocumentOperationCausalGapObservationUseCase#observe()`
 // (causal knowledge), and `DocumentOperationRecoveryUseCase#onOperationReceived()`'s
 // own new fifth `provenance` argument
-// (`core/DocumentOperationProvenance.js`). No `containsApplied()` is added
+// (`core/collaboration/DocumentOperationProvenance.js`). No `containsApplied()` is added
 // to `CommandHistory` — see that file's own header on why, and
-// `core/DocumentOperationProvenance.js`'s own header for the full
+// `core/collaboration/DocumentOperationProvenance.js`'s own header for the full
 // KNOWN/EXECUTED/RECOVERED vocabulary this suite exercises.
 //
 // Deliberately NOT tested here, because it deliberately does not exist:
@@ -397,8 +397,8 @@ function openPair(worldId, title) {
 // all — provenance is only ever assigned to genuinely verified evidence.
 // ===================================================================
 {
-    const { toDocumentOperationEnvelope } = await import('../core/DocumentOperationEnvelope.js');
-    const { toDocumentOperationRecoveryResponseMessage } = await import('../core/DocumentOperationRecoveryProtocol.js');
+    const { toDocumentOperationEnvelope } = await import('../core/collaboration/DocumentOperationEnvelope.js');
+    const { toDocumentOperationRecoveryResponseMessage } = await import('../core/collaboration/DocumentOperationRecoveryProtocol.js');
 
     const mallory = makeDevice('Mallory');
     const { peerA: peerBobAsSeenByMallory, peerB: peerMalloryAsSeenByBob } = await connectAndAuthenticate(network, 'mallory-prov', mallory, 'bob-via-mallory-prov', bobDevice);

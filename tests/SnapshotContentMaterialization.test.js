@@ -16,7 +16,7 @@ import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPub
 import { PublicationAnchorExchange } from '../application/anchoring/PublicationAnchorExchange.js';
 import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
 import { PublicationSnapshotPlacementExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementExchange.js';
-import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
+import { DecentralizedPublication } from '../core/publication/DecentralizedPublication.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { assert } from './support/Assert.js';

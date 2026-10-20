@@ -1,8 +1,8 @@
 import { ProofVerifier } from './ProofVerifier.js';
-import { STEEM_ANCHOR_TYPE, parseSteemAnchorProof, steemAnchorTarget, steemBlockNumberOfId, steemTransactionAnchors } from '../core/SteemAnchor.js';
-import { checkSteemBlockEvidence } from '../core/SteemBlockEvidence.js';
+import { STEEM_ANCHOR_TYPE, parseSteemAnchorProof, steemAnchorTarget, steemBlockNumberOfId, steemTransactionAnchors } from '../core/networks/SteemAnchor.js';
+import { checkSteemBlockEvidence } from '../core/networks/SteemBlockEvidence.js';
 import { createSteemRpcClient } from '../steem/SteemRpcClient.js';
-import { DEFAULT_STEEM_PROOF_NODES } from '../core/SteemReadingConfiguration.js';
+import { DEFAULT_STEEM_PROOF_NODES } from '../core/networks/SteemReadingConfiguration.js';
 
 // Checks a `steem` PublicationAnchor's proof, `{ blockNum, trxId, chain }`,
 // against the chain (docs/Protocol.md, "Proposed: Steem Anchoring",
@@ -23,7 +23,7 @@ import { DEFAULT_STEEM_PROOF_NODES } from '../core/SteemReadingConfiguration.js'
 // witness and how many nodes agreed, which application/anchoring/
 // ExternalAnchorVerifier.js passes on so the app can show when the anchor
 // was recorded. When the proof carries kept block evidence
-// (core/SteemBlockEvidence.js), it is checked offline too and reported in
+// (core/networks/SteemBlockEvidence.js), it is checked offline too and reported in
 // `details.evidence`. The chain decides validity: evidence that doesn't
 // check out is reported, never a reason to accept or reject, and evidence
 // that does check out never makes an unreachable chain valid.

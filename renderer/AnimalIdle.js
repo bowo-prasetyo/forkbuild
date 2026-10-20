@@ -1,10 +1,10 @@
-import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
-import { IDLE_ACTION } from '../core/WildlifeMotion.js';
+import { ANIMAL_SPECIES } from '../core/nature/WildlifeField.js';
+import { IDLE_ACTION } from '../core/nature/WildlifeMotion.js';
 import { REST_GAIT } from './AnimalGait.js';
 import { smoothstep } from '../utils/interpolation.js';
 
 // How a standing animal looks while it idles — the pause-time counterpart
-// of renderer/AnimalGait.js. core/WildlifeMotion.js decides WHICH idle
+// of renderer/AnimalGait.js. core/nature/WildlifeMotion.js decides WHICH idle
 // action a pause is spent on and for how long (idleAction, idleSeconds,
 // idleDuration); this file turns that into the same offsets a gait
 // produces, plus a sideways turn of the head:
@@ -56,7 +56,7 @@ function envelope(seconds, duration) {
 
 // { lift, bodyPitch, headPitch, headYaw } for `species` at `idleSeconds`
 // into an `idleAction` lasting `idleDuration` seconds (all as
-// core/WildlifeMotion.js#animalPoseAt() reports them).
+// core/nature/WildlifeMotion.js#animalPoseAt() reports them).
 export function idleOffsetsAt(species, idleAction, idleSeconds, idleDuration) {
     if (idleAction === IDLE_ACTION.NONE || !(idleDuration > 0)) return REST_GAIT;
     const idle = ANIMAL_IDLE[species] ?? ANIMAL_IDLE[ANIMAL_SPECIES.RABBIT];

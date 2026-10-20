@@ -1,7 +1,7 @@
-import { Brick } from '../../core/Brick.js';
-import { Position } from '../../core/Position.js';
-import { Structure } from '../../core/Structure.js';
-import { createId } from '../../core/createId.js';
+import { Brick } from '../../core/building/Brick.js';
+import { Position } from '../../core/document/Position.js';
+import { Structure } from '../../core/building/Structure.js';
+import { createId } from '../../core/document/createId.js';
 import { validateBlueprintPackage } from './BlueprintImportValidator.js';
 
 // 0.4.6 — Blueprint Sharing & Exchange. The other direction of
@@ -12,13 +12,13 @@ import { validateBlueprintPackage } from './BlueprintImportValidator.js';
 // Deliberately three steps, always in this order, never fewer:
 //
 //   1. validate  — application/blueprint/BlueprintImportValidator.js#validateBlueprintPackage()
-//   2. construct — a brand-new, independent core/Structure.js
+//   2. construct — a brand-new, independent core/building/Structure.js
 //   3. (persistence is the CALLER's job — see application/editor/EditorSession.js#importBlueprint())
 //
 // Never "import -> execute arbitrary command." A blueprint package is
 // untrusted, portable DATA — it may have crossed devices, been hand-
 // edited, or come from a stranger — so this class only ever reads plain
-// fields off it and only ever produces a plain core/Structure.js. See
+// fields off it and only ever produces a plain core/building/Structure.js. See
 // docs/Principles.md, "A Blueprint Package Is Portable Data, Never A Live
 // Dependency (0.4.6)."
 //

@@ -1,4 +1,4 @@
-import { BLURT_CATEGORY, blurtFamilyTag, isBlurtFamily, parseBlurtBuildPost } from '../../core/BlurtPost.js';
+import { BLURT_CATEGORY, blurtFamilyTag, isBlurtFamily, parseBlurtBuildPost } from '../../core/networks/BlurtPost.js';
 import { parseBlurtTime } from '../../blurt/BlurtRpcClient.js';
 
 // Reads one family's announcements from Blurt build posts (docs/Protocol.md,

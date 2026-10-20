@@ -1,4 +1,4 @@
-import { buildPlaceNamingDiscoveryEnvelope, derivePlaceNamingDiscoveryTag } from '../../core/PlaceNamingDiscoveryEnvelope.js';
+import { buildPlaceNamingDiscoveryEnvelope, derivePlaceNamingDiscoveryTag } from '../../core/world/PlaceNamingDiscoveryEnvelope.js';
 
 // Announces a signed Place Naming claim on Steem, with the publish(claim)
 // shape the Nostr and Arweave place naming publishers have. Steem has one

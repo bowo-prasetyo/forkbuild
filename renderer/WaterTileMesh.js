@@ -1,13 +1,13 @@
 import * as THREE from 'three';
-import { terrainHeightAt } from '../core/TerrainHeightField.js';
-import { surfaceCategoryAt, SURFACE_CATEGORY } from '../core/TerrainSurface.js';
-import { LAKE_SURFACE_HEIGHT, waterSurfaceColorAt, seaShareAt } from '../core/Hydrology.js';
-import { TERRAIN_TILE_SIZE, tileCenter } from '../core/TerrainTiling.js';
+import { terrainHeightAt } from '../core/nature/TerrainHeightField.js';
+import { surfaceCategoryAt, SURFACE_CATEGORY } from '../core/nature/TerrainSurface.js';
+import { LAKE_SURFACE_HEIGHT, waterSurfaceColorAt, seaShareAt } from '../core/nature/Hydrology.js';
+import { TERRAIN_TILE_SIZE, tileCenter } from '../core/nature/TerrainTiling.js';
 import { TILE_SEGMENTS } from './TerrainTileMesh.js';
 import { makeWaterWaving } from './WaterWaveMaterial.js';
 import { buildRiverTileMesh } from './RiverTileMesh.js';
 
-// The renderer-side counterpart to core/Hydrology.js's LAKE concept —
+// The renderer-side counterpart to core/nature/Hydrology.js's LAKE concept —
 // see docs/Roadmap.md, 0.2.89: it knows nothing about WHERE a lake is or
 // WHY, only how to turn one tile's worth of ground into a still, flat
 // water plane, the same core-decides/renderer-builds split
@@ -22,7 +22,7 @@ import { buildRiverTileMesh } from './RiverTileMesh.js';
 // to do it.
 //
 // The surface is still in shape but not in motion: the material moves it
-// with core/WaterWaves.js's swell and ripples (renderer/WaterWaveMaterial.js),
+// with core/nature/WaterWaves.js's swell and ripples (renderer/WaterWaveMaterial.js),
 // lifting at most MAX_SWELL_HEIGHT, far less than SINK_DEPTH, so a dry
 // vertex never rises through the ground.
 //
@@ -37,7 +37,7 @@ const SINK_DEPTH = 4; // world units below the actual ground — comfortably occ
 
 const UNDERSIDE_COLOR = 0x9fd8e8;
 const UNDERSIDE_OPACITY = 0.7;
-const WATER_OPACITY = 0.78; // translucent, not a mirror — see core/TerrainSurface.js's own "buildings and avatars remain the visual focus" restraint, extended here to water
+const WATER_OPACITY = 0.78; // translucent, not a mirror — see core/nature/TerrainSurface.js's own "buildings and avatars remain the visual focus" restraint, extended here to water
 const WATER_ROUGHNESS = 0.4; // glossy enough that the sun glints off the ripples, still far from a mirror
 
 // Deliberately untested directly, same posture as renderer/TerrainTileMesh.js
@@ -59,7 +59,7 @@ export function buildWaterTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE, w
     const center = tileCenter(tx, tz, tileSize);
     const position = geometry.attributes.position;
     // Per-vertex color, so one tile can run from lake tone to sea tone
-    // across a shelf (core/Hydrology.js#waterSurfaceColorAt()).
+    // across a shelf (core/nature/Hydrology.js#waterSurfaceColorAt()).
     const colors = new Float32Array(position.count * 3);
     const seaShares = new Float32Array(position.count);
     // How far below the still surface the ground lies, negative on dry

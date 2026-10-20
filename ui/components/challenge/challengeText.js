@@ -1,7 +1,7 @@
-import { challengeDaysLeft, isChallengeOpen, isRemixChallenge } from '../../../core/BuildChallenge.js';
+import { challengeDaysLeft, isChallengeOpen, isRemixChallenge } from '../../../core/challenge/BuildChallenge.js';
 import { formatDate, t } from '../../i18n/i18n.js';
 
-// The words a challenge (core/BuildChallenge.js) is shown with.
+// The words a challenge (core/challenge/BuildChallenge.js) is shown with.
 
 // Message keys are camelCase; theme ids are tags, so hyphenated.
 function themeKey(challenge) {

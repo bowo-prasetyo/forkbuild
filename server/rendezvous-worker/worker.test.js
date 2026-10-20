@@ -3,7 +3,7 @@ import worker, { RendezvousNode, LIMITS, handleBlurtImageUpload, handleSteemImag
 // Runs RendezvousNode against small fakes of the two Cloudflare surfaces it
 // uses: Durable Object storage and hibernatable WebSockets. Identities and
 // signatures are real (Node's WebCrypto Ed25519), built the same way the
-// app builds them (core/Signature.js, identity/Ed25519.js), so this file
+// app builds them (core/publication/Signature.js, identity/Ed25519.js), so this file
 // stays as self-contained as worker.js itself. tests/RendezvousWorkerInterop.test.js
 // checks the worker against the app's own client code.
 

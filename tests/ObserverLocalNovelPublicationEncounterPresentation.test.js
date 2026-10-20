@@ -12,12 +12,12 @@ import { StoreSnapshotContentUseCase } from '../application/snapshot/materializa
 import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
 import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
 import { ObserverLocalEncounterStore } from '../application/worldEncounter/ObserverLocalEncounterStore.js';
-import { describeObserverLocalPublicationEncounter, ObserverLocalPublicationEncounterKind } from '../core/ObserverLocalPublicationEncounter.js';
+import { describeObserverLocalPublicationEncounter, ObserverLocalPublicationEncounterKind } from '../core/publication/ObserverLocalPublicationEncounter.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
-import { PlacementRecord } from '../core/PlacementRecord.js';
-import { ContentReference } from '../core/ContentReference.js';
-import { Position } from '../core/Position.js';
+import { PlacementRecord } from '../core/publication/PlacementRecord.js';
+import { ContentReference } from '../core/document/ContentReference.js';
+import { Position } from '../core/document/Position.js';
 import { Publication } from '../publisher/Publication.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
@@ -557,7 +557,7 @@ async function runTests() {
     }
 
     // ===============================================================
-    // Section L — core/ObserverLocalPublicationEncounter.js's own pure
+    // Section L — core/publication/ObserverLocalPublicationEncounter.js's own pure
     // function contract, directly.
     // ===============================================================
     {

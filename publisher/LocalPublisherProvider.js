@@ -1,11 +1,11 @@
 import { PublisherProvider } from './PublisherProvider.js';
 import { Publication } from './Publication.js';
-import { createId } from '../core/createId.js';
+import { createId } from '../core/document/createId.js';
 import { contentHashMatches } from '../serializer/contentHash.js';
 import { DocumentSchemaMigrator } from '../serializer/DocumentSchemaMigrator.js';
 import { DocumentValidator } from '../serializer/DocumentValidator.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
-import { PlacementPolicy } from '../core/PlacementPolicy.js';
+import { PlacementPolicy } from '../core/publication/PlacementPolicy.js';
 import { UnpublishedPublicationLog } from './UnpublishedPublicationLog.js';
 
 const PUBLICATIONS_KEY = 'forkbuild-publications';
@@ -82,7 +82,7 @@ export class LocalPublisherProvider extends PublisherProvider {
                 ? null
                 : document.metadata.placementPolicy,
             // Friends who built it with its author, credited under the
-            // author's signature (core/BuiltWith.js).
+            // author's signature (core/catalog/BuiltWith.js).
             builtWith: document.metadata.builtWith || []
         });
         if (canSign) {

@@ -1,5 +1,5 @@
 import { AnnouncementKind } from './AnnouncementKinds.js';
-import { parseSnapshotDiscoveryEnvelope, snapshotCandidateFromEnvelope } from '../../core/SnapshotDiscoveryEnvelope.js';
+import { parseSnapshotDiscoveryEnvelope, snapshotCandidateFromEnvelope } from '../../core/publication/SnapshotDiscoveryEnvelope.js';
 import { isPlainObject } from '../../utils/typeGuards.js';
 import { ArweaveSnapshotDiscoveryQueryService } from '../arweave/ArweaveSnapshotDiscoveryQueryService.js';
 import { ArweavePlaceNamingDiscoveryPublisher } from '../placeNaming/ArweavePlaceNamingDiscoveryPublisher.js';

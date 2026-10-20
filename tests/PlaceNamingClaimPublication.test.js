@@ -1,8 +1,8 @@
 
-import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
+import { PlaceNamingClaim } from '../core/world/PlaceNamingClaim.js';
 import {
     buildPlaceNamingDiscoveryEnvelope, parsePlaceNamingDiscoveryEnvelope, derivePlaceNamingDiscoveryTag
-} from '../core/PlaceNamingDiscoveryEnvelope.js';
+} from '../core/world/PlaceNamingDiscoveryEnvelope.js';
 import { NostrPlaceNamingDiscoveryPublisher } from '../application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js';
 import { NostrPlaceNamingDiscoverySource } from '../application/placeNaming/NostrPlaceNamingDiscoverySource.js';
 import { PlaceNamingDiscoveryQueryService } from '../application/placeNaming/PlaceNamingDiscoveryQueryService.js';
@@ -128,7 +128,7 @@ async function runTests() {
         const independentlyBuilt = buildPlaceNamingDiscoveryEnvelope(claim);
         const publishedContent = JSON.parse(relay.calls[0].eventTemplate.content);
         assert(JSON.stringify(publishedContent) === JSON.stringify(independentlyBuilt),
-            'B1. The publisher writes exactly the envelope core/PlaceNamingDiscoveryEnvelope.js#buildPlaceNamingDiscoveryEnvelope() already defines — no second, competing serialization format.');
+            'B1. The publisher writes exactly the envelope core/world/PlaceNamingDiscoveryEnvelope.js#buildPlaceNamingDiscoveryEnvelope() already defines — no second, competing serialization format.');
 
         // Round-trip through the same parser every discovery source already
         // relies on.
@@ -332,7 +332,7 @@ async function runTests() {
         assert(!/NostrPlaceNamingDiscoveryPublisher/.test(queryServiceSource),
             'H2. The discovery aggregator never imports the publisher either.');
 
-        const envelopeSource = codeOnlyLines(await rawSource('core/PlaceNamingDiscoveryEnvelope.js'));
+        const envelopeSource = codeOnlyLines(await rawSource('core/world/PlaceNamingDiscoveryEnvelope.js'));
         assert(!/NostrPlaceNamingDiscoveryPublisher/.test(envelopeSource),
             'H3. The shared envelope contract itself never references the publisher — it is a passive shape both sides independently agree on.');
 

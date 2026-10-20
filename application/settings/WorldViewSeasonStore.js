@@ -1,9 +1,9 @@
-// Keeps the season this device shows World View in (core/Season.js's
+// Keeps the season this device shows World View in (core/nature/Season.js's
 // SEASON), for anyone who would rather always walk in summer, or wants a
 // winter's photo; nothing kept follows the world's year. Personal and local:
 // never published, shared or part of any World.
 import { StorageProvider } from '../../storage/StorageProvider.js';
-import { SEASON } from '../../core/Season.js';
+import { SEASON } from '../../core/nature/Season.js';
 
 const STORAGE_KEY = 'world-view-season';
 

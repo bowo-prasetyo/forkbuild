@@ -147,7 +147,7 @@ A build sent to everyone is shared by a short link, the worker's
 `APP_URL#/n/<publication id>` (same README, "Short links").
 Redeploy the worker before publishing an app that shares such links. A copy
 hosted elsewhere sets the worker's `APP_URL` to its own address and
-`FORKBUILD_LINK_PREVIEW_URL` in `core/ForkBuildAppLinks.js` to its worker.
+`FORKBUILD_LINK_PREVIEW_URL` in `core/app/ForkBuildAppLinks.js` to its worker.
 
 ### Embeds
 
@@ -191,7 +191,7 @@ the background (docs/AnnouncementIndex.md, "Phase 4"). On the official site
 only, it also loads one image a day from GoatCounter for the daily visitor
 count, and one each time a share link is copied or shared, a shared link is
 opened, or a build opened from one is copied into the Editor
-(`core/VisitorCount.js`); a copy served from anywhere else never sends
+(`core/app/VisitorCount.js`); a copy served from anywhere else never sends
 them. Everything else waits for a feature to be used. docs/Privacy.md lists each server. When a peer connection starts (and only then), it asks the
 rendezvous server for TURN relay credentials; the TURN provider's key lives
 only on that server (see `server/rendezvous-worker/README.md`). Most of these

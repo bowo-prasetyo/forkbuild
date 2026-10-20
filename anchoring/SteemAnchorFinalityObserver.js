@@ -1,4 +1,4 @@
-import { STEEM_ANCHOR_TYPE, parseSteemAnchorProof } from '../core/SteemAnchor.js';
+import { STEEM_ANCHOR_TYPE, parseSteemAnchorProof } from '../core/networks/SteemAnchor.js';
 
 // Watches a freshly created `steem` anchor until its block is irreversible
 // (docs/Protocol.md, "Proposed: Steem Anchoring", "Finality"), so the app

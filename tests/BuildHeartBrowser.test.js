@@ -2,12 +2,12 @@
 import { createApp, h, nextTick } from 'vue';
 import BuildHeart from '../ui/components/BuildHeart.js';
 import PublicationCommentarySection from '../ui/components/PublicationCommentarySection.js';
-import { UserFacingError } from '../core/UserFacingError.js';
+import { UserFacingError } from '../core/app/UserFacingError.js';
 import NameNeededNotice from '../ui/components/NameNeededNotice.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { SigningRemedy } from '../identity/SigningReadiness.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
-import { message } from '../core/Message.js';
+import { message } from '../core/app/Message.js';
 import { t } from '../ui/i18n/i18n.js';
 import { assert } from './support/Assert.js';
 

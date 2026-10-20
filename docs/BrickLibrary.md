@@ -2,11 +2,11 @@ A brick library is a plain object with an id and a list of BrickDefinitions:
 
     { id, definitions: [ new BrickDefinition({ id, name, category, tags, description, ... }) ] }
 
-BrickDefinitions (core/BrickDefinition.js) are pure metadata — id, name,
+BrickDefinitions (core/building/BrickDefinition.js) are pure metadata — id, name,
 category, thumbnail, defaultRotation, tags, description, color. No mesh, no
 Three.js.
 
-Libraries register with the BrickRegistry (core/BrickRegistry.js) in
+Libraries register with the BrickRegistry (core/building/BrickRegistry.js) in
 application/editor/CreateBrickRegistryUseCase.js, which every surface
 (Editor, World View, thumbnails, discovery) calls to build its registry:
 
@@ -37,7 +37,7 @@ mesh for that same definitionId. A new brick type therefore needs:
    registration API; an id missing from it renders as a 1×1×1 box
    (`FALLBACK_GEOMETRY`);
 3. only if it should be walked on as a slope or steps rather than a flat top,
-   an entry in `SHAPE_KIND_BY_DEFINITION_ID` in core/WalkableSurface.js.
+   an entry in `SHAPE_KIND_BY_DEFINITION_ID` in core/building/WalkableSurface.js.
 
 No schema, serializer or migration change is needed: a Brick stores only
 its `definitionId`. But a copy of the app that doesn't know an id can't
@@ -54,7 +54,7 @@ Directional bricks share one convention: core:stair, core:slope_45 and
 core:brace_2x2 all rise along their local +X, so at rotation 0 they climb
 toward +x, at 90 toward −z, at 180 toward −x and at 270 toward +z. The
 slope is drawn as a wedge (a right triangle extruded along depth), the
-same profile core/WalkableSurface.js lets an avatar walk up.
+same profile core/building/WalkableSurface.js lets an avatar walk up.
 
 Timber framing (2026-10-04) adds two more: core:post, a square
 0.25 × 3 × 0.25 upright (as thick as core:trim, as tall as core:wall_1x3),
@@ -93,15 +93,15 @@ them instead of grids of core:roof_hip caps (the Cottage and Chapel keep
 their rows of slopes, which are walked as slopes).
 Every one is still one primitive with one geometry, drawn at exactly its
 declared size (tests/BuildersKit.test.js). Any brick can also be tilted onto
-another side (core/BrickOrientation.js, docs/Protocol.md "Brick Tilt"), so
+another side (core/building/BrickOrientation.js, docs/Protocol.md "Brick Tilt"), so
 a post lies down as a beam and a slope turns upside down; the
-geometries need nothing for it. core/VillagePalette.js holds sixteen village colours the
+geometries need nothing for it. core/building/VillagePalette.js holds sixteen village colours the
 Build Library and the Selection Inspector offer beside the colour picker;
 a chosen swatch is an ordinary brick colour.
 
 Day and night (2026-10-12) adds the fifty-ninth, core:lantern: an
 eight-sided glass lantern, 0.75 × 1 × 0.75, in the decorative category. A
-BrickDefinition may say it shines after dark (`nightGlow`, core/NightGlow.js):
+BrickDefinition may say it shines after dark (`nightGlow`, core/nature/NightGlow.js):
 the lantern in its own colour (`own-color`), and core:window_small and
 core:window_large with warm lamplight whatever their glass (`window`). The
 framed and round windows have holes through them and don't glow. Glowing is
@@ -124,14 +124,14 @@ as a four-sided THREE.ConeGeometry — but every one is still ONE
 factory function keyed by ONE definitionId, the same pattern the
 original four already established. See docs/Principles.md, "A Brick Is
 A Primitive, Never A Preassembled Structure": adding these eleven
-required no change to core/Brick.js, core/documentSchema.js, or
+required no change to core/building/Brick.js, core/document/documentSchema.js, or
 serializer/DocumentSchemaMigrator.js — a document that only ever used
 the original four bricks is untouched, and a document using the new
 eleven is exactly as portable as one that doesn't.
 
-Doors and arches are ways through (2026-10-11, core/BrickPassage.js). A
+Doors and arches are ways through (2026-10-11, core/building/BrickPassage.js). A
 standing door has no collision, and in World View swings open for whoever
-walks up to it (core/DoorSwing.js). A standing core:arch collides as its
+walks up to it (core/building/DoorSwing.js). A standing core:arch collides as its
 jambs and a lintel that follows its opening, which is cut down to the
 ground and tall enough for a walking avatar; the opening's shape
 (`ARCH_OPENINGS`) is what both the collision and the mesh read.
@@ -169,6 +169,6 @@ Brick may also carry an optional per-instance color override; null means
 - Rendering resolves the color the same way everywhere: the instance
   override, else the definition's color (BrickRenderer when building a
   mesh, WorldRenderer#_onBrickUpdated on a recolor).
-- core/ColorHex.js converts between the stored integer and CSS "#rrggbb".
+- core/building/ColorHex.js converts between the stored integer and CSS "#rrggbb".
 
 Color never changes a brick's geometry, bounds or collision.

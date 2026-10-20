@@ -1,4 +1,4 @@
-import { buildPlaceNamingDiscoveryEnvelope, derivePlaceNamingDiscoveryTag } from '../../core/PlaceNamingDiscoveryEnvelope.js';
+import { buildPlaceNamingDiscoveryEnvelope, derivePlaceNamingDiscoveryTag } from '../../core/world/PlaceNamingDiscoveryEnvelope.js';
 import { withTimeout } from '../../utils/withTimeout.js';
 
 const DEFAULT_GATEWAY_URL = 'https://arweave.net';

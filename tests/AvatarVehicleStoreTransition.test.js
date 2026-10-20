@@ -1,11 +1,11 @@
-import { deriveAvatarVehicleStoreTransition } from '../core/AvatarVehicleStoreTransition.js';
-import { AvatarVehicleStoreIntent } from '../core/AvatarVehicleStoreIntent.js';
-import { createAvatarVehicleMount } from '../core/AvatarVehicleMount.js';
-import { emptyAvatarInventory, withEntryAdded, createAvatarInventoryEntry, InventoryEntryKind } from '../core/AvatarInventory.js';
-import { VehicleType } from '../core/VehicleType.js';
+import { deriveAvatarVehicleStoreTransition } from '../core/vehicles/AvatarVehicleStoreTransition.js';
+import { AvatarVehicleStoreIntent } from '../core/vehicles/AvatarVehicleStoreIntent.js';
+import { createAvatarVehicleMount } from '../core/vehicles/AvatarVehicleMount.js';
+import { emptyAvatarInventory, withEntryAdded, createAvatarInventoryEntry, InventoryEntryKind } from '../core/avatar/AvatarInventory.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.670 — Avatar Vehicle Store Transition, core/AvatarVehicleStoreTransition.js.
+// 0.9.670 — Avatar Vehicle Store Transition, core/vehicles/AvatarVehicleStoreTransition.js.
 //
 //   Section A: the one rule — mounted + STORE + a resolved vehicle stores it
 //   Section B: every "nothing happens" branch returns the exact unchanged pair

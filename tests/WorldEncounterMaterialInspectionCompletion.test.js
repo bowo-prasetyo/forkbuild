@@ -1,8 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
-import { WorldEncounterKind } from '../core/WorldEncounter.js';
-import { parseDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
+import { WorldEncounterKind } from '../core/world/WorldEncounter.js';
+import { parseDecentralizedDiscoveryEnvelope } from '../core/publication/DecentralizedDiscoveryEnvelope.js';
 import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js';
 import { deriveDecentralizedWorldEncounterLeadAssociationEvidenceFromEnvelopes } from '../application/discovery/DecentralizedDiscoveryEnvelopeAssociationEvidenceIngress.js';
 import {

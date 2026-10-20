@@ -1,9 +1,9 @@
 import { LICENSE_OPTIONS } from '../../application/document/LicenseLabels.js';
 import { t } from '../i18n/i18n.js';
-import { License, LicenseId } from '../../core/License.js';
+import { License, LicenseId } from '../../core/document/License.js';
 import { PLACEMENT_POLICY_OPTIONS } from '../../application/document/PlacementPolicyLabels.js';
-import { PlacementPolicy } from '../../core/PlacementPolicy.js';
-import { BUILD_TAG_MAX_COUNT, normalizeBuildTags, suggestBuildTags } from '../../core/BuildTags.js';
+import { PlacementPolicy } from '../../core/publication/PlacementPolicy.js';
+import { BUILD_TAG_MAX_COUNT, normalizeBuildTags, suggestBuildTags } from '../../core/document/BuildTags.js';
 
 // 0.2.21: the Document Properties editor — title/description/license,
 // the "New Document dialog" and "Document Properties" surfaces from
@@ -77,7 +77,7 @@ export default {
                 return;
             }
             // A remix keeps crediting its original and keeps its terms
-            // (core/License.js, relicense()), here and again where the
+            // (core/document/License.js, relicense()), here and again where the
             // edit is applied (UpdateDocumentMetadataUseCase,
             // WorldNavigationSession.updateDocumentMetadata).
             const priorLicense = this.info ? this.info.license : null;
@@ -203,7 +203,7 @@ function initialTags(info) {
 }
 
 // The licenses `info`'s build may move to: for a remix, those its original's
-// license allows (core/License.js, remixLicenseIds()), unless its builder
+// license allows (core/document/License.js, remixLicenseIds()), unless its builder
 // built the original too; otherwise every one.
 function remixLicenseOptions(info) {
     const license = info && info.license;

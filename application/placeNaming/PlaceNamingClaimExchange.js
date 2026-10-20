@@ -1,4 +1,4 @@
-import { PlaceNamingClaim } from '../../core/PlaceNamingClaim.js';
+import { PlaceNamingClaim } from '../../core/world/PlaceNamingClaim.js';
 import { buildPlaceNamingClaimPublication } from './PlaceNamingClaimPublication.js';
 import { validatePlaceNamingClaimPublication } from './PlaceNamingClaimPublicationValidator.js';
 
@@ -18,7 +18,7 @@ import { validatePlaceNamingClaimPublication } from './PlaceNamingClaimPublicati
 //   Naming exchange DISTRIBUTES claims; it never ESTABLISHES truth.
 //
 // Every question of "which name should I show" stays exactly where 0.5.2
-// left it — core/PlaceNamingView.js#namingView() — and this file never
+// left it — core/world/PlaceNamingView.js#namingView() — and this file never
 // answers it, never ranks anything, and never decides which of two
 // disagreeing claims "wins." It only ever moves a claim from one
 // replica's store into another's, unchanged, still carrying its own
@@ -34,7 +34,7 @@ import { validatePlaceNamingClaimPublication } from './PlaceNamingClaimPublicati
 // boring, and why that boredom is the point: every future transport
 // (WebRTC peer exchange, a rendezvous relay, a future DHT) plugs into
 // THIS class's importClaim()/exportClaim(), never into
-// core/PlaceNamingView.js or application/placeNaming/LocalPlaceNamingClaimStore.js
+// core/world/PlaceNamingView.js or application/placeNaming/LocalPlaceNamingClaimStore.js
 // directly.
 export class PlaceNamingClaimExchange {
     constructor(store, verifier, publicationLog) {
@@ -68,7 +68,7 @@ export class PlaceNamingClaimExchange {
     //
     //   1. validate  — application/placeNaming/PlaceNamingClaimPublicationValidator.js
     //                   (is this even a well-formed publication?)
-    //   2. construct — a real core/PlaceNamingClaim.js from the package's
+    //   2. construct — a real core/world/PlaceNamingClaim.js from the package's
     //                   own fields (never trusted as-is)
     //   3. verify    — identity/LocalAuthorizationVerifier.js#
     //                   verifyPlaceNamingClaim() (does it actually carry

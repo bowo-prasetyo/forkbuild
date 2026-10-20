@@ -1,9 +1,9 @@
 import { useBuildPlot } from '../ui/views/editorView/useBuildPlot.js';
-import { plotQuery } from '../core/BuildPlot.js';
+import { plotQuery } from '../core/world/BuildPlot.js';
 import { mountComponent, ref } from './support/MinimalVueCompositionApiShim.js';
 import { assert } from './support/Assert.js';
 
-// A resident's Build there (core/ResidentWish.js) opens the Editor on a plot
+// A resident's Build there (core/world/ResidentWish.js) opens the Editor on a plot
 // link that also names a ready-made structure: the new build for that spot
 // starts as a copy of it. Build here's own link, naming none, still starts
 // empty.

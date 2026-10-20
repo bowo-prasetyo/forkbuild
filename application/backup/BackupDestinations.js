@@ -2,8 +2,8 @@ import { BackupFolder } from './BackupFolder.js';
 import { BackupDestination } from './BackupStatusStore.js';
 import { holdsUserData } from './BackupReminder.js';
 import { deriveBackupEncryptionKey } from './DeviceBackupFile.js';
-import { UserFacingError } from '../../core/UserFacingError.js';
-import { message } from '../../core/Message.js';
+import { UserFacingError } from '../../core/app/UserFacingError.js';
+import { message } from '../../core/app/Message.js';
 
 const FOLDER_VALUE = 'folder';
 const KEY_VALUE = 'backup-key';

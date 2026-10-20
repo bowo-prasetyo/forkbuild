@@ -84,7 +84,7 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 //   tampering caught one layer earlier than 0.2.65 could catch it, never
 //   a replacement for it. A publication with NO signature is unaffected:
 //   see identity/LocalAuthorizationVerifier.js#verifyRendezvousPublication
-//   and core/Signature.js's own RENDEZVOUS_PUBLICATION header on why
+//   and core/publication/Signature.js's own RENDEZVOUS_PUBLICATION header on why
 //   signing stays optional.
 export class RendezvousDiscoveryProvider extends PeerDiscoveryProvider {
     constructor({ transport, identityProvider = null, verifier = new LocalAuthorizationVerifier() } = {}) {

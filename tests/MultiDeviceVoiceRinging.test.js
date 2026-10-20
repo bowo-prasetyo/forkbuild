@@ -6,10 +6,10 @@ import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.j
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
 import { FriendRelationshipUseCase } from '../application/identity/FriendRelationshipUseCase.js';
-import { FriendshipRecord } from '../core/FriendshipRecord.js';
+import { FriendshipRecord } from '../core/social/FriendshipRecord.js';
 import { VoiceUseCase } from '../application/chat/VoiceUseCase.js';
-import { VoiceSessionState } from '../core/VoiceSessionState.js';
-import { VoiceCallEndReason } from '../core/VoiceCallEndReason.js';
+import { VoiceSessionState } from '../core/social/VoiceSessionState.js';
+import { VoiceCallEndReason } from '../core/social/VoiceCallEndReason.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 

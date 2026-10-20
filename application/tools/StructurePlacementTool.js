@@ -1,5 +1,5 @@
 import { Tool } from './Tool.js';
-import { SpatialBounds } from '../../core/SpatialBounds.js';
+import { SpatialBounds } from '../../core/world/SpatialBounds.js';
 import { StructurePlacementValidator } from '../editor/StructurePlacementValidator.js';
 import { PlaceStructureCommand } from '../commands/PlaceStructureCommand.js';
 import { PlacementPositionService } from '../editor/PlacementPositionService.js';

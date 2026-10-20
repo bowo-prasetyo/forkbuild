@@ -2,7 +2,7 @@ import { register } from 'node:module';
 
 import { SteemReadingConfigurationStore } from '../storage/SteemReadingConfigurationStore.js';
 import { SetSteemReadingConfigurationUseCase } from '../application/settings/SetSteemReadingConfigurationUseCase.js';
-import { DEFAULT_STEEM_API_NODES } from '../core/SteemReadingConfiguration.js';
+import { DEFAULT_STEEM_API_NODES } from '../core/networks/SteemReadingConfiguration.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 

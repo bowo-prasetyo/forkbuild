@@ -1,9 +1,9 @@
 import { computed, onBeforeUnmount, ref } from 'vue';
 import {
     BuildVideoKind, BuildVideoShape, buildVideoFileName, buildVideoTimeline, canRecordBuildVideo
-} from '../../../core/BuildVideo.js';
-import { WalkThroughCamera } from '../../../core/WalkThroughFilm.js';
-import { MUSIC_MOOD } from '../../../core/MusicScore.js';
+} from '../../../core/app/BuildVideo.js';
+import { WalkThroughCamera } from '../../../core/app/WalkThroughFilm.js';
+import { MUSIC_MOOD } from '../../../core/app/MusicScore.js';
 import BuildVideoSaved from './BuildVideoSaved.js';
 import { downloadVideo, videoDescription, videoLicenseNoticeKey, videoOverlayText } from './buildVideoText.js';
 import { requestWalkThroughFilm } from './walkThroughFilmRequest.js';

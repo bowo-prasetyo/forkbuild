@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import NotificationHistoryPanel from '../ui/components/NotificationHistoryPanel.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
-import { NotificationEvent } from '../core/NotificationEvent.js';
+import { NotificationEvent } from '../core/social/NotificationEvent.js';
 import { GetRecipientNotificationEventsUseCase } from '../application/chat/GetRecipientNotificationEventsUseCase.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
 import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
@@ -11,12 +11,12 @@ import { PublicationCommentaryNotificationProducer } from '../application/public
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
@@ -458,7 +458,7 @@ async function runTests() {
     {
         const panelCode = withEnglish(await codeOnlySource('ui/components/NotificationHistoryPanel.js'));
 
-        // K1. The panel imports nothing from storage/, core/NotificationEvent.js,
+        // K1. The panel imports nothing from storage/, core/social/NotificationEvent.js,
         // or application/chat/GetRecipientNotificationEventsUseCase.js — only Vue.
         // The translator (ui/i18n/i18n.js) is the one import allowed: it gives text, never data.
         const panelRawImports = ((await rawSource('ui/components/NotificationHistoryPanel.js')).match(/^import .*/gm) || [])

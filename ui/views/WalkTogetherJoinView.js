@@ -2,12 +2,12 @@ import { computed, inject, onBeforeUnmount, onMounted, ref, shallowRef, watch } 
 import { useRoute, useRouter } from 'vue-router';
 import { WalkTogetherFailure, WalkTogetherStatus } from '../../application/walkTogether/WalkTogether.js';
 import { OpenPublicationLinkOutcome } from '../../application/publication/OpenPublicationLink.js';
-import { parseWalkTogetherCode } from '../../core/WalkTogetherCode.js';
+import { parseWalkTogetherCode } from '../../core/social/WalkTogetherCode.js';
 import LoginModal from '../components/LoginModal.js';
 import { walkTogetherFailureText } from '../components/walkTogether/walkTogetherText.js';
 import { t } from '../i18n/i18n.js';
 
-// A "Walk here with me" link (`#/walk/<code>`, core/WalkTogetherCode.js),
+// A "Walk here with me" link (`#/walk/<code>`, core/social/WalkTogetherCode.js),
 // opened by a friend: once logged in (a guest walks as their own avatar,
 // under their name) and after saying Join, it meets the host
 // (application/walkTogether/WalkTogether.js), checks and keeps the World the

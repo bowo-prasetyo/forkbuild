@@ -1,9 +1,9 @@
 
-import { IpfsGatewayConfiguration } from '../core/IpfsGatewayConfiguration.js';
+import { IpfsGatewayConfiguration } from '../core/networks/IpfsGatewayConfiguration.js';
 import { IpfsGatewayContentStore } from '../content/IpfsGatewayContentStore.js';
 import { IpfsGatewayFailoverContentStore } from '../content/IpfsGatewayFailoverContentStore.js';
 import { ContentUnavailableError } from '../content/IpfsContentStore.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource as source } from './support/SourceText.js';
@@ -237,7 +237,7 @@ async function run() {
         assert(!pinningSource.includes('IpfsGatewayFailoverContentStore'), 'I2. content/IpfsRemotePinningContentStore.js (remote pinning) never references the new failover class either');
 
         const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
-        // A later, sibling milestone (core/IpfsNodeConfiguration.js) gave
+        // A later, sibling milestone (core/networks/IpfsNodeConfiguration.js) gave
         // this construction site a real apiUrl argument, from its own
         // separate resolvedIpfsNodeApiUrl — never this milestone's own
         // read-path gatewayUrls/failover resolution.

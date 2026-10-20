@@ -13,7 +13,7 @@
 // enum's own INVALID_ENVELOPE/INVALID_SIGNATURE members describe a SIGNED
 // PublicationSnapshotPlacement's own envelope/signature checks, which this
 // pipeline never performs (a Nostr-discovered candidate carries no
-// signature at all — see core/SnapshotDiscoveryEnvelope.js's own header,
+// signature at all — see core/publication/SnapshotDiscoveryEnvelope.js's own header,
 // "a self-declared claim, never evidence"). Reusing that enum here would
 // either leave two members permanently unreachable or blur two genuinely
 // different failure vocabularies into one.

@@ -1,6 +1,6 @@
-import { AnimalDecoration } from '../../core/AnimalDecoration.js';
+import { AnimalDecoration } from '../../core/nature/AnimalDecoration.js';
 import { Command } from './Command.js';
-import { message } from '../../core/Message.js';
+import { message } from '../../core/app/Message.js';
 
 // 0.9.703 — World Animal Decorations: Removal. The direct structural
 // twin of RemoveWorldLandmarkCommand.js — removes an existing

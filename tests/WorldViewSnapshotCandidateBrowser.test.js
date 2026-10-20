@@ -5,7 +5,7 @@ import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapsho
 import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
 import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
 import { Publication } from '../publisher/Publication.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { worldViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { stripHtmlComments } from './support/StripHtmlComments.js';

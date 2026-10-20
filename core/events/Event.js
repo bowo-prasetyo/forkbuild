@@ -16,7 +16,7 @@ export const DomainEvent = Object.freeze({
     // Building or a Group, so its lifecycle publishes the same way.
     // 0.2.91 — World Instance Editing & Placement Management adds
     // STRUCTURE_PLACEMENT_UPDATED: an already-placed instance can now be
-    // moved/rotated in place (core/World.js#updateStructurePlacement()),
+    // moved/rotated in place (core/document/World.js#updateStructurePlacement()),
     // exactly the BRICK_UPDATED precedent for a Brick's own
     // position/rotation — never a remove+re-add, so the placement's id
     // (and anything referencing it, like a selection) survives the edit.

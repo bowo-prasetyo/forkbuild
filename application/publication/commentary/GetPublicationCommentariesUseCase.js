@@ -55,7 +55,7 @@
 // PUBLICATION ISOLATION IS THE STORE'S OWN GUARANTEE, REUSED, NEVER
 // REIMPLEMENTED. `getForPublication()` filters strictly by
 // `publicationId` — two Publications produced from the same underlying
-// Document (see `core/PublicationCommentaryCollection.js`'s own 0.9.242
+// Document (see `core/publication/PublicationCommentaryCollection.js`'s own 0.9.242
 // header) never contaminate each other's results here, because this
 // file performs no filtering of its own; it passes `publicationId`
 // through unchanged and returns whatever the store hands back.

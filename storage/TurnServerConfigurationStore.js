@@ -1,19 +1,19 @@
 import { StorageProvider } from './StorageProvider.js';
 import { LocalStorageProvider } from './LocalStorageProvider.js';
-import { TurnServerConfiguration, isValidTurnUrl } from '../core/TurnServerConfiguration.js';
+import { TurnServerConfiguration, isValidTurnUrl } from '../core/networks/TurnServerConfiguration.js';
 
 const TURN_SERVER_CONFIGURATION_STORE_KEY = 'turn-server-configuration';
 
 // 0.9.454 — User-Configurable TURN Server Configuration Persistence.
 //
-// core/TurnServerConfiguration.js (this same milestone, sibling file) gave
+// core/networks/TurnServerConfiguration.js (this same milestone, sibling file) gave
 // a user's own TURN relay a real, validated, immutable shape. This file is
 // its durable home — mirroring storage/IceServerConfigurationStore.js's own
 // save()/get()/clear() shape, same StorageProvider seam, same "absence
 // stays meaningful" rule — applied to a TURN relay (urls + username +
 // credential) instead of a STUN server list.
 //
-//   core/TurnServerConfiguration.js   (this milestone, unmodified by this
+//   core/networks/TurnServerConfiguration.js   (this milestone, unmodified by this
 //        file — toJSON()/the constructor's own validation, reused verbatim)
 //                    │
 //                    ▼

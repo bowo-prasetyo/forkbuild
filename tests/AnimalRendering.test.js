@@ -2,9 +2,9 @@ import * as THREE from 'three';
 import { AnimalRenderer } from '../renderer/AnimalRenderer.js';
 import { AnimalVisual } from '../renderer/AnimalVisual.js';
 import { AnimalFieldRenderer } from '../renderer/AnimalFieldRenderer.js';
-import { AnimalPresence } from '../core/AnimalPresence.js';
-import { Position } from '../core/Position.js';
-import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
+import { AnimalPresence } from '../core/nature/AnimalPresence.js';
+import { Position } from '../core/document/Position.js';
+import { ANIMAL_SPECIES } from '../core/nature/WildlifeField.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.701 — Released Animal Rendering.
@@ -115,7 +115,7 @@ async function runTests() {
         } catch (err) {
             threw = true;
         }
-        assert(threw, '19. setAnimal() rejects anything that is not a real AnimalPresence — see core/AnimalPresence.js');
+        assert(threw, '19. setAnimal() rejects anything that is not a real AnimalPresence — see core/nature/AnimalPresence.js');
     }
 
     // -------------------------------------------------------------

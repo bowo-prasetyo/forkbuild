@@ -1,14 +1,14 @@
 import {
     waterWaveAt, WAVE_KIND, LAKE_WAVES, SEA_WAVES, MAX_SWELL_HEIGHT, waveNumber, waveAngularSpeed
-} from '../core/WaterWaves.js';
-import { seaShareAt, hydrologyFeatureAt, HYDROLOGY_FEATURE } from '../core/Hydrology.js';
-import { surfaceCategoryAt, SURFACE_CATEGORY } from '../core/TerrainSurface.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+} from '../core/nature/WaterWaves.js';
+import { seaShareAt, hydrologyFeatureAt, HYDROLOGY_FEATURE } from '../core/nature/Hydrology.js';
+import { surfaceCategoryAt, SURFACE_CATEGORY } from '../core/nature/TerrainSurface.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
 import { buildWaterTileMesh } from '../renderer/WaterTileMesh.js';
-import { tileCenter } from '../core/TerrainTiling.js';
+import { tileCenter } from '../core/nature/TerrainTiling.js';
 import { assert } from './support/Assert.js';
 
-// Lakes ripple and the sea swells (core/WaterWaves.js): a pure function of
+// Lakes ripple and the sea swells (core/nature/WaterWaves.js): a pure function of
 // where, when and how much sea, low enough to stay visual only, moving the
 // way water moves, and blending from lake to sea across a coast.
 

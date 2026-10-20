@@ -1,7 +1,7 @@
-import { slopeBetween, isWalkableSlope, DEFAULT_MAX_WALKABLE_SLOPE } from '../core/TerrainWalkability.js';
+import { slopeBetween, isWalkableSlope, DEFAULT_MAX_WALKABLE_SLOPE } from '../core/nature/TerrainWalkability.js';
 import { AvatarTerrainConstraint } from '../application/avatar/AvatarTerrainConstraint.js';
 import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
@@ -13,7 +13,7 @@ import { assert } from './support/Assert.js';
 
 // 0.2.77 — Terrain-Aware Avatar Grounding & Movement.
 //
-//   Section A: core/TerrainWalkability.js — pure slope geometry
+//   Section A: core/nature/TerrainWalkability.js — pure slope geometry
 //   Section B: application/avatar/AvatarTerrainConstraint.js — real + injected terrain
 //   Section C: application/avatar/AvatarMovementController.js — terrain constraint wired into the movement pipeline
 //   Section D: WorldNavigationSession integration
@@ -74,7 +74,7 @@ function spyFacade() {
 
 // A deliberately engineered cliff: flat at z < 5, a sheer 100-unit
 // step at z >= 5. Real generated terrain (three gentle octaves, "reads
-// as geography, never spiky noise" — core/TerrainHeightField.js's own
+// as geography, never spiky noise" — core/nature/TerrainHeightField.js's own
 // header) is, by design, essentially never this steep — so this
 // synthetic function is what lets Sections B/C/D/E prove the
 // walkable/unwalkable boundary deterministically, without hunting
@@ -87,7 +87,7 @@ async function runTests() {
     const registry = buildRegistry();
 
     // -------------------------------------------------------------
-    // Section A — core/TerrainWalkability.js: pure slope geometry
+    // Section A — core/nature/TerrainWalkability.js: pure slope geometry
     // -------------------------------------------------------------
     {
         assert(slopeBetween(0, 0, 10) === 0, '1. slopeBetween: flat ground has zero slope');
@@ -148,7 +148,7 @@ async function runTests() {
     {
         // Real terrain sanity: this generator's three octaves are
         // deliberately gentle ("reads as geography, never spiky
-        // noise" — core/TerrainHeightField.js) — ordinary walking
+        // noise" — core/nature/TerrainHeightField.js) — ordinary walking
         // steps across real generated ground essentially never hit
         // the default walkable-slope limit.
         const constraint = new AvatarTerrainConstraint();

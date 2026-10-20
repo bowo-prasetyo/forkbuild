@@ -1,4 +1,4 @@
-import { PublicationAnchor } from '../../core/PublicationAnchor.js';
+import { PublicationAnchor } from '../../core/publication/PublicationAnchor.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 import { AnchorAcquisitionKind } from './AnchorAcquisitionKind.js';
 import { LEGACY_HASH_EXTERNAL_REASON, isLegacyContentHash } from '../../serializer/contentHash.js';
@@ -15,8 +15,8 @@ import { LEGACY_HASH_EXTERNAL_REASON, isLegacyContentHash } from '../../serializ
 // LocalAuthorizationVerifier.js, and application/
 // LocalPublicationAnchorCatalog.js exactly the way application/
 // BlueprintAttributionUseCase.js#publish() already orchestrates
-// core/BlueprintAttribution.js — no new domain model, no change to
-// core/PublicationAnchor.js at all.
+// core/building/BlueprintAttribution.js — no new domain model, no change to
+// core/publication/PublicationAnchor.js at all.
 //
 // CREATING A CLAIM IS NOT ANCHORING. This class produces a signed
 // assertion — "the current identity attests this publicationId/
@@ -109,7 +109,7 @@ export class CreatePublicationAnchorUseCase {
     //                              { txid, blockHeight }
     //   anchoredAt   (optional) — the EXTERNAL system's own reported
     //                              record time; defaults to now, exactly
-    //                              as core/PublicationAnchor.js itself
+    //                              as core/publication/PublicationAnchor.js itself
     //                              defaults it
     //
     // `contentHash` is deliberately NOT an option — it is always derived

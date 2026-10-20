@@ -1,6 +1,6 @@
 import { SnapshotPlacementResolutionOutcome } from './SnapshotPlacementResolutionOutcome.js';
 import { SnapshotPlacementLifecycleState } from './SnapshotPlacementLifecycleState.js';
-import { message } from '../../../core/Message.js';
+import { message } from '../../../core/app/Message.js';
 
 // 0.8.26 — Snapshot Placement Lifecycle & Stale Availability Semantics.
 //
@@ -18,7 +18,7 @@ import { message } from '../../../core/Message.js';
 // the identical thing one axis over: pure, synchronous, side-effect-free,
 // and never itself calling application/snapshot/placement/SnapshotPlacementResolver.js,
 // touching application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js, or
-// importing core/PublicationSnapshotPlacement.js's own mutating surface
+// importing core/publication/PublicationSnapshotPlacement.js's own mutating surface
 // (it has none — see that class's own header, "Placements are never
 // updated in place"). It only ever reshapes observations a caller
 // already collected elsewhere (ordinarily ui/views/

@@ -14,7 +14,7 @@ import { PlacementAcquisitionKind, isValidPlacementAcquisitionKind } from '../..
 //
 //   { placementId, firstSeenAt, acquisition: { kind } }
 //
-// NOT PART OF THE PLACEMENT. core/PublicationSnapshotPlacement.js's own
+// NOT PART OF THE PLACEMENT. core/publication/PublicationSnapshotPlacement.js's own
 // signed payload is untouched by this file — a
 // SnapshotPlacementKnowledgeRecord is never attached to a
 // PublicationSnapshotPlacement instance, never serialized inside one, and

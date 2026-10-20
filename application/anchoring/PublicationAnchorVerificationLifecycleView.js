@@ -1,6 +1,6 @@
 import { AnchorVerificationOutcome } from './AnchorVerificationOutcome.js';
 import { AnchorVerificationLifecycleState } from './AnchorVerificationLifecycleState.js';
-import { message } from '../../core/Message.js';
+import { message } from '../../core/app/Message.js';
 
 // 0.8.12 — External Anchor Lifecycle & Stale Evidence Semantics.
 //
@@ -15,7 +15,7 @@ import { message } from '../../core/Message.js';
 // view in this codebase already is: pure, synchronous, side-effect-free,
 // and never itself calling application/anchoring/ExternalAnchorVerifier.js,
 // touching application/anchoring/LocalPublicationAnchorCatalog.js, or importing
-// core/PublicationAnchor.js's own mutating surface. It only ever reshapes
+// core/publication/PublicationAnchor.js's own mutating surface. It only ever reshapes
 // observations a caller already collected elsewhere (ordinarily ui/
 // views/DecentralizedPublicationsView.js's own `entry.
 // verificationHistory`).

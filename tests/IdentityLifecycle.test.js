@@ -1,9 +1,9 @@
 import { LocalIdentity } from '../identity/LocalIdentity.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { IdentityUseCase } from '../application/identity/IdentityUseCase.js';
-import { IdentityLifecycleState } from '../core/IdentityLifecycleState.js';
-import { isValidIdentityRevocationRecord, toIdentityRevocationRecord } from '../core/IdentityRevocationEnvelope.js';
-import { isValidIdentitySuccessionRecord } from '../core/IdentitySuccessionEnvelope.js';
+import { IdentityLifecycleState } from '../core/identity/IdentityLifecycleState.js';
+import { isValidIdentityRevocationRecord, toIdentityRevocationRecord } from '../core/identity/IdentityRevocationEnvelope.js';
+import { isValidIdentitySuccessionRecord } from '../core/identity/IdentitySuccessionEnvelope.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { IncorrectPassphraseError } from '../identity/KeyEncryption.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';

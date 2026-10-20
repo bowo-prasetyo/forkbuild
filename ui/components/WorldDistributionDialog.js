@@ -144,7 +144,7 @@ export default {
         'update:storage',
         'update:discoveryProvider'
     ],
-    // The announcing networks this device can write to (core/NetworkWriters.js):
+    // The announcing networks this device can write to (core/publication/NetworkWriters.js):
     // Steem and Blurt only while switched on.
     setup() {
         const { steemOn, blurtOn } = useWritableNetworks();

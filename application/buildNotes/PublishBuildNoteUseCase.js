@@ -1,7 +1,7 @@
-import { MAX_BUILD_NOTE_PAYLOAD_LENGTH, buildNoteTemplate } from '../../core/BuildNote.js';
-import { normalizeBuildTags } from '../../core/BuildTags.js';
+import { MAX_BUILD_NOTE_PAYLOAD_LENGTH, buildNoteTemplate } from '../../core/publication/BuildNote.js';
+import { normalizeBuildTags } from '../../core/document/BuildTags.js';
 
-// Sends a just-published build to everyone: a build note (core/BuildNote.js)
+// Sends a just-published build to everyone: a build note (core/publication/BuildNote.js)
 // carrying its signed claim, its bytes and its publisher's signed placement,
 // to every Nostr relay this device reads, signed with this device's carrier
 // key (nostr/AppNostrSigner.js). Needs no wallet, extension or account.

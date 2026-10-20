@@ -29,7 +29,7 @@
 // `if (anchorType === 'bitcoin-op-return')` branch here.
 //
 // `anchoredAtLabel` exists so a caller never has to invent its own
-// wording for the restraint core/PublicationAnchor.js's own header
+// wording for the restraint core/publication/PublicationAnchor.js's own header
 // already states: `anchoredAt` is the EXTERNAL system's own reported
 // timestamp, never something this replica independently established.
 // "Claimed external recording time" — never "Verified at," "Confirmed

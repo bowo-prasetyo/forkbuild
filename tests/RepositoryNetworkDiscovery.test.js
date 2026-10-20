@@ -11,8 +11,8 @@ import { composeWorldEncounterMaterialVerifier } from '../application/worldEncou
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { useRepositoryNetworkDiscovery, exploreRouteFor } from '../ui/components/publicationCatalog/useRepositoryNetworkDiscovery.js';
 import { mountComponent } from './support/MinimalVueCompositionApiShim.js';
-import { WorldEncounterKind } from '../core/WorldEncounter.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { WorldEncounterKind } from '../core/world/WorldEncounter.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { assert } from './support/Assert.js';

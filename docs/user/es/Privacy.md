@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 48b83be51fa03585 -->
+<!-- translation-of: docs/Privacy.md source-hash: 822c93745b70c626 -->
 # Privacidad
 
 <!-- languages -->
@@ -284,8 +284,8 @@ todos modos. Por eso `/e/embed-view` y `/e/embed-open` siguen solo las otras
 dos reglas: nunca con Global Privacy Control o Do Not Track, y solo desde el
 sitio oficial.
 
-El código está en `core/VisitorCount.js`,
-`core/LaunchChannel.js`, `application/settings/CountDailyVisit.js`,
+El código está en `core/app/VisitorCount.js`,
+`core/app/LaunchChannel.js`, `application/settings/CountDailyVisit.js`,
 `application/settings/CountLaunchChannel.js`,
 `application/settings/FunnelEventCounter.js`, `ui/counterHit.js`,
 `ui/start.js` y `ui/embed/embedBoot.js`.
@@ -426,5 +426,5 @@ para otras personas, actualice esta página para nombrar sus servidores.
 
 El recuento de visitantes solo funciona en el sitio oficial, así que una
 copia alojada en otro lugar no cuenta nada. Para contar sus propios
-visitantes, cambie las direcciones de `core/VisitorCount.js` y la entrada
+visitantes, cambie las direcciones de `core/app/VisitorCount.js` y la entrada
 `img-src` de la Content Security Policy de `index.html`.

@@ -395,7 +395,7 @@ const navigateTo = (path) => {
 };
 registerServiceWorker({ navigate: navigateTo });
 
-// Notifications on this device (core/DeviceNotifications.js): the signed-in
+// Notifications on this device (core/social/DeviceNotifications.js): the signed-in
 // identity's new notifications, shown by the operating system while
 // ForkBuild is open but not in view, once turned on in the bell's panel.
 const deviceNotificationEvents = identityProvider

@@ -1,6 +1,6 @@
-import { PlacementRecord } from '../../core/PlacementRecord.js';
-import { CausalStamp } from '../../core/CausalStamp.js';
-import { RevisionReference } from '../../core/RevisionReference.js';
+import { PlacementRecord } from '../../core/publication/PlacementRecord.js';
+import { CausalStamp } from '../../core/collaboration/CausalStamp.js';
+import { RevisionReference } from '../../core/document/RevisionReference.js';
 
 // Moves a placement to a new global position.
 //

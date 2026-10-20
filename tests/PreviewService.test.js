@@ -1,5 +1,5 @@
 import { PreviewService } from '../application/editor/PreviewService.js';
-import { PreviewType } from '../core/DocumentPreview.js';
+import { PreviewType } from '../core/catalog/DocumentPreview.js';
 import { assert } from './support/Assert.js';
 
 // 0.2.32 — PreviewService's queue/cache/cancellation logic, tested

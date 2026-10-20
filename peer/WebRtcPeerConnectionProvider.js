@@ -1,7 +1,7 @@
 import { PeerConnectionProvider } from './PeerConnectionProvider.js';
 import { WebRtcPeerConnection } from './WebRtcPeerConnection.js';
 import { PeerConnectionOffer } from './PeerConnectionOffer.js';
-import { createId } from '../core/createId.js';
+import { createId } from '../core/document/createId.js';
 import { mergeIceServers } from './IceServerConfig.js';
 
 // 0.2.51 — the real, two-different-browser-sessions transport this

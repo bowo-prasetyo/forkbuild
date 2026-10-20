@@ -1,12 +1,12 @@
 import { readFile } from 'node:fs/promises';
-import { simulateAvatarMovement } from '../core/AvatarMovementSimulation.js';
-import { resolveMovementSpeed } from '../core/AvatarMovementAccelerationSimulation.js';
-import { AvatarMovementState } from '../core/AvatarMovementState.js';
+import { simulateAvatarMovement } from '../core/avatar/AvatarMovementSimulation.js';
+import { resolveMovementSpeed } from '../core/avatar/AvatarMovementAccelerationSimulation.js';
+import { AvatarMovementState } from '../core/avatar/AvatarMovementState.js';
 import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
-import { VehicleType } from '../core/VehicleType.js';
-import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
-import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
+import { resolveAvatarVehicleMovementCapability } from '../core/vehicles/AvatarVehicleMovementCapability.js';
+import { AvatarAnimationState } from '../core/avatar/AvatarAnimationState.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
@@ -22,9 +22,9 @@ import { assert } from './support/Assert.js';
 // request (coasting) from an EXPLICIT request to slow down faster
 // (braking) — both closed a lower target at the exact same
 // `acceleration` rate. This suite covers the seam this milestone adds:
-// core/AvatarMovementAccelerationSimulation.js#resolveMovementSpeed()'s
+// core/avatar/AvatarMovementAccelerationSimulation.js#resolveMovementSpeed()'s
 // own new `braking`/`brakingRequested` parameters, threaded through
-// core/AvatarMovementSimulation.js#simulateAvatarMovement() and
+// core/avatar/AvatarMovementSimulation.js#simulateAvatarMovement() and
 // application/avatar/AvatarMovementController.js's own new `_resolvedBraking()`
 // seam — while proving real, key-driven controller behavior is
 // completely untouched, since nothing yet sets `brakingRequested` true
@@ -40,7 +40,7 @@ import { assert } from './support/Assert.js';
 //   Section C: braking rate — an explicit brakingRequested tick decays
 //              at the BRAKING rate instead, strictly faster for every
 //              ground vehicle (braking > acceleration, per
-//              core/AvatarVehicleMovementCapability.js's own 0.9.92
+//              core/vehicles/AvatarVehicleMovementCapability.js's own 0.9.92
 //              header)
 //   Section D: no overshoot in either direction
 //   Section E: reversal while braking passes through exactly zero,
@@ -85,7 +85,7 @@ const DT = 0.05; // world seconds/tick — matches tests/AvatarVehicleAccelerati
 // keyboard concept entirely) for `ticks` steps of `dt` seconds each, at
 // rotationY = 0 the whole time (never turning — so stepDistance lands
 // straight on Z), returning the per-tick SIGNED currentMovementSpeed
-// core/AvatarMovementSimulation.js itself already returns.
+// core/avatar/AvatarMovementSimulation.js itself already returns.
 function simulateTicks({ movementSpeed, acceleration, braking, forwardAxis, brakingRequested = false, ticks, dt }) {
     let position = { x: 0, y: 0, z: 0 };
     let verticalVelocity = 0;
@@ -132,7 +132,7 @@ async function runTests() {
     // Section A — WALK unaffected; DRONE now brakes through this exact
     // same pipeline (Aerial Movement Pipeline milestone superseded
     // DRONE's own former "always blocked" behavior — see
-    // core/AvatarVehicleMovementCapability.js's own "AERIAL_VEHICLE Is
+    // core/vehicles/AvatarVehicleMovementCapability.js's own "AERIAL_VEHICLE Is
     // Now A Real, Supported Capability" header)
     // -------------------------------------------------------------
     {
@@ -143,7 +143,7 @@ async function runTests() {
         controller.tick(DT);
         const zAfterFirstTick = avatarPresenceSession.current.position.z;
         assert(Math.abs((zAfterFirstTick / DT) - 3) < 1e-9,
-            '1. WALK: the first tick already moves at the full WALK_SPEED (3) — INSTANT means instant, braking or not (WALK\'s own braking is INSTANT/0 too, per core/AvatarVehicleMovementCapability.js\'s own 0.9.92 header)');
+            '1. WALK: the first tick already moves at the full WALK_SPEED (3) — INSTANT means instant, braking or not (WALK\'s own braking is INSTANT/0 too, per core/vehicles/AvatarVehicleMovementCapability.js\'s own 0.9.92 header)');
         controller.keyUp('w');
         controller.tick(DT);
         assert(avatarPresenceSession.current.position.z === zAfterFirstTick,
@@ -362,7 +362,7 @@ async function runTests() {
     // 0.9.95 UPDATE: as of 0.9.92, this section's own title was true for
     // a stronger reason than it is now — `_currentMovementState()` had
     // no source for `brakingRequested` at all, so it was UNCONDITIONALLY
-    // false. 0.9.95 (core/AvatarVehicleBrakingIntent.js +
+    // false. 0.9.95 (core/vehicles/AvatarVehicleBrakingIntent.js +
     // application/avatar/AvatarMovementController.js's own new
     // `setVehicleBrakingIntent()`/`_resolvedBrakingRequested()`) gives it
     // a real source — but that source is a dedicated method call, never
@@ -425,7 +425,7 @@ async function runTests() {
         // never set `movementState.brakingRequested` anywhere — this
         // exact assertion (`!controllerCodeOnly.includes('brakingRequested')`)
         // was this suite's own proof of that. 0.9.95
-        // (core/AvatarVehicleBrakingIntent.js's own controller
+        // (core/vehicles/AvatarVehicleBrakingIntent.js's own controller
         // integration) deliberately makes that literal string appear —
         // `_currentMovementState()` now builds `brakingRequested:
         // this._resolvedBrakingRequested()` — so the ORIGINAL assertion
@@ -444,23 +444,23 @@ async function runTests() {
         assert(!/case\s+'[^']*':\s*this\._keys\.brak/i.test(controllerCodeOnly),
             '31. no key is bound to braking in _setKey() — W/A/S/D/Shift/Space remain the only recognized keys, unchanged by 0.9.95');
 
-        const simulationSource = await readFile(new URL('../core/AvatarMovementSimulation.js', import.meta.url), 'utf8');
+        const simulationSource = await readFile(new URL('../core/avatar/AvatarMovementSimulation.js', import.meta.url), 'utf8');
         const simulationCodeOnly = simulationSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         assert(!/\bBICYCLE\b|\bMOTORCYCLE\b|\bCAR\b|\bDRONE\b/.test(simulationCodeOnly),
-            '32. core/AvatarMovementSimulation.js never references BICYCLE/MOTORCYCLE/CAR/DRONE either — braking, like acceleration before it, is vehicle-identity-free');
+            '32. core/avatar/AvatarMovementSimulation.js never references BICYCLE/MOTORCYCLE/CAR/DRONE either — braking, like acceleration before it, is vehicle-identity-free');
         assert(simulationCodeOnly.includes('braking') && simulationCodeOnly.includes('brakingRequested'),
-            '33. core/AvatarMovementSimulation.js is the ONE place braking is actually threaded into resolveMovementSpeed(), exactly where acceleration already is');
+            '33. core/avatar/AvatarMovementSimulation.js is the ONE place braking is actually threaded into resolveMovementSpeed(), exactly where acceleration already is');
 
-        const mathSource = await readFile(new URL('../core/AvatarMovementAccelerationSimulation.js', import.meta.url), 'utf8');
-        const mathExports = Object.keys(await import('../core/AvatarMovementAccelerationSimulation.js')).sort();
+        const mathSource = await readFile(new URL('../core/avatar/AvatarMovementAccelerationSimulation.js', import.meta.url), 'utf8');
+        const mathExports = Object.keys(await import('../core/avatar/AvatarMovementAccelerationSimulation.js')).sort();
         assert(JSON.stringify(mathExports) === JSON.stringify(['resolveMovementSpeed']),
             '34. braking was folded into the SAME resolveMovementSpeed() function — no second "resolveMovementSpeedWithBraking" or parallel braking-simulation engine exists (this milestone\'s own "ONE speed-resolution algorithm" brief)');
         assert(mathSource.includes('brakingRequested'), '35. sanity: the pure math file genuinely carries the new parameter');
 
-        const capabilitySource = await readFile(new URL('../core/AvatarVehicleMovementCapability.js', import.meta.url), 'utf8');
+        const capabilitySource = await readFile(new URL('../core/vehicles/AvatarVehicleMovementCapability.js', import.meta.url), 'utf8');
         const capabilityCodeOnly = capabilitySource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         assert(!capabilityCodeOnly.includes('_currentMovementSpeed') && !capabilityCodeOnly.includes('currentSpeed') && !capabilityCodeOnly.includes('brakingRequested'),
-            '36. core/AvatarVehicleMovementCapability.js still carries no transient current-speed or brakingRequested state of any kind (comments aside — this is a CODE-only sweep) — the capability remains immutable and stateless');
+            '36. core/vehicles/AvatarVehicleMovementCapability.js still carries no transient current-speed or brakingRequested state of any kind (comments aside — this is a CODE-only sweep) — the capability remains immutable and stateless');
     }
 
     console.log('✅ All Vehicle Braking and Coasting Integration tests passed.');

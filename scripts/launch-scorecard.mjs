@@ -1,5 +1,5 @@
 // Prints how a week's visitor counts stand against the pillars' targets
-// (core/LaunchTargets.js; docs/Pillars.md, "Measuring it"), and whether the
+// (core/app/LaunchTargets.js; docs/Pillars.md, "Measuring it"), and whether the
 // gate on new networks is open.
 //
 //   node scripts/launch-scorecard.mjs counts.json
@@ -10,7 +10,7 @@
 // a JSON object of { "/e/<event>": total }, GoatCounter's CSV export (one row
 // per hit), or lines of "/e/<event> total". Exits 0 whatever the numbers say.
 import { readFileSync } from 'node:fs';
-import { evaluateFirstSteps, evaluateLaunchTargets, evaluateSideSystems, parseCounts, SIDE_SYSTEM_STATUS, TARGET_STATUS } from '../core/LaunchTargets.js';
+import { evaluateFirstSteps, evaluateLaunchTargets, evaluateSideSystems, parseCounts, SIDE_SYSTEM_STATUS, TARGET_STATUS } from '../core/app/LaunchTargets.js';
 
 const SIDE_MARK = { [SIDE_SYSTEM_STATUS.USED]: '✓ used', [SIDE_SYSTEM_STATUS.RARELY_USED]: '! rarely used', [SIDE_SYSTEM_STATUS.TOO_FEW]: '… too few' };
 const MARK = { [TARGET_STATUS.MET]: '✓ met', [TARGET_STATUS.MISSED]: '✗ below', [TARGET_STATUS.TOO_FEW]: '… too few' };

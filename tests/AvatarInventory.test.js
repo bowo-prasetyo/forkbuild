@@ -9,12 +9,12 @@ import {
     isValidAvatarInventory,
     withEntryAdded,
     withEntryRemoved
-} from '../core/AvatarInventory.js';
-import { VehicleType } from '../core/VehicleType.js';
-import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
+} from '../core/avatar/AvatarInventory.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
+import { ANIMAL_SPECIES } from '../core/nature/WildlifeField.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.670 — Avatar Inventory, core/AvatarInventory.js.
+// 0.9.670 — Avatar Inventory, core/avatar/AvatarInventory.js.
 //
 //   Section A: InventoryEntryKind vocabulary
 //   Section B: AvatarInventoryEntry construction/validation

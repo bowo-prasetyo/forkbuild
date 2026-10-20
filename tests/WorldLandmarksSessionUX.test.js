@@ -1,7 +1,7 @@
-import { Position } from '../core/Position.js';
-import { World } from '../core/World.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { Position } from '../core/document/Position.js';
+import { World } from '../core/document/World.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
@@ -20,7 +20,7 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 // 0.3.7 — World Landmarks & Personal Waypoints — Session/UI integration.
 //
 // tests/WorldLandmarks.test.js already proves the domain/command layer
-// (core/WorldLandmark.js, the three commands, World serialization,
+// (core/world/WorldLandmark.js, the three commands, World serialization,
 // WorldLocationDirectory). This file proves the layer World View's UI
 // actually calls: WorldNavigationSession#createLandmarkHere/
 // updateLandmark/removeLandmark/getLandmark, built the same way

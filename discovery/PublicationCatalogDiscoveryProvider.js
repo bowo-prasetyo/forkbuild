@@ -12,7 +12,7 @@ import { DiscoveryProvider } from './DiscoveryProvider.js';
 //
 // The Publication Center this codebase actually ships (ui/views/
 // DecentralizedPublicationsView.js, wired in ui/main.js) has never used
-// that world — it catalogs core/DecentralizedPublication.js instances in
+// that world — it catalogs core/publication/DecentralizedPublication.js instances in
 // application/publication/LocalPublicationCatalog.js, whose own lookup method is
 // `get(publicationId)`, not `findById(publicationId)`. Two established,
 // already-shipped classes; two different method names for the identical

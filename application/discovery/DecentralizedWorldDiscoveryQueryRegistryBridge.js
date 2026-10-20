@@ -89,8 +89,8 @@ import { queryDecentralizedWorldDiscovery } from './DecentralizedWorldDiscoveryQ
 //
 // NO RETRIEVAL, NO VERIFICATION, NO `ContentReference` OR
 // `WorldDiscoverySource` CONSTRUCTION. This file never imports
-// `core/ContentReference.js`, `core/DecentralizedPublication.js`,
-// `core/WorldDiscoverySource.js`, `core/WorldEncounter.js`, or
+// `core/document/ContentReference.js`, `core/publication/DecentralizedPublication.js`,
+// `core/world/WorldDiscoverySource.js`, `core/world/WorldEncounter.js`, or
 // `application/discovery/WorldDiscoverySourceRegistry.js`, and never fetches
 // anything from a lead's own `uri`. A lead a caller now finds via
 // `registry.listLeads()` is exactly what 0.9.24 already called it — a rumor
@@ -120,7 +120,7 @@ import { queryDecentralizedWorldDiscovery } from './DecentralizedWorldDiscoveryQ
 //   automatically.** See "No scheduling, polling, or retry of its own,"
 //   above.
 // - **Deciding whether an accepted lead becomes a real
-//   `core/WorldDiscoverySource.js` contribution, resolving it against a
+//   `core/world/WorldDiscoverySource.js` contribution, resolving it against a
 //   selected World encounter, retrieving its bytes, or hash-verifying
 //   anything.** Unscheduled, later work — see 0.9.24's own header, "A lead
 //   is deliberately not yet a `ContentReference`."

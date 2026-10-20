@@ -7,7 +7,7 @@ export function sendCounterHit(url) {
     image.src = url;
 }
 
-// Global Privacy Control and Do Not Track, as core/VisitorCount.js reads them.
+// Global Privacy Control and Do Not Track, as core/app/VisitorCount.js reads them.
 export function browserPrivacySignals() {
     return { globalPrivacyControl: navigator.globalPrivacyControl, doNotTrack: navigator.doNotTrack || window.doNotTrack };
 }

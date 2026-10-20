@@ -5,7 +5,7 @@ import PublicationCatalog from '../components/PublicationCatalog.js';
 import ForkTree from '../components/ForkTree.js';
 import FollowButton from '../components/FollowButton.js';
 import { shortIdentityId } from './following/followedPeople.js';
-import { computeAmbiguousPublishedDateIds } from '../../core/PublicationDateAmbiguity.js';
+import { computeAmbiguousPublishedDateIds } from '../../core/catalog/PublicationDateAmbiguity.js';
 import { publicationDateText } from '../i18n/dateText.js';
 // 0.9.525 — Repository Discovery & Material Trust Product
 // Reassessment, Section G. See application/
@@ -56,7 +56,7 @@ export default {
             return allPublications.value.filter((p) => !p.parentDocumentId);
         });
 
-        // 0.9.572 — see core/PublicationDateAmbiguity.js's own header
+        // 0.9.572 — see core/catalog/PublicationDateAmbiguity.js's own header
         // and ui/components/PublicationCatalog.js's own identical
         // computed one component over. The "Original Works & Forks"
         // tree below renders from this SAME `allPublications` array —

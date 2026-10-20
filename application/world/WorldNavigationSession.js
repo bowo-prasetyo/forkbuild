@@ -6,10 +6,10 @@ import { SpatialInspectionService } from '../editor/SpatialInspectionService.js'
 import { SpatialInspectionState } from '../spatial-state/SpatialInspectionState.js';
 import { SpatialEditingContext } from '../spatial-state/SpatialEditingContext.js';
 import { EventBus } from '../../core/events/EventBus.js';
-import { SpatialAllocationPolicy } from '../../core/SpatialAllocationPolicy.js';
+import { SpatialAllocationPolicy } from '../../core/world/SpatialAllocationPolicy.js';
 import { VehicleRuntimeInstances } from './VehicleRuntimeInstances.js';
 import { AnimalRuntimeInstances, ANIMAL_RENDER_RADIUS } from './AnimalRuntimeInstances.js';
-import { isDeterministicAnimalId } from '../../core/AnimalIdentity.js';
+import { isDeterministicAnimalId } from '../../core/nature/AnimalIdentity.js';
 import { AvatarInventoryStore } from '../avatar/AvatarInventoryStore.js';
 import { AvatarInventoryTransferPeerExchange } from '../avatar/AvatarInventoryTransferPeerExchange.js';
 import { AvatarInteractionState } from '../spatial-state/AvatarInteractionState.js';
@@ -37,7 +37,7 @@ import { arrivalMethods } from '../worldNavigation/arrivalMethods.js';
 import { walkThroughFilmMethods } from '../worldNavigation/walkThroughFilmMethods.js';
 import { dayCycleMethods } from '../worldNavigation/dayCycleMethods.js';
 import { CommandHistoryEvent } from '../events/CommandHistoryEvent.js';
-import { EDITOR_ACTIVITY } from '../../core/EditorSoundCues.js';
+import { EDITOR_ACTIVITY } from '../../core/app/EditorSoundCues.js';
 import { describeCommand } from '../commands/describeCommand.js';
 
 // Throttle for runtime vehicle/animal persistence. A ridden vehicle moves
@@ -110,7 +110,7 @@ export class WorldNavigationSession {
         presenceVisibilityUseCase = null,
         avatarProfileBroadcastProvider = null,
         avatarInteractionBroadcastProvider = null,
-        // What each avatar rides, on its own channel (core/AvatarVehicleAdvertisement.js).
+        // What each avatar rides, on its own channel (core/vehicles/AvatarVehicleAdvertisement.js).
         avatarVehicleBroadcastProvider = null,
         avatarProfileVisibilityUseCase = null,
         hasFriend = null,
@@ -164,7 +164,7 @@ export class WorldNavigationSession {
         // unavailable rather than silently broken.
         peerMessageBus = null,
         connectedPeerRegistry = null,
-        // Wildlife time in seconds (see core/WildlifeMotion.js). One clock
+        // Wildlife time in seconds (see core/nature/WildlifeMotion.js). One clock
         // for everything that asks where a wild animal is — the renderer,
         // collision, catching — so an animal is caught and bumped into
         // where it is drawn. Wall-clock time, so peers see the same
@@ -195,7 +195,7 @@ export class WorldNavigationSession {
         this._addPublicationCommentaryUseCase = addPublicationCommentaryUseCase;
         this._getRecipientNotificationEventsUseCase = getRecipientNotificationEventsUseCase;
         // Policy for explicit, interactive placement (checkPlacementOverlap/
-        // movePlacement); see core/SpatialAllocationPolicy.js. Automatic initial
+        // movePlacement); see core/world/SpatialAllocationPolicy.js. Automatic initial
         // placement always behaves as ALLOW: placement never blocks a publish.
         this._spatialAllocationPolicy = spatialAllocationPolicy;
         // Without it a session can't search.
@@ -236,7 +236,7 @@ export class WorldNavigationSession {
         this._vehicleSteeringIntent = null;
         this._avatarFrameSubscription = null;
         this._avatarControlModeActive = false;
-        // Physical Alt key hold state for core/AvatarContinuousMovementInputAdapter.js.
+        // Physical Alt key hold state for core/avatar/AvatarContinuousMovementInputAdapter.js.
         // The resulting intent lives only in `_avatarMovementController`; this is
         // never a second copy of it.
         this._altDown = false;
@@ -245,7 +245,7 @@ export class WorldNavigationSession {
         this._shiftDown = false;
         // Raw physical hold bits for the steering keys, so a new press can be told
         // from a key-repeat (steering is a discrete pulse; see
-        // core/VehicleSteeringInputAdapter.js). The request itself lives only in
+        // core/vehicles/VehicleSteeringInputAdapter.js). The request itself lives only in
         // `_vehicleSteeringIntent`.
         this._vehicleSteerLeftHeld = false;
         this._vehicleSteerRightHeld = false;
@@ -323,13 +323,13 @@ export class WorldNavigationSession {
         this._followedRemoteAvatarId = null;
         this._lastFollowedRemotePosition = null;
         // One shared cooldown for GREET/WAVE/POINT (see
-        // core/AvatarInteractionCooldown.js). 0 means the first gesture is always
+        // core/avatar/AvatarInteractionCooldown.js). 0 means the first gesture is always
         // allowed.
         this._lastInteractionPerformedAt = 0;
         // Without a provider, interaction events are never published or received; a
         // gesture still happens locally. `_localInteractionSequence` is a separate
         // counter from AvatarPresence's `sequence` (see
-        // core/AvatarInteractionAdvertisement.js). `_remoteAvatarGestureExpiry` maps
+        // core/avatar/AvatarInteractionAdvertisement.js). `_remoteAvatarGestureExpiry` maps
         // avatarId to when a received remote gesture should clear; see
         // _applyRemoteAvatarInteraction/_expireRemoteAvatarGestures.
         this._avatarInteractionBroadcastProvider = avatarInteractionBroadcastProvider;
@@ -469,7 +469,7 @@ export class WorldNavigationSession {
         this._vehicleRenderFrameSubscription = null;
         // Day and night (application/worldNavigation/dayCycleMethods.js).
         this._alwaysDay = false;
-        // A season this device keeps (core/Season.js's SEASON), or null to
+        // A season this device keeps (core/nature/Season.js's SEASON), or null to
         // follow the world's year.
         this._keptSeason = null;
         this._shadowsOn = false;
@@ -477,7 +477,7 @@ export class WorldNavigationSession {
         this._detailedTreesOn = null;
         this._dayCycleFrameSubscription = null;
         // Where the local avatar's footprints in the snow fall
-        // (core/Footprints.js); see dayCycleMethods.
+        // (core/avatar/Footprints.js); see dayCycleMethods.
         this._footprintState = null;
         // Runtime vehicle positions (see application/world/VehicleRuntimeInstances.js).
         // Built unconditionally: a vehicle's position is a fact about the World,

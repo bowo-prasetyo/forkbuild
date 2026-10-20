@@ -1,7 +1,7 @@
 import { readdir } from 'node:fs/promises';
 
-import { RoleProviderRole } from '../core/RoleProviderRole.js';
-import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
+import { RoleProviderRole } from '../core/publication/RoleProviderRole.js';
+import { RoleProviderPreference } from '../core/publication/RoleProviderPreference.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { RoleProviderPreferenceStore } from '../storage/RoleProviderPreferenceStore.js';
 import { assert } from './support/Assert.js';
@@ -10,7 +10,7 @@ import { readSource as source } from './support/SourceText.js';
 
 // 0.9.294 — Decentralized Role Provider Preference Persistence Boundary.
 // See docs/Roadmap.md, "0.9.294 — Decentralized Role Provider Preference
-// Persistence Boundary," and core/RoleProviderPreference.js (0.9.293),
+// Persistence Boundary," and core/publication/RoleProviderPreference.js (0.9.293),
 // the boundary this milestone gives a durable home.
 //
 // Section A: round-trip — save() then get() preserves role and providerKey
@@ -228,7 +228,7 @@ async function run() {
         assert(typeof RoleProviderPreferenceStore.registry === 'undefined', 'J2. no registry, static or otherwise, is reachable from this class at all');
         store.save(new RoleProviderPreference({ role: RoleProviderRole.CONTENT, providerKey: 'ipfs' }));
         const loaded = store.get(RoleProviderRole.CONTENT);
-        assert(typeof loaded.resolve === 'undefined', 'J3. the reloaded RoleProviderPreference itself carries no resolve() either — unchanged from core/RoleProviderPreference.js\'s own 0.9.293 contract');
+        assert(typeof loaded.resolve === 'undefined', 'J3. the reloaded RoleProviderPreference itself carries no resolve() either — unchanged from core/publication/RoleProviderPreference.js\'s own 0.9.293 contract');
         console.log('✓ Section J: zero production path exists from a saved providerKey to a concrete provider — this store hands back preferences, never resolved capability');
     }
 

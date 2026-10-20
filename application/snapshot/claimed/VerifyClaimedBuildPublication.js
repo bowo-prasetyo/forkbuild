@@ -1,6 +1,6 @@
 import { inspectWorldEncounterMaterial } from '../../worldEncounter/WorldEncounterMaterialInspection.js';
-import { WorldEncounterKind } from '../../../core/WorldEncounter.js';
-import { publicationRecordTag } from '../../../core/NarrowDiscoveryTags.js';
+import { WorldEncounterKind } from '../../../core/world/WorldEncounter.js';
+import { publicationRecordTag } from '../../../core/publication/NarrowDiscoveryTags.js';
 import { Publication } from '../../../publisher/Publication.js';
 
 // Verifies a claimed build's Publication straight from the network, so a

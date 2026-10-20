@@ -7,9 +7,9 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { publicKeyMatchesDidKey } from '../identity/Ed25519.js';
 import { Publication } from '../publisher/Publication.js';
-import { PlacementRecord } from '../core/PlacementRecord.js';
-import { Position } from '../core/Position.js';
-import { SpatialBounds } from '../core/SpatialBounds.js';
+import { PlacementRecord } from '../core/publication/PlacementRecord.js';
+import { Position } from '../core/document/Position.js';
+import { SpatialBounds } from '../core/world/SpatialBounds.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 

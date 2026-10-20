@@ -1,12 +1,12 @@
 import { StorageProvider } from './StorageProvider.js';
 import { LocalStorageProvider } from './LocalStorageProvider.js';
-import { isValidCommentaryDistributionProvider } from '../core/CommentaryDistributionProvider.js';
+import { isValidCommentaryDistributionProvider } from '../core/publication/CommentaryDistributionProvider.js';
 
 const COMMENTARY_DISTRIBUTION_PREFERENCE_STORE_KEY = 'commentary-distribution-preference';
 
 // This device's default network for comments, or none saved. With none, comments
 // follow the Announcement / Discovery provider (see
-// core/CommentaryDistributionProvider.js). A stored value that isn't a known
+// core/publication/CommentaryDistributionProvider.js). A stored value that isn't a known
 // provider reads as none saved.
 export class CommentaryDistributionPreferenceStore {
     constructor(storageProvider = new LocalStorageProvider()) {

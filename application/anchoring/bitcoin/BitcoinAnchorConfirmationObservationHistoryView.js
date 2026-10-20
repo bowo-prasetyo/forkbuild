@@ -1,5 +1,5 @@
 import { BitcoinAnchorConfirmationState } from './BitcoinAnchorConfirmationState.js';
-import { message } from '../../../core/Message.js';
+import { message } from '../../../core/app/Message.js';
 
 // 0.8.56 — Bitcoin Anchor Confirmation Observation History & Per-Observation
 // Inspection.

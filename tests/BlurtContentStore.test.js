@@ -5,7 +5,7 @@ import { createBlurtFeeEstimator } from '../application/blurt/BlurtFeeEstimator.
 import { createBlurtRpcClient } from '../blurt/BlurtRpcClient.js';
 import { BlurtWorldEncounterMaterialResolver } from '../application/worldEncounter/BlurtWorldEncounterMaterialResolver.js';
 import { BlurtContentUploadStore } from '../storage/BlurtContentUploadStore.js';
-import { blurtSignedTransactionSize, blurtTransactionFee, blurtFeeSchedule, formatBlurtAmount, parseBlurtAmount } from '../core/BlurtFees.js';
+import { blurtSignedTransactionSize, blurtTransactionFee, blurtFeeSchedule, formatBlurtAmount, parseBlurtAmount } from '../core/networks/BlurtFees.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { fakeBlurtChain } from './support/FakeBlurtChain.js';

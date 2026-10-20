@@ -1,14 +1,14 @@
 import * as THREE from 'three';
-import { wildlifeInRegion } from '../core/WildlifeField.js';
-import { animalPoseAt, MAX_WANDER_DISTANCE } from '../core/WildlifeMotion.js';
-import { wildlifeCollisionGeometryInRegion } from '../core/WildlifeCollisionGeometry.js';
-import { isDeterministicAnimalId, animalIdFor } from '../core/AnimalIdentity.js';
-import { AnimalPresence } from '../core/AnimalPresence.js';
-import { Position } from '../core/Position.js';
-import { ANIMAL_INTERACTION_RADIUS } from '../core/AvatarAnimalCatchTarget.js';
-import { AVATAR_COLLISION_RADIUS } from '../core/AvatarCollision.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
+import { wildlifeInRegion } from '../core/nature/WildlifeField.js';
+import { animalPoseAt, MAX_WANDER_DISTANCE } from '../core/nature/WildlifeMotion.js';
+import { wildlifeCollisionGeometryInRegion } from '../core/nature/WildlifeCollisionGeometry.js';
+import { isDeterministicAnimalId, animalIdFor } from '../core/nature/AnimalIdentity.js';
+import { AnimalPresence } from '../core/nature/AnimalPresence.js';
+import { Position } from '../core/document/Position.js';
+import { ANIMAL_INTERACTION_RADIUS } from '../core/avatar/AvatarAnimalCatchTarget.js';
+import { AVATAR_COLLISION_RADIUS } from '../core/avatar/AvatarCollision.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { TERRAIN_TILE_SIZE } from '../core/nature/TerrainTiling.js';
 import { AvatarWildlifeConstraint } from '../application/avatar/AvatarWildlifeConstraint.js';
 import { AvatarAnimalInteractionController } from '../application/avatar/AvatarAnimalInteractionController.js';
 import { AnimalRuntimeInstances } from '../application/world/AnimalRuntimeInstances.js';
@@ -18,7 +18,7 @@ import { AnimalRuntimeInstancePersistenceStore } from '../storage/AnimalRuntimeI
 import { buildWildlifeTileMesh, updateWildlifeTileMesh, SPECIES_PRESET } from '../renderer/WildlifeTileMesh.js';
 import { TerrainStreamingController } from '../renderer/TerrainStreamingController.js';
 import { disposeOwnedTile, disposeInstancedTile } from '../renderer/TileDisposal.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
@@ -27,7 +27,7 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
 // Wandering wildlife, end to end: every system that asks where a wild
-// animal is gets the same answer from core/WildlifeMotion.js.
+// animal is gets the same answer from core/nature/WildlifeMotion.js.
 //
 //   Section A: collision — animals block where they are now, and caught
 //              animals stop blocking (the invisible-collider fix)

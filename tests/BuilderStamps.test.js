@@ -1,11 +1,11 @@
-import { BUILDER_STAMPS, builderStamps, snapshotBrickCount } from '../core/BuilderStamps.js';
+import { BUILDER_STAMPS, builderStamps, snapshotBrickCount } from '../core/catalog/BuilderStamps.js';
 import { gatherBuilderStampFacts } from '../application/stamps/BuilderStampFacts.js';
 import { BuildPlotStore } from '../application/plot/BuildPlotStore.js';
-import { challengeAt } from '../core/BuildChallenge.js';
+import { challengeAt } from '../core/challenge/BuildChallenge.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
-// Builder stamps (core/BuilderStamps.js): facts about this device's own
+// Builder stamps (core/catalog/BuilderStamps.js): facts about this device's own
 // builds that crossed a threshold. Never points, levels or a score.
 
 // Thresholds: the highest one reached, with the fact's own count; nothing

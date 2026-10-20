@@ -5,7 +5,7 @@ import { AnnouncementSync } from '../application/announcementIndex/AnnouncementS
 import { syncNostrTag } from '../application/announcementIndex/NostrTagSync.js';
 import { syncArweaveTag } from '../application/announcementIndex/ArweaveTagSync.js';
 import { snapshotSyncTarget, commentarySyncTarget, placeNamingSyncTarget, SNAPSHOT_DISCOVERY_TAG } from '../application/announcementIndex/AnnouncementSyncTargets.js';
-import { derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
+import { derivePlaceNamingDiscoveryTag } from '../core/world/PlaceNamingDiscoveryEnvelope.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 

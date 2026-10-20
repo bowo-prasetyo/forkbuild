@@ -1,13 +1,13 @@
 import { readFile } from 'node:fs/promises';
-import { resolveMovementSpeed } from '../core/AvatarMovementAccelerationSimulation.js';
+import { resolveMovementSpeed } from '../core/avatar/AvatarMovementAccelerationSimulation.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.90 — Vehicle Acceleration Capability: core/AvatarMovementAccelerationSimulation.js,
+// 0.9.90 — Vehicle Acceleration Capability: core/avatar/AvatarMovementAccelerationSimulation.js,
 // the pure mathematical half (see that file's own header). This suite
 // covers the ONE function it exports directly — no engine, no
 // capability vocabulary, no controller — matching the same "pure
 // geometry/math, independently testable" split tests/AvatarMovement.test.js's
-// own Section B already established for core/AvatarMovementSimulation.js's
+// own Section B already established for core/avatar/AvatarMovementSimulation.js's
 // own `simulateAvatarMovement()`.
 //
 //   Section A: approaching a higher target speed, one tick at a time,
@@ -38,7 +38,7 @@ import { assert } from './support/Assert.js';
 // only "given a rate, a current speed, and a target speed, what is the
 // speed one simulation tick later," never "which vehicle, if any, is
 // involved" or "should a rate even apply here" — see
-// core/AvatarMovementAccelerationSimulation.js's own header. See
+// core/avatar/AvatarMovementAccelerationSimulation.js's own header. See
 // docs/Roadmap.md, 0.9.90 and 0.9.92.
 
 async function runTests() {
@@ -197,7 +197,7 @@ async function runTests() {
     // Section J — architectural regression
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../core/AvatarMovementAccelerationSimulation.js', import.meta.url);
+        const sourceUrl = new URL('../core/avatar/AvatarMovementAccelerationSimulation.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -221,21 +221,21 @@ async function runTests() {
             'localStorage', 'StorageProvider', 'fetch(', 'WebSocket'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `39. core/AvatarMovementAccelerationSimulation.js's own code never references "${term}" — pure rate math only, no vehicle/capability/runtime/rendering/collision knowledge whatsoever`);
+            assert(!codeOnly.includes(term), `39. core/avatar/AvatarMovementAccelerationSimulation.js's own code never references "${term}" — pure rate math only, no vehicle/capability/runtime/rendering/collision knowledge whatsoever`);
         }
 
-        const exportsModule = await import('../core/AvatarMovementAccelerationSimulation.js');
+        const exportsModule = await import('../core/avatar/AvatarMovementAccelerationSimulation.js');
         const exportedNames = Object.keys(exportsModule).sort();
         assert(JSON.stringify(exportedNames) === JSON.stringify(['resolveMovementSpeed']),
-            '40. core/AvatarMovementAccelerationSimulation.js exports exactly the one resolution function — nothing else (braking folded into the SAME function, per this milestone\'s own "ONE speed-resolution algorithm" brief — see 0.9.92)');
+            '40. core/avatar/AvatarMovementAccelerationSimulation.js exports exactly the one resolution function — nothing else (braking folded into the SAME function, per this milestone\'s own "ONE speed-resolution algorithm" brief — see 0.9.92)');
     }
     {
         // SUPERSEDED BY 0.9.91 — Vehicle Acceleration State Integration
         // (see application/avatar/AvatarMovementController.js's and
-        // core/AvatarMovementSimulation.js's own 0.9.91 headers). This
+        // core/avatar/AvatarMovementSimulation.js's own 0.9.91 headers). This
         // suite's own header already named "a future milestone" as the
         // one that wires this seam in; 0.9.91 is that milestone.
-        // core/AvatarMovementSimulation.js is now the ONE place that
+        // core/avatar/AvatarMovementSimulation.js is now the ONE place that
         // actually imports and calls resolveMovementSpeed() — chosen
         // over application/avatar/AvatarMovementController.js because that file
         // already owns the one true "target speed a base speed plus
@@ -249,7 +249,7 @@ async function runTests() {
         // resolveMovementSpeed() directly — comments aside (this
         // assertion is a CODE-only sweep, matching every other
         // architectural regression check in this codebase), it only ever
-        // hands core/AvatarMovementSimulation.js a bare acceleration rate
+        // hands core/avatar/AvatarMovementSimulation.js a bare acceleration rate
         // plus its own transient `currentMovementSpeed` bookkeeping.
         const controllerSource = await readFile(new URL('../application/avatar/AvatarMovementController.js', import.meta.url), 'utf8');
         const controllerCodeOnly = controllerSource
@@ -257,11 +257,11 @@ async function runTests() {
             .filter((line) => !line.trim().startsWith('//'))
             .join('\n');
         assert(!controllerCodeOnly.includes('AvatarMovementAccelerationSimulation') && !controllerCodeOnly.includes('resolveMovementSpeed'),
-            '41. (as of 0.9.91) application/avatar/AvatarMovementController.js\'s own CODE (comments aside) still never imports this file or calls resolveMovementSpeed() directly — it only ever passes bare numbers to core/AvatarMovementSimulation.js, which is the one place this seam is actually wired in');
+            '41. (as of 0.9.91) application/avatar/AvatarMovementController.js\'s own CODE (comments aside) still never imports this file or calls resolveMovementSpeed() directly — it only ever passes bare numbers to core/avatar/AvatarMovementSimulation.js, which is the one place this seam is actually wired in');
 
-        const simulationSource = await readFile(new URL('../core/AvatarMovementSimulation.js', import.meta.url), 'utf8');
+        const simulationSource = await readFile(new URL('../core/avatar/AvatarMovementSimulation.js', import.meta.url), 'utf8');
         assert(simulationSource.includes('AvatarMovementAccelerationSimulation') && simulationSource.includes('resolveMovementSpeed'),
-            '42. (as of 0.9.91) core/AvatarMovementSimulation.js now DOES reference this file and calls resolveMovementSpeed() — this is the "future milestone" this suite\'s own header originally named as wiring this seam in');
+            '42. (as of 0.9.91) core/avatar/AvatarMovementSimulation.js now DOES reference this file and calls resolveMovementSpeed() — this is the "future milestone" this suite\'s own header originally named as wiring this seam in');
     }
 
     console.log('✅ All Vehicle Acceleration Simulation tests passed.');

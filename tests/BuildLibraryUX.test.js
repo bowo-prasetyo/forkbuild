@@ -2,14 +2,14 @@ import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickReg
 import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';
 import { VillageLibrary } from '../core/library/VillageLibrary.js';
 import { LibraryPreviewService } from '../application/editor/LibraryPreviewService.js';
-import { PreviewType } from '../core/DocumentPreview.js';
+import { PreviewType } from '../core/catalog/DocumentPreview.js';
 import { groupBricksForDisplay, matches, normalize } from '../ui/components/BuildLibraryPanel.js';
 import { EditorContext } from '../application/editor/EditorContext.js';
 import { PaletteUseCase } from '../application/editor/PaletteUseCase.js';
 import { ForkStructureUseCase } from '../application/editor/ForkStructureUseCase.js';
 import { EditorSession } from '../application/editor/EditorSession.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
-import { Brick } from '../core/Brick.js';
+import { Brick } from '../core/building/Brick.js';
 import { BrickRenderer } from '../renderer/BrickRenderer.js';
 import { assert } from './support/Assert.js';
 

@@ -1,13 +1,13 @@
-import { World } from '../core/World.js';
-import { AnimalDecoration } from '../core/AnimalDecoration.js';
-import { Position } from '../core/Position.js';
-import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
+import { World } from '../core/document/World.js';
+import { AnimalDecoration } from '../core/nature/AnimalDecoration.js';
+import { Position } from '../core/document/Position.js';
+import { ANIMAL_SPECIES } from '../core/nature/WildlifeField.js';
 import { EventBus } from '../core/events/EventBus.js';
 import { DomainEvent } from '../core/events/Event.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.702 — World Animal Decorations, core/AnimalDecoration.js +
-// core/World.js's own animalDecorations wiring.
+// 0.9.702 — World Animal Decorations, core/nature/AnimalDecoration.js +
+// core/document/World.js's own animalDecorations wiring.
 //
 //   Section A: AnimalDecoration's own construction/validation
 //   Section B: World add/get/remove

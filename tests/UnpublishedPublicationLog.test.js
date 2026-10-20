@@ -3,13 +3,13 @@
 // would list it again as a new creation. publisher/UnpublishedPublicationLog.js
 // remembers what this device unpublished, and the Repository counts those
 // ids as known, as ui/main.js composes its isKnown.
-import { Brick } from '../core/Brick.js';
-import { Building } from '../core/Building.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { Position } from '../core/Position.js';
-import { World } from '../core/World.js';
-import { WorldEncounterKind } from '../core/WorldEncounter.js';
+import { Brick } from '../core/building/Brick.js';
+import { Building } from '../core/building/Building.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { Position } from '../core/document/Position.js';
+import { World } from '../core/document/World.js';
+import { WorldEncounterKind } from '../core/world/WorldEncounter.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { UnpublishedPublicationLog, UNPUBLISHED_PUBLICATIONS_KEY } from '../publisher/UnpublishedPublicationLog.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';

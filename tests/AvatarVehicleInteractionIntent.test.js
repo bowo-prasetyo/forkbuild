@@ -3,10 +3,10 @@ import {
     AvatarVehicleInteractionIntent,
     isValidAvatarVehicleInteractionIntent,
     deriveAvatarVehicleInteractionIntent
-} from '../core/AvatarVehicleInteractionIntent.js';
+} from '../core/vehicles/AvatarVehicleInteractionIntent.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.75 — Avatar-Vehicle Interaction Intent, core/AvatarVehicleInteractionIntent.js.
+// 0.9.75 — Avatar-Vehicle Interaction Intent, core/vehicles/AvatarVehicleInteractionIntent.js.
 //
 //   Section A: the vocabulary itself — NONE/MOUNT, isValid()
 //   Section B: activation — a mount request produces MOUNT
@@ -158,7 +158,7 @@ async function runTests() {
     // no mounting-as-effect, no keyboard, no rendering, no movement
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../core/AvatarVehicleInteractionIntent.js', import.meta.url);
+        const sourceUrl = new URL('../core/vehicles/AvatarVehicleInteractionIntent.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -177,14 +177,14 @@ async function runTests() {
             'velocity', 'acceleration', 'speed', 'position', 'rotation', 'collision', 'physics'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `28. core/AvatarVehicleInteractionIntent.js's own code never references "${term}" — a pure vocabulary and transition rule only, never vehicle-aware, never movement, never raw input handling`);
+            assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `28. core/vehicles/AvatarVehicleInteractionIntent.js's own code never references "${term}" — a pure vocabulary and transition rule only, never vehicle-aware, never movement, never raw input handling`);
         }
     }
     {
-        const exportsModule = await import('../core/AvatarVehicleInteractionIntent.js');
+        const exportsModule = await import('../core/vehicles/AvatarVehicleInteractionIntent.js');
         const exportedNames = Object.keys(exportsModule).sort();
         assert(JSON.stringify(exportedNames) === JSON.stringify(['AvatarVehicleInteractionIntent', 'deriveAvatarVehicleInteractionIntent', 'isValidAvatarVehicleInteractionIntent']),
-            '29. core/AvatarVehicleInteractionIntent.js exports exactly the vocabulary, its validator, and the one transition function — nothing else');
+            '29. core/vehicles/AvatarVehicleInteractionIntent.js exports exactly the vocabulary, its validator, and the one transition function — nothing else');
     }
 
     console.log('✅ All Avatar Vehicle Interaction Intent tests passed.');

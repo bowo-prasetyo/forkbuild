@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue';
-import { FriendshipState } from '../../../core/FriendshipState.js';
-import { FriendshipAction } from '../../../core/FriendshipAdvertisement.js';
+import { FriendshipState } from '../../../core/social/FriendshipState.js';
+import { FriendshipAction } from '../../../core/social/FriendshipAdvertisement.js';
 import { stripPrefix, shortId } from './presentation.js';
 import { errorText } from '../../i18n/i18n.js';
 

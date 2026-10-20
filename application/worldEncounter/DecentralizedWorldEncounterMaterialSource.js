@@ -1,5 +1,5 @@
 import { WorldEncounterMaterialSource } from './WorldEncounterMaterialLoading.js';
-import { describeWorldEncounterSelectionIdentity } from '../../core/WorldEncounterSelectionIdentity.js';
+import { describeWorldEncounterSelectionIdentity } from '../../core/world/WorldEncounterSelectionIdentity.js';
 
 // 0.9.33 — Decentralized World Encounter Material Source.
 //
@@ -50,7 +50,7 @@ import { describeWorldEncounterSelectionIdentity } from '../../core/WorldEncount
 // A RETRIEVER, NEVER A SECOND RESOLVER. This file never imports
 // `application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js`,
 // `application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js`,
-// `core/DecentralizedWorldEncounterLeadAssociation.js`, or
+// `core/world/DecentralizedWorldEncounterLeadAssociation.js`, or
 // `application/discovery/DecentralizedWorldDiscoveryQuery.js`. It is handed a
 // `resolvedLead` a caller already resolved, exactly the way 0.9.22's own
 // `LocalWorldEncounterMaterialSource` is handed an already-connected
@@ -88,7 +88,7 @@ import { describeWorldEncounterSelectionIdentity } from '../../core/WorldEncount
 // spent by `resolveDecentralizedWorldEncounterLead()` to decide THAT this
 // is the right lead; this file only needs WHERE it points. It never
 // re-derives, re-validates, or re-describes a lead's own shape via
-// `core/DecentralizedWorldDiscoveryLead.js`'s own
+// `core/world/DecentralizedWorldDiscoveryLead.js`'s own
 // `describeDecentralizedWorldDiscoveryLead()` — a caller is expected to
 // hand this source an already-resolved lead, the same "already described,
 // never re-validated" posture `LocalWorldEncounterMaterialSource` already

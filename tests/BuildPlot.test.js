@@ -1,4 +1,4 @@
-import { normalizeBuildPlot, plotPositionFromQuery, plotQuery } from '../core/BuildPlot.js';
+import { normalizeBuildPlot, plotPositionFromQuery, plotQuery } from '../core/world/BuildPlot.js';
 import { BuildPlotStore } from '../application/plot/BuildPlotStore.js';
 import { BuildPlotPlacementStrategy } from '../application/plot/BuildPlotPlacementStrategy.js';
 import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
@@ -7,7 +7,7 @@ import { backupEntryGroupOf, BackupEntryGroup } from '../application/backup/Back
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
-// Build here (core/BuildPlot.js): a spot in a World remembered for the build
+// Build here (core/world/BuildPlot.js): a spot in a World remembered for the build
 // started there, so that publishing the build places it on that spot.
 
 const position = { x: 12.345, y: 3, z: -7.5 };

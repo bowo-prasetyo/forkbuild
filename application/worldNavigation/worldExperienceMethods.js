@@ -1,4 +1,4 @@
-import { computeCompassHeading } from '../../core/CompassHeading.js';
+import { computeCompassHeading } from '../../core/world/CompassHeading.js';
 import { STREAMING_RADIUS } from './constants.js';
 
 // WorldNavigationSession methods for this replica's local, per-World camera
@@ -6,7 +6,7 @@ import { STREAMING_RADIUS } from './constants.js';
 //
 // Local, per-user camera framing for Worlds this replica has visited; never
 // a Document or WorldPlacement field, never broadcast. See
-// core/LocalWorldExperience.js and docs/Principles.md, "Personal Experience
+// core/world/LocalWorldExperience.js and docs/Principles.md, "Personal Experience
 // Is Not Shared World State". No-ops without localWorldExperienceStore.
 //
 // Independent of enterWorldPresence()/leaveWorldPresence(), which broadcast

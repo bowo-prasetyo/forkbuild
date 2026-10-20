@@ -4,7 +4,7 @@ import { GLTFLoader } from '/node_modules/three/examples/jsm/loaders/GLTFLoader.
 import { STLLoader } from '/node_modules/three/examples/jsm/loaders/STLLoader.js';
 import { OBJLoader } from '/node_modules/three/examples/jsm/loaders/OBJLoader.js';
 import { ShowcaseLibrary } from '../core/library/ShowcaseLibrary.js';
-import { countTriangles, writeGlb, writeObj, writeStl } from '../core/BuildModelFormats.js';
+import { countTriangles, writeGlb, writeObj, writeStl } from '../core/building/BuildModelFormats.js';
 import { extractBuildMeshes } from '../renderer/BuildMeshExtraction.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { assert } from './support/Assert.js';

@@ -8,8 +8,8 @@ import { useBatchAnchoring } from '../ui/views/decentralizedPublications/useBatc
 import { composeSteemRuntime } from '../application/steem/SteemRuntimeComposition.js';
 import { SteemAnchorFinalityObserver } from '../anchoring/SteemAnchorFinalityObserver.js';
 import { createSteemRpcClient } from '../steem/SteemRpcClient.js';
-import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { DecentralizedPublication } from '../core/publication/DecentralizedPublication.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
 import { CreateExternalPublicationAnchorOrchestratorUseCase } from '../application/anchoring/CreateExternalPublicationAnchorOrchestratorUseCase.js';

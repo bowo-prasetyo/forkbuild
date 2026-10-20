@@ -9,7 +9,7 @@
 // It is simpler because there is nothing to RESOLVE. 0.9.608's own
 // counterpart re-runs the full application/publication/PublicationResolver.js
 // ten-step discipline for every catalog entry because a
-// core/DecentralizedPublication.js catalog entry is only ever a signed
+// core/publication/DecentralizedPublication.js catalog entry is only ever a signed
 // LOCATOR — the actual content still has to be retrieved and verified
 // from a ContentStore. application/worldEncounter/LocalWorldEncounterPublicationAdmissionLog.js
 // stores no locator at all: every entry IS already the fully resolved,

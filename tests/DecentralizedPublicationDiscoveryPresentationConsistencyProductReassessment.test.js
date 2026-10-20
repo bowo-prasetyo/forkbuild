@@ -4,14 +4,14 @@ import { PublishDocumentUseCase } from '../application/publication/PublishDocume
 import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { License, LicenseId } from '../core/License.js';
-import { computeAmbiguousPublishedDateIds, formatPublicationDate } from '../core/PublicationDateAmbiguity.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { License, LicenseId } from '../core/document/License.js';
+import { computeAmbiguousPublishedDateIds, formatPublicationDate } from '../core/catalog/PublicationDateAmbiguity.js';
 
 import ForkTree from '../ui/components/ForkTree.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
@@ -33,7 +33,7 @@ import { withEnglish } from './support/EnglishSource.js';
 // a surface nobody re-checked?
 //
 // FINDING: one genuine, narrowly-scoped gap, in exactly that shape.
-// 0.9.539's own fix (core/PublicationDateAmbiguity.js's
+// 0.9.539's own fix (core/catalog/PublicationDateAmbiguity.js's
 // computeAmbiguousPublishedDateIds()/formatPublicationDate(), see that
 // file's own header) was wired into ui/components/PublicationCard.js
 // and PublicationList.js — the two views ui/components/
@@ -168,7 +168,7 @@ async function run() {
 
     // =======================================================================
     // Section C — THE FIX, proven behaviorally against the REAL, unmodified
-    // core/PublicationDateAmbiguity.js and the REAL, unmodified
+    // core/catalog/PublicationDateAmbiguity.js and the REAL, unmodified
     // ui/components/ForkTree.js#setup() — never a reimplementation of
     // either.
     // =======================================================================
@@ -225,8 +225,8 @@ async function run() {
         const authorViewCode = codeOnly(authorViewSource);
         const forkTreeCode = codeOnly(forkTreeSource);
 
-        assert(authorViewCode.includes("from '../../core/PublicationDateAmbiguity.js'"),
-            'D1. AuthorView.js imports the SAME, unmodified core/PublicationDateAmbiguity.js — no parallel module.');
+        assert(authorViewCode.includes("from '../../core/catalog/PublicationDateAmbiguity.js'"),
+            'D1. AuthorView.js imports the SAME, unmodified core/catalog/PublicationDateAmbiguity.js — no parallel module.');
         assert(/computeAmbiguousPublishedDateIds\(allPublications\.value\)/.test(authorViewCode),
             'D2. preciseDateIds is scoped over the FULL `allPublications` array — the same data source forkTreeRoots/ForkTree already use — never a narrower, root-only slice that would miss the sibling-fork collision Section A/C proved.');
         assert(!/toLocaleDateString/.test(authorViewCode),
@@ -254,7 +254,7 @@ async function run() {
     // =======================================================================
     {
         const materialInspectionSource = await readSource('application/worldEncounter/WorldEncounterMaterialInspectionView.js');
-        // Its labels are messages now (core/Message.js), read here as their English.
+        // Its labels are messages now (core/app/Message.js), read here as their English.
         const snapshotOutcomeSource = withEnglish(await readSource('application/snapshot/SnapshotOutcomeInspectionView.js'));
         assert(materialInspectionSource.includes("'Confirmed to match the selected encounter'"),
             'E1. WorldEncounterMaterialInspectionView.js still holds its own VERIFIED label unchanged.');

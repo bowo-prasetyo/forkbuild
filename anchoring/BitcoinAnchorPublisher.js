@@ -8,7 +8,7 @@ const TXID_PATTERN = /^[0-9a-f]{64}$/i;
 // "can I ask Bitcoin to record this contentHash, and get back the exact
 // evidence parameters that verifier already knows how to check?" It is
 // the CREATION-side counterpart, never a replacement, and never a second
-// way to construct a `core/PublicationAnchor.js` — see application/
+// way to construct a `core/publication/PublicationAnchor.js` — see application/
 // CreatePublicationAnchorUseCase.js's own header for why creating a claim
 // and recording evidence externally stay two separate, explicit actions:
 //
@@ -26,7 +26,7 @@ const TXID_PATTERN = /^[0-9a-f]{64}$/i;
 //       ▼
 //   PublicationAnchor
 //
-// This class never imports core/PublicationAnchor.js or application/
+// This class never imports core/publication/PublicationAnchor.js or application/
 // CreatePublicationAnchorUseCase.js — exactly the asymmetry anchoring/
 // BitcoinOpReturnProofVerifier.js already holds for verification, held
 // here for creation. Nothing about `publish()`'s return value is ever

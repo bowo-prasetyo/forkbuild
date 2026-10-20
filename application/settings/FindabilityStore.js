@@ -1,6 +1,6 @@
 // Who can find a build this device publishes (docs/Pillars.md, "one verb,
 // Publish, and one choice inside it"): everyone, through a build note on
-// Nostr that anyone's ForkBuild reads (core/BuildNote.js), or only people
+// Nostr that anyone's ForkBuild reads (core/publication/BuildNote.js), or only people
 // sent its link. Asked once, before the first publish, and changed in the
 // same place later. Personal and local: never published or shared.
 import { StorageProvider } from '../../storage/StorageProvider.js';

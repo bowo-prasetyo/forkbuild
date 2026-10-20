@@ -1,6 +1,6 @@
 import { StorageProvider } from './StorageProvider.js';
 import { LocalStorageProvider } from './LocalStorageProvider.js';
-import { isValidCommentaryDistributionProvider } from '../core/CommentaryDistributionProvider.js';
+import { isValidCommentaryDistributionProvider } from '../core/publication/CommentaryDistributionProvider.js';
 
 // The network this device sends hearts to (Settings → Announcement /
 // Discovery → Hearts): one of the comment networks or "Local & peers only".

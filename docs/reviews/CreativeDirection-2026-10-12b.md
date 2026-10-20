@@ -343,8 +343,8 @@ good, and none of them is what stands between a newcomer and the fantasy.
   colours, but geometry, layout and camera are what a player sees.
 - Read Pillars.md, VISION.md, the README, both earlier audits, the roadmap
   entries "Find each other" and "A room worth entering",
-  ui/views/worldView/useChallengePlaza.js, core/ChallengePlaza.js,
-  core/BuildSettlement.js, core/library/VillageLibrary.js,
+  ui/views/worldView/useChallengePlaza.js, core/challenge/ChallengePlaza.js,
+  core/challenge/BuildSettlement.js, core/library/VillageLibrary.js,
   application/tools/PlacementTool.js, the English catalogue and
   docs/launch/README.md.
 - Measured the settled house's distance from `PLAZA_CENTER` and the ring

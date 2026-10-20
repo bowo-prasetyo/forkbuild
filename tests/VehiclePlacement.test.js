@@ -1,16 +1,16 @@
 import { readFile } from 'node:fs/promises';
 import {
     vehiclePresenceInRegion, bicycleDensityAt, BICYCLE_LATTICE_SPACING
-} from '../core/VehiclePlacement.js';
-import { VehiclePresence } from '../core/VehiclePresence.js';
-import { VehicleType } from '../core/VehicleType.js';
-import { ecologyZoneAt, ECOLOGY_ZONE } from '../core/TerrainEcology.js';
-import { isRiverAt } from '../core/Hydrology.js';
-import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
+} from '../core/vehicles/VehiclePlacement.js';
+import { VehiclePresence } from '../core/vehicles/VehiclePresence.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
+import { ecologyZoneAt, ECOLOGY_ZONE } from '../core/nature/TerrainEcology.js';
+import { isRiverAt } from '../core/nature/Hydrology.js';
+import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { TERRAIN_TILE_SIZE } from '../core/nature/TerrainTiling.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.72 — Deterministic Vehicle Placement, core/VehiclePlacement.js.
+// 0.9.72 — Deterministic Vehicle Placement, core/vehicles/VehiclePlacement.js.
 //
 //   Section A: determinism
 //   Section B: region behavior — inside/outside/boundary/adjacent regions
@@ -101,7 +101,7 @@ async function runTests() {
 
         // Adjacent regions: tile-by-tile queries sum to exactly the whole
         // covered region's own query — no gap, no double-count, the same
-        // partition guarantee core/NaturalFeatureField.js's own tests
+        // partition guarantee core/nature/NaturalFeatureField.js's own tests
         // establish for trees.
         const wholeRegion = { minX: -4 * TERRAIN_TILE_SIZE, minZ: -4 * TERRAIN_TILE_SIZE, maxX: 4 * TERRAIN_TILE_SIZE, maxZ: 4 * TERRAIN_TILE_SIZE };
         const whole = vehiclePresenceInRegion(DEFAULT_WORLD_SEED, wholeRegion.minX, wholeRegion.minZ, wholeRegion.maxX, wholeRegion.maxZ);
@@ -185,7 +185,7 @@ async function runTests() {
                 '20. Every returned VehiclePresence has a finite position');
             assert(p.position.y === terrainHeightAt(DEFAULT_WORLD_SEED, p.position.x, p.position.z),
                 '21. A bicycle\'s own Y sits at exactly terrainHeightAt(seed, x, z) — never a separately-sampled or stale elevation');
-            assert(typeof p.id === 'string' && p.id.length > 0, '21b. Every returned VehiclePresence carries a non-empty string id (core/VehicleIdentity.js, 0.9.74)');
+            assert(typeof p.id === 'string' && p.id.length > 0, '21b. Every returned VehiclePresence carries a non-empty string id (core/vehicles/VehicleIdentity.js, 0.9.74)');
         }
 
         // fromJSON(toJSON()) still round-trips, proving the returned
@@ -200,7 +200,7 @@ async function runTests() {
     // Section E — rendering/avatar/controller independence
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../core/VehiclePlacement.js', import.meta.url);
+        const sourceUrl = new URL('../core/vehicles/VehiclePlacement.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -215,7 +215,7 @@ async function runTests() {
             'Math.random', 'localStorage', 'StorageProvider', 'fetch(', 'WebSocket'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `23. core/VehiclePlacement.js's own code never references "${term}" — a deterministic placement core, independent of rendering, the avatar, and any controller`);
+            assert(!codeOnly.includes(term), `23. core/vehicles/VehiclePlacement.js's own code never references "${term}" — a deterministic placement core, independent of rendering, the avatar, and any controller`);
         }
     }
 
@@ -223,7 +223,7 @@ async function runTests() {
     // Section F — no movement/mounting semantics
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../core/VehiclePlacement.js', import.meta.url);
+        const sourceUrl = new URL('../core/vehicles/VehiclePlacement.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -235,7 +235,7 @@ async function runTests() {
             'mount', 'dismount', 'ride', 'rider', 'occupant', 'mounted'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `24. core/VehiclePlacement.js's own code never references "${term}" — placement establishes existence and location only, never movement or riding`);
+            assert(!codeOnly.includes(term), `24. core/vehicles/VehiclePlacement.js's own code never references "${term}" — placement establishes existence and location only, never movement or riding`);
         }
 
         // Object-shape confirmation: a returned VehiclePresence itself

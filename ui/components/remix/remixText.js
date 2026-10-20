@@ -1,6 +1,6 @@
 import { t } from '../../i18n/i18n.js';
 
-// The words for a build's remix lineage (core/RemixLineage.js), the same on
+// The words for a build's remix lineage (core/publication/RemixLineage.js), the same on
 // a shared link's arrival screen and on the Repository's cards and list.
 
 // "Remixed from …" for describeRemixSource()'s `{ title, author }`, or ''

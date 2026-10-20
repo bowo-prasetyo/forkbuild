@@ -1,19 +1,19 @@
 import { readFile } from 'node:fs/promises';
 import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
-import { VehicleType } from '../core/VehicleType.js';
-import { resolveAvatarVehicleMovementCapability, AvatarMovementCapabilityKind } from '../core/AvatarVehicleMovementCapability.js';
-import { AvatarVehicleBrakingIntent } from '../core/AvatarVehicleBrakingIntent.js';
-import { AvatarContinuousMovementIntent } from '../core/AvatarContinuousMovementIntent.js';
-import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
+import { resolveAvatarVehicleMovementCapability, AvatarMovementCapabilityKind } from '../core/vehicles/AvatarVehicleMovementCapability.js';
+import { AvatarVehicleBrakingIntent } from '../core/vehicles/AvatarVehicleBrakingIntent.js';
+import { AvatarContinuousMovementIntent } from '../core/avatar/AvatarContinuousMovementIntent.js';
+import { vehiclePresenceInRegion } from '../core/vehicles/VehiclePlacement.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
-import { Position } from '../core/Position.js';
+import { Position } from '../core/document/Position.js';
 import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
@@ -22,9 +22,9 @@ import { assert } from './support/Assert.js';
 //
 // 0.9.95 built a complete, real, key-free path from an already-resolved
 // braking request down to `AvatarMovementState.brakingRequested` —
-// `core/AvatarVehicleBrakingInputAdapter.js` (a control's own
+// `core/vehicles/AvatarVehicleBrakingInputAdapter.js` (a control's own
 // `brakedown`/`brakeup` transition -> `{ brakeRequested }`),
-// `core/AvatarVehicleBrakingIntent.js` (`{ brakeRequested }` -> NONE/
+// `core/vehicles/AvatarVehicleBrakingIntent.js` (`{ brakeRequested }` -> NONE/
 // BRAKE), and `application/avatar/AvatarMovementController.js#setVehicleBrakingIntent()`
 // — and deliberately stopped there: nothing in this codebase's own real
 // input ever called `setVehicleBrakingIntent()`. This milestone adds
@@ -119,13 +119,13 @@ function findRealVehicle() {
     const vehicles = vehiclePresenceInRegion(DEFAULT_WORLD_SEED, -500, -500, 500, 500);
     const vehicle = vehicles.find((v) => v.id === REAL_VEHICLE_ID);
     if (!vehicle) {
-        throw new Error(`Test fixture vehicle ${REAL_VEHICLE_ID} not found under DEFAULT_WORLD_SEED — has core/VehiclePlacement.js changed?`);
+        throw new Error(`Test fixture vehicle ${REAL_VEHICLE_ID} not found under DEFAULT_WORLD_SEED — has core/vehicles/VehiclePlacement.js changed?`);
     }
     return vehicle;
 }
 
 // The exact discrete "never overshoots" recurrence
-// core/AvatarMovementAccelerationSimulation.js#resolveMovementSpeed()
+// core/avatar/AvatarMovementAccelerationSimulation.js#resolveMovementSpeed()
 // itself implements — reproduced here, bit-for-bit the same operations
 // in the same order, purely to compute EXPECTED per-tick speeds for
 // this file's own assertions. Never imported from production code:
@@ -192,7 +192,7 @@ async function runTests() {
     {
         // Case-insensitivity, matching every other raw-key comparison
         // already in this codebase (see application/avatar/AvatarMovementController.js#_setKey
-        // and core/AvatarContinuousMovementInputAdapter.js).
+        // and core/avatar/AvatarContinuousMovementInputAdapter.js).
         const { avatarProfileUseCase, avatarPresenceSession } = buildAvatarStack(registry, 'bind-a3');
         const session = buildSession(registry, avatarProfileUseCase, avatarPresenceSession);
         session.setAvatarControlMode(true);
@@ -503,15 +503,15 @@ async function runTests() {
         assert(/const VEHICLE_BRAKE_KEY = 'control';/.test(sessionSource),
             '41. sanity: exactly one physical key, Control, is bound to braking');
 
-        const intentSource = await readFile(new URL('../core/AvatarVehicleBrakingIntent.js', import.meta.url), 'utf8');
+        const intentSource = await readFile(new URL('../core/vehicles/AvatarVehicleBrakingIntent.js', import.meta.url), 'utf8');
         const intentCodeOnly = intentSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         assert(!/key|KeyboardEvent|'w'|'s'|control/i.test(intentCodeOnly),
-            '42. core/AvatarVehicleBrakingIntent.js remains completely untouched by this milestone — still no keyboard awareness of any kind');
+            '42. core/vehicles/AvatarVehicleBrakingIntent.js remains completely untouched by this milestone — still no keyboard awareness of any kind');
 
-        const adapterSource = await readFile(new URL('../core/AvatarVehicleBrakingInputAdapter.js', import.meta.url), 'utf8');
+        const adapterSource = await readFile(new URL('../core/vehicles/AvatarVehicleBrakingInputAdapter.js', import.meta.url), 'utf8');
         const adapterCodeOnly = adapterSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         assert(!/\bkey\b|KeyboardEvent|'w'|'s'|control/i.test(adapterCodeOnly),
-            '43. core/AvatarVehicleBrakingInputAdapter.js remains completely untouched by this milestone too — still no `key` parameter, still control-name-blind');
+            '43. core/vehicles/AvatarVehicleBrakingInputAdapter.js remains completely untouched by this milestone too — still no `key` parameter, still control-name-blind');
 
         const controllerSource = await readFile(new URL('../application/avatar/AvatarMovementController.js', import.meta.url), 'utf8');
         const controllerCodeOnly = controllerSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');

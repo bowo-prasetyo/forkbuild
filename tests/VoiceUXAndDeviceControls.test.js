@@ -7,8 +7,8 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { FriendRelationshipUseCase } from '../application/identity/FriendRelationshipUseCase.js';
 import { ChatUseCase } from '../application/chat/ChatUseCase.js';
 import { VoiceUseCase } from '../application/chat/VoiceUseCase.js';
-import { VoiceSessionState } from '../core/VoiceSessionState.js';
-import { VoiceCallSignalType } from '../core/VoiceCallSignal.js';
+import { VoiceSessionState } from '../core/social/VoiceSessionState.js';
+import { VoiceCallSignalType } from '../core/social/VoiceCallSignal.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
@@ -294,7 +294,7 @@ async function runTests() {
     assert(aliceAudio.lastTrack !== oldTrack, 'a genuinely different MediaStreamTrack is now attached');
     assert(oldTrack.readyState === 'ended', "the OLD device's own track was stopped/released once the switch completed");
     await wait(150);
-    assert(bobRawMessages.length === messagesBeforeSwitch, 'a live device switch produced ZERO additional core/VoiceCallSignal.js or core/VoiceMediaSignal.js messages — replaceTrack() needs no renegotiation at all');
+    assert(bobRawMessages.length === messagesBeforeSwitch, 'a live device switch produced ZERO additional core/social/VoiceCallSignal.js or core/social/VoiceMediaSignal.js messages — replaceTrack() needs no renegotiation at all');
     assert(aliceVoice.getActiveCall().state === VoiceSessionState.ACTIVE, 'VoiceSession never left ACTIVE for the switch — no CONNECTING detour');
     assert(aliceConnectedPeer.connection.role !== undefined, 'sanity: still the same underlying connection object');
     assert(aliceConnectedPeer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED, 'the underlying peer connection is completely untouched by the device switch');
@@ -451,7 +451,7 @@ async function runTests() {
 //    own design.
 // ---------------------------------------------------------------------
 {
-    assert(Object.values(VoiceCallSignalType).length === 5, 'core/VoiceCallSignal.js still has exactly the five 0.2.73 values — INVITE/ACCEPT/REJECT/END/BUSY');
+    assert(Object.values(VoiceCallSignalType).length === 5, 'core/social/VoiceCallSignal.js still has exactly the five 0.2.73 values — INVITE/ACCEPT/REJECT/END/BUSY');
     console.log('✓ NO NEW WIRE VOCABULARY: device control added zero new call-signal or media-signal types — mute/device selection stay exactly as local as 0.2.73 designed them');
 }
 

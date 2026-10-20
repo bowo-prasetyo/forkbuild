@@ -1,9 +1,9 @@
 import { ContentStore, ContentTooLargeError } from './ContentStore.js';
 import { ContentUnavailableError } from './IpfsContentStore.js';
 import { SteemContentTooLargeError, decodeSteemContent, planSteemContentUpload } from './SteemContentStore.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { CONTENT_HASH_ALGORITHM } from '../serializer/contentHash.js';
-import { blurtPublicationViewUrl } from '../core/ForkBuildAppLinks.js';
+import { blurtPublicationViewUrl } from '../core/app/ForkBuildAppLinks.js';
 import {
     BLURT_CONTENT_MAX_PARTS,
     BLURT_CONTENT_PART_MAX_BYTES,
@@ -19,7 +19,7 @@ import {
     describeBlurtContentManifest,
     emptyBlurtBuildPost,
     parseBlurtContentLocator
-} from '../core/BlurtPost.js';
+} from '../core/networks/BlurtPost.js';
 
 // Stores content on Blurt (docs/Protocol.md, "Proposed: Blurt Substrate",
 // "Content"): a manifest replying to the poster's current build post,

@@ -1,4 +1,4 @@
-import { BlueprintAttribution } from '../../core/BlueprintAttribution.js';
+import { BlueprintAttribution } from '../../core/building/BlueprintAttribution.js';
 
 const STORAGE_KEY_PREFIX = 'blueprint-attributions:';
 

@@ -1,4 +1,4 @@
-import { PublicationAnchor } from '../../core/PublicationAnchor.js';
+import { PublicationAnchor } from '../../core/publication/PublicationAnchor.js';
 import { validatePublicationAnchor, PublicationAnchorError } from './PublicationAnchorValidator.js';
 
 // 0.8.15 — Persistent External Evidence Catalog & Restart Recovery.
@@ -31,7 +31,7 @@ import { validatePublicationAnchor, PublicationAnchorError } from './Publication
 //
 //   1. validate  — application/anchoring/PublicationAnchorValidator.js (is this
 //                   even a well-formed PublicationAnchor envelope?)
-//   2. construct — a real core/PublicationAnchor.js instance
+//   2. construct — a real core/publication/PublicationAnchor.js instance
 //   3. verify    — identity/LocalAuthorizationVerifier.js#
 //                   verifyPublicationAnchor() (did the claimed
 //                   anchorIdentity really sign exactly this tuple?)

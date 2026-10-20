@@ -1,10 +1,10 @@
-import { SideSystemUse, sideSystemSnapshot, sideSystemUsesBetween } from '../core/SideSystemUse.js';
-import { AvatarInventory, AvatarInventoryEntry, InventoryEntryKind } from '../core/AvatarInventory.js';
-import { AvatarSwimMode } from '../core/AvatarSwimming.js';
-import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
-import { VehicleType } from '../core/VehicleType.js';
-import { FunnelEvent, VISITOR_COUNT_SITE_ORIGIN, funnelEventHitUrl } from '../core/VisitorCount.js';
-import { DAILY_VISIT_PATH, SIDE_SYSTEMS, SIDE_SYSTEM_STATUS, evaluateSideSystems, parseCounts } from '../core/LaunchTargets.js';
+import { SideSystemUse, sideSystemSnapshot, sideSystemUsesBetween } from '../core/app/SideSystemUse.js';
+import { AvatarInventory, AvatarInventoryEntry, InventoryEntryKind } from '../core/avatar/AvatarInventory.js';
+import { AvatarSwimMode } from '../core/avatar/AvatarSwimming.js';
+import { ANIMAL_SPECIES } from '../core/nature/WildlifeField.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
+import { FunnelEvent, VISITOR_COUNT_SITE_ORIGIN, funnelEventHitUrl } from '../core/app/VisitorCount.js';
+import { DAILY_VISIT_PATH, SIDE_SYSTEMS, SIDE_SYSTEM_STATUS, evaluateSideSystems, parseCounts } from '../core/app/LaunchTargets.js';
 import { formatScorecard } from '../scripts/launch-scorecard.mjs';
 import { FunnelEventCounter } from '../application/settings/FunnelEventCounter.js';
 import { VisitorCountSettingsStore } from '../application/settings/VisitorCountSettingsStore.js';

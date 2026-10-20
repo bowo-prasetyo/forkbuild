@@ -1,11 +1,11 @@
 import { ref, computed, inject } from 'vue';
 import { useRoleProviderPreferenceForm } from '../composables/useRoleProviderPreferenceForm.js';
 import { useEndpointSettingsForm } from '../composables/useEndpointSettingsForm.js';
-import { RoleProviderRole } from '../../core/RoleProviderRole.js';
+import { RoleProviderRole } from '../../core/publication/RoleProviderRole.js';
 import { describeRoleProviderPreferenceSettings } from '../../application/settings/RoleProviderPreferenceSettingsView.js';
-import { DEFAULT_IPFS_NODE_API_URL } from '../../core/IpfsNodeConfiguration.js';
+import { DEFAULT_IPFS_NODE_API_URL } from '../../core/networks/IpfsNodeConfiguration.js';
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
-import { IpfsRemotePinningSettings } from '../../core/IpfsRemotePinningSettings.js';
+import { IpfsRemotePinningSettings } from '../../core/networks/IpfsRemotePinningSettings.js';
 import {
     recallIpfsRemotePublishingCredential, rememberIpfsRemotePublishingCredential
 } from '../../application/ipfs/IpfsRemotePublishingCredentialMemory.js';
@@ -49,7 +49,7 @@ import { displayText, t } from '../i18n/i18n.js';
 // "offering this store as an EXPLICIT alternative to Kubo... requires a
 // second, separately constructed registry," deliberately left unbuilt.
 // Saving `'remote-pinning'` as the CONTENT preference is still a real,
-// well-formed choice (core/RoleProviderPreference.js's own `providerKey` is
+// well-formed choice (core/publication/RoleProviderPreference.js's own `providerKey` is
 // a shape check only, never a registry-membership check), and
 // PreferredSnapshotPlacementCreationCoordinator.js's own `create()` already
 // reports it back as an explicit PROVIDER_NOT_FOUND outcome — never a

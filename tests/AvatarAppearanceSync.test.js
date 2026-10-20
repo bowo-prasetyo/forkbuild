@@ -1,9 +1,9 @@
-import { AvatarProfile } from '../core/AvatarProfile.js';
-import { toAvatarProfileAdvertisement, isValidAvatarProfileAdvertisement, getAvatarProfileSigningDescriptor } from '../core/AvatarProfileAdvertisement.js';
-import { resolveIncomingProfile } from '../core/AvatarProfileIngestion.js';
-import { detectAvatarProfileEquivocation } from '../core/AvatarProfileEquivocation.js';
-import { Signature, SignatureType } from '../core/Signature.js';
-import { TrustStatus } from '../core/TrustObservation.js';
+import { AvatarProfile } from '../core/avatar/AvatarProfile.js';
+import { toAvatarProfileAdvertisement, isValidAvatarProfileAdvertisement, getAvatarProfileSigningDescriptor } from '../core/avatar/AvatarProfileAdvertisement.js';
+import { resolveIncomingProfile } from '../core/avatar/AvatarProfileIngestion.js';
+import { detectAvatarProfileEquivocation } from '../core/avatar/AvatarProfileEquivocation.js';
+import { Signature, SignatureType } from '../core/publication/Signature.js';
+import { TrustStatus } from '../core/identity/TrustObservation.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { signAvatarProfileAdvertisement } from '../application/avatar/AvatarProfileSigning.js';
@@ -14,7 +14,7 @@ import { RemoteAvatarAppearanceRegistry } from '../application/avatar/RemoteAvat
 import { RemoteAvatarRegistry } from '../application/avatar/RemoteAvatarRegistry.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { LocalAvatarPresenceBroadcastProvider } from '../presence/LocalAvatarPresenceBroadcastProvider.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
@@ -24,10 +24,10 @@ import { assert } from './support/Assert.js';
 
 // 0.2.41 — Remote Avatar Appearance Synchronization.
 //
-//   Section A: core/AvatarProfile.js — revision field
-//   Section B: core/AvatarProfileAdvertisement.js
-//   Section C: core/AvatarProfileIngestion.js
-//   Section D: core/AvatarProfileEquivocation.js
+//   Section A: core/avatar/AvatarProfile.js — revision field
+//   Section B: core/avatar/AvatarProfileAdvertisement.js
+//   Section C: core/avatar/AvatarProfileIngestion.js
+//   Section D: core/avatar/AvatarProfileEquivocation.js
 //   Section E: identity/LocalAuthorizationVerifier.verifyAvatarProfileAdvertisement (REAL Ed25519)
 //   Section F: application/avatar/AvatarProfileSigning.js
 //   Section G: application/avatar/AvatarProfileTrustBoundary.js — the full decision table
@@ -124,7 +124,7 @@ async function runTests() {
     const registry = buildRegistry();
 
     // -------------------------------------------------------------
-    // Section A — core/AvatarProfile.js: revision field
+    // Section A — core/avatar/AvatarProfile.js: revision field
     // -------------------------------------------------------------
     {
         const profile = new AvatarProfile({ ownerIdentity: 'alice' });
@@ -145,7 +145,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section B — core/AvatarProfileAdvertisement.js
+    // Section B — core/avatar/AvatarProfileAdvertisement.js
     // -------------------------------------------------------------
     {
         const profile = new AvatarProfile({ ownerIdentity: 'alice', templateId: 'humanoid-01', appearance: { skin: 'skin-03' }, displayName: 'Alice' }).withDisplayName('Alice W.');
@@ -178,7 +178,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section C — core/AvatarProfileIngestion.js
+    // Section C — core/avatar/AvatarProfileIngestion.js
     // -------------------------------------------------------------
     {
         let current = null;
@@ -200,7 +200,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section D — core/AvatarProfileEquivocation.js
+    // Section D — core/avatar/AvatarProfileEquivocation.js
     // -------------------------------------------------------------
     {
         assert(detectAvatarProfileEquivocation(null, makeProfileAdvertisement()) === null, '28. nothing stored yet is never an equivocation');
@@ -493,7 +493,7 @@ async function runTests() {
         // publishing too, exactly like presence.
         const { avatarProfileUseCase, avatarPresenceSession } = buildAvatarStack('session-l2', registry);
         const { PresenceVisibilityUseCase } = await import('../application/presence/PresenceVisibilityUseCase.js');
-        const { PresenceVisibility } = await import('../core/PresenceVisibility.js');
+        const { PresenceVisibility } = await import('../core/avatar/PresenceVisibility.js');
         const storage = new InMemoryStorageProvider();
         const identity = new LocalIdentityProvider(storage);
         identity.login('session-l2');

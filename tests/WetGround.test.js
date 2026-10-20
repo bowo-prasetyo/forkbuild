@@ -1,17 +1,17 @@
 import {
     FAIR_WEATHER, WEATHER_SPELL_SECONDS, DRY_SECONDS, spellRain, rainAt, wetnessAt, weatherAt
-} from '../core/Weather.js';
+} from '../core/nature/Weather.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { BrickInstanceRegistry } from '../renderer/BrickInstanceRegistry.js';
-import { brickAabb } from '../core/AvatarCollision.js';
-import { indoorCutaway } from '../core/IndoorView.js';
+import { brickAabb } from '../core/avatar/AvatarCollision.js';
+import { indoorCutaway } from '../core/building/IndoorView.js';
 import { CoreLibrary } from '../core/library/CoreLibrary.js';
 import { VillageLibrary } from '../core/library/VillageLibrary.js';
-import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../core/TerrainHeightField.js';
+import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../core/nature/TerrainHeightField.js';
 import { assert } from './support/Assert.js';
 
-// Wet ground (core/Weather.js#wetnessAt()): the ground soaks up the rain
+// Wet ground (core/nature/Weather.js#wetnessAt()): the ground soaks up the rain
 // quickly and dries over a few minutes once it stops, the same for everyone
 // at the same moment; Always day keeps it dry; and the room the avatar stands
 // in stays dry.

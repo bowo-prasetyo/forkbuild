@@ -12,8 +12,8 @@
 // page (see ui/views/LanguageSettingsView.js), so no text computed earlier is
 // left in the old language.
 import { Translator } from './Translator.js';
-import { isMessage } from '../../core/Message.js';
-import { isUserFacingError } from '../../core/UserFacingError.js';
+import { isMessage } from '../../core/app/Message.js';
+import { isUserFacingError } from '../../core/app/UserFacingError.js';
 import { LOCALES, SOURCE_LOCALE, findLocale } from './locales.js';
 
 function reportMissing(key, locale) {
@@ -23,7 +23,7 @@ function reportMissing(key, locale) {
 let translator = new Translator({ locale: SOURCE_LOCALE, messages: {}, onMissing: reportMissing });
 
 // `t('app.nav.home')`, `t('language.current', { language })`, or a message
-// descriptor from core/ or application/ (core/Message.js): `t(message)`.
+// descriptor from core/ or application/ (core/app/Message.js): `t(message)`.
 export function t(keyOrMessage, params) {
     if (isMessage(keyOrMessage)) {
         return translator.translate(keyOrMessage.key, keyOrMessage.params);

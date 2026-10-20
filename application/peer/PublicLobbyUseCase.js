@@ -1,12 +1,12 @@
-import { LobbyCard, DEFAULT_LOBBY_CARD_TTL_MS, isValidLobby, normalizeDisplayName } from '../../core/LobbyCard.js';
+import { LobbyCard, DEFAULT_LOBBY_CARD_TTL_MS, isValidLobby, normalizeDisplayName } from '../../core/social/LobbyCard.js';
 import { EventBus } from '../../core/events/EventBus.js';
 import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
 import { signLobbyCard, signLobbyLeave } from '../../peer/LobbyCardSigning.js';
 import { signingIdentityId } from '../../peer/RendezvousPublicationSigning.js';
 import { LocalAuthorizationVerifier } from '../../identity/LocalAuthorizationVerifier.js';
 import * as Ed25519 from '../../identity/Ed25519.js';
-import { UserFacingError } from '../../core/UserFacingError.js';
-import { message } from '../../core/Message.js';
+import { UserFacingError } from '../../core/app/UserFacingError.js';
+import { message } from '../../core/app/Message.js';
 import { refusalFor, requireSigningIdentityId, signingReadiness } from '../../identity/SigningReadiness.js';
 
 const CHANGED_EVENT = 'PublicLobbyChanged';
@@ -20,7 +20,7 @@ const RENEW_MARGIN_MS = 3 * 60 * 1000;
 // The public lobby: an opt-in list of people open to connections from
 // strangers, one global lobby plus one per World.
 //
-// Joining signs a core/LobbyCard.js and sends it to every configured
+// Joining signs a core/social/LobbyCard.js and sends it to every configured
 // rendezvous server, then keeps this device discoverable: the lobby lists
 // who is present, never how to reach them, so a stranger connects through
 // this device's own rendezvous publication (PeerSessionManager#publishSelf)

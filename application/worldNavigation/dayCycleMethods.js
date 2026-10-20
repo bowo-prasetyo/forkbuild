@@ -1,27 +1,27 @@
-// World View's day and night (core/DayCycle.js): the sky follows the session's
+// World View's day and night (core/nature/DayCycle.js): the sky follows the session's
 // clock, the same wall-clock time wildlife wanders by, so everyone at a build
 // sees the same sky without exchanging anything. "Always day" is this device's
 // own choice (application/settings/WorldViewSkyStore.js) and changes nothing
-// for anyone else. The weather (core/Weather.js) and its storms
-// (core/Storms.js) follow the same clock, and Always day keeps it fair as
-// well. So do the seasons (core/Season.js), unless this device keeps one
+// for anyone else. The weather (core/nature/Weather.js) and its storms
+// (core/nature/Storms.js) follow the same clock, and Always day keeps it fair as
+// well. So do the seasons (core/nature/Season.js), unless this device keeps one
 // (application/settings/WorldViewSeasonStore.js): then the land stays in it,
 // and the world's weather falls as that season's rain or snow. The season
-// also sets the sun's path and how long the day is (core/DayCycle.js's
+// also sets the sun's path and how long the day is (core/nature/DayCycle.js's
 // seasonalSky()). The lakes freeze on the world's clock alone
-// (core/Season.js#lakeIceAt()), since the ice is walked on. Footprints in
-// the snow (core/Footprints.js) are this device's own.
-import { DAY, DAY_SKY_BODIES, moonPhaseAt, moonlitLook, skyBodiesAt, skyLookAt } from '../../core/DayCycle.js';
-import { fairWeatherIn, overcastLook, weatherAt, weatherInSeason } from '../../core/Weather.js';
-import { SEASON, lakeIceAt, seasonLookAt, seasonLookOf } from '../../core/Season.js';
-import { advanceFootprints, createFootprintState } from '../../core/Footprints.js';
-import { lightningAt, lightningLook, thunderBetween } from '../../core/Storms.js';
+// (core/nature/Season.js#lakeIceAt()), since the ice is walked on. Footprints in
+// the snow (core/avatar/Footprints.js) are this device's own.
+import { DAY, DAY_SKY_BODIES, moonPhaseAt, moonlitLook, skyBodiesAt, skyLookAt } from '../../core/nature/DayCycle.js';
+import { fairWeatherIn, overcastLook, weatherAt, weatherInSeason } from '../../core/nature/Weather.js';
+import { SEASON, lakeIceAt, seasonLookAt, seasonLookOf } from '../../core/nature/Season.js';
+import { advanceFootprints, createFootprintState } from '../../core/avatar/Footprints.js';
+import { lightningAt, lightningLook, thunderBetween } from '../../core/nature/Storms.js';
 
 export const dayCycleMethods = {
     // The sky's look right now, lit by the night's moon
-    // (core/DayCycle.js#moonlitLook()), greyed as far as the weather is
-    // overcast and lit by any flash of lightning (core/Storms.js), unless
-    // this device asks for no flashes: core/DayCycle.js's DAY while Always
+    // (core/nature/DayCycle.js#moonlitLook()), greyed as far as the weather is
+    // overcast and lit by any flash of lightning (core/nature/Storms.js), unless
+    // this device asks for no flashes: core/nature/DayCycle.js's DAY while Always
     // day is on.
     skyLook() {
         if (this._alwaysDay) return DAY;
@@ -43,12 +43,12 @@ export const dayCycleMethods = {
     },
 
     // The thunder heard after `from` and up to `to` on that clock
-    // (core/Storms.js#thunderBetween()): none while Always day is on.
+    // (core/nature/Storms.js#thunderBetween()): none while Always day is on.
     thunderBetween(from, to) {
         return this._alwaysDay ? [] : thunderBetween(from, to);
     },
 
-    // The weather right now (core/Weather.js): fair while Always day is on,
+    // The weather right now (core/nature/Weather.js): fair while Always day is on,
     // over whatever snow the season brings; in the season this device keeps,
     // if it keeps one.
     weather() {
@@ -57,13 +57,13 @@ export const dayCycleMethods = {
         return this._keptSeason ? weatherInSeason(weather, this.season()) : weather;
     },
 
-    // The season's look on the land right now (core/Season.js): the
+    // The season's look on the land right now (core/nature/Season.js): the
     // world's, or the middle of the one this device keeps.
     season() {
         return this._keptSeason ? seasonLookOf(this._keptSeason) : seasonLookAt(this._wildlifeClock());
     },
 
-    // The season this device keeps (core/Season.js's SEASON), or null when it
+    // The season this device keeps (core/nature/Season.js's SEASON), or null when it
     // follows the world's year.
     keptSeason() {
         return this._keptSeason;
@@ -82,7 +82,7 @@ export const dayCycleMethods = {
     },
 
     // How much ice lies on the lakes now, 0 to 1: the world's, whatever this
-    // device shows (core/Season.js#lakeIceAt()).
+    // device shows (core/nature/Season.js#lakeIceAt()).
     lakeIce() {
         return lakeIceAt(this._wildlifeClock());
     },

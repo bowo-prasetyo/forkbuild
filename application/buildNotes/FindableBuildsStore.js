@@ -1,7 +1,7 @@
 // The Publications this device knows are on the public Nostr relays as build
-// notes (core/BuildNote.js): its own, once a relay took the note, and others'
+// notes (core/publication/BuildNote.js): its own, once a relay took the note, and others'
 // it opened from one. Only these are offered a short link (/n/<publication
-// id>, core/ForkBuildAppLinks.js), since a short link names a note instead of
+// id>, core/app/ForkBuildAppLinks.js), since a short link names a note instead of
 // carrying the build. Personal and local: never published or shared.
 import { StorageProvider } from '../../storage/StorageProvider.js';
 

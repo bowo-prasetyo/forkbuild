@@ -1,5 +1,5 @@
 import { withTimeout } from '../../../utils/withTimeout.js';
-import { commentaryPublicationTag } from '../../../core/NarrowDiscoveryTags.js';
+import { commentaryPublicationTag } from '../../../core/publication/NarrowDiscoveryTags.js';
 
 const DEFAULT_RELAY_URL = 'wss://relay.damus.io';
 const DEFAULT_TAG_NAME = 't';
@@ -51,7 +51,7 @@ const EVENT_ID_PATTERN = /^[0-9a-f]{64}$/i;
 //                      event on a shared relay)
 //
 // AN OPAQUE ENVELOPE CARRIER, NEVER A SECOND COMMENTARY AUTHORITY. This
-// class never imports core/PublicationCommentary.js, core/
+// class never imports core/publication/PublicationCommentary.js, core/
 // PublicationCommentaryDistributionEnvelope.js, or application/
 // PublicationCommentaryDistributionExchange.js. It knows nothing about
 // signatures, authorship, or verification — it treats `envelopeJson` as a
@@ -101,7 +101,7 @@ const EVENT_ID_PATTERN = /^[0-9a-f]{64}$/i;
 // there is no separate "look up a locator, then fetch its bytes" round
 // trip for Nostr the way a locator-plus-content-store substrate would
 // need. `retrieve(locator)` is kept anyway — never removed — because it
-// is the exact shape core/PublicationCommentaryAsynchronousDeliveryContract.js's
+// is the exact shape core/publication/PublicationCommentaryAsynchronousDeliveryContract.js's
 // own contract names, and because a caller that already holds a locator
 // (a publish() result, kept for its own bookkeeping) has no reason to
 // re-run a tag query to use it.
@@ -131,7 +131,7 @@ const EVENT_ID_PATTERN = /^[0-9a-f]{64}$/i;
 // application/nostr/NostrMultiRelayPublicationCommentaryDistribution.js
 // constructs one instance of THIS class per configured relay and fans
 // publish()/retrieve()/discover() out across all of them, following the
-// unification decision recorded in core/NostrRelayConfiguration.js's own
+// unification decision recorded in core/networks/NostrRelayConfiguration.js's own
 // header (this codebase now has exactly one Nostr relay set, used
 // everywhere Nostr is used). This class itself is entirely unmodified —
 // the fan-out lives one layer up, exactly the same "composition around the

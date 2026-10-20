@@ -1,11 +1,11 @@
-import { PlaceNamingClaim, getPlaceNamingClaimSigningDescriptor } from '../core/PlaceNamingClaim.js';
+import { PlaceNamingClaim, getPlaceNamingClaimSigningDescriptor } from '../core/world/PlaceNamingClaim.js';
 import {
     claimsForRegion, namingView, preferredClaimedName, describeNamingView
-} from '../core/PlaceNamingView.js';
-import { WorldRegion } from '../core/WorldRegion.js';
-import { RegionKind } from '../core/RegionKind.js';
-import { regionsContaining, describePlace } from '../core/WorldRegionGeography.js';
-import { Position } from '../core/Position.js';
+} from '../core/world/PlaceNamingView.js';
+import { WorldRegion } from '../core/world/WorldRegion.js';
+import { RegionKind } from '../core/world/RegionKind.js';
+import { regionsContaining, describePlace } from '../core/world/WorldRegionGeography.js';
+import { Position } from '../core/document/Position.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
 import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
@@ -30,7 +30,7 @@ import { makeIdentity } from './support/TestIdentity.js';
 
 async function run() {
     // -------------------------------------------------------------
-    // Section A: core/PlaceNamingClaim.js — construction & validation
+    // Section A: core/world/PlaceNamingClaim.js — construction & validation
     // -------------------------------------------------------------
     {
         let threw = false;
@@ -69,7 +69,7 @@ async function run() {
         assert(JSON.stringify(descriptorFromInstance) === JSON.stringify(descriptorFromFreeFn),
             'instance getSigningDescriptor() matches the standalone free function exactly');
     }
-    console.log('✓ Section A: core/PlaceNamingClaim.js — construction & validation');
+    console.log('✓ Section A: core/world/PlaceNamingClaim.js — construction & validation');
 
     // -------------------------------------------------------------
     // Section B: identity/LocalAuthorizationVerifier.js#verifyPlaceNamingClaim
@@ -109,7 +109,7 @@ async function run() {
     console.log('✓ Section B: identity/LocalAuthorizationVerifier.js#verifyPlaceNamingClaim — required-signature discipline');
 
     // -------------------------------------------------------------
-    // Section C: core/PlaceNamingView.js — confidence, not authority
+    // Section C: core/world/PlaceNamingView.js — confidence, not authority
     // -------------------------------------------------------------
     {
         const alice = 'did:key:alice';
@@ -152,7 +152,7 @@ async function run() {
         const tiedView = namingView('r3', tiedClaims);
         assert(tiedView[0].name === 'Apple Town', `tied scores should break alphabetically, got ${tiedView[0].name} first`);
     }
-    console.log('✓ Section C: core/PlaceNamingView.js — distinct-author scoring, ranking, deterministic tie-break');
+    console.log('✓ Section C: core/world/PlaceNamingView.js — distinct-author scoring, ranking, deterministic tie-break');
 
     // -------------------------------------------------------------
     // Section D: application/placeNaming/LocalPlaceNamingClaimStore.js — persistence
@@ -272,7 +272,7 @@ async function run() {
         assert(describePlace(containing) === 'Willow Village', 'describePlace() is untouched by 0.5.2');
         assert(preferredClaimedName('r1', claims) === 'Riverside', 'meanwhile, the CLAIMED naming view is a completely independent reading');
     }
-    console.log('✓ Section G: core/WorldRegion.js / core/WorldRegionGeography.js — 0.5.0 behavior completely unchanged by 0.5.2');
+    console.log('✓ Section G: core/world/WorldRegion.js / core/world/WorldRegionGeography.js — 0.5.0 behavior completely unchanged by 0.5.2');
 
     // -------------------------------------------------------------
     // Section H: CAPSTONE — three independent identities, disagreement,

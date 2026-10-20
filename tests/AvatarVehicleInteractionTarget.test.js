@@ -1,15 +1,15 @@
 import { readFile } from 'node:fs/promises';
 import {
     resolveAvatarVehicleInteractionTarget
-} from '../core/AvatarVehicleInteractionTarget.js';
-import { VEHICLE_INTERACTION_RADIUS } from '../core/AvatarVehicleProximity.js';
-import { AvatarVehicleInteractionIntent } from '../core/AvatarVehicleInteractionIntent.js';
-import { VehiclePresence } from '../core/VehiclePresence.js';
-import { VehicleType } from '../core/VehicleType.js';
+} from '../core/vehicles/AvatarVehicleInteractionTarget.js';
+import { VEHICLE_INTERACTION_RADIUS } from '../core/vehicles/AvatarVehicleProximity.js';
+import { AvatarVehicleInteractionIntent } from '../core/vehicles/AvatarVehicleInteractionIntent.js';
+import { VehiclePresence } from '../core/vehicles/VehiclePresence.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.76 — Avatar-Vehicle Interaction Target Resolution,
-// core/AvatarVehicleInteractionTarget.js.
+// core/vehicles/AvatarVehicleInteractionTarget.js.
 //
 //   Section A: no interaction — NONE always produces no target
 //   Section B: no vehicles — MOUNT + empty list produces no target
@@ -262,7 +262,7 @@ async function runTests() {
     // Section M — architectural regression
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../core/AvatarVehicleInteractionTarget.js', import.meta.url);
+        const sourceUrl = new URL('../core/vehicles/AvatarVehicleInteractionTarget.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -281,14 +281,14 @@ async function runTests() {
             'facing', 'direction', 'heading'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `28. core/AvatarVehicleInteractionTarget.js's own code never references "${term}" — target resolution only, never mounting/persistence/input/rendering/movement/animation/randomness/clock/storage/direction`);
+            assert(!codeOnly.includes(term), `28. core/vehicles/AvatarVehicleInteractionTarget.js's own code never references "${term}" — target resolution only, never mounting/persistence/input/rendering/movement/animation/randomness/clock/storage/direction`);
         }
     }
     {
-        const exportsModule = await import('../core/AvatarVehicleInteractionTarget.js');
+        const exportsModule = await import('../core/vehicles/AvatarVehicleInteractionTarget.js');
         const exportedNames = Object.keys(exportsModule).sort();
         assert(JSON.stringify(exportedNames) === JSON.stringify(['resolveAvatarVehicleInteractionTarget']),
-            '29. core/AvatarVehicleInteractionTarget.js exports exactly resolveAvatarVehicleInteractionTarget — nothing else');
+            '29. core/vehicles/AvatarVehicleInteractionTarget.js exports exactly resolveAvatarVehicleInteractionTarget — nothing else');
     }
     {
         // No new persistent field is added to VehiclePresence by this

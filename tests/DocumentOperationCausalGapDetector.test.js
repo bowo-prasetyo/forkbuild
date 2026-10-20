@@ -1,9 +1,9 @@
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
@@ -22,7 +22,7 @@ import {
 import {
     CausalGapStatus,
     DocumentOperationCausalGapDetector
-} from '../core/DocumentOperationCausalGapDetector.js';
+} from '../core/collaboration/DocumentOperationCausalGapDetector.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
@@ -41,7 +41,7 @@ import { assert } from './support/Assert.js';
 // Deliberately NOT tested here, because it deliberately does not exist:
 // buffering, retransmission, automatic predecessor retrieval, retry,
 // synchronization, rollback, reordering, conflict resolution, or any
-// claim of convergence. See core/DocumentOperationCausalGapDetector.js's
+// claim of convergence. See core/collaboration/DocumentOperationCausalGapDetector.js's
 // own header.
 
 function assertThrows(fn, message) {
@@ -255,7 +255,7 @@ async function runTests() {
 
 // ===================================================================
 // Section G2 — Input validation: the same closed-vocabulary discipline
-// core/DocumentOperationEnvelope.js and DocumentOperationCausality.js
+// core/collaboration/DocumentOperationEnvelope.js and DocumentOperationCausality.js
 // already apply.
 // ===================================================================
 {

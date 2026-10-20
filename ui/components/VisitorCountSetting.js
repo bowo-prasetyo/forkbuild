@@ -1,10 +1,10 @@
 import { inject, ref } from 'vue';
-import { VISITOR_COUNT_DASHBOARD_URL, asksNotToBeTracked } from '../../core/VisitorCount.js';
+import { VISITOR_COUNT_DASHBOARD_URL, asksNotToBeTracked } from '../../core/app/VisitorCount.js';
 import { currentLocale, t } from '../i18n/i18n.js';
 import { privacyPageUrl } from '../i18n/userGuide.js';
 import I18nText from '../i18n/I18nText.js';
 
-// The Your Data page's switch for the daily visitor count (core/VisitorCount.js,
+// The Your Data page's switch for the daily visitor count (core/app/VisitorCount.js,
 // docs/Privacy.md "Visitor count"). Saved as soon as it changes. A browser
 // sending Global Privacy Control or Do Not Track is never counted, so the
 // switch is shown off and locked, saying why.

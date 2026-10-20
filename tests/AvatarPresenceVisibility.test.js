@@ -1,12 +1,12 @@
-import { PresenceVisibility, isValidPresenceVisibility } from '../core/PresenceVisibility.js';
-import { PresenceVisibilityPolicy } from '../core/PresenceVisibilityPolicy.js';
+import { PresenceVisibility, isValidPresenceVisibility } from '../core/avatar/PresenceVisibility.js';
+import { PresenceVisibilityPolicy } from '../core/avatar/PresenceVisibilityPolicy.js';
 import { PresenceVisibilityUseCase } from '../application/presence/PresenceVisibilityUseCase.js';
 import { CreatePresenceVisibilityUseCase } from '../application/presence/CreatePresenceVisibilityUseCase.js';
 import { CreateAvatarPresenceSessionUseCase } from '../application/avatar/CreateAvatarPresenceSessionUseCase.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { LocalAvatarPresenceBroadcastProvider } from '../presence/LocalAvatarPresenceBroadcastProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -20,12 +20,12 @@ import { GridPlacementStrategy } from '../application/placement/InitialPlacement
 import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
 import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { License, LicenseId } from '../core/License.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { License, LicenseId } from '../core/document/License.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 import { installFakeWindowLocalStorage } from './support/FakeWindowLocalStorage.js';
@@ -35,8 +35,8 @@ installFakeWindowLocalStorage();
 
 // 0.2.40 — Avatar Presence Visibility & Privacy.
 //
-//   Section A: core/PresenceVisibility.js
-//   Section B: core/PresenceVisibilityPolicy.js
+//   Section A: core/avatar/PresenceVisibility.js
+//   Section B: core/avatar/PresenceVisibilityPolicy.js
 //   Section C: application/presence/PresenceVisibilityUseCase.js
 //   Section D: application/presence/CreatePresenceVisibilityUseCase.js / CreateAvatarPresenceSessionUseCase.js wiring
 //   Section E: WorldNavigationSession publish gating
@@ -109,7 +109,7 @@ async function runTests() {
     const registry = buildRegistry();
 
     // -------------------------------------------------------------
-    // Section A — core/PresenceVisibility.js
+    // Section A — core/avatar/PresenceVisibility.js
     // -------------------------------------------------------------
     {
         assert(isValidPresenceVisibility(PresenceVisibility.PUBLIC), '1. PUBLIC is valid');
@@ -121,7 +121,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section B — core/PresenceVisibilityPolicy.js
+    // Section B — core/avatar/PresenceVisibilityPolicy.js
     // -------------------------------------------------------------
     {
         const def = PresenceVisibilityPolicy.default();

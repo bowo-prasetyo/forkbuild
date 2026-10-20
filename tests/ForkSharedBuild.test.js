@@ -5,14 +5,14 @@
 // Publication signed. Before this, such a copy failed as "material
 // unavailable". Also the turning view's read of the same bytes
 // (application/publication/sharing/ReadSharedBuild.js).
-import { Brick } from '../core/Brick.js';
-import { Building } from '../core/Building.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { Position } from '../core/Position.js';
-import { World } from '../core/World.js';
-import { License, LicenseId } from '../core/License.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { Brick } from '../core/building/Brick.js';
+import { Building } from '../core/building/Building.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { Position } from '../core/document/Position.js';
+import { World } from '../core/document/World.js';
+import { License, LicenseId } from '../core/document/License.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
 import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
 import { ForkFailureReason } from '../application/document/ForkFailureReason.js';

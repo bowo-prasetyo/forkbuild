@@ -1,9 +1,9 @@
 import * as THREE from 'three';
-import { DAY } from '../core/DayCycle.js';
+import { DAY } from '../core/nature/DayCycle.js';
 
 // World View's rain: streaks falling all round the camera, as many as the
-// weather's rain says (core/Weather.js, 0 to 1), coloured by the sky's look
-// (core/DayCycle.js) so they are pale grey by day and faint at night.
+// weather's rain says (core/nature/Weather.js, 0 to 1), coloured by the sky's look
+// (core/nature/DayCycle.js) so they are pale grey by day and faint at night.
 //
 // DROP_COUNT drops, each a short line from its top to its tip, in one draw:
 // every drop's place in a box BOX_WIDTH across and BOX_HEIGHT tall round the
@@ -133,7 +133,7 @@ export class RainFall {
         sceneManager.add(this._lines);
     }
 
-    // How hard it rains, 0 to 1 (core/Weather.js's rain).
+    // How hard it rains, 0 to 1 (core/nature/Weather.js's rain).
     set(rain) {
         this._rain = Number.isFinite(rain) ? Math.min(Math.max(rain, 0), 1) : 0;
     }

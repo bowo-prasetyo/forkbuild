@@ -1,7 +1,7 @@
 import { inject } from 'vue';
-import { SideSystemUse, sideSystemSnapshot, sideSystemUsesBetween } from '../../../core/SideSystemUse.js';
+import { SideSystemUse, sideSystemSnapshot, sideSystemUsesBetween } from '../../../core/app/SideSystemUse.js';
 
-// Counting the kept side systems used in World View (core/SideSystemUse.js):
+// Counting the kept side systems used in World View (core/app/SideSystemUse.js):
 // swimming, catching an animal and carrying things, read from the avatar
 // each tick, and decorating with an animal, heard from the session. Each is
 // sent at most once a page load (application/settings/FunnelEventCounter.js),

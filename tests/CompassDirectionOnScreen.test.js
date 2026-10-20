@@ -1,16 +1,16 @@
 // East is on your right when you face North: the compass, the world map and
 // every spoken direction agree with what the 3D view shows. Each check
 // starts from the screen: the camera framed behind the avatar
-// (core/CameraPerspective.js) and projected through a real Three.js camera.
+// (core/avatar/CameraPerspective.js) and projected through a real Three.js camera.
 // A yaw grows from +Z toward +X, which is the screen's left, so treating a
 // yaw as a bearing once put East on the left and drew the map mirrored.
 import * as THREE from 'three';
-import { computeCameraFraming, CameraPerspective } from '../core/CameraPerspective.js';
-import { computeCompassHeading, compassLabelBetween, compassBearingFromYaw } from '../core/CompassHeading.js';
-import { createMapViewport, projectPosition } from '../core/WorldMapProjection.js';
-import { directionLabelBetween } from '../core/GeographicPlaceNavigation.js';
-import { simulateAvatarMovement } from '../core/AvatarMovementSimulation.js';
-import { AvatarMovementState } from '../core/AvatarMovementState.js';
+import { computeCameraFraming, CameraPerspective } from '../core/avatar/CameraPerspective.js';
+import { computeCompassHeading, compassLabelBetween, compassBearingFromYaw } from '../core/world/CompassHeading.js';
+import { createMapViewport, projectPosition } from '../core/world/WorldMapProjection.js';
+import { directionLabelBetween } from '../core/world/GeographicPlaceNavigation.js';
+import { simulateAvatarMovement } from '../core/avatar/AvatarMovementSimulation.js';
+import { AvatarMovementState } from '../core/avatar/AvatarMovementState.js';
 import { assert } from './support/Assert.js';
 
 const avatar = { x: 0, y: 0, z: 0 };

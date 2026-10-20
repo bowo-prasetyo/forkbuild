@@ -5,7 +5,7 @@ import { WorldEncounterMaterialVerificationStatus, WorldEncounterMaterialVerifie
 import { describeLocalWorldDiscoverySource } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
 import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js';
-import { describeDecentralizedWorldDiscoveryLead } from '../core/DecentralizedWorldDiscoveryLead.js';
+import { describeDecentralizedWorldDiscoveryLead } from '../core/world/DecentralizedWorldDiscoveryLead.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 
@@ -409,7 +409,7 @@ async function run() {
 
         assert(codeOnly.includes('describeDecentralizedWorldEncounterLeadSelectionOutcomeFromRegistry({'), '27. WorldEncounterCanvas.js calls describeDecentralizedWorldEncounterLeadSelectionOutcomeFromRegistry() directly');
         assert(codeOnly.includes('worldDiscoveryLeadRegistry: {') && codeOnly.includes('decentralizedLeadAssociations: {'), '28. both new props are declared');
-        assert(!codeOnly.includes('core/DecentralizedWorldEncounterLeadAssociation.js') && !codeOnly.includes('DecentralizedWorldDiscoveryLeadRegistry.js\''), '29. this component never imports the association/registry core modules directly — only the application-layer selection seam');
+        assert(!codeOnly.includes('core/world/DecentralizedWorldEncounterLeadAssociation.js') && !codeOnly.includes('DecentralizedWorldDiscoveryLeadRegistry.js\''), '29. this component never imports the association/registry core modules directly — only the application-layer selection seam');
         const resolvedLeadChoiceAssignments = codeOnly.match(/this\.resolvedLeadChoice\s*=\s*[^;]+;/g) || [];
         assert(resolvedLeadChoiceAssignments.length === 2, '30a. resolvedLeadChoice is assigned in exactly two places');
         assert(resolvedLeadChoiceAssignments.every((line) => /=\s*(null|candidate)\s*;/.test(line)), '30. resolvedLeadChoice is only ever assigned null (reset) or the exact candidate handed to chooseDecentralizedLead() — never guessed');

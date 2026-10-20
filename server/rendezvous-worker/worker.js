@@ -24,7 +24,7 @@ import { handleBuildPreview, handleOEmbed, isBuildPreviewPath, isOEmbedPath } fr
 //         { answer|null, answererId, watching: true }, and an answer that
 //         arrives later is pushed to this connection (see below)
 //     { v: 1, type: 'JOIN_LOBBY',  requestId, card }
-//         a signed core/LobbyCard.js toJSON(): "this identity is in this lobby"
+//         a signed core/social/LobbyCard.js toJSON(): "this identity is in this lobby"
 //     { v: 1, type: 'LEAVE_LOBBY', requestId, identityId, lobby, cardId, signature }
 //     { v: 1, type: 'LIST_LOBBY',  requestId, lobby }
 //         -> { cards, total }: a random sample of the lobby's current cards
@@ -40,7 +40,7 @@ import { handleBuildPreview, handleOEmbed, isBuildPreviewPath, isOEmbedPath } fr
 // - Only an identity can publish or withdraw its own entry. An identity id
 //   is a did:key, which embeds its Ed25519 public key, so the server checks
 //   each signature against the id itself; it needs no accounts. Signatures
-//   use ForkBuild's canonical envelope (core/Signature.js) and are checked
+//   use ForkBuild's canonical envelope (core/publication/Signature.js) and are checked
 //   with the platform's WebCrypto Ed25519.
 // - A publication cannot be replayed to roll an identity back to an older
 //   entry, or to restore one it withdrew: the server refuses a publication
@@ -151,7 +151,7 @@ const IMAGE_RELAYS = Object.freeze({
     })
 });
 
-// Mirrors core/LobbyCard.js: the global lobby, or one per World.
+// Mirrors core/social/LobbyCard.js: the global lobby, or one per World.
 const LOBBY_PATTERN = /^(public|world:[A-Za-z0-9._-]{1,128})$/;
 
 // One entry per identity, stored under this prefix:
@@ -224,12 +224,12 @@ function hexToBytes(hex) {
     return bytes;
 }
 
-// The exact bytes the app signs (core/Signature.js#canonicalBytes).
+// The exact bytes the app signs (core/publication/Signature.js#canonicalBytes).
 function canonicalBytes({ type, id, revision, payload }) {
     return new TextEncoder().encode(JSON.stringify({ domain: SIGNING_DOMAIN, type, id, revision, payload }));
 }
 
-// True when `signature` (a core/Signature.js toJSON()) is `signer`'s valid
+// True when `signature` (a core/publication/Signature.js toJSON()) is `signer`'s valid
 // Ed25519 signature over `descriptor`.
 export async function verifySignature(descriptor, signature, signer) {
     if (!signature || typeof signature !== 'object'
@@ -251,7 +251,7 @@ export async function verifySignature(descriptor, signature, signer) {
     }
 }
 
-// Mirrors core/RendezvousPublicationEnvelope.js.
+// Mirrors core/social/RendezvousPublicationEnvelope.js.
 function publicationDescriptor(publication) {
     return {
         type: PUBLICATION_SIGNATURE_TYPE,
@@ -276,7 +276,7 @@ function removalDescriptor(identityId, publicationId) {
     };
 }
 
-// Mirrors core/RendezvousPublicationEnvelope.js#getRendezvousAnswerSigningDescriptor.
+// Mirrors core/social/RendezvousPublicationEnvelope.js#getRendezvousAnswerSigningDescriptor.
 function answerDescriptor({ answererId, identityId, publicationId, answer }) {
     return {
         type: ANSWER_SIGNATURE_TYPE,
@@ -286,7 +286,7 @@ function answerDescriptor({ answererId, identityId, publicationId, answer }) {
     };
 }
 
-// Mirrors core/LobbyCard.js#getLobbyCardSigningDescriptor.
+// Mirrors core/social/LobbyCard.js#getLobbyCardSigningDescriptor.
 function lobbyCardDescriptor(card) {
     return {
         type: LOBBY_CARD_SIGNATURE_TYPE,

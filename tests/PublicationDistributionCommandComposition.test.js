@@ -4,8 +4,8 @@ import { resolveArweaveUploaderOptions, resolveNostrPublisherOptions } from '../
 import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
 import { PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
 import { Publication } from '../publisher/Publication.js';
-import { ContentReference } from '../core/ContentReference.js';
-import { Signature } from '../core/Signature.js';
+import { ContentReference } from '../core/document/ContentReference.js';
+import { Signature } from '../core/publication/Signature.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.105 — Publication Distribution Configuration Boundary.

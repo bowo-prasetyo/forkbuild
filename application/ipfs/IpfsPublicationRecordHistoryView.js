@@ -1,5 +1,5 @@
 import { IpfsPublicationMethod } from './IpfsPublicationRecord.js';
-import { message } from '../../core/Message.js';
+import { message } from '../../core/app/Message.js';
 
 const PUBLICATION_METHOD_LABELS = {
     [IpfsPublicationMethod.KUBO]: message('ipfsPublicationRecordHistory.localIpfsNodeKubo'),

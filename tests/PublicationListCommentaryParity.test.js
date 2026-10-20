@@ -11,12 +11,12 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { Publication } from '../publisher/Publication.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
@@ -371,7 +371,7 @@ async function runTests() {
     {
         const listCode = await codeOnlySource('ui/components/PublicationList.js');
         const forbidden = [
-            "from '../../core/PublicationCommentary.js'",
+            "from '../../core/publication/PublicationCommentary.js'",
             "from '../../storage/PublicationCommentaryStore.js'",
             "from '../../application/publication/commentary/GetPublicationCommentariesUseCase.js'",
             "from '../../application/publication/commentary/AddPublicationCommentaryUseCase.js'",

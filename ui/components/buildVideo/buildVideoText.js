@@ -1,14 +1,14 @@
-import { describeBuildVideo, videoAppUrl } from '../../../core/BuildVideo.js';
-import { FORKBUILD_APP_URL } from '../../../core/ForkBuildAppLinks.js';
-import { challengeOfTags } from '../../../core/BuildChallenge.js';
+import { describeBuildVideo, videoAppUrl } from '../../../core/app/BuildVideo.js';
+import { FORKBUILD_APP_URL } from '../../../core/app/ForkBuildAppLinks.js';
+import { challengeOfTags } from '../../../core/challenge/BuildChallenge.js';
 import { describeLicense } from '../../../application/document/LicenseLabels.js';
-import { LicenseId } from '../../../core/License.js';
+import { LicenseId } from '../../../core/document/License.js';
 import { displayText, t } from '../../i18n/i18n.js';
 
 // The words a video of a build carries, in the viewer's language, from the
-// build's metadata (core/DocumentMetadata.js): the overlay's
+// build's metadata (core/document/DocumentMetadata.js): the overlay's
 // (renderer/BuildVideoOverlay.js) and the title and description to paste
-// beside it (core/BuildVideo.js#describeBuildVideo()). Shared by Make a video
+// beside it (core/app/BuildVideo.js#describeBuildVideo()). Shared by Make a video
 // (BuildVideoDialog) and the walk-through World View films.
 
 // The address the end card shows, without its scheme: short enough to read

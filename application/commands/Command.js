@@ -1,4 +1,4 @@
-import { createId } from '../../core/createId.js';
+import { createId } from '../../core/document/createId.js';
 
 // Base class every command extends. Now carries id and timestamp for
 // history tracking and serialization. execute(context) and undo(context)

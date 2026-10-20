@@ -1,5 +1,5 @@
 import PublicationPreview from './PublicationPreview.js';
-import { CameraPerspective } from '../../core/CameraPerspective.js';
+import { CameraPerspective } from '../../core/avatar/CameraPerspective.js';
 import { relativeVisitText } from '../i18n/dateText.js';
 import { t } from '../i18n/i18n.js';
 
@@ -27,7 +27,7 @@ const PERSPECTIVE_KEYS = {
 //     landmarkCount) — freshly re-derived from the document every time
 //     this card renders, never cached beyond that.
 //   - THIS replica's own local visit history (lastVisitedAt,
-//     cameraPerspective) — from core/LocalWorldExperience.js, and
+//     cameraPerspective) — from core/world/LocalWorldExperience.js, and
 //     NOTHING else's.
 // See docs/Principles.md, "Personal Experience Is Not Shared World
 // State (0.3.10)." Deliberately excludes anything requiring a live

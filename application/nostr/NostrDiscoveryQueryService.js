@@ -1,5 +1,5 @@
 import { DecentralizedDiscoveryQueryService } from '../discovery/DecentralizedWorldDiscoveryQuery.js';
-import { parseDecentralizedDiscoveryEnvelope } from '../../core/DecentralizedDiscoveryEnvelope.js';
+import { parseDecentralizedDiscoveryEnvelope } from '../../core/publication/DecentralizedDiscoveryEnvelope.js';
 import { withTimeout } from '../../utils/withTimeout.js';
 
 const DEFAULT_RELAY_URL = 'wss://relay.damus.io';
@@ -14,7 +14,7 @@ const URI_SCHEME_PATTERN = /^([a-zA-Z][a-zA-Z0-9+.-]*):\/\//;
 // `application/arweave/ArweaveGraphqlDiscoveryQueryService.js` (0.9.25) was the
 // first concrete `DecentralizedDiscoveryQueryService` — but Arweave's own
 // tags carry no `kind`/`objectId` of their own, which is exactly the gap
-// `core/DecentralizedDiscoveryEnvelope.js` (0.9.30) named and closed with
+// `core/publication/DecentralizedDiscoveryEnvelope.js` (0.9.30) named and closed with
 // a substrate-neutral JSON shape a publisher can attach to whatever
 // payload field their own substrate already offers. This milestone is
 // the first adapter that actually reads one: a `DecentralizedDiscoveryQueryService`
@@ -31,7 +31,7 @@ const URI_SCHEME_PATTERN = /^([a-zA-Z][a-zA-Z0-9+.-]*):\/\//;
 //         │
 //         │   events, each carrying its own `.content`
 //         ▼
-//   core/DecentralizedDiscoveryEnvelope.js   (0.9.30, unmodified)
+//   core/publication/DecentralizedDiscoveryEnvelope.js   (0.9.30, unmodified)
 //        parseDecentralizedDiscoveryEnvelope(event.content)
 //         │
 //         ▼
@@ -55,7 +55,7 @@ const URI_SCHEME_PATTERN = /^([a-zA-Z][a-zA-Z0-9+.-]*):\/\//;
 // takes the second shape. The `t` tag answers "can I find ForkBuild-
 // related material on this relay at all" — a search accelerator, matched
 // by the relay's own indexing, proving nothing. `content`, once fetched,
-// answers the different question `core/DecentralizedDiscoveryEnvelope.js`
+// answers the different question `core/publication/DecentralizedDiscoveryEnvelope.js`
 // already exists to answer: what does the tagged event actually claim?
 // Folding `kind`/`objectId`/`uri` into individual Nostr tags instead would
 // have leaked ForkBuild's own internal envelope shape into a Nostr-
@@ -105,17 +105,17 @@ const URI_SCHEME_PATTERN = /^([a-zA-Z][a-zA-Z0-9+.-]*):\/\//;
 // `ArweaveGraphqlDiscoveryQueryService` can hard-code `storage: 'ar'`
 // because every candidate it reports is, by construction, an Arweave
 // transaction. A Nostr event's own envelope carries no such guarantee —
-// `core/DecentralizedDiscoveryEnvelope.js`'s own `uri` field is exactly as
+// `core/publication/DecentralizedDiscoveryEnvelope.js`'s own `uri` field is exactly as
 // substrate-neutral as the envelope itself, and the whole reason 0.9.30's
 // own header drew a line between "where ForkBuild discovered the
 // declaration" (this relay) and "where the declared material claims to
 // reside" (whatever `uri` says) is that those can differ. This file reads
 // that difference off the `uri` string's own scheme — `ar://…` implies
 // `"ar"`, `ipfs://…` implies `"ipfs"` — the same open, free-form
-// inference `core/ContentReference.js`'s own header already draws between
+// inference `core/document/ContentReference.js`'s own header already draws between
 // a uri and the backend it names, never a closed list of recognized
 // schemes. A `uri` with no recognizable `scheme://` prefix reports
-// `storage: null`, exactly as `core/DecentralizedWorldDiscoveryLead.js`'s
+// `storage: null`, exactly as `core/world/DecentralizedWorldDiscoveryLead.js`'s
 // own `describeDecentralizedWorldDiscoveryLead()` already treats a missing
 // `storage` as an optional field, never a reason to reject the candidate.
 //
@@ -129,7 +129,7 @@ const URI_SCHEME_PATTERN = /^([a-zA-Z][a-zA-Z0-9+.-]*):\/\//;
 // NO SIGNATURE, NO PUBKEY, NO NIP-01 `id`/`sig` VERIFICATION OF ANY KIND.
 // A Nostr event's own `sig` field is a real, checkable cryptographic
 // signature — this class never checks it, never reads `event.pubkey`, and
-// never imports anything that would. `core/DecentralizedDiscoveryEnvelope.js`'s
+// never imports anything that would. `core/publication/DecentralizedDiscoveryEnvelope.js`'s
 // own header already drew this line for the envelope itself: "an envelope
 // carries no signature field for this file to even look for." Whether a
 // Nostr event's own `sig` should ever gate anything — turning an unsigned
@@ -220,7 +220,7 @@ export class NostrDiscoveryQueryService extends DecentralizedDiscoveryQueryServi
 
     // Resolves to `[{ uri, storage }, ...]` — one candidate for every
     // event `queryImpl` reports whose own `content` describes a well-formed
-    // ForkBuild discovery envelope (see `core/DecentralizedDiscoveryEnvelope.js`).
+    // ForkBuild discovery envelope (see `core/publication/DecentralizedDiscoveryEnvelope.js`).
     // Resolves to `[]`, never throws — see this file's own header, "never
     // throws."
     async search(discoveryTag) {

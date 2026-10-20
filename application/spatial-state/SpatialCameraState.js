@@ -1,4 +1,4 @@
-import { WorldPosition } from '../../core/WorldPosition.js';
+import { WorldPosition } from '../../core/document/WorldPosition.js';
 
 // Runtime-only state: where the spatial camera is and how it behaves.
 // Not part of the ForkBuild Protocol; never serialized. Navigation

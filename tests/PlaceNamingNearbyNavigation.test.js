@@ -1,7 +1,7 @@
-import { World } from '../core/World.js';
-import { WorldRegion } from '../core/WorldRegion.js';
-import { RegionKind } from '../core/RegionKind.js';
-import { Position } from '../core/Position.js';
+import { World } from '../core/document/World.js';
+import { WorldRegion } from '../core/world/WorldRegion.js';
+import { RegionKind } from '../core/world/RegionKind.js';
+import { Position } from '../core/document/Position.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
 import { LocalPlaceNamingPublicationLog } from '../application/placeNaming/LocalPlaceNamingPublicationLog.js';
@@ -14,7 +14,7 @@ import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { PlaceNamingDiscoveryMonitor } from '../application/placeNaming/PlaceNamingDiscoveryMonitor.js';
 import { executeDiscoverPlaceNamingClaimsCommand } from '../application/placeNaming/DiscoverPlaceNamingClaimsCommand.js';
-import { derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
+import { derivePlaceNamingDiscoveryTag } from '../core/world/PlaceNamingDiscoveryEnvelope.js';
 import { composePlaceNamingDiscoveryRuntime } from '../application/placeNaming/PlaceNamingDiscoveryRuntimeComposition.js';
 import { NostrPlaceNamingDiscoverySource } from '../application/placeNaming/NostrPlaceNamingDiscoverySource.js';
 import { worldViewFiles } from './support/SourceFileGroups.js';
@@ -530,20 +530,20 @@ async function runTests() {
     // unchanged.
     // -------------------------------------------------------------
     {
-        const proximitySource = codeOnlyLines(await rawSource('core/PlaceNamingProximitySelection.js'));
+        const proximitySource = codeOnlyLines(await rawSource('core/world/PlaceNamingProximitySelection.js'));
         const monitorSource = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingDiscoveryMonitor.js'));
-        const envelopeSource = codeOnlyLines(await rawSource('core/PlaceNamingDiscoveryEnvelope.js'));
+        const envelopeSource = codeOnlyLines(await rawSource('core/world/PlaceNamingDiscoveryEnvelope.js'));
 
-        for (const [name, source] of [['core/PlaceNamingProximitySelection.js', proximitySource], ['application/placeNaming/PlaceNamingDiscoveryMonitor.js', monitorSource], ['core/PlaceNamingDiscoveryEnvelope.js', envelopeSource]]) {
+        for (const [name, source] of [['core/world/PlaceNamingProximitySelection.js', proximitySource], ['application/placeNaming/PlaceNamingDiscoveryMonitor.js', monitorSource], ['core/world/PlaceNamingDiscoveryEnvelope.js', envelopeSource]]) {
             assert(!/navigateToNearbyPlaceNamingClaim|focusLocation|WorldNavigationSession/.test(source),
                 `35. ${name} was not touched by this milestone — it carries no reference to the new Navigate function, focusLocation(), or WorldNavigationSession at all.`);
         }
 
-        // Re-confirms core/PlaceNamingProximitySelection.js's own basic
+        // Re-confirms core/world/PlaceNamingProximitySelection.js's own basic
         // contract still holds exactly as tests/PlaceNamingProximitySelection.test.js
         // already proves in full — one live, functional spot-check here,
         // not a reproduction of that file's own suite.
-        const { selectNearbyPlaceNamingClaims } = await import('../core/PlaceNamingProximitySelection.js');
+        const { selectNearbyPlaceNamingClaims } = await import('../core/world/PlaceNamingProximitySelection.js');
         const near = { id: 'near', position: { x: 1, z: 1 } };
         const far = { id: 'far', position: { x: 1000, z: 1000 } };
         const selected = selectNearbyPlaceNamingClaims([near, far], { x: 0, z: 0 }, 10);

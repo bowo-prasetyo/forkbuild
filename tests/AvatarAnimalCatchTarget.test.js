@@ -1,11 +1,11 @@
-import { resolveAvatarAnimalCatchTarget, ANIMAL_INTERACTION_RADIUS } from '../core/AvatarAnimalCatchTarget.js';
-import { AvatarAnimalCatchIntent } from '../core/AvatarAnimalCatchIntent.js';
-import { AnimalPresence } from '../core/AnimalPresence.js';
-import { Position } from '../core/Position.js';
-import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
+import { resolveAvatarAnimalCatchTarget, ANIMAL_INTERACTION_RADIUS } from '../core/avatar/AvatarAnimalCatchTarget.js';
+import { AvatarAnimalCatchIntent } from '../core/avatar/AvatarAnimalCatchIntent.js';
+import { AnimalPresence } from '../core/nature/AnimalPresence.js';
+import { Position } from '../core/document/Position.js';
+import { ANIMAL_SPECIES } from '../core/nature/WildlifeField.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.700 — Avatar Animal Catch Target Resolution, core/AvatarAnimalCatchTarget.js.
+// 0.9.700 — Avatar Animal Catch Target Resolution, core/avatar/AvatarAnimalCatchTarget.js.
 // Mirrors tests/AvatarVehicleInteractionTarget.test.js's own shape.
 
 function animal(id, x, z, species = ANIMAL_SPECIES.RABBIT) {

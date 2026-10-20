@@ -3,10 +3,10 @@ import {
     AvatarVehicleBrakingIntent,
     isValidAvatarVehicleBrakingIntent,
     deriveAvatarVehicleBrakingIntent
-} from '../core/AvatarVehicleBrakingIntent.js';
+} from '../core/vehicles/AvatarVehicleBrakingIntent.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.95 — Vehicle Braking Intent, core/AvatarVehicleBrakingIntent.js.
+// 0.9.95 — Vehicle Braking Intent, core/vehicles/AvatarVehicleBrakingIntent.js.
 //
 //   Section A: the vocabulary itself — NONE/BRAKE, isValid()
 //   Section B: activation — a brake request produces BRAKE
@@ -72,7 +72,7 @@ async function runTests() {
     // Section C — level-driven hold semantics: BRAKE is reported for as
     // long as brakeRequested keeps arriving true, never a one-shot
     // consumption (the direct architectural DIFFERENCE from
-    // core/AvatarVehicleDismountIntent.js's own DISMOUNT)
+    // core/vehicles/AvatarVehicleDismountIntent.js's own DISMOUNT)
     // -------------------------------------------------------------
     {
         // Repeating brakeRequested: true any number of times keeps
@@ -95,7 +95,7 @@ async function runTests() {
     {
         // A `currentIntent` a caller might still pass (matching the
         // shared-options-shape convenience
-        // core/AvatarVehicleInteractionIntent.js/core/AvatarVehicleDismountIntent.js
+        // core/vehicles/AvatarVehicleInteractionIntent.js/core/AvatarVehicleDismountIntent.js
         // already established for their own one-shot vocabularies) is
         // simply irrelevant here — this function has no state to fold
         // it into at all.
@@ -164,7 +164,7 @@ async function runTests() {
     // vocabulary and mapping only
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../core/AvatarVehicleBrakingIntent.js', import.meta.url);
+        const sourceUrl = new URL('../core/vehicles/AvatarVehicleBrakingIntent.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -187,23 +187,23 @@ async function runTests() {
             'velocity', 'speed', 'position', 'rotation', 'collision', 'physics'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `31. core/AvatarVehicleBrakingIntent.js's own code never references "${term}" — a pure vocabulary and mapping only, never vehicle-aware, never capability/rate-aware, never movement, never raw input handling`);
+            assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `31. core/vehicles/AvatarVehicleBrakingIntent.js's own code never references "${term}" — a pure vocabulary and mapping only, never vehicle-aware, never capability/rate-aware, never movement, never raw input handling`);
         }
     }
     {
         // The strongest architectural regression: this file must not
         // even IMPORT anything — the intent must not need to know a
         // capability, a vehicle, or an input adapter exists.
-        const sourceUrl = new URL('../core/AvatarVehicleBrakingIntent.js', import.meta.url);
+        const sourceUrl = new URL('../core/vehicles/AvatarVehicleBrakingIntent.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         assert(!/^\s*import\b/m.test(source),
-            '32. core/AvatarVehicleBrakingIntent.js has no import statements at all — it does not depend on AvatarMovementBrakingCapability, AvatarVehicleBrakingInputAdapter, or anything else in this codebase');
+            '32. core/vehicles/AvatarVehicleBrakingIntent.js has no import statements at all — it does not depend on AvatarMovementBrakingCapability, AvatarVehicleBrakingInputAdapter, or anything else in this codebase');
     }
     {
-        const exportsModule = await import('../core/AvatarVehicleBrakingIntent.js');
+        const exportsModule = await import('../core/vehicles/AvatarVehicleBrakingIntent.js');
         const exportedNames = Object.keys(exportsModule).sort();
         assert(JSON.stringify(exportedNames) === JSON.stringify(['AvatarVehicleBrakingIntent', 'deriveAvatarVehicleBrakingIntent', 'isValidAvatarVehicleBrakingIntent']),
-            '33. core/AvatarVehicleBrakingIntent.js exports exactly the vocabulary, its validator, and the one transition function — nothing else');
+            '33. core/vehicles/AvatarVehicleBrakingIntent.js exports exactly the vocabulary, its validator, and the one transition function — nothing else');
     }
 
     console.log('✅ All Vehicle Braking Intent tests passed.');

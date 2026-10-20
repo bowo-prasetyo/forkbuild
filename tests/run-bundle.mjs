@@ -28,7 +28,7 @@ import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 import { build } from '../scripts/build.mjs';
 import { assert } from './support/Assert.js';
-import { challengeAt, isRemixChallenge } from '../core/BuildChallenge.js';
+import { challengeAt, isRemixChallenge } from '../core/challenge/BuildChallenge.js';
 import { prepareLinkOnlyShare } from '../application/publication/PublicationShareLink.js';
 import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
@@ -36,12 +36,12 @@ import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { ShowcaseLibrary } from '../core/library/ShowcaseLibrary.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { License, LicenseId } from '../core/License.js';
-import { embedCode, payloadFromLinkPreviewUrl } from '../core/ForkBuildAppLinks.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { License, LicenseId } from '../core/document/License.js';
+import { embedCode, payloadFromLinkPreviewUrl } from '../core/app/ForkBuildAppLinks.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
@@ -284,7 +284,7 @@ async function walkThePlaza(browser, base) {
     }
 }
 
-// Steem's and Blurt's posting switches (core/NetworkWriters.js), in the
+// Steem's and Blurt's posting switches (core/publication/NetworkWriters.js), in the
 // published build: off for a new visitor, so their settings page offers the
 // switch without the account form and the preferred network lists neither;
 // switched on, both appear. A device that already had an account saved to

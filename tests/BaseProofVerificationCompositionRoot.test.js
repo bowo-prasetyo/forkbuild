@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url';
 
-import { PublicationAnchor } from '../core/PublicationAnchor.js';
+import { PublicationAnchor } from '../core/publication/PublicationAnchor.js';
 import { ExternalProofVerifierRegistry } from '../application/anchoring/ExternalProofVerifierRegistry.js';
 import { ExternalAnchorVerifier } from '../application/anchoring/ExternalAnchorVerifier.js';
 import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerificationOutcome.js';

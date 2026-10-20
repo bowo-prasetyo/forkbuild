@@ -7,9 +7,9 @@ import {
     InventoryEntryKind,
     emptyAvatarInventory,
     withEntryAdded
-} from '../core/AvatarInventory.js';
-import { VehicleType } from '../core/VehicleType.js';
-import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
+} from '../core/avatar/AvatarInventory.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
+import { ANIMAL_SPECIES } from '../core/nature/WildlifeField.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 

@@ -1,6 +1,6 @@
 import { t } from '../i18n/i18n.js';
 
-// The Editor's note for a build started with Build here (core/BuildPlot.js):
+// The Editor's note for a build started with Build here (core/world/BuildPlot.js):
 // where it will stand once published, then where it stands, with a way to
 // go and see it, or to forget the spot.
 export default {

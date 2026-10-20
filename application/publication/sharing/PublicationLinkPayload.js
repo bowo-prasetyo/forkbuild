@@ -1,4 +1,4 @@
-// A Publication carried inside a link (`#/s/<payload>`, core/ForkBuildAppLinks.js):
+// A Publication carried inside a link (`#/s/<payload>`, core/app/ForkBuildAppLinks.js):
 // its Signed Claim and its build's exact bytes, as JSON, compressed with
 // deflate-raw and written as base64url behind a one-character format version.
 // The payload is not trusted: whoever opens it checks the signature and the
@@ -12,7 +12,7 @@ const FORMAT_VERSION = '1';
 // chat apps and social sites keep a link this long whole; a bigger build is
 // shared through the networks instead. Discord (2,000 characters a message)
 // and Telegram (4,096) refuse long messages sooner, so there the short link
-// of a build sent to everyone (core/ForkBuildAppLinks.js, noteLinkUrl()) or a
+// of a build sent to everyone (core/app/ForkBuildAppLinks.js, noteLinkUrl()) or a
 // distributed build's network link is the one to paste.
 export const MAX_LINK_PAYLOAD_LENGTH = 12000;
 

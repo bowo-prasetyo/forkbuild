@@ -7,7 +7,7 @@ import {
     DEFAULT_STEEM_API_NODES,
     DEFAULT_STEEM_EARLIEST_PERIOD,
     DEFAULT_STEEM_THREAD_ACCOUNTS
-} from '../../core/SteemReadingConfiguration.js';
+} from '../../core/networks/SteemReadingConfiguration.js';
 import { t } from '../i18n/i18n.js';
 
 // Where Steem announcements are read from (applies on the next load, like
@@ -20,7 +20,7 @@ export default {
     name: 'SteemReadingSettingsView',
     components: { NetworkWriterSwitch },
     setup() {
-        // The account form only while this device posts to Steem (core/NetworkWriters.js).
+        // The account form only while this device posts to Steem (core/publication/NetworkWriters.js).
         const { steemOn: postingOn } = useWritableNetworks();
         const store = inject('steemReadingConfigurationStore', null);
         const useCase = inject('setSteemReadingConfigurationUseCase', null);

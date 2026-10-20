@@ -138,7 +138,7 @@ export const SCHEMA_1_DOCUMENT = {
 
 // Fixture 4: Malformed documents for validation testing.
 // Fixture 4: Current era (schema 2): SCHEMA_1_DOCUMENT with its bricks
-// as a table (core/BrickTable.js).
+// as a table (core/building/BrickTable.js).
 export const CURRENT_DOCUMENT = {
     schemaVersion: 2,
     world: {

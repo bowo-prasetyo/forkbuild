@@ -1,10 +1,10 @@
 import { StorageProvider } from './StorageProvider.js';
 import { LocalStorageProvider } from './LocalStorageProvider.js';
-import { IpfsRemotePinningSettings } from '../core/IpfsRemotePinningSettings.js';
+import { IpfsRemotePinningSettings } from '../core/networks/IpfsRemotePinningSettings.js';
 
 const IPFS_REMOTE_PINNING_SETTINGS_STORE_KEY = 'ipfs-remote-pinning-settings';
 
-// Keeps core/IpfsRemotePinningSettings.js on this device: the endpoint and
+// Keeps core/networks/IpfsRemotePinningSettings.js on this device: the endpoint and
 // field names only. There is no place for a credential in what it saves.
 export class IpfsRemotePinningSettingsStore {
     constructor(storageProvider = new LocalStorageProvider()) {

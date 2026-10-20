@@ -1,4 +1,4 @@
-import { Brick } from '../../core/Brick.js';
+import { Brick } from '../../core/building/Brick.js';
 import { Command } from './Command.js';
 import { bricksMessage } from './HistoryDescription.js';
 

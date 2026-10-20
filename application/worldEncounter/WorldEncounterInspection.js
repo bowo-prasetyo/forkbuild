@@ -50,7 +50,7 @@
 // `isSigned` STAYS EXACTLY WHAT IT ALREADY WAS — NEVER `isVerified`,
 // NEVER `isTrusted`, NEVER `isAuthentic`. `isSigned === true` reports only
 // that the underlying publication carries signature material — the same
-// fact `core/WorldEncounter.js`'s own header already drew this line
+// fact `core/world/WorldEncounter.js`'s own header already drew this line
 // around: "never whether that signature verifies... and never anything
 // about trust." This milestone inspects a selection; it does not load the
 // signed material behind it and does not verify anything. Introducing
@@ -103,7 +103,7 @@
 //
 // ARCHITECTURAL BOUNDARY — THIS FILE IMPORTS NOTHING. Exactly like 0.9.1's
 // and 0.9.2's own modules, it performs no join back into `core/`, so it
-// never needs `core/WorldEncounter.js`'s own `deriveWorldEncounters()`,
+// never needs `core/world/WorldEncounter.js`'s own `deriveWorldEncounters()`,
 // `application/worldEncounter/WorldEncounterReadModel.js`, or
 // `application/worldEncounter/WorldEncounterView.js` themselves — a caller already
 // holding 0.9.2's own `view` result (or `WorldEncounterCanvas`'s own

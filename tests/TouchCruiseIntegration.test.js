@@ -1,4 +1,4 @@
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
@@ -6,8 +6,8 @@ import { WorldNavigationSession } from '../application/world/WorldNavigationSess
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { TouchMovementInput, cruiseChord } from '../application/avatar/TouchMovementInput.js';
-import { AvatarContinuousMovementIntent as Intent } from '../core/AvatarContinuousMovementIntent.js';
-import { AvatarContinuousMovementMode as Mode } from '../core/AvatarContinuousMovementMode.js';
+import { AvatarContinuousMovementIntent as Intent } from '../core/avatar/AvatarContinuousMovementIntent.js';
+import { AvatarContinuousMovementMode as Mode } from '../core/avatar/AvatarContinuousMovementMode.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 

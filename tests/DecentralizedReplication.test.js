@@ -1,10 +1,10 @@
-import { CausalStamp } from '../core/CausalStamp.js';
-import { RevisionReference } from '../core/RevisionReference.js';
-import { ConflictSet } from '../core/ConflictSet.js';
-import { PlacementRecord } from '../core/PlacementRecord.js';
-import { Position } from '../core/Position.js';
-import { SpatialBounds } from '../core/SpatialBounds.js';
-import { Signature } from '../core/Signature.js';
+import { CausalStamp } from '../core/collaboration/CausalStamp.js';
+import { RevisionReference } from '../core/document/RevisionReference.js';
+import { ConflictSet } from '../core/collaboration/ConflictSet.js';
+import { PlacementRecord } from '../core/publication/PlacementRecord.js';
+import { Position } from '../core/document/Position.js';
+import { SpatialBounds } from '../core/world/SpatialBounds.js';
+import { Signature } from '../core/publication/Signature.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';

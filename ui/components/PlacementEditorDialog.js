@@ -31,7 +31,7 @@
 // shown for.
 //
 // "Move to its grid spot" fills the form with the placement's own spot on
-// the id-keyed grid (core/DeterministicGridPlacement.js), where a build is
+// the id-keyed grid (core/world/DeterministicGridPlacement.js), where a build is
 // placed when it is published: a way back for a build placed round the
 // challenge plaza from 2026-10-12 to 2026-10-17. Like the nudges it only
 // fills the form; Move still submits it, with the same overlap check.
@@ -40,7 +40,7 @@
 // since the caller (WorldNavigationSession.movePlacement) constructs
 // whatever position type MoveWorldPlacementUseCase expects.
 import { t } from '../i18n/i18n.js';
-import { computeDeterministicGridPosition } from '../../core/DeterministicGridPlacement.js';
+import { computeDeterministicGridPosition } from '../../core/world/DeterministicGridPlacement.js';
 const STEP_PRESETS = [1, 10, 100];
 
 export default {

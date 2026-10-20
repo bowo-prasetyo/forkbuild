@@ -1,14 +1,14 @@
-import { AvatarProfileVisibilityPolicy } from '../core/AvatarProfileVisibilityPolicy.js';
-import { PresenceVisibilityPolicy } from '../core/PresenceVisibilityPolicy.js';
+import { AvatarProfileVisibilityPolicy } from '../core/avatar/AvatarProfileVisibilityPolicy.js';
+import { PresenceVisibilityPolicy } from '../core/avatar/PresenceVisibilityPolicy.js';
 import { PeerAvatarPresenceBroadcastProvider } from '../presence/PeerAvatarPresenceBroadcastProvider.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarProfileSyncService } from '../application/avatar/AvatarProfileSyncService.js';
 import { RemoteAvatarAppearanceRegistry } from '../application/avatar/RemoteAvatarAppearanceRegistry.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { toAvatarProfileAdvertisement } from '../core/AvatarProfileAdvertisement.js';
+import { toAvatarProfileAdvertisement } from '../core/avatar/AvatarProfileAdvertisement.js';
 import { signAvatarProfileAdvertisement } from '../application/avatar/AvatarProfileSigning.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
@@ -21,12 +21,12 @@ import { GridPlacementStrategy } from '../application/placement/InitialPlacement
 import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
 import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { License, LicenseId } from '../core/License.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { License, LicenseId } from '../core/document/License.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
@@ -40,9 +40,9 @@ import { assert } from './support/Assert.js';
 // with authenticated peer messaging, while preserving the entire
 // 0.2.41 profile trust model." The identical claim tests/
 // PeerAvatarPresence.test.js already proved for presence in 0.2.53,
-// proved here for profile: core/AvatarProfile.js, core/
-// AvatarProfileAdvertisement.js, core/AvatarProfileIngestion.js,
-// core/AvatarProfileEquivocation.js, application/
+// proved here for profile: core/avatar/AvatarProfile.js, core/
+// AvatarProfileAdvertisement.js, core/avatar/AvatarProfileIngestion.js,
+// core/avatar/AvatarProfileEquivocation.js, application/
 // AvatarProfileTrustBoundary.js, application/avatar/AvatarProfileSigning.js,
 // application/avatar/LocalAvatarProfileStore.js, and application/
 // RemoteAvatarAppearanceRegistry.js are every one of them completely
@@ -62,9 +62,9 @@ import { assert } from './support/Assert.js';
 // applied when it reused LocalAvatarPresenceBroadcastProvider
 // directly for profile's own BroadcastChannel in 0.2.41.
 //
-//   Section A: core/AvatarProfileVisibilityPolicy.js — the one new
+//   Section A: core/avatar/AvatarProfileVisibilityPolicy.js — the one new
 //              file, and its deliberate independence from
-//              core/PresenceVisibilityPolicy.js
+//              core/avatar/PresenceVisibilityPolicy.js
 //   Section B: presence/PeerAvatarPresenceBroadcastProvider.js reused
 //              for TWO independent protocols on the SAME shared bus —
 //              proving presence and profile never cross-talk even
@@ -166,7 +166,7 @@ async function runTests() {
     const registry = buildRegistry();
 
     // -------------------------------------------------------------
-    // Section A — core/AvatarProfileVisibilityPolicy.js
+    // Section A — core/avatar/AvatarProfileVisibilityPolicy.js
     // -------------------------------------------------------------
     {
         const policy = new AvatarProfileVisibilityPolicy();

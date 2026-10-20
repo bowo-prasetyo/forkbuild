@@ -1,15 +1,15 @@
-import { derivePlaceContexts, describeLocation } from '../../core/WorldCurationContext.js';
-import { deriveWorldWelcomeContext } from '../../core/WorldWelcomeContext.js';
-import { groupRegionsByPlaceIdentity } from '../../core/PlaceIdentity.js';
-import { geographicPlaceForRegion } from '../../core/GeographicPlaceResolution.js';
-import { buildGeographicPlaceDirectory, geographicPlaceByKey } from '../../core/GeographicPlaceDirectory.js';
+import { derivePlaceContexts, describeLocation } from '../../core/collaboration/WorldCurationContext.js';
+import { deriveWorldWelcomeContext } from '../../core/world/WorldWelcomeContext.js';
+import { groupRegionsByPlaceIdentity } from '../../core/world/PlaceIdentity.js';
+import { geographicPlaceForRegion } from '../../core/world/GeographicPlaceResolution.js';
+import { buildGeographicPlaceDirectory, geographicPlaceByKey } from '../../core/world/GeographicPlaceDirectory.js';
 import {
     DEFAULT_NEARBY_GEOGRAPHIC_PLACE_RADIUS, deriveNearbyGeographicPlaces, geographicPlaceLocationId,
     isGeographicPlaceLocationId, geographicPlaceFingerprintKeyFromLocationId,
     searchGeographicPlaces as searchGeographicPlaceRows
-} from '../../core/GeographicPlaceNavigation.js';
-import { deriveWorldFocusContext, WorldFocusKind } from '../../core/WorldFocusContext.js';
-import { regionsContaining, describePlace } from '../../core/WorldRegionGeography.js';
+} from '../../core/world/GeographicPlaceNavigation.js';
+import { deriveWorldFocusContext, WorldFocusKind } from '../../core/world/WorldFocusContext.js';
+import { regionsContaining, describePlace } from '../../core/world/WorldRegionGeography.js';
 import { LOCATION_FOCUS_OFFSET } from './constants.js';
 
 // WorldNavigationSession read-only place queries: locations, collaborators,
@@ -49,7 +49,7 @@ export const placeQueryMethods = {
                     activity: device.activity,
                     activityTarget: this._resolveSpatialContextualLabel(device.selection),
                     // Carried through so a "Follow" affordance built on
-                    // top of this row (see core/WorldWelcomeContext.js's
+                    // top of this row (see core/world/WorldWelcomeContext.js's
                     // nearby-collaborator shape) can call
                     // focusCollaborator(deviceId) directly.
                     deviceId: device.deviceId
@@ -61,7 +61,7 @@ export const placeQueryMethods = {
 
     // Derived place contexts around landmarks: the landmark plus nearby
     // structures, landmarks and collaborators. Never persisted or authoritative;
-    // see core/WorldCurationContext.js.
+    // see core/collaboration/WorldCurationContext.js.
     getPlaceContexts(resolveDisplayName) {
         const landmarks = [];
         const structurePlacements = [];
@@ -148,7 +148,7 @@ export const placeQueryMethods = {
     // Derives a WorldWelcomeContext for the active document's World from the
     // landmarks/structures getPlaceContexts() gathers, the live spatial roster
     // and the avatar's position (or the camera's). Never persisted, never
-    // mutates. See core/WorldWelcomeContext.js and docs/Principles.md,
+    // mutates. See core/world/WorldWelcomeContext.js and docs/Principles.md,
     // "Exploration Guides Attention, Never Ownership or Mutation". Null with no
     // active document.
     getWelcomeContext(resolveDisplayName) {
@@ -231,7 +231,7 @@ export const placeQueryMethods = {
     // Every WorldRegion in its own native per-World coordinates, not offset
     // into the shared layout. That offset only keeps loaded Worlds from
     // overlapping on screen; using it would make cross-World geographic
-    // comparison meaningless. core/PlaceFingerprint.js/PlaceIdentity.js only
+    // comparison meaningless. core/world/PlaceFingerprint.js/PlaceIdentity.js only
     // ever see these positions.
     _collectRawRegions() {
         const regions = [];
@@ -251,7 +251,7 @@ export const placeQueryMethods = {
         return regions;
     },
 
-    // core/PlaceIdentity.js#groupRegionsByPlaceIdentity(), applied to
+    // core/world/PlaceIdentity.js#groupRegionsByPlaceIdentity(), applied to
     // every region across every currently loaded document. Pure
     // geometry — candidacy only; see that module's own header on why a
     // matching fingerprint is never treated as proof that two regions
@@ -262,7 +262,7 @@ export const placeQueryMethods = {
 
     // The combined naming view for the geographic place `regionId` belongs to:
     // every known region sharing its fingerprint and every claim on any of them,
-    // ranked by distinct authors (see core/GeographicPlaceResolution.js).
+    // ranked by distinct authors (see core/world/GeographicPlaceResolution.js).
     // Returns `{ regions, namingView }`; `namingView` is [] when naming claims
     // aren't wired. Always safe to call.
     getGeographicNamingView(regionId, options = {}) {
@@ -373,7 +373,7 @@ export const placeQueryMethods = {
                     id: placement.id,
                     // The placed structure's own content document: "Edit a Copy" forks this,
                     // never the World document that positions it (see
-                    // core/WorldFocusContext.js). Same id WorldView.js#openStructureSource()
+                    // core/world/WorldFocusContext.js). Same id WorldView.js#openStructureSource()
                     // loads.
                     documentId: placement.documentId,
                     title: this.getSavedDocumentTitle(placement.documentId),
@@ -459,7 +459,7 @@ export const placeQueryMethods = {
     },
 
     // A derived filter over getGeographicPlaceDirectory() (see
-    // core/GeographicPlaceNavigation.js#searchGeographicPlaces()); no second
+    // core/world/GeographicPlaceNavigation.js#searchGeographicPlaces()); no second
     // index, re-derived on every call.
     searchGeographicPlaces(query, options = {}) {
         return searchGeographicPlaceRows(this.getGeographicPlaceDirectory(options), query);
@@ -482,7 +482,7 @@ export const placeQueryMethods = {
     },
 
     // Every named region containing the viewer, innermost first; see
-    // core/WorldRegionGeography.js#regionsContaining().
+    // core/world/WorldRegionGeography.js#regionsContaining().
     getCurrentRegionPath() {
         const position = this.getAvatarPosition() || this.getCameraPosition();
         if (!position) {
@@ -507,7 +507,7 @@ export const placeQueryMethods = {
     // streaming radius. Positions are offset into shared layout space like
     // _collectRegions(). `resolveDisplayName` is optional.
     //
-    // A pure read. See core/WorldMapProjection.js and
+    // A pure read. See core/world/WorldMapProjection.js and
     // ui/components/WorldMapPanel.js.
     getMapContent(resolveDisplayName) {
         const landmarks = [];

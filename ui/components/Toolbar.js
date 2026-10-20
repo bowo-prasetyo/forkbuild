@@ -3,7 +3,7 @@ import LoginModal from './LoginModal.js';
 import RemixPermissionDialog from './RemixPermissionDialog.js';
 import FindabilityDialog from './FindabilityDialog.js';
 import SimilarBuildDialog from './SimilarBuildDialog.js';
-import { License, LicenseId } from '../../core/License.js';
+import { License, LicenseId } from '../../core/document/License.js';
 import { UpdateDocumentMetadataUseCase } from '../../application/document/UpdateDocumentMetadataUseCase.js';
 import { saveFailureMessage } from './saveFailureMessages.js';
 import { saveDocument } from './saveDocument.js';
@@ -76,7 +76,7 @@ export default {
             required: true
         },
         // 0.6.1 — World ↔ Editor Continuity & Return Navigation. The
-        // EditorEntryContext (core/EditorEntryContext.js) EditorView
+        // EditorEntryContext (core/document/EditorEntryContext.js) EditorView
         // decoded off the fork that opened the CURRENTLY open document,
         // or null — see that view's own `entryContext` ref header for
         // exactly when it's null (every non-"Edit a Copy" way to reach
@@ -216,7 +216,7 @@ export default {
         // (RemixPermissionDialog); the answer becomes its license.
         const askRemixPermission = ref(false);
         // A build started from something ready-made with nothing of the
-        // builder's own in it yet (core/PlacedBricks.js) is asked about once,
+        // builder's own in it yet (core/building/PlacedBricks.js) is asked about once,
         // kindly: publishing it untouched isn't building it
         // (docs/reviews/CreativeDirection-2026-10-12b.md, finding 2).
         const askNothingAdded = ref(false);

@@ -1,5 +1,5 @@
-import { PublicationHeart } from '../../../core/PublicationHeart.js';
-import { message } from '../../../core/Message.js';
+import { PublicationHeart } from '../../../core/publication/PublicationHeart.js';
+import { message } from '../../../core/app/Message.js';
 import { requireSigningIdentityId } from '../../../identity/SigningReadiness.js';
 
 // Gives the signed-in identity's heart to a Publication, or takes it back:

@@ -1,10 +1,10 @@
-import { Structure } from '../core/Structure.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { deriveBlueprintFingerprint } from '../core/BlueprintFingerprint.js';
-import { BlueprintAttribution } from '../core/BlueprintAttribution.js';
-import { BlueprintLineageClaim } from '../core/BlueprintLineageClaim.js';
-import { PublicationAnchor } from '../core/PublicationAnchor.js';
+import { Structure } from '../core/building/Structure.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { deriveBlueprintFingerprint } from '../core/building/BlueprintFingerprint.js';
+import { BlueprintAttribution } from '../core/building/BlueprintAttribution.js';
+import { BlueprintLineageClaim } from '../core/building/BlueprintLineageClaim.js';
+import { PublicationAnchor } from '../core/publication/PublicationAnchor.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import {
     buildBlueprintPackage,
@@ -161,7 +161,7 @@ async function run() {
 
         // Multiple, independently signed, differently-typed anchors — all
         // preserved, no dedup by anchorType/contentHash/locator, no
-        // ranking, mirroring core/PublicationAnchor.js's own multi-evidence
+        // ranking, mirroring core/publication/PublicationAnchor.js's own multi-evidence
         // coexistence rule.
         const anotherBitcoinAnchor = signAnchor(alice, {
             publicationId: 'pub-farmstead', contentHash, anchorType: 'bitcoin-op-return',

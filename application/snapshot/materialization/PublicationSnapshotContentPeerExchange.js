@@ -1,5 +1,5 @@
 import { EventBus } from '../../../core/events/EventBus.js';
-import { ContentReference } from '../../../core/ContentReference.js';
+import { ContentReference } from '../../../core/document/ContentReference.js';
 import {
     PeerSnapshotContentMessageKind,
     MAX_SNAPSHOT_CONTENT_BYTES,
@@ -50,7 +50,7 @@ const TRANSFER_PROGRESS_EVENT = 'PublicationSnapshotContentPeerExchangeTransferP
 // locator's own claim) already do. See application/
 // MaterializeSnapshotFromPeerUseCase.js — the one and only caller this
 // class should ever have — for where the received bytes actually meet
-// `core/ContentReference.js#verify()`. A second caller that trusted this
+// `core/document/ContentReference.js#verify()`. A second caller that trusted this
 // class's own onContentReceived() bytes without routing them through that
 // boundary first would defeat the entire point of 0.8.36 having built one.
 //

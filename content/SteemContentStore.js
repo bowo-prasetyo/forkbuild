@@ -1,10 +1,10 @@
 import { ContentStore, ContentTooLargeError } from './ContentStore.js';
 import { ContentUnavailableError } from './IpfsContentStore.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { CONTENT_HASH_ALGORITHM, computeContentHash } from '../serializer/contentHash.js';
-import { STEEM_CONTENT_FAMILY, steemDiscoveryThreadPermlink } from '../core/SteemDiscoveryThread.js';
-import { STEEM_RC_REFUSAL } from '../core/SteemResourceCredits.js';
-import { steemPublicationViewUrl } from '../core/ForkBuildAppLinks.js';
+import { STEEM_CONTENT_FAMILY, steemDiscoveryThreadPermlink } from '../core/networks/SteemDiscoveryThread.js';
+import { STEEM_RC_REFUSAL } from '../core/networks/SteemResourceCredits.js';
+import { steemPublicationViewUrl } from '../core/app/ForkBuildAppLinks.js';
 import {
     STEEM_CONTENT_MAX_PARTS,
     STEEM_CONTENT_PART_MAX_BYTES,
@@ -21,7 +21,7 @@ import {
     steemContentPartOperations,
     steemContentPartPermlink,
     steemContentPartProblem
-} from '../core/SteemContentManifest.js';
+} from '../core/networks/SteemContentManifest.js';
 
 // Stores content on Steem (docs/Protocol.md, "Proposed: Steem Content
 // Storage"): a manifest replying to the current month's content thread,

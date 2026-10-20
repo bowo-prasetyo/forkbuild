@@ -1,9 +1,9 @@
-import { WorldRegion } from '../../core/WorldRegion.js';
-import { Position } from '../../core/Position.js';
-import { RegionKind } from '../../core/RegionKind.js';
-import { createId } from '../../core/createId.js';
+import { WorldRegion } from '../../core/world/WorldRegion.js';
+import { Position } from '../../core/document/Position.js';
+import { RegionKind } from '../../core/world/RegionKind.js';
+import { createId } from '../../core/document/createId.js';
 import { Command } from './Command.js';
-import { message } from '../../core/Message.js';
+import { message } from '../../core/app/Message.js';
 
 // 0.5.0 — World Regions & Decentralized Place Naming.
 //
@@ -11,7 +11,7 @@ import { message } from '../../core/Message.js';
 // specified position. Mirrors application/commands/CreateWorldLandmarkCommand.js
 // exactly: execute() creates the region's identity, it doesn't receive
 // one, and mints its own id via createId() on first execute() since
-// core/WorldRegion.js requires one explicitly.
+// core/world/WorldRegion.js requires one explicitly.
 //
 // _executedRegionId tracks what was created for undo() correctness AND
 // is included in toJSON(), the same "redo() must recreate the SAME

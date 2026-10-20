@@ -9,7 +9,7 @@ import { WorldEncounterMaterialIdentityVerifier } from '../application/worldEnco
 import { WorldEncounterMaterialSignatureVerifier } from '../application/worldEncounter/WorldEncounterMaterialSignatureVerifier.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
-import { WorldEncounterKind } from '../core/WorldEncounter.js';
+import { WorldEncounterKind } from '../core/world/WorldEncounter.js';
 import { assert } from './support/Assert.js';
 import { serialize } from './support/Serialize.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
@@ -318,7 +318,7 @@ function signedPublication(identityProvider, overrides = {}) {
 
     assert(!codeOnly.includes('WorldEncounterMaterialIdentityVerifier'), '24. never imports or knows about the 0.9.38 identity verifier by name');
     assert(!codeOnly.includes('WorldEncounterMaterialSignatureVerifier'), '25. never imports or knows about the 0.9.41 signature verifier by name');
-    assert(!codeOnly.includes('WorldEncounterKind'), '26. never imports core/WorldEncounter.js — no kind-specific applicability policy of its own');
+    assert(!codeOnly.includes('WorldEncounterKind'), '26. never imports core/world/WorldEncounter.js — no kind-specific applicability policy of its own');
     assert(!/\bresolvedSelection\.\w/.test(codeOnly), '27. never reads a field off resolvedSelection');
     assert(!/\bmaterial\.\w/.test(codeOnly), '28. never reads a field off material');
     assert(!/\bresolvedLead\.\w/.test(codeOnly), '29. never reads a field off resolvedLead');

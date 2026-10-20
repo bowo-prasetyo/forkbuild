@@ -5,12 +5,12 @@ import { PublicationContentCache } from '../world/PublicationContentCache.js';
 import { ResolvePublicationUseCase } from '../application/publication/ResolvePublicationUseCase.js';
 import { DiscoverWorldAreaUseCase } from '../application/discovery/DiscoverWorldAreaUseCase.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { Document } from '../core/Document.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { Document } from '../core/document/Document.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { Publication } from '../publisher/Publication.js';
 import { assert } from './support/Assert.js';
 

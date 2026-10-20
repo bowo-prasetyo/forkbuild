@@ -3,7 +3,7 @@ import {
     getRendezvousAnswerSigningDescriptor,
     getRendezvousPublicationSigningDescriptor,
     getRendezvousRemovalSigningDescriptor
-} from '../core/RendezvousPublicationEnvelope.js';
+} from '../core/social/RendezvousPublicationEnvelope.js';
 
 // The reference rendezvous server (server/rendezvous-worker/) now refuses
 // unsigned publications and removals, so on a real network an unsigned
@@ -16,7 +16,7 @@ import {
 // signAvatarPresenceAdvertisement(): optional by construction (an
 // identityProvider that cannot sign, or isn't currently authenticated,
 // simply returns the publication UNCHANGED — signing a publication is
-// never required for publish() to work, matching core/Signature.js's own
+// never required for publish() to work, matching core/publication/Signature.js's own
 // RENDEZVOUS_PUBLICATION header), and never a mutation — see
 // peer/RendezvousPublication.js#withSignature, the only method this ever
 // calls.

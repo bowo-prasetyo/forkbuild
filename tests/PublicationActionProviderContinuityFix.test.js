@@ -1,7 +1,7 @@
 
 import { Publication } from '../publisher/Publication.js';
-import { ContentReference } from '../core/ContentReference.js';
-import { License, LicenseId } from '../core/License.js';
+import { ContentReference } from '../core/document/ContentReference.js';
+import { License, LicenseId } from '../core/document/License.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { CompositeDiscoveryProvider } from '../discovery/CompositeDiscoveryProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
@@ -17,9 +17,9 @@ import { DocumentCloneService } from '../application/document/DocumentCloneServi
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
-import { World } from '../core/World.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
@@ -298,7 +298,7 @@ async function run() {
         // stays local-only via _resolvePublicationForPlacement() (Section D).
         assert(session.getPlacementInfoForPublication(publicationId) === null, 'F1. No PlacementRecord exists merely because resolution now succeeds — getPlacementInfoForPublication() still returns null.');
 
-        const { PlacementRecord } = await import('../core/PlacementRecord.js');
+        const { PlacementRecord } = await import('../core/publication/PlacementRecord.js');
         placementRegistry.add(new PlacementRecord({ publicationId, position: { x: 1, y: 0, z: 1 }, owner: 'erin' }));
         assert(session.getPlacementInfoForPublication(publicationId) !== null, 'F2. A PlacementRecord only ever appears after the existing, explicit placement mechanism (placementRegistry.add(), reached via PlacePublicationUseCase/an explicit placement action) — never as a byproduct of resolution becoming reachable.');
 

@@ -1,4 +1,4 @@
-import { BitcoinEsploraConfiguration } from '../../core/BitcoinEsploraConfiguration.js';
+import { BitcoinEsploraConfiguration } from '../../core/networks/BitcoinEsploraConfiguration.js';
 import { BitcoinEsploraConfigurationStore } from '../../storage/BitcoinEsploraConfigurationStore.js';
 
 // Bitcoin Esplora Endpoint Settings Write Use Case. Mirrors application/
@@ -16,7 +16,7 @@ export class SetBitcoinEsploraConfigurationUseCase {
     }
 
     // Takes either `apiUrls` (the settings page's list) or a single `apiUrl`;
-    // core/BitcoinEsploraConfiguration.js rejects both or neither.
+    // core/networks/BitcoinEsploraConfiguration.js rejects both or neither.
     execute({ apiUrl, apiUrls } = {}) {
         const configuration = new BitcoinEsploraConfiguration(apiUrls !== undefined ? { apiUrls } : { apiUrl });
         this._store.save(configuration);

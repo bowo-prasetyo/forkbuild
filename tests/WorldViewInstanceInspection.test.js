@@ -1,12 +1,12 @@
 import { BrickInstanceRegistry } from '../renderer/BrickInstanceRegistry.js';
 import * as THREE from 'three';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { StructurePlacement } from '../core/StructurePlacement.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { StructurePlacement } from '../core/building/StructurePlacement.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
@@ -24,7 +24,7 @@ import { WorldRenderer } from '../renderer/WorldRenderer.js';
 import { PlacementMeshRegistry } from '../renderer/PlacementMeshRegistry.js';
 import { SpatialSelectionRenderer } from '../renderer/SpatialSelectionRenderer.js';
 import { TransformMath } from '../application/editor/TransformMath.js';
-import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
@@ -339,7 +339,7 @@ async function run() {
             session._session.pickPlacement = () => ({ placementId: placement.id, point: new Position(5, 0, 5), distance: 8 });
             session.pick(400, 300);
 
-            // core/Position.js stores x/y/z behind getters on the
+            // core/document/Position.js stores x/y/z behind getters on the
             // prototype, not as own enumerable properties — a `{ ...position }`
             // spread silently captures nothing useful, so read the axes
             // explicitly instead.

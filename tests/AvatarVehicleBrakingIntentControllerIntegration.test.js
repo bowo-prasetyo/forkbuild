@@ -1,9 +1,9 @@
 import { readFile } from 'node:fs/promises';
 import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
-import { VehicleType } from '../core/VehicleType.js';
-import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
-import { AvatarVehicleBrakingIntent } from '../core/AvatarVehicleBrakingIntent.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
+import { resolveAvatarVehicleMovementCapability } from '../core/vehicles/AvatarVehicleMovementCapability.js';
+import { AvatarVehicleBrakingIntent } from '../core/vehicles/AvatarVehicleBrakingIntent.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
@@ -13,8 +13,8 @@ import { assert } from './support/Assert.js';
 
 // 0.9.95 — Vehicle Braking Intent, controller integration.
 //
-// core/AvatarVehicleBrakingIntent.js (NONE/BRAKE) and
-// core/AvatarVehicleBrakingInputAdapter.js (a raw control fact ->
+// core/vehicles/AvatarVehicleBrakingIntent.js (NONE/BRAKE) and
+// core/vehicles/AvatarVehicleBrakingInputAdapter.js (a raw control fact ->
 // { brakeRequested }) are both pure and, on their own, prove nothing
 // about REAL movement — see each file's own test suite for that half.
 // This suite proves the other half: that
@@ -23,7 +23,7 @@ import { assert } from './support/Assert.js';
 // (0.9.95) genuinely closes the gap `AvatarMovementState.brakingRequested`
 // left open since 0.9.92 — a real `AvatarMovementController`, driven only
 // through its own public methods, can now make `brakingRequested` true,
-// and `core/AvatarMovementSimulation.js`'s own existing braking-rate
+// and `core/avatar/AvatarMovementSimulation.js`'s own existing braking-rate
 // selection (unchanged since 0.9.92) genuinely uses it.
 //
 //   Section A: controller integration — setVehicleBrakingIntent(BRAKE)
@@ -81,7 +81,7 @@ function buildAvatarStack(registry, username) {
 }
 
 // The exact discrete "never overshoots" recurrence
-// core/AvatarMovementAccelerationSimulation.js#resolveMovementSpeed()
+// core/avatar/AvatarMovementAccelerationSimulation.js#resolveMovementSpeed()
 // itself implements — reproduced here, bit-for-bit the same operations
 // in the same order, purely to compute EXPECTED per-tick speeds for this
 // file's own assertions. Never imported from production code: this file
@@ -197,14 +197,14 @@ async function runTests() {
         // The three braking rates (6/9/8) are mutually distinct, and
         // follow no simple ordering relative to movementSpeed (MOTORCYCLE
         // brakes hardest despite CAR's own higher movementSpeed) — the
-        // exact independence core/AvatarVehicleMovementCapability.js's
+        // exact independence core/vehicles/AvatarVehicleMovementCapability.js's
         // own 0.9.92 header establishes.
         const bicycle = resolveAvatarVehicleMovementCapability(VehicleType.BICYCLE);
         const motorcycle = resolveAvatarVehicleMovementCapability(VehicleType.MOTORCYCLE);
         const car = resolveAvatarVehicleMovementCapability(VehicleType.CAR);
         const drone = resolveAvatarVehicleMovementCapability(VehicleType.DRONE);
         assert(bicycle.braking.braking === 6 && motorcycle.braking.braking === 9 && car.braking.braking === 8 && drone.braking.braking === 7,
-            '7. BICYCLE/MOTORCYCLE/CAR/DRONE braking rates are exactly 6/9/8/7, matching core/AvatarVehicleMovementCapability.js — MOTORCYCLE brakes hardest despite CAR having the highest ground-vehicle movementSpeed, and DRONE (fastest overall) brakes more gently than either');
+            '7. BICYCLE/MOTORCYCLE/CAR/DRONE braking rates are exactly 6/9/8/7, matching core/vehicles/AvatarVehicleMovementCapability.js — MOTORCYCLE brakes hardest despite CAR having the highest ground-vehicle movementSpeed, and DRONE (fastest overall) brakes more gently than either');
     }
 
     // -------------------------------------------------------------
@@ -279,7 +279,7 @@ async function runTests() {
 
         // Press S (backward) AND request braking at the same time: the
         // TARGET becomes -movementSpeed (S's own existing meaning, per
-        // core/AvatarMovementSimulation.js's own forwardAxis * speed —
+        // core/avatar/AvatarMovementSimulation.js's own forwardAxis * speed —
         // completely untouched by this milestone), while the RATE
         // switches to BICYCLE's own braking (6), not left at acceleration
         // (3).
@@ -392,7 +392,7 @@ async function runTests() {
     // Note: AERIAL_VEHICLE/DRONE's own braking is now fully proven above,
     // in Section B's own loop (Aerial Movement Pipeline milestone made
     // DRONE supported, superseding its former "always blocked" behavior
-    // — see core/AvatarVehicleMovementCapability.js's own "AERIAL_VEHICLE
+    // — see core/vehicles/AvatarVehicleMovementCapability.js's own "AERIAL_VEHICLE
     // Is Now A Real, Supported Capability" header) — no separate section
     // is needed any more.
 
@@ -436,10 +436,10 @@ async function runTests() {
         assert(controllerCodeOnly.includes('setVehicleBrakingIntent') && controllerCodeOnly.includes('_resolvedBrakingRequested'),
             '36. sanity: this milestone\'s own two new methods are genuinely present in the shipped source');
 
-        const simulationSource = await readFile(new URL('../core/AvatarMovementSimulation.js', import.meta.url), 'utf8');
+        const simulationSource = await readFile(new URL('../core/avatar/AvatarMovementSimulation.js', import.meta.url), 'utf8');
         const simulationCodeOnly = simulationSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         assert(!/\bBICYCLE\b|\bMOTORCYCLE\b|\bCAR\b|\bDRONE\b/.test(simulationCodeOnly),
-            '37. core/AvatarMovementSimulation.js still never references BICYCLE/MOTORCYCLE/CAR/DRONE — braking remains vehicle-identity-free, exactly as 0.9.92 established and 0.9.95 leaves untouched');
+            '37. core/avatar/AvatarMovementSimulation.js still never references BICYCLE/MOTORCYCLE/CAR/DRONE — braking remains vehicle-identity-free, exactly as 0.9.92 established and 0.9.95 leaves untouched');
 
         // Comments legitimately name these terms when explaining what
         // was deliberately left out (see each file's own "Deliberately
@@ -448,15 +448,15 @@ async function runTests() {
         // convention tests/AvatarVehicleBrakingIntent.test.js's own
         // Section F and tests/AvatarVehicleBrakingInputAdapter.test.js's
         // own Section G already establish for these two files.
-        const intentSource = await readFile(new URL('../core/AvatarVehicleBrakingIntent.js', import.meta.url), 'utf8');
+        const intentSource = await readFile(new URL('../core/vehicles/AvatarVehicleBrakingIntent.js', import.meta.url), 'utf8');
         const intentCodeOnly = intentSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         assert(!/VehicleType|VehiclePresence|AvatarVehicleMount/.test(intentCodeOnly),
-            '38. core/AvatarVehicleBrakingIntent.js\'s own CODE never references VehicleType, VehiclePresence, or AvatarVehicleMount');
+            '38. core/vehicles/AvatarVehicleBrakingIntent.js\'s own CODE never references VehicleType, VehiclePresence, or AvatarVehicleMount');
 
-        const adapterSource = await readFile(new URL('../core/AvatarVehicleBrakingInputAdapter.js', import.meta.url), 'utf8');
+        const adapterSource = await readFile(new URL('../core/vehicles/AvatarVehicleBrakingInputAdapter.js', import.meta.url), 'utf8');
         const adapterCodeOnly = adapterSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         assert(!/VehicleType|VehiclePresence|AvatarVehicleMount/.test(adapterCodeOnly),
-            '39. core/AvatarVehicleBrakingInputAdapter.js\'s own CODE never references VehicleType, VehiclePresence, or AvatarVehicleMount either');
+            '39. core/vehicles/AvatarVehicleBrakingInputAdapter.js\'s own CODE never references VehicleType, VehiclePresence, or AvatarVehicleMount either');
     }
 
     console.log('✅ All Vehicle Braking Intent Controller Integration tests passed.');

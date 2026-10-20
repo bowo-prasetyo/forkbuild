@@ -1,32 +1,32 @@
-import { AvatarMovementState } from '../core/AvatarMovementState.js';
-import { simulateAvatarMovement } from '../core/AvatarMovementSimulation.js';
-import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
-import { AvatarVerticalState, deriveAvatarVerticalState, isValidAvatarVerticalState } from '../core/AvatarVerticalState.js';
-import { deriveWorldSpatialActivity, WorldSpatialActivity, isValidWorldSpatialActivity } from '../core/WorldSpatialActivity.js';
-import { isStepClimbable, DEFAULT_MAX_STEP_HEIGHT } from '../core/BrickWalkability.js';
+import { AvatarMovementState } from '../core/avatar/AvatarMovementState.js';
+import { simulateAvatarMovement } from '../core/avatar/AvatarMovementSimulation.js';
+import { AvatarAnimationState } from '../core/avatar/AvatarAnimationState.js';
+import { AvatarVerticalState, deriveAvatarVerticalState, isValidAvatarVerticalState } from '../core/avatar/AvatarVerticalState.js';
+import { deriveWorldSpatialActivity, WorldSpatialActivity, isValidWorldSpatialActivity } from '../core/collaboration/WorldSpatialActivity.js';
+import { isStepClimbable, DEFAULT_MAX_STEP_HEIGHT } from '../core/building/BrickWalkability.js';
 import { AvatarStepConstraint } from '../application/avatar/AvatarStepConstraint.js';
 import { AvatarMovementConstraint } from '../application/avatar/AvatarMovementConstraint.js';
 import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
 // 0.3.4 — Vertical World Navigation.
 //
-//   Section A: core/AvatarVerticalState.js        — the pure SUPPORTED/RISING/FALLING vocabulary
-//   Section B: core/AvatarMovementSimulation.js    — `result.verticalState`, derived, not duplicated
+//   Section A: core/avatar/AvatarVerticalState.js        — the pure SUPPORTED/RISING/FALLING vocabulary
+//   Section B: core/avatar/AvatarMovementSimulation.js    — `result.verticalState`, derived, not duplicated
 //   Section C: application/avatar/AvatarStepConstraint.js — a step DOWN beyond maxStepHeight now falls
 //   Section D: application/avatar/AvatarMovementController.js — falling flips `grounded` for the next tick
-//   Section E: core/WorldSpatialActivity.js        — the JUMPING/FALLING vocabulary extension
+//   Section E: core/collaboration/WorldSpatialActivity.js        — the JUMPING/FALLING vocabulary extension
 //   Section F: FLAGSHIP — climb, walk off the edge, fall, land, jump, determinism
 //   Section G: Edge case — falling lands on a SLOPE's own per-point surface,
 //              never a brick's flat bounding-box max
@@ -38,7 +38,7 @@ import { assert } from './support/Assert.js';
 // SAME function 0.3.2/0.3.3 already built — is what a walking step snaps
 // onto AND what a falling avatar lands on. No physics engine, no rigid
 // bodies, no momentum beyond the one signed `verticalVelocity` scalar
-// core/AvatarMovementSimulation.js has carried since 0.2.36.
+// core/avatar/AvatarMovementSimulation.js has carried since 0.2.36.
 
 function almostEqual(a, b, epsilon = 1e-6) {
     return Math.abs(a - b) < epsilon;
@@ -81,7 +81,7 @@ async function runTests() {
     const slope = brickRegistry.get('core:slope_45');
 
     // -------------------------------------------------------------
-    // Section A — core/AvatarVerticalState.js: a pure label over
+    // Section A — core/avatar/AvatarVerticalState.js: a pure label over
     // existing grounded/verticalVelocity bookkeeping, nothing more.
     // -------------------------------------------------------------
     {
@@ -105,7 +105,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section B — core/AvatarMovementSimulation.js: the pure kinematics
+    // Section B — core/avatar/AvatarMovementSimulation.js: the pure kinematics
     // now report `verticalState` alongside `grounded`/`verticalVelocity`
     // — additive, derived, never a second source of truth.
     // -------------------------------------------------------------
@@ -258,7 +258,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section E — core/WorldSpatialActivity.js: the JUMPING/FALLING
+    // Section E — core/collaboration/WorldSpatialActivity.js: the JUMPING/FALLING
     // vocabulary extension. Backward compatible — every pre-0.3.4
     // caller that never mentions rising/falling gets byte-for-byte the
     // same vocabulary as before.
@@ -325,7 +325,7 @@ async function runTests() {
             `FLAGSHIP sanity (${username}): the avatar is genuinely back on the ground before Phase D begins — increase the tick budget above if this ever fails`);
 
         // Phase D — Space only ever jumps while grounded (see
-        // core/AvatarMovementSimulation.js, unchanged since 0.2.36):
+        // core/avatar/AvatarMovementSimulation.js, unchanged since 0.2.36):
         // RISING -> apex -> FALLING -> landing.
         controller.keyDown(' ');
         for (let i = 0; i < 10; i++) {

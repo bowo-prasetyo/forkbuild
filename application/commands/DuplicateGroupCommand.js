@@ -1,9 +1,9 @@
-import { Brick } from '../../core/Brick.js';
-import { Group } from '../../core/Group.js';
-import { Position } from '../../core/Position.js';
+import { Brick } from '../../core/building/Brick.js';
+import { Group } from '../../core/building/Group.js';
+import { Position } from '../../core/document/Position.js';
 import { Command } from './Command.js';
 import { descriptionFromJSON, descriptionToJSON } from './HistoryDescription.js';
-import { message } from '../../core/Message.js';
+import { message } from '../../core/app/Message.js';
 
 // Duplicates a group: fresh brick identities (definitionId/rotation
 // copied, position shifted by the intent offset) plus a fresh group

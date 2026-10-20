@@ -1,6 +1,6 @@
-import { BLURT_ANCHOR_TYPE, blurtAnchorTarget, blurtTransactionAnchors, parseBlurtAnchorProof } from '../core/BlurtAnchor.js';
-import { checkBlurtBlockEvidence } from '../core/BlurtBlockEvidence.js';
-import { blurtPostUrl } from '../core/BlurtPost.js';
+import { BLURT_ANCHOR_TYPE, blurtAnchorTarget, blurtTransactionAnchors, parseBlurtAnchorProof } from '../core/networks/BlurtAnchor.js';
+import { checkBlurtBlockEvidence } from '../core/networks/BlurtBlockEvidence.js';
+import { blurtPostUrl } from '../core/networks/BlurtPost.js';
 import { formatSteemTime } from './SteemAnchorEvidenceView.js';
 
 // Describes a `blurt` anchor for the anchor evidence panel, as

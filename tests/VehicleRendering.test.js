@@ -2,8 +2,8 @@ import * as THREE from 'three';
 import { VehicleRenderer } from '../renderer/VehicleRenderer.js';
 import { VehicleVisual } from '../renderer/VehicleVisual.js';
 import { VehicleFieldRenderer } from '../renderer/VehicleFieldRenderer.js';
-import { VehicleInstance } from '../core/VehicleInstance.js';
-import { VehicleType } from '../core/VehicleType.js';
+import { VehicleInstance } from '../core/vehicles/VehicleInstance.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.115 — Vehicle Rendering.
@@ -251,7 +251,7 @@ async function runTests() {
         } catch (err) {
             threw = true;
         }
-        assert(threw, '30. setVehicle() rejects anything that is not a real VehicleInstance — see core/VehicleInstance.js#isValidVehicleInstance');
+        assert(threw, '30. setVehicle() rejects anything that is not a real VehicleInstance — see core/vehicles/VehicleInstance.js#isValidVehicleInstance');
     }
 
     // -------------------------------------------------------------

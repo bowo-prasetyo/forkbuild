@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { getAvatarPoseOffsets } from '../core/AvatarPoseOffsets.js';
+import { getAvatarPoseOffsets } from '../core/avatar/AvatarPoseOffsets.js';
 import { castShadows } from './ShadowRoles.js';
 
 // 0.2.35 — the "dumb executor" that turns a declarative
@@ -10,7 +10,7 @@ import { castShadows } from './ShadowRoles.js';
 // core/ data this class only ever applies; it never invents an
 // appearance or animation choice of its own.
 //
-// core/AvatarTemplate.js's own header explains why component ->
+// core/avatar/AvatarTemplate.js's own header explains why component ->
 // GEOMETRY is deliberately NOT part of the template's own declarative
 // data: an appearance option is a closed vocabulary id ("hair-07"),
 // never a mesh reference — see docs/Principles.md, "A Template Is A
@@ -205,9 +205,9 @@ export class AvatarRenderer {
     // geometry, never touches root's own position/rotation (that
     // stays exclusively AvatarPresence's to decide). `animationTimeSeconds`
     // (0.2.36) lets WALKING/RUNNING read as an actual gait cycle
-    // rather than one frozen frame — see core/AvatarPoseOffsets.js.
+    // rather than one frozen frame — see core/avatar/AvatarPoseOffsets.js.
     //
-    // 0.2.44 — `gestureOverride` (see core/AvatarGesturePoseOffsets.js)
+    // 0.2.44 — `gestureOverride` (see core/avatar/AvatarGesturePoseOffsets.js)
     // is an OPTIONAL upper-body override for a local GREET/WAVE/POINT:
     // when present, it replaces just the body/head tilt this call
     // would otherwise take from the locomotion pose, while legSplay

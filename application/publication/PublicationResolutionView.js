@@ -1,9 +1,9 @@
 import { PublicationResolutionOutcome } from './PublicationResolutionOutcome.js';
-import { message } from '../../core/Message.js';
+import { message } from '../../core/app/Message.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 //
-// core/BlueprintAttributionView.js and core/PlaceNamingView.js each
+// core/building/BlueprintAttributionView.js and core/world/PlaceNamingView.js each
 // derive a plain, ephemeral, presentation-only shape from whatever this
 // replica happens to know right now — never persisted, never itself a
 // signed fact. This file is the same idea applied one layer up, over a
@@ -13,7 +13,7 @@ import { message } from '../../core/Message.js';
 // requires actually calling application/
 // PublicationResolutionCoordinator.js#resolve() — genuinely asynchronous
 // I/O (a ContentStore read, maybe a live peer round trip) — where
-// core/BlueprintAttributionView.js's own attributionView() only ever
+// core/building/BlueprintAttributionView.js's own attributionView() only ever
 // reads an array already sitting in memory. Everything core/ in this
 // codebase stays synchronous and side-effect-free; this file is the
 // application-layer counterpart for a view that cannot be.
@@ -89,7 +89,7 @@ export async function resolvePublicationView(publication, { coordinator, kindPlu
 }
 
 // A short, human-readable label for `outcome` — presentation only,
-// mirroring core/BlueprintAttributionView.js#describeAttributionView()'s
+// mirroring core/building/BlueprintAttributionView.js#describeAttributionView()'s
 // own restraint (a plain string, never a translation table the caller
 // has to maintain in parallel). `null` (the "unknown kind" case above)
 // reads as its own distinct label, never silently folded into

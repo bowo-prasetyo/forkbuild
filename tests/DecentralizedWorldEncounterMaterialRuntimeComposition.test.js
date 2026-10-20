@@ -12,8 +12,8 @@ import { loadWorldEncounterMaterialFromResolvedLead } from '../application/world
 import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js';
 import { resolveDecentralizedWorldEncounterLeadFromRegistry, DecentralizedWorldEncounterLeadResolutionStatus } from '../application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js';
 import { deriveDecentralizedWorldEncounterLeadAssociationEvidenceFromEnvelopes } from '../application/discovery/DecentralizedDiscoveryEnvelopeAssociationEvidenceIngress.js';
-import { parseDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
-import { WorldEncounterKind } from '../core/WorldEncounter.js';
+import { parseDecentralizedDiscoveryEnvelope } from '../core/publication/DecentralizedDiscoveryEnvelope.js';
+import { WorldEncounterKind } from '../core/world/WorldEncounter.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.36 — Decentralized World Encounter Material Runtime Composition.
@@ -215,7 +215,7 @@ async function run() {
         };
 
         // 2. The envelope the event's own content declares — parsed via
-        //    core/DecentralizedDiscoveryEnvelope.js (0.9.30, unmodified).
+        //    core/publication/DecentralizedDiscoveryEnvelope.js (0.9.30, unmodified).
         //    This is a self-declared CLAIM, not yet evidence — see that
         //    file's own header.
         const envelope = parseDecentralizedDiscoveryEnvelope(nostrEvent.content);

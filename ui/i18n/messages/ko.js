@@ -298,7 +298,7 @@ export default Object.freeze({
     'publicationLink.buildMismatch': '찾은 작품이 서명과 일치하지 않습니다',
     'publicationLink.noStoreCouldRead': '어떤 저장소도 읽지 못했습니다',
 
-    // The World welcome panel (core/WorldWelcomeContext.js): why a place is
+    // The World welcome panel (core/world/WorldWelcomeContext.js): why a place is
     // suggested, and what collaborators are doing, with and without a target.
     'welcome.reason.nearbyLandmark': '근처 랜드마크',
     'welcome.reason.youAreHere': '현재 위치',
@@ -1323,7 +1323,7 @@ export default Object.freeze({
     'distribution.explore': '탐색',
     'distribution.close': '닫기',
 
-    // Editor: a structure's details (ui/components/StructureInfoPanel.js, core/BlueprintSimilarity.js).
+    // Editor: a structure's details (ui/components/StructureInfoPanel.js, core/building/BlueprintSimilarity.js).
     'structureInfo.bricks': '블록',
     'structureInfo.footprint': '바닥 면적',
     'structureInfo.footprintValue': '{width} × {depth}',
@@ -1368,7 +1368,7 @@ export default Object.freeze({
     'blueprintSimilarity.identical': '동일한 디자인',
     'blueprintSimilarity.percent': '디자인 유사도 {percent}%',
 
-    // Editor: the Build Library (ui/components/BuildLibraryPanel.js, core/sortStructures.js).
+    // Editor: the Build Library (ui/components/BuildLibraryPanel.js, core/building/sortStructures.js).
     'buildLibrary.title': '빌드 라이브러리',
     'buildLibrary.bricks': '블록',
     'buildLibrary.structures': '구조물',
@@ -2307,7 +2307,7 @@ export default Object.freeze({
     'residentPrompt.talk': '[T] 말하기',
     'residentPrompt.remove': '[R] 주민 제거',
 
-    // What a resident says about its surroundings (core/ResidentTalk.js). A
+    // What a resident says about its surroundings (core/world/ResidentTalk.js). A
     // {title} or {name} is someone else's text, shown as written; {where} is
     // one of the resident.where.* messages, {distance} a resident.distance.* one.
     'resident.quiet': '이 근처는 조용해요. 주변에 아는 게 없어요.',
@@ -2426,7 +2426,7 @@ export default Object.freeze({
     'worldEncounterCanvas.peerSource': '피어 {id}',
     'worldEncounterCanvas.snapshotSource': '스냅샷 {hash}',
 
-    // World View: words core/ keeps as ids (ui/i18n/worldText.js) and the focus panel's core-built text (core/WorldFocusContext.js).
+    // World View: words core/ keeps as ids (ui/i18n/worldText.js) and the focus panel's core-built text (core/world/WorldFocusContext.js).
     'compass.n': '북',
     'compass.ne': '북동',
     'compass.e': '동',
@@ -4707,7 +4707,7 @@ export default Object.freeze({
     'chatView.couldNotSwitchSpeaker': '그 스피커로 전환할 수 없습니다.',
     'chatView.microphoneDisappeared': '마이크가 사라졌습니다 — 내 오디오 없이 통화가 계속됩니다.',
 
-    // Refusals a person reads, thrown as UserFacingError (core/UserFacingError.js) by Identity, Peers, Chat and settings.
+    // Refusals a person reads, thrown as UserFacingError (core/app/UserFacingError.js) by Identity, Peers, Chat and settings.
     'refusal.noUserIsCurrentlyLogged': '먼저 이름을 정하세요.',
     'refusal.nameLocked': '이름 "{name}"이(가) 잠겨 있습니다. 계속하려면 암호 문구로 잠금을 해제하세요.',
     'refusal.nameRevoked': '이름 "{name}"은(는) 폐기되어 더 이상 서명할 수 없습니다. 계속하려면 다른 이름으로 바꾸세요.',

@@ -6,7 +6,7 @@
 // Inspect here (contrast ui/components/WorldLocationBrowser.js, which
 // browses DOCUMENTS by camera region and offers all three) — a
 // WorldLocation is not a document and carries no active-document
-// concept of its own; see core/WorldLocation.js's own header. Focusing a
+// concept of its own; see core/world/WorldLocation.js's own header. Focusing a
 // location never loads a new document, never changes the active
 // document, and never touches selection — purely camera navigation, the
 // same "Navigate ≠ Modify" boundary every other World View navigation
@@ -14,7 +14,7 @@
 //
 // 0.3.7 — World Landmarks & Personal Waypoints adds the one exception
 // to "no Edit here": a LANDMARK location, unlike a STRUCTURE one, isn't
-// read from someone else's identity (core/WorldLocation.js's own
+// read from someone else's identity (core/world/WorldLocation.js's own
 // header) — it IS World content a collaborator with EDIT access may
 // create/rename/redescribe/remove directly, per docs/Principles.md,
 // "A Landmark Is World Content, Not Spatial Presence (0.3.7)." Rows are
@@ -43,7 +43,7 @@
 // Focus (pre-existing) moves the camera; Info opens
 // ui/components/WorldFocusPanel.js's own read-only reading of the same
 // row — a description, distance/direction, and which named place it
-// sits inside — without moving anything. See core/WorldFocusContext.js's
+// sits inside — without moving anything. See core/world/WorldFocusContext.js's
 // own header on why this panel is never itself called "Focus."
 import { formatNumber, t } from '../i18n/i18n.js';
 export default {

@@ -12,8 +12,8 @@ import { navigationHudSectionTemplate } from '../ui/views/worldView/templates/na
 import WorldSearchPanel from '../ui/components/WorldSearchPanel.js';
 import { residentRefusalLabel } from '../ui/components/avatarInteractionLabels.js';
 import ResidentSpeechActions from '../ui/components/ResidentSpeechActions.js';
-import { message } from '../core/Message.js';
-import { CameraPerspective } from '../core/CameraPerspective.js';
+import { message } from '../core/app/Message.js';
+import { CameraPerspective } from '../core/avatar/CameraPerspective.js';
 import { WorldViewPrimaryMode } from '../application/world/WorldViewNavigationState.js';
 import { assert } from './support/Assert.js';
 import { displayText, errorText, t } from '../ui/i18n/i18n.js';
@@ -268,7 +268,7 @@ const buttonLabels = (element) => [...element.querySelectorAll('button')].map((b
     console.log('✓ A resident\'s mentions get Focus buttons');
 }
 
-// A resident's wish (core/ResidentWish.js): one Build there button, worded in
+// A resident's wish (core/world/ResidentWish.js): one Build there button, worded in
 // the viewer's language, and nothing else.
 {
     const built = [];

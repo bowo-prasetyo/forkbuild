@@ -1,8 +1,8 @@
-import { StarterCardStage } from '../../core/StarterJob.js';
+import { StarterCardStage } from '../../core/challenge/StarterJob.js';
 import { t } from '../i18n/i18n.js';
 
 // The card a build opened from something ready-made carries
-// (core/StarterJob.js, starterCardStage): the job Home's main button left,
+// (core/challenge/StarterJob.js, starterCardStage): the job Home's main button left,
 // or with no job a first brick of the builder's own, each with a button that
 // picks the brick and turns Place on; then, once the build is theirs, a
 // Publish button. `floating` puts it over the 3D view, for a phone, where the

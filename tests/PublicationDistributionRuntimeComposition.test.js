@@ -3,7 +3,7 @@ import { composePublicationDistributionRuntime } from '../application/publicatio
 import { ArweavePublicationMaterialUploader } from '../application/arweave/ArweavePublicationMaterialUploader.js';
 import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
 import { describePublicationDistribution } from '../application/publication/distribution/PublicationDistributionDescriptor.js';
-import { parseDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
+import { parseDecentralizedDiscoveryEnvelope } from '../core/publication/DecentralizedDiscoveryEnvelope.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.47 — Publication Distribution Runtime Composition.

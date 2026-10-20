@@ -1,7 +1,7 @@
 import { EventBus } from '../../core/events/EventBus.js';
-import { PeerBlockRecord } from '../../core/PeerBlockRecord.js';
-import { UserFacingError } from '../../core/UserFacingError.js';
-import { message } from '../../core/Message.js';
+import { PeerBlockRecord } from '../../core/social/PeerBlockRecord.js';
+import { UserFacingError } from '../../core/app/UserFacingError.js';
+import { message } from '../../core/app/Message.js';
 
 const BLOCKS_CHANGED_EVENT = 'PeerBlocksChanged';
 const STORAGE_KEY_PREFIX = 'peer-blocks:';
@@ -9,7 +9,7 @@ const STORAGE_KEY_PREFIX = 'peer-blocks:';
 // 0.2.60 — Friendship Revocation, Blocking & Privacy Withdrawal.
 //
 // The local, unilateral counterpart to application/identity/FriendRelationshipUseCase.js
-// — see core/PeerBlockRecord.js's own header for the full reasoning on
+// — see core/social/PeerBlockRecord.js's own header for the full reasoning on
 // why blocking is a completely separate store rather than a third
 // FriendshipState value. This class NEVER touches a peer/PeerMessageBus.js,
 // NEVER sends or receives anything over the network, and NEVER imports
@@ -29,7 +29,7 @@ const STORAGE_KEY_PREFIX = 'peer-blocks:';
 // PresenceTrustBoundary.js, application/avatar/AvatarProfileTrustBoundary.js,
 // application/avatar/AvatarInteractionTrustBoundary.js, application/
 // FriendRelationshipUseCase.js's own ingestion) consults ONLY that
-// predicate — none of them import this class or core/PeerBlockRecord.js
+// predicate — none of them import this class or core/social/PeerBlockRecord.js
 // directly, the same "the transport/trust layer asks a predicate its
 // caller closed over, it never reads a store itself" discipline
 // application/world/CreateWorldViewUseCase.js's own isFriend/hasFriend
@@ -67,8 +67,8 @@ export class PeerBlockUseCase {
 
     // Alice's "Block" gesture. `identity` is anything carrying
     // identityId/publicKey[/algorithm] — a live, authenticated
-    // peer/PeerIdentity.js, or an already-persisted core/PeerRelationship.js/
-    // core/FriendshipRecord.js — see core/PeerBlockRecord.js#fromIdentity's
+    // peer/PeerIdentity.js, or an already-persisted core/social/PeerRelationship.js/
+    // core/social/FriendshipRecord.js — see core/social/PeerBlockRecord.js#fromIdentity's
     // own header for why both are equally valid, unlike
     // PeerRelationshipUseCase#rememberPeer's stricter live-handshake
     // requirement. Idempotent: blocking an already-blocked identity is
@@ -89,7 +89,7 @@ export class PeerBlockUseCase {
     }
 
     // Deletes ONLY this device's local block record. Never touches, and
-    // has no mechanism to touch, whatever core/FriendshipRecord.js this
+    // has no mechanism to touch, whatever core/social/FriendshipRecord.js this
     // owner may separately hold for the same identity — see this file's
     // own header: unblocking is the exact inverse of block(), nothing
     // more. In particular, unblocking NEVER restores or creates a

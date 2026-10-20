@@ -1,19 +1,19 @@
 
-import { World } from '../core/World.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { License, LicenseId } from '../core/License.js';
-import { WorldRegion } from '../core/WorldRegion.js';
-import { RegionKind } from '../core/RegionKind.js';
-import { WorldPlacement } from '../core/WorldPlacement.js';
-import { WorldLocation } from '../core/WorldLocation.js';
-import { WorldLocationKind } from '../core/WorldLocationKind.js';
-import { deriveWorldFocusContext, WorldFocusKind, WorldFocusAction } from '../core/WorldFocusContext.js';
-import { describeEncounterablePublication, WorldEncounterKind } from '../core/WorldEncounter.js';
-import { describeWorldEncounterSelectionIdentity } from '../core/WorldEncounterSelectionIdentity.js';
+import { World } from '../core/document/World.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { License, LicenseId } from '../core/document/License.js';
+import { WorldRegion } from '../core/world/WorldRegion.js';
+import { RegionKind } from '../core/world/RegionKind.js';
+import { WorldPlacement } from '../core/publication/WorldPlacement.js';
+import { WorldLocation } from '../core/world/WorldLocation.js';
+import { WorldLocationKind } from '../core/world/WorldLocationKind.js';
+import { deriveWorldFocusContext, WorldFocusKind, WorldFocusAction } from '../core/world/WorldFocusContext.js';
+import { describeEncounterablePublication, WorldEncounterKind } from '../core/world/WorldEncounter.js';
+import { describeWorldEncounterSelectionIdentity } from '../core/world/WorldEncounterSelectionIdentity.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
@@ -25,7 +25,7 @@ import { LoadPublishedWorldSessionUseCase } from '../application/publication/Loa
 import { PublishedWorldSession } from '../application/publication/PublishedWorldSession.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalWorldExperienceStore } from '../application/world/LocalWorldExperienceStore.js';
-import { LocalWorldExperience } from '../core/LocalWorldExperience.js';
+import { LocalWorldExperience } from '../core/world/LocalWorldExperience.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { ObserverLocalEncounterStore } from '../application/worldEncounter/ObserverLocalEncounterStore.js';
 import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
@@ -59,9 +59,9 @@ import { readSource } from './support/SourceText.js';
 // (readSource() + exact line quotes) rather than live execution — the
 // same discipline 0.9.575 Section H4 already established for
 // WorldView.js. Everywhere else, real production classes ARE imported
-// and exercised live: core/World.js, core/WorldRegion.js,
-// core/WorldPlacement.js, core/WorldLocation.js, core/WorldFocusContext.js,
-// core/WorldEncounter.js, core/WorldEncounterSelectionIdentity.js,
+// and exercised live: core/document/World.js, core/world/WorldRegion.js,
+// core/publication/WorldPlacement.js, core/world/WorldLocation.js, core/world/WorldFocusContext.js,
+// core/world/WorldEncounter.js, core/world/WorldEncounterSelectionIdentity.js,
 // application/publication/PublishedWorldSession.js,
 // application/publication/LoadPublishedWorldSessionUseCase.js (a genuinely separate,
 // simpler, read-only single-Publication "enter a World" pipeline that
@@ -184,7 +184,7 @@ async function main() {
     // Section A — World identity inventory.
     // ===============================================================
     {
-        // A1. core/World.js: a World has its own, independently-generated
+        // A1. core/document/World.js: a World has its own, independently-generated
         // `id` (createId()) — never derived from anything else. Two
         // fresh Worlds never collide.
         const w1 = new World();
@@ -192,7 +192,7 @@ async function main() {
         assert(typeof w1.id === 'string' && w1.id.length > 0, 'A1a. A World carries a real, non-empty id.');
         assert(w1.id !== w2.id, 'A1b. Two independently-constructed Worlds never share an id.');
 
-        // A2. core/Document.js: a Document has NO id of its own — its
+        // A2. core/document/Document.js: a Document has NO id of its own — its
         // only identity-bearing field is the World it embeds.
         const document = new Document({ world: w1 });
         assert(document.id === undefined, 'A2. Document exposes no `id` property of its own.');
@@ -207,7 +207,7 @@ async function main() {
         const { document: doc2, publication } = publishMinimalDocument(storage, 'Identity Keep', 'alice');
         assert(publication.documentId === doc2.world.id, 'A3. publication.documentId is exactly document.world.id — the one identity this codebase actually uses.');
 
-        // A4. core/WorldRegion.js: UNLIKE World/WorldPlacement/WorldLocation,
+        // A4. core/world/WorldRegion.js: UNLIKE World/WorldPlacement/WorldLocation,
         // a WorldRegion carries an explicit `worldId` field DISTINCT from
         // its own `id` — a real, persisted, World-scoped piece of content.
         const region = new WorldRegion({
@@ -217,7 +217,7 @@ async function main() {
         assert(region.id === 'region-1' && region.worldId === doc2.world.id && region.id !== region.worldId,
             'A4. A WorldRegion carries both its own id AND a separate worldId naming the World it belongs to.');
 
-        // A5. core/WorldPlacement.js: the header's own stated invariant
+        // A5. core/publication/WorldPlacement.js: the header's own stated invariant
         // — "a WorldPlacement does NOT own a world. It points to one via
         // publicationId" — confirmed structurally: no worldId field
         // exists on the class at all.
@@ -225,7 +225,7 @@ async function main() {
         assert(placement.publicationId === publication.id, 'A5a. A WorldPlacement is identified by publicationId, not by any World id.');
         assert(!('worldId' in placement) && placement.worldId === undefined, 'A5b. A WorldPlacement carries no worldId field at all — structurally, never accidentally.');
 
-        // A6. core/WorldLocation.js: deliberately NOT a persisted entity
+        // A6. core/world/WorldLocation.js: deliberately NOT a persisted entity
         // — no worldId, no store, no id that outlives the thing it was
         // derived from (its own header's own claim, reconfirmed live).
         const location = new WorldLocation({ id: 'loc-1', title: 'Origin', kind: WorldLocationKind.ORIGIN, position: new Position(0, 0, 0) });
@@ -248,7 +248,7 @@ async function main() {
         assert(focusContext.kind === WorldFocusKind.REGION && focusContext.hasAction(WorldFocusAction.GO),
             'A7a. A WorldFocusContext describes a target and offers a "Go" action — it does not itself navigate.');
         assert(!('worldId' in focusContext) && focusContext.source.documentId === 'unrelated-structure-doc',
-            'A7b. NAMING TRAP CONFIRMED: WorldFocusContext carries no worldId of its own; its `source.documentId` names the focused TARGET\'s own content, never "the World currently on screen" — core/WorldFocusContext.js\'s own 0.6.1 header explicitly states this getter "has no way to know which World is currently on screen."');
+            'A7b. NAMING TRAP CONFIRMED: WorldFocusContext carries no worldId of its own; its `source.documentId` names the focused TARGET\'s own content, never "the World currently on screen" — core/world/WorldFocusContext.js\'s own 0.6.1 header explicitly states this getter "has no way to know which World is currently on screen."');
 
         // A8. NAMING TRAP #2, confirmed live: a "WorldEncounter" never
         // carries a World id either — it identifies a Publication (by
@@ -644,9 +644,9 @@ async function main() {
         experienceStore.recordVisit(worldIdForExperience, { position: { x: 1, y: 2, z: 3 }, target: { x: 0, y: 0, z: 0 } });
         const restored = experienceStore.getExperience(worldIdForExperience);
         assert(restored.cameraPosition.x === 1, 'H1b. LocalWorldExperience genuinely persists camera framing, keyed by worldId — but see its own header (H1c) for why this is never WORLD_STATE.');
-        const experienceSource = await readSource('core/LocalWorldExperience.js');
+        const experienceSource = await readSource('core/world/LocalWorldExperience.js');
         assert(/Personal Experience Is/.test(experienceSource) && /Does NOT store avatar position \(that would be World state\)/.test(experienceSource),
-            'H1c. core/LocalWorldExperience.js\'s own header explicitly classifies itself as personal/local, never World state, and explicitly contrasts itself against avatar position, which WOULD be World state if it were ever stored (it is not — see H2).');
+            'H1c. core/world/LocalWorldExperience.js\'s own header explicitly classifies itself as personal/local, never World state, and explicitly contrasts itself against avatar position, which WOULD be World state if it were ever stored (it is not — see H2).');
 
         // H2. Avatar position: SESSION_STATE, live-confirmed structurally
         // incapable of persistence (no StorageProvider dependency at all
@@ -889,11 +889,11 @@ async function main() {
     // Section M — Deliberate exclusions.
     // ===============================================================
     {
-        const worldSource = await readSource('core/World.js');
+        const worldSource = await readSource('core/document/World.js');
         const worldFieldMatches = worldSource.match(/this\._(\w+)\s*=/g) || [];
         const worldFields = new Set(worldFieldMatches.map((m) => m.replace(/this\.|\s*=/g, '')));
         assert(worldFields.has('_id') && worldFields.has('_buildings') && worldFields.has('_regions'),
-            'M1. core/World.js\'s own field set is exactly what this milestone found it to be at the start (id/buildings/groups/placements/landmarks/regions/metadata/eventBus) — no new World identity field was added.');
+            'M1. core/document/World.js\'s own field set is exactly what this milestone found it to be at the start (id/buildings/groups/placements/landmarks/regions/metadata/eventBus) — no new World identity field was added.');
 
         const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(!/setInterval\(.*retry|automaticRecover|autoRecover/i.test(sessionSource) || /RETRY_DELAYS/.test(sessionSource),
@@ -903,7 +903,7 @@ async function main() {
   - No World synchronization redesign — every collaborator exercised above (WorldPresenceUseCase, WorldMembershipUseCase, the streaming loop) is pre-existing and unmodified.
   - No World persistence redesign — LocalWorldExperienceStore/PlacementRegistry/World.toJSON() are exercised exactly as they already existed.
   - No multiplayer protocol changes — this file touches no protocol/wire-format code.
-  - No new World identity fields (M1) — core/World.js's field set is unchanged.
+  - No new World identity fields (M1) — core/document/World.js's field set is unchanged.
   - No World cloning changes — DocumentCloneService is exercised, unmodified, exactly as ForkDocumentUseCase/ForkPublishedWorldUseCase already used it.
   - No World versioning of any kind was introduced or found missing-but-needed.
   - No automatic World recovery beyond the pre-existing, bounded retry-with-backoff already in production (M2).

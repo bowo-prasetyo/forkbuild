@@ -6,7 +6,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
 import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
 import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
-import { DeviceAuthority } from '../core/DeviceAuthority.js';
+import { DeviceAuthority } from '../core/identity/DeviceAuthority.js';
 import {
     toDeviceAuthorizationGrant,
     isValidDeviceAuthorizationGrant,
@@ -14,12 +14,12 @@ import {
     toDeviceAuthorizationRevocation,
     isValidDeviceAuthorizationRevocation,
     getDeviceAuthorizationRevocationSigningDescriptor
-} from '../core/DeviceAuthorizationEnvelope.js';
+} from '../core/identity/DeviceAuthorizationEnvelope.js';
 import {
     DeviceAuthorizationGossipKind,
     toDeviceAuthorizationGossipMessage,
     isValidDeviceAuthorizationGossipMessage
-} from '../core/DeviceAuthorizationGossip.js';
+} from '../core/identity/DeviceAuthorizationGossip.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
@@ -101,7 +101,7 @@ async function connectAndAuthenticate(network, addressA, deviceA, addressB, devi
 async function runTests() {
 
 // ---------------------------------------------------------------------
-// 1. core/DeviceAuthorizationEnvelope.js — wire shape, validation,
+// 1. core/identity/DeviceAuthorizationEnvelope.js — wire shape, validation,
 //    signing descriptors covering every field.
 // ---------------------------------------------------------------------
 {
@@ -131,11 +131,11 @@ async function runTests() {
     const gossipMessage = toDeviceAuthorizationGossipMessage(DeviceAuthorizationGossipKind.GRANT, grant);
     assert(isValidDeviceAuthorizationGossipMessage(gossipMessage), 'a structurally well-formed grant passes gossip shape validation regardless of signature — signing is the verifier\'s job');
     assert(!isValidDeviceAuthorizationGossipMessage({ kind: 'NOT-A-KIND', record: grant }), 'an unknown gossip kind is rejected');
-    console.log('✓ core/DeviceAuthorizationEnvelope.js + core/DeviceAuthorizationGossip.js: wire shape, validation, signing descriptors');
+    console.log('✓ core/identity/DeviceAuthorizationEnvelope.js + core/identity/DeviceAuthorizationGossip.js: wire shape, validation, signing descriptors');
 }
 
 // ---------------------------------------------------------------------
-// 2. core/DeviceAuthority.js — immutability and the timestamp-compare
+// 2. core/identity/DeviceAuthority.js — immutability and the timestamp-compare
 //    isAuthorized rule (never a permanent one-way latch, unlike identity
 //    revocation itself — see this class's own header).
 // ---------------------------------------------------------------------
@@ -163,7 +163,7 @@ async function runTests() {
     const roundTripped = DeviceAuthority.fromJSON(reAuthorized.toJSON());
     assert(roundTripped.isAuthorized && roundTripped.deviceIdentityId === 'did:key:zDeviceA', 'round-trips through toJSON/fromJSON');
     assertThrows(() => new DeviceAuthority({ identityId: 'did:key:zAlice' }), 'deviceIdentityId is required');
-    console.log('✓ core/DeviceAuthority.js: immutability, timestamp-compare isAuthorized, re-authorization after revocation');
+    console.log('✓ core/identity/DeviceAuthority.js: immutability, timestamp-compare isAuthorized, re-authorization after revocation');
 }
 
 // ---------------------------------------------------------------------

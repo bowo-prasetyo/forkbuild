@@ -5,7 +5,7 @@ import { LocalSnapshotCandidateDiscoveryQueryService } from '../application/snap
 import { SnapshotCandidateDiscoveryQueryService } from '../application/snapshot/SnapshotCandidateDiscoveryQueryService.js';
 import { SnapshotCandidateDiscoveryOutcome } from '../application/snapshot/SnapshotCandidateDiscoveryOutcome.js';
 import { executeDiscoverSnapshotCandidatesCommandWithOutcome } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
-import { SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../core/SnapshotDiscoveryEnvelope.js';
+import { SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../core/publication/SnapshotDiscoveryEnvelope.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import { ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';

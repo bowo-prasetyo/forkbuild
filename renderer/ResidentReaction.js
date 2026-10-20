@@ -1,5 +1,5 @@
 import { idleEnvelope } from './AnimalIdle.js';
-import { lerpAngle } from '../core/ResidentMotion.js';
+import { lerpAngle } from '../core/world/ResidentMotion.js';
 import { smoothstep } from '../utils/interpolation.js';
 
 // How a World Resident notices YOUR avatar: while it stands idle, it turns
@@ -7,7 +7,7 @@ import { smoothstep } from '../utils/interpolation.js';
 // of renderer/AnimalReaction.js, with the same two rules:
 //
 // PURELY VISUAL, AND ONLY FOR THE VIEWER'S OWN AVATAR. Where a resident is
-// (core/ResidentMotion.js) stays the same for everyone; only which way it
+// (core/world/ResidentMotion.js) stays the same for everyone; only which way it
 // faces while it stands, and whether it waves, depend on who is looking, so
 // each viewer's residents greet that viewer alone. A resident never stops
 // walking, steps aside or follows anyone.
@@ -54,7 +54,7 @@ function wrapAngle(angle) {
 }
 
 // Which way a resident at (`pose.x`, `pose.z`) in `pose` (as
-// core/ResidentMotion.js#residentPoseAt() reports it) faces while
+// core/world/ResidentMotion.js#residentPoseAt() reports it) faces while
 // `observer` ({ x, z }, or null) is around, and how much it is paying
 // attention: { rotationY, attention, distance }, rotationY in radians,
 // attention in [0, 1], distance to the observer (Infinity without one).

@@ -1,7 +1,7 @@
 import { ConflictRelation } from './ConflictResolver.js';
-import { ConflictSet } from '../core/ConflictSet.js';
-import { PlacementRecord } from '../core/PlacementRecord.js';
-import { evaluatePlacementPermission } from '../core/PlacementPolicy.js';
+import { ConflictSet } from '../core/collaboration/ConflictSet.js';
+import { PlacementRecord } from '../core/publication/PlacementRecord.js';
+import { evaluatePlacementPermission } from '../core/publication/PlacementPolicy.js';
 
 export const MergeResult = Object.freeze({
     IGNORED: 'IGNORED',

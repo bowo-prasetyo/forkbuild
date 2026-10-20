@@ -1,5 +1,5 @@
 import { EventBus } from '../../core/events/EventBus.js';
-import { ContentReference } from '../../core/ContentReference.js';
+import { ContentReference } from '../../core/document/ContentReference.js';
 import {
     PeerContentMessageKind,
     MAX_CONTENT_BYTES,
@@ -44,7 +44,7 @@ const TRANSFER_PROGRESS_EVENT = 'PeerContentExchangeTransferProgress';
 // method below: a peer is never trusted merely because it supplied
 // bytes. Peer identity is not content authenticity, and a publication's
 // own signature is not content-delivery authority — that signature only
-// ever proved who published a LOCATOR (core/DecentralizedPublication.js's
+// ever proved who published a LOCATOR (core/publication/DecentralizedPublication.js's
 // own header), never who is allowed to hand this replica bytes for it.
 // The only thing that ever makes a RESPONSE trustworthy is core/
 // ContentReference.js#verify(): recomputing the hash of exactly the bytes
@@ -263,7 +263,7 @@ export class PeerContentExchange {
     //      asked about, or that no locator was ever cataloged for, is
     //      dropped — the identical boundary `request()` applies before
     //      ever sending);
-    //   2. `core/ContentReference.js#verify()` confirms the received
+    //   2. `core/document/ContentReference.js#verify()` confirms the received
     //      bytes actually hash to `hash` — never merely because SOME
     //      peer, authenticated or not, chose to send them.
     //

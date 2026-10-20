@@ -1,10 +1,10 @@
-import { PublicationAnchor } from '../../core/PublicationAnchor.js';
+import { PublicationAnchor } from '../../core/publication/PublicationAnchor.js';
 import { LocalPublicationAnchorStore } from './LocalPublicationAnchorStore.js';
 
 // 0.8.2 — Anchor Catalog & Evidence Discovery.
 //
 // 0.8.0 gave this codebase a new kind of signed evidence
-// (`core/PublicationAnchor.js`); 0.8.1 gave it a way to independently
+// (`core/publication/PublicationAnchor.js`); 0.8.1 gave it a way to independently
 // verify one. Neither ever gave a replica anywhere to KEEP an anchor it
 // has seen. This class is application/publication/LocalPublicationCatalog.js's own
 // pattern, applied one step further down the same chain that class's own
@@ -43,12 +43,12 @@ import { LocalPublicationAnchorStore } from './LocalPublicationAnchorStore.js';
 //
 // No PublicationAnchorCatalogEntry wrapper class exists here, for the
 // identical reason application/publication/LocalPublicationCatalog.js's own header
-// gives for skipping one: a core/PublicationAnchor.js instance already
+// gives for skipping one: a core/publication/PublicationAnchor.js instance already
 // IS the slim, signed record this catalog indexes. Every method below
 // returns real PublicationAnchor instances, ready to hand straight to
 // application/anchoring/ExternalAnchorVerifier.js#verify() unchanged.
 //
-// Identity for dedup is the anchor's own `id` — core/PublicationAnchor.js
+// Identity for dedup is the anchor's own `id` — core/publication/PublicationAnchor.js
 // already mints one (`createId()`) as part of every anchor's signed
 // payload, so this class introduces no second fingerprinting scheme.
 // Two replicas that each receive the identical anchor recognize it as
@@ -66,7 +66,7 @@ import { LocalPublicationAnchorStore } from './LocalPublicationAnchorStore.js';
 // Multiple independent anchors — different anchoring identities,
 // different anchorTypes, different locators, even different anchor ids
 // naming the SAME publicationId/contentHash — all coexist here, exactly
-// as core/PublicationAnchor.js's own header requires. This catalog never
+// as core/publication/PublicationAnchor.js's own header requires. This catalog never
 // collapses them into one, never picks a "best" one, and holds no
 // ranking, trust score, or "canonical anchor" field anywhere in it —
 // see this milestone's own docs/Principles.md entry.

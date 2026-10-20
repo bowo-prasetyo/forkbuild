@@ -1,6 +1,6 @@
 import { StorageProvider } from './StorageProvider.js';
 import { LocalStorageProvider } from './LocalStorageProvider.js';
-import { SteemAnnouncingConfiguration } from '../core/SteemAnnouncingConfiguration.js';
+import { SteemAnnouncingConfiguration } from '../core/networks/SteemAnnouncingConfiguration.js';
 
 const STEEM_ANNOUNCING_CONFIGURATION_STORE_KEY = 'steem-announcing-configuration';
 

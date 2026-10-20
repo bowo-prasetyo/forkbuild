@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 
-import { WorldEncounterKind } from '../core/WorldEncounter.js';
-import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
+import { WorldEncounterKind } from '../core/world/WorldEncounter.js';
+import { describeDecentralizedDiscoveryEnvelope } from '../core/publication/DecentralizedDiscoveryEnvelope.js';
 import { describePublicationDistribution } from '../application/publication/distribution/PublicationDistributionDescriptor.js';
 import { ArweavePublicationMaterialUploader } from '../application/arweave/ArweavePublicationMaterialUploader.js';
 import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import { TREE_SPECIES } from '../core/NaturalFeatureField.js';
+import { TREE_SPECIES } from '../core/nature/NaturalFeatureField.js';
 
-// Turns a core/TreeForm.js form into geometry at three levels of detail
+// Turns a core/nature/TreeForm.js form into geometry at three levels of detail
 // (renderer/TreeForest.js picks one per tree by distance):
 //
 //   near  every branch as a tapered tube, and the leaves as clusters of
@@ -11,7 +11,7 @@ import { TREE_SPECIES } from '../core/NaturalFeatureField.js';
 //   far   one tube for the trunk under one shape for the whole crown
 //
 // Every vertex carries `treeWind` (flex, flutter): how far it sways with the
-// trunk (core/TreeForm.js#flexAt()) and, for leaves, how much it flutters on
+// trunk (core/nature/TreeForm.js#flexAt()) and, for leaves, how much it flutters on
 // its own. The shader in renderer/TreeMaterials.js reads them.
 
 const NEAR_RADIAL_SEGMENTS = Object.freeze([8, 5, 4, 3]);
@@ -97,7 +97,7 @@ function writeTube(writer, points, radii, flex, sides) {
     }
 }
 
-// The same seeded generator core/TreeForm.js grows forms with, so the cards'
+// The same seeded generator core/nature/TreeForm.js grows forms with, so the cards'
 // turns are the same on every device.
 function rngFor(seed) {
     let a = seed >>> 0;

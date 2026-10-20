@@ -8,7 +8,7 @@
 // resolve() call conclude," but "given every resolution attempt this
 // replica has made for one placement so far, what should a person be
 // told RIGHT NOW about whether its bytes can be retrieved." This value is
-// never stored on core/PublicationSnapshotPlacement.js, never persisted,
+// never stored on core/publication/PublicationSnapshotPlacement.js, never persisted,
 // and never treated as a new kind of domain truth — see this file's own
 // deliberately un-domain-sounding names below, and docs/Principles.md, "A
 // Resolution Result Describes Whether Bytes Can Be Retrieved Now; It Does

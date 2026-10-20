@@ -1,14 +1,14 @@
 import * as THREE from 'three';
-import { wildlifeInRegion, ANIMAL_SPECIES } from '../core/WildlifeField.js';
-import { animalPoseAt, IDLE_ACTION, ANIMAL_MOTION } from '../core/WildlifeMotion.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
+import { wildlifeInRegion, ANIMAL_SPECIES } from '../core/nature/WildlifeField.js';
+import { animalPoseAt, IDLE_ACTION, ANIMAL_MOTION } from '../core/nature/WildlifeMotion.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { TERRAIN_TILE_SIZE } from '../core/nature/TerrainTiling.js';
 import { idleOffsetsAt, ANIMAL_IDLE, IDLE_EASE_SECONDS } from '../renderer/AnimalIdle.js';
 import { gaitOffsetsAt, REST_GAIT } from '../renderer/AnimalGait.js';
 import { buildWildlifeTileMesh } from '../renderer/WildlifeTileMesh.js';
 import { assert } from './support/Assert.js';
 
-// Idle animation: core/WildlifeMotion.js decides what a standing animal
+// Idle animation: core/nature/WildlifeMotion.js decides what a standing animal
 // does during a pause; renderer/AnimalIdle.js decides how that looks.
 //
 //   Section A: core — one action per pause, only while standing, never

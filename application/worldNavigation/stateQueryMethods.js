@@ -1,7 +1,7 @@
-import { Position } from '../../core/Position.js';
-import { DEFAULT_WORLD_SEED } from '../../core/TerrainHeightField.js';
-import { distanceBetween } from '../../core/SpatialQuery.js';
-import { DEFAULT_AVATAR_TEMPLATE_ID } from '../../core/AvatarProfile.js';
+import { Position } from '../../core/document/Position.js';
+import { DEFAULT_WORLD_SEED } from '../../core/nature/TerrainHeightField.js';
+import { distanceBetween } from '../../core/world/SpatialQuery.js';
+import { DEFAULT_AVATAR_TEMPLATE_ID } from '../../core/avatar/AvatarProfile.js';
 import { STREAMING_RADIUS } from './constants.js';
 
 // WorldNavigationSession read-only state: selection, hover, inspection,

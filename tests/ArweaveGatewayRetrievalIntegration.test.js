@@ -1,5 +1,5 @@
 
-import { ArweaveGatewayConfiguration, DEFAULT_ARWEAVE_GATEWAY_URL, isValidArweaveGatewayUrl } from '../core/ArweaveGatewayConfiguration.js';
+import { ArweaveGatewayConfiguration, DEFAULT_ARWEAVE_GATEWAY_URL, isValidArweaveGatewayUrl } from '../core/networks/ArweaveGatewayConfiguration.js';
 import { ArweaveGatewayConfigurationStore } from '../storage/ArweaveGatewayConfigurationStore.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { ArweaveWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js';

@@ -1,10 +1,10 @@
-import { Brick } from '../Brick.js';
-import { Building } from '../Building.js';
-import { World } from '../World.js';
-import { Position } from '../Position.js';
+import { Brick } from '../building/Brick.js';
+import { Building } from '../building/Building.js';
+import { World } from '../document/World.js';
+import { Position } from '../document/Position.js';
 import { VillageLibrary } from './VillageLibrary.js';
 
-// The challenge plaza's own square (core/ChallengePlaza.js): a rounded paving
+// The challenge plaza's own square (core/challenge/ChallengePlaza.js): a rounded paving
 // of sandstone slabs in the open middle, with a well to the north, benches
 // facing in, a lamp post on each diagonal and bushes round the edge. It
 // stands whenever someone visits the plaza, entries or none, so an empty week

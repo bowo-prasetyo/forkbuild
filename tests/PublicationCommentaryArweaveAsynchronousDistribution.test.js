@@ -3,9 +3,9 @@ import { execSync } from 'node:child_process';
 
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 
-import { PublicationCommentary } from '../core/PublicationCommentary.js';
+import { PublicationCommentary } from '../core/publication/PublicationCommentary.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
-import { PublicationCommentaryDistributionEnvelope } from '../core/PublicationCommentaryDistributionEnvelope.js';
+import { PublicationCommentaryDistributionEnvelope } from '../core/publication/PublicationCommentaryDistributionEnvelope.js';
 import { PublicationCommentaryDistributionExchange } from '../application/publication/commentary/PublicationCommentaryDistributionExchange.js';
 import { PublicationCommentaryArweaveDistribution } from '../application/publication/commentary/PublicationCommentaryArweaveDistribution.js';
 import { DiscoverPublicationCommentaryFromArweaveUseCase } from '../application/publication/commentary/DiscoverPublicationCommentaryFromArweaveUseCase.js';
@@ -20,7 +20,7 @@ import {
     PUBLICATION_COMMENTARY_DELIVERY_STATUS_SEQUENCE,
     isValidPublicationCommentaryDeliveryStatusTransition,
     describesConformingPublicationCommentaryAsynchronousDeliverySubstrate
-} from '../core/PublicationCommentaryAsynchronousDeliveryContract.js';
+} from '../core/publication/PublicationCommentaryAsynchronousDeliveryContract.js';
 
 // The existing, unmodified Nostr Commentary substrate — imported ONLY to
 // prove, live, side by side, that it and this milestone's own Arweave
@@ -40,7 +40,7 @@ import { makeIdentity } from './support/TestIdentity.js';
 // proved, entirely inside a test file, that a composition of two existing,
 // unmodified Arweave transport primitives (application/
 // ArweaveTaggedTransactionUpload.js, content/ArweaveContentStore.js#get())
-// already duck-type-conforms to core/PublicationCommentaryAsynchronousDeliveryContract.js's
+// already duck-type-conforms to core/publication/PublicationCommentaryAsynchronousDeliveryContract.js's
 // own { publish, retrieve } contract and can carry a real, signed
 // Commentary envelope through a live Arweave upload/retrieval round trip.
 // That audit named two remaining gaps: a small, permanent production
@@ -643,7 +643,7 @@ async function run() {
         assert(retrieved.commentaryId === commentary.commentaryId && retrieved.publicationId === commentary.publicationId,
             n('commentaryId and publicationId survive the round trip unchanged, independent of the transport-layer locator'));
 
-        const envelopeSource = await rawSource('core/PublicationCommentaryDistributionEnvelope.js');
+        const envelopeSource = await rawSource('core/publication/PublicationCommentaryDistributionEnvelope.js');
         assert(!/arweaveTransactionId/i.test(envelopeSource),
             n('the envelope class carries no arweaveTransactionId field of any kind — the locator stays a caller-side fact, never folded into Commentary identity'));
 

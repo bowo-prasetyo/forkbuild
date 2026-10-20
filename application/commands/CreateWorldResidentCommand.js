@@ -1,15 +1,15 @@
-import { WorldResident } from '../../core/WorldResident.js';
-import { Position } from '../../core/Position.js';
-import { createSecureId } from '../../core/createId.js';
+import { WorldResident } from '../../core/world/WorldResident.js';
+import { Position } from '../../core/document/Position.js';
+import { createSecureId } from '../../core/document/createId.js';
 import { Command } from './Command.js';
-import { message } from '../../core/Message.js';
+import { message } from '../../core/app/Message.js';
 
 // World Residents: adds an ambient resident whose home is `position`
 // (World-local). The resident counterpart of
 // CreateWorldAnimalDecorationCommand.js: execute() mints the resident's id,
 // and redo() recreates the SAME id, which toJSON() carries, so replay and
 // redo keep naming the same resident — and, since where a resident walks is
-// hashed from its id (core/ResidentMotion.js), keep it walking the same way.
+// hashed from its id (core/world/ResidentMotion.js), keep it walking the same way.
 export class CreateWorldResidentCommand extends Command {
     // `residentId` (optional) is the id the new resident gets; left out, one
     // is minted. The World View picks one so the resident starts out right

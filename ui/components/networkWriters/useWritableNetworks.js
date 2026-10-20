@@ -1,8 +1,8 @@
 import { computed, inject, onBeforeUnmount, ref } from 'vue';
-import { isWritable, writableKeys } from '../../../core/NetworkWriters.js';
-import { DEFAULT_ANNOUNCEMENT_DISCOVERY_PROVIDER } from '../../../core/AnnouncementDiscoveryProvider.js';
+import { isWritable, writableKeys } from '../../../core/publication/NetworkWriters.js';
+import { DEFAULT_ANNOUNCEMENT_DISCOVERY_PROVIDER } from '../../../core/publication/AnnouncementDiscoveryProvider.js';
 
-// Which networks this device can write to right now (core/NetworkWriters.js):
+// Which networks this device can write to right now (core/publication/NetworkWriters.js):
 // Nostr and Arweave always, Steem and Blurt only while their writer is
 // switched on in Network Settings. Follows the switches as they change, for
 // as long as the component using it is mounted. Without the settings store

@@ -1,10 +1,10 @@
 import { AvatarAnimalInteractionController } from '../application/avatar/AvatarAnimalInteractionController.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { AnimalRuntimeInstances } from '../application/world/AnimalRuntimeInstances.js';
-import { animalPresenceInRegion } from '../core/AnimalPlacement.js';
-import { Position } from '../core/Position.js';
-import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
-import { InventoryEntryKind } from '../core/AvatarInventory.js';
+import { animalPresenceInRegion } from '../core/nature/AnimalPlacement.js';
+import { Position } from '../core/document/Position.js';
+import { ANIMAL_SPECIES } from '../core/nature/WildlifeField.js';
+import { InventoryEntryKind } from '../core/avatar/AvatarInventory.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.700 — Avatar-Animal Catch/Release Runtime Integration,
@@ -38,7 +38,7 @@ const SEED = 29;
 function findFixtureAnimal() {
     const animals = animalPresenceInRegion(SEED, -300, -300, 300, 300);
     if (animals.length === 0) {
-        throw new Error(`No animals found under seed ${SEED} in the fixture region — has core/WildlifeField.js changed?`);
+        throw new Error(`No animals found under seed ${SEED} in the fixture region — has core/nature/WildlifeField.js changed?`);
     }
     return animals[0];
 }

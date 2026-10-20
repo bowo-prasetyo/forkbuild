@@ -1,4 +1,4 @@
-import { isWithinRadius } from '../../core/SpatialQuery.js';
+import { isWithinRadius } from '../../core/world/SpatialQuery.js';
 
 // 0.9.189 — Automatic Snapshot Encounter Retention Policy.
 //
@@ -41,7 +41,7 @@ import { isWithinRadius } from '../../core/SpatialQuery.js';
 // RETENTION IS NEVER VISIBILITY. This function does not ask "is this
 // Snapshot currently on screen," "is it inside the camera frustum," or
 // "is it within streaming/rendering distance" — those remain
-// `core/WorldEncounter.js`'s and the renderer's own downstream questions,
+// `core/world/WorldEncounter.js`'s and the renderer's own downstream questions,
 // entirely untouched by this milestone. It asks only whether an
 // automatically materialized Snapshot is still within the retention
 // region drawn around the Wanderer's OWN current position — a narrower,
@@ -58,7 +58,7 @@ import { isWithinRadius } from '../../core/SpatialQuery.js';
 // area a Wanderer's current position is treated as "nearby" for. This file
 // declares its own copy, for the identical reason that file's own header
 // gives for declaring its own rather than importing
-// `core/WorldSpatialContext.js`'s internal default — the two are
+// `core/world/WorldSpatialContext.js`'s internal default — the two are
 // independent constants that happen to agree today, not a shared
 // reference a future change to one would silently move the other.
 //
@@ -78,7 +78,7 @@ import { isWithinRadius } from '../../core/SpatialQuery.js';
 // only an exact position match") and is evaluated normally.
 //
 // EXACTLY ON THE RADIUS RETAINS — THE SAME INCLUSIVE BOUNDARY
-// `core/SpatialQuery.js#isWithinRadius()` ITSELF ALREADY HOLDS. This file
+// `core/world/SpatialQuery.js#isWithinRadius()` ITSELF ALREADY HOLDS. This file
 // reuses that exact primitive rather than reimplementing Euclidean
 // distance a second time; a Snapshot sitting at precisely `retentionRadius`
 // meters away is retained, not removed, the identical convention every

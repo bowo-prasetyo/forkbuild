@@ -28,8 +28,8 @@
 // microphone provider — or application/chat/VoiceUseCase.js, one layer up —
 // has any business deciding; see that file's own header on why output
 // selection stays entirely a UI/platform concern.
-import { UserFacingError } from '../../core/UserFacingError.js';
-import { message } from '../../core/Message.js';
+import { UserFacingError } from '../../core/app/UserFacingError.js';
+import { message } from '../../core/app/Message.js';
 
 export class LocalAudioTrackProvider {
     constructor({ mediaDevices = (typeof navigator !== 'undefined' ? navigator.mediaDevices : null) } = {}) {

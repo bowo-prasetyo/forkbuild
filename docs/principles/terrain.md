@@ -28,7 +28,7 @@ the same floor.
 
 ### The Terrain Height Field Is The Shared Authority; The Renderer Is An Adapter, Not The Owner (0.2.77)
 
-The pure `terrainHeightAt()` in `core/TerrainHeightField.js` is the one
+The pure `terrainHeightAt()` in `core/nature/TerrainHeightField.js` is the one
 authority for elevation. The renderer's method is only a pass-through,
 and movement code imports the core function directly, with no Three.js
 dependency.
@@ -103,7 +103,7 @@ independently, and neither imports the other. (The same pattern as the
 ecology rule above.)
 
 Revised (2026-10-15): rivers now cut beds into the ground
-(core/TerrainHeightField.js#riverBedDepthAt()), so `terrainHeightAt()`
+(core/nature/TerrainHeightField.js#riverBedDepthAt()), so `terrainHeightAt()`
 is the land with its beds. Classification still reads the land before
 them (`baseTerrainHeightAt()`): surface, ecology and rivers are decided
 exactly as before, and a bed is cut only where they already put a river.
@@ -112,7 +112,7 @@ The bed is still a pure function of (seed, x, z), never stored.
 Revised again (same day): a river no longer stops at steep ground. It runs
 over rock, cascading down the steepest stretches in small stepped falls,
 and where its channel meets highland it ends in a round pool, a spring or
-a still pond (core/RiverBed.js). Each shape is local: a cascade's steps
+a still pond (core/nature/RiverBed.js). Each shape is local: a cascade's steps
 follow the land's own contours, and a pool sits where the centreline
 crosses HIGHLAND_ELEVATION, so nothing about a river is traced or stored.
 This world has no cliffs, so no tall waterfalls.
@@ -138,7 +138,7 @@ placed from its own world coordinates, so tiles need no seam handling.
 Revised (2026-10-14): a river now also has water, a thin sheet laid just
 over the ground mesh's own triangles along the channel
 (renderer/RiverTileMesh.js), running the way the ground falls
-(core/RiverFlow.js). The bed keeps its ground color, the height field is
+(core/nature/RiverFlow.js). The bed keeps its ground color, the height field is
 untouched and the water is visual only, so the rule's point stands: a
 river never becomes a second ground truth.
 

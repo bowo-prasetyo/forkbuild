@@ -295,7 +295,7 @@ export default Object.freeze({
     'publicationLink.buildMismatch': '見つかった作品が署名と一致しません',
     'publicationLink.noStoreCouldRead': 'どの保存先からも読み込めませんでした',
 
-    // The World welcome panel (core/WorldWelcomeContext.js): why a place is
+    // The World welcome panel (core/world/WorldWelcomeContext.js): why a place is
     // suggested, and what collaborators are doing, with and without a target.
     'welcome.reason.nearbyLandmark': '近くのランドマーク',
     'welcome.reason.youAreHere': '現在地',
@@ -1320,7 +1320,7 @@ export default Object.freeze({
     'distribution.explore': '探索',
     'distribution.close': '閉じる',
 
-    // Editor: a structure's details (ui/components/StructureInfoPanel.js, core/BlueprintSimilarity.js).
+    // Editor: a structure's details (ui/components/StructureInfoPanel.js, core/building/BlueprintSimilarity.js).
     'structureInfo.bricks': 'ブロック数',
     'structureInfo.footprint': '占有面積',
     'structureInfo.footprintValue': '{width} × {depth}',
@@ -1365,7 +1365,7 @@ export default Object.freeze({
     'blueprintSimilarity.identical': '同一のデザイン',
     'blueprintSimilarity.percent': 'デザインの類似度 {percent}%',
 
-    // Editor: the Build Library (ui/components/BuildLibraryPanel.js, core/sortStructures.js).
+    // Editor: the Build Library (ui/components/BuildLibraryPanel.js, core/building/sortStructures.js).
     'buildLibrary.title': 'ビルドライブラリ',
     'buildLibrary.bricks': 'ブロック',
     'buildLibrary.structures': '構造物',
@@ -2304,7 +2304,7 @@ export default Object.freeze({
     'residentPrompt.talk': '[T] 話す',
     'residentPrompt.remove': '[R] 住人を削除',
 
-    // What a resident says about its surroundings (core/ResidentTalk.js). A
+    // What a resident says about its surroundings (core/world/ResidentTalk.js). A
     // {title} or {name} is someone else's text, shown as written; {where} is
     // one of the resident.where.* messages, {distance} a resident.distance.* one.
     'resident.quiet': 'この辺りは静かですね。近くに何があるかは知りません。',
@@ -2423,7 +2423,7 @@ export default Object.freeze({
     'worldEncounterCanvas.peerSource': 'ピア {id}',
     'worldEncounterCanvas.snapshotSource': 'スナップショット {hash}',
 
-    // World View: words core/ keeps as ids (ui/i18n/worldText.js) and the focus panel's core-built text (core/WorldFocusContext.js).
+    // World View: words core/ keeps as ids (ui/i18n/worldText.js) and the focus panel's core-built text (core/world/WorldFocusContext.js).
     'compass.n': '北',
     'compass.ne': '北東',
     'compass.e': '東',
@@ -4704,7 +4704,7 @@ export default Object.freeze({
     'chatView.couldNotSwitchSpeaker': 'そのスピーカーに切り替えられませんでした。',
     'chatView.microphoneDisappeared': 'マイクが見つからなくなりました — あなたの音声なしで通話を続けます。',
 
-    // Refusals a person reads, thrown as UserFacingError (core/UserFacingError.js) by Identity, Peers, Chat and settings.
+    // Refusals a person reads, thrown as UserFacingError (core/app/UserFacingError.js) by Identity, Peers, Chat and settings.
     'refusal.noUserIsCurrentlyLogged': '先に名前を決めてください。',
     'refusal.nameLocked': '名前「{name}」はロックされています。続けるにはパスフレーズでロックを解除してください。',
     'refusal.nameRevoked': '名前「{name}」は失効しているため、署名できません。続けるには別の名前に切り替えてください。',

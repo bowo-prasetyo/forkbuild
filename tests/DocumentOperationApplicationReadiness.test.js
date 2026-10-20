@@ -1,18 +1,18 @@
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
-import { DocumentOperationCausalGapDetector } from '../core/DocumentOperationCausalGapDetector.js';
-import { DocumentOperationApplicationEligibility } from '../core/DocumentOperationApplicationEligibility.js';
+import { DocumentOperationCausalGapDetector } from '../core/collaboration/DocumentOperationCausalGapDetector.js';
+import { DocumentOperationApplicationEligibility } from '../core/collaboration/DocumentOperationApplicationEligibility.js';
 import {
     DocumentOperationApplicationReadiness,
     isDocumentOperationApplicationReadiness,
     evaluateApplicationReadiness
-} from '../core/DocumentOperationApplicationReadiness.js';
+} from '../core/collaboration/DocumentOperationApplicationReadiness.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.234 — Causal Application Readiness Boundary.
@@ -146,7 +146,7 @@ function runTests() {
 // Section D — THE CENTRAL CASE. Recovered predecessor: A is made known
 // WITHOUT ever being executed (simulating 0.9.230's own recovery path,
 // which records causal evidence but never touches CommandHistory — see
-// core/DocumentOperationProvenance.js). B -> A is ELIGIBLE (0.9.232's own
+// core/collaboration/DocumentOperationProvenance.js). B -> A is ELIGIBLE (0.9.232's own
 // answer, unchanged) but NOT_READY: this is the proof that eligibility and
 // readiness are genuinely different boundaries.
 // ===================================================================

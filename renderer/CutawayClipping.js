@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 // The cutaway that lets the player see into the build they stand in
-// (core/IndoorView.js): everything of that build above the cut height is not
+// (core/building/IndoorView.js): everything of that build above the cut height is not
 // drawn, so the room shows from above, the walls standing to the cut. Five
 // planes shared by every brick material World View draws, clipping only
 // where all five agree (`clipIntersection`): above `y`, and inside the

@@ -62,7 +62,7 @@ export const WorldCollaborationAccess = Object.freeze({
 //                    only," never a thrown error).
 //   isViewerOwner    session.isWorldOwner(documentId) — see _ownerRow.
 //   members          session.listWorldMembers(documentId) — an Array of
-//                    core/WorldEditAuthority.js instances (or their
+//                    core/collaboration/WorldEditAuthority.js instances (or their
 //                    toJSON() shape; only `.subjectIdentityId` and
 //                    `.isAuthorized` are ever read).
 //   presence         session.getWorldPresenceRoster(documentId) — an

@@ -48,7 +48,7 @@ export function usePostPublishDistribution({
 
     // Substrate choice shared by both actions: page-local, never persisted.
     // Opens on the saved preference, else 'nostr', and on 'nostr' too when the
-    // saved one is a network whose writer is switched off (core/NetworkWriters.js).
+    // saved one is a network whose writer is switched off (core/publication/NetworkWriters.js).
     const defaultAnnouncementDiscoveryProvider = inject('defaultAnnouncementDiscoveryProvider', 'nostr');
     const { writableOr, writable } = useWritableNetworks();
     const selectedDiscoveryProvider = ref(writableOr(defaultAnnouncementDiscoveryProvider));

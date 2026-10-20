@@ -3,8 +3,8 @@ import {
     deriveDecentralizedWorldEncounterLeadAssociationEvidenceFromEnvelopes,
     deriveDecentralizedWorldEncounterLeadAssociationEvidenceFromEnvelopesFromRegistry
 } from '../application/discovery/DecentralizedDiscoveryEnvelopeAssociationEvidenceIngress.js';
-import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
-import { describeDecentralizedWorldDiscoveryLead } from '../core/DecentralizedWorldDiscoveryLead.js';
+import { describeDecentralizedDiscoveryEnvelope } from '../core/publication/DecentralizedDiscoveryEnvelope.js';
+import { describeDecentralizedWorldDiscoveryLead } from '../core/world/DecentralizedWorldDiscoveryLead.js';
 import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js';
 import {
     resolveDecentralizedWorldEncounterLead,

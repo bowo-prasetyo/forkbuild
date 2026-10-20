@@ -1,4 +1,4 @@
-import { challengeAt } from '../../../core/BuildChallenge.js';
+import { challengeAt } from '../../../core/challenge/BuildChallenge.js';
 import { challengeJoinRoute, challengeThemeBrief, challengeThemeTitle, challengeThemeTwist, challengeTimeText } from './challengeText.js';
 import { t } from '../../i18n/i18n.js';
 

@@ -1,7 +1,7 @@
 // Document-level actions on the World View: metadata editing, Save and Publish.
 import { inject } from 'vue';
 import { t } from '../../i18n/i18n.js';
-import { worldBrickCount } from '../../../core/BuilderStamps.js';
+import { worldBrickCount } from '../../../core/catalog/BuilderStamps.js';
 export function useDocumentActions({
     activeDocumentInfo, feedback, guarded, metadataEditTarget, refreshSpatialUI, session, showMetadataEditor,
     funnelEventCounter = null

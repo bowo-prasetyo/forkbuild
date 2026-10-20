@@ -1,13 +1,13 @@
-import { encodeBrickTable, decodeBrickTable, brickTableErrors } from '../core/BrickTable.js';
-import { createBrickId, createId } from '../core/createId.js';
-import { DOCUMENT_SCHEMA_VERSION } from '../core/documentSchema.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Group } from '../core/Group.js';
-import { Position } from '../core/Position.js';
+import { encodeBrickTable, decodeBrickTable, brickTableErrors } from '../core/building/BrickTable.js';
+import { createBrickId, createId } from '../core/document/createId.js';
+import { DOCUMENT_SCHEMA_VERSION } from '../core/document/documentSchema.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Group } from '../core/building/Group.js';
+import { Position } from '../core/document/Position.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { DocumentValidator } from '../serializer/DocumentValidator.js';
 import { DocumentSchemaMigrator } from '../serializer/DocumentSchemaMigrator.js';
@@ -22,7 +22,7 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
 // Document schema 2 stores each building's bricks as a table
-// (core/BrickTable.js), and new bricks get 12-character ids
+// (core/building/BrickTable.js), and new bricks get 12-character ids
 // (createBrickId()). Checks the codec, the canonical round trip content
 // hashes rely on, migration of schema 0 and 1 documents, validation, the
 // size gained, and that autosave and Save read a checkpoint's revision

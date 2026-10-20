@@ -1,9 +1,9 @@
 // Tells the visitor counter which launch channel a visit came through
-// (core/LaunchChannel.js), under the funnel events' rules: the official site
+// (core/app/LaunchChannel.js), under the funnel events' rules: the official site
 // only, the Count this browser setting, Global Privacy Control and Do Not
 // Track. Called once at startup; never throws.
-import { launchChannelHitUrl, launchChannelOf } from '../../core/LaunchChannel.js';
-import { shouldCountFunnelEvent } from '../../core/VisitorCount.js';
+import { launchChannelHitUrl, launchChannelOf } from '../../core/app/LaunchChannel.js';
+import { shouldCountFunnelEvent } from '../../core/app/VisitorCount.js';
 
 // Returns the channel counted, or null.
 export function countLaunchChannel({ search, settingsStore, origin, privacySignals, random = Math.random, sendHit }) {

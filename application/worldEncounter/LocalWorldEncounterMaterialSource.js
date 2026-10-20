@@ -1,7 +1,7 @@
 import { WorldEncounterMaterialSource } from './WorldEncounterMaterialLoading.js';
-import { WorldEncounterKind } from '../../core/WorldEncounter.js';
+import { WorldEncounterKind } from '../../core/world/WorldEncounter.js';
 import { LocalDiscoveryProvider } from '../../discovery/LocalDiscoveryProvider.js';
-import { AvatarProfile } from '../../core/AvatarProfile.js';
+import { AvatarProfile } from '../../core/avatar/AvatarProfile.js';
 
 // 0.9.22 — Local World Encounter Material Loader.
 //
@@ -66,7 +66,7 @@ import { AvatarProfile } from '../../core/AvatarProfile.js';
 //   here) resolves to `null`/`UNAVAILABLE`, never a thrown error and
 //   never a guess.
 //
-// THE ACTUAL MATERIAL, NEVER THE DISCOVERY SUMMARY. `core/WorldEncounter.js`'s
+// THE ACTUAL MATERIAL, NEVER THE DISCOVERY SUMMARY. `core/world/WorldEncounter.js`'s
 // own `describeEncounterablePublication()`/`describeEncounterableAvatar()`
 // intentionally expose only enough to discover and display an encounter —
 // `title`/`isSigned`/`position` for a publication, `displayName`/`position`

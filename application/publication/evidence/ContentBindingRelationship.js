@@ -4,7 +4,7 @@
 // PublicationEvidenceConvergence.js can derive between a single anchor's
 // own `contentHash` and an EXPECTED content hash a caller already knows
 // (ordinarily a locally resolved publication's own
-// `contentReference.hash` — see core/DecentralizedPublication.js). This is
+// `contentReference.hash` — see core/publication/DecentralizedPublication.js). This is
 // a purely structural comparison of two strings; it is never a
 // verification outcome (see application/anchoring/AnchorVerificationOutcome.js,
 // which answers an entirely different question: "does this anchor's
@@ -16,7 +16,7 @@
 //                             expectedContentHash the caller supplied
 //   DIFFERS_FROM_EXPECTED  — they differ. NEVER read as "this anchor is
 //                             wrong" or "this anchor is malicious" — see
-//                             core/PublicationAnchor.js's own header on
+//                             core/publication/PublicationAnchor.js's own header on
 //                             why an anchor is always self-contained,
 //                             independently checkable evidence, never
 //                             something this codebase reconciles against

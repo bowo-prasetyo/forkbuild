@@ -1,6 +1,6 @@
 import { inject } from 'vue';
 import { useEndpointListSettings } from '../composables/useEndpointListSettings.js';
-import { DEFAULT_IPFS_GATEWAY_URLS } from '../../core/IpfsGatewayConfiguration.js';
+import { DEFAULT_IPFS_GATEWAY_URLS } from '../../core/networks/IpfsGatewayConfiguration.js';
 import { t } from '../i18n/i18n.js';
 
 // 0.9.665 — IPFS Gateway Settings UI.

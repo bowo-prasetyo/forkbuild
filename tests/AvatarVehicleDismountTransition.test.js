@@ -1,11 +1,11 @@
 import { readFile } from 'node:fs/promises';
-import { deriveAvatarVehicleDismountTransition } from '../core/AvatarVehicleDismountTransition.js';
-import { AvatarVehicleMount, createAvatarVehicleMount } from '../core/AvatarVehicleMount.js';
-import { AvatarVehicleDismountIntent } from '../core/AvatarVehicleDismountIntent.js';
-import { Position } from '../core/Position.js';
+import { deriveAvatarVehicleDismountTransition } from '../core/vehicles/AvatarVehicleDismountTransition.js';
+import { AvatarVehicleMount, createAvatarVehicleMount } from '../core/vehicles/AvatarVehicleMount.js';
+import { AvatarVehicleDismountIntent } from '../core/vehicles/AvatarVehicleDismountIntent.js';
+import { Position } from '../core/document/Position.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.82 — Avatar-Vehicle Dismount Transition, core/AvatarVehicleDismountTransition.js.
+// 0.9.82 — Avatar-Vehicle Dismount Transition, core/vehicles/AvatarVehicleDismountTransition.js.
 //
 //   Section A: successful transition — mounted + DISMOUNT + clear destination -> dismounted
 //   Section B: no transition — every way the rule's four conditions can fail
@@ -238,7 +238,7 @@ async function runTests() {
     // Section F — architectural regression
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../core/AvatarVehicleDismountTransition.js', import.meta.url);
+        const sourceUrl = new URL('../core/vehicles/AvatarVehicleDismountTransition.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -264,17 +264,17 @@ async function runTests() {
             'localStorage', 'StorageProvider', 'fetch(', 'WebSocket'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `29. core/AvatarVehicleDismountTransition.js's own code never references "${term}" — a pure state transition only, never vehicle awareness/target-resolution/destination-or-clearance recalculation/movement/collision/input/rendering/persistence/networking/randomness/clock`);
+            assert(!codeOnly.includes(term), `29. core/vehicles/AvatarVehicleDismountTransition.js's own code never references "${term}" — a pure state transition only, never vehicle awareness/target-resolution/destination-or-clearance recalculation/movement/collision/input/rendering/persistence/networking/randomness/clock`);
         }
-        assert(codeOnly.includes('isValidAvatarVehicleMount'), '30. this file does consume isValidAvatarVehicleMount() from core/AvatarVehicleMount.js — the existing validator, never a reimplementation');
+        assert(codeOnly.includes('isValidAvatarVehicleMount'), '30. this file does consume isValidAvatarVehicleMount() from core/vehicles/AvatarVehicleMount.js — the existing validator, never a reimplementation');
         assert(codeOnly.includes('AvatarVehicleDismountIntent.DISMOUNT'), '31. this file does consume the existing AvatarVehicleDismountIntent vocabulary rather than a bare string literal');
     }
     {
-        const exportsModule = await import('../core/AvatarVehicleDismountTransition.js');
+        const exportsModule = await import('../core/vehicles/AvatarVehicleDismountTransition.js');
         const exportedNames = Object.keys(exportsModule).sort();
         assert(
             JSON.stringify(exportedNames) === JSON.stringify(['deriveAvatarVehicleDismountTransition']),
-            '32. core/AvatarVehicleDismountTransition.js exports exactly the one transition function — nothing else'
+            '32. core/vehicles/AvatarVehicleDismountTransition.js exports exactly the one transition function — nothing else'
         );
     }
     {

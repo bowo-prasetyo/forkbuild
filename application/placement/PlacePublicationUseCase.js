@@ -1,10 +1,10 @@
-import { WorldPlacement } from '../../core/WorldPlacement.js';
-import { SpatialBounds } from '../../core/SpatialBounds.js';
-import { PlacementRecord } from '../../core/PlacementRecord.js';
-import { CausalStamp } from '../../core/CausalStamp.js';
+import { WorldPlacement } from '../../core/publication/WorldPlacement.js';
+import { SpatialBounds } from '../../core/world/SpatialBounds.js';
+import { PlacementRecord } from '../../core/publication/PlacementRecord.js';
+import { CausalStamp } from '../../core/collaboration/CausalStamp.js';
 import {
     evaluatePlacementPermission, placementPolicyOf, PlacementPolicy, PlacementPermissionReason, PlacementNotPermittedError
-} from '../../core/PlacementPolicy.js';
+} from '../../core/publication/PlacementPolicy.js';
 
 // Creates a WorldPlacement and a PlacementRecord for a published document.
 //
@@ -61,7 +61,7 @@ export class PlacePublicationUseCase {
                 // DOCUMENT id (it loads storage[documentId] — see its own
                 // header) and a Publication's own `id` is a SEPARATE,
                 // independently-minted field from its `documentId` (see
-                // core/WorldPlacement.js's own header on the distinction).
+                // core/publication/WorldPlacement.js's own header on the distinction).
                 // Passing publicationId here therefore threw "no document
                 // found" on every single call, unconditionally — this
                 // branch's own catch below silently swallowed that and

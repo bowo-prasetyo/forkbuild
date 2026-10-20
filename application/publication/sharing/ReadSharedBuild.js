@@ -1,4 +1,4 @@
-import { ContentReference } from '../../../core/ContentReference.js';
+import { ContentReference } from '../../../core/document/ContentReference.js';
 import { DocumentSerializer } from '../../../serializer/DocumentSerializer.js';
 
 // The bricks of a published build kept on this device, for the turning view

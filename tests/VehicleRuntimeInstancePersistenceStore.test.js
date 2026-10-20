@@ -1,9 +1,9 @@
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { VehicleRuntimeInstancePersistenceStore } from '../storage/VehicleRuntimeInstancePersistenceStore.js';
 import { VehicleRuntimeInstances } from '../application/world/VehicleRuntimeInstances.js';
-import { VehicleInstance } from '../core/VehicleInstance.js';
-import { VehicleType } from '../core/VehicleType.js';
-import { Position } from '../core/Position.js';
+import { VehicleInstance } from '../core/vehicles/VehicleInstance.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
+import { Position } from '../core/document/Position.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 

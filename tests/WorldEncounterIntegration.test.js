@@ -220,8 +220,8 @@ function connectedPeerOf(identityId) {
     const sourceUrl = new URL('../application/worldEncounter/WorldEncounterIntegration.js', import.meta.url);
     const fullSource = await readFile(sourceUrl, 'utf8');
 
-    assert(fullSource.includes("from '../../core/WorldDiscoverySourceAssembly.js'"), 'imports assembleWorldDiscoveryInputs from 0.9.7');
-    assert(fullSource.includes("from '../../core/WorldEncounter.js'"), 'imports deriveWorldEncounters from 0.9.0');
+    assert(fullSource.includes("from '../../core/world/WorldDiscoverySourceAssembly.js'"), 'imports assembleWorldDiscoveryInputs from 0.9.7');
+    assert(fullSource.includes("from '../../core/world/WorldEncounter.js'"), 'imports deriveWorldEncounters from 0.9.0');
     assert(fullSource.includes("from './WorldEncounterReadModel.js'"), 'imports describeWorldEncounterReadModel from 0.9.1');
     assert(fullSource.includes("from './WorldEncounterView.js'"), 'imports describeWorldEncounterView from 0.9.2');
 

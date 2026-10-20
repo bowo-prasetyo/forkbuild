@@ -2,7 +2,7 @@ import {
     describeSnapshotDiscoveryEnvelope,
     SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL,
     SNAPSHOT_DISCOVERY_ENVELOPE_VERSION
-} from '../../core/SnapshotDiscoveryEnvelope.js';
+} from '../../core/publication/SnapshotDiscoveryEnvelope.js';
 import { STEEM_SNAPSHOT_DISCOVERY_TAG } from './SteemSnapshotDiscoveryQueryService.js';
 
 // Announces where a Snapshot's bytes are, on Steem, with the publish() shape

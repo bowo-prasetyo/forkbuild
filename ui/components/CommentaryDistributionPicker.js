@@ -1,7 +1,7 @@
 import { describeSteemAnnouncingUnreadiness } from '../../application/steem/SteemAnnouncingReadiness.js';
 import { useWritableNetworks } from './networkWriters/useWritableNetworks.js';
 import { describeBlurtAnnouncingUnreadiness } from '../../application/blurt/BlurtAnnouncingReadiness.js';
-import { LOCAL_AND_PEERS_ONLY } from '../../core/CommentaryDistributionProvider.js';
+import { LOCAL_AND_PEERS_ONLY } from '../../core/publication/CommentaryDistributionProvider.js';
 import { t } from '../i18n/i18n.js';
 
 // Network names, the same in every language.
@@ -64,7 +64,7 @@ export default {
         }
     },
     // Steem and Blurt are offered only while this device's writer for them is
-    // switched on (core/NetworkWriters.js).
+    // switched on (core/publication/NetworkWriters.js).
     setup() {
         const { steemOn, blurtOn } = useWritableNetworks();
         return { steemOn, blurtOn };

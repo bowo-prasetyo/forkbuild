@@ -1,4 +1,4 @@
-import { Document } from '../../core/Document.js';
+import { Document } from '../../core/document/Document.js';
 import { DocumentSerializer } from '../../serializer/DocumentSerializer.js';
 import { sealDocumentJson } from '../../identity/DocumentSealing.js';
 
@@ -20,7 +20,7 @@ import { sealDocumentJson } from '../../identity/DocumentSealing.js';
 // this class adds no additional exclusion logic of its own because none
 // is needed.
 export class ExportDocumentUseCase {
-    // `identityProvider`, when given, seals the file (core/DocumentSeal.js)
+    // `identityProvider`, when given, seals the file (core/document/DocumentSeal.js)
     // whenever the identity exporting is the build's author, so Import can
     // trust the name and license in it. Anyone else's export, or one made
     // while signed out or locked, is the plain document as before.

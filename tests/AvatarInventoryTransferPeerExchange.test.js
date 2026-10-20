@@ -7,9 +7,9 @@ import {
 } from '../application/avatar/AvatarInventoryTransferPeerProtocol.js';
 import { AvatarInventoryTransferPeerExchange } from '../application/avatar/AvatarInventoryTransferPeerExchange.js';
 import { AvatarInventoryStore } from '../application/avatar/AvatarInventoryStore.js';
-import { createAvatarInventoryEntry, InventoryEntryKind, withEntryAdded } from '../core/AvatarInventory.js';
-import { VehicleType } from '../core/VehicleType.js';
-import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
+import { createAvatarInventoryEntry, InventoryEntryKind, withEntryAdded } from '../core/avatar/AvatarInventory.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
+import { ANIMAL_SPECIES } from '../core/nature/WildlifeField.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';

@@ -1,9 +1,9 @@
 import { RepositoryNetworkDiscovery } from '../publication/RepositoryNetworkDiscovery.js';
-import { buildTagDiscoveryTag } from '../../core/NarrowDiscoveryTags.js';
+import { buildTagDiscoveryTag } from '../../core/publication/NarrowDiscoveryTags.js';
 
 // Finds a week's challenge entries on the networks: the Publication
 // announcements carrying the week's `forkbuild-tag:` tag
-// (core/NarrowDiscoveryTags.js) on Nostr and Arweave, and those whose Blurt
+// (core/publication/NarrowDiscoveryTags.js) on Nostr and Arweave, and those whose Blurt
 // build post lists the week's tag (BlurtPublicationDiscoveryQueryService
 // answers the same `forkbuild-tag:` query). New ones are fetched and verified exactly as the
 // Repository's network discovery does, and admitted to the Repository too;

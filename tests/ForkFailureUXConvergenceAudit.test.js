@@ -1,15 +1,15 @@
 import { readFile, readdir } from 'node:fs/promises';
 
-import { Brick } from '../core/Brick.js';
-import { Building } from '../core/Building.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { Position } from '../core/Position.js';
-import { World } from '../core/World.js';
-import { License, LicenseId } from '../core/License.js';
+import { Brick } from '../core/building/Brick.js';
+import { Building } from '../core/building/Building.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { Position } from '../core/document/Position.js';
+import { World } from '../core/document/World.js';
+import { License, LicenseId } from '../core/document/License.js';
 import {
     EditorEntryContext, EditorEntryReason, editorEntryContextToQuery, editorEntryContextFromQuery
-} from '../core/EditorEntryContext.js';
+} from '../core/document/EditorEntryContext.js';
 import { Publication } from '../publisher/Publication.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';

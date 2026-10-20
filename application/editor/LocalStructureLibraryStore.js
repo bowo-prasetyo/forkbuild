@@ -1,6 +1,6 @@
 import { StorageProvider } from '../../storage/StorageProvider.js';
-import { Structure } from '../../core/Structure.js';
-import { groupStructuresByCategory } from '../../core/groupStructuresByCategory.js';
+import { Structure } from '../../core/building/Structure.js';
+import { groupStructuresByCategory } from '../../core/building/groupStructuresByCategory.js';
 
 const STORAGE_KEY_PREFIX = 'personal-structure:';
 
@@ -19,13 +19,13 @@ const STORAGE_KEY_PREFIX = 'personal-structure:';
 // Personal Library Persists What Extraction Only Returns (0.4.3)"):
 //
 //   - A personal Structure is reusable CONTENT, not World state — it
-//     never touches core/World.js, never gets a WorldPlacement, and
+//     never touches core/document/World.js, never gets a WorldPlacement, and
 //     nothing here is signed, published, or replicated. Purely local
 //     application state, per-device, exactly like LocalWorldExperience
 //     already established for camera framing (0.3.10) — NOT synchronized
 //     across a user's devices yet; see docs/Roadmap.md, 0.4.3's own
 //     "Deliberately excluded."
-//   - Every entry is an independent, self-contained core/Structure.js
+//   - Every entry is an independent, self-contained core/building/Structure.js
 //     VALUE, never a reference to the Document it may have been
 //     extracted from. This is already guaranteed one rung down by
 //     application/editor/CreateStructureFromSelectionUseCase.js (fresh bricks,
@@ -38,7 +38,7 @@ const STORAGE_KEY_PREFIX = 'personal-structure:';
 //     ever removed. See this class's own removeStructure().
 //   - Library membership is never part of a Structure's own identity —
 //     nothing here adds a "libraryId" or "personal: true" field to
-//     core/Structure.js itself. A Structure that started life here can
+//     core/building/Structure.js itself. A Structure that started life here can
 //     move to being forked, composed, extracted again, or re-saved
 //     without ever knowing which library (built-in, personal, or none)
 //     it currently sits in.
@@ -72,7 +72,7 @@ export class LocalStructureLibraryStore {
     // this first added" survives a later metadata edit rather than
     // bumping every rename to the top of listStructures()'s recency
     // order. `savedAt` is an optional explicit override (tests only, in
-    // practice — mirrors core/LocalWorldExperience.js's own constructor
+    // practice — mirrors core/world/LocalWorldExperience.js's own constructor
     // accepting an explicit lastVisitedAt) for deterministic recency
     // ordering without depending on real elapsed wall-clock time between
     // calls in the same tick; omitted, it defaults to Date.now().
@@ -141,9 +141,9 @@ export class LocalStructureLibraryStore {
         return records.map((record) => Structure.fromJSON(record.structure));
     }
 
-    // Same [{ category, structures }] shape core/StructureRegistry.js#groupByCategory()
+    // Same [{ category, structures }] shape core/building/StructureRegistry.js#groupByCategory()
     // already returns for the built-in library, via the exact same
-    // core/groupStructuresByCategory.js helper — so
+    // core/building/groupStructuresByCategory.js helper — so
     // ui/components/BuildLibraryPanel.js renders "My Structures" through
     // the identical grouping/rendering path, never a second one invented
     // for personal content.
@@ -154,7 +154,7 @@ export class LocalStructureLibraryStore {
     // 0.6.4 — Blueprint Discovery, Search & Library Organization.
     // Exposes each stored Structure's own `savedAt` (see addStructure()'s
     // own header on how it survives a metadata-only overwrite) keyed by
-    // id — added for core/sortStructures.js's 'recent' sort key, which
+    // id — added for core/building/sortStructures.js's 'recent' sort key, which
     // needs an actual timestamp per id, not merely the recency ORDER
     // listStructures() already returns. Never exposed on Structure
     // itself (see that class's own header) — this is exactly the kind
@@ -176,7 +176,7 @@ export class LocalStructureLibraryStore {
         return map;
     }
 
-    // Mirrors core/StructureRegistry.js#search()'s own contract exactly
+    // Mirrors core/building/StructureRegistry.js#search()'s own contract exactly
     // — matches a tag or array of tags against ANY of a structure's own
     // tags. ui/components/BuildLibraryPanel.js's existing name/category/tag
     // text filter already works over any structureGroups-shaped prop

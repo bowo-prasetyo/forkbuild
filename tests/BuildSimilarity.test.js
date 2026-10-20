@@ -1,11 +1,11 @@
-// core/BuildSimilarity.js: two whole builds compared brick by brick, lined up
+// core/catalog/BuildSimilarity.js: two whole builds compared brick by brick, lined up
 // however one was moved or turned, for the "looks a lot like someone else's
 // build" hint at publish.
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
 import {
     MIN_COMPARED_BRICKS, MIN_READY_MADE_POINTS, SIMILAR_BUILD_THRESHOLD, buildShape, compareBuildShapes, isSimilarBuild, readyMadeCoverage, similarityUpperBound, withoutReadyMade
-} from '../core/BuildSimilarity.js';
+} from '../core/catalog/BuildSimilarity.js';
 import { CollectionLibrary } from '../core/library/CollectionLibrary.js';
 import { VillageLibrary } from '../core/library/VillageLibrary.js';
 import { assert } from './support/Assert.js';

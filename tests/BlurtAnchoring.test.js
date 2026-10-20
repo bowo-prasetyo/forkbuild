@@ -4,9 +4,9 @@ import {
     blurtPublicKeyString,
     blurtTransactionId,
     packBlurtTransaction
-} from '../core/BlurtBinary.js';
-import { captureBlurtBlockEvidence, checkBlurtBlockEvidence } from '../core/BlurtBlockEvidence.js';
-import { blurtAnchorBatch, blurtTransactionAnchors, parseBlurtAnchorProof } from '../core/BlurtAnchor.js';
+} from '../core/networks/BlurtBinary.js';
+import { captureBlurtBlockEvidence, checkBlurtBlockEvidence } from '../core/networks/BlurtBlockEvidence.js';
+import { blurtAnchorBatch, blurtTransactionAnchors, parseBlurtAnchorProof } from '../core/networks/BlurtAnchor.js';
 import { createBlurtPoster } from '../application/blurt/BlurtPoster.js';
 import { createBlurtRpcClient } from '../blurt/BlurtRpcClient.js';
 import { BlurtAnchorPublisher } from '../anchoring/BlurtAnchorPublisher.js';
@@ -14,7 +14,7 @@ import { BlurtProofVerifier } from '../anchoring/BlurtProofVerifier.js';
 import { BlurtAnchorEvidenceView } from '../anchoring/BlurtAnchorEvidenceView.js';
 import { BlurtAnchorFinalityObserver } from '../anchoring/BlurtAnchorFinalityObserver.js';
 import { composeBlurtRuntime } from '../application/blurt/BlurtRuntimeComposition.js';
-import { BlurtReadingConfiguration } from '../core/BlurtReadingConfiguration.js';
+import { BlurtReadingConfiguration } from '../core/networks/BlurtReadingConfiguration.js';
 import { BLURT_WITNESS_KEY, fakeBlurtChain } from './support/FakeBlurtChain.js';
 import { assert } from './support/Assert.js';
 

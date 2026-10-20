@@ -1,17 +1,17 @@
 import {
     terrainHeightAt, baseTerrainHeightAt, riverBedAt, riverPoolAt, riverPoolReachAt, riverChannelFallAt, WATER_LEVEL, HIGHLAND_ELEVATION, DEFAULT_WORLD_SEED
-} from '../core/TerrainHeightField.js';
+} from '../core/nature/TerrainHeightField.js';
 import {
     isRiverAt, riverProximityAt, riverChannelTangentAt, riverChannelDistanceAt, hydrologyFeatureAt, HYDROLOGY_FEATURE,
     RIVER_CHANNEL_THRESHOLD
-} from '../core/Hydrology.js';
-import { surfaceCategoryAt, SURFACE_CATEGORY } from '../core/TerrainSurface.js';
-import { riverFlowAt, riverRapidsAt, MAX_RIVER_SPEED } from '../core/RiverFlow.js';
-import { STEP_HEIGHT, RIVER_FILL, POOL_RADIUS, BED_DEPTH, CASCADE_SHALLOWING } from '../core/RiverBed.js';
-import { DEFAULT_MAX_WALKABLE_SLOPE } from '../core/TerrainWalkability.js';
+} from '../core/nature/Hydrology.js';
+import { surfaceCategoryAt, SURFACE_CATEGORY } from '../core/nature/TerrainSurface.js';
+import { riverFlowAt, riverRapidsAt, MAX_RIVER_SPEED } from '../core/nature/RiverFlow.js';
+import { STEP_HEIGHT, RIVER_FILL, POOL_RADIUS, BED_DEPTH, CASCADE_SHALLOWING } from '../core/nature/RiverBed.js';
+import { DEFAULT_MAX_WALKABLE_SLOPE } from '../core/nature/TerrainWalkability.js';
 import { assert } from './support/Assert.js';
 
-// Where rivers end (core/RiverBed.js): they run over rock rather than
+// Where rivers end (core/nature/RiverBed.js): they run over rock rather than
 // vanishing, cascade down the steepest ground in walkable steps, and end at
 // the highland edge in a pool, a spring where the river runs away from it
 // and a still pond where it runs in. Nowhere does a river simply stop on dry

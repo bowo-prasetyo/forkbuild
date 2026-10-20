@@ -6,7 +6,7 @@ import {
 } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { describeWorldFromDiscoveryRegistry } from '../application/discovery/WorldDiscoveryRegistryProjection.js';
 import { describePeerWorldDiscoverySource } from '../peer/PeerWorldDataIngress.js';
-import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
+import { describeWorldDiscoverySource } from '../core/world/WorldDiscoverySource.js';
 import { assert } from './support/Assert.js';
 
 function connectedPeerOf(identityId) {

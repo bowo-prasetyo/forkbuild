@@ -1,9 +1,9 @@
-import { getAvatarProfileSigningDescriptor } from '../../core/AvatarProfileAdvertisement.js';
+import { getAvatarProfileSigningDescriptor } from '../../core/avatar/AvatarProfileAdvertisement.js';
 
 // 0.2.41 — the ONE place a local profile advertisement gains a real
 // Ed25519 signature before it ever reaches a transport, exactly
 // mirroring application/presence/PresenceSigning.js one layer up. Deliberately
-// NOT inside core/AvatarProfileAdvertisement.js itself (a private
+// NOT inside core/avatar/AvatarProfileAdvertisement.js itself (a private
 // signing key must never be reachable from core/) and NOT a mutation
 // of the advertisement that already exists — a signed advertisement is
 // a brand NEW plain object.

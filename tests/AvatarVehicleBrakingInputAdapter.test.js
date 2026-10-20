@@ -1,13 +1,13 @@
 import { readFile } from 'node:fs/promises';
-import { deriveAvatarVehicleBrakingInputFact } from '../core/AvatarVehicleBrakingInputAdapter.js';
+import { deriveAvatarVehicleBrakingInputFact } from '../core/vehicles/AvatarVehicleBrakingInputAdapter.js';
 import {
     AvatarVehicleBrakingIntent,
     deriveAvatarVehicleBrakingIntent
-} from '../core/AvatarVehicleBrakingIntent.js';
+} from '../core/vehicles/AvatarVehicleBrakingIntent.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.95 — Vehicle Braking Input Adapter,
-// core/AvatarVehicleBrakingInputAdapter.js.
+// core/vehicles/AvatarVehicleBrakingInputAdapter.js.
 //
 //   Section A: brake control pressed ('brakedown') -> requested
 //   Section B: brake control released ('brakeup') -> not requested
@@ -25,7 +25,7 @@ import { assert } from './support/Assert.js';
 //
 // Central architectural claim under test throughout: this file only
 // TRANSLATES an already-abstract "brake control" event into the shape
-// core/AvatarVehicleBrakingIntent.js already knows how to interpret — it
+// core/vehicles/AvatarVehicleBrakingIntent.js already knows how to interpret — it
 // never calls that function itself, never decides what a request MEANS,
 // and — the one property this milestone insists on above every other —
 // never once mentions a specific key, mouse button, or gamepad control.
@@ -98,7 +98,7 @@ async function runTests() {
     // -------------------------------------------------------------
     // Section E — statelessness / idempotence: repeated identical facts
     // produce the identical result; this file threads no caller-owned
-    // state between calls, unlike core/AvatarContinuousMovementInputAdapter.js's
+    // state between calls, unlike core/avatar/AvatarContinuousMovementInputAdapter.js's
     // own altDown/shiftDown
     // -------------------------------------------------------------
     {
@@ -156,7 +156,7 @@ async function runTests() {
     // mouse/gamepad vocabulary, no intent derivation, no movement
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../core/AvatarVehicleBrakingInputAdapter.js', import.meta.url);
+        const sourceUrl = new URL('../core/vehicles/AvatarVehicleBrakingInputAdapter.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -178,23 +178,23 @@ async function runTests() {
             'velocity', 'acceleration', 'speed', 'position', 'rotation', 'collision', 'physics', 'camera'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `21. core/AvatarVehicleBrakingInputAdapter.js's own code never references "${term}" — pure control-event translation only, never a specific key/mouse/gamepad, never the intent function itself, never movement`);
+            assert(!codeOnly.includes(term), `21. core/vehicles/AvatarVehicleBrakingInputAdapter.js's own code never references "${term}" — pure control-event translation only, never a specific key/mouse/gamepad, never the intent function itself, never movement`);
         }
     }
     {
         // This file must not even IMPORT anything — the adapter must not
         // need to know a vehicle, an intent vocabulary, or a controller
         // exists.
-        const sourceUrl = new URL('../core/AvatarVehicleBrakingInputAdapter.js', import.meta.url);
+        const sourceUrl = new URL('../core/vehicles/AvatarVehicleBrakingInputAdapter.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         assert(!/^\s*import\b/m.test(source),
-            '22. core/AvatarVehicleBrakingInputAdapter.js has no import statements at all');
+            '22. core/vehicles/AvatarVehicleBrakingInputAdapter.js has no import statements at all');
     }
     {
-        const exportsModule = await import('../core/AvatarVehicleBrakingInputAdapter.js');
+        const exportsModule = await import('../core/vehicles/AvatarVehicleBrakingInputAdapter.js');
         const exportedNames = Object.keys(exportsModule).sort();
         assert(JSON.stringify(exportedNames) === JSON.stringify(['deriveAvatarVehicleBrakingInputFact']),
-            '23. core/AvatarVehicleBrakingInputAdapter.js exports exactly the one translation function — nothing else');
+            '23. core/vehicles/AvatarVehicleBrakingInputAdapter.js exports exactly the one translation function — nothing else');
     }
 
     console.log('✅ All Avatar Vehicle Braking Input Adapter tests passed.');

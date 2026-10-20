@@ -1,4 +1,4 @@
-import { NotificationEvent } from '../../../core/NotificationEvent.js';
+import { NotificationEvent } from '../../../core/social/NotificationEvent.js';
 
 // 0.9.275 — Publication Commentary Notification Producer.
 //

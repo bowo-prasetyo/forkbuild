@@ -1,4 +1,4 @@
-import { DecentralizedPublication } from '../../core/DecentralizedPublication.js';
+import { DecentralizedPublication } from '../../core/publication/DecentralizedPublication.js';
 import { validateDecentralizedPublication } from './DecentralizedPublicationValidator.js';
 
 // 0.7.2 — Decentralized Publication Discovery & Catalog.
@@ -7,7 +7,7 @@ import { validateDecentralizedPublication } from './DecentralizedPublicationVali
 // application/blueprint/BlueprintAttributionExchange.js one layer up: those two
 // each move exactly one domain's own signed claim from one replica's
 // store into another's. This class moves the WRAPPER those domains can
-// optionally travel inside instead — a core/DecentralizedPublication.js
+// optionally travel inside instead — a core/publication/DecentralizedPublication.js
 // envelope itself — into application/publication/LocalPublicationCatalog.js,
 // without ever needing to know what contentKind it wraps.
 //
@@ -31,7 +31,7 @@ import { validateDecentralizedPublication } from './DecentralizedPublicationVali
 //
 //   1. validate  — application/publication/DecentralizedPublicationValidator.js (is
 //                   this even a well-formed envelope?)
-//   2. construct — a real core/DecentralizedPublication.js from the
+//   2. construct — a real core/publication/DecentralizedPublication.js from the
 //                   package's own fields (never trusted as-is)
 //   3. verify    — identity/LocalAuthorizationVerifier.js#
 //                   verifyDecentralizedPublication() (did the claimed

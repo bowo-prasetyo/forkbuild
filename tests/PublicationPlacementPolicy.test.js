@@ -1,20 +1,20 @@
-// A publisher's placement policy (core/PlacementPolicy.js): chosen in
+// A publisher's placement policy (core/publication/PlacementPolicy.js): chosen in
 // Document Properties, signed into the Publication at publish, and honored
 // wherever a placement is created (PlacePublicationUseCase), merged from a
 // peer (ReplicaMergeService) or accepted from a claim (ClaimedBuilds).
 import {
     PlacementPolicy, PlacementPermissionReason, PlacementNotPermittedError, evaluatePlacementPermission, placementPolicyOf
-} from '../core/PlacementPolicy.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { Document } from '../core/Document.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { SpatialBounds } from '../core/SpatialBounds.js';
-import { PlacementRecord } from '../core/PlacementRecord.js';
-import { CausalStamp } from '../core/CausalStamp.js';
-import { License, LicenseId } from '../core/License.js';
+} from '../core/publication/PlacementPolicy.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { Document } from '../core/document/Document.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { SpatialBounds } from '../core/world/SpatialBounds.js';
+import { PlacementRecord } from '../core/publication/PlacementRecord.js';
+import { CausalStamp } from '../core/collaboration/CausalStamp.js';
+import { License, LicenseId } from '../core/document/License.js';
 import { Publication } from '../publisher/Publication.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';

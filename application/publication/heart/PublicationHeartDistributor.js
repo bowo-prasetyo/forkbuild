@@ -1,4 +1,4 @@
-import { LOCAL_AND_PEERS_ONLY } from '../../../core/CommentaryDistributionProvider.js';
+import { LOCAL_AND_PEERS_ONLY } from '../../../core/publication/CommentaryDistributionProvider.js';
 
 // Which networks this device sent each of its own hearts to, and where they
 // landed, so taking a heart back on Nostr can ask relays to delete the

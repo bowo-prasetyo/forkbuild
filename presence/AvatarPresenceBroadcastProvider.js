@@ -9,14 +9,14 @@
 // changing).
 //
 // Deliberately NOT modeled after StorageProvider — presence is never
-// persisted (see core/AvatarPresence.js's own header), so there is no
+// persisted (see core/avatar/AvatarPresence.js's own header), so there is no
 // save()/load() here, only a live publish/subscribe pair.
 export class AvatarPresenceBroadcastProvider {
     // advertisement: the plain, JSON-shaped object
-    // core/AvatarPresenceAdvertisement.js's toAvatarPresenceAdvertisement()
+    // core/avatar/AvatarPresenceAdvertisement.js's toAvatarPresenceAdvertisement()
     // produces. Fire-and-forget — a broadcast provider never
     // acknowledges, retries, or guarantees delivery; a receiver's own
-    // sequence-based ingestion (core/PresenceIngestion.js) is what
+    // sequence-based ingestion (core/avatar/PresenceIngestion.js) is what
     // stays correct regardless of whether any given advertisement
     // arrives at all.
     advertise(advertisement) {

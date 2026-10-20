@@ -1,7 +1,7 @@
-import { DeviceNotificationState, deviceNotificationState, selectNotificationsToShow } from '../../core/DeviceNotifications.js';
+import { DeviceNotificationState, deviceNotificationState, selectNotificationsToShow } from '../../core/social/DeviceNotifications.js';
 
 // Shows the signed-in identity's new notifications through the operating
-// system while ForkBuild is open but not in view (core/DeviceNotifications.js).
+// system while ForkBuild is open but not in view (core/social/DeviceNotifications.js).
 // It only reads what the notification store already holds, so every producer
 // (new work from someone followed, a remix of one of your builds, a comment)
 // is covered without knowing about it, and nothing new is stored or sent.
@@ -15,7 +15,7 @@ export class DeviceNotificationRelay {
     // what that identity already had is taken as seen, as at start().
     // loadEvents(): the recipient's NotificationEvents (none when signed out).
     // settings(): this device's choice. permission(): the browser's
-    // (core/DeviceNotifications.js, DeviceNotificationPermission).
+    // (core/social/DeviceNotifications.js, DeviceNotificationPermission).
     // isVisible(): whether ForkBuild is on screen, when nothing is shown.
     // describe(event): `{ title, body, path }`, or null for an event that
     // can't be put into words. show(described, event): shows it.

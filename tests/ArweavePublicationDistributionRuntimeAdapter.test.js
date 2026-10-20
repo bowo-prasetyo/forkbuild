@@ -7,8 +7,8 @@ import { PublicationDistributionLifecycleMemoryStore } from '../application/publ
 import { PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
 import { ArweavePublicationMaterialUploader } from '../application/arweave/ArweavePublicationMaterialUploader.js';
 import { Publication } from '../publisher/Publication.js';
-import { ContentReference } from '../core/ContentReference.js';
-import { Signature } from '../core/Signature.js';
+import { ContentReference } from '../core/document/ContentReference.js';
+import { Signature } from '../core/publication/Signature.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.109 — Arweave Publication Distribution Runtime Adapter.

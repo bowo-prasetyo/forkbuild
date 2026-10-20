@@ -1,4 +1,4 @@
-import { ContentReference } from '../../core/ContentReference.js';
+import { ContentReference } from '../../core/document/ContentReference.js';
 import { DecentralizedSnapshotResolutionOutcome } from './DecentralizedSnapshotResolutionOutcome.js';
 
 // 0.9.134 — Snapshot Retrieval from Decentralized Discovery.
@@ -26,7 +26,7 @@ import { DecentralizedSnapshotResolutionOutcome } from './DecentralizedSnapshotR
 //   Snapshot bytes
 //         │
 //         ▼
-//   content hash verification (core/ContentReference.js#verify())
+//   content hash verification (core/document/ContentReference.js#verify())
 //         │
 //         ▼
 //   usable Snapshot
@@ -62,7 +62,7 @@ import { DecentralizedSnapshotResolutionOutcome } from './DecentralizedSnapshotR
 //
 // NO SIGNATURE, NO ENVELOPE VALIDATION OF ITS OWN. A discovered candidate
 // (`{ contentHash, locator, storage }`) already passed through
-// core/SnapshotDiscoveryEnvelope.js's own shape validation inside
+// core/publication/SnapshotDiscoveryEnvelope.js's own shape validation inside
 // application/nostr/NostrSnapshotDiscoveryQueryService.js#search() — this class
 // trusts that shape and performs no second parse of it. What it never
 // trusts is the CLAIM the shape carries: that the locator actually serves
@@ -105,7 +105,7 @@ import { DecentralizedSnapshotResolutionOutcome } from './DecentralizedSnapshotR
 //   sibling) or decides WHEN a resolution should be attempted.
 // - **A new ContentStoreRegistry.** See "reuses
 //   SnapshotPlacementStoreRegistry," above.
-// - **Any change to core/SnapshotDiscoveryEnvelope.js, application/
+// - **Any change to core/publication/SnapshotDiscoveryEnvelope.js, application/
 //   NostrSnapshotDiscoveryQueryService.js, application/
 //   NostrSnapshotDiscoveryPublisher.js, application/
 //   SnapshotPlacementResolver.js, or application/

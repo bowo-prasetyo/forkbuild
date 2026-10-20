@@ -1,6 +1,6 @@
 import { DocumentSerializer } from '../../serializer/DocumentSerializer.js';
 import { DocumentCloneService } from '../document/DocumentCloneService.js';
-import { License } from '../../core/License.js';
+import { License } from '../../core/document/License.js';
 import { LoadPublishedSnapshotUseCase } from '../snapshot/LoadPublishedSnapshotUseCase.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 import { forkTitle } from '../document/DocumentTitles.js';

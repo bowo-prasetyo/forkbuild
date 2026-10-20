@@ -1,5 +1,5 @@
 
-import { ArweaveGatewayConfiguration, DEFAULT_ARWEAVE_GATEWAY_URL, isValidArweaveGatewayUrl } from '../core/ArweaveGatewayConfiguration.js';
+import { ArweaveGatewayConfiguration, DEFAULT_ARWEAVE_GATEWAY_URL, isValidArweaveGatewayUrl } from '../core/networks/ArweaveGatewayConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { ArweaveGatewayConfigurationStore } from '../storage/ArweaveGatewayConfigurationStore.js';
 import { SetArweaveGatewayConfigurationUseCase } from '../application/settings/SetArweaveGatewayConfigurationUseCase.js';
@@ -7,7 +7,7 @@ import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { ArweaveWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js';
 import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
 import { composeSnapshotDistributionRuntime } from '../application/snapshot/SnapshotDistributionRuntimeComposition.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
@@ -128,8 +128,8 @@ async function run() {
             '10. the view writes the configuration through the injected use case, never ArweaveGatewayConfigurationStore.save() directly');
         assert(!/new ArweaveGatewayConfiguration\(/.test(viewExecutable),
             '11. the view never constructs an ArweaveGatewayConfiguration itself — validation and construction stay inside the use case');
-        assert(viewExecutable.includes("import { DEFAULT_ARWEAVE_GATEWAY_URLS } from '../../core/ArweaveGatewayConfiguration.js';"),
-            '12. the ONE thing the view imports from core/ArweaveGatewayConfiguration.js is the plain default constant, for display only');
+        assert(viewExecutable.includes("import { DEFAULT_ARWEAVE_GATEWAY_URLS } from '../../core/networks/ArweaveGatewayConfiguration.js';"),
+            '12. the ONE thing the view imports from core/networks/ArweaveGatewayConfiguration.js is the plain default constant, for display only');
         assert(!/ArweaveContentStore|ArweaveWorldEncounterMaterialResolver/.test(viewExecutable),
             '13. the view never imports or constructs a retrieval adapter, and never even names one — it only ever talks to the injected store/use case seam');
         assert(!/composeDiscoverSnapshotRuntime|composeWorldEncounterMaterialSources|composeDecentralized/.test(viewExecutable),
@@ -397,7 +397,7 @@ async function run() {
         // in what the UI actually RENDERS (the template literal itself,
         // never this file's own design-rationale comments, which
         // legitimately discuss and rule out each one by name, exactly like
-        // core/ArweaveGatewayConfiguration.js's own "DELIBERATELY EXCLUDED"
+        // core/networks/ArweaveGatewayConfiguration.js's own "DELIBERATELY EXCLUDED"
         // header discusses fields it never implements).
         const templateMatch = viewSource.match(/template:\s*`([\s\S]*)`\s*\n\};/);
         assert(templateMatch, '59. the view exports a template literal to inspect');

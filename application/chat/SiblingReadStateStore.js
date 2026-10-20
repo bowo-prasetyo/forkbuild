@@ -1,12 +1,12 @@
-import { SiblingReadMarker } from '../../core/SiblingReadMarker.js';
-import { UserFacingError } from '../../core/UserFacingError.js';
-import { message } from '../../core/Message.js';
+import { SiblingReadMarker } from '../../core/social/SiblingReadMarker.js';
+import { UserFacingError } from '../../core/app/UserFacingError.js';
+import { message } from '../../core/app/Message.js';
 
 const STORAGE_KEY_PREFIX = 'sibling-read-state:';
 
 // 0.2.83 — Multi-Device Conversation & Read-State Synchronization.
 //
-// The durable home for core/SiblingReadMarker.js — "what has each of my
+// The durable home for core/social/SiblingReadMarker.js — "what has each of my
 // OWN sibling devices told me about ITS OWN local read position, per
 // peer." A SIXTH durable per-owner store in this file's own family
 // (alongside application/chat/ChatOutbox.js, application/chat/ConversationStore.js,
@@ -18,7 +18,7 @@ const STORAGE_KEY_PREFIX = 'sibling-read-state:';
 //
 // This class is never reused as, and never reaches into,
 // application/chat/ConversationReadTracker.js — see that file's own header
-// and core/SiblingReadMarker.js's own: a device's OWN local read marker
+// and core/social/SiblingReadMarker.js's own: a device's OWN local read marker
 // answers what THIS device's owner has actually looked at, on THIS
 // screen; this store answers a completely different, THIRD-PARTY
 // question, "what has one of my other devices reported about itself."

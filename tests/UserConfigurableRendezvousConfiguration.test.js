@@ -1,5 +1,5 @@
 
-import { RendezvousConfiguration, isValidRendezvousUrl } from '../core/RendezvousConfiguration.js';
+import { RendezvousConfiguration, isValidRendezvousUrl } from '../core/networks/RendezvousConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { RendezvousConfigurationStore } from '../storage/RendezvousConfigurationStore.js';
 import { SetRendezvousConfigurationUseCase } from '../application/settings/SetRendezvousConfigurationUseCase.js';
@@ -50,7 +50,7 @@ import { readSource as source } from './support/SourceText.js';
 //               unmodified provider/transport classes.
 //   Section I — reset to defaults: clear() restores genuine absence,
 //               never a saved copy of the default.
-//   Section J — no effect on STUN: core/IceServerConfiguration.js and
+//   Section J — no effect on STUN: core/networks/IceServerConfiguration.js and
 //               peer/IceServerConfig.js are untouched by this milestone's
 //               own configuration boundary.
 //   Section K — no effect on peer identity: peer/
@@ -70,7 +70,7 @@ import { readSource as source } from './support/SourceText.js';
 //               protocol are untouched, and this milestone's classes
 //               never import either.
 //
-// See core/RendezvousConfiguration.js, storage/RendezvousConfigurationStore.js,
+// See core/networks/RendezvousConfiguration.js, storage/RendezvousConfigurationStore.js,
 // application/settings/SetRendezvousConfigurationUseCase.js, and
 // ui/views/RendezvousSettingsView.js for the full design rationale this
 // milestone carries out.
@@ -476,7 +476,7 @@ async function run() {
         // Explicitly saving the default entries by hand still leaves a
         // real, distinct saved entry — never silently treated as
         // "nothing to persist," the identical rule
-        // core/IceServerConfiguration.js's own settings view holds.
+        // core/networks/IceServerConfiguration.js's own settings view holds.
         const saved = setUseCase.execute({ urls: [...DEFAULT_RENDEZVOUS_URLS] });
         assert(store.get() !== null, '65. explicitly saving entries matching the deployment default still leaves a real, explicit entry on file');
         assert(saved.urls.length === DEFAULT_RENDEZVOUS_URLS.length, '66. …with the same entry count as the deployment default, confirming this is a genuine explicit save, not a no-op');
@@ -484,7 +484,7 @@ async function run() {
     console.log('✓ Section I: "Reset to Defaults" clears to genuine absence; explicitly saving default-matching entries still persists a real, distinct entry');
 
     // ===============================================================
-    // Section J — no effect on STUN: core/IceServerConfiguration.js and
+    // Section J — no effect on STUN: core/networks/IceServerConfiguration.js and
     // peer/IceServerConfig.js are untouched by this milestone's own
     // configuration boundary.
     // ===============================================================
@@ -494,13 +494,13 @@ async function run() {
         assert(!/RendezvousConfiguration|RendezvousConfigurationStore|SetRendezvousConfigurationUseCase|RendezvousSettingsView/.test(iceConfigSource),
             '68. peer/IceServerConfig.js imports none of this milestone\'s new Rendezvous configuration classes');
 
-        const iceServerConfigurationExecutable = (await source('core/IceServerConfiguration.js')).replace(/\/\/.*$/gm, '');
+        const iceServerConfigurationExecutable = (await source('core/networks/IceServerConfiguration.js')).replace(/\/\/.*$/gm, '');
         assert(!/RendezvousConfiguration|RendezvousConfigurationStore/.test(iceServerConfigurationExecutable),
-            '69. core/IceServerConfiguration.js itself never imports this milestone\'s new Rendezvous configuration classes');
+            '69. core/networks/IceServerConfiguration.js itself never imports this milestone\'s new Rendezvous configuration classes');
 
-        const rendezvousConfigurationExecutable = (await source('core/RendezvousConfiguration.js')).replace(/\/\/.*$/gm, '');
+        const rendezvousConfigurationExecutable = (await source('core/networks/RendezvousConfiguration.js')).replace(/\/\/.*$/gm, '');
         assert(!/IceServerConfiguration|stun:|turn:/.test(rendezvousConfigurationExecutable),
-            '70. core/RendezvousConfiguration.js itself never imports or references STUN/TURN in executable code');
+            '70. core/networks/RendezvousConfiguration.js itself never imports or references STUN/TURN in executable code');
     }
     console.log('✓ Section J: STUN\'s own configuration boundary and TURN\'s own fetch/credential module are both untouched by this milestone\'s Rendezvous configuration boundary');
 
@@ -520,7 +520,7 @@ async function run() {
 
         const transportSource = await source('peer/WebSocketRendezvousTransport.js');
         assert(!/RendezvousConfiguration|RendezvousConfigurationStore|SetRendezvousConfigurationUseCase/.test(transportSource),
-            '73. peer/WebSocketRendezvousTransport.js itself is untouched — it still accepts a plain url string, with no awareness of core/RendezvousConfiguration.js at all; ui/main.js alone bridges the two');
+            '73. peer/WebSocketRendezvousTransport.js itself is untouched — it still accepts a plain url string, with no awareness of core/networks/RendezvousConfiguration.js at all; ui/main.js alone bridges the two');
     }
     console.log('✓ Section K: peer identity/authentication and publication signing are both untouched by this milestone\'s Rendezvous configuration boundary');
 
@@ -625,7 +625,7 @@ async function run() {
 
         const bootstrapSource = await source('peer/DiscoveryBootstrap.js');
         assert(!/RendezvousConfiguration|core\/RendezvousConfiguration/.test(bootstrapSource),
-            '83. peer/DiscoveryBootstrap.js itself is untouched — it still accepts a plain bootstrapProviders array, with no awareness of core/RendezvousConfiguration.js at all; ui/main.js alone bridges the two');
+            '83. peer/DiscoveryBootstrap.js itself is untouched — it still accepts a plain bootstrapProviders array, with no awareness of core/networks/RendezvousConfiguration.js at all; ui/main.js alone bridges the two');
     }
     console.log('✓ Section N: the existing graceful-degradation discipline and the discovery bootstrap/transport classes are completely untouched by this milestone — the new configuration boundary is entirely a composition-root/settings concern layered on top');
 }

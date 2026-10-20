@@ -1,7 +1,7 @@
 import { computed } from 'vue';
-import { encodeQrCode } from '../../core/QrCode.js';
+import { encodeQrCode } from '../../core/app/QrCode.js';
 
-// `text` as a QR code (core/QrCode.js): an SVG of dark modules on white,
+// `text` as a QR code (core/app/QrCode.js): an SVG of dark modules on white,
 // with the four-module quiet zone scanners need. Always dark on light,
 // whatever the page's theme: cameras read that best.
 export default {

@@ -1,9 +1,9 @@
-import { WorldEncounterKind } from '../../../core/WorldEncounter.js';
+import { WorldEncounterKind } from '../../../core/world/WorldEncounter.js';
 import {
     describeDecentralizedDiscoveryEnvelope,
     DECENTRALIZED_DISCOVERY_ENVELOPE_PROTOCOL,
     DECENTRALIZED_DISCOVERY_ENVELOPE_VERSION
-} from '../../../core/DecentralizedDiscoveryEnvelope.js';
+} from '../../../core/publication/DecentralizedDiscoveryEnvelope.js';
 import { isNonEmptyString } from '../../../utils/typeGuards.js';
 
 const URI_SCHEME_PATTERN = /^([a-zA-Z][a-zA-Z0-9+.-]*):\/\//;
@@ -54,7 +54,7 @@ const URI_SCHEME_PATTERN = /^([a-zA-Z][a-zA-Z0-9+.-]*):\/\//;
 //
 // NEVER A SECOND ENVELOPE FORMAT. This file does not invent its own
 // "distribution" JSON shape for the discovery half of its own output. It
-// calls `core/DecentralizedDiscoveryEnvelope.js`'s own
+// calls `core/publication/DecentralizedDiscoveryEnvelope.js`'s own
 // `describeDecentralizedDiscoveryEnvelope()`, unmodified, with this file's
 // own `objectId`/`uri` plugged into the exact `protocol`/`version` the
 // consumption side (0.9.30 through 0.9.43) already knows how to read — the
@@ -64,7 +64,7 @@ const URI_SCHEME_PATTERN = /^([a-zA-Z][a-zA-Z0-9+.-]*):\/\//;
 // exists; this file honors that rather than quietly drifting from it.
 //
 // A SIGNED PUBLICATION IS REQUIRED — DUCK-TYPED, NEVER A CLASS IMPORT, THE
-// SAME RESTRAINT `core/DecentralizedPublicationLocationClaim.js` (0.9.29)
+// SAME RESTRAINT `core/publication/DecentralizedPublicationLocationClaim.js` (0.9.29)
 // ALREADY HOLDS FOR THE IDENTICAL REASON. This file never imports
 // `Publication` from `publisher/Publication.js`; it reads exactly two
 // duck-typed fields off whatever `publication` a caller hands it: `id` and

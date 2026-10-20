@@ -1,6 +1,6 @@
 import { Command } from './Command.js';
-import { Position } from '../../core/Position.js';
-import { message } from '../../core/Message.js';
+import { Position } from '../../core/document/Position.js';
+import { message } from '../../core/app/Message.js';
 
 // 0.2.91 — World Instance Editing & Placement Management. The
 // StructurePlacement counterpart to MoveBrickCommand.js, one rung up:
@@ -9,12 +9,12 @@ import { message } from '../../core/Message.js';
 // offset, the original position is remembered for undo().
 //
 // Mutates ONLY StructurePlacement.position via
-// core/World.js#updateStructurePlacement() — never Document.bricks[*],
+// core/document/World.js#updateStructurePlacement() — never Document.bricks[*],
 // never the referenced Document at all. This is the load-bearing
 // distinction the whole milestone exists to make real: moving House
 // Instance A never moves a single brick inside the House Document, and
 // leaves every OTHER placement of that same Document (Instance B, C, …)
-// completely untouched — see core/StructurePlacement.js's own header.
+// completely untouched — see core/building/StructurePlacement.js's own header.
 //
 // Deliberately ignorant of collision: exactly like MoveBrickCommand and
 // PlaceStructureCommand before it, validating the destination

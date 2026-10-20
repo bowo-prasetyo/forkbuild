@@ -1,13 +1,13 @@
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { StructurePlacement } from '../core/StructurePlacement.js';
-import { SpatialBounds } from '../core/SpatialBounds.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { StructurePlacement } from '../core/building/StructurePlacement.js';
+import { SpatialBounds } from '../core/world/SpatialBounds.js';
 import { DomainEvent } from '../core/events/Event.js';
 import { EventBus } from '../core/events/EventBus.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { VillageLibrary } from '../core/library/VillageLibrary.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';
@@ -36,9 +36,9 @@ import { assert } from './support/Assert.js';
 // tests/PlacementPreviewUX.test.js's own note); the rendering half lives
 // in tests/StructurePlacementRendering.test.js.
 //
-//   Section A: core/StructurePlacement.js — pure data, requires a
+//   Section A: core/building/StructurePlacement.js — pure data, requires a
 //              documentId, round-trips byte-identically
-//   Section B: core/World.js — placements are document state exactly
+//   Section B: core/document/World.js — placements are document state exactly
 //              like buildings/groups: CRUD, events, backward-compatible
 //              serialization (a pre-0.2.90 World JSON has no
 //              `placements` field at all)
@@ -53,7 +53,7 @@ import { assert } from './support/Assert.js';
 //   Section F: StructurePlacementValidator — conservative AABB
 //              collision against bricks and other placements,
 //              translate-only (rotation ignored, matching
-//              core/SpatialBounds.js's own V1 simplification)
+//              core/world/SpatialBounds.js's own V1 simplification)
 //   Section G: StructurePlacementTool — headless tool-level proof that
 //              the committed StructurePlacement matches the preview
 //              exactly across a rotate/move/place sequence, and that a
@@ -99,7 +99,7 @@ async function run() {
     const brickRegistry = new CreateBrickRegistryUseCase().execute();
 
     // -------------------------------------------------------------
-    // Section A: core/StructurePlacement.js
+    // Section A: core/building/StructurePlacement.js
     // -------------------------------------------------------------
     {
         assert((() => {
@@ -130,7 +130,7 @@ async function run() {
     }
 
     // -------------------------------------------------------------
-    // Section B: core/World.js — placements as document state
+    // Section B: core/document/World.js — placements as document state
     // -------------------------------------------------------------
     {
         const events = [];
@@ -500,8 +500,8 @@ async function run() {
             + 'never touches the Document or the other placement');
     }
 
-    console.log('✓ Section A: core/StructurePlacement.js — pure data, requires a documentId, round-trips byte-identically');
-    console.log('✓ Section B: core/World.js — placements are document state (CRUD, events, backward-compatible serialization)');
+    console.log('✓ Section A: core/building/StructurePlacement.js — pure data, requires a documentId, round-trips byte-identically');
+    console.log('✓ Section B: core/document/World.js — placements are document state (CRUD, events, backward-compatible serialization)');
     console.log('✓ Section C: PlaceStructureCommand — execute/undo/redo identity, worldId guard, CommandRegistry round trip');
     console.log('✓ Section D: RemoveStructurePlacementCommand — snapshot/undo, never touches the referenced Document');
     console.log('✓ Section E: StructureDocumentResolver — fresh every call, null (never throws) for missing/corrupt content');

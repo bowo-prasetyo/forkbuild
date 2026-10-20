@@ -1,5 +1,5 @@
 import { SteemAnchorFinalityObserver } from './SteemAnchorFinalityObserver.js';
-import { BLURT_ANCHOR_TYPE, parseBlurtAnchorProof } from '../core/BlurtAnchor.js';
+import { BLURT_ANCHOR_TYPE, parseBlurtAnchorProof } from '../core/networks/BlurtAnchor.js';
 
 // Watches a freshly created `blurt` anchor until its block is irreversible
 // (docs/Protocol.md, "Proposed: Blurt Substrate", "Anchoring"). Blurt's

@@ -1,5 +1,5 @@
 import { SpatialEditingContext } from '../spatial-state/SpatialEditingContext.js';
-import { Position } from '../../core/Position.js';
+import { Position } from '../../core/document/Position.js';
 import { MoveBrickCommand } from '../commands/MoveBrickCommand.js';
 import { RotateBrickCommand } from '../commands/RotateBrickCommand.js';
 import { DeleteBrickCommand } from '../commands/DeleteBrickCommand.js';
@@ -11,9 +11,9 @@ import { TransformMath } from './TransformMath.js';
 import { TransformSnap } from './TransformSnap.js';
 import { TransformSettings } from './TransformSettings.js';
 import { TransformAlignment } from './TransformAlignment.js';
-import { SelectionTransformValidator } from '../../core/SelectionTransformValidator.js';
-import { SnapMath } from '../../core/SnapMath.js';
-import { message } from '../../core/Message.js';
+import { SelectionTransformValidator } from '../../core/building/SelectionTransformValidator.js';
+import { SnapMath } from '../../core/building/SnapMath.js';
+import { message } from '../../core/app/Message.js';
 
 // Translates spatial editing intent into domain mutations via CommandHistory.
 // The UI calls this; it never touches Brick directly.
@@ -59,7 +59,7 @@ import { message } from '../../core/Message.js';
 // excluded" section) that also decides whether a transform is legal:
 // every preview frame stamps its gesture feedback with `valid` — whether
 // the candidate positions collide with any brick outside the moving
-// selection, per core/SelectionTransformValidator.js — and commit
+// selection, per core/building/SelectionTransformValidator.js — and commit
 // refuses to turn an invalid candidate into a TransformSelectionCommand,
 // reverting to the pre-gesture positions instead. This is the SAME
 // "release over an invalid position cancels the whole gesture" posture
@@ -74,7 +74,7 @@ import { message } from '../../core/Message.js';
 //
 // 0.4.9 — Alignment, Snapping & Repetition adds ONE new operation here,
 // snapSelectionToGrid(): "move this selection's pivot onto the nearest
-// world-space grid intersection" (core/SnapMath.js), routed through the
+// world-space grid intersection" (core/building/SnapMath.js), routed through the
 // SAME beginTransformGesture/commitTransformGesture chokepoint with
 // snap:false — exact intent, like applyNumericTransform — so it
 // inherits 0.4.8's collision gate for free rather than needing a new
@@ -335,7 +335,7 @@ export class SpatialEditingService {
     // member by that SAME x/z delta so the selection's own internal
     // geometry is preserved exactly, the same rule numeric absolute
     // translation (applyNumericTransform) already follows. Y is left
-    // untouched — see core/SnapMath.js's own header on why grid
+    // untouched — see core/building/SnapMath.js's own header on why grid
     // snapping is a ground-plane (X/Z) operation here.
     //
     // Deliberately routed through beginTransformGesture/

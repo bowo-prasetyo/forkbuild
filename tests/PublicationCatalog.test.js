@@ -1,15 +1,15 @@
-import { Position } from '../core/Position.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { License, LicenseId } from '../core/License.js';
-import { PublicationQuery, DEFAULT_PAGE_SIZE } from '../core/PublicationQuery.js';
-import { PublicationPage } from '../core/PublicationPage.js';
-import { PublicationSort, comparePublications } from '../core/PublicationSort.js';
-import { PreviewType, derivePlaceholderPreview } from '../core/DocumentPreview.js';
-import { GroupBy, groupPublications } from '../core/PublicationGrouping.js';
+import { Position } from '../core/document/Position.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { License, LicenseId } from '../core/document/License.js';
+import { PublicationQuery, DEFAULT_PAGE_SIZE } from '../core/catalog/PublicationQuery.js';
+import { PublicationPage } from '../core/catalog/PublicationPage.js';
+import { PublicationSort, comparePublications } from '../core/catalog/PublicationSort.js';
+import { PreviewType, derivePlaceholderPreview } from '../core/catalog/DocumentPreview.js';
+import { GroupBy, groupPublications } from '../core/catalog/PublicationGrouping.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
 import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
@@ -81,7 +81,7 @@ function makeRawRecord({ id, documentId, title, author, publishedAt, parentDocum
 
 async function runTests() {
     // -------------------------------------------------------------
-    // 1-6. core/PublicationSort.js — deterministic ordering.
+    // 1-6. core/catalog/PublicationSort.js — deterministic ordering.
     // -------------------------------------------------------------
     {
         const a = { id: 'a', title: 'Ancient City', author: 'alice', publishedAt: new Date('2026-01-01T00:00:00Z') };
@@ -98,7 +98,7 @@ async function runTests() {
         // lowercase ones ('M' < 'o'), which is NOT how a human/locale
         // collator would order "Mars Colony" vs "ocean base" — this is
         // the deliberate, documented trade-off for cross-replica
-        // determinism (see core/PublicationSort.js).
+        // determinism (see core/catalog/PublicationSort.js).
         assert(comparePublications(c, b, PublicationSort.TITLE_ASC) < 0,
             '4. TITLE_ASC is ordinal (uppercase before lowercase), not locale-aware collation');
         assert(comparePublications(a, c, PublicationSort.AUTHOR_ASC) < 0,
@@ -261,7 +261,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // 19-24. core/DocumentPreview.js — deterministic placeholder.
+    // 19-24. core/catalog/DocumentPreview.js — deterministic placeholder.
     // -------------------------------------------------------------
     {
         const pubLike = { id: 'pub-fixed-id', title: 'Ancient City' };
@@ -280,7 +280,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // 25-29. core/PublicationGrouping.js — presentation-only grouping.
+    // 25-29. core/catalog/PublicationGrouping.js — presentation-only grouping.
     // -------------------------------------------------------------
     {
         const now = new Date(2026, 5, 15, 12, 0, 0);

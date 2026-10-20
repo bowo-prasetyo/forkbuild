@@ -1,12 +1,12 @@
-import { BlurtReadingConfiguration, DEFAULT_BLURT_API_NODES } from '../core/BlurtReadingConfiguration.js';
-import { BlurtAnnouncingConfiguration } from '../core/BlurtAnnouncingConfiguration.js';
+import { BlurtReadingConfiguration, DEFAULT_BLURT_API_NODES } from '../core/networks/BlurtReadingConfiguration.js';
+import { BlurtAnnouncingConfiguration } from '../core/networks/BlurtAnnouncingConfiguration.js';
 import { BlurtReadingConfigurationStore } from '../storage/BlurtReadingConfigurationStore.js';
 import { BlurtAnnouncingConfigurationStore } from '../storage/BlurtAnnouncingConfigurationStore.js';
 import { BlurtKnownAuthorStore } from '../storage/BlurtKnownAuthorStore.js';
 import { SetBlurtReadingConfigurationUseCase } from '../application/settings/SetBlurtReadingConfigurationUseCase.js';
 import { SetBlurtAnnouncingConfigurationUseCase } from '../application/settings/SetBlurtAnnouncingConfigurationUseCase.js';
-import { blurtPublicationViewUrl, describePublicationClaimLocator, publicationClaimLocatorFromViewPath, publicationViewUrl } from '../core/ForkBuildAppLinks.js';
-import { parseBlurtContentLocator } from '../core/BlurtPost.js';
+import { blurtPublicationViewUrl, describePublicationClaimLocator, publicationClaimLocatorFromViewPath, publicationViewUrl } from '../core/app/ForkBuildAppLinks.js';
+import { parseBlurtContentLocator } from '../core/networks/BlurtPost.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 

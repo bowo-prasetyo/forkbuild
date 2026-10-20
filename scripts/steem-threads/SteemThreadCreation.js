@@ -4,7 +4,7 @@ import {
     describeSteemDiscoveryThreadPost,
     steemDiscoveryThreadOperations,
     steemDiscoveryThreadPermlink
-} from '../../core/SteemDiscoveryThread.js';
+} from '../../core/networks/SteemDiscoveryThread.js';
 import { parseSteemTime } from '../../steem/SteemRpcClient.js';
 
 // Nodes and clocks disagree by a few seconds; posting early is refused by

@@ -1,8 +1,8 @@
-import { isValidAvatarProfileAdvertisement, getAvatarProfileSigningDescriptor } from '../../core/AvatarProfileAdvertisement.js';
-import { resolveIncomingProfile } from '../../core/AvatarProfileIngestion.js';
-import { detectAvatarProfileEquivocation } from '../../core/AvatarProfileEquivocation.js';
-import { PresenceAuthorityRegistry } from '../../core/PresenceAuthority.js';
-import { TrustObservation, TrustStatus } from '../../core/TrustObservation.js';
+import { isValidAvatarProfileAdvertisement, getAvatarProfileSigningDescriptor } from '../../core/avatar/AvatarProfileAdvertisement.js';
+import { resolveIncomingProfile } from '../../core/avatar/AvatarProfileIngestion.js';
+import { detectAvatarProfileEquivocation } from '../../core/avatar/AvatarProfileEquivocation.js';
+import { PresenceAuthorityRegistry } from '../../core/avatar/PresenceAuthority.js';
+import { TrustObservation, TrustStatus } from '../../core/identity/TrustObservation.js';
 import { computeContentHash } from '../../serializer/contentHash.js';
 import { LocalAuthorizationVerifier } from '../../identity/LocalAuthorizationVerifier.js';
 import { ReplayGuard } from '../../replication/ReplayGuard.js';
@@ -12,22 +12,22 @@ import { ReplayGuard } from '../../replication/ReplayGuard.js';
 // design doc's own instruction: "reuse the trust vocabulary but not
 // automatically duplicate the entire presence protocol"):
 //
-//   1. Is this even shaped like an advertisement?           (core/AvatarProfileAdvertisement.js)
+//   1. Is this even shaped like an advertisement?           (core/avatar/AvatarProfileAdvertisement.js)
 //   2. If signed, does the signature actually verify?        (identity/LocalAuthorizationVerifier.js)
 //      (unsigned is always tolerated — 0.2.41 has no policy
-//      knob equivalent to core/PresenceTrustPolicy.js)
-//   3. Is the claimant allowed to speak for this avatarId?    (core/PresenceAuthority.js — REUSED directly)
+//      knob equivalent to core/avatar/PresenceTrustPolicy.js)
+//   3. Is the claimant allowed to speak for this avatarId?    (core/avatar/PresenceAuthority.js — REUSED directly)
 //   4. Have I already accepted this EXACT claim before?       (replication/ReplayGuard.js — REUSED directly)
-//   5. Does it conflict with what's currently held at the      (core/AvatarProfileEquivocation.js)
+//   5. Does it conflict with what's currently held at the      (core/avatar/AvatarProfileEquivocation.js)
 //      same profileRevision?
-//   6. Is it actually newer?                                  (core/AvatarProfileIngestion.js)
+//   6. Is it actually newer?                                  (core/avatar/AvatarProfileIngestion.js)
 //
 // TWO deliberate reuse decisions, both explained here rather than at
 // the reused files themselves (neither file has anything
 // presence-specific baked into its actual logic, despite living under
 // a presence-flavored name/location):
 //
-//   - core/PresenceAuthority.js's PresenceAuthorityRegistry is reused
+//   - core/avatar/PresenceAuthority.js's PresenceAuthorityRegistry is reused
 //     for the IDENTICAL underlying question ("who is authorized to
 //     speak for this avatarId") — but with its OWN, SEPARATE instance
 //     here, never the same one a PresenceTrustBoundary uses. Keeping
@@ -38,7 +38,7 @@ import { ReplayGuard } from '../../replication/ReplayGuard.js';
 //     authority, or vice versa.
 //   - replication/ReplayGuard.js (the UNBOUNDED, remember-forever
 //     guard) is reused AS-IS, unlike presence's own bespoke
-//     core/PresenceReplayWindow.js. That bounded structure exists
+//     core/avatar/PresenceReplayWindow.js. That bounded structure exists
 //     specifically because presence updates are HIGH-frequency (every
 //     accepted WASD step); profile updates are the opposite — rare,
 //     deliberate edits, exactly the workload ReplayGuard was built

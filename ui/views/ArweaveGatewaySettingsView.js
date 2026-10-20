@@ -1,12 +1,12 @@
 import { inject } from 'vue';
 import { useEndpointListSettings } from '../composables/useEndpointListSettings.js';
-import { DEFAULT_ARWEAVE_GATEWAY_URLS } from '../../core/ArweaveGatewayConfiguration.js';
+import { DEFAULT_ARWEAVE_GATEWAY_URLS } from '../../core/networks/ArweaveGatewayConfiguration.js';
 import { t } from '../i18n/i18n.js';
 
 // 0.9.366 — Arweave Gateway Settings UI.
 //
 // The missing user-facing seam over 0.9.364's own configuration boundary
-// (core/ArweaveGatewayConfiguration.js + storage/
+// (core/networks/ArweaveGatewayConfiguration.js + storage/
 // ArweaveGatewayConfigurationStore.js) and 0.9.365's own convergence proof
 // that boundary already controls both real retrieval paths. Nothing about
 // that boundary changes here — this view only ever makes it REACHABLE,
@@ -41,7 +41,7 @@ import { t } from '../i18n/i18n.js';
 // THIS VIEW NEVER CONSTRUCTS A RETRIEVAL ADAPTER, AND NEVER IMPORTS
 // content/ArweaveContentStore.js OR application/
 // ArweaveWorldEncounterMaterialResolver.js. `DEFAULT_ARWEAVE_GATEWAY_URLS`
-// is the one thing imported from core/ArweaveGatewayConfiguration.js — a
+// is the one thing imported from core/networks/ArweaveGatewayConfiguration.js — a
 // plain constant, consulted only to SHOW the deployment defaults when no
 // override is on file, never to construct anything. A change saved here
 // only reaches those adapters through the existing composition root
@@ -70,7 +70,7 @@ import { t } from '../i18n/i18n.js';
 // 0.9.440 — ONE GATEWAY PER LINE, IN TRY ORDER. The single text input
 // became a multi-line field: each non-empty line is one gateway URL, and
 // the ORDER of the lines is the order gateways are tried on a read — see
-// core/ArweaveGatewayConfiguration.js's own 0.9.440 header, "ordering IS
+// core/networks/ArweaveGatewayConfiguration.js's own 0.9.440 header, "ordering IS
 // the priority." A single line still behaves exactly as the single input
 // always did — see that same header, "why the single-value shape isn't
 // just a list of one everywhere." This view still performs no ordering
@@ -96,7 +96,7 @@ export default {
             entriesOf: (configuration) => configuration.gatewayUrls,
             // Splitting the textarea into lines is the ONLY interpretation
             // this view performs; every other rule (what counts as a valid
-            // URL) stays inside core/ArweaveGatewayConfiguration.js's own
+            // URL) stays inside core/networks/ArweaveGatewayConfiguration.js's own
             // constructor, reached through the use case.
             toRequest: (gatewayUrls) => ({ gatewayUrls })
         });

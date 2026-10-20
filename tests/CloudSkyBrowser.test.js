@@ -1,8 +1,8 @@
 // @environment browser
 import * as THREE from 'three';
 import { CloudSky } from '../renderer/CloudSky.js';
-import { DAY, NIGHT } from '../core/DayCycle.js';
-import { FAIR_WEATHER, weatherOfCover, overcastLook } from '../core/Weather.js';
+import { DAY, NIGHT } from '../core/nature/DayCycle.js';
+import { FAIR_WEATHER, weatherOfCover, overcastLook } from '../core/nature/Weather.js';
 import { assert } from './support/Assert.js';
 
 // The clouds drawn with real WebGL (renderer/CloudSky.js): the shader

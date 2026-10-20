@@ -1,4 +1,4 @@
-import { ContentReference } from '../../core/ContentReference.js';
+import { ContentReference } from '../../core/document/ContentReference.js';
 import { IpfsPublicationContentVerificationState } from './IpfsPublicationContentVerificationState.js';
 
 // 0.8.69 — IPFS Publication Record & Content-Identity Binding.
@@ -22,7 +22,7 @@ import { IpfsPublicationContentVerificationState } from './IpfsPublicationConten
 //   retrieved bytes, or ContentUnavailableError
 //        │
 //        ▼
-//   core/ContentReference.js#verify(bytes)          (UNCHANGED)
+//   core/document/ContentReference.js#verify(bytes)          (UNCHANGED)
 //        │
 //        ▼
 //   HASH_MATCH / HASH_MISMATCH / UNAVAILABLE   (application/
@@ -57,7 +57,7 @@ import { IpfsPublicationContentVerificationState } from './IpfsPublicationConten
 // be checked right now.
 //
 // A MISMATCH IS ONLY EVER REPORTED FOR BYTES THAT WERE ACTUALLY
-// RETRIEVED. `core/ContentReference.js#verify()` is called only once
+// RETRIEVED. `core/document/ContentReference.js#verify()` is called only once
 // real bytes are in hand; there is no code path that reports
 // HASH_MISMATCH for an unreachable locator.
 export class IpfsPublicationContentVerifier {
@@ -76,7 +76,7 @@ export class IpfsPublicationContentVerifier {
     // or any plain object carrying `contentHash`/`locator` strings —
     // this class never requires an `instanceof` check, mirroring
     // `application/anchoring/bitcoin/BitcoinAnchorProofReconciliationView.js#reconcile()`'s
-    // own duck-typed acceptance of a `core/PublicationAnchor.js`.
+    // own duck-typed acceptance of a `core/publication/PublicationAnchor.js`.
     //
     // Throws only for a caller-contract violation checked before the
     // injected contentStore is ever consulted: a missing `record`, or one

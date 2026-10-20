@@ -1,5 +1,5 @@
-import { snapshotCellTag, snapshotCellTagsAround } from '../../../core/NarrowDiscoveryTags.js';
-import { detectSpatialOverlap } from '../../../core/SpatialOverlap.js';
+import { snapshotCellTag, snapshotCellTagsAround } from '../../../core/publication/NarrowDiscoveryTags.js';
+import { detectSpatialOverlap } from '../../../core/world/SpatialOverlap.js';
 
 // Claimed builds: a downloaded, content-verified Snapshot whose publisher
 // announced a `claimedPosition`, for a Publication this device holds no
@@ -115,7 +115,7 @@ export const ClaimedBuildAcceptance = Object.freeze({
     PUBLICATION_UNKNOWN: 'publication-unknown',
     // The known Publication names different content than the ghost shows.
     CONTENT_MISMATCH: 'content-mismatch',
-    // Its publisher allows only their own placements (core/PlacementPolicy.js).
+    // Its publisher allows only their own placements (core/publication/PlacementPolicy.js).
     PUBLISHER_ONLY: 'publisher-only'
 });
 

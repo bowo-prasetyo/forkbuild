@@ -11,8 +11,8 @@ import { RepositoryNetworkDiscovery } from '../application/publication/Repositor
 import { ChallengeEntryDiscovery } from '../application/challenge/ChallengeEntryDiscovery.js';
 import { ChallengeEntryLog } from '../application/challenge/ChallengeEntryLog.js';
 import { composeWorldEncounterMaterialVerifier } from '../application/worldEncounter/WorldEncounterMaterialVerifierRuntimeComposition.js';
-import { WorldEncounterKind } from '../core/WorldEncounter.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { WorldEncounterKind } from '../core/world/WorldEncounter.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { assert } from './support/Assert.js';

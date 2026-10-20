@@ -1,18 +1,18 @@
 
-import { NostrRelayConfiguration, isValidNostrRelayUrl, DEFAULT_NOSTR_RELAY_URL } from '../core/NostrRelayConfiguration.js';
+import { NostrRelayConfiguration, isValidNostrRelayUrl, DEFAULT_NOSTR_RELAY_URL } from '../core/networks/NostrRelayConfiguration.js';
 import { assert } from './support/Assert.js';
 import { readSource as source } from './support/SourceText.js';
 
 // 0.9.369 — Nostr Relay Configuration Boundary.
 // See docs/Roadmap.md, "0.9.369 — Nostr Relay Configuration Boundary," and
-// core/NostrRelayConfiguration.js's own header for the full seam this
+// core/networks/NostrRelayConfiguration.js's own header for the full seam this
 // milestone closes — the direct structural mirror of tests/
 // ArweaveGatewayConfiguration.test.js, one relay URL instead of one
 // gateway URL.
 //
 // Section A: construction — a valid absolute ws:/wss: URL round-trips
 // Section B: whitespace is trimmed; no trailing-slash normalization occurs
-//            (unlike core/ArweaveGatewayConfiguration.js — see that file's
+//            (unlike core/networks/ArweaveGatewayConfiguration.js — see that file's
 //            own header for why the two differ)
 // Section C: rejection — malformed/non-URL/non-ws(s) values all throw
 // Section D: immutability — frozen, no setter, no mutation reaches another
@@ -49,7 +49,7 @@ async function run() {
 
     // ===============================================================
     // Section B — whitespace is trimmed; no trailing-slash normalization
-    // occurs (deliberately, unlike core/ArweaveGatewayConfiguration.js —
+    // occurs (deliberately, unlike core/networks/ArweaveGatewayConfiguration.js —
     // see that file's own header, "no trailing-slash normalization").
     // ===============================================================
     {
@@ -120,7 +120,7 @@ async function run() {
     {
         const config = new NostrRelayConfiguration({ relayUrl: 'wss://my-relay.example' });
         const json = config.toJSON();
-        assert(JSON.stringify(json) === JSON.stringify({ relayUrls: ['wss://my-relay.example'] }), 'F1. toJSON() returns exactly { relayUrls }, nothing more — the list shape, mirroring core/ArweaveGatewayConfiguration.js\'s own toJSON()');
+        assert(JSON.stringify(json) === JSON.stringify({ relayUrls: ['wss://my-relay.example'] }), 'F1. toJSON() returns exactly { relayUrls }, nothing more — the list shape, mirroring core/networks/ArweaveGatewayConfiguration.js\'s own toJSON()');
         assert(Object.keys(json).length === 1, 'F2. toJSON() carries exactly one field');
         console.log('✓ Section F: toJSON() is a plain, single-field data shape — no extra fields, no methods');
     }
@@ -147,7 +147,7 @@ async function run() {
     // a guess from this file's own prose.
     // ===============================================================
     {
-        const configSource = await source('core/NostrRelayConfiguration.js');
+        const configSource = await source('core/networks/NostrRelayConfiguration.js');
         const configExecutable = configSource.replace(/\/\/.*$/gm, '');
         assert(!/localStorage|StorageProvider/.test(configExecutable), 'H1. no persistence of any kind — no localStorage, no StorageProvider reference in this file\'s own executable code');
         assert(!/\bfetch\s*\(/.test(configExecutable) && !/new\s+WebSocket/.test(configExecutable), 'H2. no fetch() call and no WebSocket construction anywhere — this file never makes a network connection');

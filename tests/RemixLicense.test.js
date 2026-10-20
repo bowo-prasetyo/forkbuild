@@ -1,13 +1,13 @@
 // A remix keeps its original's builder credited and its terms
-// (core/License.js, remixLicenseIds(), derivedFrom(), relicense()): a remix of
+// (core/document/License.js, remixLicenseIds(), derivedFrom(), relicense()): a remix of
 // a non-commercial castle can't be relabelled into one anyone may sell, nor
 // lose the name of whoever built it, through Build Properties in the Editor
 // (UpdateDocumentMetadataUseCase) or World View; the builder of the original
 // may relicense their own remix as they like.
-import { License, LicenseId } from '../core/License.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { World } from '../core/World.js';
+import { License, LicenseId } from '../core/document/License.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
 import { UpdateDocumentMetadataUseCase } from '../application/document/UpdateDocumentMetadataUseCase.js';

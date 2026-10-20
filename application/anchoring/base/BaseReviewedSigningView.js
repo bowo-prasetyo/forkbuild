@@ -1,5 +1,5 @@
 import { BaseReviewedSigningState } from './BaseReviewedSigningState.js';
-import { message } from '../../../core/Message.js';
+import { message } from '../../../core/app/Message.js';
 
 const STATE_LABELS = {
     [BaseReviewedSigningState.IDLE]: message('baseReviewedSigning.notYetSigned'),

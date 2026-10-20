@@ -1,9 +1,9 @@
-import { RendezvousConfiguration } from '../../core/RendezvousConfiguration.js';
+import { RendezvousConfiguration } from '../../core/networks/RendezvousConfiguration.js';
 import { RendezvousConfigurationStore } from '../../storage/RendezvousConfigurationStore.js';
 
 // 0.9.388 — User-Configurable Rendezvous Server Configuration Settings UI.
 //
-// core/RendezvousConfiguration.js already named the one thing missing
+// core/networks/RendezvousConfiguration.js already named the one thing missing
 // between a user's own rendezvous server list and a durable, validated
 // configuration: a settings surface. This class is that missing WRITE
 // seam, the direct structural mirror of `application/
@@ -41,7 +41,7 @@ import { RendezvousConfigurationStore } from '../../storage/RendezvousConfigurat
 // never falls back to the previous or default configuration if the
 // newly-saved servers later turn out unreachable — see docs/Roadmap.md,
 // 0.9.386, "explicitly exclude" (the identical restraint held here), and
-// core/RendezvousConfiguration.js's own header, "validation is
+// core/networks/RendezvousConfiguration.js's own header, "validation is
 // deliberately modest."
 //
 // AN INVALID SERVER LIST NEVER MUTATES THE STORE. `new
@@ -68,7 +68,7 @@ export class SetRendezvousConfigurationUseCase {
     // of the store itself). Returns the new, persisted
     // RendezvousConfiguration.
     //
-    // Throws for anything core/RendezvousConfiguration.js's own constructor
+    // Throws for anything core/networks/RendezvousConfiguration.js's own constructor
     // rejects (empty, not ws:/wss:, ...) — before this method ever calls
     // `save()`.
     execute({ urls } = {}) {

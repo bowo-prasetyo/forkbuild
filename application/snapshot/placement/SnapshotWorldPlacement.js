@@ -24,10 +24,10 @@ import { SnapshotWorldPlacementOutcome } from './SnapshotWorldPlacementOutcome.j
 // spatial coordinate. Rather than invent one — from a locator, from
 // discovery order, from whichever avatar happens to be nearby — this file
 // asks a narrower, prior question: does an AUTHORITATIVE World position for
-// the relevant Publication already exist? core/WorldPlacement.js already
+// the relevant Publication already exist? core/publication/WorldPlacement.js already
 // answers exactly that question, for exactly this reason (see its own
 // header: "a lightweight spatial reference to a Publication... coordinates
-// belong to shared world space"), and core/WorldEncounter.js (0.9.0)
+// belong to shared world space"), and core/world/WorldEncounter.js (0.9.0)
 // already builds World View's entire notion of "what, in the World, is
 // findable" by joining a Publication to its own WorldPlacement, never any
 // other way. This file reuses that SAME existing authority, one layer
@@ -97,7 +97,7 @@ import { SnapshotWorldPlacementOutcome } from './SnapshotWorldPlacementOutcome.j
 // WHICH existing WorldPlacement this position was borrowed from, purely for
 // traceability — neither is ever treated as the Snapshot's OWN identity.
 //
-// THREE IDENTITIES, DELIBERATELY NEVER MERGED — core/ContentReference.js's
+// THREE IDENTITIES, DELIBERATELY NEVER MERGED — core/document/ContentReference.js's
 // own `hash` (a Snapshot's content identity), core/
 // PublicationSnapshotPlacement.js's own `locator`/`storage` (WHERE bytes can
 // be RETRIEVED from — a placement in the retrieval sense), and this file's
@@ -121,7 +121,7 @@ import { SnapshotWorldPlacementOutcome } from './SnapshotWorldPlacementOutcome.j
 // - **Visibility, viewport, camera distance, or "nearest" of any kind.**
 //   Whether a placed Snapshot is CURRENTLY on screen is a separate, later,
 //   downstream question for World View's own runtime/rendering state to
-//   answer — the identical restraint core/WorldEncounter.js's own header
+//   answer — the identical restraint core/world/WorldEncounter.js's own header
 //   already holds ("camera position, distance, nearest object, visibility...
 //   require relating the World to a Wanderer's own position — a different
 //   projection than 'what is encounterable'"). This file never reads a

@@ -1,4 +1,4 @@
-import { Delegation } from '../../core/Delegation.js';
+import { Delegation } from '../../core/publication/Delegation.js';
 import { LocalAuthorizationVerifier } from '../../identity/LocalAuthorizationVerifier.js';
 
 // Checks a stored Delegation's issuer signature and expiry.

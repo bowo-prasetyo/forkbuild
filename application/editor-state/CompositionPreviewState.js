@@ -1,4 +1,4 @@
-import { Position } from '../../core/Position.js';
+import { Position } from '../../core/document/Position.js';
 
 // Pure data: is a Structure-composition preview currently active, and
 // if so which Structure, where, at what rotation, and whether that

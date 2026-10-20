@@ -34,7 +34,7 @@ const DEFAULT_MAX_RESULTS = 20;
 //        │   a caller's own, already-existing collaborator:
 //        ▼
 //   application/placeNaming/PlaceNamingDiscoveryQueryService.js   (0.9.253, unmodified)
-//        parses each raw payload via core/PlaceNamingDiscoveryEnvelope.js
+//        parses each raw payload via core/world/PlaceNamingDiscoveryEnvelope.js
 //        #parsePlaceNamingDiscoveryEnvelope(), discards what fails to
 //        parse, deduplicates by claim.id
 //
@@ -118,7 +118,7 @@ const DEFAULT_MAX_RESULTS = 20;
 // NO SIGNATURE, NO PUBKEY, NO NIP-01 `id`/`sig` VERIFICATION OF ANY KIND,
 // AND NO SPATIAL, TRUST, RANKING, ADOPTION, OR PRESENTATION DECISION OF ANY
 // KIND. This file never imports `identity/LocalAuthorizationVerifier.js`,
-// `application/placeNaming/LocalPlaceNamingClaimStore.js`, `core/PlaceNamingView.js`,
+// `application/placeNaming/LocalPlaceNamingClaimStore.js`, `core/world/PlaceNamingView.js`,
 // or anything World/spatial-shaped — whether a discovered claim is
 // spatially relevant, whether its publisher is trustworthy, which claim
 // among several is "better," whether two claims conflict, whether a claim

@@ -1,12 +1,12 @@
 import { readFile } from 'node:fs/promises';
-import { resolveAvatarTreeMovement } from '../core/AvatarTreeMovement.js';
-import { AVATAR_COLLISION_RADIUS } from '../core/AvatarCollision.js';
-import { treeCollisionCircleFor, treeCollisionGeometryInRegion } from '../core/TreeCollisionGeometry.js';
-import { FEATURE_TYPE } from '../core/NaturalFeatureField.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+import { resolveAvatarTreeMovement } from '../core/avatar/AvatarTreeMovement.js';
+import { AVATAR_COLLISION_RADIUS } from '../core/avatar/AvatarCollision.js';
+import { treeCollisionCircleFor, treeCollisionGeometryInRegion } from '../core/nature/TreeCollisionGeometry.js';
+import { FEATURE_TYPE } from '../core/nature/NaturalFeatureField.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.61 — Avatar-Tree Collision Resolution, core/AvatarTreeMovement.js.
+// 0.9.61 — Avatar-Tree Collision Resolution, core/avatar/AvatarTreeMovement.js.
 //
 //   Section A: no collision — free-space movement passes through untouched
 //   Section B: direct movement into a tree — stops exactly at the
@@ -251,7 +251,7 @@ async function runTests() {
         // stored inertly.
         const currentPosition = { x: -5, y: 0, z: 0 };
         const requestedPosition = { x: 5, y: 0, z: 0 };
-        const carRadius = 0.80; // matches CAR_COLLISION_RADIUS, core/AvatarVehicleMovementCapability.js
+        const carRadius = 0.80; // matches CAR_COLLISION_RADIUS, core/vehicles/AvatarVehicleMovementCapability.js
         const walkResult = resolveAvatarTreeMovement({ currentPosition, requestedPosition, trees: [tree] });
         const carResult = resolveAvatarTreeMovement({ currentPosition, requestedPosition, trees: [tree], avatarRadius: carRadius });
         const walkStopDistance = distance(walkResult, currentPosition);
@@ -268,7 +268,7 @@ async function runTests() {
     // or the avatar/world runtime
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../core/AvatarTreeMovement.js', import.meta.url);
+        const sourceUrl = new URL('../core/avatar/AvatarTreeMovement.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -286,18 +286,18 @@ async function runTests() {
             '.position =', 'avatar.'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `24. core/AvatarTreeMovement.js's own code never references "${term}" — resolution-only, never spatial-query/rendering/simulation/randomness/clock/storage/mutation`);
+            assert(!codeOnly.includes(term), `24. core/avatar/AvatarTreeMovement.js's own code never references "${term}" — resolution-only, never spatial-query/rendering/simulation/randomness/clock/storage/mutation`);
         }
-        assert(codeOnly.includes('AVATAR_COLLISION_RADIUS'), '25. core/AvatarTreeMovement.js does consume AVATAR_COLLISION_RADIUS from core/AvatarCollision.js — the one deliberate, already-defined geometric fact it is allowed to import');
+        assert(codeOnly.includes('AVATAR_COLLISION_RADIUS'), '25. core/avatar/AvatarTreeMovement.js does consume AVATAR_COLLISION_RADIUS from core/avatar/AvatarCollision.js — the one deliberate, already-defined geometric fact it is allowed to import');
     }
     {
         // A resolved position is never itself applied to anything — the
         // exported surface is exactly the one function, no avatar-
         // mutating side effect hiding among them.
-        const exportsModule = await import('../core/AvatarTreeMovement.js');
+        const exportsModule = await import('../core/avatar/AvatarTreeMovement.js');
         const exportedNames = Object.keys(exportsModule).sort();
         assert(JSON.stringify(exportedNames) === JSON.stringify(['resolveAvatarTreeMovement']),
-            '26. core/AvatarTreeMovement.js exports exactly resolveAvatarTreeMovement — nothing else');
+            '26. core/avatar/AvatarTreeMovement.js exports exactly resolveAvatarTreeMovement — nothing else');
     }
 
     console.log('✅ All Avatar-Tree Collision Resolution tests passed.');

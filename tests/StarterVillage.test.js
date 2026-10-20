@@ -1,15 +1,15 @@
-import { PLAZA_CENTER, PLAZA_CLEARING_RADIUS, PLAZA_OPEN_RADIUS, PLAZA_VILLAGE_RADIUS } from '../core/ChallengePlaza.js';
-import { starterVillageLayout, starterVillageReach } from '../core/StarterVillage.js';
-import { VILLAGE_FIRST_RING_RADIUS, settleInVillage } from '../core/BuildSettlement.js';
-import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../core/TerrainHeightField.js';
-import { SURFACE_CATEGORY, surfaceCategoryAt } from '../core/TerrainSurface.js';
-import { naturalFeaturesInRegion } from '../core/NaturalFeatureField.js';
+import { PLAZA_CENTER, PLAZA_CLEARING_RADIUS, PLAZA_OPEN_RADIUS, PLAZA_VILLAGE_RADIUS } from '../core/challenge/ChallengePlaza.js';
+import { starterVillageLayout, starterVillageReach } from '../core/challenge/StarterVillage.js';
+import { VILLAGE_FIRST_RING_RADIUS, settleInVillage } from '../core/challenge/BuildSettlement.js';
+import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../core/nature/TerrainHeightField.js';
+import { SURFACE_CATEGORY, surfaceCategoryAt } from '../core/nature/TerrainSurface.js';
+import { naturalFeaturesInRegion } from '../core/nature/NaturalFeatureField.js';
 import { FEATURED_STRUCTURE_IDS, featuredStructures } from '../application/home/FeaturedBuilds.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';
 import { assert } from './support/Assert.js';
 
-// The village at the plaza (core/StarterVillage.js;
+// The village at the plaza (core/challenge/StarterVillage.js;
 // docs/reviews/CreativeDirection-2026-10-12b.md, finding 1): the six
 // ready-made builds stand round the square for everyone, and builds published
 // since settle just outside them, close enough to be one village.

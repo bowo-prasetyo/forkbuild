@@ -1,8 +1,8 @@
-import { Position } from '../core/Position.js';
-import { VehicleType } from '../core/VehicleType.js';
-import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
-import { InventoryEntryKind, createAvatarInventoryEntry, withEntryAdded } from '../core/AvatarInventory.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { Position } from '../core/document/Position.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
+import { AvatarAnimationState } from '../core/avatar/AvatarAnimationState.js';
+import { InventoryEntryKind, createAvatarInventoryEntry, withEntryAdded } from '../core/avatar/AvatarInventory.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';

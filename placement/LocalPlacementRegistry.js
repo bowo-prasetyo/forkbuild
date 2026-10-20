@@ -1,7 +1,7 @@
 import { PlacementRegistry } from './PlacementRegistry.js';
-import { PlacementRecord } from '../core/PlacementRecord.js';
-import { ConflictSet } from '../core/ConflictSet.js';
-import { WorldPlacement } from '../core/WorldPlacement.js';
+import { PlacementRecord } from '../core/publication/PlacementRecord.js';
+import { ConflictSet } from '../core/collaboration/ConflictSet.js';
+import { WorldPlacement } from '../core/publication/WorldPlacement.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 
 const RECORD_KEY_PREFIX = 'placement-record:';

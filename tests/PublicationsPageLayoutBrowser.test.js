@@ -5,7 +5,7 @@ import { PublicationResolutionOutcome } from '../application/publication/Publica
 import { LEGACY_HASH_REASON } from '../serializer/contentHash.js';
 import { CreatePublicationDisplayKindRegistryUseCase } from '../application/publication/CreatePublicationDisplayKindRegistryUseCase.js';
 import { Publication } from '../publisher/Publication.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { assert } from './support/Assert.js';
 
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);

@@ -1,4 +1,4 @@
-import { computeDeterministicGridPosition } from '../../core/DeterministicGridPlacement.js';
+import { computeDeterministicGridPosition } from '../../core/world/DeterministicGridPlacement.js';
 
 // 0.2.23: where does a freshly published world land, before anyone
 // has chosen to move it? Before this milestone that question had an
@@ -15,7 +15,7 @@ import { computeDeterministicGridPosition } from '../../core/DeterministicGridPl
 // PlacementRecord itself.
 //
 // 0.2.24: computePosition is now a PURE function of
-// context.publicationId — see core/DeterministicGridPlacement.js for
+// context.publicationId — see core/world/DeterministicGridPlacement.js for
 // why. It no longer takes a discoveryProvider (nothing it does
 // depends on what else this node has published or discovered), which
 // is itself the point: the previous, count-based version was exactly

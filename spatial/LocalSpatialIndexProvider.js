@@ -1,5 +1,5 @@
 import { SpatialIndexProvider } from './SpatialIndexProvider.js';
-import { WorldPlacement } from '../core/WorldPlacement.js';
+import { WorldPlacement } from '../core/publication/WorldPlacement.js';
 
 const PLACEMENT_KEY_PREFIX = 'placement:';
 const INDEX_KEY = 'spatial-index';

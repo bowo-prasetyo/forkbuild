@@ -87,8 +87,8 @@ constants are not claims about real physics.
 
 Two placements at the same position are not invalid in themselves, so
 position is deliberately not unique. Detecting overlap
-(`core/SpatialOverlap.js`) is separate from deciding whether it is
-acceptable (`core/SpatialAllocationPolicy.js`). Overlap is computed on
+(`core/world/SpatialOverlap.js`) is separate from deciding whether it is
+acceptable (`core/world/SpatialAllocationPolicy.js`). Overlap is computed on
 demand, never stored, and two validly signed placements that overlap are
 both still valid.
 

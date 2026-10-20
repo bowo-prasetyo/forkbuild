@@ -3,11 +3,11 @@ import { readFile } from 'node:fs/promises';
 import { AvatarVehicleInteractionController } from '../application/avatar/AvatarVehicleInteractionController.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
-import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { VehicleType } from '../core/VehicleType.js';
-import { Position } from '../core/Position.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { vehiclePresenceInRegion } from '../core/vehicles/VehiclePlacement.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
+import { Position } from '../core/document/Position.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -66,7 +66,7 @@ function findVehicle(seed, id) {
     const vehicles = vehiclePresenceInRegion(seed, -300, -300, 300, 300);
     const vehicle = vehicles.find((v) => v.id === id);
     if (!vehicle) {
-        throw new Error(`Test fixture vehicle ${id} not found under seed ${seed} — has core/VehiclePlacement.js changed?`);
+        throw new Error(`Test fixture vehicle ${id} not found under seed ${seed} — has core/vehicles/VehiclePlacement.js changed?`);
     }
     return vehicle;
 }

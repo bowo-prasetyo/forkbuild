@@ -1,6 +1,6 @@
 import { VehicleRenderer } from './VehicleRenderer.js';
 import { VehicleVisual } from './VehicleVisual.js';
-import { isValidVehicleInstance } from '../core/VehicleInstance.js';
+import { isValidVehicleInstance } from '../core/vehicles/VehicleInstance.js';
 
 // 0.9.115 — Vehicle Rendering.
 //
@@ -17,7 +17,7 @@ import { isValidVehicleInstance } from '../core/VehicleInstance.js';
 // seam this milestone's own brief asks for — see docs/Roadmap.md,
 // 0.9.115. It never computes vehicle placement, never decides whether a
 // vehicle should exist, never mutates the instance it is handed, and
-// never queries core/VehiclePlacement.js or core/VehicleIdentity.js
+// never queries core/vehicles/VehiclePlacement.js or core/vehicles/VehicleIdentity.js
 // itself — a caller (application/world/WorldNavigationSession.js, via
 // application/world/NearbyVehicleInstances.js) supplies the real, already-
 // resolved VehicleInstance; this class only ever turns one into
@@ -31,7 +31,7 @@ import { isValidVehicleInstance } from '../core/VehicleInstance.js';
 //
 // STABLE IDENTITY ACROSS A POSITION CHANGE. `VehicleInstance#withPosition()`
 // returns a brand-new VehicleInstance object carrying the SAME `id`
-// (core/VehicleInstance.js's own header, "identity never changes") — so
+// (core/vehicles/VehicleInstance.js's own header, "identity never changes") — so
 // calling setVehicle() again with that new instance finds the SAME
 // tracked VehicleVisual by id and only updates its position; it never
 // tears down and rebuilds the Object3D, and never returns a different

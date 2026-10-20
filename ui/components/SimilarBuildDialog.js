@@ -1,4 +1,4 @@
-import { License } from '../../core/License.js';
+import { License } from '../../core/document/License.js';
 import { t } from '../i18n/i18n.js';
 
 // Shown at publish when the build looks a lot like someone else's published

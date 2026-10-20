@@ -3,15 +3,15 @@
 // be able to take it. The old "bp:" fingerprints were 32-bit FNV-1a and can
 // be matched in milliseconds: claims under them are kept apart, never
 // counted, never imported, and only their author can sign again.
-import { Structure } from '../core/Structure.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
+import { Structure } from '../core/building/Structure.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
 import {
     canonicalizeBlueprint, deriveBlueprintFingerprint, deriveLegacyBlueprintFingerprint,
     isCurrentBlueprintFingerprint, isLegacyBlueprintFingerprint
-} from '../core/BlueprintFingerprint.js';
-import { BlueprintAttribution } from '../core/BlueprintAttribution.js';
-import { BlueprintLineageClaim } from '../core/BlueprintLineageClaim.js';
+} from '../core/building/BlueprintFingerprint.js';
+import { BlueprintAttribution } from '../core/building/BlueprintAttribution.js';
+import { BlueprintLineageClaim } from '../core/building/BlueprintLineageClaim.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalBlueprintAttributionStore } from '../application/blueprint/LocalBlueprintAttributionStore.js';
 import { LocalBlueprintAttributionPublicationLog } from '../application/blueprint/LocalBlueprintAttributionPublicationLog.js';

@@ -1,14 +1,14 @@
-import { AvatarTemplate } from '../core/AvatarTemplate.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { AvatarTemplate } from '../core/avatar/AvatarTemplate.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
-import { validateAvatarAppearance, isValidHexColor } from '../core/AvatarAppearanceValidator.js';
+import { AvatarAnimationState } from '../core/avatar/AvatarAnimationState.js';
+import { validateAvatarAppearance, isValidHexColor } from '../core/avatar/AvatarAppearanceValidator.js';
 import { assert } from './support/Assert.js';
 
-// 0.2.34 — Avatar Templates & Customization. Covers core/AvatarTemplate.js
+// 0.2.34 — Avatar Templates & Customization. Covers core/avatar/AvatarTemplate.js
 // (declarative template data + the lenient resolveEffectiveAppearance
-// read path), core/AvatarAppearanceValidator.js (the strict write-time
-// validator), core/AvatarTemplateRegistry.js, and the built-in
+// read path), core/avatar/AvatarAppearanceValidator.js (the strict write-time
+// validator), core/avatar/AvatarTemplateRegistry.js, and the built-in
 // core/library/CoreAvatarTemplateLibrary.js data itself. See
 // tests/AvatarProfile.test.js for AvatarProfileUseCase's own
 // validate-on-write / never-fail-on-read integration.
@@ -29,7 +29,7 @@ function buildTemplate() {
 
 async function runTests() {
     // -------------------------------------------------------------
-    // core/AvatarTemplate.js
+    // core/avatar/AvatarTemplate.js
     // -------------------------------------------------------------
     {
         let threw = false;
@@ -101,7 +101,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // core/AvatarAppearanceValidator.js — the strict, reject-on-write path
+    // core/avatar/AvatarAppearanceValidator.js — the strict, reject-on-write path
     // -------------------------------------------------------------
     {
         const template = buildTemplate();
@@ -175,7 +175,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // core/AvatarTemplateRegistry.js + built-in library data
+    // core/avatar/AvatarTemplateRegistry.js + built-in library data
     // -------------------------------------------------------------
     {
         const registry = new AvatarTemplateRegistry();

@@ -1,4 +1,4 @@
-import { createId } from '../core/createId.js';
+import { createId } from '../core/document/createId.js';
 
 // 0.2.51 — a portable SIGNALING payload, and nothing more. Answers "here is
 // the WebRTC session description and candidates needed to open a direct

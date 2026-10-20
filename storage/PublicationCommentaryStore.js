@@ -1,18 +1,18 @@
 import { StorageProvider } from './StorageProvider.js';
 import { LocalStorageProvider } from './LocalStorageProvider.js';
-import { PublicationCommentary } from '../core/PublicationCommentary.js';
+import { PublicationCommentary } from '../core/publication/PublicationCommentary.js';
 import {
     addPublicationCommentary,
     getPublicationCommentaryById,
     getPublicationCommentariesForPublication
-} from '../core/PublicationCommentaryCollection.js';
+} from '../core/publication/PublicationCommentaryCollection.js';
 
 const COMMENTARY_STORE_KEY = 'publication-commentary:entries';
 
 // 0.9.243 — Publication Commentary Storage Boundary.
 //
-// 0.9.242 drew the domain seam — core/PublicationCommentary.js (the
-// immutable descriptor) and core/PublicationCommentaryCollection.js (three
+// 0.9.242 drew the domain seam — core/publication/PublicationCommentary.js (the
+// immutable descriptor) and core/publication/PublicationCommentaryCollection.js (three
 // plain functions over an in-memory array) — and named persistence an
 // explicitly separate, later milestone. This file is that milestone, and
 // only that: the smallest possible transition from those domain objects to
@@ -40,11 +40,11 @@ const COMMENTARY_STORE_KEY = 'publication-commentary:entries';
 // for the pattern). This class never touches `window.localStorage`
 // directly — only the injected provider does.
 //
-// THE DOMAIN STAYS UNAWARE OF STORAGE. core/PublicationCommentary.js and
-// core/PublicationCommentaryCollection.js import nothing from storage/ —
+// THE DOMAIN STAYS UNAWARE OF STORAGE. core/publication/PublicationCommentary.js and
+// core/publication/PublicationCommentaryCollection.js import nothing from storage/ —
 // this file is the ONLY bridge between them and any actual persistence
 // mechanism. Conversely, this file duplicates none of
-// core/PublicationCommentary.js's own validation: every record this class
+// core/publication/PublicationCommentary.js's own validation: every record this class
 // persists came from a real PublicationCommentary instance's own
 // `toJSON()`, and every record it reads back is re-hydrated through that
 // same class's own `fromJSON()` — never a hand-rolled parallel parser.
@@ -139,7 +139,7 @@ export class PublicationCommentaryStore {
     // `publicationId`, in the order they were originally saved. Two
     // Publications never contaminate each other's commentary here, even
     // when both trace back to the same underlying Document — see
-    // core/PublicationCommentaryCollection.js's own header, unchanged by
+    // core/publication/PublicationCommentaryCollection.js's own header, unchanged by
     // this file. An unrecognized `publicationId` returns an empty array,
     // never `null` and never a thrown error.
     getForPublication(publicationId) {

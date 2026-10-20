@@ -26,12 +26,12 @@
 // The HTTP checks send an Origin header and report whether the response
 // allows it (Access-Control-Allow-Origin); without that, the app, which runs
 // in a browser, can't read the endpoint even though it answers.
-import { DEFAULT_ARWEAVE_GATEWAY_URLS } from '../core/ArweaveGatewayConfiguration.js';
-import { DEFAULT_IPFS_GATEWAY_URLS } from '../core/IpfsGatewayConfiguration.js';
-import { DEFAULT_BITCOIN_ESPLORA_API_URLS } from '../core/BitcoinEsploraConfiguration.js';
-import { DEFAULT_NOSTR_RELAY_URLS } from '../core/NostrRelayConfiguration.js';
-import { DEFAULT_STEEM_API_NODES } from '../core/SteemReadingConfiguration.js';
-import { DEFAULT_BLURT_API_NODES } from '../core/BlurtReadingConfiguration.js';
+import { DEFAULT_ARWEAVE_GATEWAY_URLS } from '../core/networks/ArweaveGatewayConfiguration.js';
+import { DEFAULT_IPFS_GATEWAY_URLS } from '../core/networks/IpfsGatewayConfiguration.js';
+import { DEFAULT_BITCOIN_ESPLORA_API_URLS } from '../core/networks/BitcoinEsploraConfiguration.js';
+import { DEFAULT_NOSTR_RELAY_URLS } from '../core/networks/NostrRelayConfiguration.js';
+import { DEFAULT_STEEM_API_NODES } from '../core/networks/SteemReadingConfiguration.js';
+import { DEFAULT_BLURT_API_NODES } from '../core/networks/BlurtReadingConfiguration.js';
 
 const ORIGIN = 'https://bowo-prasetyo.github.io';
 const TIMEOUT_MS = 15000;

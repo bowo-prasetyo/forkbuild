@@ -1,14 +1,14 @@
 import worker from '../server/rendezvous-worker/worker.js';
-import { normalizeBuiltWith, withBuilder, sameBuiltWith, BUILT_WITH_MAX_COUNT } from '../core/BuiltWith.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { Document } from '../core/Document.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { License, LicenseId } from '../core/License.js';
-import { remixFamily } from '../core/RemixFamily.js';
-import { FunnelEvent, publishedBuildEvents } from '../core/VisitorCount.js';
+import { normalizeBuiltWith, withBuilder, sameBuiltWith, BUILT_WITH_MAX_COUNT } from '../core/catalog/BuiltWith.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { Document } from '../core/document/Document.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { License, LicenseId } from '../core/document/License.js';
+import { remixFamily } from '../core/publication/RemixFamily.js';
+import { FunnelEvent, publishedBuildEvents } from '../core/app/VisitorCount.js';
 import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
 import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
@@ -21,7 +21,7 @@ import { LocalContentStore } from '../content/LocalContentStore.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
-// Credit co-builders (core/BuiltWith.js): who built a build with its author
+// Credit co-builders (core/catalog/BuiltWith.js): who built a build with its author
 // is kept on the build, signed onto its Publication by the author, and shown
 // wherever the build is credited. The Editor recording it as friends' edits
 // arrive is tested in BuildWithMe; the share page and family tree in

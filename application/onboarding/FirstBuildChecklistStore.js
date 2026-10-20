@@ -1,8 +1,8 @@
 // Keeps this device's progress through the guided first build
-// (core/FirstBuildChecklist.js). Personal and local: never published, shared
+// (core/challenge/FirstBuildChecklist.js). Personal and local: never published, shared
 // or part of any World.
 import { StorageProvider } from '../../storage/StorageProvider.js';
-import { normalizeFirstBuildProgress } from '../../core/FirstBuildChecklist.js';
+import { normalizeFirstBuildProgress } from '../../core/challenge/FirstBuildChecklist.js';
 
 const STORAGE_KEY = 'first-build-guide';
 

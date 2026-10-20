@@ -1,17 +1,17 @@
 import {
     SETTLEMENT_TAKEN_RADIUS, SETTLEMENT_TREE_CLEARANCE, VILLAGE_FIRST_RING_RADIUS, VILLAGE_SLOT_SPACING,
     isSettleableGround, ringSpots, settleInVillage
-} from '../core/BuildSettlement.js';
-import { naturalFeaturesInRegion } from '../core/NaturalFeatureField.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { PLAZA_CENTER, PLAZA_VILLAGE_RADIUS } from '../core/ChallengePlaza.js';
-import { computeDeterministicGridPosition } from '../core/DeterministicGridPlacement.js';
+} from '../core/challenge/BuildSettlement.js';
+import { naturalFeaturesInRegion } from '../core/nature/NaturalFeatureField.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { PLAZA_CENTER, PLAZA_VILLAGE_RADIUS } from '../core/challenge/ChallengePlaza.js';
+import { computeDeterministicGridPosition } from '../core/world/DeterministicGridPlacement.js';
 import { StandingPlacementStrategy } from '../application/placement/StandingPlacementStrategy.js';
 import { GridPlacementStrategy } from '../application/placement/InitialPlacementStrategy.js';
 import { assert } from './support/Assert.js';
 
 // The rings round the challenge plaza, where a week's entries are shown as
-// exhibits (core/PlazaEntrySpots.js); and where a build stands when it is
+// exhibits (core/challenge/PlazaEntrySpots.js); and where a build stands when it is
 // published: where an earlier publish stood it, else on the id-keyed grid,
 // never round the plaza (docs/reviews/CreativeDirection-2026-10-12.md,
 // finding 2, "Decided afterwards").

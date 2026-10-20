@@ -1,8 +1,8 @@
-import { WorldEncounterKind } from '../../core/WorldEncounter.js';
+import { WorldEncounterKind } from '../../core/world/WorldEncounter.js';
 import {
     describeDecentralizedWorldEncounterLeadAssociation,
     decentralizedWorldEncounterLeadAssociationMatchesLead
-} from '../../core/DecentralizedWorldEncounterLeadAssociation.js';
+} from '../../core/world/DecentralizedWorldEncounterLeadAssociation.js';
 
 // 0.9.28 — Decentralized Lead → Encounter Resolution Boundary.
 //
@@ -24,7 +24,7 @@ import {
 //                       │                          │
 //                       │           caller-supplied `associations` array —
 //                       │                explicit evidence; see
-//                       │                core/DecentralizedWorldEncounterLeadAssociation.js
+//                       │                core/world/DecentralizedWorldEncounterLeadAssociation.js
 //                       │                (THIS milestone)       │
 //                       ▼                          ▼            │
 //   application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js   ★ (THIS)
@@ -49,8 +49,8 @@ import {
 //
 // A PURE RESOLUTION BOUNDARY, NEVER A LOADER — SAME RESTRAINT 0.9.19 ALREADY
 // HELD FOR SELECTION, HELD HERE FOR LEADS. This file never fetches a
-// lead's own `uri`, never imports `core/ContentReference.js` or
-// `core/DecentralizedPublication.js`, and never decides whether resolved
+// lead's own `uri`, never imports `core/document/ContentReference.js` or
+// `core/publication/DecentralizedPublication.js`, and never decides whether resolved
 // material is trustworthy. It answers exactly one question — "which
 // currently-known lead(s), if any, does the available evidence connect to
 // this requested material?" — and stops there.
@@ -71,7 +71,7 @@ import {
 //
 // EVIDENCE IS SUPPLIED, NEVER INFERRED. This file never reads a lead's
 // own `discoveryTag` or `uri` to guess whether it matches
-// `requestedMaterial` — see `core/DecentralizedWorldEncounterLeadAssociation.js`'s
+// `requestedMaterial` — see `core/world/DecentralizedWorldEncounterLeadAssociation.js`'s
 // own header, "The one rule this file exists to hold." A candidate
 // association is checked against `requestedMaterial`'s own `kind`/
 // `objectId`, and a matching association is checked against `leads` via
@@ -151,7 +151,7 @@ import {
 //
 // DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
 // - **Producing real association evidence.** See
-//   `core/DecentralizedWorldEncounterLeadAssociation.js`'s own header,
+//   `core/world/DecentralizedWorldEncounterLeadAssociation.js`'s own header,
 //   "No producer of real association evidence exists yet." Until one
 //   does, every real-world call to this file's own functions, over a
 //   real, currently-known lead set and an empty `associations` array,
@@ -161,8 +161,8 @@ import {
 // - **Choosing one lead among an `AMBIGUOUS` result's own `candidates`.**
 //   See "Three statuses, never a ranking between them," above.
 // - **Retrieving a resolved lead's own `uri`, hash-verifying anything, or
-//   constructing a real `core/ContentReference.js`/
-//   `core/DecentralizedPublication.js`.** Unscheduled, later work — this
+//   constructing a real `core/document/ContentReference.js`/
+//   `core/publication/DecentralizedPublication.js`.** Unscheduled, later work — this
 //   file never imports either one.
 // - **Wiring a `RESOLVED` result into
 //   `application/worldEncounter/WorldEncounterMaterialLoading.js`'s own
@@ -171,7 +171,7 @@ import {
 //   milestone, and this file never imports it.
 // - **A stateful registry for `associations` — subscribing, persisting,
 //   or accumulating evidence across calls.** See
-//   `core/DecentralizedWorldEncounterLeadAssociation.js`'s own
+//   `core/world/DecentralizedWorldEncounterLeadAssociation.js`'s own
 //   "Deliberately excluded," above. Every call to this file's own
 //   functions is handed a fresh `associations` array by its caller.
 // - **Any trust, priority, ranking, or confidence judgment about a lead,

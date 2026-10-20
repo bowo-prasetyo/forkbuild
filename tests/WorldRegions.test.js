@@ -1,12 +1,12 @@
-import { World } from '../core/World.js';
-import { WorldRegion } from '../core/WorldRegion.js';
-import { RegionKind, isValidRegionKind } from '../core/RegionKind.js';
-import { regionsContaining, describePlace, childRegions, nearestRegion } from '../core/WorldRegionGeography.js';
-import { deriveSpatialContext } from '../core/WorldSpatialContext.js';
-import { deriveWorldWelcomeContext } from '../core/WorldWelcomeContext.js';
-import { Position } from '../core/Position.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { WorldRegion } from '../core/world/WorldRegion.js';
+import { RegionKind, isValidRegionKind } from '../core/world/RegionKind.js';
+import { regionsContaining, describePlace, childRegions, nearestRegion } from '../core/world/WorldRegionGeography.js';
+import { deriveSpatialContext } from '../core/world/WorldSpatialContext.js';
+import { deriveWorldWelcomeContext } from '../core/world/WorldWelcomeContext.js';
+import { Position } from '../core/document/Position.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
@@ -18,7 +18,7 @@ import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { WorldLocationDirectory } from '../application/world/WorldLocationDirectory.js';
-import { WorldLocationKind } from '../core/WorldLocationKind.js';
+import { WorldLocationKind } from '../core/world/WorldLocationKind.js';
 import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
 import { CreateWorldRegionCommand } from '../application/commands/CreateWorldRegionCommand.js';
 import { UpdateWorldRegionCommand } from '../application/commands/UpdateWorldRegionCommand.js';
@@ -44,7 +44,7 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 async function run() {
     // -------------------------------------------------------------
-    // Section A: core/WorldRegion.js
+    // Section A: core/world/WorldRegion.js
     // -------------------------------------------------------------
     {
         const region = new WorldRegion({
@@ -123,7 +123,7 @@ async function run() {
     }
 
     // -------------------------------------------------------------
-    // Section B: core/WorldRegionGeography.js — geometric containment,
+    // Section B: core/world/WorldRegionGeography.js — geometric containment,
     // deliberately independent of parentRegionId (overlapping,
     // non-hierarchical regions still nest correctly by radius alone).
     // -------------------------------------------------------------
@@ -466,7 +466,7 @@ async function run() {
     }
 
     // -------------------------------------------------------------
-    // Section L: core/WorldSpatialContext.js — containingRegions/placeName
+    // Section L: core/world/WorldSpatialContext.js — containingRegions/placeName
     // -------------------------------------------------------------
     {
         const valley = new WorldRegion({ id: 'valley', worldId: 'w', authorIdentityId: 'alice', name: 'Green Valley', position: new Position(0, 0, 0), radius: 200 });
@@ -499,7 +499,7 @@ async function run() {
     }
 
     // -------------------------------------------------------------
-    // Section M: core/WorldWelcomeContext.js — optional, additive
+    // Section M: core/world/WorldWelcomeContext.js — optional, additive
     // -------------------------------------------------------------
     {
         const world = new World({ id: 'welcome-world' });
@@ -694,8 +694,8 @@ async function run() {
         assert(alice.getWorldRegions().length === 4, '131. undoing the removal restores the fourth region');
     }
 
-    console.log('✓ Section A: core/WorldRegion.js — value object, validation, mutation, contains()');
-    console.log('✓ Section B: core/WorldRegionGeography.js — geometric containment, independent of parentRegionId');
+    console.log('✓ Section A: core/world/WorldRegion.js — value object, validation, mutation, contains()');
+    console.log('✓ Section B: core/world/WorldRegionGeography.js — geometric containment, independent of parentRegionId');
     console.log('✓ Section C: World.addWorldRegion/getWorldRegions/removeWorldRegion');
     console.log('✓ Section D: World.updateWorldRegion');
     console.log('✓ Section E: World serialization with regions');

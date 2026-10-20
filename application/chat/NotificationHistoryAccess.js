@@ -1,4 +1,4 @@
-import { isUserFacingError } from '../../core/UserFacingError.js';
+import { isUserFacingError } from '../../core/app/UserFacingError.js';
 
 // App-wide access to the signed-in identity's Notification History, for the
 // Notifications panel in the app's header, which is open on every page

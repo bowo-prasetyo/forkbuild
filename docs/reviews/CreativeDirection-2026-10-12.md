@@ -48,11 +48,11 @@ pass.
 
 | 2026-10-11 recommendation | State | Notes |
 |---|---|---|
-| Doors and arches you can walk through, with a test | **Done** | core/BrickPassage.js, DoorSwing, `StepInside` tests. Silo, Watchtower, Lighthouse and keep doors still lead nowhere (roadmap "Not done"). |
+| Doors and arches you can walk through, with a test | **Done** | core/building/BrickPassage.js, DoorSwing, `StepInside` tests. Silo, Watchtower, Lighthouse and keep doors still lead nowhere (roadmap "Not done"). |
 | Guide's sixth step and Walk inside it after Publish | **Done** | Played: arrives facing the door. |
 | A **Walk** / Explore nav entry that works with no build of your own | Not done | Nav is still Home · Editor · Repository · Challenge · My Worlds. The plaza link appears only once there are entries. |
 | The copy pass, with a regression test | Not done | See finding 5. |
-| Count placed bricks and re-gate on them | **Done** | core/PlacedBricks.js, `/e/publish-placed-…`. |
+| Count placed bricks and re-gate on them | **Done** | core/building/PlacedBricks.js, `/e/publish-placed-…`. |
 | Challenge Join opens a plot, plus twists and remix weeks | **Done** | Every theme has a twist line. The first remix week is 2 November. |
 | Residents notice fulfilled wishes | **Done** | `residentWishFulfilledNear()`. |
 | Build with me, cursors, co-builder credit | **Done**, and more | Undo while sharing, credits in every copy, builder pages. |
@@ -119,7 +119,7 @@ and a new `/e/publish-found` against `/e/publish-link-only`.
 
 `GridPlacementStrategy` puts every published build at
 `computeDeterministicGridPosition(publicationId)`
-(core/DeterministicGridPlacement.js), which gives 4,096 cells 40 units apart
+(core/world/DeterministicGridPlacement.js), which gives 4,096 cells 40 units apart
 over a 2,560 × 2,560 square. World View streams other builds within 100
 units (`streamingRadius: 100`, application/world/WorldSpatialContextService.js).
 How many neighbours a build expects to see in that radius:
@@ -168,7 +168,7 @@ So a Build here build goes on its plot, a republished build stays where it
 stands, and everything else, remixes included, takes its grid spot. The
 plaza shows only its week's entries, as exhibits round the square, and
 leaves other placed builds near it out of view while it is visited
-(core/PlazaEntrySpots.js). Builds placed round the plaza from 2026-10-12 to
+(core/challenge/PlazaEntrySpots.js). Builds placed round the plaza from 2026-10-12 to
 2026-10-17 keep their signed spots. Expect fewer neighbours in view
 (`/e/world-neighbour`) until the World fills up; the plaza is where builds
 meet.
@@ -291,7 +291,7 @@ ambient life, and move chat and voice under **People** with nothing on Home.
 - Since the last audit, 8 milestones landed in about 17 hours, all on
   pillar. That's good discipline. But **nobody outside the project has played
   any of it**: the launch checklist is 0 of 8, and every target in
-  core/LaunchTargets.js is still "a first guess".
+  core/app/LaunchTargets.js is still "a first guess".
 - By a rough split of non-test source files on their names, about 34% of
   the code's lines are networks, proofs and publications, 13% identity and
   peers, 14% world and terrain, 7% avatars, vehicles and animals, and **9%
@@ -378,7 +378,7 @@ version.
   docs/user/Distribution.md and 03-WorldView.md, and docs/launch/README.md.
 - Measured the structures' footprints and furniture from
   `VillageLibrary.structures`, the placement density from
-  core/DeterministicGridPlacement.js (`GRID_SPACING = 40`,
+  core/world/DeterministicGridPlacement.js (`GRID_SPACING = 40`,
   `GRID_EXTENT = 64`) and the streaming radius, and the code split by
   classifying non-test, non-vendor `.js` paths by keyword (rough, meant to
   show proportions).

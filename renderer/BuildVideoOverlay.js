@@ -1,4 +1,4 @@
-// What a video of a build (core/BuildVideo.js) shows over the picture,
+// What a video of a build (core/app/BuildVideo.js) shows over the picture,
 // drawn into its canvas's 2D context: the build's name along the bottom, and
 // the end card. Shared by renderer/BuildVideoRecorder.js and
 // renderer/WorldFilmRecorder.js. `text` is in the viewer's language:

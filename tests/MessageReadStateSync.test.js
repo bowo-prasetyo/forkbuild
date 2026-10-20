@@ -11,10 +11,10 @@ import { ChatOutbox } from '../application/chat/ChatOutbox.js';
 import { ConversationStore } from '../application/chat/ConversationStore.js';
 import { ConversationReadOutbox } from '../application/chat/ConversationReadOutbox.js';
 import { RemoteReadReceiptStore } from '../application/chat/RemoteReadReceiptStore.js';
-import { ConversationReadOutboxEntry, ReadReceiptOutboxState } from '../core/ConversationReadOutboxEntry.js';
-import { RemoteReadReceipt } from '../core/RemoteReadReceipt.js';
-import { toChatReadReceipt, isValidChatReadReceipt } from '../core/ChatReadReceipt.js';
-import { toChatMessage, deriveConversationId } from '../core/ChatMessage.js';
+import { ConversationReadOutboxEntry, ReadReceiptOutboxState } from '../core/social/ConversationReadOutboxEntry.js';
+import { RemoteReadReceipt } from '../core/social/RemoteReadReceipt.js';
+import { toChatReadReceipt, isValidChatReadReceipt } from '../core/social/ChatReadReceipt.js';
+import { toChatMessage, deriveConversationId } from '../core/social/ChatMessage.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
@@ -119,7 +119,7 @@ function makeChatStack(device, registry, friends) {
 async function runTests() {
 
 // ---------------------------------------------------------------------
-// 1. core/ChatReadReceipt.js — construction and structural validity.
+// 1. core/social/ChatReadReceipt.js — construction and structural validity.
 // ---------------------------------------------------------------------
 {
     const receipt = toChatReadReceipt({ conversationId: 'alice|bob', readerIdentity: 'alice', readThroughSequence: 5 });
@@ -135,11 +135,11 @@ async function runTests() {
     let threw = false;
     try { toChatReadReceipt({ conversationId: 'alice|bob', readerIdentity: 'alice', readThroughSequence: 0 }); } catch { threw = true; }
     assert(threw, 'toChatReadReceipt() refuses a non-positive readThroughSequence at construction');
-    console.log('✓ core/ChatReadReceipt.js: construction and structural validity, independent of core/ChatMessage.js and core/ChatDeliveryAck.js');
+    console.log('✓ core/social/ChatReadReceipt.js: construction and structural validity, independent of core/social/ChatMessage.js and core/social/ChatDeliveryAck.js');
 }
 
 // ---------------------------------------------------------------------
-// 2. core/ConversationReadOutboxEntry.js — coalescing, never a per-
+// 2. core/social/ConversationReadOutboxEntry.js — coalescing, never a per-
 //    message log.
 // ---------------------------------------------------------------------
 {
@@ -163,11 +163,11 @@ async function runTests() {
     assert(roundTripped.peerIdentityId === 'bob' && roundTripped.readThroughSequence === 5 && roundTripped.state === ReadReceiptOutboxState.SENT, 'toJSON()/fromJSON() round-trips exactly');
     assert(ConversationReadOutboxEntry.fromJSON(null) === null, 'fromJSON(null) degrades to null rather than throwing');
     assert(ConversationReadOutboxEntry.fromJSON({ peerIdentityId: 'bob', readThroughSequence: 0 }) === null, 'fromJSON() degrades gracefully on a corrupted stored record (non-positive sequence)');
-    console.log('✓ core/ConversationReadOutboxEntry.js: coalesces rather than accumulates, and immutability holds across every transition');
+    console.log('✓ core/social/ConversationReadOutboxEntry.js: coalesces rather than accumulates, and immutability holds across every transition');
 }
 
 // ---------------------------------------------------------------------
-// 3. core/RemoteReadReceipt.js — the mirror-image, opposite-direction
+// 3. core/social/RemoteReadReceipt.js — the mirror-image, opposite-direction
 //    value object; monotonic, never regresses.
 // ---------------------------------------------------------------------
 {
@@ -183,7 +183,7 @@ async function runTests() {
     const roundTripped = RemoteReadReceipt.fromJSON(advanced.toJSON());
     assert(roundTripped.peerIdentityId === 'alice' && roundTripped.readThroughSequence === 4, 'toJSON()/fromJSON() round-trips exactly');
     assert(RemoteReadReceipt.fromJSON({ peerIdentityId: 'alice', readThroughSequence: -1 }) === null, 'fromJSON() degrades gracefully on a corrupted stored record');
-    console.log('✓ core/RemoteReadReceipt.js: monotonic, immutable, and structurally independent from core/ConversationReadMarker.js');
+    console.log('✓ core/social/RemoteReadReceipt.js: monotonic, immutable, and structurally independent from core/social/ConversationReadMarker.js');
 }
 
 // ---------------------------------------------------------------------

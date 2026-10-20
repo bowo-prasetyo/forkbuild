@@ -1,8 +1,8 @@
 import { ORIGIN_LOCATION_ID } from '../world/WorldLocationDirectory.js';
 import { CameraFocusAnimator } from '../editor/CameraFocusAnimator.js';
-import { computeCompassHeading } from '../../core/CompassHeading.js';
+import { computeCompassHeading } from '../../core/world/CompassHeading.js';
 import { LOCATION_FOCUS_OFFSET } from './constants.js';
-import { terrainHeightAt } from '../../core/TerrainHeightField.js';
+import { terrainHeightAt } from '../../core/nature/TerrainHeightField.js';
 
 // WorldNavigationSession navigation: focusing documents, selections and
 // locations, going home, the compass, and the animated camera glide. None of
@@ -47,7 +47,7 @@ export const navigationMethods = {
             // inputs (`{ ...from.position }`), and WorldPosition's x/y/z
             // are prototype getters that a plain object spread would
             // silently drop, leaving an animator with no coordinates at
-            // all. See core/WorldPosition.js.
+            // all. See core/document/WorldPosition.js.
             animator: new CameraFocusAnimator({
                 from: {
                     position: { x: current.position.x, y: current.position.y, z: current.position.z },
@@ -169,7 +169,7 @@ export const navigationMethods = {
     },
 
     // Takes the camera and the local avatar to a bare World position on the
-    // ground, such as the challenge plaza (core/ChallengePlaza.js). Like
+    // ground, such as the challenge plaza (core/challenge/ChallengePlaza.js). Like
     // goHome(), it moves the avatar on purpose: the visitor asked to go there.
     // Never touches the active document. False for a position that isn't one.
     visitPosition(position) {
@@ -223,7 +223,7 @@ export const navigationMethods = {
     },
 
     // Which way the camera is looking, derived fresh from position/target (see
-    // core/CompassHeading.js). Null before start() or when position and target
+    // core/world/CompassHeading.js). Null before start() or when position and target
     // coincide.
     getCompassHeading() {
         if (!this._spatialCameraController) {

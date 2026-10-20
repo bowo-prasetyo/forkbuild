@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import { naturalFeaturesInRegion, FEATURE_TYPE, TREE_SPECIES } from '../core/NaturalFeatureField.js';
-import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
-import { treeForm, treeShapeOf, TREE_FORMS_PER_SPECIES } from '../core/TreeForm.js';
+import { naturalFeaturesInRegion, FEATURE_TYPE, TREE_SPECIES } from '../core/nature/NaturalFeatureField.js';
+import { TERRAIN_TILE_SIZE } from '../core/nature/TerrainTiling.js';
+import { treeForm, treeShapeOf, TREE_FORMS_PER_SPECIES } from '../core/nature/TreeForm.js';
 import { buildTreeGeometries } from './TreeGeometry.js';
 import { createTreeMaterials, createTreeWind, disposeTreeMaterials } from './TreeMaterials.js';
 import { makeWet } from './WetSurfaces.js';
@@ -11,7 +11,7 @@ import {
 
 // Every tree World View draws. Trees are streamed by terrain tile
 // (renderer/TerrainStreamingController.js calls loadTile()/unloadTile()), but
-// drawn from one pool: each form of each species (core/TreeForm.js) has one
+// drawn from one pool: each form of each species (core/nature/TreeForm.js) has one
 // InstancedMesh per part per level of detail, shared by every tile, so the
 // draw calls stay at a few dozen however many trees are in view.
 //
@@ -51,7 +51,7 @@ export function treeLodAt(distance, detail = TREE_DETAIL.HIGH) {
     return TREE_LOD.FAR;
 }
 
-// Muted, low-saturation colours (core/TerrainSurface.js's palette keeps the
+// Muted, low-saturation colours (core/nature/TerrainSurface.js's palette keeps the
 // same restraint), three leaf shades per species chosen by feature.variant.
 // The textures are grey, so these are the colours trees show.
 // `crown` darkens the solid mid and far crowns to match how much darker a
@@ -262,7 +262,7 @@ export class TreeForest {
         this._dirty = true;
     }
 
-    // Dresses every tree for the season `look` (core/Season.js's
+    // Dresses every tree for the season `look` (core/nature/Season.js's
     // seasonLookAt()): fresh leaves, blossom, fruit, autumn colours, leaves
     // dropping (renderer/SeasonalSurfaces.js). The colours are worked out
     // here, once the change would show, and drawn at the next update().

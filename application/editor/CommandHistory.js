@@ -1,6 +1,6 @@
 import { EventBus } from '../../core/events/EventBus.js';
 import { CommandHistoryEvent } from '../events/CommandHistoryEvent.js';
-import { message } from '../../core/Message.js';
+import { message } from '../../core/app/Message.js';
 
 const COMMAND_HISTORY_SCHEMA_VERSION = 1;
 

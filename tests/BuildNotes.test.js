@@ -3,7 +3,7 @@ import { createAppNostrSigner, generateNostrSecretKey, isNostrSecretKey, nostrEv
 import { createNostrInjectedProviderPublisher } from '../nostr/NostrInjectedProviderPublisher.js';
 import {
     BUILD_NOTE_KIND, BUILD_NOTE_TAG, MAX_BUILD_NOTE_PAYLOAD_LENGTH, buildNoteFilter, buildNoteTemplate, latestBuildNotes, readBuildNote
-} from '../core/BuildNote.js';
+} from '../core/publication/BuildNote.js';
 import { BuildNoteSendOutcome, PublishBuildNoteUseCase } from '../application/buildNotes/PublishBuildNoteUseCase.js';
 import { BuildNoteDiscovery } from '../application/buildNotes/BuildNoteDiscovery.js';
 import { CarrierKeyStore } from '../application/buildNotes/CarrierKeyStore.js';
@@ -23,13 +23,13 @@ import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { VillageLibrary } from '../core/library/VillageLibrary.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { License, LicenseId } from '../core/License.js';
-import { FunnelEvent } from '../core/VisitorCount.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { License, LicenseId } from '../core/document/License.js';
+import { FunnelEvent } from '../core/app/VisitorCount.js';
 import { BackupEntryGroup, backupEntryGroupOf } from '../application/backup/BackupEntryGroups.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';

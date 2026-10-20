@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 48b83be51fa03585 -->
+<!-- translation-of: docs/Privacy.md source-hash: 822c93745b70c626 -->
 # 개인정보 보호
 
 <!-- languages -->
@@ -218,7 +218,7 @@ IndexedDB가 없는 브라우저는 `forkbuild:`로 시작하는 키로 `localSt
 규칙만 따릅니다. Global Privacy Control이나 Do Not Track이 있으면 보내지 않고,
 공식 사이트에서만 보냅니다.
 
-코드는 `core/VisitorCount.js`, `core/LaunchChannel.js`, `application/settings/CountDailyVisit.js`,
+코드는 `core/app/VisitorCount.js`, `core/app/LaunchChannel.js`, `application/settings/CountDailyVisit.js`,
 `application/settings/CountLaunchChannel.js`,
 `application/settings/FunnelEventCounter.js`, `ui/counterHit.js`,
 `ui/start.js`, `ui/embed/embedBoot.js`에 있습니다.
@@ -339,5 +339,5 @@ TURN 릴레이를 제공하는지(`server/rendezvous-worker/README.md`), 그리�
 호스팅한다면, 이 페이지를 고쳐 내 서버들의 이름을 적으세요.
 
 방문자 수 집계는 공식 사이트에서만 동작하므로 다른 곳에서 호스팅한 사본은
-아무것도 집계하지 않습니다. 내 방문자를 집계하려면 `core/VisitorCount.js`의
+아무것도 집계하지 않습니다. 내 방문자를 집계하려면 `core/app/VisitorCount.js`의
 주소와 `index.html` Content Security Policy의 `img-src` 항목을 바꾸세요.

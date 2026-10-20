@@ -1,4 +1,4 @@
-// Notifications on this device (core/DeviceNotifications.js,
+// Notifications on this device (core/social/DeviceNotifications.js,
 // application/notification/DeviceNotificationRelay.js), and the remix
 // notification (application/publication/RemixedBuildNotifier.js): the
 // signed-in identity's notifications, also shown by the operating system
@@ -8,12 +8,12 @@
 import {
     DeviceNotificationPermission, DeviceNotificationState, MAX_SHOWN_AT_ONCE,
     deviceNotificationState, normalizeDeviceNotificationSettings, selectNotificationsToShow
-} from '../core/DeviceNotifications.js';
+} from '../core/social/DeviceNotifications.js';
 import { DeviceNotificationRelay } from '../application/notification/DeviceNotificationRelay.js';
 import { DeviceNotificationSettingsStore } from '../application/settings/DeviceNotificationSettingsStore.js';
 import { RemixedBuildNotifier, BUILD_REMIXED_EVENT_TYPE } from '../application/publication/RemixedBuildNotifier.js';
 import { NotificationEventStore, NotificationPersistenceOutcome } from '../storage/NotificationEventStore.js';
-import { NotificationEvent } from '../core/NotificationEvent.js';
+import { NotificationEvent } from '../core/social/NotificationEvent.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';

@@ -5,7 +5,7 @@ import { LookSettingsStore } from '../application/settings/LookSettingsStore.js'
 import { VisitorCountSettingsStore } from '../application/settings/VisitorCountSettingsStore.js';
 import { countDailyVisit } from '../application/settings/CountDailyVisit.js';
 import { countLaunchChannel } from '../application/settings/CountLaunchChannel.js';
-import { addressWithoutLaunchChannel } from '../core/LaunchChannel.js';
+import { addressWithoutLaunchChannel } from '../core/app/LaunchChannel.js';
 import { applyDocumentLanguage, preloadLocale, setAppLocale } from './i18n/i18n.js';
 import { applyLook } from './look.js';
 import { negotiateLocale } from './i18n/locales.js';

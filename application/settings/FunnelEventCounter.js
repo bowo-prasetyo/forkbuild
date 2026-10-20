@@ -1,7 +1,7 @@
-import { FunnelEvent, funnelEventHitUrl, isFunnelEvent, publishedBuildEvents, shouldCountFunnelEvent } from '../../core/VisitorCount.js';
+import { FunnelEvent, funnelEventHitUrl, isFunnelEvent, publishedBuildEvents, shouldCountFunnelEvent } from '../../core/app/VisitorCount.js';
 
 // Tells the visitor counter about a few moments in sharing a build
-// (core/VisitorCount.js, FunnelEvent), under the daily count's own rules and
+// (core/app/VisitorCount.js, FunnelEvent), under the daily count's own rules and
 // setting. Remembers, for this page only, which builds were opened from a
 // shared link, so copying one of them into the Editor counts as a remix from
 // a link. `listOwnPublications` returns the Publications this device has
@@ -19,7 +19,7 @@ export class FunnelEventCounter {
         this._countedThisPage = new Set();
     }
 
-    // At most once a page load: a side system used (core/SideSystemUse.js),
+    // At most once a page load: a side system used (core/app/SideSystemUse.js),
     // so the totals read as visits that used it.
     countOnce(event) {
         if (this._countedThisPage.has(event)) return false;
@@ -104,7 +104,7 @@ export class FunnelEventCounter {
         return this.countOnce(FunnelEvent.GUEST_WALK);
     }
 
-    // The first steps towards a build (core/VisitorCount.js, EDITOR_OPEN,
+    // The first steps towards a build (core/app/VisitorCount.js, EDITOR_OPEN,
     // STARTER_OPEN, EDITOR_EDIT; ui/views/EditorView.js), once a page load each.
     openedEditor() {
         return this.countOnce(FunnelEvent.EDITOR_OPEN);
@@ -147,7 +147,7 @@ export class FunnelEventCounter {
         return this.count(FunnelEvent.BUILD_JOINED);
     }
 
-    // A build just published and sent to everyone (core/BuildNote.js).
+    // A build just published and sent to everyone (core/publication/BuildNote.js).
     publishedFound() {
         return this.count(FunnelEvent.PUBLISH_FOUND);
     }
@@ -163,7 +163,7 @@ export class FunnelEventCounter {
         return this.count(FunnelEvent.REMIX_FROM_LINK);
     }
 
-    // A build just published (core/VisitorCount.js, publishedBuildEvents).
+    // A build just published (core/app/VisitorCount.js, publishedBuildEvents).
     // Returns the events sent.
     // `placedCount`: how many of its bricks its builder placed or changed
     // (application/document/ReadyMadeBricksStore.js), when known.

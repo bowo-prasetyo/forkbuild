@@ -1,6 +1,6 @@
 // Short links to builds sent to everyone (GET /n/<publication id>): the app
 // sends each such build to the public Nostr relays as a build note (the main
-// repository's core/BuildNote.js; docs/Protocol.md, "Build notes"), whose
+// repository's core/publication/BuildNote.js; docs/Protocol.md, "Build notes"), whose
 // content is exactly the payload a /b/<payload> link carries. A short link
 // names the build instead of carrying it, so it stays about 90 characters and
 // fits in any chat. This file finds the note on the relays; buildPreview.js
@@ -13,16 +13,16 @@
 // any build's id. What is trusted is the builder's own signature inside the
 // payload, which buildPreview.js checks; the notes are tried newest first
 // until one checks out. Like worker.js, this file imports nothing from the app
-// (tests/ShortLinks.test.js checks it agrees with core/BuildNote.js).
+// (tests/ShortLinks.test.js checks it agrees with core/publication/BuildNote.js).
 
 export const BUILD_NOTE_KIND = 30078;
 export const BUILD_NOTE_D_PREFIX = 'forkbuild-build:';
-// As core/BuildNote.js: the longest payload a note carries, and the most
+// As core/publication/BuildNote.js: the longest payload a note carries, and the most
 // notes asked for one build.
 export const MAX_NOTE_PAYLOAD_LENGTH = 48000;
 export const NOTE_CANDIDATE_LIMIT = 10;
 // The relays asked when the deployment names none (NOSTR_RELAYS): the app's
-// own defaults (core/NostrRelayConfiguration.js).
+// own defaults (core/networks/NostrRelayConfiguration.js).
 export const DEFAULT_NOTE_RELAYS = Object.freeze(['wss://relay.damus.io', 'wss://nos.lol', 'wss://relay.primal.net']);
 // How long one relay may take to answer; a short link's preview waits for
 // the slowest relay at most this long.
@@ -47,7 +47,7 @@ export function noteFilter(publicationId) {
 }
 
 // The payloads of the notes for `publicationId` among `events`, each once,
-// newest first and at most NOTE_CANDIDATE_LIMIT. Mirrors core/BuildNote.js's
+// newest first and at most NOTE_CANDIDATE_LIMIT. Mirrors core/publication/BuildNote.js's
 // readBuildNote() and buildNotesForPublication().
 export function notePayloads(events, publicationId) {
     const notes = [];

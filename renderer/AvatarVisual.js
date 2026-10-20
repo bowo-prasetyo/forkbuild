@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { AvatarRenderer } from './AvatarRenderer.js';
-import { getGesturePoseOverride } from '../core/AvatarGesturePoseOffsets.js';
+import { getGesturePoseOverride } from '../core/avatar/AvatarGesturePoseOffsets.js';
 
 // 0.2.35 — one avatar's live Three.js presence: a stable `root`
 // object a caller adds to the scene ONCE, plus the bookkeeping that
@@ -24,7 +24,7 @@ import { getGesturePoseOverride } from '../core/AvatarGesturePoseOffsets.js';
 // actually publishes a change — see its own header). This clock is
 // PURELY a rendering-smoothness concern, deliberately never written
 // to AvatarPresence — see docs/Principles.md, "Animation Is Driven By
-// Elapsed Time, Never By Frame Count," and core/AvatarPoseOffsets.js's
+// Elapsed Time, Never By Frame Count," and core/avatar/AvatarPoseOffsets.js's
 // own header for why a receiver never needs to know the sender's
 // local animation clock.
 //
@@ -33,14 +33,14 @@ import { getGesturePoseOverride } from '../core/AvatarGesturePoseOffsets.js';
 //
 //   setGesture(interactionKind)  — an upper-body GREET/WAVE/POINT
 //                                  overlay (see
-//                                  core/AvatarGesturePoseOffsets.js),
+//                                  core/avatar/AvatarGesturePoseOffsets.js),
 //                                  its own elapsed-time clock exactly
 //                                  like the gait clock above.
 //   setFacingOverride(yawDegrees) — a temporary yaw applied ON TOP OF
 //                                  whatever setPose's rotation last
 //                                  set, restored the moment it's
 //                                  cleared (null) — see
-//                                  core/AvatarFacing.js.
+//                                  core/avatar/AvatarFacing.js.
 export class AvatarVisual {
     constructor(avatarRenderer = new AvatarRenderer()) {
         this._avatarRenderer = avatarRenderer;
@@ -112,26 +112,26 @@ export class AvatarVisual {
         }
         this._lastAnimation = animation;
         // A fresh gait cycle always starts from phase zero — see
-        // core/AvatarPoseOffsets.js: animationTimeSeconds = 0
+        // core/avatar/AvatarPoseOffsets.js: animationTimeSeconds = 0
         // reproduces the base pose exactly, so switching e.g. IDLE ->
         // WALKING never pops mid-stride.
         this._animationTime = 0;
         this._applyPose();
     }
 
-    // 0.2.44 — see core/AvatarInteractionKind.js for the closed
+    // 0.2.44 — see core/avatar/AvatarInteractionKind.js for the closed
     // vocabulary (GREET/WAVE/POINT); pass null (or NONE) to clear.
     // A fresh gesture always restarts its own elapsed-time clock from
     // zero, the same "no visible pop, no mid-cycle jump" reasoning
     // setAnimation above already follows for a locomotion change.
-    // How the avatar is in the water (core/AvatarSwimming.js's AvatarSwimMode, or
+    // How the avatar is in the water (core/avatar/AvatarSwimming.js's AvatarSwimMode, or
     // null on land), worked out by the caller from its position.
     get swimMode() {
         return this._swimMode;
     }
 
     // How far the water lifts the avatar above where presence puts it: a
-    // swimmer at the surface rides the swell (core/WaterWaves.js), set every
+    // swimmer at the surface rides the swell (core/nature/WaterWaves.js), set every
     // frame by its caller. Drawing only; presence never hears of it.
     setFloat(offset) {
         this._float = Number.isFinite(offset) ? offset : 0;

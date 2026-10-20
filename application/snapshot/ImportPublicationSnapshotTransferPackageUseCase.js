@@ -92,7 +92,7 @@ export class ImportPublicationSnapshotTransferPackageUseCase {
     //                         SnapshotContentTransferOutcome.js's three
     //                         values, UNCHANGED from before 0.8.36
     //   publicationId      — `pkg.publicationId`, unchanged
-    //   contentReference    — the core/ContentReference.js this replica
+    //   contentReference    — the core/document/ContentReference.js this replica
     //                         now holds bytes under (STORED/
     //                         ALREADY_STORED), or null
     //                         (CONTENT_HASH_MISMATCH — nothing stored)

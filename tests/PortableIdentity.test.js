@@ -7,7 +7,7 @@ import { IdentityPackageError } from '../identity/IdentityImport.js';
 import { IdentityConflictError } from '../identity/IdentityRecovery.js';
 import { IncorrectPassphraseError } from '../identity/KeyEncryption.js';
 import * as Ed25519 from '../identity/Ed25519.js';
-import { Signature, SignatureType } from '../core/Signature.js';
+import { Signature, SignatureType } from '../core/publication/Signature.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';

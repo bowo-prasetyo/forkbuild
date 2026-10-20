@@ -1,4 +1,4 @@
-import { Position } from '../../core/Position.js';
+import { Position } from '../../core/document/Position.js';
 
 // Pure data: is a placement ghost currently visible, and if so which
 // brick definition, where, and at what rotation. Editor State, not Domain
@@ -17,7 +17,7 @@ export class PreviewState {
     // for the definition's default); renderer/PreviewRenderer.js tints
     // the ghost with it so what you see is what you get.
     // tilt: the quarter turn laying the pending brick on another side
-    // (core/BrickOrientation.js), which the T key changes.
+    // (core/building/BrickOrientation.js), which the T key changes.
     constructor({ visible = false, definitionId = null, position = new Position(), rotation = 0, tilt = 0, valid = true, color = null } = {}) {
         this._visible = visible;
         this._definitionId = definitionId;

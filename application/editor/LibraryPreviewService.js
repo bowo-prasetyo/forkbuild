@@ -1,5 +1,5 @@
-import { thumbnailPreview } from '../../core/DocumentPreview.js';
-import { Brick } from '../../core/Brick.js';
+import { thumbnailPreview } from '../../core/catalog/DocumentPreview.js';
+import { Brick } from '../../core/building/Brick.js';
 
 // Same idle-scheduling shim application/editor/PreviewService.js already
 // uses — duplicated rather than shared, the same way that file
@@ -26,15 +26,15 @@ function scheduleIdle(fn) {
 // shape is "load a Publication's document from storage, by
 // contentHash, then render it" — genuinely async, genuinely
 // content-addressed. A BrickDefinition or a Structure is already
-// resident, in-memory, static data (per core/BrickRegistry.js and
-// core/StructureRegistry.js's own header comments: "the registry's
+// resident, in-memory, static data (per core/building/BrickRegistry.js and
+// core/building/StructureRegistry.js's own header comments: "the registry's
 // contents don't change at runtime") — there is nothing to load, and
 // the cache key is simply the definition's or structure's own stable
 // id, never a content hash. Reusing PreviewService's loading/hashing
 // machinery for a job that has neither would be forcing one shape onto
 // two different problems; this file reuses only what both genuinely
 // share — renderer/DocumentThumbnailRenderer.js's `renderBricks()` and
-// core/DocumentPreview.js's `thumbnailPreview()` — not PreviewService's
+// core/catalog/DocumentPreview.js's `thumbnailPreview()` — not PreviewService's
 // own code.
 export class LibraryPreviewService {
     constructor({ createRenderer }) {

@@ -17,9 +17,9 @@
 //   - Avatar/camera position from navigation session
 //
 // See docs/Principles.md, "Exploration Is Derived From Place, Not Stored
-// As Place (0.3.6)" and core/WorldSpatialContext.js for the value object
+// As Place (0.3.6)" and core/world/WorldSpatialContext.js for the value object
 // this service produces.
-import { deriveSpatialContext, WorldSpatialContext } from '../../core/WorldSpatialContext.js';
+import { deriveSpatialContext, WorldSpatialContext } from '../../core/world/WorldSpatialContext.js';
 
 export class WorldSpatialContextService {
     constructor(session) {

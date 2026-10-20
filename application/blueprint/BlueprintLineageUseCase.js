@@ -1,32 +1,32 @@
-import { BlueprintLineageClaim } from '../../core/BlueprintLineageClaim.js';
-import { deriveBlueprintFingerprint, deriveLegacyBlueprintFingerprint } from '../../core/BlueprintFingerprint.js';
+import { BlueprintLineageClaim } from '../../core/building/BlueprintLineageClaim.js';
+import { deriveBlueprintFingerprint, deriveLegacyBlueprintFingerprint } from '../../core/building/BlueprintFingerprint.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
-import { lineageView as deriveLineageView } from '../../core/BlueprintLineageView.js';
-import { message } from '../../core/Message.js';
-import { UserFacingError } from '../../core/UserFacingError.js';
+import { lineageView as deriveLineageView } from '../../core/building/BlueprintLineageView.js';
+import { message } from '../../core/app/Message.js';
+import { UserFacingError } from '../../core/app/UserFacingError.js';
 import { requireSigningIdentityId } from '../../identity/SigningReadiness.js';
 
 // 0.6.8 — Blueprint Lineage & Revision Discovery.
 //
 // The explicit entry point for "publish/retract/read lineage claims for
 // a blueprint" — thin over LocalBlueprintLineageClaimStore.js (raw
-// persistence) and core/BlueprintLineageView.js (pure derivation), the
+// persistence) and core/building/BlueprintLineageView.js (pure derivation), the
 // same three-layer split application/blueprint/BlueprintAttributionUseCase.js
 // already keeps one concept over: ui/ talks to THIS class, never to the
 // store or the view module directly.
 //
 // publish() REQUIRES a signing identity and REQUIRES two Structures with
 // derivable design content — a BlueprintLineageClaim has never existed
-// unsigned; see core/Signature.js's own BLUEPRINT_LINEAGE_CLAIM header.
+// unsigned; see core/publication/Signature.js's own BLUEPRINT_LINEAGE_CLAIM header.
 //
 // Deliberately never checks whether the caller actually knows the two
 // designs are really related — publish() only ever consults "can this
 // identity sign at all" and "do these fingerprints actually differ" (the
-// core/BlueprintLineageClaim.js constructor's own guard). Whether a
+// core/building/BlueprintLineageClaim.js constructor's own guard). Whether a
 // derivation claim is TRUE is a judgment this layer was never built to
 // make — exactly the same restraint application/
 // BlueprintAttributionUseCase.js#publish() already applies to authorship.
-// core/BlueprintSimilarity.js is the module that helps a human decide
+// core/building/BlueprintSimilarity.js is the module that helps a human decide
 // whether publishing is even worth doing; it is never consulted here.
 export class BlueprintLineageUseCase {
     constructor(store, identityProvider, verifier) {

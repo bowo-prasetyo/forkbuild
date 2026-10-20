@@ -5,11 +5,11 @@ import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { DEFAULT_MAX_STEP_HEIGHT } from '../core/BrickWalkability.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { DEFAULT_MAX_STEP_HEIGHT } from '../core/building/BrickWalkability.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // Regression coverage for the "invisible wall under a floating bridge
@@ -141,7 +141,7 @@ async function runTests() {
         const loaded = new Map([['stair-doc', document]]);
         const constraint = new AvatarStepConstraint({ loadedDocuments: loaded, getWorldPosition, brickRegistry });
         // Stepping onto the stair's own BACK edge (local +X, the full-
-        // height end — see core/WalkableSurface.js#stepSurfaceAt()) from
+        // height end — see core/building/WalkableSurface.js#stepSurfaceAt()) from
         // flat ground just outside its footprint, in a single tick.
         const result = constraint.apply({ x: -1, y: 0, z: 0 }, { x: 0.49, y: 0, z: 0 }, { grounded: true });
         assert(result.blocked === true, '10. apply(): approaching a ground-rooted stair\'s own tall back face is still genuinely blocked, not excused as "unreachable and therefore absent"');

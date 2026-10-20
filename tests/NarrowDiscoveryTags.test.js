@@ -1,6 +1,6 @@
 import {
     commentaryPublicationTag, snapshotCellTag, snapshotCellTagsAround, SNAPSHOT_CELL_SIZE
-} from '../core/NarrowDiscoveryTags.js';
+} from '../core/publication/NarrowDiscoveryTags.js';
 import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
 import { ArweaveSnapshotDiscoveryPublisher } from '../application/arweave/ArweaveSnapshotDiscoveryPublisher.js';
 import { createArweaveTaggedTransactionUpload } from '../application/arweave/ArweaveTaggedTransactionUpload.js';

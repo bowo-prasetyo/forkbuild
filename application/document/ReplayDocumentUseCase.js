@@ -1,4 +1,4 @@
-import { World } from '../../core/World.js';
+import { World } from '../../core/document/World.js';
 
 // Reconstructs a historical world state from a CommandHistory — the
 // 0.1.40 replay workflow. The history itself is the source of truth: its

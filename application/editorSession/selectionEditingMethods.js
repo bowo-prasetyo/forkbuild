@@ -1,16 +1,16 @@
 import { TiltBrickCommand } from '../commands/TiltBrickCommand.js';
-import { nextTilt, orientedSize } from '../../core/BrickOrientation.js';
+import { nextTilt, orientedSize } from '../../core/building/BrickOrientation.js';
 import { SelectionState } from '../editor-state/SelectionState.js';
 import { DeleteBrickCommand } from '../commands/DeleteBrickCommand.js';
 import { SetBrickColorCommand } from '../commands/SetBrickColorCommand.js';
 import { CompositeCommand } from '../commands/CompositeCommand.js';
 import { ToolId } from '../editor-state/ToolId.js';
-import { Position } from '../../core/Position.js';
+import { Position } from '../../core/document/Position.js';
 import { CameraState } from '../../renderer/CameraState.js';
-import { message } from '../../core/Message.js';
-import { seeInsideCutaway } from '../../core/IndoorView.js';
-import { SpatialBounds } from '../../core/SpatialBounds.js';
-import { computeThumbnailCamera } from '../../core/PreviewCameraFraming.js';
+import { message } from '../../core/app/Message.js';
+import { seeInsideCutaway } from '../../core/building/IndoorView.js';
+import { SpatialBounds } from '../../core/world/SpatialBounds.js';
+import { computeThumbnailCamera } from '../../core/catalog/PreviewCameraFraming.js';
 
 // EditorSession selection editing: select all or none, marquee selection,
 // framing the camera, entry contexts, delete, recolor, and align, distribute
@@ -90,7 +90,7 @@ export const selectionEditingMethods = {
         return true;
     },
 
-    // See inside (core/IndoorView.js, seeInsideCutaway()): the open build cut
+    // See inside (core/building/IndoorView.js, seeInsideCutaway()): the open build cut
     // away above its ground floor, or drawn whole again. Only what is drawn
     // changes; a click goes past what is cut away. Returns whether it is on.
     setSeeInside(on) {
@@ -213,7 +213,7 @@ export const selectionEditingMethods = {
         return true;
     },
 
-    // Lays every selected brick on its next side (core/BrickOrientation.js;
+    // Lays every selected brick on its next side (core/building/BrickOrientation.js;
     // `direction` -1 the other way), each where it stands with its bottom
     // kept at the same height, in one undo step. Brick selections only: a
     // placed structure turns, it doesn't tilt.

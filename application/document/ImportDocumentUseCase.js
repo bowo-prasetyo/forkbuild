@@ -1,6 +1,6 @@
 import { DocumentSerializer } from '../../serializer/DocumentSerializer.js';
 import { DocumentCloneService } from './DocumentCloneService.js';
-import { License } from '../../core/License.js';
+import { License } from '../../core/document/License.js';
 import { verifyDocumentSeal } from '../../identity/DocumentSealing.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 import { forkTitle, untitledWorldTitle } from './DocumentTitles.js';
@@ -38,7 +38,7 @@ import {
 //
 // Whose build it becomes (2026-10-16): application/document/
 // DocumentImportPolicy.js decides from the maker the file names, its seal
-// (core/DocumentSeal.js) and its license. The importer's own build opens
+// (core/document/DocumentSeal.js) and its license. The importer's own build opens
 // as itself; someone else's opens as the importer's credited copy when its
 // license allows remixes, and is refused (DocumentImportRefusedError)
 // when it doesn't or when its seal doesn't hold.

@@ -1,12 +1,12 @@
-import { PlaceNamingClaim } from '../../core/PlaceNamingClaim.js';
-import { namingView as deriveNamingView } from '../../core/PlaceNamingView.js';
+import { PlaceNamingClaim } from '../../core/world/PlaceNamingClaim.js';
+import { namingView as deriveNamingView } from '../../core/world/PlaceNamingView.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 
 // 0.5.2 — Place Naming & Naming Claims.
 //
 // The explicit entry point for "publish/retract/read my own opinion
 // about what a region is called" — thin over LocalPlaceNamingClaimStore
-// (raw persistence) and core/PlaceNamingView.js (pure derivation), the
+// (raw persistence) and core/world/PlaceNamingView.js (pure derivation), the
 // same three-layer split VerifyPublicationUseCase.js keeps over
 // identity/LocalAuthorizationVerifier.js: ui/ and
 // application/world/WorldNavigationSession.js talk to THIS class, never to
@@ -16,7 +16,7 @@ import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityI
 // LocalPublisherProvider.js's own tolerant `canSign` fallback (kept for
 // pre-0.2.16 compatibility with content that predates signing
 // entirely), a PlaceNamingClaim has never existed unsigned; see
-// core/Signature.js's own PLACE_NAMING_CLAIM header on why the
+// core/publication/Signature.js's own PLACE_NAMING_CLAIM header on why the
 // signature is REQUIRED, the same posture WorldMembershipUseCase.js
 // already takes for a World edit grant.
 //
@@ -98,7 +98,7 @@ export class PlaceNamingClaimUseCase {
         return this._store.listForRegion(worldId, regionId);
     }
 
-    // core/PlaceNamingView.js#namingView(), applied to whatever this
+    // core/world/PlaceNamingView.js#namingView(), applied to whatever this
     // replica currently has stored for `regionId` — see that module's
     // own header on why this is confidence, never authority.
     namingView(worldId, regionId) {

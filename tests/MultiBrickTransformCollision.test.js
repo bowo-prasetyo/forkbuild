@@ -1,10 +1,10 @@
-import { Brick } from '../core/Brick.js';
-import { Building } from '../core/Building.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { Position } from '../core/Position.js';
-import { World } from '../core/World.js';
-import { Group } from '../core/Group.js';
+import { Brick } from '../core/building/Brick.js';
+import { Building } from '../core/building/Building.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
+import { Position } from '../core/document/Position.js';
+import { World } from '../core/document/World.js';
+import { Group } from '../core/building/Group.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { SpatialEditingService } from '../application/editor/SpatialEditingService.js';
@@ -17,7 +17,7 @@ import { PreviewUseCase } from '../application/editor/PreviewUseCase.js';
 import { EditorSession } from '../application/editor/EditorSession.js';
 import { EditorContext } from '../application/editor/EditorContext.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
-import { SelectionTransformValidator } from '../core/SelectionTransformValidator.js';
+import { SelectionTransformValidator } from '../core/building/SelectionTransformValidator.js';
 import { assert } from './support/Assert.js';
 
 // 0.4.8 — Collision-Aware Multi-Brick Transform.
@@ -27,11 +27,11 @@ import { assert } from './support/Assert.js';
 // application/commands/TransformSelectionCommand.js — both already
 // shipped in 0.1.42-0.1.50, both otherwise unchanged since): moving or
 // rotating a selection had NO collision check at all, unlike single-brick
-// placement (core/PlacementValidator.js) and structure placement
+// placement (core/publication/PlacementValidator.js) and structure placement
 // (application/editor/StructurePlacementValidator.js), both of which already
 // refuse an overlapping commit. This milestone closes exactly that gap —
 // nothing else. There is no new command, no new "group" concept
-// (core/Group.js already covers persistent named groups, untouched
+// (core/building/Group.js already covers persistent named groups, untouched
 // here), and no ghost-mesh renderer: the gesture transaction already
 // previews by mutating real bricks live (SpatialEditingService's own
 // header), so "collision-aware preview" here means the SAME live preview
@@ -41,7 +41,7 @@ import { assert } from './support/Assert.js';
 // for structure placements ("releasing over an invalid position cancels
 // the whole gesture, never a partial commit").
 //
-//   Section 1: core/SelectionTransformValidator.js — the pure collision
+//   Section 1: core/building/SelectionTransformValidator.js — the pure collision
 //              check, in isolation
 //   Section 2: SpatialEditingService's gesture transaction — preview
 //              feedback carries `valid`, commit is blocked on collision,

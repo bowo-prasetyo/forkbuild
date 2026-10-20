@@ -1,5 +1,5 @@
 // How a command names itself in undo/redo and the history timeline: a
-// message (core/Message.js) the UI shows in the chosen language, never an
+// message (core/app/Message.js) the UI shows in the chosen language, never an
 // English sentence.
 //
 // A few commands carry a description chosen by whoever made them ("Align 3
@@ -11,7 +11,7 @@
 //     command's own generic label rather than a message key.
 //   - `description: "Move 3 Bricks"` from an older version is kept and shown
 //     as written: nobody can translate text that is already English.
-import { isMessage, message } from '../../core/Message.js';
+import { isMessage, message } from '../../core/app/Message.js';
 
 // The fields a command's toJSON() adds for `description` (a message, a
 // legacy English string, or null).

@@ -1,4 +1,4 @@
-import { snapshotCellTag, snapshotCellTagsAround } from '../../core/NarrowDiscoveryTags.js';
+import { snapshotCellTag, snapshotCellTagsAround } from '../../core/publication/NarrowDiscoveryTags.js';
 
 // Snapshots without any known position kept per call, newest first: the
 // cap the global tag's network query used to impose on its own.

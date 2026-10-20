@@ -1,4 +1,4 @@
-import { Group } from '../../core/Group.js';
+import { Group } from '../../core/building/Group.js';
 import { Command } from './Command.js';
 import { bricksMessage } from './HistoryDescription.js';
 

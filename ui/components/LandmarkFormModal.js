@@ -8,7 +8,7 @@
 // is created at the avatar's own current position, which this
 // component never sees or computes); `landmark: {...}` is Edit
 // (fields prefilled, position is never shown or editable here — see
-// core/WorldLandmark.js's own header on why a landmark's position
+// core/world/WorldLandmark.js's own header on why a landmark's position
 // isn't a field anyone edits after the fact).
 //
 // Emits save({ title, description }) — never a position; the host

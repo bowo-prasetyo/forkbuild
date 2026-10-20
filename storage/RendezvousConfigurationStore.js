@@ -1,12 +1,12 @@
 import { StorageProvider } from './StorageProvider.js';
 import { LocalStorageProvider } from './LocalStorageProvider.js';
-import { RendezvousConfiguration, isValidRendezvousUrl } from '../core/RendezvousConfiguration.js';
+import { RendezvousConfiguration, isValidRendezvousUrl } from '../core/networks/RendezvousConfiguration.js';
 
 const RENDEZVOUS_CONFIGURATION_STORE_KEY = 'rendezvous-configuration';
 
 // 0.9.388 — User-Configurable Rendezvous Server Configuration Persistence.
 //
-// core/RendezvousConfiguration.js (this same milestone, sibling file) gave
+// core/networks/RendezvousConfiguration.js (this same milestone, sibling file) gave
 // a user's own rendezvous server list a real, validated, immutable shape.
 // This file is the direct, named answer, mirroring `storage/
 // IceServerConfigurationStore.js` (0.9.386) exactly — same
@@ -14,7 +14,7 @@ const RENDEZVOUS_CONFIGURATION_STORE_KEY = 'rendezvous-configuration';
 // stays meaningful" rule — applied to a rendezvous URL list instead of a
 // STUN server list.
 //
-//   core/RendezvousConfiguration.js   (this milestone, unmodified by this
+//   core/networks/RendezvousConfiguration.js   (this milestone, unmodified by this
 //        file — toJSON()/the constructor's own validation, reused verbatim)
 //                    │
 //                    ▼

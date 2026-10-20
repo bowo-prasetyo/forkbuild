@@ -73,7 +73,7 @@ export function composeAnchoring({
     // Arweave and Base, the order the registries have always listed them in.
     // Their anchors are checked and described for everyone; making one is
     // offered only while the network's writer is switched on
-    // (core/NetworkWriters.js), following the switch as it changes.
+    // (core/publication/NetworkWriters.js), following the switch as it changes.
     if (steemRuntime) {
         externalAnchorProofVerifierRegistry.register(steemRuntime.proofVerifier);
         externalAnchorEvidenceViewRegistry.register(steemRuntime.anchorEvidenceView);

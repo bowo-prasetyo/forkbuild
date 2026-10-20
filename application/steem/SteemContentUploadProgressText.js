@@ -1,7 +1,7 @@
-import { message } from '../../core/Message.js';
+import { message } from '../../core/app/Message.js';
 
 // The line shown while content is being stored on Steem, from the progress
-// SteemContentStore reports, as a message (core/Message.js), or null when
+// SteemContentStore reports, as a message (core/app/Message.js), or null when
 // nothing is in progress. Finished and failed uploads are shown by their
 // result or error instead. Each combination of resuming and Resource Credits
 // is its own whole message, since sentences aren't joined the same way in

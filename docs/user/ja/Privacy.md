@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 48b83be51fa03585 -->
+<!-- translation-of: docs/Privacy.md source-hash: 822c93745b70c626 -->
 # プライバシー
 
 <!-- languages -->
@@ -254,7 +254,7 @@ ForkBuild 自身のファイル（コード、スタイルシート、アイコ�
 `/e/embed-open` は残りの 2 つのルールにだけ従います。Global Privacy Control
 または Do Not Track があれば送らず、公式サイトからしか送りません。
 
-コードは `core/VisitorCount.js`、`core/LaunchChannel.js`、`application/settings/CountDailyVisit.js`、`application/settings/CountLaunchChannel.js`、
+コードは `core/app/VisitorCount.js`、`core/app/LaunchChannel.js`、`application/settings/CountDailyVisit.js`、`application/settings/CountLaunchChannel.js`、
 `application/settings/FunnelEventCounter.js`、`ui/counterHit.js`、
 `ui/start.js`、`ui/embed/embedBoot.js` にあります。
 
@@ -383,6 +383,6 @@ ForkBuild を他の人のためにホストする場合は、このページ（�
 更新して、あなたのサーバーを記載してください。
 
 訪問者数のカウントは公式サイトでしか動かないため、他の場所でホストした
-コピーは何も数えません。自分の訪問者を数えるには、`core/VisitorCount.js`
+コピーは何も数えません。自分の訪問者を数えるには、`core/app/VisitorCount.js`
 のアドレスと、`index.html` の Content Security Policy の `img-src` を
 変更してください。

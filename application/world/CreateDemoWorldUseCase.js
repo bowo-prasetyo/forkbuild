@@ -1,7 +1,7 @@
-import { World } from '../../core/World.js';
-import { Building } from '../../core/Building.js';
-import { Brick } from '../../core/Brick.js';
-import { Position } from '../../core/Position.js';
+import { World } from '../../core/document/World.js';
+import { Building } from '../../core/building/Building.js';
+import { Brick } from '../../core/building/Brick.js';
+import { Position } from '../../core/document/Position.js';
 
 // TEMPORARY bootstrap use case. Builds a small hardcoded World so the
 // rendering pipeline has something to display. Once storage/ (0.1.13) or

@@ -5,7 +5,7 @@
 import { humanizeContentKind } from '../ui/views/decentralizedPublications/presentation.js';
 import { PUBLICATION_CONTENT_KIND } from '../application/publication/PublicationContentValidator.js';
 import { PLACE_NAMING_CLAIM_PUBLICATION_KIND } from '../application/placeNaming/PlaceNamingClaimPublication.js';
-import { BLUEPRINT_ATTRIBUTION_KIND } from '../core/BlueprintAttribution.js';
+import { BLUEPRINT_ATTRIBUTION_KIND } from '../core/building/BlueprintAttribution.js';
 import { assert } from './support/Assert.js';
 
 assert(humanizeContentKind(PUBLICATION_CONTENT_KIND) === 'Shared World', 'a World\'s record is a Shared World');

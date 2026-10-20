@@ -1,5 +1,5 @@
-import { findBuildEntrance, hasWalkedInside } from '../../core/BuildEntrance.js';
-import { terrainHeightAt } from '../../core/TerrainHeightField.js';
+import { findBuildEntrance, hasWalkedInside } from '../../core/world/BuildEntrance.js';
+import { terrainHeightAt } from '../../core/nature/TerrainHeightField.js';
 
 // How far behind the arriving avatar, and how high, the camera starts:
 // looking past them at the door, the way a third-person camera would.
@@ -12,7 +12,7 @@ const ARRIVAL_LOOK_HEIGHT = 1.2;
 // opens World View on `/world/:id?arrive=door`, and World View calls
 // arriveAtEntrance(). The avatar is put on open ground in front of the
 // build's door, facing it, and the camera looks past them at it
-// (core/BuildEntrance.js picks the spot). Like goHome(), this moves the
+// (core/world/BuildEntrance.js picks the spot). Like goHome(), this moves the
 // avatar on purpose: the person asked to go there.
 //
 // arrivalState() then says whether the avatar has walked in through that

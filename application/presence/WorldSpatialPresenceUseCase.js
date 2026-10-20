@@ -3,10 +3,10 @@ import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
 import {
     toWorldSpatialPresenceAdvertisement,
     isValidWorldSpatialPresenceAdvertisement
-} from '../../core/WorldSpatialPresenceAdvertisement.js';
-import { WorldSpatialSelection } from '../../core/WorldSpatialSelection.js';
-import { WorldSpatialActivity, isValidWorldSpatialActivity } from '../../core/WorldSpatialActivity.js';
-import { resolveIncomingPresence } from '../../core/PresenceIngestion.js';
+} from '../../core/collaboration/WorldSpatialPresenceAdvertisement.js';
+import { WorldSpatialSelection } from '../../core/collaboration/WorldSpatialSelection.js';
+import { WorldSpatialActivity, isValidWorldSpatialActivity } from '../../core/collaboration/WorldSpatialActivity.js';
+import { resolveIncomingPresence } from '../../core/avatar/PresenceIngestion.js';
 
 const SPATIAL_PRESENCE_CHANGED_EVENT = 'WorldSpatialPresenceChanged';
 
@@ -22,7 +22,7 @@ const SPATIAL_PRESENCE_CHANGED_EVENT = 'WorldSpatialPresenceChanged';
 //
 // A THIRD, separate protocol from `forkbuild:world-sync`
 // (WorldCommandPropagationUseCase) and `forkbuild:world-presence`
-// (WorldPresenceUseCase) — see core/WorldSpatialPresenceAdvertisement.js's
+// (WorldPresenceUseCase) — see core/collaboration/WorldSpatialPresenceAdvertisement.js's
 // own header for why. This class is structured as closely as possible
 // after WorldPresenceUseCase itself — same constructor shape, same
 // authenticated-peer broadcast, same "computed from live connections,
@@ -48,13 +48,13 @@ const SPATIAL_PRESENCE_CHANGED_EVENT = 'WorldSpatialPresenceChanged';
 // NOT a wall-clock timestamp, and NOT a CausalStamp. It advances by
 // exactly one on every LOGICAL call to updateSpatial(), whether or not
 // that particular call actually goes out over the wire — exactly
-// core/AvatarPresence.js's own "sequence is the sender's own monotonic
+// core/avatar/AvatarPresence.js's own "sequence is the sender's own monotonic
 // clock; how often it's actually transmitted is a separate transport
 // concern" discipline. A receiver that only ever sees every third
 // sequence number (because two were throttled away) loses nothing: it
 // still always displays the LATEST value it received, which is always
 // newer than whatever it already had — the identical gap-tolerant
-// guarantee core/PresenceIngestion.js#resolveIncomingPresence() already
+// guarantee core/avatar/PresenceIngestion.js#resolveIncomingPresence() already
 // gives 0.2.37's avatar presence, reused here completely unmodified
 // rather than re-inventing a second "is this newer" rule.
 //
@@ -193,7 +193,7 @@ export class WorldSpatialPresenceUseCase {
         }
     }
 
-    // Explicit "I have left" — see core/WorldSpatialPresenceAdvertisement.js's
+    // Explicit "I have left" — see core/collaboration/WorldSpatialPresenceAdvertisement.js's
     // own header: never inferred from silence. A no-op for a World this
     // replica was never present in.
     leaveWorld(worldDocumentId) {
@@ -337,7 +337,7 @@ export class WorldSpatialPresenceUseCase {
 
     // Identity is resolved from the LIVE CONNECTION only — never from
     // anything the payload itself claims. See
-    // core/WorldSpatialPresenceAdvertisement.js's own header.
+    // core/collaboration/WorldSpatialPresenceAdvertisement.js's own header.
     _handleIncoming(payload, meta) {
         if (!isValidWorldSpatialPresenceAdvertisement(payload)) {
             return;
@@ -365,7 +365,7 @@ export class WorldSpatialPresenceUseCase {
         // 0.3.0 — the ONE new trust-boundary step WorldPresenceUseCase's
         // own coarse presence never needed: at up to ~10-15 updates a
         // second, out-of-order delivery is a real, expected occurrence,
-        // not an edge case. core/PresenceIngestion.js#resolveIncomingPresence()
+        // not an edge case. core/avatar/PresenceIngestion.js#resolveIncomingPresence()
         // is reused completely unmodified — a stale or duplicate
         // sequence for this exact connection is simply ignored, never
         // allowed to regress what's currently displayed.
@@ -416,5 +416,5 @@ export class WorldSpatialPresenceUseCase {
 }
 
 // Deliberately its own namespaced protocol — see
-// core/WorldSpatialPresenceAdvertisement.js's own header.
+// core/collaboration/WorldSpatialPresenceAdvertisement.js's own header.
 WorldSpatialPresenceUseCase.DEFAULT_PROTOCOL = 'forkbuild:world-spatial-presence';

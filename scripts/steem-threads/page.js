@@ -6,7 +6,7 @@ import {
     steemDiscoveryPeriodOf,
     steemDiscoveryPeriodsFrom,
     steemDiscoveryThreadOperations
-} from '../../core/SteemDiscoveryThread.js';
+} from '../../core/networks/SteemDiscoveryThread.js';
 import { DEFAULT_STEEM_API_NODES, createSteemRpcClient } from '../../steem/SteemRpcClient.js';
 import { createSteemKeychainBroadcaster } from '../../steem/SteemKeychainBroadcaster.js';
 import { checkSteemDiscoveryThreads, createSteemDiscoveryThreads, planSteemDiscoveryThreads } from './SteemThreadCreation.js';

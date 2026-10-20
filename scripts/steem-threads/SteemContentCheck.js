@@ -1,5 +1,5 @@
 import { SteemContentStore } from '../../content/SteemContentStore.js';
-import { STEEM_CONTENT_PART_MAX_BYTES } from '../../core/SteemContentManifest.js';
+import { STEEM_CONTENT_PART_MAX_BYTES } from '../../core/networks/SteemContentManifest.js';
 import { createSteemRpcClient } from '../../steem/SteemRpcClient.js';
 import { computeContentHash } from '../../serializer/contentHash.js';
 

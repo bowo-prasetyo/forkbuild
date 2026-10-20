@@ -1,7 +1,7 @@
 import { PlaceNamingDiscoveryQueryService } from '../application/placeNaming/PlaceNamingDiscoveryQueryService.js';
 import { executeDiscoverPlaceNamingClaimsCommand } from '../application/placeNaming/DiscoverPlaceNamingClaimsCommand.js';
 import { composePlaceNamingDiscoveryRuntime } from '../application/placeNaming/PlaceNamingDiscoveryRuntimeComposition.js';
-import { derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
+import { derivePlaceNamingDiscoveryTag } from '../core/world/PlaceNamingDiscoveryEnvelope.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.253 — Place Naming Discovery Boundary.
@@ -245,7 +245,7 @@ function sourceOf(rawPayloads) {
 // ---------------------------------------------------------------------
 // D. CAPSTONE — a discovery candidate is a candidate, never adopted,
 //    never placed, never ranked. This suite never once imports
-//    application/placeNaming/LocalPlaceNamingClaimStore.js, core/PlaceNamingView.js,
+//    application/placeNaming/LocalPlaceNamingClaimStore.js, core/world/PlaceNamingView.js,
 //    identity/LocalAuthorizationVerifier.js, or application/
 //    WorldNavigationSession.js — proving structurally, not just by
 //    convention, that this milestone's discovery boundary never reaches

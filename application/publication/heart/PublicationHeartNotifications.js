@@ -1,5 +1,5 @@
-import { NotificationEvent } from '../../../core/NotificationEvent.js';
-import { isLaterHeart } from '../../../core/PublicationHeart.js';
+import { NotificationEvent } from '../../../core/social/NotificationEvent.js';
+import { isLaterHeart } from '../../../core/publication/PublicationHeart.js';
 import { currentIdentityId } from '../../../identity/SigningReadiness.js';
 
 export const PUBLICATION_HEARTED_EVENT_TYPE = 'publication.hearted';

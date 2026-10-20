@@ -1,9 +1,9 @@
 
-import { ArweaveGatewayConfiguration } from '../core/ArweaveGatewayConfiguration.js';
+import { ArweaveGatewayConfiguration } from '../core/networks/ArweaveGatewayConfiguration.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { ArweaveGatewayFailoverContentStore } from '../content/ArweaveGatewayFailoverContentStore.js';
 import { ContentUnavailableError } from '../content/IpfsContentStore.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { ArweaveWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js';
 import { ArweaveGatewayFailoverWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js';
 import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
@@ -20,7 +20,7 @@ import { readSource as source } from './support/SourceText.js';
 // the resilience benefit with none of fan-out's complexity. This file
 // covers the real production change that audit recommended:
 //
-//   core/ArweaveGatewayConfiguration.js — `gatewayUrl` (a string) OR
+//   core/networks/ArweaveGatewayConfiguration.js — `gatewayUrl` (a string) OR
 //     `gatewayUrls` (a non-empty, ordered array) — never both — with the
 //     single-string shape remaining exactly a one-element list.
 //   content/ArweaveGatewayFailoverContentStore.js /

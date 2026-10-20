@@ -1,11 +1,11 @@
 import { readFile } from 'node:fs/promises';
-import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
-import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../core/TerrainHeightField.js';
-import { Position } from '../core/Position.js';
-import { VehicleType } from '../core/VehicleType.js';
-import { VehicleInstance } from '../core/VehicleInstance.js';
-import { createAvatarVehicleMount } from '../core/AvatarVehicleMount.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { vehiclePresenceInRegion } from '../core/vehicles/VehiclePlacement.js';
+import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../core/nature/TerrainHeightField.js';
+import { Position } from '../core/document/Position.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
+import { VehicleInstance } from '../core/vehicles/VehicleInstance.js';
+import { createAvatarVehicleMount } from '../core/vehicles/AvatarVehicleMount.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
@@ -112,7 +112,7 @@ function findRealVehicle() {
     const vehicles = vehiclePresenceInRegion(DEFAULT_WORLD_SEED, -500, -500, 500, 500);
     const vehicle = vehicles.find((v) => v.id === REAL_VEHICLE_ID);
     if (!vehicle) {
-        throw new Error(`Test fixture vehicle ${REAL_VEHICLE_ID} not found under DEFAULT_WORLD_SEED — has core/VehiclePlacement.js changed?`);
+        throw new Error(`Test fixture vehicle ${REAL_VEHICLE_ID} not found under DEFAULT_WORLD_SEED — has core/vehicles/VehiclePlacement.js changed?`);
     }
     return vehicle;
 }
@@ -357,7 +357,7 @@ async function runTests() {
         const coastZ = coastSession._vehicleRuntimeInstances.get(REAL_VEHICLE_ID).position.z;
         const brakeZ = brakeSession._vehicleRuntimeInstances.get(REAL_VEHICLE_ID).position.z;
         assert((brakeZ - cruiseBrakeZ) < (coastZ - cruiseCoastZ),
-            '20. BRAKING: holding the real Control-key binding covers strictly less ground than plain coasting over the same window — the existing braking capability (core/AvatarVehicleBrakingIntent.js + core/AvatarVehicleMovementCapability.js), connected here, never a new vehicle-specific implementation');
+            '20. BRAKING: holding the real Control-key binding covers strictly less ground than plain coasting over the same window — the existing braking capability (core/vehicles/AvatarVehicleBrakingIntent.js + core/vehicles/AvatarVehicleMovementCapability.js), connected here, never a new vehicle-specific implementation');
     }
 
     // Note: through the Aerial Movement Pipeline milestone, every
@@ -381,7 +381,7 @@ async function runTests() {
         const session = buildSession(registry, avatarProfileUseCase, avatarPresenceSession);
         session.setAvatarControlMode(true);
 
-        // core/VehiclePlacement.js's own 0.9.668 update means a real
+        // core/vehicles/VehiclePlacement.js's own 0.9.668 update means a real
         // motorcycle CAN exist deterministically, but directly injecting
         // one here (same technique as Section H) keeps this test
         // independent of any particular seed/region actually producing
@@ -415,7 +415,7 @@ async function runTests() {
         const session = buildSession(registry, avatarProfileUseCase, avatarPresenceSession);
         session.setAvatarControlMode(true);
 
-        // core/VehiclePlacement.js's own 0.9.669 update means a real car
+        // core/vehicles/VehiclePlacement.js's own 0.9.669 update means a real car
         // CAN exist deterministically, but directly injecting one here
         // (same technique as Section H2) keeps this test independent of
         // any particular seed/region actually producing one nearby.
@@ -449,7 +449,7 @@ async function runTests() {
         const session = buildSession(registry, avatarProfileUseCase, avatarPresenceSession);
         session.setAvatarControlMode(true);
 
-        // core/VehiclePlacement.js now places DRONE too, but directly
+        // core/vehicles/VehiclePlacement.js now places DRONE too, but directly
         // injecting one here (same technique as H2/H3) keeps this test
         // independent of any particular seed/region actually producing
         // one nearby.
@@ -469,7 +469,7 @@ async function runTests() {
             '21d. a mounted DRONE\'s own position IS moved by this session\'s frame loop while holding W');
         const groundHeightAtFinalPos = terrainHeightAt(DEFAULT_WORLD_SEED, after.position.x, after.position.z);
         assert(after.position.y > groundHeightAtFinalPos + 1,
-            '21e. ...and gains altitude while doing so — its own Y sits well above raw terrain height, hovering when moving, per core/AvatarDroneVerticalState.js');
+            '21e. ...and gains altitude while doing so — its own Y sits well above raw terrain height, hovering when moving, per core/avatar/AvatarDroneVerticalState.js');
     }
 
     console.log('✅ All Avatar-Vehicle Movement Controller (World View) Integration tests passed.');

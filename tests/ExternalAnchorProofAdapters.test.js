@@ -1,4 +1,4 @@
-import { PublicationAnchor } from '../core/PublicationAnchor.js';
+import { PublicationAnchor } from '../core/publication/PublicationAnchor.js';
 import { ExternalAnchorVerifier } from '../application/anchoring/ExternalAnchorVerifier.js';
 import { ExternalProofVerifierRegistry } from '../application/anchoring/ExternalProofVerifierRegistry.js';
 import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerificationOutcome.js';

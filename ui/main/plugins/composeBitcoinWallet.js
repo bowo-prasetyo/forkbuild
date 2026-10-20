@@ -16,7 +16,7 @@ import { BitcoinAnchorTransactionBuilder } from '../../../anchoring/BitcoinAncho
 import { BitcoinAnchorTransactionReviewCoordinator } from '../../../application/anchoring/bitcoin/BitcoinAnchorTransactionReviewCoordinator.js';
 import { BitcoinWalletFundingObserver } from '../../../anchoring/BitcoinWalletFundingObserver.js';
 
-// Bitcoin's writer (core/NetworkWriters.js): the wallet steps that build,
+// Bitcoin's writer (core/publication/NetworkWriters.js): the wallet steps that build,
 // review, sign, finalize, broadcast and confirm a Bitcoin anchor, and the
 // one-shot Bitcoin publisher. Built only when this device switches Bitcoin's
 // writer on (ui/main/NetworkWriterLoader.js); Bitcoin's reader (proof checks,

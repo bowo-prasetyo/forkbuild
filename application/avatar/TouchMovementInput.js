@@ -1,6 +1,6 @@
-import { deriveTouchJoystickKeys } from '../../core/TouchJoystickKeys.js';
-import { AvatarContinuousMovementIntent } from '../../core/AvatarContinuousMovementIntent.js';
-import { AvatarContinuousMovementMode } from '../../core/AvatarContinuousMovementMode.js';
+import { deriveTouchJoystickKeys } from '../../core/avatar/TouchJoystickKeys.js';
+import { AvatarContinuousMovementIntent } from '../../core/avatar/AvatarContinuousMovementIntent.js';
+import { AvatarContinuousMovementMode } from '../../core/avatar/AvatarContinuousMovementMode.js';
 
 // Turns the World View touch pad (a joystick and held buttons) into the same
 // key presses a keyboard sends, through `keyDown(key)`/`keyUp(key)` (the

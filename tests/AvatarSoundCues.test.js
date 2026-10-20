@@ -1,12 +1,12 @@
 import {
     AVATAR_SOUND_CUE, FOOTSTEP_SURFACE, advanceAvatarSound, createAvatarSoundState, footstepSurfaceAt
-} from '../core/AvatarSoundCues.js';
-import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
-import { AvatarVerticalState } from '../core/AvatarVerticalState.js';
-import { VehicleType } from '../core/VehicleType.js';
-import { ecologyZoneAt, ECOLOGY_ZONE } from '../core/TerrainEcology.js';
-import { isRiverAt } from '../core/Hydrology.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+} from '../core/avatar/AvatarSoundCues.js';
+import { AvatarAnimationState } from '../core/avatar/AvatarAnimationState.js';
+import { AvatarVerticalState } from '../core/avatar/AvatarVerticalState.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
+import { ecologyZoneAt, ECOLOGY_ZONE } from '../core/nature/TerrainEcology.js';
+import { isRiverAt } from '../core/nature/Hydrology.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
 import { assert } from './support/Assert.js';
 
 const SEED = DEFAULT_WORLD_SEED;

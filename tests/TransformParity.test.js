@@ -1,9 +1,9 @@
-import { Brick } from '../core/Brick.js';
-import { Building } from '../core/Building.js';
-import { Document } from '../core/Document.js';
-import { Position } from '../core/Position.js';
-import { World } from '../core/World.js';
-import { Group } from '../core/Group.js';
+import { Brick } from '../core/building/Brick.js';
+import { Building } from '../core/building/Building.js';
+import { Document } from '../core/document/Document.js';
+import { Position } from '../core/document/Position.js';
+import { World } from '../core/document/World.js';
+import { Group } from '../core/building/Group.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';

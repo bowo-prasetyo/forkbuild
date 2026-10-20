@@ -1,6 +1,6 @@
-import { ConversationReadMarker } from '../../core/ConversationReadMarker.js';
-import { UserFacingError } from '../../core/UserFacingError.js';
-import { message } from '../../core/Message.js';
+import { ConversationReadMarker } from '../../core/social/ConversationReadMarker.js';
+import { UserFacingError } from '../../core/app/UserFacingError.js';
+import { message } from '../../core/app/Message.js';
 
 const STORAGE_KEY_PREFIX = 'conversation-read-state:';
 
@@ -66,7 +66,7 @@ export class ConversationReadTracker {
     // Advances this peer's own high-water mark to `sequence` — a no-op
     // (never an error, never a regression) if `sequence` is at or below
     // what is already recorded, exactly like
-    // `core/ConversationReadMarker.js#withLastReadSequence()` itself
+    // `core/social/ConversationReadMarker.js#withLastReadSequence()` itself
     // guarantees. Returns the resulting marker either way.
     markRead(peerIdentityId, sequence) {
         if (!peerIdentityId || typeof peerIdentityId !== 'string') {

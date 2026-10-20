@@ -1,6 +1,6 @@
-import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
-import { RoleProviderRole } from '../core/RoleProviderRole.js';
-import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
+import { PublicationSnapshotPlacement } from '../core/publication/PublicationSnapshotPlacement.js';
+import { RoleProviderRole } from '../core/publication/RoleProviderRole.js';
+import { RoleProviderPreference } from '../core/publication/RoleProviderPreference.js';
 import { RoleProviderPreferenceStore } from '../storage/RoleProviderPreferenceStore.js';
 import { RoleProviderResolutionStatus } from '../application/settings/RoleAwareProviderResolver.js';
 import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
@@ -14,7 +14,7 @@ import { CreatePreferredSnapshotPlacementCreationCoordinatorUseCase } from '../a
 import { SnapshotPlacementCreationOutcome } from '../application/snapshot/placement/SnapshotPlacementCreationOutcome.js';
 import { SnapshotPlacementCreationUiState } from '../application/snapshot/placement/SnapshotPlacementCreationUiState.js';
 import { describeCreationAttempt } from '../application/snapshot/placement/SnapshotPlacementCreationView.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
@@ -77,8 +77,8 @@ function fakeCid(text) {
 // plumbing (irrelevant here — this suite needs a second real provider
 // distinct from 'ipfs', not Arweave's own signing mechanics). Deliberately
 // never content/LocalContentStore.js: that class's own put() never sets a
-// ContentReference `uri` (see core/ContentReference.js), so a placement
-// created onto it always fails core/PublicationSnapshotPlacement.js's own
+// ContentReference `uri` (see core/document/ContentReference.js), so a placement
+// created onto it always fails core/publication/PublicationSnapshotPlacement.js's own
 // "requires a locator" check — a real, pre-existing condition unrelated to,
 // and out of scope for, this milestone (this codebase's own existing
 // suites, e.g. tests/SnapshotPlacementCreationUX.test.js and tests/

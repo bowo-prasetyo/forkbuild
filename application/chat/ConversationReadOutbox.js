@@ -1,6 +1,6 @@
-import { ConversationReadOutboxEntry, ReadReceiptOutboxState } from '../../core/ConversationReadOutboxEntry.js';
-import { UserFacingError } from '../../core/UserFacingError.js';
-import { message } from '../../core/Message.js';
+import { ConversationReadOutboxEntry, ReadReceiptOutboxState } from '../../core/social/ConversationReadOutboxEntry.js';
+import { UserFacingError } from '../../core/app/UserFacingError.js';
+import { message } from '../../core/app/Message.js';
 
 const STORAGE_KEY_PREFIX = 'chat-read-outbox:';
 
@@ -17,7 +17,7 @@ const STORAGE_KEY_PREFIX = 'chat-read-outbox:';
 // this store never grows past ONE entry per peer, because a read
 // acknowledgement is "the latest known state," not "an event," and
 // coalesces instead of accumulating — see
-// core/ConversationReadOutboxEntry.js's own header.
+// core/social/ConversationReadOutboxEntry.js's own header.
 //
 // This class is never reused as, and never reaches into,
 // application/chat/ChatOutbox.js: that store answers "what MESSAGE have I
@@ -64,7 +64,7 @@ export class ConversationReadOutbox {
         return this.list(peerIdentityId).filter((entry) => entry.state === ReadReceiptOutboxState.PENDING);
     }
 
-    // Advances (never regresses — see core/ConversationReadOutboxEntry.js#withReadThroughSequence)
+    // Advances (never regresses — see core/social/ConversationReadOutboxEntry.js#withReadThroughSequence)
     // this peer's pending read-through value, creating a fresh entry if
     // none exists yet. Returns the resulting entry either way, so a
     // caller never needs a separate existence check first, the same

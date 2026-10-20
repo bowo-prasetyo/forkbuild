@@ -1,4 +1,4 @@
-import { WorldEncounterKind } from '../../../core/WorldEncounter.js';
+import { WorldEncounterKind } from '../../../core/world/WorldEncounter.js';
 import { isNonEmptyString, isPlainObject } from '../../../utils/typeGuards.js';
 
 const INVALID = Symbol('PublicationDistributionResult.INVALID');
@@ -38,7 +38,7 @@ const INVALID = Symbol('PublicationDistributionResult.INVALID');
 //          discovery: { relayUrl, discoveryTag, id } | null }
 //
 // A PURE RESULT BOUNDARY, NEVER AN EXECUTION SERVICE — THE SAME RESTRAINT
-// `core/DecentralizedDiscoveryEnvelope.js` (0.9.30) AND `application/
+// `core/publication/DecentralizedDiscoveryEnvelope.js` (0.9.30) AND `application/
 // PublicationDistributionDescriptor.js` (0.9.44) ALREADY HOLD, HELD HERE
 // ONE LAYER LATER IN THE PIPELINE. `describePublicationDistributionResult()`
 // accepts already-produced facts, validates their structural shape,
@@ -68,7 +68,7 @@ const INVALID = Symbol('PublicationDistributionResult.INVALID');
 // below.
 //
 // NO SECOND ENVELOPE, NO SECOND PROTOCOL SHAPE. This file never imports
-// `core/DecentralizedDiscoveryEnvelope.js` and never reads or repeats a
+// `core/publication/DecentralizedDiscoveryEnvelope.js` and never reads or repeats a
 // `discoveryEnvelope`'s own `protocol`/`version`/`kind`/`uri` fields —
 // `PublicationDistributionDescriptor.js`'s own `discoveryEnvelope` remains
 // entirely that file's concern, already published, already gone once

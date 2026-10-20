@@ -1,14 +1,14 @@
-import { AvatarMovementState } from '../../core/AvatarMovementState.js';
-import { simulateAvatarMovement } from '../../core/AvatarMovementSimulation.js';
-import { deriveAvatarVerticalState } from '../../core/AvatarVerticalState.js';
-import { AvatarContinuousMovementIntent, isValidAvatarContinuousMovementIntent } from '../../core/AvatarContinuousMovementIntent.js';
-import { AvatarContinuousMovementMode, isValidAvatarContinuousMovementMode } from '../../core/AvatarContinuousMovementMode.js';
-import { AvatarMovementCapabilityKind, isValidAvatarVehicleMovementCapability } from '../../core/AvatarVehicleMovementCapability.js';
-import { AvatarVehicleBrakingIntent, isValidAvatarVehicleBrakingIntent } from '../../core/AvatarVehicleBrakingIntent.js';
+import { AvatarMovementState } from '../../core/avatar/AvatarMovementState.js';
+import { simulateAvatarMovement } from '../../core/avatar/AvatarMovementSimulation.js';
+import { deriveAvatarVerticalState } from '../../core/avatar/AvatarVerticalState.js';
+import { AvatarContinuousMovementIntent, isValidAvatarContinuousMovementIntent } from '../../core/avatar/AvatarContinuousMovementIntent.js';
+import { AvatarContinuousMovementMode, isValidAvatarContinuousMovementMode } from '../../core/avatar/AvatarContinuousMovementMode.js';
+import { AvatarMovementCapabilityKind, isValidAvatarVehicleMovementCapability } from '../../core/vehicles/AvatarVehicleMovementCapability.js';
+import { AvatarVehicleBrakingIntent, isValidAvatarVehicleBrakingIntent } from '../../core/vehicles/AvatarVehicleBrakingIntent.js';
 import {
     AvatarSwimMode, deriveAvatarSwimMode, isSwimmableDepth, surfaceSwimFeetHeight, isHeadUnderwater,
     stepSwimFeetHeight, createAvatarBreathState, stepAvatarBreath, SWIM_SPEED_FACTOR, BREATH_CAPACITY_SECONDS
-} from '../../core/AvatarSwimming.js';
+} from '../../core/avatar/AvatarSwimming.js';
 
 // The one place raw input becomes an AvatarPresence update, and the one
 // movement executor for walking and every vehicle. It never touches Three.js;
@@ -19,13 +19,13 @@ import {
 //   tick(deltaSeconds) once per frame: simulate, constrain, and publish a new
 //                      AvatarPresence only if something changed
 //
-// tick() pipeline: core/AvatarMovementSimulation.js proposes a position, then
+// tick() pipeline: core/avatar/AvatarMovementSimulation.js proposes a position, then
 // each optional constraint (building, terrain slope, water depth, step height,
 // tree, wildlife) adjusts it in that order. Constraints that can revert X/Z run
 // before step height, which settles the final Y; tree and wildlife only touch
 // X/Z, so they run last.
 //
-// On foot in water deeper than core/AvatarSwimming.js's swim depth the avatar
+// On foot in water deeper than core/avatar/AvatarSwimming.js's swim depth the avatar
 // swims instead: the simulation still steers and moves it (at swimming speed),
 // but its height comes from the swim rules (Space rises, C dives, otherwise it
 // drifts up) and terrain slope and step height no longer apply. Breath runs
@@ -359,7 +359,7 @@ export class AvatarMovementController {
         return this._collidedWithTree;
     }
 
-    // How the avatar is in the water now: its swim mode (core/AvatarSwimming.js),
+    // How the avatar is in the water now: its swim mode (core/avatar/AvatarSwimming.js),
     // the air it has left, and whether it is being pushed up for lack of air.
     swimState() {
         const current = this._avatarPresenceSession ? this._avatarPresenceSession.current : null;

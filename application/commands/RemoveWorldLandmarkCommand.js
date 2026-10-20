@@ -1,6 +1,6 @@
-import { WorldLandmark } from '../../core/WorldLandmark.js';
+import { WorldLandmark } from '../../core/world/WorldLandmark.js';
 import { Command } from './Command.js';
-import { message } from '../../core/Message.js';
+import { message } from '../../core/app/Message.js';
 
 // 0.3.7 — World Landmarks & Personal Waypoints.
 //

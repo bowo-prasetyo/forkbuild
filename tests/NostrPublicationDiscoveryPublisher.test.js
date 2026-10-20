@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
-import { parseDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
+import { parseDecentralizedDiscoveryEnvelope } from '../core/publication/DecentralizedDiscoveryEnvelope.js';
 import { describePublicationDistribution } from '../application/publication/distribution/PublicationDistributionDescriptor.js';
 import { assert } from './support/Assert.js';
 
@@ -107,7 +107,7 @@ async function run() {
         assert(relayUrl === 'wss://custom-relay.example', '7. publishImpl is invoked against the configured relay');
         assert(eventTemplate.kind === 30078, '8. the event template carries the configured kind');
         // Amended: a Publication announcement also carries its narrow record tag
-        // (core/NarrowDiscoveryTags.js#publicationRecordTag), under the same tag name.
+        // (core/publication/NarrowDiscoveryTags.js#publicationRecordTag), under the same tag name.
         assert(
             eventTemplate.tags.length === 2 && eventTemplate.tags[0][0] === 'x' && eventTemplate.tags[0][1] === 'forkbuild_campaign_42'
                 && eventTemplate.tags[1][0] === 'x' && eventTemplate.tags[1][1] === 'forkbuild-publication:pub-99',

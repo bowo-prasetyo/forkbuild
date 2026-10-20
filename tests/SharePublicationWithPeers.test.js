@@ -20,14 +20,14 @@ import { StoreSnapshotContentUseCase } from '../application/snapshot/materializa
 import { MaterializeSnapshotFromPeerUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromPeerUseCase.js';
 import { PeerSnapshotMaterializationOutcome } from '../application/snapshot/materialization/PeerSnapshotMaterializationOutcome.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
-import { DecentralizedPublication, MAX_CONTENT_TITLE_LENGTH, normalizeContentTitle } from '../core/DecentralizedPublication.js';
+import { DecentralizedPublication, MAX_CONTENT_TITLE_LENGTH, normalizeContentTitle } from '../core/publication/DecentralizedPublication.js';
 import { validateDecentralizedPublication } from '../application/publication/DecentralizedPublicationValidator.js';
 import { SharePublicationWithPeersUseCase, LEGACY_CONTENT_HASH } from '../application/publication/sharing/SharePublicationWithPeersUseCase.js';
 import { RetrieveSharedPublicationUseCase, SHARE_UNAVAILABLE } from '../application/publication/sharing/RetrieveSharedPublicationUseCase.js';
 import { AutoRetrieveSharedPublicationsUseCase } from '../application/publication/sharing/AutoRetrieveSharedPublicationsUseCase.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { StorageEntryNotLoadedError } from '../storage/StorageEntryNotLoadedError.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { computeFnv1a32 } from '../serializer/contentHash.js';
 import { assert } from './support/Assert.js';
 

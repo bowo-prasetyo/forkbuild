@@ -1,6 +1,6 @@
-import { normalizeTilt } from '../core/BrickOrientation.js';
+import { normalizeTilt } from '../core/building/BrickOrientation.js';
 import { ThreeBrickFactory } from './ThreeBrickFactory.js';
-import { nightGlowColor } from '../core/NightGlow.js';
+import { nightGlowColor } from '../core/nature/NightGlow.js';
 import { castShadows } from './ShadowRoles.js';
 
 // BrickRenderer no longer knows what a brick looks like. Given a Brick, it
@@ -17,7 +17,7 @@ export class BrickRenderer {
 
     // { definitionId, x, y, z, rotationY, rotationX (radians), color, glow }, in
     // the brick's own (document-local) coordinates. rotationX is its tilt
-    // (core/BrickOrientation.js), applied before rotationY (Euler 'YXZ').
+    // (core/building/BrickOrientation.js), applied before rotationY (Euler 'YXZ').
     describe(brick) {
         const definition = this._registry.get(brick.definitionId);
         if (!definition) {
@@ -35,7 +35,7 @@ export class BrickRenderer {
             rotationY: brick.rotation * (Math.PI / 180),
             rotationX: normalizeTilt(brick.tilt) * (Math.PI / 180),
             color,
-            // The light it gives off at full night (core/NightGlow.js), 0 for none.
+            // The light it gives off at full night (core/nature/NightGlow.js), 0 for none.
             glow: nightGlowColor(definition, color)
         };
     }

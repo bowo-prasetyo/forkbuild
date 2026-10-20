@@ -2,14 +2,14 @@ import { createApp } from 'vue';
 import EmbedView from './EmbedView.js';
 import { applyDocumentLanguage, setAppLocale } from '../i18n/i18n.js';
 import { negotiateLocale } from '../i18n/locales.js';
-import { payloadFromEmbedHash } from '../../core/ForkBuildAppLinks.js';
-import { DEFAULT_VISITOR_COUNT_SETTINGS } from '../../core/VisitorCount.js';
+import { payloadFromEmbedHash } from '../../core/app/ForkBuildAppLinks.js';
+import { DEFAULT_VISITOR_COUNT_SETTINGS } from '../../core/app/VisitorCount.js';
 import { composeWorldEncounterMaterialVerifier } from '../../application/worldEncounter/WorldEncounterMaterialVerifierRuntimeComposition.js';
 import { FunnelEventCounter } from '../../application/settings/FunnelEventCounter.js';
 import { browserPrivacySignals, sendCounterHit } from '../counterHit.js';
 
 // embed.html's entry point: a build shown inside another site's page
-// (`embed.html#<payload>`, core/ForkBuildAppLinks.js). Nothing of the app is
+// (`embed.html#<payload>`, core/app/ForkBuildAppLinks.js). Nothing of the app is
 // started: no storage, no peers, no relays. The page checks the build the
 // link carries and shows it turning, with a way into ForkBuild.
 //

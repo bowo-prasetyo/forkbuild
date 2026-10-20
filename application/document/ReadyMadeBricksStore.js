@@ -1,9 +1,9 @@
 import { StorageProvider } from '../../storage/StorageProvider.js';
-import { addReadyMadeBricks, countPlacedBricks, worldBricks } from '../../core/PlacedBricks.js';
+import { addReadyMadeBricks, countPlacedBricks, worldBricks } from '../../core/building/PlacedBricks.js';
 
 const KEY_PREFIX = 'ready-made-bricks:';
 
-// The bricks each build on this device was started with (core/PlacedBricks.js):
+// The bricks each build on this device was started with (core/building/PlacedBricks.js):
 // the ready-made structure or the build it is a copy of, and ready-made
 // structures dropped into it since. Kept per World id, on this device only,
 // to tell at publish how many bricks the builder placed or changed. A build

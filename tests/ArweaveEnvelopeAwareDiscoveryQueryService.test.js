@@ -4,7 +4,7 @@ import { DecentralizedDiscoveryQueryService } from '../application/discovery/Dec
 import { NostrDiscoveryQueryService } from '../application/nostr/NostrDiscoveryQueryService.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
-import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
+import { describeDecentralizedDiscoveryEnvelope } from '../core/publication/DecentralizedDiscoveryEnvelope.js';
 import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
 import { ArweaveWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js';
 import { composeDecentralizedWorldEncounterMaterialDiscoveryRuntime } from '../application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
@@ -250,8 +250,8 @@ async function run() {
         check(candidate.announcementId === announced.id, 'E1. the raw candidate carries announcementId, equal to the real announcement transaction id — never globally discarded, exactly 0.9.493 Section D\'s own preservable invariant');
         check(candidate.uri === 'ar://TX-MATERIAL-E' && candidate.announcementId !== 'ar://TX-MATERIAL-E', 'E2. uri and announcementId are two distinct facts, never conflated');
 
-        const leadSource = codeOnlyOf(await source('core/DecentralizedWorldDiscoveryLead.js'));
-        check(!/announcementId/.test(leadSource), 'E3. core/DecentralizedWorldDiscoveryLead.js itself carries no announcementId vocabulary — the extra field rides on the raw candidate only, tolerated and silently dropped downstream, never a schema change');
+        const leadSource = codeOnlyOf(await source('core/world/DecentralizedWorldDiscoveryLead.js'));
+        check(!/announcementId/.test(leadSource), 'E3. core/world/DecentralizedWorldDiscoveryLead.js itself carries no announcementId vocabulary — the extra field rides on the raw candidate only, tolerated and silently dropped downstream, never a schema change');
 
         console.log('✓ Section E: the announcement transaction id is preserved on the raw candidate, alongside the material uri, with zero schema change.');
     }
@@ -392,7 +392,7 @@ async function run() {
         const signerSource = await source('arweave/ArweaveInjectedProviderSigner.js');
         const uploaderSource = await source('application/arweave/ArweavePublicationMaterialUploader.js');
         const resolverSource = await source('application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js');
-        const leadSource = await source('core/DecentralizedWorldDiscoveryLead.js');
+        const leadSource = await source('core/world/DecentralizedWorldDiscoveryLead.js');
         const materialSourceSource = await source('application/worldEncounter/DecentralizedWorldEncounterMaterialSource.js');
 
         check(!/0\.9\.494/.test(publisherSource), 'I1. ArweaveAnnouncementPublisher.js — untouched by 0.9.494; announcement/signing is a write-side concern this milestone never reaches');
@@ -400,7 +400,7 @@ async function run() {
         check(!/0\.9\.494/.test(signerSource), 'I3. arweave/ArweaveInjectedProviderSigner.js — untouched by 0.9.494; transaction signing is a write-side concern');
         check(!/0\.9\.494/.test(uploaderSource), 'I4. ArweavePublicationMaterialUploader.js — untouched by 0.9.494; content storage/upload is a write-side, content-role concern');
         check(!/0\.9\.494/.test(resolverSource), 'I5. ArweaveWorldEncounterMaterialResolver.js — untouched by 0.9.494; Section G already proved zero change is needed on the resolve side');
-        check(!/0\.9\.494/.test(leadSource), 'I6. core/DecentralizedWorldDiscoveryLead.js — untouched by 0.9.494; no candidate-schema change was required');
+        check(!/0\.9\.494/.test(leadSource), 'I6. core/world/DecentralizedWorldDiscoveryLead.js — untouched by 0.9.494; no candidate-schema change was required');
         check(!/0\.9\.494/.test(materialSourceSource), 'I7. DecentralizedWorldEncounterMaterialSource.js — untouched by 0.9.494; the terminal retrieval step required no envelope-awareness of its own');
 
         const fixedSource = codeOnlyOf(await source('application/arweave/ArweaveGraphqlDiscoveryQueryService.js'));

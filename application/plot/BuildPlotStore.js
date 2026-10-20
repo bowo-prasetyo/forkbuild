@@ -1,7 +1,7 @@
-// This device's plots (core/BuildPlot.js), one per build. Personal and local:
+// This device's plots (core/world/BuildPlot.js), one per build. Personal and local:
 // only the placement made when the build is published is ever shared.
 import { StorageProvider } from '../../storage/StorageProvider.js';
-import { normalizeBuildPlot } from '../../core/BuildPlot.js';
+import { normalizeBuildPlot } from '../../core/world/BuildPlot.js';
 
 export const BUILD_PLOTS_ENTRY_NAME = 'build-plots';
 // Plenty for anyone's builds in progress; the oldest go first.

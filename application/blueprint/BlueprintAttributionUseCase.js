@@ -1,23 +1,23 @@
-import { BlueprintAttribution } from '../../core/BlueprintAttribution.js';
-import { deriveBlueprintFingerprint, deriveLegacyBlueprintFingerprint } from '../../core/BlueprintFingerprint.js';
+import { BlueprintAttribution } from '../../core/building/BlueprintAttribution.js';
+import { deriveBlueprintFingerprint, deriveLegacyBlueprintFingerprint } from '../../core/building/BlueprintFingerprint.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
-import { attributionView } from '../../core/BlueprintAttributionView.js';
-import { message } from '../../core/Message.js';
-import { UserFacingError } from '../../core/UserFacingError.js';
+import { attributionView } from '../../core/building/BlueprintAttributionView.js';
+import { message } from '../../core/app/Message.js';
+import { UserFacingError } from '../../core/app/UserFacingError.js';
 import { requireSigningIdentityId } from '../../identity/SigningReadiness.js';
 
 // 0.6.5 — Blueprint Identity & Attribution.
 //
 // The explicit entry point for "publish/retract/read attribution for a
 // blueprint's design" — thin over LocalBlueprintAttributionStore.js (raw
-// persistence) and core/BlueprintFingerprint.js (pure derivation), the
+// persistence) and core/building/BlueprintFingerprint.js (pure derivation), the
 // same three-layer split application/placeNaming/PlaceNamingClaimUseCase.js already
 // keeps one domain over: ui/ talks to THIS class, never to the store or
 // the fingerprint module directly.
 //
 // publish() REQUIRES a signing identity and REQUIRES a Structure with
 // derivable design content — a BlueprintAttribution has never existed
-// unsigned or fingerprint-less; see core/Signature.js's own
+// unsigned or fingerprint-less; see core/publication/Signature.js's own
 // BLUEPRINT_ATTRIBUTION header on why the signature is REQUIRED, the
 // same posture PlaceNamingClaimUseCase.js already takes for a naming
 // claim.
@@ -30,7 +30,7 @@ import { requireSigningIdentityId } from '../../identity/SigningReadiness.js';
 // same reason claiming a place name you have no connection to already
 // was in 0.5.2: this layer establishes what a claim MEANS, never who is
 // telling the truth — that judgment is left entirely to whoever reads
-// attributions later (see core/PlaceNamingClaim.js's own header on the
+// attributions later (see core/world/PlaceNamingClaim.js's own header on the
 // identical restraint, one domain over).
 export class BlueprintAttributionUseCase {
     // `publicationLog` is OPTIONAL and OFF by default — every call site
@@ -114,7 +114,7 @@ export class BlueprintAttributionUseCase {
 
     // A small, presentation-oriented summary a UI can render directly —
     // never a ranking or authority verdict, the same "confidence, not
-    // authority" restraint core/PlaceNamingView.js already keeps one
+    // authority" restraint core/world/PlaceNamingView.js already keeps one
     // domain over. `mine` is the CURRENTLY SIGNED-IN identity's own
     // attribution for this fingerprint, if it has published one;
     // `attributions` is every attribution this replica has on file,
@@ -138,12 +138,12 @@ export class BlueprintAttributionUseCase {
     //
     // The presentation-ready counterpart to summarize() above: the exact
     // same fingerprint/attributions/identity read, but run through
-    // core/BlueprintAttributionView.js#attributionView() so a caller gets
+    // core/building/BlueprintAttributionView.js#attributionView() so a caller gets
     // back a distinct-author ranking (`authors`/`authorCount`) instead of
     // a flat, unranked list. Deliberately a SEPARATE method rather than a
     // change to summarize()'s own return shape — summarize() stays the
     // plain, unranked read every existing caller already relies on, the
-    // same restraint core/PlaceNamingView.js keeps as its own module,
+    // same restraint core/world/PlaceNamingView.js keeps as its own module,
     // entirely apart from application/placeNaming/PlaceNamingClaimUseCase.js.
     //
     // This is also the ONE place in this class allowed to read

@@ -1,4 +1,4 @@
-import { STEEM_ROOT_POST_INTERVAL_MS } from '../core/SteemDiscoveryThread.js';
+import { STEEM_ROOT_POST_INTERVAL_MS } from '../core/networks/SteemDiscoveryThread.js';
 import { checkSteemDiscoveryThreads, createSteemDiscoveryThreads, planSteemDiscoveryThreads } from '../scripts/steem-threads/SteemThreadCreation.js';
 import { assert } from './support/Assert.js';
 

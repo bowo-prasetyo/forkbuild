@@ -1,11 +1,11 @@
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { Publication } from '../publisher/Publication.js';
-import { Position } from '../core/Position.js';
-import { SpatialBounds } from '../core/SpatialBounds.js';
-import { PlacementRecord } from '../core/PlacementRecord.js';
-import { FollowRecord } from '../core/FollowRecord.js';
-import { getPlaceNamingClaimSigningDescriptor } from '../core/PlaceNamingClaim.js';
+import { Position } from '../core/document/Position.js';
+import { SpatialBounds } from '../core/world/SpatialBounds.js';
+import { PlacementRecord } from '../core/publication/PlacementRecord.js';
+import { FollowRecord } from '../core/social/FollowRecord.js';
+import { getPlaceNamingClaimSigningDescriptor } from '../core/world/PlaceNamingClaim.js';
 import { FollowUseCase } from '../application/identity/FollowUseCase.js';
 import { FollowingFeed } from '../application/publication/FollowingFeed.js';
 import {

@@ -1,13 +1,13 @@
-import { emptyAvatarInventory, isValidAvatarInventory } from '../../core/AvatarInventory.js';
+import { emptyAvatarInventory, isValidAvatarInventory } from '../../core/avatar/AvatarInventory.js';
 
 // 0.9.700 — Shared Avatar Inventory Store.
 //
 // Through 0.9.671, `AvatarVehicleInteractionController` owned its own
-// private `this._inventory` — the only consumer of core/AvatarInventory.js
+// private `this._inventory` — the only consumer of core/avatar/AvatarInventory.js
 // that existed. 0.9.700 — Animal Catching — adds a second, genuinely
 // independent consumer: `AvatarAnimalInteractionController`. Both must
 // read and write the SAME backpack (one avatar, one inventory, holding
-// vehicles and animals together — see core/AvatarInventory.js's own
+// vehicles and animals together — see core/avatar/AvatarInventory.js's own
 // header, "A shared inventory, not two parallel ones") — so the current
 // `AvatarInventory` reference can no longer live privately inside
 // either controller; it needs exactly one owner both can reach.
@@ -19,7 +19,7 @@ import { emptyAvatarInventory, isValidAvatarInventory } from '../../core/AvatarI
 // plays for an avatar's own position. It has no policy of its own: it
 // never decides WHAT should be added or removed, WHEN, or WHY — every
 // actual decision still comes from a pure transition
-// (core/AvatarVehicleStoreTransition.js, core/AvatarAnimalCatchTransition.js,
+// (core/vehicles/AvatarVehicleStoreTransition.js, core/avatar/AvatarAnimalCatchTransition.js,
 // and their own mirror-image files), exactly as it always has. A
 // controller calls `set(transition.inventory)` with whatever a pure
 // transition already computed; this class never computes one itself.

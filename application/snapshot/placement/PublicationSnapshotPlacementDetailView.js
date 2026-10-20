@@ -3,7 +3,7 @@
 // application/anchoring/PublicationAnchorDetailView.js (0.8.14) turns a
 // PublicationAnchor into a flat, UI-ready shape without touching a
 // verifier. This file is the identical idea, one axis over: a
-// PublicationSnapshotPlacement (core/PublicationSnapshotPlacement.js,
+// PublicationSnapshotPlacement (core/publication/PublicationSnapshotPlacement.js,
 // 0.8.18) turned into a flat, UI-ready shape without touching
 // application/snapshot/placement/SnapshotPlacementResolver.js. Pure, synchronous,
 // side-effect-free — never imports application/
@@ -24,7 +24,7 @@
 // `if (storage === 'ipfs')` branch here.
 //
 // `placedAtLabel` exists so a caller never has to invent its own
-// wording for the restraint core/PublicationSnapshotPlacement.js's own
+// wording for the restraint core/publication/PublicationSnapshotPlacement.js's own
 // header already states: `placedAt` is THIS REPLICA's own reported time
 // of placing the content, never an external system's timestamp (a
 // placement has no external system to report one at all — content-

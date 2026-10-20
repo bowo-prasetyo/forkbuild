@@ -7,9 +7,9 @@ import {
     steemPublicKeyBytes,
     steemPublicKeyString,
     steemTransactionId
-} from '../core/SteemBinary.js';
-import { captureSteemBlockEvidence, checkSteemBlockEvidence } from '../core/SteemBlockEvidence.js';
-import { STEEM_ANCHOR_MAX_BATCH, parseSteemAnchorProof, steemAnchorBatch, steemAnchorBatchRoot, steemAnchorOperations } from '../core/SteemAnchor.js';
+} from '../core/networks/SteemBinary.js';
+import { captureSteemBlockEvidence, checkSteemBlockEvidence } from '../core/networks/SteemBlockEvidence.js';
+import { STEEM_ANCHOR_MAX_BATCH, parseSteemAnchorProof, steemAnchorBatch, steemAnchorBatchRoot, steemAnchorOperations } from '../core/networks/SteemAnchor.js';
 import { SteemProofVerifier } from '../anchoring/SteemProofVerifier.js';
 import { SteemAnchorPublisher } from '../anchoring/SteemAnchorPublisher.js';
 import { SteemAnchorEvidenceView } from '../anchoring/SteemAnchorEvidenceView.js';
@@ -17,8 +17,8 @@ import { SteemAnchorFinalityObserver } from '../anchoring/SteemAnchorFinalityObs
 import { createSteemAnnouncer } from '../application/steem/SteemAnnouncer.js';
 import { composeSteemRuntime } from '../application/steem/SteemRuntimeComposition.js';
 import { createSteemRpcClient } from '../steem/SteemRpcClient.js';
-import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { DecentralizedPublication } from '../core/publication/DecentralizedPublication.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
 import { CreateExternalPublicationAnchorOrchestratorUseCase } from '../application/anchoring/CreateExternalPublicationAnchorOrchestratorUseCase.js';

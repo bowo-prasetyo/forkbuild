@@ -1,13 +1,13 @@
 import * as THREE from 'three';
-import { wildlifeInRegion, WILDLIFE_FEATURE_TYPE, ANIMAL_SPECIES } from '../core/WildlifeField.js';
-import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
-import { animalPoseAt, MAX_WANDER_DISTANCE } from '../core/WildlifeMotion.js';
+import { wildlifeInRegion, WILDLIFE_FEATURE_TYPE, ANIMAL_SPECIES } from '../core/nature/WildlifeField.js';
+import { TERRAIN_TILE_SIZE } from '../core/nature/TerrainTiling.js';
+import { animalPoseAt, MAX_WANDER_DISTANCE } from '../core/nature/WildlifeMotion.js';
 import { gaitOffsetsAt, REST_GAIT } from './AnimalGait.js';
 import { idleOffsetsAt } from './AnimalIdle.js';
 import { reactToObserver } from './AnimalReaction.js';
 import { castShadows } from './ShadowRoles.js';
 
-// The renderer-side counterpart to core/WildlifeField.js — the
+// The renderer-side counterpart to core/nature/WildlifeField.js — the
 // "core decides, renderer builds" split: this file knows nothing about WHERE an
 // animal stands or WHY, only how to turn one tile's worth of deterministic
 // animal candidates into stylized Three.js geometry.
@@ -18,7 +18,7 @@ import { castShadows } from './ShadowRoles.js';
 // holds.
 //
 // Deliberately stylized, low-poly, and muted — the exact restraint
-// core/TerrainSurface.js#SURFACE_PALETTE's own header established
+// core/nature/TerrainSurface.js#SURFACE_PALETTE's own header established
 // ("buildings and avatars remain the visual focus"), extended here: every
 // ANIMAL_SPECIES is still just two low-poly spheres (an elongated-body
 // ellipsoid under a smaller head), never a detailed creature asset that
@@ -41,7 +41,7 @@ const HEAD_SEGMENTS_HEIGHT = 5; // low-poly on purpose
 const APPENDAGE_SEGMENTS_WIDTH = 5; // ears and tails: lower-poly still
 const APPENDAGE_SEGMENTS_HEIGHT = 4;
 
-// One geometry+color preset per core/WildlifeField.js#ANIMAL_SPECIES —
+// One geometry+color preset per core/nature/WildlifeField.js#ANIMAL_SPECIES —
 // each pivoted at its own base (y=0, matching an animal standing at
 // ground Y) with its head translated forward and up from the body,
 // slightly overlapping. Built once at module load and reused, unchanged, across
@@ -195,7 +195,7 @@ const _turn = new THREE.Matrix4();
 const _pivot = new THREE.Matrix4();
 
 // A tile's bounding spheres are computed once, from where its animals were
-// placed, and padded by how far they can wander (core/WildlifeMotion.js)
+// placed, and padded by how far they can wander (core/nature/WildlifeMotion.js)
 // so frustum culling never hides an animal that has walked toward the
 // edge of the view. Twice the wander distance leaves room for the terrain
 // rising or falling under a wandering animal as well.
@@ -270,7 +270,7 @@ function buildSpeciesMeshes(preset, animals) {
 // per species, never one draw call per animal.
 // 0.9.700 — Animal Catching. `excludedAnimalIds` (optional, defaults to
 // an empty set) is the ONE new parameter this milestone adds — a caught
-// animal's own core/AnimalIdentity.js id, so this tile simply never
+// animal's own core/nature/AnimalIdentity.js id, so this tile simply never
 // builds geometry for it, the same "renderer glue reads whatever the
 // application layer already decided" split
 // application/world/VehicleRuntimeInstances.js's own render sync already
@@ -278,7 +278,7 @@ function buildSpeciesMeshes(preset, animals) {
 // policy of its own — it only ever filters a set it is handed.
 //
 // A tile holds the animals PLACED in it, and keeps holding them while
-// they wander: core/WildlifeMotion.js never lets an animal leave its own
+// they wander: core/nature/WildlifeMotion.js never lets an animal leave its own
 // lattice cell, so it never leaves its tile either. The tile remembers
 // them (in `userData.wildlife`) so updateWildlifeTileMesh() can move them
 // each frame. `timeSeconds` (optional) poses them straight away; without
@@ -316,7 +316,7 @@ export function buildWildlifeTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE
 }
 
 // Moves every animal in a tile built by buildWildlifeTileMesh() to where
-// it is at `timeSeconds` (core/WildlifeMotion.js#animalPoseAt()) by
+// it is at `timeSeconds` (core/nature/WildlifeMotion.js#animalPoseAt()) by
 // rewriting instance transforms in place — no geometry is rebuilt and no
 // draw call is added. Called once per frame for every loaded tile. A
 // group with no animals is left alone. A walking animal also moves with

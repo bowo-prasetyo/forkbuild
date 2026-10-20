@@ -1,7 +1,7 @@
 import CommentaryDistributionPicker from './CommentaryDistributionPicker.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
-import { LOCAL_AND_PEERS_ONLY } from '../../core/CommentaryDistributionProvider.js';
-import { isUserFacingError } from '../../core/UserFacingError.js';
+import { LOCAL_AND_PEERS_ONLY } from '../../core/publication/CommentaryDistributionProvider.js';
+import { isUserFacingError } from '../../core/app/UserFacingError.js';
 import { sanitizeDistributionErrorMessage } from '../../application/publication/distribution/DistributionErrorMessageSanitizer.js';
 import { errorText, t } from '../i18n/i18n.js';
 

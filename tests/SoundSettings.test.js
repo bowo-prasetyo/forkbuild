@@ -1,4 +1,4 @@
-import { DEFAULT_SOUND_SETTINGS, DEFAULT_SOUND_VOLUME, normalizeSoundSettings } from '../core/SoundSettings.js';
+import { DEFAULT_SOUND_SETTINGS, DEFAULT_SOUND_VOLUME, normalizeSoundSettings } from '../core/app/SoundSettings.js';
 import { SoundSettingsStore } from '../application/settings/SoundSettingsStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { assert } from './support/Assert.js';

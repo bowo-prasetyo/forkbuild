@@ -1,7 +1,7 @@
 import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
 import { EventBus } from '../../core/events/EventBus.js';
-import { AvatarInventoryEntry, withEntryAdded, withEntryRemoved } from '../../core/AvatarInventory.js';
-import { createId } from '../../core/createId.js';
+import { AvatarInventoryEntry, withEntryAdded, withEntryRemoved } from '../../core/avatar/AvatarInventory.js';
+import { createId } from '../../core/document/createId.js';
 import {
     AvatarInventoryTransferPeerMessageKind,
     toAvatarInventoryTransferOfferMessage,
@@ -18,7 +18,7 @@ const OFFER_WITHDRAWN_EVENT = 'AvatarInventoryTransferOfferWithdrawn';
 // Send An Avatar Inventory Entry To Another Avatar's Inventory.
 //
 // The application/anchoring/PublicationAnchorPeerExchange.js shape, applied to one
-// carried core/AvatarInventory.js entry instead of a signed anchor claim:
+// carried core/avatar/AvatarInventory.js entry instead of a signed anchor claim:
 // attach to every application/peer/ConnectedPeerRegistry.js peer (now and in
 // the future, via its own onChange), subscribe to this file's own
 // DEFAULT_PROTOCOL, and route OFFER/ACCEPT/DECLINE traffic against the

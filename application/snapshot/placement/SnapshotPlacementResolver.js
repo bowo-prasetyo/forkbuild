@@ -1,5 +1,5 @@
-import { PublicationSnapshotPlacement } from '../../../core/PublicationSnapshotPlacement.js';
-import { ContentReference } from '../../../core/ContentReference.js';
+import { PublicationSnapshotPlacement } from '../../../core/publication/PublicationSnapshotPlacement.js';
+import { ContentReference } from '../../../core/document/ContentReference.js';
 import { validatePublicationSnapshotPlacement } from './PublicationSnapshotPlacementValidator.js';
 import { SnapshotPlacementResolutionOutcome } from './SnapshotPlacementResolutionOutcome.js';
 import { LEGACY_HASH_REASON, isLegacyContentHash } from '../../../serializer/contentHash.js';
@@ -32,7 +32,7 @@ import { LEGACY_HASH_REASON, isLegacyContentHash } from '../../../serializer/con
 //                             store this class or anything it imports
 //                             hard-codes
 //   5. retrieve bytes       — from that store, addressed by an AD-HOC
-//                             core/ContentReference.js this class builds
+//                             core/document/ContentReference.js this class builds
 //                             from the placement's own contentHash/
 //                             locator/storage — never the store's put()
 //                             called a second time, and never anything

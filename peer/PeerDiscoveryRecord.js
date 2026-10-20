@@ -1,4 +1,4 @@
-import { createId } from '../core/createId.js';
+import { createId } from '../core/document/createId.js';
 import { PeerDiscoverySource } from './PeerDiscoverySource.js';
 
 // 0.2.50 — "here is something that might be Bob." A PeerDiscoveryRecord is
@@ -20,7 +20,7 @@ import { PeerDiscoverySource } from './PeerDiscoverySource.js';
 //
 // 0.2.64 — a candidate carries its own explicit freshness, `expiresAt`,
 // checked lazily via `isExpired()` — the exact same "checked on read, never
-// on a timer" discipline core/ChatOutboxEntry.js's own TTL already
+// on a timer" discipline core/social/ChatOutboxEntry.js's own TTL already
 // established. This is a SEPARATE clock from whatever expiry the mechanism
 // that produced this record might also enforce at import time (see
 // peer/LocalPeerDiscoveryProvider.js#importInvitation, which still refuses
@@ -66,7 +66,7 @@ export class PeerDiscoveryRecord {
     // this file's own header. Every caller that reads a
     // PeerDiscoveryProvider's records (peer/LocalPeerDiscoveryProvider.js's
     // own list()/discover(), and anything built on top) is expected to
-    // apply this check, exactly like core/ChatOutboxEntry.js#isExpired()'s
+    // apply this check, exactly like core/social/ChatOutboxEntry.js#isExpired()'s
     // own callers do.
     isExpired(now = new Date()) {
         return now.getTime() >= this._expiresAt.getTime();

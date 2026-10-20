@@ -1,5 +1,5 @@
 
-import { IpfsGatewayConfiguration, DEFAULT_IPFS_GATEWAY_URL, isValidIpfsGatewayUrl } from '../core/IpfsGatewayConfiguration.js';
+import { IpfsGatewayConfiguration, DEFAULT_IPFS_GATEWAY_URL, isValidIpfsGatewayUrl } from '../core/networks/IpfsGatewayConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { IpfsGatewayConfigurationStore } from '../storage/IpfsGatewayConfigurationStore.js';
 import { SetIpfsGatewayConfigurationUseCase } from '../application/settings/SetIpfsGatewayConfigurationUseCase.js';
@@ -13,7 +13,7 @@ import { withEnglish } from './support/EnglishSource.js';
 // 0.9.665 — IPFS Gateway Settings UI.
 //
 // Mirrors tests/ArweaveGatewaySettingsEntryPoint.test.js's own structure —
-// proving the missing other half of core/IpfsGatewayConfiguration.js +
+// proving the missing other half of core/networks/IpfsGatewayConfiguration.js +
 // storage/IpfsGatewayConfigurationStore.js: a real settings surface,
 // reachable from top-nav, that creates/changes/clears the override end to
 // end, and a real composition-root wiring that actually feeds it into both
@@ -24,7 +24,7 @@ import { withEnglish } from './support/EnglishSource.js';
 // (content/IpfsContentStore.js, content/IpfsRemotePinningContentStore.js).
 //
 // This suite also reverses 0.9.373/0.9.385/0.9.657's own recorded DEFER
-// verdicts for this exact candidate — see core/IpfsGatewayConfiguration.js's
+// verdicts for this exact candidate — see core/networks/IpfsGatewayConfiguration.js's
 // own header for the new evidence (ipfs.io's public gateway now blocks
 // ordinary programmatic requests behind a bot-detection check) that
 // reopened the question, and docs/Roadmap.md, "0.9.665," for the full
@@ -89,8 +89,8 @@ async function run() {
             '10. the view writes the configuration through the injected use case, never IpfsGatewayConfigurationStore.save() directly');
         assert(!/new IpfsGatewayConfiguration\(/.test(viewExecutable),
             '11. the view never constructs an IpfsGatewayConfiguration itself — validation and construction stay inside the use case');
-        assert(viewExecutable.includes("import { DEFAULT_IPFS_GATEWAY_URLS } from '../../core/IpfsGatewayConfiguration.js';"),
-            '12. the ONE thing the view imports from core/IpfsGatewayConfiguration.js is the plain default constant, for display only');
+        assert(viewExecutable.includes("import { DEFAULT_IPFS_GATEWAY_URLS } from '../../core/networks/IpfsGatewayConfiguration.js';"),
+            '12. the ONE thing the view imports from core/networks/IpfsGatewayConfiguration.js is the plain default constant, for display only');
         assert(!/new IpfsGatewayContentStore/.test(viewExecutable),
             '13. the view never constructs a retrieval adapter itself — it only ever talks to the injected store/use case seam');
         console.log('✓ Section 0: the settings entry point is really wired — nav link, route, shared store, shared use case, and a view that only ever goes through the injected collaborators');
@@ -253,7 +253,7 @@ async function run() {
             '37. content/IpfsRemotePinningContentStore.js (remote pinning, the OTHER write path) never references the new gateway configuration classes either');
 
         const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
-        // core/IpfsNodeConfiguration.js (a later, sibling milestone) gave the
+        // core/networks/IpfsNodeConfiguration.js (a later, sibling milestone) gave the
         // CREATION registry's own IpfsContentStore construction a real
         // apiUrl argument — but a SEPARATE resolved value
         // (resolvedIpfsNodeApiUrl, its own store/use case), never this

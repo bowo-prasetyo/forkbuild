@@ -4,7 +4,7 @@ import {
     describeEncounterablePublication,
     describeEncounterableAvatar,
     deriveWorldEncounters
-} from '../core/WorldEncounter.js';
+} from '../core/world/WorldEncounter.js';
 import { assert } from './support/Assert.js';
 
 function publicationOf(overrides = {}) {
@@ -218,7 +218,7 @@ function avatarPresenceOf(overrides = {}) {
 // 8. Vocabulary boundary: no evaluative, ranking, or network vocabulary
 // ---------------------------------------------------------------------
 {
-    const sourceUrl = new URL('../core/WorldEncounter.js', import.meta.url);
+    const sourceUrl = new URL('../core/world/WorldEncounter.js', import.meta.url);
     const source = await readFile(sourceUrl, 'utf8');
     const codeOnly = source
         .split('\n')
@@ -232,7 +232,7 @@ function avatarPresenceOf(overrides = {}) {
         'fetch(', 'websocket', 'WebSocket', 'gossip', 'socket'
     ];
     for (const term of forbidden) {
-        assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `core/WorldEncounter.js code must never use the word "${term}"`);
+        assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `core/world/WorldEncounter.js code must never use the word "${term}"`);
     }
 
     console.log('✓ Vocabulary boundary: no evaluative, ranking, or network vocabulary');

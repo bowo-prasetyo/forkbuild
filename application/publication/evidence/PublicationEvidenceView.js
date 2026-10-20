@@ -1,14 +1,14 @@
 import { AnchorVerificationOutcome } from '../../anchoring/AnchorVerificationOutcome.js';
-import { message } from '../../../core/Message.js';
+import { message } from '../../../core/app/Message.js';
 
 // 0.8.3 — Publication Center: External Evidence UX.
 //
-// core/BlueprintAttributionView.js and application/
+// core/building/BlueprintAttributionView.js and application/
 // PublicationResolutionView.js each derive a plain, ephemeral,
 // presentation-only shape from state this replica already holds —
 // never persisted, never itself a signed fact. This file is the
 // identical idea applied to evidence: it turns a list of already-
-// discovered core/PublicationAnchor.js instances (application/
+// discovered core/publication/PublicationAnchor.js instances (application/
 // PublicationEvidenceCoordinator.js#discover(), a synchronous local
 // catalog read) plus an OPTIONAL, caller-supplied map of verification
 // results (application/publication/evidence/PublicationEvidenceCoordinator.js#verify(),
@@ -17,7 +17,7 @@ import { message } from '../../../core/Message.js';
 //
 // This file is pure and read-only — synchronous, side-effect-free, and
 // never imports application/anchoring/LocalPublicationAnchorCatalog.js,
-// application/anchoring/ExternalAnchorVerifier.js, or core/PublicationAnchor.js's
+// application/anchoring/ExternalAnchorVerifier.js, or core/publication/PublicationAnchor.js's
 // own mutating surface. It never modifies a PublicationAnchor, never
 // writes to the catalog, and never calls a verifier itself; it only
 // ever reshapes values a caller already obtained elsewhere. See

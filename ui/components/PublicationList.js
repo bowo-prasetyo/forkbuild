@@ -3,7 +3,7 @@ import PublicationCommentarySection from './PublicationCommentarySection.js';
 import BuildHeart from './BuildHeart.js';
 import SharePublicationButton from './SharePublicationButton.js';
 import { publicationDateText } from '../i18n/dateText.js';
-import { License } from '../../core/License.js';
+import { License } from '../../core/document/License.js';
 import { describeLicense } from '../../application/document/LicenseLabels.js';
 import { displayText, t } from '../i18n/i18n.js';
 import { remixedFromText } from './remix/remixText.js';
@@ -35,9 +35,9 @@ export default {
     props: {
         items: { type: Array, required: true },
         descriptions: { type: Object, default: () => ({}) },
-        // What each remix was remixed from (core/RemixLineage.js), by documentId.
+        // What each remix was remixed from (core/publication/RemixLineage.js), by documentId.
         remixSources: { type: Object, default: () => ({}) },
-        // 0.9.539 — see core/PublicationDateAmbiguity.js's own header.
+        // 0.9.539 — see core/catalog/PublicationDateAmbiguity.js's own header.
         // Keyed by publicationId (unlike the two maps above, which are
         // keyed by documentId) because the collision this guards
         // against is between two Publication INSTANCES of the same

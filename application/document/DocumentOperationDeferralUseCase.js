@@ -3,11 +3,11 @@ import {
     RemoteDocumentOperationApplicationUseCase,
     DocumentOperationApplicationOutcome
 } from './RemoteDocumentOperationApplicationUseCase.js';
-import { DocumentOperationCausalGapDetector } from '../../core/DocumentOperationCausalGapDetector.js';
+import { DocumentOperationCausalGapDetector } from '../../core/collaboration/DocumentOperationCausalGapDetector.js';
 import {
     DocumentOperationApplicationReadiness,
     evaluateApplicationReadiness
-} from '../../core/DocumentOperationApplicationReadiness.js';
+} from '../../core/collaboration/DocumentOperationApplicationReadiness.js';
 
 // 0.9.237 — Causal Application Deferral Boundary.
 //

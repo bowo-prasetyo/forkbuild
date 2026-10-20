@@ -1,5 +1,5 @@
 import { EventBus } from '../../core/events/EventBus.js';
-import { Document } from '../../core/Document.js';
+import { Document } from '../../core/document/Document.js';
 import { DocumentState } from '../editor-state/DocumentState.js';
 import { CommandHistoryEvent } from '../events/CommandHistoryEvent.js';
 import { DocumentManagerEvent } from '../events/DocumentManagerEvent.js';

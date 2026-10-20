@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { stationaryAnimalPoseAt } from '../core/WildlifeMotion.js';
+import { stationaryAnimalPoseAt } from '../core/nature/WildlifeMotion.js';
 import { idleOffsetsAt } from './AnimalIdle.js';
 import { reactToObserver } from './AnimalReaction.js';
 import { BODY_FRAME, NECK } from './AnimalRenderer.js';
@@ -7,12 +7,12 @@ import { BODY_FRAME, NECK } from './AnimalRenderer.js';
 // 0.9.701 — Released Animal Rendering.
 //
 // One released animal's live Three.js presence — the direct structural
-// twin of renderer/VehicleVisual.js, smaller still: core/AnimalPresence.js
+// twin of renderer/VehicleVisual.js, smaller still: core/nature/AnimalPresence.js
 // carries no heading (see renderer/AnimalRenderer.js's own header for
 // why), so there is no setHeading() counterpart here at all. Position is
 // set by the caller; everything else — which way it faces, and grazing or
 // looking around — comes from animateAt(), which never moves it off its
-// spot (core/WildlifeMotion.js#stationaryAnimalPoseAt()).
+// spot (core/nature/WildlifeMotion.js#stationaryAnimalPoseAt()).
 //
 // `root` is the ONE Object3D a caller (renderer/AnimalFieldRenderer.js)
 // ever adds to or removes from the scene — created once, reused for the

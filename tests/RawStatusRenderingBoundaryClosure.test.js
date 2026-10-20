@@ -4,7 +4,7 @@ import WorldLocationBrowser from '../ui/components/WorldLocationBrowser.js';
 import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { WorldEncounterMaterialVerificationStatus } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
 import { describeWorldEncounterMaterialLoadStatusLabel, describeWorldEncounterMaterialVerificationStatusLabel } from '../application/worldEncounter/WorldEncounterMaterialInspectionView.js';
-import { TrustStatus } from '../core/TrustObservation.js';
+import { TrustStatus } from '../core/identity/TrustObservation.js';
 import { describeTrustStatus as describeTrustStatusMessage } from '../application/avatar/AvatarPresenceLabels.js';
 import { t } from '../ui/i18n/i18n.js';
 // Each label as a person reads it, in English.
@@ -26,7 +26,7 @@ import { readSource as source } from './support/SourceText.js';
 //     humanizing view functions for this same file's SELECTION-driven
 //     panel.
 //   Finding 2 — ui/components/WorldLocationBrowser.js's Inspect panel
-//     rendered inspected.trust.status (core/TrustObservation.js's
+//     rendered inspected.trust.status (core/identity/TrustObservation.js's
 //     TrustStatus) raw.
 //
 // THE ARCHITECTURAL INVARIANT THIS MILESTONE HOLDS THE LINE ON (its own
@@ -61,7 +61,7 @@ import { readSource as source } from './support/SourceText.js';
 // describeTrustStatus(TrustStatus.VALID) returns the word "Trusted" —
 // itself a claim word this codebase's own established overclaim vocabulary
 // sweep (tests/PublicationEvidenceTrustExperienceProductReassessment.test.js)
-// already bans, and core/TrustObservation.js's own header is explicit that
+// already bans, and core/identity/TrustObservation.js's own header is explicit that
 // a TrustObservation is "purely DESCRIPTIVE... not what should happen
 // next," never a verdict. Reusing that existing humanizer verbatim would
 // have traded a raw-enum gap for a stronger, unearned claim — replacing
@@ -153,9 +153,9 @@ async function run() {
         // REALLY is at THIS call site, read from the real orchestration
         // source rather than assumed from the enum's own name.
         check(TrustStatus.VALID === 'VALID', 'B2a. TrustStatus.VALID is genuinely the bare word "VALID"');
-        const trustObservationSource = await source('core/TrustObservation.js');
+        const trustObservationSource = await source('core/identity/TrustObservation.js');
         check(trustObservationSource.includes('A TrustObservation is purely DESCRIPTIVE'),
-            'B2b. core/TrustObservation.js\'s own header is explicit: purely descriptive, never a verdict — the fact this milestone\'s labels must honor');
+            'B2b. core/identity/TrustObservation.js\'s own header is explicit: purely descriptive, never a verdict — the fact this milestone\'s labels must honor');
         check(trustObservationSource.includes("VALID: 'VALID',                       // integrity + signature + authorization all hold"),
             'B2c. VALID\'s own documented meaning is a compound fact (integrity + signature + authorization), never a generic "trustworthy" claim');
 
@@ -173,7 +173,7 @@ async function run() {
         check(OVERCLAIM_WORDS.test(describeTrustStatus(TrustStatus.VALID)),
             'B3b. "Trusted" itself trips this codebase\'s own established overclaim-word regex — reusing describeTrustStatus() here would not have closed 0.9.520\'s SEMANTIC_BOUNDARY_GAP, it would have widened it');
 
-        console.log('✓ Section B: WorldEncounterMaterialVerificationStatus.VERIFIED means identity correspondence (unchanged from 0.9.519); inspected.trust.status is a per-placement-record TrustObservation, purely descriptive by core/TrustObservation.js\'s own header; the "already-existing humanizer" 0.9.520 pointed at for Finding 2 (describeTrustStatus) is confirmed, live, to itself render an overclaim word — the reason this milestone writes a new, narrower function instead of reusing it.');
+        console.log('✓ Section B: WorldEncounterMaterialVerificationStatus.VERIFIED means identity correspondence (unchanged from 0.9.519); inspected.trust.status is a per-placement-record TrustObservation, purely descriptive by core/identity/TrustObservation.js\'s own header; the "already-existing humanizer" 0.9.520 pointed at for Finding 2 (describeTrustStatus) is confirmed, live, to itself render an overclaim word — the reason this milestone writes a new, narrower function instead of reusing it.');
     }
 
     // ===============================================================

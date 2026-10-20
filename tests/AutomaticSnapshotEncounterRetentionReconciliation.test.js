@@ -5,7 +5,7 @@ import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDisc
 import { registerMaterializedSnapshotWorldSource } from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
 import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
 import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
-import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
+import { describeWorldDiscoverySource } from '../core/world/WorldDiscoverySource.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.190 — Automatic Snapshot Encounter Retention Integration.

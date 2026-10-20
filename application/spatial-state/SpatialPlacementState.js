@@ -1,4 +1,4 @@
-import { Position } from '../../core/Position.js';
+import { Position } from '../../core/document/Position.js';
 
 // Runtime-only state: where a brick would be placed if committed.
 // Carries document-local position; the renderer adds layout offsets.
@@ -8,7 +8,7 @@ import { Position } from '../../core/Position.js';
 // resolved at all" (unchanged since 0.2.27 — false means there's
 // nothing to show, WorldNavigationSession hides the preview entirely);
 // `blocked` means "that target is currently occupied," per
-// core/PlacementValidator.js, and only means anything when `valid` is
+// core/publication/PlacementValidator.js, and only means anything when `valid` is
 // already true. The preview stays VISIBLE while blocked (tinted red by
 // SpatialPreviewRenderer) rather than hiding — the user is hovering a
 // real position, it just can't be placed, and the ghost should say so

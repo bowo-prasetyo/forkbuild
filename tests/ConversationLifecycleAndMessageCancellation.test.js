@@ -10,8 +10,8 @@ import { ChatOutbox } from '../application/chat/ChatOutbox.js';
 import { ConversationStore } from '../application/chat/ConversationStore.js';
 import { ConversationReadOutbox } from '../application/chat/ConversationReadOutbox.js';
 import { RemoteReadReceiptStore } from '../application/chat/RemoteReadReceiptStore.js';
-import { ChatDeliveryState } from '../core/ChatDeliveryState.js';
-import { toChatMessage } from '../core/ChatMessage.js';
+import { ChatDeliveryState } from '../core/social/ChatDeliveryState.js';
+import { toChatMessage } from '../core/social/ChatMessage.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
@@ -36,7 +36,7 @@ import { assert } from './support/Assert.js';
 //      this file's own FLAGSHIP for why both are treated identically,
 //      never one strictly and the other loosely) is cancelled
 //      IMMEDIATELY, never left to linger until an unrelated 7-day TTL
-//      happens to expire it — core/ChatDeliveryState.js's new
+//      happens to expire it — core/social/ChatDeliveryState.js's new
 //      CANCELLED value, kept genuinely distinct from EXPIRED.
 
 function wait(ms) {
@@ -113,13 +113,13 @@ function makeChatStack(device, registry, friends) {
 async function runTests() {
 
 // ---------------------------------------------------------------------
-// 1. core/ChatDeliveryState.js — CANCELLED is part of the vocabulary,
+// 1. core/social/ChatDeliveryState.js — CANCELLED is part of the vocabulary,
 //    genuinely distinct from EXPIRED.
 // ---------------------------------------------------------------------
 {
     assert(ChatDeliveryState.CANCELLED === 'CANCELLED', 'CANCELLED is a real value in the vocabulary');
     assert(ChatDeliveryState.CANCELLED !== ChatDeliveryState.EXPIRED, 'CANCELLED and EXPIRED are genuinely different values — authorization vs. time');
-    console.log('✓ core/ChatDeliveryState.js: CANCELLED is a fifth, distinct terminal value');
+    console.log('✓ core/social/ChatDeliveryState.js: CANCELLED is a fifth, distinct terminal value');
 }
 
 // ---------------------------------------------------------------------

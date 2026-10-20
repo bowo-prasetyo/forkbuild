@@ -1,9 +1,9 @@
-import { VehicleType } from '../../core/VehicleType.js';
-import { AvatarMovementState } from '../../core/AvatarMovementState.js';
-import { simulateAvatarMovement } from '../../core/AvatarMovementSimulation.js';
-import { terrainHeightAt } from '../../core/TerrainHeightField.js';
-import { resolveVehicleMovementDirectionFromSteering } from '../../core/VehicleSteeringSimulation.js';
-import { AvatarDroneVerticalStateKind, deriveAvatarDroneVerticalState, stepDroneAltitude } from '../../core/AvatarDroneVerticalState.js';
+import { VehicleType } from '../../core/vehicles/VehicleType.js';
+import { AvatarMovementState } from '../../core/avatar/AvatarMovementState.js';
+import { simulateAvatarMovement } from '../../core/avatar/AvatarMovementSimulation.js';
+import { terrainHeightAt } from '../../core/nature/TerrainHeightField.js';
+import { resolveVehicleMovementDirectionFromSteering } from '../../core/vehicles/VehicleSteeringSimulation.js';
+import { AvatarDroneVerticalStateKind, deriveAvatarDroneVerticalState, stepDroneAltitude } from '../../core/avatar/AvatarDroneVerticalState.js';
 
 // Moves the mounted vehicle, not the avatar:
 //
@@ -12,7 +12,7 @@ import { AvatarDroneVerticalStateKind, deriveAvatarDroneVerticalState, stepDrone
 //   -> WorldNavigationSession makes the avatar follow
 //
 // There is no second movement system: the kinematics are
-// core/AvatarMovementSimulation.js's, called verbatim, and collision reuses the
+// core/avatar/AvatarMovementSimulation.js's, called verbatim, and collision reuses the
 // same AvatarMovementConstraint/AvatarTreeConstraint instances as the on-foot
 // avatar, at the vehicle's own collision radius. This class never reads or
 // writes an AvatarPresence; ownership flows vehicle -> avatar only.
@@ -21,7 +21,7 @@ import { AvatarDroneVerticalStateKind, deriveAvatarDroneVerticalState, stepDrone
 // not every type the capability layer supports, so a future vehicle without a
 // visual never starts moving by accident.
 //
-// A drone additionally steps its own altitude (core/AvatarDroneVerticalState.js)
+// A drone additionally steps its own altitude (core/avatar/AvatarDroneVerticalState.js)
 // on top of the same horizontal pipeline, measured from the water surface where
 // there is water. Wheeled vehicles stop at the waterline (VehicleWaterConstraint).
 //

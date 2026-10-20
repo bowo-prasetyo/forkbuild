@@ -6,15 +6,15 @@ import {
     ANNOUNCEMENT_DISCOVERY_PROVIDER_KEYS,
     announcementDiscoveryProviderOrDefault,
     isAnnouncementDiscoveryProviderKey
-} from '../core/AnnouncementDiscoveryProvider.js';
-import { COMMENTARY_DISTRIBUTION_PROVIDER_KEYS, LOCAL_AND_PEERS_ONLY } from '../core/CommentaryDistributionProvider.js';
+} from '../core/publication/AnnouncementDiscoveryProvider.js';
+import { COMMENTARY_DISTRIBUTION_PROVIDER_KEYS, LOCAL_AND_PEERS_ONLY } from '../core/publication/CommentaryDistributionProvider.js';
 import { AnnouncementDiscoveryProviderRegistry, AnnouncementDiscoveryServiceKind } from '../application/discovery/AnnouncementDiscoveryProviderRegistry.js';
 import { RoleAwareProviderResolver, RoleProviderResolutionStatus } from '../application/settings/RoleAwareProviderResolver.js';
 import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
 import { RoleProviderPreferenceStore } from '../storage/RoleProviderPreferenceStore.js';
-import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
-import { RoleProviderRole } from '../core/RoleProviderRole.js';
-import { UserFacingError } from '../core/UserFacingError.js';
+import { RoleProviderPreference } from '../core/publication/RoleProviderPreference.js';
+import { RoleProviderRole } from '../core/publication/RoleProviderRole.js';
+import { UserFacingError } from '../core/app/UserFacingError.js';
 import { errorText } from '../ui/i18n/i18n.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { composePublicationDistribution } from '../ui/main/composePublicationDistribution.js';

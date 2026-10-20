@@ -18,7 +18,7 @@
 // application/chat/ChatUseCase.js, before a message is ever appended here.
 //
 // 0.2.63 — `append()`/`updateDeliveryState()` let a message carry an
-// OPTIONAL `deliveryState` (core/ChatDeliveryState.js) alongside its
+// OPTIONAL `deliveryState` (core/social/ChatDeliveryState.js) alongside its
 // own `direction`. This class still never persists anything and still
 // carries no toJSON/fromJSON — a delivery state shown here is exactly
 // as ephemeral as the transcript itself; the actual durable record of
@@ -52,10 +52,10 @@ export class LiveConversation {
     // `direction` is 'outgoing' (this device sent it) or 'incoming'
     // (this device received and already-trusted it) — appended in
     // acceptance order, which for a live, ordered transport is also
-    // display order. `message` is a plain core/ChatMessage.js shape;
+    // display order. `message` is a plain core/social/ChatMessage.js shape;
     // this class never re-validates it — see application/chat/ChatUseCase.js,
     // the only caller, for where that already happened. `deliveryState`
-    // (core/ChatDeliveryState.js) is null for every incoming message
+    // (core/social/ChatDeliveryState.js) is null for every incoming message
     // and for a live-only `sendMessage()` (0.2.61) — only
     // `sendOrQueue()` (0.2.63) ever supplies one, starting at QUEUED.
     append(message, direction, deliveryState = null) {

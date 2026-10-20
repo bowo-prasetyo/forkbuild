@@ -1,4 +1,4 @@
-// Which substrate serves which of the three roles (core/RoleProviderRole.js),
+// Which substrate serves which of the three roles (core/publication/RoleProviderRole.js),
 // checked against the real providers rather than written down from memory.
 // Proof & Anchoring is read from the registries ui/main/composeAnchoring.js
 // actually fills. Content is read from a SnapshotPlacementStoreRegistry
@@ -12,8 +12,8 @@ import { composeAnchoring } from '../ui/main/composeAnchoring.js';
 import { composeBitcoinWallet } from '../ui/main/plugins/composeBitcoinWallet.js';
 import { composeSteemRuntime } from '../application/steem/SteemRuntimeComposition.js';
 import { composeBlurtRuntime } from '../application/blurt/BlurtRuntimeComposition.js';
-import { SteemReadingConfiguration } from '../core/SteemReadingConfiguration.js';
-import { BlurtReadingConfiguration } from '../core/BlurtReadingConfiguration.js';
+import { SteemReadingConfiguration } from '../core/networks/SteemReadingConfiguration.js';
+import { BlurtReadingConfiguration } from '../core/networks/BlurtReadingConfiguration.js';
 import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
 import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { LocalAnchorKnowledgeStore } from '../application/anchoring/LocalAnchorKnowledgeStore.js';
@@ -28,7 +28,7 @@ import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnaps
 import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
 import { ArweaveSnapshotDiscoveryPublisher } from '../application/arweave/ArweaveSnapshotDiscoveryPublisher.js';
 import { ArweaveSnapshotDiscoveryQueryService } from '../application/arweave/ArweaveSnapshotDiscoveryQueryService.js';
-import { RoleProviderRole } from '../core/RoleProviderRole.js';
+import { RoleProviderRole } from '../core/publication/RoleProviderRole.js';
 import { fakeBlurtChain } from './support/FakeBlurtChain.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { makeIdentity } from './support/TestIdentity.js';
@@ -137,7 +137,7 @@ const matrix = Object.fromEntries(SUBSTRATES.map((substrate) => [substrate, new 
         matrix[substrate].add(RoleProviderRole.PROOF_AND_ANCHORING);
     }
     const creatable = () => SUBSTRATES.filter((substrate) => ANCHOR_TYPE[substrate] && composed.externalAnchorPublisherRegistry.has(ANCHOR_TYPE[substrate]));
-    // Bitcoin's wallet is a network writer (core/NetworkWriters.js), joining the
+    // Bitcoin's wallet is a network writer (core/publication/NetworkWriters.js), joining the
     // registry only when switched on; Base anchors are created through their own
     // wallet pipeline (anchoring/BaseAnchorPublisher.js), not this registry.
     assert(creatable().join() === 'arweave,steem,blurt', `without the wallet plugins, anchors are created on Arweave, Steem and Blurt (got ${creatable()})`);

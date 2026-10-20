@@ -1,5 +1,5 @@
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
 import { EventBus } from '../core/events/EventBus.js';
 import { EditorEvent } from '../core/events/EditorEvent.js';
 import { CompositionPreviewRenderer } from '../renderer/CompositionPreviewRenderer.js';

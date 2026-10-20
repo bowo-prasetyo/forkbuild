@@ -1,7 +1,7 @@
-import { Delegation } from '../../core/Delegation.js';
+import { Delegation } from '../../core/publication/Delegation.js';
 import { SigningIdentity } from '../../identity/SigningIdentity.js';
-import { UserFacingError } from '../../core/UserFacingError.js';
-import { message } from '../../core/Message.js';
+import { UserFacingError } from '../../core/app/UserFacingError.js';
+import { message } from '../../core/app/Message.js';
 import { requireSigningIdentityId } from '../../identity/SigningReadiness.js';
 
 // Issues a Delegation signed by the identity provider's own identity, through

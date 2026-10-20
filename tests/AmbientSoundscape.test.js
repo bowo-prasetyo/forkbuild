@@ -1,8 +1,8 @@
-import { AMBIENT_LAYER, AMBIENT_LAYERS, ambientMixAt, silentAmbientMix } from '../core/AmbientSoundscape.js';
-import { riverSpringAt } from '../core/RiverFlow.js';
-import { ecologyZoneAt, ECOLOGY_ZONE } from '../core/TerrainEcology.js';
-import { isRiverAt } from '../core/Hydrology.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+import { AMBIENT_LAYER, AMBIENT_LAYERS, ambientMixAt, silentAmbientMix } from '../core/app/AmbientSoundscape.js';
+import { riverSpringAt } from '../core/nature/RiverFlow.js';
+import { ecologyZoneAt, ECOLOGY_ZONE } from '../core/nature/TerrainEcology.js';
+import { isRiverAt } from '../core/nature/Hydrology.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
 import { assert } from './support/Assert.js';
 
 const SEED = DEFAULT_WORLD_SEED;
@@ -93,7 +93,7 @@ function mixAt({ x, z }) {
 // Trees are heard by kind: leaves rustle in broadleaf woods, wind sighs in
 // conifers, and open ground far from any tree has neither.
 {
-    const { naturalFeaturesInRegion, TREE_SPECIES } = await import('../core/NaturalFeatureField.js');
+    const { naturalFeaturesInRegion, TREE_SPECIES } = await import('../core/nature/NaturalFeatureField.js');
     const treesAround = (x, z) => naturalFeaturesInRegion(SEED, x - 20, z - 20, x + 20, z + 20)
         .filter((tree) => Math.hypot(tree.x - x, tree.z - z) < 20);
     const findWood = (species) => {

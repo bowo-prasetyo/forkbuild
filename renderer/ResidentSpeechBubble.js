@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 // A speech bubble over a World Resident's head: `remarks` (plain sentences
-// from core/ResidentTalk.js) drawn as TEXT into a canvas and shown as a
+// from core/world/ResidentTalk.js) drawn as TEXT into a canvas and shown as a
 // camera-facing sprite. Text only — nothing here interprets markup, so a
 // title someone else chose can never become anything but letters.
 //

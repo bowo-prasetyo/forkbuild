@@ -18,7 +18,7 @@ const STORAGE_KEY = 'world-encounter-publication-admission-log:entries';
 // this for the OTHER admission path (application/publication/PublicationExchange.js,
 // resolved via application/publication/ReconstructPublicationDiscoveryUseCase.js) — is
 // NOT the right durable sink here, and reusing it directly is actively
-// unsafe: it stores signed core/DecentralizedPublication.js LOCATOR
+// unsafe: it stores signed core/publication/DecentralizedPublication.js LOCATOR
 // ENVELOPES (id, contentKind, contentReference.hash, publisherIdentity,
 // signature), reconstructed on read via DecentralizedPublication.fromJSON(),
 // which throws on any record lacking a non-empty contentKind. A World

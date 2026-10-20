@@ -1,11 +1,11 @@
-import { isAnnouncementDiscoveryProviderKey } from '../../core/AnnouncementDiscoveryProvider.js';
-import { UserFacingError } from '../../core/UserFacingError.js';
-import { message } from '../../core/Message.js';
+import { isAnnouncementDiscoveryProviderKey } from '../../core/publication/AnnouncementDiscoveryProvider.js';
+import { UserFacingError } from '../../core/app/UserFacingError.js';
+import { message } from '../../core/app/Message.js';
 
 // The Announcement & Discovery role's keyed registry, the counterpart of
 // SnapshotPlacementStoreRegistry (Content, keyed by `storage`) and
 // ExternalProofVerifierRegistry (Proof & Anchoring, keyed by `anchorType`).
-// It is keyed by provider key (core/AnnouncementDiscoveryProvider.js) and
+// It is keyed by provider key (core/publication/AnnouncementDiscoveryProvider.js) and
 // holds, per substrate, the announcement services this device has set up,
 // one per kind of announcement:
 //

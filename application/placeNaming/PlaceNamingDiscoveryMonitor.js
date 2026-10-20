@@ -1,5 +1,5 @@
 import { shouldRefreshPlaceNamingDiscovery, DEFAULT_PLACE_NAMING_DISCOVERY_REFRESH_RADIUS } from './ShouldRefreshPlaceNamingDiscovery.js';
-import { selectNearbyPlaceNamingClaims } from '../../core/PlaceNamingProximitySelection.js';
+import { selectNearbyPlaceNamingClaims } from '../../core/world/PlaceNamingProximitySelection.js';
 
 // How far "nearby" extends for `selectNearby`'s own `proximityRadius` —
 // deliberately its OWN constant, not a reuse of
@@ -47,7 +47,7 @@ export const DEFAULT_PLACE_NAMING_DISCOVERY_PROXIMITY_RADIUS = 100;
 //        holds for discoverSnapshotCandidatesCommand)
 //        │
 //        ▼
-//   discovered envelopes   (core/PlaceNamingDiscoveryEnvelope.js shape,
+//   discovered envelopes   (core/world/PlaceNamingDiscoveryEnvelope.js shape,
 //        UNMODIFIED — { protocol, version, worldId, regionId, claim })
 //        │
 //        │   resolveClaimPosition(envelope) -> {x,z}|null   (a caller-
@@ -58,7 +58,7 @@ export const DEFAULT_PLACE_NAMING_DISCOVERY_PROXIMITY_RADIUS = 100;
 //        │
 //        ▼
 //   selectNearbyPlaceNamingClaims(claimsWithPosition, position, proximityRadius)
-//        (core/PlaceNamingProximitySelection.js, 0.9.255, UNMODIFIED)
+//        (core/world/PlaceNamingProximitySelection.js, 0.9.255, UNMODIFIED)
 //        │
 //        ▼
 //   { position, claims }   -> this.lastResult, and (optionally)
@@ -115,11 +115,11 @@ export const DEFAULT_PLACE_NAMING_DISCOVERY_PROXIMITY_RADIUS = 100;
 //
 // POSITION RESOLUTION IS INJECTED, NEVER PERFORMED. A discovery envelope
 // carries a `regionId`, never a position (see
-// `core/PlaceNamingProximitySelection.js`'s own header, "each entry in
+// `core/world/PlaceNamingProximitySelection.js`'s own header, "each entry in
 // `claims` must already carry its own `.position` — this file never
 // resolves one"). Resolving "where is this region, in THIS Wanderer's
 // current layout" requires exactly the layout-aware knowledge
-// `core/GeographicPlaceNavigation.js`'s own header already refuses to
+// `core/world/GeographicPlaceNavigation.js`'s own header already refuses to
 // take on for itself, and that only an application session actually
 // holding the current World layout (`application/world/WorldNavigationSession.js`,
 // via `application/world/WorldLocationDirectory.js`) can answer. So this file

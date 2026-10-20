@@ -12,15 +12,15 @@
 // setRemoteEngines(engines),
 // setListener(pose), setSpatial(spatial), setVolume(volume), setMuted(muted),
 // setMusic(enabled), setMusicMood(mood) and dispose(). The music's mood
-// follows the day: warm by day, slow and low after dark (core/MusicScore.js).
+// follows the day: warm by day, slow and low after dark (core/app/MusicScore.js).
 // Browsers keep audio silent until the user interacts with the page, so the
 // view calls unlock() from its first key press or tap.
-import { ambientMixAt, ambientMixAtNight, ambientMixInRain, ambientMixInSeason, silentAmbientMix } from '../../core/AmbientSoundscape.js';
-import { advanceAvatarSound, createAvatarSoundState } from '../../core/AvatarSoundCues.js';
-import { advanceCreatureSound, createCreatureSoundState } from '../../core/CreatureSoundCues.js';
+import { ambientMixAt, ambientMixAtNight, ambientMixInRain, ambientMixInSeason, silentAmbientMix } from '../../core/app/AmbientSoundscape.js';
+import { advanceAvatarSound, createAvatarSoundState } from '../../core/avatar/AvatarSoundCues.js';
+import { advanceCreatureSound, createCreatureSoundState } from '../../core/app/CreatureSoundCues.js';
 import { SoundPreference } from '../settings/SoundPreference.js';
-import { editorSoundCueFor } from '../../core/EditorSoundCues.js';
-import { musicMoodFor } from '../../core/MusicScore.js';
+import { editorSoundCueFor } from '../../core/app/EditorSoundCues.js';
+import { musicMoodFor } from '../../core/app/MusicScore.js';
 
 const DEFAULT_SAMPLE_INTERVAL_MS = 250;
 // Moving less than this since the last sample can't change what is heard.
@@ -69,20 +69,20 @@ export class WorldSoundscapeService {
         this._preference = new SoundPreference({ provider, settingsStore });
         this._interval = null;
         this._lastSampledAt = null;
-        // How deep into the night it is, 0 to 1 (core/DayCycle.js); absent, always day.
+        // How deep into the night it is, 0 to 1 (core/nature/DayCycle.js); absent, always day.
         this._nightLevel = typeof nightLevel === 'function' ? nightLevel : () => 0;
         this._lastSampledNight = 0;
-        // How hard it rains, 0 to 1 (core/Weather.js); absent, never.
+        // How hard it rains, 0 to 1 (core/nature/Weather.js); absent, never.
         this._rainLevel = typeof rainLevel === 'function' ? rainLevel : () => 0;
         this._lastSampledRain = 0;
         // Whether the listener is under a roof, where rain drums on it; absent, never.
         this._sheltered = typeof sheltered === 'function' ? sheltered : () => false;
         this._lastSampledSheltered = false;
-        // The season's look (core/Season.js), whose birdsong and insects are
+        // The season's look (core/nature/Season.js), whose birdsong and insects are
         // heard; absent, high summer's.
         this._season = typeof season === 'function' ? season : () => null;
         this._lastSampledSeason = null;
-        // Thunder (core/Storms.js): what is heard between one sample and the
+        // Thunder (core/nature/Storms.js): what is heard between one sample and the
         // next, on the weather's clock; absent, none.
         this._weatherClock = typeof weatherClock === 'function' ? weatherClock : null;
         this._thunderBetween = typeof thunderBetween === 'function' ? thunderBetween : null;

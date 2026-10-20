@@ -1,7 +1,7 @@
 import { SpatialCameraState } from '../spatial-state/SpatialCameraState.js';
 import { CameraState } from '../../renderer/CameraState.js';
-import { WorldPosition } from '../../core/WorldPosition.js';
-import { Position } from '../../core/Position.js';
+import { WorldPosition } from '../../core/document/WorldPosition.js';
+import { Position } from '../../core/document/Position.js';
 
 // Translates spatial navigation commands into renderer CameraState
 // changes. Always reads the renderer's current state before modifying

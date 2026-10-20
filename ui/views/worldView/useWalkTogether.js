@@ -1,7 +1,7 @@
 import { computed, inject, onBeforeUnmount, ref } from 'vue';
 import { WalkTogetherStatus } from '../../../application/walkTogether/WalkTogether.js';
 import { readPublishedBuildText } from '../../../application/publication/PublicationShareLink.js';
-import { walkTogetherLink } from '../../../core/WalkTogetherCode.js';
+import { walkTogetherLink } from '../../../core/social/WalkTogetherCode.js';
 
 // World View's "Walk here with me" (application/walkTogether/WalkTogether.js):
 // the link that brings friends into the World on screen. The link lives as

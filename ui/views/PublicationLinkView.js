@@ -1,23 +1,23 @@
 import { computed, defineAsyncComponent, inject, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { OpenPublicationLinkOutcome } from '../../application/publication/OpenPublicationLink.js';
-import { describePublicationClaimLocator, isNoteLinkPublicationId, publicationClaimLocatorFromViewPath } from '../../core/ForkBuildAppLinks.js';
+import { describePublicationClaimLocator, isNoteLinkPublicationId, publicationClaimLocatorFromViewPath } from '../../core/app/ForkBuildAppLinks.js';
 import { decodePublicationLinkPayload } from '../../application/publication/sharing/PublicationLinkPayload.js';
 import { readSharedBuildBricks, readSharedBuildDocument } from '../../application/publication/sharing/ReadSharedBuild.js';
-import { BUILD_MODEL_FORMATS } from '../../core/BuildModelFormats.js';
+import { BUILD_MODEL_FORMATS } from '../../core/building/BuildModelFormats.js';
 import { CreateDiscoveryUseCase } from '../../application/discovery/CreateDiscoveryUseCase.js';
 import { describeLicense } from '../../application/document/LicenseLabels.js';
-import { countRemixes, describeRemixSource } from '../../core/RemixLineage.js';
-import { remixFamily } from '../../core/RemixFamily.js';
-import { License } from '../../core/License.js';
-import { EditorEntryContext, EditorEntryReason, editorEntryContextToQuery } from '../../core/EditorEntryContext.js';
+import { countRemixes, describeRemixSource } from '../../core/publication/RemixLineage.js';
+import { remixFamily } from '../../core/publication/RemixFamily.js';
+import { License } from '../../core/document/License.js';
+import { EditorEntryContext, EditorEntryReason, editorEntryContextToQuery } from '../../core/document/EditorEntryContext.js';
 import { remixCountText, remixedFromText } from '../components/remix/remixText.js';
 import RemixFamilyTree from '../components/remix/RemixFamilyTree.js';
 import SimilarEarlierBuilds from '../components/remix/SimilarEarlierBuilds.js';
 import { builtWithNames, builderRoute } from '../components/remix/builtWithText.js';
 import BuiltWithNames from '../components/remix/BuiltWithNames.js';
 import I18nText from '../i18n/I18nText.js';
-import { normalizeBuiltWith } from '../../core/BuiltWith.js';
+import { normalizeBuiltWith } from '../../core/catalog/BuiltWith.js';
 import { exploreRouteFor } from '../components/publicationCatalog/useRepositoryNetworkDiscovery.js';
 import { displayText, errorText, t } from '../i18n/i18n.js';
 
@@ -38,7 +38,7 @@ const NOTE_NOT_FOUND = 'note-not-found';
 // `#/view/ipfs/<cid>` (links shared with Share) name its Signed Claim;
 // `#/s/<payload>` (a link-only share) carries the claim and the build;
 // `#/n/<publicationId>` (a short link) names a build sent to everyone, whose
-// build note (core/BuildNote.js) is read from the Nostr relays and opened as
+// build note (core/publication/BuildNote.js) is read from the Nostr relays and opened as
 // a link-only share is.
 // `openPublicationLink` (ui/main.js) reads and verifies it, fetches and
 // checks its build, and admits it as World discovery does; this view then
@@ -46,7 +46,7 @@ const NOTE_NOT_FOUND = 'note-not-found';
 //
 // The build is shown on its own, turning, with who made it, what it was
 // remixed from and how many remixes of it this device has found
-// (core/RemixLineage.js), and one main action: Edit a Copy, which needs no
+// (core/publication/RemixLineage.js), and one main action: Edit a Copy, which needs no
 // account and opens it in the Editor as the visitor's own. Walking around it
 // in World View is the second. A build whose license allows no copies says
 // so, and offers only the walk. Under its family tree, builds by other people
@@ -102,7 +102,7 @@ export default {
                 documentId: opened.documentId,
                 title: typeof opened.title === 'string' && opened.title.trim() ? opened.title.trim() : t('publicationLink.untitled'),
                 author: typeof opened.author === 'string' && opened.author.trim() ? opened.author.trim() : null,
-                // Friends who built it with its author (core/BuiltWith.js).
+                // Friends who built it with its author (core/catalog/BuiltWith.js).
                 builtWith: builtWithNames(opened.builtWith),
                 builtWithList: normalizeBuiltWith(opened.builtWith),
                 // The author's page, by the identity that signed it.
@@ -216,7 +216,7 @@ export default {
             });
         }
 
-        // Download it as a 3D model (core/BuildModelFormats.js), offered when
+        // Download it as a 3D model (core/building/BuildModelFormats.js), offered when
         // its license allows copies. Three.js and the brick library load on
         // the first click.
         const modelMessage = ref('');

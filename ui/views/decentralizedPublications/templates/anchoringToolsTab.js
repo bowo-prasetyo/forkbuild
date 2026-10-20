@@ -52,7 +52,7 @@ export const anchoringToolsTabTemplate = `<div v-show="publicationsToolsTab === 
             </div>
 
             <!-- Bitcoin's and Base's wallets are network writers, offered once
-                 switched on in Network Settings (core/NetworkWriters.js). -->
+                 switched on in Network Settings (core/publication/NetworkWriters.js). -->
             <p v-if="!bitcoinWalletConnection || !baseWalletConnection" class="form-hint form-hint--neutral network-writers-hint">
                 <I18nText keypath="publications.walletsSwitchedOn">
                     <template #settings><router-link to="/settings">{{ t('app.nav.networkSettings') }}</router-link></template>

@@ -1,6 +1,6 @@
 import { StorageProvider } from './StorageProvider.js';
 import { LocalStorageProvider } from './LocalStorageProvider.js';
-import { AvatarInventory, emptyAvatarInventory } from '../core/AvatarInventory.js';
+import { AvatarInventory, emptyAvatarInventory } from '../core/avatar/AvatarInventory.js';
 
 const AVATAR_INVENTORY_STORE_KEY = 'avatar-inventory';
 

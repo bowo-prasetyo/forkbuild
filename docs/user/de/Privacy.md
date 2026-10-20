@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 48b83be51fa03585 -->
+<!-- translation-of: docs/Privacy.md source-hash: 822c93745b70c626 -->
 # Datenschutz
 
 <!-- languages -->
@@ -290,8 +290,8 @@ folgen `/e/embed-view` und `/e/embed-open` nur den anderen beiden Regeln:
 nie mit Global Privacy Control oder Do Not Track, und nur von der
 offiziellen Website.
 
-Der Code steht in `core/VisitorCount.js`,
-`core/LaunchChannel.js`, `application/settings/CountDailyVisit.js`,
+Der Code steht in `core/app/VisitorCount.js`,
+`core/app/LaunchChannel.js`, `application/settings/CountDailyVisit.js`,
 `application/settings/CountLaunchChannel.js`,
 `application/settings/FunnelEventCounter.js`, `ui/counterHit.js`,
 `ui/start.js` und `ui/embed/embedBoot.js`.
@@ -433,5 +433,5 @@ für andere hosten, passen Sie diese Seite an und nennen Sie Ihre Server.
 
 Die Besucherzählung läuft nur auf der offiziellen Website, eine anderswo
 gehostete Kopie zählt also nichts. Um Ihre eigenen Besucher zu zählen,
-ändern Sie die Adressen in `core/VisitorCount.js` und den `img-src`-Eintrag
+ändern Sie die Adressen in `core/app/VisitorCount.js` und den `img-src`-Eintrag
 in der Content Security Policy von `index.html`.

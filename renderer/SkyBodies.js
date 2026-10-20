@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-// The sun and the moon in World View's sky (core/DayCycle.js#skyBodiesAt()):
+// The sun and the moon in World View's sky (core/nature/DayCycle.js#skyBodiesAt()):
 // a disc each, with a soft halo round the sun, drawn as far off as the
 // camera sees and kept there as it moves, so they hang in the sky like the
 // sky itself instead of being walked up to. Builds and hills in front hide
@@ -10,7 +10,7 @@ import * as THREE from 'three';
 // Their size is a matter of looks, not astronomy: about five times the real
 // sun's and moon's half a degree, enough to read as a sun on a phone.
 //
-// The moon shows its phase (core/DayCycle.js's MOON_PHASES): each point of
+// The moon shows its phase (core/nature/DayCycle.js's MOON_PHASES): each point of
 // its disc stands for a point on a ball facing the viewer, lit where that
 // ball faces bodies.moonLitFrom, with a soft edge between light and dark,
 // darker seas on the lit side, and the dark side only a little paler than
@@ -85,14 +85,14 @@ export class SkyBodies {
         }
     }
 
-    // `bodies` shaped like core/DayCycle.js#skyBodiesAt()'s result.
+    // `bodies` shaped like core/nature/DayCycle.js#skyBodiesAt()'s result.
     set(bodies) {
         this._bodies = bodies || null;
     }
 
     // Places the sun and the moon round `camera` for this frame; `hidden`
     // (under water) puts both out of sight. `sky` is the sky's colour behind
-    // them (core/DayCycle.js's look.sky), which the moon's dark side is
+    // them (core/nature/DayCycle.js's look.sky), which the moon's dark side is
     // drawn from.
     update(camera, hidden = false, sky = null) {
         const bodies = hidden ? null : this._bodies;

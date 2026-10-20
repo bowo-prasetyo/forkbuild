@@ -8,7 +8,7 @@ const IPFS_URI_PREFIX = 'ipfs://';
 // alive for exactly as long as the reactive UI state holding it. This
 // class is the durable, replayable shape of that same fact, independent
 // of any one coordinator call: the one thing this codebase now knows
-// about a publish, stated the way `core/ContentReference.js`'s own
+// about a publish, stated the way `core/document/ContentReference.js`'s own
 // header has always insisted it be stated —
 //
 //   contentHash ───────────► what the bytes are
@@ -19,7 +19,7 @@ const IPFS_URI_PREFIX = 'ipfs://';
 // `locator` anywhere in this class — both are supplied, independently,
 // by whatever produced them (typically `application/
 // IpfsRemotePublicationCoordinator.js`'s own PUBLISHED outcome, whose
-// `contentHash` already came from `core/ContentReference.js#hash`, never
+// `contentHash` already came from `core/document/ContentReference.js#hash`, never
 // from the CID `content/IpfsRemotePinningContentStore.js#put()` handed
 // back — see that coordinator's own header, "the CID stays a locator").
 //
@@ -45,7 +45,7 @@ const IPFS_URI_PREFIX = 'ipfs://';
 // was asked to pin it or how many times.
 //
 // NEVER SIGNED, NEVER GIVEN AN `id`, AND NEVER PERSISTED BY THIS FILE.
-// Unlike `core/PublicationAnchor.js` or `core/PublicationSnapshotPlacement
+// Unlike `core/publication/PublicationAnchor.js` or `core/PublicationSnapshotPlacement
 // .js` — both signed, catalogued protocol envelopes with their own
 // schema version and signing descriptor — this is a plain, local value
 // object. It is never published as content itself, never exchanged with

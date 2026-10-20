@@ -253,7 +253,7 @@ browser straight on to the app at `APP_URL#/s/<payload>` (a `refresh`
 - **`APP_URL`** (a variable in `wrangler.toml`) is where people are sent;
   it defaults to `https://bowo-prasetyo.github.io/forkbuild/`. A copy of the
   app hosted elsewhere sets it to its own address, and points
-  `FORKBUILD_LINK_PREVIEW_URL` in `core/ForkBuildAppLinks.js` at its own
+  `FORKBUILD_LINK_PREVIEW_URL` in `core/app/ForkBuildAppLinks.js` at its own
   worker.
 
 Check it by sharing a build from the app and opening the link, or by pasting

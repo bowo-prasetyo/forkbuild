@@ -1,5 +1,5 @@
-import { AvatarTemplate } from '../AvatarTemplate.js';
-import { AvatarAnimationState } from '../AvatarAnimationState.js';
+import { AvatarTemplate } from '../avatar/AvatarTemplate.js';
+import { AvatarAnimationState } from '../avatar/AvatarAnimationState.js';
 
 // The built-in "core" avatar template library — mirrors
 // core/library/CoreLibrary.js's shape exactly ({ id, <items> }), just

@@ -1,5 +1,5 @@
 import { ref, watch, onMounted, onBeforeUnmount, inject } from 'vue';
-import { MAX_DISPLAY_NAME_LENGTH } from '../../core/LobbyCard.js';
+import { MAX_DISPLAY_NAME_LENGTH } from '../../core/social/LobbyCard.js';
 import { t } from '../i18n/i18n.js';
 import I18nText from '../i18n/I18nText.js';
 
@@ -22,7 +22,7 @@ export default {
     name: 'PublicLobbyPanel',
     components: { I18nText },
     props: {
-        // 'public', or a `world:<documentId>` lobby (core/LobbyCard.js).
+        // 'public', or a `world:<documentId>` lobby (core/social/LobbyCard.js).
         lobby: { type: String, required: true },
         // Defaults to "Public Lobby" in the chosen language.
         title: { type: String, default: null }
@@ -83,7 +83,7 @@ export default {
                     await publicLobbyUseCase.leave(props.lobby);
                 } else {
                     await publicLobbyUseCase.join(props.lobby, { displayName: displayName.value });
-                    // A kept side system used (core/SideSystemUse.js).
+                    // A kept side system used (core/app/SideSystemUse.js).
                     funnel?.joinedLobby();
                 }
             } catch (e) {

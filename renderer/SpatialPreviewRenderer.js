@@ -14,7 +14,7 @@ const INVALID_COLOR = 0xe05252;
 // Deliberately NO terrain awareness here, unlike PreviewRenderer: the
 // `position` this class receives has already had the document's own
 // terrain offset folded in by WorldNavigationSession#_presentPlacementPreview()
-// (application/ calling core/TerrainHeightField.js's pure function
+// (application/ calling core/nature/TerrainHeightField.js's pure function
 // directly, the same discipline AvatarTerrainConstraint already
 // established) — this class stays exactly what its own header always
 // said: an imperative mesh mover, never a second place that decides

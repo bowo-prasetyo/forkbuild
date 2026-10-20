@@ -1,4 +1,4 @@
-import { LicenseId } from '../../core/License.js';
+import { LicenseId } from '../../core/document/License.js';
 import { t } from '../i18n/i18n.js';
 
 // Asked when a build with no license is published (ui/components/Toolbar.js):

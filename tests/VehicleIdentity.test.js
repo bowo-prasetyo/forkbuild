@@ -1,12 +1,12 @@
 import { readFile } from 'node:fs/promises';
-import { vehicleIdFor } from '../core/VehicleIdentity.js';
-import { vehiclePresenceInRegion, BICYCLE_LATTICE_SPACING } from '../core/VehiclePlacement.js';
-import { VehiclePresence } from '../core/VehiclePresence.js';
-import { VehicleType } from '../core/VehicleType.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+import { vehicleIdFor } from '../core/vehicles/VehicleIdentity.js';
+import { vehiclePresenceInRegion, BICYCLE_LATTICE_SPACING } from '../core/vehicles/VehiclePlacement.js';
+import { VehiclePresence } from '../core/vehicles/VehiclePresence.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
 import { assert } from './support/Assert.js';
 
-// 0.9.74 — Deterministic Vehicle Identity, core/VehicleIdentity.js.
+// 0.9.74 — Deterministic Vehicle Identity, core/vehicles/VehicleIdentity.js.
 //
 //   Section A: determinism
 //   Section B: spatial distinction — different cells, different ids
@@ -19,7 +19,7 @@ import { assert } from './support/Assert.js';
 //   Section G: serialization — toJSON()/fromJSON() preserves id exactly
 //   Section H: architectural regression — no avatar/proximity/mounting/
 //              input/movement/rendering/physics/randomness/clock/
-//              persistence in core/VehicleIdentity.js
+//              persistence in core/vehicles/VehicleIdentity.js
 //
 // Central architectural claim under test throughout: vehicleIdFor(seed,
 // cellX, cellZ) is a PURE function of exactly its own three arguments —
@@ -133,7 +133,7 @@ async function runTests() {
         const seenIds = new Set();
         for (const p of presences) {
             assert(typeof p.id === 'string' && p.id.length > 0, '11. Every procedurally generated bicycle carries a non-empty string id');
-            assert(p.id.startsWith('vehicle:'), '12. Every generated id follows core/VehicleIdentity.js\'s own `vehicle:<seed>:<cellX>,<cellZ>` shape');
+            assert(p.id.startsWith('vehicle:'), '12. Every generated id follows core/vehicles/VehicleIdentity.js\'s own `vehicle:<seed>:<cellX>,<cellZ>` shape');
             assert(!seenIds.has(p.id), `13. No two bicycles in the same region share an id (duplicate: ${p.id})`);
             seenIds.add(p.id);
         }
@@ -166,7 +166,7 @@ async function runTests() {
     // Section H — architectural regression
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../core/VehicleIdentity.js', import.meta.url);
+        const sourceUrl = new URL('../core/vehicles/VehicleIdentity.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -184,14 +184,14 @@ async function runTests() {
             'localStorage', 'StorageProvider', 'fetch(', 'WebSocket'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `19. core/VehicleIdentity.js's own code never references "${term}" — a pure, standalone identity primitive`);
+            assert(!codeOnly.includes(term), `19. core/vehicles/VehicleIdentity.js's own code never references "${term}" — a pure, standalone identity primitive`);
         }
     }
     {
-        const exportsModule = await import('../core/VehicleIdentity.js');
+        const exportsModule = await import('../core/vehicles/VehicleIdentity.js');
         const exportedNames = Object.keys(exportsModule).sort();
         assert(JSON.stringify(exportedNames) === JSON.stringify(['vehicleIdFor']),
-            '20. core/VehicleIdentity.js exports exactly vehicleIdFor(), nothing else');
+            '20. core/vehicles/VehicleIdentity.js exports exactly vehicleIdFor(), nothing else');
     }
 
     // -------------------------------------------------------------

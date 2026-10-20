@@ -3,7 +3,7 @@ import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { WorldEncounterMaterialLoadStatus, WorldEncounterMaterialSource } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { WorldEncounterMaterialVerificationStatus, WorldEncounterMaterialVerifier } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
 import { describeLocalWorldDiscoverySource } from '../application/worldEncounter/WorldEncounterIntegration.js';
-import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
+import { describeWorldDiscoverySource } from '../core/world/WorldDiscoverySource.js';
 import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';

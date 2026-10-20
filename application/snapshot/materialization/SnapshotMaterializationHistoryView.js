@@ -1,6 +1,6 @@
 import { StoreSnapshotContentOutcome } from './StoreSnapshotContentOutcome.js';
 import { describeSnapshotMaterializationSourceLabel } from './SnapshotMaterializationView.js';
-import { message } from '../../../core/Message.js';
+import { message } from '../../../core/app/Message.js';
 
 // 0.8.38 — Snapshot Materialization History & Source Inspection.
 //

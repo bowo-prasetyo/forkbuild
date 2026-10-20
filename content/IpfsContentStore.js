@@ -1,5 +1,5 @@
 import { ContentStore } from './ContentStore.js';
-import { ContentReference } from '../core/ContentReference.js';
+import { ContentReference } from '../core/document/ContentReference.js';
 import { CONTENT_HASH_ALGORITHM, computeContentHash } from '../serializer/contentHash.js';
 import { uploadTimeoutMs } from '../utils/uploadTimeout.js';
 import { byteLength } from '../utils/responseSize.js';
@@ -19,7 +19,7 @@ const DEFAULT_TIMEOUT_MS = 5000;
 // on in both the browser and Node.
 //
 // The one rule this class exists to enforce structurally, not just by
-// convention, exactly the same restraint core/ContentReference.js's own
+// convention, exactly the same restraint core/document/ContentReference.js's own
 // header already states:
 //
 //   The CID IPFS hands back is a LOCATOR. It is never this content's

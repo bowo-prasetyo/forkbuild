@@ -1,4 +1,4 @@
-import { PublicationAnchor } from '../../core/PublicationAnchor.js';
+import { PublicationAnchor } from '../../core/publication/PublicationAnchor.js';
 import { validatePublicationAnchor } from './PublicationAnchorValidator.js';
 
 // 0.8.4 — External Anchor Publication Over Peers.
@@ -12,7 +12,7 @@ import { validatePublicationAnchor } from './PublicationAnchorValidator.js';
 //
 //   1. validate  — application/anchoring/PublicationAnchorValidator.js (is this
 //                   even a well-formed PublicationAnchor envelope?)
-//   2. construct — a real core/PublicationAnchor.js instance, never
+//   2. construct — a real core/publication/PublicationAnchor.js instance, never
 //                   trusted as-is
 //   3. verify    — identity/LocalAuthorizationVerifier.js#
 //                   verifyPublicationAnchor() (did the claimed
@@ -56,7 +56,7 @@ export class PublicationAnchorExchange {
     // passthrough to `anchor.toJSON()`, the same shape application/
     // PublicationExchange.js#exportPublication() already establishes one
     // domain over. Throws for anything that isn't a signed
-    // core/PublicationAnchor.js instance.
+    // core/publication/PublicationAnchor.js instance.
     exportAnchor(anchor) {
         if (!anchor || !(anchor instanceof PublicationAnchor)) {
             throw new Error('PublicationAnchorExchange: a PublicationAnchor instance is required');

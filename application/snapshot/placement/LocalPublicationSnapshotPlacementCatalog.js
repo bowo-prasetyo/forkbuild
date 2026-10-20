@@ -1,4 +1,4 @@
-import { PublicationSnapshotPlacement } from '../../../core/PublicationSnapshotPlacement.js';
+import { PublicationSnapshotPlacement } from '../../../core/publication/PublicationSnapshotPlacement.js';
 import { LocalPublicationSnapshotPlacementStore } from './LocalPublicationSnapshotPlacementStore.js';
 
 // 0.8.18 — Decentralized Snapshot Placement Foundation.
@@ -6,7 +6,7 @@ import { LocalPublicationSnapshotPlacementStore } from './LocalPublicationSnapsh
 // The placement-side counterpart of application/
 // LocalPublicationAnchorCatalog.js (0.8.2), mirrored deliberately:
 //
-//   PublicationSnapshotPlacement (core/PublicationSnapshotPlacement.js)
+//   PublicationSnapshotPlacement (core/publication/PublicationSnapshotPlacement.js)
 //       │
 //       ▼
 //   LocalPublicationSnapshotPlacementCatalog (THIS FILE)
@@ -45,7 +45,7 @@ import { LocalPublicationSnapshotPlacementStore } from './LocalPublicationSnapsh
 // Multiple independent placements — different placing identities,
 // different storage backends, different locators, even different
 // placement ids naming the SAME publicationId/contentHash — all coexist
-// here, exactly as core/PublicationSnapshotPlacement.js's own header
+// here, exactly as core/publication/PublicationSnapshotPlacement.js's own header
 // requires. This catalog never collapses them into one, never picks a
 // "best" one, and holds no ranking, trust score, or "canonical
 // placement" field anywhere in it.

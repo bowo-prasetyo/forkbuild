@@ -18,10 +18,10 @@ import { buildPublicationReplicaPackage } from '../application/publication/repli
 import { ImportPublicationReplicaPackageUseCase } from '../application/publication/replica/ImportPublicationReplicaPackageUseCase.js';
 import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { PublicationExchange } from '../application/publication/PublicationExchange.js';
-import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
-import { ContentReference } from '../core/ContentReference.js';
-import { PublicationAnchor } from '../core/PublicationAnchor.js';
-import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
+import { DecentralizedPublication } from '../core/publication/DecentralizedPublication.js';
+import { ContentReference } from '../core/document/ContentReference.js';
+import { PublicationAnchor } from '../core/publication/PublicationAnchor.js';
+import { PublicationSnapshotPlacement } from '../core/publication/PublicationSnapshotPlacement.js';
 import { derivePublicationEvidenceConvergence } from '../application/publication/evidence/PublicationEvidenceConvergence.js';
 import { publicationEvidenceConvergenceView } from '../application/publication/evidence/PublicationEvidenceConvergenceView.js';
 import { ContentBindingSetRelationship } from '../application/publication/evidence/ContentBindingSetRelationship.js';

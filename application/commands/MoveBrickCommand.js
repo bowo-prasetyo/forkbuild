@@ -1,5 +1,5 @@
 import { Command } from './Command.js';
-import { Position } from '../../core/Position.js';
+import { Position } from '../../core/document/Position.js';
 import { bricksMessage } from './HistoryDescription.js';
 
 // Undoable spatial translation. Remembers the original position so

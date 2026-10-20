@@ -1,9 +1,9 @@
-// The QR Code encoder (core/QrCode.js). The golden symbols below were made
+// The QR Code encoder (core/app/QrCode.js). The golden symbols below were made
 // by an independent encoder (Python's `qrcode` package) for the same text,
 // level and mask, so a match means the two agree module for module. While
 // it was written, every version at every level was also read back by a
 // decoder (zxing-cpp).
-import { encodeQrCode, QrErrorCorrection } from '../core/QrCode.js';
+import { encodeQrCode, QrErrorCorrection } from '../core/app/QrCode.js';
 import { assert } from './support/Assert.js';
 
 const GOLDEN = [

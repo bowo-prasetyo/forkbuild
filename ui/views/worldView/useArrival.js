@@ -1,13 +1,13 @@
 import { inject } from 'vue';
 import { FirstBuildChecklistTracker } from '../../../application/onboarding/FirstBuildChecklistTracker.js';
-import { isFirstBuildComplete } from '../../../core/FirstBuildChecklist.js';
+import { isFirstBuildComplete } from '../../../core/challenge/FirstBuildChecklist.js';
 import { t } from '../../i18n/i18n.js';
 
 // World View opened with `?arrive=door` (the Editor's Walk inside it): the
 // avatar arrives at the build's door (application/worldNavigation/
 // arrivalMethods.js), World View says how to walk in, and once the avatar
 // has gone in, the guided first build's last step is ticked off
-// (core/FirstBuildChecklist.js), with a word: a celebration if that finished
+// (core/challenge/FirstBuildChecklist.js), with a word: a celebration if that finished
 // the guide.
 // watchArrival() is called on World View's fast presence tick (every 100 ms)
 // rather than a timer of its own; it does nothing when nobody is arriving.

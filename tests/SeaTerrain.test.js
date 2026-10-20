@@ -1,16 +1,16 @@
 import {
     terrainHeightAt, seaBasinAt, DEFAULT_WORLD_SEED, TERRAIN_HEIGHT_BOUND, TERRAIN_DEPTH_BOUND
-} from '../core/TerrainHeightField.js';
-import { surfaceCategoryAt, SURFACE_CATEGORY, WATER_LEVEL } from '../core/TerrainSurface.js';
+} from '../core/nature/TerrainHeightField.js';
+import { surfaceCategoryAt, SURFACE_CATEGORY, WATER_LEVEL } from '../core/nature/TerrainSurface.js';
 import {
     hydrologyFeatureAt, waterSurfaceColorAt, HYDROLOGY_FEATURE, SEA_BASIN_MIN,
     LAKE_SURFACE_COLOR, SEA_SURFACE_COLOR
-} from '../core/Hydrology.js';
-import { deriveSpatialContext } from '../core/WorldSpatialContext.js';
-import { Position } from '../core/Position.js';
+} from '../core/nature/Hydrology.js';
+import { deriveSpatialContext } from '../core/world/WorldSpatialContext.js';
+import { Position } from '../core/document/Position.js';
 import { assert } from './support/Assert.js';
 
-// Sea terrain — core/TerrainHeightField.js#seaBasinAt() and the SEA
+// Sea terrain — core/nature/TerrainHeightField.js#seaBasinAt() and the SEA
 // hydrology feature built on it.
 //
 //   Section A: the basin field is pure, bounded, and keeps the origin dry

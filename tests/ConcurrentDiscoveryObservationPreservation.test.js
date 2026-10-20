@@ -413,7 +413,7 @@ async function run() {
         }
 
         const placementFiles = [
-            'core/PublicationSnapshotPlacement.js',
+            'core/publication/PublicationSnapshotPlacement.js',
             'application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js',
             'application/snapshot/placement/AddPublicationSnapshotPlacementUseCase.js'
         ];

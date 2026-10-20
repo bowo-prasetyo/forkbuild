@@ -1,9 +1,9 @@
-import { Brick } from '../../core/Brick.js';
-import { Position } from '../../core/Position.js';
-import { SpatialBounds } from '../../core/SpatialBounds.js';
-import { Building } from '../../core/Building.js';
-import { World } from '../../core/World.js';
-import { moveInReadyMadeResident } from '../../core/ReadyMadeHome.js';
+import { Brick } from '../../core/building/Brick.js';
+import { Position } from '../../core/document/Position.js';
+import { SpatialBounds } from '../../core/world/SpatialBounds.js';
+import { Building } from '../../core/building/Building.js';
+import { World } from '../../core/document/World.js';
+import { moveInReadyMadeResident } from '../../core/building/ReadyMadeHome.js';
 
 // The built-in structures offered as ready-made builds, in the order their
 // cards show them: the three showcase builds (core/library/ShowcaseLibrary.js)
@@ -22,7 +22,7 @@ export const FEATURED_STRUCTURE_IDS = Object.freeze([
 ]);
 
 // What Home's main button opens: something to finish, rather than an empty
-// plot or a finished showcase. The House, with the job core/StarterJob.js
+// plot or a finished showcase. The House, with the job core/challenge/StarterJob.js
 // names (its roof) left to do.
 export const STARTER_STRUCTURE_ID = 'village:house';
 export const STARTER_JOB_ID = 'roof';
@@ -106,7 +106,7 @@ export function structureWorld(structure, brickRegistry = null) {
     const world = new World({ id: `ready-made:${structure.id}` });
     world.addBuilding(building);
     // A ready-made home stands lived in, as a copy of one starts
-    // (core/ReadyMadeHome.js).
+    // (core/building/ReadyMadeHome.js).
     if (brickRegistry) moveInReadyMadeResident(world, structure, brickRegistry, () => `ready-made-resident:${structure.id}`);
     return world;
 }

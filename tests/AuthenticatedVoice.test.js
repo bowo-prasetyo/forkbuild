@@ -7,18 +7,18 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { FriendRelationshipUseCase } from '../application/identity/FriendRelationshipUseCase.js';
 import { PeerBlockUseCase } from '../application/peer/PeerBlockUseCase.js';
 import { VoiceUseCase } from '../application/chat/VoiceUseCase.js';
-import { VoiceSessionState } from '../core/VoiceSessionState.js';
+import { VoiceSessionState } from '../core/social/VoiceSessionState.js';
 import {
     VoiceCallSignalType,
     toVoiceCallSignal,
     isValidVoiceCallSignal,
     MAX_VOICE_CALL_ID_LENGTH
-} from '../core/VoiceCallSignal.js';
+} from '../core/social/VoiceCallSignal.js';
 import {
     VoiceMediaSignalKind,
     toVoiceMediaSignal,
     isValidVoiceMediaSignal
-} from '../core/VoiceMediaSignal.js';
+} from '../core/social/VoiceMediaSignal.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
@@ -184,7 +184,7 @@ function makeFriendUseCase(identityProvider, registry) {
 async function runTests() {
 
 // ---------------------------------------------------------------------
-// 1. core/VoiceCallSignal.js — structural validation of the call-
+// 1. core/social/VoiceCallSignal.js — structural validation of the call-
 //    lifecycle wire vocabulary. No network involved.
 // ---------------------------------------------------------------------
 {
@@ -203,11 +203,11 @@ async function runTests() {
     let threw = false;
     try { toVoiceCallSignal({ callId: 'call-1', type: 'BOGUS', callerIdentity: 'alice', calleeIdentity: 'bob' }); } catch { threw = true; }
     assert(threw, 'toVoiceCallSignal refuses an unrecognized type');
-    console.log('✓ core/VoiceCallSignal.js: wire vocabulary is structurally validated and bounded');
+    console.log('✓ core/social/VoiceCallSignal.js: wire vocabulary is structurally validated and bounded');
 }
 
 // ---------------------------------------------------------------------
-// 2. core/VoiceMediaSignal.js — structural validation of the SDP-
+// 2. core/social/VoiceMediaSignal.js — structural validation of the SDP-
 //    carrying wire vocabulary.
 // ---------------------------------------------------------------------
 {
@@ -220,11 +220,11 @@ async function runTests() {
     let threw = false;
     try { toVoiceMediaSignal({ callId: 'call-1', kind: 'garbage', sdp: 'v=0', senderIdentity: 'alice' }); } catch { threw = true; }
     assert(threw, 'toVoiceMediaSignal refuses an unrecognized kind');
-    console.log('✓ core/VoiceMediaSignal.js: wire vocabulary is structurally validated');
+    console.log('✓ core/social/VoiceMediaSignal.js: wire vocabulary is structurally validated');
 }
 
 // ---------------------------------------------------------------------
-// 3. core/VoiceSessionState.js — a closed, six-value vocabulary.
+// 3. core/social/VoiceSessionState.js — a closed, six-value vocabulary.
 // ---------------------------------------------------------------------
 {
     const values = Object.values(VoiceSessionState);
@@ -232,7 +232,7 @@ async function runTests() {
     for (const v of ['IDLE', 'CALLING', 'RINGING', 'CONNECTING', 'ACTIVE', 'ENDED']) {
         assert(values.includes(v), `includes ${v}`);
     }
-    console.log('✓ core/VoiceSessionState.js: closed vocabulary');
+    console.log('✓ core/social/VoiceSessionState.js: closed vocabulary');
 }
 
 // ---------------------------------------------------------------------

@@ -2,9 +2,9 @@ import { readFile } from 'node:fs/promises';
 import {
     WorldDiscoveryInputKeys,
     describeWorldDiscoverySource
-} from '../core/WorldDiscoverySource.js';
-import { assembleWorldDiscoveryInputs } from '../core/WorldDiscoverySourceAssembly.js';
-import { deriveWorldEncounters } from '../core/WorldEncounter.js';
+} from '../core/world/WorldDiscoverySource.js';
+import { assembleWorldDiscoveryInputs } from '../core/world/WorldDiscoverySourceAssembly.js';
+import { deriveWorldEncounters } from '../core/world/WorldEncounter.js';
 import { assert } from './support/Assert.js';
 
 // ---------------------------------------------------------------------
@@ -175,7 +175,7 @@ import { assert } from './support/Assert.js';
 // 9. Architectural regression: forbidden imports and vocabulary
 // ---------------------------------------------------------------------
 {
-    const sourceUrl = new URL('../core/WorldDiscoverySourceAssembly.js', import.meta.url);
+    const sourceUrl = new URL('../core/world/WorldDiscoverySourceAssembly.js', import.meta.url);
     const fullSource = await readFile(sourceUrl, 'utf8');
     const codeOnly = fullSource
         .split('\n')
@@ -183,35 +183,35 @@ import { assert } from './support/Assert.js';
         .join('\n');
 
     // No encounter derivation.
-    assert(!codeOnly.includes('WorldEncounter'), 'core/WorldDiscoverySourceAssembly.js code must never reference WorldEncounter');
-    assert(!codeOnly.includes('deriveWorldEncounters'), 'core/WorldDiscoverySourceAssembly.js code must never call deriveWorldEncounters');
+    assert(!codeOnly.includes('WorldEncounter'), 'core/world/WorldDiscoverySourceAssembly.js code must never reference WorldEncounter');
+    assert(!codeOnly.includes('deriveWorldEncounters'), 'core/world/WorldDiscoverySourceAssembly.js code must never call deriveWorldEncounters');
 
     // No knowledge of peer transport or peer ingress.
-    assert(!codeOnly.includes('PeerMessageBus'), 'core/WorldDiscoverySourceAssembly.js code must never import PeerMessageBus');
-    assert(!codeOnly.includes('PeerWorldDataIngress'), 'core/WorldDiscoverySourceAssembly.js code must never import PeerWorldDataIngress');
-    assert(!codeOnly.includes('PeerConnection'), 'core/WorldDiscoverySourceAssembly.js code must never reference PeerConnection');
-    assert(!codeOnly.includes('PeerDiscoveryProvider'), 'core/WorldDiscoverySourceAssembly.js code must never reference PeerDiscoveryProvider');
+    assert(!codeOnly.includes('PeerMessageBus'), 'core/world/WorldDiscoverySourceAssembly.js code must never import PeerMessageBus');
+    assert(!codeOnly.includes('PeerWorldDataIngress'), 'core/world/WorldDiscoverySourceAssembly.js code must never import PeerWorldDataIngress');
+    assert(!codeOnly.includes('PeerConnection'), 'core/world/WorldDiscoverySourceAssembly.js code must never reference PeerConnection');
+    assert(!codeOnly.includes('PeerDiscoveryProvider'), 'core/world/WorldDiscoverySourceAssembly.js code must never reference PeerDiscoveryProvider');
 
     // No storage or network.
-    assert(!codeOnly.includes('StorageProvider'), 'core/WorldDiscoverySourceAssembly.js code must never reference StorageProvider');
-    assert(!/\blocalStorage\b/.test(codeOnly), 'core/WorldDiscoverySourceAssembly.js code must never reference localStorage');
-    assert(!/fetch\(/.test(codeOnly), 'core/WorldDiscoverySourceAssembly.js code must never call fetch(...)');
-    assert(!codeOnly.includes('WebSocket'), 'core/WorldDiscoverySourceAssembly.js code must never reference WebSocket');
+    assert(!codeOnly.includes('StorageProvider'), 'core/world/WorldDiscoverySourceAssembly.js code must never reference StorageProvider');
+    assert(!/\blocalStorage\b/.test(codeOnly), 'core/world/WorldDiscoverySourceAssembly.js code must never reference localStorage');
+    assert(!/fetch\(/.test(codeOnly), 'core/world/WorldDiscoverySourceAssembly.js code must never call fetch(...)');
+    assert(!codeOnly.includes('WebSocket'), 'core/world/WorldDiscoverySourceAssembly.js code must never reference WebSocket');
 
     // No reconciliation, dedup, sort, or match vocabulary.
     const reconciliationTerms = ['dedup', 'reconcile', 'match(', 'compare', '.sort(', 'winner'];
     for (const term of reconciliationTerms) {
-        assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `core/WorldDiscoverySourceAssembly.js code must never use "${term}"`);
+        assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `core/world/WorldDiscoverySourceAssembly.js code must never use "${term}"`);
     }
 
     // No trust/authority vocabulary of any kind.
     const trustTerms = ['trusted', 'trust(', 'reputation', 'verified', 'verify(', 'authority', 'priority', 'weight', 'confidence', 'ranking', 'scoring'];
     for (const term of trustTerms) {
-        assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `core/WorldDiscoverySourceAssembly.js code must never use "${term}"`);
+        assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `core/world/WorldDiscoverySourceAssembly.js code must never use "${term}"`);
     }
 
     // No .find()/identity lookup should be needed to assemble records.
-    assert(!/\.find\(/.test(codeOnly), 'core/WorldDiscoverySourceAssembly.js code must never call .find(...)');
+    assert(!/\.find\(/.test(codeOnly), 'core/world/WorldDiscoverySourceAssembly.js code must never call .find(...)');
 
     console.log('✓ Architectural regression: forbidden imports and vocabulary');
 }
@@ -221,9 +221,9 @@ import { assert } from './support/Assert.js';
 //     dimension names — this file never retypes its own copy
 // ---------------------------------------------------------------------
 {
-    const sourceUrl = new URL('../core/WorldDiscoverySourceAssembly.js', import.meta.url);
+    const sourceUrl = new URL('../core/world/WorldDiscoverySourceAssembly.js', import.meta.url);
     const fullSource = await readFile(sourceUrl, 'utf8');
-    assert(fullSource.includes("from './WorldDiscoverySource.js'"), 'core/WorldDiscoverySourceAssembly.js imports the shared key list rather than retyping it');
+    assert(fullSource.includes("from './WorldDiscoverySource.js'"), 'core/world/WorldDiscoverySourceAssembly.js imports the shared key list rather than retyping it');
 
     console.log('✓ WorldDiscoveryInputKeys stays the single shared source of the six dimension names');
 }

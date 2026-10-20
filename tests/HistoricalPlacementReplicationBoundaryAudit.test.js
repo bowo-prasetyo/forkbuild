@@ -1,12 +1,12 @@
 import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
-import { CausalStamp } from '../core/CausalStamp.js';
-import { RevisionReference } from '../core/RevisionReference.js';
-import { ConflictSet } from '../core/ConflictSet.js';
-import { PlacementRecord } from '../core/PlacementRecord.js';
-import { Position } from '../core/Position.js';
-import { SpatialBounds } from '../core/SpatialBounds.js';
+import { CausalStamp } from '../core/collaboration/CausalStamp.js';
+import { RevisionReference } from '../core/document/RevisionReference.js';
+import { ConflictSet } from '../core/collaboration/ConflictSet.js';
+import { PlacementRecord } from '../core/publication/PlacementRecord.js';
+import { Position } from '../core/document/Position.js';
+import { SpatialBounds } from '../core/world/SpatialBounds.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 
@@ -18,11 +18,11 @@ import { CreateReplicationUseCase } from '../application/placement/CreateReplica
 import { ReplicatePlacementUseCase } from '../application/placement/ReplicatePlacementUseCase.js';
 import { SynchronizeReplicaUseCase } from '../application/placement/SynchronizeReplicaUseCase.js';
 
-import { World } from '../core/World.js';
-import { StructurePlacement } from '../core/StructurePlacement.js';
+import { World } from '../core/document/World.js';
+import { StructurePlacement } from '../core/building/StructurePlacement.js';
 import { MoveStructurePlacementCommand } from '../application/commands/MoveStructurePlacementCommand.js';
 import { SetStructurePlacementTransformCommand } from '../application/commands/SetStructurePlacementTransformCommand.js';
-import { compareWorldOperations, worldOperationSortKey } from '../core/WorldOperationOrder.js';
+import { compareWorldOperations, worldOperationSortKey } from '../core/collaboration/WorldOperationOrder.js';
 import { WorldConflictResolver, WorldOperationOutcome } from '../replication/WorldConflictResolver.js';
 import { WorldCommandPropagationUseCase } from '../application/document/WorldCommandPropagationUseCase.js';
 import { assert } from './support/Assert.js';
@@ -352,7 +352,7 @@ async function runTests() {
     // ===============================================================
     {
         // C1. The historical resolver compares CausalStamp — a per-actor
-        // VECTOR clock (core/CausalStamp.js's own documented semantics:
+        // VECTOR clock (core/collaboration/CausalStamp.js's own documented semantics:
         // "A happens-before B iff every component of A <= B"). Proven
         // live: two divergent single-actor advances compare CONCURRENT,
         // a relation that requires genuinely incomparable vectors.
@@ -363,7 +363,7 @@ async function runTests() {
             'C1. The historical ConflictResolver genuinely detects CONCURRENT vector clocks, live.');
 
         // C2. The live resolver orders by a SCALAR Lamport logicalClock
-        // plus operationId as a tie-breaker (core/WorldOperationOrder.js)
+        // plus operationId as a tie-breaker (core/collaboration/WorldOperationOrder.js)
         // — a STRICT TOTAL order. Two operations with the SAME
         // logicalClock (a genuine tie a vector clock would report as
         // CONCURRENT) still resolve to a deterministic -1/1, never an
@@ -391,7 +391,7 @@ async function runTests() {
         // resolvers are implementation-equivalent, or that they operate
         // on the same data. They do not — the historical protocol
         // reconciles independently-created PlacementRecord revisions of
-        // a PUBLISHED placement (core/PlacementRecord.js); the live
+        // a PUBLISHED placement (core/publication/PlacementRecord.js); the live
         // protocol reconciles Commands mutating StructurePlacements
         // inside ONE live, shared World document (core/
         // StructurePlacement.js) — a genuinely different data model, per

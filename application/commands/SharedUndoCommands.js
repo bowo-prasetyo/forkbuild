@@ -1,5 +1,5 @@
 import { Command } from './Command.js';
-import { message } from '../../core/Message.js';
+import { message } from '../../core/app/Message.js';
 
 // Undo and Redo while building together (Build with me,
 // application/buildTogether/): each is an operation of its own, sent to

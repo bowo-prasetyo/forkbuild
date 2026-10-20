@@ -1,4 +1,4 @@
-import { normalizeBuiltWith } from '../../core/BuiltWith.js';
+import { normalizeBuiltWith } from '../../core/catalog/BuiltWith.js';
 
 // A person's name, for "alice and 11 others" and a comment's author, from
 // what this device knows, best first:

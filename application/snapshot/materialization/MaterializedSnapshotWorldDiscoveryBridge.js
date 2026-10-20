@@ -1,4 +1,4 @@
-import { describeWorldDiscoverySource } from '../../../core/WorldDiscoverySource.js';
+import { describeWorldDiscoverySource } from '../../../core/world/WorldDiscoverySource.js';
 import { SnapshotWorldPlacementOutcome } from '../placement/SnapshotWorldPlacementOutcome.js';
 import { SnapshotWorldRegistrationOutcome } from '../placement/SnapshotWorldRegistrationOutcome.js';
 
@@ -89,10 +89,10 @@ import { SnapshotWorldRegistrationOutcome } from '../placement/SnapshotWorldRegi
 // result never carries a `Publication` instance — only `publicationId`,
 // borrowed from `placementInfo`. This file's own `publication` argument is
 // the ACTUAL Publication object (title, publisherIdentity, signature,
-// contentReference — everything `core/WorldEncounter.js#describeEncounterablePublication()`
+// contentReference — everything `core/world/WorldEncounter.js#describeEncounterablePublication()`
 // reads), handed straight through into the registered source, the exact
 // same reference, never cloned or re-described — mirroring
-// `core/WorldDiscoverySourceAssembly.js`'s own rule, "every record
+// `core/world/WorldDiscoverySourceAssembly.js`'s own rule, "every record
 // reference a source contributed is the exact same object reference that
 // went in." A caller handing a `publication` whose own `id` does not match
 // `worldPlacementResult.publicationId` is a caller-contract violation (the

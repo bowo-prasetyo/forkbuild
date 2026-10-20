@@ -28,7 +28,7 @@ export const PUBLICATION_ANCHOR_STORE_KEY = 'publication-anchor-catalog:entries'
 //
 // DELIBERATELY DUMB. This class never validates, never constructs a
 // PublicationAnchor, never checks a signature, and never imports
-// core/PublicationAnchor.js at all — every method here operates on plain,
+// core/publication/PublicationAnchor.js at all — every method here operates on plain,
 // JSON-safe values. `get()`/`list()` hand back the RAW envelope
 // (`{ anchor: <plain JSON>, receivedAt: <ISO string> }`) exactly as
 // stored, not a hydrated instance — from this class's own point of view,

@@ -2,7 +2,7 @@
 // NetworkWriters.js). Personal and local: never published, shared or part of
 // any World; a backup carries it with the other Network settings.
 import { StorageProvider } from '../../storage/StorageProvider.js';
-import { isNetworkWriter, normalizeNetworkWriterSettings } from '../../core/NetworkWriters.js';
+import { isNetworkWriter, normalizeNetworkWriterSettings } from '../../core/publication/NetworkWriters.js';
 
 const STORAGE_KEY = 'network-writer-settings';
 

@@ -1,4 +1,4 @@
-import { searchGeographicPlaces } from '../../core/GeographicPlaceNavigation.js';
+import { searchGeographicPlaces } from '../../core/world/GeographicPlaceNavigation.js';
 import { t } from '../i18n/i18n.js';
 import { compassText } from '../i18n/worldText.js';
 
@@ -17,7 +17,7 @@ import { compassText } from '../i18n/worldText.js';
 //                         look like they might describe the same
 //                         ground?"
 //
-// Each row shows exactly what core/GeographicPlaceView.js's own
+// Each row shows exactly what core/world/GeographicPlaceView.js's own
 // GeographicPlaceView already derived — a display name, a description/
 // World/contributor count — and nothing this panel invents itself.
 // Clicking a row opens ui/components/GeographicPlacePanel.js for that
@@ -34,10 +34,10 @@ import { compassText } from '../i18n/worldText.js';
 //     emits — see that panel's own header). [] renders nothing extra,
 //     the same graceful-absence posture `places` itself already has.
 //   - a search box filtering `places` client-side through
-//     core/GeographicPlaceNavigation.js#searchGeographicPlaces() — a
+//     core/world/GeographicPlaceNavigation.js#searchGeographicPlaces() — a
 //     pure function imported directly (the same "component may import a
 //     pure core derivation" precedent ui/components/WorldMapPanel.js's
-//     own core/WorldMapProjection.js import already set), never a
+//     own core/world/WorldMapProjection.js import already set), never a
 //     second index and never anything session-owned.
 export default {
     name: 'GeographicPlaceDirectoryPanel',

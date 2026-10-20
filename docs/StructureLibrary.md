@@ -3,12 +3,12 @@ Structures:
 
     { id, structures: [ new Structure({ id, name, category, tags, description, bricks }) ] }
 
-Structures (core/Structure.js) are pure data — id, name, category, tags,
-description, and a flat array of ordinary core/Brick.js instances
+Structures (core/building/Structure.js) are pure data — id, name, category, tags,
+description, and a flat array of ordinary core/building/Brick.js instances
 positioned in the Structure's own local coordinate space. No world
 placement, no terrain, no StructureBuilder/StructureEngine/
 StructureRuntime subsystem. A Structure's "dimensions" are never stored
-— core/SpatialBounds.js#fromBricks(structure.bricks, brickRegistry)
+— core/world/SpatialBounds.js#fromBricks(structure.bricks, brickRegistry)
 derives them fresh from the bricks + the live BrickRegistry, the same
 way a World's bounds always were (SpatialBounds#fromWorld is now a thin
 wrapper over fromBricks).
@@ -21,7 +21,7 @@ Never A Preassembled Structure" — a Structure is the next rung up that
 same ladder, not an exception to it.
 
 Structure libraries register with the StructureRegistry
-(core/StructureRegistry.js) at startup, the same shape
+(core/building/StructureRegistry.js) at startup, the same shape
 docs/BrickLibrary.md already documents for BrickRegistry:
 
     registry.register(VillageLibrary);
@@ -94,7 +94,7 @@ rotation and color, so a fork looks like the structure's thumbnail (until
 2026-10 the color was dropped, and the Tool Shed's and Stable's
 roof-colored cubes came out in their default color).
 `document.metadata.parentStructureId` records which Structure
-the fork came from (core/DocumentMetadata.js) — provenance only, never a
+the fork came from (core/document/DocumentMetadata.js) — provenance only, never a
 live dependency: editing, saving, or reloading a fork never reads from
 or writes back to the Structure it was forked from, and the Structure
 keeps existing (and forkable again) exactly as it was, indefinitely.
@@ -132,11 +132,11 @@ placing has nothing to do with a Structure library specifically), how do
 you put it INTO the World you're currently building, more than once,
 without copying its bricks?
 
-`core/StructurePlacement.js` is a lightweight spatial REFERENCE — `id`,
-`documentId`, `position`, `rotation` — mirroring `core/WorldPlacement.js`
+`core/building/StructurePlacement.js` is a lightweight spatial REFERENCE — `id`,
+`documentId`, `position`, `rotation` — mirroring `core/publication/WorldPlacement.js`
 one rung down (which places a whole published World in shared global
 space); a StructurePlacement places one Document inside another
-Document's own `core/World.js`, alongside its ordinary Buildings and
+Document's own `core/document/World.js`, alongside its ordinary Buildings and
 Groups. It never owns bricks. `application/editor/StructureDocumentResolver.js`
 resolves `documentId` to its CURRENT content fresh from storage on every
 call — there is exactly one authoritative representation of a
@@ -167,7 +167,7 @@ own "deliberately not" list); 'R'/Shift+R rotate the pending placement in
 with the same undo/redo and CommandRegistry serialization support.
 Collision is conservative and AABB-only
 (`application/editor/StructurePlacementValidator.js`, translate-only, rotation
-ignored — the same V1 simplification `core/SpatialBounds.js` already
+ignored — the same V1 simplification `core/world/SpatialBounds.js` already
 declared for whole-World bounds) against both ordinary bricks and other
 placements.
 
@@ -220,8 +220,8 @@ document keeps the Structure's own untranslated local geometry (so
 copying House into a blank document produces byte-identical bricks to
 forking House); copying into a document that already has content appends
 the new Structure just past the document's current occupied footprint
-along X (`core/SpatialBounds.js#fromWorld()`/`#fromBricks()` — the same
-derived-bounds math `core/Structure.js` already uses for itself), so
+along X (`core/world/SpatialBounds.js#fromWorld()`/`#fromBricks()` — the same
+derived-bounds math `core/building/Structure.js` already uses for itself), so
 composing several structures never requires picking coordinates by hand
 and never overlaps what's already there.
 
@@ -300,7 +300,7 @@ Structure:
 
 `application/editor/CreateStructureFromSelectionUseCase.js` reads a selection
 (`application/editor-state/SelectionState.js`) out of a Document and
-returns a brand-new `core/Structure.js` instance — pure observation, the
+returns a brand-new `core/building/Structure.js` instance — pure observation, the
 same "no UI, no persistence, no World mutation" restraint
 `application/editor/CopySelectionUseCase.js` already applies to the clipboard:
 
@@ -322,7 +322,7 @@ milestone's.
 
 **Normalization.** The selection's own minimum X/Z occupied bounds
 become the new Structure's local origin — the exact same
-`core/SpatialBounds.js#fromBricks()` math `core/Structure.js` and
+`core/world/SpatialBounds.js#fromBricks()` math `core/building/Structure.js` and
 `CopyStructureIntoDocumentUseCase` already use, never a second bounds
 calculation. Y is left exactly as authored (every built-in Structure
 already measures Y from the ground up), so extracting the same shape is
@@ -367,7 +367,7 @@ Structure — it is never saved anywhere by that call. 0.4.3 gives it
 somewhere to go: `application/editor/LocalStructureLibraryStore.js`, a local,
 per-device catalog of the user's OWN Structures, architecturally separate
 from both the shared World (`World`/`Document`/`Command`) and the
-built-in Village Library (`core/StructureRegistry.js`/
+built-in Village Library (`core/building/StructureRegistry.js`/
 `core/library/VillageLibrary.js`):
 
     Shared World          Built-in Library         Personal Library
@@ -379,11 +379,11 @@ docs/Principles.md, "A Personal Library Persists What Extraction Only
 Returns (0.4.3)."
 
 **No new domain object.** `LocalStructureLibraryStore` stores ordinary
-`core/Structure.js` values — the exact same class the built-in library
+`core/building/Structure.js` values — the exact same class the built-in library
 already uses and `CreateStructureFromSelectionUseCase` already returns.
 Nothing here adds a `libraryId` or a `personal: true` field to `Structure`
 itself; see docs/Principles.md, "Library Membership Is Not Structure
-Identity (0.4.3)." `core/groupStructuresByCategory.js` is a small, pure
+Identity (0.4.3)." `core/building/groupStructuresByCategory.js` is a small, pure
 grouping helper extracted from `StructureRegistry#groupByCategory()`
 specifically so the personal library's own `groupByCategory()` groups its
 contents exactly the same way the built-in one always has, rather than a
@@ -488,7 +488,7 @@ deliberately never:
     Structure --publish--> World
 
 A blueprint stays reusable content, exactly the same category
-`core/Structure.js`'s own header has occupied since 0.2.81 — it is not,
+`core/building/Structure.js`'s own header has occupied since 0.2.81 — it is not,
 and does not become, a `StructurePlacement`, a `Publication`, or anything
 else that implies a live World or a live dependency on Alice's device.
 See docs/Principles.md, "A Blueprint Package Is Portable Data, Never A
@@ -538,7 +538,7 @@ a portable identity package, one domain over:
 
 **Import, and why every id is fresh.**
 `application/blueprint/ImportBlueprintUseCase.js` constructs a brand-new
-`core/Structure.js` from an already-validated package — its own id AND
+`core/building/Structure.js` from an already-validated package — its own id AND
 every brick's own id are freshly minted (`createId()`), never trusted
 from the package, the identical "an id crossing a boundary always
 regenerates" rule `ForkStructureUseCase` and
@@ -631,7 +631,7 @@ entry in My Structures without first becoming — and then having to be
 extracted back out of — a whole Document.
 
 **Every card can leave the device now, not only a personal one.**
-`ExportBlueprintUseCase` was always generic over any `core/Structure.js`
+`ExportBlueprintUseCase` was always generic over any `core/building/Structure.js`
 — only the UI had withheld the **Export Blueprint** button from
 built-in entries. 0.6.3 adds it to a built-in card's "⋮" menu too,
 alongside the new Fork to My Structures and Info entries; a personal
@@ -641,7 +641,7 @@ Remove) is unchanged.
 **Info — inspect, never edit.** `ui/components/StructureInfoPanel.js`
 is a new, read-only detail surface reachable from any card's "⋮" menu
 (built-in or personal): name, category, brick count, footprint and
-height (via `core/SpatialBounds.js#fromBricks()`, never a second,
+height (via `core/world/SpatialBounds.js#fromBricks()`, never a second,
 cached dimensions field), source, and description, plus Place/Export
 buttons that delegate to the exact same actions the card itself already
 offers. There is no Save button and no editable field anywhere in this
@@ -651,7 +651,7 @@ panel — see docs/Principles.md's running "Inspect ≠ edit" posture.
 0.6.3 does not add in-place blueprint editing. "Farmstead Deluxe"
 coexists with "Farmstead" as two ordinary, independent entries in My
 Structures — never a version of one another at the data-model level.
-`core/Structure.js` gains no `sourceStructureId`/`version`/
+`core/building/Structure.js` gains no `sourceStructureId`/`version`/
 `parentBlueprintId` field: turning a reusable spatial value into a
 genealogy object was considered and deliberately rejected (see
 docs/Roadmap.md, 0.6.3's own "Deliberately excluded") as premature

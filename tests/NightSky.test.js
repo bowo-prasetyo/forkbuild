@@ -1,11 +1,11 @@
 import * as THREE from 'three';
-import { CELESTIAL_POLE, MILKY_WAY_STAR_COUNT, STAR_COUNT, milkyWayPole, milkyWayRibbon, starField, turnSky } from '../core/StarField.js';
-import { DAY_CYCLE_SECONDS, DAY_SKY_BODIES, skyBodiesAt, skyBodiesAtFraction } from '../core/DayCycle.js';
-import { compassLabelBetween } from '../core/CompassHeading.js';
+import { CELESTIAL_POLE, MILKY_WAY_STAR_COUNT, STAR_COUNT, milkyWayPole, milkyWayRibbon, starField, turnSky } from '../core/nature/StarField.js';
+import { DAY_CYCLE_SECONDS, DAY_SKY_BODIES, skyBodiesAt, skyBodiesAtFraction } from '../core/nature/DayCycle.js';
+import { compassLabelBetween } from '../core/world/CompassHeading.js';
 import { StarSky } from '../renderer/StarSky.js';
 import { assert } from './support/Assert.js';
 
-// World View's night sky (core/StarField.js, renderer/StarSky.js): the same
+// World View's night sky (core/nature/StarField.js, renderer/StarSky.js): the same
 // stars for everyone, the Milky Way across them, and the whole sky turning
 // once a day round the celestial pole, rising in the east and setting in
 // the west with the sun and the moon.

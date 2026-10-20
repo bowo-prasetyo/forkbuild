@@ -130,7 +130,7 @@ const DEFAULT_TIMEOUT_MS = 8000;
 // data is entirely `parseDecentralizedDiscoveryEnvelope()`'s/
 // `parseSnapshotDiscoveryEnvelope()`'s own job, one layer up; whether a
 // signature should ever gate anything remains the same unscheduled question
-// `core/DecentralizedDiscoveryEnvelope.js`'s own header already left open.
+// `core/publication/DecentralizedDiscoveryEnvelope.js`'s own header already left open.
 //
 // NO EXTERNAL DEPENDENCY — plain `WebSocket`, injectable exactly like
 // `nostr/NostrInjectedProviderPublisher.js`'s own `webSocketImpl`, so this

@@ -19,7 +19,7 @@
 // re-derives or re-checks either. `observedAt` is THIS REPLICA's own
 // local clock at the moment the observation was created, never anything
 // the storage backend reported (a placement has no external system to
-// report a time at all — see core/PublicationSnapshotPlacement.js's own
+// report a time at all — see core/publication/PublicationSnapshotPlacement.js's own
 // header on why `placedAt` is honestly just "when the placing identity
 // says it did this").
 //
@@ -27,7 +27,7 @@
 // entirely within one replica's own ephemeral UI/session state — it is
 // never written to application/
 // LocalPublicationSnapshotPlacementCatalog.js, never attached to a
-// core/PublicationSnapshotPlacement.js instance, and never carried over
+// core/publication/PublicationSnapshotPlacement.js instance, and never carried over
 // application/snapshot/placement/PublicationSnapshotPlacementPeerExchange.js. Two replicas
 // that resolve the identical placement at the identical moment, and even
 // reach the identical outcome, each hold their own, entirely separate

@@ -1,4 +1,4 @@
-import { descriptionSnippet } from '../core/DescriptionMarkup.js';
+import { descriptionSnippet } from '../core/document/DescriptionMarkup.js';
 import { groupRecentWorlds } from '../ui/views/recentWorlds/recentWorldGroups.js';
 import { assert } from './support/Assert.js';
 

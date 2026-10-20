@@ -2,27 +2,27 @@ import * as THREE from 'three';
 import {
     DAY_CYCLE_SECONDS, EQUINOX_SKY, FULL_MOON, SEASON_DAY_SHIFT, seasonalFraction, seasonalSky,
     skyBodiesAt, skyBodiesAtFraction, skyLookAt, skyLookAtFraction, moonPhaseAt
-} from '../core/DayCycle.js';
+} from '../core/nature/DayCycle.js';
 import {
     SEASON, SEASON_DAYS, WORLD_YEAR_SECONDS, LAKE_FREEZE_DAY, LAKE_THAW_DAY,
     isLakeFrozenAt, lakeIceAt, seasonLookAtYearDay, seasonLookOf, summerAt
-} from '../core/Season.js';
-import { LAKE_SURFACE_HEIGHT, isLakeAt, seaShareAt } from '../core/Hydrology.js';
-import { surfaceCategoryAt, SURFACE_CATEGORY } from '../core/TerrainSurface.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { AvatarSwimMode } from '../core/AvatarSwimming.js';
-import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
-import { AvatarVerticalState } from '../core/AvatarVerticalState.js';
-import { VehicleType } from '../core/VehicleType.js';
-import { FOOTSTEP_SURFACE, SNOW_FOOTSTEP_COVER, advanceAvatarSound, createAvatarSoundState, footstepSurfaceAt } from '../core/AvatarSoundCues.js';
-import { FOOTPRINT_SECONDS, FOOTPRINT_STRIDE, advanceFootprints, createFootprintState, footprintFade } from '../core/Footprints.js';
-import { CHALLENGE_THEMES, challengeAt } from '../core/BuildChallenge.js';
+} from '../core/nature/Season.js';
+import { LAKE_SURFACE_HEIGHT, isLakeAt, seaShareAt } from '../core/nature/Hydrology.js';
+import { surfaceCategoryAt, SURFACE_CATEGORY } from '../core/nature/TerrainSurface.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { AvatarSwimMode } from '../core/avatar/AvatarSwimming.js';
+import { AvatarAnimationState } from '../core/avatar/AvatarAnimationState.js';
+import { AvatarVerticalState } from '../core/avatar/AvatarVerticalState.js';
+import { VehicleType } from '../core/vehicles/VehicleType.js';
+import { FOOTSTEP_SURFACE, SNOW_FOOTSTEP_COVER, advanceAvatarSound, createAvatarSoundState, footstepSurfaceAt } from '../core/avatar/AvatarSoundCues.js';
+import { FOOTPRINT_SECONDS, FOOTPRINT_STRIDE, advanceFootprints, createFootprintState, footprintFade } from '../core/avatar/Footprints.js';
+import { CHALLENGE_THEMES, challengeAt } from '../core/challenge/BuildChallenge.js';
 import { AvatarWaterConstraint } from '../application/avatar/AvatarWaterConstraint.js';
 import { AvatarStepConstraint } from '../application/avatar/AvatarStepConstraint.js';
 import { AvatarTerrainConstraint } from '../application/avatar/AvatarTerrainConstraint.js';
 import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -34,11 +34,11 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
 // Winter, and the sun through the year: the sun's path and the day's length
-// follow the season (core/DayCycle.js's seasonalSky()); lakes freeze hard
-// in the depth of winter and are walked on (core/Season.js#lakeIceAt(), the
+// follow the season (core/nature/DayCycle.js's seasonalSky()); lakes freeze hard
+// in the depth of winter and are walked on (core/nature/Season.js#lakeIceAt(), the
 // avatar's water, step and terrain constraints); snow and ice sound
 // underfoot; footprints follow the avatar through the snow, on this device
-// only (core/Footprints.js); and seasonal challenge themes are added
+// only (core/avatar/Footprints.js); and seasonal challenge themes are added
 // without changing the weeks before them.
 
 const YEAR_START = Math.ceil(1_800_000_000 / WORLD_YEAR_SECONDS) * WORLD_YEAR_SECONDS;

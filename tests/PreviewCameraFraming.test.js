@@ -1,9 +1,9 @@
-import { SpatialBounds } from '../core/SpatialBounds.js';
-import { computeThumbnailCamera } from '../core/PreviewCameraFraming.js';
+import { SpatialBounds } from '../core/world/SpatialBounds.js';
+import { computeThumbnailCamera } from '../core/catalog/PreviewCameraFraming.js';
 import { assert } from './support/Assert.js';
 
 // 0.2.32 — deterministic camera framing, pure geometry. No Three.js,
-// no rendering, no randomness — see core/PreviewCameraFraming.js's own
+// no rendering, no randomness — see core/catalog/PreviewCameraFraming.js's own
 // comment for the exact guarantee under test: SAME bounds -> SAME
 // intended camera shot, always. (Byte-identical pixels across GPUs is
 // explicitly NOT the guarantee — that's verified visually, not here.)

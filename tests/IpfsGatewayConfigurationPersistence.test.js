@@ -1,5 +1,5 @@
 
-import { IpfsGatewayConfiguration, DEFAULT_IPFS_GATEWAY_URL } from '../core/IpfsGatewayConfiguration.js';
+import { IpfsGatewayConfiguration, DEFAULT_IPFS_GATEWAY_URL } from '../core/networks/IpfsGatewayConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { IpfsGatewayConfigurationStore } from '../storage/IpfsGatewayConfigurationStore.js';
 import { mainFiles } from './support/SourceFileGroups.js';
@@ -10,7 +10,7 @@ import { readSource as source } from './support/SourceText.js';
 // 0.9.665 — User-Configurable IPFS Gateway Configuration Persistence.
 // Mirrors tests/ArweaveGatewayConfigurationPersistence.test.js's own
 // structure exactly, one field instead of a per-role map, no gatewayUrls
-// list (see core/IpfsGatewayConfiguration.js's own header).
+// list (see core/networks/IpfsGatewayConfiguration.js's own header).
 
 function expectThrows(fn, message) {
     let threw = false;

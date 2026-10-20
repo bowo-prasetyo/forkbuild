@@ -4,7 +4,7 @@ import { isNonEmptyString } from '../../utils/typeGuards.js';
 //
 // The WIRE shape carried over peer/PeerMessageBus.js under this file's own
 // DEFAULT_PROTOCOL, once an avatar has decided to send a carried vehicle or
-// animal (core/AvatarInventory.js's own AvatarInventoryEntry) to another
+// animal (core/avatar/AvatarInventory.js's own AvatarInventoryEntry) to another
 // avatar's inventory. Deliberately the same "smallest possible wrapper"
 // discipline application/anchoring/PublicationAnchorPeerProtocol.js already
 // established one domain over — a `kind` discriminator plus whatever that

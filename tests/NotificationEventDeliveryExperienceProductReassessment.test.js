@@ -1,13 +1,13 @@
 import NotificationHistoryPanel from '../ui/components/NotificationHistoryPanel.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { NotificationEventStore, NotificationPersistenceOutcome } from '../storage/NotificationEventStore.js';
-import { NotificationEvent } from '../core/NotificationEvent.js';
+import { NotificationEvent } from '../core/social/NotificationEvent.js';
 import {
     NotificationCollisionOutcome,
     classifyNotificationCollision,
     notificationDeduplicationIdentity,
     describeNotificationDeduplicationPolicy
-} from '../core/NotificationDeduplicationPolicy.js';
+} from '../core/social/NotificationDeduplicationPolicy.js';
 import { GetRecipientNotificationEventsUseCase } from '../application/chat/GetRecipientNotificationEventsUseCase.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
 import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
@@ -16,12 +16,12 @@ import { PublicationCommentaryNotificationProducer } from '../application/public
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
+import { Document } from '../core/document/Document.js';
+import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { assert } from './support/Assert.js';
 import { readSource as rawSource } from './support/SourceText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
@@ -201,11 +201,11 @@ async function runTests() {
     // Section B — Delivery versus observation.
     // ===============================================================
     {
-        const notificationEventCode = codeOnlyLines(await rawSource('core/NotificationEvent.js'));
+        const notificationEventCode = codeOnlyLines(await rawSource('core/social/NotificationEvent.js'));
         const storeCode = codeOnlyLines(await rawSource('storage/NotificationEventStore.js'));
         const panelCode = codeOnlyLines(await rawSource('ui/components/NotificationHistoryPanel.js'));
         const forbidden = /\b(delivered|isDelivered|isRead|markRead|markDelivered|seenAt|readAt|deliveredAt)\b/i;
-        assert(!forbidden.test(notificationEventCode), 'B1. core/NotificationEvent.js carries no delivery/read/seen field.');
+        assert(!forbidden.test(notificationEventCode), 'B1. core/social/NotificationEvent.js carries no delivery/read/seen field.');
         assert(!forbidden.test(storeCode), 'B2. storage/NotificationEventStore.js carries no delivery/read/seen mutator.');
         assert(!forbidden.test(panelCode), 'B3. NotificationHistoryPanel.js carries no delivery/read/seen UI state.');
 

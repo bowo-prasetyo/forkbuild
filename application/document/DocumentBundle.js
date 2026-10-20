@@ -17,7 +17,7 @@ export function isDocumentBundle(value) {
 
 // Reads each saved document as stored; the recovery checkpoints of
 // unsaved changes are not included, as with a single export. Each build
-// the exporting identity made is sealed (core/DocumentSeal.js), as a
+// the exporting identity made is sealed (core/document/DocumentSeal.js), as a
 // single export is.
 export class ExportAllDocumentsUseCase {
     constructor(storageProvider, documentManifest = new DocumentManifest(storageProvider), { identityProvider = null } = {}) {

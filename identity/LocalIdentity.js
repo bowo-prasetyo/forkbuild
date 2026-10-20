@@ -1,5 +1,5 @@
 import * as Ed25519 from './Ed25519.js';
-import { IdentityLifecycleState, isValidIdentityLifecycleState } from '../core/IdentityLifecycleState.js';
+import { IdentityLifecycleState, isValidIdentityLifecycleState } from '../core/identity/IdentityLifecycleState.js';
 
 // An identity whose PRIVATE key THIS device currently holds. New in
 // 0.2.46 — the missing piece between two identity concepts that already
@@ -37,14 +37,14 @@ import { IdentityLifecycleState, isValidIdentityLifecycleState } from '../core/I
 // lifecycleState/successorIdentityId (0.2.67) answer a fourth question,
 // durable like isProtected but otherwise independent of it: "has this
 // identity's own owner permanently declared it no longer trustworthy?"
-// See core/IdentityLifecycleState.js for why this is deliberately kept
+// See core/identity/IdentityLifecycleState.js for why this is deliberately kept
 // apart from VaultLock and AuthenticationSession. lifecycleState
 // defaults to ACTIVE for the exact same backward-compatibility reason
 // isProtected defaults to false — every identity that existed before
 // 0.2.67 keeps loading as the ACTIVE identity it has always been.
 // successorIdentityId is an informational pointer set by
 // identity/LocalIdentityProvider.js#declareSuccessor() — see that
-// method, and core/IdentitySuccessionEnvelope.js, for the signed
+// method, and core/identity/IdentitySuccessionEnvelope.js, for the signed
 // record it is derived from. It may be present on an identity that is
 // still ACTIVE (naming a successor does not itself revoke anything —
 // see docs/Principles.md, "Declaring A Successor Does Not Revoke The

@@ -1,18 +1,18 @@
 import {
     STORM_FROM, STRIKE_SLOT_SECONDS, STRIKE_WINDOW_SECONDS, THUNDER_DELAY, FLASH_SECONDS,
     storminessAt, strikeInSlot, lightningAt, lightningLook, thunderBetween
-} from '../core/Storms.js';
-import { WEATHER_SPELL_SECONDS, overcastLook, rainAt, spellRain, weatherAt } from '../core/Weather.js';
-import { DAY, NIGHT, moonPhaseAt, moonlitLook, skyLookAt } from '../core/DayCycle.js';
+} from '../core/nature/Storms.js';
+import { WEATHER_SPELL_SECONDS, overcastLook, rainAt, spellRain, weatherAt } from '../core/nature/Weather.js';
+import { DAY, NIGHT, moonPhaseAt, moonlitLook, skyLookAt } from '../core/nature/DayCycle.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { WorldSoundscapeService } from '../application/world/WorldSoundscapeService.js';
 import { SoundSettingsStore } from '../application/settings/SoundSettingsStore.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
-// Gentle storms (core/Storms.js): only the heaviest downpours storm; lightning
+// Gentle storms (core/nature/Storms.js): only the heaviest downpours storm; lightning
 // is rare, soft and never flickers; thunder follows each flash once, a few
 // seconds later; everyone sees and hears the same; Always day has none, and a
 // device asking for reduced motion sees no flashes.
@@ -127,7 +127,7 @@ for (let slot = Math.floor(FROM / STRIKE_SLOT_SECONDS); slot < Math.floor(TO / S
     const clock = { now: strike.at + 0.04 };
     const nav = new WorldNavigationSession({ registry: new CreateBrickRegistryUseCase().execute(), wildlifeClock: () => clock.now });
     const lit = nav.skyLook();
-    // In the season's sky (core/Season.js's sky: the day's length and the sun's path).
+    // In the season's sky (core/nature/Season.js's sky: the day's length and the sun's path).
     const sky = nav.season().sky;
     const unlit = overcastLook(moonlitLook(skyLookAt(clock.now, sky), moonPhaseAt(clock.now, sky)), weatherAt(clock.now).overcast);
     assert(lit.hemisphereIntensity > unlit.hemisphereIntensity, 'the sky flashes when lightning strikes');

@@ -1,15 +1,15 @@
 import { AvatarRenderer } from './AvatarRenderer.js';
 import { AvatarVisual } from './AvatarVisual.js';
 import { residentFacingFor, RESIDENT_REACTION } from './ResidentReaction.js';
-import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
-import { AvatarInteractionKind } from '../core/AvatarInteractionKind.js';
+import { AvatarAnimationState } from '../core/avatar/AvatarAnimationState.js';
+import { AvatarInteractionKind } from '../core/avatar/AvatarInteractionKind.js';
 import { createSpeechBubble } from './ResidentSpeechBubble.js';
-import { speechSecondsFor } from '../core/ResidentTalk.js';
+import { speechSecondsFor } from '../core/world/ResidentTalk.js';
 
 // How long a resident's wave lasts.
 const WAVE_SECONDS = 2.2;
 
-// The walking stride of the avatar gait (core/AvatarPoseOffsets.js swings
+// The walking stride of the avatar gait (core/avatar/AvatarPoseOffsets.js swings
 // its legs at 2 cycles a second for an avatar walking 3 units a second):
 // the ground one gait cycle covers. A resident's legs advance by the
 // distance it actually walked, so they keep time with its slower stroll
@@ -18,7 +18,7 @@ const GROUND_PER_GAIT_SECOND = 3;
 
 const RADIANS_TO_DEGREES = 180 / Math.PI;
 
-// How long a speech bubble stays up is core/ResidentTalk.js#speechSecondsFor(),
+// How long a speech bubble stays up is core/world/ResidentTalk.js#speechSecondsFor(),
 // shared with the UI's Focus buttons. Re-exported for callers of this file.
 export { speechSecondsFor };
 

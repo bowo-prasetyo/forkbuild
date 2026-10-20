@@ -1,4 +1,4 @@
-// Measures how well core/BuildSimilarity.js#withoutReadyMade() takes out of
+// Measures how well core/catalog/BuildSimilarity.js#withoutReadyMade() takes out of
 // a build the ready-made structures from the Build Library its builder
 // changed, and what that costs, under the coverage it ships with
 // (readyMadeCoverage()) and some others to weigh it against. Run it before
@@ -22,7 +22,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';
 import { COLLECTION_REMIXED_FROM } from '../core/library/CollectionLibrary.js';
-import { worldBricks } from '../core/PlacedBricks.js';
+import { worldBricks } from '../core/building/PlacedBricks.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import {
     MIN_COMPARED_BRICKS,
@@ -32,7 +32,7 @@ import {
     compareBuildShapes,
     readyMadeCoverage,
     withoutReadyMade
-} from '../core/BuildSimilarity.js';
+} from '../core/catalog/BuildSimilarity.js';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const outIndex = process.argv.indexOf('--out');

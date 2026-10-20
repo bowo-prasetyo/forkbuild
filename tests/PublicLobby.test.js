@@ -4,7 +4,7 @@ import { RendezvousDiscoveryProvider } from '../peer/RendezvousDiscoveryProvider
 import { DiscoveryBootstrap } from '../peer/DiscoveryBootstrap.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
-import { LobbyCard, PUBLIC_LOBBY, worldLobby } from '../core/LobbyCard.js';
+import { LobbyCard, PUBLIC_LOBBY, worldLobby } from '../core/social/LobbyCard.js';
 import { PeerSessionManager } from '../application/peer/PeerSessionManager.js';
 import { FindPeerUseCase } from '../application/peer/FindPeerUseCase.js';
 import { PeerBlockUseCase } from '../application/peer/PeerBlockUseCase.js';

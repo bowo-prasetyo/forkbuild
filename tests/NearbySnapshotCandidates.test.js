@@ -1,5 +1,5 @@
 import { selectNearbySnapshotCandidates, DEFAULT_MAX_UNLOCATED_CANDIDATES } from '../application/snapshot/NearbySnapshotCandidates.js';
-import { SNAPSHOT_CELL_SIZE } from '../core/NarrowDiscoveryTags.js';
+import { SNAPSHOT_CELL_SIZE } from '../core/publication/NarrowDiscoveryTags.js';
 import { limitConcurrency } from '../utils/limitConcurrency.js';
 import { assert } from './support/Assert.js';
 

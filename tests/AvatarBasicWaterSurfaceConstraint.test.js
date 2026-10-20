@@ -1,9 +1,9 @@
 import { readFile } from 'node:fs/promises';
 
-import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { surfaceCategoryAt, SURFACE_CATEGORY, WATER_LEVEL } from '../core/TerrainSurface.js';
-import { hydrologyFeatureAt, HYDROLOGY_FEATURE, LAKE_SURFACE_HEIGHT, isRiverAt } from '../core/Hydrology.js';
-import { DEFAULT_MAX_WALKING_DEPTH } from '../core/AvatarWaterWalkability.js';
+import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
+import { surfaceCategoryAt, SURFACE_CATEGORY, WATER_LEVEL } from '../core/nature/TerrainSurface.js';
+import { hydrologyFeatureAt, HYDROLOGY_FEATURE, LAKE_SURFACE_HEIGHT, isRiverAt } from '../core/nature/Hydrology.js';
+import { DEFAULT_MAX_WALKING_DEPTH } from '../core/avatar/AvatarWaterWalkability.js';
 import { assert } from './support/Assert.js';
 
 // 0.9.615 — Avatar Basic Water Surface Constraint.
@@ -36,7 +36,7 @@ import { assert } from './support/Assert.js';
 // unit directly rather than the whole use case), withGroundElevation()
 // itself is extracted from the real file text and executed standalone
 // with a stub `renderer` whose own terrainHeightAt() is a thin
-// pass-through to the SAME real, pure core/TerrainHeightField.js
+// pass-through to the SAME real, pure core/nature/TerrainHeightField.js
 // function renderer/Renderer.js's own terrainHeightAt() wraps (see that
 // file's own 0.2.76 header) — an exact behavioral stand-in, not a
 // re-implementation of the function under test itself.
@@ -175,7 +175,7 @@ async function run() {
         '2. the extracted function body genuinely contains the water-floor gate (surfaceCategoryAt/LAKE_SURFACE_HEIGHT/Math.max) — this is testing the shipped fix, not a stand-in for it');
 
     // AMENDED BY 0.9.634 — the real, current source text now references
-    // DEFAULT_MAX_WALKING_DEPTH (core/AvatarWaterWalkability.js) as a
+    // DEFAULT_MAX_WALKING_DEPTH (core/avatar/AvatarWaterWalkability.js) as a
     // free identifier; this dynamic extraction must supply it too, the
     // same reasoning tests/AvatarShallowWaterTraversalBoundaryAudit.test.js
     // (0.9.633) already applied to its own identical extraction.
@@ -184,7 +184,7 @@ async function run() {
         `${functionBody}\nreturn withGroundElevation;`
     );
     // The exact behavioral stand-in for renderer/Renderer.js's own
-    // terrainHeightAt() — "a thin pass-through to core/TerrainHeightField.js's
+    // terrainHeightAt() — "a thin pass-through to core/nature/TerrainHeightField.js's
     // own pure function with this renderer's fixed DEFAULT_WORLD_SEED"
     // (that file's own 0.2.76 header, unchanged by this milestone).
     const fakeRenderer = { terrainHeightAt: (x, z) => terrainHeightAt(seed, x, z) };
@@ -300,10 +300,10 @@ async function run() {
     // -------------------------------------------------------------
     {
         const presenceFiles = [
-            'core/AvatarPresence.js',
-            'core/AvatarMovementState.js',
-            'core/AvatarAnimationState.js',
-            'core/AvatarMovementSimulation.js',
+            'core/avatar/AvatarPresence.js',
+            'core/avatar/AvatarMovementState.js',
+            'core/avatar/AvatarAnimationState.js',
+            'core/avatar/AvatarMovementSimulation.js',
             'application/avatar/AvatarStepConstraint.js',
             'application/avatar/AvatarMovementController.js'
         ];
@@ -317,9 +317,9 @@ async function run() {
         // plane; no x/z or hydrology reference in the kinematics path)
         // is still exactly where it was — this milestone never touched
         // it, only the rendering layer above it.
-        const simulationSrc = codeOnly(await readSource('core/AvatarMovementSimulation.js'));
+        const simulationSrc = codeOnly(await readSource('core/avatar/AvatarMovementSimulation.js'));
         assert(!/Hydrology|LAKE_SURFACE_HEIGHT|WATER_LEVEL|surfaceCategoryAt/.test(simulationSrc),
-            '17. core/AvatarMovementSimulation.js still contains no water-related reference of any kind — the authoritative simulation is untouched, exactly as 0.9.614 found and this milestone\'s own brief required');
+            '17. core/avatar/AvatarMovementSimulation.js still contains no water-related reference of any kind — the authoritative simulation is untouched, exactly as 0.9.614 found and this milestone\'s own brief required');
     }
 
     // -------------------------------------------------------------
@@ -330,7 +330,7 @@ async function run() {
         const renderWorldViewCode = codeOnly(renderWorldViewSource);
         assert(!forbiddenTerms.test(renderWorldViewCode),
             '18. application/world/RenderWorldViewUseCase.js introduces no breath/drowning/stamina/buoyancy vocabulary — the milestone stayed exactly as narrow as its own brief specified');
-        for (const file of ['core/AvatarMovementSimulation.js', 'core/AvatarMovementState.js', 'core/AvatarAnimationState.js']) {
+        for (const file of ['core/avatar/AvatarMovementSimulation.js', 'core/avatar/AvatarMovementState.js', 'core/avatar/AvatarAnimationState.js']) {
             const src = codeOnly(await readSource(file));
             assert(!forbiddenTerms.test(src), `19. ${file} introduces no breath/drowning/stamina/buoyancy mechanic`);
         }

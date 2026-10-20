@@ -20,7 +20,7 @@
 // `storage` is a short, stable string self-identifying which backend a
 // concrete ContentStore talks to ('local', 'ipfs', ...) — the exact
 // same value it already stamps onto every ContentReference its own
-// put() returns (see core/ContentReference.js's own `storage` field).
+// put() returns (see core/document/ContentReference.js's own `storage` field).
 // Exposing it on the STORE itself, not just on what it produces, is
 // what lets application/snapshot/placement/SnapshotPlacementStoreRegistry.js key a lookup
 // table by "the plugin's own name" — the identical discipline

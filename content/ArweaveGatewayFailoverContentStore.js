@@ -77,7 +77,7 @@ import { ContentUnavailableError } from './IpfsContentStore.js';
 //   enforces, or persistent failure scoring across calls.**
 export class ArweaveGatewayFailoverContentStore extends ContentStore {
     // gatewayUrls: a non-empty array of gateway URLs, in the order they
-    //   should be tried — see core/ArweaveGatewayConfiguration.js's own
+    //   should be tried — see core/networks/ArweaveGatewayConfiguration.js's own
     //   `.gatewayUrls`, this same milestone, for where a caller usually
     //   gets this from.
     // signer / fetchImpl / timeoutMs / maxResponseBytes: forwarded

@@ -1,23 +1,23 @@
-import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../../core/TerrainHeightField.js';
-import { surfaceCategoryAt, SURFACE_CATEGORY } from '../../core/TerrainSurface.js';
-import { LAKE_SURFACE_HEIGHT } from '../../core/Hydrology.js';
-import { riverWaterDepthAt } from '../../core/RiverFlow.js';
-import { waterDepthSpeedFactor, DEFAULT_MAX_WALKING_DEPTH } from '../../core/AvatarWaterWalkability.js';
+import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../../core/nature/TerrainHeightField.js';
+import { surfaceCategoryAt, SURFACE_CATEGORY } from '../../core/nature/TerrainSurface.js';
+import { LAKE_SURFACE_HEIGHT } from '../../core/nature/Hydrology.js';
+import { riverWaterDepthAt } from '../../core/nature/RiverFlow.js';
+import { waterDepthSpeedFactor, DEFAULT_MAX_WALKING_DEPTH } from '../../core/avatar/AvatarWaterWalkability.js';
 
 // Supplies real world water to the avatar's movement: how deep the water is at a
 // point, how much wading slows the avatar, and where the surface lies in the
 // terrain-relative frame AvatarPresence uses (0 is the ground under the avatar).
-// The pure rules live in core/AvatarWaterWalkability.js (wading) and
-// core/AvatarSwimming.js (swimming and diving).
+// The pure rules live in core/avatar/AvatarWaterWalkability.js (wading) and
+// core/avatar/AvatarSwimming.js (swimming and diving).
 //
 // Standing water is `surfaceCategoryAt(...) === SURFACE_CATEGORY.WATER`, the
 // same predicate the renderer uses: lakes and the sea, which an avatar wades
-// into and swims in. A river (core/RiverFlow.js#riverWaterDepthAt(), the
+// into and swims in. A river (core/nature/RiverFlow.js#riverWaterDepthAt(), the
 // water in its carved bed) is wading only: it slows the avatar by its depth,
 // but at most about half a unit deep it is never deep enough to swim, so it
 // has no surface for swimming (waterSurfaceAt()).
 //
-// A lake frozen hard (`frozenAt(x, z)`, core/Season.js#lakeIceAt()) is
+// A lake frozen hard (`frozenAt(x, z)`, core/nature/Season.js#lakeIceAt()) is
 // walked on, not waded: it slows no one (depthAt() is 0) and it has a top,
 // level with the surface, for the avatar to stand on (iceTopAt(); the step
 // constraint stands it there). Under the ice the water is still there: a

@@ -1,8 +1,8 @@
 import {
     FAIR_WEATHER, WEATHER_SPELL_SECONDS, WEATHER_CHANGE_SECONDS, RAIN_CHANGE_SHARE, weatherAt, weatherOfCover, spellCover, spellRain
-} from '../core/Weather.js';
-import { AMBIENT_LAYER, ambientMixAt, ambientMixInRain } from '../core/AmbientSoundscape.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+} from '../core/nature/Weather.js';
+import { AMBIENT_LAYER, ambientMixAt, ambientMixInRain } from '../core/app/AmbientSoundscape.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
 import { WorldSoundscapeService } from '../application/world/WorldSoundscapeService.js';
 import { SoundSettingsStore } from '../application/settings/SoundSettingsStore.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
@@ -10,7 +10,7 @@ import { WorldNavigationSession } from '../application/world/WorldNavigationSess
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
-// Rain (core/Weather.js): it falls now and then, only from an overcast sky,
+// Rain (core/nature/Weather.js): it falls now and then, only from an overcast sky,
 // waiting for the clouds to gather and stopping before they clear; it is heard
 // wherever you stand, and quietens the birds and insects; and Always day
 // keeps it dry.
@@ -50,7 +50,7 @@ const FIRST = Math.floor(1_800_000_000 / WEATHER_SPELL_SECONDS);
         checked++;
         const start = (spell + 1) * WEATHER_SPELL_SECONDS - WEATHER_CHANGE_SECONDS;
         let previous = weatherAt(start);
-        // What falls: rain, or in winter snow (core/Season.js).
+        // What falls: rain, or in winter snow (core/nature/Season.js).
         const falls = (weather) => weather.rain + weather.snow;
         for (let t = start; t <= start + WEATHER_CHANGE_SECONDS; t += 2) {
             const now = weatherAt(t);

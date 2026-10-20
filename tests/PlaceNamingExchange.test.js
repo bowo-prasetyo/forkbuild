@@ -1,8 +1,8 @@
-import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
-import { namingView, preferredClaimedName } from '../core/PlaceNamingView.js';
-import { WorldRegion } from '../core/WorldRegion.js';
-import { RegionKind } from '../core/RegionKind.js';
-import { Position } from '../core/Position.js';
+import { PlaceNamingClaim } from '../core/world/PlaceNamingClaim.js';
+import { namingView, preferredClaimedName } from '../core/world/PlaceNamingView.js';
+import { WorldRegion } from '../core/world/WorldRegion.js';
+import { RegionKind } from '../core/world/RegionKind.js';
+import { Position } from '../core/document/Position.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
 import { LocalPlaceNamingPublicationLog } from '../application/placeNaming/LocalPlaceNamingPublicationLog.js';
@@ -40,7 +40,7 @@ import { makeIdentity } from './support/TestIdentity.js';
 //            refusing anything that doesn't independently verify
 // Section E: WorldNavigationSession wiring — delegates correctly, and
 //            degrades gracefully with nothing wired
-// Section F: regression — core/PlaceNamingClaim.js, core/PlaceNamingView.js,
+// Section F: regression — core/world/PlaceNamingClaim.js, core/world/PlaceNamingView.js,
 //            and WorldRegion are completely untouched by this milestone
 // Section G: CAPSTONE — the flagship scenario: two independent replicas,
 //            Alice and Bob, each with their OWN storage, exchanging
@@ -261,7 +261,7 @@ async function run() {
         const claim = publishedClaim(aliceReplica.useCase, 'w1', 'r1', 'Riverbend');
         const imported = bobReplica.exchange.importClaim(aliceReplica.exchange.exportClaim(claim)).claim;
 
-        // An IMPORTED claim ranks in core/PlaceNamingView.js exactly like
+        // An IMPORTED claim ranks in core/world/PlaceNamingView.js exactly like
         // a locally published one — namingView() has no notion of "where
         // a claim came from" at all.
         const view = namingView('r1', bobReplica.store.list('w1'));
@@ -272,7 +272,7 @@ async function run() {
         assert(JSON.stringify(region.toJSON()) === beforeJSON,
             '39. WorldRegion is byte-for-byte unchanged by any exchange activity — exchange never touches World content at all');
     }
-    console.log('✓ Section F: core/PlaceNamingClaim.js / core/PlaceNamingView.js / WorldRegion — completely unmodified by 0.5.3');
+    console.log('✓ Section F: core/world/PlaceNamingClaim.js / core/world/PlaceNamingView.js / WorldRegion — completely unmodified by 0.5.3');
 
     // -------------------------------------------------------------
     // Section G: CAPSTONE — the flagship scenario

@@ -1,5 +1,5 @@
-import { World } from '../../core/World.js';
-import { Building } from '../../core/Building.js';
+import { World } from '../../core/document/World.js';
+import { Building } from '../../core/building/Building.js';
 
 // Builds a fresh, empty World — one Building, no bricks. Used for "New
 // Document." Mirrors CreateDemoWorldUseCase's shape but adds nothing to

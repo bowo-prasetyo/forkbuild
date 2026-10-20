@@ -4,7 +4,7 @@ import {
 } from '../application/worldEncounter/WorldEncounterMaterialInspection.js';
 import { WorldEncounterMaterialLoadStatus, WorldEncounterMaterialSource } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { WorldEncounterMaterialVerificationStatus, WorldEncounterMaterialVerifier } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
-import { WorldEncounterKind } from '../core/WorldEncounter.js';
+import { WorldEncounterKind } from '../core/world/WorldEncounter.js';
 import { LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { assert } from './support/Assert.js';
 import { serialize } from './support/Serialize.js';
@@ -292,7 +292,7 @@ async function run() {
     // ---------------------------------------------------------------------
     // 12. Architectural regression — this file names exactly the three
     //     boundaries it orchestrates, never a fourth loader, never a second
-    //     verifier, never `core/WorldEncounter.js`, never selection
+    //     verifier, never `core/world/WorldEncounter.js`, never selection
     //     resolution, and no rank/trust/score vocabulary.
     // ---------------------------------------------------------------------
     {

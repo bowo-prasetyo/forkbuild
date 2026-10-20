@@ -1,6 +1,6 @@
 import {
     LobbyCard, PUBLIC_LOBBY, MAX_LOBBY_CARD_TTL_MS, worldLobby, isValidLobby, lobbyWorldId, normalizeDisplayName
-} from '../core/LobbyCard.js';
+} from '../core/social/LobbyCard.js';
 import { signLobbyCard, signLobbyLeave } from '../peer/LobbyCardSigning.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';

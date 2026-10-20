@@ -5,14 +5,14 @@ import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { PeerSessionManager } from '../application/peer/PeerSessionManager.js';
 import { PeerRelationshipUseCase } from '../application/peer/PeerRelationshipUseCase.js';
 import { FriendRelationshipUseCase } from '../application/identity/FriendRelationshipUseCase.js';
-import { FriendshipRecord } from '../core/FriendshipRecord.js';
-import { FriendshipState, deriveFriendshipState } from '../core/FriendshipState.js';
+import { FriendshipRecord } from '../core/social/FriendshipRecord.js';
+import { FriendshipState, deriveFriendshipState } from '../core/social/FriendshipState.js';
 import {
     FriendshipAction,
     toFriendshipAdvertisement,
     isValidFriendshipAdvertisement,
     getFriendshipSigningDescriptor
-} from '../core/FriendshipAdvertisement.js';
+} from '../core/social/FriendshipAdvertisement.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
@@ -77,7 +77,7 @@ async function connectPeers(inviterSessions, accepterSessions) {
 async function runTests() {
 
 // ---------------------------------------------------------------------
-// 1. core/FriendshipRecord.js + core/FriendshipState.js — construction,
+// 1. core/social/FriendshipRecord.js + core/social/FriendshipState.js — construction,
 //    validation, immutability, and the derived state machine.
 // ---------------------------------------------------------------------
 {
@@ -115,11 +115,11 @@ async function runTests() {
     const roundTripped = FriendshipRecord.fromJSON(mutual.toJSON());
     assert(roundTripped.identityId === mutual.identityId && roundTripped.status === FriendshipState.FRIEND, 'round-trips through toJSON/fromJSON, including the derived status');
 
-    console.log('✓ core/FriendshipRecord.js + core/FriendshipState.js: construction, validation, and the mutual-consent state machine');
+    console.log('✓ core/social/FriendshipRecord.js + core/social/FriendshipState.js: construction, validation, and the mutual-consent state machine');
 }
 
 // ---------------------------------------------------------------------
-// 2. core/FriendshipAdvertisement.js — wire shape validation.
+// 2. core/social/FriendshipAdvertisement.js — wire shape validation.
 // ---------------------------------------------------------------------
 {
     const alice = makeDevice('Alice').getSigningIdentity();
@@ -137,7 +137,7 @@ async function runTests() {
     assert(!isValidFriendshipAdvertisement({ ...request, sequence: 99 }), 'a sequence that does not match its action is rejected');
     assert(!isValidFriendshipAdvertisement(null), 'a missing advertisement is rejected');
 
-    console.log('✓ core/FriendshipAdvertisement.js: wire shape validation');
+    console.log('✓ core/social/FriendshipAdvertisement.js: wire shape validation');
 }
 
 // ---------------------------------------------------------------------

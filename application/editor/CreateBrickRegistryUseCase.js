@@ -1,4 +1,4 @@
-import { BrickRegistry } from '../../core/BrickRegistry.js';
+import { BrickRegistry } from '../../core/building/BrickRegistry.js';
 import { CoreLibrary } from '../../core/library/CoreLibrary.js';
 
 // Builds the BrickRegistry and registers every built-in library. Later,

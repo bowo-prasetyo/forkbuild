@@ -1,4 +1,4 @@
-import { License } from '../../core/License.js';
+import { License } from '../../core/document/License.js';
 
 // 0.2.21: the Editor-side entry point for editing a document's
 // title/description/license through the Document Properties UI. The
@@ -22,7 +22,7 @@ export class UpdateDocumentMetadataUseCase {
         if (title !== undefined) metadata.title = title;
         if (description !== undefined) metadata.description = description;
         // A remix keeps crediting its original and keeps its terms
-        // (core/License.js, relicense()).
+        // (core/document/License.js, relicense()).
         if (license !== undefined) metadata.license = License.relicense(metadata.license, license, { authorIdentityId: metadata.authorIdentityId });
         if (placementPolicy !== undefined) metadata.placementPolicy = placementPolicy;
         if (tags !== undefined) metadata.tags = tags;

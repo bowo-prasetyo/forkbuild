@@ -1,12 +1,12 @@
-import { PLAZA_CENTER } from '../core/ChallengePlaza.js';
-import { SETTLEMENT_TAKEN_RADIUS, VILLAGE_FIRST_RING_RADIUS, settleInVillage } from '../core/BuildSettlement.js';
-import { computeDeterministicGridPosition } from '../core/DeterministicGridPlacement.js';
-import { PLAZA_IN_VIEW_RADIUS, plazaEntrySpots, standsInVillage } from '../core/PlazaEntrySpots.js';
+import { PLAZA_CENTER } from '../core/challenge/ChallengePlaza.js';
+import { SETTLEMENT_TAKEN_RADIUS, VILLAGE_FIRST_RING_RADIUS, settleInVillage } from '../core/challenge/BuildSettlement.js';
+import { computeDeterministicGridPosition } from '../core/world/DeterministicGridPlacement.js';
+import { PLAZA_IN_VIEW_RADIUS, plazaEntrySpots, standsInVillage } from '../core/challenge/PlazaEntrySpots.js';
 import { STREAMING_RADIUS } from '../application/worldNavigation/constants.js';
 import { assert } from './support/Assert.js';
 
 // Every week's entry stands in the village while someone visits the plaza
-// (core/PlazaEntrySpots.js). The Islet Lighthouse, published on 2026-10-12
+// (core/challenge/PlazaEntrySpots.js). The Islet Lighthouse, published on 2026-10-12
 // before builds settled in the village, has its spot on the old grid,
 // hundreds of units from the square: the plaza counted it ("1 entry stands
 // here") and showed it nowhere near.

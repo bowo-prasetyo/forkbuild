@@ -104,8 +104,8 @@
 // two sources' arrays together, and never mutates a record.
 //
 // NO ENCOUNTER DERIVATION — inherited from 0.9.7's and 0.9.8's own
-// refusal. This file never imports `core/WorldEncounter.js`,
-// `core/WorldDiscoverySourceAssembly.js`, or
+// refusal. This file never imports `core/world/WorldEncounter.js`,
+// `core/world/WorldDiscoverySourceAssembly.js`, or
 // `application/worldEncounter/WorldEncounterIntegration.js`, and never calls
 // `deriveWorldEncounters()`, `assembleWorldDiscoveryInputs()`, or
 // `describeWorldFromDiscoverySources()`. See "Membership, not

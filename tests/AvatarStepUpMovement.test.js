@@ -1,25 +1,25 @@
-import { walkableTopAt, isStepClimbable, DEFAULT_MAX_STEP_HEIGHT } from '../core/BrickWalkability.js';
-import { brickAabb, translateAabb } from '../core/AvatarCollision.js';
+import { walkableTopAt, isStepClimbable, DEFAULT_MAX_STEP_HEIGHT } from '../core/building/BrickWalkability.js';
+import { brickAabb, translateAabb } from '../core/avatar/AvatarCollision.js';
 import { AvatarStepConstraint } from '../application/avatar/AvatarStepConstraint.js';
 import { AvatarMovementConstraint } from '../application/avatar/AvatarMovementConstraint.js';
 import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
-import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
+import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
-import { World } from '../core/World.js';
-import { Building } from '../core/Building.js';
-import { Brick } from '../core/Brick.js';
-import { Position } from '../core/Position.js';
+import { World } from '../core/document/World.js';
+import { Building } from '../core/building/Building.js';
+import { Brick } from '../core/building/Brick.js';
+import { Position } from '../core/document/Position.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
 // 0.3.2 — Step-Up Movement.
 //
-//   Section A: core/BrickWalkability.js — pure step-height geometry
+//   Section A: core/building/BrickWalkability.js — pure step-height geometry
 //   Section B: application/avatar/AvatarStepConstraint.js — real loaded-brick support height
 //   Section C: application/avatar/AvatarMovementConstraint.js — a climbable brick is excluded from collision
 //   Section D: application/avatar/AvatarMovementController.js — the full three-stage pipeline
@@ -30,7 +30,7 @@ import { assert } from './support/Assert.js';
 // brick is a DETERMINISTIC HEIGHT CONSTRAINT applied to movement, the
 // same shape 0.2.42 (building collision) and 0.2.77 (terrain slope)
 // already established — never a physics engine, never a rewrite of
-// core/AvatarMovementSimulation.js's own pure kinematics (only its
+// core/avatar/AvatarMovementSimulation.js's own pure kinematics (only its
 // flat-plane ASSUMPTION becomes an injectable `groundHeight`, still a
 // plain number with no idea what a brick even is), and never something
 // that requires a wired stepConstraint at all — every controller/
@@ -95,7 +95,7 @@ async function runTests() {
     const brickRegistry = new CreateBrickRegistryUseCase().execute();
 
     // -------------------------------------------------------------
-    // Section A — core/BrickWalkability.js: pure step-height geometry
+    // Section A — core/building/BrickWalkability.js: pure step-height geometry
     // -------------------------------------------------------------
     {
         const aabb = { min: { x: -0.5, y: 0, z: -0.5 }, max: { x: 0.5, y: 0.4, z: 0.5 } };
@@ -276,7 +276,7 @@ async function runTests() {
         const { avatarPresenceSession } = buildAvatarStack(registry, 'step-climb');
         const low = brickRegistry.get('core:plate_2x4');
         // default facing (rotation 0) walks toward +z — see
-        // core/AvatarMovementSimulation.js's own angle convention, the
+        // core/avatar/AvatarMovementSimulation.js's own angle convention, the
         // same one every other movement test in this codebase already
         // relies on (tests/AvatarTerrainWalkability.test.js included).
         const document = documentWithBricks([

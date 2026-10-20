@@ -6,7 +6,7 @@ import { describeBitcoinAnchorBroadcast } from '../../anchoring/bitcoin/BitcoinA
 import { describeBitcoinAnchorConfirmationObservationHistory } from '../../anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistoryView.js';
 import { describeBitcoinAnchorContentProof } from '../../anchoring/bitcoin/BitcoinAnchorContentProofView.js';
 import { describeBaseTransactionInclusionObservationHistory } from '../../anchoring/base/BaseTransactionInclusionObservationView.js';
-import { message } from '../../../core/Message.js';
+import { message } from '../../../core/app/Message.js';
 
 // 0.8.74 — Cross-Domain Publication Observation Timeline.
 //
@@ -63,7 +63,7 @@ import { message } from '../../../core/Message.js';
 // IpfsPublicationRecord.js is deliberately narrow — no `id` of any kind —
 // and identifies a publication record only by its own position
 // (`recordIndex`) in a caller's own history array (see that file's own
-// header). core/PublicationAnchor.js identifies a Bitcoin anchor by its own
+// header). core/publication/PublicationAnchor.js identifies a Bitcoin anchor by its own
 // `id`/`anchorId` and `publicationId` — a completely separate identity
 // scheme, native to a different domain. This file invents no third,
 // unifying identity, and — the single most important restraint this

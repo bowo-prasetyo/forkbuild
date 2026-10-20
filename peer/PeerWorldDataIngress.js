@@ -1,4 +1,4 @@
-import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
+import { describeWorldDiscoverySource } from '../core/world/WorldDiscoverySource.js';
 
 // 0.9.6 — Peer World Data Ingress.
 //
@@ -15,14 +15,14 @@ import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
 //      describePeerWorldDiscoverySource(payload, connectedPeer)
 //              │
 //              ▼
-//   core/WorldDiscoverySource.js
+//   core/world/WorldDiscoverySource.js
 //      describeWorldDiscoverySource()
 //              │
 //              ▼
 //   (future, unscheduled: World Data Assembly)
 //              │
 //              ▼
-//   core/WorldEncounter.js
+//   core/world/WorldEncounter.js
 //      deriveWorldEncounters()
 //
 // THE TRANSFORMATION IS EXACTLY THREE STEPS, NO MORE. (1) Validate that
@@ -62,7 +62,7 @@ import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
 // `signature` field, decides whether one exists, or decides whether one
 // verifies — a signed record inside `payload.publications` travels
 // through this file exactly as opaque as it arrived. See
-// core/WorldDiscoverySource.js's own header, "No trust vocabulary of any
+// core/world/WorldDiscoverySource.js's own header, "No trust vocabulary of any
 // kind," which this file inherits without adding a single exception to
 // it.
 //
@@ -87,7 +87,7 @@ import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
 //   verifies is a separate, later, unscheduled projection's job.
 // - **Combining this source with any other.** One peer message produces
 //   one `WorldDiscoverySource`; there is no plural counterpart here, the
-//   same restraint `core/WorldDiscoverySource.js` itself already applies
+//   same restraint `core/world/WorldDiscoverySource.js` itself already applies
 //   to describing more than one origin. See "One source per call" in
 //   that file's own header.
 // - **Persistence of any kind.** This file never imports a
@@ -97,7 +97,7 @@ import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
 //   anything — receiving a peer's World data can never, by construction,
 //   cause this device to send a message of its own.
 // - **Calling `deriveWorldEncounters()`, or importing
-//   `core/WorldEncounter.js` in any way.** Wiring a described peer source
+//   `core/world/WorldEncounter.js` in any way.** Wiring a described peer source
 //   into the running World View is 0.9.7 (World Data Assembly) and 0.9.8
 //   (Remote Encounter Integration) — separate, later, unscheduled work.
 // - **Establishing, authenticating, or managing a peer connection.** This

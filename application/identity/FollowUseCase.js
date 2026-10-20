@@ -1,7 +1,7 @@
 import { EventBus } from '../../core/events/EventBus.js';
-import { FollowRecord, isFollowableIdentityId } from '../../core/FollowRecord.js';
-import { UserFacingError } from '../../core/UserFacingError.js';
-import { message } from '../../core/Message.js';
+import { FollowRecord, isFollowableIdentityId } from '../../core/social/FollowRecord.js';
+import { UserFacingError } from '../../core/app/UserFacingError.js';
+import { message } from '../../core/app/Message.js';
 import { currentIdentityId, requireSigningIdentityId } from '../../identity/SigningReadiness.js';
 
 const FOLLOWING_CHANGED_EVENT = 'FollowingChanged';

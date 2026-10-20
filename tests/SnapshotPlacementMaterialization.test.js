@@ -12,7 +12,7 @@ import { PublicationCatalogContentResolver } from '../discovery/PublicationCatal
 import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js';
 import { CreateSnapshotPlacementResolutionCoordinatorUseCase } from '../application/snapshot/placement/CreateSnapshotPlacementResolutionCoordinatorUseCase.js';
 import { SnapshotPlacementResolutionOutcome } from '../application/snapshot/placement/SnapshotPlacementResolutionOutcome.js';
-import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
+import { PublicationSnapshotPlacement } from '../core/publication/PublicationSnapshotPlacement.js';
 
 import { MaterializeSnapshotFromPlacementUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromPlacementUseCase.js';
 import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
@@ -42,7 +42,7 @@ import { displayText } from '../ui/i18n/i18n.js';
 //              the exact permitted sentences and the words this milestone
 //              must never use.
 //   Section C — FLAGSHIP: Alice's real Publication Center (application/
-//              LocalPublicationCatalog.js + core/DecentralizedPublication.js
+//              LocalPublicationCatalog.js + core/publication/DecentralizedPublication.js
 //              — the SAME model ui/views/DecentralizedPublicationsView.js
 //              actually renders) creates an IPFS placement for a real
 //              publication. Bob already knows both the publication and the

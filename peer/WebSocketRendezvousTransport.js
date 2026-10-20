@@ -1,6 +1,6 @@
 import { RendezvousTransport } from './RendezvousTransport.js';
 import { RendezvousPublication } from './RendezvousPublication.js';
-import { createId } from '../core/createId.js';
+import { createId } from '../core/document/createId.js';
 
 // 0.2.66 — Real Network Rendezvous & NAT Traversal.
 //
@@ -49,13 +49,13 @@ import { createId } from '../core/createId.js';
 //     { v: 1, type: 'PUBLISH', requestId, publication }   // a signed RendezvousPublication.toJSON()
 //     { v: 1, type: 'LOOKUP',  requestId, identityId }
 //     { v: 1, type: 'REMOVE',  requestId, identityId, publicationId, signature }
-//                                  // signature: core/RendezvousPublicationEnvelope.js's
+//                                  // signature: core/social/RendezvousPublicationEnvelope.js's
 //                                  // getRendezvousRemovalSigningDescriptor(), signed by identityId
 //     { v: 1, type: 'POST_ANSWER',  requestId, identityId, publicationId, answer, answererId, signature }
 //                                  // signature: getRendezvousAnswerSigningDescriptor(), signed by answererId
 //     { v: 1, type: 'FETCH_ANSWER', requestId, identityId, publicationId, signature, watch? }
 //                                  // signature: getRendezvousAnswerFetchSigningDescriptor(), signed by identityId
-//     { v: 1, type: 'JOIN_LOBBY',  requestId, card }    // a signed core/LobbyCard.js toJSON()
+//     { v: 1, type: 'JOIN_LOBBY',  requestId, card }    // a signed core/social/LobbyCard.js toJSON()
 //     { v: 1, type: 'LEAVE_LOBBY', requestId, identityId, lobby, cardId, signature }
 //     { v: 1, type: 'LIST_LOBBY',  requestId, lobby }   // see peer/RendezvousLobbyTransport.js
 //

@@ -1,7 +1,7 @@
 import { PasteBricksCommand } from '../commands/PasteBricksCommand.js';
-import { SpatialBounds } from '../../core/SpatialBounds.js';
+import { SpatialBounds } from '../../core/world/SpatialBounds.js';
 import { transformStructureBricks } from './StructureCompositionTransform.js';
-import { message } from '../../core/Message.js';
+import { message } from '../../core/app/Message.js';
 
 // Composition margin between successively copied structures along X, in
 // the same units as Position — the whole-structure equivalent of
@@ -10,7 +10,7 @@ import { message } from '../../core/Message.js';
 export const COMPOSITION_MARGIN = 2;
 
 // 0.4.0 — Structure Composition & Blueprint Library. Turns a library
-// Structure (core/Structure.js) into ONE PasteBricksCommand that inserts
+// Structure (core/building/Structure.js) into ONE PasteBricksCommand that inserts
 // its bricks into the CURRENT Document's own bricks — composition, not
 // provenance. See docs/Principles.md, "Copying Composes A Blueprint;
 // Forking Creates One (0.4.0)":
@@ -30,21 +30,21 @@ export const COMPOSITION_MARGIN = 2;
 // serialization test coverage in tests/DocumentCloning.test.js and
 // tests/Grouping.test.js) for no behavioral difference.
 //
-// A Structure never carries group intent (core/Structure.js has no
+// A Structure never carries group intent (core/building/Structure.js has no
 // concept of groups), so the produced command's groups are always empty
 // — unlike a clipboard paste, which can carry groups copied from a live
 // selection.
 //
 // Positioning (Composition Offset): a Structure's bricks are already
 // authored in the Structure's own local space, centered on its own
-// footprint (core/Structure.js's own header). Copying into an EMPTY
+// footprint (core/building/Structure.js's own header). Copying into an EMPTY
 // document places them unmodified, so "Copy House" into a blank
 // Document produces byte-identical geometry to "Fork House" — both are
 // just the Structure's own bricks, untranslated. Copying into a
 // document that already has content instead appends the new structure
 // just past the document's current occupied footprint along +X (using
 // the exact same SpatialBounds.fromWorld()/fromBricks() math
-// core/Structure.js already uses to derive bounds rather than store
+// core/building/Structure.js already uses to derive bounds rather than store
 // them) — deterministic, and guaranteed not to overlap what's already
 // there, so composing House + Well + Barn into one blueprint never
 // requires the caller to pick coordinates by hand.
