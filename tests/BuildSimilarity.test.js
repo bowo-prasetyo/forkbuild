@@ -6,6 +6,7 @@ import { Position } from '../core/Position.js';
 import {
     MIN_COMPARED_BRICKS, MIN_READY_MADE_POINTS, SIMILAR_BUILD_THRESHOLD, buildShape, compareBuildShapes, isSimilarBuild, readyMadeCoverage, similarityUpperBound, withoutReadyMade
 } from '../core/BuildSimilarity.js';
+import { CollectionLibrary } from '../core/library/CollectionLibrary.js';
 import { VillageLibrary } from '../core/library/VillageLibrary.js';
 import { assert } from './support/Assert.js';
 
@@ -188,5 +189,32 @@ console.log('✓ edge cases');
     assert(withoutReadyMade(a, []) === a && withoutReadyMade(a, null) === a, '25. with no structures, nothing is taken out');
 }
 console.log('✓ ready-made structures taken out');
+
+// The Collection's lighthouse is a watchtower with 4 of its 11 bricks changed
+// (scripts/evaluate-ready-made-detection.mjs, E1): too much changed for the
+// watchtower to count as there, on purpose. Rebuilt by hand, a third of it is
+// its builder's own work; started from the Build Library, it is the lighthouse.
+{
+    const library = [...VillageLibrary.structures, ...CollectionLibrary.structures];
+    const byId = (id) => library.find((structure) => structure.id === id);
+    const watchtower = buildShape(byId('village:watchtower').bricks);
+    const lighthouse = buildShape(byId('collection:lighthouse').bricks);
+    const keepers = buildShape(byId('collection:keepers_lighthouse').bricks);
+    assert(watchtower.size === 11 && lighthouse.size === 11 && compareBuildShapes(lighthouse, watchtower).shared === 7,
+        '26. the lighthouse keeps 7 of the watchtower\'s 11 bricks');
+    assert(readyMadeCoverage(watchtower.size) * watchtower.size > 7, '26a. fewer than a small structure needs');
+
+    const withoutLighthouses = library
+        .filter((structure) => !['collection:lighthouse', 'collection:keepers_lighthouse'].includes(structure.id))
+        .map((structure) => buildShape(structure.bricks));
+    assert(withoutReadyMade(lighthouse, withoutLighthouses).size === lighthouse.size,
+        '27. a watchtower changed that much by hand counts as its builder\'s own bricks');
+
+    const all = library.map((structure) => buildShape(structure.bricks));
+    assert(withoutReadyMade(lighthouse, all).size === 0, '28. the lighthouse from the Build Library is taken out whole');
+    const rest = withoutReadyMade(keepers, all);
+    assert([...lighthouse.keys].every((key) => !rest.keys.has(key)), '28a. and so is the lighthouse a remix of it stands on');
+}
+console.log('✓ the lighthouse, a watchtower changed by a third');
 
 console.log('✅ All build similarity tests passed.');
