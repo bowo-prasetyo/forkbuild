@@ -639,6 +639,15 @@ const lookAlikeBuildNotifier = new LookAlikeBuildNotifier({
 decentralizedPublicationDiscoveryProvider.onAdded((publication) => {
     lookAlikeBuildNotifier.handlePublicationAdmitted(publication);
 });
+// A build admitted before its bytes is compared when they arrive, by either
+// way incoming bytes are stored: the snapshot store networks, links and
+// packages share, and a connected peer's answer.
+storeSnapshotContentUseCase.onStored(({ contentHash }) => {
+    lookAlikeBuildNotifier.handleContentStored(contentHash);
+});
+publicationPeerContentExchange.onContentReceived(({ hash }) => {
+    lookAlikeBuildNotifier.handleContentStored(hash);
+});
 // The builds each identity helped make with friends (Build with me).
 const helpedBuildsStore = new HelpedBuildsStore({ storageProvider: new LocalStorageProvider() });
 app.provide('helpedBuildsStore', helpedBuildsStore);

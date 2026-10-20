@@ -93,6 +93,14 @@ export class SimilarBuildFinder {
         return this._matching(mine, candidates);
     }
 
+    // Whether the build `publication` signed is on this device, as the bytes
+    // it signed, so it can be compared at all: an empty answer from
+    // findEarlier() then means nothing alike, not that its bytes haven't
+    // arrived yet.
+    async canCompare(publication) {
+        return (await this._shapeOf(publication)) !== null;
+    }
+
     async _matching(mine, candidates) {
         const startedAt = this._now();
         const best = new Map();

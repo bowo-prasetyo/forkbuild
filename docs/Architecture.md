@@ -1186,6 +1186,15 @@ Repository cards and ui/components/SharedWithYouPanel.js above the catalog.
     them, looks a lot like one of the signed-in identity's own published
     before it (`SimilarBuildFinder#findEarlier(publication, { by })`, its
     family left out), verifiably signed by them; one comparison at a time.
+    A Publication admitted before its bytes (`SimilarBuildFinder#canCompare()`
+    false: Explore's network discovery admits signed records and fetches
+    builds later) waits in memory by content hash, at most
+    `MAX_BUILDS_WAITING_FOR_BYTES`, oldest let go first, and is compared when
+    one of the two ways incoming bytes are stored reports them, after
+    verification: StoreSnapshotContentUseCase (`onStored()`; networks, shared
+    links, build notes, placements, transfer packages) or PeerContentExchange
+    (`onContentReceived()`; a connected peer's answer), both wired in
+    ui/main.js; bytes still unreadable then let it go.
   - application/announcementIndex/FollowedAnnouncementRetention.js is the
     Announcement Index's `isKeptFirst`: Snapshot records with a followed
     publisher's signed placement, and Place Naming claims a followed author
