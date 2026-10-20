@@ -118,10 +118,9 @@ function anchoring() {
     console.log('✓ the default is adopted once, as the app starts');
 }
 
-// Steem's and Blurt's writers share their readers' runtime, so there is
-// nothing to load: what they offer follows the switch, live. Anchors made on
-// them are checked and described for everyone; making one is offered only
-// while switched on.
+// Steem's and Blurt's writers are part of their readers' runtime: what they
+// offer follows the switch, live. Anchors made on them are checked and
+// described for everyone; making one is offered only while switched on.
 {
     const noNetwork = async () => { throw new Error('no network in this test'); };
     const steemRuntime = composeSteemRuntime({ fetchImpl: noNetwork });
@@ -241,6 +240,52 @@ function anchoring() {
     await loader.load('base');
     assert(loader.isLoaded('base') && provided.get('baseWalletConnection') === 'base', 'and is tried again');
     console.log('✓ the loader builds each writer switched on, once, after the anchoring services');
+}
+
+// Steem's and Blurt's code that posts is loaded only when it is needed: the
+// app reaches it by import() alone, the first post loads it once, and until
+// then the runtime answers from the saved settings.
+{
+    const postingModules = {
+        steem: [
+            'application/steem/SteemAnnouncer.js', 'application/steem/SteemResourceCreditEstimator.js',
+            'anchoring/SteemAnchorPublisher.js', 'steem/SteemKeychainBroadcaster.js'
+        ],
+        blurt: [
+            'application/blurt/BlurtPoster.js', 'application/blurt/BlurtFeeEstimator.js',
+            'anchoring/BlurtAnchorPublisher.js', 'blurt/BlurtKeychain.js'
+        ]
+    };
+    const noticeModules = ['application/steem/SteemPublicationNoticeComposition.js', 'application/steem/SteemPublicationNoticeCard.js', 'steem/SteemImageUpload.js'];
+    const app = staticGraph('ui/main.js');
+    const network = staticGraph('ui/main/composeNetwork.js');
+    const leaked = [...postingModules.steem, ...postingModules.blurt, ...noticeModules].filter((file) => app.has(file) || network.has(file));
+    assert(leaked.length === 0, `the app reaches no posting module but by import():\n  ${leaked.join('\n  ')}`);
+    assert(postingModules.steem.every((file) => staticGraph('application/steem/SteemPostingComposition.js').has(file))
+        && postingModules.blurt.every((file) => staticGraph('application/blurt/BlurtPostingComposition.js').has(file)),
+    "each network's posting composition reaches its own");
+
+    const noNetwork = async () => { throw new Error('no network in this test'); };
+    let steemOn = false;
+    const steem = composeSteemRuntime({ fetchImpl: noNetwork, getAccount: () => 'alice', isWriterEnabled: () => steemOn });
+    assert(steem.announcer.currentAccount() === null, 'before loading, a switched-off writer posts as no one');
+    steemOn = true;
+    assert(steem.announcer.currentAccount() === 'alice' && steem.anchorPublisher.anchorType === 'steem' && steem.anchorPublisher.maxBatchSize > 0,
+        'and a switched-on one as the saved account, with its anchor type known without loading');
+    steemOn = false;
+    let refused = null;
+    await steem.announcer.announce('publication', {}).catch((error) => { refused = error; });
+    assert(refused && /switched off/.test(refused.message), `the first post loads the announcer, which refuses while switched off (${refused?.message})`);
+    const loaded = await steem.loadPosting();
+    assert(loaded === await steem.loadPosting() && typeof loaded.announcer.announce === 'function', 'and it is loaded once');
+
+    const records = { get: (author, contentHash) => (author === 'bob' && contentHash === 'h1' ? { permlink: 'p1' } : null) };
+    const blurt = composeBlurtRuntime({ fetchImpl: noNetwork, getAccount: () => 'bob', postRecords: records });
+    assert(blurt.poster.findCommitment('h1')?.permlink === 'p1' && blurt.poster.findCommitment('h2') === null && blurt.poster.willStartBuildPost() === true,
+        "before loading, Blurt's commitments come from its saved records and the next post starts a build post");
+    await blurt.loadPosting();
+    assert(blurt.poster.findCommitment('h1')?.permlink === 'p1' && blurt.poster.willStartBuildPost() === true, 'and loading answers the same');
+    console.log("✓ Steem's and Blurt's code that posts loads only when needed, once");
 }
 
 // Only the plugins reach the wallet modules: the anchoring readers don't, and

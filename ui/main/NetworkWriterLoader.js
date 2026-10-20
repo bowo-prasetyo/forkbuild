@@ -10,8 +10,9 @@ import { NETWORK_WRITERS } from '../../core/publication/NetworkWriters.js';
 //
 // `plugins` maps a writer to an async function (anchoring) => services, which
 // imports the writer's modules only when called. A writer with no plugin here
-// (Steem, Blurt: their writers share their readers' runtime) is only a switch,
-// read where it is offered and enforced where it posts. `provide(key, value)` makes a
+// (Steem, Blurt: their readers' runtime loads the code that posts, see
+// ui/main/composeNetwork.js) is only a switch here, read where it is offered
+// and enforced where it posts. `provide(key, value)` makes a
 // service available (app.provide). Switching a writer off does not unload it:
 // what the Publications page offers is decided by the switch when the page
 // opens (ui/views/decentralizedPublications/networkWriterServices.js).

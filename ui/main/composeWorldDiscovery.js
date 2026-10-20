@@ -13,12 +13,10 @@ import { SteemReadingConfigurationStore } from '../../storage/SteemReadingConfig
 import { SetSteemReadingConfigurationUseCase } from '../../application/settings/SetSteemReadingConfigurationUseCase.js';
 import { composeSteemRuntime } from '../../application/steem/SteemRuntimeComposition.js';
 import { publishedBuildTags } from '../../application/challenge/PublishedBuildTags.js';
-import { composeSteemPublicationNoticeDescriber } from '../../application/steem/SteemPublicationNoticeComposition.js';
 import { DISCOVERY_CLAIM_IPFS_TIMEOUT_MS, buildIpfsWorldEncounterMaterialResolver, composePublicationClaimRetriever } from '../../application/publication/PublicationClaimRetriever.js';
 import { DEFAULT_IPFS_GATEWAY_URLS } from '../../core/networks/IpfsGatewayConfiguration.js';
 import { SteemAnnouncingConfigurationStore } from '../../storage/SteemAnnouncingConfigurationStore.js';
 import { SetSteemAnnouncingConfigurationUseCase } from '../../application/settings/SetSteemAnnouncingConfigurationUseCase.js';
-import { createSteemKeychainBroadcaster } from '../../steem/SteemKeychainBroadcaster.js';
 import { SteemContentUploadStore } from '../../storage/SteemContentUploadStore.js';
 import { BlurtReadingConfiguration } from '../../core/networks/BlurtReadingConfiguration.js';
 import { BlurtReadingConfigurationStore } from '../../storage/BlurtReadingConfigurationStore.js';
@@ -29,7 +27,6 @@ import { BlurtPostRecordStore } from '../../storage/BlurtPostRecordStore.js';
 import { SetBlurtReadingConfigurationUseCase } from '../../application/settings/SetBlurtReadingConfigurationUseCase.js';
 import { SetBlurtAnnouncingConfigurationUseCase } from '../../application/settings/SetBlurtAnnouncingConfigurationUseCase.js';
 import { composeBlurtRuntime } from '../../application/blurt/BlurtRuntimeComposition.js';
-import { createBlurtKeychainBroadcaster, uploadBlurtImage } from '../../blurt/BlurtKeychain.js';
 import { shallowRef } from 'vue';
 import { LocalWorldEncounterMaterialSource } from '../../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
 import { PeerWorldEncounterMaterialSource } from '../../application/worldEncounter/PeerWorldEncounterMaterialSource.js';
@@ -46,6 +43,20 @@ import { IndexBackedPublicationDiscoveryService } from '../../application/announ
 import { composeDecentralizedWorldEncounterMaterialDiscoveryServices, composeDecentralizedWorldEncounterMaterialDiscoveryRuntime } from '../../application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
 import { composeDiscoverWorldEncounterPublicationCommand } from '../../application/worldEncounter/DiscoverWorldEncounterPublicationCommandComposition.js';
 import { composeWorldEncounterLeadAssociationsQuery } from '../../application/worldEncounter/WorldEncounterLeadAssociationsQueryComposition.js';
+
+// A Steem or Blurt notice's describer
+// (application/steem/SteemPublicationNoticeComposition.js), loaded only when a
+// notice is posted: only a device that posts there needs it.
+function lazyNoticeDescriber(options) {
+    let describe = null;
+    return async (claim) => {
+        if (!describe) {
+            const { composeSteemPublicationNoticeDescriber } = await import('../../application/steem/SteemPublicationNoticeComposition.js');
+            describe ??= composeSteemPublicationNoticeDescriber(options);
+        }
+        return describe(claim);
+    };
+}
 
 // Composition root: the World discovery registry, World Encounter material
 // sources and verification, the Arweave gateway, IPFS and Nostr relay
@@ -120,7 +131,6 @@ export function composeWorldDiscovery({
     const steemRuntime = composeSteemRuntime({
         configuration: steemReadingConfigurationStore.get() || new SteemReadingConfiguration(),
         getAccount: () => steemAnnouncingConfigurationStore.get()?.account ?? null,
-        getBroadcaster: () => createSteemKeychainBroadcaster({ keychain: globalThis.steem_keychain }),
         isWriterEnabled: () => isNetworkWriterEnabled('steem'),
         contentUploads: new SteemContentUploadStore(new LocalStorageProvider()),
         contentUploadProgress: { report: (state) => { steemContentUploadProgress.value = state; } },
@@ -130,7 +140,7 @@ export function composeWorldDiscovery({
         // A Signed Claim's notice shows its build: title, description and a
         // thumbnail uploaded to the Steem image host.
         describePublication: publicationContentStore
-            ? composeSteemPublicationNoticeDescriber({
+            ? lazyNoticeDescriber({
                 contentStore: publicationContentStore,
                 // No picture is uploaded while the writer is off.
                 getAccount: () => (isNetworkWriterEnabled('steem') ? steemAnnouncingConfigurationStore.get()?.account ?? null : null),
@@ -154,7 +164,6 @@ export function composeWorldDiscovery({
     const blurtRuntime = composeBlurtRuntime({
         configuration: blurtReadingConfigurationStore.get() || new BlurtReadingConfiguration(),
         getAccount: blurtAccount,
-        getBroadcaster: () => createBlurtKeychainBroadcaster(),
         isWriterEnabled: () => isNetworkWriterEnabled('blurt'),
         knownAuthors: new BlurtKnownAuthorStore(new LocalStorageProvider()),
         postRecords: new BlurtPostRecordStore(new LocalStorageProvider()),
@@ -162,11 +171,14 @@ export function composeWorldDiscovery({
         contentUploadProgress: { report: (state) => { blurtContentUploadProgress.value = state; } },
         onWaiting: ({ untilMs }) => { blurtContentUploadProgress.value = { phase: 'waiting', untilMs }; },
         describePublication: publicationContentStore
-            ? composeSteemPublicationNoticeDescriber({
+            ? lazyNoticeDescriber({
                 contentStore: publicationContentStore,
                 getAccount: () => (isNetworkWriterEnabled('blurt') ? blurtAccount() : null),
                 chainName: 'Blurt',
-                upload: async ({ account, bytes }) => (await uploadBlurtImage({ account, bytes, fileName: 'forkbuild-build.png' })).url,
+                upload: async ({ account, bytes }) => {
+                    const { uploadBlurtImage } = await import('../../blurt/BlurtKeychain.js');
+                    return (await uploadBlurtImage({ account, bytes, fileName: 'forkbuild-build.png' })).url;
+                },
                 onPictureMissing: ({ title, reason }) => { blurtNoticePictureProblem.value = { title, reason, at: Date.now() }; }
             })
             : null

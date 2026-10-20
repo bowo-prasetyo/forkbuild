@@ -477,9 +477,10 @@ export async function composeNetwork({ app, decentralizedPublicationDiscoveryPro
     // Network Settings' writer switches (core/publication/NetworkWriters.js): which network
     // writers this device builds. Bitcoin's and Base's wallets are plugins, built
     // after the 'anchoring' group (ui/main.js), only when switched on. Steem's and
-    // Blurt's share their readers' runtime: their switches decide what is offered
-    // and whether anything is posted, and start on for a device that already has
-    // an account saved to post as.
+    // Blurt's are part of their readers' runtime, which loads the code that posts
+    // as the switch goes on (below): their switches decide what is offered and
+    // whether anything is posted, and start on for a device that already has an
+    // account saved to post as.
     const networkWriterSettingsStore = new NetworkWriterSettingsStore({
         storageProvider: new LocalStorageProvider(),
         defaults: {
@@ -654,8 +655,13 @@ export async function composeNetwork({ app, decentralizedPublicationDiscoveryPro
     if (blurtRuntime) {
         publicationSnapshotPlacementResolutionStoreRegistry.register(blurtRuntime.contentStore);
     }
+    // Switching a writer on also starts loading the code that posts there, so
+    // the first post doesn't wait for it.
     followNetworkWriterSwitches(networkWriterSettingsStore, { steem: steemRuntime, blurt: blurtRuntime }, {
-        on: (runtime) => snapshotPlacementStoreRegistry.register(runtime.contentStore),
+        on: (runtime) => {
+            snapshotPlacementStoreRegistry.register(runtime.contentStore);
+            runtime.loadPosting().catch(() => {});
+        },
         off: (runtime) => snapshotPlacementStoreRegistry.unregister(runtime.contentStore.storage)
     });
     // Watches a newly created anchor until its block is final, by anchorType;

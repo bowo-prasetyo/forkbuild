@@ -122,8 +122,11 @@ Bitcoin's and Base's wallets are split this way: each is a plugin switched on
 under Network Settings → Wallets. So are Steem's and Blurt's writers, each
 switched on with **Post to Steem (or Blurt) from this device** on its own
 settings page; a device that already had an account saved to post as starts
-with it on. Their writers share their readers' runtime, so the switch decides
-what is offered and whether anything is posted, rather than what is loaded.
+with it on. Their writers are part of their readers' runtime, but the code
+that posts (application/steem/SteemPostingComposition.js,
+application/blurt/BlurtPostingComposition.js) loads only when the switch goes
+on or something is posted, so the switch decides what is offered, whether
+anything is posted, and whether that code is loaded at all.
 
 **Who signs.** A writer signs and pays through the player's own browser
 extension or wallet whenever one exists for its network (a Nostr extension,
