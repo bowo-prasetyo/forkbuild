@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: ddd5e492a88450c7 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: b70b27623985ebf0 -->
 # 03 — Visão do mundo
 
 <!-- languages -->
@@ -129,7 +129,11 @@ cabeça para olhar você (a não ser que você esteja bem atrás); um cervo que
 pasta levanta a cabeça, um coelho fica sentado nas patas de trás. Eles
 nunca fogem nem mudam de lugar por sua causa, e as outras pessoas veem os
 animais olhando para *elas*. Os animais bloqueiam seu caminho a pé, como
-as árvores.
+as árvores. Onde se construiu, os animais selvagens ficam longe: aquele
+cujo pedaço de chão tem uma construção some aos poucos e fica fora
+enquanto ela estiver de pé, então nenhum cervo pasta numa sala de estar.
+Debaixo de uma ponte ou de um andar alto há lugar para eles. Tire a
+construção e o animal volta.
 
 Todos que olham o mesmo lugar no mesmo momento veem o mesmo terreno, os
 mesmos peixes, árvores e animais. Nada disso pode ser editado.

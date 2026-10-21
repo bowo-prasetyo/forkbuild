@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: ddd5e492a88450c7 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: b70b27623985ebf0 -->
 # 03 — Weltansicht
 
 <!-- languages -->
@@ -134,7 +134,11 @@ ab und zu auf. Kommen Sie näher, dreht eines den Kopf nach Ihnen (außer Sie
 stehen direkt dahinter); ein grasender Hirsch hebt den Kopf, ein Kaninchen
 macht Männchen. Sie laufen nie weg und bewegen sich nie Ihretwegen, und
 andere sehen sie stattdessen *sich* beobachten. Tiere versperren Ihnen zu
-Fuß den Weg, wie Bäume.
+Fuß den Weg, wie Bäume. Wo gebaut wurde, halten sich wilde Tiere fern:
+Eines, auf dessen Fleckchen Boden ein Bauwerk steht, verblasst und bleibt
+weg, solange das Bauwerk steht; so grast kein Hirsch im Wohnzimmer. Unter
+einer Brücke oder einem hohen Stockwerk ist Platz für sie. Wird das Bauwerk
+entfernt, kommt das Tier zurück.
 
 Alle, die im selben Moment auf dieselbe Stelle schauen, sehen dasselbe
 Land, dieselben Fische, Bäume und Tiere. Nichts davon lässt sich bearbeiten.

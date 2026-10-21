@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 924941a6d98b2fef -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 170440c7f3266fb3 -->
 # 01 — はじめに
 
 <!-- languages -->
@@ -102,6 +102,8 @@ ForkBuild は最新のウェブブラウザーならどれでも動きます。�
     直接選べます。自動はデバイスのライト／ダークモードに従います。
     ライトは昼の村、ダークは夜の同じ村です。すぐに切り替わり、この
     デバイスに保存されます。
+  - **ヘルプ** — 自分の言葉で質問すると、このガイドから答えが返ります。
+    ガイドはこの端末の上で読まれます。一度開けばオフラインでも使えます。
   - **ForkBuildについて** — バージョン情報とこのガイドへのリンク
   - **ForkBuild をインストール** — ブラウザーがインストールできる場合
     （[ForkBuild をインストールする](#forkbuild-をインストールする) を参照）

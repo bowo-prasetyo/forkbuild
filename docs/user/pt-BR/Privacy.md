@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 8d5d29ddd6f4e2ed -->
+<!-- translation-of: docs/Privacy.md source-hash: 287edaaf9be8160b -->
 # Privacidade
 
 <!-- languages -->
@@ -304,14 +304,15 @@ acontece quando você usa o recurso, e cada servidor pode ser trocado em
 pede a ele.
 
 A voz, quando você a liga no Editor ou na visão do mundo, também baixa uma única vez seu modelo
-de voz do Hugging Face e seu motor de voz (WebAssembly) do jsDelivr; o motor
-é recusado se não for exatamente o arquivo que o ForkBuild espera (seu
-SHA-256 é fixo no aplicativo). O que você diz é gravado e entendido no seu
+de voz do Hugging Face e seu motor de voz (WebAssembly) do jsDelivr; cada um
+é recusado se não for exatamente o arquivo que o ForkBuild espera (o
+SHA-256 do motor e de cada arquivo do modelo, numa versão exata do modelo,
+é fixo no aplicativo). O que você diz é gravado e entendido no seu
 dispositivo, e nunca é enviado.
 
 | Quando | Servidor (padrão) | O que ele recebe |
 | --- | --- | --- |
-| Você liga a voz no Editor ou na visão do mundo (uma vez, e de novo só depois de remover seus arquivos) | Hugging Face (`huggingface.co` e seus servidores de arquivos), jsDelivr (`cdn.jsdelivr.net`) | pedidos dos arquivos do modelo de voz (`onnx-community/whisper-tiny`) e do arquivo WebAssembly do motor de voz (`onnxruntime-web`, uma versão exata); nunca nada do que você diz |
+| Você liga a voz no Editor ou na visão do mundo (uma vez, e de novo só depois de remover seus arquivos) | Hugging Face (`huggingface.co` e seus servidores de arquivos), jsDelivr (`cdn.jsdelivr.net`) | pedidos dos arquivos do modelo de voz (`onnx-community/whisper-tiny`, uma versão exata) e do arquivo WebAssembly do motor de voz (`onnxruntime-web`, uma versão exata); nunca nada do que você diz |
 | O aplicativo abre no site oficial, no máximo uma vez por dia (veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma solicitação de imagem com caminho fixo, sem referenciador e sem cookie |
 | No site oficial, você copia ou compartilha um link para uma construção, abre um link compartilhado ou copia para o Editor uma construção aberta por um link (veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma solicitação de imagem com caminho fixo que diz qual dos três momentos foi, sem referenciador e sem cookie |
 | Você instala o ForkBuild pelo site oficial (veja "Contagem de visitantes") | GoatCounter (`forkbuild.goatcounter.com`) | uma solicitação de imagem com o caminho fixo `/e/installed`, sem referenciador e sem cookie |

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: fdcc7c250da899ce -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 79dd3fed265f1388 -->
 # 06 — Avatares y presencia
 
 <!-- languages -->
@@ -317,7 +317,9 @@ solo en la pantalla de su dueño hasta que lo conduce.
 
 Algunos mundos tienen fauna: venados en los bosques, conejos en la pradera
 abierta. Los animales salvajes deambulan despacio alrededor de donde los
-colocó el mundo, sin alejarse nunca más de unos pasos. Acérquese lo
+colocó el mundo, sin alejarse nunca más de unos pasos. Uno cuyo trozo de
+terreno ocupa una construcción no está, ni se puede atrapar, hasta que la
+construcción desaparece (consulte [Lo que hay a su alrededor](03-WorldView.md#lo-que-hay-a-su-alrededor)). Acérquese lo
 suficiente a uno y aparece un aviso que le indica que presione **F** para
 atraparlo. Atraparlo lo agrega a su inventario (el mismo inventario donde
 vive un vehículo guardado) y lo quita del mundo.
@@ -381,8 +383,10 @@ deshaga con **Ctrl/Cmd+Z**.
 **Cómo se mueven.** Los habitantes se quedan a unos seis pasos de su casa.
 Rodean paredes, árboles y agua, nunca los atraviesan, y de vez en cuando se
 detienen a mirar alrededor. Todos ven a cada habitante en el mismo lugar en
-el mismo momento, porque dónde está sale del Mundo y del reloj. No se envía
-nada entre jugadores. Usted choca con un habitante como con un árbol, pero
+el mismo momento, porque dónde está sale del Mundo y del reloj. Los
+jugadores conectados se ponen de acuerdo en un solo reloj del Mundo, así
+que un dispositivo con el reloj un poco desajustado muestra lo mismo; entre
+ellos solo se envía la hora, nunca dónde está un habitante. Usted choca con un habitante como con un árbol, pero
 él no se aparta, así que uno puede atravesarlo mientras usted está quieto.
 
 **Cómo encuentran el camino.** Un habitante sale por una puerta, dobla la esquina de su casa y sigue el camino hasta los sitios que le gustan, rodeando lo que se interponga. Cuando cae la noche, vuelve a casa y se queda allí hasta la mañana.

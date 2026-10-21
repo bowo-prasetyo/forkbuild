@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: cf497f719abf3048 -->
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: ed66279f6cd72634 -->
 # 05 — Seu nome e sua identidade
 
 <!-- languages -->
@@ -90,9 +90,9 @@ de qual você está usando. Daqui você pode:
   chave pública e todas as assinaturas que ela já fez — nunca muda.
 - **Exportar** — fazer backup.
 - **Importar** — restaurar ou copiar uma a partir de um arquivo de backup.
-- **Declarar sucessora / Revogar** — marcar uma identidade como aposentada
+- **Declarar sucessora** / **Revogar** — marcar uma identidade como aposentada
   em favor de outra (cole o ID `did:key:z…` da sucessora), ou revogá-la de
-  vez, para sempre. Declarar uma sucessora não revoga nada por si só —
+  vez, para sempre, com **Revogar identidade**. Declarar uma sucessora não revoga nada por si só —
   revogue separadamente quando a troca deve passar a valer. Para uma
   identidade protegida e bloqueada, as duas ações pedem a frase secreta dela,
   e assinar com ela a desbloqueia, exatamente como desbloquear você mesmo.

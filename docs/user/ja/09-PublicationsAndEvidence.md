@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: be6c14fcfc79e4c8 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 0076c2d8fe2e4551 -->
 # 09 — 公開物と外部証拠
 
 <!-- languages -->
@@ -76,7 +76,7 @@ ForkBuild を使うのに、ここにあるものは何も必要ありません�
 
 ワールドビュー、エディター、「さがす」でも、ワールドの署名された記録を
 **共有ワールド** と呼びます。**自分の共有ワールド**、
-**共有ワールドを発見**、**共有ワールドに戻る** などです。
+**共有ワールドを発見**、**共有ワールドを選択** などです。
 
 ## 公開物を取り巻くもの
 

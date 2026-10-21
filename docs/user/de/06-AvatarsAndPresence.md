@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: fdcc7c250da899ce -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 79dd3fed265f1388 -->
 # 06 — Avatare & Anwesenheit
 
 <!-- languages -->
@@ -328,7 +328,9 @@ seines Besitzers, bis er es fährt.
 
 Manche Welten haben Wildtiere — Rehe in Wäldern, Kaninchen auf offenem
 Grasland. Wilde Tiere wandern langsam um den Ort herum, an dem die Welt
-sie platziert hat, und entfernen sich nie mehr als ein paar Schritte.
+sie platziert hat, und entfernen sich nie mehr als ein paar Schritte. Eines, auf dessen Fleckchen Boden ein
+Bauwerk steht, ist nicht da und kann nicht gefangen werden, bis das
+Bauwerk weg ist (siehe [Was um Sie herum ist](03-WorldView.md#was-um-sie-herum-ist)).
 Gehen Sie nahe genug an eines heran, und ein Hinweis sagt Ihnen, dass Sie
 es mit **F** fangen können. Fangen fügt es Ihrem Inventar hinzu (demselben
 Inventar, in dem ein abgestelltes Fahrzeug liegt) und entfernt es aus der
@@ -401,8 +403,10 @@ Hinweis zeigt **[R] Bewohner entfernen**), oder machen Sie es mit
 Schritten um ihr Zuhause. Sie gehen um Wände, Bäume und Wasser herum, nie
 hindurch, und bleiben ab und zu stehen, um sich umzusehen. Alle sehen jeden
 Bewohner im selben Moment am selben Ort, denn wo er ist, ergibt sich aus
-der Welt und der Uhrzeit. Zwischen Spielern wird nichts gesendet. Sie
-stoßen an einen Bewohner wie an einen Baum, aber er weicht Ihnen nicht aus;
+der Welt und der Uhrzeit. Verbundene Spieler einigen sich auf eine
+Weltuhr, sodass auch ein Gerät, dessen Uhr etwas falsch geht, dasselbe
+zeigt; zwischen ihnen wird nur die Uhrzeit gesendet, nie, wo ein Bewohner
+ist. Sie stoßen an einen Bewohner wie an einen Baum, aber er weicht Ihnen nicht aus;
 einer kann also durch Sie hindurchgehen, während Sie stillstehen.
 
 **Ihren Weg finden.** Ein Bewohner geht durch eine Tür nach draußen, um die Ecke seines Hauses und den Weg entlang zu den Stellen, die er mag, und um alles herum, was im Weg steht. Wenn es Nacht wird, geht er nach Hause und bleibt dort bis zum Morgen.

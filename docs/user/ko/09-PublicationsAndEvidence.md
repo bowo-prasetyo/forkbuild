@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: be6c14fcfc79e4c8 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 0076c2d8fe2e4551 -->
 # 09 — 게시물과 외부 증거
 
 <!-- languages -->
@@ -68,7 +68,7 @@ X라고 부른다” 같은 **서명된 클레임**과, 클레임에 더할 수 
 | **장소 이름 클레임** | 지역이나 랜드마크의 이름 |
 
 월드 보기, 에디터, 둘러보기도 월드의 서명된 기록을 **공유 월드**라고 부릅니다.
-**내 공유 월드**, **공유 월드 찾기**, **공유 월드로 돌아가기**처럼요.
+**내 공유 월드**, **공유 월드 찾기**, **공유 월드 선택**처럼요.
 
 ## 게시물을 둘러싼 것
 

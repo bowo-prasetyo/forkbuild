@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 8d5d29ddd6f4e2ed -->
+<!-- translation-of: docs/Privacy.md source-hash: 287edaaf9be8160b -->
 # プライバシー
 
 <!-- languages -->
@@ -276,14 +276,14 @@ ForkBuild 自身のファイル（コード、スタイルシート、アイコ�
 あなたの IP アドレスと、何を要求したかが見えます。
 
 音声は、エディターかワールドビューでオンにすると、音声モデルを Hugging Face から、音声
-エンジン（WebAssembly）を jsDelivr から一度だけダウンロードします。エンジン
-は、ForkBuild が想定するファイルと完全に一致しなければ拒否されます（その
-SHA-256 はアプリに固定されています）。話した内容はこのデバイスで録音・聞き
+エンジン（WebAssembly）を jsDelivr から一度だけダウンロードします。どちらも、
+ForkBuild が想定するファイルと完全に一致しなければ拒否されます（エンジンと、
+決まったバージョンのモデルの各ファイルの SHA-256 はアプリに固定されています）。話した内容はこのデバイスで録音・聞き
 取りされ、どこにも送られません。
 
 | いつ | サーバー（既定） | 受け取るもの |
 | --- | --- | --- |
-| エディターかワールドビューで音声をオンにしたとき（一度だけ。ファイルを削除した後に再びオンにしたときも） | Hugging Face（`huggingface.co` とそのファイルサーバー）、jsDelivr（`cdn.jsdelivr.net`） | 音声モデルのファイル（`onnx-community/whisper-tiny`）と音声エンジンの WebAssembly ファイル（`onnxruntime-web` の決まったバージョン）の要求。話した内容は一切送られません |
+| エディターかワールドビューで音声をオンにしたとき（一度だけ。ファイルを削除した後に再びオンにしたときも） | Hugging Face（`huggingface.co` とそのファイルサーバー）、jsDelivr（`cdn.jsdelivr.net`） | 音声モデルのファイル（`onnx-community/whisper-tiny` の決まったバージョン）と音声エンジンの WebAssembly ファイル（`onnxruntime-web` の決まったバージョン）の要求。話した内容は一切送られません |
 | 公式サイトでアプリを開いたとき、多くても 1 日 1 回（「訪問者数のカウント」を参照） | GoatCounter（`forkbuild.goatcounter.com`） | 固定のパスで、リファラーも Cookie もない画像リクエスト 1 回 |
 | 公式サイトで、作品へのリンクをコピーまたは共有したとき、共有リンクを開いたとき、そのリンクから開いた作品をエディターにコピーしたとき（「訪問者数のカウント」を参照） | GoatCounter（`forkbuild.goatcounter.com`） | 3 つのうちどの場面かを示す固定のパスで、リファラーも Cookie もない画像リクエスト 1 回 |
 | 公式サイトから ForkBuild をインストールしたとき（「訪問者数のカウント」を参照） | GoatCounter（`forkbuild.goatcounter.com`） | 固定パス `/e/installed` の画像リクエスト 1 件。リファラーなし、Cookie なし |

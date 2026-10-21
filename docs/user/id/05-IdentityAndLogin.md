@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: cf497f719abf3048 -->
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: ed66279f6cd72634 -->
 # 05 — Nama & Identitas Anda
 
 <!-- languages -->
@@ -94,9 +94,10 @@ dari identitas mana yang sedang Anda pakai. Dari sini Anda dapat:
   tidak pernah berubah.
 - **Ekspor** — mencadangkannya.
 - **Impor** — memulihkan atau menyalin identitas dari file cadangan.
-- **Nyatakan Pengganti / Cabut** — menandai identitas sebagai pensiun dan
+- **Nyatakan Pengganti** / **Cabut** — menandai identitas sebagai pensiun dan
   digantikan identitas lain (tempelkan ID `did:key:z…` milik
-  penggantinya), atau mencabutnya sepenuhnya, secara permanen. Menyatakan
+  penggantinya), atau mencabutnya sepenuhnya, secara permanen, dengan
+  **Cabut Identitas**. Menyatakan
   pengganti tidak mencabut apa pun dengan sendirinya — cabut secara
   terpisah saat peralihan itu harus berlaku. Untuk identitas terlindungi
   yang terkunci, keduanya meminta frasa sandinya, dan menandatangani

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 924941a6d98b2fef -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 170440c7f3266fb3 -->
 # 01 — 시작하기
 
 <!-- languages -->
@@ -97,6 +97,8 @@ ForkBuild는 최신 웹 브라우저라면 어디서든 실행됩니다: 호스�
   - **모양** — **자동**, **밝게**, **어둡게**를 메뉴에서 바로 고릅니다.
     자동은 기기의 밝은/어두운 모드를 따릅니다. 밝게는 낮의 마을, 어둡게는
     밤의 같은 마을입니다. 바로 바뀌고 이 기기에 저장됩니다.
+  - **도움말** — 내 말로 질문하면 이 안내에서 답을 찾아 줍니다. 안내는
+    이 기기에서 읽히며, 한 번 열면 오프라인에서도 작동합니다.
   - **정보** — 버전 정보와 이 안내로 가는 링크
   - **ForkBuild 설치** — 브라우저가 설치할 수 있는 경우
     ([ForkBuild 설치하기](#forkbuild-설치하기) 참고)

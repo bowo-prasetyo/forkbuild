@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: cf497f719abf3048 -->
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: ed66279f6cd72634 -->
 # 05 — Ihr Name & Ihre Identität
 
 <!-- languages -->
@@ -98,9 +98,10 @@ davon, welche Sie gerade verwenden. Von hier aus können Sie:
 - **Exportieren** — sie sichern.
 - **Importieren** — eine aus einer Sicherungsdatei wiederherstellen oder
   kopieren.
-- **Nachfolger benennen / Widerrufen** — eine Identität zugunsten einer
+- **Nachfolger benennen** / **Widerrufen** — eine Identität zugunsten einer
   anderen als ausgemustert kennzeichnen (fügen Sie die ID `did:key:z…` des
-  Nachfolgers ein) oder sie endgültig widerrufen. Das Benennen eines
+  Nachfolgers ein) oder sie mit **Identität widerrufen**
+  endgültig widerrufen. Das Benennen eines
   Nachfolgers widerruft selbst nichts — widerrufen Sie separat, wenn der
   Wechsel wirksam werden soll. Bei einer gesperrten, geschützten Identität
   fragen beide nach ihrer Passphrase, und das Signieren damit entsperrt

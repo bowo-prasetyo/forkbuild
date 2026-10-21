@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: fdcc7c250da899ce -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 79dd3fed265f1388 -->
 # 06 — Avatars et présence
 
 <!-- languages -->
@@ -338,7 +338,9 @@ conduise.
 Certains mondes ont de la faune — des cerfs dans les forêts, des lapins
 dans les prairies. Les animaux sauvages errent lentement autour de
 l’endroit où le monde les a placés, sans jamais s’éloigner de plus de
-quelques pas. Approchez-vous assez de l’un d’eux et une indication vous
+quelques pas. Celui dont le coin de terrain porte une construction n’est
+pas là, et ne peut pas être attrapé, tant qu’elle est debout (voir
+[Ce qu’il y a autour de vous](03-WorldView.md#ce-quil-y-a-autour-de-vous)). Approchez-vous assez de l’un d’eux et une indication vous
 propose d’appuyer sur **F** pour l’attraper. L’attraper l’ajoute à votre
 inventaire (le même inventaire que celui des véhicules rangés) et le
 retire du monde.
@@ -408,8 +410,10 @@ message affiche **[R] Retirer l’habitant**), ou annulez avec
 chez eux. Ils contournent les murs, les arbres et l’eau, sans jamais les
 traverser, et s’arrêtent de temps en temps pour regarder autour d’eux. Tout
 le monde voit chaque habitant au même endroit au même moment, car sa
-position vient du Monde et de l’horloge. Rien n’est envoyé entre joueurs.
-Vous butez contre un habitant comme contre un arbre, mais il ne s’écarte
+position vient du Monde et de l’horloge. Les joueurs connectés
+s’accordent sur une seule horloge du Monde, si bien qu’un appareil dont
+l’horloge est un peu décalée montre la même chose ; seule l’heure est
+envoyée entre eux, jamais la position d’un habitant. Vous butez contre un habitant comme contre un arbre, mais il ne s’écarte
 pas pour vous : il peut donc vous traverser pendant que vous restez
 immobile.
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: be6c14fcfc79e4c8 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 0076c2d8fe2e4551 -->
 # 09 — Publicações e evidências externas
 
 <!-- languages -->
@@ -80,7 +80,7 @@ três tipos:
 
 A Visão do mundo, o Editor e Explorar também chamam o registro assinado
 de um Mundo de **Mundo compartilhado**, como em **Meu Mundo compartilhado**,
-**Descobrir Mundo compartilhado** e **Voltar ao Mundo compartilhado**.
+**Descobrir Mundo compartilhado** e **Selecionar Mundo compartilhado**.
 
 ## O que fica em volta de uma publicação
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: ddd5e492a88450c7 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: b70b27623985ebf0 -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
@@ -136,7 +136,11 @@ en temps. Approchez-vous, et l’un d’eux tourne la tête vers vous (sauf si
 vous êtes juste derrière) ; un cerf qui broute relève la tête, un lapin se
 dresse sur ses pattes arrière. Ils ne s’enfuient jamais et ne bougent
 jamais à cause de vous, et les autres les voient *les* regarder, eux. Les
-animaux vous barrent le chemin à pied, comme les arbres.
+animaux vous barrent le chemin à pied, comme les arbres. Là où l’on a construit, les animaux sauvages se
+tiennent à l’écart : celui dont le coin de terrain porte une construction
+s’efface et reste absent tant qu’elle est debout, si bien qu’aucun cerf ne
+broute dans un salon. Sous un pont ou un étage élevé, il y a de la place
+pour eux. Retirez la construction et l’animal revient.
 
 Tous ceux qui regardent le même endroit au même moment voient le même
 terrain, les mêmes poissons, arbres et animaux. Rien de tout cela ne se

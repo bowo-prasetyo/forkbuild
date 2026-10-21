@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: ddd5e492a88450c7 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: b70b27623985ebf0 -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
@@ -132,7 +132,11 @@ menoleh untuk memperhatikan Anda (kecuali Anda tepat di belakangnya); rusa
 yang sedang merumput mengangkat kepala, kelinci duduk tegak. Mereka tidak
 pernah lari atau berpindah karena Anda, dan orang lain melihat hewan itu
 memperhatikan *mereka*. Hewan menghalangi jalan Anda saat berjalan kaki,
-seperti pohon.
+seperti pohon. Di tempat orang membangun, hewan liar menjauh: hewan yang
+petak tanahnya ditempati bangunan memudar dan tetap hilang selama bangunan
+itu berdiri, jadi tidak ada rusa yang merumput di ruang tamu. Di bawah
+jembatan atau lantai yang tinggi ada ruang untuk mereka. Singkirkan
+bangunannya, dan hewan itu kembali.
 
 Siapa pun yang melihat tempat yang sama pada saat yang sama melihat
 daratan, ikan, pohon, dan hewan yang sama. Tidak ada yang bisa diedit.

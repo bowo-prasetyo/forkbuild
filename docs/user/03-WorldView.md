@@ -123,7 +123,11 @@ Animals wander slowly near their own spot, stop to graze, and look up now
 and then. Come close and one turns its head to watch you (unless you're
 right behind it); a grazing deer lifts its head and a rabbit sits up. They
 never run away or move because of you, and other people see them watching
-*them*. Animals block your way on foot, like trees.
+*them*. Animals block your way on foot, like trees. Where people have
+built, wild animals keep away: one whose patch of ground a build stands on
+fades away and stays gone while the build stands, so a deer never grazes in
+a living room. Under a bridge or a high floor there's room for them. Take
+the build away and the animal comes back.
 
 Everyone looking at the same place at the same moment sees the same land,
 fish, trees and animals. None of it can be edited.

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: be6c14fcfc79e4c8 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 0076c2d8fe2e4551 -->
 # 09 — Publicaciones y evidencia externa
 
 <!-- languages -->
@@ -81,7 +81,7 @@ de uno de tres tipos:
 
 La Vista del mundo, el Editor y Explorar también llaman **Mundo
 compartido** al registro firmado de un Mundo, como en **Mi Mundo
-compartido**, **Descubrir Mundo compartido** y **Volver al Mundo
+compartido**, **Descubrir Mundo compartido** y **Seleccionar Mundo
 compartido**.
 
 ## Qué rodea a una publicación
