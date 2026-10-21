@@ -1,6 +1,6 @@
 import { createHash, webcrypto } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { actionNamed, cleanTranscript, whisperLanguage, WHISPER_LANGUAGES } from '../core/voice/Transcript.js';
+import { actionNamed, actionSaid, nearestBySound, soundsExactly, cleanTranscript, whisperLanguage, WHISPER_LANGUAGES } from '../core/voice/Transcript.js';
 import { SPEECH_ENGINE, SPEECH_MODEL, SpeechRuntime } from '../application/voice/SpeechRuntime.js';
 import { SPEECH_ENGINE_LOADER, SpeechWorkerClient, speechSupported } from '../application/voice/SpeechWorkerClient.js';
 import { serveSpeech } from '../application/voice/serveSpeech.js';
@@ -9,7 +9,9 @@ import { worldVoiceVocabulary } from '../ui/i18n/worldVoiceWords.js';
 import { setAppLocale } from '../ui/i18n/i18n.js';
 import { SOURCE_LOCALE } from '../ui/i18n/locales.js';
 import { useViewportInput } from '../ui/views/worldView/useViewportInput.js';
-import { createStandardActions } from '../application/editor/EditorActionRegistry.js';
+import { createStandardActions, EditorActionRegistry } from '../application/editor/EditorActionRegistry.js';
+import { splitWordList } from '../core/library/LibrarySearch.js';
+import { t } from '../ui/i18n/i18n.js';
 import { LOCALES } from '../ui/i18n/locales.js';
 import { assert } from './support/Assert.js';
 
@@ -283,6 +285,93 @@ function workerPair(runtimeFor) {
     }
     await setAppLocale(SOURCE_LOCALE);
     console.log('✓ commands spoken in World View');
+}
+
+// A command heard as words that only sound like it (core/voice/Transcript.js
+// #nearestBySound()): in World View and in the Editor alike.
+{
+    await setAppLocale(SOURCE_LOCALE);
+    const candidates = [
+        { value: 'undo', phrases: ['undo', 'undo that'] },
+        { value: 'redo', phrases: ['redo', 'redo that'] },
+        { value: 'chat', phrases: ['chat'] },
+        { value: 'delete', phrases: ['delete'] },
+        { value: 'find', phrases: ['find'] }
+    ];
+    const sound = {
+        'and do that': 'undo',  // the word break in the wrong place, one vowel off
+        'and do': 'undo',
+        'Undo.': 'undo',
+        'and': null,            // as near "undo" as "find": no guess
+        'read that': null,      // two edits from "redo that": too far for a short command
+        'elite': null,          // one edit from "delete", and one is more than a short command allows
+        'cat': null,            // ...nor is "cat" "chat"
+        'what is a license': null,
+        '': null,
+        '元に戻して': null       // Japanese, Chinese and Korean: whole or not at all
+    };
+    for (const [heard, value] of Object.entries(sound)) {
+        assert(nearestBySound(heard, candidates) === value, `by sound: "${heard}" is ${value} (got ${nearestBySound(heard, candidates)})`);
+    }
+    assert(nearestBySound('rido', [{ value: 'redo', phrases: ['redo'] }, { value: 'rodo', phrases: ['rodo'] }]) === null,
+        'by sound: two commands about as near is no command');
+    assert(soundsExactly('un mute', [{ value: 'on', phrases: ['unmute'] }, { value: 'off', phrases: ['mute'] }]) === 'on'
+        && soundsExactly('mute', [{ value: 'on', phrases: ['unmute'] }, { value: 'off', phrases: ['mute'] }]) === 'off'
+        && soundsExactly('mute it', [{ value: 'off', phrases: ['mute'] }]) === null,
+        'sounds exactly: all of what was said, spaces aside, is the phrase, or nothing');
+
+    const read = (text, list = []) => {
+        const command = interpretWorldCommand(text, worldVoiceVocabulary(), list);
+        return command ? (command.kind === 'goTo' ? `goTo:${command.place?.id ?? 'none'}` : command.kind) : null;
+    };
+    const world = {
+        'and do that': 'undo',
+        'and do': 'undo',
+        'un mute': 'soundOn',     // all of it is "unmute": never the "mute" inside it
+        'un-mute': 'soundOn',
+        'bird eye view': 'birdEye',
+        'free camra': 'free',
+        'third persons': 'thirdPerson',
+        'and': null,
+        'what is a license': null,
+        'go to the castle': 'goTo:none' // "go to" said: a place, never a command by sound
+    };
+    for (const [heard, command] of Object.entries(world)) {
+        assert(read(heard) === command, `World View by sound: "${heard}" is ${command} (got ${read(heard)})`);
+    }
+    await setAppLocale('es');
+    assert(read('des hacer') === 'undo', 'World View by sound: "des hacer" is deshacer, undo, in Spanish');
+    await setAppLocale(SOURCE_LOCALE);
+
+    // The Editor: an action by its name, by World View's phrasings for undo
+    // and redo, or by what it sounds like, among every action it has.
+    const actions = new EditorActionRegistry(createStandardActions({ session: {}, feedback: {}, ui: {} })).getAll().filter(({ id }) => id !== 'ui.voice');
+    const aliases = { 'history.undo': splitWordList(t('worldVoice.words.undo')), 'history.redo': splitWordList(t('worldVoice.words.redo')) };
+    const editor = (text) => actionSaid(text, actions, { toText: t, aliases })?.id ?? null;
+    const said = {
+        'Undo': 'history.undo',
+        'undo that': 'history.undo',      // World View's phrasings, said exactly
+        'take that back': 'history.undo',
+        'redo that': 'history.redo',
+        'and do that': 'history.undo',    // by sound
+        'and do': 'history.undo',
+        'select hall': 'selection.selectAll',
+        'tilt': 'transform.tilt',
+        'and': null,
+        'elite': null,                    // never Delete by a near miss
+        'dilate': null,
+        'delete it': null,
+        'coffee': null,
+        'till': null,
+        'how do I tilt a brick': null,    // a question is left for the guide
+        'paint the roof red': null
+    };
+    for (const [heard, id] of Object.entries(said)) {
+        assert(editor(heard) === id, `Editor: "${heard}" is ${id} (got ${editor(heard)})`);
+    }
+    assert(actionSaid('undo', actions, { toText: t }) && actionSaid('undo that', actions, { toText: t }) === null,
+        'Editor: without phrasings, only the name itself is said exactly');
+    console.log('✓ commands heard by sound');
 }
 
 // V listens in World View too.
