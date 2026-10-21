@@ -635,7 +635,19 @@ async function firstVisit(browser, base) {
         assert(await editor.isVisible('.world-view-hud .world-view-walk-together') && await editor.isVisible('.world-view-hud .world-view-build-here'), 'Walk here with me and Build here sit over the view');
         assert(!(await editor.$('.world-view-overlay .world-view-walk-together')), 'and not in the side panel');
         assert(!editor.url().includes('arrive='), `the arrival leaves the address clean (${editor.url()})`);
-        await editor.click('.world-viewport canvas', { position: { x: 640, y: 120 } });
+        // World View hears keys from anywhere on the page but a text field
+        // (ui/views/worldView/useViewportInput.js), so walking needs only that
+        // no text field holds the focus. Not a mouse click on the view: a
+        // click waits on several frames (to see the canvas hold still, to hit
+        // it, to press and release), and where WebGL is drawn in software a
+        // frame of the plaza can take seconds, enough on a slow machine to
+        // run out a click's 30 s before the walk even starts.
+        const typingIn = await editor.evaluate(() => {
+            const typing = (element) => Boolean(element) && (['INPUT', 'TEXTAREA', 'SELECT'].includes(element.tagName) || element.isContentEditable === true);
+            if (typing(document.activeElement)) document.activeElement.blur();
+            return typing(document.activeElement) ? document.activeElement.tagName : null;
+        });
+        assert(typingIn === null, `no text field holds the focus when walking starts (${typingIn})`);
         await editor.keyboard.down('w');
         await said('You\'re inside!');
         await editor.keyboard.up('w');
