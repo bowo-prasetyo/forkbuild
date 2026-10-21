@@ -5,6 +5,8 @@ import { AvatarStepConstraint } from '../application/avatar/AvatarStepConstraint
 import { AvatarMovementConstraint } from '../application/avatar/AvatarMovementConstraint.js';
 import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
 import { AvatarTreeConstraint } from '../application/avatar/AvatarTreeConstraint.js';
+import { AvatarTerrainConstraint } from '../application/avatar/AvatarTerrainConstraint.js';
+import { AvatarWaterConstraint } from '../application/avatar/AvatarWaterConstraint.js';
 import { TreeDisplacement, TREE_OBSTACLE_QUERY_RADIUS } from '../application/world/TreeDisplacement.js';
 import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
 import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
@@ -147,7 +149,7 @@ const structure = (id) => [VillageLibrary, CollectionLibrary, ShowcaseLibrary]
 }
 
 // End to end at real plots: World View's arrival, then walking ahead with the
-// real movement pipeline and the real trees (application/avatar/AvatarTreeConstraint.js),
+// real movement pipeline (bricks, steps, terrain, water) and the real trees (application/avatar/AvatarTreeConstraint.js),
 // trees under the build giving way to it (application/world/TreeDisplacement.js).
 // The plots are where the published House stood when the bundle test's walk
 // got stuck (a tree in front of the door, in the doorway, inside the house),
@@ -179,7 +181,8 @@ const structure = (id) => [VillageLibrary, CollectionLibrary, ShowcaseLibrary]
         host.arriveAtEntrance('doc');
         const controller = new AvatarMovementController(presence,
             new AvatarMovementConstraint({ loadedDocuments, getWorldPosition, brickRegistry: registry, maxStepHeight: DEFAULT_MAX_STEP_HEIGHT }),
-            null, new AvatarStepConstraint({ loadedDocuments, getWorldPosition, brickRegistry: registry }), new AvatarTreeConstraint({ standing }));
+            new AvatarTerrainConstraint(), new AvatarStepConstraint({ loadedDocuments, getWorldPosition, brickRegistry: registry }),
+            new AvatarTreeConstraint({ standing }), new AvatarWaterConstraint());
         controller.keyDown('w');
         for (let i = 0; i < 200; i++) {
             controller.tick(0.05);

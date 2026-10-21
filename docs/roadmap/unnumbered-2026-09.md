@@ -8671,16 +8671,19 @@ served: building feels joyful (voice building that starts).
 - Not done: recognising real speech is still untried here (this sandbox can't reach Hugging Face); the Node build of
   transformers.js has no WebAssembly backend, so the test ends where the browser would create the model's sessions.
 
-## Walk inside it past the trees, and trees that give way to builds (unnumbered, 2026-10-21)
+## Walk inside it past the trees, trees that give way to builds, and no builds in lakes (unnumbered, 2026-10-21)
 
 **A fix for Walk inside it, which sometimes never got inside.** The bundled-site test's walk into the published House
 timed out about one run in ten, on CI and here (`tests/run-bundle.mjs`, waiting for "You're inside!"). A build takes
 its spot on the id-keyed grid, which knows nothing of the World's trees, so a fresh identity's House stood somewhere
-new each run, and at some spots a tree stood in the way. Walking ahead from the arrival spot slid round a trunk in
+new each run. At some spots a tree stood in the way: walking ahead from the arrival spot slid round a trunk in
 front of the door and into its jamb, and held there (at plot 1360, 2240: a trunk 1.66 in front of the door and 0.35
-to its side); at others a trunk stood in the doorway or inside the house, through its floor. With the House on every
-spot of the grid from 0 to 2560, 64 of 4,096 never got inside; now none does. Pillars served: walk inside it with
-friends (the guided first build ends inside), and build a little place (no tree grows through it).
+to its side), or a trunk stood in the doorway or inside the house, through its floor; with the House on every spot of
+the grid from 0 to 2560, 64 of 4,096 never got inside, and now none does. At others the House was published into a
+lake (at plot 2440, 1440, 3 m deep), where the avatar swam up to its door and no further: 261 of the grid's 4,096
+cells have water more than 1 m deep at the door, about one new build in sixteen. Pillars served: walk inside it with
+friends (the guided first build ends inside), and build a little place (no tree grows through it, and it stands on
+dry ground).
 
 - core/world/BuildEntrance.js: `findBuildEntrance()` takes round `obstacles` (trunks, in the build's coordinates). A
   spot whose straight walk to just past the doorway touches one is passed over for the next, then for
@@ -8696,9 +8699,18 @@ friends (the guided first build ends inside), and build a little place (no tree 
   `standingTrees`) and the arrival (application/worldNavigation/arrivalMethods.js). renderer/TreeForest.js
   `setHidden()` (through `Renderer#setHiddenTrees()` and the render facade) leaves such a tree undrawn, and sorts the
   trees again when the answer changes.
-- Tests: `TreeDisplacement` (the rule; the per-tile answers and their version; a real session with a World built over
+- core/world/DeterministicGridPlacement.js: a grid cell with water within 8 m of its middle (`isDrySpot()`: no water
+  surface, river or lake) is passed over for the cells hashed from `${id}#1`, `${id}#2`, …, up to 64, still a
+  function of the id alone. A dry cell of its own is kept, so most ids land where they always did, and placements
+  already recorded stand. A Publication with no placement record is shown at the same spot
+  (world-layout/LocalWorldLayoutProvider.js), so one whose own cell is wet is now shown on dry ground, and a copy from
+  before still shows it in the water. docs/Protocol.md says so.
+- Tests: `DeterministicGridPlacement` (new: the lake plot is not dry, 600 ids all land with no water round them, a dry
+  cell of its own is kept); `TreeDisplacement` (the rule; the per-tile answers and their version; a real session with a World built over
   a tree: not bumped into, not drawn, and back once the World is gone; the forest leaving it out and bringing it
   back); `WalkInside` (a trunk in front of the door brings the spot in front of it; the real arrival and movement
-  pipeline with the real trees at the plots where the walk stuck and on a sweep of the grid). docs/Architecture.md.
+  pipeline, terrain and water included, with the real trees at the plots where the walk stuck and on a sweep of the
+  grid). docs/Architecture.md. The walk into a lake is not reproduced in Node, which doesn't float the avatar as World
+  View does; the bundled-site test is what found it.
 - Not done: ambient birdsong and where vehicles are parked still read the seed's trees, so a tree under a build can
   still be heard, and keeps a parking spot empty.

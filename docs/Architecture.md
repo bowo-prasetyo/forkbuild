@@ -904,6 +904,9 @@ wires:
   are near the camera, and where" from each publication's placement, and
   falls back to a deterministic, id-keyed grid position
   (core/world/DeterministicGridPlacement.js) for a publication with none.
+  A grid cell with water within 8 m of its middle (`isDrySpot()`) is passed
+  over for the cells hashed from `${id}#1`, `${id}#2`, … (2026-10-21), so no
+  build is placed, or shown unplaced, in a lake or a river.
 - PlacePublicationUseCase with GridPlacementStrategy
   (application/placement/InitialPlacementStrategy.js): the automatic first
   placement after publishing. Its position is a pure function of the

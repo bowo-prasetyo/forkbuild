@@ -494,7 +494,10 @@ the protocol: a reader only adopts the signed record. ForkBuild's own choice
 application/placement/StandingPlacementStrategy.js) is a Build here plot
 when there is one; else the position an earlier Publication of the same
 world already has; else the id-keyed grid
-(core/world/DeterministicGridPlacement.js), remix or not. From 2026-10-12 to
+(core/world/DeterministicGridPlacement.js), remix or not, passing over a
+cell under water (from 2026-10-21; a Publication with no placement record
+is shown at the same spot, so a copy from before shows one whose own cell
+is wet in the water). From 2026-10-12 to
 2026-10-17 a remix was placed on a ring round the world it remixes and
 anything else in rings round the challenge plaza (core/challenge/BuildSettlement.js);
 those placements stand as they were signed. The rings round the plaza now
