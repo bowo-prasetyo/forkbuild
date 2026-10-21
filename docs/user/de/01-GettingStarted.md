@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 3895abf811fef371 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 924941a6d98b2fef -->
 # 01 — Erste Schritte
 
 <!-- languages -->
@@ -266,6 +266,10 @@ ForkBuild schon installiert ist, wird die Schaltfläche nicht gezeigt.
   **[Avatare & Anwesenheit](06-AvatarsAndPresence.md)** und
   **[Peer-Verbindungen & Freunde](07-PeerConnectionsAndFriends.md)**.
 - Nicht weiter? Die **[FAQ](FAQ.md)** beantworten die häufigsten Fragen.
+- Oder fragen Sie mit eigenen Worten: **Hilfe** unter **Mehr** antwortet
+  aus diesem Handbuch in Ihrer Sprache und funktioniert nach dem ersten
+  Öffnen auch offline. Im Editor bietet eine Frage in der Befehlspalette
+  (`Strg/Cmd+K`) **Das Handbuch fragen** an.
 
 ## Eine eigene Kopie betreiben
 

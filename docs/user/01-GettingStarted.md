@@ -234,6 +234,10 @@ button isn't shown.
   **[Avatars & Presence](06-AvatarsAndPresence.md)** and
   **[Peer Connections & Friends](07-PeerConnectionsAndFriends.md)**.
 - Stuck? The **[FAQ](FAQ.md)** answers the questions people most often ask.
+- Or ask in your own words: **Help**, under **More**, answers from this
+  guide in your language, and still works offline once opened. In the
+  Editor, a question typed in the Command Palette (`Ctrl/Cmd+K`) offers
+  **Ask the guide**.
 
 ## Running your own copy
 

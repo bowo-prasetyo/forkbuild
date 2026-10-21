@@ -304,6 +304,19 @@ the detailed references; in short:
   words. The Editor's `planPlainCommand()` turns a reading into the palette's
   first row, and runs it with EditorSession#selectWhere() and the existing
   recolor and delete, one undo step each.
+- Help (`/help`, ui/views/HelpView.js): a question answered from the user
+  guide. application/help/GuideLibrary.js reads the chosen language's
+  guide from this site (the chapters its README links to; the published
+  build carries docs/user's Markdown for this), and core/help/GuideSearch.js
+  splits it into sections by heading, as plain text with GitHub's anchors,
+  and ranks them for a question: words matched with short endings, one
+  letter off or the same first five letters, Japanese, Chinese and Korean by
+  pairs of letters; a rare word weighing far more than a common one, words
+  in more than a sixth of the sections dropped, the language's question
+  words (`help.ignoredWords`) ignored. Each answer shows its most telling
+  paragraph, the whole section, and a link to it on GitHub. The Editor's
+  command palette offers Ask the guide for a question, or words no action
+  matches. No model, and nothing typed leaves the device.
 - Ready-made builds: application/home/FeaturedBuilds.js lists six built-in
   structures (the three showcase ones first). Home, the Repository and My
   Worlds' empty state show them with ui/components/featured/FeaturedBuilds.js

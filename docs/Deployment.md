@@ -29,10 +29,14 @@ set to **GitHub Actions**. The workflow builds with `npm run build`
 
 `dist/` is the app bundled by esbuild into `bundle/`, an `index.html` and
 `embed.html` that load it, and the few files of the repository a browser
-asks for: the manifest, the favicon, `assets/`, and the licences (the
-vendored libraries' too, since their code is in the bundle). The rest of the
-repository (its source, `docs/`, `tests/`) is not published: the app links
-to the documentation on GitHub. `npm run test:bundle` fails if a page asks
+asks for: the manifest, the favicon, `assets/`, the licences (the
+vendored libraries' too, since their code is in the bundle), and the user
+guide's text, `docs/user/**/*.md` without its pictures, which Help reads
+(application/help/GuideLibrary.js). The rest of the repository (its source,
+the rest of `docs/`, `tests/`) is not published: the app links to the
+documentation on GitHub. The guide's files are not kept on install: the
+service worker keeps each one the first time Help reads it, so only the
+chosen language's are ever downloaded. `npm run test:bundle` fails if a page asks
 for a file the site left out.
 
 - The first load is about 70 minified files instead of about 250 modules;

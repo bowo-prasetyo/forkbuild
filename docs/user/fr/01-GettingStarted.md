@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 3895abf811fef371 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 924941a6d98b2fef -->
 # 01 — Premiers pas
 
 <!-- languages -->
@@ -269,6 +269,10 @@ si ForkBuild est déjà installé, le bouton n’apparaît pas.
   **[Avatars et présence](06-AvatarsAndPresence.md)** et
   **[Connexions entre pairs et amis](07-PeerConnectionsAndFriends.md)**.
 - Bloqué ? La **[FAQ](FAQ.md)** répond aux questions les plus fréquentes.
+- Ou demandez avec vos propres mots : **Aide**, dans **Plus**, répond à
+  partir de ce guide dans votre langue, et marche hors ligne une fois
+  ouverte. Dans l’Éditeur, une question tapée dans la palette de commandes
+  (`Ctrl/Cmd+K`) propose **Demander au guide**.
 
 ## Faire tourner votre propre copie
 

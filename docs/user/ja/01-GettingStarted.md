@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 3895abf811fef371 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 924941a6d98b2fef -->
 # 01 — はじめに
 
 <!-- languages -->
@@ -246,6 +246,10 @@ iPhone や iPad の Safari では、ボタンが代わりに方法を案内し�
   **[ピア接続と友達](07-PeerConnectionsAndFriends.md)** をご覧ください。
 - 困ったときは **[よくある質問](FAQ.md)** に、よくある疑問への答えが
   あります。
+- 自分の言葉で聞くこともできます。**その他** の **ヘルプ** が、あなたの
+  言語のこのガイドから答えます。一度開けばオフラインでも使えます。エディター
+  では、コマンドパレット（`Ctrl/Cmd+K`）に質問を入力すると **ガイドに聞く**
+  が出ます。
 
 ## 自分のコピーを動かす
 

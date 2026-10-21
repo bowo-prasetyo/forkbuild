@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 3895abf811fef371 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 924941a6d98b2fef -->
 # 01 — Memulai
 
 <!-- languages -->
@@ -256,6 +256,10 @@ atau ForkBuild sudah terpasang, tombol itu tidak ditampilkan.
   **[Avatar & Kehadiran](06-AvatarsAndPresence.md)** dan
   **[Koneksi Rekan & Teman](07-PeerConnectionsAndFriends.md)**.
 - Buntu? **[FAQ](FAQ.md)** menjawab pertanyaan yang paling sering muncul.
+- Atau tanyakan dengan kata-kata Anda sendiri: **Bantuan**, di bawah
+  **Lainnya**, menjawab dari panduan ini dalam bahasa Anda, dan tetap
+  bekerja tanpa koneksi setelah dibuka. Di Editor, pertanyaan yang diketik
+  di Palet Perintah (`Ctrl/Cmd+K`) menawarkan **Tanyakan ke panduan**.
 
 ## Menjalankan salinan Anda sendiri
 
