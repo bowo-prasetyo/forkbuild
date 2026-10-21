@@ -16,11 +16,13 @@ default setup uses is a rendezvous server that helps peers find each other,
 plus an anonymous, cookie-free visitor count once a day that you can turn off;
 see [docs/Privacy.md](docs/Privacy.md) for everything the app contacts.
 
-**Version 1.4.0**, released 2026-10-14: see the
-[release notes](docs/ReleaseNotes-1.4.md). It is the builder's release:
-fifty bricks that tilt, links that carry the build, builds anyone can find
-in a village round the weekly challenge, walking and building together from
-one link, and day and night in World View. 1.1.0
+**Version 1.5.0**, released 2026-10-21: see the
+[release notes](docs/ReleaseNotes-1.5.md). It makes the World round a build
+worth walking through (running water, weather, the moon's phases, real
+trees and four seasons) and keeps a builder's credit with their work
+(look-alikes pointed out, terms that stay with a remix), with hearts, short
+links, videos of a build, and voice building on the device. Update before
+16 November 2026, when the weekly challenge's themes change. 1.1.0
 fixed two security problems in 1.0.0, so update any copy older than that. Every milestone is recorded in
 [docs/Roadmap.md](docs/Roadmap.md).
 
@@ -311,7 +313,8 @@ See [docs/Architecture.md](docs/Architecture.md) for the full description.
 - [docs/Privacy.md](docs/Privacy.md): what ForkBuild stores, and every server
   it can contact.
 - [CONTRIBUTING.md](CONTRIBUTING.md): how to set up, test and submit changes.
-- [docs/ReleaseNotes-1.4.md](docs/ReleaseNotes-1.4.md),
+- [docs/ReleaseNotes-1.5.md](docs/ReleaseNotes-1.5.md),
+  [docs/ReleaseNotes-1.4.md](docs/ReleaseNotes-1.4.md),
   [docs/ReleaseNotes-1.3.md](docs/ReleaseNotes-1.3.md),
   [docs/ReleaseNotes-1.2.md](docs/ReleaseNotes-1.2.md),
   [docs/ReleaseNotes-1.1.md](docs/ReleaseNotes-1.1.md) and
