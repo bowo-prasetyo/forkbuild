@@ -107,6 +107,10 @@ const served = { 'config.json': config, 'onnx/encoder_model_quantized.onnx': enc
     assert(missing.status === 404 && fetched.length === before, '7. An unpinned file is answered as missing, and never fetched');
     const otherRevision = await pinned.fetch(urlOf('config.json', 'main'));
     assert(otherRevision.status === 404 && fetched.length === before, '8. ...as is the right file at the wrong revision');
+    for (const address of ['https://cdn.example/engine.wasm', `${HOST}someone/another-model/resolve/${REVISION}/config.json`, 'https://example.org/config.json']) {
+        const elsewhere = await pinned.fetch(address);
+        assert(elsewhere.status === 404 && fetched.length === before, `8b. Anything that is not the model's (${address}) is answered as missing, and never fetched`);
+    }
 
     serve = { ...served, 'config.json': new TextEncoder().encode('{"model_type":"something else"}') };
     const refused = await threw(pinned.fetch(urlOf('config.json')));
