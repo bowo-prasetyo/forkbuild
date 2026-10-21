@@ -6,7 +6,7 @@ import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { Position } from '../core/document/Position.js';
 import { WorldResident } from '../core/world/WorldResident.js';
 import { RESIDENT_MOTION } from '../core/world/ResidentMotion.js';
-import { isResidentWalkClear, isResidentGroundAt, RESIDENT_COLLISION_RADIUS } from '../core/world/ResidentPath.js';
+import { isResidentWalkClear, isResidentGroundAt, RESIDENT_COLLISION_RADIUS, RESIDENT_HEADROOM } from '../core/world/ResidentPath.js';
 import { VillageLibrary } from '../core/library/VillageLibrary.js';
 import { moveInReadyMadeResident, isReadyMadeHome } from '../core/building/ReadyMadeHome.js';
 import { DEFAULT_MAX_STEP_HEIGHT } from '../core/building/BrickWalkability.js';
@@ -46,6 +46,9 @@ import { assert } from './support/Assert.js';
 //   Section F: the Village library's ready-made homes — their residents get
 //              out of a fenced garden, step indoors through a front door, and
 //              never walk through anything
+//   Section G: an edit nearby — a brick raised over a resident's head or
+//              lowered into its way changes its way, and an edit made in
+//              World View is looked at again on the resident's next turn
 
 const SEED = DEFAULT_WORLD_SEED;
 // A daytime moment (a quarter of the way into the World's day): by night
@@ -394,6 +397,95 @@ function runTests() {
             `57. The garden cottage's resident gets out of its fenced garden and about (${outcomes.get('village:garden_cottage').away.toFixed(2)} of the time more than 2 m from home)`);
         assert(outcomes.get('village:large_house').inside > 0,
             '58. The large house\'s resident steps indoors through its front door, under the wall above it');
+    }
+
+    // -------------------------------------------------------------
+    // Section G — edits nearby
+    // -------------------------------------------------------------
+    {
+        const world = new World({ id: 'w-g' });
+        world.addResident(residentAt('g1', 'w-g', 0, 0));
+        world.addResident(residentAt('g2', 'w-g', 0.5, 0));
+        const loaded = new Map([['w-g', documentWith(world)]]);
+        const offset = { x: home.x, y: 0, z: home.z };
+        // A wall across the resident's ground, 1 m east of home, whose height
+        // the test sets: from the ground (in its way) or over its head.
+        const wall = (minY, maxY) => [{
+            min: { x: home.x + 1, y: minY, z: home.z - 8 },
+            max: { x: home.x + 1.5, y: maxY, z: home.z + 8 }
+        }];
+        let boxes = wall(0, 2);
+        let now = 0;
+        const runtime = new ResidentRuntime({
+            loadedDocuments: loaded, getWorldPosition: () => offset,
+            obstaclesNear: () => boxes, now: () => now
+        });
+        const [entry, second] = runtime.residents();
+        const underWall = { x: home.x + 1.25, z: home.z };
+        const navigation = runtime._navigationFor(entry);
+        assert(!navigation.isOpen(navigation.cellOf(underWall)), '59. (fixture) a wall from the ground is in a resident\'s way');
+
+        // The same footprint, raised over its head: a way through.
+        boxes = wall(RESIDENT_HEADROOM, RESIDENT_HEADROOM + 1);
+        now += 2000;
+        const raised = runtime._navigationFor(entry);
+        assert(raised !== navigation && raised.isOpen(raised.cellOf(underWall)),
+            '60. A brick raised over a resident\'s head, its footprint unchanged, opens a way on the next refresh');
+        boxes = wall(0, 2);
+        now += 2000;
+        const lowered = runtime._navigationFor(entry);
+        assert(lowered !== raised && !lowered.isOpen(lowered.cellOf(underWall)),
+            '61. ...and lowered into its way again, closes it');
+        now += 2000;
+        assert(runtime._navigationFor(entry) === lowered, '62. The same bricks, heights and all, keep the same navigation');
+
+        // invalidate(): looked at again before the timed refresh is due.
+        // Right after a timed refresh (61-62), so only invalidate() can let
+        // a resident look again this soon.
+        runtime._navigationFor(second);
+        boxes = wall(RESIDENT_HEADROOM, RESIDENT_HEADROOM + 1);
+        assert(runtime._navigationFor(entry) === lowered, '(fixture) before the refresh is due, the old navigation stands');
+        runtime.invalidate();
+        const invalidated = runtime._navigationFor(entry);
+        assert(invalidated !== lowered && invalidated.isOpen(invalidated.cellOf(underWall)),
+            '63. After invalidate(), a resident looks at its bricks again at once');
+        const secondBefore = runtime._paths.get('g2').navigation;
+        assert(runtime._navigationFor(second) === secondBefore, '64. ...one resident per turn, so a crowd never refreshes in one frame');
+        now += 50;
+        const secondAfter = runtime._navigationFor(second);
+        assert(secondAfter !== secondBefore && secondAfter.isOpen(secondAfter.cellOf(underWall)), '65. ...and the next on the next turn');
+        runtime.invalidate();
+        now += 50;
+        assert(runtime._navigationFor(entry) === invalidated, '66. Invalidated with nothing changed nearby, a resident keeps its navigation and the ways it found');
+
+        // WorldNavigationSession: every edit made here invalidates both.
+        const identity = new LocalIdentityProvider(new InMemoryStorageProvider());
+        identity.login('alice');
+        const avatar = new AvatarPresenceSession({ avatarId: 'alice-avatar', ownerIdentity: 'alice' }, { position: new Position(home.x, 0, home.z) });
+        const session = new WorldNavigationSession({
+            registry, loadPublicationDocumentUseCase: null, worldLayoutProvider: null,
+            identityProvider: identity, avatarPresenceSession: avatar, wildlifeClock: () => T
+        });
+        session._session = frameFacade();
+        const edited = new World({ id: 'w-g2' });
+        session._loadedDocuments.set('w-g2', documentWith(edited));
+        session._localPositions.set('w-g2', { x: home.x, y: 0, z: home.z });
+        session._registerCommandHistory('w-g2', new CommandHistory({ world: edited }));
+        session._activeDocumentId = 'w-g2';
+        const counted = (instance) => {
+            const original = instance.invalidate.bind(instance);
+            instance.invalidations = 0;
+            instance.invalidate = () => { instance.invalidations++; original(); };
+            return instance;
+        };
+        const residents = counted(session._residentRuntime());
+        const wildlife = counted(session._wildlifeDisplacement());
+        session.toggleResidentHere();
+        assert(residents.invalidations === 1 && wildlife.invalidations === 1, '67. An edit made in World View invalidates residents\' and wild animals\' bricks');
+        const history = session._commandHistories.get('w-g2');
+        history.undo();
+        history.redo();
+        assert(residents.invalidations === 3 && wildlife.invalidations === 3, '68. ...and so do its undo and redo');
     }
 
     console.log('✅ All Resident Integration tests passed.');

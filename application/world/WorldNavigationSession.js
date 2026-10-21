@@ -544,7 +544,10 @@ export class WorldNavigationSession {
             });
             this._commandHistoryUnsubscribes.set(worldId, unsubscribe);
         }
-        const activity = (kind) => ({ command }) => this._emitCommandActivity(kind, command);
+        const activity = (kind) => ({ command }) => {
+            this._worldContentChanged();
+            this._emitCommandActivity(kind, command);
+        };
         const subscriptions = [
             history.eventBus.subscribe(CommandHistoryEvent.COMMAND_EXECUTED, activity(EDITOR_ACTIVITY.EXECUTED)),
             history.eventBus.subscribe(CommandHistoryEvent.COMMAND_UNDONE, activity(EDITOR_ACTIVITY.UNDONE)),
@@ -552,6 +555,15 @@ export class WorldNavigationSession {
         ];
         this._commandActivityUnsubscribes.set(worldId, () => subscriptions.forEach((subscription) => subscription.unsubscribe()));
         return history;
+    }
+
+    // A World this session holds was changed here (a command run, undone or
+    // redone, or a past state restored): residents and wild animals look at
+    // its bricks again now rather than on their next timed refresh. A
+    // collaborator's change waits for that refresh.
+    _worldContentChanged() {
+        if (this._residentRuntimeInstance) this._residentRuntimeInstance.invalidate();
+        if (this._wildlifeDisplacementInstance) this._wildlifeDisplacementInstance.invalidate();
     }
 
     // Calls `listener(activity, command)` for every change the user makes to a

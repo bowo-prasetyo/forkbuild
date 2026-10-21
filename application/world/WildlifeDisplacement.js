@@ -64,9 +64,13 @@ export class WildlifeDisplacement {
         return verdict;
     }
 
-    // Forget every gathered brick, e.g. after this session's own edit.
+    // Expire every tile's gathered bricks, e.g. after this session's own edit:
+    // the next tile asked about gathers again at once, the rest on their
+    // turns, REFRESH_SPACING_MS apart as any stale ones are, so the tiles round
+    // a viewer never all refresh in one frame.
     invalidate() {
-        this._tiles.clear();
+        for (const tile of this._tiles.values()) tile.gatheredAt = -Infinity;
+        this._lastRefreshAt = -Infinity;
     }
 
     _tileFor(animal) {

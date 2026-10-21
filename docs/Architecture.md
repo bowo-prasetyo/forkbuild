@@ -1560,7 +1560,7 @@ surface and stays silent under water. Presence keeps its existing `animation` va
   whose reachable ground (its cell, within its wander radius, grown by its body) overlaps a brick lower than 2 m is
   not there. `application/world/WildlifeDisplacement.js` answers it by animal id from the session's solid documents
   (`AvatarMovementConstraint#obstaclesNear()` with no step allowance), gathering bricks once per terrain tile and again
-  every 2 s. `AnimalRuntimeInstances#setDisplacement()` makes `isExcluded()` true for a displaced animal (never added
+  every 2 s, or on the tile's next turn after an edit made in World View (`invalidate()`). `AnimalRuntimeInstances#setDisplacement()` makes `isExcluded()` true for a displaced animal (never added
   to `excludedIds`), so catching, collision, creature sounds and resident talk leave it out, and
   `Renderer#setHiddenWildlife()` makes `updateWildlifeTileMesh()` draw it at zero scale until the build is gone.
 - **Rendering.** Deterministic animals are drawn by their wildlife tile (`renderer/WildlifeTileMesh.js`), which keeps
@@ -1600,6 +1600,7 @@ surface and stays silent under water. Presence keeps its existing `animation` va
     application/world/ResidentRuntime.js ── obstacles per home: AvatarMovementConstraint#obstaclesNear()
             │                                (bricks an avatar on the ground bumps into) + tree trunks,
             │                                gathered again every 2 s, one resident at a time
+            │                                (and on its next turn after an edit made in World View)
     core/world/ResidentMotion.js#residentPoseAt(resident, time, { navigation })
             │      navigation = core/world/ResidentNavigation.js#buildResidentNavigation()
             │                   (kept while the gathered bricks are the same)
@@ -1622,8 +1623,12 @@ surface and stays silent under water. Presence keeps its existing `animation` va
   is a turn in place. Only spots whose way from home takes at most
   `RESIDENT_REACH_SECONDS` (8.35 s) are used, so the way between two, at worst by way of home, fits in a segment.
   A navigation is built in about 2 ms and its plans in under 1 ms; `ResidentRuntime` keeps it while the bricks it
-  gathers every 2 s are the same, and `newResidentIdNear()` picks an id that stays home this segment
-  (`residentStaysHomeAt()`) without building one. The session's `wildlifeClock` is the one clock.
+  gathers every 2 s are the same, heights included (a brick raised over a resident's head opens a way). An edit made
+  in World View (a command run, undone or redone, or a past state restored) calls
+  `WorldNavigationSession#_worldContentChanged()`, which expires every resident's and wild animal tile's bricks
+  (`invalidate()`): the next one asked about gathers again at once, the rest a turn apart, and a resident whose bricks
+  did not change keeps its navigation; a collaborator's edit waits for the 2 s refresh. And `newResidentIdNear()`
+  picks an id that stays home this segment (`residentStaysHomeAt()`) without building one. The session's `wildlifeClock` is the one clock.
 - **Posing (2026-10-21).** The renderer, the avatar's collision and the creature sounds each ask `posesNear()` every
   frame, at the same moment: `poseOf()` poses each resident once per moment and hands each caller a fresh copy.
   With a `limit` (the renderer's 16), homes are visited nearest first and the search stops once no home left could

@@ -35,6 +35,7 @@ export const documentHistoryMethods = {
         // 3. Update session state
         this._loadedDocuments.set(docId, restoredDocument);
         this._registerCommandHistory(restoredWorld.id, restoredHistory);
+        this._worldContentChanged();
 
         // 4. Retire the old history
         if (!this._retiredHistories) this._retiredHistories = new Map();
