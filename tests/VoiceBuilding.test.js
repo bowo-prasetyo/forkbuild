@@ -228,7 +228,7 @@ function workerPair(runtimeFor) {
         es: [['llévame al molino viejo', 'goTo:mill'], ['a casa', 'home'], ['silencio', 'soundOff'], ['activa el sonido', 'soundOn'], ['primera persona', 'firstPerson'], ['deshacer', 'undo']],
         fr: [['emmène-moi au vieux moulin', 'goTo:mill'], ['à la maison', 'home'], ['coupe le son', 'soundOff'], ['remets le son', 'soundOn'], ['troisième personne', 'thirdPerson'], ['annuler', 'undo']],
         id: [['bawa aku ke kincir tua', 'goTo:mill'], ['pulang', 'home'], ['matikan suara', 'soundOff'], ['nyalakan suara', 'soundOn'], ['orang pertama', 'firstPerson'], ['urungkan', 'undo']],
-        ja: [['古い水車小屋に連れて行って', 'goTo:mill'], ['ホームに戻って', 'home'], ['ミュート', 'soundOff'], ['ミュート解除', 'soundOn'], ['一人称', 'firstPerson'], ['元に戻して', 'undo']],
+        ja: [['古い水車小屋に連れて行って', 'goTo:mill'], ['ホームに戻って', 'home'], ['ミュート', 'soundOff'], ['ミュート解除', 'soundOn'], ['一人称', 'firstPerson'], ['1人称にして', 'firstPerson'], ['３人称', 'thirdPerson'], ['元に戻して', 'undo']],
         ko: [['오래된 물레방아로 데려가 줘', 'goTo:mill'], ['홈으로', 'home'], ['음소거', 'soundOff'], ['음소거 해제', 'soundOn'], ['1인칭', 'firstPerson'], ['실행 취소', 'undo']],
         'pt-BR': [['me leve ao moinho velho', 'goTo:mill'], ['para casa', 'home'], ['sem som', 'soundOff'], ['liga o som', 'soundOn'], ['terceira pessoa', 'thirdPerson'], ['desfazer', 'undo']]
     };
@@ -269,7 +269,11 @@ function workerPair(runtimeFor) {
     let removed = 0;
     const languages = [];
     const runtime = { load: async (report) => { report({ phase: 'engine', loaded: 1, total: 2 }); }, transcribe: async (samples, language) => { languages.push(language); return ' Paint the roof red. [BLANK_AUDIO]'; }, remove: async () => { removed += 1; } };
-    const record = async () => ({ stop: async () => new Float32Array(16000), cancel: async () => {} });
+    // A second of sound with something said in the middle of it.
+    const spoken = () => Float32Array.from({ length: 16000 }, (_, i) => (i > 5000 && i < 11000 ? 0.2 * Math.sin(i / 8) : 0));
+    const transcribed = [];
+    runtime.transcribe = async (samples, language) => { languages.push(language); transcribed.push(samples.length); return ' Paint the roof red. [BLANK_AUDIO]'; };
+    const record = async () => ({ stop: async () => spoken(), cancel: async () => {} });
     const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
     const voice = useVoiceCommands({ act: (text) => { acted.push(text); return { kind: 'done', label: 'Paint 4 roof pieces Roof red' }; }, runtime, record, supported: true, language: () => 'en', storage });
     voice.toggleVoice();
@@ -284,6 +288,29 @@ function workerPair(runtimeFor) {
     await settle();
     assert(voice.voice.value.step === 'result' && voice.voice.value.heard === 'Paint the roof red', `pressing again stops, and what was said is heard, without the noise the model marks (got "${voice.voice.value.heard}")`);
     assert(acted.length === 1 && acted[0] === 'Paint the roof red' && voice.voice.value.outcome.kind === 'done' && languages[0] === 'english', 'and done, heard in the app\'s language');
+    assert(transcribed[0] < 16000 && transcribed[0] >= 6000, 'only what was said goes to the model, the silence round it cut off');
+
+    // Nothing said: the model is not asked, and nothing is done.
+    const quiet = useVoiceCommands({ act: (text) => { acted.push(text); return { kind: 'done' }; }, runtime, record: async () => ({ stop: async () => new Float32Array(16000), cancel: async () => {} }), supported: true, language: () => 'en', storage: { getItem: () => 'yes', setItem() {}, removeItem() {} } });
+    const asked = transcribed.length;
+    quiet.toggleVoice();
+    await settle();
+    quiet.toggleVoice();
+    await settle();
+    await settle();
+    assert(quiet.voice.value.step === 'result' && quiet.voice.value.heard === '' && quiet.voice.value.outcome.kind === 'nothing' && transcribed.length === asked,
+        'silence is not sent to the model, and nothing is done');
+
+    // What the model makes up from noise is not a command.
+    const madeUp = useVoiceCommands({ act: (text) => { acted.push(text); return { kind: 'done' }; }, runtime: { ...runtime, transcribe: async () => ' ご視聴ありがとうございました。' }, record, supported: true, language: () => 'ja', storage: { getItem: () => 'yes', setItem() {}, removeItem() {} } });
+    const actedBefore = acted.length;
+    madeUp.toggleVoice();
+    await settle();
+    madeUp.toggleVoice();
+    await settle();
+    await settle();
+    assert(madeUp.voice.value.heard === '' && madeUp.voice.value.outcome.kind === 'nothing' && acted.length === actedBefore,
+        'a sign-off the model made up from noise is taken as nothing said');
     voice.toggleVoice();
     await settle();
     assert(voice.voice.value.step === 'listening', 'once on, a press listens straight away');

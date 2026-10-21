@@ -16,8 +16,8 @@
 // neighbours must not be steeper than an avatar can walk.
 //
 // THE QUICKEST WAY between two cells is a shortest path over the open cells
-// and their eight neighbours (no cutting a blocked corner), ties broken by
-// cell order, so every replica finds the same one. smoothPath() then pulls
+// and their eight neighbours (no cutting a blocked corner), found by an A*
+// search with ties broken by cell order, so every replica finds the same one. smoothPath() then pulls
 // it tight: it walks straight from each corner as far as the exact geometry
 // allows (isStraightClear()), so a resident heads straight for a doorway and
 // turns only where something is in the way.
@@ -90,11 +90,13 @@ function landAt(land, x, z) {
     return { dry: Boolean(dry), height: h };
 }
 
-// A min-heap of cell indices by cost, ties to the lower index.
+// A min-heap of cell indices by priority, ties to the lower index. Plain
+// growable arrays, swapped by hand: a search pushes thousands of cells and
+// must not make garbage doing it.
 class CellHeap {
     constructor() {
         this.cells = [];
-        this.costs = [];
+        this.keys = [];
     }
 
     get size() {
@@ -102,17 +104,23 @@ class CellHeap {
     }
 
     _less(a, b) {
-        return this.costs[a] < this.costs[b] || (this.costs[a] === this.costs[b] && this.cells[a] < this.cells[b]);
+        const ka = this.keys[a];
+        const kb = this.keys[b];
+        return ka < kb || (ka === kb && this.cells[a] < this.cells[b]);
     }
 
     _swap(a, b) {
-        [this.cells[a], this.cells[b]] = [this.cells[b], this.cells[a]];
-        [this.costs[a], this.costs[b]] = [this.costs[b], this.costs[a]];
+        const cell = this.cells[a];
+        this.cells[a] = this.cells[b];
+        this.cells[b] = cell;
+        const key = this.keys[a];
+        this.keys[a] = this.keys[b];
+        this.keys[b] = key;
     }
 
-    push(cell, cost) {
+    push(cell, key) {
         this.cells.push(cell);
-        this.costs.push(cost);
+        this.keys.push(key);
         let i = this.cells.length - 1;
         while (i > 0) {
             const parent = (i - 1) >> 1;
@@ -122,13 +130,14 @@ class CellHeap {
         }
     }
 
+    // Removes the top cell and returns it.
     pop() {
-        const top = { cell: this.cells[0], cost: this.costs[0] };
+        const top = this.cells[0];
         const lastCell = this.cells.pop();
-        const lastCost = this.costs.pop();
+        const lastKey = this.keys.pop();
         if (this.cells.length > 0) {
             this.cells[0] = lastCell;
-            this.costs[0] = lastCost;
+            this.keys[0] = lastKey;
             let i = 0;
             for (;;) {
                 const left = 2 * i + 1;
@@ -230,20 +239,35 @@ export function buildResidentNavigation({
         return i * size + j;
     };
 
-    // Shortest ways from `source` over open cells, kept per source.
-    const searches = new Map();
-    const searchFrom = (source) => {
-        let found = searches.get(source);
-        if (found) return found;
-        const cost = new Float64Array(count).fill(Infinity);
-        const previous = new Int32Array(count).fill(-1);
-        if (open[source]) {
-            cost[source] = 0;
+    // The quickest way from cell `from` to cell `to` over open cells, as the
+    // cells along it, or null: an A* search, guided by the distance left as
+    // the crow walks on a grid (never more than the true way, so the way found
+    // is a shortest one), ties to the lower cell. Kept per pair.
+    const found = new Map();
+    const findPath = (from, to) => {
+        const id = from * count + to;
+        if (found.has(id)) return found.get(id);
+        let path = null;
+        if (open[from] && open[to]) {
+            const ti = Math.floor(to / size);
+            const tj = to % size;
+            const guess = (cell) => {
+                const di = Math.abs(Math.floor(cell / size) - ti);
+                const dj = Math.abs((cell % size) - tj);
+                return (Math.max(di, dj) + (Math.SQRT2 - 1) * Math.min(di, dj)) * NAV_CELL;
+            };
+            const cost = new Float64Array(count).fill(Infinity);
+            const previous = new Int32Array(count).fill(-1);
+            const closed = new Uint8Array(count);
+            cost[from] = 0;
             const heap = new CellHeap();
-            heap.push(source, 0);
+            heap.push(from, guess(from));
             while (heap.size > 0) {
-                const { cell, cost: reached } = heap.pop();
-                if (reached > cost[cell]) continue;
+                const cell = heap.pop();
+                if (closed[cell]) continue;
+                closed[cell] = 1;
+                if (cell === to) break;
+                const reached = cost[cell];
                 const i = Math.floor(cell / size);
                 const j = cell % size;
                 for (const [di, dj, steps] of NEIGHBOURS) {
@@ -251,7 +275,7 @@ export function buildResidentNavigation({
                     const nj = j + dj;
                     if (ni < 0 || nj < 0 || ni >= size || nj >= size) continue;
                     const next = ni * size + nj;
-                    if (!open[next]) continue;
+                    if (!open[next] || closed[next]) continue;
                     // No cutting a blocked corner.
                     if (di !== 0 && dj !== 0 && (!open[ni * size + j] || !open[i * size + nj])) continue;
                     const length = steps * NAV_CELL;
@@ -260,14 +284,18 @@ export function buildResidentNavigation({
                     if (through < cost[next]) {
                         cost[next] = through;
                         previous[next] = cell;
-                        heap.push(next, through);
+                        heap.push(next, through + guess(next));
                     }
                 }
             }
+            if (closed[to]) {
+                path = [to];
+                while (path[path.length - 1] !== from) path.push(previous[path[path.length - 1]]);
+                path.reverse();
+            }
         }
-        found = { cost, previous };
-        searches.set(source, found);
-        return found;
+        found.set(id, path);
+        return path;
     };
 
     // Whether a resident can walk straight from `from` to `to` by the exact
@@ -305,11 +333,7 @@ export function buildResidentNavigation({
         // included, or null when there is none.
         cellPath(from, to) {
             if (from === to) return open[from] ? [from] : null;
-            const { cost, previous } = searchFrom(from);
-            if (!(cost[to] < Infinity)) return null;
-            const path = [to];
-            while (path[path.length - 1] !== from) path.push(previous[path[path.length - 1]]);
-            return path.reverse();
+            return findPath(from, to);
         },
         isStraightClear,
         // `cells` (a cellPath()) pulled tight: the corners a resident walks

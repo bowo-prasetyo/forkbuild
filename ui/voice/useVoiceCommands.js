@@ -1,6 +1,7 @@
 import { onBeforeUnmount, ref } from 'vue';
 import { speechSupported } from '../../application/voice/SpeechWorkerClient.js';
-import { cleanTranscript, whisperLanguage } from '../../core/voice/Transcript.js';
+import { cleanTranscript, whisperLanguage, withoutSilenceWords } from '../../core/voice/Transcript.js';
+import { prepareSpeech } from '../../core/voice/SpeechPreparation.js';
 import { startRecording } from './recordVoice.js';
 import { sharedSpeechRecognizer } from './speechRecognizer.js';
 import { currentLocale } from '../i18n/i18n.js';
@@ -75,9 +76,12 @@ export function useVoiceCommands({ act, runtime = sharedSpeechRecognizer(), reco
         if (!current) return;
         show({ step: 'working' });
         try {
-            const samples = await current.stop();
-            const heard = samples.length > 0
-                ? cleanTranscript(await runtime.transcribe(samples, whisperLanguage(language())))
+            // Only what was said, at a level the model hears well; nothing
+            // said, nothing asked (core/voice/SpeechPreparation.js), and what
+            // the model makes up from silence is not taken for a command.
+            const speech = prepareSpeech(await current.stop());
+            const heard = speech.speech
+                ? withoutSilenceWords(cleanTranscript(await runtime.transcribe(speech.samples, whisperLanguage(language()))))
                 : '';
             show({ step: 'result', heard, outcome: heard ? act(heard) : { kind: 'nothing' } });
         } catch (error) {

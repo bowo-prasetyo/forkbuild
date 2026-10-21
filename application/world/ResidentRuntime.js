@@ -71,6 +71,9 @@ export class ResidentRuntime {
         this._now = now;
         this._paths = new Map(); // resident id -> { homeX, homeZ, gatheredAt, boxes, navigation }
         this._lastRefreshAt = -Infinity;
+        // The moment last posed, and each resident's pose then.
+        this._posedAt = null;
+        this._poses = new Map(); // resident id -> { navigation, homeX, homeZ, pose }
     }
 
     // Every resident in every loaded World: { id, resident, worldId,
@@ -97,26 +100,55 @@ export class ResidentRuntime {
     }
 
     // Where `entry` (from residents()) is at `timeSeconds`: residentPoseAt()'s
-    // pose, plus the resident's id, World and home (shared space).
+    // pose, plus the resident's id, World and home (shared space). The
+    // renderer, the avatar's collision and the sounds all ask about the same
+    // moment every frame, so each resident is posed once per moment.
     poseOf(entry, timeSeconds) {
-        const pose = residentPoseAt({ id: entry.id, home: entry.home }, timeSeconds, { navigation: this._navigationFor(entry) });
-        return { id: entry.id, worldId: entry.worldId, documentId: entry.documentId, home: { ...entry.home }, ...pose };
+        if (this._posedAt !== timeSeconds) {
+            this._posedAt = timeSeconds;
+            this._poses.clear();
+        }
+        const navigation = this._navigationFor(entry);
+        let posed = this._poses.get(entry.id);
+        if (!posed || posed.navigation !== navigation || posed.homeX !== entry.home.x || posed.homeZ !== entry.home.z) {
+            posed = {
+                navigation,
+                homeX: entry.home.x,
+                homeZ: entry.home.z,
+                pose: residentPoseAt({ id: entry.id, home: entry.home }, timeSeconds, { navigation })
+            };
+            this._poses.set(entry.id, posed);
+        }
+        return { id: entry.id, worldId: entry.worldId, documentId: entry.documentId, home: { ...entry.home }, ...posed.pose };
     }
 
     // The poses of residents within `radius` of `center` right now, nearest
     // first, at most `limit`. A resident is never farther than the wander
-    // radius from home, so only those whose home is within reach are posed.
+    // radius from home, so only those whose home is within reach are posed,
+    // nearest home first; with a `limit`, the search stops once no home left
+    // could hold anyone nearer than the nearest `limit` found.
     posesNear(center, radius, timeSeconds, { limit = Infinity } = {}) {
-        const reach = radius + RESIDENT_MOTION.wanderRadius;
-        const poses = [];
+        const wander = RESIDENT_MOTION.wanderRadius;
+        const reach = radius + wander;
+        const candidates = [];
         for (const entry of this.residents()) {
-            if (flatDistance(entry.home, center) > reach) continue;
+            const homeDistance = flatDistance(entry.home, center);
+            if (homeDistance <= reach) candidates.push({ entry, homeDistance });
+        }
+        candidates.sort((a, b) => a.homeDistance - b.homeDistance);
+        const poses = [];
+        for (const { entry, homeDistance } of candidates) {
+            if (poses.length >= limit) {
+                poses.sort(byDistanceThenId);
+                poses.length = limit;
+                if (homeDistance - wander > poses[limit - 1].distance) break;
+            }
             const pose = this.poseOf(entry, timeSeconds);
             const distance = flatDistance(pose, center);
             if (distance > radius) continue;
             poses.push({ pose, distance });
         }
-        poses.sort((a, b) => (a.distance - b.distance) || (a.pose.id < b.pose.id ? -1 : a.pose.id > b.pose.id ? 1 : 0));
+        poses.sort(byDistanceThenId);
         return poses.slice(0, limit).map(({ pose }) => pose);
     }
 
@@ -214,6 +246,10 @@ function sameBoxes(a, b) {
 // The query radius an obstacle source should gather within, around a home:
 // everything a resident's walks can reach.
 export const RESIDENT_OBSTACLE_QUERY_RADIUS = RESIDENT_MOTION.wanderRadius + OBSTACLE_MARGIN;
+
+function byDistanceThenId(a, b) {
+    return (a.distance - b.distance) || (a.pose.id < b.pose.id ? -1 : a.pose.id > b.pose.id ? 1 : 0);
+}
 
 function flatDistance(a, b) {
     return Math.hypot(a.x - b.x, a.z - b.z);

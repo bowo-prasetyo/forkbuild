@@ -8,7 +8,10 @@
 // - the ONNX runtime's WebAssembly engine is downloaded once from jsDelivr,
 //   at one exact version, and refused unless its SHA-256 is the one below;
 // - the speech model (onnx-community/whisper-tiny) is downloaded once from
-//   Hugging Face;
+//   Hugging Face, at the commit application/voice/SpeechModelPins.js names, and
+//   every file of it is refused unless its SHA-256 is the pinned one, whether
+//   downloaded or found in this browser's cache (application/voice/
+//   PinnedModelFiles.js);
 // - both are kept in this browser's Cache Storage, so voice works offline
 //   afterwards, and remove() deletes them.
 //
@@ -16,6 +19,9 @@
 // (vendor/onnxruntime-web/) are served by this site, so no script ever comes
 // from elsewhere; the engine is given to the runtime as bytes, never by URL
 // (docs/Privacy.md, "Voice building").
+import { SPEECH_MODEL_REVISION, SPEECH_MODEL_FILES } from './SpeechModelPins.js';
+import { PinnedModelFiles } from './PinnedModelFiles.js';
+
 export const SPEECH_MODEL = 'onnx-community/whisper-tiny';
 
 export const SPEECH_ENGINE = Object.freeze({
@@ -42,8 +48,12 @@ export class SpeechRuntime {
         caches: cacheStorage = globalThis.caches,
         subtle = globalThis.crypto?.subtle,
         engine = SPEECH_ENGINE,
+        modelRevision = SPEECH_MODEL_REVISION,
+        modelFiles = SPEECH_MODEL_FILES,
         engineLoaderUrl
     } = {}) {
+        this._modelRevision = modelRevision;
+        this._modelFiles = modelFiles;
         this._importLibrary = importLibrary;
         this._fetch = fetchResource;
         this._caches = cacheStorage;
@@ -90,19 +100,41 @@ export class SpeechRuntime {
         wasm.numThreads = 1;
         wasm.proxy = false;
         const files = new Map();
+        const report = (file, loaded, total) => {
+            files.set(file, { loaded: loaded || 0, total: total || 0 });
+            let sumLoaded = 0;
+            let sumTotal = 0;
+            for (const each of files.values()) {
+                sumLoaded += each.loaded;
+                sumTotal += each.total;
+            }
+            onProgress({ phase: 'model', loaded: sumLoaded, total: sumTotal });
+        };
+        const pinned = this._modelRevision !== null && this._modelRevision !== undefined;
+        if (pinned) {
+            // Every file of the model held to its pin, downloaded or cached.
+            const pinnedFiles = new PinnedModelFiles({
+                model: SPEECH_MODEL,
+                revision: this._modelRevision,
+                files: this._modelFiles,
+                host: env.remoteHost || 'https://huggingface.co/',
+                fetch: this._fetch,
+                caches: this._caches,
+                cacheName: MODEL_CACHE,
+                subtle: this._subtle,
+                onProgress: report
+            });
+            env.fetch = (url, init) => pinnedFiles.fetch(url, init);
+            env.useCustomCache = true;
+            env.customCache = pinnedFiles.cache;
+        }
         this._recognize = await pipeline('automatic-speech-recognition', SPEECH_MODEL, {
             device: 'wasm',
             dtype: 'q8',
+            ...(pinned ? { revision: this._modelRevision } : {}),
             progress_callback: (event) => {
                 if (event?.status !== 'progress' || !event.file) return;
-                files.set(event.file, { loaded: event.loaded || 0, total: event.total || 0 });
-                let loaded = 0;
-                let total = 0;
-                for (const file of files.values()) {
-                    loaded += file.loaded;
-                    total += file.total;
-                }
-                onProgress({ phase: 'model', loaded, total });
+                report(event.file, event.loaded, event.total);
             }
         });
         return this;

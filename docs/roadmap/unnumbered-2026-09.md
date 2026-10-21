@@ -8482,3 +8482,36 @@ and deer and rabbits lie down for the night.
   the time and is more than 2 m from home 87% of it; the large house's goes indoors 10% of the time (never before).
 - Not done: an animal that stays put after being released on a build still lies where it stands; residents do not
   open doors (a standing door has no collision, as for avatars); night does not change what a resident says.
+
+
+## A pinned speech model, a voice heard more surely, and residents posed once a frame (unnumbered, 2026-10-21)
+
+**The last three findings of the game AI audit.** The speech engine was pinned by its SHA-256, but the speech model
+itself was taken from Hugging Face's main branch as it stood, unchecked; given silence or noise, Whisper tiny makes
+words up (in Japanese and Korean above all, the sign-offs of the videos it was trained on), and every recording went
+to it whole, silence included; and the resident runtime posed every resident within reach afresh for each of the
+three systems that ask every frame. Pillar served: building feels joyful (voice building that does what was said),
+and anyone can remix it (a model nobody can swap under the app).
+
+- application/voice/SpeechModelPins.js and PinnedModelFiles.js (new): the model at one commit, every file transformers.js
+  reads held to its SHA-256, downloaded or cached (a bad cached copy is thrown away and fetched again), anything
+  unpinned answered as missing; SpeechRuntime gives transformers.js the revision, `env.fetch` and `env.customCache`.
+  scripts/pin-speech-model.mjs (new) writes the pins, and `--check` compares them with Hugging Face.
+- core/voice/SpeechPreparation.js (new): the silence round what was said cut off, a quiet voice brought up, nothing
+  said never sent. core/voice/Transcript.js: `withoutSilenceWords()` drops what the model makes up from silence, in
+  all eight languages. ui/voice/useVoiceCommands.js uses both. Japanese: 1人称 and 3人称 (as the model often writes
+  them) for the camera views.
+- application/world/ResidentRuntime.js: each resident posed once per moment; with a limit, the search stops early.
+  core/world/ResidentNavigation.js: an A* search per pair of cells instead of a whole-grid search per source, and a
+  heap that makes no garbage. 300 residents in reach: 3.1 ms a frame down to 0.8 ms.
+- docs/Architecture.md.
+- Tests: tests/PinnedSpeechModel.test.js (pinned bytes handed on, changed ones refused, unpinned files never read,
+  the cache checked and cleaned, the runtime's wiring with and without pins, the pins file as the script writes it);
+  tests/SpeechPreparation.test.js (silence cut, a quiet voice raised, nothing said, a click, talk from start to end,
+  made-up sign-offs in every language and real commands kept); tests/VoiceBuilding.test.js (silence never reaches the
+  model, a made-up sign-off is nothing said, 1人称/３人称); tests/ResidentIntegration.test.js (the nearest few found
+  early are those of posing everyone; one pose per moment, a fresh copy each).
+- Not done: the pins themselves. This change was made where Hugging Face could not be reached, so
+  SpeechModelPins.js is still empty and the model loads unchecked, as before, until someone runs
+  `node scripts/pin-speech-model.mjs`, commits the result and says a command to check voice still works. Recognising
+  real speech was not tried here either.
