@@ -17,6 +17,7 @@ import { AVATAR_COLLISION_RADIUS } from '../core/avatar/AvatarCollision.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { residentAppearanceFor, RESIDENT_TEMPLATE_ID } from '../core/world/ResidentAppearance.js';
 import { AvatarInteractionKind } from '../core/avatar/AvatarInteractionKind.js';
+import { AvatarAnimationState } from '../core/avatar/AvatarAnimationState.js';
 import { ResidentRuntime, RESIDENT_INTERACTION_RADIUS, MAX_RENDERED_RESIDENTS } from '../application/world/ResidentRuntime.js';
 import { AvatarResidentConstraint } from '../application/avatar/AvatarResidentConstraint.js';
 import { AvatarMovementConstraint } from '../application/avatar/AvatarMovementConstraint.js';
@@ -26,7 +27,7 @@ import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { RESIDENT_REFUSAL } from '../application/worldNavigation/residentMethods.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { ResidentFieldRenderer } from '../renderer/ResidentFieldRenderer.js';
+import { ResidentFieldRenderer, RESIDENT_GLIDE } from '../renderer/ResidentFieldRenderer.js';
 import { RESIDENT_REACTION } from '../renderer/ResidentReaction.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
@@ -48,7 +49,8 @@ import { assert } from './support/Assert.js';
 //              never walk through anything
 //   Section G: an edit nearby — a brick raised over a resident's head or
 //              lowered into its way changes its way, and an edit made in
-//              World View is looked at again on the resident's next turn
+//              World View is looked at again on the resident's next turn;
+//              drawn, the change is a short walk, never a pop
 
 const SEED = DEFAULT_WORLD_SEED;
 // A daytime moment (a quarter of the way into the World's day): by night
@@ -330,8 +332,36 @@ function runTests() {
         assert(Math.abs(visual()._animationTime - 0.1) < 1e-9 && gaitBefore >= 0,
             '35. Walking legs advance with the ground covered, not the clock');
 
+        // A jump in the pose (its way changed under it) is drawn as a short
+        // walk from where the body was, not a pop.
+        const glider = (x, z, rotationY = 0) => ({ id: 'r-g', x, z, rotationY, moving: false, idleSeconds: 0, idleDuration: 0 });
+        const drawnOf = () => field.getObject('r-g').position;
+        const gliderVisual = () => field._entries.get('r-g').visual;
+        field.sync([standing, glider(10, 0)]);
+        field.tick(1 / 60);
+        field.sync([standing, glider(13, 0, Math.PI)]);
+        assert(drawnOf().x === 10 && drawnOf().z === 0, '35b. On the frame its pose jumps 3 m, the body is still where it was');
+        assert(gliderVisual()._lastAnimation === AvatarAnimationState.WALKING, '35c. ...and walks while it glides, though the pose stands');
+        field.tick(RESIDENT_GLIDE.seconds / 2);
+        field.sync([standing, glider(13, 0, Math.PI)]);
+        assert(drawnOf().x > 10.5 && drawnOf().x < 12.5, `35d. Halfway through, it is on its way (${drawnOf().x.toFixed(2)})`);
+        const halfwayDegrees = gliderVisual()._lastRotationY;
+        assert(halfwayDegrees > 45 && halfwayDegrees < 135, `35e. ...turning toward its new facing (${halfwayDegrees.toFixed(0)}°)`);
+        field.tick(RESIDENT_GLIDE.seconds / 2 + 0.01);
+        field.sync([standing, glider(13.01, 0, Math.PI)]);
+        assert(drawnOf().x === 13.01 && Math.abs(gliderVisual()._lastRotationY - 180) < 1e-9
+            && gliderVisual()._lastAnimation === AvatarAnimationState.IDLE,
+            '35f. When the glide is over, the body is exactly where the resident is, standing');
+        field.tick(1 / 60);
+        field.sync([standing, glider(13.01 + RESIDENT_GLIDE.snapDistance + 1, 0, Math.PI)]);
+        assert(drawnOf().x === 13.01 + RESIDENT_GLIDE.snapDistance + 1, '35g. A jump farther than any new way round home (its World moved) is drawn there at once');
+        field.tick(1 / 60);
+        const snapped = 13.01 + RESIDENT_GLIDE.snapDistance + 1;
+        field.sync([standing, glider(snapped + 0.3, 0, Math.PI)]);
+        assert(drawnOf().x === snapped + 0.3, '35h. A step no farther than a frame\'s stroll is drawn as it is');
+
         const gone = field.sync([]);
-        assert(gone.removed.length === 1 && field.getObject('r-1') === null, '36. A resident out of range is removed');
+        assert(gone.removed.length === 2 && field.getObject('r-1') === null, '36. A resident out of range is removed');
         field.sync([standing]);
         assert(field.clear().length === 1 && field.trackedResidentIds().length === 0, '37. clear() hands back everything to remove');
     }
@@ -457,6 +487,43 @@ function runTests() {
         runtime.invalidate();
         now += 50;
         assert(runtime._navigationFor(entry) === invalidated, '66. Invalidated with nothing changed nearby, a resident keeps its navigation and the ways it found');
+
+        // Drawn, the change never pops: the moment the wall is raised, a
+        // resident's new way may put it metres from where it was walking,
+        // and its body walks there over RESIDENT_GLIDE.seconds.
+        {
+            const before = new ResidentRuntime({ loadedDocuments: loaded, getWorldPosition: () => offset, obstaclesNear: () => wall(0, 2) });
+            const after = new ResidentRuntime({ loadedDocuments: loaded, getWorldPosition: () => offset, obstaclesNear: () => wall(RESIDENT_HEADROOM, RESIDENT_HEADROOM + 1) });
+            const [beforeEntry] = before.residents();
+            const [afterEntry] = after.residents();
+            let at = null;
+            let jump = 0;
+            for (let t = 0; t < 4000 && at === null; t += 1) {
+                const a = before.poseOf(beforeEntry, T + t);
+                const b = after.poseOf(afterEntry, T + t);
+                jump = Math.hypot(a.x - b.x, a.z - b.z);
+                if (jump > 2 && jump <= RESIDENT_GLIDE.snapDistance) at = T + t;
+            }
+            assert(at !== null, '(fixture) raising the wall moves the resident to a new way, metres away');
+            const template = CoreAvatarTemplateLibrary.templates.find((t) => t.templateId === RESIDENT_TEMPLATE_ID);
+            const field = new ResidentFieldRenderer({ appearanceFor: (id) => ({ template, appearance: residentAppearanceFor(id, template) }) });
+            const frame = 1 / 60;
+            field.sync([before.poseOf(beforeEntry, at - frame)]);
+            let drawn = { ...field.getObject(beforeEntry.id).position };
+            let farthestStep = 0;
+            for (let f = 0; f <= Math.ceil(RESIDENT_GLIDE.seconds / frame) + 1; f++) {
+                field.tick(frame);
+                field.sync([after.poseOf(afterEntry, at + f * frame)]);
+                const now = field.getObject(beforeEntry.id).position;
+                farthestStep = Math.max(farthestStep, Math.hypot(now.x - drawn.x, now.z - drawn.z));
+                drawn = { ...now };
+            }
+            // smoothstep's steepest slope is 1.5, on top of the resident's own stroll.
+            const bound = (1.5 * jump) / (RESIDENT_GLIDE.seconds / frame) + 1.65 * frame + 1e-6;
+            assert(farthestStep <= bound, `69. A wall raised under a walking resident moves its body at most ${bound.toFixed(3)} m a frame (${farthestStep.toFixed(3)} m, the jump ${jump.toFixed(2)} m)`);
+            const final = after.poseOf(afterEntry, at + (Math.ceil(RESIDENT_GLIDE.seconds / frame) + 1) * frame);
+            assert(Math.abs(drawn.x - final.x) < 1e-9 && Math.abs(drawn.z - final.z) < 1e-9, '70. ...and once the glide is over, it is drawn exactly where every replica has it');
+        }
 
         // WorldNavigationSession: every edit made here invalidates both.
         const identity = new LocalIdentityProvider(new InMemoryStorageProvider());

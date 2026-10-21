@@ -5,6 +5,8 @@ import { AvatarAnimationState } from '../core/avatar/AvatarAnimationState.js';
 import { AvatarInteractionKind } from '../core/avatar/AvatarInteractionKind.js';
 import { createSpeechBubble } from './ResidentSpeechBubble.js';
 import { speechSecondsFor } from '../core/world/ResidentTalk.js';
+import { lerpAngle, RESIDENT_MOTION } from '../core/world/ResidentMotion.js';
+import { smoothstep } from '../utils/interpolation.js';
 
 // How long a resident's wave lasts.
 const WAVE_SECONDS = 2.2;
@@ -25,6 +27,27 @@ export { speechSecondsFor };
 // Walk this far from a talking resident and its bubble goes.
 const SPEECH_HEARING_RADIUS = 8;
 
+// When a resident's way changes under it (a wall built across it, the
+// World's clock corrected), where it is jumps: core/world/ResidentMotion.js
+// is a pure function of the World, so a new navigation puts it wherever the
+// new ways take it by now. Its body glides there instead of popping:
+//
+//   jumpDistance — a pose farther than this from the last one is a jump.
+//                  A strolling resident covers at most 1.65 m a second (its
+//                  eased walk peaks at 1.5x walkSpeed), so even a quarter-
+//                  second frame never moves it this far.
+//   snapDistance — farther than this it is not a new way round home but a
+//                  World moved, and it is simply drawn there.
+//   seconds      — how long the glide takes, walking.
+//
+// Only drawing: the runtime's pose stays where the avatar's collision and
+// every replica put it, and the body catches up within `seconds`.
+export const RESIDENT_GLIDE = Object.freeze({
+    jumpDistance: 0.75,
+    snapDistance: 2 * RESIDENT_MOTION.wanderRadius + 1,
+    seconds: 0.6
+});
+
 // Draws World Residents: each one an ordinary avatar body
 // (renderer/AvatarVisual.js) dressed as a resident, posed every frame from
 // application/world/ResidentRuntime.js's poses. The resident counterpart of
@@ -39,7 +62,8 @@ const SPEECH_HEARING_RADIUS = 8;
 // resident, kept only here and only for this viewer. And where what a
 // resident says is shown (say()): a speech bubble over its head
 // (renderer/ResidentSpeechBubble.js), gone after a while or once you walk
-// away — also only for this viewer.
+// away — also only for this viewer. And where a jump in a resident's pose
+// is drawn as a short walk (RESIDENT_GLIDE), kept per resident like the wave.
 export class ResidentFieldRenderer {
     // `appearanceFor(id)` -> { template, appearance } dresses a resident;
     // `groundAt({ x, z })` -> { x, y, z } puts its feet on the ground.
@@ -55,7 +79,7 @@ export class ResidentFieldRenderer {
         this._groundAt = groundAt;
         this._avatarRenderer = avatarRenderer;
         this._speechBubbleFor = speechBubbleFor;
-        this._entries = new Map(); // resident id -> { visual, last, waved, waveSeconds }
+        this._entries = new Map(); // resident id -> { visual, last, drawn, glide, waved, waveSeconds }
     }
 
     // Brings the drawn residents in line with `poses` (from
@@ -73,7 +97,7 @@ export class ResidentFieldRenderer {
                 const { template, appearance } = this._appearanceFor(pose.id);
                 const visual = new AvatarVisual(this._avatarRenderer);
                 visual.setAppearance(template, appearance);
-                entry = { visual, last: null, waved: false, waveSeconds: 0 };
+                entry = { visual, last: null, drawn: null, glide: null, waved: false, waveSeconds: 0 };
                 this._entries.set(pose.id, entry);
                 added.push(visual.root);
             }
@@ -114,9 +138,13 @@ export class ResidentFieldRenderer {
     }
 
     // Advances every resident's animation clocks: the gait by the ground it
-    // covered since the last frame, a wave by real time.
+    // covered since the last frame, a wave and a glide by real time.
     tick(deltaSeconds) {
         for (const entry of this._entries.values()) {
+            if (entry.glide) {
+                entry.glide.secondsLeft -= deltaSeconds;
+                if (entry.glide.secondsLeft <= 0) entry.glide = null;
+            }
             const walked = entry.walkedSinceTick || 0;
             entry.walkedSinceTick = 0;
             entry.visual.tick(entry.walking ? walked / GROUND_PER_GAIT_SECOND : deltaSeconds);
@@ -158,14 +186,39 @@ export class ResidentFieldRenderer {
     _pose(entry, pose, observer) {
         const { visual } = entry;
         const facing = residentFacingFor(pose, observer);
-        visual.setPose(this._groundAt({ x: pose.x, z: pose.z }), { y: facing.rotationY * RADIANS_TO_DEGREES });
-        visual.setAnimation(pose.moving ? AvatarAnimationState.WALKING : AvatarAnimationState.IDLE);
 
-        entry.walking = pose.moving;
-        if (entry.last) {
-            entry.walkedSinceTick = (entry.walkedSinceTick || 0) + Math.hypot(pose.x - entry.last.x, pose.z - entry.last.z);
+        // A jump starts a glide from where the body is drawn now: kept as how
+        // far it is from the pose, eased away as the glide runs out, so the
+        // body follows the resident even while it walks on its new way.
+        if (entry.last && entry.drawn) {
+            const jump = Math.hypot(pose.x - entry.last.x, pose.z - entry.last.z);
+            if (jump > RESIDENT_GLIDE.snapDistance) {
+                entry.glide = null;
+            } else if (jump > RESIDENT_GLIDE.jumpDistance) {
+                entry.glide = {
+                    dx: entry.drawn.x - pose.x,
+                    dz: entry.drawn.z - pose.z,
+                    dRotation: lerpAngle(facing.rotationY, entry.drawn.rotationY, 1) - facing.rotationY,
+                    secondsLeft: RESIDENT_GLIDE.seconds
+                };
+            }
+        }
+        const left = entry.glide ? smoothstep(Math.min(1, entry.glide.secondsLeft / RESIDENT_GLIDE.seconds)) : 0;
+        const drawn = {
+            x: pose.x + (entry.glide ? entry.glide.dx * left : 0),
+            z: pose.z + (entry.glide ? entry.glide.dz * left : 0),
+            rotationY: facing.rotationY + (entry.glide ? entry.glide.dRotation * left : 0)
+        };
+        const walking = pose.moving || entry.glide !== null;
+        visual.setPose(this._groundAt({ x: drawn.x, z: drawn.z }), { y: drawn.rotationY * RADIANS_TO_DEGREES });
+        visual.setAnimation(walking ? AvatarAnimationState.WALKING : AvatarAnimationState.IDLE);
+
+        entry.walking = walking;
+        if (entry.drawn) {
+            entry.walkedSinceTick = (entry.walkedSinceTick || 0) + Math.hypot(drawn.x - entry.drawn.x, drawn.z - entry.drawn.z);
         }
         entry.last = { x: pose.x, z: pose.z };
+        entry.drawn = drawn;
 
         // One wave per approach: when you come close while it faces you.
         if (facing.distance > RESIDENT_REACTION.rearmRadius) {
