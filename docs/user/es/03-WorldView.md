@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 356a48136117ec0e -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: a51a7c2c7ea79eeb -->
 # 03 — Vista del mundo
 
 <!-- languages -->
@@ -386,6 +386,28 @@ muestra nada; lo que llegó mientras tanto está en la lista la próxima vez.
 Solo aparecen unas pocas a la vez; el resto espera en la lista. Si el
 navegador las bloquea, el panel lo dice: permita las notificaciones de
 ForkBuild en la configuración del sitio del navegador.
+
+### Decir adónde ir (voz)
+
+Presione `V`, o **🎤 Voz** junto a **Inicio**, y diga adónde ir o qué hacer.
+Presione `V` (o **Detener**) cuando termine:
+
+- *llévame al viejo molino*, o solo el nombre de un lugar: la cámara va
+  allí, como **Enfocar** en **Ubicaciones**. Se puede nombrar cualquier
+  lugar de **Ubicaciones** y, en una plaza del desafío, también sus
+  construcciones.
+- *a casa*: lo mismo que **Inicio**.
+- *primera persona*, *tercera persona*, *vista de pájaro*, *cámara libre*:
+  las vistas de cámara del panel de avatar.
+- *silencio*, *activa el sonido*.
+- *deshacer*, *rehacer*: como `Ctrl+Z` y `Ctrl+Y`.
+- *habla con*: lo mismo que `T` junto a un residente.
+
+Cualquier otra cosa se ofrece a la guía con **Preguntar a la guía**. La voz
+aquí es la misma que en el Editor (vea
+[Decir un comando](02-TheEditor.md#decir-un-comando-voz)): se activa una vez
+para ambos, se entiende en su dispositivo, y el mundo sigue moviéndose
+mientras averigua lo que dijo.
 
 ### Explorar, Mapa y Lugares — tres formas de recorrer, nunca a la vez
 

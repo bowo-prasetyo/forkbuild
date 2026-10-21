@@ -1,25 +1,27 @@
 import { byteSizeText } from '../i18n/sizeText.js';
 import { t } from '../i18n/i18n.js';
-import { SPEECH_DOWNLOAD_BYTES } from '../../application/voice/SpeechRuntime.js';
+import { SPEECH_DOWNLOAD_BYTES } from '../../application/voice/SpeechWorkerClient.js';
 
-// Voice building's panel over the Editor's 3D view (ui/views/editorView/
-// useVoiceCommands.js): asking before the first download, the download's
-// progress, listening, what was heard and what was done, and turning voice
-// off or removing the speech model. A screen reader hears each change.
+// Voice building's panel over the 3D view of the Editor or World View
+// (ui/voice/useVoiceCommands.js): asking before the first download, the
+// download's progress, listening, what was heard and what was done, and
+// turning voice off or removing the speech model. `place` ('editor' or
+// 'world') picks the examples it gives. A screen reader hears each change.
 export default {
     name: 'VoicePanel',
     props: {
-        voice: { type: Object, required: true }
+        voice: { type: Object, required: true },
+        place: { type: String, default: 'editor' }
     },
     emits: ['turn-on', 'turn-off', 'remove', 'toggle', 'ask-guide', 'close'],
     setup() {
         return { t, downloadSize: byteSizeText(SPEECH_DOWNLOAD_BYTES) };
     },
     template: `
-        <div v-if="voice.step !== 'off'" class="editor-voice" role="region" :aria-label="t('voice.title')">
+        <div v-if="voice.step !== 'off'" :class="['editor-voice', 'editor-voice--' + place]" role="region" :aria-label="t('voice.title')">
             <div class="editor-voice-body" aria-live="polite">
                 <template v-if="voice.step === 'intro'">
-                    <p>{{ t('voice.intro') }}</p>
+                    <p>{{ place === 'world' ? t('voice.introWorld') : t('voice.intro') }}</p>
                     <p class="editor-voice-quiet">{{ t('voice.download', { size: downloadSize }) }}</p>
                 </template>
                 <p v-else-if="voice.step === 'loading'">{{ voice.progress > 0 ? t('voice.downloading', { percent: voice.progress }) : t('voice.loading') }}</p>
@@ -31,7 +33,7 @@ export default {
                     <p v-else-if="voice.outcome.kind === 'disabled'">{{ voice.outcome.reason }}</p>
                     <p v-else-if="voice.outcome.kind === 'question'">{{ t('voice.question') }}</p>
                     <p v-else-if="voice.outcome.kind === 'nothing'">{{ t('voice.nothingHeard') }}</p>
-                    <p v-else>{{ t('voice.notUnderstood') }}</p>
+                    <p v-else>{{ place === 'world' ? t('voice.notUnderstoodWorld') : t('voice.notUnderstood') }}</p>
                 </template>
                 <p v-else-if="voice.step === 'removed'">{{ t('voice.removed') }}</p>
                 <p v-else-if="voice.step === 'failed'">

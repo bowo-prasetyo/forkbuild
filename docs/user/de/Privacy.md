@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 3869d101d026839b -->
+<!-- translation-of: docs/Privacy.md source-hash: a245f388db3fff60 -->
 # Datenschutz
 
 <!-- languages -->
@@ -313,7 +313,7 @@ jeweilige Funktion nutzen, und jeder Server lässt sich unter
 **Netzwerkeinstellungen** ändern. Jeder Server sieht Ihre IP-Adresse und
 was Sie bei ihm anfragen.
 
-Die Sprachsteuerung lädt, sobald Sie sie im Editor einschalten, außerdem
+Die Sprachsteuerung lädt, sobald Sie sie im Editor oder in der Weltansicht einschalten, außerdem
 einmalig ihr Sprachmodell von Hugging Face und ihre Sprach-Laufzeit
 (WebAssembly) von jsDelivr; die Laufzeit wird abgelehnt, wenn sie nicht genau
 die Datei ist, die ForkBuild erwartet (ihr SHA-256 steht fest in der App).
@@ -322,7 +322,7 @@ gesendet.
 
 | Wann | Server (Standard) | Was er erhält |
 | --- | --- | --- |
-| Sie schalten im Editor die Sprachsteuerung ein (einmalig, und erneut nur, nachdem Sie ihre Dateien entfernt haben) | Hugging Face (`huggingface.co` und seine Dateiserver), jsDelivr (`cdn.jsdelivr.net`) | Anfragen nach den Dateien des Sprachmodells (`onnx-community/whisper-tiny`) und der WebAssembly-Datei der Sprach-Laufzeit (`onnxruntime-web`, eine feste Version); nie etwas, das Sie sagen |
+| Sie schalten im Editor oder in der Weltansicht die Sprachsteuerung ein (einmalig, und erneut nur, nachdem Sie ihre Dateien entfernt haben) | Hugging Face (`huggingface.co` und seine Dateiserver), jsDelivr (`cdn.jsdelivr.net`) | Anfragen nach den Dateien des Sprachmodells (`onnx-community/whisper-tiny`) und der WebAssembly-Datei der Sprach-Laufzeit (`onnxruntime-web`, eine feste Version); nie etwas, das Sie sagen |
 | Die App öffnet sich auf der offiziellen Website, höchstens einmal am Tag (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit festem Pfad, ohne Referrer und ohne Cookie |
 | Sie kopieren oder teilen auf der offiziellen Website einen Link zu einem Bauwerk, öffnen einen geteilten Link oder kopieren ein darüber geöffnetes Bauwerk in den Editor (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit festem Pfad, der nennt, welcher der drei Momente es war, ohne Referrer und ohne Cookie |
 | Sie installieren ForkBuild von der offiziellen Seite (siehe „Besucherzählung“) | GoatCounter (`forkbuild.goatcounter.com`) | eine Bildanfrage mit dem festen Pfad `/e/installed`, ohne Referrer und ohne Cookie |

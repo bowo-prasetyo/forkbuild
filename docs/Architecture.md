@@ -317,9 +317,10 @@ the detailed references; in short:
   paragraph, the whole section, and a link to it on GitHub. The Editor's
   command palette offers Ask the guide for a question, or words no action
   matches. No model, and nothing typed leaves the device.
-- Voice building (the Editor's `V`): ForkBuild's one real AI feature, run
-  on the device. ui/voice/recordVoice.js records from the microphone to mono
-  16 kHz samples; application/voice/SpeechRuntime.js runs Whisper tiny
+- Voice building (`V` in the Editor and World View): ForkBuild's one real AI
+  feature, run on the device. ui/voice/recordVoice.js records from the
+  microphone to mono 16 kHz samples; application/voice/SpeechRuntime.js runs
+  Whisper tiny
   (`onnx-community/whisper-tiny`, from Hugging Face) with transformers.js
   (vendor/transformers/) on the ONNX runtime's WebAssembly engine, which it
   downloads from jsDelivr at one exact version, refuses unless its SHA-256 is
@@ -327,10 +328,23 @@ the detailed references; in short:
   served from vendor/onnxruntime-web/ (so no script, and no blob: URL, ever
   comes from elsewhere). Both are kept in Cache Storage until removed. The
   published Content Security Policy allows `'wasm-unsafe-eval'` for this,
-  never `'unsafe-eval'`. core/voice/Transcript.js cleans what was heard;
-  ui/views/editorView/useVoiceCommands.js asks before the first download and
-  does what was said as the command palette would: a plain command, an
-  action said by its name, or Ask the guide for a question. scripts/vendor.mjs
+  never `'unsafe-eval'`. The runtime lives in a module worker
+  (application/voice/speechWorker.js, answering requests through
+  serveSpeech.js), so recognition never pauses the 3D view; the page talks to
+  it through application/voice/SpeechWorkerClient.js, which has the
+  runtime's methods, starts the worker on first use and starts a new one if
+  it stops. ui/voice/speechRecognizer.js keeps one for the visit, shared by
+  both views, so the model loads once; scripts/build.mjs bundles the worker
+  on its own (bundle/voice/) and names it in index.html's
+  `<meta name="forkbuild-speech-worker">`. core/voice/Transcript.js cleans
+  what was heard; ui/voice/useVoiceCommands.js asks before the first
+  download and hands what was said to the view. The Editor does it as the
+  command palette would: a plain command, an action said by its name, or Ask
+  the guide for a question. World View reads it with
+  core/voice/WorldVoiceCommand.js (words from ui/i18n/worldVoiceWords.js):
+  go to a place named in Locations (or a build on a challenge plaza), Home,
+  a camera view, sound off or on, undo, redo, or talk to a resident.
+  scripts/vendor.mjs
   takes these two packages' files from their published tarballs, pinned by
   integrity and SHA-256, since their npm package would install native Node
   builds on every `npm ci`.

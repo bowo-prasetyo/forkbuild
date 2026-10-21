@@ -1,6 +1,9 @@
 // Voice building's speech recognition: Whisper (a small speech model) run in
 // the browser by transformers.js and the ONNX runtime, so what a player says
-// never leaves the device. Nothing is loaded until voice is turned on; then:
+// never leaves the device. It runs in a worker (application/voice/
+// speechWorker.js), so the 3D view never pauses while it works; the page
+// talks to it through application/voice/SpeechWorkerClient.js. Nothing is
+// loaded until voice is turned on; then:
 //
 // - the ONNX runtime's WebAssembly engine is downloaded once from jsDelivr,
 //   at one exact version, and refused unless its SHA-256 is the one below;
@@ -21,9 +24,6 @@ export const SPEECH_ENGINE = Object.freeze({
     bytes: 26861777
 });
 
-// About how much turning voice on downloads: the engine and the model.
-export const SPEECH_DOWNLOAD_BYTES = 70 * 1000 * 1000;
-
 const ENGINE_CACHE = 'forkbuild-voice-engine';
 // Where transformers.js keeps the model files (its env.cacheKey).
 const MODEL_CACHE = 'transformers-cache';
@@ -32,6 +32,9 @@ function hex(buffer) {
     return [...new Uint8Array(buffer)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
+// `engineLoaderUrl` is the address of this site's copy of the engine's loader
+// (SPEECH_ENGINE_LOADER in application/voice/SpeechWorkerClient.js): a worker
+// has no page to resolve it against, so the page hands it over.
 export class SpeechRuntime {
     constructor({
         importLibrary = () => import('../../vendor/transformers/transformers.min.js'),
@@ -39,7 +42,7 @@ export class SpeechRuntime {
         caches: cacheStorage = globalThis.caches,
         subtle = globalThis.crypto?.subtle,
         engine = SPEECH_ENGINE,
-        engineLoaderUrl = () => new URL('vendor/onnxruntime-web/ort-wasm-simd-threaded.asyncify.mjs', globalThis.document?.baseURI).href
+        engineLoaderUrl
     } = {}) {
         this._importLibrary = importLibrary;
         this._fetch = fetchResource;
@@ -49,12 +52,6 @@ export class SpeechRuntime {
         this._engineLoaderUrl = engineLoaderUrl;
         this._loading = null;
         this._recognize = null;
-    }
-
-    // Whether this browser can run it at all.
-    static supported(scope = globalThis) {
-        return typeof scope.WebAssembly === 'object' && !!scope.caches && !!scope.crypto?.subtle
-            && !!scope.navigator?.mediaDevices?.getUserMedia && typeof scope.MediaRecorder === 'function';
     }
 
     // Whether the engine is already kept here, so turning voice on again
@@ -88,7 +85,7 @@ export class SpeechRuntime {
         // which this site's Content Security Policy forbids; ours is given.
         env.useWasmCache = false;
         const wasm = env.backends.onnx.wasm;
-        wasm.wasmPaths = { mjs: this._engineLoaderUrl() };
+        wasm.wasmPaths = { mjs: this._engineLoaderUrl };
         wasm.wasmBinary = engine;
         wasm.numThreads = 1;
         wasm.proxy = false;

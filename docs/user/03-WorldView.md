@@ -358,6 +358,27 @@ in meanwhile is in the list next time. Only a few appear at once; the rest
 wait in the list. If the browser blocks them, the panel says so: allow
 ForkBuild's notifications in the browser's site settings.
 
+### Say where to go (voice)
+
+Press `V`, or **🎤 Voice** beside **Home**, and say where to go or what to
+do. Press `V` (or **Stop**) when you're done:
+
+- *take me to the old mill*, or just a place's name: the camera goes there,
+  as **Focus** does in **Locations**. Any place in **Locations** can be
+  named, and on a challenge plaza its builds too.
+- *go home*: the same as **Home**.
+- *first person*, *third person*, *bird's eye*, *free camera*: the camera
+  views in the Avatar panel.
+- *sound off*, *sound on*.
+- *undo*, *redo*: as `Ctrl+Z` and `Ctrl+Y`.
+- *talk*: the same as `T` beside a resident.
+
+Anything else is offered to the guide with **Ask the guide**. Voice here is
+the same as in the Editor (see
+[Speak a command](02-TheEditor.md#speak-a-command-voice)): turned on once for
+both, heard on your device, and the World keeps moving while it works out
+what you said.
+
 ### Explore, Map, and Places — three ways to browse, never at once
 
 Below the buttons are three tabs. Only one is open at a time, and

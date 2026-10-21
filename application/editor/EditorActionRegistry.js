@@ -670,7 +670,7 @@ export function createStandardActions({ session, feedback, ui = {} }) {
             }
         }),
         // Voice building: starts listening for a spoken command, and stops
-        // (ui/views/editorView/useVoiceCommands.js); V for "voice".
+        // (ui/voice/useVoiceCommands.js); V for "voice".
         define({
             id: 'ui.voice',
             category: 'interface',

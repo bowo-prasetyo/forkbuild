@@ -491,6 +491,10 @@
         bottom: calc(128px + 5.25rem + env(safe-area-inset-bottom, 0px));
         max-width: calc(100% - 1rem);
     }
+
+    .editor-voice--world {
+        bottom: calc(128px + 8.75rem + env(safe-area-inset-bottom, 0px));
+    }
 }
 
 /* See inside on a phone: below the Tools button, top right, clear of the
@@ -502,8 +506,15 @@
         right: 0.5rem;
     }
 
-    .editor-voice {
+    .editor-voice--editor {
         top: 6rem;
         left: 0.5rem;
+    }
+
+    .editor-voice--world {
+        left: 0.5rem;
+        transform: none;
+        width: auto;
+        max-width: calc(100% - 1rem);
     }
 }

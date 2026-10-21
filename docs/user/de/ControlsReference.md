@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 253bc0e4a5118027 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 0ebb06952a43419a -->
 # Steuerungsreferenz
 
 <!-- languages -->
@@ -32,7 +32,7 @@ der folgenden Bearbeitungsvorgänge nach Namen zu suchen.
 |---|---|
 | `Strg/Cmd+K` | Befehlspalette |
 | `I` | Bauwerk beschreiben: woraus es besteht, angezeigt und von einem Screenreader vorgelesen — siehe [Das Bauwerk beschreiben](02-TheEditor.md#das-bauwerk-beschreiben) |
-| `V` | Einen Befehl sprechen: drücken, sprechen, erneut drücken — siehe [Einen Befehl sprechen (Sprachsteuerung)](02-TheEditor.md#einen-befehl-sprechen-sprachsteuerung) |
+| `V` | Einen Befehl sprechen: drücken, sprechen, erneut drücken — siehe [Einen Befehl sprechen (Sprachsteuerung)](02-TheEditor.md#einen-befehl-sprechen-sprachsteuerung). In der Weltansicht sagen, wohin es geht — siehe [Sagen, wohin es geht (Sprachsteuerung)](03-WorldView.md#sagen-wohin-es-geht-sprachsteuerung) |
 | `?` | Übersicht Tastenkürzel (auch über die Schaltfläche „⌨ Tastenkürzel“ in der Werkzeugleiste erreichbar) — alle Tastenkürzel des Editors |
 
 ## Entdecken (Weltansicht)

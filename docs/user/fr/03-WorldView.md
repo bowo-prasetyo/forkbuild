@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 356a48136117ec0e -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: a51a7c2c7ea79eeb -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
@@ -402,6 +402,28 @@ liste la fois suivante. Seules quelques-unes apparaissent à la fois ; les
 autres attendent dans la liste. Si le navigateur les bloque, le panneau le
 dit : autorisez les notifications de ForkBuild dans les paramètres du site
 du navigateur.
+
+### Dire où aller (voix)
+
+Appuyez sur `V`, ou sur **🎤 Voix** à côté d’**Accueil**, et dites où aller
+ou quoi faire. Appuyez sur `V` (ou **Arrêter**) quand vous avez fini :
+
+- *emmène-moi au vieux moulin*, ou simplement le nom d’un lieu : la caméra y
+  va, comme avec **Centrer** dans **Emplacements**. Tout lieu des
+  **Emplacements** peut être nommé, et sur une place du défi, ses
+  constructions aussi.
+- *à la maison* : comme **Accueil**.
+- *première personne*, *troisième personne*, *vue aérienne*, *caméra
+  libre* : les vues de caméra du panneau Avatar.
+- *coupe le son*, *remets le son*.
+- *annuler*, *rétablir* : comme `Ctrl+Z` et `Ctrl+Y`.
+- *parle à* : comme `T` à côté d’un habitant.
+
+Tout le reste est proposé au guide avec **Demander au guide**. La voix est
+ici la même que dans l’Éditeur (voir
+[Dire une commande](02-TheEditor.md#dire-une-commande-voix)) : activée une
+fois pour les deux, comprise sur votre appareil, et le monde continue de
+bouger pendant qu’elle comprend ce que vous avez dit.
 
 ### Explorer, Carte et Lieux — trois façons de parcourir, jamais en même temps
 

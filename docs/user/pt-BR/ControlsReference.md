@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 253bc0e4a5118027 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 0ebb06952a43419a -->
 # Referência de controles
 
 <!-- languages -->
@@ -32,7 +32,7 @@ nome todas as operações de edição abaixo.
 |---|---|
 | `Ctrl/Cmd+K` | Paleta de comandos |
 | `I` | Descrever a construção: do que ela é feita, mostrado e lido por um leitor de tela — veja [Descrever a construção](02-TheEditor.md#descrever-a-construção) |
-| `V` | Falar um comando: pressionar, falar, pressionar de novo — veja [Falar um comando (voz)](02-TheEditor.md#falar-um-comando-voz) |
+| `V` | Falar um comando: pressionar, falar, pressionar de novo — veja [Falar um comando (voz)](02-TheEditor.md#falar-um-comando-voz). Na visão do mundo, diga aonde ir — veja [Dizer aonde ir (voz)](03-WorldView.md#dizer-aonde-ir-voz) |
 | `?` | Sobreposição Atalhos de teclado (também pelo botão "⌨ Atalhos" da barra de ferramentas) — todos os atalhos do Editor |
 
 ## Descoberta (Visão do mundo)
