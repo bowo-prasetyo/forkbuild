@@ -27,8 +27,9 @@ import { assert } from './support/Assert.js';
 // stepConstraint, driven over the Hay Wain Bridge example build
 // (forkbuild-document-hay-wain-bridge.json), in Section F the Packhorse Arch
 // (forkbuild-document-packhorse-arch.json), in Section H the Pontoon
-// Crossing (forkbuild-document-pontoon-crossing.json) and in Section I the
-// Harp Stay (forkbuild-document-harp-stay.json).
+// Crossing (forkbuild-document-pontoon-crossing.json), in Section I the
+// Harp Stay (forkbuild-document-harp-stay.json) and in Section J the Kissing
+// Bridge (forkbuild-document-kissing-bridge.json).
 //
 //   Section A: the wagon, bicycle and motorcycle each cross the bridge, deck
 //              over the river, back on the ground on the far bank
@@ -48,6 +49,9 @@ import { assert } from './support/Assert.js';
 //              floating deck, and its rails keep the wagon on it
 //   Section I: every ground vehicle drives over the Harp Stay, past its
 //              tower, and over the river its stays keep the wagon on the deck
+//   Section J: every ground vehicle drives through the Kissing Bridge's
+//              covered span without touching walls or roof, and the walls
+//              keep the wagon on the deck
 //
 // The bridge's river is a few blue slabs, not world water, so the water
 // constraint is told the river is there: a bed a full unit below the lake
@@ -302,6 +306,28 @@ async function runTests() {
         const held = drive(vehicleAt('i:held', VehicleType.CAR, 2, 0, 0, HARP_DECK_TOP), { ...withHarp, ...river }, 200);
         assert(held.collided && held.z < 2 && Math.abs(held.lift - HARP_DECK_TOP) < 1e-6,
             `I5. over the river the stays keep the wagon on the deck (z ${held.z.toFixed(2)}, lift ${held.lift.toFixed(2)})`);
+    }
+
+    // -------------------------------------------------------------
+    // Section J — through the Kissing Bridge
+    // -------------------------------------------------------------
+    {
+        const kissingJson = JSON.parse(await readFile(new URL('../forkbuild-document-kissing-bridge.json', import.meta.url), 'utf8'));
+        const withKissing = constraints(new Map([['kissing', new DocumentSerializer().deserialize(kissingJson)]]), brickRegistry);
+        const KISSING_DECK_TOP = 1;
+        const river = { water: riverWater(4), riverHalfWidth: 4 };
+        for (const type of GROUND_TYPES) {
+            const run = drive(vehicleAt(`j:${type}`, type, -11, 0, 90), { ...withKissing, ...river }, 400);
+            assert(run.x > 10, `J1. a ${type} drives through the Kissing Bridge from one bank to the other (ended at x ${run.x.toFixed(2)})`);
+            assert(run.liftsOverRiver.length > 0 && run.liftsOverRiver.every((lift) => Math.abs(lift - KISSING_DECK_TOP) < 1e-6),
+                `J2. a ${type} is on the deck the whole way over the river`);
+            assert(!run.blockedByWater && !run.collided && Math.abs(run.maxLift - KISSING_DECK_TOP) < 1e-6,
+                `J3. a ${type} never meets the water, the walls or the roof, and never climbs above the deck`);
+            assert(Math.abs(run.lift) < 1e-9 && Math.abs(run.z) < 1e-9, `J4. a ${type} comes down straight onto the far bank`);
+        }
+        const held = drive(vehicleAt('j:held', VehicleType.CAR, 0, 0, 0, KISSING_DECK_TOP), { ...withKissing, ...river }, 200);
+        assert(held.collided && held.z < 1.8 && Math.abs(held.lift - KISSING_DECK_TOP) < 1e-6,
+            `J5. inside the covered span the walls keep the wagon on the deck (z ${held.z.toFixed(2)}, lift ${held.lift.toFixed(2)})`);
     }
 
     console.log('✅ All Ground Vehicle Bridge Crossing tests passed.');
