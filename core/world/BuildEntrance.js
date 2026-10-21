@@ -14,11 +14,17 @@ import { archOpening, archOpeningHeightAt, brickCollisionBoxes, isPassableDoor }
 // grid's edge is outside. A door with outside on one side only leads
 // somewhere, so it is preferred over a free-standing arch or gate.
 //
-// Pure: bricks in, a spot out, in the build's own coordinates.
+// Pure: bricks in, a spot out, in the build's own coordinates. Anything else
+// an avatar bumps into that isn't a brick (trees, which grow wherever the
+// World's seed puts them, builds or not) can be passed as round `obstacles`.
 
 // How far in front of the door the visitor stands, tried in turn until one is
 // clear: a few steps, so the door swings open as they walk up.
 export const ENTRANCE_STAND_DISTANCES = Object.freeze([2.5, 2, 1.5]);
+// Nearer spots, tried only when something round (a tree) stands between every
+// spot above and the door: in front of it rather than behind it, since walking
+// straight ahead would slide round it and into the door's jamb.
+export const NEAR_STAND_DISTANCES = Object.freeze([1, 0.75]);
 // How far past the doorway counts as having walked inside.
 export const INSIDE_DEPTH = 0.6;
 // How far past a doorway there must be room to stand for it to lead in.
@@ -39,16 +45,10 @@ const FINE_BUDGET = 4_000_000;
 //   90 faces +x), inward: { x, z } (a unit vector through the door into the
 //   build, or null), footprint: { minX, maxX, minZ, maxZ } (the build's
 //   extent on the ground) }.
-export function findBuildEntrance(bricks, registry) {
-    const solids = [];
-    let bounds = null;
-    for (const brick of bricks || []) {
-        const definition = registry?.get?.(brick.definitionId);
-        if (!definition || !brick.position) continue;
-        const box = brickAabb(brick.position, definition, brick.rotation || 0, brick.tilt || 0);
-        bounds = bounds ? union(bounds, box) : box;
-        solids.push({ brick, definition, box });
-    }
+// obstacles: [{ center: { x, z }, radius }], in the build's coordinates: a
+// spot whose straight walk in would touch one is passed over (standOnSide()).
+export function findBuildEntrance(bricks, registry, { obstacles = [] } = {}) {
+    const { solids, bounds } = measure(bricks, registry);
     if (!bounds) return null;
     const ground = bounds.min.y;
     const footprint = Object.freeze({ minX: bounds.min.x, maxX: bounds.max.x, minZ: bounds.min.z, maxZ: bounds.max.z });
@@ -59,7 +59,7 @@ export function findBuildEntrance(bricks, registry) {
         const center = { x: (bounds.min.x + bounds.max.x) / 2, z: (bounds.min.z + bounds.max.z) / 2 };
         const choices = [];
         for (const doorway of doorways) {
-            const choice = entranceThrough(doorway, plan, center, ground, footprint);
+            const choice = entranceThrough(doorway, plan, center, ground, footprint, obstacles);
             if (choice) choices.push(choice);
         }
         choices.sort(compareChoices);
@@ -76,6 +76,34 @@ export function findBuildEntrance(bricks, registry) {
         inward: null,
         footprint
     });
+}
+
+// The ground round a build where an obstacle could stand in the way of a walk
+// in from any of its spots, in the build's coordinates, for a caller to gather
+// `obstacles` from: { minX, maxX, minZ, maxZ }, or null for no bricks.
+export function entranceSearchArea(bricks, registry) {
+    const { bounds } = measure(bricks, registry);
+    if (!bounds) return null;
+    const reach = Math.max(...ENTRANCE_STAND_DISTANCES, FRONT_DISTANCE) + AVATAR_COLLISION_RADIUS;
+    return Object.freeze({
+        minX: bounds.min.x - reach, maxX: bounds.max.x + reach,
+        minZ: bounds.min.z - reach, maxZ: bounds.max.z + reach
+    });
+}
+
+// Each brick with its definition and box, and the box round them all (null
+// for no bricks).
+function measure(bricks, registry) {
+    const solids = [];
+    let bounds = null;
+    for (const brick of bricks || []) {
+        const definition = registry?.get?.(brick.definitionId);
+        if (!definition || !brick.position) continue;
+        const box = brickAabb(brick.position, definition, brick.rotation || 0, brick.tilt || 0);
+        bounds = bounds ? union(bounds, box) : box;
+        solids.push({ brick, definition, box });
+    }
+    return { solids, bounds };
 }
 
 // Whether `position` (the build's coordinates) has gone in through the
@@ -172,22 +200,15 @@ function drawPlan(solids, doorways, bounds, ground) {
 
 // The spot in front of `doorway` on its outside, or null when neither side
 // is outside (a door between two rooms, or into a courtyard).
-function entranceThrough(doorway, plan, center, ground, footprint) {
+function entranceThrough(doorway, plan, center, ground, footprint, obstacles) {
     const { brick } = doorway;
     const turn = ((brick.rotation || 0) * Math.PI) / 180;
     // The door's local +z, as drawn (a turn by rotationY about the vertical axis).
     const normal = { x: Math.sin(turn), z: Math.cos(turn) };
     const sides = [];
     for (const side of [1, -1]) {
-        for (const distance of ENTRANCE_STAND_DISTANCES) {
-            const x = brick.position.x + normal.x * side * distance;
-            const z = brick.position.z + normal.z * side * distance;
-            const cell = plan.at(x, z);
-            if (cell.free && cell.outside) {
-                sides.push({ side, stand: { x, z } });
-                break;
-            }
-        }
+        const stand = standOnSide(brick, normal, side, plan, obstacles);
+        if (stand) sides.push({ side, stand });
     }
     if (sides.length === 0) return null;
     // A door into nothing (set into a solid tower, or over a stall too
@@ -217,6 +238,33 @@ function entranceThrough(doorway, plan, center, ground, footprint) {
             footprint
         })
     };
+}
+
+// Where to stand on `side` of the door: the first of ENTRANCE_STAND_DISTANCES
+// on open ground outside whose straight walk to just past the doorway touches
+// no obstacle; else the first such of NEAR_STAND_DISTANCES; else, with every
+// way blocked (a tree in the doorway itself), the first on open ground, as
+// with no obstacles. Null when none of ENTRANCE_STAND_DISTANCES is outside.
+function standOnSide(brick, normal, side, plan, obstacles) {
+    const spot = (distance) => {
+        const x = brick.position.x + normal.x * side * distance;
+        const z = brick.position.z + normal.z * side * distance;
+        const cell = plan.at(x, z);
+        return cell.free && cell.outside ? { x, z } : null;
+    };
+    const usual = ENTRANCE_STAND_DISTANCES.map(spot).filter(Boolean);
+    if (usual.length === 0) return null;
+    const pastDoor = { x: brick.position.x - normal.x * side * BEHIND_DISTANCE, z: brick.position.z - normal.z * side * BEHIND_DISTANCE };
+    const clear = (stand) => obstacles.every((obstacle) => distanceToSegment(obstacle.center, stand, pastDoor) >= obstacle.radius + AVATAR_COLLISION_RADIUS);
+    return usual.find(clear) || NEAR_STAND_DISTANCES.map(spot).find((stand) => stand && clear(stand)) || usual[0];
+}
+
+// How far `point` is from the segment from `a` to `b`, on the ground.
+function distanceToSegment(point, a, b) {
+    const dx = b.x - a.x;
+    const dz = b.z - a.z;
+    const along = Math.max(0, Math.min(1, ((point.x - a.x) * dx + (point.z - a.z) * dz) / (dx * dx + dz * dz)));
+    return Math.hypot(point.x - (a.x + along * dx), point.z - (a.z + along * dz));
 }
 
 // A door that leads in, then a door before an arch, then the lowest, then the

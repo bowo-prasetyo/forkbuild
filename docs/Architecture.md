@@ -915,6 +915,9 @@ wires:
   are near the camera, and where" from each publication's placement, and
   falls back to a deterministic, id-keyed grid position
   (core/world/DeterministicGridPlacement.js) for a publication with none.
+  A grid cell with water within 8 m of its middle (`isDrySpot()`) is passed
+  over for the cells hashed from `${id}#1`, `${id}#2`, … (2026-10-21), so no
+  build is placed, or shown unplaced, in a lake or a river.
 - PlacePublicationUseCase with GridPlacementStrategy
   (application/placement/InitialPlacementStrategy.js): the automatic first
   placement after publishing. Its position is a pure function of the
@@ -1505,7 +1508,11 @@ World View calls `arriveAtEntrance()` (application/worldNavigation/arrivalMethod
 `navigateToDocument()`. core/world/BuildEntrance.js picks the spot: the build's ground-level doors and doorway arches,
 each with outside found by flooding a plan of where an avatar can stand (doorways shut) from its edge, and room to
 stand on both sides of it; a door that leads in wins over a free-standing arch. The avatar is put a few steps in
-front of it, facing it, and the camera behind them; a build with no way in is arrived at from its -z side. An arrival
+front of it, facing it, and the camera behind them; a build with no way in is arrived at from its -z side. Trees
+still standing round the build (`_standingTrees()`; one under its bricks gives way, see "Trees give way to builds")
+are passed as `obstacles`: a spot whose straight walk to just past the doorway touches a trunk is passed over for
+the next, then for `NEAR_STAND_DISTANCES` (1 and 0.75 in front of the door), since walking ahead from behind a
+trunk slides round it into the door's jamb. An arrival
 asked for before the document is loaded finishes in `_loadWorld()`, it skips the automatic Welcome panel, and its
 framing wins over the World's remembered camera. `arrivalState()` says when the avatar has gone in
 (`hasWalkedInside()`: past the doorway and within the build), which ui/views/worldView/useArrival.js turns into the
@@ -1592,6 +1599,16 @@ surface and stays silent under water. Presence keeps its existing `animation` va
   `WILDLIFE_FADE_SECONDS` (0.6 s of the wildlife clock) until the build is gone, then grow it back the same way. How
   far each animal is shown is kept per herd (`herd.shown`), for this viewer alone; on a tile's first frame each starts
   as it is, so a tile streamed in fades nothing. Collision, catching and the rest leave it out at once.
+- **Trees give way to builds (2026-10-21).** `core/nature/TreeDisplacement.js#isTreeDisplaced()`: a tree whose trunk
+  circle (`treeCollisionCircleFor()`) overlaps the footprint of any brick, at any height, is not there, since builds
+  stand on an id-keyed grid that knows nothing of the seed's trees. `application/world/TreeDisplacement.js` answers it
+  by trunk from the session's solid documents, as for animals: bricks gathered once per terrain tile, again every 2 s
+  a tile at a time (`version()`, asked every frame), and at once after an edit made in World View or a World loaded or
+  let go (`invalidate()`). `WorldNavigationSession#_standingTrees()` is what everything that meets trees asks:
+  `AvatarTreeConstraint` (`standing`, shared by the avatar and ground vehicles), getting off a vehicle, residents' ways
+  (`ResidentRuntime`'s `standingTrees`) and the arrival at a door. `Renderer#setHiddenTrees()` hands the same answer to
+  `TreeForest#setHidden()`, which leaves the tree out when it sorts its trees and sorts them again when `version()`
+  moves on. Ambient birdsong and where vehicles are parked still read the seed's trees.
 - **Rendering.** Deterministic animals are drawn by their wildlife tile (`renderer/WildlifeTileMesh.js`), which keeps
   owning them while they wander because they never leave their cell; every frame
   `updateWildlifeTileMesh()` rewrites each loaded tile's instance matrices in place. A walking animal also moves with
@@ -2021,7 +2038,8 @@ painted pixel by pixel from a seed (renderer/TreeMaterials.js): nothing is downl
 every tree from one pool: tiles stream on the ground's grid as before, but a tile only adds its trees to the pool,
 which keeps one InstancedMesh per form, part and way of drawing (at most 96 draw calls, 40 to 80 in a forest).
 Which level a tree gets is decided on the CPU by its distance from the camera, re-sorted only after the camera moves
-2 m or turns 8°. Only trees inside a slightly widened view get their level; of the rest, those close enough to shade
+2 m or turns 8°, or when the trees giving way to builds change (`TreeForest#setHidden()`, which leaves those out).
+Only trees inside a slightly widened view get their level; of the rest, those close enough to shade
 the view are drawn as the solid mid shapes, which cast shadows, and the others are skipped. HIGH detail draws near
 trees within 45 m (the reach of the shadows) and mid within 100 m; LOW draws no leaf cards, which phones feel most as
 overdraw, only mid shapes within 40 m and far beyond. Only trees close by cast shadows (near ones, the mid shapes

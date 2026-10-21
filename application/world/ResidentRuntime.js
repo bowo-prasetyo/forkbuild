@@ -62,13 +62,19 @@ export class ResidentRuntime {
         getWorldPosition,
         obstaclesNear = () => [],
         seed = DEFAULT_WORLD_SEED,
-        now = () => Date.now()
+        now = () => Date.now(),
+        standingTrees = (circles) => circles
     } = {}) {
         this._loadedDocuments = loadedDocuments;
         this._getWorldPosition = getWorldPosition;
         this._obstaclesNear = obstaclesNear;
         this._seed = seed;
         this._now = now;
+        // The trees still there: one giving way to a build
+        // (application/world/TreeDisplacement.js) is no obstacle to walk round.
+        // A tree only gives way to bricks, so a resident's navigation, kept
+        // until its bricks differ, is rebuilt whenever that answer can change.
+        this._standingTrees = standingTrees;
         this._paths = new Map(); // resident id -> { homeX, homeZ, gatheredAt, boxes, navigation }
         this._lastRefreshAt = -Infinity;
         // The moment last posed, and each resident's pose then.
@@ -231,7 +237,7 @@ export class ResidentRuntime {
     // ground would bump into, and the trees.
     _buildNavigation(home, boxes = this._boxesNear(home)) {
         const reach = RESIDENT_MOTION.wanderRadius + OBSTACLE_MARGIN;
-        const circles = treeCollisionGeometryInRegion(this._seed, home.x - reach, home.z - reach, home.x + reach, home.z + reach);
+        const circles = this._standingTrees(treeCollisionGeometryInRegion(this._seed, home.x - reach, home.z - reach, home.x + reach, home.z + reach));
         return buildResidentNavigation({ home, reach: RESIDENT_MOTION.wanderRadius, seed: this._seed, boxes, circles });
     }
 }

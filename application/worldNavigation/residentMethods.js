@@ -82,7 +82,8 @@ export const residentMethods = {
                     supportHeight: 0,
                     avatarRadius: RESIDENT_COLLISION_RADIUS
                 }),
-                seed: this.getWorldSeed()
+                seed: this.getWorldSeed(),
+                standingTrees: (circles) => this._standingTrees(circles)
             });
         }
         return this._residentRuntimeInstance;

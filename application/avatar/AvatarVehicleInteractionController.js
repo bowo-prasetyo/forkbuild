@@ -60,9 +60,12 @@ import { isSwimmableDepth, surfaceSwimFeetHeight } from '../../core/avatar/Avata
 // lookups fall back to the deterministic spawn query.
 
 export class AvatarVehicleInteractionController {
-    constructor(avatarPresenceSession, { seed = DEFAULT_WORLD_SEED, vehicleRuntimeInstances = null, avatarInventoryStore = null, isTakenByOther = () => false } = {}) {
+    constructor(avatarPresenceSession, { seed = DEFAULT_WORLD_SEED, vehicleRuntimeInstances = null, avatarInventoryStore = null, isTakenByOther = () => false, standingTrees = null } = {}) {
         this._avatarPresenceSession = avatarPresenceSession;
         this._seed = seed;
+        // The trees still there (application/world/TreeDisplacement.js): one
+        // giving way to a build doesn't block getting off. All of them without.
+        this._standingTrees = typeof standingTrees === 'function' ? standingTrees : (circles) => circles;
         // Shared with AvatarAnimalInteractionController in a real session; a private
         // store otherwise.
         this._inventoryStore = avatarInventoryStore || new AvatarInventoryStore();
@@ -264,11 +267,11 @@ export class AvatarVehicleInteractionController {
         const destinationClearance = dismountPosition
             ? isAvatarVehicleDismountPositionClear({
                 position: dismountPosition,
-                treeCollisions: treeCollisionCandidatesForMovement({
+                treeCollisions: this._standingTrees(treeCollisionCandidatesForMovement({
                     seed: this._seed,
                     currentPosition: dismountPosition,
                     requestedPosition: dismountPosition
-                })
+                }))
             })
             : null;
 

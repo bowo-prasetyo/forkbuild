@@ -45,9 +45,13 @@ import { DEFAULT_WORLD_SEED } from '../../core/nature/TerrainHeightField.js';
 // application/avatar/AvatarMovementConstraint.js#apply() and
 // application/avatar/AvatarTerrainConstraint.js#apply() already established for
 // their own return values.
+// `standing(circles)` (optional) keeps the trees still there: a tree giving
+// way to a build (application/world/TreeDisplacement.js) is bumped into by
+// nothing. Without it, every tree the seed grows stands.
 export class AvatarTreeConstraint {
-    constructor({ seed = DEFAULT_WORLD_SEED } = {}) {
+    constructor({ seed = DEFAULT_WORLD_SEED, standing = null } = {}) {
         this._seed = seed;
+        this._standing = typeof standing === 'function' ? standing : null;
     }
 
     // `position` — the avatar's position BEFORE this tick's movement.
@@ -83,12 +87,13 @@ export class AvatarTreeConstraint {
     // its own "tree collision never acquires responsibility for vertical
     // positioning" rule (docs/Roadmap.md, 0.9.63).
     apply(position, desiredPosition, { avatarRadius } = {}) {
-        const trees = treeCollisionCandidatesForMovement({
+        const candidates = treeCollisionCandidatesForMovement({
             seed: this._seed,
             currentPosition: position,
             requestedPosition: desiredPosition,
             avatarRadius
         });
+        const trees = this._standing && candidates.length > 0 ? this._standing(candidates) : candidates;
         if (trees.length === 0) {
             return { position: desiredPosition, collided: false };
         }

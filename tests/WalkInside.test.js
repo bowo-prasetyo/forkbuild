@@ -1,9 +1,14 @@
-import { findBuildEntrance, hasWalkedInside, ENTRANCE_STAND_DISTANCES, INSIDE_DEPTH } from '../core/world/BuildEntrance.js';
+import { findBuildEntrance, hasWalkedInside, entranceSearchArea, ENTRANCE_STAND_DISTANCES, NEAR_STAND_DISTANCES, INSIDE_DEPTH } from '../core/world/BuildEntrance.js';
 import { arrivalMethods } from '../application/worldNavigation/arrivalMethods.js';
 import { DEFAULT_MAX_STEP_HEIGHT } from '../core/building/BrickWalkability.js';
 import { AvatarStepConstraint } from '../application/avatar/AvatarStepConstraint.js';
 import { AvatarMovementConstraint } from '../application/avatar/AvatarMovementConstraint.js';
 import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
+import { AvatarTreeConstraint } from '../application/avatar/AvatarTreeConstraint.js';
+import { AvatarTerrainConstraint } from '../application/avatar/AvatarTerrainConstraint.js';
+import { AvatarWaterConstraint } from '../application/avatar/AvatarWaterConstraint.js';
+import { TreeDisplacement, TREE_OBSTACLE_QUERY_RADIUS } from '../application/world/TreeDisplacement.js';
+import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
 import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
@@ -119,6 +124,83 @@ const structure = (id) => [VillageLibrary, CollectionLibrary, ShowcaseLibrary]
     }
     assert(walked >= 14, `every ready-made build with a door (${walked}) is walked into from where you arrive`);
     console.log(`✓ from where you arrive, walking ahead goes inside, in all ${walked} ready-made builds with a door`);
+}
+
+// A tree in front of the door: walking straight ahead from behind it would
+// slide round it into the door's jamb, so the visitor stands in front of it.
+{
+    const bricks = structure(STARTER_STRUCTURE_ID).bricks;
+    const plain = findBuildEntrance(bricks, registry);
+    // As at plot (1360, 2240), where the bundle test's walk got stuck: a trunk
+    // 1.66 in front of the door and 0.35 to its side.
+    const tree = { center: { x: -0.85, z: -4.66 }, radius: 0.32 };
+    const moved = findBuildEntrance(bricks, registry, { obstacles: [tree] });
+    assert(near(moved.stand.x, plain.stand.x) && near(moved.stand.z, -3 - NEAR_STAND_DISTANCES[0]) && moved.heading === plain.heading,
+        `a tree on the way in brings the spot nearer the door, in front of it (${moved.stand.z})`);
+    const aside = findBuildEntrance(bricks, registry, { obstacles: [{ center: { x: 3, z: -5 }, radius: 0.4 }] });
+    assert(near(aside.stand.z, plain.stand.z), 'a tree off to the side changes nothing');
+    const doorway = findBuildEntrance(bricks, registry, { obstacles: [{ center: { x: -0.5, z: -3.2 }, radius: 0.3 }] });
+    assert(near(doorway.stand.z, plain.stand.z), 'a tree in the doorway itself: no spot helps, so the usual one');
+    const area = entranceSearchArea(bricks, registry);
+    assert(area.minZ <= plain.stand.z - 0.35 && area.minX < plain.footprint.minX && area.maxX > plain.footprint.maxX,
+        'the area searched for obstacles covers every spot and its way in');
+    assert(entranceSearchArea([], registry) === null, 'no bricks, nowhere to search');
+    console.log('✓ a tree in front of the door brings the spot in front of it');
+}
+
+// End to end at real plots: World View's arrival, then walking ahead with the
+// real movement pipeline (bricks, steps, terrain, water) and the real trees (application/avatar/AvatarTreeConstraint.js),
+// trees under the build giving way to it (application/world/TreeDisplacement.js).
+// The plots are where the published House stood when the bundle test's walk
+// got stuck (a tree in front of the door, in the doorway, inside the house),
+// and a sweep of the grid builds are placed on.
+{
+    const templates = new AvatarTemplateRegistry();
+    templates.register(CoreAvatarTemplateLibrary);
+    const storage = new InMemoryStorageProvider();
+    const identity = new LocalIdentityProvider(storage);
+    identity.login('walk-inside');
+    const profile = new AvatarProfileUseCase(storage, identity, templates).getProfile();
+    const house = structure(STARTER_STRUCTURE_ID).bricks;
+    const walkIn = (plot) => {
+        const world = new World();
+        const building = new Building({ creator: 'walk-inside' });
+        for (const brick of house) building.addBrick(brick);
+        world.addBuilding(building);
+        const loadedDocuments = new Map([['doc', { world }]]);
+        const getWorldPosition = () => plot;
+        const obstacles = new AvatarMovementConstraint({ loadedDocuments, getWorldPosition, brickRegistry: registry, queryRadius: TREE_OBSTACLE_QUERY_RADIUS, maxStepHeight: 0 });
+        const displacement = new TreeDisplacement({ obstaclesNear: (position) => obstacles.obstaclesNear(position, { avatarRadius: 0 }) });
+        const standing = (circles) => displacement.standing(circles);
+        const presence = new AvatarPresenceSession(profile);
+        const host = {
+            ...arrivalMethods, _registry: registry, _loadedDocuments: loadedDocuments, _getWorldPosition: getWorldPosition,
+            _avatarPresenceSession: presence, _standingTrees: standing, getWorldSeed: () => DEFAULT_WORLD_SEED,
+            focusDocument() {}, _beginCameraFocus() {}, updateSpatialView() {}, _arrival: null
+        };
+        host.arriveAtEntrance('doc');
+        const controller = new AvatarMovementController(presence,
+            new AvatarMovementConstraint({ loadedDocuments, getWorldPosition, brickRegistry: registry, maxStepHeight: DEFAULT_MAX_STEP_HEIGHT }),
+            new AvatarTerrainConstraint(), new AvatarStepConstraint({ loadedDocuments, getWorldPosition, brickRegistry: registry }),
+            new AvatarTreeConstraint({ standing }), new AvatarWaterConstraint());
+        controller.keyDown('w');
+        for (let i = 0; i < 200; i++) {
+            controller.tick(0.05);
+            if (host.arrivalState().walkedInside) return true;
+        }
+        return false;
+    };
+    for (const [x, z, what] of [[1360, 2240, 'a tree in front of the door'], [40, 1920, 'a tree in the doorway'], [160, 1920, 'a tree inside']]) {
+        assert(walkIn({ x, y: 0, z }), `at (${x}, ${z}), with ${what}, walking ahead from the arrival goes inside`);
+    }
+    const stuck = [];
+    for (let x = 0; x < 2560; x += 80) {
+        for (let z = 0; z < 2560; z += 80) {
+            if (!walkIn({ x, y: 0, z })) stuck.push(`(${x}, ${z})`);
+        }
+    }
+    assert(stuck.length === 0, `walking ahead goes inside wherever the house stands; stuck at ${stuck.join(' ')}`);
+    console.log('✓ wherever the house stands among the trees, walking ahead from the arrival goes inside');
 }
 
 // World View: arriving puts the avatar at the door and the camera behind it,

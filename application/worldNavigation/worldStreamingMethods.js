@@ -160,6 +160,9 @@ export const worldStreamingMethods = {
         if (!this._commandHistories.has(document.world.id)) {
             this._registerCommandHistory(document.world.id, new CommandHistory({ world: document.world }));
         }
+        // Trees under the newcomer's bricks give way at once, before anyone
+        // arrives at its door (core/nature/TreeDisplacement.js).
+        if (this._treeDisplacementInstance) this._treeDisplacementInstance.invalidate();
         this._settlePendingAvatarSpawn(documentId);
         this._settlePendingArrival(documentId);
     },
@@ -190,6 +193,8 @@ export const worldStreamingMethods = {
             this._session.removeWorld(document.world, documentId);
         }
         this._loadedDocuments.delete(documentId);
+        // And grow back once it is gone.
+        if (this._treeDisplacementInstance) this._treeDisplacementInstance.invalidate();
         this._refreshGizmo();
     },
 

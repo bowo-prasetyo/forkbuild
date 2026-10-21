@@ -809,6 +809,11 @@ export class RenderWorldViewUseCase {
             setHiddenWildlife: (isHidden) => {
                 renderer.setHiddenWildlife(isHidden);
             },
+            // Trees giving way to a build are not drawn
+            // (application/world/TreeDisplacement.js). A pass-through.
+            setHiddenTrees: (isHidden, version) => {
+                renderer.setHiddenTrees(isHidden, version);
+            },
             // The sky and its light (core/nature/DayCycle.js's look), and how
             // strongly lamps and lit windows shine with it.
             setSkyLook: (look) => {

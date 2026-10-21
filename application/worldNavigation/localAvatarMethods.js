@@ -171,7 +171,8 @@ export const localAvatarMethods = {
                 // The same AvatarInventoryStore the animal controller gets.
                 avatarInventoryStore: this._avatarInventoryStore,
                 // Someone else is riding it: not drawn here, so not mountable.
-                isTakenByOther: (vehicleId) => this._remotelyRiddenVehicleIds().has(vehicleId)
+                isTakenByOther: (vehicleId) => this._remotelyRiddenVehicleIds().has(vehicleId),
+                standingTrees: (circles) => this._standingTrees(circles)
             }
         );
         // Shares `_animalRuntimeInstances` and `_avatarInventoryStore`, as the
@@ -379,8 +380,10 @@ export const localAvatarMethods = {
     },
 
     // Tree placement is a pure function of (seed, x, z); defaults suffice.
+    // A tree giving way to a build stands in nobody's way
+    // (application/world/TreeDisplacement.js).
     _buildAvatarTreeConstraint() {
-        return new AvatarTreeConstraint();
+        return new AvatarTreeConstraint({ standing: (circles) => this._standingTrees(circles) });
     },
 
     // Water depth is a pure function of (seed, x, z); defaults suffice.
