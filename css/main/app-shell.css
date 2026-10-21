@@ -231,6 +231,67 @@ html, body {
     text-decoration: underline;
 }
 
+/* Help: a question answered from the user guide (ui/views/HelpView.js). */
+.help-view {
+    padding: 2rem 16px;
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.help-lead,
+.help-status {
+    color: var(--ink-soft);
+}
+
+.help-form {
+    margin: 1rem 0;
+}
+
+.help-question {
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 1rem;
+}
+
+.help-examples {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--ink-soft);
+}
+
+.help-answers {
+    padding-left: 1.4rem;
+}
+
+.help-answer {
+    margin-bottom: 1.5rem;
+}
+
+.help-answer-title {
+    font-size: 1.1rem;
+    margin: 0 0 0.4rem;
+}
+
+/* A list or table in the guide keeps one line an item or row. */
+.help-answer p {
+    white-space: pre-line;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.help-answer-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.help-view a {
+    color: var(--accent-ink);
+}
+
 .cta-button {
     display: inline-block;
     margin-top: 1rem;

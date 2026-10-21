@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 3895abf811fef371 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 924941a6d98b2fef -->
 # 01 — 시작하기
 
 <!-- languages -->
@@ -225,6 +225,9 @@ iPhone이나 iPad의 Safari에서는 버튼이 대신 방법을 알려 줍니다
   **[아바타와 접속 상태](06-AvatarsAndPresence.md)**와
   **[피어 연결과 친구](07-PeerConnectionsAndFriends.md)**를 보세요.
 - 막혔나요? **[자주 묻는 질문](FAQ.md)**에 흔한 질문의 답이 있습니다.
+- 자기 말로 물어볼 수도 있습니다. **더 보기**의 **도움말**이 내 언어로 된
+  이 가이드에서 답하며, 한 번 열면 오프라인에서도 동작합니다. 에디터에서는
+  명령 팔레트(`Ctrl/Cmd+K`)에 질문을 입력하면 **가이드에 묻기**가 나옵니다.
 
 ## 내 사본 실행하기
 

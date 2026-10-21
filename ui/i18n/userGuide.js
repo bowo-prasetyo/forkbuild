@@ -13,6 +13,16 @@ export function userGuidePath(code) {
     return `docs/user/${locale.code}/README.md`;
 }
 
+// The folder of a locale's guide, as this site serves it (Help reads it).
+export function userGuideDirectory(code) {
+    return userGuidePath(code).replace(/\/README\.md$/, '');
+}
+
+// A section of a locale's guide on GitHub, by its chapter file and anchor.
+export function userGuideSectionUrl(code, file, anchor) {
+    return `${REPOSITORY_URL}/${userGuideDirectory(code)}/${file}${anchor ? `#${anchor}` : ''}`;
+}
+
 export function userGuideUrl(code) {
     return `${REPOSITORY_URL}/${userGuidePath(code)}`;
 }

@@ -1289,7 +1289,7 @@ export default {
         const plainVocabulary = plainCommandVocabulary();
         function planPlainCommand(query) {
             const plan = interpretPlainCommand(query, plainVocabulary);
-            if (!plan) return null;
+            if (!plan) return guideQuestion(query);
             const { target } = plan;
             const predicate = target.kind === 'part'
                 ? (brick) => brickPart(brick.definitionId, registry.get(brick.definitionId)) === target.part
@@ -1303,6 +1303,20 @@ export default {
                 enabled: count > 0,
                 reason: count > 0 ? null : t(target.kind === 'selection' ? 'plainCommand.nothingSelected' : 'plainCommand.nothingFound'),
                 run: () => runPlainCommand(plan, predicate)
+            };
+        }
+        // A question (ending in "?"), or words no action matches, can be asked
+        // of the user guide on the Help page.
+        function guideQuestion(query) {
+            const text = String(query || '').trim();
+            if (text.length < 3) return null;
+            if (!/[?？]$/.test(text) && actionRegistry.findMatching(text, t).length > 0) return null;
+            return {
+                heading: t('help.title'),
+                label: t('help.askGuide', { question: text }),
+                enabled: true,
+                reason: null,
+                run: () => router.push({ path: '/help', query: { q: text } })
             };
         }
         function runPlainCommand(plan, predicate) {

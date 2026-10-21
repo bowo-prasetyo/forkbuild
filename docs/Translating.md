@@ -93,6 +93,15 @@ names are made of and that say nothing about an item ("and", "with") go in
 `buildLibrary.searchIgnoredWords`. See core/library/LibrarySearch.js for
 how they are matched.
 
+Help answers questions from your language's user guide. `help.ignoredWords`
+lists the question words it should not search for ("how", "what"; for
+Japanese and Korean, the pairs of letters such words are made of, like
+`どう` or `떻게`), and `help.examples` four questions it offers to try, the
+first the same as `help.placeholder`. Write the examples with the words
+your guide itself uses (the French guide *bascule* a brick rather than
+*incline* it), so they find their answer: tests/GuideHelp.test.js checks
+that the first two find the sections on moving bricks and on undo.
+
 What people write themselves is never translated: publication titles, names,
 chat messages, and anything signed or published.
 

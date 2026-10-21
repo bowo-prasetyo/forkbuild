@@ -20,7 +20,7 @@
 // Chromium comes from `npx playwright-core install chromium`, or from the
 // executable named by the CHROMIUM_PATH environment variable.
 import { createServer } from 'node:http';
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { extname, join, normalize } from 'node:path';
@@ -917,8 +917,15 @@ try {
         const scriptSrc = page.match(/script-src ([^;"]*)/);
         assert(scriptSrc && scriptSrc[1].trim() === "'self'", `the published ${name} runs only this site's scripts, with no 'unsafe-eval' (${scriptSrc && scriptSrc[1]})`);
     }
-    for (const left of ['ui', 'application', 'core', 'docs', 'tests', 'css', 'vendor/vue/dist']) {
+    for (const left of ['ui', 'application', 'core', 'tests', 'css', 'vendor/vue/dist']) {
         assert(!existsSync(join(published.outdir, left)), `the published site leaves out ${left}/`);
+    }
+    // Of docs/, only the user guide's text, which Help reads: no pictures, no
+    // other documents.
+    const docs = readdirSync(join(published.outdir, 'docs'), { recursive: true }).map(String).filter((file) => statSync(join(published.outdir, 'docs', file)).isFile());
+    assert(docs.length > 0 && docs.every((file) => /^user\/(?:[A-Za-z-]+\/)?[A-Za-z0-9_-]+\.md$/.test(file.split('\\').join('/'))), `the published site's docs/ holds only the user guide's text (${docs.filter((file) => !file.endsWith('.md')).slice(0, 3).join(', ')})`);
+    for (const guide of ['docs/user/README.md', 'docs/user/02-TheEditor.md', 'docs/user/ja/README.md']) {
+        assert(existsSync(join(published.outdir, guide)), `Help can read ${guide}`);
     }
     assert(!readdirSync(join(published.outdir, 'bundle'), { recursive: true }).some((file) => String(file).endsWith('.map')), 'the published site has no source maps');
     assert(html.includes(`href="${published.stylesheet}"`), 'index.html loads the bundled stylesheet');
@@ -932,7 +939,7 @@ try {
         `the first load stays within ${FIRST_LOAD_BUDGET_KIB} KiB, minified (${(published.firstLoadBytes / 1024).toFixed(0)} KiB): load what Home doesn't need with import(), or raise the budget on purpose`);
     assert(!/bundle\/chunks\/(en|de|es|fr|id|ja|ko|pt-BR)-[A-Z0-9]+\.js/.test(html), 'no translation is preloaded: each visitor downloads only their own');
     assert(!html.includes('chunks/composeNetwork-'), 'the network runtime is not preloaded: it loads once Home is on screen');
-    console.log(`✓ built: ${published.files} script files, ${published.firstLoadFiles} in the first load; no 'unsafe-eval', no source, docs or source maps`);
+    console.log(`✓ built: ${published.files} script files, ${published.firstLoadFiles} in the first load; no 'unsafe-eval', no source or source maps, and of docs/ only the user guide's text`);
 
     const server = await serve(published.outdir);
     servers.push(server);

@@ -25,6 +25,7 @@ const RepositoryView = page('RepositoryView', () => import('../views/RepositoryV
 const RecentWorldsView = page('RecentWorldsView', () => import('../views/RecentWorldsView.js'));
 const ChallengeView = page('ChallengeView', () => import('../views/ChallengeView.js'));
 const AboutView = page('AboutView', () => import('../views/AboutView.js'));
+const HelpView = page('HelpView', () => import('../views/HelpView.js'));
 const PublicationLinkView = page('PublicationLinkView', () => import('../views/PublicationLinkView.js'));
 const AuthorView = page('AuthorView', () => import('../views/AuthorView.js'));
 const BuilderView = page('BuilderView', () => import('../views/BuilderView.js'));
@@ -256,6 +257,8 @@ const routes = [
     ...['/leaderboard', '/publisher-leaderboard', '/publisher-snapshot-claim', '/reconciliation-workspace',
         '/reconciliation-leaderboard', '/evidence-export-comparison'].map((path) => ({ path, redirect: '/' })),
     { path: '/about', name: 'about', component: AboutView },
+    // Help: a question answered from the user guide (ui/views/HelpView.js).
+    { path: '/help', name: 'help', component: HelpView },
     // Any other address, such as an old link to a retired page.
     { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFoundView }
 ];

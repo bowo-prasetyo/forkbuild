@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 3895abf811fef371 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 924941a6d98b2fef -->
 # 01 — Primeros pasos
 
 <!-- languages -->
@@ -265,6 +265,10 @@ instalar aplicaciones, o ForkBuild ya está instalado, el botón no aparece.
   **[Conexiones entre pares y amigos](07-PeerConnectionsAndFriends.md)**.
 - ¿Atascado? Las **[Preguntas frecuentes](FAQ.md)** responden las dudas más
   comunes.
+- O pregunte con sus propias palabras: **Ayuda**, en **Más**, responde con
+  esta guía en su idioma y, una vez abierta, funciona también sin conexión.
+  En el Editor, una pregunta escrita en la paleta de comandos
+  (`Ctrl/Cmd+K`) ofrece **Preguntar a la guía**.
 
 ## Ejecutar su propia copia
 

@@ -8303,3 +8303,33 @@ As before, no model: every piece is worked out from the bricks and written as me
   description; every language whole; a family's changes.
 - Not done: a plain command can't move, turn or add bricks, or name a structure ("the house"); Suggest doesn't see a
   challenge's theme; a family member whose bricks this device can't read has no line.
+
+
+## Help from the user guide (unnumbered, 2026-10-21)
+
+**The guide had the answers, but only on GitHub, in a separate tab, and only by reading it.** The fifth task an
+on-device model could help with, done without one. Pillar served: building feels joyful (a newcomer stuck on how to
+tilt a brick finds out without leaving the app). How a player notices: **Help** under **More**, where *how do I tilt a
+brick?* opens on the section about it; in the Editor's command palette, a question offers **Ask the guide**.
+
+- core/help/GuideSearch.js (new, pure): `guideSections()` splits a chapter into sections by heading, as plain text
+  with the anchors GitHub gives them (checked against scripts/check-doc-translations.mjs's), leaving out the language
+  links and code blocks; `searchGuide()` ranks them. Words match with a short ending either way, one letter off or the
+  same first five letters (*colour* finds *color*, *delete* finds *deleting*); Japanese, Chinese and Korean by each pair
+  of letters. A word weighs the square of how rare it is, words in more than a sixth of the sections are dropped (the
+  rarest kept when all are), and each language's question words (`help.ignoredWords`) are ignored. Each answer carries
+  its most telling paragraph.
+- application/help/GuideLibrary.js (new): reads the chapters a guide's README links to, once a visit; a chapter that
+  can't be read is left out.
+- ui/views/HelpView.js (new, `/help?q=…`): the question kept in the address; up to five answers, each with **Show the
+  whole section** and a link to its place on GitHub; four examples to try; **Help** in the menu, under More → App.
+  ui/views/EditorView.js: the palette's **Ask the guide** row, for a question ending in *?* or words no action matches.
+- scripts/build.mjs publishes docs/user's Markdown (4 MB, no pictures), not kept on install: the service worker keeps
+  each file once Help reads it, so only the chosen language's is downloaded. tests/run-bundle.mjs: docs/ holds only
+  that.
+- 19 messages in every language; docs/user/01 (What's next) in every language; docs/Architecture.md,
+  docs/Deployment.md, docs/Translating.md.
+- Tests: reading Markdown and anchors; searching; in every language, its own examples answered by its own guide's
+  sections on moving bricks and on undo; the library.
+- Not done: a question worded unlike the guide (*change my name*, when the guide says *Choose a name*) can miss; the
+  answer is the guide's own words, never a summary of them.

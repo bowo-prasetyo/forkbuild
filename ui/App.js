@@ -173,6 +173,7 @@ export default {
                                     <span class="app-nav-group-label" aria-hidden="true">{{ t('app.nav.group.app') }}</span>
                                     <router-link to="/settings/language" class="app-nav-link">{{ t('app.nav.language') }}</router-link>
                                     <LookChoice />
+                                    <router-link to="/help" class="app-nav-link">{{ t('app.nav.help') }}</router-link>
                                     <router-link to="/about" class="app-nav-link">{{ t('app.nav.about') }}</router-link>
                                     <InstallAppButton variant="link" />
                                 </div>

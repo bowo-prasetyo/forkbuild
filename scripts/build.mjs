@@ -55,11 +55,13 @@ const EMBED_ENTRY = 'ui/embed/embedBoot.js';
 const RUNTIME_VUE = 'vendor/vue/dist/vue.runtime.esm-browser.prod.js';
 // The repository's files the published site serves as they are, as
 // docs/Deployment.md says: the pages' own files, the images the app and the
-// manifest point at, and the licences, the vendored libraries' among them
-// (their code is in the bundle). A directory ends in '/'.
+// manifest point at, the licences, the vendored libraries' among them
+// (their code is in the bundle), and the user guide's text in every
+// language, which Help reads (application/help/GuideLibrary.js). A directory
+// ends in '/'.
 const PUBLISHED = ['index.html', 'embed.html', 'manifest.webmanifest', 'favicon.svg', 'LICENSE', 'assets/',
     'scripts/steem-threads/index.html', 'scripts/steem-threads/content-check.html', 'scripts/steem-threads/page.css'];
-const PUBLISHED_PATTERN = /^vendor\/[^/]+\/LICENSE$/;
+const PUBLISHED_PATTERN = /^vendor\/[^/]+\/LICENSE$|^docs\/user\/(?:[A-Za-z-]+\/)?[A-Za-z0-9_-]+\.md$/;
 // The Steem operator pages' scripts, bundled to the paths their pages load.
 const OPERATOR_PAGE_ENTRIES = ['scripts/steem-threads/page.js', 'scripts/steem-threads/content-check.js'];
 // What the service worker keeps on install besides the bundle's own files.

@@ -35,11 +35,11 @@ export function normalizeQuery(query) {
 
 // Lowercased, accents taken off Latin letters (é → e), other scripts as
 // they are.
-function fold(text) {
+export function fold(text) {
     return text.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').normalize('NFC');
 }
 
-function wordsOf(text) {
+export function wordsOf(text) {
     return fold(text).split(/[^\p{L}\p{N}]+/u).filter(Boolean);
 }
 

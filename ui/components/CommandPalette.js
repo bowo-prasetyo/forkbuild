@@ -24,8 +24,9 @@ import { displayText, t } from '../i18n/i18n.js';
 //
 // `plan(query)` (optional) reads the query as a request in plain words
 // (core/building/PlainCommand.js, "paint the roof red") and returns
-// `{ label, enabled, reason, run }` or null; when it reads one, that row
-// comes first, under its own heading, and Enter runs it.
+// `{ label, enabled, reason, run, heading? }` or null; when it reads one,
+// that row comes first, under its heading ("From your words" unless it
+// names another), and Enter runs it.
 export default {
     name: 'CommandPalette',
     props: {
@@ -240,7 +241,7 @@ export default {
                         {{ t('commandPalette.noMatches') }}
                     </div>
                     <template v-for="(row, rowIndex) in rows" :key="rowIndex">
-                        <div v-if="row.header" :style="rowStyle(row)">{{ row.planned ? t('commandPalette.fromYourWords') : categoryName(row.category) }}</div>
+                        <div v-if="row.header" :style="rowStyle(row)">{{ row.planned ? (planned.heading || t('commandPalette.fromYourWords')) : categoryName(row.category) }}</div>
                         <button
                             v-else-if="row.planned"
                             type="button"
