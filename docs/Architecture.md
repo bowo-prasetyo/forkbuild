@@ -361,8 +361,9 @@ the detailed references; in short:
   caption credits of `SILENCE_WORDS`, in every language the app speaks);
   ui/voice/useVoiceCommands.js asks before the first
   download and hands what was said to the view. The Editor does it as the
-  command palette would: a plain command, an action said by its name, or Ask
-  the guide for a question. World View reads it with
+  command palette would: a plain command, an action said by its name (or, for
+  undo and redo, by World View's phrasings: `Transcript.js#actionSaid()`), or
+  Ask the guide for a question. World View reads it with
   core/voice/WorldVoiceCommand.js (words from ui/i18n/worldVoiceWords.js):
   go to a place named in Locations (or a build on a challenge plaza), Home,
   a camera view, sound off or on, undo, redo, or talk to a resident. When
@@ -372,7 +373,17 @@ the detailed references; in short:
   one edit (two from eight letters; a swap of neighbours is one), the words
   of "go to" and the ignored words left out of what was heard; the most
   words matched, then the fewest edits, wins, and a tie is no place. Not in
-  Japanese, Chinese or Korean.
+  Japanese, Chinese or Korean. A command is also heard by its sound
+  (`Transcript.js`), since the model writes "undo that" as "and do that" and
+  "unmute" as "un mute": first, when all of what was said is one command's
+  phrase with spaces and punctuation aside (`soundsExactly()`), that command
+  wins over any phrase found inside it; then, when nothing matched,
+  `nearestBySound()` compares it with every command's phrases without spaces,
+  a doubled letter as one, a vowel heard as another costing half an edit. The
+  nearest is taken when it is at most half an edit away (15% of its length
+  for a long phrase) and a whole edit nearer than any other command's; "go
+  to" said is still a place. In the Editor, among every action's name and
+  phrasings, so "elite" is never Delete.
   scripts/vendor.mjs
   takes these two packages' files from their published tarballs, pinned by
   integrity and SHA-256, since their npm package would install native Node

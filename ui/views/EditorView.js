@@ -89,7 +89,8 @@ import { displayText, errorText, t } from '../i18n/i18n.js';
 import { buildDescriptionText } from '../i18n/buildDescriptionText.js';
 import VoicePanel from '../components/VoicePanel.js';
 import { useVoiceCommands } from '../voice/useVoiceCommands.js';
-import { actionNamed } from '../../core/voice/Transcript.js';
+import { actionSaid } from '../../core/voice/Transcript.js';
+import { splitWordList } from '../../core/library/LibrarySearch.js';
 import { descriptionSuggestion, titleSuggestions } from '../i18n/buildSuggestionText.js';
 import { plainCommandVocabulary } from '../i18n/plainCommandWords.js';
 import { interpretPlainCommand } from '../../core/building/PlainCommand.js';
@@ -1361,7 +1362,15 @@ export default {
                 plan.run();
                 return { kind: 'done', label: plan.label };
             }
-            const action = actionNamed(text, actionRegistry.getAll().filter(({ id }) => id !== 'ui.voice'), t);
+            // By its name, by the phrasings World View hears for undo and
+            // redo, or by what it sounds like ("and do that" is Undo).
+            const action = actionSaid(text, actionRegistry.getAll().filter(({ id }) => id !== 'ui.voice'), {
+                toText: t,
+                aliases: {
+                    'history.undo': splitWordList(t('worldVoice.words.undo')),
+                    'history.redo': splitWordList(t('worldVoice.words.redo'))
+                }
+            });
             if (action) {
                 const context = getActionContext();
                 if (!action.enabled(context)) {

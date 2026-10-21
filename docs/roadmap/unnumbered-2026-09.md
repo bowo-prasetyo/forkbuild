@@ -8671,6 +8671,38 @@ served: building feels joyful (voice building that starts).
 - Not done: recognising real speech is still untried here (this sandbox can't reach Hugging Face); the Node build of
   transformers.js has no WebAssembly backend, so the test ends where the browser would create the model's sessions.
 
+
+## A command heard by its sound: "and do that" is undo (unnumbered, 2026-10-21)
+
+**What a player saying "undo" found.** Whisper tiny heard "undo" as "and" and "undo that" as "and do that": the
+right sounds, written as other words, so neither World View nor the Editor found a command in them. And "unmute"
+written "un mute" turned the sound off, by the "mute" inside it. Pillar served: building feels joyful (voice that
+does what was said).
+
+- core/voice/Transcript.js:
+  - `soundsExactly()`: all of what was said is one command's phrase, spaces and punctuation aside ("un mute" is
+    unmute); it comes before the phrases found inside what was said.
+  - `nearestBySound()`, when nothing matched: what was heard and every command's phrases compared without spaces or
+    punctuation, accents off, a letter written twice in a row as one, counting edits with a vowel heard as another
+    as half. The nearest is taken only when it is at most half an edit away (15% of its length for a long phrase)
+    and a whole edit nearer than any other command's phrase. "and do that" is half an edit from "undo that" and two
+    from "redo that"; a bare "and" is as near "undo" as "find", so it is nothing; "elite" is not "delete". Not in
+    Japanese, Chinese or Korean.
+  - `actionSaid()`: the Editor's action by its name, by its other phrasings said exactly, or by its sound.
+- core/voice/WorldVoiceCommand.js: both, around the phrases it already found; "go to" said is still a place, never a
+  command by sound.
+- ui/views/EditorView.js: voice uses `actionSaid()`, with World View's phrasings for undo and redo ("undo that",
+  "take that back", "redo that"), among all 43 actions.
+- Measured on the real vocabulary before choosing the allowances: in the Editor's 43 actions, "and do that", "and
+  do", "select hall" and "tilt" are found; "and", "elite", "dilate", "delete it", "coffee", "past", "till" and
+  sentences meant for the guide are not.
+- docs/Architecture.md. The user guide is unchanged: commands said as before simply work more often.
+- Tests: tests/VoiceBuilding.test.js (by sound, in general and in World View and the Editor, with every case above;
+  two commands about as near is none; "un mute", "un-mute" are unmute; "des hacer" is deshacer in Spanish; "go to the
+  castle" is still a place not found; without phrasings the Editor only takes an action's name).
+- Not done: the model itself. Whisper tiny at q8 is the root of what it mishears; a full-precision encoder or
+  whisper-base should hear better, but trying either needs Hugging Face, which this change was made without.
+
 ## Walk inside it past the trees, trees that give way to builds, and no builds in lakes (unnumbered, 2026-10-21)
 
 **A fix for Walk inside it, which sometimes never got inside.** The bundled-site test's walk into the published House
