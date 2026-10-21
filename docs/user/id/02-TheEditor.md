@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: f36d402077c24e76 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 30a0033d559cc17e -->
 # 02 — Editor
 
 <!-- languages -->
@@ -760,6 +760,25 @@ batu, dan rumput), *semua*, atau yang sedang dipilih (*ini*, *itu*); serta
 warna desa dengan namanya atau kata sehari-hari (*merah*, *abu-abu tua*,
 *biru muda*). Ini bekerja di setiap bahasa ForkBuild, di perangkat Anda;
 ketikan lain tetap mencari tindakan seperti biasa.
+
+## Ucapkan perintah (suara)
+
+Tekan `V`, atau **🎤 Suara** di atas tampilan 3D, lalu ucapkan yang Anda
+inginkan: *cat atap jadi merah*, *pilih semua jendela*, *hapus pohon*,
+*urungkan*. Tekan `V` (atau **Berhenti**) jika sudah selesai; ForkBuild
+menyebutkan apa yang didengarnya dan apa yang dilakukannya, dalam satu
+langkah yang bisa diurungkan. Ia memahami permintaan yang sama dengan
+[Perintah dengan kata-kata sendiri](#perintah-dengan-kata-kata-sendiri), dan
+setiap tindakan yang disebut namanya. Pertanyaan (*bagaimana cara
+mengajak teman?*) menawarkan **Tanyakan ke panduan**.
+
+Pertama kali, ia menjelaskan apa yang diunduh saat suara dinyalakan, sekitar
+70 MB sekali saja: model suara kecil (Whisper) dari Hugging Face dan mesinnya
+dari jsDelivr. Keduanya tetap di peramban ini, jadi suara bekerja tanpa
+koneksi sesudahnya. Apa yang Anda ucapkan direkam dan dipahami di perangkat
+Anda dan tidak pernah dikirim (lihat [Privasi](Privacy.md)). **Matikan
+suara** dan **Hapus model suara** ada di panel suara setelah setiap perintah.
+Ia mendengar bahasa yang dipakai ForkBuild.
 
 ## Kontrol kamera
 

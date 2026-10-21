@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Content Security Policy: see docs/Deployment.md. The sha256 value is the hash of the
          import map below; tests/ContentSecurityPolicy.test.js fails if they drift apart. -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'sha256-1Yauk+MBJJXMGtEunLNkm2IMuBHncM/1loYKdwVuAa4='; style-src 'self'; img-src 'self' data: blob: https://forkbuild.goatcounter.com; font-src 'self'; media-src 'self' blob:; connect-src 'self' https: wss: http://127.0.0.1:* http://localhost:*; worker-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' 'sha256-1Yauk+MBJJXMGtEunLNkm2IMuBHncM/1loYKdwVuAa4='; style-src 'self'; img-src 'self' data: blob: https://forkbuild.goatcounter.com; font-src 'self'; media-src 'self' blob:; connect-src 'self' https: wss: http://127.0.0.1:* http://localhost:*; worker-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
     <title>ForkBuild: build in 3D, right in your browser</title>
     <!-- What search engines and link previews show for the site (docs/Deployment.md, "Link previews").
          og:url and og:image are the official site's; a copy hosted elsewhere can point them at itself. -->

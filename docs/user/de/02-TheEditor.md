@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: f36d402077c24e76 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 30a0033d559cc17e -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -789,6 +789,26 @@ und Rasen), *alles* oder die Auswahl (*diese*); und die Dorffarben mit
 ihren Namen oder alltäglichen Wörtern (*rot*, *dunkelgrau*, *hellblau*). Es
 funktioniert in jeder Sprache von ForkBuild, auf Ihrem Gerät; alles andere
 sucht wie bisher in den Aktionen.
+
+## Einen Befehl sprechen (Sprachsteuerung)
+
+Drücken Sie `V` oder **🎤 Sprachsteuerung** oben in der 3D-Ansicht und
+sagen Sie, was Sie möchten: *das Dach rot streichen*, *alle Fenster
+auswählen*, *die Bäume löschen*, *rückgängig*. Drücken Sie `V` (oder
+**Stopp**), wenn Sie fertig sind; ForkBuild sagt, was es gehört und getan
+hat, in einem Schritt, den Sie rückgängig machen können. Es versteht
+dieselben Wünsche wie [Befehle in eigenen Worten](#befehle-in-eigenen-worten)
+und jede Aktion, die Sie beim Namen nennen. Eine Frage (*Wie lade ich einen
+Freund ein?*) bietet **Das Handbuch fragen** an.
+
+Beim ersten Mal erklärt es, was das Einschalten herunterlädt, einmalig etwa
+70 MB: ein kleines Sprachmodell (Whisper) von Hugging Face und seine
+Laufzeit von jsDelivr. Beides bleibt in diesem Browser, sodass die
+Sprachsteuerung danach auch offline funktioniert. Was Sie sagen, wird auf
+Ihrem Gerät aufgenommen und erkannt und nie gesendet (siehe
+[Datenschutz](Privacy.md)). **Sprachsteuerung ausschalten** und
+**Sprachmodell entfernen** stehen nach jedem Befehl im Sprachfeld. Es hört
+die Sprache, in der ForkBuild angezeigt wird.
 
 ## Kamerasteuerung
 

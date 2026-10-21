@@ -496,9 +496,14 @@
 /* See inside on a phone: below the Tools button, top right, clear of the
    first-build pill at the top left. */
 @media (max-width: 720px) {
-    .editor-see-inside {
+    .editor-view-tools {
         top: 3.25rem;
         left: auto;
         right: 0.5rem;
+    }
+
+    .editor-voice {
+        top: 6rem;
+        left: 0.5rem;
     }
 }

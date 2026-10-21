@@ -34,9 +34,9 @@ const policy = parsePolicy(metas[0][1]);
         assert(scriptSrc.includes(hash), `script-src allows the import map; after editing it, set its hash in index.html to ${hash}`);
     }
     const allowed = scriptSrc.filter((source) => !source.startsWith("'sha256-"));
-    assert(JSON.stringify(allowed) === JSON.stringify(["'self'", "'unsafe-eval'"]),
-        `scripts load only from this origin (found ${JSON.stringify(allowed)}); 'unsafe-eval' is needed by Vue's in-browser template compiler`);
-    console.log('✓ script-src: this origin, plus the import map by hash');
+    assert(JSON.stringify(allowed) === JSON.stringify(["'self'", "'unsafe-eval'", "'wasm-unsafe-eval'"]),
+        `scripts load only from this origin (found ${JSON.stringify(allowed)}); 'unsafe-eval' is needed by Vue's in-browser template compiler, 'wasm-unsafe-eval' by voice building's speech engine (application/voice/SpeechRuntime.js)`);
+    console.log('✓ script-src: this origin, plus the import map by hash, and WebAssembly for voice building');
 }
 
 // The restrictive directives stay restrictive.
@@ -86,7 +86,8 @@ const policy = parsePolicy(metas[0][1]);
     const inlineScripts = [...embed.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
     const importMapText = html.match(/<script type="importmap">([\s\S]*?)<\/script>/)[1];
     assert(inlineScripts.length === 1 && inlineScripts[0] === importMapText, 'embed.html\'s only inline script is index.html\'s import map, word for word');
-    assert(JSON.stringify(embedPolicy.get('script-src')) === JSON.stringify(policy.get('script-src')), 'so it allows the same scripts');
+    assert(JSON.stringify(embedPolicy.get('script-src')) === JSON.stringify(policy.get('script-src').filter((source) => source !== "'wasm-unsafe-eval'")),
+        'so it allows the same scripts, but no WebAssembly: an embed has no voice building');
     const expect = {
         'default-src': ["'self'"],
         'style-src': ["'self'"],

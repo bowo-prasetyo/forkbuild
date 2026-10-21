@@ -51,7 +51,8 @@ for a file the site left out.
   compiled when the site is built (`scripts/templatePlugin.mjs`), so the
   bundle uses Vue's runtime-only build. The published pages' Content
   Security Policy therefore has no `'unsafe-eval'`, and, with no import map,
-  no hash for one: `script-src 'self'`.
+  no hash for one: `script-src 'self' 'wasm-unsafe-eval'` for the app (see
+  "Content Security Policy") and `script-src 'self'` for the embed.
 - File names carry a content hash, so a page opened after a new deployment
   never mixes old and new files. Someone with the old version open who then
   opens a page whose files are gone gets the "This page couldn't load" notice
@@ -214,12 +215,13 @@ own rendezvous server (set it in `peer/RendezvousConfig.js` or under
 `index.html` carries a Content Security Policy in a `<meta>` tag, so it
 applies on any host. This is the repository's, which compiles templates in
 the browser; the published site's (see "GitHub Pages") drops
-`'unsafe-eval'` and the hash, leaving `script-src 'self'`:
+`'unsafe-eval'` and the hash, leaving `script-src 'self' 'wasm-unsafe-eval'`
+(`embed.html`, which has no voice building, has `script-src 'self'`):
 
 | Directive | Value | Why |
 | --- | --- | --- |
 | `default-src` | `'self'` | Nothing loads from elsewhere unless listed below. |
-| `script-src` | `'self' 'unsafe-eval'` and the import map's hash | Scripts come only from this origin. No inline script runs except the import map. |
+| `script-src` | `'self' 'unsafe-eval' 'wasm-unsafe-eval'` and the import map's hash | Scripts come only from this origin. No inline script runs except the import map. `'wasm-unsafe-eval'` lets voice building's speech engine compile its WebAssembly (application/voice/SpeechRuntime.js): it allows WebAssembly only, never JavaScript's `eval`, and the engine is refused unless its SHA-256 is the pinned one. |
 | `style-src` | `'self'` | Only the app's own stylesheets. |
 | `font-src` | `'self'` | Only the app's own fonts. |
 | `img-src` | `'self' data: blob: https://forkbuild.goatcounter.com` | Thumbnails are rendered to `data:` images; the visitor count's hits are images from GoatCounter (docs/Privacy.md, "Visitor count"). |

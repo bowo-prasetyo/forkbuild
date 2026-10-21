@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: d826f595608a7d2e -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 253bc0e4a5118027 -->
 # 操作リファレンス
 
 <!-- languages -->
@@ -32,6 +32,7 @@ ForkBuild のマウスとキーボードの操作をすべてまとめていま�
 |---|---|
 | `Ctrl/Cmd+K` | コマンドパレット |
 | `I` | 建物を説明: 中身を表示し、スクリーンリーダーが読み上げます — [建物を説明する](02-TheEditor.md#建物を説明する) を参照 |
+| `V` | 声でコマンド: 押して話し、もう一度押す — [声でコマンド（音声）](02-TheEditor.md#声でコマンド音声) を参照 |
 | `?` | キーボードショートカットの一覧（ツールバーの「⌨ ショートカット」ボタンからも開けます） — エディターのすべてのショートカット |
 
 ## 発見（ワールドビュー）

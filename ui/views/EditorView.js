@@ -87,6 +87,9 @@ import { useSoundControls } from '../composables/useSoundControls.js';
 import SoundControl from '../components/SoundControl.js';
 import { displayText, errorText, t } from '../i18n/i18n.js';
 import { buildDescriptionText } from '../i18n/buildDescriptionText.js';
+import VoicePanel from '../components/VoicePanel.js';
+import { useVoiceCommands } from './editorView/useVoiceCommands.js';
+import { actionNamed } from '../../core/voice/Transcript.js';
 import { descriptionSuggestion, titleSuggestions } from '../i18n/buildSuggestionText.js';
 import { plainCommandVocabulary } from '../i18n/plainCommandWords.js';
 import { interpretPlainCommand } from '../../core/building/PlainCommand.js';
@@ -115,7 +118,7 @@ const PLACING_TOOLS = new Set([ToolId.PLACE, ToolId.PLACE_STRUCTURE, ToolId.COMP
 
 export default {
     name: 'EditorView',
-    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, CommandPalette, KeyboardShortcutsOverlay, NewDocumentDialog, ActionFeedback, RecoveryBanner, DocumentInfoPanel, DescriptionReaderSheet, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback, ForkFailureDialog, EditorDistributionDialog, PublicationShareLink, ProtectIdentityNote, FirstBuildGuide, StarterJobCard, BuildPlotBanner, EditorTouchActionBar, SoundControl, ModelExportDialog, WalkTogetherDialog, LoginModal, BuildTogetherStrip },
+    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, CommandPalette, KeyboardShortcutsOverlay, NewDocumentDialog, ActionFeedback, RecoveryBanner, DocumentInfoPanel, DescriptionReaderSheet, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback, ForkFailureDialog, EditorDistributionDialog, PublicationShareLink, ProtectIdentityNote, FirstBuildGuide, StarterJobCard, BuildPlotBanner, EditorTouchActionBar, SoundControl, ModelExportDialog, WalkTogetherDialog, LoginModal, BuildTogetherStrip, VoicePanel },
     template: `
         <div class="editor-view">
             <Toolbar
@@ -402,14 +405,34 @@ export default {
                         :style="{ left: marqueeRect.left + 'px', top: marqueeRect.top + 'px', width: marqueeRect.width + 'px', height: marqueeRect.height + 'px' }"
                     ></div>
                     <TransformFeedback :feedback="transformFeedback" />
-                    <!-- See inside: the build cut away above its ground floor. -->
-                    <button
-                        type="button"
-                        :class="['action-btn', 'editor-see-inside', { 'action-btn--active': seeInside }]"
-                        :aria-pressed="seeInside ? 'true' : 'false'"
-                        :title="t('editor.seeInsideHint')"
-                        @click="toggleSeeInside"
-                    >{{ seeInside ? t('editor.seeInsideOff') : t('editor.seeInside') }}</button>
+                    <div class="editor-view-tools">
+                        <!-- See inside: the build cut away above its ground floor. -->
+                        <button
+                            type="button"
+                            :class="['action-btn', 'editor-see-inside', { 'action-btn--active': seeInside }]"
+                            :aria-pressed="seeInside ? 'true' : 'false'"
+                            :title="t('editor.seeInsideHint')"
+                            @click="toggleSeeInside"
+                        >{{ seeInside ? t('editor.seeInsideOff') : t('editor.seeInside') }}</button>
+                        <!-- Voice building (V): say a command. -->
+                        <button
+                            type="button"
+                            :class="['action-btn', 'editor-voice-button', { 'action-btn--active': voice.step === 'listening' }]"
+                            :aria-pressed="voice.step === 'listening' ? 'true' : 'false'"
+                            :title="t('editorAction.ui.voice.description')"
+                            :aria-label="t('editorAction.ui.voice')"
+                            @click="toggleVoice"
+                        >🎤 {{ voice.step === 'listening' ? t('voice.stop') : t('voice.button') }}</button>
+                    </div>
+                    <VoicePanel
+                        :voice="voice"
+                        @turn-on="turnOnVoice"
+                        @turn-off="turnOffVoice"
+                        @remove="removeVoiceModel"
+                        @toggle="toggleVoice"
+                        @ask-guide="askGuideAbout"
+                        @close="closeVoice"
+                    />
                     <!-- Who is building this with you, each in their own colour. -->
                     <BuildTogetherStrip
                         v-if="buildRole"
@@ -1330,7 +1353,33 @@ export default {
             documentVersion.value++;
         }
 
+        // Voice building: what was said, done as the palette would do it.
+        function actOnVoice(text) {
+            const plan = planPlainCommand(text);
+            if (plan && !plan.heading) {
+                if (!plan.enabled) return { kind: 'disabled', label: plan.label, reason: plan.reason };
+                plan.run();
+                return { kind: 'done', label: plan.label };
+            }
+            const action = actionNamed(text, actionRegistry.getAll().filter(({ id }) => id !== 'ui.voice'), t);
+            if (action) {
+                const context = getActionContext();
+                if (!action.enabled(context)) {
+                    return { kind: 'disabled', label: t(action.label), reason: displayText(action.disabledReason?.(context)) || '' };
+                }
+                actionRegistry.execute(action.id, context);
+                return { kind: 'done', label: t(action.label) };
+            }
+            return plan ? { kind: 'question' } : { kind: 'unknown' };
+        }
+        const voiceCommands = useVoiceCommands({ act: actOnVoice });
+        function askGuideAbout(question) {
+            voiceCommands.closeVoice();
+            router.push({ path: '/help', query: { q: question } });
+        }
+
         const actionUi = {
+            toggleVoice: () => voiceCommands.toggleVoice(),
             async describeBuild() {
                 buildDescriptionNote.value = '';
                 try {
@@ -1819,6 +1868,8 @@ export default {
         return {
             t,
             buildDescriptionNote,
+            ...voiceCommands,
+            askGuideAbout,
             suggestForBuild,
             planPlainCommand,
             ...buildTogether,

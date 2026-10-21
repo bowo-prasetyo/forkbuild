@@ -913,9 +913,10 @@ try {
     assert(html.includes(`<script type="module" src="${published.entry}">`) && published.entry.startsWith('bundle/'), 'index.html loads the bundle');
     assert(!html.includes('importmap') && !/'sha256-/.test(html), 'the published index.html has no import map, and no hash for one');
     const embedHtml = readFileSync(join(published.outdir, 'embed.html'), 'utf8');
-    for (const [name, page] of [['index.html', html], ['embed.html', embedHtml]]) {
+    // WebAssembly only where voice building needs it, never 'unsafe-eval'.
+    for (const [name, page, expected] of [['index.html', html, "'self' 'wasm-unsafe-eval'"], ['embed.html', embedHtml, "'self'"]]) {
         const scriptSrc = page.match(/script-src ([^;"]*)/);
-        assert(scriptSrc && scriptSrc[1].trim() === "'self'", `the published ${name} runs only this site's scripts, with no 'unsafe-eval' (${scriptSrc && scriptSrc[1]})`);
+        assert(scriptSrc && scriptSrc[1].trim() === expected, `the published ${name} runs only this site's scripts, with no 'unsafe-eval' (${scriptSrc && scriptSrc[1]})`);
     }
     for (const left of ['ui', 'application', 'core', 'tests', 'css', 'vendor/vue/dist']) {
         assert(!existsSync(join(published.outdir, left)), `the published site leaves out ${left}/`);

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: f36d402077c24e76 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 30a0033d559cc17e -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -751,6 +751,24 @@ o que estiver selecionado (*isto*, *estes*); e as cores da vila pelo nome
 ou por palavras do dia a dia (*vermelho*, *cinza escuro*, *azul claro*).
 Funciona em todos os idiomas do ForkBuild, no seu dispositivo; qualquer
 outra coisa que você digitar busca nas ações como antes.
+
+## Falar um comando (voz)
+
+Pressione `V`, ou **🎤 Voz** no alto da visão 3D, e diga o que quer:
+*pinte o telhado de vermelho*, *selecione todas as janelas*, *apague as
+árvores*, *desfazer*. Pressione `V` (ou **Parar**) quando terminar; o
+ForkBuild diz o que ouviu e o que fez, em um só passo que dá para desfazer.
+Ele entende os mesmos pedidos que [Comandos com suas palavras](#comandos-com-suas-palavras),
+e qualquer ação dita pelo nome. Uma pergunta (*como convido um amigo?*) oferece
+**Perguntar ao guia**.
+
+Na primeira vez, ele explica o que ligar a voz baixa, cerca de 70 MB uma
+única vez: um pequeno modelo de voz (Whisper) do Hugging Face e o motor dele
+do jsDelivr. Eles ficam neste navegador, então depois a voz funciona sem
+conexão. O que você diz é gravado e entendido no seu dispositivo e nunca é
+enviado (veja [Privacidade](Privacy.md)). **Desligar a voz** e **Remover o
+modelo de voz** ficam no painel de voz depois de cada comando. Ele ouve o
+idioma em que o ForkBuild é mostrado.
 
 ## Controles da câmera
 

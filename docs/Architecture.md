@@ -317,6 +317,23 @@ the detailed references; in short:
   paragraph, the whole section, and a link to it on GitHub. The Editor's
   command palette offers Ask the guide for a question, or words no action
   matches. No model, and nothing typed leaves the device.
+- Voice building (the Editor's `V`): ForkBuild's one real AI feature, run
+  on the device. ui/voice/recordVoice.js records from the microphone to mono
+  16 kHz samples; application/voice/SpeechRuntime.js runs Whisper tiny
+  (`onnx-community/whisper-tiny`, from Hugging Face) with transformers.js
+  (vendor/transformers/) on the ONNX runtime's WebAssembly engine, which it
+  downloads from jsDelivr at one exact version, refuses unless its SHA-256 is
+  the pinned one, and gives the runtime as bytes, with the engine's loader
+  served from vendor/onnxruntime-web/ (so no script, and no blob: URL, ever
+  comes from elsewhere). Both are kept in Cache Storage until removed. The
+  published Content Security Policy allows `'wasm-unsafe-eval'` for this,
+  never `'unsafe-eval'`. core/voice/Transcript.js cleans what was heard;
+  ui/views/editorView/useVoiceCommands.js asks before the first download and
+  does what was said as the command palette would: a plain command, an
+  action said by its name, or Ask the guide for a question. scripts/vendor.mjs
+  takes these two packages' files from their published tarballs, pinned by
+  integrity and SHA-256, since their npm package would install native Node
+  builds on every `npm ci`.
 - Ready-made builds: application/home/FeaturedBuilds.js lists six built-in
   structures (the three showcase ones first). Home, the Repository and My
   Worlds' empty state show them with ui/components/featured/FeaturedBuilds.js

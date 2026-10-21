@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 822c93745b70c626 -->
+<!-- translation-of: docs/Privacy.md source-hash: 3869d101d026839b -->
 # プライバシー
 
 <!-- languages -->
@@ -272,8 +272,15 @@ ForkBuild 自身のファイル（コード、スタイルシート、アイコ�
 行われ、各サーバーは **ネットワーク設定** で変更できます。各サーバーには、
 あなたの IP アドレスと、何を要求したかが見えます。
 
+音声は、エディターでオンにすると、音声モデルを Hugging Face から、音声
+エンジン（WebAssembly）を jsDelivr から一度だけダウンロードします。エンジン
+は、ForkBuild が想定するファイルと完全に一致しなければ拒否されます（その
+SHA-256 はアプリに固定されています）。話した内容はこのデバイスで録音・聞き
+取りされ、どこにも送られません。
+
 | いつ | サーバー（既定） | 受け取るもの |
 | --- | --- | --- |
+| エディターで音声をオンにしたとき（一度だけ。ファイルを削除した後に再びオンにしたときも） | Hugging Face（`huggingface.co` とそのファイルサーバー）、jsDelivr（`cdn.jsdelivr.net`） | 音声モデルのファイル（`onnx-community/whisper-tiny`）と音声エンジンの WebAssembly ファイル（`onnxruntime-web` の決まったバージョン）の要求。話した内容は一切送られません |
 | 公式サイトでアプリを開いたとき、多くても 1 日 1 回（「訪問者数のカウント」を参照） | GoatCounter（`forkbuild.goatcounter.com`） | 固定のパスで、リファラーも Cookie もない画像リクエスト 1 回 |
 | 公式サイトで、作品へのリンクをコピーまたは共有したとき、共有リンクを開いたとき、そのリンクから開いた作品をエディターにコピーしたとき（「訪問者数のカウント」を参照） | GoatCounter（`forkbuild.goatcounter.com`） | 3 つのうちどの場面かを示す固定のパスで、リファラーも Cookie もない画像リクエスト 1 回 |
 | 公式サイトから ForkBuild をインストールしたとき（「訪問者数のカウント」を参照） | GoatCounter（`forkbuild.goatcounter.com`） | 固定パス `/e/installed` の画像リクエスト 1 件。リファラーなし、Cookie なし |
