@@ -13,6 +13,19 @@
 // (SpeechRuntime turns its engine cache, the one other asker, off), and a
 // version that one day wants another file stops loading, loudly, until that
 // file is pinned too.
+//
+// One exception, which transformers.js 4.3 needs: pipeline() works out which
+// files a model has before it passes the revision on, so it reads config.json,
+// and asks whether tokenizer_config.json and preprocessor_config.json exist,
+// at the main branch. A pinned path asked for at main is the same file at the
+// pinned commit: fetched from the commit's address, kept under it, and held to
+// its pin like any other, so what main holds today never matters.
+//
+// transformers.js asks whether a file exists, and how big it is, with a
+// request for its first byte (`Range: bytes=0-0`). Such a request for a pinned
+// file is passed on to its address at the commit and answered with the
+// file's size only: no byte of it is handed on unchecked.
+const BRANCH = 'main';
 
 function hex(buffer) {
     return [...new Uint8Array(buffer)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
@@ -32,8 +45,9 @@ export class PinnedModelFiles {
         this._onProgress = onProgress;
     }
 
-    // The pinned file `url` names: { path, sha256 }; { path: null } for a
-    // file under the model that is not pinned; null for anything else.
+    // The pinned file `url` names: { path, sha256, url }, `url` its address at
+    // the pinned commit; { path: null } for a file under the model that is
+    // not pinned; null for anything else.
     pinOf(url) {
         const address = String(url && url.url ? url.url : url);
         if (!address.startsWith(this._prefix)) return null;
@@ -41,8 +55,8 @@ export class PinnedModelFiles {
         const slash = rest.indexOf('/');
         const revision = slash === -1 ? rest : rest.slice(0, slash);
         const path = slash === -1 ? '' : decodeURIComponent(rest.slice(slash + 1));
-        if (revision !== this._revision || !Object.hasOwn(this._files, path)) return { path: null };
-        return { path, sha256: this._files[path] };
+        if ((revision !== this._revision && revision !== BRANCH) || !Object.hasOwn(this._files, path)) return { path: null };
+        return { path, sha256: this._files[path], url: `${this._prefix}${this._revision}/${path}` };
     }
 
     async _verified(bytes, sha256) {
@@ -53,13 +67,31 @@ export class PinnedModelFiles {
     async fetch(url, init) {
         const pin = this.pinOf(url);
         if (pin === null || pin.path === null) return new Response(null, { status: 404, statusText: 'Not pinned' });
-        const response = await this._fetch(url, { ...init, credentials: 'omit' });
+        if (new Headers(init?.headers).has('Range')) return this._size(pin.url, init);
+        const response = await this._fetch(pin.url, { ...init, credentials: 'omit' });
         if (!response.ok) return response;
         const bytes = await this._read(response, pin.path);
         if (!(await this._verified(bytes, pin.sha256))) {
             throw new Error(`speech model: ${pin.path} is not the pinned file (its SHA-256 differs)`);
         }
         return new Response(bytes, { status: 200, headers: { 'Content-Length': String(bytes.byteLength) } });
+    }
+
+    // A pinned file's size, for a request for its first byte: the answer's
+    // status and Content-Range (or Content-Length), without its bytes.
+    async _size(url, init) {
+        const response = await this._fetch(url, { ...init, credentials: 'omit' });
+        try {
+            await response.body?.cancel();
+        } catch {
+            // Nothing more is read either way.
+        }
+        const headers = {};
+        for (const name of ['Content-Range', 'Content-Length']) {
+            const value = response.headers?.get?.(name);
+            if (value) headers[name] = value;
+        }
+        return new Response(null, { status: response.status, headers });
     }
 
     async _read(response, path) {
@@ -100,13 +132,13 @@ export class PinnedModelFiles {
         const pin = this.pinOf(request);
         if (!pin || pin.path === null) return undefined;
         const cache = await this._caches.open(this._cacheName);
-        const kept = await cache.match(request);
+        const kept = await cache.match(pin.url);
         if (!kept) return undefined;
         const bytes = await kept.arrayBuffer();
         if (await this._verified(bytes, pin.sha256)) {
             return new Response(bytes, { status: 200, headers: { 'Content-Length': String(bytes.byteLength) } });
         }
-        await cache.delete(request);
+        await cache.delete(pin.url);
         return undefined;
     }
 
@@ -114,6 +146,6 @@ export class PinnedModelFiles {
         const pin = this.pinOf(request);
         if (!pin || pin.path === null) return;
         const cache = await this._caches.open(this._cacheName);
-        await cache.put(request, response);
+        await cache.put(pin.url, response);
     }
 }

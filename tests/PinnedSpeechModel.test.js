@@ -14,6 +14,9 @@ import { assert } from './support/Assert.js';
 //   Section B: SpeechRuntime gives transformers.js the pinned commit and the
 //              checking fetch and cache, and leaves an unpinned model as before
 //   Section C: the pins file, as the script writes it
+//   Section D: the vendored transformers.js's own pipeline(), which asks for
+//              some files at the main branch, loads only pinned files at the
+//              pinned commit
 
 const sha = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const REVISION = '0123456789abcdef0123456789abcdef01234567';
@@ -68,11 +71,14 @@ const served = { 'config.json': config, 'onnx/encoder_model_quantized.onnx': enc
     const fetched = [];
     const progress = [];
     let serve = served;
-    const network = async (url) => {
+    const network = async (url, init) => {
         fetched.push(String(url));
         const path = String(url).split(`/resolve/${REVISION}/`)[1];
         const bytes = serve[path];
         if (!bytes) return new Response(null, { status: 404 });
+        if (new Headers(init?.headers).has('Range')) {
+            return new Response(bytes.slice(0, 1), { status: 206, headers: { 'Content-Range': `bytes 0-0/${bytes.length}`, 'Content-Length': '1' } });
+        }
         // Streamed in two halves, as a download is.
         const half = Math.floor(bytes.length / 2);
         const body = new ReadableStream({
@@ -93,7 +99,10 @@ const served = { 'config.json': config, 'onnx/encoder_model_quantized.onnx': enc
 
     assert(pinned.pinOf(urlOf('config.json')).sha256 === files['config.json'], '1. A pinned file is known by its address');
     assert(pinned.pinOf(urlOf('processor_config.json')).path === null, '2. An unpinned file under the model is known as unpinned');
-    assert(pinned.pinOf(urlOf('config.json', 'main')).path === null, '3. ...and so is a pinned path at another revision');
+    assert(pinned.pinOf(urlOf('config.json', 'feedfacefeedfacefeedfacefeedfacefeedface')).path === null, '3. ...and so is a pinned path at another revision');
+    const atMain = pinned.pinOf(urlOf('config.json', 'main'));
+    assert(atMain.sha256 === files['config.json'] && atMain.url === urlOf('config.json'), '3b. A pinned path at the main branch is the same file at the pinned commit');
+    assert(pinned.pinOf(urlOf('processor_config.json', 'main')).path === null, '3c. ...but an unpinned one is still unpinned');
     assert(pinned.pinOf('https://cdn.example/engine.wasm') === null, '4. Anything else is not the model\'s');
 
     const response = await pinned.fetch(urlOf('onnx/encoder_model_quantized.onnx'));
@@ -105,12 +114,22 @@ const served = { 'config.json': config, 'onnx/encoder_model_quantized.onnx': enc
     const before = fetched.length;
     const missing = await pinned.fetch(urlOf('processor_config.json'));
     assert(missing.status === 404 && fetched.length === before, '7. An unpinned file is answered as missing, and never fetched');
-    const otherRevision = await pinned.fetch(urlOf('config.json', 'main'));
+    const otherRevision = await pinned.fetch(urlOf('config.json', 'feedfacefeedfacefeedfacefeedfacefeedface'));
     assert(otherRevision.status === 404 && fetched.length === before, '8. ...as is the right file at the wrong revision');
+    assert((await pinned.fetch(urlOf('processor_config.json', 'main'))).status === 404 && fetched.length === before, '8a. ...and an unpinned file at the main branch');
     for (const address of ['https://cdn.example/engine.wasm', `${HOST}someone/another-model/resolve/${REVISION}/config.json`, 'https://example.org/config.json']) {
         const elsewhere = await pinned.fetch(address);
         assert(elsewhere.status === 404 && fetched.length === before, `8b. Anything that is not the model's (${address}) is answered as missing, and never fetched`);
     }
+    const fromMain = await pinned.fetch(urlOf('config.json', 'main'));
+    assert(fromMain.ok && sha(new Uint8Array(await fromMain.arrayBuffer())) === files['config.json'] && fetched.at(-1) === urlOf('config.json'),
+        '8c. A pinned file asked for at the main branch is fetched at the pinned commit, with its pinned bytes');
+    const size = await pinned.fetch(urlOf('onnx/encoder_model_quantized.onnx', 'main'), { headers: { Range: 'bytes=0-0' } });
+    assert(size.status === 206 && size.headers.get('Content-Range') === `bytes 0-0/${encoder.length}` && (await size.arrayBuffer()).byteLength === 0
+        && fetched.at(-1) === urlOf('onnx/encoder_model_quantized.onnx'),
+        '8d. Asked for its first byte, a pinned file says its size, from the pinned commit, and hands on none of its bytes');
+    const absent = await pinned.fetch(urlOf('processor_config.json', 'main'), { headers: { Range: 'bytes=0-0' } });
+    assert(absent.status === 404, '8e. ...and an unpinned file is still missing');
 
     serve = { ...served, 'config.json': new TextEncoder().encode('{"model_type":"something else"}') };
     const refused = await threw(pinned.fetch(urlOf('config.json')));
@@ -128,6 +147,10 @@ const served = { 'config.json': config, 'onnx/encoder_model_quantized.onnx': enc
     assert(await store.match(urlOf('config.json')) === undefined, '12. ...and is thrown away, so the file is downloaded afresh');
     await cache.put(urlOf('processor_config.json'), new Response(config));
     assert(await store.match(urlOf('processor_config.json')) === undefined, '13. Nothing unpinned is kept');
+    await cache.put(urlOf('config.json', 'main'), new Response(config));
+    assert(await store.match(urlOf('config.json', 'main')) === undefined && await store.match(urlOf('config.json')) !== undefined
+        && await cache.match(urlOf('config.json', 'main')) !== undefined,
+        '13b. A pinned file asked for at the main branch is kept, and found, under the pinned commit\'s address');
 }
 
 // -------------------------------------------------------------
@@ -185,6 +208,55 @@ const served = { 'config.json': config, 'onnx/encoder_model_quantized.onnx': enc
         assert(MODEL_FILES.every((path) => /^[0-9a-f]{64}$/.test(SPEECH_MODEL_FILES[path] || '')) && Object.keys(SPEECH_MODEL_FILES).length === MODEL_FILES.length,
             '24. Every file the model needs is pinned, with a full SHA-256');
     }
+}
+
+// -------------------------------------------------------------
+// Section D — the vendored transformers.js's pipeline()
+// -------------------------------------------------------------
+// transformers.js 4.3 reads config.json, and asks whether
+// tokenizer_config.json and preprocessor_config.json exist, at the main
+// branch before it passes the revision on: refused, voice stopped with
+// 'Could not locate file: ".../resolve/main/config.json"'. Here Hugging Face
+// serves the model only at the pinned commit. This Node build of the library
+// has no WebAssembly backend, so loading ends at the device; everything
+// before it is the browser's path.
+{
+    const { env, pipeline } = await import('../vendor/transformers/transformers.min.js');
+    const text = (value) => new TextEncoder().encode(typeof value === 'string' ? value : JSON.stringify(value));
+    const repository = {
+        'config.json': text({ model_type: 'whisper', architectures: ['WhisperForConditionalGeneration'], is_encoder_decoder: true, d_model: 384, encoder_layers: 4, decoder_layers: 4, encoder_attention_heads: 6, decoder_attention_heads: 6, vocab_size: 51865 }),
+        'generation_config.json': text({}),
+        'preprocessor_config.json': text({ feature_extractor_type: 'WhisperFeatureExtractor', feature_size: 80, sampling_rate: 16000 }),
+        'tokenizer.json': text({}),
+        'tokenizer_config.json': text({}),
+        'onnx/encoder_model_quantized.onnx': text('pretend encoder'),
+        'onnx/decoder_model_merged_quantized.onnx': text('pretend decoder')
+    };
+    const pins = Object.fromEntries(Object.entries(repository).map(([path, bytes]) => [path, sha(bytes)]));
+    const asked = [];
+    const huggingFace = async (url, init) => {
+        asked.push(String(url));
+        const bytes = repository[String(url).split(`/resolve/${REVISION}/`)[1]];
+        if (!bytes) return new Response('Entry not found', { status: 404 });
+        if (new Headers(init?.headers).has('Range')) {
+            return new Response(bytes.slice(0, 1), { status: 206, headers: { 'Content-Range': `bytes 0-0/${bytes.length}`, 'Content-Length': '1' } });
+        }
+        return new Response(bytes, { headers: { 'Content-Length': String(bytes.length) } });
+    };
+    const pinned = new PinnedModelFiles({
+        model: SPEECH_MODEL, revision: REVISION, files: pins, host: HOST,
+        fetch: huggingFace, caches: fakeCaches(), cacheName: 'transformers-cache', subtle: webcrypto.subtle
+    });
+    const saved = { allowLocalModels: env.allowLocalModels, useBrowserCache: env.useBrowserCache, useFSCache: env.useFSCache, fetch: env.fetch, useCustomCache: env.useCustomCache, customCache: env.customCache };
+    Object.assign(env, { allowLocalModels: false, useBrowserCache: false, useFSCache: false, useCustomCache: true, customCache: pinned.cache, fetch: (url, init) => pinned.fetch(url, init) });
+    const failure = await threw(pipeline('automatic-speech-recognition', SPEECH_MODEL, { device: 'wasm', dtype: 'q8', revision: REVISION, progress_callback: () => {} }));
+    Object.assign(env, saved);
+    assert(!failure || !/Could not locate file/.test(failure.message), `24. The pipeline finds the model's files (got: ${failure && failure.message})`);
+    const read = (path) => asked.includes(urlOf(path));
+    assert(read('config.json') && read('tokenizer_config.json') && read('preprocessor_config.json'),
+        '25. ...its config, and that it has a tokenizer and a processor, asked for at the main branch and read at the pinned commit');
+    assert(asked.length > 0 && asked.every((url) => url.startsWith(`${HOST}${SPEECH_MODEL}/resolve/${REVISION}/`)), `26. ...and nothing is fetched anywhere but the pinned commit (${asked.find((url) => !url.includes(REVISION))})`);
+    console.log('✓ the vendored pipeline() loads the pinned model');
 }
 
 console.log('✅ Pinned speech model tests passed.');

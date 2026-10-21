@@ -8647,3 +8647,26 @@ behind, now fixed in English and in all seven translations (each stamped again):
   🎤 Voice buttons.
 
 Left as it was: a place name heard a little wrong is not described, as the entry above decided.
+
+
+## Voice starts again with the model pinned (unnumbered, 2026-10-21)
+
+**A fix for voice, which stopped before it started.** With the model pinned, turning voice on failed with `Could not
+locate file: ".../onnx-community/whisper-tiny/resolve/main/config.json"`, reported from a device. Hugging Face was
+never asked: transformers.js 4.3's `pipeline()` works out which files a model has before it passes the revision on
+(`get_pipeline_files()` drops it), so it reads config.json, and asks whether tokenizer_config.json and
+preprocessor_config.json exist, at the main branch; `PinnedModelFiles` answered every one of those as missing. The
+live check of the pins fetched files at the commit directly, not through `pipeline()`, so it didn't see this. Pillar
+served: building feels joyful (voice building that starts).
+
+- application/voice/PinnedModelFiles.js: a pinned path asked for at the main branch is the same file at the pinned
+  commit, fetched from and kept under the commit's address and held to its pin like any other, so what main holds
+  never matters. A request for a pinned file's first byte (`Range: bytes=0-0`, how transformers.js asks whether a
+  file exists and how big it is) is passed on to the commit's address and answered with the file's size only. Any
+  other revision, and any unpinned file, is still answered as missing without being fetched.
+- tests/PinnedSpeechModel.test.js: the main branch, the size request and the shared cache entry; and Section D, the
+  vendored transformers.js's own `pipeline()` against a stand-in Hugging Face that serves the model only at the
+  pinned commit: it found the model's files, and fetched nothing anywhere else (before the fix: the reported error,
+  with nothing fetched). docs/Architecture.md.
+- Not done: recognising real speech is still untried here (this sandbox can't reach Hugging Face); the Node build of
+  transformers.js has no WebAssembly backend, so the test ends where the browser would create the model's sessions.

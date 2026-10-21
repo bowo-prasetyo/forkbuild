@@ -334,8 +334,14 @@ the detailed references; in short:
   one, downloaded or cached (a bad cached copy is thrown away), and answers
   any other address, an unpinned file of the model or anything else, as
   missing without fetching it (transformers.js asks `env.fetch` for nothing
-  else while its engine cache is off); until then the model loads unchecked, as
-  before. Both are kept in Cache Storage until removed. The
+  else while its engine cache is off). A pinned file asked for at the main
+  branch is that file at the pinned commit, fetched and kept under the
+  commit's address and checked the same way: transformers.js 4.3's
+  `pipeline()` reads config.json, and asks whether the tokenizer and processor
+  files exist, at main before it passes the revision on. Asked for its first
+  byte (`Range: bytes=0-0`, how transformers.js learns a file's size), a
+  pinned file answers with its size from the commit and none of its bytes.
+  Until a commit is pinned, the model loads unchecked, as before. Both are kept in Cache Storage until removed. The
   published Content Security Policy allows `'wasm-unsafe-eval'` for this,
   never `'unsafe-eval'`. The runtime lives in a module worker
   (application/voice/speechWorker.js, answering requests through
