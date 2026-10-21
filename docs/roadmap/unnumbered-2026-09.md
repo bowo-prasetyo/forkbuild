@@ -8376,3 +8376,36 @@ Privacy page.
 - Not done: recognising real speech was not tried here, since this sandbox can't download the model; Whisper tiny is
   weakest in the languages it was least trained on; recognition runs on the page's own thread, so the Editor pauses for
   a moment while it works; only the Editor listens, not World View.
+
+
+## Voice in a worker, and in World View (unnumbered, 2026-10-21)
+
+**The two things voice building left undone.** Recognition now runs in a worker, so the 3D view keeps drawing while
+the speech model works out what was said, where it used to pause for a second or two. And World View listens too:
+*take me to the old mill*, *go home*, *first person*, *sound off*, *talk*. Pillar served: building feels joyful (and
+walking a World, hands-free). How a player notices: **🎤 Voice** beside **Home** in World View, and `V`.
+
+- application/voice/speechWorker.js and serveSpeech.js (new): a module worker that answers the page's requests (load,
+  transcribe, downloaded, remove) with one SpeechRuntime. application/voice/SpeechWorkerClient.js (new): the same
+  methods on the page side; starts the worker on first use, hands the recorded sound over rather than copying it,
+  relays the download's progress, and fails what was asked if the worker stops, starting a new one next time.
+  `speechSupported()` now also asks for workers. ui/voice/speechRecognizer.js (new): one for the visit, shared by both
+  views, so the model loads once.
+- scripts/build.mjs: the worker bundled on its own into bundle/voice/ (the speech library with it, so the app's own
+  bundle no longer carries it) and named in index.html's `<meta name="forkbuild-speech-worker">`; not kept on install.
+- core/voice/WorldVoiceCommand.js and ui/i18n/worldVoiceWords.js (new): what a command spoken in World View asks for,
+  read like plain commands in the Editor: a place named in Locations (or a build on a challenge plaza), Home, the four
+  camera views, sound off or on, undo, redo, talk to the resident beside you. WorldView.js does it as its buttons
+  would and says when it can't (no such place, no avatar for that camera, no resident beside you); anything else
+  offers **Ask the guide**. useVoiceCommands.js moved to ui/voice/ for both views; VoicePanel gives World View's own
+  examples. `V` in World View (useViewportInput.js).
+- 20 messages in every language; docs/user/03 (Say where to go), docs/user/02, ControlsReference (`V`) and the Privacy
+  page in every language; docs/Architecture.md, docs/Deployment.md.
+- Tests: the worker and its client with a stand-in worker (one runtime for every request, progress relayed, the sound
+  handed over, a failure reaching the page, a stopped worker failing what was asked and replaced); commands spoken in
+  World View in every language; `V` in World View. By hand, in Chromium: every World View command, through the real
+  panel, with the recognizer stood in; and in the published build under its policy, the worker started from the
+  bundle, fetched, checked and kept the engine and loaded the speech library, as far as the model download, which
+  this sandbox can't reach.
+- Not done: recognising real speech still wasn't tried here; a place is found by the words of its name, so two places
+  sharing a word go to the first listed.

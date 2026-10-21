@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 30a0033d559cc17e -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2bbc73bd617ba5be -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -806,6 +806,11 @@ conexión. Lo que dice se graba y se entiende en su dispositivo, y nunca se
 envía (vea [Privacidad](Privacy.md)). **Desactivar la voz** y **Quitar el
 modelo de voz** están en el panel de voz después de cada comando. Oye el
 idioma en que se muestra ForkBuild.
+
+La vista del mundo también escucha (vea
+[Decir adónde ir](03-WorldView.md#decir-adónde-ir-voz)). El modelo de voz
+trabaja en segundo plano, así que la vista nunca se detiene mientras escucha,
+y sigue cargado cuando pasa de una a otra.
 
 ## Controles de cámara
 

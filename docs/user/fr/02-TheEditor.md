@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 30a0033d559cc17e -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2bbc73bd617ba5be -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -824,6 +824,11 @@ enregistré et compris sur votre appareil, et n’est jamais envoyé (voir
 [Confidentialité](Privacy.md)). **Désactiver la voix** et **Supprimer le
 modèle vocal** se trouvent dans le panneau de la voix après chaque commande.
 Il entend la langue dans laquelle ForkBuild est affiché.
+
+La Vue du Monde écoute aussi (voir
+[Dire où aller](03-WorldView.md#dire-où-aller-voix)). Le modèle vocal
+travaille en arrière-plan : la vue ne se fige jamais pendant qu’il écoute, et
+il reste chargé quand vous passez de l’une à l’autre.
 
 ## Commandes de la caméra
 

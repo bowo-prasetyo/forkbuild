@@ -88,7 +88,7 @@ import SoundControl from '../components/SoundControl.js';
 import { displayText, errorText, t } from '../i18n/i18n.js';
 import { buildDescriptionText } from '../i18n/buildDescriptionText.js';
 import VoicePanel from '../components/VoicePanel.js';
-import { useVoiceCommands } from './editorView/useVoiceCommands.js';
+import { useVoiceCommands } from '../voice/useVoiceCommands.js';
 import { actionNamed } from '../../core/voice/Transcript.js';
 import { descriptionSuggestion, titleSuggestions } from '../i18n/buildSuggestionText.js';
 import { plainCommandVocabulary } from '../i18n/plainCommandWords.js';

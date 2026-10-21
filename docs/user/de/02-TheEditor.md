@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 30a0033d559cc17e -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2bbc73bd617ba5be -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -809,6 +809,11 @@ Ihrem Gerät aufgenommen und erkannt und nie gesendet (siehe
 [Datenschutz](Privacy.md)). **Sprachsteuerung ausschalten** und
 **Sprachmodell entfernen** stehen nach jedem Befehl im Sprachfeld. Es hört
 die Sprache, in der ForkBuild angezeigt wird.
+
+Auch die Weltansicht hört zu (siehe
+[Sagen, wohin es geht](03-WorldView.md#sagen-wohin-es-geht-sprachsteuerung)).
+Das Sprachmodell arbeitet im Hintergrund, sodass die Ansicht beim Zuhören nie
+stockt, und es bleibt geladen, wenn Sie zwischen beiden wechseln.
 
 ## Kamerasteuerung
 

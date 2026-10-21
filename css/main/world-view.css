@@ -880,6 +880,16 @@
     font-variant-numeric: tabular-nums;
 }
 
+/* Voice's panel (ui/components/VoicePanel.js, styled in editor.css), in
+   World View above the bar of actions at the foot of the view. */
+.editor-voice--world {
+    top: auto;
+    left: 50%;
+    bottom: 4.75rem;
+    transform: translateX(-50%);
+    width: max-content;
+}
+
 /* The controls over the view (ui/views/worldView/templates/hudSection.js):
    Build here, Walk here with me and Edit a Copy, and on the plaza with the
    panel closed its one-line chip, on a bar at the bottom of the World. */

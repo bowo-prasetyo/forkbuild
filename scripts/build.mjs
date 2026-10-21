@@ -72,9 +72,11 @@ const APP_SHELL = ['index.html', 'manifest.webmanifest', 'favicon.svg', 'assets/
     'assets/icons/icon-maskable-512.png', 'assets/icons/apple-touch-icon.png', 'assets/icons/logo.svg', 'assets/icons/logo-mark.svg'];
 // Translations are kept once used rather than on install: only one is needed.
 const TRANSLATION_ENTRY = /^ui\/i18n\/messages\/[^/]+\.js$/;
-// Voice building's speech library is kept once voice is turned on, not on
-// install: most visitors never use it.
-const VOICE_ENTRY = /^vendor\/transformers\//;
+// Voice building's speech worker, with the speech library in it, bundled on
+// its own and named to the page by a <meta> tag (ui/voice/speechRecognizer.js).
+// It is kept once voice is turned on, not on install: most visitors never use it.
+const SPEECH_WORKER_ENTRY = 'application/voice/speechWorker.js';
+const SPEECH_WORKER_DIR = 'voice';
 
 // Resolves bare specifiers the way the browser does, through index.html's
 // import map, so there is one list of what 'vue' or 'three/addons/…' means.
@@ -171,6 +173,13 @@ export async function build(outdir = path.join(ROOT, 'dist'), { developmentVue =
         plugins: [templatePlugin(ROOT), importMapPlugin(imports)]
     });
     const css = await esbuild.build({ ...shared, entryPoints: ['css/main.css', 'css/embed.css'], entryNames: '[name]-[hash]' });
+    const speechWorker = await esbuild.build({
+        ...shared,
+        entryPoints: [SPEECH_WORKER_ENTRY],
+        outdir: path.join(outdir, BUNDLE_DIR, SPEECH_WORKER_DIR),
+        format: 'esm',
+        entryNames: '[name]-[hash]'
+    });
     const operatorPages = await esbuild.build({
         ...shared,
         entryPoints: OPERATOR_PAGE_ENTRIES,
@@ -183,7 +192,7 @@ export async function build(outdir = path.join(ROOT, 'dist'), { developmentVue =
     // esbuild has printed each warning above. A warning is usually a mistake in
     // the code (a duplicate key, an import that doesn't exist), so the build,
     // and with it tests/run-bundle.mjs, fails rather than publishing it.
-    const warnings = js.warnings.length + css.warnings.length + operatorPages.warnings.length;
+    const warnings = js.warnings.length + css.warnings.length + speechWorker.warnings.length + operatorPages.warnings.length;
     if (warnings > 0) throw new Error(`esbuild reported ${warnings} warning${warnings === 1 ? '' : 's'}; fix ${warnings === 1 ? 'it' : 'them'} before building`);
 
     const relative = (file) => path.relative(outdir, path.resolve(ROOT, file)).split(path.sep).join('/');
@@ -192,6 +201,7 @@ export async function build(outdir = path.join(ROOT, 'dist'), { developmentVue =
     const stylesheetOf = (entry) => Object.keys(css.metafile.outputs).find((file) => css.metafile.outputs[file].entryPoint === entry);
     const stylesheet = stylesheetOf('css/main.css');
     const preloads = firstLoadFiles(outputs, entryFile, ['ui/start.js', 'ui/main.js']);
+    const speechWorkerFile = Object.keys(speechWorker.metafile.outputs).find((file) => speechWorker.metafile.outputs[file].entryPoint === SPEECH_WORKER_ENTRY);
 
     let page = html;
     page = replaceOnce(page, /<!-- Content Security Policy: [\s\S]*?-->/,
@@ -204,7 +214,7 @@ export async function build(outdir = path.join(ROOT, 'dist'), { developmentVue =
             ...preloads.map((file) => `    <link rel="modulepreload" href="${relative(file)}">`)].join('\n'), 'modulepreload block');
     page = replaceOnce(page, /<script type="module" src="ui\/boot\.js"><\/script>/, `<script type="module" src="${relative(entryFile)}"></script>`, 'entry script');
     page = replaceOnce(page, /(<link rel="manifest" href="manifest\.webmanifest">)/,
-        `$1\n    <meta name="forkbuild-service-worker" content="${SERVICE_WORKER_FILE}">`, 'manifest link');
+        `$1\n    <meta name="forkbuild-service-worker" content="${SERVICE_WORKER_FILE}">\n    <meta name="forkbuild-speech-worker" content="${relative(speechWorkerFile)}">`, 'manifest link');
     writeFileSync(path.join(outdir, 'index.html'), page);
 
     const embedEntryFile = Object.keys(outputs).find((file) => outputs[file].entryPoint === EMBED_ENTRY);
@@ -221,7 +231,7 @@ export async function build(outdir = path.join(ROOT, 'dist'), { developmentVue =
         ...APP_SHELL,
         relative(stylesheet),
         ...Object.keys(outputs)
-            .filter((file) => file.endsWith('.js') && !TRANSLATION_ENTRY.test(outputs[file].entryPoint || '') && !VOICE_ENTRY.test(outputs[file].entryPoint || ''))
+            .filter((file) => file.endsWith('.js') && !TRANSLATION_ENTRY.test(outputs[file].entryPoint || ''))
             .map(relative)
             .sort()
     ];
@@ -240,6 +250,7 @@ export async function build(outdir = path.join(ROOT, 'dist'), { developmentVue =
         stylesheet: relative(stylesheet),
         files: jsFiles.length,
         serviceWorker: SERVICE_WORKER_FILE,
+        speechWorker: relative(speechWorkerFile),
         precacheFiles: precache.length,
         firstLoadFiles: preloads.length,
         firstLoadBytes: bytes(preloads),

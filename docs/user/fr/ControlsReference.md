@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 253bc0e4a5118027 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 0ebb06952a43419a -->
 # Référence des commandes
 
 <!-- languages -->
@@ -37,7 +37,7 @@ Les touches sont désignées par leur nom sur un clavier français : `Maj`
 |---|---|
 | `Ctrl/Cmd+K` | Palette de commandes |
 | `I` | Décrire la construction : de quoi elle est faite, affiché et lu par un lecteur d’écran — voir [Décrire la construction](02-TheEditor.md#décrire-la-construction) |
-| `V` | Dire une commande : appuyer, parler, appuyer de nouveau — voir [Dire une commande (voix)](02-TheEditor.md#dire-une-commande-voix) |
+| `V` | Dire une commande : appuyer, parler, appuyer de nouveau — voir [Dire une commande (voix)](02-TheEditor.md#dire-une-commande-voix). Dans la Vue du Monde, dire où aller — voir [Dire où aller (voix)](03-WorldView.md#dire-où-aller-voix) |
 | `?` | Panneau des raccourcis clavier (aussi accessible par le bouton « ⌨ Raccourcis » de la barre d’outils) — tous les raccourcis de l’Éditeur |
 
 ## Découverte (Vue du Monde)

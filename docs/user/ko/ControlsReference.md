@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 253bc0e4a5118027 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 0ebb06952a43419a -->
 # 조작 참조
 
 <!-- languages -->
@@ -33,7 +33,7 @@ ForkBuild의 모든 마우스와 키보드 조작입니다. 휴대폰과 태블�
 |---|---|
 | `Ctrl/Cmd+K` | 명령 팔레트 |
 | `I` | 건물 설명: 무엇으로 되어 있는지 보여 주고 스크린 리더가 읽어 줍니다 — [건물 설명하기](02-TheEditor.md#건물-설명하기) 참고 |
-| `V` | 음성 명령: 누르고 말한 뒤 다시 누르기 — [음성 명령 (음성)](02-TheEditor.md#음성-명령-음성) 참고 |
+| `V` | 음성 명령: 누르고 말한 뒤 다시 누르기 — [음성 명령 (음성)](02-TheEditor.md#음성-명령-음성) 참고. 월드 보기에서는 갈 곳을 말하기 — [갈 곳 말하기 (음성)](03-WorldView.md#갈-곳-말하기-음성) 참고 |
 | `?` | 키보드 단축키 오버레이(툴바의 “⌨ 단축키” 버튼으로도 열림) — 에디터의 모든 단축키 |
 
 ## 발견 (월드 보기)

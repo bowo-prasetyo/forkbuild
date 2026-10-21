@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 356a48136117ec0e -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: a51a7c2c7ea79eeb -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
@@ -388,6 +388,28 @@ tertutup tidak menampilkan apa-apa; yang datang sementara itu ada di
 daftar lain kali. Hanya beberapa yang muncul sekaligus; sisanya menunggu
 di daftar. Jika browser memblokirnya, panel memberi tahu: izinkan
 notifikasi ForkBuild di pengaturan situs browser.
+
+### Katakan ke mana pergi (suara)
+
+Tekan `V`, atau **🎤 Suara** di samping **Beranda**, lalu katakan ke mana
+pergi atau apa yang harus dilakukan. Tekan `V` (atau **Berhenti**) setelah
+selesai:
+
+- *bawa aku ke kincir tua*, atau cukup nama sebuah tempat: kamera pergi ke
+  sana, seperti **Fokus** di **Lokasi**. Tempat mana pun di **Lokasi** bisa
+  disebut, dan di plaza tantangan juga bangunannya.
+- *pulang*: sama dengan **Beranda**.
+- *orang pertama*, *orang ketiga*, *pandangan burung*, *kamera bebas*:
+  tampilan kamera di panel Avatar.
+- *matikan suara*, *nyalakan suara*.
+- *urungkan*, *ulangi*: seperti `Ctrl+Z` dan `Ctrl+Y`.
+- *bicara*: sama dengan `T` di samping penghuni.
+
+Selain itu, ditawarkan ke panduan dengan **Tanyakan ke panduan**. Suara di
+sini sama dengan di Editor (lihat
+[Ucapkan perintah](02-TheEditor.md#ucapkan-perintah-suara)): dinyalakan
+sekali untuk keduanya, dipahami di perangkat Anda, dan Dunia tetap bergerak
+selama ia mencari tahu apa yang Anda ucapkan.
 
 ### Jelajahi, Peta, dan Tempat — tiga cara menelusuri, tidak pernah sekaligus
 

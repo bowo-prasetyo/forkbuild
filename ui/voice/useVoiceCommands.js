@@ -1,23 +1,25 @@
 import { onBeforeUnmount, ref } from 'vue';
-import { SpeechRuntime } from '../../../application/voice/SpeechRuntime.js';
-import { cleanTranscript, whisperLanguage } from '../../../core/voice/Transcript.js';
-import { startRecording } from '../../voice/recordVoice.js';
-import { currentLocale } from '../../i18n/i18n.js';
+import { speechSupported } from '../../application/voice/SpeechWorkerClient.js';
+import { cleanTranscript, whisperLanguage } from '../../core/voice/Transcript.js';
+import { startRecording } from './recordVoice.js';
+import { sharedSpeechRecognizer } from './speechRecognizer.js';
+import { currentLocale } from '../i18n/i18n.js';
 
-// Voice building in the Editor: V (or the microphone button) starts
-// listening and stops; what was said is heard on this device
-// (application/voice/SpeechRuntime.js) and done by `act(transcript)`, the
-// same plain commands and actions the command palette offers. The first time,
-// it explains what turning voice on downloads and asks; the choice is kept
-// on this device.
+// Voice building, in the Editor and in World View: V (or the microphone
+// button) starts listening and stops; what was said is heard on this device,
+// in the speech worker both views share (ui/voice/speechRecognizer.js), and
+// done by `act(transcript)`: in the Editor, the plain commands and actions
+// the command palette offers; in World View, going places and the like
+// (core/voice/WorldVoiceCommand.js). The first time, it explains what
+// turning voice on downloads and asks; the choice is kept on this device,
+// for both views.
 //
 // `state.value.step`: 'off' | 'intro' | 'loading' | 'ready' | 'listening' |
 // 'working' | 'result' | 'failed', with `progress` (0–100) while loading
 // and `heard`/`outcome` after a command.
 const ENABLED_KEY = 'forkbuild.voice.enabled';
 
-
-export function useVoiceCommands({ act, runtime = new SpeechRuntime(), record = startRecording, supported = SpeechRuntime.supported(), language = () => currentLocale().code, storage = globalThis.localStorage }) {
+export function useVoiceCommands({ act, runtime = sharedSpeechRecognizer(), record = startRecording, supported = speechSupported(), language = () => currentLocale().code, storage = globalThis.localStorage }) {
     const state = ref({ step: 'off' });
     let recording = null;
 
@@ -122,7 +124,7 @@ export function useVoiceCommands({ act, runtime = new SpeechRuntime(), record = 
         show({ step: 'off' });
     }
 
-    // Leaving the Editor lets go of the microphone.
+    // Leaving the view lets go of the microphone; the model stays loaded.
     function release() {
         recording?.cancel();
         recording = null;

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 356a48136117ec0e -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: a51a7c2c7ea79eeb -->
 # 03 — Visão do mundo
 
 <!-- languages -->
@@ -376,6 +376,27 @@ nada; o que chegou nesse meio-tempo está na lista da próxima vez. Só
 algumas aparecem de uma vez; o resto espera na lista. Se o navegador as
 bloquear, o painel avisa: permita as notificações do ForkBuild nas
 configurações do site no navegador.
+
+### Dizer aonde ir (voz)
+
+Pressione `V`, ou **🎤 Voz** ao lado de **Início**, e diga aonde ir ou o que
+fazer. Pressione `V` (ou **Parar**) quando terminar:
+
+- *me leve ao moinho velho*, ou só o nome de um lugar: a câmera vai até lá,
+  como **Focar** em **Locais**. Qualquer lugar de **Locais** pode ser
+  nomeado e, numa praça do desafio, também as construções dela.
+- *para casa*: o mesmo que **Início**.
+- *primeira pessoa*, *terceira pessoa*, *vista aérea*, *câmera livre*: as
+  vistas de câmera do painel do avatar.
+- *sem som*, *liga o som*.
+- *desfazer*, *refazer*: como `Ctrl+Z` e `Ctrl+Y`.
+- *falar com*: o mesmo que `T` ao lado de um morador.
+
+Qualquer outra coisa é oferecida ao guia com **Perguntar ao guia**. A voz
+aqui é a mesma do Editor (veja
+[Falar um comando](02-TheEditor.md#falar-um-comando-voz)): ligada uma vez
+para os dois, entendida no seu dispositivo, e o mundo continua se movendo
+enquanto ela descobre o que você disse.
 
 ### Explorar, Mapa e Lugares — três jeitos de navegar, nunca ao mesmo tempo
 

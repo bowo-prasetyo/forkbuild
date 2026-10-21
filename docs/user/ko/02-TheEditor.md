@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 30a0033d559cc17e -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2bbc73bd617ba5be -->
 # 02 — 에디터
 
 <!-- languages -->
@@ -684,6 +684,10 @@ copyright와 extras에, STL은 헤더에, OBJ는 주석에 들어갑니다. 공�
 이 기기에서 녹음되고 인식되며 어디에도 보내지 않습니다
 ([개인정보](Privacy.md) 참고). **음성 끄기**와 **음성 모델 삭제**는 명령마다
 음성 패널에 있습니다. ForkBuild가 표시되는 언어를 알아듣습니다.
+
+월드 보기에서도 듣습니다([갈 곳 말하기](03-WorldView.md#갈-곳-말하기-음성)
+참고). 음성 모델은 뒤에서 일하므로 듣는 동안 화면이 멈추지 않고, 두 보기를
+오가도 불러온 채로 남습니다.
 
 ## 카메라 조작
 

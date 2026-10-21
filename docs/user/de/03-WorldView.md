@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 356a48136117ec0e -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: a51a7c2c7ea79eeb -->
 # 03 — Weltansicht
 
 <!-- languages -->
@@ -387,6 +387,28 @@ nichts; was inzwischen kam, steht beim nächsten Mal in der Liste. Nur
 wenige erscheinen auf einmal; der Rest wartet in der Liste. Blockiert der
 Browser sie, sagt das Feld es: Erlauben Sie die Benachrichtigungen von
 ForkBuild in den Website-Einstellungen des Browsers.
+
+### Sagen, wohin es geht (Sprachsteuerung)
+
+Drücken Sie `V` oder **🎤 Sprachsteuerung** neben **Start** und sagen Sie,
+wohin es gehen oder was geschehen soll. Drücken Sie `V` (oder **Stopp**),
+wenn Sie fertig sind:
+
+- *bring mich zur alten Mühle* oder einfach der Name eines Ortes: Die Kamera
+  fliegt dorthin, wie mit **Fokus** unter **Orte**. Jeder Ort unter **Orte**
+  lässt sich nennen, auf einer Challenge-Plaza auch ihre Bauwerke.
+- *nach Hause*: wie **Start**.
+- *Ich-Perspektive*, *Verfolgerperspektive*, *Vogelperspektive*, *freie
+  Kamera*: die Kameraansichten im Avatar-Bereich.
+- *Ton aus*, *Ton an*.
+- *rückgängig*, *wiederholen*: wie `Strg+Z` und `Strg+Y`.
+- *sprich mit*: wie `T` neben einem Bewohner.
+
+Alles andere wird mit **Das Handbuch fragen** dem Handbuch angeboten. Die
+Sprachsteuerung ist hier dieselbe wie im Editor (siehe
+[Einen Befehl sprechen](02-TheEditor.md#einen-befehl-sprechen-sprachsteuerung)):
+einmal für beide eingeschaltet, auf Ihrem Gerät erkannt, und die Welt bewegt
+sich weiter, während sie herausfindet, was Sie gesagt haben.
 
 ### Erkunden, Karte und Gegenden — drei Arten zu stöbern, nie gleichzeitig
 

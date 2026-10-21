@@ -31,7 +31,7 @@ every editing operation below by name.
 |---|---|
 | `Ctrl/Cmd+K` | Command Palette |
 | `I` | Describe the Build: what it is made of, shown and read out by a screen reader — see [Describe the build](02-TheEditor.md#describe-the-build) |
-| `V` | Speak a command: press, speak, press again — see [Speak a command (voice)](02-TheEditor.md#speak-a-command-voice) |
+| `V` | Speak a command: press, speak, press again — see [Speak a command (voice)](02-TheEditor.md#speak-a-command-voice). In World View, say where to go — see [Say where to go (voice)](03-WorldView.md#say-where-to-go-voice) |
 | `?` | Keyboard Shortcuts overlay (also reachable from the toolbar's "⌨ Shortcuts" button) — every Editor shortcut |
 
 ## Discovery (World View)

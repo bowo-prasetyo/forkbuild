@@ -221,13 +221,13 @@ the browser; the published site's (see "GitHub Pages") drops
 | Directive | Value | Why |
 | --- | --- | --- |
 | `default-src` | `'self'` | Nothing loads from elsewhere unless listed below. |
-| `script-src` | `'self' 'unsafe-eval' 'wasm-unsafe-eval'` and the import map's hash | Scripts come only from this origin. No inline script runs except the import map. `'wasm-unsafe-eval'` lets voice building's speech engine compile its WebAssembly (application/voice/SpeechRuntime.js): it allows WebAssembly only, never JavaScript's `eval`, and the engine is refused unless its SHA-256 is the pinned one. |
+| `script-src` | `'self' 'unsafe-eval' 'wasm-unsafe-eval'` and the import map's hash | Scripts come only from this origin. No inline script runs except the import map. `'wasm-unsafe-eval'` lets voice building's speech engine compile its WebAssembly (application/voice/SpeechRuntime.js): it allows WebAssembly only, never JavaScript's `eval`, and the engine is refused unless its SHA-256 is the pinned one. The engine runs in a worker, which a browser may hold to the page's policy, so the page keeps it. |
 | `style-src` | `'self'` | Only the app's own stylesheets. |
 | `font-src` | `'self'` | Only the app's own fonts. |
 | `img-src` | `'self' data: blob: https://forkbuild.goatcounter.com` | Thumbnails are rendered to `data:` images; the visitor count's hits are images from GoatCounter (docs/Privacy.md, "Visitor count"). |
 | `media-src` | `'self' blob:` | Voice call audio. |
 | `connect-src` | `'self' https: wss: http://127.0.0.1:* http://localhost:*` | Relays, gateways and APIs are user-configurable, so any HTTPS/WSS endpoint is allowed; plain HTTP only to a local IPFS node. |
-| `worker-src` | `'self'` | The built site's service worker, `sw.js` (see "Installing and working offline"). `embed.html` has `'none'`, and `connect-src 'self'` (see "Embeds"). |
+| `worker-src` | `'self'` | The built site's service worker, `sw.js` (see "Installing and working offline"), and voice building's speech worker (`application/voice/speechWorker.js`, bundled to `bundle/voice/`). `embed.html` has `'none'`, and `connect-src 'self'` (see "Embeds"). |
 | `object-src`, `frame-src` | `'none'` | Not used. |
 | `base-uri`, `form-action` | `'none'` | Every form is handled in script. |
 

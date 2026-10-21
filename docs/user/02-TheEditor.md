@@ -727,6 +727,11 @@ you say is recorded and understood on your device and never sent anywhere
 model** are in the voice panel after any command. It hears the language
 ForkBuild is shown in.
 
+World View listens too (see
+[Say where to go](03-WorldView.md#say-where-to-go-voice)). The speech model
+works in the background, so the view never pauses while it listens, and it
+stays loaded as you move between the two.
+
 ## Camera controls
 
 - **Drag** — orbit around the scene

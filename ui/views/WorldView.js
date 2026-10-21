@@ -105,6 +105,10 @@ import LoginModal from '../components/LoginModal.js';
 import { compassText, spatialContextDescription } from '../i18n/worldText.js';
 import { DAY_CYCLE_SECONDS } from '../../core/nature/DayCycle.js';
 import { SEASON, SEASON_SECONDS } from '../../core/nature/Season.js';
+import VoicePanel from '../components/VoicePanel.js';
+import { useVoiceCommands } from '../voice/useVoiceCommands.js';
+import { interpretWorldCommand } from '../../core/voice/WorldVoiceCommand.js';
+import { worldVoiceVocabulary } from '../i18n/worldVoiceWords.js';
 
 // The seasons World View can be kept in, in the year's order.
 const SEASON_OPTIONS = Object.freeze([
@@ -135,7 +139,7 @@ export default {
         WorldWelcomePanel, WorldMapPanel, PlaceNamingPanel,
         GeographicPlaceDirectoryPanel, GeographicPlacePanel, CollapsibleSection,
         WorldFocusPanel, WorldEncounterCanvas, OwnPublicationPanel, VehicleInteractionPrompt, AnimalInteractionPrompt, ResidentInteractionPrompt, ResidentSpeechActions,
-        HistoryTimelinePanel, TouchMovementPad, BreathMeter, SoundControl, WalkTogetherDialog, LoginModal, WalkThroughFilmPanel
+        HistoryTimelinePanel, TouchMovementPad, BreathMeter, SoundControl, WalkTogetherDialog, LoginModal, WalkThroughFilmPanel, VoicePanel
     },
     setup() {
         const route = useRoute();
@@ -1176,11 +1180,13 @@ export default {
 
         // The Avatar panel's Residents button: the same action as 'R', but through
         // guarded() so a refusal (not signed in, no edit access) is shown.
-        // The Avatar panel's and touch pad's Talk: the same action as 'T'.
+        // The Avatar panel's and touch pad's Talk: the same action as 'T'. It
+        // returns what the resident said, or null with no resident beside you.
         function talkToResident() {
-            guarded(() => session.talkToNearestResident());
+            const spoken = guarded(() => session.talkToNearestResident());
             residentSpeech.value = session.lastResidentSpeech();
             refreshResidentFocusTargets();
+            return spoken;
         }
 
         function refreshResidentFocusTargets() {
@@ -1228,10 +1234,71 @@ export default {
             toggleSoundSpatial, toggleSoundMusic, onSoundKeyDown, sound
         } = useWorldSoundscape({ createWorldSoundscape: inject('createWorldSoundscape', null), session });
 
+        // Voice (V, or the panel's microphone button): a spoken command does
+        // what its button or key does (core/voice/WorldVoiceCommand.js); a
+        // question can be asked of the user guide.
+        const CAMERA_BY_COMMAND = {
+            free: null, firstPerson: CameraPerspective.FIRST_PERSON, thirdPerson: CameraPerspective.THIRD_PERSON, birdEye: CameraPerspective.BIRD_EYE
+        };
+        const CAMERA_LABEL = { free: 'worldView.free', firstPerson: 'worldView.firstPerson', thirdPerson: 'worldView.thirdPerson', birdEye: 'worldView.birdSEye' };
+        function actOnVoice(text) {
+            // On a challenge plaza, its builds too, which aren't in Locations.
+            const exhibits = plaza.value ? [...(plaza.value.exhibits || []), ...(plaza.value.readyMades || [])] : [];
+            const places = [
+                ...exhibits.map((exhibit) => ({ id: exhibit.key, title: exhibit.title, exhibit })),
+                ...session.getWorldLocations().map((location) => location.toJSON())
+            ];
+            const command = interpretWorldCommand(text, worldVoiceVocabulary(), places);
+            const done = (label) => ({ kind: 'done', label });
+            const refused = (label, reason) => ({ kind: 'disabled', label, reason });
+            switch (command?.kind) {
+                case 'goTo':
+                    if (!command.place) return refused(t('worldView.locations'), t('worldVoice.noPlace'));
+                    if (command.place.exhibit) focusExhibit(command.place.exhibit);
+                    else focusLocation(command.place.id);
+                    return done(t('worldVoice.goTo', { place: command.place.title }));
+                case 'home':
+                    goHome();
+                    return done(t('worldView.home'));
+                case 'free':
+                case 'firstPerson':
+                case 'thirdPerson':
+                case 'birdEye': {
+                    const label = t('worldVoice.camera', { perspective: t(CAMERA_LABEL[command.kind]) });
+                    const perspective = CAMERA_BY_COMMAND[command.kind];
+                    if (perspective && !hasLocalAvatar.value) return refused(label, t('worldVoice.noAvatar'));
+                    if (cameraPerspective.value !== perspective) setCameraPerspective(perspective);
+                    return done(label);
+                }
+                case 'soundOff':
+                case 'soundOn': {
+                    const label = t(command.kind === 'soundOff' ? 'sound.off' : 'sound.on');
+                    if (!soundAvailable.value) return refused(label, t('worldVoice.noSound'));
+                    if (soundMuted.value !== (command.kind === 'soundOff')) toggleSound();
+                    return done(label);
+                }
+                case 'undo':
+                    undoAction();
+                    return done(t('editorAction.history.undo'));
+                case 'redo':
+                    redoAction();
+                    return done(t('editorAction.history.redo'));
+                case 'talk':
+                    return talkToResident() ? done(t('worldView.talk')) : refused(t('worldView.talk'), t('worldVoice.noResident'));
+                default:
+                    return text.trim().length >= 3 ? { kind: 'question' } : { kind: 'unknown' };
+            }
+        }
+        const voiceCommands = useVoiceCommands({ act: actOnVoice });
+        function askGuideAbout(question) {
+            voiceCommands.closeVoice();
+            router.push({ path: '/help', query: { q: question } });
+        }
+
         const {
             onKeyDown, onPointerDown, onPointerMove, onPointerUp
         } = useViewportInput({
-            advanced, compassHeading, goHome, onAvatarKeyDown, onSoundKeyDown, redoAction, refreshHoverUI, refreshSpatialUI, session, undoAction
+            advanced, compassHeading, goHome, onAvatarKeyDown, onSoundKeyDown, redoAction, refreshHoverUI, refreshSpatialUI, session, toggleVoice: voiceCommands.toggleVoice, undoAction
         });
 
         const { arriveAtDoor, watchArrival } = useArrival({ session, feedback });
@@ -1415,6 +1482,8 @@ export default {
             toggleResidentHere,
             residentSpeech,
             talkToResident,
+            ...voiceCommands,
+            askGuideAbout,
             residentFocusTargets,
             residentWish, buildResidentWish,
             focusResidentMention,
@@ -1709,6 +1778,16 @@ export default {
                 <!-- What a visitor came to do is on the bar over the view (./worldView/templates/hudSection.js). -->
                 <div v-if="cameraPosition || activeDocumentInfo" class="world-view-actions world-view-actions--navigation">
                     <button v-if="cameraPosition" class="action-btn" @click="goHome">{{ t('worldView.home') }}</button>
+                    <!-- Voice (V): say where to go, or what to do. -->
+                    <button
+                        v-if="cameraPosition"
+                        type="button"
+                        :class="['action-btn', 'world-view-voice-button', { 'action-btn--active': voice.step === 'listening' }]"
+                        :aria-pressed="voice.step === 'listening' ? 'true' : 'false'"
+                        :title="t('worldVoice.buttonHint')"
+                        :aria-label="t('editorAction.ui.voice')"
+                        @click="toggleVoice"
+                    >🎤 {{ voice.step === 'listening' ? t('voice.stop') : t('voice.button') }}</button>
                     <button
                         v-if="activeDocumentInfo"
                         class="action-btn"
@@ -1836,6 +1915,16 @@ export default {
             ${dialogsTemplate}
             ${navigationHudSectionTemplate}
             ${hudSectionTemplate}
+            <VoicePanel
+                :voice="voice"
+                place="world"
+                @turn-on="turnOnVoice"
+                @turn-off="turnOffVoice"
+                @remove="removeVoiceModel"
+                @toggle="toggleVoice"
+                @ask-guide="askGuideAbout"
+                @close="closeVoice"
+            />
             ${hoverCardTemplate}
             <TouchMovementPad
                 v-if="touchPadVisible"

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 30a0033d559cc17e -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2bbc73bd617ba5be -->
 # 02 — エディター
 
 <!-- languages -->
@@ -732,6 +732,10 @@ glTF では copyright と extras に、STL ではヘッダーに、OBJ ではコ
 され、どこにも送られません（[プライバシー](Privacy.md) を参照）。
 **音声をオフにする** と **音声モデルを削除** は、コマンドのたびに音声パネル
 に出ます。ForkBuild の表示言語を聞き取ります。
+
+ワールドビューでも聞き取ります（[行き先を話す](03-WorldView.md#行き先を話す音声)
+を参照）。音声モデルは裏で動くので、聞き取っている間もビューは止まらず、
+両方のビューを行き来しても読み込んだままです。
 
 ## カメラの操作
 

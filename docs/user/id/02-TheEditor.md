@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 30a0033d559cc17e -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2bbc73bd617ba5be -->
 # 02 — Editor
 
 <!-- languages -->
@@ -779,6 +779,11 @@ koneksi sesudahnya. Apa yang Anda ucapkan direkam dan dipahami di perangkat
 Anda dan tidak pernah dikirim (lihat [Privasi](Privacy.md)). **Matikan
 suara** dan **Hapus model suara** ada di panel suara setelah setiap perintah.
 Ia mendengar bahasa yang dipakai ForkBuild.
+
+Tampilan Dunia juga mendengarkan (lihat
+[Katakan ke mana pergi](03-WorldView.md#katakan-ke-mana-pergi-suara)). Model
+suara bekerja di latar belakang, jadi tampilan tidak pernah tersendat selama
+ia mendengarkan, dan tetap termuat saat Anda berpindah di antara keduanya.
 
 ## Kontrol kamera
 
