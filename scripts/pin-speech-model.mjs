@@ -1,15 +1,19 @@
 // Pins the speech model voice building downloads
 // (application/voice/SpeechModelPins.js): asks Hugging Face which commit the
-// model's main branch is at (or takes the one given), downloads every file
-// transformers.js reads for it at that commit, hashes each, and writes the
-// commit and the hashes into SpeechModelPins.js.
+// model's main branch is at (or takes the one given), finds the SHA-256 of
+// every file transformers.js reads for it at that commit, and writes the
+// commit and the hashes into SpeechModelPins.js. A file kept in Git LFS (the
+// model's weights) is known by its LFS object id, which is by definition the
+// SHA-256 of its bytes, recorded in the commit itself; any other file is
+// downloaded at the commit and hashed.
 //
 //   node scripts/pin-speech-model.mjs            pin main as it is now
 //   node scripts/pin-speech-model.mjs <commit>   pin that commit
 //   node scripts/pin-speech-model.mjs --check    exit 1 unless the pinned files
 //                                                still have the pinned hashes
 //
-// It needs Hugging Face (huggingface.co); nothing else does. After pinning
+// It needs Hugging Face (huggingface.co); nothing else does. Run it with
+// NODE_USE_ENV_PROXY=1 where Node must reach the web through a proxy. After pinning
 // a new commit, turn voice on in the app and say a command, to see that the
 // model still works.
 import { createHash } from 'node:crypto';
@@ -49,11 +53,25 @@ async function latestCommit() {
     return sha;
 }
 
+// The commit's files, by path: { size, lfsSha256 } (lfsSha256 null for a file
+// not kept in Git LFS).
+async function filesAt(commit) {
+    const response = await fetch(`${HOST}/api/models/${SPEECH_MODEL}/revision/${commit}?blobs=true`);
+    if (!response.ok) throw new Error(`files at ${commit}: ${response.status}`);
+    const { sha, siblings } = await response.json();
+    if (sha !== commit) throw new Error(`asked for ${commit}, Hugging Face answered ${sha}`);
+    return new Map((siblings || []).map((file) => [file.rfilename, { size: file.size, lfsSha256: file.lfs?.sha256 || null }]));
+}
+
 async function hashesAt(commit) {
+    const listed = await filesAt(commit);
     const files = {};
     for (const path of MODEL_FILES) {
-        files[path] = await sha256Of(`${HOST}/${SPEECH_MODEL}/resolve/${commit}/${path}`);
-        console.log(`${path}  ${files[path]}`);
+        const file = listed.get(path);
+        if (!file) throw new Error(`${path} is not in ${SPEECH_MODEL}@${commit}`);
+        const lfs = /^[0-9a-f]{64}$/.test(file.lfsSha256 || '');
+        files[path] = lfs ? file.lfsSha256 : await sha256Of(`${HOST}/${SPEECH_MODEL}/resolve/${commit}/${path}`);
+        console.log(`${path}  ${files[path]}  (${lfs ? 'its Git LFS object id' : 'downloaded and hashed'})`);
     }
     return files;
 }
