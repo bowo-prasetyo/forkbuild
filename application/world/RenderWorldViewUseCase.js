@@ -804,6 +804,11 @@ export class RenderWorldViewUseCase {
             markAnimalCaught: (animalId, position) => {
                 renderer.markAnimalCaught(animalId, position);
             },
+            // Wild animals keeping away from a build are not drawn
+            // (application/world/WildlifeDisplacement.js). A pass-through.
+            setHiddenWildlife: (isHidden) => {
+                renderer.setHiddenWildlife(isHidden);
+            },
             // The sky and its light (core/nature/DayCycle.js's look), and how
             // strongly lamps and lit windows shine with it.
             setSkyLook: (look) => {

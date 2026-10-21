@@ -9,6 +9,8 @@ import { EventBus } from '../../core/events/EventBus.js';
 import { SpatialAllocationPolicy } from '../../core/world/SpatialAllocationPolicy.js';
 import { VehicleRuntimeInstances } from './VehicleRuntimeInstances.js';
 import { AnimalRuntimeInstances, ANIMAL_RENDER_RADIUS } from './AnimalRuntimeInstances.js';
+import { WildlifeDisplacement, WILDLIFE_OBSTACLE_QUERY_RADIUS } from './WildlifeDisplacement.js';
+import { AvatarMovementConstraint } from '../avatar/AvatarMovementConstraint.js';
 import { isDeterministicAnimalId } from '../../core/nature/AnimalIdentity.js';
 import { AvatarInventoryStore } from '../avatar/AvatarInventoryStore.js';
 import { AvatarInventoryTransferPeerExchange } from '../avatar/AvatarInventoryTransferPeerExchange.js';
@@ -167,7 +169,9 @@ export class WorldNavigationSession {
         // for everything that asks where a wild animal is — the renderer,
         // collision, catching — so an animal is caught and bumped into
         // where it is drawn. Wall-clock time, so peers see the same
-        // animals in the same places without exchanging anything.
+        // animals in the same places without exchanging anything beyond
+        // agreeing on the clock (World View passes the World clock,
+        // application/world/WorldClockUseCase.js; this device's own by default).
         wildlifeClock = () => Date.now() / 1000
     }) {
         this._wildlifeClock = wildlifeClock;
@@ -248,6 +252,9 @@ export class WorldNavigationSession {
         this._residentKeyHeld = false;
         // Where World Residents are; built on first use (see residentMethods).
         this._residentRuntimeInstance = null;
+        // Which wild animals keep away from a build; built on first use (see
+        // _wildlifeDisplacement()).
+        this._wildlifeDisplacementInstance = null;
         // Talking to residents ('T'): rising-edge tracking, how many times
         // each resident has been talked to (what it says moves on), the last
         // thing said, and how people are named. All local to this session.
@@ -483,6 +490,9 @@ export class WorldNavigationSession {
         // Animal counterpart of `_vehicleRuntimeInstances`; see
         // application/world/AnimalRuntimeInstances.js.
         this._animalRuntimeInstances = new AnimalRuntimeInstances();
+        // A wild animal keeps away from what is built, so it is left out
+        // wherever a caught one is (catching, collision, sounds, residents).
+        this._animalRuntimeInstances.setDisplacement((id) => this._wildlifeDisplacement().isDisplaced(id));
         // Animal counterpart of `_vehicleRuntimeInstancePersistenceStore`.
         this._animalRuntimeInstancePersistenceStore = animalRuntimeInstancePersistenceStore;
         if (this._animalRuntimeInstancePersistenceStore) {
@@ -604,6 +614,7 @@ export class WorldNavigationSession {
         this._setupCameraFocusAnimation();
         this._setupVehicleRendering();
         this._setupWildlifeExclusionSync();
+        this._setupWildlifeDisplacementRendering();
         this._setupAnimalRendering();
         this._setupResidentRendering();
         this._setupDayCycle();
@@ -683,6 +694,38 @@ export class WorldNavigationSession {
                 this._session.markAnimalCaught(id, position);
             }
         });
+    }
+
+    // The one WildlifeDisplacement this session asks which wild animals keep
+    // away from a build: every brick of the loaded Worlds and the plaza's
+    // exhibits (_solidDocuments(), as residents walk round), floor tiles and
+    // steps included, since an animal never stands on a build. Built on first
+    // use, like _residentRuntime().
+    _wildlifeDisplacement() {
+        if (!this._wildlifeDisplacementInstance) {
+            const obstacles = new AvatarMovementConstraint({
+                loadedDocuments: this._solidDocuments(),
+                getWorldPosition: (documentId) => this._solidWorldPosition(documentId),
+                brickRegistry: this._registry,
+                queryRadius: WILDLIFE_OBSTACLE_QUERY_RADIUS,
+                maxStepHeight: 0,
+                structureResolver: this._structureResolver
+            });
+            this._wildlifeDisplacementInstance = new WildlifeDisplacement({
+                obstaclesNear: (position) => obstacles.obstaclesNear(position, { avatarRadius: 0 }),
+                seed: this.getWorldSeed()
+            });
+        }
+        return this._wildlifeDisplacementInstance;
+    }
+
+    // Wild animals keeping away from a build are not drawn either, by the same
+    // answer as everything else. Absent when the facade lacks setHiddenWildlife.
+    _setupWildlifeDisplacementRendering() {
+        if (typeof this._session.setHiddenWildlife !== 'function') {
+            return;
+        }
+        this._session.setHiddenWildlife((id) => this._wildlifeDisplacement().isDisplaced(id));
     }
 
     // Animal counterpart of `_setupVehicleRendering()`.

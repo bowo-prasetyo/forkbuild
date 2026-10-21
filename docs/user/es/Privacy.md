@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: a245f388db3fff60 -->
+<!-- translation-of: docs/Privacy.md source-hash: 8d5d29ddd6f4e2ed -->
 # Privacidad
 
 <!-- languages -->
@@ -129,6 +129,11 @@ dispositivo» más abajo).
   quien la construyó como notificación. Retirar un corazón envía un registro
   más nuevo; el anterior puede quedarse donde se envió, y en Nostr una
   solicitud de borrado es solo una solicitud.
+- **Su hora, a los pares conectados.** Mientras está conectado, su
+  dispositivo y cada par conectado se dicen qué marcan sus relojes (unas
+  cuantas veces al conectarse y después una vez por minuto), para que los
+  animales y los habitantes estén en el mismo sitio en todas las pantallas.
+  Solo se envía la hora.
 - **Los pares con los que se conecta** conocen la clave pública de su
   identidad y su dirección IP (una conexión directa la necesita; un relay
   TURN la oculta del par, pero no del relay). Los pares conectados pueden

@@ -127,6 +127,10 @@ settings (see "Notifications on this device" below).
   the builder as a notification. Taking a heart back sends a newer record;
   the earlier one may stay where it was sent, and on Nostr a deletion
   request is only a request.
+- **Your clock, to connected peers.** While you are connected, your device and
+  each connected peer tell each other what their clocks say (a few times on
+  connecting, then once a minute), so animals and residents stand in the same
+  place on everyone's screen. Only the time is sent.
 - **Peers you connect to** learn your identity's public key, and your IP
   address (a direct connection needs it; a TURN relay hides it from the peer
   but not from the relay). Connected peers can see your avatar and presence

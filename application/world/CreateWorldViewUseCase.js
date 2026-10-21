@@ -71,7 +71,7 @@ export class CreateWorldViewUseCase {
     // Direction, Because Neither Side May Trust The Other To Enforce It").
     // deviceAuthorizationPropagationUseCase lets edit authority follow the device's
     // parent identity; without it ownership uses the signing identity directly.
-    execute(identityProvider = null, { peerMessageBus = null, connectedPeerRegistry = null, friendRelationshipUseCase = null, peerBlockUseCase = null, deviceAuthorizationPropagationUseCase = null, decentralizedPublicationDiscoveryProvider = null } = {}) {
+    execute(identityProvider = null, { peerMessageBus = null, connectedPeerRegistry = null, friendRelationshipUseCase = null, peerBlockUseCase = null, deviceAuthorizationPropagationUseCase = null, decentralizedPublicationDiscoveryProvider = null, worldClock = null } = {}) {
         const storageProvider = new LocalStorageProvider();
         const contentStore = new LocalContentStore(storageProvider);
         const discoveryProvider = new LocalDiscoveryProvider(storageProvider);
@@ -410,7 +410,10 @@ export class CreateWorldViewUseCase {
                     vehicleRuntimeInstancePersistenceStore,
                     animalRuntimeInstancePersistenceStore,
                     peerMessageBus,
-                    connectedPeerRegistry
+                    connectedPeerRegistry,
+                    // The clock connected peers agree on (application/world/WorldClockUseCase.js);
+                    // without one, this device's own.
+                    ...(worldClock ? { wildlifeClock: () => worldClock.seconds() } : {})
                 });
                 sessionRef = session;
                 return session;

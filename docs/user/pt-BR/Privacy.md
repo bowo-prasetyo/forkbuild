@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: a245f388db3fff60 -->
+<!-- translation-of: docs/Privacy.md source-hash: 8d5d29ddd6f4e2ed -->
 # Privacidade
 
 <!-- languages -->
@@ -124,6 +124,11 @@ com suas configurações (veja "Notificações neste dispositivo" abaixo).
   mudar), onde qualquer um pode ler, e para quem construiu como notificação.
   Retirar uma curtida envia um registro mais novo; o anterior pode continuar
   onde foi enviado, e no Nostr um pedido de exclusão é só um pedido.
+- **Seu horário, para os pares conectados.** Enquanto você está conectado,
+  seu dispositivo e cada par conectado dizem um ao outro o que seus relógios
+  marcam (algumas vezes ao conectar, depois uma vez por minuto), para que os
+  animais e os moradores fiquem no mesmo lugar na tela de todo mundo. Só o
+  horário é enviado.
 - **Os pares a que você se conecta** ficam sabendo a chave pública da sua
   identidade e seu endereço IP (uma conexão direta precisa dele; um relay
   TURN o esconde do par, mas não do relay). Os pares conectados podem ver seu

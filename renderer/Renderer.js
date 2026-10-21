@@ -69,6 +69,8 @@ export class Renderer {
         this._wildlifeClock = wildlifeClock;
         // Who animals turn to watch; see setWildlifeObserver().
         this._wildlifeObserver = () => null;
+        // Which wild animals not to draw; see setHiddenWildlife().
+        this._isWildlifeHidden = null;
 
         this._webglRenderer = new THREE.WebGLRenderer({ antialias: true });
         // Per-material clipping, which World View's cutaway uses
@@ -539,6 +541,13 @@ export class Renderer {
         return this._wildlifeObserver() || null;
     }
 
+    // `isHidden(id)` names the wild animals not drawn, frame by frame: those
+    // keeping away from a build (application/world/WildlifeDisplacement.js).
+    // null draws them all.
+    setHiddenWildlife(isHidden) {
+        this._isWildlifeHidden = typeof isHidden === 'function' ? isHidden : null;
+    }
+
     // Registers `callback(deltaSeconds)` to run once per render frame,
     // real elapsed seconds since the previous frame. Returns an
     // unsubscribe function, the same shape every EventBus subscription
@@ -606,7 +615,7 @@ export class Renderer {
         this._wildlifeStreaming.update(this._cameraController.camera.position.x, this._cameraController.camera.position.z);
         const wildlifeTime = this._wildlifeClock();
         const observer = this.wildlifeObserver();
-        this._wildlifeStreaming.forEachLoadedTile((tile) => updateWildlifeTileMesh(tile, wildlifeTime, observer));
+        this._wildlifeStreaming.forEachLoadedTile((tile) => updateWildlifeTileMesh(tile, wildlifeTime, observer, this._isWildlifeHidden));
         this._underwaterLifeStreaming.update(this._cameraController.camera.position.x, this._cameraController.camera.position.z);
         this._underwaterLifeStreaming.forEachLoadedTile((tile) => updateUnderwaterLifeTileMesh(tile, wildlifeTime));
         this._applyUnderwaterView(underwaterViewAt(DEFAULT_WORLD_SEED, this._cameraController.camera.position));

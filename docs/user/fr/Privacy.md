@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: a245f388db3fff60 -->
+<!-- translation-of: docs/Privacy.md source-hash: 8d5d29ddd6f4e2ed -->
 # Confidentialité
 
 <!-- languages -->
@@ -133,6 +133,11 @@ notifications sur cet appareil soient activées est gardé avec vos réglages
   notification. Retirer un cœur envoie un enregistrement plus récent ;
   l’ancien peut rester là où il a été envoyé, et sur Nostr une demande de
   suppression n’est qu’une demande.
+- **Votre heure, aux pairs connectés.** Tant que vous êtes connecté, votre
+  appareil et chaque pair connecté se disent ce qu’indiquent leurs horloges
+  (quelques fois à la connexion, puis une fois par minute), pour que les
+  animaux et les habitants se tiennent au même endroit sur tous les écrans.
+  Seule l’heure est envoyée.
 - **Les pairs auxquels vous vous connectez** apprennent la clé publique
   de votre identité, et votre adresse IP (une connexion directe en a
   besoin ; un relais TURN la cache au pair mais pas au relais). Les pairs

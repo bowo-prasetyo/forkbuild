@@ -54,7 +54,9 @@ function runTests() {
         assert(MAX_WANDER_DISTANCE === Math.max(...Object.values(ANIMAL_MOTION).map((m) => m.wanderRadius)),
             '6. MAX_WANDER_DISTANCE is the largest wander radius of any species');
         for (const motion of Object.values(ANIMAL_MOTION)) {
-            assert(motion.segmentSeconds > (2 * motion.wanderRadius) / motion.walkSpeed,
+            // The longest walk goes out and back by way of the spawn point
+            // (around a river), with a turn before it and one at the spawn point.
+            assert(motion.segmentSeconds > (2 * motion.wanderRadius) / motion.walkSpeed + 2 * 0.8,
                 '7. Every species\' segment is long enough for its longest possible walk');
         }
     }
@@ -115,6 +117,25 @@ function runTests() {
         // A turn of at most π over TURN_SECONDS (0.8 s), eased, peaks near
         // 5.9 rad/s: about 0.2 rad per 30 fps frame.
         assert(maxTurn < 0.25, `13. Heading is continuous: an animal turns, it never snaps round (max ${maxTurn.toFixed(3)} rad per frame)`);
+    }
+    {
+        // A deer beside a river, whose straight walk between two waypoints
+        // used to wade across the channel (2026-10-21): it walks round by
+        // way of where it was placed instead, never setting foot in water,
+        // and still moves continuously.
+        const [deer] = wildlifeInRegion(SEED, -5970, 5890, -5960, 5900).filter((a) => a.id === `animal:${SEED}:-597,589`);
+        assert(deer && deer.species === ANIMAL_SPECIES.DEER, '17a. Setup: the riverside deer is where it was');
+        let previous = animalPoseAt(SEED, deer, 1_759_000_000);
+        let sawWalk = false;
+        for (let i = 1; i <= 4000; i++) {
+            const pose = animalPoseAt(SEED, deer, 1_759_000_000 + i * 0.1);
+            assert(!isRiverAt(SEED, pose.x, pose.z), `17b. A walking animal never wades across a river (at ${i * 0.1} s)`);
+            assert(Math.hypot(pose.x - previous.x, pose.z - previous.z) <= ANIMAL_MOTION.DEER.walkSpeed * 1.5 * 0.1 + 1e-9,
+                '17c. Walking round the river, it still moves continuously');
+            sawWalk = sawWalk || pose.moving;
+            previous = pose;
+        }
+        assert(sawWalk, '17d. It still walks');
     }
     {
         // Two replicas that agree on the clock agree on every animal,

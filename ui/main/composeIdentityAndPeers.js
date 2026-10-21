@@ -38,6 +38,7 @@ import { ConversationStore } from '../../application/chat/ConversationStore.js';
 import { ConversationReadTracker } from '../../application/chat/ConversationReadTracker.js';
 import { ChatOutbox } from '../../application/chat/ChatOutbox.js';
 import { PeerRelationshipUseCase } from '../../application/peer/PeerRelationshipUseCase.js';
+import { WorldClockUseCase } from '../../application/world/WorldClockUseCase.js';
 
 // Composition root, for the network runtime (ui/main/composeNetwork.js):
 // around the local identity (ui/main.js builds it, for the header), the saved
@@ -195,6 +196,13 @@ export function composeIdentityAndPeers({ identityProvider, decentralizedPublica
         resolveSocialIdentity
     });
 
+    // One World clock for everyone connected, so animals and residents stand in
+    // the same place on every screen (core/world/WorldClockAgreement.js).
+    const worldClock = new WorldClockUseCase({
+        peerMessageBus,
+        connectedPeerRegistry: peerSessionManager.registry
+    });
+
     return {
         createPublicationCommentaryCommand,
         getPublicationCommentariesCommand, iceServerConfigurationStore, turnServerConfigurationStore,
@@ -203,7 +211,7 @@ export function composeIdentityAndPeers({ identityProvider, decentralizedPublica
         setBitcoinEsploraConfigurationUseCase, peerSessionManager, peerRelationshipUseCase,
         peerReconnectionUseCase, findPeerUseCase, peerMessageBus, peerBlockUseCase, deviceAuthorizationUseCase,
         friendRelationshipUseCase, identityLifecyclePropagationUseCase, chatUseCase, peerPresenceUseCase,
-        deviceConversationSyncUseCase, voiceUseCase, publicLobbyUseCase, followUseCase,
+        deviceConversationSyncUseCase, voiceUseCase, worldClock, publicLobbyUseCase, followUseCase,
         peerConnectionProvider, rendezvousTransports: Array.from(rendezvousTransports.values())
     };
 }

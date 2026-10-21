@@ -58,6 +58,18 @@ export class AnimalRuntimeInstances {
         // discovery. See releasedNearby()'s own header for exactly why
         // this distinction has to exist at all.
         this._released = new Set();
+        // Whether a wild animal keeps away from a build
+        // (application/world/WildlifeDisplacement.js#isDisplaced); none does
+        // until setDisplacement() says how to tell.
+        this._isDisplaced = () => false;
+    }
+
+    // How to tell a wild animal that keeps away from a build:
+    // `isDisplaced(id)`, or null for none. A displaced animal is left out
+    // exactly as a caught one is (isExcluded()), but only for as long as the
+    // build stands: it is never added to excludedIds.
+    setDisplacement(isDisplaced) {
+        this._isDisplaced = typeof isDisplaced === 'function' ? isDisplaced : () => false;
     }
 
     // Reconciles this store against `animalPresenceInRegion(seed,
@@ -81,13 +93,14 @@ export class AnimalRuntimeInstances {
             timeSeconds
         );
         for (const candidate of candidates) {
-            if (this._excluded.has(candidate.id) || this._released.has(candidate.id)) {
+            if (this._excluded.has(candidate.id) || this._released.has(candidate.id) || this._isDisplaced(candidate.id)) {
                 continue;
             }
             this._instances.set(candidate.id, candidate);
         }
         for (const [id, instance] of this._instances) {
-            if (!withinRadiusXZ(instance.position, centerPosition, radius)) {
+            if (!withinRadiusXZ(instance.position, centerPosition, radius)
+                || (!this._released.has(id) && this._isDisplaced(id))) {
                 this._instances.delete(id);
             }
         }
@@ -109,9 +122,10 @@ export class AnimalRuntimeInstances {
     // discarded id must never resurface as a "fresh" candidate there
     // either, or catching, then re-approaching, then trying to catch
     // "again" would re-add the same id to inventory and crash
-    // `withEntryAdded()`'s own duplicate-id guard.
+    // `withEntryAdded()`'s own duplicate-id guard. Also true, for now, of a
+    // wild animal that keeps away from a build (setDisplacement()).
     isExcluded(id) {
-        return this._excluded.has(id);
+        return this._excluded.has(id) || (!this._released.has(id) && this._isDisplaced(id));
     }
 
     // 0.9.701 — World View Persistence. The direct structural twin of
