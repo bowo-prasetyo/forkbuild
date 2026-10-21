@@ -137,6 +137,31 @@ function runTests() {
         assert(nearest.length === MAX_RENDERED_RESIDENTS, '5. A crowd is capped');
         const distances = nearest.map((p) => Math.hypot(p.x - home.x, p.z - home.z));
         assert(distances.every((d, i) => i === 0 || d >= distances[i - 1]), '6. ...nearest first');
+        // A village of residents spread over 80 m: the nearest few, found
+        // without posing everyone, are exactly the nearest few of everyone.
+        const village = new World({ id: 'w-village' });
+        for (let i = 0; i < 120; i++) {
+            village.addResident(residentAt(`v-${i}`, 'w-village', (i % 12) * 7 - 40, Math.floor(i / 12) * 7 - 35));
+        }
+        const villageAt = { x: home.x, y: 0, z: home.z };
+        const villageRuntime = new ResidentRuntime({ loadedDocuments: new Map([['w-village', documentWith(village)]]), getWorldPosition: () => villageAt });
+        const allPosed = new ResidentRuntime({ loadedDocuments: new Map([['w-village', documentWith(village)]]), getWorldPosition: () => villageAt });
+        for (const [dx, dz, t] of [[0, 0, 0], [13, -9, 37], [-30, 20, 401], [55, 41, 999]]) {
+            const center = { x: home.x + dx, z: home.z + dz };
+            const fast = villageRuntime.posesNear(center, 60, T + t, { limit: MAX_RENDERED_RESIDENTS }).map((p) => p.id);
+            const every = allPosed.residents().map((entry) => allPosed.poseOf(entry, T + t))
+                .map((pose) => ({ id: pose.id, distance: Math.hypot(pose.x - center.x, pose.z - center.z) }))
+                .filter((p) => p.distance <= 60)
+                .sort((a, b) => (a.distance - b.distance) || (a.id < b.id ? -1 : 1))
+                .slice(0, MAX_RENDERED_RESIDENTS)
+                .map((p) => p.id);
+            assert(JSON.stringify(fast) === JSON.stringify(every), `6b. The nearest few are the same as posing everyone (${JSON.stringify(fast.slice(0, 3))}…)`);
+        }
+        const first = villageRuntime.posesNear(home, 20, T + 5);
+        const again = villageRuntime.posesNear(home, 20, T + 5);
+        assert(JSON.stringify(first) === JSON.stringify(again) && first[0] !== again[0], '6c. Asked twice about one moment, the same poses, each a fresh object');
+        const later = villageRuntime.posesNear(home, 20, T + 6);
+        assert(later.some((p, i) => first[i] && (p.x !== first[i].x || p.z !== first[i].z || p.id !== first[i].id)), '6d. A later moment is posed afresh');
         assert(new ResidentRuntime({ loadedDocuments: new Map(), getWorldPosition: () => null }).posesNear(home, 60, T).length === 0,
             '7. No loaded Worlds, no residents');
     }

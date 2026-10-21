@@ -326,7 +326,14 @@ the detailed references; in short:
   downloads from jsDelivr at one exact version, refuses unless its SHA-256 is
   the pinned one, and gives the runtime as bytes, with the engine's loader
   served from vendor/onnxruntime-web/ (so no script, and no blob: URL, ever
-  comes from elsewhere). Both are kept in Cache Storage until removed. The
+  comes from elsewhere). The model is held the same way once
+  application/voice/SpeechModelPins.js names a commit (written by
+  scripts/pin-speech-model.mjs): transformers.js loads it at that revision,
+  and application/voice/PinnedModelFiles.js, its `env.fetch` and
+  `env.customCache`, hands on each file only when its SHA-256 is the pinned
+  one, downloaded or cached (a bad cached copy is thrown away), and answers
+  any unpinned file as missing; until then the model loads unchecked, as
+  before. Both are kept in Cache Storage until removed. The
   published Content Security Policy allows `'wasm-unsafe-eval'` for this,
   never `'unsafe-eval'`. The runtime lives in a module worker
   (application/voice/speechWorker.js, answering requests through
@@ -336,8 +343,15 @@ the detailed references; in short:
   it stops. ui/voice/speechRecognizer.js keeps one for the visit, shared by
   both views, so the model loads once; scripts/build.mjs bundles the worker
   on its own (bundle/voice/) and names it in index.html's
-  `<meta name="forkbuild-speech-worker">`. core/voice/Transcript.js cleans
-  what was heard; ui/voice/useVoiceCommands.js asks before the first
+  `<meta name="forkbuild-speech-worker">`. Before the model hears anything,
+  core/voice/SpeechPreparation.js cuts the silence round what was said (20 ms
+  frames over the room's own background, a quarter second kept either side)
+  and brings a quiet voice up (at most 8×); a recording with nothing said is
+  never sent to the model, since given silence it makes words up.
+  core/voice/Transcript.js cleans what was heard, and `withoutSilenceWords()`
+  drops a transcript that is only such made-up words (the sign-offs and
+  caption credits of `SILENCE_WORDS`, in every language the app speaks);
+  ui/voice/useVoiceCommands.js asks before the first
   download and hands what was said to the view. The Editor does it as the
   command palette would: a plain command, an action said by its name, or Ask
   the guide for a question. World View reads it with
@@ -1603,12 +1617,18 @@ surface and stays silent under water. Presence keeps its existing `animation` va
   id. The way there comes from the navigation: a 0.125 m grid over the 6 m disc, a cell open where the resident's
   0.3 radius plus half a cell's diagonal clears every brick lower than 1.8 m (`ResidentPath.js#RESIDENT_HEADROOM`, so
   the wall over a door is no obstacle) and every trunk, on dry land (sampled every 0.5 m and kept per home); shortest
-  paths over 8 neighbours without cutting corners, ties to the lower cell, then pulled tight against the exact
-  geometry. Every corner is a turn in place. Only spots whose way from home takes at most
+  paths over 8 neighbours without cutting corners (an A* search from one cell to another, guided by the octile
+  distance, ties to the lower cell, each pair's way kept), then pulled tight against the exact geometry. Every corner
+  is a turn in place. Only spots whose way from home takes at most
   `RESIDENT_REACH_SECONDS` (8.35 s) are used, so the way between two, at worst by way of home, fits in a segment.
   A navigation is built in about 2 ms and its plans in under 1 ms; `ResidentRuntime` keeps it while the bricks it
   gathers every 2 s are the same, and `newResidentIdNear()` picks an id that stays home this segment
   (`residentStaysHomeAt()`) without building one. The session's `wildlifeClock` is the one clock.
+- **Posing (2026-10-21).** The renderer, the avatar's collision and the creature sounds each ask `posesNear()` every
+  frame, at the same moment: `poseOf()` poses each resident once per moment and hands each caller a fresh copy.
+  With a `limit` (the renderer's 16), homes are visited nearest first and the search stops once no home left could
+  hold anyone nearer than the nearest `limit` found (a resident is never more than 6 m from home). With 300 residents
+  in reach, the three calls of a frame went from 3.1 ms to 0.8 ms.
 - **Night (2026-10-21).** `core/nature/Nightfall.js#isNightfallAt()` is the World's night on the World clock, from
   0.63 of an equinox day (the deepening dusk, later in summer as the sky's) until dawn, whatever a device's Always day
   or kept season shows. A segment that starts after nightfall has home for its waypoint, so a resident walks home in
