@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { naturalFeaturesInRegion, FEATURE_TYPE, TREE_SPECIES } from '../core/nature/NaturalFeatureField.js';
+import { treeCollisionCircleFor } from '../core/nature/TreeCollisionGeometry.js';
 import { TERRAIN_TILE_SIZE } from '../core/nature/TerrainTiling.js';
 import { treeForm, treeShapeOf, TREE_FORMS_PER_SPECIES } from '../core/nature/TreeForm.js';
 import { buildTreeGeometries } from './TreeGeometry.js';
@@ -139,6 +140,8 @@ function treeRecord(feature) {
         numbers: treeNumbers(feature.x, feature.z),
         x: feature.x,
         z: feature.z,
+        // Its trunk, as collision meets it: what setHidden()'s question takes.
+        trunk: treeCollisionCircleFor(feature),
         middleY: feature.y + height / 2,
         radius: Math.hypot(reach, height / 2),
         matrix: Float32Array.from(_matrix.elements),
@@ -218,6 +221,11 @@ export class TreeForest {
         this._lastDirection = new THREE.Vector3();
         this._lodCounts = { [TREE_LOD.NEAR]: 0, [TREE_LOD.MID]: 0, [TREE_LOD.FAR]: 0 };
         this._wideCamera = new THREE.PerspectiveCamera();
+        // Which trees not to draw, and the version of that answer last sorted
+        // by; see setHidden().
+        this._isHidden = null;
+        this._hiddenVersion = null;
+        this._sortedHiddenVersion = null;
     }
 
     get detail() {
@@ -301,6 +309,16 @@ export class TreeForest {
         this._wind.time.value = seconds;
     }
 
+    // `isHidden(trunk)` names the trees not to draw (those giving way to a
+    // build, application/world/TreeDisplacement.js), asked when the trees are
+    // sorted; `version()`, asked every update(), moves on when an answer
+    // already given changes, and they are sorted again. null draws them all.
+    setHidden(isHidden, version = null) {
+        this._isHidden = typeof isHidden === 'function' ? isHidden : null;
+        this._hiddenVersion = typeof version === 'function' ? version : null;
+        this._dirty = true;
+    }
+
     // The tile's trees join the pool. Returns what unloadTile() takes back.
     loadTile(tx, tz) {
         const minX = tx * this._tileSize;
@@ -330,6 +348,11 @@ export class TreeForest {
         camera.getWorldDirection(_direction);
         const moved = camera.position.distanceToSquared(this._lastPosition) > REBUCKET_METRES * REBUCKET_METRES;
         const turned = _direction.dot(this._lastDirection) < Math.cos(THREE.MathUtils.degToRad(REBUCKET_DEGREES));
+        const hiddenVersion = this._hiddenVersion ? this._hiddenVersion() : null;
+        if (hiddenVersion !== this._sortedHiddenVersion) {
+            this._sortedHiddenVersion = hiddenVersion;
+            this._dirty = true;
+        }
         if (!this._dirty && !moved && !turned) return false;
         this._dirty = false;
         this._lastPosition.copy(camera.position);
@@ -344,6 +367,7 @@ export class TreeForest {
         let nearby = 0;
         for (const records of this._tiles.values()) {
             for (const tree of records) {
+                if (this._isHidden && this._isHidden(tree.trunk)) continue;
                 const dx = tree.x - cx;
                 const dy = tree.middleY - cy;
                 const dz = tree.z - cz;

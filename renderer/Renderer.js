@@ -548,6 +548,13 @@ export class Renderer {
         this._isWildlifeHidden = typeof isHidden === 'function' ? isHidden : null;
     }
 
+    // `isHidden(trunk)` names the trees not drawn: those giving way to a build
+    // (application/world/TreeDisplacement.js). `version()` moves on whenever
+    // an answer already given changes. null draws them all.
+    setHiddenTrees(isHidden, version = null) {
+        this._trees.setHidden(isHidden, version);
+    }
+
     // Registers `callback(deltaSeconds)` to run once per render frame,
     // real elapsed seconds since the previous frame. Returns an
     // unsubscribe function, the same shape every EventBus subscription

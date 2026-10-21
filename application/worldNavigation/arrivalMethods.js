@@ -1,5 +1,7 @@
-import { findBuildEntrance, hasWalkedInside } from '../../core/world/BuildEntrance.js';
+import { entranceSearchArea, findBuildEntrance, hasWalkedInside } from '../../core/world/BuildEntrance.js';
 import { terrainHeightAt } from '../../core/nature/TerrainHeightField.js';
+import { treeCollisionGeometryInRegion } from '../../core/nature/TreeCollisionGeometry.js';
+import { MAX_TREE_COLLISION_RADIUS } from '../../core/avatar/AvatarTreeCollisionQuery.js';
 
 // How far behind the arriving avatar, and how high, the camera starts:
 // looking past them at the door, the way a third-person camera would.
@@ -17,6 +19,34 @@ const ARRIVAL_LOOK_HEIGHT = 1.2;
 //
 // arrivalState() then says whether the avatar has walked in through that
 // door, which the guided first build's last step waits for.
+//
+// Trees grow wherever the World's seed puts them. One under the build's own
+// bricks gives way to it (application/world/TreeDisplacement.js); one in
+// front of its door still stands, so the spot is chosen so that walking
+// straight ahead doesn't slide round it into the door's jamb (treesAround()).
+
+// The trunks round a build at `layout` (in shared space, as the avatar's tree
+// collision meets them): the session then keeps those still standing, since
+// one under the build's own bricks gives way to it (_standingTrees()).
+function treesAround(bricks, registry, layout, seed) {
+    const area = entranceSearchArea(bricks, registry);
+    if (!area) {
+        return [];
+    }
+    return treeCollisionGeometryInRegion(
+        seed,
+        layout.x + area.minX - MAX_TREE_COLLISION_RADIUS,
+        layout.z + area.minZ - MAX_TREE_COLLISION_RADIUS,
+        layout.x + area.maxX + MAX_TREE_COLLISION_RADIUS,
+        layout.z + area.maxZ + MAX_TREE_COLLISION_RADIUS
+    );
+}
+
+// A trunk in the build's own coordinates, as findBuildEntrance() takes it.
+function inBuild(tree, layout) {
+    return { center: { x: tree.center.x - layout.x, z: tree.center.z - layout.z }, radius: tree.radius };
+}
+
 export const arrivalMethods = {
     // Focuses `documentId` and arrives at its door, now if its content is
     // loaded, or as soon as _loadWorld() has it. False for no document.
@@ -50,7 +80,9 @@ export const arrivalMethods = {
         for (const building of document.world.getBuildings()) {
             for (const brick of building.getBricks()) bricks.push(brick);
         }
-        const entrance = findBuildEntrance(bricks, this._registry);
+        const trees = treesAround(bricks, this._registry, layout, this.getWorldSeed());
+        const standing = typeof this._standingTrees === 'function' ? this._standingTrees(trees) : trees;
+        const entrance = findBuildEntrance(bricks, this._registry, { obstacles: standing.map((tree) => inBuild(tree, layout)) });
         if (!entrance) {
             return;
         }

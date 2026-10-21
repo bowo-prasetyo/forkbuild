@@ -8670,3 +8670,35 @@ served: building feels joyful (voice building that starts).
   with nothing fetched). docs/Architecture.md.
 - Not done: recognising real speech is still untried here (this sandbox can't reach Hugging Face); the Node build of
   transformers.js has no WebAssembly backend, so the test ends where the browser would create the model's sessions.
+
+## Walk inside it past the trees, and trees that give way to builds (unnumbered, 2026-10-21)
+
+**A fix for Walk inside it, which sometimes never got inside.** The bundled-site test's walk into the published House
+timed out about one run in ten, on CI and here (`tests/run-bundle.mjs`, waiting for "You're inside!"). A build takes
+its spot on the id-keyed grid, which knows nothing of the World's trees, so a fresh identity's House stood somewhere
+new each run, and at some spots a tree stood in the way. Walking ahead from the arrival spot slid round a trunk in
+front of the door and into its jamb, and held there (at plot 1360, 2240: a trunk 1.66 in front of the door and 0.35
+to its side); at others a trunk stood in the doorway or inside the house, through its floor. With the House on every
+spot of the grid from 0 to 2560, 64 of 4,096 never got inside; now none does. Pillars served: walk inside it with
+friends (the guided first build ends inside), and build a little place (no tree grows through it).
+
+- core/world/BuildEntrance.js: `findBuildEntrance()` takes round `obstacles` (trunks, in the build's coordinates). A
+  spot whose straight walk to just past the doorway touches one is passed over for the next, then for
+  `NEAR_STAND_DISTANCES` (1 and 0.75 in front of the door, in front of the trunk); with every way blocked, the usual
+  spot. `entranceSearchArea()` says where to gather them. With no obstacles, the same spot as before.
+- core/nature/TreeDisplacement.js (new): a tree whose trunk overlaps the footprint of any brick, at any height, is
+  not there, the posture wild animals take (core/nature/WildlifeDisplacement.js). application/world/TreeDisplacement.js
+  (new) answers it by trunk from the session's solid documents, once per terrain tile, refreshed every 2 s a tile at a
+  time and at once after an edit in World View or a World loaded or let go, with a `version()` that moves on when an
+  answer already given changes.
+- application/world/WorldNavigationSession.js: `_standingTrees()`, asked by the avatar's and ground vehicles' tree
+  collision (`AvatarTreeConstraint`'s `standing`), getting off a vehicle, residents' ways (`ResidentRuntime`'s
+  `standingTrees`) and the arrival (application/worldNavigation/arrivalMethods.js). renderer/TreeForest.js
+  `setHidden()` (through `Renderer#setHiddenTrees()` and the render facade) leaves such a tree undrawn, and sorts the
+  trees again when the answer changes.
+- Tests: `TreeDisplacement` (the rule; the per-tile answers and their version; a real session with a World built over
+  a tree: not bumped into, not drawn, and back once the World is gone; the forest leaving it out and bringing it
+  back); `WalkInside` (a trunk in front of the door brings the spot in front of it; the real arrival and movement
+  pipeline with the real trees at the plots where the walk stuck and on a sweep of the grid). docs/Architecture.md.
+- Not done: ambient birdsong and where vehicles are parked still read the seed's trees, so a tree under a build can
+  still be heard, and keeps a parking spot empty.

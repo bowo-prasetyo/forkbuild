@@ -10,6 +10,7 @@ import { SpatialAllocationPolicy } from '../../core/world/SpatialAllocationPolic
 import { VehicleRuntimeInstances } from './VehicleRuntimeInstances.js';
 import { AnimalRuntimeInstances, ANIMAL_RENDER_RADIUS } from './AnimalRuntimeInstances.js';
 import { WildlifeDisplacement, WILDLIFE_OBSTACLE_QUERY_RADIUS } from './WildlifeDisplacement.js';
+import { TreeDisplacement, TREE_OBSTACLE_QUERY_RADIUS } from './TreeDisplacement.js';
 import { AvatarMovementConstraint } from '../avatar/AvatarMovementConstraint.js';
 import { isDeterministicAnimalId } from '../../core/nature/AnimalIdentity.js';
 import { AvatarInventoryStore } from '../avatar/AvatarInventoryStore.js';
@@ -255,6 +256,9 @@ export class WorldNavigationSession {
         // Which wild animals keep away from a build; built on first use (see
         // _wildlifeDisplacement()).
         this._wildlifeDisplacementInstance = null;
+        // Which trees give way to a build; built on first use (see
+        // _treeDisplacement()).
+        this._treeDisplacementInstance = null;
         // Talking to residents ('T'): rising-edge tracking, how many times
         // each resident has been talked to (what it says moves on), the last
         // thing said, and how people are named. All local to this session.
@@ -564,6 +568,7 @@ export class WorldNavigationSession {
     _worldContentChanged() {
         if (this._residentRuntimeInstance) this._residentRuntimeInstance.invalidate();
         if (this._wildlifeDisplacementInstance) this._wildlifeDisplacementInstance.invalidate();
+        if (this._treeDisplacementInstance) this._treeDisplacementInstance.invalidate();
     }
 
     // Calls `listener(activity, command)` for every change the user makes to a
@@ -627,6 +632,7 @@ export class WorldNavigationSession {
         this._setupVehicleRendering();
         this._setupWildlifeExclusionSync();
         this._setupWildlifeDisplacementRendering();
+        this._setupTreeDisplacementRendering();
         this._setupAnimalRendering();
         this._setupResidentRendering();
         this._setupDayCycle();
@@ -738,6 +744,43 @@ export class WorldNavigationSession {
             return;
         }
         this._session.setHiddenWildlife((id) => this._wildlifeDisplacement().isDisplaced(id));
+    }
+
+    // The one TreeDisplacement this session asks which trees give way to a
+    // build: every brick of the loaded Worlds and the plaza's exhibits, as for
+    // wild animals, floor tiles included, since no trunk grows through a
+    // floor. Built on first use.
+    _treeDisplacement() {
+        if (!this._treeDisplacementInstance) {
+            const obstacles = new AvatarMovementConstraint({
+                loadedDocuments: this._solidDocuments(),
+                getWorldPosition: (documentId) => this._solidWorldPosition(documentId),
+                brickRegistry: this._registry,
+                queryRadius: TREE_OBSTACLE_QUERY_RADIUS,
+                maxStepHeight: 0,
+                structureResolver: this._structureResolver
+            });
+            this._treeDisplacementInstance = new TreeDisplacement({
+                obstaclesNear: (position) => obstacles.obstaclesNear(position, { avatarRadius: 0 })
+            });
+        }
+        return this._treeDisplacementInstance;
+    }
+
+    // The trees of `circles` (trunk circles) still standing: those not giving
+    // way to a build. What everything that meets trees asks.
+    _standingTrees(circles) {
+        return this._treeDisplacement().standing(circles);
+    }
+
+    // Trees giving way to a build are not drawn either, by the same answer.
+    // Absent when the facade lacks setHiddenTrees.
+    _setupTreeDisplacementRendering() {
+        if (typeof this._session.setHiddenTrees !== 'function') {
+            return;
+        }
+        const displacement = this._treeDisplacement();
+        this._session.setHiddenTrees((circle) => displacement.isDisplaced(circle), () => displacement.version());
     }
 
     // Animal counterpart of `_setupVehicleRendering()`.
