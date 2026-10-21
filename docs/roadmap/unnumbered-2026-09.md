@@ -8373,9 +8373,10 @@ Privacy page.
   loaded as configured; removed); the Editor's voice states; the action on `V`. By hand, in Chromium under the published
   policy: a real ONNX inference on the same engine build, and turning voice on as far as the model download, which this
   sandbox can't reach.
-- Not done: recognising real speech was not tried here, since this sandbox can't download the model; Whisper tiny is
-  weakest in the languages it was least trained on; recognition runs on the page's own thread, so the Editor pauses for
-  a moment while it works; only the Editor listens, not World View.
+- Not done: recognising real speech was not tried here, since this sandbox can't download the model (tried since, on
+  2026-10-21: see "Voice building heard end to end"); Whisper tiny is weakest in the languages it was least trained
+  on; recognition runs on the page's own thread, so the Editor pauses for a moment while it works; only the Editor
+  listens, not World View.
 
 
 ## Voice in a worker, and in World View (unnumbered, 2026-10-21)
@@ -8407,7 +8408,8 @@ walking a World, hands-free). How a player notices: **🎤 Voice** beside **Home
   panel, with the recognizer stood in; and in the published build under its policy, the worker started from the
   bundle, fetched, checked and kept the engine and loaded the speech library, as far as the model download, which
   this sandbox can't reach.
-- Not done: recognising real speech still wasn't tried here; a place is found by the words of its name, so two places
+- Not done: recognising real speech still wasn't tried here (tried since, on 2026-10-21: see
+  "Voice building heard end to end"); a place is found by the words of its name, so two places
   sharing a word go to the first listed.
 
 
@@ -8534,7 +8536,7 @@ whose bytes differ. Pillar served: anyone can remix it (a model nobody can swap 
 - A device that already had voice on downloads the model once more: it was kept under the main branch's address, and
   is now asked for at the commit's.
 - Not done: the weights were not downloaded here, so a full load of the pinned model in a browser was not tried; say
-  a command once after release.
+  a command once after release. (Done on 2026-10-21: see "Voice building heard end to end".)
 
 
 ## Residents see an edit made nearby at once, heights and all (unnumbered, 2026-10-21)
@@ -8670,6 +8672,8 @@ served: building feels joyful (voice building that starts).
   with nothing fetched). docs/Architecture.md.
 - Not done: recognising real speech is still untried here (this sandbox can't reach Hugging Face); the Node build of
   transformers.js has no WebAssembly backend, so the test ends where the browser would create the model's sessions.
+  Since tried: on 2026-10-21 the published build, with the pinned model, did what was meant for twelve of thirteen
+  spoken commands, in the Editor and World View (see "Voice building heard end to end").
 
 
 ## A command heard by its sound: "and do that" is undo (unnumbered, 2026-10-21)
@@ -8746,3 +8750,53 @@ dry ground).
   View does; the bundled-site test is what found it.
 - Not done: ambient birdsong and where vehicles are parked still read the seed's trees, so a tree under a build can
   still be heard, and keeps a parking spot empty.
+
+## Voice building heard end to end (unnumbered, 2026-10-21)
+
+**The first time real speech went through voice building.** Every voice entry above was made where Hugging Face's
+file servers couldn't be reached, so the pinned model had never been loaded in a browser nor heard anyone. With them
+reachable, the published build (`node scripts/build.mjs`) ran in headless Chromium with spoken commands made by an
+offline text-to-speech voice (Piper, `en_US-lessac-medium`), each with a second of quiet either side. The model's
+files and the engine were downloaded with verified TLS and handed to the app at their own addresses, where it held
+each to its pin. Pillar served: building feels joyful (voice that does what was said). Nothing in the app changed.
+
+- The pins: `node scripts/pin-speech-model.mjs --check` passes (every file at `ff41770…` has its pinned SHA-256), and
+  the engine downloaded from jsDelivr (26,861,777 bytes) has its pinned one.
+- Through Chromium's own fake microphone (`--use-file-for-fake-audio-capture`), so `getUserMedia()` ran with the app's
+  constraints: *paint the roof red* was heard and painted the House's roof. Turning voice on took about 15 s with the
+  files at hand; the result came about 3 s after Stop.
+- In one Editor session (the microphone stood in for by a stream of the recording through Web Audio, everything after
+  it the app's own): *paint the roof blue* painted it blue; *undo*, heard "And do", undid it (by its sound, the entry
+  above); *select all the windows* selected the House's 4; *delete the trees* said there are none in this build; *add
+  a door*, heard "at a door", was offered to the guide, which it would have been heard right too: placing a brick is
+  not among the plain-word intents (`paint`, `delete`, `select`, core/building/PlainCommand.js).
+- In World View on the challenge plaza: *take me to the old mill* went to the Mill, *bird's eye* turned the camera
+  to it, *go home* went Home, *sound off* turned the sound off, each heard word for word.
+- With pink noise mixed in, *paint the roof blue*, *undo* and *select all the windows* were still heard and done.
+- After the first load, each listen was ready in 2 to 5 s and each result came 2 to 4 s after Stop, the 3D view
+  drawing throughout.
+- Not done: a person's voice, accent and room, a real microphone, and a phone's speed; one person saying a few
+  commands on a phone and a laptop is what's left to try. The release notes call voice building experimental.
+
+## Release 1.5.0 (unnumbered, 2026-10-21)
+
+**Version 1.5.0 is released.** Everything since 1.4.0 ships under its own version number; until now the published
+site ran it as 1.4.0, and Steem and Blurt posts said `forkbuild/1.4.0`. It is a minor release: it adds features
+(running water, weather, the moon's phases, realistic trees and four seasons; residents and animals that share one
+World clock and keep out of builds; trees that give way to builds; look-alike hints at publish, on a build's page, in
+World View and in the 🔔; sealed exports; hearts; short links; Make a video; commands in plain words, Help, Describe
+the Build and voice building), keeps a remix to its original's terms, places no new build under water, removes the
+trust-diagnostics banner and code nothing reached, and fixes what the entries above name, with no security fix.
+`PROTOCOL_VERSION` is unchanged; the protocol gains additive parts (Publication Hearts, short links, the World clock).
+
+- `package.json`, `package-lock.json` and `core/app/version.js` say 1.5.0; so does the Game Jolt guide's version
+  number.
+- `docs/ReleaseNotes-1.5.md` is new: what's new, removed, changed and fixed, privacy (hearts, short links, voice
+  building's downloads, the clock sent to peers, the new counts), upgrading from 1.4.0 (update before 16 November 2026,
+  when 1.4.0's weekly themes part from 1.5.0's; redeploying a self-hosted worker for short links; what 1.4.0 doesn't
+  show) and known limitations (voice building experimental, with what its end-to-end try found).
+  `docs/ReleaseNotes-1.4.md` points to it, and the README names 1.5.0 and links all six.
+- Not done: the cleanup and speed work of 2026-10-20 (the eval-free published bundle, the network runtime loaded
+  after Home, Steem's and Blurt's posting code on demand, the trust-diagnostics banner and the unused spatial index,
+  streaming session and old collaboration protocol removed) went in without entries here; the release notes cover
+  them from their commits.

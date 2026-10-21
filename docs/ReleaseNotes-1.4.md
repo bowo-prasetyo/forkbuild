@@ -1,7 +1,8 @@
 # ForkBuild 1.4 release notes
 
 *Released 2026-10-14 as version 1.4.0.* For 1.3, see
-[ReleaseNotes-1.3.md](ReleaseNotes-1.3.md).
+[ReleaseNotes-1.3.md](ReleaseNotes-1.3.md); for what came after, see
+[ReleaseNotes-1.5.md](ReleaseNotes-1.5.md).
 
 1.4 is the builder's release. A newcomer starts from a ready-made house,
 builds with a kit of fifty bricks, publishes with only a name, and shares a
