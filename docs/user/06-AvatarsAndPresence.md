@@ -371,6 +371,11 @@ is sent between players. You bump into a resident like a tree, but it
 doesn't step aside for you, so one may walk through you while you stand
 still.
 
+**Finding their way.** A resident walks out through a doorway, round the
+corner of its house and down the lane to the spots it likes, going round
+anything in the way. When night falls it walks home and stays there until
+morning.
+
 **They notice you.** When you come within a few steps, in front of a
 resident or beside it, it turns to face you. Walk right up and it waves,
 once each time you come over. Like animals, this happens only on your

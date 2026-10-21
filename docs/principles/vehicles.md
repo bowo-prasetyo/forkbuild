@@ -47,6 +47,14 @@ clock more than 15 minutes off is ignored rather than followed, and one
 wrong clock among three or more moves nothing. A change is eased in, time
 running a little fast or slow, so animals never jump.
 
+### The World Settles Down At Night, On The World's Clock (2026-10-21)
+
+From nightfall to dawn residents are at home and wild animals lie at
+their own spots, all on the World clock and the World's own day and
+seasons, never a device's Always day or kept season, so everyone sees the
+same village asleep. It changes where things are, never what anyone may
+do: a resting animal can still be caught, and a resident still talks.
+
 ### A Wild Animal Keeps Away From What Is Built (2026-10-21)
 
 A wild animal never grazes inside a build or walks through a wall, and
@@ -62,8 +70,9 @@ briefly disagree.
 
 A World Resident is World content that stores only its home. Where it is
 is a pure function of its id, home, the time and the World's geometry: it
-strolls between waypoints home can see, around walls, trees and water, and
-never reacts to anyone, so replicas agree. It may turn to face and wave at
+strolls between spots of its own near home, finding its way out through
+doorways and round walls, trees and water (2026-10-21), goes home for the
+night, and never reacts to anyone, so replicas agree. It may turn to face and wave at
 the viewer's own avatar, which changes only that viewer's screen. It is
 never a person: no identity, presence or People listing, and no quests.
 

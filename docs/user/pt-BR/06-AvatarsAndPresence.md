@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 2d751aee5c2fa769 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: fdcc7c250da899ce -->
 # 06 — Avatares e presença
 
 <!-- languages -->
@@ -377,6 +377,8 @@ momento, porque onde ele está vem do Mundo e do relógio. Nada é enviado
 entre os jogadores. Você esbarra num morador como numa árvore, mas ele não
 desvia de você, então pode passar através de você enquanto você fica
 parado.
+
+**Encontrando o caminho.** Um morador sai por uma porta, dobra a esquina da casa e segue pelo caminho até os lugares de que gosta, contornando o que estiver no caminho. Quando a noite cai, ele volta para casa e fica lá até de manhã.
 
 **Eles notam você.** Quando você chega a poucos passos, na frente de um
 morador ou ao lado dele, ele se vira para você. Chegue bem perto e ele

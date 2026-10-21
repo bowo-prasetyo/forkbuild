@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: a51a7c2c7ea79eeb -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: ddd5e492a88450c7 -->
 # 03 — Weltansicht
 
 <!-- languages -->
@@ -146,6 +146,8 @@ gibt. Anders als Tiere gehören sie zur Welt selbst: Ihr Autor fügt sie
 hinzu. Die fertigen Häuser haben einen Bewohner an der Haustür, auch die
 rund um den Challenge-Platz. In Ihrem eigenen Bauwerk entfernt **R** einen.
 Siehe [Bewohner](06-AvatarsAndPresence.md#bewohner).
+
+**Nachts** kommt die Welt zur Ruhe. Tiere kehren an ihren eigenen Platz zurück und legen sich bis zum Morgen hin; kommen Sie einem nahe, steht es auf und beobachtet Sie. Bewohner gehen in der Abenddämmerung nach Hause und bleiben dort bis zum Morgengrauen.
 
 **Blasse, durchscheinende Bauwerke** sind Bauwerke, die andere in Ihrer Nähe
 angekündigt haben und die dieses Gerät nicht angenommen hat. Sie

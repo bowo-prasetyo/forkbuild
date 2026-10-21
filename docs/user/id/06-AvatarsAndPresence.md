@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 2d751aee5c2fa769 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: fdcc7c250da899ce -->
 # 06 — Avatar & Kehadiran
 
 <!-- languages -->
@@ -403,6 +403,8 @@ melihat setiap penghuni di tempat yang sama pada saat yang sama, karena
 letaknya berasal dari Dunia dan jam. Tidak ada yang dikirim antarpemain.
 Anda menabrak penghuni seperti menabrak pohon, tetapi ia tidak menyingkir
 untuk Anda, jadi ia bisa berjalan menembus Anda saat Anda diam.
+
+**Menemukan jalan.** Penghuni keluar lewat pintu, berbelok di sudut rumahnya, dan menyusuri jalan ke tempat-tempat yang ia sukai, memutari apa pun yang menghalangi. Saat malam tiba, ia pulang dan tetap di rumah sampai pagi.
 
 **Mereka memperhatikan Anda.** Saat Anda mendekat sampai beberapa langkah,
 di depan atau di samping penghuni, ia menoleh menghadap Anda. Datangi

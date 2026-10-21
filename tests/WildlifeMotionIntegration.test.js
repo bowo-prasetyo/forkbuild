@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { wildlifeInRegion } from '../core/nature/WildlifeField.js';
-import { animalPoseAt, MAX_WANDER_DISTANCE } from '../core/nature/WildlifeMotion.js';
+import { animalPoseAt, MAX_WANDER_DISTANCE, IDLE_ACTION } from '../core/nature/WildlifeMotion.js';
 import { wildlifeCollisionGeometryInRegion } from '../core/nature/WildlifeCollisionGeometry.js';
 import { isDeterministicAnimalId, animalIdFor } from '../core/nature/AnimalIdentity.js';
 import { AnimalPresence } from '../core/nature/AnimalPresence.js';
@@ -40,16 +40,21 @@ import { assert } from './support/Assert.js';
 //              they share
 
 const SEED = DEFAULT_WORLD_SEED;
-const T = 1_759_000_000;
+// A daytime moment (a quarter of the way into the World's day): by night
+// animals and residents settle down (core/nature/Nightfall.js).
+const T = 1_758_999_000;
 
 const ANIMALS = wildlifeInRegion(SEED, -1200, -1200, 1200, 1200);
 
 // An animal that is, at time T, well away from where it was placed — so a
-// system still using placed positions would look in the wrong spot.
+// system still using placed positions would look in the wrong spot — and
+// standing there calmly (not mid-hop, not sitting up), so it is drawn at
+// exactly its pose's height.
 function wanderedAnimal() {
     for (const animal of ANIMALS) {
         const pose = animalPoseAt(SEED, animal, T);
-        if (Math.hypot(pose.x - animal.x, pose.z - animal.z) > ANIMAL_INTERACTION_RADIUS + 0.2) {
+        const calm = !pose.moving && (pose.idleAction === IDLE_ACTION.NONE || pose.idleAction === IDLE_ACTION.GRAZE);
+        if (calm && Math.hypot(pose.x - animal.x, pose.z - animal.z) > ANIMAL_INTERACTION_RADIUS + 0.2) {
             return { animal, pose };
         }
     }

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: a51a7c2c7ea79eeb -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: ddd5e492a88450c7 -->
 # 03 — La Vue du Monde
 
 <!-- languages -->
@@ -150,6 +150,8 @@ partie du Monde : c’est son auteur qui les ajoute. Les maisons toutes
 prêtes ont un habitant près de la porte d’entrée, y compris celles autour
 de la place du défi. Dans votre propre construction, **R** en retire un.
 Voir [Habitants](06-AvatarsAndPresence.md#habitants).
+
+**La nuit**, le Monde s’apaise. Les animaux retournent à leur place et se couchent jusqu’au matin ; approchez-vous de l’un d’eux et il se relève pour vous observer. Les habitants rentrent chez eux au crépuscule et y restent jusqu’à l’aube.
 
 **Les constructions pâles et transparentes** sont des constructions que
 d’autres ont annoncées près de vous et que cet appareil n’a pas acceptées.

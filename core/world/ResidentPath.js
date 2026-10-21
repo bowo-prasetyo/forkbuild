@@ -17,8 +17,9 @@
 //   - the ground is dry — no lake (SURFACE_CATEGORY.WATER) and no river;
 //   - the terrain is never steeper than an avatar can walk.
 //
-// Obstacles are 2D here on purpose: the caller has already decided which
-// bricks stand in a resident's way (see
+// Obstacles are 2D here, but for one height: a brick wholly over a
+// resident's head (RESIDENT_HEADROOM) is not in its way. The caller has
+// already decided which other bricks stand in a resident's way (see
 // application/world/ResidentRuntime.js, which asks
 // application/avatar/AvatarMovementConstraint.js, so a resident is blocked
 // by exactly the bricks an avatar on the ground would be — a floor tile or
@@ -34,6 +35,17 @@ import { isWalkableSlope, DEFAULT_MAX_WALKABLE_SLOPE } from '../nature/TerrainWa
 // avatar could stand to add a resident, the resident fits too.
 export const RESIDENT_COLLISION_RADIUS = 0.3;
 
+// A brick whose underside is at least this high (the wall over a door, a
+// lintel, an upper floor) is over a resident's head, not in its way, so a
+// doorway is a way through. A door is 2 m tall; a resident is 1.7 m.
+export const RESIDENT_HEADROOM = 1.8;
+
+// Whether `box` stands in a resident's way at all: not when it is wholly
+// over its head. A box without heights (a 2D footprint) always does.
+export function isInResidentWay(box) {
+    return !(box && box.min && Number.isFinite(box.min.y) && box.min.y >= RESIDENT_HEADROOM);
+}
+
 // How far apart the ground is sampled along a walk.
 const GROUND_SAMPLE_SPACING = 0.5;
 
@@ -45,7 +57,7 @@ export function isResidentGroundAt(seed, x, z) {
 // Whether the segment from `from` to `to` passes within `radius` of the
 // box's footprint: the classic slab test against the box grown by
 // `radius` on every side. Grazing the grown box's edge does not count.
-function segmentHitsBox(from, to, box, radius) {
+export function segmentHitsBox(from, to, box, radius) {
     const minX = box.min.x - radius;
     const maxX = box.max.x + radius;
     const minZ = box.min.z - radius;
@@ -71,7 +83,7 @@ function segmentHitsBox(from, to, box, radius) {
 
 // Whether the segment passes closer than `circle.radius + radius` to the
 // circle's center.
-function segmentHitsCircle(from, to, circle, radius) {
+export function segmentHitsCircle(from, to, circle, radius) {
     const dx = to.x - from.x;
     const dz = to.z - from.z;
     const lengthSq = dx * dx + dz * dz;
@@ -96,7 +108,7 @@ export function isResidentWalkClear(seed, from, to, {
     maxSlope = DEFAULT_MAX_WALKABLE_SLOPE
 } = {}) {
     for (const box of boxes) {
-        if (segmentHitsBox(from, to, box, radius)) return false;
+        if (isInResidentWay(box) && segmentHitsBox(from, to, box, radius)) return false;
     }
     for (const circle of circles) {
         if (segmentHitsCircle(from, to, circle, radius)) return false;

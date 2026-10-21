@@ -1,4 +1,6 @@
-import { residentPoseAt, RESIDENT_MOTION } from '../core/world/ResidentMotion.js';
+import { residentPoseAt, residentStaysHomeAt, RESIDENT_MOTION, RESIDENT_REACH_SECONDS } from '../core/world/ResidentMotion.js';
+import { buildResidentNavigation, NAV_CELL } from '../core/world/ResidentNavigation.js';
+import { isNightfallAt } from '../core/nature/Nightfall.js';
 import { isResidentWalkClear, isResidentGroundAt, RESIDENT_COLLISION_RADIUS } from '../core/world/ResidentPath.js';
 import { residentAppearanceFor, RESIDENT_TEMPLATE_ID } from '../core/world/ResidentAppearance.js';
 import { surfaceCategoryAt, SURFACE_CATEGORY } from '../core/nature/TerrainSurface.js';
@@ -14,14 +16,19 @@ import { assert } from './support/Assert.js';
 //   Section A: determinism and bounds
 //   Section B: continuity — position and facing never jump, over hours
 //   Section C: obstacles — a wall is never crossed; a blocked straight walk
-//              detours by way of home; a blocked waypoint is home itself
+//              detours round it; with nowhere to go, it stands at home
 //   Section D: core/world/ResidentPath.js — boxes, circles, water, slopes
 //   Section E: appearance — deterministic, and always the template's own options
 //   Section F: noticing the viewer — only while settled, never behind, and
 //              never a jump in facing
+//   Section G: finding the way — out through a door under its lintel, round
+//              a house to the far side, never through a wall
+//   Section H: night — home from nightfall to dawn, walking home in the dusk
 
 const SEED = DEFAULT_WORLD_SEED;
-const T0 = 1_759_000_000;
+// A daytime moment (a quarter of the way into the World's day): by night
+// animals and residents settle down (core/nature/Nightfall.js).
+const T0 = 1_758_999_000;
 const STEP = 0.05;
 const close = (a, b, eps = 1e-9) => Math.abs(a - b) < eps;
 
@@ -58,18 +65,22 @@ function track(resident, seconds, options = {}) {
 function runTests() {
     const home = openHome();
     const resident = { id: 'resident-a', home };
-    const clear = (from, to) => isResidentWalkClear(SEED, from, to);
+    // The World round home: its land, and whatever is built.
+    const navigationOf = ({ boxes = [], circles = [] } = {}) => buildResidentNavigation({
+        home, reach: RESIDENT_MOTION.wanderRadius, seed: SEED, boxes, circles
+    });
+    const open = { navigation: navigationOf() };
     const HOUR = 60 * 60;
 
     // -------------------------------------------------------------
     // Section A — determinism and bounds
     // -------------------------------------------------------------
-    const hour = track(resident, HOUR, { isClear: clear });
+    const hour = track(resident, HOUR, open);
     {
-        const again = residentPoseAt(resident, T0 + 1234.5, { isClear: clear });
-        const same = residentPoseAt({ id: 'resident-a', home: { ...home } }, T0 + 1234.5, { isClear: clear });
+        const again = residentPoseAt(resident, T0 + 234.5, open);
+        const same = residentPoseAt({ id: 'resident-a', home: { ...home } }, T0 + 234.5, open);
         assert(JSON.stringify(again) === JSON.stringify(same), '1. The same resident at the same moment is in the same place — no hidden state');
-        const other = residentPoseAt({ id: 'resident-b', home }, T0 + 1234.5, { isClear: clear });
+        const other = residentPoseAt({ id: 'resident-b', home }, T0 + 234.5, open);
         assert(other.x !== again.x || other.z !== again.z, '2. Two residents sharing a home walk their own paths');
         const farthest = Math.max(...hour.map((p) => Math.hypot(p.x - home.x, p.z - home.z)));
         assert(farthest <= RESIDENT_MOTION.wanderRadius + 1e-9, '3. A resident never strays past its wander radius');
@@ -109,12 +120,12 @@ function runTests() {
             }
         }
         // Across a segment boundary exactly.
-        const phaseProbe = residentPoseAt(resident, T0, { isClear: clear });
+        const phaseProbe = residentPoseAt(resident, T0, open);
         assert(phaseProbe, '12. (probe)');
         for (let k = 0; k < 50; k++) {
             const boundary = T0 + k * RESIDENT_MOTION.segmentSeconds * 1.37;
-            const a = residentPoseAt(resident, boundary - 1e-4, { isClear: clear });
-            const b = residentPoseAt(resident, boundary + 1e-4, { isClear: clear });
+            const a = residentPoseAt(resident, boundary - 1e-4, open);
+            const b = residentPoseAt(resident, boundary + 1e-4, open);
             assert(Math.hypot(a.x - b.x, a.z - b.z) < 1e-3 && angleBetween(a.rotationY, b.rotationY) < 1e-2,
                 '13. Continuous everywhere, segment boundaries included');
         }
@@ -127,32 +138,36 @@ function runTests() {
         // A wall right through the middle of its range, leaving a gap round
         // neither end (it runs well past the wander radius both ways).
         const wall = { min: { x: home.x + 1, z: home.z - 20 }, max: { x: home.x + 1.4, z: home.z + 20 } };
-        const walled = (from, to) => isResidentWalkClear(SEED, from, to, { boxes: [wall] });
-        const poses = track(resident, HOUR, { isClear: walled });
+        const poses = track(resident, HOUR, { navigation: navigationOf({ boxes: [wall] }) });
         assert(poses.every((p) => p.x <= wall.min.x - RESIDENT_COLLISION_RADIUS + 1e-9),
             '14. A resident never walks through (or into) a wall on its home\'s side');
         assert(poses.some((p) => Math.hypot(p.x - home.x, p.z - home.z) > 3), '15. ...and still strolls on its own side');
 
         // A pillar between home and the far side: straight walks across it are
-        // blocked, but each end can see home, so it goes round by home.
+        // blocked, so it goes round.
         const pillar = { center: { x: home.x + 3, z: home.z }, radius: 0.8 };
-        const pillared = (from, to) => isResidentWalkClear(SEED, from, to, { circles: [pillar] });
-        const around = track({ id: 'resident-c', home }, HOUR, { isClear: pillared });
+        const around = track({ id: 'resident-c', home }, HOUR, { navigation: navigationOf({ circles: [pillar] }) });
         for (let i = 1; i < around.length; i++) {
             assert(isResidentWalkClear(SEED, around[i - 1], around[i], { circles: [pillar], radius: RESIDENT_COLLISION_RADIUS - 1e-6 }),
                 '16. A resident never passes through a pillar in its way');
         }
-        // Arriving home mid-walk, turning in place there (no idle window), and
-        // walking on within one turn's time.
+        // Stopping mid-walk at a corner, turning in place there (no idle
+        // window), and walking on within one turn's time.
         const turnFrames = Math.ceil(RESIDENT_MOTION.turnSeconds / STEP) + 1;
         const detours = around.filter((p, i) => i > 0 && !p.moving && around[i - 1].moving
             && p.idleDuration === 0
-            && Math.hypot(p.x - home.x, p.z - home.z) < 1e-9
             && around.slice(i + 1, i + 1 + turnFrames).some((q) => q.moving));
-        assert(detours.length > 0, '17. ...detouring by way of home, where it stops to turn');
+        assert(detours.length > 0, '17. ...detouring round it, stopping at a corner to turn');
 
-        // Everything blocked: it simply stays home.
-        const boxedIn = track({ id: 'resident-d', home }, 600, { isClear: () => false });
+        // Walled in tight on every side: it simply stays home.
+        const cell = { min: { x: home.x - 0.6, z: home.z - 0.6 }, max: { x: home.x + 0.6, z: home.z + 0.6 } };
+        const tight = [
+            { min: { x: cell.min.x - 1, z: cell.max.z }, max: { x: cell.max.x + 1, z: cell.max.z + 1 } },
+            { min: { x: cell.min.x - 1, z: cell.min.z - 1 }, max: { x: cell.max.x + 1, z: cell.min.z } },
+            { min: { x: cell.max.x, z: cell.min.z }, max: { x: cell.max.x + 1, z: cell.max.z } },
+            { min: { x: cell.min.x - 1, z: cell.min.z }, max: { x: cell.min.x, z: cell.max.z } }
+        ];
+        const boxedIn = track({ id: 'resident-d', home }, 600, { navigation: navigationOf({ boxes: tight }) });
         assert(boxedIn.every((p) => p.x === home.x && p.z === home.z && !p.moving), '18. With nowhere to go, a resident stands at home');
         assert(boxedIn.some((p, i) => i > 0 && p.rotationY !== boxedIn[0].rotationY), '19. ...turning now and then instead of freezing');
     }
@@ -245,6 +260,92 @@ function runTests() {
             prev = f;
         }
         assert(worstReal < 0.3, `42. Over an hour of pauses and walks with you nearby, its facing never snaps (worst ${worstReal.toFixed(3)})`);
+    }
+
+    // -------------------------------------------------------------
+    // Section G — finding the way
+    // -------------------------------------------------------------
+    {
+        // A one-room house round home, 5 m inside, its walls 0.5 m thick and
+        // 3 m tall, with a 1 m doorway in the east wall under a lintel.
+        const inner = 2.5;
+        const outer = 3;
+        const at = (x0, z0, x1, z1, y0 = 0, y1 = 3) => ({
+            min: { x: home.x + x0, y: y0, z: home.z + z0 }, max: { x: home.x + x1, y: y1, z: home.z + z1 }
+        });
+        const walls = [
+            at(-outer, inner, outer, outer),          // north
+            at(-outer, -outer, outer, -inner),        // south
+            at(-outer, -inner, -inner, inner),        // west
+            at(inner, -inner, outer, -0.5),           // east, below the door
+            at(inner, 0.5, outer, inner)              // east, above the door
+        ];
+        const lintel = at(inner, -0.5, outer, 0.5, 2, 3);
+        const house = [...walls, lintel];
+        const isOutside = (p) => Math.abs(p.x - home.x) > outer || Math.abs(p.z - home.z) > outer;
+        const residents = Array.from({ length: 6 }, (_, i) => ({ id: `householder-${i}`, home }));
+        const navigation = navigationOf({ boxes: house });
+        let outside = 0;
+        let detoured = 0;
+        for (const householder of residents) {
+            const poses = track(householder, HOUR, { navigation });
+            for (let i = 1; i < poses.length; i++) {
+                assert(isResidentWalkClear(SEED, poses[i - 1], poses[i], { boxes: house, radius: RESIDENT_COLLISION_RADIUS - 1e-6 }),
+                    `43. A resident never walks through a wall (${householder.id}, frame ${i})`);
+            }
+            const out = poses.filter(isOutside);
+            outside += out.length;
+            if (out.some((p) => !isResidentWalkClear(SEED, home, p, { boxes: house }))) detoured++;
+        }
+        assert(outside > 0, '44. Residents living in a house step out through its door');
+        assert(detoured > 0, '45. ...to spots they could never walk straight to from home');
+
+        const shut = [...walls, at(inner, -0.5, outer, 0.5)];
+        const shutIn = track(residents[0], HOUR, { navigation: navigationOf({ boxes: shut }) });
+        assert(!shutIn.some(isOutside), '46. With the doorway walled up, nobody gets out');
+        const lowLintel = [...walls, at(inner, -0.5, outer, 0.5, 1.2, 3)];
+        const ducked = track(residents[0], HOUR, { navigation: navigationOf({ boxes: lowLintel }) });
+        assert(!ducked.some(isOutside), '47. Nor under a beam lower than a resident is tall');
+
+        // Every spot it goes to can be reached and walked back from within a
+        // segment, however far round it lies.
+        assert(RESIDENT_REACH_SECONDS * 2 + RESIDENT_MOTION.turnSeconds * 2 + 1.5 <= RESIDENT_MOTION.segmentSeconds + 1e-9,
+            '48. Two ways out from home, and the turns, fit in one segment');
+        const cells = navigation.cellPath(navigation.homeCell, navigation.cellOf({ x: home.x + outer + 1, z: home.z }));
+        const corners = navigation.smoothPath(cells);
+        assert(corners.length >= 2 && corners.length < cells.length / 4, '49. A way is pulled tight to a few corners');
+        assert(cells.every((cell, i) => i === 0 || Math.hypot(navigation.pointOf(cell).x - navigation.pointOf(cells[i - 1]).x,
+            navigation.pointOf(cell).z - navigation.pointOf(cells[i - 1]).z) <= NAV_CELL * Math.SQRT2 + 1e-9),
+        '50. ...from a path of neighbouring cells');
+    }
+
+    // -------------------------------------------------------------
+    // Section H — night
+    // -------------------------------------------------------------
+    {
+        let nightfall = T0;
+        while (!isNightfallAt(nightfall)) nightfall += 1;
+        let dawn = nightfall;
+        while (isNightfallAt(dawn)) dawn += 1;
+        assert(dawn - nightfall > 10 * 60, '51. (fixture) the night lasts a while');
+        const { segmentSeconds } = RESIDENT_MOTION;
+        const townsfolk = Array.from({ length: 12 }, (_, i) => ({ id: `townsfolk-${i}`, home }));
+        let walkedHome = 0;
+        for (const person of townsfolk) {
+            for (let t = nightfall + segmentSeconds; t <= dawn - segmentSeconds; t += 2) {
+                const pose = residentPoseAt(person, t, open);
+                assert(pose.x === home.x && pose.z === home.z && !pose.moving, `52. From nightfall to dawn a resident is at home (${person.id})`);
+            }
+            assert(residentStaysHomeAt(person.id, nightfall + segmentSeconds * 2), '53. ...as residentStaysHomeAt() says without a World');
+            const before = residentPoseAt(person, nightfall - segmentSeconds, open);
+            if (before.x !== home.x || before.z !== home.z) walkedHome++;
+        }
+        assert(walkedHome > 0, '54. Residents out at dusk walk home as night falls');
+        const morning = townsfolk.filter((person) => {
+            const pose = residentPoseAt(person, dawn + 3 * segmentSeconds, open);
+            return pose.x !== home.x || pose.z !== home.z;
+        });
+        assert(morning.length > 0, '55. ...and are out again in the morning');
     }
 
     console.log('✅ All Resident Motion tests passed.');

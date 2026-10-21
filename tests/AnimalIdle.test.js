@@ -20,7 +20,9 @@ import { assert } from './support/Assert.js';
 //              rabbit sitting up keeps its rump on it
 
 const SEED = DEFAULT_WORLD_SEED;
-const T0 = 1_759_000_000;
+// A daytime moment (a quarter of the way into the World's day): by night
+// animals and residents settle down (core/nature/Nightfall.js).
+const T0 = 1_758_999_000;
 const ALL = wildlifeInRegion(SEED, -3000, -3000, 3000, 3000);
 const sampleOf = (species, n) => ALL.filter((a) => a.species === species).slice(0, n);
 const offsetsFor = (species, pose) => (pose.moving

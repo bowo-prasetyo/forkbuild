@@ -40,7 +40,9 @@ import { assert } from './support/Assert.js';
 //              nothing, and comes back
 
 const SEED = DEFAULT_WORLD_SEED;
-const T = 1_759_000_000;
+// A daytime moment (a quarter of the way into the World's day): by night
+// animals and residents settle down (core/nature/Nightfall.js).
+const T = 1_758_999_000;
 const ANIMALS = wildlifeInRegion(SEED, -1200, -1200, 1200, 1200);
 const DEER = ANIMALS.find((a) => a.species === ANIMAL_SPECIES.DEER);
 const RABBIT = ANIMALS.find((a) => a.species === ANIMAL_SPECIES.RABBIT);

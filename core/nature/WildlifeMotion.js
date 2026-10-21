@@ -30,6 +30,11 @@
 // need no change. Staying within the wander radius bounds how far a
 // region query must look beyond its own edges (MAX_WANDER_DISTANCE).
 //
+// AT NIGHT IT BEDS DOWN. From nightfall to dawn (core/nature/Nightfall.js, on
+// the World's own clock) every waypoint is the spawn point: an animal walks
+// back there in the dusk and lies down (IDLE_ACTION.REST) until morning,
+// facing the way it came in.
+//
 // AN ANIMAL NEVER WADES ACROSS A RIVER. A waypoint outside the animal's own
 // ecology zone, in a river channel, or whose walk out from the spawn point
 // would cross one, is replaced by the spawn point, which always qualifies.
@@ -45,6 +50,7 @@ import { WILDLIFE_LATTICE_SPACING, ANIMAL_SPECIES, wildlifeInRegion } from './Wi
 import { terrainHeightAt } from './TerrainHeightField.js';
 import { ecologyZoneAt } from './TerrainEcology.js';
 import { isRiverAt } from './Hydrology.js';
+import { isNightfallAt } from './Nightfall.js';
 import { lerp, smoothstep } from '../../utils/interpolation.js';
 
 // Per species: how far from its spawn point it roams, how fast it walks
@@ -73,8 +79,36 @@ export const ANIMAL_MOTION = Object.freeze({
 export const IDLE_ACTION = Object.freeze({
     NONE: 'NONE',     // just standing
     GRAZE: 'GRAZE',   // head down, eating
-    ALERT: 'ALERT'    // head up (a rabbit sits up), looking around
+    ALERT: 'ALERT',   // head up (a rabbit sits up), looking around
+    REST: 'REST'      // lying down for the night
 });
+
+// While an animal rests the night through, its idle window runs on across
+// segment boundaries: it is reported as reaching this far before and after
+// them, so the rest eases in at nightfall and out at dawn, never between.
+const NIGHT_REST_CARRY_SECONDS = 1000;
+
+// How far back to look for where a night's rest began.
+const MAX_NIGHT_SEGMENTS = 1000;
+
+// The segment a night's rest began in, per animal and segment: looking back
+// for it costs a few dozen steps, and the same few segments are asked about
+// on every frame.
+const nightStartCache = new Map();
+const MAX_CACHED_NIGHT_STARTS = 8192;
+
+// The first segment of the night segment `k` belongs to, `restsIn(segment)`
+// saying which segments are night; `key` names the animal.
+function nightStartOf(key, k, restsIn) {
+    const id = `${key}:${k}`;
+    const kept = nightStartCache.get(id);
+    if (kept !== undefined) return kept;
+    let start = k;
+    while (k - start < MAX_NIGHT_SEGMENTS && restsIn(start - 1)) start--;
+    if (nightStartCache.size >= MAX_CACHED_NIGHT_STARTS) nightStartCache.clear();
+    nightStartCache.set(id, start);
+    return start;
+}
 
 // A pause too short to fit an action in, eased in and out, is spent standing.
 const MIN_IDLE_SECONDS = 1.5;
@@ -153,10 +187,18 @@ function isDryWalk(seed, from, to) {
     return true;
 }
 
+// Whether segment k of the animal in cell (cellX, cellZ) starts after
+// nightfall, when it rests at its spawn point.
+function restsAt(seed, cellX, cellZ, k, segmentSeconds) {
+    return isNightfallAt((k - hash3D(seed + PHASE_SEED_OFFSET, cellX, cellZ, 0)) * segmentSeconds);
+}
+
 // Waypoint k of `animal`'s path. Spawn-relative, clamped into the spawn
 // cell, and vetoed back to the spawn point off-zone, in a river, or when the
-// walk out to it from the spawn point would cross one.
-function waypoint(seed, animal, cellX, cellZ, k, wanderRadius) {
+// walk out to it from the spawn point would cross one; the spawn point, too,
+// for a segment that starts at night.
+function waypoint(seed, animal, cellX, cellZ, k, wanderRadius, segmentSeconds) {
+    if (restsAt(seed, cellX, cellZ, k, segmentSeconds)) return { x: animal.x, z: animal.z };
     const angle = hash3D(seed + ANGLE_SEED_OFFSET, cellX, cellZ, k) * TWO_PI;
     // sqrt spreads waypoints evenly over the disc instead of bunching them
     // at its center.
@@ -196,12 +238,13 @@ function samePoint(a, b) {
 const segmentCache = new Map();
 const MAX_CACHED_SEGMENTS = 8192;
 
-function segmentWalk(seed, animal, cellX, cellZ, k, wanderRadius) {
-    const key = `${seed}:${cellX},${cellZ}:${animal.x},${animal.z}:${wanderRadius}:${k}`;
+function segmentWalk(seed, animal, cellX, cellZ, k, motion) {
+    const { wanderRadius, segmentSeconds } = motion;
+    const key = `${seed}:${cellX},${cellZ}:${animal.x},${animal.z}:${wanderRadius}:${segmentSeconds}:${k}`;
     const cached = segmentCache.get(key);
     if (cached) return cached;
-    const from = waypoint(seed, animal, cellX, cellZ, k, wanderRadius);
-    const to = waypoint(seed, animal, cellX, cellZ, k + 1, wanderRadius);
+    const from = waypoint(seed, animal, cellX, cellZ, k, wanderRadius, segmentSeconds);
+    const to = waypoint(seed, animal, cellX, cellZ, k + 1, wanderRadius, segmentSeconds);
     const spawn = { x: animal.x, z: animal.z };
     let legs;
     if (samePoint(from, to)) {
@@ -232,9 +275,9 @@ const ARRIVAL_LOOKBACK_SEGMENTS = 4;
 // waypoints coincide (both vetoed back to the spawn point) is no walk at
 // all, so it looks further back; with no real walk in reach it falls back
 // to the placement rotation.
-function arrivalHeadingAt(seed, animal, cellX, cellZ, k, wanderRadius) {
+function arrivalHeadingAt(seed, animal, cellX, cellZ, k, motion) {
     for (let back = 1; back <= ARRIVAL_LOOKBACK_SEGMENTS; back++) {
-        const { legs } = segmentWalk(seed, animal, cellX, cellZ, k - back, wanderRadius);
+        const { legs } = segmentWalk(seed, animal, cellX, cellZ, k - back, motion);
         if (legs.length > 0) {
             const [a, b] = legs[legs.length - 1];
             return headingBetween(a, b);
@@ -270,7 +313,7 @@ export function animalPoseAt(seed, animal, timeSeconds) {
     const k = Math.floor(segments);
     const secondsIntoSegment = (segments - k) * motion.segmentSeconds;
 
-    const { from, legs } = segmentWalk(seed, animal, cellX, cellZ, k, motion.wanderRadius);
+    const { from, legs } = segmentWalk(seed, animal, cellX, cellZ, k, motion);
     const legLengths = legs.map(([a, b]) => Math.hypot(b.x - a.x, b.z - a.z));
     const legSeconds = legLengths.map((length) => length / motion.walkSpeed);
     // Legs walk back to back, with a turn in place at the spawn point
@@ -322,8 +365,36 @@ export function animalPoseAt(seed, animal, timeSeconds) {
             t -= TURN_SECONDS;
         }
     }
-    if (!walking) {
-        const arrivalHeading = arrivalHeadingAt(seed, animal, cellX, cellZ, k, motion.wanderRadius);
+    const resting = !walking && restsAt(seed, cellX, cellZ, k, motion.segmentSeconds);
+    if (resting) {
+        // Lying at the spawn point the night through, facing the way it came
+        // in at nightfall. The rest runs on from the segment before and into
+        // the one after while those are night too, so it eases in only at
+        // nightfall and out only before the morning's first turn.
+        const before = restsAt(seed, cellX, cellZ, k - 1, motion.segmentSeconds);
+        const after = restsAt(seed, cellX, cellZ, k + 1, motion.segmentSeconds);
+        const nightStart = nightStartOf(`${seed}:${cellX},${cellZ}:${motion.segmentSeconds}`, k,
+            (segment) => restsAt(seed, cellX, cellZ, segment, motion.segmentSeconds));
+        const bedHeading = arrivalHeadingAt(seed, animal, cellX, cellZ, nightStart, motion);
+        rotationY = bedHeading;
+        const carryIn = before ? NIGHT_REST_CARRY_SECONDS : 0;
+        const restEnd = after ? motion.segmentSeconds + NIGHT_REST_CARRY_SECONDS : walkStart - TURN_SECONDS;
+        if (after || secondsIntoSegment < restEnd) {
+            idleAction = IDLE_ACTION.REST;
+            idleSeconds = secondsIntoSegment + carryIn;
+            idleDuration = restEnd + carryIn;
+        }
+        const turnProgress = (secondsIntoSegment - (walkStart - TURN_SECONDS)) / TURN_SECONDS;
+        if (!after && turnProgress > 0) {
+            // Morning: up, and turning toward the day's first walk (or the
+            // way the day starts out facing).
+            const nextHeading = legs.length > 0
+                ? headingBetween(legs[0][0], legs[0][1])
+                : arrivalHeadingAt(seed, animal, cellX, cellZ, k + 1, motion);
+            rotationY = lerpAngle(bedHeading, nextHeading, smoothstep(Math.min(turnProgress, 1)));
+        }
+    } else if (!walking) {
+        const arrivalHeading = arrivalHeadingAt(seed, animal, cellX, cellZ, k, motion);
         rotationY = arrivalHeading;
         // The idle window: from arrival until the animal starts turning
         // toward its next waypoint, so an idle action never overlaps a turn
@@ -343,7 +414,7 @@ export function animalPoseAt(seed, animal, timeSeconds) {
             // instead of snapping at the segment boundary.
             const nextHeading = legs.length > 0
                 ? headingBetween(legs[0][0], legs[0][1])
-                : arrivalHeadingAt(seed, animal, cellX, cellZ, k + 1, motion.wanderRadius);
+                : arrivalHeadingAt(seed, animal, cellX, cellZ, k + 1, motion);
             rotationY = lerpAngle(arrivalHeading, nextHeading, smoothstep(Math.min(turnProgress, 1)));
         }
     }
@@ -426,7 +497,8 @@ function hashString(text) {
 // id is part of the World document, so every replica that loads the World
 // sees it doing the same thing at the same moment. Time runs in the same
 // per-species segments as a wandering animal's: each one is a pause spent
-// on one IDLE_ACTION, then a turn in place to a new heading.
+// on one IDLE_ACTION, then a turn in place to a new heading; at night it
+// lies down (IDLE_ACTION.REST) until morning.
 export function stationaryAnimalPoseAt(seed, animalKey, species, timeSeconds) {
     if (typeof timeSeconds !== 'number' || !Number.isFinite(timeSeconds)) {
         throw new Error(`stationaryAnimalPoseAt requires a finite timeSeconds, got ${JSON.stringify(timeSeconds)}`);
@@ -437,21 +509,43 @@ export function stationaryAnimalPoseAt(seed, animalKey, species, timeSeconds) {
     const k = Math.floor(segments);
     const secondsIntoSegment = (segments - k) * motion.segmentSeconds;
     const headingAt = (segment) => hash3D(seed + ANGLE_SEED_OFFSET, key, 1, segment) * TWO_PI;
+    const phase = hash3D(seed + PHASE_SEED_OFFSET, key, 0, 0);
+    const restsIn = (segment) => isNightfallAt((segment - phase) * motion.segmentSeconds);
 
     const turnStart = motion.segmentSeconds - STATIONARY_TURN_SECONDS;
-    let rotationY = headingAt(k);
-    if (secondsIntoSegment >= turnStart) {
-        const progress = smoothstep((secondsIntoSegment - turnStart) / STATIONARY_TURN_SECONDS);
-        rotationY = lerpAngle(rotationY, headingAt(k + 1), progress);
-    }
-
     let idleAction = IDLE_ACTION.NONE;
     let idleSeconds = 0;
     let idleDuration = 0;
-    if (turnStart >= MIN_IDLE_SECONDS && secondsIntoSegment < turnStart) {
-        idleAction = idleActionFor(hash3D(seed + IDLE_SEED_OFFSET, key, 1, k), motion.idleChances);
-        idleSeconds = secondsIntoSegment;
-        idleDuration = turnStart;
+    let rotationY;
+    if (restsIn(k)) {
+        // At night it lies down where it stands, facing the way it faced at
+        // nightfall, the rest running on across segments as a wandering
+        // animal's does (animalPoseAt()).
+        const nightStart = nightStartOf(`${seed}:${key}:${motion.segmentSeconds}`, k, restsIn);
+        rotationY = headingAt(nightStart);
+        const carryIn = restsIn(k - 1) ? NIGHT_REST_CARRY_SECONDS : 0;
+        const after = restsIn(k + 1);
+        const restEnd = after ? motion.segmentSeconds + NIGHT_REST_CARRY_SECONDS : turnStart;
+        if (after || secondsIntoSegment < restEnd) {
+            idleAction = IDLE_ACTION.REST;
+            idleSeconds = secondsIntoSegment + carryIn;
+            idleDuration = restEnd + carryIn;
+        }
+        if (!after && secondsIntoSegment >= turnStart) {
+            const progress = smoothstep((secondsIntoSegment - turnStart) / STATIONARY_TURN_SECONDS);
+            rotationY = lerpAngle(rotationY, headingAt(k + 1), progress);
+        }
+    } else {
+        rotationY = headingAt(k);
+        if (secondsIntoSegment >= turnStart) {
+            const progress = smoothstep((secondsIntoSegment - turnStart) / STATIONARY_TURN_SECONDS);
+            rotationY = lerpAngle(rotationY, headingAt(k + 1), progress);
+        }
+        if (turnStart >= MIN_IDLE_SECONDS && secondsIntoSegment < turnStart) {
+            idleAction = idleActionFor(hash3D(seed + IDLE_SEED_OFFSET, key, 1, k), motion.idleChances);
+            idleSeconds = secondsIntoSegment;
+            idleDuration = turnStart;
+        }
     }
 
     return {

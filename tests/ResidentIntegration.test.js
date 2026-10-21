@@ -6,7 +6,12 @@ import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { Position } from '../core/document/Position.js';
 import { WorldResident } from '../core/world/WorldResident.js';
 import { RESIDENT_MOTION } from '../core/world/ResidentMotion.js';
-import { isResidentWalkClear, RESIDENT_COLLISION_RADIUS } from '../core/world/ResidentPath.js';
+import { isResidentWalkClear, isResidentGroundAt, RESIDENT_COLLISION_RADIUS } from '../core/world/ResidentPath.js';
+import { VillageLibrary } from '../core/library/VillageLibrary.js';
+import { moveInReadyMadeResident, isReadyMadeHome } from '../core/building/ReadyMadeHome.js';
+import { DEFAULT_MAX_STEP_HEIGHT } from '../core/building/BrickWalkability.js';
+import { SpatialBounds } from '../core/world/SpatialBounds.js';
+import { RESIDENT_OBSTACLE_QUERY_RADIUS } from '../application/world/ResidentRuntime.js';
 import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
 import { AVATAR_COLLISION_RADIUS } from '../core/avatar/AvatarCollision.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
@@ -38,9 +43,14 @@ import { assert } from './support/Assert.js';
 //              the 'R' key and the per-frame hand-off to the renderer
 //   Section E: ResidentFieldRenderer — drawn, removed, feet on the ground,
 //              one wave per approach
+//   Section F: the Village library's ready-made homes — their residents get
+//              out of a fenced garden, step indoors through a front door, and
+//              never walk through anything
 
 const SEED = DEFAULT_WORLD_SEED;
-const T = 1_759_000_000;
+// A daytime moment (a quarter of the way into the World's day): by night
+// animals and residents settle down (core/nature/Nightfall.js).
+const T = 1_758_999_000;
 
 // A home with dry, gentle ground all around it.
 function openHome() {
@@ -296,6 +306,69 @@ function runTests() {
         assert(gone.removed.length === 1 && field.getObject('r-1') === null, '36. A resident out of range is removed');
         field.sync([standing]);
         assert(field.clear().length === 1 && field.trackedResidentIds().length === 0, '37. clear() hands back everything to remove');
+    }
+
+    // -------------------------------------------------------------
+    // Section F — ready-made homes
+    // -------------------------------------------------------------
+    {
+        // Somewhere with dry, gentle land all round, for a whole house.
+        let offset = null;
+        for (let x = 0; x < 8000 && !offset; x += 17) {
+            let ok = true;
+            for (let dx = -14; dx <= 14 && ok; dx++) {
+                for (let dz = -14; dz <= 14 && ok; dz++) {
+                    ok = isResidentGroundAt(SEED, x + dx, 17 + dz) && isResidentWalkClear(SEED, { x: x + dx, z: 17 + dz }, { x: x + dx + 1, z: 17 + dz });
+                }
+            }
+            if (ok) offset = { x, y: 0, z: 17 };
+        }
+        assert(offset, '(fixture) open land for a house');
+        const outcomes = new Map();
+        for (const structure of VillageLibrary.structures.filter(isReadyMadeHome)) {
+            const world = new World({ id: `w-${structure.id}` });
+            const building = new Building({ creator: 'alice' });
+            for (const brick of structure.bricks) {
+                building.addBrick(new Brick({ definitionId: brick.definitionId, position: brick.position.clone(), rotation: brick.rotation, tilt: brick.tilt || 0 }));
+            }
+            world.addBuilding(building);
+            const resident = moveInReadyMadeResident(world, structure, registry, () => `resident-of-${structure.id}`);
+            if (!resident) continue;
+            const loaded = new Map([[world.id, documentWith(world)]]);
+            // As the session gathers them (application/worldNavigation/residentMethods.js).
+            const obstacles = new AvatarMovementConstraint({
+                loadedDocuments: loaded, getWorldPosition: () => offset, brickRegistry: registry,
+                queryRadius: RESIDENT_OBSTACLE_QUERY_RADIUS, maxStepHeight: DEFAULT_MAX_STEP_HEIGHT
+            });
+            const obstaclesNear = (position) => obstacles.obstaclesNear(position, { supportHeight: 0, avatarRadius: RESIDENT_COLLISION_RADIUS });
+            const runtime = new ResidentRuntime({ loadedDocuments: loaded, getWorldPosition: () => offset, obstaclesNear, seed: SEED });
+            const homeAt = { x: resident.position.x + offset.x, z: resident.position.z + offset.z };
+            const boxes = obstaclesNear({ x: homeAt.x, y: 0, z: homeAt.z });
+            const bounds = SpatialBounds.fromBricks(structure.bricks, registry);
+            const indoors = (p) => p.x > bounds.min.x + offset.x + 0.5 && p.x < bounds.max.x + offset.x - 0.5
+                && p.z > bounds.min.z + offset.z + 0.5 && p.z < bounds.max.z + offset.z - 0.5;
+            let previous = null;
+            let away = 0;
+            let inside = 0;
+            let frames = 0;
+            for (let t = 0; t < 800; t += 0.25) {
+                const [pose] = runtime.posesNear(homeAt, 20, T + t);
+                frames++;
+                if (Math.hypot(pose.x - homeAt.x, pose.z - homeAt.z) > 2) away++;
+                if (indoors(pose)) inside++;
+                if (previous) {
+                    assert(isResidentWalkClear(SEED, previous, pose, { boxes, radius: RESIDENT_COLLISION_RADIUS - 1e-6 }),
+                        `56. A ready-made home's resident never walks through anything (${structure.id})`);
+                }
+                previous = pose;
+            }
+            outcomes.set(structure.id, { away: away / frames, inside: inside / frames });
+        }
+        assert(outcomes.size >= 3, '(fixture) the Village library\'s homes come lived in');
+        assert(outcomes.get('village:garden_cottage').away > 0.5,
+            `57. The garden cottage's resident gets out of its fenced garden and about (${outcomes.get('village:garden_cottage').away.toFixed(2)} of the time more than 2 m from home)`);
+        assert(outcomes.get('village:large_house').inside > 0,
+            '58. The large house\'s resident steps indoors through its front door, under the wall above it');
     }
 
     console.log('✅ All Resident Integration tests passed.');

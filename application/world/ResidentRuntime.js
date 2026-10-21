@@ -1,5 +1,5 @@
-import { residentPoseAt, RESIDENT_MOTION } from '../../core/world/ResidentMotion.js';
-import { isResidentWalkClear, RESIDENT_COLLISION_RADIUS } from '../../core/world/ResidentPath.js';
+import { residentPoseAt, residentStaysHomeAt, RESIDENT_MOTION } from '../../core/world/ResidentMotion.js';
+import { buildResidentNavigation } from '../../core/world/ResidentNavigation.js';
 import { treeCollisionGeometryInRegion } from '../../core/nature/TreeCollisionGeometry.js';
 import { DEFAULT_WORLD_SEED } from '../../core/nature/TerrainHeightField.js';
 import { createSecureId } from '../../core/document/createId.js';
@@ -30,6 +30,11 @@ const REFRESH_SPACING_MS = 50;
 // A cap on cached residents, far above MAX_RENDERED_RESIDENTS.
 const MAX_CACHED_PATHS = 512;
 
+// How many ids newResidentIdNear() poses in the World when none of those
+// it tried stays home: each pose plans the resident's ways, which asks
+// about every pair of its spots.
+const FALLBACK_TRIES = 8;
+
 // Obstacles are gathered this far beyond the wander radius.
 const OBSTACLE_MARGIN = 1;
 
@@ -41,11 +46,13 @@ const OBSTACLE_MARGIN = 1;
 // stored or synced: each resident is found in `loadedDocuments`, its home
 // lifted into shared space by its document's position, and its pose
 // computed by core/world/ResidentMotion.js from the clock. What this class adds
-// is the World's geometry, as the `isClear` that motion needs: the brick
-// boxes an avatar on the ground would bump into (`obstaclesNear`, usually
+// is the World's geometry, as the navigation that motion needs
+// (core/world/ResidentNavigation.js): the brick boxes an avatar on the ground
+// would bump into (`obstaclesNear`, usually
 // AvatarMovementConstraint#obstaclesNear) and the trees, gathered once per
-// resident around its home and refreshed every OBSTACLE_REFRESH_MS, with
-// every answer memoized until then. Both only depend on World content, so
+// resident around its home and gathered again every OBSTACLE_REFRESH_MS; the
+// navigation, and every way found in it, is kept until the bricks differ.
+// Both only depend on World content, so
 // every replica that has loaded the same Worlds walks each resident the
 // same way. Right after an edit, replicas can briefly disagree, until
 // both have the edit and have refreshed.
@@ -62,7 +69,7 @@ export class ResidentRuntime {
         this._obstaclesNear = obstaclesNear;
         this._seed = seed;
         this._now = now;
-        this._paths = new Map(); // resident id -> { homeX, homeZ, gatheredAt, isClear }
+        this._paths = new Map(); // resident id -> { homeX, homeZ, gatheredAt, boxes, navigation }
         this._lastRefreshAt = -Infinity;
     }
 
@@ -92,7 +99,7 @@ export class ResidentRuntime {
     // Where `entry` (from residents()) is at `timeSeconds`: residentPoseAt()'s
     // pose, plus the resident's id, World and home (shared space).
     poseOf(entry, timeSeconds) {
-        const pose = residentPoseAt({ id: entry.id, home: entry.home }, timeSeconds, { isClear: this._isClearFor(entry) });
+        const pose = residentPoseAt({ id: entry.id, home: entry.home }, timeSeconds, { navigation: this._navigationFor(entry) });
         return { id: entry.id, worldId: entry.worldId, documentId: entry.documentId, home: { ...entry.home }, ...pose };
     }
 
@@ -122,16 +129,23 @@ export class ResidentRuntime {
     // `timeSeconds`, is standing within `radius` of home: where a resident
     // walks is fixed by its id (core/world/ResidentMotion.js), so choosing the id
     // is how a resident added at your feet appears at your feet, instead of
-    // wherever its day would otherwise have taken it. Tries up to `tries`
-    // fresh ids and keeps the nearest standing one; one within `radius` is
-    // found after a few dozen tries on open ground.
+    // wherever its day would otherwise have taken it. An id that spends the
+    // whole segment under way at home (residentStaysHomeAt()) needs no look at
+    // the World at all, and one turns up within a few dozen tries by day (at
+    // once at night); failing that, up to FALLBACK_TRIES of the ids tried are
+    // posed in the World and the nearest standing one kept.
     newResidentIdNear(home, timeSeconds, { radius = 1.5, tries = 256, mintId = createSecureId } = {}) {
-        const isClear = this._buildIsClear(home);
-        let best = null;
-        let bestDistance = Infinity;
+        const tried = [];
         for (let i = 0; i < tries; i++) {
             const id = mintId();
-            const pose = residentPoseAt({ id, home }, timeSeconds, { isClear });
+            if (residentStaysHomeAt(id, timeSeconds)) return id;
+            if (tried.length < FALLBACK_TRIES) tried.push(id);
+        }
+        const navigation = this._buildNavigation(home);
+        let best = null;
+        let bestDistance = Infinity;
+        for (const id of tried) {
+            const pose = residentPoseAt({ id, home }, timeSeconds, { navigation });
             const distance = flatDistance(pose, home) + (pose.moving ? radius : 0);
             if (distance < bestDistance) {
                 best = id;
@@ -147,7 +161,7 @@ export class ResidentRuntime {
         this._paths.clear();
     }
 
-    _isClearFor(entry) {
+    _navigationFor(entry) {
         const now = this._now();
         let path = this._paths.get(entry.id);
         const stale = path && now - path.gatheredAt >= OBSTACLE_REFRESH_MS
@@ -156,30 +170,45 @@ export class ResidentRuntime {
             && now - this._lastRefreshAt >= REFRESH_SPACING_MS;
         if (!path || path.homeX !== entry.home.x || path.homeZ !== entry.home.z || stale) {
             if (stale) this._lastRefreshAt = now;
+            const boxes = this._boxesNear(entry.home);
+            // The same bricks as before: keep the same navigation, so the
+            // resident keeps the ways it has already found
+            // (core/world/ResidentMotion.js keeps them per navigation).
+            if (stale && path.homeX === entry.home.x && path.homeZ === entry.home.z && sameBoxes(path.boxes, boxes)) {
+                path.gatheredAt = now;
+                return path.navigation;
+            }
             // Removed residents never ask again; keep the cache from growing.
             if (this._paths.size >= MAX_CACHED_PATHS) this._paths.clear();
-            path = { homeX: entry.home.x, homeZ: entry.home.z, gatheredAt: now, isClear: this._buildIsClear(entry.home) };
+            path = { homeX: entry.home.x, homeZ: entry.home.z, gatheredAt: now, boxes, navigation: this._buildNavigation(entry.home, boxes) };
             this._paths.set(entry.id, path);
         }
-        return path.isClear;
+        return path.navigation;
     }
 
-    _buildIsClear(home) {
-        const reach = RESIDENT_MOTION.wanderRadius + OBSTACLE_MARGIN;
-        const boxes = this._obstaclesNear({ x: home.x, y: 0, z: home.z }) || [];
-        const circles = treeCollisionGeometryInRegion(this._seed, home.x - reach, home.z - reach, home.x + reach, home.z + reach);
-        const seed = this._seed;
-        const memo = new Map();
-        return (from, to) => {
-            const key = `${from.x},${from.z},${to.x},${to.z}`;
-            let clear = memo.get(key);
-            if (clear === undefined) {
-                clear = isResidentWalkClear(seed, from, to, { boxes, circles, radius: RESIDENT_COLLISION_RADIUS });
-                memo.set(key, clear);
-            }
-            return clear;
-        };
+    _boxesNear(home) {
+        return this._obstaclesNear({ x: home.x, y: 0, z: home.z }) || [];
     }
+
+    // The way round everything near `home`: the bricks an avatar on the
+    // ground would bump into, and the trees.
+    _buildNavigation(home, boxes = this._boxesNear(home)) {
+        const reach = RESIDENT_MOTION.wanderRadius + OBSTACLE_MARGIN;
+        const circles = treeCollisionGeometryInRegion(this._seed, home.x - reach, home.z - reach, home.x + reach, home.z + reach);
+        return buildResidentNavigation({ home, reach: RESIDENT_MOTION.wanderRadius, seed: this._seed, boxes, circles });
+    }
+}
+
+// Whether two gatherings of obstacle boxes are the same boxes, in the same
+// order (a gathering walks the same Worlds the same way every time).
+function sameBoxes(a, b) {
+    if (!a || !b || a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+        const p = a[i];
+        const q = b[i];
+        if (p.min.x !== q.min.x || p.min.z !== q.min.z || p.max.x !== q.max.x || p.max.z !== q.max.z) return false;
+    }
+    return true;
 }
 
 // The query radius an obstacle source should gather within, around a home:

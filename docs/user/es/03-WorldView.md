@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: a51a7c2c7ea79eeb -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: ddd5e492a88450c7 -->
 # 03 — Vista del mundo
 
 <!-- languages -->
@@ -146,6 +146,8 @@ animales, forman parte del Mundo: los agrega su autor. Las casas listas
 traen un habitante junto a la puerta, también las que rodean la plaza del
 reto. En su propia construcción, **R** quita uno. Consulte
 [Habitantes](06-AvatarsAndPresence.md#habitantes).
+
+**De noche** el Mundo se aquieta. Los animales vuelven a su propio sitio y se echan hasta la mañana; si se acerca a uno, se levanta para observarlo. Los habitantes vuelven a casa al anochecer y se quedan allí hasta el amanecer.
 
 **Las construcciones tenues y transparentes** son construcciones que otras
 personas anunciaron cerca de usted y que este dispositivo no ha aceptado.

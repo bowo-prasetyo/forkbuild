@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 2d751aee5c2fa769 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: fdcc7c250da899ce -->
 # 06 — Avatares y presencia
 
 <!-- languages -->
@@ -384,6 +384,8 @@ detienen a mirar alrededor. Todos ven a cada habitante en el mismo lugar en
 el mismo momento, porque dónde está sale del Mundo y del reloj. No se envía
 nada entre jugadores. Usted choca con un habitante como con un árbol, pero
 él no se aparta, así que uno puede atravesarlo mientras usted está quieto.
+
+**Cómo encuentran el camino.** Un habitante sale por una puerta, dobla la esquina de su casa y sigue el camino hasta los sitios que le gustan, rodeando lo que se interponga. Cuando cae la noche, vuelve a casa y se queda allí hasta la mañana.
 
 **Lo notan.** Cuando se acerca a unos pocos pasos, delante de un habitante
 o a su lado, se vuelve hacia usted. Si llega justo a su lado, saluda con la

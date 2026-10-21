@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: a51a7c2c7ea79eeb -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: ddd5e492a88450c7 -->
 # 03 — Visão do mundo
 
 <!-- languages -->
@@ -141,6 +141,8 @@ contrário dos animais, eles fazem parte do Mundo: quem o fez os coloca.
 As casas prontas vêm com um morador perto da porta, inclusive as que ficam
 em volta da praça do desafio. Na sua própria construção, **R** remove um.
 Veja [Moradores](06-AvatarsAndPresence.md#moradores).
+
+**À noite** o Mundo sossega. Os animais voltam para o próprio lugar e se deitam até de manhã; chegue perto de um e ele se levanta para observar você. Os moradores voltam para casa ao anoitecer e ficam lá até o amanhecer.
 
 **Construções fracas e transparentes** são construções que outras pessoas
 anunciaram perto de você e que este dispositivo não aceitou. Elas somem de

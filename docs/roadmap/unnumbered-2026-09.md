@@ -8446,3 +8446,39 @@ off.
 - Not done: peers with different Worlds loaded can disagree about a displaced animal until both have them, as with
   residents; an animal is left out rather than steered round a build; a peer on an older version still shows its own
   clock and its animals' old river crossings.
+
+
+## Residents find their way, and the World settles down at night (unnumbered, 2026-10-21)
+
+**Two more findings from the game AI audit.** A resident could only go where it could see from home, and the wall
+over a door counted as part of the doorway, so a resident in a house never got out, and the Village's garden
+cottage's resident spent its day pacing its fenced garden (walking 3% of the time, more than 2 m from home 6%). And
+day and night changed the sky but nobody in it. Pillar served: walk inside it with friends (a place that feels lived
+in). How a player notices: residents step out of their front doors and stroll down the lane; at dusk they walk home,
+and deer and rabbits lie down for the night.
+
+- core/world/ResidentNavigation.js (new): a navigation grid round a resident's home (0.125 m cells over its 6 m
+  disc, bricks lower than 1.8 m, trunks and the land, kept per home), shortest ways over it and pulled tight against
+  the exact geometry.
+- core/world/ResidentMotion.js: ten spots per resident and home; ways from the navigation, with a turn at each corner;
+  only spots whose way from home fits half a segment, so every walk fits one (segments now 20 s); home by night.
+  `residentStaysHomeAt()` for choosing a new resident's id without building a navigation.
+- core/world/ResidentPath.js: `RESIDENT_HEADROOM` (1.8 m): a brick over a resident's head is not in its way.
+- application/world/ResidentRuntime.js: builds the navigation from the gathered bricks and trees, and keeps it (and
+  every way found in it) while the bricks stay the same.
+- core/nature/Nightfall.js (new): the World's night, from the deepening dusk until dawn, later in summer.
+- core/nature/WildlifeMotion.js: by night a wild animal's waypoint is its spawn point and it rests
+  (`IDLE_ACTION.REST`), lying down at nightfall and getting up at dawn; animals that stay put rest too.
+  renderer/AnimalIdle.js draws resting as lying low, breathing.
+- docs/user/03 and 06 in every language; docs/Architecture.md; docs/principles/vehicles.md (one new principle).
+- Tests: tests/Nightfall.test.js (when night falls; animals back at their spot and lying still the night through,
+  never up between segments, continuous into the night and out of it; animals that stay put; how resting looks and
+  that it gets up when you come close); tests/ResidentMotion.test.js (out through a door under its lintel, never
+  through a wall, not out of a walled-up door or under a low beam; home from nightfall to dawn; walking home at
+  dusk); tests/ResidentIntegration.test.js (the Village's ready-made homes with the session's own obstacle gathering:
+  never through anything, the garden cottage's resident out and about, the large house's stepping indoors). Fixtures
+  that sampled wildlife or residents at a moment that is now night moved to daytime.
+- Measured on the Village's ready-made homes, 800 s of daylight each: the garden cottage's resident now walks 13% of
+  the time and is more than 2 m from home 87% of it; the large house's goes indoors 10% of the time (never before).
+- Not done: an animal that stays put after being released on a build still lies where it stands; residents do not
+  open doors (a standing door has no collision, as for avatars); night does not change what a resident says.

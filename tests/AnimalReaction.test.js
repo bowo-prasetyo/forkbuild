@@ -26,7 +26,9 @@ import { assert } from './support/Assert.js';
 //              never a change to where an animal is
 
 const SEED = DEFAULT_WORLD_SEED;
-const T0 = 1_759_000_000;
+// A daytime moment (a quarter of the way into the World's day): by night
+// animals and residents settle down (core/nature/Nightfall.js).
+const T0 = 1_758_999_000;
 // A standing animal mid-pause, with no idle action of its own.
 const SETTLED = Object.freeze({ rotationY: 0, idleSeconds: 3, idleDuration: 6 });
 // A walking animal (no idle window).
