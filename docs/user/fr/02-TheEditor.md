@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: f36d402077c24e76 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 30a0033d559cc17e -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -804,6 +804,26 @@ buissons, rochers et pelouse), *tout*, ou ce qui est sélectionné (*ceci*,
 les jours (*rouge*, *gris foncé*, *bleu clair*). Cela marche dans toutes
 les langues de ForkBuild, sur votre appareil ; tout le reste cherche parmi
 les actions comme avant.
+
+## Dire une commande (voix)
+
+Appuyez sur `V`, ou sur **🎤 Voix** en haut de la vue 3D, et dites ce que
+vous voulez : *peins le toit en rouge*, *sélectionne toutes les fenêtres*,
+*supprime les arbres*, *annuler*. Appuyez sur `V` (ou **Arrêter**) quand
+vous avez fini ; ForkBuild dit ce qu’il a entendu et ce qu’il a fait, en une
+seule étape annulable. Il comprend les mêmes demandes que
+[Des commandes avec vos mots](#des-commandes-avec-vos-mots), et toute action
+dite par son nom. Une question (*comment inviter un ami ?*) propose
+**Demander au guide**.
+
+La première fois, il explique ce que télécharge l’activation de la voix,
+environ 70 Mo une seule fois : un petit modèle vocal (Whisper) depuis
+Hugging Face et son moteur depuis jsDelivr. Ils restent dans ce navigateur,
+si bien que la voix marche ensuite hors ligne. Ce que vous dites est
+enregistré et compris sur votre appareil, et n’est jamais envoyé (voir
+[Confidentialité](Privacy.md)). **Désactiver la voix** et **Supprimer le
+modèle vocal** se trouvent dans le panneau de la voix après chaque commande.
+Il entend la langue dans laquelle ForkBuild est affiché.
 
 ## Commandes de la caméra
 

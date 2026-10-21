@@ -8333,3 +8333,46 @@ brick?* opens on the section about it; in the Editor's command palette, a questi
   sections on moving bricks and on undo; the library.
 - Not done: a question worded unlike the guide (*change my name*, when the guide says *Choose a name*) can miss; the
   answer is the guide's own words, never a summary of them.
+
+
+## Voice building: speak a command (unnumbered, 2026-10-21)
+
+**The first feature that needs a real model.** Saying *paint the roof red* or *undo* in the Editor does it, for people
+who find a mouse and keyboard hard, for children who can't type yet, and for anyone with their hands full. Pillar
+served: building feels joyful. How a player notices: **🎤 Voice** at the top of the 3D view, and `V`.
+
+Decided with the owner (2026-10-21): Whisper run on the device rather than the browser's own speech recognition (which
+sends audio to Google or Apple, and is missing from Firefox); the model from Hugging Face, and the ONNX runtime's 27 MB
+WebAssembly engine from jsDelivr, pinned and hash-checked, rather than either committed to the repository. Both are
+downloaded only when a player turns voice on, after being told what and from where (about 70 MB once), and named on the
+Privacy page.
+
+- application/voice/SpeechRuntime.js (new): loads transformers.js only when voice is turned on; fetches the engine from
+  jsDelivr, refuses it unless its SHA-256 is the pinned one, keeps it in Cache Storage and gives it to the runtime as
+  bytes (`wasmBinary`), with the engine's loader from vendor/onnxruntime-web/ and `useWasmCache` off, since
+  transformers.js would otherwise load that loader from a blob: URL the policy forbids. Whisper tiny, quantized, on
+  WebAssembly, one thread; `remove()` deletes the engine and the model.
+- ui/voice/recordVoice.js (new): the microphone to mono 16 kHz samples, at most eight seconds, the microphone let go as
+  soon as recording stops. core/voice/Transcript.js (new): the model's noise and punctuation cleaned off, the app's
+  language as Whisper's, an action said by its exact name.
+- ui/views/editorView/useVoiceCommands.js and ui/components/VoicePanel.js (new): asking before the first download,
+  progress, listening, what was heard and what was done (a plain command, an action, or **Ask the guide** for a
+  question), **Turn voice off** and **Remove the speech model**; the choice to turn voice on is kept on the device.
+  application/editor/EditorActionRegistry.js: **Speak a Command** on `V`. See inside and Voice share a small toolbar
+  over the 3D view.
+- scripts/vendor.mjs: packages taken from their published tarballs by `npm pack` (no install, no install scripts),
+  pinned by integrity and each file's SHA-256, which `--check` compares offline: transformers.js's browser build and the
+  ONNX runtime's loader. Their npm package would otherwise put sharp and onnxruntime-node in every `npm ci`.
+- index.html, scripts/build.mjs: `'wasm-unsafe-eval'` in the app's Content Security Policy (WebAssembly only, never
+  `eval`); the embed keeps `script-src 'self'`. The speech library isn't kept on install, only once used; the engine's
+  loader is published as it is. tests/ContentSecurityPolicy.test.js and tests/run-bundle.mjs say so.
+- 27 messages in every language; docs/user/02 (Speak a command), ControlsReference (`V`) and the Privacy page in every
+  language; docs/Architecture.md, docs/Deployment.md.
+- Tests: transcripts; the pinned engine matching vendor/; the runtime with stand-ins for the network, the cache and
+  the model (the engine fetched once, checked, kept, refused when it isn't the pinned one, given as bytes; Whisper
+  loaded as configured; removed); the Editor's voice states; the action on `V`. By hand, in Chromium under the published
+  policy: a real ONNX inference on the same engine build, and turning voice on as far as the model download, which this
+  sandbox can't reach.
+- Not done: recognising real speech was not tried here, since this sandbox can't download the model; Whisper tiny is
+  weakest in the languages it was least trained on; recognition runs on the page's own thread, so the Editor pauses for
+  a moment while it works; only the Editor listens, not World View.

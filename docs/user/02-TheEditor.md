@@ -710,6 +710,23 @@ everyday ones (*red*, *dark grey*, *light blue*). It works in every
 language ForkBuild speaks, on your device; anything else you type searches
 the actions as before.
 
+## Speak a command (voice)
+
+Press `V`, or **🎤 Voice** at the top of the 3D view, and say what you want:
+*paint the roof red*, *select all the windows*, *delete the trees*, *undo*.
+Press `V` (or **Stop**) when you're done; ForkBuild says what it heard and
+what it did, in one step you can undo. It understands the same requests as
+[Commands in plain words](#commands-in-plain-words), and any action said by
+its name. A question (*how do I invite a friend?*) offers **Ask the guide**.
+
+The first time, it explains what turning voice on downloads, about 70 MB
+once: a small speech model (Whisper) from Hugging Face and its engine from
+jsDelivr. They stay in this browser, so voice works offline afterwards. What
+you say is recorded and understood on your device and never sent anywhere
+(see [Privacy](../Privacy.md)). **Turn voice off** and **Remove the speech
+model** are in the voice panel after any command. It hears the language
+ForkBuild is shown in.
+
 ## Camera controls
 
 - **Drag** — orbit around the scene

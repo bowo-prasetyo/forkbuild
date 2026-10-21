@@ -669,6 +669,20 @@ export function createStandardActions({ session, feedback, ui = {} }) {
                 }
             }
         }),
+        // Voice building: starts listening for a spoken command, and stops
+        // (ui/views/editorView/useVoiceCommands.js); V for "voice".
+        define({
+            id: 'ui.voice',
+            category: 'interface',
+            shortcut: 'V',
+            keys: [{ key: 'v' }],
+            enabled: () => typeof ui.toggleVoice === 'function',
+            execute: () => {
+                if (typeof ui.toggleVoice === 'function') {
+                    ui.toggleVoice();
+                }
+            }
+        }),
         // Brings back the guided first build after it was hidden.
         define({
             id: 'ui.firstBuildGuide',

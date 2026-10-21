@@ -877,18 +877,60 @@
     border-color: transparent;
 }
 
-/* See inside (EditorView.js): over the viewport, top left. */
-.editor-see-inside {
+/* See inside and Voice (EditorView.js): over the viewport, top left. */
+.editor-view-tools {
     position: absolute;
     top: 1rem;
     left: 1rem;
     z-index: 14;
+    display: flex;
+    gap: 0.4rem;
+}
+
+.editor-see-inside,
+.editor-voice-button {
     background: rgba(var(--overlay-rgb), 0.93);
     color: var(--ink);
     border: 1px solid var(--line-strong);
 }
 
-.editor-see-inside.action-btn--active {
+.editor-see-inside.action-btn--active,
+.editor-voice-button.action-btn--active {
     border-color: var(--accent);
     color: var(--accent-ink);
+}
+
+/* Voice building's panel (ui/components/VoicePanel.js), under the buttons. */
+.editor-voice {
+    position: absolute;
+    left: 16px;
+    top: 56px;
+    z-index: 31;
+    max-width: min(440px, calc(100% - 32px));
+    padding: 10px 12px;
+    background: var(--surface);
+    color: var(--ink);
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+}
+
+.editor-voice-body p {
+    margin: 0 0 0.5rem;
+    line-height: 1.45;
+}
+
+.editor-voice-quiet {
+    color: var(--ink-soft);
+    font-size: 0.9em;
+}
+
+.editor-voice-listening::before {
+    content: '● ';
+    color: var(--accent);
+}
+
+.editor-voice-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
 }

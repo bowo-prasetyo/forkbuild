@@ -60,6 +60,9 @@ const RUNTIME_VUE = 'vendor/vue/dist/vue.runtime.esm-browser.prod.js';
 // language, which Help reads (application/help/GuideLibrary.js). A directory
 // ends in '/'.
 const PUBLISHED = ['index.html', 'embed.html', 'manifest.webmanifest', 'favicon.svg', 'LICENSE', 'assets/',
+    // Voice building's speech engine loads this itself, by its address
+    // (application/voice/SpeechRuntime.js), so it is served as it is.
+    'vendor/onnxruntime-web/ort-wasm-simd-threaded.asyncify.mjs',
     'scripts/steem-threads/index.html', 'scripts/steem-threads/content-check.html', 'scripts/steem-threads/page.css'];
 const PUBLISHED_PATTERN = /^vendor\/[^/]+\/LICENSE$|^docs\/user\/(?:[A-Za-z-]+\/)?[A-Za-z0-9_-]+\.md$/;
 // The Steem operator pages' scripts, bundled to the paths their pages load.
@@ -69,6 +72,9 @@ const APP_SHELL = ['index.html', 'manifest.webmanifest', 'favicon.svg', 'assets/
     'assets/icons/icon-maskable-512.png', 'assets/icons/apple-touch-icon.png', 'assets/icons/logo.svg', 'assets/icons/logo-mark.svg'];
 // Translations are kept once used rather than on install: only one is needed.
 const TRANSLATION_ENTRY = /^ui\/i18n\/messages\/[^/]+\.js$/;
+// Voice building's speech library is kept once voice is turned on, not on
+// install: most visitors never use it.
+const VOICE_ENTRY = /^vendor\/transformers\//;
 
 // Resolves bare specifiers the way the browser does, through index.html's
 // import map, so there is one list of what 'vue' or 'three/addons/…' means.
@@ -215,7 +221,7 @@ export async function build(outdir = path.join(ROOT, 'dist'), { developmentVue =
         ...APP_SHELL,
         relative(stylesheet),
         ...Object.keys(outputs)
-            .filter((file) => file.endsWith('.js') && !TRANSLATION_ENTRY.test(outputs[file].entryPoint || ''))
+            .filter((file) => file.endsWith('.js') && !TRANSLATION_ENTRY.test(outputs[file].entryPoint || '') && !VOICE_ENTRY.test(outputs[file].entryPoint || ''))
             .map(relative)
             .sort()
     ];
