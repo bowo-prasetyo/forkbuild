@@ -8535,3 +8535,31 @@ whose bytes differ. Pillar served: anyone can remix it (a model nobody can swap 
   is now asked for at the commit's.
 - Not done: the weights were not downloaded here, so a full load of the pinned model in a browser was not tried; say
   a command once after release.
+
+
+## Residents see an edit made nearby at once, heights and all (unnumbered, 2026-10-21)
+
+**Finding #1 of the second game AI audit.** A resident kept its navigation while the bricks gathered round its home
+every 2 s had the same footprints, but heights were not compared: a brick raised over a resident's head (a lintel
+lifted to make a doorway) or lowered into its way changed nothing until something else nearby did. And
+`ResidentRuntime#invalidate()` and `WildlifeDisplacement#invalidate()` existed for "this session's own edit" but
+nothing called them, so an edit made in World View waited for the timed refresh like anyone else's. Pillar served:
+walk inside it with friends (residents that walk round what was just built, not through it).
+
+- application/world/ResidentRuntime.js: `sameBoxes()` compares heights too. `invalidate()` expires every resident's
+  gathered bricks instead of forgetting them: the next resident asked about gathers again at once, the rest a turn
+  (50 ms) apart as stale ones already were, so a crowd next to a large build never refreshes in one frame, and a
+  resident whose bricks did not change keeps its navigation and the ways it found.
+- application/world/WildlifeDisplacement.js: `invalidate()` expires tiles the same way.
+- application/world/WorldNavigationSession.js: `_worldContentChanged()` invalidates both, on every command run,
+  undone or redone in a World this session holds, and after `restoreHistoryAt()`
+  (application/worldNavigation/documentHistoryMethods.js). A collaborator's edit is applied straight to the document
+  and still waits for the 2 s refresh.
+- docs/Architecture.md.
+- Tests: tests/ResidentIntegration.test.js (a wall's footprint raised over a resident's head opens a way and lowered
+  again closes it; the same bricks keep the same navigation; invalidate() looks again at once even right after a
+  timed refresh, one resident per turn, keeping the navigation when nothing changed; an edit in World View, its undo
+  and redo invalidate residents and wild animals). tests/WildlifeDisplacement.test.js's "invalidate() takes a fresh
+  look at once" holds as before.
+- Not done: a resident whose navigation changes mid-walk still jumps to where its new way puts it (finding #2), and a
+  displaced animal still vanishes without a fade (finding #3).

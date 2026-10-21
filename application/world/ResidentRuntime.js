@@ -188,9 +188,14 @@ export class ResidentRuntime {
         return best;
     }
 
-    // Forget cached obstacles, e.g. after this session's own edit.
+    // Expire every resident's gathered obstacles, e.g. after this session's
+    // own edit: the next resident asked about gathers again at once, the rest
+    // on their turns, REFRESH_SPACING_MS apart as any stale ones are, so a
+    // crowd never refreshes in one frame, and a resident whose bricks did not
+    // change keeps its navigation.
     invalidate() {
-        this._paths.clear();
+        for (const path of this._paths.values()) path.gatheredAt = -Infinity;
+        this._lastRefreshAt = -Infinity;
     }
 
     _navigationFor(entry) {
@@ -232,13 +237,16 @@ export class ResidentRuntime {
 }
 
 // Whether two gatherings of obstacle boxes are the same boxes, in the same
-// order (a gathering walks the same Worlds the same way every time).
+// order (a gathering walks the same Worlds the same way every time). Heights
+// count too: a brick raised over a resident's head, or lowered into its way
+// (core/world/ResidentPath.js#isInResidentWay), opens or closes a way.
 function sameBoxes(a, b) {
     if (!a || !b || a.length !== b.length) return false;
     for (let i = 0; i < a.length; i++) {
         const p = a[i];
         const q = b[i];
-        if (p.min.x !== q.min.x || p.min.z !== q.min.z || p.max.x !== q.max.x || p.max.z !== q.max.z) return false;
+        if (p.min.x !== q.min.x || p.min.y !== q.min.y || p.min.z !== q.min.z
+            || p.max.x !== q.max.x || p.max.y !== q.max.y || p.max.z !== q.max.z) return false;
     }
     return true;
 }
