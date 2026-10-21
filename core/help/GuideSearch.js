@@ -30,12 +30,38 @@ const COMMON_SHARE = 1 / 6;
 const SNIPPET_LENGTH = 320;
 export const GUIDE_RESULTS = 5;
 
+// Text with its HTML tags left out, as GitHub shows it: a '<' never
+// survives, even in a malformed tag (as scripts/check-doc-translations.mjs
+// reads headings).
+function withoutTags(text) {
+    let result = '';
+    let inTag = false;
+    for (const character of text) {
+        if (character === '<') inTag = true;
+        else if (character === '>' && inTag) inTag = false;
+        else if (!inTag) result += character;
+    }
+    return result;
+}
+
+// Markdown without the parts from `open` to `close` (comments, the language
+// links), each left out whole; an unclosed one leaves out the rest.
+function without(text, open, close) {
+    let result = '';
+    let from = 0;
+    for (let start = text.indexOf(open); start !== -1; start = text.indexOf(open, from)) {
+        result += text.slice(from, start);
+        const end = text.indexOf(close, start + open.length);
+        if (end === -1) return result;
+        from = end + close.length;
+    }
+    return result + text.slice(from);
+}
+
 // The anchor GitHub gives a heading (as scripts/check-doc-translations.mjs
 // works them out for its link check).
 export function headingSlug(heading) {
-    const text = heading
-        .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
-        .replace(/<[^>]*>?/g, '')
+    const text = withoutTags(heading.replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1'))
         .replace(/[`*]/g, '')
         .replace(/(^|\s)_+|_+(\s|$)/g, '$1$2');
     return text.trim().toLowerCase().replace(/[^\p{L}\p{M}\p{N}\p{Pc} -]/gu, '').replace(/ /g, '-');
@@ -44,14 +70,13 @@ export function headingSlug(heading) {
 // Markdown as the words a reader sees: no links' addresses, pictures, code
 // marks, emphasis, tags, table rules or list marks.
 export function plainText(markdown) {
-    return markdown
+    return withoutTags(markdown)
         .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
         .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
         .replace(/`([^`]*)`/g, '$1')
         .replace(/\*\*([^*]+)\*\*/g, '$1')
         .replace(/(^|[^\w*])\*([^*\n]+)\*(?!\w)/g, '$1$2')
         .replace(/(^|\W)_([^_\n]+)_(?!\w)/g, '$1$2')
-        .replace(/<[^>]*>?/g, '')
         .replace(/^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$/gm, '')
         .replace(/^\s*\|\s?|\s?\|\s*$/gm, '')
         .replace(/\s\|\s/g, ' — ')
@@ -88,9 +113,7 @@ function blockText(block) {
 // up to the next heading, as plain text, a list or table one line an item. Comments and code blocks are left
 // out; anchors repeat with -1, -2 … as GitHub's do.
 export function guideSections(markdown, file) {
-    const source = String(markdown || '')
-        .replace(/<!-- languages -->[\s\S]*?<!-- \/languages -->/g, '')
-        .replace(/<!--[\s\S]*?-->/g, '')
+    const source = without(without(String(markdown || ''), '<!-- languages -->', '<!-- /languages -->'), '<!--', '-->')
         .replace(/^(```|~~~)[^\n]*\n[\s\S]*?^\1[^\n]*$/gm, '');
     const sections = [];
     const anchors = new Map();
