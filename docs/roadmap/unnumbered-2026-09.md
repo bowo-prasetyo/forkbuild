@@ -8267,3 +8267,39 @@ models considered (SmolLM2, SmolVLM) are English-only, which these sentences are
 - Not done: a remix whose original this device can't read says nothing of what changed; a build moved or turned as a
   whole reads as every brick taken away and added; the family tree doesn't yet say what each member changed; Save
   picture's PNG carries no description.
+
+
+## Commands in plain words, suggested titles, and what each remix in a family changed (unnumbered, 2026-10-20)
+
+**The tasks ranked third and fourth among those an on-device model could help with, and the family tree's half of
+"What changed".** Pillars served: building feels joyful (asking for a change in your own words; a title when you
+can't think of one) and every build has a family tree (credit says what each builder added, all the way down).
+How a player notices: *paint the roof red* in the command palette paints it; **Suggest a title** in Build
+Properties; a line under each remix in a family tree, and under the ready-made families on the challenge page.
+
+As before, no model: every piece is worked out from the bricks and written as messages in all eight languages.
+
+- core/building/PlainCommand.js (new, pure): a query read as paint, delete or select; a part (as
+  core/catalog/BuildDescription.js names them), everything or the selection; and, to paint, a village palette colour,
+  by its name or everyday words. Words match as the Build Library's search matches them, but only a phrase found
+  whole counts and a longer one wins, so *dark grey* is Slate, *grey* is Stone and 黄緑 is Meadow; Brick and Stone come
+  last on a tie, so *paint all bricks red* is red. Anything it can't read is no plain command, and the palette lists
+  actions as before.
+- application/editorSession/selectionEditingMethods.js: `bricksWhere()` and `selectWhere()`. ui/components/
+  CommandPalette.js: an optional `plan(query)` whose row comes first, **From your words**, with how many bricks
+  (*Paint 4 windows Harbor blue*), disabled with a reason when there are none; ui/views/EditorView.js runs it with
+  the existing recolor and delete, one undo step.
+- ui/i18n/buildSuggestionText.js (new): up to five titles (the original with what a remix added, the structures in
+  it, a place named for its main part, its main colour) and a description (what it has, its colours, and what a remix
+  changed). ui/components/MetadataEditorDialog.js: **Suggest a title** (each press the next) and **Suggest a
+  description** (fills an empty one, else goes after it). The Editor compares a copy with the structure it started
+  from, or the version of the published build it remixes.
+- application/publication/BuildDescriber.js: `familyChanges()`, each remix in a family against the member above it,
+  at most 30 pairs; ui/components/remix/familyChangesText.js; RemixFamilyTree's `changes` on a build's page and the
+  challenge page; CollectionFamilies works its lines out from the structures themselves.
+- 76 messages in every language; docs/user/02 (Commands in plain words, Suggest) and 04 (the family tree's lines) in
+  every language; docs/Architecture.md.
+- Tests: English requests and ones that aren't; each language's own; `selectWhere()`; suggested titles and
+  description; every language whole; a family's changes.
+- Not done: a plain command can't move, turn or add bricks, or name a structure ("the house"); Suggest doesn't see a
+  challenge's theme; a family member whose bricks this device can't read has no line.

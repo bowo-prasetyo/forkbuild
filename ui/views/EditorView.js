@@ -87,6 +87,12 @@ import { useSoundControls } from '../composables/useSoundControls.js';
 import SoundControl from '../components/SoundControl.js';
 import { displayText, errorText, t } from '../i18n/i18n.js';
 import { buildDescriptionText } from '../i18n/buildDescriptionText.js';
+import { descriptionSuggestion, titleSuggestions } from '../i18n/buildSuggestionText.js';
+import { plainCommandVocabulary } from '../i18n/plainCommandWords.js';
+import { interpretPlainCommand } from '../../core/building/PlainCommand.js';
+import { brickPart } from '../../core/catalog/BuildDescription.js';
+import { VILLAGE_PALETTE } from '../../core/building/VillagePalette.js';
+import { remixParentPublication } from '../../core/publication/RemixLineage.js';
 import { BuildDescriber } from '../../application/publication/BuildDescriber.js';
 import { libraryItemName } from '../i18n/libraryText.js';
 import { FEATURED_STRUCTURE_IDS, featuredStructures, findStarterStructure } from '../../application/home/FeaturedBuilds.js';
@@ -438,6 +444,7 @@ export default {
                 v-if="paletteOpen"
                 :registry="actionRegistry"
                 :get-context="getActionContext"
+                :plan="planPlainCommand"
                 @close="closePalette"
             />
             <ActionFeedback :message="feedbackMessage" :visible="feedbackVisible" />
@@ -477,6 +484,7 @@ export default {
             <MetadataEditorDialog
                 v-if="showMetadataEditor"
                 :info="documentInfo"
+                :suggest="suggestForBuild"
                 @save="onSaveMetadata"
                 @cancel="showMetadataEditor = false"
             />
@@ -591,7 +599,7 @@ export default {
         });
         // Fork/load lookups also search Repository-admitted decentralized publications.
         const decentralizedDiscoveryProviderForLookup = inject('decentralizedPublicationDiscoveryProvider', null);
-        const { findPublicationUseCase } = new CreateDiscoveryUseCase().execute({
+        const { findPublicationUseCase, discoveryProvider: lookupDiscoveryProvider } = new CreateDiscoveryUseCase().execute({
             decentralizedDiscoveryProvider: decentralizedDiscoveryProviderForLookup
         });
         const { blueprintAttributionUseCase, blueprintAttributionExchange } = new CreateBlueprintAttributionUseCase().execute(identityProvider);
@@ -1238,6 +1246,76 @@ export default {
         // Describe the Build's text, shown and read out until closed.
         const buildDescriber = inject('buildDescriber', null) || new BuildDescriber();
         const buildDescriptionNote = ref('');
+        // The build's remix origin, for suggestions: what it changed from the
+        // structure or published build it was copied from, and that one's title.
+        const contentStore = inject('publicationContentStore', null);
+        async function remixOrigin(document, bricks) {
+            const metadata = document?.metadata;
+            const structure = metadata?.parentStructureId ? structureRegistry.get(metadata.parentStructureId) : null;
+            if (structure) {
+                return { changes: await buildDescriber.remixChanges(structure.bricks, bricks), parentTitle: libraryItemName(structure) };
+            }
+            const parentDocumentId = metadata?.parentDocumentId;
+            if (!parentDocumentId) return { changes: null, parentTitle: null };
+            let parents = [];
+            try {
+                parents = lookupDiscoveryProvider.findByDocumentId(parentDocumentId) || [];
+            } catch {
+                parents = [];
+            }
+            const remix = { parentDocumentId, publishedAt: new Date().toISOString() };
+            const parent = remixParentPublication(remix, parents);
+            const credited = metadata?.license?.attribution?.sourceDocumentId === parentDocumentId ? metadata.license.attribution.title : null;
+            return {
+                changes: parent ? await buildDescriber.remixChangesOf(remix, bricks, { parentPublications: parents, contentStore }) : null,
+                parentTitle: parent?.title || credited || null
+            };
+        }
+        // Build Properties' Suggest: titles and a description from the bricks.
+        async function suggestForBuild(currentTitle = '') {
+            const document = documentManager.document;
+            const bricks = worldBricks(document?.world);
+            const facts = await buildDescriber.describe(bricks);
+            const { changes, parentTitle } = await remixOrigin(document, bricks);
+            return {
+                titles: titleSuggestions({ facts, changes, parentTitle, currentTitle }),
+                description: descriptionSuggestion({ facts, changes, parentTitle })
+            };
+        }
+
+        // A request in plain words in the command palette
+        // (core/building/PlainCommand.js): what it would do, as a row the
+        // palette shows first, or null when it isn't one.
+        const plainVocabulary = plainCommandVocabulary();
+        function planPlainCommand(query) {
+            const plan = interpretPlainCommand(query, plainVocabulary);
+            if (!plan) return null;
+            const { target } = plan;
+            const predicate = target.kind === 'part'
+                ? (brick) => brickPart(brick.definitionId, registry.get(brick.definitionId)) === target.part
+                : (target.kind === 'everything' ? () => true : null);
+            const count = predicate ? editorSession.bricksWhere(predicate).length : selectionCount.value;
+            const things = target.kind === 'part'
+                ? t(`buildDescription.part.${target.part}`, { count })
+                : t(target.kind === 'everything' ? 'plainCommand.everything' : 'plainCommand.selected', { count });
+            return {
+                label: t(`plainCommand.${plan.intent}`, { things, colour: plan.colour ? t(`villagePalette.${plan.colour}`) : '' }),
+                enabled: count > 0,
+                reason: count > 0 ? null : t(target.kind === 'selection' ? 'plainCommand.nothingSelected' : 'plainCommand.nothingFound'),
+                run: () => runPlainCommand(plan, predicate)
+            };
+        }
+        function runPlainCommand(plan, predicate) {
+            if (predicate && editorSession.selectWhere(predicate) === 0) return;
+            if (plan.intent === 'paint') {
+                const swatch = VILLAGE_PALETTE.find(({ id }) => id === plan.colour);
+                if (swatch && !editorSession.recolorSelection(swatch.color)) feedback.show(t('plainCommand.cannotPaint'));
+            } else if (plan.intent === 'delete') {
+                editorSession.deleteSelection();
+            }
+            documentVersion.value++;
+        }
+
         const actionUi = {
             async describeBuild() {
                 buildDescriptionNote.value = '';
@@ -1727,6 +1805,8 @@ export default {
         return {
             t,
             buildDescriptionNote,
+            suggestForBuild,
+            planPlainCommand,
             ...buildTogether,
             soundAvailable,
             soundMuted,

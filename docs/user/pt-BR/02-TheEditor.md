@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: a6b88e4e92839dec -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: f36d402077c24e76 -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -542,6 +542,15 @@ ser pesquisada lá; a licença controla se — e como — outras pessoas podem
 remixá-la. Veja [Publicar e remixar](04-PublishingAndForking.md) para o
 que significa cada licença.
 
+Os botões **Sugerir um título** e **Sugerir uma descrição** abaixo do
+título oferecem ideias feitas com os blocos da construção: suas estruturas
+da Biblioteca de construção, suas principais peças e cores e, num remix, o
+que ele acrescentou à construção de onde veio (*Moinho e celeiro com
+Celeiro*). Pressione **Sugerir um título** de novo para a próxima ideia.
+Uma descrição sugerida preenche uma vazia, ou vai depois do que você
+escreveu. São só sugestões, calculadas no seu dispositivo; mude como
+quiser.
+
 Uma descrição longa fica mais legível com um pouco de formatação, que o
 painel de Informações da construção, o navegador de locais da Visão do Mundo
 e as postagens no Steem e no Blurt mostram:
@@ -727,6 +736,21 @@ conferir uma construção sem girar a câmera em volta dela. Tudo é calculado
 no seu dispositivo a partir dos blocos, então nada é enviado. A imagem de
 uma construção no link compartilhado e na incorporação traz a mesma
 descrição para leitores de tela.
+
+## Comandos com suas palavras
+
+Digite o que você quer na paleta de comandos (`Ctrl/Cmd+K`) com suas
+próprias palavras, como *pinte o telhado de vermelho*, *selecione todas as
+janelas* ou *apague as árvores*, e a primeira linha, **Pelas suas
+palavras**, diz o que vai fazer e em quantos blocos: *Pintar 4 janelas de
+Azul do porto*. Pressione `Enter`, ou clique, para fazer isso em um só passo
+que dá para desfazer. Ela entende pintar, selecionar e apagar; as partes de
+uma construção (janelas, portas, telhados, escadas, arcos, cercas,
+chaminés, móveis, lanternas, árvores, arbustos, rochas e grama), *tudo*, ou
+o que estiver selecionado (*isto*, *estes*); e as cores da vila pelo nome
+ou por palavras do dia a dia (*vermelho*, *cinza escuro*, *azul claro*).
+Funciona em todos os idiomas do ForkBuild, no seu dispositivo; qualquer
+outra coisa que você digitar busca nas ações como antes.
 
 ## Controles da câmera
 

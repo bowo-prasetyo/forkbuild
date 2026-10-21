@@ -336,6 +336,15 @@ html, body {
 .formatted-description-list { padding-left: 1.25em; }
 
 /* Tag suggestions in Document Properties (ui/components/MetadataEditorDialog.js). */
+/* Build Properties' Suggest a title / Suggest a description. */
+.metadata-editor-suggest {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+    margin: -0.25rem 0 0.75rem;
+}
+
 .metadata-editor-tag-suggestions {
     display: flex;
     flex-wrap: wrap;

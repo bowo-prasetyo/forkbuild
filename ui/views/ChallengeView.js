@@ -6,6 +6,7 @@ import { familyTreesOf } from '../../core/publication/RemixFamily.js';
 import { CreateChallengeEntriesUseCase } from '../../application/challenge/CreateChallengeEntriesUseCase.js';
 import PublicationCard from '../components/PublicationCard.js';
 import RemixFamilyTree from '../components/remix/RemixFamilyTree.js';
+import { familyChangesText } from '../components/remix/familyChangesText.js';
 import { exploreRouteFor } from '../components/publicationCatalog/useRepositoryNetworkDiscovery.js';
 import {
     challengeDatesText, challengeJoinRoute, challengeRemixRoute, challengeThemeBrief, challengeSeasonHint, challengeThemeTitle, challengeThemeTwist, challengeTimeText
@@ -31,6 +32,8 @@ export default {
         const entryLog = inject('challengeEntryLog', null);
         const entryDiscovery = inject('challengeEntryDiscovery', null);
         const networkPublicationLocatorStore = inject('networkPublicationLocatorStore', null);
+        const buildDescriber = inject('buildDescriber', null);
+        const contentStore = inject('publicationContentStore', null);
         const { discoveryProvider, listEntries } = new CreateChallengeEntriesUseCase().execute({
             decentralizedDiscoveryProvider: inject('decentralizedPublicationDiscoveryProvider', null),
             entryLog
@@ -67,6 +70,9 @@ export default {
         const remixCounts = ref({});
         const remixSources = ref({});
         const families = ref([]);
+        // What each remix in the families changed, worked out after they show.
+        const familyChanges = ref(new Map());
+        let familyChangesFor = 0;
         function refresh() {
             if (!challenge.value) return;
             const items = listEntries(challenge.value.tag);
@@ -85,6 +91,10 @@ export default {
             families.value = familyTreesOf(items, {
                 findByDocumentId: (documentId) => discoveryProvider.findByDocumentId(documentId),
                 findByParentId: (documentId) => discoveryProvider.findByParentId(documentId)
+            });
+            const asked = ++familyChangesFor;
+            familyChangesText(buildDescriber, families.value, { contentStore }).then((texts) => {
+                if (asked === familyChangesFor) familyChanges.value = texts;
             });
         }
         // A family member opens as the entries do.
@@ -132,7 +142,7 @@ export default {
             t,
             challenge,
             view,
-            entries, remixFrom, remixCounts, remixSources, families, familyRoute,
+            entries, remixFrom, remixCounts, remixSources, families, familyChanges, familyRoute,
             remixPublication: (pub) => router.push(challengeRemixRoute(challenge.value, pub)),
             networkSearch, networkSearchText, searchNetworks,
             openPublication: (pub) => router.push({ path: '/editor', query: { load: pub.documentId } }),
@@ -231,7 +241,7 @@ export default {
                 <section v-if="families.length" class="challenge-section challenge-families" aria-labelledby="challenge-families-title">
                     <h2 id="challenge-families-title">{{ t('challenge.familiesTitle') }}</h2>
                     <p class="home-section-lead">{{ t('challenge.familiesLead') }}</p>
-                    <RemixFamilyTree v-for="family in families" :key="family.build.documentId" :family="family" :route-for="familyRoute" />
+                    <RemixFamilyTree v-for="family in families" :key="family.build.documentId" :family="family" :route-for="familyRoute" :changes="familyChanges" />
                 </section>
                 <!-- Before a week has any remixes of its own, the app's example families. -->
                 <section v-else-if="entries.length === 0 && !view.remix" class="challenge-section challenge-families challenge-example-families">

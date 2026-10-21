@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 64eabe993a5d0f63 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 195bfda527c3a111 -->
 # 04 — Publicar y remezclar
 
 <!-- languages -->
@@ -903,6 +903,11 @@ ella, hasta donde sabe este dispositivo. La página del desafío muestra uno
 por cada cadena de participaciones. Cada construcción del árbol nombra a su
 autor y a los amigos que la construyeron con él; su título abre la
 construcción, y cada nombre abre la página de esa persona.
+
+Debajo de cada remezcla del árbol, una línea dice qué cambió respecto de
+la construcción de arriba (*Agregó 2 arbustos, 4 parches de césped y 6
+bloques más*), cuando este dispositivo puede leer ambas. Las familias ya
+hechas de la página del desafío muestran lo mismo.
 
 ### Construcciones parecidas publicadas antes
 

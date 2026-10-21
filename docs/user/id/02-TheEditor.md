@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: a6b88e4e92839dec -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: f36d402077c24e76 -->
 # 02 — Editor
 
 <!-- languages -->
@@ -551,6 +551,14 @@ juga dapat dicari di sana; lisensi menentukan apakah — dan bagaimana —
 orang lain boleh me-remix-nya. Lihat
 [Penerbitan & Remix](04-PublishingAndForking.md) untuk arti setiap lisensi.
 
+Tombol **Sarankan judul** dan **Sarankan deskripsi** di bawah judul
+menawarkan ide dari balok-balok bangunan: struktur Pustaka Bangunannya,
+bagian dan warna utamanya, dan untuk remix, apa yang ditambahkannya pada
+bangunan asalnya (*Kincir dan Lumbung dengan Lumbung*). Tekan
+**Sarankan judul** lagi untuk ide berikutnya. Deskripsi yang disarankan
+mengisi deskripsi kosong, atau ditambahkan setelah yang Anda tulis. Itu
+hanya saran, dihitung di perangkat Anda; ubahlah sesuka Anda.
+
 Deskripsi yang panjang lebih mudah dibaca dengan sedikit format, yang
 ditampilkan oleh panel Informasi Bangunan, penjelajah lokasi di Tampilan
 Dunia, serta postingan Steem dan Blurt:
@@ -737,6 +745,21 @@ memeriksa bangunan tanpa memutar kamera mengelilinginya. Semua dihitung di
 perangkat Anda dari baloknya, jadi tidak ada yang dikirim ke mana pun.
 Gambar bangunan di tautan bagikannya dan di sematan membawa penjelasan yang
 sama untuk pembaca layar.
+
+## Perintah dengan kata-kata sendiri
+
+Ketik apa yang Anda inginkan di Palet Perintah (`Ctrl/Cmd+K`) dengan
+kata-kata Anda sendiri, misalnya *cat atap jadi merah*, *pilih semua
+jendela*, atau *hapus pohon*, dan baris pertamanya, **Dari kata-kata
+Anda**, menyebutkan apa yang akan dilakukan dan pada berapa balok: *Cat 4
+jendela menjadi Biru pelabuhan*. Tekan `Enter`, atau kliknya, untuk
+melakukannya dalam satu langkah yang bisa diurungkan. Palet memahami
+mengecat, memilih, dan menghapus; bagian-bagian bangunan (jendela, pintu,
+atap, tangga, lengkungan, pagar, cerobong, perabot, lentera, pohon, semak,
+batu, dan rumput), *semua*, atau yang sedang dipilih (*ini*, *itu*); serta
+warna desa dengan namanya atau kata sehari-hari (*merah*, *abu-abu tua*,
+*biru muda*). Ini bekerja di setiap bahasa ForkBuild, di perangkat Anda;
+ketikan lain tetap mencari tindakan seperti biasa.
 
 ## Kontrol kamera
 

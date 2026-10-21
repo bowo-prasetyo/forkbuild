@@ -290,6 +290,20 @@ the detailed references; in short:
   embed's carry it for screen readers (BuildTurntable's `description`),
   and a remix's page says "What changed" under Remixed from. No model: the
   facts are exact, and the sentences are messages in every language.
+  The same facts make Build Properties' Suggest a title and Suggest a
+  description (ui/i18n/buildSuggestionText.js, from the Editor's
+  `suggestForBuild()`, which compares a copy with the structure or
+  published build it came from), and the line under each remix in a family
+  tree (BuildDescriber#familyChanges(), shown by RemixFamilyTree's
+  `changes` and by the ready-made CollectionFamilies).
+- Commands in plain words: core/building/PlainCommand.js reads a command
+  palette query ("paint the roof red") as paint, delete or select, a part,
+  everything or the selection, and a village palette colour, with the
+  chosen language's words (ui/i18n/plainCommandWords.js) matched as the
+  Build Library's search matches them, a whole phrase beating its own
+  words. The Editor's `planPlainCommand()` turns a reading into the palette's
+  first row, and runs it with EditorSession#selectWhere() and the existing
+  recolor and delete, one undo step each.
 - Ready-made builds: application/home/FeaturedBuilds.js lists six built-in
   structures (the three showcase ones first). Home, the Repository and My
   Worlds' empty state show them with ui/components/featured/FeaturedBuilds.js

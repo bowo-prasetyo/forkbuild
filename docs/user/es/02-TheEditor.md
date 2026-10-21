@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: a6b88e4e92839dec -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: f36d402077c24e76 -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -572,6 +572,15 @@ licencia controla si otras personas pueden remezclarla, y cómo. Consulte
 [Publicar y remezclar](04-PublishingAndForking.md) para saber qué significa
 cada licencia.
 
+Los botones **Sugerir un título** y **Sugerir una descripción** debajo del
+título ofrecen ideas hechas con los bloques de la construcción: sus
+estructuras de la Biblioteca de construcción, sus partes y colores
+principales y, en una remezcla, lo que agregó a la construcción de la que
+viene (*Molino y granero con Granero*). Presione **Sugerir un título** otra
+vez para la siguiente idea. Una descripción sugerida llena una vacía, o va
+después de lo que escribió. Son solo sugerencias, calculadas en su
+dispositivo; cámbielas como quiera.
+
 Una descripción larga se lee mejor con un poco de formato, que muestran el
 panel de información de la construcción, el explorador de lugares de la Vista del
 mundo y las publicaciones en Steem y Blurt:
@@ -764,6 +773,21 @@ sin girar la cámara a su alrededor. Se calcula en su dispositivo a partir de
 los bloques, así que no se envía nada. La imagen de una construcción en su
 enlace compartido y en una inserción lleva la misma descripción para los
 lectores de pantalla.
+
+## Comandos con sus propias palabras
+
+Escriba lo que quiere en la paleta de comandos (`Ctrl/Cmd+K`) con sus
+propias palabras, como *pinta el techo de rojo*, *selecciona todas las
+ventanas* o *borra los árboles*, y su primera fila, **Según sus palabras**,
+dice qué hará y con cuántos bloques: *Pintar 4 ventanas de Azul puerto*.
+Presione `Enter`, o haga clic, para hacerlo en un solo paso que puede
+deshacer. Entiende pintar, seleccionar y borrar; las partes de una
+construcción (ventanas, puertas, techos, escaleras, arcos, vallas,
+chimeneas, muebles, faroles, árboles, arbustos, rocas y césped), *todo*, o
+lo que tenga seleccionado (*esto*, *estos*); y los colores del pueblo por
+sus nombres o por palabras de todos los días (*rojo*, *gris oscuro*, *azul
+claro*). Funciona en todos los idiomas de ForkBuild, en su dispositivo;
+cualquier otra cosa que escriba busca entre las acciones como siempre.
 
 ## Controles de cámara
 

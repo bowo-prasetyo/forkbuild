@@ -49,6 +49,48 @@ export class BuildDescriber {
         }
     }
 
+    // What each remix in `family` (core/publication/RemixFamily.js's) changed
+    // from the member it was remixed from: a Map from document id to
+    // describeRemixChanges()'s, for every pair whose bricks this device can
+    // read, at most `limit` of them. A member's bricks are read as a shared
+    // link reads a build's, unless `readBricks(member)` is given. Never
+    // rejects.
+    async familyChanges(family, {
+        contentStore = null,
+        limit = 30,
+        readBricks = (member) => readSharedBuildBricks({ publication: member.publication, contentStore })
+    } = {}) {
+        const changes = new Map();
+        if (!family?.build) return changes;
+        const pairs = [];
+        const line = [...(family.ancestors || []), family.build];
+        for (let i = 1; i < line.length; i += 1) pairs.push([line[i], line[i - 1]]);
+        const below = (parent, remixes) => {
+            for (const remix of remixes || []) {
+                pairs.push([remix, parent]);
+                below(remix, remix.remixes);
+            }
+        };
+        below(family.build, family.remixes);
+        const bricks = new Map();
+        const bricksOf = (member) => {
+            if (!member?.publication) return Promise.resolve(null);
+            if (!bricks.has(member.documentId)) {
+                bricks.set(member.documentId, Promise.resolve().then(() => readBricks(member)).catch(() => null));
+            }
+            return bricks.get(member.documentId);
+        };
+        for (const [member, parent] of pairs.slice(0, limit)) {
+            try {
+                const [mine, theirs] = await Promise.all([bricksOf(member), bricksOf(parent)]);
+                if (Array.isArray(mine) && Array.isArray(theirs)) changes.set(member.documentId, await this.remixChanges(theirs, mine));
+            } catch {
+                // That pair says nothing.
+            }
+        }
+        return changes;
+    }
+
     // Loaded once; a library that can't be loaded names nothing from it.
     _describeOptions() {
         if (!this._options) {

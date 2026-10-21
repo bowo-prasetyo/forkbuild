@@ -42,6 +42,34 @@ export const selectionEditingMethods = {
         return true;
     },
 
+    // The bricks for which `predicate(brick)` is true, as selection items.
+    bricksWhere(predicate) {
+        const document = this._documentManager.document;
+        const items = [];
+        for (const building of document?.world.getBuildings() || []) {
+            for (const brick of building.getBricks()) {
+                if (predicate(brick)) items.push({ type: 'brick', buildingId: building.id, brickId: brick.id });
+            }
+        }
+        return items;
+    },
+
+    // Selects the bricks for which `predicate(brick)` is true (a plain
+    // command's "select all the windows"); how many, 0 leaving the selection
+    // as it was.
+    selectWhere(predicate) {
+        const items = this.bricksWhere(predicate);
+        if (items.length === 0) {
+            return 0;
+        }
+        const selection = new SelectionState({ items });
+        this._editorContext.setSelection(selection);
+        if (this._session && typeof this._session.selectBricks === 'function') {
+            this._session.selectBricks(selection.brickIds, selection.brickId);
+        }
+        return items.length;
+    },
+
     clearSelection() {
         this._editorContext.clearSelection();
         return true;

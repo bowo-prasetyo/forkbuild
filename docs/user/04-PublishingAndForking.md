@@ -823,6 +823,11 @@ The challenge page shows one for each chain of entries. Each build in the
 tree names its author, and the friends who built it with them; its title
 opens the build, and each name opens that person's page.
 
+Under each remix in the tree, a line says what it changed from the build
+above it (*Added 2 bushes, 4 patches of lawn, and 6 other bricks*), when
+this device can read both. The ready-made families on the challenge page
+show the same.
+
 ### Similar builds published earlier
 
 Under the family tree, a build's page lists builds by other people that were

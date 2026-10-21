@@ -518,6 +518,14 @@ controls whether — and how — other people are allowed to remix it. See
 [Publishing & Remixing](04-PublishingAndForking.md) for what each license
 means.
 
+The **Suggest a title** and **Suggest a description** buttons under the
+title offer ideas made from the build's bricks: its Build Library
+structures, its main parts and colours and, for a remix, what it added to
+the build it came from (*Mill and Granary with a Barn*). Press **Suggest a
+title** again for the next idea. A suggested description fills an empty
+one, or goes after what you wrote. They are only suggestions, worked out on
+your device; change them as you like.
+
 A long description reads better with a little formatting, which the
 **About this build** panel, World View's location browser and Steem and
 Blurt posts all show:
@@ -686,6 +694,21 @@ it out; it also stays at the top of the 3D view until you press
 it. It is worked out on your device from the bricks, so nothing is sent
 anywhere. A build's picture on its shared link and in an embed carries the
 same description for screen readers.
+
+## Commands in plain words
+
+Type what you want into the Command Palette (`Ctrl/Cmd+K`) in your own
+words, like *paint the roof red*, *select all the windows*, *delete the
+trees* or *paint it light blue*, and its first row, **From your words**,
+says what it will do and to how many bricks: *Paint 4 windows Harbor blue*.
+Press `Enter`, or click it, to do it in one step you can undo. It
+understands painting, selecting and deleting; the parts of a build
+(windows, doors, roofs, stairs, arches, fences, chimneys, furniture,
+lanterns, trees, bushes, rocks and lawn), *everything*, or what you have
+selected (*this*, *these*); and the village colours by their names or by
+everyday ones (*red*, *dark grey*, *light blue*). It works in every
+language ForkBuild speaks, on your device; anything else you type searches
+the actions as before.
 
 ## Camera controls
 

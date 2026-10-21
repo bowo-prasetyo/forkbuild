@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: a6b88e4e92839dec -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: f36d402077c24e76 -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -574,6 +574,15 @@ durchsuchbar; die Lizenz legt fest, ob — und wie — andere es remixen
 dürfen. Was jede Lizenz bedeutet, steht unter
 [Veröffentlichen & Remixen](04-PublishingAndForking.md).
 
+Die Schaltflächen **Titel vorschlagen** und **Beschreibung vorschlagen**
+unter dem Titel bieten Ideen aus den Steinen des Bauwerks: seine Strukturen
+aus der Baubibliothek, seine wichtigsten Teile und Farben und bei einem
+Remix, was es dem Bauwerk hinzugefügt hat, von dem es stammt (*Mühle mit
+Speicher mit Scheune*). Drücken Sie **Titel vorschlagen** erneut für
+die nächste Idee. Eine vorgeschlagene Beschreibung füllt eine leere oder
+kommt hinter das, was Sie geschrieben haben. Es sind nur Vorschläge, auf
+Ihrem Gerät ermittelt; ändern Sie sie, wie Sie möchten.
+
 Eine lange Beschreibung liest sich mit etwas Formatierung besser. Das
 Feld **Über dieses Bauwerk**, der Ortsbrowser in der Weltansicht und ein
 Steem- und Blurt-Beiträge zeigen sie an:
@@ -765,6 +774,21 @@ prüfen, ohne die Kamera darum herumzudrehen. Es wird auf Ihrem Gerät aus den
 Steinen ermittelt, daher wird nichts gesendet. Das Bild eines Bauwerks auf
 seinem geteilten Link und in einer Einbettung trägt dieselbe Beschreibung
 für Screenreader.
+
+## Befehle in eigenen Worten
+
+Tippen Sie in der Befehlspalette (`Strg/Cmd+K`) mit eigenen Worten, was Sie
+möchten, etwa *das Dach rot streichen*, *alle Fenster auswählen* oder *die
+Bäume löschen*, und die erste Zeile, **Aus Ihren Worten**, sagt, was
+geschieht und mit wie vielen Steinen: *4 Fenster in Hafenblau streichen*.
+Drücken Sie `Enter` oder klicken Sie darauf, und es geschieht in einem
+Schritt, den Sie rückgängig machen können. Verstanden werden Streichen,
+Auswählen und Löschen; die Teile eines Bauwerks (Fenster, Türen, Dächer,
+Treppen, Bögen, Zäune, Schornsteine, Möbel, Laternen, Bäume, Büsche, Felsen
+und Rasen), *alles* oder die Auswahl (*diese*); und die Dorffarben mit
+ihren Namen oder alltäglichen Wörtern (*rot*, *dunkelgrau*, *hellblau*). Es
+funktioniert in jeder Sprache von ForkBuild, auf Ihrem Gerät; alles andere
+sucht wie bisher in den Aktionen.
 
 ## Kamerasteuerung
 

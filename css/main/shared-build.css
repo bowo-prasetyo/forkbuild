@@ -602,3 +602,12 @@
 .world-similar-earlier .similar-earlier {
     margin: 0;
 }
+
+/* What a remix in a family tree changed from the build above it. */
+.remix-family-changes {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.85em;
+    line-height: 1.4;
+    color: var(--ink-soft);
+}

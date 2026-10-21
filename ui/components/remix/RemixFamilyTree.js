@@ -8,7 +8,8 @@ import BuiltWithNames from './BuiltWithNames.js';
 
 // A build's family tree (core/publication/RemixFamily.js): what it was remixed from,
 // back to the original, then this build, then the remixes made from it.
-// `routeFor(member)` gives a member's route, or null to show it as text.
+// `routeFor(member)` gives a member's route, or null to show it as text;
+// `changes` says what each remix changed, under its line.
 
 // One member's line: its title, a link to the build; its author, a link to
 // their page when the build's signature verifies (ui/views/BuilderView.js);
@@ -34,18 +35,31 @@ const RemixFamilyMemberLabel = {
     `
 };
 
+// What a member changed from the build above it (ui/i18n/buildDescriptionText.js),
+// when its host has worked that out.
+const RemixFamilyChanges = {
+    name: 'RemixFamilyChanges',
+    props: {
+        member: { type: Object, required: true },
+        changes: { type: Object, default: null }
+    },
+    template: `<span v-if="changes && changes.get(member.documentId)" class="remix-family-changes">{{ changes.get(member.documentId) }}</span>`
+};
+
 const RemixFamilyMembers = {
     name: 'RemixFamilyMembers',
-    components: { RemixFamilyMemberLabel },
+    components: { RemixFamilyMemberLabel, RemixFamilyChanges },
     props: {
         members: { type: Array, required: true },
-        routeFor: { type: Function, required: true }
+        routeFor: { type: Function, required: true },
+        changes: { type: Object, default: null }
     },
     template: `
         <ul class="remix-family-remixes">
             <li v-for="member in members" :key="member.documentId" class="remix-family-member">
                 <RemixFamilyMemberLabel :member="member" :route-for="routeFor" />
-                <RemixFamilyMembers v-if="member.remixes.length" :members="member.remixes" :route-for="routeFor" />
+                <RemixFamilyChanges :member="member" :changes="changes" />
+                <RemixFamilyMembers v-if="member.remixes.length" :members="member.remixes" :route-for="routeFor" :changes="changes" />
             </li>
         </ul>
     `
@@ -84,10 +98,13 @@ export function memberLabel(member) {
 }
 export default {
     name: 'RemixFamilyTree',
-    components: { RemixFamilyMembers, RemixFamilyMemberLabel },
+    components: { RemixFamilyMembers, RemixFamilyMemberLabel, RemixFamilyChanges },
     props: {
         family: { type: Object, default: null },
         routeFor: { type: Function, default: () => null },
+        // Document id -> what that member changed from the one above it, as
+        // text; members missing from it show no change.
+        changes: { type: Object, default: null },
         // A heading level for where the tree sits.
         heading: { type: String, default: 'h3' }
     },
@@ -101,10 +118,12 @@ export default {
                 <li v-for="member in family.ancestors" :key="member.documentId" class="remix-family-member remix-family-ancestor">
                     <RemixFamilyMemberLabel v-if="member.title || member.author" :member="member" :route-for="routeFor" />
                     <span v-else>{{ t('remixFamily.unseen') }}</span>
+                    <RemixFamilyChanges :member="member" :changes="changes" />
                 </li>
                 <li class="remix-family-member remix-family-self" aria-current="true">
                     <RemixFamilyMemberLabel :member="family.build" :route-for="routeFor" self /> <span class="remix-family-self-mark">{{ t('remixFamily.thisBuild') }}</span>
-                    <RemixFamilyMembers v-if="family.remixes.length" :members="family.remixes" :route-for="routeFor" />
+                    <RemixFamilyChanges :member="family.build" :changes="changes" />
+                    <RemixFamilyMembers v-if="family.remixes.length" :members="family.remixes" :route-for="routeFor" :changes="changes" />
                 </li>
             </ol>
             <p v-if="family.more" class="remix-family-more">{{ t('remixFamily.more', { count: family.more }) }}</p>
