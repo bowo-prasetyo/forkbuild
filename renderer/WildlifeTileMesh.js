@@ -6,6 +6,12 @@ import { gaitOffsetsAt, REST_GAIT } from './AnimalGait.js';
 import { idleOffsetsAt } from './AnimalIdle.js';
 import { reactToObserver } from './AnimalReaction.js';
 import { castShadows } from './ShadowRoles.js';
+import { smoothstep } from '../utils/interpolation.js';
+
+// How long a wild animal takes to shrink away when a build displaces it
+// (core/nature/WildlifeDisplacement.js), and to grow back once it is gone, in
+// seconds of the wildlife clock, rather than vanishing between two frames.
+export const WILDLIFE_FADE_SECONDS = 0.6;
 
 // The renderer-side counterpart to core/nature/WildlifeField.js — the
 // "core decides, renderer builds" split: this file knows nothing about WHERE an
@@ -311,6 +317,9 @@ export function buildWildlifeTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE
 
     if (timeSeconds !== null && timeSeconds !== undefined) {
         updateWildlifeTileMesh(group, timeSeconds);
+        // Posed, but not yet drawn with what is hidden: the first frame that
+        // is still starts every animal as it is, never fading.
+        delete group.userData.wildlife.shownAt;
     }
     return group;
 }
@@ -328,16 +337,31 @@ export function buildWildlifeTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE
 // animals watch (renderer/AnimalReaction.js): heads turn toward it, and
 // nothing about where an animal is changes.
 //
-// `isHidden(id)` (or null) names animals not to draw this frame — wild
-// animals keeping away from a build (core/nature/WildlifeDisplacement.js) —
-// which are shrunk to nothing rather than rebuilt out of the tile, so they
-// come back the moment the build is gone.
+// `isHidden(id)` (or null) names animals not to draw — wild animals keeping
+// away from a build (core/nature/WildlifeDisplacement.js) — which shrink to
+// nothing over WILDLIFE_FADE_SECONDS rather than being rebuilt out of the
+// tile, and grow back the same way once the build is gone. How far each one
+// is shown is the tile's one piece of memory (`herd.shown`), kept for this
+// viewer alone: on the tile's first frame each starts as it is, so a tile
+// streamed in never fades anything in or out. Where an animal is, and that
+// a hidden one can't be bumped into or caught, never waits for the fade.
 export function updateWildlifeTileMesh(group, timeSeconds, observer = null, isHidden = null) {
     const wildlife = group.userData.wildlife;
     if (!wildlife) return;
-    for (const { species, preset, animals, bodyMesh, headMesh } of wildlife.herds) {
+    const first = wildlife.shownAt === undefined;
+    // A clock set back counts as no time; a long gap finishes any fade.
+    const elapsed = first ? 0 : Math.min(WILDLIFE_FADE_SECONDS, Math.max(0, timeSeconds - wildlife.shownAt));
+    wildlife.shownAt = timeSeconds;
+    const step = elapsed / WILDLIFE_FADE_SECONDS;
+    for (const herd of wildlife.herds) {
+        const { species, preset, animals, bodyMesh, headMesh } = herd;
+        if (!herd.shown) herd.shown = new Float32Array(animals.length);
         animals.forEach((animal, i) => {
-            if (isHidden && isHidden(animal.id)) {
+            const target = isHidden && isHidden(animal.id) ? 0 : 1;
+            const shown = first ? target
+                : target > herd.shown[i] ? Math.min(target, herd.shown[i] + step) : Math.max(target, herd.shown[i] - step);
+            herd.shown[i] = shown;
+            if (shown === 0) {
                 _matrix.makeScale(0, 0, 0);
                 bodyMesh.setMatrixAt(i, _matrix);
                 headMesh.setMatrixAt(i, _matrix);
@@ -348,7 +372,7 @@ export function updateWildlifeTileMesh(group, timeSeconds, observer = null, isHi
                 ? gaitOffsetsAt(species, pose.gaitPhase)
                 : idleOffsetsAt(species, pose.idleAction, pose.idleSeconds, pose.idleDuration);
             const offsets = reactToObserver(species, own, pose, pose.x, pose.z, observer);
-            writeInstance(bodyMesh, headMesh, i, pose, animal.scale, preset, offsets);
+            writeInstance(bodyMesh, headMesh, i, pose, animal.scale * smoothstep(shown), preset, offsets);
         });
         bodyMesh.instanceMatrix.needsUpdate = true;
         headMesh.instanceMatrix.needsUpdate = true;

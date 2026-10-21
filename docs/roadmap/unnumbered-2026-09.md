@@ -8563,3 +8563,34 @@ walk inside it with friends (residents that walk round what was just built, not 
   look at once" holds as before.
 - Not done: a resident whose navigation changes mid-walk still jumps to where its new way puts it (finding #2), and a
   displaced animal still vanishes without a fade (finding #3).
+
+
+## A resident walks to its new way, and an animal shrinks away from a build (unnumbered, 2026-10-21)
+
+**Findings #2 and #3 of the second game AI audit.** Where a resident is is a pure function of the World, so when its
+navigation changes under it (a wall built or raised nearby, the World clock corrected) it is wherever the new ways
+take it by now, and its body popped there, metres away, between two frames. And a wild animal displaced by a build
+was drawn at zero scale from one frame to the next, vanishing in front of the viewer. Pillar served: walk inside it
+with friends (a World that looks alive while it is being built in).
+
+- renderer/ResidentFieldRenderer.js: `RESIDENT_GLIDE`. A pose farther than 0.75 m from the last one (a strolling
+  resident covers at most 1.65 m a second) starts a glide: the body walks from where it was drawn to the pose over
+  0.6 s, kept as an offset from the pose that eases to zero, so it follows the resident walking on its new way, and
+  turns the short way round. Past 13 m (twice the wander radius and a metre, so a World moved) it is drawn there at
+  once. The gait advances by the ground the body covers, so legs never spin on a jump.
+- renderer/WildlifeTileMesh.js: `WILDLIFE_FADE_SECONDS`. A hidden animal shrinks away over 0.6 s of the wildlife
+  clock and grows back the same way once the build is gone, eased; how far each is shown is kept per herd. On a
+  tile's first frame drawn with what is hidden every animal starts as it is (the pose `buildWildlifeTileMesh()` gives
+  a tile it builds at the clock does not count), so streaming tiles in never fades anything, a clock set back
+  fades nothing, and a long gap finishes any fade.
+- Both are drawing only, for this viewer: the avatar's collision, catching, sounds and every replica use where the
+  resident is and whether the animal is displaced from the first frame.
+- docs/Architecture.md.
+- Tests: tests/ResidentIntegration.test.js (a 3 m jump is still drawn where it was, walking; halfway it is on its way
+  and turning; when the glide is over it is exactly at the pose, standing; a World moved is drawn there at once; an
+  ordinary step is drawn as it is; end to end, a wall raised under a walking resident never moves its body more than
+  the eased glide allows in a frame, and it ends where every replica has it); tests/WildlifeDisplacement.test.js
+  (hidden on this frame it has not shrunk; halfway part way gone; a clock set back fades nothing; gone when the fade
+  is over; it grows back; the rest of the herd never fades; a tile streamed in, posed at the clock as Renderer builds it or not, draws a hidden animal gone at once).
+- Not done: a gliding resident goes straight, so for 0.6 s it may cross the wall that changed its way; while an
+  animal fades out it is already left out of collision and catching.

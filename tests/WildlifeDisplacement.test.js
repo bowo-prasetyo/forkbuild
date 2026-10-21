@@ -22,7 +22,7 @@ import { AnimalRuntimeInstances } from '../application/world/AnimalRuntimeInstan
 import { AvatarWildlifeConstraint } from '../application/avatar/AvatarWildlifeConstraint.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
-import { buildWildlifeTileMesh, updateWildlifeTileMesh } from '../renderer/WildlifeTileMesh.js';
+import { buildWildlifeTileMesh, updateWildlifeTileMesh, WILDLIFE_FADE_SECONDS } from '../renderer/WildlifeTileMesh.js';
 import { assert } from './support/Assert.js';
 
 // Wild animals keep away from what people build
@@ -223,7 +223,40 @@ function runTests() {
         const others = herd.animals.map((a, i) => i).filter((i) => i !== index);
         assert(others.every((i) => scaleOfInstance(herd.bodyMesh, i) > 0.5), '37. ...and only that one');
         updateWildlifeTileMesh(tile, T + 2, null, () => false);
-        assert(Math.abs(scaleOfInstance(herd.bodyMesh, index) - DEER.scale) < 1e-4, '38. It comes back the moment it is not hidden');
+        assert(Math.abs(scaleOfInstance(herd.bodyMesh, index) - DEER.scale) < 1e-4, '38. Once it is not hidden, it comes back');
+
+        // The fade: shrinking away and growing back over WILDLIFE_FADE_SECONDS.
+        const hideDeer = (id) => id === DEER.id;
+        const half = WILDLIFE_FADE_SECONDS / 2;
+        updateWildlifeTileMesh(tile, T + 3, null, () => false);
+        updateWildlifeTileMesh(tile, T + 3, null, hideDeer);
+        const shrinking = scaleOfInstance(herd.bodyMesh, index);
+        assert(shrinking === DEER.scale || Math.abs(shrinking - DEER.scale) < 1e-4,
+            '38b. Hidden on this very frame, it has not shrunk yet: no time has passed');
+        updateWildlifeTileMesh(tile, T + 3 + half, null, hideDeer);
+        const midway = scaleOfInstance(herd.bodyMesh, index);
+        assert(midway > 0.1 * DEER.scale && midway < 0.9 * DEER.scale, `38c. Halfway through the fade it is part way gone (${midway.toFixed(3)})`);
+        updateWildlifeTileMesh(tile, T + 3 + half - 1, null, hideDeer);
+        assert(Math.abs(scaleOfInstance(herd.bodyMesh, index) - midway) < 1e-6, '38d. A clock set back fades nothing');
+        const gone = T + 3 + WILDLIFE_FADE_SECONDS + 0.01;
+        updateWildlifeTileMesh(tile, gone, null, hideDeer);
+        assert(scaleOfInstance(herd.bodyMesh, index) === 0, '38e. ...and when the fade is over, it is gone');
+        updateWildlifeTileMesh(tile, gone + half, null, () => false);
+        const growing = scaleOfInstance(herd.bodyMesh, index);
+        assert(growing > 0 && growing < DEER.scale, '38f. Unhidden, it grows back over the fade too');
+        assert(others.every((i) => Math.abs(scaleOfInstance(herd.bodyMesh, i) - herd.animals[i].scale) < 1e-4),
+            '38g. ...and the others never fade at all');
+
+        // A tile streamed in with the deer already hidden: gone from its first
+        // frame, never seen shrinking.
+        const fresh = buildWildlifeTileMesh(tx, tz, SEED, TERRAIN_TILE_SIZE, new Set());
+        const freshHerd = fresh.userData.wildlife.herds.find((h) => h.animals.some((a) => a.id === DEER.id));
+        updateWildlifeTileMesh(fresh, T, null, hideDeer);
+        assert(scaleOfInstance(freshHerd.bodyMesh, index) === 0, '38h. A tile streamed in draws a hidden animal as gone at once, no fade');
+        const posed = buildWildlifeTileMesh(tx, tz, SEED, TERRAIN_TILE_SIZE, new Set(), T);
+        const posedHerd = posed.userData.wildlife.herds.find((h) => h.animals.some((a) => a.id === DEER.id));
+        updateWildlifeTileMesh(posed, T + 1 / 60, null, hideDeer);
+        assert(scaleOfInstance(posedHerd.bodyMesh, index) === 0, '38i. ...also when it was built posed at the clock, as Renderer builds it');
     }
 
     console.log('WildlifeDisplacement tests passed');

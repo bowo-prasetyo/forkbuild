@@ -1562,7 +1562,10 @@ surface and stays silent under water. Presence keeps its existing `animation` va
   (`AvatarMovementConstraint#obstaclesNear()` with no step allowance), gathering bricks once per terrain tile and again
   every 2 s, or on the tile's next turn after an edit made in World View (`invalidate()`). `AnimalRuntimeInstances#setDisplacement()` makes `isExcluded()` true for a displaced animal (never added
   to `excludedIds`), so catching, collision, creature sounds and resident talk leave it out, and
-  `Renderer#setHiddenWildlife()` makes `updateWildlifeTileMesh()` draw it at zero scale until the build is gone.
+  `Renderer#setHiddenWildlife()` makes `updateWildlifeTileMesh()` shrink it to zero scale over
+  `WILDLIFE_FADE_SECONDS` (0.6 s of the wildlife clock) until the build is gone, then grow it back the same way. How
+  far each animal is shown is kept per herd (`herd.shown`), for this viewer alone; on a tile's first frame each starts
+  as it is, so a tile streamed in fades nothing. Collision, catching and the rest leave it out at once.
 - **Rendering.** Deterministic animals are drawn by their wildlife tile (`renderer/WildlifeTileMesh.js`), which keeps
   owning them while they wander because they never leave their cell; every frame
   `updateWildlifeTileMesh()` rewrites each loaded tile's instance matrices in place. A walking animal also moves with
@@ -1647,7 +1650,11 @@ surface and stays silent under water. Presence keeps its existing `animation` va
   picked, listed or hidden as a player. Its feet use the same `withGroundElevation()` as the avatar's; its walking
   legs advance with the ground it covered. `renderer/ResidentReaction.js#residentFacingFor()` turns a settled
   resident to face the local avatar within 6 (fading out toward its back), and the field renderer waves once per
-  approach within 3.5.
+  approach within 3.5. When a resident's pose jumps (farther than 0.75 m between two frames: its navigation changed
+  under it, or the World clock was corrected), the field renderer draws a glide instead
+  (`ResidentFieldRenderer.js#RESIDENT_GLIDE`): the body walks from where it was drawn to the pose over 0.6 s, kept
+  as an offset from the pose that eases to zero, turning the short way round; past 13 m (a World moved) it is drawn
+  there at once. Only drawing: collision and every replica use the pose throughout.
 - **Talking.** `T` (or a Talk button) calls `WorldNavigationSession#talkToNearestResident()`:
   `application/world/ResidentSurroundings.js#gatherResidentFacts()` collects what this replica knows around the
   resident — deterministic vehicles minus those `VehicleRuntimeInstances` excludes (stored), at their runtime
