@@ -8515,3 +8515,23 @@ and anyone can remix it (a model nobody can swap under the app).
   SpeechModelPins.js is still empty and the model loads unchecked, as before, until someone runs
   `node scripts/pin-speech-model.mjs`, commits the result and says a command to check voice still works. Recognising
   real speech was not tried here either.
+
+
+## The speech model pinned (unnumbered, 2026-10-21)
+
+**What the speech model pinning was waiting for.** `application/voice/SpeechModelPins.js` now names
+`onnx-community/whisper-tiny` at commit `ff4177021cc41f7db950912b73ea4fdf7d01d8e7` and the SHA-256 of the seven files
+transformers.js reads, so voice building loads that model and no other, and refuses any file, downloaded or cached,
+whose bytes differ. Pillar served: anyone can remix it (a model nobody can swap under the app).
+
+- scripts/pin-speech-model.mjs: a file kept in Git LFS (the two weights files) is pinned by its LFS object id, which
+  is the SHA-256 of its bytes recorded in the commit, rather than downloaded (Hugging Face serves the weights from a
+  separate host); the five small files are downloaded at the commit and hashed. Run with `NODE_USE_ENV_PROXY=1`
+  behind a proxy.
+- Checked live: the five small files fetched through PinnedModelFiles at the commit match their pins, the optional
+  processor_config.json (not in the repository) is answered as missing, and Hugging Face's own X-Linked-ETag for each
+  weights file matches its pin.
+- A device that already had voice on downloads the model once more: it was kept under the main branch's address, and
+  is now asked for at the commit's.
+- Not done: the weights were not downloaded here, so a full load of the pinned model in a browser was not tried; say
+  a command once after release.

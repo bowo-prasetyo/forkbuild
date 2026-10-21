@@ -5,14 +5,23 @@
 // Face or from this browser's own cache, so a changed or tampered model never
 // runs, just as the engine is held to SPEECH_ENGINE.sha256.
 //
-// Written by scripts/pin-speech-model.mjs, which downloads each file at the
-// commit and hashes it; to move to a newer model, run it again and test voice
-// by hand. Until it has been run, SPEECH_MODEL_REVISION is null and the
-// model is not pinned: SpeechRuntime then loads it as before, unchecked.
-export const SPEECH_MODEL_REVISION = null;
+// Written by scripts/pin-speech-model.mjs, which hashes each small file it
+// downloads at the commit and takes each weights file's hash from its Git LFS
+// object id in the commit (the SHA-256 of its bytes); to move to a newer
+// model, run it again and test voice by hand. With SPEECH_MODEL_REVISION null,
+// the model would not be pinned, and SpeechRuntime would load it unchecked.
+export const SPEECH_MODEL_REVISION = 'ff4177021cc41f7db950912b73ea4fdf7d01d8e7';
 
 // The files transformers.js 4 reads for Whisper speech recognition at dtype
 // q8, by their path in the repository, with their SHA-256 (hex). Any other
 // file it asks for (an optional one such as processor_config.json) is
 // answered as missing, never fetched.
-export const SPEECH_MODEL_FILES = Object.freeze({});
+export const SPEECH_MODEL_FILES = Object.freeze({
+    'config.json': '46aeea0a406afbeb563fc8e59ca10609203df4299af6a83f73752fef369efd2d',
+    'generation_config.json': 'f5c67e5a4f7102f8cb4d058bc95da276bbc19eeec997267c3bb0f25ef68facd1',
+    'preprocessor_config.json': 'a6a76d28c93edb273669eb9e0b0636a2bddbb1272c3261e47b7ca6dfdbac1b8d',
+    'tokenizer.json': '27fc476bfe7f17299480be2273fc0608e4d5a99aba2ab5dec5374b4482d1a566',
+    'tokenizer_config.json': '2a4c4281cf9f51ac6ccc406fdc711a087afe6530f671fa7b80953edc498275ce',
+    'onnx/encoder_model_quantized.onnx': '2af4a414ca47aa30f61246017e5fe82b0a8d229281d1255ba666a2a7f6b84d19',
+    'onnx/decoder_model_merged_quantized.onnx': '25e807a962b6349356d0ea5d0dfe530b7e5bf0e2a484aeca0359d03143faddd3'
+});
