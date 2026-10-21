@@ -7,8 +7,12 @@
 // One at the pinned revision whose path is pinned is fetched (or read from the
 // cache), hashed, and handed on only when its SHA-256 is the pinned one; a
 // cached copy that isn't is thrown away and fetched again, and a download
-// that isn't is refused. Any other address under the model is answered as
-// missing (404), so nothing unpinned is ever read.
+// that isn't is refused. Any other address, under the model or not, is
+// answered as missing (404) without being fetched, so nothing unpinned is
+// ever read: transformers.js asks `env.fetch` only for the model's files
+// (SpeechRuntime turns its engine cache, the one other asker, off), and a
+// version that one day wants another file stops loading, loudly, until that
+// file is pinned too.
 
 function hex(buffer) {
     return [...new Uint8Array(buffer)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
@@ -48,8 +52,7 @@ export class PinnedModelFiles {
     // transformers.js's env.fetch.
     async fetch(url, init) {
         const pin = this.pinOf(url);
-        if (pin === null) return this._fetch(url, init);
-        if (pin.path === null) return new Response(null, { status: 404, statusText: 'Not pinned' });
+        if (pin === null || pin.path === null) return new Response(null, { status: 404, statusText: 'Not pinned' });
         const response = await this._fetch(url, { ...init, credentials: 'omit' });
         if (!response.ok) return response;
         const bytes = await this._read(response, pin.path);

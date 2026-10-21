@@ -332,7 +332,9 @@ the detailed references; in short:
   and application/voice/PinnedModelFiles.js, its `env.fetch` and
   `env.customCache`, hands on each file only when its SHA-256 is the pinned
   one, downloaded or cached (a bad cached copy is thrown away), and answers
-  any unpinned file as missing; until then the model loads unchecked, as
+  any other address, an unpinned file of the model or anything else, as
+  missing without fetching it (transformers.js asks `env.fetch` for nothing
+  else while its engine cache is off); until then the model loads unchecked, as
   before. Both are kept in Cache Storage until removed. The
   published Content Security Policy allows `'wasm-unsafe-eval'` for this,
   never `'unsafe-eval'`. The runtime lives in a module worker
@@ -357,7 +359,14 @@ the detailed references; in short:
   the guide for a question. World View reads it with
   core/voice/WorldVoiceCommand.js (words from ui/i18n/worldVoiceWords.js):
   go to a place named in Locations (or a build on a challenge plaza), Home,
-  a camera view, sound off or on, undo, redo, or talk to a resident.
+  a camera view, sound off or on, undo, redo, or talk to a resident. When
+  "go to" was said, nothing else was asked for and no place name is found
+  whole, a near miss is: each name word of four letters or more matches a
+  word heard, or two heard side by side, with the same first letter within
+  one edit (two from eight letters; a swap of neighbours is one), the words
+  of "go to" and the ignored words left out of what was heard; the most
+  words matched, then the fewest edits, wins, and a tie is no place. Not in
+  Japanese, Chinese or Korean.
   scripts/vendor.mjs
   takes these two packages' files from their published tarballs, pinned by
   integrity and SHA-256, since their npm package would install native Node

@@ -8594,3 +8594,35 @@ with friends (a World that looks alive while it is being built in).
   is over; it grows back; the rest of the herd never fades; a tile streamed in, posed at the clock as Renderer builds it or not, draws a hidden animal gone at once).
 - Not done: a gliding resident goes straight, so for 0.6 s it may cross the wall that changed its way; while an
   animal fades out it is already left out of collision and catching.
+
+
+## A place's name heard a little wrong still takes you there, and the speech model reads nothing unpinned (unnumbered, 2026-10-21)
+
+**Two of the remaining findings of the second game AI audit.** Voice in World View found a place only when its name
+was heard whole (or with up to two letters more): Whisper tiny writes "the old mil", "the brige" or "the light house"
+often enough that "take me to …" missed places that were plainly meant. And `PinnedModelFiles#fetch()` passed any
+address outside the model's own straight through to the network, unchecked. Pillar served: building feels joyful
+(voice that does what was said), and anyone can remix it (a model nobody can swap under the app).
+
+- core/voice/WorldVoiceCommand.js: `fuzzyPlaceNamed()`, tried only when "go to" was said, nothing else was asked for
+  ("go to home" is still Home, however near "Homes" is) and no name is found whole. Each name word of four letters
+  or more matches a word heard, or two heard side by side ("light house"), that starts with the same letter and is
+  within one edit (two from eight letters; a letter added, dropped or changed, or two neighbours swapped). The words
+  of "go to" and the language's ignored words are left out of what was heard, so "show me" never matches a place
+  called "Shop". The most name words matched, then the fewest edits, wins; a tie is no place, never a guess. Japanese,
+  Chinese and Korean names are found whole or not at all. Instead of giving the model the World's place names as a
+  prompt: no change to what the model hears, no risk of it repeating the prompt, and every language at once.
+- application/voice/PinnedModelFiles.js: every address that is not a pinned file of the model at the pinned
+  revision is answered as missing without being fetched. transformers.js 4.3 asks `env.fetch` for nothing else in
+  voice's configuration: its one other asker, the engine cache, is off (`env.useWasmCache = false`), and the rest
+  (speaker embeddings, audio by URL) are for features voice does not use. A later version that wants another file
+  stops loading until it is pinned too.
+- The speech engine stays on `onnxruntime-web@1.31.0-dev.20260914`: transformers.js 4.3.1 itself depends on exactly
+  that build, and the engine must match the one it bundles; the latest stable release, 1.30.0, is older. Move with
+  transformers.js once it ships against a stable 1.31.
+- docs/Architecture.md. The user guide is unchanged: a name said a little wrong now simply works.
+- Tests: tests/VoiceBuilding.test.js (a letter dropped, added or changed, two swapped, two edits in a long word, two
+  words heard for one; a word too short; another first letter; nothing near; two places equally near is none; a
+  second word settles a tie; "show me" is never "Shop"; "go to home" stays Home; a near miss without "go to" is
+  nothing); tests/PinnedSpeechModel.test.js (another host, another model and anything else answered as missing and
+  never fetched).

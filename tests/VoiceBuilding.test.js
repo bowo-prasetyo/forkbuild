@@ -223,6 +223,45 @@ function workerPair(runtimeFor) {
     for (const [text, command] of Object.entries(expected)) {
         assert(read(text) === command, `"${text}" is ${command} (got ${read(text)})`);
     }
+    // A name heard a little wrong is still found, but only when one place is
+    // clearly nearest.
+    const near = [
+        { id: 'mill', title: 'Old Mill' }, { id: 'bridge', title: 'Stone Bridge' }, { id: 'light', title: 'Lighthouse' },
+        { id: 'lake', title: 'Lake' }, { id: 'market', title: 'Market Square' }, { id: 'homes', title: 'Homes' },
+        { id: 'chapel', title: 'Chapel' }, { id: 'castle', title: 'Castle' }, { id: 'garden', title: 'Rose Garden' }, { id: 'garden2', title: 'Herb Garden' }
+    ];
+    const heard = (text, list = near) => {
+        const command = interpretWorldCommand(text, worldVoiceVocabulary(), list);
+        return command ? (command.kind === 'goTo' ? `goTo:${command.place?.id ?? 'none'}` : command.kind) : null;
+    };
+    const nearMisses = {
+        'go to the brige': 'goTo:bridge',              // a letter dropped
+        'take me to the stone bridgr': 'goTo:bridge', // changed
+        'go to the light house': 'goTo:light',        // two words heard for one
+        'go to the lighhtouse': 'goTo:light',         // two edits in a long word
+        'show me the markte square': 'goTo:market',   // two letters swapped
+        'take me to the chapell': 'goTo:chapel',      // a letter added
+        'take me to the lak': 'goTo:lake',
+        'take me to the mil': 'goTo:mill',            // the old mill, misheard
+        'go to the inn': 'goTo:none',                 // a heard word too short to match anything
+        'go to the gardem': 'goTo:none',              // two gardens equally near: no guess
+        'go to the rose gardem': 'goTo:garden',       // "rose" settles it
+        'go to the cattle': 'goTo:castle',
+        'go to the bottle': 'goTo:none',              // starts with another letter
+        'go to the tavern': 'goTo:none',              // nothing near
+        'go to home': 'home',                         // "Homes" is near, but home was asked for
+        'stone bridgr': null                          // a near miss alone, without "go to", is nothing
+    };
+    for (const [text, command] of Object.entries(nearMisses)) {
+        assert(heard(text) === command, `near miss: "${text}" is ${command} (got ${heard(text)})`);
+    }
+    assert(heard('go to the brige', [{ id: 'b1', title: 'Bridge' }, { id: 'b2', title: 'Fridge' }]) === 'goTo:b1',
+        'near miss: the same letter first ("Bridge", not "Fridge")');
+    assert(heard('show me the brige', [{ id: 'shop', title: 'Shop' }, { id: 'bridge', title: 'Stone Bridge' }]) === 'goTo:bridge',
+        'near miss: the words of "go to" are never matched ("show" is one edit from "Shop")');
+    assert(heard('go to the brige', [{ id: 'b1', title: 'North Bridge' }, { id: 'b2', title: 'South Bridge' }]) === 'goTo:none',
+        'near miss: two places equally near is no place');
+
     const cases = {
         de: [['bring mich zur alten Mühle', 'goTo:mill'], ['nach Hause', 'home'], ['Ton aus', 'soundOff'], ['Ton an', 'soundOn'], ['Vogelperspektive', 'birdEye'], ['rückgängig', 'undo']],
         es: [['llévame al molino viejo', 'goTo:mill'], ['a casa', 'home'], ['silencio', 'soundOff'], ['activa el sonido', 'soundOn'], ['primera persona', 'firstPerson'], ['deshacer', 'undo']],
