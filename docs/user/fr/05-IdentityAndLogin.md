@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: cf497f719abf3048 -->
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: ed66279f6cd72634 -->
 # 05 — Votre nom et votre identité
 
 <!-- languages -->
@@ -100,9 +100,10 @@ De là, vous pouvez :
 - **Exporter** — la sauvegarder.
 - **Importer** — en restaurer ou en copier une depuis un fichier de
   sauvegarde.
-- **Déclarer un successeur / Révoquer** — marquer une identité comme
+- **Déclarer un successeur** / **Révoquer** — marquer une identité comme
   retirée au profit d’une autre (collez l’ID `did:key:z…` du successeur),
-  ou la révoquer purement et simplement, définitivement. Déclarer un
+  ou la révoquer purement et simplement, définitivement, avec
+  **Révoquer l’identité**. Déclarer un
   successeur ne révoque rien en soi — révoquez séparément quand le
   changement doit prendre effet. Pour une identité protégée verrouillée,
   les deux demandent sa phrase secrète, et signer avec elle la

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 924941a6d98b2fef -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 170440c7f3266fb3 -->
 # 01 — Memulai
 
 <!-- languages -->
@@ -109,6 +109,9 @@ menampilkan semuanya sekaligus.
     menu. Otomatis mengikuti mode terang atau gelap perangkat Anda; Terang
     adalah desa di siang hari, Gelap desa yang sama di malam hari. Berubah
     seketika dan disimpan di perangkat ini.
+  - **Bantuan** — ajukan pertanyaan dengan kata-kata Anda sendiri dan
+    dapatkan jawabannya dari panduan ini, dibaca di perangkat Anda. Setelah
+    dibuka, tetap berfungsi saat offline.
   - **Tentang** — informasi versi dan tautan ke panduan ini
   - **Pasang ForkBuild** — jika browser dapat memasangnya (lihat
     [Memasang ForkBuild](#memasang-forkbuild))

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: be6c14fcfc79e4c8 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 0076c2d8fe2e4551 -->
 # 09 — Publications et preuves externes
 
 <!-- languages -->
@@ -81,7 +81,7 @@ est de l’un de ces trois types :
 
 La Vue du Monde, l’Éditeur et Explorer appellent eux aussi
 l’enregistrement signé d’un Monde un **Monde partagé**, comme dans **Mon
-Monde partagé**, **Découvrir un Monde partagé** et **Retour au Monde
+Monde partagé**, **Découvrir un Monde partagé** et **Sélectionner le Monde
 partagé**.
 
 ## Ce qui entoure une publication

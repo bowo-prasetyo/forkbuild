@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 924941a6d98b2fef -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 170440c7f3266fb3 -->
 # 01 — Premiers pas
 
 <!-- languages -->
@@ -113,6 +113,9 @@ montre tous à la fois.
     menu. Auto suit le mode clair ou sombre de votre appareil ; Clair est le
     village de jour, Sombre le même village la nuit. Le changement est
     immédiat et gardé sur cet appareil.
+  - **Aide** — posez une question avec vos propres mots et obtenez la
+    réponse tirée de ce guide, lu sur votre appareil. Une fois ouverte,
+    elle fonctionne aussi hors ligne.
   - **À propos** — informations de version et un lien vers ce guide
   - **Installer ForkBuild** — là où le navigateur peut l’installer (voir
     [Installer ForkBuild](#installer-forkbuild))

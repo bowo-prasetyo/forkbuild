@@ -84,10 +84,11 @@ using. From here you can:
   public key, and every signature it has made — never changes.
 - **Export** — back it up.
 - **Import** — restore or copy one from a backup file.
-- **Declare a successor / Revoke** — mark an identity as retired in favor of
+- **Declare Successor** / **Revoke** — mark an identity as retired in favor of
   another (paste the successor's `did:key:z…` ID), or revoke it outright,
-  permanently. Declaring a successor doesn't revoke anything by itself —
-  revoke separately when the switch should take effect. For a locked,
+  permanently, with **Revoke Identity**. Declaring a successor doesn't
+  revoke anything by itself — revoke separately when the switch should take
+  effect. For a locked,
   protected identity both ask for its passphrase, and signing with it
   unlocks it, exactly as unlocking it yourself would.
 

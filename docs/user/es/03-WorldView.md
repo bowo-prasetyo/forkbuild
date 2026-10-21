@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: ddd5e492a88450c7 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: b70b27623985ebf0 -->
 # 03 — Vista del mundo
 
 <!-- languages -->
@@ -133,7 +133,11 @@ en cuando. Si se acerca, uno gira la cabeza para mirarlo (salvo que esté
 justo detrás); un ciervo que pasta levanta la cabeza y un conejo se sienta
 sobre las patas traseras. Nunca huyen ni se mueven por usted, y los demás
 ven que los miran *a ellos*. Los animales le cierran el paso a pie, como
-los árboles.
+los árboles. Donde se ha construido, los animales salvajes se mantienen
+lejos: uno cuyo trozo de terreno ocupa una construcción se desvanece y no
+vuelve mientras la construcción siga en pie, así que ningún ciervo pasta en
+un salón. Bajo un puente o un piso alto hay sitio para ellos. Quite la
+construcción y el animal vuelve.
 
 Todos los que miran el mismo lugar en el mismo momento ven la misma
 tierra, los mismos peces, árboles y animales. Nada de esto se puede

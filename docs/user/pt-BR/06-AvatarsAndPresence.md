@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: fdcc7c250da899ce -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 79dd3fed265f1388 -->
 # 06 — Avatares e presença
 
 <!-- languages -->
@@ -310,7 +310,9 @@ dono até ele montar.
 
 Alguns mundos têm vida selvagem — cervos nas florestas, coelhos nos campos
 abertos. Os animais selvagens passeiam devagar em torno de onde o mundo os
-pôs, nunca se afastando mais que alguns passos. Chegue perto o bastante de um
+pôs, nunca se afastando mais que alguns passos. Aquele cujo
+pedaço de chão tem uma construção não está lá, nem pode ser pego, até a
+construção sumir (veja [O que há em volta](03-WorldView.md#o-que-há-em-volta)). Chegue perto o bastante de um
 e aparece um aviso dizendo para pressionar **F** para pegá-lo. Pegar o
 adiciona ao seu inventário (o mesmo inventário onde fica um veículo
 guardado) e o tira do mundo.
@@ -373,8 +375,10 @@ desfaça com **Ctrl/Cmd+Z**.
 **Como eles se movem.** Os moradores ficam a uns seis passos de casa. Eles
 contornam paredes, árvores e água, nunca atravessam, e de vez em quando
 param para olhar em volta. Todos veem cada morador no mesmo lugar no mesmo
-momento, porque onde ele está vem do Mundo e do relógio. Nada é enviado
-entre os jogadores. Você esbarra num morador como numa árvore, mas ele não
+momento, porque onde ele está vem do Mundo e do relógio. Os jogadores
+conectados combinam um só relógio do Mundo, então um dispositivo com o
+relógio um pouco errado mostra a mesma coisa; entre eles só a hora é
+enviada, nunca onde um morador está. Você esbarra num morador como numa árvore, mas ele não
 desvia de você, então pode passar através de você enquanto você fica
 parado.
 

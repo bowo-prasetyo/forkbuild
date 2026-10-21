@@ -74,7 +74,7 @@ three kinds:
 
 World View, the Editor and Explore call a World's signed record a
 **Shared World** too, as in **My Shared World**, **Discover Shared World**
-and **Back to Shared World**.
+and **Select Shared World**.
 
 ## What surrounds a publication
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: fdcc7c250da899ce -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 79dd3fed265f1388 -->
 # 06 — Avatar & Kehadiran
 
 <!-- languages -->
@@ -331,7 +331,9 @@ hanya ada di layar pemiliknya sampai mereka menaikinya.
 
 Beberapa dunia memiliki satwa liar — rusa di hutan, kelinci di padang
 rumput terbuka. Hewan liar berkeliaran perlahan di sekitar tempat dunia
-menempatkannya, tidak pernah menjauh lebih dari beberapa langkah.
+menempatkannya, tidak pernah menjauh lebih dari beberapa langkah. Hewan yang petak tanahnya
+ditempati bangunan tidak ada, dan tidak bisa ditangkap, sampai bangunan itu
+hilang (lihat [Apa yang ada di sekitar Anda](03-WorldView.md#apa-yang-ada-di-sekitar-anda)).
 Berjalanlah cukup dekat ke salah satunya dan sebuah petunjuk muncul yang
 meminta Anda menekan **F** untuk menangkapnya. Menangkap menambahkannya ke
 inventaris Anda (inventaris yang sama dengan tempat kendaraan tersimpan) dan
@@ -400,8 +402,10 @@ petunjuk **[R] Hapus Penghuni**), atau urungkan dengan **Ctrl/Cmd+Z**.
 dari rumahnya. Mereka mengitari dinding, pohon, dan air, tidak pernah
 menembusnya, dan sesekali berhenti untuk melihat sekeliling. Semua orang
 melihat setiap penghuni di tempat yang sama pada saat yang sama, karena
-letaknya berasal dari Dunia dan jam. Tidak ada yang dikirim antarpemain.
-Anda menabrak penghuni seperti menabrak pohon, tetapi ia tidak menyingkir
+letaknya berasal dari Dunia dan jam. Pemain yang terhubung menyepakati
+satu jam Dunia, jadi perangkat yang jamnya sedikit meleset tetap
+menampilkan hal yang sama; hanya waktu yang dikirim antarmereka, tidak
+pernah letak seorang penghuni. Anda menabrak penghuni seperti menabrak pohon, tetapi ia tidak menyingkir
 untuk Anda, jadi ia bisa berjalan menembus Anda saat Anda diam.
 
 **Menemukan jalan.** Penghuni keluar lewat pintu, berbelok di sudut rumahnya, dan menyusuri jalan ke tempat-tempat yang ia sukai, memutari apa pun yang menghalangi. Saat malam tiba, ia pulang dan tetap di rumah sampai pagi.

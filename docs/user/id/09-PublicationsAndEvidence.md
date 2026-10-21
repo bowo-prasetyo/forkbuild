@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: be6c14fcfc79e4c8 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 0076c2d8fe2e4551 -->
 # 09 — Publikasi & Bukti Eksternal
 
 <!-- languages -->
@@ -80,7 +80,7 @@ masing-masing adalah salah satu dari tiga jenis:
 
 Tampilan Dunia, Editor, dan Jelajahi juga menyebut catatan bertanda
 tangan sebuah Dunia sebagai **Dunia Bersama**, seperti di **Dunia Bersama
-Saya**, **Temukan Dunia Bersama**, dan **Kembali ke Dunia Bersama**.
+Saya**, **Temukan Dunia Bersama**, dan **Pilih Dunia Bersama**.
 
 ## Apa yang melingkupi sebuah publikasi
 

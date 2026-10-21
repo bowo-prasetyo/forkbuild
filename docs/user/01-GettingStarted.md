@@ -101,6 +101,8 @@ at once.
     follows your device's light or dark mode; Light is the village by day,
     Dark the same village after dark. It changes at once and is kept on
     this device.
+  - **Help** — ask a question in your own words and get the answer from
+    this guide, read on your device. It still works offline once opened.
   - **About** — version info and a link to this guide
   - **Install ForkBuild** — where the browser can install it (see
     [Installing ForkBuild](#installing-forkbuild))

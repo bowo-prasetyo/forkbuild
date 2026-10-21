@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 8d5d29ddd6f4e2ed -->
+<!-- translation-of: docs/Privacy.md source-hash: 287edaaf9be8160b -->
 # Privasi
 
 <!-- languages -->
@@ -319,13 +319,14 @@ Anda dan apa yang Anda minta darinya.
 
 Suara, setelah Anda menyalakannya di Editor atau Tampilan Dunia, juga mengunduh model suaranya
 dari Hugging Face dan mesin suaranya (WebAssembly) dari jsDelivr, sekali
-saja; mesin itu ditolak jika bukan berkas yang persis diharapkan ForkBuild
-(SHA-256-nya ditetapkan di aplikasi). Apa yang Anda ucapkan direkam dan
+saja; masing-masing ditolak jika bukan berkas yang persis diharapkan ForkBuild
+(SHA-256 mesin dan setiap berkas model, pada satu versi model tertentu,
+ditetapkan di aplikasi). Apa yang Anda ucapkan direkam dan
 dipahami di perangkat Anda, dan tidak pernah dikirim ke mana pun.
 
 | Kapan | Server (bawaan) | Apa yang diterimanya |
 | --- | --- | --- |
-| Anda menyalakan suara di Editor atau Tampilan Dunia (sekali, dan lagi hanya setelah menghapus berkasnya) | Hugging Face (`huggingface.co` dan server berkasnya), jsDelivr (`cdn.jsdelivr.net`) | permintaan berkas model suara (`onnx-community/whisper-tiny`) dan berkas WebAssembly mesin suara (`onnxruntime-web`, satu versi tertentu); tidak pernah apa pun yang Anda ucapkan |
+| Anda menyalakan suara di Editor atau Tampilan Dunia (sekali, dan lagi hanya setelah menghapus berkasnya) | Hugging Face (`huggingface.co` dan server berkasnya), jsDelivr (`cdn.jsdelivr.net`) | permintaan berkas model suara (`onnx-community/whisper-tiny`, satu versi tertentu) dan berkas WebAssembly mesin suara (`onnxruntime-web`, satu versi tertentu); tidak pernah apa pun yang Anda ucapkan |
 | Aplikasi dibuka di situs resmi, paling banyak sekali sehari (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap, tanpa perujuk dan tanpa cookie |
 | Di situs resmi, Anda menyalin atau membagikan tautan ke sebuah bangunan, membuka tautan yang dibagikan, atau menyalin bangunan yang dibuka dari tautan itu ke Editor (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap yang menyebut momen mana dari ketiganya, tanpa perujuk dan tanpa cookie |
 | Anda memasang ForkBuild dari situs resmi (lihat "Hitungan pengunjung") | GoatCounter (`forkbuild.goatcounter.com`) | satu permintaan gambar dengan jalur tetap `/e/installed`, tanpa referrer dan tanpa cookie |

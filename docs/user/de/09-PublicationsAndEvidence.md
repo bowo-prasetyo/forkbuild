@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: be6c14fcfc79e4c8 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 0076c2d8fe2e4551 -->
 # 09 — Veröffentlichungen & externe Nachweise
 
 <!-- languages -->
@@ -83,7 +83,7 @@ Jeder Eintrag auf der Seite Veröffentlichungen ist eine
 
 Weltansicht, Editor und Entdecken nennen den signierten Datensatz einer
 Welt ebenfalls **Geteilte Welt**, wie in **Meine Geteilte Welt**,
-**Geteilte Welt entdecken** und **Zurück zur Geteilten Welt**.
+**Geteilte Welt entdecken** und **Geteilte Welt auswählen**.
 
 ## Was eine Veröffentlichung umgibt
 

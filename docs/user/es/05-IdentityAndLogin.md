@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: cf497f719abf3048 -->
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: ed66279f6cd72634 -->
 # 05 — Su nombre y su identidad
 
 <!-- languages -->
@@ -96,9 +96,9 @@ puede:
 - **Exportar**: hacer una copia de seguridad.
 - **Importar**: restaurar o copiar una desde un archivo de copia de
   seguridad.
-- **Declarar sucesora / Revocar**: marcar una identidad como retirada en
+- **Declarar sucesora** / **Revocar**: marcar una identidad como retirada en
   favor de otra (pegue el ID `did:key:z…` de la sucesora), o revocarla por
-  completo, de forma permanente. Declarar una sucesora no revoca nada por
+  completo, de forma permanente, con **Revocar identidad**. Declarar una sucesora no revoca nada por
   sí solo: revoque por separado cuando el cambio deba entrar en vigor. En
   una identidad protegida y bloqueada, ambas acciones piden su frase de
   contraseña, y firmar con ella la desbloquea, exactamente como si la

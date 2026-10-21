@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 8d5d29ddd6f4e2ed -->
+<!-- translation-of: docs/Privacy.md source-hash: 287edaaf9be8160b -->
 # 개인정보 보호
 
 <!-- languages -->
@@ -240,13 +240,14 @@ Nostr 릴레이, Arweave 게이트웨이, Steem과 Blurt 노드에서 새 공지
 내가 요청하는 것을 봅니다.
 
 음성은 편집기나 월드 보기에서 켜면 음성 모델을 Hugging Face에서, 음성 엔진(WebAssembly)을
-jsDelivr에서 한 번만 내려받습니다. 엔진은 ForkBuild가 기대하는 파일과 정확히
-같지 않으면 거부됩니다(그 SHA-256은 앱에 고정되어 있습니다). 말한 내용은 이
+jsDelivr에서 한 번만 내려받습니다. 둘 다 ForkBuild가 기대하는 파일과 정확히
+같지 않으면 거부됩니다(엔진과, 정해진 한 버전의 모델 각 파일의 SHA-256은 앱에
+고정되어 있습니다). 말한 내용은 이
 기기에서 녹음되고 인식되며, 어디에도 보내지 않습니다.
 
 | 언제 | 서버 (기본값) | 받는 것 |
 | --- | --- | --- |
-| 편집기나 월드 보기에서 음성을 켤 때(한 번, 그리고 파일을 삭제한 뒤 다시 켤 때만) | Hugging Face(`huggingface.co`와 그 파일 서버), jsDelivr(`cdn.jsdelivr.net`) | 음성 모델 파일(`onnx-community/whisper-tiny`)과 음성 엔진의 WebAssembly 파일(`onnxruntime-web`, 정해진 한 버전) 요청. 말한 내용은 절대 보내지 않습니다 |
+| 편집기나 월드 보기에서 음성을 켤 때(한 번, 그리고 파일을 삭제한 뒤 다시 켤 때만) | Hugging Face(`huggingface.co`와 그 파일 서버), jsDelivr(`cdn.jsdelivr.net`) | 음성 모델 파일(`onnx-community/whisper-tiny`, 정해진 한 버전)과 음성 엔진의 WebAssembly 파일(`onnxruntime-web`, 정해진 한 버전) 요청. 말한 내용은 절대 보내지 않습니다 |
 | 공식 사이트에서 앱을 열 때, 하루에 최대 한 번(“방문자 수 집계” 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 고정된 경로로, 리퍼러와 쿠키 없이 보내는 이미지 요청 하나 |
 | 공식 사이트에서 작품 링크를 복사하거나 공유할 때, 공유 링크를 열 때, 그 링크로 연 작품을 에디터로 복사할 때(“방문자 수 집계” 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 세 순간 중 어느 것인지 나타내는 고정된 경로로, 리퍼러와 쿠키 없이 보내는 이미지 요청 하나 |
 | 공식 사이트에서 ForkBuild를 설치할 때(“방문자 수 집계” 참고) | GoatCounter(`forkbuild.goatcounter.com`) | 고정 경로 `/e/installed`의 이미지 요청 하나, 리퍼러와 쿠키 없음 |

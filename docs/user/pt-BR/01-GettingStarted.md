@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 924941a6d98b2fef -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 170440c7f3266fb3 -->
 # 01 — Primeiros passos
 
 <!-- languages -->
@@ -108,6 +108,9 @@ de uma vez.
     Auto segue o modo claro ou escuro do seu dispositivo; Clara é a vila
     de dia, Escura a mesma vila à noite. Muda na hora e fica guardada
     neste dispositivo.
+  - **Ajuda** — faça uma pergunta com suas próprias palavras e receba a
+    resposta deste guia, lido no seu dispositivo. Depois de aberta, funciona
+    também offline.
   - **Sobre** — informações da versão e um link para este guia
   - **Instalar o ForkBuild** — onde o navegador consegue instalá-lo (veja
     [Instalando o ForkBuild](#instalando-o-forkbuild))

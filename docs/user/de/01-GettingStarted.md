@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 924941a6d98b2fef -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 170440c7f3266fb3 -->
 # 01 — Erste Schritte
 
 <!-- languages -->
@@ -111,6 +111,9 @@ alle auf einmal.
     folgt dem hellen oder dunklen Modus Ihres Geräts; Hell ist das Dorf am
     Tag, Dunkel dasselbe Dorf bei Nacht. Es wechselt sofort und wird auf
     diesem Gerät gespeichert.
+  - **Hilfe** — stellen Sie eine Frage in Ihren eigenen Worten; die Antwort
+    kommt aus dieser Anleitung, gelesen auf Ihrem Gerät. Einmal geöffnet,
+    funktioniert es auch offline.
   - **Über** — Versionsinformationen und ein Link zu dieser Anleitung
   - **ForkBuild installieren** — wo der Browser es installieren kann (siehe
     [ForkBuild installieren](#forkbuild-installieren))

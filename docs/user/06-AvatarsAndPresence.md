@@ -304,8 +304,10 @@ until they ride it.
 
 Some worlds have wildlife — deer in forests, rabbits on open grassland.
 Wild animals wander slowly around where the world placed them, never
-straying more than a few steps. Walk close enough to one and a prompt appears telling you to
-press **F** to catch it. Catching adds it to your inventory (the same
+straying more than a few steps. One whose patch of ground has a build on it
+isn't there, and can't be caught, until the build is gone (see
+[What's around you](03-WorldView.md#whats-around-you)). Walk close enough
+to one and a prompt appears telling you to press **F** to catch it. Catching adds it to your inventory (the same
 inventory a stored vehicle lives in) and removes it from the world.
 
 Walk anywhere else and press **F** again — with nothing catchable
@@ -366,8 +368,10 @@ press **R** again (a prompt shows **[R] Remove Resident**), or undo with
 **How they move.** Residents stay within about six steps of home. They walk
 around walls, trees and water, never through them, and stop now and then
 to look around. Everyone sees each resident in the same place at the same
-moment, because where they are comes from the World and the clock. Nothing
-is sent between players. You bump into a resident like a tree, but it
+moment, because where they are comes from the World and the clock.
+Connected players agree on one World clock, so a device whose clock is a
+little off still shows the same thing; only the time is sent between
+them, never where a resident is. You bump into a resident like a tree, but it
 doesn't step aside for you, so one may walk through you while you stand
 still.
 

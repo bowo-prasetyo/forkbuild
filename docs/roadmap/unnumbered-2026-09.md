@@ -8626,3 +8626,24 @@ address outside the model's own straight through to the network, unchecked. Pill
   second word settles a tie; "show me" is never "Shop"; "go to home" stays Home; a near miss without "go to" is
   nothing); tests/PinnedSpeechModel.test.js (another host, another model and anything else answered as missing and
   never fetched).
+
+
+## The user guide caught up with the last days' changes (unnumbered, 2026-10-21)
+
+**A technical writer's check of `docs/user/` against the code.** Links and anchors, the translations' stamps, the
+Controls Reference's keys and the guide's bold labels were checked against the app; nearly all held. What had fallen
+behind, now fixed in English and in all seven translations (each stamped again):
+
+- 01 Getting Started: **Help** was missing from the menu's App group (ui/App.js).
+- 03 World View, 06 Avatars & Presence: wild animals keep away from builds (core/nature/WildlifeDisplacement.js), and
+  a hidden one can't be caught; the guide didn't say so.
+- 06 Avatars & Presence: residents said "nothing is sent between players", but connected players now agree on one
+  World clock (core/world/WorldClockAgreement.js); only the time is sent.
+- 05 Your Name & Identity: **Declare Successor** / **Revoke**, then **Revoke Identity**, as the buttons say.
+- 09 Publications: **Back to Shared World** never existed; **Select Shared World** does.
+- Privacy: the speech model, like its engine, is held to one version and each file's SHA-256
+  (application/voice/SpeechModelPins.js).
+- The guide's pictures, in every language, taken again with scripts/user-guide-screenshots.mjs: they predated the
+  🎤 Voice buttons.
+
+Left as it was: a place name heard a little wrong is not described, as the entry above decided.

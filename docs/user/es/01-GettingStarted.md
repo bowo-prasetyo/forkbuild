@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 924941a6d98b2fef -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 170440c7f3266fb3 -->
 # 01 — Primeros pasos
 
 <!-- languages -->
@@ -112,6 +112,9 @@ muestra todos a la vez.
     menú. Auto sigue el modo claro u oscuro de su dispositivo; Claro es el
     pueblo de día y Oscuro el mismo pueblo de noche. Cambia al instante y
     se guarda en este dispositivo.
+  - **Ayuda**: haga una pregunta con sus propias palabras y obtenga la
+    respuesta de esta guía, leída en su dispositivo. Una vez abierta,
+    funciona también sin conexión.
   - **Acerca de**: información de la versión y un enlace a esta guía
   - **Instalar ForkBuild**: donde el navegador puede instalarlo (consulte
     [Instalar ForkBuild](#instalar-forkbuild))
