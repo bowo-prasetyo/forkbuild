@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: a245f388db3fff60 -->
+<!-- translation-of: docs/Privacy.md source-hash: 8d5d29ddd6f4e2ed -->
 # Privasi
 
 <!-- languages -->
@@ -129,6 +129,11 @@ Apakah notifikasi di perangkat ini aktif disimpan bersama pengaturan Anda
   pembuatnya sebagai notifikasi. Menarik kembali hati mengirim catatan yang
   lebih baru; yang lama bisa tetap berada di tempat ia dikirim, dan di Nostr
   permintaan penghapusan hanyalah permintaan.
+- **Jam Anda, ke rekan yang terhubung.** Selama Anda terhubung, perangkat
+  Anda dan setiap rekan yang terhubung saling memberi tahu waktu di jam
+  masing-masing (beberapa kali saat terhubung, lalu sekali semenit), agar
+  hewan dan penghuni berdiri di tempat yang sama di layar semua orang. Hanya
+  waktunya yang dikirim.
 - **Rekan yang terhubung dengan Anda** mengetahui kunci publik identitas
   Anda dan alamat IP Anda (koneksi langsung memerlukannya; relay TURN
   menyembunyikannya dari rekan tetapi tidak dari relay itu sendiri). Rekan

@@ -257,6 +257,9 @@ export default {
         const identityUseCase = inject('identityUseCase');
         const peerSessionManager = inject('peerSessionManager');
         const peerMessageBus = inject('peerMessageBus');
+        // The World clock peers agree on, so animals and residents stand where
+        // they do on everyone else's screen.
+        const worldClock = inject('worldClock', null);
         const friendRelationshipUseCase = inject('friendRelationshipUseCase');
         const peerBlockUseCase = inject('peerBlockUseCase');
         const deviceAuthorizationUseCase = inject('deviceAuthorizationUseCase');
@@ -322,7 +325,8 @@ export default {
             friendRelationshipUseCase,
             peerBlockUseCase,
             deviceAuthorizationPropagationUseCase: deviceAuthorizationUseCase,
-            decentralizedPublicationDiscoveryProvider: decentralizedDiscoveryProviderForEnrichment
+            decentralizedPublicationDiscoveryProvider: decentralizedDiscoveryProviderForEnrichment,
+            worldClock
         });
         const session = worldViewFactory.createSession(registry);
         // The village at the plaza, standing in every World View (core/challenge/StarterVillage.js).

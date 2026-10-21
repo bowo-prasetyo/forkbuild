@@ -36,6 +36,28 @@ is drawn. Motion never reacts to an avatar, so replicas always agree.
 
 [Full text](history/0.9.md#a-wild-animal-wanders-on-a-path-sampled-from-time-never-simulated-2026-09-29)
 
+### Peers Agree On One World Clock, And Nobody Can Pull It Far (2026-10-21)
+
+Everything sampled from time is only the same for everyone if everyone's
+clock says the same thing, and device clocks drift by seconds. Connected
+peers tell each other what their own, uncorrected clocks say, and each
+moves its World time to the median of its own and theirs: no server, no
+leader, and no feedback, since only uncorrected clocks are ever sent. A
+clock more than 15 minutes off is ignored rather than followed, and one
+wrong clock among three or more moves nothing. A change is eased in, time
+running a little fast or slow, so animals never jump.
+
+### A Wild Animal Keeps Away From What Is Built (2026-10-21)
+
+A wild animal never grazes inside a build or walks through a wall, and
+never wades across a river. Its path stays a pure function of the seed
+and the time: a walk that would cross a river goes by way of where it was
+placed, and an animal whose reachable ground touches a brick it could not
+walk under is simply not there, left out everywhere a caught one is, for
+as long as the build stands. Like a resident's paths, this depends on the
+Worlds a replica has loaded, so right after an edit two replicas can
+briefly disagree.
+
 ### A Resident Walks A Path Sampled From Time And The World, And Is Never A Person (2026-09-29)
 
 A World Resident is World content that stores only its home. Where it is

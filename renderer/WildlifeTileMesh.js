@@ -327,11 +327,22 @@ export function buildWildlifeTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE
 // `observer` ({ x, z } — the viewer's own avatar — or null) is who the
 // animals watch (renderer/AnimalReaction.js): heads turn toward it, and
 // nothing about where an animal is changes.
-export function updateWildlifeTileMesh(group, timeSeconds, observer = null) {
+//
+// `isHidden(id)` (or null) names animals not to draw this frame — wild
+// animals keeping away from a build (core/nature/WildlifeDisplacement.js) —
+// which are shrunk to nothing rather than rebuilt out of the tile, so they
+// come back the moment the build is gone.
+export function updateWildlifeTileMesh(group, timeSeconds, observer = null, isHidden = null) {
     const wildlife = group.userData.wildlife;
     if (!wildlife) return;
     for (const { species, preset, animals, bodyMesh, headMesh } of wildlife.herds) {
         animals.forEach((animal, i) => {
+            if (isHidden && isHidden(animal.id)) {
+                _matrix.makeScale(0, 0, 0);
+                bodyMesh.setMatrixAt(i, _matrix);
+                headMesh.setMatrixAt(i, _matrix);
+                return;
+            }
             const pose = animalPoseAt(wildlife.seed, animal, timeSeconds);
             const own = pose.moving
                 ? gaitOffsetsAt(species, pose.gaitPhase)

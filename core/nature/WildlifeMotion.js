@@ -30,10 +30,16 @@
 // need no change. Staying within the wander radius bounds how far a
 // region query must look beyond its own edges (MAX_WANDER_DISTANCE).
 //
-// A waypoint outside the animal's own ecology zone, or in a river channel,
-// is replaced by the spawn point, which always qualifies. The straight
-// walk between two valid waypoints is not re-checked, so an animal can
-// briefly cut across the corner of a neighboring zone.
+// AN ANIMAL NEVER WADES ACROSS A RIVER. A waypoint outside the animal's own
+// ecology zone, in a river channel, or whose walk out from the spawn point
+// would cross one, is replaced by the spawn point, which always qualifies.
+// So every waypoint can reach the spawn point dry-footed, and the walk from
+// waypoint k to waypoint k+1 goes straight when that is dry too, and
+// otherwise by way of the spawn point, with a turn there — the same scheme
+// core/world/ResidentMotion.js uses to walk a resident around a wall. Each
+// decision depends only on (seed, cell, k), so any moment can still be
+// computed directly. A walk may still cut across the corner of a
+// neighboring ecology zone.
 
 import { WILDLIFE_LATTICE_SPACING, ANIMAL_SPECIES, wildlifeInRegion } from './WildlifeField.js';
 import { terrainHeightAt } from './TerrainHeightField.js';
@@ -132,8 +138,24 @@ function lerpAngle(from, to, t) {
     return from + delta * t;
 }
 
+// How far apart a walk is checked for river water.
+const RIVER_SAMPLE_SPACING = 0.5;
+
+// Whether the straight walk from `from` to `to` stays out of every river
+// channel, ends included.
+function isDryWalk(seed, from, to) {
+    const length = Math.hypot(to.x - from.x, to.z - from.z);
+    const steps = Math.max(1, Math.ceil(length / RIVER_SAMPLE_SPACING));
+    for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        if (isRiverAt(seed, from.x + (to.x - from.x) * t, from.z + (to.z - from.z) * t)) return false;
+    }
+    return true;
+}
+
 // Waypoint k of `animal`'s path. Spawn-relative, clamped into the spawn
-// cell, and vetoed back to the spawn point off-zone or in a river.
+// cell, and vetoed back to the spawn point off-zone, in a river, or when the
+// walk out to it from the spawn point would cross one.
 function waypoint(seed, animal, cellX, cellZ, k, wanderRadius) {
     const angle = hash3D(seed + ANGLE_SEED_OFFSET, cellX, cellZ, k) * TWO_PI;
     // sqrt spreads waypoints evenly over the disc instead of bunching them
@@ -145,8 +167,9 @@ function waypoint(seed, animal, cellX, cellZ, k, wanderRadius) {
     const maxZ = (cellZ + 1) * WILDLIFE_LATTICE_SPACING - CELL_EDGE_MARGIN;
     const x = clamp(animal.x + Math.sin(angle) * distance, minX, maxX);
     const z = clamp(animal.z + Math.cos(angle) * distance, minZ, maxZ);
-    if (ecologyZoneAt(seed, x, z) !== animal.zone || isRiverAt(seed, x, z)) {
-        return { x: animal.x, z: animal.z };
+    const spawn = { x: animal.x, z: animal.z };
+    if (ecologyZoneAt(seed, x, z) !== animal.zone || !isDryWalk(seed, spawn, { x, z })) {
+        return spawn;
     }
     return { x, z };
 }
@@ -160,6 +183,40 @@ function headingBetween(from, to) {
     return Math.atan2(dx, dz);
 }
 
+function samePoint(a, b) {
+    return Math.hypot(b.x - a.x, b.z - a.z) <= SAME_POINT_DISTANCE;
+}
+
+// Segment k's walk, as computed once: `from` (waypoint k), `to` (waypoint
+// k+1) and the legs between them — none when they coincide, one when the
+// straight walk is dry, else two by way of the spawn point. A pure function
+// of (seed, animal, k), so it is kept in a small cache: the same few
+// segments are asked about on every frame, and the river check is the
+// costly part.
+const segmentCache = new Map();
+const MAX_CACHED_SEGMENTS = 8192;
+
+function segmentWalk(seed, animal, cellX, cellZ, k, wanderRadius) {
+    const key = `${seed}:${cellX},${cellZ}:${animal.x},${animal.z}:${wanderRadius}:${k}`;
+    const cached = segmentCache.get(key);
+    if (cached) return cached;
+    const from = waypoint(seed, animal, cellX, cellZ, k, wanderRadius);
+    const to = waypoint(seed, animal, cellX, cellZ, k + 1, wanderRadius);
+    const spawn = { x: animal.x, z: animal.z };
+    let legs;
+    if (samePoint(from, to)) {
+        legs = [];
+    } else if (isDryWalk(seed, from, to)) {
+        legs = [[from, to]];
+    } else {
+        legs = [[from, spawn], [spawn, to]].filter(([a, b]) => !samePoint(a, b));
+    }
+    const walk = { from, to, legs };
+    if (segmentCache.size >= MAX_CACHED_SEGMENTS) segmentCache.clear();
+    segmentCache.set(key, walk);
+    return walk;
+}
+
 // Which IDLE_ACTION a uniform roll in [0, 1) lands on.
 function idleActionFor(roll, chances) {
     if (roll < chances.GRAZE) return IDLE_ACTION.GRAZE;
@@ -170,18 +227,18 @@ function idleActionFor(roll, chances) {
 // How many earlier segments arrivalHeadingAt() looks back through.
 const ARRIVAL_LOOKBACK_SEGMENTS = 4;
 
-// The heading `animal` stands at on reaching waypoint k (`from`): that of
-// the last walk that actually moved it. A segment whose two waypoints
-// coincide (both vetoed back to the spawn point) is no walk at all, so it
-// looks further back; with no real walk in reach it falls back to the
-// placement rotation.
-function arrivalHeadingAt(seed, animal, cellX, cellZ, k, from, wanderRadius) {
-    let to = from;
+// The heading `animal` stands at on reaching waypoint k: that of the last
+// leg of the last walk that actually moved it. A segment whose two
+// waypoints coincide (both vetoed back to the spawn point) is no walk at
+// all, so it looks further back; with no real walk in reach it falls back
+// to the placement rotation.
+function arrivalHeadingAt(seed, animal, cellX, cellZ, k, wanderRadius) {
     for (let back = 1; back <= ARRIVAL_LOOKBACK_SEGMENTS; back++) {
-        const previous = waypoint(seed, animal, cellX, cellZ, k - back, wanderRadius);
-        const heading = headingBetween(previous, to);
-        if (heading !== null) return heading;
-        to = previous;
+        const { legs } = segmentWalk(seed, animal, cellX, cellZ, k - back, wanderRadius);
+        if (legs.length > 0) {
+            const [a, b] = legs[legs.length - 1];
+            return headingBetween(a, b);
+        }
     }
     return animal.rotationY;
 }
@@ -191,10 +248,11 @@ function arrivalHeadingAt(seed, animal, cellX, cellZ, k, from, wanderRadius) {
 // wall-clock seconds). Returns { x, y, z, rotationY, moving, gaitPhase }:
 // y is the terrain height under the animal, rotationY is in [0, 2π),
 // moving says whether it is walking rather than standing, and gaitPhase
-// counts strides walked so far in the current walk — 0 when standing,
-// rising to a whole number on arrival. Its fractional part is how far
-// through the current stride the animal is; how that looks (a hop, a
-// step) is the renderer's business (renderer/AnimalGait.js).
+// counts strides walked so far in the current leg of the walk — 0 when
+// standing, rising to a whole number on reaching the end of the leg. Its
+// fractional part is how far through the current stride the animal is;
+// how that looks (a hop, a step) is the renderer's business
+// (renderer/AnimalGait.js).
 //
 // A standing animal also reports idleAction (an IDLE_ACTION), idleSeconds
 // (how far into it) and idleDuration (how long it lasts): one action per
@@ -212,42 +270,60 @@ export function animalPoseAt(seed, animal, timeSeconds) {
     const k = Math.floor(segments);
     const secondsIntoSegment = (segments - k) * motion.segmentSeconds;
 
-    const from = waypoint(seed, animal, cellX, cellZ, k, motion.wanderRadius);
-    const to = waypoint(seed, animal, cellX, cellZ, k + 1, motion.wanderRadius);
-    const departureHeading = headingBetween(from, to);
-    const walkSeconds = departureHeading === null
-        ? 0
-        : Math.hypot(to.x - from.x, to.z - from.z) / motion.walkSpeed;
+    const { from, legs } = segmentWalk(seed, animal, cellX, cellZ, k, motion.wanderRadius);
+    const legLengths = legs.map(([a, b]) => Math.hypot(b.x - a.x, b.z - a.z));
+    const legSeconds = legLengths.map((length) => length / motion.walkSpeed);
+    // Legs walk back to back, with a turn in place at the spawn point
+    // between two of them.
+    const walkSeconds = legSeconds.reduce((sum, seconds) => sum + seconds, 0)
+        + Math.max(0, legs.length - 1) * TURN_SECONDS;
     const walkStart = motion.segmentSeconds - walkSeconds;
 
-    let x;
-    let z;
+    let x = from.x;
+    let z = from.z;
     let rotationY;
     let moving = false;
     let gaitPhase = 0;
     let idleAction = IDLE_ACTION.NONE;
     let idleSeconds = 0;
     let idleDuration = 0;
-    if (departureHeading !== null && secondsIntoSegment >= walkStart) {
-        const progress = smoothstep((secondsIntoSegment - walkStart) / walkSeconds);
-        x = lerp(from.x, to.x, progress);
-        z = lerp(from.z, to.z, progress);
-        rotationY = departureHeading;
-        moving = true;
-        // A whole number of strides per walk, so the last stride ends
-        // exactly on arrival: gaitPhase runs from 0 to that whole number,
-        // in step with the ground actually covered (the eased walk's
-        // progress), so the gait never slides and never cuts off mid-hop.
-        // Rounded down, so a stride is never shorter than strideLength and
-        // the cadence never outruns the species' own (a rabbit never
-        // flutters through tiny hops); a walk shorter than one stride has
-        // none, and the animal just shuffles over.
-        const strides = Math.floor(Math.hypot(to.x - from.x, to.z - from.z) / motion.strideLength);
-        gaitPhase = progress * strides;
-    } else {
-        x = from.x;
-        z = from.z;
-        const arrivalHeading = arrivalHeadingAt(seed, animal, cellX, cellZ, k, from, motion.wanderRadius);
+    let walking = false;
+    if (legs.length > 0 && secondsIntoSegment >= walkStart) {
+        walking = true;
+        let t = secondsIntoSegment - walkStart;
+        for (let i = 0; i < legs.length; i++) {
+            const [a, b] = legs[i];
+            if (t < legSeconds[i] || i === legs.length - 1) {
+                const progress = smoothstep(Math.min(1, t / legSeconds[i]));
+                x = lerp(a.x, b.x, progress);
+                z = lerp(a.z, b.z, progress);
+                rotationY = headingBetween(a, b);
+                moving = true;
+                // A whole number of strides per leg, so the last stride ends
+                // exactly on arrival: gaitPhase runs from 0 to that whole
+                // number, in step with the ground actually covered (the eased
+                // walk's progress), so the gait never slides and never cuts
+                // off mid-hop. Rounded down, so a stride is never shorter than
+                // strideLength and the cadence never outruns the species' own
+                // (a rabbit never flutters through tiny hops); a leg shorter
+                // than one stride has none, and the animal just shuffles over.
+                gaitPhase = progress * Math.floor(legLengths[i] / motion.strideLength);
+                break;
+            }
+            t -= legSeconds[i];
+            if (t < TURN_SECONDS) {
+                // Standing at the spawn point, turning toward the next leg.
+                const [c, d] = legs[i + 1];
+                x = b.x;
+                z = b.z;
+                rotationY = lerpAngle(headingBetween(a, b), headingBetween(c, d), smoothstep(t / TURN_SECONDS));
+                break;
+            }
+            t -= TURN_SECONDS;
+        }
+    }
+    if (!walking) {
+        const arrivalHeading = arrivalHeadingAt(seed, animal, cellX, cellZ, k, motion.wanderRadius);
         rotationY = arrivalHeading;
         // The idle window: from arrival until the animal starts turning
         // toward its next waypoint, so an idle action never overlaps a turn
@@ -265,8 +341,9 @@ export function animalPoseAt(seed, animal, timeSeconds) {
             // differs only once the last real walk falls out of
             // arrivalHeadingAt()'s look-back — so that change turns too,
             // instead of snapping at the segment boundary.
-            const nextHeading = departureHeading
-                ?? arrivalHeadingAt(seed, animal, cellX, cellZ, k + 1, to, motion.wanderRadius);
+            const nextHeading = legs.length > 0
+                ? headingBetween(legs[0][0], legs[0][1])
+                : arrivalHeadingAt(seed, animal, cellX, cellZ, k + 1, motion.wanderRadius);
             rotationY = lerpAngle(arrivalHeading, nextHeading, smoothstep(Math.min(turnProgress, 1)));
         }
     }

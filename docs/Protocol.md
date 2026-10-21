@@ -602,6 +602,7 @@ reads `payload`.
 | `forkbuild:world-membership` | core/collaboration/WorldEditAuthorizationEnvelope.js | World edit grants |
 | `forkbuild:world-presence` | core/collaboration/WorldPresenceAdvertisement.js | who is in a World |
 | `forkbuild:world-spatial-presence` | core/collaboration/WorldSpatialPresenceAdvertisement.js | where they are looking |
+| `forkbuild:world-clock` | application/world/WorldClockUseCase.js | `{ type: 'PING', nonce }` and `{ type: 'PONG', nonce, time }` (ms, uncorrected), so peers agree on one World clock |
 | `forkbuild:world-discovery` | application/discovery/WorldDiscoveryRuntimeBootstrap.js | World Encounter discovery |
 | `forkbuild:document-sync` | application/document/DocumentCommandPropagationUseCase.js | Editor document commands |
 | `forkbuild:build-together-sync` | application/buildTogether/BuildTogetherSession.js | see "Build links" |

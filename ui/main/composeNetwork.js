@@ -94,7 +94,7 @@ export async function composeNetwork({ app, decentralizedPublicationDiscoveryPro
         peerSessionManager, peerRelationshipUseCase, peerReconnectionUseCase, findPeerUseCase, peerMessageBus,
         peerBlockUseCase, deviceAuthorizationUseCase, friendRelationshipUseCase,
         identityLifecyclePropagationUseCase, chatUseCase, peerPresenceUseCase, deviceConversationSyncUseCase,
-        voiceUseCase, publicLobbyUseCase, followUseCase, peerConnectionProvider, rendezvousTransports
+        voiceUseCase, worldClock, publicLobbyUseCase, followUseCase, peerConnectionProvider, rendezvousTransports
     } = composeIdentityAndPeers({ identityProvider, decentralizedPublicationDiscoveryProvider });
 
     // The one LocalPublicationCatalog instance; every collaborator below shares it.
@@ -425,6 +425,7 @@ export async function composeNetwork({ app, decentralizedPublicationDiscoveryPro
     app.provide('peerPresenceUseCase', peerPresenceUseCase);
     app.provide('deviceConversationSyncUseCase', deviceConversationSyncUseCase);
     app.provide('voiceUseCase', voiceUseCase);
+    app.provide('worldClock', worldClock);
     app.provide('peerMessageBus', peerMessageBus);
     app.provide('publicationResolver', publicationResolver);
     app.provide('publicationCatalog', publicationCatalog);

@@ -1528,10 +1528,27 @@ surface and stays silent under water. Presence keeps its existing `animation` va
   saved; wild ones are recomputed.
 - **Wandering (2026-09-29).** `core/nature/WildlifeMotion.js#animalPoseAt(seed, animal, time)` says where a wild animal is
   at a moment: pausing, turning and walking between hashed waypoints inside its own lattice cell, within its
-  species' wander radius of where it was placed. `WorldNavigationSession`'s `wildlifeClock` (wall-clock seconds by
-  default) is the one time source, handed to the renderer, `AvatarWildlifeConstraint`,
-  `AvatarAnimalInteractionController` and `AnimalRuntimeInstances#sync()`, so an animal is caught and collided
-  with where it is drawn. Caught animals stop colliding (`isExcluded`). Released animals and decorations stay put.
+  species' wander radius of where it was placed. A walk that would cross a river goes by way of where the animal was
+  placed instead, as a resident goes round a wall by way of home (each segment's walk is cached, since the river check
+  is the costly part). `WorldNavigationSession`'s `wildlifeClock` is the one time source, handed to the renderer,
+  `AvatarWildlifeConstraint`, `AvatarAnimalInteractionController` and `AnimalRuntimeInstances#sync()`, so an animal is
+  caught and collided with where it is drawn. Caught animals stop colliding (`isExcluded`). Released animals and
+  decorations stay put.
+- **One World clock (2026-10-21).** World View's `wildlifeClock` is `application/world/WorldClockUseCase.js`, app-wide
+  like the peer bus: over `forkbuild:world-clock` it asks each authenticated peer what its uncorrected clock says (a
+  PING answered by a PONG; three on connecting, then one a minute), keeps the shortest round trip of the last five
+  samples per peer, and moves this device's World time to the median of its own clock and theirs
+  (`core/world/WorldClockAgreement.js`): two peers meet half way, peers that all see each other agree exactly. A sample
+  over a 2 s round trip, or a clock more than 15 minutes off, is ignored. A change is eased in at a quarter of real
+  time (time runs at 1.25 or 0.75 s per second) unless it is over 5 s, which is applied at once. Without peers it is
+  this device's clock.
+- **Keeping away from builds (2026-10-21).** `core/nature/WildlifeDisplacement.js#isAnimalDisplaced()`: a wild animal
+  whose reachable ground (its cell, within its wander radius, grown by its body) overlaps a brick lower than 2 m is
+  not there. `application/world/WildlifeDisplacement.js` answers it by animal id from the session's solid documents
+  (`AvatarMovementConstraint#obstaclesNear()` with no step allowance), gathering bricks once per terrain tile and again
+  every 2 s. `AnimalRuntimeInstances#setDisplacement()` makes `isExcluded()` true for a displaced animal (never added
+  to `excludedIds`), so catching, collision, creature sounds and resident talk leave it out, and
+  `Renderer#setHiddenWildlife()` makes `updateWildlifeTileMesh()` draw it at zero scale until the build is gone.
 - **Rendering.** Deterministic animals are drawn by their wildlife tile (`renderer/WildlifeTileMesh.js`), which keeps
   owning them while they wander because they never leave their cell; every frame
   `updateWildlifeTileMesh()` rewrites each loaded tile's instance matrices in place. A walking animal also moves with

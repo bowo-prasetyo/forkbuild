@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: a245f388db3fff60 -->
+<!-- translation-of: docs/Privacy.md source-hash: 8d5d29ddd6f4e2ed -->
 # Datenschutz
 
 <!-- languages -->
@@ -129,6 +129,11 @@ eingeschaltet sind, wird mit Ihren Einstellungen gespeichert (siehe
   Erbauer. Ein Herz zurückzunehmen sendet einen neueren Eintrag; der frühere
   kann bleiben, wohin er gesendet wurde, und auf Nostr ist eine
   Löschanfrage nur eine Bitte.
+- **Ihre Uhrzeit, an verbundene Peers.** Solange Sie verbunden sind, sagen
+  sich Ihr Gerät und jeder verbundene Peer gegenseitig, was ihre Uhren zeigen
+  (einige Male beim Verbinden, danach einmal pro Minute), damit Tiere und
+  Bewohner auf allen Bildschirmen an derselben Stelle stehen. Gesendet wird nur
+  die Uhrzeit.
 - **Peers, mit denen Sie sich verbinden**, erfahren den öffentlichen
   Schlüssel Ihrer Identität und Ihre IP-Adresse (eine direkte Verbindung
   braucht sie; ein TURN-Relay verbirgt sie vor dem Peer, aber nicht vor dem

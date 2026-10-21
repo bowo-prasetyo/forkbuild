@@ -8409,3 +8409,40 @@ walking a World, hands-free). How a player notices: **🎤 Voice** beside **Home
   this sandbox can't reach.
 - Not done: recognising real speech still wasn't tried here; a place is found by the words of its name, so two places
   sharing a word go to the first listed.
+
+
+## One World clock, and animals that keep away from builds (unnumbered, 2026-10-21)
+
+**Two problems found auditing ForkBuild's game AI.** Everything that moves on its own (deer, rabbits, residents)
+is sampled from the clock so that every screen agrees without sending a message, but device clocks are often seconds
+apart: two friends walking together saw the same deer in two places. And a wild animal only knew about terrain, so it
+could stand inside someone's house, walk through its walls, or, now and then, wade across a river. Pillar served: walk
+inside it with friends (the same world on both screens), and a little place feels lived in rather than overrun. How a
+player notices: with a friend, the deer you both look at is in the same spot; build over a meadow and its rabbit moves
+off.
+
+- core/world/WorldClockAgreement.js (new): a clock sample from a PING and its PONG, the best of a peer's samples (the
+  shortest round trip), the median of this clock and every peer's, and easing a change in. A sample over a 2 s round
+  trip, or a clock more than 15 minutes off, is ignored.
+- application/world/WorldClockUseCase.js (new), `forkbuild:world-clock`: asks each authenticated peer three times on
+  connecting, then once a minute; only answers to its own PINGs count. Composed app-wide in
+  ui/main/composeIdentityAndPeers.js, provided as `worldClock`, and handed by WorldView.js through
+  CreateWorldViewUseCase to the session as its `wildlifeClock`, so the renderer, collision, catching, sounds,
+  residents and the seasons all run on it.
+- core/nature/WildlifeMotion.js: a waypoint whose walk out from where the animal was placed would cross a river is
+  vetoed, and a walk between waypoints that would cross one goes by way of that spot, with a turn there. Each
+  segment's walk is cached.
+- core/nature/WildlifeDisplacement.js and application/world/WildlifeDisplacement.js (new): an animal whose reachable
+  ground touches a brick lower than 2 m is displaced, decided from the loaded Worlds and the plaza's exhibits, bricks
+  gathered once per terrain tile every 2 s. AnimalRuntimeInstances#setDisplacement() leaves it out wherever a caught
+  animal is left out (never saved as caught); Renderer#setHiddenWildlife() shrinks it out of its tile.
+- docs/Protocol.md, docs/Architecture.md, docs/principles/vehicles.md (two new principles), and the Privacy page in
+  every language (your clock goes to connected peers).
+- Tests: tests/WorldClock.test.js (the pure agreement; two devices seconds apart agreeing, eased in without a jump or
+  running backwards; an uneven link; three devices agreeing on the middle clock, a far-off one ignored; unasked PONGs,
+  a peer leaving, dispose); tests/WildlifeDisplacement.test.js (the rule, the per-tile cache and refresh, the runtime
+  store, a real World built over a deer in a WorldNavigationSession, the tile mesh); tests/WildlifeMotion.test.js (a
+  riverside deer that used to wade across, now walking round).
+- Not done: peers with different Worlds loaded can disagree about a displaced animal until both have them, as with
+  residents; an animal is left out rather than steered round a build; a peer on an older version still shows its own
+  clock and its animals' old river crossings.
