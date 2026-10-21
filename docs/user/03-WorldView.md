@@ -136,6 +136,10 @@ one resident by the front door, including the ones round the challenge
 plaza. In your own build, **R** removes one. See
 [Residents](06-AvatarsAndPresence.md#residents).
 
+**At night** the World settles down. Animals go back to their own spot
+and lie down until morning; come close to one and it gets up to watch
+you. Residents walk home as dusk falls and stay home until dawn.
+
 **Faint, see-through builds** are builds other people announced near you
 that this device hasn't accepted. They go away again as you walk on. See
 [Claimed Builds](WorldViewAdvancedTools.md#claimed-builds--other-peoples-builds-where-their-publishers-say-they-stand).

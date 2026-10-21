@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 2d751aee5c2fa769 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: fdcc7c250da899ce -->
 # 06 — Avatars et présence
 
 <!-- languages -->
@@ -412,6 +412,8 @@ position vient du Monde et de l’horloge. Rien n’est envoyé entre joueurs.
 Vous butez contre un habitant comme contre un arbre, mais il ne s’écarte
 pas pour vous : il peut donc vous traverser pendant que vous restez
 immobile.
+
+**Ils trouvent leur chemin.** Un habitant sort par une porte, contourne le coin de sa maison et suit le chemin jusqu’aux endroits qu’il aime, en contournant tout ce qui gêne. À la tombée de la nuit, il rentre chez lui et y reste jusqu’au matin.
 
 **Ils vous remarquent.** Quand vous arrivez à quelques pas, devant un
 habitant ou à côté, il se tourne vers vous. Venez tout près et il vous fait

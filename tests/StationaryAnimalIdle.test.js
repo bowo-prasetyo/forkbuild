@@ -26,7 +26,9 @@ import { assert } from './support/Assert.js';
 //   Section D: ears and a tail in the shared species geometry
 
 const SEED = DEFAULT_WORLD_SEED;
-const T0 = 1_759_000_000;
+// A daytime moment (a quarter of the way into the World's day): by night
+// animals and residents settle down (core/nature/Nightfall.js).
+const T0 = 1_758_999_000;
 const KEYS = Array.from({ length: 30 }, (_, i) => `9b2f6d1e-5a4c-4f7e-8d2b-${String(i).padStart(12, '0')}`);
 
 function angleDelta(a, b) {

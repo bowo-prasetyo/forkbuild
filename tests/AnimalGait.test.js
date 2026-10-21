@@ -16,7 +16,9 @@ import { assert } from './support/Assert.js';
 //              that nods about its neck; at rest the head rides the body
 
 const SEED = DEFAULT_WORLD_SEED;
-const T0 = 1_759_000_000;
+// A daytime moment (a quarter of the way into the World's day): by night
+// animals and residents settle down (core/nature/Nightfall.js).
+const T0 = 1_758_999_000;
 const ANIMALS = wildlifeInRegion(SEED, -1200, -1200, 1200, 1200);
 
 function runTests() {

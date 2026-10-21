@@ -13,6 +13,8 @@ import { smoothstep } from '../utils/interpolation.js';
 //           head and nibbles, quicker.
 //   ALERT — DEER raises its head and slowly looks from side to side;
 //           RABBIT sits up on its haunches and glances about.
+//   REST  — lying down for the night: the body sinks into the grass, the
+//           head low, breathing slowly (core/nature/Nightfall.js).
 //
 // Every action eases in from rest at the start of the pause and back out
 // to rest before the animal turns to leave, so it never pops against the
@@ -24,19 +26,27 @@ export const ANIMAL_IDLE = Object.freeze({
     [ANIMAL_SPECIES.DEER]: Object.freeze({
         // A muzzle in the grass: the head's center stays above the ground.
         graze: Object.freeze({ headPitch: 0.45, bodyPitch: 0.04, chewPitch: 0.05, chewHz: 1.5 }),
-        alert: Object.freeze({ headPitch: -0.25, lookYaw: 0.6, lookHz: 0.2 })
+        alert: Object.freeze({ headPitch: -0.25, lookYaw: 0.6, lookHz: 0.2 }),
+        // Lying in the grass: the body sunk to half its height (there are no
+        // legs to fold), the head held low and still, breathing slowly.
+        rest: Object.freeze({ lift: -0.2, bodyPitch: 0, headPitch: 0.2, breathLift: 0.008, breathHz: 0.25 })
     }),
     [ANIMAL_SPECIES.RABBIT]: Object.freeze({
         graze: Object.freeze({ headPitch: 0.5, bodyPitch: 0.06, chewPitch: 0.08, chewHz: 4 }),
         // Sitting up pivots the body about its base; the lift keeps its rump
         // on the ground rather than sunk into it, and the head tips forward
         // again to look ahead rather than at the sky.
-        alert: Object.freeze({ bodyPitch: -0.5, lift: 0.12, headPitch: 0.35, lookYaw: 0.4, lookHz: 0.35 })
+        alert: Object.freeze({ bodyPitch: -0.5, lift: 0.12, headPitch: 0.35, lookYaw: 0.4, lookHz: 0.35 }),
+        // Crouched flat, ears and all, nose tipped down.
+        rest: Object.freeze({ lift: -0.07, bodyPitch: 0.05, headPitch: 0.15, breathLift: 0.004, breathHz: 0.5 })
     })
 });
 
 // How long an action takes to ease in, and to ease back out.
 export const IDLE_EASE_SECONDS = 0.7;
+
+// Lying down and getting up again take longer.
+export const REST_EASE_SECONDS = 1.5;
 
 const TWO_PI = Math.PI * 2;
 
@@ -49,8 +59,8 @@ export function idleEnvelope(seconds, duration) {
     return envelope(seconds, duration);
 }
 
-function envelope(seconds, duration) {
-    const edge = Math.min(seconds, duration - seconds) / IDLE_EASE_SECONDS;
+function envelope(seconds, duration, ease = IDLE_EASE_SECONDS) {
+    const edge = Math.min(seconds, duration - seconds) / ease;
     return smoothstep(Math.max(0, Math.min(1, edge)));
 }
 
@@ -60,6 +70,17 @@ function envelope(seconds, duration) {
 export function idleOffsetsAt(species, idleAction, idleSeconds, idleDuration) {
     if (idleAction === IDLE_ACTION.NONE || !(idleDuration > 0)) return REST_GAIT;
     const idle = ANIMAL_IDLE[species] ?? ANIMAL_IDLE[ANIMAL_SPECIES.RABBIT];
+    if (idleAction === IDLE_ACTION.REST) {
+        const weight = envelope(idleSeconds, idleDuration, REST_EASE_SECONDS);
+        if (weight === 0) return REST_GAIT;
+        const { lift, bodyPitch, headPitch, breathLift, breathHz } = idle.rest;
+        return {
+            lift: (lift + breathLift * Math.sin(TWO_PI * breathHz * idleSeconds)) * weight,
+            bodyPitch: bodyPitch * weight,
+            headPitch: headPitch * weight,
+            headYaw: 0
+        };
+    }
     const weight = envelope(idleSeconds, idleDuration);
     if (weight === 0) return REST_GAIT;
     if (idleAction === IDLE_ACTION.GRAZE) {

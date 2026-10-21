@@ -1586,8 +1586,9 @@ surface and stays silent under water. Presence keeps its existing `animation` va
     application/world/ResidentRuntime.js ── obstacles per home: AvatarMovementConstraint#obstaclesNear()
             │                                (bricks an avatar on the ground bumps into) + tree trunks,
             │                                gathered again every 2 s, one resident at a time
-    core/world/ResidentMotion.js#residentPoseAt(resident, time, { isClear })
-            │                     isClear = core/world/ResidentPath.js#isResidentWalkClear()
+    core/world/ResidentMotion.js#residentPoseAt(resident, time, { navigation })
+            │      navigation = core/world/ResidentNavigation.js#buildResidentNavigation()
+            │                   (kept while the gathered bricks are the same)
             ├── WorldNavigationSession._setupResidentRendering() → facade.syncResidents(poses)
             │      → renderer/ResidentFieldRenderer.js (one AvatarVisual each, at most 16, nearest first)
             └── AvatarResidentConstraint (last in AvatarMovementController's pipeline)
@@ -1597,10 +1598,25 @@ surface and stays silent under water. Presence keeps its existing `animation` va
   saved, published and forked with its World. `World#toJSON()` writes `residents` only when there is one, so a World
   without residents serializes exactly as before. A new resident's id is chosen so that it is standing at the
   avatar's feet at that moment (`ResidentRuntime#newResidentIdNear()`).
-- **Motion.** Sampled from time like a wild animal's (16 s pause-then-walk segments, 1.1 m/s, within 6 m of home),
-  keyed by id. A waypoint is kept only if the walk from home to it is clear; a walk between waypoints goes straight
-  if clear and by way of home otherwise, turning in place there. `isClear` checks brick footprints (grown by the
-  resident's 0.3 radius), tree trunks, lakes, rivers and slope. The session's `wildlifeClock` is the one clock.
+- **Motion.** Sampled from time like a wild animal's (20 s pause-then-walk segments, 1.1 m/s, within 6 m of home),
+  keyed by id. A waypoint is home (by night always, by day one time in five) or one of ten spots hashed from the
+  id. The way there comes from the navigation: a 0.125 m grid over the 6 m disc, a cell open where the resident's
+  0.3 radius plus half a cell's diagonal clears every brick lower than 1.8 m (`ResidentPath.js#RESIDENT_HEADROOM`, so
+  the wall over a door is no obstacle) and every trunk, on dry land (sampled every 0.5 m and kept per home); shortest
+  paths over 8 neighbours without cutting corners, ties to the lower cell, then pulled tight against the exact
+  geometry. Every corner is a turn in place. Only spots whose way from home takes at most
+  `RESIDENT_REACH_SECONDS` (8.35 s) are used, so the way between two, at worst by way of home, fits in a segment.
+  A navigation is built in about 2 ms and its plans in under 1 ms; `ResidentRuntime` keeps it while the bricks it
+  gathers every 2 s are the same, and `newResidentIdNear()` picks an id that stays home this segment
+  (`residentStaysHomeAt()`) without building one. The session's `wildlifeClock` is the one clock.
+- **Night (2026-10-21).** `core/nature/Nightfall.js#isNightfallAt()` is the World's night on the World clock, from
+  0.63 of an equinox day (the deepening dusk, later in summer as the sky's) until dawn, whatever a device's Always day
+  or kept season shows. A segment that starts after nightfall has home for its waypoint, so a resident walks home in
+  the dusk and comes out in the morning. A wild animal's waypoint is its spawn point, and it rests there
+  (`IDLE_ACTION.REST`, drawn by `renderer/AnimalIdle.js` as lying low and breathing); its idle window is reported
+  as running on across night segments, so it lies down at nightfall and gets up at dawn, never between, facing the
+  way it came in. Released animals and decorations rest too. `renderer/AnimalReaction.js` lifts a resting animal
+  as the viewer comes close, as it lifts a grazing one's head.
 - **Rendering.** Each resident is an ordinary `AvatarVisual` dressed by `core/world/ResidentAppearance.js` (template
   `humanoid-01`, options and an earthy palette picked from the id), kept apart from `remoteAvatarVisuals`: never
   picked, listed or hidden as a player. Its feet use the same `withGroundElevation()` as the avatar's; its walking

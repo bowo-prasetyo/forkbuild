@@ -28,7 +28,9 @@ import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 const SEED = DEFAULT_WORLD_SEED;
-const T = 1_759_000_000;
+// A daytime moment (a quarter of the way into the World's day): by night
+// animals and residents settle down (core/nature/Nightfall.js).
+const T = 1_758_999_000;
 
 // A wild animal standing still at T, so it can be walked up to and caught.
 function findStandingAnimal() {

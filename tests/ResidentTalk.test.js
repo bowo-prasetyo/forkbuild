@@ -59,7 +59,9 @@ const composeResidentRemarks = (facts, options) => ResidentTalk.composeResidentR
 const QUIET_REMARK = english(ResidentTalk.QUIET_REMARK);
 
 const SEED = DEFAULT_WORLD_SEED;
-const T = 1_759_000_000;
+// A daytime moment (a quarter of the way into the World's day): by night
+// animals and residents settle down (core/nature/Nightfall.js).
+const T = 1_758_999_000;
 
 // Words a remark about what exists never needs: nothing is asked of you.
 const IMPERATIVE = /\b(go|must|should|find|bring|quest|mission|reward|collect|visit|you need)\b/i;

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: a51a7c2c7ea79eeb -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: ddd5e492a88450c7 -->
 # 03 — Tampilan Dunia
 
 <!-- languages -->
@@ -145,6 +145,8 @@ pembuatnya yang menambahkan mereka. Rumah siap pakai datang dengan satu
 penghuni di dekat pintu depan, termasuk yang di sekeliling alun-alun
 tantangan. Di bangunan Anda sendiri, **R** menghapus satu. Lihat
 [Penghuni](06-AvatarsAndPresence.md#penghuni).
+
+**Pada malam hari** Dunia menjadi tenang. Hewan kembali ke tempatnya sendiri dan berbaring sampai pagi; dekati salah satunya dan ia bangun untuk memperhatikan Anda. Penghuni pulang saat senja dan tetap di rumah sampai fajar.
 
 **Bangunan samar yang tembus pandang** adalah bangunan yang diumumkan orang
 lain di dekat Anda dan belum diterima perangkat ini. Bangunan itu hilang

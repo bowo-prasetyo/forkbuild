@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 2d751aee5c2fa769 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: fdcc7c250da899ce -->
 # 06 — Avatare & Anwesenheit
 
 <!-- languages -->
@@ -404,6 +404,8 @@ Bewohner im selben Moment am selben Ort, denn wo er ist, ergibt sich aus
 der Welt und der Uhrzeit. Zwischen Spielern wird nichts gesendet. Sie
 stoßen an einen Bewohner wie an einen Baum, aber er weicht Ihnen nicht aus;
 einer kann also durch Sie hindurchgehen, während Sie stillstehen.
+
+**Ihren Weg finden.** Ein Bewohner geht durch eine Tür nach draußen, um die Ecke seines Hauses und den Weg entlang zu den Stellen, die er mag, und um alles herum, was im Weg steht. Wenn es Nacht wird, geht er nach Hause und bleibt dort bis zum Morgen.
 
 **Sie bemerken Sie.** Kommen Sie auf wenige Schritte heran, vor einem
 Bewohner oder neben ihm, dreht er sich zu Ihnen. Gehen Sie direkt auf ihn

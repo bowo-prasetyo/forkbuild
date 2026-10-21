@@ -18,7 +18,9 @@ import { assert } from './support/Assert.js';
 
 const SEED = DEFAULT_WORLD_SEED;
 // A fixed wall-clock moment, so every run tests the same stretch of time.
-const T0 = 1_759_000_000;
+// A daytime moment (a quarter of the way into the World's day): by night
+// animals and residents settle down (core/nature/Nightfall.js).
+const T0 = 1_758_999_000;
 
 // A good spread of real animals, both species.
 const ANIMALS = wildlifeInRegion(SEED, -1200, -1200, 1200, 1200);
@@ -125,10 +127,12 @@ function runTests() {
         // and still moves continuously.
         const [deer] = wildlifeInRegion(SEED, -5970, 5890, -5960, 5900).filter((a) => a.id === `animal:${SEED}:-597,589`);
         assert(deer && deer.species === ANIMAL_SPECIES.DEER, '17a. Setup: the riverside deer is where it was');
-        let previous = animalPoseAt(SEED, deer, 1_759_000_000);
+        // A morning stretch in which the old straight walk waded the channel.
+        const WADE_T = 1_758_991_000;
+        let previous = animalPoseAt(SEED, deer, WADE_T);
         let sawWalk = false;
         for (let i = 1; i <= 4000; i++) {
-            const pose = animalPoseAt(SEED, deer, 1_759_000_000 + i * 0.1);
+            const pose = animalPoseAt(SEED, deer, WADE_T + i * 0.1);
             assert(!isRiverAt(SEED, pose.x, pose.z), `17b. A walking animal never wades across a river (at ${i * 0.1} s)`);
             assert(Math.hypot(pose.x - previous.x, pose.z - previous.z) <= ANIMAL_MOTION.DEER.walkSpeed * 1.5 * 0.1 + 1e-9,
                 '17c. Walking round the river, it still moves continuously');
