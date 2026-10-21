@@ -15,10 +15,12 @@
 // said and no name is found whole, a name word is matched to a word heard
 // within an edit or two (fuzzyPlaceNamed()), and only when one place is
 // clearly nearest, so a near miss never sends anyone to the wrong place.
+// And a command heard as words that only sound like it ("and do that") is
+// still that command, when one clearly sounds nearest.
 //
 // Pure: text, words and places in, a command or null out.
 import { wordsFound, wordsOf, fold } from '../library/LibrarySearch.js';
-import { actionNamed } from './Transcript.js';
+import { actionNamed, nearestBySound, soundsExactly } from './Transcript.js';
 
 // The commands besides going to a place, first winning a tie.
 export const WORLD_VOICE_COMMANDS = Object.freeze(['home', 'free', 'firstPerson', 'thirdPerson', 'birdEye', 'soundOff', 'soundOn', 'undo', 'redo', 'talk']);
@@ -150,6 +152,11 @@ export function interpretWorldCommand(transcript, vocabulary = {}, places = []) 
     const ignoredWords = vocabulary.ignoredWords || [];
     const named = actionNamed(transcript, places.map((place) => ({ place, label: place?.title || '' })));
     if (named) return { kind: 'goTo', place: named.place };
+    const commands = WORLD_VOICE_COMMANDS.map((command) => ({ value: command, phrases: vocabulary[command] }));
+    // All of what was said is one command's phrase, spaces aside: "un mute"
+    // is unmute, never the "mute" inside it.
+    const whole = soundsExactly(transcript, commands);
+    if (whole) return { kind: whole };
 
     let kind = null;
     let most = 0;
@@ -167,5 +174,10 @@ export function interpretWorldCommand(transcript, vocabulary = {}, places = []) 
         // "Go to home" is home; "go to the old mill" is the mill.
         if (place || !kind) return { kind: 'goTo', place };
     }
-    return kind ? { kind } : null;
+    if (kind) return { kind };
+    // Nothing found whole: the command that sounds most like what was heard
+    // ("and do that" is undo), when one clearly does
+    // (core/voice/Transcript.js#nearestBySound()).
+    const sounded = nearestBySound(transcript, commands);
+    return sounded ? { kind: sounded } : null;
 }

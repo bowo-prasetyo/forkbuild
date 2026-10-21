@@ -83,3 +83,114 @@ export function actionNamed(transcript, actions, toText = String) {
     const named = (actions || []).filter((action) => words(toText(action.label)) === said);
     return named.length === 1 ? named[0] : null;
 }
+
+// A small speech model often writes a command as words that sound like it
+// but aren't it: "undo that" as "and do that", "unmute" as "on mute". When
+// nothing was matched exactly, nearestBySound() finds the command whose
+// phrase sounds most like what was heard:
+//
+// - Both are compared as sounds rather than spellings: lowercased, accents
+//   off, without spaces or punctuation, and with a letter written twice in a
+//   row as one ("and do" is "ando", as "undo" is "undo").
+// - Edits are counted between them, one for a letter added, dropped or
+//   changed, but half for one vowel heard as another ("ando" to "undo" is
+//   half an edit; "redo" is two away).
+// - A phrase may be at most SOUND_EDITS_ALLOWED away, or SOUND_SHARE_ALLOWED
+//   of its length for a longer one: a vowel misheard in a short command, an
+//   edit or so in a long one. "elite" is never "delete", nor "cat" "chat".
+// - It must also be at least SOUND_MARGIN nearer than any phrase of another
+//   command, so a near miss between two commands is no command, never a
+//   guess.
+//
+// Only where words are spaced: Japanese, Chinese and Korean are matched
+// whole or not at all.
+const SOUND_EDITS_ALLOWED = 0.5;
+const SOUND_SHARE_ALLOWED = 0.15;
+const SOUND_MARGIN = 1;
+const VOWEL_SWAP = 0.5;
+const VOWELS = new Set(['a', 'e', 'i', 'o', 'u', 'y']);
+const SPACELESS = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u;
+
+// `text` as the sounds it is compared by, as an array of letters.
+function soundOf(text) {
+    return Array.from(fold(String(text || '')).replace(/[^\p{L}\p{N}]+/gu, '').replace(/(.)\1+/gu, '$1'));
+}
+
+// The weighted edits between two arrays of letters.
+function soundEdits(a, b) {
+    let previous = Array.from({ length: b.length + 1 }, (_, j) => j);
+    for (let i = 1; i <= a.length; i++) {
+        const current = [i];
+        for (let j = 1; j <= b.length; j++) {
+            const swap = a[i - 1] === b[j - 1] ? 0 : (VOWELS.has(a[i - 1]) && VOWELS.has(b[j - 1]) ? VOWEL_SWAP : 1);
+            current.push(Math.min(previous[j] + 1, current[j - 1] + 1, previous[j - 1] + swap));
+        }
+        previous = current;
+    }
+    return previous[b.length];
+}
+
+// Of `candidates` (`{ value, phrases: [text] }` each, a value being one
+// command), the value whose phrases sound most like `transcript`, or null
+// when none is near enough or another is about as near.
+export function nearestBySound(transcript, candidates) {
+    if (SPACELESS.test(String(transcript || ''))) return null;
+    const heard = soundOf(transcript);
+    if (heard.length === 0) return null;
+    // Per value: its nearest phrase, and that phrase's nearness if allowed.
+    const ranked = [];
+    for (const { value, phrases } of candidates || []) {
+        let nearest = Infinity;
+        let allowed = Infinity;
+        for (const phrase of phrases || []) {
+            if (typeof phrase !== 'string' || SPACELESS.test(phrase)) continue;
+            const sound = soundOf(phrase);
+            if (sound.length === 0) continue;
+            const edits = soundEdits(heard, sound);
+            nearest = Math.min(nearest, edits);
+            if (edits <= Math.max(SOUND_EDITS_ALLOWED, SOUND_SHARE_ALLOWED * sound.length)) allowed = Math.min(allowed, edits);
+        }
+        if (Number.isFinite(nearest)) ranked.push({ value, nearest, allowed });
+    }
+    let best = null;
+    for (const entry of ranked) {
+        if (Number.isFinite(entry.allowed) && (!best || entry.allowed < best.allowed)) best = entry;
+    }
+    if (!best) return null;
+    const clear = ranked.every((entry) => entry.value === best.value || entry.nearest >= best.allowed + SOUND_MARGIN);
+    return clear ? best.value : null;
+}
+
+// The one value whose phrase `transcript` is, sound for sound, spaces and
+// punctuation aside ("un mute" is "unmute"), or null for none or several.
+export function soundsExactly(transcript, candidates) {
+    if (SPACELESS.test(String(transcript || ''))) return null;
+    const heard = soundOf(transcript).join('');
+    if (!heard) return null;
+    const values = new Set();
+    for (const { value, phrases } of candidates || []) {
+        if ((phrases || []).some((phrase) => typeof phrase === 'string' && !SPACELESS.test(phrase) && soundOf(phrase).join('') === heard)) {
+            values.add(value);
+        }
+    }
+    return values.size === 1 ? [...values][0] : null;
+}
+
+// The one action `transcript` asks for: by its name (actionNamed()), or by
+// one of its other phrasings, `aliases[action.id]` ("undo that", "take that
+// back" for Undo), said exactly; failing both, the one whose name or
+// phrasings it sounds most like (nearestBySound()). Null for none, or when
+// two are about as near.
+export function actionSaid(transcript, actions, { toText = String, aliases = {} } = {}) {
+    const named = actionNamed(transcript, actions, toText);
+    if (named) return named;
+    const said = words(transcript);
+    if (!said) return null;
+    const phrasingsOf = (action) => (Object.hasOwn(aliases, action.id) ? aliases[action.id] : []) || [];
+    const byPhrasing = (actions || []).filter((action) => phrasingsOf(action).some((phrase) => words(phrase) === said));
+    if (byPhrasing.length === 1) return byPhrasing[0];
+    return nearestBySound(transcript, (actions || []).map((action) => ({
+        value: action,
+        phrases: [toText(action.label), ...phrasingsOf(action)]
+    })));
+}
