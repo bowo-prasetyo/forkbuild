@@ -31,7 +31,7 @@ export const hudSectionTemplate = `<div
                         @click="openWalkDialog"
                     >{{ t('walkTogether.button') }}</button>
                     <button
-                        v-if="!activeDocumentInfo.editable"
+                        v-if="!activeDocumentInfo.editable && !isOwnBuild"
                         type="button"
                         class="action-btn world-view-edit-copy"
                         :title="t('publicationLink.editCopyHint')"

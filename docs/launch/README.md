@@ -161,8 +161,11 @@ defensive:
 
 - Everything lives in this browser: back up with **Your Data → Back Up to a
   File**; there is no account to recover.
-- Distributing to Nostr needs a NIP-07 browser extension; Arweave, Steem and
-  Blurt need their wallets. Sharing a link needs none of them.
+- Letting everyone find a build needs nothing installed. Posting it under
+  your own Nostr account (optional, under **Where it goes**) needs a Nostr
+  browser extension; Arweave, Steem and Blurt need their wallets. Sharing a
+  link needs none of them.
 - Talking to someone needs you both online and friends with each other.
-- The challenge page finds others' entries only when they were distributed
-  to Nostr, Arweave, Steem or Blurt.
+- The challenge page finds others' entries only when they were sent to
+  everyone (**Everyone can find it** at Publish) or distributed to Nostr,
+  Arweave, Steem or Blurt.

@@ -297,7 +297,7 @@ log('## E3. Builds made by hand: bricks wrongly taken out');
 log('');
 const serializer = new DocumentSerializer();
 const examples = ['harbor-wall-light', 'hay-wain-bridge', 'islet-lighthouse', 'packhorse-arch'].map((name) => {
-    const doc = serializer.deserialize(JSON.parse(readFileSync(`${repoRoot}/forkbuild-document-${name}.json`, 'utf8')));
+    const doc = serializer.deserialize(JSON.parse(readFileSync(`${repoRoot}/examples/forkbuild-document-${name}.json`, 'utf8')));
     return { name, shape: buildShape(worldBricks(doc.world)) };
 });
 log(`| Example build | Bricks | ${Object.keys(POLICIES).join(' | ')} |`);

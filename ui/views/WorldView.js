@@ -1104,6 +1104,28 @@ export default {
         }
         if (typeof session.setDetailedTreesOn === 'function') session.setDetailedTreesOn(detailedTreesOn.value);
 
+        // Whether the build this World is was signed by the name in use: its
+        // builder walks round it, so World View doesn't offer them a copy of it
+        // (they change it in the Editor and publish again).
+        const currentIdentityId = ref(signedInIdentityId());
+        function signedInIdentityId() {
+            const current = typeof identityUseCase.currentSession === 'function' ? identityUseCase.currentSession() : null;
+            return current && current.isAuthenticated ? current.identityId : null;
+        }
+        const unwatchIdentity = typeof identityUseCase.onUserChanged === 'function'
+            ? identityUseCase.onUserChanged(() => { currentIdentityId.value = signedInIdentityId(); })
+            : null;
+        onBeforeUnmount(() => { if (typeof unwatchIdentity === 'function') unwatchIdentity(); });
+        // Yours when you signed one of its publications (as OwnPublicationPanel
+        // decides), or claimed it to build together.
+        const isOwnBuild = computed(() => {
+            const info = activeDocumentInfo.value;
+            const me = currentIdentityId.value;
+            if (!info || !me) return false;
+            if (info.authorIdentityId === me) return true;
+            return allPublications.value.some((publication) => publication.documentId === info.documentId && publication.publisherIdentity?.id === me);
+        });
+
         // Edit a Copy of the build this World is, when it isn't yours to change.
         function editActiveCopy() {
             const documentId = session.getActiveDocumentId() || route.params.documentId || null;
@@ -1712,7 +1734,7 @@ export default {
             goHome,
             buildHere,
             advanced, setAdvanced, alwaysDay, setAlwaysDay, keptSeason, setKeptSeason, seasonOptions: SEASON_OPTIONS,
-            seasonHours: Math.round(SEASON_SECONDS / 360) / 10, shadowsOn, setShadowsOn, detailedTreesOn, setDetailedTreesOn, dayCycleMinutes: DAY_CYCLE_SECONDS / 60, editActiveCopy,
+            seasonHours: Math.round(SEASON_SECONDS / 360) / 10, shadowsOn, setShadowsOn, detailedTreesOn, setDetailedTreesOn, dayCycleMinutes: DAY_CYCLE_SECONDS / 60, editActiveCopy, isOwnBuild,
             plaza, inPlaza, backToPlaza, focusExhibit, openExhibit, remixExhibit,
             openLocationsPanel,
             closeLocationsPanel,

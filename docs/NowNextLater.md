@@ -23,10 +23,10 @@ Publish in one sheet"), **a first job worth doing** ("Try it now's job in
 four steps") and **a first walk that looks like the game** ("A first walk
 in daylight, and a clearing round every build"), all on 2026-10-22.
 
-Still to do before 1.6 is released, riding along: the launch kit's known issues corrected (Nostr
-needs no extension now), the four `forkbuild-document-*.json` example
-builds moved out of the repository root, **Edit a Copy** hidden on your own
-build, and the toolbar's **Publish** in the one meadow green.
+The fixes riding along are done too (the roadmap, "1.6's loose ends"): the
+launch kit says what Nostr needs, the example builds live in `examples/`,
+**Edit a Copy** isn't offered on your own build, and the toolbar's
+**Publish** is the meadow green. 1.6 is ready to release.
 
 ## Next
 

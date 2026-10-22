@@ -13,15 +13,18 @@ then the site:
 > Made this <theme> in ForkBuild, a 3D building app that announces builds on
 > Nostr: anyone can open it in 3D and fork it from the link, no account.
 > This week's build challenge is <theme>; your entry shows up on everyone's
-> challenge page once you distribute it to Nostr.
+> challenge page when you publish it with **Everyone can find it** on.
 >
 > <shared link to the build>
 > https://bowo-prasetyo.github.io/forkbuild/?ref=nostr
 >
 > #forkbuild #<week's tag> #3d #buildinpublic
 
-Distributing a build to Nostr needs a NIP-07 signer extension (nos2x, Alby
-and others); say so to anyone who asks why their entry doesn't show.
+Letting everyone find a build needs nothing installed: it goes to the Nostr
+relays as a build note. Only posting it under your own Nostr account
+(optional, under **Where it goes**) needs a NIP-07 signer extension (nos2x,
+Alby and others). If someone's entry doesn't show, check that **Everyone can
+find it** was on when they published.
 
 ## Steem and Blurt
 

@@ -25,8 +25,8 @@ import { assert } from './support/Assert.js';
 // Ground vehicles drive up ramps and across bridges, as an avatar on foot
 // walks them: application/avatar/AvatarVehicleMovementController.js with a
 // stepConstraint, driven over the Hay Wain Bridge example build
-// (forkbuild-document-hay-wain-bridge.json) and, in Section F, the Packhorse
-// Arch (forkbuild-document-packhorse-arch.json).
+// (examples/forkbuild-document-hay-wain-bridge.json) and, in Section F, the Packhorse
+// Arch (examples/forkbuild-document-packhorse-arch.json).
 //
 //   Section A: the wagon, bicycle and motorcycle each cross the bridge, deck
 //              over the river, back on the ground on the far bank
@@ -117,7 +117,7 @@ function drive(vehicle, { movement, step, water, riverHalfWidth = 4 }, ticks) {
 
 async function runTests() {
     const brickRegistry = new CreateBrickRegistryUseCase().execute();
-    const json = JSON.parse(await readFile(new URL('../forkbuild-document-hay-wain-bridge.json', import.meta.url), 'utf8'));
+    const json = JSON.parse(await readFile(new URL('../examples/forkbuild-document-hay-wain-bridge.json', import.meta.url), 'utf8'));
     const bridge = new DocumentSerializer().deserialize(json);
     const withBridge = constraints(new Map([['bridge', bridge]]), brickRegistry);
     const withoutBridge = constraints(new Map(), brickRegistry);
@@ -211,7 +211,7 @@ async function runTests() {
     // Section F — over the Packhorse Arch's hump
     // -------------------------------------------------------------
     {
-        const archJson = JSON.parse(await readFile(new URL('../forkbuild-document-packhorse-arch.json', import.meta.url), 'utf8'));
+        const archJson = JSON.parse(await readFile(new URL('../examples/forkbuild-document-packhorse-arch.json', import.meta.url), 'utf8'));
         const withArch = constraints(new Map([['arch', new DocumentSerializer().deserialize(archJson)]]), brickRegistry);
         const CROWN_TOP = 2.5;
         const river = { water: riverWater(2), riverHalfWidth: 2 };
