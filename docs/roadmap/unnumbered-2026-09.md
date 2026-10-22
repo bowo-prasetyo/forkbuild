@@ -8851,3 +8851,33 @@ anyone can remix it (a link to a build that isn't here says so instead of waitin
 - Not done: under several times the usual load (six copies of `WalkTogether.test.js` at once), real WebRTC
   handshakes still miss their timeouts now and then, as they did before; `tests/run.mjs` runs those files one at a
   time for that reason. A checkpoint is still offered in a second tab while the first is editing that build.
+
+## Four decisions: diorama, remix by default, the week's seasons, a filter that says no (unnumbered, 2026-10-22)
+
+**The owner took the four decisions the creative-direction review of 2026-10-22 asked for**
+(docs/reviews/CreativeDirection-2026-10-22.md). The review found the vision coherent and the work drifting from it:
+the launch week's counts (24 daily visits, 10 Editor opens, 3 first edits, no build published) pointed at building,
+and most of the milestones after them went to the World. Pillar served: all three, by deciding what comes first. How
+a player notices: not yet; this records the decisions and the order of work, and the first release they shape is 1.6.
+
+- **The World is a diorama, not a simulation** (docs/Pillars.md, "Look"): near a build, nothing natural stands
+  taller than a two-storey build; nature drawn about as simply as the bricks, by default; a clearing round every
+  build and the plaza; a page's first World View visit in fair daylight. New World content meets it now; what
+  already doesn't (the realistic trees of 2026-10-18 above all) waits for the diorama pass.
+- **A first Publish is one sheet, with remixing on** (docs/Pillars.md, "Infrastructure, kept out of sight"): a
+  suggested name, **Others may remix it** and **Everyone can find it** already chosen and changeable in place, one
+  **Publish** button, no dead end.
+- **The seasons follow the challenge week** (docs/Pillars.md, "One clock that matters: the week"), so a seasonal
+  theme is shown in its season; day and night keep their 40 minutes.
+- **The filter says no** (docs/Pillars.md, "The filter"): a fourth question (which first step or target should it
+  move, and what in the counts says so); off the newcomer's path, the owner's explicit yes in the roadmap entry
+  until a week of counts can answer it; every change a player can notice has a roadmap entry.
+- **docs/NowNextLater.md** (new): at most three items each. Now is 1.6, "First publish" (Publish in one sheet, a
+  first job worth doing, a first walk that looks like the game); Next a written playtest, one launch channel for
+  builders and a week of counts; Later the diorama pass, seasons on the week, and Pillars.md back to one page.
+- **.github/pull_request_template.md** (new): the filter's four questions, and whether the change is in Now, fixes
+  something broken or has the owner's yes, and has its roadmap entry.
+- The README's documentation list and docs/Roadmap.md point to NowNextLater.md.
+- Not done: none of the three product decisions is built yet; until they are, Publish asks its three questions in
+  turn, the seasons turn every five hours or so, and the World's trees stay as they are. Nothing checks
+  automatically that a commit has a roadmap entry; the pull request template asks instead.

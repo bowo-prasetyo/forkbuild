@@ -7,6 +7,9 @@ opened comfortably. Only the part still being written is in the
 repository; the closed parts are kept in its history, and the table links
 to each as it was when it was closed, so its text never changes.
 
+What comes next, and in what order, is [NowNextLater.md](NowNextLater.md):
+at most three items each, decided by the owner. This page records what shipped.
+
 When another document says "see docs/Roadmap.md, 0.8.26", look up that
 version in the table below and search its part for `## 0.8.26`.
 
