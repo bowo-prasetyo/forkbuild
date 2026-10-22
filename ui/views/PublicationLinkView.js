@@ -20,6 +20,8 @@ import BuiltWithNames from '../components/remix/BuiltWithNames.js';
 import I18nText from '../i18n/I18nText.js';
 import { normalizeBuiltWith } from '../../core/catalog/BuiltWith.js';
 import { exploreRouteFor } from '../components/publicationCatalog/useRepositoryNetworkDiscovery.js';
+import { useBuilderData } from '../composables/useBuilderData.js';
+import { LocalStorageProvider } from '../../storage/LocalStorageProvider.js';
 import { displayText, errorText, t } from '../i18n/i18n.js';
 import { buildDescriptionText, remixChangesText } from '../i18n/buildDescriptionText.js';
 
@@ -51,9 +53,11 @@ const NOTE_NOT_FOUND = 'note-not-found';
 // (core/publication/RemixLineage.js), and one main action: Edit a Copy, which needs no
 // account and opens it in the Editor as the visitor's own. Walking around it
 // in World View is the second. A build whose license allows no copies says
-// so, and offers only the walk. Under its family tree, builds by other people
-// published before it that look a lot like it, found after it opens
-// (SimilarEarlierBuilds).
+// so, and offers only the walk. Your own build offers no copy of itself:
+// Keep building opens it in the Editor when it is saved on this device, and
+// elsewhere the page says where it can be changed. Under its family tree,
+// builds by other people published before it that look a lot like it, found
+// after it opens (SimilarEarlierBuilds).
 export default {
     name: 'PublicationLinkView',
     components: { BuildTurntable, RemixFamilyTree, SimilarEarlierBuilds, BuiltWithNames, I18nText },
@@ -67,6 +71,8 @@ export default {
         const networkPublicationLocatorStore = inject('networkPublicationLocatorStore', null);
         const similarBuildFinder = inject('similarBuildFinder', null);
         const buildDescriber = inject('buildDescriber', null);
+        const builderData = useBuilderData();
+        const storage = new LocalStorageProvider();
         const { discoveryProvider } = new CreateDiscoveryUseCase().execute({
             decentralizedDiscoveryProvider: inject('decentralizedPublicationDiscoveryProvider', null)
         });
@@ -118,6 +124,10 @@ export default {
                 authorRoute: builderRoute(opened.publisherIdentity?.id, typeof opened.author === 'string' ? opened.author.trim() || null : null),
                 licenseLabel: displayText(describeLicense(license.id)),
                 remixAllowed: license.forkAllowed,
+                // Signed by you (the "you" of your builder page), and whether
+                // the build itself is saved here to keep building.
+                yours: lookUp(() => builderData.isOwnIdentity(opened.publisherIdentity?.id), false),
+                savedHere: lookUp(() => storage.exists(opened.documentId), false),
                 remixedFrom: remixedFromText(remixSource),
                 remixSourceTitle: remixSource?.title || '',
                 remixes: remixCountText(lookUp(() => countRemixes(discoveryProvider.findByParentId(opened.documentId), opened.documentId), 0)),
@@ -237,7 +247,7 @@ export default {
         // build's World to go back to.
         function editCopy() {
             const build = arrived.value;
-            if (!build || !build.remixAllowed) return;
+            if (!build || !build.remixAllowed || build.yours) return;
             const entryContext = new EditorEntryContext({
                 sourceDocumentId: build.documentId,
                 title: build.title,
@@ -249,6 +259,20 @@ export default {
                 path: '/editor',
                 query: { fork: build.documentId, publication: build.publication.id, ...editorEntryContextToQuery(entryContext) }
             });
+        }
+
+        // The page's one main button, when it has one besides the walk.
+        const mainAction = computed(() => {
+            const build = arrived.value;
+            if (!build) return null;
+            if (build.yours) return build.savedHere ? 'keep-building' : null;
+            return build.remixAllowed ? 'edit-copy' : null;
+        });
+
+        // Your own build, opened where you left it, as the Repository's Open does.
+        function keepBuilding() {
+            const build = arrived.value;
+            if (build?.yours && build.savedHere) router.push({ path: '/editor', query: { load: build.documentId } });
         }
 
         // Download it as a 3D model (core/building/BuildModelFormats.js), offered when
@@ -304,7 +328,7 @@ export default {
         onMounted(open);
 
         return {
-            t, state, message, publication, arrived, label, network, open, buildBricks, showTurntable, editCopy, walkAround,
+            t, state, message, publication, arrived, label, network, open, buildBricks, showTurntable, editCopy, keepBuilding, mainAction, walkAround,
             downloadModel, modelMessage, modelFormats: BUILD_MODEL_FORMATS, familyRoute, similarEarlier, similarRoute, buildDescription, remixChanges, familyChanges
         };
     },
@@ -331,10 +355,12 @@ export default {
                         <li v-if="arrived.remixes" class="shared-build-remix-count">{{ arrived.remixes }}</li>
                     </ul>
                     <div class="shared-build-actions">
-                        <button v-if="arrived.remixAllowed" type="button" class="cta-button shared-build-edit-copy" @click="editCopy">{{ t('publicationLink.editCopy') }}</button>
-                        <button type="button" :class="arrived.remixAllowed ? 'shared-build-walk' : 'cta-button shared-build-walk'" @click="walkAround">{{ t('publicationLink.walkAround') }}</button>
+                        <button v-if="mainAction === 'keep-building'" type="button" class="cta-button shared-build-keep-building" @click="keepBuilding">{{ t('publicationLink.keepBuilding') }}</button>
+                        <button v-else-if="mainAction === 'edit-copy'" type="button" class="cta-button shared-build-edit-copy" @click="editCopy">{{ t('publicationLink.editCopy') }}</button>
+                        <button type="button" :class="mainAction ? 'shared-build-walk' : 'cta-button shared-build-walk'" @click="walkAround">{{ t('publicationLink.walkAround') }}</button>
                     </div>
-                    <p v-if="arrived.remixAllowed" class="shared-build-hint">{{ t('publicationLink.editCopyHint') }}</p>
+                    <p v-if="arrived.yours" class="shared-build-hint">{{ t(arrived.savedHere ? 'publicationLink.yoursHint' : 'publicationLink.yoursElsewhere') }}</p>
+                    <p v-else-if="arrived.remixAllowed" class="shared-build-hint">{{ t('publicationLink.editCopyHint') }}</p>
                     <p v-else class="shared-build-hint">{{ t('publicationLink.noRemix') }}</p>
                     <p class="shared-build-license">{{ t('publicationLink.license', { license: arrived.licenseLabel }) }}</p>
                     <RemixFamilyTree :family="arrived.family" :route-for="familyRoute" :changes="familyChanges" heading="h2" />

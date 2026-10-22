@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ab8dc5cb397441b2 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 2ac1d0875426646f -->
 # 04 — Veröffentlichen & Remixen
 
 <!-- languages -->
@@ -201,6 +201,12 @@ Erlaubt die Lizenz Kopien, bietet die Seite auch **Als 3D-Modell
 herunterladen** an (glTF, STL für den 3D-Druck oder OBJ; siehe
 [Ein 3D-Modell herunterladen](02-TheEditor.md#ein-3d-modell-herunterladen)). Erlaubt die Lizenz des Bauwerks keine Kopien, sagt die Seite das und
 bietet nur den Rundgang an.
+
+Bei einem eigenen Bauwerk bietet die Seite keine Kopie davon an. Ist das
+Bauwerk auf diesem Gerät gespeichert, ist der große Knopf **Weiterbauen**:
+Er öffnet es im Editor so, wie Sie es gespeichert haben, bereit zum Ändern
+und erneuten Veröffentlichen. Auf einem anderen Gerät sagt die Seite, dass
+Sie es auf dem Gerät ändern, auf dem Sie es gebaut haben.
 
 ### Ein Bauwerk in eine Webseite einbetten
 

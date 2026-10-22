@@ -183,6 +183,11 @@ model** (glTF, STL for 3D printing, or OBJ; see
 build's license doesn't allow copies, the page says so and offers only the
 walk around it.
 
+On a build of your own, the page offers no copy of it. When the build is
+saved on this device, the big button is **Keep building**, which opens it
+in the Editor as you saved it, ready to change and publish again. On
+another device, the page says to change it on the device you built it on.
+
 ### Embedding a build in a web page
 
 A build whose link carries it can also be shown inside a blog post or a web

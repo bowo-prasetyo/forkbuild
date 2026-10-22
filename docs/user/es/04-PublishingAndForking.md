@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ab8dc5cb397441b2 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 2ac1d0875426646f -->
 # 04 — Publicar y remezclar
 
 <!-- languages -->
@@ -200,6 +200,12 @@ como modelo 3D** (glTF, STL para impresión 3D u OBJ; consulte
 [Descargar un modelo 3D](02-TheEditor.md#descargar-un-modelo-3d)). Si la licencia de la construcción no permite
 copias, la página lo dice y
 solo ofrece recorrerla.
+
+En una construcción suya, la página no ofrece una copia de ella. Cuando la
+construcción está guardada en este dispositivo, el botón grande es
+**Seguir construyendo**, que la abre en el Editor tal como la guardó, lista
+para cambiarla y publicarla de nuevo. En otro dispositivo, la página le
+dice que la cambie en el dispositivo en el que la construyó.
 
 ### Insertar una construcción en una página web
 

@@ -9028,8 +9028,9 @@ newcomer, or someone reading the launch posts, would trip on.
   never part of the published site.
 - **Your own build** (ui/views/WorldView.js, `isOwnBuild`; worldView/templates/hudSection.js): World View's bar
   offered **Edit a Copy** on a build its own builder had just published and walked into, since a published build is
-  never editable. It is now left out when the build was signed by the name in use (its `authorIdentityId`), following
-  a change of name; the builder changes it in the Editor and publishes again.
+  never editable. It is now left out when the build is yours: one of its publications was signed by the name in use
+  (as OwnPublicationPanel decides), or you claimed it to build together (its `authorIdentityId`), following a change
+  of name; the builder changes it in the Editor and publishes again.
 - **Publish in the meadow green** (css/main/editor.css): the toolbar's Publish was purple and Save the green.
   docs/Pillars.md's Look keeps one meadow green for the thing to press, which is Publish; Save beside it is outlined
   in the green, with the green's ink.
@@ -9037,3 +9038,23 @@ newcomer, or someone reading the launch posts, would trip on.
   published House offers no Edit a Copy.
 - Not done: the shared link's page still offers **Edit a Copy** on your own build, where making a copy of it is a
   reasonable thing to want.
+
+## Your own build's link: Keep building, not a copy (unnumbered, 2026-10-22)
+
+**The gap 1.6's loose ends left** (the entry above, "Not done"). Pillar served: making something of your own. A
+builder who opens the link to their own build, to check it before sharing it, was offered **Edit a Copy**, the big
+button: a remix of themselves, with a "Remixed from" credit to their own name.
+
+- **The shared link's page** (ui/views/PublicationLinkView.js) now tells your own build from anyone else's: a build is
+  yours when its publication was signed by one of your identities, the "you" of your builder page
+  (ui/composables/useBuilderData.js, `isOwnIdentity`). It offers no copy of it. When the build is saved on this
+  device, the big button is **Keep building**, which opens it in the Editor as you saved it (`/editor?load=`, as the
+  Repository's Open does), with the walk second. On another device, where the build itself isn't saved, the page says
+  to change it on the device you built it on, and the walk is the main button. Anyone else's build reads as before.
+- Its words in all eight languages; the user guide's shared link page (04-PublishingAndForking) says so, in all eight.
+- Tests: tests/PublicationLinkViewBrowser.test.js opens your own build saved here (Keep building, opening it rather
+  than a copy), saved elsewhere (no copy, the hint, the walk as the main button) and someone else's (Edit a Copy, as
+  before). The bundled-site test opens the House's link as its builder, after a friend copied it, and keeps building
+  it.
+- Not done: on another device, your own build can't be changed until it is opened on the device it was built on;
+  opening the published build in the Editor as your own, from its link, would close that.

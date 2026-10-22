@@ -764,6 +764,13 @@ async function firstVisit(browser, base) {
         } finally {
             await friend.close();
         }
+
+        // Its builder, opening the same link, keeps building it rather than copying it.
+        await editor.goto(`${base}/#/s/${payloadFromLinkPreviewUrl(link)}`);
+        await editor.waitForSelector('.shared-build-keep-building', { timeout: 60_000 });
+        assert(!(await editor.$('.shared-build-edit-copy')), 'its builder isn\'t offered a copy of it on its link');
+        await editor.click('.shared-build-keep-building');
+        await editor.waitForFunction(() => document.querySelector('.document-info-compact-title')?.textContent.trim() === 'House', null, { timeout: 60_000 });
     } finally {
         await signing.close();
     }

@@ -21,6 +21,7 @@ import { License, LicenseId } from '../core/document/License.js';
 import { EditorEntryReason } from '../core/document/EditorEntryContext.js';
 import { SimilarBuildFinder } from '../application/publication/SimilarBuildFinder.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { LocalStorageProvider } from '../storage/LocalStorageProvider.js';
 import { t } from '../ui/i18n/i18n.js';
 import { assert } from './support/Assert.js';
 
@@ -28,7 +29,8 @@ import { assert } from './support/Assert.js';
 // CSS: the build turning, its maker, what it was remixed from and how many
 // remixes of it this device knows, Edit a Copy (the fork World View makes,
 // with this build's World to go back to) and the walk around it; a build
-// whose license allows no copies offers only the walk. (The phone layout is
+// whose license allows no copies offers only the walk, and your own build
+// offers Keep building instead of a copy. (The phone layout is
 // checked in tests/run-bundle.mjs, which can size the window.)
 
 await new Promise((resolve, reject) => {
@@ -72,7 +74,7 @@ function publishCastle({ license = LicenseId.CC_BY_4_0, remix = true, builtWith 
         })
     }), `doc-castle-${license}`);
     const publication = new PublishDocumentUseCase(new LocalPublisherProvider(storage, contentStore), identity).execute(manager);
-    return { publication, contentStore };
+    return { publication, contentStore, identity };
 }
 
 function remixOf(documentId, remixDocumentId, id, publishedAt) {
@@ -81,7 +83,7 @@ function remixOf(documentId, remixDocumentId, id, publishedAt) {
 
 // Mounts the view on `#/s/<payload>`, opening the link with a stand-in for
 // ui/main.js's openPublicationLink that has already checked it.
-async function mount({ publication, contentStore, discovery = new DecentralizedPublicationDiscoveryProvider(), outcome = OpenPublicationLinkOutcome.OPENED, similarBuildFinder = null }) {
+async function mount({ publication, contentStore, discovery = new DecentralizedPublicationDiscoveryProvider(), outcome = OpenPublicationLinkOutcome.OPENED, similarBuildFinder = null, viewer = null }) {
     const payload = await encodePublicationLinkPayload({ claim: publication.toJSON(), snapshotText: await contentStore.get(publication.contentReference) });
     const counted = [];
     const router = createRouter({
@@ -110,6 +112,8 @@ async function mount({ publication, contentStore, discovery = new DecentralizedP
     app.provide('decentralizedPublicationDiscoveryProvider', discovery);
     app.provide('funnelEventCounter', { openedSharedLink: (documentId) => counted.push(documentId) });
     if (similarBuildFinder) app.provide('similarBuildFinder', similarBuildFinder);
+    // Who is looking: an identity provider whose name is in use.
+    if (viewer) app.provide('identityUseCase', { provider: viewer });
     app.mount(host);
     await nextTick();
     return { host, router, counted, unmount: () => { app.unmount(); host.remove(); } };
@@ -347,4 +351,53 @@ const text = (host, selector) => host.querySelector(selector)?.textContent.trim(
         none.unmount();
     }
     console.log('✓ nothing alike, or a failed look, shows no section');
+}
+
+// Your own build: no copy of itself. Saved on this device, Keep building
+// opens it in the Editor; built on another, the page says where to change it.
+{
+    const castle = publishCastle();
+    const storage = new LocalStorageProvider();
+    const documentId = castle.publication.documentId;
+    storage.remove(documentId);
+    const elsewhere = await mount({ ...castle, viewer: castle.identity });
+    try {
+        await until(() => elsewhere.host.querySelector('.shared-build-view'), 'the arrival screen');
+        assert(!elsewhere.host.querySelector('.shared-build-edit-copy'), 'its maker isn\'t offered a copy of it');
+        assert(!elsewhere.host.querySelector('.shared-build-keep-building'), 'and, with it saved on another device, nothing to open here');
+        assert(text(elsewhere.host, '.shared-build-hint') === t('publicationLink.yoursElsewhere'), `the page says where it can be changed (${text(elsewhere.host, '.shared-build-hint')})`);
+        assert(elsewhere.host.querySelector('.shared-build-walk').classList.contains('cta-button'), 'and the walk is the main button');
+    } finally {
+        elsewhere.unmount();
+    }
+
+    storage.save(documentId, { saved: true });
+    const here = await mount({ ...castle, viewer: castle.identity });
+    try {
+        await until(() => here.host.querySelector('.shared-build-view'), 'the arrival screen');
+        assert(!here.host.querySelector('.shared-build-edit-copy'), 'saved here, still no copy');
+        const keep = here.host.querySelector('.shared-build-keep-building');
+        assert(keep && keep.classList.contains('cta-button') && keep.textContent.trim() === t('publicationLink.keepBuilding'), 'Keep building is the main button');
+        assert(!here.host.querySelector('.shared-build-walk').classList.contains('cta-button'), 'with the walk second');
+        assert(text(here.host, '.shared-build-hint') === t('publicationLink.yoursHint'), 'it says the build opens as it was saved');
+        keep.click();
+        await until(() => here.router.currentRoute.value.path === '/editor', 'the Editor');
+        const query = here.router.currentRoute.value.query;
+        assert(query.load === documentId && !query.fork, `it opens the build itself, not a copy (${JSON.stringify(query)})`);
+    } finally {
+        here.unmount();
+        storage.remove(documentId);
+    }
+
+    const someoneElse = new LocalIdentityProvider(new InMemoryStorageProvider());
+    someoneElse.login('link-view-bob');
+    const visitor = await mount({ ...castle, viewer: someoneElse });
+    try {
+        await until(() => visitor.host.querySelector('.shared-build-view'), 'the arrival screen');
+        assert(visitor.host.querySelector('.shared-build-edit-copy') && !visitor.host.querySelector('.shared-build-keep-building'), 'anyone else is offered Edit a Copy');
+        assert(text(visitor.host, '.shared-build-hint') === t('publicationLink.editCopyHint'), 'with the copy\'s hint');
+    } finally {
+        visitor.unmount();
+    }
+    console.log('✓ your own build offers Keep building when it is saved here, and no copy of itself');
 }
