@@ -139,7 +139,9 @@ longer-term aim.
   casting shadows near you (**Shadows**, on by default except on phones);
   at night the stars and the Milky Way come out and wheel across the sky;
   windows and lanterns light up after dark and crickets take over from the
-  birds. **Always day** keeps it day.
+  birds. **Always day** keeps it day. A visit's first look at World View is
+  in fair morning light, easing into the shared sky over two minutes, and
+  every build stands in a clearing, so you see its door as you arrive.
 - An avatar you can walk, run and jump with, which collides with buildings and
   can climb stairs and slopes, with no name needed: until you choose one you
   walk as a guest only you can see; vehicles, an inventory, and catching and

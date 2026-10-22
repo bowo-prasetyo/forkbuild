@@ -121,6 +121,10 @@ const SEASON_OPTIONS = Object.freeze([
 // Snapshot fetches the automatic cascade runs at once.
 const AUTOMATIC_SNAPSHOT_FETCH_CONCURRENCY = 4;
 
+// Whether this page has shown World View's first sight yet
+// (core/nature/FirstSight.js): only its first visit opens in the fair morning.
+let firstSightShown = false;
+
 // World View observes and navigates; brick editing lives in the Editor (see
 // docs/Principles.md, "World View Observes and Navigates; Editor Mutates and
 // Builds"). What remains mutation-shaped is document- and World-level: Save,
@@ -1058,6 +1062,12 @@ export default {
             if (typeof session.setAlwaysDay === 'function') session.setAlwaysDay(alwaysDay.value);
         }
         if (typeof session.setAlwaysDay === 'function') session.setAlwaysDay(alwaysDay.value);
+        // A page's first visit opens in fair morning light and catches up with
+        // the shared sky (core/nature/FirstSight.js); with Always day on, it is day anyway.
+        if (!firstSightShown && typeof session.startFirstSight === 'function') {
+            firstSightShown = true;
+            if (!alwaysDay.value) session.startFirstSight();
+        }
         // The world's seasons, unless this device keeps one
         // (application/settings/WorldViewSeasonStore.js): '' follows the world.
         const worldViewSeasonStore = inject('worldViewSeasonStore', null);

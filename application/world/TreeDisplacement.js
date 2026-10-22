@@ -1,4 +1,4 @@
-import { isTreeDisplaced } from '../../core/nature/TreeDisplacement.js';
+import { BUILD_CLEARING, isTreeDisplaced } from '../../core/nature/TreeDisplacement.js';
 import { TERRAIN_TILE_SIZE } from '../../core/nature/TerrainTiling.js';
 import { MAX_TREE_COLLISION_RADIUS } from '../../core/avatar/AvatarTreeCollisionQuery.js';
 
@@ -15,11 +15,13 @@ const REFRESH_SPACING_MS = 50;
 const MAX_CACHED_TILES = 256;
 
 // The bricks gathered for a tile must reach every trunk standing in it, from
-// its middle to a corner and the widest trunk beyond.
-export const TREE_OBSTACLE_QUERY_RADIUS = Math.SQRT2 * (TERRAIN_TILE_SIZE / 2) + MAX_TREE_COLLISION_RADIUS + 1;
+// its middle to a corner, the widest trunk and the clearing round a build
+// beyond.
+export const TREE_OBSTACLE_QUERY_RADIUS = Math.SQRT2 * (TERRAIN_TILE_SIZE / 2) + MAX_TREE_COLLISION_RADIUS + BUILD_CLEARING + 1;
 
 // Which trees give way to what has been built (core/nature/TreeDisplacement.js),
-// for this session's loaded Worlds. Asked by a tree's trunk circle
+// for this session's loaded Worlds: none grows within `clearing`
+// (BUILD_CLEARING) of a brick. Asked by a tree's trunk circle
 // (core/nature/TreeCollisionGeometry.js#treeCollisionCircleFor()), which every
 // place that meets trees already holds: drawing (renderer/TreeForest.js),
 // avatar and vehicle collision (application/avatar/AvatarTreeConstraint.js),
@@ -38,8 +40,9 @@ export const TREE_OBSTACLE_QUERY_RADIUS = Math.SQRT2 * (TERRAIN_TILE_SIZE / 2) +
 // Calling it also refreshes one stale tile, so a caller asking every frame
 // sees a build arrive or go within a refresh.
 export class TreeDisplacement {
-    constructor({ obstaclesNear = () => [], now = () => Date.now() } = {}) {
+    constructor({ obstaclesNear = () => [], now = () => Date.now(), clearing = BUILD_CLEARING } = {}) {
         this._obstaclesNear = obstaclesNear;
+        this._clearing = clearing;
         this._now = now;
         this._tiles = new Map(); // tile key -> { tx, tz, gatheredAt, boxes, verdicts: Map(key -> { circle, displaced }) }
         this._lastRefreshAt = -Infinity;
@@ -53,7 +56,7 @@ export class TreeDisplacement {
         const key = `${circle.center.x},${circle.center.z}`;
         let verdict = tile.verdicts.get(key);
         if (verdict === undefined) {
-            verdict = { circle, displaced: isTreeDisplaced(circle, tile.boxes) };
+            verdict = { circle, displaced: isTreeDisplaced(circle, tile.boxes, this._clearing) };
             tile.verdicts.set(key, verdict);
         }
         return verdict.displaced;
@@ -113,7 +116,7 @@ export class TreeDisplacement {
         tile.gatheredAt = now;
         let changed = false;
         for (const verdict of tile.verdicts.values()) {
-            const displaced = isTreeDisplaced(verdict.circle, tile.boxes);
+            const displaced = isTreeDisplaced(verdict.circle, tile.boxes, this._clearing);
             if (displaced !== verdict.displaced) {
                 verdict.displaced = displaced;
                 changed = true;

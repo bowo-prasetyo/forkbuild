@@ -122,7 +122,10 @@ under and you see seaweed and small schools of fish.
 
 **Trees and animals.** Forests have conifers where it's wetter and
 broadleaf trees where it's drier, with scrub at the edge of the grassland.
-Deer live in the forest and rabbits on the grassland. Trees never move.
+Deer live in the forest and rabbits on the grassland. Trees never move,
+but none grows within 15 metres of a build: every build stands in a
+clearing of its own, so it reads as a place rather than a thing hidden in a
+wood, and you see its door as you arrive.
 Animals wander slowly near their own spot, stop to graze, and look up now
 and then. Come close and one turns its head to watch you (unless you're
 right behind it); a grazing deer lifts its head and a rabbit sits up. They
@@ -175,6 +178,12 @@ color, so a lighthouse shows the way in and a village looks lived in; the
 birds go quiet and crickets take over. The night is never too dark to find
 your way. Only World View has night: the Editor, pictures of builds and link
 previews are always in daylight.
+
+The first time you open World View after loading ForkBuild, it greets you in
+fair morning light, whatever the hour: for a minute the sky is clear and the
+sun is up, then over the next minute it eases into the sky everyone else
+sees, night, rain and all. If someone else is already there, or joins you,
+you both see the shared sky at once.
 
 The sun rises in the east, crosses the southern sky and sets in the west,
 glowing orange near the horizon; after it sets, the moon follows the same

@@ -5,7 +5,7 @@ import { MAX_TREE_COLLISION_RADIUS } from '../../core/avatar/AvatarTreeCollision
 
 // How far behind the arriving avatar, and how high, the camera starts:
 // looking past them at the door, the way a third-person camera would.
-const ARRIVAL_CAMERA_BACK = 5;
+export const ARRIVAL_CAMERA_BACK = 5;
 const ARRIVAL_CAMERA_HEIGHT = 2.5;
 // The height on the door the camera looks at.
 const ARRIVAL_LOOK_HEIGHT = 1.2;
