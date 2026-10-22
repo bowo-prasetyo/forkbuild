@@ -19,6 +19,7 @@ import { LoadFailureReason } from '../application/document/LoadFailureReason.js'
 import { AutosaveScheduler } from '../application/document/AutosaveScheduler.js';
 import { AutosaveDocumentUseCase } from '../application/document/AutosaveDocumentUseCase.js';
 import { CheckRecoveryUseCase } from '../application/document/CheckRecoveryUseCase.js';
+import RecoveryBanner from '../ui/components/RecoveryBanner.js';
 import { RecoverDocumentUseCase } from '../application/document/RecoverDocumentUseCase.js';
 import { DiscardRecoveryUseCase } from '../application/document/DiscardRecoveryUseCase.js';
 import { RecoveryObserver } from '../application/document/RecoveryObserver.js';
@@ -840,8 +841,9 @@ async function main() {
         // L5. RecoveryBanner — confirmed clean of raw implementation
         // vocabulary, and its date formatting degrades gracefully.
         const bannerSource = await readSource('ui/components/RecoveryBanner.js');
-        assert(/t\('recovery\.found', \{ when: formatSavedAt\(status\.recovery\.savedAt\) \}\)/.test(bannerSource)
-            && t('recovery.found', { when: 'Tuesday' }) === 'Unsaved changes from Tuesday were found for this build.',
+        const bannerSays = (status) => RecoveryBanner.methods.message.call({ status, formatSavedAt: () => 'Tuesday' });
+        assert(bannerSays({ recovery: { savedAt: 'x' } }) === 'Unsaved changes from Tuesday were found for this build.'
+            && bannerSays({ recovery: { savedAt: 'x' }, otherBuild: true, title: 'Mill' }) === 'Unsaved changes to "Mill" from Tuesday were found. Recover opens that build with them.',
             'L5a. RecoveryBanner\'s user-facing sentence is plain language — no "checkpoint," "contentHash," or "revision" jargon leaks into it.');
         assert(/return Number\.isNaN\(date\.getTime\(\)\)\s*\?\s*t\('recovery\.earlierSession'\)/.test(bannerSource) && t('recovery.earlierSession') === 'an earlier session',
             'L5b. formatSavedAt() degrades gracefully to "an earlier session" rather than showing "Invalid Date" for a malformed timestamp — confirmed live below.');

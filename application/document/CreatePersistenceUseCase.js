@@ -7,6 +7,7 @@ import { AutosaveDocumentUseCase } from './AutosaveDocumentUseCase.js';
 import { RecoverDocumentUseCase } from './RecoverDocumentUseCase.js';
 import { DiscardRecoveryUseCase } from './DiscardRecoveryUseCase.js';
 import { CheckRecoveryUseCase } from './CheckRecoveryUseCase.js';
+import { FindUnsavedWorkUseCase } from './FindUnsavedWorkUseCase.js';
 import { StructureDocumentResolver } from '../editor/StructureDocumentResolver.js';
 import { LocalContentStore } from '../../content/LocalContentStore.js';
 
@@ -19,6 +20,7 @@ export class CreatePersistenceUseCase {
     execute() {
         const storageProvider = new LocalStorageProvider();
         const recoveryStore = new LocalRecoveryStore(storageProvider);
+        const checkRecoveryUseCase = new CheckRecoveryUseCase(recoveryStore, storageProvider);
         return {
             storageProvider,
             recoveryStore,
@@ -32,7 +34,8 @@ export class CreatePersistenceUseCase {
             autosaveDocumentUseCase: new AutosaveDocumentUseCase(recoveryStore, storageProvider),
             recoverDocumentUseCase: new RecoverDocumentUseCase(recoveryStore),
             discardRecoveryUseCase: new DiscardRecoveryUseCase(recoveryStore),
-            checkRecoveryUseCase: new CheckRecoveryUseCase(recoveryStore, storageProvider),
+            checkRecoveryUseCase,
+            findUnsavedWorkUseCase: new FindUnsavedWorkUseCase(recoveryStore, checkRecoveryUseCase),
             // 0.2.90 — Structure Placement & World Instances. Read-only
             // resolution of "what does this documentId currently
             // contain," shared by StructurePlacementTool (collision/

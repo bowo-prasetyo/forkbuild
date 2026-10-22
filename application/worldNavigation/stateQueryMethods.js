@@ -192,6 +192,16 @@ export const stateQueryMethods = {
 
     getDocumentPosition(documentId) {
         return this._getWorldPosition(documentId);
+    },
+
+    // Whether this World can show `documentId`: it is loaded, or placed where
+    // it would stream in. Only placed builds ever do, so a link to anything
+    // else would wait for ever.
+    isDocumentPlaced(documentId) {
+        if (!documentId) return false;
+        if (this._loadedDocuments.has(documentId) || this._localPositions.has(documentId)) return true;
+        const layout = this._worldLayoutProvider;
+        return typeof layout.hasPosition === 'function' ? layout.hasPosition(documentId) : Boolean(layout.getPosition(documentId));
     }
 };
 

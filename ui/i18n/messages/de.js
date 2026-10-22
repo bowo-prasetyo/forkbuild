@@ -49,6 +49,7 @@ export default Object.freeze({
     'app.loadFailed': 'ForkBuild konnte nicht vollständig geladen werden. Prüfen Sie Ihre Verbindung und laden Sie die Seite dann neu.',
     'app.loadFailedReload': 'Neu laden',
     // Shown when a page opened later could not load (ui/components/PageLoadFailureNotice.js).
+    'app.pageLoading': 'Seite wird geladen…',
     'app.pageLoadFailed': 'Diese Seite konnte nicht geladen werden. Prüfen Sie Ihre Verbindung und laden Sie ForkBuild dann neu, um sie zu öffnen.',
     'app.pageLoadFailedEndsCall': 'Das Neuladen beendet Ihren Sprachanruf.',
     'app.pageLoadFailedDismiss': 'Ausblenden',
@@ -837,6 +838,7 @@ export default Object.freeze({
 
     // Editor: recovering unsaved changes (ui/components/RecoveryBanner.js).
     'recovery.found': 'Für dieses Bauwerk wurden ungespeicherte Änderungen von {when} gefunden.',
+    'recovery.foundOther': 'Ungespeicherte Änderungen an „{title}“ von {when} wurden gefunden. „Wiederherstellen“ öffnet dieses Bauwerk mit ihnen.',
     'recovery.earlierSession': 'einer früheren Sitzung',
     'recovery.recover': 'Wiederherstellen',
     'recovery.discard': 'Verwerfen',
@@ -1191,6 +1193,7 @@ export default Object.freeze({
     'editor.composingHint': '„{title}“ wird platziert — über den Boden fahren, R zum Drehen, klicken zum Platzieren, Esc zum Abbrechen.',
     'editor.tools': 'Werkzeuge',
     'editor.hideTools': 'Werkzeuge ausblenden',
+    'editor.heading': 'Bauen an „{title}“',
     'editor.recovered': 'Ungespeicherte Änderungen aus einer früheren Sitzung wiederhergestellt',
     'editor.recoveryFailed': 'Wiederherstellung fehlgeschlagen: {error}',
     'editor.discarded': 'Den wiederhergestellten Sicherungspunkt verworfen',
@@ -2416,6 +2419,10 @@ export default Object.freeze({
     'worldView.cameraAndEditing': 'Kamera: {camera} · Bearbeitung: {editing}',
     'worldView.untitled': 'Ohne Titel',
     'worldView.loading': 'Wird geladen …',
+    'worldView.notHereTitle': 'Dieses Bauwerk ist nicht hier',
+    'worldView.notHereText': 'Auf diesem Gerät gibt es kein Bauwerk mit diesem Link. Vielleicht ist es noch nicht veröffentlicht oder noch nicht auf diesem Gerät angekommen: Bitte die Person, die es geteilt hat, noch einmal um den Link, oder suche es unter „Entdecken“.',
+    'worldView.notHereExplore': 'Bauwerke entdecken',
+    'worldView.notHereLookAround': 'Umsehen',
     'worldView.none': 'Keine',
     'worldView.nothingToUndo': 'Nichts rückgängig zu machen',
 

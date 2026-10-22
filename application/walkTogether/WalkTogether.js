@@ -62,6 +62,11 @@ export const JOIN_TIMEOUT_MS = 45 * 1000;
 // shortly before it ends.
 export const MAX_OFFER_TTL_MS = 10 * 60 * 1000;
 const OFFER_RENEW_BEFORE_MS = 60 * 1000;
+// A standing offer is gone once a guest takes it, and the host puts out the
+// next only after that guest's connection opens; a guest who looks in
+// between finds nobody, so it looks again after each of these delays before
+// saying the link is not found.
+export const NOT_FOUND_RETRY_DELAYS_MS = Object.freeze([750, 1500, 3000]);
 // How long the invitation each guest receives stays open.
 const GUEST_INVITATION_TTL_MS = 5 * 60 * 1000;
 const SETTLE_BEFORE_CLOSE_MS = 2000;
@@ -120,7 +125,8 @@ export class WalkTogether {
     //   the one-off meeting.
     constructor({
         peerSessionManager, identityProvider, peerConnectionProvider, rendezvousTransports,
-        ttlMs = WALK_LINK_TTL_MS, joinTimeoutMs = JOIN_TIMEOUT_MS, maxOfferTtlMs = MAX_OFFER_TTL_MS, answerPollIntervalMs, answerWatchIntervalMs
+        ttlMs = WALK_LINK_TTL_MS, joinTimeoutMs = JOIN_TIMEOUT_MS, maxOfferTtlMs = MAX_OFFER_TTL_MS,
+        notFoundRetryDelaysMs = NOT_FOUND_RETRY_DELAYS_MS, answerPollIntervalMs, answerWatchIntervalMs
     }) {
         if (!peerSessionManager) throw new Error('WalkTogether: peerSessionManager is required');
         if (!identityProvider) throw new Error('WalkTogether: identityProvider is required');
@@ -132,6 +138,7 @@ export class WalkTogether {
         this._ttlMs = ttlMs;
         this._joinTimeoutMs = joinTimeoutMs;
         this._maxOfferTtlMs = maxOfferTtlMs;
+        this._notFoundRetryDelaysMs = Array.from(notFoundRetryDelaysMs);
         this._pollIntervals = {
             ...(answerPollIntervalMs !== undefined ? { answerPollIntervalMs } : {}),
             ...(answerWatchIntervalMs !== undefined ? { answerWatchIntervalMs } : {})
@@ -199,6 +206,7 @@ class WalkSide {
         this._walk = walk;
         this._listeners = new Set();
         this._timers = new Set();
+        this._waits = new Set();
         this._meeting = null;
         this._closed = false;
         this.state = Object.freeze({ status: WalkTogetherStatus.STARTING });
@@ -217,6 +225,8 @@ class WalkSide {
         this._closed = true;
         for (const timer of this._timers) clearTimeout(timer);
         this._timers.clear();
+        for (const resolve of this._waits) resolve();
+        this._waits.clear();
         if (this._meeting) this._meeting.close();
         this._meeting = null;
     }
@@ -230,6 +240,21 @@ class WalkSide {
         if (this._closed) return;
         this._set({ ...this.state, status: WalkTogetherStatus.FAILED, failure });
         this.close();
+    }
+
+    // Resolves after `ms`, or at once when the side closes first, so an
+    // awaited start() never hangs; callers check _closed after it. Unlike
+    // _later(), the timer is not unref'd: something is awaiting it.
+    _wait(ms) {
+        return new Promise((resolve) => {
+            const timer = setTimeout(() => {
+                this._timers.delete(timer);
+                this._waits.delete(resolve);
+                resolve();
+            }, ms);
+            this._timers.add(timer);
+            this._waits.add(resolve);
+        });
     }
 
     _later(ms, callback) {
@@ -445,15 +470,22 @@ export class WalkTogetherGuest extends WalkSide {
             if (connectedPeer === this._peer && payload && payload.type === 'part') this._acceptPart(payload);
         });
         // Two guests can race for one standing offer; the one that loses
-        // finds the next.
-        for (let attempt = 0; attempt < 2 && !this._closed; attempt++) {
+        // either fails to connect to it or finds no offer until the host
+        // puts out the next, and looks again either way.
+        const notFoundRetryDelaysMs = this._walk._notFoundRetryDelaysMs;
+        let connectionAttempts = 0;
+        let notFoundRetries = 0;
+        while (!this._closed) {
             const outcome = await this._connect();
-            if (outcome !== WalkTogetherFailure.CONNECTION) {
-                if (outcome) this._fail(outcome);
-                return;
+            if (!outcome) return;
+            if (outcome === WalkTogetherFailure.CONNECTION && ++connectionAttempts < 2) continue;
+            if (outcome === WalkTogetherFailure.NOT_FOUND && notFoundRetries < notFoundRetryDelaysMs.length) {
+                await this._wait(notFoundRetryDelaysMs[notFoundRetries++]);
+                continue;
             }
+            this._fail(outcome);
+            return;
         }
-        this._fail(WalkTogetherFailure.CONNECTION);
     }
 
     // Resolves once a welcome is arriving (null), or to a failure.

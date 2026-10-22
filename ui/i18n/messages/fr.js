@@ -49,6 +49,7 @@ export default Object.freeze({
     'app.loadFailed': 'ForkBuild n’a pas pu terminer son chargement. Vérifiez votre connexion, puis rechargez la page.',
     'app.loadFailedReload': 'Recharger',
     // Shown when a page opened later could not load (ui/components/PageLoadFailureNotice.js).
+    'app.pageLoading': 'Chargement de la page…',
     'app.pageLoadFailed': 'Cette page n’a pas pu se charger. Vérifiez votre connexion, puis rechargez ForkBuild pour l’ouvrir.',
     'app.pageLoadFailedEndsCall': 'Recharger met fin à votre appel vocal.',
     'app.pageLoadFailedDismiss': 'Ignorer',
@@ -837,6 +838,7 @@ export default Object.freeze({
 
     // Editor: recovering unsaved changes (ui/components/RecoveryBanner.js).
     'recovery.found': 'Des modifications non enregistrées datant de {when} ont été trouvées pour cette construction.',
+    'recovery.foundOther': 'Des modifications non enregistrées de « {title} » datant de {when} ont été trouvées. Récupérer ouvre cette construction avec elles.',
     'recovery.earlierSession': 'une session précédente',
     'recovery.recover': 'Récupérer',
     'recovery.discard': 'Abandonner',
@@ -1191,6 +1193,7 @@ export default Object.freeze({
     'editor.composingHint': 'Placement de « {title} » — survolez le sol, R pour pivoter, cliquez pour placer, Échap pour annuler.',
     'editor.tools': 'Outils',
     'editor.hideTools': 'Masquer les outils',
+    'editor.heading': 'Construction de « {title} »',
     'editor.recovered': 'Modifications non enregistrées d’une session précédente récupérées',
     'editor.recoveryFailed': 'Échec de la récupération : {error}',
     'editor.discarded': 'Point de reprise récupéré abandonné',
@@ -2416,6 +2419,10 @@ export default Object.freeze({
     'worldView.cameraAndEditing': 'Caméra : {camera} · Modification : {editing}',
     'worldView.untitled': 'Sans titre',
     'worldView.loading': 'Chargement…',
+    'worldView.notHereTitle': 'Cette construction n’est pas ici',
+    'worldView.notHereText': 'Aucune construction avec ce lien n’est sur cet appareil. Elle n’est peut-être pas encore publiée, ou pas encore arrivée sur cet appareil : redemandez le lien à la personne qui l’a partagé, ou cherchez-la dans Explorer.',
+    'worldView.notHereExplore': 'Explorer les constructions',
+    'worldView.notHereLookAround': 'Regarder autour',
     'worldView.none': 'Aucun',
     'worldView.nothingToUndo': 'Rien à annuler',
 

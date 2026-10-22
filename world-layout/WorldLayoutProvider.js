@@ -15,4 +15,10 @@ export class WorldLayoutProvider {
     getPosition(documentId) {
         throw new Error('WorldLayoutProvider.getPosition() must be implemented by a subclass');
     }
+
+    // Whether `documentId` has a place of its own, as opposed to a fallback
+    // getPosition() may give anything. A provider that can't tell says so.
+    hasPosition(documentId) {
+        return Boolean(this.getPosition(documentId));
+    }
 }

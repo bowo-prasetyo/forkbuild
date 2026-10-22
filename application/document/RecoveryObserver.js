@@ -62,6 +62,14 @@ export class RecoveryObserver {
         this._setStatus(null);
     }
 
+    // Offers `status` (CheckRecoveryUseCase's descriptor) for a build other
+    // than the open one, such as one FindUnsavedWorkUseCase found, until the
+    // open document changes or clear() runs.
+    offer(status) {
+        this._checkedDocumentId = this._currentDocumentId();
+        this._setStatus(status && status.available ? { ...status, otherBuild: true } : null);
+    }
+
     _currentDocumentId() {
         const document = this._documentManager.document;
         return document ? document.world.id : null;

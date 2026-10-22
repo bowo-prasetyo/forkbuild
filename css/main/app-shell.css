@@ -207,6 +207,50 @@ html, body {
     flex: 1;
     min-height: 0;
     display: flex;
+    position: relative;
+}
+
+/* A page still downloading (ui/components/PageLoadingNotice.js), laid over the
+   top of the page area so nothing beneath moves when it goes. */
+.page-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    pointer-events: none;
+}
+
+.page-loading-bar {
+    align-self: stretch;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent) 0 0 / 40% 100% no-repeat;
+    animation: page-loading-slide 1.2s ease-in-out infinite;
+}
+
+.page-loading-text {
+    padding: 0.2rem 0.7rem;
+    border-radius: 999px;
+    background: var(--paper);
+    color: var(--ink-muted);
+    font-size: 0.85rem;
+}
+
+@keyframes page-loading-slide {
+    from { background-position: -40% 0; }
+    to { background-position: 140% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .page-loading-bar {
+        animation: none;
+        background: var(--accent);
+        opacity: 0.5;
+    }
 }
 
 /* About view (Home has its own stylesheet, main/home.css) */

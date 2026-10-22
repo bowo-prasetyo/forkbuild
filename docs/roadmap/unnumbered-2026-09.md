@@ -8800,3 +8800,54 @@ trust-diagnostics banner and code nothing reached, and fixes what the entries ab
   after Home, Steem's and Blurt's posting code on demand, the trust-diagnostics banner and the unused spatial index,
   streaming session and old collaboration protocol removed) went in without entries here; the release notes cover
   them from their commits.
+
+## Unsaved work offered after a reload, friends who open a link together, and World links to a missing build (unnumbered, 2026-10-22)
+
+**Four fixes from a QA pass over 1.5.0.** Pillars served: build a little place (work left unsaved when the page
+closes comes back), walk inside it with friends (two friends opening one Walk here with me link both get in), and
+anyone can remix it (a link to a build that isn't here says so instead of waiting for ever).
+
+- **Unsaved work after a reload.** The user guide promised that the Editor offers to restore unsaved changes if the
+  page closes before you save, and it didn't: autosave wrote the checkpoint, but each visit to the Editor starts a new
+  document, and RecoveryObserver only probes the open one. A build never saved could not even be opened to be asked.
+  application/document/FindUnsavedWorkUseCase.js (new) finds the newest checkpoint, for a build other than the open
+  one, that CheckRecoveryUseCase still offers; `RecoveryObserver#offer()` puts it on the existing banner, which then
+  names the build (`recovery.foundOther`). The Editor asks on a plain open (not for a link, a ready-made build, a
+  plot or a challenge); Recover and Discard are the existing handlers, and Discard offers the next.
+  persistence/RecoveryStore.js gains `list()` and `loadInfo()`; LocalRecoveryStore's `recovery-info:` record now
+  keeps the checkpoint's time and title beside its revision, so choosing reads no checkpoint, and an older record
+  falls back to the checkpoint. Choosing New over unsaved changes keeps their checkpoint: it is offered later, and
+  Discard throws it away.
+- **The 3D view's size.** renderer/Renderer.js resized the canvas only when the window did, so the recovery banner
+  closing left a strip of empty page under the view. A ResizeObserver on the view resizes it whenever the view
+  changes size, and a hidden view (0 by 0) keeps its last size rather than a NaN aspect.
+- **Two friends at once.** A standing offer answers one guest, and the host puts out the next once that guest's
+  connection opens (application/walkTogether/WalkTogether.js). A guest who looked in between found nobody and failed
+  for good with `notFound`; `WalkTogether.test.js` failed so about once in a busy full run ("Sam joins the build").
+  The guest now looks again after `NOT_FOUND_RETRY_DELAYS_MS` (0.75, 1.5 and 3 s; `notFoundRetryDelaysMs` to
+  change them), keeping its one retry after a failed connection; a link truly gone is said so about 5 s later than
+  before. A guest closed while waiting ends its `start()` at once.
+- **A World link to a build that isn't here.** `/world/:id` for a build this device can't place showed "Loading…" for
+  ever, and the visit was kept in My Worlds with Continue Exploring. world-layout/LocalWorldLayoutProvider.js
+  `getPosition()` gives any unplaced id the origin, so `hasPosition()` (new, on WorldLayoutProvider too) tells them
+  apart, and `WorldNavigationSession#isDocumentPlaced()` asks it, its loaded documents and its own copies. World View
+  checks it before going to the build: when it can't, the panel says **This build isn't here**, with Explore builds
+  and Look around; the build is never made active, so no visit is recorded; and the address isn't swapped for a
+  nearby build's. If the build arrives (its announcement syncs in), the next refresh goes to it.
+- **A page still downloading.** Most pages load on demand, and until one arrives the page area stays empty: about 2 s
+  for the Editor and World View on the published site, longer on a slow connection. ui/pageLoading.js watches the
+  router: a navigation still pending after 300 ms shows ui/components/PageLoadingNotice.js, a `role="status"` line
+  with a moving bar laid over the top of the page area (still for reduced motion), gone once the page arrives or
+  fails (ui/pageLoadFailure.js reports a failure, as before).
+- **The Editor's heading.** The Editor had no `<h1>`; it has a visually hidden one naming the build (`editor.heading`).
+- Messages: `recovery.foundOther`, `worldView.notHere*`, `app.pageLoading` and `editor.heading`, in every language.
+- Tests: `UnsavedWorkOffer` (new: a never-saved build left by a closed page is offered by the next Editor, named, and
+  recovers with its bricks; a saved build's later changes until saved; newest first, Discard offers the next, the open
+  build left to its own banner; a corrupt checkpoint passed over and removed, an older info record still named);
+  `WalkTogether` (a friend who looks between two offers finds the next one, which failed with `notFound` before;
+  closing a guest between looks ends it); `WorldLinkPlacement` (new: the layout tells a placed build from one given
+  the origin; the session's answer); `PageLoading` (new); the bundled-site test opens the Editor on a slow
+  connection, reloads with unsaved bricks, recovers them all, and opens a link to a missing build.
+- Not done: under several times the usual load (six copies of `WalkTogether.test.js` at once), real WebRTC
+  handshakes still miss their timeouts now and then, as they did before; `tests/run.mjs` runs those files one at a
+  time for that reason. A checkpoint is still offered in a second tab while the first is editing that build.

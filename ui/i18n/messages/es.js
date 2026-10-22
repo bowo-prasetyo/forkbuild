@@ -50,6 +50,7 @@ export default Object.freeze({
     'app.loadFailed': 'ForkBuild no terminó de cargar. Revise su conexión y luego vuelva a cargar la página.',
     'app.loadFailedReload': 'Volver a cargar',
     // Shown when a page opened later could not load (ui/components/PageLoadFailureNotice.js).
+    'app.pageLoading': 'Cargando la página…',
     'app.pageLoadFailed': 'Esta página no se pudo cargar. Revise su conexión y luego vuelva a cargar ForkBuild para abrirla.',
     'app.pageLoadFailedEndsCall': 'Volver a cargar termina su llamada de voz.',
     'app.pageLoadFailedDismiss': 'Descartar',
@@ -838,6 +839,7 @@ export default Object.freeze({
 
     // Editor: recovering unsaved changes (ui/components/RecoveryBanner.js).
     'recovery.found': 'Se encontraron cambios sin guardar de {when} para esta construcción.',
+    'recovery.foundOther': 'Se encontraron cambios sin guardar en «{title}» de {when}. Recuperar abre esa construcción con ellos.',
     'recovery.earlierSession': 'una sesión anterior',
     'recovery.recover': 'Recuperar',
     'recovery.discard': 'Descartar',
@@ -1192,6 +1194,7 @@ export default Object.freeze({
     'editor.composingHint': 'Colocando “{title}”: pase el puntero sobre el suelo, R para girar, haga clic para colocar, Esc para cancelar.',
     'editor.tools': 'Herramientas',
     'editor.hideTools': 'Ocultar herramientas',
+    'editor.heading': 'Construyendo «{title}»',
     'editor.recovered': 'Se recuperaron cambios sin guardar de una sesión anterior',
     'editor.recoveryFailed': 'No se pudo recuperar: {error}',
     'editor.discarded': 'Se descartó el punto de control recuperado',
@@ -2417,6 +2420,10 @@ export default Object.freeze({
     'worldView.cameraAndEditing': 'Cámara: {camera} · Edición: {editing}',
     'worldView.untitled': 'Sin título',
     'worldView.loading': 'Cargando…',
+    'worldView.notHereTitle': 'Esta construcción no está aquí',
+    'worldView.notHereText': 'No hay ninguna construcción con este enlace en este dispositivo. Puede que aún no esté publicada o que no haya llegado a este dispositivo: pide de nuevo el enlace a quien lo compartió, o búscala en Explorar.',
+    'worldView.notHereExplore': 'Explorar construcciones',
+    'worldView.notHereLookAround': 'Mirar alrededor',
     'worldView.none': 'Ninguno',
     'worldView.nothingToUndo': 'No hay nada que deshacer',
 

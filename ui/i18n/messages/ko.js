@@ -49,6 +49,7 @@ export default Object.freeze({
     'app.loadFailed': 'ForkBuild를 끝까지 불러오지 못했습니다. 연결을 확인한 뒤 페이지를 새로 고치세요.',
     'app.loadFailedReload': '새로 고침',
     // Shown when a page opened later could not load (ui/components/PageLoadFailureNotice.js).
+    'app.pageLoading': '페이지를 불러오는 중…',
     'app.pageLoadFailed': '이 페이지를 불러오지 못했습니다. 연결을 확인한 뒤 ForkBuild를 새로 고쳐 다시 여세요.',
     'app.pageLoadFailedEndsCall': '새로 고치면 음성 통화가 끝납니다.',
     'app.pageLoadFailedDismiss': '닫기',
@@ -837,6 +838,7 @@ export default Object.freeze({
 
     // Editor: recovering unsaved changes (ui/components/RecoveryBanner.js).
     'recovery.found': '이 작품에 대해 {when}의 저장하지 않은 변경 사항을 찾았습니다.',
+    'recovery.foundOther': '"{title}"에 대해 {when}의 저장하지 않은 변경 사항을 찾았습니다. 복구하면 변경 사항과 함께 그 작품을 엽니다.',
     'recovery.earlierSession': '이전 세션',
     'recovery.recover': '복구',
     'recovery.discard': '버리기',
@@ -1191,6 +1193,7 @@ export default Object.freeze({
     'editor.composingHint': '“{title}” 배치 중 — 지면 위에 커서를 올리고, R로 회전, 클릭해 배치, Esc로 취소하세요.',
     'editor.tools': '도구',
     'editor.hideTools': '도구 숨기기',
+    'editor.heading': '"{title}" 만드는 중',
     'editor.recovered': '이전 세션의 저장하지 않은 변경 사항을 복구했습니다',
     'editor.recoveryFailed': '복구 실패: {error}',
     'editor.discarded': '복구된 체크포인트를 버렸습니다',
@@ -2416,6 +2419,10 @@ export default Object.freeze({
     'worldView.cameraAndEditing': '카메라: {camera} · 편집: {editing}',
     'worldView.untitled': '제목 없음',
     'worldView.loading': '불러오는 중…',
+    'worldView.notHereTitle': '이 작품은 여기에 없습니다',
+    'worldView.notHereText': '이 링크의 작품이 이 기기에 없습니다. 아직 게시되지 않았거나 이 기기에 도착하지 않았을 수 있습니다. 공유한 사람에게 링크를 다시 받거나 둘러보기에서 찾아보세요.',
+    'worldView.notHereExplore': '작품 둘러보기',
+    'worldView.notHereLookAround': '주변 보기',
     'worldView.none': '없음',
     'worldView.nothingToUndo': '실행 취소할 항목이 없습니다',
 

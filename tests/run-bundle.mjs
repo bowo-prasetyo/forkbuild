@@ -235,6 +235,77 @@ async function joinChallenge(browser, base) {
 // The challenge plaza, in the published build: an entry published unsigned
 // for the week stands there, reached from the challenge page's Walk the
 // plaza, in World View, which stays on the plaza; an unknown week says so.
+// Nothing is lost to a reload, and no link leaves anyone waiting: a build
+// with unsaved changes is offered back, named, by the Editor the reload
+// opens, and Recover brings its bricks back; a World link to a build this
+// device doesn't have says so instead of "Loading…", and is not remembered
+// among My Worlds. A page still downloading says it is loading, and the
+// Editor has a heading naming the build.
+async function reloadAndMissingWorld(browser, base) {
+    const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    const page = await context.newPage();
+    // The Editor's page slow to arrive, so its loading is long enough to see.
+    await context.route(/\/bundle\/chunks\/EditorView-/, async (route) => {
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        await route.continue();
+    });
+    try {
+        await page.goto(`${base}/#/editor`);
+        await page.waitForSelector('.page-loading[role="status"]', { timeout: 10_000 });
+        await page.waitForSelector('.first-build-guide', { timeout: 60_000 });
+        assert(await page.locator('.page-loading').count() === 0, 'the loading notice goes once the Editor is there');
+        const heading = (await page.textContent('h1')).trim();
+        assert(heading === 'Building "Untitled ForkBuild World"', `the Editor's heading names the build (${heading})`);
+
+        await page.click('.tool-switcher--editor .tool-btn:nth-child(2)');
+        const middle = await page.$eval('.viewport', (element) => { const r = element.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height * 0.6 }; });
+        for (const dx of [-60, 60]) {
+            await page.mouse.move(middle.x + dx - 20, middle.y);
+            await page.mouse.move(middle.x + dx, middle.y, { steps: 3 });
+            await page.mouse.down();
+            await page.mouse.up();
+        }
+        await page.waitForSelector('.first-build-step--done[data-step="place-brick"]', { timeout: 10_000 });
+        await page.keyboard.press('Escape');
+        const selectAll = async () => {
+            await page.click('.tool-switcher--editor .tool-btn:nth-child(1)');
+            await page.getByRole('button', { name: 'Select All' }).click();
+            return page.evaluate(() => (document.body.innerText.match(/(\d+) bricks? selected/) || [])[1] || null);
+        };
+        const before = await selectAll();
+        assert(before && Number(before) >= 2, `the bricks placed are in the build (${before})`);
+        // Autosave writes its checkpoint once editing has paused.
+        await page.waitForTimeout(3500);
+
+        await page.reload();
+        await page.waitForSelector('.recovery-banner', { timeout: 60_000 });
+        const offer = await page.textContent('.recovery-banner-message');
+        assert(offer.includes('"Untitled ForkBuild World"'), `after a reload the Editor offers the unsaved build, by name (${offer.trim()})`);
+        await page.click('.recovery-banner .action-btn--primary');
+        await page.waitForSelector('.recovery-banner', { state: 'detached', timeout: 10_000 });
+        assert(await selectAll() === before, 'Recover brings back every brick');
+        await page.keyboard.press('Control+s');
+        await page.waitForFunction(() => !document.body.innerText.includes('Unsaved changes'), null, { timeout: 10_000 });
+        await page.reload();
+        await page.waitForSelector('.first-build-guide', { timeout: 60_000 });
+        await page.waitForTimeout(1000);
+        assert(await page.locator('.recovery-banner').count() === 0, 'once saved, nothing is offered again');
+
+        await page.goto(`${base}/#/world/no-such-build-anywhere`);
+        await page.waitForSelector('.world-view-missing', { timeout: 60_000 });
+        assert((await page.textContent('.world-view-overlay h2')).trim() === "This build isn't here", 'a World link to a build this device lacks says so');
+        await page.waitForTimeout(4000);
+        assert(page.url().endsWith('#/world/no-such-build-anywhere') && await page.locator('.world-view-missing').count() === 1, 'and keeps saying so');
+        await page.evaluate(() => { location.hash = '#/worlds/recent'; });
+        await page.waitForSelector('.recent-worlds-view, h1', { timeout: 60_000 });
+        await page.waitForTimeout(1500);
+        const remembered = await page.$$eval('a[href*="world/no-such-build-anywhere"]', (links) => links.length);
+        assert(remembered === 0, 'and My Worlds does not list it as visited');
+    } finally {
+        await context.close();
+    }
+}
+
 async function walkThePlaza(browser, base) {
     const context = await themedWeekContext(browser, { viewport: { width: 1280, height: 800 } });
     const page = await context.newPage();
@@ -983,6 +1054,8 @@ try {
     console.log(`✓ the published site keeps its ${published.precacheFiles} files on the first visit and opens offline, Home and the Editor; a new version is offered and starts on Reload; notifications on this device turn on and off (or say the browser blocks them)`);
     await firstVisit(browser, `http://127.0.0.1:${server.address().port}`);
     console.log('✓ a first visit: six pages and More in the nav, Walk opening the plaza with the ready-made builds, Publish asking who can find it, the guided first build in the Editor, where Place with no brick picked places a cube on the first real click and stacks a second, Publish asking about remixes and to log in, an untouched ready-made house asked about once, the published link copied on another device, Walk inside it arriving at the house door and walking in, and a walk-through of a published house filmed in World View');
+    await reloadAndMissingWorld(browser, `http://127.0.0.1:${server.address().port}`);
+    console.log('✓ a reload offers the unsaved build back by name and Recover restores its bricks; a link to a build this device lacks says so and is not kept in My Worlds; a page still downloading says it is loading, and the Editor\'s heading names the build');
     await walkThePlaza(browser, `http://127.0.0.1:${server.address().port}`);
     console.log('✓ an entry published for the week stands in its plaza, reached from the challenge page, and World View stays there until Open takes you to the entry\'s World; an unknown week says so');
     await postingSwitches(browser, `http://127.0.0.1:${server.address().port}`);

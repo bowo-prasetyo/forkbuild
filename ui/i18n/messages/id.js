@@ -46,6 +46,7 @@ export default Object.freeze({
     'app.notifications': 'Notifikasi',
     'app.loadFailed': 'ForkBuild tidak dapat selesai dimuat. Periksa koneksi Anda, lalu muat ulang halaman.',
     'app.loadFailedReload': 'Muat ulang',
+    'app.pageLoading': 'Memuat halaman…',
     'app.pageLoadFailed': 'Halaman ini tidak dapat dimuat. Periksa koneksi Anda, lalu muat ulang ForkBuild untuk membukanya.',
     'app.pageLoadFailedEndsCall': 'Memuat ulang akan mengakhiri panggilan suara Anda.',
     'app.pageLoadFailedDismiss': 'Tutup',
@@ -834,6 +835,7 @@ export default Object.freeze({
 
     // Editor: recovering unsaved changes (ui/components/RecoveryBanner.js).
     'recovery.found': 'Ditemukan perubahan yang belum disimpan dari {when} untuk bangunan ini.',
+    'recovery.foundOther': 'Ditemukan perubahan yang belum disimpan pada "{title}" dari {when}. Pulihkan membuka bangunan itu beserta perubahannya.',
     'recovery.earlierSession': 'sesi sebelumnya',
     'recovery.recover': 'Pulihkan',
     'recovery.discard': 'Buang',
@@ -1188,6 +1190,7 @@ export default Object.freeze({
     'editor.composingHint': 'Menempatkan "{title}" — arahkan ke tanah, R untuk memutar, klik untuk menempatkan, Esc untuk membatalkan.',
     'editor.tools': 'Alat',
     'editor.hideTools': 'Sembunyikan Alat',
+    'editor.heading': 'Membangun "{title}"',
     'editor.recovered': 'Perubahan yang belum disimpan dari sesi sebelumnya telah dipulihkan',
     'editor.recoveryFailed': 'Pemulihan gagal: {error}',
     'editor.discarded': 'Titik pemeriksaan yang dipulihkan telah dibuang',
@@ -2413,6 +2416,10 @@ export default Object.freeze({
     'worldView.cameraAndEditing': 'Kamera: {camera} · Mengedit: {editing}',
     'worldView.untitled': 'Tanpa Judul',
     'worldView.loading': 'Memuat…',
+    'worldView.notHereTitle': 'Bangunan ini tidak ada di sini',
+    'worldView.notHereText': 'Tidak ada bangunan dengan tautan ini di perangkat ini. Mungkin belum diterbitkan, atau belum sampai ke perangkat ini: minta tautannya lagi kepada yang membagikannya, atau cari di Jelajahi.',
+    'worldView.notHereExplore': 'Jelajahi bangunan',
+    'worldView.notHereLookAround': 'Lihat sekitar',
     'worldView.none': 'Tidak ada',
     'worldView.nothingToUndo': 'Tidak ada yang dapat diurungkan',
 
