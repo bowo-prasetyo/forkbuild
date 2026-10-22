@@ -1104,6 +1104,23 @@ export default {
         }
         if (typeof session.setDetailedTreesOn === 'function') session.setDetailedTreesOn(detailedTreesOn.value);
 
+        // Whether the build this World is was signed by the name in use: its
+        // builder walks round it, so World View doesn't offer them a copy of it
+        // (they change it in the Editor and publish again).
+        const currentIdentityId = ref(signedInIdentityId());
+        function signedInIdentityId() {
+            const current = typeof identityUseCase.currentSession === 'function' ? identityUseCase.currentSession() : null;
+            return current && current.isAuthenticated ? current.identityId : null;
+        }
+        const unwatchIdentity = typeof identityUseCase.onUserChanged === 'function'
+            ? identityUseCase.onUserChanged(() => { currentIdentityId.value = signedInIdentityId(); })
+            : null;
+        onBeforeUnmount(() => { if (typeof unwatchIdentity === 'function') unwatchIdentity(); });
+        const isOwnBuild = computed(() => {
+            const author = activeDocumentInfo.value?.authorIdentityId;
+            return Boolean(author) && author === currentIdentityId.value;
+        });
+
         // Edit a Copy of the build this World is, when it isn't yours to change.
         function editActiveCopy() {
             const documentId = session.getActiveDocumentId() || route.params.documentId || null;
@@ -1712,7 +1729,7 @@ export default {
             goHome,
             buildHere,
             advanced, setAdvanced, alwaysDay, setAlwaysDay, keptSeason, setKeptSeason, seasonOptions: SEASON_OPTIONS,
-            seasonHours: Math.round(SEASON_SECONDS / 360) / 10, shadowsOn, setShadowsOn, detailedTreesOn, setDetailedTreesOn, dayCycleMinutes: DAY_CYCLE_SECONDS / 60, editActiveCopy,
+            seasonHours: Math.round(SEASON_SECONDS / 360) / 10, shadowsOn, setShadowsOn, detailedTreesOn, setDetailedTreesOn, dayCycleMinutes: DAY_CYCLE_SECONDS / 60, editActiveCopy, isOwnBuild,
             plaza, inPlaza, backToPlaza, focusExhibit, openExhibit, remixExhibit,
             openLocationsPanel,
             closeLocationsPanel,

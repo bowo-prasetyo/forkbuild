@@ -9011,3 +9011,29 @@ and screenshots in daylight.
 - Not done: residents walking home at dusk and animals lying down follow the shared clock even while the first sight
   shows the morning. Trees are still the realistic ones of 2026-10-18; bringing them to the bricks' scale is the
   diorama pass in Later. Birdsong and parked vehicles still go by the seed's trees, cleared or not, as before.
+
+## 1.6's loose ends: what Nostr needs, the example builds, your own build, and Publish in green (unnumbered, 2026-10-22)
+
+**The four small fixes that rode along with 1.6, "First publish"** (docs/NowNextLater.md; docs/reviews/
+CreativeDirection-2026-10-22.md, findings 5 and 7). Pillar served: none on its own; each takes away something a
+newcomer, or someone reading the launch posts, would trip on.
+
+- **What Nostr needs** (docs/launch/README.md's known issues; docs/launch/Communities.md): the known issue said
+  "Distributing to Nostr needs a NIP-07 browser extension", which stopped being true for most builds when build notes
+  shipped (2026-10-12). It now says letting everyone find a build needs nothing installed, and only posting it under
+  your own Nostr account (optional, under **Where it goes**) needs a Nostr extension; the challenge's known issue and
+  the Nostr post say entries show when published with **Everyone can find it** on.
+- **The example builds** move from the repository root to `examples/`, with a README naming each. The bridge test
+  (tests/GroundVehicleBridgeCrossing.test.js) and scripts/evaluate-ready-made-detection.mjs read them there. They were
+  never part of the published site.
+- **Your own build** (ui/views/WorldView.js, `isOwnBuild`; worldView/templates/hudSection.js): World View's bar
+  offered **Edit a Copy** on a build its own builder had just published and walked into, since a published build is
+  never editable. It is now left out when the build was signed by the name in use (its `authorIdentityId`), following
+  a change of name; the builder changes it in the Editor and publishes again.
+- **Publish in the meadow green** (css/main/editor.css): the toolbar's Publish was purple and Save the green.
+  docs/Pillars.md's Look keeps one meadow green for the thing to press, which is Publish; Save beside it is outlined
+  in the green, with the green's ink.
+- Tests: the bundled-site test checks that Publish is the green and Save is outlined, and that walking round your own
+  published House offers no Edit a Copy.
+- Not done: the shared link's page still offers **Edit a Copy** on your own build, where making a copy of it is a
+  reasonable thing to want.

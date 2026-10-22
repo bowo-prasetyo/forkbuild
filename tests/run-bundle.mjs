@@ -130,6 +130,13 @@ async function startFromHome(browser, base) {
         assert(look.button[1] > look.button[0] && look.button[1] > look.button[2] && look.words.every((c) => c === 255), `Try it now is green with white words (${look.button} / ${look.words})`);
         await page.click('.home-cta-primary');
         await page.waitForFunction(() => document.querySelector('.document-info-compact-title')?.textContent.trim() === 'House', null, { timeout: 60_000 });
+        // One meadow green to press in the Editor too: Publish; Save beside it is outlined.
+        const buttons = await page.evaluate(() => {
+            const rgba = (value) => value.match(/[\d.]+/g).map(Number);
+            return { publish: rgba(getComputedStyle(document.querySelector('.toolbar-publish')).backgroundColor), save: rgba(getComputedStyle(document.querySelector('.toolbar-save')).backgroundColor) };
+        });
+        assert(buttons.publish[1] > buttons.publish[0] && buttons.publish[1] > buttons.publish[2], `Publish is the meadow green (${buttons.publish})`);
+        assert(buttons.save.length === 4 && buttons.save[3] === 0, `and Save is outlined, not filled (${buttons.save})`);
         await page.waitForFunction(() => location.hash === '#/editor', null, { timeout: 10_000 });
         const editorText = await page.evaluate(() => document.body.innerText);
         assert(editorText.includes('Remixed from House') && !editorText.includes('village:house'),
@@ -724,6 +731,7 @@ async function firstVisit(browser, base) {
         // What a visitor came to do is on the bar over the view, not in the panel.
         assert(await editor.isVisible('.world-view-hud .world-view-walk-together') && await editor.isVisible('.world-view-hud .world-view-build-here'), 'Walk here with me and Build here sit over the view');
         assert(!(await editor.$('.world-view-overlay .world-view-walk-together')), 'and not in the side panel');
+        assert(!(await editor.$('.world-view-edit-copy')), 'its own builder, walking round it, isn\'t offered a copy of it');
         assert(!editor.url().includes('arrive='), `the arrival leaves the address clean (${editor.url()})`);
         // World View hears keys from anywhere on the page but a text field
         // (ui/views/worldView/useViewportInput.js), so walking needs only that
