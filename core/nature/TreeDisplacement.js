@@ -10,18 +10,30 @@
 // same Worlds leaves out the same trees. Building over a tree takes it away;
 // removing the build brings it back.
 //
+// And every build stands in a clearing (docs/Pillars.md, "The World is a
+// diorama, not a simulation"): no tree grows within BUILD_CLEARING of any of
+// its bricks, so a build reads as a place, not a thing hidden in a wood, and
+// "Walk inside it" sees the door with no trunk or crown in between
+// (tests/BuildClearing.test.js works out how wide that has to be from the
+// trees' own shapes and the arrival camera).
+//
 // Pure: a tree's trunk and boxes in, a yes or no out. Which boxes stand near
 // a tree is the caller's question (application/world/TreeDisplacement.js).
+
+// How far round a build's bricks no tree grows, from the edge of any brick's
+// footprint to the edge of the trunk.
+export const BUILD_CLEARING = 15;
 
 // Whether the tree whose trunk is `circle` ({ center: { x, z }, radius },
 // core/nature/TreeCollisionGeometry.js#treeCollisionCircleFor()) is displaced by
 // any of `boxes` ({ min: { x, z }, max: { x, z } } each, a brick's
-// collision box in shared space): one whose footprint the trunk overlaps.
-// Touching edges do not count.
-export function isTreeDisplaced(circle, boxes) {
+// collision box in shared space): one whose trunk comes within `clearing` of
+// a footprint (0: one whose footprint the trunk overlaps). Touching edges do
+// not count.
+export function isTreeDisplaced(circle, boxes, clearing = 0) {
     if (!circle || !circle.center || !boxes || boxes.length === 0) return false;
     const { x, z } = circle.center;
-    const radius = circle.radius;
+    const radius = circle.radius + Math.max(0, Number(clearing) || 0);
     for (const box of boxes) {
         if (!box || !box.min || !box.max) continue;
         const dx = x - Math.max(box.min.x, Math.min(x, box.max.x));

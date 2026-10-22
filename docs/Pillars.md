@@ -269,13 +269,19 @@ thing worth looking at:
 - **Detail.** Nature is drawn about as simply as the bricks: clear shapes
   and colours, not every branch and leaf. A newcomer's device gets that look
   by default.
-- **Room.** Every build and the plaza stand in a clearing, a meadow a few
-  units wide, so a build reads as a place and not as a thing hidden in a
-  wood. "Walk inside it" arrives with nothing between the camera and the
-  door.
+- **Room.** Every build and the plaza stand in a clearing, a meadow round
+  them, so a build reads as a place and not as a thing hidden in a wood.
+  "Walk inside it" arrives with nothing between the camera and the door.
+  Built on 2026-10-22: no tree grows within BUILD_CLEARING (15 units) of a
+  build's bricks (core/nature/TreeDisplacement.js), worked out from the
+  trees' shapes and the arrival camera (tests/BuildClearing.test.js); the
+  plaza already had its clearing.
 - **First sight.** A visitor's first World View visit of a page opens in
   fair late-morning light and catches up with the shared clock over the
   first minute or two. Joining a friend puts both on the shared clock.
+  Built on 2026-10-22 (core/nature/FirstSight.js): a minute of Always day's
+  sky, then a minute easing into the shared one; it ends at once when
+  someone else is in the World.
 
 What's already in the World and doesn't meet this (the realistic trees of
 2026-10-18 above all) is brought into line by the diorama pass in

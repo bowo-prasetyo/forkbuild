@@ -11,7 +11,14 @@
 // seasonalSky()). The lakes freeze on the world's clock alone
 // (core/nature/Season.js#lakeIceAt()), since the ice is walked on. Footprints in
 // the snow (core/avatar/Footprints.js) are this device's own.
+//
+// A visitor's first sight (core/nature/FirstSight.js): the first World View visit
+// of a page (World View calls startFirstSight()) opens in Always day's fair
+// morning and eases into the shared sky over its first two minutes, with no
+// thunder or lightning meanwhile. It ends at once when someone else is here,
+// so friends walking together share the same sky.
 import { DAY, DAY_SKY_BODIES, moonPhaseAt, moonlitLook, skyBodiesAt, skyLookAt } from '../../core/nature/DayCycle.js';
+import { firstSightBodies, firstSightLook, firstSightWeather, firstSightWeight } from '../../core/nature/FirstSight.js';
 import { fairWeatherIn, overcastLook, weatherAt, weatherInSeason } from '../../core/nature/Weather.js';
 import { SEASON, lakeIceAt, seasonLookAt, seasonLookOf } from '../../core/nature/Season.js';
 import { advanceFootprints, createFootprintState } from '../../core/avatar/Footprints.js';
@@ -28,7 +35,30 @@ export const dayCycleMethods = {
         const now = this._wildlifeClock();
         const sky = this.season().sky;
         const look = overcastLook(moonlitLook(skyLookAt(now, sky), moonPhaseAt(now, sky)), weatherAt(now).overcast);
+        const firstSight = this._firstSightWeight();
+        if (firstSight > 0) return firstSightLook(look, firstSight);
         return this._noFlashes ? look : lightningLook(look, lightningAt(now));
+    },
+
+    // Starts a visitor's first sight now: the sky opens in the fair morning.
+    startFirstSight() {
+        this._firstSightStartedAt = this._wildlifeClock();
+        this._applySkyLook();
+    },
+
+    // Whether the first sight's fair morning is still showing, all or part.
+    isFirstSight() {
+        return this._firstSightWeight() > 0;
+    },
+
+    // How much of the fair morning shows now (core/nature/FirstSight.js), 0 once
+    // it has eased away or someone else is here.
+    _firstSightWeight() {
+        if (this._firstSightStartedAt == null) return 0;
+        const others = typeof this.getKnownRemoteAvatarCount === 'function' ? this.getKnownRemoteAvatarCount() : 0;
+        const weight = others > 0 ? 0 : firstSightWeight(this._wildlifeClock() - this._firstSightStartedAt);
+        if (weight === 0) this._firstSightStartedAt = null;
+        return weight;
     },
 
     // Keeps lightning from flashing on this device (it asks for reduced
@@ -45,7 +75,7 @@ export const dayCycleMethods = {
     // The thunder heard after `from` and up to `to` on that clock
     // (core/nature/Storms.js#thunderBetween()): none while Always day is on.
     thunderBetween(from, to) {
-        return this._alwaysDay ? [] : thunderBetween(from, to);
+        return this._alwaysDay || this._firstSightWeight() > 0 ? [] : thunderBetween(from, to);
     },
 
     // The weather right now (core/nature/Weather.js): fair while Always day is on,
@@ -54,7 +84,9 @@ export const dayCycleMethods = {
     weather() {
         if (this._alwaysDay) return fairWeatherIn(this.season());
         const weather = weatherAt(this._wildlifeClock());
-        return this._keptSeason ? weatherInSeason(weather, this.season()) : weather;
+        const shared = this._keptSeason ? weatherInSeason(weather, this.season()) : weather;
+        const firstSight = this._firstSightWeight();
+        return firstSight > 0 ? firstSightWeather(shared, fairWeatherIn(this.season()), firstSight) : shared;
     },
 
     // The season's look on the land right now (core/nature/Season.js): the
@@ -78,7 +110,10 @@ export const dayCycleMethods = {
     // Where the sun and the moon are right now, the moon's phase, and where
     // the light comes from: a still morning sun while Always day is on.
     skyBodies() {
-        return this._alwaysDay ? DAY_SKY_BODIES : skyBodiesAt(this._wildlifeClock(), this.season().sky);
+        if (this._alwaysDay) return DAY_SKY_BODIES;
+        const bodies = skyBodiesAt(this._wildlifeClock(), this.season().sky);
+        const firstSight = this._firstSightWeight();
+        return firstSight > 0 ? firstSightBodies(bodies, firstSight) : bodies;
     },
 
     // How much ice lies on the lakes now, 0 to 1: the world's, whatever this

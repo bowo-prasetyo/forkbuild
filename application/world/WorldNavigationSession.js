@@ -464,6 +464,9 @@ export class WorldNavigationSession {
         this._vehicleRenderFrameSubscription = null;
         // Day and night (application/worldNavigation/dayCycleMethods.js).
         this._alwaysDay = false;
+        // When a visitor's first sight began on the World clock, or null
+        // (core/nature/FirstSight.js; dayCycleMethods#startFirstSight()).
+        this._firstSightStartedAt = null;
         // A season this device keeps (core/nature/Season.js's SEASON), or null to
         // follow the world's year.
         this._keptSeason = null;

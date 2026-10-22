@@ -18,16 +18,12 @@ edits and no build published. Everything here aims at that drop
 (`/e/editor-edit` → `/e/publish-*`, and the median of
 `/e/publish-placed-…`).
 
-1. **A first walk that looks like the game.** The first World View visit of
-   a page opens in fair daylight; every build and the plaza stand in a
-   clearing; "Walk inside it" arrives with nothing between the camera and
-   the door (Pillars, "The World is a diorama, not a simulation").
+Its three items are done: **Publish in one sheet** (the roadmap, "A first
+Publish in one sheet"), **a first job worth doing** ("Try it now's job in
+four steps") and **a first walk that looks like the game** ("A first walk
+in daylight, and a clearing round every build"), all on 2026-10-22.
 
-Done: **Publish in one sheet** (2026-10-22; the roadmap, "A first Publish
-in one sheet"), and **a first job worth doing** (2026-10-22; the roadmap,
-"Try it now's job in four steps").
-
-Riding along with these: the launch kit's known issues corrected (Nostr
+Still to do before 1.6 is released, riding along: the launch kit's known issues corrected (Nostr
 needs no extension now), the four `forkbuild-document-*.json` example
 builds moved out of the repository root, **Edit a Copy** hidden on your own
 build, and the toolbar's **Publish** in the one meadow green.

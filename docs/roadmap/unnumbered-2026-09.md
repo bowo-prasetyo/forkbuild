@@ -8973,3 +8973,41 @@ the median of `/e/publish-placed-…` (10 or more), from the 1 a finished roof g
 - Not done: only the House has a job; the other ready-made builds still ask for one first brick of the builder's own
   (a tree). Whether ten bricks is the right length for a first job shows in `/e/publish-placed-…` against
   `/e/publish-*` after release: a longer job could cost publishes. The step's finishing has no sound of its own.
+
+## A first walk in daylight, and a clearing round every build (unnumbered, 2026-10-22)
+
+**More than half of first walks arrived at dusk, at night or under cloud, and "Walk inside it" framed the House
+behind a tree trunk in a forest** (docs/reviews/CreativeDirection-2026-10-22.md, findings 2 and 4). The third item of
+1.6, "First publish", in docs/NowNextLater.md, as docs/Pillars.md's "The World is a diorama, not a simulation" asks:
+a first sight in fair light, and room round every build. Pillar served: your work is yours, and lives in a world (the
+first walk round a build looks like the game Home promised, and the build is the thing worth looking at). Which
+first step it should move: `/e/plaza-visit` and the walk-inside step after a publish; it also keeps the launch clip
+and screenshots in daylight.
+
+- **First sight** (core/nature/FirstSight.js, new and pure; application/worldNavigation/dayCycleMethods.js): World View's
+  first visit of a page (ui/views/WorldView.js, `startFirstSight()`; none with Always day on) shows Always day's fair
+  morning for FIRST_SIGHT_HOLD_SECONDS (60), then eases into the shared sky over FIRST_SIGHT_BLEND_SECONDS (60): the
+  sky's light (`blendLooks`) and the weather blend from fair to the shared ones; a sun or moon up in both slides
+  between them, one up in only one comes or goes halfway; the light swings. No thunder or lightning meanwhile. It
+  ends at once when someone else is in the World (`getKnownRemoteAvatarCount()`), so friends walking together share
+  one sky, and never comes back by itself.
+- **A clearing round every build** (core/nature/TreeDisplacement.js, `BUILD_CLEARING`, 15 units;
+  `isTreeDisplaced(circle, boxes, clearing)`; application/world/TreeDisplacement.js passes it and gathers the bricks
+  that far further out): no tree grows within 15 units of any brick of a loaded World or a plaza exhibit, so every
+  place that meets trees (drawing, collision, residents' ways, arrival at a door) agrees. The width is worked out in
+  tests/BuildClearing.test.js from the trees' own shapes (the widest crown of any form, at the widest scale and
+  most lean: 6.6) and the arrival camera (up to 2.5 from the door and ARRIVAL_CAMERA_BACK, now exported, behind):
+  7.5 + 6.6 < 15. The plaza already had its own clearing.
+- **"Walk inside it" sees the door**: tests/BuildClearing.test.js arrives at the House on 256 plots across the land
+  with the real trees and checks no standing tree's crown comes between the camera and the door; with a 3-unit
+  clearing it finds trees in the view at once.
+- The guide's World View chapter (English) says a build stands in a clearing and what the first visit's sky does;
+  its translations were already marked out of date for an earlier change. README and docs/Pillars.md say it is built;
+  docs/NowNextLater.md has 1.6's three items done, with its riding-along fixes still to do.
+- Tests: `FirstSight` (new: the weight over time; the sky, weather, sun and moon at a weight; in the session, a night
+  visit opening in the morning and easing into the night, no rain in the first minute, a friend arriving ending it,
+  Always day still day), `BuildClearing` (new: the width from the trees and the camera; which trees give way; the
+  arrival sweep).
+- Not done: residents walking home at dusk and animals lying down follow the shared clock even while the first sight
+  shows the morning. Trees are still the realistic ones of 2026-10-18; bringing them to the bricks' scale is the
+  diorama pass in Later. Birdsong and parked vehicles still go by the seed's trees, cleared or not, as before.
