@@ -1,4 +1,4 @@
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { FIRST_BUILD_STEPS, isFirstBuildComplete, nextFirstBuildStep } from '../../core/challenge/FirstBuildChecklist.js';
 import { t } from '../i18n/i18n.js';
 
@@ -8,12 +8,14 @@ import { t } from '../i18n/i18n.js';
 // is next and the build is published, the hint has a Walk inside it button
 // (`walkRoute`, World View at the build's door). It can fold to a small
 // button (as it starts on a phone), or be hidden (the command palette's
-// First-Build Guide brings it back). It only shows `progress` and reports what
-// the person chose.
+// First-Build Guide brings it back). While `quiet` (a starter job is open,
+// ui/components/StarterJobCard.js, and is the one tutor) it folds, and opens
+// again as it started once the job is done. It only shows `progress` and
+// reports what the person chose.
 const STEP_KEYS = Object.freeze({
     'place-brick': 'placeBrick',
     stack: 'stack',
-    structure: 'structure',
+    own: 'own',
     save: 'save',
     share: 'share',
     'walk-inside': 'walkInside'
@@ -24,13 +26,17 @@ export default {
     props: {
         progress: { type: Object, required: true },
         // Where Walk inside it goes, once the build is published; null before.
-        walkRoute: { type: Object, default: null }
+        walkRoute: { type: Object, default: null },
+        // Fold while something else is teaching (a starter job).
+        quiet: { type: Boolean, default: false }
     },
     emits: ['dismiss', 'celebrated'],
     setup(props) {
         // On a phone-width screen it starts folded: open, it would cover much of the build.
-        const folded = ref(typeof window !== 'undefined' && typeof window.matchMedia === 'function'
-            && window.matchMedia('(max-width: 720px)').matches);
+        const startsFolded = typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+            && window.matchMedia('(max-width: 720px)').matches;
+        const folded = ref(startsFolded || props.quiet);
+        watch(() => props.quiet, (quiet) => { folded.value = quiet || startsFolded; });
         const steps = computed(() => {
             const done = new Set(props.progress.completed);
             const next = nextFirstBuildStep(props.progress);

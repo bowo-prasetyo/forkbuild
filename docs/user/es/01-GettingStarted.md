@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 8aee537086ae6864 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: b77912c92f47f6cd -->
 # 01 — Primeros pasos
 
 <!-- languages -->
@@ -13,8 +13,9 @@ empezar: todo se queda en su dispositivo hasta que decida compartirlo.
 
 1. En la pantalla de **Inicio**, haga clic en **Probar ahora: empezar con
    una casa**.
-2. Haga clic en **Elegir el techo** y luego en la casa: el techo queda
-   puesto.
+2. Termine la casa en cuatro pasos cortos: haga clic en **Elegir el techo**
+   y luego en la casa; después una chimenea, un camino hasta la puerta y un
+   jardín, cada uno con su propio botón **Elegir**.
 3. Haga clic en **Publicar**. Se abre una hoja con un nombre ya sugerido, y
    con la remezcla y **Todos pueden encontrarla** ya activados: escriba su
    propio nombre si quiere y haga clic en **Publicar como …**.

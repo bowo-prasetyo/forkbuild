@@ -18,21 +18,56 @@ await new Promise((resolve, reject) => {
     document.head.appendChild(link);
 });
 
-function mount(completed, walkRoute = null) {
+function mount(completed, walkRoute = null, quiet = false) {
     const events = [];
     const host = document.createElement('div');
     host.style.cssText = 'position: relative; width: 900px; height: 600px;';
     document.body.appendChild(host);
-    const state = reactive({ progress: normalizeFirstBuildProgress({ completed }), walkRoute });
+    const state = reactive({ progress: normalizeFirstBuildProgress({ completed }), walkRoute, quiet });
     const app = createApp({
         components: { FirstBuildGuide },
         setup: () => ({ state, events }),
-        template: `<FirstBuildGuide :progress="state.progress" :walk-route="state.walkRoute" @dismiss="events.push('dismiss')" @celebrated="events.push('celebrated')" />`
+        template: `<FirstBuildGuide :progress="state.progress" :walk-route="state.walkRoute" :quiet="state.quiet" @dismiss="events.push('dismiss')" @celebrated="events.push('celebrated')" />`
     });
     // The test page has no router; a plain link stands in for router-link.
     app.component('router-link', { props: ['to'], template: '<a :href="typeof to === \'string\' ? to : to.path + \'?arrive=\' + to.query.arrive"><slot /></a>' });
     app.mount(host);
     return { host, events, state, unmount: () => { app.unmount(); host.remove(); } };
+}
+
+// While a starter job is open it is the one tutor: the guide folds to its
+// small button, and opens again once the job is done.
+{
+    const { host, state, unmount } = mount(['place-brick'], null, true);
+    await nextTick();
+    assert(host.querySelector('.first-build-guide-pill') && !host.querySelector('.first-build-guide'), 'quiet, the guide is only its small button');
+    state.quiet = false;
+    await nextTick();
+    assert(host.querySelector('.first-build-guide') && !host.querySelector('.first-build-guide-pill'), 'the job done, it opens again');
+    state.quiet = true;
+    await nextTick();
+    assert(host.querySelector('.first-build-guide-pill'), 'and folds when another job opens');
+    host.querySelector('.first-build-guide-pill').click();
+    await nextTick();
+    assert(host.querySelector('.first-build-guide'), 'its button still opens it on request');
+    unmount();
+    console.log('✓ quiet while a starter job teaches, open again after');
+}
+
+// "Add something of your own" is the third step; a device that had dropped a
+// structure in keeps it done.
+{
+    const { host, unmount } = mount(['place-brick', 'stack']);
+    await nextTick();
+    const own = host.querySelector('.first-build-step[data-step="own"]');
+    assert(own && own.textContent.includes(t('firstBuild.step.own')) && own.getAttribute('aria-current') === 'step', 'the third step asks for something of your own');
+    assert(host.querySelector('.first-build-hint').textContent.trim() === t('firstBuild.hint.own'), 'five bricks, anything, anywhere');
+    unmount();
+    const before = mount(['place-brick', 'stack', 'structure']);
+    await nextTick();
+    assert(before.host.querySelector('.first-build-step[data-step="own"]').classList.contains('first-build-step--done'), 'a structure dropped in before the change keeps the step done');
+    before.unmount();
+    console.log('✓ the third step: add something of your own');
 }
 
 // The steps, the one to do next and its hint.

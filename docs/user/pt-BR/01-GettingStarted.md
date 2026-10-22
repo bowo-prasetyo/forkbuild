@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 8aee537086ae6864 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: b77912c92f47f6cd -->
 # 01 — Primeiros passos
 
 <!-- languages -->
@@ -13,7 +13,9 @@ decidir compartilhar.
 **A versão curta:**
 
 1. Na tela **Início**, clique em **Experimente agora: comece com uma casa**.
-2. Clique em **Pegar o telhado** e depois na casa: o telhado é colocado.
+2. Termine a casa em quatro passos curtos: clique em **Pegar o telhado** e
+   depois na casa; depois uma chaminé, um caminho até a porta e um jardim,
+   cada um com o seu botão **Pegar**.
 3. Clique em **Publicar**. Abre-se uma folha com um nome já sugerido, e com
    o remix e **Todo mundo pode encontrá-la** já ligados: digite o seu próprio
    nome se quiser e clique em **Publicar como …**.

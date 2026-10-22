@@ -68,7 +68,7 @@ ads *in the game*, rather than a bare "no ads" sitting beside one.
 >
 > ForkBuild is a 3D building game that runs in your browser, on a computer
 > or a phone. Press **Try it now** and you get a little house with no roof:
-> put one on, make it yours, and walk inside it. Every other ready-made
+> put one on, add a chimney, a path and a garden, and walk inside it. Every other ready-made
 > build (a castle, a harbor island, a village square) asks you to make it
 > yours too.
 >

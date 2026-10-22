@@ -61,7 +61,7 @@ import ProtectIdentityNote from '../components/ProtectIdentityNote.js';
 import FirstBuildGuide from '../components/FirstBuildGuide.js';
 import StarterJobCard from '../components/StarterJobCard.js';
 import { EDITOR_ACTIVITY } from '../../core/app/EditorSoundCues.js';
-import { FIRST_EDIT_BRICK_ID, isStarterJobDone, starterCardStage as stageOfStarterCard, starterJobById, starterJobGuide, unfinishedStructure } from '../../core/challenge/StarterJob.js';
+import { FIRST_EDIT_BRICK_ID, starterCardStage as stageOfStarterCard, starterJobById, starterJobProgress, starterStepGuide, unfinishedStructure } from '../../core/challenge/StarterJob.js';
 import { worldBricks } from '../../core/building/PlacedBricks.js';
 import BuildPlotBanner from '../components/BuildPlotBanner.js';
 import { useBuildPlot } from './editorView/useBuildPlot.js';
@@ -302,7 +302,7 @@ export default {
                     </p>
                     </template>
                     <!-- What a ready-made build asks of its builder (core/challenge/StarterJob.js); over the 3D view on a phone. -->
-                    <StarterJobCard v-if="starterCardStage && !compactLayout" :stage="starterCardStage" @pick="pickStarterJobBrick" @publish="publishFromStarterCard" @hide="hideStarterCard" />
+                    <StarterJobCard v-if="starterCardStage && !compactLayout" :stage="starterCardStage" :step="starterStep" @pick="pickStarterJobBrick" @publish="publishFromStarterCard" @hide="hideStarterCard" />
                     <DocumentInfoPanel
                         compact
                         :expanded="documentInfoExpanded"
@@ -446,11 +446,12 @@ export default {
                         @stop="stopBuild"
                         @leave="leaveBuild"
                     />
-                    <StarterJobCard v-if="starterCardStage && compactLayout" floating :stage="starterCardStage" @pick="pickStarterJobBrick" @publish="publishFromStarterCard" @hide="hideStarterCard" />
+                    <StarterJobCard v-if="starterCardStage && compactLayout" floating :stage="starterCardStage" :step="starterStep" @pick="pickStarterJobBrick" @publish="publishFromStarterCard" @hide="hideStarterCard" />
                     <FirstBuildGuide
                         v-if="firstBuildVisible"
                         :progress="firstBuildProgress"
                         :walk-route="walkInside ? walkInside.route : null"
+                        :quiet="starterCardStage === 'job'"
                         @dismiss="dismissFirstBuildGuide"
                         @celebrated="finishFirstBuildGuide"
                     />
@@ -867,13 +868,17 @@ export default {
         const pinnedTitle = computed(() => challengePins.value?.title ?? '');
         // A build opened from something ready-made (core/challenge/StarterJob.js), with
         // the job Home's main button left to do or none, for as long as it is
-        // the open build: its card, until it is published or hidden.
+        // the open build: its card, until it is published or hidden. A job is a
+        // chain of steps; `structure` is the finished one it was taken from
+        // (where the roof and the chimney go), `startBricks` what it opened
+        // with (what isn't the builder's own).
         const starterJob = ref(null);
-        // Any edit, undo or redo may finish (or unfinish) the job.
+        // Any edit, undo or redo may finish (or unfinish) a step.
         const starterJobEdits = ref(0);
         let unwatchStarterJob = null;
         function startStarterJob(job, structure) {
-            starterJob.value = { job, worldId: documentManager.document?.world.id ?? null, guide: job ? starterJobGuide(job, structure) : null, published: false, hidden: false };
+            const startBricks = job ? unfinishedStructure(job, structure)?.bricks ?? [] : [];
+            starterJob.value = { job, structure, startBricks, worldId: documentManager.document?.world.id ?? null, published: false, hidden: false };
             unwatchStarterJob?.();
             unwatchStarterJob = editorSession.onCommandActivity(() => { starterJobEdits.value++; });
         }
@@ -881,11 +886,27 @@ export default {
             void documentVersion.value;
             return Boolean(starterJob.value) && documentManager.document?.world.id === starterJob.value.worldId;
         });
-        const starterJobDone = computed(() => {
+        const starterJobState = computed(() => {
             void documentVersion.value;
             void starterJobEdits.value;
             const job = starterJob.value?.job;
-            return Boolean(job) && isStarterJobDone(job, worldBricks(documentManager.document?.world), (id) => registry.get(id));
+            if (!job) return null;
+            return starterJobProgress(job, worldBricks(documentManager.document?.world), (id) => registry.get(id), starterJob.value.startBricks);
+        });
+        const starterJobDone = computed(() => Boolean(starterJobState.value?.done));
+        // The step the card shows: which, its place in the chain, how many in.
+        const starterStep = computed(() => {
+            const state = starterJobState.value;
+            if (!state || state.done) return null;
+            const { placed, needed } = state.steps[state.currentIndex];
+            return { id: state.current.id, index: state.currentIndex, total: state.steps.length, placed, needed };
+        });
+        // Where the current step's next brick goes, while the job is open.
+        const starterGuide = computed(() => {
+            void starterJobEdits.value;
+            const state = starterJobState.value;
+            if (!starterJobShown.value || !state || state.done) return null;
+            return starterStepGuide(starterJob.value.job, state.current, starterJob.value.structure, worldBricks(documentManager.document?.world));
         });
         const starterCardStage = computed(() => {
             void starterJobEdits.value;
@@ -908,15 +929,17 @@ export default {
         }
         function pickStarterJobBrick() {
             if (!starterJob.value) return;
-            const job = starterJob.value.job;
-            if (!job) {
+            const step = starterJobState.value?.current;
+            if (!step) {
                 editorContext.setActiveBrick(FIRST_EDIT_BRICK_ID);
                 setTool(ToolId.PLACE);
                 return;
             }
-            editorContext.setActiveBrick(job.brickId);
-            // The roof goes on the house wherever on it the pointer is.
-            editorContext.setPlacementGuide(starterJobShown.value && !starterJobDone.value ? starterJob.value.guide : null);
+            editorContext.setActiveBrick(step.brickId);
+            if (step.color !== undefined) editorContext.setActiveBrickColor(step.color);
+            // The roof, the chimney and the path's next stone go to their
+            // places wherever on the house the pointer is (starterGuide).
+            editorContext.setPlacementGuide(starterGuide.value);
             setTool(ToolId.PLACE);
         }
         // A copy just opened from ?fork=: its bricks are someone else's, not its
@@ -1092,10 +1115,9 @@ export default {
         const unwatchFirstEdit = funnelEventCounter
             ? editorSession.onCommandActivity((activity) => { if (activity === EDITOR_ACTIVITY.EXECUTED) funnelEventCounter.editedInEditor(); })
             : null;
-        // Done, or another build opened: the roof goes wherever it is put.
-        watch([starterJobShown, starterJobDone], ([shown, done]) => {
-            if (!shown || done) editorContext.setPlacementGuide(null);
-        });
+        // Each step's brick to its place; done, or another build opened, and
+        // bricks go wherever they are put.
+        watch(starterGuide, (guide) => editorContext.setPlacementGuide(guide));
         const { buildPlot, buildPlotPublished, startBuildPlot, onBuildPlotPublished, forgetBuildPlot, visitBuildPlot } = useBuildPlot({
             documentManager, documentVersion, router, feedback
         });
@@ -1696,9 +1718,8 @@ export default {
                     editorSession.frameDocument();
                     funnelEventCounter?.openedStarter();
                     startStarterJob(unfinished ? job : null, structure);
-                    if (unfinished) {
-                        feedback.show(t('starterJob.started', { name: libraryItemName(structure) }), { durationMs: 5000 });
-                    } else if (!joinChallenge(challenge)) {
+                    // With a job, its card is the one tutor: no toast repeats it.
+                    if (!unfinished && !joinChallenge(challenge)) {
                         feedback.show(t('editor.startedFromBuild', { name: libraryItemName(structure) }));
                     }
                 } else {
@@ -2022,7 +2043,7 @@ export default {
             onDocumentPublished,
             onPublished, protectNoteDue, seeInside, toggleSeeInside, buildPlot, buildPlotPublished, forgetBuildPlot, visitBuildPlot,
             ...firstBuildGuide,
-            pinnedStructures, pinnedTitle, starterCardStage, pickStarterJobBrick, publishFromStarterCard, hideStarterCard, toolbar,
+            pinnedStructures, pinnedTitle, starterCardStage, starterStep, pickStarterJobBrick, publishFromStarterCard, hideStarterCard, toolbar,
             walkInside,
             distributePublishedDocument,
             distributePublishedDocumentAndSnapshot,

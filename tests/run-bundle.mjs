@@ -134,19 +134,41 @@ async function startFromHome(browser, base) {
         const editorText = await page.evaluate(() => document.body.innerText);
         assert(editorText.includes('Remixed from House') && !editorText.includes('village:house'),
             'the Editor says the copy came from the built-in House, by its name rather than its id');
-        // With a job left to do: no roof yet. Pick the roof, and one real
-        // click on the middle of the house puts it on the walls.
+        // With a job left to do, one step at a time: the roof, a chimney, a
+        // path and a garden. The card is the one tutor: the guide waits folded.
         await page.waitForSelector('.starter-job:not(.starter-job--done)', { timeout: 10_000 });
         assert((await page.textContent('.starter-job-title')).includes('give it a roof'), 'the House arrives with its roof to do');
+        assert((await page.textContent('.starter-job-progress')).includes('Step 1 of 4'), 'the first of four steps');
+        assert(!(await page.$('.first-build-guide')), 'while the job is open, the first-build guide waits folded');
+        const viewport = await page.$eval('.viewport', (element) => { const r = element.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
+        // One real click, offset from the middle of the 3D view.
+        const clickView = async (dx = 0, dy = 0) => {
+            await page.mouse.move(viewport.x + dx - 20, viewport.y + dy - 20);
+            await page.mouse.move(viewport.x + dx, viewport.y + dy, { steps: 4 });
+            await page.mouse.down();
+            await page.mouse.up();
+        };
+        // Pick the roof, and one real click on the middle of the house puts it on the walls.
         await page.click('.starter-job-pick');
         assert(await page.$eval('.tool-switcher--editor .tool-btn:nth-child(2)', (button) => button.classList.contains('tool-btn--active')), 'Pick the roof turns Place on');
-        const viewport = await page.$eval('.viewport', (element) => { const r = element.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
-        await page.mouse.move(viewport.x - 20, viewport.y - 20);
-        await page.mouse.move(viewport.x, viewport.y, { steps: 4 });
-        await page.mouse.down();
-        await page.mouse.up();
+        await clickView();
+        // The chimney, and the path's four stones: a click on the house puts each in its place.
+        await page.waitForSelector('.starter-job-progress[data-step="chimney"]', { timeout: 10_000 });
+        await page.click('.starter-job-pick');
+        await clickView();
+        await page.waitForSelector('.starter-job-progress[data-step="path"]', { timeout: 10_000 });
+        await page.click('.starter-job-pick');
+        for (let stone = 1; stone <= 4; stone += 1) {
+            await clickView();
+            if (stone < 4) await page.waitForFunction((laid) => document.querySelector('.starter-job-count')?.textContent.startsWith(`${laid} of 4`), stone, { timeout: 10_000 });
+        }
+        // The garden goes wherever it is put: four bushes on the ground beside the house.
+        await page.waitForSelector('.starter-job-progress[data-step="garden"]', { timeout: 10_000 });
+        await page.click('.starter-job-pick');
+        for (const [dx, dy] of [[-260, 150], [-200, 200], [240, 160], [190, 210]]) await clickView(dx, dy);
         await page.waitForSelector('.starter-job--done', { timeout: 10_000 });
-        assert((await page.textContent('.starter-job-title')).includes('yours now'), 'a roof on, the House is the builder\'s');
+        assert((await page.textContent('.starter-job-title')).includes('yours now'), 'roof, chimney, path and garden: the House is the builder\'s');
+        assert(await page.$('.first-build-guide'), 'and the guide opens again');
         // Its card's Publish it starts the toolbar's Publish, with its questions.
         await page.click('.starter-job-publish');
         await page.waitForSelector('.modal-overlay[role="dialog"], [role="dialog"][aria-modal="true"]', { timeout: 10_000 });
@@ -1039,7 +1061,7 @@ try {
     await startFromHome(browser, `http://127.0.0.1:${server.address().port}`);
     await joinChallenge(browser, `http://127.0.0.1:${server.address().port}`);
     await openLaunchLink(browser, `http://127.0.0.1:${server.address().port}`);
-    console.log('✓ the published site carries its link-preview tags and manifest, and Home opens the House in the Editor with its roof to do, which Pick the roof and one real click put on, New the castle (which downloads as a 3D model), and the Repository lists them; Home\'s Join opens the week\'s challenge tagged, New offers it first, and its page explains how to enter; a launch post\'s ?ref= leaves the address, and a retired page\'s link says it is gone');
+    console.log('✓ the published site carries its link-preview tags and manifest, and Home opens the House in the Editor with its job to do, whose four steps (the roof, a chimney, a path and a garden) real clicks do while the guide waits folded, New the castle (which downloads as a 3D model), and the Repository lists them; Home\'s Join opens the week\'s challenge tagged, New offers it first, and its page explains how to enter; a launch post\'s ?ref= leaves the address, and a retired page\'s link says it is gone');
     await openLinkOnlyShare(browser, `http://127.0.0.1:${server.address().port}`);
     console.log('✓ a link that carries its build opens on it in the published build, with no network, and Edit a Copy makes the visitor a copy, or it downloads as a 3D model; it fits a phone');
     assert(html.includes('<meta name="forkbuild-service-worker" content="sw.js">') && readFileSync(join(published.outdir, 'sw.js'), 'utf8').includes('forkbuild-'),

@@ -71,10 +71,12 @@ longer-term aim.
   library, structure placements, and document export/import.
 - Save, autosave with crash recovery, and publishing to an immutable,
   content-hashed snapshot.
-- A guided first build: six steps (place a brick, stack one, drop in a
-  structure, save, share a link, walk inside it) ticked off as you do them,
-  ending in a small celebration. Logging in is asked for only when you first
-  publish.
+- A guided first build: six steps (place a brick, stack one, add something
+  of your own, save, share a link, walk inside it) ticked off as you do them,
+  ending in a small celebration. Home's **Try it now** house comes with a job
+  in four short steps (a roof, a chimney, a path to the door and a garden),
+  shown one at a time while the guide waits. Logging in is asked for only
+  when you first publish.
 - **Walk inside it**: once a build is published, one click opens World View
   with your avatar in front of its door, facing it; the door swings open as
   you walk up.

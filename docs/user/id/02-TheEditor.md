@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2bbc73bd617ba5be -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: b275d31fdacad544 -->
 # 02 — Editor
 
 <!-- languages -->
@@ -96,12 +96,27 @@ tombol yang belum bisa melakukan apa-apa:
 
 **Coba sekarang** di **Beranda** membuka rumah milik Anda sendiri yang belum
 selesai: dindingnya sudah berdiri dan ruangannya sudah berperabot, tetapi
-belum beratap. Kartu **Tugas Anda: beri atap** di bagian atas alat
-mengatakannya. Klik **Ambil atap** (ini memilih **Atap Limas 6x6** dan
-beralih ke Tempatkan), lalu klik di mana saja pada rumah: atapnya terpasang
-di atas dinding. Kartu itu lalu mengatakan bahwa rumah itu kini milik Anda,
-dengan **Terbitkan** (Terbitkan yang sama dengan di bilah alat) dan
-**Lanjut membangun**, yang menyimpan kartunya.
+belum beratap. Kartu di bagian atas alat memberi Anda tugasnya, satu langkah
+demi satu langkah (**Langkah 1 dari 4**), masing-masing dengan tombol yang
+memilih bata yang dibutuhkan dan beralih ke Tempatkan:
+
+1. **Beri atap**: klik **Ambil atap** (**Atap Limas 6x6**), lalu klik di
+   mana saja pada rumah: atapnya terpasang di atas dinding.
+2. **Cerobong**: klik **Ambil cerobong**, lalu klik di mana saja pada
+   rumah: cerobong menembus atap di atas tungku.
+3. **Jalan setapak ke pintu**: klik **Ambil batu**, lalu klik empat kali di
+   mana saja pada rumah: batu-batunya berjajar dari ambang pintu.
+4. **Taman**: klik **Ambil semak**, lalu taruh empat benda di sekitar
+   rumah, di mana saja. Semak, pagar, rumput, batu besar, pohon, atau
+   lentera dari Pustaka Bangunan semuanya dihitung.
+
+Setiap langkah menghitung bata yang Anda tambahkan, dalam urutan apa pun,
+dan urungkan mundur satu langkah. Selama tugas terbuka, kartu **Bangunan
+pertama Anda** menunggu terlipat, jadi hanya ada satu petunjuk pada satu
+waktu. Setelah keempat langkah selesai, kartu itu mengatakan bahwa rumah itu
+kini milik Anda, dengan **Terbitkan** (Terbitkan yang sama dengan di bilah
+alat, yang juga bisa Anda pakai kapan saja) dan **Lanjut membangun**, yang
+menyimpan kartunya.
 
 Setiap bangunan siap pakai lainnya (kartu di **Beranda**, ide sebuah
 tantangan, atau yang dipilih lewat **Baru** di Editor) dibuka dengan kartu
@@ -116,13 +131,13 @@ alat-alatnya terlipat di sana.
 Saat pertama kali Anda membuka Editor di sebuah perangkat, kartu
 **Bangunan pertama Anda** muncul di sudut kiri bawah tampilan 3D (di
 ponsel, kartu itu mulai terlipat menjadi tombol kecil
-**Bangunan pertama · 0/6** di kiri atas). Kartu itu mencantumkan enam langkah
+**Bangunan pertama · 0/6** di kiri atas, dan selama rumah dari **Coba sekarang** masih punya tugas terbuka, kartu itu juga menunggu terlipat). Kartu itu mencantumkan enam langkah
 dan menampilkan petunjuk untuk langkah berikutnya:
 
 1. **Tempatkan sebuah balok**
 2. **Tumpuk satu di atas yang lain**: tempatkan balok di atas balok lain.
-3. **Tambahkan sebuah struktur**: tempatkan struktur dari tab **Struktur**
-   di Pustaka Bangunan.
+3. **Tambahkan sesuatu milik Anda**: pasang lima bata milik Anda, satu per
+   satu. Struktur yang ditambahkan dari Pustaka Bangunan tidak dihitung.
 4. **Simpan bangunan Anda**
 5. **Terbitkan dan bagikan tautan**: terbitkan, lalu **Salin tautan** atau
    **Bagikan…**.

@@ -87,12 +87,26 @@ that can't do anything yet:
 ## Try it now: a house to finish
 
 Home's **Try it now** opens a house of your own that isn't finished: its
-walls are up and its room is furnished, but it has no roof. A **Your job:
-give it a roof** card at the top of the tools says so. Click **Pick the
-roof** (it chooses **Hip Roof 6x6** and switches to Place), then click
-anywhere on the house: the roof goes on top of the walls. The
-card then says the house is yours now, with **Publish it** (the same Publish
-as the toolbar's) and **Keep building**, which puts the card away.
+walls are up and its room is furnished, but it has no roof. A card at the
+top of the tools gives you the job, one step at a time (**Step 1 of 4**),
+each with a button that picks the brick it needs and switches to Place:
+
+1. **Give it a roof**: click **Pick the roof** (**Hip Roof 6x6**), then
+   click anywhere on the house: the roof goes on top of the walls.
+2. **A chimney**: click **Pick the chimney**, then click anywhere on the
+   house: it goes through the roof above the hearth.
+3. **A path to the door**: click **Pick a stone**, then click anywhere on
+   the house four times: the stones line up from the doorstep.
+4. **A garden**: click **Pick a bush**, then put four things round the
+   house, wherever you like. Bushes, a fence, a lawn, a rock, a tree or a
+   lantern from the Build Library all count.
+
+Each step counts the bricks you add, in any order, and undo takes a step
+back. While the job is open, the **Your first build** card waits folded, so
+there is one set of instructions at a time. Once all four steps are done,
+the card says the house is yours now, with **Publish it** (the same Publish
+as the toolbar's, which you can also use at any time) and **Keep
+building**, which puts the card away.
 
 Every other ready-made build (Home's cards, a challenge's ideas, or one
 chosen under the Editor's **New**) opens with a **Make it yours** card
@@ -105,13 +119,14 @@ the card offers **Publish it** the same way. On a phone the card sits over the
 
 The first time you open the Editor on a device, a **Your first build** card
 sits in the bottom-left corner of the 3D view (on a phone it starts folded
-into a small **First build · 0/6** button at the top left). It lists six
-steps and shows a hint for the next one:
+into a small **First build · 0/6** button at the top left, and while a
+house from **Try it now** has its job open it waits folded too). It lists
+six steps and shows a hint for the next one:
 
 1. **Place a brick**
 2. **Stack one on another**: place a brick on top of another.
-3. **Drop in a structure**: place a structure from the Build Library's
-   **Structures** tab.
+3. **Add something of your own**: place five bricks of your own, one at a
+   time. A structure dropped in from the Build Library doesn't count.
 4. **Save your build**
 5. **Publish and share a link**: Publish, then **Copy link** or **Share…**.
 6. **Walk inside it**: click **Walk inside it**, beside the link Publish

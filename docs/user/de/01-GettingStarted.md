@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 8aee537086ae6864 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: b77912c92f47f6cd -->
 # 01 — Erste Schritte
 
 <!-- languages -->
@@ -14,7 +14,9 @@ Sie es teilen.
 
 1. Klicken Sie auf der Seite **Start** auf **Jetzt ausprobieren: mit einem
    Haus beginnen**.
-2. Klicken Sie auf **Dach wählen** und dann auf das Haus: Das Dach sitzt.
+2. Bauen Sie das Haus in vier kurzen Schritten fertig: Klicken Sie auf
+   **Dach wählen** und dann auf das Haus; dann ein Schornstein, ein Weg zur
+   Tür und ein Garten, jeder mit seiner eigenen **…-wählen**-Schaltfläche.
 3. Klicken Sie auf **Veröffentlichen**. Es öffnet sich ein Blatt mit einem
    schon vorgeschlagenen Namen, und Remixen und **Alle können es finden**
    sind bereits eingeschaltet: Tippen Sie, wenn Sie möchten, Ihren eigenen

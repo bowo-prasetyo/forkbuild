@@ -141,6 +141,28 @@ try {
         await page.mouse.down();
         await page.mouse.up();
     }, 1.8);
+    // Then the job's other steps, briskly: a click on the house puts the
+    // chimney and each path stone in its place, and the garden goes where it's put.
+    const placeAt = async (x, y, glide = 10) => {
+        await glideTo(page, x, y, glide);
+        await page.waitForTimeout(150);
+        await page.mouse.down();
+        await page.mouse.up();
+    };
+    await only('.starter-job-progress[data-step="chimney"]')(page);
+    await caption(page, 'A chimney');
+    await keep(() => press(page, '.starter-job-pick'), 0.8);
+    await keep(() => placeAt(middle.x + 30, middle.y - 30), 1);
+    await only('.starter-job-progress[data-step="path"]')(page);
+    await caption(page, 'A path to the door');
+    await keep(() => press(page, '.starter-job-pick'), 0.8);
+    await keep(async () => { for (let stone = 0; stone < 4; stone += 1) await placeAt(middle.x, middle.y + 20, 6); }, 1.6);
+    await only('.starter-job-progress[data-step="garden"]')(page);
+    await caption(page, 'And a garden');
+    await keep(() => press(page, '.starter-job-pick'), 0.8);
+    await keep(async () => {
+        for (const [dx, dy] of [[-260, 150], [-200, 200], [240, 160], [190, 210]]) await placeAt(middle.x + dx, middle.y + dy, 8);
+    }, 2);
     await only('.starter-job[data-stage="publish"]')(page);
     // Back to Select, so no roof's ghost follows the pointer to Publish.
     await page.keyboard.press('1');

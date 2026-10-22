@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2bbc73bd617ba5be -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: b275d31fdacad544 -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -99,12 +99,29 @@ botones que todavía no pueden hacer nada:
 
 **Probar ahora**, en Inicio, abre una casa propia que no está terminada:
 sus paredes están levantadas y su habitación amueblada, pero no tiene techo.
-Una tarjeta **Su tarea: ponerle techo** en la parte superior de las
-herramientas se lo indica. Haga clic en **Elegir el techo** (elige
-**Techo a cuatro aguas 6x6** y cambia a Colocar) y luego en cualquier parte
-de la casa: el techo queda encima de las paredes. Después, la tarjeta dice
-que la casa ya es suya, con **Publicarla** (el mismo Publicar de la barra de
-herramientas) y **Seguir construyendo**, que guarda la tarjeta.
+Una tarjeta en la parte superior de las herramientas le da la tarea, paso a
+paso (**Paso 1 de 4**), cada uno con un botón que elige la pieza que hace
+falta y cambia a Colocar:
+
+1. **Ponerle techo**: haga clic en **Elegir el techo** (**Techo a cuatro
+   aguas 6x6**) y luego en cualquier parte de la casa: el techo queda
+   encima de las paredes.
+2. **Una chimenea**: haga clic en **Elegir la chimenea** y luego en
+   cualquier parte de la casa: atraviesa el techo sobre el hogar.
+3. **Un camino hasta la puerta**: haga clic en **Elegir una piedra** y luego
+   cuatro veces en cualquier parte de la casa: las piedras se alinean desde
+   el umbral.
+4. **Un jardín**: haga clic en **Elegir un arbusto** y ponga cuatro cosas
+   alrededor de la casa, donde quiera. Arbustos, una valla, césped, una
+   roca, un árbol o un farol de la Biblioteca de construcción cuentan todos.
+
+Cada paso cuenta las piezas que agrega, en cualquier orden, y deshacer
+retrocede un paso. Mientras la tarea está abierta, la tarjeta **Su primera
+construcción** espera plegada, para que haya una sola guía a la vez. Cuando
+termina los cuatro pasos, la tarjeta dice que la casa ya es suya, con
+**Publicarla** (el mismo Publicar de la barra de herramientas, que también
+puede usar en cualquier momento) y **Seguir construyendo**, que guarda la
+tarjeta.
 
 Cualquier otra construcción ya hecha (las tarjetas de Inicio, las ideas de un
 reto o una que elija en **Nuevo** del Editor) se abre en cambio con una
@@ -119,13 +136,13 @@ porque allí las herramientas están plegadas.
 La primera vez que abre el Editor en un dispositivo, una tarjeta **Su
 primera construcción** aparece en la esquina inferior izquierda de la vista
 3D (en un teléfono empieza plegada en un pequeño botón
-**Primera construcción · 0/6** arriba a la izquierda). Enumera seis pasos y
+**Primera construcción · 0/6** arriba a la izquierda, y mientras una casa de **Probar ahora** tiene su tarea abierta también espera plegada). Enumera seis pasos y
 muestra una pista para el siguiente:
 
 1. **Colocar un bloque**
 2. **Apilar uno sobre otro**: coloque un bloque encima de otro.
-3. **Agregar una estructura**: coloque una estructura de la pestaña
-   **Estructuras** de la Biblioteca de construcción.
+3. **Agregar algo suyo**: ponga cinco piezas suyas, una a una. Una
+   estructura agregada desde la Biblioteca de construcción no cuenta.
 4. **Guardar su construcción**
 5. **Publicar y compartir un enlace**: publique y luego use **Copiar
    enlace** o **Compartir…**.

@@ -1,6 +1,6 @@
 import {
-    FIRST_BUILD_STEPS, FirstBuildStep, firstBuildStepsForEdit, isFirstBuildComplete, nextFirstBuildStep,
-    normalizeFirstBuildProgress, shouldShowFirstBuildGuide
+    bricksPlacedByEdit, FIRST_BUILD_STEPS, FirstBuildStep, firstBuildStepsForEdit, isFirstBuildComplete, nextFirstBuildStep,
+    normalizeFirstBuildProgress, OWN_BRICKS_NEEDED, shouldShowFirstBuildGuide
 } from '../core/challenge/FirstBuildChecklist.js';
 import { FirstBuildChecklistStore } from '../application/onboarding/FirstBuildChecklistStore.js';
 import { FirstBuildChecklistTracker } from '../application/onboarding/FirstBuildChecklistTracker.js';
@@ -17,7 +17,7 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
 // The guided first build: six steps ticked off by doing them (in the Editor,
-// place a brick, stack one, drop in a structure, save, share a link; then, in
+// place a brick, stack one, add something of your own, save, share a link; then, in
 // World View, walk inside it), kept on this device, and hidden for someone who
 // already knows the Editor.
 
@@ -38,11 +38,17 @@ function placed(y, definitionId = CUBE) {
     assert(JSON.stringify(firstBuildStepsForEdit(placed(cubeHeight * 1.5), brickHeight)) === JSON.stringify([FirstBuildStep.PLACE_BRICK, FirstBuildStep.STACK]), 'a brick resting on another is stacking too');
     const plate = [...registry.getAll()].find((definition) => definition.height < cubeHeight);
     assert(plate && firstBuildStepsForEdit(placed(plate.height / 2, plate.id), brickHeight).length === 1, `a thin ${plate?.id} on the ground is not stacking`);
-    assert(firstBuildStepsForEdit(describeCommand(new PlaceStructureCommand({ worldId: 'w', documentId: 'd', position: new Position(0, 0, 0) })), brickHeight)[0] === FirstBuildStep.STRUCTURE, 'placing a structure drops one in');
-    assert(firstBuildStepsForEdit(describeCommand(new PasteBricksCommand({ worldId: 'w', buildingId: 'b' })), brickHeight)[0] === FirstBuildStep.STRUCTURE, 'composing one from the Build Library (a paste of its bricks) does too');
+    const structure = describeCommand(new PlaceStructureCommand({ worldId: 'w', documentId: 'd', position: new Position(0, 0, 0) }));
+    const paste = describeCommand(new PasteBricksCommand({ worldId: 'w', buildingId: 'b' }));
+    assert(firstBuildStepsForEdit(structure, brickHeight).length === 0 && firstBuildStepsForEdit(paste, brickHeight).length === 0,
+        'a structure dropped in, or composed from the Build Library, completes nothing: it isn\'t the builder\'s own');
+    assert(bricksPlacedByEdit(structure) === 0 && bricksPlacedByEdit(paste) === 0, 'and places none of the builder\'s own bricks');
+    assert(bricksPlacedByEdit(placed(cubeHeight / 2)) === 1, 'a brick placed is one of their own');
     const composite = new CompositeCommand();
     composite.add(new PlaceBrickCommand({ worldId: 'w', buildingId: 'b', definitionId: CUBE, position: new Position(0, cubeHeight * 2.5, 0) }));
+    composite.add(new PlaceBrickCommand({ worldId: 'w', buildingId: 'b', definitionId: CUBE, position: new Position(1, cubeHeight / 2, 0) }));
     assert(firstBuildStepsForEdit(describeCommand(composite), brickHeight).includes(FirstBuildStep.STACK), 'a composite counts its children');
+    assert(bricksPlacedByEdit(describeCommand(composite)) === 2, 'each brick it places');
     assert(firstBuildStepsForEdit(describeCommand(new MoveBrickCommand({ worldId: 'w', buildingId: 'b', brickId: 'x', delta: { x: 1, y: 0, z: 0 } })), brickHeight).length === 0, 'moving a brick completes nothing');
     assert(firstBuildStepsForEdit(null).length === 0 && firstBuildStepsForEdit({ type: 'place-brick' }).join() === FirstBuildStep.PLACE_BRICK, 'read leniently');
     console.log('✓ which edits complete which steps');
@@ -62,6 +68,9 @@ function placed(y, definitionId = CUBE) {
     assert(!shouldShowFirstBuildGuide({ dismissed: true }), 'hidden is hidden');
     const oldFinish = normalizeFirstBuildProgress({ completed: ['place-brick', 'stack', 'structure', 'save', 'share'], celebrated: true });
     assert(!isFirstBuildComplete(oldFinish) && !shouldShowFirstBuildGuide(oldFinish), 'a guide finished before walking inside was a step stays away');
+    assert(oldFinish.completed.includes(FirstBuildStep.OWN) && !oldFinish.completed.includes('structure'),
+        'a structure dropped in before the step became "Add something of your own" keeps it done');
+    assert(FIRST_BUILD_STEPS[2] === FirstBuildStep.OWN && OWN_BRICKS_NEEDED === 5, 'the third step is five bricks of your own');
     assert(FIRST_BUILD_STEPS[FIRST_BUILD_STEPS.length - 1] === FirstBuildStep.WALK_INSIDE, 'walking inside is the last step');
     console.log('✓ progress');
 }
@@ -92,6 +101,13 @@ function placed(y, definitionId = CUBE) {
     assert(seen.join() === '1', `placing again changes nothing more (${seen})`);
     edit(EDITOR_ACTIVITY.EXECUTED, stacked);
     edit(EDITOR_ACTIVITY.EXECUTED, new PlaceStructureCommand({ worldId: 'w', documentId: 'd', position: new Position(0, 0, 0) }));
+    assert(!tracker.progress().completed.includes(FirstBuildStep.OWN), 'three bricks and a structure are not yet five of your own');
+    edit(EDITOR_ACTIVITY.UNDONE, stacked);
+    edit(EDITOR_ACTIVITY.REDONE, stacked);
+    edit(EDITOR_ACTIVITY.EXECUTED, new PlaceBrickCommand({ worldId: 'w', buildingId: 'b', definitionId: CUBE, position: new Position(2, cubeHeight / 2, 0) }));
+    assert(!tracker.progress().completed.includes(FirstBuildStep.OWN), 'an undo and redo place nothing more: four');
+    edit(EDITOR_ACTIVITY.EXECUTED, new PlaceBrickCommand({ worldId: 'w', buildingId: 'b', definitionId: CUBE, position: new Position(3, cubeHeight / 2, 0) }));
+    assert(tracker.progress().completed.includes(FirstBuildStep.OWN), 'the fifth brick placed adds something of your own');
     tracker.saved();
     assert(nextFirstBuildStep(tracker.progress()) === FirstBuildStep.SHARE, 'four done, sharing is next');
     const again = new FirstBuildChecklistTracker({ store: new FirstBuildChecklistStore({ storageProvider: storage }), brickHeight });
