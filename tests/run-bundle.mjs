@@ -318,13 +318,12 @@ async function walkThePlaza(browser, base) {
         await page.goto(`${base}/${join}`);
         await page.waitForFunction(() => document.querySelector('.document-info-compact-title')?.textContent.trim(), null, { timeout: 60_000 });
         await page.click('.toolbar-publish');
-        await page.waitForSelector('.remix-permission-dialog', { timeout: 10_000 });
-        await page.click('.remix-permission-allow');
-        // Who can find it? is asked once per device; an unsigned build can only travel by link.
-        await page.waitForSelector('.findability-dialog', { timeout: 10_000 });
-        await page.click('.findability-link');
-        await page.waitForSelector('.login-modal-purpose', { timeout: 10_000 });
-        await page.click('.login-modal-skip');
+        // One sheet: an unsigned build can only travel by link, so Everyone is
+        // turned off before publishing it with no name, from Advanced.
+        await page.waitForSelector('.publish-sheet', { timeout: 10_000 });
+        await page.uncheck('.publish-sheet-everyone input');
+        await page.click('.publish-sheet-advanced summary');
+        await page.click('.publish-sheet-unsigned');
         await page.waitForSelector('.editor-post-publish-share', { timeout: 60_000 });
 
         await page.evaluate(() => { location.hash = '#/challenge'; });
@@ -604,21 +603,21 @@ async function firstVisit(browser, base) {
         await page.click('.first-build-guide-pill');
         await page.waitForSelector('.first-build-guide');
 
-        // Publish asks first whether others may remix a build with no license
-        // (Not now publishes nothing), then, logged out, to log in; publishing
-        // unsigned still works, and stays possible.
+        // Publish asks in one sheet, remixing and Everyone already on (Keep
+        // building publishes nothing); each choice can be turned off, and
+        // publishing with no name still works, under Advanced.
         await page.click('.toolbar-publish');
-        await page.waitForSelector('.remix-permission-dialog', { timeout: 10_000 });
-        await page.click('.remix-permission-dialog .action-btn--secondary');
-        assert(!(await page.$('.login-modal-purpose')), 'Not now publishes nothing');
+        await page.waitForSelector('.publish-sheet', { timeout: 10_000 });
+        assert(await page.isChecked('.publish-sheet-remix input') && await page.isChecked('.publish-sheet-everyone input'), 'remixing and Everyone start on');
+        await page.click('.publish-sheet-cancel');
+        assert(!(await page.$('.publish-sheet')) && !(await page.$('.editor-post-publish-share')), 'Keep building publishes nothing');
         await page.click('.toolbar-publish');
-        await page.waitForSelector('.remix-permission-dialog', { timeout: 10_000 });
-        await page.click('.remix-permission-look');
-        await page.waitForSelector('.findability-dialog', { timeout: 10_000 });
-        await page.click('.findability-link');
-        await page.waitForSelector('.login-modal-purpose', { timeout: 10_000 });
-        await page.click('.login-modal-skip');
-        await page.waitForFunction(() => !document.querySelector('.login-modal-purpose'), null, { timeout: 10_000 });
+        await page.waitForSelector('.publish-sheet', { timeout: 10_000 });
+        await page.uncheck('.publish-sheet-remix input');
+        await page.uncheck('.publish-sheet-everyone input');
+        await page.click('.publish-sheet-advanced summary');
+        await page.click('.publish-sheet-unsigned');
+        await page.waitForFunction(() => !document.querySelector('.publish-sheet'), null, { timeout: 10_000 });
 
         await page.click('.first-build-link-btn');
         await page.waitForFunction(() => !document.querySelector('.first-build-guide'), null, { timeout: 10_000 });
@@ -648,18 +647,16 @@ async function firstVisit(browser, base) {
         await editor.click('.toolbar-publish');
         await editor.waitForSelector('.nothing-added-dialog', { timeout: 10_000 });
         await editor.click('.nothing-added-keep');
-        assert(!(await editor.$('.nothing-added-dialog')) && !(await editor.$('.remix-permission-dialog')), 'Keep building publishes nothing');
+        assert(!(await editor.$('.nothing-added-dialog')) && !(await editor.$('.publish-sheet')), 'Keep building publishes nothing');
         await editor.click('.toolbar-publish');
-        await editor.waitForSelector('.remix-permission-dialog', { timeout: 10_000 });
-        await editor.click('.remix-permission-allow');
-        // Who can find it? Everyone: the build is also sent to everyone as a build note.
-        await editor.waitForSelector('.findability-dialog', { timeout: 10_000 });
-        await editor.click('.findability-everyone');
-        // A first publish on a new device asks only for a name.
-        await editor.waitForSelector('.login-modal-quick', { timeout: 10_000 });
-        assert(!(await editor.$('.login-modal-quick input[type="password"]')), 'a first publish asks for no passphrase');
-        await editor.fill('.login-modal-quick-name', 'Bundle builder');
-        await editor.click('.login-modal-quick-go');
+        // A first publish on a new device is one sheet: a name (one suggested),
+        // remixing and Everyone already on, so the build is also sent to
+        // everyone as a build note.
+        await editor.waitForSelector('.publish-sheet', { timeout: 10_000 });
+        assert(/\d{3}$/.test(await editor.inputValue('.publish-sheet-name')), 'a name is suggested');
+        assert(!(await editor.$('.publish-sheet input[type="password"]')), 'a first publish asks for no passphrase');
+        await editor.fill('.publish-sheet-name', 'Bundle builder');
+        await editor.click('.publish-sheet-publish');
         // One celebration: Copy link up front, the link itself and the rest under More ways to share.
         await editor.waitForSelector('.editor-post-publish-share .publication-share-link-actions button:has-text("Copy link")', { timeout: 60_000 });
         assert(!(await editor.isVisible('.editor-post-publish-share .publication-share-link-url')), 'the long link waits under More ways to share');
@@ -751,13 +748,10 @@ async function firstVisit(browser, base) {
         await film.click('.toolbar-publish');
         await film.waitForSelector('.nothing-added-dialog', { timeout: 10_000 });
         await film.click('.nothing-added-dialog button:has-text("Publish anyway")');
-        await film.waitForSelector('.remix-permission-dialog', { timeout: 10_000 });
-        await film.click('.remix-permission-allow');
-        await film.waitForSelector('.findability-dialog', { timeout: 10_000 });
-        await film.click('.findability-link');
-        await film.waitForSelector('.login-modal-quick', { timeout: 10_000 });
-        await film.fill('.login-modal-quick-name', 'Film maker');
-        await film.click('.login-modal-quick-go');
+        await film.waitForSelector('.publish-sheet', { timeout: 10_000 });
+        await film.uncheck('.publish-sheet-everyone input');
+        await film.fill('.publish-sheet-name', 'Film maker');
+        await film.click('.publish-sheet-publish');
         await film.waitForSelector('.editor-post-publish-share .publication-share-more summary', { timeout: 60_000 });
         await film.click('.editor-post-publish-share .publication-share-more summary');
         await film.click('.editor-post-publish-share .publication-share-link-video');
@@ -1053,7 +1047,7 @@ try {
     await offlineAndNotifications(browser, `http://127.0.0.1:${server.address().port}`, published.precacheFiles, published.outdir);
     console.log(`✓ the published site keeps its ${published.precacheFiles} files on the first visit and opens offline, Home and the Editor; a new version is offered and starts on Reload; notifications on this device turn on and off (or say the browser blocks them)`);
     await firstVisit(browser, `http://127.0.0.1:${server.address().port}`);
-    console.log('✓ a first visit: six pages and More in the nav, Walk opening the plaza with the ready-made builds, Publish asking who can find it, the guided first build in the Editor, where Place with no brick picked places a cube on the first real click and stacks a second, Publish asking about remixes and to log in, an untouched ready-made house asked about once, the published link copied on another device, Walk inside it arriving at the house door and walking in, and a walk-through of a published house filmed in World View');
+    console.log('✓ a first visit: six pages and More in the nav, Walk opening the plaza with the ready-made builds, Publish asking in one sheet, the guided first build in the Editor, where Place with no brick picked places a cube on the first real click and stacks a second, remixing and Everyone already on there, and publishing with no name under Advanced, an untouched ready-made house asked about once, the published link copied on another device, Walk inside it arriving at the house door and walking in, and a walk-through of a published house filmed in World View');
     await reloadAndMissingWorld(browser, `http://127.0.0.1:${server.address().port}`);
     console.log('✓ a reload offers the unsaved build back by name and Recover restores its bricks; a link to a build this device lacks says so and is not kept in My Worlds; a page still downloading says it is loading, and the Editor\'s heading names the build');
     await walkThePlaza(browser, `http://127.0.0.1:${server.address().port}`);

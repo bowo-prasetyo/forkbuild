@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 195bfda527c3a111 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ab8dc5cb397441b2 -->
 # 04 — Publier et remixer
 
 <!-- languages -->
@@ -14,20 +14,28 @@ construction et de la faire évoluer, en conservant tout son historique.
 ## Publier votre construction
 
 1. Construisez quelque chose dans l’Éditeur.
-2. Ayez un nom, et vérifiez qu’il est déverrouillé (voir
-   [Votre nom et votre identité](05-IdentityAndLogin.md)). Publier signe la
-   construction avec lui. Si vous n’avez pas encore de nom, **Publier**
-   vous demande d’abord d’en choisir un ; **Publier sans signer** la publie
-   alors sans auteur et sans lien.
-3. Donnez-lui un titre — Publier refuse une construction sans titre ou vide —
+2. Donnez-lui un titre — Publier refuse une construction sans titre ou vide —
    et, si vous le souhaitez, une description et une licence : cliquez sur
    **✎** à côté du titre de la construction dans la barre latérale pour ouvrir
-   **Propriétés de la construction**. Une nouvelle construction n’a pas de licence ;
-   la première fois que vous le publiez, ForkBuild demande si d’autres
-   peuvent le remixer (voir [Laisser les autres la remixer](#laisser-les-autres-la-remixer)).
-4. Appuyez sur **Enregistrer** pour qu’elle soit stockée.
-5. Cliquez sur **Publier**. La première fois, ForkBuild demande aussi
-   [Qui peut la trouver ?](#qui-peut-la-trouver-)
+   **Propriétés de la construction**.
+3. Cliquez sur **Publier**. La première fois, une seule fenêtre demande ce
+   que Publier doit encore savoir, avec une réponse déjà choisie pour
+   chaque point :
+   - **Votre nom**, sur un appareil qui n’en a pas encore, avec un nom
+     proposé (comme *Bâtisseur 427*) : tapez le vôtre par-dessus si vous
+     voulez. Publier signe la construction avec lui (voir
+     [Votre nom et votre identité](05-IdentityAndLogin.md)).
+   - **Les autres peuvent la remixer**, activé, pour une construction sans
+     licence (voir [Laisser les autres la remixer](#laisser-les-autres-la-remixer)).
+   - **Tout le monde peut la trouver**, activé, la première fois que cet
+     appareil publie (voir [Qui peut la trouver ?](#qui-peut-la-trouver-)).
+
+   Décochez l’un ou l’autre si vous préférez, puis cliquez sur **Publier en
+   tant que …** (ou **Publier**). **Continuer à construire** ferme la
+   fenêtre et ne publie rien. **Avancé** contient **Publier sans nom**, qui
+   la publie sans auteur et sans lien. Un nom verrouillé, ou l’un de
+   plusieurs, est demandé après la fenêtre. Publier enregistre aussi la
+   construction.
 
 Votre construction apparaît maintenant dans **Explorer** sur cet appareil, où
 vous pouvez la chercher, l’ouvrir et la remixer, avec votre nom comme
@@ -86,7 +94,7 @@ boutons se trouvent sous **Mon Monde partagé** dans la Vue du monde.
   ForkBuild, qui envoie ensuite quiconque l’ouvre vers ForkBuild. Un lien
   modifié n’affiche que « A shared build ».
 - **Il faut une signature.** Publiez sous un nom ; une construction
-  publiée sans nom (**Publier sans signer**) n’obtient pas de lien.
+  publiée sans nom (**Publier sans nom**) n’obtient pas de lien.
 - **Un lien court dès qu’elle est envoyée à tout le monde.** Si la
   construction est allée à **Tout le monde** (voir
   [Qui peut la trouver ?](#qui-peut-la-trouver-)), les boutons proposent
@@ -236,10 +244,10 @@ ForkBuild, sont aussi comptés anonymement.
 
 ## Qui peut la trouver ?
 
-La première fois que vous cliquez sur **Publier**, ForkBuild demande
-**Qui peut la trouver ?** :
+La première fois que vous cliquez sur **Publier**, sa fenêtre propose
+**Tout le monde peut la trouver**, déjà coché :
 
-- **Tout le monde** : chaque construction que vous publiez est aussi envoyée
+- **Coché (tout le monde)** : chaque construction que vous publiez est aussi envoyée
   à tout le monde. Elle apparaît dans **Explorer**, dans le défi de la
   semaine et sur sa place, et dans le Monde, pour quiconque utilise
   ForkBuild, sans lien, portefeuille ni compte d’un côté comme de l’autre.
@@ -248,7 +256,7 @@ La première fois que vous cliquez sur **Publier**, ForkBuild demande
   dans le défi et dans le Monde. » Si les réseaux n’ont pas pu être
   joints, il le dit et propose **Réessayer** ; le lien fonctionne dans tous
   les cas.
-- **Seulement les personnes à qui j’envoie le lien** : la construction reste
+- **Décoché (seulement les personnes à qui vous envoyez le lien)** : la construction reste
   sur cet appareil et dans son lien. La notification dit « Seules les
   personnes à qui vous envoyez son lien peuvent la voir. » avec **Laisser
   tout le monde la trouver**, qui envoie cette construction et fait de
@@ -326,7 +334,7 @@ jamais gardé, car son jeton ne dure que la visite ; choisissez-le chaque
 fois dans la boîte de dialogue.
 
 Seule une construction signée est envoyée toute seule ; **Publier sans
-signer** n’envoie rien. Le portefeuille ou l’extension de votre navigateur
+nom** n’envoie rien. Le portefeuille ou l’extension de votre navigateur
 pour ce réseau (un portefeuille Arweave comme Wander, une extension Nostr
 comme nos2x, Steem ou Blurt Keychain) vous demande d’approuver chaque envoi,
 et Arweave et Blurt prennent de petits frais à chaque fois. Sans eux,
@@ -415,16 +423,17 @@ bouton n’apparaît que sur vos propres Mondes publiés.
 
 ### Laisser les autres la remixer
 
-La première fois que vous publiez une construction sans licence,
-ForkBuild demande **Autoriser les autres à la remixer ?** avant de publier
-quoi que ce soit :
+La première fois que vous publiez une construction sans licence, la
+fenêtre de Publier propose **Les autres peuvent la remixer**, déjà coché :
 
-- **Oui, autoriser les remix** choisit **CC BY 4.0** : chacun peut la
-  copier et la modifier, à condition de vous citer, et chaque remix indique
-  qu’il vient de la vôtre.
-- **Non, seulement la regarder** choisit **Tous droits réservés** : on peut
-  en faire le tour, mais pas la copier.
-- **Pas maintenant** ne publie rien.
+- **Coché** choisit **CC BY 4.0** : chacun peut la copier et la modifier,
+  à condition de vous citer, et chaque remix indique qu’il vient de la
+  vôtre.
+- **Décoché** choisit **Tous droits réservés** : on peut en faire le tour,
+  mais pas la copier.
+
+Remixer, c’est la raison d’être de ForkBuild : c’est donc activé au départ.
+**Continuer à construire** ferme la fenêtre et ne publie rien.
 
 Votre réponse est enregistrée comme licence de la construction, on ne vous
 le demande donc qu’une fois ; changez-la quand vous voulez dans

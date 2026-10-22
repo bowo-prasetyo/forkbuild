@@ -167,60 +167,95 @@
     }
 }
 
-/* Asked before a build with no license is first published
-   (ui/components/RemixPermissionDialog.js). */
-.modal-panel.remix-permission-dialog {
+/* A first Publish, in one sheet (ui/components/PublishSheet.js): a name,
+   and the choices already made, each changeable in place. */
+.modal-panel.publish-sheet {
     width: min(520px, calc(100vw - 2rem));
     max-width: none;
 }
 
-.remix-permission-lead {
+.publish-sheet-lead {
     margin: 0 0 1rem;
     color: var(--ink-soft);
     line-height: 1.45;
 }
 
-.remix-permission-option {
+.publish-sheet-field,
+.publish-sheet-choice {
     display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    width: 100%;
+    gap: 0.6rem;
     margin-bottom: 0.6rem;
     padding: 0.75rem 0.85rem;
     border: 1px solid var(--line);
     border-radius: 8px;
     background: var(--surface-low);
-    color: inherit;
-    font: inherit;
-    text-align: left;
+}
+
+.publish-sheet-field {
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.publish-sheet-field .modal-input {
+    margin: 0;
+}
+
+.publish-sheet-choice {
+    align-items: flex-start;
     cursor: pointer;
 }
 
-.remix-permission-option:hover,
-.remix-permission-option:focus-visible {
-    border-color: var(--accent);
-}
-
-.remix-permission-allow {
+.publish-sheet-choice:has(input:checked) {
     border-color: var(--edge-green);
     background: var(--tint-green);
 }
 
-.remix-permission-name {
+.publish-sheet-choice input {
+    flex: none;
+    width: 1.1rem;
+    height: 1.1rem;
+    margin: 0.1rem 0 0;
+    accent-color: var(--accent);
+}
+
+.publish-sheet-choice-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.publish-sheet-label {
     font-weight: 600;
     color: var(--ink-strong);
 }
 
-.remix-permission-description {
+.publish-sheet-hint {
     font-size: 0.85rem;
     line-height: 1.35;
     color: var(--ink-muted);
 }
 
-.remix-permission-note {
+.publish-sheet-later {
     margin: 0.4rem 0 0;
     font-size: 0.82rem;
     color: var(--ink-subtle);
+}
+
+.publish-sheet-advanced {
+    margin-top: 0.75rem;
+    font-size: 0.85rem;
+    color: var(--ink-subtle);
+}
+
+.publish-sheet-advanced summary {
+    cursor: pointer;
+}
+
+.publish-sheet-advanced[open] {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
 }
 
 /* Publish's "looks a lot like someone else's build"

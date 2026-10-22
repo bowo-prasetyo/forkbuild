@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 58c380fc2151aa11 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: ce5fc18391277ac3 -->
 # Häufige Fragen
 
 <!-- languages -->
@@ -31,9 +31,10 @@ Identitäten und Ihre Daten.
 
 ### Ich habe mein Bauwerk veröffentlicht, aber mein Freund findet es nicht in Entdecken
 
-Sofern Sie nicht **Alle** gewählt haben, als Veröffentlichen
-[Wer kann es finden?](04-PublishingAndForking.md#wer-kann-es-finden)
-gefragt hat, speichert Veröffentlichen das Bauwerk nur auf Ihrem eigenen
+Sofern Sie beim ersten Veröffentlichen **Alle können es finden** nicht
+angehakt gelassen haben (siehe
+[Wer kann es finden?](04-PublishingAndForking.md#wer-kann-es-finden)),
+speichert Veröffentlichen das Bauwerk nur auf Ihrem eigenen
 Gerät und führt es in *Ihrem* **Entdecken** auf. So kommt es zu Ihrem
 Freund:
 
@@ -57,10 +58,10 @@ Siehe [Veröffentlichen & Remixen](04-PublishingAndForking.md#mit-verbundenen-pe
 
 ### Wie mache ich meine Arbeit für alle zugänglich?
 
-Wählen Sie **Alle**, wenn Veröffentlichen
-[Wer kann es finden?](04-PublishingAndForking.md#wer-kann-es-finden)
-fragt (oder klicken Sie nach dem Veröffentlichen auf **Für alle auffindbar
-machen**). Jedes Bauwerk, das Sie veröffentlichen, wird dann an alle
+Lassen Sie beim ersten Veröffentlichen **Alle können es finden** angehakt
+(siehe [Wer kann es finden?](04-PublishingAndForking.md#wer-kann-es-finden)),
+oder klicken Sie nach dem Veröffentlichen auf **Für alle auffindbar
+machen**. Jedes Bauwerk, das Sie veröffentlichen, wird dann an alle
 gesendet und erscheint in **Entdecken**, in der Wochen-Challenge und in der
 Welt, ohne dass etwas installiert werden muss.
 
@@ -98,9 +99,10 @@ Diese Meldungen zeigt die App nur auf Englisch:
 
 ### Brauche ich zum Veröffentlichen einen Namen?
 
-Praktisch ja. Veröffentlichen bittet Sie, einen zu wählen; das dauert ein
-paar Sekunden und braucht kein Konto. **Unsigniert veröffentlichen** in
-diesem Dialog veröffentlicht ohne Namen, aber das Ergebnis hat keinen Autor
+Praktisch ja. Das Blatt von Veröffentlichen schlägt einen vor, den Sie
+behalten oder überschreiben können, und braucht kein Konto. **Ohne Namen
+veröffentlichen** unter **Erweitert** auf diesem Blatt veröffentlicht ohne
+Namen, aber das Ergebnis hat keinen Autor
 und keine Signatur: Es bekommt keinen Link, und Sie können es später weder
 mit Peers teilen noch an alle senden. Siehe
 [Einen Namen wählen](01-GettingStarted.md#einen-namen-wählen).

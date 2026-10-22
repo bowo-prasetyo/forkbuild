@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 58c380fc2151aa11 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: ce5fc18391277ac3 -->
 # Questions fréquentes
 
 <!-- languages -->
@@ -30,8 +30,8 @@ droite ouvre aussi Mon avatar, Mes identités et Vos données.
 
 ### J’ai publié ma construction, mais mon ami ne la trouve pas dans Explorer
 
-Sauf si vous avez choisi **Tout le monde** quand Publier a demandé
-[Qui peut la trouver ?](04-PublishingAndForking.md#qui-peut-la-trouver-),
+Sauf si vous avez laissé **Tout le monde peut la trouver** coché à votre
+première publication (voir [Qui peut la trouver ?](04-PublishingAndForking.md#qui-peut-la-trouver-)),
 publier ne fait que stocker la construction sur votre propre appareil et la
 lister dans *votre* **Explorer**. Pour qu’elle arrive à votre ami :
 
@@ -55,10 +55,10 @@ Voir [Publier et remixer](04-PublishingAndForking.md#partager-avec-les-pairs-con
 
 ### Comment rendre mon travail accessible à tous ?
 
-Choisissez **Tout le monde** quand Publier demande
-[Qui peut la trouver ?](04-PublishingAndForking.md#qui-peut-la-trouver-)
-(ou cliquez sur **Laisser tout le monde la trouver** après la
-publication). Chaque construction que vous publiez est alors envoyée à tout
+Laissez **Tout le monde peut la trouver** coché à votre première
+publication (voir [Qui peut la trouver ?](04-PublishingAndForking.md#qui-peut-la-trouver-)),
+ou cliquez sur **Laisser tout le monde la trouver** après la
+publication. Chaque construction que vous publiez est alors envoyée à tout
 le monde et apparaît dans **Explorer**, dans le défi de la semaine et dans
 le Monde, sans rien à installer.
 
@@ -94,9 +94,9 @@ Ces messages sont aujourd’hui affichés en anglais.
 
 ### Faut-il un nom pour publier ?
 
-En pratique, oui. Publier vous demande d’en choisir un, ce qui prend
-quelques secondes et ne demande aucun compte. **Publier sans signer**, dans
-cette fenêtre, publie sans nom, mais le résultat n’a ni auteur ni
+En pratique, oui. La fenêtre de Publier vous en propose un, que vous
+pouvez garder ou remplacer, et ne demande aucun compte. **Publier sans
+nom**, sous **Avancé** dans cette fenêtre, publie sans nom, mais le résultat n’a ni auteur ni
 signature : il n’obtient pas de lien, et vous ne pouvez ni le partager avec
 des pairs ni l’envoyer à tout le monde plus tard. Voir
 [Choisir un nom](01-GettingStarted.md#choisir-un-nom).

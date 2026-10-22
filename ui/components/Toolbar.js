@@ -1,9 +1,10 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount, inject } from 'vue';
 import LoginModal from './LoginModal.js';
-import RemixPermissionDialog from './RemixPermissionDialog.js';
-import FindabilityDialog from './FindabilityDialog.js';
+import PublishSheet from './PublishSheet.js';
 import SimilarBuildDialog from './SimilarBuildDialog.js';
 import { License, LicenseId } from '../../core/document/License.js';
+import { PublishSheetRow, licenseForRemix, publishSheetRows, suggestedNameNumber } from '../../core/publication/PublishSheet.js';
+import { Findability } from '../../application/settings/FindabilityStore.js';
 import { UpdateDocumentMetadataUseCase } from '../../application/document/UpdateDocumentMetadataUseCase.js';
 import { saveFailureMessage } from './saveFailureMessages.js';
 import { saveDocument } from './saveDocument.js';
@@ -124,7 +125,7 @@ export default {
     // never calls editorSession.importDocument() itself.
     // `saved` follows a successful Save, for the Editor's save sound.
     emits: ['back-to-world', 'open-shortcuts', 'published', 'saved', 'export-document', 'export-model', 'export-all-documents', 'import-document', 'new-document'],
-    components: { LoginModal, RemixPermissionDialog, FindabilityDialog, SimilarBuildDialog },
+    components: { LoginModal, PublishSheet, SimilarBuildDialog },
     setup(props, { emit }) {
         const identityUseCase = inject('identityUseCase', null);
         const findabilityStore = inject('findabilityStore', null);
@@ -211,10 +212,6 @@ export default {
         // building. The modal can still publish unsigned.
         const signInToPublish = ref(false);
         const lockedIdentityId = ref(null);
-        // A build with no license may not be copied, so before its first
-        // publish the person says whether others may remix it
-        // (RemixPermissionDialog); the answer becomes its license.
-        const askRemixPermission = ref(false);
         // A build started from something ready-made with nothing of the
         // builder's own in it yet (core/building/PlacedBricks.js) is asked about once,
         // kindly: publishing it untouched isn't building it
@@ -284,49 +281,101 @@ export default {
             similarBuilds.value = [];
             continueToPublish();
         }
+        // What Publish still needs to know, asked together in one sheet
+        // (PublishSheet): whether others may remix a build with no license
+        // (with no license, nobody may copy it), who can find what this
+        // device publishes (asked once per device; the answer decides whether
+        // each publish is also sent to everyone, ui/views/editorView/
+        // useBuildNoteSend.js), and a name to sign with on a device that has
+        // none. With nothing to ask, it publishes straight away.
+        const sheetRows = ref([]);
+        const sheetName = ref('');
+        const sheetBusy = ref(false);
+        const sheetError = ref('');
         function continueToPublish() {
             const license = props.documentManager.document?.metadata?.license;
-            if (license && license.id === LicenseId.UNSPECIFIED) {
-                askRemixPermission.value = true;
-                return;
-            }
-            requestFindability();
-        }
-        function chooseRemixPermission(licenseId) {
-            askRemixPermission.value = false;
+            let findability = null;
             try {
-                new UpdateDocumentMetadataUseCase().execute(props.documentManager, { license: new License({ id: licenseId }) });
-            } catch (err) {
-                report(t('toolbar.publishFailed', { error: errorText(err) }));
-                return;
-            }
-            requestFindability();
-        }
-        // Who can find it? (FindabilityDialog), asked once per device, before
-        // its first publish; the answer decides whether each publish is also
-        // sent to everyone (ui/views/editorView/useBuildNoteSend.js).
-        const askFindability = ref(false);
-        function requestFindability() {
-            let chosen = null;
-            try {
-                chosen = findabilityStore ? findabilityStore.get() : 'none';
+                findability = findabilityStore ? findabilityStore.get() : 'none';
             } catch {
-                chosen = null;
+                findability = null;
             }
-            if (chosen === null) {
-                askFindability.value = true;
+            const rows = publishSheetRows({
+                needsName: needsFirstName(),
+                needsLicense: Boolean(license && license.id === LicenseId.UNSPECIFIED),
+                needsFindability: findability === null
+            });
+            if (rows.length === 0) {
+                requestSignedPublish();
                 return;
             }
+            sheetError.value = '';
+            sheetName.value = t('publishSheet.suggestedName', { number: suggestedNameNumber() });
+            sheetRows.value = rows;
+        }
+        // Only a device with no name at all is asked for one on the sheet; a
+        // name that is locked, or one of several to pick from, is asked for
+        // after it (LoginModal), as before.
+        function needsFirstName() {
+            if (!identityUseCase) return false;
+            const session = identityUseCase.currentSession?.();
+            if (session && session.isAuthenticated) return false;
+            try {
+                return identityUseCase.listIdentities().length === 0;
+            } catch {
+                return false;
+            }
+        }
+        function closeSheet() {
+            if (sheetBusy.value) return;
+            sheetRows.value = [];
+            sheetError.value = '';
+        }
+        // Keeps the sheet's choices: the license on the build, who can find
+        // it for this device. False when the license couldn't be set.
+        function keepSheetChoices({ remix, everyone }) {
+            const rows = sheetRows.value;
+            if (rows.includes(PublishSheetRow.REMIX)) {
+                try {
+                    new UpdateDocumentMetadataUseCase().execute(props.documentManager, { license: new License({ id: licenseForRemix(remix) }) });
+                } catch (err) {
+                    sheetError.value = t('toolbar.publishFailed', { error: errorText(err) });
+                    return false;
+                }
+            }
+            if (rows.includes(PublishSheetRow.FIND)) {
+                try {
+                    findabilityStore.set(everyone ? Findability.EVERYONE : Findability.LINK);
+                } catch {
+                    // Asked again at the next publish.
+                }
+            }
+            return true;
+        }
+        async function publishFromSheet(choice) {
+            if (sheetBusy.value || !keepSheetChoices(choice)) return;
+            if (sheetRows.value.includes(PublishSheetRow.NAME)) {
+                // A name is all it takes; its key stays unprotected until a
+                // passphrase is added on My Identities (ProtectIdentityNote.js
+                // reminds at a later publish).
+                sheetBusy.value = true;
+                try {
+                    const identity = await identityUseCase.createIdentity(choice.name, null);
+                    await identityUseCase.authenticate(identity.identityId, null);
+                } catch (err) {
+                    sheetError.value = errorText(err).replace(/^LocalIdentityProvider:\s*/, '');
+                    return;
+                } finally {
+                    sheetBusy.value = false;
+                }
+            }
+            sheetRows.value = [];
             requestSignedPublish();
         }
-        function chooseFindability(findability) {
-            askFindability.value = false;
-            try {
-                findabilityStore.set(findability);
-            } catch {
-                // Asked again at the next publish.
-            }
-            requestSignedPublish();
+        function publishUnsignedFromSheet(choice) {
+            if (sheetBusy.value || !keepSheetChoices(choice)) return;
+            sheetRows.value = [];
+            publish();
         }
         function requestSignedPublish() {
             const session = identityUseCase?.currentSession?.();
@@ -444,7 +493,8 @@ export default {
             searchThreshold: SEARCH_THRESHOLD,
             save, createNew, load, place, publish, saveAndReturnToWorld,
             signInToPublish, lockedIdentityId, requestPublish, publishAfterSignIn,
-            askRemixPermission, chooseRemixPermission, askNothingAdded, keepBuilding, publishAnyway, askFindability, chooseFindability,
+            askNothingAdded, keepBuilding, publishAnyway,
+            sheetRows, sheetName, sheetBusy, sheetError, closeSheet, publishFromSheet, publishUnsignedFromSheet,
             checkingSimilar, similarBuilds, keepBuildingSimilar, publishOwnWork,
             importFileInput, triggerImportDocument, onImportDocumentFileChosen, exportAllDocuments
         };
@@ -528,15 +578,15 @@ export default {
                 @publish="publishOwnWork"
                 @cancel="keepBuildingSimilar"
             />
-            <RemixPermissionDialog
-                v-if="askRemixPermission"
-                @choose="chooseRemixPermission"
-                @cancel="askRemixPermission = false"
-            />
-            <FindabilityDialog
-                v-if="askFindability"
-                @choose="chooseFindability"
-                @cancel="askFindability = false"
+            <PublishSheet
+                v-if="sheetRows.length"
+                :rows="sheetRows"
+                :suggested-name="sheetName"
+                :busy="sheetBusy"
+                :error="sheetError"
+                @publish="publishFromSheet"
+                @publish-unsigned="publishUnsignedFromSheet"
+                @cancel="closeSheet"
             />
             <LoginModal
                 v-if="signInToPublish"

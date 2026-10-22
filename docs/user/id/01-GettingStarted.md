@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 170440c7f3266fb3 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 8aee537086ae6864 -->
 # 01 — Memulai
 
 <!-- languages -->
 [English](../01-GettingStarted.md) · [Deutsch](../de/01-GettingStarted.md) · [Español](../es/01-GettingStarted.md) · [Français](../fr/01-GettingStarted.md) · **Bahasa Indonesia** · [日本語](../ja/01-GettingStarted.md) · [한국어](../ko/01-GettingStarted.md) · [Português (Brasil)](../pt-BR/01-GettingStarted.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../01-GettingStarted.md).
-<!-- /stale -->
 
 Selamat datang! Panduan ini membawa Anda dari "baru membuka aplikasi" ke
 "saya sudah membangun sesuatu" dalam sekitar lima menit. Anda tidak perlu
@@ -18,8 +14,10 @@ sampai Anda memilih untuk membagikannya.
 
 1. Di layar **Beranda**, klik **Coba sekarang: mulai dengan sebuah rumah**.
 2. Klik **Ambil atap**, lalu klik rumahnya: atapnya terpasang.
-3. Klik **Terbitkan** dan jawab pertanyaannya: nama untuk menerbitkan
-   (klik **Terbitkan sebagai …**), dan **Siapa yang bisa menemukannya?**
+3. Klik **Terbitkan**. Satu lembar terbuka dengan nama yang sudah
+   disarankan, dan remix serta **Semua orang bisa menemukannya** sudah
+   aktif: ketik nama Anda sendiri jika mau, lalu klik **Terbitkan sebagai
+   …**.
 4. Klik **Masuk ke dalamnya** untuk berjalan di dalam rumah Anda di Dunia.
 
 Bagian lain halaman ini menjelaskan setiap langkah, dan cara memulai dari
@@ -162,7 +160,12 @@ Tekan **Ctrl+S** (atau klik **Simpan** di bilah alat). Penanda
 Bangunan Anda disimpan di browser Anda, jadi masih ada saat Anda kembali.
 Selama Anda mengedit, ForkBuild juga menyimpan salinan pemulihan dari
 perubahan yang belum disimpan, dan menawarkan untuk memulihkannya jika
-halaman tertutup sebelum Anda menyimpan.
+halaman tertutup sebelum Anda menyimpan: saat berikutnya Anda membuka
+Editor, sebuah spanduk menyebut nama bangunan dan kapan ia diubah.
+**Pulihkan** membuka bangunan itu beserta perubahannya (simpan agar
+perubahan tetap ada); **Buang** membuang salinan itu dan menawarkan salinan
+berikutnya, jika ada. Ini juga berlaku untuk bangunan yang belum pernah
+Anda simpan.
 
 > **Simpan salinan.** Bangunan Anda hanya ada di browser ini. Menghapus
 > data browser untuk situs ini ikut menghapusnya, jadi cadangkan sesekali
@@ -218,11 +221,11 @@ Lalu klik **Pakai nama ini**.
 Semua yang Anda terbitkan, atau kirim ke orang lain, lalu ditandatangani
 dengan nama itu.
 
-**Menerbitkan tanpa nama.** Dialog nama yang dibuka Terbitkan juga punya
-**Terbitkan tanpa tanda tangan**. Bangunan yang diterbitkan dengan cara itu
+**Menerbitkan tanpa nama.** Di lembar yang dibuka Terbitkan, **Lanjutan**
+berisi **Terbitkan tanpa nama**. Bangunan yang diterbitkan dengan cara itu
 tidak punya pembuat dan tanda tangan: tidak mendapat tautan, tidak bisa
 dibagikan kepada orang lain, dan tidak bisa dikirim ke semua orang nanti.
-Pilihlah nama, kecuali Anda hanya ingin bangunan itu ada di **Jelajahi**
+Gunakan nama, kecuali Anda hanya ingin bangunan itu ada di **Jelajahi**
 Anda sendiri.
 
 Apa yang dilindungi frasa sandi, mengunci dan membuka kunci, serta

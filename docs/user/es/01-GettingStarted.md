@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 170440c7f3266fb3 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 8aee537086ae6864 -->
 # 01 — Primeros pasos
 
 <!-- languages -->
 [English](../01-GettingStarted.md) · [Deutsch](../de/01-GettingStarted.md) · **Español** · [Français](../fr/01-GettingStarted.md) · [Bahasa Indonesia](../id/01-GettingStarted.md) · [日本語](../ja/01-GettingStarted.md) · [한국어](../ko/01-GettingStarted.md) · [Português (Brasil)](../pt-BR/01-GettingStarted.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** La versión en inglés de esta página cambió desde que se tradujo, así que es posible que esta traducción ya no esté actualizada. Consulte la [versión en inglés](../01-GettingStarted.md).
-<!-- /stale -->
 
 ¡Bienvenido! Esta guía lo lleva de "acabo de abrir la aplicación" a "construí
 algo" en unos cinco minutos. No necesita cuenta, descarga ni nombre para
@@ -19,9 +15,9 @@ empezar: todo se queda en su dispositivo hasta que decida compartirlo.
    una casa**.
 2. Haga clic en **Elegir el techo** y luego en la casa: el techo queda
    puesto.
-3. Haga clic en **Publicar** y responda sus preguntas: un nombre con el que
-   publicar (haga clic en **Publicar como …**) y **¿Quién puede
-   encontrarla?**
+3. Haga clic en **Publicar**. Se abre una hoja con un nombre ya sugerido, y
+   con la remezcla y **Todos pueden encontrarla** ya activados: escriba su
+   propio nombre si quiere y haga clic en **Publicar como …**.
 4. Haga clic en **Entrar caminando** para recorrer su casa en el Mundo.
 
 El resto de esta página explica cada parte, y cómo empezar en un terreno
@@ -169,7 +165,11 @@ herramientas). El indicador **● Cambios sin guardar** cambia a
 Su construcción se guarda en su navegador, así que sigue ahí cuando vuelve.
 Mientras edita, ForkBuild también conserva una copia de recuperación de
 los cambios sin guardar, y ofrece restaurarla si la página se cierra antes
-de que guarde.
+de que guarde: la próxima vez que abra el Editor, un aviso nombra la
+construcción y cuándo cambió. **Recuperar** abre esa construcción con sus
+cambios (guárdela para conservarlos); **Descartar** tira la copia y ofrece
+la siguiente, si la hay. También sirve para una construcción que nunca
+guardó.
 
 > **Guarde una copia.** Sus construcciones viven solo en este navegador.
 > Borrar los datos del navegador para el sitio las borra, así que haga de
@@ -225,10 +225,10 @@ en este navegador.) Luego haga clic en **Usar este nombre**.
 Todo lo que publique, o envíe a otras personas, queda firmado con ese
 nombre.
 
-**Publicar sin nombre.** El diálogo de nombre que abre Publicar también
-tiene **Publicar sin firmar**. Una construcción publicada así no tiene
+**Publicar sin nombre.** En la hoja que abre Publicar, **Avanzado**
+contiene **Publicar sin nombre**. Una construcción publicada así no tiene
 autor ni firma: no recibe enlace, no se puede compartir con otras personas
-y no se puede enviar a todos más tarde. Elija un nombre, salvo que solo la
+y no se puede enviar a todos más tarde. Use un nombre, salvo que solo la
 quiera en su propio **Explorar**.
 
 Qué protege una frase de contraseña, cómo bloquear y desbloquear, y cómo

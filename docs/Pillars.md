@@ -94,11 +94,11 @@ revocation. It is what makes "your work is yours" true, and it stays. But it
 is a means, not the game:
 
 - Players should see one verb, **Publish**, and one choice inside it: who
-  can find the build. **Who can find it?** is asked before the first
-  publish: **Everyone** sends each build as a build note to the Nostr relays
-  every copy of ForkBuild reads, with a key the device holds itself, so no
-  wallet or extension is needed; **Only people I send the link to** keeps it
-  in its link. Where else to send the build is a second, optional step. Network-by-network detail belongs on the Publications
+  can find the build. **Everyone can find it** is on the sheet before the
+  first publish, already ticked: it sends each build as a build note to the
+  Nostr relays every copy of ForkBuild reads, with a key the device holds
+  itself, so no wallet or extension is needed; unticked, the build stays in
+  its link. Where else to send the build is a second, optional step. Network-by-network detail belongs on the Publications
   page and in Network Settings. Publish asks where the build goes once, in
   **Where it goes**, and sends each signed build there from then on.
 - **A first Publish is one sheet, with remixing on** (decided by the owner
@@ -109,8 +109,9 @@ is a means, not the game:
   choices already made, **Others may remix it** and **Everyone can find
   it**, each changeable right there, and one **Publish** button. No choice
   on it is a dead end that publishes nothing, and publishing unsigned moves
-  under Advanced. Until that is built, Publish asks **Let others remix
-  it?**, **Who can find it?** and a name in turn, as docs/user/04 says.
+  under Advanced. Built on 2026-10-22 (ui/components/PublishSheet.js; the
+  roadmap, "A first Publish in one sheet"); a name that is locked, or one of
+  several, is still asked for after the sheet.
 - Network Settings and the Publications page live under **More → Advanced**.
   The Experimental tools (the Publications page's Wallet & Archive Tools and
   the Bitcoin Endpoint page) stay hidden until **Show experimental tools**

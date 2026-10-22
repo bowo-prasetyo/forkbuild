@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 58c380fc2151aa11 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: ce5fc18391277ac3 -->
 # Perguntas frequentes
 
 <!-- languages -->
@@ -29,8 +29,8 @@ avatar, Minhas identidades e Seus dados.
 
 ### Publiquei minha construção, mas meu amigo não a encontra no Explorar
 
-A não ser que você tenha escolhido **Todo mundo** quando Publicar perguntou
-[Quem pode encontrá-la?](04-PublishingAndForking.md#quem-pode-encontrá-la),
+A não ser que você tenha deixado **Todo mundo pode encontrá-la** marcado ao
+publicar pela primeira vez (veja [Quem pode encontrá-la?](04-PublishingAndForking.md#quem-pode-encontrá-la)),
 publicar só guarda a construção no seu próprio dispositivo e a lista no
 *seu* **Explorar**. Para ela chegar ao seu amigo:
 
@@ -55,9 +55,9 @@ Veja
 
 ### Como deixo meu trabalho disponível para todos?
 
-Escolha **Todo mundo** quando Publicar perguntar
-[Quem pode encontrá-la?](04-PublishingAndForking.md#quem-pode-encontrá-la)
-(ou clique em **Deixar todo mundo encontrar** depois de publicar). Cada
+Deixe **Todo mundo pode encontrá-la** marcado ao publicar pela primeira
+vez (veja [Quem pode encontrá-la?](04-PublishingAndForking.md#quem-pode-encontrá-la)),
+ou clique em **Deixar todo mundo encontrar** depois de publicar. Cada
 construção que você publica passa a ser enviada a todo mundo e aparece no
 **Explorar**, no desafio semanal e no Mundo, sem precisar instalar nada.
 
@@ -94,9 +94,9 @@ Estas mensagens aparecem em inglês no app:
 
 ### Preciso de um nome para publicar?
 
-Na prática, sim. Publicar pede que você escolha um, o que leva alguns
-segundos e não exige conta. **Publicar sem assinar**, nessa caixa de
-diálogo, publica sem nome, mas o resultado não tem autor nem assinatura:
+Na prática, sim. A folha de Publicar sugere um, que você pode manter ou
+trocar, e não exige conta. **Publicar sem nome**, em **Avançado** nessa
+folha, publica sem nome, mas o resultado não tem autor nem assinatura:
 não ganha link, e você não consegue compartilhá-lo com pares nem enviá-lo
 a todo mundo depois. Veja
 [Escolhendo um nome](01-GettingStarted.md#escolhendo-um-nome).

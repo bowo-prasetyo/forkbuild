@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 195bfda527c3a111 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ab8dc5cb397441b2 -->
 # 04 — Penerbitan & Remix
 
 <!-- languages -->
@@ -14,20 +14,27 @@ seperti dalam ForkBuild.)
 ## Menerbitkan karya Anda
 
 1. Bangun sesuatu di Editor.
-2. Miliki sebuah nama, dan pastikan nama itu tidak terkunci (lihat
-   [Nama & Identitas Anda](05-IdentityAndLogin.md)). Menerbitkan
-   menandatangani bangunan itu dengannya. Jika Anda belum punya nama,
-   **Terbitkan** meminta Anda memilih nama lebih dulu; **Terbitkan tanpa
-   tanda tangan** di sana menerbitkannya tanpa pembuat dan tanpa tautan.
-3. Beri judul — Terbitkan menolak karya tanpa judul atau kosong — dan,
+2. Beri judul — Terbitkan menolak karya tanpa judul atau kosong — dan,
    secara opsional, deskripsi dan lisensi: klik **✎** di samping judul
-   bangunan di bilah sisi untuk membuka **Properti Bangunan**. Bangunan baru
-   tidak memiliki lisensi; saat pertama kali Anda menerbitkannya, ForkBuild
-   bertanya apakah orang lain boleh me-remix-nya (lihat
-   [Mengizinkan orang lain me-remix](#mengizinkan-orang-lain-me-remix)).
-4. Tekan **Simpan** agar tersimpan.
-5. Klik **Terbitkan**. Pertama kali, ForkBuild juga bertanya
-   [Siapa yang bisa menemukannya?](#siapa-yang-bisa-menemukannya)
+   bangunan di bilah sisi untuk membuka **Properti Bangunan**.
+3. Klik **Terbitkan**. Pertama kali, satu lembar menanyakan apa yang masih
+   perlu diketahui Terbitkan, dengan jawaban yang sudah dipilih untuk
+   masing-masing:
+   - **Nama Anda**, di perangkat yang belum punya nama, dengan satu nama
+     yang disarankan (misalnya *Pembangun 427*): ketik nama Anda sendiri di
+     atasnya jika mau. Menerbitkan menandatangani bangunan dengannya (lihat
+     [Nama & Identitas Anda](05-IdentityAndLogin.md)).
+   - **Orang lain boleh me-remix-nya**, aktif, untuk bangunan tanpa lisensi
+     (lihat [Mengizinkan orang lain me-remix](#mengizinkan-orang-lain-me-remix)).
+   - **Semua orang bisa menemukannya**, aktif, saat perangkat ini pertama
+     kali menerbitkan (lihat [Siapa yang bisa menemukannya?](#siapa-yang-bisa-menemukannya)).
+
+   Hapus centang salah satunya jika Anda mau, lalu klik **Terbitkan sebagai
+   …** (atau **Terbitkan**). **Terus membangun** menutup lembar dan tidak
+   menerbitkan apa pun. **Lanjutan** berisi **Terbitkan tanpa nama**, yang
+   menerbitkannya tanpa pembuat dan tanpa tautan. Nama yang terkunci, atau
+   salah satu dari beberapa nama, ditanyakan setelah lembar itu.
+   Menerbitkan juga menyimpan bangunan.
 
 Karya Anda kini muncul di **Jelajahi** di perangkat ini, tempat Anda dapat
 mencarinya, membukanya, dan me-remix-nya, dengan nama Anda sebagai
@@ -85,7 +92,7 @@ bawah **Dunia Bersama Saya** di Tampilan Dunia.
   mengarahkan siapa pun yang membukanya ke ForkBuild. Tautan yang diubah
   hanya menampilkan "A shared build".
 - **Perlu tanda tangan.** Terbitkan dengan sebuah nama; bangunan yang
-  diterbitkan tanpa nama (**Terbitkan tanpa tanda tangan**) tidak mendapat
+  diterbitkan tanpa nama (**Terbitkan tanpa nama**) tidak mendapat
   tautan.
 - **Tautan pendek begitu dikirim ke semua orang.** Jika bangunan dikirim ke
   **Semua orang** (lihat
@@ -231,10 +238,10 @@ ForkBuild, juga dihitung secara anonim.
 
 ## Siapa yang bisa menemukannya?
 
-Pertama kali Anda mengeklik **Terbitkan**, ForkBuild bertanya **Siapa yang
-bisa menemukannya?**:
+Pertama kali Anda mengeklik **Terbitkan**, lembarnya berisi **Semua orang
+bisa menemukannya**, sudah dicentang:
 
-- **Semua orang**: setiap bangunan yang Anda terbitkan juga dikirim ke
+- **Dicentang (semua orang)**: setiap bangunan yang Anda terbitkan juga dikirim ke
   semua orang. Bangunan itu muncul di **Jelajahi**, di tantangan minggu itu
   dan alun-alunnya, dan di Dunia, bagi siapa pun yang memakai ForkBuild,
   tanpa tautan, dompet, atau akun di kedua sisi. Tepat setelah Terbitkan,
@@ -242,7 +249,7 @@ bisa menemukannya?**:
   "Diterbitkan! Kini siapa pun bisa menemukannya di Jelajahi, di tantangan,
   dan di Dunia." Jika jaringan tidak dapat dijangkau, Editor mengatakannya
   dan menawarkan **Coba lagi**; tautannya tetap berfungsi.
-- **Hanya orang yang saya kirimi tautannya**: bangunan tetap di perangkat
+- **Tidak dicentang (hanya orang yang Anda kirimi tautannya)**: bangunan tetap di perangkat
   ini dan di dalam tautannya. Pemberitahuannya berkata "Hanya orang yang
   Anda kirimi tautannya yang bisa melihatnya." dengan **Biarkan semua orang
   menemukannya**, yang mengirim bangunan ini dan menjadikan **Semua orang**
@@ -317,7 +324,7 @@ di perangkat ini. Pinning jarak jauh tidak pernah disimpan, karena tokennya
 hanya berlaku selama kunjungan; pilih di dialog setiap kali.
 
 Hanya bangunan bertanda tangan yang dikirim dengan sendirinya; **Terbitkan
-tanpa tanda tangan** tidak mengirim apa pun. Dompet atau ekstensi browser
+tanpa nama** tidak mengirim apa pun. Dompet atau ekstensi browser
 Anda untuk jaringan itu (dompet Arweave seperti Wander, ekstensi Nostr
 seperti nos2x, Steem atau Blurt Keychain) meminta persetujuan Anda untuk
 setiap pengiriman, dan Arweave serta Blurt memungut biaya kecil setiap kali.
@@ -403,15 +410,17 @@ pada Dunia terbitan Anda sendiri.
 
 ### Mengizinkan orang lain me-remix
 
-Saat pertama kali Anda menerbitkan bangunan tanpa lisensi, ForkBuild
-bertanya **Izinkan orang lain me-remix?** sebelum apa pun diterbitkan:
+Saat pertama kali Anda menerbitkan bangunan tanpa lisensi, lembar
+Terbitkan berisi **Orang lain boleh me-remix-nya**, sudah dicentang:
 
-- **Ya, izinkan remix** memasang **CC BY 4.0**: siapa pun boleh menyalin
-  dan mengubahnya, asalkan mencantumkan nama Anda, dan setiap remix
-  menunjukkan bahwa ia berasal dari milik Anda.
-- **Tidak, hanya untuk dilihat** memasang **Hak Cipta Dilindungi**: orang
-  dapat mengelilinginya, tetapi tidak menyalinnya.
-- **Nanti saja** tidak menerbitkan apa pun.
+- **Dicentang** memasang **CC BY 4.0**: siapa pun boleh menyalin dan
+  mengubahnya, asalkan mencantumkan nama Anda, dan setiap remix menunjukkan
+  bahwa ia berasal dari milik Anda.
+- **Tidak dicentang** memasang **Hak Cipta Dilindungi**: orang dapat
+  mengelilinginya, tetapi tidak menyalinnya.
+
+Remix adalah tujuan ForkBuild, jadi pilihan ini aktif sejak awal. **Terus
+membangun** menutup lembar dan tidak menerbitkan apa pun.
 
 Jawaban Anda disimpan sebagai lisensi bangunan, jadi Anda hanya ditanya
 sekali; ubah kapan saja di **Properti Bangunan**. Sebuah remix sudah membawa

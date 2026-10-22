@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 170440c7f3266fb3 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 8aee537086ae6864 -->
 # 01 — Premiers pas
 
 <!-- languages -->
 [English](../01-GettingStarted.md) · [Deutsch](../de/01-GettingStarted.md) · [Español](../es/01-GettingStarted.md) · **Français** · [Bahasa Indonesia](../id/01-GettingStarted.md) · [日本語](../ja/01-GettingStarted.md) · [한국어](../ko/01-GettingStarted.md) · [Português (Brasil)](../pt-BR/01-GettingStarted.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Remarque :** la version anglaise de cette page a changé depuis sa traduction, cette traduction n’est donc peut-être plus à jour. Consultez la [version anglaise](../01-GettingStarted.md).
-<!-- /stale -->
 
 Bienvenue ! Ce guide vous emmène de « je viens d’ouvrir l’application » à
 « j’ai construit quelque chose » en cinq minutes environ. Pas besoin de
@@ -19,9 +15,10 @@ appareil jusqu’à ce que vous choisissiez de le partager.
 1. Sur l’écran d’**Accueil**, cliquez sur **Essayez maintenant : commencez
    par une maison**.
 2. Cliquez sur **Prendre le toit**, puis sur la maison : le toit se pose.
-3. Cliquez sur **Publier** et répondez à ses questions : un nom sous lequel
-   publier (cliquez sur **Publier en tant que …**), et **Qui peut la
-   trouver ?**
+3. Cliquez sur **Publier**. Une seule fenêtre s’ouvre, avec un nom déjà
+   proposé, et le remix et **Tout le monde peut la trouver** déjà activés :
+   tapez votre propre nom si vous voulez, puis cliquez sur **Publier en tant
+   que …**.
 4. Cliquez sur **Entrer à pied** pour parcourir votre maison dans le Monde.
 
 La suite de cette page explique chaque étape, et comment partir d’un
@@ -170,7 +167,12 @@ d’outils). L’indicateur **● Modifications non enregistrées** devient
 Votre construction est stockée dans votre navigateur : elle est donc
 toujours là quand vous revenez. Pendant que vous modifiez, ForkBuild garde
 aussi une copie de récupération des modifications non enregistrées, et
-propose de la restaurer si la page se ferme avant que vous n’enregistriez.
+propose de la restaurer si la page se ferme avant que vous n’enregistriez :
+la prochaine fois que vous ouvrez l’Éditeur, un bandeau nomme la
+construction et quand elle a été modifiée. **Récupérer** ouvre cette
+construction avec ses modifications (enregistrez-la pour les garder) ;
+**Abandonner** jette la copie et propose la suivante, s’il y en a une. Cela
+marche aussi pour une construction que vous n’avez jamais enregistrée.
 
 > **Gardez une copie.** Vos constructions ne vivent que dans ce navigateur.
 > Effacer les données du navigateur pour le site les supprime, alors
@@ -228,10 +230,10 @@ non chiffrée dans ce navigateur.) Cliquez ensuite sur **Utiliser ce nom**.
 Tout ce que vous publiez, ou envoyez à d’autres, est alors signé sous ce
 nom.
 
-**Publier sans nom.** La fenêtre de nom qu’ouvre Publier propose aussi
-**Publier sans signer**. Une construction publiée ainsi n’a ni auteur ni
+**Publier sans nom.** Dans la fenêtre qu’ouvre Publier, **Avancé** contient
+**Publier sans nom**. Une construction publiée ainsi n’a ni auteur ni
 signature : elle n’obtient pas de lien, ne peut pas être partagée avec
-d’autres et ne peut pas être envoyée à tout le monde plus tard. Choisissez
+d’autres et ne peut pas être envoyée à tout le monde plus tard. Prenez
 plutôt un nom, sauf si vous ne la voulez que dans votre propre
 **Explorer**.
 

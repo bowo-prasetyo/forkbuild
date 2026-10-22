@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 170440c7f3266fb3 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 8aee537086ae6864 -->
 # 01 — Primeiros passos
 
 <!-- languages -->
 [English](../01-GettingStarted.md) · [Deutsch](../de/01-GettingStarted.md) · [Español](../es/01-GettingStarted.md) · [Français](../fr/01-GettingStarted.md) · [Bahasa Indonesia](../id/01-GettingStarted.md) · [日本語](../ja/01-GettingStarted.md) · [한국어](../ko/01-GettingStarted.md) · **Português (Brasil)**
 <!-- /languages -->
-
-<!-- stale -->
-> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês](../01-GettingStarted.md).
-<!-- /stale -->
 
 Boas-vindas! Este guia leva você de "acabei de abrir o aplicativo" a
 "construí alguma coisa" em uns cinco minutos. Você não precisa de conta,
@@ -18,8 +14,9 @@ decidir compartilhar.
 
 1. Na tela **Início**, clique em **Experimente agora: comece com uma casa**.
 2. Clique em **Pegar o telhado** e depois na casa: o telhado é colocado.
-3. Clique em **Publicar** e responda às perguntas: um nome para publicar
-   (clique em **Publicar como …**) e **Quem pode encontrá-la?**
+3. Clique em **Publicar**. Abre-se uma folha com um nome já sugerido, e com
+   o remix e **Todo mundo pode encontrá-la** já ligados: digite o seu próprio
+   nome se quiser e clique em **Publicar como …**.
 4. Clique em **Entrar andando** para andar pela sua casa no Mundo.
 
 O resto desta página explica cada parte, e como começar num terreno vazio.
@@ -163,7 +160,11 @@ indicador **● Alterações não salvas** vira **Salvo**.
 Sua construção fica guardada no navegador, então continua lá quando você
 volta. Enquanto você edita, o ForkBuild também guarda uma cópia de
 recuperação das alterações não salvas, e oferece restaurá-la se a página
-fechar antes de você salvar.
+fechar antes de você salvar: na próxima vez que você abrir o Editor, um
+aviso diz o nome da construção e quando ela mudou. **Recuperar** abre essa
+construção com as alterações (salve-a para mantê-las); **Descartar** joga a
+cópia fora e oferece a próxima, se houver. Isso funciona também para uma
+construção que você nunca salvou.
 
 > **Guarde uma cópia.** Suas construções vivem só neste navegador. Apagar
 > os dados do navegador para o site apaga as construções, então faça backup
@@ -219,10 +220,10 @@ este nome**.
 Tudo o que você publica, ou envia a outras pessoas, passa a ser assinado
 com esse nome.
 
-**Publicar sem nome.** A caixa de diálogo de nome que Publicar abre também
-tem **Publicar sem assinar**. Uma construção publicada assim não tem autor
+**Publicar sem nome.** Na folha que Publicar abre, **Avançado** tem
+**Publicar sem nome**. Uma construção publicada assim não tem autor
 nem assinatura: não ganha link, não pode ser compartilhada com outras
-pessoas e não pode ser enviada a todo mundo depois. Escolha um nome, a não
+pessoas e não pode ser enviada a todo mundo depois. Use um nome, a não
 ser que você só a queira no seu próprio **Explorar**.
 
 O que uma frase secreta protege, bloquear e desbloquear, e fazer backup da

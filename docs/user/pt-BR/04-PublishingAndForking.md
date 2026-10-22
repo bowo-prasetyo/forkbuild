@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 195bfda527c3a111 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ab8dc5cb397441b2 -->
 # 04 — Publicar e remixar
 
 <!-- languages -->
@@ -14,20 +14,26 @@ em ForkBuild.)
 ## Publicando sua construção
 
 1. Construa algo no Editor.
-2. Tenha um nome e confira se ele está desbloqueado (veja
-   [Seu nome e sua identidade](05-IdentityAndLogin.md)). Publicar assina a
-   construção com ele. Se você ainda não tem nome, **Publicar** pede que
-   você escolha um primeiro; **Publicar sem assinar** ali a publica sem
-   autor e sem link.
-3. Dê um título a ela — Publicar recusa uma construção sem título ou vazia — e,
+2. Dê um título a ela — Publicar recusa uma construção sem título ou vazia — e,
    se quiser, uma descrição e uma licença: clique em **✎** ao lado do título
-   da construção na barra lateral para abrir **Propriedades da construção**. Uma
-   construção nova não tem licença; na primeira vez que você a publicar, o
-   ForkBuild pergunta se outras pessoas podem remixá-lo (veja
-   [Deixando outras pessoas remixarem](#deixando-outras-pessoas-remixarem)).
-4. Pressione **Salvar** para guardá-la.
-5. Clique em **Publicar**. Na primeira vez, o ForkBuild também pergunta
-   [Quem pode encontrá-la?](#quem-pode-encontrá-la)
+   da construção na barra lateral para abrir **Propriedades da construção**.
+3. Clique em **Publicar**. Na primeira vez, uma única folha pergunta o que
+   Publicar ainda precisa saber, com uma resposta já escolhida para cada
+   item:
+   - **Seu nome**, num dispositivo que ainda não tem nenhum, com um nome
+     sugerido (como *Construtor 427*): digite o seu por cima se quiser.
+     Publicar assina a construção com ele (veja
+     [Seu nome e sua identidade](05-IdentityAndLogin.md)).
+   - **Outras pessoas podem remixá-la**, ligado, para uma construção sem
+     licença (veja [Deixando outras pessoas remixarem](#deixando-outras-pessoas-remixarem)).
+   - **Todo mundo pode encontrá-la**, ligado, na primeira vez que este
+     dispositivo publica (veja [Quem pode encontrá-la?](#quem-pode-encontrá-la)).
+
+   Desmarque qualquer um dos dois se preferir e clique em **Publicar como
+   …** (ou **Publicar**). **Continuar construindo** fecha a folha e não
+   publica nada. **Avançado** tem **Publicar sem nome**, que a publica sem
+   autor e sem link. Um nome bloqueado, ou um entre vários, é pedido depois
+   da folha. Publicar também salva a construção.
 
 Sua construção agora aparece em **Explorar** neste dispositivo, onde você pode
 pesquisá-la, abri-la e remixá-la, com seu nome como autor. As outras
@@ -82,7 +88,7 @@ ficam em **Meu Mundo compartilhado** na Visão do mundo.
   dela, desenhada pelo servidor de links do ForkBuild, que depois leva quem
   o abrir ao ForkBuild. Um link alterado mostra só "A shared build".
 - **Precisa de assinatura.** Publique com um nome; uma construção
-  publicada sem nome (**Publicar sem assinar**) não ganha link.
+  publicada sem nome (**Publicar sem nome**) não ganha link.
 - **Um link curto assim que é enviada para todos.** Se a construção foi
   para **Todo mundo** (veja [Quem pode encontrá-la?](#quem-pode-encontrá-la)),
   os botões oferecem em vez disso um link curto, de uns 90 caracteres, que
@@ -220,10 +226,10 @@ também são contados de forma anônima.
 
 ## Quem pode encontrá-la?
 
-Na primeira vez que você clica em **Publicar**, o ForkBuild pergunta
-**Quem pode encontrá-la?**:
+Na primeira vez que você clica em **Publicar**, a folha tem **Todo mundo
+pode encontrá-la**, já marcado:
 
-- **Todo mundo**: cada construção que você publica também é enviada para
+- **Marcado (todo mundo)**: cada construção que você publica também é enviada para
   todo mundo. Ela aparece em **Explorar**, no desafio da semana e na praça
   dele, e no Mundo, para qualquer pessoa que use o ForkBuild, sem link,
   carteira ou conta de nenhum dos lados. Logo depois de Publicar, o Editor
@@ -231,7 +237,7 @@ Na primeira vez que você clica em **Publicar**, o ForkBuild pergunta
   qualquer pessoa pode encontrá-la em Explorar, no desafio e no Mundo." Se
   não foi possível alcançar as redes, ele avisa e oferece **Tentar de
   novo**; o link funciona de qualquer jeito.
-- **Só quem receber o meu link**: a construção fica neste dispositivo e
+- **Desmarcado (só quem receber o seu link)**: a construção fica neste dispositivo e
   dentro do link dela. O aviso diz "Só quem receber o link pode vê-la." com
   **Deixar todo mundo encontrar**, que envia esta construção e torna
   **Todo mundo** a escolha daí em diante.
@@ -303,7 +309,7 @@ parar, e Publicar volta a manter as construções neste dispositivo. O
 pinning remoto nunca fica guardado, porque o token dele dura só a visita;
 escolha-o no diálogo a cada vez.
 
-Só uma construção assinada é enviada sozinha; **Publicar sem assinar** não
+Só uma construção assinada é enviada sozinha; **Publicar sem nome** não
 envia nada. A carteira ou extensão do seu navegador para essa rede (uma
 carteira Arweave como Wander, uma extensão Nostr como nos2x, Steem ou Blurt
 Keychain) pede sua aprovação a cada envio, e Arweave e Blurt cobram uma
@@ -387,16 +393,16 @@ Mundos que você mesmo publicou.
 
 ### Deixando outras pessoas remixarem
 
-Na primeira vez que você publica uma construção sem licença, o ForkBuild
-pergunta **Deixar outras pessoas remixarem?** antes de publicar qualquer
-coisa:
+Na primeira vez que você publica uma construção sem licença, a folha de
+Publicar tem **Outras pessoas podem remixá-la**, já marcado:
 
-- **Sim, permitir remixes** define **CC BY 4.0**: qualquer pessoa pode
-  copiar e mudar, desde que dê crédito a você, e cada remix mostra que veio
-  da sua.
-- **Não, só deixar olhar** define **Todos os direitos reservados**: dá para
-  andar ao redor, mas não copiar.
-- **Agora não** não publica nada.
+- **Marcado** define **CC BY 4.0**: qualquer pessoa pode copiar e mudar,
+  desde que dê crédito a você, e cada remix mostra que veio da sua.
+- **Desmarcado** define **Todos os direitos reservados**: dá para andar ao
+  redor, mas não copiar.
+
+Remixar é a razão de ser do ForkBuild, por isso começa ligado.
+**Continuar construindo** fecha a folha e não publica nada.
 
 Sua resposta é salva como a licença da construção, então a pergunta vem só
 uma vez; mude quando quiser em **Propriedades da construção**. Um

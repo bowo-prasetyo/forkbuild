@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 195bfda527c3a111 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ab8dc5cb397441b2 -->
 # 04 — Veröffentlichen & Remixen
 
 <!-- languages -->
@@ -14,20 +14,29 @@ wie in ForkBuild.)
 ## Ihr Bauwerk veröffentlichen
 
 1. Bauen Sie etwas im Editor.
-2. Haben Sie einen Namen, und sorgen Sie dafür, dass er entsperrt ist
-   (siehe [Ihr Name & Ihre Identität](05-IdentityAndLogin.md)).
-   Veröffentlichen signiert das Bauwerk damit. Haben Sie noch keinen Namen,
-   bittet **Veröffentlichen** Sie zuerst, einen zu wählen; **Unsigniert
-   veröffentlichen** veröffentlicht es dort ohne Autor und ohne Link.
-3. Geben Sie ihm einen Titel — Veröffentlichen verweigert ein Bauwerk
+2. Geben Sie ihm einen Titel — Veröffentlichen verweigert ein Bauwerk
    ohne Titel oder eine leere — und, optional, eine Beschreibung und eine
    Lizenz: Klicken Sie in der Seitenleiste auf **✎** neben dem
-   Bauwerkstitel, um **Bauwerkeigenschaften** zu öffnen. Ein neues
-   Bauwerk hat keine Lizenz; beim ersten Veröffentlichen fragt ForkBuild,
-   ob andere es remixen dürfen (siehe [Andere remixen lassen](#andere-remixen-lassen)).
-4. Drücken Sie **Speichern**, damit sie gespeichert ist.
-5. Klicken Sie auf **Veröffentlichen**. Beim ersten Mal fragt ForkBuild
-   außerdem [Wer kann es finden?](#wer-kann-es-finden)
+   Bauwerkstitel, um **Bauwerkeigenschaften** zu öffnen.
+3. Klicken Sie auf **Veröffentlichen**. Beim ersten Mal fragt ein einziges
+   Blatt alles, was Veröffentlichen noch wissen muss, mit einer schon
+   gewählten Antwort für jede Frage:
+   - **Ihr Name**, auf einem Gerät, das noch keinen hat, mit einem
+     Vorschlag (etwa *Baumeister 427*): Überschreiben Sie ihn mit Ihrem
+     eigenen, wenn Sie möchten. Veröffentlichen signiert das Bauwerk damit
+     (siehe [Ihr Name & Ihre Identität](05-IdentityAndLogin.md)).
+   - **Andere dürfen es remixen**, eingeschaltet, für ein Bauwerk ohne
+     Lizenz (siehe [Andere remixen lassen](#andere-remixen-lassen)).
+   - **Alle können es finden**, eingeschaltet, wenn dieses Gerät zum ersten
+     Mal veröffentlicht (siehe [Wer kann es finden?](#wer-kann-es-finden)).
+
+   Nehmen Sie den Haken bei einer der beiden Wahlen weg, wenn Sie möchten,
+   und klicken Sie dann auf **Als … veröffentlichen** (oder
+   **Veröffentlichen**). **Weiterbauen** schließt das Blatt und
+   veröffentlicht nichts. **Erweitert** enthält **Ohne Namen
+   veröffentlichen**, was es ohne Autor und ohne Link veröffentlicht. Ein
+   gesperrter Name oder einer von mehreren wird nach dem Blatt erfragt.
+   Veröffentlichen speichert das Bauwerk auch.
 
 Ihr Bauwerk erscheint jetzt unter **Entdecken** auf diesem Gerät, wo Sie
 sie suchen, öffnen und remixen können, mit Ihrem Namen als Autor. Andere
@@ -84,7 +93,7 @@ Weltansicht unter **Meine Geteilte Welt**.
   jeden, der ihn öffnet, weiter zu ForkBuild schickt. Ein veränderter Link
   zeigt nur „A shared build“.
 - **Er braucht eine Signatur.** Veröffentlichen Sie unter einem Namen; ein
-  Bauwerk ohne Namen (**Unsigniert veröffentlichen**) bekommt keinen Link.
+  Bauwerk ohne Namen (**Ohne Namen veröffentlichen**) bekommt keinen Link.
 - **Ein kurzer Link, sobald es an alle gesendet ist.** Ging das Bauwerk an
   **Alle** (siehe [Wer kann es finden?](#wer-kann-es-finden)), bieten die
   Schaltflächen stattdessen einen kurzen Link von etwa 90 Zeichen an, der
@@ -227,10 +236,10 @@ ForkBuild werden anonym gezählt.
 
 ## Wer kann es finden?
 
-Wenn Sie zum ersten Mal auf **Veröffentlichen** klicken, fragt ForkBuild
-**Wer kann es finden?**:
+Wenn Sie zum ersten Mal auf **Veröffentlichen** klicken, hat sein Blatt
+**Alle können es finden**, bereits angehakt:
 
-- **Alle**: Jedes Bauwerk, das Sie veröffentlichen, wird zusätzlich an alle
+- **Angehakt (Alle)**: Jedes Bauwerk, das Sie veröffentlichen, wird zusätzlich an alle
   gesendet. Es erscheint unter **Entdecken**, in der Challenge der Woche und
   auf ihrem Platz sowie in der Welt, für alle, die ForkBuild nutzen, ohne
   Link, Wallet oder Konto auf beiden Seiten. Direkt nach dem
@@ -239,7 +248,7 @@ Wenn Sie zum ersten Mal auf **Veröffentlichen** klicken, fragt ForkBuild
   „Entdecken“, in der Challenge und in der Welt.“ Waren die Netzwerke nicht
   erreichbar, sagt er das und bietet **Erneut versuchen** an; der Link
   funktioniert so oder so.
-- **Nur wer den Link von mir bekommt**: Das Bauwerk bleibt auf diesem Gerät
+- **Nicht angehakt (nur wer den Link von Ihnen bekommt)**: Das Bauwerk bleibt auf diesem Gerät
   und in seinem Link. Die Meldung sagt „Nur wer den Link von Ihnen bekommt,
   kann es sehen.“ mit **Für alle auffindbar machen**, was dieses Bauwerk
   sendet und **Alle** von da an zur Wahl macht.
@@ -314,7 +323,7 @@ Veröffentlichen Bauwerke wieder auf diesem Gerät. Remote Pinning wird nie
 gemerkt, weil sein Token nur für den Besuch gilt; wählen Sie es jedes Mal
 im Dialog.
 
-Nur ein signiertes Bauwerk wird von selbst gesendet; **Unsigniert
+Nur ein signiertes Bauwerk wird von selbst gesendet; **Ohne Namen
 veröffentlichen** sendet nichts. Die Wallet oder Erweiterung Ihres Browsers
 für dieses Netzwerk (eine Arweave-Wallet wie Wander, eine Nostr-Erweiterung
 wie nos2x, Steem oder Blurt Keychain) fragt bei jedem Senden nach Ihrer
@@ -400,15 +409,18 @@ Schaltfläche erscheint nur bei Ihren eigenen veröffentlichten Welten.
 
 ### Andere remixen lassen
 
-Wenn Sie ein Bauwerk ohne Lizenz zum ersten Mal veröffentlichen, fragt
-ForkBuild **Dürfen andere es remixen?**, bevor etwas veröffentlicht wird:
+Wenn Sie ein Bauwerk ohne Lizenz zum ersten Mal veröffentlichen, hat das
+Blatt von Veröffentlichen **Andere dürfen es remixen**, bereits angehakt:
 
-- **Ja, Remixe erlauben** setzt **CC BY 4.0**: Jeder darf es kopieren und
-  ändern, solange Sie genannt werden, und jeder Remix zeigt, dass er von
-  Ihrem stammt.
-- **Nein, nur ansehen lassen** setzt **Alle Rechte vorbehalten**: Man kann
-  darum herumgehen, es aber nicht kopieren.
-- **Nicht jetzt** veröffentlicht nichts.
+- **Angehakt** setzt **CC BY 4.0**: Jeder darf es kopieren und ändern,
+  solange Sie genannt werden, und jeder Remix zeigt, dass er von Ihrem
+  stammt.
+- **Nicht angehakt** setzt **Alle Rechte vorbehalten**: Man kann darum
+  herumgehen, es aber nicht kopieren.
+
+Remixen ist das, wofür ForkBuild da ist, darum ist es zuerst
+eingeschaltet. **Weiterbauen** schließt das Blatt und veröffentlicht
+nichts.
 
 Ihre Antwort wird als Lizenz des Bauwerks gespeichert, Sie werden also nur
 einmal gefragt; ändern können Sie sie jederzeit in den

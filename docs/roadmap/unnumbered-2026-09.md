@@ -8881,3 +8881,43 @@ a player notices: not yet; this records the decisions and the order of work, and
 - Not done: none of the three product decisions is built yet; until they are, Publish asks its three questions in
   turn, the seasons turn every five hours or so, and the World's trees stay as they are. Nothing checks
   automatically that a commit has a roadmap entry; the pull request template asks instead.
+
+## A first Publish in one sheet (unnumbered, 2026-10-22)
+
+**The launch week's counts went from 3 first edits to no build published, and a first Publish asked three questions
+in turn**: *Let others remix it?* (whose **Not now** published nothing), *Who can find it?* and a name. The owner
+decided on 2026-10-22 (docs/Pillars.md, "Infrastructure, kept out of sight") that a first Publish is one sheet with
+remixing on; it is the first item of 1.6, "First publish", in docs/NowNextLater.md. Pillar served: building feels
+joyful (a newcomer gets from a finished build to a published one), and every build has a family tree (a build is
+remixable unless its builder says otherwise). How a player notices: one sheet, with a name already filled in, and
+one button. Which first step it should move: `/e/editor-edit` → `/e/publish-*`, where the launch week stopped.
+
+- **One sheet** (ui/components/PublishSheet.js, new; the rows, the defaults, the license each choice becomes and a
+  suggested name's number in core/publication/PublishSheet.js, new and pure): **Your name**, on a device with no
+  name yet, filled in with a suggestion (`publishSheet.suggestedName`, *Builder 427*) that has the focus, selected,
+  so typing replaces it; **Others may remix it**, ticked, for a build with no license (CC BY 4.0, or All Rights
+  Reserved unticked); **Everyone can find it**, ticked, before this device's first publish (or kept to its link
+  unticked). Each says what its choice means as it changes. One button, **Publish as …** (or **Publish**), keeps the
+  choices, makes the name with no passphrase, as the quick start always did, and publishes. **Keep building**,
+  Escape or a click outside closes it and keeps nothing. **Publish without a name** waits, folded, under
+  **Advanced**. Only what is still unknown is shown; with nothing unknown there is no sheet.
+- **ui/components/Toolbar.js**: the sheet replaces RemixPermissionDialog and FindabilityDialog (both removed) and the
+  name step for a device with no name. The checks before it (nothing of your own yet, look-alikes) are unchanged;
+  a name that is locked, or one of several to pick from, is still asked for afterwards (LoginModal), which still
+  offers **Publish unsigned** there.
+- Messages: eight new (`publishSheet.*`) in every language; the twelve only the two dialogs used are gone.
+  `remixPermission.allowDescription`, `.lookOnlyDescription`, `findability.everyoneDescription` and
+  `.linkDescription` stay, now on the sheet.
+- The user guide (01, 04 and the FAQ), in every language: the sheet instead of the three questions, and **Publish
+  without a name** under Advanced. 01's paragraph on recovering unsaved work, out of date in every translation
+  since 2026-10-21, is translated with it.
+- docs/Pillars.md and docs/NowNextLater.md say it is built; scripts/launch-clip.mjs films the sheet.
+- Tests: `PublishSheet` (new: the rows, only what is unknown and the name first; remixing and Everyone on; the
+  license each choice becomes; three-digit suggestions), `PublishSheetBrowser` (new, the real Toolbar: one dialog,
+  not three; the suggestion focused and published under; remix and Everyone kept; each choice changed in place, an
+  empty name refused; Keep building and Escape keep nothing; publishing with no name under Advanced; only the
+  unknown rows, and no sheet when nothing is unknown; it fits a phone), and the bundled-site test's four first
+  publishes go through the sheet.
+- Not done: the look-alike notice can still come before the sheet on a first publish (the review's finding 6). The
+  suggested name is a word and a number, not something warmer. The sheet hasn't met players yet: whether it moves
+  `/e/publish-*` shows in the counts after release.
