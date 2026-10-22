@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 79dd3fed265f1388 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: f21ab93ad9cd0c58 -->
 # 06 — Avatare & Anwesenheit
 
 <!-- languages -->
@@ -201,7 +201,10 @@ brauchen sie einen lokalen Avatar (Mein Avatar), um aktiv zu sein.
 - **Frei** ist die gewöhnliche Kreiskamera — der Standard der Weltansicht
   und das, wovon jede andere Kamerasteuerung in dieser Anleitung ausgeht.
 - **Ich-Perspektive** setzt die Kamera auf Augenhöhe Ihres Avatars, mit
-  Blick in seine Richtung.
+  Blick in seine Richtung. Ihr eigener Avatar wird dabei nicht gezeichnet,
+  damit sein Kopf, seine Brille oder sein Hut nie vor Ihren Augen sitzen;
+  andere sehen ihn weiterhin, und **Meinen Avatar zeigen** gilt wieder,
+  sobald Sie die Ich-Perspektive verlassen.
 - **Verfolgerperspektive** sitzt hinter und über Ihrem Avatar und blickt
   leicht nach unten — der klassische Blick „auf die eigene Figur“.
 - **Vogelperspektive** blickt von hoch oben senkrecht nach unten, folgt

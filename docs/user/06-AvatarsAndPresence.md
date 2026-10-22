@@ -180,7 +180,10 @@ enable.
 - **Free** is the ordinary orbit camera — World View's default, and what
   every other camera control in this guide assumes.
 - **First Person** puts the camera at your avatar's own eye height,
-  looking the direction it's facing.
+  looking the direction it's facing. Your own avatar isn't drawn while it's
+  on, so its head, glasses or hat never sit in front of your eyes; others
+  still see it, and **Show My Avatar** applies again when you leave First
+  Person.
 - **Third Person** sits behind and above your avatar, looking slightly
   down — the classic "see your own character" framing.
 - **Bird's-Eye** looks straight down from high overhead, following your

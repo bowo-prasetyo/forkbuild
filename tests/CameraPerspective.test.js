@@ -1,4 +1,4 @@
-import { CameraPerspective, isValidCameraPerspective, computeCameraFraming } from '../core/avatar/CameraPerspective.js';
+import { CameraPerspective, isValidCameraPerspective, computeCameraFraming, drawsOwnAvatar } from '../core/avatar/CameraPerspective.js';
 import { SpatialCameraController } from '../application/world/SpatialCameraController.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
@@ -405,6 +405,47 @@ async function runTests() {
             '44. FLAGSHIP: AvatarProfile is completely untouched by Camera Perspective');
         const documentKeysAfter = storage.list().filter((k) => k.startsWith('document:')).length;
         assert(documentKeysAfter === documentKeysBefore, '45. FLAGSHIP: no document is ever created by selecting or changing a Camera Perspective');
+    }
+
+    // -------------------------------------------------------------
+    // Section F — first person leaves your own avatar out: the camera is
+    // at its eyes, where its head, glasses and hat would sit in front of
+    // the lens, bobbing with each step
+    // -------------------------------------------------------------
+    {
+        assert(drawsOwnAvatar(null, true) && drawsOwnAvatar(CameraPerspective.THIRD_PERSON, true) && drawsOwnAvatar(CameraPerspective.BIRD_EYE, true),
+            '46. shown, your own avatar is drawn in every view but first person');
+        assert(!drawsOwnAvatar(CameraPerspective.FIRST_PERSON, true), '47. in first person it is left out');
+        assert(!drawsOwnAvatar(null, false) && !drawsOwnAvatar(CameraPerspective.THIRD_PERSON, false), '48. hidden by Show my avatar, it is never drawn');
+
+        const { avatarProfileUseCase, avatarPresenceSession } = buildAvatarStack(registry, 'camera-f1');
+        const session = new WorldNavigationSession({
+            registry: brickRegistry, loadPublicationDocumentUseCase: null, worldLayoutProvider: null,
+            avatarProfileUseCase, avatarPresenceSession
+        });
+        let drawn = null;
+        session._session = { ...stubCameraRenderer(), setLocalAvatarVisible(visible) { drawn = visible; } };
+        session._spatialCameraController = new SpatialCameraController(session._session);
+        session._setupLocalAvatar();
+        assert(drawn === true, '49. walking around, your own avatar is drawn');
+        session.setCameraPerspective(CameraPerspective.FIRST_PERSON);
+        assert(drawn === false, '50. switching to first person leaves it out');
+        assert(session.isLocalAvatarVisible() === true, '51. while Show my avatar stays as you set it');
+        avatarPresenceSession.update({ position: { x: 1, y: 0, z: 1 } });
+        assert(drawn === false, '52. and walking in first person keeps it out');
+        session.setCameraPerspective(CameraPerspective.THIRD_PERSON);
+        assert(drawn === true, '53. third person draws it again');
+        session.setLocalAvatarVisible(false);
+        session.setCameraPerspective(CameraPerspective.FIRST_PERSON);
+        session.setCameraPerspective(null);
+        assert(drawn === false, '54. leaving first person keeps it hidden when Show my avatar is off');
+        session.setCameraPerspective(CameraPerspective.FIRST_PERSON);
+        session.setLocalAvatarVisible(true);
+        assert(drawn === false && session.isLocalAvatarVisible() === true, '55. turning Show my avatar on in first person waits until you leave it');
+        session.setCameraPerspective(null);
+        assert(drawn === true, '56. and the free camera then draws it');
+        assert(JSON.stringify(Object.keys(avatarPresenceSession.current.toJSON()).sort()) === JSON.stringify(['animation', 'avatarId', 'ownerIdentity', 'position', 'rotation', 'sequence', 'timestamp']),
+            '57. nothing about it reaches presence: others still see your avatar');
     }
 
     console.log('✅ All Camera Perspective tests passed.');

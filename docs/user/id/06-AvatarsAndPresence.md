@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 79dd3fed265f1388 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: f21ab93ad9cd0c58 -->
 # 06 — Avatar & Kehadiran
 
 <!-- languages -->
@@ -200,7 +200,10 @@ memerlukan avatar lokal (Avatar Saya) agar aktif.
 - **Bebas** adalah kamera orbit biasa — bawaan Tampilan Dunia, dan yang
   diasumsikan oleh setiap kontrol kamera lain di panduan ini.
 - **Orang Pertama** menempatkan kamera setinggi mata avatar Anda sendiri,
-  melihat ke arah yang dihadapinya.
+  melihat ke arah yang dihadapinya. Selama aktif, avatar Anda sendiri tidak
+  digambar, jadi kepala, kacamata, atau topinya tidak pernah menghalangi
+  mata Anda; orang lain tetap melihatnya, dan **Tampilkan Avatar Saya**
+  berlaku lagi saat Anda keluar dari Orang Pertama.
 - **Orang Ketiga** berada di belakang dan di atas avatar Anda, sedikit
   melihat ke bawah — bingkai klasik "melihat karakter Anda sendiri".
 - **Pandangan Burung** melihat lurus ke bawah dari ketinggian, mengikuti
