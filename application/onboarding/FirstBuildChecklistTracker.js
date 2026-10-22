@@ -1,5 +1,6 @@
 import {
-    completeFirstBuildSteps, firstBuildStepsForEdit, FirstBuildStep, isFirstBuildComplete, normalizeFirstBuildProgress
+    bricksPlacedByEdit, completeFirstBuildSteps, firstBuildStepsForEdit, FirstBuildStep, isFirstBuildComplete, normalizeFirstBuildProgress,
+    OWN_BRICKS_NEEDED
 } from '../../core/challenge/FirstBuildChecklist.js';
 import { EDITOR_ACTIVITY } from '../../core/app/EditorSoundCues.js';
 
@@ -16,6 +17,9 @@ export class FirstBuildChecklistTracker {
         this._brickHeight = brickHeight;
         this._listeners = new Set();
         this._progress = store.get();
+        // Bricks placed one by one this visit, towards "Add something of
+        // your own".
+        this._placed = 0;
     }
 
     // A device that has never seen the guide but already saved or published
@@ -42,7 +46,10 @@ export class FirstBuildChecklistTracker {
         if (!editorSession || typeof editorSession.onCommandActivity !== 'function') return () => {};
         return editorSession.onCommandActivity((activity, command) => {
             if (activity !== EDITOR_ACTIVITY.EXECUTED) return;
-            this._complete(firstBuildStepsForEdit(command, this._brickHeight));
+            const steps = firstBuildStepsForEdit(command, this._brickHeight);
+            this._placed += bricksPlacedByEdit(command);
+            if (this._placed >= OWN_BRICKS_NEEDED) steps.push(FirstBuildStep.OWN);
+            this._complete(steps);
         });
     }
 

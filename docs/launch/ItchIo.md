@@ -70,7 +70,7 @@ won't see the page; answering "No" isn't an option.
 >
 > ForkBuild is a 3D building game that runs in your browser, on a computer or
 > a phone. Press **Try it now** and you get a little house with no roof:
-> put one on, make it your own, and walk inside it.
+> put one on, add a chimney, a path and a garden, and walk inside it.
 >
 > - **Fifty-nine bricks** that look like what they're made of: stone, timber,
 >   plaster, roof tiles, glass and leaves, in sixteen village colours.

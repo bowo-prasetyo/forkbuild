@@ -11,7 +11,9 @@ start: everything stays on your device until you choose to share it.
 **The short version:**
 
 1. On the **Home** screen, click **Try it now: start with a house**.
-2. Click **Pick the roof**, then click the house: the roof goes on.
+2. Finish the house in four short steps: click **Pick the roof**, then
+   click the house; then a chimney, a path to the door and a garden, each
+   with its own **Pick** button.
 3. Click **Publish**. One sheet opens with a name already suggested, and
    remixing and **Everyone can find it** already on: type your own name if
    you like, then click **Publish as …**.

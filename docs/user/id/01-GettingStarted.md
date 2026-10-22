@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 8aee537086ae6864 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: b77912c92f47f6cd -->
 # 01 — Memulai
 
 <!-- languages -->
@@ -13,7 +13,9 @@ sampai Anda memilih untuk membagikannya.
 **Versi singkatnya:**
 
 1. Di layar **Beranda**, klik **Coba sekarang: mulai dengan sebuah rumah**.
-2. Klik **Ambil atap**, lalu klik rumahnya: atapnya terpasang.
+2. Selesaikan rumah dalam empat langkah singkat: klik **Ambil atap**, lalu
+   klik rumahnya; lalu cerobong, jalan setapak ke pintu, dan taman, masing-
+   masing dengan tombol **Ambil** sendiri.
 3. Klik **Terbitkan**. Satu lembar terbuka dengan nama yang sudah
    disarankan, dan remix serta **Semua orang bisa menemukannya** sudah
    aktif: ketik nama Anda sendiri jika mau, lalu klik **Terbitkan sebagai

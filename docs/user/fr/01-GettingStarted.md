@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 8aee537086ae6864 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: b77912c92f47f6cd -->
 # 01 — Premiers pas
 
 <!-- languages -->
@@ -14,7 +14,9 @@ appareil jusqu’à ce que vous choisissiez de le partager.
 
 1. Sur l’écran d’**Accueil**, cliquez sur **Essayez maintenant : commencez
    par une maison**.
-2. Cliquez sur **Prendre le toit**, puis sur la maison : le toit se pose.
+2. Finissez la maison en quatre petites étapes : cliquez sur **Prendre le
+   toit**, puis sur la maison ; ensuite une cheminée, un chemin jusqu’à la
+   porte et un jardin, chacun avec son bouton **Prendre**.
 3. Cliquez sur **Publier**. Une seule fenêtre s’ouvre, avec un nom déjà
    proposé, et le remix et **Tout le monde peut la trouver** déjà activés :
    tapez votre propre nom si vous voulez, puis cliquez sur **Publier en tant

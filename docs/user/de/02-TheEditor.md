@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2bbc73bd617ba5be -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: b275d31fdacad544 -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -100,12 +100,28 @@ Schaltflächen zeigt, die noch nichts tun können:
 
 **Jetzt ausprobieren** auf **Start** öffnet ein eigenes Haus, das noch
 nicht fertig ist: Seine Wände stehen und sein Raum ist eingerichtet, aber
-es hat kein Dach. Eine Karte **Ihre Aufgabe: ein Dach** oben bei den
-Werkzeugen sagt das. Klicken Sie auf **Dach wählen** (es wählt
-**Walmdach 6x6** und wechselt zu Platzieren) und dann irgendwo auf das
-Haus: Das Dach kommt oben auf die Wände. Danach sagt die Karte, dass das
-Haus jetzt Ihnen gehört, mit **Veröffentlichen** (dasselbe Veröffentlichen
-wie in der Werkzeugleiste) und **Weiterbauen**, das die Karte wegräumt.
+es hat kein Dach. Eine Karte oben bei den Werkzeugen gibt Ihnen die
+Aufgabe, einen Schritt nach dem anderen (**Schritt 1 von 4**), jeder mit
+einer Schaltfläche, die den passenden Stein wählt und zu Platzieren
+wechselt:
+
+1. **Ein Dach**: Klicken Sie auf **Dach wählen** (**Walmdach 6x6**) und
+   dann irgendwo auf das Haus: Das Dach kommt oben auf die Wände.
+2. **Ein Schornstein**: Klicken Sie auf **Schornstein wählen** und dann
+   irgendwo auf das Haus: Er kommt über dem Herd durchs Dach.
+3. **Ein Weg zur Tür**: Klicken Sie auf **Stein wählen** und dann viermal
+   irgendwo auf das Haus: Die Steine reihen sich von der Türschwelle aus auf.
+4. **Ein Garten**: Klicken Sie auf **Busch wählen** und stellen Sie vier
+   Dinge ums Haus, wohin Sie möchten. Büsche, ein Zaun, ein Rasen, ein
+   Felsen, ein Baum oder eine Laterne aus der Baubibliothek zählen alle.
+
+Jeder Schritt zählt die Steine, die Sie hinzufügen, in beliebiger
+Reihenfolge, und Rückgängig geht einen Schritt zurück. Solange die Aufgabe
+offen ist, wartet die Karte **Ihr erstes Bauwerk** eingeklappt, damit es
+immer nur eine Anleitung gibt. Sind alle vier Schritte erledigt, sagt die
+Karte, dass das Haus jetzt Ihnen gehört, mit **Veröffentlichen** (dasselbe
+Veröffentlichen wie in der Werkzeugleiste, das Sie auch jederzeit nutzen
+können) und **Weiterbauen**, das die Karte wegräumt.
 
 Jedes andere fertige Bauwerk (die Karten auf **Start**, die Ideen einer
 Challenge oder eines, das Sie unter **Neu** im Editor wählen) öffnet
@@ -120,13 +136,13 @@ eingeklappt sind.
 
 Wenn Sie den Editor auf einem Gerät zum ersten Mal öffnen, steht unten
 links in der 3D-Ansicht eine Karte **Ihr erstes Bauwerk** (auf einem Telefon
-beginnt sie eingeklappt als kleine Schaltfläche **Erstes Bauwerk · 0/6** oben links).
+beginnt sie eingeklappt als kleine Schaltfläche **Erstes Bauwerk · 0/6** oben links, und solange ein Haus aus **Jetzt ausprobieren** seine Aufgabe offen hat, wartet sie ebenfalls eingeklappt).
 Sie listet sechs Schritte auf und zeigt einen Hinweis zum nächsten:
 
 1. **Einen Stein platzieren**
 2. **Einen auf einen anderen setzen**: einen Stein auf einen anderen setzen.
-3. **Eine Struktur einsetzen**: eine Struktur aus dem Reiter **Strukturen**
-   der Baubibliothek platzieren.
+3. **Etwas Eigenes hinzufügen**: Setzen Sie fünf eigene Steine, einen nach
+   dem anderen. Eine aus der Baubibliothek eingesetzte Struktur zählt nicht.
 4. **Ihr Bauwerk speichern**
 5. **Veröffentlichen und einen Link teilen**: veröffentlichen, dann **Link
    kopieren** oder **Teilen …**.

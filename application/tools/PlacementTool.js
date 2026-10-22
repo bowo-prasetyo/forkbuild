@@ -220,8 +220,9 @@ export class PlacementTool extends Tool {
     }
 
     // EditorContext.placementGuide: the brick it names goes to its spot while
-    // the pointer is over the build near it (a brick hit counts by the
-    // brick's own position, so a click on a wall of the house counts).
+    // the pointer is over the build near it, or near the guide's `around`
+    // when it names one (a brick hit counts by the brick's own position, so
+    // a click on a wall of the house counts).
     _guided(definitionId, position, pointerEvent) {
         const guide = this.context.editorContext.placementGuide;
         if (!guide || guide.definitionId !== definitionId || !position) return position;
@@ -230,7 +231,8 @@ export class PlacementTool extends Tool {
             const building = this.context.world.getBuilding(pointerEvent.pickedBrick.buildingId);
             near = building?.findBrick(pointerEvent.pickedBrick.brickId)?.position || near;
         }
-        if (!near || Math.hypot(near.x - guide.position.x, near.z - guide.position.z) > (guide.radius ?? 0)) return position;
+        const around = guide.around ?? guide.position;
+        if (!near || Math.hypot(near.x - around.x, near.z - around.z) > (guide.radius ?? 0)) return position;
         return new Position(guide.position.x, guide.position.y, guide.position.z);
     }
 

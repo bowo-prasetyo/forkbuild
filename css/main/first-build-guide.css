@@ -255,6 +255,44 @@
     line-height: 1.4;
 }
 
+/* A job's steps: a dot for each, filled once done, and which this is. */
+.starter-job-progress {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0 0 0.35rem;
+    font-size: 0.75rem;
+    color: var(--ink-muted);
+}
+
+.starter-job-dots {
+    display: inline-flex;
+    gap: 0.25rem;
+}
+
+.starter-job-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border: 1px solid var(--accent);
+    border-radius: 50%;
+}
+
+.starter-job-dot--done {
+    background: var(--accent);
+}
+
+.starter-job-dot--current {
+    box-shadow: 0 0 0 2px var(--tint-green);
+}
+
+/* How many of a step's bricks are in: "2 of 4 stones". */
+.starter-job-count {
+    margin: -0.2rem 0 0.5rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--ink-strong);
+}
+
 .starter-job-actions {
     display: flex;
     flex-wrap: wrap;
@@ -262,13 +300,15 @@
 }
 
 /* On a phone the sidebar is a closed drawer, so the card sits over the 3D
-   view instead, above the touch bar. */
+   view instead, above the touch bar, and over the sound control
+   (.world-view-sound, z-index 20), which a touch screen raises to the same
+   height: while the card teaches, its words come first. */
 .starter-job--floating {
     position: absolute;
     left: 0.5rem;
     right: 0.5rem;
     bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
-    z-index: 18;
+    z-index: 21;
     margin: 0;
     background-color: rgba(var(--overlay-rgb), 0.97);
     background-image: linear-gradient(rgba(255, 193, 7, 0.08), rgba(255, 193, 7, 0.08));

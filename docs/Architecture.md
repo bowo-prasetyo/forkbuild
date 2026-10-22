@@ -241,14 +241,20 @@ docs/CapabilityMatrix.md for exactly what each surface may do.
   - Save failures (0.9.653): both Save entry points catch errors and show
     SAVE_FAILURE_MESSAGE. The sidebar scrolls inside `.sidebar-scroll`.
   - The guided first build: core/challenge/FirstBuildChecklist.js decides which
-    of five steps an edit completes (from describeCommand(), which now
+    steps an edit completes (from describeCommand(), which now
     carries a placed brick's definition and position, so a brick off the
-    ground is a stack); FirstBuildChecklistTracker
+    ground is a stack) and how many bricks it places one by one, five of
+    which add something of your own; FirstBuildChecklistTracker
     (application/onboarding/) follows EditorSession#onCommandActivity(), a
     save and a shared link, and keeps progress in FirstBuildChecklistStore
     (`first-build-guide`). ui/components/FirstBuildGuide.js shows it over
     the viewport; the `ui.firstBuildGuide` action brings it back. A device
-    with saved documents starts with it hidden.
+    with saved documents starts with it hidden. It folds (`quiet`) while a
+    starter job is open: core/challenge/StarterJob.js's chain of steps for
+    Home's House (roof, chimney, path, garden), whose progress
+    (`starterJobProgress()`) counts each step's bricks beyond those the job
+    opened with, and whose current step's next brick EditorView hands Place
+    as EditorContext's placement guide (`starterStepGuide()`).
   - Publishing asks for an identity first: Toolbar's Publish opens
     LoginModal with `purpose="publish"` when no identity is logged in and
     unlocked, then publishes on `signed-in` (or unsigned on `skip`).

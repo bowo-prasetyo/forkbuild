@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2bbc73bd617ba5be -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: b275d31fdacad544 -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -100,13 +100,30 @@ jamais de boutons qui ne peuvent encore rien faire :
 ## Essayez maintenant : une maison à finir
 
 **Essayez maintenant**, sur l’**Accueil**, ouvre une maison à vous qui n’est
-pas finie : ses murs sont montés et sa pièce est meublée, mais elle n’a pas
-de toit. Une carte **Votre mission : un toit** en haut des outils vous le
-dit. Cliquez sur **Prendre le toit** (il choisit **Toit en croupe 6x6** et
-passe en Placement), puis n’importe où sur la maison : le toit se pose sur
-les murs. La carte dit alors que la maison est à vous, avec **La publier** (le
-même Publier que celui de la barre d’outils) et **Continuer à construire**,
-qui range la carte.
+pas finie : ses murs sont montés et sa pièce est meublée, mais elle n’a pas
+de toit. Une carte en haut des outils vous donne la mission, une étape à la
+fois (**Étape 1 sur 4**), chacune avec un bouton qui choisit la brique
+voulue et passe en Placement :
+
+1. **Un toit** : cliquez sur **Prendre le toit** (**Toit en croupe 6x6**),
+   puis n’importe où sur la maison : le toit se pose sur les murs.
+2. **Une cheminée** : cliquez sur **Prendre la cheminée**, puis n’importe où
+   sur la maison : elle traverse le toit au-dessus du foyer.
+3. **Un chemin jusqu’à la porte** : cliquez sur **Prendre une pierre**, puis
+   quatre fois n’importe où sur la maison : les pierres s’alignent depuis le
+   seuil.
+4. **Un jardin** : cliquez sur **Prendre un buisson**, puis mettez quatre
+   choses autour de la maison, où vous voulez. Des buissons, une clôture,
+   une pelouse, un rocher, un arbre ou une lanterne de la Bibliothèque de
+   construction comptent tous.
+
+Chaque étape compte les briques que vous ajoutez, dans n’importe quel
+ordre, et annuler revient d’une étape. Tant que la mission est ouverte, la
+carte **Votre première construction** attend repliée, pour qu’il n’y ait
+qu’une consigne à la fois. Une fois les quatre étapes faites, la carte dit
+que la maison est à vous, avec **La publier** (le même Publier que celui de
+la barre d’outils, que vous pouvez aussi utiliser à tout moment) et
+**Continuer à construire**, qui range la carte.
 
 Toute autre construction toute prête (les cartes de l’**Accueil**, les idées
 d’un défi, ou celle choisie sous **Nouveau** dans l’Éditeur) s’ouvre plutôt
@@ -121,13 +138,14 @@ vue 3D, au-dessus des boutons tactiles, car les outils y sont repliés.
 La première fois que vous ouvrez l’Éditeur sur un appareil, une carte
 **Votre première construction** apparaît dans le coin inférieur gauche de
 la vue 3D (sur un téléphone, elle commence repliée en un petit bouton
-**Première construction · 0/6** en haut à gauche). Elle liste six
+**Première construction · 0/6** en haut à gauche, et tant qu’une maison d’**Essayez maintenant** a sa mission ouverte, elle attend repliée aussi). Elle liste six
 étapes et donne une indication pour la suivante :
 
 1. **Placer une brique**
 2. **En empiler une sur une autre** : placez une brique sur une autre.
-3. **Ajouter une structure** : placez une structure de l’onglet
-   **Structures** de la Bibliothèque de construction.
+3. **Ajouter quelque chose à vous** : posez cinq briques à vous, une à une.
+   Une structure ajoutée depuis la Bibliothèque de construction ne compte
+   pas.
 4. **Enregistrer votre construction**
 5. **Publier et partager un lien** : publiez, puis **Copier le lien** ou
    **Partager…**.

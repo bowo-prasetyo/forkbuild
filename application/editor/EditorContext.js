@@ -80,9 +80,10 @@ export class EditorContext {
     }
 
     // Where one brick is meant to go (a starter job's roof, core/challenge/StarterJob.js):
-    // `{ definitionId, position, radius }`, or null. While that brick is the
-    // one being placed, PlacementTool puts its ghost there whenever the
-    // pointer is within `radius` of it. Transient, like everything here.
+    // `{ definitionId, position, radius, around }`, or null. While that brick
+    // is the one being placed, PlacementTool puts its ghost there whenever
+    // the pointer is within `radius` of `around` (or of the spot itself).
+    // Transient, like everything here.
     get placementGuide() {
         return this._placementGuide;
     }

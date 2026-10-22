@@ -18,16 +18,16 @@ await new Promise((resolve, reject) => {
     document.head.appendChild(link);
 });
 
-function mount(stage, floating = false) {
+function mount(stage, floating = false, step = null) {
     const events = [];
     const host = document.createElement('div');
     host.style.cssText = 'position: relative; width: 390px; height: 700px;';
     document.body.appendChild(host);
-    const state = reactive({ stage, floating });
+    const state = reactive({ stage, floating, step });
     const app = createApp({
         components: { StarterJobCard },
         setup: () => ({ state, events }),
-        template: `<StarterJobCard :stage="state.stage" :floating="state.floating" @pick="events.push('pick')" @publish="events.push('publish')" @hide="events.push('hide')" />`
+        template: `<StarterJobCard :stage="state.stage" :floating="state.floating" :step="state.step" @pick="events.push('pick')" @publish="events.push('publish')" @hide="events.push('hide')" />`
     });
     app.mount(host);
     return { host, events, state, unmount: () => { app.unmount(); host.remove(); } };
@@ -37,10 +37,28 @@ const text = (host, selector) => host.querySelector(selector)?.textContent.trim(
 
 // Each stage: what it says and the button it offers.
 {
-    const { host, events, state, unmount } = mount(StarterCardStage.JOB);
+    const { host, events, state, unmount } = mount(StarterCardStage.JOB, false, { id: 'roof', index: 0, total: 4, placed: 0, needed: 1 });
     await nextTick();
     assert(text(host, '.starter-job-title') === t('starterJob.roofTitle') && text(host, '.starter-job-pick') === t('starterJob.roofPick'), 'the roof job, with Pick the roof');
+    assert(text(host, '.starter-job-progress') === t('starterJob.step', { step: 1, total: 4 }), 'step 1 of 4');
+    assert(host.querySelectorAll('.starter-job-dot').length === 4 && host.querySelectorAll('.starter-job-dot--done').length === 0
+        && host.querySelectorAll('.starter-job-dot--current').length === 1, 'a dot for each step, the first the current one');
+    assert(!host.querySelector('.starter-job-count'), 'a one-brick step has no count');
     host.querySelector('.starter-job-pick').click();
+
+    state.step = { id: 'path', index: 2, total: 4, placed: 1, needed: 4 };
+    await nextTick();
+    assert(text(host, '.starter-job-title') === t('starterJob.pathTitle') && text(host, '.starter-job-pick') === t('starterJob.pathPick'), 'the path, with Pick a stone');
+    assert(text(host, '.starter-job-count') === t('starterJob.pathCount', { placed: 1, needed: 4 }), 'and how many stones are in');
+    assert(host.querySelectorAll('.starter-job-dot--done').length === 2, 'the roof and the chimney done');
+    for (const id of ['chimney', 'garden']) {
+        state.step = { id, index: 1, total: 4, placed: 0, needed: id === 'garden' ? 4 : 1 };
+        await nextTick();
+        assert(text(host, '.starter-job-title') === t(`starterJob.${id}Title`) && text(host, '.starter-job-pick') === t(`starterJob.${id}Pick`), `the ${id} step reads`);
+    }
+    assert(text(host, '.starter-job-count') === t('starterJob.gardenCount', { placed: 0, needed: 4 }), 'the garden counts too');
+    host.querySelector('.starter-job-pick').click();
+    state.step = null;
 
     state.stage = StarterCardStage.FIRST_EDIT;
     await nextTick();
@@ -56,9 +74,9 @@ const text = (host, selector) => host.querySelector(selector)?.textContent.trim(
     assert(text(host, '.starter-job-publish') === t('starterJob.publish') && host.querySelector('.starter-job-publish').classList.contains('action-btn--primary'), 'Publish it is the main button');
     host.querySelector('.starter-job-publish').click();
     host.querySelector('.starter-job-later').click();
-    assert(events.join() === 'pick,pick,publish,hide', `each button says what was chosen (${events.join()})`);
+    assert(events.join() === 'pick,pick,pick,publish,hide', `each button says what was chosen (${events.join()})`);
     unmount();
-    console.log('✓ the roof job, a first brick of their own, then Publish it or Keep building');
+    console.log('✓ the job one step at a time, a first brick of their own, then Publish it or Keep building');
 }
 
 // In the sidebar it sits in the flow; floating, it is over the 3D view's

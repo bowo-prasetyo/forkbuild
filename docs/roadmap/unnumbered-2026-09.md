@@ -8921,3 +8921,55 @@ one button. Which first step it should move: `/e/editor-edit` → `/e/publish-*`
 - Not done: the look-alike notice can still come before the sheet on a first publish (the review's finding 6). The
   suggested name is a word and a number, not something warmer. The sheet hasn't met players yet: whether it moves
   `/e/publish-*` shows in the counts after release.
+
+## Try it now's job in four steps (unnumbered, 2026-10-22)
+
+**One click finished Try it now's job, so a newcomer's first build held one brick of their own**, against a median
+target of ten; the first-build guide then asked them to drop in a structure, which the building numbers leave out;
+and two tutors spoke at once on a desktop (docs/reviews/CreativeDirection-2026-10-22.md, finding 1). The second item
+of 1.6, "First publish", in docs/NowNextLater.md. Pillar served: building feels joyful (a newcomer finishes a first
+build they're proud of, and most of it is theirs). How a player notices: the card walks them through a roof, a
+chimney, a path and a garden, one step at a time, and the guide waits until it's done. Which target it should move:
+the median of `/e/publish-placed-…` (10 or more), from the 1 a finished roof gave.
+
+- **A chain of four steps** (core/challenge/StarterJob.js): the job (still `job=roof`, so Home's link is unchanged)
+  holds `steps`, each with the brick its button picks (and a colour: the path's stones in the doorstep's grey), the
+  bricks that count towards it, how many, and where they go. **Give it a roof** (1, where the finished House has
+  it), **a chimney** (1, likewise, through the roof above the hearth), **a path to the door** (4 stones, laid in turn
+  from the doorstep outwards) and **a garden** (4 of bush, fence, lawn, rock, tree or lantern, anywhere): ten bricks
+  of the builder's own. `starterJobProgress()` counts each step's bricks beyond those the job opened with (so the
+  doorstep is no stone of the path), never past what it needs, each step on its own (a garden planted first still
+  counts; an undo takes a step back); `starterStepGuide()` says where the current step's next brick goes.
+  `starterJobGuide()` gave way to it.
+- **Anywhere on the house** (application/tools/PlacementTool.js, EditorContext's placement guide): a guide may name
+  `around`, the point its radius is measured from, rather than its own spot. The job's steps are measured from the
+  House's middle (8), so a tap that lands on the chimney still lays the path's last stone by the door: measured from
+  each stone, as the roof's guide was, the fourth missed and stood on the roof, which playing it on a phone showed.
+- **On a phone** the floating card stands over the sound control (z-index 21, css/main/first-build-guide.css), which
+  a touch screen raises to the card's height and which covered its words.
+- **The card** (ui/components/StarterJobCard.js) shows the current step: **Step 2 of 4** with a dot for each step,
+  its title and text, how many are in for the path and the garden (*2 of 4 stones laid*), and its **Pick** button;
+  **It's yours now!** comes after the fourth, its text no longer listing the chain's own steps.
+- **One tutor at a time** (ui/views/EditorView.js): the placement guide follows the current step as bricks go in;
+  the toast that repeated the job when the House opened is gone; the first-build guide (ui/components/
+  FirstBuildGuide.js, new `quiet`) folds to its small button while the job is open, and opens again as it started
+  once it's done (its button still opens it on request).
+- **The guide's third step is "Add something of your own"** (core/challenge/FirstBuildChecklist.js, `OWN`): five bricks
+  placed one by one this visit (`bricksPlacedByEdit()`, counted by FirstBuildChecklistTracker); a structure dropped
+  in or pasted no longer ticks it. A device whose saved progress had "Drop in a structure" keeps the step done.
+- Messages: 15 new (`starterJob.step`, each step's title, text, button and count; `firstBuild.step.own`,
+  `firstBuild.hint.own`) and `starterJob.doneText` changed, in every language; `starterJob.started` and the two
+  "Drop in a structure" messages are gone.
+- The user guide, in every language: chapter 01's short version and chapter 02's "Try it now" list the four steps;
+  "Your first build" names the new third step and says the card waits folded while a job is open.
+  scripts/launch-clip.mjs films the whole job.
+- Tests: `StarterJob` (the chain with the real placement tool: the roof and the chimney where the House has them,
+  four stones in a line from the doorstep in its grey, half of them tapped on the chimney (which failed before
+  `around`), four bushes where they were put, ten bricks of the builder's
+  own, an undo taking a step back; what counts towards a step), `FirstBuildChecklist` (structures and pastes place
+  none of the builder's own; five bricks tick the third step, undo and redo none; old progress kept),
+  `StarterJobCardBrowser` (each step, its dots and count), `FirstBuildGuideBrowser` (quiet while a job is open, open
+  again after; the new third step), and the bundled-site test does the whole job with real clicks.
+- Not done: only the House has a job; the other ready-made builds still ask for one first brick of the builder's own
+  (a tree). Whether ten bricks is the right length for a first job shows in `/e/publish-placed-…` against
+  `/e/publish-*` after release: a longer job could cost publishes. The step's finishing has no sound of its own.
