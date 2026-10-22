@@ -1116,9 +1116,14 @@ export default {
             ? identityUseCase.onUserChanged(() => { currentIdentityId.value = signedInIdentityId(); })
             : null;
         onBeforeUnmount(() => { if (typeof unwatchIdentity === 'function') unwatchIdentity(); });
+        // Yours when you signed one of its publications (as OwnPublicationPanel
+        // decides), or claimed it to build together.
         const isOwnBuild = computed(() => {
-            const author = activeDocumentInfo.value?.authorIdentityId;
-            return Boolean(author) && author === currentIdentityId.value;
+            const info = activeDocumentInfo.value;
+            const me = currentIdentityId.value;
+            if (!info || !me) return false;
+            if (info.authorIdentityId === me) return true;
+            return allPublications.value.some((publication) => publication.documentId === info.documentId && publication.publisherIdentity?.id === me);
         });
 
         // Edit a Copy of the build this World is, when it isn't yours to change.
