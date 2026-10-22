@@ -114,3 +114,11 @@ export function computeCameraFraming(perspective, avatarPosition, headingDegrees
             return null;
     }
 }
+
+// Whether your own avatar is drawn: as Show my avatar says, except in
+// first person, where the camera is at its eyes and its head, glasses and
+// hat would sit in front of the lens, bobbing with every step. Others still
+// see it; only what this screen draws changes.
+export function drawsOwnAvatar(perspective, shown) {
+    return Boolean(shown) && perspective !== CameraPerspective.FIRST_PERSON;
+}

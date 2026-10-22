@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 79dd3fed265f1388 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: f21ab93ad9cd0c58 -->
 # 06 — Avatares e presença
 
 <!-- languages -->
@@ -189,7 +189,10 @@ avatar) para ficar habilitados.
 - **Livre** é a câmera orbital comum — o padrão da Visão do mundo, e o que
   todos os outros controles de câmera deste guia pressupõem.
 - **Primeira pessoa** põe a câmera na altura dos olhos do seu avatar,
-  olhando para onde ele está virado.
+  olhando para onde ele está virado. Enquanto ela está ativa, o seu próprio
+  avatar não é desenhado, para que a cabeça, os óculos ou o chapéu dele
+  nunca fiquem na frente dos seus olhos; os outros continuam vendo, e
+  **Mostrar meu avatar** volta a valer quando você sai da Primeira pessoa.
 - **Terceira pessoa** fica atrás e acima do seu avatar, olhando um pouco
   para baixo — o enquadramento clássico de "ver o próprio personagem".
 - **Vista aérea** olha direto para baixo, do alto, acompanhando a posição do

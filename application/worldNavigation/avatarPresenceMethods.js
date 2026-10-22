@@ -534,6 +534,8 @@ export const avatarPresenceMethods = {
             return false;
         }
         this._cameraPerspective = perspective;
+        // First person leaves your own avatar out, so its head isn't in front of the lens.
+        this._drawLocalAvatar();
         if (perspective && this._avatarPresenceSession) {
             const presence = this._avatarPresenceSession.current;
             this._applyCameraPerspectiveFraming(presence.position, presence.rotation ? presence.rotation.y : null);

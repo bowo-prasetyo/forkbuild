@@ -9058,3 +9058,22 @@ button: a remix of themselves, with a "Remixed from" credit to their own name.
   it.
 - Not done: on another device, your own build can't be changed until it is opened on the device it was built on;
   opening the published build in the Editor as your own, from its link, would close that.
+
+## First person without your own glasses in view (unnumbered, 2026-10-22)
+
+**A black bar bobbing across the first-person view** (the owner's report). Pillar served: walking inside what you
+built. First Person puts the camera at your avatar's eyes (core/avatar/CameraPerspective.js), and World View still
+drew your avatar there. The head and hair are drawn so they can't be seen from inside, but the glasses are a thin,
+almost black box 26 cm ahead of the eye and 2 cm below it (renderer/AvatarRenderer.js); each step lifts the avatar up
+to 5 cm (core/avatar/AvatarPoseOffsets.js) while the camera holds its height, so the glasses rose across the eye line
+and fell back with every stride. A hat could show the same kind of edge.
+
+- **Your own avatar isn't drawn in first person**, as first-person games do (core/avatar/CameraPerspective.js,
+  `drawsOwnAvatar`; application/worldNavigation/localAvatarMethods.js, `_drawLocalAvatar`). What is drawn follows
+  **Show My Avatar** and the camera perspective together: switching to First Person leaves it out, leaving First
+  Person draws it again if **Show My Avatar** is on, and the setting itself never changes. Nothing reaches presence:
+  others still see your avatar.
+- The user guide's Camera Perspective (06-AvatarsAndPresence) says so, in all eight languages.
+- Tests: tests/CameraPerspective.test.js checks the rule, and that a session leaves your avatar out in first person,
+  while walking too, draws it again in third person and the free camera, keeps **Show My Avatar** as set, and sends
+  nothing new in presence.

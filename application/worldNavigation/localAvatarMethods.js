@@ -21,6 +21,7 @@ import { isLakeAt } from '../../core/nature/Hydrology.js';
 import { isLakeFrozenAt } from '../../core/nature/Season.js';
 import { VehicleWaterConstraint } from '../avatar/VehicleWaterConstraint.js';
 import { AvatarSwimMode } from '../../core/avatar/AvatarSwimming.js';
+import { drawsOwnAvatar } from '../../core/avatar/CameraPerspective.js';
 import { AvatarWildlifeConstraint } from '../avatar/AvatarWildlifeConstraint.js';
 import { ANIMAL_INTERACTION_RADIUS } from '../../core/avatar/AvatarAnimalCatchTarget.js';
 import { AvatarVehicleBrakingIntent, deriveAvatarVehicleBrakingIntent } from '../../core/vehicles/AvatarVehicleBrakingIntent.js';
@@ -96,7 +97,7 @@ export const localAvatarMethods = {
         this._session.setLocalAvatar(template, appearance, this._avatarPresenceSession.current, {
             ridingVehicle: this._isRidingMovableVehicle()
         });
-        this._session.setLocalAvatarVisible(this._localAvatarVisible);
+        this._drawLocalAvatar();
 
         this._avatarProfileSubscription = this._avatarProfileUseCase.onProfileChanged((profile) => {
             const effective = this._avatarProfileUseCase.getEffectiveAvatar();
@@ -998,8 +999,15 @@ export const localAvatarMethods = {
     // visual toggle in this codebase.
     setLocalAvatarVisible(visible) {
         this._localAvatarVisible = visible;
+        this._drawLocalAvatar();
+    },
+
+    // Draws your own avatar or leaves it out, from Show my avatar and the
+    // camera perspective (core/avatar/CameraPerspective.js#drawsOwnAvatar()):
+    // never in first person. isLocalAvatarVisible() stays the preference.
+    _drawLocalAvatar() {
         if (this._session && typeof this._session.setLocalAvatarVisible === 'function') {
-            this._session.setLocalAvatarVisible(visible);
+            this._session.setLocalAvatarVisible(drawsOwnAvatar(this._cameraPerspective, this._localAvatarVisible));
         }
     },
 };

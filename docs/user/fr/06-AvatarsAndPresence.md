@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 79dd3fed265f1388 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: f21ab93ad9cd0c58 -->
 # 06 — Avatars et présence
 
 <!-- languages -->
@@ -208,7 +208,11 @@ actifs.
   du Monde, et celle que supposent toutes les autres commandes de caméra
   de ce guide.
 - **Première personne** place la caméra à hauteur des yeux de votre
-  avatar, regardant dans la direction où il est tourné.
+  avatar, regardant dans la direction où il est tourné. Votre propre avatar
+  n’est alors pas dessiné, pour que sa tête, ses lunettes ou son chapeau ne
+  se trouvent jamais devant vos yeux ; les autres le voient toujours, et
+  **Afficher mon avatar** s’applique de nouveau quand vous quittez la
+  Première personne.
 - **Troisième personne** se place derrière et au-dessus de votre avatar,
   en regardant légèrement vers le bas — le cadrage classique « voir son
   propre personnage ».

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 79dd3fed265f1388 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: f21ab93ad9cd0c58 -->
 # 06 — Avatares y presencia
 
 <!-- languages -->
@@ -195,7 +195,10 @@ volarla usted mismo. Igual que Seguir avatar, requieren un avatar local
   mundo, y la que suponen todos los demás controles de cámara de esta
   guía.
 - **Primera persona** pone la cámara a la altura de los ojos de su avatar,
-  mirando hacia donde mira él.
+  mirando hacia donde mira él. Mientras está activa, su propio avatar no se
+  dibuja, para que su cabeza, sus gafas o su sombrero nunca queden delante
+  de sus ojos; los demás lo siguen viendo, y **Mostrar mi avatar** vuelve a
+  aplicarse al salir de Primera persona.
 - **Tercera persona** se ubica detrás y por encima de su avatar, mirando un
   poco hacia abajo: el clásico encuadre de “ver a su propio personaje”.
 - **Vista de pájaro** mira directamente hacia abajo desde muy arriba,
