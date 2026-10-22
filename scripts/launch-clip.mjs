@@ -149,15 +149,13 @@ try {
 
     await caption(page, 'Publish it');
     await keep(() => press(page, '.starter-job-publish'), 1.2);
-    await only('.remix-permission-allow')(page);
-    await keep(() => press(page, '.remix-permission-allow', { pause: 600 }), 1.3);
-    await only('.findability-link')(page);
-    await keep(() => press(page, '.findability-link', { pause: 600 }), 1.3);
-    await only('.login-modal-quick-name')(page);
+    // One sheet: remixing and Everyone already on; only the name is typed.
+    await only('.publish-sheet-name')(page);
     await keep(async () => {
-        await press(page, '.login-modal-quick-name', { pause: 200 });
+        await press(page, '.publish-sheet-name', { pause: 200 });
+        await page.keyboard.press('Control+A');
         await page.keyboard.type('Robin', { delay: 110 });
-        await press(page, '.login-modal-quick-go');
+        await press(page, '.publish-sheet-publish');
     }, 2.4);
     await only('.editor-post-publish-walk')(page);
     await page.waitForTimeout(800);

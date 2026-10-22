@@ -29,8 +29,8 @@ My Identities and Your Data.
 
 ### I published my build, but my friend can't find it in Explore
 
-Unless you chose **Everyone** when Publish asked
-[Who can find it?](04-PublishingAndForking.md#who-can-find-it), publishing
+Unless you left **Everyone can find it** ticked when you first published
+(see [Who can find it?](04-PublishingAndForking.md#who-can-find-it)), publishing
 only stores the build on your own device and lists it in *your* Explore.
 To get it to your friend:
 
@@ -53,9 +53,9 @@ See [Publishing & Remixing](04-PublishingAndForking.md#sharing-with-connected-pe
 
 ### How do I make my work available to everyone?
 
-Choose **Everyone** when Publish asks
-[Who can find it?](04-PublishingAndForking.md#who-can-find-it) (or click
-**Let everyone find it** after publishing). Each build you publish is then
+Leave **Everyone can find it** ticked when you first publish (see
+[Who can find it?](04-PublishingAndForking.md#who-can-find-it)), or click
+**Let everyone find it** after publishing. Each build you publish is then
 sent to everyone and appears in **Explore**, the weekly challenge and the
 World, with nothing to install.
 
@@ -85,9 +85,10 @@ so builds you already published keep the license they had. See
 
 ### Do I need a name to publish?
 
-Yes, in practice. Publish asks you to choose one, which takes a few
-seconds and needs no account. **Publish unsigned** in that dialog publishes
-with no name, but the result has no author and no signature, so it gets no
+Yes, in practice. Publish's sheet suggests one, which you can keep or
+type over, and needs no account. **Publish without a name**, under
+**Advanced** on that sheet, publishes with no name, but the result has no
+author and no signature, so it gets no
 link, and you can't share it with peers or send it to everyone later. See
 [Choosing a name](01-GettingStarted.md#choosing-a-name).
 

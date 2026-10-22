@@ -1,13 +1,9 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 170440c7f3266fb3 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 8aee537086ae6864 -->
 # 01 — Erste Schritte
 
 <!-- languages -->
 [English](../01-GettingStarted.md) · **Deutsch** · [Español](../es/01-GettingStarted.md) · [Français](../fr/01-GettingStarted.md) · [Bahasa Indonesia](../id/01-GettingStarted.md) · [日本語](../ja/01-GettingStarted.md) · [한국어](../ko/01-GettingStarted.md) · [Português (Brasil)](../pt-BR/01-GettingStarted.md)
 <!-- /languages -->
-
-<!-- stale -->
-> **Hinweis:** Die englische Fassung dieser Seite wurde seit der Übersetzung geändert, daher ist diese Übersetzung möglicherweise nicht mehr aktuell. Siehe die [englische Fassung](../01-GettingStarted.md).
-<!-- /stale -->
 
 Willkommen! Diese Anleitung bringt Sie in etwa fünf Minuten von „gerade die
 App geöffnet“ zu „ich habe etwas gebaut“. Sie brauchen kein Konto, keinen
@@ -19,9 +15,10 @@ Sie es teilen.
 1. Klicken Sie auf der Seite **Start** auf **Jetzt ausprobieren: mit einem
    Haus beginnen**.
 2. Klicken Sie auf **Dach wählen** und dann auf das Haus: Das Dach sitzt.
-3. Klicken Sie auf **Veröffentlichen** und beantworten Sie die Fragen: einen
-   Namen, unter dem Sie veröffentlichen (klicken Sie auf **Als …
-   veröffentlichen**), und **Wer kann es finden?**
+3. Klicken Sie auf **Veröffentlichen**. Es öffnet sich ein Blatt mit einem
+   schon vorgeschlagenen Namen, und Remixen und **Alle können es finden**
+   sind bereits eingeschaltet: Tippen Sie, wenn Sie möchten, Ihren eigenen
+   Namen ein und klicken Sie dann auf **Als … veröffentlichen**.
 4. Klicken Sie auf **Hineingehen**, um in der Welt durch Ihr Haus zu gehen.
 
 Der Rest dieser Seite erklärt jeden Teil, und wie Sie stattdessen auf einem
@@ -169,7 +166,12 @@ Ihr Bauwerk wird in Ihrem Browser gespeichert und ist daher noch da, wenn
 Sie zurückkommen. Während Sie bearbeiten, hält ForkBuild außerdem eine
 Kopie ungespeicherter Änderungen zur Absturzwiederherstellung bereit und
 bietet an, sie wiederherzustellen, wenn die Seite vor dem Speichern
-geschlossen wird.
+geschlossen wird: Wenn Sie den Editor das nächste Mal öffnen, nennt ein
+Banner das Bauwerk und wann es geändert wurde. **Wiederherstellen** öffnet
+dieses Bauwerk mit seinen Änderungen (speichern Sie es, um sie zu
+behalten); **Verwerfen** wirft die Kopie weg und bietet die nächste an,
+falls es eine gibt. Das funktioniert auch für ein Bauwerk, das Sie nie
+gespeichert haben.
 
 > **Behalten Sie eine Kopie.** Ihre Bauwerke liegen nur in diesem Browser.
 > Wer die Browserdaten der Website löscht, löscht sie mit; sichern Sie sie
@@ -226,12 +228,12 @@ Sie dann auf **Diesen Namen nutzen**.
 Alles, was Sie veröffentlichen oder an andere senden, wird dann unter
 diesem Namen signiert.
 
-**Ohne Namen veröffentlichen.** Der Namensdialog, den Veröffentlichen
-öffnet, hat auch **Unsigniert veröffentlichen**. Ein so veröffentlichtes
-Bauwerk hat keinen Autor und keine Signatur: Es bekommt keinen Link, kann
-nicht mit anderen geteilt und später nicht an alle gesendet werden. Wählen
-Sie lieber einen Namen, es sei denn, Sie wollen es nur in Ihrem eigenen
-**Entdecken** haben.
+**Ohne Namen veröffentlichen.** Auf dem Blatt, das Veröffentlichen öffnet,
+enthält **Erweitert** den Knopf **Ohne Namen veröffentlichen**. Ein so
+veröffentlichtes Bauwerk hat keinen Autor und keine Signatur: Es bekommt
+keinen Link, kann nicht mit anderen geteilt und später nicht an alle
+gesendet werden. Nehmen Sie lieber einen Namen, es sei denn, Sie wollen es
+nur in Ihrem eigenen **Entdecken** haben.
 
 Was eine Passphrase schützt, Sperren und Entsperren sowie das Sichern Ihrer
 Identität werden in [Ihr Name & Ihre Identität](05-IdentityAndLogin.md)

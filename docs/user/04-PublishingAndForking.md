@@ -12,20 +12,25 @@ further, with its whole history kept. (Developer documents call a remix a
 ## Publishing your build
 
 1. Build something in the Editor.
-2. Have a name, and make sure it's unlocked (see
-   [Your Name & Identity](05-IdentityAndLogin.md)). Publishing signs the
-   build with it. If you have no name yet, **Publish** asks you to choose
-   one first; **Publish unsigned** there publishes it with no author, and
-   no link.
-3. Give it a title — Publish refuses an untitled or empty build — and,
+2. Give it a title — Publish refuses an untitled or empty build — and,
    optionally, a description and a license: click **✎** beside the
-   build title in the sidebar to open **Build Properties**. A new
-   build has no license; the first time you publish it, ForkBuild asks
-   whether others may remix it (see
-   [Letting others remix it](#letting-others-remix-it)).
-4. Press **Save** so it's stored.
-5. Click **Publish**. The first time, ForkBuild also asks
-   [Who can find it?](#who-can-find-it).
+   build title in the sidebar to open **Build Properties**.
+3. Click **Publish**. The first time, one sheet asks whatever Publish
+   still needs to know, with an answer already chosen for each:
+   - **Your name**, on a device that has none yet, with one suggested
+     (such as *Builder 427*): type your own over it if you like.
+     Publishing signs the build with it (see
+     [Your Name & Identity](05-IdentityAndLogin.md)).
+   - **Others may remix it**, on, for a build with no license (see
+     [Letting others remix it](#letting-others-remix-it)).
+   - **Everyone can find it**, on, the first time this device publishes
+     (see [Who can find it?](#who-can-find-it)).
+
+   Untick either choice if you'd rather, then click **Publish as …** (or
+   **Publish**). **Keep building** closes the sheet and publishes nothing.
+   **Advanced** holds **Publish without a name**, which publishes it with
+   no author, and no link. A name that is locked, or one of several, is
+   asked for after the sheet. Publishing saves the build too.
 
 Your build now appears in **Explore** on this device, where
 you can search for it, open it, and remix it, with your name as the author.
@@ -80,7 +85,7 @@ picture** and **Embed**, with the link below them. The same buttons are under
   drawn by ForkBuild's link server, which then sends whoever opens it on to
   ForkBuild. A link that was changed shows only "A shared build".
 - **It needs a signature.** Publish under a name; a build published
-  without one (**Publish unsigned**) gets no link.
+  without one (**Publish without a name**) gets no link.
 - **A short link once it's sent to everyone.** When the build went to
   **Everyone** (see [Who can find it?](#who-can-find-it)), the buttons offer
   a short link instead, about 90 characters, that names the build rather
@@ -209,16 +214,17 @@ counted anonymously too.
 
 ## Who can find it?
 
-The first time you click **Publish**, ForkBuild asks **Who can find it?**:
+The first time you click **Publish**, its sheet has **Everyone can find
+it**, already ticked:
 
-- **Everyone**: each build you publish is also sent to everyone. It appears
+- **Ticked (Everyone)**: each build you publish is also sent to everyone. It appears
   in **Explore**, in the week's challenge and its plaza, and in the World,
   for anyone using ForkBuild, with no link, wallet or account on either
   side. Right after Publish the Editor says "Sending it to everyone…", then
   "Published! Anyone can find it now, in Explore, the challenge and the
   World." If the networks couldn't be reached, it says so and offers **Try
   again**; the link works either way.
-- **Only people I send the link to**: the build stays on this device and
+- **Unticked (only people you send the link to)**: the build stays on this device and
   inside its link. The notice says "Only people you send its link to can
   see it." with **Let everyone find it**, which sends this build and makes
   **Everyone** the choice from then on.
@@ -284,7 +290,7 @@ and **Change where it goes**. Untick the box (in the dialog, from
 again. Remote pinning is never kept, since its token lasts only for the
 visit; choose it in the dialog each time.
 
-Only a signed build is sent by itself; **Publish unsigned** sends nothing.
+Only a signed build is sent by itself; **Publish without a name** sends nothing.
 Your browser's wallet or extension for that network (an Arweave wallet such
 as Wander, a Nostr extension such as nos2x, Steem or Blurt Keychain) asks
 you to approve each send, and Arweave and Blurt charge a small fee for
@@ -365,15 +371,16 @@ your own published Worlds.
 
 ### Letting others remix it
 
-The first time you publish a build that has no license, ForkBuild asks
-**Let others remix it?** before anything is published:
+The first time you publish a build that has no license, Publish's sheet
+has **Others may remix it**, already ticked:
 
-- **Yes, allow remixes** sets **CC BY 4.0**: anyone may copy and change it,
-  as long as they credit you, and each remix shows it was remixed from
-  yours.
-- **No, just let people look** sets **All Rights Reserved**: people can
-  walk around it, but not copy it.
-- **Not now** publishes nothing.
+- **Ticked** sets **CC BY 4.0**: anyone may copy and change it, as long as
+  they credit you, and each remix shows it was remixed from yours.
+- **Unticked** sets **All Rights Reserved**: people can walk around it, but
+  not copy it.
+
+Remixing is what ForkBuild is for, so it starts on. **Keep building**
+closes the sheet and publishes nothing.
 
 Your answer is saved as the build's license, so you're asked only once;
 change it any time in **Build Properties**. A remix already carries its

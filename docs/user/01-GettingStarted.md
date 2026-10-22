@@ -12,8 +12,9 @@ start: everything stays on your device until you choose to share it.
 
 1. On the **Home** screen, click **Try it now: start with a house**.
 2. Click **Pick the roof**, then click the house: the roof goes on.
-3. Click **Publish** and answer its questions: a name to publish under
-   (click **Publish as …**), and **Who can find it?**
+3. Click **Publish**. One sheet opens with a name already suggested, and
+   remixing and **Everyone can find it** already on: type your own name if
+   you like, then click **Publish as …**.
 4. Click **Walk inside it** to walk through your house in the World.
 
 The rest of this page explains each part, and how to start from an empty
@@ -200,11 +201,11 @@ browser.) Then click **Use this name**.
 Everything you publish, or send to other people, is then signed under that
 name.
 
-**Publishing without a name.** The name dialog that Publish opens also has
-**Publish unsigned**. A build published that way has no author and no
-signature, so it gets no link, can't be shared with other people, and can't
-be sent to everyone later. Choose a name instead unless you only want it in
-your own **Explore**.
+**Publishing without a name.** On the sheet Publish opens, **Advanced**
+holds **Publish without a name**. A build published that way has no author
+and no signature, so it gets no link, can't be shared with other people,
+and can't be sent to everyone later. Use a name instead unless you only want
+it in your own **Explore**.
 
 What a passphrase protects, locking and unlocking, and backing your
 identity up are all covered in [Your Name & Identity](05-IdentityAndLogin.md).

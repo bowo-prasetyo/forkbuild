@@ -18,19 +18,18 @@ edits and no build published. Everything here aims at that drop
 (`/e/editor-edit` → `/e/publish-*`, and the median of
 `/e/publish-placed-…`).
 
-1. **Publish in one sheet.** A suggested name, with **Others may remix
-   it** and **Everyone can find it** already on and changeable in place,
-   and one **Publish** button. No dead end; publishing unsigned moves under
-   Advanced (Pillars, "Infrastructure, kept out of sight").
-2. **A first job worth doing.** The starter job becomes a short chain
+1. **A first job worth doing.** The starter job becomes a short chain
    (roof → chimney → a path to the door → a fence or a garden), ending
    near ten placed bricks. One tutor at a time on every screen: while a job
    is open, the first-build guide folds to its pill and no toast repeats
    it. The guide's third step becomes **Add something of your own**.
-3. **A first walk that looks like the game.** The first World View visit of
+2. **A first walk that looks like the game.** The first World View visit of
    a page opens in fair daylight; every build and the plaza stand in a
    clearing; "Walk inside it" arrives with nothing between the camera and
    the door (Pillars, "The World is a diorama, not a simulation").
+
+Done: **Publish in one sheet** (2026-10-22; the roadmap, "A first Publish
+in one sheet").
 
 Riding along with these: the launch kit's known issues corrected (Nostr
 needs no extension now), the four `forkbuild-document-*.json` example

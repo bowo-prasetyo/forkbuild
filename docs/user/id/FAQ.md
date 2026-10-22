@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 58c380fc2151aa11 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: ce5fc18391277ac3 -->
 # Pertanyaan Umum
 
 <!-- languages -->
@@ -30,8 +30,8 @@ Avatar Saya, Identitas Saya, dan Data Anda.
 
 ### Saya sudah menerbitkan bangunan saya, tetapi teman saya tidak menemukannya di Jelajahi
 
-Kecuali Anda memilih **Semua orang** saat Terbitkan bertanya
-[Siapa yang bisa menemukannya?](04-PublishingAndForking.md#siapa-yang-bisa-menemukannya),
+Kecuali Anda membiarkan **Semua orang bisa menemukannya** tercentang saat
+pertama kali menerbitkan (lihat [Siapa yang bisa menemukannya?](04-PublishingAndForking.md#siapa-yang-bisa-menemukannya)),
 menerbitkan hanya menyimpan bangunan di perangkat Anda sendiri dan
 mencantumkannya di **Jelajahi** *Anda*. Agar sampai ke teman Anda:
 
@@ -55,9 +55,9 @@ Lihat [Penerbitan & Remix](04-PublishingAndForking.md#berbagi-dengan-rekan-yang-
 
 ### Bagaimana cara membuat karya saya tersedia untuk semua orang?
 
-Pilih **Semua orang** saat Terbitkan bertanya
-[Siapa yang bisa menemukannya?](04-PublishingAndForking.md#siapa-yang-bisa-menemukannya)
-(atau klik **Biarkan semua orang menemukannya** setelah menerbitkan).
+Biarkan **Semua orang bisa menemukannya** tercentang saat pertama kali
+menerbitkan (lihat [Siapa yang bisa menemukannya?](04-PublishingAndForking.md#siapa-yang-bisa-menemukannya)),
+atau klik **Biarkan semua orang menemukannya** setelah menerbitkan.
 Setiap bangunan yang Anda terbitkan lalu dikirim ke semua orang dan muncul
 di **Jelajahi**, tantangan mingguan, dan Dunia, tanpa perlu memasang apa
 pun.
@@ -95,9 +95,9 @@ Alasan setelah "Gagal menerbitkan:" ditampilkan dalam bahasa Inggris.
 
 ### Apakah saya perlu nama untuk menerbitkan?
 
-Pada praktiknya, ya. Terbitkan meminta Anda memilih nama, yang hanya butuh
-beberapa detik dan tidak perlu akun. **Terbitkan tanpa tanda tangan** di
-dialog itu menerbitkan tanpa nama, tetapi hasilnya tidak memiliki pembuat
+Pada praktiknya, ya. Lembar Terbitkan menyarankan satu nama, yang bisa Anda
+pakai atau ganti, dan tidak perlu akun. **Terbitkan tanpa nama**, di bawah
+**Lanjutan** pada lembar itu, menerbitkan tanpa nama, tetapi hasilnya tidak memiliki pembuat
 dan tanda tangan: tidak mendapat tautan, dan tidak dapat Anda bagikan
 kepada rekan atau kirim ke semua orang nanti. Lihat
 [Memilih nama](01-GettingStarted.md#memilih-nama).
