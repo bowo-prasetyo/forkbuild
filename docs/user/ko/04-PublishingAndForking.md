@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ab8dc5cb397441b2 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 2ac1d0875426646f -->
 # 04 — 게시와 리믹스
 
 <!-- languages -->
@@ -158,6 +158,10 @@
 프린팅용 STL, OBJ; [3D 모델 내려받기](02-TheEditor.md#3d-모델-내려받기) 참고)도 나옵니다. 작품의
 라이선스가 복사를 허용하지 않으면, 페이지가 그렇다고 알려 주고
 둘러보기만 제안합니다.
+
+내가 만든 작품이면 페이지는 사본을 제안하지 않습니다. 작품이 이 기기에 저장되어
+있으면 큰 버튼은 **계속 만들기**이고, 저장한 그대로 에디터에서 열려 바꾸고 다시 게시할
+수 있습니다. 다른 기기에서는 만든 기기에서 바꾸라고 페이지가 알려 줍니다.
 
 ### 웹 페이지에 작품 임베드하기
 

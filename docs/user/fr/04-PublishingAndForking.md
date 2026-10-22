@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ab8dc5cb397441b2 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 2ac1d0875426646f -->
 # 04 — Publier et remixer
 
 <!-- languages -->
@@ -206,6 +206,13 @@ télécharger comme modèle 3D** (glTF, STL pour l’impression 3D ou OBJ ; voir
 [Télécharger un modèle 3D](02-TheEditor.md#télécharger-un-modèle-3d)). Si la licence de la construction n’autorise pas
 les copies, la page le dit
 et ne propose que d’en faire le tour.
+
+Sur une construction à vous, la page ne propose pas d’en faire une copie.
+Quand la construction est enregistrée sur cet appareil, le grand bouton est
+**Continuer à construire**, qui l’ouvre dans l’Éditeur telle que vous l’avez
+enregistrée, prête à être modifiée et publiée à nouveau. Sur un autre
+appareil, la page vous dit de la modifier sur l’appareil où vous l’avez
+construite.
 
 ### Intégrer une construction dans une page web
 

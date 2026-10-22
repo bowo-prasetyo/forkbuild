@@ -107,17 +107,19 @@
     cursor: pointer;
 }
 
-.shared-build-edit-copy {
+.shared-build-edit-copy,
+.shared-build-keep-building {
     padding: 0.8rem 1.6rem;
     font-size: 1.1rem;
 }
 
 .shared-build-edit-copy:hover,
+.shared-build-keep-building:hover,
 .shared-build-actions .cta-button:hover {
     background: var(--accent-hover);
 }
 
-/* The second action, when Edit a Copy is offered: a plain link-like button. */
+/* The second action, when Edit a Copy or Keep building is offered: a plain link-like button. */
 .shared-build-walk:not(.cta-button) {
     padding: 0;
     border: none;
@@ -161,7 +163,8 @@
         aspect-ratio: 16 / 11;
     }
 
-    .shared-build-edit-copy {
+    .shared-build-edit-copy,
+    .shared-build-keep-building {
         flex: 1 1 100%;
         text-align: center;
     }

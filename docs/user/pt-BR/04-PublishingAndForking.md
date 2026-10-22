@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ab8dc5cb397441b2 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 2ac1d0875426646f -->
 # 04 — Publicar e remixar
 
 <!-- languages -->
@@ -191,6 +191,12 @@ Quando a licença permite cópias, a página também oferece **Baixe como
 modelo 3D** (glTF, STL para impressão 3D ou OBJ; veja
 [Baixando um modelo 3D](02-TheEditor.md#baixando-um-modelo-3d)). Se a licença da construção não permite cópias, a página diz isso e oferece
 só andar ao redor dela.
+
+Numa construção sua, a página não oferece uma cópia dela. Quando a
+construção está salva neste dispositivo, o botão grande é **Continuar
+construindo**, que a abre no Editor como você a salvou, pronta para mudar e
+publicar de novo. Em outro dispositivo, a página diz para mudá-la no
+dispositivo em que você a construiu.
 
 ### Incorporando uma construção em uma página web
 

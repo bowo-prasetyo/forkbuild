@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: ab8dc5cb397441b2 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 2ac1d0875426646f -->
 # 04 — Penerbitan & Remix
 
 <!-- languages -->
@@ -202,6 +202,12 @@ sebagai model 3D** (glTF, STL untuk cetak 3D, atau OBJ; lihat
 [Mengunduh model 3D](02-TheEditor.md#mengunduh-model-3d)). Jika lisensi bangunan itu tidak mengizinkan
 salinan, halamannya
 mengatakannya dan hanya menawarkan untuk mengelilinginya.
+
+Pada bangunan Anda sendiri, halaman itu tidak menawarkan salinannya. Jika
+bangunan itu tersimpan di perangkat ini, tombol besarnya adalah **Lanjut
+membangun**, yang membukanya di Editor seperti saat Anda menyimpannya, siap
+diubah dan diterbitkan lagi. Di perangkat lain, halaman itu meminta Anda
+mengubahnya di perangkat tempat Anda membangunnya.
 
 ### Menyematkan bangunan di halaman web
 

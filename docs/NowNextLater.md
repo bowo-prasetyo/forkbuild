@@ -25,7 +25,8 @@ in daylight, and a clearing round every build"), all on 2026-10-22.
 
 The fixes riding along are done too (the roadmap, "1.6's loose ends"): the
 launch kit says what Nostr needs, the example builds live in `examples/`,
-**Edit a Copy** isn't offered on your own build, and the toolbar's
+**Edit a Copy** isn't offered on your own build (in World View, and on its
+link, which offers **Keep building**: "Your own build's link"), and the toolbar's
 **Publish** is the meadow green. 1.6 is ready to release.
 
 ## Next
