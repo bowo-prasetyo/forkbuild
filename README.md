@@ -296,6 +296,8 @@ See [docs/Architecture.md](docs/Architecture.md) for the full description.
   are recorded, synced in the background and shared between peers.
 - [docs/DeveloperFAQ.md](docs/DeveloperFAQ.md): answers to questions
   contributors often have, with pointers into the code.
+- [docs/NowNextLater.md](docs/NowNextLater.md): what comes next, in order,
+  at most three items each.
 - [docs/Roadmap.md](docs/Roadmap.md): every milestone and why it was made.
   This is the project's changelog.
 - [docs/ArchitectureHistory.md](docs/ArchitectureHistory.md) and

@@ -66,6 +66,25 @@ Before starting a feature, answer these in its roadmap entry:
 3. **Does building get at least as much as everything else?** If the last
    few releases led with something other than building, remixing or the
    world, the next one leads with them.
+4. **Which first step or target should it move, and what in the counts
+   says that's where players are held back?** The first steps and the
+   targets are in "Measuring it" below. "We don't know yet" is an honest
+   answer, and it means: get players or counts before building it.
+
+The filter says no as well as yes (decided by the owner on 2026-10-22,
+docs/reviews/CreativeDirection-2026-10-22.md, finding 5):
+
+- **Off the newcomer's path, the owner says yes first.** Until a week of
+  counts can answer question 4, a feature that doesn't touch the path from
+  Home to the Editor, the first edit, Publish and Walk inside it starts only
+  with the owner's explicit yes, written in its roadmap entry. Fixes to
+  something broken don't need one.
+- **Now, Next and Later.** [NowNextLater.md](NowNextLater.md) holds at most
+  three items in each. Nothing new starts while an item in **Now** is
+  unfinished, unless the owner moves it.
+- **Every change a player can notice has a roadmap entry**, answering these
+  four questions. No commit skips the filter. The pull request template
+  (.github/pull_request_template.md) asks the same.
 
 ## Infrastructure, kept out of sight
 
@@ -82,6 +101,16 @@ is a means, not the game:
   in its link. Where else to send the build is a second, optional step. Network-by-network detail belongs on the Publications
   page and in Network Settings. Publish asks where the build goes once, in
   **Where it goes**, and sends each signed build there from then on.
+- **A first Publish is one sheet, with remixing on** (decided by the owner
+  on 2026-10-22, docs/reviews/CreativeDirection-2026-10-22.md, finding 1).
+  Remixing is the pillar that makes ForkBuild different, so a build is
+  remixable unless its builder says otherwise. The sheet has the name to
+  publish under (a suggestion filled in, which they can change) and two
+  choices already made, **Others may remix it** and **Everyone can find
+  it**, each changeable right there, and one **Publish** button. No choice
+  on it is a dead end that publishes nothing, and publishing unsigned moves
+  under Advanced. Until that is built, Publish asks **Let others remix
+  it?**, **Who can find it?** and a name in turn, as docs/user/04 says.
 - Network Settings and the Publications page live under **More → Advanced**.
   The Experimental tools (the Publications page's Wallet & Archive Tools and
   the Bitcoin Endpoint page) stay hidden until **Show experimental tools**
@@ -225,6 +254,40 @@ name in css/main/theme.css and a dark value beside it; the stylesheets use
 only the names, so both looks reach every page. **Auto** (the default)
 follows the device; **Light** keeps the village by day. The 3D view keeps
 its own sky either way: day and night there are the World's.
+
+### The World is a diorama, not a simulation
+
+Decided by the owner on 2026-10-22 (docs/reviews/CreativeDirection-2026-10-22.md,
+finding 2). The World round a build is part of the toy, drawn at the bricks'
+scale and with the bricks' level of detail, so the player's build is always the
+thing worth looking at:
+
+- **Scale.** Near a build, nothing natural stands taller than a two-storey
+  build. A tree the World grows and the **Pine Tree** brick a player places
+  should look as if they belong to the same village.
+- **Detail.** Nature is drawn about as simply as the bricks: clear shapes
+  and colours, not every branch and leaf. A newcomer's device gets that look
+  by default.
+- **Room.** Every build and the plaza stand in a clearing, a meadow a few
+  units wide, so a build reads as a place and not as a thing hidden in a
+  wood. "Walk inside it" arrives with nothing between the camera and the
+  door.
+- **First sight.** A visitor's first World View visit of a page opens in
+  fair late-morning light and catches up with the shared clock over the
+  first minute or two. Joining a friend puts both on the shared clock.
+
+What's already in the World and doesn't meet this (the realistic trees of
+2026-10-18 above all) is brought into line by the diorama pass in
+[NowNextLater.md](NowNextLater.md); new World content meets it from now on.
+
+### One clock that matters: the week
+
+Decided by the owner on 2026-10-22 (docs/reviews/CreativeDirection-2026-10-22.md,
+finding 3). The World's seasons follow the weekly challenge, not a clock of
+their own, so a seasonal theme (a winter cabin, a summer fair) is shown in its
+season for everyone, and Monday brings a new theme and a changed village
+together. Day and night keep their 40 minutes. Until that is built, the
+seasons turn every five hours or so, as core/nature/Season.js describes.
 
 ## What we are not making
 
@@ -406,3 +469,16 @@ in the first five minutes. The owner took two of its recommendations on
 shell"): someone with no name walks World View as a guest, seen only on
 their own screen, and the shell round the 3D view is light and warm (see
 "Look" above). The name stays ForkBuild.
+
+A sixth review on 2026-10-22
+([reviews/CreativeDirection-2026-10-22.md](reviews/CreativeDirection-2026-10-22.md))
+found the vision coherent and the work drifting from it: the launch week's
+counts (24 daily visits, 3 first edits, no build published) pointed at
+building, and most of what followed went to the World. The owner took all
+four of its decisions the same day (see the roadmap, "Four decisions:
+diorama, remix by default, the week's seasons, a filter that says no"): the
+World is a diorama (see "Look"), a first Publish is one sheet with remixing
+on (see "Infrastructure, kept out of sight"), the seasons follow the
+challenge week (see "Look"), and the filter has a fourth question and says
+no (see "The filter"), with [NowNextLater.md](NowNextLater.md) saying what
+comes first.
