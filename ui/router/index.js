@@ -3,6 +3,7 @@ import { importWithRetry } from '../importWithRetry.js';
 import { loadServiceGroups } from '../serviceGroups.js';
 import { PAGE_SERVICE_GROUPS } from './pageServiceGroups.js';
 import { watchPageLoads } from '../pageLoadFailure.js';
+import { watchPageLoading } from '../pageLoading.js';
 import HomeView from '../views/HomeView.js';
 import { challengeAt } from '../../core/challenge/BuildChallenge.js';
 
@@ -270,3 +271,4 @@ export const router = createRouter({
 
 // A page that fails to download shows a notice instead of doing nothing.
 watchPageLoads(router);
+watchPageLoading(router);

@@ -5,6 +5,7 @@ import ExperimentalBanner from './components/ExperimentalBanner.js';
 import BackupReminderBanner from './components/BackupReminderBanner.js';
 import NotificationHistoryPanel from './components/NotificationHistoryPanel.js';
 import PageLoadFailureNotice from './components/PageLoadFailureNotice.js';
+import PageLoadingNotice from './components/PageLoadingNotice.js';
 import AppUpdateBanner from './components/pwa/AppUpdateBanner.js';
 import InstallAppButton from './components/pwa/InstallAppButton.js';
 import LookChoice from './components/LookChoice.js';
@@ -15,7 +16,7 @@ import { t } from './i18n/i18n.js';
 
 export default {
     name: 'App',
-    components: { UserWidget, ExperimentalBanner, BackupReminderBanner, NotificationHistoryPanel, PageLoadFailureNotice, AppUpdateBanner, InstallAppButton, DeviceNotificationSetting, LookChoice },
+    components: { UserWidget, ExperimentalBanner, BackupReminderBanner, NotificationHistoryPanel, PageLoadFailureNotice, PageLoadingNotice, AppUpdateBanner, InstallAppButton, DeviceNotificationSetting, LookChoice },
     // 0.2.32: one app-wide PreviewService, provided here (same
     // provide/inject convention LoginModal's identityUseCase already
     // uses) so its cache and generation queue survive navigating
@@ -197,6 +198,7 @@ export default {
             <ExperimentalBanner v-if="$route.meta.experimental" />
             <PageLoadFailureNotice />
             <main class="app-content">
+                <PageLoadingNotice />
                 <router-view />
             </main>
             <NotificationHistoryPanel

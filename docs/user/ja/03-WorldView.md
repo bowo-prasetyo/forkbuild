@@ -5,6 +5,10 @@
 [English](../03-WorldView.md) · [Deutsch](../de/03-WorldView.md) · [Español](../es/03-WorldView.md) · [Français](../fr/03-WorldView.md) · [Bahasa Indonesia](../id/03-WorldView.md) · **日本語** · [한국어](../ko/03-WorldView.md) · [Português (Brasil)](../pt-BR/03-WorldView.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **注意:** このページの英語版は翻訳後に更新されているため、この翻訳は古くなっている可能性があります。[英語版](../03-WorldView.md)も参照してください。
+<!-- /stale -->
+
 ワールドビューは、**公開されたすべての作品が並んで建っている** 共有の 3D
 ワールドです。歩いたり飛んだりして見て回り、ものを見つけ、ほかの人が
 作ったものを眺め、友達を連れてくることができます。

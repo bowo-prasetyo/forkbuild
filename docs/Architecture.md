@@ -795,6 +795,13 @@ loading a snapshot checks the hash before deserializing
 (LoadPublishedWorldSessionUseCase), so a corrupt or tampered snapshot is
 refused. Recovery checkpoints go through the same pipeline;
 CheckRecoveryUseCase and DiscardRecoveryUseCase decide what to offer.
+RecoveryObserver offers the open build's checkpoint. Each visit to the
+Editor starts a new document, so a checkpoint left when the page closed
+is another build's: on a plain open (no link, ready-made build or plot)
+the Editor asks FindUnsavedWorkUseCase for the newest one still newer than
+its build's save, and RecoveryObserver's `offer()` puts it on the same
+banner, named from the checkpoint's `recovery-info:` record (revision,
+time and title, so nothing large is parsed to choose).
 CommandHistory is not persisted with the document: after a reload or a
 recovery, undo history starts empty.
 

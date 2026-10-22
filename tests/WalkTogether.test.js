@@ -24,7 +24,7 @@ function signedClaim(publisherId) {
     return { documentId: WORLD_DOCUMENT_ID, title: 'Harbor', signature: 'ab'.repeat(64), publisherIdentity: { id: publisherId } };
 }
 
-function makePerson(network, { ttlMs, joinTimeoutMs, maxOfferTtlMs, identityProvider } = {}) {
+function makePerson(network, { ttlMs, joinTimeoutMs, maxOfferTtlMs, notFoundRetryDelaysMs, identityProvider } = {}) {
     const identity = identityProvider || new EphemeralIdentityProvider();
     const peerConnectionProvider = new WebRtcPeerConnectionProvider();
     const peerSessionManager = new PeerSessionManager({ identityProvider: identity, peerConnectionProvider: new WebRtcPeerConnectionProvider() });
@@ -37,7 +37,8 @@ function makePerson(network, { ttlMs, joinTimeoutMs, maxOfferTtlMs, identityProv
         answerWatchIntervalMs: 50,
         ...(ttlMs ? { ttlMs } : {}),
         ...(joinTimeoutMs ? { joinTimeoutMs } : {}),
-        ...(maxOfferTtlMs ? { maxOfferTtlMs } : {})
+        ...(maxOfferTtlMs ? { maxOfferTtlMs } : {}),
+        ...(notFoundRetryDelaysMs ? { notFoundRetryDelaysMs } : {})
     });
     return {
         identity,
@@ -108,7 +109,7 @@ function authenticatedPeer(person, remoteIdentityId) {
 {
     const network = new LocalRendezvousNetwork();
     const host = makePerson(network);
-    const sam = makePerson(network);
+    const sam = makePerson(network, { notFoundRetryDelaysMs: [50] });
     const kim = makePerson(network);
 
     const hosting = host.walk.createHost({ world: { claim: signedClaim(host.identity.identityId), snapshotText: SNAPSHOT_TEXT }, hostName: '  Ana  ' });
@@ -212,7 +213,7 @@ function authenticatedPeer(person, remoteIdentityId) {
     await offlineHost.start();
     assert(offlineHost.state.failure === WalkTogetherFailure.UNREACHABLE, 'and hosting says why');
 
-    const guest = makePerson(network);
+    const guest = makePerson(network, { notFoundRetryDelaysMs: [50] });
     const invalid = guest.walk.createGuest('not-a-code', opener());
     await invalid.start();
     assert(invalid.state.failure === WalkTogetherFailure.INVALID_CODE, 'a malformed link is refused');
@@ -294,4 +295,36 @@ console.log('Walk together tests passed.');
     hosting.close();
     guest.close();
     for (const person of [host, kim]) person.dispose();
+}
+
+// Each standing offer answers one guest, and the host puts out the next only
+// once that guest's connection opens: a friend who looks in between finds no
+// offer for a moment, and looks again rather than being told the link is gone.
+{
+    const network = new LocalRendezvousNetwork();
+    const host = makePerson(network);
+    const sam = makePerson(network, { notFoundRetryDelaysMs: [200, 400, 800] });
+    const hosting = host.walk.createHost({ world: { claim: signedClaim(host.identity.identityId), snapshotText: SNAPSHOT_TEXT }, hostName: 'Ana' });
+    await hosting.start();
+    const { code } = hosting.state;
+    // The offer just taken, the next not out yet.
+    await hosting._meeting.manager.stopPublishing();
+    assert((await network.lookup(parseWalkTogetherCode(code).identityId)).length === 0, 'between offers, nobody is found');
+    setTimeout(() => hosting._publish(), 300);
+    const joining = sam.walk.createGuest(code, { ...opener(), guestName: 'Sam' });
+    await joining.start();
+    await waitFor(joining, hasStatus(WalkTogetherStatus.JOINED), 'Sam joins once the next offer is out');
+    console.log('✓ a friend who looks between two offers finds the next one');
+
+    // Closing while it waits to look again ends start() rather than leaving it pending.
+    const patient = makePerson(network, { notFoundRetryDelaysMs: [60 * 1000] });
+    const nobody = patient.walk.createGuest(createWalkTogetherCode(new EphemeralIdentityProvider().identityId), opener());
+    const started = nobody.start();
+    setTimeout(() => nobody.close(), 200);
+    const ended = await Promise.race([started.then(() => true), new Promise((resolve) => setTimeout(() => resolve(false), 5000))]);
+    assert(ended, 'closing a guest that is waiting to look again ends its start()');
+    console.log('✓ closing a guest between looks ends it at once');
+    hosting.close();
+    joining.close();
+    for (const person of [host, sam, patient]) person.dispose();
 }

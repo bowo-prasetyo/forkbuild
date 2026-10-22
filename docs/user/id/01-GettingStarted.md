@@ -5,6 +5,10 @@
 [English](../01-GettingStarted.md) · [Deutsch](../de/01-GettingStarted.md) · [Español](../es/01-GettingStarted.md) · [Français](../fr/01-GettingStarted.md) · **Bahasa Indonesia** · [日本語](../ja/01-GettingStarted.md) · [한국어](../ko/01-GettingStarted.md) · [Português (Brasil)](../pt-BR/01-GettingStarted.md)
 <!-- /languages -->
 
+<!-- stale -->
+> **Catatan:** Halaman berbahasa Inggris ini telah diubah sejak diterjemahkan, jadi terjemahan ini mungkin sudah tidak sesuai. Lihat [versi bahasa Inggris](../01-GettingStarted.md).
+<!-- /stale -->
+
 Selamat datang! Panduan ini membawa Anda dari "baru membuka aplikasi" ke
 "saya sudah membangun sesuatu" dalam sekitar lima menit. Anda tidak perlu
 akun, unduhan, atau nama untuk mulai: semuanya tetap di perangkat Anda

@@ -2,6 +2,13 @@
 // actions. The Own Publication panel lives in ./publicationSection.js, lower in the panel.
 // It renders in WorldView's scope, so it uses the names its setup() returns.
 export const headerSectionTemplate = `<h2>{{ title }}</h2>
+                <div v-if="missingWorld" class="world-view-missing" role="status">
+                    <p>{{ t('worldView.notHereText') }}</p>
+                    <div class="world-view-actions">
+                        <router-link class="action-btn action-btn--primary" to="/repository">{{ t('worldView.notHereExplore') }}</router-link>
+                        <button type="button" class="action-btn" @click="lookAroundMissingWorld">{{ t('worldView.notHereLookAround') }}</button>
+                    </div>
+                </div>
                 <p v-if="author" class="world-view-byline">{{ t('worldLocationBrowser.by', { author }) }}</p>
                 <p
                     v-if="activeDocumentInfo"

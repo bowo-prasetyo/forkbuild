@@ -148,6 +148,10 @@ export default {
         const initialDocumentId = route.params.documentId;
 
         const title = ref(t('worldView.loading'));
+        // The World link names a build this device can't place anywhere: never
+        // published here, or not arrived yet. Said so, rather than "Loading…" for
+        // ever, and not recorded as a World visited.
+        const missingWorld = ref(false);
         const author = ref(null);
         // Info for the ACTIVE document (drives the header badge), which can differ
         // from the inspected `documentInfo` below.
@@ -648,6 +652,15 @@ export default {
             })
             : () => {};
 
+        function isWorldOnThisDevice(documentId) {
+            return session.isDocumentPlaced(documentId);
+        }
+        // Looking around from where the missing build's link left the visitor.
+        function lookAroundMissingWorld() {
+            missingWorld.value = false;
+            refreshSpatialUI();
+        }
+
         function refreshSpatialUI() {
             neighbourCount.checkNeighbours(plaza.value ? plaza.value.exhibits.map((exhibit) => exhibit.key) : []);
             const state = session.getSpatialState();
@@ -768,7 +781,11 @@ export default {
             // title or URL following.
             const activeId = session.getActiveDocumentId();
             const activeDoc = docs.find((d) => d.world.id === activeId);
-            if (activeDoc) {
+            if (missingWorld.value) {
+                // A build nearby may load, but it isn't the one the link named.
+                title.value = t('worldView.notHereTitle');
+                author.value = null;
+            } else if (activeDoc) {
                 title.value = activeDoc.metadata.title || t('worldView.untitled');
                 author.value = activeDoc.metadata.author;
             } else if (!activeId) {
@@ -784,7 +801,7 @@ export default {
             redoLabel.value = session.getRedoLabel();
             activePlacementInfo.value = activeId ? session.getPlacementInfo(activeId) : null;
             ownPublication.value = activeId ? session.getPublicationForDocument(activeId) : null;
-            if (activeId && !inPlaza.value && activeId !== route.params.documentId) {
+            if (activeId && !inPlaza.value && !missingWorld.value && activeId !== route.params.documentId) {
                 router.replace({ path: `/world/${activeId}` });
             }
 
@@ -1335,8 +1352,10 @@ export default {
                 skipWelcomeFor(initialDocumentId);
                 if (!beginFilm(initialDocumentId)) session.navigateToDocument(initialDocumentId);
                 router.replace({ path: `/world/${initialDocumentId}` });
-            } else {
+            } else if (isWorldOnThisDevice(initialDocumentId)) {
                 session.navigateToDocument(initialDocumentId);
+            } else {
+                missingWorld.value = true;
             }
             refreshSpatialUI();
 
@@ -1370,6 +1389,11 @@ export default {
             window.addEventListener('blur', onWindowBlur);
 
             spatialInterval = setInterval(() => {
+                // The build the link named has arrived since: go to it.
+                if (missingWorld.value && isWorldOnThisDevice(initialDocumentId)) {
+                    missingWorld.value = false;
+                    session.navigateToDocument(initialDocumentId);
+                }
                 session.updateSpatialView();
                 refreshSpatialUI();
             }, 3000);
@@ -1464,6 +1488,8 @@ export default {
         return {
             film,
             stopFilm,
+            missingWorld,
+            lookAroundMissingWorld,
             displayText,
             compassText,
             spatialContextDescription,

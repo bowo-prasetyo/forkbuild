@@ -253,6 +253,10 @@ export class Renderer {
 
         this._onResize = this._onResize.bind(this);
         window.addEventListener('resize', this._onResize);
+        // The view also changes size without the window doing so: a banner
+        // above it opening or closing, a sidebar folding away.
+        this._resizeObserver = typeof ResizeObserver === 'function' ? new ResizeObserver(this._onResize) : null;
+        if (this._resizeObserver) this._resizeObserver.observe(container);
     }
 
     get scene() {
@@ -604,6 +608,7 @@ export class Renderer {
         }
         if (this._footprints) this._footprints.dispose();
         window.removeEventListener('resize', this._onResize);
+        if (this._resizeObserver) this._resizeObserver.disconnect();
         this._cameraController.dispose();
         this._container.removeChild(this._webglRenderer.domElement);
         this._webglRenderer.dispose();
@@ -713,6 +718,8 @@ export class Renderer {
         }
         const width = this._container.clientWidth;
         const height = this._container.clientHeight;
+        // A hidden view measures 0: keep the last size rather than a NaN aspect.
+        if (!(width > 0 && height > 0)) return;
         this._cameraController.setAspect(width / height);
         this._webglRenderer.setSize(width, height);
     }

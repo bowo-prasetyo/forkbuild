@@ -46,6 +46,7 @@ export default Object.freeze({
     'app.notifications': '通知',
     'app.loadFailed': 'ForkBuild の読み込みを完了できませんでした。接続を確認してから、ページを再読み込みしてください。',
     'app.loadFailedReload': '再読み込み',
+    'app.pageLoading': 'ページを読み込み中…',
     'app.pageLoadFailed': 'このページを読み込めませんでした。接続を確認してから、ForkBuild を再読み込みして開いてください。',
     'app.pageLoadFailedEndsCall': '再読み込みすると音声通話が終了します。',
     'app.pageLoadFailedDismiss': '閉じる',
@@ -834,6 +835,7 @@ export default Object.freeze({
 
     // Editor: recovering unsaved changes (ui/components/RecoveryBanner.js).
     'recovery.found': 'この作品について、{when}の未保存の変更が見つかりました。',
+    'recovery.foundOther': '「{title}」の{when}の未保存の変更が見つかりました。復元すると、その作品を変更ごと開きます。',
     'recovery.earlierSession': '以前のセッション',
     'recovery.recover': '復元',
     'recovery.discard': '破棄',
@@ -1188,6 +1190,7 @@ export default Object.freeze({
     'editor.composingHint': '「{title}」を配置中 — 地面にカーソルを合わせ、Rで回転、クリックで配置、Escでキャンセルします。',
     'editor.tools': 'ツール',
     'editor.hideTools': 'ツールを隠す',
+    'editor.heading': '「{title}」を作成中',
     'editor.recovered': '前回のセッションの未保存の変更を復元しました',
     'editor.recoveryFailed': '復元に失敗しました: {error}',
     'editor.discarded': '復元されたチェックポイントを破棄しました',
@@ -2413,6 +2416,10 @@ export default Object.freeze({
     'worldView.cameraAndEditing': 'カメラ: {camera} · 編集: {editing}',
     'worldView.untitled': '無題',
     'worldView.loading': '読み込み中…',
+    'worldView.notHereTitle': 'この作品はここにありません',
+    'worldView.notHereText': 'このリンクの作品はこの端末にありません。まだ公開されていないか、この端末に届いていない可能性があります。共有した人にもう一度リンクをもらうか、「さがす」で探してください。',
+    'worldView.notHereExplore': '作品をさがす',
+    'worldView.notHereLookAround': '周りを見る',
     'worldView.none': 'なし',
     'worldView.nothingToUndo': '元に戻す操作がありません',
 

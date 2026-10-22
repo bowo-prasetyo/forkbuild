@@ -96,7 +96,16 @@ export class LocalWorldLayoutProvider extends WorldLayoutProvider {
         return Array.from(visible);
     }
 
+    // Unplaced documents are given the origin; hasPosition() tells them apart.
     getPosition(documentId) {
+        return this._placedPosition(documentId) || new WorldPosition(0, 0, 0);
+    }
+
+    hasPosition(documentId) {
+        return this._placedPosition(documentId) !== null;
+    }
+
+    _placedPosition(documentId) {
         // 1. Check explicit spatial index — resolve documentId to its
         // publication first (see _resolvePublicationId above).
         if (this._spatialIndexProvider) {
@@ -125,6 +134,6 @@ export class LocalWorldLayoutProvider extends WorldLayoutProvider {
             }
         }
 
-        return new WorldPosition(0, 0, 0);
+        return null;
     }
 }

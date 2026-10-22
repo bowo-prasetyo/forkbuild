@@ -48,6 +48,7 @@ export default Object.freeze({
     'app.loadFailed': 'ForkBuild couldn\'t finish loading. Check your connection, then reload the page.',
     'app.loadFailedReload': 'Reload',
     // Shown when a page opened later could not load (ui/components/PageLoadFailureNotice.js).
+    'app.pageLoading': 'Loading the page…',
     'app.pageLoadFailed': 'This page couldn\'t load. Check your connection, then reload ForkBuild to open it.',
     'app.pageLoadFailedEndsCall': 'Reloading ends your voice call.',
     'app.pageLoadFailedDismiss': 'Dismiss',
@@ -836,6 +837,7 @@ export default Object.freeze({
 
     // Editor: recovering unsaved changes (ui/components/RecoveryBanner.js).
     'recovery.found': 'Unsaved changes from {when} were found for this build.',
+    'recovery.foundOther': 'Unsaved changes to "{title}" from {when} were found. Recover opens that build with them.',
     'recovery.earlierSession': 'an earlier session',
     'recovery.recover': 'Recover',
     'recovery.discard': 'Discard',
@@ -1190,6 +1192,7 @@ export default Object.freeze({
     'editor.composingHint': 'Placing "{title}" — hover the ground, R to rotate, click to place, Esc to cancel.',
     'editor.tools': 'Tools',
     'editor.hideTools': 'Hide Tools',
+    'editor.heading': 'Building "{title}"',
     'editor.recovered': 'Recovered unsaved changes from a previous session',
     'editor.recoveryFailed': 'Recovery failed: {error}',
     'editor.discarded': 'Discarded the recovered checkpoint',
@@ -2415,6 +2418,10 @@ export default Object.freeze({
     'worldView.cameraAndEditing': 'Camera: {camera} · Editing: {editing}',
     'worldView.untitled': 'Untitled',
     'worldView.loading': 'Loading…',
+    'worldView.notHereTitle': 'This build isn\'t here',
+    'worldView.notHereText': 'No build with this link is on this device. It may not be published yet, or not have reached this device: ask whoever shared it for the link again, or look for it in Explore.',
+    'worldView.notHereExplore': 'Explore builds',
+    'worldView.notHereLookAround': 'Look around',
     'worldView.none': 'None',
     'worldView.nothingToUndo': 'Nothing to undo',
 

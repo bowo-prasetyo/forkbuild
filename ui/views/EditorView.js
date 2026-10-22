@@ -122,6 +122,7 @@ export default {
     components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, CommandPalette, KeyboardShortcutsOverlay, NewDocumentDialog, ActionFeedback, RecoveryBanner, DocumentInfoPanel, DescriptionReaderSheet, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback, ForkFailureDialog, EditorDistributionDialog, PublicationShareLink, ProtectIdentityNote, FirstBuildGuide, StarterJobCard, BuildPlotBanner, EditorTouchActionBar, SoundControl, ModelExportDialog, WalkTogetherDialog, LoginModal, BuildTogetherStrip, VoicePanel },
     template: `
         <div class="editor-view">
+            <h1 class="visually-hidden">{{ documentInfo ? t('editor.heading', { title: displayText(documentInfo.title) }) : t('app.nav.editor') }}</h1>
             <Toolbar
                 ref="toolbar"
                 :document-manager="documentManager"
@@ -584,7 +585,8 @@ export default {
         const {
             storageProvider: documentStorage,
             saveDocumentUseCase, loadDocumentUseCase, forkDocumentUseCase, structureDocumentResolver,
-            autosaveDocumentUseCase, recoverDocumentUseCase, discardRecoveryUseCase, checkRecoveryUseCase
+            autosaveDocumentUseCase, recoverDocumentUseCase, discardRecoveryUseCase, checkRecoveryUseCase,
+            findUnsavedWorkUseCase
         } = new CreatePersistenceUseCase().execute();
         // Bumped when documents are saved without opening one, so the
         // Toolbar's Recent list reads them again.
@@ -1213,18 +1215,34 @@ export default {
         }
 
         // Discards the checkpoint without touching the open document. Wrapped like
-        // recoverDocument() so a failure never leaves a stale banner.
+        // recoverDocument() so a failure never leaves a stale banner. Discarding
+        // another build's work offers the next, if any.
         function discardRecovery() {
             if (!recoveryStatus.value) {
                 return;
             }
-            const documentId = recoveryStatus.value.documentId;
+            const { documentId, otherBuild } = recoveryStatus.value;
             try {
                 discardRecoveryUseCase.execute(documentId);
                 recoveryObserver.clear();
                 feedback.show(t('editor.discarded'));
             } catch (e) {
                 feedback.show(t('editor.discardFailed', { error: errorText(e) }));
+                return;
+            }
+            if (otherBuild) offerUnsavedWork();
+        }
+
+        // Every visit starts a new document, so work left unsaved when the page
+        // closed belongs to a build that isn't open: offered here, on the same
+        // banner, rather than only when that build is opened again.
+        function offerUnsavedWork() {
+            try {
+                const status = findUnsavedWorkUseCase.execute({ excludeDocumentId: documentManager.document?.world.id ?? null });
+                if (status) recoveryObserver.offer(status);
+            } catch (e) {
+                // Recovery is a courtesy on top of editing, never a gate in front of it.
+                console.error('Recovery: could not look for unsaved work', e);
             }
         }
 
@@ -1587,6 +1605,12 @@ export default {
             autosaveScheduler.start();
             recoveryObserver.start();
 
+            // Opening something on purpose (a link, a ready-made build, a plot)
+            // isn't the moment to bring back other work.
+            const opensSomething = ['together', 'fork', 'load', 'plot', 'challenge', 'start']
+                .some((key) => route.query[key]);
+            if (!opensSomething) offerUnsavedWork();
+
             if (route.query.together) {
                 // A Build with me link: the friend's build, asked of their Editor.
                 buildTogether.joinFromRoute(route.query);
@@ -1876,6 +1900,7 @@ export default {
 
         return {
             t,
+            displayText,
             buildDescriptionNote,
             ...voiceCommands,
             askGuideAbout,

@@ -146,7 +146,11 @@ indicator turns into **Saved**.
 
 Your build is stored in your browser, so it's still there when you come back.
 While you edit, ForkBuild also keeps a crash-recovery copy of unsaved changes,
-and offers to restore it if the page closes before you save.
+and offers to restore it if the page closes before you save: the next time
+you open the Editor, a banner names the build and when it was changed.
+**Recover** opens that build with its changes (save it to keep them);
+**Discard** throws the copy away and offers the next, if there is one. This
+works for a build you never saved, too.
 
 > **Keep a copy.** Your builds live only in this browser. Clearing the
 > browser's data for the site deletes them, so back them up now and then

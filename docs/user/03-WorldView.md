@@ -45,7 +45,11 @@ There are two ways in:
   entries stand just outside (see
   [The challenge plaza](04-PublishingAndForking.md#the-challenge-plaza)).
 - On the **Explore** page, **Explore** on any build puts you next to it.
-  Opening a link to a World does the same.
+  Opening a link to a World does the same. If the build isn't on this
+  device (not published yet, or not arrived here), the panel says **This
+  build isn't here**, with **Explore builds** and **Look around**, and the
+  link isn't added to **My Worlds**. Should the build arrive while you
+  wait, World View takes you to it.
 
 Builds that people [sent to everyone](04-PublishingAndForking.md#who-can-find-it)
 stand where their builders put them: each on a spot of its own, with room
@@ -484,7 +488,9 @@ arrived.
 - The World has to be published first: your friend's ForkBuild checks its
   signature and its build, as it does for a shared link, and keeps a copy.
 - The link works for anyone who opens it, for 30 minutes, while you stay in
-  World View. Closing the dialog keeps it working; **Stop the link** ends
+  World View. Two friends opening it at once both get in: the one who
+  arrives second waits a few seconds for the next place in line, rather
+  than being told the link is gone. Closing the dialog keeps it working; **Stop the link** ends
   it. Friends who already joined stay connected either way.
 - Joining connects your two devices directly, like an invitation on
   **Peers**. Each of you can see the other's IP address, and your avatars
