@@ -599,7 +599,7 @@ en **Más**.
 Publicar un nombre se lo dice a las personas con las que está conectado,
 igual que declarar que usted hizo una construcción. Para ver todos los
 nombres y declaraciones que este dispositivo publicó o conoció, consulte
-[Publicaciones y evidencia externa](09-PublicationsAndEvidence.md).
+[Registros firmados y evidencia externa](09-PublicationsAndEvidence.md).
 
 ## Mis mundos — los Mundos que realmente visitó
 

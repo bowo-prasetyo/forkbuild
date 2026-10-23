@@ -90,9 +90,9 @@ at once.
   - **Conversations** — your direct messages, see
     [Chat & Conversations](08-ChatAndConversations.md)
 - **Advanced** — you don't need these to build and share
-  - **Publications** — signed authorship and place-name claims, where to
+  - **Signed Records** — signed authorship and place-name claims, where to
     store and announce them, and (*experimental*) their external evidence,
-    see [Publications & External Evidence](09-PublicationsAndEvidence.md)
+    see [Signed Records & External Evidence](09-PublicationsAndEvidence.md)
   - **Network Settings** — gateways, relays, providers, and peer-connection
     servers, see [Network Settings](10-NetworkSettings.md)
 - **App**

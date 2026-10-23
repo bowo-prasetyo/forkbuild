@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 49b3a123cec42c7e -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: d67f6b7ce2344c01 -->
 # Vista del mundo: herramientas avanzadas
 
 <!-- languages -->
@@ -273,7 +273,7 @@ pequeño mapa propio (no el Mapa del mundo) que muestra lo que le contaron
 sus [pares conectados](07-PeerConnectionsAndFriends.md):
 
 - **publicaciones** colocadas cerca (consulte
-  [Publicaciones y evidencia externa](09-PublicationsAndEvidence.md));
+  [Registros firmados y evidencia externa](09-PublicationsAndEvidence.md));
 - los **avatares** de otras personas;
 - un marcador para usted.
 
@@ -503,7 +503,7 @@ Encuentros en el Mundo, pero para su propia construcción. Hasta que la
 construcción esté publicada, el botón está desactivado, con una nota que
 dice que todavía no hay nada que enviar. El pinning remoto de IPFS y el
 anclaje en Bitcoin o Base no están aquí: primero necesitan una cuenta o una
-billetera, así que están en la página Publicaciones (consulte
+billetera, así que están en la página Registros firmados (consulte
 [Publicación en IPFS](11-EvidenceAndStorage.md#publicación-en-ipfs) y
 [El flujo de anclaje en Bitcoin](11-EvidenceAndStorage.md#el-flujo-de-anclaje-en-bitcoin)).
 

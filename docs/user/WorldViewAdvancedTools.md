@@ -248,7 +248,7 @@ small map of its own (not the World Map) showing what your
 [connected peers](07-PeerConnectionsAndFriends.md) have told you about:
 
 - **publications** placed nearby (see
-  [Publications & External Evidence](09-PublicationsAndEvidence.md));
+  [Signed Records & External Evidence](09-PublicationsAndEvidence.md));
 - other people's **avatars**;
 - a marker for you.
 
@@ -459,7 +459,7 @@ same [Distribute dialog](#the-distribute-dialog) as World Encounters, but
 for your own build. Until the build is published, the button is greyed out
 with a note saying there's nothing to send yet. Remote IPFS pinning and
 Bitcoin or Base anchoring aren't here: they need an account or a wallet
-first, so they live on the Publications page (see
+first, so they live on the Signed Records page (see
 [IPFS Publishing](11-EvidenceAndStorage.md#ipfs-publishing) and
 [The Bitcoin Anchor Pipeline](11-EvidenceAndStorage.md#the-bitcoin-anchor-pipeline)).
 

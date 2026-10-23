@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/12-ArchiveAndAchievements.md source-hash: 60c7fd2807c8b8fe -->
+<!-- translation-of: docs/user/12-ArchiveAndAchievements.md source-hash: b3e47023605bc26e -->
 # 12 — Archivo y logros
 
 <!-- languages -->
@@ -21,7 +21,7 @@ observan en un archivo duradero en este dispositivo. Esta guía cubre ese
 archivo y lo que se construye sobre él: las referencias entre
 publicaciones y los logros.
 
-La mayoría de estas tarjetas están en la página Publicaciones, en
+La mayoría de estas tarjetas están en la página Registros firmados, en
 **Herramientas de billetera y archivo**, en sus pestañas
 **Herramientas de archivo** y **Referencias y logros**. Cada una muestra
 **Guardado localmente** cuando lo que contiene se conserva al recargar.

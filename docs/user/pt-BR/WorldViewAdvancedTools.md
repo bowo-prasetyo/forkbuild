@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 49b3a123cec42c7e -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: d67f6b7ce2344c01 -->
 # Visão do mundo: ferramentas avançadas
 
 <!-- languages -->
@@ -271,7 +271,7 @@ pequeno mapa à parte (não o Mapa do mundo) que mostra o que os seus
 [pares conectados](07-PeerConnectionsAndFriends.md) contaram a você:
 
 - **publicações** posicionadas por perto (veja
-  [Publicações e evidências externas](09-PublicationsAndEvidence.md));
+  [Registros assinados e evidências externas](09-PublicationsAndEvidence.md));
 - os **avatares** de outras pessoas;
 - um marcador para você.
 
@@ -502,7 +502,7 @@ Encontros no Mundo, mas para a sua própria construção. Até a construção
 ser publicada, o botão fica desativado, com uma nota dizendo que ainda não
 há nada para enviar. O pinning remoto no IPFS e a ancoragem no Bitcoin ou
 no Base não ficam aqui: eles precisam antes de uma conta ou de uma
-carteira, então ficam na página Publicações (veja
+carteira, então ficam na página Registros assinados (veja
 [Publicação no IPFS](11-EvidenceAndStorage.md#publicação-no-ipfs) e
 [O fluxo de âncora no Bitcoin](11-EvidenceAndStorage.md#o-fluxo-de-âncora-no-bitcoin)).
 

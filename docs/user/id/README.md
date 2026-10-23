@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: b52156afbaeaed07 -->
+<!-- translation-of: docs/user/README.md source-hash: 8832d9dd4363463e -->
 # Dokumentasi Pengguna ForkBuild
 
 <!-- languages -->
@@ -80,8 +80,8 @@ eksperimental. Anda tidak memerlukan semua ini untuk bermain.
   TURN Anda sendiri.
 - **[Obrolan & Percakapan](08-ChatAndConversations.md)** — pesan langsung khusus teman, pengiriman saat luring, tanda
   sudah dibaca, dan panggilan suara.
-- **[Publikasi & Bukti Eksternal](09-PublicationsAndEvidence.md)** — lapisan teknis yang opsional: klaim kepengarangan dan
-  nama tempat yang ditandatangani, halaman Publikasi, komentar, dan apa
+- **[Catatan Bertanda Tangan & Bukti Eksternal](09-PublicationsAndEvidence.md)** — lapisan teknis yang opsional: klaim kepengarangan dan
+  nama tempat yang ditandatangani, halaman Catatan Bertanda Tangan, komentar, dan apa
   yang disimpan perangkat Anda (Snapshot Lokal). Sebagian halamannya
   *eksperimental*, dan ditandai demikian.
 - **[Pengaturan Jaringan](10-NetworkSettings.md)** —

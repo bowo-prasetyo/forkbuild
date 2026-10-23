@@ -89,7 +89,7 @@ function providePublications(app, store) {
     await settle();
     assert(host.querySelector('.identity-mgmt-card'), 'publications are still listed');
     assert(!host.querySelector('#publications-tools'), 'the Wallet & Archive Tools panel is hidden');
-    const intro = host.querySelector('.publications-view > p');
+    const intro = host.querySelector('.publications-view > p.publications-intro');
     assert(intro.querySelector('a.publications-tools-hidden-link[href="/settings"]'), 'the intro links to Network Settings');
     assert(intro.textContent.includes('Show experimental tools'), 'and names the switch');
     unmount();

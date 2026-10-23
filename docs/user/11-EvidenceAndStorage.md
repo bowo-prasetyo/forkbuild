@@ -19,8 +19,8 @@
 > what it produces may not carry over. The page marks these parts with an
 > **Experimental** badge.
 
-Every card on the **Publications** page (see
-[Publications & External Evidence](09-PublicationsAndEvidence.md)) has
+Every card on the **Signed Records** page (see
+[Signed Records & External Evidence](09-PublicationsAndEvidence.md)) has
 sections for proving *when* a publication existed and for putting its
 content somewhere others can fetch it:
 
@@ -238,7 +238,7 @@ click.
 > Transaction** sends a real transaction. There is no test mode.
 
 All of its page-wide panels are under **Wallet & Archive Tools →
-Blockchain Anchoring**, the folded panel at the bottom of the Publications
+Blockchain Anchoring**, the folded panel at the bottom of the Signed Records
 page; the per-publication steps are on each publication's card. Where a step
 needs a wallet or funding observed first, its link opens that panel for you.
 
@@ -251,7 +251,7 @@ needs a wallet or funding observed first, its link opens that panel for you.
   (starting `bc1q…`). Funding at Taproot (`bc1p…`) or legacy (`1…`, `3…`)
   addresses can be observed but not signed; review reports it as not
   reviewable.
-- A publication on your Publications page; the transaction anchors its
+- A publication on your Signed Records page; the transaction anchors its
   content hash.
 
 ### Connecting a wallet
@@ -395,7 +395,7 @@ the content hash as data), its own terms.
   interface, such as Coinbase Wallet or MetaMask.
 - An account on chain ID **8453** (Base mainnet) or **84532** (Base
   Sepolia). Any other chain is reported as a mismatch.
-- A publication on your Publications page.
+- A publication on your Signed Records page.
 
 ### Connecting a wallet and observing an account
 
@@ -701,7 +701,7 @@ affect it. Settings are under
 
 ### Posting to Steem
 
-Choose **Steem** in a Distribute dialog, on the Publications page, or next
+Choose **Steem** in a Distribute dialog, on the Signed Records page, or next
 to **Post Comment**, or make it your default under
 [Announcement / Discovery Provider](10-NetworkSettings.md#announcement--discovery-provider).
 You need the Steem Keychain extension holding your account's **posting**
@@ -715,7 +715,7 @@ Keychain is missing.
 ### Storing on Steem
 
 Choose **Steem** as the storage in a Distribute dialog or on the
-Publications page. The Snapshot is compressed and stored as replies to this
+Signed Records page. The Snapshot is compressed and stored as replies to this
 month's content thread (such as `@forkbuild/forkbuild-content-2026-10`),
 with no pinning or upload fee. The data sits in each post's metadata; the
 post text is a one-line note. Older posts with the data in the text still
@@ -759,7 +759,7 @@ stored, which Distribute does.
 
 **Anywhere.** Once a Signed Claim is stored on Steem, Arweave or IPFS,
 **Share…** and **Copy link** appear under it: in World View's publication
-panel, in the Distribute dialog's result, and on the Publications page.
+panel, in the Distribute dialog's result, and on the Signed Records page.
 **Share…** opens your device's share sheet where available; **Copy link**
 copies the link, also shown for copying by hand. The link opens on any
 device, as long as the Snapshot has been distributed too, and shows the
@@ -787,7 +787,7 @@ ForkBuild account and no shared thread. Settings are under
 
 ### Posting to Blurt
 
-Choose **Blurt** in a Distribute dialog, on the Publications page, next to
+Choose **Blurt** in a Distribute dialog, on the Signed Records page, next to
 **Post Comment** or in the naming panel, or make it your default under
 [Announcement / Discovery Provider](10-NetworkSettings.md#announcement--discovery-provider).
 You need the Blurt Keychain extension (or WhaleVault) holding your
@@ -826,7 +826,7 @@ post.
 ### Storing on Blurt
 
 Choose **Blurt** as the storage in a Distribute dialog or on the
-Publications page. The build is stored the way it is on Steem, in replies
+Signed Records page. The build is stored the way it is on Steem, in replies
 under your build's post: up to about 2,500 bricks in one reply, or up to 20
 more replies for up to about 30,000 bricks. Before posting, ForkBuild works
 out the fees and refuses if your balance is short ("Storing this build on

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/12-ArchiveAndAchievements.md source-hash: 60c7fd2807c8b8fe -->
+<!-- translation-of: docs/user/12-ArchiveAndAchievements.md source-hash: b3e47023605bc26e -->
 # 12 — Archive et succès
 
 <!-- languages -->
@@ -12,7 +12,7 @@
 
 > **Expérimental.** Tout ce qui est ici peut changer ou être retiré dans
 > une version ultérieure, et ce que cela produit pourrait ne pas être
-> conservé. Sur la page Publications, le panneau **Outils de portefeuille et
+> conservé. Sur la page Enregistrements signés, le panneau **Outils de portefeuille et
 > d’archives** porte un badge **Expérimental**.
 
 Les outils Bitcoin, Base et IPFS de
@@ -21,7 +21,7 @@ observent dans une archive durable sur cet appareil. Ce guide présente
 cette archive et ce qui s’appuie dessus : les références entre
 publications et les succès.
 
-La plupart de ces cartes se trouvent sur la page Publications, sous
+La plupart de ces cartes se trouvent sur la page Enregistrements signés, sous
 **Outils de portefeuille et d’archives**, dans ses onglets **Outils
 d’archive** et **Références et succès**. Chacune affiche **Conservé
 localement** quand ce qu’elle contient survit à un rechargement.

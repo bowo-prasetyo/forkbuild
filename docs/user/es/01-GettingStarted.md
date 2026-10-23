@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: b77912c92f47f6cd -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: c6bc6de8889ba433 -->
 # 01 — Primeros pasos
 
 <!-- languages -->
@@ -96,10 +96,10 @@ muestra todos a la vez.
   - **Conversaciones**: sus mensajes directos; consulte
     [Chat y conversaciones](08-ChatAndConversations.md)
 - **Avanzado**: no lo necesita para construir y compartir
-  - **Publicaciones**: declaraciones firmadas de autoría y de nombres de
+  - **Registros firmados**: declaraciones firmadas de autoría y de nombres de
     lugares, dónde guardarlas y anunciarlas, y (*experimental*) su
     evidencia externa; consulte
-    [Publicaciones y evidencia externa](09-PublicationsAndEvidence.md)
+    [Registros firmados y evidencia externa](09-PublicationsAndEvidence.md)
   - **Configuración de red**: puertas de enlace, relays, proveedores y
     servidores de conexión entre pares; consulte
     [Configuración de red](10-NetworkSettings.md)

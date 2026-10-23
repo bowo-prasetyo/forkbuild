@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: b275d31fdacad544 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: cd26489f2c0613bc -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -532,7 +532,7 @@ Esto es opcional, y totalmente aparte de colocar, remezclar o compartir la
 estructura en sí: existe para las situaciones en que quiere asociar su
 nombre a un diseño de una forma que otras personas puedan verificar de
 manera independiente, no solo creer. Consulte
-[Publicaciones y evidencia externa](09-PublicationsAndEvidence.md) para
+[Registros firmados y evidencia externa](09-PublicationsAndEvidence.md) para
 saber qué pasa con una declaración una vez publicada, y cómo asociarle
 evidencia externa independiente.
 

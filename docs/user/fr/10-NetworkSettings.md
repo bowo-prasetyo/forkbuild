@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 80bde5395bb4efa2 -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: df2c8cb0e2cd162f -->
 # 10 — Paramètres réseau
 
 <!-- languages -->
@@ -40,7 +40,7 @@ Pour ce que chaque serveur apprend sur vous, voir
 
 En haut de la page, **Afficher les outils expérimentaux** affiche les
 parties de ForkBuild qui sont **expérimentales** : ici, la page
-**Endpoint Bitcoin**, et sur la [page Publications](09-PublicationsAndEvidence.md#la-page-publications), le panneau
+**Endpoint Bitcoin**, et sur la [page Enregistrements signés](09-PublicationsAndEvidence.md#la-page-enregistrements-signés), le panneau
 **Outils de portefeuille et d’archives**. Il est désactivé tant que
 vous ne l’activez pas, et il est enregistré sur cet appareil dès que vous le
 changez. Rien de ce qu’il faut pour construire, publier ou partager n’est
@@ -50,12 +50,12 @@ En dessous, **Portefeuilles** propose un interrupteur pour chaque
 portefeuille avec lequel ForkBuild peut ancrer : **Portefeuille Bitcoin** et
 **Portefeuille Base**. Chacun est désactivé tant que vous ne l’activez pas, et
 il est enregistré sur cet appareil. Tant que l’un est désactivé, la page
-Publications ne propose ni ne charge les étapes de ce portefeuille, et
+Enregistrements signés ne propose ni ne charge les étapes de ce portefeuille, et
 Bitcoin n’est pas proposé comme
 [fournisseur de preuve / ancrage](#fournisseur-de-preuve--ancrage). Les ancres déjà
 créées sur Bitcoin ou Base sont vérifiées et affichées dans tous les cas.
 Désactiver un portefeuille prend effet à la prochaine ouverture de la page
-Publications.
+Enregistrements signés.
 
 ## Comment se comporte chaque page
 
@@ -120,7 +120,7 @@ le fichier et le **Champ de la réponse** qui contient le CID.
 jusqu’à la fermeture ou au rechargement de la page, et n’est jamais
 enregistré ; un service qui en a besoin refuse les envois tant que vous ne
 l’avez pas saisi. Chaque boîte de dialogue **Distribuer** et la page
-Publications partent de ce service, et vous pouvez encore le changer là.
+Enregistrements signés partent de ce service, et vous pouvez encore le changer là.
 **Oublier le service** le retire.
 
 ## Fournisseur d’annonce / de découverte

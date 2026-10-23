@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 80bde5395bb4efa2 -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: df2c8cb0e2cd162f -->
 # 10 — Pengaturan Jaringan
 
 <!-- languages -->
@@ -41,18 +41,18 @@ Untuk apa yang diketahui setiap server tentang Anda, lihat
 Di bagian atas halaman, **Tampilkan alat eksperimental** menampilkan
 bagian ForkBuild yang **Eksperimental**: halaman **Endpoint Bitcoin** di
 sini, dan panel **Alat Dompet & Arsip** di
-[halaman Publikasi](09-PublicationsAndEvidence.md#halaman-publikasi). Pengaturan ini mati sampai Anda menyalakannya,
+[halaman Catatan Bertanda Tangan](09-PublicationsAndEvidence.md#halaman-catatan-bertanda-tangan). Pengaturan ini mati sampai Anda menyalakannya,
 dan disimpan di perangkat ini begitu Anda mengubahnya. Tidak ada yang Anda
 perlukan untuk membangun, menerbitkan, atau berbagi yang disembunyikan.
 
 Di bawahnya, **Dompet** memiliki sakelar untuk setiap dompet yang dapat
 dipakai ForkBuild untuk menjangkarkan: **Dompet Bitcoin** dan **Dompet Base**.
 Masing-masing mati sampai Anda menyalakannya, dan disimpan di perangkat ini.
-Selama salah satunya mati, halaman Publikasi tidak menawarkan maupun memuat
+Selama salah satunya mati, halaman Catatan Bertanda Tangan tidak menawarkan maupun memuat
 langkah-langkah dompet itu, dan Bitcoin tidak ditawarkan sebagai
 [Penyedia Bukti / Penjangkaran](#penyedia-bukti--penjangkaran). Jangkar yang sudah dibuat di
 Bitcoin atau Base tetap diperiksa dan ditampilkan. Mematikannya berlaku saat
-halaman Publikasi dibuka berikutnya.
+halaman Catatan Bertanda Tangan dibuka berikutnya.
 
 ## Perilaku setiap halaman
 
@@ -113,7 +113,7 @@ dan, jika layanannya memerlukan, **Kolom permintaan** untuk berkas dan
 perangkat ini. **Token** hanya disimpan sampai Anda menutup atau memuat
 ulang halaman, dan tidak pernah disimpan permanen; layanan yang
 memerlukannya menolak unggahan sampai Anda memasukkannya. Setiap dialog
-**Distribusikan** dan halaman Publikasi dimulai dengan layanan ini, dan
+**Distribusikan** dan halaman Catatan Bertanda Tangan dimulai dengan layanan ini, dan
 Anda tetap dapat mengubahnya di sana. **Lupakan Layanan** menghapusnya.
 
 ## Penyedia Pengumuman / Penemuan

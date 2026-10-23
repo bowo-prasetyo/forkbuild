@@ -12,6 +12,7 @@ import LookChoice from './components/LookChoice.js';
 import DeviceNotificationSetting from './components/DeviceNotificationSetting.js';
 import { describeNotification } from './notifications/notificationText.js';
 import { CreatePreviewUseCase } from '../application/editor/CreatePreviewUseCase.js';
+import { useMyBuildsRoute } from './composables/useMyBuildsRoute.js';
 import { t } from './i18n/i18n.js';
 
 // A call's bar, loaded with the network runtime that calls need, so Home's
@@ -125,12 +126,15 @@ export default {
             return true;
         }
 
+        // My Builds: your own builder page, when a name is in use.
+        const myBuildsRoute = useMyBuildsRoute();
+
         // Built with the network runtime (ui/main.js); the call bar waits for it.
         const callServices = inject('callServices', ref(null));
         const callsReady = computed(() => Boolean(callServices.value));
 
         return {
-            callsReady,
+            callsReady, myBuildsRoute,
             t, menuOpen, moreOpen, moreMenu, inMore, inWalk, notificationsOpen, openNotifications,
             getRecipientNotificationEventsCommand, viewNotificationPublication, describeNotification
         };
@@ -164,6 +168,7 @@ export default {
                             <div class="app-nav-more-panel">
                                 <div class="app-nav-group" role="group" :aria-label="t('app.nav.group.you')">
                                     <span class="app-nav-group-label" aria-hidden="true">{{ t('app.nav.group.you') }}</span>
+                                    <router-link v-if="myBuildsRoute" :to="myBuildsRoute" class="app-nav-link app-nav-my-builds">{{ t('app.nav.myBuilds') }}</router-link>
                                     <router-link to="/avatar" class="app-nav-link">{{ t('app.nav.myAvatar') }}</router-link>
                                     <router-link to="/identity" class="app-nav-link">{{ t('app.nav.myIdentities') }}</router-link>
                                     <router-link to="/settings/data" class="app-nav-link">{{ t('app.nav.yourData') }}</router-link>

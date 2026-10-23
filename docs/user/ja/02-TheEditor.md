@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: b275d31fdacad544 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: cd26489f2c0613bc -->
 # 02 — エディター
 
 <!-- languages -->
@@ -484,7 +484,7 @@ ForkBuild では選択を細かく操作できます。
 自分の名前をデザインに付けて、ほかの人がただ信じるのではなく、それぞれ
 独立に確認できるようにしたい場面のためにあります。公開したクレームが
 どうなるか、そこに独立した外部証拠をどう付けるかは、
-[公開物と外部証拠](09-PublicationsAndEvidence.md) を参照してください。
+[署名付き記録と外部証拠](09-PublicationsAndEvidence.md) を参照してください。
 
 ## 構造物のインスタンス: 生きた参照
 

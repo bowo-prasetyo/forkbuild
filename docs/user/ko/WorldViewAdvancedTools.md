@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 49b3a123cec42c7e -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: d67f6b7ce2344c01 -->
 # 월드 보기: 고급 도구
 
 <!-- languages -->
@@ -247,7 +247,7 @@ ForkBuild는 정확히 같은 점에 있는 작품만 확인합니다. 조금 �
 보여 줍니다:
 
 - 근처에 배치된 **게시물**
-  ([게시물과 외부 증거](09-PublicationsAndEvidence.md) 참고)
+  ([서명된 기록과 외부 증거](09-PublicationsAndEvidence.md) 참고)
 - 다른 사람의 **아바타**
 - 내 표시
 
@@ -449,7 +449,7 @@ ForkBuild는 그 배치가 그 공유 월드의 키로 서명되었는지 확인
 [배포 대화 상자](#배포-대화-상자)를 내 작품에 대해 엽니다. 작품을 게시하기
 전까지는 버튼을 쓸 수 없으며, 아직 보낼 것이 없다는 메모가 붙습니다. IPFS
 원격 피닝과 Bitcoin이나 Base 앵커링은 여기 없습니다. 먼저 계정이나 지갑이
-필요하므로 게시물 페이지에 있습니다
+필요하므로 서명된 기록 페이지에 있습니다
 ([IPFS 게시](11-EvidenceAndStorage.md#ipfs-게시)와
 [Bitcoin 앵커 절차](11-EvidenceAndStorage.md#bitcoin-앵커-절차) 참고).
 

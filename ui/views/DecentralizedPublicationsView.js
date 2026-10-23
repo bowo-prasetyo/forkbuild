@@ -79,6 +79,7 @@ import { placementsTabTemplate } from './decentralizedPublications/templates/pla
 import { displayText, t } from '../i18n/i18n.js';
 import { ANNOUNCEMENT_DISCOVERY_PROVIDER_KEYS, DEFAULT_ANNOUNCEMENT_DISCOVERY_PROVIDER } from '../../core/publication/AnnouncementDiscoveryProvider.js';
 import I18nText from '../i18n/I18nText.js';
+import { useMyBuildsRoute } from '../composables/useMyBuildsRoute.js';
 
 // Publications page (/publications). Lists every DecentralizedPublication in
 // the local catalog (this replica's own, or one a peer announced) with its
@@ -108,6 +109,8 @@ export default {
     name: 'DecentralizedPublicationsView',
     components: { I18nText, PublicationShareLink },
     setup() {
+        // Your own builder page, for "your builds are on your page" at the top.
+        const myBuildsRoute = useMyBuildsRoute();
         // Steem and Blurt are offered only while this device's writer for them
         // is switched on (core/publication/NetworkWriters.js).
         const { steemOn, blurtOn } = useWritableNetworks();
@@ -1034,6 +1037,7 @@ export default {
         });
 
         return {
+            myBuildsRoute,
             t,
             displayText,
             publicationsToolsOpen, publicationsToolsShown, openPublicationsTools,
@@ -1220,7 +1224,17 @@ export default {
     template: `
         <section class="publications-view">
             <h1>{{ t('publications.publications') }}</h1>
-            <p class="form-hint form-hint--neutral">
+            <!-- What this page is, and where your builds are instead. -->
+            <p class="form-hint form-hint--neutral publications-what-this-is">
+                <I18nText v-if="myBuildsRoute" keypath="publications.whatThisIs">
+                    <template #yourPage><router-link :to="myBuildsRoute">{{ t('publications.yourPage') }}</router-link></template>
+                    <template #explore><router-link to="/repository">{{ t('app.nav.repository') }}</router-link></template>
+                </I18nText>
+                <I18nText v-else keypath="publications.whatThisIsNoName">
+                    <template #explore><router-link to="/repository">{{ t('app.nav.repository') }}</router-link></template>
+                </I18nText>
+            </p>
+            <p class="form-hint form-hint--neutral publications-intro">
                 <I18nText v-if="publicationsToolsShown" keypath="publications.intro">
                     <template #peer><router-link to="/peers">{{ t('publications.peer') }}</router-link></template>
                     <template #tools><button type="button" class="inline-link-btn" @click="openPublicationsTools('anchoring')">{{ t('publications.walletArchiveTools') }}</button></template>

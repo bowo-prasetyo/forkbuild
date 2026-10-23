@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 2ac1d0875426646f -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 487a84099ce93c78 -->
 # 04 — Penerbitan & Remix
 
 <!-- languages -->
@@ -533,7 +533,7 @@ bertentangan dengan lisensi Anda:
 2. **Simpan buktinya.** Publikasi bangunan Anda adalah klaim yang
    ditandatangani identitas Anda, membawa lisensinya, dan dapat ditambatkan
    di Arweave untuk tanggal yang tidak bisa diubah siapa pun kemudian
-   (lihat [Publikasi & Bukti Eksternal](09-PublicationsAndEvidence.md)).
+   (lihat [Catatan Bertanda Tangan & Bukti Eksternal](09-PublicationsAndEvidence.md)).
    Simpan juga salinan tersimpan Anda dan tautan ke sana.
 3. **Gunakan proses situs itu sendiri.** YouTube, TikTok, dan lainnya
    menerima keluhan hak cipta dari orang yang memiliki karya itu. Ajukan
@@ -783,7 +783,7 @@ pernah menentukan apa yang ditampilkan lebih dulu.
 
 Sesekali remix tidak dapat dilakukan — paling sering saat me-remix Dunia
 Bersama yang ditemukan melalui rekan atau jaringan terdesentralisasi
-(lihat [Publikasi & Bukti Eksternal](09-PublicationsAndEvidence.md)),
+(lihat [Catatan Bertanda Tangan & Bukti Eksternal](09-PublicationsAndEvidence.md)),
 bukan bangunan biasa di **Jelajahi**. Alih-alih melempar Anda ke bangunan
 Editor kosong yang tidak berhubungan, ForkBuild menampilkan dialog **Tidak
 bisa membuat salinan** yang menyebutkan persis apa yang salah:

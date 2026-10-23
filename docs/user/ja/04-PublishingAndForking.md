@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 2ac1d0875426646f -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 487a84099ce93c78 -->
 # 04 — 公開とリミックス
 
 <!-- languages -->
@@ -472,7 +472,7 @@ ForkBuild には間に立つ会社やモデレーターがいません。作品�
 2. **証拠を残しましょう。** 作品の公開物は、あなたの ID で署名され、
    ライセンスを含む主張です。Arweave にアンカーすれば、あとからだれも
    変えられない日付が付きます
-   （[公開物と外部証拠](09-PublicationsAndEvidence.md) を参照）。保存した
+   （[署名付き記録と外部証拠](09-PublicationsAndEvidence.md) を参照）。保存した
    コピーとそのリンクも残しておきましょう。
 3. **サイトの手続きを使いましょう。** YouTube や TikTok などは、作品の
    権利を持つ本人からの著作権の申し立てを受け付けています。本当に許されて
@@ -704,7 +704,7 @@ ForkBuild がそのことを伝えます。リミックスの回数と同じく�
 
 リミックスがうまくいかないことがたまにあります。多いのは、普通の
 **さがす** の作品ではなく、ピアや分散型ネットワークで見つけた共有
-ワールド（[公開物と外部証拠](09-PublicationsAndEvidence.md) を参照）を
+ワールド（[署名付き記録と外部証拠](09-PublicationsAndEvidence.md) を参照）を
 リミックスするときです。ForkBuild は、無関係な空のエディターの
 作品にあなたを放り込む代わりに、何がうまくいかなかったかを
 はっきり示す **コピーを作れません** ダイアログを表示します。

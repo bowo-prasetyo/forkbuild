@@ -75,9 +75,9 @@ tools. You don't need any of it to play.
 - **[Chat & Conversations](08-ChatAndConversations.md)** — direct,
   friends-only messaging, offline delivery, read receipts, and voice
   calls.
-- **[Publications & External Evidence](09-PublicationsAndEvidence.md)** —
+- **[Signed Records & External Evidence](09-PublicationsAndEvidence.md)** —
   the technical, optional layer: signed authorship and place-name claims,
-  the Publications page, commentary, and what your device holds (Local
+  the Signed Records page, commentary, and what your device holds (Local
   Snapshot). Parts of the page are *experimental*, and marked so.
 - **[Network Settings](10-NetworkSettings.md)** — gateways, relays,
   storage and announcement providers, and peer-connection servers.

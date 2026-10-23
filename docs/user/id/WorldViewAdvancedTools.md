@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 49b3a123cec42c7e -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: d67f6b7ce2344c01 -->
 # Tampilan Dunia: Alat Lanjutan
 
 <!-- languages -->
@@ -281,7 +281,7 @@ yang diberitahukan [rekan yang terhubung](07-PeerConnectionsAndFriends.md)
 kepada Anda:
 
 - **publikasi** yang ditempatkan di dekat Anda (lihat
-  [Publikasi & Bukti Eksternal](09-PublicationsAndEvidence.md));
+  [Catatan Bertanda Tangan & Bukti Eksternal](09-PublicationsAndEvidence.md));
 - **avatar** orang lain;
 - penanda untuk Anda.
 
@@ -520,7 +520,7 @@ Perjumpaan Dunia, tetapi untuk bangunan Anda sendiri. Sampai bangunan itu
 diterbitkan, tombolnya nonaktif, dengan catatan bahwa belum ada yang bisa
 dikirim. Pinning IPFS jarak jauh dan penjangkaran di Bitcoin atau Base
 tidak ada di sini: keduanya memerlukan akun atau dompet dulu, jadi ada di
-halaman Publikasi (lihat
+halaman Catatan Bertanda Tangan (lihat
 [Penerbitan IPFS](11-EvidenceAndStorage.md#penerbitan-ipfs) dan
 [Alur jangkar Bitcoin](11-EvidenceAndStorage.md#alur-jangkar-bitcoin)).
 

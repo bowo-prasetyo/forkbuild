@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: b77912c92f47f6cd -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: c6bc6de8889ba433 -->
 # 01 — Memulai
 
 <!-- languages -->
@@ -96,10 +96,10 @@ menampilkan semuanya sekaligus.
   - **Percakapan** — pesan langsung Anda, lihat
     [Obrolan & Percakapan](08-ChatAndConversations.md)
 - **Lanjutan** — tidak diperlukan untuk membangun dan berbagi
-  - **Publikasi** — klaim kepengarangan dan nama tempat yang ditandatangani,
+  - **Catatan Bertanda Tangan** — klaim kepengarangan dan nama tempat yang ditandatangani,
     tempat menyimpan dan mengumumkannya, serta (*eksperimental*) bukti
     eksternalnya, lihat
-    [Publikasi & Bukti Eksternal](09-PublicationsAndEvidence.md)
+    [Catatan Bertanda Tangan & Bukti Eksternal](09-PublicationsAndEvidence.md)
   - **Pengaturan Jaringan** — gateway, relay, penyedia, dan server koneksi
     rekan, lihat [Pengaturan Jaringan](10-NetworkSettings.md)
 - **Aplikasi**

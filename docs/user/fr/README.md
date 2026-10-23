@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: b52156afbaeaed07 -->
+<!-- translation-of: docs/user/README.md source-hash: 8832d9dd4363463e -->
 # Documentation utilisateur de ForkBuild
 
 <!-- languages -->
@@ -88,9 +88,9 @@ pour jouer.
 - **[Chat et conversations](08-ChatAndConversations.md)** — la
   messagerie directe réservée aux amis, la remise hors ligne, les
   accusés de lecture et les appels vocaux.
-- **[Publications et preuves externes](09-PublicationsAndEvidence.md)** —
+- **[Enregistrements signés et preuves externes](09-PublicationsAndEvidence.md)** —
   la couche technique et facultative : revendications signées de
-  paternité et de noms de lieux, la page Publications, les commentaires,
+  paternité et de noms de lieux, la page Enregistrements signés, les commentaires,
   et ce que détient votre appareil (Snapshot local). Certaines parties de
   la page sont *expérimentales*, et marquées comme telles.
 - **[Paramètres réseau](10-NetworkSettings.md)** — passerelles, relais,

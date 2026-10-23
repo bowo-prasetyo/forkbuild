@@ -584,7 +584,7 @@ histórico completo de nomes, importar e exportar) fica recolhido em
 Publicar um nome avisa as pessoas com quem você está conectado, do mesmo
 jeito que declarar que você fez uma construção. Para ver todos os nomes e
 declarações que este dispositivo publicou ou conheceu, veja
-[Publicações e evidências externas](09-PublicationsAndEvidence.md).
+[Registros assinados e evidências externas](09-PublicationsAndEvidence.md).
 
 ## Meus mundos — os Mundos em que você realmente esteve
 

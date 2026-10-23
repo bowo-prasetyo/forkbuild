@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 328589fa34314f56 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: dbd3a37199f5ba2c -->
 # 11 — Evidências e armazenamento
 
 <!-- languages -->
@@ -21,8 +21,8 @@
 > removido numa versão futura, e o que produz pode não ser aproveitado
 > depois. A página marca essas partes com um selo **Experimental**.
 
-Todo cartão da página **Publicações** (veja
-[Publicações e evidências externas](09-PublicationsAndEvidence.md)) tem
+Todo cartão da página **Registros assinados** (veja
+[Registros assinados e evidências externas](09-PublicationsAndEvidence.md)) tem
 seções para provar *quando* uma publicação existia e para pôr o conteúdo
 dela num lugar de onde outros possam buscá-lo:
 
@@ -261,7 +261,7 @@ um clique separado.
 
 Todos os painéis dele que valem para a página toda ficam em **Ferramentas de
 carteira e arquivo → Ancoragem em blockchain**, o painel recolhido no
-fim da página Publicações; os passos de cada publicação ficam no cartão
+fim da página Registros assinados; os passos de cada publicação ficam no cartão
 dela. Quando um passo precisa antes de uma carteira ou de fundos observados,
 o link dele abre esse painel para você.
 
@@ -274,7 +274,7 @@ o link dele abre esse painel para você.
   nativo** (começando com `bc1q…`). Fundos em endereços Taproot (`bc1p…`) ou
   legados (`1…`, `3…`) podem ser observados, mas não assinados; a revisão
   informa que não podem ser revisados.
-- Uma publicação na sua página Publicações; a transação ancora o hash do
+- Uma publicação na sua página Registros assinados; a transação ancora o hash do
   conteúdo dela.
 
 ### Conectando uma carteira
@@ -427,7 +427,7 @@ mesmo levando o hash do conteúdo como dado), termos próprios.
   como a Coinbase Wallet ou a MetaMask.
 - Uma conta no chain ID **8453** (mainnet da Base) ou **84532** (Base
   Sepolia). Qualquer outra cadeia é informada como divergente.
-- Uma publicação na sua página Publicações.
+- Uma publicação na sua página Registros assinados.
 
 ### Conectando uma carteira e observando uma conta
 
@@ -749,7 +749,7 @@ configurações ficam em
 
 ### Postando no Steem
 
-Escolha **Steem** numa caixa de diálogo Distribuir, na página Publicações ou
+Escolha **Steem** numa caixa de diálogo Distribuir, na página Registros assinados ou
 ao lado de **Publicar comentário**, ou torne-o seu padrão em
 [Provedor de anúncio / descoberta](10-NetworkSettings.md#provedor-de-anúncio--descoberta).
 Você precisa da extensão Steem Keychain com a chave de **postagem** da sua
@@ -763,7 +763,7 @@ faltar a conta ou o Keychain.
 ### Guardando no Steem
 
 Escolha **Steem** como armazenamento numa caixa de diálogo Distribuir ou na
-página Publicações. O Snapshot é compactado e guardado como respostas ao
+página Registros assinados. O Snapshot é compactado e guardado como respostas ao
 tópico de conteúdo deste mês (como `@forkbuild/forkbuild-content-2026-10`),
 sem pinning nem taxa de envio. Os dados ficam nos metadados de cada
 postagem; o texto da postagem é uma nota de uma linha. Postagens mais antigas
@@ -808,7 +808,7 @@ anunciada, além de guardada, o que Distribuir faz.
 **Em qualquer lugar.** Depois que uma Declaração assinada está guardada no
 Steem, no Arweave ou no IPFS, **Compartilhar…** e **Copiar link** aparecem
 abaixo dela: no painel de publicação da Visão do mundo, no resultado da caixa
-de diálogo Distribuir e na página Publicações. **Compartilhar…** abre o menu
+de diálogo Distribuir e na página Registros assinados. **Compartilhar…** abre o menu
 de compartilhamento do seu dispositivo, onde houver; **Copiar link** copia o
 link, que também aparece para copiar à mão. O link abre em qualquer
 dispositivo, desde que o Snapshot também tenha sido distribuído, e mostra a construção onde você a colocou: seu posicionamento assinado viaja com o Snapshot, e o link o traz junto. O endereço
@@ -835,7 +835,7 @@ configurações ficam em
 
 ### Postando no Blurt
 
-Escolha **Blurt** em um diálogo de Distribuir, na página Publicações, ao
+Escolha **Blurt** em um diálogo de Distribuir, na página Registros assinados, ao
 lado de **Publicar comentário** ou no painel de nomes, ou torne-o seu
 padrão em
 [Provedor de anúncio / descoberta](10-NetworkSettings.md#provedor-de-anúncio--descoberta).
@@ -875,7 +875,7 @@ que você aprove cada postagem.
 ### Guardando no Blurt
 
 Escolha **Blurt** como armazenamento em um diálogo de Distribuir ou na
-página Publicações. A construção é guardada como no Steem, em respostas
+página Registros assinados. A construção é guardada como no Steem, em respostas
 abaixo da postagem da sua construção: até cerca de 2.500 blocos em uma
 resposta, ou até 20 respostas a mais para até cerca de 30.000 blocos.
 Antes de postar, o ForkBuild calcula as taxas e se recusa se o seu saldo

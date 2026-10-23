@@ -1,4 +1,4 @@
-# 09 — Publications & External Evidence
+# 09 — Signed Records & External Evidence
 
 <!-- languages -->
 **English** · [Deutsch](de/09-PublicationsAndEvidence.md) · [Español](es/09-PublicationsAndEvidence.md) · [Français](fr/09-PublicationsAndEvidence.md) · [Bahasa Indonesia](id/09-PublicationsAndEvidence.md) · [日本語](ja/09-PublicationsAndEvidence.md) · [한국어](ko/09-PublicationsAndEvidence.md) · [Português (Brasil)](pt-BR/09-PublicationsAndEvidence.md)
@@ -8,7 +8,7 @@
 > around with friends: the [Play chapters](README.md#play-read-in-order) cover that. Read on
 > when you want to know what runs underneath.
 
-> **Partly experimental.** The Publications page is a regular feature: its
+> **Partly experimental.** The Signed Records page is a regular feature: its
 > list and statuses, removing publications that can't be used, announcing on
 > Nostr or Arweave, storing on IPFS or Arweave, anchoring on Arweave, and
 > all four of a card's tabs: **Snapshot**, **Decentralization & Evidence**,
@@ -25,12 +25,12 @@
 None of this is needed to use ForkBuild. Skip it if you just want to build,
 publish and explore.
 
-The **Publications** page is a more technical layer than Explore. Explore
-is about builds and Worlds; the Publications page is about
+The **Signed Records** page is a more technical layer than Explore. Explore
+is about builds and Worlds; the Signed Records page is about
 **signed claims** such as "I designed this structure" or "I call this place
 X", and about the optional depth you can add to a claim:
 
-- **This guide** — where claims come from, the Publications page,
+- **This guide** — where claims come from, the Signed Records page,
   [Commentary](#commentary), and [Local Snapshot](#local-snapshot) (what
   your device holds).
 - **[Network Settings](10-NetworkSettings.md)** — gateways, relays,
@@ -44,18 +44,20 @@ X", and about the optional depth you can add to a claim:
 
 ## Two meanings of "publish"
 
-| | **Publish** (Explore) | **Publications page** |
+| | **Publish** (Explore) | **Signed Records page** |
 |---|---|---|
 | What it shares | A build or World | A signed record: a Shared World, authorship of a structure, or a place name |
-| Where you see it | Explore, Author view, World View | The **Publications** page |
+| Where you see it | Explore, your page (**My Builds**), World View | The **Signed Records** page |
 | What you do with it | Open, explore, remix | Check it, fetch its content, distribute and anchor it |
 | Guide | [Publishing & Remixing](04-PublishingAndForking.md) | This one |
 
-**Publish** alone doesn't put a World on the Publications page. **Share
+**Publish** alone doesn't put a World on the Signed Records page. **Share
 with Peers** does: it signs the World as a **Shared World** that can travel
 to peers (see [A build from Explore, decentralized](#a-build-from-explore-decentralized)).
+Everything you published is on your own page, **More → My Builds** (the
+builds your name signed), and in Explore.
 
-The Publications page has no **Open**, **Explore** or **Remix**, not even for
+The Signed Records page has no **Open**, **Explore** or **Remix**, not even for
 a Shared World. It shows the signed record, not the World. To open, explore
 or remix a Shared World, find it in Explore, on its author's page or
 in World View. One you received from a peer appears there once its content
@@ -63,7 +65,7 @@ is on this device. (The one exception is **Open in Editor** on your own
 Shared World that needs publishing again; see
 [Status meanings](#status-meanings).)
 
-Every entry on the Publications page is a *publication*, and each is one of
+Every entry on the Signed Records page is a *publication*, and each is one of
 three kinds:
 
 | Kind | What it is |
@@ -99,7 +101,7 @@ it.
 
 ## Where a publication comes from
 
-You never create a claim on the Publications page itself. It lists claims
+You never create a claim on the Signed Records page itself. It lists claims
 you made elsewhere, ones peers sent you, and builds from Explore that
 arrived in decentralized form. Place-name claims can also be found straight
 from Nostr, with no peer involved; see
@@ -116,7 +118,7 @@ its **Community Attribution** section offers:
 - **Export Attribution** — saves your claim as a file you can hand to
   someone.
 - **Publish to Network** — announces your claim to every peer you're
-  connected to, which puts it on their Publications page, and on yours.
+  connected to, which puts it on their Signed Records page, and on yours.
 
 Once it's published, the panel offers to **Distribute** it, so people who
 aren't connected to you can find it too. **Distribute** opens the same
@@ -124,7 +126,7 @@ dialog the Editor offers after you publish a World, with only the Signed
 Claim half (an authorship claim has no Snapshot): choose where its content
 is stored and where it's announced, then **Distribute Signed Claim**.
 **Not now** hides the offer; you can still distribute the claim later from
-its card on the Publications page (see
+its card on the Signed Records page (see
 [Distribution](Distribution.md)).
 
 ### Naming a place
@@ -164,9 +166,9 @@ Once you resolve one here with **Re-check** or **Retrieve from Peers**, it
 joins Explore's search, its author's page and World View, and stays
 after a reload.
 
-## The Publications page
+## The Signed Records page
 
-Open **Publications** in the top bar. It lists every signed publication this
+Open **Signed Records** (**More → Advanced**). It lists every signed publication this
 device has cataloged, yours or a peer's. At the bottom, the folded **Wallet
 & Archive Tools** panel holds page-wide tools in three tabs:
 **Blockchain Anchoring**, **Archive Tools** and **References &
@@ -205,7 +207,7 @@ Below that, two folded sections:
   provider it can use, all the options show instead. Steem, Blurt and remote IPFS
   pinning are marked **Experimental** wherever they're offered, and so is
   every kind of anchoring but Arweave. See
-  [Distributing from the Publications page](#distributing-from-the-publications-page)
+  [Distributing from the Signed Records page](#distributing-from-the-signed-records-page)
   and [Evidence & Storage](11-EvidenceAndStorage.md).
 - **Details**, in four tabs:
 
@@ -267,7 +269,7 @@ It doesn't un-publish anything or reach anyone else, and a connected peer
 that still has the publication may announce it again. Only publications in
 this group can be removed.
 
-### Distributing from the Publications page
+### Distributing from the Signed Records page
 
 **Distribution → Announcement / Discovery** has two cards:
 

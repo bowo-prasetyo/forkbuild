@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: b275d31fdacad544 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: cd26489f2c0613bc -->
 # 02 — Editor
 
 <!-- languages -->
@@ -512,7 +512,7 @@ Ini opsional, dan sepenuhnya terpisah dari menempatkan, me-remix, atau
 membagikan struktur itu sendiri — fitur ini ada untuk situasi saat Anda
 ingin melekatkan nama Anda pada sebuah desain dengan cara yang dapat
 diverifikasi orang lain secara mandiri, bukan sekadar dipercaya. Lihat
-[Publikasi & Bukti Eksternal](09-PublicationsAndEvidence.md) untuk apa
+[Catatan Bertanda Tangan & Bukti Eksternal](09-PublicationsAndEvidence.md) untuk apa
 yang terjadi pada klaim setelah Anda menerbitkannya, dan cara melekatkan
 bukti eksternal yang mandiri padanya.
 

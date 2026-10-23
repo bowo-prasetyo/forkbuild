@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: b52156afbaeaed07 -->
+<!-- translation-of: docs/user/README.md source-hash: 8832d9dd4363463e -->
 # Documentación para usuarios de ForkBuild
 
 <!-- languages -->
@@ -87,9 +87,9 @@ para jugar.
 - **[Chat y conversaciones](08-ChatAndConversations.md)**: mensajes
   directos solo entre amigos, entrega sin conexión, confirmaciones de
   lectura y llamadas de voz.
-- **[Publicaciones y evidencia externa](09-PublicationsAndEvidence.md)**:
+- **[Registros firmados y evidencia externa](09-PublicationsAndEvidence.md)**:
   la capa técnica y opcional: declaraciones firmadas de autoría y de
-  nombres de lugares, la página Publicaciones, los comentarios y lo que
+  nombres de lugares, la página Registros firmados, los comentarios y lo que
   tiene su dispositivo (Snapshot local). Partes de la página son
   *experimentales*, y así se indica.
 - **[Configuración de red](10-NetworkSettings.md)**: gateways, relays,

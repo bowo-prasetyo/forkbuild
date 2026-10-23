@@ -604,7 +604,7 @@ riwayat lengkap nama, impor dan ekspor) dilipat di bawah **Lainnya**.
 Menerbitkan nama memberi tahu orang-orang yang terhubung dengan Anda, sama
 seperti mengklaim bahwa Anda membuat sebuah bangunan. Untuk melihat setiap
 nama dan klaim yang pernah diterbitkan atau diketahui perangkat ini, lihat
-[Publikasi & Bukti Eksternal](09-PublicationsAndEvidence.md).
+[Catatan Bertanda Tangan & Bukti Eksternal](09-PublicationsAndEvidence.md).
 
 ## Dunia Saya — dunia yang benar-benar pernah Anda kunjungi
 

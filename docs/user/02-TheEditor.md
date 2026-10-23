@@ -480,7 +480,7 @@ This is optional, and entirely separate from placing, remixing, or sharing
 the structure itself — it exists for situations where you want to attach
 your name to a design in a way other people can independently verify, not
 merely trust. See
-[Publications & External Evidence](09-PublicationsAndEvidence.md) for what
+[Signed Records & External Evidence](09-PublicationsAndEvidence.md) for what
 happens to a claim once you've published it, and how to attach independent
 external evidence to it.
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 328589fa34314f56 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: dbd3a37199f5ba2c -->
 # 11 — Nachweise & Speicher
 
 <!-- languages -->
@@ -22,8 +22,8 @@
 > möglicherweise nicht übernommen. Die Seite kennzeichnet diese Teile mit
 > einem Abzeichen **Experimentell**.
 
-Jede Karte auf der Seite **Veröffentlichungen** (siehe
-[Veröffentlichungen & externe Nachweise](09-PublicationsAndEvidence.md))
+Jede Karte auf der Seite **Signierte Einträge** (siehe
+[Signierte Einträge & externe Nachweise](09-PublicationsAndEvidence.md))
 hat Abschnitte, um nachzuweisen, *wann* eine Veröffentlichung existierte,
 und um ihren Inhalt irgendwo abzulegen, wo andere ihn holen können:
 
@@ -271,7 +271,7 @@ Jeder Schritt ist ein eigener Klick.
 
 Alle seitenweiten Bereiche liegen unter **Wallet- & Archivwerkzeuge →
 Blockchain-Verankerung**, dem eingeklappten Bereich
-ganz unten auf der Seite Veröffentlichungen; die Schritte pro
+ganz unten auf der Seite Signierte Einträge; die Schritte pro
 Veröffentlichung stehen auf der Karte jeder Veröffentlichung. Wo ein
 Schritt zuerst eine beobachtete Wallet oder ein beobachtetes Guthaben
 braucht, öffnet sein Link diesen Bereich für Sie.
@@ -285,7 +285,7 @@ braucht, öffnet sein Link diesen Bereich für Sie.
   (beginnend mit `bc1q…`). Guthaben an Taproot- (`bc1p…`) oder
   Legacy-Adressen (`1…`, `3…`) kann beobachtet, aber nicht signiert
   werden; die Prüfung meldet es als nicht prüfbar.
-- Eine Veröffentlichung auf Ihrer Seite Veröffentlichungen; die
+- Eine Veröffentlichung auf Ihrer Seite Signierte Einträge; die
   Transaktion verankert ihren Inhalts-Hash.
 
 ### Eine Wallet verbinden
@@ -441,7 +441,7 @@ an sich selbst, die den Inhalts-Hash als Daten trägt), eigene Begriffe.
   etwa Coinbase Wallet oder MetaMask.
 - Ein Konto auf Chain-ID **8453** (Base-Mainnet) oder **84532** (Base
   Sepolia). Jede andere Chain wird als Abweichung gemeldet.
-- Eine Veröffentlichung auf Ihrer Seite Veröffentlichungen.
+- Eine Veröffentlichung auf Ihrer Seite Signierte Einträge.
 
 ### Eine Wallet verbinden und ein Konto beobachten
 
@@ -778,7 +778,7 @@ Reputation spielen keine Rolle. Die Einstellungen liegen unter
 ### Auf Steem posten
 
 Wählen Sie **Steem** in einem Verteilen-Dialog, auf der Seite
-Veröffentlichungen oder neben **Kommentar senden**, oder machen Sie es
+Signierte Einträge oder neben **Kommentar senden**, oder machen Sie es
 unter
 [Anbieter für Ankündigung / Entdeckung](10-NetworkSettings.md#anbieter-für-ankündigung--entdeckung)
 zu Ihrem Standard. Sie brauchen die Erweiterung Steem Keychain mit dem
@@ -793,7 +793,7 @@ Formular warnt Sie, wenn Konto oder Keychain fehlen.
 ### Auf Steem speichern
 
 Wählen Sie **Steem** als Speicher in einem Verteilen-Dialog oder auf der
-Seite Veröffentlichungen. Der Snapshot wird komprimiert und als Antworten
+Seite Signierte Einträge. Der Snapshot wird komprimiert und als Antworten
 auf den Inhalts-Thread dieses Monats gespeichert (etwa
 `@forkbuild/forkbuild-content-2026-10`), ohne Pinning- oder Upload-Gebühr.
 Die Daten liegen in den Metadaten jedes Beitrags; der Beitragstext ist ein
@@ -842,7 +842,7 @@ braucht das Bauwerk angekündigt und gespeichert, was Verteilen erledigt.
 **Überall.** Sobald ein Signierter Anspruch auf Steem, Arweave oder IPFS
 gespeichert ist, erscheinen darunter **Teilen …** und **Link kopieren**:
 im Veröffentlichungsfeld der Weltansicht, im Ergebnis des
-Verteilen-Dialogs und auf der Seite Veröffentlichungen. **Teilen …**
+Verteilen-Dialogs und auf der Seite Signierte Einträge. **Teilen …**
 öffnet, wo verfügbar, das Teilen-Menü Ihres Geräts; **Link kopieren**
 kopiert den Link, der auch zum Kopieren von Hand angezeigt wird. Der Link
 öffnet sich auf jedem Gerät, sofern auch der Snapshot verteilt wurde, und zeigt den Bau dort, wo Sie ihn platziert haben: Ihre signierte Platzierung reist mit dem Snapshot, und der Link nimmt sie mit. Die
@@ -873,7 +873,7 @@ und keinen gemeinsamen Thread. Die Einstellungen liegen unter
 ### Auf Blurt posten
 
 Wählen Sie **Blurt** in einem Verteilen-Dialog, auf der Seite
-Veröffentlichungen, neben **Kommentar senden** oder im Benennungsfeld, oder
+Signierte Einträge, neben **Kommentar senden** oder im Benennungsfeld, oder
 machen Sie es unter
 [Anbieter für Ankündigung / Entdeckung](10-NetworkSettings.md#anbieter-für-ankündigung--entdeckung)
 zu Ihrem Standard. Sie brauchen die Erweiterung Blurt Keychain (oder
@@ -913,7 +913,7 @@ den Schlüssel nie, und Keychain bittet Sie, jeden Beitrag zu bestätigen.
 ### Auf Blurt speichern
 
 Wählen Sie **Blurt** als Speicher in einem Verteilen-Dialog oder auf der
-Seite Veröffentlichungen. Das Bauwerk wird so gespeichert wie auf Steem, in
+Seite Signierte Einträge. Das Bauwerk wird so gespeichert wie auf Steem, in
 Antworten unter dem Beitrag Ihres Bauwerks: bis zu etwa 2.500 Steine in
 einer Antwort oder bis zu 20 weitere Antworten für bis zu etwa 30.000
 Steine. Vor dem Posten berechnet ForkBuild die Gebühren und lehnt ab, wenn

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 49b3a123cec42c7e -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: d67f6b7ce2344c01 -->
 # Weltansicht: Erweiterte Werkzeuge
 
 <!-- languages -->
@@ -276,7 +276,7 @@ wovon Ihnen Ihre
 [verbundenen Peers](07-PeerConnectionsAndFriends.md) erzählt haben:
 
 - **Veröffentlichungen**, die in der Nähe platziert sind (siehe
-  [Veröffentlichungen & externe Nachweise](09-PublicationsAndEvidence.md));
+  [Signierte Einträge & externe Nachweise](09-PublicationsAndEvidence.md));
 - die **Avatare** anderer Menschen;
 - eine Markierung für Sie.
 
@@ -516,7 +516,7 @@ der Welt, aber für Ihr eigenes Bauwerk. Bis das Bauwerk veröffentlicht ist,
 ist die Schaltfläche ausgegraut, mit dem Hinweis, dass es noch nichts zu
 senden gibt. Entferntes IPFS-Pinning und Verankerung mit Bitcoin oder Base
 sind nicht hier: Sie brauchen zuerst ein Konto oder eine Wallet, darum
-liegen sie auf der Seite Veröffentlichungen (siehe
+liegen sie auf der Seite Signierte Einträge (siehe
 [Veröffentlichen auf IPFS](11-EvidenceAndStorage.md#veröffentlichen-auf-ipfs)
 und
 [Der Ablauf für Bitcoin-Anker](11-EvidenceAndStorage.md#der-ablauf-für-bitcoin-anker)).

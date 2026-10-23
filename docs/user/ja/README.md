@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: b52156afbaeaed07 -->
+<!-- translation-of: docs/user/README.md source-hash: 8832d9dd4363463e -->
 # ForkBuild ユーザードキュメント
 
 <!-- languages -->
@@ -65,8 +65,8 @@
   自分の TURN リレー。
 - **[チャットと会話](08-ChatAndConversations.md)** — 友達
   どうしの直接メッセージ、オフライン時の配信、既読、音声通話。
-- **[公開物と外部証拠](09-PublicationsAndEvidence.md)** —
-  技術的で任意の層: 署名された作者情報と地名のクレーム、公開物ページ、
+- **[署名付き記録と外部証拠](09-PublicationsAndEvidence.md)** —
+  技術的で任意の層: 署名された作者情報と地名のクレーム、署名付き記録ページ、
   コメント、デバイスが保持するもの（ローカルスナップショット）。
   ページの一部は *試験的* で、そのように示されています。
 - **[ネットワーク設定](10-NetworkSettings.md)** —

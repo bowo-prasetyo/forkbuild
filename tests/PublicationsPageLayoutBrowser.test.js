@@ -134,7 +134,11 @@ app.provide('publicationDisplayKindPlugins', {
     'forkbuild.structure': { describe: () => 'a structure' },
     'forkbuild.publication': publicationKindPlugin
 });
-app.provide('identityUseCase', { listIdentities: () => [{ identityId: 'did:key:zme' }] });
+app.provide('identityUseCase', {
+    listIdentities: () => [{ identityId: 'did:key:zme' }],
+    provider: { getSigningIdentity: () => ({ id: 'did:key:zme' }) },
+    onSessionChanged: () => () => {}
+});
 provideDistribution(app);
 app.provide('peerSessionManager', { listPeers: () => [] });
 app.provide('publicationAnchorCreationCoordinator', creationCoordinator);
@@ -155,6 +159,15 @@ function buttonNamed(root, label) {
 await settle();
 
 const view = host.querySelector('.publications-view');
+
+// Signed Records, not Publications: what the page is, and where your builds are.
+assert(view.querySelector('h1').textContent.trim() === 'Signed Records', `the page is called Signed Records (${view.querySelector('h1').textContent.trim()})`);
+{
+    const what = view.querySelector(':scope > p.publications-what-this-is');
+    assert(what && what === view.querySelector(':scope > p'), 'it opens by saying what it holds');
+    const hrefs = [...what.querySelectorAll('a')].map((a) => a.getAttribute('href'));
+    assert(hrefs.includes('/builder/did%3Akey%3Azme') && hrefs.includes('/repository'), `and that your builds are on your page and in Explore (${hrefs.join(', ')})`);
+}
 
 // Experimental parts are marked on the page itself: the notice, the tools
 // panel, and parts inside the detail tabs, never a detail tab as a whole.
@@ -220,7 +233,7 @@ assert(order.indexOf(mainList) < order.indexOf(toolsPanel) && order.indexOf(fail
     'and comes after the publications and the failed group');
 toolsPanel.querySelector('[role="tab"]:nth-child(2)').click();
 await settle();
-buttonNamed(view.querySelector(':scope > p'), 'Wallet & Archive Tools').click();
+buttonNamed(view.querySelector(':scope > p.publications-intro'), 'Wallet & Archive Tools').click();
 await settle();
 assert(toolsPanel.open, "the intro's link opens it");
 assert(toolsPanel.querySelector('[role="tab"][aria-selected="true"]').textContent.trim() === 'Blockchain Anchoring', 'on the Blockchain Anchoring tab');

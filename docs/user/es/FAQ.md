@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: ce5fc18391277ac3 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: f174ea3c3d70e078 -->
 # Preguntas frecuentes
 
 <!-- languages -->
@@ -21,8 +21,8 @@ en la plaza del desafío de esta semana. Consulte
 ### No encuentro Mi avatar, Pares ni Configuración de red
 
 Están en **Más**, en la barra superior (en un teléfono, en **Menú**):
-**Personal** tiene Mi avatar, Mis identidades y Sus datos; **Personas**
-tiene Pares, Siguiendo y Conversaciones; **Avanzado** tiene Publicaciones
+**Personal** tiene Mis construcciones, Mi avatar, Mis identidades y Sus datos; **Personas**
+tiene Pares, Siguiendo y Conversaciones; **Avanzado** tiene Registros firmados
 y Configuración de red. Al hacer clic en su nombre, en la esquina superior
 derecha, también se abren Mi avatar, Mis identidades y Sus datos.
 
