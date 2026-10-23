@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 49b3a123cec42c7e -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: d67f6b7ce2344c01 -->
 # La Vue du Monde : outils avancés
 
 <!-- languages -->
@@ -282,7 +282,7 @@ ce que vos [pairs connectés](07-PeerConnectionsAndFriends.md) vous ont
 signalé :
 
 - des **publications** placées à proximité (voir
-  [Publications et preuves externes](09-PublicationsAndEvidence.md)) ;
+  [Enregistrements signés et preuves externes](09-PublicationsAndEvidence.md)) ;
 - les **avatars** d’autres personnes ;
 - un repère pour vous.
 
@@ -522,7 +522,7 @@ Rencontres dans le Monde, mais pour votre propre construction. Tant que la
 construction n’est pas publiée, le bouton est grisé, avec une note disant
 qu’il n’y a encore rien à envoyer. L’épinglage IPFS distant et l’ancrage
 sur Bitcoin ou Base ne sont pas ici : ils demandent d’abord un compte ou un
-portefeuille, et se trouvent donc sur la page Publications (voir
+portefeuille, et se trouvent donc sur la page Enregistrements signés (voir
 [Publication IPFS](11-EvidenceAndStorage.md#publication-ipfs) et
 [Le parcours d’ancrage Bitcoin](11-EvidenceAndStorage.md#le-parcours-dancrage-bitcoin)).
 

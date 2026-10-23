@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 328589fa34314f56 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: dbd3a37199f5ba2c -->
 # 11 — Bukti & Penyimpanan
 
 <!-- languages -->
@@ -21,8 +21,8 @@
 > yang dihasilkannya mungkin tidak terbawa. Halaman ini menandai
 > bagian-bagian itu dengan lencana **Eksperimental**.
 
-Setiap kartu di halaman **Publikasi** (lihat
-[Publikasi & Bukti Eksternal](09-PublicationsAndEvidence.md)) memiliki
+Setiap kartu di halaman **Catatan Bertanda Tangan** (lihat
+[Catatan Bertanda Tangan & Bukti Eksternal](09-PublicationsAndEvidence.md)) memiliki
 bagian untuk membuktikan *kapan* sebuah publikasi ada dan untuk menaruh
 kontennya di tempat yang dapat diambil orang lain:
 
@@ -268,7 +268,7 @@ langkah adalah kliknya sendiri.
 
 Semua panel untuk seluruh halaman berada di bawah **Alat Dompet & Arsip →
 Penjangkaran Blockchain**, panel terlipat di bagian bawah
-halaman Publikasi; langkah per publikasi ada di kartu setiap publikasi.
+halaman Catatan Bertanda Tangan; langkah per publikasi ada di kartu setiap publikasi.
 Jika sebuah langkah memerlukan dompet atau dana diamati terlebih dahulu,
 tautannya membuka panel itu untuk Anda.
 
@@ -281,7 +281,7 @@ tautannya membuka panel itu untuk Anda.
   SegWit** (diawali `bc1q…`). Dana di alamat Taproot (`bc1p…`) atau lama
   (`1…`, `3…`) dapat diamati tetapi tidak dapat ditandatangani; tahap
   tinjauan melaporkannya sebagai tidak dapat ditinjau.
-- Sebuah publikasi di halaman Publikasi Anda; transaksi itu menjangkarkan
+- Sebuah publikasi di halaman Catatan Bertanda Tangan Anda; transaksi itu menjangkarkan
   hash kontennya.
 
 ### Menghubungkan dompet
@@ -436,7 +436,7 @@ istilahnya sendiri.
   seperti Coinbase Wallet atau MetaMask.
 - Akun di chain ID **8453** (Base mainnet) atau **84532** (Base Sepolia).
   Rantai lain dilaporkan sebagai tidak cocok.
-- Sebuah publikasi di halaman Publikasi Anda.
+- Sebuah publikasi di halaman Catatan Bertanda Tangan Anda.
 
 ### Menghubungkan dompet dan mengamati akun
 
@@ -762,7 +762,7 @@ memengaruhinya. Pengaturannya ada di
 
 ### Memposting ke Steem
 
-Pilih **Steem** di dialog Distribusikan, di halaman Publikasi, atau di
+Pilih **Steem** di dialog Distribusikan, di halaman Catatan Bertanda Tangan, atau di
 samping **Kirim Komentar**, atau jadikan bawaan Anda di
 [Penyedia Pengumuman / Penemuan](10-NetworkSettings.md#penyedia-pengumuman--penemuan).
 Anda memerlukan ekstensi Steem Keychain yang menyimpan kunci **posting**
@@ -777,7 +777,7 @@ ada.
 ### Menyimpan di Steem
 
 Pilih **Steem** sebagai penyimpanan di dialog Distribusikan atau di
-halaman Publikasi. Snapshot dikompresi dan disimpan sebagai balasan di utas
+halaman Catatan Bertanda Tangan. Snapshot dikompresi dan disimpan sebagai balasan di utas
 konten bulan ini (seperti `@forkbuild/forkbuild-content-2026-10`), tanpa
 biaya pinning atau unggahan. Datanya berada di metadata setiap postingan;
 teks postingannya berupa catatan satu baris. Postingan lama yang datanya
@@ -828,7 +828,7 @@ yang dilakukan oleh Distribusikan.
 **Di mana saja.** Begitu Klaim Bertanda Tangan disimpan di Steem, Arweave,
 atau IPFS, **Bagikan…** dan **Salin tautan** muncul di bawahnya: di panel
 publikasi Tampilan Dunia, di hasil dialog Distribusikan, dan di halaman
-Publikasi. **Bagikan…** membuka lembar berbagi perangkat Anda jika
+Catatan Bertanda Tangan. **Bagikan…** membuka lembar berbagi perangkat Anda jika
 tersedia; **Salin tautan** menyalin tautannya, yang juga ditampilkan untuk
 disalin secara manual. Tautan itu dapat dibuka di perangkat mana pun,
 asalkan Snapshot-nya juga sudah didistribusikan, dan menampilkan bangunan di tempat Anda menempatkannya: penempatan bertanda tangan Anda ikut bersama Snapshot, dan tautan itu membawanya. Alamat `#/world/…` di
@@ -855,7 +855,7 @@ ForkBuild dan tidak ada utas bersama. Pengaturannya ada di
 
 ### Memposting ke Blurt
 
-Pilih **Blurt** di dialog Distribusikan, di halaman Publikasi, di samping
+Pilih **Blurt** di dialog Distribusikan, di halaman Catatan Bertanda Tangan, di samping
 **Kirim Komentar**, atau di panel penamaan, atau jadikan pilihan bawaan
 Anda di
 [Penyedia Pengumuman / Penemuan](10-NetworkSettings.md#penyedia-pengumuman--penemuan).
@@ -897,7 +897,7 @@ meminta Anda menyetujui setiap postingan.
 ### Menyimpan di Blurt
 
 Pilih **Blurt** sebagai penyimpanan di dialog Distribusikan atau di
-halaman Publikasi. Bangunan disimpan dengan cara yang sama seperti di
+halaman Catatan Bertanda Tangan. Bangunan disimpan dengan cara yang sama seperti di
 Steem, dalam balasan di bawah postingan bangunan Anda: hingga sekitar
 2.500 balok dalam satu balasan, atau hingga 20 balasan tambahan untuk
 hingga sekitar 30.000 balok. Sebelum memposting, ForkBuild menghitung

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 80bde5395bb4efa2 -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: df2c8cb0e2cd162f -->
 # 10 — Netzwerkeinstellungen
 
 <!-- languages -->
@@ -40,7 +40,7 @@ Was jeder Server über Sie erfährt, steht unter [Datenschutz](Privacy.md).
 Oben auf der Seite zeigt **Experimentelle Werkzeuge anzeigen** die Teile
 von ForkBuild, die **experimentell** sind: hier die Seite
 **Bitcoin-Endpunkt** und auf der
-[Seite Veröffentlichungen](09-PublicationsAndEvidence.md#die-seite-veröffentlichungen)
+[Seite Signierte Einträge](09-PublicationsAndEvidence.md#die-seite-signierte-einträge)
 den Bereich **Wallet- & Archivwerkzeuge**. Der Schalter ist aus, bis Sie ihn
 einschalten, und wird auf diesem Gerät gespeichert, sobald Sie ihn ändern. Nichts, was Sie
 zum Bauen, Veröffentlichen oder Teilen brauchen, wird ausgeblendet.
@@ -48,11 +48,11 @@ zum Bauen, Veröffentlichen oder Teilen brauchen, wird ausgeblendet.
 Darunter hat **Wallets** einen Schalter für jede Wallet, mit der ForkBuild
 verankern kann: **Bitcoin-Wallet** und **Base-Wallet**. Jeder ist aus, bis
 Sie ihn einschalten, und wird auf diesem Gerät gespeichert. Solange einer aus
-ist, bietet die Seite Veröffentlichungen die Schritte dieser Wallet weder an
+ist, bietet die Seite Signierte Einträge die Schritte dieser Wallet weder an
 noch lädt sie sie, und Bitcoin wird nicht als
 [Nachweis-/Verankerungsanbieter](#nachweis-verankerungsanbieter) angeboten. Bereits
 erstellte Bitcoin- und Base-Anker werden in jedem Fall geprüft und angezeigt.
-Das Ausschalten wirkt, sobald die Seite Veröffentlichungen das nächste Mal
+Das Ausschalten wirkt, sobald die Seite Signierte Einträge das nächste Mal
 geöffnet wird.
 
 ## Wie sich jede Seite verhält
@@ -116,7 +116,7 @@ für die Datei und das **Antwortfeld** mit der CID. **Speichern** bewahrt
 diese auf diesem Gerät auf. Das **Token** wird nur aufbewahrt, bis Sie die
 Seite schließen oder neu laden, und nie gespeichert; ein Dienst, der eines
 braucht, lehnt Uploads ab, bis Sie es eingeben. Jeder Dialog **Verteilen**
-und die Seite Veröffentlichungen beginnen mit diesem Dienst, und Sie können
+und die Seite Signierte Einträge beginnen mit diesem Dienst, und Sie können
 ihn dort noch ändern. **Dienst vergessen** entfernt ihn.
 
 ## Anbieter für Ankündigung / Entdeckung

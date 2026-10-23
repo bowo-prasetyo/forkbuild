@@ -20,8 +20,8 @@ challenge plaza. See
 ### I can't find My Avatar, Peers or Network Settings
 
 They're under **More** in the top bar (on a phone, under **Menu**):
-**You** has My Avatar, My Identities and Your Data; **People** has Peers,
-Following and Conversations; **Advanced** has Publications and Network
+**You** has My Builds, My Avatar, My Identities and Your Data; **People** has Peers,
+Following and Conversations; **Advanced** has Signed Records and Network
 Settings. Clicking your name in the top-right corner also opens My Avatar,
 My Identities and Your Data.
 

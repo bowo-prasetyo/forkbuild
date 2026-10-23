@@ -1,5 +1,5 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 0076c2d8fe2e4551 -->
-# 09 — Publications et preuves externes
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: c9274474de1ec083 -->
+# 09 — Enregistrements signés et preuves externes
 
 <!-- languages -->
 [English](../09-PublicationsAndEvidence.md) · [Deutsch](../de/09-PublicationsAndEvidence.md) · [Español](../es/09-PublicationsAndEvidence.md) · **Français** · [Bahasa Indonesia](../id/09-PublicationsAndEvidence.md) · [日本語](../ja/09-PublicationsAndEvidence.md) · [한국어](../ko/09-PublicationsAndEvidence.md) · [Português (Brasil)](../pt-BR/09-PublicationsAndEvidence.md)
@@ -10,7 +10,7 @@
 > [chapitres Jouer](README.md#jouer-à-lire-dans-lordre) s’en chargent. Lisez la suite si vous
 > voulez savoir ce qui tourne en dessous.
 
-> **En partie expérimental.** La page Publications est une fonctionnalité
+> **En partie expérimental.** La page Enregistrements signés est une fonctionnalité
 > ordinaire : sa liste et ses statuts, le retrait des publications
 > inutilisables, l’annonce sur Nostr ou Arweave, le stockage sur IPFS ou
 > Arweave, l’ancrage sur Arweave, et les quatre onglets d’une carte :
@@ -29,13 +29,13 @@
 Rien de tout cela n’est nécessaire pour utiliser ForkBuild. Passez si vous
 voulez seulement construire, publier et explorer.
 
-La page **Publications** est une couche plus technique qu’Explorer.
-Explorer concerne les Constructions et les Mondes ; la page Publications
+La page **Enregistrements signés** est une couche plus technique qu’Explorer.
+Explorer concerne les Constructions et les Mondes ; la page Enregistrements signés
 concerne les **revendications signées** comme « j’ai conçu cette
 structure » ou « j’appelle ce lieu X », et la profondeur facultative que
 vous pouvez ajouter à une revendication :
 
-- **Ce guide** — d’où viennent les revendications, la page Publications,
+- **Ce guide** — d’où viennent les revendications, la page Enregistrements signés,
   les [Commentaires](#commentaires) et le [Snapshot local](#snapshot-local)
   (ce que détient votre appareil).
 - **[Paramètres réseau](10-NetworkSettings.md)** — passerelles, relais,
@@ -52,16 +52,18 @@ vous pouvez ajouter à une revendication :
 | | **Publier** (Explorer) | **Page Publications** |
 |---|---|---|
 | Ce qui est partagé | Un Construction ou un Monde | Un enregistrement signé : un Monde partagé, la paternité d’une structure ou un nom de lieu |
-| Où on le voit | Explorer, page d’auteur, Vue du Monde | La page **Publications** |
+| Où on le voit | Explorer, votre page (**Mes constructions**), Vue du Monde | La page **Enregistrements signés** |
 | Ce qu’on en fait | L’ouvrir, l’explorer, le remixer | Le vérifier, récupérer son contenu, le distribuer et l’ancrer |
 | Guide | [Publier et remixer](04-PublishingAndForking.md) | Celui-ci |
 
-**Publier** seul ne met pas un Monde sur la page Publications.
+**Publier** seul ne met pas un Monde sur la page Enregistrements signés.
 **Partager avec les pairs**, si : cela signe le Monde comme **Monde
 partagé**, capable de voyager vers les pairs (voir
 [Une construction d’Explorer, décentralisée](#une-construction-dexplorer-décentralisée)).
+Tout ce que vous avez publié se trouve sur votre propre page, **Plus → Mes
+constructions** (les constructions signées par votre nom), et dans Explorer.
 
-La page Publications n’a ni **Ouvrir**, ni **Explorer**, ni **Remixer**,
+La page Enregistrements signés n’a ni **Ouvrir**, ni **Explorer**, ni **Remixer**,
 même pas pour un Monde partagé. Elle montre l’enregistrement signé, pas le
 Monde. Pour ouvrir, explorer ou remixer un Monde partagé, trouvez-le dans
 Explorer, sur la page de son auteur ou dans la Vue du Monde. Un Monde
@@ -70,7 +72,7 @@ reçu d’un pair y apparaît dès que son contenu est sur cet appareil.
 partagé qui doit être publié de nouveau ; voir
 [Signification des statuts](#signification-des-statuts).)
 
-Chaque entrée de la page Publications est une *publication*, et chacune
+Chaque entrée de la page Enregistrements signés est une *publication*, et chacune
 est de l’un de ces trois types :
 
 | Type | Ce que c’est |
@@ -107,7 +109,7 @@ partagé) ; et n’importe qui peut la commenter.
 
 ## D’où vient une publication
 
-Vous ne créez jamais de revendication sur la page Publications
+Vous ne créez jamais de revendication sur la page Enregistrements signés
 elle-même. Elle liste les revendications que vous avez faites ailleurs,
 celles que des pairs vous ont envoyées, et les constructions d’Explorer arrivées
 sous forme décentralisée. Les propositions de nom de lieu peuvent aussi
@@ -127,7 +129,7 @@ Plan (la plupart des structures enregistrées en ont une), sa section
 - **Exporter l’attribution** — enregistre votre revendication dans un
   fichier que vous pouvez remettre à quelqu’un.
 - **Publier sur le réseau** — annonce votre revendication à tous les pairs
-  auxquels vous êtes connecté, ce qui la place sur leur page Publications,
+  auxquels vous êtes connecté, ce qui la place sur leur page Enregistrements signés,
   et sur la vôtre.
 
 Une fois publiée, le panneau propose de la **Distribuer**, pour que les
@@ -138,7 +140,7 @@ revendication de paternité n’a pas de Snapshot) : choisissez où son
 contenu est stocké et où il est annoncé, puis **Distribuer la Déclaration
 signée**. **Pas maintenant** masque la proposition ; vous pouvez toujours
 distribuer la revendication plus tard depuis sa carte sur la page
-Publications (voir [Distribution](Distribution.md)).
+Enregistrements signés (voir [Distribution](Distribution.md)).
 
 ### Nommer un lieu
 
@@ -182,9 +184,9 @@ Une fois résolu ici avec **Revérifier** ou **Récupérer auprès des pairs**,
 il rejoint la recherche d’Explorer, la page de son auteur et la Vue du
 Monde, et y reste après un rechargement.
 
-## La page Publications
+## La page Enregistrements signés
 
-Ouvrez **Publications** dans la barre du haut. Elle liste toutes les
+Ouvrez **Enregistrements signés** (**Plus → Avancé**). Elle liste toutes les
 publications signées que cet appareil a cataloguées, les vôtres ou celles
 d’un pair. En bas, le panneau replié **Outils de portefeuille et
 d’archives** contient des outils pour toute la page, en trois onglets :
@@ -227,7 +229,7 @@ En dessous, deux sections repliées :
   les options s’affichent à la place. Steem, Blurt et l’épinglage IPFS distant
   sont marqués **Expérimental** partout où ils sont proposés, tout comme
   tous les types d’ancrage sauf Arweave. Voir
-  [Distribuer depuis la page Publications](#distribuer-depuis-la-page-publications)
+  [Distribuer depuis la page Enregistrements signés](#distribuer-depuis-la-page-enregistrements-signés)
   et [Preuves et stockage](11-EvidenceAndStorage.md).
 - **Détails**, en quatre onglets :
 
@@ -293,7 +295,7 @@ Cela ne dépublie rien et n’atteint personne d’autre, et un pair connecté
 qui a encore la publication peut l’annoncer de nouveau. Seules les
 publications de ce groupe peuvent être retirées.
 
-### Distribuer depuis la page Publications
+### Distribuer depuis la page Enregistrements signés
 
 **Distribution → Annonce / Découverte** contient deux cartes :
 

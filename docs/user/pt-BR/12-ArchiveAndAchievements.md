@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/12-ArchiveAndAchievements.md source-hash: 60c7fd2807c8b8fe -->
+<!-- translation-of: docs/user/12-ArchiveAndAchievements.md source-hash: b3e47023605bc26e -->
 # 12 — Arquivo e conquistas
 
 <!-- languages -->
@@ -21,7 +21,7 @@ observam num arquivo durável neste dispositivo. Este guia trata desse
 arquivo e do que é construído sobre ele: referências entre publicações e
 conquistas.
 
-A maioria destes cartões fica na página Publicações, em **Ferramentas de
+A maioria destes cartões fica na página Registros assinados, em **Ferramentas de
 carteira e arquivo**, nas guias **Ferramentas de arquivo** e
 **Referências e conquistas**. Cada um mostra **Guardado localmente** quando o
 que ele guarda sobrevive a uma recarga.

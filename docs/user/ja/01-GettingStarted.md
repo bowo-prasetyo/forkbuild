@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: b77912c92f47f6cd -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: c6bc6de8889ba433 -->
 # 01 — はじめに
 
 <!-- languages -->
@@ -90,9 +90,9 @@ ForkBuild は最新のウェブブラウザーならどれでも動きます。�
   - **会話** — ダイレクトメッセージ。
     [チャットと会話](08-ChatAndConversations.md) を参照
 - **詳細** — 作って共有するだけなら必要ありません
-  - **公開物** — 署名された作者の主張や地名の主張、それらの保存先と
+  - **署名付き記録** — 署名された作者の主張や地名の主張、それらの保存先と
     告知先、そして（*試験的*）外部証拠。
-    [公開物と外部証拠](09-PublicationsAndEvidence.md) を参照
+    [署名付き記録と外部証拠](09-PublicationsAndEvidence.md) を参照
   - **ネットワーク設定** — ゲートウェイ、リレー、プロバイダー、ピア接続
     用サーバー。[ネットワーク設定](10-NetworkSettings.md) を参照
 - **アプリ**

@@ -784,6 +784,15 @@ async function firstVisit(browser, base) {
         assert(!(await editor.$('.shared-build-edit-copy')), 'its builder isn\'t offered a copy of it on its link');
         await editor.click('.shared-build-keep-building');
         await editor.waitForFunction(() => document.querySelector('.document-info-compact-title')?.textContent.trim() === 'House', null, { timeout: 60_000 });
+
+        // More → My Builds: its builder's own page, with the House on it; and the
+        // page of signed records is Signed Records, not Publications.
+        await editor.click('.app-nav-more-toggle');
+        assert((await editor.textContent('.app-nav-more-panel a[href="#/publications"]')).trim() === 'Signed Records', 'More lists Signed Records');
+        await editor.click('.app-nav-more-panel .app-nav-my-builds');
+        await editor.waitForSelector('.builder-you', { timeout: 30_000 });
+        await editor.waitForFunction(() => [...document.querySelectorAll('.builder-builds .builder-build')].some((build) => build.textContent.trim() === 'House'),
+            null, { timeout: 30_000 });
     } finally {
         await signing.close();
     }

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: ce5fc18391277ac3 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: f174ea3c3d70e078 -->
 # Häufige Fragen
 
 <!-- languages -->
@@ -21,9 +21,9 @@ der Challenge dieser Woche. Siehe
 ### Ich finde Mein Avatar, Peers oder die Netzwerkeinstellungen nicht
 
 Sie stehen in der oberen Leiste unter **Mehr** (auf einem Telefon unter
-**Menü**): **Persönlich** enthält Mein Avatar, Meine Identitäten und Ihre
+**Menü**): **Persönlich** enthält Meine Bauwerke, Mein Avatar, Meine Identitäten und Ihre
 Daten; **Menschen** enthält Peers, Gefolgt und Unterhaltungen;
-**Erweitert** enthält Veröffentlichungen und Netzwerkeinstellungen. Ein
+**Erweitert** enthält Signierte Einträge und Netzwerkeinstellungen. Ein
 Klick auf Ihren Namen oben rechts öffnet ebenfalls Mein Avatar, Meine
 Identitäten und Ihre Daten.
 

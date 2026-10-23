@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: 5a1b60c315ac9a44 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: f97c16f677fc5882 -->
 # Distribuir su trabajo
 
 <!-- languages -->
@@ -43,7 +43,7 @@ Distribuir usa hasta tres tipos de red, cada uno elegido por separado:
 Necesita los dos primeros juntos. Un trabajo guardado sin anunciar es
 difícil de encontrar, y un anuncio sin nada guardado no apunta a nada.
 **Distribuir** hace ambas cosas con un solo clic. Anclar es un extra, y se
-hace por separado en la página **Publicaciones**.
+hace por separado en la página **Registros firmados**.
 
 Configure su opción habitual para cada papel en
 [Configuración de red](10-NetworkSettings.md):
@@ -57,11 +57,11 @@ nada.
 
 | Qué | Contenido | Anuncio / descubrimiento | Prueba / anclaje | Dónde se hace |
 |---|---|---|---|---|
-| **La Declaración firmada de su Mundo** (el registro firmado de un Mundo publicado, llamado Mundo compartido) | Arweave, IPFS, Steem o Blurt | Nostr, Arweave, Steem o Blurt | — | **Distribuir** después de publicar en el Editor; **Mi Mundo compartido** en la Vista del mundo; la página **Publicaciones** |
+| **La Declaración firmada de su Mundo** (el registro firmado de un Mundo publicado, llamado Mundo compartido) | Arweave, IPFS, Steem o Blurt | Nostr, Arweave, Steem o Blurt | — | **Distribuir** después de publicar en el Editor; **Mi Mundo compartido** en la Vista del mundo; la página **Registros firmados** |
 | **El Snapshot de su Mundo** (sus bloques), con el lugar donde lo colocó | Arweave, IPFS, Steem o Blurt | Nostr, Arweave, Steem o Blurt | — | Los mismos diálogos de **Distribuir** (**Distribuir solo el Snapshot** para solo esta mitad) |
-| **El hash del contenido de cualquier publicación** (un Mundo, una declaración de autoría o un nombre de lugar) | — | — | Bitcoin, Arweave, Base, Steem o Blurt | La tarjeta de la publicación en la página **Publicaciones** |
-| **La autoría de una estructura** (Atribución de plano) | Arweave, IPFS, Steem o Blurt | Nostr, Arweave, Steem o Blurt | — | **Distribuir** en el panel **Información** de la estructura, que se ofrece en cuanto usa **Publicar en la red**; la página **Publicaciones** |
-| **Un nombre de lugar** (Declaración de nombre de lugar) | Arweave, IPFS, Steem o Blurt | Nostr, Arweave, Steem o Blurt | — | **Distribuir** en el panel de nombres de la Vista del mundo, que se ofrece en cuanto usa **Publicar un nombre** (anuncia el nombre en la red que elija); la página **Publicaciones** para cualquiera de estas opciones |
+| **El hash del contenido de cualquier publicación** (un Mundo, una declaración de autoría o un nombre de lugar) | — | — | Bitcoin, Arweave, Base, Steem o Blurt | La tarjeta de la publicación en la página **Registros firmados** |
+| **La autoría de una estructura** (Atribución de plano) | Arweave, IPFS, Steem o Blurt | Nostr, Arweave, Steem o Blurt | — | **Distribuir** en el panel **Información** de la estructura, que se ofrece en cuanto usa **Publicar en la red**; la página **Registros firmados** |
+| **Un nombre de lugar** (Declaración de nombre de lugar) | Arweave, IPFS, Steem o Blurt | Nostr, Arweave, Steem o Blurt | — | **Distribuir** en el panel de nombres de la Vista del mundo, que se ofrece en cuanto usa **Publicar un nombre** (anuncia el nombre en la red que elija); la página **Registros firmados** para cualquiera de estas opciones |
 | **Un comentario** sobre una publicación | — | Nostr, Arweave, Steem o Blurt, o ninguna (**Solo local y pares**) | — | **Publicar comentario**, en Explorar o en la Vista del mundo, en la red elegida junto al botón; más tarde, **Distribuir** bajo su propio comentario |
 
 El Snapshot de un Mundo lleva consigo su ubicación firmada, así que quienes
@@ -107,8 +107,8 @@ Detalles:
   [A dónde va](04-PublishingAndForking.md#a-dónde-va--enviar-una-construcción-al-publicar),
   [Mi Mundo compartido](WorldViewAdvancedTools.md#mi-mundo-compartido--distribuir-su-propio-snapshot-sin-necesidad-de-pares)
   y el propio [diálogo Distribuir](WorldViewAdvancedTools.md#encuentros-en-el-mundo--publicaciones-y-avatares-que-comparten-sus-pares).
-- La página Publicaciones:
-  [Distribuir desde la página Publicaciones](09-PublicationsAndEvidence.md#distribuir-desde-la-página-publicaciones),
+- La página Registros firmados:
+  [Distribuir desde la página Registros firmados](09-PublicationsAndEvidence.md#distribuir-desde-la-página-registros-firmados),
   [Ubicaciones de Snapshots](11-EvidenceAndStorage.md#ubicaciones-de-snapshots) y
   [Publicación en IPFS](11-EvidenceAndStorage.md#publicación-en-ipfs).
 - Anclaje: [Evidencia externa](11-EvidenceAndStorage.md#evidencia-externa),
@@ -148,7 +148,7 @@ completar.
 | **IPFS (Remote Pinning)** *(experimental)* | Contenido | Una cuenta en un servicio de pinning compatible con Pinata | Sin límite de tamaño. Configure el servicio una vez en [Proveedor de contenido](10-NetworkSettings.md#proveedor-de-contenido); el token se pide una vez por visita y nunca se guarda. |
 | **Steem** *(experimental)* | Contenido, anuncio / descubrimiento, prueba / anclaje | La extensión Steem Keychain con su clave de publicación, y su cuenta en [Configuración de red → Steem](10-NetworkSettings.md#steem) | Las publicaciones son respuestas a los hilos mensuales de ForkBuild; una aprobación por publicación. Guarda unos 2.500 bloques por publicación, hasta unos 30.000 bloques en 20 publicaciones. Usa Resource Credits, que se recargan. |
 | **Blurt** *(experimental)* | Contenido, anuncio / descubrimiento, prueba / anclaje | La extensión Blurt Keychain (o WhaleVault) con su clave de publicación, y su cuenta en [Configuración de red → Blurt](10-NetworkSettings.md#blurt) | Una publicación principal desde su propia cuenta por construcción, que conserva su pago; los datos guardados van en respuestas debajo de ella. Guarda unos 2.500 bloques por respuesta, hasta unos 30.000 bloques. Cada transacción cuesta una pequeña comisión en BLURT. |
-| **Bitcoin** *(experimental)* | Prueba / anclaje | La extensión UniSat, con bitcoin en una dirección SegWit nativa (`bc1q…`) para la comisión | Se hace con los pasos de billetera de la página Publicaciones |
+| **Bitcoin** *(experimental)* | Prueba / anclaje | La extensión UniSat, con bitcoin en una dirección SegWit nativa (`bc1q…`) para la comisión | Se hace con los pasos de billetera de la página Registros firmados |
 | **Base** *(experimental)* | Prueba / anclaje | Una billetera del navegador como MetaMask o Coinbase Wallet, en Base | Cada ancla es una transacción que usted revisa y firma |
 
 Un ancla en Steem es rápida y gratuita, pero la atestiguan los witnesses de
@@ -169,7 +169,7 @@ en Blurt ya lleva su hash de contenido; consulte [Blurt](11-EvidenceAndStorage.m
 4. Envía el Snapshot, luego la Declaración firmada, y muestra un resultado
    para cada uno. Si una mitad falla, reintente solo esa con su propio
    botón **Distribuir solo …**.
-5. *Opcional:* en la página **Publicaciones**, ancle la publicación (por
+5. *Opcional:* en la página **Registros firmados**, ancle la publicación (por
    ejemplo con **Anclar en Arweave**) para dejar constancia de cuándo
    existía.
 6. Haga clic en **Compartir…** o **Copiar enlace** bajo el resultado. El
@@ -196,7 +196,7 @@ hasta 64 MB directamente de usted.
   Vista del mundo, busca su Mundo en Arweave y Nostr y lo comprueba: ¿de
   verdad está allá afuera, intacto? Consulte
   [Descubrir Mundo compartido](WorldViewAdvancedTools.md#descubrir-mundo-compartido--buscar-directamente-en-redes-descentralizadas).
-- **En la página Publicaciones.** **Verificar contenido de IPFS** recupera
+- **En la página Registros firmados.** **Verificar contenido de IPFS** recupera
   algo subido a IPFS y lo compara con su hash. **Verificar evidencia**
   comprueba un anclaje.
 

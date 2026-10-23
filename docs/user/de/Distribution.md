@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: 5a1b60c315ac9a44 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: f97c16f677fc5882 -->
 # Ihre Arbeit verteilen
 
 <!-- languages -->
@@ -46,7 +46,7 @@ Die ersten beiden brauchen Sie zusammen. Gespeicherte Arbeit ohne
 Ankündigung ist schwer zu finden, und eine Ankündigung ohne Gespeichertes
 verweist auf nichts. **Verteilen** erledigt beides mit einem Klick.
 Verankern ist ein Extra und geschieht separat auf der Seite
-**Veröffentlichungen**.
+**Signierte Einträge**.
 
 Legen Sie Ihre übliche Wahl für jede Rolle unter
 [Netzwerkeinstellungen](10-NetworkSettings.md) fest:
@@ -60,11 +60,11 @@ nie etwas.
 
 | Was | Inhalt | Ankündigung / Entdeckung | Nachweis / Verankerung | Wo Sie es tun |
 |---|---|---|---|---|
-| **Der Signierte Anspruch Ihrer Welt** (der signierte Eintrag einer veröffentlichten Welt, genannt Geteilte Welt) | Arweave, IPFS, Steem oder Blurt | Nostr, Arweave, Steem oder Blurt | — | **Verteilen** nach dem Veröffentlichen im Editor; **Meine Geteilte Welt** in der Weltansicht; die Seite **Veröffentlichungen** |
+| **Der Signierte Anspruch Ihrer Welt** (der signierte Eintrag einer veröffentlichten Welt, genannt Geteilte Welt) | Arweave, IPFS, Steem oder Blurt | Nostr, Arweave, Steem oder Blurt | — | **Verteilen** nach dem Veröffentlichen im Editor; **Meine Geteilte Welt** in der Weltansicht; die Seite **Signierte Einträge** |
 | **Der Snapshot Ihrer Welt** (ihre Steine), mit dem Ort, an dem Sie sie platziert haben | Arweave, IPFS, Steem oder Blurt | Nostr, Arweave, Steem oder Blurt | — | Dieselben **Verteilen**-Dialoge (**Nur Snapshot verteilen** für nur diese Hälfte) |
-| **Der Inhalts-Hash jeder Veröffentlichung** (eine Welt, ein Urheberschaftsanspruch oder ein Ortsname) | — | — | Bitcoin, Arweave, Base, Steem oder Blurt | Die Karte der Veröffentlichung auf der Seite **Veröffentlichungen** |
-| **Die Urheberschaft einer Struktur** (Bauplan-Zuschreibung) | Arweave, IPFS, Steem oder Blurt | Nostr, Arweave, Steem oder Blurt | — | **Verteilen** im **Info**-Feld der Struktur, angeboten, sobald Sie **Im Netzwerk veröffentlichen**; die Seite **Veröffentlichungen** |
-| **Ein Ortsname** (Ortsnamensanspruch) | Arweave, IPFS, Steem oder Blurt | Nostr, Arweave, Steem oder Blurt | — | **Verteilen** im Benennungsfeld der Weltansicht, angeboten, sobald Sie **Einen Namen veröffentlichen** (es kündigt den Namen im gewählten Netzwerk an); die Seite **Veröffentlichungen** für alle diese |
+| **Der Inhalts-Hash jeder Veröffentlichung** (eine Welt, ein Urheberschaftsanspruch oder ein Ortsname) | — | — | Bitcoin, Arweave, Base, Steem oder Blurt | Die Karte der Veröffentlichung auf der Seite **Signierte Einträge** |
+| **Die Urheberschaft einer Struktur** (Bauplan-Zuschreibung) | Arweave, IPFS, Steem oder Blurt | Nostr, Arweave, Steem oder Blurt | — | **Verteilen** im **Info**-Feld der Struktur, angeboten, sobald Sie **Im Netzwerk veröffentlichen**; die Seite **Signierte Einträge** |
+| **Ein Ortsname** (Ortsnamensanspruch) | Arweave, IPFS, Steem oder Blurt | Nostr, Arweave, Steem oder Blurt | — | **Verteilen** im Benennungsfeld der Weltansicht, angeboten, sobald Sie **Einen Namen veröffentlichen** (es kündigt den Namen im gewählten Netzwerk an); die Seite **Signierte Einträge** für alle diese |
 | **Ein Kommentar** zu einer Veröffentlichung | — | Nostr, Arweave, Steem oder Blurt, oder keines (**Nur lokal & Peers**) | — | **Kommentar senden**, unter Entdecken oder in der Weltansicht, im daneben gewählten Netzwerk; später **Verteilen** unter Ihrem eigenen Kommentar |
 
 Der Snapshot einer Welt trägt Ihre signierte Platzierung mit sich, sodass
@@ -110,8 +110,8 @@ Einzelheiten:
   [Meine Geteilte Welt](WorldViewAdvancedTools.md#meine-geteilte-welt--ihren-eigenen-snapshot-verteilen-ohne-peers)
   und der [Verteilen-Dialog](WorldViewAdvancedTools.md#begegnungen-in-der-welt--veröffentlichungen-und-avatare-die-ihre-peers-teilen)
   selbst.
-- Die Seite Veröffentlichungen:
-  [Von der Seite Veröffentlichungen verteilen](09-PublicationsAndEvidence.md#von-der-seite-veröffentlichungen-verteilen),
+- Die Seite Signierte Einträge:
+  [Von der Seite Signierte Einträge verteilen](09-PublicationsAndEvidence.md#von-der-seite-signierte-einträge-verteilen),
   [Snapshot-Platzierungen](11-EvidenceAndStorage.md#snapshot-platzierungen) und
   [Veröffentlichen auf IPFS](11-EvidenceAndStorage.md#veröffentlichen-auf-ipfs).
 - Verankern: [Externe Nachweise](11-EvidenceAndStorage.md#externe-nachweise),
@@ -152,7 +152,7 @@ werden konnte.
 | **IPFS (Remote Pinning)** *(experimentell)* | Inhalt | Ein Konto bei einem Pinata-kompatiblen Pinning-Dienst | Keine Größenbegrenzung. Richten Sie den Dienst einmal unter [Inhaltsanbieter](10-NetworkSettings.md#inhaltsanbieter) ein; das Token wird einmal pro Besuch abgefragt und nie gespeichert. |
 | **Steem** *(experimentell)* | Inhalt, Ankündigung / Entdeckung, Nachweis / Verankerung | Die Erweiterung Steem Keychain mit Ihrem Posting-Schlüssel und Ihr Konto unter [Netzwerkeinstellungen → Steem](10-NetworkSettings.md#steem) | Beiträge sind Antworten auf die monatlichen Threads von ForkBuild; eine Bestätigung pro Beitrag. Speichert etwa 2.500 Steine pro Beitrag, bis zu etwa 30.000 Steine in 20 Beiträgen. Verbraucht Resource Credits, die sich wieder auffüllen. |
 | **Blurt** *(experimentell)* | Inhalt, Ankündigung / Entdeckung, Nachweis / Verankerung | Die Erweiterung Blurt Keychain (oder WhaleVault) mit Ihrem Posting-Schlüssel und Ihr Konto unter [Netzwerkeinstellungen → Blurt](10-NetworkSettings.md#blurt) | Ein Hauptbeitrag von Ihrem eigenen Konto pro Bauwerk, der seine Auszahlung behält; gespeicherte Daten stehen in Antworten darunter. Speichert etwa 2.500 Steine pro Antwort, bis zu etwa 30.000 Steine. Jede Transaktion kostet eine kleine Gebühr in BLURT. |
-| **Bitcoin** *(experimentell)* | Nachweis / Verankerung | Die Erweiterung UniSat, mit Bitcoin auf einer nativen SegWit-Adresse (`bc1q…`) für die Gebühr | Erstellt über die Wallet-Schritte auf der Seite Veröffentlichungen |
+| **Bitcoin** *(experimentell)* | Nachweis / Verankerung | Die Erweiterung UniSat, mit Bitcoin auf einer nativen SegWit-Adresse (`bc1q…`) für die Gebühr | Erstellt über die Wallet-Schritte auf der Seite Signierte Einträge |
 | **Base** *(experimentell)* | Nachweis / Verankerung | Eine Browser-Wallet wie MetaMask oder Coinbase Wallet, im Netzwerk Base | Jeder Anker ist eine Transaktion, die Sie prüfen und signieren |
 
 Ein Steem-Anker ist schnell und kostenlos, wird aber von den Witnesses von
@@ -174,7 +174,7 @@ bereits dessen Inhalts-Hash trägt; siehe [Blurt](11-EvidenceAndStorage.md#blurt
    jedes ein Ergebnis. Schlägt eine Hälfte fehl, wiederholen Sie nur diese
    mit ihrer eigenen Schaltfläche **Nur … verteilen**.
 5. *Optional:* Verankern Sie die Veröffentlichung auf der Seite
-   **Veröffentlichungen** (zum Beispiel mit **Auf Arweave verankern**), um
+   **Signierte Einträge** (zum Beispiel mit **Auf Arweave verankern**), um
    festzuhalten, wann sie existierte.
 6. Klicken Sie unter dem Ergebnis auf **Teilen …** oder **Link kopieren**.
    Der Link öffnet Ihr Bauwerk auf jedem Gerät, bereit zum Remixen oder für
@@ -200,7 +200,7 @@ direkt von Ihnen abrufen.
   Weltansicht sucht Ihre Welt auf Arweave und Nostr und prüft sie: Ist sie
   wirklich da draußen, und unversehrt? Siehe
   [Geteilte Welt entdecken](WorldViewAdvancedTools.md#geteilte-welt-entdecken--dezentrale-netzwerke-direkt-durchsuchen).
-- **Auf der Seite Veröffentlichungen.** **IPFS-Inhalt überprüfen** ruft
+- **Auf der Seite Signierte Einträge.** **IPFS-Inhalt überprüfen** ruft
   einen IPFS-Upload zurück und vergleicht ihn mit seinem Hash.
   **Nachweise überprüfen** prüft einen Anker.
 

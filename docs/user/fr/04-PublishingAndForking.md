@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 2ac1d0875426646f -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 487a84099ce93c78 -->
 # 04 — Publier et remixer
 
 <!-- languages -->
@@ -552,7 +552,7 @@ licence :
    revendication signée par votre identité, portant sa licence, et elle
    peut être ancrée sur Arweave pour une date que personne ne peut changer
    plus tard (voir
-   [Publications et preuves externes](09-PublicationsAndEvidence.md)).
+   [Enregistrements signés et preuves externes](09-PublicationsAndEvidence.md)).
    Gardez aussi votre copie enregistrée et un lien vers elle.
 3. **Passez par la procédure du site.** YouTube, TikTok et les autres
    reçoivent les plaintes pour droit d’auteur de la personne dont c’est
@@ -805,7 +805,7 @@ jamais de ce qui s’affiche en premier.
 
 Il arrive qu’un remix ne puisse pas aboutir — le plus souvent en remixant un
 Monde partagé trouvé via un pair ou un réseau décentralisé (voir
-[Publications et preuves externes](09-PublicationsAndEvidence.md)) plutôt
+[Enregistrements signés et preuves externes](09-PublicationsAndEvidence.md)) plutôt
 qu’une construction ordinaire d’**Explorer**. Au lieu de vous déposer
 dans une construction vide et sans rapport de l’Éditeur, ForkBuild affiche une
 boîte de dialogue **Impossible de faire une copie** qui nomme exactement le

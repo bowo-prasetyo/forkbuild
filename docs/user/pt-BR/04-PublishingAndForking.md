@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 2ac1d0875426646f -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 487a84099ce93c78 -->
 # 04 — Publicar e remixar
 
 <!-- languages -->
@@ -514,7 +514,7 @@ licença:
 2. **Guarde as provas.** A Publicação da sua construção é uma reivindicação
    assinada pela sua identidade, com a licença dela, e pode ser ancorada no
    Arweave para ter uma data que ninguém consegue mudar depois (veja
-   [Publicações e evidências externas](09-PublicationsAndEvidence.md)).
+   [Registros assinados e evidências externas](09-PublicationsAndEvidence.md)).
    Guarde também a sua cópia salva e um link para ela.
 3. **Use o processo do próprio site.** YouTube, TikTok e os outros aceitam
    reclamações de direitos autorais da pessoa dona da obra. Só faça uma
@@ -758,7 +758,7 @@ que este dispositivo encontrou, e nunca decide o que aparece primeiro.
 De vez em quando um remix não dá certo — na maioria das vezes ao
 remixar um Mundo compartilhado encontrado por um par ou por uma rede
 descentralizada (veja
-[Publicações e evidências externas](09-PublicationsAndEvidence.md)), e não
+[Registros assinados e evidências externas](09-PublicationsAndEvidence.md)), e não
 uma construção comum do **Explorar**. Em vez de largar você numa construção
 vazio e sem relação no Editor, o ForkBuild mostra uma caixa de diálogo
 **Não dá para fazer uma cópia** dizendo exatamente o que deu errado:

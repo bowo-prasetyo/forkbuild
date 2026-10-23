@@ -37,17 +37,17 @@ For what each server learns about you, see [Privacy](../Privacy.md).
 At the top of the page, **Show experimental tools** lists the parts of
 ForkBuild that are **Experimental**: the **Bitcoin Endpoint** page here,
 and the **Wallet & Archive Tools** panel on the
-[Publications page](09-PublicationsAndEvidence.md#the-publications-page). It is off until you turn it on, and is saved on
+[Signed Records page](09-PublicationsAndEvidence.md#the-signed-records-page). It is off until you turn it on, and is saved on
 this device as soon as you change it. Nothing you need to build, publish or
 share is hidden while it is off.
 
 Below it, **Wallets** has a switch for each wallet ForkBuild can anchor
 with: **Bitcoin wallet** and **Base wallet**. Each is off until you turn it
-on, and is saved on this device. While one is off, the Publications page
+on, and is saved on this device. While one is off, the Signed Records page
 neither offers that wallet's steps nor loads them, and Bitcoin isn't offered
 as a [Proof / Anchoring Provider](#proof--anchoring-provider). Anchors
 already made on Bitcoin or Base are still checked and shown either way.
-Turning one off takes effect the next time the Publications page opens.
+Turning one off takes effect the next time the Signed Records page opens.
 
 ## How every page behaves
 
@@ -100,7 +100,7 @@ the service needs them, the **Request field** for the file and the
 **Response field** holding the CID. **Save** keeps these on this device.
 The **Token** is kept only until you close or reload the page, and is never
 saved; a service that needs one refuses uploads until you enter it. Every
-**Distribute** dialog and the Publications page start on this service, and
+**Distribute** dialog and the Signed Records page start on this service, and
 you can still change it there. **Forget Service** removes it.
 
 ## Announcement / Discovery Provider

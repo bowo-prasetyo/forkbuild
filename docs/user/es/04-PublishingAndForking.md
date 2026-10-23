@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 2ac1d0875426646f -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 487a84099ce93c78 -->
 # 04 — Publicar y remezclar
 
 <!-- languages -->
@@ -528,7 +528,7 @@ licencia:
    reclamación firmada por su identidad que lleva su licencia, y puede
    anclarse en Arweave para tener una fecha que nadie pueda cambiar después
    (consulte
-   [Publicaciones y evidencia externa](09-PublicationsAndEvidence.md)).
+   [Registros firmados y evidencia externa](09-PublicationsAndEvidence.md)).
    Guarde también su copia guardada y un enlace a ella.
 3. **Use el proceso del propio sitio.** YouTube, TikTok y los demás aceptan
    reclamaciones de derechos de autor de la persona dueña de la obra.
@@ -778,7 +778,7 @@ decide qué se muestra primero.
 A veces una remezcla no puede completarse; la mayoría de las veces al
 remezclar un Mundo compartido encontrado mediante un par o una red
 descentralizada (consulte
-[Publicaciones y evidencia externa](09-PublicationsAndEvidence.md)) en
+[Registros firmados y evidencia externa](09-PublicationsAndEvidence.md)) en
 lugar de una construcción común de **Explorar**. En lugar de dejarlo en
 una construcción del Editor vacío y sin relación, ForkBuild muestra un diálogo
 **No se puede hacer una copia** que indica exactamente qué salió mal:

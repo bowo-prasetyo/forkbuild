@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: b275d31fdacad544 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: cd26489f2c0613bc -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -503,7 +503,7 @@ Isso é opcional e totalmente separado de posicionar, remixar ou
 compartilhar a estrutura em si — existe para quando você quer ligar seu nome
 a um projeto de um jeito que outras pessoas possam verificar por conta
 própria, e não só confiar. Veja
-[Publicações e evidências externas](09-PublicationsAndEvidence.md) para o
+[Registros assinados e evidências externas](09-PublicationsAndEvidence.md) para o
 que acontece com uma declaração depois de publicada e como anexar a ela
 evidências externas independentes.
 

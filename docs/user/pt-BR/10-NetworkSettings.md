@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 80bde5395bb4efa2 -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: df2c8cb0e2cd162f -->
 # 10 — Configurações de rede
 
 <!-- languages -->
@@ -39,7 +39,7 @@ Para o que cada servidor fica sabendo sobre você, veja
 
 No alto da página, **Mostrar ferramentas experimentais** mostra as partes
 do ForkBuild que são **experimentais**: aqui, a página **Endpoint do
-Bitcoin**, e na [página Publicações](09-PublicationsAndEvidence.md#a-página-publicações), o painel **Ferramentas de
+Bitcoin**, e na [página Registros assinados](09-PublicationsAndEvidence.md#a-página-registros-assinados), o painel **Ferramentas de
 carteira e arquivo**. Fica desativado até você ativá-lo e é salvo
 neste dispositivo assim que você o muda. Nada do que você precisa para
 construir, publicar ou compartilhar fica oculto.
@@ -47,11 +47,11 @@ construir, publicar ou compartilhar fica oculto.
 Logo abaixo, **Carteiras** tem um botão para cada carteira com que o
 ForkBuild pode ancorar: **Carteira de Bitcoin** e **Carteira da Base**. Cada
 um fica desativado até você ativá-lo, e é salvo neste dispositivo. Enquanto
-um estiver desativado, a página Publicações não oferece nem carrega os passos
+um estiver desativado, a página Registros assinados não oferece nem carrega os passos
 dessa carteira, e o Bitcoin não é oferecido como
 [Provedor de prova / ancoragem](#provedor-de-prova--ancoragem). As âncoras já criadas no
 Bitcoin ou na Base continuam sendo verificadas e mostradas. Desativar uma
-carteira vale a partir da próxima vez que a página Publicações abrir.
+carteira vale a partir da próxima vez que a página Registros assinados abrir.
 
 ## Como todas as páginas se comportam
 
@@ -109,7 +109,7 @@ serviço precisar, o **Campo da requisição** para o arquivo e o **Campo da
 resposta** com o CID. **Salvar** guarda isso neste dispositivo. O
 **Token** só fica até você fechar ou recarregar a página, e nunca é salvo;
 um serviço que precise de um recusa envios até você informá-lo. Toda caixa
-de diálogo **Distribuir** e a página Publicações começam com esse serviço,
+de diálogo **Distribuir** e a página Registros assinados começam com esse serviço,
 e você ainda pode trocá-lo ali. **Esquecer serviço** o remove.
 
 ## Provedor de anúncio / descoberta

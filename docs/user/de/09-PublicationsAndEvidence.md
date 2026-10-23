@@ -1,5 +1,5 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 0076c2d8fe2e4551 -->
-# 09 — Veröffentlichungen & externe Nachweise
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: c9274474de1ec083 -->
+# 09 — Signierte Einträge & externe Nachweise
 
 <!-- languages -->
 [English](../09-PublicationsAndEvidence.md) · **Deutsch** · [Español](../es/09-PublicationsAndEvidence.md) · [Français](../fr/09-PublicationsAndEvidence.md) · [Bahasa Indonesia](../id/09-PublicationsAndEvidence.md) · [日本語](../ja/09-PublicationsAndEvidence.md) · [한국어](../ko/09-PublicationsAndEvidence.md) · [Português (Brasil)](../pt-BR/09-PublicationsAndEvidence.md)
@@ -10,7 +10,7 @@
 > [Spielen-Kapiteln](README.md#spielen-der-reihe-nach-lesen). Lesen Sie weiter, wenn Sie wissen
 > möchten, was darunter läuft.
 
-> **Teilweise experimentell.** Die Seite Veröffentlichungen ist eine
+> **Teilweise experimentell.** Die Seite Signierte Einträge ist eine
 > reguläre Funktion: ihre Liste und Status, das Entfernen unbrauchbarer
 > Veröffentlichungen, das Ankündigen auf Nostr oder Arweave, das Speichern
 > auf IPFS oder Arweave, das Verankern auf Arweave sowie alle vier Reiter
@@ -30,14 +30,14 @@
 Nichts hiervon ist nötig, um ForkBuild zu nutzen. Überspringen Sie es, wenn
 Sie nur bauen, veröffentlichen und erkunden möchten.
 
-Die Seite **Veröffentlichungen** ist eine technischere Ebene als
+Die Seite **Signierte Einträge** ist eine technischere Ebene als
 Entdecken. Unter Entdecken geht es um Bauwerke und Welten; auf der Seite
-Veröffentlichungen geht es um **signierte Ansprüche** wie „Ich habe diese
+Signierte Einträge geht es um **signierte Ansprüche** wie „Ich habe diese
 Struktur entworfen“ oder „Ich nenne diesen Ort X“ und um die optionale
 Tiefe, die Sie einem Anspruch geben können:
 
 - **Diese Anleitung** — woher Ansprüche kommen, die Seite
-  Veröffentlichungen, [Kommentare](#kommentare) und
+  Signierte Einträge, [Kommentare](#kommentare) und
   [Lokaler Snapshot](#lokaler-snapshot) (was Ihr Gerät besitzt).
 - **[Netzwerkeinstellungen](10-NetworkSettings.md)** — Gateways, Relays,
   Anbieter und Server für Peer-Verbindungen. Nicht experimentell und für
@@ -50,19 +50,21 @@ Tiefe, die Sie einem Anspruch geben können:
 
 ## Zwei Bedeutungen von „veröffentlichen“
 
-| | **Veröffentlichen** (Entdecken) | **Seite Veröffentlichungen** |
+| | **Veröffentlichen** (Entdecken) | **Seite Signierte Einträge** |
 |---|---|---|
 | Was es teilt | Ein Bauwerk oder eine Welt | Einen signierten Datensatz: eine Geteilte Welt, die Urheberschaft einer Struktur oder einen Ortsnamen |
-| Wo Sie es sehen | Entdecken, Autorenansicht, Weltansicht | Die Seite **Veröffentlichungen** |
+| Wo Sie es sehen | Entdecken, Ihre Seite (**Meine Bauwerke**), Weltansicht | Die Seite **Signierte Einträge** |
 | Was Sie damit tun | Öffnen, erkunden, remixen | Es prüfen, seinen Inhalt holen, es verteilen und verankern |
 | Anleitung | [Veröffentlichen & Remixen](04-PublishingAndForking.md) | Diese hier |
 
 **Veröffentlichen** allein bringt eine Welt nicht auf die Seite
-Veröffentlichungen. **Mit Peers teilen** tut es: Es signiert die Welt als
+Signierte Einträge. **Mit Peers teilen** tut es: Es signiert die Welt als
 **Geteilte Welt**, die zu Peers reisen kann (siehe
 [Ein Bauwerk aus Entdecken, dezentral](#ein-bauwerk-aus-entdecken-dezentral)).
+Alles, was Sie veröffentlicht haben, steht auf Ihrer eigenen Seite, **Mehr →
+Meine Bauwerke** (die Bauwerke, die Ihr Name signiert hat), und unter Entdecken.
 
-Die Seite Veröffentlichungen hat kein **Öffnen**, **Erkunden** oder
+Die Seite Signierte Einträge hat kein **Öffnen**, **Erkunden** oder
 **Remixen**, nicht einmal für eine Geteilte Welt. Sie zeigt den signierten
 Datensatz, nicht die Welt. Um eine Geteilte Welt zu öffnen, zu erkunden
 oder zu remixen, suchen Sie sie unter Entdecken, auf der Seite ihres Autors
@@ -72,7 +74,7 @@ Ausnahme ist **Im Editor öffnen** bei Ihrer eigenen Geteilten Welt, die
 erneut veröffentlicht werden muss; siehe
 [Bedeutung der Status](#bedeutung-der-status).)
 
-Jeder Eintrag auf der Seite Veröffentlichungen ist eine
+Jeder Eintrag auf der Seite Signierte Einträge ist eine
 *Veröffentlichung*, und jede gehört zu einer von drei Arten:
 
 | Art | Was sie ist |
@@ -109,7 +111,7 @@ Geteilten Welt) platzieren; und jeder kann sie kommentieren.
 
 ## Woher eine Veröffentlichung kommt
 
-Auf der Seite Veröffentlichungen selbst erstellen Sie nie einen Anspruch.
+Auf der Seite Signierte Einträge selbst erstellen Sie nie einen Anspruch.
 Sie listet Ansprüche auf, die Sie anderswo erstellt haben, solche, die
 Peers Ihnen gesendet haben, und Bauwerke aus Entdecken, die in
 dezentraler Form angekommen sind. Ortsnamensansprüche lassen sich auch
@@ -129,7 +131,7 @@ durch die Gemeinschaft**:
 - **Zuschreibung exportieren** — speichert Ihren Anspruch als Datei, die
   Sie jemandem geben können.
 - **Im Netzwerk veröffentlichen** — kündigt Ihren Anspruch jedem Peer an,
-  mit dem Sie verbunden sind, was ihn auf dessen Seite Veröffentlichungen
+  mit dem Sie verbunden sind, was ihn auf dessen Seite Signierte Einträge
   bringt, und auf Ihre.
 
 Sobald er veröffentlicht ist, bietet das Feld an, ihn zu **Verteilen**,
@@ -140,7 +142,7 @@ Anspruch (ein Urheberschaftsanspruch hat keinen Snapshot): Wählen Sie, wo
 sein Inhalt gespeichert und wo er angekündigt wird, und klicken Sie dann auf
 **Signierten Anspruch verteilen**. **Nicht jetzt** blendet das Angebot aus;
 Sie können den Anspruch später immer noch über seine Karte auf der Seite
-Veröffentlichungen verteilen (siehe [Verteilung](Distribution.md)).
+Signierte Einträge verteilen (siehe [Verteilung](Distribution.md)).
 
 ### Einen Ort benennen
 
@@ -184,9 +186,9 @@ Sobald Sie eine hier mit **Erneut prüfen** oder **Von Peers abrufen**
 auflösen, kommt sie in die Suche von Entdecken, auf die Seite ihres
 Autors und in die Weltansicht und bleibt dort auch nach einem Neuladen.
 
-## Die Seite Veröffentlichungen
+## Die Seite Signierte Einträge
 
-Öffnen Sie in der oberen Leiste **Veröffentlichungen**. Sie listet jede
+Öffnen Sie **Signierte Einträge** (**Mehr → Erweitert**). Sie listet jede
 signierte Veröffentlichung auf, die dieses Gerät erfasst hat, Ihre oder die
 eines Peers. Ganz unten enthält der eingeklappte Bereich **Wallet- &
 Archivwerkzeuge** seitenweite Werkzeuge in drei Reitern:
@@ -233,7 +235,7 @@ Darunter zwei eingeklappte Abschnitte:
   stattdessen alle Optionen. Steem, Blurt und entferntes IPFS-Pinning sind
   überall, wo sie angeboten werden, als **Experimentell** gekennzeichnet,
   ebenso jede Art der Verankerung außer Arweave. Siehe
-  [Von der Seite Veröffentlichungen verteilen](#von-der-seite-veröffentlichungen-verteilen)
+  [Von der Seite Signierte Einträge verteilen](#von-der-seite-signierte-einträge-verteilen)
   und [Nachweise & Speicher](11-EvidenceAndStorage.md).
 - **Details**, in vier Reitern:
 
@@ -301,7 +303,7 @@ sonst, und ein verbundener Peer, der die Veröffentlichung noch hat, kann
 sie erneut ankündigen. Nur Veröffentlichungen in dieser Gruppe lassen
 sich entfernen.
 
-### Von der Seite Veröffentlichungen verteilen
+### Von der Seite Signierte Einträge verteilen
 
 **Verteilung → Ankündigung / Entdeckung** hat zwei Karten:
 

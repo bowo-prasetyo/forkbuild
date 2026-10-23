@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 49b3a123cec42c7e -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: d67f6b7ce2344c01 -->
 # ワールドビュー：詳細ツール
 
 <!-- languages -->
@@ -259,7 +259,7 @@ ForkBuild が確かめるのは、まったく同じ点にある作品だけで�
 ものを表示します：
 
 - 近くに配置された **公開物**
-  （[公開物と外部証拠](09-PublicationsAndEvidence.md) を参照）
+  （[署名付き記録と外部証拠](09-PublicationsAndEvidence.md) を参照）
 - ほかの人の **アバター**
 - あなたの印
 

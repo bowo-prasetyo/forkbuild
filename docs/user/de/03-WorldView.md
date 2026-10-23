@@ -608,7 +608,7 @@ Einen Namen zu veröffentlichen sagt es den Menschen, mit denen Sie
 verbunden sind, genau wie wenn Sie beanspruchen, ein Bauwerk gemacht zu
 haben. Jeden Namen und Anspruch, den dieses Gerät veröffentlicht oder
 erfahren hat, sehen Sie unter
-[Veröffentlichungen & externe Nachweise](09-PublicationsAndEvidence.md).
+[Signierte Einträge & externe Nachweise](09-PublicationsAndEvidence.md).
 
 ## Meine Welten — Welten, in denen Sie wirklich waren
 

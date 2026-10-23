@@ -625,7 +625,7 @@ sous **Plus**.
 Publier un nom le dit aux personnes avec qui vous êtes connecté, comme
 lorsque vous déclarez avoir fait une construction. Pour voir tous les noms
 et toutes les déclarations que cet appareil a publiés ou appris, voir
-[Publications et preuves externes](09-PublicationsAndEvidence.md).
+[Enregistrements signés et preuves externes](09-PublicationsAndEvidence.md).
 
 ## Mes mondes — les Mondes où vous êtes vraiment allé
 

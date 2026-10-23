@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/12-ArchiveAndAchievements.md source-hash: 60c7fd2807c8b8fe -->
+<!-- translation-of: docs/user/12-ArchiveAndAchievements.md source-hash: b3e47023605bc26e -->
 # 12 — Archiv & Erfolge
 
 <!-- languages -->
@@ -12,7 +12,7 @@
 
 > **Experimentell.** Alles hier kann sich in einer späteren Version ändern
 > oder entfernt werden, und was es erzeugt, wird möglicherweise nicht
-> übernommen. Auf der Seite Veröffentlichungen ist der Bereich **Wallet- &
+> übernommen. Auf der Seite Signierte Einträge ist der Bereich **Wallet- &
 > Archivwerkzeuge** mit einem Abzeichen **Experimentell**
 > gekennzeichnet.
 
@@ -22,7 +22,7 @@ beobachten, in einem dauerhaften Archiv auf diesem Gerät. Diese Anleitung
 behandelt dieses Archiv und was darauf aufbaut: Verweise zwischen
 Veröffentlichungen und Erfolge.
 
-Die meisten dieser Karten liegen auf der Seite Veröffentlichungen unter
+Die meisten dieser Karten liegen auf der Seite Signierte Einträge unter
 **Wallet- & Archivwerkzeuge**, in deren Reitern
 **Archivwerkzeuge** und **Verweise & Erfolge**. Jede zeigt **Lokal
 gespeichert**, wenn ihr Inhalt ein Neuladen übersteht.

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: b52156afbaeaed07 -->
+<!-- translation-of: docs/user/README.md source-hash: 8832d9dd4363463e -->
 # ForkBuild-Benutzerdokumentation
 
 <!-- languages -->
@@ -83,9 +83,9 @@ experimentellen Werkzeuge. Zum Spielen brauchen Sie nichts davon.
 - **[Chat & Unterhaltungen](08-ChatAndConversations.md)** — direkte
   Nachrichten nur unter Freunden, Zustellung im Offline-Zustand,
   Lesebestätigungen und Sprachanrufe.
-- **[Veröffentlichungen & externe Nachweise](09-PublicationsAndEvidence.md)** —
+- **[Signierte Einträge & externe Nachweise](09-PublicationsAndEvidence.md)** —
   die technische, optionale Ebene: signierte Urheberschafts- und
-  Ortsnamensansprüche, die Seite Veröffentlichungen, Kommentare und was
+  Ortsnamensansprüche, die Seite Signierte Einträge, Kommentare und was
   Ihr Gerät besitzt (lokaler Snapshot). Teile der Seite sind
   *experimentell* und so gekennzeichnet.
 - **[Netzwerkeinstellungen](10-NetworkSettings.md)** — Gateways, Relays,

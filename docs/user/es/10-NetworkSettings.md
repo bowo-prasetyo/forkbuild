@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 80bde5395bb4efa2 -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: df2c8cb0e2cd162f -->
 # 10 — Configuración de red
 
 <!-- languages -->
@@ -40,7 +40,7 @@ Para saber qué averigua cada servidor sobre usted, consulte
 
 Arriba de la página, **Mostrar herramientas experimentales** muestra las
 partes de ForkBuild que son **experimentales**: aquí, la página
-**Endpoint de Bitcoin**, y en la [página Publicaciones](09-PublicationsAndEvidence.md#la-página-publicaciones), el panel
+**Endpoint de Bitcoin**, y en la [página Registros firmados](09-PublicationsAndEvidence.md#la-página-registros-firmados), el panel
 **Herramientas de billetera y archivo**. Está desactivado hasta que
 lo active, y se guarda en este dispositivo en cuanto lo cambia. No se oculta
 nada que necesite para construir, publicar o compartir.
@@ -48,11 +48,11 @@ nada que necesite para construir, publicar o compartir.
 Debajo, **Billeteras** tiene un interruptor para cada billetera con la que
 ForkBuild puede anclar: **Billetera de Bitcoin** y **Billetera de Base**.
 Cada uno está desactivado hasta que lo active, y se guarda en este
-dispositivo. Mientras uno está desactivado, la página Publicaciones no ofrece
+dispositivo. Mientras uno está desactivado, la página Registros firmados no ofrece
 ni carga los pasos de esa billetera, y Bitcoin no se ofrece como
 [Proveedor de prueba / anclaje](#proveedor-de-prueba--anclaje). Los anclajes ya creados en
 Bitcoin o Base se siguen comprobando y mostrando igualmente. Desactivar uno
-surte efecto la próxima vez que se abre la página Publicaciones.
+surte efecto la próxima vez que se abre la página Registros firmados.
 
 ## Cómo se comporta cada página
 
@@ -115,7 +115,7 @@ archivo y el **Campo de la respuesta** que contiene el CID. **Guardar** los
 conserva en este dispositivo. El **Token** solo se conserva hasta que
 cierre o recargue la página, y nunca se guarda; un servicio que lo necesite
 rechaza las subidas hasta que lo introduzca. Todos los diálogos
-**Distribuir** y la página Publicaciones empiezan con este servicio, y allí
+**Distribuir** y la página Registros firmados empiezan con este servicio, y allí
 todavía puede cambiarlo. **Olvidar servicio** lo quita.
 
 ## Proveedor de anuncio / descubrimiento

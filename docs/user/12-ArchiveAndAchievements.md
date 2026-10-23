@@ -9,7 +9,7 @@
 > when you want to know what runs underneath.
 
 > **Experimental.** Everything here may change or be removed in a later
-> version, and what it produces may not carry over. On the Publications
+> version, and what it produces may not carry over. On the Signed Records
 > page, the **Wallet & Archive Tools** panel is marked with an
 > **Experimental** badge.
 
@@ -18,7 +18,7 @@ The Bitcoin, Base and IPFS tools in
 a durable archive on this device. This guide covers that archive and what's
 built on it: references between publications, and achievements.
 
-Most of these cards are on the Publications page under **Wallet & Archive
+Most of these cards are on the Signed Records page under **Wallet & Archive
 Tools**, in its **Archive Tools** and **References &
 Achievements** tabs. Each shows **Persisted locally** when what it holds
 survives a reload.

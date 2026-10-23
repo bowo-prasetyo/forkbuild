@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 2ac1d0875426646f -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 487a84099ce93c78 -->
 # 04 — Veröffentlichen & Remixen
 
 <!-- languages -->
@@ -535,7 +535,7 @@ verdient:
    von Ihrer Identität signierter Anspruch mit seiner Lizenz, und sie kann
    auf Arweave verankert werden, für ein Datum, das niemand später ändern
    kann (siehe
-   [Veröffentlichungen & externe Nachweise](09-PublicationsAndEvidence.md)).
+   [Signierte Einträge & externe Nachweise](09-PublicationsAndEvidence.md)).
    Bewahren Sie auch Ihre gespeicherte Kopie und einen Link dazu auf.
 3. **Nutzen Sie das Verfahren der Seite.** YouTube, TikTok und die anderen
    nehmen Urheberrechtsbeschwerden von der Person entgegen, deren Werk es
@@ -793,7 +793,7 @@ bestimmt nie, was zuerst gezeigt wird.
 Gelegentlich kann ein Remix nicht durchgeführt werden — meistens beim
 Remixen einer Geteilten Welt, die über einen Peer oder ein dezentrales
 Netzwerk gefunden wurde (siehe
-[Veröffentlichungen & externe Nachweise](09-PublicationsAndEvidence.md)),
+[Signierte Einträge & externe Nachweise](09-PublicationsAndEvidence.md)),
 statt eines gewöhnlichen Bauwerks in **Entdecken**. Statt Sie in ein leeres,
 fremdes Editor-Bauwerk zu werfen, zeigt ForkBuild einen Dialog **Keine
 Kopie möglich**, der genau nennt, was schiefgegangen ist:

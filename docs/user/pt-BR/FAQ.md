@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: ce5fc18391277ac3 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: f174ea3c3d70e078 -->
 # Perguntas frequentes
 
 <!-- languages -->
@@ -20,8 +20,8 @@ semana. Veja [Orientando-se](01-GettingStarted.md#orientando-se).
 ### Não encontro Meu avatar, Pares ou Configurações de rede
 
 Eles ficam em **Mais**, na barra superior (no celular, em **Menu**):
-**Você** tem Meu avatar, Minhas identidades e Seus dados; **Pessoas** tem
-Pares, Seguindo e Conversas; **Avançado** tem Publicações e Configurações
+**Você** tem Minhas construções, Meu avatar, Minhas identidades e Seus dados; **Pessoas** tem
+Pares, Seguindo e Conversas; **Avançado** tem Registros assinados e Configurações
 de rede. Clicar no seu nome, no canto superior direito, também abre Meu
 avatar, Minhas identidades e Seus dados.
 

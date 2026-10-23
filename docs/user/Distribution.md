@@ -41,7 +41,7 @@ Distributing uses up to three kinds of network, each chosen separately:
 You need both of the first two. Stored work that isn't announced is hard
 to find, and an announcement with nothing stored points at nothing.
 **Distribute** does both in one click. Anchoring is extra, and done
-separately on the **Publications** page.
+separately on the **Signed Records** page.
 
 Set your usual choice for each role under
 [Network Settings](10-NetworkSettings.md):
@@ -55,11 +55,11 @@ anything.
 
 | What | Content | Announcement / Discovery | Proof / Anchoring | Where you do it |
 |---|---|---|---|---|
-| **Your World's Signed Claim** (the signed record of a published World, called a Shared World) | Arweave, IPFS, Steem or Blurt | Nostr, Arweave, Steem or Blurt | — | **Distribute** after publishing in the Editor; **My Shared World** in World View; the **Publications** page |
+| **Your World's Signed Claim** (the signed record of a published World, called a Shared World) | Arweave, IPFS, Steem or Blurt | Nostr, Arweave, Steem or Blurt | — | **Distribute** after publishing in the Editor; **My Shared World** in World View; the **Signed Records** page |
 | **Your World's Snapshot** (its bricks), with where you placed it | Arweave, IPFS, Steem or Blurt | Nostr, Arweave, Steem or Blurt | — | The same **Distribute** dialogs (**Distribute Snapshot only** for just this half) |
-| **Any publication's content hash** (a World, an authorship claim or a place name) | — | — | Bitcoin, Arweave, Base, Steem or Blurt | The publication's card on the **Publications** page |
-| **Authorship of a structure** (Blueprint Attribution) | Arweave, IPFS, Steem or Blurt | Nostr, Arweave, Steem or Blurt | — | **Distribute** in the structure's **Info** panel, offered once you **Publish to Network**; the **Publications** page |
-| **A place name** (Place Naming Claim) | Arweave, IPFS, Steem or Blurt | Nostr, Arweave, Steem or Blurt | — | **Distribute** in World View's naming panel, offered once you **Publish A Name** (it announces the name on the network you pick); the **Publications** page for any of these |
+| **Any publication's content hash** (a World, an authorship claim or a place name) | — | — | Bitcoin, Arweave, Base, Steem or Blurt | The publication's card on the **Signed Records** page |
+| **Authorship of a structure** (Blueprint Attribution) | Arweave, IPFS, Steem or Blurt | Nostr, Arweave, Steem or Blurt | — | **Distribute** in the structure's **Info** panel, offered once you **Publish to Network**; the **Signed Records** page |
+| **A place name** (Place Naming Claim) | Arweave, IPFS, Steem or Blurt | Nostr, Arweave, Steem or Blurt | — | **Distribute** in World View's naming panel, offered once you **Publish A Name** (it announces the name on the network you pick); the **Signed Records** page for any of these |
 | **A comment** on a publication | — | Nostr, Arweave, Steem or Blurt, or none (**Local & peers only**) | — | **Post Comment**, in Explore or World View, on the network chosen beside it; later, **Distribute** under your own comment |
 
 A World's Snapshot carries your signed placement with it, so people who
@@ -103,8 +103,8 @@ Details:
   [My Shared World](WorldViewAdvancedTools.md#my-shared-world--distributing-your-own-snapshot-no-peers-required),
   and the [Distribute dialog](WorldViewAdvancedTools.md#world-encounters--publications-and-avatars-your-peers-are-sharing)
   itself.
-- The Publications page:
-  [Distributing from the Publications page](09-PublicationsAndEvidence.md#distributing-from-the-publications-page),
+- The Signed Records page:
+  [Distributing from the Signed Records page](09-PublicationsAndEvidence.md#distributing-from-the-signed-records-page),
   [Snapshot Placements](11-EvidenceAndStorage.md#snapshot-placements) and
   [IPFS Publishing](11-EvidenceAndStorage.md#ipfs-publishing).
 - Anchoring: [External Evidence](11-EvidenceAndStorage.md#external-evidence),
@@ -144,7 +144,7 @@ the attempt ends with a notice saying it couldn't be completed.
 | **IPFS (Remote Pinning)** *(experimental)* | Content | An account with a Pinata-compatible pinning service | No size limit. Set the service up once under [Content Provider](10-NetworkSettings.md#content-provider); the token is asked for once per visit and never saved. |
 | **Steem** *(experimental)* | Content, Announcement / Discovery, Proof / Anchoring | The Steem Keychain extension with your posting key, and your account under [Network Settings → Steem](10-NetworkSettings.md#steem) | Posts are replies to ForkBuild's monthly threads; one approval per post. Stores about 2,500 bricks per post, up to about 30,000 bricks in 20 posts. Uses Resource Credits, which refill. |
 | **Blurt** *(experimental)* | Content, Announcement / Discovery, Proof / Anchoring | The Blurt Keychain extension (or WhaleVault) with your posting key, and your account under [Network Settings → Blurt](10-NetworkSettings.md#blurt) | One top-level post from your own account per build, which keeps its payout; stored data goes in replies under it. Stores about 2,500 bricks per reply, up to about 30,000 bricks. Each transaction costs a small fee in BLURT. |
-| **Bitcoin** *(experimental)* | Proof / Anchoring | The UniSat extension, with bitcoin at a native SegWit (`bc1q…`) address for the fee | Made through the wallet steps on the Publications page |
+| **Bitcoin** *(experimental)* | Proof / Anchoring | The UniSat extension, with bitcoin at a native SegWit (`bc1q…`) address for the fee | Made through the wallet steps on the Signed Records page |
 | **Base** *(experimental)* | Proof / Anchoring | A browser wallet such as MetaMask or Coinbase Wallet, on Base | Every anchor is a transaction you review and sign |
 
 A Steem anchor is quick and free but attested by Steem's witnesses rather
@@ -164,7 +164,7 @@ content hash; see [Blurt](11-EvidenceAndStorage.md#blurt).
 4. It sends the Snapshot, then the Signed Claim, and shows a result for
    each. If one half fails, retry just that half with its own **… only**
    button.
-5. *Optional:* on the **Publications** page, anchor the publication (for
+5. *Optional:* on the **Signed Records** page, anchor the publication (for
    example with **Anchor on Arweave**) to record when it existed.
 6. Click **Share…** or **Copy link** under the result. The link opens your
    build on any device, ready to remix or walk around in.
@@ -186,7 +186,7 @@ you're connected to can fetch builds of up to 64 MB straight from you.
   looks your World up on Arweave and Nostr and checks it: is it really out
   there, intact? See
   [Discover Shared World](WorldViewAdvancedTools.md#discover-shared-world--searching-decentralized-networks-directly).
-- **On the Publications page.** **Verify IPFS Content** fetches an IPFS
+- **On the Signed Records page.** **Verify IPFS Content** fetches an IPFS
   upload back and compares it with its hash. **Verify Evidence** checks an
   anchor.
 

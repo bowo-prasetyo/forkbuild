@@ -1,5 +1,5 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 0076c2d8fe2e4551 -->
-# 09 — Publikasi & Bukti Eksternal
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: c9274474de1ec083 -->
+# 09 — Catatan Bertanda Tangan & Bukti Eksternal
 
 <!-- languages -->
 [English](../09-PublicationsAndEvidence.md) · [Deutsch](../de/09-PublicationsAndEvidence.md) · [Español](../es/09-PublicationsAndEvidence.md) · [Français](../fr/09-PublicationsAndEvidence.md) · **Bahasa Indonesia** · [日本語](../ja/09-PublicationsAndEvidence.md) · [한국어](../ko/09-PublicationsAndEvidence.md) · [Português (Brasil)](../pt-BR/09-PublicationsAndEvidence.md)
@@ -10,7 +10,7 @@
 > [bab Bermain](README.md#bermain-baca-berurutan). Lanjutkan membaca bila Anda ingin tahu apa
 > yang berjalan di baliknya.
 
-> **Sebagian eksperimental.** Halaman Publikasi adalah fitur biasa: daftar
+> **Sebagian eksperimental.** Halaman Catatan Bertanda Tangan adalah fitur biasa: daftar
 > dan statusnya, menghapus publikasi yang tidak dapat dipakai, mengumumkan
 > di Nostr atau Arweave, menyimpan di IPFS atau Arweave, penjangkaran di
 > Arweave, serta keempat tab sebuah kartu: **Snapshot**, **Desentralisasi &
@@ -28,13 +28,13 @@
 Tidak ada satu pun dari ini yang diperlukan untuk memakai ForkBuild.
 Lewati saja jika Anda hanya ingin membangun, menerbitkan, dan menjelajah.
 
-Halaman **Publikasi** adalah lapisan yang lebih teknis daripada Jelajahi.
-Jelajahi berkaitan dengan Bangunan dan Dunia; halaman Publikasi berkaitan
+Halaman **Catatan Bertanda Tangan** adalah lapisan yang lebih teknis daripada Jelajahi.
+Jelajahi berkaitan dengan Bangunan dan Dunia; halaman Catatan Bertanda Tangan berkaitan
 dengan **klaim bertanda tangan** seperti "Saya merancang struktur ini" atau
 "Saya menyebut tempat ini X", dan dengan kedalaman opsional yang dapat Anda
 tambahkan pada sebuah klaim:
 
-- **Panduan ini** — dari mana klaim berasal, halaman Publikasi,
+- **Panduan ini** — dari mana klaim berasal, halaman Catatan Bertanda Tangan,
   [Komentar](#komentar), dan [Snapshot Lokal](#snapshot-lokal) (apa yang
   disimpan perangkat Anda).
 - **[Pengaturan Jaringan](10-NetworkSettings.md)** — gateway, relay,
@@ -48,19 +48,21 @@ tambahkan pada sebuah klaim:
 
 ## Dua arti "terbitkan"
 
-| | **Terbitkan** (Jelajahi) | **Halaman Publikasi** |
+| | **Terbitkan** (Jelajahi) | **Halaman Catatan Bertanda Tangan** |
 |---|---|---|
 | Apa yang dibagikan | Bangunan atau Dunia | Catatan bertanda tangan: Dunia Bersama, kepengarangan struktur, atau nama tempat |
-| Tempat melihatnya | Jelajahi, Halaman pembuat, Tampilan Dunia | Halaman **Publikasi** |
+| Tempat melihatnya | Jelajahi, halaman Anda (**Bangunan Saya**), Tampilan Dunia | Halaman **Catatan Bertanda Tangan** |
 | Apa yang Anda lakukan dengannya | Membuka, menjelajahi, me-remix | Memeriksanya, mengambil kontennya, mendistribusikan dan menjangkarkannya |
 | Panduan | [Penerbitan & Remix](04-PublishingAndForking.md) | Yang ini |
 
-**Terbitkan** saja tidak memasukkan sebuah Dunia ke halaman Publikasi.
+**Terbitkan** saja tidak memasukkan sebuah Dunia ke halaman Catatan Bertanda Tangan.
 **Bagikan dengan Rekan** yang melakukannya: ia menandatangani Dunia itu
 sebagai **Dunia Bersama** yang dapat berpindah ke rekan (lihat
 [Bangunan dari Jelajahi, terdesentralisasi](#bangunan-dari-jelajahi-terdesentralisasi)).
+Semua yang Anda terbitkan ada di halaman Anda sendiri, **Lainnya → Bangunan
+Saya** (bangunan yang ditandatangani nama Anda), dan di Jelajahi.
 
-Halaman Publikasi tidak memiliki **Buka**, **Jelajahi**, atau **Remix**,
+Halaman Catatan Bertanda Tangan tidak memiliki **Buka**, **Jelajahi**, atau **Remix**,
 bahkan untuk Dunia Bersama. Halaman ini menampilkan catatan bertanda
 tangan, bukan Dunianya. Untuk membuka, menjelajahi, atau me-remix Dunia
 Bersama, temukan di Jelajahi, di halaman pembuatnya, atau di Tampilan
@@ -69,7 +71,7 @@ perangkat ini. (Satu-satunya pengecualian adalah **Buka di Editor** pada
 Dunia Bersama milik Anda sendiri yang perlu diterbitkan lagi; lihat
 [Arti status](#arti-status).)
 
-Setiap entri di halaman Publikasi adalah sebuah *publikasi*, dan
+Setiap entri di halaman Catatan Bertanda Tangan adalah sebuah *publikasi*, dan
 masing-masing adalah salah satu dari tiga jenis:
 
 | Jenis | Apa itu |
@@ -105,7 +107,7 @@ Bersama); dan siapa pun dapat mengomentarinya.
 
 ## Dari mana publikasi berasal
 
-Anda tidak pernah membuat klaim di halaman Publikasi itu sendiri. Halaman
+Anda tidak pernah membuat klaim di halaman Catatan Bertanda Tangan itu sendiri. Halaman
 ini mencantumkan klaim yang Anda buat di tempat lain, yang dikirim rekan
 kepada Anda, dan bangunan dari Jelajahi yang datang dalam bentuk
 terdesentralisasi. Klaim nama tempat juga dapat ditemukan langsung dari
@@ -125,7 +127,7 @@ menawarkan:
 - **Ekspor Atribusi** — menyimpan klaim Anda sebagai file yang dapat Anda
   berikan kepada seseorang.
 - **Terbitkan ke Jaringan** — mengumumkan klaim Anda kepada setiap rekan
-  yang terhubung dengan Anda, sehingga klaim itu masuk ke halaman Publikasi
+  yang terhubung dengan Anda, sehingga klaim itu masuk ke halaman Catatan Bertanda Tangan
   mereka, dan milik Anda.
 
 Setelah diterbitkan, panel menawarkan **Distribusikan**, agar orang yang
@@ -135,7 +137,7 @@ menerbitkan Dunia, hanya dengan separuh Klaim Bertanda Tangan (klaim
 kepengarangan tidak punya Snapshot): pilih tempat kontennya disimpan dan
 tempat klaim itu diumumkan, lalu klik **Distribusikan Klaim Bertanda
 Tangan**. **Nanti saja** menyembunyikan tawaran itu; Anda tetap dapat
-mendistribusikan klaim itu nanti dari kartunya di halaman Publikasi (lihat
+mendistribusikan klaim itu nanti dari kartunya di halaman Catatan Bertanda Tangan (lihat
 [Distribusi](Distribution.md)).
 
 ### Memberi nama tempat
@@ -179,9 +181,9 @@ Begitu Anda menyelesaikannya di sini dengan **Periksa Ulang** atau **Ambil
 dari Rekan**, karya itu bergabung ke pencarian Jelajahi, halaman
 pembuatnya, dan Tampilan Dunia, dan tetap ada setelah dimuat ulang.
 
-## Halaman Publikasi
+## Halaman Catatan Bertanda Tangan
 
-Buka **Publikasi** di bilah atas. Halaman ini mencantumkan setiap publikasi
+Buka **Catatan Bertanda Tangan** (**Lainnya → Lanjutan**). Halaman ini mencantumkan setiap publikasi
 bertanda tangan yang telah dikatalogkan perangkat ini, milik Anda atau
 milik rekan. Di bagian bawah, panel terlipat **Alat Dompet & Arsip** berisi
 alat untuk seluruh halaman dalam tiga tab:
@@ -222,7 +224,7 @@ Di bawahnya, dua bagian terlipat:
   semua opsi ditampilkan. Steem, Blurt, dan pinning IPFS jarak jauh ditandai
   **Eksperimental** di mana pun ditawarkan, begitu pula setiap jenis
   penjangkaran kecuali Arweave. Lihat
-  [Mendistribusikan dari halaman Publikasi](#mendistribusikan-dari-halaman-publikasi)
+  [Mendistribusikan dari halaman Catatan Bertanda Tangan](#mendistribusikan-dari-halaman-catatan-bertanda-tangan)
   dan [Bukti & Penyimpanan](11-EvidenceAndStorage.md).
 - **Detail**, dalam empat tab:
 
@@ -288,7 +290,7 @@ di sini. Ini tidak membatalkan penerbitan apa pun atau menjangkau orang
 lain, dan rekan terhubung yang masih memiliki publikasi itu dapat
 mengumumkannya lagi. Hanya publikasi di kelompok ini yang dapat dihapus.
 
-### Mendistribusikan dari halaman Publikasi
+### Mendistribusikan dari halaman Catatan Bertanda Tangan
 
 **Distribusi → Pengumuman / Penemuan** memiliki dua kartu:
 

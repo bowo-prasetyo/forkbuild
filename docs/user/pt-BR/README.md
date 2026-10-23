@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: b52156afbaeaed07 -->
+<!-- translation-of: docs/user/README.md source-hash: 8832d9dd4363463e -->
 # Documentação do ForkBuild para usuários
 
 <!-- languages -->
@@ -81,9 +81,9 @@ ferramentas experimentais. Você não precisa de nada disso para jogar.
   bloquear, reconexão automática e seu próprio relay TURN.
 - **[Conversas](08-ChatAndConversations.md)** — mensagens diretas, só
   entre amigos, entrega offline, confirmações de leitura e chamadas de voz.
-- **[Publicações e evidências externas](09-PublicationsAndEvidence.md)** —
+- **[Registros assinados e evidências externas](09-PublicationsAndEvidence.md)** —
   a camada técnica e opcional: declarações assinadas de autoria e de nomes
-  de lugares, a página Publicações, comentários e o que o seu dispositivo
+  de lugares, a página Registros assinados, comentários e o que o seu dispositivo
   guarda (Snapshot local). Partes da página são *experimentais*, e estão
   marcadas assim.
 - **[Configurações de rede](10-NetworkSettings.md)** — gateways, relays,

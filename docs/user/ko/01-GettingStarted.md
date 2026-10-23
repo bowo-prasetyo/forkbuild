@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: b77912c92f47f6cd -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: c6bc6de8889ba433 -->
 # 01 — 시작하기
 
 <!-- languages -->
@@ -87,9 +87,9 @@ ForkBuild는 최신 웹 브라우저라면 어디서든 실행됩니다: 호스�
   - **대화** — 내 다이렉트 메시지,
     [채팅과 대화](08-ChatAndConversations.md) 참고
 - **고급** — 짓고 공유하는 데는 필요 없습니다
-  - **게시물** — 서명된 작성자 주장과 장소 이름 주장, 그것을 저장하고
+  - **서명된 기록** — 서명된 작성자 주장과 장소 이름 주장, 그것을 저장하고
     알릴 곳, 그리고 (*실험적*) 외부 증거,
-    [게시물과 외부 증거](09-PublicationsAndEvidence.md) 참고
+    [서명된 기록과 외부 증거](09-PublicationsAndEvidence.md) 참고
   - **네트워크 설정** — 게이트웨이, 릴레이, 제공자, 피어 연결용 서버,
     [네트워크 설정](10-NetworkSettings.md) 참고
 - **앱**

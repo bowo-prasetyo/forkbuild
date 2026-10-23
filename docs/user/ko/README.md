@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: b52156afbaeaed07 -->
+<!-- translation-of: docs/user/README.md source-hash: 8832d9dd4363463e -->
 # ForkBuild 사용자 문서
 
 <!-- languages -->
@@ -70,8 +70,8 @@
   내 TURN 릴레이.
 - **[채팅과 대화](08-ChatAndConversations.md)** — 친구끼리만 주고받는
   직접 메시지, 오프라인 전달, 읽음 확인, 음성 통화.
-- **[게시물과 외부 증거](09-PublicationsAndEvidence.md)** — 기술적이고
-  선택적인 계층: 서명된 저작자 클레임과 장소 이름 클레임, 게시물 페이지,
+- **[서명된 기록과 외부 증거](09-PublicationsAndEvidence.md)** — 기술적이고
+  선택적인 계층: 서명된 저작자 클레임과 장소 이름 클레임, 서명된 기록 페이지,
   댓글, 그리고 내 기기가 가진 것(로컬 스냅샷). 페이지 일부는
   *실험적*이며 그렇게 표시되어 있습니다.
 - **[네트워크 설정](10-NetworkSettings.md)** — 게이트웨이, 릴레이,

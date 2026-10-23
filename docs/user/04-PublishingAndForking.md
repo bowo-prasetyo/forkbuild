@@ -480,7 +480,7 @@ If someone posts or earns from your build against your license:
 2. **Keep the evidence.** Your build's Publication is a claim signed by
    your identity, carrying its license, and it can be anchored on Arweave
    for a date nobody can change later (see
-   [Publications and Evidence](09-PublicationsAndEvidence.md)). Keep your
+   [Signed Records and Evidence](09-PublicationsAndEvidence.md)). Keep your
    saved copy and a link to it too.
 3. **Use the site's own process.** YouTube, TikTok and the others take
    copyright complaints from the person whose work it is. Only file one when
@@ -710,7 +710,7 @@ device has found, and it never decides what is shown first.
 
 Occasionally a remix can't go through — most often when remixing a Shared World
 found through a peer or a decentralized network (see
-[Publications & External Evidence](09-PublicationsAndEvidence.md)) rather
+[Signed Records & External Evidence](09-PublicationsAndEvidence.md)) rather
 than an ordinary build in Explore. Instead of dropping you into a blank,
 unrelated Editor build, ForkBuild shows a **Can't make a copy** dialog
 naming exactly what went wrong:

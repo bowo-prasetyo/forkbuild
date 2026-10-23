@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: b275d31fdacad544 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: cd26489f2c0613bc -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -540,7 +540,7 @@ C’est facultatif, et entièrement indépendant du placement, du remix ou du
 partage de la structure elle-même — cela existe pour les situations où
 vous voulez associer votre nom à un design d’une façon que d’autres
 peuvent vérifier indépendamment, et pas seulement croire. Voir
-[Publications et preuves externes](09-PublicationsAndEvidence.md) pour ce
+[Enregistrements signés et preuves externes](09-PublicationsAndEvidence.md) pour ce
 qu’il advient d’une revendication une fois publiée, et comment y joindre
 des preuves externes indépendantes.
 

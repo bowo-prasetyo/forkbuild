@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: ce5fc18391277ac3 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: f174ea3c3d70e078 -->
 # Questions fréquentes
 
 <!-- languages -->
@@ -21,9 +21,9 @@ Monde sur la place du défi de la semaine. Voir
 ### Je ne trouve pas Mon avatar, Pairs ou Paramètres réseau
 
 Ils sont sous **Plus** dans la barre du haut (sur un téléphone, sous
-**Menu**) : **Vous** contient Mon avatar, Mes identités et Vos données ;
+**Menu**) : **Vous** contient Mes constructions, Mon avatar, Mes identités et Vos données ;
 **Personnes** contient Pairs, Abonnements et Conversations ; **Avancé**
-contient Publications et Paramètres réseau. Cliquer sur votre nom en haut à
+contient Enregistrements signés et Paramètres réseau. Cliquer sur votre nom en haut à
 droite ouvre aussi Mon avatar, Mes identités et Vos données.
 
 ## Publier et partager

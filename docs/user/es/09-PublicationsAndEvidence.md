@@ -1,5 +1,5 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 0076c2d8fe2e4551 -->
-# 09 — Publicaciones y evidencia externa
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: c9274474de1ec083 -->
+# 09 — Registros firmados y evidencia externa
 
 <!-- languages -->
 [English](../09-PublicationsAndEvidence.md) · [Deutsch](../de/09-PublicationsAndEvidence.md) · **Español** · [Français](../fr/09-PublicationsAndEvidence.md) · [Bahasa Indonesia](../id/09-PublicationsAndEvidence.md) · [日本語](../ja/09-PublicationsAndEvidence.md) · [한국어](../ko/09-PublicationsAndEvidence.md) · [Português (Brasil)](../pt-BR/09-PublicationsAndEvidence.md)
@@ -10,7 +10,7 @@
 > [capítulos de Jugar](README.md#jugar-léalo-en-orden). Siga leyendo si quiere saber qué
 > funciona por debajo.
 
-> **En parte experimental.** La página Publicaciones es una función
+> **En parte experimental.** La página Registros firmados es una función
 > habitual: su lista y sus estados, quitar publicaciones que no se pueden
 > usar, anunciar en Nostr o Arweave, guardar en IPFS o Arweave, anclar en
 > Arweave, y las cuatro pestañas de una tarjeta: **Snapshot**,
@@ -29,14 +29,14 @@
 Nada de esto es necesario para usar ForkBuild. Sáltelo si solo quiere
 construir, publicar y explorar.
 
-La página **Publicaciones** es una capa más técnica que Explorar.
-Explorar trata de construcciones y Mundos; la página Publicaciones trata de
+La página **Registros firmados** es una capa más técnica que Explorar.
+Explorar trata de construcciones y Mundos; la página Registros firmados trata de
 **declaraciones firmadas** como “yo diseñé esta estructura” o “yo llamo X a
 este lugar”, y de la profundidad opcional que puede agregarle a una
 declaración:
 
 - **Esta guía**: de dónde vienen las declaraciones, la página
-  Publicaciones, los [Comentarios](#comentarios) y el
+  Registros firmados, los [Comentarios](#comentarios) y el
   [Snapshot local](#snapshot-local) (lo que tiene su dispositivo).
 - **[Configuración de red](10-NetworkSettings.md)**: gateways, relays,
   proveedores y servidores de conexión entre pares. No es experimental, y
@@ -52,16 +52,18 @@ declaración:
 | | **Publicar** (Explorar) | **Página Publicaciones** |
 |---|---|---|
 | Qué comparte | Una construcción o un Mundo | Un registro firmado: un Mundo compartido, la autoría de una estructura o un nombre de lugar |
-| Dónde lo ve | Explorar, Vista del autor, Vista del mundo | La página **Publicaciones** |
+| Dónde lo ve | Explorar, su página (**Mis construcciones**), Vista del mundo | La página **Registros firmados** |
 | Qué hace con él | Abrirlo, explorarlo, remezclarlo | Comprobarlo, obtener su contenido, distribuirlo y anclarlo |
 | Guía | [Publicar y remezclar](04-PublishingAndForking.md) | Esta |
 
-**Publicar** por sí solo no pone un Mundo en la página Publicaciones. Lo
+**Publicar** por sí solo no pone un Mundo en la página Registros firmados. Lo
 hace **Compartir con pares**: firma el Mundo como un **Mundo compartido**
 que puede viajar a los pares (consulte
 [Una construcción de Explorar, descentralizada](#una-construcción-de-explorar-descentralizada)).
+Todo lo que publicó está en su propia página, **Más → Mis construcciones**
+(las construcciones que firmó su nombre), y en Explorar.
 
-La página Publicaciones no tiene **Abrir**, **Explorar** ni **Remezclar**, ni
+La página Registros firmados no tiene **Abrir**, **Explorar** ni **Remezclar**, ni
 siquiera para un Mundo compartido. Muestra el registro firmado, no el
 Mundo. Para abrir, explorar o remezclar un Mundo compartido, búsquelo en
 Explorar, en la página de su autor o en la Vista del mundo. Uno que
@@ -70,7 +72,7 @@ dispositivo. (La única excepción es **Abrir en el Editor** en su propio
 Mundo compartido que necesita volver a publicarse; consulte
 [Significado de los estados](#significado-de-los-estados)).
 
-Cada entrada de la página Publicaciones es una *publicación*, y cada una es
+Cada entrada de la página Registros firmados es una *publicación*, y cada una es
 de uno de tres tipos:
 
 | Tipo | Qué es |
@@ -107,7 +109,7 @@ cualquiera puede comentarla.
 
 ## De dónde viene una publicación
 
-Nunca crea una declaración en la página Publicaciones en sí. La página
+Nunca crea una declaración en la página Registros firmados en sí. La página
 muestra las declaraciones que hizo en otro lugar, las que le enviaron sus
 pares y las construcciones de Explorar que llegaron en forma
 descentralizada. Las declaraciones de nombres de lugares también se pueden
@@ -126,7 +128,7 @@ plano (la mayoría de las estructuras guardadas la tienen), su sección
 - **Exportar atribución**: guarda su declaración como un archivo que puede
   darle a alguien.
 - **Publicar en la red**: anuncia su declaración a todos los pares con los
-  que está conectado, lo que la pone en su página Publicaciones, y en la
+  que está conectado, lo que la pone en su página Registros firmados, y en la
   suya.
 
 Una vez publicada, el panel ofrece **Distribuir**, para que también puedan
@@ -136,7 +138,7 @@ mitad de la Declaración firmada (una declaración de autoría no tiene
 Snapshot): elija dónde se guarda su contenido y dónde se anuncia, y luego
 haga clic en **Distribuir Declaración firmada**. **Ahora no** oculta el
 ofrecimiento; puede distribuir la declaración más tarde desde su tarjeta en
-la página Publicaciones (consulte [Distribución](Distribution.md)).
+la página Registros firmados (consulte [Distribución](Distribution.md)).
 
 ### Nombrar un lugar
 
@@ -179,9 +181,9 @@ Cuando resuelve uno aquí con **Volver a comprobar** o **Recuperar de los
 pares**, se suma a la búsqueda de Explorar, a la página de su autor y a
 la Vista del mundo, y sigue allí después de recargar.
 
-## La página Publicaciones
+## La página Registros firmados
 
-Abra **Publicaciones** en la barra superior. Muestra todas las
+Abra **Registros firmados** (**Más → Avanzado**). Muestra todas las
 publicaciones firmadas que catalogó este dispositivo, suyas o de un par. Al
 final, el panel plegado **Herramientas de billetera y archivo**
 contiene herramientas para toda la página en tres pestañas: **Anclaje en
@@ -225,7 +227,7 @@ Debajo, dos secciones plegadas:
   todas las opciones. Steem, Blurt y el pinning remoto de IPFS están marcados
   como **Experimental** dondequiera que se ofrezcan, igual que todo tipo
   de anclaje salvo en Arweave. Consulte
-  [Distribuir desde la página Publicaciones](#distribuir-desde-la-página-publicaciones)
+  [Distribuir desde la página Registros firmados](#distribuir-desde-la-página-registros-firmados)
   y [Evidencia y almacenamiento](11-EvidenceAndStorage.md).
 - **Detalles**, en cuatro pestañas:
 
@@ -291,7 +293,7 @@ No retira ninguna publicación ni llega a nadie más, y un par conectado que
 todavía la tenga puede volver a anunciarla. Solo se pueden quitar las
 publicaciones de este grupo.
 
-### Distribuir desde la página Publicaciones
+### Distribuir desde la página Registros firmados
 
 **Distribución → Anuncio / descubrimiento** tiene dos tarjetas:
 

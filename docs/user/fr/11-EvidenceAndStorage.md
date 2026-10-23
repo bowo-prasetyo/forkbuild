@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 328589fa34314f56 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: dbd3a37199f5ba2c -->
 # 11 — Preuves et stockage
 
 <!-- languages -->
@@ -22,8 +22,8 @@
 > produit pourrait ne pas être conservé. La page marque ces parties d’un
 > badge **Expérimental**.
 
-Chaque carte de la page **Publications** (voir
-[Publications et preuves externes](09-PublicationsAndEvidence.md)) a des
+Chaque carte de la page **Enregistrements signés** (voir
+[Enregistrements signés et preuves externes](09-PublicationsAndEvidence.md)) a des
 sections pour prouver *quand* une publication existait et pour placer son
 contenu là où d’autres peuvent le récupérer :
 
@@ -271,7 +271,7 @@ transaction. Chaque étape demande son propre clic.
 
 Tous ses panneaux valables pour toute la page se trouvent sous
 **Outils de portefeuille et d’archives → Ancrage sur blockchain**,
-le panneau replié en bas de la page Publications ; les étapes propres à
+le panneau replié en bas de la page Enregistrements signés ; les étapes propres à
 chaque publication sont sur sa carte. Quand une étape demande d’abord
 d’observer un portefeuille ou des fonds, son lien ouvre ce panneau pour
 vous.
@@ -285,7 +285,7 @@ vous.
   native** (commençant par `bc1q…`). Des fonds sur des adresses Taproot
   (`bc1p…`) ou anciennes (`1…`, `3…`) peuvent être observés mais pas
   signés ; l’examen les signale comme non examinables.
-- Une publication sur votre page Publications ; la transaction ancre son
+- Une publication sur votre page Enregistrements signés ; la transaction ancre son
   hash de contenu.
 
 ### Connecter un portefeuille
@@ -446,7 +446,7 @@ termes.
 - Un compte sur l’ID de chaîne **8453** (réseau principal Base) ou
   **84532** (Base Sepolia). Toute autre chaîne est signalée comme non
   correspondante.
-- Une publication sur votre page Publications.
+- Une publication sur votre page Enregistrements signés.
 
 ### Connecter un portefeuille et observer un compte
 
@@ -783,7 +783,7 @@ trouvent sous [Paramètres réseau → Steem](10-NetworkSettings.md#steem).
 ### Publier sur Steem
 
 Choisissez **Steem** dans une boîte de dialogue Distribuer, sur la page
-Publications ou à côté de **Publier le commentaire**, ou faites-en votre
+Enregistrements signés ou à côté de **Publier le commentaire**, ou faites-en votre
 valeur par défaut sous
 [Fournisseur d’annonce / de découverte](10-NetworkSettings.md#fournisseur-dannonce--de-découverte).
 Il vous faut l’extension Steem Keychain contenant la clé de **publication**
@@ -798,7 +798,7 @@ ou Keychain manque.
 ### Stocker sur Steem
 
 Choisissez **Steem** comme stockage dans une boîte de dialogue Distribuer
-ou sur la page Publications. Le Snapshot est compressé et stocké sous
+ou sur la page Enregistrements signés. Le Snapshot est compressé et stocké sous
 forme de réponses au fil de contenu du mois (comme
 `@forkbuild/forkbuild-content-2026-10`), sans frais d’épinglage ni
 d’envoi. Les données se trouvent dans les métadonnées de chaque article ;
@@ -850,7 +850,7 @@ Distribuer.
 **N’importe où.** Dès qu’une Déclaration signée est stockée sur Steem,
 Arweave ou IPFS, **Partager…** et **Copier le lien** apparaissent en
 dessous : dans le panneau de publication de la Vue du Monde, dans le
-résultat de la boîte de dialogue Distribuer, et sur la page Publications.
+résultat de la boîte de dialogue Distribuer, et sur la page Enregistrements signés.
 **Partager…** ouvre la feuille de partage de votre appareil quand elle
 existe ; **Copier le lien** copie le lien, qui est aussi affiché pour une
 copie à la main. Le lien s’ouvre sur n’importe quel appareil, à condition
@@ -880,7 +880,7 @@ commun. Les réglages se trouvent sous
 ### Publier sur Blurt
 
 Choisissez **Blurt** dans une boîte de dialogue Distribuer, sur la page
-Publications, à côté de **Publier le commentaire** ou dans le panneau de
+Enregistrements signés, à côté de **Publier le commentaire** ou dans le panneau de
 nommage, ou faites-en votre choix par défaut sous
 [Fournisseur d’annonce / de découverte](10-NetworkSettings.md#fournisseur-dannonce--de-découverte).
 Il vous faut l’extension Blurt Keychain (ou WhaleVault) contenant la clé
@@ -920,7 +920,7 @@ Keychain vous demande d’approuver chaque article.
 ### Stocker sur Blurt
 
 Choisissez **Blurt** comme stockage dans une boîte de dialogue Distribuer
-ou sur la page Publications. La construction est stockée comme sur Steem,
+ou sur la page Enregistrements signés. La construction est stockée comme sur Steem,
 dans des réponses sous l’article de votre construction : jusqu’à environ
 2 500 briques dans une réponse, ou jusqu’à 20 réponses de plus pour
 jusqu’à environ 30 000 briques. Avant de publier, ForkBuild calcule les

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: b275d31fdacad544 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: cd26489f2c0613bc -->
 # 02 — 에디터
 
 <!-- languages -->
@@ -458,7 +458,7 @@ ForkBuild에서는 선택을 정밀하게 다룰 수 있습니다:
 완전히 별개입니다 — 다른 사람이 그냥 믿는 것이 아니라 독립적으로 확인할 수
 있는 방식으로 디자인에 내 이름을 붙이고 싶을 때를 위한 것입니다. 클레임을
 게시한 뒤 어떻게 되는지, 독립적인 외부 증거를 붙이는 방법은
-[게시물과 외부 증거](09-PublicationsAndEvidence.md)를 보세요.
+[서명된 기록과 외부 증거](09-PublicationsAndEvidence.md)를 보세요.
 
 ## 구조물 인스턴스: 실시간 참조
 

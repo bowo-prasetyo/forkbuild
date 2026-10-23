@@ -9152,3 +9152,28 @@ worked.
   (ui/views/peerConnections/templates/peopleSection.js).
 - Its words in all eight languages; the user guide's Peer Connections & Friends (07) says so, in all eight.
 - Tests: tests/PeersPageLayoutBrowser.test.js (only "I follow" points to the Following page, and links to it).
+
+## Signed Records, and My Builds (unnumbered, 2026-10-23)
+
+**"Publications" didn't hold your publications** (the owner's question and yes, 2026-10-23). Publish is one of the
+game's words, and Publications is its noun, so a player who published builds looked for them on the Publications page
+and found only some: the page lists signed records (a build shared with **Share with Peers**, authorship of a
+structure, a place name, and those peers announced), never a plain Publish.
+
+- **The page is Signed Records** (ui/i18n/messages, `app.nav.publications` and `publications.publications`, in all
+  eight languages), and the hints that sent people "to the Publications page" say Signed Records. Its address stays
+  `/publications`, so links and bookmarks still work, and the words inside it (a "publication" for each entry) are as
+  they were.
+- **It opens by saying what it holds, and where your builds are** (ui/views/DecentralizedPublicationsView.js): signed
+  records of your work that can travel between devices and networks, and your builds themselves on your page and in
+  Explore, both links.
+- **My Builds** in **More → You** (ui/App.js) opens your own builder page, the builds the name in use signed
+  (ui/composables/useMyBuildsRoute.js, shared with the page's "your page"); with no name, no link.
+- The user guide calls the page Signed Records throughout (chapter 09 is "Signed Records & External Evidence"; its two
+  headings' anchors follow), says where everything you published is (**More → My Builds** and Explore), and lists My
+  Builds in the FAQ, in all eight languages.
+- Tests: tests/PublicationsPageLayoutBrowser.test.js (the title, and the opening line's links to your page and
+  Explore), tests/MyBuildsRouteBrowser.test.js (your builder page, following a change of name, none without one), and
+  the bundled-site test, where the House's builder finds Signed Records in More and opens My Builds to the House.
+- Not done: the entries inside the page are still called publications ("Anchor Several Publications", "cataloged
+  publications"); calling them records too would be a larger pass over the page's own words.

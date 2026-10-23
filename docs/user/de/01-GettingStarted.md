@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: b77912c92f47f6cd -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: c6bc6de8889ba433 -->
 # 01 — Erste Schritte
 
 <!-- languages -->
@@ -97,10 +97,10 @@ alle auf einmal.
   - **Unterhaltungen** — Ihre Direktnachrichten, siehe
     [Chat & Unterhaltungen](08-ChatAndConversations.md)
 - **Erweitert** — zum Bauen und Teilen brauchen Sie das nicht
-  - **Veröffentlichungen** — signierte Urheberschafts- und
+  - **Signierte Einträge** — signierte Urheberschafts- und
     Ortsnamensansprüche, wo sie gespeichert und angekündigt werden, und
     (*experimentell*) ihre externen Nachweise, siehe
-    [Veröffentlichungen & externe Nachweise](09-PublicationsAndEvidence.md)
+    [Signierte Einträge & externe Nachweise](09-PublicationsAndEvidence.md)
   - **Netzwerkeinstellungen** — Gateways, Relays, Anbieter und Server für
     Peer-Verbindungen, siehe [Netzwerkeinstellungen](10-NetworkSettings.md)
 - **App**

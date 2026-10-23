@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: b77912c92f47f6cd -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: c6bc6de8889ba433 -->
 # 01 — Premiers pas
 
 <!-- languages -->
@@ -99,10 +99,10 @@ montre tous à la fois.
   - **Conversations** — vos messages directs, voir
     [Chat et conversations](08-ChatAndConversations.md)
 - **Avancé** — inutile pour construire et partager
-  - **Publications** — revendications signées de paternité et de noms de
+  - **Enregistrements signés** — revendications signées de paternité et de noms de
     lieux, où les stocker et les annoncer, et (*expérimental*) leurs
     preuves externes, voir
-    [Publications et preuves externes](09-PublicationsAndEvidence.md)
+    [Enregistrements signés et preuves externes](09-PublicationsAndEvidence.md)
   - **Paramètres réseau** — passerelles, relais, fournisseurs et serveurs
     de connexion entre pairs, voir [Paramètres réseau](10-NetworkSettings.md)
 - **Application**

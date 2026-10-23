@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: b275d31fdacad544 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: cd26489f2c0613bc -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -536,7 +536,7 @@ so an ein Design heften möchten, dass andere es unabhängig überprüfen
 können, statt einfach zu vertrauen. Was mit einem Anspruch nach der
 Veröffentlichung geschieht und wie Sie ihm unabhängige externe Nachweise
 anhängen, steht unter
-[Veröffentlichungen & externe Nachweise](09-PublicationsAndEvidence.md).
+[Signierte Einträge & externe Nachweise](09-PublicationsAndEvidence.md).
 
 ## Strukturinstanzen: eine lebendige Referenz
 

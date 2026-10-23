@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: ce5fc18391277ac3 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: f174ea3c3d70e078 -->
 # Pertanyaan Umum
 
 <!-- languages -->
@@ -21,8 +21,8 @@ alun-alun tantangan minggu ini. Lihat
 ### Saya tidak menemukan Avatar Saya, Rekan, atau Pengaturan Jaringan
 
 Semuanya ada di **Lainnya** di bilah atas (di ponsel, di **Menu**):
-**Anda** berisi Avatar Saya, Identitas Saya, dan Data Anda; **Orang**
-berisi Rekan, Diikuti, dan Percakapan; **Lanjutan** berisi Publikasi dan
+**Anda** berisi Bangunan Saya, Avatar Saya, Identitas Saya, dan Data Anda; **Orang**
+berisi Rekan, Diikuti, dan Percakapan; **Lanjutan** berisi Catatan Bertanda Tangan dan
 Pengaturan Jaringan. Mengeklik nama Anda di pojok kanan atas juga membuka
 Avatar Saya, Identitas Saya, dan Data Anda.
 

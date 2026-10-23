@@ -571,7 +571,7 @@ names, import and export) is folded under **More**.
 Publishing a name tells the people you're connected to, just like
 claiming you made a build. To see every name and claim this device has
 published or heard about, see
-[Publications & External Evidence](09-PublicationsAndEvidence.md).
+[Signed Records & External Evidence](09-PublicationsAndEvidence.md).
 
 ## My Worlds — worlds you've actually been to
 

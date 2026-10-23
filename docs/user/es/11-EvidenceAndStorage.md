@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 328589fa34314f56 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: dbd3a37199f5ba2c -->
 # 11 — Evidencia y almacenamiento
 
 <!-- languages -->
@@ -22,8 +22,8 @@
 > conservarse. La página marca estas partes con una insignia
 > **Experimental**.
 
-Cada tarjeta de la página **Publicaciones** (consulte
-[Publicaciones y evidencia externa](09-PublicationsAndEvidence.md)) tiene
+Cada tarjeta de la página **Registros firmados** (consulte
+[Registros firmados y evidencia externa](09-PublicationsAndEvidence.md)) tiene
 secciones para demostrar *cuándo* existía una publicación y para poner su
 contenido en algún lugar donde otras personas puedan obtenerlo:
 
@@ -270,7 +270,7 @@ es su propio clic.
 
 Todos sus paneles para toda la página están en **Herramientas de billetera y
 archivo → Anclaje en blockchain**, el panel plegado al
-final de la página Publicaciones; los pasos de cada publicación están en su
+final de la página Registros firmados; los pasos de cada publicación están en su
 tarjeta. Cuando un paso necesita que antes se observe una billetera o sus
 fondos, su enlace abre ese panel por usted.
 
@@ -283,7 +283,7 @@ fondos, su enlace abre ese panel por usted.
   empieza con `bc1q…`). Los fondos en direcciones Taproot (`bc1p…`) o
   heredadas (`1…`, `3…`) se pueden observar pero no firmar; la revisión
   informa que no se pueden revisar.
-- Una publicación en su página Publicaciones; la transacción ancla su hash
+- Una publicación en su página Registros firmados; la transacción ancla su hash
   de contenido.
 
 ### Conectar una billetera
@@ -439,7 +439,7 @@ misma que lleva el hash de contenido como datos), sus propios términos.
 - Una cuenta en el ID de cadena **8453** (red principal de Base) o
   **84532** (Base Sepolia). Cualquier otra cadena se informa como una
   discrepancia.
-- Una publicación en su página Publicaciones.
+- Una publicación en su página Registros firmados.
 
 ### Conectar una billetera y observar una cuenta
 
@@ -771,7 +771,7 @@ afectan. La configuración está en
 
 ### Publicar en Steem
 
-Elija **Steem** en un diálogo Distribuir, en la página Publicaciones o junto
+Elija **Steem** en un diálogo Distribuir, en la página Registros firmados o junto
 a **Publicar comentario**, o hágalo su opción predeterminada en
 [Proveedor de anuncio / descubrimiento](10-NetworkSettings.md#proveedor-de-anuncio--descubrimiento).
 Necesita la extensión Steem Keychain con la clave de **publicación**
@@ -785,7 +785,7 @@ dispositivo, y su formulario le advierte si falta la cuenta o Keychain.
 ### Guardar en Steem
 
 Elija **Steem** como almacenamiento en un diálogo Distribuir o en la página
-Publicaciones. El Snapshot se comprime y se guarda como respuestas al hilo
+Registros firmados. El Snapshot se comprime y se guarda como respuestas al hilo
 de contenido de este mes (como `@forkbuild/forkbuild-content-2026-10`), sin
 pinning ni costo de subida. Los datos van en los metadatos de cada
 publicación; el texto de la publicación es una nota de una línea. Las
@@ -834,7 +834,7 @@ de guardada, lo que hace Distribuir.
 **En cualquier lugar.** Una vez que una Declaración firmada está guardada
 en Steem, Arweave o IPFS, aparecen debajo **Compartir…** y **Copiar
 enlace**: en el panel de la publicación de la Vista del mundo, en el
-resultado del diálogo Distribuir y en la página Publicaciones.
+resultado del diálogo Distribuir y en la página Registros firmados.
 **Compartir…** abre el menú para compartir de su dispositivo, cuando está
 disponible; **Copiar enlace** copia el enlace, que también se muestra para
 copiarlo a mano. El enlace se abre en cualquier dispositivo, siempre que
@@ -863,7 +863,7 @@ ningún hilo compartido. La configuración está en
 
 ### Publicar en Blurt
 
-Elija **Blurt** en un diálogo de Distribuir, en la página Publicaciones,
+Elija **Blurt** en un diálogo de Distribuir, en la página Registros firmados,
 junto a **Publicar comentario** o en el panel de nombres, o conviértalo en
 su opción predeterminada en
 [Proveedor de anuncio / descubrimiento](10-NetworkSettings.md#proveedor-de-anuncio--descubrimiento).
@@ -905,7 +905,7 @@ le pide que apruebe cada publicación.
 ### Guardar en Blurt
 
 Elija **Blurt** como almacenamiento en un diálogo de Distribuir o en la
-página Publicaciones. La construcción se guarda como en Steem, en
+página Registros firmados. La construcción se guarda como en Steem, en
 respuestas debajo de la publicación de su construcción: hasta unos 2.500
 bloques en una respuesta, o hasta 20 respuestas más para hasta unos 30.000
 bloques. Antes de publicar, ForkBuild calcula las comisiones y se niega si
