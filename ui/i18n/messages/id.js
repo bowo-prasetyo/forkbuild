@@ -4634,6 +4634,8 @@ export default Object.freeze({
     'peerConnections.friend': 'Teman',
     'peerConnections.remembered': 'Diingat',
     'peerConnections.following': 'Diikuti',
+    'peerConnections.filterFollowed': 'Yang saya ikuti',
+    'peerConnections.followingElsewhere': 'Hanya orang yang pernah terhubung dengan Anda yang tercantum di sini. Semua orang yang Anda ikuti, dan bangunan terbaru mereka, ada di {page}.',
     'peerConnections.blocked2': 'Diblokir',
     'peerConnections.revoked': 'Dicabut',
     'peerConnections.newIdentityDeclared': 'Identitas baru dinyatakan',

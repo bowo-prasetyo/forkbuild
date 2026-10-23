@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 7ffb295aa351970e -->
+<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: ac5c5128a6232d78 -->
 # 07 — Conexiones entre pares y amigos
 
 <!-- languages -->
@@ -21,7 +21,7 @@ a quién conoce y quiénes son sus amigos.
 Pares                                   Su ID …N6KbN  [Copiar ID completo]
 
 Requiere su atención      conexiones que lo esperan, solicitudes de amistad
-Personas  [Todos|Amigos|Siguiendo|En línea]   una fila por persona
+Personas  [Todos|Amigos|Los que sigo|En línea]   una fila por persona
 Conectarse con alguien nuevo  [Invitar|Pegar una invitación|Buscar por ID|Sala pública]
 ▸ Bloqueados (N)          solo cuando bloqueó a alguien
 ```
@@ -42,7 +42,8 @@ Conectarse con alguien nuevo  [Invitar|Pegar una invitación|Buscar por ID|Sala 
   **Renombrar** (o **Nombrar y recordar**), **Recordar** / **Olvidar**,
   **Quitar de amigos**, **Seguir** / **Dejar de seguir**, **Detalles de la
   conexión**, **Desconectar** y **Bloquear** / **Desbloquear**. El filtro
-  **Siguiendo** muestra a las personas de aquí que usted sigue.
+  **Los que sigo** muestra a las personas de aquí que usted sigue, y remite
+  a la página **Siguiendo**, que lista a todas las que sigue.
 - **Bloqueados** está plegado al final y solo aparece cuando bloqueó a
   alguien.
 

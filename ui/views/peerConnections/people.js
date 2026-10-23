@@ -10,8 +10,9 @@ import { t } from '../../i18n/i18n.js';
 // `connectedPeersFor(identityId)` returns the live connections whose
 // resolved identity is that one, so a friend connected from an authorized
 // device still lands on the friend's card. Authenticated connections no
-// card claims become cards of their own. Following only tags a card: someone
-// you follow but have never connected to is listed on the Following page.
+// card claims become cards of their own. Following only tags a card, and the
+// "I follow" filter only narrows these cards: someone you follow but have never
+// connected to is listed on the Following page, which the filter points to.
 export function buildPeople({ relationships = [], friendships = [], blockedIds = new Set(), followedIds = new Set(), authenticatedPeers = [], connectedPeersFor = () => [] }) {
     const byId = new Map();
     const entryFor = (identityId) => {
@@ -72,7 +73,7 @@ function comparePeople(a, b) {
 export const PEOPLE_FILTERS = [
     { key: 'all', label: t('peerConnections.all') },
     { key: 'friends', label: t('peerConnections.friends') },
-    { key: 'following', label: t('peerConnections.following') },
+    { key: 'following', label: t('peerConnections.filterFollowed') },
     { key: 'online', label: t('peerConnections.online') }
 ];
 

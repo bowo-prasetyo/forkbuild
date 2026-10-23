@@ -4637,6 +4637,8 @@ export default Object.freeze({
     'peerConnections.friend': 'Ami',
     'peerConnections.remembered': 'Mémorisé',
     'peerConnections.following': 'Suivi',
+    'peerConnections.filterFollowed': 'Que je suis',
+    'peerConnections.followingElsewhere': 'Seules les personnes avec qui vous vous êtes connecté figurent ici. Toutes celles que vous suivez, et leurs dernières constructions, sont dans {page}.',
     'peerConnections.blocked2': 'Bloqué',
     'peerConnections.revoked': 'Révoqué',
     'peerConnections.newIdentityDeclared': 'Nouvelle identité déclarée',

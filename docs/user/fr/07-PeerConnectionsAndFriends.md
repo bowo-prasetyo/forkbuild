@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 7ffb295aa351970e -->
+<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: ac5c5128a6232d78 -->
 # 07 — Connexions entre pairs et amis
 
 <!-- languages -->
@@ -21,7 +21,7 @@ vous connaissez et dont vous êtes ami.
 Pairs                                   Votre ID …N6KbN  [Copier l’ID complet]
 
 Demande votre attention   connexions qui vous attendent, demandes d’ami
-Personnes  [Tous|Amis|Suivi|En ligne]   une ligne par personne
+Personnes  [Tous|Amis|Que je suis|En ligne]   une ligne par personne
 Se connecter avec quelqu’un de nouveau
   [Inviter|Coller une invitation|Chercher par ID|Salon public]
 ▸ Bloqués (N)             seulement si vous avez bloqué quelqu’un
@@ -43,8 +43,9 @@ Se connecter avec quelqu’un de nouveau
   reste : **Renommer** (ou **Nommer et mémoriser**), **Mémoriser** /
   **Oublier**, **Retirer des amis**, **Suivre** / **Ne plus suivre**,
   **Détails de la connexion**, **Déconnecter**, et **Bloquer** /
-  **Débloquer**. Le filtre **Suivi** affiche les personnes d’ici que vous
-  suivez.
+  **Débloquer**. Le filtre **Que je suis** affiche les personnes d’ici que
+  vous suivez, et renvoie à la page **Abonnements**, qui liste toutes
+  celles que vous suivez.
 - **Bloqués** est replié en bas et n’apparaît que si vous avez bloqué
   quelqu’un.
 

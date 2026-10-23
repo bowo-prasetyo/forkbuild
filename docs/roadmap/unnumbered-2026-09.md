@@ -9135,3 +9135,20 @@ guest you invited with a walk link is often neither. Now anyone who can see your
   where the House's builder says a line after walking in.
 - Not done: step 3, group voice for everyone walking together, until people use talk in the World; speaking a
   line instead of typing it, with World View's own voice input.
+
+## "I follow" on the Peers page, pointing to Following (unnumbered, 2026-10-23)
+
+**Two things called Following** (the owner's question and yes, 2026-10-23). The Peers page's People list had a
+**Following** filter, and the app has a **Following** page; both read the same follow list
+(application/identity/FollowUseCase.js), but the filter only narrows the people you have a connection record with,
+while the page lists everyone you follow, with their newest builds. Someone who followed a builder from a build
+(**Follow Their Work**) and opened Peers → Following didn't find them there, and could think the follow hadn't
+worked.
+
+- **The filter is "I follow"** (ui/views/peerConnections/people.js, `peerConnections.filterFollowed`), reading as a
+  tag on your connections rather than a second Following page; a card's **Following** tag stays as it was.
+- **With it on, one line says where everyone is**: only people you've connected to are listed here, and everyone you
+  follow, with their newest builds, is on **Following**, a link to that page
+  (ui/views/peerConnections/templates/peopleSection.js).
+- Its words in all eight languages; the user guide's Peer Connections & Friends (07) says so, in all eight.
+- Tests: tests/PeersPageLayoutBrowser.test.js (only "I follow" points to the Following page, and links to it).

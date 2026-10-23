@@ -4161,6 +4161,8 @@
         "peerConnections.friend": "acd8f664",
         "peerConnections.remembered": "a9139833",
         "peerConnections.following": "344b4271",
+        "peerConnections.filterFollowed": "d680aabc",
+        "peerConnections.followingElsewhere": "e1ee1c6f",
         "peerConnections.blocked2": "18f2a094",
         "peerConnections.revoked": "f6f738d0",
         "peerConnections.newIdentityDeclared": "f57d58c8",

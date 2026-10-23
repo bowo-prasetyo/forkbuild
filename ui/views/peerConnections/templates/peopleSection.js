@@ -12,6 +12,9 @@ export const peopleSectionTemplate = `<section class="peers-section" aria-labell
                     </div>
                 </div>
 
+                <p v-if="people.length && peopleFilter === 'following'" class="form-hint form-hint--neutral peers-following-elsewhere">
+                    <I18nText keypath="peerConnections.followingElsewhere"><template #page><router-link to="/following">{{ t('app.nav.following') }}</router-link></template></I18nText>
+                </p>
                 <p v-if="reconnectRejectedError" class="identity-unlock-error">{{ reconnectRejectedError }}</p>
                 <p v-if="actionError && !actionTargetVisible" class="identity-unlock-error">{{ actionError }}</p>
 
