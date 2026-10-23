@@ -3,12 +3,12 @@ import { InputRouter } from '../../../application/editor/InputRouter.js';
 const DRAG_THRESHOLD_PX = 6;
 
 // Viewport input: pointer picks and hovers (focus and inspection only), and
-// keyboard shortcuts routed to text inputs, Undo/Redo, Home, voice, sound,
-// then Avatar Control Mode.
+// keyboard shortcuts routed to text inputs, Undo/Redo, Home, voice, Say,
+// sound, then Avatar Control Mode.
 // A click picks a brick, a build or the ground only with Advanced on
 // (`advanced`, a ref); a visitor's click picks nothing but another avatar.
 export function useViewportInput({
-    advanced = null, compassHeading, goHome, onAvatarKeyDown, onSoundKeyDown, redoAction, refreshHoverUI, refreshSpatialUI, session, toggleVoice = null, undoAction
+    advanced = null, compassHeading, goHome, onAvatarKeyDown, onSoundKeyDown, openSay = null, redoAction, refreshHoverUI, refreshSpatialUI, session, toggleVoice = null, undoAction
 }) {
     let pointerStart = null;
     let isDragging = false;
@@ -84,11 +84,19 @@ export function useViewportInput({
             if (!event.repeat) toggleVoice();
             return;
         }
-        // 5. M: sound on or off.
+        // 5. Enter: say something aloud (ui/components/WorldSayPanel.js). Not on a
+        // focused button or link, whose own Enter presses it.
+        if (openSay && event.key === 'Enter' && !event.ctrlKey && !event.metaKey && !event.altKey && !event.shiftKey && !event.repeat
+            && !event.target?.closest?.('button, a, select, summary, [role="button"]')) {
+            event.preventDefault();
+            openSay();
+            return;
+        }
+        // 6. M: sound on or off.
         if (onSoundKeyDown && onSoundKeyDown(event)) {
             return;
         }
-        // 6. Avatar Control Mode consumes W/A/S/D/Shift/Space only while on.
+        // 7. Avatar Control Mode consumes W/A/S/D/Shift/Space only while on.
         if (onAvatarKeyDown(event)) {
             return;
         }

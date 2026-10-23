@@ -749,6 +749,19 @@ async function firstVisit(browser, base) {
         await editor.keyboard.down('w');
         await said('You\'re inside!');
         await editor.keyboard.up('w');
+        // Saying something aloud: Enter, a line, Enter; it shows over the avatar
+        // and in the log (ui/components/WorldSayPanel.js).
+        await editor.evaluate(() => document.activeElement?.blur());
+        await editor.keyboard.press('Enter');
+        await editor.waitForSelector('.world-say-input', { timeout: 10_000 });
+        await editor.keyboard.type('Nice house!');
+        await editor.keyboard.press('Enter');
+        await editor.waitForFunction(() => [...document.querySelectorAll('.world-say-line--own .world-say-text')].some((line) => line.textContent === 'Nice house!'),
+            null, { timeout: 10_000 });
+        assert(!(await editor.$('.world-say-input')), 'saying a line in World View puts it in the log, and the line closes');
+        const sayBox = await editor.$eval('.world-say', (element) => element.getBoundingClientRect().left);
+        const panelRight = await editor.$eval('.world-view-overlay', (element) => element.getBoundingClientRect().right);
+        assert(sayBox >= panelRight, `beside the side panel, not over it (${sayBox} vs ${panelRight})`);
         await editor.goBack();
         await editor.waitForSelector('.first-build-step--done[data-step="walk-inside"]', { timeout: 60_000 });
 

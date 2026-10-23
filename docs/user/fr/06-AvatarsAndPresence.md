@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: f21ab93ad9cd0c58 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: d3cda869f61d33ed -->
 # 06 — Avatars et présence
 
 <!-- languages -->
@@ -111,6 +111,28 @@ plus souvent juste après avoir fait orbiter librement la caméra. Quelqu’un
 qui se tient en plein sur votre chemin peut être totalement invisible
 pendant que votre caméra regarde ailleurs ; tournez ou faites orbiter la
 caméra vers lui et il réapparaît.
+
+### Dire quelque chose à voix haute
+
+Appuyez sur **Entrée** dans la Vue du Monde (ou touchez **💬 Dire**), tapez
+une courte phrase, jusqu’à 140 caractères, puis appuyez de nouveau sur
+**Entrée**. Elle s’affiche quelques secondes dans une bulle au-dessus de
+votre avatar, et dans un court historique en bas à gauche qui garde les
+dernières phrases pendant une minute, chacune avec qui l’a dite. **Échap**
+ferme la phrase sans rien dire.
+
+Ceux qui voient votre avatar voient ce que vous dites : les mêmes personnes
+que votre **Visibilité de la présence** autorise à vous voir ; si elle est
+réglée sur caché, la phrase ne s’affiche que pour vous, et l’historique le
+précise. Une personne que vous avez bloquée ne vous entend jamais, et vous
+ne l’entendez jamais. Chaque phrase est signée en votre nom et vérifiée à
+son arrivée comme un geste, si bien que personne ne peut mettre des mots
+dans la bouche de votre avatar. Rien n’est conservé : les phrases ne sont
+pas enregistrées, et quelqu’un qui arrive plus tard ne voit pas ce qui a été
+dit avant. Un invité doit d’abord choisir un nom, car personne ne peut voir
+un avatar sans nom. Pour parler de vive voix, appelez plutôt un ami avec
+**📞 Appeler** (voir
+[Chat et conversations](08-ChatAndConversations.md#appels-vocaux)).
 
 ## Faire marcher votre avatar
 

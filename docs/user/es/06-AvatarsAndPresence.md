@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: f21ab93ad9cd0c58 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: d3cda869f61d33ed -->
 # 06 — Avatares y presencia
 
 <!-- languages -->
@@ -107,6 +107,25 @@ dos pueden apuntar en direcciones distintas, sobre todo justo después de
 orbitar libremente la cámara. Alguien parado justo en su camino puede ser
 completamente invisible mientras su cámara mira hacia otro lado; gire u
 orbite la cámara de vuelta hacia esa persona y reaparece.
+
+### Decir algo en voz alta
+
+Pulse **Intro** en la Vista del mundo (o toque **💬 Decir**), escriba una
+frase corta, de hasta 140 caracteres, y pulse **Intro** otra vez. Aparece
+unos segundos en un bocadillo sobre su avatar y en un breve registro abajo a
+la izquierda que guarda las últimas frases durante un minuto, cada una con
+quién la dijo. **Escape** cierra la frase sin decir nada.
+
+Quien puede ver su avatar ve lo que dice: las mismas personas a las que su
+**Visibilidad de la presencia** deja verle; si está en oculto, la frase solo
+la ve usted, y el registro lo indica. Alguien a quien ha bloqueado nunca le
+oye, y usted nunca le oye a esa persona. Cada frase se firma como suya y se
+comprueba al llegar, como un gesto, así que nadie puede poner palabras en
+boca de su avatar. No se guarda nada: las frases no se almacenan y quien
+llega después no ve lo que se dijo antes. Un invitado debe elegir primero un
+nombre, porque nadie puede ver un avatar sin nombre. Para hablar en voz alta
+de verdad, llame a un amigo con **📞 Llamar** (consulte
+[Chat y conversaciones](08-ChatAndConversations.md#llamadas-de-voz)).
 
 ## Caminar con su avatar
 

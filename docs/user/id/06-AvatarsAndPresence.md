@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: f21ab93ad9cd0c58 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: d3cda869f61d33ed -->
 # 06 — Avatar & Kehadiran
 
 <!-- languages -->
@@ -109,6 +109,28 @@ setelah Anda mengorbitkan kamera dengan bebas. Seseorang yang berdiri tepat
 di jalur jalan Anda bisa sepenuhnya tidak terlihat selama kamera Anda
 melihat ke tempat lain; putar atau orbitkan kamera kembali ke arahnya dan
 mereka muncul lagi.
+
+### Mengatakan sesuatu dengan lantang
+
+Tekan **Enter** di Tampilan Dunia (atau ketuk **💬 Katakan**), ketik kalimat
+pendek, hingga 140 karakter, lalu tekan **Enter** lagi. Kalimat itu muncul
+beberapa detik dalam balon di atas avatar Anda, dan dalam catatan singkat di
+kiri bawah yang menyimpan beberapa kalimat terakhir selama satu menit,
+masing-masing dengan siapa yang mengatakannya. **Escape** menutup kalimat
+tanpa mengatakan apa pun.
+
+Siapa pun yang bisa melihat avatar Anda melihat apa yang Anda katakan: orang
+yang sama yang diizinkan **Visibilitas Kehadiran** Anda untuk melihat Anda;
+jika diatur tersembunyi, kalimat itu hanya terlihat oleh Anda, dan
+catatannya memberi tahu. Orang yang Anda blokir tidak pernah mendengar Anda,
+dan Anda tidak pernah mendengarnya. Setiap kalimat ditandatangani sebagai
+Anda dan diperiksa saat tiba seperti gerakan, jadi tidak ada yang bisa
+memasukkan kata-kata ke mulut avatar Anda. Tidak ada yang disimpan: kalimat
+tidak disimpan, dan orang yang datang belakangan tidak melihat apa yang
+dikatakan sebelumnya. Tamu perlu memilih nama dulu, karena tidak ada yang
+bisa melihat avatar tanpa nama. Untuk berbicara dengan suara, panggil teman
+dengan **📞 Panggil** (lihat
+[Obrolan & Percakapan](08-ChatAndConversations.md#panggilan-suara)).
 
 ## Menjalankan avatar Anda
 

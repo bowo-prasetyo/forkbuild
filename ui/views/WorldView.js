@@ -66,6 +66,7 @@ import { useLandmarkAndRegionForms } from './worldView/useLandmarkAndRegionForms
 import { useLocationBrowser } from './worldView/useLocationBrowser.js';
 import { useAvatarControls } from './worldView/useAvatarControls.js';
 import { useAvatarCall } from '../voice/useAvatarCall.js';
+import { useWorldSay } from './worldView/useWorldSay.js';
 import { useWelcomePanel } from './worldView/useWelcomePanel.js';
 import { usePlacesAndFocus } from './worldView/usePlacesAndFocus.js';
 import { useNearbySections } from './worldView/useNearbySections.js';
@@ -107,6 +108,7 @@ import { compassText, spatialContextDescription } from '../i18n/worldText.js';
 import { DAY_CYCLE_SECONDS } from '../../core/nature/DayCycle.js';
 import { SEASON, SEASON_SECONDS } from '../../core/nature/Season.js';
 import VoicePanel from '../components/VoicePanel.js';
+import WorldSayPanel from '../components/WorldSayPanel.js';
 import { useVoiceCommands } from '../voice/useVoiceCommands.js';
 import { interpretWorldCommand } from '../../core/voice/WorldVoiceCommand.js';
 import { worldVoiceVocabulary } from '../i18n/worldVoiceWords.js';
@@ -138,7 +140,7 @@ export default {
         DocumentInfoPanel, SimilarEarlierBuilds, DescriptionReaderSheet, MetadataEditorDialog,
         PlacementInfoPanel, PlacementEditorDialog,
         WorldSearchPanel, LocationDocumentsDialog, WorldLocationBrowser,
-        AvatarInfoPanel, NearbyAvatarsPanel,
+        AvatarInfoPanel, NearbyAvatarsPanel, WorldSayPanel,
         CompassIndicator, LocationsPanel, LandmarkFormModal, RegionFormModal,
         WorldMembersPanel, WorldPresenceIndicator, WorldCollaboratorIndicator, PublicLobbyPanel,
         WorldWelcomePanel, WorldMapPanel, PlaceNamingPanel,
@@ -1350,10 +1352,13 @@ export default {
             router.push({ path: '/help', query: { q: question } });
         }
 
+        // Saying something aloud to whoever sees your avatar (ui/components/WorldSayPanel.js).
+        const { sayLog, sayGuest, sayPanel, sayLine, startSay, openSay } = useWorldSay({ session });
+
         const {
             onKeyDown, onPointerDown, onPointerMove, onPointerUp
         } = useViewportInput({
-            advanced, compassHeading, goHome, onAvatarKeyDown, onSoundKeyDown, redoAction, refreshHoverUI, refreshSpatialUI, session, toggleVoice: voiceCommands.toggleVoice, undoAction
+            advanced, compassHeading, goHome, onAvatarKeyDown, onSoundKeyDown, openSay, redoAction, refreshHoverUI, refreshSpatialUI, session, toggleVoice: voiceCommands.toggleVoice, undoAction
         });
 
         const { arriveAtDoor, watchArrival } = useArrival({ session, feedback });
@@ -1408,6 +1413,7 @@ export default {
             startSound();
 
             hasLocalAvatar.value = session.hasLocalAvatar();
+            startSay();
             // Applies the default-on avatar toggles once session.start() has created a
             // local avatar.
             if (hasLocalAvatar.value) {
@@ -1574,6 +1580,7 @@ export default {
             toggleSoundMusic,
             touchPadVisible,
             panelOpen,
+            compactLayout,
             togglePanel,
             controlsHintOpen,
             toggleFollowAvatar,
@@ -1585,6 +1592,10 @@ export default {
             performAvatarInteraction,
             canCallAvatar,
             callAvatar,
+            sayLog,
+            sayGuest,
+            sayPanel,
+            sayLine,
             nearbyAvatars,
             selectNearbyAvatar,
             loadedWorlds,
@@ -1981,6 +1992,15 @@ export default {
             ${dialogsTemplate}
             ${navigationHudSectionTemplate}
             ${hudSectionTemplate}
+            <WorldSayPanel
+                v-if="hasLocalAvatar"
+                v-show="!(panelOpen && compactLayout)"
+                ref="sayPanel"
+                :class="{ 'world-say--beside-panel': panelOpen && !compactLayout }"
+                :log="sayLog"
+                :guest="sayGuest"
+                :say-line="sayLine"
+            />
             <VoicePanel
                 :voice="voice"
                 place="world"

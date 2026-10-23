@@ -98,6 +98,24 @@ camera around. Someone standing squarely in your walking path can be
 completely invisible while your camera looks elsewhere; turn or orbit the
 camera back toward them and they reappear.
 
+### Saying something aloud
+
+Press **Enter** in World View (or tap **💬 Say**), type a short line, up to
+140 characters, and press **Enter** again. It shows in a bubble over your
+avatar for a few seconds, and in a short log at the bottom left that keeps
+the last few lines for a minute, each with who said it. **Escape** closes the
+line without saying anything.
+
+Whoever can see your avatar sees what you say: the same people your
+**Presence Visibility** lets see you, so with it set to hidden, a line shows
+only to you, and the log says so. Someone you've blocked never hears you, and
+you never hear them. A line is signed as you and checked on arrival like a
+gesture, so nobody can put words in your avatar's mouth. Nothing is kept:
+lines aren't saved, and someone who arrives later doesn't see what was said
+before. A guest needs to choose a name first, since nobody can see an avatar
+without one. To talk out loud instead, **📞 Call** a friend (see
+[Chat & Conversations](08-ChatAndConversations.md#voice-calls)).
+
 ## Walking your avatar
 
 Flying the camera ([World View](03-WorldView.md#flying-around)) is one way

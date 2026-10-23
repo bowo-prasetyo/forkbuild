@@ -102,6 +102,7 @@ export const avatarPresenceMethods = {
             appearanceResolver: this._remoteAvatarAppearanceRegistry
         });
         this._setupRemoteVehicles(localAvatarId, isBlocked);
+        this._setupAvatarSay(localAvatarId, isBlocked);
         if (typeof this._session.setRemoteAvatarsVisible === 'function') {
             this._session.setRemoteAvatarsVisible(this._remoteAvatarsVisible);
         }
@@ -137,6 +138,8 @@ export const avatarPresenceMethods = {
                     }
                 }
                 this._expireRemoteAvatarGestures(now);
+                // Lines said aloud, over their speakers (avatarSayMethods.js).
+                this._pullAvatarSay(now);
             });
         }
     },

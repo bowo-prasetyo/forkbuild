@@ -12,6 +12,7 @@ import { TransformGizmoController } from '../../renderer/TransformGizmoControlle
 import { TransformMath } from '../editor/TransformMath.js';
 import { AvatarRenderer } from '../../renderer/AvatarRenderer.js';
 import { AvatarVisual } from '../../renderer/AvatarVisual.js';
+import { AvatarSpeech } from '../../renderer/AvatarSpeech.js';
 import { RemoteSpatialPresenceRenderer } from '../../renderer/RemoteSpatialPresenceRenderer.js';
 import { VehicleFieldRenderer } from '../../renderer/VehicleFieldRenderer.js';
 import { RemoteRiderVehicles } from '../../renderer/RemoteRiderVehicles.js';
@@ -172,6 +173,10 @@ export class RenderWorldViewUseCase {
         // that happens to be driven by application/
         // RemoteAvatarRegistry.js instead of local movement input.
         const remoteAvatarVisuals = new Map(); // avatarId -> AvatarVisual
+        // What players say aloud, in bubbles over their avatars (showAvatarSpeech()).
+        const avatarSpeech = new AvatarSpeech();
+        const LOCAL_SPEAKER = Symbol('local');
+        renderer.addFrameListener((deltaSeconds) => avatarSpeech.tick(deltaSeconds));
         let remoteAvatarsVisible = true;
 
         // 0.2.36 — keeps WALKING/RUNNING swinging every render frame,
@@ -509,6 +514,7 @@ export class RenderWorldViewUseCase {
                 if (!localAvatarVisual) {
                     return;
                 }
+                avatarSpeech.clear(LOCAL_SPEAKER);
                 renderer.remove(localAvatarVisual.root);
                 localAvatarVisual.dispose();
                 localAvatarVisual = null;
@@ -604,6 +610,16 @@ export class RenderWorldViewUseCase {
             // updateRemoteAvatarAppearance's own "appearance never
             // creates a remote avatar on its own" rule, applied to a
             // gesture instead.
+            // A line said aloud (core/avatar/AvatarSay.js) in a bubble over an
+            // avatar for `seconds`: remote avatar `avatarId`, or your own when
+            // null. A no-op for an avatar not drawn.
+            showAvatarSpeech: (avatarId, text, seconds) => {
+                const visual = avatarId === null ? localAvatarVisual : remoteAvatarVisuals.get(avatarId);
+                if (!visual) {
+                    return;
+                }
+                avatarSpeech.show(avatarId === null ? LOCAL_SPEAKER : avatarId, visual.root, text, seconds);
+            },
             setRemoteAvatarGesture: (avatarId, interactionKind) => {
                 const visual = remoteAvatarVisuals.get(avatarId);
                 if (!visual) {
@@ -612,6 +628,7 @@ export class RenderWorldViewUseCase {
                 visual.setGesture(interactionKind);
             },
             removeRemoteAvatar: (avatarId) => {
+                avatarSpeech.clear(avatarId);
                 const vehicle = remoteRiderVehicles.remove(avatarId);
                 if (vehicle) {
                     renderer.remove(vehicle);
@@ -883,6 +900,7 @@ export class RenderWorldViewUseCase {
                 transformGizmoRenderer.dispose();
                 spatialPreviewRenderer.dispose();
                 spatialSelectionRenderer.clear();
+                avatarSpeech.dispose();
                 if (localAvatarVisual) {
                     localAvatarVisual.dispose();
                     localAvatarVisual = null;
