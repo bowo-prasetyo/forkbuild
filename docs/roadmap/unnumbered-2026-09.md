@@ -9105,3 +9105,33 @@ the call connected but silent, with no Mute or Hang Up; and an incoming call sho
   runtime; Call on a friend's avatar, and none while a call is on).
 - Not done: step 2, saying something as a speech bubble to the people walking with you, and step 3, group voice for
   everyone walking together, which waits until people use talk in the World.
+
+## Say something while you walk together (unnumbered, 2026-10-23)
+
+**Talking while you walk together, step 2** (the owner's yes, 2026-10-23: "Please design and implement the step 2").
+Pillar served: walking with friends. Step 1 let a call go with you; a call needs a friend and a microphone, and a
+guest you invited with a walk link is often neither. Now anyone who can see your avatar can read what you say.
+
+- **Say**: Enter in World View (not on a focused button) or **💬 Say** opens a short line, up to 140 characters
+  (ui/components/WorldSayPanel.js); Enter says it, Escape closes it. It shows in a bubble over your avatar, the
+  residents' bubble (renderer/AvatarSpeech.js over renderer/ResidentSpeechBubble.js), for 4 to 10 seconds by its
+  length, and in a short log at the bottom left that keeps the last six lines for a minute, each by who said it.
+- **Who hears it**: whoever may see your avatar. It travels on its own channel, `forkbuild:avatar-say`
+  (application/world/CreateWorldViewUseCase.js), gated by your Presence Visibility as gestures are. With it hidden,
+  a line shows only to you and the log says so. A guest with no name, whom nobody can see, is asked for one first.
+- **Believed like a gesture**: a line (core/avatar/AvatarSay.js) is signed as its speaker
+  (application/avatar/AvatarSaySigning.js, `SignatureType.AVATAR_SAY`) and, on arrival
+  (application/avatar/AvatarSayTrustBoundary.js), shown only when well-formed, signed by the avatar's owner when
+  signed at all, never from someone blocked, once, and newer than that avatar's last; a line from an avatar not
+  present here is let go. At most one line every 0.8 seconds; control and invisible characters are taken out.
+- **Nothing kept**: an event, never republished or stored (application/avatar/AvatarSaySyncService.js,
+  application/worldNavigation/avatarSayMethods.js), so someone who arrives later never sees what was said before.
+- The user guide's Avatars & Presence (06) has "Saying something aloud", in all eight languages; the panel's words
+  are in all eight.
+- Tests: tests/AvatarSay.test.js (the line's rules; signed by the owner, once, in order, never from someone blocked,
+  words changed on the way refused; the session saying, heard or not, hearing others, the log's six lines and its
+  minute; a guest asked for a name), tests/WorldSayPanelBrowser.test.js (the log by whom, Say and Escape, why a line
+  wasn't said or heard, a guest, Enter opening it but not on a button or in a field), and the bundled-site test,
+  where the House's builder says a line after walking in.
+- Not done: step 3, group voice for everyone walking together, until people use talk in the World; speaking a
+  line instead of typing it, with World View's own voice input.

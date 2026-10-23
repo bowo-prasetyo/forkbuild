@@ -4,6 +4,7 @@ import { getAvatarPresenceSigningDescriptor } from '../core/avatar/AvatarPresenc
 import { getAvatarProfileSigningDescriptor } from '../core/avatar/AvatarProfileAdvertisement.js';
 import { getAvatarInteractionSigningDescriptor } from '../core/avatar/AvatarInteractionAdvertisement.js';
 import { getAvatarVehicleSigningDescriptor } from '../core/vehicles/AvatarVehicleAdvertisement.js';
+import { getAvatarSaySigningDescriptor } from '../core/avatar/AvatarSay.js';
 import { getFriendshipSigningDescriptor } from '../core/social/FriendshipAdvertisement.js';
 import { getRendezvousPublicationSigningDescriptor } from '../core/social/RendezvousPublicationEnvelope.js';
 import { getLobbyCardSigningDescriptor } from '../core/social/LobbyCard.js';
@@ -168,6 +169,29 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
         }
         const identity = { id: sig.signer, algorithm: 'Ed25519', publicKey: Ed25519.bytesToHex(publicKeyBytes) };
         return this.verifyDescriptor(getAvatarInteractionSigningDescriptor(advertisement), advertisement.signature, identity);
+    }
+
+    // A line said aloud in World View (core/avatar/AvatarSay.js): the same
+    // shape as verifyAvatarInteractionAdvertisement(), the did:key signer
+    // being the public key. Unsigned is tolerated here, as for gestures;
+    // application/avatar/AvatarSayTrustBoundary.js decides the rest.
+    verifyAvatarSayAdvertisement(advertisement) {
+        if (!advertisement) {
+            return { valid: false, signed: false, reason: 'no advertisement' };
+        }
+        if (!advertisement.signature) {
+            return { valid: true, signed: false, reason: 'unsigned say advertisement' };
+        }
+        const sig = Signature.fromJSON(advertisement.signature);
+        if (!sig) {
+            return { valid: false, signed: true, reason: 'malformed signature' };
+        }
+        const publicKeyBytes = Ed25519.didKeyToPublicKey(sig.signer);
+        if (!publicKeyBytes) {
+            return { valid: false, signed: true, reason: 'unknown signer identity' };
+        }
+        const identity = { id: sig.signer, algorithm: 'Ed25519', publicKey: Ed25519.bytesToHex(publicKeyBytes) };
+        return this.verifyDescriptor(getAvatarSaySigningDescriptor(advertisement), advertisement.signature, identity);
     }
 
     // What an avatar rides (core/vehicles/AvatarVehicleAdvertisement.js): the same shape

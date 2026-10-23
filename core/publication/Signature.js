@@ -55,6 +55,10 @@ export const SignatureType = Object.freeze({
     // (core/vehicles/AvatarVehicleAdvertisement.js): which vehicle, if any, an avatar
     // is riding. See getAvatarVehicleSigningDescriptor().
     AVATAR_VEHICLE: 'avatar-vehicle',
+    // An OPTIONAL signature over an AvatarSayAdvertisement
+    // (core/avatar/AvatarSay.js): a line someone said aloud in World View,
+    // shown over their avatar. See getAvatarSaySigningDescriptor().
+    AVATAR_SAY: 'avatar-say',
     // 0.2.49 — a REQUIRED signature (never optional the way the
     // advertisement types above are) over a peer authentication PROOF
     // message (core/social/PeerAuthenticationEnvelope.js's wire shape). Every

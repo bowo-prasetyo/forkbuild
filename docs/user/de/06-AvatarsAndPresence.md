@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: f21ab93ad9cd0c58 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: d3cda869f61d33ed -->
 # 06 — Avatare & Anwesenheit
 
 <!-- languages -->
@@ -109,6 +109,28 @@ nachdem Sie die Kamera frei herumgedreht haben. Jemand, der genau auf
 Ihrem Weg steht, kann völlig unsichtbar sein, während Ihre Kamera
 woanders hinsieht; drehen Sie die Kamera zurück zu ihm, und er erscheint
 wieder.
+
+### Etwas laut sagen
+
+Drücken Sie in der Weltansicht die **Eingabetaste** (oder tippen Sie auf
+**💬 Sagen**), schreiben Sie eine kurze Zeile mit bis zu 140 Zeichen und
+drücken Sie erneut die **Eingabetaste**. Sie erscheint einige Sekunden lang
+in einer Sprechblase über Ihrem Avatar und in einem kurzen Verlauf unten
+links, der die letzten Zeilen eine Minute lang behält, jeweils mit dem
+Namen, wer sie gesagt hat. **Escape** schließt die Zeile, ohne etwas zu
+sagen.
+
+Wer Ihren Avatar sehen kann, sieht, was Sie sagen: dieselben Menschen, die
+Ihre **Sichtbarkeit der Anwesenheit** Sie sehen lässt; ist sie auf verborgen
+gestellt, sehen nur Sie die Zeile, und der Verlauf sagt das. Wen Sie
+blockiert haben, der hört Sie nie, und Sie hören ihn nie. Eine Zeile wird
+als Sie signiert und beim Eintreffen wie eine Geste geprüft, sodass niemand
+Ihrem Avatar Worte in den Mund legen kann. Nichts wird aufbewahrt: Zeilen
+werden nicht gespeichert, und wer später kommt, sieht nicht, was vorher
+gesagt wurde. Ein Gast muss zuerst einen Namen wählen, da niemand einen
+Avatar ohne Namen sehen kann. Um stattdessen laut zu sprechen, rufen Sie
+einen Freund mit **📞 Anrufen** an (siehe
+[Chat & Unterhaltungen](08-ChatAndConversations.md#sprachanrufe)).
 
 ## Mit Ihrem Avatar gehen
 

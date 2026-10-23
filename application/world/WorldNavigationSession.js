@@ -36,6 +36,7 @@ import { worldStreamingMethods } from '../worldNavigation/worldStreamingMethods.
 import { documentOperationMethods } from '../worldNavigation/documentOperationMethods.js';
 import { soundObservationMethods } from '../worldNavigation/soundObservationMethods.js';
 import { remoteVehicleMethods } from '../worldNavigation/remoteVehicleMethods.js';
+import { avatarSayMethods } from '../worldNavigation/avatarSayMethods.js';
 import { arrivalMethods } from '../worldNavigation/arrivalMethods.js';
 import { walkThroughFilmMethods } from '../worldNavigation/walkThroughFilmMethods.js';
 import { dayCycleMethods } from '../worldNavigation/dayCycleMethods.js';
@@ -114,6 +115,8 @@ export class WorldNavigationSession {
         avatarInteractionBroadcastProvider = null,
         // What each avatar rides, on its own channel (core/vehicles/AvatarVehicleAdvertisement.js).
         avatarVehicleBroadcastProvider = null,
+        // Lines said aloud, on their own channel (core/avatar/AvatarSay.js).
+        avatarSayBroadcastProvider = null,
         avatarProfileVisibilityUseCase = null,
         hasFriend = null,
         isBlocked = null,
@@ -339,6 +342,13 @@ export class WorldNavigationSession {
         this._avatarInteractionSyncService = null;
         this._avatarVehicleBroadcastProvider = avatarVehicleBroadcastProvider;
         this._avatarVehicleSyncService = null;
+        // Lines said aloud (application/worldNavigation/avatarSayMethods.js).
+        this._avatarSayBroadcastProvider = avatarSayBroadcastProvider;
+        this._avatarSaySyncService = null;
+        this._saySequence = 0;
+        this._lastSaidAt = null;
+        this._sayLog = [];
+        this._sayLogListeners = new Set();
         // What was last sent about the local avatar's vehicle, and when.
         this._advertisedRidingKey = null;
         this._lastVehicleAdvertisedAt = 0;
@@ -955,6 +965,12 @@ export class WorldNavigationSession {
             this._avatarVehicleSyncService.dispose();
             this._avatarVehicleSyncService = null;
         }
+        if (this._avatarSaySyncService) {
+            this._avatarSaySyncService.dispose();
+            this._avatarSaySyncService = null;
+        }
+        this._sayLog = [];
+        this._lastSaidAt = null;
         this._advertisedRidingKey = null;
         this._lastVehicleAdvertisedAt = 0;
         this._localInteractionSequence = 0;
@@ -1028,6 +1044,7 @@ installMethods(
     documentOperationMethods,
     soundObservationMethods,
     remoteVehicleMethods,
+    avatarSayMethods,
     arrivalMethods,
     walkThroughFilmMethods,
     dayCycleMethods

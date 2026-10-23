@@ -495,6 +495,11 @@
     .editor-voice--world {
         bottom: calc(128px + 8.75rem + env(safe-area-inset-bottom, 0px));
     }
+
+    /* Above the touch pad and the bar of actions. */
+    .world-say {
+        bottom: calc(128px + 8.75rem + env(safe-area-inset-bottom, 0px));
+    }
 }
 
 /* See inside on a phone: below the Tools button, top right, clear of the
@@ -516,5 +521,14 @@
         transform: none;
         width: auto;
         max-width: calc(100% - 1rem);
+    }
+
+    .world-say {
+        left: 0.5rem;
+        max-width: calc(100% - 1rem);
+    }
+
+    .world-say-form {
+        width: calc(100vw - 1rem);
     }
 }

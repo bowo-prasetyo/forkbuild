@@ -299,6 +299,18 @@ export class CreateWorldViewUseCase {
                 ...(isBlocked ? { isBlocked } : {})
             })
             : new LocalAvatarPresenceBroadcastProvider('forkbuild:avatar-vehicle');
+        // A fifth: lines said aloud (core/avatar/AvatarSay.js), heard by whoever may
+        // see the avatar, so gated by the presence policy as gestures are.
+        const avatarSayBroadcastProvider = usePeerTransport
+            ? new PeerAvatarPresenceBroadcastProvider({
+                peerMessageBus,
+                connectedPeerRegistry,
+                protocol: 'forkbuild:avatar-say',
+                getVisibilityPolicy: presenceVisibilityPolicy,
+                ...(isFriend ? { isFriend } : {}),
+                ...(isBlocked ? { isBlocked } : {})
+            })
+            : new LocalAvatarPresenceBroadcastProvider('forkbuild:avatar-say');
         const avatarTemplateRegistry = new CreateAvatarTemplateRegistryUseCase().execute();
 
         return {
@@ -393,6 +405,7 @@ export class CreateWorldViewUseCase {
                     avatarProfileBroadcastProvider,
                     avatarInteractionBroadcastProvider,
                     avatarVehicleBroadcastProvider,
+                    avatarSayBroadcastProvider,
                     hasFriend,
                     isBlocked,
                     structureResolver: structureDocumentResolver,
