@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: eefddf9b6eb874a7 -->
+<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: 13366a65358f83c3 -->
 # 08 — Chat y conversaciones
 
 <!-- languages -->
@@ -18,8 +18,9 @@ saber cómo hacerse amigo de alguien primero.
 ## Iniciar una conversación
 
 Al chat se llega desde el botón **Chat** de un amigo en la página
-**Pares**, o desde la página **Conversaciones** (**Más → Conversaciones**): no
-hay acceso al chat desde la Vista del mundo ni desde un avatar. Abrir el
+**Pares**, o desde la página **Conversaciones** (**Más → Conversaciones**).
+En la Vista del mundo no hay chat de texto, pero puede llamar a un amigo
+desde su avatar (consulte [Llamadas de voz](#llamadas-de-voz)). Abrir el
 chat con alguien que en ese momento no es amigo suyo (o que está
 bloqueado) muestra una explicación en lugar de un cuadro de redacción: lo
 que habilita el chat es la amistad, no estar en línea.
@@ -72,6 +73,14 @@ realmente; la llamada llega a su identidad, no a una conexión concreta.
   qué **Altavoz** usar.
 - El botón para terminar dice **Cancelar** mientras todavía espera que
   contesten, y **Colgar** cuando ya están hablando.
+
+**Una llamada va con usted.** Una vez en curso, puede salir del chat: la
+llamada y su voz siguen en todas las páginas, con una pequeña barra bajo
+la cabecera que muestra con quién habla, **Silenciar**, **Colgar** y
+**Abrir chat** para volver. Si un amigo llama mientras está en otra parte,
+incluida la Vista del mundo, suena en esa barra con **Aceptar** /
+**Rechazar**. En la Vista del mundo, haga clic en el avatar de un amigo y
+elija **📞 Llamar** para llamarlo mientras caminan juntos.
 
 Solo puede tener una llamada a la vez en todo este dispositivo: el botón
 Llamar está deshabilitado para cualquier otra persona mientras está en una

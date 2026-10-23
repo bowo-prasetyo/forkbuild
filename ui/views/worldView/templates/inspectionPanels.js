@@ -161,6 +161,8 @@ export const inspectionPanelsTemplate = `<div v-if="spatialInspection" class="sp
                     v-if="avatarInfo"
                     :info="avatarInfo"
                     :following="followedRemoteAvatarId === avatarInfo.avatarId"
+                    :can-call="canCallAvatar"
+                    @call="callAvatar"
                     @follow="followAvatarFromPanel(avatarInfo.avatarId)"
                     @stop-follow="stopFollowingAvatarFromPanel"
                     @interact="performAvatarInteraction"

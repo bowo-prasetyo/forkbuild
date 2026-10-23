@@ -65,6 +65,7 @@ import { useWorldHistoryPanel } from './worldView/useWorldHistoryPanel.js';
 import { useLandmarkAndRegionForms } from './worldView/useLandmarkAndRegionForms.js';
 import { useLocationBrowser } from './worldView/useLocationBrowser.js';
 import { useAvatarControls } from './worldView/useAvatarControls.js';
+import { useAvatarCall } from '../voice/useAvatarCall.js';
 import { useWelcomePanel } from './worldView/useWelcomePanel.js';
 import { usePlacesAndFocus } from './worldView/usePlacesAndFocus.js';
 import { useNearbySections } from './worldView/useNearbySections.js';
@@ -1208,6 +1209,7 @@ export default {
             avatarControlMode, blurCheckbox, cameraPerspective, followAvatar, followedRemoteAvatarId,
             refreshSpatialUI, session, showMyAvatar, showOtherAvatars
         });
+        const { canCallAvatar, callAvatar } = useAvatarCall({ avatarInfo, feedback, funnel: inject('funnelEventCounter', null) });
 
         // Touch screens get the on-screen movement pad. On a phone-width screen the
         // side panel starts closed so the World fills the screen.
@@ -1581,6 +1583,8 @@ export default {
             followAvatarFromPanel,
             stopFollowingAvatarFromPanel,
             performAvatarInteraction,
+            canCallAvatar,
+            callAvatar,
             nearbyAvatars,
             selectNearbyAvatar,
             loadedWorlds,

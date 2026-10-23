@@ -46,6 +46,10 @@ import FollowButton from './FollowButton.js';
 // see docs/Principles.md, "Looking At Something Is Never The Same As
 // Acting On It" — reusing that existing surface rather than adding a
 // second, redundant one.
+//
+// Call, when the host says this friend can be called (`canCall`;
+// ui/voice/useAvatarCall.js decides and places it), emitting
+// 'call': a call goes on while you walk together.
 export default {
     name: 'AvatarInfoPanel',
     components: { FollowButton },
@@ -57,9 +61,13 @@ export default {
         following: {
             type: Boolean,
             default: false
+        },
+        canCall: {
+            type: Boolean,
+            default: false
         }
     },
-    emits: ['follow', 'stop-follow', 'interact'],
+    emits: ['follow', 'stop-follow', 'interact', 'call'],
     methods: {
         t,
         formatNumber,
@@ -131,6 +139,7 @@ export default {
                 <button class="action-btn" @click="$emit('interact', 'greet')">{{ t('avatarInfoPanel.greet') }}</button>
                 <button class="action-btn" @click="$emit('interact', 'wave')">{{ t('avatarInfoPanel.wave') }}</button>
                 <button class="action-btn" @click="$emit('interact', 'point')">{{ t('avatarInfoPanel.point') }}</button>
+                <button v-if="canCall" type="button" class="action-btn avatar-info-call" @click="$emit('call')">{{ t('chatView.call') }}</button>
                 <FollowButton v-if="info.signerIdentityId" :identity-id="info.signerIdentityId" :name="info.displayName || null"
                               :follow-label="t('avatarInfoPanel.followWork')" :following-label="t('avatarInfoPanel.followingWork')" />
             </div>

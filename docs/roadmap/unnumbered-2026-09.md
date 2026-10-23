@@ -9077,3 +9077,31 @@ and fell back with every stride. A hat could show the same kind of edge.
 - Tests: tests/CameraPerspective.test.js checks the rule, and that a session leaves your avatar out in first person,
   while walking too, draws it again in third person and the free camera, keeps **Show My Avatar** as set, and sends
   nothing new in presence.
+
+## A call goes with you into World View (unnumbered, 2026-10-23)
+
+**Talking while you walk together, step 1** (the owner's yes, 2026-10-23: "please design and implement the step 1
+first"). Pillar served: walking with friends, the first thing World View offers (**Walk here with me**). Text chat and
+calls lived only on the Conversations and Chat pages, and a call was worse than missing outside them: its voice
+played through an element on the friend's Chat page (ui/views/ChatView.js), so leaving that page for World View kept
+the call connected but silent, with no Mute or Hang Up; and an incoming call showed only on that friend's Chat page.
+
+- **The call's voice plays app-wide** (ui/voice/callAudio.js, built with the network runtime in ui/main.js): one
+  element follows application/chat/VoiceUseCase.js's one call for the device, so a call is heard on every page. The
+  Chat page's speaker choice sets it.
+- **A call bar on every page** (ui/components/CallBar.js, under the header in ui/App.js, with the app's other banners
+  so it never covers World View's controls): who the call is with, how it stands, **Accept** / **Decline**, **Mute**,
+  **Hang Up** (or **Cancel** while it rings), **Open Chat**, and for a moment why a call ended. It steps aside on that
+  friend's own Chat page, whose fuller bar keeps the microphone and speaker choices.
+- **Call on a friend's avatar** in World View (ui/components/AvatarInfoPanel.js, which stays presentation only;
+  ui/voice/useAvatarCall.js decides and places the call): offered when the Chat page would offer it
+  (`canCallIdentity`) and no call is on; a refusal says why in World View's own message.
+- The call bar loads with the network runtime calls need, so Home's first load gains only the call audio.
+- Its words in all eight languages; the user guide's Chat & Conversations (08) says a call goes with you and can start
+  from an avatar, in all eight.
+- Tests: tests/CallAudio.test.js (the voice plays from answer to hang-up, wherever you are; a refused play or no
+  speaker choice changes nothing else) and tests/CallBarBrowser.test.js (a friend's call answered, muted and hung up
+  from World View; the bar stepping aside on their Chat page; Cancel and why a call ended; waiting for the network
+  runtime; Call on a friend's avatar, and none while a call is on).
+- Not done: step 2, saying something as a speech bubble to the people walking with you, and step 3, group voice for
+  everyone walking together, which waits until people use talk in the World.

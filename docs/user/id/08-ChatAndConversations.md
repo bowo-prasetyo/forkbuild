@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: eefddf9b6eb874a7 -->
+<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: 13366a65358f83c3 -->
 # 08 — Obrolan & Percakapan
 
 <!-- languages -->
@@ -17,8 +17,9 @@ berteman dengan seseorang terlebih dahulu.
 ## Memulai percakapan
 
 Obrolan dibuka dari tombol **Obrolan** milik seorang teman di halaman
-**Rekan**, atau dari halaman **Percakapan** (**Lainnya → Percakapan**) — tidak ada jalan
-masuk obrolan dari Tampilan Dunia atau dari avatar. Membuka obrolan dengan
+**Rekan**, atau dari halaman **Percakapan** (**Lainnya → Percakapan**). Tidak
+ada obrolan teks di Tampilan Dunia, tetapi Anda dapat memanggil teman dari
+avatarnya di sana (lihat [Panggilan suara](#panggilan-suara)). Membuka obrolan dengan
 seseorang yang saat ini bukan teman (atau yang diblokir) menampilkan
 penjelasan alih-alih kotak tulis: yang membuka obrolan adalah pertemanan,
 bukan status daring.
@@ -69,6 +70,15 @@ menjangkau identitas mereka, bukan satu koneksi tertentu.
   **Speaker** yang akan dipakai.
 - Tombol akhirnya bertuliskan **Batal** selama Anda masih menunggu mereka
   menjawab, dan **Tutup Panggilan** begitu Anda benar-benar berbicara.
+
+**Panggilan ikut bersama Anda.** Setelah tersambung, Anda boleh
+meninggalkan obrolan: panggilan dan suaranya tetap berjalan di setiap
+halaman, dengan bilah kecil di bawah kepala halaman yang menunjukkan
+dengan siapa Anda berbicara, **Bisukan**, **Tutup Panggilan**, dan **Buka
+Obrolan** untuk kembali. Teman yang memanggil saat Anda berada di tempat
+lain, termasuk Tampilan Dunia, berdering di bilah itu dengan **Terima** /
+**Tolak**. Di Tampilan Dunia, klik avatar teman lalu pilih **📞 Panggil**
+untuk memanggilnya sambil berjalan bersama.
 
 Anda dibatasi satu panggilan pada satu waktu di seluruh perangkat ini —
 tombol Panggil dinonaktifkan untuk orang lain selama Anda sedang dalam

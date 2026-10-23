@@ -15,8 +15,9 @@ become friends with someone first.
 ## Starting a conversation
 
 Chat is reached from a friend's **Chat** button on the **Peers** page, or
-from the **Conversations** page (**More → Conversations**) — there's no chat entry point
-from World View or an avatar. Opening chat with someone who isn't currently
+from the **Conversations** page (**More → Conversations**). There's no text chat in
+World View, but you can call a friend from their avatar there (see
+[Voice calls](#voice-calls)). Opening chat with someone who isn't currently
 a friend (or who's blocked) shows an explanation instead of a compose box:
 friendship, not being online, is what unlocks chat.
 
@@ -62,6 +63,13 @@ their identity, not one specific connection.
   **Microphone** and (if your browser supports it) **Speaker** to use.
 - The end button reads **Cancel** while you're still waiting for them to
   pick up, and **Hang Up** once you're actually talking.
+
+**A call goes with you.** Once it's on, you can leave the chat: the call
+and its voice carry on on every page, with a small bar under the header
+showing who it's with, **Mute**, **Hang Up**, and **Open Chat** to come
+back. A friend calling while you're elsewhere, World View included, rings
+in that bar with **Accept** / **Decline**. In World View, click a friend's
+avatar and choose **📞 Call** to call them while you walk together.
 
 You're limited to one call at a time across this whole device — the Call
 button is disabled for anyone else while you're on a call. If your

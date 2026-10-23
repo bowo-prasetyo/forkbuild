@@ -4894,6 +4894,7 @@ export default Object.freeze({
     'chatView.incomingCall': '수신 전화',
     'chatView.connecting': '연결 중…',
     'chatView.onCall': '통화 중',
+    'callBar.label': '진행 중인 통화',
     'chatView.blocked': '차단됨',
     'chatView.notFriends': '친구 아님',
     'chatView.onlineFriend': '온라인 · 친구',

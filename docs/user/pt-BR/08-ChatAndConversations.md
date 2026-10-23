@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: eefddf9b6eb874a7 -->
+<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: 13366a65358f83c3 -->
 # 08 — Conversas
 
 <!-- languages -->
@@ -17,8 +17,9 @@ saber como ficar amigo de alguém antes.
 ## Começando uma conversa
 
 Chega-se ao chat pelo botão **Conversar** de um amigo na página **Pares**, ou
-pela página **Conversas** (**Mais → Conversas**) — não há entrada para o chat pela
-Visão do mundo nem por um avatar. Abrir o chat com alguém que não é seu amigo
+pela página **Conversas** (**Mais → Conversas**). Não há chat de texto na
+Visão do mundo, mas você pode ligar para um amigo pelo avatar dele lá (veja
+[Chamadas de voz](#chamadas-de-voz)). Abrir o chat com alguém que não é seu amigo
 no momento (ou que está bloqueado) mostra uma explicação em vez de uma caixa
 de escrita: o que libera o chat é a amizade, não estar on-line.
 
@@ -69,6 +70,14 @@ identidade dele, não a uma conexão específica.
   usar.
 - O botão de encerrar mostra **Cancelar** enquanto você ainda espera a
   pessoa atender, e **Desligar** quando vocês já estão conversando.
+
+**A chamada vai com você.** Depois que ela começa, você pode sair do
+chat: a chamada e a voz continuam em todas as páginas, com uma pequena
+barra abaixo do cabeçalho mostrando com quem você fala, **Silenciar**,
+**Desligar** e **Abrir conversa** para voltar. Um amigo que liga enquanto
+você está em outro lugar, inclusive na Visão do mundo, toca nessa barra
+com **Aceitar** / **Recusar**. Na Visão do mundo, clique no avatar de um
+amigo e escolha **📞 Ligar** para ligar enquanto vocês andam juntos.
 
 Você fica limitado a uma chamada por vez neste dispositivo inteiro — o botão
 Ligar fica desabilitado para qualquer outra pessoa enquanto você está numa

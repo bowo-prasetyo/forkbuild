@@ -4891,6 +4891,7 @@ export default Object.freeze({
     'chatView.incomingCall': '着信',
     'chatView.connecting': '接続中…',
     'chatView.onCall': '通話中',
+    'callBar.label': '通話',
     'chatView.blocked': 'ブロック中',
     'chatView.notFriends': '友達ではありません',
     'chatView.onlineFriend': 'オンライン · 友達',

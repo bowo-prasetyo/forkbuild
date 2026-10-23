@@ -104,7 +104,8 @@ const VOICE_END_REASON_MESSAGE = Object.freeze({
 // (2) a microphone picker and (if `<audio>#setSinkId` exists in this
 //     browser) a speaker picker appear once `hasMediaAttached` — the
 //     microphone one calls `voiceUseCase.setInputDevice()`, the speaker
-//     one calls `remoteAudioEl.value.setSinkId()` DIRECTLY and never
+//     one calls the app-wide call audio's setSpeaker() (ui/voice/callAudio.js,
+//     where the call's voice plays on every page) and never
 //     touches voiceUseCase at all, exactly matching that file's own
 //     header, "Output Device Selection Never Enters This Class";
 // (3) `voiceUseCase.onMicrophoneUnavailable()` surfaces a small, dismissible-
@@ -174,7 +175,9 @@ export default {
         const activeCall = ref(voiceUseCase ? voiceUseCase.getActiveCall() : null);
         const isMuted = ref(voiceUseCase ? voiceUseCase.isMuted() : false);
         const voiceError = ref('');
-        const remoteAudioEl = ref(null);
+        // The call's voice plays app-wide (ui/voice/callAudio.js), so it
+        // goes on when you leave this page; the speaker choice is its.
+        const callAudio = inject('callAudio', null);
         // 0.2.75 — Voice UX & Device Controls. `inputDevices`/`outputDevices`
         // are refreshed once media is actually attached (see
         // refreshInputDevices()/refreshOutputDevices() below) rather than
@@ -355,12 +358,6 @@ export default {
             if (!voiceUseCase) return;
             activeCall.value = voiceUseCase.getActiveCall();
             isMuted.value = voiceUseCase.isMuted();
-            if (remoteAudioEl.value) {
-                const stream = activeCall.value ? voiceUseCase.getRemoteStream(activeCall.value.callId) : null;
-                if (remoteAudioEl.value.srcObject !== stream) {
-                    remoteAudioEl.value.srcObject = stream;
-                }
-            }
             // 0.2.75 — the call bar (and any device problem it was
             // showing) is entirely about a call THIS peer is in; once
             // that's no longer true, both reset rather than lingering
@@ -430,9 +427,10 @@ export default {
         // never through voiceUseCase — see this view's own header and
         // application/chat/VoiceUseCase.js's own header, "Output Device
         // Selection Never Enters This Class." Degrades to an empty list
-        // (no picker shown) in a browser without device enumeration.
+        // (no picker shown) in a browser without device enumeration or setSinkId().
         async function refreshOutputDevices() {
-            if (!navigator.mediaDevices || typeof navigator.mediaDevices.enumerateDevices !== 'function') {
+            if (!callAudio || !callAudio.canChooseSpeaker()
+                || !navigator.mediaDevices || typeof navigator.mediaDevices.enumerateDevices !== 'function') {
                 outputDevices.value = [];
                 return;
             }
@@ -455,19 +453,18 @@ export default {
             selectedInputDeviceId.value = voiceUseCase.getInputDevice() || '';
         }
 
-        // A speaker choice is only ever meaningful once `<audio
-        // ref="remoteAudioEl">` actually exists AND this browser supports
-        // `setSinkId()` — both feature-detected here rather than assumed;
-        // see this view's own header on why this never touches
-        // voiceUseCase at all.
+        // A speaker choice is only ever meaningful when the call audio
+        // exists AND this browser supports `setSinkId()` — both
+        // feature-detected here rather than assumed; see this view's own
+        // header on why this never touches voiceUseCase at all.
         async function changeOutputDevice(event) {
             const deviceId = event.target.value || '';
-            if (!remoteAudioEl.value || typeof remoteAudioEl.value.setSinkId !== 'function') {
+            if (!callAudio || !callAudio.canChooseSpeaker()) {
                 return;
             }
             voiceError.value = '';
             try {
-                await remoteAudioEl.value.setSinkId(deviceId);
+                await callAudio.setSpeaker(deviceId);
                 selectedOutputDeviceId.value = deviceId;
             } catch {
                 voiceError.value = t('chatView.couldNotSwitchSpeaker');
@@ -572,7 +569,7 @@ export default {
             send, formatTime, deliveryLabel, presence, showDetail,
             // 0.2.73
             callForThisPeer, isRinging, isInCallWithThisPeer, canCall, callStatusLabel,
-            isMuted, voiceError, remoteAudioEl,
+            isMuted, voiceError,
             call, acceptIncomingCall, rejectIncomingCall, hangUp, toggleMute,
             // 0.2.75
             isOutgoingRinging, hasMediaAttached, inputDevices, outputDevices,
@@ -631,7 +628,6 @@ export default {
                         </template>
                         <button type="button" class="action-btn call-btn--end" @click="hangUp">{{ isOutgoingRinging ? t('chatView.cancel') : t('chatView.hangUp') }}</button>
                     </template>
-                    <audio ref="remoteAudioEl" autoplay></audio>
                 </div>
                 <p v-if="micProblem" class="call-bar-note">{{ micProblem }}</p>
                 <p v-if="voiceError" class="identity-unlock-error">{{ voiceError }}</p>

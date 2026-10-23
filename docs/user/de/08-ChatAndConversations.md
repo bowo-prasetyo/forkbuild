@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: eefddf9b6eb874a7 -->
+<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: 13366a65358f83c3 -->
 # 08 — Chat & Unterhaltungen
 
 <!-- languages -->
@@ -18,8 +18,9 @@ Freunden** — wie Sie sich zuerst mit jemandem befreunden, steht unter
 
 Den Chat erreichen Sie über die Schaltfläche **Chat** eines Freundes auf
 der Seite **Peers** oder über die Seite **Unterhaltungen** (**Mehr →
-Unterhaltungen**) — aus der Weltansicht oder von einem Avatar aus gibt es keinen
-Zugang zum Chat. Öffnen Sie den Chat mit jemandem, der gerade kein Freund
+Unterhaltungen**). In der Weltansicht gibt es keinen Text-Chat, aber Sie
+können dort einen Freund über seinen Avatar anrufen (siehe
+[Sprachanrufe](#sprachanrufe)). Öffnen Sie den Chat mit jemandem, der gerade kein Freund
 ist (oder blockiert ist), erscheint statt eines Eingabefelds eine
 Erklärung: Die Freundschaft, nicht das Online-Sein, schaltet den Chat
 frei.
@@ -75,6 +76,15 @@ Verbindung.
 - Die Beenden-Schaltfläche heißt **Abbrechen**, solange Sie noch darauf
   warten, dass er abnimmt, und **Auflegen**, sobald Sie tatsächlich
   sprechen.
+
+**Ein Anruf geht mit.** Sobald er läuft, können Sie den Chat verlassen:
+Der Anruf samt Stimme läuft auf jeder Seite weiter, mit einer kleinen
+Leiste unter der Kopfzeile, die zeigt, mit wem Sie sprechen, dazu
+**Stummschalten**, **Auflegen** und **Chat öffnen**, um zurückzukehren.
+Ruft ein Freund an, während Sie woanders sind, auch in der Weltansicht,
+klingelt es in dieser Leiste mit **Annehmen** / **Ablehnen**. Klicken Sie
+in der Weltansicht auf den Avatar eines Freundes und wählen Sie
+**📞 Anrufen**, um ihn anzurufen, während Sie zusammen gehen.
 
 Auf diesem ganzen Gerät ist nur ein Anruf gleichzeitig möglich — die
 Schaltfläche Anrufen ist für alle anderen deaktiviert, solange Sie in
