@@ -531,12 +531,19 @@ async function main() {
         for (const label of ['Avatar', 'Status', 'Position', 'Distance', 'Animation']) {
             assert(infoTemplate.includes(`>${label}<`), `G2. AvatarInfoPanel exposes a "${label}" row — inspection ("look") is a real, reachable capability.`);
         }
-        // G3 — INTERACTABLE: exactly Follow/Greet/Wave/Point, and this
-        // panel's own emits() list is the complete inventory of what a
-        // click here can ever ask the host to do — no chat, no message,
-        // no "add friend," no "view profile."
-        assert(JSON.stringify(AvatarInfoPanel.emits.slice().sort()) === JSON.stringify(['follow', 'interact', 'stop-follow'].sort()),
-            "G3a. AvatarInfoPanel.emits is EXACTLY ['follow', 'stop-follow', 'interact'] — the panel is structurally incapable of emitting a chat/message/friend-request/profile-view event, because no such event exists in its own contract.");
+        // G3 — INTERACTABLE: exactly Follow/Greet/Wave/Point, plus Call,
+        // and this panel's own emits() list is the complete inventory of
+        // what a click here can ever ask the host to do — no chat, no
+        // message, no "add friend," no "view profile." Call joined on
+        // 2026-10-23 by the owner's decision (docs/roadmap/unnumbered-2026-09.md,
+        // "A call goes with you into World View"), not silently: it is shown
+        // only when the host passes `canCall`, which ui/voice/useAvatarCall.js
+        // sets from VoiceUseCase#canCallIdentity() — a mutual friend, not
+        // blocked — so a Wanderer who isn't your friend is never offered it.
+        assert(JSON.stringify(AvatarInfoPanel.emits.slice().sort()) === JSON.stringify(['call', 'follow', 'interact', 'stop-follow'].sort()),
+            "G3a. AvatarInfoPanel.emits is EXACTLY ['follow', 'stop-follow', 'interact', 'call'] — the panel is structurally incapable of emitting a chat/message/friend-request/profile-view event, because no such event exists in its own contract.");
+        assert(infoTemplate.includes('v-if="canCall"') && AvatarInfoPanel.props.canCall.default === false,
+            'G3a\'. Call shows only when the host says so (`canCall`, false by default): the panel never decides who can be called.');
         assert(JSON.stringify(NearbyAvatarsPanel.emits) === JSON.stringify(['select']),
             "G3b. NearbyAvatarsPanel.emits is EXACTLY ['select'] — clicking a nearby-avatars row can only ever ask the host to target that avatarId, the same reach-not-act boundary AvatarInfoPanel's own header states explicitly.");
         const interactionKinds = infoTemplate.match(/\$emit\('interact', '(\w+)'\)/g) || [];

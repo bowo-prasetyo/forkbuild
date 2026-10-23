@@ -4891,6 +4891,7 @@ export default Object.freeze({
     'chatView.incomingCall': 'Panggilan masuk',
     'chatView.connecting': 'Menghubungkan…',
     'chatView.onCall': 'Dalam panggilan',
+    'callBar.label': 'Panggilan berlangsung',
     'chatView.blocked': 'Diblokir',
     'chatView.notFriends': 'Bukan teman',
     'chatView.onlineFriend': 'Daring · Teman',

@@ -948,6 +948,7 @@ export async function composeNetwork({ app, decentralizedPublicationDiscoveryPro
         nostrRelayQueryClient,
         ownSnapshotDistributionLog,
         peerConnectionProvider,
+        peerRelationshipUseCase,
         peerSessionManager,
         publicationAnchorCatalog,
         publicationCatalog,

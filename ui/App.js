@@ -1,4 +1,4 @@
-import { computed, inject, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
+import { computed, defineAsyncComponent, inject, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import UserWidget from './components/UserWidget.js';
 import ExperimentalBanner from './components/ExperimentalBanner.js';
@@ -14,9 +14,13 @@ import { describeNotification } from './notifications/notificationText.js';
 import { CreatePreviewUseCase } from '../application/editor/CreatePreviewUseCase.js';
 import { t } from './i18n/i18n.js';
 
+// A call's bar, loaded with the network runtime that calls need, so Home's
+// first load stays as it was.
+const CallBar = defineAsyncComponent(() => import('./components/CallBar.js'));
+
 export default {
     name: 'App',
-    components: { UserWidget, ExperimentalBanner, BackupReminderBanner, NotificationHistoryPanel, PageLoadFailureNotice, PageLoadingNotice, AppUpdateBanner, InstallAppButton, DeviceNotificationSetting, LookChoice },
+    components: { UserWidget, ExperimentalBanner, BackupReminderBanner, NotificationHistoryPanel, PageLoadFailureNotice, PageLoadingNotice, AppUpdateBanner, InstallAppButton, DeviceNotificationSetting, LookChoice, CallBar },
     // 0.2.32: one app-wide PreviewService, provided here (same
     // provide/inject convention LoginModal's identityUseCase already
     // uses) so its cache and generation queue survive navigating
@@ -121,7 +125,12 @@ export default {
             return true;
         }
 
+        // Built with the network runtime (ui/main.js); the call bar waits for it.
+        const callServices = inject('callServices', ref(null));
+        const callsReady = computed(() => Boolean(callServices.value));
+
         return {
+            callsReady,
             t, menuOpen, moreOpen, moreMenu, inMore, inWalk, notificationsOpen, openNotifications,
             getRecipientNotificationEventsCommand, viewNotificationPublication, describeNotification
         };
@@ -194,6 +203,7 @@ export default {
             </header>
 
             <AppUpdateBanner />
+            <CallBar v-if="callsReady" />
             <BackupReminderBanner :path="$route.path" @open-your-data="$router.push('/settings/data')" />
             <ExperimentalBanner v-if="$route.meta.experimental" />
             <PageLoadFailureNotice />

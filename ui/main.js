@@ -8,7 +8,7 @@
 // of them are needed to draw Home. It is the "network" service group, and
 // every other group waits for it (ui/serviceGroups.js,
 // ui/router/pageServiceGroups.js).
-import { createApp } from 'vue';
+import { createApp, shallowRef } from 'vue';
 import App from './App.js';
 import { router } from './router/index.js';
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
@@ -27,6 +27,7 @@ import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.j
 import { registerServiceWorker, showDeviceNotification } from './pwa/serviceWorkerClient.js';
 import { browserNotificationPermission } from './components/DeviceNotificationSetting.js';
 import { describeNotification } from './notifications/notificationText.js';
+import { createCallAudio } from './voice/callAudio.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { LanguageSettingsStore } from '../application/settings/LanguageSettingsStore.js';
@@ -168,6 +169,16 @@ defineServiceGroup('network', startNetwork);
 // (ui/components/PageLoadFailureNotice.js); there is none before the network
 // runtime is built.
 app.provide('activeVoiceCall', () => (network ? network.voiceUseCase.getActiveCall() : null));
+// A call goes on wherever you are: its voice plays through one app-wide
+// element (ui/voice/callAudio.js), and its bar (ui/components/CallBar.js)
+// shows on every page but that friend's own Chat page.
+const callServices = shallowRef(null);
+app.provide('callServices', callServices);
+whenNetworkBuilt.push(({ voiceUseCase, peerRelationshipUseCase }) => {
+    const callAudio = createCallAudio(voiceUseCase);
+    app.provide('callAudio', callAudio);
+    callServices.value = { voiceUseCase, peerRelationshipUseCase, callAudio };
+});
 
 // Services only some pages use are built the first time one of those pages
 // opens, not with the app (ui/serviceGroups.js); ui/router/pageServiceGroups.js

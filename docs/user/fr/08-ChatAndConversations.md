@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: eefddf9b6eb874a7 -->
+<!-- translation-of: docs/user/08-ChatAndConversations.md source-hash: 13366a65358f83c3 -->
 # 08 — Chat et conversations
 
 <!-- languages -->
@@ -18,8 +18,9 @@ devenir d’abord ami avec quelqu’un.
 ## Démarrer une conversation
 
 On accède au chat par le bouton **Discuter** d’un ami sur la page
-**Pairs**, ou par la page **Conversations** (**Plus → Conversations**) — il n’y a
-pas d’accès au chat depuis la Vue du Monde ou un avatar. Ouvrir le chat
+**Pairs**, ou par la page **Conversations** (**Plus → Conversations**). Il n’y
+a pas de chat écrit dans la Vue du Monde, mais vous pouvez y appeler un ami
+depuis son avatar (voir [Appels vocaux](#appels-vocaux)). Ouvrir le chat
 avec quelqu’un qui n’est pas actuellement votre ami (ou qui est bloqué)
 affiche une explication au lieu d’une zone de saisie : c’est l’amitié, et
 non le fait d’être en ligne, qui débloque le chat.
@@ -72,6 +73,15 @@ appeler vise son identité, pas une connexion en particulier.
   navigateur le permet) le **Haut-parleur** à utiliser.
 - Le bouton de fin affiche **Annuler** tant que vous attendez qu’il
   décroche, et **Raccrocher** une fois que vous parlez vraiment.
+
+**Un appel vous suit.** Une fois en cours, vous pouvez quitter le chat :
+l’appel et sa voix continuent sur toutes les pages, avec une petite barre
+sous l’en-tête qui montre avec qui vous parlez, **Couper le micro**,
+**Raccrocher**, et **Ouvrir le chat** pour y revenir. Si un ami appelle
+pendant que vous êtes ailleurs, Vue du Monde comprise, l’appel sonne dans
+cette barre avec **Accepter** / **Refuser**. Dans la Vue du Monde, cliquez
+sur l’avatar d’un ami et choisissez **📞 Appeler** pour l’appeler pendant
+que vous marchez ensemble.
 
 Vous êtes limité à un appel à la fois sur tout cet appareil — le bouton
 Appeler est désactivé pour toutes les autres personnes pendant que vous

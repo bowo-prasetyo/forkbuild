@@ -509,6 +509,32 @@
     margin-top: 0.4rem;
 }
 
+/* A call on every page (ui/components/CallBar.js): under the header, with
+   the app's other banners, so it never covers World View's controls. */
+.call-bar--app {
+    flex-wrap: wrap;
+    margin: 0.5rem 1rem 0;
+    background: var(--surface-raised);
+}
+
+.call-bar-who {
+    font-weight: 600;
+}
+
+.call-bar--app .call-bar-status {
+    margin-right: auto;
+}
+
+.call-bar-chat {
+    font-size: 0.85rem;
+    color: var(--accent-ink);
+}
+
+.call-bar--app .call-bar-note {
+    margin-top: 0;
+    flex-basis: 100%;
+}
+
 /* 0.2.70 — Presence & Conversation Lifecycle. Reuses .identity-mgmt-*,
    .peer-badge*, .peer-detail-row, and .form-hint* wholesale — the same
    card/list language every other social surface already uses — and

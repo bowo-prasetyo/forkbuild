@@ -4893,6 +4893,7 @@ export default Object.freeze({
     'chatView.incomingCall': 'Chamada recebida',
     'chatView.connecting': 'Conectando…',
     'chatView.onCall': 'Em chamada',
+    'callBar.label': 'Chamada em andamento',
     'chatView.blocked': 'Bloqueado',
     'chatView.notFriends': 'Não são amigos',
     'chatView.onlineFriend': 'Online · Amigo',
