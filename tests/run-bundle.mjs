@@ -762,7 +762,6 @@ async function firstVisit(browser, base) {
         const sayBox = await editor.$eval('.world-say', (element) => element.getBoundingClientRect().left);
         const panelRight = await editor.$eval('.world-view-overlay', (element) => element.getBoundingClientRect().right);
         assert(sayBox >= panelRight, `beside the side panel, not over it (${sayBox} vs ${panelRight})`);
-        await editor.screenshot({ path: process.env.SAY_SHOT || '/dev/null' });
         await editor.goBack();
         await editor.waitForSelector('.first-build-step--done[data-step="walk-inside"]', { timeout: 60_000 });
 
