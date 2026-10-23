@@ -909,6 +909,12 @@
     pointer-events: auto;
 }
 
+/* Beside World View's side panel (.world-view-overlay, 280px from 1rem), not over it. */
+.world-say--beside-panel {
+    left: calc(1rem + 280px + 0.75rem);
+    max-width: min(24rem, calc(100% - 280px - 2.75rem));
+}
+
 .world-say-log {
     list-style: none;
     margin: 0;

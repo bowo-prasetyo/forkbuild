@@ -759,6 +759,10 @@ async function firstVisit(browser, base) {
         await editor.waitForFunction(() => [...document.querySelectorAll('.world-say-line--own .world-say-text')].some((line) => line.textContent === 'Nice house!'),
             null, { timeout: 10_000 });
         assert(!(await editor.$('.world-say-input')), 'saying a line in World View puts it in the log, and the line closes');
+        const sayBox = await editor.$eval('.world-say', (element) => element.getBoundingClientRect().left);
+        const panelRight = await editor.$eval('.world-view-overlay', (element) => element.getBoundingClientRect().right);
+        assert(sayBox >= panelRight, `beside the side panel, not over it (${sayBox} vs ${panelRight})`);
+        await editor.screenshot({ path: process.env.SAY_SHOT || '/dev/null' });
         await editor.goBack();
         await editor.waitForSelector('.first-build-step--done[data-step="walk-inside"]', { timeout: 60_000 });
 

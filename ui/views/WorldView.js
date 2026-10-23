@@ -1580,6 +1580,7 @@ export default {
             toggleSoundMusic,
             touchPadVisible,
             panelOpen,
+            compactLayout,
             togglePanel,
             controlsHintOpen,
             toggleFollowAvatar,
@@ -1993,7 +1994,9 @@ export default {
             ${hudSectionTemplate}
             <WorldSayPanel
                 v-if="hasLocalAvatar"
+                v-show="!(panelOpen && compactLayout)"
                 ref="sayPanel"
+                :class="{ 'world-say--beside-panel': panelOpen && !compactLayout }"
                 :log="sayLog"
                 :guest="sayGuest"
                 :say-line="sayLine"
