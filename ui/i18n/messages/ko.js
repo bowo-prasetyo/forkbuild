@@ -4637,6 +4637,8 @@ export default Object.freeze({
     'peerConnections.friend': '친구',
     'peerConnections.remembered': '기억됨',
     'peerConnections.following': '팔로잉',
+    'peerConnections.filterFollowed': '내가 팔로우',
+    'peerConnections.followingElsewhere': '여기에는 연결한 적 있는 사람만 나옵니다. 내가 팔로우하는 모든 사람과 그들의 최신 작품은 {page}에 있습니다.',
     'peerConnections.blocked2': '차단됨',
     'peerConnections.revoked': '폐기됨',
     'peerConnections.newIdentityDeclared': '새 신원 선언됨',

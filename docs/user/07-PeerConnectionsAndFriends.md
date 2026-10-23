@@ -18,7 +18,7 @@ manage who you're connected, known, and friends with.
 Peers                                   Your ID …N6KbN  [Copy full ID]
 
 Needs your attention      connections waiting for you, friend requests
-People  [All|Friends|Following|Online]   one row per person
+People  [All|Friends|I follow|Online]   one row per person
 Connect with someone new  [Invite|Paste an invitation|Find by ID|Public lobby]
 ▸ Blocked (N)             only when you've blocked someone
 ```
@@ -38,7 +38,8 @@ Connect with someone new  [Invite|Paste an invitation|Find by ID|Public lobby]
   the **⋯** menu holds the rest: **Rename** (or **Name & Remember**),
   **Remember** / **Forget**, **Unfriend**, **Follow** / **Unfollow**,
   **Connection Details**, **Disconnect**, and **Block** / **Unblock**.
-  The **Following** filter shows the people here you follow.
+  The **I follow** filter shows the people here you follow, and points to
+  the **Following** page, which lists everyone you follow.
 - **Blocked** is folded at the bottom and only shows when you've blocked
   someone.
 

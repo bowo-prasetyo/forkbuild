@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 7ffb295aa351970e -->
+<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: ac5c5128a6232d78 -->
 # 07 — Koneksi Rekan & Teman
 
 <!-- languages -->
@@ -20,7 +20,7 @@ untuk mengelola siapa yang terhubung, Anda kenal, dan berteman dengan Anda.
 Rekan                                   ID Anda …N6KbN  [Salin ID lengkap]
 
 Perlu perhatian Anda      koneksi yang menunggu Anda, permintaan pertemanan
-Orang  [Semua|Teman|Diikuti|Daring]     satu baris per orang
+Orang  [Semua|Teman|Yang saya ikuti|Daring]     satu baris per orang
 Terhubung dengan orang baru  [Undang|Tempel undangan|Cari berdasarkan ID|Lobi publik]
 ▸ Diblokir (N)            hanya saat Anda telah memblokir seseorang
 ```
@@ -40,8 +40,9 @@ Terhubung dengan orang baru  [Undang|Tempel undangan|Cari berdasarkan ID|Lobi pu
   terhubung dengan Anda), dan menu **⋯** berisi sisanya: **Ganti Nama**
   (atau **Beri Nama & Ingat**), **Ingat** / **Lupakan**, **Hapus
   Pertemanan**, **Ikuti** / **Berhenti Mengikuti**, **Detail Koneksi**,
-  **Putuskan**, dan **Blokir** / **Buka Blokir**. Saringan **Diikuti**
-  menampilkan orang-orang di sini yang Anda ikuti.
+  **Putuskan**, dan **Blokir** / **Buka Blokir**. Saringan **Yang saya
+  ikuti** menampilkan orang-orang di sini yang Anda ikuti, dan menunjuk ke
+  halaman **Diikuti**, yang mencantumkan semua orang yang Anda ikuti.
 - **Diblokir** terlipat di bagian bawah dan hanya muncul saat Anda telah
   memblokir seseorang.
 

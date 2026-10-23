@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: 7ffb295aa351970e -->
+<!-- translation-of: docs/user/07-PeerConnectionsAndFriends.md source-hash: ac5c5128a6232d78 -->
 # 07 — Peer-Verbindungen & Freunde
 
 <!-- languages -->
@@ -21,7 +21,7 @@ kennen und mit wem Sie befreundet sind.
 Peers                                       Ihre ID …N6KbN  [Vollständige ID kopieren]
 
 Braucht Ihre Aufmerksamkeit   wartende Verbindungen, Freundschaftsanfragen
-Personen  [Alle|Freunde|Gefolgt|Online]   eine Zeile pro Person
+Personen  [Alle|Freunde|Denen ich folge|Online]   eine Zeile pro Person
 Mit jemand Neuem verbinden  [Einladen|Einladung einfügen|Über ID suchen|Öffentliche Lobby]
 ▸ Blockiert (N)               nur, wenn Sie jemanden blockiert haben
 ```
@@ -42,7 +42,8 @@ Mit jemand Neuem verbinden  [Einladen|Einladung einfügen|Über ID suchen|Öffen
   (oder **Benennen & merken**), **Merken** / **Vergessen**, **Freundschaft
   beenden**, **Folgen** / **Nicht mehr folgen**, **Verbindungsdetails**,
   **Trennen** und **Blockieren** / **Blockierung aufheben**. Der Filter
-  **Gefolgt** zeigt die Personen hier, denen Sie folgen.
+  **Denen ich folge** zeigt die Personen hier, denen Sie folgen, und
+  verweist auf die Seite **Gefolgt**, die alle auflistet, denen Sie folgen.
 - **Blockiert** ist unten eingeklappt und erscheint nur, wenn Sie jemanden
   blockiert haben.
 

@@ -6,6 +6,7 @@ import { PeerIdentity } from '../peer/PeerIdentity.js';
 import { FriendshipState } from '../core/social/FriendshipState.js';
 import * as Ed25519 from '../identity/Ed25519.js';
 import { assert } from './support/Assert.js';
+import { t } from '../ui/i18n/i18n.js';
 
 // The Peers page, rendered by real Vue with the shipped CSS over fake use
 // cases: time-sensitive items first, one card per person however many
@@ -254,6 +255,13 @@ const settle = async () => { await nextTick(); await new Promise((r) => setTimeo
     byText(host, '.peers-filter-btn', 'Online').click();
     await settle();
     assert(names().length === 3 && !names().includes('Carol') && !names().includes('Dave'), `Online hides offline people, got ${names().join(', ')}`);
+    assert(!host.querySelector('.peers-following-elsewhere'), 'only the "I follow" filter points to the Following page');
+    byText(host, '.peers-filter-btn', t('peerConnections.filterFollowed')).click();
+    await settle();
+    const elsewhere = host.querySelector('.peers-following-elsewhere');
+    assert(names().length === 0 && elsewhere, '"I follow" narrows the people here, and says where everyone you follow is');
+    assert(elsewhere.querySelector('a').getAttribute('href') === '#/following' && elsewhere.querySelector('a').textContent.trim() === t('app.nav.following'),
+        `linking to the Following page (${elsewhere.textContent.trim()})`);
     byText(host, '.peers-filter-btn', 'All').click();
     await settle();
 }
