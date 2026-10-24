@@ -21,11 +21,11 @@
 
 Every card on the **Signed Records** page (see
 [Signed Records & External Evidence](09-PublicationsAndEvidence.md)) has
-sections for proving *when* a publication existed and for putting its
+sections for proving *when* a record existed and for putting its
 content somewhere others can fetch it:
 
 - **[External Evidence](#external-evidence)** — records on Bitcoin, Base,
-  Arweave, Steem or Blurt that a publication's content hash existed at a
+  Arweave, Steem or Blurt that a record's content hash existed at a
   certain time.
 - **[The Bitcoin Anchor Pipeline](#the-bitcoin-anchor-pipeline)** and
   **[The Base Anchor Pipeline](#the-base-anchor-pipeline)** — step-by-step
@@ -56,7 +56,7 @@ when you expand the list.
 
 ### Creating evidence
 
-In a publication card's **Distribution** section, the **Proof / Anchoring**
+In a record card's **Distribution** section, the **Proof / Anchoring**
 block (Steem and Blurt marked **Experimental**) has a card per kind of evidence one click
 can create, each with its own button: **Create Arweave Anchor** and
 **Create Steem Anchor**. Bitcoin and Base anchors have no such card: they're
@@ -64,7 +64,7 @@ made through their wallet steps in the card's **Details → Decentralization
 & Evidence** tab, and the block says so. When you've saved a preferred provider, these cards
 are folded under **Other anchoring options**, below that provider's own
 button (see [Anchoring on a preferred provider](#anchoring-on-a-preferred-provider)).
-Each records the publication's content hash in a transaction on that
+Each writes the record's content hash in a transaction on that
 network, with one of three outcomes:
 
 | Outcome | Meaning |
@@ -84,9 +84,9 @@ network, with one of three outcomes:
   and your Blurt account set under
   [Network Settings → Blurt](10-NetworkSettings.md#blurt).
 
-A publication made before content hashes became SHA-256 is never anchored,
+A record made before content hashes became SHA-256 is never anchored,
 by these buttons, the Bitcoin or Base steps, or **Anchor Several
-Publications**: nobody else can check content against its old hash, so a
+Records**: nobody else can check content against its old hash, so a
 record of it would prove nothing. You get **Recording rejected** (or, for
 Bitcoin and Base, a failed transaction step) saying to publish it again,
 before any wallet is asked. The same goes for placements, which end in **No
@@ -117,12 +117,12 @@ Otherwise it adds the build's content hash to your current Blurt post, or
 makes a new one, for a small fee in BLURT. Finality, **Verify Evidence** and
 **Inspect Evidence** work as for Steem, and the card links to the post.
 
-**Anchoring several publications at once on Steem.** Under **Wallet &
-Archive Tools → Blockchain Anchoring**, **Anchor Several Publications on
-Steem** lists your cataloged publications. Tick the ones you want (or
-**Select Unanchored**) and click **Anchor N Publications on Steem**. One
-Keychain approval anchors up to 64. Each publication still gets its own
-anchor, verified on its own. **Anchor Several Publications on Blurt** works
+**Anchoring several records at once on Steem.** Under **Wallet &
+Archive Tools → Blockchain Anchoring**, **Anchor Several Records on
+Steem** lists your cataloged records. Tick the ones you want (or
+**Select Unanchored**) and click **Anchor N Records on Steem**. One
+Keychain approval anchors up to 64. Each record still gets its own
+anchor, verified on its own. **Anchor Several Records on Blurt** works
 the same way, with one Blurt Keychain approval.
 
 ### Anchoring on a preferred provider
@@ -146,7 +146,7 @@ says so.
 
 Connected peers only pass on evidence created or re-announced while you're
 connected. **Discover from Peers** fills the gap: it asks each connected
-peer, one at a time, for every anchor they know for this publication,
+peer, one at a time, for every anchor they know for this record,
 including ones they learned from others. Nothing else on the page contacts a
 peer.
 
@@ -164,7 +164,7 @@ kept, and the same anchor is never added twice.
 
 On the card's **Decentralization & Evidence** tab, **External Evidence**
 shows how many anchors are known and offers **Discover from Peers** (above).
-**Show Evidence** lists every anchor known for the publication, side by
+**Show Evidence** lists every anchor known for the record, side by
 side, even ones that disagree. With more than one anchor, a **Content
 binding** summary comes first, counting anchors per content hash, and warns
 when they claim different hashes. It doesn't say which one is right.
@@ -175,7 +175,7 @@ Each anchor shows:
 |---|---|
 | **Locator** | Where the external system says to find the recording. |
 | **Recorded** | The claimed recording time (claimed until you verify). |
-| **Publication / Content hash** | What this anchor's signature binds together. |
+| **Record / Content hash** | What this anchor's signature binds together. |
 | **Attested by** | The identity that signed the anchor. |
 
 - **Verify Evidence** (then **Verify Again**) checks with the external
@@ -195,7 +195,7 @@ Each anchor shows:
 | **Proof not independently verified** | Genuinely signed, but this device can't check this kind of anchor externally. |
 | **Verification unavailable** | The external system couldn't be reached. This isn't the same as invalid. |
 | **Invalid evidence** / **Invalid signature** | The record is malformed or wasn't genuinely signed. |
-| **Content mismatch** | The anchor doesn't match this publication. |
+| **Content mismatch** | The anchor doesn't match this record. |
 | **Invalid external proof** | The external system says the claim is false. |
 
 If an anchor was verified earlier in this visit and a later check can't
@@ -230,7 +230,7 @@ History**, oldest first; content proof shows only the latest result.
 ## The Bitcoin Anchor Pipeline
 
 A step-by-step flow that uses your own Bitcoin wallet to write a
-publication's content hash into a real transaction. Each step is its own
+record's content hash into a real transaction. Each step is its own
 click.
 
 > **This spends real bitcoin on Bitcoin mainnet.** From **Create Transaction
@@ -239,7 +239,7 @@ click.
 
 All of its page-wide panels are under **Wallet & Archive Tools →
 Blockchain Anchoring**, the folded panel at the bottom of the Signed Records
-page; the per-publication steps are on each publication's card. Where a step
+page; the per-record steps are on each record's card. Where a step
 needs a wallet or funding observed first, its link opens that panel for you.
 
 ### What you'll need
@@ -251,7 +251,7 @@ needs a wallet or funding observed first, its link opens that panel for you.
   (starting `bc1q…`). Funding at Taproot (`bc1p…`) or legacy (`1…`, `3…`)
   addresses can be observed but not signed; review reports it as not
   reviewable.
-- A publication on your Signed Records page; the transaction anchors its
+- A record on your Signed Records page; the transaction anchors its
   content hash.
 
 ### Connecting a wallet
@@ -288,7 +288,7 @@ observation is stale.
 
 ### Building a transaction plan
 
-On the publication card's **Decentralization & Evidence** tab, **Bitcoin
+On the record card's **Decentralization & Evidence** tab, **Bitcoin
 Anchor Transaction → Create Transaction Plan** is enabled once you've observed funding. It plans against
 the latest observation, choosing UTXOs largest first, and computes the fee.
 
@@ -327,7 +327,7 @@ offline.
 | **Finalization failed** | Some other unusable result. |
 
 Only native SegWit (P2WPKH) inputs can be finalized. Finalizing also
-records a [Bitcoin Anchor Publication](#bitcoin-anchor-publications).
+records a [Bitcoin Anchor Record](#bitcoin-anchor-records).
 
 ### Broadcasting
 
@@ -349,32 +349,32 @@ mined, with the same three results as
 [Bitcoin anchor reconciliation](#bitcoin-anchor-reconciliation). Each check
 is added to this broadcast's **Show Confirmation History**. That list is
 cleared on reload, but every result is also kept in the
-[Publication Observation Archive](12-ArchiveAndAchievements.md#the-publication-observation-archive).
+[Record Observation Archive](12-ArchiveAndAchievements.md#the-record-observation-archive).
 
 ### What the pipeline doesn't do
 
 Once **Broadcast Transaction** succeeds, the transaction is added to the
-publication's **External Evidence** list as a new anchor, unverified until
+record's **External Evidence** list as a new anchor, unverified until
 you click **Verify Evidence**; peers can find it with **Discover from
 Peers**. A rejected or unreachable broadcast adds nothing. The pipeline
 doesn't keep its screens: the review, signing and broadcast screens are
 cleared by a new plan, a new signature, or a reload.
-What's kept is the publication record made at finalization, and every
+What's kept is the record made at finalization, and every
 broadcast and confirmation result in the Observation Archive.
 
-### Bitcoin Anchor Publications
+### Bitcoin Anchor Records
 
-The **Bitcoin Anchor Publications** card lists a record for every
+The **Bitcoin Anchor Records** card lists a record for every
 transaction this device has finalized: `{ anchor ID, content hash, txid,
 network, created at }`. It's made when **Verify & Finalize Transaction**
 succeeds, whether or not the broadcast later works, and has no confirmed or
-valid status of its own. **Show Publications** lists them. Each row has:
+valid status of its own. **Show Records** lists them. Each row has:
 
 - **Inspect Observations** — counts of every broadcast, confirmation,
   content-proof, chain-placement and consistency fact the archive holds for
   that anchor ID.
-- **Show Publication Lifecycle** — the same facts in time order, starting
-  with **Publication record created**. A step with nothing recorded is
+- **Show Record Lifecycle** — the same facts in time order, starting
+  with **Record created**. A step with nothing recorded is
   simply absent. Opening it contacts no network.
 
 ## The Base Anchor Pipeline
@@ -395,7 +395,7 @@ the content hash as data), its own terms.
   interface, such as Coinbase Wallet or MetaMask.
 - An account on chain ID **8453** (Base mainnet) or **84532** (Base
   Sepolia). Any other chain is reported as a mismatch.
-- A publication on your Signed Records page.
+- A record on your Signed Records page.
 
 ### Connecting a wallet and observing an account
 
@@ -415,8 +415,8 @@ account's chain and balance:
 
 ### Building a transaction plan
 
-On the publication card's **Decentralization & Evidence** tab, **Base
-Publication Transaction → Create Base Transaction Plan** (enabled once you've observed an account) builds an
+On the record card's **Decentralization & Evidence** tab, **Base
+Anchor Transaction → Create Base Transaction Plan** (enabled once you've observed an account) builds an
 unsigned self-transfer from your account to itself, carrying the content
 hash as its data.
 
@@ -445,7 +445,7 @@ Reviewed Transaction** asks the wallet to sign exactly that plan.
 
 In the same review card, **Create Base Anchor** signs, finalizes and
 broadcasts the reviewed transaction in one click, then adds it to the
-publication's evidence list. It's an alternative to the step-by-step
+record's evidence list. It's an alternative to the step-by-step
 buttons, which still work.
 
 | Badge | Meaning |
@@ -468,7 +468,7 @@ reviewed plan and recovers the signer.
 | **Signature did not verify** | Wrong key, wrong signature, or wrong data. |
 | **Finalization unavailable** / **Finalization failed** | Couldn't be checked, or some other unusable result. |
 
-Finalizing records a [Base Anchor Publication](#base-anchor-publications).
+Finalizing records a [Base Anchor Record](#base-anchor-records).
 Then **Broadcast Transaction** sends it: **Transaction broadcasted** (with
 the **Transaction ID**; not yet included in a block), **Transaction
 rejected**, or **Broadcast unavailable**. **Broadcast Again** resends the
@@ -487,14 +487,14 @@ Transaction** checks whether it's in a block:
 
 **Observe Transaction Again** adds to **Show Observation History**. That
 list is cleared on reload, but every observation is also kept in the
-[Publication Observation Archive](12-ArchiveAndAchievements.md#the-publication-observation-archive).
+[Record Observation Archive](12-ArchiveAndAchievements.md#the-record-observation-archive).
 
-### Base Anchor Publications
+### Base Anchor Records
 
-Like Bitcoin's, the **Base Anchor Publications** card keeps a record per
+Like Bitcoin's, the **Base Anchor Records** card keeps a record per
 finalized transaction: `{ content hash, txid, network, created at }`.
-**Show Publications** lists them, and **Show Publication Lifecycle** shows
-**Publication record created** followed by each **Inclusion observation
+**Show Records** lists them, and **Show Record Lifecycle** shows
+**Record created** followed by each **Inclusion observation
 #N**. Base broadcast results aren't saved, so there's no broadcast entry.
 
 Only **Create Base Anchor** adds an External Evidence entry; the
@@ -508,18 +508,18 @@ Arweave or Local to the **Placements & IPFS** tab's list. Only IPFS
 
 A **snapshot placement** is a signed claim that a storage backend — **IPFS**,
 **Arweave**, or this device's own **Local** storage — can serve the bytes
-for a publication's content hash. It isn't a guarantee they'll be there
+for a record's content hash. It isn't a guarantee they'll be there
 tomorrow. Several placements, on different backends and from different
 people, can exist side by side; none is preferred.
 
 ### Creating a placement
 
-In a publication card's **Distribution** section, the **Content** block has
+In a record card's **Distribution** section, the **Content** block has
 a card per backend, with **Create Local Placement**, **Create IPFS
 Placement** or **Create Arweave Placement**. When you've saved a preferred
 storage, the block leads with one button for it, such as **Store on IPFS**,
 and folds these cards under **Other storage options**. Each takes the bytes
-this device holds for the publication and hands them to that backend:
+this device holds for the record and hands them to that backend:
 
 - **Placement created** — accepted; a new signed placement appears below.
 - **No placement was created** — the backend couldn't be reached, or this
@@ -559,14 +559,14 @@ service set up under [Content Provider](10-NetworkSettings.md#content-provider).
 ### The Snapshot Placements list
 
 On the card's **Placements & IPFS** tab, **Show Placements** lists every
-placement known for the publication: ones
+placement known for the record: ones
 you made, ones a peer sent, and ones inside an imported Blueprint package.
 
 | Field | Meaning |
 |---|---|
 | **Locator** | Where the backend says to find the bytes. |
 | **Placed** | The claimed placement time. |
-| **Publication** / **Content hash** | What the placement's signature binds together. |
+| **Record** / **Content hash** | What the placement's signature binds together. |
 | **Placed by** | The identity that signed it. |
 
 Each has up to three buttons:
@@ -624,7 +624,7 @@ Unlike a placement,
 the result isn't a signed claim others can discover: it's a record that a
 provider accepted these bytes. The on-screen results are cleared on reload,
 but every successful publish and every verification is also kept in the
-[Publication Observation Archive](12-ArchiveAndAchievements.md#the-publication-observation-archive).
+[Record Observation Archive](12-ArchiveAndAchievements.md#the-record-observation-archive).
 
 ### Configuring a remote pinning provider
 
@@ -679,9 +679,9 @@ the recorded hash:
 | **Content retrieval unavailable** | The gateway couldn't be reached or doesn't have it. Not a mismatch. |
 | **Verification failed** | Something else went wrong. |
 
-### Publication History
+### Record History
 
-Publishing again never overwrites earlier records. **Show Publication
+Publishing again never overwrites earlier records. **Show Record
 History** lists every publish, oldest first, with locator and time;
 **Inspect** shows its locator, content hash, time and method (today always
 **Remote pinning provider**). Each entry has its own **Verify Content**
@@ -691,7 +691,7 @@ check for that record.
 ## Steem
 
 *Experimental.* ForkBuild can announce, store and share over the Steem
-blockchain. Announcements (of publications, Snapshots and
+blockchain. Announcements (of records, Snapshots and
 comments) are replies to monthly discovery threads such as
 [`@forkbuild/forkbuild-snapshot-2026-09`](https://steemit.com/forkbuild/@forkbuild/forkbuild-snapshot-2026-09).
 Reading needs no account. Whatever is found is verified like an
@@ -758,7 +758,7 @@ then kept in their browser. The link needs the build announced as well as
 stored, which Distribute does.
 
 **Anywhere.** Once a Signed Claim is stored on Steem, Arweave or IPFS,
-**Share…** and **Copy link** appear under it: in World View's publication
+**Share…** and **Copy link** appear under it: in World View's record
 panel, in the Distribute dialog's result, and on the Signed Records page.
 **Share…** opens your device's share sheet where available; **Copy link**
 copies the link, also shown for copying by hand. The link opens on any
@@ -802,7 +802,7 @@ post.
   name and description (whole, up to 2,000 characters, with its
   [formatting](02-TheEditor.md#build-properties)), and a "See it in 3D"
   link. What follows in the next
-  half hour (the Publication's announcement, a comment, an anchor) is added
+  half hour (the Record's announcement, a comment, an anchor) is added
   to the same post by editing it, so your followers see one post, not
   several.
 - **The picture needs its own approval.** For a Signed Claim, Keychain
