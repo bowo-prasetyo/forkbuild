@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/12-ArchiveAndAchievements.md source-hash: b3e47023605bc26e -->
+<!-- translation-of: docs/user/12-ArchiveAndAchievements.md source-hash: 40a1d36fb48cc3e7 -->
 # 12 — Archive et succès
 
 <!-- languages -->
@@ -19,29 +19,29 @@ Les outils Bitcoin, Base et IPFS de
 [Preuves et stockage](11-EvidenceAndStorage.md) enregistrent ce qu’ils
 observent dans une archive durable sur cet appareil. Ce guide présente
 cette archive et ce qui s’appuie dessus : les références entre
-publications et les succès.
+enregistrements et les succès.
 
 La plupart de ces cartes se trouvent sur la page Enregistrements signés, sous
 **Outils de portefeuille et d’archives**, dans ses onglets **Outils
 d’archive** et **Références et succès**. Chacune affiche **Conservé
 localement** quand ce qu’elle contient survit à un rechargement.
 
-Un terme utilisé partout : une **identité de publication** est un
-enregistrement de Publication d’ancre Bitcoin ou Base (voir
-[Publications d’ancres Bitcoin](11-EvidenceAndStorage.md#publications-dancres-bitcoin)).
+Un terme utilisé partout : une **identité d’enregistrement** est un
+Enregistrement d’ancre Bitcoin ou Base (voir
+[Enregistrements d’ancres Bitcoin](11-EvidenceAndStorage.md#enregistrements-dancres-bitcoin)).
 C’est un enregistrement sur une chaîne, pas une personne.
 
-## L’archive des observations de publication
+## L’archive des observations d’enregistrements
 
 Un registre durable, sur cet appareil, des faits qu’observent les outils
-IPFS, Bitcoin et Base. Il ne contient que des identités de publication et
+IPFS, Bitcoin et Base. Il ne contient que des identités d’enregistrement et
 des observations : jamais une connexion de portefeuille, une clé ou un
 identifiant d’épinglage.
 
 ### Archive des observations
 
 La carte **Archive des observations** indique combien de
-**Publications** et d’**Observations** elle contient.
+**Enregistrements** et d’**Observations** elle contient.
 
 - **Afficher l’archive** ouvre la **Chronologie des observations
   archivées** : chaque publication et vérification IPFS, chaque
@@ -66,13 +66,13 @@ degré de fiabilité.
 
 ### Exporter, importer et inspecter l’archive
 
-La carte **Archive des publications** transforme l’archive en fichier
+La carte **Archive des enregistrements** transforme l’archive en fichier
 JSON :
 
 - **Exporter l’archive** affiche le JSON et un lien **Télécharger
   l’export de l’archive**.
 - **Importer une archive** prend un fichier ou du JSON collé et
-  prévisualise combien de publications et d’observations il contient, par
+  prévisualise combien d’enregistrements et d’observations il contient, par
   rapport à l’archive actuelle. Seul **Remplacer l’archive actuelle**
   l’applique. Importer **remplace** l’archive actuelle (cela ne fusionne
   pas) et est irréversible. Un fichier invalide est refusé sans rien
@@ -81,8 +81,8 @@ JSON :
 **Inspecter une archive externe** examine un export sans l’importer.
 Elle affiche la version du schéma du fichier, le nombre de faits par
 domaine (publication et vérification IPFS ; diffusion, confirmation,
-preuve de contenu et identité de publication Bitcoin ; inclusion et
-identité de publication Base), le nombre de faits locaux et importés, les
+preuve de contenu et identité d’enregistrement Bitcoin ; inclusion et
+identité d’enregistrement Base), le nombre de faits locaux et importés, les
 événements d’import, son empreinte, ainsi que les ID d’ancres Bitcoin, les
 index d’enregistrements IPFS et les hashs de transactions Base qu’il
 contient. De là :
@@ -122,16 +122,16 @@ Une correspondance signifie seulement que les contenus sont identiques,
 pas qu’ils sont corrects, et rien ici n’indique quelle archive est la plus
 récente.
 
-## Références entre publications
+## Références entre enregistrements
 
-Enregistrer qu’une identité de publication en désigne une autre.
+Enregistrer qu’une identité d’enregistrement en désigne une autre.
 
-**Références entre publications → Afficher les références** ouvre un
-formulaire : choisissez la **Publication source (celle qui fait la
-référence)** et la **Publication référencée (celle qui est désignée)**
-parmi vos identités de publication Bitcoin et Base connues (par exemple
+**Références entre enregistrements → Afficher les références** ouvre un
+formulaire : choisissez l’**Enregistrement source (celui qui fait la
+référence)** et l’**Enregistrement référencé (celui qui est désigné)**
+parmi vos identités d’enregistrement Bitcoin et Base connues (par exemple
 « Bitcoin — a1b2…c3d4 — contenu 9f8e… »), puis cliquez sur **Enregistrer
-la référence**. Une publication ne peut pas se référencer elle-même. Les
+la référence**. Un enregistrement ne peut pas se référencer lui-même. Les
 références ne sont jamais faites que par vous ; rien n’en crée
 automatiquement, et les remix faits ailleurs dans l’application non plus.
 
@@ -144,44 +144,44 @@ récente, avec la chaîne, l’identité abrégée et le hash de contenu des deu
 côtés, et la date d’enregistrement. Les doublons sont conservés comme des
 références distinctes.
 
-Le **Graphe des références entre publications** regroupe ces mêmes
-références par publication : les totaux d’**Arêtes**, de **Publications**,
-de **Sources distinctes** et de **Référencées distinctes**, et pour chaque
-publication ses **Références sortantes** et **Références entrantes**, qui
+Le **Graphe des références entre enregistrements** regroupe ces mêmes
+références par enregistrement : les totaux d’**Arêtes**, d’**Enregistrements**,
+de **Sources distinctes** et de **Référencés distincts**, et pour chaque
+enregistrement ses **Références sortantes** et **Références entrantes**, qui
 se déplient pour montrer les références individuelles. Les décomptes ne
 sont pas un classement.
 
 ## Succès
 
-Une identité de publication obtient un badge dès qu’elle franchit un
+Une identité d’enregistrement obtient un badge dès qu’elle franchit un
 seuil ; il n’y a rien à réclamer.
 
 **Succès → Afficher les succès** liste les badges obtenus jusqu’ici :
 
 | Badge | Icône | Obtenu quand |
 |---|---|---|
-| Première publication | 🏆 | Votre premier enregistrement de publication d’ancre Bitcoin ou Base. |
+| Première publication | 🏆 | Votre premier enregistrement d’ancre Bitcoin ou Base. |
 | Éditeur Bitcoin | ₿ | Votre premier sur Bitcoin. |
 | Éditeur Base | 🔵 | Votre premier sur Base. |
 | Éditeur multi-chaînes | 🌐 | Des enregistrements sur plus d’une chaîne. |
 | Dix publications | 🔟 | Votre 10e, Bitcoin et Base confondus. |
 | Cent publications | 💯 | Votre 100e. |
 
-Cliquez sur un badge pour voir sa **Publication source** (chaîne, hash du
-contenu, référence dans la chaîne, date de création) et, si disponible,
-**Voir le cycle de vie de la publication ci-dessus**, qui mène au cycle de
+Cliquez sur un badge pour voir son **Enregistrement source** (chaîne, hash
+du contenu, référence dans la chaîne, date de création) et, si disponible,
+**Voir le cycle de vie de l’enregistrement ci-dessus**, qui mène au cycle de
 vie de cet enregistrement.
 
 Cinq autres succès viennent des références et n’ont pas encore de badge :
 **Première référence créée**, **Première référence reçue**, **Référencée
 par 10 publications**, **Référencée par 100 publications** et **Première
-référence entre chaînes** (entre une publication Bitcoin et une
-publication Base). Ils sont listés par leur nom dans **Profil de succès**,
-où vous choisissez une identité de publication et voyez son nombre de
+référence entre chaînes** (entre un enregistrement Bitcoin et un
+enregistrement Base). Ils sont listés par leur nom dans **Profil de succès**,
+où vous choisissez une identité d’enregistrement et voyez son nombre de
 succès et leur liste complète, chacun avec sa date d’obtention.
 
-Les succès appartiennent aux identités de publication, pas aux
-personnes : rien ici ne relie une publication à une personne.
+Les succès appartiennent aux identités d’enregistrement, pas aux
+personnes : rien ici ne relie un enregistrement à une personne.
 
 ## Retiré : classements, réconciliation et étiquettes d’éditeur
 
@@ -195,6 +195,6 @@ charge et s’importe toujours, avec tous ses autres enregistrements ; les
 déclarations de classement et les décisions de réconciliation qu’elle
 contenait sont abandonnées.
 
-Les Associations d’éditeurs, qui étiquetaient vos publications d’un nom
+Les Associations d’éditeurs, qui étiquetaient vos enregistrements d’un nom
 d’éditeur pour ces pages, ont aussi été retirées. Les étiquettes que
 contenait une archive sont abandonnées de la même façon.

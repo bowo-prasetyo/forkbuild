@@ -9177,3 +9177,27 @@ structure, a place name, and those peers announced), never a plain Publish.
   the bundled-site test, where the House's builder finds Signed Records in More and opens My Builds to the House.
 - Not done: the entries inside the page are still called publications ("Anchor Several Publications", "cataloged
   publications"); calling them records too would be a larger pass over the page's own words.
+
+## Signed Records' entries are records, and removing one is safe (unnumbered, 2026-10-24)
+
+**The rest of the Signed Records rename** (the owner's yes, 2026-10-24: "entries inside Signed Records that are still
+called 'publications' should be renamed", and "a line nearby explaining the removal is safe will help").
+
+- **Its entries are records**, in all eight languages: "18 records that can't be used", **Anchor Several Records on
+  Steem**, **Show Records**, **Record Lifecycle**, **Record History**, **Record Archive**, **Record References**,
+  "Invalid record signature", "Unsupported record kind", "Record created", and the anchor, archive, reference and
+  achievement texts around them (120 messages). The settings that described these as "publications (Shared Worlds,
+  Blueprint Attributions and place names)" say signed records, and the two that still said "Publication Center" say
+  the Signed Records page. **Base Publication Transaction** is **Base Anchor Transaction**. Explore's builds, the
+  backup's "publications" and Following keep their words: those are published builds. The file format **Publication
+  Snapshot Transfer Package** and the achievement badge names (stored with each achievement) are unchanged.
+- **Removing is safe, and the page says so** (ui/views/DecentralizedPublicationsView.js, `publications.removeIsSafe`):
+  under "records that can't be used", one line says removing a record never touches your builds, which stay in the
+  Editor, in Explore and on **My Builds**, and only this device's copy of the signed record is forgotten.
+- Where a gendered language agreed with the old feminine word (German Veröffentlichung, Spanish publicación,
+  French publication, Portuguese publicação), the nearby untouched texts now agree with the new masculine one too
+  ("Remove All", "Select Unanchored", the old-hash notice).
+- The user guide follows, in all eight languages: chapters 09, 10, 11 and 12, README and Distribution call the entries
+  records, their renamed headings' anchors and links follow, and 09 says removing a record never touches your builds.
+- Tests: tests/PublicationsPageLayoutBrowser.test.js (the group's count and the safe-to-remove line with its link to
+  My Builds), and the tests that read these labels in English follow the new words.

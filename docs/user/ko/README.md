@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: 8832d9dd4363463e -->
+<!-- translation-of: docs/user/README.md source-hash: 168564d162b23c2b -->
 # ForkBuild 사용자 문서
 
 <!-- languages -->
@@ -51,7 +51,7 @@
    나를 볼 수 있는 사람, 걷기, 카메라 시점, 탈것, 동물, 인벤토리.
 6. **[내 데이터](13-YourData.md)** — 이 브라우저가 가진 모든 것을
    암호화된 파일 하나로 백업하고 복원하기, 더 작은 내보내기, 이 기기가
-   내 게시물의 배포를 기록한 곳.
+   내 기록을 배포한 내역을 남긴 곳.
 
 ## 고급
 
@@ -85,7 +85,7 @@
   [작품 배포하기](Distribution.md)에서 이것들이 어떻게 맞물리는지
   볼 수 있습니다.
 - **[아카이브와 업적](12-ArchiveAndAchievements.md)** —
-  *실험적*. 관측 아카이브, 게시물 참조, 업적.
+  *실험적*. 관측 아카이브, 기록 참조, 업적.
 
 ## 참조
 

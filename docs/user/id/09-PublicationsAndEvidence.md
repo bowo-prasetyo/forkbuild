@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: c9274474de1ec083 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 7a94f288453a4fe2 -->
 # 09 — Catatan Bertanda Tangan & Bukti Eksternal
 
 <!-- languages -->

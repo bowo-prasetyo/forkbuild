@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: c9274474de1ec083 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 7a94f288453a4fe2 -->
 # 09 — Enregistrements signés et preuves externes
 
 <!-- languages -->
@@ -11,7 +11,7 @@
 > voulez savoir ce qui tourne en dessous.
 
 > **En partie expérimental.** La page Enregistrements signés est une fonctionnalité
-> ordinaire : sa liste et ses statuts, le retrait des publications
+> ordinaire : sa liste et ses statuts, le retrait des enregistrements
 > inutilisables, l’annonce sur Nostr ou Arweave, le stockage sur IPFS ou
 > Arweave, l’ancrage sur Arweave, et les quatre onglets d’une carte :
 > **Snapshot**, **Décentralisation et preuves**, **Placements et IPFS** et
@@ -49,7 +49,7 @@ vous pouvez ajouter à une revendication :
 
 ## Deux sens de « publier »
 
-| | **Publier** (Explorer) | **Page Publications** |
+| | **Publier** (Explorer) | **Page Enregistrements signés** |
 |---|---|---|
 | Ce qui est partagé | Un Construction ou un Monde | Un enregistrement signé : un Monde partagé, la paternité d’une structure ou un nom de lieu |
 | Où on le voit | Explorer, votre page (**Mes constructions**), Vue du Monde | La page **Enregistrements signés** |
@@ -72,7 +72,7 @@ reçu d’un pair y apparaît dès que son contenu est sur cet appareil.
 partagé qui doit être publié de nouveau ; voir
 [Signification des statuts](#signification-des-statuts).)
 
-Chaque entrée de la page Enregistrements signés est une *publication*, et chacune
+Chaque entrée de la page Enregistrements signés est un *enregistrement*, et chacun
 est de l’un de ces trois types :
 
 | Type | Ce que c’est |
@@ -86,28 +86,28 @@ l’enregistrement signé d’un Monde un **Monde partagé**, comme dans **Mon
 Monde partagé**, **Découvrir un Monde partagé** et **Sélectionner le Monde
 partagé**.
 
-## Ce qui entoure une publication
+## Ce qui entoure un enregistrement
 
-Une publication n’est que l’enregistrement signé. Tout ce que vous verrez
-d’autre sur sa carte, et autour d’elle dans la Vue du Monde, est quelque
-chose qu’on en a fait ou qu’on y a joint. Aucun de ces éléments n’est un
-type de publication, et seule la publication elle-même est obligatoire :
+Un enregistrement n’est que la revendication signée elle-même. Tout ce que
+vous verrez d’autre sur sa carte, et autour de lui dans la Vue du Monde, est
+quelque chose qu’on en a fait ou qu’on y a joint. Aucun de ces éléments n’est
+un type d’enregistrement, et seul l’enregistrement lui-même est obligatoire :
 
 | Terme | Comme… | Ce que c’est |
 |---|---|---|
-| **Publication** | Le livre lui-même | Un enregistrement signé : un Monde partagé, une Attribution de plan ou une Proposition de nom de lieu. Il porte le hash de son contenu et la signature de son éditeur. |
-| **Contenu** | L’endroit où sont gardés les exemplaires imprimés | Les octets dont parle la publication, comme les briques d’un Monde. Ils sont toujours d’abord conservés sur cet appareil ; **Stocker sur …** en place une copie sur IPFS, Arweave, Steem ou Blurt pour que d’autres puissent la récupérer. Voir [Fournisseur de contenu](10-NetworkSettings.md#fournisseur-de-contenu). |
-| **Snapshot** | Un exemplaire imprimé | Une copie stockée du contenu d’une publication, comme les briques d’un Monde, que d’autres peuvent récupérer et vérifier par rapport à son hash. Voir [Snapshot local](#snapshot-local). |
+| **Enregistrement** | Le livre lui-même | Un enregistrement signé : un Monde partagé, une Attribution de plan ou une Proposition de nom de lieu. Il porte le hash de son contenu et la signature de son éditeur. |
+| **Contenu** | L’endroit où sont gardés les exemplaires imprimés | Les octets dont parle l’enregistrement, comme les briques d’un Monde. Ils sont toujours d’abord conservés sur cet appareil ; **Stocker sur …** en place une copie sur IPFS, Arweave, Steem ou Blurt pour que d’autres puissent la récupérer. Voir [Fournisseur de contenu](10-NetworkSettings.md#fournisseur-de-contenu). |
+| **Snapshot** | Un exemplaire imprimé | Une copie stockée du contenu d’un enregistrement, comme les briques d’un Monde, que d’autres peuvent récupérer et vérifier par rapport à son hash. Voir [Snapshot local](#snapshot-local). |
 | **Placement** | Le rayon où l’exemplaire est rangé | Un enregistrement signé de l’endroit où se tient une construction dans le Monde. Un Monde partagé peut en avoir plusieurs. Voir [Placer ou remixer](WorldViewAdvancedTools.md#placer-ou-remixer). |
-| **Annonce / Découverte** | Une fiche du catalogue de la bibliothèque | Un petit avis signé sur Nostr, Arweave, Steem ou Blurt indiquant que la publication ou le Snapshot existe et où se trouve sa copie, pour que des personnes non connectées à vous puissent la trouver. Voir [Fournisseur d’annonce / de découverte](10-NetworkSettings.md#fournisseur-dannonce--de-découverte). |
+| **Annonce / Découverte** | Une fiche du catalogue de la bibliothèque | Un petit avis signé sur Nostr, Arweave, Steem ou Blurt indiquant que l’enregistrement ou le Snapshot existe et où se trouve sa copie, pour que des personnes non connectées à vous puissent la trouver. Voir [Fournisseur d’annonce / de découverte](10-NetworkSettings.md#fournisseur-dannonce--de-découverte). |
 | **Preuve / Ancrage** *(Expérimental, sauf sur Arweave)* | Le tampon d’un notaire | Le hash du contenu inscrit dans une transaction blockchain (Bitcoin, Base, Arweave, Steem ou Blurt), comme preuve qu’il existait à ce moment-là. Il ne stocke ni n’annonce rien. Voir [Preuves et stockage](11-EvidenceAndStorage.md). |
-| **Commentaires** | Les critiques des lecteurs | Des commentaires que toute personne ayant un nom peut joindre à une publication, chacun signé par son auteur, pas par l’éditeur. Voir [Commentaires](#commentaires). |
+| **Commentaires** | Les critiques des lecteurs | Des commentaires que toute personne ayant un nom peut joindre à un enregistrement, chacun signé par son auteur, pas par l’éditeur. Voir [Commentaires](#commentaires). |
 
-Vous faites donc une publication ; puis, si vous le souhaitez, vous
-stockez son contenu, l’annoncez, l’ancrez et la placez (pour un Monde
-partagé) ; et n’importe qui peut la commenter.
+Vous faites donc un enregistrement ; puis, si vous le souhaitez, vous
+stockez son contenu, l’annoncez, l’ancrez et le placez (pour un Monde
+partagé) ; et n’importe qui peut le commenter.
 
-## D’où vient une publication
+## D’où vient un enregistrement
 
 Vous ne créez jamais de revendication sur la page Enregistrements signés
 elle-même. Elle liste les revendications que vous avez faites ailleurs,
@@ -186,8 +186,8 @@ Monde, et y reste après un rechargement.
 
 ## La page Enregistrements signés
 
-Ouvrez **Enregistrements signés** (**Plus → Avancé**). Elle liste toutes les
-publications signées que cet appareil a cataloguées, les vôtres ou celles
+Ouvrez **Enregistrements signés** (**Plus → Avancé**). Elle liste tous les
+enregistrements signés que cet appareil a catalogués, les vôtres ou ceux
 d’un pair. En bas, le panneau replié **Outils de portefeuille et
 d’archives** contient des outils pour toute la page, en trois onglets :
 **Ancrage sur blockchain**, **Outils d’archive** et **Références et
@@ -201,13 +201,13 @@ activé dans les [Paramètres réseau](10-NetworkSettings.md#afficher-les-outils
 aux Paramètres réseau. Une étape qui demande d’abord d’observer un
 portefeuille ouvre quand même le panneau pour cette visite.
 
-Chaque carte de publication affiche :
+Chaque carte d’enregistrement affiche :
 
 - Son nom, une fois son contenu vérifié : le titre d’un Monde partagé ou
   un nom de lieu. Sinon, ou pour une revendication de paternité, le type
-  de publication.
-- Le type de publication (sous le nom, quand il y en a un) et qui l’a
-  publiée, réduit aux derniers caractères de son ID.
+  d’enregistrement.
+- Le type d’enregistrement (sous le nom, quand il y en a un) et qui l’a
+  publié, réduit aux derniers caractères de son ID.
 - Un **badge d’état** (voir
   [Signification des statuts](#signification-des-statuts)), recalculé à
   chaque chargement de la page ou quand vous cliquez sur **Revérifier**.
@@ -221,7 +221,7 @@ Chaque carte de publication affiche :
 
 En dessous, deux sections repliées :
 
-- **Distribution** — annoncer la publication, stocker son contenu et
+- **Distribution** — annoncer l’enregistrement, stocker son contenu et
   l’ancrer. Le stockage et l’ancrage commencent chacun par un bouton pour
   le fournisseur enregistré sous **Configurer** (**Stocker sur IPFS**,
   **Ancrer sur Steem**), avec tous les autres fournisseurs repliés sous
@@ -238,7 +238,7 @@ En dessous, deux sections repliées :
 | **Snapshot** | Le [Snapshot local](#snapshot-local) : ce que détient cet appareil, et comment l’obtenir. |
 | **Décentralisation et preuves** | La [Décentralisation](#la-décentralisation-en-un-coup-dœil), la [liste des preuves](11-EvidenceAndStorage.md#la-liste-des-preuves), et les étapes de transaction Bitcoin et Base (expérimental). |
 | **Placements et IPFS** | La liste des [Placements de Snapshot](11-EvidenceAndStorage.md#placements-de-snapshot) et la [Publication IPFS](11-EvidenceAndStorage.md#publication-ipfs) (Expérimental). |
-| **Historique** | **Afficher la chronologie multi-domaines** : toutes les observations IPFS, Bitcoin et Base que cet appareil a enregistrées pour cette publication, dans l’ordre chronologique, tirées de l’[Archive des observations](12-ArchiveAndAchievements.md), donc conservées d’une visite à l’autre ; ou une note indiquant que rien n’est encore enregistré. |
+| **Historique** | **Afficher la chronologie multi-domaines** : toutes les observations IPFS, Bitcoin et Base que cet appareil a consignées pour cet enregistrement, dans l’ordre chronologique, tirées de l’[Archive des observations](12-ArchiveAndAchievements.md), donc conservées d’une visite à l’autre ; ou une note indiquant que rien n’est encore enregistré. |
 
 ### Signification des statuts
 
@@ -246,30 +246,30 @@ En dessous, deux sections repliées :
 |---|---|
 | **Disponible** | Le contenu est sur cet appareil maintenant. |
 | **Contenu indisponible** | La revendication est authentique, mais le contenu n’est pas encore ici. Essayez **Récupérer auprès des pairs**. |
-| **Enveloppe de publication invalide** / **Signature de publication invalide** | L’enregistrement est mal formé, ou n’a pas été réellement signé. |
-| **Le contenu ne correspond pas à sa propre référence** / **Contenu invalide** / **Signature du contenu invalide** | Le contenu ne correspond pas à ce que déclare la publication. |
-| **Échec d’une vérification propre au domaine** | Bien formée et signée, mais échoue à une vérification propre à son type. |
-| **Type de publication non pris en charge** | Cette version ne sait pas afficher ce type de publication. |
+| **Enveloppe d’enregistrement invalide** / **Signature d’enregistrement invalide** | L’enregistrement est mal formé, ou n’a pas été réellement signé. |
+| **Le contenu ne correspond pas à sa propre référence** / **Contenu invalide** / **Signature du contenu invalide** | Le contenu ne correspond pas à ce que déclare l’enregistrement. |
+| **Échec d’une vérification propre au domaine** | Bien formé et signé, mais échoue à une vérification propre à son type. |
+| **Type d’enregistrement non pris en charge** | Cette version ne sait pas afficher ce type d’enregistrement. |
 
 Ces statuts décrivent si l’enregistrement est valide, pas si le design ou
 le nom est bon.
 
-Une publication dont l’état n’est ni **Disponible** ni **Contenu
-indisponible** ne peut être ni ouverte, ni distribuée, ni ancrée, elle n’a
-donc pas de carte complète. Ces publications sont réunies en bas de la
-page dans un groupe replié, « *N* publications inutilisables », chacune
+Un enregistrement dont l’état n’est ni **Disponible** ni **Contenu
+indisponible** ne peut être ni ouvert, ni distribué, ni ancré, il n’a
+donc pas de carte complète. Ces enregistrements sont réunis en bas de la
+page dans un groupe replié, « *N* enregistrements inutilisables », chacun
 avec son état, la raison, **Revérifier** et **Retirer de cet appareil**.
-Elles sont aussi exclues d’**Ancrer plusieurs publications**. La raison la
-plus fréquente est une publication faite avant le passage des hashs de
-contenu en SHA-256 : seul son auteur peut corriger cela, en la publiant de
+Ils sont aussi exclus d’**Ancrer plusieurs enregistrements**. La raison la
+plus fréquente est un enregistrement fait avant le passage des hashs de
+contenu en SHA-256 : seul son auteur peut corriger cela, en le publiant de
 nouveau.
 
-Si l’une d’elles est **à vous** (signée par une identité de cet appareil)
-et n’a échoué qu’à cause de son ancien hash, elle est listée en premier
-avec un badge **Les vôtres**. Au lieu de « son auteur doit la publier de
-nouveau », elle vous explique comment faire :
+Si l’un d’eux est **à vous** (signé par une identité de cet appareil)
+et n’a échoué qu’à cause de son ancien hash, il est listé en premier
+avec un badge **Les vôtres**. Au lieu de « son auteur doit le publier de
+nouveau », il vous explique comment faire :
 
-| Type | Comment la publier de nouveau |
+| Type | Comment le publier de nouveau |
 |---|---|
 | **Monde partagé** | Publiez de nouveau le Monde depuis l’Éditeur, puis **Partager avec les pairs** en dessous, dans Explorer (**Ouvrir Explorer**). |
 | **Attribution de plan** | Dans l’Éditeur, ouvrez le panneau **Infos** de la structure, **Signer de nouveau pour ce design**, puis **Publier sur le réseau** (**Ouvrir l’Éditeur**). |
@@ -290,25 +290,32 @@ stocke aussi du contenu reçu de pairs, l’ancien hash ne peut donc pas
 prouver quels octets vous avez publiés.
 
 **Retirer de cet appareil** (ou **Retirer les *N* de cet appareil** en
-haut du groupe) demande confirmation, puis oublie la publication ici.
+haut du groupe) demande confirmation, puis oublie l’enregistrement ici.
 Cela ne dépublie rien et n’atteint personne d’autre, et un pair connecté
-qui a encore la publication peut l’annoncer de nouveau. Seules les
-publications de ce groupe peuvent être retirées.
+qui a encore l’enregistrement peut l’annoncer de nouveau. Seuls les
+enregistrements de ce groupe peuvent être retirés.
+
+Retirer un enregistrement ne touche jamais à vos constructions. La
+construction derrière un Monde partagé reste dans l’Éditeur, dans Explorer
+et sur votre page (**Plus → Mes constructions**) ; seule la copie de
+l’enregistrement signé sur cet appareil disparaît. Pour partager de nouveau
+une telle construction avec les pairs, ouvrez-la, cliquez sur **Publier**
+puis sur **Partager avec les pairs** : cela crée un nouvel enregistrement.
 
 ### Distribuer depuis la page Enregistrements signés
 
 **Distribution → Annonce / Découverte** contient deux cartes :
 
-- **Publication** annonce la publication signée elle-même sur le
+- **Enregistrement** annonce l’enregistrement signé lui-même sur le
   **Support** de votre choix (Arweave, Nostr, Steem ou Blurt ; ces deux
-  derniers sont Expérimentaux). Elle démarre sur votre
+  derniers sont Expérimentaux). Il démarre sur votre
   [Fournisseur d’annonce / de découverte](10-NetworkSettings.md#fournisseur-dannonce--de-découverte).
 - **Snapshot** stocke le contenu sous **Contenu** et l’annonce sur son
   propre **Support**, qui démarre aussi sur ce fournisseur. Pour un Monde,
   c’est le snapshot du Monde lui-même, annoncé avec l’endroit où son
   éditeur l’a placé quand cet appareil détient ce placement signé, comme
   le fait **Distribuer** dans la Vue du Monde. Pour tout autre type, c’est
-  le contenu de la publication, annoncé par son seul hash. Cet appareil a
+  le contenu de l’enregistrement, annoncé par son seul hash. Cet appareil a
   besoin des octets : pour un Monde que vous n’avez pas ouvert,
   ouvrez-le d’abord dans la Vue du Monde ou obtenez-le d’un pair.
 
@@ -318,7 +325,7 @@ annoncé** signifie que seule l’annonce a échoué ; le contenu a été stock�
 
 ## Commentaires
 
-Toute personne ayant un nom peut commenter n’importe quelle publication
+Toute personne ayant un nom peut commenter n’importe quel enregistrement
 qui se résout : une construction d’Explorer, une revendication de paternité ou un
 nom de lieu. Il n’y a ni vérification de propriété, ni exigence d’amitié,
 ni modération.
@@ -376,7 +383,7 @@ ne connaît que ce que cet appareil a envoyé.
 Les commentaires des autres vous parviennent :
 
 - des pairs connectés, au moment où ils sont publiés ;
-- des réseaux, quand vous ouvrez les commentaires d’une publication et
+- des réseaux, quand vous ouvrez les commentaires d’un enregistrement et
   chaque fois que vous cliquez sur **Rechercher de nouveaux
   commentaires**. C’est ainsi que vous voyez les commentaires publiés
   pendant que vous étiez hors ligne.
@@ -386,11 +393,11 @@ comme *2 nouveaux commentaires trouvés* ou *Aucun nouveau commentaire
 trouvé* (ce qui ne couvre que les réseaux qui ont répondu). Un réseau
 injoignable est nommé (*Arweave indisponible(s)*) ; si aucun ne répond,
 vous voyez *Impossible de joindre Nostr et Arweave — affichage des
-commentaires stockés sur cet appareil*. Seules les publications dont vous
-ouvrez les commentaires sont vérifiées. La signature de chaque
+commentaires stockés sur cet appareil*. Seuls les enregistrements dont vous
+ouvrez les commentaires sont vérifiés. La signature de chaque
 commentaire récupéré est vérifiée, et aucun n’est compté deux fois.
 
-Quand quelqu’un commente une publication que vous avez publiée, une
+Quand quelqu’un commente un enregistrement que vous avez publié, une
 entrée **Nouveau commentaire sur votre construction** apparaît dans votre
 [Historique des notifications](03-WorldView.md#orientation-et-emplacements)
 (le bouton 🔔 de l’en-tête).
@@ -399,7 +406,7 @@ entrée **Nouveau commentaire sur votre construction** apparaît dans votre
 
 Dans l’onglet **Snapshot** d’une carte, **Snapshot local** répond à une
 seule question : cet appareil détient-il en ce moment les octets du
-contenu de cette publication ? Il ne vérifie ni les signatures ni les
+contenu de cet enregistrement ? Il ne vérifie ni les signatures ni les
 placements, et ne contacte le réseau que lorsque vous cliquez sur l’une
 des actions de récupération.
 
@@ -413,11 +420,11 @@ des actions de récupération.
 | **Non disponible** | Rien n’a jamais été stocké sous ce hash. |
 | **Hash non correspondant** | Quelque chose est stocké sous ce hash, mais ne lui correspond plus. |
 
-Deux personnes ayant la même publication peuvent obtenir des réponses
+Deux personnes ayant le même enregistrement peuvent obtenir des réponses
 différentes, car leur stockage diffère. Après une vérification, une ligne
-indique *Publication : connue localement / non connue localement ·
-Snapshot : disponible / non disponible* : si cet appareil a catalogué la
-publication signée, et s’il détient des octets valides.
+indique *Enregistrement : connu localement / non connu localement ·
+Snapshot : disponible / non disponible* : si cet appareil a catalogué
+l’enregistrement signé, et s’il détient des octets valides.
 
 Si la vérification ne trouve pas d’octets valides, une indication renvoie
 vers les façons de les faire venir, plus bas. Rien ne réessaie tout seul.
@@ -428,7 +435,7 @@ Trois actions, chacune avec son propre clic :
 
 **Importer un Snapshot** — affiche un sélecteur de fichier et une zone de
 collage pour un **Paquet de transfert de Snapshot de publication** (un
-paquet JSON du contenu d’une publication). Choisissez-en ou collez-en un,
+paquet JSON du contenu d’un enregistrement). Choisissez-en ou collez-en un,
 puis cliquez de nouveau sur **Importer le Snapshot**.
 
 | Badge | Signification |
@@ -472,7 +479,7 @@ comme **Obtenir le Snapshot d’un pair** ; rien n’est jamais récupéré
 auprès de quelqu’un d’autre à votre place. **Afficher les réponses de cette
 visite** liste chaque réponse sur une ligne (comme
 `20:21:04 — Alice → Disponible`) ; cliquez sur une ligne pour le rapport
-complet, la publication et le hash de contenu. Une ligne n’est jamais
+complet, l’enregistrement et le hash de contenu. Une ligne n’est jamais
 réécrite.
 
 ### Tentatives de cette visite
@@ -483,17 +490,17 @@ Une tentative qui a stocké les octets ne signifie pas qu’ils sont toujours
 là ; c’est **Vérifier le snapshot local** qui le dit. **Afficher
 l’historique d’acquisition** liste chaque tentative (comme
 `20:16 — Pair → Hash non correspondant`) ; cliquez sur l’une d’elles pour
-son résultat, sa publication et son hash de contenu.
+son résultat, son enregistrement et son hash de contenu.
 
 ## La décentralisation en un coup d’œil
 
 Dans l’onglet **Décentralisation et preuves**, dès
-qu’une publication a une ancre ou un placement, **Décentralisation**
+qu’un enregistrement a une ancre ou un placement, **Décentralisation**
 compare les [Preuves externes](11-EvidenceAndStorage.md#preuves-externes)
 et les [Placements de Snapshot](11-EvidenceAndStorage.md#placements-de-snapshot) :
 
-- **Publication : connue localement / non connue localement** — si cet
-  appareil a catalogué la publication signée.
+- **Enregistrement : connu localement / non connu localement** — si cet
+  appareil a catalogué l’enregistrement signé.
 - Deux cartes indiquant combien de déclarations de chaque type sont
   connues, et si elles s’accordent sur le hash du contenu (**Accord**) ou
   non (**Conflit**). Si l’une s’accorde et l’autre est en conflit, une
@@ -521,13 +528,13 @@ vérifications, les tentatives et les écrans en cours ne le sont pas.
 | Les octets de Snapshot que vous avez importés, récupérés ou matérialisés | Tout le reste de **Snapshot local** : vérifications, historique des tentatives, ligne **Source :**, vérifications et comparaisons auprès des pairs |
 | Les décomptes de **Décentralisation** (recalculés à chaque chargement) | Les résultats de **Synchroniser avec les pairs** |
 | — | **Publication IPFS** : la configuration du fournisseur, les résultats, l’historique à l’écran et l’historique de vérification |
-| Les enregistrements **Publications d’ancres Bitcoin/Base**, créés à la finalisation | La connexion des parcours de portefeuille, l’observation des fonds ou du compte, le plan, l’examen, la signature, la transaction finalisée, le résultat de diffusion et l’historique à l’écran des confirmations ou inclusions |
-| L’**Archive des observations de publication** (chaque publication et vérification IPFS, diffusion, confirmation et preuve de contenu Bitcoin, et inclusion Base), jusqu’à **Vider l’archive** | — |
-| Les Références entre publications | Les cartes et lignes que vous aviez ouvertes |
+| Les **Enregistrements d’ancres Bitcoin/Base**, créés à la finalisation | La connexion des parcours de portefeuille, l’observation des fonds ou du compte, le plan, l’examen, la signature, la transaction finalisée, le résultat de diffusion et l’historique à l’écran des confirmations ou inclusions |
+| L’**Archive des observations d’enregistrements** (chaque publication et vérification IPFS, diffusion, confirmation et preuve de contenu Bitcoin, et inclusion Base), jusqu’à **Vider l’archive** | — |
+| Les Références entre enregistrements | Les cartes et lignes que vous aviez ouvertes |
 
 Après un rechargement, les résultats d’un parcours ou d’une publication
 IPFS restent visibles dans
-l’[Archive des observations](12-ArchiveAndAchievements.md#larchive-des-observations-de-publication),
+l’[Archive des observations](12-ArchiveAndAchievements.md#larchive-des-observations-denregistrements),
 le cycle de vie d’un enregistrement, ou (pour Bitcoin) l’Historique des
 preuves d’ancrage Bitcoin. Reconnectez le portefeuille, ou reconfigurez le
 fournisseur d’épinglage, pour continuer.

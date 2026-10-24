@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/12-ArchiveAndAchievements.md source-hash: b3e47023605bc26e -->
+<!-- translation-of: docs/user/12-ArchiveAndAchievements.md source-hash: 40a1d36fb48cc3e7 -->
 # 12 — Arsip & Pencapaian
 
 <!-- languages -->

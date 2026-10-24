@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: c9274474de1ec083 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 7a94f288453a4fe2 -->
 # 09 — Registros firmados y evidencia externa
 
 <!-- languages -->
@@ -287,7 +287,7 @@ nunca se acepta, aunque sea suya: este dispositivo también guarda
 contenido que recibió de pares, así que el hash antiguo no puede probar qué
 bytes publicó usted.
 
-**Quitar de este dispositivo** (o **Quitar las *N* de este dispositivo**,
+**Quitar de este dispositivo** (o **Quitar los *N* de este dispositivo**,
 arriba del grupo) le pide confirmación y luego olvida el registro aquí.
 No retira ninguna publicación ni llega a nadie más, y un par conectado que
 todavía lo tenga puede volver a anunciarlo. Solo se pueden quitar los

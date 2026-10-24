@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/12-ArchiveAndAchievements.md source-hash: b3e47023605bc26e -->
+<!-- translation-of: docs/user/12-ArchiveAndAchievements.md source-hash: 40a1d36fb48cc3e7 -->
 # 12 — Archivo y logros
 
 <!-- languages -->
@@ -141,7 +141,7 @@ referencias separadas.
 
 **Grafo de referencias entre registros** agrupa las mismas referencias
 por registro: totales de **Aristas**, **Registros**, **Orígenes
-distintos** y **Referenciadas distintas**, y para cada registro sus
+distintos** y **Referenciados distintos**, y para cada registro sus
 **Referencias salientes** y **Referencias entrantes**, que se despliegan
 para mostrar cada referencia. Los conteos no son una clasificación.
 

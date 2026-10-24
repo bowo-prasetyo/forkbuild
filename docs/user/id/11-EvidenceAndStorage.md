@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: dbd3a37199f5ba2c -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 0cc0471bd48f8142 -->
 # 11 — Bukti & Penyimpanan
 
 <!-- languages -->

@@ -114,14 +114,14 @@ async function settle() {
 {
     const { chain, entries, batch, loaded } = setUp();
     assert(batch.batchAnchorTypes.length === 1 && batch.batchAnchorTypes[0].anchorType === 'steem', 'Steem is offered for batches');
-    assert(batch.batchButtonDisabled('steem') && displayText(batch.batchButtonLabel('steem')) === 'Anchor 0 Publications on Steem', 'nothing picked, nothing to do');
+    assert(batch.batchButtonDisabled('steem') && displayText(batch.batchButtonLabel('steem')) === 'Anchor 0 Records on Steem', 'nothing picked, nothing to do');
     batch.selectUnanchoredForBatch('steem');
-    assert(batch.batchSelectedIds('steem').length === 3 && displayText(batch.batchButtonLabel('steem')) === 'Anchor 3 Publications on Steem', 'every unanchored publication is picked');
+    assert(batch.batchSelectedIds('steem').length === 3 && displayText(batch.batchButtonLabel('steem')) === 'Anchor 3 Records on Steem', 'every unanchored publication is picked');
     batch.batchAnchoring.steem.selected['pub-2'] = false;
     await batch.createBatchAnchors('steem');
     assert(chain.broadcasts.length === 1, 'one broadcast for the batch');
     const view = batch.batchCreationView('steem');
-    assert(displayText(view.label) === 'Anchor created' && displayText(view.message).startsWith('2 publications anchored with one Steem transaction'), 'the batch reports its anchors');
+    assert(displayText(view.label) === 'Anchor created' && displayText(view.message).startsWith('2 records anchored with one Steem transaction'), 'the batch reports its anchors');
     assert(loaded.join() === 'pub-0,pub-1' && entries[0].evidenceAnchors.length === 1 && entries[2].evidenceAnchors.length === 0, 'each picked publication gets its own anchor');
     assert(batch.batchSelectedIds('steem').length === 0, 'the selection is cleared');
     await settle();

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: dbd3a37199f5ba2c -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 0cc0471bd48f8142 -->
 # 11 — Preuves et stockage
 
 <!-- languages -->
@@ -24,12 +24,12 @@
 
 Chaque carte de la page **Enregistrements signés** (voir
 [Enregistrements signés et preuves externes](09-PublicationsAndEvidence.md)) a des
-sections pour prouver *quand* une publication existait et pour placer son
+sections pour prouver *quand* un enregistrement existait et pour placer son
 contenu là où d’autres peuvent le récupérer :
 
 - **[Preuves externes](#preuves-externes)** — des enregistrements sur
-  Bitcoin, Base, Arweave, Steem ou Blurt attestant que le hash de contenu d’une
-  publication existait à un moment donné.
+  Bitcoin, Base, Arweave, Steem ou Blurt attestant que le hash de contenu d’un
+  enregistrement existait à un moment donné.
 - **[Le parcours d’ancrage Bitcoin](#le-parcours-dancrage-bitcoin)** et
   **[Le parcours d’ancrage Base](#le-parcours-dancrage-base)** — des
   parcours étape par étape qui utilisent votre propre portefeuille pour
@@ -64,7 +64,7 @@ ni quand vous dépliez la liste.
 
 ### Créer des preuves
 
-Dans la section **Distribution** d’une carte de publication, le bloc
+Dans la section **Distribution** d’une carte d’enregistrement, le bloc
 **Preuve / Ancrage** (Steem et Blurt marqués **Expérimental**) a une carte par type de
 preuve qu’un clic peut créer, chacune avec son propre bouton : **Créer une
 ancre Arweave** et **Créer une ancre Steem**. Les ancres Bitcoin et Base
@@ -74,7 +74,7 @@ carte, et le bloc le signale. Quand vous avez enregistré un fournisseur
 préféré, ces cartes sont repliées sous **Autres options d’ancrage**, sous
 le bouton propre à ce fournisseur (voir
 [Ancrer chez un fournisseur préféré](#ancrer-chez-un-fournisseur-préféré)).
-Chacune enregistre le hash de contenu de la publication dans une
+Chacune inscrit le hash de contenu de l’enregistrement dans une
 transaction sur ce réseau, avec l’un de trois résultats :
 
 | Résultat | Signification |
@@ -95,12 +95,12 @@ transaction sur ce réseau, avec l’un de trois résultats :
   WhaleVault), et votre compte Blurt défini dans
   [Paramètres réseau → Blurt](10-NetworkSettings.md#blurt).
 
-Une publication faite avant le passage des hashs de contenu en SHA-256
-n’est jamais ancrée, ni par ces boutons, ni par les étapes Bitcoin ou
-Base, ni par **Ancrer plusieurs publications** : personne d’autre ne peut
+Un enregistrement fait avant le passage des hashs de contenu en SHA-256
+n’est jamais ancré, ni par ces boutons, ni par les étapes Bitcoin ou
+Base, ni par **Ancrer plusieurs enregistrements** : personne d’autre ne peut
 vérifier un contenu par rapport à son ancien hash, un enregistrement ne
 prouverait donc rien. Vous obtenez **Enregistrement refusé** (ou, pour
-Bitcoin et Base, une étape de transaction en échec) indiquant de la
+Bitcoin et Base, une étape de transaction en échec) indiquant de le
 publier de nouveau, avant qu’aucun portefeuille ne soit sollicité. Il en
 va de même pour les placements, qui se terminent par **Aucun placement
 n’a été créé**.
@@ -136,14 +136,14 @@ nouveau, pour de petits frais en BLURT. La finalité, **Vérifier les
 preuves** et **Inspecter les preuves** fonctionnent comme pour Steem, et
 la carte renvoie vers l’article.
 
-**Ancrer plusieurs publications à la fois sur Steem.** Sous
+**Ancrer plusieurs enregistrements à la fois sur Steem.** Sous
 **Outils de portefeuille et d’archives → Ancrage sur blockchain**,
-**Ancrer plusieurs publications sur Steem** liste vos publications
-cataloguées. Cochez celles que vous voulez (ou **Sélectionner les non
-ancrées**) et cliquez sur **Ancrer N publications sur Steem**. Une seule
-approbation dans Keychain en ancre jusqu’à 64. Chaque publication obtient
+**Ancrer plusieurs enregistrements sur Steem** liste vos enregistrements
+catalogués. Cochez ceux que vous voulez (ou **Sélectionner les non
+ancrés**) et cliquez sur **Ancrer N enregistrements sur Steem**. Une seule
+approbation dans Keychain en ancre jusqu’à 64. Chaque enregistrement obtient
 toujours sa propre ancre, vérifiée séparément. **Ancrer plusieurs
-publications sur Blurt** fonctionne de la même façon, avec une seule
+enregistrements sur Blurt** fonctionne de la même façon, avec une seule
 approbation dans Blurt Keychain.
 
 ### Ancrer chez un fournisseur préféré
@@ -170,7 +170,7 @@ bloc le signale.
 Les pairs connectés ne transmettent que les preuves créées ou
 ré-annoncées pendant que vous êtes connecté. **Découvrir auprès des
 pairs** comble ce manque : il demande à chaque pair connecté, l’un après
-l’autre, toutes les ancres qu’il connaît pour cette publication, y
+l’autre, toutes les ancres qu’il connaît pour cet enregistrement, y
 compris celles qu’il a apprises d’autres. Rien d’autre sur la page ne
 contacte un pair.
 
@@ -190,7 +190,7 @@ ajoutée deux fois.
 Dans l’onglet **Décentralisation et preuves** de la carte, **Preuves
 externes** indique combien d’ancres sont connues et propose **Découvrir
 auprès des pairs** (ci-dessus). **Afficher les preuves** liste côte à côte
-toutes les ancres connues pour la publication, même celles qui sont en
+toutes les ancres connues pour l’enregistrement, même celles qui sont en
 désaccord. Avec plus d’une ancre, un résumé **Liaison au contenu** vient
 en premier, comptant les ancres par hash de contenu, et avertit quand
 elles déclarent des hashs différents. Il ne dit pas lequel est le bon.
@@ -201,7 +201,7 @@ Chaque ancre affiche :
 |---|---|
 | **Localisateur** | Où le système externe dit de trouver l’enregistrement. |
 | **Enregistré** | L’heure d’enregistrement déclarée (déclarée tant que vous ne l’avez pas vérifiée). |
-| **Publication / Hash du contenu** | Ce que la signature de cette ancre lie ensemble. |
+| **Enregistrement / Hash du contenu** | Ce que la signature de cette ancre lie ensemble. |
 | **Attesté par** | L’identité qui a signé l’ancre. |
 
 - **Vérifier les preuves** (puis **Vérifier de nouveau**) interroge
@@ -224,7 +224,7 @@ Chaque ancre affiche :
 | **Preuve non vérifiée de façon indépendante** | Réellement signée, mais cet appareil ne peut pas vérifier ce type d’ancre à l’extérieur. |
 | **Vérification indisponible** | Le système externe n’a pas pu être joint. Ce n’est pas la même chose qu’invalide. |
 | **Preuve invalide** / **Signature invalide** | L’enregistrement est mal formé ou n’a pas été réellement signé. |
-| **Contenu non correspondant** | L’ancre ne correspond pas à cette publication. |
+| **Contenu non correspondant** | L’ancre ne correspond pas à cet enregistrement. |
 | **Preuve externe invalide** | Le système externe dit que la déclaration est fausse. |
 
 Si une ancre a été vérifiée plus tôt pendant cette visite et qu’une
@@ -261,7 +261,7 @@ plus récente ; la preuve de contenu n’affiche que le dernier résultat.
 ## Le parcours d’ancrage Bitcoin
 
 Un parcours étape par étape qui utilise votre propre portefeuille Bitcoin
-pour écrire le hash de contenu d’une publication dans une vraie
+pour écrire le hash de contenu d’un enregistrement dans une vraie
 transaction. Chaque étape demande son propre clic.
 
 > **Cela dépense de vrais bitcoins sur le réseau principal Bitcoin.** À
@@ -272,7 +272,7 @@ transaction. Chaque étape demande son propre clic.
 Tous ses panneaux valables pour toute la page se trouvent sous
 **Outils de portefeuille et d’archives → Ancrage sur blockchain**,
 le panneau replié en bas de la page Enregistrements signés ; les étapes propres à
-chaque publication sont sur sa carte. Quand une étape demande d’abord
+chaque enregistrement sont sur sa carte. Quand une étape demande d’abord
 d’observer un portefeuille ou des fonds, son lien ouvre ce panneau pour
 vous.
 
@@ -285,7 +285,7 @@ vous.
   native** (commençant par `bc1q…`). Des fonds sur des adresses Taproot
   (`bc1p…`) ou anciennes (`1…`, `3…`) peuvent être observés mais pas
   signés ; l’examen les signale comme non examinables.
-- Une publication sur votre page Enregistrements signés ; la transaction ancre son
+- Un enregistrement sur votre page Enregistrements signés ; la transaction ancre son
   hash de contenu.
 
 ### Connecter un portefeuille
@@ -325,7 +325,7 @@ indique que l’observation est périmée.
 
 ### Construire un plan de transaction
 
-Dans l’onglet **Décentralisation et preuves** de la carte de publication,
+Dans l’onglet **Décentralisation et preuves** de la carte d’enregistrement,
 **Transaction d’ancrage Bitcoin → Créer le plan de transaction** est
 activé dès que vous avez observé les fonds. Il planifie à partir de la
 dernière observation, en choisissant d’abord les plus gros UTXO, et
@@ -370,7 +370,7 @@ cryptographique, hors ligne.
 
 Seules les entrées SegWit natives (P2WPKH) peuvent être finalisées.
 Finaliser enregistre aussi une
-[Publication d’ancre Bitcoin](#publications-dancres-bitcoin).
+[Enregistrement d’ancre Bitcoin](#enregistrements-dancres-bitcoin).
 
 ### Diffuser
 
@@ -394,36 +394,35 @@ minée, avec les trois mêmes résultats que la
 Chaque vérification est ajoutée à **Afficher l’historique des
 confirmations** de cette diffusion. Cette liste est effacée au
 rechargement, mais chaque résultat est aussi conservé dans
-l’[Archive des observations de publication](12-ArchiveAndAchievements.md#larchive-des-observations-de-publication).
+l’[Archive des observations d’enregistrements](12-ArchiveAndAchievements.md#larchive-des-observations-denregistrements).
 
 ### Ce que le parcours ne fait pas
 
 Dès que **Diffuser la transaction** réussit, la transaction est ajoutée à
-la liste **Preuves externes** de la publication comme nouvelle ancre, non
+la liste **Preuves externes** de l’enregistrement comme nouvelle ancre, non
 vérifiée tant que vous n’avez pas cliqué sur **Vérifier les preuves** ; les
 pairs peuvent la trouver avec **Découvrir auprès des pairs**. Une diffusion
 refusée ou injoignable n’ajoute rien. Le parcours ne garde pas ses écrans :
 les écrans d’examen, de signature et de diffusion sont effacés par un
 nouveau plan, une nouvelle signature ou un rechargement. Ce qui est conservé,
-c’est l’enregistrement de publication créé à la finalisation, ainsi que
+c’est l’enregistrement créé à la finalisation, ainsi que
 chaque résultat de diffusion et de confirmation dans l’Archive des
 observations.
 
-### Publications d’ancres Bitcoin
+### Enregistrements d’ancres Bitcoin
 
-La carte **Publications d’ancres Bitcoin** liste un enregistrement pour
+La carte **Enregistrements d’ancres Bitcoin** liste un enregistrement pour
 chaque transaction que cet appareil a finalisée : `{ ID d’ancre, hash du
 contenu, txid, réseau, créé le }`. Il est créé quand **Vérifier et
 finaliser la transaction** réussit, que la diffusion fonctionne ensuite ou
 non, et n’a pas d’état confirmé ou valide propre. **Afficher les
-publications** les liste. Chaque ligne a :
+enregistrements** les liste. Chaque ligne a :
 
 - **Inspecter les observations** — le nombre de chaque fait de diffusion,
   de confirmation, de preuve de contenu, de position dans la chaîne et de
   cohérence que l’archive détient pour cet ID d’ancre.
-- **Afficher le cycle de vie de la publication** — les mêmes faits dans
-  l’ordre chronologique, en commençant par **Enregistrement de publication
-  créé**. Une étape sans rien d’enregistré est simplement absente.
+- **Afficher le cycle de vie de l’enregistrement** — les mêmes faits dans
+  l’ordre chronologique, en commençant par **Enregistrement créé**. Une étape sans rien d’enregistré est simplement absente.
   L’ouvrir ne contacte aucun réseau.
 
 ## Le parcours d’ancrage Base
@@ -446,7 +445,7 @@ termes.
 - Un compte sur l’ID de chaîne **8453** (réseau principal Base) ou
   **84532** (Base Sepolia). Toute autre chaîne est signalée comme non
   correspondante.
-- Une publication sur votre page Enregistrements signés.
+- Un enregistrement sur votre page Enregistrements signés.
 
 ### Connecter un portefeuille et observer un compte
 
@@ -467,8 +466,8 @@ lit la chaîne et le solde du compte :
 
 ### Construire un plan de transaction
 
-Dans l’onglet **Décentralisation et preuves** de la carte de publication,
-**Transaction de publication sur Base → Créer le plan de transaction Base**
+Dans l’onglet **Décentralisation et preuves** de la carte d’enregistrement,
+**Transaction d’ancrage Base → Créer le plan de transaction Base**
 (activé dès que vous avez observé un compte) construit un transfert non
 signé de votre compte vers lui-même, portant le hash du contenu comme
 données.
@@ -500,7 +499,7 @@ portefeuille de signer exactement ce plan.
 
 Dans la même carte d’examen, **Créer une ancre Base** signe, finalise et
 diffuse la transaction examinée en un clic, puis l’ajoute à la liste des
-preuves de la publication. C’est une alternative aux boutons étape par
+preuves de l’enregistrement. C’est une alternative aux boutons étape par
 étape, qui fonctionnent toujours.
 
 | Badge | Signification |
@@ -524,7 +523,7 @@ par rapport au plan examiné et retrouve le signataire.
 | **Finalisation indisponible** / **Échec de la finalisation** | N’a pas pu être vérifiée, ou un autre résultat inutilisable. |
 
 Finaliser enregistre une
-[Publication d’ancre Base](#publications-dancres-base). Ensuite,
+[Enregistrement d’ancre Base](#enregistrements-dancres-base). Ensuite,
 **Diffuser la transaction** l’envoie : **Transaction diffusée** (avec
 l’**ID de transaction** ; pas encore incluse dans un bloc), **Transaction
 refusée** ou **Diffusion indisponible**. **Diffuser de nouveau** renvoie
@@ -544,15 +543,15 @@ Après une diffusion, **Observer la transaction**, dans la section
 **Observer de nouveau la transaction** ajoute une entrée à **Afficher
 l’historique des observations**. Cette liste est effacée au
 rechargement, mais chaque observation est aussi conservée dans
-l’[Archive des observations de publication](12-ArchiveAndAchievements.md#larchive-des-observations-de-publication).
+l’[Archive des observations d’enregistrements](12-ArchiveAndAchievements.md#larchive-des-observations-denregistrements).
 
-### Publications d’ancres Base
+### Enregistrements d’ancres Base
 
-Comme pour Bitcoin, la carte **Publications d’ancres Base** garde un
+Comme pour Bitcoin, la carte **Enregistrements d’ancres Base** garde un
 enregistrement par transaction finalisée : `{ hash du contenu, txid,
-réseau, créé le }`. **Afficher les publications** les liste, et
-**Afficher le cycle de vie de la publication** montre **Enregistrement de
-publication créé** suivi de chaque **Observation d’inclusion nº N**. Les
+réseau, créé le }`. **Afficher les enregistrements** les liste, et
+**Afficher le cycle de vie de l’enregistrement** montre **Enregistrement
+créé** suivi de chaque **Observation d’inclusion nº N**. Les
 résultats de diffusion Base ne sont pas enregistrés, il n’y a donc pas
 d’entrée de diffusion.
 
@@ -569,19 +568,19 @@ préféré est *Expérimental*.
 Un **placement de snapshot** est une déclaration signée selon laquelle un
 backend de stockage — **IPFS**, **Arweave**, ou le stockage **Local** de
 cet appareil — peut fournir les octets correspondant au hash de contenu
-d’une publication. Ce n’est pas une garantie qu’ils y seront demain.
+d’un enregistrement. Ce n’est pas une garantie qu’ils y seront demain.
 Plusieurs placements, sur différents backends et de différentes
 personnes, peuvent coexister ; aucun n’est préféré.
 
 ### Créer un placement
 
-Dans la section **Distribution** d’une carte de publication, le bloc
+Dans la section **Distribution** d’une carte d’enregistrement, le bloc
 **Contenu** a une carte par backend, avec **Créer un placement Local**,
 **Créer un placement IPFS** ou **Créer un placement Arweave**. Quand vous
 avez enregistré un stockage préféré, le bloc commence par un bouton pour
 celui-ci, comme **Stocker sur IPFS**, et replie ces cartes sous **Autres
 options de stockage**. Chacune prend les octets que cet appareil détient
-pour la publication et les remet à ce backend :
+pour l’enregistrement et les remet à ce backend :
 
 - **Placement créé** — accepté ; un nouveau placement signé apparaît en
   dessous.
@@ -624,7 +623,7 @@ distant) enregistré, **Stocker sur …** utilise le service configuré sous
 ### La liste des Placements de Snapshot
 
 Dans l’onglet **Placements et IPFS** de la carte, **Afficher les
-placements** liste tous les placements connus pour la publication : ceux
+placements** liste tous les placements connus pour l’enregistrement : ceux
 que vous avez faits, ceux qu’un pair a envoyés, et ceux contenus dans un
 paquet de Plan importé.
 
@@ -632,7 +631,7 @@ paquet de Plan importé.
 |---|---|
 | **Localisateur** | Où le backend dit de trouver les octets. |
 | **Placé** | L’heure de placement déclarée. |
-| **Publication** / **Hash du contenu** | Ce que la signature du placement lie ensemble. |
+| **Enregistrement** / **Hash du contenu** | Ce que la signature du placement lie ensemble. |
 | **Placé par** | L’identité qui l’a signé. |
 
 Chacun a jusqu’à trois boutons :
@@ -699,7 +698,7 @@ déclaration signée que d’autres peuvent découvrir : c’est la trace qu’u
 fournisseur a accepté ces octets. Les résultats à l’écran sont effacés au
 rechargement, mais chaque publication réussie et chaque vérification sont
 aussi conservées dans
-l’[Archive des observations de publication](12-ArchiveAndAchievements.md#larchive-des-observations-de-publication).
+l’[Archive des observations d’enregistrements](12-ArchiveAndAchievements.md#larchive-des-observations-denregistrements).
 
 ### Configurer un fournisseur d’épinglage distant
 
@@ -758,10 +757,10 @@ au hash enregistré :
 | **Récupération du contenu indisponible** | La passerelle n’a pas pu être jointe ou ne l’a pas. Ce n’est pas une non-correspondance. |
 | **Échec de la vérification** | Autre chose s’est mal passé. |
 
-### Historique de publication
+### Historique de l’enregistrement
 
 Publier de nouveau n’écrase jamais les enregistrements antérieurs.
-**Afficher l’historique de publication** liste chaque publication, de la
+**Afficher l’historique de l’enregistrement** liste chaque publication, de la
 plus ancienne à la plus récente, avec son localisateur et son heure ;
 **Inspecter** montre son localisateur, son hash de contenu, son heure et
 sa méthode (aujourd’hui toujours **Fournisseur d’épinglage distant**).
@@ -772,7 +771,7 @@ vérification de cet enregistrement.
 ## Steem
 
 *Expérimental.* ForkBuild peut annoncer, stocker et partager via la
-blockchain Steem. Les annonces (de publications, de Snapshots et de
+blockchain Steem. Les annonces (d’enregistrements, de Snapshots et de
 commentaires) sont des réponses à des fils de découverte mensuels comme
 [`@forkbuild/forkbuild-snapshot-2026-09`](https://steemit.com/forkbuild/@forkbuild/forkbuild-snapshot-2026-09).
 La lecture ne nécessite aucun compte. Tout ce qui est trouvé est vérifié
@@ -849,7 +848,7 @@ Distribuer.
 
 **N’importe où.** Dès qu’une Déclaration signée est stockée sur Steem,
 Arweave ou IPFS, **Partager…** et **Copier le lien** apparaissent en
-dessous : dans le panneau de publication de la Vue du Monde, dans le
+dessous : dans le panneau d’enregistrement de la Vue du Monde, dans le
 résultat de la boîte de dialogue Distribuer, et sur la page Enregistrements signés.
 **Partager…** ouvre la feuille de partage de votre appareil quand elle
 existe ; **Copier le lien** copie le lien, qui est aussi affiché pour une
@@ -892,7 +891,7 @@ Keychain vous demande d’approuver chaque article.
   depuis votre compte, avec les tags `forkbuild` et `forkbuild-snapshot`
   ou `forkbuild-publication`, puis les [étiquettes](02-TheEditor.md) propres à votre construction, avec une image de votre construction, son
   titre, votre nom et sa description (entière, jusqu’à 2 000 caractères, avec sa [mise en forme](02-TheEditor.md)), et un lien « Voir en 3D ». Ce qui
-  suit dans la demi-heure (l’annonce de la Publication, un commentaire,
+  suit dans la demi-heure (l’annonce de l’Enregistrement, un commentaire,
   une ancre) est ajouté au même article en le modifiant, pour que vos
   abonnés voient un seul article, pas plusieurs.
 - **L’image demande sa propre approbation.** Pour une Déclaration signée,

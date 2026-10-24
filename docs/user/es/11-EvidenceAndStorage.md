@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: dbd3a37199f5ba2c -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 0cc0471bd48f8142 -->
 # 11 — Evidencia y almacenamiento
 
 <!-- languages -->
@@ -140,7 +140,7 @@ tarjeta enlaza a la publicación.
 **Anclar varios registros a la vez en Steem.** En **Herramientas de
 billetera y archivo → Anclaje en blockchain**, **Anclar varios
 registros en Steem** muestra sus registros catalogados. Marque los
-que quiera (o use **Seleccionar las no ancladas**) y haga clic en **Anclar
+que quiera (o use **Seleccionar los no anclados**) y haga clic en **Anclar
 N registros en Steem**. Una sola aprobación de Keychain ancla hasta 64.
 Cada registro igual recibe su propio anclaje, que se verifica por
 separado. **Anclar varios registros en Blurt** funciona igual, con una
