@@ -15,7 +15,7 @@ que controlan con qué servidores habla ForkBuild. La mayoría de las
 personas nunca necesita cambiar nada aquí: los valores predeterminados
 funcionan desde el principio. Venga aquí cuando un servidor no funcione,
 cuando administre uno propio, o para elegir dónde se guardan y se anuncian
-sus publicaciones.
+sus registros.
 
 Para saber qué averigua cada servidor sobre usted, consulte
 [Privacidad](Privacy.md).
@@ -86,12 +86,12 @@ surte efecto la próxima vez que se abre la página Registros firmados.
 ## Proveedor de contenido
 
 Elija en qué almacenamiento crean una Ubicación de Snapshot **Guardar en
-…** (el primer botón del bloque **Contenido** de una publicación) y **Usar
+…** (el primer botón del bloque **Contenido** de un registro) y **Usar
 el proveedor preferido** (consulte
 [Usar un proveedor preferido](11-EvidenceAndStorage.md#usar-un-proveedor-preferido)),
 entre los backends que registró este dispositivo, y haga clic en
-**Guardar**. **Local** no se ofrece, ya que cada publicación ya está
-guardada en este dispositivo.
+**Guardar**. **Local** no se ofrece, ya que cada registro ya está
+guardado en este dispositivo.
 
 **IPFS (pinning remoto)** *(experimental)* siempre se ofrece. Usa el
 servicio configurado en **Servicio de pinning remoto**, más abajo: con uno
@@ -121,7 +121,7 @@ todavía puede cambiarlo. **Olvidar servicio** lo quita.
 ## Proveedor de anuncio / descubrimiento
 
 Elija **Arweave**, **Blurt** (experimental), **Nostr** o **Steem** (experimental) como el lugar
-predeterminado donde se anuncian sus publicaciones (Mundos compartidos,
+predeterminado donde se anuncian sus registros (Mundos compartidos,
 Atribuciones de plano y declaraciones de nombres de lugares), Snapshots y
 comentarios. Es solo un valor predeterminado: todos los diálogos
 **Distribuir**, el selector de Distribución de cada tarjeta de Explorar
@@ -140,7 +140,7 @@ comentario junto a **Publicar comentario**.
 ## Proveedor de prueba / anclaje
 
 Elija dónde crea evidencia externa **Anclar en …** (el
-primer botón del bloque **Prueba / anclaje** de una publicación):
+primer botón del bloque **Prueba / anclaje** de un registro):
 **Arweave**, **Bitcoin** *(experimental)*, **Blurt** *(experimental)* o **Steem** *(experimental)*, según los que haya registrado este
 dispositivo. Base nunca se ofrece, porque cada anclaje en Base requiere que
 usted revise y firme una transacción de billetera. Con Bitcoin elegido no
@@ -160,7 +160,7 @@ actual no se puede alcanzar o devuelve un error. El contenido de Arweave se
 identifica por su id de transacción, así que todos los gateways devuelven
 los mismos bytes.
 
-Esta lista se usa al recuperar el material de una publicación desde una
+Esta lista se usa al recuperar el material de un registro desde una
 fuente descentralizada y al resolver o materializar una Ubicación de
 Snapshot en Arweave. No cambia adónde se sube su propio contenido. Los
 anclajes en Arweave usan el primer gateway de la lista para crear y
@@ -201,7 +201,7 @@ de que uno rechazara la transacción.
 ## Relays de Nostr
 
 Relays para todo lo que ForkBuild publica o descubre a través de Nostr:
-publicaciones (Mundos compartidos, Atribuciones de plano y declaraciones de
+registros (Mundos compartidos, Atribuciones de plano y declaraciones de
 nombres de lugares), Snapshots y comentarios. Una URL `ws://` o `wss://`
 por línea; los predeterminados son `wss://relay.damus.io`, `wss://nos.lol`
 y `wss://relay.primal.net`. **Guardar** reemplaza toda la lista, y la

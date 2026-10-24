@@ -391,7 +391,7 @@ in, below. Nothing retries by itself.
 
 Three actions, each its own click:
 
-**Import Snapshot** — shows a file picker and paste box for a **Record
+**Import Snapshot** — shows a file picker and paste box for a **Publication
 Snapshot Transfer Package** (a JSON bundle of one record's content).
 Choose or paste one, then click **Import Snapshot** again.
 

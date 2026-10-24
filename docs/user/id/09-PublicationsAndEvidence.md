@@ -11,7 +11,7 @@
 > yang berjalan di baliknya.
 
 > **Sebagian eksperimental.** Halaman Catatan Bertanda Tangan adalah fitur biasa: daftar
-> dan statusnya, menghapus publikasi yang tidak dapat dipakai, mengumumkan
+> dan statusnya, menghapus catatan yang tidak dapat dipakai, mengumumkan
 > di Nostr atau Arweave, menyimpan di IPFS atau Arweave, penjangkaran di
 > Arweave, serta keempat tab sebuah kartu: **Snapshot**, **Desentralisasi &
 > Bukti**, **Penempatan & IPFS**, dan **Riwayat**. Sisanya
@@ -71,7 +71,7 @@ perangkat ini. (Satu-satunya pengecualian adalah **Buka di Editor** pada
 Dunia Bersama milik Anda sendiri yang perlu diterbitkan lagi; lihat
 [Arti status](#arti-status).)
 
-Setiap entri di halaman Catatan Bertanda Tangan adalah sebuah *publikasi*, dan
+Setiap entri di halaman Catatan Bertanda Tangan adalah sebuah *catatan*, dan
 masing-masing adalah salah satu dari tiga jenis:
 
 | Jenis | Apa itu |
@@ -84,28 +84,28 @@ Tampilan Dunia, Editor, dan Jelajahi juga menyebut catatan bertanda
 tangan sebuah Dunia sebagai **Dunia Bersama**, seperti di **Dunia Bersama
 Saya**, **Temukan Dunia Bersama**, dan **Pilih Dunia Bersama**.
 
-## Apa yang melingkupi sebuah publikasi
+## Apa yang melingkupi sebuah catatan
 
-Publikasi hanyalah catatan bertanda tangan. Semua hal lain yang Anda lihat
+Catatan hanyalah klaim bertanda tangan itu sendiri. Semua hal lain yang Anda lihat
 di kartunya, dan di sekitarnya di Tampilan Dunia, adalah sesuatu yang
 dilakukan dengannya atau dilekatkan padanya. Tidak satu pun dari itu yang
-merupakan jenis publikasi, dan hanya publikasi itu sendiri yang wajib:
+merupakan jenis catatan, dan hanya catatan itu sendiri yang wajib:
 
 | Istilah | Seperti… | Apa itu |
 |---|---|---|
-| **Publikasi** | Bukunya sendiri | Catatan bertanda tangan: Dunia Bersama, Atribusi Cetak Biru, atau Klaim Nama Tempat. Membawa hash kontennya dan tanda tangan penerbitnya. |
-| **Konten** | Tempat salinan cetak disimpan | Byte yang menjadi isi publikasi, seperti balok sebuah Dunia. Selalu disimpan di perangkat ini terlebih dahulu; **Simpan di …** menaruh salinannya di IPFS, Arweave, Steem, atau Blurt agar orang lain dapat mengambilnya. Lihat [Penyedia Konten](10-NetworkSettings.md#penyedia-konten). |
-| **Snapshot** | Satu salinan cetak | Satu salinan tersimpan dari konten publikasi, seperti balok sebuah Dunia, yang dapat diambil orang lain dan dicocokkan dengan hash-nya. Lihat [Snapshot Lokal](#snapshot-lokal). |
+| **Catatan** | Bukunya sendiri | Catatan bertanda tangan: Dunia Bersama, Atribusi Cetak Biru, atau Klaim Nama Tempat. Membawa hash kontennya dan tanda tangan penerbitnya. |
+| **Konten** | Tempat salinan cetak disimpan | Byte yang menjadi isi catatan, seperti balok sebuah Dunia. Selalu disimpan di perangkat ini terlebih dahulu; **Simpan di …** menaruh salinannya di IPFS, Arweave, Steem, atau Blurt agar orang lain dapat mengambilnya. Lihat [Penyedia Konten](10-NetworkSettings.md#penyedia-konten). |
+| **Snapshot** | Satu salinan cetak | Satu salinan tersimpan dari konten catatan, seperti balok sebuah Dunia, yang dapat diambil orang lain dan dicocokkan dengan hash-nya. Lihat [Snapshot Lokal](#snapshot-lokal). |
 | **Penempatan** | Rak tempat salinan itu ditaruh | Catatan bertanda tangan tentang di mana sebuah bangunan berdiri di Dunia. Satu Dunia Bersama dapat memiliki beberapa penempatan. Lihat [Menempatkan vs me-remix](WorldViewAdvancedTools.md#menempatkan-vs-me-remix). |
-| **Pengumuman / Penemuan** | Entri katalog perpustakaan | Pemberitahuan kecil bertanda tangan di Nostr, Arweave, Steem, atau Blurt yang menyatakan bahwa publikasi atau Snapshot itu ada dan di mana salinannya, agar orang yang tidak terhubung dengan Anda dapat menemukannya. Lihat [Penyedia Pengumuman / Penemuan](10-NetworkSettings.md#penyedia-pengumuman--penemuan). |
+| **Pengumuman / Penemuan** | Entri katalog perpustakaan | Pemberitahuan kecil bertanda tangan di Nostr, Arweave, Steem, atau Blurt yang menyatakan bahwa catatan atau Snapshot itu ada dan di mana salinannya, agar orang yang tidak terhubung dengan Anda dapat menemukannya. Lihat [Penyedia Pengumuman / Penemuan](10-NetworkSettings.md#penyedia-pengumuman--penemuan). |
 | **Bukti / Penjangkaran** *(Eksperimental, kecuali di Arweave)* | Cap notaris | Hash konten yang ditulis ke dalam transaksi blockchain (Bitcoin, Base, Arweave, Steem, atau Blurt), sebagai bukti bahwa konten itu sudah ada pada waktu tersebut. Tidak menyimpan atau mengumumkan apa pun. Lihat [Bukti & Penyimpanan](11-EvidenceAndStorage.md). |
-| **Komentar** | Ulasan pembaca | Komentar yang dapat dilekatkan siapa pun yang punya nama pada sebuah publikasi, masing-masing ditandatangani oleh pemberi komentar, bukan oleh penerbit. Lihat [Komentar](#komentar). |
+| **Komentar** | Ulasan pembaca | Komentar yang dapat dilekatkan siapa pun yang punya nama pada sebuah catatan, masing-masing ditandatangani oleh pemberi komentar, bukan oleh penerbit. Lihat [Komentar](#komentar). |
 
-Jadi Anda membuat publikasi; lalu, jika mau, menyimpan kontennya,
+Jadi Anda membuat catatan; lalu, jika mau, menyimpan kontennya,
 mengumumkannya, menjangkarkannya, dan menempatkannya (untuk Dunia
 Bersama); dan siapa pun dapat mengomentarinya.
 
-## Dari mana publikasi berasal
+## Dari mana catatan berasal
 
 Anda tidak pernah membuat klaim di halaman Catatan Bertanda Tangan itu sendiri. Halaman
 ini mencantumkan klaim yang Anda buat di tempat lain, yang dikirim rekan
@@ -183,7 +183,7 @@ pembuatnya, dan Tampilan Dunia, dan tetap ada setelah dimuat ulang.
 
 ## Halaman Catatan Bertanda Tangan
 
-Buka **Catatan Bertanda Tangan** (**Lainnya → Lanjutan**). Halaman ini mencantumkan setiap publikasi
+Buka **Catatan Bertanda Tangan** (**Lainnya → Lanjutan**). Halaman ini mencantumkan setiap catatan
 bertanda tangan yang telah dikatalogkan perangkat ini, milik Anda atau
 milik rekan. Di bagian bawah, panel terlipat **Alat Dompet & Arsip** berisi
 alat untuk seluruh halaman dalam tiga tab:
@@ -198,11 +198,11 @@ Panel ini hanya tampil selama **Tampilkan alat eksperimental** menyala di
 Pengaturan Jaringan. Langkah yang memerlukan pengamatan dompet terlebih
 dahulu tetap membuka panel untuk kunjungan itu.
 
-Setiap kartu publikasi menampilkan:
+Setiap kartu catatan menampilkan:
 
 - Namanya, setelah kontennya diperiksa: judul Dunia Bersama atau nama
-  tempat. Jika belum, atau untuk klaim kepengarangan, jenis publikasinya.
-- Jenis publikasi (di bawah nama, jika ada) dan siapa yang menerbitkannya,
+  tempat. Jika belum, atau untuk klaim kepengarangan, jenis catatannya.
+- Jenis catatan (di bawah nama, jika ada) dan siapa yang menerbitkannya,
   dipersingkat menjadi beberapa karakter terakhir ID mereka.
 - **Lencana status** (lihat [Arti status](#arti-status)), yang dihitung
   ulang setiap kali halaman dimuat atau Anda mengeklik **Periksa Ulang**.
@@ -216,7 +216,7 @@ Setiap kartu publikasi menampilkan:
 
 Di bawahnya, dua bagian terlipat:
 
-- **Distribusi** — mengumumkan publikasi, menyimpan kontennya, dan
+- **Distribusi** — mengumumkan catatan, menyimpan kontennya, dan
   menjangkarkannya. Penyimpanan dan penjangkaran masing-masing diawali satu
   tombol untuk penyedia yang Anda simpan di **Konfigurasi** (**Simpan di
   IPFS**, **Jangkarkan di Steem**), dengan setiap penyedia lain terlipat di
@@ -233,7 +233,7 @@ Di bawahnya, dua bagian terlipat:
 | **Snapshot** | [Snapshot Lokal](#snapshot-lokal): apa yang disimpan perangkat ini, dan cara mendapatkannya. |
 | **Desentralisasi & Bukti** | [Desentralisasi](#desentralisasi-sekilas), [daftar bukti](11-EvidenceAndStorage.md#daftar-bukti), dan langkah-langkah transaksi Bitcoin dan Base (Eksperimental). |
 | **Penempatan & IPFS** | Daftar [Penempatan Snapshot](11-EvidenceAndStorage.md#penempatan-snapshot) dan [Penerbitan IPFS](11-EvidenceAndStorage.md#penerbitan-ipfs) (Eksperimental). |
-| **Riwayat** | **Tampilkan Linimasa Lintas Domain**: setiap pengamatan IPFS, Bitcoin, dan Base yang dicatat perangkat ini untuk publikasi ini, berurutan menurut waktu, dari [Arsip Pengamatan](12-ArchiveAndAchievements.md), sehingga tersimpan antarkunjungan; atau catatan bahwa belum ada yang tercatat. |
+| **Riwayat** | **Tampilkan Linimasa Lintas Domain**: setiap pengamatan IPFS, Bitcoin, dan Base yang dicatat perangkat ini untuk catatan ini, berurutan menurut waktu, dari [Arsip Pengamatan](12-ArchiveAndAchievements.md), sehingga tersimpan antarkunjungan; atau catatan bahwa belum ada yang tercatat. |
 
 ### Arti status
 
@@ -241,26 +241,26 @@ Di bawahnya, dua bagian terlipat:
 |---|---|
 | **Tersedia** | Kontennya ada di perangkat ini sekarang. |
 | **Konten tidak tersedia** | Klaimnya asli, tetapi kontennya belum ada di sini. Coba **Ambil dari Rekan**. |
-| **Amplop publikasi tidak valid** / **Tanda tangan publikasi tidak valid** | Catatannya rusak, atau tidak benar-benar ditandatangani. |
-| **Konten tidak cocok dengan referensinya sendiri** / **Konten tidak valid** / **Tanda tangan konten tidak valid** | Kontennya tidak cocok dengan apa yang diklaim publikasi. |
+| **Amplop catatan tidak valid** / **Tanda tangan catatan tidak valid** | Catatannya rusak, atau tidak benar-benar ditandatangani. |
+| **Konten tidak cocok dengan referensinya sendiri** / **Konten tidak valid** / **Tanda tangan konten tidak valid** | Kontennya tidak cocok dengan apa yang diklaim catatan. |
 | **Gagal dalam pemeriksaan khusus domain** | Bentuknya benar dan ditandatangani, tetapi gagal dalam pemeriksaan khusus untuk jenisnya. |
-| **Jenis publikasi tidak didukung** | Versi ini tidak dapat menampilkan jenis publikasi ini. |
+| **Jenis catatan tidak didukung** | Versi ini tidak dapat menampilkan jenis catatan ini. |
 
 Status ini menjelaskan apakah catatannya valid, bukan apakah desain atau
 namanya bagus.
 
-Publikasi yang statusnya bukan **Tersedia** atau **Konten tidak tersedia**
+Catatan yang statusnya bukan **Tersedia** atau **Konten tidak tersedia**
 tidak dapat dibuka, didistribusikan, atau dijangkarkan, jadi tidak diberi
-kartu lengkap. Publikasi semacam itu dikumpulkan di bagian bawah halaman
-dalam kelompok terlipat, "*N* publikasi yang tidak dapat digunakan",
+kartu lengkap. Catatan semacam itu dikumpulkan di bagian bawah halaman
+dalam kelompok terlipat, "*N* catatan yang tidak dapat digunakan",
 masing-masing dengan statusnya, alasannya, **Periksa Ulang**, dan **Hapus
-dari Perangkat Ini**. Publikasi itu juga tidak diikutkan di **Jangkarkan
-Beberapa Publikasi**. Alasan yang paling umum adalah publikasi yang dibuat
+dari Perangkat Ini**. Catatan itu juga tidak diikutkan di **Jangkarkan
+Beberapa Catatan**. Alasan yang paling umum adalah catatan yang dibuat
 sebelum hash konten menjadi SHA-256: hanya pembuatnya yang dapat
 memperbaikinya, dengan menerbitkannya lagi.
 
 Jika salah satunya **milik Anda** (ditandatangani oleh identitas di
-perangkat ini) dan gagal hanya karena hash lamanya, publikasi itu
+perangkat ini) dan gagal hanya karena hash lamanya, catatan itu
 dicantumkan paling atas dengan lencana **Milik Anda**. Alih-alih "pembuatnya
 perlu menerbitkannya lagi", ia memberi tahu caranya:
 
@@ -285,16 +285,23 @@ konten yang diterimanya dari rekan, jadi hash lama tidak dapat membuktikan
 byte mana yang Anda terbitkan.
 
 **Hapus dari Perangkat Ini** (atau **Hapus Semua *N* dari Perangkat Ini**
-di bagian atas kelompok) meminta konfirmasi, lalu melupakan publikasi itu
+di bagian atas kelompok) meminta konfirmasi, lalu melupakan catatan itu
 di sini. Ini tidak membatalkan penerbitan apa pun atau menjangkau orang
-lain, dan rekan terhubung yang masih memiliki publikasi itu dapat
-mengumumkannya lagi. Hanya publikasi di kelompok ini yang dapat dihapus.
+lain, dan rekan terhubung yang masih memiliki catatan itu dapat
+mengumumkannya lagi. Hanya catatan di kelompok ini yang dapat dihapus.
+
+Menghapus catatan tidak pernah menyentuh bangunan Anda. Bangunan di balik
+sebuah Dunia Bersama tetap ada di Editor, di Jelajahi, dan di halaman Anda
+(**Lainnya → Bangunan Saya**); hanya salinan catatan bertanda tangan di
+perangkat ini yang hilang. Untuk membagikan bangunan semacam itu lagi
+kepada rekan, buka bangunannya, **Terbitkan**, lalu **Bagikan dengan
+Rekan**: itu membuat catatan baru.
 
 ### Mendistribusikan dari halaman Catatan Bertanda Tangan
 
 **Distribusi → Pengumuman / Penemuan** memiliki dua kartu:
 
-- **Publikasi** mengumumkan publikasi bertanda tangan itu sendiri di
+- **Catatan** mengumumkan catatan bertanda tangan itu sendiri di
   **Substrat** yang Anda pilih (Arweave, Nostr, Steem, atau Blurt;
   dua yang terakhir Eksperimental). Pilihan awalnya adalah
   [Penyedia Pengumuman / Penemuan](10-NetworkSettings.md#penyedia-pengumuman--penemuan)
@@ -304,7 +311,7 @@ mengumumkannya lagi. Hanya publikasi di kelompok ini yang dapat dihapus.
   sebuah Dunia, itu adalah snapshot Dunia itu sendiri, diumumkan bersama
   tempat penerbitnya menempatkannya jika perangkat ini menyimpan
   penempatan bertanda tangan itu, seperti yang dilakukan **Distribusikan**
-  di Tampilan Dunia. Untuk jenis lain, itu adalah konten publikasi,
+  di Tampilan Dunia. Untuk jenis lain, itu adalah konten catatan,
   diumumkan hanya dengan hash-nya. Perangkat ini memerlukan byte-nya: untuk
   Dunia yang belum Anda buka, buka di Tampilan Dunia atau ambil dari rekan
   terlebih dahulu.
@@ -316,7 +323,7 @@ kontennya sudah tersimpan.
 
 ## Komentar
 
-Siapa pun yang punya nama dapat mengomentari publikasi apa pun
+Siapa pun yang punya nama dapat mengomentari catatan apa pun
 yang terselesaikan: bangunan dari Jelajahi, klaim kepengarangan, atau nama
 tempat. Tidak ada pemeriksaan kepemilikan, syarat pertemanan, atau
 moderasi.
@@ -371,7 +378,7 @@ yang dikirim perangkat ini.
 Komentar orang lain sampai kepada Anda:
 
 - dari rekan yang terhubung, saat komentar itu dikirim;
-- dari jaringan, saat Anda membuka komentar sebuah publikasi dan setiap
+- dari jaringan, saat Anda membuka komentar sebuah catatan dan setiap
   kali Anda mengeklik **Periksa komentar baru**. Beginilah Anda melihat
   komentar yang dikirim selama Anda luring.
 
@@ -380,18 +387,18 @@ Baris di samping tombol melaporkan pemeriksaan terakhir, seperti
 mencakup jaringan yang menjawab). Jaringan yang tidak dapat dijangkau
 disebutkan namanya (*Arweave tidak tersedia*); jika tidak ada yang
 menjawab, Anda melihat *Tidak dapat menjangkau Nostr atau Arweave —
-menampilkan komentar yang tersimpan di perangkat ini.* Hanya publikasi yang
+menampilkan komentar yang tersimpan di perangkat ini.* Hanya catatan yang
 komentarnya Anda buka yang diperiksa. Tanda tangan setiap komentar yang
 diambil diperiksa, dan tidak ada yang dihitung dua kali.
 
-Saat seseorang mengomentari publikasi yang Anda terbitkan, entri
+Saat seseorang mengomentari catatan yang Anda terbitkan, entri
 **Komentar baru pada bangunan Anda** muncul di
 [Riwayat Notifikasi](03-WorldView.md#orientasi-dan-lokasi) Anda (tombol 🔔 di kepala halaman).
 
 ## Snapshot Lokal
 
 Di tab **Snapshot** sebuah kartu, **Snapshot Lokal** menjawab satu
-pertanyaan: apakah perangkat ini menyimpan byte untuk konten publikasi ini
+pertanyaan: apakah perangkat ini menyimpan byte untuk konten catatan ini
 sekarang? Bagian ini tidak memeriksa tanda tangan atau penempatan, dan
 menghubungi jaringan hanya saat Anda mengeklik salah satu tindakan
 pengambilan.
@@ -406,11 +413,11 @@ pengambilan.
 | **Tidak tersedia** | Tidak pernah ada yang disimpan dengan hash ini. |
 | **Hash tidak cocok** | Ada sesuatu yang disimpan dengan hash ini, tetapi tidak lagi cocok. |
 
-Dua orang dengan publikasi yang sama bisa mendapat jawaban berbeda, karena
+Dua orang dengan catatan yang sama bisa mendapat jawaban berbeda, karena
 penyimpanan mereka berbeda. Setelah pemeriksaan, sebuah baris berbunyi
-*Publikasi: diketahui secara lokal / tidak diketahui secara lokal ·
+*Catatan: diketahui secara lokal / tidak diketahui secara lokal ·
 Snapshot: tersedia / tidak tersedia*: apakah perangkat ini telah
-mengatalogkan publikasi bertanda tangan itu, dan apakah perangkat ini
+mengatalogkan catatan bertanda tangan itu, dan apakah perangkat ini
 menyimpan byte yang valid.
 
 Jika pemeriksaan tidak menemukan byte yang valid, sebuah petunjuk menunjuk
@@ -423,7 +430,7 @@ Tiga tindakan, masing-masing dengan kliknya sendiri:
 
 **Impor Snapshot** — menampilkan pemilih file dan kotak tempel untuk
 **Paket Transfer Snapshot Publikasi** (bundel JSON berisi konten satu
-publikasi). Pilih atau tempelkan satu, lalu klik **Impor Snapshot** lagi.
+catatan). Pilih atau tempelkan satu, lalu klik **Impor Snapshot** lagi.
 
 | Lencana | Arti |
 |---|---|
@@ -466,7 +473,7 @@ dan memeriksanya, seperti **Ambil Snapshot dari Rekan**; tidak ada yang
 pernah diambil dari pihak lain untuk Anda. **Tampilkan Jawaban Kunjungan
 Ini** mencantumkan setiap jawaban, satu baris masing-masing (misalnya
 `20:21:04 — Alice → Tersedia`); klik sebuah baris untuk laporan lengkap,
-publikasi, dan hash kontennya. Sebuah baris tidak pernah ditulis ulang.
+catatan, dan hash kontennya. Sebuah baris tidak pernah ditulis ulang.
 
 ### Percobaan pada kunjungan ini
 
@@ -476,17 +483,17 @@ Percobaan yang menyimpan byte-nya tidak berarti byte itu masih ada di sini;
 **Periksa Snapshot Lokal** yang mengatakannya. **Tampilkan Riwayat
 Perolehan** mencantumkan setiap percobaan (misalnya
 `20:16 — Rekan → Hash tidak cocok`); klik salah satunya untuk hasil,
-publikasi, dan hash kontennya.
+catatan, dan hash kontennya.
 
 ## Desentralisasi sekilas
 
-Di tab **Desentralisasi & Bukti**, begitu sebuah publikasi
+Di tab **Desentralisasi & Bukti**, begitu sebuah catatan
 memiliki jangkar atau penempatan, **Desentralisasi** membandingkan
 [Bukti Eksternal](11-EvidenceAndStorage.md#bukti-eksternal) dan
 [Penempatan Snapshot](11-EvidenceAndStorage.md#penempatan-snapshot):
 
-- **Publikasi: diketahui secara lokal / tidak diketahui secara lokal** —
-  apakah perangkat ini telah mengatalogkan publikasi bertanda tangan itu.
+- **Catatan: diketahui secara lokal / tidak diketahui secara lokal** —
+  apakah perangkat ini telah mengatalogkan catatan bertanda tangan itu.
 - Dua kartu berisi berapa banyak klaim dari setiap jenis yang diketahui,
   dan apakah klaim-klaim itu sepakat tentang hash konten (**Sesuai**) atau
   tidak (**Bertentangan**). Jika yang satu sesuai dan yang lain
@@ -515,12 +522,12 @@ percobaan, dan layar yang sedang berlangsung tidak.
 | Byte snapshot yang Anda impor, ambil, atau materialisasikan | Semua hal lain di **Snapshot Lokal**: pemeriksaan, riwayat percobaan, baris **Sumber:**, pemeriksaan dan perbandingan rekan |
 | Jumlah **Desentralisasi** (dihitung pada setiap pemuatan) | Hasil **Sinkronkan dengan Rekan** |
 | — | **Penerbitan IPFS**: konfigurasi penyedia, hasil, riwayat di layar, dan riwayat verifikasi |
-| Catatan **Publikasi Jangkar Bitcoin/Base**, dibuat saat finalisasi | Koneksi alur dompet, pengamatan dana atau akun, rencana, tinjauan, tanda tangan, transaksi yang difinalisasi, hasil penyiaran, dan riwayat konfirmasi atau inklusi di layar |
-| **Arsip Pengamatan Publikasi** (setiap penerbitan dan verifikasi IPFS, penyiaran, konfirmasi, dan bukti konten Bitcoin, serta inklusi Base), sampai **Kosongkan Arsip** | — |
-| Referensi Publikasi | Kartu dan baris mana yang sedang Anda buka |
+| Entri **Catatan Jangkar Bitcoin/Base**, dibuat saat finalisasi | Koneksi alur dompet, pengamatan dana atau akun, rencana, tinjauan, tanda tangan, transaksi yang difinalisasi, hasil penyiaran, dan riwayat konfirmasi atau inklusi di layar |
+| **Arsip Pengamatan Catatan** (setiap penerbitan dan verifikasi IPFS, penyiaran, konfirmasi, dan bukti konten Bitcoin, serta inklusi Base), sampai **Kosongkan Arsip** | — |
+| Referensi Catatan | Kartu dan baris mana yang sedang Anda buka |
 
 Setelah dimuat ulang, hasil sebuah alur atau penerbitan IPFS tetap terlihat
-di [Arsip Pengamatan](12-ArchiveAndAchievements.md#arsip-pengamatan-publikasi),
+di [Arsip Pengamatan](12-ArchiveAndAchievements.md#arsip-pengamatan-catatan),
 siklus hidup sebuah catatan, atau (untuk Bitcoin) Bukti Jangkar Bitcoin
 Historis. Hubungkan kembali dompet, atau konfigurasikan ulang penyedia
 pinning, untuk melanjutkan.

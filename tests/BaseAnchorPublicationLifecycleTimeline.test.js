@@ -97,7 +97,7 @@ async function run() {
         assert(timeline.txid === TX_A, '1. the timeline names the publication\'s own txid');
         assert(timeline.count === 1, '2. a fresh publication\'s timeline holds exactly one entry — never zero, never a fabricated stage');
         assert(timeline.entries[0].kind === BaseAnchorPublicationLifecycleTimelineEntryKind.PUBLICATION, '3. the one entry is the publication record itself');
-        assert(displayText(timeline.entries[0].label) === 'Publication record created', '4. the label is a plain factual sentence');
+        assert(displayText(timeline.entries[0].label) === 'Record created', '4. the label is a plain factual sentence');
         assert(timeline.entries[0].txid === TX_A, '5. the entry is stamped with the publication\'s own txid');
 
         // No observationsByTransactionHash argument at all, and an empty

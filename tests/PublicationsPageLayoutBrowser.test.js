@@ -193,7 +193,13 @@ assert([...mainList.querySelectorAll('summary')].some((summary) => summary.textC
 const groups = [...view.querySelectorAll(':scope > details.publications-tools-panel')];
 const failedGroup = groups.find((details) => details.querySelector('summary').textContent.includes("can't be used"));
 assert(failedGroup, 'the failed publications are folded into one group');
-assert(failedGroup.querySelector('summary').textContent.trim() === "3 publications that can't be used", 'the group says how many');
+assert(failedGroup.querySelector('summary').textContent.trim() === "3 records that can't be used", 'the group says how many');
+{
+    // Removing a record never touches the builds behind it, and the group says so.
+    const safe = failedGroup.querySelector('.publications-remove-is-safe');
+    assert(safe && safe.textContent.includes('never touches your builds'), `the group says removing is safe for your builds (${safe && safe.textContent.trim()})`);
+    assert(safe.querySelector('a').getAttribute('href') === '/builder/did%3Akey%3Azme', 'pointing to My Builds');
+}
 assert(!failedGroup.open, 'and it is folded while something usable is listed');
 const failedCards = failedGroup.querySelectorAll('.identity-mgmt-card');
 assert(failedCards.length === 3, 'each failed publication has a card');
@@ -282,7 +288,7 @@ buttonNamed(firstCard, 'Remove').click();
 await settle();
 assert(publications.length === 5 && !publications.some((publication) => publication.id === 'mine'), 'confirming removes that publication from the catalog');
 assert(failedGroup.querySelectorAll('.identity-mgmt-card').length === 2
-    && failedGroup.querySelector('summary').textContent.trim() === "2 publications that can't be used", 'and its card');
+    && failedGroup.querySelector('summary').textContent.trim() === "2 records that can't be used", 'and its card');
 
 // Remove All asks first too, then forgets every failed one and nothing else.
 buttonNamed(failedGroup, 'Remove All 2 from This Device').click();

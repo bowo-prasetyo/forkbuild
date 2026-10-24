@@ -119,7 +119,7 @@ settingsStore.save(new IpfsRemotePinningSettings({ endpoint: 'https://api.exampl
     await settle();
     assert(recorded.textContent.includes('ipfs://bafy-earlier-visit'), "History shows what an earlier visit recorded");
     const quiet = await historyOf(cards[1]);
-    assert(quiet.textContent.includes('Nothing recorded for this publication yet.'), 'and says so when nothing is recorded');
+    assert(quiet.textContent.includes('Nothing recorded for this record yet.'), 'and says so when nothing is recorded');
     assert(quiet.querySelector('.experimental-badge') && quiet.textContent.includes('Remote IPFS pinning and Bitcoin and Base anchoring, which add to this list, are Experimental.'),
         'History is a regular tab that says which of its sources are Experimental');
     console.log('✓ History reads the saved archive, with an empty state');

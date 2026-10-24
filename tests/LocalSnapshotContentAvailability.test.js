@@ -112,7 +112,7 @@ async function run() {
         const available = describeLocalSnapshotContentAvailability({ outcome: LocalSnapshotContentAvailabilityOutcome.AVAILABLE });
         assert(available.checked === true && available.outcome === LocalSnapshotContentAvailabilityOutcome.AVAILABLE,
             '3. a completed AVAILABLE check reports checked:true with the outcome carried through');
-        assert(displayText(available.message) === "Local snapshot is available and matches the publication's content hash.",
+        assert(displayText(available.message) === "Local snapshot is available and matches the record's content hash.",
             '4. AVAILABLE carries the exact, deliberately unhedged sentence — never "verified"/"trusted"/"authentic"/"confirmed"');
 
         const notAvailable = describeLocalSnapshotContentAvailability({ outcome: LocalSnapshotContentAvailabilityOutcome.NOT_AVAILABLE });
@@ -198,7 +198,7 @@ async function run() {
         const carolResult = await carolChecker.execute(carolPublicationCatalog.get(PUBLICATION_ID));
         assert(carolResult.outcome === LocalSnapshotContentAvailabilityOutcome.AVAILABLE,
             '4. Carol\'s local availability check reports AVAILABLE — she possesses the bytes, obtained entirely through offline transfer');
-        assert(displayText(describeLocalSnapshotContentAvailability({ outcome: carolResult.outcome }).message) === "Local snapshot is available and matches the publication's content hash.",
+        assert(displayText(describeLocalSnapshotContentAvailability({ outcome: carolResult.outcome }).message) === "Local snapshot is available and matches the record's content hash.",
             '5. the displayed sentence is exactly the precise, unhedged claim this milestone allows');
 
         // --- Dave: imports the replica package, then possesses bytes

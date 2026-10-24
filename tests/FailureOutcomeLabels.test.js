@@ -33,7 +33,7 @@ import { displayText } from '../ui/i18n/i18n.js';
     assert(new Set(labels).size === outcomes.length, `each of the ${outcomes.length} resolution outcomes has a distinct label (found ${JSON.stringify(labels)})`);
     assert(displayText(describePublicationOutcome(PublicationResolutionOutcome.RESOLVED)) === 'Available', 'a resolved publication reads as available');
     assert(labels.filter((label) => displayText(label) === 'Available').length === 1, 'no other outcome reads as available');
-    assert(displayText(describePublicationOutcome('SOMETHING_NEW')) === 'Unsupported publication kind', 'an unknown outcome is named as unsupported');
+    assert(displayText(describePublicationOutcome('SOMETHING_NEW')) === 'Unsupported record kind', 'an unknown outcome is named as unsupported');
     console.log('✓ every resolution outcome has its own label');
 }
 

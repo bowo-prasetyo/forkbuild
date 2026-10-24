@@ -272,7 +272,7 @@ async function run() {
         assert(unknownView.outcome === null && unknownView.resolved === false,
             '8. an unsupported contentKind is reported directly, never guessed at with the wrong kindPlugin');
         assert(displayText(unknownView.reason).includes('forkbuild.some-future-kind'), '9. the reason names the unsupported contentKind');
-        assert(displayText(describePublicationOutcome(unknownView.outcome)) === 'Unsupported publication kind',
+        assert(displayText(describePublicationOutcome(unknownView.outcome)) === 'Unsupported record kind',
             '10. describePublicationOutcome() labels a null outcome distinctly from every real PublicationResolutionOutcome');
     }
     console.log('✓ Section D: PublicationResolutionView derives a display-ready shape without importing anything, and reports an unsupported contentKind honestly');

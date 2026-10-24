@@ -12,7 +12,7 @@
 
 > **Teilweise experimentell.** Die Seite Signierte Einträge ist eine
 > reguläre Funktion: ihre Liste und Status, das Entfernen unbrauchbarer
-> Veröffentlichungen, das Ankündigen auf Nostr oder Arweave, das Speichern
+> Einträge, das Ankündigen auf Nostr oder Arweave, das Speichern
 > auf IPFS oder Arweave, das Verankern auf Arweave sowie alle vier Reiter
 > einer Karte: **Snapshot**, **Dezentralisierung & Nachweise**,
 > **Platzierungen & IPFS** und **Verlauf**. Der Rest ist **Experimentell**:
@@ -74,8 +74,8 @@ Ausnahme ist **Im Editor öffnen** bei Ihrer eigenen Geteilten Welt, die
 erneut veröffentlicht werden muss; siehe
 [Bedeutung der Status](#bedeutung-der-status).)
 
-Jeder Eintrag auf der Seite Signierte Einträge ist eine
-*Veröffentlichung*, und jede gehört zu einer von drei Arten:
+Jeder Eintrag auf der Seite Signierte Einträge ist ein
+*Eintrag*, und jeder gehört zu einer von drei Arten:
 
 | Art | Was sie ist |
 |---|---|
@@ -87,29 +87,29 @@ Weltansicht, Editor und Entdecken nennen den signierten Datensatz einer
 Welt ebenfalls **Geteilte Welt**, wie in **Meine Geteilte Welt**,
 **Geteilte Welt entdecken** und **Geteilte Welt auswählen**.
 
-## Was eine Veröffentlichung umgibt
+## Was einen Eintrag umgibt
 
-Eine Veröffentlichung ist nur der signierte Datensatz. Alles andere, was
-Sie auf ihrer Karte und um sie herum in der Weltansicht sehen, ist etwas,
-das mit ihr getan oder an sie angehängt wird. Nichts davon ist eine Art
-von Veröffentlichung, und nur die Veröffentlichung selbst ist
+Ein Eintrag ist nur der signierte Anspruch selbst. Alles andere, was
+Sie auf seiner Karte und um ihn herum in der Weltansicht sehen, ist etwas,
+das mit ihm getan oder an ihn angehängt wird. Nichts davon ist eine Art
+von Eintrag, und nur der Eintrag selbst ist
 erforderlich:
 
 | Begriff | Wie … | Was es ist |
 |---|---|---|
-| **Veröffentlichung** | das Buch selbst | Ein signierter Datensatz: eine Geteilte Welt, eine Bauplan-Zuschreibung oder ein Ortsnamensanspruch. Sie trägt den Hash ihres Inhalts und die Signatur ihres Herausgebers. |
-| **Inhalt** | der Ort, an dem gedruckte Exemplare lagern | Die Bytes, um die es in der Veröffentlichung geht, etwa die Steine einer Welt. Sie liegen immer zuerst auf diesem Gerät; **Auf … speichern** legt eine Kopie auf IPFS, Arweave, Steem oder Blurt ab, damit andere sie holen können. Siehe [Inhaltsanbieter](10-NetworkSettings.md#inhaltsanbieter). |
-| **Snapshot** | ein gedrucktes Exemplar | Eine gespeicherte Kopie des Inhalts einer Veröffentlichung, etwa der Steine einer Welt, die andere holen und gegen ihren Hash prüfen können. Siehe [Lokaler Snapshot](#lokaler-snapshot). |
+| **Eintrag** | das Buch selbst | Ein signierter Datensatz: eine Geteilte Welt, eine Bauplan-Zuschreibung oder ein Ortsnamensanspruch. Er trägt den Hash seines Inhalts und die Signatur seines Herausgebers. |
+| **Inhalt** | der Ort, an dem gedruckte Exemplare lagern | Die Bytes, um die es im Eintrag geht, etwa die Steine einer Welt. Sie liegen immer zuerst auf diesem Gerät; **Auf … speichern** legt eine Kopie auf IPFS, Arweave, Steem oder Blurt ab, damit andere sie holen können. Siehe [Inhaltsanbieter](10-NetworkSettings.md#inhaltsanbieter). |
+| **Snapshot** | ein gedrucktes Exemplar | Eine gespeicherte Kopie des Inhalts eines Eintrags, etwa der Steine einer Welt, die andere holen und gegen ihren Hash prüfen können. Siehe [Lokaler Snapshot](#lokaler-snapshot). |
 | **Platzierung** | das Regal, in dem das Exemplar steht | Ein signierter Nachweis, wo ein Bauwerk in der Welt steht. Eine Geteilte Welt kann mehrere haben. Siehe [Platzieren oder remixen](WorldViewAdvancedTools.md#platzieren-oder-remixen). |
-| **Ankündigung / Entdeckung** | ein Eintrag im Bibliothekskatalog | Ein kleiner signierter Hinweis auf Nostr, Arweave, Steem oder Blurt, dass die Veröffentlichung oder der Snapshot existiert und wo die Kopie ist, damit Menschen, die nicht mit Ihnen verbunden sind, sie finden können. Siehe [Anbieter für Ankündigung / Entdeckung](10-NetworkSettings.md#anbieter-für-ankündigung--entdeckung). |
+| **Ankündigung / Entdeckung** | ein Eintrag im Bibliothekskatalog | Ein kleiner signierter Hinweis auf Nostr, Arweave, Steem oder Blurt, dass der Eintrag oder der Snapshot existiert und wo die Kopie ist, damit Menschen, die nicht mit Ihnen verbunden sind, sie finden können. Siehe [Anbieter für Ankündigung / Entdeckung](10-NetworkSettings.md#anbieter-für-ankündigung--entdeckung). |
 | **Nachweis / Verankerung** *(experimentell, außer auf Arweave)* | ein Notarstempel | Der Hash des Inhalts, in eine Blockchain-Transaktion geschrieben (Bitcoin, Base, Arweave, Steem oder Blurt), als Nachweis, dass er zu diesem Zeitpunkt existierte. Sie speichert und kündigt nichts an. Siehe [Nachweise & Speicher](11-EvidenceAndStorage.md). |
-| **Kommentare** | Leserrezensionen | Kommentare, die jeder mit einem Namen an eine Veröffentlichung hängen kann, jeweils vom Kommentierenden signiert, nicht vom Herausgeber. Siehe [Kommentare](#kommentare). |
+| **Kommentare** | Leserrezensionen | Kommentare, die jeder mit einem Namen an einen Eintrag hängen kann, jeweils vom Kommentierenden signiert, nicht vom Herausgeber. Siehe [Kommentare](#kommentare). |
 
-Sie erstellen also eine Veröffentlichung; dann können Sie, wenn Sie
-möchten, ihren Inhalt speichern, sie ankündigen, verankern und (bei einer
-Geteilten Welt) platzieren; und jeder kann sie kommentieren.
+Sie erstellen also einen Eintrag; dann können Sie, wenn Sie
+möchten, seinen Inhalt speichern, ihn ankündigen, verankern und (bei einer
+Geteilten Welt) platzieren; und jeder kann ihn kommentieren.
 
-## Woher eine Veröffentlichung kommt
+## Woher ein Eintrag kommt
 
 Auf der Seite Signierte Einträge selbst erstellen Sie nie einen Anspruch.
 Sie listet Ansprüche auf, die Sie anderswo erstellt haben, solche, die
@@ -188,8 +188,8 @@ Autors und in die Weltansicht und bleibt dort auch nach einem Neuladen.
 
 ## Die Seite Signierte Einträge
 
-Öffnen Sie **Signierte Einträge** (**Mehr → Erweitert**). Sie listet jede
-signierte Veröffentlichung auf, die dieses Gerät erfasst hat, Ihre oder die
+Öffnen Sie **Signierte Einträge** (**Mehr → Erweitert**). Sie listet jeden
+signierten Eintrag auf, den dieses Gerät erfasst hat, Ihren oder den
 eines Peers. Ganz unten enthält der eingeklappte Bereich **Wallet- &
 Archivwerkzeuge** seitenweite Werkzeuge in drei Reitern:
 **Blockchain-Verankerung**, **Archivwerkzeuge** und **Verweise & Erfolge**
@@ -204,13 +204,13 @@ dahin verweist die Einleitung stattdessen auf die Netzwerkeinstellungen.
 Ein Schritt, der zuerst eine beobachtete Wallet braucht, öffnet den Bereich
 trotzdem für diesen Besuch.
 
-Jede Karte einer Veröffentlichung zeigt:
+Jede Karte eines Eintrags zeigt:
 
-- Ihren Namen, sobald ihr Inhalt geprüft wurde: den Titel einer Geteilten
+- Seinen Namen, sobald sein Inhalt geprüft wurde: den Titel einer Geteilten
   Welt oder einen Ortsnamen. Andernfalls, oder bei einem
-  Urheberschaftsanspruch, die Art der Veröffentlichung.
-- Die Art der Veröffentlichung (unter dem Namen, wenn es einen gibt) und
-  wer sie veröffentlicht hat, gekürzt auf die letzten paar Zeichen seiner
+  Urheberschaftsanspruch, die Art des Eintrags.
+- Die Art des Eintrags (unter dem Namen, wenn es einen gibt) und
+  wer ihn veröffentlicht hat, gekürzt auf die letzten paar Zeichen seiner
   ID.
 - Ein **Statusabzeichen** (siehe
   [Bedeutung der Status](#bedeutung-der-status)), jedes Mal neu ermittelt,
@@ -226,8 +226,8 @@ Jede Karte einer Veröffentlichung zeigt:
 
 Darunter zwei eingeklappte Abschnitte:
 
-- **Verteilung** — die Veröffentlichung ankündigen, ihren Inhalt speichern
-  und sie verankern. Speichern und Verankern beginnen jeweils mit einer
+- **Verteilung** — den Eintrag ankündigen, seinen Inhalt speichern
+  und ihn verankern. Speichern und Verankern beginnen jeweils mit einer
   Schaltfläche für den Anbieter, den Sie unter **Konfigurieren**
   gespeichert haben (**Auf IPFS speichern**, **Auf Steem verankern**),
   während jeder andere Anbieter unter **Weitere …optionen** eingeklappt
@@ -244,7 +244,7 @@ Darunter zwei eingeklappte Abschnitte:
 | **Snapshot** | [Lokaler Snapshot](#lokaler-snapshot): was dieses Gerät besitzt und wie man es bekommt. |
 | **Dezentralisierung & Nachweise** | [Dezentralisierung](#dezentralisierung-auf-einen-blick), die [Nachweisliste](11-EvidenceAndStorage.md#die-nachweisliste) und die Transaktionsschritte für Bitcoin und Base (experimentell). |
 | **Platzierungen & IPFS** | Die Liste der [Snapshot-Platzierungen](11-EvidenceAndStorage.md#snapshot-platzierungen) und [Veröffentlichen auf IPFS](11-EvidenceAndStorage.md#veröffentlichen-auf-ipfs) (Experimentell). |
-| **Verlauf** | **Domänenübergreifende Zeitleiste zeigen**: jede IPFS-, Bitcoin- und Base-Beobachtung, die dieses Gerät zu dieser Veröffentlichung aufgezeichnet hat, in zeitlicher Reihenfolge, aus dem [Beobachtungsarchiv](12-ArchiveAndAchievements.md), daher über Besuche hinweg erhalten; oder ein Hinweis, dass noch nichts aufgezeichnet ist. |
+| **Verlauf** | **Domänenübergreifende Zeitleiste zeigen**: jede IPFS-, Bitcoin- und Base-Beobachtung, die dieses Gerät zu diesem Eintrag aufgezeichnet hat, in zeitlicher Reihenfolge, aus dem [Beobachtungsarchiv](12-ArchiveAndAchievements.md), daher über Besuche hinweg erhalten; oder ein Hinweis, dass noch nichts aufgezeichnet ist. |
 
 ### Bedeutung der Status
 
@@ -252,24 +252,24 @@ Darunter zwei eingeklappte Abschnitte:
 |---|---|
 | **Verfügbar** | Der Inhalt ist jetzt auf diesem Gerät. |
 | **Inhalt nicht verfügbar** | Der Anspruch ist echt, aber der Inhalt ist noch nicht hier. Versuchen Sie **Von Peers abrufen**. |
-| **Ungültiger Veröffentlichungsumschlag** / **Ungültige Veröffentlichungssignatur** | Der Datensatz ist fehlerhaft oder wurde nicht echt signiert. |
-| **Der Inhalt passt nicht zu seinem eigenen Verweis** / **Ungültiger Inhalt** / **Ungültige Inhaltssignatur** | Der Inhalt passt nicht zu dem, was die Veröffentlichung behauptet. |
+| **Ungültiger Eintragsumschlag** / **Ungültige Eintragssignatur** | Der Datensatz ist fehlerhaft oder wurde nicht echt signiert. |
+| **Der Inhalt passt nicht zu seinem eigenen Verweis** / **Ungültiger Inhalt** / **Ungültige Inhaltssignatur** | Der Inhalt passt nicht zu dem, was der Eintrag behauptet. |
 | **Eine domänenspezifische Prüfung ist fehlgeschlagen** | Wohlgeformt und signiert, besteht aber eine Prüfung nicht, die für ihre Art gilt. |
-| **Nicht unterstützte Veröffentlichungsart** | Diese Version kann diese Art von Veröffentlichung nicht anzeigen. |
+| **Nicht unterstützte Eintragsart** | Diese Version kann diese Art von Eintrag nicht anzeigen. |
 
 Diese beschreiben, ob der Datensatz gültig ist, nicht, ob das Design oder
 der Name etwas taugt.
 
-Eine Veröffentlichung, deren Status etwas anderes als **Verfügbar** oder
+Ein Eintrag, dessen Status etwas anderes als **Verfügbar** oder
 **Inhalt nicht verfügbar** ist, kann nicht geöffnet, verteilt oder
 verankert werden und bekommt daher keine vollständige Karte. Diese werden
 ganz unten auf der Seite in einer eingeklappten Gruppe „*N*
-Veröffentlichungen, die nicht verwendet werden können“ gesammelt, jeweils
+Einträge, die nicht verwendet werden können“ gesammelt, jeweils
 mit ihrem Status, dem Grund, **Erneut prüfen** und **Von diesem Gerät
-entfernen**. Auch unter **Mehrere Veröffentlichungen verankern** fehlen
-sie. Der häufigste Grund ist eine Veröffentlichung, die erstellt wurde,
-bevor Inhalts-Hashes zu SHA-256 wurden: Nur ihr Autor kann das beheben,
-indem er sie erneut veröffentlicht.
+entfernen**. Auch unter **Mehrere Einträge verankern** fehlen
+sie. Der häufigste Grund ist ein Eintrag, der erstellt wurde,
+bevor Inhalts-Hashes zu SHA-256 wurden: Nur sein Autor kann das beheben,
+indem er ihn erneut veröffentlicht.
 
 Ist eine davon **Ihre** (von einer Identität auf diesem Gerät signiert) und
 nur wegen ihres alten Hashes durchgefallen, steht sie mit einem Abzeichen
@@ -297,17 +297,24 @@ auch Inhalte, die es von Peers erhalten hat, daher kann der alte Hash
 nicht beweisen, welche Bytes Sie veröffentlicht haben.
 
 **Von diesem Gerät entfernen** (oder **Alle *N* von diesem Gerät
-entfernen** oben in der Gruppe) bittet um Bestätigung und vergisst die
-Veröffentlichung dann hier. Es zieht nichts zurück und erreicht niemanden
-sonst, und ein verbundener Peer, der die Veröffentlichung noch hat, kann
-sie erneut ankündigen. Nur Veröffentlichungen in dieser Gruppe lassen
+entfernen** oben in der Gruppe) bittet um Bestätigung und vergisst den
+Eintrag dann hier. Es zieht nichts zurück und erreicht niemanden
+sonst, und ein verbundener Peer, der den Eintrag noch hat, kann
+ihn erneut ankündigen. Nur Einträge in dieser Gruppe lassen
 sich entfernen.
+
+Das Entfernen eines Eintrags berührt nie Ihre Bauwerke. Das Bauwerk hinter
+einer Geteilten Welt bleibt im Editor, unter Entdecken und auf Ihrer Seite
+(**Mehr → Meine Bauwerke**); nur die Kopie des signierten Eintrags auf
+diesem Gerät verschwindet. Um ein solches Bauwerk erneut mit Peers zu
+teilen, öffnen Sie es, **Veröffentlichen** Sie es und wählen Sie **Mit
+Peers teilen**: Das erstellt einen neuen Eintrag.
 
 ### Von der Seite Signierte Einträge verteilen
 
 **Verteilung → Ankündigung / Entdeckung** hat zwei Karten:
 
-- **Veröffentlichung** kündigt die signierte Veröffentlichung selbst auf
+- **Eintrag** kündigt den signierten Eintrag selbst auf
   dem gewählten **Substrat** an (Arweave, Nostr, Steem oder Blurt; die
   letzten beiden sind experimentell). Sie beginnt mit Ihrem
   [Anbieter für Ankündigung / Entdeckung](10-NetworkSettings.md#anbieter-für-ankündigung--entdeckung).
@@ -316,8 +323,8 @@ sich entfernen.
   beginnt. Bei einer Welt ist es der eigene Snapshot der Welt, angekündigt
   zusammen mit dem Ort, an dem ihr Herausgeber sie platziert hat, wenn
   dieses Gerät diese signierte Platzierung hat — wie **Verteilen** in der
-  Weltansicht. Bei jeder anderen Art ist es der Inhalt der
-  Veröffentlichung, allein über seinen Hash angekündigt. Dieses Gerät
+  Weltansicht. Bei jeder anderen Art ist es der Inhalt des
+  Eintrags, allein über seinen Hash angekündigt. Dieses Gerät
   braucht die Bytes: Bei einer Welt, die Sie nicht geöffnet haben, öffnen
   Sie sie zuerst in der Weltansicht oder holen Sie sie von einem Peer.
 
@@ -328,7 +335,7 @@ ist; der Inhalt wurde gespeichert.
 
 ## Kommentare
 
-Jeder mit einem Namen kann jede Veröffentlichung kommentieren, die
+Jeder mit einem Namen kann jeden Eintrag kommentieren, der
 sich auflösen lässt: ein Bauwerk aus Entdecken, einen
 Urheberschaftsanspruch oder einen Ortsnamen. Es gibt keine Prüfung auf
 Eigentum, keine Freundschaftspflicht und keine Moderation.
@@ -385,7 +392,7 @@ hat.
 Die Kommentare anderer erreichen Sie:
 
 - von verbundenen Peers, sobald sie gesendet werden;
-- aus den Netzwerken, wenn Sie die Kommentare einer Veröffentlichung
+- aus den Netzwerken, wenn Sie die Kommentare eines Eintrags
   öffnen und wann immer Sie auf **Nach neuen Kommentaren suchen** klicken.
   So sehen Sie Kommentare, die gesendet wurden, während Sie offline waren.
 
@@ -394,11 +401,11 @@ Kommentare gefunden* oder *Keine neuen Kommentare gefunden* (was nur die
 Netzwerke abdeckt, die geantwortet haben). Ein nicht erreichbares Netzwerk
 wird genannt (*Arweave nicht verfügbar*); antwortet keines, sehen Sie
 *Nostr und Arweave nicht erreichbar — es werden die auf diesem Gerät
-gespeicherten Kommentare angezeigt.* Nur Veröffentlichungen, deren
+gespeicherten Kommentare angezeigt.* Nur Einträge, deren
 Kommentare Sie öffnen, werden geprüft. Die Signatur jedes geholten
 Kommentars wird geprüft, und keiner wird doppelt gezählt.
 
-Wenn jemand eine Veröffentlichung kommentiert, die Sie veröffentlicht
+Wenn jemand einen Eintrag kommentiert, den Sie veröffentlicht
 haben, erscheint ein Eintrag **Neuer Kommentar zu Ihrem Bauwerk** in Ihrem
 [Benachrichtigungsverlauf](03-WorldView.md#orientierung-und-orte) (die
 Schaltfläche 🔔 in der Kopfzeile).
@@ -406,8 +413,8 @@ Schaltfläche 🔔 in der Kopfzeile).
 ## Lokaler Snapshot
 
 Im Reiter **Snapshot** einer Karte beantwortet **Lokaler Snapshot** eine
-Frage: Besitzt dieses Gerät gerade die Bytes für den Inhalt dieser
-Veröffentlichung? Es prüft weder Signaturen noch Platzierungen und
+Frage: Besitzt dieses Gerät gerade die Bytes für den Inhalt dieses
+Eintrags? Es prüft weder Signaturen noch Platzierungen und
 kontaktiert das Netzwerk nur, wenn Sie auf eine der Abrufaktionen klicken.
 
 ### Prüfen, was Sie haben
@@ -420,11 +427,11 @@ kontaktiert das Netzwerk nur, wenn Sie auf eine der Abrufaktionen klicken.
 | **Nicht verfügbar** | Unter diesem Hash wurde nie etwas gespeichert. |
 | **Hash-Abweichung** | Unter diesem Hash ist etwas gespeichert, aber es passt nicht mehr. |
 
-Zwei Menschen mit derselben Veröffentlichung können verschiedene Antworten
+Zwei Menschen mit demselben Eintrag können verschiedene Antworten
 bekommen, weil ihr Speicher sich unterscheidet. Nach einer Prüfung lautet
-eine Zeile *Publication: lokal bekannt / lokal nicht bekannt · Snapshot:
-verfügbar / nicht verfügbar*: ob dieses Gerät die signierte
-Veröffentlichung erfasst hat und ob es gültige Bytes besitzt.
+eine Zeile *Eintrag: lokal bekannt / lokal nicht bekannt · Snapshot:
+verfügbar / nicht verfügbar*: ob dieses Gerät den signierten
+Eintrag erfasst hat und ob es gültige Bytes besitzt.
 
 Findet die Prüfung keine gültigen Bytes, verweist ein Hinweis auf die Wege,
 sie hereinzuholen (unten). Nichts versucht es von selbst erneut.
@@ -435,7 +442,7 @@ Drei Aktionen, jede ein eigener Klick:
 
 **Snapshot importieren** — zeigt eine Dateiauswahl und ein Einfügefeld für
 ein **Snapshot-Übertragungspaket der Veröffentlichung** (ein JSON-Bündel
-mit dem Inhalt einer Veröffentlichung). Wählen Sie eines oder fügen Sie es
+mit dem Inhalt eines Eintrags). Wählen Sie eines oder fügen Sie es
 ein und klicken Sie dann erneut auf **Snapshot importieren**.
 
 | Abzeichen | Bedeutung |
@@ -478,7 +485,7 @@ Ein Peer, der **Verfügbar** geantwortet hat, bekommt einen eigenen Knopf
 prüft sie, wie **Snapshot von Peer holen**; von niemand anderem wird je
 etwas für Sie geholt. **Antworten dieses Besuchs zeigen** listet jede
 Antwort in einer eigenen Zeile auf (etwa `20:21:04 — Alice → Verfügbar`);
-klicken Sie auf eine Zeile für den ganzen Bericht, die Veröffentlichung und
+klicken Sie auf eine Zeile für den ganzen Bericht, den Eintrag und
 den Inhalts-Hash. Eine Zeile wird nie umgeschrieben.
 
 ### Versuche bei diesem Besuch
@@ -488,18 +495,18 @@ diesem Besuch** die Versuche dieses Besuchs nach Ergebnis und nach Quelle.
 Ein Versuch, der die Bytes gespeichert hat, heißt nicht, dass sie noch hier
 sind; das sagt **Lokalen Snapshot prüfen**. **Beschaffungsverlauf zeigen**
 listet jeden Versuch auf (etwa `20:16 — Peer → Hash-Abweichung`); klicken
-Sie auf einen für sein Ergebnis, die Veröffentlichung und den Inhalts-Hash.
+Sie auf einen für sein Ergebnis, den Eintrag und den Inhalts-Hash.
 
 ## Dezentralisierung auf einen Blick
 
 Im Reiter **Dezentralisierung & Nachweise** vergleicht
-**Dezentralisierung**, sobald eine Veröffentlichung einen Anker oder eine
+**Dezentralisierung**, sobald ein Eintrag einen Anker oder eine
 Platzierung hat,
 [Externe Nachweise](11-EvidenceAndStorage.md#externe-nachweise) und
 [Snapshot-Platzierungen](11-EvidenceAndStorage.md#snapshot-platzierungen):
 
-- **Publication: lokal bekannt / lokal nicht bekannt** — ob dieses Gerät
-  die signierte Veröffentlichung erfasst hat.
+- **Eintrag: lokal bekannt / lokal nicht bekannt** — ob dieses Gerät
+  den signierten Eintrag erfasst hat.
 - Zwei Karten damit, wie viele Ansprüche jeder Art bekannt sind und ob sie
   beim Inhalts-Hash übereinstimmen (**Übereinstimmung**) oder nicht
   (**Widerspruch**). Stimmt eine überein und widerspricht die andere, sagt
@@ -527,13 +534,13 @@ Versuche und Ansichten in Arbeit nicht.
 | Snapshot-Bytes, die Sie importiert, abgerufen oder materialisiert haben | Alles andere unter **Lokaler Snapshot**: Prüfungen, Versuchsverlauf, die Zeile **Quelle:**, Prüfungen und Vergleiche bei Peers |
 | Zahlen unter **Dezentralisierung** (bei jedem Laden neu ermittelt) | Ergebnisse von **Mit Peers synchronisieren** |
 | — | **Veröffentlichen auf IPFS**: die Anbieterkonfiguration, Ergebnisse, der angezeigte Verlauf und der Überprüfungsverlauf |
-| Datensätze unter **Bitcoin-/Base-Ankerveröffentlichungen**, beim Finalisieren erstellt | Verbindung, Guthaben- oder Kontobeobachtung, Plan, Prüfung, Signatur, finalisierte Transaktion, Sendeergebnis und angezeigter Bestätigungs- oder Aufnahmeverlauf der Wallet-Abläufe |
-| Das **Beobachtungsarchiv** der Veröffentlichungen (jede IPFS-Veröffentlichung und -Überprüfung, jedes Bitcoin-Senden, jede Bestätigung und jeder Inhaltsnachweis sowie jede Base-Aufnahme), bis **Archiv leeren** | — |
-| Veröffentlichungsverweise | Welche Karten und Zeilen Sie geöffnet hatten |
+| Datensätze unter **Bitcoin-/Base-Ankereinträge**, beim Finalisieren erstellt | Verbindung, Guthaben- oder Kontobeobachtung, Plan, Prüfung, Signatur, finalisierte Transaktion, Sendeergebnis und angezeigter Bestätigungs- oder Aufnahmeverlauf der Wallet-Abläufe |
+| Das **Beobachtungsarchiv** der Einträge (jede IPFS-Veröffentlichung und -Überprüfung, jedes Bitcoin-Senden, jede Bestätigung und jeder Inhaltsnachweis sowie jede Base-Aufnahme), bis **Archiv leeren** | — |
+| Eintragsverweise | Welche Karten und Zeilen Sie geöffnet hatten |
 
 Nach einem Neuladen sind die Ergebnisse eines Ablaufs oder einer
 IPFS-Veröffentlichung weiterhin im
-[Beobachtungsarchiv](12-ArchiveAndAchievements.md#das-beobachtungsarchiv-der-veröffentlichungen),
+[Beobachtungsarchiv](12-ArchiveAndAchievements.md#das-beobachtungsarchiv-der-einträge),
 im Lebenszyklus eines Datensatzes oder (bei Bitcoin) unter Historische
 Nachweise zu Bitcoin-Ankern zu sehen. Verbinden Sie die Wallet erneut oder
 konfigurieren Sie den Pinning-Anbieter neu, um weiterzumachen.

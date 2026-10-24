@@ -258,7 +258,7 @@ async function run() {
         const snapshotOutcomeSource = withEnglish(await readSource('application/snapshot/SnapshotOutcomeInspectionView.js'));
         assert(materialInspectionSource.includes("'Confirmed to match the selected encounter'"),
             'E1. WorldEncounterMaterialInspectionView.js still holds its own VERIFIED label unchanged.');
-        assert(snapshotOutcomeSource.includes("match: 'Confirmed to match this Publication'"),
+        assert(snapshotOutcomeSource.includes("match: 'Confirmed to match this record'"),
             'E2. SnapshotOutcomeInspectionView.js still holds its own MATCH label unchanged.');
         assert(/deliberately echoes/.test(snapshotOutcomeSource) && /never a stronger claim in one panel than\s*\/\/ another/.test(snapshotOutcomeSource),
             'E3. The header still documents this as a DELIBERATE, explained echo of the same evidentiary character across two different referents (an encounter vs. a Publication) — never presented as an accidental inconsistency for a future edit to "fix" by merging the wording.');

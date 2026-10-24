@@ -18,7 +18,7 @@
 Alat Bitcoin, Base, dan IPFS di
 [Bukti & Penyimpanan](11-EvidenceAndStorage.md) mencatat apa yang
 diamatinya dalam arsip yang tahan lama di perangkat ini. Panduan ini
-membahas arsip itu dan apa yang dibangun di atasnya: referensi antarpublikasi
+membahas arsip itu dan apa yang dibangun di atasnya: referensi antarcatatan
 dan pencapaian.
 
 Sebagian besar kartu ini ada di halaman Catatan Bertanda Tangan di bawah **Alat Dompet &
@@ -26,21 +26,21 @@ Arsip**, di tab **Alat Arsip** dan **Referensi & Pencapaian**.
 Masing-masing menampilkan **Disimpan secara lokal** jika isinya tetap ada
 setelah dimuat ulang.
 
-Satu istilah yang dipakai di seluruh panduan: **identitas publikasi** adalah
-satu catatan Publikasi Jangkar Bitcoin atau Base (lihat
-[Publikasi Jangkar Bitcoin](11-EvidenceAndStorage.md#publikasi-jangkar-bitcoin)).
+Satu istilah yang dipakai di seluruh panduan: **identitas catatan** adalah
+satu Catatan Jangkar Bitcoin atau Base (lihat
+[Catatan Jangkar Bitcoin](11-EvidenceAndStorage.md#catatan-jangkar-bitcoin)).
 Itu catatan di sebuah rantai, bukan orang.
 
-## Arsip Pengamatan Publikasi
+## Arsip Pengamatan Catatan
 
 Satu catatan yang tahan lama, di perangkat ini, berisi fakta-fakta yang
 diamati alat IPFS, Bitcoin, dan Base. Arsip ini hanya menyimpan identitas
-publikasi dan pengamatan: tidak pernah koneksi dompet, kunci, atau
+catatan dan pengamatan: tidak pernah koneksi dompet, kunci, atau
 kredensial pinning.
 
 ### Arsip Pengamatan
 
-Kartu **Arsip Pengamatan** menampilkan berapa banyak **Publikasi** dan
+Kartu **Arsip Pengamatan** menampilkan berapa banyak **Catatan** dan
 **Pengamatan** yang disimpannya.
 
 - **Tampilkan Arsip** membuka **Linimasa Pengamatan yang Diarsipkan**:
@@ -65,11 +65,11 @@ seberapa tepercaya.
 
 ### Mengekspor, mengimpor, dan memeriksa arsip
 
-Kartu **Arsip Publikasi** mengubah arsip menjadi file JSON:
+Kartu **Arsip Catatan** mengubah arsip menjadi file JSON:
 
 - **Ekspor Arsip** menampilkan JSON dan tautan **Unduh Ekspor Arsip**.
 - **Impor Arsip** menerima file atau JSON yang ditempel dan menampilkan
-  pratinjau berapa banyak publikasi dan pengamatan di dalamnya
+  pratinjau berapa banyak catatan dan pengamatan di dalamnya
   dibandingkan arsip saat ini. Hanya **Ganti Arsip Saat Ini** yang
   menerapkannya. Mengimpor **menggantikan** arsip saat ini (tidak
   menggabungkan) dan tidak dapat diurungkan. File yang tidak valid ditolak
@@ -78,7 +78,7 @@ Kartu **Arsip Publikasi** mengubah arsip menjadi file JSON:
 **Periksa Arsip Eksternal** melihat isi sebuah ekspor tanpa mengimpornya.
 Ini menampilkan versi skema file itu, jumlah fakta per domain (penerbitan
 dan verifikasi IPFS; penyiaran, konfirmasi, bukti konten, dan identitas
-publikasi Bitcoin; pencantuman dan identitas publikasi Base), jumlah fakta
+catatan Bitcoin; pencantuman dan identitas catatan Base), jumlah fakta
 lokal dan yang diimpor, peristiwa impor, sidik jarinya, serta ID jangkar
 Bitcoin, indeks catatan IPFS, dan hash transaksi Base yang dimuatnya. Dari
 sana:
@@ -115,15 +115,15 @@ Lain** dan klik **Bandingkan**:
 Kecocokan hanya berarti isinya identik, bukan bahwa isinya benar, dan tidak
 ada apa pun di sini yang menyebutkan arsip mana yang lebih baru.
 
-## Referensi Publikasi
+## Referensi Catatan
 
-Mencatat bahwa satu identitas publikasi menunjuk ke identitas lain.
+Mencatat bahwa satu identitas catatan menunjuk ke identitas lain.
 
-**Referensi Publikasi → Tampilkan Referensi** membuka formulir: pilih
-**Publikasi sumber (yang membuat referensi)** dan **Publikasi yang dirujuk
-(yang ditunjuk)** dari identitas publikasi Bitcoin dan Base yang Anda
+**Referensi Catatan → Tampilkan Referensi** membuka formulir: pilih
+**Catatan sumber (yang membuat referensi)** dan **Catatan yang dirujuk
+(yang ditunjuk)** dari identitas catatan Bitcoin dan Base yang Anda
 ketahui (misalnya "Bitcoin — a1b2…c3d4 — content 9f8e…"), lalu klik
-**Catat Referensi**. Sebuah publikasi tidak dapat merujuk dirinya sendiri.
+**Catat Referensi**. Sebuah catatan tidak dapat merujuk dirinya sendiri.
 Referensi hanya pernah dibuat oleh Anda; tidak ada yang membuatnya secara
 otomatis, dan remix di bagian lain aplikasi juga tidak.
 
@@ -134,15 +134,15 @@ Referensi yang tercatat dicantumkan dari yang terlama, dengan rantai,
 identitas singkat, hash konten, dan waktu pencatatan kedua sisi. Duplikat
 tetap disimpan sebagai referensi terpisah.
 
-**Graf Referensi Publikasi** mengelompokkan referensi yang sama per
-publikasi: total untuk **Sisi**, **Publikasi**, **Sumber berbeda**, dan
-**Yang dirujuk berbeda**, dan untuk setiap publikasi **Referensi keluar**
+**Graf Referensi Catatan** mengelompokkan referensi yang sama per
+catatan: total untuk **Sisi**, **Catatan**, **Sumber berbeda**, dan
+**Yang dirujuk berbeda**, dan untuk setiap catatan **Referensi keluar**
 dan **Referensi masuk**-nya, yang dapat dibuka untuk melihat referensi
 satu per satu. Jumlahnya bukan peringkat.
 
 ## Pencapaian
 
-Sebuah identitas publikasi mendapat lencana begitu melewati suatu ambang;
+Sebuah identitas catatan mendapat lencana begitu melewati suatu ambang;
 tidak ada yang perlu diklaim.
 
 **Pencapaian → Tampilkan Pencapaian** mencantumkan lencana yang sudah
@@ -151,16 +151,16 @@ aplikasi.
 
 | Lencana | Ikon | Didapat saat |
 |---|---|---|
-| First publication (publikasi pertama) | 🏆 | Catatan publikasi jangkar Bitcoin atau Base pertama Anda. |
+| First publication (publikasi pertama) | 🏆 | Catatan jangkar Bitcoin atau Base pertama Anda. |
 | Bitcoin publisher (penerbit Bitcoin) | ₿ | Yang Bitcoin pertama Anda. |
 | Base publisher (penerbit Base) | 🔵 | Yang Base pertama Anda. |
 | Multi-chain publisher (penerbit multi-rantai) | 🌐 | Catatan di lebih dari satu rantai. |
 | Ten publications (sepuluh publikasi) | 🔟 | Yang ke-10, Bitcoin dan Base digabung. |
 | One hundred publications (seratus publikasi) | 💯 | Yang ke-100. |
 
-Klik sebuah lencana untuk melihat **Publikasi Sumber**-nya (rantai, hash
+Klik sebuah lencana untuk melihat **Catatan Sumber**-nya (rantai, hash
 konten, referensi rantai, waktu pembuatan) dan, jika tersedia, **Lihat
-Siklus Hidup Publikasi di Atas**, yang melompat ke siklus hidup catatan
+Siklus Hidup Catatan di Atas**, yang melompat ke siklus hidup catatan
 itu.
 
 Lima pencapaian lagi berasal dari referensi dan belum memiliki lencana:
@@ -168,13 +168,13 @@ Lima pencapaian lagi berasal dari referensi dan belum memiliki lencana:
 received** (referensi pertama diterima), **Referenced by 10 publications**
 (dirujuk oleh 10 publikasi), **Referenced by 100 publications** (dirujuk
 oleh 100 publikasi), dan **First cross-chain reference** (referensi lintas
-rantai pertama, antara publikasi Bitcoin dan Base). Semuanya dicantumkan
+rantai pertama, antara catatan Bitcoin dan Base). Semuanya dicantumkan
 berdasarkan nama di **Profil Pencapaian**, tempat Anda memilih identitas
-publikasi dan melihat jumlah serta daftar lengkap pencapaiannya,
+catatan dan melihat jumlah serta daftar lengkap pencapaiannya,
 masing-masing dengan waktu didapatnya.
 
-Pencapaian dimiliki identitas publikasi, bukan orang: tidak ada apa pun di
-sini yang mengaitkan publikasi dengan seseorang.
+Pencapaian dimiliki identitas catatan, bukan orang: tidak ada apa pun di
+sini yang mengaitkan catatan dengan seseorang.
 
 ## Dihentikan: papan peringkat, rekonsiliasi, dan label penerbit
 
@@ -186,6 +186,6 @@ ke salah satu halaman itu membuka Beranda. Arsip yang disimpan saat halaman
 itu masih ada tetap bisa dimuat dan diimpor, dengan semua catatan lainnya;
 klaim papan peringkat dan keputusan rekonsiliasi di dalamnya dibuang.
 
-Asosiasi Penerbit, yang memberi label nama penerbit pada publikasi Anda untuk
+Asosiasi Penerbit, yang memberi label nama penerbit pada catatan Anda untuk
 halaman-halaman itu, juga dihapus. Label yang ada di arsip dibuang dengan
 cara yang sama.

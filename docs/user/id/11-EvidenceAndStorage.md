@@ -23,11 +23,11 @@
 
 Setiap kartu di halaman **Catatan Bertanda Tangan** (lihat
 [Catatan Bertanda Tangan & Bukti Eksternal](09-PublicationsAndEvidence.md)) memiliki
-bagian untuk membuktikan *kapan* sebuah publikasi ada dan untuk menaruh
+bagian untuk membuktikan *kapan* sebuah catatan ada dan untuk menaruh
 kontennya di tempat yang dapat diambil orang lain:
 
 - **[Bukti Eksternal](#bukti-eksternal)** — catatan di Bitcoin, Base,
-  Arweave, Steem, atau Blurt bahwa hash konten sebuah publikasi sudah ada pada
+  Arweave, Steem, atau Blurt bahwa hash konten sebuah catatan sudah ada pada
   waktu tertentu.
 - **[Alur Jangkar Bitcoin](#alur-jangkar-bitcoin)** dan
   **[Alur Jangkar Base](#alur-jangkar-base)** — alur langkah demi langkah
@@ -62,7 +62,7 @@ tidak saat Anda membuka daftarnya.
 
 ### Membuat bukti
 
-Di bagian **Distribusi** sebuah kartu publikasi, blok **Bukti /
+Di bagian **Distribusi** sebuah kartu catatan, blok **Bukti /
 Penjangkaran** (Steem dan Blurt ditandai **Eksperimental**) memiliki satu kartu untuk setiap
 jenis bukti yang dapat dibuat dengan satu klik, masing-masing dengan
 tombolnya sendiri: **Buat Jangkar Arweave** dan **Buat Jangkar Steem**.
@@ -72,7 +72,7 @@ Bukti** pada kartu, dan blok itu menyebutkannya. Jika Anda sudah menyimpan
 penyedia pilihan, kartu-kartu ini terlipat di bawah **Opsi penjangkaran
 lain**, di bawah tombol milik penyedia itu (lihat
 [Menjangkarkan di penyedia pilihan](#menjangkarkan-di-penyedia-pilihan)).
-Masing-masing mencatat hash konten publikasi dalam sebuah transaksi di
+Masing-masing menulis hash konten catatan dalam sebuah transaksi di
 jaringan itu, dengan salah satu dari tiga hasil:
 
 | Hasil | Arti |
@@ -92,9 +92,9 @@ jaringan itu, dengan salah satu dari tiga hasil:
   WhaleVault), dan akun Blurt Anda yang diatur di
   [Pengaturan Jaringan → Blurt](10-NetworkSettings.md#blurt).
 
-Publikasi yang dibuat sebelum hash konten menjadi SHA-256 tidak pernah
+Catatan yang dibuat sebelum hash konten menjadi SHA-256 tidak pernah
 dijangkarkan, baik oleh tombol-tombol ini, langkah Bitcoin atau Base,
-maupun **Jangkarkan Beberapa Publikasi**: tidak ada orang lain yang dapat
+maupun **Jangkarkan Beberapa Catatan**: tidak ada orang lain yang dapat
 memeriksa konten terhadap hash lamanya, jadi catatannya tidak membuktikan
 apa pun. Anda mendapat **Pencatatan ditolak** (atau, untuk Bitcoin dan
 Base, langkah transaksi yang gagal) yang meminta Anda menerbitkannya lagi,
@@ -132,13 +132,13 @@ membuat yang baru, dengan biaya kecil dalam BLURT. Finalitas,
 **Verifikasi Bukti**, dan **Periksa Bukti** bekerja seperti pada Steem,
 dan kartunya menautkan ke postingan tersebut.
 
-**Menjangkarkan beberapa publikasi sekaligus di Steem.** Di bawah **Alat
+**Menjangkarkan beberapa catatan sekaligus di Steem.** Di bawah **Alat
 Dompet & Arsip → Penjangkaran Blockchain**, **Jangkarkan Beberapa
-Publikasi di Steem** mencantumkan publikasi yang sudah Anda katalogkan.
+Catatan di Steem** mencantumkan catatan yang sudah Anda katalogkan.
 Centang yang Anda inginkan (atau **Pilih yang Belum Dijangkarkan**) dan klik
-**Jangkarkan N Publikasi di Steem**. Satu persetujuan Keychain
-menjangkarkan hingga 64. Setiap publikasi tetap mendapat jangkarnya
-sendiri, yang diverifikasi secara terpisah. **Jangkarkan Beberapa Publikasi
+**Jangkarkan N Catatan di Steem**. Satu persetujuan Keychain
+menjangkarkan hingga 64. Setiap catatan tetap mendapat jangkarnya
+sendiri, yang diverifikasi secara terpisah. **Jangkarkan Beberapa Catatan
 di Blurt** bekerja dengan cara yang sama, dengan satu persetujuan Blurt
 Keychain.
 
@@ -167,7 +167,7 @@ menyebutkannya.
 Rekan yang terhubung hanya meneruskan bukti yang dibuat atau diumumkan
 ulang selama Anda terhubung. **Temukan dari Rekan** mengisi celah itu:
 tombol ini bertanya kepada setiap rekan yang terhubung, satu per satu,
-tentang setiap jangkar yang mereka ketahui untuk publikasi ini, termasuk
+tentang setiap jangkar yang mereka ketahui untuk catatan ini, termasuk
 yang mereka ketahui dari orang lain. Tidak ada hal lain di halaman ini yang
 menghubungi rekan.
 
@@ -187,7 +187,7 @@ pernah ditambahkan dua kali.
 Di tab **Desentralisasi & Bukti** pada kartu, **Bukti Eksternal**
 menampilkan berapa banyak jangkar yang diketahui dan menawarkan **Temukan
 dari Rekan** (di atas). **Tampilkan Bukti** mencantumkan setiap jangkar
-yang diketahui untuk publikasi itu, berdampingan, bahkan yang saling tidak
+yang diketahui untuk catatan itu, berdampingan, bahkan yang saling tidak
 sepakat. Dengan lebih dari satu jangkar, ringkasan **Pengikatan konten**
 muncul terlebih dahulu, menghitung jangkar per hash konten, dan
 memperingatkan saat jangkar-jangkar itu mengklaim hash yang berbeda.
@@ -199,7 +199,7 @@ Setiap jangkar menampilkan:
 |---|---|
 | **Lokator** | Tempat yang ditunjukkan sistem eksternal untuk menemukan pencatatannya. |
 | **Dicatat** | Waktu pencatatan yang diklaim (masih klaim sampai Anda memverifikasinya). |
-| **Publikasi / Hash konten** | Apa yang diikat bersama oleh tanda tangan jangkar ini. |
+| **Catatan / Hash konten** | Apa yang diikat bersama oleh tanda tangan jangkar ini. |
 | **Dibuktikan oleh** | Identitas yang menandatangani jangkar itu. |
 
 - **Verifikasi Bukti** (lalu **Verifikasi Lagi**) memeriksa ke sistem
@@ -221,7 +221,7 @@ Setiap jangkar menampilkan:
 | **Bukti belum diverifikasi secara independen** | Benar-benar ditandatangani, tetapi perangkat ini tidak dapat memeriksa jenis jangkar ini secara eksternal. |
 | **Verifikasi tidak tersedia** | Sistem eksternal tidak dapat dijangkau. Ini tidak sama dengan tidak valid. |
 | **Bukti tidak valid** / **Tanda tangan tidak valid** | Catatannya rusak atau tidak benar-benar ditandatangani. |
-| **Konten tidak cocok** | Jangkar itu tidak cocok dengan publikasi ini. |
+| **Konten tidak cocok** | Jangkar itu tidak cocok dengan catatan ini. |
 | **Bukti eksternal tidak valid** | Sistem eksternal menyatakan klaim itu salah. |
 
 Jika sebuah jangkar sudah diverifikasi sebelumnya pada kunjungan ini dan
@@ -258,7 +258,7 @@ terbaru.
 ## Alur Jangkar Bitcoin
 
 Alur langkah demi langkah yang memakai dompet Bitcoin Anda sendiri untuk
-menulis hash konten sebuah publikasi ke dalam transaksi sungguhan. Setiap
+menulis hash konten sebuah catatan ke dalam transaksi sungguhan. Setiap
 langkah adalah kliknya sendiri.
 
 > **Ini membelanjakan bitcoin sungguhan di Bitcoin mainnet.** Sejak **Buat
@@ -268,7 +268,7 @@ langkah adalah kliknya sendiri.
 
 Semua panel untuk seluruh halaman berada di bawah **Alat Dompet & Arsip →
 Penjangkaran Blockchain**, panel terlipat di bagian bawah
-halaman Catatan Bertanda Tangan; langkah per publikasi ada di kartu setiap publikasi.
+halaman Catatan Bertanda Tangan; langkah per catatan ada di kartu setiap catatan.
 Jika sebuah langkah memerlukan dompet atau dana diamati terlebih dahulu,
 tautannya membuka panel itu untuk Anda.
 
@@ -281,7 +281,7 @@ tautannya membuka panel itu untuk Anda.
   SegWit** (diawali `bc1q…`). Dana di alamat Taproot (`bc1p…`) atau lama
   (`1…`, `3…`) dapat diamati tetapi tidak dapat ditandatangani; tahap
   tinjauan melaporkannya sebagai tidak dapat ditinjau.
-- Sebuah publikasi di halaman Catatan Bertanda Tangan Anda; transaksi itu menjangkarkan
+- Sebuah catatan di halaman Catatan Bertanda Tangan Anda; transaksi itu menjangkarkan
   hash kontennya.
 
 ### Menghubungkan dompet
@@ -319,7 +319,7 @@ menyatakan bahwa pengamatannya sudah usang.
 
 ### Menyusun rencana transaksi
 
-Di tab **Desentralisasi & Bukti** pada kartu publikasi, **Transaksi Jangkar
+Di tab **Desentralisasi & Bukti** pada kartu catatan, **Transaksi Jangkar
 Bitcoin → Buat Rencana Transaksi** aktif begitu Anda sudah mengamati dana.
 Rencana disusun berdasarkan pengamatan terbaru, memilih UTXO dari yang
 terbesar, dan menghitung biayanya.
@@ -362,7 +362,7 @@ kriptografis, secara luring.
 
 Hanya input native SegWit (P2WPKH) yang dapat difinalisasi. Memfinalisasi
 juga mencatat
-[Publikasi Jangkar Bitcoin](#publikasi-jangkar-bitcoin).
+[Catatan Jangkar Bitcoin](#catatan-jangkar-bitcoin).
 
 ### Menyiarkan
 
@@ -386,34 +386,34 @@ ditambang, dengan tiga hasil yang sama seperti
 pemeriksaan ditambahkan ke **Tampilkan Riwayat Konfirmasi** milik
 penyiaran ini. Daftar itu dihapus saat dimuat ulang, tetapi setiap hasil
 juga disimpan di
-[Arsip Pengamatan Publikasi](12-ArchiveAndAchievements.md#arsip-pengamatan-publikasi).
+[Arsip Pengamatan Catatan](12-ArchiveAndAchievements.md#arsip-pengamatan-catatan).
 
 ### Apa yang tidak dilakukan alur ini
 
 Begitu **Siarkan Transaksi** berhasil, transaksi itu ditambahkan ke daftar
-**Bukti Eksternal** publikasi sebagai jangkar baru, belum diverifikasi
+**Bukti Eksternal** catatan sebagai jangkar baru, belum diverifikasi
 sampai Anda mengeklik **Verifikasi Bukti**; peer dapat menemukannya dengan
 **Temukan dari Rekan**. Penyiaran yang ditolak atau tidak terjangkau tidak
 menambahkan apa pun. Alur ini tidak menyimpan layarnya: layar tinjauan,
 penandatanganan, dan penyiaran dihapus oleh rencana baru, tanda tangan
-baru, atau pemuatan ulang. Yang disimpan adalah catatan publikasi
+baru, atau pemuatan ulang. Yang disimpan adalah catatan
 yang dibuat saat finalisasi, serta setiap hasil penyiaran dan konfirmasi di
 Arsip Pengamatan.
 
-### Publikasi Jangkar Bitcoin
+### Catatan Jangkar Bitcoin
 
-Kartu **Publikasi Jangkar Bitcoin** mencantumkan catatan untuk setiap
+Kartu **Catatan Jangkar Bitcoin** mencantumkan catatan untuk setiap
 transaksi yang telah difinalisasi perangkat ini: `{ anchor ID, content
 hash, txid, network, created at }`. Catatan itu dibuat saat **Verifikasi &
 Finalisasi Transaksi** berhasil, entah penyiarannya nanti berhasil atau
 tidak, dan tidak memiliki status terkonfirmasi atau valid sendiri.
-**Tampilkan Publikasi** mencantumkannya. Setiap baris memiliki:
+**Tampilkan Catatan** mencantumkannya. Setiap baris memiliki:
 
 - **Periksa Pengamatan** — jumlah setiap fakta penyiaran, konfirmasi,
   bukti konten, penempatan di rantai, dan konsistensi yang disimpan arsip
   untuk ID jangkar itu.
-- **Tampilkan Siklus Hidup Publikasi** — fakta yang sama dalam urutan
-  waktu, dimulai dengan **Catatan publikasi dibuat**. Langkah yang tidak
+- **Tampilkan Siklus Hidup Catatan** — fakta yang sama dalam urutan
+  waktu, dimulai dengan **Catatan dibuat**. Langkah yang tidak
   memiliki catatan cukup tidak ditampilkan. Membukanya tidak menghubungi
   jaringan apa pun.
 
@@ -436,7 +436,7 @@ istilahnya sendiri.
   seperti Coinbase Wallet atau MetaMask.
 - Akun di chain ID **8453** (Base mainnet) atau **84532** (Base Sepolia).
   Rantai lain dilaporkan sebagai tidak cocok.
-- Sebuah publikasi di halaman Catatan Bertanda Tangan Anda.
+- Sebuah catatan di halaman Catatan Bertanda Tangan Anda.
 
 ### Menghubungkan dompet dan mengamati akun
 
@@ -457,8 +457,8 @@ dan saldo akun itu:
 
 ### Menyusun rencana transaksi
 
-Di tab **Desentralisasi & Bukti** pada kartu publikasi, **Transaksi
-Publikasi Base → Buat Rencana Transaksi Base** (aktif begitu Anda sudah
+Di tab **Desentralisasi & Bukti** pada kartu catatan, **Transaksi
+Jangkar Base → Buat Rencana Transaksi Base** (aktif begitu Anda sudah
 mengamati akun) menyusun transfer tanpa tanda tangan dari akun Anda ke
 akun itu sendiri, yang membawa hash konten sebagai datanya.
 
@@ -488,7 +488,7 @@ Transaksi yang Ditinjau** meminta dompet menandatangani persis rencana itu.
 
 Di kartu tinjauan yang sama, **Buat Jangkar Base** menandatangani,
 memfinalisasi, dan menyiarkan transaksi yang ditinjau dalam satu klik, lalu
-menambahkannya ke daftar bukti publikasi. Ini alternatif untuk tombol
+menambahkannya ke daftar bukti catatan. Ini alternatif untuk tombol
 langkah demi langkah, yang tetap berfungsi.
 
 | Lencana | Arti |
@@ -512,7 +512,7 @@ terhadap rencana yang ditinjau dan memulihkan penandatangannya.
 | **Finalisasi tidak tersedia** / **Finalisasi gagal** | Tidak dapat diperiksa, atau hasil lain yang tidak dapat dipakai. |
 
 Memfinalisasi mencatat
-[Publikasi Jangkar Base](#publikasi-jangkar-base). Lalu **Siarkan
+[Catatan Jangkar Base](#catatan-jangkar-base). Lalu **Siarkan
 Transaksi** mengirimnya: **Transaksi disiarkan** (dengan **ID Transaksi**;
 belum dicantumkan dalam blok), **Transaksi ditolak**, atau **Penyiaran
 tidak tersedia**. **Siarkan Lagi** mengirim ulang byte yang sama.
@@ -531,14 +531,14 @@ Base** memeriksa apakah transaksi itu sudah ada di dalam blok:
 **Amati Transaksi Lagi** menambahkan ke **Tampilkan Riwayat Pengamatan**.
 Daftar itu dihapus saat dimuat ulang, tetapi setiap pengamatan juga
 disimpan di
-[Arsip Pengamatan Publikasi](12-ArchiveAndAchievements.md#arsip-pengamatan-publikasi).
+[Arsip Pengamatan Catatan](12-ArchiveAndAchievements.md#arsip-pengamatan-catatan).
 
-### Publikasi Jangkar Base
+### Catatan Jangkar Base
 
-Seperti milik Bitcoin, kartu **Publikasi Jangkar Base** menyimpan catatan
+Seperti milik Bitcoin, kartu **Catatan Jangkar Base** menyimpan catatan
 per transaksi yang difinalisasi: `{ content hash, txid, network, created
-at }`. **Tampilkan Publikasi** mencantumkannya, dan **Tampilkan Siklus
-Hidup Publikasi** menampilkan **Catatan publikasi dibuat** diikuti setiap
+at }`. **Tampilkan Catatan** mencantumkannya, dan **Tampilkan Siklus
+Hidup Catatan** menampilkan **Catatan dibuat** diikuti setiap
 **Pengamatan pencantuman #N**. Hasil penyiaran Base tidak disimpan, jadi
 tidak ada entri penyiaran.
 
@@ -555,19 +555,19 @@ Arweave, atau Lokal hingga daftar di tab **Penempatan & IPFS**. Hanya IPFS
 **Penempatan snapshot** adalah klaim bertanda tangan bahwa sebuah backend
 penyimpanan — **IPFS**, **Arweave**, atau penyimpanan **Lokal** milik
 perangkat ini sendiri — dapat menyajikan byte untuk hash konten sebuah
-publikasi. Itu bukan jaminan byte-nya masih ada besok. Beberapa penempatan,
+catatan. Itu bukan jaminan byte-nya masih ada besok. Beberapa penempatan,
 di backend yang berbeda dan dari orang yang berbeda, dapat ada
 berdampingan; tidak ada yang diutamakan.
 
 ### Membuat penempatan
 
-Di bagian **Distribusi** sebuah kartu publikasi, blok **Konten** memiliki
+Di bagian **Distribusi** sebuah kartu catatan, blok **Konten** memiliki
 kartu untuk setiap backend, dengan **Buat Penempatan Lokal**, **Buat
 Penempatan IPFS**, atau **Buat Penempatan Arweave**. Jika Anda sudah
 menyimpan penyimpanan pilihan, blok itu diawali satu tombol untuknya,
 seperti **Simpan di IPFS**, dan melipat kartu-kartu ini di bawah **Opsi
 penyimpanan lain**. Masing-masing mengambil byte yang disimpan perangkat
-ini untuk publikasi itu dan menyerahkannya ke backend tersebut:
+ini untuk catatan itu dan menyerahkannya ke backend tersebut:
 
 - **Penempatan dibuat** — diterima; penempatan bertanda tangan yang baru
   muncul di bawah.
@@ -609,7 +609,7 @@ Jauh), **Simpan di …** memakai layanan yang disiapkan di
 ### Daftar Penempatan Snapshot
 
 Di tab **Penempatan & IPFS** pada kartu, **Tampilkan Penempatan**
-mencantumkan setiap penempatan yang diketahui untuk publikasi itu: yang
+mencantumkan setiap penempatan yang diketahui untuk catatan itu: yang
 Anda buat, yang dikirim rekan, dan yang ada di dalam paket Cetak Biru yang
 diimpor.
 
@@ -617,7 +617,7 @@ diimpor.
 |---|---|
 | **Lokator** | Tempat yang ditunjukkan backend untuk menemukan byte-nya. |
 | **Ditempatkan** | Waktu penempatan yang diklaim. |
-| **Publikasi** / **Hash konten** | Apa yang diikat bersama oleh tanda tangan penempatan. |
+| **Catatan** / **Hash konten** | Apa yang diikat bersama oleh tanda tangan penempatan. |
 | **Ditempatkan oleh** | Identitas yang menandatanganinya. |
 
 Masing-masing memiliki hingga tiga tombol:
@@ -682,7 +682,7 @@ seperti penempatan, hasilnya bukan klaim bertanda tangan yang dapat
 ditemukan orang lain: hasilnya adalah catatan bahwa sebuah penyedia
 menerima byte ini. Hasil di layar dihapus saat dimuat ulang, tetapi setiap
 penerbitan yang berhasil dan setiap verifikasi juga disimpan di
-[Arsip Pengamatan Publikasi](12-ArchiveAndAchievements.md#arsip-pengamatan-publikasi).
+[Arsip Pengamatan Catatan](12-ArchiveAndAchievements.md#arsip-pengamatan-catatan).
 
 ### Mengonfigurasi penyedia pinning jarak jauh
 
@@ -739,10 +739,10 @@ membandingkannya dengan hash yang tercatat:
 | **Pengambilan konten tidak tersedia** | Gateway tidak dapat dijangkau atau tidak memilikinya. Bukan ketidakcocokan. |
 | **Verifikasi gagal** | Ada hal lain yang salah. |
 
-### Riwayat Publikasi
+### Riwayat Catatan
 
 Menerbitkan lagi tidak pernah menimpa catatan sebelumnya. **Tampilkan
-Riwayat Publikasi** mencantumkan setiap penerbitan, dari yang terlama,
+Riwayat Catatan** mencantumkan setiap penerbitan, dari yang terlama,
 dengan lokator dan waktunya; **Periksa** menampilkan lokator, hash konten,
 waktu, dan metodenya (saat ini selalu **Penyedia pinning jarak jauh**).
 Setiap entri memiliki tombol **Verifikasi Konten** sendiri dan **Tampilkan
@@ -752,7 +752,7 @@ untuk catatan itu.
 ## Steem
 
 *Eksperimental.* ForkBuild dapat mengumumkan, menyimpan, dan membagikan
-melalui blockchain Steem. Pengumuman (publikasi, Snapshot, dan komentar)
+melalui blockchain Steem. Pengumuman (catatan bertanda tangan, Snapshot, dan komentar)
 adalah balasan di utas penemuan bulanan seperti
 [`@forkbuild/forkbuild-snapshot-2026-09`](https://steemit.com/forkbuild/@forkbuild/forkbuild-snapshot-2026-09).
 Membaca tidak memerlukan akun. Apa pun yang ditemukan diverifikasi seperti
@@ -827,7 +827,7 @@ yang dilakukan oleh Distribusikan.
 
 **Di mana saja.** Begitu Klaim Bertanda Tangan disimpan di Steem, Arweave,
 atau IPFS, **Bagikan…** dan **Salin tautan** muncul di bawahnya: di panel
-publikasi Tampilan Dunia, di hasil dialog Distribusikan, dan di halaman
+catatan Tampilan Dunia, di hasil dialog Distribusikan, dan di halaman
 Catatan Bertanda Tangan. **Bagikan…** membuka lembar berbagi perangkat Anda jika
 tersedia; **Salin tautan** menyalin tautannya, yang juga ditampilkan untuk
 disalin secara manual. Tautan itu dapat dibuka di perangkat mana pun,
@@ -868,7 +868,7 @@ meminta Anda menyetujui setiap postingan.
   utama dari akun Anda, bertag `forkbuild` dan `forkbuild-snapshot` atau
   `forkbuild-publication`, lalu [tag](02-TheEditor.md) bangunan Anda sendiri, dengan gambar bangunan Anda, judulnya, nama dan
   deskripsi Anda (utuh, hingga 2.000 karakter, dengan [formatnya](02-TheEditor.md)), serta tautan "See it in 3D" (lihat dalam 3D). Apa yang
-  menyusul dalam setengah jam berikutnya (pengumuman Publikasi, komentar,
+  menyusul dalam setengah jam berikutnya (pengumuman catatan, komentar,
   jangkar) ditambahkan ke postingan yang sama dengan menyuntingnya,
   sehingga pengikut Anda melihat satu postingan, bukan beberapa.
 - **Gambarnya memerlukan persetujuan tersendiri.** Untuk Klaim Bertanda
