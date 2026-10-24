@@ -57,7 +57,7 @@ anything.
 |---|---|---|---|---|
 | **Your World's Signed Claim** (the signed record of a published World, called a Shared World) | Arweave, IPFS, Steem or Blurt | Nostr, Arweave, Steem or Blurt | — | **Distribute** after publishing in the Editor; **My Shared World** in World View; the **Signed Records** page |
 | **Your World's Snapshot** (its bricks), with where you placed it | Arweave, IPFS, Steem or Blurt | Nostr, Arweave, Steem or Blurt | — | The same **Distribute** dialogs (**Distribute Snapshot only** for just this half) |
-| **Any publication's content hash** (a World, an authorship claim or a place name) | — | — | Bitcoin, Arweave, Base, Steem or Blurt | The publication's card on the **Signed Records** page |
+| **Any record's content hash** (a World, an authorship claim or a place name) | — | — | Bitcoin, Arweave, Base, Steem or Blurt | The record's card on the **Signed Records** page |
 | **Authorship of a structure** (Blueprint Attribution) | Arweave, IPFS, Steem or Blurt | Nostr, Arweave, Steem or Blurt | — | **Distribute** in the structure's **Info** panel, offered once you **Publish to Network**; the **Signed Records** page |
 | **A place name** (Place Naming Claim) | Arweave, IPFS, Steem or Blurt | Nostr, Arweave, Steem or Blurt | — | **Distribute** in World View's naming panel, offered once you **Publish A Name** (it announces the name on the network you pick); the **Signed Records** page for any of these |
 | **A comment** on a publication | — | Nostr, Arweave, Steem or Blurt, or none (**Local & peers only**) | — | **Post Comment**, in Explore or World View, on the network chosen beside it; later, **Distribute** under your own comment |
@@ -164,7 +164,7 @@ content hash; see [Blurt](11-EvidenceAndStorage.md#blurt).
 4. It sends the Snapshot, then the Signed Claim, and shows a result for
    each. If one half fails, retry just that half with its own **… only**
    button.
-5. *Optional:* on the **Signed Records** page, anchor the publication (for
+5. *Optional:* on the **Signed Records** page, anchor the record (for
    example with **Anchor on Arweave**) to record when it existed.
 6. Click **Share…** or **Copy link** under the result. The link opens your
    build on any device, ready to remix or walk around in.

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: 8832d9dd4363463e -->
+<!-- translation-of: docs/user/README.md source-hash: 168564d162b23c2b -->
 # Documentação do ForkBuild para usuários
 
 <!-- languages -->
@@ -57,8 +57,8 @@ com amigos.
    animais e seu inventário.
 6. **[Seus dados](13-YourData.md)** — fazer backup de tudo o que este
    navegador guarda em um único arquivo criptografado e restaurá-lo, as
-   exportações menores e onde este dispositivo registrou a distribuição das
-   suas publicações.
+   exportações menores e onde este dispositivo registrou a distribuição dos
+   seus registros.
 
 ## Avançado
 
@@ -98,7 +98,7 @@ ferramentas experimentais. Você não precisa de nada disso para jogar.
   e o Blurt. [Distribuindo seu trabalho](Distribution.md) mostra como tudo
   isso se encaixa.
 - **[Arquivo e conquistas](12-ArchiveAndAchievements.md)** —
-  *experimental*. O arquivo de observações, referências entre publicações
+  *experimental*. O arquivo de observações, referências entre registros
   e conquistas.
 
 ## Referência

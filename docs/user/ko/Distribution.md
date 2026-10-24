@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: f97c16f677fc5882 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: 8a0b3b5d89aebe19 -->
 # 작품 배포하기
 
 <!-- languages -->
@@ -56,7 +56,7 @@ ForkBuild에서 만드는 모든 것은 내 기기에서 시작합니다. **배�
 |---|---|---|---|---|
 | **내 월드의 서명 클레임**(게시된 월드의 서명된 기록, 공유 월드라고 부름) | Arweave, IPFS, Steem, Blurt | Nostr, Arweave, Steem, Blurt | — | 에디터에서 게시한 뒤의 **배포**, 월드 보기의 **내 공유 월드**, **서명된 기록** 페이지 |
 | **내 월드의 스냅샷**(블록)과 내가 배치한 위치 | Arweave, IPFS, Steem, Blurt | Nostr, Arweave, Steem, Blurt | — | 같은 **배포** 대화 상자(이 절반만이라면 **스냅샷만 배포**) |
-| **모든 게시물의 콘텐츠 해시**(월드, 저작자 클레임, 장소 이름) | — | — | Bitcoin, Arweave, Base, Steem, Blurt | **서명된 기록** 페이지의 그 게시물 카드 |
+| **모든 기록의 콘텐츠 해시**(월드, 저작자 클레임, 장소 이름) | — | — | Bitcoin, Arweave, Base, Steem, Blurt | **서명된 기록** 페이지의 그 기록 카드 |
 | **구조물의 저작자**(설계도 저작자 표시) | Arweave, IPFS, Steem, Blurt | Nostr, Arweave, Steem, Blurt | — | 구조물 **정보** 패널의 **배포**(**네트워크에 게시**하면 제공됨), **서명된 기록** 페이지 |
 | **장소 이름**(장소 이름 클레임) | Arweave, IPFS, Steem, Blurt | Nostr, Arweave, Steem, Blurt | — | 월드 보기 이름 패널의 **배포**(**이름 게시**하면 제공되며, 고른 네트워크에 이름을 공지함), 이 모든 것에 대해 **서명된 기록** 페이지 |
 | 게시물에 단 **댓글** | — | Nostr, Arweave, Steem, Blurt, 또는 없음(**로컬 및 피어만**) | — | 둘러보기나 월드 보기의 **댓글 게시**, 그 옆에서 고른 네트워크로. 나중에는 내 댓글 아래의 **배포** |
@@ -159,7 +159,7 @@ Bitcoin 앵커를 대신하지 말고 함께 쓰세요. [Steem](11-EvidenceAndSt
 4. 스냅샷을 보내고 이어서 서명 클레임을 보내며, 각각의 결과를 보여
    줍니다. 한쪽이 실패하면 그쪽만 전용 버튼으로 다시 시도합니다(버튼
    이름이 **…만**으로 끝납니다).
-5. *선택:* **서명된 기록** 페이지에서 게시물을 앵커링해(예: **Arweave에
+5. *선택:* **서명된 기록** 페이지에서 기록을 앵커링해(예: **Arweave에
    앵커링** 버튼) 언제 있었는지 기록합니다.
 6. 결과 아래의 **공유…** 또는 **링크 복사**를 클릭합니다. 링크는 어느
    기기에서나 작품을 열며, 바로 리믹스하거나 걸어 다닐 수 있습니다.

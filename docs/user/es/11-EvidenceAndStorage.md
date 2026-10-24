@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: dbd3a37199f5ba2c -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 0cc0471bd48f8142 -->
 # 11 — Evidencia y almacenamiento
 
 <!-- languages -->
@@ -24,11 +24,11 @@
 
 Cada tarjeta de la página **Registros firmados** (consulte
 [Registros firmados y evidencia externa](09-PublicationsAndEvidence.md)) tiene
-secciones para demostrar *cuándo* existía una publicación y para poner su
+secciones para demostrar *cuándo* existía un registro y para poner su
 contenido en algún lugar donde otras personas puedan obtenerlo:
 
 - **[Evidencia externa](#evidencia-externa)**: registros en Bitcoin, Base,
-  Arweave, Steem o Blurt de que el hash de contenido de una publicación existía en
+  Arweave, Steem o Blurt de que el hash de contenido de un registro existía en
   cierto momento.
 - **[El flujo de anclaje en Bitcoin](#el-flujo-de-anclaje-en-bitcoin)** y
   **[El flujo de anclaje en Base](#el-flujo-de-anclaje-en-base)**: flujos
@@ -63,7 +63,7 @@ al cargar, ni cuando llega evidencia, ni cuando despliega la lista.
 
 ### Crear evidencia
 
-En la sección **Distribución** de la tarjeta de una publicación, el bloque
+En la sección **Distribución** de la tarjeta de un registro, el bloque
 **Prueba / anclaje** (con Steem y Blurt marcados como **Experimental**) tiene una tarjeta por
 cada tipo de evidencia que se puede crear con un clic, cada una con su
 propio botón: **Crear anclaje en Arweave** y **Crear anclaje en Steem**.
@@ -74,7 +74,7 @@ Cuando guardó un proveedor preferido, estas tarjetas quedan plegadas en
 **Otras opciones de anclaje**, debajo del botón propio de ese proveedor
 (consulte
 [Anclar en un proveedor preferido](#anclar-en-un-proveedor-preferido)).
-Cada una registra el hash de contenido de la publicación en una
+Cada una escribe el hash de contenido del registro en una
 transacción en esa red, con uno de tres resultados:
 
 | Resultado | Significado |
@@ -96,12 +96,12 @@ transacción en esa red, con uno de tres resultados:
   WhaleVault), y su cuenta de Blurt configurada en
   [Configuración de red → Blurt](10-NetworkSettings.md#blurt).
 
-Una publicación hecha antes de que los hashes de contenido pasaran a ser
+Un registro hecho antes de que los hashes de contenido pasaran a ser
 SHA-256 nunca se ancla, ni con estos botones, ni con los pasos de Bitcoin o
-Base, ni con **Anclar varias publicaciones**: nadie más puede comprobar
-contenido contra su hash antiguo, así que un registro de ella no probaría
+Base, ni con **Anclar varios registros**: nadie más puede comprobar
+contenido contra su hash antiguo, así que anclarlo no probaría
 nada. Obtiene **Registro rechazado** (o, para Bitcoin y Base, un paso de
-transacción fallido) indicando que la vuelva a publicar, antes de que se le
+transacción fallido) indicando que lo vuelva a publicar, antes de que se le
 pregunte nada a ninguna billetera. Lo mismo vale para las ubicaciones, que
 terminan en **No se creó ninguna ubicación**.
 
@@ -137,13 +137,13 @@ nueva, por una pequeña comisión en BLURT. La finalidad, **Verificar
 evidencia** e **Inspeccionar evidencia** funcionan como en Steem, y la
 tarjeta enlaza a la publicación.
 
-**Anclar varias publicaciones a la vez en Steem.** En **Herramientas de
-billetera y archivo → Anclaje en blockchain**, **Anclar varias
-publicaciones en Steem** muestra sus publicaciones catalogadas. Marque las
-que quiera (o use **Seleccionar las no ancladas**) y haga clic en **Anclar
-N publicaciones en Steem**. Una sola aprobación de Keychain ancla hasta 64.
-Cada publicación igual recibe su propio anclaje, que se verifica por
-separado. **Anclar varias publicaciones en Blurt** funciona igual, con una
+**Anclar varios registros a la vez en Steem.** En **Herramientas de
+billetera y archivo → Anclaje en blockchain**, **Anclar varios
+registros en Steem** muestra sus registros catalogados. Marque los
+que quiera (o use **Seleccionar los no anclados**) y haga clic en **Anclar
+N registros en Steem**. Una sola aprobación de Keychain ancla hasta 64.
+Cada registro igual recibe su propio anclaje, que se verifica por
+separado. **Anclar varios registros en Blurt** funciona igual, con una
 sola aprobación de Blurt Keychain.
 
 ### Anclar en un proveedor preferido
@@ -170,7 +170,7 @@ bloque lo indica.
 Los pares conectados solo transmiten la evidencia creada o anunciada de
 nuevo mientras usted está conectado. **Descubrir de los pares** cubre ese
 hueco: les pide a los pares conectados, uno por uno, todos los anclajes que
-conocen para esta publicación, incluidos los que conocieron por otros. Nada
+conocen para este registro, incluidos los que conocieron por otros. Nada
 más en la página contacta a un par.
 
 | Mensaje | Significado |
@@ -189,7 +189,7 @@ dos veces.
 En la pestaña **Descentralización y evidencia** de la tarjeta, **Evidencia
 externa** muestra cuántos anclajes se conocen y ofrece **Descubrir de los
 pares** (arriba). **Mostrar evidencia** muestra todos los anclajes que se
-conocen para la publicación, uno al lado del otro, incluso los que no
+conocen para el registro, uno al lado del otro, incluso los que no
 coinciden. Con más de un anclaje, primero aparece un resumen **Vínculo con
 el contenido**, que cuenta los anclajes por hash de contenido y advierte
 cuando declaran hashes distintos. No dice cuál es el correcto.
@@ -200,7 +200,7 @@ Cada anclaje muestra:
 |---|---|
 | **Localizador** | Dónde dice el sistema externo que se encuentra el registro. |
 | **Registrado** | La hora de registro declarada (declarada hasta que la verifique). |
-| **Publicación / Hash del contenido** | Lo que une la firma de este anclaje. |
+| **Registro / Hash del contenido** | Lo que une la firma de este anclaje. |
 | **Certificado por** | La identidad que firmó el anclaje. |
 
 - **Verificar evidencia** (y luego **Verificar de nuevo**) consulta ahora
@@ -223,7 +223,7 @@ Cada anclaje muestra:
 | **Prueba no verificada de forma independiente** | Está firmado de verdad, pero este dispositivo no puede comprobar externamente este tipo de anclaje. |
 | **Verificación no disponible** | No se pudo alcanzar el sistema externo. No es lo mismo que no válido. |
 | **Evidencia no válida** / **Firma no válida** | El registro está mal formado o no se firmó de verdad. |
-| **El contenido no coincide** | El anclaje no coincide con esta publicación. |
+| **El contenido no coincide** | El anclaje no coincide con este registro. |
 | **Prueba externa no válida** | El sistema externo dice que la declaración es falsa. |
 
 Si un anclaje se verificó antes durante esta visita y una comprobación
@@ -260,7 +260,7 @@ contenido solo muestra el resultado más reciente.
 ## El flujo de anclaje en Bitcoin
 
 Un flujo paso a paso que usa su propia billetera de Bitcoin para escribir
-el hash de contenido de una publicación en una transacción real. Cada paso
+el hash de contenido de un registro en una transacción real. Cada paso
 es su propio clic.
 
 > **Esto gasta bitcoin real en la red principal de Bitcoin.** Desde
@@ -270,7 +270,7 @@ es su propio clic.
 
 Todos sus paneles para toda la página están en **Herramientas de billetera y
 archivo → Anclaje en blockchain**, el panel plegado al
-final de la página Registros firmados; los pasos de cada publicación están en su
+final de la página Registros firmados; los pasos de cada registro están en su
 tarjeta. Cuando un paso necesita que antes se observe una billetera o sus
 fondos, su enlace abre ese panel por usted.
 
@@ -283,7 +283,7 @@ fondos, su enlace abre ese panel por usted.
   empieza con `bc1q…`). Los fondos en direcciones Taproot (`bc1p…`) o
   heredadas (`1…`, `3…`) se pueden observar pero no firmar; la revisión
   informa que no se pueden revisar.
-- Una publicación en su página Registros firmados; la transacción ancla su hash
+- Un registro en su página Registros firmados; la transacción ancla su hash
   de contenido.
 
 ### Conectar una billetera
@@ -321,8 +321,8 @@ observación está desactualizada.
 
 ### Armar un plan de transacción
 
-En la pestaña **Descentralización y evidencia** de la tarjeta de la
-publicación, **Transacción de anclaje en Bitcoin → Crear plan de
+En la pestaña **Descentralización y evidencia** de la tarjeta del
+registro, **Transacción de anclaje en Bitcoin → Crear plan de
 transacción** se habilita una vez que observó los fondos. Planifica a
 partir de la observación más reciente, eligiendo los UTXO de mayor a menor,
 y calcula la comisión.
@@ -365,7 +365,7 @@ firma, sin conexión.
 
 Solo se pueden finalizar entradas SegWit nativas (P2WPKH). Finalizar
 también registra una
-[Publicación de anclaje en Bitcoin](#publicaciones-de-anclaje-en-bitcoin).
+[Registro de anclaje en Bitcoin](#registros-de-anclaje-en-bitcoin).
 
 ### Transmitir
 
@@ -389,34 +389,34 @@ con los mismos tres resultados que la
 Cada comprobación se agrega al **Mostrar historial de confirmaciones** de
 esta transmisión. Esa lista se borra al recargar, pero cada resultado
 también se conserva en el
-[Archivo de observaciones de publicaciones](12-ArchiveAndAchievements.md#el-archivo-de-observaciones-de-publicaciones).
+[Archivo de observaciones de registros](12-ArchiveAndAchievements.md#el-archivo-de-observaciones-de-registros).
 
 ### Lo que no hace el flujo
 
 Cuando **Transmitir transacción** funciona, la transacción se añade a la
-lista de **Evidencia externa** de la publicación como un anclaje nuevo, sin
+lista de **Evidencia externa** del registro como un anclaje nuevo, sin
 verificar hasta que haga clic en **Verificar evidencia**; los pares pueden
 encontrarla con **Descubrir de los pares**. Una transmisión rechazada o que
 no llega no añade nada. El flujo no conserva sus pantallas: las de
 revisión, firma y transmisión se borran con un plan nuevo, una firma nueva
-o al recargar. Lo que se conserva es el registro de publicación
+o al recargar. Lo que se conserva es el registro
 creado al finalizar, y cada resultado de transmisión y de confirmación en el
 Archivo de observaciones.
 
-### Publicaciones de anclaje en Bitcoin
+### Registros de anclaje en Bitcoin
 
-La tarjeta **Publicaciones de anclaje en Bitcoin** muestra un registro por
+La tarjeta **Registros de anclaje en Bitcoin** muestra un registro por
 cada transacción que finalizó este dispositivo: `{ ID del anclaje, hash del
 contenido, txid, red, fecha de construcción }`. Se crea cuando **Verificar y
 finalizar transacción** funciona, funcione o no la transmisión después, y
 no tiene ningún estado propio de confirmado o válido. **Mostrar
-publicaciones** las muestra. Cada fila tiene:
+registros** los muestra. Cada fila tiene:
 
 - **Inspeccionar observaciones**: el conteo de cada hecho de transmisión,
   confirmación, prueba de contenido, ubicación en la cadena y coherencia
   que tiene el archivo para ese ID de anclaje.
-- **Mostrar ciclo de vida de la publicación**: los mismos hechos en orden
-  cronológico, empezando por **Registro de publicación creado**. Un paso
+- **Mostrar ciclo de vida del registro**: los mismos hechos en orden
+  cronológico, empezando por **Registro creado**. Un paso
   sin nada registrado simplemente no aparece. Abrirlo no contacta ninguna
   red.
 
@@ -439,7 +439,7 @@ misma que lleva el hash de contenido como datos), sus propios términos.
 - Una cuenta en el ID de cadena **8453** (red principal de Base) o
   **84532** (Base Sepolia). Cualquier otra cadena se informa como una
   discrepancia.
-- Una publicación en su página Registros firmados.
+- Un registro en su página Registros firmados.
 
 ### Conectar una billetera y observar una cuenta
 
@@ -460,8 +460,8 @@ lee la cadena y el saldo de la cuenta:
 
 ### Armar un plan de transacción
 
-En la pestaña **Descentralización y evidencia** de la tarjeta de la
-publicación, **Transacción de publicación en Base → Crear plan de
+En la pestaña **Descentralización y evidencia** de la tarjeta del
+registro, **Transacción de anclaje en Base → Crear plan de
 transacción de Base** (se habilita una vez que observó una cuenta) arma
 una transferencia sin firmar de su cuenta a sí misma, que lleva el hash de
 contenido como datos.
@@ -493,7 +493,7 @@ billetera que firme exactamente ese plan.
 
 En la misma tarjeta de revisión, **Crear anclaje en Base** firma, finaliza
 y transmite la transacción revisada con un solo clic, y luego la agrega a
-la lista de evidencia de la publicación. Es una alternativa a los botones
+la lista de evidencia del registro. Es una alternativa a los botones
 paso a paso, que siguen funcionando.
 
 | Insignia | Significado |
@@ -517,7 +517,7 @@ contra el plan revisado y recupera al firmante.
 | **Finalización no disponible** / **La finalización falló** | No se pudo comprobar, o algún otro resultado que no se puede usar. |
 
 Finalizar registra una
-[Publicación de anclaje en Base](#publicaciones-de-anclaje-en-base). Luego,
+[Registro de anclaje en Base](#registros-de-anclaje-en-base). Luego,
 **Transmitir transacción** la envía: **Transacción transmitida** (con el
 **ID de la transacción**; todavía no está incluida en un bloque),
 **Transacción rechazada** o **Transmisión no disponible**. **Transmitir de
@@ -537,15 +537,15 @@ Después de una transmisión, **Observar transacción**, en la sección
 **Observar la transacción de nuevo** agrega al **Mostrar historial de
 observaciones**. Esa lista se borra al recargar, pero cada observación
 también se conserva en el
-[Archivo de observaciones de publicaciones](12-ArchiveAndAchievements.md#el-archivo-de-observaciones-de-publicaciones).
+[Archivo de observaciones de registros](12-ArchiveAndAchievements.md#el-archivo-de-observaciones-de-registros).
 
-### Publicaciones de anclaje en Base
+### Registros de anclaje en Base
 
-Igual que la de Bitcoin, la tarjeta **Publicaciones de anclaje en Base**
+Igual que la de Bitcoin, la tarjeta **Registros de anclaje en Base**
 conserva un registro por cada transacción finalizada: `{ hash del
-contenido, txid, red, fecha de construcción }`. **Mostrar publicaciones** las
-muestra, y **Mostrar ciclo de vida de la publicación** muestra **Registro
-de publicación creado** seguido de cada **Observación de inclusión n.º N**.
+contenido, txid, red, fecha de construcción }`. **Mostrar registros** los
+muestra, y **Mostrar ciclo de vida del registro** muestra **Registro
+creado** seguido de cada **Observación de inclusión n.º N**.
 Los resultados de transmisión de Base no se guardan, así que no hay
 ninguna entrada de transmisión.
 
@@ -562,19 +562,19 @@ IPFS**. Solo IPFS (pinning remoto) como proveedor preferido es
 Una **ubicación de Snapshot** es una declaración firmada de que un backend
 de almacenamiento (**IPFS**, **Arweave** o el almacenamiento **Local**
 propio de este dispositivo) puede servir los bytes del hash de contenido de
-una publicación. No es una garantía de que estén ahí mañana. Pueden existir
+un registro. No es una garantía de que estén ahí mañana. Pueden existir
 varias ubicaciones una al lado de otra, en distintos backends y de distintas
 personas; ninguna tiene preferencia.
 
 ### Crear una ubicación
 
-En la sección **Distribución** de la tarjeta de una publicación, el bloque
+En la sección **Distribución** de la tarjeta de un registro, el bloque
 **Contenido** tiene una tarjeta por backend, con **Crear ubicación en
 Local**, **Crear ubicación en IPFS** o **Crear ubicación en Arweave**.
 Cuando guardó un almacenamiento preferido, el bloque empieza con un botón
 para él, como **Guardar en IPFS**, y pliega estas tarjetas en **Otras
 opciones de almacenamiento**. Cada una toma los bytes que este dispositivo
-tiene para la publicación y se los entrega a ese backend:
+tiene para el registro y se los entrega a ese backend:
 
 - **Ubicación creada**: se aceptó; abajo aparece una nueva ubicación
   firmada.
@@ -617,15 +617,15 @@ backends en lugar de **Guardar en …**. Con IPFS (pinning remoto) guardado,
 ### La lista de Ubicaciones de Snapshots
 
 En la pestaña **Colocaciones e IPFS** de la tarjeta, **Mostrar
-ubicaciones** muestra todas las ubicaciones que se conocen para la
-publicación: las que hizo usted, las que envió un par y las que venían
+ubicaciones** muestra todas las ubicaciones que se conocen para el
+registro: las que hizo usted, las que envió un par y las que venían
 dentro de un paquete de plano importado.
 
 | Campo | Significado |
 |---|---|
 | **Localizador** | Dónde dice el backend que se encuentran los bytes. |
 | **Ubicado** | La hora de ubicación declarada. |
-| **Publicación** / **Hash del contenido** | Lo que une la firma de la ubicación. |
+| **Registro** / **Hash del contenido** | Lo que une la firma de la ubicación. |
 | **Ubicado por** | La identidad que la firmó. |
 
 Cada una tiene hasta tres botones:
@@ -688,7 +688,7 @@ ubicación, el resultado no es una declaración firmada que otros puedan
 descubrir: es un registro de que un proveedor aceptó estos bytes. Los
 resultados en pantalla se borran al recargar, pero cada publicación
 correcta y cada verificación también se conservan en el
-[Archivo de observaciones de publicaciones](12-ArchiveAndAchievements.md#el-archivo-de-observaciones-de-publicaciones).
+[Archivo de observaciones de registros](12-ArchiveAndAchievements.md#el-archivo-de-observaciones-de-registros).
 
 ### Configurar un proveedor de pinning remoto
 
@@ -748,10 +748,10 @@ el hash registrado:
 | **Recuperación de contenido no disponible** | No se pudo alcanzar el gateway, o no lo tiene. No es una discrepancia. |
 | **La verificación falló** | Salió mal otra cosa. |
 
-### Historial de publicación
+### Historial del registro
 
 Publicar de nuevo nunca sobrescribe los registros anteriores. **Mostrar
-historial de publicación** muestra cada publicación, de la más antigua a la
+historial del registro** muestra cada publicación, de la más antigua a la
 más reciente, con su localizador y su hora; **Inspeccionar** muestra su
 localizador, su hash de contenido, su hora y su método (hoy siempre
 **Proveedor de pinning remoto**). Cada entrada tiene su propio botón
@@ -761,7 +761,7 @@ en orden cronológico de cada comprobación de ese registro.
 ## Steem
 
 *Experimental.* ForkBuild puede anunciar, guardar y compartir a través de
-la blockchain de Steem. Los anuncios (de publicaciones, Snapshots y
+la blockchain de Steem. Los anuncios (de registros, Snapshots y
 comentarios) son respuestas a hilos de descubrimiento mensuales como
 [`@forkbuild/forkbuild-snapshot-2026-09`](https://steemit.com/forkbuild/@forkbuild/forkbuild-snapshot-2026-09).
 Leer no requiere ninguna cuenta. Lo que se encuentra se verifica igual que
@@ -833,7 +833,7 @@ de guardada, lo que hace Distribuir.
 
 **En cualquier lugar.** Una vez que una Declaración firmada está guardada
 en Steem, Arweave o IPFS, aparecen debajo **Compartir…** y **Copiar
-enlace**: en el panel de la publicación de la Vista del mundo, en el
+enlace**: en el panel del registro de la Vista del mundo, en el
 resultado del diálogo Distribuir y en la página Registros firmados.
 **Compartir…** abre el menú para compartir de su dispositivo, cuando está
 disponible; **Copiar enlace** copia el enlace, que también se muestra para
@@ -876,8 +876,8 @@ le pide que apruebe cada publicación.
   principal desde su cuenta, con las etiquetas `forkbuild` y
   `forkbuild-snapshot` o `forkbuild-publication` y luego las [etiquetas](02-TheEditor.md) propias de su construcción, con una imagen de su
   construcción, su título, su nombre y descripción (completa, hasta 2000 caracteres, con su [formato](02-TheEditor.md)), y un enlace “See it in
-  3D” (verla en 3D). Lo que sigue en la próxima media hora (el anuncio de
-  la publicación, un comentario, un anclaje) se agrega a la misma
+  3D” (verla en 3D). Lo que sigue en la próxima media hora (el anuncio del
+  registro, un comentario, un anclaje) se agrega a la misma
   publicación editándola, para que sus seguidores vean una publicación, no
   varias.
 - **La imagen necesita su propia aprobación.** Para una Declaración

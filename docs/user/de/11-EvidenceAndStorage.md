@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: dbd3a37199f5ba2c -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 0cc0471bd48f8142 -->
 # 11 — Nachweise & Speicher
 
 <!-- languages -->
@@ -24,11 +24,11 @@
 
 Jede Karte auf der Seite **Signierte Einträge** (siehe
 [Signierte Einträge & externe Nachweise](09-PublicationsAndEvidence.md))
-hat Abschnitte, um nachzuweisen, *wann* eine Veröffentlichung existierte,
-und um ihren Inhalt irgendwo abzulegen, wo andere ihn holen können:
+hat Abschnitte, um nachzuweisen, *wann* ein Eintrag existierte,
+und um seinen Inhalt irgendwo abzulegen, wo andere ihn holen können:
 
 - **[Externe Nachweise](#externe-nachweise)** — Datensätze auf Bitcoin,
-  Base, Arweave, Steem oder Blurt, dass der Inhalts-Hash einer Veröffentlichung zu
+  Base, Arweave, Steem oder Blurt, dass der Inhalts-Hash eines Eintrags zu
   einem bestimmten Zeitpunkt existierte.
 - **[Der Ablauf für Bitcoin-Anker](#der-ablauf-für-bitcoin-anker)** und
   **[Der Ablauf für Base-Anker](#der-ablauf-für-base-anker)** —
@@ -64,7 +64,7 @@ beim Aufklappen der Liste.
 
 ### Nachweise erstellen
 
-Im Abschnitt **Verteilung** einer Veröffentlichungskarte hat der Block
+Im Abschnitt **Verteilung** einer Eintragskarte hat der Block
 **Nachweis / Verankerung** (Steem und Blurt als **Experimentell** gekennzeichnet) eine
 Karte für jede Art von Nachweis, die ein Klick erstellen kann, jeweils mit
 eigener Schaltfläche: **Arweave-Anker erstellen** und **Steem-Anker
@@ -75,7 +75,7 @@ bevorzugten Anbieter gespeichert, sind diese Karten unter **Weitere
 Verankerungsoptionen** eingeklappt, unter der eigenen Schaltfläche dieses
 Anbieters (siehe
 [Bei einem bevorzugten Anbieter verankern](#bei-einem-bevorzugten-anbieter-verankern)).
-Jede erfasst den Inhalts-Hash der Veröffentlichung in einer Transaktion in
+Jede schreibt den Inhalts-Hash des Eintrags in eine Transaktion in
 diesem Netzwerk, mit einem von drei Ergebnissen:
 
 | Ergebnis | Bedeutung |
@@ -96,10 +96,10 @@ diesem Netzwerk, mit einem von drei Ergebnissen:
   WhaleVault) und Ihr Blurt-Konto, festgelegt unter
   [Netzwerkeinstellungen → Blurt](10-NetworkSettings.md#blurt).
 
-Eine Veröffentlichung, die erstellt wurde, bevor Inhalts-Hashes zu SHA-256
+Ein Eintrag, der erstellt wurde, bevor Inhalts-Hashes zu SHA-256
 wurden, wird nie verankert, weder mit diesen Schaltflächen noch mit den
-Schritten für Bitcoin oder Base noch mit **Mehrere Veröffentlichungen
-verankern**: Niemand sonst kann Inhalte gegen ihren alten Hash prüfen,
+Schritten für Bitcoin oder Base noch mit **Mehrere Einträge
+verankern**: Niemand sonst kann Inhalte gegen seinen alten Hash prüfen,
 daher würde ein Nachweis davon nichts beweisen. Sie erhalten **Erfassung
 abgelehnt** (oder, bei Bitcoin und Base, einen fehlgeschlagenen
 Transaktionsschritt) mit dem Hinweis, sie erneut zu veröffentlichen, bevor
@@ -138,14 +138,14 @@ kleine Gebühr in BLURT. Endgültigkeit, **Nachweise überprüfen** und
 **Nachweise untersuchen** funktionieren wie bei Steem, und die Karte verlinkt
 den Beitrag.
 
-**Mehrere Veröffentlichungen auf einmal auf Steem verankern.** Unter
+**Mehrere Einträge auf einmal auf Steem verankern.** Unter
 **Wallet- & Archivwerkzeuge → Blockchain-Verankerung** listet
-**Mehrere Veröffentlichungen auf Steem verankern** Ihre erfassten
-Veröffentlichungen auf. Setzen Sie Häkchen bei denen, die Sie möchten
+**Mehrere Einträge auf Steem verankern** Ihre erfassten
+Einträge auf. Setzen Sie Häkchen bei denen, die Sie möchten
 (oder **Nicht verankerte auswählen**), und klicken Sie auf **N
-Veröffentlichungen auf Steem verankern**. Eine Bestätigung in Keychain
-verankert bis zu 64. Jede Veröffentlichung bekommt trotzdem ihren eigenen
-Anker, der einzeln überprüft wird. **Mehrere Veröffentlichungen auf Blurt
+Einträge auf Steem verankern**. Eine Bestätigung in Keychain
+verankert bis zu 64. Jeder Eintrag bekommt trotzdem seinen eigenen
+Anker, der einzeln überprüft wird. **Mehrere Einträge auf Blurt
 verankern** funktioniert genauso, mit einer Bestätigung in Blurt Keychain.
 
 ### Bei einem bevorzugten Anbieter verankern
@@ -172,7 +172,7 @@ Block sagt das.
 Verbundene Peers geben nur Nachweise weiter, die erstellt oder erneut
 angekündigt werden, während Sie verbunden sind. **Bei Peers entdecken**
 schließt die Lücke: Es fragt nacheinander jeden verbundenen Peer nach jedem
-Anker, den er für diese Veröffentlichung kennt, einschließlich solcher, die
+Anker, den er für diesen Eintrag kennt, einschließlich solcher, die
 er von anderen erfahren hat. Nichts anderes auf der Seite kontaktiert einen
 Peer.
 
@@ -190,8 +190,8 @@ bleiben erhalten, und derselbe Anker wird nie zweimal hinzugefügt.
 
 Im Reiter **Dezentralisierung & Nachweise** der Karte zeigt **Externe
 Nachweise**, wie viele Anker bekannt sind, und bietet **Bei Peers
-entdecken** (oben). **Nachweise zeigen** listet jeden für die
-Veröffentlichung bekannten Anker nebeneinander auf, auch solche, die sich
+entdecken** (oben). **Nachweise zeigen** listet jeden für den
+Eintrag bekannten Anker nebeneinander auf, auch solche, die sich
 widersprechen. Bei mehr als einem Anker kommt zuerst eine Zusammenfassung
 **Inhaltsbindung**, die Anker pro Inhalts-Hash zählt und warnt, wenn sie
 verschiedene Hashes beanspruchen. Sie sagt nicht, welcher richtig ist.
@@ -202,7 +202,7 @@ Jeder Anker zeigt:
 |---|---|
 | **Fundort** | Wo das externe System die Erfassung zu finden angibt. |
 | **Erfasst** | Die beanspruchte Erfassungszeit (beansprucht, bis Sie überprüfen). |
-| **Veröffentlichung / Inhalts-Hash** | Was die Signatur dieses Ankers miteinander verbindet. |
+| **Eintrag / Inhalts-Hash** | Was die Signatur dieses Ankers miteinander verbindet. |
 | **Bestätigt von** | Die Identität, die den Anker signiert hat. |
 
 - **Nachweise überprüfen** (danach **Erneut überprüfen**) prüft jetzt beim
@@ -224,7 +224,7 @@ Jeder Anker zeigt:
 | **Nachweis nicht unabhängig überprüft** | Echt signiert, aber dieses Gerät kann diese Art von Anker nicht extern prüfen. |
 | **Überprüfung nicht verfügbar** | Das externe System war nicht erreichbar. Das ist nicht dasselbe wie ungültig. |
 | **Ungültiger Nachweis** / **Ungültige Signatur** | Der Datensatz ist fehlerhaft oder wurde nicht echt signiert. |
-| **Inhalt weicht ab** | Der Anker passt nicht zu dieser Veröffentlichung. |
+| **Inhalt weicht ab** | Der Anker passt nicht zu diesem Eintrag. |
 | **Ungültiger externer Nachweis** | Das externe System sagt, dass der Anspruch falsch ist. |
 
 Wurde ein Anker früher bei diesem Besuch überprüft und kann eine spätere
@@ -261,7 +261,7 @@ Inhaltsnachweis wird nur das neueste Ergebnis gezeigt.
 ## Der Ablauf für Bitcoin-Anker
 
 Ein schrittweiser Ablauf, der mit Ihrer eigenen Bitcoin-Wallet den
-Inhalts-Hash einer Veröffentlichung in eine echte Transaktion schreibt.
+Inhalts-Hash eines Eintrags in eine echte Transaktion schreibt.
 Jeder Schritt ist ein eigener Klick.
 
 > **Das gibt echte Bitcoin im Bitcoin-Mainnet aus.** Ab
@@ -272,7 +272,7 @@ Jeder Schritt ist ein eigener Klick.
 Alle seitenweiten Bereiche liegen unter **Wallet- & Archivwerkzeuge →
 Blockchain-Verankerung**, dem eingeklappten Bereich
 ganz unten auf der Seite Signierte Einträge; die Schritte pro
-Veröffentlichung stehen auf der Karte jeder Veröffentlichung. Wo ein
+Eintrag stehen auf der Karte jedes Eintrags. Wo ein
 Schritt zuerst eine beobachtete Wallet oder ein beobachtetes Guthaben
 braucht, öffnet sein Link diesen Bereich für Sie.
 
@@ -285,8 +285,8 @@ braucht, öffnet sein Link diesen Bereich für Sie.
   (beginnend mit `bc1q…`). Guthaben an Taproot- (`bc1p…`) oder
   Legacy-Adressen (`1…`, `3…`) kann beobachtet, aber nicht signiert
   werden; die Prüfung meldet es als nicht prüfbar.
-- Eine Veröffentlichung auf Ihrer Seite Signierte Einträge; die
-  Transaktion verankert ihren Inhalts-Hash.
+- Ein Eintrag auf Ihrer Seite Signierte Einträge; die
+  Transaktion verankert seinen Inhalts-Hash.
 
 ### Eine Wallet verbinden
 
@@ -325,7 +325,7 @@ Hinweis, dass die Beobachtung veraltet ist.
 
 ### Einen Transaktionsplan erstellen
 
-Im Reiter **Dezentralisierung & Nachweise** der Veröffentlichungskarte ist
+Im Reiter **Dezentralisierung & Nachweise** der Eintragskarte ist
 **Bitcoin-Ankertransaktion → Transaktionsplan erstellen** aktiv, sobald
 Sie ein Guthaben beobachtet haben. Es plant auf Grundlage der neuesten
 Beobachtung, wählt die UTXOs vom größten an und berechnet die Gebühr.
@@ -368,7 +368,7 @@ kryptografisch, offline.
 
 Nur native SegWit-Eingänge (P2WPKH) können finalisiert werden. Das
 Finalisieren erfasst außerdem eine
-[Bitcoin-Ankerveröffentlichung](#bitcoin-ankerveröffentlichungen).
+[Bitcoin-Ankereintrag](#bitcoin-ankereinträge).
 
 ### Senden
 
@@ -391,35 +391,35 @@ gemined wurde, mit denselben drei Ergebnissen wie beim
 [Abgleich von Bitcoin-Ankern](#abgleich-von-bitcoin-ankern). Jede Prüfung
 wird zu **Bestätigungsverlauf zeigen** dieses Sendevorgangs hinzugefügt.
 Diese Liste wird beim Neuladen geleert, aber jedes Ergebnis wird auch im
-[Beobachtungsarchiv der Veröffentlichungen](12-ArchiveAndAchievements.md#das-beobachtungsarchiv-der-veröffentlichungen)
+[Beobachtungsarchiv der Einträge](12-ArchiveAndAchievements.md#das-beobachtungsarchiv-der-einträge)
 aufbewahrt.
 
 ### Was der Ablauf nicht tut
 
 Sobald **Transaktion senden** gelingt, wird die Transaktion als neuer Anker
-in die Liste **Externe Nachweise** der Veröffentlichung aufgenommen,
+in die Liste **Externe Nachweise** des Eintrags aufgenommen,
 ungeprüft, bis Sie auf **Nachweise überprüfen** klicken; Peers finden sie mit
 **Bei Peers entdecken**. Ein abgelehntes oder nicht zustellbares Senden fügt
 nichts hinzu. Seine Ansichten behält der Ablauf nicht: Die Ansichten für
 Prüfen, Signieren und Senden werden durch einen neuen Plan, eine neue
 Signatur oder ein Neuladen geleert. Erhalten bleiben der beim
-Finalisieren erstellte Veröffentlichungsdatensatz und jedes Sende- und
+Finalisieren erstellte Eintrag und jedes Sende- und
 Bestätigungsergebnis im Beobachtungsarchiv.
 
-### Bitcoin-Ankerveröffentlichungen
+### Bitcoin-Ankereinträge
 
-Die Karte **Bitcoin-Ankerveröffentlichungen** listet einen Datensatz für
+Die Karte **Bitcoin-Ankereinträge** listet einen Datensatz für
 jede Transaktion auf, die dieses Gerät finalisiert hat: `{ Anker-ID,
 Inhalts-Hash, txid, Netzwerk, erstellt am }`. Er entsteht, wenn
 **Transaktion überprüfen & finalisieren** gelingt, ob das Senden später
 klappt oder nicht, und hat keinen eigenen Status „bestätigt“ oder „gültig“.
-**Veröffentlichungen zeigen** listet sie auf. Jede Zeile hat:
+**Einträge zeigen** listet sie auf. Jede Zeile hat:
 
 - **Beobachtungen untersuchen** — Zählungen aller Tatsachen zu Senden,
   Bestätigung, Inhaltsnachweis, Chain-Platzierung und Konsistenz, die das
   Archiv für diese Anker-ID enthält.
-- **Lebenszyklus der Veröffentlichung zeigen** — dieselben Tatsachen in
-  zeitlicher Reihenfolge, beginnend mit **Veröffentlichungsdatensatz
+- **Lebenszyklus des Eintrags zeigen** — dieselben Tatsachen in
+  zeitlicher Reihenfolge, beginnend mit **Eintrag
   erstellt**. Ein Schritt, zu dem nichts erfasst ist, fehlt einfach. Das
   Öffnen kontaktiert kein Netzwerk.
 
@@ -441,7 +441,7 @@ an sich selbst, die den Inhalts-Hash als Daten trägt), eigene Begriffe.
   etwa Coinbase Wallet oder MetaMask.
 - Ein Konto auf Chain-ID **8453** (Base-Mainnet) oder **84532** (Base
   Sepolia). Jede andere Chain wird als Abweichung gemeldet.
-- Eine Veröffentlichung auf Ihrer Seite Signierte Einträge.
+- Ein Eintrag auf Ihrer Seite Signierte Einträge.
 
 ### Eine Wallet verbinden und ein Konto beobachten
 
@@ -462,8 +462,8 @@ aktualisieren**) Chain und Guthaben des Kontos:
 
 ### Einen Transaktionsplan erstellen
 
-Im Reiter **Dezentralisierung & Nachweise** der Veröffentlichungskarte
-erstellt **Base-Veröffentlichungstransaktion → Base-Transaktionsplan
+Im Reiter **Dezentralisierung & Nachweise** der Eintragskarte
+erstellt **Base-Ankertransaktion → Base-Transaktionsplan
 erstellen** (aktiv, sobald Sie ein Konto beobachtet haben) eine
 unsignierte Überweisung von Ihrem Konto an sich selbst, die den
 Inhalts-Hash als Daten trägt.
@@ -494,7 +494,7 @@ Transaktion signieren** bittet die Wallet, genau diesen Plan zu signieren.
 
 In derselben Prüfkarte signiert, finalisiert und sendet **Base-Anker
 erstellen** die geprüfte Transaktion mit einem Klick und fügt sie dann der
-Nachweisliste der Veröffentlichung hinzu. Es ist eine Alternative zu den
+Nachweisliste des Eintrags hinzu. Es ist eine Alternative zu den
 schrittweisen Schaltflächen, die weiterhin funktionieren.
 
 | Abzeichen | Bedeutung |
@@ -518,7 +518,7 @@ den geprüften Plan und ermittelt den Unterzeichner.
 | **Finalisierung nicht verfügbar** / **Finalisierung fehlgeschlagen** | Konnte nicht geprüft werden, oder ein anderes unbrauchbares Ergebnis. |
 
 Das Finalisieren erfasst eine
-[Base-Ankerveröffentlichung](#base-ankerveröffentlichungen). Dann sendet
+[Base-Ankereintrag](#base-ankereinträge). Dann sendet
 **Transaktion senden** sie: **Transaktion gesendet** (mit der
 **Transaktions-ID**; noch nicht in einen Block aufgenommen), **Transaktion
 abgelehnt** oder **Senden nicht verfügbar**. **Erneut senden** sendet
@@ -537,16 +537,16 @@ der Base-Transaktion**, ob sie in einem Block ist:
 
 **Transaktion erneut beobachten** ergänzt **Beobachtungsverlauf zeigen**.
 Diese Liste wird beim Neuladen geleert, aber jede Beobachtung wird auch im
-[Beobachtungsarchiv der Veröffentlichungen](12-ArchiveAndAchievements.md#das-beobachtungsarchiv-der-veröffentlichungen)
+[Beobachtungsarchiv der Einträge](12-ArchiveAndAchievements.md#das-beobachtungsarchiv-der-einträge)
 aufbewahrt.
 
-### Base-Ankerveröffentlichungen
+### Base-Ankereinträge
 
-Wie bei Bitcoin führt die Karte **Base-Ankerveröffentlichungen** einen
+Wie bei Bitcoin führt die Karte **Base-Ankereinträge** einen
 Datensatz pro finalisierter Transaktion: `{ Inhalts-Hash, txid, Netzwerk,
-erstellt am }`. **Veröffentlichungen zeigen** listet sie auf, und
-**Lebenszyklus der Veröffentlichung zeigen** zeigt
-**Veröffentlichungsdatensatz erstellt**, gefolgt von jeder
+erstellt am }`. **Einträge zeigen** listet sie auf, und
+**Lebenszyklus des Eintrags zeigen** zeigt
+**Eintrag erstellt**, gefolgt von jeder
 **Aufnahmebeobachtung Nr. N**. Base-Sendeergebnisse werden nicht
 gespeichert, daher gibt es keinen Eintrag für das Senden.
 
@@ -561,21 +561,21 @@ Nur IPFS (entferntes Pinning) als bevorzugter Anbieter ist *experimentell*.
 
 Eine **Snapshot-Platzierung** ist ein signierter Anspruch, dass ein
 Speicher-Backend — **IPFS**, **Arweave** oder der eigene **lokale**
-Speicher dieses Geräts — die Bytes für den Inhalts-Hash einer
-Veröffentlichung liefern kann. Es ist keine Garantie, dass sie morgen noch
+Speicher dieses Geräts — die Bytes für den Inhalts-Hash eines
+Eintrags liefern kann. Es ist keine Garantie, dass sie morgen noch
 da sind. Mehrere Platzierungen auf verschiedenen Backends und von
 verschiedenen Menschen können nebeneinander bestehen; keine wird
 bevorzugt.
 
 ### Eine Platzierung erstellen
 
-Im Abschnitt **Verteilung** einer Veröffentlichungskarte hat der Block
+Im Abschnitt **Verteilung** einer Eintragskarte hat der Block
 **Inhalt** eine Karte pro Backend, mit **Lokal-Platzierung erstellen**,
 **IPFS-Platzierung erstellen** oder **Arweave-Platzierung erstellen**.
 Haben Sie einen bevorzugten Speicher gespeichert, beginnt der Block mit
 einer Schaltfläche dafür, etwa **Auf IPFS speichern**, und klappt diese
 Karten unter **Weitere Speicheroptionen** ein. Jede nimmt die Bytes, die
-dieses Gerät für die Veröffentlichung besitzt, und übergibt sie an dieses
+dieses Gerät für den Eintrag besitzt, und übergibt sie an dieses
 Backend:
 
 - **Platzierung erstellt** — angenommen; darunter erscheint eine neue
@@ -620,7 +620,7 @@ eingerichteten Dienst.
 ### Die Liste der Snapshot-Platzierungen
 
 Im Reiter **Platzierungen & IPFS** der Karte listet **Platzierungen
-zeigen** jede für die Veröffentlichung bekannte Platzierung auf: solche,
+zeigen** jede für den Eintrag bekannte Platzierung auf: solche,
 die Sie erstellt haben, solche, die ein Peer gesendet hat, und solche in
 einem importierten Bauplanpaket.
 
@@ -628,7 +628,7 @@ einem importierten Bauplanpaket.
 |---|---|
 | **Fundort** | Wo das Backend die Bytes zu finden angibt. |
 | **Platziert** | Die beanspruchte Platzierungszeit. |
-| **Veröffentlichung** / **Inhalts-Hash** | Was die Signatur der Platzierung miteinander verbindet. |
+| **Eintrag** / **Inhalts-Hash** | Was die Signatur der Platzierung miteinander verbindet. |
 | **Platziert von** | Die Identität, die sie signiert hat. |
 
 Jede hat bis zu drei Schaltflächen:
@@ -692,7 +692,7 @@ signierter Anspruch, den andere entdecken können: Es ist ein Nachweis, dass
 ein Anbieter diese Bytes angenommen hat. Die angezeigten Ergebnisse werden
 beim Neuladen geleert, aber jede erfolgreiche Veröffentlichung und jede
 Überprüfung wird auch im
-[Beobachtungsarchiv der Veröffentlichungen](12-ArchiveAndAchievements.md#das-beobachtungsarchiv-der-veröffentlichungen)
+[Beobachtungsarchiv der Einträge](12-ArchiveAndAchievements.md#das-beobachtungsarchiv-der-einträge)
 aufbewahrt.
 
 ### Einen Anbieter für entferntes Pinning konfigurieren
@@ -754,10 +754,10 @@ sie mit dem erfassten Hash:
 | **Inhaltsabruf nicht verfügbar** | Das Gateway war nicht erreichbar oder hat ihn nicht. Keine Abweichung. |
 | **Überprüfung fehlgeschlagen** | Etwas anderes ist schiefgegangen. |
 
-### Veröffentlichungsverlauf
+### Verlauf des Eintrags
 
 Erneutes Veröffentlichen überschreibt nie frühere Datensätze.
-**Veröffentlichungsverlauf zeigen** listet jede Veröffentlichung auf, die
+**Verlauf des Eintrags zeigen** listet jede Veröffentlichung auf, die
 älteste zuerst, mit Fundort und Zeit; **Untersuchen** zeigt ihren Fundort,
 Inhalts-Hash, Zeit und Methode (derzeit immer **Anbieter für entferntes
 Pinning**). Jeder Eintrag hat seine eigene Schaltfläche **Inhalt
@@ -767,7 +767,7 @@ Liste aller Prüfungen dieses Datensatzes.
 ## Steem
 
 *Experimentell.* ForkBuild kann über die Steem-Blockchain ankündigen,
-speichern und teilen. Ankündigungen (von Veröffentlichungen, Snapshots und
+speichern und teilen. Ankündigungen (von Einträgen, Snapshots und
 Kommentaren) sind Antworten auf monatliche Entdeckungs-Threads wie
 [`@forkbuild/forkbuild-snapshot-2026-09`](https://steemit.com/forkbuild/@forkbuild/forkbuild-snapshot-2026-09).
 Zum Lesen ist kein Konto nötig. Was gefunden wird, wird wie eine
@@ -841,7 +841,7 @@ braucht das Bauwerk angekündigt und gespeichert, was Verteilen erledigt.
 
 **Überall.** Sobald ein Signierter Anspruch auf Steem, Arweave oder IPFS
 gespeichert ist, erscheinen darunter **Teilen …** und **Link kopieren**:
-im Veröffentlichungsfeld der Weltansicht, im Ergebnis des
+im Eintragsfeld der Weltansicht, im Ergebnis des
 Verteilen-Dialogs und auf der Seite Signierte Einträge. **Teilen …**
 öffnet, wo verfügbar, das Teilen-Menü Ihres Geräts; **Link kopieren**
 kopiert den Link, der auch zum Kopieren von Hand angezeigt wird. Der Link
@@ -886,7 +886,7 @@ den Schlüssel nie, und Keychain bittet Sie, jeden Beitrag zu bestätigen.
   `forkbuild-publication`, dann den eigenen [Tags](02-TheEditor.md) Ihres Bauwerks, mit einem Bild Ihres Bauwerks, seinem Titel,
   Ihrem Namen und der Beschreibung (vollständig, bis 2.000 Zeichen, mit ihrer [Formatierung](02-TheEditor.md)) sowie einem Link „See it in 3D“ (in 3D
   ansehen). Was in der folgenden halben Stunde dazukommt (die Ankündigung
-  der Veröffentlichung, ein Kommentar, ein Anker), wird demselben Beitrag
+  des Eintrags, ein Kommentar, ein Anker), wird demselben Beitrag
   durch Bearbeiten hinzugefügt, sodass Ihre Follower einen Beitrag sehen,
   nicht mehrere.
 - **Das Bild braucht eine eigene Bestätigung.** Bei einem Signierten

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: f97c16f677fc5882 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: 8a0b3b5d89aebe19 -->
 # Mendistribusikan Karya Anda
 
 <!-- languages -->
@@ -63,7 +63,7 @@ tidak pernah mengirim apa pun.
 |---|---|---|---|---|
 | **Klaim Bertanda Tangan Dunia Anda** (catatan bertanda tangan dari Dunia yang diterbitkan, disebut Dunia Bersama) | Arweave, IPFS, Steem, atau Blurt | Nostr, Arweave, Steem, atau Blurt | — | **Distribusikan** setelah menerbitkan di Editor; **Dunia Bersama Saya** di Tampilan Dunia; halaman **Catatan Bertanda Tangan** |
 | **Snapshot Dunia Anda** (balok-baloknya), beserta tempat Anda menempatkannya | Arweave, IPFS, Steem, atau Blurt | Nostr, Arweave, Steem, atau Blurt | — | Dialog **Distribusikan** yang sama (**Distribusikan Snapshot saja** untuk separuh ini saja) |
-| **Hash konten publikasi apa pun** (Dunia, klaim kepengarangan, atau nama tempat) | — | — | Bitcoin, Arweave, Base, Steem, atau Blurt | Kartu publikasi itu di halaman **Catatan Bertanda Tangan** |
+| **Hash konten catatan apa pun** (Dunia, klaim kepengarangan, atau nama tempat) | — | — | Bitcoin, Arweave, Base, Steem, atau Blurt | Kartu catatan itu di halaman **Catatan Bertanda Tangan** |
 | **Kepengarangan sebuah struktur** (Atribusi Cetak Biru) | Arweave, IPFS, Steem, atau Blurt | Nostr, Arweave, Steem, atau Blurt | — | **Distribusikan** di panel **Info** struktur, yang ditawarkan begitu Anda **Terbitkan ke Jaringan**; halaman **Catatan Bertanda Tangan** |
 | **Nama tempat** (Klaim Nama Tempat) | Arweave, IPFS, Steem, atau Blurt | Nostr, Arweave, Steem, atau Blurt | — | **Distribusikan** di panel penamaan Tampilan Dunia, yang ditawarkan begitu Anda **Terbitkan Sebuah Nama** (mengumumkan nama itu di jaringan yang Anda pilih); halaman **Catatan Bertanda Tangan** untuk pilihan mana pun |
 | **Komentar** pada sebuah publikasi | — | Nostr, Arweave, Steem, atau Blurt, atau tidak ada (**Lokal & rekan saja**) | — | **Kirim Komentar**, di Jelajahi atau Tampilan Dunia, di jaringan yang dipilih di sebelahnya; nanti, **Distribusikan** di bawah komentar Anda sendiri |
@@ -177,7 +177,7 @@ bangunan Anda sudah memuat hash kontennya; lihat [Blurt](11-EvidenceAndStorage.m
 4. Ia mengirim Snapshot, lalu Klaim Bertanda Tangan, dan menampilkan hasil
    untuk masing-masing. Jika salah satu gagal, ulangi yang itu saja dengan
    tombol **Distribusikan … saja** miliknya.
-5. *Opsional:* di halaman **Catatan Bertanda Tangan**, jangkarkan publikasi itu
+5. *Opsional:* di halaman **Catatan Bertanda Tangan**, jangkarkan catatan itu
    (misalnya dengan **Jangkarkan di Arweave**) untuk mencatat kapan ia ada.
 6. Klik **Bagikan…** atau **Salin tautan** di bawah hasilnya. Tautan itu
    membuka bangunan Anda di perangkat apa pun, siap di-remix atau

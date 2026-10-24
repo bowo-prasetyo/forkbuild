@@ -1393,6 +1393,11 @@ export default {
                 <p class="form-hint form-hint--neutral">
                     {{ t('publications.theseFailedTheirCheckSo') }}
                 </p>
+                <!-- Safe to remove: the builds behind these records aren't touched. -->
+                <p class="form-hint form-hint--neutral publications-remove-is-safe">
+                    <I18nText v-if="myBuildsRoute" keypath="publications.removeIsSafe"><template #myBuilds><router-link :to="myBuildsRoute">{{ t('app.nav.myBuilds') }}</router-link></template></I18nText>
+                    <template v-else>{{ t('publications.removeIsSafeNoName') }}</template>
+                </p>
                 <p v-if="ownLegacyCount > 0" class="form-hint form-hint--neutral">
                     <I18nText keypath="publications.ownLegacy" :params="{ count: ownLegacyCount }"><template #yours><strong>{{ t('publications.ownLegacyYours', { count: ownLegacyCount }) }}</strong></template></I18nText>
                 </p>

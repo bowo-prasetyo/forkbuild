@@ -54,7 +54,7 @@ Everything you need to build, share, remix and walk around with friends.
    animals, and your inventory.
 6. **[Your Data](13-YourData.md)** — backing up everything this browser
    holds to one encrypted file and restoring it, the smaller exports, and
-   where this device recorded distributing your publications.
+   where this device recorded distributing your records.
 
 ## Advanced
 
@@ -89,7 +89,7 @@ tools. You don't need any of it to play.
   pipelines, remote IPFS pinning, Steem and Blurt.
   [Distributing Your Work](Distribution.md) shows how these fit together.
 - **[Archive & Achievements](12-ArchiveAndAchievements.md)** —
-  *experimental*. The observation archive, publication references and
+  *experimental*. The observation archive, record references and
   achievements.
 
 ## Reference

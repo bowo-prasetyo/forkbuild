@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: df2c8cb0e2cd162f -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 22cbbdb4844c4278 -->
 # 10 — Netzwerkeinstellungen
 
 <!-- languages -->
@@ -14,7 +14,7 @@
 festlegt, mit welchen Servern ForkBuild spricht. Die meisten Menschen
 müssen hier nie etwas ändern: Die Standardwerte funktionieren sofort.
 Kommen Sie hierher, wenn ein Server ausgefallen ist, wenn Sie einen
-eigenen betreiben oder um zu wählen, wo Ihre Veröffentlichungen
+eigenen betreiben oder um zu wählen, wo Ihre Einträge
 gespeichert und angekündigt werden.
 
 Was jeder Server über Sie erfährt, steht unter [Datenschutz](Privacy.md).
@@ -87,11 +87,11 @@ geöffnet wird.
 
 Wählen Sie aus den Backends, die dieses Gerät registriert hat, auf
 welchem Speicher **Auf … speichern** (die erste Schaltfläche im Block
-**Inhalt** einer Veröffentlichung) und **Bevorzugten Anbieter verwenden**
+**Inhalt** eines Eintrags) und **Bevorzugten Anbieter verwenden**
 eine Snapshot-Platzierung erstellen (siehe
 [Einen bevorzugten Anbieter verwenden](11-EvidenceAndStorage.md#einen-bevorzugten-anbieter-verwenden)),
-und klicken Sie auf **Speichern**. **Lokal** wird nicht angeboten, da jede
-Veröffentlichung schon auf diesem Gerät gespeichert ist.
+und klicken Sie auf **Speichern**. **Lokal** wird nicht angeboten, da jeder
+Eintrag schon auf diesem Gerät gespeichert ist.
 
 **IPFS (entferntes Pinning)** *(experimentell)* wird immer angeboten. Es
 nutzt den unter **Entfernter Pinning-Dienst** (unten) eingerichteten
@@ -122,7 +122,7 @@ ihn dort noch ändern. **Dienst vergessen** entfernt ihn.
 ## Anbieter für Ankündigung / Entdeckung
 
 Wählen Sie **Arweave**, **Blurt** (experimentell), **Nostr** oder **Steem** (experimentell) als
-Standardort, an dem Ihre Veröffentlichungen (Geteilte Welten,
+Standardort, an dem Ihre Einträge (Geteilte Welten,
 Bauplan-Zuschreibungen und Ortsnamensansprüche), Snapshots und Kommentare
 angekündigt werden. Es ist nur ein Standard: Jeder Dialog **Verteilen**,
 die Verteilungsauswahl auf jeder Karte unter Entdecken und die
@@ -141,7 +141,7 @@ Kommentar weiterhin ändern.
 ## Nachweis-/Verankerungsanbieter
 
 Wählen Sie, wo **Auf … verankern** (die erste
-Schaltfläche im Block **Nachweis / Verankerung** einer Veröffentlichung)
+Schaltfläche im Block **Nachweis / Verankerung** eines Eintrags)
 externe Nachweise erstellt: **Arweave**, **Bitcoin** *(experimentell)*, **Blurt** *(experimentell)* oder **Steem** *(experimentell)*, je
 nachdem, was dieses Gerät registriert hat. Base wird nie angeboten, weil
 jeder Base-Anker erfordert, dass Sie eine Wallet-Transaktion prüfen und
@@ -161,7 +161,7 @@ nächsten Gateway, wenn das aktuelle nicht erreichbar ist oder einen Fehler
 liefert. Arweave-Inhalte werden über ihre Transaktions-ID adressiert,
 sodass jedes Gateway dieselben Bytes liefert.
 
-Diese Liste wird verwendet, wenn das Material einer Veröffentlichung aus
+Diese Liste wird verwendet, wenn das Material eines Eintrags aus
 einer dezentralen Quelle abgerufen wird und wenn eine
 Arweave-Snapshot-Platzierung aufgelöst oder materialisiert wird. Sie
 ändert nicht, wohin Ihre eigenen Inhalte hochgeladen werden. Arweave-Anker
@@ -203,7 +203,7 @@ war, nie nachdem einer die Transaktion abgelehnt hat.
 ## Nostr-Relays
 
 Relays für alles, was ForkBuild über Nostr veröffentlicht oder entdeckt:
-Veröffentlichungen (Geteilte Welten, Bauplan-Zuschreibungen und
+Einträge (Geteilte Welten, Bauplan-Zuschreibungen und
 Ortsnamensansprüche), Snapshots und Kommentare. Eine `ws://`- oder
 `wss://`-URL pro Zeile; Standard sind `wss://relay.damus.io`,
 `wss://nos.lol` und `wss://relay.primal.net`. **Speichern** ersetzt die

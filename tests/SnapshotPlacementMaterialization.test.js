@@ -253,7 +253,7 @@ async function run() {
             '4. the exact, deliberately unhedged sentence this milestone permits for a known publication');
 
         const storedUnknown = describePlacementMaterializationAttempt({ outcome: SnapshotPlacementMaterializationOutcome.STORED, publicationKnown: false, placementId: 'pl', publicationId: 'p', contentReference: { hash: 'h' } });
-        assert(displayText(storedUnknown.message) === 'Snapshot materialized from this placement. The publication is not currently known locally.',
+        assert(displayText(storedUnknown.message) === 'Snapshot materialized from this placement. The record is not currently known locally.',
             '5. the distinct sentence this milestone requires when the publication is not cataloged — publicationKnown never gates the outcome');
 
         const already = describePlacementMaterializationAttempt({ outcome: SnapshotPlacementMaterializationOutcome.ALREADY_AVAILABLE, publicationKnown: true });

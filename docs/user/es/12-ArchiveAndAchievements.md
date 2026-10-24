@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/12-ArchiveAndAchievements.md source-hash: b3e47023605bc26e -->
+<!-- translation-of: docs/user/12-ArchiveAndAchievements.md source-hash: 40a1d36fb48cc3e7 -->
 # 12 — Archivo y logros
 
 <!-- languages -->
@@ -12,35 +12,35 @@
 
 > **Experimental.** Todo lo que hay aquí puede cambiar o eliminarse en una
 > versión futura, y lo que produce podría no conservarse. En la página
-> Publicaciones, el panel **Herramientas de billetera y archivo**
+> Registros firmados, el panel **Herramientas de billetera y archivo**
 > está marcado con una insignia **Experimental**.
 
 Las herramientas de Bitcoin, Base e IPFS de
 [Evidencia y almacenamiento](11-EvidenceAndStorage.md) registran lo que
 observan en un archivo duradero en este dispositivo. Esta guía cubre ese
 archivo y lo que se construye sobre él: las referencias entre
-publicaciones y los logros.
+registros y los logros.
 
 La mayoría de estas tarjetas están en la página Registros firmados, en
 **Herramientas de billetera y archivo**, en sus pestañas
 **Herramientas de archivo** y **Referencias y logros**. Cada una muestra
 **Guardado localmente** cuando lo que contiene se conserva al recargar.
 
-Una expresión que se usa en toda la guía: una **identidad de publicación**
-es un registro de Publicación de anclaje en Bitcoin o en Base (consulte
-[Publicaciones de anclaje en Bitcoin](11-EvidenceAndStorage.md#publicaciones-de-anclaje-en-bitcoin)).
+Una expresión que se usa en toda la guía: una **identidad de registro**
+es un Registro de anclaje en Bitcoin o en Base (consulte
+[Registros de anclaje en Bitcoin](11-EvidenceAndStorage.md#registros-de-anclaje-en-bitcoin)).
 Es un registro en una cadena, no una persona.
 
-## El Archivo de observaciones de publicaciones
+## El Archivo de observaciones de registros
 
 Un único registro duradero, en este dispositivo, de los hechos que
 observan las herramientas de IPFS, Bitcoin y Base. Contiene solo
-identidades de publicación y observaciones: nunca una conexión de
+identidades de registro y observaciones: nunca una conexión de
 billetera, una clave ni una credencial de pinning.
 
 ### Archivo de observaciones
 
-La tarjeta **Archivo de observaciones** muestra cuántas **Publicaciones** y
+La tarjeta **Archivo de observaciones** muestra cuántos **Registros** y
 **Observaciones** contiene.
 
 - **Mostrar archivo** abre la **Línea de tiempo de observaciones
@@ -64,13 +64,13 @@ conteos. Los conteos dicen cuánto se registró, no qué tan confiable es.
 
 ### Exportar, importar e inspeccionar el archivo
 
-La tarjeta **Archivo de publicaciones** convierte el archivo en un documento
+La tarjeta **Archivo de registros** convierte el archivo en un documento
 JSON:
 
 - **Exportar archivo** muestra el JSON y un enlace **Descargar la
   exportación del archivo**.
 - **Importar archivo** toma un documento JSON, como archivo o pegado, y muestra una vista
-  previa de cuántas publicaciones y observaciones contiene frente al
+  previa de cuántos registros y observaciones contiene frente al
   archivo actual. Solo **Reemplazar el archivo actual** lo aplica. Importar
   **reemplaza** el archivo actual (no lo combina) y no se puede deshacer.
   Un documento no válido se rechaza sin cambiar nada.
@@ -78,8 +78,8 @@ JSON:
 **Inspeccionar un archivo externo** mira dentro de una exportación sin
 importarla. Muestra la versión del esquema del documento, los conteos de
 hechos por dominio (publicación y verificación en IPFS; transmisión,
-confirmación, prueba de contenido e identidad de publicación en Bitcoin;
-inclusión e identidad de publicación en Base), los conteos de hechos
+confirmación, prueba de contenido e identidad de registro en Bitcoin;
+inclusión e identidad de registro en Base), los conteos de hechos
 locales e importados, los eventos de importación, su huella, y los ID de
 anclajes en Bitcoin, los índices de registros de IPFS y los hashes de
 transacciones de Base que contiene. Desde allí:
@@ -117,17 +117,17 @@ huella** y haga clic en **Comparar**:
 Que coincidan solo significa que el contenido es idéntico, no que sea
 correcto, y nada aquí dice qué archivo es más reciente.
 
-## Referencias entre publicaciones
+## Referencias entre registros
 
-Registre que una identidad de publicación apunta a otra.
+Registre que una identidad de registro apunta a otra.
 
-**Referencias entre publicaciones → Mostrar referencias** abre un
-formulario: elija la **Publicación de origen (la que hace la referencia)**
-y la **Publicación referenciada (a la que se apunta)** entre sus
-identidades de publicación de Bitcoin y Base conocidas (por ejemplo,
+**Referencias entre registros → Mostrar referencias** abre un
+formulario: elija el **Registro de origen (el que hace la referencia)**
+y el **Registro referenciado (al que se apunta)** entre sus
+identidades de registro de Bitcoin y Base conocidas (por ejemplo,
 “Bitcoin — a1b2…c3d4 — contenido 9f8e…”), y luego haga clic en
-**Registrar referencia**. Una publicación no puede hacer referencia a sí
-misma. Las referencias solo las crea usted; nada crea una automáticamente,
+**Registrar referencia**. Un registro no puede hacer referencia a sí
+mismo. Las referencias solo las crea usted; nada crea una automáticamente,
 y remezclar en otra parte de la app tampoco.
 
 A propósito, una referencia no se llama remezcla: registra que el
@@ -139,15 +139,15 @@ reciente, con la cadena, la identidad abreviada y el hash de contenido de
 ambos lados, y cuándo se registraron. Los duplicados se conservan como
 referencias separadas.
 
-**Grafo de referencias entre publicaciones** agrupa las mismas referencias
-por publicación: totales de **Aristas**, **Publicaciones**, **Orígenes
-distintos** y **Referenciadas distintas**, y para cada publicación sus
+**Grafo de referencias entre registros** agrupa las mismas referencias
+por registro: totales de **Aristas**, **Registros**, **Orígenes
+distintos** y **Referenciados distintos**, y para cada registro sus
 **Referencias salientes** y **Referencias entrantes**, que se despliegan
 para mostrar cada referencia. Los conteos no son una clasificación.
 
 ## Logros
 
-Una identidad de publicación obtiene una insignia en el momento en que
+Una identidad de registro obtiene una insignia en el momento en que
 supera un umbral; no hay nada que reclamar.
 
 **Logros → Mostrar logros** muestra las insignias obtenidas hasta ahora
@@ -155,16 +155,16 @@ supera un umbral; no hay nada que reclamar.
 
 | Insignia | Icono | Se obtiene cuando |
 |---|---|---|
-| First publication (primera publicación) | 🏆 | Su primer registro de publicación de anclaje en Bitcoin o Base. |
+| First publication (primera publicación) | 🏆 | Su primer registro de anclaje en Bitcoin o Base. |
 | Bitcoin publisher (editor en Bitcoin) | ₿ | Su primero en Bitcoin. |
 | Base publisher (editor en Base) | 🔵 | Su primero en Base. |
 | Multi-chain publisher (editor en varias cadenas) | 🌐 | Registros en más de una cadena. |
 | Ten publications (diez publicaciones) | 🔟 | Su décimo, sumando Bitcoin y Base. |
 | One hundred publications (cien publicaciones) | 💯 | Su centésimo. |
 
-Haga clic en una insignia para ver su **Publicación de origen** (cadena,
+Haga clic en una insignia para ver su **Registro de origen** (cadena,
 hash del contenido, referencia en la cadena, hora de creación) y, cuando
-está disponible, **Ver el ciclo de vida de la publicación arriba**, que
+está disponible, **Ver el ciclo de vida del registro arriba**, que
 salta al ciclo de vida de ese registro.
 
 Cinco logros más vienen de las referencias y todavía no tienen insignia:
@@ -172,13 +172,13 @@ Cinco logros más vienen de las referencias y todavía no tienen insignia:
 received** (primera referencia recibida), **Referenced by 10
 publications** (referenciada por 10 publicaciones), **Referenced by 100
 publications** (referenciada por 100 publicaciones) y **First cross-chain
-reference** (primera referencia entre cadenas, entre una publicación de
-Bitcoin y una de Base). Aparecen por su nombre en **Perfil de logros**,
-donde elige una identidad de publicación y ve su conteo de logros y la
+reference** (primera referencia entre cadenas, entre un registro de
+Bitcoin y uno de Base). Aparecen por su nombre en **Perfil de logros**,
+donde elige una identidad de registro y ve su conteo de logros y la
 lista completa, cada uno con cuándo se obtuvo.
 
-Los logros pertenecen a identidades de publicación, no a personas: nada
-aquí vincula una publicación con una persona.
+Los logros pertenecen a identidades de registro, no a personas: nada
+aquí vincula un registro con una persona.
 
 ## Retirado: clasificaciones, conciliación y etiquetas de editor
 
@@ -192,5 +192,5 @@ importando, con todos sus demás registros; las declaraciones de clasificación
 y las decisiones de conciliación que contenía se descartan.
 
 También se eliminaron las Asociaciones de editores, que etiquetaban sus
-publicaciones con un nombre de editor para esas páginas. Las etiquetas que
+registros con un nombre de editor para esas páginas. Las etiquetas que
 tenía un archivo se descartan de la misma manera.

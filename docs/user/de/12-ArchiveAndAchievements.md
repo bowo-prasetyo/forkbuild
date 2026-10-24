@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/12-ArchiveAndAchievements.md source-hash: b3e47023605bc26e -->
+<!-- translation-of: docs/user/12-ArchiveAndAchievements.md source-hash: 40a1d36fb48cc3e7 -->
 # 12 — Archiv & Erfolge
 
 <!-- languages -->
@@ -20,28 +20,28 @@ Die Werkzeuge für Bitcoin, Base und IPFS unter
 [Nachweise & Speicher](11-EvidenceAndStorage.md) halten fest, was sie
 beobachten, in einem dauerhaften Archiv auf diesem Gerät. Diese Anleitung
 behandelt dieses Archiv und was darauf aufbaut: Verweise zwischen
-Veröffentlichungen und Erfolge.
+Einträgen und Erfolge.
 
 Die meisten dieser Karten liegen auf der Seite Signierte Einträge unter
 **Wallet- & Archivwerkzeuge**, in deren Reitern
 **Archivwerkzeuge** und **Verweise & Erfolge**. Jede zeigt **Lokal
 gespeichert**, wenn ihr Inhalt ein Neuladen übersteht.
 
-Ein Begriff, der überall vorkommt: Eine **Veröffentlichungsidentität** ist
-ein Datensatz einer Bitcoin- oder Base-Ankerveröffentlichung (siehe
-[Bitcoin-Ankerveröffentlichungen](11-EvidenceAndStorage.md#bitcoin-ankerveröffentlichungen)).
+Ein Begriff, der überall vorkommt: Eine **Eintragsidentität** ist
+ein Bitcoin- oder Base-Ankereintrag (siehe
+[Bitcoin-Ankereinträge](11-EvidenceAndStorage.md#bitcoin-ankereinträge)).
 Sie ist ein Datensatz auf einer Chain, keine Person.
 
-## Das Beobachtungsarchiv der Veröffentlichungen
+## Das Beobachtungsarchiv der Einträge
 
 Ein dauerhafter Datensatz auf diesem Gerät mit den Tatsachen, die die
 Werkzeuge für IPFS, Bitcoin und Base beobachten. Er enthält nur
-Veröffentlichungsidentitäten und Beobachtungen: nie eine
+Eintragsidentitäten und Beobachtungen: nie eine
 Wallet-Verbindung, einen Schlüssel oder Zugangsdaten zum Pinning.
 
 ### Beobachtungsarchiv
 
-Die Karte **Beobachtungsarchiv** zeigt, wie viele **Veröffentlichungen**
+Die Karte **Beobachtungsarchiv** zeigt, wie viele **Einträge**
 und **Beobachtungen** es enthält.
 
 - **Archiv zeigen** öffnet die **Archivierte Beobachtungszeitleiste**:
@@ -66,13 +66,13 @@ erfasst wurde, nicht, wie vertrauenswürdig es ist.
 
 ### Das Archiv exportieren, importieren und untersuchen
 
-Die Karte **Veröffentlichungsarchiv** macht aus dem Archiv eine
+Die Karte **Eintragsarchiv** macht aus dem Archiv eine
 JSON-Datei:
 
 - **Archiv exportieren** zeigt das JSON und einen Link **Archivexport
   herunterladen**.
 - **Archiv importieren** nimmt eine Datei oder eingefügtes JSON und zeigt
-  vorab, wie viele Veröffentlichungen und Beobachtungen sie im Vergleich
+  vorab, wie viele Einträge und Beobachtungen sie im Vergleich
   zum aktuellen Archiv enthält. Erst **Aktuelles Archiv ersetzen** wendet
   es an. Der Import **ersetzt** das aktuelle Archiv (er führt nicht
   zusammen) und kann nicht rückgängig gemacht werden. Eine ungültige Datei
@@ -81,8 +81,8 @@ JSON-Datei:
 **Externes Archiv untersuchen** sieht in einen Export hinein, ohne ihn zu
 importieren. Es zeigt die Schemaversion der Datei, die Zahl der Tatsachen
 pro Domäne (IPFS-Veröffentlichung und -Überprüfung; Bitcoin-Senden,
--Bestätigung, -Inhaltsnachweis und -Veröffentlichungsidentität;
-Base-Aufnahme und -Veröffentlichungsidentität), die Zahl lokaler und
+-Bestätigung, -Inhaltsnachweis und -Eintragsidentität;
+Base-Aufnahme und -Eintragsidentität), die Zahl lokaler und
 importierter Tatsachen, Importvorgänge, ihren Fingerabdruck sowie die
 Bitcoin-Anker-IDs, IPFS-Datensatzindizes und Base-Transaktions-Hashes, die
 sie enthält. Von dort aus:
@@ -122,17 +122,17 @@ anderswo (etwa von einem Peer) zu vergleichen, fügen Sie diesen unter
 Eine Übereinstimmung bedeutet nur, dass die Inhalte identisch sind, nicht,
 dass sie richtig sind, und nichts hier sagt, welches Archiv neuer ist.
 
-## Veröffentlichungsverweise
+## Eintragsverweise
 
-Halten Sie fest, dass eine Veröffentlichungsidentität auf eine andere
+Halten Sie fest, dass eine Eintragsidentität auf eine andere
 verweist.
 
-**Veröffentlichungsverweise → Verweise zeigen** öffnet ein Formular:
-Wählen Sie aus Ihren bekannten Bitcoin- und Base-Veröffentlichungsidentitäten
-die **Quellveröffentlichung (die verweisende)** und die **Referenzierte
-Veröffentlichung (die, auf die verwiesen wird)** (zum Beispiel „Bitcoin —
+**Eintragsverweise → Verweise zeigen** öffnet ein Formular:
+Wählen Sie unter **Quelleintrag (der verweisende)** und **Referenzierter
+Eintrag (der, auf den verwiesen wird)** je eine Ihrer bekannten Bitcoin-
+und Base-Eintragsidentitäten (zum Beispiel „Bitcoin —
 a1b2…c3d4 — Inhalt 9f8e…“) und klicken Sie dann auf **Verweis erfassen**.
-Eine Veröffentlichung kann nicht auf sich selbst verweisen. Verweise
+Ein Eintrag kann nicht auf sich selbst verweisen. Verweise
 erstellen immer nur Sie; nichts erstellt einen automatisch, auch das
 Remixen an anderer Stelle der App nicht.
 
@@ -143,16 +143,16 @@ Erfasste Verweise werden der älteste zuerst aufgelistet, mit Chain,
 kurzer Identität und Inhalts-Hash beider Seiten und dem Zeitpunkt der
 Erfassung. Duplikate bleiben als getrennte Verweise erhalten.
 
-**Verweisgraph der Veröffentlichungen** gruppiert dieselben Verweise nach
-Veröffentlichung: Summen für **Kanten**, **Veröffentlichungen**,
-**Verschiedene Quellen** und **Verschiedene referenzierte** und für jede
-Veröffentlichung ihre **Ausgehenden Verweise** und **Eingehenden
+**Verweisgraph der Einträge** gruppiert dieselben Verweise nach
+Eintrag: Summen für **Kanten**, **Einträge**,
+**Verschiedene Quellen** und **Verschiedene referenzierte** und für jeden
+Eintrag seine **Ausgehenden Verweise** und **Eingehenden
 Verweise**, die sich zu den einzelnen Verweisen aufklappen lassen. Die
 Zahlen sind keine Rangfolge.
 
 ## Erfolge
 
-Eine Veröffentlichungsidentität erzielt ein Abzeichen in dem Moment, in
+Eine Eintragsidentität erzielt ein Abzeichen in dem Moment, in
 dem sie eine Schwelle überschreitet; es gibt nichts zu beanspruchen.
 
 **Erfolge → Erfolge zeigen** listet die bisher erzielten Abzeichen auf
@@ -160,16 +160,16 @@ dem sie eine Schwelle überschreitet; es gibt nichts zu beanspruchen.
 
 | Abzeichen | Symbol | Erzielt, wenn |
 |---|---|---|
-| First publication (erste Veröffentlichung) | 🏆 | Ihr erster Datensatz einer Bitcoin- oder Base-Ankerveröffentlichung. |
+| First publication (erste Veröffentlichung) | 🏆 | Ihr erster Bitcoin- oder Base-Ankereintrag. |
 | Bitcoin publisher (Bitcoin-Herausgeber) | ₿ | Ihr erster auf Bitcoin. |
 | Base publisher (Base-Herausgeber) | 🔵 | Ihr erster auf Base. |
 | Multi-chain publisher (Herausgeber auf mehreren Chains) | 🌐 | Datensätze auf mehr als einer Chain. |
 | Ten publications (zehn Veröffentlichungen) | 🔟 | Ihr zehnter, Bitcoin und Base zusammen. |
 | One hundred publications (hundert Veröffentlichungen) | 💯 | Ihr hundertster. |
 
-Klicken Sie auf ein Abzeichen, um seine **Quellveröffentlichung** zu sehen
+Klicken Sie auf ein Abzeichen, um seinen **Quelleintrag** zu sehen
 (Chain, Inhalts-Hash, Chain-Verweis, Erstellungszeit) und, wenn verfügbar,
-**Lebenszyklus der Veröffentlichung oben ansehen**, was zum Lebenszyklus
+**Lebenszyklus des Eintrags oben ansehen**, was zum Lebenszyklus
 dieses Datensatzes springt.
 
 Fünf weitere Erfolge stammen aus Verweisen und haben noch kein Abzeichen:
@@ -178,13 +178,13 @@ received** (erster Verweis erhalten), **Referenced by 10 publications**
 (von 10 Veröffentlichungen referenziert), **Referenced by 100
 publications** (von 100 Veröffentlichungen referenziert) und **First
 cross-chain reference** (erster chainübergreifender Verweis, zwischen einer
-Bitcoin- und einer Base-Veröffentlichung). Sie stehen mit Namen im
-**Erfolgsprofil**, wo Sie eine Veröffentlichungsidentität wählen und ihre
+Bitcoin- und einem Base-Eintrag). Sie stehen mit Namen im
+**Erfolgsprofil**, wo Sie eine Eintragsidentität wählen und ihre
 Zahl der Erfolge und die vollständige Liste sehen, jeweils mit dem
 Zeitpunkt, an dem er erzielt wurde.
 
-Erfolge gehören Veröffentlichungsidentitäten, nicht Menschen: Nichts hier
-verknüpft eine Veröffentlichung mit einer Person.
+Erfolge gehören Eintragsidentitäten, nicht Menschen: Nichts hier
+verknüpft einen Eintrag mit einer Person.
 
 ## Eingestellt: Bestenlisten, Abgleich und Herausgeberkennungen
 
@@ -198,6 +198,6 @@ noch gab, lässt sich weiter laden und importieren, mit all seinen übrigen
 Datensätzen; die Bestenlisten-Ansprüche und Abgleichsentscheidungen darin
 werden verworfen.
 
-Auch die Herausgeberzuordnungen, mit denen Sie Ihre Veröffentlichungen für
+Auch die Herausgeberzuordnungen, mit denen Sie Ihre Einträge für
 diese Seiten mit einem Herausgebernamen versehen konnten, wurden entfernt.
 Die Kennungen in einem Archiv werden auf dieselbe Weise verworfen.

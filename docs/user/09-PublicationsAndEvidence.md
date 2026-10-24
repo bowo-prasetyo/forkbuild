@@ -9,7 +9,7 @@
 > when you want to know what runs underneath.
 
 > **Partly experimental.** The Signed Records page is a regular feature: its
-> list and statuses, removing publications that can't be used, announcing on
+> list and statuses, removing records that can't be used, announcing on
 > Nostr or Arweave, storing on IPFS or Arweave, anchoring on Arweave, and
 > all four of a card's tabs: **Snapshot**, **Decentralization & Evidence**,
 > **Placements & IPFS** and **History**. The rest is **Experimental**: it
@@ -65,7 +65,7 @@ is on this device. (The one exception is **Open in Editor** on your own
 Shared World that needs publishing again; see
 [Status meanings](#status-meanings).)
 
-Every entry on the Signed Records page is a *publication*, and each is one of
+Every entry on the Signed Records page is a *record*, and each is one of
 three kinds:
 
 | Kind | What it is |
@@ -78,28 +78,28 @@ World View, the Editor and Explore call a World's signed record a
 **Shared World** too, as in **My Shared World**, **Discover Shared World**
 and **Select Shared World**.
 
-## What surrounds a publication
+## What surrounds a record
 
-A publication is only the signed record. Everything else you'll see on its
+A record is only the signed claim itself. Everything else you'll see on its
 card, and around it in World View, is something done with it or attached
-to it. None of these is a kind of publication, and only the publication
+to it. None of these is a kind of record, and only the record
 itself is required:
 
 | Term | Like… | What it is |
 |---|---|---|
-| **Publication** | The book itself | A signed record: a Shared World, a Blueprint Attribution or a Place Naming Claim. It carries the hash of its content and its publisher's signature. |
-| **Content** | Where printed copies are kept | The bytes the publication is about, such as a World's bricks. They're always kept on this device first; **Store on …** puts a copy on IPFS, Arweave, Steem or Blurt so others can fetch it. See [Content Provider](10-NetworkSettings.md#content-provider). |
-| **Snapshot** | A printed copy | One stored copy of a publication's content, such as a World's bricks, which others can fetch and check against its hash. See [Local Snapshot](#local-snapshot). |
+| **Record** | The book itself | A signed record: a Shared World, a Blueprint Attribution or a Place Naming Claim. It carries the hash of its content and its publisher's signature. |
+| **Content** | Where printed copies are kept | The bytes the record is about, such as a World's bricks. They're always kept on this device first; **Store on …** puts a copy on IPFS, Arweave, Steem or Blurt so others can fetch it. See [Content Provider](10-NetworkSettings.md#content-provider). |
+| **Snapshot** | A printed copy | One stored copy of a record's content, such as a World's bricks, which others can fetch and check against its hash. See [Local Snapshot](#local-snapshot). |
 | **Placement** | Where the copy is shelved | A signed record of where a build stands in the World. One Shared World can have several. See [Placing vs remixing](WorldViewAdvancedTools.md#placing-vs-remixing). |
-| **Announcement / Discovery** | A library catalogue entry | A small signed notice on Nostr, Arweave, Steem or Blurt saying the publication or Snapshot exists and where its copy is, so people who aren't connected to you can find it. See [Announcement / Discovery Provider](10-NetworkSettings.md#announcement--discovery-provider). |
+| **Announcement / Discovery** | A library catalogue entry | A small signed notice on Nostr, Arweave, Steem or Blurt saying the record or Snapshot exists and where its copy is, so people who aren't connected to you can find it. See [Announcement / Discovery Provider](10-NetworkSettings.md#announcement--discovery-provider). |
 | **Proof / Anchoring** *(Experimental, except on Arweave)* | A notary's stamp | The content's hash written into a blockchain transaction (Bitcoin, Base, Arweave, Steem or Blurt), as evidence it existed by that time. It stores and announces nothing. See [Evidence & Storage](11-EvidenceAndStorage.md). |
-| **Commentary** | Readers' reviews | Comments anyone with a name can attach to a publication, each signed by its commenter, not the publisher. See [Commentary](#commentary). |
+| **Commentary** | Readers' reviews | Comments anyone with a name can attach to a record, each signed by its commenter, not the publisher. See [Commentary](#commentary). |
 
-So you make a publication; then, if you like, store its content, announce
+So you make a record; then, if you like, store its content, announce
 it, anchor it, and place it (for a Shared World); and anyone can comment on
 it.
 
-## Where a publication comes from
+## Where a record comes from
 
 You never create a claim on the Signed Records page itself. It lists claims
 you made elsewhere, ones peers sent you, and builds from Explore that
@@ -168,7 +168,7 @@ after a reload.
 
 ## The Signed Records page
 
-Open **Signed Records** (**More → Advanced**). It lists every signed publication this
+Open **Signed Records** (**More → Advanced**). It lists every signed record this
 device has cataloged, yours or a peer's. At the bottom, the folded **Wallet
 & Archive Tools** panel holds page-wide tools in three tabs:
 **Blockchain Anchoring**, **Archive Tools** and **References &
@@ -181,12 +181,12 @@ The panel is listed only while **Show experimental tools** is on in
 instead. A step that needs a wallet observed first still opens the panel
 for that visit.
 
-Each publication card shows:
+Each record card shows:
 
 - Its name, once its content has been checked: a Shared World's title or a
   place name. Otherwise, or for an authorship claim, the kind of
-  publication.
-- The kind of publication (under the name, when there is one) and who
+  record.
+- The kind of record (under the name, when there is one) and who
   published it, shortened to the last few
   characters of their ID.
 - A **status badge** (see [Status meanings](#status-meanings)), worked out
@@ -200,7 +200,7 @@ Each publication card shows:
 
 Below that, two folded sections:
 
-- **Distribution** — announce the publication, store its content and anchor
+- **Distribution** — announce the record, store its content and anchor
   it. Storing and anchoring each lead with one button for the provider you
   saved under **Configure** (**Store on IPFS**, **Anchor on Steem**), with
   every other provider folded under **Other … options**. Without a saved
@@ -216,7 +216,7 @@ Below that, two folded sections:
 | **Snapshot** | [Local Snapshot](#local-snapshot): what this device holds, and how to get it. |
 | **Decentralization & Evidence** | [Decentralization](#decentralization-at-a-glance), the [evidence list](11-EvidenceAndStorage.md#the-evidence-list), and the Bitcoin and Base transaction steps (Experimental). |
 | **Placements & IPFS** | The [Snapshot Placements](11-EvidenceAndStorage.md#snapshot-placements) list and [IPFS Publishing](11-EvidenceAndStorage.md#ipfs-publishing) (Experimental). |
-| **History** | **Show Cross-Domain Timeline**: every IPFS, Bitcoin and Base observation this device recorded for this publication, in time order, from the [Observation Archive](12-ArchiveAndAchievements.md#the-publication-observation-archive), so it's kept across visits; or a note that nothing is recorded yet. |
+| **History** | **Show Cross-Domain Timeline**: every IPFS, Bitcoin and Base observation this device recorded for this record, in time order, from the [Observation Archive](12-ArchiveAndAchievements.md#the-record-observation-archive), so it's kept across visits; or a note that nothing is recorded yet. |
 
 ### Status meanings
 
@@ -224,20 +224,20 @@ Below that, two folded sections:
 |---|---|
 | **Available** | The content is on this device now. |
 | **Content unavailable** | The claim is genuine, but the content isn't here yet. Try **Retrieve from Peers**. |
-| **Invalid publication envelope** / **Invalid publication signature** | The record is malformed, or wasn't genuinely signed. |
-| **Content does not match its own reference** / **Invalid content** / **Invalid content signature** | The content doesn't match what the publication claims. |
+| **Invalid record envelope** / **Invalid record signature** | The record is malformed, or wasn't genuinely signed. |
+| **Content does not match its own reference** / **Invalid content** / **Invalid content signature** | The content doesn't match what the record claims. |
 | **Failed a domain-specific check** | Well-formed and signed, but fails a check specific to its kind. |
-| **Unsupported publication kind** | This version can't display this kind of publication. |
+| **Unsupported record kind** | This version can't display this kind of record. |
 
 These describe whether the record checks out, not whether the design or name
 is any good.
 
-A publication whose status is anything but **Available** or **Content
+A record whose status is anything but **Available** or **Content
 unavailable** can't be opened, distributed or anchored, so it isn't given a
 full card. These are gathered at the bottom of the page in a folded group,
-"*N* publications that can't be used", each with its status, the reason,
+"*N* records that can't be used", each with its status, the reason,
 **Re-check** and **Remove from This Device**. They're left out of **Anchor
-Several Publications** too. The most common reason is a publication made
+Several Records** too. The most common reason is a record made
 before content hashes became SHA-256: only its author can fix that, by
 publishing it again.
 
@@ -264,16 +264,21 @@ it received from peers, so the old hash can't prove which bytes you
 published.
 
 **Remove from This Device** (or **Remove All *N* from This Device** at the
-top of the group) asks you to confirm, then forgets the publication here.
+top of the group) asks you to confirm, then forgets the record here.
 It doesn't un-publish anything or reach anyone else, and a connected peer
-that still has the publication may announce it again. Only publications in
+that still has the record may announce it again. Only records in
 this group can be removed.
+
+Removing a record never touches your builds. The build behind a Shared World
+stays in the Editor, in Explore and on your page (**More → My Builds**); only
+this device's copy of the signed record goes. To share such a build with peers
+again, open it, **Publish** it and **Share with Peers**: that makes a new record.
 
 ### Distributing from the Signed Records page
 
 **Distribution → Announcement / Discovery** has two cards:
 
-- **Publication** announces the signed publication itself on the
+- **Record** announces the signed record itself on the
   **Substrate** you choose (Arweave, Nostr, or Steem or Blurt, which are
   Experimental). It starts on your
   [Announcement / Discovery Provider](10-NetworkSettings.md#announcement--discovery-provider).
@@ -281,7 +286,7 @@ this group can be removed.
   own **Substrate**, which also starts on that provider. For a World, it's
   the World's own snapshot, announced with where its publisher placed it
   when this device holds that signed placement, as **Distribute** in World
-  View does. For any other kind, it's the publication's content, announced
+  View does. For any other kind, it's the record's content, announced
   by its hash alone. This device needs the bytes: for a World you haven't
   opened, open it in World View or get it from a peer first.
 
@@ -291,7 +296,7 @@ announced** means only the announcement failed; the content was stored.
 
 ## Commentary
 
-Anyone with a name can comment on any publication that resolves: a
+Anyone with a name can comment on any record that resolves: a
 build from Explore, an authorship claim or a place name. There's no
 ownership check, friendship requirement or moderation.
 
@@ -340,7 +345,7 @@ comment for a network, and the line knows only what this device sent.
 Other people's comments reach you:
 
 - from connected peers, as they're posted;
-- from the networks, when you open a publication's comments and whenever
+- from the networks, when you open a record's comments and whenever
   you click **Check for new comments**. This is how you see comments posted
   while you were offline.
 
@@ -348,10 +353,10 @@ The line beside the button reports the last check, such as *Found 2 new
 comments* or *No new comments found* (which only covers the networks that
 answered). An unreachable network is named (*Arweave unavailable*); if none
 answers, you see *Couldn't reach Nostr or Arweave — showing comments stored
-on this device*. Only publications whose comments you open are checked.
+on this device*. Only records whose comments you open are checked.
 Every fetched comment's signature is checked, and none is counted twice.
 
-When someone comments on a publication you published, a **New comment on
+When someone comments on a record you published, a **New comment on
 your build** entry appears in your
 [Notification History](03-WorldView.md#orientation-and-locations) (the 🔔
 button in the header).
@@ -359,7 +364,7 @@ button in the header).
 ## Local Snapshot
 
 On a card's **Snapshot** tab, **Local Snapshot** answers one question: does
-this device hold the bytes for this publication's content right now? It
+this device hold the bytes for this record's content right now? It
 doesn't check signatures or placements, and it contacts the network only
 when you click one of the retrieval actions.
 
@@ -373,10 +378,10 @@ when you click one of the retrieval actions.
 | **Not available** | Nothing has ever been stored under this hash. |
 | **Hash mismatch** | Something is stored under this hash, but it no longer matches. |
 
-Two people with the same publication can get different answers, because
-their storage differs. After a check, a line reads *Publication: known
+Two people with the same record can get different answers, because
+their storage differs. After a check, a line reads *Record: known
 locally / not known locally · Snapshot: available / not available*: whether
-this device has cataloged the signed publication, and whether it holds valid
+this device has cataloged the signed record, and whether it holds valid
 bytes.
 
 If the check finds no valid bytes, a hint points to the ways to bring them
@@ -387,7 +392,7 @@ in, below. Nothing retries by itself.
 Three actions, each its own click:
 
 **Import Snapshot** — shows a file picker and paste box for a **Publication
-Snapshot Transfer Package** (a JSON bundle of one publication's content).
+Snapshot Transfer Package** (a JSON bundle of one record's content).
 Choose or paste one, then click **Import Snapshot** again.
 
 | Badge | Meaning |
@@ -427,7 +432,7 @@ A peer that answered **Available** gets its own **Get Snapshot from
 **Get Snapshot from Peer** does; nothing is ever fetched from anyone else
 for you. **Show Answers from This Visit** lists every answer, one row each
 (such as `20:21:04 — Alice → Available`); click a row for the full report,
-publication and content hash. A row is never rewritten.
+record and content hash. A row is never rewritten.
 
 ### Attempts this visit
 
@@ -435,18 +440,18 @@ Once you've tried to bring the bytes in, **Attempts this visit** counts
 this visit's attempts by outcome and by source. An attempt that stored the
 bytes doesn't mean they're still here; **Check Local Snapshot** says that.
 **Show Acquisition History** lists each attempt (such as
-`20:16 — Peer → Hash mismatch`); click one for its outcome, publication and
+`20:16 — Peer → Hash mismatch`); click one for its outcome, record and
 content hash.
 
 ## Decentralization at a glance
 
-On the **Decentralization & Evidence** tab, once a publication has an anchor
+On the **Decentralization & Evidence** tab, once a record has an anchor
 or a placement, **Decentralization** compares
 [External Evidence](11-EvidenceAndStorage.md#external-evidence) and
 [Snapshot Placements](11-EvidenceAndStorage.md#snapshot-placements):
 
-- **Publication: known locally / not known locally** — whether this device
-  has cataloged the signed publication.
+- **Record: known locally / not known locally** — whether this device
+  has cataloged the signed record.
 - Two cards with how many claims of each kind are known, and whether they
   agree on the content hash (**Agreement**) or not (**Conflict**). If one
   agrees and the other conflicts, a sentence says so; agreement in one
@@ -471,12 +476,12 @@ progress are not.
 | Snapshot bytes you imported, retrieved or materialized | Everything else in **Local Snapshot**: checks, attempt history, the **Source:** line, peer checks and comparisons |
 | **Decentralization** counts (worked out on every load) | **Synchronize with Peers** results |
 | — | **IPFS Publishing**: the provider configuration, results, on-screen history and verification history |
-| **Bitcoin/Base Anchor Publications** records, made at finalization | The wallet pipelines' connection, funding or account observation, plan, review, signature, finalized transaction, broadcast result and on-screen confirmation or inclusion history |
-| The **Publication Observation Archive** (every IPFS publish and verification, Bitcoin broadcast, confirmation and content proof, and Base inclusion), until **Clear Archive** | — |
-| Publication References | Which cards and rows you had open |
+| **Bitcoin/Base Anchor Records** records, made at finalization | The wallet pipelines' connection, funding or account observation, plan, review, signature, finalized transaction, broadcast result and on-screen confirmation or inclusion history |
+| The **Record Observation Archive** (every IPFS publish and verification, Bitcoin broadcast, confirmation and content proof, and Base inclusion), until **Clear Archive** | — |
+| Record References | Which cards and rows you had open |
 
 After a reload, a pipeline's or IPFS publish's results are still visible in
-the [Observation Archive](12-ArchiveAndAchievements.md#the-publication-observation-archive),
+the [Observation Archive](12-ArchiveAndAchievements.md#the-record-observation-archive),
 a record's lifecycle, or (for Bitcoin) Historical Bitcoin Anchor Evidence.
 Reconnect the wallet, or reconfigure the pinning provider, to continue.
 

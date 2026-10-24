@@ -16,27 +16,27 @@
 The Bitcoin, Base and IPFS tools in
 [Evidence & Storage](11-EvidenceAndStorage.md) record what they observe in
 a durable archive on this device. This guide covers that archive and what's
-built on it: references between publications, and achievements.
+built on it: references between records, and achievements.
 
 Most of these cards are on the Signed Records page under **Wallet & Archive
 Tools**, in its **Archive Tools** and **References &
 Achievements** tabs. Each shows **Persisted locally** when what it holds
 survives a reload.
 
-A word used throughout: a **publication identity** is one Bitcoin or Base
-Anchor Publication record (see
-[Bitcoin Anchor Publications](11-EvidenceAndStorage.md#bitcoin-anchor-publications)).
+A word used throughout: a **record identity** is one Bitcoin or Base
+Anchor Record (see
+[Bitcoin Anchor Records](11-EvidenceAndStorage.md#bitcoin-anchor-records)).
 It's a record on a chain, not a person.
 
-## The Publication Observation Archive
+## The Record Observation Archive
 
 One durable record, on this device, of the facts the IPFS, Bitcoin and Base
-tools observe. It holds publication identities and observations only:
+tools observe. It holds record identities and observations only:
 never a wallet connection, key or pinning credential.
 
 ### Observation Archive
 
-The **Observation Archive** card shows how many **Publications** and
+The **Observation Archive** card shows how many **Records** and
 **Observations** it holds.
 
 - **Show Archive** opens the **Archived Observation Timeline**: every IPFS
@@ -59,11 +59,11 @@ is.
 
 ### Exporting, importing and inspecting the archive
 
-The **Publication Archive** card turns the archive into a JSON file:
+The **Record Archive** card turns the archive into a JSON file:
 
 - **Export Archive** shows the JSON and a **Download Archive Export** link.
 - **Import Archive** takes a file or pasted JSON and previews how many
-  publications and observations it holds against the current archive.
+  records and observations it holds against the current archive.
   Only **Replace Current Archive** applies it. Importing **replaces** the
   current archive (it doesn't merge) and can't be undone. An invalid file is
   rejected with nothing changed.
@@ -71,7 +71,7 @@ The **Publication Archive** card turns the archive into a JSON file:
 **Inspect External Archive** looks inside an export without importing it.
 It shows the file's schema version, fact counts per domain (IPFS publish and
 verification; Bitcoin broadcast, confirmation, content proof and
-publication identity; Base inclusion and publication identity), local and
+record identity; Base inclusion and record identity), local and
 imported fact counts, import events, its fingerprint, and the Bitcoin anchor
 IDs, IPFS record indexes and Base transaction hashes it holds. From there:
 
@@ -106,15 +106,15 @@ peer, say), paste it under **Compare With Another Fingerprint** and click
 A match only means the contents are identical, not that they're correct,
 and nothing here says which archive is newer.
 
-## Publication References
+## Record References
 
-Record that one publication identity points at another.
+Record that one record identity points at another.
 
-**Publication References → Show References** opens a form: choose the
-**Source publication (the one making the reference)** and the **Referenced
-publication (the one being pointed at)** from your known Bitcoin and Base
-publication identities (for example "Bitcoin — a1b2…c3d4 — content 9f8e…"),
-then click **Record Reference**. A publication can't reference itself.
+**Record References → Show References** opens a form: choose the
+**Source record (the one making the reference)** and the **Referenced
+record (the one being pointed at)** from your known Bitcoin and Base
+record identities (for example "Bitcoin — a1b2…c3d4 — content 9f8e…"),
+then click **Record Reference**. A record can't reference itself.
 References are only ever made by you; nothing creates one automatically,
 and remixing elsewhere in the app doesn't either.
 
@@ -125,41 +125,41 @@ Recorded references are listed oldest first, with both sides' chain, short
 identity, content hash, and when it was recorded. Duplicates are kept as
 separate references.
 
-**Publication Reference Graph** groups the same references by publication:
-totals for **Edges**, **Publications**, **Distinct sources** and **Distinct
-referenced**, and for each publication its **Outgoing references** and
+**Record Reference Graph** groups the same references by record:
+totals for **Edges**, **Records**, **Distinct sources** and **Distinct
+referenced**, and for each record its **Outgoing references** and
 **Incoming references**, which expand to the individual references. The
 counts aren't a ranking.
 
 ## Achievements
 
-A publication identity earns a badge the moment it crosses a threshold;
+A record identity earns a badge the moment it crosses a threshold;
 there's nothing to claim.
 
 **Achievements → Show Achievements** lists the badges earned so far:
 
 | Badge | Icon | Earned when |
 |---|---|---|
-| First publication | 🏆 | Your first Bitcoin or Base anchor publication record. |
+| First publication | 🏆 | Your first Bitcoin or Base anchor record. |
 | Bitcoin publisher | ₿ | Your first Bitcoin one. |
 | Base publisher | 🔵 | Your first Base one. |
 | Multi-chain publisher | 🌐 | Records on more than one chain. |
 | Ten publications | 🔟 | Your 10th, Bitcoin and Base together. |
 | One hundred publications | 💯 | Your 100th. |
 
-Click a badge to see its **Source Publication** (chain, content hash,
-chain reference, creation time) and, when available, **View Publication
+Click a badge to see its **Source Record** (chain, content hash,
+chain reference, creation time) and, when available, **View Record
 Lifecycle Above**, which jumps to that record's lifecycle.
 
 Five more achievements come from references and have no badge yet: **First
 reference created**, **First reference received**, **Referenced by 10
 publications**, **Referenced by 100 publications**, and **First cross-chain
-reference** (between a Bitcoin and a Base publication). They're listed by
-name in **Achievement Profile**, where you choose a publication identity and
+reference** (between a Bitcoin and a Base record). They're listed by
+name in **Achievement Profile**, where you choose a record identity and
 see its achievement count and full list, each with when it was earned.
 
-Achievements belong to publication identities, not people: nothing here
-links a publication to a person.
+Achievements belong to record identities, not people: nothing here
+links a record to a person.
 
 ## Retired: leaderboards, reconciliation and publisher labels
 
@@ -171,6 +171,6 @@ old link to one of those pages opens Home. An archive saved while they
 existed still loads and imports, with all its other records; the leaderboard
 claims and reconciliation decisions it held are dropped.
 
-Publisher Associations, which labelled your publications with a publisher
+Publisher Associations, which labelled your records with a publisher
 name for those pages, were removed too. The labels an archive held are
 dropped the same way.

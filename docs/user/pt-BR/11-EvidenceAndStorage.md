@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: dbd3a37199f5ba2c -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 0cc0471bd48f8142 -->
 # 11 — Evidências e armazenamento
 
 <!-- languages -->
@@ -23,12 +23,12 @@
 
 Todo cartão da página **Registros assinados** (veja
 [Registros assinados e evidências externas](09-PublicationsAndEvidence.md)) tem
-seções para provar *quando* uma publicação existia e para pôr o conteúdo
-dela num lugar de onde outros possam buscá-lo:
+seções para provar *quando* um registro existia e para pôr o conteúdo
+dele num lugar de onde outros possam buscá-lo:
 
 - **[Evidências externas](#evidências-externas)** — registros no Bitcoin,
-  na Base, no Arweave, no Steem ou no Blurt de que o hash do conteúdo de uma
-  publicação existia num certo momento.
+  na Base, no Arweave, no Steem ou no Blurt de que o hash do conteúdo de um
+  registro existia num certo momento.
 - **[O fluxo de âncora no Bitcoin](#o-fluxo-de-âncora-no-bitcoin)** e
   **[O fluxo de âncora na Base](#o-fluxo-de-âncora-na-base)** — fluxos passo a
   passo que usam sua própria carteira para gravar uma transação de verdade.
@@ -61,7 +61,7 @@ carregar, nem quando chegam evidências, nem quando você expande a lista.
 
 ### Criando evidências
 
-Na seção **Distribuição** de um cartão de publicação, o bloco **Prova /
+Na seção **Distribuição** de um cartão de registro, o bloco **Prova /
 ancoragem** (com o Steem e o Blurt marcados como **Experimental**) tem um cartão para cada tipo de
 evidência que um clique consegue criar, cada um com seu botão: **Criar
 âncora Arweave** e **Criar âncora Steem**. As âncoras no Bitcoin e na Base
@@ -70,7 +70,7 @@ não têm um cartão assim: elas são feitas pelos passos da carteira na guia
 Quando você salvou um provedor preferido, estes cartões ficam recolhidos em
 **Outras opções de ancoragem**, abaixo do botão desse provedor (veja
 [Ancorando num provedor preferido](#ancorando-num-provedor-preferido)). Cada
-um registra o hash do conteúdo da publicação numa transação naquela rede,
+um grava o hash do conteúdo do registro numa transação naquela rede,
 com um de três resultados:
 
 | Resultado | Significado |
@@ -91,9 +91,9 @@ com um de três resultados:
   e da sua conta no Blurt definida em
   [Configurações de rede → Blurt](10-NetworkSettings.md#blurt).
 
-Uma publicação feita antes de os hashes de conteúdo passarem a ser SHA-256
+Um registro feito antes de os hashes de conteúdo passarem a ser SHA-256
 nunca é ancorada, nem por estes botões, nem pelos passos do Bitcoin ou da
-Base, nem por **Ancorar várias publicações**: ninguém mais consegue conferir
+Base, nem por **Ancorar vários registros**: ninguém mais consegue conferir
 o conteúdo com o hash antigo dela, então um registro dele não provaria nada.
 Você recebe **Registro rejeitado** (ou, no Bitcoin e na Base, um passo de
 transação que falha) dizendo para publicá-la de novo, antes de qualquer
@@ -131,13 +131,13 @@ pequena taxa em BLURT. A finalidade, **Verificar evidências** e
 **Inspecionar evidências** funcionam como no Steem, e o card tem um link
 para a postagem.
 
-**Ancorando várias publicações de uma vez no Steem.** Em **Ferramentas de
-carteira e arquivo → Ancoragem em blockchain**, **Ancorar várias
-publicações em Steem** lista suas publicações catalogadas. Marque as que
-quiser (ou **Selecionar as não ancoradas**) e clique em **Ancorar N
-publicações em Steem**. Uma única aprovação no Keychain ancora até 64. Cada
-publicação continua recebendo sua própria âncora, verificada por conta
-própria. **Ancorar várias publicações em Blurt** funciona do mesmo jeito,
+**Ancorando vários registros de uma vez no Steem.** Em **Ferramentas de
+carteira e arquivo → Ancoragem em blockchain**, **Ancorar vários
+registros em Steem** lista seus registros catalogados. Marque os que
+quiser (ou **Selecionar os não ancorados**) e clique em **Ancorar N
+registros em Steem**. Uma única aprovação no Keychain ancora até 64. Cada
+registro continua recebendo sua própria âncora, verificada por conta
+própria. **Ancorar vários registros em Blurt** funciona do mesmo jeito,
 com uma única aprovação no Blurt Keychain.
 
 ### Ancorando num provedor preferido
@@ -162,7 +162,7 @@ diz isso.
 Os pares conectados só repassam evidências criadas ou anunciadas de novo
 enquanto você está conectado. **Descobrir com os pares** preenche essa
 lacuna: pergunta a cada par conectado, um de cada vez, todas as âncoras que
-ele conhece para esta publicação, incluindo as que ficou sabendo por
+ele conhece para este registro, incluindo as que ficou sabendo por
 outros. Nada mais na página contata um par.
 
 | Mensagem | Significado |
@@ -180,8 +180,8 @@ vezes.
 
 Na guia **Descentralização e evidências** do cartão, **Evidências externas**
 mostra quantas âncoras são conhecidas e oferece **Descobrir com os pares**
-(acima). **Mostrar evidências** lista todas as âncoras conhecidas da
-publicação, lado a lado, mesmo as que discordam. Com mais de uma âncora, um
+(acima). **Mostrar evidências** lista todas as âncoras conhecidas do
+registro, lado a lado, mesmo as que discordam. Com mais de uma âncora, um
 resumo de **Vínculo com o conteúdo** vem primeiro, contando as âncoras por
 hash de conteúdo, e avisa quando elas declaram hashes diferentes. Ele não diz
 qual está certo.
@@ -192,7 +192,7 @@ Cada âncora mostra:
 |---|---|
 | **Localizador** | Onde o sistema externo diz que o registro pode ser encontrado. |
 | **Registrado** | A hora de registro declarada (declarada até você verificar). |
-| **Publicação / Hash do conteúdo** | O que a assinatura desta âncora liga entre si. |
+| **Registro / Hash do conteúdo** | O que a assinatura desta âncora liga entre si. |
 | **Atestado por** | A identidade que assinou a âncora. |
 
 - **Verificar evidências** (depois **Verificar de novo**) confere agora com
@@ -214,7 +214,7 @@ Cada âncora mostra:
 | **Prova não verificada de forma independente** | Assinada de verdade, mas este dispositivo não consegue conferir externamente este tipo de âncora. |
 | **Verificação indisponível** | Não foi possível alcançar o sistema externo. Não é o mesmo que inválida. |
 | **Evidência inválida** / **Assinatura inválida** | O registro está malformado ou não foi assinado de verdade. |
-| **Conteúdo divergente** | A âncora não corresponde a esta publicação. |
+| **Conteúdo divergente** | A âncora não corresponde a este registro. |
 | **Prova externa inválida** | O sistema externo diz que a declaração é falsa. |
 
 Se uma âncora foi verificada antes nesta visita e uma verificação posterior
@@ -251,7 +251,7 @@ mostra o resultado mais recente.
 ## O fluxo de âncora no Bitcoin
 
 Um fluxo passo a passo que usa sua própria carteira Bitcoin para gravar o
-hash do conteúdo de uma publicação numa transação de verdade. Cada passo é
+hash do conteúdo de um registro numa transação de verdade. Cada passo é
 um clique separado.
 
 > **Isto gasta bitcoin de verdade na mainnet do Bitcoin.** A partir de
@@ -261,8 +261,8 @@ um clique separado.
 
 Todos os painéis dele que valem para a página toda ficam em **Ferramentas de
 carteira e arquivo → Ancoragem em blockchain**, o painel recolhido no
-fim da página Registros assinados; os passos de cada publicação ficam no cartão
-dela. Quando um passo precisa antes de uma carteira ou de fundos observados,
+fim da página Registros assinados; os passos de cada registro ficam no cartão
+dele. Quando um passo precisa antes de uma carteira ou de fundos observados,
 o link dele abre esse painel para você.
 
 ### Do que você vai precisar
@@ -274,8 +274,8 @@ o link dele abre esse painel para você.
   nativo** (começando com `bc1q…`). Fundos em endereços Taproot (`bc1p…`) ou
   legados (`1…`, `3…`) podem ser observados, mas não assinados; a revisão
   informa que não podem ser revisados.
-- Uma publicação na sua página Registros assinados; a transação ancora o hash do
-  conteúdo dela.
+- Um registro na sua página Registros assinados; a transação ancora o hash do
+  conteúdo dele.
 
 ### Conectando uma carteira
 
@@ -311,7 +311,7 @@ desatualizada.
 
 ### Montando um plano de transação
 
-Na guia **Descentralização e evidências** do cartão da publicação,
+Na guia **Descentralização e evidências** do cartão do registro,
 **Transação de âncora no Bitcoin → Criar plano de transação** fica
 habilitado depois que você observou os fundos. Ele planeja com base na
 observação mais recente, escolhendo os UTXOs dos maiores para os menores, e
@@ -355,7 +355,7 @@ criptograficamente, offline.
 
 Só entradas SegWit nativas (P2WPKH) podem ser finalizadas. Finalizar também
 registra uma
-[Publicação de âncora no Bitcoin](#publicações-de-âncora-no-bitcoin).
+[Registro de âncora no Bitcoin](#registros-de-âncora-no-bitcoin).
 
 ### Transmitindo
 
@@ -378,34 +378,34 @@ minerada, com os mesmos três resultados de
 Cada verificação entra no **Mostrar histórico de confirmações** desta
 transmissão. Essa lista é apagada ao recarregar, mas todo resultado também
 fica guardado no
-[Arquivo de observações de publicações](12-ArchiveAndAchievements.md#o-arquivo-de-observações-de-publicações).
+[Arquivo de observações de registros](12-ArchiveAndAchievements.md#o-arquivo-de-observações-de-registros).
 
 ### O que o fluxo não faz
 
 Quando **Transmitir transação** dá certo, a transação é adicionada à lista
-de **Evidências externas** da publicação como uma âncora nova, sem
+de **Evidências externas** do registro como uma âncora nova, sem
 verificação até você clicar em **Verificar evidências**; os pares podem
 encontrá-la com **Descobrir com os pares**. Uma transmissão recusada ou que não
 chega não adiciona nada. O fluxo não guarda suas telas: as de revisão,
 assinatura e transmissão são apagadas por um plano novo, uma assinatura nova
-ou uma recarga. O que fica é o registro de
-publicação feito na finalização, e todo resultado de transmissão e
+ou uma recarga. O que fica é o registro
+feito na finalização, e todo resultado de transmissão e
 confirmação no Arquivo de observações.
 
-### Publicações de âncora no Bitcoin
+### Registros de âncora no Bitcoin
 
-O cartão **Publicações de âncora no Bitcoin** lista um registro para cada
+O cartão **Registros de âncora no Bitcoin** lista um registro para cada
 transação que este dispositivo finalizou: `{ ID da âncora, hash do conteúdo,
 txid, rede, criado em }`. Ele é feito quando **Verificar e finalizar
 transação** dá certo, funcione ou não a transmissão depois, e não tem status
-próprio de confirmado ou válido. **Mostrar publicações** os lista. Cada linha
+próprio de confirmado ou válido. **Mostrar registros** os lista. Cada linha
 tem:
 
 - **Inspecionar observações** — contagens de todos os fatos de transmissão,
   confirmação, prova de conteúdo, posicionamento na cadeia e consistência
   que o arquivo tem para aquele ID de âncora.
-- **Mostrar ciclo de vida da publicação** — os mesmos fatos em ordem
-  cronológica, começando com **Registro de publicação criado**. Um passo sem
+- **Mostrar ciclo de vida do registro** — os mesmos fatos em ordem
+  cronológica, começando com **Registro criado**. Um passo sem
   nada registrado simplesmente não aparece. Abri-lo não contata nenhuma
   rede.
 
@@ -427,7 +427,7 @@ mesmo levando o hash do conteúdo como dado), termos próprios.
   como a Coinbase Wallet ou a MetaMask.
 - Uma conta no chain ID **8453** (mainnet da Base) ou **84532** (Base
   Sepolia). Qualquer outra cadeia é informada como divergente.
-- Uma publicação na sua página Registros assinados.
+- Um registro na sua página Registros assinados.
 
 ### Conectando uma carteira e observando uma conta
 
@@ -447,8 +447,8 @@ cadeia e o saldo da conta:
 
 ### Montando um plano de transação
 
-Na guia **Descentralização e evidências** do cartão da publicação,
-**Transação de publicação na Base → Criar plano de transação na Base**
+Na guia **Descentralização e evidências** do cartão do registro,
+**Transação de âncora na Base → Criar plano de transação na Base**
 (habilitado depois que você observou uma conta) monta uma transferência não
 assinada da sua conta para ela mesma, levando o hash do conteúdo como dado.
 
@@ -479,7 +479,7 @@ esse plano.
 
 No mesmo cartão de revisão, **Criar âncora na Base** assina, finaliza e
 transmite a transação revisada com um clique, e depois a adiciona à lista de
-evidências da publicação. É uma alternativa aos botões passo a passo, que
+evidências do registro. É uma alternativa aos botões passo a passo, que
 continuam funcionando.
 
 | Selo | Significado |
@@ -503,7 +503,7 @@ revisado e recupera quem assinou.
 | **Finalização indisponível** / **Falha na finalização** | Não foi possível conferir, ou algum outro resultado inutilizável. |
 
 Finalizar registra uma
-[Publicação de âncora na Base](#publicações-de-âncora-na-base). Depois,
+[Registro de âncora na Base](#registros-de-âncora-na-base). Depois,
 **Transmitir transação** a envia: **Transação transmitida** (com o **ID da
 transação**; ainda não incluída num bloco), **Transação rejeitada** ou
 **Transmissão indisponível**. **Transmitir de novo** reenvia os mesmos bytes.
@@ -522,14 +522,14 @@ transação na Base**, confere se ela está num bloco:
 **Observar a transação de novo** acrescenta ao **Mostrar histórico de
 observações**. Essa lista é apagada ao recarregar, mas toda observação
 também fica guardada no
-[Arquivo de observações de publicações](12-ArchiveAndAchievements.md#o-arquivo-de-observações-de-publicações).
+[Arquivo de observações de registros](12-ArchiveAndAchievements.md#o-arquivo-de-observações-de-registros).
 
-### Publicações de âncora na Base
+### Registros de âncora na Base
 
-Como as do Bitcoin, o cartão **Publicações de âncora na Base** guarda um
+Como o do Bitcoin, o cartão **Registros de âncora na Base** guarda um
 registro por transação finalizada: `{ hash do conteúdo, txid, rede, criado
-em }`. **Mostrar publicações** os lista, e **Mostrar ciclo de vida da
-publicação** mostra **Registro de publicação criado** seguido de cada
+em }`. **Mostrar registros** os lista, e **Mostrar ciclo de vida do
+registro** mostra **Registro criado** seguido de cada
 **Observação de inclusão nº N**. Os resultados de transmissão na Base não
 são guardados, então não há entrada de transmissão.
 
@@ -546,19 +546,19 @@ IPFS**. Só o IPFS (pinning remoto) como provedor preferido é
 Um **posicionamento de snapshot** é uma declaração assinada de que um
 backend de armazenamento — **IPFS**, **Arweave** ou o armazenamento
 **Local** deste dispositivo — consegue servir os bytes do hash de conteúdo de
-uma publicação. Não é garantia de que eles vão estar lá amanhã. Vários
+um registro. Não é garantia de que eles vão estar lá amanhã. Vários
 posicionamentos, em backends diferentes e de pessoas diferentes, podem
 existir lado a lado; nenhum é preferido.
 
 ### Criando um posicionamento
 
-Na seção **Distribuição** de um cartão de publicação, o bloco **Conteúdo** tem
+Na seção **Distribuição** de um cartão de registro, o bloco **Conteúdo** tem
 um cartão por backend, com **Criar posicionamento Local**, **Criar
 posicionamento IPFS** ou **Criar posicionamento Arweave**. Quando você salvou
 um armazenamento preferido, o bloco começa com um único botão para ele, como
 **Armazenar em IPFS**, e recolhe estes cartões em **Outras opções de
-armazenamento**. Cada um pega os bytes que este dispositivo tem da
-publicação e os entrega àquele backend:
+armazenamento**. Cada um pega os bytes que este dispositivo tem do
+registro e os entrega àquele backend:
 
 - **Posicionamento criado** — aceito; um novo posicionamento assinado aparece
   abaixo.
@@ -600,14 +600,14 @@ o serviço configurado em
 ### A lista de posicionamentos de snapshot
 
 Na guia **Posicionamentos e IPFS** do cartão, **Mostrar posicionamentos**
-lista todos os posicionamentos conhecidos da publicação: os que você fez,
+lista todos os posicionamentos conhecidos do registro: os que você fez,
 os que um par enviou e os que vêm dentro de um pacote de planta importado.
 
 | Campo | Significado |
 |---|---|
 | **Localizador** | Onde o backend diz que os bytes podem ser encontrados. |
 | **Posicionado** | A hora de posicionamento declarada. |
-| **Publicação** / **Hash do conteúdo** | O que a assinatura do posicionamento liga entre si. |
+| **Registro** / **Hash do conteúdo** | O que a assinatura do posicionamento liga entre si. |
 | **Posicionado por** | A identidade que o assinou. |
 
 Cada um tem até três botões:
@@ -669,7 +669,7 @@ remoto só pode publicar.) Ao contrário de um posicionamento, o resultado não
 um provedor aceitou estes bytes. Os resultados na tela são apagados ao
 recarregar, mas toda publicação bem-sucedida e toda verificação também ficam
 guardadas no
-[Arquivo de observações de publicações](12-ArchiveAndAchievements.md#o-arquivo-de-observações-de-publicações).
+[Arquivo de observações de registros](12-ArchiveAndAchievements.md#o-arquivo-de-observações-de-registros).
 
 ### Configurando um provedor de pinning remoto
 
@@ -726,10 +726,10 @@ registrado:
 | **Recuperação de conteúdo indisponível** | Não foi possível alcançar o gateway, ou ele não o tem. Não é uma divergência. |
 | **Falha na verificação** | Outra coisa deu errado. |
 
-### Histórico de publicação
+### Histórico do registro
 
 Publicar de novo nunca sobrescreve registros anteriores. **Mostrar histórico
-de publicação** lista cada publicação, da mais antiga para a mais nova, com
+do registro** lista cada publicação, da mais antiga para a mais nova, com
 localizador e hora; **Inspecionar** mostra o localizador, o hash do
 conteúdo, a hora e o método (hoje sempre **Provedor de pinning remoto**).
 Cada entrada tem seu próprio botão **Verificar conteúdo** e **Mostrar
@@ -739,7 +739,7 @@ verificação daquele registro.
 ## Steem
 
 *Experimental.* O ForkBuild consegue anunciar, guardar e compartilhar pela
-blockchain Steem. Os anúncios (de publicações, Snapshots e comentários) são
+blockchain Steem. Os anúncios (de registros, Snapshots e comentários) são
 respostas a tópicos mensais de descoberta, como
 [`@forkbuild/forkbuild-snapshot-2026-09`](https://steemit.com/forkbuild/@forkbuild/forkbuild-snapshot-2026-09).
 Ler não exige conta. O que for encontrado é verificado como um anúncio do
@@ -807,7 +807,7 @@ anunciada, além de guardada, o que Distribuir faz.
 
 **Em qualquer lugar.** Depois que uma Declaração assinada está guardada no
 Steem, no Arweave ou no IPFS, **Compartilhar…** e **Copiar link** aparecem
-abaixo dela: no painel de publicação da Visão do mundo, no resultado da caixa
+abaixo dela: no painel do registro na Visão do mundo, no resultado da caixa
 de diálogo Distribuir e na página Registros assinados. **Compartilhar…** abre o menu
 de compartilhamento do seu dispositivo, onde houver; **Copiar link** copia o
 link, que também aparece para copiar à mão. O link abre em qualquer
@@ -848,7 +848,7 @@ que você aprove cada postagem.
   da sua conta, com as tags `forkbuild` e `forkbuild-snapshot` ou
   `forkbuild-publication`, depois as [tags](02-TheEditor.md) da própria construção, com uma imagem da sua construção, o título,
   seu nome e a descrição (completa, até 2.000 caracteres, com sua [formatação](02-TheEditor.md)), e um link "See it in 3D" (veja em 3D). O que vier
-  na meia hora seguinte (o anúncio da Publicação, um comentário, uma
+  na meia hora seguinte (o anúncio do Registro, um comentário, uma
   âncora) é acrescentado à mesma postagem editando-a, para que seus
   seguidores vejam uma postagem, não várias.
 - **A imagem precisa de uma aprovação própria.** Para uma Declaração

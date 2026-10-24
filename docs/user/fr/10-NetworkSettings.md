@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: df2c8cb0e2cd162f -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 22cbbdb4844c4278 -->
 # 10 — Paramètres réseau
 
 <!-- languages -->
@@ -14,8 +14,8 @@
 pages qui déterminent avec quels serveurs ForkBuild communique. La plupart
 des gens n’ont jamais rien à changer ici : les valeurs par défaut
 fonctionnent d’emblée. Venez ici quand un serveur est en panne, quand
-vous gérez le vôtre, ou pour choisir où vos publications sont stockées et
-annoncées.
+vous gérez le vôtre, ou pour choisir où vos enregistrements sont stockés et
+annoncés.
 
 Pour ce que chaque serveur apprend sur vous, voir
 [Confidentialité](Privacy.md).
@@ -90,12 +90,12 @@ Enregistrements signés.
 ## Fournisseur de contenu
 
 Choisissez sur quel stockage **Stocker sur …** (le premier bouton du bloc
-**Contenu** d’une publication) et **Utiliser le fournisseur préféré**
+**Contenu** d’un enregistrement) et **Utiliser le fournisseur préféré**
 créent un Placement de Snapshot (voir
 [Utiliser un fournisseur préféré](11-EvidenceAndStorage.md#utiliser-un-fournisseur-préféré)),
 parmi les backends que cet appareil a enregistrés, et cliquez sur
-**Enregistrer**. **Local** n’est pas proposé, puisque chaque publication
-est déjà stockée sur cet appareil.
+**Enregistrer**. **Local** n’est pas proposé, puisque chaque enregistrement
+est déjà stocké sur cet appareil.
 
 **IPFS (épinglage distant)** *(expérimental)* est toujours proposé. Il
 utilise le service configuré dans **Service d’épinglage distant**, plus
@@ -126,7 +126,7 @@ Enregistrements signés partent de ce service, et vous pouvez encore le changer 
 ## Fournisseur d’annonce / de découverte
 
 Choisissez **Arweave**, **Blurt** (expérimental), **Nostr** ou **Steem** (expérimental) comme
-endroit par défaut où sont annoncés vos publications (Mondes partagés,
+endroit par défaut où sont annoncés vos enregistrements (Mondes partagés,
 Attributions de plans et propositions de noms de lieux), vos Snapshots et
 vos commentaires. Ce n’est qu’une valeur par défaut : chaque boîte de
 dialogue **Distribuer**, le sélecteur de Distribution de chaque carte
@@ -145,7 +145,7 @@ commentaire à côté de **Publier le commentaire**.
 ## Fournisseur de Preuve / Ancrage
 
 Choisissez où **Ancrer sur …** (le premier bouton du bloc
-**Preuve / Ancrage** d’une publication) crée des preuves externes :
+**Preuve / Ancrage** d’un enregistrement) crée des preuves externes :
 **Arweave**, **Bitcoin** *(expérimental)*, **Blurt** *(expérimental)* ou **Steem** *(expérimental)*, selon ce que cet appareil a
 enregistré. Base n’est jamais proposé, car chaque ancre Base exige que
 vous examiniez et signiez une transaction de portefeuille. Avec Bitcoin, il
@@ -165,7 +165,7 @@ suivante que si la passerelle actuelle est injoignable ou renvoie une
 erreur. Le contenu Arweave est adressé par son id de transaction, si bien
 que toutes les passerelles renvoient les mêmes octets.
 
-Cette liste sert à récupérer le contenu d’une publication depuis une
+Cette liste sert à récupérer le contenu d’un enregistrement depuis une
 source décentralisée et à résoudre ou matérialiser un Placement de
 Snapshot Arweave. Elle ne change pas l’endroit où votre propre contenu est
 envoyé. Les ancres Arweave utilisent la première passerelle de la liste
@@ -208,7 +208,7 @@ après qu’un endpoint a refusé la transaction.
 ## Relais Nostr
 
 Les relais de tout ce que ForkBuild publie ou découvre via Nostr :
-publications (Mondes partagés, Attributions de plans et propositions de
+enregistrements (Mondes partagés, Attributions de plans et propositions de
 noms de lieux), Snapshots et commentaires. Une URL `ws://` ou `wss://` par
 ligne ; les valeurs par défaut sont `wss://relay.damus.io`, `wss://nos.lol`
 et `wss://relay.primal.net`. **Enregistrer** remplace toute la liste, et

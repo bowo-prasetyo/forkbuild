@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: f97c16f677fc5882 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: 8a0b3b5d89aebe19 -->
 # Ihre Arbeit verteilen
 
 <!-- languages -->
@@ -62,7 +62,7 @@ nie etwas.
 |---|---|---|---|---|
 | **Der Signierte Anspruch Ihrer Welt** (der signierte Eintrag einer veröffentlichten Welt, genannt Geteilte Welt) | Arweave, IPFS, Steem oder Blurt | Nostr, Arweave, Steem oder Blurt | — | **Verteilen** nach dem Veröffentlichen im Editor; **Meine Geteilte Welt** in der Weltansicht; die Seite **Signierte Einträge** |
 | **Der Snapshot Ihrer Welt** (ihre Steine), mit dem Ort, an dem Sie sie platziert haben | Arweave, IPFS, Steem oder Blurt | Nostr, Arweave, Steem oder Blurt | — | Dieselben **Verteilen**-Dialoge (**Nur Snapshot verteilen** für nur diese Hälfte) |
-| **Der Inhalts-Hash jeder Veröffentlichung** (eine Welt, ein Urheberschaftsanspruch oder ein Ortsname) | — | — | Bitcoin, Arweave, Base, Steem oder Blurt | Die Karte der Veröffentlichung auf der Seite **Signierte Einträge** |
+| **Der Inhalts-Hash jedes Eintrags** (eine Welt, ein Urheberschaftsanspruch oder ein Ortsname) | — | — | Bitcoin, Arweave, Base, Steem oder Blurt | Die Karte des Eintrags auf der Seite **Signierte Einträge** |
 | **Die Urheberschaft einer Struktur** (Bauplan-Zuschreibung) | Arweave, IPFS, Steem oder Blurt | Nostr, Arweave, Steem oder Blurt | — | **Verteilen** im **Info**-Feld der Struktur, angeboten, sobald Sie **Im Netzwerk veröffentlichen**; die Seite **Signierte Einträge** |
 | **Ein Ortsname** (Ortsnamensanspruch) | Arweave, IPFS, Steem oder Blurt | Nostr, Arweave, Steem oder Blurt | — | **Verteilen** im Benennungsfeld der Weltansicht, angeboten, sobald Sie **Einen Namen veröffentlichen** (es kündigt den Namen im gewählten Netzwerk an); die Seite **Signierte Einträge** für alle diese |
 | **Ein Kommentar** zu einer Veröffentlichung | — | Nostr, Arweave, Steem oder Blurt, oder keines (**Nur lokal & Peers**) | — | **Kommentar senden**, unter Entdecken oder in der Weltansicht, im daneben gewählten Netzwerk; später **Verteilen** unter Ihrem eigenen Kommentar |
@@ -173,9 +173,9 @@ bereits dessen Inhalts-Hash trägt; siehe [Blurt](11-EvidenceAndStorage.md#blurt
 4. Es sendet den Snapshot, dann den Signierten Anspruch, und zeigt für
    jedes ein Ergebnis. Schlägt eine Hälfte fehl, wiederholen Sie nur diese
    mit ihrer eigenen Schaltfläche **Nur … verteilen**.
-5. *Optional:* Verankern Sie die Veröffentlichung auf der Seite
+5. *Optional:* Verankern Sie den Eintrag auf der Seite
    **Signierte Einträge** (zum Beispiel mit **Auf Arweave verankern**), um
-   festzuhalten, wann sie existierte.
+   festzuhalten, wann er existierte.
 6. Klicken Sie unter dem Ergebnis auf **Teilen …** oder **Link kopieren**.
    Der Link öffnet Ihr Bauwerk auf jedem Gerät, bereit zum Remixen oder für
    einen Rundgang.

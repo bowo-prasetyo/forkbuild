@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: f97c16f677fc5882 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: 8a0b3b5d89aebe19 -->
 # Distribuir su trabajo
 
 <!-- languages -->
@@ -59,7 +59,7 @@ nada.
 |---|---|---|---|---|
 | **La Declaración firmada de su Mundo** (el registro firmado de un Mundo publicado, llamado Mundo compartido) | Arweave, IPFS, Steem o Blurt | Nostr, Arweave, Steem o Blurt | — | **Distribuir** después de publicar en el Editor; **Mi Mundo compartido** en la Vista del mundo; la página **Registros firmados** |
 | **El Snapshot de su Mundo** (sus bloques), con el lugar donde lo colocó | Arweave, IPFS, Steem o Blurt | Nostr, Arweave, Steem o Blurt | — | Los mismos diálogos de **Distribuir** (**Distribuir solo el Snapshot** para solo esta mitad) |
-| **El hash del contenido de cualquier publicación** (un Mundo, una declaración de autoría o un nombre de lugar) | — | — | Bitcoin, Arweave, Base, Steem o Blurt | La tarjeta de la publicación en la página **Registros firmados** |
+| **El hash del contenido de cualquier registro** (un Mundo, una declaración de autoría o un nombre de lugar) | — | — | Bitcoin, Arweave, Base, Steem o Blurt | La tarjeta del registro en la página **Registros firmados** |
 | **La autoría de una estructura** (Atribución de plano) | Arweave, IPFS, Steem o Blurt | Nostr, Arweave, Steem o Blurt | — | **Distribuir** en el panel **Información** de la estructura, que se ofrece en cuanto usa **Publicar en la red**; la página **Registros firmados** |
 | **Un nombre de lugar** (Declaración de nombre de lugar) | Arweave, IPFS, Steem o Blurt | Nostr, Arweave, Steem o Blurt | — | **Distribuir** en el panel de nombres de la Vista del mundo, que se ofrece en cuanto usa **Publicar un nombre** (anuncia el nombre en la red que elija); la página **Registros firmados** para cualquiera de estas opciones |
 | **Un comentario** sobre una publicación | — | Nostr, Arweave, Steem o Blurt, o ninguna (**Solo local y pares**) | — | **Publicar comentario**, en Explorar o en la Vista del mundo, en la red elegida junto al botón; más tarde, **Distribuir** bajo su propio comentario |
@@ -169,7 +169,7 @@ en Blurt ya lleva su hash de contenido; consulte [Blurt](11-EvidenceAndStorage.m
 4. Envía el Snapshot, luego la Declaración firmada, y muestra un resultado
    para cada uno. Si una mitad falla, reintente solo esa con su propio
    botón **Distribuir solo …**.
-5. *Opcional:* en la página **Registros firmados**, ancle la publicación (por
+5. *Opcional:* en la página **Registros firmados**, ancle el registro (por
    ejemplo con **Anclar en Arweave**) para dejar constancia de cuándo
    existía.
 6. Haga clic en **Compartir…** o **Copiar enlace** bajo el resultado. El

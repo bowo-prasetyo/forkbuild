@@ -183,12 +183,12 @@ async function run() {
 
         const imported = describeMaterializationAttempt({ outcome: SnapshotContentTransferOutcome.STORED, publicationKnown: true, publicationId: 'p', contentReference: { hash: 'h' } });
         assert(imported.state === SnapshotContentMaterializationUiState.IMPORTED, '3. STORED + known reports IMPORTED');
-        assert(displayText(imported.message) === "Snapshot was imported and matches the publication's content hash.",
+        assert(displayText(imported.message) === "Snapshot was imported and matches the record's content hash.",
             '4. the exact, deliberately unhedged sentence this milestone permits for a known publication');
 
         const importedUnknown = describeMaterializationAttempt({ outcome: SnapshotContentTransferOutcome.STORED, publicationKnown: false, publicationId: 'p', contentReference: { hash: 'h' } });
         assert(importedUnknown.state === SnapshotContentMaterializationUiState.IMPORTED, '5. STORED + unknown still reports IMPORTED — publicationKnown never gates the outcome');
-        assert(displayText(importedUnknown.message) === 'Snapshot imported. The publication is not currently known locally.',
+        assert(displayText(importedUnknown.message) === 'Snapshot imported. The record is not currently known locally.',
             '6. the distinct sentence this milestone requires when the publication is not cataloged');
 
         const already = describeMaterializationAttempt({ outcome: SnapshotContentTransferOutcome.ALREADY_STORED, publicationKnown: true });
@@ -261,7 +261,7 @@ async function run() {
         assert(firstAttempt.error === null && firstAttempt.outcome === SnapshotContentTransferOutcome.STORED, '4. a healthy import produces STORED');
         const firstView = describeMaterializationAttempt(firstAttempt);
         assert(firstView.state === SnapshotContentMaterializationUiState.IMPORTED, '5. the derived view reports IMPORTED');
-        assert(displayText(firstView.message) === "Snapshot was imported and matches the publication's content hash.",
+        assert(displayText(firstView.message) === "Snapshot was imported and matches the record's content hash.",
             '6. Bob already knows P, so the UI states the exact, unhedged "matches" sentence');
 
         assert((await bob.contentStore.get(contentReference)) === SNAPSHOT_BYTES, '7. Bob now genuinely possesses the exact snapshot bytes');
@@ -299,7 +299,7 @@ async function run() {
         assert(carolAttempt.outcome === SnapshotContentTransferOutcome.STORED, '16. Carol\'s import still succeeds — she now possesses the bytes');
         const carolView = describeMaterializationAttempt(carolAttempt);
         assert(carolView.state === SnapshotContentMaterializationUiState.IMPORTED, '17. the derived view still reports IMPORTED, never a failure');
-        assert(displayText(carolView.message) === 'Snapshot imported. The publication is not currently known locally.',
+        assert(displayText(carolView.message) === 'Snapshot imported. The record is not currently known locally.',
             '18. INVARIANT: the UI names the uncataloged publication explicitly, rather than silently pretending it is known');
         assert((await carol.contentStore.get(contentReference)) === SNAPSHOT_BYTES, '19. Carol genuinely possesses the exact snapshot bytes despite never having cataloged the publication');
     }

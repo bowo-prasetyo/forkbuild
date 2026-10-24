@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: 8832d9dd4363463e -->
+<!-- translation-of: docs/user/README.md source-hash: 168564d162b23c2b -->
 # ForkBuild-Benutzerdokumentation
 
 <!-- languages -->
@@ -59,7 +59,7 @@ Freunden herumzulaufen.
 6. **[Ihre Daten](13-YourData.md)** — alles, was dieser Browser enthält,
    in eine verschlüsselte Datei sichern und wiederherstellen, die
    kleineren Exporte und wo dieses Gerät das Verteilen Ihrer
-   Veröffentlichungen festgehalten hat.
+   Einträge festgehalten hat.
 
 ## Erweitert
 
@@ -99,7 +99,7 @@ experimentellen Werkzeuge. Zum Spielen brauchen Sie nichts davon.
   Bitcoin und Base, entferntes IPFS-Pinning, Steem und Blurt.
   [Ihre Arbeit verteilen](Distribution.md) zeigt, wie das zusammenpasst.
 - **[Archiv & Erfolge](12-ArchiveAndAchievements.md)** —
-  *experimentell*. Das Beobachtungsarchiv, Veröffentlichungsverweise
+  *experimentell*. Das Beobachtungsarchiv, Eintragsverweise
   und Erfolge.
 
 ## Nachschlagen

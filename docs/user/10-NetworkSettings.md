@@ -11,7 +11,7 @@
 **Network Settings**, in the top bar, links every page that controls which
 servers ForkBuild talks to. Most people never need to change anything
 here: the defaults work out of the box. Come here when a server is down,
-when you run your own, or to choose where your publications are stored and
+when you run your own, or to choose where your records are stored and
 announced.
 
 For what each server learns about you, see [Privacy](../Privacy.md).
@@ -74,12 +74,12 @@ Turning one off takes effect the next time the Signed Records page opens.
 
 ## Content Provider
 
-Choose which storage **Store on …** (the first button in a publication's
+Choose which storage **Store on …** (the first button in a record's
 **Content** block) and **Use Preferred Provider** create a Snapshot
 Placement on (see
 [Using a preferred provider](11-EvidenceAndStorage.md#using-a-preferred-provider)),
 from the backends this device has registered, and click **Save**. **Local**
-isn't offered, since every publication is already stored on this device.
+isn't offered, since every record is already stored on this device.
 
 **IPFS (Remote Pinning)** *(experimental)* is always offered. It uses the
 service set up under **Remote Pinning Service**, below: with one set up,
@@ -106,7 +106,7 @@ you can still change it there. **Forget Service** removes it.
 ## Announcement / Discovery Provider
 
 Choose **Arweave**, **Blurt** (experimental), **Nostr** or **Steem** (experimental) as the default
-place your publications (Shared Worlds, Blueprint Attributions and
+place your records (Shared Worlds, Blueprint Attributions and
 place-name claims), Snapshots and comments are announced. It's only a
 default: every **Distribute** dialog, Explore's per-card
 Distribution picker and the network picker next to **Post Comment** start
@@ -123,7 +123,7 @@ Every comment form starts on it, and you can still switch a comment beside
 ## Proof / Anchoring Provider
 
 Choose where **Anchor on …** (the first button in a
-publication's **Proof / Anchoring** block) creates external evidence: **Arweave**, **Bitcoin** *(experimental)*, **Blurt** *(experimental)* or **Steem** *(experimental)*, whichever this device has
+record's **Proof / Anchoring** block) creates external evidence: **Arweave**, **Bitcoin** *(experimental)*, **Blurt** *(experimental)* or **Steem** *(experimental)*, whichever this device has
 registered. Base is never offered, because every Base anchor needs you to
 review and sign a wallet transaction. With Bitcoin chosen there's no
 **Anchor on …** button: the block shows every option and points to the
@@ -141,7 +141,7 @@ They're tried in order: a read moves to the next gateway only if the
 current one is unreachable or returns an error. Arweave content is
 addressed by its transaction id, so every gateway returns the same bytes.
 
-This list is used when retrieving a publication's material from a
+This list is used when retrieving a record's material from a
 decentralized source and when resolving or materializing an Arweave
 Snapshot Placement. It doesn't change where your own content is uploaded.
 Arweave anchors use the first gateway in the list to create and verify.
@@ -182,7 +182,7 @@ rejected the transaction.
 ## Nostr Relays
 
 Relays for everything ForkBuild publishes or discovers over Nostr:
-publications (Shared Worlds, Blueprint Attributions and place-name
+records (Shared Worlds, Blueprint Attributions and place-name
 claims), Snapshots and comments. One `ws://` or `wss://` URL per line; the defaults are `wss://relay.damus.io`,
 `wss://nos.lol` and `wss://relay.primal.net`. **Save** replaces the whole
 list, and rejects it if any line isn't a valid URL.

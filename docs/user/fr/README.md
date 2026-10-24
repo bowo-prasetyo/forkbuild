@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: 8832d9dd4363463e -->
+<!-- translation-of: docs/user/README.md source-hash: 168564d162b23c2b -->
 # Documentation utilisateur de ForkBuild
 
 <!-- languages -->
@@ -62,7 +62,7 @@ avec des amis.
 6. **[Vos données](13-YourData.md)** — sauvegarder tout ce que ce
    navigateur contient dans un seul fichier chiffré et le restaurer, les
    exports plus restreints, et où cet appareil a enregistré la
-   distribution de vos publications.
+   distribution de vos enregistrements.
 
 ## Avancé
 
@@ -105,7 +105,7 @@ pour jouer.
   s’articule.
 - **[Archive et succès](12-ArchiveAndAchievements.md)** —
   *expérimental*. L’archive des observations, les références entre
-  publications et les succès.
+  enregistrements et les succès.
 
 ## Référence
 

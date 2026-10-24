@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: 8832d9dd4363463e -->
+<!-- translation-of: docs/user/README.md source-hash: 168564d162b23c2b -->
 # Documentación para usuarios de ForkBuild
 
 <!-- languages -->
@@ -61,7 +61,7 @@ sus amigos.
 6. **[Sus datos](13-YourData.md)**: hacer una copia de seguridad de todo
    lo que tiene este navegador en un solo archivo cifrado y restaurarla,
    las exportaciones más pequeñas y dónde registró este dispositivo la
-   distribución de sus publicaciones.
+   distribución de sus registros.
 
 ## Avanzado
 
@@ -105,7 +105,7 @@ para jugar.
   encaja todo esto.
 - **[Archivo y logros](12-ArchiveAndAchievements.md)**:
   *experimental*. El archivo de observaciones, las referencias entre
-  publicaciones y los logros.
+  registros y los logros.
 
 ## Referencia
 

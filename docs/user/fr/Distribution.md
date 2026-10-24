@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: f97c16f677fc5882 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: 8a0b3b5d89aebe19 -->
 # Distribuer votre travail
 
 <!-- languages -->
@@ -61,7 +61,7 @@ enregistrer n’envoie jamais rien.
 |---|---|---|---|---|
 | **La Déclaration signée de votre Monde** (l’enregistrement signé d’un Monde publié, appelé Monde partagé) | Arweave, IPFS, Steem ou Blurt | Nostr, Arweave, Steem ou Blurt | — | **Distribuer** après la publication dans l’Éditeur ; **Mon Monde partagé** dans la Vue du Monde ; la page **Enregistrements signés** |
 | **Le Snapshot de votre Monde** (ses briques), avec l’endroit où vous l’avez placé | Arweave, IPFS, Steem ou Blurt | Nostr, Arweave, Steem ou Blurt | — | Les mêmes boîtes de dialogue **Distribuer** (**Distribuer le Snapshot seulement** pour cette seule moitié) |
-| **Le hash de contenu de n’importe quelle publication** (un Monde, une revendication de paternité ou un nom de lieu) | — | — | Bitcoin, Arweave, Base, Steem ou Blurt | La carte de la publication sur la page **Enregistrements signés** |
+| **Le hash de contenu de n’importe quel enregistrement** (un Monde, une revendication de paternité ou un nom de lieu) | — | — | Bitcoin, Arweave, Base, Steem ou Blurt | La carte de l’enregistrement sur la page **Enregistrements signés** |
 | **La paternité d’une structure** (Attribution de plan) | Arweave, IPFS, Steem ou Blurt | Nostr, Arweave, Steem ou Blurt | — | **Distribuer** dans le panneau **Infos** de la structure, proposé une fois que vous avez cliqué sur **Publier sur le réseau** ; la page **Enregistrements signés** |
 | **Un nom de lieu** (Proposition de nom de lieu) | Arweave, IPFS, Steem ou Blurt | Nostr, Arweave, Steem ou Blurt | — | **Distribuer** dans le panneau de nommage de la Vue du Monde, proposé une fois que vous avez cliqué sur **Publier un nom** (il annonce le nom sur le réseau choisi) ; la page **Enregistrements signés** pour n’importe lequel d’entre eux |
 | **Un commentaire** sur une publication | — | Nostr, Arweave, Steem ou Blurt, ou aucun (**Local et pairs uniquement**) | — | **Publier le commentaire**, dans Explorer ou la Vue du Monde, sur le réseau choisi à côté ; plus tard, **Distribuer** sous votre propre commentaire |
@@ -178,7 +178,7 @@ déjà son hash de contenu ; voir [Blurt](11-EvidenceAndStorage.md#blurt).
 4. Il envoie le Snapshot, puis la Déclaration signée, et affiche un
    résultat pour chacun. Si une moitié échoue, réessayez seulement
    celle-là avec son propre bouton **… seulement**.
-5. *Facultatif :* sur la page **Enregistrements signés**, ancrez la publication (par
+5. *Facultatif :* sur la page **Enregistrements signés**, ancrez l’enregistrement (par
    exemple avec **Ancrer sur Arweave**) pour garder la trace de la date à
    laquelle elle existait.
 6. Cliquez sur **Partager…** ou **Copier le lien** sous le résultat. Le

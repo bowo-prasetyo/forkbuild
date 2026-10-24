@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: df2c8cb0e2cd162f -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 22cbbdb4844c4278 -->
 # 10 — Pengaturan Jaringan
 
 <!-- languages -->
@@ -14,7 +14,7 @@
 mengatur server mana yang dihubungi ForkBuild. Kebanyakan orang tidak
 pernah perlu mengubah apa pun di sini: nilai bawaannya langsung berfungsi.
 Datanglah ke sini saat sebuah server mati, saat Anda menjalankan server
-sendiri, atau untuk memilih di mana publikasi Anda disimpan dan
+sendiri, atau untuk memilih di mana catatan bertanda tangan Anda disimpan dan
 diumumkan.
 
 Untuk apa yang diketahui setiap server tentang Anda, lihat
@@ -85,11 +85,11 @@ halaman Catatan Bertanda Tangan dibuka berikutnya.
 ## Penyedia Konten
 
 Pilih penyimpanan tempat **Simpan di …** (tombol pertama di blok
-**Konten** sebuah publikasi) dan **Gunakan Penyedia Pilihan** membuat
+**Konten** sebuah catatan) dan **Gunakan Penyedia Pilihan** membuat
 Penempatan Snapshot (lihat
 [Menggunakan penyedia pilihan](11-EvidenceAndStorage.md#menggunakan-penyedia-pilihan)),
 dari backend yang terdaftar di perangkat ini, lalu klik **Simpan**.
-**Lokal** tidak ditawarkan, karena setiap publikasi sudah tersimpan di
+**Lokal** tidak ditawarkan, karena setiap catatan sudah tersimpan di
 perangkat ini.
 
 **IPFS (Pinning Jarak Jauh)** *(eksperimental)* selalu ditawarkan. Ini
@@ -119,7 +119,7 @@ Anda tetap dapat mengubahnya di sana. **Lupakan Layanan** menghapusnya.
 ## Penyedia Pengumuman / Penemuan
 
 Pilih **Arweave**, **Blurt** (eksperimental), **Nostr**, atau **Steem** (eksperimental) sebagai tempat
-bawaan untuk mengumumkan publikasi Anda (Dunia Bersama, Atribusi Cetak
+bawaan untuk mengumumkan catatan bertanda tangan Anda (Dunia Bersama, Atribusi Cetak
 Biru, dan klaim nama tempat), Snapshot, dan komentar. Ini hanya bawaan:
 setiap dialog **Distribusikan**, pemilih Distribusi per kartu di
 Jelajahi, dan pemilih jaringan di samping **Kirim Komentar** dimulai
@@ -136,7 +136,7 @@ mengubahnya untuk satu komentar di samping **Kirim Komentar**.
 ## Penyedia Bukti / Penjangkaran
 
 Pilih tempat **Jangkarkan di …** (tombol pertama di blok
-**Bukti / Penjangkaran** sebuah publikasi) membuat bukti eksternal:
+**Bukti / Penjangkaran** sebuah catatan) membuat bukti eksternal:
 **Arweave**, **Bitcoin** *(eksperimental)*, **Blurt** *(eksperimental)*, atau **Steem** *(eksperimental)*, mana pun yang terdaftar di
 perangkat ini. Base tidak pernah ditawarkan, karena setiap jangkar Base
 mengharuskan Anda meninjau dan menandatangani transaksi dompet. Jika
@@ -156,7 +156,7 @@ hanya jika gateway saat ini tidak dapat dijangkau atau mengembalikan
 kesalahan. Konten Arweave dialamatkan dengan id transaksinya, jadi setiap
 gateway mengembalikan byte yang sama.
 
-Daftar ini dipakai saat mengambil materi publikasi dari sumber
+Daftar ini dipakai saat mengambil materi catatan dari sumber
 terdesentralisasi dan saat menyelesaikan atau mewujudkan Penempatan
 Snapshot Arweave. Daftar ini tidak mengubah tempat konten Anda sendiri
 diunggah. Jangkar Arweave memakai gateway pertama dalam daftar untuk
@@ -197,7 +197,7 @@ tidak pernah setelah ada yang menolak transaksinya.
 ## Relay Nostr
 
 Relay untuk semua yang diterbitkan atau ditemukan ForkBuild melalui Nostr:
-publikasi (Dunia Bersama, Atribusi Cetak Biru, dan klaim nama tempat),
+catatan bertanda tangan (Dunia Bersama, Atribusi Cetak Biru, dan klaim nama tempat),
 Snapshot, dan komentar. Satu URL `ws://` atau `wss://` per baris;
 bawaannya adalah `wss://relay.damus.io`, `wss://nos.lol`, dan
 `wss://relay.primal.net`. **Simpan** mengganti seluruh daftar, dan

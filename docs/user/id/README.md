@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/README.md source-hash: 8832d9dd4363463e -->
+<!-- translation-of: docs/user/README.md source-hash: 168564d162b23c2b -->
 # Dokumentasi Pengguna ForkBuild
 
 <!-- languages -->
@@ -58,8 +58,8 @@ berjalan-jalan bersama teman.
    pandang kamera, kendaraan, hewan, dan inventaris Anda.
 6. **[Data Anda](13-YourData.md)** — mencadangkan semua yang disimpan
    browser ini ke satu file terenkripsi dan memulihkannya, ekspor yang
-   lebih kecil, dan di mana perangkat ini mencatat distribusi publikasi
-   Anda.
+   lebih kecil, dan di mana perangkat ini mencatat distribusi catatan
+   bertanda tangan Anda.
 
 ## Lanjutan
 
@@ -95,7 +95,7 @@ eksperimental. Anda tidak memerlukan semua ini untuk bermain.
   Base, pinning IPFS jarak jauh, Steem, dan Blurt.
   [Mendistribusikan Karya Anda](Distribution.md) menunjukkan bagaimana
   semuanya saling terkait.
-- **[Arsip & Pencapaian](12-ArchiveAndAchievements.md)** — *eksperimental*. Arsip pengamatan, referensi publikasi,
+- **[Arsip & Pencapaian](12-ArchiveAndAchievements.md)** — *eksperimental*. Arsip pengamatan, referensi catatan,
   dan pencapaian.
 
 ## Referensi

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: df2c8cb0e2cd162f -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 22cbbdb4844c4278 -->
 # 10 — Configurações de rede
 
 <!-- languages -->
@@ -14,7 +14,7 @@
 páginas que controlam com quais servidores o ForkBuild conversa. A maioria
 das pessoas nunca precisa mudar nada aqui: os padrões já funcionam. Venha
 aqui quando um servidor cair, quando você rodar o seu próprio, ou para
-escolher onde suas publicações são guardadas e anunciadas.
+escolher onde seus registros são guardados e anunciados.
 
 Para o que cada servidor fica sabendo sobre você, veja
 [Privacidade](Privacy.md).
@@ -82,11 +82,11 @@ carteira vale a partir da próxima vez que a página Registros assinados abrir.
 ## Provedor de conteúdo
 
 Escolha em qual armazenamento **Armazenar em …** (o primeiro botão do bloco
-**Conteúdo** de uma publicação) e **Usar o provedor preferido** criam um
+**Conteúdo** de um registro) e **Usar o provedor preferido** criam um
 Posicionamento de Snapshot (veja
 [Usando um provedor preferido](11-EvidenceAndStorage.md#usando-um-provedor-preferido)),
 entre os backends que este dispositivo registrou, e clique em **Salvar**.
-**Local** não aparece, já que toda publicação já fica guardada neste
+**Local** não aparece, já que todo registro já fica guardado neste
 dispositivo.
 
 **IPFS (pinning remoto)** *(experimental)* sempre aparece. Ele usa o
@@ -115,7 +115,7 @@ e você ainda pode trocá-lo ali. **Esquecer serviço** o remove.
 ## Provedor de anúncio / descoberta
 
 Escolha **Arweave**, **Blurt** (experimental), **Nostr** ou **Steem** (experimental) como o lugar
-padrão onde suas publicações (Mundos compartilhados, atribuições de planta e
+padrão onde seus registros (Mundos compartilhados, atribuições de planta e
 declarações de nomes de lugares), Snapshots e comentários são anunciados. É
 só um padrão: toda caixa de diálogo **Distribuir**, o seletor de Distribuição
 de cada cartão em Explorar e o seletor de rede ao lado de **Publicar
@@ -132,7 +132,7 @@ trocá-la em um comentário ao lado de **Publicar comentário**.
 ## Provedor de prova / ancoragem
 
 Escolha onde **Ancorar em …** (o primeiro botão do bloco
-**Prova / ancoragem** de uma publicação) cria evidências externas:
+**Prova / ancoragem** de um registro) cria evidências externas:
 **Arweave**, **Bitcoin** *(experimental)*, **Blurt** *(experimental)* ou **Steem** *(experimental)*, conforme o que este dispositivo tiver
 registrado. A Base nunca aparece, porque toda âncora na Base exige que você
 revise e assine uma transação na carteira. Com o Bitcoin escolhido, não há
@@ -152,7 +152,7 @@ atual estiver inacessível ou devolver um erro. O conteúdo do Arweave é
 endereçado pelo id da transação, então todos os gateways devolvem os mesmos
 bytes.
 
-Esta lista é usada ao recuperar o material de uma publicação a partir de uma
+Esta lista é usada ao recuperar o material de um registro a partir de uma
 origem descentralizada e ao resolver ou materializar um Posicionamento de
 Snapshot no Arweave. Ela não muda para onde seu próprio conteúdo é enviado.
 As âncoras no Arweave usam o primeiro gateway da lista para criar e
@@ -193,7 +193,7 @@ um rejeitou a transação.
 ## Relays do Nostr
 
 Relays para tudo o que o ForkBuild publica ou descobre pelo Nostr:
-publicações (Mundos compartilhados, atribuições de planta e declarações de
+registros (Mundos compartilhados, atribuições de planta e declarações de
 nomes de lugares), Snapshots e comentários. Uma URL `ws://` ou `wss://` por
 linha; os padrões são `wss://relay.damus.io`, `wss://nos.lol` e
 `wss://relay.primal.net`. **Salvar** substitui a lista inteira, e a recusa

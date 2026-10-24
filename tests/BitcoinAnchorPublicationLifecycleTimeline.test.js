@@ -96,7 +96,7 @@ async function run() {
         assert(timeline.anchorId === 'anchor-fresh', '1. the timeline names the publication\'s own anchorId');
         assert(timeline.count === 1, '2. a fresh publication\'s timeline holds exactly one entry — never zero, never a fabricated stage');
         assert(timeline.entries[0].kind === BitcoinAnchorPublicationLifecycleTimelineEntryKind.PUBLICATION, '3. the one entry is the publication record itself');
-        assert(displayText(timeline.entries[0].label) === 'Publication record created', '4. the label is a plain factual sentence');
+        assert(displayText(timeline.entries[0].label) === 'Record created', '4. the label is a plain factual sentence');
         assert(timeline.entries[0].anchorId === 'anchor-fresh', '5. the entry is stamped with the publication\'s own anchorId');
         assertNeverScored(timeline, 'freshTimeline');
     }

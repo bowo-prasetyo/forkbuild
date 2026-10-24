@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: c9274474de1ec083 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 7a94f288453a4fe2 -->
 # 09 — Registros firmados y evidencia externa
 
 <!-- languages -->
@@ -11,7 +11,7 @@
 > funciona por debajo.
 
 > **En parte experimental.** La página Registros firmados es una función
-> habitual: su lista y sus estados, quitar publicaciones que no se pueden
+> habitual: su lista y sus estados, quitar registros que no se pueden
 > usar, anunciar en Nostr o Arweave, guardar en IPFS o Arweave, anclar en
 > Arweave, y las cuatro pestañas de una tarjeta: **Snapshot**,
 > **Descentralización y evidencia**, **Colocaciones e IPFS** e
@@ -49,7 +49,7 @@ declaración:
 
 ## Dos significados de “publicar”
 
-| | **Publicar** (Explorar) | **Página Publicaciones** |
+| | **Publicar** (Explorar) | **Página Registros firmados** |
 |---|---|---|
 | Qué comparte | Una construcción o un Mundo | Un registro firmado: un Mundo compartido, la autoría de una estructura o un nombre de lugar |
 | Dónde lo ve | Explorar, su página (**Mis construcciones**), Vista del mundo | La página **Registros firmados** |
@@ -72,7 +72,7 @@ dispositivo. (La única excepción es **Abrir en el Editor** en su propio
 Mundo compartido que necesita volver a publicarse; consulte
 [Significado de los estados](#significado-de-los-estados)).
 
-Cada entrada de la página Registros firmados es una *publicación*, y cada una es
+Cada entrada de la página Registros firmados es un *registro*, y cada uno es
 de uno de tres tipos:
 
 | Tipo | Qué es |
@@ -86,28 +86,28 @@ compartido** al registro firmado de un Mundo, como en **Mi Mundo
 compartido**, **Descubrir Mundo compartido** y **Seleccionar Mundo
 compartido**.
 
-## Qué rodea a una publicación
+## Qué rodea a un registro
 
-Una publicación es solo el registro firmado. Todo lo demás que verá en su
+Un registro es solo la declaración firmada en sí. Todo lo demás que verá en su
 tarjeta, y a su alrededor en la Vista del mundo, es algo que se hace con
-ella o que se le asocia. Nada de eso es un tipo de publicación, y solo la
-publicación en sí es obligatoria:
+él o que se le asocia. Nada de eso es un tipo de registro, y solo el
+registro en sí es obligatorio:
 
 | Término | Como… | Qué es |
 |---|---|---|
-| **Publicación** | El libro en sí | Un registro firmado: un Mundo compartido, una Atribución de plano o una Declaración de nombre de lugar. Lleva el hash de su contenido y la firma de su editor. |
-| **Contenido** | Donde se guardan los ejemplares impresos | Los bytes de los que trata la publicación, como los bloques de un Mundo. Siempre se guardan primero en este dispositivo; **Guardar en …** pone una copia en IPFS, Arweave, Steem o Blurt para que otros puedan obtenerla. Consulte [Proveedor de contenido](10-NetworkSettings.md#proveedor-de-contenido). |
-| **Snapshot** | Un ejemplar impreso | Una copia guardada del contenido de una publicación, como los bloques de un Mundo, que otros pueden obtener y comprobar contra su hash. Consulte [Snapshot local](#snapshot-local). |
+| **Registro** | El libro en sí | Un registro firmado: un Mundo compartido, una Atribución de plano o una Declaración de nombre de lugar. Lleva el hash de su contenido y la firma de su editor. |
+| **Contenido** | Donde se guardan los ejemplares impresos | Los bytes de los que trata el registro, como los bloques de un Mundo. Siempre se guardan primero en este dispositivo; **Guardar en …** pone una copia en IPFS, Arweave, Steem o Blurt para que otros puedan obtenerla. Consulte [Proveedor de contenido](10-NetworkSettings.md#proveedor-de-contenido). |
+| **Snapshot** | Un ejemplar impreso | Una copia guardada del contenido de un registro, como los bloques de un Mundo, que otros pueden obtener y comprobar contra su hash. Consulte [Snapshot local](#snapshot-local). |
 | **Colocación** | Dónde está el ejemplar en el estante | Un registro firmado de dónde está una construcción en el Mundo. Un Mundo compartido puede tener varias. Consulte [Colocar o remezclar](WorldViewAdvancedTools.md#colocar-o-remezclar). |
-| **Anuncio / descubrimiento** | Una ficha del catálogo de una biblioteca | Un pequeño aviso firmado en Nostr, Arweave, Steem o Blurt que dice que la publicación o el Snapshot existen y dónde está su copia, para que puedan encontrarlo personas que no están conectadas con usted. Consulte [Proveedor de anuncio / descubrimiento](10-NetworkSettings.md#proveedor-de-anuncio--descubrimiento). |
+| **Anuncio / descubrimiento** | Una ficha del catálogo de una biblioteca | Un pequeño aviso firmado en Nostr, Arweave, Steem o Blurt que dice que el registro o el Snapshot existen y dónde está su copia, para que puedan encontrarlo personas que no están conectadas con usted. Consulte [Proveedor de anuncio / descubrimiento](10-NetworkSettings.md#proveedor-de-anuncio--descubrimiento). |
 | **Prueba / anclaje** *(Experimental, salvo en Arweave)* | El sello de un notario | El hash del contenido escrito en una transacción de blockchain (Bitcoin, Base, Arweave, Steem o Blurt), como evidencia de que existía en ese momento. No guarda ni anuncia nada. Consulte [Evidencia y almacenamiento](11-EvidenceAndStorage.md). |
-| **Comentarios** | Las reseñas de los lectores | Comentarios que cualquiera con un nombre puede asociar a una publicación, cada uno firmado por quien comenta, no por el editor. Consulte [Comentarios](#comentarios). |
+| **Comentarios** | Las reseñas de los lectores | Comentarios que cualquiera con un nombre puede asociar a un registro, cada uno firmado por quien comenta, no por el editor. Consulte [Comentarios](#comentarios). |
 
-Así que usted crea una publicación; luego, si quiere, guarda su contenido,
-la anuncia, la ancla y la coloca (en el caso de un Mundo compartido); y
-cualquiera puede comentarla.
+Así que usted crea un registro; luego, si quiere, guarda su contenido,
+lo anuncia, lo ancla y lo coloca (en el caso de un Mundo compartido); y
+cualquiera puede comentarlo.
 
-## De dónde viene una publicación
+## De dónde viene un registro
 
 Nunca crea una declaración en la página Registros firmados en sí. La página
 muestra las declaraciones que hizo en otro lugar, las que le enviaron sus
@@ -183,8 +183,8 @@ la Vista del mundo, y sigue allí después de recargar.
 
 ## La página Registros firmados
 
-Abra **Registros firmados** (**Más → Avanzado**). Muestra todas las
-publicaciones firmadas que catalogó este dispositivo, suyas o de un par. Al
+Abra **Registros firmados** (**Más → Avanzado**). Muestra todos los
+registros firmados que catalogó este dispositivo, suyas o de un par. Al
 final, el panel plegado **Herramientas de billetera y archivo**
 contiene herramientas para toda la página en tres pestañas: **Anclaje en
 blockchain**, **Herramientas de archivo** y **Referencias y logros**
@@ -198,12 +198,12 @@ está activado en [Configuración de red](10-NetworkSettings.md#mostrar-herramie
 introducción enlaza a Configuración de red. Un paso que necesite observar
 antes una billetera sigue abriendo el panel durante esa visita.
 
-Cada tarjeta de publicación muestra:
+Cada tarjeta de registro muestra:
 
 - Su nombre, una vez que se comprobó su contenido: el título de un Mundo
   compartido o un nombre de lugar. En otro caso, o para una declaración de
-  autoría, el tipo de publicación.
-- El tipo de publicación (debajo del nombre, cuando lo hay) y quién la
+  autoría, el tipo de registro.
+- El tipo de registro (debajo del nombre, cuando lo hay) y quién lo
   publicó, abreviado a los últimos caracteres de su ID.
 - Una **insignia de estado** (consulte
   [Significado de los estados](#significado-de-los-estados)), que se vuelve
@@ -219,7 +219,7 @@ Cada tarjeta de publicación muestra:
 
 Debajo, dos secciones plegadas:
 
-- **Distribución**: anunciar la publicación, guardar su contenido y
+- **Distribución**: anunciar el registro, guardar su contenido y
   anclarlo. Guardar y anclar empiezan cada uno con un botón para el
   proveedor que guardó en **Configurar** (**Guardar en IPFS**, **Anclar en
   Steem**), con todos los demás proveedores plegados en **Otras opciones
@@ -236,7 +236,7 @@ Debajo, dos secciones plegadas:
 | **Snapshot** | [Snapshot local](#snapshot-local): lo que tiene este dispositivo y cómo obtenerlo. |
 | **Descentralización y evidencia** | [Descentralización](#la-descentralización-de-un-vistazo), la [lista de evidencia](11-EvidenceAndStorage.md#la-lista-de-evidencia) y los pasos de las transacciones de Bitcoin y Base (Experimental). |
 | **Colocaciones e IPFS** | La lista de [Ubicaciones de Snapshots](11-EvidenceAndStorage.md#ubicaciones-de-snapshots) y la [Publicación en IPFS](11-EvidenceAndStorage.md#publicación-en-ipfs) (Experimental). |
-| **Historial** | **Mostrar línea de tiempo entre dominios**: todas las observaciones de IPFS, Bitcoin y Base que este dispositivo registró para esta publicación, en orden cronológico, tomadas del [Archivo de observaciones](12-ArchiveAndAchievements.md), así que se conservan entre visitas; o un aviso de que todavía no hay nada registrado. |
+| **Historial** | **Mostrar línea de tiempo entre dominios**: todas las observaciones de IPFS, Bitcoin y Base que este dispositivo registró para este registro, en orden cronológico, tomadas del [Archivo de observaciones](12-ArchiveAndAchievements.md), así que se conservan entre visitas; o un aviso de que todavía no hay nada registrado. |
 
 ### Significado de los estados
 
@@ -244,30 +244,30 @@ Debajo, dos secciones plegadas:
 |---|---|
 | **Disponible** | El contenido está en este dispositivo ahora. |
 | **Contenido no disponible** | La declaración es auténtica, pero el contenido todavía no está aquí. Pruebe **Recuperar de los pares**. |
-| **Sobre de publicación no válido** / **Firma de publicación no válida** | El registro está mal formado, o no se firmó de verdad. |
-| **El contenido no coincide con su propia referencia** / **Contenido no válido** / **Firma del contenido no válida** | El contenido no coincide con lo que declara la publicación. |
-| **No pasó una comprobación específica del dominio** | Está bien formada y firmada, pero no pasa una comprobación propia de su tipo. |
-| **Tipo de publicación no compatible** | Esta versión no puede mostrar este tipo de publicación. |
+| **Sobre de registro no válido** / **Firma de registro no válida** | El registro está mal formado, o no se firmó de verdad. |
+| **El contenido no coincide con su propia referencia** / **Contenido no válido** / **Firma del contenido no válida** | El contenido no coincide con lo que declara el registro. |
+| **No pasó una comprobación específica del dominio** | Está bien formado y firmado, pero no pasa una comprobación propia de su tipo. |
+| **Tipo de registro no compatible** | Esta versión no puede mostrar este tipo de registro. |
 
 Esto describe si el registro pasa la comprobación, no si el diseño o el
 nombre son buenos.
 
-Una publicación cuyo estado no sea **Disponible** ni **Contenido no
+Un registro cuyo estado no sea **Disponible** ni **Contenido no
 disponible** no se puede abrir, distribuir ni anclar, así que no recibe una
-tarjeta completa. Estas se reúnen al final de la página en un grupo
-plegado, “*N* publicaciones que no se pueden usar”, cada una con su estado,
+tarjeta completa. Estos se reúnen al final de la página en un grupo
+plegado, “*N* registros que no se pueden usar”, cada uno con su estado,
 el motivo, **Volver a comprobar** y **Quitar de este dispositivo**.
-También quedan fuera de **Anclar varias publicaciones**. El motivo más
-común es una publicación hecha antes de que los hashes de contenido
+También quedan fuera de **Anclar varios registros**. El motivo más
+común es un registro hecho antes de que los hashes de contenido
 pasaran a ser SHA-256: solo su autor puede arreglarlo, volviendo a
-publicarla.
+publicarlo.
 
-Si una de ellas es **suya** (firmada por una identidad de este
+Si uno de ellos es **suyo** (firmado por una identidad de este
 dispositivo) y falló solo por su hash antiguo, aparece primero con una
-insignia **Suya**. En lugar de “su autor tiene que volver a publicarla”, le
+insignia **Suya**. En lugar de “su autor tiene que volver a publicarlo”, le
 dice cómo hacerlo:
 
-| Tipo | Cómo volver a publicarla |
+| Tipo | Cómo volver a publicarlo |
 |---|---|
 | **Mundo compartido** | Vuelva a publicar el Mundo desde el Editor; luego use **Compartir con pares** debajo de él en Explorar (**Abrir Explorar**). |
 | **Atribución de plano** | En el Editor, abra el panel **Información** de la estructura, **Volver a firmar para este diseño** y luego **Publicar en la red** (**Abrir el Editor**). |
@@ -287,17 +287,24 @@ nunca se acepta, aunque sea suya: este dispositivo también guarda
 contenido que recibió de pares, así que el hash antiguo no puede probar qué
 bytes publicó usted.
 
-**Quitar de este dispositivo** (o **Quitar las *N* de este dispositivo**,
-arriba del grupo) le pide confirmación y luego olvida la publicación aquí.
+**Quitar de este dispositivo** (o **Quitar los *N* de este dispositivo**,
+arriba del grupo) le pide confirmación y luego olvida el registro aquí.
 No retira ninguna publicación ni llega a nadie más, y un par conectado que
-todavía la tenga puede volver a anunciarla. Solo se pueden quitar las
-publicaciones de este grupo.
+todavía lo tenga puede volver a anunciarlo. Solo se pueden quitar los
+registros de este grupo.
+
+Quitar un registro nunca afecta a sus construcciones. La construcción detrás
+de un Mundo compartido sigue en el Editor, en Explorar y en su página
+(**Más → Mis construcciones**); solo se va la copia del registro firmado de
+este dispositivo. Para volver a compartir esa construcción con los pares,
+ábrala, use **Publicar** y luego **Compartir con pares**: eso crea un
+registro nuevo.
 
 ### Distribuir desde la página Registros firmados
 
 **Distribución → Anuncio / descubrimiento** tiene dos tarjetas:
 
-- **Publicación** anuncia la publicación firmada en sí en el **Sustrato**
+- **Registro** anuncia el registro firmado en sí en el **Sustrato**
   que elija (Arweave, Nostr, Steem o Blurt; estos dos últimos son Experimentales). Empieza en su
   [Proveedor de anuncio / descubrimiento](10-NetworkSettings.md#proveedor-de-anuncio--descubrimiento).
 - **Snapshot** guarda el contenido en **Contenido** y lo anuncia en su
@@ -305,7 +312,7 @@ publicaciones de este grupo.
   es el Snapshot propio del Mundo, anunciado junto con el lugar donde lo
   colocó su editor cuando este dispositivo tiene esa colocación firmada,
   igual que **Distribuir** en la Vista del mundo. Para cualquier otro tipo,
-  es el contenido de la publicación, anunciado solo por su hash. Este
+  es el contenido del registro, anunciado solo por su hash. Este
   dispositivo necesita los bytes: para un Mundo que no abrió, primero
   ábralo en la Vista del mundo u obténgalo de un par.
 
@@ -316,7 +323,7 @@ anunciado** significa que solo falló el anuncio; el contenido se guardó.
 ## Comentarios
 
 Cualquiera con un nombre puede comentar cualquier
-publicación que se resuelva: una construcción de Explorar, una declaración
+registro que se resuelva: una construcción de Explorar, una declaración
 de autoría o un nombre de lugar. No hay comprobación de propiedad, ni
 requisito de amistad, ni moderación.
 
@@ -369,7 +376,7 @@ firmarlo para una red, y la línea solo sabe lo que envió este dispositivo.
 Los comentarios de otras personas le llegan:
 
 - de los pares conectados, a medida que se publican;
-- de las redes, cuando abre los comentarios de una publicación y cada vez
+- de las redes, cuando abre los comentarios de un registro y cada vez
   que hace clic en **Buscar comentarios nuevos**. Así es como ve los
   comentarios publicados mientras estaba desconectado.
 
@@ -378,11 +385,11 @@ comentarios nuevos* o *No se encontraron comentarios nuevos* (que solo
 abarca las redes que respondieron). Una red que no se puede alcanzar se
 nombra (*Arweave no disponible*); si ninguna responde, verá *No se pudo
 alcanzar Nostr o Arweave: se muestran los comentarios guardados en este
-dispositivo*. Solo se buscan las publicaciones cuyos comentarios abre. Se
+dispositivo*. Solo se buscan los registros cuyos comentarios abre. Se
 comprueba la firma de cada comentario obtenido, y ninguno se cuenta dos
 veces.
 
-Cuando alguien comenta una publicación que usted publicó, aparece una
+Cuando alguien comenta un registro que usted publicó, aparece una
 entrada **Nuevo comentario en su construcción** en su
 [Historial de notificaciones](03-WorldView.md#orientación-y-ubicaciones)
 (el botón 🔔 del encabezado).
@@ -391,7 +398,7 @@ entrada **Nuevo comentario en su construcción** en su
 
 En la pestaña **Snapshot** de una tarjeta, **Snapshot local** responde una
 sola pregunta: ¿tiene este dispositivo, en este momento, los bytes del
-contenido de esta publicación? No comprueba firmas ni colocaciones, y solo
+contenido de este registro? No comprueba firmas ni colocaciones, y solo
 contacta a la red cuando hace clic en una de las acciones de recuperación.
 
 ### Comprobar lo que tiene
@@ -404,11 +411,11 @@ contacta a la red cuando hace clic en una de las acciones de recuperación.
 | **No disponible** | Nunca se guardó nada con este hash. |
 | **El hash no coincide** | Hay algo guardado con este hash, pero ya no coincide. |
 
-Dos personas con la misma publicación pueden obtener respuestas distintas,
+Dos personas con el mismo registro pueden obtener respuestas distintas,
 porque su almacenamiento es distinto. Después de una comprobación, una
-línea dice *Publicación: conocida localmente / no conocida localmente ·
-Snapshot: disponible / no disponible*: si este dispositivo catalogó la
-publicación firmada, y si tiene bytes válidos.
+línea dice *Registro: conocido localmente / no conocido localmente ·
+Snapshot: disponible / no disponible*: si este dispositivo catalogó el
+registro firmado, y si tiene bytes válidos.
 
 Si la comprobación no encuentra bytes válidos, una indicación señala las
 formas de traerlos, más abajo. Nada se reintenta por sí solo.
@@ -419,7 +426,7 @@ Tres acciones, cada una con su propio clic:
 
 **Importar Snapshot**: muestra un selector de archivos y un cuadro para
 pegar un **Paquete de transferencia de Snapshot de publicación** (un
-paquete JSON con el contenido de una publicación). Elija o pegue uno y
+paquete JSON con el contenido de un registro). Elija o pegue uno y
 luego haga clic otra vez en **Importar Snapshot**.
 
 | Insignia | Significado |
@@ -462,7 +469,7 @@ Snapshot de *par***. Le pide los bytes solo a ese par y los comprueba, como
 **Obtener Snapshot del par**; nunca se trae nada de nadie más por usted.
 **Mostrar respuestas de esta visita** lista cada respuesta en una fila
 (como `20:21:04 — Alice → Disponible`); haga clic en una fila para ver el
-informe completo, la publicación y el hash del contenido. Una fila nunca se
+informe completo, el registro y el hash del contenido. Una fila nunca se
 reescribe.
 
 ### Intentos en esta visita
@@ -472,18 +479,18 @@ cuenta los intentos de esta visita por resultado y por fuente. Un intento
 que guardó los bytes no significa que sigan aquí; eso lo dice **Comprobar
 Snapshot local**. **Mostrar historial de adquisición** lista cada intento
 (como `20:16 — Par → Hash no coincide`); haga clic en uno para ver su
-resultado, la publicación y el hash del contenido.
+resultado, el registro y el hash del contenido.
 
 ## La descentralización de un vistazo
 
 En la pestaña **Descentralización y evidencia**, cuando
-una publicación tiene un anclaje o una ubicación, **Descentralización**
+un registro tiene un anclaje o una ubicación, **Descentralización**
 compara la
 [Evidencia externa](11-EvidenceAndStorage.md#evidencia-externa) y las
 [Ubicaciones de Snapshots](11-EvidenceAndStorage.md#ubicaciones-de-snapshots):
 
-- **Publicación: conocida localmente / no conocida localmente**: si este
-  dispositivo catalogó la publicación firmada.
+- **Registro: conocido localmente / no conocido localmente**: si este
+  dispositivo catalogó el registro firmado.
 - Dos tarjetas con cuántas declaraciones de cada tipo se conocen, y si
   coinciden en el hash del contenido (**Acuerdo**) o no (**Conflicto**). Si
   una coincide y la otra está en conflicto, una frase lo indica; el acuerdo
@@ -510,13 +517,13 @@ comprobaciones, los intentos y las pantallas en curso no.
 | Los bytes de Snapshots que importó, recuperó o materializó | Todo lo demás en **Snapshot local**: comprobaciones, historial de intentos, la línea **Fuente:**, comprobaciones y comparaciones con pares |
 | Los conteos de **Descentralización** (se calculan en cada carga) | Los resultados de **Sincronizar con los pares** |
 | — | **Publicación en IPFS**: la configuración del proveedor, los resultados, el historial en pantalla y el historial de verificación |
-| Los registros de **Publicaciones de anclaje en Bitcoin/Base**, creados al finalizar | La conexión de los flujos de billetera, la observación de fondos o de la cuenta, el plan, la revisión, la firma, la transacción finalizada, el resultado de la transmisión y el historial en pantalla de confirmación o inclusión |
-| El **Archivo de observaciones de publicaciones** (cada publicación y verificación en IPFS, cada transmisión, confirmación y prueba de contenido de Bitcoin, y cada inclusión en Base), hasta **Vaciar archivo** | — |
-| Las Referencias entre publicaciones | Qué tarjetas y filas tenía abiertas |
+| Las entradas de **Registros de anclaje en Bitcoin/Base**, creadas al finalizar | La conexión de los flujos de billetera, la observación de fondos o de la cuenta, el plan, la revisión, la firma, la transacción finalizada, el resultado de la transmisión y el historial en pantalla de confirmación o inclusión |
+| El **Archivo de observaciones de registros** (cada publicación y verificación en IPFS, cada transmisión, confirmación y prueba de contenido de Bitcoin, y cada inclusión en Base), hasta **Vaciar archivo** | — |
+| Las Referencias entre registros | Qué tarjetas y filas tenía abiertas |
 
 Después de recargar, los resultados de un flujo o de una publicación en
 IPFS siguen visibles en el
-[Archivo de observaciones](12-ArchiveAndAchievements.md#el-archivo-de-observaciones-de-publicaciones),
+[Archivo de observaciones](12-ArchiveAndAchievements.md#el-archivo-de-observaciones-de-registros),
 en el ciclo de vida de un registro o (para Bitcoin) en la Evidencia
 histórica de anclajes en Bitcoin. Vuelva a conectar la billetera, o
 vuelva a configurar el proveedor de pinning, para continuar.
