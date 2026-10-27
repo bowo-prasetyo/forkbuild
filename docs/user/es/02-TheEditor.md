@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: abbb99ac426b1347 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 080ab27533db83cb -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -661,6 +661,11 @@ teclado, `?`); el control deslizante de al lado ajusta el volumen. Es la
 misma configuración que la de la Vista del mundo, y se recuerda en este
 dispositivo. El sonido empieza con su primer clic o la primera tecla que
 presione, como exigen los navegadores.
+
+En un teléfono o una pantalla táctil, el sonido es el pequeño botón 🔊 junto
+a **Ver por dentro** y **Voz**, para que no tape su construcción: tóquelo
+para ver los botones de sonido y música, y use los botones de volumen del
+propio dispositivo para el volumen.
 
 Mientras construye suena una música suave, algo más animada que la de la Vista del mundo. El botón **♪ Música** junto al control la activa o desactiva; es la misma elección que en la Vista del mundo.
 

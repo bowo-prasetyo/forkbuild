@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: abbb99ac426b1347 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 080ab27533db83cb -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -663,6 +663,11 @@ Tastenkürzel, `?`); der Regler daneben stellt die Lautstärke ein. Es ist
 dieselbe Einstellung wie in der Weltansicht und wird auf diesem Gerät
 gespeichert. Der Ton beginnt mit Ihrem ersten Klick oder Tastendruck, wie
 Browser es verlangen.
+
+Auf einem Handy oder Touchscreen ist der Ton die kleine Schaltfläche 🔊
+neben **Hineinsehen** und **Sprachsteuerung**, damit er Ihrem Bauwerk nicht
+im Weg ist: Tippen Sie darauf für die Ton- und Musik-Schaltflächen, und
+stellen Sie die Lautstärke mit den Lautstärketasten des Geräts ein.
 
 Beim Bauen spielt leise Musik, etwas lebhafter als in der Weltansicht. Die Schaltfläche **♪ Musik** neben dem Regler schaltet sie aus oder ein; es ist dieselbe Wahl wie in der Weltansicht.
 
