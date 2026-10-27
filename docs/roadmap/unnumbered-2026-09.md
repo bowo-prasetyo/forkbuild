@@ -9329,3 +9329,33 @@ ground behind the build, turned red, and couldn't be placed, though a single bri
   under it, and again after a turn; a turned structure clears a brick the unturned one hits; a turned brick in the
   build is checked along its length). Checked in the running app: a Cottage pointed at the top of a 2x2 block rests
   on it, valid, and is placed with its floor on the block's top.
+
+## The Build Library from the keyboard (unnumbered, 2026-10-27)
+
+**Building, for everyone.** Finding P1-7 of
+[the Editor placement audit](../reviews/EditorPlacementUX-2026-10-27.md): the Build Library's brick tiles and structure
+cards were list items with a click handler, so the keyboard couldn't reach them. Tab stopped only at the two tabs, the
+search box and each card's ⋮ button, and a keyboard or switch user couldn't choose a brick or place a structure (WCAG
+2.1.1, Keyboard).
+
+- **Every brick tile is a button** (ui/components/BuildLibraryPanel.js), marked pressed when it's the chosen brick, and
+  **every structure card has a Place button** (ui/components/StructureLibraryCard.js) named "Place {name}". The ⋮
+  menu stays beside it. Enter or Space does what a click does.
+- **One Tab stop per list, arrow keys within it** (a roving tabindex), so Tab doesn't walk through 59 bricks or 32
+  structures. In the brick grid, Left and Right step along, Up and Down keep the column across sections
+  (`gridNeighbor()`), and Home and End go to the ends. In the structures, Up, Down, Home and End move between cards,
+  and the ⋮ button is reachable from the card in focus. The Tab stop is the tile last focused, else the chosen brick,
+  else the first one shown.
+- **Down from the search box goes to the first thing it found**, so typing "roof", then Down, then Enter picks a roof.
+- **The colour swatches are one Tab stop too** (ui/components/VillagePaletteSwatches.js, also in the Selection panel),
+  with the arrow keys, Home and End along them, so Tab no longer walks through 18 colours to reach the bricks.
+- The tiles look as before, with a focus ring like the swatches' (css/main/editor.css). Previews are hidden from
+  screen readers inside the buttons, since the name says it all.
+- The user guide's *Build Library* says how to use it from the keyboard, in all eight languages.
+- Tests: tests/BuildLibraryKeyboardBrowser.test.js (bricks and structure cards are buttons with one Tab stop each; the
+  arrow keys, Home and End move between them, and the Tab stop follows; a tile chooses its brick and reads as pressed;
+  Down from the search box goes to what it found; a card's button places its structure and says so),
+  tests/BuildLibraryUX.test.js (`gridNeighbor()`), and tests/VillagePaletteBrowser.test.js (one Tab stop, and the
+  arrow keys). Checked in the running app with a real keyboard: "roof", Down, Right, Enter chooses the Hip Roof and
+  turns Place on; on Structures, a search, Down and Enter start placing; from the search box, Tab goes colour, one
+  swatch, one brick, and out.

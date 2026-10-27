@@ -697,6 +697,40 @@
     color: var(--ink-faint);
 }
 
+/* The Build Library from the keyboard: each brick tile and each structure
+   card's place area is a real button, so these undo a button's own look
+   (the tile and card keep theirs), and focus shows as the swatches' does. */
+.palette-cell {
+    display: flex;
+}
+
+button.palette-item {
+    width: 100%;
+    font: inherit;
+    text-align: inherit;
+}
+
+.structure-item-place {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    color: inherit;
+    text-align: inherit;
+    cursor: pointer;
+}
+
+.palette-item:focus-visible,
+.structure-item-place:focus-visible {
+    outline: 2px solid var(--edge-blue);
+    outline-offset: 2px;
+}
+
 /* Turns .palette-item/.structure-item (each already a background/
    radius/padding card) into a flex row carrying a preview thumbnail
    alongside the existing label/button content — additive, so neither

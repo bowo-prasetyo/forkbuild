@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 5d47324184a4e3ca -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: abbb99ac426b1347 -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -49,6 +49,9 @@ ordnen.
   *über den Fluss* findet die Brücke, *schlafen* das Bett. Die Wörter, unter
   denen jeder Stein und jede Struktur gefunden wird, kommen mit der App,
   daher wird nichts irgendwohin gesendet.
+  Mit der Tastatur führt Pfeil nach unten aus dem Suchfeld zum ersten
+  Treffer, die Pfeiltasten wechseln zwischen Steinen oder Strukturen, und
+  die Eingabetaste wählt einen, wie ein Klick.
   - **Steine** — alles, was Sie mit dem Platzierwerkzeug setzen können,
     als Kacheln in sechs Abschnitten (Grundformen, Tragwerk, Dächer &
     Treppen, Öffnungen, Details, Natur): neunundfünfzig Teile, von halben

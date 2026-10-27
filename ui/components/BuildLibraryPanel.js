@@ -115,6 +115,39 @@ export function foundIds(query, items, rules, ignoredWords) {
     return new Set(searchLibrary(query, unique, { ...rules, ignoredWords }).map((item) => item.id));
 }
 
+// Keyboard moves in the brick grid: which tile `key` goes to from `id`, the
+// tiles being `groups` of ids, each section a grid `columns` wide. Left and
+// Right step along every tile in order; Up and Down keep the column, crossing
+// into the section above or below; Home and End go to the first and last.
+// Null for any other key; `id` itself where there is nowhere to go.
+export function gridNeighbor(groups, id, key, columns = 2) {
+    const sections = groups.filter((ids) => ids.length > 0);
+    const flat = sections.flat();
+    const at = flat.indexOf(id);
+    if (at < 0) return flat[0] ?? null;
+    if (key === 'Home') return flat[0];
+    if (key === 'End') return flat[flat.length - 1];
+    if (key === 'ArrowLeft') return flat[Math.max(0, at - 1)];
+    if (key === 'ArrowRight') return flat[Math.min(flat.length - 1, at + 1)];
+    if (key !== 'ArrowUp' && key !== 'ArrowDown') return null;
+    const g = sections.findIndex((ids) => ids.includes(id));
+    const ids = sections[g];
+    const i = ids.indexOf(id);
+    const column = i % columns;
+    if (key === 'ArrowDown') {
+        if (i + columns < ids.length) return ids[i + columns];
+        // A last row shorter than this column: its last tile.
+        if (Math.floor(i / columns) < Math.floor((ids.length - 1) / columns)) return ids[ids.length - 1];
+        const next = sections[g + 1];
+        return next ? next[Math.min(column, next.length - 1)] : id;
+    }
+    if (i - columns >= 0) return ids[i - columns];
+    const previous = sections[g - 1];
+    if (!previous) return id;
+    const lastRow = Math.floor((previous.length - 1) / columns) * columns;
+    return previous[Math.min(lastRow + column, previous.length - 1)];
+}
+
 // Regroups [{ category, definitions }] into display sections, known
 // sections first in BRICK_SECTIONS order, then any unmapped category in
 // the order it first appears. Keeps registry order within a section.
@@ -633,10 +666,81 @@ export default {
             window.removeEventListener('click', closeMenu);
         });
 
+        // Keyboard (finding P1-7 of docs/reviews/EditorPlacementUX-2026-10-27.md):
+        // each tile is a button, and one tile per tab is the Tab stop, the arrow
+        // keys moving between them (a roving tabindex), so Tab doesn't walk
+        // through every brick. The Tab stop is the tile last focused, else the
+        // chosen brick, else the first one shown.
+        const root = ref(null);
+        const brickFocusId = ref(null);
+        const visibleBrickIds = computed(() => filteredBrickGroups.value.map((group) => group.definitions.map((definition) => definition.id)));
+        const brickTabStopId = computed(() => {
+            const shown = visibleBrickIds.value.flat();
+            if (shown.includes(brickFocusId.value)) return brickFocusId.value;
+            if (shown.includes(selectedDefinitionId.value)) return selectedDefinitionId.value;
+            return shown[0] ?? null;
+        });
+        function focusTile(selector) {
+            const tile = root.value ? root.value.querySelector(selector) : null;
+            if (tile) tile.focus();
+        }
+        function focusBrick(id) {
+            brickFocusId.value = id;
+            focusTile(`[data-brick-id="${CSS.escape(id)}"]`);
+        }
+        function onBrickKeydown(event, id) {
+            const target = gridNeighbor(visibleBrickIds.value, id, event.key);
+            if (target === null) return;
+            event.preventDefault();
+            focusBrick(target);
+        }
+
+        // Structure cards, in the order they are shown, by the key each card
+        // is told (a structure can show both pinned or recent and in its group).
+        const structureFocusKey = ref(null);
+        const visibleStructureKeys = computed(() => [
+            ...filteredPinnedStructures.value.map((structure) => 'pinned-' + structure.id),
+            ...filteredRecentStructures.value.map(({ structure }) => 'recent-' + structure.id),
+            ...filteredStructureGroups.value.flatMap((group) => group.structures.map((structure) => structure.id)),
+            ...(sourceFilter.value === 'built-in' ? [] : filteredPersonalStructureGroups.value.flatMap((group) => group.structures.map((structure) => structure.id)))
+        ]);
+        const structureTabStopKey = computed(() => {
+            const shown = visibleStructureKeys.value;
+            return shown.includes(structureFocusKey.value) ? structureFocusKey.value : (shown[0] ?? null);
+        });
+        function focusStructure(key) {
+            structureFocusKey.value = key;
+            focusTile(`[data-structure-key="${CSS.escape(key)}"]`);
+        }
+        function onStructureNavigate(key, direction) {
+            const shown = visibleStructureKeys.value;
+            const at = shown.indexOf(key);
+            if (at < 0 || shown.length === 0) return;
+            const next = {
+                ArrowUp: shown[Math.max(0, at - 1)],
+                ArrowDown: shown[Math.min(shown.length - 1, at + 1)],
+                Home: shown[0],
+                End: shown[shown.length - 1]
+            }[direction];
+            if (next) focusStructure(next);
+        }
+
+        // Down from the search box goes to the first tile it found.
+        function focusFirstResult() {
+            if (activeTab.value === 'bricks') {
+                const first = visibleBrickIds.value.flat()[0];
+                if (first) focusBrick(first);
+            } else {
+                const first = visibleStructureKeys.value[0];
+                if (first) focusStructure(first);
+            }
+        }
+
         const hasPersonalStructures = computed(() => (props.personalStructureGroups || []).some((group) => group.structures.length > 0));
 
         return {
             t, libraryItemName, libraryItemDescription, libraryCategoryName, brickSectionName,
+            root, brickFocusId, brickTabStopId, onBrickKeydown, structureFocusKey, structureTabStopKey, onStructureNavigate, focusFirstResult,
             hasPersonalStructures,
             activeTab,
             filteredPinnedStructures,
@@ -673,7 +777,7 @@ export default {
         };
     },
     template: `
-        <div class="build-library">
+        <div ref="root" class="build-library">
             <h3 class="palette-title">{{ t('buildLibrary.title') }}</h3>
             <div class="build-library-tabs" role="tablist">
                 <button
@@ -699,6 +803,7 @@ export default {
                 v-model="query"
                 type="text"
                 class="build-library-search"
+                @keydown.down.prevent="focusFirstResult"
                 :placeholder="t(activeTab === 'bricks' ? 'buildLibrary.searchBricks' : 'buildLibrary.searchStructures')"
                 :aria-label="t(activeTab === 'bricks' ? 'buildLibrary.searchBricksLabel' : 'buildLibrary.searchStructuresLabel')"
             />
@@ -713,15 +818,21 @@ export default {
                 <div v-for="group in filteredBrickGroups" :key="group.category" class="palette-group">
                     <h4 class="palette-category">{{ brickSectionName(group.category) }}</h4>
                     <ul class="palette-list palette-list--grid">
-                        <li
-                            v-for="definition in group.definitions"
-                            :key="definition.id"
-                            :class="['palette-item', 'build-library-item', { 'palette-item--active': definition.id === selectedDefinitionId }]"
-                            :title="libraryItemDescription(definition)"
-                            @click="selectBrick(definition.id)"
-                        >
-                            <BuildLibraryPreview kind="brick" :item="definition" :preview-service="previewService" />
-                            <span class="palette-item-name">{{ libraryItemName(definition) }}</span>
+                        <li v-for="definition in group.definitions" :key="definition.id" class="palette-cell">
+                            <button
+                                type="button"
+                                :class="['palette-item', 'build-library-item', { 'palette-item--active': definition.id === selectedDefinitionId }]"
+                                :title="libraryItemDescription(definition)"
+                                :aria-pressed="definition.id === selectedDefinitionId ? 'true' : 'false'"
+                                :tabindex="definition.id === brickTabStopId ? 0 : -1"
+                                :data-brick-id="definition.id"
+                                @click="selectBrick(definition.id)"
+                                @focus="brickFocusId = definition.id"
+                                @keydown="onBrickKeydown($event, definition.id)"
+                            >
+                                <BuildLibraryPreview kind="brick" :item="definition" :preview-service="previewService" />
+                                <span class="palette-item-name">{{ libraryItemName(definition) }}</span>
+                            </button>
                         </li>
                     </ul>
                 </div>
@@ -776,6 +887,14 @@ export default {
                         <StructureLibraryCard
                             v-for="structure in filteredPinnedStructures"
                             :key="'pinned-' + structure.id"
+
+                            :nav-key="'pinned-' + structure.id"
+
+                            :tab-stop="structureTabStopKey === 'pinned-' + structure.id"
+
+                            @navigate="onStructureNavigate"
+
+                            @focused="structureFocusKey = $event"
                             :structure="structure"
                             :preview-service="previewService"
                             source="built-in"
@@ -795,6 +914,14 @@ export default {
                         <StructureLibraryCard
                             v-for="entry in filteredRecentStructures"
                             :key="'recent-' + entry.structure.id"
+
+                            :nav-key="'recent-' + entry.structure.id"
+
+                            :tab-stop="structureTabStopKey === 'recent-' + entry.structure.id"
+
+                            @navigate="onStructureNavigate"
+
+                            @focused="structureFocusKey = $event"
                             :structure="entry.structure"
                             :preview-service="previewService"
                             :source="entry.source"
@@ -817,6 +944,14 @@ export default {
                         <StructureLibraryCard
                             v-for="structure in group.structures"
                             :key="structure.id"
+
+                            :nav-key="structure.id"
+
+                            :tab-stop="structureTabStopKey === structure.id"
+
+                            @navigate="onStructureNavigate"
+
+                            @focused="structureFocusKey = $event"
                             :structure="structure"
                             :preview-service="previewService"
                             source="built-in"
@@ -861,6 +996,14 @@ export default {
                             <StructureLibraryCard
                                 v-for="structure in group.structures"
                                 :key="structure.id"
+
+                                :nav-key="structure.id"
+
+                                :tab-stop="structureTabStopKey === structure.id"
+
+                                @navigate="onStructureNavigate"
+
+                                @focused="structureFocusKey = $event"
                                 :structure="structure"
                                 :preview-service="previewService"
                                 source="personal"

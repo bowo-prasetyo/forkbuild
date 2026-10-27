@@ -43,6 +43,9 @@ transform bricks, and how to organize your build with groups.
   say what you need in your own words: *something to cross the river*
   finds the Bridge, *somewhere to sleep* the Bed. The words each brick and
   structure is found by come with the app, so nothing is sent anywhere.
+  From the keyboard, Down from the search box goes to the first thing it
+  found, the arrow keys move between bricks or structures, and Enter picks
+  one, as a click does.
   - **Bricks** — everything you can place with the Place tool, as tiles in
     six sections (Basic, Structure, Roofs & Stairs, Openings, Details,
     Nature): fifty-nine pieces, from half cubes, round bricks and logs to

@@ -20,21 +20,47 @@ export default {
         structure: { type: Object, required: true },
         previewService: { type: Object, default: null },
         source: { type: String, default: 'built-in' }, // 'built-in' | 'personal'
-        isMenuOpen: { type: Boolean, default: false }
+        isMenuOpen: { type: Boolean, default: false },
+        // Keyboard: the card's key among the panel's cards, and whether it is
+        // the one Tab stops at (BuildLibraryPanel's roving tabindex). Up, Down,
+        // Home and End ask the panel to move to another card.
+        navKey: { type: String, default: '' },
+        tabStop: { type: Boolean, default: true }
     },
-    emits: ['place', 'toggle-menu', 'info', 'fork', 'fork-to-library', 'export', 'rename', 'remove'],
-    methods: { t, libraryItemName },
+    emits: ['place', 'toggle-menu', 'info', 'fork', 'fork-to-library', 'export', 'rename', 'remove', 'navigate', 'focused'],
+    methods: {
+        t,
+        libraryItemName,
+        onKeydown(event) {
+            if (!['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return;
+            event.preventDefault();
+            this.$emit('navigate', this.navKey, event.key);
+        }
+    },
     template: `
         <li
             class="structure-item build-library-item"
             :title="t('buildLibrary.place', { name: libraryItemName(structure) })"
             @click="$emit('place', structure)"
         >
-            <BuildLibraryPreview kind="structure" :item="structure" :preview-service="previewService" />
-            <span class="structure-item-name">{{ libraryItemName(structure) }}</span>
+            <!-- The card's own button, so the keyboard can place it; its click
+                 reaches the card's own handler above. -->
+            <button
+                type="button"
+                class="structure-item-place"
+                :aria-label="t('buildLibrary.place', { name: libraryItemName(structure) })"
+                :tabindex="tabStop ? 0 : -1"
+                :data-structure-key="navKey"
+                @focus="$emit('focused', navKey)"
+                @keydown="onKeydown"
+            >
+                <BuildLibraryPreview kind="structure" :item="structure" :preview-service="previewService" />
+                <span class="structure-item-name">{{ libraryItemName(structure) }}</span>
+            </button>
             <div class="structure-item-menu" @click.stop>
                 <button
                     type="button"
+                    :tabindex="tabStop ? 0 : -1"
                     class="action-btn action-btn--secondary structure-item-menu-toggle"
                     :aria-label="t('structureCard.moreActions')"
                     :aria-expanded="isMenuOpen"
