@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 9ea0390fc2a063c9 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 5d47324184a4e3ca -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -427,6 +427,11 @@ sol, exactement comme pour placer une seule brique :
 4. `Échap` (ou l’outil Sélection, ou **Arrêter** sur un écran tactile)
    arrête le placement — rien de plus n’est ajouté, et l’outil Sélection
    est actif.
+
+Visez le dessus d’une brique et la structure s’y pose, sur la brique la
+plus haute sous elle : un abri sur une terrasse, une cheminée sur un toit,
+comme une brique large repose sur ses murs. Visée sur le sol, ou sur le
+côté d’une brique, elle se pose sur le sol.
 
 Les briques obtenues sont des briques ordinaires de votre construction dès
 qu’elles se posent — impossibles à distinguer de celles placées à la

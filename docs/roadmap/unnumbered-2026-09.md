@@ -9302,3 +9302,30 @@ guide's "With Place still on, click…" was also wrong after a structure.
   (a structure stays in hand after placing, the same as a brick). Checked in the running app: on desktop, three clicks
   place a turned Tool Shed twice and keep its turn for the next ghost, and Escape ends placing. On an emulated phone,
   two taps place a Tool Shed, Place places another, and Cancel ends placing.
+
+## A structure rests on what's under it (unnumbered, 2026-10-27)
+
+**Building: putting things together.** Finding P1-3 of
+[the Editor placement audit](../reviews/EditorPlacementUX-2026-10-27.md): a structure from the Build Library could only
+stand on the ground. Pointed at a build to put a shed on its deck or a chimney on its roof, its ghost dropped to the
+ground behind the build, turned red, and couldn't be placed, though a single brick stacks where it is pointed.
+
+- **Pointed at the top of a brick, a structure goes there** (application/tools/StructureCompositionTool.js). It goes
+  where the pointer is on that top, and rests on the tallest brick under its footprint, by the same rule a wide brick
+  rests on its walls (core/building/BrickResting.js, `restingLift()`). Pointed at the ground, or at a brick's side, it
+  stands on the ground as before. A turn works out where it rests again. The Editor's brick pick now reports where the
+  ray met the brick (renderer/PickingService.js, `point`).
+- **The collision check uses turned footprints** (application/editor/StructurePlacementValidator.js; part of finding
+  P2-12). A structure being placed is checked by its turned bricks' turned footprints, and so is every brick already
+  in the build, so a long structure turned a quarter, or a 1x4 brick turned along z, is no longer tinted red where it
+  fits or green where it doesn't. Resting and checking use the same boxes (`boxOfBricks()`), so a structure that rests
+  on a build is never shown blocked by the bricks it rests on. A placed build's own box (Place Structure) still
+  ignores its turn.
+- The user guide's *Placing a structure into your build* says so, in all eight languages, and
+  docs/StructureLibrary.md describes it.
+- Tests: tests/StructureResting.test.js (a box by turned footprints, and the lift onto what's under it; a structure
+  pointed at a deck rests on it where the pointer is, and is placed there as one undo step; half over the edge it
+  still rests on the deck; pointed at the ground or a side it stands on the ground; it rests on the tallest brick
+  under it, and again after a turn; a turned structure clears a brick the unturned one hits; a turned brick in the
+  build is checked along its length). Checked in the running app: a Cottage pointed at the top of a 2x2 block rests
+  on it, valid, and is placed with its floor on the block's top.

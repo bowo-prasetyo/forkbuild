@@ -1,4 +1,5 @@
 import { SpatialBounds } from '../../core/world/SpatialBounds.js';
+import { boxOfBricks } from '../../core/building/BrickResting.js';
 
 // "Would this structure placement overlap anything already here?" — the
 // structure-placement counterpart to core/publication/PlacementValidator.js's
@@ -47,7 +48,7 @@ export class StructurePlacementValidator {
 
         for (const building of world.getBuildings()) {
             for (const brick of building.getBricks()) {
-                const brickBounds = SpatialBounds.fromBricks([brick], registry);
+                const brickBounds = brickBox(brick, registry);
                 if (aabbOverlap(targetBounds, brickBounds)) {
                     return false;
                 }
@@ -84,4 +85,11 @@ function aabbOverlap(a, b) {
     return aMin.x < bMax.x && aMax.x > bMin.x
         && aMin.y < bMax.y && aMax.y > bMin.y
         && aMin.z < bMax.z && aMax.z > bMin.z;
+}
+
+// A brick's box by its turned and tilted footprint (a 1x4 turned a quarter
+// runs along z), as structures rest by (core/building/BrickResting.js).
+function brickBox(brick, registry) {
+    const box = boxOfBricks([brick], (id) => (registry ? registry.get(id) : null));
+    return new SpatialBounds({ min: { x: box.minX, y: box.minY, z: box.minZ }, max: { x: box.maxX, y: box.maxY, z: box.maxZ } });
 }

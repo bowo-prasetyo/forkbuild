@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 9ea0390fc2a063c9 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 5d47324184a4e3ca -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -420,6 +420,12 @@ sobre el suelo, exactamente como al colocar un solo bloque:
 4. `Escape` (o la herramienta Seleccionar, o **Cancelar** en una pantalla
    táctil) deja de colocar: no se agrega nada más y queda activa la
    herramienta Seleccionar.
+
+Apunte a la parte de arriba de un bloque y la estructura irá allí, apoyada
+en el bloque más alto que tenga debajo: un cobertizo sobre una terraza, una
+chimenea sobre un tejado, igual que un bloque ancho se apoya en sus
+paredes. Si apunta al suelo, o al costado de un bloque, queda sobre el
+suelo.
 
 Los bloques que obtiene son bloques comunes de su construcción desde el
 momento en que se colocan: no se distinguen de nada que haya colocado a
