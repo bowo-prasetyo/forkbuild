@@ -395,9 +395,13 @@ export default {
                         :multi-select="touchMultiSelect"
                         :box-select="touchBoxSelect"
                         :placing="PLACING_TOOLS.has(activeTool)"
+                        :placing-tilts="activeTool === ToolId.PLACE"
+                        :can-place="placementGhost"
                         @run="runTouchAction"
                         @rotate-placement="rotateTouchPlacement"
                         @tilt-placement="tiltTouchPlacement"
+                        @place="confirmTouchPlacement"
+                        @cancel-placement="cancelTouchPlacement"
                         @toggle-multi-select="toggleTouchMultiSelect"
                         @toggle-box-select="toggleTouchBoxSelect"
                     />
@@ -969,6 +973,7 @@ export default {
         let unsubTool = null;
         let unsubSelection = null;
         let unsubPlacementBlocked = null;
+        let unsubPlacementGhost = [];
         let unsubActiveStructure = null;
         let unsubActiveComposition = null;
 
@@ -1052,7 +1057,9 @@ export default {
             refreshPersonalStructureGroups, removePersonalStructure, renamePersonalStructure,
             showCreateBlueprintDialog, structureGroups
         } = useStructureLibrary({
-            editorSession, feedback, libraryUsageHistoryStore, personalStructureLibraryStore, structureRegistry
+            editorSession, feedback, libraryUsageHistoryStore, personalStructureLibraryStore, structureRegistry,
+            // Read when a structure is picked, after touchInput below is set.
+            isTouch: () => touchInput.value
         });
 
         const {
@@ -1527,6 +1534,19 @@ export default {
             editorSession.onKeyDown({ key: 't' });
             feedback.show(t('editor.touchTilted'));
         }
+        // Whether the piece being placed shows its ghost: the touch bar's Place
+        // has something to put down. Kept by the preview events (onMounted).
+        const placementGhost = ref(false);
+        function refreshPlacementGhost() {
+            placementGhost.value = editorSession.hasPlacementGhost();
+        }
+        function confirmTouchPlacement() {
+            editorSession.confirmPlacement();
+            refreshSelectedPlacementInfo();
+        }
+        function cancelTouchPlacement() {
+            editorSession.cancelPlacement();
+        }
 
         let onPointerDown = null;
         let onPointerMove = null;
@@ -1581,6 +1601,10 @@ export default {
             unsubPlacementBlocked = editorSession.onPlacementBlocked(() => {
                 feedback.show(t(touchInput.value ? 'editor.touchPlacementBlocked' : 'editor.placementBlocked'));
             });
+            unsubPlacementGhost = [
+                EditorEvent.TOOL_CHANGED, EditorEvent.PREVIEW_CHANGED,
+                EditorEvent.STRUCTURE_PREVIEW_CHANGED, EditorEvent.COMPOSITION_PREVIEW_CHANGED
+            ].map((event) => editorContext.eventBus.subscribe(event, refreshPlacementGhost));
             firstBuildGuide.followFirstBuildEdits();
             // The Editor opened, whichever way in (core/app/VisitorCount.js, EDITOR_OPEN).
             funnelEventCounter?.openedEditor();
@@ -1593,6 +1617,13 @@ export default {
                     // it can reach the scene.
                     if (compactLayout.value && PLACING_TOOLS.has(t)) {
                         sidebarOpen.value = false;
+                    }
+                    // Box selects; while placing, the touch bar hides it, so it
+                    // can't be left on to hold the camera still.
+                    if (PLACING_TOOLS.has(t) && touchBoxSelect.value) {
+                        touchBoxSelect.value = false;
+                        editorSession.setTouchBoxSelect(false);
+                        if (editorSession.cancelMarquee()) updateMarqueeRect();
                     }
                 }
             );
@@ -1883,6 +1914,7 @@ export default {
                 unsubTool.unsubscribe();
             }
             unsubPlacementBlocked?.();
+            unsubPlacementGhost.forEach((subscription) => subscription.unsubscribe());
             if (unsubSelection) {
                 unsubSelection.unsubscribe();
             }
@@ -1953,6 +1985,7 @@ export default {
             toggleTouchBoxSelect,
             runTouchAction,
             rotateTouchPlacement, tiltTouchPlacement,
+            placementGhost, confirmTouchPlacement, cancelTouchPlacement,
             PLACING_TOOLS,
             marqueeRect,
             transformFeedback,

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 0ebb06952a43419a -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 0df1f1ec398f8dc6 -->
 # Referência de controles
 
 <!-- languages -->
@@ -376,20 +376,23 @@ automático: para trás**, e tocar nele a para.
 
 ### Editando (Editor)
 
-Um toque faz o que um clique faz: seleciona com a ferramenta Selecionar,
-coloca com a ferramenta Colocar. Arrastar só move a câmera, então orbitar
-nunca coloca um bloco nem limpa a seleção por engano. O toque não tem
-"passar o mouse", então a ferramenta Colocar não mostra prévia antes do
-toque; o bloco vai para onde você toca. Escolher um bloco ou uma estrutura
-para colocar fecha a gaveta Ferramentas, para que o próximo toque chegue à
-cena. A barra na parte de baixo da área de visualização substitui as
-teclas:
+Um toque seleciona com a ferramenta Selecionar. Colocar leva dois toques,
+porque o toque não tem "passar o mouse" para mostrar uma prévia antes: o
+primeiro toque mostra a prévia onde o bloco ou a estrutura iria, e um
+segundo toque na prévia, ou **Colocar**, o coloca. Um toque em outro lugar
+move a prévia para lá. Arrastar só move a câmera, então orbitar nunca
+coloca um bloco nem limpa a seleção por engano. Escolher um bloco ou uma
+estrutura para colocar fecha a gaveta Ferramentas, para que o próximo toque
+chegue à cena. A barra na parte de baixo da área de visualização substitui
+as teclas:
 
 | Botão | O mesmo que | Observações |
 |---|---|---|
 | **Desfazer** / **Refazer** | `Ctrl/Cmd+Z` / `Ctrl/Cmd+Shift+Z` | |
-| **Girar** | `R` | Ao colocar, gira o próximo bloco ou estrutura antes do toque; senão, gira a seleção |
-| **Tombar** | `T` | Ao colocar, deita o próximo bloco sobre a próxima face; senão, tomba os blocos selecionados |
+| **Girar** | `R` | Ao colocar, gira a prévia antes de você colocá-la; senão, gira a seleção |
+| **Tombar** | `T` | Ao colocar um bloco, deita a prévia sobre a próxima face (uma estrutura não tomba); senão, tomba os blocos selecionados |
+| **Colocar** | Clique | Ao colocar: põe a peça onde está a prévia. Ao colocar, **Colocar** e **Cancelar** ficam no lugar de **Excluir**, **Múltiplo** e **Caixa** |
+| **Cancelar** | `Esc` | Ao colocar: para de colocar, sem colocar nada, e volta à ferramenta Selecionar |
 | **Excluir** | `Delete` | |
 | **Múltiplo** | `Ctrl/Cmd` + clique | Ligado, cada toque põe um bloco na seleção ou o tira |
 | **Caixa** | `Shift` + arrastar | Ligado, arrastar com um dedo desenha uma caixa de seleção em vez de mover a câmera; com **Múltiplo** também ligado, a caixa soma à seleção (`Ctrl/Cmd+Shift` + arrastar). A câmera fica parada enquanto Caixa está ligado (um segundo dedo cancela a caixa em vez de dar zoom), então desligue para voltar a se mover |

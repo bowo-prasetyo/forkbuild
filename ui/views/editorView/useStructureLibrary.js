@@ -5,7 +5,7 @@ import { libraryItemName } from '../../i18n/libraryText.js';
 // The Build Library's structures: built-in and personal groups, recently used, and the
 // actions that rename, remove, fork, place or create a personal Structure.
 export function useStructureLibrary({
-    editorSession, feedback, libraryUsageHistoryStore, personalStructureLibraryStore, structureRegistry
+    editorSession, feedback, libraryUsageHistoryStore, personalStructureLibraryStore, structureRegistry, isTouch = () => false
 }) {
     // Built-in structures never change at runtime, so this is read once.
     const structureGroups = ref(structureRegistry.groupByCategory());
@@ -85,7 +85,7 @@ export function useStructureLibrary({
     function copyStructureIntoDocument(structure) {
         const started = editorSession.beginStructureComposition(structure);
         if (started) {
-            feedback.show(t('editor.placingStructure', { name: libraryItemName(structure) }));
+            feedback.show(t(isTouch() ? 'editor.touchPlacingStructure' : 'editor.placingStructure', { name: libraryItemName(structure) }));
             // Recorded on place intent, even if later cancelled; a stale entry is harmless.
             libraryUsageHistoryStore.recordUse(structure.id);
             refreshRecentStructures();

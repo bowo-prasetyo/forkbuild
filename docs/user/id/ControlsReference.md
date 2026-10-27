@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 0ebb06952a43419a -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 0df1f1ec398f8dc6 -->
 # Referensi Kontrol
 
 <!-- languages -->
@@ -375,20 +375,24 @@ tidak memiliki tombol sentuh; jika dimulai dari keyboard, tampil sebagai
 
 ### Mengedit (Editor)
 
-Ketukan melakukan apa yang dilakukan klik: memilih dengan alat Pilih,
-menempatkan dengan alat Tempatkan. Seretan hanya menggerakkan kamera,
-jadi mengorbit tidak pernah menempatkan balok atau menghapus pilihan
-secara tidak sengaja. Sentuhan tidak memiliki hover, jadi alat Tempatkan
-tidak menampilkan pratinjau sebelum ketukan; balok ditempatkan di tempat
-Anda mengetuk. Memilih balok atau struktur untuk ditempatkan menutup laci
-Alat, sehingga ketukan berikutnya sampai ke adegan. Bilah di bagian bawah
-viewport menggantikan tombol-tombol keyboard:
+Ketukan memilih dengan alat Pilih. Menempatkan perlu dua ketukan, karena
+sentuhan tidak memiliki hover untuk menampilkan pratinjau lebih dulu:
+ketukan pertama menampilkan pratinjau di tempat balok atau struktur akan
+diletakkan, dan ketukan kedua pada pratinjau itu, atau **Taruh**,
+meletakkannya. Ketukan di tempat lain memindahkan pratinjau ke sana.
+Seretan hanya menggerakkan kamera, jadi mengorbit tidak pernah menempatkan
+balok atau menghapus pilihan secara tidak sengaja. Memilih balok atau
+struktur untuk ditempatkan menutup laci Alat, sehingga ketukan berikutnya
+sampai ke adegan. Bilah di bagian bawah viewport menggantikan tombol-tombol
+keyboard:
 
 | Tombol | Sama dengan | Catatan |
 |---|---|---|
 | **Urungkan** / **Ulangi** | `Ctrl/Cmd+Z` / `Ctrl/Cmd+Shift+Z` | |
-| **Putar** | `R` | Saat menempatkan, memutar balok atau struktur berikutnya sebelum Anda mengetuk; selain itu memutar pilihan |
-| **Miringkan** | `T` | Saat menempatkan, merebahkan balok berikutnya ke sisi berikutnya; selain itu memiringkan balok terpilih |
+| **Putar** | `R` | Saat menempatkan, memutar pratinjau sebelum Anda meletakkannya; selain itu memutar pilihan |
+| **Miringkan** | `T` | Saat menempatkan balok, merebahkan pratinjaunya ke sisi berikutnya (struktur tidak bisa dimiringkan); selain itu memiringkan balok terpilih |
+| **Taruh** | Klik | Saat menempatkan: meletakkan bagian itu di tempat pratinjaunya. Saat menempatkan, **Taruh** dan **Batal** menggantikan **Hapus**, **Multi**, dan **Kotak** |
+| **Batal** | `Esc` | Saat menempatkan: berhenti menempatkan tanpa meletakkan apa pun, lalu kembali ke alat Pilih |
 | **Hapus** | `Delete` | |
 | **Multi** | `Ctrl/Cmd`-klik | Selama aktif, setiap ketukan menambahkan balok ke pilihan atau mengeluarkannya |
 | **Kotak** | `Shift`-seret | Selama aktif, seretan satu jari menggambar kotak pilihan alih-alih menggerakkan kamera; dengan **Multi** juga aktif, kotak menambah ke pilihan (`Ctrl/Cmd+Shift`-seret). Kamera diam selama Kotak aktif (jari kedua membatalkan kotak alih-alih zoom), jadi matikan untuk bergerak lagi |

@@ -164,6 +164,8 @@ exception, for example after a Paste.
 
 ### P1-5. On touch, every placement is blind
 
+**Fixed 2026-10-27:** placing by touch takes two taps, one to see the ghost and a second on it (or **Place**) to put it down (roadmap, "Placing by touch: see it, then place it"). A structure's ghost still starts beside the build until the first tap.
+
 **What happens.** Touch has no hover, so the Editor plays a tap back as
 "hover, press, release" all at once. The ghost exists only for the moment
 the brick is committed.
@@ -183,6 +185,8 @@ can see. Start a structure's ghost at the centre of the view, not beside
 the build.
 
 ### P1-6. Touch has no Cancel, and Tilt reports a change that did not happen
+
+**Fixed 2026-10-27:** the touch bar has **Cancel** while placing, Tilt is on only for a brick, and picking a structure says what to tap (same roadmap entry).
 
 - **No way out.** Esc is the only way to cancel placing a structure. A
   phone has no Esc, and no Cancel button appears anywhere (measured: no

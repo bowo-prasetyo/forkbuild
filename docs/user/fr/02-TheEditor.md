@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 9f1f7aebb3cab3d2 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1ddea9df5bda977a -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -877,15 +877,20 @@ n’est retiré ; seul ce qui est dessiné change.
 
 ## Sur un téléphone ou une tablette
 
-L’Éditeur fonctionne au toucher. Faites glisser un doigt pour orbiter,
-deux pour vous déplacer, et pincez pour zoomer. Un appui bref sélectionne
-ou place, et un glissement ne le fait jamais. Sur un écran étroit, la
-barre latérale s’ouvre avec le bouton **Outils** en haut à droite de la
-scène. Une barre en bas de la scène propose **Annuler**, **Rétablir**,
-**Pivoter**, **Basculer**, **Supprimer**, **Multi** (chaque appui ajoute ou retire une
-brique de la sélection), **Cadre** (glissez pour tracer un cadre de
-sélection ; la caméra reste immobile jusqu’à ce que vous le désactiviez)
-et **Plus**, qui ouvre la Palette de commandes. Sur un téléphone, la barre d’outils au-dessus de la
-scène défile sur le côté : **Enregistrer** et **Publier** y viennent donc en
-premier (après **← Retour au Monde**, quand il y en a un). Voir
-[Écrans tactiles](ControlsReference.md#écrans-tactiles) pour les détails.
+L’Éditeur fonctionne au toucher. Faites glisser un doigt pour orbiter, deux
+pour vous déplacer, et pincez pour zoomer. Un appui bref sélectionne ;
+placer demande deux appuis, un pour voir où va la pièce et un second dessus
+(ou **Poser**) pour la poser. Un glissement ne sélectionne et ne place
+jamais. Sur un écran étroit, la barre latérale s’ouvre avec le bouton
+**Outils** en haut à droite de la scène. Une barre en bas de la scène
+propose **Annuler**, **Rétablir**, **Pivoter**, **Basculer**,
+**Supprimer**, **Multi** (chaque appui ajoute ou retire une brique de la
+sélection), **Cadre** (glissez pour tracer un cadre de sélection ; la
+caméra reste immobile jusqu’à ce que vous le désactiviez) et **Plus**, qui
+ouvre la Palette de commandes. Pendant un placement, **Poser** et
+**Arrêter** prennent la place de **Supprimer**, **Multi** et **Cadre** ;
+**Arrêter** met fin au placement. Sur un téléphone, la barre d’outils
+au-dessus de la scène défile sur le côté : **Enregistrer** et **Publier** y
+viennent donc en premier (après **← Retour au Monde**, quand il y en a un).
+Voir [Écrans tactiles](ControlsReference.md#écrans-tactiles) pour les
+détails.

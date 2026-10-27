@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 0ebb06952a43419a -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 0df1f1ec398f8dc6 -->
 # Steuerungsreferenz
 
 <!-- languages -->
@@ -384,20 +384,24 @@ darauf hält an.
 
 ### Bearbeiten (Editor)
 
-Ein Tippen tut, was ein Klick tut: wählt mit dem Auswahlwerkzeug aus,
-platziert mit dem Platzierwerkzeug. Ein Ziehen bewegt nur die Kamera,
-sodass Umkreisen nie versehentlich einen Stein platziert oder die Auswahl
-aufhebt. Touch kennt kein Überfahren, daher zeigt das Platzierwerkzeug vor
-dem Tippen keine Vorschau; der Stein kommt dorthin, wo Sie tippen. Wenn Sie
-einen Stein oder eine Struktur zum Platzieren wählen, schließt sich die
-Werkzeug-Schublade, damit das nächste Tippen die Szene erreicht. Die
-Leiste unten im Ansichtsfenster steht für die Tasten:
+Ein Tippen wählt mit dem Auswahlwerkzeug aus. Platzieren braucht zwei
+Tipper, weil Touch kein Überfahren kennt, das vorher eine Vorschau zeigt:
+Das erste Tippen zeigt die Vorschau dort, wo der Stein oder die Struktur
+hinkäme, und ein zweites Tippen auf die Vorschau, oder **Setzen**, setzt es
+ab. Ein Tippen woanders verschiebt die Vorschau stattdessen dorthin. Ein
+Ziehen bewegt nur die Kamera, sodass Umkreisen nie versehentlich einen
+Stein platziert oder die Auswahl aufhebt. Wenn Sie einen Stein oder eine
+Struktur zum Platzieren wählen, schließt sich die Werkzeug-Schublade, damit
+das nächste Tippen die Szene erreicht. Die Leiste unten im Ansichtsfenster
+steht für die Tasten:
 
 | Schaltfläche | Entspricht | Hinweise |
 |---|---|---|
 | **Rückgängig** / **Wiederholen** | `Strg/Cmd+Z` / `Strg/Cmd+Umschalt+Z` | |
-| **Drehen** | `R` | Beim Platzieren dreht es den nächsten Stein oder die nächste Struktur vor dem Tippen; sonst dreht es die Auswahl |
-| **Kippen** | `T` | Beim Platzieren legt es den nächsten Stein auf seine nächste Seite; sonst kippt es die ausgewählten Steine |
+| **Drehen** | `R` | Beim Platzieren dreht es die Vorschau, bevor Sie sie absetzen; sonst dreht es die Auswahl |
+| **Kippen** | `T` | Beim Platzieren eines Steins legt es seine Vorschau auf die nächste Seite (eine Struktur kippt nicht); sonst kippt es die ausgewählten Steine |
+| **Setzen** | Klick | Beim Platzieren: setzt das Teil dort ab, wo seine Vorschau ist. Beim Platzieren stehen **Setzen** und **Abbrechen** an der Stelle von **Löschen**, **Mehrfach** und **Rahmen** |
+| **Abbrechen** | `Esc` | Beim Platzieren: hört auf zu platzieren, ohne etwas abzusetzen, und kehrt zum Auswahlwerkzeug zurück |
 | **Löschen** | `Entf` | |
 | **Mehrfach** | `Strg/Cmd`-Klick | Solange es an ist, fügt jedes Tippen der Auswahl einen Stein hinzu oder entfernt ihn |
 | **Rahmen** | `Umschalt`-Ziehen | Solange es an ist, zieht ein Ein-Finger-Ziehen einen Auswahlrahmen auf, statt die Kamera zu bewegen; ist auch **Mehrfach** an, fügt der Rahmen der Auswahl hinzu (`Strg/Cmd+Umschalt`-Ziehen). Die Kamera steht still, solange Rahmen an ist (ein zweiter Finger bricht den Rahmen ab, statt zu zoomen); schalten Sie es also aus, um sich wieder zu bewegen |

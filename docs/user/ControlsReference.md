@@ -367,18 +367,22 @@ started from a keyboard shows as **Cruise: Back**, and tapping it stops.
 
 ### Editing (Editor)
 
-A tap does what a click does: selects with the Select tool, places with the
-Place tool. A drag only moves the camera, so orbiting never places a brick
-or clears the selection by accident. Touch has no hover, so the Place tool
-shows no preview before the tap; the brick goes where you tap. Choosing a
-brick or structure to place closes the Tools drawer, so the next tap reaches
-the scene. The bar at the bottom of the viewport stands in for the keys:
+A tap selects with the Select tool. Placing takes two taps, since touch has
+no hover to show a preview first: the first tap shows the ghost where the
+brick or structure would go, and a second tap on the ghost, or **Place**,
+puts it down. A tap somewhere else moves the ghost there instead. A drag
+only moves the camera, so orbiting never places a brick or clears the
+selection by accident. Choosing a brick or structure to place closes the
+Tools drawer, so the next tap reaches the scene. The bar at the bottom of
+the viewport stands in for the keys:
 
 | Button | Same as | Notes |
 |---|---|---|
 | **Undo** / **Redo** | `Ctrl/Cmd+Z` / `Ctrl/Cmd+Shift+Z` | |
-| **Rotate** | `R` | While placing, turns the next brick or structure before you tap; otherwise rotates the selection |
-| **Tilt** | `T` | While placing, lays the next brick on its next side; otherwise tilts the selected bricks |
+| **Rotate** | `R` | While placing, turns the ghost before you put it down; otherwise rotates the selection |
+| **Tilt** | `T` | While placing a brick, lays its ghost on its next side (a structure doesn't tilt); otherwise tilts the selected bricks |
+| **Place** | Click | While placing: puts the piece down where its ghost is. While placing, **Place** and **Cancel** take the places of **Delete**, **Multi** and **Box** |
+| **Cancel** | `Escape` | While placing: stops placing, with nothing placed, and goes back to the Select tool |
 | **Delete** | `Delete` | |
 | **Multi** | `Ctrl/Cmd`-click | While on, each tap adds a brick to the selection or removes it |
 | **Box** | `Shift`-drag | While on, a one-finger drag draws a selection box instead of moving the camera; with **Multi** also on, the box adds to the selection (`Ctrl/Cmd+Shift`-drag). The camera stays still while Box is on (a second finger cancels the box rather than zooming), so turn it off to move around again |
