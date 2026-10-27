@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: cd26489f2c0613bc -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 6d3906d689db600b -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -175,6 +175,11 @@ anzusetzen. Ein Stein, den Sie auf einen anderen setzen, ruht auf dem
 höchsten Stein darunter, nicht in ihm: Ein Dach, das Sie mitten auf den
 Boden eines Hauses fallen lassen, sitzt auf seinen Wänden, und ein Balken
 über zwei Pfosten auf den Pfosten.
+
+Nur ein Klick platziert: drücken und loslassen, ohne zu bewegen. Ziehen,
+um sich umzusehen (mit jeder Maustaste), bewegt die Kamera und platziert
+nichts, sodass Platzieren eingeschaltet bleiben kann, während Sie das
+Bauwerk drehen, um die nächste Stelle zu finden.
 
 > **Tipp:** Drücken Sie **Escape**, um zum Auswahlwerkzeug zurückzukehren.
 

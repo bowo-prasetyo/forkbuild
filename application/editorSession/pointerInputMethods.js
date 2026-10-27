@@ -1,5 +1,8 @@
+import { ToolId } from '../editor-state/ToolId.js';
+
 // EditorSession pointer and keyboard input forwarded from EditorView: gizmo
-// drags, Shift+Drag marquee selection, touch taps, and key events.
+// drags, Shift+Drag marquee selection, touch taps, mouse clicks that place,
+// and key events.
 
 // Shift+Click adds one brick; Shift+Drag draws a box. Movement under this many
 // pixels counts as a click.
@@ -20,6 +23,15 @@ const TOUCH_TAP_SLOP_PX = 10;
 // Multi-select on, like Ctrl+Shift). As for Shift-drag, the camera controls are
 // off while the box is drawn, so they never see that finger: a second finger
 // cancels the box rather than becoming a pinch.
+//
+// Mouse and pen while placing: a press also starts the camera's orbit (left)
+// or pan (right), so the placing tools see it only once it is released as a
+// click, the rule touch follows: the left button, moved under
+// MARQUEE_DRAG_THRESHOLD_PX. It then replays as a hover, press and release at
+// that point. Other buttons never place. Hover still reaches the tools as it
+// happens, so the ghost keeps following the pointer.
+const PLACING_TOOLS = new Set([ToolId.PLACE, ToolId.PLACE_STRUCTURE, ToolId.COMPOSE_STRUCTURE]);
+
 export const pointerInputMethods = {
     onPointerDown(event) {
         if (event.pointerType === 'touch') {
@@ -46,6 +58,12 @@ export const pointerInputMethods = {
             if (this._session) {
                 this._session.setControlsEnabled(false);
             }
+            return null;
+        }
+        if (this._isPlacing()) {
+            this._placePress = event.button === 0
+                ? { pointerId: event.pointerId, x0: event.clientX, y0: event.clientY, moved: false }
+                : null;
             return null;
         }
         if (this._inputDispatcher) {
@@ -78,6 +96,11 @@ export const pointerInputMethods = {
             if (result && result.consumed) {
                 return result;
             }
+        }
+        const press = this._placePress;
+        if (press && press.pointerId === event.pointerId
+            && Math.hypot(event.clientX - press.x0, event.clientY - press.y0) > MARQUEE_DRAG_THRESHOLD_PX) {
+            press.moved = true;
         }
         if (this._inputDispatcher) {
             this._inputDispatcher.dispatchPointerMove(event);
@@ -116,15 +139,27 @@ export const pointerInputMethods = {
                 return result;
             }
         }
+        if (this._isPlacing()) {
+            const press = this._placePress;
+            this._placePress = null;
+            if (press && press.pointerId === event.pointerId && event.button === 0 && !press.moved
+                && Math.hypot(event.clientX - press.x0, event.clientY - press.y0) <= MARQUEE_DRAG_THRESHOLD_PX) {
+                this._replayClick(event);
+            }
+            return null;
+        }
         if (this._inputDispatcher) {
             this._inputDispatcher.dispatchPointerUp(event);
         }
         return null;
     },
 
-    // The browser took the touch over (e.g. for scrolling), so it is no tap.
+    // The browser took the pointer over, so it is no tap or click.
     onPointerCancel(event) {
         if (event.pointerType !== 'touch') {
+            if (this._placePress && this._placePress.pointerId === event.pointerId) {
+                this._placePress = null;
+            }
             return;
         }
         this._touchPointerIds.delete(event.pointerId);
@@ -271,6 +306,31 @@ export const pointerInputMethods = {
             this._inputDispatcher.dispatchPointerDown({ ...click, buttons: 1 });
             this._inputDispatcher.dispatchPointerUp(click);
         }
+    },
+
+    // A mouse or pen click while placing, replayed at its release point.
+    _replayClick(event) {
+        if (this._inputDispatcher) {
+            // Copied field by field: a DOM event's fields are getters a spread drops.
+            const click = {
+                pointerType: event.pointerType,
+                clientX: event.clientX,
+                clientY: event.clientY,
+                button: 0,
+                buttons: 0,
+                ctrlKey: event.ctrlKey || false,
+                shiftKey: event.shiftKey || false,
+                altKey: event.altKey || false,
+                metaKey: event.metaKey || false
+            };
+            this._inputDispatcher.dispatchPointerMove(click);
+            this._inputDispatcher.dispatchPointerDown({ ...click, buttons: 1 });
+            this._inputDispatcher.dispatchPointerUp(click);
+        }
+    },
+
+    _isPlacing() {
+        return PLACING_TOOLS.has(this._editorContext.tool?.activeTool);
     },
 
     // Marquee UI: read by EditorView to draw the overlay and to route Escape

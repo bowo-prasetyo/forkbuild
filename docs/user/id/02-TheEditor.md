@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: cd26489f2c0613bc -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 6d3906d689db600b -->
 # 02 — Editor
 
 <!-- languages -->
@@ -168,6 +168,11 @@ sisi balok yang sudah ada untuk menumpuk atau menempelkan. Balok yang
 ditaruh di atas balok lain bertumpu pada balok tertinggi di bawahnya, bukan
 di dalamnya: atap yang dijatuhkan di tengah lantai rumah duduk di atas
 dindingnya, dan balok melintang di atas dua tiang bertumpu pada tiangnya.
+
+Hanya klik yang menempatkan: tekan lalu lepas tanpa bergerak. Menyeret
+untuk melihat sekeliling (dengan tombol apa pun) menggerakkan kamera dan
+tidak menempatkan apa pun, jadi Tempatkan bisa tetap aktif selagi Anda
+memutar bangunan untuk mencari tempat berikutnya.
 
 > **Kiat:** Tekan **Escape** untuk kembali ke alat Pilih.
 
