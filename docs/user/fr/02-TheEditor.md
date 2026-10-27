@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: cd26489f2c0613bc -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 6d3906d689db600b -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -176,6 +176,11 @@ face d’une brique existante pour empiler ou accrocher. Une brique posée sur
 une autre repose sur la brique la plus haute en dessous, pas dedans : un toit
 lâché au milieu du sol d’une maison se pose sur ses murs, et une poutre
 en travers de deux poteaux, sur les poteaux.
+
+Seul un clic place : appuyez et relâchez sans bouger. Faire glisser pour
+regarder autour (avec n’importe quel bouton) déplace la caméra et ne place
+rien : Placement peut rester actif pendant que vous tournez la
+construction pour trouver l’endroit suivant.
 
 > **Astuce :** appuyez sur **Échap** pour revenir à l’outil Sélection.
 

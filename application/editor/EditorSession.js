@@ -195,6 +195,9 @@ export class EditorSession {
         this._touchTap = null;
         this._touchMultiSelect = false;
         this._touchBoxSelect = false;
+        // A mouse or pen press while placing, until it is released as a click
+        // (application/editorSession/pointerInputMethods.js).
+        this._placePress = null;
 
         this._pasteCount = 0;
 

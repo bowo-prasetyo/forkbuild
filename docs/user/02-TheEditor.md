@@ -154,6 +154,10 @@ put on top of another rests on the tallest brick under it, not inside it:
 a roof dropped on the middle of a house's floor sits on its walls, and a
 beam across two posts on the posts.
 
+Only a click places: press and let go without moving. Dragging to look
+around (with any button) moves the camera and places nothing, so Place can
+stay on while you turn the build to find the next spot.
+
 > **Tip:** Press **Escape** to switch back to the Select tool.
 
 ### Select tool (`1`)

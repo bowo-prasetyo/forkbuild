@@ -211,3 +211,67 @@ function touch(pointerId, x, y, isPrimary = true) {
     assert(marquees.length === 0, 'and nothing is box-selected');
     console.log('✓ gizmo in box mode');
 }
+
+// 12. Placing with a mouse: a press reaches the tools only once it is
+// released as a click, so orbiting (left-drag) or panning (right-drag) the
+// camera places nothing.
+{
+    const placingHost = (activeTool) => {
+        const made = makeHost();
+        made.host._editorContext = { selection: null, tool: { activeTool } };
+        made.host._placePress = null;
+        return made;
+    };
+    const mouse = (x, y, extra = {}) => ({ pointerType: 'mouse', pointerId: 1, clientX: x, clientY: y, button: 0, buttons: 1, shiftKey: false, ...extra });
+
+    for (const tool of ['place', 'place-structure', 'compose-structure']) {
+        const { host, dispatched } = placingHost(tool);
+        host.onPointerMove(mouse(10, 10, { buttons: 0 }));
+        assert(dispatched.map((d) => d.type).join(',') === 'move', `${tool}: hover still reaches the tool`);
+        dispatched.length = 0;
+        host.onPointerDown(mouse(10, 10));
+        assert(dispatched.length === 0, `${tool}: a press alone places nothing`);
+        host.onPointerMove(mouse(13, 12));
+        host.onPointerUp(mouse(13, 12, { buttons: 0 }));
+        assert(dispatched.map((d) => d.type).join(',') === 'move,move,down,up', `${tool}: a click replays move, down, up`);
+        assert(dispatched.slice(1).every((d) => d.e.clientX === 13 && d.e.clientY === 12), `${tool}: at the release point`);
+        assert(dispatched[2].e.buttons === 1 && dispatched[2].e.button === 0, `${tool}: as a primary press`);
+    }
+
+    {
+        const { host, dispatched } = placingHost('place');
+        host.onPointerDown(mouse(100, 100));
+        host.onPointerMove(mouse(160, 110));
+        host.onPointerMove(mouse(101, 100));
+        host.onPointerUp(mouse(101, 100, { buttons: 0 }));
+        assert(dispatched.every((d) => d.type === 'move'), 'a left-drag (orbit) places nothing, even when it comes back');
+    }
+
+    {
+        const { host, dispatched } = placingHost('compose-structure');
+        host.onPointerDown(mouse(50, 50, { button: 2, buttons: 2 }));
+        host.onPointerUp(mouse(50, 50, { button: 2, buttons: 0 }));
+        host.onPointerDown(mouse(50, 50, { button: 1, buttons: 4 }));
+        host.onPointerUp(mouse(50, 50, { button: 1, buttons: 0 }));
+        assert(dispatched.length === 0, 'a right or middle click (pan, zoom) places nothing');
+    }
+
+    {
+        const { host, dispatched } = placingHost('place');
+        host.onPointerDown(mouse(5, 5));
+        host.onPointerCancel(mouse(5, 5));
+        host.onPointerUp(mouse(5, 5, { buttons: 0 }));
+        assert(dispatched.length === 0, 'a cancelled press places nothing');
+        host.onPointerDown(mouse(7, 7, { pointerType: 'pen' }));
+        host.onPointerUp(mouse(7, 7, { pointerType: 'pen', buttons: 0 }));
+        assert(dispatched.map((d) => d.type).join(',') === 'move,down,up', 'a pen tap places, like a click');
+        assert(dispatched[0].e.pointerType === 'pen', 'and says it was a pen');
+    }
+
+    {
+        const { host, dispatched } = placingHost('select');
+        host.onPointerDown(mouse(1, 1));
+        assert(dispatched.map((d) => d.type).join(',') === 'down', 'Select still gets the press at once');
+    }
+    console.log('✓ placing acts on a click, never on a camera drag');
+}

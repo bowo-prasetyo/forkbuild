@@ -71,6 +71,8 @@ significant barrier, and **P2** is friction or polish.
 
 ### P0-1. Moving the camera in Place mode places bricks and structures
 
+**Fixed 2026-10-27:** only a click places now (roadmap, "Moving the camera while placing places nothing").
+
 **What happens.** In Place mode, starting any drag places a brick at the
 point where the drag began: a left-drag (orbit), a right-drag (pan) or a
 middle-drag (dolly). When you are placing a structure, the same drag drops

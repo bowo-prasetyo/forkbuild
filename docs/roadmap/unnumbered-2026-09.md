@@ -9201,3 +9201,22 @@ called 'publications' should be renamed", and "a line nearby explaining the remo
   records, their renamed headings' anchors and links follow, and 09 says removing a record never touches your builds.
 - Tests: tests/PublicationsPageLayoutBrowser.test.js (the group's count and the safe-to-remove line with its link to
   My Builds), and the tests that read these labels in English follow the new words.
+
+## Moving the camera while placing places nothing (unnumbered, 2026-10-27)
+
+**Building: the first brick.** Finding P0-1 of
+[the Editor placement audit](../reviews/EditorPlacementUX-2026-10-27.md): in Place mode, starting any camera drag placed
+a brick where the drag began (left-drag to orbit, right-drag to pan), and while a structure was being placed, one drag
+dropped all of its bricks and left Place. Builders turn the camera all the time to see where the next brick goes, so
+this cost them stray bricks and Undos from the very first minute.
+
+- **Only a click places** (application/editorSession/pointerInputMethods.js). With the mouse or a pen, while Place is
+  on (a brick, a structure being placed, or a placement), a press reaches the tools only once it is released as a
+  click: the left button, moved under 6 px. It is then replayed as a hover, press and release at that point, the rule
+  touch taps already followed. A right or middle press never places. Hover still reaches the tools as it happens, so
+  the ghost keeps following the pointer while the camera turns, and Select keeps acting on the press as before.
+- The user guide says so under **Place tool**, in all eight languages.
+- Tests: tests/EditorTouchTap.test.js (a click replays at its release point for each placing tool; a left-drag, a
+  right or middle click and a cancelled press place nothing; a pen tap places; Select still gets the press at once).
+  Checked in the running app too: orbiting and panning in Place mode leave the brick count unchanged, a click still
+  places a brick or a whole House, and a drag while placing Cottage keeps it in hand.

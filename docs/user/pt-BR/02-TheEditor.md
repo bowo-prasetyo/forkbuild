@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: cd26489f2c0613bc -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 6d3906d689db600b -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -167,6 +167,11 @@ sobre a face de um bloco existente para empilhar ou prender. Um bloco posto
 em cima de outro se apoia no bloco mais alto embaixo dele, não dentro dele:
 um telhado solto no meio do piso de uma casa fica sobre as paredes, e uma
 viga atravessada em dois postes, sobre os postes.
+
+Só um clique coloca: pressione e solte sem mover. Arrastar para olhar ao
+redor (com qualquer botão) move a câmera e não coloca nada, então Colocar
+pode continuar ligado enquanto você gira a construção para achar o próximo
+lugar.
 
 > **Dica:** Pressione **Esc** para voltar à ferramenta Selecionar.
 
