@@ -174,6 +174,14 @@
     color: #ffffff;
 }
 
+/* Place, while placing: the step that puts the piece down. */
+.editor-touch-btn--primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #ffffff;
+    font-weight: 600;
+}
+
 /* Bigger tap targets wherever the main pointer is a finger. */
 @media (pointer: coarse) {
     button {

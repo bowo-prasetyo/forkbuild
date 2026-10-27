@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 0ebb06952a43419a -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 0df1f1ec398f8dc6 -->
 # Referencia de controles
 
 <!-- languages -->
@@ -384,20 +384,23 @@ atrás**, y tocarla la detiene.
 
 ### Editar (Editor)
 
-Un toque hace lo mismo que un clic: selecciona con la herramienta
-Seleccionar, coloca con la herramienta Colocar. Arrastrar solo mueve la
+Un toque selecciona con la herramienta Seleccionar. Colocar lleva dos
+toques, porque el tacto no tiene cursor flotante que muestre antes una
+vista previa: el primer toque muestra la vista previa donde iría el bloque
+o la estructura, y un segundo toque sobre ella, o **Colocar**, lo coloca.
+Un toque en otro sitio mueve la vista previa allí. Arrastrar solo mueve la
 cámara, así que orbitar nunca coloca un bloque ni borra la selección por
-accidente. El tacto no tiene cursor flotante, así que la herramienta
-Colocar no muestra vista previa antes del toque; el bloque va donde toca.
-Elegir un bloque o una estructura para colocar cierra el cajón
+accidente. Elegir un bloque o una estructura para colocar cierra el cajón
 Herramientas, para que el siguiente toque llegue a la escena. La barra al
 pie de la ventana gráfica reemplaza las teclas:
 
 | Botón | Igual que | Notas |
 |---|---|---|
 | **Deshacer** / **Rehacer** | `Ctrl/Cmd+Z` / `Ctrl/Cmd+Mayús+Z` | |
-| **Girar** | `R` | Mientras coloca, gira el próximo bloque o estructura antes de que toque; si no, gira la selección |
-| **Inclinar** | `T` | Mientras coloca, tumba el próximo bloque sobre su siguiente cara; si no, inclina los bloques seleccionados |
+| **Girar** | `R` | Mientras coloca, gira la vista previa antes de colocarla; si no, gira la selección |
+| **Inclinar** | `T` | Mientras coloca un bloque, tumba su vista previa sobre su siguiente cara (una estructura no se inclina); si no, inclina los bloques seleccionados |
+| **Colocar** | Clic | Mientras coloca: deja la pieza donde está su vista previa. Mientras coloca, **Colocar** y **Cancelar** ocupan el lugar de **Eliminar**, **Múltiple** y **Recuadro** |
+| **Cancelar** | `Esc` | Mientras coloca: deja de colocar sin colocar nada y vuelve a la herramienta Seleccionar |
 | **Eliminar** | `Supr` | |
 | **Múltiple** | `Ctrl/Cmd` + clic | Mientras está activado, cada toque agrega un bloque a la selección o lo quita |
 | **Recuadro** | `Mayús` + arrastrar | Mientras está activado, arrastrar con un dedo dibuja un recuadro de selección en lugar de mover la cámara; con **Múltiple** también activado, el recuadro agrega a la selección (`Ctrl/Cmd+Mayús` + arrastrar). La cámara queda quieta mientras Recuadro está activado (un segundo dedo cancela el recuadro en lugar de hacer zoom), así que desactívelo para volver a moverse |

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 9f1f7aebb3cab3d2 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1ddea9df5bda977a -->
 # 02 — Editor
 
 <!-- languages -->
@@ -829,15 +829,18 @@ yang digambar yang berubah.
 
 ## Di ponsel atau tablet
 
-Editor bekerja dengan sentuhan. Seret dengan satu jari untuk mengorbit,
-dua jari untuk menggeser, dan cubit untuk zoom. Ketukan memilih atau
-menempatkan, dan seretan tidak pernah melakukannya. Di layar sempit, bilah
-sisi dibuka dari tombol **Alat** di kanan atas adegan. Bilah di bagian
-bawah adegan memiliki **Urungkan**, **Ulangi**, **Putar**, **Miringkan**, **Hapus**,
-**Multi** (setiap ketukan menambahkan balok ke pilihan atau
-mengeluarkannya), **Kotak** (seret untuk menggambar kotak pilihan; kamera
-tetap diam sampai Anda mematikannya), dan **Lainnya**, yang membuka Palet
-Perintah. Di ponsel, bilah alat di atas adegan bergulir ke samping, jadi
-**Simpan** dan **Terbitkan** ada paling depan (setelah **← Kembali ke Dunia**,
-bila ada). Lihat [Layar sentuh](ControlsReference.md#layar-sentuh) untuk
-detailnya.
+Editor bekerja dengan sentuhan. Seret dengan satu jari untuk mengorbit, dua
+jari untuk menggeser, dan cubit untuk zoom. Ketukan memilih; menempatkan
+perlu dua ketukan, satu untuk melihat letak bagiannya dan satu lagi padanya
+(atau **Taruh**) untuk meletakkannya. Seretan tidak pernah memilih atau
+menempatkan. Di layar sempit, bilah sisi dibuka dari tombol **Alat** di
+kanan atas adegan. Bilah di bagian bawah adegan memiliki **Urungkan**,
+**Ulangi**, **Putar**, **Miringkan**, **Hapus**, **Multi** (setiap ketukan
+menambahkan balok ke pilihan atau mengeluarkannya), **Kotak** (seret untuk
+menggambar kotak pilihan; kamera tetap diam sampai Anda mematikannya), dan
+**Lainnya**, yang membuka Palet Perintah. Saat menempatkan, **Taruh** dan
+**Batal** menggantikan **Hapus**, **Multi**, dan **Kotak**; **Batal**
+menghentikan penempatan. Di ponsel, bilah alat di atas adegan bergulir ke
+samping, jadi **Simpan** dan **Terbitkan** ada paling depan (setelah **←
+Kembali ke Dunia**, bila ada). Lihat [Layar
+sentuh](ControlsReference.md#layar-sentuh) untuk detailnya.

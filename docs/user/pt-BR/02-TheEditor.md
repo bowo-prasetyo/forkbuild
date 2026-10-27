@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 9f1f7aebb3cab3d2 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1ddea9df5bda977a -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -819,15 +819,18 @@ desenha tudo de novo. Nada é removido; só muda o que é desenhado.
 
 ## Em um celular ou tablet
 
-O Editor funciona com toque. Arraste com um dedo para orbitar, com dois para
-mover a vista, e faça pinça para o zoom. Um toque seleciona ou coloca, e
-arrastar nunca faz isso. Em uma tela estreita, a barra lateral abre pelo
-botão **Ferramentas** no canto superior direito da cena. Uma barra na parte
-de baixo da cena tem **Desfazer**, **Refazer**, **Girar**, **Tombar**, **Excluir**,
-**Múltiplo** (cada toque põe um bloco na seleção ou tira dela), **Caixa**
-(arraste para desenhar uma caixa de seleção; a câmera fica parada até você
-desativar) e **Mais**, que abre a Paleta de comandos. Em um celular, a barra de ferramentas acima da cena rola
-para o lado, então **Salvar** e **Publicar** vêm primeiro nela (depois de
-**← Voltar ao Mundo**, quando houver). Veja
-[Telas sensíveis ao toque](ControlsReference.md#telas-sensíveis-ao-toque)
-para os detalhes.
+O Editor funciona com toque. Arraste com um dedo para orbitar, com dois
+para mover a vista, e faça pinça para o zoom. Um toque seleciona; colocar
+leva dois toques, um para ver onde a peça vai e outro sobre ela (ou
+**Colocar**) para pô-la. Arrastar nunca seleciona nem coloca. Em uma tela
+estreita, a barra lateral abre pelo botão **Ferramentas** no canto superior
+direito da cena. Uma barra na parte de baixo da cena tem **Desfazer**,
+**Refazer**, **Girar**, **Tombar**, **Excluir**, **Múltiplo** (cada toque
+põe um bloco na seleção ou tira dela), **Caixa** (arraste para desenhar uma
+caixa de seleção; a câmera fica parada até você desativar) e **Mais**, que
+abre a Paleta de comandos. Ao colocar, **Colocar** e **Cancelar** ficam no
+lugar de **Excluir**, **Múltiplo** e **Caixa**; **Cancelar** para de
+colocar. Em um celular, a barra de ferramentas acima da cena rola para o
+lado, então **Salvar** e **Publicar** vêm primeiro nela (depois de **←
+Voltar ao Mundo**, quando houver). Veja [Telas sensíveis ao
+toque](ControlsReference.md#telas-sensíveis-ao-toque) para os detalhes.

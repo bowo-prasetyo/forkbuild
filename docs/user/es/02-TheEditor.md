@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 9f1f7aebb3cab3d2 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1ddea9df5bda977a -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -859,15 +859,18 @@ toda. No se quita nada; solo cambia lo que se dibuja.
 ## En un teléfono o una tableta
 
 El Editor funciona con el tacto. Arrastre con un dedo para orbitar, con dos
-para desplazar la vista y pellizque para hacer zoom. Un toque selecciona o
-coloca, y arrastrar nunca lo hace. En una pantalla angosta, la barra
-lateral se abre desde el botón **Herramientas**, arriba a la derecha de la
-escena. Una barra al pie de la escena tiene **Deshacer**, **Rehacer**,
-**Girar**, **Inclinar**, **Eliminar**, **Múltiple** (cada toque agrega un bloque a la
-selección o lo quita), **Recuadro** (arrastre para dibujar un recuadro de
-selección; la cámara queda quieta hasta que lo desactive) y **Más**, que
-abre la Paleta de comandos. En un teléfono, la barra de herramientas sobre la
-escena se desplaza de lado, así que **Guardar** y **Publicar** van primero en
-ella (después de **← Volver al Mundo**, cuando lo hay). Consulte
-[Pantallas táctiles](ControlsReference.md#pantallas-táctiles) para ver los
-detalles.
+para desplazar la vista y pellizque para hacer zoom. Un toque selecciona;
+colocar lleva dos toques, uno para ver dónde va la pieza y otro sobre ella
+(o **Colocar**) para dejarla. Arrastrar nunca selecciona ni coloca. En una
+pantalla angosta, la barra lateral se abre desde el botón **Herramientas**,
+arriba a la derecha de la escena. Una barra al pie de la escena tiene
+**Deshacer**, **Rehacer**, **Girar**, **Inclinar**, **Eliminar**,
+**Múltiple** (cada toque agrega un bloque a la selección o lo quita),
+**Recuadro** (arrastre para dibujar un recuadro de selección; la cámara
+queda quieta hasta que lo desactive) y **Más**, que abre la Paleta de
+comandos. Mientras coloca, **Colocar** y **Cancelar** ocupan el lugar de
+**Eliminar**, **Múltiple** y **Recuadro**; **Cancelar** deja de colocar. En
+un teléfono, la barra de herramientas sobre la escena se desplaza de lado,
+así que **Guardar** y **Publicar** van primero en ella (después de **←
+Volver al Mundo**, cuando lo hay). Consulte [Pantallas
+táctiles](ControlsReference.md#pantallas-táctiles) para ver los detalles.

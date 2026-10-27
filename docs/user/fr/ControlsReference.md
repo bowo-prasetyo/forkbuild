@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 0ebb06952a43419a -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 0df1f1ec398f8dc6 -->
 # Référence des commandes
 
 <!-- languages -->
@@ -391,20 +391,23 @@ clavier s’affiche comme **Croisière : arrière**, et un appui l’arrête.
 
 ### Modifier (Éditeur)
 
-Un appui fait ce que fait un clic : il sélectionne avec l’outil
-Sélection, il place avec l’outil Placement. Un glissement ne fait que
-déplacer la caméra, si bien qu’orbiter ne place jamais une brique et
-n’efface jamais la sélection par accident. Le toucher n’a pas de survol,
-l’outil Placement n’affiche donc pas d’aperçu avant l’appui ; la brique va
-là où vous touchez. Choisir une brique ou une structure à placer ferme le
-tiroir Outils, pour que l’appui suivant atteigne la scène. La barre en bas
-de la vue remplace les touches :
+Un appui sélectionne avec l’outil Sélection. Placer demande deux appuis,
+car le toucher n’a pas de survol pour montrer d’abord un aperçu : le
+premier appui montre l’aperçu là où irait la brique ou la structure, et un
+second appui sur l’aperçu, ou **Poser**, la pose. Un appui ailleurs y
+déplace l’aperçu. Un glissement ne fait que déplacer la caméra, si bien
+qu’orbiter ne place jamais une brique et n’efface jamais la sélection par
+accident. Choisir une brique ou une structure à placer ferme le tiroir
+Outils, pour que l’appui suivant atteigne la scène. La barre en bas de la
+vue remplace les touches :
 
 | Bouton | Équivaut à | Remarques |
 |---|---|---|
 | **Annuler** / **Rétablir** | `Ctrl/Cmd+Z` / `Ctrl/Cmd+Maj+Z` | |
-| **Pivoter** | `R` | Pendant un placement, fait tourner la prochaine brique ou structure avant l’appui ; sinon, fait pivoter la sélection |
-| **Basculer** | `T` | Pendant un placement, couche la prochaine brique sur sa face suivante ; sinon, bascule les briques sélectionnées |
+| **Pivoter** | `R` | Pendant un placement, fait tourner l’aperçu avant de le poser ; sinon, fait pivoter la sélection |
+| **Basculer** | `T` | Pendant le placement d’une brique, couche son aperçu sur sa face suivante (une structure ne bascule pas) ; sinon, bascule les briques sélectionnées |
+| **Poser** | Clic | Pendant un placement : pose la pièce là où est son aperçu. Pendant un placement, **Poser** et **Arrêter** prennent la place de **Supprimer**, **Multi** et **Cadre** |
+| **Arrêter** | `Échap` | Pendant un placement : arrête de placer, sans rien poser, et revient à l’outil Sélection |
 | **Supprimer** | `Suppr` | |
 | **Multi** | `Ctrl/Cmd`-clic | Tant qu’il est actif, chaque appui ajoute une brique à la sélection ou l’en retire |
 | **Cadre** | `Maj`-glisser | Tant qu’il est actif, glisser un doigt trace un cadre de sélection au lieu de déplacer la caméra ; avec **Multi** aussi actif, le cadre ajoute à la sélection (`Ctrl/Cmd+Maj`-glisser). La caméra reste immobile tant que Cadre est actif (un second doigt annule le cadre au lieu de zoomer), désactivez-le donc pour vous déplacer de nouveau |

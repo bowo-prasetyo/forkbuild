@@ -3,6 +3,8 @@
 // toggle (a drag then draws the Shift-drag marquee), and the Command Palette,
 // which reaches every other action. Each runs the same
 // EditorActionRegistry action as its shortcut, with the same enabled rules.
+// While placing, Delete, Multi and Box (which act on a selection) give way to
+// Place, which puts the piece down where its ghost is, and Cancel (Escape).
 import { t } from '../i18n/i18n.js';
 const ACTIONS = Object.freeze({
     undo: 'history.undo',
@@ -21,9 +23,13 @@ export default {
         multiSelect: { type: Boolean, default: false },
         boxSelect: { type: Boolean, default: false },
         // While placing, Rotate turns the piece being placed (the R key there).
-        placing: { type: Boolean, default: false }
+        placing: { type: Boolean, default: false },
+        // Whether the piece being placed can tilt (a brick; a structure can't).
+        placingTilts: { type: Boolean, default: false },
+        // Whether the piece being placed shows its ghost, for Place.
+        canPlace: { type: Boolean, default: false }
     },
-    emits: ['run', 'rotate-placement', 'tilt-placement', 'toggle-multi-select', 'toggle-box-select'],
+    emits: ['run', 'rotate-placement', 'tilt-placement', 'toggle-multi-select', 'toggle-box-select', 'place', 'cancel-placement'],
     computed: {
         context() {
             return this.getContext();
@@ -59,7 +65,12 @@ export default {
             <button type="button" class="editor-touch-btn" :disabled="isDisabled('undo')" @click="run('undo')">{{ t('touchBar.undo') }}</button>
             <button type="button" class="editor-touch-btn" :disabled="isDisabled('redo')" @click="run('redo')">{{ t('touchBar.redo') }}</button>
             <button type="button" class="editor-touch-btn" :disabled="!placing && isDisabled('rotate')" @click="rotate">{{ t('touchBar.rotate') }}</button>
-            <button type="button" class="editor-touch-btn" :disabled="!placing && isDisabled('tilt')" @click="tilt">{{ t('touchBar.tilt') }}</button>
+            <button type="button" class="editor-touch-btn" :disabled="placing ? !placingTilts : isDisabled('tilt')" @click="tilt">{{ t('touchBar.tilt') }}</button>
+            <template v-if="placing">
+                <button type="button" class="editor-touch-btn editor-touch-btn--primary editor-touch-place" :disabled="!canPlace" @click="$emit('place')">{{ t('touchBar.place') }}</button>
+                <button type="button" class="editor-touch-btn editor-touch-cancel" @click="$emit('cancel-placement')">{{ t('touchBar.cancel') }}</button>
+            </template>
+            <template v-else>
             <button type="button" class="editor-touch-btn" :disabled="isDisabled('delete')" @click="run('delete')">{{ t('touchBar.delete') }}</button>
             <button
                 type="button"
@@ -73,6 +84,7 @@ export default {
                 :aria-pressed="boxSelect ? 'true' : 'false'"
                 @click="$emit('toggle-box-select')"
             >{{ t('touchBar.box') }}</button>
+            </template>
             <button type="button" class="editor-touch-btn" @click="run('palette')">{{ t('touchBar.more') }}</button>
         </div>
     `

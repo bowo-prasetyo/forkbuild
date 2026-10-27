@@ -275,3 +275,116 @@ function touch(pointerId, x, y, isPrimary = true) {
     }
     console.log('✓ placing acts on a click, never on a camera drag');
 }
+
+// 13. Placing by touch takes two taps: the first shows the ghost, a second on
+// it places. The Place button places the ghost; Cancel stops placing.
+{
+    // A placing tool's ghost follows a tap to its 40 px cell; a press places.
+    const placingTouchHost = (activeTool = 'place') => {
+        const made = makeHost();
+        const { host } = made;
+        const placed = [];
+        const preview = { visible: false, position: null };
+        const tools = [];
+        host._editorContext = {
+            selection: null,
+            tool: { activeTool },
+            preview, compositionPreview: preview, structurePreview: preview,
+            setActiveComposition(structure) { tools.push(`composition:${structure}`); },
+            setActiveTool(id) { this.tool.activeTool = id; tools.push(id); }
+        };
+        host._placePress = null;
+        host._lastPlacingTap = null;
+        host._inputDispatcher = {
+            dispatchPointerMove: (e) => {
+                preview.visible = true;
+                preview.position = { x: Math.round(e.clientX / 40), y: 0.5, z: Math.round(e.clientY / 40) };
+            },
+            dispatchPointerDown: () => {
+                placed.push({ ...preview.position });
+                preview.visible = false; // a placed piece's ghost hides until the next tap
+            },
+            dispatchPointerUp: () => {}
+        };
+        const tap = (x, y, id = 1) => {
+            host.onPointerDown(touch(id, x, y));
+            host.onPointerUp(touch(id, x, y));
+        };
+        return { host, placed, preview, tools, tap };
+    };
+
+    for (const tool of ['place', 'place-structure', 'compose-structure']) {
+        const { host, placed, tap } = placingTouchHost(tool);
+        assert(host.hasPlacementGhost() === false, `${tool}: no ghost before a tap`);
+        tap(100, 100);
+        assert(placed.length === 0 && host.hasPlacementGhost(), `${tool}: the first tap only shows the ghost`);
+        tap(112, 106);
+        assert(placed.length === 1 && placed[0].x === 3 && placed[0].z === 3, `${tool}: a second tap on it places it where it was shown`);
+    }
+
+    {
+        const { placed, tap } = placingTouchHost();
+        tap(100, 100);
+        tap(300, 300);
+        assert(placed.length === 0, 'a second tap elsewhere moves the ghost, places nothing');
+        tap(301, 302);
+        assert(placed.length === 1 && placed[0].x === 8, 'and a tap on it there places it');
+        tap(301, 302);
+        assert(placed.length === 1, 'after placing, the next tap shows the next ghost first (stacking sees it before it lands)');
+        tap(302, 301);
+        assert(placed.length === 2, 'and the tap after that places it');
+    }
+
+    {
+        // A drag (the camera turned) in between: the ghost moved on screen, so a
+        // tap at the old point is a fresh look unless it resolves to the ghost's spot.
+        const drag = (host) => {
+            host.onPointerDown(touch(2, 200, 200));
+            host.onPointerMove(touch(2, 260, 200));
+            host.onPointerUp(touch(2, 260, 200));
+        };
+        const near = placingTouchHost();
+        near.tap(100, 100);
+        drag(near.host);
+        near.tap(90, 90);
+        assert(near.placed.length === 0, 'after a camera drag, a nearby tap that lands elsewhere places nothing');
+        const onSpot = placingTouchHost();
+        onSpot.tap(100, 100);
+        drag(onSpot.host);
+        onSpot.tap(118, 118);
+        assert(onSpot.placed.length === 1 && onSpot.placed[0].x === 3 && onSpot.placed[0].z === 3,
+            'a tap that lands on the ghost\'s own spot places it, camera moved or not');
+    }
+
+    {
+        const { host, placed, preview, tap } = placingTouchHost();
+        assert(host.confirmPlacement() === false && placed.length === 0, 'Place with no ghost does nothing');
+        tap(40, 40);
+        assert(host.confirmPlacement() === true && placed.length === 1 && placed[0].x === 1, 'Place puts the ghost down where it is');
+        assert(preview.visible === false && host.hasPlacementGhost() === false, 'leaving no ghost to place again');
+    }
+
+    {
+        const { host, tools, tap } = placingTouchHost('compose-structure');
+        tap(40, 40);
+        assert(host.cancelPlacement() === true, 'Cancel while placing');
+        assert(tools.join() === 'composition:null,select', 'puts the structure down and returns to Select');
+        assert(host.cancelPlacement() === false, 'Cancel with nothing being placed does nothing');
+        const brick = placingTouchHost('place');
+        brick.host.cancelPlacement();
+        assert(brick.tools.join() === 'select', 'Cancel while placing a brick returns to Select');
+    }
+
+    {
+        const { host, placed, tap } = placingTouchHost('select');
+        const dispatched = [];
+        host._inputDispatcher = {
+            dispatchPointerMove: (e) => dispatched.push('move'),
+            dispatchPointerDown: (e) => dispatched.push('down'),
+            dispatchPointerUp: (e) => dispatched.push('up')
+        };
+        tap(10, 10);
+        assert(dispatched.join() === 'move,down,up' && placed.length === 0, 'Select still acts on the first tap');
+    }
+    console.log('✓ placing by touch: see it, then place it');
+}

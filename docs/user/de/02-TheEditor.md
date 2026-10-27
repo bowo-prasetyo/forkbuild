@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 9f1f7aebb3cab3d2 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1ddea9df5bda977a -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -861,15 +861,19 @@ gezeichnet wird, ändert sich.
 ## Auf Telefon oder Tablet
 
 Der Editor funktioniert mit Touch. Ziehen Sie mit einem Finger zum
-Umkreisen, mit zwei zum Schwenken, und ziehen Sie zwei Finger zusammen
-zum Zoomen. Ein Tippen wählt aus oder platziert, ein Ziehen nie. Auf einem
+Umkreisen, mit zwei zum Schwenken, und ziehen Sie zwei Finger zusammen zum
+Zoomen. Ein Tippen wählt aus; Platzieren braucht zwei Tipper, eines, um zu
+sehen, wo das Teil hinkommt, und ein zweites darauf (oder **Setzen**), um
+es abzusetzen. Ein Ziehen wählt nie aus und platziert nie. Auf einem
 schmalen Bildschirm öffnet sich die Seitenleiste über die Schaltfläche
 **Werkzeuge** oben rechts in der Szene. Eine Leiste unten in der Szene hat
-**Rückgängig**, **Wiederholen**, **Drehen**, **Kippen**, **Löschen**, **Mehrfach**
-(jedes Tippen fügt der Auswahl einen Stein hinzu oder entfernt ihn),
-**Rahmen** (ziehen, um einen Auswahlrahmen aufzuziehen; die Kamera bleibt
-still, bis Sie es ausschalten) und **Mehr**, das die Befehlspalette
-öffnet. Auf einem Handy lässt sich die Werkzeugleiste über der Szene seitlich
-scrollen, deshalb stehen **Speichern** und **Veröffentlichen** darin ganz vorn
-(nach **← Zurück zur Welt**, wenn es das gibt). Einzelheiten unter
-[Touchscreens](ControlsReference.md#touchscreens).
+**Rückgängig**, **Wiederholen**, **Drehen**, **Kippen**, **Löschen**,
+**Mehrfach** (jedes Tippen fügt der Auswahl einen Stein hinzu oder entfernt
+ihn), **Rahmen** (ziehen, um einen Auswahlrahmen aufzuziehen; die Kamera
+bleibt still, bis Sie es ausschalten) und **Mehr**, das die Befehlspalette
+öffnet. Beim Platzieren stehen **Setzen** und **Abbrechen** an der Stelle
+von **Löschen**, **Mehrfach** und **Rahmen**; **Abbrechen** beendet das
+Platzieren. Auf einem Handy lässt sich die Werkzeugleiste über der Szene
+seitlich scrollen, deshalb stehen **Speichern** und **Veröffentlichen**
+darin ganz vorn (nach **← Zurück zur Welt**, wenn es das gibt).
+Einzelheiten unter [Touchscreens](ControlsReference.md#touchscreens).

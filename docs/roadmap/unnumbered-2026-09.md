@@ -9248,3 +9248,36 @@ the way) placed nothing and said nothing, so it looked like a missed click and b
   for placing a build), tests/EditorSound.test.js (the service plays `blocked` for either kind, a disposed one plays
   nothing, and every cue has a synthesized sound). Checked in the running app on desktop and an emulated phone: a House
   dropped over a brick places nothing, plays `blocked`, shows the message with the right wording, and stays in hand.
+
+## Placing by touch: see it, then place it (unnumbered, 2026-10-27)
+
+**Building: the first brick, on a phone.** Findings P1-5 and P1-6 of
+[the Editor placement audit](../reviews/EditorPlacementUX-2026-10-27.md): a finger has no hover, so the first tap
+placed the brick or structure at once, before the builder had seen where it would go or which way it faced. Rotate and
+Tilt turned a ghost nobody could see. A structure couldn't be put down again without the Esc key. Tilt said a structure
+had tilted when it hadn't, and placing a structure said "click … R … Esc" on a phone.
+
+- **Two taps** (application/editorSession/pointerInputMethods.js). While placing, the first tap shows the ghost where
+  it would go, and places nothing. A second tap on the ghost places it: close to the tap that showed it with the camera
+  unmoved, or anywhere that lands on the ghost's own spot. Pressing near the ghost covers a stacked ghost, where a
+  fingertip can hit the ground behind it. A tap anywhere else moves the ghost there. After a brick is placed, the next
+  tap shows the next ghost first, so a stack is seen before it lands. Mouse and pen are unchanged: a click still places.
+- **Place and Cancel on the touch bar** (ui/components/EditorTouchActionBar.js). While placing, **Place** (puts the
+  piece down where its ghost is; off until there is a ghost) and **Cancel** (stops placing, with nothing placed, and
+  goes back to Select) take the places of Delete, Multi and Box, which only act on a selection. Starting to place turns
+  Box off, so it can't be left on, hidden, to hold the camera still. The bar is narrower while placing than while
+  selecting, in every language.
+- **Tilt is on only when it does something**: for a brick, not for a structure, so its "Tilted" message is always true.
+- **Touch words for touch**: the Place hints, the Rotate and Tilt messages, and a new touch message when a structure is
+  picked (`editor.touchPlacingStructure`) say what to tap, not what to click or which key to press, in all eight
+  languages.
+- The user guide's touch sections (The Editor, and the Controls Reference's Touch screens) say how placing by touch
+  works and list Place and Cancel, in all eight languages.
+- Tests: tests/EditorTouchTap.test.js (for each placing tool, the first tap only shows the ghost and a second on it
+  places it; a tap elsewhere moves the ghost; after a camera drag, only a tap on the ghost's spot places; the next
+  ghost after a placement is shown before it lands; Place puts down the ghost, and does nothing without one; Cancel
+  puts a structure down and returns to Select; Select still acts on the first tap). Checked in the running app on an
+  emulated iPhone 13: tap shows a brick's ghost, Rotate turns it on screen, a tap on it places it, Place places a
+  moved ghost, a Tool Shed takes two taps, Cancel ends placing with nothing placed, and Tilt is off for a structure.
+- Not done: the touch bar still scrolls sideways in seven languages, as it did before this change. A structure's ghost
+  still starts beside the build, sometimes off screen, until the first tap.

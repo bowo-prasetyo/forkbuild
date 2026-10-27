@@ -11,6 +11,10 @@ const MARQUEE_DRAG_THRESHOLD_PX = 6;
 // A finger moves a little even when tapping, so touch gets a wider margin.
 const TOUCH_TAP_SLOP_PX = 10;
 
+// While placing by touch, a second tap this close to the one that showed the
+// ghost (the camera unmoved) places it: a fingertip on the ghost.
+const PLACE_AGAIN_TAP_PX = 28;
+
 // Touch: one finger both orbits the camera and taps, and the tools act on
 // pointer-down, so a touch reaches the tools only once it lifts as a tap (no
 // second finger, little movement). It then replays as a hover, press and
@@ -23,6 +27,13 @@ const TOUCH_TAP_SLOP_PX = 10;
 // Multi-select on, like Ctrl+Shift). As for Shift-drag, the camera controls are
 // off while the box is drawn, so they never see that finger: a second finger
 // cancels the box rather than becoming a pinch.
+//
+// Touch while placing takes two steps, since a finger has no hover to show
+// the ghost first: a tap moves the ghost there, and a second tap places it
+// when it lands close to the tap that showed it (the camera unmoved) or on the
+// ghost's own spot. The touch bar's Place does the same, and its Cancel puts
+// the piece down. So nothing lands before it has been seen, and Rotate and
+// Tilt turn a ghost that is on screen.
 //
 // Mouse and pen while placing: a press also starts the camera's orbit (left)
 // or pan (right), so the placing tools see it only once it is released as a
@@ -197,6 +208,7 @@ export const pointerInputMethods = {
         if (this._touchPointerIds.size > 1) {
             // A second finger: pinch or pan, never a tap or a box.
             this._touchTap = null;
+            this._lastPlacingTap = null;
             this.cancelMarquee();
             return null;
         }
@@ -237,7 +249,9 @@ export const pointerInputMethods = {
         const tap = this._touchTap;
         if (tap && tap.pointerId === event.pointerId
             && Math.hypot(event.clientX - tap.x0, event.clientY - tap.y0) > TOUCH_TAP_SLOP_PX) {
+            // A drag turns the camera, so the ghost has moved on screen.
             this._touchTap = null;
+            this._lastPlacingTap = null;
         }
         if (this._session) {
             const result = this._session.gizmoPointerMove(
@@ -291,6 +305,9 @@ export const pointerInputMethods = {
 
     _replayTouchTap(event) {
         if (this._inputDispatcher) {
+            const placing = this._isPlacing();
+            const ghostBefore = placing ? this._placingGhostKey() : null;
+            const last = placing ? this._lastPlacingTap : null;
             const click = {
                 pointerType: 'touch',
                 clientX: event.clientX,
@@ -302,10 +319,78 @@ export const pointerInputMethods = {
                 altKey: false,
                 metaKey: false
             };
+            // On the ghost by where it was tapped: placed as it stands, since a
+            // finger on a stacked ghost can hit the ground behind it.
+            if (last && ghostBefore !== null && last.ghost === ghostBefore
+                && Math.hypot(click.clientX - last.click.clientX, click.clientY - last.click.clientY) <= PLACE_AGAIN_TAP_PX) {
+                this._placeAt(last.click);
+                return;
+            }
             this._inputDispatcher.dispatchPointerMove(click);
+            if (placing) {
+                const ghost = this._placingGhostKey();
+                // The first tap only shows where it would go.
+                if (ghostBefore === null || ghostBefore !== ghost) {
+                    this._lastPlacingTap = ghost === null ? null : { click, ghost };
+                    return;
+                }
+                this._placeAt(click);
+                return;
+            }
             this._inputDispatcher.dispatchPointerDown({ ...click, buttons: 1 });
             this._inputDispatcher.dispatchPointerUp(click);
         }
+    },
+
+    _placeAt(click) {
+        this._lastPlacingTap = null;
+        this._inputDispatcher.dispatchPointerDown({ ...click, buttons: 1 });
+        this._inputDispatcher.dispatchPointerUp(click);
+    },
+
+    // Whether a piece being placed shows its ghost (the touch bar's Place).
+    hasPlacementGhost() {
+        return this._isPlacing() && this._placingGhostKey() !== null;
+    },
+
+    // The touch bar's Place: puts the piece down where its ghost is, as a tap on
+    // the ghost would. False with no ghost to place.
+    confirmPlacement() {
+        if (!this.hasPlacementGhost() || !this._inputDispatcher) {
+            return false;
+        }
+        this._placeAt(this._lastPlacingTap?.click || { pointerType: 'touch', clientX: 0, clientY: 0, button: 0, buttons: 0 });
+        return true;
+    },
+
+    // The touch bar's Cancel (Escape on a keyboard): stops placing and goes
+    // back to Select, with nothing placed. False when nothing is being placed.
+    cancelPlacement() {
+        if (!this._isPlacing()) {
+            return false;
+        }
+        this._lastPlacingTap = null;
+        if (this._editorContext.tool.activeTool === ToolId.COMPOSE_STRUCTURE) {
+            this._editorContext.setActiveComposition(null);
+        }
+        this._editorContext.setActiveTool(ToolId.SELECT);
+        return true;
+    },
+
+    // Where the active placing tool's ghost is, as text to compare, or null
+    // when it shows none.
+    _placingGhostKey() {
+        const context = this._editorContext;
+        const preview = {
+            [ToolId.PLACE]: context.preview,
+            [ToolId.COMPOSE_STRUCTURE]: context.compositionPreview,
+            [ToolId.PLACE_STRUCTURE]: context.structurePreview
+        }[context.tool?.activeTool];
+        if (!preview || !preview.visible || !preview.position) {
+            return null;
+        }
+        const { x, y, z } = preview.position;
+        return `${x},${y},${z}`;
     },
 
     // A mouse or pen click while placing, replayed at its release point.
