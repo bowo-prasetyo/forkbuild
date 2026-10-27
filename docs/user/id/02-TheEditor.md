@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 9ea0390fc2a063c9 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 5d47324184a4e3ca -->
 # 02 — Editor
 
 <!-- languages -->
@@ -403,6 +403,11 @@ seperti menempatkan satu balok:
    tidak menempatkan apa pun, dan Editor memberi tahu ada yang menghalangi.
 4. `Escape` (atau alat Pilih, atau **Batal** di layar sentuh) menghentikan
    penempatan — tidak ada lagi yang ditambahkan, dan alat Pilih aktif.
+
+Arahkan ke bagian atas sebuah balok dan struktur akan ditempatkan di sana,
+bertumpu pada balok tertinggi di bawahnya: gudang di atas dek, cerobong di
+atas atap, sama seperti balok lebar bertumpu pada dindingnya. Bila
+diarahkan ke tanah, atau ke sisi balok, struktur berdiri di tanah.
 
 Balok yang Anda dapatkan adalah balok biasa di bangunan Anda sejak saat
 mendarat — tidak dapat dibedakan dari apa pun yang Anda tempatkan dengan

@@ -46,3 +46,33 @@ export function restingHeight({ definition, position, rotation = 0, tilt = 0 }, 
     }
     return bottom + pending.height / 2;
 }
+
+// The box round a set of bricks, each by its turned and tilted footprint
+// and its height: { minX, maxX, minY, maxY, minZ, maxZ }, or null for none.
+export function boxOfBricks(bricks, definitionOf) {
+    let box = null;
+    for (const brick of bricks || []) {
+        const footprint = footprintOf(definitionOf(brick.definitionId), brick.position, brick.rotation, brick.tilt);
+        const bottom = brick.position.y - footprint.height / 2;
+        const top = brick.position.y + footprint.height / 2;
+        box = box
+            ? {
+                minX: Math.min(box.minX, footprint.minX), maxX: Math.max(box.maxX, footprint.maxX),
+                minY: Math.min(box.minY, bottom), maxY: Math.max(box.maxY, top),
+                minZ: Math.min(box.minZ, footprint.minZ), maxZ: Math.max(box.maxZ, footprint.maxZ)
+            }
+            : { minX: footprint.minX, maxX: footprint.maxX, minY: bottom, maxY: top, minZ: footprint.minZ, maxZ: footprint.maxZ };
+    }
+    return box;
+}
+
+// How far a whole box (a structure being placed) has to rise to rest on the
+// tallest brick under it, by the same rule as one brick: 0 when nothing
+// under it is in its way.
+export function restingLift(box, bricks, definitionOf) {
+    if (!box) return 0;
+    const definition = { width: box.maxX - box.minX, height: box.maxY - box.minY, depth: box.maxZ - box.minZ };
+    const centerY = (box.minY + box.maxY) / 2;
+    const position = { x: (box.minX + box.maxX) / 2, y: centerY, z: (box.minZ + box.maxZ) / 2 };
+    return restingHeight({ definition, position }, bricks, definitionOf) - centerY;
+}

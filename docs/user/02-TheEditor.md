@@ -378,6 +378,11 @@ single brick:
 4. `Escape` (or the Select tool, or **Cancel** on a touch screen) stops
    placing — nothing more is added, and the Select tool is on.
 
+Point at the top of a brick and the structure goes there instead, resting
+on the tallest brick under it: a shed on a deck, a chimney on a roof, the
+same way a wide brick rests on its walls. Pointed at the ground, or at a
+brick's side, it stands on the ground.
+
 The bricks you get are ordinary bricks in your build from the moment
 they land — indistinguishable from anything you placed by hand, free to
 edit, select, group, or delete like anything else. Placing several

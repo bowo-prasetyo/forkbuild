@@ -44,7 +44,9 @@ export class PickingService {
         this._groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
     }
 
-    // Legacy shape for EditorView: { brickId, buildingId } | null.
+    // Legacy shape for EditorView: { brickId, buildingId, normal, point } | null.
+    // `point`, where the ray met the brick, places a structure where the
+    // pointer is on a brick's top (application/tools/StructureCompositionTool.js).
     pick(screenX, screenY) {
         const result = this.pickRich(screenX, screenY);
         if (!result || result.type !== 'brick') {
@@ -53,7 +55,8 @@ export class PickingService {
         return {
             brickId: result.brickId,
             buildingId: result.buildingId,
-            normal: result.normal
+            normal: result.normal,
+            point: result.point
         };
     }
 

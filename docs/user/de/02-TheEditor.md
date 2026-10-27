@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 9ea0390fc2a063c9 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 5d47324184a4e3ca -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -419,6 +419,12 @@ Steins:
 4. `Escape` (oder das Auswahlwerkzeug, oder **Abbrechen** auf einem
    Touchscreen) beendet das Platzieren — nichts weiter wird hinzugefügt,
    und das Auswahlwerkzeug ist aktiv.
+
+Zeigen Sie auf die Oberseite eines Steins, und die Struktur kommt
+stattdessen dorthin und ruht auf dem höchsten Stein unter ihr: ein Schuppen
+auf einer Terrasse, ein Schornstein auf einem Dach, so wie ein breiter
+Stein auf seinen Wänden ruht. Zeigen Sie auf den Boden oder auf die Seite
+eines Steins, steht sie auf dem Boden.
 
 Die Steine, die Sie erhalten, sind ab dem Moment, in dem sie landen,
 gewöhnliche Steine in Ihrem Bauwerk — nicht von dem zu unterscheiden, was

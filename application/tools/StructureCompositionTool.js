@@ -3,6 +3,9 @@ import { SpatialBounds } from '../../core/world/SpatialBounds.js';
 import { StructurePlacementValidator } from '../editor/StructurePlacementValidator.js';
 import { PlacementPositionService } from '../editor/PlacementPositionService.js';
 import { ToolId } from '../editor-state/ToolId.js';
+import { Position } from '../../core/document/Position.js';
+import { boxOfBricks, restingLift } from '../../core/building/BrickResting.js';
+import { transformStructureBricks } from '../editor/StructureCompositionTransform.js';
 
 // 0.4.1 — Interactive Structure Composition UX: the "Copy Into
 // Document" counterpart to application/tools/StructurePlacementTool.js,
@@ -42,6 +45,13 @@ import { ToolId } from '../editor-state/ToolId.js';
 // to the Build Library. The structure and its turn stay in hand and its
 // ghost hides until the pointer moves (or, by touch, the next tap shows it).
 // Escape, Select or the touch bar's Cancel return to Select.
+//
+// Pointed at the top of a brick, the structure goes where the pointer is on
+// it and rests on the tallest brick under its footprint, by the same rule as
+// a wide brick (core/building/BrickResting.js): a shed on a deck, a chimney
+// on a roof. Pointed at the ground (or a brick's side) it stands on the
+// ground. Its footprint, for resting and for the collision check alike, is
+// the turned footprint of its turned bricks.
 export class StructureCompositionTool extends Tool {
     constructor(context) {
         super(context);
@@ -49,6 +59,7 @@ export class StructureCompositionTool extends Tool {
         this._positionService = new PlacementPositionService(context.registry);
         this._rotation = 0;
         this._lastPosition = null;
+        this._lastPointer = null;
     }
 
     // Seeds the preview at the deterministic AUTOMATIC composition
@@ -75,6 +86,7 @@ export class StructureCompositionTool extends Tool {
         }
         this._rotation = 0;
         this._lastPosition = null;
+        this._lastPointer = null;
     }
 
     onPointerMove(pointerEvent) {
@@ -82,10 +94,19 @@ export class StructureCompositionTool extends Tool {
         if (!structure || !pointerEvent.worldPosition) {
             return;
         }
-        const position = this._positionService.calculateStructureGround(
-            pointerEvent.worldPosition,
+        const top = pointerEvent.pickedBrick && pointerEvent.pickedBrick.normal
+            && pointerEvent.pickedBrick.normal.y > 0.5 && pointerEvent.pickedBrick.point
+            ? pointerEvent.pickedBrick.point
+            : null;
+        let position = this._positionService.calculateStructureGround(
+            top || pointerEvent.worldPosition,
             this.context.editorContext.settings
         );
+        if (top) {
+            position = this._restOnTop(structure, position);
+        }
+        // Kept so a turn can work out where it rests again.
+        this._lastPointer = pointerEvent;
         this._lastPosition = position;
         this._showPreview(structure, position);
     }
@@ -121,17 +142,47 @@ export class StructureCompositionTool extends Tool {
         }
         const delta = keyEvent.modifiers?.shift ? -90 : 90;
         this._rotation = ((this._rotation + delta) % 360 + 360) % 360;
+        // A turn changes the footprint, so where it rests is worked out again.
+        if (this._lastPointer) {
+            this.onPointerMove(this._lastPointer);
+            return;
+        }
         // See PlacementTool#onKeyDown: the turn applies even with nothing hovered.
         if (this._lastPosition) {
             this._showPreview(structure, this._lastPosition);
         }
     }
 
+    // The structure's box with its current turn, in its own space (its
+    // position at the origin).
+    _localBox(structure) {
+        const registry = this.context.registry;
+        return boxOfBricks(transformStructureBricks(structure, { rotation: this._rotation }), (id) => (registry ? registry.get(id) : null));
+    }
+
+    // Raised onto the tallest brick under its footprint.
+    _restOnTop(structure, position) {
+        const registry = this.context.registry;
+        const box = this._localBox(structure);
+        if (!box || !registry) return position;
+        const placed = {
+            minX: box.minX + position.x, maxX: box.maxX + position.x,
+            minY: box.minY + position.y, maxY: box.maxY + position.y,
+            minZ: box.minZ + position.z, maxZ: box.maxZ + position.z
+        };
+        const bricks = this.context.world.getBuildings().flatMap((building) => building.getBricks());
+        const lift = restingLift(placed, bricks, (id) => registry.get(id));
+        return lift > 0 ? new Position(position.x, position.y + lift, position.z) : position;
+    }
+
     _showPreview(structure, position) {
         const world = this.context.world;
         const registry = this.context.registry;
         const resolver = this.context.structureResolver;
-        const localBounds = SpatialBounds.fromBricks(structure.bricks, registry);
+        const box = this._localBox(structure);
+        const localBounds = box
+            ? new SpatialBounds({ min: { x: box.minX, y: box.minY, z: box.minZ }, max: { x: box.maxX, y: box.maxY, z: box.maxZ } })
+            : SpatialBounds.fromBricks(structure.bricks, registry);
         const valid = this._validator.canPlace(world, registry, resolver, { localBounds, position });
         if (this.context.compositionPreviewUseCase) {
             this.context.compositionPreviewUseCase.show(structure, position, this._rotation, valid);
@@ -160,6 +211,7 @@ export class StructureCompositionTool extends Tool {
             this.context.compositionPreviewUseCase.hide();
         }
         this._lastPosition = null;
+        this._lastPointer = null;
     }
 
     _cancel() {

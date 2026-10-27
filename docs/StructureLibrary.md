@@ -277,6 +277,14 @@ user moves anything. From there:
   ghost until the pointer moves, so placing four trees is four clicks
   (2026-10-27; it was one-shot before, which sent builders back to the
   Build Library for every copy).
+- Pointed at the top of a brick (`pickedBrick.normal.y > 0.5`, with the
+  hit `point` PickingService#pick() now reports), the structure goes where
+  the pointer is on it and rests on the tallest brick under its footprint,
+  by `core/building/BrickResting.js#restingLift()`, the wide-brick rule.
+  Pointed at the ground or a brick's side, it stands on the ground. Its
+  footprint, for resting and for `StructurePlacementValidator`, is the
+  turned footprint of its turned bricks (`boxOfBricks()`), and the
+  validator boxes existing bricks the same way (2026-10-27).
 
 `renderer/CompositionPreviewRenderer.js` renders the ghost — a sibling
 of `renderer/StructurePreviewRenderer.js` that never needs a

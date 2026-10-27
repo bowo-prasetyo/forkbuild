@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 9ea0390fc2a063c9 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 5d47324184a4e3ca -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -399,6 +399,11 @@ inteira, acompanhando o ponteiro sobre o chão, exatamente como ao colocar um
 4. `Esc` (ou a ferramenta Selecionar, ou **Cancelar** numa tela sensível ao
    toque) para de colocar — nada mais é adicionado, e a ferramenta
    Selecionar fica ativa.
+
+Aponte para o topo de um bloco e a estrutura vai para lá, apoiada no bloco
+mais alto embaixo dela: um galpão sobre um deck, uma chaminé sobre um
+telhado, do mesmo jeito que um bloco largo se apoia nas paredes. Apontada
+para o chão, ou para a lateral de um bloco, ela fica no chão.
 
 Os blocos que você recebe são blocos comuns da sua construção desde o
 momento em que chegam — iguais a tudo o que você colocou à mão, livres para

@@ -130,6 +130,8 @@ bricks and for structures.
 
 ### P1-3. Structures can only be placed on the ground
 
+**Fixed 2026-10-27:** pointed at the top of a brick, a structure goes there and rests on the tallest brick under it (roadmap, "A structure rests on what's under it").
+
 **What happens.** A structure's preview always sits at height 0. If you
 point at an existing build to put a structure on it (a chimney on a roof, a
 tower on a platform, a shed on a deck), the ghost drops to the ground
@@ -270,6 +272,8 @@ screens. Let the guide fold to a chip on its own while you place, as it
 already does on a phone ("First build · 0/6").
 
 ### P2-12. Structure collision ignores rotation
+
+**Partly fixed 2026-10-27:** a structure from the Build Library, and every brick already in the build, are now checked by their turned footprints (same roadmap entry). A placed build's own box (Place Structure) still ignores its turn.
 
 `StructurePlacementValidator#canPlace` receives the structure's
 **unrotated** bounds (`StructureCompositionTool.js:129`). A long structure
