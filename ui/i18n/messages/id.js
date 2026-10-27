@@ -1209,6 +1209,8 @@ export default Object.freeze({
     'editor.touchPlaceHint': 'Ketuk tanah untuk menempatkan; Putar memutar balok terlebih dahulu.',
     'editor.touchPlacingHint': 'Menempatkan "{title}" — ketuk tanah untuk menempatkan; Putar memutarnya terlebih dahulu.',
     'editor.placeHint': 'Arahkan ke tanah, R untuk memutar, klik untuk menempatkan.',
+    'editor.placementBlocked': 'Ada yang menghalangi di sini. Coba tempat lain, atau tekan R untuk memutarnya.',
+    'editor.touchPlacementBlocked': 'Ada yang menghalangi di sini. Coba tempat lain, atau ketuk Putar untuk memutarnya.',
     'editor.seeInside': 'Lihat ke dalam',
     'editor.seeInsideOff': 'Tampilkan utuh',
     'editor.seeInsideHint': 'Sembunyikan bangunan di atas lantai dasarnya, untuk melihat dan membangun di ruangannya. Tidak ada yang dihapus.',

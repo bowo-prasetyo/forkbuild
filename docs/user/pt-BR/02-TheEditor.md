@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 6d3906d689db600b -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 9f1f7aebb3cab3d2 -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -172,6 +172,10 @@ Só um clique coloca: pressione e solte sem mover. Arrastar para olhar ao
 redor (com qualquer botão) move a câmera e não coloca nada, então Colocar
 pode continuar ligado enquanto você gira a construção para achar o próximo
 lugar.
+
+Um clique onde a prévia está vermelha não coloca nada: o Editor diz que
+tem algo no caminho e toca uma batida suave e grave, para você saber que
+deve tentar outro lugar ou girar a peça.
 
 > **Dica:** Pressione **Esc** para voltar à ferramenta Selecionar.
 

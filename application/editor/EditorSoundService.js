@@ -1,5 +1,6 @@
 // The Editor's sound: a short cue for each edit the user makes
-// (core/app/EditorSoundCues.js), heard through the same kind of provider as World
+// (core/app/EditorSoundCues.js), and for a click that can't place because
+// something is in the way, heard through the same kind of provider as World
 // View's (audio/WebAudioSoundscapeProvider.js, without ambience), with the
 // same device mute and volume, and the Editor's own music (core/app/MusicScore.js).
 import { editorSoundCueFor, EDITOR_SOUND_CUE } from '../../core/app/EditorSoundCues.js';
@@ -15,6 +16,7 @@ export class EditorSoundService {
         this._editorSession = editorSession;
         this._preference = new SoundPreference({ provider, settingsStore });
         this._unsubscribe = null;
+        this._unsubscribeBlocked = null;
         this._disposed = false;
     }
 
@@ -30,6 +32,11 @@ export class EditorSoundService {
                 this._provider.playEditorCue(cue);
             }
         });
+        if (typeof this._editorSession.onPlacementBlocked === 'function') {
+            this._unsubscribeBlocked = this._editorSession.onPlacementBlocked(() => {
+                this._provider.playEditorCue(EDITOR_SOUND_CUE.BLOCKED);
+            });
+        }
     }
 
     // Called from a user gesture: the only moment a browser lets audio start.
@@ -78,6 +85,10 @@ export class EditorSoundService {
         if (this._unsubscribe) {
             this._unsubscribe();
             this._unsubscribe = null;
+        }
+        if (this._unsubscribeBlocked) {
+            this._unsubscribeBlocked();
+            this._unsubscribeBlocked = null;
         }
         this._provider.dispose();
     }

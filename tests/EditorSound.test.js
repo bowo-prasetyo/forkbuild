@@ -29,6 +29,7 @@ import { EditorSoundService } from '../application/editor/EditorSoundService.js'
 import { SoundSettingsStore } from '../application/settings/SoundSettingsStore.js';
 import { EDITOR_ACTIVITY, EDITOR_SOUND_CUE, editorSoundCueFor } from '../core/app/EditorSoundCues.js';
 import { CompositeCommand } from '../application/commands/CompositeCommand.js';
+import { hasEditorSound } from '../audio/EditorSoundSynth.js';
 import { CommandRegistry } from '../application/commands/CommandRegistry.js';
 import { assert } from './support/Assert.js';
 
@@ -238,6 +239,10 @@ async function runTests() {
         assert(registered.length > 10, `setup: the registry registered its commands (${registered.length})`);
         const silent = registered.filter((type) => type !== 'composite' && executed(type) === null);
         assert(silent.length === 0, `every registered edit has a sound (silent: ${silent.join(', ')})`);
+
+        // Every cue, a blocked click's included, is one the synth can play.
+        const unplayable = Object.values(EDITOR_SOUND_CUE).filter((cue) => !hasEditorSound(cue));
+        assert(unplayable.length === 0, `every cue has a synthesized sound (missing: ${unplayable.join(', ')})`);
         console.log('✓ each kind of edit has its own sound');
     }
 
@@ -304,6 +309,10 @@ async function runTests() {
         aliceStack.editorSession.commandHistory.execute(new MoveBrickCommand({ worldId: docId, buildingId, brickId, delta: { x: 1, y: 0, z: 0 } }));
         aliceStack.editorSession.undo();
         assert(JSON.stringify(provider.cues) === JSON.stringify(['move', 'undo']), `a move then an undo (${provider.cues})`);
+        aliceStack.editorSession._editorContext.notePlacementBlocked('brick');
+        aliceStack.editorSession._editorContext.notePlacementBlocked('structure');
+        assert(JSON.stringify(provider.cues.slice(-2)) === JSON.stringify(['blocked', 'blocked']),
+            `a click on a blocked spot, brick or structure, has its sound (${provider.cues})`);
         service.saved();
         assert(provider.cues[provider.cues.length - 1] === 'save', 'saving has its sound');
         service.unlock();
@@ -317,6 +326,7 @@ async function runTests() {
         assert(provider.disposed, 'dispose() releases audio');
         const count = provider.cues.length;
         aliceStack.editorSession.redo();
+        aliceStack.editorSession._editorContext.notePlacementBlocked('brick');
         service.saved();
         assert(provider.cues.length === count, 'a disposed service plays nothing');
         let threw = false;

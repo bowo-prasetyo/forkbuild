@@ -968,6 +968,7 @@ export default {
         }
         let unsubTool = null;
         let unsubSelection = null;
+        let unsubPlacementBlocked = null;
         let unsubActiveStructure = null;
         let unsubActiveComposition = null;
 
@@ -1575,6 +1576,11 @@ export default {
         onMounted(() => {
             editorSession.start(viewport.value);
             startSound();
+            // A click on a blocked spot (the ghost tinted red) is said here and
+            // heard through the sound service, so it isn't taken for a missed click.
+            unsubPlacementBlocked = editorSession.onPlacementBlocked(() => {
+                feedback.show(t(touchInput.value ? 'editor.touchPlacementBlocked' : 'editor.placementBlocked'));
+            });
             firstBuildGuide.followFirstBuildEdits();
             // The Editor opened, whichever way in (core/app/VisitorCount.js, EDITOR_OPEN).
             funnelEventCounter?.openedEditor();
@@ -1876,6 +1882,7 @@ export default {
             if (unsubTool) {
                 unsubTool.unsubscribe();
             }
+            unsubPlacementBlocked?.();
             if (unsubSelection) {
                 unsubSelection.unsubscribe();
             }

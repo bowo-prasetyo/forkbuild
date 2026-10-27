@@ -18,6 +18,7 @@ import { transformStructureBricks } from '../application/editor/StructureComposi
 import { EditorSession } from '../application/editor/EditorSession.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
 import { ToolId } from '../application/editor-state/ToolId.js';
+import { EditorEvent } from '../core/events/EditorEvent.js';
 import { assert } from './support/Assert.js';
 
 // 0.4.5 — Unified Build Placement.
@@ -168,9 +169,12 @@ async function run() {
         const { tool, editorContext, building, commandHistory } = buildBrickTool({ occupied: [{ x: 0, y: 0.5, z: 0 }] });
         tool.onPointerMove({ worldPosition: { x: 0, y: 0, z: 0 }, pickedBrick: null });
         assert(editorContext.preview.valid === false, '17. Brick: hovering an occupied position previews as invalid');
+        const blocked = [];
+        editorContext.eventBus.subscribe(EditorEvent.PLACEMENT_BLOCKED, (payload) => blocked.push(payload.kind));
         tool.onPointerDown({});
         assert(building.getBricks().length === 1, '18. Brick: an invalid preview refuses to commit');
         assert(commandHistory.getCursor() === 0, '19. Brick: a refused click leaves history untouched');
+        assert(blocked.join() === 'brick', '19b. Brick: the refused click is reported as blocked');
     }
     {
         const blocker = new Brick({ definitionId: 'core:block_2x2', position: new Position(2, 1, 2) });
@@ -180,9 +184,14 @@ async function run() {
         tool.onPointerMove({ worldPosition: { x: 2, y: 0, z: 2 } });
         assert(editorContext.compositionPreview.valid === false,
             '20. Structure: hovering the existing footprint previews as invalid — the SAME contract as a Brick');
+        const blocked = [];
+        editorContext.eventBus.subscribe(EditorEvent.PLACEMENT_BLOCKED, (payload) => blocked.push(payload.kind));
         tool.onPointerDown();
         assert(building.getBricks().length === 1, '21. Structure: an invalid preview refuses to commit');
         assert(commandHistory.getCursor() === 0, '22. Structure: a refused click leaves history untouched');
+        assert(blocked.join() === 'structure', '22b. Structure: the refused click is reported as blocked, the SAME contract as a Brick');
+        assert(editorContext.activeComposition.structure === house,
+            '22c. Structure: a blocked click keeps the structure in hand to try another spot');
     }
     console.log('✓ Section C: an invalid preview refuses to commit for both a Brick and a Structure');
 

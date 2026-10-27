@@ -9220,3 +9220,31 @@ this cost them stray bricks and Undos from the very first minute.
   right or middle click and a cancelled press place nothing; a pen tap places; Select still gets the press at once).
   Checked in the running app too: orbiting and panning in Place mode leave the brick count unchanged, a click still
   places a brick or a whole House, and a drag while placing Cottage keeps it in hand.
+
+## A click on a blocked spot says so, and sounds it (unnumbered, 2026-10-27)
+
+**Building: the first brick.** Finding P1-2 of
+[the Editor placement audit](../reviews/EditorPlacementUX-2026-10-27.md): a click while the ghost was red (something in
+the way) placed nothing and said nothing, so it looked like a missed click and builders clicked again or gave up.
+
+- **Placing tools report a blocked click** (application/tools/PlacementTool.js, StructureCompositionTool.js and
+  StructurePlacementTool.js). A click that would have placed but lands where the preview is blocked publishes
+  `EditorEvent.PLACEMENT_BLOCKED` with its kind, a brick or a structure (application/editor/EditorContext.js
+  `notePlacementBlocked()`, heard through `EditorSession#onPlacementBlocked()`). It changes nothing in the build, and a
+  structure stays in hand to try another spot.
+- **A message**: *"Something's in the way here. Try another spot, or press R to turn it."*, or *"…tap Rotate…"* on a
+  touch screen (ui/views/EditorView.js, `editor.placementBlocked` and `editor.touchPlacementBlocked`, in all eight
+  languages).
+- **A sound**: a new `blocked` cue, two soft low knocks (core/app/EditorSoundCues.js, audio/EditorSoundSynth.js),
+  played by EditorSoundService with the Editor's own mute and volume. It is low and dull where placing is a bright
+  snap, so the two are told apart by ear.
+- **The Editor's messages can be read again** (ui/components/ActionFeedback.js). The strip they appear in had a fixed
+  near-black background under the theme's ink, which is dark in the light theme, so every message, this one included,
+  was dark text on a dark strip. It now uses the theme's own surface and ink, in light and dark alike, and wraps inside
+  the view on a phone instead of running off both edges. World View's messages use the same strip and are fixed too.
+- The user guide says what a blocked click does under **Place tool**, in all eight languages.
+- Tests: tests/PlacementPreviewUX.test.js and tests/UnifiedBuildPlacement.test.js (a blocked brick or structure click
+  is reported once with its kind, and a click that places reports nothing), tests/StructurePlacement.test.js (the same
+  for placing a build), tests/EditorSound.test.js (the service plays `blocked` for either kind, a disposed one plays
+  nothing, and every cue has a synthesized sound). Checked in the running app on desktop and an emulated phone: a House
+  dropped over a brick places nothing, plays `blocked`, shows the message with the right wording, and stays in hand.

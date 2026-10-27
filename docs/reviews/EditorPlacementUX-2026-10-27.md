@@ -113,6 +113,8 @@ following the pointer while the camera moves.
 
 ### P1-2. A blocked placement fails silently
 
+**Fixed 2026-10-27:** a blocked click now shows a message and plays a soft "blocked" sound (roadmap, "A click on a blocked spot says so, and sounds it"). The fix also made the Editor's message strip readable: it had been dark text on a dark strip in the light theme. The red ghost's pulse is not done yet.
+
 **What happens.** Clicking while the ghost is red does nothing. There is no
 message, no sound and no shake. It looks the same as a missed click.
 

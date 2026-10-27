@@ -91,7 +91,12 @@ export class StructureCompositionTool extends Tool {
 
     onPointerDown() {
         const preview = this.context.editorContext.compositionPreview;
-        if (!preview.visible || !preview.structure || !preview.valid) {
+        if (!preview.visible || !preview.structure) {
+            return;
+        }
+        if (!preview.valid) {
+            // See PlacementTool#onPointerDown: a blocked click is said and heard.
+            this.context.editorContext.notePlacementBlocked?.('structure');
             return;
         }
         this._commit(preview.structure, preview.position, preview.rotation);

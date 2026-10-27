@@ -152,6 +152,8 @@ export class PlacementTool extends Tool {
         const buildingId = buildings[0].id;
 
         if (!this._placementValidator.canPlace(world, buildingId, preview.position)) {
+            // Said and heard, so a blocked click isn't taken for a missed one.
+            this.context.editorContext.notePlacementBlocked?.('brick');
             return;
         }
 

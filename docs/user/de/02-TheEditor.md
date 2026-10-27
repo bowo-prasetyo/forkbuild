@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 6d3906d689db600b -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 9f1f7aebb3cab3d2 -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -180,6 +180,10 @@ Nur ein Klick platziert: drücken und loslassen, ohne zu bewegen. Ziehen,
 um sich umzusehen (mit jeder Maustaste), bewegt die Kamera und platziert
 nichts, sodass Platzieren eingeschaltet bleiben kann, während Sie das
 Bauwerk drehen, um die nächste Stelle zu finden.
+
+Ein Klick, wo die Vorschau rot ist, platziert nichts: Der Editor sagt,
+dass etwas im Weg ist, und spielt ein leises, tiefes Klopfen, damit Sie
+wissen, dass Sie eine andere Stelle versuchen oder das Teil drehen können.
 
 > **Tipp:** Drücken Sie **Escape**, um zum Auswahlwerkzeug zurückzukehren.
 

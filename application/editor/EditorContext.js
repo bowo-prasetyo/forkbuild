@@ -150,6 +150,11 @@ export class EditorContext {
         this._publish(EditorEvent.COMPOSITION_PREVIEW_CHANGED, { compositionPreview });
     }
 
+    // A placing tool's click landed on a blocked spot (EditorEvent.PLACEMENT_BLOCKED).
+    notePlacementBlocked(kind) {
+        this._publish(EditorEvent.PLACEMENT_BLOCKED, { kind });
+    }
+
     _publish(eventType, payload) {
         this._eventBus.publish(eventType, payload);
     }

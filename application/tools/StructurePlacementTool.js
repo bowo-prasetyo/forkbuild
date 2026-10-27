@@ -108,6 +108,8 @@ export class StructurePlacementTool extends Tool {
             return;
         }
         if (!preview.valid) {
+            // See PlacementTool#onPointerDown: a blocked click is said and heard.
+            this.context.editorContext.notePlacementBlocked?.('structure');
             return;
         }
 

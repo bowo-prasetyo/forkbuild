@@ -28,5 +28,9 @@ export const EditorEvent = Object.freeze({
     // the current Document instead of placing a StructurePlacement
     // reference to another Document.
     ACTIVE_COMPOSITION_CHANGED: 'ActiveCompositionChanged',
-    COMPOSITION_PREVIEW_CHANGED: 'CompositionPreviewChanged'
+    COMPOSITION_PREVIEW_CHANGED: 'CompositionPreviewChanged',
+    // A click that would have placed something landed where the preview
+    // was blocked (tinted red), so nothing was placed: { kind }, 'brick' or
+    // 'structure'. Heard and shown by the Editor, never a document change.
+    PLACEMENT_BLOCKED: 'PlacementBlocked'
 });
