@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 5d47324184a4e3ca -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: abbb99ac426b1347 -->
 # 02 — Editor
 
 <!-- languages -->
@@ -48,6 +48,9 @@ dengan grup.
   *menyeberang sungai* menemukan Jembatan, *tidur* menemukan Tempat Tidur.
   Kata-kata untuk menemukan setiap balok dan struktur sudah ada di dalam
   aplikasi, jadi tidak ada yang dikirim ke mana pun.
+  Dengan keyboard, panah bawah dari kotak pencarian menuju hasil pertama,
+  tombol panah berpindah di antara balok atau struktur, dan Enter memilih
+  satu, sama seperti klik.
   - **Balok** — semua yang dapat Anda tempatkan dengan alat Tempatkan,
     sebagai ubin dalam enam bagian (Dasar, Struktur, Atap & Tangga,
     Bukaan, Detail, Alam): lima puluh sembilan keping, dari setengah

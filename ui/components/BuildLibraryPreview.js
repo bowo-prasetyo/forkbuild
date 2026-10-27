@@ -95,6 +95,7 @@ export default {
     },
     template: `
         <div
+            aria-hidden="true"
             :class="['build-library-preview', { 'build-library-preview--pending': pending }]"
             :style="style"
         >

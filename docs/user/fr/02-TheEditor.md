@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 5d47324184a4e3ca -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: abbb99ac426b1347 -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -50,6 +50,9 @@ organiser votre construction avec des groupes.
   qu’il vous faut : *traverser la rivière* trouve le Pont, *dormir* le Lit.
   Les mots qui permettent de trouver chaque brique et chaque structure
   sont fournis avec l’application : rien n’est envoyé nulle part.
+  Au clavier, la flèche vers le bas depuis le champ de recherche va au
+  premier résultat, les flèches passent d’une brique ou d’une structure à
+  l’autre, et Entrée en choisit une, comme un clic.
   - **Briques** — tout ce que vous pouvez placer avec l’outil Placement,
     sous forme de vignettes réparties en six sections (Base, Structure,
     Toits et escaliers, Ouvertures, Détails, Nature) : cinquante-neuf

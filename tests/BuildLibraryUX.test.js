@@ -3,7 +3,7 @@ import { CreateStructureRegistryUseCase } from '../application/editor/CreateStru
 import { VillageLibrary } from '../core/library/VillageLibrary.js';
 import { LibraryPreviewService } from '../application/editor/LibraryPreviewService.js';
 import { PreviewType } from '../core/catalog/DocumentPreview.js';
-import { groupBricksForDisplay, matches, normalize } from '../ui/components/BuildLibraryPanel.js';
+import { groupBricksForDisplay, gridNeighbor, matches, normalize } from '../ui/components/BuildLibraryPanel.js';
 import { EditorContext } from '../application/editor/EditorContext.js';
 import { PaletteUseCase } from '../application/editor/PaletteUseCase.js';
 import { ForkStructureUseCase } from '../application/editor/ForkStructureUseCase.js';
@@ -330,3 +330,21 @@ async function run() {
 // closing comment on this — so this is invoked with top-level await,
 // never fire-and-forget.
 await run();
+
+// The brick grid's keyboard moves (finding P1-7 of
+// docs/reviews/EditorPlacementUX-2026-10-27.md): two sections, five and
+// three tiles, two columns.
+{
+    const groups = [['a', 'b', 'c', 'd', 'e'], ['f', 'g', 'h']];
+    const move = (id, key) => gridNeighbor(groups, id, key);
+    assert(move('a', 'ArrowRight') === 'b' && move('e', 'ArrowRight') === 'f', 'gridNeighbor: Right steps on, across sections');
+    assert(move('a', 'ArrowLeft') === 'a' && move('f', 'ArrowLeft') === 'e', 'gridNeighbor: Left steps back, stopping at the first');
+    assert(move('a', 'ArrowDown') === 'c' && move('c', 'ArrowDown') === 'e', 'gridNeighbor: Down keeps the column');
+    assert(move('d', 'ArrowDown') === 'e', 'gridNeighbor: Down onto a shorter last row takes its last tile');
+    assert(move('e', 'ArrowDown') === 'f' && move('h', 'ArrowDown') === 'h', 'gridNeighbor: Down crosses into the next section, and stops at the end');
+    assert(move('g', 'ArrowUp') === 'e' && move('f', 'ArrowUp') === 'e' && move('c', 'ArrowUp') === 'a', 'gridNeighbor: Up keeps the column into the section above');
+    assert(move('b', 'ArrowUp') === 'b', 'gridNeighbor: Up from the top row stays');
+    assert(move('c', 'Home') === 'a' && move('c', 'End') === 'h', 'gridNeighbor: Home and End');
+    assert(move('c', 'x') === null, 'gridNeighbor: other keys are not moves');
+    assert(gridNeighbor([[], ['z']], 'q', 'ArrowDown') === 'z', 'gridNeighbor: from a tile no longer shown, the first one shown');
+}

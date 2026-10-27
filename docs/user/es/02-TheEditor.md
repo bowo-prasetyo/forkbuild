@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 5d47324184a4e3ca -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: abbb99ac426b1347 -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -49,6 +49,9 @@ grupos.
   necesita: *cruzar el río* encuentra el Puente, *dormir* la Cama. Las
   palabras con las que se encuentra cada bloque y cada estructura vienen con
   la aplicación, así que no se envía nada a ninguna parte.
+  Con el teclado, la flecha abajo desde el cuadro de búsqueda va al primer
+  resultado, las flechas se mueven entre bloques o estructuras, y Intro
+  elige uno, como un clic.
   - **Bloques**: todo lo que puede colocar con la herramienta Colocar,
     como mosaicos en seis secciones (Básicos, Estructura, Techos y
     escaleras, Aberturas, Detalles, Naturaleza): cincuenta y nueve piezas,

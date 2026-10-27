@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 5d47324184a4e3ca -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: abbb99ac426b1347 -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -46,6 +46,9 @@ selecionar e transformar blocos e como organizar sua construção com grupos.
   *atravessar o rio* encontra a Ponte, *dormir* a Cama. As palavras pelas
   quais cada bloco e cada estrutura são encontrados vêm com o aplicativo,
   então nada é enviado a lugar nenhum.
+  Pelo teclado, a seta para baixo na caixa de pesquisa vai ao primeiro
+  resultado, as setas passam de um bloco ou estrutura a outro, e Enter
+  escolhe um, como um clique.
   - **Blocos** — tudo o que você pode colocar com a ferramenta Colocar, em
     blocos de seis seções (Básicos, Estrutura, Telhados e escadas,
     Aberturas, Detalhes, Natureza): cinquenta e nove peças, de meios cubos,

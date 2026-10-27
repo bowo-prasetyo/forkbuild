@@ -211,6 +211,8 @@ cannot tilt. Add a touch version of `editor.placingStructure`, as
 
 ### P1-7. The Build Library cannot be used from the keyboard
 
+**Fixed 2026-10-27:** tiles and cards are buttons with one Tab stop per list, the arrow keys move between them, and Down from the search box goes to what it found (roadmap, "The Build Library from the keyboard").
+
 **What happens.** Brick tiles and structure cards are `<li @click>`
 elements with `tabIndex -1` (`BuildLibraryPanel.js:721`,
 `StructureLibraryCard.js:31`). In the library, Tab reaches only the two
