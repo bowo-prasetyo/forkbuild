@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1ddea9df5bda977a -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 9ea0390fc2a063c9 -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -411,12 +411,14 @@ Steins:
 
 1. Bewegen Sie den Zeiger, um den Geist zu positionieren.
 2. Drücken Sie `R` / `Umschalt+R`, um ihn in 90°-Schritten zu drehen.
-3. Klicken Sie, um zu übernehmen — jeder Stein der Struktur wird Ihrem
-   Bauwerk als ein **Rückgängig-Schritt** hinzugefügt. Eine belegte
-   Position färbt den Geist rot und verweigert den Klick, genauso wie ein
-   einzelner Stein sich nicht auf einen anderen setzen lässt.
-4. `Escape` bricht ab — nichts wird hinzugefügt, und Sie kehren zu dem
-   Werkzeug zurück, das Sie vorher benutzt haben.
+3. Klicken Sie, um sie zu platzieren — jeder Stein der Struktur wird Ihrem
+   Bauwerk als ein **Rückgängig-Schritt** hinzugefügt. Die Struktur bleibt
+   in der Hand, gleich gedreht, sodass jeder weitere Klick eine weitere
+   platziert. Eine belegte Position färbt den Geist rot; ein Klick dort
+   platziert nichts, und der Editor sagt, dass etwas im Weg ist.
+4. `Escape` (oder das Auswahlwerkzeug, oder **Abbrechen** auf einem
+   Touchscreen) beendet das Platzieren — nichts weiter wird hinzugefügt,
+   und das Auswahlwerkzeug ist aktiv.
 
 Die Steine, die Sie erhalten, sind ab dem Moment, in dem sie landen,
 gewöhnliche Steine in Ihrem Bauwerk — nicht von dem zu unterscheiden, was

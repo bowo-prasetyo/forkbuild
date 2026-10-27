@@ -271,11 +271,12 @@ user moves anything. From there:
   `application/editor/StructureCompositionTransform.js#transformStructureBricks()`
   pipeline, so the ghost is a visualization of the exact command that
   will run, never an approximation of it.
-- `Escape` cancels with zero Document mutation. Composing is one-shot —
-  unlike `StructurePlacementTool`, which stays active for placing the
-  same structure repeatedly, committing or cancelling a composition
-  returns to Select; "compose House once" is closer to a paste gesture
-  than a placement mode.
+- `Escape` cancels with zero Document mutation and returns to Select.
+  Committing does not: like `StructurePlacementTool` and `PlacementTool`,
+  the tool stays active with the same Structure and turn, and hides its
+  ghost until the pointer moves, so placing four trees is four clicks
+  (2026-10-27; it was one-shot before, which sent builders back to the
+  Build Library for every copy).
 
 `renderer/CompositionPreviewRenderer.js` renders the ghost — a sibling
 of `renderer/StructurePreviewRenderer.js` that never needs a

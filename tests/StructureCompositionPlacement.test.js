@@ -284,7 +284,10 @@ async function run() {
         // matching the preview's own last position/rotation exactly.
         const previewBeforeCommit = editorContext.compositionPreview;
         const expectedItems = transformStructureBricks(well, { position: previewBeforeCommit.position, rotation: previewBeforeCommit.rotation });
+        const toolChanges = [];
+        const unsubTool = editorContext.eventBus.subscribe(EditorEvent.TOOL_CHANGED, ({ activeTool }) => toolChanges.push(activeTool));
         tool.onPointerDown();
+        unsubTool.unsubscribe();
         assert(commandHistory.getCursor() === 1, '34. Phase F: commit produces exactly one history entry, no matter how many bricks Well has');
         const composedBricks = building.getBricks().filter((b) => b.id !== preExistingBrick.id);
         assert(composedBricks.length === well.bricks.length,
@@ -294,8 +297,8 @@ async function run() {
         assert(JSON.stringify(committedSnapshot) === JSON.stringify(expectedSnapshot),
             '36. Phase F: the committed bricks match EXACTLY what the preview last showed — preview is a visualization of the command, never an approximation');
         assert(editorContext.compositionPreview.visible === false, '37. Phase F: the preview hides after committing');
-        assert(editorContext.activeComposition.structure === null, '38. Phase F: the active composition clears after committing');
-        assert(editorContext.tool.activeTool === ToolId.SELECT, '39. Phase F: composing is one-shot — committing returns to Select, unlike StructurePlacementTool');
+        assert(editorContext.activeComposition.structure === well, '38. Phase F: the structure stays in hand after placing, like a brick');
+        assert(toolChanges.length === 0, '39. Phase F: placing a structure does not switch tools (no return to Select), like StructurePlacementTool and bricks');
 
         const wellBrickIds = composedBricks.map((b) => b.id);
 
@@ -315,6 +318,19 @@ async function run() {
             '42. Phase H: redo brings back the SAME brick ids, not a fresh set');
         assert(JSON.stringify(bricksSnapshot(redoneBricks)) === JSON.stringify(expectedSnapshot),
             '43. Phase H: redo reproduces the exact same geometry');
+
+        // ---- Phase I: still in hand, a second Well goes down with the same
+        // turn, as a second brick does.
+        tool.onPointerMove({ worldPosition: { x: 40, y: 0, z: 40 } });
+        assert(editorContext.compositionPreview.visible === true && editorContext.compositionPreview.valid === true
+            && editorContext.compositionPreview.rotation === previewBeforeCommit.rotation,
+            '43b. Phase I: moving shows the next ghost, keeping the turn of the last one');
+        const bricksBeforeSecond = building.getBricks().length;
+        tool.onPointerDown();
+        assert(building.getBricks().length === bricksBeforeSecond + well.bricks.length && commandHistory.getCursor() === 2,
+            '43c. Phase I: a second click places a second Well, as its own undo step');
+        commandHistory.undo();
+        assert(building.getBricks().length === bricksBeforeSecond, '43d. Phase I: undo removes only the second Well');
 
         console.log('✓ Sections D-J (part 1): ghost preview, move, rotate, collision-blocked click, valid commit, undo/redo');
     }

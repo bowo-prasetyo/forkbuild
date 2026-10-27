@@ -9281,3 +9281,24 @@ had tilted when it hadn't, and placing a structure said "click … R … Esc" on
   moved ghost, a Tool Shed takes two taps, Cancel ends placing with nothing placed, and Tilt is off for a structure.
 - Not done: the touch bar still scrolls sideways in seven languages, as it did before this change. A structure's ghost
   still starts beside the build, sometimes off screen, until the first tap.
+
+## A structure stays in hand, like a brick (unnumbered, 2026-10-27)
+
+**Building: placing more than one.** Finding P1-4 of
+[the Editor placement audit](../reviews/EditorPlacementUX-2026-10-27.md): after a brick is placed it stays in hand
+for the next click, but after a structure from the Build Library was placed the Editor went back to Select. Four trees
+or a row of fences took four trips to the library, and on a phone four openings of the Tools drawer. The first-build
+guide's "With Place still on, click…" was also wrong after a structure.
+
+- **Placing a structure no longer ends placing** (application/tools/StructureCompositionTool.js). After each placement
+  the same structure stays in hand, turned the same way, and its ghost hides until the pointer moves (by touch, until
+  the next tap shows it), as bricks and placed builds already did. Escape, the Select tool, or **Cancel** on a touch
+  screen stop placing. Each placement is still its own undo step.
+- The user guide's *Placing a structure into your build* says so, in all eight languages, and now says that Escape
+  goes to the Select tool (it said "whichever tool you were using before", which the Editor never did).
+  docs/StructureLibrary.md no longer calls placing a structure one-shot.
+- Tests: tests/StructureCompositionPlacement.test.js (placing doesn't switch tools; the structure stays in hand; a
+  second click places a second Well with the same turn, as its own undo step) and tests/UnifiedBuildPlacement.test.js
+  (a structure stays in hand after placing, the same as a brick). Checked in the running app: on desktop, three clicks
+  place a turned Tool Shed twice and keep its turn for the next ghost, and Escape ends placing. On an emulated phone,
+  two taps place a Tool Shed, Place places another, and Cancel ends placing.

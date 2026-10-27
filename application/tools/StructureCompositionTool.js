@@ -37,10 +37,11 @@ import { ToolId } from '../editor-state/ToolId.js';
 // a Structure never creates a StructurePlacement, but colliding with
 // one that's already there is still a real collision.
 //
-// A one-shot tool, unlike StructurePlacementTool: composing House once
-// is "paste it," not "keep pasting Houses" — commit or Escape both
-// return to Select, exactly like exiting a paste gesture, never leaving
-// the editor camped in a placement mode after one composition lands.
+// Stays active after a placement, like PlacementTool and
+// StructurePlacementTool: placing four trees is four clicks, not four trips
+// to the Build Library. The structure and its turn stay in hand and its
+// ghost hides until the pointer moves (or, by touch, the next tap shows it).
+// Escape, Select or the touch bar's Cancel return to Select.
 export class StructureCompositionTool extends Tool {
     constructor(context) {
         super(context);
@@ -155,7 +156,10 @@ export class StructureCompositionTool extends Tool {
         if (command) {
             this.context.commandHistory.execute(command);
         }
-        this._finish();
+        if (this.context.compositionPreviewUseCase) {
+            this.context.compositionPreviewUseCase.hide();
+        }
+        this._lastPosition = null;
     }
 
     _cancel() {

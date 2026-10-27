@@ -152,7 +152,8 @@ async function run() {
         assert(commandHistory.getCursor() === 1,
             '13. Structure: commit produces exactly ONE history entry, mirroring a Brick\'s own single-command commit');
         assert(editorContext.compositionPreview.visible === false, '14. Structure: the preview hides after committing');
-        assert(editorContext.activeComposition.structure === null, '15. Structure: the active composition clears after committing');
+        assert(editorContext.activeComposition.structure === house,
+            '15. Structure: it stays in hand after committing, the SAME as a Brick stays selected');
 
         commandHistory.undo();
         assert(building.getBricks().length === bricksBeforeCommit,

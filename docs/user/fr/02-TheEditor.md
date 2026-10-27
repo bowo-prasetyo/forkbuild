@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1ddea9df5bda977a -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 9ea0390fc2a063c9 -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -418,12 +418,15 @@ sol, exactement comme pour placer une seule brique :
 
 1. Déplacez le pointeur pour positionner le fantôme.
 2. Appuyez sur `R` / `Maj+R` pour le faire pivoter par pas de 90°.
-3. Cliquez pour valider — toutes les briques de la structure sont
-   ajoutées à votre construction en **une seule étape d’annulation**. Une
-   position occupée teinte le fantôme en rouge et refuse le clic, de la
-   même façon qu’une brique refuse de se poser sur une autre.
-4. `Échap` annule — rien n’est ajouté, et vous revenez à l’outil que vous
-   utilisiez avant.
+3. Cliquez pour la poser — toutes les briques de la structure sont ajoutées
+   à votre construction en **une seule étape d’annulation**. La structure
+   reste en main, tournée de la même façon, si bien que chaque clic suivant
+   en pose une autre. Une position occupée teinte le fantôme en rouge ; un
+   clic à cet endroit ne pose rien, et l’Éditeur signale que quelque chose
+   gêne.
+4. `Échap` (ou l’outil Sélection, ou **Arrêter** sur un écran tactile)
+   arrête le placement — rien de plus n’est ajouté, et l’outil Sélection
+   est actif.
 
 Les briques obtenues sont des briques ordinaires de votre construction dès
 qu’elles se posent — impossibles à distinguer de celles placées à la
