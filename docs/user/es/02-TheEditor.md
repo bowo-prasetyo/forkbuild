@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1ddea9df5bda977a -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 9ea0390fc2a063c9 -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -412,12 +412,14 @@ sobre el suelo, exactamente como al colocar un solo bloque:
 
 1. Mueva el puntero para ubicar el fantasma.
 2. Presione `R` / `Mayús+R` para girarlo en pasos de 90°.
-3. Haga clic para confirmar: todos los bloques de la estructura se
-   agregan a su construcción como un solo **paso de deshacer**. Una posición
-   ocupada tiñe el fantasma de rojo y rechaza el clic, igual que un solo
-   bloque se niega a colocarse encima de otro.
-4. `Escape` cancela: no se agrega nada y vuelve a la herramienta que
-   estaba usando antes.
+3. Haga clic para colocarla: todos los bloques de la estructura se agregan
+   a su construcción como un solo **paso de deshacer**. La estructura sigue
+   en la mano, con el mismo giro, así que cada clic más coloca otra. Una
+   posición ocupada tiñe el fantasma de rojo; un clic allí no coloca nada y
+   el Editor avisa que hay algo en medio.
+4. `Escape` (o la herramienta Seleccionar, o **Cancelar** en una pantalla
+   táctil) deja de colocar: no se agrega nada más y queda activa la
+   herramienta Seleccionar.
 
 Los bloques que obtiene son bloques comunes de su construcción desde el
 momento en que se colocan: no se distinguen de nada que haya colocado a

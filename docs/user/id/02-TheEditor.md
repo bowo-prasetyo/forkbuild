@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1ddea9df5bda977a -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 9ea0390fc2a063c9 -->
 # 02 — Editor
 
 <!-- languages -->
@@ -396,12 +396,13 @@ seperti menempatkan satu balok:
 
 1. Gerakkan penunjuk untuk memosisikan bayangan.
 2. Tekan `R` / `Shift+R` untuk memutarnya per 90°.
-3. Klik untuk menerapkan — setiap balok dalam struktur ditambahkan ke
-   bangunan Anda sebagai satu **langkah urung**. Posisi yang terisi
-   mewarnai bayangan menjadi merah dan menolak kliknya, sama seperti satu
-   balok menolak ditempatkan di atas balok lain.
-4. `Escape` membatalkan — tidak ada yang ditambahkan, dan Anda kembali ke
-   alat yang Anda pakai sebelumnya.
+3. Klik untuk menempatkannya — setiap balok dalam struktur ditambahkan ke
+   bangunan Anda sebagai satu **langkah urung**. Struktur tetap di tangan,
+   dengan putaran yang sama, jadi setiap klik berikutnya menempatkan satu
+   lagi. Posisi yang terisi mewarnai bayangan menjadi merah; klik di sana
+   tidak menempatkan apa pun, dan Editor memberi tahu ada yang menghalangi.
+4. `Escape` (atau alat Pilih, atau **Batal** di layar sentuh) menghentikan
+   penempatan — tidak ada lagi yang ditambahkan, dan alat Pilih aktif.
 
 Balok yang Anda dapatkan adalah balok biasa di bangunan Anda sejak saat
 mendarat — tidak dapat dibedakan dari apa pun yang Anda tempatkan dengan

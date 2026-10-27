@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1ddea9df5bda977a -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 9ea0390fc2a063c9 -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -391,12 +391,14 @@ inteira, acompanhando o ponteiro sobre o chão, exatamente como ao colocar um
 
 1. Mova o ponteiro para posicionar o fantasma.
 2. Pressione `R` / `Shift+R` para girá-lo em passos de 90°.
-3. Clique para confirmar — todos os blocos da estrutura são adicionados ao
-   construção como **um passo de desfazer**. Uma posição ocupada deixa o
-   fantasma vermelho e recusa o clique, do mesmo jeito que um bloco se recusa
-   a ser colocado em cima de outro.
-4. `Esc` cancela — nada é adicionado, e você volta à ferramenta que estava
-   usando antes.
+3. Clique para colocá-la — todos os blocos da estrutura são adicionados à
+   construção como **um passo de desfazer**. A estrutura continua na mão,
+   com o mesmo giro, então cada clique a mais coloca outra. Uma posição
+   ocupada deixa o fantasma vermelho; um clique ali não coloca nada, e o
+   Editor avisa que tem algo no caminho.
+4. `Esc` (ou a ferramenta Selecionar, ou **Cancelar** numa tela sensível ao
+   toque) para de colocar — nada mais é adicionado, e a ferramenta
+   Selecionar fica ativa.
 
 Os blocos que você recebe são blocos comuns da sua construção desde o
 momento em que chegam — iguais a tudo o que você colocou à mão, livres para

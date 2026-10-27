@@ -148,6 +148,8 @@ docs/Principles.md, *Buildable Things Share One Placement Experience*.
 
 ### P1-4. A structure places once, but a brick places again and again
 
+**Fixed 2026-10-27:** a structure stays in hand after it is placed, turned the same way, until Escape, Select or Cancel (roadmap, "A structure stays in hand, like a brick").
+
 **What happens.** After you place a brick you are still in Place mode, so
 you can click again to add another. After you place a structure the Editor
 returns to Select, so placing four trees or a row of fences takes four trips

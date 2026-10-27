@@ -370,12 +370,13 @@ single brick:
 
 1. Move the pointer to position the ghost.
 2. Press `R` / `Shift+R` to rotate it in 90° steps.
-3. Click to commit — every brick in the structure is added to your build
-   as one **undo step**. An occupied position tints the ghost red and
-   refuses the click, the same way a single brick refuses to place on top
-   of another.
-4. `Escape` cancels — nothing is added, and you're returned to whichever
-   tool you were using before.
+3. Click to place it — every brick in the structure is added to your build
+   as one **undo step**. The structure stays in hand, turned the same way,
+   so each further click places another one. An occupied position tints the
+   ghost red; a click there places nothing, and the Editor says something
+   is in the way.
+4. `Escape` (or the Select tool, or **Cancel** on a touch screen) stops
+   placing — nothing more is added, and the Select tool is on.
 
 The bricks you get are ordinary bricks in your build from the moment
 they land — indistinguishable from anything you placed by hand, free to
