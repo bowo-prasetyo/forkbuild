@@ -1140,6 +1140,8 @@
         "editor.touchPlaceHint": "b3fbe128",
         "editor.touchPlacingHint": "40c18823",
         "editor.placeHint": "2cd71830",
+        "editor.placementBlocked": "eb39634f",
+        "editor.touchPlacementBlocked": "eb09df26",
         "editor.seeInside": "81cf5a43",
         "editor.seeInsideOff": "4d05eb63",
         "editor.seeInsideHint": "464d4d9c",

@@ -1211,6 +1211,8 @@ export default Object.freeze({
     'editor.touchPlaceHint': 'Tap the ground to place; Rotate turns the brick first.',
     'editor.touchPlacingHint': 'Placing "{title}" — tap the ground to place; Rotate turns it first.',
     'editor.placeHint': 'Hover the ground, R to rotate, click to place.',
+    'editor.placementBlocked': 'Something\'s in the way here. Try another spot, or press R to turn it.',
+    'editor.touchPlacementBlocked': 'Something\'s in the way here. Try another spot, or tap Rotate to turn it.',
     'editor.seeInside': 'See inside',
     'editor.seeInsideOff': 'Show it whole',
     'editor.seeInsideHint': 'Cut the build away above its ground floor, to see and build in its rooms. Nothing is removed.',

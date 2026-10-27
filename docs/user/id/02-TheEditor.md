@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 6d3906d689db600b -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 9f1f7aebb3cab3d2 -->
 # 02 — Editor
 
 <!-- languages -->
@@ -173,6 +173,10 @@ Hanya klik yang menempatkan: tekan lalu lepas tanpa bergerak. Menyeret
 untuk melihat sekeliling (dengan tombol apa pun) menggerakkan kamera dan
 tidak menempatkan apa pun, jadi Tempatkan bisa tetap aktif selagi Anda
 memutar bangunan untuk mencari tempat berikutnya.
+
+Klik di tempat pratinjau berwarna merah tidak menempatkan apa pun: Editor
+memberi tahu ada yang menghalangi dan memainkan ketukan pelan yang rendah,
+supaya Anda tahu untuk mencoba tempat lain atau memutar bagiannya.
 
 > **Kiat:** Tekan **Escape** untuk kembali ke alat Pilih.
 

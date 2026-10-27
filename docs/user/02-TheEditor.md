@@ -158,6 +158,10 @@ Only a click places: press and let go without moving. Dragging to look
 around (with any button) moves the camera and places nothing, so Place can
 stay on while you turn the build to find the next spot.
 
+A click where the ghost is red places nothing: the Editor says something is
+in the way and plays a soft, low knock, so you know to try another spot or
+turn the piece.
+
 > **Tip:** Press **Escape** to switch back to the Select tool.
 
 ### Select tool (`1`)

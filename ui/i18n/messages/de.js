@@ -1212,6 +1212,8 @@ export default Object.freeze({
     'editor.touchPlaceHint': 'Tippen Sie auf den Boden, um zu platzieren; Drehen dreht den Stein vorher.',
     'editor.touchPlacingHint': '„{title}“ wird platziert — auf den Boden tippen zum Platzieren; Drehen dreht es vorher.',
     'editor.placeHint': 'Über den Boden fahren, R zum Drehen, klicken zum Platzieren.',
+    'editor.placementBlocked': 'Hier ist etwas im Weg. Versuchen Sie eine andere Stelle, oder drücken Sie R, um es zu drehen.',
+    'editor.touchPlacementBlocked': 'Hier ist etwas im Weg. Versuchen Sie eine andere Stelle, oder tippen Sie auf Drehen, um es zu drehen.',
     'editor.seeInside': 'Hineinsehen',
     'editor.seeInsideOff': 'Ganz zeigen',
     'editor.seeInsideHint': 'Das Bauwerk über dem Erdgeschoss ausblenden, um seine Räume zu sehen und darin zu bauen. Nichts wird entfernt.',

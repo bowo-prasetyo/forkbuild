@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 6d3906d689db600b -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 9f1f7aebb3cab3d2 -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -181,6 +181,10 @@ Seul un clic place : appuyez et relâchez sans bouger. Faire glisser pour
 regarder autour (avec n’importe quel bouton) déplace la caméra et ne place
 rien : Placement peut rester actif pendant que vous tournez la
 construction pour trouver l’endroit suivant.
+
+Un clic là où l’aperçu est rouge ne place rien : l’Éditeur dit que
+quelque chose gêne et joue un petit coup sourd, pour que vous sachiez
+essayer un autre endroit ou tourner la pièce.
 
 > **Astuce :** appuyez sur **Échap** pour revenir à l’outil Sélection.
 

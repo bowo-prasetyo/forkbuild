@@ -1,3 +1,4 @@
+import { EditorEvent } from '../core/events/EditorEvent.js';
 import { World } from '../core/document/World.js';
 import { Building } from '../core/building/Building.js';
 import { Brick } from '../core/building/Brick.js';
@@ -408,9 +409,12 @@ async function run() {
         tool.onPointerMove({ worldPosition: { x: 3, y: 0, z: 4 } });
         assert(editorContext.structurePreview.valid === false, '54. hovering an occupied position shows an invalid preview');
         const countBeforeBlockedClick = world.getStructurePlacements().length;
+        const blocked = [];
+        editorContext.eventBus.subscribe(EditorEvent.PLACEMENT_BLOCKED, (payload) => blocked.push(payload.kind));
         tool.onPointerDown();
         assert(world.getStructurePlacements().length === countBeforeBlockedClick,
             '55. clicking an invalid preview does not commit anything');
+        assert(blocked.join() === 'structure', '55b. and the blocked click is reported, so the Editor can say and sound it');
 
         tool.deactivate();
         assert(editorContext.structurePreview.visible === false, '56. deactivate() hides the preview and resets rotation');

@@ -8,6 +8,7 @@ import { PreviewUseCase } from '../application/editor/PreviewUseCase.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { PlacementTool } from '../application/tools/PlacementTool.js';
 import { PreviewState } from '../application/editor-state/PreviewState.js';
+import { EditorEvent } from '../core/events/EditorEvent.js';
 import { assert } from './support/Assert.js';
 
 // 0.2.87 — World Building Interaction & Placement UX.
@@ -171,10 +172,14 @@ async function runTests() {
         assert(editorContext.preview.valid === false,
             '23. FLAGSHIP: the preview reports invalid at an occupied position — visible feedback BEFORE the click, not just a silent no-op after it');
 
+        const blocked = [];
+        editorContext.eventBus.subscribe(EditorEvent.PLACEMENT_BLOCKED, (payload) => blocked.push(payload));
         const bricksBefore = world.getBuilding(buildingId).getBricks().length;
         tool.onPointerDown({});
         assert(world.getBuilding(buildingId).getBricks().length === bricksBefore,
             '24. clicking an invalid (occupied) position places nothing — existing PlacementValidator collision rules are reused unchanged, never a second collision system');
+        assert(blocked.length === 1 && blocked[0].kind === 'brick',
+            '24b. and the blocked click is reported (EditorEvent.PLACEMENT_BLOCKED), so the Editor can say and sound it');
 
         // Move one grid step away: collision-clear again.
         move(tool, 3, 0, 2);
@@ -183,6 +188,7 @@ async function runTests() {
         tool.onPointerDown({});
         assert(world.getBuilding(buildingId).getBricks().length === bricksBefore + 1,
             '26. and clicking a valid position places exactly one brick, as before this milestone');
+        assert(blocked.length === 1, '26b. a click that places reports nothing blocked');
     }
 
     // -------------------------------------------------------------

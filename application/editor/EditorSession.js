@@ -659,6 +659,13 @@ export class EditorSession {
         this._readyMadeBricks.added(world.id, bricks);
     }
 
+    // Calls listener({ kind }) when a click while placing lands on a blocked
+    // spot (EditorEvent.PLACEMENT_BLOCKED). Returns an unsubscribe function.
+    onPlacementBlocked(listener) {
+        const subscription = this._editorContext.eventBus.subscribe(EditorEvent.PLACEMENT_BLOCKED, listener);
+        return () => subscription.unsubscribe();
+    }
+
     // Calls `listener(activity, command)` for every edit the user makes in this
     // Editor, whichever document is open: an EDITOR_ACTIVITY and the command as
     // { type, children } (children for a composite). Collaborators' edits

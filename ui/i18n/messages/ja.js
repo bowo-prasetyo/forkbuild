@@ -1209,6 +1209,8 @@ export default Object.freeze({
     'editor.touchPlaceHint': '地面をタップして配置します。先に「回転」でブロックの向きを変えられます。',
     'editor.touchPlacingHint': '「{title}」を配置中 — 地面をタップして配置します。先に「回転」で向きを変えられます。',
     'editor.placeHint': '地面にカーソルを合わせ、Rで回転、クリックで配置します。',
+    'editor.placementBlocked': 'ここは何かがじゃまで置けません。別の場所を試すか、R で向きを変えてください。',
+    'editor.touchPlacementBlocked': 'ここは何かがじゃまで置けません。別の場所を試すか、「回転」で向きを変えてください。',
     'editor.seeInside': '中を見る',
     'editor.seeInsideOff': '全体を表示',
     'editor.seeInsideHint': '1階より上を隠して、部屋の中を見たり作ったりします。何も消えません。',

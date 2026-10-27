@@ -13,7 +13,9 @@ export const EDITOR_SOUND_CUE = Object.freeze({
     MARK: 'mark',
     UNDO: 'undo',
     REDO: 'redo',
-    SAVE: 'save'
+    SAVE: 'save',
+    // Not an edit: a click while placing that landed on a blocked spot.
+    BLOCKED: 'blocked'
 });
 
 export const EDITOR_ACTIVITY = Object.freeze({

@@ -30,15 +30,22 @@ export default {
                 transform: 'translateX(-50%)',
                 zIndex: 35,
                 pointerEvents: 'none',
-                background: 'rgba(18, 18, 18, 0.92)',
+                // The theme's own pair, so the text reads in light and dark
+                // alike (a fixed dark background left --ink's dark text unreadable).
+                background: 'var(--surface)',
                 border: '1px solid var(--line-strong)',
                 borderLeft: '3px solid var(--accent)',
                 borderRadius: '4px',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.18)',
                 padding: '6px 14px',
                 fontFamily: 'monospace',
                 fontSize: '12px',
                 color: 'var(--ink)',
-                whiteSpace: 'nowrap'
+                // One line when it fits; wrapped inside the view on a phone.
+                width: 'max-content',
+                maxWidth: 'calc(100% - 32px)',
+                boxSizing: 'border-box',
+                textAlign: 'center'
             }"
         >{{ message }}</div>
     `

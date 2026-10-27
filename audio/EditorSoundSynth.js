@@ -2,7 +2,8 @@
 // into place, a pop as one is removed, a tick for a move, a double tick for
 // a turn, a quick run of blips for a paste, a bright ping for a new color, a
 // two-note link for grouping, a bell for a named place, a falling blip for
-// undo and a rising one for redo, and a small chord when a document saves.
+// undo and a rising one for redo, a small chord when a document saves, and
+// two soft low knocks when a click can't place because something is in the way.
 // Each call builds short-lived nodes that disconnect themselves.
 
 function blip(context, destination, { type = 'sine', from, to = from, seconds, gain, attack = 0.003 }, start) {
@@ -78,7 +79,13 @@ const CUE_SOUND = Object.freeze({
     redo: (c, d, n, t) => blip(c, d, { type: 'triangle', from: 330, to: 660, seconds: 0.14, gain: 0.35 }, t),
     save: (c, d, n, t) => [523, 659, 784].forEach((frequency) => {
         blip(c, d, { type: 'triangle', from: frequency, seconds: 0.45, gain: 0.18, attack: 0.01 }, t);
-    })
+    }),
+    // Low and dull, unlike place's bright snap, so it reads as "not here".
+    blocked: (c, d, n, t) => {
+        click(c, d, n, 600, 0.04, 0.25, t);
+        blip(c, d, { type: 'triangle', from: 196, seconds: 0.08, gain: 0.3 }, t);
+        blip(c, d, { type: 'triangle', from: 147, seconds: 0.12, gain: 0.3 }, t + 0.09);
+    }
 });
 
 export function hasEditorSound(cue) {
