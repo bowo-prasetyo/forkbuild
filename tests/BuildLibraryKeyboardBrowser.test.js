@@ -23,6 +23,7 @@ document.body.appendChild(host);
 const app = createApp({
     render: () => h(BuildLibraryPanel, {
         paletteUseCase, structureGroups, registry,
+        brickKeys: { 'core:cube': '3', 'core:plate_2x4': '4' },
         onPlaceStructure: (structure) => placed.push(structure.id)
     })
 });
@@ -110,6 +111,19 @@ const tabStops = (selector) => [...host.querySelectorAll(selector)].filter((elem
     assert(placed.length === 1, 'Enter (a click) on a card starts placing its structure');
     assert(card.getAttribute('aria-label').startsWith('Place '), `the button says what it does (${card.getAttribute('aria-label')})`);
     console.log('✓ structure cards place from the keyboard');
+}
+
+// The number key that chooses a recent brick shows on its tile.
+{
+    host.querySelector('.build-library-tab').click();
+    await nextTick();
+    const cube = host.querySelector('.palette-item[data-brick-id="core:cube"]');
+    const plate = host.querySelector('.palette-item[data-brick-id="core:plate_2x4"]');
+    const door = host.querySelector('.palette-item[data-brick-id="core:door"]');
+    assert(cube.querySelector('.palette-item-key').textContent.trim() === '3' && cube.getAttribute('aria-keyshortcuts') === '3', 'the Cube\'s tile shows 3, and says so to a screen reader');
+    assert(plate.querySelector('.palette-item-key').textContent.trim() === '4', 'the Plate 2x4\'s shows 4');
+    assert(!door.querySelector('.palette-item-key') && !door.hasAttribute('aria-keyshortcuts'), 'a brick with no key shows none');
+    console.log('✓ recent bricks show their number keys');
 }
 
 // A colour chosen elsewhere (a brick picked from the build with Alt-click,

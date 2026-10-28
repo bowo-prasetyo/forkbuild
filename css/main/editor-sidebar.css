@@ -246,6 +246,7 @@
 }
 
 .palette-list--grid .build-library-item {
+    position: relative;
     flex-direction: column;
     justify-content: flex-start;
     gap: 0.3rem;
@@ -256,6 +257,24 @@
 .palette-list--grid .palette-item-name {
     font-size: 0.72rem;
     line-height: 1.2;
+}
+
+/* The number key (3 to 9) that chooses a recent brick, in its tile's corner. */
+.palette-item-key {
+    position: absolute;
+    top: 0.25rem;
+    left: 0.3rem;
+    min-width: 1.1rem;
+    padding: 0 0.25rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 3px;
+    background: var(--surface-raised);
+    color: var(--ink-soft);
+    font-family: inherit;
+    font-size: 0.68rem;
+    font-weight: 600;
+    line-height: 1.3;
+    text-align: center;
 }
 
 /* A brick's size under its name: width × depth × height (finding P2-9). */

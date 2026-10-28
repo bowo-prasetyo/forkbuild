@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: aa7a58af29f5af7a -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 7478badd81a9e5cd -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -213,6 +213,14 @@ reprend : son type, sa couleur, son orientation et son inclinaison
 deviennent ce que vous placez ensuite, et Placement s’active, si bien que le
 clic suivant en place une pareille. Cela marche aussi depuis Sélection, et
 rien n’est repris sur un sol vide.
+
+Les touches **3** à **9** gardent chacune une brique choisie récemment,
+comme une barre d’accès rapide : la première brique choisie prend le 3, la
+suivante le 4, et ainsi de suite, et une brique garde sa touche tant que
+vous l’utilisez (une huitième prend la touche de celle utilisée il y a le
+plus longtemps). La touche figure dans le coin de sa vignette dans la
+Bibliothèque de construction ; appuyez dessus pour choisir cette brique,
+avec Placement activé. Cet appareil les retient.
 
 Un clic là où l’aperçu est rouge ne place rien : l’Éditeur dit que
 quelque chose gêne et joue un petit coup sourd, pour que vous sachiez

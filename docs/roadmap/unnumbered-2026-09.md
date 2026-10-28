@@ -9619,3 +9619,27 @@ a builder had to find it in the library, match its colour among the swatches and
   tests/BuildLibraryKeyboardBrowser.test.js (the Color box follows a colour set elsewhere). Checked in the running app
   at 1366×768: a red Plate 2x4 Alt-clicked from Select turns Place on with the chip showing it and its red dot, the
   message names it, and the next click places another.
+
+## Keys 3 to 9 choose a recent brick (unnumbered, 2026-10-28)
+
+**Building: the bricks in use, a key away.** From "Beyond the fixes" in
+[the Editor placement audit](../reviews/EditorPlacementUX-2026-10-27.md): switching between the few bricks a build is
+made of meant going back to the Build Library each time.
+
+- **The number keys 3 to 9 each hold a brick chosen lately**, like a hotbar (core/building/BrickSlots.js): the first
+  brick chosen takes 3, the next 4, and so on. A brick keeps its key while it is in use, so the fingers learn where
+  it is; once all seven are held, a new brick takes the key of the one used longest ago. Any way of choosing a
+  brick counts: a tile, Alt-click, a starter job.
+- **Pressing a key chooses its brick, with Place on** (ui/views/EditorView.js), from Select or while placing; an empty
+  key, or a key typed into a text field, does nothing.
+- **The key shows in the corner of the brick's tile** in the Build Library (`aria-keyshortcuts` too), and the Keyboard
+  Shortcuts overlay lists 3–9.
+- **Kept on this device** (application/settings/RecentBricksStore.js, `editor-recent-bricks`), like the build info's
+  fold; a failed save keeps them until the Editor closes.
+- Two new messages (`buildLibrary.brickKey`, `shortcuts.view.recentBrick`) in all eight languages; the user guide's
+  *Place tool* and the Controls Reference say so, in all eight.
+- Tests: tests/RecentBrickKeys.test.js (keys fill in order and stay put; an eighth brick takes the key used longest
+  ago; kept on the device; anything odd read back is made safe; a failed save still keeps them);
+  tests/BuildLibraryKeyboardBrowser.test.js (a brick's tile shows its key, and says so to a screen reader). Checked in
+  the running app at 1366×768: three bricks chosen take 3, 4 and 5, shown on their tiles; from Select, 5 and 4 choose
+  them with Place on; an empty key does nothing; the keys are still there after a reload.

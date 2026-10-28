@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 0df1f1ec398f8dc6 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: ee41957881dffe63 -->
 # 조작 참조
 
 <!-- languages -->
@@ -295,6 +295,7 @@ ForkBuild의 모든 마우스와 키보드 조작입니다. 휴대폰과 태블�
 | 입력 | 작업 |
 |---|---|
 | `1` / `2` | 선택 / 배치 도구로 전환 |
+| `3` ~ `9` | 최근 블록을 골라 배치 켜기(키는 타일에 표시) |
 | `Ctrl/Cmd+S` | 작품 저장 |
 
 ## 배치 (에디터 전용)

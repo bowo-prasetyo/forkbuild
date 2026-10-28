@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: aa7a58af29f5af7a -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 7478badd81a9e5cd -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -210,6 +210,13 @@ descarta la fila mientras arrastra.
 toma: su tipo, color, giro e inclinación pasan a ser lo que coloca a
 continuación, y se activa Colocar, así que el siguiente clic coloca otro
 igual. También funciona desde Seleccionar, y sobre suelo vacío no toma nada.
+
+Las teclas numéricas **3** a **9** guardan cada una un bloque que eligió
+hace poco, como una barra rápida: el primer bloque que elija toma el 3, el
+siguiente el 4, y así, y un bloque conserva su tecla mientras lo usa (un
+octavo toma la tecla del que lleva más tiempo sin usarse). La tecla aparece
+en la esquina de su casilla en la Biblioteca de construcción; púlsela para
+elegir ese bloque, con Colocar activado. Este dispositivo las recuerda.
 
 Un clic donde la vista previa está en rojo no coloca nada: el Editor dice
 que hay algo en medio y suena un golpe suave y grave, para que sepa que

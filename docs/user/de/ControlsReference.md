@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 0df1f1ec398f8dc6 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: ee41957881dffe63 -->
 # Steuerungsreferenz
 
 <!-- languages -->
@@ -313,6 +313,7 @@ kann sie auch in der Vorschau zeigen und wiederherstellen.
 | Eingabe | Aktion |
 |---|---|
 | `1` / `2` | Zwischen Auswahl- und Platzierwerkzeug wechseln |
+| `3` – `9` | Einen zuletzt gewählten Stein wählen, mit Platzieren an (die Taste steht auf seiner Kachel) |
 | `Strg/Cmd+S` | Bauwerk speichern |
 
 ## Platzieren (nur Editor)

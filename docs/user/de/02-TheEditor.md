@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: aa7a58af29f5af7a -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 7478badd81a9e5cd -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -211,6 +211,13 @@ nimmt ihn auf: Art, Farbe, Drehung und Neigung werden zu dem, was Sie als
 Nächstes platzieren, und Platzieren geht an, sodass der nächste Klick einen
 genau gleichen platziert. Das geht auch aus Auswählen heraus; auf leerem
 Boden wird nichts aufgenommen.
+
+Die Zifferntasten **3** bis **9** halten je einen Stein, den Sie zuletzt
+gewählt haben, wie eine Schnellleiste: Der erste gewählte Stein bekommt 3,
+der nächste 4 und so weiter, und ein Stein behält seine Taste, solange Sie
+ihn nutzen (ein achter bekommt die Taste des am längsten nicht genutzten).
+Die Taste steht in der Ecke seiner Kachel in der Baubibliothek; drücken Sie
+sie, um den Stein zu wählen, mit Platzieren an. Dieses Gerät merkt sie sich.
 
 Ein Klick, wo die Vorschau rot ist, platziert nichts: Der Editor sagt,
 dass etwas im Weg ist, und spielt ein leises, tiefes Klopfen, damit Sie

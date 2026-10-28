@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: aa7a58af29f5af7a -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 7478badd81a9e5cd -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -203,6 +203,14 @@ descarta a fileira enquanto você arrasta.
 o tipo, a cor, o giro e a inclinação passam a ser o que você coloca em
 seguida, e Colocar liga, então o próximo clique coloca outro igual. Também
 funciona a partir de Selecionar, e em chão vazio não pega nada.
+
+As teclas numéricas **3** a **9** guardam cada uma um bloco que você
+escolheu há pouco, como uma barra de atalhos: o primeiro bloco escolhido
+fica com o 3, o seguinte com o 4, e assim por diante, e um bloco mantém sua
+tecla enquanto você o usa (um oitavo fica com a tecla do que está há mais
+tempo sem uso). A tecla aparece no canto do bloco na Biblioteca de
+construção; pressione-a para escolher esse bloco, com Colocar ligado. Este
+dispositivo se lembra delas.
 
 Um clique onde a prévia está vermelha não coloca nada: o Editor diz que
 tem algo no caminho e toca uma batida suave e grave, para você saber que
