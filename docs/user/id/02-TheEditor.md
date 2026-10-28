@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1a92298c009cb9e8 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2ee1e50a637a34bd -->
 # 02 — Editor
 
 <!-- languages -->
@@ -34,6 +34,8 @@ dengan grup.
 - **Alat** — beralih antara **Pilih** (`1`) dan **Tempatkan** (`2`).
   **Tempatkan** tetap tersorot selama Anda menempatkan balok atau
   struktur.
+  Menekan **Tempatkan** (atau `2`) saat Anda sedang menempatkan tetap
+  mempertahankan yang sedang Anda pegang.
   Alat tetap di bagian atas bilah samping sementara semua di bawahnya
   bergulir.
 - **Judul bangunan** — nama karya yang terbuka. Klik **✎** untuk mengedit

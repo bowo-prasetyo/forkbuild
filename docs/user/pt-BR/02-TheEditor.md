@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1a92298c009cb9e8 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2ee1e50a637a34bd -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -32,6 +32,8 @@ selecionar e transformar blocos e como organizar sua construção com grupos.
   reabrir os recentes e abrir a sobreposição **⌨ Atalhos** (também `?`).
 - **Ferramentas** — alterne entre **Selecionar** (`1`) e **Colocar** (`2`).
   **Colocar** fica destacado enquanto você coloca um bloco ou uma estrutura.
+  Apertar **Colocar** (ou `2`) enquanto você coloca mantém o que você está
+  segurando.
   Elas ficam no alto da barra lateral enquanto o resto rola.
 - **Título da construção** — o nome da construção aberta. Clique em **✎** para
   editar o título, a descrição e a licença. Se ela está salva aparece na

@@ -31,6 +31,8 @@ transform bricks, and how to organize your build with groups.
   open the **⌨ Shortcuts** overlay (also `?`).
 - **Tools** — switch between **Select** (`1`) and **Place** (`2`). **Place**
   stays highlighted while you're placing a brick or a structure.
+  Pressing **Place** (or `2`) while you're placing keeps what you're
+  holding.
   The tools stay at the top of the sidebar while everything under them scrolls.
 - **Build title** — the open build's name. Click **✎** to edit its
   title, description and license. Whether it's saved is shown in the

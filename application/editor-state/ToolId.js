@@ -24,3 +24,14 @@ export const ToolId = Object.freeze({
     // application/tools/StructureCompositionTool.js's own header.
     COMPOSE_STRUCTURE: 'compose-structure'
 });
+
+// The tools that place something: a brick, a placed build or a structure.
+export const PLACING_TOOLS = new Set([ToolId.PLACE, ToolId.PLACE_STRUCTURE, ToolId.COMPOSE_STRUCTURE]);
+
+// The tool Place (its button, or 2) turns on from `activeTool`: Place, or
+// none when something is already being placed, so a structure in hand stays
+// in hand instead of being swapped for a brick without a word
+// (docs/reviews/EditorPlacementUX-2026-10-27.md, P2-13).
+export function toolForPlace(activeTool) {
+    return PLACING_TOOLS.has(activeTool) ? null : ToolId.PLACE;
+}

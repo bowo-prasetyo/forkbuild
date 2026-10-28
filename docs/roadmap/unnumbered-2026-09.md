@@ -9516,3 +9516,19 @@ menu deleted the structure at once, with no confirmation and no Undo, so one sli
   tests/BuildLibraryUndoBrowser.test.js (the notice in the pinned header, read out, naming the structure; the focus
   the removed card took goes to Undo, and focus already elsewhere is left alone; Undo asks for it back). Checked in the
   running app at 1366×768 and on an emulated iPhone 13.
+
+## Place keeps what you're holding (unnumbered, 2026-10-28)
+
+**Building: not losing what's in hand.** The other half of finding P2-13 of
+[the Editor placement audit](../reviews/EditorPlacementUX-2026-10-27.md): **Place** stays highlighted while a
+structure is being placed, but pressing it (or `2`) dropped the structure and switched to bricks without a word.
+
+- **Place, or `2`, while something is being placed keeps it in hand** (`toolForPlace()` in
+  application/editor-state/ToolId.js, used by ui/views/EditorView.js's tool switch and shortcut): a brick, a structure
+  from the library or a placed build. The button still brings the Build Library up to the top of the sidebar. From
+  Select, Place turns on Place as before.
+- `PLACING_TOOLS` lives beside the tool ids now, shared by the view and application/editorSession/pointerInputMethods.js.
+- The user guide's Tools entry says so, in all eight languages.
+- Tests: tests/PlaceKeepsHand.test.js (from Select, Place; while placing a brick, a library structure or a placed
+  build, nothing changes). Checked in the running app at 1366×768: holding the Cottage, the button and `2` keep it in
+  hand; from Select, `2` takes up the Cube.

@@ -1,4 +1,4 @@
-import { ToolId } from '../editor-state/ToolId.js';
+import { PLACING_TOOLS, ToolId } from '../editor-state/ToolId.js';
 
 // EditorSession pointer and keyboard input forwarded from EditorView: gizmo
 // drags, Shift+Drag marquee selection, touch taps, mouse clicks that place,
@@ -41,7 +41,6 @@ const PLACE_AGAIN_TAP_PX = 28;
 // MARQUEE_DRAG_THRESHOLD_PX. It then replays as a hover, press and release at
 // that point. Other buttons never place. Hover still reaches the tools as it
 // happens, so the ghost keeps following the pointer.
-const PLACING_TOOLS = new Set([ToolId.PLACE, ToolId.PLACE_STRUCTURE, ToolId.COMPOSE_STRUCTURE]);
 
 export const pointerInputMethods = {
     onPointerDown(event) {
