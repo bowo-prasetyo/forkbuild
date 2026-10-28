@@ -9553,3 +9553,18 @@ could turn into the bricks or builds beside it.
 - Tests: tests/PlacedBuildTurn.test.js 21-28 (a quarter turn into a cube is refused, leaves the build and Undo as they
   were and is said; half a turn clears it and turns; the exact Rotation field reports turnBlocked; `R` into the cube
   is refused and said, every time, and turns once the cube is gone).
+
+## The toolbar says Saving… until a save is stored (unnumbered, 2026-10-28)
+
+**Building: trusting Saved.** Found while making the bundled-site test's save-and-reload step reliable: the toolbar said
+**Saved** the moment Save or `Ctrl/Cmd+S` was pressed, but the save reaches the browser's storage a moment later
+(storage/IndexedDbStorageBackend.js), so a reload in between found the save not yet stored and offered the build back
+as unsaved work.
+
+- **Saving…** now shows from the press until the save is stored (`savesInProgress` in ui/components/saveDocument.js,
+  shown by ui/components/Toolbar.js), then **Saved**; a save that fails goes back to **● Unsaved changes**, as before.
+  It covers both the Save button and `Ctrl/Cmd+S`, and Publish's own save.
+- One new message (`toolbar.saving`) in all eight languages.
+- Tests: tests/IndexedDbStorageBackend.test.js (a Save counts as in progress until it is stored, and not after it is
+  stored or fails). Checked in the running app with storage slowed down: Saving… after Ctrl+S and after the Save
+  button, then Saved once stored.

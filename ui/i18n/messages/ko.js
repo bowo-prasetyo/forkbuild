@@ -1106,6 +1106,7 @@ export default Object.freeze({
     'toolbar.from': '원본: {title}',
     'toolbar.save': '저장',
     'toolbar.saved': '저장됨',
+    'toolbar.saving': '저장 중…',
     'toolbar.unsaved': '● 저장하지 않은 변경 사항',
     'toolbar.export': '내보내기',
     'toolbar.file': '파일',

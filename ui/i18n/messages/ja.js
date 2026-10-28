@@ -1103,6 +1103,7 @@ export default Object.freeze({
     'toolbar.from': '元: {title}',
     'toolbar.save': '保存',
     'toolbar.saved': '保存済み',
+    'toolbar.saving': '保存中…',
     'toolbar.unsaved': '● 未保存の変更',
     'toolbar.export': 'エクスポート',
     'toolbar.file': 'ファイル',

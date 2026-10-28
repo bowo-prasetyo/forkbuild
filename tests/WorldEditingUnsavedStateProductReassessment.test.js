@@ -832,9 +832,9 @@ async function main() {
         // vocabulary (dirty/clean only) that coexists with
         // DocumentInfoPanel's finer one — never says "Published" either.
         const toolbarSource = await readSource('ui/components/Toolbar.js');
-        assert(/\{\{ dirty \? t\('toolbar\.unsaved'\) : t\('toolbar\.saved'\) \}\}/.test(toolbarSource)
-            && t('toolbar.unsaved') === '● Unsaved changes' && t('toolbar.saved') === 'Saved',
-            'L4a. Toolbar\'s own always-visible pill is a strictly binary dirty/clean indicator — quoted verbatim.');
+        assert(/\{\{ dirty \? t\('toolbar\.unsaved'\) : \(saving \? t\('toolbar\.saving'\) : t\('toolbar\.saved'\)\) \}\}/.test(toolbarSource)
+            && t('toolbar.unsaved') === '● Unsaved changes' && t('toolbar.saving') === 'Saving…' && t('toolbar.saved') === 'Saved',
+            'L4a. Toolbar\'s own always-visible pill is a dirty/clean indicator (clean reading Saving… until a save is stored) — quoted verbatim.');
         assert(!/'Published'|"Published"/.test(toolbarSource),
             'L4b. The literal string "Published" never appears anywhere in Toolbar.js — its persistent, always-on-screen indicator can say "Saved" immediately after a successful Publish (dirty correctly stays false — publishing never marks the document dirty) and will keep saying "Saved" from then on, for the rest of that editing session, even while a Publication genuinely exists for exactly what is on screen.');
 

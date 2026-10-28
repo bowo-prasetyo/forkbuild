@@ -2,7 +2,7 @@ import { IndexedDbStorageBackend } from '../storage/IndexedDbStorageBackend.js';
 import { LocalStorageProvider, installLocalStorageBackend, flushLocalStorage } from '../storage/LocalStorageProvider.js';
 import { openBrowserStorage } from '../storage/openBrowserStorage.js';
 import { StorageFullError } from '../storage/StorageFullError.js';
-import { saveDocument } from '../ui/components/saveDocument.js';
+import { saveDocument, savesInProgress } from '../ui/components/saveDocument.js';
 import { assert } from './support/Assert.js';
 
 // IndexedDbStorageBackend's in-memory copy, write batching, failure
@@ -237,14 +237,18 @@ const afterReadBack = async () => { await nextMacrotask(); await nextMacrotask()
         const calls = [];
         const documentManager = { markDirty: () => calls.push('markDirty') };
         const saveUseCase = { execute: () => { calls.push('execute'); new LocalStorageProvider().save('doc', 1); } };
-        await saveDocument(saveUseCase, documentManager);
+        const saving = saveDocument(saveUseCase, documentManager);
+        assert(savesInProgress.value === 1 && !database.stored.has('doc'), 'until it is stored, the Save counts as in progress (the toolbar says Saving…)');
+        await saving;
         assert(calls.join() === 'execute' && database.stored.get('doc') === '1', 'a successful Save resolves after the document is stored');
+        assert(savesInProgress.value === 0, 'and is no longer in progress');
 
         database.failWith = new DOMException('full', 'QuotaExceededError');
         let thrown = null;
         try { await saveDocument(saveUseCase, documentManager); } catch (error) { thrown = error; }
         assert(thrown instanceof StorageFullError, 'a Save that cannot be stored rejects with StorageFullError');
         assert(calls.join() === 'execute,execute,markDirty', '...and marks the document unsaved again');
+        assert(savesInProgress.value === 0, '...and is no longer in progress either');
     } finally {
         installLocalStorageBackend(null);
     }
