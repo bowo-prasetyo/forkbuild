@@ -554,8 +554,11 @@ Repository's discovery providers list, takes each one's bytes from the
 publication content store only when they match its signed hash, and
 compares bricks with core/catalog/BuildSimilarity.js: one point per definition and
 position, the two builds lined up over four quarter turns by offsets voted
-for by pairs of same-kind bricks, scored as shared over all distinct
-bricks. Only the builder's own bricks (core/building/PlacedBricks.js
+for by pairs of same-kind bricks (spread over each build, by place, so the
+order bricks were placed in never matters) and by the offsets that line up
+their lowest and their highest corners (which find a copy of a wall or a
+floor, where every offset gets about as many votes), scored as shared over
+all distinct bricks. Only the builder's own bricks (core/building/PlacedBricks.js
 `placedBricks()`) count on their side; their own identities' builds, the
 whole remix family (every build connected through `parentDocumentId`, not
 cut off where core/publication/RemixFamily.js stops drawing), and builds published after
