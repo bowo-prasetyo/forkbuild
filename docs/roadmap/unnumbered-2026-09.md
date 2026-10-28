@@ -9747,3 +9747,29 @@ earlier date was listed on the original's page as **published earlier**, and its
   tests/LookAlikeBuildNotifier.test.js 38-42 (a backdated copy notifies, as dated before hers, where taken at its date
   it said nothing; a copy with more of its own says how much of hers is in it); tests/PublicationLinkViewBrowser.test.js
   (the dated wording).
+
+## Voice building, measured in every language (unnumbered, 2026-10-28)
+
+**Voice that says what it can do.** Finding 6 of [the AI/ML audit](../reviews/AIML-2026-10-28.md): voice was offered
+in eight languages on Whisper tiny, with one run of a synthesized English voice behind it.
+
+- **Measured:** scripts/evaluate-voice-commands.mjs (new) hears recordings of scripts/voiceCommandPhrases.mjs's
+  eighteen phrases (new; eight languages) in Chromium as the app does, reads them as the app does
+  (core/voice/EditorVoiceCommand.js, new, taken out of EditorView), and says per language, speaker and phrase what
+  was right, did nothing or did something else. scripts/synthesize-voice-corpus.mjs (new) speaks them with Piper
+  voices and espeak-ng into voice-corpus/ (ignored by Git), where people's recordings go too; `--save-heard` and
+  `--heard` re-read without hearing again. docs/Translating.md's *Voice building* says how to record and measure.
+- **What it found**, on 576 synthetic recordings (32 speakers), Whisper tiny: English 68% right (78–89% with
+  natural-sounding voices); German 26%, Spanish 38%, French 39%, Indonesian 36%, Japanese 32%, Korean 31%,
+  Portuguese 29%, mostly by doing nothing; 2% wrong. Whisper base: 49% overall (English 93%, others 31–53%), 0.3%
+  wrong, at 4.3 s a command instead of 2.1 s and about 105 MB instead of 70 MB.
+- **Spoken commands act on the selection only when they say so** ("paint this red"): most wrong actions were a
+  misheard part name falling back on the selection ("Apague as árvores" heard as "Apagas, avulis" deleted it).
+  PlainCommand's selection target says whether it was said; the palette is unchanged. Wrong actions 14 → 9 of 576,
+  none of which changes the build.
+- **Voice says it hears English best**, in the first ask, in every other language (core/voice/Transcript.js
+  `VOICE_HEARS_WELL`; `voice.languageNote`, new, in all eight languages); the user guide's *Speak a command* says both,
+  in all eight.
+- **Indonesian:** "Cat atapnya merah" (paint the roof red) painted the selection: the part words gain their -nya
+  forms, found by tests/VoicePhrases.test.js (new), which checks every phrase, typed, in every language.
+- Tests: tests/VoicePhrases.test.js, tests/VoicePanelBrowser.test.js (new).

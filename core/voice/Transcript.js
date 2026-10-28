@@ -24,11 +24,12 @@ export function whisperLanguage(code) {
 }
 
 // The languages the speech model has been measured to hear well
-// (scripts/evaluate-voice-commands.mjs, with synthetic voices: English 78 to
-// 89% of commands right with natural-sounding ones; every other language 26
-// to 39%, mostly by doing nothing). In the others, voice still works, and
-// says first that it hears English best (ui/components/VoicePanel.js). Add a
-// language here when recordings of people show it heard as well.
+// (scripts/evaluate-voice-commands.mjs, 576 synthetic recordings: in English
+// 78 to 89% of commands right with natural-sounding voices; in every other
+// language 26 to 39%, mostly by doing nothing; Whisper base, about twice as
+// slow, only 31 to 53%). In the others, voice still works, and says first
+// that it hears English best (ui/components/VoicePanel.js). Add a language
+// here when recordings of people show it heard as well.
 export const VOICE_HEARS_WELL = Object.freeze(['en']);
 
 export function voiceHearsWell(code) {
