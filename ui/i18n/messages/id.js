@@ -613,6 +613,7 @@ export default Object.freeze({
     'voice.title': 'Suara',
     'voice.intro': 'Katakan apa yang harus dilakukan, misalnya “cat atap jadi merah”, “pilih semua jendela”, atau “urungkan”. Model suara kecil (Whisper) memahami Anda di perangkat ini: tidak ada yang Anda ucapkan dikirim ke mana pun.',
     'voice.download': 'Menyalakan suara mengunduh sekitar {size} sekali saja: model suara dari Hugging Face dan mesinnya dari jsDelivr. Keduanya tetap di peramban ini sampai Anda menghapusnya.',
+    'voice.languageNote': 'Suara paling baik memahami bahasa Inggris. Dalam bahasa Indonesia, model suara kecil ini masih sering salah dengar, jadi sebuah perintah bisa tidak melakukan apa-apa: ucapkan lagi, atau lakukan secara manual.',
     'voice.turnOn': 'Nyalakan suara',
     'voice.notNow': 'Nanti saja',
     'voice.downloading': 'Mengunduh model suara… {percent}%',

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: b07dea3a1e4b6d8c -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 932ce3b7a104064f -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -916,6 +916,14 @@ enregistré et compris sur votre appareil, et n’est jamais envoyé (voir
 [Confidentialité](Privacy.md)). **Désactiver la voix** et **Supprimer le
 modèle vocal** se trouvent dans le panneau de la voix après chaque commande.
 Il entend la langue dans laquelle ForkBuild est affiché.
+
+Il comprend mieux l’anglais. Dans les autres langues, le petit modèle vocal
+comprend encore mal beaucoup de commandes, et la voix le dit avant que vous
+l’activiez ; une commande mal comprise ne fait en général rien : répétez-la
+ou faites-le à la main. À voix haute, une commande n’agit sur votre
+sélection que si vous le dites (*peins ceci en rouge*) : si la partie nommée
+est mal comprise, elle ne fait rien plutôt que de peindre ou supprimer votre
+sélection.
 
 La Vue du Monde écoute aussi (voir
 [Dire où aller](03-WorldView.md#dire-où-aller-voix)). Le modèle vocal

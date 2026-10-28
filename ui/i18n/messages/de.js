@@ -616,6 +616,7 @@ export default Object.freeze({
     'voice.title': 'Sprachsteuerung',
     'voice.intro': 'Sagen Sie, was geschehen soll, etwa „das Dach rot streichen“, „alle Fenster auswählen“ oder „rückgängig“. Ein kleines Sprachmodell (Whisper) versteht Sie auf diesem Gerät: Nichts, was Sie sagen, wird gesendet.',
     'voice.download': 'Das Einschalten lädt einmalig etwa {size} herunter: das Sprachmodell von Hugging Face und seine Laufzeit von jsDelivr. Beides bleibt in diesem Browser, bis Sie es entfernen.',
+    'voice.languageNote': 'Am besten versteht die Sprachsteuerung Englisch. Auf Deutsch verhört sich das kleine Sprachmodell noch oft, sodass ein Befehl manchmal nichts tut: Sagen Sie ihn noch einmal oder erledigen Sie es von Hand.',
     'voice.turnOn': 'Sprachsteuerung einschalten',
     'voice.notNow': 'Nicht jetzt',
     'voice.downloading': 'Sprachmodell wird geladen … {percent} %',

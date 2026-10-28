@@ -9,6 +9,7 @@
 //
 //   node scripts/evaluate-voice-commands.mjs [--audio voice-corpus] [--out report.md]
 //        [--model onnx-community/whisper-base] [--language ja]
+//        [--save-heard heard.json | --heard heard.json]
 //
 // Recordings are <audio>/<language>/<speaker>/<phrase id>.<wav|webm|ogg|mp3|m4a>,
 // as scripts/synthesize-voice-corpus.mjs makes them, or as people record
@@ -16,10 +17,12 @@
 // speech model, unpinned, beside the pinned one. The model and engine are
 // downloaded the first time, as when voice is turned on; Chromium comes from
 // `npx playwright-core install chromium` or CHROMIUM_PATH, and an HTTPS_PROXY
-// in the environment is used.
+// in the environment is used. `--save-heard` keeps what was heard; `--heard`
+// reads it back instead of hearing again, to measure a change to the words
+// the app listens for in seconds rather than half an hour.
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
-import { existsSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, extname, join, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
@@ -35,6 +38,8 @@ const audio = resolve(argument('--audio', 'voice-corpus'));
 const outPath = argument('--out');
 const model = argument('--model');
 const onlyLanguage = argument('--language');
+const savePath = argument('--save-heard');
+const heardPath = argument('--heard');
 const AUDIO_TYPES = new Set(['.wav', '.webm', '.ogg', '.mp3', '.m4a']);
 const MIME_TYPES = { '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json', '.html': 'text/html', '.wav': 'audio/wav', '.webm': 'audio/webm', '.ogg': 'audio/ogg', '.mp3': 'audio/mpeg', '.m4a': 'audio/mp4' };
 
@@ -50,70 +55,79 @@ for (const language of directories(audio).filter((name) => Object.hasOwn(SAID, n
         }
     }
 }
-if (clips.length === 0) {
+if (clips.length === 0 && !heardPath) {
     console.error(`No recordings in ${audio}: run scripts/synthesize-voice-corpus.mjs, or see this script's header.`);
     process.exit(2);
 }
 
 // ---- Heard in Chromium --------------------------------------------------------
-const server = await new Promise((done) => {
-    const server = createServer(async (request, response) => {
-        const path = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
-        if (path === '/__voice.html') {
-            response.writeHead(200, { 'Content-Type': 'text/html' }).end('<!doctype html><title>voice</title>');
-            return;
-        }
-        const [base, rest] = path.startsWith('/__audio/') ? [audio, path.slice('/__audio/'.length)] : [root, path];
-        const file = normalize(join(base, rest));
-        if (!file.startsWith(base)) {
-            response.writeHead(403).end();
-            return;
-        }
-        try {
-            const body = await readFile(file);
-            response.writeHead(200, { 'Content-Type': MIME_TYPES[extname(file)] || 'application/octet-stream' }).end(body);
-        } catch {
-            response.writeHead(404).end();
-        }
+const heard = heardPath
+    ? JSON.parse(readFileSync(heardPath, 'utf8')).filter((clip) => !onlyLanguage || clip.language === onlyLanguage)
+        .map((clip) => ({ ...phrases.get(`${clip.language}/${clip.id}`), ...clip }))
+    : await hearAll();
+if (savePath) writeFileSync(savePath, JSON.stringify(heard.map(({ language, id, speaker, transcript, ms }) => ({ language, id, speaker, transcript, ms }))));
+
+async function hearAll() {
+    const server = await new Promise((done) => {
+        const server = createServer(async (request, response) => {
+            const path = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
+            if (path === '/__voice.html') {
+                response.writeHead(200, { 'Content-Type': 'text/html' }).end('<!doctype html><title>voice</title>');
+                return;
+            }
+            const [base, rest] = path.startsWith('/__audio/') ? [audio, path.slice('/__audio/'.length)] : [root, path];
+            const file = normalize(join(base, rest));
+            if (!file.startsWith(base)) {
+                response.writeHead(403).end();
+                return;
+            }
+            try {
+                const body = await readFile(file);
+                response.writeHead(200, { 'Content-Type': MIME_TYPES[extname(file)] || 'application/octet-stream' }).end(body);
+            } catch {
+                response.writeHead(404).end();
+            }
+        });
+        server.listen(0, '127.0.0.1', () => done(server));
     });
-    server.listen(0, '127.0.0.1', () => done(server));
-});
-const baseUrl = `http://127.0.0.1:${server.address().port}`;
-const proxy = process.env.HTTPS_PROXY || process.env.https_proxy;
-const browser = await chromium.launch({
-    executablePath: process.env.CHROMIUM_PATH || undefined,
-    ...(proxy ? { proxy: { server: proxy, bypass: '127.0.0.1,localhost' } } : {})
-});
-const heard = [];
-try {
-    const page = await browser.newPage();
-    await page.goto(`${baseUrl}/__voice.html`);
-    const loadMs = await page.evaluate(async ({ model: other }) => {
-        const [{ SpeechRuntime }, { SPEECH_ENGINE_LOADER }, recording, preparation, transcript] = await Promise.all([
-            import('/application/voice/SpeechRuntime.js'), import('/application/voice/SpeechWorkerClient.js'),
-            import('/ui/voice/recordVoice.js'), import('/core/voice/SpeechPreparation.js'), import('/core/voice/Transcript.js')
-        ]);
-        const started = performance.now();
-        const runtime = new SpeechRuntime({ engineLoaderUrl: new URL(SPEECH_ENGINE_LOADER, location.href).href, ...(other ? { model: other } : {}) });
-        await runtime.load();
-        globalThis.hear = async (url, language) => {
-            const samples = await recording.toSpeechSamples(await (await fetch(url)).arrayBuffer());
-            const speech = preparation.prepareSpeech(samples);
-            if (!speech.speech) return { transcript: '', ms: 0 };
-            const at = performance.now();
-            const text = await runtime.transcribe(speech.samples, transcript.whisperLanguage(language));
-            return { transcript: text, ms: Math.round(performance.now() - at) };
-        };
-        return Math.round(performance.now() - started);
-    }, { model });
-    console.error(`Speech model ready in ${(loadMs / 1000).toFixed(1)} s; hearing ${clips.length} recordings`);
-    for (const [i, clip] of clips.entries()) {
-        heard.push({ ...clip, ...(await page.evaluate(([url, language]) => globalThis.hear(url, language), [`/__audio/${clip.path}`, clip.language])) });
-        if ((i + 1) % 50 === 0) console.error(`${i + 1} of ${clips.length}`);
-    }
-} finally {
-    await browser.close();
-    server.close();
+    const baseUrl = `http://127.0.0.1:${server.address().port}`;
+    const proxy = process.env.HTTPS_PROXY || process.env.https_proxy;
+    const browser = await chromium.launch({
+        executablePath: process.env.CHROMIUM_PATH || undefined,
+        ...(proxy ? { proxy: { server: proxy, bypass: '127.0.0.1,localhost' } } : {})
+    });
+    const heard = [];
+    try {
+        const page = await browser.newPage();
+        await page.goto(`${baseUrl}/__voice.html`);
+        const loadMs = await page.evaluate(async ({ model: other }) => {
+            const [{ SpeechRuntime }, { SPEECH_ENGINE_LOADER }, recording, preparation, transcript] = await Promise.all([
+                import('/application/voice/SpeechRuntime.js'), import('/application/voice/SpeechWorkerClient.js'),
+                import('/ui/voice/recordVoice.js'), import('/core/voice/SpeechPreparation.js'), import('/core/voice/Transcript.js')
+            ]);
+            const started = performance.now();
+            const runtime = new SpeechRuntime({ engineLoaderUrl: new URL(SPEECH_ENGINE_LOADER, location.href).href, ...(other ? { model: other } : {}) });
+            await runtime.load();
+            globalThis.hear = async (url, language) => {
+                const samples = await recording.toSpeechSamples(await (await fetch(url)).arrayBuffer());
+                const speech = preparation.prepareSpeech(samples);
+                if (!speech.speech) return { transcript: '', ms: 0 };
+                const at = performance.now();
+                const text = await runtime.transcribe(speech.samples, transcript.whisperLanguage(language));
+                return { transcript: text, ms: Math.round(performance.now() - at) };
+            };
+            return Math.round(performance.now() - started);
+        }, { model });
+        console.error(`Speech model ready in ${(loadMs / 1000).toFixed(1)} s; hearing ${clips.length} recordings`);
+        for (const [i, clip] of clips.entries()) {
+            heard.push({ ...clip, ...(await page.evaluate(([url, language]) => globalThis.hear(url, language), [`/__audio/${clip.path}`, clip.language])) });
+            if ((i + 1) % 50 === 0) console.error(`${i + 1} of ${clips.length}`);
+        }
+    } finally {
+        await browser.close();
+        server.close();
+}
+return heard;
 }
 
 // ---- Read as the app reads them -----------------------------------------------

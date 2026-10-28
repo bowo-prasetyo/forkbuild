@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: b07dea3a1e4b6d8c -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 932ce3b7a104064f -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -897,6 +897,14 @@ Ihrem Gerät aufgenommen und erkannt und nie gesendet (siehe
 [Datenschutz](Privacy.md)). **Sprachsteuerung ausschalten** und
 **Sprachmodell entfernen** stehen nach jedem Befehl im Sprachfeld. Es hört
 die Sprache, in der ForkBuild angezeigt wird.
+
+Englisch versteht es am besten. In den anderen Sprachen verhört sich das
+kleine Sprachmodell noch oft, und die Sprachsteuerung sagt das, bevor Sie
+sie einschalten; ein verhörter Befehl tut meist nichts, sagen Sie ihn also
+noch einmal oder erledigen Sie es von Hand. Gesprochen wirkt ein Befehl nur
+dann auf Ihre Auswahl, wenn Sie das sagen (*streiche dieses rot*): Wird der
+genannte Teil verhört, tut er nichts, statt Ihre Auswahl zu streichen oder
+zu löschen.
 
 Auch die Weltansicht hört zu (siehe
 [Sagen, wohin es geht](03-WorldView.md#sagen-wohin-es-geht-sprachsteuerung)).

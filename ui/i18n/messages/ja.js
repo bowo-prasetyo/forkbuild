@@ -613,6 +613,7 @@ export default Object.freeze({
     'voice.title': '音声',
     'voice.intro': '「屋根を赤く塗って」「窓を全部選択」「元に戻す」のように、したいことを話してください。小さな音声モデル（Whisper）がこのデバイスの上で聞き取ります。話した内容はどこにも送られません。',
     'voice.download': '音声をオンにすると、約 {size} を一度だけダウンロードします。音声モデルは Hugging Face から、その実行エンジンは jsDelivr からです。削除するまでこのブラウザーに残ります。',
+    'voice.languageNote': '音声は英語がいちばんよく聞き取れます。日本語では、小さな音声モデルがまだ多くのコマンドを聞き違えるため、何も起きないことがあります。もう一度言うか、手で操作してください。',
     'voice.turnOn': '音声をオンにする',
     'voice.notNow': '今はしない',
     'voice.downloading': '音声モデルをダウンロード中… {percent}%',

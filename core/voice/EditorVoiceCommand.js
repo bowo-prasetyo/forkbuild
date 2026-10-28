@@ -12,6 +12,12 @@
 // (application/editor/EditorActionRegistry.js), but for Voice itself, which
 // a spoken command never turns off.
 //
+// Spoken, a plain command acts on the selection only when it says so ("paint
+// this red"): when the part named was misheard ("paint the roof red" heard as
+// "paint the rough red"), the palette's fallback to the selection would do it
+// to something else (scripts/evaluate-voice-commands.mjs found it doing so).
+// Such a command is read as an action's name instead, or as nothing.
+//
 // Pure: text and words in, `{ kind: 'plain', plan }`, `{ kind: 'action',
 // action }` or null out.
 import { interpretPlainCommand } from '../building/PlainCommand.js';
@@ -19,7 +25,7 @@ import { actionSaid } from './Transcript.js';
 
 export function interpretEditorCommand(transcript, { vocabulary = {}, actions = [], toText = String, aliases = {} } = {}) {
     const plan = interpretPlainCommand(transcript, vocabulary);
-    if (plan) return Object.freeze({ kind: 'plain', plan });
+    if (plan && (plan.target.kind !== 'selection' || plan.target.said)) return Object.freeze({ kind: 'plain', plan });
     const action = actionSaid(transcript, actions.filter(({ id }) => id !== 'ui.voice'), { toText, aliases });
     return action ? Object.freeze({ kind: 'action', action }) : null;
 }

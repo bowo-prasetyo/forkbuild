@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: b07dea3a1e4b6d8c -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 932ce3b7a104064f -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -857,6 +857,13 @@ conexão. O que você diz é gravado e entendido no seu dispositivo e nunca é
 enviado (veja [Privacidade](Privacy.md)). **Desligar a voz** e **Remover o
 modelo de voz** ficam no painel de voz depois de cada comando. Ele ouve o
 idioma em que o ForkBuild é mostrado.
+
+Ele entende melhor o inglês. Nos outros idiomas, o pequeno modelo de voz
+ainda entende mal muitos comandos, e a voz avisa antes de você ligá-la; um
+comando mal entendido costuma não fazer nada, então diga de novo ou faça à
+mão. Falado, um comando age sobre o que você selecionou só quando você diz
+(*pinte isto de vermelho*): se a parte que você citou for mal entendida, ele
+não faz nada em vez de pintar ou apagar a sua seleção.
 
 A visão do mundo também escuta (veja
 [Dizer aonde ir](03-WorldView.md#dizer-aonde-ir-voz)). O modelo de voz

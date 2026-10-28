@@ -28,6 +28,12 @@ console.log('✓ every phrase, typed, does what it should in every language');
     const reader = await voiceReader('en');
     assert(reader.did(' Thank you for watching. ', 'editor') === null, '6. what the model makes up from silence does nothing');
     assert(reader.did('and do that', 'editor') === 'action history.undo', '7. a command heard as words that sound like it is still that command');
+    // Misheard as the evaluation heard them: the part named didn't come through.
+    const pt = await voiceReader('pt-BR');
+    assert(pt.did('Apagas, avulis.', 'editor') === null, '7a. "Apague as árvores" misheard does nothing, rather than delete the selection');
+    const ko = await voiceReader('ko');
+    assert(ko.did('지분을 빨간색으로 칠해줘', 'editor') === null, '7b. nor paints it');
+    assert((await voiceReader('en')).did('Paint this red.', 'editor') === 'paint selection roofRed', '7c. the selection, said, is painted');
 }
 console.log('✓ verdicts');
 
@@ -39,6 +45,11 @@ console.log('✓ verdicts');
     assert(interpretEditorCommand('undo', { vocabulary, actions }).action.id === 'history.undo', '9. then an action by its name');
     assert(interpretEditorCommand('voice', { vocabulary, actions }) === null, '10. never Voice itself');
     assert(interpretEditorCommand('take that back', { vocabulary, actions, aliases: { 'history.undo': ['take that back'] } }).action.id === 'history.undo', '11. or by another phrasing');
+    assert(interpretEditorCommand('paint it red', { vocabulary, actions }) === null,
+        '12. spoken, a command that names nothing to paint does nothing, rather than paint the selection: the part it named may have been misheard');
+    const deleting = [...actions, { id: 'selection.delete', label: 'Delete' }];
+    const words = { ...vocabulary, intents: { ...vocabulary.intents, delete: ['delete'] } };
+    assert(interpretEditorCommand('delete', { vocabulary: words, actions: deleting }).action.id === 'selection.delete', '13. Delete said alone is still the Delete action');
 }
 console.log('✓ the Editor\'s reading of a spoken command');
 
