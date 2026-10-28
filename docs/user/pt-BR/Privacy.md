@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: ca4e09d21f77cc11 -->
+<!-- translation-of: docs/Privacy.md source-hash: 6fa21c9feb160d15 -->
 # Privacidade
 
 <!-- languages -->
@@ -71,6 +71,10 @@ que você publique, exporte ou envie:
   outra de uma que estava aqui primeiro (**Construções parecidas publicadas
   antes** e a entrada do 🔔 **… publicou uma construção com data anterior à
   sua que se parece com ela**).
+- de que é feita cada construção publicada neste dispositivo, só em
+  contagens (quantos blocos e quantos de cada tipo, pelo hash do conteúdo,
+  no máximo 2000), para comparar primeiro as construções com mais chance
+  de se parecer com as suas, seja qual for a idade delas.
 - os identificadores e hashes de conteúdo das construções de outras pessoas
   cujos bytes ainda não chegaram a este aparelho, e desde quando (no máximo
   500, cada um por 30 dias), para que cada uma ainda possa ser comparada com

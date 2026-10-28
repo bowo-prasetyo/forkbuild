@@ -13,6 +13,7 @@ import { addReadyMadeBricks, worldBricks } from '../core/building/PlacedBricks.j
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { Publication } from '../publisher/Publication.js';
 import { SimilarBuildFinder } from '../application/publication/SimilarBuildFinder.js';
+import { BuildKindIndex } from '../application/publication/BuildKindIndex.js';
 import { VillageLibrary } from '../core/library/VillageLibrary.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
@@ -321,6 +322,51 @@ async function run() {
         assert(orderOf(await unknown.findEarlier(mine), older) === 'datedBefore', '41. a build with no first-seen time counts as seen late');
     }
     console.log('✓ which came first, as far as this device can tell');
+
+    {
+        // The original, published before 400 builds unlike it: a device that
+        // knows many builds still finds it, as it compares the builds likeliest
+        // to match first rather than the newest.
+        const { contentStore, publications } = setUp();
+        const original = published(contentStore, documentOf(cottageBricks(), { title: 'The original' }), { identityId: 'alice', publishedAt: '2026-01-01T00:00:00Z' });
+        publications.push(original);
+        for (let i = 0; i < 400; i += 1) {
+            publications.push(published(contentStore, documentOf(cottageBricks({ kind: 'core:block_2x2', dx: i }), { title: `Barn ${i}` }), { identityId: `builder-${i}`, publishedAt: '2026-09-01T00:00:00Z' }));
+        }
+        let reads = 0;
+        const counting = { get: async (reference) => { reads += 1; return contentStore.get(reference); } };
+        const storage = new InMemoryStorageProvider();
+        const idle = [];
+        const visit = () => new SimilarBuildFinder({
+            listPublications: () => publications,
+            contentStore: counting,
+            ownIdentityIds: () => ['me'],
+            kindIndex: new BuildKindIndex({ storageProvider: storage, schedule: (write) => write() }),
+            idle: (work) => idle.push(work)
+        });
+        const copy = documentOf(cottageBricks({ dx: 50 }), { authorIdentityId: 'me' });
+
+        const first = visit();
+        assert((await first.find(copy)).length === 0 && reads === 300,
+            `42. never counted, builds are read newest first, at most 300 a look, so the original is not reached (read ${reads})`);
+        do {
+            while (idle.length > 0) idle.shift()();
+            await new Promise((resolve) => setTimeout(resolve, 0));
+        } while (idle.length > 0);
+        assert(reads === 401, `43. the builds the look didn't reach are counted when the page is idle, each read once (read ${reads})`);
+
+        reads = 0;
+        const again = await first.find(copy);
+        assert(again.length === 1 && again[0].publication === original, '44. the next look finds the original');
+        assert(reads === 1, `45. builds whose counts can't match are left out unread (read ${reads})`);
+
+        reads = 0;
+        const nextVisit = await visit().find(copy);
+        assert(nextVisit.length === 1 && nextVisit[0].publication === original && reads === 1,
+            `46. the counts are kept for the next visit, which reads only the original (read ${reads})`);
+        assert(idle.length === 0, '47. with every build counted, nothing is left to count');
+    }
+    console.log('✓ the likeliest builds compared first, whatever their age');
 
     console.log('✅ All similar build finder tests passed.');
 }

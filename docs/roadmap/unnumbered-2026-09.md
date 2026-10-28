@@ -9821,3 +9821,16 @@ asks each search what a player would, in all eight languages, and holds each lan
 - The engine stays `onnxruntime-web@1.31.0-dev.20260914`: transformers.js 4.3.2 is still built with it.
 - Tests: tests/SearchRelevance.test.js (new); tests/VoiceBuilding.test.js (asked again when evicted, progress that
   never moves back, Remove during a load).
+
+## Look-alikes compared likeliest first (unnumbered, 2026-10-28)
+
+**An older original is found however many builds this device knows.** Look-alikes were looked for among the 300
+newest builds, so original work, usually older than its copies, was the first to be missed.
+
+- **Each build's counts are kept** (application/publication/BuildKindIndex.js, new): how many bricks it has, and of
+  each kind, by content hash, at most 2000, on this device only (docs/Privacy.md, in all eight languages).
+- **Builds are ranked by how alike they could be** (core/catalog/BuildSimilarity.js `alikeAtMost()`, new), and those
+  that can't match are left out unread; the likeliest are compared first, then builds not yet counted, newest first.
+- **Builds a look didn't reach are counted when the browser is idle**, one at a time, so the next look ranks them too.
+- Tests: tests/BuildKindIndex.test.js (new); tests/SimilarBuildFinder.test.js 42-47 (an original older than 400
+  builds unlike it); tests/BuildSimilarity.test.js 13j-13l.

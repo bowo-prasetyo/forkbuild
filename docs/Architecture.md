@@ -606,8 +606,18 @@ them. Publish and the lists say which it was, and whether mirrored
 `placedBricks()`) count on their side; their own identities' builds, the
 whole remix family (every build connected through `parentDocumentId`, not
 cut off where core/publication/RemixFamily.js stops drawing), and builds published after
-this one's first Publication are left out; it gives up after a time budget,
-and nothing is sent or stored. A build's page (PublicationLinkView) asks the
+this one's first Publication are left out. Which builds it compares goes by
+how alike they could be, not how new they are (original work that gets
+copied is usually older): application/publication/BuildKindIndex.js keeps,
+on this device, each published build's counts by content hash (how many
+bricks, and of each kind, once ready-made structures are taken out; at most
+2000, the one used longest ago let go first), so every build is ranked by
+`alikeAtMost()` and those `couldBeSimilar()` rules out are left out before
+any bytes are read. The likeliest are compared first, then builds not yet
+counted, newest first, at most 300 read in one look and within its time
+budget; builds a look didn't reach are counted afterwards, one at a time
+when the browser is idle, so the next look ranks them too. Nothing is
+sent. A build's page (PublicationLinkView) asks the
 same finder's `findEarlier()` for builds published before it that look like
 it and lists them under its family tree
 (ui/components/remix/SimilarEarlierBuilds.js): there every brick counts,

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: ca4e09d21f77cc11 -->
+<!-- translation-of: docs/Privacy.md source-hash: 6fa21c9feb160d15 -->
 # Privacidad
 
 <!-- languages -->
@@ -73,6 +73,10 @@ dispositivo a menos que usted lo publique, lo exporte o lo envíe:
   fechada antes que otra de una que estuvo aquí primero (**Construcciones
   parecidas publicadas antes** y la entrada de la 🔔 **… publicó una
   construcción con fecha anterior a la suya que se parece a ella**).
+- de qué está hecha cada construcción publicada en este dispositivo, solo
+  en cantidades (cuántos bloques y cuántos de cada tipo, por su hash de
+  contenido, como mucho 2000), para comparar primero las construcciones
+  que más pueden parecerse a la suya, sea cual sea su antigüedad.
 - los identificadores y hashes de contenido de las construcciones de otras
   personas cuyos bytes aún no han llegado a este dispositivo, y desde cuándo
   (como mucho 500, cada uno durante 30 días), para que cada una pueda

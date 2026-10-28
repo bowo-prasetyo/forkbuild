@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: ca4e09d21f77cc11 -->
+<!-- translation-of: docs/Privacy.md source-hash: 6fa21c9feb160d15 -->
 # Privasi
 
 <!-- languages -->
@@ -75,6 +75,10 @@ perangkat kecuali Anda menerbitkan, mengekspor, atau mengirimnya:
   sini (**Bangunan mirip yang diterbitkan lebih dulu** dan entri 🔔 **…
   menerbitkan bangunan bertanggal sebelum milik Anda yang mirip
   dengannya**).
+- dari apa setiap bangunan terbit di perangkat ini dibuat, hanya dalam
+  jumlah (berapa balok dan berapa dari tiap jenis, menurut hash isinya,
+  paling banyak 2000), agar bangunan yang paling mungkin mirip dengan
+  milik Anda dibandingkan lebih dulu, berapa pun umurnya.
 - ID dan hash konten bangunan orang lain yang byte-nya belum sampai ke
   perangkat ini, dan sejak kapan (paling banyak 500, masing-masing selama
   30 hari), agar masing-masing tetap bisa dibandingkan dengan bangunan Anda
