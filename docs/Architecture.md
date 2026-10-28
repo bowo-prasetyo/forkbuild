@@ -323,6 +323,14 @@ the detailed references; in short:
   paragraph, the whole section, and a link to it on GitHub. The Editor's
   command palette offers Ask the guide for a question, or words no action
   matches. No model, and nothing typed leaves the device.
+- How well these answer is measured, in every language the app speaks, by
+  tests/SearchRelevance.test.js: questions to the guide with the sections
+  that answer them (the translated guides keep the same sections in the
+  same order, so one answer key serves all), plain commands with what each
+  should do (never something else), and things described to the Build
+  Library with the items meant. Each language is held at what it scores
+  now, so a change to a search, a word list or a translation that loses an
+  answer fails.
 - Voice building (`V` in the Editor and World View): ForkBuild's one real AI
   feature, run on the device. ui/voice/recordVoice.js records from the
   microphone to mono 16 kHz samples; application/voice/SpeechRuntime.js runs
@@ -353,7 +361,11 @@ the detailed references; in short:
   one's at another commit, are deleted when voice loads
   (`PinnedModelFiles#forgetOthers()`), and voice turned on for another model
   asks again before downloading this one (`forkbuild.voice.enabled` names the
-  model it was turned on for). The
+  model it was turned on for), as does voice whose engine or model files the
+  browser has since let go (`SpeechRuntime#downloaded()`). The download's
+  progress is measured against the pinned files' size
+  (`SPEECH_MODEL_BYTES`), so it never moves back as another file starts, and
+  Remove while the model loads wins: the load's late result is dropped. The
   published Content Security Policy allows `'wasm-unsafe-eval'` for this,
   never `'unsafe-eval'`. The runtime lives in a module worker
   (application/voice/speechWorker.js, answering requests through

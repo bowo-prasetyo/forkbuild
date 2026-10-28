@@ -9796,3 +9796,28 @@ command instead of 2.1 s.
 - Tests: tests/VoiceBuilding.test.js (the model; the download is the engine and the pinned files; voice turned on for
   Whisper tiny asks again); tests/PinnedSpeechModel.test.js 13a-13b (an earlier model's files are deleted, the pinned
   ones stay).
+
+## Searches measured, voice's smaller gaps closed (unnumbered, 2026-10-28)
+
+**Help, the palette and the Build Library, measured in a player's own words.** tests/SearchRelevance.test.js (new)
+asks each search what a player would, in all eight languages, and holds each language at what it scores now:
+
+- **Help:** 21 questions with the guide sections that answer them, one answer key for every language (the translated
+  guides have the same sections in the same order). In the first two answers: en 18, de 17, es 15, fr 16, id 16,
+  ja 15, ko 15, pt-BR 18. "How do I remix" and "change my avatar" miss everywhere: their topic word is in more than a
+  sixth of the guide, so the search leaves it out.
+- **The palette:** 18 plain commands, three not commands, never read as something else. Every language reads all 18,
+  with the words they found missing added: *highlight* (es, fr, id, pt-BR), everyday Brazilian *tira*, *escolhe* and
+  *pedras* ("apaga as pedras" deleted the selection), and Korean colour stems and 짙은 회색 (read as grey before).
+- **The Build Library:** 16 things described, right when found among five or fewer: 14–16 in each language, with
+  wine and meals added to the Barrel's and the Table's words in all eight.
+
+**Voice.**
+
+- **Voice asks again** before downloading when the browser has let the speech model go (`SpeechRuntime#downloaded()`),
+  rather than starting an 80 MB download unasked.
+- **The download's progress never moves back:** it is measured against the pinned model's size.
+- **Remove while the model loads wins** over the load.
+- The engine stays `onnxruntime-web@1.31.0-dev.20260914`: transformers.js 4.3.2 is still built with it.
+- Tests: tests/SearchRelevance.test.js (new); tests/VoiceBuilding.test.js (asked again when evicted, progress that
+  never moves back, Remove during a load).
