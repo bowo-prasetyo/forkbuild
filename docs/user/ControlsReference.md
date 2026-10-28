@@ -302,6 +302,7 @@ can also preview and restore them.
 | Input | Action |
 |---|---|
 | `1` / `2` | Switch Select / Place tool |
+| `3` – `9` | Choose a recent brick, with Place on (its key is on its tile) |
 | `Ctrl/Cmd+S` | Save build |
 
 ## Placement (Editor only)

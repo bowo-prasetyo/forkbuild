@@ -19,6 +19,7 @@ import { CompositionPreviewUseCase } from '../../application/editor/CompositionP
 import { CreateLibraryPreviewUseCase } from '../../application/editor/CreateLibraryPreviewUseCase.js';
 import { EditorSession } from '../../application/editor/EditorSession.js';
 import { PLACING_TOOLS, ToolId, toolForPlace } from '../../application/editor-state/ToolId.js';
+import { brickForKey, emptyBrickSlots, keysByBrick, useBrick } from '../../core/building/BrickSlots.js';
 import { EditorEvent } from '../../core/events/EditorEvent.js';
 import { EditorActionRegistry, createStandardActions } from '../../application/editor/EditorActionRegistry.js';
 import { EditorActionContext } from '../../application/editor/EditorActionContext.js';
@@ -358,6 +359,7 @@ export default {
                         :pinned-structures="pinnedStructures"
                         :pinned-title="pinnedTitle"
                         :preview-service="libraryPreviewService"
+                        :brick-keys="recentBrickKeys"
                         @place="setTool(ToolId.PLACE)"
                         @fork="forkStructure"
                         @place-structure="copyStructureIntoDocument"
@@ -1014,6 +1016,15 @@ export default {
         let unsubPlacementGhost = [];
         let unsubHolding = [];
         let unsubActiveStructure = null;
+        // Number keys for recent bricks (core/building/BrickSlots.js): 3 to 9
+        // each hold a brick chosen lately, kept on this device.
+        const recentBricksStore = inject('recentBricksStore', null);
+        const recentBrickSlots = ref(recentBricksStore ? recentBricksStore.load() : emptyBrickSlots());
+        const recentBrickKeys = computed(() => keysByBrick(recentBrickSlots.value));
+        function rememberBrick(definitionId) {
+            if (!definitionId) return;
+            recentBrickSlots.value = recentBricksStore ? recentBricksStore.use(definitionId) : useBrick(recentBrickSlots.value, definitionId);
+        }
         let unsubActiveComposition = null;
 
         function setTool(toolId) {
@@ -1702,6 +1713,7 @@ export default {
                 editorContext.eventBus.subscribe(EditorEvent.ACTIVE_BRICK_CHANGED, ({ definitionId }) => {
                     activeBrickId.value = definitionId;
                     activeBrickColor.value = editorContext.activeBrick.color;
+                    rememberBrick(definitionId);
                 }),
                 editorContext.eventBus.subscribe(EditorEvent.ACTIVE_BRICK_COLOR_CHANGED, ({ color }) => { activeBrickColor.value = color; }),
                 editorContext.eventBus.subscribe(EditorEvent.ACTIVE_COMPOSITION_CHANGED, ({ structure }) => { activeCompositionStructure.value = structure; })
@@ -1968,6 +1980,13 @@ export default {
                     if (tool) editorContext.setActiveTool(tool);
                     return;
                 }
+                // 3 to 9 choose a recent brick, with Place on.
+                const recentBrick = !event.ctrlKey && !event.metaKey && !event.altKey ? brickForKey(recentBrickSlots.value, event.key) : null;
+                if (recentBrick) {
+                    editorContext.setActiveBrick(recentBrick);
+                    if (editorContext.tool.activeTool !== ToolId.PLACE) editorContext.setActiveTool(ToolId.PLACE);
+                    return;
+                }
                 if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
                     event.preventDefault();
                     saveDocument(saveDocumentUseCase, documentManager).then(onDocumentSaved, (error) => {
@@ -2129,6 +2148,7 @@ export default {
             renamePersonalStructure,
             removePersonalStructure,
             removedStructure,
+            recentBrickKeys,
             undoRemovePersonalStructure,
             exportStructure,
             exportDocument,

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 0df1f1ec398f8dc6 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: ee41957881dffe63 -->
 # 操作リファレンス
 
 <!-- languages -->
@@ -306,6 +306,7 @@ ForkBuild のマウスとキーボードの操作をすべてまとめていま�
 | 入力 | 操作 |
 |---|---|
 | `1` / `2` | 選択ツール / 配置ツールに切り替え |
+| `3` ～ `9` | 最近のブロックを選んで配置をオン（キーはタイルに表示） |
 | `Ctrl/Cmd+S` | 作品を保存 |
 
 ## 配置（エディターのみ）

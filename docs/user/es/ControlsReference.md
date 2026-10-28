@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 0df1f1ec398f8dc6 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: ee41957881dffe63 -->
 # Referencia de controles
 
 <!-- languages -->
@@ -314,6 +314,7 @@ también puede previsualizarlas y restaurarlas.
 | Entrada | Acción |
 |---|---|
 | `1` / `2` | Cambiar a la herramienta Seleccionar / Colocar |
+| `3` – `9` | Elegir un bloque reciente, con Colocar activado (su tecla aparece en su casilla) |
 | `Ctrl/Cmd+S` | Guardar la construcción |
 
 ## Colocación (solo en el Editor)

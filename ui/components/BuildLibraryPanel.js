@@ -350,6 +350,12 @@ export default {
         removedStructureName: {
             type: String,
             default: ''
+        },
+        // { definitionId: '3' }: the number key that chooses each recent
+        // brick (core/building/BrickSlots.js), shown on its tile.
+        brickKeys: {
+            type: Object,
+            default: () => ({})
         }
     },
     emits: [
@@ -867,11 +873,13 @@ export default {
                                 :aria-pressed="definition.id === selectedDefinitionId ? 'true' : 'false'"
                                 :tabindex="definition.id === brickTabStopId ? 0 : -1"
                                 :data-brick-id="definition.id"
+                                :aria-keyshortcuts="brickKeys[definition.id] || null"
                                 @click="selectBrick(definition.id)"
                                 @focus="brickFocusId = definition.id"
                                 @keydown="onBrickKeydown($event, definition.id)"
                             >
                                 <BuildLibraryPreview kind="brick" :item="definition" :preview-service="previewService" />
+                                <kbd v-if="brickKeys[definition.id]" class="palette-item-key" :title="t('buildLibrary.brickKey', { key: brickKeys[definition.id] })">{{ brickKeys[definition.id] }}</kbd>
                                 <span class="palette-item-name">{{ libraryItemName(definition) }}</span>
                                 <span class="palette-item-size">{{ brickSize(definition) }}</span>
                             </button>

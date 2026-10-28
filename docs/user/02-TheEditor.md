@@ -186,6 +186,13 @@ its type, colour, turn and tilt become what you place next, and Place comes
 on, so the next click places another just like it. It works from Select too,
 and picks nothing on empty ground.
 
+The number keys **3** to **9** each hold a brick you chose lately, like a
+hotbar: the first brick you choose takes 3, the next 4, and so on, and a
+brick keeps its key while you use it (an eighth takes the key of the one
+used longest ago). The key shows in the corner of the brick's tile in the
+Build Library; press it to choose that brick, with Place on. This device
+remembers them.
+
 A click where the ghost is red places nothing: the Editor says something is
 in the way and plays a soft, low knock, so you know to try another spot or
 turn the piece.

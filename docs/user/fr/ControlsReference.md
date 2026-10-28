@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 0df1f1ec398f8dc6 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: ee41957881dffe63 -->
 # Référence des commandes
 
 <!-- languages -->
@@ -321,6 +321,7 @@ permet aussi de les prévisualiser et de les restaurer.
 | Entrée | Action |
 |---|---|
 | `1` / `2` | Passer à l’outil Sélection / Placement |
+| `3` – `9` | Choisir une brique récente, avec Placement activé (sa touche figure sur sa vignette) |
 | `Ctrl/Cmd+S` | Enregistrer la construction |
 
 ## Placement (Éditeur uniquement)

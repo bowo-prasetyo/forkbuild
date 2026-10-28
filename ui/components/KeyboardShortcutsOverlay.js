@@ -25,6 +25,7 @@ import { t } from '../i18n/i18n.js';
 const VIEW_LOCAL_SHORTCUTS = [
     { label: 'shortcuts.view.selectTool', shortcut: '1' },
     { label: 'shortcuts.view.placeTool', shortcut: '2' },
+    { label: 'shortcuts.view.recentBrick', shortcut: '3–9' },
     { label: 'shortcuts.view.save', shortcut: 'Ctrl/Cmd+S' },
     { label: 'shortcuts.view.sound', shortcut: 'M' },
     { label: 'shortcuts.view.rotateGhost', shortcut: 'R' },

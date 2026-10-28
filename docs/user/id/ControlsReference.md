@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 0df1f1ec398f8dc6 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: ee41957881dffe63 -->
 # Referensi Kontrol
 
 <!-- languages -->
@@ -307,6 +307,7 @@ juga dapat menampilkan pratinjau dan memulihkannya.
 | Masukan | Tindakan |
 |---|---|
 | `1` / `2` | Beralih ke alat Pilih / Tempatkan |
+| `3` – `9` | Pilih balok terbaru, dengan Tempatkan menyala (tombolnya ada di petaknya) |
 | `Ctrl/Cmd+S` | Menyimpan bangunan |
 
 ## Penempatan (hanya Editor)

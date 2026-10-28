@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: aa7a58af29f5af7a -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 7478badd81a9e5cd -->
 # 02 — Editor
 
 <!-- languages -->
@@ -206,6 +206,13 @@ jenis, warna, putaran, dan kemiringannya menjadi yang Anda tempatkan
 berikutnya, dan Tempatkan menyala, sehingga klik berikutnya menempatkan satu
 lagi yang persis sama. Ini juga bisa dari Pilih, dan tidak mengambil apa pun
 di tanah kosong.
+
+Tombol angka **3** sampai **9** masing-masing menyimpan balok yang baru Anda
+pilih, seperti hotbar: balok pertama yang Anda pilih mendapat 3, berikutnya
+4, dan seterusnya, dan balok tetap memegang tombolnya selama Anda memakainya
+(balok kedelapan mengambil tombol balok yang paling lama tidak dipakai).
+Tombolnya tampil di sudut petaknya di Pustaka Bangunan; tekan untuk memilih
+balok itu, dengan Tempatkan menyala. Perangkat ini mengingatnya.
 
 Klik di tempat pratinjau berwarna merah tidak menempatkan apa pun: Editor
 memberi tahu ada yang menghalangi dan memainkan ketukan pelan yang rendah,

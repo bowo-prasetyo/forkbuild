@@ -36,6 +36,7 @@ import { VisitorCountSettingsStore } from '../application/settings/VisitorCountS
 import { ExperimentalToolsSettingsStore } from '../application/settings/ExperimentalToolsSettingsStore.js';
 import { WorldViewDetailStore } from '../application/settings/WorldViewDetailStore.js';
 import { EditorBuildInfoStore } from '../application/settings/EditorBuildInfoStore.js';
+import { RecentBricksStore } from '../application/settings/RecentBricksStore.js';
 import { WorldViewSkyStore } from '../application/settings/WorldViewSkyStore.js';
 import { WorldViewSeasonStore } from '../application/settings/WorldViewSeasonStore.js';
 import { WorldViewShadowStore } from '../application/settings/WorldViewShadowStore.js';
@@ -89,6 +90,7 @@ app.provide('publishDestinationStore', new PublishDestinationStore({ storageProv
 app.provide('worldViewDetailStore', new WorldViewDetailStore({ storageProvider: new LocalStorageProvider() }));
 // Whether the Editor shows the open build's details folded or unfolded, per device.
 app.provide('editorBuildInfoStore', new EditorBuildInfoStore({ storageProvider: new LocalStorageProvider() }));
+app.provide('recentBricksStore', new RecentBricksStore({ storageProvider: new LocalStorageProvider() }));
 app.provide('worldViewSkyStore', new WorldViewSkyStore({ storageProvider: new LocalStorageProvider() }));
 app.provide('worldViewSeasonStore', new WorldViewSeasonStore({ storageProvider: new LocalStorageProvider() }));
 // Shadows start off where the main pointer is a finger (phones, tablets),
