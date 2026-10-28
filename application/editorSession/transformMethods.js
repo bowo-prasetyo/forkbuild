@@ -163,17 +163,18 @@ export const transformMethods = {
 
     // Numeric targets for the selected placement, turned into the same delta calls
     // as dragging; omitted axes are unchanged and Y is never a target. Returns
-    // { moved, blocked, rotated }; `blocked` means X/Z were requested but collide.
+    // { moved, blocked, rotated, turnBlocked }; `blocked` means X/Z were
+    // requested but collide, `turnBlocked` that the turn was and would.
     applyPlacementTransform({ x = null, z = null, rotation = null } = {}) {
         const selection = this._editorContext.selection;
         const document = this._documentManager.document;
         if (!selection.isStructurePlacementSelection || !document) {
-            return { moved: false, blocked: false, rotated: false };
+            return { moved: false, blocked: false, rotated: false, turnBlocked: false };
         }
         const placementId = selection.selectedPlacementId;
         const placement = document.world.getStructurePlacement(placementId);
         if (!placement) {
-            return { moved: false, blocked: false, rotated: false };
+            return { moved: false, blocked: false, rotated: false, turnBlocked: false };
         }
 
         let moved = false;
@@ -189,14 +190,16 @@ export const transformMethods = {
         }
 
         let rotated = false;
+        let turnBlocked = false;
         if (rotation !== null) {
             const deltaRotation = Number(rotation) - placement.rotation;
             if (deltaRotation !== 0) {
                 rotated = this._rotateStructurePlacement(placementId, deltaRotation);
+                turnBlocked = !rotated;
             }
         }
 
-        return { moved, blocked, rotated };
+        return { moved, blocked, rotated, turnBlocked };
     },
 
     // Edits happen by opening the placement's Document, never by modifying the
@@ -239,7 +242,15 @@ export const transformMethods = {
             return false;
         }
         const world = document.world;
-        if (!world.getStructurePlacement(placementId)) {
+        const placement = world.getStructurePlacement(placementId);
+        if (!placement) {
+            return false;
+        }
+        // Checked at the turn it would have, so it never turns into something
+        // (docs/reviews/EditorPlacementUX-2026-10-27.md, P2-12); a blocked turn
+        // is said and heard, as a blocked placement is.
+        if (!this._structurePlacementFits(world, placement, placement.position, placement.rotation + deltaRotation)) {
+            this._editorContext.notePlacementBlocked?.('turn');
             return false;
         }
         this._commandHistory.execute(new RotateStructurePlacementCommand({
@@ -250,7 +261,7 @@ export const transformMethods = {
 
     // Excludes the placement's own id so it never collides with itself. Permissive
     // (true) without a resolver or a resolvable document.
-    _structurePlacementFits(world, placement, candidatePosition) {
+    _structurePlacementFits(world, placement, candidatePosition, candidateRotation = placement.rotation) {
         if (!this._structureResolver) {
             return true;
         }
@@ -260,7 +271,7 @@ export const transformMethods = {
         }
         const validator = new StructurePlacementValidator();
         return validator.canPlace(world, this._registry, this._structureResolver, {
-            localBounds: placedWorldBounds(placedWorld, this._registry, placement.rotation),
+            localBounds: placedWorldBounds(placedWorld, this._registry, candidateRotation),
             position: candidatePosition,
             excludePlacementId: placement.id
         });

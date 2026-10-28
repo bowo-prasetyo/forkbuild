@@ -9532,3 +9532,24 @@ structure is being placed, but pressing it (or `2`) dropped the structure and sw
 - Tests: tests/PlaceKeepsHand.test.js (from Select, Place; while placing a brick, a library structure or a placed
   build, nothing changes). Checked in the running app at 1366×768: holding the Cottage, the button and `2` keep it in
   hand; from Select, `2` takes up the Cube.
+
+## A placed build turns only where it fits (unnumbered, 2026-10-28)
+
+**Building: a turn that doesn't run into things.** The follow-up to finding P2-12 of
+[the Editor placement audit](../reviews/EditorPlacementUX-2026-10-27.md): a placed build (Place Structure) was moved
+and placed by its turned box, and the gizmo checked a turn, but turning it from its panel's **Rotate ↻ / ↺**, with `R`
+in Select, the touch bar's Rotate, the rotate keys or the panel's exact **Rotation °** field was never checked, so it
+could turn into the bricks or builds beside it.
+
+- **Every turn of a placed build is checked at the turn it would have**
+  (application/editorSession/transformMethods.js#_rotateStructurePlacement(), and application/tools/SelectionTool.js
+  for `R`), by its turned box (`placedWorldBounds()`). A turn that would run into something isn't made: the build stays
+  as it was, nothing is added to Undo.
+- **A blocked turn is said and heard**, as a blocked placement is: `notePlacementBlocked('turn')` plays the blocked sound
+  and shows *Something's in the way of that turn. Move it somewhere clearer first.* (`editor.turnBlocked`, new, in
+  all eight languages). The panel's exact transform reports `turnBlocked`, so its "Instance updated" doesn't cover the
+  message.
+- The user guide's placed-build table says so, in all eight languages.
+- Tests: tests/PlacedBuildTurn.test.js 21-28 (a quarter turn into a cube is refused, leaves the build and Undo as they
+  were and is said; half a turn clears it and turns; the exact Rotation field reports turnBlocked; `R` into the cube
+  is refused and said, every time, and turns once the cube is gone).

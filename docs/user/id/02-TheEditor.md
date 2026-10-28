@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2ee1e50a637a34bd -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1c85e2e33e2425a8 -->
 # 02 — Editor
 
 <!-- languages -->
@@ -587,6 +587,11 @@ dengan alat Pilih (`1`) dan bilah sisi menampilkan:
 | **Duplikat** (`Ctrl/Cmd+D`) | Menempatkan instans lain dari struktur yang sama |
 | **Hapus** | Menghapus instans ini — bangunan sumbernya tidak tersentuh |
 | **Edit Bangunan Sumber** | Membuka bangunan yang dirujuk itu sendiri, untuk mengubah tampilan setiap instansnya |
+
+**Putar ↻ / ↺**, `R`, dan kolom **Rotasi °** hanya memutar instans bila
+muat: putaran yang akan menabrak sesuatu membiarkannya seperti semula,
+dengan bunyi dan pesan yang memberitahukannya. (Gizmo menampilkan putaran
+yang terhalang dengan warna merah lalu mengembalikannya.)
 
 Mengedit *isi* struktur yang ditempatkan selalu dilakukan dengan mengedit
 bangunan sumbernya — tidak ada cara untuk mengedit balok sebuah instans

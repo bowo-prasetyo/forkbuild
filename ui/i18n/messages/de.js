@@ -1217,6 +1217,7 @@ export default Object.freeze({
     'editor.placeHint': 'Über den Boden fahren, R zum Drehen, klicken zum Platzieren.',
     'editor.placementBlocked': 'Hier ist etwas im Weg. Versuchen Sie eine andere Stelle, oder drücken Sie R, um es zu drehen.',
     'editor.touchPlacementBlocked': 'Hier ist etwas im Weg. Versuchen Sie eine andere Stelle, oder tippen Sie auf Drehen, um es zu drehen.',
+    'editor.turnBlocked': 'Bei dieser Drehung ist etwas im Weg. Rücken Sie es zuerst an eine freiere Stelle.',
     'editor.seeInside': 'Hineinsehen',
     'editor.seeInsideOff': 'Ganz zeigen',
     'editor.seeInsideHint': 'Das Bauwerk über dem Erdgeschoss ausblenden, um seine Räume zu sehen und darin zu bauen. Nichts wird entfernt.',

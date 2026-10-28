@@ -1214,6 +1214,7 @@ export default Object.freeze({
     'editor.placeHint': '地面にカーソルを合わせ、Rで回転、クリックで配置します。',
     'editor.placementBlocked': 'ここは何かがじゃまで置けません。別の場所を試すか、R で向きを変えてください。',
     'editor.touchPlacementBlocked': 'ここは何かがじゃまで置けません。別の場所を試すか、「回転」で向きを変えてください。',
+    'editor.turnBlocked': 'その向きに回すと何かにぶつかります。先に空いている場所へ動かしてください。',
     'editor.seeInside': '中を見る',
     'editor.seeInsideOff': '全体を表示',
     'editor.seeInsideHint': '1階より上を隠して、部屋の中を見たり作ったりします。何も消えません。',

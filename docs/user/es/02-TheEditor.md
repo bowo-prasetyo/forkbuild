@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2ee1e50a637a34bd -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1c85e2e33e2425a8 -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -612,6 +612,11 @@ Seleccionar (`1`) y la barra lateral muestra:
 | **Duplicar** (`Ctrl/Cmd+D`) | Colocar otra instancia de la misma estructura |
 | **Eliminar** | Quitar esta instancia: la construcción de origen no se toca |
 | **Editar construcción de origen** | Abrir la construcción referenciada en sí, para cambiar cómo se ven todas sus instancias |
+
+**Girar ↻ / ↺**, `R` y el campo **Rotación °** solo giran una instancia
+donde cabe: un giro que la haría chocar con algo la deja como estaba, con un
+sonido y un mensaje que lo dicen. (El gizmo muestra en rojo un giro
+bloqueado y lo deshace.)
 
 Editar el *contenido* de una estructura colocada siempre se hace editando
 su construcción de origen: no hay forma de editar directamente los bloques de

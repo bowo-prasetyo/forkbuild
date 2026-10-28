@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2ee1e50a637a34bd -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1c85e2e33e2425a8 -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -620,6 +620,11 @@ toutes ses instances. Sélectionnez une instance avec l’outil Sélection
 | **Dupliquer** (`Ctrl/Cmd+D`) | Placer une autre instance de la même structure |
 | **Supprimer** | Retirer cette instance — la construction source n’est pas touchée |
 | **Modifier la construction source** | Ouvrir la construction référencée elle-même, pour changer l’apparence de toutes ses instances |
+
+**Pivoter ↻ / ↺**, `R` et le champ **Rotation °** ne tournent une instance
+que là où elle tient : une rotation qui la ferait entrer dans quelque chose
+la laisse telle quelle, avec un son et un message qui le disent. (Le gizmo
+montre en rouge une rotation bloquée et la défait.)
 
 Modifier le *contenu* d’une structure placée se fait toujours en modifiant
 sa construction source — il est impossible de modifier directement les

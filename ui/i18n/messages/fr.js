@@ -1217,6 +1217,7 @@ export default Object.freeze({
     'editor.placeHint': 'Survolez le sol, R pour pivoter, cliquez pour placer.',
     'editor.placementBlocked': 'Quelque chose gêne ici. Essayez un autre endroit, ou appuyez sur R pour le tourner.',
     'editor.touchPlacementBlocked': 'Quelque chose gêne ici. Essayez un autre endroit, ou touchez Pivoter pour le tourner.',
+    'editor.turnBlocked': 'Quelque chose gêne cette rotation. Déplacez-la d’abord vers un endroit plus dégagé.',
     'editor.seeInside': 'Voir l’intérieur',
     'editor.seeInsideOff': 'La montrer en entier',
     'editor.seeInsideHint': 'Masquer la construction au-dessus du rez-de-chaussée, pour voir ses pièces et construire dedans. Rien n’est supprimé.',

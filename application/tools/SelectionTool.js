@@ -178,6 +178,12 @@ export class SelectionTool extends Tool {
         if (!selection.isStructurePlacementSelection) {
             return;
         }
+        // Checked at its new turn, as EditorSession#_rotateStructurePlacement() is.
+        const placement = this.context.world.getStructurePlacement(selection.selectedPlacementId);
+        if (placement && !this._canPlaceAt(this.context.world, placement, placement.position, placement.rotation + deltaRotation)) {
+            this.context.editorContext.notePlacementBlocked?.('turn');
+            return;
+        }
         this.context.commandHistory.execute(new RotateStructurePlacementCommand({
             worldId: this.context.world.id,
             placementId: selection.selectedPlacementId,
@@ -239,7 +245,7 @@ export class SelectionTool extends Tool {
     // the precedent this codebase already established for brick
     // deletion (SelectionTool#_deleteSelected() vs.
     // EditorSession#deleteSelection()).
-    _canPlaceAt(world, placement, candidatePosition) {
+    _canPlaceAt(world, placement, candidatePosition, candidateRotation = placement.rotation) {
         const resolver = this.context.structureResolver;
         if (!resolver) {
             return true;
@@ -249,7 +255,7 @@ export class SelectionTool extends Tool {
             return true;
         }
         return this._validator.canPlace(world, this.context.registry, resolver, {
-            localBounds: placedWorldBounds(placedWorld, this.context.registry, placement.rotation),
+            localBounds: placedWorldBounds(placedWorld, this.context.registry, candidateRotation),
             position: candidatePosition,
             excludePlacementId: placement.id
         });

@@ -1217,6 +1217,7 @@ export default Object.freeze({
     'editor.placeHint': '지면 위에 커서를 올리고, R로 회전, 클릭해 배치하세요.',
     'editor.placementBlocked': '여기는 무언가에 막혀 놓을 수 없습니다. 다른 자리를 고르거나 R로 돌려 보세요.',
     'editor.touchPlacementBlocked': '여기는 무언가에 막혀 놓을 수 없습니다. 다른 자리를 고르거나 회전을 눌러 돌려 보세요.',
+    'editor.turnBlocked': '그렇게 돌리면 무언가에 걸립니다. 먼저 더 넓은 곳으로 옮겨 주세요.',
     'editor.seeInside': '안 들여다보기',
     'editor.seeInsideOff': '전체 보기',
     'editor.seeInsideHint': '1층 위를 가려서 방 안을 보고 그 안에서 만들 수 있게 합니다. 지워지는 것은 없어요.',

@@ -551,6 +551,11 @@ instance with the Select tool (`1`) and the sidebar shows:
 | **Delete** | Remove this instance — the source build is untouched |
 | **Edit Source Build** | Open the referenced build itself, to change what every instance of it looks like |
 
+**Rotate ↻ / ↺**, `R` and the **Rotation °** field only turn an instance
+where it fits: a turn that would run into something leaves it as it was,
+with a sound and a message saying so. (The gizmo shows a blocked turn red
+and puts it back.)
+
 Editing a placed structure's *content* always happens by editing its source
 build — there's no way to edit an instance's bricks directly, which is
 exactly what keeps every instance of it in sync.

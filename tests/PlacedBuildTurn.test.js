@@ -14,6 +14,7 @@ import { StructurePreviewUseCase } from '../application/editor/StructurePreviewU
 import { StructurePlacementTool } from '../application/tools/StructurePlacementTool.js';
 import { transformMethods } from '../application/editorSession/transformMethods.js';
 import { StructurePlacementGestureService } from '../application/editor/StructurePlacementGestureService.js';
+import { SelectionTool } from '../application/tools/SelectionTool.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { assert } from './support/Assert.js';
@@ -139,6 +140,47 @@ const box = (bounds) => [bounds.min.x, bounds.max.x, bounds.min.z, bounds.max.z]
     const gizmoBox = gestures._boundsForPlacement(new StructurePlacement({ documentId: bench.id, position: new Position(0, 0, 0), rotation: 90 }));
     assert(gizmoBox.size.z === 4 && gizmoBox.size.x === 1, '20. the gizmo frames a turned build by its turned box');
     console.log('✓ turning a build with the gizmo is checked at its new turn');
+}
+
+// 6. Turning a placed build from its panel, the touch bar, the keys or R is
+// checked at its new turn too: blocked, it stays as it was and says so.
+{
+    const world = new World({});
+    const building = new Building({});
+    building.addBrick(new Brick({ definitionId: 'core:cube', position: new Position(0, 0.5, 1.5) }));
+    world.addBuilding(building);
+    const placement = new StructurePlacement({ documentId: bench.id, position: new Position(0, 0, 0), rotation: 0 });
+    world.addStructurePlacement(placement);
+    const commandHistory = new CommandHistory({ world });
+    const editorContext = new CreateEditorContextUseCase().execute();
+    const blocked = [];
+    const noteBlocked = editorContext.notePlacementBlocked.bind(editorContext);
+    editorContext.notePlacementBlocked = (kind) => { blocked.push(kind); noteBlocked(kind); };
+    const session = {
+        ...transformMethods,
+        _documentManager: { document: { world } }, _commandHistory: commandHistory, _editorContext: editorContext,
+        _structureResolver: resolver, _registry: registry
+    };
+    assert(session._rotateStructurePlacement(placement.id, 90) === false, '21. a quarter turn into the cube is refused');
+    assert(placement.rotation === 0 && commandHistory.getCursor() === 0, '22. the build stays as it was, with nothing to undo');
+    assert(blocked.join() === 'turn', '23. and the turn is said to be blocked');
+    assert(session._rotateStructurePlacement(placement.id, 180) === true && placement.rotation === 180, '24. half a turn, still along x, clears the cube and turns');
+    const numeric = { ...session, _editorContext: { ...editorContext, selection: { isStructurePlacementSelection: true, selectedPlacementId: placement.id }, notePlacementBlocked: editorContext.notePlacementBlocked } };
+    const result = transformMethods.applyPlacementTransform.call(numeric, { rotation: 270 });
+    assert(result.rotated === false && result.turnBlocked === true && placement.rotation === 180, '25. the panel\'s exact turn, blocked, says turnBlocked and leaves it');
+
+    // R with the build selected in Select.
+    const selected = { isStructurePlacementSelection: true, selectedPlacementId: placement.id, isEmpty: false };
+    const tool = new SelectionTool({ world, registry, commandHistory, structureResolver: resolver,
+        editorContext: { selection: selected, notePlacementBlocked: (kind) => blocked.push(kind) }, selectionUseCase: { clear() {} } });
+    tool.onKeyDown({ key: 'r', modifiers: {} });
+    assert(placement.rotation === 180 && blocked.at(-1) === 'turn', '26. R into the cube is refused too, and said');
+    tool.onKeyDown({ key: 'r', modifiers: {} });
+    assert(placement.rotation === 180, '27. as often as it is pressed');
+    world.getBuildings()[0].removeBrick(world.getBuildings()[0].getBricks()[0].id);
+    tool.onKeyDown({ key: 'r', modifiers: {} });
+    assert(placement.rotation === 270, '28. with the cube gone, R turns it');
+    console.log('✓ turning a placed build from its panel, the keys or R is checked at its new turn');
 }
 
 console.log('✅ All placed-build turn tests passed.');
