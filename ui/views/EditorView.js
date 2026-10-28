@@ -92,8 +92,8 @@ import { displayText, errorText, t } from '../i18n/i18n.js';
 import { buildDescriptionText } from '../i18n/buildDescriptionText.js';
 import VoicePanel from '../components/VoicePanel.js';
 import { useVoiceCommands } from '../voice/useVoiceCommands.js';
-import { actionSaid } from '../../core/voice/Transcript.js';
-import { splitWordList } from '../../core/library/LibrarySearch.js';
+import { interpretEditorCommand } from '../../core/voice/EditorVoiceCommand.js';
+import { editorVoiceWords } from '../voice/editorVoiceWords.js';
 import { descriptionSuggestion, titleSuggestions } from '../i18n/buildSuggestionText.js';
 import { plainCommandVocabulary } from '../i18n/plainCommandWords.js';
 import { interpretPlainCommand } from '../../core/building/PlainCommand.js';
@@ -1430,7 +1430,10 @@ export default {
         const plainVocabulary = plainCommandVocabulary();
         function planPlainCommand(query) {
             const plan = interpretPlainCommand(query, plainVocabulary);
-            if (!plan) return guideQuestion(query);
+            return plan ? planRow(plan) : guideQuestion(query);
+        }
+        // The palette's row for a plain command's `plan`.
+        function planRow(plan) {
             const { target } = plan;
             const predicate = target.kind === 'part'
                 ? (brick) => brickPart(brick.definitionId, registry.get(brick.definitionId)) === target.part
@@ -1471,23 +1474,21 @@ export default {
             documentVersion.value++;
         }
 
-        // Voice building: what was said, done as the palette would do it.
+        // Voice building: what was said, done as the palette would do it
+        // (core/voice/EditorVoiceCommand.js, which
+        // scripts/evaluate-voice-commands.mjs measures): a plain command, or
+        // an action by its name, the phrasings World View hears for undo and
+        // redo, or what it sounds like ("and do that" is Undo).
+        const voiceWords = editorVoiceWords({ vocabulary: plainVocabulary });
         function actOnVoice(text) {
-            const plan = planPlainCommand(text);
-            if (plan && !plan.heading) {
+            const command = interpretEditorCommand(text, { ...voiceWords, actions: actionRegistry.getAll() });
+            if (command?.kind === 'plain') {
+                const plan = planRow(command.plan);
                 if (!plan.enabled) return { kind: 'disabled', label: plan.label, reason: plan.reason };
                 plan.run();
                 return { kind: 'done', label: plan.label };
             }
-            // By its name, by the phrasings World View hears for undo and
-            // redo, or by what it sounds like ("and do that" is Undo).
-            const action = actionSaid(text, actionRegistry.getAll().filter(({ id }) => id !== 'ui.voice'), {
-                toText: t,
-                aliases: {
-                    'history.undo': splitWordList(t('worldVoice.words.undo')),
-                    'history.redo': splitWordList(t('worldVoice.words.redo'))
-                }
-            });
+            const action = command?.action;
             if (action) {
                 const context = getActionContext();
                 if (!action.enabled(context)) {
@@ -1496,7 +1497,7 @@ export default {
                 actionRegistry.execute(action.id, context);
                 return { kind: 'done', label: t(action.label) };
             }
-            return plan ? { kind: 'question' } : { kind: 'unknown' };
+            return guideQuestion(text) ? { kind: 'question' } : { kind: 'unknown' };
         }
         const voiceCommands = useVoiceCommands({ act: actOnVoice });
         function askGuideAbout(question) {

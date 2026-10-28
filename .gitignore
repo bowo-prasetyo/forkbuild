@@ -66,3 +66,6 @@ Thumbs.db
 *.tar.bz2
 *.tar.xz
 *.tar.zst
+
+# Voice recordings made by scripts/synthesize-voice-corpus.mjs, or recorded to measure voice building
+voice-corpus/

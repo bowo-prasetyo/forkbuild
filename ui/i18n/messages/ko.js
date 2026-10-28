@@ -616,6 +616,7 @@ export default Object.freeze({
     'voice.title': '음성',
     'voice.intro': '“지붕을 빨갛게 칠해”, “창문을 모두 선택”, “실행 취소”처럼 할 일을 말해 보세요. 작은 음성 모델(Whisper)이 이 기기에서 알아듣습니다. 말한 내용은 어디에도 보내지 않습니다.',
     'voice.download': '음성을 켜면 약 {size}를 한 번만 내려받습니다. 음성 모델은 Hugging Face에서, 실행 엔진은 jsDelivr에서 받습니다. 삭제할 때까지 이 브라우저에 남습니다.',
+    'voice.languageNote': '음성은 영어를 가장 잘 알아듣습니다. 한국어에서는 작은 음성 모델이 아직 많은 명령을 잘못 알아들어서, 아무 일도 일어나지 않을 수 있습니다. 다시 말하거나 직접 해 주세요.',
     'voice.turnOn': '음성 켜기',
     'voice.notNow': '나중에',
     'voice.downloading': '음성 모델 내려받는 중… {percent}%',

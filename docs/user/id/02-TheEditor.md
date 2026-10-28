@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: b07dea3a1e4b6d8c -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 932ce3b7a104064f -->
 # 02 — Editor
 
 <!-- languages -->
@@ -864,6 +864,14 @@ koneksi sesudahnya. Apa yang Anda ucapkan direkam dan dipahami di perangkat
 Anda dan tidak pernah dikirim (lihat [Privasi](Privacy.md)). **Matikan
 suara** dan **Hapus model suara** ada di panel suara setelah setiap perintah.
 Ia mendengar bahasa yang dipakai ForkBuild.
+
+Ia paling baik memahami bahasa Inggris. Dalam bahasa lain, model suara kecil
+ini masih sering salah dengar, dan suara mengatakannya sebelum Anda
+menyalakannya; perintah yang salah dengar biasanya tidak melakukan apa-apa,
+jadi ucapkan lagi atau lakukan secara manual. Saat diucapkan, perintah hanya
+berlaku pada yang Anda pilih jika Anda mengatakannya (*cat ini merah*): jika
+bagian yang Anda sebut salah dengar, perintah tidak melakukan apa-apa
+alih-alih mengecat atau menghapus pilihan Anda.
 
 Tampilan Dunia juga mendengarkan (lihat
 [Katakan ke mana pergi](03-WorldView.md#katakan-ke-mana-pergi-suara)). Model

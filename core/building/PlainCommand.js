@@ -61,7 +61,9 @@ function bestMatch(query, options, order, ignoredWords) {
 //     parts: { window, door, … }, colours: { roofRed, leaf, … }, ignoredWords }
 // each a list of words. `{ intent, target, colour }`: `target` is
 // `{ kind: 'part', part }`, `{ kind: 'everything' }` or
-// `{ kind: 'selection' }`; `colour` a palette id, for paint only. Null when
+// `{ kind: 'selection', said }`, `said` false when no word for the selection
+// was used and it is only what paint and delete fall back on; `colour` a
+// palette id, for paint only. Null when
 // it isn't one of these requests.
 export function interpretPlainCommand(query, vocabulary = {}) {
     if (typeof query !== 'string' || !query.trim()) return null;
@@ -80,7 +82,7 @@ export function interpretPlainCommand(query, vocabulary = {}) {
     let target = null;
     if (part) target = Object.freeze({ kind: 'part', part });
     else if (everything) target = Object.freeze({ kind: 'everything' });
-    else if (selection || intent !== 'select') target = Object.freeze({ kind: 'selection' });
+    else if (selection || intent !== 'select') target = Object.freeze({ kind: 'selection', said: selection });
     if (!target) return null;
 
     return Object.freeze({ intent, target, colour: intent === 'paint' ? colour : null });

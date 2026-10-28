@@ -372,10 +372,22 @@ the detailed references; in short:
   drops a transcript that is only such made-up words (the sign-offs and
   caption credits of `SILENCE_WORDS`, in every language the app speaks);
   ui/voice/useVoiceCommands.js asks before the first
-  download and hands what was said to the view. The Editor does it as the
-  command palette would: a plain command, an action said by its name (or, for
-  undo and redo, by World View's phrasings: `Transcript.js#actionSaid()`), or
-  Ask the guide for a question. World View reads it with
+  download (saying, in a language not in `Transcript.js#VOICE_HEARS_WELL`,
+  that voice hears English best) and hands what was said to the view. The
+  Editor does it as the command palette would (core/voice/EditorVoiceCommand.js,
+  words from ui/voice/editorVoiceWords.js): a plain command, an action said by
+  its name (or, for undo and redo, by World View's phrasings:
+  `Transcript.js#actionSaid()`), or Ask the guide for a question; spoken, a
+  plain command acts on the selection only when it says so
+  (core/building/PlainCommand.js's `target.said`), since a misheard part name
+  would otherwise paint or delete the selection. How well it hears is
+  measured by scripts/evaluate-voice-commands.mjs: recordings of
+  scripts/voiceCommandPhrases.mjs's phrases (synthetic ones from
+  scripts/synthesize-voice-corpus.mjs, or people's, in voice-corpus/, which
+  Git ignores), heard in Chromium as the app hears them and read by
+  scripts/voiceCommandOutcome.mjs as the app reads them, right, nothing or
+  wrong per language; tests/VoicePhrases.test.js checks that every phrase,
+  typed, is read right. World View reads it with
   core/voice/WorldVoiceCommand.js (words from ui/i18n/worldVoiceWords.js):
   go to a place named in Locations (or a build on a challenge plaza), Home,
   a camera view, sound off or on, undo, redo, or talk to a resident. When

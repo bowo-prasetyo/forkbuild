@@ -1,12 +1,16 @@
 import { byteSizeText } from '../i18n/sizeText.js';
-import { t } from '../i18n/i18n.js';
+import { currentLocale, t } from '../i18n/i18n.js';
+import { voiceHearsWell } from '../../core/voice/Transcript.js';
 import { SPEECH_DOWNLOAD_BYTES } from '../../application/voice/SpeechWorkerClient.js';
 
 // Voice building's panel over the 3D view of the Editor or World View
 // (ui/voice/useVoiceCommands.js): asking before the first download, the
 // download's progress, listening, what was heard and what was done, and
 // turning voice off or removing the speech model. `place` ('editor' or
-// 'world') picks the examples it gives. A screen reader hears each change.
+// 'world') picks the examples it gives. In a language the speech model isn't
+// measured to hear well (core/voice/Transcript.js#voiceHearsWell()), the
+// first ask says so before anything is downloaded. A screen reader hears each
+// change.
 export default {
     name: 'VoicePanel',
     props: {
@@ -15,13 +19,14 @@ export default {
     },
     emits: ['turn-on', 'turn-off', 'remove', 'toggle', 'ask-guide', 'close'],
     setup() {
-        return { t, downloadSize: byteSizeText(SPEECH_DOWNLOAD_BYTES) };
+        return { t, downloadSize: byteSizeText(SPEECH_DOWNLOAD_BYTES), hearsWell: () => voiceHearsWell(currentLocale().code) };
     },
     template: `
         <div v-if="voice.step !== 'off'" :class="['editor-voice', 'editor-voice--' + place]" role="region" :aria-label="t('voice.title')">
             <div class="editor-voice-body" aria-live="polite">
                 <template v-if="voice.step === 'intro'">
                     <p>{{ place === 'world' ? t('voice.introWorld') : t('voice.intro') }}</p>
+                    <p v-if="!hearsWell()" class="editor-voice-language">{{ t('voice.languageNote') }}</p>
                     <p class="editor-voice-quiet">{{ t('voice.download', { size: downloadSize }) }}</p>
                 </template>
                 <p v-else-if="voice.step === 'loading'">{{ voice.progress > 0 ? t('voice.downloading', { percent: voice.progress }) : t('voice.loading') }}</p>

@@ -615,6 +615,7 @@ export default Object.freeze({
     'voice.title': 'Voice',
     'voice.intro': 'Say what to do, like “paint the roof red”, “select all the windows” or “undo”. A small speech model (Whisper) understands you on this device: nothing you say is sent anywhere.',
     'voice.download': 'Turning voice on downloads about {size} once: the speech model from Hugging Face and its engine from jsDelivr. They stay in this browser until you remove them.',
+    'voice.languageNote': 'Voice hears English best. In this language the small speech model still mishears many commands, so one may do nothing: say it again, or do it by hand.',
     'voice.turnOn': 'Turn on voice',
     'voice.notNow': 'Not now',
     'voice.downloading': 'Downloading the speech model… {percent}%',

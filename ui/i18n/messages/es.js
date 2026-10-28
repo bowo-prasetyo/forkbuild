@@ -617,6 +617,7 @@ export default Object.freeze({
     'voice.title': 'Voz',
     'voice.intro': 'Diga qué hacer, como “pinta el techo de rojo”, “selecciona todas las ventanas” o “deshacer”. Un pequeño modelo de voz (Whisper) le entiende en este dispositivo: nada de lo que dice se envía a ninguna parte.',
     'voice.download': 'Activar la voz descarga una sola vez unos {size}: el modelo de voz desde Hugging Face y su motor desde jsDelivr. Se quedan en este navegador hasta que los quite.',
+    'voice.languageNote': 'La voz entiende mejor el inglés. En español, el pequeño modelo de voz aún entiende mal muchas órdenes, así que alguna puede no hacer nada: dígala otra vez o hágalo a mano.',
     'voice.turnOn': 'Activar la voz',
     'voice.notNow': 'Ahora no',
     'voice.downloading': 'Descargando el modelo de voz… {percent} %',

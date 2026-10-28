@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: b07dea3a1e4b6d8c -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 932ce3b7a104064f -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -898,6 +898,13 @@ conexión. Lo que dice se graba y se entiende en su dispositivo, y nunca se
 envía (vea [Privacidad](Privacy.md)). **Desactivar la voz** y **Quitar el
 modelo de voz** están en el panel de voz después de cada comando. Oye el
 idioma en que se muestra ForkBuild.
+
+Entiende mejor el inglés. En los demás idiomas, el pequeño modelo de voz aún
+entiende mal muchas órdenes, y la voz lo dice antes de que la active; una
+orden mal entendida suele no hacer nada, así que dígala otra vez o hágalo a
+mano. Dicha en voz alta, una orden actúa sobre lo que tiene seleccionado
+solo cuando lo dice (*pinta esto de rojo*): si la parte que nombró se
+entiende mal, no hace nada en lugar de pintar o borrar su selección.
 
 La vista del mundo también escucha (vea
 [Decir adónde ir](03-WorldView.md#decir-adónde-ir-voz)). El modelo de voz

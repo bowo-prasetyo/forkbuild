@@ -46,7 +46,9 @@ function hex(buffer) {
 
 // `engineLoaderUrl` is the address of this site's copy of the engine's loader
 // (SPEECH_ENGINE_LOADER in application/voice/SpeechWorkerClient.js): a worker
-// has no page to resolve it against, so the page hands it over.
+// has no page to resolve it against, so the page hands it over. `model` is
+// another speech model to load, unpinned, for scripts/evaluate-voice-commands.mjs
+// to measure; the app always loads SPEECH_MODEL, pinned.
 export class SpeechRuntime {
     constructor({
         importLibrary = () => import('../../vendor/transformers/transformers.min.js'),
@@ -56,9 +58,12 @@ export class SpeechRuntime {
         engine = SPEECH_ENGINE,
         modelRevision = SPEECH_MODEL_REVISION,
         modelFiles = SPEECH_MODEL_FILES,
-        engineLoaderUrl
+        engineLoaderUrl,
+        model = SPEECH_MODEL
     } = {}) {
-        this._modelRevision = modelRevision;
+        this._model = model;
+        // Only SPEECH_MODEL has a pin.
+        this._modelRevision = model === SPEECH_MODEL ? modelRevision : null;
         this._modelFiles = modelFiles;
         this._importLibrary = importLibrary;
         this._fetch = fetchResource;
@@ -120,7 +125,7 @@ export class SpeechRuntime {
         if (pinned) {
             // Every file of the model held to its pin, downloaded or cached.
             const pinnedFiles = new PinnedModelFiles({
-                model: SPEECH_MODEL,
+                model: this._model,
                 revision: this._modelRevision,
                 files: this._modelFiles,
                 host: env.remoteHost || 'https://huggingface.co/',
@@ -134,7 +139,7 @@ export class SpeechRuntime {
             env.useCustomCache = true;
             env.customCache = pinnedFiles.cache;
         }
-        this._recognize = await pipeline('automatic-speech-recognition', SPEECH_MODEL, {
+        this._recognize = await pipeline('automatic-speech-recognition', this._model, {
             device: 'wasm',
             dtype: 'q8',
             ...(pinned ? { revision: this._modelRevision } : {}),
