@@ -45,6 +45,8 @@ export function useSelectionActions({
         refreshSelectedPlacementInfo();
         if (result.blocked) {
             feedback.show(t('editor.positionOccupied'));
+        } else if (result.turnBlocked) {
+            // A blocked turn has already said so (EditorView's onPlacementBlocked).
         } else if (result.moved || result.rotated) {
             feedback.show(t('editor.instanceUpdated'));
         }

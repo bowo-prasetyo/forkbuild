@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2ee1e50a637a34bd -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1c85e2e33e2425a8 -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -611,6 +611,11 @@ Auswahlwerkzeug (`1`) aus, und die Seitenleiste zeigt:
 | **Duplizieren** (`Strg/Cmd+D`) | Eine weitere Instanz derselben Struktur platzieren |
 | **Löschen** | Diese Instanz entfernen — das Ursprungsbauwerk bleibt unberührt |
 | **Ursprungsbauwerk bearbeiten** | Das referenzierte Bauwerk selbst öffnen, um zu ändern, wie jede seiner Instanzen aussieht |
+
+**Drehen ↻ / ↺**, `R` und das Feld **Drehung °** drehen eine Instanz nur, wo
+sie Platz hat: Eine Drehung, die in etwas hineinführen würde, lässt sie, wie
+sie war, mit einem Ton und einer Meldung. (Der Gizmo zeigt eine blockierte
+Drehung rot und nimmt sie zurück.)
 
 Der *Inhalt* einer platzierten Struktur wird immer über ihr Ursprungsbauwerk
 bearbeitet — die Steine einer Instanz lassen sich nicht direkt bearbeiten,

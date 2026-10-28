@@ -1218,6 +1218,7 @@ export default Object.freeze({
     'editor.placeHint': 'Pase el puntero sobre el suelo, R para girar, haga clic para colocar.',
     'editor.placementBlocked': 'Aquí hay algo en medio. Pruebe otro sitio, o pulse R para girarlo.',
     'editor.touchPlacementBlocked': 'Aquí hay algo en medio. Pruebe otro sitio, o toque Girar para girarlo.',
+    'editor.turnBlocked': 'Hay algo en el camino de ese giro. Muévalo primero a un sitio más despejado.',
     'editor.seeInside': 'Ver por dentro',
     'editor.seeInsideOff': 'Mostrarla entera',
     'editor.seeInsideHint': 'Ocultar la construcción por encima de la planta baja, para ver sus habitaciones y construir dentro. No se quita nada.',

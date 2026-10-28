@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2ee1e50a637a34bd -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1c85e2e33e2425a8 -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -581,6 +581,11 @@ a barra lateral mostra:
 | **Duplicar** (`Ctrl/Cmd+D`) | Posicionar outra instância da mesma estrutura |
 | **Excluir** | Remover esta instância — a construção de origem não é afetada |
 | **Editar construção de origem** | Abrir a própria construção referenciada, para mudar a aparência de todas as instâncias dela |
+
+**Girar ↻ / ↺**, `R` e o campo **Rotação °** só giram uma instância onde ela
+cabe: um giro que a faria bater em algo a deixa como estava, com um som e
+uma mensagem avisando. (O gizmo mostra um giro bloqueado em vermelho e o
+desfaz.)
 
 Editar o *conteúdo* de uma estrutura posicionada sempre se faz editando o
 construção de origem — não há como editar diretamente os blocos de uma

@@ -1685,7 +1685,11 @@ export default {
             startSound();
             // A click on a blocked spot (the ghost tinted red) is said here and
             // heard through the sound service, so it isn't taken for a missed click.
-            unsubPlacementBlocked = editorSession.onPlacementBlocked(() => {
+            unsubPlacementBlocked = editorSession.onPlacementBlocked((blocked) => {
+                if (blocked && blocked.kind === 'turn') {
+                    feedback.show(t('editor.turnBlocked'));
+                    return;
+                }
                 feedback.show(t(touchInput.value ? 'editor.touchPlacementBlocked' : 'editor.placementBlocked'));
             });
             unsubHolding = [

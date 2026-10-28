@@ -1218,6 +1218,7 @@ export default Object.freeze({
     'editor.placeHint': 'Passe o cursor sobre o chão, R para girar, clique para colocar.',
     'editor.placementBlocked': 'Tem algo no caminho aqui. Tente outro lugar, ou aperte R para girar.',
     'editor.touchPlacementBlocked': 'Tem algo no caminho aqui. Tente outro lugar, ou toque em Girar para girar.',
+    'editor.turnBlocked': 'Tem algo no caminho desse giro. Mova primeiro para um lugar mais livre.',
     'editor.seeInside': 'Ver por dentro',
     'editor.seeInsideOff': 'Mostrar inteira',
     'editor.seeInsideHint': 'Esconder a construção acima do térreo, para ver os cômodos e construir neles. Nada é removido.',
