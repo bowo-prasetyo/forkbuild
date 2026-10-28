@@ -7,7 +7,8 @@ import { toCssHex, fromCssHex } from '../../core/building/ColorHex.js';
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 import { normalizeQuery, searchLibrary, textMatches } from '../../core/library/LibrarySearch.js';
 import { libraryCategoryName, libraryItemDescription, libraryItemName, libraryItemWords, librarySearchIgnoredWords } from '../i18n/libraryText.js';
-import { t } from '../i18n/i18n.js';
+import { formatNumber, t } from '../i18n/i18n.js';
+import { brickSizeLabel } from '../../core/building/BrickSize.js';
 
 // Exported (not just module-local) so tests/BuildLibraryUX.test.js can
 // exercise the actual matching rule directly. matches() is search's first
@@ -369,6 +370,8 @@ export default {
         'inspect-structure', 'fork-to-library'
     ],
     setup(props, { emit }) {
+        // Width × depth × height, in grid units (core/building/BrickSize.js).
+        const brickSize = (definition) => brickSizeLabel(definition, (value) => formatNumber(value, { maximumFractionDigits: 2 }));
         const activeTab = ref('bricks');
         const query = ref('');
         // 0.4.5 — Unified Build Placement. Which structure's secondary
@@ -739,7 +742,7 @@ export default {
         const hasPersonalStructures = computed(() => (props.personalStructureGroups || []).some((group) => group.structures.length > 0));
 
         return {
-            t, libraryItemName, libraryItemDescription, libraryCategoryName, brickSectionName,
+            t, libraryItemName, libraryItemDescription, libraryCategoryName, brickSectionName, brickSize,
             root, brickFocusId, brickTabStopId, onBrickKeydown, structureFocusKey, structureTabStopKey, onStructureNavigate, focusFirstResult,
             hasPersonalStructures,
             activeTab,
@@ -835,6 +838,7 @@ export default {
                             >
                                 <BuildLibraryPreview kind="brick" :item="definition" :preview-service="previewService" />
                                 <span class="palette-item-name">{{ libraryItemName(definition) }}</span>
+                                <span class="palette-item-size">{{ brickSize(definition) }}</span>
                             </button>
                         </li>
                     </ul>

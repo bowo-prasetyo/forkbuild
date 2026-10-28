@@ -9425,3 +9425,27 @@ and scrolling down to the bricks took the tool switch, the hint and the library'
 - Tests: tests/EditorSidebarLibraryBrowser.test.js, with the shipped CSS (only what's under the head scrolls; scrolled
   down, the tool switch doesn't move and the tabs and search stay pinned on top of the tiles; a focused tile scrolled
   out above comes back clear of the pinned head). Checked in the running app at 1366×768 and on an emulated iPhone 13.
+
+## Library previews you can tell apart (unnumbered, 2026-10-28)
+
+**Building: telling pieces apart.** Finding P2-9 of
+[the Editor placement audit](../reviews/EditorPlacementUX-2026-10-27.md): the Build Library's previews were 32 px and
+every piece was scaled to fill its square, so the Cube, Half Cube and Block 2×2 looked almost the same, a Plate 1×1
+looked as big as a Plate 2×4, and long structure names were cut off ("Garden Cott…").
+
+- **56 px previews** in the Build Library, for bricks and structures (css/main/editor-sidebar.css).
+- **Small bricks look small.** Each brick is framed as if it were at least 1.5 grid units on every side
+  (`BRICK_FRAME_SIZE` in application/editor/LibraryPreviewService.js, the new `minSize` of
+  core/catalog/PreviewCameraFraming.js), so pieces up to that size keep their sizes relative to each other: a Cube shows
+  smaller than a Block 2×2, a Half Cube lower than a Cube. Bigger pieces and structures still fill their frame.
+- **Each brick says its size** under its name: width × depth × height in grid units, footprint smaller side first,
+  quarters and halves as fractions (core/building/BrickSize.js): the Cube 1×1×1, the Half Cube 1×1×½, the Plate 2×4
+  2×4×¼. Other decimals follow the language's own decimal mark.
+- **Structure names are whole**, wrapping onto a second line instead of being cut off. Structures stay a one-column
+  list rather than a grid, so their names have the room.
+- The user guide's *Bricks* entry says so, in all eight languages.
+- Tests: tests/BrickSize.test.js (sizes, fractions, the caller's decimal mark, every brick has one);
+  tests/PreviewCameraFraming.test.js 11-14 (a minimum frames a cube and a 1×1 plate alike and leaves a bigger box as
+  it was); tests/BuildLibraryUX.test.js Section C.6 (bricks are framed at the shared minimum, structures as
+  themselves); tests/EditorSidebarLibraryBrowser.test.js 4 (56 px previews, the Half Cube reads 1×1×½, no tile
+  overflows, no structure name is cut). Checked in the running app at 1366×768 and on an emulated iPhone 13.

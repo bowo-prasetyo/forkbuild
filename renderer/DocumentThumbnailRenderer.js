@@ -88,7 +88,8 @@ export class DocumentThumbnailRenderer {
     // are, underneath, "some bricks, framed and rendered" — this method
     // is that shared operation; renderDocument() is now a two-line
     // adapter over it, not a second implementation.
-    renderBricks(bricks) {
+    // `options.minSize`: see core/catalog/PreviewCameraFraming.js.
+    renderBricks(bricks, { minSize = 0 } = {}) {
         this._clearMeshes();
 
         for (const brick of bricks) {
@@ -102,7 +103,7 @@ export class DocumentThumbnailRenderer {
         // function; this class only ever applies whatever that
         // function decided, it never makes a framing choice of its own.
         const bounds = SpatialBounds.fromBricks(bricks, this._registry);
-        const framing = computeThumbnailCamera(bounds);
+        const framing = computeThumbnailCamera(bounds, { minSize });
         this._camera.fov = framing.fovDegrees;
         this._camera.position.set(framing.position.x, framing.position.y, framing.position.z);
         this._camera.lookAt(framing.target.x, framing.target.y, framing.target.z);

@@ -59,6 +59,9 @@ transform bricks, and how to organize your build with groups.
     hearth and a shelf, in Details) for the rooms you walk into, and a
     **Lantern** that lights up at night in World View (see
     [Day and night](03-WorldView.md#day-and-night)).
+    Small pieces look small in their pictures (a **Cube** looks smaller than
+    a **Block 2x2**), and each piece's size is written under its name: width
+    × depth × height in grid units (a **Half Cube** is 1×1×½).
     Click one to select it (and switch to the Place tool); a
     **Color** swatch then appears for choosing its color — see
     [Brick colors](#brick-colors) below.

@@ -549,10 +549,10 @@
     flex: 1;
     min-width: 0;
     font-size: 0.85rem;
+    line-height: 1.25;
     color: var(--ink-soft);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    /* The whole name, wrapped, never cut off ("Garden Cott…"). */
+    overflow-wrap: anywhere;
 }
 
 /* 0.4.5 — Unified Build Placement. Fork (and, for a personal Structure,

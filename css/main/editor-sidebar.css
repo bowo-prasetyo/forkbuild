@@ -258,6 +258,22 @@
     line-height: 1.2;
 }
 
+/* A brick's size under its name: width × depth × height (finding P2-9). */
+.palette-list--grid .palette-item-size {
+    margin-top: -0.15rem;
+    font-size: 0.65rem;
+    line-height: 1.1;
+    color: var(--ink-faint);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Previews big enough to tell pieces apart (finding P2-9). */
+.build-library .build-library-preview {
+    width: 56px;
+    height: 56px;
+    border-radius: 4px;
+}
+
 .editor-panel .selection-inspector-color-input {
     width: 0.9rem;
     height: 0.9rem;

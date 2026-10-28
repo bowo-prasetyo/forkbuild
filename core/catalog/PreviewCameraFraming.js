@@ -36,8 +36,16 @@ const ELEVATION_RADIANS = Math.atan(1 / Math.sqrt(2));
 // camera sitting on top of its own target.
 const MIN_RADIUS = 0.5;
 
-export function computeThumbnailCamera(bounds, { fovDegrees = DEFAULT_FOV_DEGREES, padding = DEFAULT_PADDING } = {}) {
-    const size = bounds.size;
+// `minSize` frames the box as if each side were at least that long, so a
+// set of small things framed alike keeps their sizes relative to each
+// other (the Build Library's bricks: a Cube shows half as big as a Block
+// 2x2) instead of each filling the frame. 0 frames the box itself.
+export function computeThumbnailCamera(bounds, { fovDegrees = DEFAULT_FOV_DEGREES, padding = DEFAULT_PADDING, minSize = 0 } = {}) {
+    const size = {
+        x: Math.max(bounds.size.x, minSize),
+        y: Math.max(bounds.size.y, minSize),
+        z: Math.max(bounds.size.z, minSize)
+    };
     const center = bounds.center;
 
     // The radius of the sphere that CIRCUMSCRIBES the AABB — using the

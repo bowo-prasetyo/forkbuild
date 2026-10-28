@@ -88,6 +88,23 @@ async function runTests() {
         assert(framing.fovDegrees === 60, '10. a custom fovDegrees option is honored and returned');
     }
 
+    // -------------------------------------------------------------
+    // 11. minSize frames small things alike, so they keep their sizes
+    //     relative to each other (the Build Library's bricks, finding
+    //     P2-9 of docs/reviews/EditorPlacementUX-2026-10-27.md); a box
+    //     bigger than it is framed as itself.
+    // -------------------------------------------------------------
+    {
+        const box = (x, y, z) => new SpatialBounds({ min: { x: 0, y: 0, z: 0 }, max: { x, y, z } });
+        const cube = computeThumbnailCamera(box(1, 1, 1), { minSize: 1.5 });
+        const plate = computeThumbnailCamera(box(1, 0.25, 1), { minSize: 1.5 });
+        const block = computeThumbnailCamera(box(2, 2, 2), { minSize: 1.5 });
+        assert(cube.distance === plate.distance, '11. a cube and a 1x1 plate are framed from the same distance, so the plate shows thinner');
+        assert(block.distance > cube.distance, '12. a 2x2 block, bigger than the minimum, is framed from further away');
+        assert(block.distance === computeThumbnailCamera(box(2, 2, 2)).distance, '13. and exactly as it would be without a minimum');
+        assert(computeThumbnailCamera(box(1, 1, 1)).distance < cube.distance, '14. without a minimum, a cube fills its frame');
+    }
+
     console.log('✅ All Preview Camera Framing tests passed.');
 }
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: bf41d96ddae684a1 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 5df87310a3ed33cb -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -65,7 +65,12 @@ ordnen.
     Zäunen, Bänken, Büschen und Kiefern, Möbeln für die Räume, die Sie
     betreten (ein Tisch, ein Bett, ein Herd und ein Regal, unter Details),
     und einer **Laterne**, die in der Weltansicht nachts leuchtet (siehe
-    [Tag und Nacht](03-WorldView.md#tag-und-nacht)). Klicken Sie auf eine, um sie auszuwählen
+    [Tag und Nacht](03-WorldView.md#tag-und-nacht)).
+    Kleine Teile sehen auf ihren Bildern klein aus (ein **Würfel** wirkt
+    kleiner als ein **Block 2x2**), und unter jedem Namen steht die Größe
+    des Teils: Breite × Tiefe × Höhe in Rastereinheiten (ein **Halber
+    Würfel** ist 1×1×½).
+    Klicken Sie auf eine, um sie auszuwählen
     (und zum Platzierwerkzeug zu wechseln); dann erscheint ein Farbfeld
     **Farbe** zum Wählen ihrer Farbe — siehe [Steinfarben](#steinfarben)
     unten.
