@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: cc26a2f709f6a59a -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1a92298c009cb9e8 -->
 # 02 — Editor
 
 <!-- languages -->
@@ -474,7 +474,7 @@ Baru — dengan dua tindakan tambahan di menu **⋮**-nya:
 | Tindakan | Fungsinya |
 |---|---|
 | **Ganti Nama** | Mengubah namanya (kategori dan deskripsinya tetap) |
-| **Hapus** | Menghapusnya dari pustaka Anda |
+| **Hapus** | Menghapusnya dari pustaka Anda; **Urungkan**, yang lalu muncul beberapa detik di bagian atas pustaka, mengembalikannya |
 
 **Struktur Saya** hanya menyimpan *struktur itu sendiri* — nama dan
 sekumpulan balok. Menghapus satu struktur tidak pernah menyentuh apa pun

@@ -363,7 +363,9 @@ export default {
                         @fork="forkStructure"
                         @place-structure="copyStructureIntoDocument"
                         @rename-personal-structure="renamePersonalStructure"
+                        :removed-structure-name="removedStructure ? removedStructure.name : ''"
                         @remove-personal-structure="removePersonalStructure"
+                        @undo-remove-personal-structure="undoRemovePersonalStructure"
                         @export-personal-structure="exportStructure"
                         @import-blueprint="importBlueprint"
                         @export-all-personal-structures="exportAllStructures"
@@ -1105,11 +1107,15 @@ export default {
             closeCreateBlueprintDialog, copyStructureIntoDocument, createBlueprintPreview, forkStructure,
             forkStructureToLibrary, onCreateBlueprint, personalSavedAtById, personalStructureGroups, recentStructures,
             refreshPersonalStructureGroups, removePersonalStructure, renamePersonalStructure,
-            showCreateBlueprintDialog, structureGroups
+            showCreateBlueprintDialog, structureGroups, removedStructure, dismissRemovedStructure, undoRemovePersonalStructure
         } = useStructureLibrary({
             editorSession, feedback, libraryUsageHistoryStore, personalStructureLibraryStore, structureRegistry,
             // Read when a structure is picked, after touchInput below is set.
-            isTouch: () => touchInput.value
+            isTouch: () => touchInput.value,
+            isRemovedNoticeInUse: () => {
+                const notice = document.querySelector('.build-library-undo');
+                return Boolean(notice && (notice.matches(':hover') || notice.contains(document.activeElement)));
+            }
         });
 
         const {
@@ -1994,6 +2000,7 @@ export default {
         });
 
         onBeforeUnmount(() => {
+            dismissRemovedStructure();
             unwatchStarterJob?.();
             unwatchSeeInside?.();
             unwatchFirstEdit?.();
@@ -2101,6 +2108,8 @@ export default {
             copyStructureIntoDocument,
             renamePersonalStructure,
             removePersonalStructure,
+            removedStructure,
+            undoRemovePersonalStructure,
             exportStructure,
             exportDocument,
             modelExportOpen, exportModel,

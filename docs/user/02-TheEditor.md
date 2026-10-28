@@ -443,7 +443,7 @@ extra actions in its **⋮** menu:
 | Action | What it does |
 |---|---|
 | **Rename** | Change its name (its category and description stay as they are) |
-| **Remove** | Delete it from your library |
+| **Remove** | Delete it from your library; **Undo**, which then shows for a few seconds at the top of the library, puts it back |
 
 **My Structures** only ever stores the *structure itself* — a name and a set
 of bricks. Removing one never touches anything you already built with it:

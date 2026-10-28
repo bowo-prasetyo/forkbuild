@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: cc26a2f709f6a59a -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1a92298c009cb9e8 -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -470,7 +470,7 @@ construção — com duas ações extras no menu **⋮**:
 | Ação | O que faz |
 |---|---|
 | **Renomear** | Muda o nome (a categoria e a descrição continuam como estão) |
-| **Remover** | Exclui a estrutura da sua biblioteca |
+| **Remover** | Exclui a estrutura da sua biblioteca; **Desfazer**, que aparece por alguns segundos no alto da biblioteca, a devolve |
 
 **Minhas estruturas** só guarda a *estrutura em si* — um nome e um conjunto
 de blocos. Remover uma nunca afeta nada que você já construiu com ela: todo

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: cc26a2f709f6a59a -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1a92298c009cb9e8 -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -498,7 +498,7 @@ Remezclar como construcción nueva), con dos acciones adicionales en su menú
 | Acción | Qué hace |
 |---|---|
 | **Cambiar nombre** | Cambia su nombre (su categoría y su descripción quedan como están) |
-| **Quitar** | La elimina de su biblioteca |
+| **Quitar** | La elimina de su biblioteca; **Deshacer**, que aparece unos segundos arriba en la biblioteca, la devuelve |
 
 **Mis estructuras** solo guarda la *estructura en sí*: un nombre y un
 conjunto de bloques. Quitar una nunca afecta nada de lo que ya construyó

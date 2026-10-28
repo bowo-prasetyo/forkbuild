@@ -675,6 +675,30 @@
     border-bottom: 1px solid var(--line);
 }
 
+/* Undo, after a structure is removed from My Structures. */
+.build-library-undo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.5rem;
+    border: 1px solid var(--line-strong);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    background: var(--surface);
+    font-size: 0.78rem;
+    color: var(--ink);
+}
+
+.build-library-undo-text {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.build-library-undo-btn {
+    flex-shrink: 0;
+}
+
 /* A tile or card reached from the keyboard scrolls in clear of that head. */
 .brick-palette *,
 .structure-library-panel * {

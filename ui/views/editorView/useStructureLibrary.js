@@ -4,8 +4,12 @@ import { libraryItemName } from '../../i18n/libraryText.js';
 
 // The Build Library's structures: built-in and personal groups, recently used, and the
 // actions that rename, remove, fork, place or create a personal Structure.
+// How long Undo is offered after a structure is removed from My Structures.
+export const REMOVED_NOTICE_MS = 10000;
+
 export function useStructureLibrary({
-    editorSession, feedback, libraryUsageHistoryStore, personalStructureLibraryStore, structureRegistry, isTouch = () => false
+    editorSession, feedback, libraryUsageHistoryStore, personalStructureLibraryStore, structureRegistry, isTouch = () => false,
+    isRemovedNoticeInUse = () => false, removedNoticeMs = REMOVED_NOTICE_MS
 }) {
     // Built-in structures never change at runtime, so this is read once.
     const structureGroups = ref(structureRegistry.groupByCategory());
@@ -54,12 +58,50 @@ export function useStructureLibrary({
         feedback.show(t('editor.structureRenamed', { name: name.trim() }));
     }
 
+    // The last structure removed, until it is put back, another is removed, or
+    // the notice times out: removing is one click, and Undo in the library's
+    // header puts it back as it was (docs/reviews/EditorPlacementUX-2026-10-27.md, P2-13).
+    const removedStructure = ref(null);
+    let removedTimer = null;
+    function clearRemovedTimer() {
+        if (removedTimer !== null) clearTimeout(removedTimer);
+        removedTimer = null;
+    }
+    function dismissRemovedStructure() {
+        clearRemovedTimer();
+        removedStructure.value = null;
+    }
+    // Kept while the pointer or the focus is on the notice, so Undo never goes
+    // from under a hand reaching for it.
+    function armRemovedTimer() {
+        clearRemovedTimer();
+        removedTimer = setTimeout(() => {
+            removedTimer = null;
+            if (isRemovedNoticeInUse()) armRemovedTimer();
+            else removedStructure.value = null;
+        }, removedNoticeMs);
+    }
+
     function removePersonalStructure(structure) {
         // Removing from the library never touches documents that already used it.
+        const savedAt = personalStructureLibraryStore.getSavedAtById()[structure.id];
         personalStructureLibraryStore.removeStructure(structure.id);
         refreshPersonalStructureGroups();
         refreshRecentStructures();
-        feedback.show(t('editor.structureRemoved', { name: libraryItemName(structure) }));
+        removedStructure.value = { structure, savedAt, name: libraryItemName(structure) };
+        armRemovedTimer();
+    }
+
+    // Puts the last removed structure back, with its id and its saved time, so
+    // it returns to its place in the list and in recently used.
+    function undoRemovePersonalStructure() {
+        const removed = removedStructure.value;
+        dismissRemovedStructure();
+        if (!removed) return;
+        personalStructureLibraryStore.addStructure(removed.structure, { savedAt: removed.savedAt });
+        refreshPersonalStructureGroups();
+        refreshRecentStructures();
+        feedback.show(t('editor.structureRestored', { name: removed.name }));
     }
 
     function forkStructure(structure) {
@@ -116,7 +158,7 @@ export function useStructureLibrary({
     return {
         closeCreateBlueprintDialog, copyStructureIntoDocument, createBlueprintPreview, forkStructure,
         forkStructureToLibrary, onCreateBlueprint, personalSavedAtById, personalStructureGroups, recentStructures,
-        refreshPersonalStructureGroups, removePersonalStructure, renamePersonalStructure, showCreateBlueprintDialog,
-        structureGroups
+        refreshPersonalStructureGroups, removePersonalStructure, removedStructure, dismissRemovedStructure,
+        undoRemovePersonalStructure, renamePersonalStructure, showCreateBlueprintDialog, structureGroups
     };
 }

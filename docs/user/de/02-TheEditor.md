@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: cc26a2f709f6a59a -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1a92298c009cb9e8 -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -495,7 +495,7 @@ Menü **⋮**:
 | Aktion | Was sie tut |
 |---|---|
 | **Umbenennen** | Den Namen ändern (Kategorie und Beschreibung bleiben, wie sie sind) |
-| **Entfernen** | Sie aus Ihrer Bibliothek löschen |
+| **Entfernen** | Sie aus Ihrer Bibliothek löschen; **Rückgängig**, das dann einige Sekunden oben in der Bibliothek erscheint, holt sie zurück |
 
 **Meine Strukturen** speichert immer nur die *Struktur selbst* — einen
 Namen und eine Menge Steine. Das Entfernen einer Struktur berührt nie
