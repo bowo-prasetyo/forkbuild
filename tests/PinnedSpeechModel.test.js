@@ -41,6 +41,9 @@ function fakeCaches() {
                 },
                 async delete(request) {
                     return store.delete(key(request));
+                },
+                async keys() {
+                    return [...store.keys()].map((url) => ({ url }));
                 }
             };
         },
@@ -147,6 +150,16 @@ const served = { 'config.json': config, 'onnx/encoder_model_quantized.onnx': enc
     assert(await store.match(urlOf('config.json')) === undefined, '12. ...and is thrown away, so the file is downloaded afresh');
     await cache.put(urlOf('processor_config.json'), new Response(config));
     assert(await store.match(urlOf('processor_config.json')) === undefined, '13. Nothing unpinned is kept');
+    // An earlier model's files, kept before SpeechModelPins.js named this one.
+    const earlier = `${HOST}onnx-community/whisper-tiny/resolve/ff4177021cc41f7db950912b73ea4fdf7d01d8e7/onnx/encoder_model_quantized.onnx`;
+    await store.put(earlier, new Response(new Uint8Array(8)));
+    await store.put(urlOf('config.json', 'abc123'), new Response(config));
+    await cache.put(urlOf('config.json'), new Response(config));
+    await pinned.forgetOthers();
+    assert(await store.match(earlier) === undefined && await store.match(urlOf('config.json', 'abc123')) === undefined,
+        '13a. An earlier model\'s files, or this one\'s at another commit, are deleted, so they don\'t stay in the browser');
+    assert(await store.match(urlOf('config.json')), '13b. ...and the pinned files stay');
+    await new PinnedModelFiles({ model: SPEECH_MODEL, revision: REVISION, files, host: HOST, caches: { open: async () => { throw new Error('blocked'); } }, cacheName: 'x', subtle: webcrypto.subtle }).forgetOthers();
     await cache.put(urlOf('config.json', 'main'), new Response(config));
     assert(await store.match(urlOf('config.json', 'main')) === undefined && await store.match(urlOf('config.json')) !== undefined
         && await cache.match(urlOf('config.json', 'main')) !== undefined,

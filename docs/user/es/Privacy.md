@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 1a6b0b8708e8925c -->
+<!-- translation-of: docs/Privacy.md source-hash: ca4e09d21f77cc11 -->
 # Privacidad
 
 <!-- languages -->
@@ -324,7 +324,7 @@ entiende en su dispositivo, y nunca se envía a ninguna parte.
 
 | Cuándo | Servidor (predeterminado) | Qué recibe |
 | --- | --- | --- |
-| Activa la voz en el Editor o en la vista del mundo (una vez, y de nuevo solo después de quitar sus archivos) | Hugging Face (`huggingface.co` y sus servidores de archivos), jsDelivr (`cdn.jsdelivr.net`) | solicitudes de los archivos del modelo de voz (`onnx-community/whisper-tiny`, una versión exacta) y del archivo WebAssembly del motor de voz (`onnxruntime-web`, una versión exacta); nunca nada de lo que dice |
+| Activa la voz en el Editor o en la vista del mundo (una vez, y de nuevo solo después de quitar sus archivos) | Hugging Face (`huggingface.co` y sus servidores de archivos), jsDelivr (`cdn.jsdelivr.net`) | solicitudes de los archivos del modelo de voz (`onnx-community/whisper-base`, una versión exacta) y del archivo WebAssembly del motor de voz (`onnxruntime-web`, una versión exacta); nunca nada de lo que dice |
 | La aplicación se abre en el sitio oficial, como mucho una vez al día (consulte «Recuento de visitantes») | GoatCounter (`forkbuild.goatcounter.com`) | una solicitud de imagen con una ruta fija, sin referente y sin cookie |
 | En el sitio oficial, copia o comparte un enlace a una construcción, abre un enlace compartido o copia en el Editor una construcción abierta desde uno (consulte «Recuento de visitantes») | GoatCounter (`forkbuild.goatcounter.com`) | una solicitud de imagen con una ruta fija que indica cuál de los tres momentos fue, sin referente y sin cookie |
 | Instala ForkBuild desde el sitio oficial (consulte «Recuento de visitantes») | GoatCounter (`forkbuild.goatcounter.com`) | una solicitud de imagen con la ruta fija `/e/installed`, sin referente y sin cookie |

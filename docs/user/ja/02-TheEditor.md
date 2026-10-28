@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 932ce3b7a104064f -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: fbeac6898411907a -->
 # 02 — エディター
 
 <!-- languages -->
@@ -778,7 +778,7 @@ glTF では copyright と extras に、STL ではヘッダーに、OBJ ではコ
 出ます。
 
 初めてのときは、音声をオンにすると何をダウンロードするかを説明します。
-一度だけ約 70 MB で、小さな音声モデル（Whisper）を Hugging Face から、その
+一度だけ約 107 MB で、小さな音声モデル（Whisper）を Hugging Face から、その
 エンジンを jsDelivr から取得します。どちらもこのブラウザーに残るので、
 その後はオフラインでも使えます。話した内容はこのデバイスで録音・聞き取り
 され、どこにも送られません（[プライバシー](Privacy.md) を参照）。

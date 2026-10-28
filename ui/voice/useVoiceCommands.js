@@ -1,5 +1,6 @@
 import { onBeforeUnmount, ref } from 'vue';
-import { TRANSCRIBE_TIMEOUT, speechSupported } from '../../application/voice/SpeechWorkerClient.js';
+import { SPEECH_ENGINE_SHARE, TRANSCRIBE_TIMEOUT, speechSupported } from '../../application/voice/SpeechWorkerClient.js';
+import { SPEECH_MODEL } from '../../application/voice/SpeechModelPins.js';
 import { cleanTranscript, whisperLanguage, withoutSilenceWords } from '../../core/voice/Transcript.js';
 import { prepareSpeech } from '../../core/voice/SpeechPreparation.js';
 import { startRecording } from './recordVoice.js';
@@ -13,7 +14,8 @@ import { currentLocale } from '../i18n/i18n.js';
 // the command palette offers; in World View, going places and the like
 // (core/voice/WorldVoiceCommand.js). The first time, it explains what
 // turning voice on downloads and asks; the choice is kept on this device,
-// for both views.
+// for both views, naming the model it was made for, so a new speech model
+// (another download) is asked about again.
 //
 // `state.value.step`: 'off' | 'intro' | 'loading' | 'ready' | 'listening' |
 // 'working' | 'result' | 'failed', with `progress` (0–100) while loading,
@@ -30,14 +32,14 @@ export function useVoiceCommands({ act, runtime = sharedSpeechRecognizer(), reco
 
     function readEnabled() {
         try {
-            return storage?.getItem(ENABLED_KEY) === 'yes';
+            return storage?.getItem(ENABLED_KEY) === SPEECH_MODEL;
         } catch {
             return false;
         }
     }
     function writeEnabled(on) {
         try {
-            if (on) storage?.setItem(ENABLED_KEY, 'yes');
+            if (on) storage?.setItem(ENABLED_KEY, SPEECH_MODEL);
             else storage?.removeItem(ENABLED_KEY);
         } catch {
             // Kept for this visit only.
@@ -52,9 +54,10 @@ export function useVoiceCommands({ act, runtime = sharedSpeechRecognizer(), reco
         show({ step: 'loading', progress: 0 });
         try {
             await runtime.load(({ phase, loaded, total }) => {
-                // The engine is the first ~40% of the download, the model the rest.
+                // The engine is the first part of the download, the model the rest.
                 const share = total > 0 ? Math.min(1, loaded / total) : 0;
-                show({ step: 'loading', progress: Math.round(phase === 'engine' ? share * 40 : 40 + share * 60) });
+                const engine = 100 * SPEECH_ENGINE_SHARE;
+                show({ step: 'loading', progress: Math.round(phase === 'engine' ? share * engine : engine + share * (100 - engine)) });
             });
             return true;
         } catch (error) {

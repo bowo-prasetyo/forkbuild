@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 932ce3b7a104064f -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: fbeac6898411907a -->
 # 02 — Editor
 
 <!-- languages -->
@@ -858,7 +858,7 @@ setiap tindakan yang disebut namanya. Pertanyaan (*bagaimana cara
 mengajak teman?*) menawarkan **Tanyakan ke panduan**.
 
 Pertama kali, ia menjelaskan apa yang diunduh saat suara dinyalakan, sekitar
-70 MB sekali saja: model suara kecil (Whisper) dari Hugging Face dan mesinnya
+107 MB sekali saja: model suara kecil (Whisper) dari Hugging Face dan mesinnya
 dari jsDelivr. Keduanya tetap di peramban ini, jadi suara bekerja tanpa
 koneksi sesudahnya. Apa yang Anda ucapkan direkam dan dipahami di perangkat
 Anda dan tidak pernah dikirim (lihat [Privasi](Privacy.md)). **Matikan

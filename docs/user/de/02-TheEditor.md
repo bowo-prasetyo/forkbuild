@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 932ce3b7a104064f -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: fbeac6898411907a -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -890,7 +890,7 @@ und jede Aktion, die Sie beim Namen nennen. Eine Frage (*Wie lade ich einen
 Freund ein?*) bietet **Das Handbuch fragen** an.
 
 Beim ersten Mal erklärt es, was das Einschalten herunterlädt, einmalig etwa
-70 MB: ein kleines Sprachmodell (Whisper) von Hugging Face und seine
+107 MB: ein kleines Sprachmodell (Whisper) von Hugging Face und seine
 Laufzeit von jsDelivr. Beides bleibt in diesem Browser, sodass die
 Sprachsteuerung danach auch offline funktioniert. Was Sie sagen, wird auf
 Ihrem Gerät aufgenommen und erkannt und nie gesendet (siehe

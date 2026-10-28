@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 932ce3b7a104064f -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: fbeac6898411907a -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -850,7 +850,7 @@ Ele entende os mesmos pedidos que [Comandos com suas palavras](#comandos-com-sua
 e qualquer ação dita pelo nome. Uma pergunta (*como convido um amigo?*) oferece
 **Perguntar ao guia**.
 
-Na primeira vez, ele explica o que ligar a voz baixa, cerca de 70 MB uma
+Na primeira vez, ele explica o que ligar a voz baixa, cerca de 107 MB uma
 única vez: um pequeno modelo de voz (Whisper) do Hugging Face e o motor dele
 do jsDelivr. Eles ficam neste navegador, então depois a voz funciona sem
 conexão. O que você diz é gravado e entendido no seu dispositivo e nunca é

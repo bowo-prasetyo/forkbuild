@@ -313,7 +313,7 @@ understood on your device, and never sent anywhere.
 
 | When | Server (default) | What it receives |
 | --- | --- | --- |
-| You turn on voice building in the Editor or World View (once, and again only after removing its files) | Hugging Face (`huggingface.co` and its file servers), jsDelivr (`cdn.jsdelivr.net`) | requests for the speech model's files (`onnx-community/whisper-tiny`, one exact version) and the speech engine's WebAssembly file (`onnxruntime-web`, one exact version); never anything you say |
+| You turn on voice building in the Editor or World View (once, and again only after removing its files) | Hugging Face (`huggingface.co` and its file servers), jsDelivr (`cdn.jsdelivr.net`) | requests for the speech model's files (`onnx-community/whisper-base`, one exact version) and the speech engine's WebAssembly file (`onnxruntime-web`, one exact version); never anything you say |
 | The app opens on the official site, at most once a day (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with a fixed path, no referrer and no cookie |
 | On the official site, you copy or share a link to a build, open a shared link, or copy a build opened from one into the Editor (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with a fixed path naming which of the three it was, no referrer and no cookie |
 | You install ForkBuild from the official site (see "Visitor count") | GoatCounter (`forkbuild.goatcounter.com`) | one image request with the fixed path `/e/installed`, no referrer and no cookie |

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 1a6b0b8708e8925c -->
+<!-- translation-of: docs/Privacy.md source-hash: ca4e09d21f77cc11 -->
 # Confidentialité
 
 <!-- languages -->
@@ -339,7 +339,7 @@ dites est enregistré et compris sur votre appareil, et n’est jamais envoyé.
 
 | Quand | Serveur (par défaut) | Ce qu’il reçoit |
 | --- | --- | --- |
-| Vous activez la voix dans l’Éditeur ou la Vue du Monde (une fois, puis seulement après avoir supprimé ses fichiers) | Hugging Face (`huggingface.co` et ses serveurs de fichiers), jsDelivr (`cdn.jsdelivr.net`) | des demandes pour les fichiers du modèle vocal (`onnx-community/whisper-tiny`, une version précise) et le fichier WebAssembly du moteur vocal (`onnxruntime-web`, une version précise) ; jamais rien de ce que vous dites |
+| Vous activez la voix dans l’Éditeur ou la Vue du Monde (une fois, puis seulement après avoir supprimé ses fichiers) | Hugging Face (`huggingface.co` et ses serveurs de fichiers), jsDelivr (`cdn.jsdelivr.net`) | des demandes pour les fichiers du modèle vocal (`onnx-community/whisper-base`, une version précise) et le fichier WebAssembly du moteur vocal (`onnxruntime-web`, une version précise) ; jamais rien de ce que vous dites |
 | L’application s’ouvre sur le site officiel, au plus une fois par jour (voir « Comptage des visiteurs ») | GoatCounter (`forkbuild.goatcounter.com`) | une requête d’image avec un chemin fixe, sans référent et sans cookie |
 | Sur le site officiel, vous copiez ou partagez un lien vers une construction, ouvrez un lien partagé, ou copiez dans l’Éditeur une construction ouverte depuis un tel lien (voir « Comptage des visiteurs ») | GoatCounter (`forkbuild.goatcounter.com`) | une requête d’image avec un chemin fixe qui indique lequel des trois moments c’était, sans référent et sans cookie |
 | Vous installez ForkBuild depuis le site officiel (voir « Comptage des visiteurs ») | GoatCounter (`forkbuild.goatcounter.com`) | une requête d’image avec le chemin fixe `/e/installed`, sans référent et sans cookie |

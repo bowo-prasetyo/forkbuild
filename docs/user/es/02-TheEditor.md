@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 932ce3b7a104064f -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: fbeac6898411907a -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -891,7 +891,7 @@ lo mismo que [Comandos con sus propias palabras](#comandos-con-sus-propias-palab
 y cualquier acción dicha por su nombre. Una pregunta (*¿cómo invito a un
 amigo?*) ofrece **Preguntar a la guía**.
 
-La primera vez explica lo que descarga activar la voz, unos 70 MB una sola
+La primera vez explica lo que descarga activar la voz, unos 107 MB una sola
 vez: un pequeño modelo de voz (Whisper) desde Hugging Face y su motor desde
 jsDelivr. Se quedan en este navegador, así que después la voz funciona sin
 conexión. Lo que dice se graba y se entiende en su dispositivo, y nunca se

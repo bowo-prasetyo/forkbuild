@@ -799,7 +799,7 @@ what it did, in one step you can undo. It understands the same requests as
 [Commands in plain words](#commands-in-plain-words), and any action said by
 its name. A question (*how do I invite a friend?*) offers **Ask the guide**.
 
-The first time, it explains what turning voice on downloads, about 70 MB
+The first time, it explains what turning voice on downloads, about 107 MB
 once: a small speech model (Whisper) from Hugging Face and its engine from
 jsDelivr. They stay in this browser, so voice works offline afterwards. What
 you say is recorded and understood on your device and never sent anywhere
