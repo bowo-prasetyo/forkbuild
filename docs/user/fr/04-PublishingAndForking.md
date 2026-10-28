@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 487a84099ce93c78 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d06277fe319f2763 -->
 # 04 — Publier et remixer
 
 <!-- languages -->
@@ -510,9 +510,15 @@ Ce qui est comparé, et ce qu’il ne peut pas savoir :
   à vous n’est pas comparée : les petites constructions se ressemblent trop
   facilement.
 - Une brique compte comme identique quand c’est le même genre de brique au
-  même endroit, même si toute votre construction se trouve ailleurs ou est
-  tournée d’un quart de tour. Les couleurs, et l’orientation de chaque
+  même endroit, même si toute votre construction se trouve ailleurs, est tournée d’un quart de tour ou est en miroir. Les couleurs, et l’orientation de chaque
   brique, ne comptent pas.
+- Deux constructions se ressemblent quand la plus grande partie des deux est
+  identique, ou quand presque toute l’une (85 % ou plus) se retrouve dans
+  l’autre : une copie à laquelle on a ajouté ses propres briques est donc
+  remarquée aussi. Ce qu’elles ont en commun doit compter au moins 20 briques
+  d’au moins quatre genres : des murs, un sol ou une boîte d’un ou deux genres
+  de brique, ou les murs et le toit de deux petites maisons, se ressemblent
+  trop souvent par hasard pour dire quelque chose.
 - Vos propres constructions, toutes celles de l’arbre généalogique de la
   vôtre (celle dont elle est un remix, ses remix et tout autre remix de la
   même famille) et les constructions publiées après la première

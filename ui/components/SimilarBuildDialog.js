@@ -1,5 +1,6 @@
 import { License } from '../../core/document/License.js';
 import { t } from '../i18n/i18n.js';
+import { lookAlikeShare } from '../../core/catalog/BuildSimilarity.js';
 
 // Shown at publish when the build looks a lot like someone else's published
 // build on this device (application/publication/SimilarBuildFinder.js). It is
@@ -22,7 +23,14 @@ export default {
             const license = publication.license instanceof License ? publication.license : new License(publication.license || {});
             return license.forkAllowed;
         }
-        return { t, title, remixAllowed };
+        // How alike, as lookAlikeShare() says: most of both the same, or most
+        // of one standing in the other, and whether it was mirrored.
+        function howAlike(evidence) {
+            const { kind, percent, mirrored } = lookAlikeShare(evidence);
+            const share = t(kind === 'same' ? 'similarBuild.percent' : (kind === 'theirsInMine' ? 'similarBuild.theirsInYours' : 'similarBuild.yoursInTheirs'), { percent });
+            return mirrored ? t('similarBuild.mirrored', { how: share }) : share;
+        }
+        return { t, title, remixAllowed, howAlike };
     },
     mounted() {
         this.$el.querySelector('.similar-build-keep')?.focus();
@@ -52,7 +60,7 @@ export default {
                         <span class="similar-build-name">{{ match.publication.author
                             ? t('similarBuild.titleBy', { title: title(match.publication), author: match.publication.author })
                             : title(match.publication) }}</span>
-                        <span class="similar-build-percent">{{ t('similarBuild.percent', { percent: Math.round(match.evidence.similarity * 100) }) }}</span>
+                        <span class="similar-build-percent">{{ howAlike(match.evidence) }}</span>
                         <span class="similar-build-terms">{{ remixAllowed(match.publication) ? t('similarBuild.remixAllowed') : t('similarBuild.remixNotAllowed') }}</span>
                     </li>
                 </ul>

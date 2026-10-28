@@ -1,7 +1,7 @@
 import { ContentReference } from '../../core/document/ContentReference.js';
 import { DocumentSerializer } from '../../serializer/DocumentSerializer.js';
 import {
-    MIN_COMPARED_BRICKS, SIMILAR_BUILD_THRESHOLD, buildShape, compareBuildShapes, isSimilarBuild, similarityUpperBound, withoutReadyMade
+    MIN_COMPARED_BRICKS, SIMILAR_BUILD_THRESHOLD, buildShape, compareBuildShapes, couldBeSimilar, isSimilarBuild, withoutReadyMade
 } from '../../core/catalog/BuildSimilarity.js';
 import { placedBricks, worldBricks } from '../../core/building/PlacedBricks.js';
 
@@ -59,8 +59,8 @@ export class SimilarBuildFinder {
     }
 
     // For Publish: up to `limit` { publication, evidence } for `document`, most
-    // alike first. `readyMade` is the build's record of the bricks it was
-    // started with (application/document/ReadyMadeBricksStore.js), or null:
+    // alike first (moreAlike()). `readyMade` is the build's record of the
+    // bricks it was started with (application/document/ReadyMadeBricksStore.js), or null:
     // only the builder's own bricks count, so two builds started from the
     // same ready-made house don't look alike. Builds by any identity on this
     // device are the builder's own, and so are builds published after this
@@ -142,16 +142,16 @@ export class SimilarBuildFinder {
         for (const publication of candidates) {
             if (this._now() - startedAt > this._timeBudgetMs) break;
             const theirs = await this._shapeOf(publication);
-            if (!theirs || theirs.size < MIN_COMPARED_BRICKS || similarityUpperBound(mine, theirs) < this._threshold) continue;
+            if (!theirs || theirs.size < MIN_COMPARED_BRICKS || !couldBeSimilar(mine, theirs, this._threshold)) continue;
             const evidence = compareBuildShapes(mine, theirs);
             if (!isSimilarBuild(evidence, this._threshold)) continue;
             const found = best.get(publication.documentId);
-            if (!found || evidence.similarity > found.evidence.similarity) {
+            if (!found || moreAlike(evidence, found.evidence) < 0) {
                 best.set(publication.documentId, Object.freeze({ publication, evidence }));
             }
         }
         return [...best.values()]
-            .sort((a, b) => b.evidence.similarity - a.evidence.similarity || publishedTime(a.publication) - publishedTime(b.publication))
+            .sort((a, b) => moreAlike(a.evidence, b.evidence) || publishedTime(a.publication) - publishedTime(b.publication))
             .slice(0, this._limit);
     }
 
@@ -269,6 +269,15 @@ function remixFamilyIds(documentId, parentDocumentId, publications) {
         }
     }
     return family;
+}
+
+// Negative when evidence `a` says more strongly than `b` that two builds look
+// alike: by the larger of how much of both is the same and how much of either
+// stands in the other (so a copy with a garden added ranks with the copies it
+// is), then by how much of both is the same.
+function moreAlike(a, b) {
+    const strength = (evidence) => Math.max(evidence.similarity, evidence.theirsInMine || 0, evidence.mineInTheirs || 0);
+    return strength(b) - strength(a) || b.similarity - a.similarity;
 }
 
 function contentHashOf(publication) {

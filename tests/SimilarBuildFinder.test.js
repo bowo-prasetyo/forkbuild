@@ -27,6 +27,7 @@ function cottageBricks({ width = 6, dx = 0, kind = 'core:cube' } = {}) {
         }
     }
     bricks.push(new Brick({ definitionId: 'core:door', position: new Position(2 + dx, 1, 0) }));
+    bricks.push(new Brick({ definitionId: 'core:window_small', position: new Position(width - 2 + dx, 1.5, 4) }));
     for (let x = 0; x < width; x += 1) bricks.push(new Brick({ definitionId: 'core:beam', position: new Position(x + dx, 2.5, 2) }));
     return bricks;
 }
@@ -281,7 +282,7 @@ async function run() {
             && !loads.includes('untouched'), '32a. a build with too few bricks of its own never loads the library');
 
         const failing = finder({ readyMadeStructures: async () => { throw new Error('offline'); } });
-        assert((await failing.find(mine)).length === 1, '33. when the structures can\'t be loaded, builds are compared as before');
+        assert((await failing.find(mine)).some((match) => match.publication === theirs), '33. when the structures can\'t be loaded, builds are compared as before');
     }
     console.log('✓ ready-made structures don\'t make builds look alike');
 

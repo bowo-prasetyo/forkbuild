@@ -7,8 +7,18 @@
 // position). Its turn and colour are left out: rebuilding a build by eye
 // often turns a symmetric brick the other way or picks another colour, and a
 // recoloured copy is still a copy. Unlike BlueprintSimilarity, the two builds
-// are first lined up: a copy built two studs over, higher up, or turned a
-// quarter turn compares as what it is.
+// are first lined up: a copy built two studs over, higher up, turned a
+// quarter turn, or mirrored compares as what it is.
+//
+// Two builds are pointed out (isSimilarBuild()) when most of both is the
+// same (a Jaccard index), or when nearly all of the smaller stands in the
+// larger: a copy with a garden added is still a copy. Either way, what they
+// share must say something: walls, a floor or a block of one or two kinds of
+// brick turn up in many builds by chance, and so do the walls and roof of two
+// tiny homes for the same challenge, so a match made of fewer than
+// MIN_SHARED_KINDS kinds of brick is never pointed out. Every Build Library
+// structure and example build of 20 bricks or more has five or more.
+// scripts/evaluate-look-alikes.mjs measures these bars.
 //
 // Bricks of a ready-made structure from the Build Library, even one its
 // builder changed in part, can be taken out of a shape first
@@ -22,6 +32,14 @@ export const MIN_COMPARED_BRICKS = 20;
 // Shared bricks over all distinct bricks of both (a Jaccard index) at or
 // above which two builds are worth pointing out.
 export const SIMILAR_BUILD_THRESHOLD = 0.6;
+// The share of the smaller build's bricks standing in the larger at or above
+// which they are worth pointing out too, however much the larger added.
+export const CONTAINED_BUILD_THRESHOLD = 0.85;
+// How many kinds of brick the shared bricks must be to say anything: with
+// three, two tiny homes made apart were pointed out one time in twelve, and
+// a tiny home among a village of others one in nine; with four, one in a
+// hundred and none, while copies are still found.
+export const MIN_SHARED_KINDS = 4;
 
 const TURNS = Object.freeze([0, 90, 180, 270]);
 const PRECISION = 1000;
@@ -104,8 +122,10 @@ export function similarityUpperBound(mine, theirs) {
 }
 
 // A quarter turn about the vertical, as the Editor turns a selection
-// (application/editor/TransformMath.js: x' = cos·x − sin·z, z' = sin·x + cos·z).
-function turnPoint(point, turn) {
+// (application/editor/TransformMath.js: x' = cos·x − sin·z, z' = sin·x + cos·z),
+// after mirroring left to right (x' = −x) when `mirrored`.
+function turnPoint(point, turn, mirrored = false) {
+    if (mirrored) point = { definitionId: point.definitionId, x: rounded(-point.x), y: point.y, z: point.z };
     switch (turn) {
         case 90: return { definitionId: point.definitionId, x: rounded(-point.z), y: point.y, z: rounded(point.x) };
         case 180: return { definitionId: point.definitionId, x: rounded(-point.x), y: point.y, z: rounded(-point.z) };
@@ -203,37 +223,66 @@ function sharedKeys(mine, turned, offset) {
     return keys;
 }
 
-// `theirs` turned and moved onto `mine` the way that makes the most bricks
-// meet: `{ shared, turn, keys }`, `keys` being those of `mine` they meet.
-function bestAlignment(mine, theirs) {
-    let best = { shared: -1, turn: 0, keys: [] };
-    for (const turn of TURNS) {
-        const turned = theirs.points.map((point) => turnPoint(point, turn));
-        for (const offset of [...offsetsByVote(mine, turned), ...offsetsByCorner(mine, turned)]) {
-            const keys = sharedKeys(mine, turned, offset);
-            if (keys.length > best.shared) best = { shared: keys.length, turn, keys };
+// `theirs` turned (and, with `mirror`, mirrored) and moved onto `mine` the
+// way that makes the most bricks meet: `{ shared, turn, mirrored, keys }`,
+// `keys` being those of `mine` they meet. A mirrored line-up wins only when
+// it meets more, so a symmetric build is never called mirrored.
+function bestAlignment(mine, theirs, { mirror = false } = {}) {
+    let best = { shared: -1, turn: 0, mirrored: false, keys: [] };
+    for (const mirrored of mirror ? [false, true] : [false]) {
+        for (const turn of TURNS) {
+            const turned = theirs.points.map((point) => turnPoint(point, turn, mirrored));
+            for (const offset of [...offsetsByVote(mine, turned), ...offsetsByCorner(mine, turned)]) {
+                const keys = sharedKeys(mine, turned, offset);
+                if (keys.length > best.shared) best = { shared: keys.length, turn, mirrored, keys };
+            }
         }
     }
     return best;
 }
 
-// How alike `theirs` is to `mine` (two buildShape()s), lined up the way that
-// makes the most bricks meet: `similarity` (0 to 1, to two places), how many
-// bricks are `shared`, how many are only in each, and the quarter `turn` of
-// theirs that lines them up.
-export function compareBuildShapes(mine, theirs) {
-    if (!mine?.size || !theirs?.size) {
-        return Object.freeze({ similarity: 0, shared: 0, onlyMine: mine?.size || 0, onlyTheirs: theirs?.size || 0, turn: 0 });
+// How many of `keys` (pointKey()s) are of each kind of brick.
+function countByKind(keys) {
+    const counts = {};
+    for (const key of keys) {
+        const definitionId = key.split('|').slice(0, -3).join('|');
+        counts[definitionId] = (counts[definitionId] || 0) + 1;
     }
-    const best = bestAlignment(mine, theirs);
+    return counts;
+}
+
+// How alike `theirs` is to `mine` (two buildShape()s), lined up the way that
+// makes the most bricks meet, mirrored or not: `similarity` (0 to 1, to two
+// places), how many bricks are `shared`, how many are only in each, the
+// shares of each standing in the other (`theirsInMine`, `mineInTheirs`, 0 to
+// 1, to two places), the quarter `turn` of theirs that lines them up and
+// whether it was `mirrored` first, and how many kinds of brick the shared
+// bricks are (`sharedKinds`) and how many of each (`sharedByKind`).
+// `mirror: false` tries quarter turns only (the measuring script compares
+// with how it was before mirroring).
+export function compareBuildShapes(mine, theirs, { mirror = true } = {}) {
+    if (!mine?.size || !theirs?.size) {
+        return Object.freeze({
+            similarity: 0, shared: 0, onlyMine: mine?.size || 0, onlyTheirs: theirs?.size || 0,
+            theirsInMine: 0, mineInTheirs: 0, turn: 0, mirrored: false, sharedKinds: 0, sharedByKind: Object.freeze({})
+        });
+    }
+    const best = bestAlignment(mine, theirs, { mirror });
     const shared = Math.max(best.shared, 0);
     const union = mine.size + theirs.size - shared;
+    const share = (part, whole) => Math.round((part / whole) * 100) / 100;
+    const sharedByKind = countByKind(best.keys);
     return Object.freeze({
-        similarity: Math.round((shared / union) * 100) / 100,
+        similarity: share(shared, union),
         shared,
         onlyMine: mine.size - shared,
         onlyTheirs: theirs.size - shared,
-        turn: best.shared > 0 ? best.turn : 0
+        theirsInMine: share(shared, theirs.size),
+        mineInTheirs: share(shared, mine.size),
+        turn: best.shared > 0 ? best.turn : 0,
+        mirrored: best.shared > 0 && best.mirrored,
+        sharedKinds: Object.keys(sharedByKind).length,
+        sharedByKind: Object.freeze(sharedByKind)
     });
 }
 
@@ -290,7 +339,42 @@ function containedAtMost(part, whole) {
     return held;
 }
 
-// Whether `evidence` (compareBuildShapes()) is alike enough to point out.
-export function isSimilarBuild(evidence, threshold = SIMILAR_BUILD_THRESHOLD) {
-    return !!evidence && evidence.similarity >= threshold;
+// Whether `evidence` (compareBuildShapes()) is alike enough to point out:
+// most of both the same, or nearly all of the smaller standing in the larger,
+// and in either case at least MIN_COMPARED_BRICKS shared bricks of at least
+// MIN_SHARED_KINDS kinds. `policy` changes the bars, for the measuring script
+// (scripts/evaluate-look-alikes.mjs).
+export function isSimilarBuild(evidence, policy = {}) {
+    if (!evidence) return false;
+    const {
+        threshold = SIMILAR_BUILD_THRESHOLD,
+        containedThreshold = CONTAINED_BUILD_THRESHOLD,
+        minKinds = MIN_SHARED_KINDS
+    } = typeof policy === 'number' ? { threshold: policy } : policy;
+    if (evidence.shared < MIN_COMPARED_BRICKS || evidence.sharedKinds < minKinds) return false;
+    return evidence.similarity >= threshold || Math.max(evidence.theirsInMine, evidence.mineInTheirs) >= containedThreshold;
+}
+
+// What to say of `evidence` that was pointed out: `{ kind, percent,
+// mirrored }`, `kind` being 'same' when most of both is the same (`percent`
+// of all their bricks), or else 'theirsInMine' or 'mineInTheirs' (`percent`
+// of that build's bricks standing in the other).
+export function lookAlikeShare(evidence) {
+    const percent = (share) => Math.round(share * 100);
+    const mirrored = !!evidence?.mirrored;
+    if (!evidence || evidence.similarity >= SIMILAR_BUILD_THRESHOLD) return Object.freeze({ kind: 'same', percent: percent(evidence?.similarity || 0), mirrored });
+    return evidence.theirsInMine >= evidence.mineInTheirs
+        ? Object.freeze({ kind: 'theirsInMine', percent: percent(evidence.theirsInMine), mirrored })
+        : Object.freeze({ kind: 'mineInTheirs', percent: percent(evidence.mineInTheirs), mirrored });
+}
+
+// Whether two shapes could be pointed out at all, from their counts alone
+// (similarityUpperBound(), and the most of the smaller that could stand in
+// the larger): lets a caller skip the full comparison for builds that can't.
+export function couldBeSimilar(mine, theirs, policy = {}) {
+    if (!mine?.size || !theirs?.size) return false;
+    const { threshold = SIMILAR_BUILD_THRESHOLD, containedThreshold = CONTAINED_BUILD_THRESHOLD } = typeof policy === 'number' ? { threshold: policy } : policy;
+    const shared = containedAtMost(mine, theirs);
+    if (shared < MIN_COMPARED_BRICKS) return false;
+    return similarityUpperBound(mine, theirs) >= threshold || shared / Math.min(mine.size, theirs.size) >= containedThreshold;
 }
