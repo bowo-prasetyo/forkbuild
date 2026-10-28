@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 080ab27533db83cb -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: e675ae8b16b143cb -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -184,6 +184,12 @@ siguiente sitio.
 Un clic donde la vista previa está en rojo no coloca nada: el Editor dice
 que hay algo en medio y suena un golpe suave y grave, para que sepa que
 debe probar otro sitio o girar la pieza.
+
+Mientras Colocar está activo, una etiqueta arriba a la izquierda de la
+vista muestra lo que colocará un clic: su imagen, su nombre y, si es un
+bloque, su color. Haga clic en ella para elegir otra cosa en la Biblioteca
+de construcción (en un teléfono abre el cajón), o en **✕** para dejar de
+colocar.
 
 > **Consejo:** Presione **Escape** para volver a la herramienta
 > Seleccionar.

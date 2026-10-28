@@ -1,4 +1,4 @@
-import { ref, computed, onMounted, onBeforeUnmount, inject, watch } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, inject, watch, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { CreateBrickRegistryUseCase } from '../../application/editor/CreateBrickRegistryUseCase.js';
 import { CreateStructureRegistryUseCase } from '../../application/editor/CreateStructureRegistryUseCase.js';
@@ -36,6 +36,8 @@ import ActionFeedback from '../components/ActionFeedback.js';
 import RecoveryBanner from '../components/RecoveryBanner.js';
 import TransformFeedback from '../components/TransformFeedback.js';
 import EditorTouchActionBar from '../components/EditorTouchActionBar.js';
+import HoldingChip from '../components/HoldingChip.js';
+import { toCssHex } from '../../core/building/ColorHex.js';
 import { useMediaQuery, COMPACT_LAYOUT_QUERY, TOUCH_INPUT_QUERY } from '../composables/useMediaQuery.js';
 import { CreatePublisherUseCase } from '../../application/publisher/CreatePublisherUseCase.js';
 import { CreateDiscoveryUseCase } from '../../application/discovery/CreateDiscoveryUseCase.js';
@@ -119,7 +121,7 @@ const PLACING_TOOLS = new Set([ToolId.PLACE, ToolId.PLACE_STRUCTURE, ToolId.COMP
 
 export default {
     name: 'EditorView',
-    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, CommandPalette, KeyboardShortcutsOverlay, NewDocumentDialog, ActionFeedback, RecoveryBanner, DocumentInfoPanel, DescriptionReaderSheet, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback, ForkFailureDialog, EditorDistributionDialog, PublicationShareLink, ProtectIdentityNote, FirstBuildGuide, StarterJobCard, BuildPlotBanner, EditorTouchActionBar, SoundControl, ModelExportDialog, WalkTogetherDialog, LoginModal, BuildTogetherStrip, VoicePanel },
+    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, CommandPalette, KeyboardShortcutsOverlay, NewDocumentDialog, ActionFeedback, RecoveryBanner, DocumentInfoPanel, DescriptionReaderSheet, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback, ForkFailureDialog, EditorDistributionDialog, PublicationShareLink, ProtectIdentityNote, FirstBuildGuide, StarterJobCard, BuildPlotBanner, EditorTouchActionBar, HoldingChip, SoundControl, ModelExportDialog, WalkTogetherDialog, LoginModal, BuildTogetherStrip, VoicePanel },
     template: `
         <div class="editor-view">
             <h1 class="visually-hidden">{{ documentInfo ? t('editor.heading', { title: displayText(documentInfo.title) }) : t('app.nav.editor') }}</h1>
@@ -411,6 +413,17 @@ export default {
                         :style="{ left: marqueeRect.left + 'px', top: marqueeRect.top + 'px', width: marqueeRect.width + 'px', height: marqueeRect.height + 'px' }"
                     ></div>
                     <TransformFeedback :feedback="transformFeedback" />
+                    <!-- What a click or tap will place, while Place is on. -->
+                    <HoldingChip
+                        v-if="holding"
+                        :kind="holding.kind"
+                        :item="holding.item"
+                        :name="holding.name"
+                        :color="holding.color"
+                        :preview-service="libraryPreviewService"
+                        @open="openLibraryForHolding"
+                        @stop="cancelTouchPlacement"
+                    />
                     <div class="editor-view-tools">
                         <!-- See inside: the build cut away above its ground floor. -->
                         <button
@@ -786,6 +799,11 @@ export default {
         const activeTool = ref(editorContext.tool.activeTool);
         const selectionCount = ref(0);
         const activeStructureTitle = ref(editorContext.activeStructure.title);
+        // What the holding chip shows: the brick (and its colour) or the
+        // structure being placed, kept by their events (onMounted).
+        const activeBrickId = ref(editorContext.activeBrick.definitionId);
+        const activeBrickColor = ref(editorContext.activeBrick.color);
+        const activeCompositionStructure = ref(editorContext.activeComposition.structure);
         const activeCompositionTitle = ref(
             editorContext.activeComposition.structure ? editorContext.activeComposition.structure.name : null
         );
@@ -986,6 +1004,7 @@ export default {
         let unsubSelection = null;
         let unsubPlacementBlocked = null;
         let unsubPlacementGhost = [];
+        let unsubHolding = [];
         let unsubActiveStructure = null;
         let unsubActiveComposition = null;
 
@@ -1559,6 +1578,36 @@ export default {
         function cancelTouchPlacement() {
             editorSession.cancelPlacement();
         }
+        // The holding chip: what a click or tap will place (finding P2-10 of
+        // docs/reviews/EditorPlacementUX-2026-10-27.md), null when not placing.
+        const holding = computed(() => {
+            if (activeTool.value === ToolId.PLACE && activeBrickId.value) {
+                const definition = registry.get(activeBrickId.value);
+                if (!definition) return null;
+                const color = activeBrickColor.value ?? definition.color;
+                return { kind: 'brick', item: definition, name: libraryItemName(definition), color: color === undefined || color === null ? null : toCssHex(color) };
+            }
+            if (activeTool.value === ToolId.COMPOSE_STRUCTURE && activeCompositionStructure.value) {
+                return { kind: 'structure', item: activeCompositionStructure.value, name: libraryItemName(activeCompositionStructure.value), color: null };
+            }
+            if (activeTool.value === ToolId.PLACE_STRUCTURE && activeStructureTitle.value) {
+                return { kind: null, item: null, name: displayText(activeStructureTitle.value), color: null };
+            }
+            return null;
+        });
+        // Choosing something else: the Build Library, opened on a phone, with
+        // the brick in hand in view.
+        async function openLibraryForHolding() {
+            if (compactLayout.value) sidebarOpen.value = true;
+            await nextTick();
+            const id = activeTool.value === ToolId.PLACE ? activeBrickId.value : null;
+            const tile = id ? document.querySelector(`.build-library [data-brick-id="${CSS.escape(id)}"]`) : null;
+            const target = tile || document.querySelector('.build-library-search');
+            if (target) {
+                target.scrollIntoView({ block: 'nearest' });
+                target.focus({ preventScroll: true });
+            }
+        }
 
         let onPointerDown = null;
         let onPointerMove = null;
@@ -1613,6 +1662,14 @@ export default {
             unsubPlacementBlocked = editorSession.onPlacementBlocked(() => {
                 feedback.show(t(touchInput.value ? 'editor.touchPlacementBlocked' : 'editor.placementBlocked'));
             });
+            unsubHolding = [
+                editorContext.eventBus.subscribe(EditorEvent.ACTIVE_BRICK_CHANGED, ({ definitionId }) => {
+                    activeBrickId.value = definitionId;
+                    activeBrickColor.value = editorContext.activeBrick.color;
+                }),
+                editorContext.eventBus.subscribe(EditorEvent.ACTIVE_BRICK_COLOR_CHANGED, ({ color }) => { activeBrickColor.value = color; }),
+                editorContext.eventBus.subscribe(EditorEvent.ACTIVE_COMPOSITION_CHANGED, ({ structure }) => { activeCompositionStructure.value = structure; })
+            ];
             unsubPlacementGhost = [
                 EditorEvent.TOOL_CHANGED, EditorEvent.PREVIEW_CHANGED,
                 EditorEvent.STRUCTURE_PREVIEW_CHANGED, EditorEvent.COMPOSITION_PREVIEW_CHANGED
@@ -1927,6 +1984,7 @@ export default {
             }
             unsubPlacementBlocked?.();
             unsubPlacementGhost.forEach((subscription) => subscription.unsubscribe());
+            unsubHolding.forEach((subscription) => subscription.unsubscribe());
             if (unsubSelection) {
                 unsubSelection.unsubscribe();
             }
@@ -1997,7 +2055,7 @@ export default {
             toggleTouchBoxSelect,
             runTouchAction,
             rotateTouchPlacement, tiltTouchPlacement,
-            placementGhost, confirmTouchPlacement, cancelTouchPlacement,
+            placementGhost, confirmTouchPlacement, cancelTouchPlacement, holding, openLibraryForHolding,
             PLACING_TOOLS,
             marqueeRect,
             transformFeedback,

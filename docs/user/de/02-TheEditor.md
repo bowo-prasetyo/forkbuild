@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 080ab27533db83cb -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: e675ae8b16b143cb -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -187,6 +187,12 @@ Bauwerk drehen, um die nächste Stelle zu finden.
 Ein Klick, wo die Vorschau rot ist, platziert nichts: Der Editor sagt,
 dass etwas im Weg ist, und spielt ein leises, tiefes Klopfen, damit Sie
 wissen, dass Sie eine andere Stelle versuchen oder das Teil drehen können.
+
+Solange Platzieren an ist, zeigt ein Chip oben links in der Ansicht, was
+ein Klick platziert: Bild, Name und bei einem Stein seine Farbe. Klicken
+Sie auf den Chip, um in der Baubibliothek etwas anderes zu wählen (auf
+einem Handy öffnet er die Schublade), oder auf **✕**, um das Platzieren zu
+beenden.
 
 > **Tipp:** Drücken Sie **Escape**, um zum Auswahlwerkzeug zurückzukehren.
 

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 080ab27533db83cb -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: e675ae8b16b143cb -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -188,6 +188,12 @@ construction pour trouver l’endroit suivant.
 Un clic là où l’aperçu est rouge ne place rien : l’Éditeur dit que
 quelque chose gêne et joue un petit coup sourd, pour que vous sachiez
 essayer un autre endroit ou tourner la pièce.
+
+Tant que Placement est actif, une pastille en haut à gauche de la vue
+montre ce qu’un clic va placer : son image, son nom et, pour une brique, sa
+couleur. Cliquez sur la pastille pour choisir autre chose dans la
+Bibliothèque de construction (sur un téléphone, elle ouvre le tiroir), ou
+sur **✕** pour arrêter le placement.
 
 > **Astuce :** appuyez sur **Échap** pour revenir à l’outil Sélection.
 

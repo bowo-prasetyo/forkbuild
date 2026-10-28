@@ -17,6 +17,9 @@ export const EditorEvent = Object.freeze({
     SELECTION_CHANGED: 'SelectionChanged',
     TOOL_CHANGED: 'ToolChanged',
     ACTIVE_BRICK_CHANGED: 'ActiveBrickChanged',
+    // The colour chosen for the next bricks of the active type: { color },
+    // 0xRRGGBB or null for the type's own (the Editor's holding chip shows it).
+    ACTIVE_BRICK_COLOR_CHANGED: 'ActiveBrickColorChanged',
     SETTINGS_CHANGED: 'SettingsChanged',
     PREVIEW_CHANGED: 'PreviewChanged',
     // 0.2.90 — Structure Placement & World Instances. Mirror the brick

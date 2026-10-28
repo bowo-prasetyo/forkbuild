@@ -519,6 +519,13 @@
         right: 0.5rem;
     }
 
+    /* Under the buttons, which take the top right on a phone. */
+    .editor-holding {
+        top: 6.4rem;
+        left: 0.5rem;
+        max-width: calc(100% - 1rem);
+    }
+
     .editor-voice--editor {
         top: 6rem;
         left: 0.5rem;
