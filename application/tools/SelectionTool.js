@@ -4,9 +4,8 @@ import { CompositeCommand } from '../commands/CompositeCommand.js';
 import { RemoveStructurePlacementCommand } from '../commands/RemoveStructurePlacementCommand.js';
 import { MoveStructurePlacementCommand } from '../commands/MoveStructurePlacementCommand.js';
 import { RotateStructurePlacementCommand } from '../commands/RotateStructurePlacementCommand.js';
-import { StructurePlacementValidator } from '../editor/StructurePlacementValidator.js';
+import { StructurePlacementValidator, placedWorldBounds } from '../editor/StructurePlacementValidator.js';
 import { PlacementPositionService } from '../editor/PlacementPositionService.js';
-import { SpatialBounds } from '../../core/world/SpatialBounds.js';
 import { Position } from '../../core/document/Position.js';
 import { message } from '../../core/app/Message.js';
 
@@ -250,7 +249,7 @@ export class SelectionTool extends Tool {
             return true;
         }
         return this._validator.canPlace(world, this.context.registry, resolver, {
-            localBounds: SpatialBounds.fromWorld(placedWorld, this.context.registry),
+            localBounds: placedWorldBounds(placedWorld, this.context.registry, placement.rotation),
             position: candidatePosition,
             excludePlacementId: placement.id
         });

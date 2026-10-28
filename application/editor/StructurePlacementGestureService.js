@@ -1,9 +1,8 @@
 import { Position } from '../../core/document/Position.js';
-import { SpatialBounds } from '../../core/world/SpatialBounds.js';
 import { TransformGizmoState } from '../spatial-state/TransformGizmoState.js';
 import { TransformSnap } from './TransformSnap.js';
 import { TransformMath } from './TransformMath.js';
-import { StructurePlacementValidator } from './StructurePlacementValidator.js';
+import { StructurePlacementValidator, placedWorldBounds } from './StructurePlacementValidator.js';
 import { MoveStructurePlacementCommand } from '../commands/MoveStructurePlacementCommand.js';
 import { RotateStructurePlacementCommand } from '../commands/RotateStructurePlacementCommand.js';
 
@@ -168,7 +167,7 @@ export class StructurePlacementGestureService {
 
         this._candidatePosition = candidatePosition;
         this._candidateRotation = candidateRotation;
-        this._valid = this._fits(world, placement, candidatePosition);
+        this._valid = this._fits(world, placement, candidatePosition, candidateRotation);
         this._gestureFeedback = {
             mode: this._gizmoState.mode,
             axis: this._gizmoState.axis,
@@ -266,7 +265,7 @@ export class StructurePlacementGestureService {
     // validator, same excludePlacementId reasoning, duplicated at this
     // third independent entry point rather than shared, the precedent
     // SelectionTool's own header already established for the first two.
-    _fits(world, placement, candidatePosition) {
+    _fits(world, placement, candidatePosition, candidateRotation = placement.rotation) {
         if (!this._structureResolver) {
             return true;
         }
@@ -276,7 +275,7 @@ export class StructurePlacementGestureService {
         }
         const validator = new StructurePlacementValidator();
         return validator.canPlace(world, this._registry, this._structureResolver, {
-            localBounds: SpatialBounds.fromWorld(placedWorld, this._registry),
+            localBounds: placedWorldBounds(placedWorld, this._registry, candidateRotation),
             position: candidatePosition,
             excludePlacementId: placement.id
         });
@@ -286,7 +285,7 @@ export class StructurePlacementGestureService {
         if (this._structureResolver) {
             const placedWorld = this._structureResolver.resolve(placement.documentId);
             if (placedWorld) {
-                const global = SpatialBounds.fromWorld(placedWorld, this._registry).getGlobalBounds(placement.position);
+                const global = placedWorldBounds(placedWorld, this._registry, placement.rotation).getGlobalBounds(placement.position);
                 return { min: global.min, max: global.max, center: global.center, size: global.size };
             }
         }

@@ -9449,3 +9449,28 @@ looked as big as a Plate 2×4, and long structure names were cut off ("Garden Co
   it was); tests/BuildLibraryUX.test.js Section C.6 (bricks are framed at the shared minimum, structures as
   themselves); tests/EditorSidebarLibraryBrowser.test.js 4 (56 px previews, the Half Cube reads 1×1×½, no tile
   overflows, no structure name is cut). Checked in the running app at 1366×768 and on an emulated iPhone 13.
+
+## A placed build is checked as it is turned (unnumbered, 2026-10-28)
+
+**Building: trusting the ghost's colour.** The rest of finding P2-12 of
+[the Editor placement audit](../reviews/EditorPlacementUX-2026-10-27.md): a structure from the Build Library and the
+bricks already in a build were checked by their turned footprints, but a placed build (Place Structure, a saved build
+placed by reference) was still checked by its unturned box. A long build turned a quarter could show green over
+something it ran into, or red beside something it cleared.
+
+- **`placedWorldBounds(world, registry, rotation)`** (application/editor/StructurePlacementValidator.js): a placed
+  build's box in its own space, turned as renderer/WorldRenderer.js draws it (each brick by its own turned footprint,
+  the whole turned round the placement's origin). Exact for a quarter turn; for any other angle a little larger than
+  the build, never smaller, so the check stays on the safe side.
+- **Every check of a placed build uses it:** the build in hand (application/tools/StructurePlacementTool.js, at its R
+  turn), the builds already in the world (`StructurePlacementValidator#canPlace`), one dragged with Select
+  (application/tools/SelectionTool.js) or moved from the panel (application/editorSession/transformMethods.js), one
+  moved or turned with the gizmo, at the turn it would have, and the gizmo's own frame round it
+  (application/editor/StructurePlacementGestureService.js).
+- **Flush stacking** against a turned build (pointing at its side) works from both turned boxes, so the next build
+  sits against it rather than a gap away.
+- Turning a placed build from its panel or with R is still not checked; it never was.
+- Tests: tests/PlacedBuildTurn.test.js (the turned box at 0, 90, 180, 270, -90 and 45 degrees, a brick turned inside
+  the build, a build turning round its own origin; beside a turned build is clear and along it is blocked; Place
+  Structure blocked, then clear when turned, then placed turned and the next one flush against it; moving a turned
+  build; a gizmo turn into a brick is blocked, and the gizmo frames the turned box).

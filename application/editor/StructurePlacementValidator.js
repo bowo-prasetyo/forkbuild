@@ -1,5 +1,6 @@
 import { SpatialBounds } from '../../core/world/SpatialBounds.js';
 import { boxOfBricks } from '../../core/building/BrickResting.js';
+import { TransformMath } from './TransformMath.js';
 
 // "Would this structure placement overlap anything already here?" — the
 // structure-placement counterpart to core/publication/PlacementValidator.js's
@@ -8,16 +9,15 @@ import { boxOfBricks } from '../../core/building/BrickResting.js';
 // building collision... initially, conservative bounds are perfectly
 // reasonable."
 //
-// Deliberately AABB-only, translated by position and NOT rotated —
-// exactly the simplification core/world/SpatialBounds.js's own header already
-// established for whole-World bounds ("Rotation and scale are not
-// applied to the bounds in V1"). A rotated structure's true footprint is
-// smaller than its axis-aligned box in most orientations, so this is
-// conservative (may refuse a placement a tighter oriented-bounding-box
-// check would allow) rather than permissive — the same posture
+// Deliberately AABB-only: boxes, but turned boxes. A build placed with a
+// turn is checked by its turned box (placedWorldBounds() below), and the
+// caller passes the turned box of what it is placing, so a long build
+// turned a quarter is checked along its real length. For an angle that
+// isn't a quarter turn the box is a little larger than the build, so the
+// check stays conservative (may refuse a placement an oriented check would
+// allow) rather than permissive — the same posture
 // core/publication/PlacementValidator.js already takes toward exact-cell brick
-// collision. Real oriented/mesh-level collision is future work, not a
-// gap introduced here.
+// collision. Real oriented/mesh-level collision is future work.
 //
 // Lives in application/, not core/, because checking a NEW structure
 // against EXISTING structure placements requires resolving other
@@ -30,10 +30,9 @@ export class StructurePlacementValidator {
     //   join. registry: BrickRegistry, for existing bricks' real
     //   dimensions. resolver: StructureDocumentResolver, for other
     //   placements' own bounds. localBounds: the SpatialBounds of the
-    //   structure being placed, in ITS OWN local space (typically
-    //   SpatialBounds.fromWorld(resolver.resolve(documentId), registry)
-    //   — computed once by the caller, not here, so a hover-preview
-    //   loop doesn't re-resolve+re-derive it every frame).
+    //   structure being placed, in ITS OWN local space and with its turn
+    //   (typically placedWorldBounds(resolver.resolve(documentId),
+    //   registry, rotation) — computed by the caller, not here).
     // position: the candidate position, local to `world`.
     // excludePlacementId: omit a placement from consideration against
     //   itself — unused today (0.2.90 never moves an existing
@@ -66,7 +65,7 @@ export class StructurePlacementValidator {
                 // contributing no bricks to the render.
                 continue;
             }
-            const otherBounds = SpatialBounds.fromWorld(placedWorld, registry).getGlobalBounds(placement.position);
+            const otherBounds = placedWorldBounds(placedWorld, registry, placement.rotation).getGlobalBounds(placement.position);
             if (aabbOverlap(targetBounds, otherBounds)) {
                 return false;
             }
@@ -74,6 +73,33 @@ export class StructurePlacementValidator {
 
         return true;
     }
+}
+
+// A placed build's box in its own space, turned as WorldRenderer draws it
+// (every brick turned round the placement's origin by `rotation`): the
+// box round its bricks, each by its own turned footprint, then turned
+// itself and boxed again. Exact for a quarter turn; for any other angle a
+// little larger than the build, never smaller, so a check against it
+// stays on the safe side. A build with no bricks has
+// SpatialBounds.fromWorld()'s small default box (docs/reviews/
+// EditorPlacementUX-2026-10-27.md, P2-12).
+export function placedWorldBounds(world, registry, rotation = 0) {
+    const bricks = [];
+    for (const building of world.getBuildings()) bricks.push(...building.getBricks());
+    const box = boxOfBricks(bricks, (id) => (registry ? registry.get(id) : null));
+    if (!box) return SpatialBounds.fromWorld(world, registry);
+    const turn = ((Number(rotation) || 0) % 360 + 360) % 360;
+    if (turn === 0) {
+        return new SpatialBounds({ min: { x: box.minX, y: box.minY, z: box.minZ }, max: { x: box.maxX, y: box.maxY, z: box.maxZ } });
+    }
+    const corners = [[box.minX, box.minZ], [box.maxX, box.minZ], [box.minX, box.maxZ], [box.maxX, box.maxZ]]
+        .map(([x, z]) => TransformMath.rotatePointAroundPivotY({ x, y: 0, z }, { x: 0, y: 0, z: 0 }, turn));
+    // Rounded so a quarter turn's sines and cosines land on the grid exactly.
+    const tidy = (value) => Math.round(value * 1e9) / 1e9;
+    return new SpatialBounds({
+        min: { x: tidy(Math.min(...corners.map((c) => c.x))), y: box.minY, z: tidy(Math.min(...corners.map((c) => c.z))) },
+        max: { x: tidy(Math.max(...corners.map((c) => c.x))), y: box.maxY, z: tidy(Math.max(...corners.map((c) => c.z))) }
+    });
 }
 
 // Strict AABB intersection — two boxes that only touch along a face

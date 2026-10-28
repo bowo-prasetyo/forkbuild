@@ -52,9 +52,8 @@ import { assert } from './support/Assert.js';
 //              every call, null (never throws) for a missing or corrupt
 //              id
 //   Section F: StructurePlacementValidator — conservative AABB
-//              collision against bricks and other placements,
-//              translate-only (rotation ignored, matching
-//              core/world/SpatialBounds.js's own V1 simplification)
+//              collision against bricks and other placements (turned
+//              boxes are covered by tests/PlacedBuildTurn.test.js)
 //   Section G: StructurePlacementTool — headless tool-level proof that
 //              the committed StructurePlacement matches the preview
 //              exactly across a rotate/move/place sequence, and that a
@@ -509,7 +508,7 @@ async function run() {
     console.log('✓ Section C: PlaceStructureCommand — execute/undo/redo identity, worldId guard, CommandRegistry round trip');
     console.log('✓ Section D: RemoveStructurePlacementCommand — snapshot/undo, never touches the referenced Document');
     console.log('✓ Section E: StructureDocumentResolver — fresh every call, null (never throws) for missing/corrupt content');
-    console.log('✓ Section F: StructurePlacementValidator — conservative, translate-only AABB collision');
+    console.log('✓ Section F: StructurePlacementValidator — conservative AABB collision');
     console.log('✓ Section G: StructurePlacementTool — headless preview/commit/rotate/blocked-refusal parity with PlacementTool');
 
     console.log('\nAll structure placement tests passed.');
