@@ -316,7 +316,14 @@ async function reloadAndMissingWorld(browser, base) {
         await page.waitForSelector('.recovery-banner', { state: 'detached', timeout: 10_000 });
         assert(await selectAll() === before, 'Recover brings back every brick');
         await page.keyboard.press('Control+s');
+        // Saved is shown at once, but the save (and the removal of the recovery
+        // checkpoint it replaces) reaches IndexedDB a moment later
+        // (storage/IndexedDbStorageBackend.js); reloading in between found the
+        // checkpoint still there and offered it again, about one run in five.
+        // The guide ticks Save only once the save is stored
+        // (ui/components/saveDocument.js), so the reload waits for that.
         await page.waitForFunction(() => !document.body.innerText.includes('Unsaved changes'), null, { timeout: 10_000 });
+        await page.waitForSelector('.first-build-step--done[data-step="save"]', { timeout: 10_000 });
         await page.reload();
         await page.waitForSelector('.first-build-guide', { timeout: 60_000 });
         await page.waitForTimeout(1000);
