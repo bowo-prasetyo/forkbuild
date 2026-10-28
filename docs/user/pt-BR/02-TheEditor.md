@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2a113915afc98f78 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: aa7a58af29f5af7a -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -198,6 +198,11 @@ para colocá-la, como um único passo para desfazer. A fileira segue a direção
 em que você arrastou mais, na altura do primeiro bloco. Se algum dos lugares
 estiver ocupado, a prévia fica vermelha e nada é colocado; **Escape**
 descarta a fileira enquanto você arrasta.
+
+**Alt+clique** (Option+clique no Mac) em um bloco da sua construção o pega:
+o tipo, a cor, o giro e a inclinação passam a ser o que você coloca em
+seguida, e Colocar liga, então o próximo clique coloca outro igual. Também
+funciona a partir de Selecionar, e em chão vazio não pega nada.
 
 Um clique onde a prévia está vermelha não coloca nada: o Editor diz que
 tem algo no caminho e toca uma batida suave e grave, para você saber que

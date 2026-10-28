@@ -42,6 +42,11 @@ const PLACE_AGAIN_TAP_PX = 28;
 // that point. Other buttons never place. Hover still reaches the tools as it
 // happens, so the ghost keeps following the pointer.
 //
+// Alt-click (Option-click on a Mac) on a brick, in Select or while placing,
+// takes it up: its type, colour, turn and tilt become what Place places next,
+// and Place comes on (pickFromScene()). It reaches no tool, so it never
+// selects or places.
+//
 // Placing a brick, Shift+drag lays a row instead of drawing a box: the press,
 // moves and release go straight to PlacementTool, with the camera controls
 // off so they don't pan (Shift+drag) under the row. Escape or a cancelled
@@ -54,6 +59,10 @@ export const pointerInputMethods = {
         }
         if (event.button === 0 && this._session
             && this._session.gizmoPointerDown(event.clientX, event.clientY, this._editorContext.selection)) {
+            return null;
+        }
+        if (event.button === 0 && event.altKey && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
+            this.pickFromScene(event.clientX, event.clientY);
             return null;
         }
         if (event.button === 0 && event.shiftKey && this._editorContext.tool.activeTool === ToolId.PLACE) {
@@ -208,6 +217,23 @@ export const pointerInputMethods = {
         if (this._touchTap && this._touchTap.pointerId === event.pointerId) {
             this._touchTap = null;
         }
+    },
+
+    // Takes up the brick under a screen point (see above). Returns the picked
+    // Brick, or null when there is none there.
+    pickFromScene(clientX, clientY) {
+        const picked = this._inputDispatcher ? this._inputDispatcher.pickBrickAt(clientX, clientY) : null;
+        const world = this._documentManager?.document?.world;
+        const brick = picked && world ? world.getBuilding(picked.buildingId)?.findBrick(picked.brickId) : null;
+        if (!brick) return null;
+        const editorContext = this._editorContext;
+        editorContext.setActiveBrick(brick.definitionId);
+        // After the brick: choosing a brick resets the colour chosen.
+        editorContext.setActiveBrickColor(brick.color ?? null);
+        editorContext.setActiveTool(ToolId.PLACE);
+        this._toolManager?.activeToolInstance?.setOrientation?.({ rotation: brick.rotation || 0, tilt: brick.tilt || 0 });
+        editorContext.noteBrickPicked?.(brick.definitionId);
+        return brick;
     },
 
     // A Shift+drag row being laid (see above).

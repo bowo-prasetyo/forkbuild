@@ -9592,3 +9592,30 @@ and each of their bricks took its own click.
   nothing; Escape drops it; a Shift+click places one; the session hands Shift+drag to Place with the camera held, and
   Select still draws a box). Checked in the running app at 1366×768: a Shift+drag shows a five-cube ghost row,
   letting go places five cubes, and one Ctrl+Z takes them away.
+
+## Alt-click picks a brick from the build (unnumbered, 2026-10-28)
+
+**Building: more of what's already there.** From "Beyond the fixes" in
+[the Editor placement audit](../reviews/EditorPlacementUX-2026-10-27.md): to place another brick like one in the build,
+a builder had to find it in the library, match its colour among the swatches and turn it the same way by hand.
+
+- **Alt-click (Option-click on a Mac) on a brick in the build takes it up**
+  (application/editorSession/pointerInputMethods.js#pickFromScene()): its type, colour (none, when it has its own),
+  turn and tilt become what Place places next, and Place comes on, from Select or while placing. It reaches no tool,
+  so it never selects or places; on empty ground it picks nothing. Only a plain left Alt-click picks.
+- The turn and tilt reach the Place tool through `PlacementTool#setOrientation()`, by way of
+  `ToolManager#activeToolInstance`; the brick under the pointer through `InputDispatcher#pickBrickAt()`.
+- **It says so**: *Picked up Plate 2x4 from your build: click to place another.* (`editor.brickPicked`, new, in all
+  eight languages, on the new `EditorEvent.BRICK_PICKED`), and the holding chip and the Build Library show the brick
+  and its colour.
+- **The Build Library now follows a colour chosen anywhere** (`PaletteUseCase#onActiveColorChanged()`): its Color box
+  and swatches showed only colours chosen in the library, so a picked brick's colour, or a starter job's, never
+  showed there.
+- The user guide's *Place tool* says so, in all eight languages.
+- Not on touch yet: a long press to pick is left for later.
+- Tests: tests/PickFromScene.test.js (from Select, Alt-click takes up the brick's type, colour, turn and tilt with
+  Place on, says so, and reaches no tool; the next click places a copy, turned and coloured; a brick in its own colour
+  leaves no colour chosen; empty ground picks nothing; Ctrl+Alt or another button doesn't pick);
+  tests/BuildLibraryKeyboardBrowser.test.js (the Color box follows a colour set elsewhere). Checked in the running app
+  at 1366×768: a red Plate 2x4 Alt-clicked from Select turns Place on with the chip showing it and its red dot, the
+  message names it, and the next click places another.

@@ -41,6 +41,17 @@ export class PaletteUseCase {
     }
 
     // Returns an unsubscribe function.
+    // Calls callback(color) when the colour for the next placements changes,
+    // from here or elsewhere (a brick picked from the build, a starter job).
+    // Returns an unsubscribe function.
+    onActiveColorChanged(callback) {
+        const subscription = this._editorContext.eventBus.subscribe(
+            EditorEvent.ACTIVE_BRICK_COLOR_CHANGED,
+            ({ color }) => callback(color)
+        );
+        return () => subscription.unsubscribe();
+    }
+
     onActiveBrickChanged(callback) {
         const subscription = this._editorContext.eventBus.subscribe(
             EditorEvent.ACTIVE_BRICK_CHANGED,

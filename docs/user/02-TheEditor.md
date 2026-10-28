@@ -181,6 +181,11 @@ one step to undo. The row runs whichever way you dragged further, at the
 first brick's height. If any of its spots is taken the ghost is red and
 nothing is placed; **Escape** drops the row while you drag.
 
+**Alt-click** (Option-click on a Mac) a brick in your build to take it up:
+its type, colour, turn and tilt become what you place next, and Place comes
+on, so the next click places another just like it. It works from Select too,
+and picks nothing on empty ground.
+
 A click where the ghost is red places nothing: the Editor says something is
 in the way and plays a soft, low knock, so you know to try another spot or
 turn the piece.

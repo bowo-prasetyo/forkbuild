@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2a113915afc98f78 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: aa7a58af29f5af7a -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -207,6 +207,12 @@ l’orientation de la brique ; relâchez pour la placer, en une seule étape à
 annuler. La rangée suit le sens où vous avez glissé le plus, à la hauteur de
 la première brique. Si l’une de ses places est prise, l’aperçu est rouge
 et rien n’est placé ; **Échap** abandonne la rangée pendant le glissement.
+
+**Alt+clic** (Option+clic sur Mac) sur une brique de votre construction la
+reprend : son type, sa couleur, son orientation et son inclinaison
+deviennent ce que vous placez ensuite, et Placement s’active, si bien que le
+clic suivant en place une pareille. Cela marche aussi depuis Sélection, et
+rien n’est repris sur un sol vide.
 
 Un clic là où l’aperçu est rouge ne place rien : l’Éditeur dit que
 quelque chose gêne et joue un petit coup sourd, pour que vous sachiez

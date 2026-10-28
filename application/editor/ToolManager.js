@@ -36,6 +36,11 @@ export class ToolManager {
         }
     }
 
+    // The tool instance now active (PlacementTool while placing a brick), or null.
+    get activeToolInstance() {
+        return this._activeTool;
+    }
+
     onPointerMove(pointerEvent) {
         if (this._activeTool) {
             this._activeTool.onPointerMove(pointerEvent);

@@ -665,6 +665,13 @@ export class EditorSession {
 
     // Calls listener({ kind }) when a click while placing lands on a blocked
     // spot (EditorEvent.PLACEMENT_BLOCKED). Returns an unsubscribe function.
+    // Calls listener({ definitionId }) when Alt-click takes up a brick from
+    // the build (EditorEvent.BRICK_PICKED). Returns an unsubscribe function.
+    onBrickPicked(listener) {
+        const subscription = this._editorContext.eventBus.subscribe(EditorEvent.BRICK_PICKED, listener);
+        return () => subscription.unsubscribe();
+    }
+
     onPlacementBlocked(listener) {
         const subscription = this._editorContext.eventBus.subscribe(EditorEvent.PLACEMENT_BLOCKED, listener);
         return () => subscription.unsubscribe();
