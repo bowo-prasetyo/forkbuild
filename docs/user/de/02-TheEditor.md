@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: e675ae8b16b143cb -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: bf41d96ddae684a1 -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -35,6 +35,7 @@ ordnen.
 - **Werkzeuge** — wechseln Sie zwischen **Auswählen** (`1`) und
   **Platzieren** (`2`). **Platzieren** bleibt hervorgehoben, solange Sie
   einen Stein oder eine Struktur platzieren.
+  Sie bleiben oben in der Seitenleiste, während alles darunter scrollt.
 - **Bauwerkstitel** — der Name des geöffneten Bauwerks. Klicken Sie auf
   **✎**, um Titel, Beschreibung und Lizenz zu bearbeiten. Ob sie
   gespeichert ist, zeigt die Werkzeugleiste.
@@ -44,6 +45,7 @@ ordnen.
   merkt sich Ihre Wahl.
 - **Auswahl** — zeigt nur, was auf Ihre aktuelle Auswahl wirken kann;
   siehe [Das Feld Auswahl](#das-feld-auswahl) unten.
+  Während Sie platzieren, macht es der Baubibliothek Platz.
 - **Baubibliothek** — ein Suchfeld und zwei Reiter. Tippen Sie einen Teil
   eines Namens ein, oder sagen Sie mit eigenen Worten, was Sie brauchen:
   *über den Fluss* findet die Brücke, *schlafen* das Bett. Die Wörter, unter
@@ -52,6 +54,8 @@ ordnen.
   Mit der Tastatur führt Pfeil nach unten aus dem Suchfeld zum ersten
   Treffer, die Pfeiltasten wechseln zwischen Steinen oder Strukturen, und
   die Eingabetaste wählt einen, wie ein Klick.
+  Reiter und Suchfeld bleiben beim Scrollen sichtbar, und ein Klick auf
+  **Platzieren** holt die Bibliothek nach oben.
   - **Steine** — alles, was Sie mit dem Platzierwerkzeug setzen können,
     als Kacheln in sechs Abschnitten (Grundformen, Tragwerk, Dächer &
     Treppen, Öffnungen, Details, Natur): neunundfünfzig Teile, von halben

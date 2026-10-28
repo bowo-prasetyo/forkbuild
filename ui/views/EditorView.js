@@ -267,7 +267,8 @@ export default {
             </div>
             <div :class="['editor-body', { 'editor-body--sidebar-open': sidebarOpen }]">
                 <div class="sidebar">
-                  <div class="sidebar-scroll">
+                  <!-- The tool switch and its hint stay put; everything under them scrolls. -->
+                  <div class="sidebar-head">
                     <div class="tool-switcher tool-switcher--editor" role="group" :aria-label="t('editor.tool')">
                         <button
                             :class="['tool-btn', { 'tool-btn--active': activeTool === ToolId.SELECT }]"
@@ -279,7 +280,7 @@ export default {
                         <button
                             :class="['tool-btn', { 'tool-btn--active': PLACING_TOOLS.has(activeTool) }]"
                             :aria-pressed="PLACING_TOOLS.has(activeTool) ? 'true' : 'false'"
-                            @click="setTool(ToolId.PLACE)"
+                            @click="placeFromSwitcher"
                         >
                             {{ t('editor.place') }}
                         </button>
@@ -303,6 +304,8 @@ export default {
                         {{ t('editor.composingHint', { title: activeCompositionTitle }) }}
                     </p>
                     </template>
+                  </div>
+                  <div ref="sidebarScroll" class="sidebar-scroll">
                     <!-- What a ready-made build asks of its builder (core/challenge/StarterJob.js); over the 3D view on a phone. -->
                     <StarterJobCard v-if="starterCardStage && !compactLayout" :stage="starterCardStage" :step="starterStep" @pick="pickStarterJobBrick" @publish="publishFromStarterCard" @hide="hideStarterCard" />
                     <DocumentInfoPanel
@@ -330,7 +333,9 @@ export default {
                         @edit-source="editSelectedPlacementSource"
                         @apply-transform="applySelectedPlacementTransform"
                     />
+                    <!-- Placing selects nothing, so the empty Selection card stays out of the library's way. -->
                     <EditingSidebar
+                        v-if="!PLACING_TOOLS.has(activeTool) || selectionCount > 0"
                         :registry="actionRegistry"
                         :get-context="getActionContext"
                         :ui="actionUi"
@@ -1010,6 +1015,19 @@ export default {
 
         function setTool(toolId) {
             editorContext.setActiveTool(toolId);
+        }
+
+        // Place from the tool switch: bring the Build Library up to the top
+        // of the sidebar, unless it's already scrolled into.
+        const sidebarScroll = ref(null);
+        async function placeFromSwitcher() {
+            setTool(ToolId.PLACE);
+            await nextTick();
+            const scroller = sidebarScroll.value;
+            const library = scroller && scroller.querySelector('.build-library');
+            if (!library) return;
+            const offset = library.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+            if (offset > 0) scroller.scrollTop += offset;
         }
 
         function alignSelection(mode) {
@@ -2179,6 +2197,8 @@ export default {
             showMetadataEditor,
             onSaveMetadata,
             setTool,
+            placeFromSwitcher,
+            sidebarScroll,
             alignSelection,
             distributeSelection,
             applyNumericTransform,

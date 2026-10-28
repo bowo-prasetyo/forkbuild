@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: e675ae8b16b143cb -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: bf41d96ddae684a1 -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -32,6 +32,7 @@ selecionar e transformar blocos e como organizar sua construção com grupos.
   reabrir os recentes e abrir a sobreposição **⌨ Atalhos** (também `?`).
 - **Ferramentas** — alterne entre **Selecionar** (`1`) e **Colocar** (`2`).
   **Colocar** fica destacado enquanto você coloca um bloco ou uma estrutura.
+  Elas ficam no alto da barra lateral enquanto o resto rola.
 - **Título da construção** — o nome da construção aberta. Clique em **✎** para
   editar o título, a descrição e a licença. Se ela está salva aparece na
   barra de ferramentas.
@@ -41,6 +42,8 @@ selecionar e transformar blocos e como organizar sua construção com grupos.
   escolheu.
 - **Seleção** — mostra só o que pode agir sobre a seleção atual; veja
   [O painel Seleção](#o-painel-seleção) abaixo.
+  Enquanto você coloca, ele sai do caminho para a Biblioteca de construção
+  vir primeiro.
 - **Biblioteca de construção** — uma caixa de pesquisa e duas guias.
   Digite parte de um nome, ou diga com suas palavras do que precisa:
   *atravessar o rio* encontra a Ponte, *dormir* a Cama. As palavras pelas
@@ -49,6 +52,8 @@ selecionar e transformar blocos e como organizar sua construção com grupos.
   Pelo teclado, a seta para baixo na caixa de pesquisa vai ao primeiro
   resultado, as setas passam de um bloco ou estrutura a outro, e Enter
   escolhe um, como um clique.
+  As guias e a pesquisa ficam à vista enquanto você rola por ela, e clicar
+  em **Colocar** traz a biblioteca para o topo.
   - **Blocos** — tudo o que você pode colocar com a ferramenta Colocar, em
     blocos de seis seções (Básicos, Estrutura, Telhados e escadas,
     Aberturas, Detalhes, Natureza): cinquenta e nove peças, de meios cubos,

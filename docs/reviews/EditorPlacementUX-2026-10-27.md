@@ -227,6 +227,8 @@ already make this usable: type "roof", press ↓ and then Enter.
 
 ### P2-8. The library is below the fold
 
+**Fixed 2026-10-28:** the tool switch and hint stay above the sidebar's scroll, the library's tabs and search stay pinned while its list scrolls, the empty Selection card steps aside while placing, and **Place** brings the library to the top; in Place mode at 1366×768 the first brick tile is now at y = 461 px, from 697 (roadmap, "The Build Library comes first when placing"). The build info was already folded by default.
+
 At 1366×768 the first brick tile starts at **y = 524 px**, and the sidebar
 is **2,789 px tall** for 59 bricks and 32 structures. The build's info
 panel, *Build with me* and the Selection card all sit above the library. In
