@@ -1218,6 +1218,7 @@ export default Object.freeze({
     'editor.touchPlacingHint': 'Placement de « {title} » — touchez pour voir où il va, puis touchez-le de nouveau ou appuyez sur Poser.',
     'editor.placeHint': 'Survolez le sol, R pour pivoter, cliquez pour placer, Maj+glisser pour poser une rangée.',
     'editor.brickPicked': '{name} repris dans votre construction : cliquez pour en placer un autre.',
+    'editor.touchBrickPicked': '{name} repris dans votre construction : touchez pour voir où va le suivant, puis touchez-le encore pour le placer.',
     'editor.placementBlocked': 'Quelque chose gêne ici. Essayez un autre endroit, ou appuyez sur R pour le tourner.',
     'editor.touchPlacementBlocked': 'Quelque chose gêne ici. Essayez un autre endroit, ou touchez Pivoter pour le tourner.',
     'editor.turnBlocked': 'Quelque chose gêne cette rotation. Déplacez-la d’abord vers un endroit plus dégagé.',

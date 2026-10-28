@@ -1218,6 +1218,7 @@ export default Object.freeze({
     'editor.touchPlacingHint': '„{title}“ wird platziert — tippen, um zu sehen, wo es hinkommt, dann noch einmal antippen oder Setzen drücken.',
     'editor.placeHint': 'Über den Boden fahren, R zum Drehen, klicken zum Platzieren, Umschalt+Ziehen für eine Reihe.',
     'editor.brickPicked': '{name} aus Ihrem Bauwerk aufgenommen: klicken, um noch einen zu platzieren.',
+    'editor.touchBrickPicked': '{name} aus Ihrem Bauwerk aufgenommen: tippen Sie, um zu sehen, wohin ein weiterer kommt, dann noch einmal, um ihn zu platzieren.',
     'editor.placementBlocked': 'Hier ist etwas im Weg. Versuchen Sie eine andere Stelle, oder drücken Sie R, um es zu drehen.',
     'editor.touchPlacementBlocked': 'Hier ist etwas im Weg. Versuchen Sie eine andere Stelle, oder tippen Sie auf Drehen, um es zu drehen.',
     'editor.turnBlocked': 'Bei dieser Drehung ist etwas im Weg. Rücken Sie es zuerst an eine freiere Stelle.',

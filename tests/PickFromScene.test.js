@@ -110,4 +110,52 @@ const altClick = (x, y, extra = {}) => ({ pointerType: 'mouse', pointerId: 1, cl
     console.log('✓ only a plain left Alt-click picks');
 }
 
+// 4. Touch: a finger held still on a brick picks it up; the lift is then no tap.
+function withTimers(host) {
+    const timers = new Map();
+    let next = 1;
+    host._schedule = (fn) => { const id = next++; timers.set(id, fn); return id; };
+    host._unschedule = (id) => timers.delete(id);
+    return { fire: () => { const due = [...timers.values()]; timers.clear(); due.forEach((fn) => fn()); }, pending: () => timers.size };
+}
+const finger = (id, x, y, primary = true) => ({ pointerType: 'touch', pointerId: id, clientX: x, clientY: y, button: 0, buttons: 1, isPrimary: primary });
+{
+    const { host, editorContext, picked, dispatched } = setup();
+    const timers = withTimers(host);
+    host.onPointerDown(finger(1, 10, 10));
+    assert(timers.pending() === 1 && picked.length === 0, '14. a finger down starts the hold, picking nothing yet');
+    timers.fire();
+    assert(picked.join() === 'core:brick_1x4' && editorContext.tool.activeTool === ToolId.PLACE, '15. held still, it picks the brick up, with Place on');
+    host.onPointerUp(finger(1, 10, 10));
+    assert(dispatched.length === 0, '16. and the lift is no tap: nothing selected or placed');
+    console.log('✓ a finger held on a brick picks it up');
+}
+{
+    const quick = setup();
+    const quickTimers = withTimers(quick.host);
+    quick.host.onPointerDown(finger(1, 10, 10));
+    quick.host.onPointerUp(finger(1, 10, 10));
+    assert(quickTimers.pending() === 0 && quick.picked.length === 0 && quick.dispatched.join() === 'move,down,up', '17. a quick tap is a tap, and its hold is called off');
+
+    const dragged = setup();
+    const dragTimers = withTimers(dragged.host);
+    dragged.host.onPointerDown(finger(1, 10, 10));
+    dragged.host.onPointerMove(finger(1, 60, 10));
+    assert(dragTimers.pending() === 0, '18. a drag (turning the camera) calls the hold off');
+
+    const pinched = setup();
+    const pinchTimers = withTimers(pinched.host);
+    pinched.host.onPointerDown(finger(1, 10, 10));
+    pinched.host.onPointerDown(finger(2, 200, 200, false));
+    assert(pinchTimers.pending() === 0 && pinched.picked.length === 0, '19. so does a second finger');
+
+    const empty = setup();
+    const emptyTimers = withTimers(empty.host);
+    empty.host.onPointerDown(finger(1, 500, 500));
+    emptyTimers.fire();
+    empty.host.onPointerUp(finger(1, 500, 500));
+    assert(empty.picked.length === 0 && empty.dispatched.join() === 'move,down,up', '20. held on empty ground it picks nothing, and the lift is still a tap');
+    console.log('✓ taps, drags, pinches and empty ground are left as they were');
+}
+
 console.log('✅ All pick-from-the-scene tests passed.');

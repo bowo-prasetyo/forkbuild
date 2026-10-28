@@ -317,9 +317,9 @@ the fixes above are in.
   *Done 2026-10-28 (roadmap, "Shift+drag lays a row").*
 - **Pick from the scene.** Alt-click (or a long press) an existing brick to
   take its type, colour and rotation. Builders expect this from other
-  building games. *Done 2026-10-28 for Alt-click, with the tilt too; a long
-  press on touch isn't done yet (roadmap, "Alt-click picks a brick from the
-  build").*
+  building games. *Done 2026-10-28 for Alt-click, with the tilt too (roadmap,
+  "Alt-click picks a brick from the build"), and for a long press on touch
+  (roadmap, "A long press picks a brick on a touch screen").*
 - **Number keys for recent bricks.** Let 3 to 9 choose the seven bricks used
   most recently. 1 and 2 are already Select and Place. *Done 2026-10-28, as
   stable slots: a brick keeps its key while in use (roadmap, "Keys 3 to 9

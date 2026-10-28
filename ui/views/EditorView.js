@@ -1700,7 +1700,7 @@ export default {
             // Alt-click took up a brick from the build: say which, and that a click places it.
             unsubBrickPicked = editorSession.onBrickPicked(({ definitionId }) => {
                 const definition = registry.get(definitionId);
-                feedback.show(t('editor.brickPicked', { name: definition ? libraryItemName(definition) : definitionId }));
+                feedback.show(t(touchInput.value ? 'editor.touchBrickPicked' : 'editor.brickPicked', { name: definition ? libraryItemName(definition) : definitionId }));
             });
             unsubPlacementBlocked = editorSession.onPlacementBlocked((blocked) => {
                 if (blocked && blocked.kind === 'turn') {

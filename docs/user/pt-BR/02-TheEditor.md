@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 7478badd81a9e5cd -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: b07dea3a1e4b6d8c -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -202,7 +202,8 @@ descarta a fileira enquanto você arrasta.
 **Alt+clique** (Option+clique no Mac) em um bloco da sua construção o pega:
 o tipo, a cor, o giro e a inclinação passam a ser o que você coloca em
 seguida, e Colocar liga, então o próximo clique coloca outro igual. Também
-funciona a partir de Selecionar, e em chão vazio não pega nada.
+funciona a partir de Selecionar, e em chão vazio não pega nada. Em uma tela
+sensível ao toque, mantenha um dedo parado sobre o bloco por meio segundo.
 
 As teclas numéricas **3** a **9** guardam cada uma um bloco que você
 escolheu há pouco, como uma barra de atalhos: o primeiro bloco escolhido

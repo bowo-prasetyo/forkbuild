@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 7478badd81a9e5cd -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: b07dea3a1e4b6d8c -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -212,7 +212,8 @@ et rien n’est placé ; **Échap** abandonne la rangée pendant le glissement.
 reprend : son type, sa couleur, son orientation et son inclinaison
 deviennent ce que vous placez ensuite, et Placement s’active, si bien que le
 clic suivant en place une pareille. Cela marche aussi depuis Sélection, et
-rien n’est repris sur un sol vide.
+rien n’est repris sur un sol vide. Sur un écran tactile, gardez plutôt un
+doigt immobile sur la brique pendant une demi-seconde.
 
 Les touches **3** à **9** gardent chacune une brique choisie récemment,
 comme une barre d’accès rapide : la première brique choisie prend le 3, la

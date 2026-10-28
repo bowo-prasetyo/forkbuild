@@ -9,6 +9,14 @@
     touch-action: none;
 }
 
+/* A finger held on a brick picks it up, so the Editor's view never selects
+   text or opens the system's press-and-hold menu. */
+.viewport {
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+}
+
 /* Toggles that only matter on a phone-width screen. */
 .app-menu-toggle,
 .world-view-panel-toggle,

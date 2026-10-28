@@ -1218,6 +1218,7 @@ export default Object.freeze({
     'editor.touchPlacingHint': '“{title}” 배치 중 — 탭해서 놓일 자리를 보고, 한 번 더 탭하거나 놓기를 누르세요.',
     'editor.placeHint': '지면 위에 커서를 올리고, R로 회전, 클릭해 배치, Shift+드래그로 한 줄을 놓으세요.',
     'editor.brickPicked': '작품에서 {name}을(를) 집었습니다. 클릭하면 하나 더 놓습니다.',
+    'editor.touchBrickPicked': '작품에서 {name}을(를) 집었습니다. 탭해서 놓을 곳을 보고, 다시 탭하면 놓입니다.',
     'editor.placementBlocked': '여기는 무언가에 막혀 놓을 수 없습니다. 다른 자리를 고르거나 R로 돌려 보세요.',
     'editor.touchPlacementBlocked': '여기는 무언가에 막혀 놓을 수 없습니다. 다른 자리를 고르거나 회전을 눌러 돌려 보세요.',
     'editor.turnBlocked': '그렇게 돌리면 무언가에 걸립니다. 먼저 더 넓은 곳으로 옮겨 주세요.',

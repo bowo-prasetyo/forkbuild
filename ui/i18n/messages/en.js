@@ -1217,6 +1217,7 @@ export default Object.freeze({
     'editor.touchPlacingHint': 'Placing "{title}" — tap to see where it goes, then tap it again or press Place.',
     'editor.placeHint': 'Hover the ground, R to rotate, click to place, Shift+drag to lay a row.',
     'editor.brickPicked': 'Picked up {name} from your build: click to place another.',
+    'editor.touchBrickPicked': 'Picked up {name} from your build: tap to see where another goes, then tap it again to place it.',
     'editor.placementBlocked': 'Something\'s in the way here. Try another spot, or press R to turn it.',
     'editor.touchPlacementBlocked': 'Something\'s in the way here. Try another spot, or tap Rotate to turn it.',
     'editor.turnBlocked': 'Something\'s in the way of that turn. Move it somewhere clearer first.',
