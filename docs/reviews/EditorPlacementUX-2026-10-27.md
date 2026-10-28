@@ -283,7 +283,7 @@ already does on a phone ("First build · 0/6").
 
 ### P2-12. Structure collision ignores rotation
 
-**Partly fixed 2026-10-27:** a structure from the Build Library, and every brick already in the build, are now checked by their turned footprints (same roadmap entry). A placed build's own box (Place Structure) still ignores its turn.
+**Fixed 2026-10-28:** a structure from the Build Library and every brick already in the build were checked by their turned footprints on 2026-10-27 (same roadmap entry). Now a placed build (Place Structure) is too: the one in hand, those already in the world, one being moved or turned with the gizmo, and the flush stacking against one (roadmap, "A placed build is checked as it is turned").
 
 `StructurePlacementValidator#canPlace` receives the structure's
 **unrotated** bounds (`StructureCompositionTool.js:129`). A long structure

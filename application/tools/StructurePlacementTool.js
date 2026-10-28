@@ -1,6 +1,5 @@
 import { Tool } from './Tool.js';
-import { SpatialBounds } from '../../core/world/SpatialBounds.js';
-import { StructurePlacementValidator } from '../editor/StructurePlacementValidator.js';
+import { StructurePlacementValidator, placedWorldBounds } from '../editor/StructurePlacementValidator.js';
 import { PlaceStructureCommand } from '../commands/PlaceStructureCommand.js';
 import { PlacementPositionService } from '../editor/PlacementPositionService.js';
 
@@ -84,8 +83,9 @@ export class StructurePlacementTool extends Tool {
             const anchorWorld = anchorPlacement && resolver ? resolver.resolve(anchorPlacement.documentId) : null;
             const movingWorld = resolver ? resolver.resolve(active.documentId) : null;
             if (anchorWorld && movingWorld) {
-                const anchorBounds = SpatialBounds.fromWorld(anchorWorld, registry);
-                const movingBounds = SpatialBounds.fromWorld(movingWorld, registry);
+                // Both by their turned boxes, so a turned build sits flush.
+                const anchorBounds = placedWorldBounds(anchorWorld, registry, anchorPlacement.rotation);
+                const movingBounds = placedWorldBounds(movingWorld, registry, this._rotation);
                 const stacked = this._positionService.calculateStructureStack(
                     anchorPlacement.position, anchorBounds, picked.normal, movingBounds,
                     this.context.editorContext.settings
@@ -152,7 +152,7 @@ export class StructurePlacementTool extends Tool {
         const placedWorld = resolver ? resolver.resolve(active.documentId) : null;
         const valid = placedWorld
             ? this._validator.canPlace(world, registry, resolver, {
-                localBounds: SpatialBounds.fromWorld(placedWorld, registry),
+                localBounds: placedWorldBounds(placedWorld, registry, this._rotation),
                 position
             })
             : true;

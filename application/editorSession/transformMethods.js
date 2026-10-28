@@ -4,8 +4,7 @@ import { PASTE_OFFSET as DUPLICATE_OFFSET } from '../editor/PasteClipboardUseCas
 import { MoveStructurePlacementCommand } from '../commands/MoveStructurePlacementCommand.js';
 import { RotateStructurePlacementCommand } from '../commands/RotateStructurePlacementCommand.js';
 import { DuplicateStructurePlacementCommand } from '../commands/DuplicateStructurePlacementCommand.js';
-import { StructurePlacementValidator } from '../editor/StructurePlacementValidator.js';
-import { SpatialBounds } from '../../core/world/SpatialBounds.js';
+import { StructurePlacementValidator, placedWorldBounds } from '../editor/StructurePlacementValidator.js';
 import { Position } from '../../core/document/Position.js';
 import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../../core/nature/TerrainHeightField.js';
 
@@ -261,7 +260,7 @@ export const transformMethods = {
         }
         const validator = new StructurePlacementValidator();
         return validator.canPlace(world, this._registry, this._structureResolver, {
-            localBounds: SpatialBounds.fromWorld(placedWorld, this._registry),
+            localBounds: placedWorldBounds(placedWorld, this._registry, placement.rotation),
             position: candidatePosition,
             excludePlacementId: placement.id
         });
