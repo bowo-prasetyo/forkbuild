@@ -582,7 +582,20 @@ same finder's `findEarlier()` for builds published before it that look like
 it and lists them under its family tree
 (ui/components/remix/SimilarEarlierBuilds.js): there every brick counts,
 the builder is the identity that signed the Publication (and Built with),
-whoever is looking, and "before" is the signed `publishedAt`. World View's
+whoever is looking, and "before" is the signed `publishedAt` backed by when
+this device first saw each build (core/publication/PublicationOrder.js,
+`order()`): a build seen here by the time the other's date counts as
+'before'; one only dated earlier, first seen later, as 'datedBefore'
+(listed with both dates, and on the builder's own Explore card too); one
+dated later that this device saw first, as 'seenBefore'. First-seen times
+come from application/publication/PublicationFirstSeenLog.js (earliest
+wins, fed by DecentralizedPublicationDiscoveryProvider's `onAdded()`, the
+Publications rebuilt at startup and the admission log's `admittedAt`), or
+the `publishedAt` of a build published here (ui/main/composeNetwork.js,
+`firstSeenAt`); Publish compares only builds seen before this one was first
+published, so a copy dated earlier never asks its builder to credit the
+copier. Anchors' `anchoredAt` is a report of the anchoring system until a
+proof verifier checks it, so it isn't used. World View's
 About this build shows the same list for the shown build's Publication
 (ui/views/worldView/useSimilarEarlierBuilds.js, looked up once per
 Publication shown). On both sides of every comparison, bricks of a
@@ -1376,6 +1389,10 @@ Repository cards and ui/components/SharedWithYouPanel.js above the catalog.
     them, looks a lot like one of the signed-in identity's own published
     before it (`SimilarBuildFinder#findEarlier(publication, { by })`, its
     family left out), verifiably signed by them; one comparison at a time.
+    One only dated before theirs, which this device sees only now
+    ('seenBefore'), is told of too, as `datedBefore`, so signing an earlier
+    date can't hide a copy; the payload's `share` and `percent` say how alike
+    (`lookAlikeShare()`).
     A Publication admitted before its bytes (`SimilarBuildFinder#canCompare()`
     false: Explore's network discovery admits signed records and fetches
     builds later) waits in memory by content hash, at most

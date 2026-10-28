@@ -31,10 +31,16 @@ export function describeNotification(event) {
         case BUILD_LOOKS_LIKE_YOURS_EVENT_TYPE: {
             const yours = text(payload.yourTitle);
             const percent = Number.isFinite(payload.percent) ? payload.percent : null;
+            // How alike (lookAlikeShare()): most of both, or how much of one
+            // stands in the other; and whether its builder dated it before
+            // yours, which this device can't back.
+            const bodyKey = payload.share === 'theirsInMine' ? 'notificationText.looksLikeYoursInBody'
+                : (payload.share === 'mineInTheirs' ? 'notificationText.looksLikeYoursOfBody' : 'notificationText.looksLikeYoursBody');
+            const titleKey = payload.datedBefore ? 'notificationText.looksLikeYoursDatedBefore' : 'notificationText.looksLikeYours';
             return Object.freeze({
-                title: author ? t('notificationText.looksLikeYours', { author }) : t('notificationText.looksLikeYoursNoName'),
+                title: author ? t(titleKey, { author }) : t(`${titleKey}NoName`),
                 body: yours && title && percent !== null
-                    ? t('notificationText.looksLikeYoursBody', { title, yours, percent })
+                    ? t(bodyKey, { title, yours, percent })
                     : (title ? t('notificationText.quotedTitle', { title }) : '')
             });
         }

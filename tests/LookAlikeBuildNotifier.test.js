@@ -312,4 +312,37 @@ console.log('✓ a build admitted before its bytes is compared when they arrive'
 }
 console.log('✓ the waiting list outlives the visit');
 
+// A copy can't stay hidden by signing an earlier date: this device first saw
+// it now, after Alice's build, so it is told of, as dated before hers.
+{
+    const seen = new Map();
+    const dating = new SimilarBuildFinder({
+        listPublications: () => known,
+        contentStore,
+        firstSeenAt: (publication) => (seen.has(publication.id) ? seen.get(publication.id) : publication.publishedAt.getTime())
+    });
+    const told = [];
+    const datingNotifier = new LookAlikeBuildNotifier({ identityProvider: alice, similarBuildFinder: dating, notificationSink: (event) => told.push(event), now: () => new Date('2026-10-20T10:00:00Z') });
+    const backdated = publish(bob, { documentId: 'bob-backdated', title: 'Old Cottage', bricks: cottageBricks({ dx: 700 }), publishedAt: '2026-08-01T00:00:00Z' });
+    seen.set(backdated.id, Date.parse('2026-10-20T10:00:00Z'));
+    const event = await datingNotifier.handlePublicationAdmitted(backdated);
+    assert(event && event.payload.datedBefore === true && event.payload.yourTitle === 'Cozy Cottage',
+        `38. a build dated before Alice's that this device only sees now still notifies her, as dated before hers (${JSON.stringify(event?.payload)})`);
+    const words = describeNotification(event);
+    assert(words.title === t('notificationText.looksLikeYoursDatedBefore', { author: 'lookalike-bob' }), `39. and says so (${words.title})`);
+
+    const trusted = await new LookAlikeBuildNotifier({ identityProvider: alice, similarBuildFinder: finder, notificationSink: () => {} }).handlePublicationAdmitted(backdated);
+    assert(trusted === null, '40. taken at its date, as before, it would have looked older than hers, and said nothing');
+
+    const garden = Array.from({ length: 70 }, (_, i) => new Brick({ definitionId: 'core:plate_2x4', position: new Position(900 + (i % 10), 0.5, Math.floor(i / 10)) }));
+    const extended = publish(bob, { documentId: 'bob-extended', title: 'Cottage and garden', bricks: [...cottageBricks({ dx: 800 }), ...garden], publishedAt: '2026-10-18T00:00:00Z' });
+    seen.set(extended.id, Date.parse('2026-10-20T10:00:00Z'));
+    const more = await datingNotifier.handlePublicationAdmitted(extended);
+    assert(more && more.payload.share === 'theirsInMine' && more.payload.percent === 100 && more.payload.datedBefore === false,
+        `41. a copy with more of its own says how much of hers is in it (${JSON.stringify(more?.payload)})`);
+    assert(describeNotification(more).body === t('notificationText.looksLikeYoursInBody', { title: 'Cottage and garden', yours: 'Cozy Cottage', percent: 100 }),
+        `42. in those words (${describeNotification(more).body})`);
+}
+console.log('✓ a copy dated before hers, and one with more of its own');
+
 console.log('✅ All look-alike build notifier tests passed.');

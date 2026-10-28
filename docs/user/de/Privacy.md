@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 287edaaf9be8160b -->
+<!-- translation-of: docs/Privacy.md source-hash: 1a6b0b8708e8925c -->
 # Datenschutz
 
 <!-- languages -->
@@ -68,6 +68,11 @@ veröffentlichen, exportieren oder senden es:
   können.
 - für jeden Bau, den Sie mit **Hier bauen** begonnen haben, die Welt und die
   gewählte Stelle, damit er beim Veröffentlichen dort steht.
+- wann dieses Gerät jedes veröffentlichte Bauwerk zuerst gesehen hat (seine
+  ID und die Zeit, höchstens 5000), damit ein vor einem anderen datiertes
+  Bauwerk von einem unterschieden werden kann, das zuerst hier war
+  (**Ähnliche Bauwerke, die früher veröffentlicht wurden** und der 🔔-Eintrag **… hat
+  ein Bauwerk veröffentlicht, das vor Ihrem datiert ist und ihm ähnelt**).
 - die IDs und Inhalts-Hashes der Bauwerke anderer, deren Bytes dieses Gerät
   noch nicht erreicht haben, und seit wann (höchstens 500, jedes 30 Tage
   lang), damit jedes noch mit Ihren eigenen Bauwerken verglichen werden kann,

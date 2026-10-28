@@ -59,6 +59,7 @@ import { SteemAnnouncingConfigurationStore } from '../../storage/SteemAnnouncing
 import { BlurtAnnouncingConfigurationStore } from '../../storage/BlurtAnnouncingConfigurationStore.js';
 import { ownIdentityIdsOf } from '../../application/document/DocumentImportPolicy.js';
 import { SimilarBuildFinder } from '../../application/publication/SimilarBuildFinder.js';
+import { PublicationFirstSeenLog } from '../../application/publication/PublicationFirstSeenLog.js';
 import { BuildDescriber } from '../../application/publication/BuildDescriber.js';
 import { LookAlikeBuildNotifier } from '../../application/publication/LookAlikeBuildNotifier.js';
 import { LookAlikeWaitingStore } from '../../application/publication/LookAlikeWaitingStore.js';
@@ -507,9 +508,32 @@ export async function composeNetwork({ app, decentralizedPublicationDiscoveryPro
         },
         provide: (key, value) => app.provide(key, value)
     });
+    // When this device first saw each Publication, which no builder can date
+    // (core/publication/PublicationOrder.js): every one admitted from now on,
+    // every one already listed (the ones rebuilt above), and the admission
+    // times kept before this log existed. A build published here was seen
+    // when it was published.
+    const publicationFirstSeenLog = new PublicationFirstSeenLog({ storageProvider: new LocalStorageProvider() });
+    for (const { publicationId, admittedAt } of worldEncounterPublicationAdmissionLog.admissions()) {
+        publicationFirstSeenLog.record(publicationId, admittedAt);
+    }
+    for (const publication of decentralizedPublicationDiscoveryProvider.list()) publicationFirstSeenLog.record(publication.id);
+    decentralizedPublicationDiscoveryProvider.onAdded((publication) => publicationFirstSeenLog.record(publication.id));
+    // The ids published here, read once for a whole look rather than once a
+    // build, and read again after.
+    let publishedHereIds = null;
+    const publishedHere = (id) => {
+        if (!publishedHereIds) {
+            publishedHereIds = new Set(new LocalDiscoveryProvider(new LocalStorageProvider()).list().map((publication) => publication.id));
+            queueMicrotask(() => { publishedHereIds = null; });
+        }
+        return publishedHereIds.has(id);
+    };
+    const firstSeenAt = (publication) => (publishedHere(publication.id) ? publication.publishedAt : publicationFirstSeenLog.get(publication.id));
     // Publish, a build's page and World View point out builds that look a lot
     // like another; theirs are read from the same places the Repository lists.
     const similarBuildFinder = new SimilarBuildFinder({
+        firstSeenAt,
         listPublications: () => new CompositeDiscoveryProvider([
             new LocalDiscoveryProvider(new LocalStorageProvider()),
             decentralizedPublicationDiscoveryProvider

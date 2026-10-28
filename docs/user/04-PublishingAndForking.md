@@ -859,8 +859,7 @@ from the Build Library (even one changed in part), since only the builder's own 
 which bricks they placed themselves.
 
 Left out: builds by the same builder (and anyone who built it with them),
-the whole family tree, and builds published after it. "Before" goes by the
-date each build was signed with when it was published.
+the whole family tree, and builds published after it. "Before" goes by the date each build was signed with when it was published. Its builder chooses that date, so this device backs it with when it first saw each build: a build only dated before this one, but first seen here later, is listed as "dated … by its builder, first seen here …", and a build dated after this one that this device saw first is listed as "seen here before this one". A copy can't put itself first just by signing an earlier date, and the 🔔 tells you of a build dated before yours that this device only sees now, saying it is dated before yours.
 
 Builds can look alike by chance, or because they changed the same
 ready-made structure in similar ways, so a build listed here doesn't mean

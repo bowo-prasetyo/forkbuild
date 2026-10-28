@@ -286,6 +286,42 @@ async function run() {
     }
     console.log('✓ ready-made structures don\'t make builds look alike');
 
+    {
+        // Which came first goes by what this device can back
+        // (core/publication/PublicationOrder.js): Bob's copy of my cottage is
+        // signed with a date before mine, but this device first saw it in
+        // October; Carol's older cottage was seen here in July.
+        const { contentStore, publications, finder } = setUp();
+        const day = (date) => Date.parse(`${date}T00:00:00Z`);
+        const seen = new Map();
+        const at = (publication, date) => { seen.set(publication.id, day(date)); return publication; };
+        const mineDocument = documentOf(cottageBricks(), { id: 'my-cottage', authorIdentityId: 'me' });
+        const mine = at(published(contentStore, mineDocument, { identityId: 'me', publishedAt: '2026-09-01T00:00:00Z' }), '2026-09-01');
+        const copy = at(published(contentStore, documentOf(cottageBricks({ dx: 40 }), { title: 'Copy' }), { identityId: 'bob', publishedAt: '2026-08-01T00:00:00Z' }), '2026-10-10');
+        const older = at(published(contentStore, documentOf(cottageBricks({ dx: 80 }), { title: 'Older' }), { identityId: 'carol', publishedAt: '2026-07-01T00:00:00Z' }), '2026-07-02');
+        publications.push(mine, copy, older);
+        const dating = finder({ firstSeenAt: (publication) => seen.get(publication.id) ?? null });
+        const orderOf = (matches, publication) => matches.find((match) => match.publication === publication)?.order;
+
+        const earlier = await dating.findEarlier(mine);
+        assert(orderOf(earlier, older) === 'before', '35. a build seen here before mine was published came before it');
+        assert(orderOf(earlier, copy) === 'datedBefore' && earlier.find((match) => match.publication === copy).seen === day('2026-10-10'),
+            '36. a copy only dated before it is listed as dated, with when this device first saw it');
+        assert(orderOf(await dating.findLater(mine), copy) === 'datedBefore' && !orderOf(await dating.findLater(mine), older),
+            '37. and is among the builds after mine on my own card, where a copy would be; the older build is not');
+        assert(orderOf(await dating.findEarlier(copy), mine) === 'seenBefore', '38. on the copy\'s page, mine is listed as seen here before it');
+        const atPublish = await dating.find(mineDocument);
+        assert(!orderOf(atPublish, copy) && orderOf(atPublish, older) === 'before',
+            '39. publishing mine again never asks me to credit a copy only dated before it');
+
+        const trusting = finder();
+        assert(orderOf(await trusting.findEarlier(mine), copy) === 'before' && !orderOf(await trusting.findLater(mine), copy),
+            '40. with no first-seen times, the signed dates are taken as they are');
+        const unknown = finder({ firstSeenAt: () => null });
+        assert(orderOf(await unknown.findEarlier(mine), older) === 'datedBefore', '41. a build with no first-seen time counts as seen late');
+    }
+    console.log('✓ which came first, as far as this device can tell');
+
     console.log('✅ All similar build finder tests passed.');
 }
 

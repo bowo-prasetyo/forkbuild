@@ -22,7 +22,7 @@ import { EditorEntryReason } from '../core/document/EditorEntryContext.js';
 import { SimilarBuildFinder } from '../application/publication/SimilarBuildFinder.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { LocalStorageProvider } from '../storage/LocalStorageProvider.js';
-import { t } from '../ui/i18n/i18n.js';
+import { formatDate, t } from '../ui/i18n/i18n.js';
 import { assert } from './support/Assert.js';
 
 // The screen a shared link opens on, rendered by real Vue with the shipped
@@ -331,6 +331,28 @@ const text = (host, selector) => host.querySelector(selector)?.textContent.trim(
         console.log('✓ a build\'s page lists builds published earlier that look like it');
     } finally {
         view.unmount();
+    }
+
+    // A build whose earlier date this device can't back says whose date it
+    // is, and when this device first saw it (core/publication/PublicationOrder.js).
+    const datedEarly = copyOf('doc-eve-castle', 'eve', '2026-01-01T00:00:00Z');
+    const seenAt = Date.parse('2026-10-10T00:00:00Z');
+    const datedFinder = {
+        canCompare: async () => true,
+        findEarlier: async () => [{ publication: datedEarly, evidence: { similarity: 1, theirsInMine: 1, mineInTheirs: 1, mirrored: false }, order: 'datedBefore', seen: seenAt }]
+    };
+    const datedView = await mount({ ...castle, discovery, similarBuildFinder: datedFinder });
+    try {
+        await until(() => datedView.host.querySelector('.similar-earlier-detail'), 'the dated build');
+        const expected = t('similarEarlier.datedDetail', {
+            how: t('similarEarlier.percent', { percent: 100 }),
+            date: formatDate(new Date('2026-01-01T00:00:00Z'), { dateStyle: 'medium' }),
+            seen: formatDate(new Date(seenAt), { dateStyle: 'medium' })
+        });
+        assert(text(datedView.host, '.similar-earlier-detail') === expected, `a build only dated earlier says so, and when it was first seen here (${text(datedView.host, '.similar-earlier-detail')})`);
+        console.log('✓ a build only dated earlier says whose date it is');
+    } finally {
+        datedView.unmount();
     }
 
     const failing = await mount({ ...castle, discovery, similarBuildFinder: { findEarlier: async () => { throw new Error('storage blocked'); } } });

@@ -62,6 +62,10 @@ send it:
   so they can be shared by a short link.
 - for each build you started with **Build here**, the World and the spot
   you chose, so publishing it stands it there.
+- when this device first saw each published build (its id and the time, at
+  most 5000), so a build dated before another can be told from one that
+  was here first (**Similar builds published earlier**, and the 🔔's
+  **… published a build dated before yours that looks like it**).
 - the ids and content hashes of other people's builds whose bytes haven't
   reached this device yet, and since when (at most 500, each for 30 days),
   so each can still be compared with your own builds when its bytes arrive,

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d06277fe319f2763 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d9d2658aa5a248b1 -->
 # 04 — Penerbitan & Remix
 
 <!-- languages -->
@@ -945,8 +945,7 @@ yang tahu balok mana yang ia letakkan sendiri.
 
 Tidak diikutkan: bangunan dari pembuat yang sama (dan siapa pun yang
 membangunnya bersama dia), seluruh silsilah, dan bangunan yang diterbitkan
-sesudahnya. "Sebelum" mengikuti tanggal yang ditandatangani tiap bangunan
-saat diterbitkan.
+sesudahnya. "Sebelum" mengikuti tanggal yang ditandatangani tiap bangunan saat diterbitkan. Tanggal itu dipilih pembuatnya, jadi perangkat ini mendukungnya dengan kapan perangkat ini pertama kali melihat tiap bangunan: bangunan yang hanya bertanggal sebelum bangunan ini, tetapi pertama terlihat di sini sesudahnya, dicantumkan sebagai "bertanggal … menurut pembuatnya, pertama terlihat di sini …", dan bangunan bertanggal sesudah bangunan ini yang lebih dulu dilihat perangkat ini dicantumkan sebagai "terlihat di sini sebelum bangunan ini". Salinan tidak bisa menempatkan dirinya lebih dulu hanya dengan menandatangani tanggal yang lebih awal, dan 🔔 memberi tahu Anda tentang bangunan bertanggal sebelum milik Anda yang baru sekarang dilihat perangkat ini, dengan menyebut bahwa bangunan itu bertanggal sebelum milik Anda.
 
 Bangunan bisa mirip secara kebetulan atau karena mengubah struktur siap
 pakai yang sama dengan cara yang mirip, jadi bangunan yang tercantum di sini
