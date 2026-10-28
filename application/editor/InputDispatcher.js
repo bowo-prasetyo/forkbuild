@@ -45,6 +45,11 @@ export class InputDispatcher {
         this._pickPlacement = pickPlacement;
     }
 
+    // The brick under a screen point ({ buildingId, brickId, ... }), or null.
+    pickBrickAt(clientX, clientY) {
+        return this._pick ? this._pick(clientX, clientY) : null;
+    }
+
     dispatchPointerMove(rawEvent) {
         this._toolManager.onPointerMove(this._toInteractionEvent(rawEvent));
     }

@@ -298,6 +298,18 @@ export class PlacementTool extends Tool {
         return this._tilt;
     }
 
+    get pendingRotation() {
+        return this._rotation;
+    }
+
+    // The turn and tilt the next brick is placed with (a brick picked from
+    // the build, Alt-click, keeps its own).
+    setOrientation({ rotation = 0, tilt = 0 } = {}) {
+        this._rotation = rotation;
+        this._tilt = tilt;
+        if (this._lastPointer) this.onPointerMove(this._lastPointer);
+    }
+
     // The row starts where the ghost is under the pointer.
     _beginRow(pointerEvent) {
         this.onPointerMove(pointerEvent);

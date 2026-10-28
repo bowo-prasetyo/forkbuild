@@ -112,5 +112,19 @@ const tabStops = (selector) => [...host.querySelectorAll(selector)].filter((elem
     console.log('✓ structure cards place from the keyboard');
 }
 
+// A colour chosen elsewhere (a brick picked from the build with Alt-click,
+// a starter job) shows in the library's Color box too.
+{
+    host.querySelector('.build-library-tab').click();
+    await nextTick();
+    editorContext.setActiveBrick('core:cube');
+    await nextTick();
+    editorContext.setActiveBrickColor(0xaa3333);
+    await nextTick();
+    const input = host.querySelector('.brick-palette-color-input');
+    assert(input && input.value === '#aa3333', `the Color box follows a colour set elsewhere (${input && input.value})`);
+    console.log('✓ the library follows a colour chosen elsewhere');
+}
+
 app.unmount();
 host.remove();

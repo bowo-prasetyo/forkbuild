@@ -1010,6 +1010,7 @@ export default {
         let unsubTool = null;
         let unsubSelection = null;
         let unsubPlacementBlocked = null;
+        let unsubBrickPicked = null;
         let unsubPlacementGhost = [];
         let unsubHolding = [];
         let unsubActiveStructure = null;
@@ -1685,6 +1686,11 @@ export default {
             startSound();
             // A click on a blocked spot (the ghost tinted red) is said here and
             // heard through the sound service, so it isn't taken for a missed click.
+            // Alt-click took up a brick from the build: say which, and that a click places it.
+            unsubBrickPicked = editorSession.onBrickPicked(({ definitionId }) => {
+                const definition = registry.get(definitionId);
+                feedback.show(t('editor.brickPicked', { name: definition ? libraryItemName(definition) : definitionId }));
+            });
             unsubPlacementBlocked = editorSession.onPlacementBlocked((blocked) => {
                 if (blocked && blocked.kind === 'turn') {
                     feedback.show(t('editor.turnBlocked'));
@@ -2022,6 +2028,7 @@ export default {
                 unsubTool.unsubscribe();
             }
             unsubPlacementBlocked?.();
+            unsubBrickPicked?.();
             unsubPlacementGhost.forEach((subscription) => subscription.unsubscribe());
             unsubHolding.forEach((subscription) => subscription.unsubscribe());
             if (unsubSelection) {

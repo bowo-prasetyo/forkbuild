@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2a113915afc98f78 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: aa7a58af29f5af7a -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -205,6 +205,11 @@ para colocarla, como un solo paso para deshacer. La fila sigue la dirección
 en la que arrastró más, a la altura del primer bloque. Si alguno de sus
 sitios está ocupado, la vista previa está en rojo y no se coloca nada; **Escape**
 descarta la fila mientras arrastra.
+
+**Alt+clic** (Opción+clic en Mac) sobre un bloque de su construcción lo
+toma: su tipo, color, giro e inclinación pasan a ser lo que coloca a
+continuación, y se activa Colocar, así que el siguiente clic coloca otro
+igual. También funciona desde Seleccionar, y sobre suelo vacío no toma nada.
 
 Un clic donde la vista previa está en rojo no coloca nada: el Editor dice
 que hay algo en medio y suena un golpe suave y grave, para que sepa que

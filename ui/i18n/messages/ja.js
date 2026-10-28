@@ -1213,6 +1213,7 @@ export default Object.freeze({
     'editor.touchPlaceHint': 'タップすると置く場所が表示されます。もう一度タップするか「置く」を押すと配置します。先に「回転」「倒す」で向きを変えられます。',
     'editor.touchPlacingHint': '「{title}」を配置中 — タップで置く場所を表示し、もう一度タップするか「置く」で配置します。',
     'editor.placeHint': '地面にカーソルを合わせ、Rで回転、クリックで配置、Shift+ドラッグで一列に並べます。',
+    'editor.brickPicked': '作品から{name}を取りました。クリックするともう 1 つ置けます。',
     'editor.placementBlocked': 'ここは何かがじゃまで置けません。別の場所を試すか、R で向きを変えてください。',
     'editor.touchPlacementBlocked': 'ここは何かがじゃまで置けません。別の場所を試すか、「回転」で向きを変えてください。',
     'editor.turnBlocked': 'その向きに回すと何かにぶつかります。先に空いている場所へ動かしてください。',

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2a113915afc98f78 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: aa7a58af29f5af7a -->
 # 02 — Editor
 
 <!-- languages -->
@@ -200,6 +200,12 @@ lepaskan untuk menempatkannya, sebagai satu langkah yang bisa diurungkan.
 Baris mengikuti arah yang Anda seret lebih jauh, pada ketinggian balok
 pertama. Jika salah satu tempatnya terisi, pratinjaunya merah dan tidak ada
 yang ditempatkan; **Escape** membatalkan baris selama menyeret.
+
+**Alt+klik** (Option+klik di Mac) pada balok di bangunan Anda mengambilnya:
+jenis, warna, putaran, dan kemiringannya menjadi yang Anda tempatkan
+berikutnya, dan Tempatkan menyala, sehingga klik berikutnya menempatkan satu
+lagi yang persis sama. Ini juga bisa dari Pilih, dan tidak mengambil apa pun
+di tanah kosong.
 
 Klik di tempat pratinjau berwarna merah tidak menempatkan apa pun: Editor
 memberi tahu ada yang menghalangi dan memainkan ketukan pelan yang rendah,

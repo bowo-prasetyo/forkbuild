@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2a113915afc98f78 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: aa7a58af29f5af7a -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -205,6 +205,12 @@ Drehung des Steins; loslassen platziert sie, als ein Schritt zum
 Rückgängigmachen. Die Reihe läuft in die Richtung, in die Sie weiter gezogen
 haben, auf der Höhe des ersten Steins. Ist eine ihrer Stellen belegt, ist die Vorschau rot und nichts wird platziert; **Escape** verwirft die Reihe
 während des Ziehens.
+
+**Alt-Klick** (Wahltaste-Klick auf dem Mac) auf einen Stein in Ihrem Bauwerk
+nimmt ihn auf: Art, Farbe, Drehung und Neigung werden zu dem, was Sie als
+Nächstes platzieren, und Platzieren geht an, sodass der nächste Klick einen
+genau gleichen platziert. Das geht auch aus Auswählen heraus; auf leerem
+Boden wird nichts aufgenommen.
 
 Ein Klick, wo die Vorschau rot ist, platziert nichts: Der Editor sagt,
 dass etwas im Weg ist, und spielt ein leises, tiefes Klopfen, damit Sie

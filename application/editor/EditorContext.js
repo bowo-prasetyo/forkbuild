@@ -151,6 +151,11 @@ export class EditorContext {
         this._publish(EditorEvent.COMPOSITION_PREVIEW_CHANGED, { compositionPreview });
     }
 
+    // Alt-click took up a brick from the build (EditorEvent.BRICK_PICKED).
+    noteBrickPicked(definitionId) {
+        this._publish(EditorEvent.BRICK_PICKED, { definitionId });
+    }
+
     // A placing tool's click landed on a blocked spot (EditorEvent.PLACEMENT_BLOCKED).
     notePlacementBlocked(kind) {
         this._publish(EditorEvent.PLACEMENT_BLOCKED, { kind });

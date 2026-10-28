@@ -402,6 +402,7 @@ export default {
         // PaletteUseCase, refreshed on ACTIVE_BRICK_CHANGED" shape.
         const activeColor = ref(props.paletteUseCase.getActiveColor());
         let unsubscribe = null;
+        let unsubscribeColor = null;
 
         const selectedDefinition = computed(() => {
             for (const group of brickGroups.value) {
@@ -661,6 +662,11 @@ export default {
                 // like ActiveBrickState's own reset (see its header).
                 activeColor.value = null;
             });
+            // A colour chosen elsewhere (Alt-click picking a brick from the
+            // build, a starter job) shows here too.
+            unsubscribeColor = props.paletteUseCase.onActiveColorChanged?.((color) => {
+                activeColor.value = color;
+            }) ?? null;
             // 0.4.5 — any click that reaches window (i.e. wasn't stopped
             // by the menu's own wrapper — see the template) closes an
             // open secondary menu, the same "click outside closes it"
@@ -671,6 +677,9 @@ export default {
         onBeforeUnmount(() => {
             if (unsubscribe) {
                 unsubscribe();
+            }
+            if (unsubscribeColor) {
+                unsubscribeColor();
             }
             window.removeEventListener('click', closeMenu);
         });

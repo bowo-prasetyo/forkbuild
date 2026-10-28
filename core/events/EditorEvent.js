@@ -35,5 +35,8 @@ export const EditorEvent = Object.freeze({
     // A click that would have placed something landed where the preview
     // was blocked (tinted red), so nothing was placed: { kind }, 'brick' or
     // 'structure'. Heard and shown by the Editor, never a document change.
-    PLACEMENT_BLOCKED: 'PlacementBlocked'
+    PLACEMENT_BLOCKED: 'PlacementBlocked',
+    // Alt-click took up a brick from the build to place more of it:
+    // { definitionId }. Shown by the Editor, never a document change.
+    BRICK_PICKED: 'BrickPicked'
 });
