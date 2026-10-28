@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: ee41957881dffe63 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 2d9d12cc9b830ce1 -->
 # Referencia de controles
 
 <!-- languages -->
@@ -331,6 +331,8 @@ del mundo no tiene herramienta Colocar.
 | `T` | Inclinar la vista previa pendiente sobre su siguiente cara | se reinicia al salir del modo Colocar |
 | `Mayús+T` | Inclinar al revés la vista previa pendiente | |
 | Clic | Confirmar la vista previa como un bloque real | se rechaza en una posición ocupada (roja) |
+| `Mayús` + arrastrar | Poner una fila del bloque, borde con borde, como un solo paso de deshacer | va hacia donde más arrastre, a la altura del primer bloque; roja y rechazada si algún sitio está ocupado; `Esc` la descarta mientras arrastra |
+| `Alt` + clic en un bloque de la construcción (`Opción` + clic en Mac) | Tomar su tipo, color, giro e inclinación, con Colocar activado | también funciona desde Seleccionar; sobre suelo vacío no toma nada |
 | Muestra de **Color** de la Biblioteca de construcción | Elegir el color de los próximos bloques que coloque | vuelve al color predeterminado del tipo de bloque cuando elige otro tipo; consulte [Colores de los bloques](02-TheEditor.md#colores-de-los-bloques) |
 
 Para cambiar el color de bloques que ya colocó, selecciónelos y use la
@@ -409,6 +411,9 @@ pie de la ventana gráfica reemplaza las teclas:
 
 Los controles del gizmo funcionan con el tacto igual que con un mouse, con
 **Recuadro** activado o no: arrastre un control.
+
+Para tomar un bloque de su construcción, como con `Alt` + clic, mantenga un
+dedo quieto sobre él medio segundo.
 
 ## Prioridad de Escape (Editor)
 

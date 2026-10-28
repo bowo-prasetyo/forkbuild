@@ -680,6 +680,10 @@ export default Object.freeze({
     'shortcuts.view.rotateGhost': 'Rotate ghost while placing',
     'shortcuts.view.rotateGhostBack': 'Rotate ghost (opposite direction)',
     'shortcuts.view.cancelPlacement': 'Cancel placement',
+    'shortcuts.view.layRow': 'Lay a row of the brick you\'re placing',
+    'shortcuts.view.layRowGesture': 'Shift+drag',
+    'shortcuts.view.pickBrick': 'Pick up a brick from your build',
+    'shortcuts.view.pickBrickGesture': 'Alt+click (touch: hold)',
     'shortcuts.paletteHint': 'Ctrl/Cmd+K opens the Command Palette, which searches every one of these by name.',
 
     // Editor actions (application/editor/EditorActionRegistry.js): for each

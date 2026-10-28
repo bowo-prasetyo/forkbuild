@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: ee41957881dffe63 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 2d9d12cc9b830ce1 -->
 # Referensi Kontrol
 
 <!-- languages -->
@@ -324,6 +324,8 @@ sekali tidak memiliki alat Tempatkan.
 | `T` | Miringkan pratinjau yang tertunda ke sisi berikutnya | diatur ulang saat Anda keluar dari mode Tempatkan |
 | `Shift+T` | Miringkan pratinjau yang tertunda ke arah sebaliknya | |
 | Klik | Menerapkan pratinjau sebagai Balok sungguhan | ditolak di posisi yang terisi (merah) |
+| `Shift`-seret | Meletakkan sebaris balok itu, tepi ke tepi, sebagai satu langkah urungkan | mengikuti arah seretan yang lebih jauh, setinggi balok pertama; merah dan ditolak jika ada tempat yang terisi; `Esc` membatalkannya selama menyeret |
+| `Alt`-klik balok di bangunan (`Option`-klik di Mac) | Mengambil jenis, warna, putaran, dan kemiringannya, dengan Tempatkan menyala | juga bisa dari Pilih; tidak mengambil apa pun di tanah kosong |
 | Contoh warna **Warna** di Pustaka Bangunan | Memilih warna untuk balok berikutnya yang Anda tempatkan | kembali ke warna bawaan jenis balok saat Anda memilih jenis lain — lihat [Brick colors](02-TheEditor.md#warna-balok) |
 
 Untuk mewarnai ulang balok yang sudah ditempatkan, pilih balok-balok itu
@@ -401,6 +403,9 @@ keyboard:
 
 Pegangan gizmo bekerja dengan sentuhan seperti dengan mouse, **Kotak**
 aktif atau tidak: seret pegangannya.
+
+Untuk mengambil balok dari bangunan Anda, seperti `Alt`-klik, tahan satu
+jari diam di atasnya selama setengah detik.
 
 ## Prioritas Escape (Editor)
 

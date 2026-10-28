@@ -319,6 +319,8 @@ Place tool at all.
 | `T` | Tilt the pending preview onto its next side | resets when you leave Place mode |
 | `Shift+T` | Tilt the pending preview the other way | |
 | Click | Commit the preview as a real Brick | refused at an occupied (red) position |
+| `Shift`-drag | Lay a row of the brick, edge to edge, as one undo step | runs whichever way you drag further, at the first brick's height; red and refused if any spot is taken; `Esc` drops it while you drag |
+| `Alt`-click a brick in the build (`Option`-click on a Mac) | Take up its type, colour, turn and tilt, with Place on | works from Select too; picks nothing on empty ground |
 | Build Library **Color** swatch | Choose the color for the next bricks you place | resets to the brick type's default when you pick a different type — see [Brick colors](02-TheEditor.md#brick-colors) |
 
 To recolor bricks you've already placed, select them and use the **Color**
@@ -391,6 +393,9 @@ the viewport stands in for the keys:
 
 Gizmo handles work by touch as they do with a mouse, **Box** on or off:
 drag a handle.
+
+To pick up a brick from your build, as `Alt`-click does, hold a finger
+still on it for half a second.
 
 ## Escape priority (Editor)
 

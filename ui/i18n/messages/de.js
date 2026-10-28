@@ -681,6 +681,10 @@ export default Object.freeze({
     'shortcuts.view.rotateGhost': 'Vorschau beim Platzieren drehen',
     'shortcuts.view.rotateGhostBack': 'Vorschau drehen (Gegenrichtung)',
     'shortcuts.view.cancelPlacement': 'Platzieren abbrechen',
+    'shortcuts.view.layRow': 'Eine Reihe des platzierten Steins legen',
+    'shortcuts.view.layRowGesture': 'Umschalt+Ziehen',
+    'shortcuts.view.pickBrick': 'Einen Stein aus dem Bauwerk aufnehmen',
+    'shortcuts.view.pickBrickGesture': 'Alt+Klick (Touch: halten)',
     'shortcuts.paletteHint': 'Strg/Cmd+K öffnet die Befehlspalette, die alle diese Befehle nach Namen durchsucht.',
 
     // Editor actions (application/editor/EditorActionRegistry.js): for each

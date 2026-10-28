@@ -681,6 +681,10 @@ export default Object.freeze({
     'shortcuts.view.rotateGhost': 'Faire pivoter l’aperçu pendant le placement',
     'shortcuts.view.rotateGhostBack': 'Faire pivoter l’aperçu (sens inverse)',
     'shortcuts.view.cancelPlacement': 'Annuler le placement',
+    'shortcuts.view.layRow': 'Poser une rangée de la brique en cours de placement',
+    'shortcuts.view.layRowGesture': 'Maj+glisser',
+    'shortcuts.view.pickBrick': 'Reprendre une brique de votre construction',
+    'shortcuts.view.pickBrickGesture': 'Alt+clic (tactile : maintenir)',
     'shortcuts.paletteHint': 'Ctrl/Cmd+K ouvre la Palette de commandes, qui recherche chacun de ces raccourcis par son nom.',
 
     // Editor actions (application/editor/EditorActionRegistry.js): for each
