@@ -41,6 +41,11 @@ const PLACE_AGAIN_TAP_PX = 28;
 // MARQUEE_DRAG_THRESHOLD_PX. It then replays as a hover, press and release at
 // that point. Other buttons never place. Hover still reaches the tools as it
 // happens, so the ghost keeps following the pointer.
+//
+// Placing a brick, Shift+drag lays a row instead of drawing a box: the press,
+// moves and release go straight to PlacementTool, with the camera controls
+// off so they don't pan (Shift+drag) under the row. Escape or a cancelled
+// pointer drops the row.
 
 export const pointerInputMethods = {
     onPointerDown(event) {
@@ -49,6 +54,16 @@ export const pointerInputMethods = {
         }
         if (event.button === 0 && this._session
             && this._session.gizmoPointerDown(event.clientX, event.clientY, this._editorContext.selection)) {
+            return null;
+        }
+        if (event.button === 0 && event.shiftKey && this._editorContext.tool.activeTool === ToolId.PLACE) {
+            this._rowPress = { pointerId: event.pointerId };
+            if (this._session) {
+                this._session.setControlsEnabled(false);
+            }
+            if (this._inputDispatcher) {
+                this._inputDispatcher.dispatchPointerDown(event);
+            }
             return null;
         }
         // A Shift-held left button starts a marquee instead of reaching SelectionTool.
@@ -122,6 +137,16 @@ export const pointerInputMethods = {
         if (event.pointerType === 'touch') {
             return this._onTouchPointerUp(event);
         }
+        if (this._rowPress && this._rowPress.pointerId === event.pointerId) {
+            this._rowPress = null;
+            if (this._session) {
+                this._session.setControlsEnabled(true);
+            }
+            if (this._inputDispatcher) {
+                this._inputDispatcher.dispatchPointerUp(event);
+            }
+            return null;
+        }
         if (this._marqueeState) {
             const { x0, y0, x1, y1, additive, moved } = this._marqueeState;
             this._marqueeState = null;
@@ -166,6 +191,10 @@ export const pointerInputMethods = {
 
     // The browser took the pointer over, so it is no tap or click.
     onPointerCancel(event) {
+        if (this._rowPress && this._rowPress.pointerId === event.pointerId) {
+            this.cancelRow();
+            return;
+        }
         if (event.pointerType !== 'touch') {
             if (this._placePress && this._placePress.pointerId === event.pointerId) {
                 this._placePress = null;
@@ -178,6 +207,23 @@ export const pointerInputMethods = {
         }
         if (this._touchTap && this._touchTap.pointerId === event.pointerId) {
             this._touchTap = null;
+        }
+    },
+
+    // A Shift+drag row being laid (see above).
+    isRowActive() {
+        return this._rowPress !== null && this._rowPress !== undefined;
+    },
+
+    // Drops the row being laid; nothing is placed.
+    cancelRow() {
+        if (!this.isRowActive()) return;
+        this._rowPress = null;
+        if (this._session) {
+            this._session.setControlsEnabled(true);
+        }
+        if (this._inputDispatcher) {
+            this._inputDispatcher.dispatchKeyDown({ key: 'Escape' });
         }
     },
 

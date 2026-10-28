@@ -1937,6 +1937,12 @@ export default {
                     }
                     return;
                 }
+                // 3.4. A Shift+drag row being laid owns Escape: drop it, placing nothing.
+                if (editorSession.isRowActive() && event.key === 'Escape') {
+                    event.preventDefault();
+                    editorSession.cancelRow();
+                    return;
+                }
                 // 3.5. An in-flight marquee owns Escape next: cancel it without clearing the
                 // existing selection.
                 if (editorSession.isMarqueeActive() && event.key === 'Escape') {

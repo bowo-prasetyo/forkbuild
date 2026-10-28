@@ -1215,7 +1215,7 @@ export default Object.freeze({
     'starterJob.keepBuilding': '계속 만들기',
     'editor.touchPlaceHint': '탭하면 블록이 놓일 자리가 보입니다. 한 번 더 탭하거나 놓기를 누르면 배치됩니다. 회전과 눕히기로 먼저 돌릴 수 있습니다.',
     'editor.touchPlacingHint': '“{title}” 배치 중 — 탭해서 놓일 자리를 보고, 한 번 더 탭하거나 놓기를 누르세요.',
-    'editor.placeHint': '지면 위에 커서를 올리고, R로 회전, 클릭해 배치하세요.',
+    'editor.placeHint': '지면 위에 커서를 올리고, R로 회전, 클릭해 배치, Shift+드래그로 한 줄을 놓으세요.',
     'editor.placementBlocked': '여기는 무언가에 막혀 놓을 수 없습니다. 다른 자리를 고르거나 R로 돌려 보세요.',
     'editor.touchPlacementBlocked': '여기는 무언가에 막혀 놓을 수 없습니다. 다른 자리를 고르거나 회전을 눌러 돌려 보세요.',
     'editor.turnBlocked': '그렇게 돌리면 무언가에 걸립니다. 먼저 더 넓은 곳으로 옮겨 주세요.',

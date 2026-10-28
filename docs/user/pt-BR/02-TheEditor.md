@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1c85e2e33e2425a8 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2a113915afc98f78 -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -191,6 +191,13 @@ Só um clique coloca: pressione e solte sem mover. Arrastar para olhar ao
 redor (com qualquer botão) move a câmera e não coloca nada, então Colocar
 pode continuar ligado enquanto você gira a construção para achar o próximo
 lugar.
+
+**Shift+arrastar** põe uma fileira: segure Shift, pressione onde vai o
+primeiro bloco e arraste pelo chão ou pelo alto de uma parede. Uma prévia mostra a fileira inteira, borda com borda, na cor e no giro do bloco; solte
+para colocá-la, como um único passo para desfazer. A fileira segue a direção
+em que você arrastou mais, na altura do primeiro bloco. Se algum dos lugares
+estiver ocupado, a prévia fica vermelha e nada é colocado; **Escape**
+descarta a fileira enquanto você arrasta.
 
 Um clique onde a prévia está vermelha não coloca nada: o Editor diz que
 tem algo no caminho e toca uma batida suave e grave, para você saber que

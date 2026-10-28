@@ -1212,7 +1212,7 @@ export default Object.freeze({
     'starterJob.keepBuilding': 'Lanjut membangun',
     'editor.touchPlaceHint': 'Ketuk untuk melihat letak balok, lalu ketuk lagi atau tekan Taruh. Putar dan Miringkan memutarnya terlebih dahulu.',
     'editor.touchPlacingHint': 'Menempatkan "{title}" — ketuk untuk melihat letaknya, lalu ketuk lagi atau tekan Taruh.',
-    'editor.placeHint': 'Arahkan ke tanah, R untuk memutar, klik untuk menempatkan.',
+    'editor.placeHint': 'Arahkan ke tanah, R untuk memutar, klik untuk menempatkan, Shift+seret untuk memasang satu baris.',
     'editor.placementBlocked': 'Ada yang menghalangi di sini. Coba tempat lain, atau tekan R untuk memutarnya.',
     'editor.touchPlacementBlocked': 'Ada yang menghalangi di sini. Coba tempat lain, atau ketuk Putar untuk memutarnya.',
     'editor.turnBlocked': 'Ada sesuatu yang menghalangi putaran itu. Pindahkan dulu ke tempat yang lebih lapang.',

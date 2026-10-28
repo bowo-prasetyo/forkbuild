@@ -314,6 +314,7 @@ the fixes above are in.
 
 - **Drag to lay a row.** Hold Shift and drag across the ground to lay a
   line of the current brick. Walls and paths are what people build most.
+  *Done 2026-10-28 (roadmap, "Shift+drag lays a row").*
 - **Pick from the scene.** Alt-click (or a long press) an existing brick to
   take its type, colour and rotation. Builders expect this from other
   building games.

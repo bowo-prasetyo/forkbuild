@@ -1,5 +1,8 @@
 import { nextTilt } from '../../core/building/BrickOrientation.js';
-import { restingHeight } from '../../core/building/BrickResting.js';
+import { footprintOf, restingHeight } from '../../core/building/BrickResting.js';
+import { brickRow } from '../../core/building/BrickRow.js';
+import { message } from '../../core/app/Message.js';
+import { CompositeCommand } from '../commands/CompositeCommand.js';
 import { Tool } from './Tool.js';
 import { PlacementValidator } from '../../core/publication/PlacementValidator.js';
 import { PlaceBrickCommand } from '../commands/PlaceBrickCommand.js';
@@ -53,6 +56,13 @@ export const DEFAULT_BRICK_ID = 'core:cube';
 //      switch, so rotating once and then picking a different brick from
 //      the Build Library keeps the same orientation — see
 //      docs/Roadmap.md, 0.2.87.
+//
+// Drag to lay a row: a press with Shift held starts a row where the ghost is
+// (EditorSession hands the whole Shift+drag to this tool, the camera held
+// still); moving lays it out along x or z (core/building/BrickRow.js) as one
+// ghost, red when any of its spots is taken; releasing places it as one undo
+// step, or, blocked, places nothing and says so. Escape drops it. A Shift+click
+// that doesn't move is a row of one: one brick, as a click.
 export class PlacementTool extends Tool {
     constructor(context) {
         super(context);
@@ -64,6 +74,8 @@ export class PlacementTool extends Tool {
         this._tilt = 0;
         this._lastPointer = null;
         this._lastPosition = null;
+        // The row being laid by a Shift+drag: { anchor, cells, valid }.
+        this._row = null;
     }
 
     // Place with nothing chosen yet (a new build's first click on Place, or
@@ -78,6 +90,7 @@ export class PlacementTool extends Tool {
     }
 
     deactivate() {
+        this.cancelRow();
         this.context.previewUseCase.hide();
         this._rotation = 0;
         this._tilt = 0;
@@ -135,10 +148,18 @@ export class PlacementTool extends Tool {
         // Kept so a tilt can work out the pending brick's resting height again.
         this._lastPointer = pointerEvent;
         this._lastPosition = position;
+        if (this._row) {
+            this._showRow(definitionId, position);
+            return;
+        }
         this._showPreview(definitionId, position);
     }
 
     onPointerDown(pointerEvent) {
+        if (pointerEvent?.modifiers?.shift) {
+            this._beginRow(pointerEvent);
+            return;
+        }
         const preview = this.context.editorContext.preview;
         if (!preview.visible || !preview.definitionId) {
             return;
@@ -177,8 +198,31 @@ export class PlacementTool extends Tool {
         this._lastPosition = null;
     }
 
+    onPointerUp(pointerEvent) {
+        if (this._row) {
+            this._commitRow(pointerEvent);
+        }
+    }
+
+    get layingRow() {
+        return this._row !== null;
+    }
+
+    // Drops the row being laid, placing nothing.
+    cancelRow() {
+        if (!this._row) return;
+        this._row = null;
+        this.context.compositionPreviewUseCase?.hide();
+        const definitionId = this.context.editorContext.activeBrick.definitionId;
+        if (definitionId && this._lastPosition) this._showPreview(definitionId, this._lastPosition);
+    }
+
     onKeyDown(keyEvent) {
         if (!keyEvent || typeof keyEvent.key !== 'string') {
+            return;
+        }
+        if (keyEvent.key === 'Escape') {
+            this.cancelRow();
             return;
         }
         const key = keyEvent.key.toLowerCase();
@@ -252,6 +296,83 @@ export class PlacementTool extends Tool {
 
     get pendingTilt() {
         return this._tilt;
+    }
+
+    // The row starts where the ghost is under the pointer.
+    _beginRow(pointerEvent) {
+        this.onPointerMove(pointerEvent);
+        const definitionId = this.context.editorContext.activeBrick.definitionId;
+        if (!definitionId || !this._lastPosition) return;
+        this._row = { anchor: this._lastPosition, cells: [], valid: false };
+        this.context.previewUseCase.hide();
+        this._showRow(definitionId, this._lastPosition);
+    }
+
+    // The row from its anchor towards `target`, shown as one ghost: the
+    // structure ghost (renderer/CompositionPreviewRenderer.js), with every
+    // brick in the pending brick's colour, turn and tilt.
+    _showRow(definitionId, target) {
+        const registry = this.context.registry;
+        const definition = registry.get(definitionId);
+        const preview = this.context.compositionPreviewUseCase;
+        if (!definition || !preview) return;
+        const anchor = this._row.anchor;
+        const footprint = footprintOf(definition, { x: 0, z: 0 }, this._rotation, this._tilt);
+        const cells = brickRow(anchor, target, { stepX: footprint.maxX - footprint.minX, stepZ: footprint.maxZ - footprint.minZ });
+        const world = this.context.world;
+        const buildings = world.getBuildings();
+        const valid = buildings.length === 0
+            || cells.every((cell) => this._placementValidator.canPlace(world, buildings[0].id, cell));
+        this._row.cells = cells;
+        this._row.valid = valid;
+        const color = this.context.editorContext.activeBrick.color !== null
+            ? this.context.editorContext.activeBrick.color
+            : definition.color;
+        const last = cells[cells.length - 1];
+        const row = {
+            // A new id whenever the row's bricks change, so the ghost is rebuilt.
+            id: `row:${definitionId}:${cells.length}:${last.x}:${last.z}:${this._rotation}:${this._tilt}:${color}`,
+            bricks: cells.map((cell) => ({
+                definitionId,
+                position: { x: cell.x - anchor.x, y: 0, z: cell.z - anchor.z },
+                rotation: this._rotation,
+                tilt: this._tilt,
+                color
+            }))
+        };
+        preview.show(row, anchor, 0, valid);
+    }
+
+    // Places the row as one undo step; blocked, it places nothing and says so.
+    _commitRow(pointerEvent) {
+        const row = this._row;
+        this._row = null;
+        this.context.compositionPreviewUseCase?.hide();
+        const world = this.context.world;
+        const buildings = world.getBuildings();
+        if (buildings.length > 0 && row.cells.length > 0) {
+            if (!row.valid) {
+                this.context.editorContext.notePlacementBlocked?.('brick');
+            } else {
+                const definitionId = this.context.editorContext.activeBrick.definitionId;
+                const color = this.context.editorContext.activeBrick.color;
+                const commands = row.cells.map((cell) => new PlaceBrickCommand({
+                    worldId: world.id,
+                    buildingId: buildings[0].id,
+                    definitionId,
+                    position: cell,
+                    rotation: this._rotation,
+                    tilt: this._tilt,
+                    color
+                }));
+                this.context.commandHistory.execute(commands.length === 1
+                    ? commands[0]
+                    : commands.reduce((composite, command) => composite.add(command),
+                        new CompositeCommand({ description: message('history.placeBricks', { count: commands.length }) })));
+            }
+        }
+        // The ghost goes back to following the pointer.
+        if (pointerEvent && pointerEvent.worldPosition) this.onPointerMove(pointerEvent);
     }
 
     // Shared by onPointerMove() (a fresh position) and onKeyDown() (the

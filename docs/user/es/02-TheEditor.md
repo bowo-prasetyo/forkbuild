@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1c85e2e33e2425a8 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2a113915afc98f78 -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -197,6 +197,14 @@ Solo un clic coloca: pulse y suelte sin moverse. Arrastrar para mirar
 alrededor (con cualquier botón) mueve la cámara y no coloca nada, así que
 Colocar puede seguir activo mientras gira la construcción para buscar el
 siguiente sitio.
+
+**Mayús+arrastrar** pone una fila: mantenga Mayús, pulse donde va el primer
+bloque y arrastre por el suelo o por lo alto de un muro. Una vista previa muestra
+la fila entera, borde con borde, con el color y el giro del bloque; suelte
+para colocarla, como un solo paso para deshacer. La fila sigue la dirección
+en la que arrastró más, a la altura del primer bloque. Si alguno de sus
+sitios está ocupado, la vista previa está en rojo y no se coloca nada; **Escape**
+descarta la fila mientras arrastra.
 
 Un clic donde la vista previa está en rojo no coloca nada: el Editor dice
 que hay algo en medio y suena un golpe suave y grave, para que sepa que

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1c85e2e33e2425a8 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2a113915afc98f78 -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -200,6 +200,13 @@ Seul un clic place : appuyez et relâchez sans bouger. Faire glisser pour
 regarder autour (avec n’importe quel bouton) déplace la caméra et ne place
 rien : Placement peut rester actif pendant que vous tournez la
 construction pour trouver l’endroit suivant.
+
+**Maj+glisser** pose une rangée : maintenez Maj, appuyez là où va la
+première brique et glissez sur le sol ou le long du haut d’un mur. Un aperçu montre toute la rangée, bord à bord, dans la couleur et
+l’orientation de la brique ; relâchez pour la placer, en une seule étape à
+annuler. La rangée suit le sens où vous avez glissé le plus, à la hauteur de
+la première brique. Si l’une de ses places est prise, l’aperçu est rouge
+et rien n’est placé ; **Échap** abandonne la rangée pendant le glissement.
 
 Un clic là où l’aperçu est rouge ne place rien : l’Éditeur dit que
 quelque chose gêne et joue un petit coup sourd, pour que vous sachiez
