@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: abbb99ac426b1347 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 080ab27533db83cb -->
 # 02 — Editor
 
 <!-- languages -->
@@ -633,6 +633,10 @@ atau dengan menekan `M` (tercantum di daftar Pintasan Keyboard, `?`);
 penggeser di sampingnya mengatur volume. Ini pengaturan yang sama dengan
 milik Tampilan Dunia, diingat di perangkat ini. Suara dimulai dengan klik
 atau tekanan tombol pertama Anda, sebagaimana diwajibkan browser.
+
+Di ponsel atau layar sentuh, suara adalah tombol kecil 🔊 di samping **Lihat
+ke dalam** dan **Suara**, agar tidak menghalangi bangunan Anda: ketuk untuk
+tombol suara dan musik, dan atur volume dengan tombol volume perangkat.
 
 Musik diputar pelan saat Anda membangun, sedikit lebih riang daripada di Tampilan Dunia. Tombol **♪ Musik** di samping penggeser menyalakan atau mematikannya; pilihannya sama dengan di Tampilan Dunia.
 

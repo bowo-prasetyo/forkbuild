@@ -936,6 +936,38 @@ button.palette-item {
     color: var(--accent-ink);
 }
 
+/* Sound folded into one button beside the others (ui/components/SoundControl.js,
+   `compact`), on a phone or a touch screen; its toggles open beneath it. */
+.editor-sound {
+    position: relative;
+}
+
+.editor-sound-button {
+    background: rgba(var(--overlay-rgb), 0.93);
+    color: var(--ink);
+    border: 1px solid var(--line-strong);
+}
+
+.editor-sound-button.action-btn--active {
+    border-color: var(--accent);
+}
+
+.editor-sound-menu {
+    position: absolute;
+    top: calc(100% + 0.3rem);
+    right: 0;
+    z-index: 26;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.3rem;
+    padding: 0.3rem;
+    background: rgba(var(--overlay-rgb), 0.97);
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    white-space: nowrap;
+}
+
 /* Voice building's panel (ui/components/VoicePanel.js), under the buttons. */
 .editor-voice {
     position: absolute;

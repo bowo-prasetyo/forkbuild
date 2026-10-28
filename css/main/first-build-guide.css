@@ -1,6 +1,6 @@
 /* The guided first build (ui/components/FirstBuildGuide.js): a small card
    over the Editor's viewport, bottom left, out of the way of the sound
-   control (top right) and the touch bar (bottom center). */
+   control (top right) and, on a touch screen, above the touch bar. */
 .first-build-guide,
 .first-build-guide-pill {
     position: absolute;
@@ -226,6 +226,16 @@
         width: min(17rem, calc(100% - 7.5rem));
         padding: 0.6rem 0.7rem;
         font-size: 0.82rem;
+    }
+}
+
+/* A touch screen wider than a phone (a tablet) has the touch bar at the bottom
+   too, wide enough to run through the card, so the card starts above it
+   (finding P2-11 of docs/reviews/EditorPlacementUX-2026-10-27.md). */
+@media (pointer: coarse) and (min-width: 721px) {
+    .first-build-guide,
+    .first-build-guide-pill {
+        bottom: calc(3.75rem + 56px + env(safe-area-inset-bottom, 0px));
     }
 }
 

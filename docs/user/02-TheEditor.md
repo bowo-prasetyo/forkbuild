@@ -599,6 +599,11 @@ slider beside it sets the volume. It's the same
 setting as World View's, remembered on this device. Sound starts with your
 first click or key press, as browsers require.
 
+On a phone or a touch screen, Sound is the small 🔊 button beside **See
+inside** and **Voice**, so it stays clear of your build: tap it for the
+sound and music buttons, and use the device's own volume buttons for the
+volume.
+
 Music plays softly while you build, a little livelier than World View's. The **♪ Music** button beside the slider turns it off or on; it's the same choice as in World View.
 
 ## Saving, publishing, starting over

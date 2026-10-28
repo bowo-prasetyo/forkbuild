@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: abbb99ac426b1347 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 080ab27533db83cb -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -628,6 +628,11 @@ visualização ou pressionando `M` (listado na sobreposição Atalhos de
 teclado, `?`); o controle deslizante ao lado define o volume. É a mesma
 configuração da Visão do mundo, lembrada neste dispositivo. O som começa com
 seu primeiro clique ou tecla, como os navegadores exigem.
+
+Num celular ou numa tela sensível ao toque, o som é o pequeno botão 🔊 ao
+lado de **Ver por dentro** e **Voz**, para não tapar sua construção: toque
+nele para ver os botões de som e música, e use os botões de volume do
+próprio aparelho.
 
 Enquanto você constrói, toca uma música suave, um pouco mais animada que a da Visão do mundo. O botão **♪ Música** ao lado do controle a liga ou desliga; é a mesma escolha da Visão do mundo.
 

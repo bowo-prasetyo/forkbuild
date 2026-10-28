@@ -9359,3 +9359,25 @@ search box and each card's ⋮ button, and a keyboard or switch user couldn't ch
   arrow keys). Checked in the running app with a real keyboard: "roof", Down, Right, Enter chooses the Hip Roof and
   turns Place on; on Structures, a search, Down and Enter start placing; from the search box, Tab goes colour, one
   swatch, one brick, and out.
+
+## Floating panels keep clear of the build (unnumbered, 2026-10-27)
+
+**Building, on a phone or a tablet.** Finding P2-11 of
+[the Editor placement audit](../reviews/EditorPlacementUX-2026-10-27.md): on a touch screen the Sound panel floated in
+the middle of the Editor's view. The rule that lifts it clear of World View's walking pad lifted it there too, though
+the Editor has no pad, so it covered about half the view's width at mid-height and took taps meant for the build. On a
+tablet the touch bar also ran through the First Build Guide's card.
+
+- **On a phone or a touch screen, Sound is one small 🔊 button** among the view's other buttons (ui/components/
+  SoundControl.js, `compact`; ui/views/EditorView.js). It sits beside See inside and Voice, below Tools. Tapping it opens
+  the Sound and Music toggles beneath it, and a tap anywhere else folds them away. The device's own volume buttons stand
+  in for the slider, as they already did on touch. The full panel stays on desktop, and World View is unchanged.
+- **The First Build Guide starts above the touch bar on a tablet** (css/main/first-build-guide.css). It is still bottom
+  left on desktop and top left on a phone.
+- The user guide's *Sound* says where the button is on a phone or a touch screen, in all eight languages.
+- Tests: tests/SoundControlCompactBrowser.test.js (folded to one named button; a tap opens the sound and music toggles;
+  each works and says so; with sound off there's no music toggle; a tap elsewhere folds it; without `compact` the panel
+  is as before). Checked in the running app: on an emulated iPhone 13 and iPad, the old panel's spot now reaches the
+  build, and the 🔊 button opens, toggles and folds. On both iPad orientations the guide and the touch bar no longer
+  overlap. Desktop keeps the full panel.
+- Not done: on desktop the First Build Guide still covers the bottom left of the view until it is folded with **−**.

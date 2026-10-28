@@ -429,6 +429,18 @@ export default {
                             :aria-label="t('editorAction.ui.voice')"
                             @click="toggleVoice"
                         >🎤 {{ voice.step === 'listening' ? t('voice.stop') : t('voice.button') }}</button>
+                        <!-- On a phone or a touch screen, Sound folds into one button here
+                             rather than floating over the build. -->
+                        <SoundControl
+                            v-if="soundAvailable && (compactLayout || touchInput)"
+                            compact
+                            :muted="soundMuted"
+                            :volume="soundVolume"
+                            :music="soundMusic"
+                            @toggle="toggleSound"
+                            @volume="setSoundVolume"
+                            @toggle-music="toggleSoundMusic"
+                        />
                     </div>
                     <VoicePanel
                         :voice="voice"
@@ -460,7 +472,7 @@ export default {
                         @celebrated="finishFirstBuildGuide"
                     />
                     <SoundControl
-                        v-if="soundAvailable"
+                        v-if="soundAvailable && !(compactLayout || touchInput)"
                         :muted="soundMuted"
                         :volume="soundVolume"
                         :music="soundMusic"

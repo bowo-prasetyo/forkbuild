@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: abbb99ac426b1347 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 080ab27533db83cb -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -672,6 +672,11 @@ ou en appuyant sur `M` (listé dans le panneau des raccourcis clavier,
 `?`) ; le curseur à côté règle le volume. C’est le même réglage que dans
 la Vue du Monde, mémorisé sur cet appareil. Le son démarre à votre premier
 clic ou appui sur une touche, comme l’exigent les navigateurs.
+
+Sur un téléphone ou un écran tactile, le son est le petit bouton 🔊 à côté
+de **Voir l’intérieur** et **Voix**, pour ne pas gêner votre construction :
+touchez-le pour les boutons du son et de la musique, et réglez le volume
+avec les boutons de l’appareil.
 
 Une musique douce accompagne la construction, un peu plus vive que celle de la Vue du Monde. Le bouton **♪ Musique** à côté du curseur l’active ou la désactive ; c’est le même choix que dans la Vue du Monde.
 
