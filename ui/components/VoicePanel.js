@@ -37,7 +37,7 @@ export default {
                 </template>
                 <p v-else-if="voice.step === 'removed'">{{ t('voice.removed') }}</p>
                 <p v-else-if="voice.step === 'failed'">
-                    {{ voice.reason === 'microphone' ? t('voice.micBlocked') : voice.reason === 'unsupported' ? t('voice.unsupported') : t('voice.failed', { reason: voice.reason }) }}
+                    {{ voice.reason === 'microphone' ? t('voice.micBlocked') : voice.reason === 'unsupported' ? t('voice.unsupported') : voice.reason === 'timeout' ? t('voice.timeout') : t('voice.failed', { reason: voice.reason }) }}
                 </p>
             </div>
             <div class="editor-voice-actions">

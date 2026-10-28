@@ -621,6 +621,7 @@ export default Object.freeze({
     'voice.micBlocked': '마이크가 허용되지 않았습니다. 브라우저 설정에서 이 사이트에 허용해 주세요.',
     'voice.failed': '음성을 시작할 수 없습니다: {reason}',
     'voice.unsupported': '이 브라우저에서는 녹음하거나 음성 모델을 실행할 수 없습니다.',
+    'voice.timeout': '말한 내용을 알아듣는 데 너무 오래 걸려 중지했습니다. 다시 시도해 주세요.',
     'voice.turnOff': '음성 끄기',
     'voice.remove': '음성 모델 삭제',
     'voice.removed': '음성 모델을 이 브라우저에서 삭제했습니다.',

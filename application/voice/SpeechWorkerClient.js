@@ -6,10 +6,19 @@
 // 3D view keeps drawing and the page keeps answering meanwhile.
 //
 // If the worker stops (it couldn't start, or the browser ended it), what was
-// asked fails with the reason and the next request starts a new one.
+// asked fails with the reason and the next request starts a new one. So does
+// a transcription that takes longer than TRANSCRIBE_TIMEOUT_MS: a stuck
+// model can't be interrupted, so its worker is ended, the request fails with
+// TRANSCRIBE_TIMEOUT, and the next load() reads the model from this browser's
+// cache in a new one.
 
 // About how much turning voice on downloads: the engine and the model.
 export const SPEECH_DOWNLOAD_BYTES = 70 * 1000 * 1000;
+
+// How long working out what was said may take, from a few seconds of sound,
+// before it is given up; and the reason it then fails with.
+export const TRANSCRIBE_TIMEOUT_MS = 30 * 1000;
+export const TRANSCRIBE_TIMEOUT = 'timeout';
 
 // This site's copy of the speech engine's loader (scripts/vendor.mjs).
 export const SPEECH_ENGINE_LOADER = 'vendor/onnxruntime-web/ort-wasm-simd-threaded.asyncify.mjs';
@@ -23,9 +32,10 @@ export function speechSupported(scope = globalThis) {
 export class SpeechWorkerClient {
     // `createWorker()` starts the worker; `engineLoaderUrl` is
     // SPEECH_ENGINE_LOADER's full address.
-    constructor({ createWorker, engineLoaderUrl }) {
+    constructor({ createWorker, engineLoaderUrl, transcribeTimeoutMs = TRANSCRIBE_TIMEOUT_MS }) {
         this._createWorker = createWorker;
         this._engineLoaderUrl = engineLoaderUrl;
+        this._transcribeTimeoutMs = transcribeTimeoutMs;
         this._worker = null;
         this._pending = new Map();
         this._nextId = 1;
@@ -43,14 +53,14 @@ export class SpeechWorkerClient {
 
     // `samples` (mono, 16 kHz, Float32Array) is handed to the worker, not copied.
     transcribe(samples, language) {
-        return this._ask({ type: 'transcribe', samples, language }, null, [samples.buffer]);
+        return this._ask({ type: 'transcribe', samples, language }, null, [samples.buffer], this._transcribeTimeoutMs);
     }
 
     remove() {
         return this._ask({ type: 'remove' });
     }
 
-    _ask(request, onProgress = null, transfer = []) {
+    _ask(request, onProgress = null, transfer = [], timeoutMs = null) {
         let worker;
         try {
             worker = this._started();
@@ -59,7 +69,8 @@ export class SpeechWorkerClient {
         }
         const id = this._nextId++;
         return new Promise((resolve, reject) => {
-            this._pending.set(id, { resolve, reject, onProgress });
+            const timer = timeoutMs === null ? null : setTimeout(() => this._stopped(worker, TRANSCRIBE_TIMEOUT), timeoutMs);
+            this._pending.set(id, { resolve, reject, onProgress, timer });
             worker.postMessage({ ...request, id, engineLoaderUrl: this._engineLoaderUrl }, transfer);
         });
     }
@@ -85,6 +96,7 @@ export class SpeechWorkerClient {
             return;
         }
         this._pending.delete(id);
+        clearTimeout(pending.timer);
         if (error) pending.reject(new Error(error));
         else pending.resolve(value);
     }
@@ -95,6 +107,9 @@ export class SpeechWorkerClient {
         worker.terminate?.();
         const pending = [...this._pending.values()];
         this._pending.clear();
-        for (const { reject } of pending) reject(new Error(reason));
+        for (const { reject, timer } of pending) {
+            clearTimeout(timer);
+            reject(new Error(reason));
+        }
     }
 }

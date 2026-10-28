@@ -621,6 +621,7 @@ export default Object.freeze({
     'voice.micBlocked': 'Le micro n’est pas autorisé : autorisez-le pour ce site dans les réglages de votre navigateur.',
     'voice.failed': 'La voix n’a pas pu démarrer : {reason}',
     'voice.unsupported': 'Ce navigateur ne peut pas enregistrer ni faire tourner le modèle vocal.',
+    'voice.timeout': 'Comprendre ce qui a été dit a pris trop de temps, alors c’est arrêté. Réessayez.',
     'voice.turnOff': 'Désactiver la voix',
     'voice.remove': 'Supprimer le modèle vocal',
     'voice.removed': 'Le modèle vocal a été supprimé de ce navigateur.',

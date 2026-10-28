@@ -620,6 +620,7 @@ export default Object.freeze({
     'voice.micBlocked': 'The microphone isn’t allowed: allow it for this site in your browser’s settings.',
     'voice.failed': 'Voice couldn’t start: {reason}',
     'voice.unsupported': 'This browser can’t record or run the speech model.',
+    'voice.timeout': 'Working out what was said took too long, so it was stopped. Try again.',
     'voice.turnOff': 'Turn voice off',
     'voice.remove': 'Remove the speech model',
     'voice.removed': 'The speech model was removed from this browser.',

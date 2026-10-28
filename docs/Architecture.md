@@ -354,7 +354,13 @@ the detailed references; in short:
   serveSpeech.js), so recognition never pauses the 3D view; the page talks to
   it through application/voice/SpeechWorkerClient.js, which has the
   runtime's methods, starts the worker on first use and starts a new one if
-  it stops. ui/voice/speechRecognizer.js keeps one for the visit, shared by
+  it stops. The model writes at most `MAX_SPOKEN_TOKENS` (48) for a command,
+  not Whisper's 448, so a repeating loop over noise ends quickly; and a
+  transcription still going after `TRANSCRIBE_TIMEOUT_MS` (30 s) ends its
+  worker, which can't be interrupted otherwise, and fails as `timeout`, so
+  the next press starts afresh with the model from the cache. What is heard
+  after voice was turned off, or the view left, is let go
+  (useVoiceCommands.js). ui/voice/speechRecognizer.js keeps one for the visit, shared by
   both views, so the model loads once; scripts/build.mjs bundles the worker
   on its own (bundle/voice/) and names it in index.html's
   `<meta name="forkbuild-speech-worker">`. Before the model hears anything,

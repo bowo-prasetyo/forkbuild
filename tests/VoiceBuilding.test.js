@@ -1,8 +1,8 @@
 import { createHash, webcrypto } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { actionNamed, actionSaid, nearestBySound, soundsExactly, cleanTranscript, whisperLanguage, WHISPER_LANGUAGES } from '../core/voice/Transcript.js';
-import { SPEECH_ENGINE, SPEECH_MODEL, SpeechRuntime } from '../application/voice/SpeechRuntime.js';
-import { SPEECH_ENGINE_LOADER, SpeechWorkerClient, speechSupported } from '../application/voice/SpeechWorkerClient.js';
+import { MAX_SPOKEN_TOKENS, SPEECH_ENGINE, SPEECH_MODEL, SpeechRuntime } from '../application/voice/SpeechRuntime.js';
+import { SPEECH_ENGINE_LOADER, SpeechWorkerClient, TRANSCRIBE_TIMEOUT, TRANSCRIBE_TIMEOUT_MS, speechSupported } from '../application/voice/SpeechWorkerClient.js';
 import { serveSpeech } from '../application/voice/serveSpeech.js';
 import { interpretWorldCommand } from '../core/voice/WorldVoiceCommand.js';
 import { worldVoiceVocabulary } from '../ui/i18n/worldVoiceWords.js';
@@ -67,13 +67,17 @@ function fakeCaches() {
     const engine = { url: 'https://cdn.example/engine.wasm', sha256: createHash('sha256').update(bytes).digest('hex'), bytes: bytes.length };
     let fetches = 0;
     let calls = [];
+    let heardWith = null;
     const env = { backends: { onnx: { wasm: {} } } };
     const library = {
         env,
         pipeline: async (task, model, options) => {
             calls.push({ task, model, options });
             options.progress_callback({ status: 'progress', file: 'encoder.onnx', loaded: 5, total: 10 });
-            return async (samples, settings) => ({ text: ` heard ${samples.length} as ${settings.language}/${settings.task}. ` });
+            return async (samples, settings) => {
+                heardWith = settings;
+                return { text: ` heard ${samples.length} as ${settings.language}/${settings.task}. ` };
+            };
         }
     };
     const caches = fakeCaches();
@@ -95,6 +99,7 @@ function fakeCaches() {
     assert(calls.length === 1 && calls[0].task === 'automatic-speech-recognition' && calls[0].model === SPEECH_MODEL && calls[0].options.device === 'wasm' && calls[0].options.dtype === 'q8', 'Whisper is loaded on WebAssembly, quantized');
     assert(progress.some((event) => event.phase === 'engine') && progress.some((event) => event.phase === 'model' && event.loaded === 5 && event.total === 10), 'progress is reported for the engine and the model');
     assert(await runtime.transcribe(new Float32Array(3), 'english') === ' heard 3 as english/transcribe. ', 'it transcribes in the language it is told');
+    assert(heardWith.max_new_tokens === MAX_SPOKEN_TOKENS && MAX_SPOKEN_TOKENS <= 64, 'and writes a command\'s few words at most, never Whisper\'s 448 tokens');
 
     const again = new SpeechRuntime({ engine, caches, subtle: webcrypto.subtle, fetch: async () => { fetches += 1; return new Response(bytes); }, importLibrary: async () => library, engineLoaderUrl: 'x' });
     await again.load();
@@ -185,6 +190,15 @@ function workerPair(runtimeFor) {
     assert(await pending === 'out of memory' && crashing.terminated === 1, 'a worker that stops fails what was asked of it');
     stranded.load().catch(() => {});
     assert(crashing.started === 2, 'and the next request starts a new one');
+
+    const stuck = workerPair(() => ({ load: async () => {}, transcribe: () => new Promise(() => {}) }));
+    const waiting = new SpeechWorkerClient({ createWorker: stuck.createWorker, engineLoaderUrl: 'x', transcribeTimeoutMs: 20 });
+    await waiting.load();
+    const given = await waiting.transcribe(new Float32Array(16), 'english').catch((error) => error.message);
+    assert(given === TRANSCRIBE_TIMEOUT && stuck.terminated === 1, `a transcription that takes too long fails, and its stuck worker is ended (got ${given})`);
+    await waiting.load();
+    assert(stuck.started === 2, 'the next request starts a new worker');
+    assert(TRANSCRIBE_TIMEOUT_MS >= 10 * 1000, 'a slow phone has time enough');
 
     const browser = { WebAssembly: {}, Worker: function Worker() {}, caches: {}, crypto: { subtle: {} }, navigator: { mediaDevices: { getUserMedia() {} } }, MediaRecorder: function MediaRecorder() {} };
     assert(speechSupported(browser) && !speechSupported({ ...browser, Worker: undefined }) && !speechSupported({ ...browser, MediaRecorder: undefined }), 'voice needs workers, WebAssembly and a microphone');
@@ -452,5 +466,30 @@ function workerPair(runtimeFor) {
     const unsupported = useVoiceCommands({ act: () => ({}), runtime, record, supported: false, storage });
     unsupported.toggleVoice();
     assert(unsupported.voice.value.reason === 'unsupported', 'a browser that can\'t says so');
+
+    const on = () => ({ getItem: () => 'yes', setItem() {}, removeItem() {} });
+    const slow = useVoiceCommands({ act: () => ({ kind: 'done' }), runtime: { ...runtime, transcribe: async () => { throw new Error(TRANSCRIBE_TIMEOUT); } }, record, supported: true, language: () => 'en', storage: on() });
+    slow.toggleVoice();
+    await settle();
+    slow.toggleVoice();
+    await settle();
+    await settle();
+    assert(slow.voice.value.step === 'failed' && slow.voice.value.reason === 'timeout', 'a model that took too long says so');
+    slow.toggleVoice();
+    await settle();
+    assert(slow.voice.value.step === 'listening', 'and the next press listens again');
+
+    let answer = null;
+    const lateActs = [];
+    const late = useVoiceCommands({ act: (text) => { lateActs.push(text); return { kind: 'done' }; }, runtime: { ...runtime, transcribe: () => new Promise((resolve) => { answer = resolve; }) }, record, supported: true, language: () => 'en', storage: on() });
+    late.toggleVoice();
+    await settle();
+    late.toggleVoice();
+    await settle();
+    assert(late.voice.value.step === 'working' && answer, 'stopped, it works out what was said');
+    await late.turnOffVoice();
+    answer(' Delete the trees.');
+    await settle();
+    assert(late.voice.value.step === 'off' && lateActs.length === 0, 'turned off meanwhile, what it heard afterwards is neither shown nor done');
     console.log('✓ the voice states');
 }
