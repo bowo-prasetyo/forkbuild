@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 487a84099ce93c78 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d06277fe319f2763 -->
 # 04 — Publicar e remixar
 
 <!-- languages -->
@@ -475,9 +475,14 @@ O que ele compara, e o que ele não tem como saber:
   construção com menos de 20 blocos seus não é comparada: construções
   pequenas se parecem fácil demais.
 - Um bloco conta como igual quando é o mesmo tipo de bloco no mesmo lugar,
-  mesmo que a sua construção inteira esteja em outro lugar ou girada um
-  quarto de volta. As cores, e para onde cada bloco está virado, não
+  mesmo que a sua construção inteira esteja em outro lugar, girada um quarto de volta ou espelhada. As cores, e para onde cada bloco está virado, não
   contam.
+- Duas construções se parecem quando a maior parte das duas é igual, ou quando
+  quase toda uma delas (85% ou mais) está na outra, então uma cópia com blocos
+  seus a mais também é notada. O que elas têm em comum precisa ser pelo menos
+  20 blocos de pelo menos quatro tipos: paredes, um piso ou uma caixa de um ou
+  dois tipos de bloco, ou as paredes e o telhado de duas casinhas, se parecem
+  por acaso com frequência demais para dizer alguma coisa.
 - Ficam de fora as suas próprias construções, todas as da árvore
   genealógica da sua (a construção da qual ela é remix, os remixes dela e
   qualquer outro remix da mesma família) e as construções publicadas depois

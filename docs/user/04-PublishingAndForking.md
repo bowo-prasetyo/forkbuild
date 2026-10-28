@@ -447,8 +447,13 @@ What it compares, and what it can't know:
   count as yours. A build with fewer than 20 bricks of your own isn't compared:
   small builds look alike too easily.
 - A brick counts as the same when it is the same kind of brick in the same
-  place, even if your whole build stands somewhere else or is turned a
-  quarter turn. Colours, and which way each brick faces, don't count.
+  place, even if your whole build stands somewhere else, is turned a quarter turn or is mirrored. Colours, and which way each brick faces, don't count.
+- Two builds look alike when most of both is the same, or when nearly all of
+  one (85% or more) stands in the other, so a copy with more of its own added
+  is noticed too. What they share has to be at least 20 bricks of at least
+  four kinds: walls, a floor or a box of one or two kinds of brick, or the
+  walls and roof of two small houses, look alike by chance too often to say
+  anything.
 - Your own builds, every build in your build's family tree (what it was
   remixed from, its remixes, and every other remix in the same family), and
   builds published after yours was first published are left out.

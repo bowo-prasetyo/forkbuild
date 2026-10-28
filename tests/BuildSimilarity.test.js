@@ -4,7 +4,8 @@
 import { Brick } from '../core/building/Brick.js';
 import { Position } from '../core/document/Position.js';
 import {
-    MIN_COMPARED_BRICKS, MIN_READY_MADE_POINTS, SIMILAR_BUILD_THRESHOLD, buildShape, compareBuildShapes, isSimilarBuild, readyMadeCoverage, similarityUpperBound, withoutReadyMade
+    CONTAINED_BUILD_THRESHOLD, MIN_COMPARED_BRICKS, MIN_READY_MADE_POINTS, MIN_SHARED_KINDS, SIMILAR_BUILD_THRESHOLD, buildShape, compareBuildShapes, couldBeSimilar,
+    isSimilarBuild, lookAlikeShare, readyMadeCoverage, similarityUpperBound, withoutReadyMade
 } from '../core/catalog/BuildSimilarity.js';
 import { CollectionLibrary } from '../core/library/CollectionLibrary.js';
 import { VillageLibrary } from '../core/library/VillageLibrary.js';
@@ -139,6 +140,78 @@ console.log('✓ a rebuild with changes');
     assert(!isSimilarBuild(evidence), '12. and is not pointed out');
 }
 console.log('✓ a different build');
+
+// A mirrored copy, a copy with more of its own, and a part of a build.
+{
+    for (const degrees of [0, 90, 180, 270]) {
+        const evidence = compareBuildShapes(buildShape(original), buildShape(turnedAndMoved(original, degrees, { x: 3, y: 0, z: 3 })));
+        assert(!evidence.mirrored, `12a. a copy turned ${degrees}° is not called mirrored`);
+    }
+    const mirrored = turnedAndMoved(original.map((b) => brick(b.definitionId, -b.position.x, b.position.y, b.position.z)), 90, { x: 8, y: 0, z: -2 });
+    const flipped = compareBuildShapes(buildShape(original), buildShape(mirrored));
+    assert(flipped.similarity === 1 && flipped.mirrored, `12b. a mirrored copy is lined up, entirely alike, and said to be mirrored (got ${flipped.similarity})`);
+    assert(compareBuildShapes(buildShape(original), buildShape(mirrored), { mirror: false }).similarity < 1, '12c. turned only, its door and windows would not line up');
+    assert(isSimilarBuild(flipped), '12d. it is pointed out');
+
+    const garden = Array.from({ length: 70 }, (_, i) => brick('core:plate_2x4', 40 + (i % 10), 0.5, Math.floor(i / 10)));
+    const extended = compareBuildShapes(buildShape([...turnedAndMoved(original, 180, { x: -6, y: 0, z: 2 }), ...garden]), buildShape(original));
+    assert(extended.similarity < SIMILAR_BUILD_THRESHOLD && extended.theirsInMine === 1 && extended.mineInTheirs < 0.5,
+        `12e. a copy with as many bricks again of its own is less than ${SIMILAR_BUILD_THRESHOLD * 100}% the same, but all of what it copied stands in it (${extended.similarity}, ${extended.theirsInMine})`);
+    assert(isSimilarBuild(extended), '12f. and it is pointed out');
+    assert(Object.values(extended.sharedByKind).reduce((sum, n) => sum + n, 0) === extended.shared && extended.sharedKinds === 4, '12g. the shared bricks are counted by kind');
+
+    const reversed = compareBuildShapes(buildShape(original), buildShape([...original, ...garden]));
+    assert(reversed.mineInTheirs === 1 && isSimilarBuild(reversed), '12h. either way round');
+    const most = compareBuildShapes(buildShape([...original.slice(0, Math.floor(original.length * 0.7)), ...garden]), buildShape(original));
+    assert(most.theirsInMine < CONTAINED_BUILD_THRESHOLD && !isSimilarBuild(most), `12i. less than ${CONTAINED_BUILD_THRESHOLD * 100}% of it standing there isn't pointed out (${most.theirsInMine})`);
+    assert(JSON.stringify(lookAlikeShare(flipped)) === '{"kind":"same","percent":100,"mirrored":true}', '12j. a mirrored copy is said to be all the same, mirrored');
+    assert(JSON.stringify(lookAlikeShare(extended)) === '{"kind":"theirsInMine","percent":100,"mirrored":false}', '12k. one with more of its own, by how much of the other stands in it');
+    assert(lookAlikeShare(reversed).kind === 'mineInTheirs' && lookAlikeShare(reversed).percent === 100, '12l. or how much of it stands in the other');
+}
+console.log('✓ mirrored, extended and partial copies');
+
+// What two builds share must say something: walls of one kind, or a build of
+// fewer than MIN_SHARED_KINDS kinds of brick, turn up by chance.
+{
+    const box = (w, d, h) => {
+        const bricks = [];
+        for (let x = 0; x < w; x += 1) for (let z = 0; z < d; z += 1) for (let y = 0; y < h; y += 1) {
+            if (x === 0 || z === 0 || x === w - 1 || z === d - 1) bricks.push(brick('core:cube', x, y + 0.5, z));
+        }
+        return bricks;
+    };
+    const plain = compareBuildShapes(buildShape(box(10, 10, 4)), buildShape(box(10, 10, 3)));
+    assert(plain.similarity >= SIMILAR_BUILD_THRESHOLD && plain.theirsInMine === 1 && plain.sharedKinds === 1,
+        `13a. two walled boxes of cubes made apart are mostly the same, and one stands in the other (${plain.similarity})`);
+    assert(!isSimilarBuild(plain), '13b. but walls of one kind are too plain to point out');
+    assert(!isSimilarBuild(compareBuildShapes(buildShape(box(10, 10, 4)), buildShape(box(10, 10, 4)))), '13c. even when they are the same');
+
+    const threeKinds = original.filter((b) => b.definitionId !== 'core:window_small');
+    const evidence = compareBuildShapes(buildShape(threeKinds), buildShape(turnedAndMoved(threeKinds, 90, { x: 1, y: 0, z: 1 })));
+    assert(evidence.similarity === 1 && evidence.sharedKinds === MIN_SHARED_KINDS - 1 && !isSimilarBuild(evidence),
+        `13d. nor is a match of ${MIN_SHARED_KINDS - 1} kinds of brick (walls, a door and a roof), which two tiny homes share by chance`);
+    assert(isSimilarBuild(evidence, { minKinds: 3 }) && isSimilarBuild(compareBuildShapes(buildShape(original), buildShape(original)), SIMILAR_BUILD_THRESHOLD),
+        '13e. the bars can be changed, for the measuring script, and a bare threshold is still taken');
+
+    const small = original.slice(0, MIN_COMPARED_BRICKS - 1);
+    const inLarger = compareBuildShapes(buildShape(small), buildShape(original));
+    assert(inLarger.mineInTheirs === 1 && !isSimilarBuild(inLarger), '13f. fewer shared bricks than MIN_COMPARED_BRICKS are never pointed out, however much of a build they are');
+}
+console.log('✓ too plain to tell');
+
+{
+    const garden = Array.from({ length: 70 }, (_, i) => brick('core:plate_2x4', 40 + (i % 10), 0.5, Math.floor(i / 10)));
+    const pairs = [[original, tower()], [original, [...original, ...garden]], [tower(), cottage()], [original, turnedAndMoved(original, 90, { x: 1, y: 0, z: 1 })], [original.slice(0, 25), original]];
+    for (const [a, b] of pairs) {
+        const mine = buildShape(a);
+        const theirs = buildShape(b);
+        assert(!isSimilarBuild(compareBuildShapes(mine, theirs)) || couldBeSimilar(mine, theirs), '13g. couldBeSimilar() never rules out builds that are pointed out');
+    }
+    const extended = [buildShape([...original, ...garden]), buildShape(original)];
+    assert(similarityUpperBound(...extended) < SIMILAR_BUILD_THRESHOLD && couldBeSimilar(...extended), '13h. a copy with more of its own is still compared');
+    assert(!couldBeSimilar(buildShape(original), buildShape(garden)), '13i. builds with no kind of brick in common are not');
+}
+console.log('✓ which builds could be pointed out');
 
 {
     const pairs = [[original, tower()], [original, original.slice(0, 20)], [tower(), cottage()], [original, turnedAndMoved(original, 90, { x: 1, y: 0, z: 1 })]];

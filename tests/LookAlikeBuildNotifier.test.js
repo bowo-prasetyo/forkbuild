@@ -29,6 +29,10 @@ function cottageBricks({ dx = 0, width = 6, kind = 'core:cube' } = {}) {
         }
     }
     bricks.push(new Brick({ definitionId: 'core:door', position: new Position(2 + dx, 1, 0) }));
+    // A window and a ridge of beams: a build of walls and a door alone is too
+    // plain to tell a copy from chance (BuildSimilarity.js, MIN_SHARED_KINDS).
+    bricks.push(new Brick({ definitionId: 'core:window_small', position: new Position(width - 2 + dx, 1.5, 4) }));
+    for (let x = 0; x < width; x += 1) bricks.push(new Brick({ definitionId: 'core:beam', position: new Position(x + dx, 2.5, 2) }));
     return bricks;
 }
 

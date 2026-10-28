@@ -2,6 +2,7 @@ import { formatDate, t } from '../../i18n/i18n.js';
 import I18nText from '../../i18n/I18nText.js';
 import { createVerifiedPublisherResolver } from '../../../application/publication/FollowingFeed.js';
 import { builderRoute } from './builtWithText.js';
+import { lookAlikeShare } from '../../../core/catalog/BuildSimilarity.js';
 
 // On a build's page, under its family tree: builds by other people,
 // published before it, that look a lot like it
@@ -39,12 +40,17 @@ export default {
             }
             return builderRoute(signer, publication.author || null);
         }
+        // How alike, as lookAlikeShare() says: most of both the same, or
+        // most of one standing in the other ("this one" being the build on
+        // the page), and whether it was mirrored.
         function detail(match) {
+            const { kind, percent, mirrored } = lookAlikeShare(match.evidence);
+            const share = t(kind === 'same' ? 'similarEarlier.percent' : (kind === 'theirsInMine' ? 'similarEarlier.itInThis' : 'similarEarlier.thisInIt'), { percent });
+            const how = mirrored ? t('similarEarlier.mirrored', { how: share }) : share;
             const published = new Date(match.publication.publishedAt);
-            const percent = Math.round(match.evidence.similarity * 100);
             return Number.isNaN(published.getTime())
-                ? t('similarEarlier.percent', { percent })
-                : t('similarEarlier.detail', { percent, date: formatDate(published, { dateStyle: 'medium' }) });
+                ? how
+                : t('similarEarlier.detail', { how, date: formatDate(published, { dateStyle: 'medium' }) });
         }
         return { t, title, authorRoute, detail };
     },

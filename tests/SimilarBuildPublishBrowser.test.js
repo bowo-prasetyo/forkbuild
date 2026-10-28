@@ -19,10 +19,10 @@ const flush = async () => {
     }
 };
 
-function match({ title = 'Cozy Cottage', author = 'alice', licenseId = LicenseId.CC_BY_4_0, similarity = 0.86, id = 'p1' } = {}) {
+function match({ title = 'Cozy Cottage', author = 'alice', licenseId = LicenseId.CC_BY_4_0, similarity = 0.86, id = 'p1', evidence = {} } = {}) {
     return {
         publication: { id, documentId: `doc-${id}`, title, author, license: new License({ id: licenseId }) },
-        evidence: { similarity, shared: 40, onlyMine: 3, onlyTheirs: 4, turn: 0 }
+        evidence: { similarity, shared: 40, onlyMine: 3, onlyTheirs: 4, theirsInMine: 0.91, mineInTheirs: 0.93, turn: 0, mirrored: false, ...evidence }
     };
 }
 
@@ -93,6 +93,21 @@ await setAppLocale('en');
     toolbar.unmount();
 }
 console.log('✓ a look-alike is pointed out once, and Keep building waits');
+
+{
+    // A copy with as much again of its own: less than half the same, but all
+    // of the other build stands in it, mirrored; and a part of another build.
+    const toolbar = mount({ worldId: 'w-contained', find: () => [
+        match({ similarity: 0.45, evidence: { theirsInMine: 1, mineInTheirs: 0.45, mirrored: true } }),
+        match({ id: 'p3', similarity: 0.4, evidence: { theirsInMine: 0.4, mineInTheirs: 0.9 } })
+    ] });
+    await toolbar.publish();
+    const shares = [...toolbar.host.querySelectorAll('.similar-build-percent')].map((item) => item.textContent.trim());
+    assert(shares[0] === '100% of its bricks are in yours, mirrored', `how much of it stands in yours, and that it was mirrored (${shares[0]})`);
+    assert(shares[1] === '90% of your bricks are in it', `or how much of yours stands in it (${shares[1]})`);
+    toolbar.unmount();
+}
+console.log('✓ a copy with more of its own says how much of the other is in it');
 
 {
     const toolbar = mount({ worldId: 'w-own', find: () => [match()] });

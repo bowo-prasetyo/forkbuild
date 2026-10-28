@@ -9690,3 +9690,32 @@ command Whisper got stuck on kept voice busy until it ended.
   the pinned whisper-tiny and engine: loaded and transcribed through the real worker, and a fast-read paragraph that
   sent it into a loop took 5.2 s capped against 20.3 s uncapped, with six spoken commands transcribed the same
   either way.
+
+## Look-alikes find extended and mirrored copies, and leave plain builds alone (unnumbered, 2026-10-28)
+
+**Credit that's fair both ways.** Findings 3 and 4 of [the AI/ML audit](../reviews/AIML-2026-10-28.md): a copy
+with a garden added, or a mirrored copy, wasn't pointed out, while two plain boxes of cubes, or two tiny homes for
+the same challenge, were, and the 🔔 tells a real person so.
+
+- **Mirrored copies are lined up** (core/catalog/BuildSimilarity.js): eight orientations, not four; a mirrored
+  line-up wins only when it meets more, so a symmetric build is never called mirrored.
+- **A copy with more of its own is pointed out** when 85% of the smaller build stands in the larger
+  (`CONTAINED_BUILD_THRESHOLD`), as well as at 60% the same. SimilarBuildFinder skips a build only when neither
+  could be reached (`couldBeSimilar()`), and lists the strongest first.
+- **What two builds share must say something:** at least 20 bricks of at least four kinds (`MIN_SHARED_KINDS`).
+  Walls, floors and blocks of one or two kinds, and the walls and roof two tiny homes share, aren't pointed out.
+  Every Build Library structure and example build of 20 bricks or more has five kinds or more.
+- **Publish and the lists say which it was:** "86% the same", "100% of its bricks are in yours", "90% of your bricks
+  are in it", and ", mirrored" (`lookAlikeShare()`; six new messages and a changed `similarEarlier.detail`, in all
+  eight languages). The user guide's *When your build looks like someone else's* says so, in all eight.
+- **Measured:** scripts/evaluate-look-alikes.mjs (new, about two minutes) compares the bars on builds made apart and
+  on copies; the generators it shares with scripts/evaluate-ready-made-detection.mjs moved to
+  scripts/lookAlikeBuilds.mjs. False hints: plain boxes 34% → 0%, walls and floors 6% → 0%, same-challenge tiny homes
+  17% → 1%. Copies found: with 70% more of their own 0% → 99%, mirrored 46% → 99%; exact 100% → 99%, 20% changed
+  95% → 88%, and a 70% part of a build 100% → 85% (the price of four kinds; three kinds kept them but pointed out
+  tiny homes one time in twelve). Exact copies of plain builds are no longer pointed out, by design.
+- Tests: tests/BuildSimilarity.test.js 12a-12l and 13a-13i (mirrored, extended and partial copies and what is said
+  of them; plain walls and a three-kind build not pointed out; the bars can be changed; couldBeSimilar() never rules
+  out a match); tests/SimilarBuildFinder.test.js and tests/LookAlikeBuildNotifier.test.js (their cottages gain a
+  window, since walls and a door alone are now too plain); tests/SimilarBuildPublishBrowser.test.js (a contained,
+  mirrored match reads "100% of its bricks are in yours, mirrored").

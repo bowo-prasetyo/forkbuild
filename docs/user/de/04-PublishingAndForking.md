@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 487a84099ce93c78 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d06277fe319f2763 -->
 # 04 — Veröffentlichen & Remixen
 
 <!-- languages -->
@@ -494,9 +494,15 @@ Was verglichen wird und was es nicht wissen kann:
   Bauwerk mit weniger als 20 eigenen Steinen wird nicht
   verglichen: Kleine Bauwerke ähneln sich zu leicht.
 - Ein Stein gilt als gleich, wenn es dieselbe Art Stein an derselben Stelle
-  ist, auch wenn Ihr ganzes Bauwerk woanders steht oder um eine
-  Vierteldrehung gedreht ist. Farben und die Richtung einzelner Steine
+  ist, auch wenn Ihr ganzes Bauwerk woanders steht, um eine Vierteldrehung gedreht oder gespiegelt ist. Farben und die Richtung einzelner Steine
   zählen nicht.
+- Zwei Bauwerke ähneln sich, wenn der größte Teil beider gleich ist oder wenn
+  fast das ganze eine (85 % oder mehr) im anderen steckt, sodass auch eine
+  Kopie auffällt, der eigene Steine hinzugefügt wurden. Was sie gemeinsam
+  haben, müssen mindestens 20 Steine von mindestens vier Arten sein: Mauern,
+  ein Boden oder ein Kasten aus einer oder zwei Arten von Steinen oder die
+  Mauern und das Dach zweier kleiner Häuser ähneln sich zu oft zufällig, um
+  etwas zu sagen.
 - Ihre eigenen Bauwerke, jedes Bauwerk im Stammbaum Ihres Bauwerks (woraus
   es geremixt wurde, seine Remixe und jeder andere Remix derselben Familie)
   und Bauwerke, die erst nach der ersten Veröffentlichung von Ihrem

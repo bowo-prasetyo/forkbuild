@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 487a84099ce93c78 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d06277fe319f2763 -->
 # 04 — Publicar y remezclar
 
 <!-- languages -->
@@ -488,8 +488,14 @@ Qué compara y qué no puede saber:
   construcción con menos de 20 bloques propios no se compara: las
   construcciones pequeñas se parecen con demasiada facilidad.
 - Un bloque cuenta como igual cuando es el mismo tipo de bloque en el mismo
-  lugar, aunque toda su construcción esté en otro sitio o girada un cuarto
-  de vuelta. Los colores, y hacia dónde mira cada bloque, no cuentan.
+  lugar, aunque toda su construcción esté en otro sitio, girada un cuarto de vuelta o en espejo. Los colores, y hacia dónde mira cada bloque, no cuentan.
+- Dos construcciones se parecen cuando la mayor parte de ambas es igual, o
+  cuando casi toda una (el 85 % o más) está en la otra, así que también se
+  nota una copia a la que se le añadieron bloques propios. Lo que comparten
+  tiene que ser al menos 20 bloques de al menos cuatro tipos: unos muros, un
+  suelo o una caja de uno o dos tipos de bloque, o los muros y el tejado de
+  dos casitas, se parecen por casualidad con demasiada frecuencia como para
+  decir algo.
 - Se dejan fuera sus propias construcciones, todas las del árbol
   genealógico de la suya (de la que es una remezcla, sus remezclas y
   cualquier otra remezcla de la misma familia) y las construcciones

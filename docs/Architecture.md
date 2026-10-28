@@ -559,12 +559,20 @@ builder can publish anyway. The finder reads the Publications the
 Repository's discovery providers list, takes each one's bytes from the
 publication content store only when they match its signed hash, and
 compares bricks with core/catalog/BuildSimilarity.js: one point per definition and
-position, the two builds lined up over four quarter turns by offsets voted
-for by pairs of same-kind bricks (spread over each build, by place, so the
-order bricks were placed in never matters) and by the offsets that line up
-their lowest and their highest corners (which find a copy of a wall or a
-floor, where every offset gets about as many votes), scored as shared over
-all distinct bricks. Only the builder's own bricks (core/building/PlacedBricks.js
+position, the two builds lined up over four quarter turns, mirrored or not, by
+offsets voted for by pairs of same-kind bricks (spread over each build, by
+place, so the order bricks were placed in never matters) and by the offsets
+that line up their lowest and their highest corners (which find a copy of a
+wall or a floor, where every offset gets about as many votes). Two builds are
+pointed out (`isSimilarBuild()`) when 60% of all their distinct bricks are
+shared, or 85% of the smaller's stand in the larger (`CONTAINED_BUILD_THRESHOLD`,
+so a copy with more of its own added is found), and either way only when the
+shared bricks are at least 20 of at least four kinds (`MIN_SHARED_KINDS`):
+walls, floors and blocks of one or two kinds, and the walls and roof two tiny
+homes share, look alike by chance. scripts/evaluate-look-alikes.mjs measures
+these bars on builds made apart and on copies, and is run before changing
+them. Publish and the lists say which it was, and whether mirrored
+(`lookAlikeShare()`): "86% the same", "100% of its bricks are in yours". Only the builder's own bricks (core/building/PlacedBricks.js
 `placedBricks()`) count on their side; their own identities' builds, the
 whole remix family (every build connected through `parentDocumentId`, not
 cut off where core/publication/RemixFamily.js stops drawing), and builds published after

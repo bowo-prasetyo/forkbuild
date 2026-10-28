@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 487a84099ce93c78 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d06277fe319f2763 -->
 # 04 — Penerbitan & Remix
 
 <!-- languages -->
@@ -493,8 +493,14 @@ Apa yang dibandingkan, dan apa yang tidak bisa diketahuinya:
   dengan kurang dari 20 balok milik Anda sendiri tidak
   dibandingkan: bangunan kecil terlalu mudah terlihat mirip.
 - Sebuah balok dianggap sama jika jenisnya sama dan berada di tempat yang
-  sama, meskipun seluruh bangunan Anda berdiri di tempat lain atau diputar
-  seperempat putaran. Warna, dan arah hadap tiap balok, tidak dihitung.
+  sama, meskipun seluruh bangunan Anda berdiri di tempat lain, diputar seperempat putaran, atau dicerminkan. Warna, dan arah hadap tiap balok, tidak dihitung.
+- Dua bangunan terlihat mirip jika sebagian besar keduanya sama, atau jika
+  hampir seluruh salah satunya (85% atau lebih) ada di bangunan lainnya, jadi
+  salinan yang ditambahi balok sendiri juga ketahuan. Yang sama di antara
+  keduanya harus setidaknya 20 balok dari setidaknya empat jenis: dinding,
+  lantai, atau kotak dari satu atau dua jenis balok, atau dinding dan atap dua
+  rumah kecil, terlalu sering mirip secara kebetulan sehingga tidak berarti
+  apa-apa.
 - Bangunan Anda sendiri, setiap bangunan dalam silsilah bangunan Anda
   (yang di-remix olehnya, remix-remixnya, dan remix lain dalam keluarga yang
   sama), dan bangunan yang diterbitkan setelah bangunan Anda pertama kali
