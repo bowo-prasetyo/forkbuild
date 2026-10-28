@@ -4,7 +4,7 @@
 import { Brick } from '../core/building/Brick.js';
 import { Position } from '../core/document/Position.js';
 import {
-    CONTAINED_BUILD_THRESHOLD, MIN_COMPARED_BRICKS, MIN_READY_MADE_POINTS, MIN_SHARED_KINDS, SIMILAR_BUILD_THRESHOLD, buildShape, compareBuildShapes, couldBeSimilar,
+    CONTAINED_BUILD_THRESHOLD, MIN_COMPARED_BRICKS, MIN_READY_MADE_POINTS, MIN_SHARED_KINDS, SIMILAR_BUILD_THRESHOLD, alikeAtMost, buildShape, compareBuildShapes, couldBeSimilar,
     isSimilarBuild, lookAlikeShare, readyMadeCoverage, similarityUpperBound, withoutReadyMade
 } from '../core/catalog/BuildSimilarity.js';
 import { CollectionLibrary } from '../core/library/CollectionLibrary.js';
@@ -210,6 +210,14 @@ console.log('✓ too plain to tell');
     const extended = [buildShape([...original, ...garden]), buildShape(original)];
     assert(similarityUpperBound(...extended) < SIMILAR_BUILD_THRESHOLD && couldBeSimilar(...extended), '13h. a copy with more of its own is still compared');
     assert(!couldBeSimilar(buildShape(original), buildShape(garden)), '13i. builds with no kind of brick in common are not');
+    for (const [a, b] of pairs) {
+        const evidence = compareBuildShapes(buildShape(a), buildShape(b));
+        const reached = Math.max(evidence.similarity, Math.min(1, evidence.shared / Math.min(buildShape(a).size, buildShape(b).size)));
+        assert(alikeAtMost(buildShape(a), buildShape(b)) >= reached - 1e-9, '13j. alikeAtMost() is never below how alike two builds turn out to be');
+    }
+    assert(alikeAtMost(...extended) === 1 && alikeAtMost(buildShape(original), buildShape(garden)) === 0,
+        '13k. a copy with more of its own could be wholly alike; builds with no kind in common, not at all');
+    assert(alikeAtMost({ size: 2, kinds: { a: 1, b: 1 } }, { size: 4, kinds: { a: 1, c: 3 } }) === 0.5, '13l. from counts alone: here, half of the smaller');
 }
 console.log('✓ which builds could be pointed out');
 

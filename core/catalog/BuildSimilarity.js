@@ -368,6 +368,15 @@ export function lookAlikeShare(evidence) {
         : Object.freeze({ kind: 'mineInTheirs', percent: percent(evidence.mineInTheirs), mirrored });
 }
 
+// How alike two shapes could be at most, from their counts alone: the larger
+// of similarityUpperBound() and the share of the smaller that could stand in
+// the larger. Ranks builds by how likely they are to match before any is
+// compared (application/publication/SimilarBuildFinder.js).
+export function alikeAtMost(mine, theirs) {
+    if (!mine?.size || !theirs?.size) return 0;
+    return Math.max(similarityUpperBound(mine, theirs), containedAtMost(mine, theirs) / Math.min(mine.size, theirs.size));
+}
+
 // Whether two shapes could be pointed out at all, from their counts alone
 // (similarityUpperBound(), and the most of the smaller that could stand in
 // the larger): lets a caller skip the full comparison for builds that can't.

@@ -1,10 +1,11 @@
 import { ContentReference } from '../../core/document/ContentReference.js';
 import { DocumentSerializer } from '../../serializer/DocumentSerializer.js';
 import {
-    MIN_COMPARED_BRICKS, SIMILAR_BUILD_THRESHOLD, buildShape, compareBuildShapes, couldBeSimilar, isSimilarBuild, lookAlikeShare, withoutReadyMade
+    MIN_COMPARED_BRICKS, SIMILAR_BUILD_THRESHOLD, alikeAtMost, buildShape, compareBuildShapes, couldBeSimilar, isSimilarBuild, lookAlikeShare, withoutReadyMade
 } from '../../core/catalog/BuildSimilarity.js';
 import { placedBricks, worldBricks } from '../../core/building/PlacedBricks.js';
 import { order } from '../../core/publication/PublicationOrder.js';
+import { BuildKindIndex } from './BuildKindIndex.js';
 
 // Finds published builds by other people that look a lot like a build
 // (core/catalog/BuildSimilarity.js), for four places: Publish, so it can point to
@@ -34,6 +35,16 @@ import { order } from '../../core/publication/PublicationOrder.js';
 // and as after it too, rather than taken at its word. Each match says how:
 // `{ publication, evidence, order, seen, share }`, `share` being how alike
 // in words (core/catalog/BuildSimilarity.js#lookAlikeShare()).
+//
+// Which builds are compared goes by how alike they could be, not by how new
+// they are: original work that gets copied is usually older. `kindIndex`
+// (application/publication/BuildKindIndex.js) keeps each build's counts, so
+// every build it knows is ranked by core/catalog/BuildSimilarity.js
+// #alikeAtMost(), and those that can't match are left out, before any bytes
+// are read. The likeliest are compared first, then the builds not yet
+// counted, newest first, at most `maxCandidates` read in one look and within
+// `timeBudgetMs`. Builds a look didn't get to are counted afterwards, one at
+// a time when the page is idle (`idle`), so the next look ranks them too.
 export class SimilarBuildFinder {
     constructor({
         listPublications,
@@ -46,7 +57,9 @@ export class SimilarBuildFinder {
         maxCandidates = 300,
         timeBudgetMs = 1500,
         now = () => Date.now(),
-        firstSeenAt = (publication) => publishedTime(publication)
+        firstSeenAt = (publication) => publishedTime(publication),
+        kindIndex = new BuildKindIndex(),
+        idle = (work) => setTimeout(work, 0)
     } = {}) {
         if (typeof listPublications !== 'function') throw new Error('SimilarBuildFinder: listPublications is required');
         if (!contentStore || typeof contentStore.get !== 'function') throw new Error('SimilarBuildFinder: contentStore is required');
@@ -62,6 +75,14 @@ export class SimilarBuildFinder {
         this._timeBudgetMs = timeBudgetMs;
         this._now = now;
         this._firstSeenAt = firstSeenAt;
+        this._kindIndex = kindIndex;
+        this._idle = idle;
+        // What the ready-made structures are, for kindIndex: counts made with
+        // other ones are out of date.
+        this._readyMadeKey = null;
+        // Builds waiting to be counted when the page is idle, by content hash.
+        this._toCount = new Map();
+        this._counting = false;
         // Content hash -> shape: published bytes never change, so each is read
         // at most once a visit.
         this._shapes = new Map();
@@ -154,11 +175,26 @@ export class SimilarBuildFinder {
         return (await this._shapeOf(publication)) !== null;
     }
 
+    // Up to `limit` of `candidates` that look like `mine`, compared likeliest
+    // first (see this class's header).
     async _matching(mine, candidates) {
         const startedAt = this._now();
+        const readyMade = await this._readyMadeIndexKey();
+        const likely = [];
+        const uncounted = new Set();
+        for (const candidate of candidates) {
+            const counts = this._countsOf(candidate.publication, readyMade);
+            if (!counts) uncounted.add(candidate);
+            else if (counts.size >= MIN_COMPARED_BRICKS && couldBeSimilar(mine, counts, this._threshold)) likely.push({ candidate, bound: alikeAtMost(mine, counts) });
+        }
+        // Ties stay newest first.
+        likely.sort((a, b) => b.bound - a.bound);
+        const queue = [...likely.map(({ candidate }) => candidate), ...uncounted];
         const best = new Map();
-        for (const { publication, order: placed, seen } of candidates) {
+        let read = 0;
+        for (; read < queue.length && read < this._maxCandidates; read += 1) {
             if (this._now() - startedAt > this._timeBudgetMs) break;
+            const { publication, order: placed, seen } = queue[read];
             const theirs = await this._shapeOf(publication);
             if (!theirs || theirs.size < MIN_COMPARED_BRICKS || !couldBeSimilar(mine, theirs, this._threshold)) continue;
             const evidence = compareBuildShapes(mine, theirs);
@@ -168,6 +204,7 @@ export class SimilarBuildFinder {
                 best.set(publication.documentId, Object.freeze({ publication, evidence, order: placed, seen, share: lookAlikeShare(evidence) }));
             }
         }
+        this._countLater(queue.slice(read).filter((candidate) => uncounted.has(candidate)).map(({ publication }) => publication));
         return [...best.values()]
             .sort((a, b) => moreAlike(a.evidence, b.evidence) || publishedTime(a.publication) - publishedTime(b.publication))
             .slice(0, this._limit);
@@ -197,14 +234,54 @@ export class SimilarBuildFinder {
             if (!orders.includes(placed)) continue;
             candidates.push({ publication, order: placed, seen: seenAt });
         }
-        return candidates
-            .sort((a, b) => publishedTime(b.publication) - publishedTime(a.publication))
-            .slice(0, this._maxCandidates);
+        return candidates.sort((a, b) => publishedTime(b.publication) - publishedTime(a.publication));
+    }
+
+    // The counts of the build `publication` signed (`{ size, kinds }`), from
+    // its shape read this visit or from kindIndex; null when not yet counted.
+    _countsOf(publication, readyMade) {
+        const hash = contentHashOf(publication);
+        if (!hash) return null;
+        const shape = this._shapes.get(hash);
+        if (shape) return shape;
+        try {
+            return this._kindIndex.get(hash, readyMade);
+        } catch {
+            return null;
+        }
+    }
+
+    // Counts `publications` one at a time when the page is idle, each behind
+    // any look already asked for, keeping only their counts (kindIndex), not
+    // their shapes, so a device that knows thousands of builds doesn't hold
+    // them all.
+    _countLater(publications) {
+        for (const publication of publications) {
+            const hash = contentHashOf(publication);
+            if (hash && !this._shapes.has(hash)) this._toCount.set(hash, publication);
+        }
+        if (this._counting || this._toCount.size === 0) return;
+        this._counting = true;
+        const next = () => {
+            const first = this._toCount.entries().next();
+            if (first.done) {
+                this._counting = false;
+                return;
+            }
+            const [hash, publication] = first.value;
+            this._toCount.delete(hash);
+            this._serially(() => this._shapeOf(publication, { keep: false }))
+                .catch(() => null)
+                .then(() => this._idle(next));
+        };
+        this._idle(next);
     }
 
     // The shape of the build `publication` signed, or null when its bytes
-    // aren't on this device or aren't the ones it signed.
-    async _shapeOf(publication) {
+    // aren't on this device or aren't the ones it signed. Its counts are kept
+    // in kindIndex; the shape itself is kept for the visit unless `keep` is
+    // false.
+    async _shapeOf(publication, { keep = true } = {}) {
         const hash = contentHashOf(publication);
         if (!hash) return null;
         if (this._shapes.has(hash)) return this._shapes.get(hash);
@@ -224,7 +301,14 @@ export class SimilarBuildFinder {
         } catch {
             shape = null;
         }
-        this._shapes.set(hash, shape);
+        if (shape) {
+            try {
+                this._kindIndex.put(hash, await this._readyMadeIndexKey(), shape);
+            } catch {
+                // Not counted: it is read again next time.
+            }
+        }
+        if (keep || !shape) this._shapes.set(hash, shape);
         return shape;
     }
 
@@ -238,6 +322,16 @@ export class SimilarBuildFinder {
                 .catch(() => []);
         }
         return this._readyMadeShapes;
+    }
+
+    // A short name for the Build Library's structures as loaded, so counts
+    // made with other ones aren't used (application/publication/BuildKindIndex.js).
+    async _readyMadeIndexKey() {
+        if (this._readyMadeKey === null) {
+            const shapes = await this._readyMade();
+            this._readyMadeKey ??= fingerprint(shapes.map((shape) => `${shape.size}:${Object.entries(shape.kinds).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)).join(',')}`).join(';'));
+        }
+        return this._readyMadeKey;
     }
 
     // When this device first saw `publication` (ms), or null.
@@ -315,6 +409,16 @@ function remixFamilyIds(documentId, parentDocumentId, publications) {
 function moreAlike(a, b) {
     const strength = (evidence) => Math.max(evidence.similarity, evidence.theirsInMine || 0, evidence.mineInTheirs || 0);
     return strength(b) - strength(a) || b.similarity - a.similarity;
+}
+
+// A short hash of `text` (FNV-1a, 32 bits), as hex.
+function fingerprint(text) {
+    let hash = 0x811c9dc5;
+    for (let i = 0; i < text.length; i += 1) {
+        hash ^= text.charCodeAt(i);
+        hash = Math.imul(hash, 0x01000193) >>> 0;
+    }
+    return hash.toString(16).padStart(8, '0');
 }
 
 function contentHashOf(publication) {

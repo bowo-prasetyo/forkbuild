@@ -60,6 +60,7 @@ import { BlurtAnnouncingConfigurationStore } from '../../storage/BlurtAnnouncing
 import { ownIdentityIdsOf } from '../../application/document/DocumentImportPolicy.js';
 import { SimilarBuildFinder } from '../../application/publication/SimilarBuildFinder.js';
 import { PublicationFirstSeenLog } from '../../application/publication/PublicationFirstSeenLog.js';
+import { BuildKindIndex } from '../../application/publication/BuildKindIndex.js';
 import { BuildDescriber } from '../../application/publication/BuildDescriber.js';
 import { LookAlikeBuildNotifier } from '../../application/publication/LookAlikeBuildNotifier.js';
 import { LookAlikeWaitingStore } from '../../application/publication/LookAlikeWaitingStore.js';
@@ -532,8 +533,13 @@ export async function composeNetwork({ app, decentralizedPublicationDiscoveryPro
     const firstSeenAt = (publication) => (publishedHere(publication.id) ? publication.publishedAt : publicationFirstSeenLog.get(publication.id));
     // Publish, a build's page and World View point out builds that look a lot
     // like another; theirs are read from the same places the Repository lists.
+    // Each build's counts are kept, so the builds likeliest to look alike are
+    // compared first, whatever their age; builds not yet counted are counted
+    // when the browser has nothing else to do.
     const similarBuildFinder = new SimilarBuildFinder({
         firstSeenAt,
+        kindIndex: new BuildKindIndex({ storageProvider: new LocalStorageProvider() }),
+        idle: (work) => (typeof requestIdleCallback === 'function' ? requestIdleCallback(work, { timeout: 2000 }) : setTimeout(work, 200)),
         listPublications: () => new CompositeDiscoveryProvider([
             new LocalDiscoveryProvider(new LocalStorageProvider()),
             decentralizedPublicationDiscoveryProvider

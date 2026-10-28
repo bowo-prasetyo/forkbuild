@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: ca4e09d21f77cc11 -->
+<!-- translation-of: docs/Privacy.md source-hash: 6fa21c9feb160d15 -->
 # Confidentialité
 
 <!-- languages -->
@@ -74,6 +74,11 @@ jamais l’appareil, sauf si vous le publiez, l’exportez ou l’envoyez :
   construction datée d’avant une autre d’une construction qui était ici en
   premier (**Constructions semblables publiées avant** et l’entrée 🔔 **… a
   publié une construction datée d’avant la vôtre qui lui ressemble**).
+- de quoi est faite chaque construction publiée sur cet appareil,
+  seulement en nombres (combien de briques et combien de chaque sorte, par
+  son empreinte de contenu, 2000 au plus), pour comparer d’abord les
+  constructions qui ressemblent le plus probablement aux vôtres, quel que
+  soit leur âge.
 - les identifiants et empreintes de contenu des constructions d’autres
   personnes dont les octets ne sont pas encore arrivés sur cet appareil, et
   depuis quand (500 au plus, chacune pendant 30 jours), pour que chacune

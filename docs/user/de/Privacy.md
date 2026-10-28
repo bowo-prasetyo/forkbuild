@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: ca4e09d21f77cc11 -->
+<!-- translation-of: docs/Privacy.md source-hash: 6fa21c9feb160d15 -->
 # Datenschutz
 
 <!-- languages -->
@@ -73,6 +73,10 @@ veröffentlichen, exportieren oder senden es:
   Bauwerk von einem unterschieden werden kann, das zuerst hier war
   (**Ähnliche Bauwerke, die früher veröffentlicht wurden** und der 🔔-Eintrag **… hat
   ein Bauwerk veröffentlicht, das vor Ihrem datiert ist und ihm ähnelt**).
+- woraus jedes veröffentlichte Bauwerk auf diesem Gerät besteht, nur als
+  Anzahlen (wie viele Steine und wie viele von jeder Art, nach seinem
+  Inhalts-Hash, höchstens 2000), damit die Bauwerke, die Ihren am ehesten
+  ähneln, zuerst verglichen werden, wie alt sie auch sind.
 - die IDs und Inhalts-Hashes der Bauwerke anderer, deren Bytes dieses Gerät
   noch nicht erreicht haben, und seit wann (höchstens 500, jedes 30 Tage
   lang), damit jedes noch mit Ihren eigenen Bauwerken verglichen werden kann,
