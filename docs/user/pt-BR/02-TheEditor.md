@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 080ab27533db83cb -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: e675ae8b16b143cb -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -179,6 +179,12 @@ lugar.
 Um clique onde a prévia está vermelha não coloca nada: o Editor diz que
 tem algo no caminho e toca uma batida suave e grave, para você saber que
 deve tentar outro lugar ou girar a peça.
+
+Enquanto Colocar está ligado, uma etiqueta no canto superior esquerdo da
+vista mostra o que um clique vai colocar: a imagem, o nome e, para um
+bloco, a cor. Clique nela para escolher outra coisa na Biblioteca de
+construção (no celular ela abre a gaveta), ou em **✕** para parar de
+colocar.
 
 > **Dica:** Pressione **Esc** para voltar à ferramenta Selecionar.
 

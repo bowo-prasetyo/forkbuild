@@ -165,6 +165,11 @@ A click where the ghost is red places nothing: the Editor says something is
 in the way and plays a soft, low knock, so you know to try another spot or
 turn the piece.
 
+While Place is on, a chip at the top left of the view shows what a click
+will place: its picture, its name and, for a brick, its colour. Click the
+chip to choose something else in the Build Library (on a phone it opens the
+drawer), or **✕** to stop placing.
+
 > **Tip:** Press **Escape** to switch back to the Select tool.
 
 ### Select tool (`1`)

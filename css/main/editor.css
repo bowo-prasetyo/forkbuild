@@ -936,6 +936,80 @@ button.palette-item {
     color: var(--accent-ink);
 }
 
+/* What the Editor is about to place (ui/components/HoldingChip.js), under the
+   view's buttons at the top left while Place is on. */
+.editor-holding {
+    position: absolute;
+    top: 3.6rem;
+    left: 1rem;
+    z-index: 14;
+    display: flex;
+    align-items: stretch;
+    max-width: calc(100% - 2rem);
+    background: rgba(var(--overlay-rgb), 0.95);
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    box-shadow: 0 2px 8px rgba(var(--shade-rgb), 0.15);
+}
+
+.editor-holding-item {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-width: 0;
+    padding: 0.25rem 0.5rem 0.25rem 0.3rem;
+    border: 0;
+    border-radius: 999px 0 0 999px;
+    background: none;
+    color: var(--ink);
+    font: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.editor-holding-item .build-library-preview {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+}
+
+.editor-holding-name {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.editor-holding-color {
+    flex: none;
+    width: 0.8rem;
+    height: 0.8rem;
+    border-radius: 50%;
+    border: 1px solid var(--line-strong);
+}
+
+.editor-holding-stop {
+    flex: none;
+    min-width: 2rem;
+    border: 0;
+    border-left: 1px solid var(--line);
+    border-radius: 0 999px 999px 0;
+    background: none;
+    color: var(--ink-soft);
+    font: inherit;
+    cursor: pointer;
+}
+
+.editor-holding-item:hover,
+.editor-holding-stop:hover {
+    background: var(--surface-hover);
+}
+
+.editor-holding-item:focus-visible,
+.editor-holding-stop:focus-visible {
+    outline: 2px solid var(--edge-blue);
+    outline-offset: 1px;
+}
+
 /* Sound folded into one button beside the others (ui/components/SoundControl.js,
    `compact`), on a phone or a touch screen; its toggles open beneath it. */
 .editor-sound {

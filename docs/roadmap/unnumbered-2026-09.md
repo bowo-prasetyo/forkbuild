@@ -9381,3 +9381,26 @@ tablet the touch bar also ran through the First Build Guide's card.
   build, and the 🔊 button opens, toggles and folds. On both iPad orientations the guide and the touch bar no longer
   overlap. Desktop keeps the full panel.
 - Not done: on desktop the First Build Guide still covers the bottom left of the view until it is folded with **−**.
+
+## A chip says what a click will place (unnumbered, 2026-10-28)
+
+**Building: knowing what's in hand.** Finding P2-10 of
+[the Editor placement audit](../reviews/EditorPlacementUX-2026-10-27.md): nothing in the view said which brick or
+structure a click would place. On a phone the only hint lived in the closed Tools drawer, so after picking a brick
+nothing showed that Place was on, which brick it was, or which colour.
+
+- **The holding chip** (ui/components/HoldingChip.js, ui/views/EditorView.js). While Place is on, a chip under the
+  view's buttons at the top left shows the brick's or structure's preview and name, and a brick's colour as a dot that
+  follows the colour chosen. For a placed build it shows the build's name. Clicking or tapping it opens the Build
+  Library to choose something else: on a phone it opens the drawer, and the brick in hand is in view and focused.
+  **✕** stops placing, as Escape or the touch bar's Cancel do.
+- Choosing a colour is now announced (`EditorEvent.ACTIVE_BRICK_COLOR_CHANGED`, from
+  `EditorContext#setActiveBrickColor()`), so the chip follows it. It doesn't announce a new brick, which would reset the
+  library's colour.
+- Four new messages (`editor.holding`, `editor.holdingName`, `editor.holdingChange`, `editor.stopPlacing`) in all eight
+  languages, and the user guide's *Place tool* says what the chip shows and does, in all eight.
+- Tests: tests/HoldingChipBrowser.test.js (a colour choice is announced without announcing a new brick; the chip is a
+  named group that names what's held, shows its colour and preview, is a button that opens the library, and ✕ stops
+  placing; a placed build shows its name alone). Checked in the running app on desktop, an emulated iPhone 13 and an
+  iPad: the chip shows only while placing, names the Cube and then the Cottage, its dot follows a swatch, ✕ returns to
+  Select, nothing covers it, and on the phone tapping it opens the drawer with the Cube in focus.

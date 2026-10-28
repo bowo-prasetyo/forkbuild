@@ -77,6 +77,7 @@ export class EditorContext {
     // activeBrick.color on every pointer move.
     setActiveBrickColor(color) {
         this._activeBrick = new ActiveBrickState(this._activeBrick.definitionId, color);
+        this._publish(EditorEvent.ACTIVE_BRICK_COLOR_CHANGED, { color: this._activeBrick.color });
     }
 
     // Where one brick is meant to go (a starter job's roof, core/challenge/StarterJob.js):

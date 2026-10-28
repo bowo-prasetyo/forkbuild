@@ -252,6 +252,8 @@ and show the full name on hover or on focus.
 
 ### P2-10. Nothing in the view says what you are holding
 
+**Fixed 2026-10-28:** while Place is on, a chip under the view's buttons shows what a click will place, with its colour; it opens the Build Library and its ✕ stops placing (roadmap, "A chip says what a click will place").
+
 On desktop the hint says *"Hover the ground, R to rotate, click to place"*
 but does not name the brick. On a phone the hint lives inside the closed
 drawer, so once you pick a brick nothing shows that you are in Place mode,

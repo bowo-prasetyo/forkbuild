@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 080ab27533db83cb -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: e675ae8b16b143cb -->
 # 02 — Editor
 
 <!-- languages -->
@@ -180,6 +180,11 @@ memutar bangunan untuk mencari tempat berikutnya.
 Klik di tempat pratinjau berwarna merah tidak menempatkan apa pun: Editor
 memberi tahu ada yang menghalangi dan memainkan ketukan pelan yang rendah,
 supaya Anda tahu untuk mencoba tempat lain atau memutar bagiannya.
+
+Selama Tempatkan aktif, sebuah chip di kiri atas tampilan menunjukkan apa
+yang akan ditempatkan sebuah klik: gambarnya, namanya, dan untuk balok,
+warnanya. Klik chip itu untuk memilih yang lain di Pustaka Bangunan (di
+ponsel, laci akan terbuka), atau **✕** untuk berhenti menempatkan.
 
 > **Kiat:** Tekan **Escape** untuk kembali ke alat Pilih.
 
