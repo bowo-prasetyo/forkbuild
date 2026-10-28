@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: e675ae8b16b143cb -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: bf41d96ddae684a1 -->
 # 02 — Editor
 
 <!-- languages -->
@@ -34,6 +34,8 @@ dengan grup.
 - **Alat** — beralih antara **Pilih** (`1`) dan **Tempatkan** (`2`).
   **Tempatkan** tetap tersorot selama Anda menempatkan balok atau
   struktur.
+  Alat tetap di bagian atas bilah samping sementara semua di bawahnya
+  bergulir.
 - **Judul bangunan** — nama karya yang terbuka. Klik **✎** untuk mengedit
   judul, deskripsi, dan lisensinya. Apakah sudah tersimpan ditampilkan di
   bilah alat.
@@ -43,6 +45,8 @@ dengan grup.
   mengingat pilihan Anda.
 - **Pilihan** — hanya menampilkan apa yang dapat bekerja pada pilihan Anda
   saat ini; lihat [Panel Pilihan](#panel-pilihan) di bawah.
+  Saat Anda menempatkan, panel ini menyingkir agar Pustaka Bangunan tampil
+  lebih dulu.
 - **Pustaka Bangunan** — kotak pencarian dan dua tab. Ketik sebagian nama,
   atau katakan apa yang Anda perlukan dengan kata-kata Anda sendiri:
   *menyeberang sungai* menemukan Jembatan, *tidur* menemukan Tempat Tidur.
@@ -51,6 +55,8 @@ dengan grup.
   Dengan keyboard, panah bawah dari kotak pencarian menuju hasil pertama,
   tombol panah berpindah di antara balok atau struktur, dan Enter memilih
   satu, sama seperti klik.
+  Tab dan kotak pencariannya tetap terlihat saat Anda menggulirnya, dan
+  mengklik **Tempatkan** membawa pustaka ke atas.
   - **Balok** — semua yang dapat Anda tempatkan dengan alat Tempatkan,
     sebagai ubin dalam enam bagian (Dasar, Struktur, Atap & Tangga,
     Bukaan, Detail, Alam): lima puluh sembilan keping, dari setengah

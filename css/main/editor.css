@@ -366,16 +366,30 @@
 .sidebar {
     width: 248px;
     flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
     background: var(--surface-low);
     border-right: 1px solid var(--line);
     padding: 1rem;
+}
+
+/* The tool switch and its hint, above the scroll, so they never scroll
+   out of view (docs/reviews/EditorPlacementUX-2026-10-27.md, P2-8). */
+.sidebar-head {
+    flex-shrink: 0;
+    padding-right: 1.0625rem;
+}
+
+.sidebar-head .placement-hint {
+    margin-bottom: 0.5rem;
 }
 
 /* The sidebar's only scroll owner, so the sidebar always fits its height.
    The 17px right padding is clearance for overlay scrollbars, which
    reserve no width and would otherwise paint over the content. */
 .sidebar-scroll {
-    height: 100%;
+    flex: 1;
+    min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
     padding-right: 1.0625rem;
@@ -645,6 +659,26 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+}
+
+/* Tabs and search, pinned to the top of the sidebar's scroll while the
+   list scrolls under them. */
+.build-library-head {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-bottom: 0.4rem;
+    background: var(--surface-low);
+    border-bottom: 1px solid var(--line);
+}
+
+/* A tile or card reached from the keyboard scrolls in clear of that head. */
+.brick-palette *,
+.structure-library-panel * {
+    scroll-margin-top: 5.5rem;
 }
 
 .build-library-tabs {

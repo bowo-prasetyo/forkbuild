@@ -31,6 +31,7 @@ transform bricks, and how to organize your build with groups.
   open the **⌨ Shortcuts** overlay (also `?`).
 - **Tools** — switch between **Select** (`1`) and **Place** (`2`). **Place**
   stays highlighted while you're placing a brick or a structure.
+  The tools stay at the top of the sidebar while everything under them scrolls.
 - **Build title** — the open build's name. Click **✎** to edit its
   title, description and license. Whether it's saved is shown in the
   toolbar.
@@ -39,6 +40,7 @@ transform bricks, and how to organize your build with groups.
   **▾** folds it again, and the Editor remembers which you chose.
 - **Selection** — only shows what can act on your current selection; see
   [The Selection panel](#the-selection-panel) below.
+  While you're placing, it steps aside so the Build Library comes first.
 - **Build Library** — a search box and two tabs. Type part of a name, or
   say what you need in your own words: *something to cross the river*
   finds the Bridge, *somewhere to sleep* the Bed. The words each brick and
@@ -46,6 +48,8 @@ transform bricks, and how to organize your build with groups.
   From the keyboard, Down from the search box goes to the first thing it
   found, the arrow keys move between bricks or structures, and Enter picks
   one, as a click does.
+  Its tabs and search stay in view while you scroll through it, and clicking
+  **Place** brings the library up to the top.
   - **Bricks** — everything you can place with the Place tool, as tiles in
     six sections (Basic, Structure, Roofs & Stairs, Openings, Details,
     Nature): fifty-nine pieces, from half cubes, round bricks and logs to

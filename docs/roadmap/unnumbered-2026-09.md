@@ -9404,3 +9404,24 @@ nothing showed that Place was on, which brick it was, or which colour.
   placing; a placed build shows its name alone). Checked in the running app on desktop, an emulated iPhone 13 and an
   iPad: the chip shows only while placing, names the Cube and then the Cottage, its dot follows a swatch, ✕ returns to
   Select, nothing covers it, and on the phone tapping it opens the drawer with the Cube in focus.
+
+## The Build Library comes first when placing (unnumbered, 2026-10-28)
+
+**Building: reaching the bricks.** Finding P2-8 of
+[the Editor placement audit](../reviews/EditorPlacementUX-2026-10-27.md): at 1366×768 the build's info, *Build with
+me* and an empty Selection card sat above the Build Library, so in Place mode the first brick tile was at y = 697 px,
+and scrolling down to the bricks took the tool switch, the hint and the library's search out of view.
+
+- **The tool switch and hint stay put** (ui/views/EditorView.js, css/main/editor.css). They sit in a head above the
+  sidebar's scroll, so only what's under them scrolls; on a phone the Tools drawer is laid out the same way.
+- **The library's tabs and search are pinned** (ui/components/BuildLibraryPanel.js) to the top of the scroll while the
+  bricks or structures scroll under them, and a tile reached from the keyboard scrolls in clear of them.
+- **The empty Selection card steps aside while placing.** Placing selects nothing, so it only took room from the
+  library; it shows again in Select mode, or while placing if something is still selected.
+- **Place brings the library up.** Clicking **Place** in the tool switch scrolls the library to the top of the sidebar,
+  unless it's already scrolled into. In Place mode at 1366×768 the first brick tile is now at y = 461 px.
+- The build info was already folded by default (application/settings/EditorBuildInfoStore.js), so it stays as it was.
+- The user guide's layout section says so, in all eight languages.
+- Tests: tests/EditorSidebarLibraryBrowser.test.js, with the shipped CSS (only what's under the head scrolls; scrolled
+  down, the tool switch doesn't move and the tabs and search stay pinned on top of the tiles; a focused tile scrolled
+  out above comes back clear of the pinned head). Checked in the running app at 1366×768 and on an emulated iPhone 13.

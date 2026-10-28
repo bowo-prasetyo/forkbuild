@@ -779,34 +779,37 @@ export default {
     template: `
         <div ref="root" class="build-library">
             <h3 class="palette-title">{{ t('buildLibrary.title') }}</h3>
-            <div class="build-library-tabs" role="tablist">
-                <button
-                    type="button"
-                    role="tab"
-                    :aria-selected="activeTab === 'bricks'"
-                    :class="['build-library-tab', { 'build-library-tab--active': activeTab === 'bricks' }]"
-                    @click="setTab('bricks')"
-                >
-                    {{ t('buildLibrary.bricks') }}
-                </button>
-                <button
-                    type="button"
-                    role="tab"
-                    :aria-selected="activeTab === 'structures'"
-                    :class="['build-library-tab', { 'build-library-tab--active': activeTab === 'structures' }]"
-                    @click="setTab('structures')"
-                >
-                    {{ t('buildLibrary.structures') }}
-                </button>
+            <!-- Tabs and search stay pinned at the top of the sidebar while the list scrolls. -->
+            <div class="build-library-head">
+                <div class="build-library-tabs" role="tablist">
+                    <button
+                        type="button"
+                        role="tab"
+                        :aria-selected="activeTab === 'bricks'"
+                        :class="['build-library-tab', { 'build-library-tab--active': activeTab === 'bricks' }]"
+                        @click="setTab('bricks')"
+                    >
+                        {{ t('buildLibrary.bricks') }}
+                    </button>
+                    <button
+                        type="button"
+                        role="tab"
+                        :aria-selected="activeTab === 'structures'"
+                        :class="['build-library-tab', { 'build-library-tab--active': activeTab === 'structures' }]"
+                        @click="setTab('structures')"
+                    >
+                        {{ t('buildLibrary.structures') }}
+                    </button>
+                </div>
+                <input
+                    v-model="query"
+                    type="text"
+                    class="build-library-search"
+                    @keydown.down.prevent="focusFirstResult"
+                    :placeholder="t(activeTab === 'bricks' ? 'buildLibrary.searchBricks' : 'buildLibrary.searchStructures')"
+                    :aria-label="t(activeTab === 'bricks' ? 'buildLibrary.searchBricksLabel' : 'buildLibrary.searchStructuresLabel')"
+                />
             </div>
-            <input
-                v-model="query"
-                type="text"
-                class="build-library-search"
-                @keydown.down.prevent="focusFirstResult"
-                :placeholder="t(activeTab === 'bricks' ? 'buildLibrary.searchBricks' : 'buildLibrary.searchStructures')"
-                :aria-label="t(activeTab === 'bricks' ? 'buildLibrary.searchBricksLabel' : 'buildLibrary.searchStructuresLabel')"
-            />
 
             <div v-if="activeTab === 'bricks'" class="brick-palette">
                 <label v-if="selectedDefinitionId" class="brick-palette-color" :title="t('buildLibrary.colorHint')">

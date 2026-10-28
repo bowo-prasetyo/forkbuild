@@ -399,7 +399,7 @@
     }
 
     .editor-body--sidebar-open .sidebar {
-        display: block;
+        display: flex;
         position: absolute;
         top: 0;
         bottom: 0;

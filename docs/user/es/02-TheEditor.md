@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: e675ae8b16b143cb -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: bf41d96ddae684a1 -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -35,6 +35,8 @@ grupos.
 - **Herramientas**: alterne entre **Seleccionar** (`1`) y **Colocar**
   (`2`). **Colocar** sigue resaltada mientras coloca un bloque o una
   estructura.
+  Se quedan arriba en la barra lateral mientras todo lo de debajo se
+  desplaza.
 - **Título de la construcción**: el nombre de la construcción abierta. Haga clic en
   **✎** para editar su título, su descripción y su licencia. Si está
   guardada o no se muestra en la barra de herramientas.
@@ -44,6 +46,8 @@ grupos.
   recuerda lo que eligió.
 - **Selección**: solo muestra lo que puede actuar sobre su selección
   actual; consulte [El panel Selección](#el-panel-selección) más abajo.
+  Mientras coloca, se aparta para que la Biblioteca de construcción quede
+  primero.
 - **Biblioteca de construcción**: un cuadro de búsqueda y dos pestañas.
   Escriba parte de un nombre, o diga con sus propias palabras lo que
   necesita: *cruzar el río* encuentra el Puente, *dormir* la Cama. Las
@@ -52,6 +56,8 @@ grupos.
   Con el teclado, la flecha abajo desde el cuadro de búsqueda va al primer
   resultado, las flechas se mueven entre bloques o estructuras, y Intro
   elige uno, como un clic.
+  Sus pestañas y su cuadro de búsqueda siguen a la vista mientras se
+  desplaza por ella, y hacer clic en **Colocar** la sube arriba del todo.
   - **Bloques**: todo lo que puede colocar con la herramienta Colocar,
     como mosaicos en seis secciones (Básicos, Estructura, Techos y
     escaleras, Aberturas, Detalles, Naturaleza): cincuenta y nueve piezas,

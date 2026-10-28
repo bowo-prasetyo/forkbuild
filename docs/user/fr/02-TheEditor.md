@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: e675ae8b16b143cb -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: bf41d96ddae684a1 -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -35,6 +35,7 @@ organiser votre construction avec des groupes.
 - **Outils** — basculer entre **Sélection** (`1`) et **Placement** (`2`).
   **Placement** reste en surbrillance pendant que vous placez une brique
   ou une structure.
+  Ils restent en haut de la barre latérale pendant que tout le reste défile.
 - **Titre de la construction** — le nom de la construction ouverte. Cliquez sur **✎**
   pour modifier son titre, sa description et sa licence. Son état
   d’enregistrement est affiché dans la barre d’outils.
@@ -45,6 +46,8 @@ organiser votre construction avec des groupes.
 - **Sélection** — n’affiche que ce qui peut agir sur votre sélection
   actuelle ; voir [Le panneau Sélection](#le-panneau-sélection)
   ci-dessous.
+  Pendant que vous placez, il s’efface pour laisser la Bibliothèque de
+  construction en premier.
 - **Bibliothèque de construction** — un champ de recherche et deux
   onglets. Tapez une partie d’un nom, ou dites avec vos propres mots ce
   qu’il vous faut : *traverser la rivière* trouve le Pont, *dormir* le Lit.
@@ -53,6 +56,8 @@ organiser votre construction avec des groupes.
   Au clavier, la flèche vers le bas depuis le champ de recherche va au
   premier résultat, les flèches passent d’une brique ou d’une structure à
   l’autre, et Entrée en choisit une, comme un clic.
+  Ses onglets et son champ de recherche restent visibles pendant que vous la
+  faites défiler, et cliquer sur **Placement** la remonte tout en haut.
   - **Briques** — tout ce que vous pouvez placer avec l’outil Placement,
     sous forme de vignettes réparties en six sections (Base, Structure,
     Toits et escaliers, Ouvertures, Détails, Nature) : cinquante-neuf
