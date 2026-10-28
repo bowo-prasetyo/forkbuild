@@ -344,10 +344,16 @@ export default {
         pinnedTitle: {
             type: String,
             default: ''
+        },
+        // The name of the structure just removed from My Structures while Undo
+        // is offered; '' when nothing is.
+        removedStructureName: {
+            type: String,
+            default: ''
         }
     },
     emits: [
-        'place', 'fork', 'place-structure', 'rename-personal-structure', 'remove-personal-structure',
+        'place', 'fork', 'place-structure', 'rename-personal-structure', 'remove-personal-structure', 'undo-remove-personal-structure',
         // 0.4.6 — Blueprint Sharing & Exchange. 'export-personal-structure'
         // mirrors 'fork'/'rename-personal-structure'/'remove-personal-structure'
         // exactly — one Structure in, no return value expected, the caller
@@ -675,6 +681,14 @@ export default {
         // through every brick. The Tab stop is the tile last focused, else the
         // chosen brick, else the first one shown.
         const root = ref(null);
+        // A removed card takes the focus with it; Undo takes it up, so the
+        // keyboard can put the structure back at once.
+        const undoButton = ref(null);
+        watch(() => props.removedStructureName, (name) => {
+            if (!name) return;
+            const active = document.activeElement;
+            if ((!active || active === document.body) && undoButton.value) undoButton.value.focus();
+        }, { flush: 'post' });
         const brickFocusId = ref(null);
         const visibleBrickIds = computed(() => filteredBrickGroups.value.map((group) => group.definitions.map((definition) => definition.id)));
         const brickTabStopId = computed(() => {
@@ -775,6 +789,7 @@ export default {
             inspectStructure,
             forkToLibrary,
             importFileInput,
+            undoButton,
             triggerImportBlueprint,
             onImportBlueprintFileChosen
         };
@@ -812,6 +827,17 @@ export default {
                     :placeholder="t(activeTab === 'bricks' ? 'buildLibrary.searchBricks' : 'buildLibrary.searchStructures')"
                     :aria-label="t(activeTab === 'bricks' ? 'buildLibrary.searchBricksLabel' : 'buildLibrary.searchStructuresLabel')"
                 />
+                <!-- Removing from My Structures takes one click, so it can be taken back. -->
+                <div v-if="removedStructureName" class="build-library-undo" role="status">
+                    <span class="build-library-undo-text">{{ t('editor.structureRemoved', { name: removedStructureName }) }}</span>
+                    <button
+                        ref="undoButton"
+                        type="button"
+                        class="action-btn action-btn--secondary build-library-undo-btn"
+                        :aria-label="t('buildLibrary.undoRemoveLabel', { name: removedStructureName })"
+                        @click="$emit('undo-remove-personal-structure')"
+                    >{{ t('buildLibrary.undoRemove') }}</button>
+                </div>
             </div>
 
             <div v-if="activeTab === 'bricks'" class="brick-palette">

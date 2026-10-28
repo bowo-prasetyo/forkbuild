@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: cc26a2f709f6a59a -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1a92298c009cb9e8 -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -502,7 +502,7 @@ menu **⋮** :
 | Action | Ce qu’elle fait |
 |---|---|
 | **Renommer** | Changer son nom (sa catégorie et sa description restent telles quelles) |
-| **Retirer** | La supprimer de votre bibliothèque |
+| **Retirer** | La supprimer de votre bibliothèque ; **Annuler**, qui s’affiche alors quelques secondes en haut de la bibliothèque, la remet |
 
 **Mes structures** ne stocke jamais que la *structure elle-même* — un nom
 et un ensemble de briques. En retirer une ne touche jamais à ce que vous

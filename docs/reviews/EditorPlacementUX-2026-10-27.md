@@ -301,7 +301,9 @@ is committed.
   place a structure, but pressing it cancels the structure and switches to
   bricks without telling you (`EditorView.js:280`).
 - **Removing a structure from My Structures** happens at once, with no
-  confirmation and no Undo.
+  confirmation and no Undo. *Fixed 2026-10-28: it still takes one click,
+  and **Undo** in the library's header puts it back as it was (roadmap,
+  "Undo after removing from My Structures").*
 
 ## Beyond the fixes
 

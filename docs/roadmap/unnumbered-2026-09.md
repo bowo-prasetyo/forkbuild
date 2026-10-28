@@ -9494,3 +9494,25 @@ hand, and bricks placed there were hidden behind it.
   height; a step done while placing moves the hint on; + shows every step until placing stops; – folds and its button
   opens in full); tests/run-bundle.mjs now reads the compact card while placing in the published build. Checked in the
   running app at 1366×768 and on an emulated iPad.
+
+## Undo after removing from My Structures (unnumbered, 2026-10-28)
+
+**Building: not losing your own work.** Finding P2-13 of
+[the Editor placement audit](../reviews/EditorPlacementUX-2026-10-27.md): **Remove** in a My Structures card's **⋮**
+menu deleted the structure at once, with no confirmation and no Undo, so one slip lost a saved build for good.
+
+- **Removing still takes one click**, and an **Undo** notice shows in the Build Library's pinned header ("Removed
+  "Shed" from My Structures · Undo", ui/components/BuildLibraryPanel.js), read out as a status. Undo puts the
+  structure back as it was: the same id and saved time, so it returns to its place in the list and in recently used
+  (ui/views/editorView/useStructureLibrary.js, `LocalStructureLibraryStore#addStructure(structure, { savedAt })`), and
+  a message says it is back.
+- The removed card takes the focus with it; Undo takes it up, so Enter puts the structure back at once.
+- The notice is for the last structure removed, and lapses after 10 seconds, but not while the pointer or the focus
+  is on it.
+- Three new messages (`editor.structureRestored`, `buildLibrary.undoRemove`, `buildLibrary.undoRemoveLabel`) in all
+  eight languages, and the user guide's My Structures table says so, in all eight.
+- Tests: tests/StructureRemoveUndo.test.js (one click removes it and offers Undo; Undo restores its place, saved time
+  and recent use, says so, and only once; Undo is for the last one removed; it lapses, but not while in use);
+  tests/BuildLibraryUndoBrowser.test.js (the notice in the pinned header, read out, naming the structure; the focus
+  the removed card took goes to Undo, and focus already elsewhere is left alone; Undo asks for it back). Checked in the
+  running app at 1366×768 and on an emulated iPhone 13.
