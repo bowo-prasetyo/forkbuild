@@ -198,6 +198,8 @@ export class EditorSession {
         // A mouse or pen press while placing, until it is released as a click
         // (application/editorSession/pointerInputMethods.js).
         this._placePress = null;
+        // A Shift+drag row being laid while placing (pointerInputMethods.js).
+        this._rowPress = null;
         // The last touch tap while placing, where the touch bar's Place acts.
         this._lastPlacingTap = null;
 

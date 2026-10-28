@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1c85e2e33e2425a8 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2a113915afc98f78 -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -197,6 +197,14 @@ Nur ein Klick platziert: drücken und loslassen, ohne zu bewegen. Ziehen,
 um sich umzusehen (mit jeder Maustaste), bewegt die Kamera und platziert
 nichts, sodass Platzieren eingeschaltet bleiben kann, während Sie das
 Bauwerk drehen, um die nächste Stelle zu finden.
+
+**Umschalt+Ziehen** legt eine Reihe: Halten Sie Umschalt, drücken Sie dort,
+wo der erste Stein hin soll, und ziehen Sie über den Boden oder oben eine
+Mauer entlang. Eine Vorschau zeigt die ganze Reihe, Kante an Kante, in Farbe und
+Drehung des Steins; loslassen platziert sie, als ein Schritt zum
+Rückgängigmachen. Die Reihe läuft in die Richtung, in die Sie weiter gezogen
+haben, auf der Höhe des ersten Steins. Ist eine ihrer Stellen belegt, ist die Vorschau rot und nichts wird platziert; **Escape** verwirft die Reihe
+während des Ziehens.
 
 Ein Klick, wo die Vorschau rot ist, platziert nichts: Der Editor sagt,
 dass etwas im Weg ist, und spielt ein leises, tiefes Klopfen, damit Sie

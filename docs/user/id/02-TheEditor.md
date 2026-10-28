@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1c85e2e33e2425a8 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2a113915afc98f78 -->
 # 02 — Editor
 
 <!-- languages -->
@@ -193,6 +193,13 @@ Hanya klik yang menempatkan: tekan lalu lepas tanpa bergerak. Menyeret
 untuk melihat sekeliling (dengan tombol apa pun) menggerakkan kamera dan
 tidak menempatkan apa pun, jadi Tempatkan bisa tetap aktif selagi Anda
 memutar bangunan untuk mencari tempat berikutnya.
+
+**Shift+seret** memasang satu baris: tahan Shift, tekan di tempat balok
+pertama dan seret di sepanjang tanah atau di atas dinding. Pratinjau menampilkan seluruh baris, berimpit tepi, dengan warna dan arah balok itu;
+lepaskan untuk menempatkannya, sebagai satu langkah yang bisa diurungkan.
+Baris mengikuti arah yang Anda seret lebih jauh, pada ketinggian balok
+pertama. Jika salah satu tempatnya terisi, pratinjaunya merah dan tidak ada
+yang ditempatkan; **Escape** membatalkan baris selama menyeret.
 
 Klik di tempat pratinjau berwarna merah tidak menempatkan apa pun: Editor
 memberi tahu ada yang menghalangi dan memainkan ketukan pelan yang rendah,

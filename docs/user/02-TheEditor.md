@@ -174,6 +174,13 @@ Only a click places: press and let go without moving. Dragging to look
 around (with any button) moves the camera and places nothing, so Place can
 stay on while you turn the build to find the next spot.
 
+**Shift+drag** lays a row: hold Shift, press where the first brick goes and
+drag along the ground, or along the top of a wall. A ghost shows the whole
+row, edge to edge, in the brick's colour and turn; let go to place it, as
+one step to undo. The row runs whichever way you dragged further, at the
+first brick's height. If any of its spots is taken the ghost is red and
+nothing is placed; **Escape** drops the row while you drag.
+
 A click where the ghost is red places nothing: the Editor says something is
 in the way and plays a soft, low knock, so you know to try another spot or
 turn the piece.

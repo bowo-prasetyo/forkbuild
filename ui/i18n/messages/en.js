@@ -1214,7 +1214,7 @@ export default Object.freeze({
     'starterJob.keepBuilding': 'Keep building',
     'editor.touchPlaceHint': 'Tap to see where the brick goes, then tap it again or press Place. Rotate and Tilt turn it first.',
     'editor.touchPlacingHint': 'Placing "{title}" — tap to see where it goes, then tap it again or press Place.',
-    'editor.placeHint': 'Hover the ground, R to rotate, click to place.',
+    'editor.placeHint': 'Hover the ground, R to rotate, click to place, Shift+drag to lay a row.',
     'editor.placementBlocked': 'Something\'s in the way here. Try another spot, or press R to turn it.',
     'editor.touchPlacementBlocked': 'Something\'s in the way here. Try another spot, or tap Rotate to turn it.',
     'editor.turnBlocked': 'Something\'s in the way of that turn. Move it somewhere clearer first.',

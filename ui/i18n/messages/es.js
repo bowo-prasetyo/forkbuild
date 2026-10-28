@@ -1216,7 +1216,7 @@ export default Object.freeze({
     'starterJob.keepBuilding': 'Seguir construyendo',
     'editor.touchPlaceHint': 'Toque para ver dónde va el bloque y vuelva a tocarlo o pulse Colocar. Girar e Inclinar lo giran antes.',
     'editor.touchPlacingHint': 'Colocando “{title}”: toque para ver dónde va y vuelva a tocarlo o pulse Colocar.',
-    'editor.placeHint': 'Pase el puntero sobre el suelo, R para girar, haga clic para colocar.',
+    'editor.placeHint': 'Pase el puntero sobre el suelo, R para girar, haga clic para colocar, Mayús+arrastrar para poner una fila.',
     'editor.placementBlocked': 'Aquí hay algo en medio. Pruebe otro sitio, o pulse R para girarlo.',
     'editor.touchPlacementBlocked': 'Aquí hay algo en medio. Pruebe otro sitio, o toque Girar para girarlo.',
     'editor.turnBlocked': 'Hay algo en el camino de ese giro. Muévalo primero a un sitio más despejado.',

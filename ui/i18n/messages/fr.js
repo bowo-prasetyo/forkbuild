@@ -1215,7 +1215,7 @@ export default Object.freeze({
     'starterJob.keepBuilding': 'Continuer à construire',
     'editor.touchPlaceHint': 'Touchez pour voir où va la brique, puis touchez-la de nouveau ou appuyez sur Poser. Pivoter et Basculer la tournent d’abord.',
     'editor.touchPlacingHint': 'Placement de « {title} » — touchez pour voir où il va, puis touchez-le de nouveau ou appuyez sur Poser.',
-    'editor.placeHint': 'Survolez le sol, R pour pivoter, cliquez pour placer.',
+    'editor.placeHint': 'Survolez le sol, R pour pivoter, cliquez pour placer, Maj+glisser pour poser une rangée.',
     'editor.placementBlocked': 'Quelque chose gêne ici. Essayez un autre endroit, ou appuyez sur R pour le tourner.',
     'editor.touchPlacementBlocked': 'Quelque chose gêne ici. Essayez un autre endroit, ou touchez Pivoter pour le tourner.',
     'editor.turnBlocked': 'Quelque chose gêne cette rotation. Déplacez-la d’abord vers un endroit plus dégagé.',

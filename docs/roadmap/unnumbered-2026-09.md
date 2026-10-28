@@ -9568,3 +9568,27 @@ as unsaved work.
 - Tests: tests/IndexedDbStorageBackend.test.js (a Save counts as in progress until it is stored, and not after it is
   stored or fails). Checked in the running app with storage slowed down: Saving… after Ctrl+S and after the Save
   button, then Saved once stored.
+
+## Shift+drag lays a row (unnumbered, 2026-10-28)
+
+**Building: walls and paths in one stroke.** From "Beyond the fixes" in
+[the Editor placement audit](../reviews/EditorPlacementUX-2026-10-27.md): walls and paths are what people build most,
+and each of their bricks took its own click.
+
+- **Placing a brick, Shift+drag lays a row** of it: from where the ghost was when the press began, along x or z,
+  whichever way the drag went further, edge to edge by the brick's turned (and tilted) footprint, at the first brick's
+  height, so it runs along the ground or along the top of a wall (core/building/BrickRow.js, at most 64 bricks).
+- **One ghost for the whole row**, in the brick's colour, turn and tilt (application/tools/PlacementTool.js, shown by
+  renderer/CompositionPreviewRenderer.js, which now paints a ghost brick in its own colour when it has one). Red
+  when any of its spots is taken.
+- **Letting go places it as one undo step** ("Place N Bricks"); blocked, it places nothing and says so, as a blocked
+  click does. **Escape** (or a cancelled pointer) drops it. A Shift+click that doesn't move places one brick.
+- While the row is drawn the camera holds still (application/editorSession/pointerInputMethods.js), as for the
+  selection box: in Place mode Shift+drag lays a row instead of drawing one; in Select it still draws the box.
+- The Place hint says so (`editor.placeHint`), and the user guide's *Place tool*, both in all eight languages.
+- Not on touch: a finger has no Shift.
+- Tests: tests/BrickRow.test.js (the row's positions; Shift+drag lays a row as one undo step in the brick's colour and
+  one Undo takes it away; a turned brick steps by its turned footprint; a row across a taken spot is red and places
+  nothing; Escape drops it; a Shift+click places one; the session hands Shift+drag to Place with the camera held, and
+  Select still draws a box). Checked in the running app at 1366×768: a Shift+drag shows a five-cube ghost row,
+  letting go places five cubes, and one Ctrl+Z takes them away.

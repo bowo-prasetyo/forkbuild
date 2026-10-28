@@ -1215,7 +1215,7 @@ export default Object.freeze({
     'starterJob.keepBuilding': 'Weiterbauen',
     'editor.touchPlaceHint': 'Tippen Sie, um zu sehen, wo der Stein hinkommt, dann tippen Sie ihn noch einmal an oder drücken Sie Setzen. Drehen und Kippen drehen ihn vorher.',
     'editor.touchPlacingHint': '„{title}“ wird platziert — tippen, um zu sehen, wo es hinkommt, dann noch einmal antippen oder Setzen drücken.',
-    'editor.placeHint': 'Über den Boden fahren, R zum Drehen, klicken zum Platzieren.',
+    'editor.placeHint': 'Über den Boden fahren, R zum Drehen, klicken zum Platzieren, Umschalt+Ziehen für eine Reihe.',
     'editor.placementBlocked': 'Hier ist etwas im Weg. Versuchen Sie eine andere Stelle, oder drücken Sie R, um es zu drehen.',
     'editor.touchPlacementBlocked': 'Hier ist etwas im Weg. Versuchen Sie eine andere Stelle, oder tippen Sie auf Drehen, um es zu drehen.',
     'editor.turnBlocked': 'Bei dieser Drehung ist etwas im Weg. Rücken Sie es zuerst an eine freiere Stelle.',

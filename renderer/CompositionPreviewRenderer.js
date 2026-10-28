@@ -81,7 +81,10 @@ export class CompositionPreviewRenderer {
     _buildGhostMeshes(structure) {
         const meshes = [];
         for (const brick of structure.bricks) {
-            const mesh = this._brickFactory.createMesh(brick.definitionId);
+            // In its own colour when it has one (a row being laid, Shift+drag).
+            const mesh = brick.color !== undefined && brick.color !== null
+                ? this._brickFactory.createMesh(brick.definitionId, brick.color)
+                : this._brickFactory.createMesh(brick.definitionId);
             mesh.material = mesh.material.clone();
             mesh.material.transparent = true;
             mesh.material.opacity = PREVIEW_OPACITY;
