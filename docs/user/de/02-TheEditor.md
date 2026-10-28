@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 5df87310a3ed33cb -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: cc26a2f709f6a59a -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -167,7 +167,11 @@ Jeder Schritt wird abgehakt, sobald Sie ihn erledigen, in beliebiger
 Reihenfolge; Rückgängig und Wiederholen zählen nicht. Sind alle sechs
 erledigt, feiert die Karte und bietet **Andere Bauwerke ansehen** oder
 **Weiterbauen** an, dann verschwindet sie; war sie schon fertig, bevor Hineingehen ein Schritt
-war, bleibt sie weg. **–** klappt sie zur kleinen
+war, bleibt sie weg.
+Solange **Platzieren** an ist, schrumpft die Karte auf den Hinweis zum
+nächsten Schritt, damit sie nicht im Weg ist; **+** zeigt alle Schritte, und
+zurück bei **Auswählen** öffnet sie sich wieder ganz.
+**–** klappt sie zur kleinen
 Schaltfläche ein; **Anleitung ausblenden** blendet sie auf diesem Gerät
 dauerhaft aus. Um sie zurückzuholen, öffnen Sie die Befehlspalette
 (**Strg+K**) und führen **Anleitung zum ersten Bauwerk** aus. Auf einem

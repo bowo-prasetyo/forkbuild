@@ -1170,6 +1170,7 @@ export default Object.freeze({
     'firstBuild.pill': 'Erstes Bauwerk · {done}/{total}',
     'firstBuild.openLabel': 'Die Anleitung zum ersten Bauwerk öffnen ({done} von {total} erledigt)',
     'firstBuild.fold': 'Anleitung einklappen',
+    'firstBuild.expand': 'Alle Schritte zeigen',
     'firstBuild.hide': 'Anleitung ausblenden',
     'firstBuild.doneMark': '(erledigt)',
     'firstBuild.step.placeBrick': 'Einen Stein platzieren',

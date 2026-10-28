@@ -1170,6 +1170,7 @@ export default Object.freeze({
     'firstBuild.pill': 'Première construction · {done}/{total}',
     'firstBuild.openLabel': 'Ouvrir le guide de la première construction ({done} sur {total} faites)',
     'firstBuild.fold': 'Replier le guide',
+    'firstBuild.expand': 'Afficher toutes les étapes',
     'firstBuild.hide': 'Masquer le guide',
     'firstBuild.doneMark': '(fait)',
     'firstBuild.step.placeBrick': 'Placer une brique',

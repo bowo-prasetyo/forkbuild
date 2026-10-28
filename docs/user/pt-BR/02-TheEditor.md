@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 5df87310a3ed33cb -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: cc26a2f709f6a59a -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -163,7 +163,11 @@ Cada passo é marcado quando você o faz, em qualquer ordem; desfazer e
 refazer não contam. Quando os seis estão feitos, o cartão comemora e
 oferece **Ver outras construções** ou **Continuar construindo**, e depois
 some; se já estava concluído antes de entrar andando ser um passo, não
-volta. **–** o recolhe no botão pequeno; **Ocultar o guia** o esconde de vez
+volta.
+Enquanto **Colocar** está ativo, o cartão encolhe para a dica do próximo
+passo, para não atrapalhar o que você constrói; **+** mostra todos os
+passos, e ele volta a abrir inteiro quando você volta para **Selecionar**.
+**–** o recolhe no botão pequeno; **Ocultar o guia** o esconde de vez
 neste dispositivo. Para trazê-lo de volta, abra a paleta de comandos
 (**Ctrl+K**) e execute **Guia da primeira construção**. Um dispositivo que
 já tem trabalho salvo começa com o guia oculto.

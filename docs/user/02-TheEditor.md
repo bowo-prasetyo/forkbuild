@@ -147,7 +147,11 @@ six steps and shows a hint for the next one:
 Each step is ticked off when you do it, in any order; undo and redo don't
 count. When all six are done, the card celebrates and offers **See other
 builds** or **Keep building**, then goes away; if it was already done before walking inside
-was a step, it stays away. **–** folds it into the small
+was a step, it stays away.
+While **Place** is on, the card shrinks to the next step's hint, out of the
+way of what you're building; **+** shows every step, and it opens in full
+again when you go back to **Select**.
+**–** folds it into the small
 button; **Hide guide** hides it for good on this device. To bring it back,
 open the command palette (**Ctrl+K**) and run **First-Build Guide**. A device
 that already has saved work starts with the guide hidden.

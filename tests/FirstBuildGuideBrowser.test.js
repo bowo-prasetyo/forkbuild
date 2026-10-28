@@ -18,16 +18,16 @@ await new Promise((resolve, reject) => {
     document.head.appendChild(link);
 });
 
-function mount(completed, walkRoute = null, quiet = false) {
+function mount(completed, walkRoute = null, quiet = false, placing = false) {
     const events = [];
     const host = document.createElement('div');
     host.style.cssText = 'position: relative; width: 900px; height: 600px;';
     document.body.appendChild(host);
-    const state = reactive({ progress: normalizeFirstBuildProgress({ completed }), walkRoute, quiet });
+    const state = reactive({ progress: normalizeFirstBuildProgress({ completed }), walkRoute, quiet, placing });
     const app = createApp({
         components: { FirstBuildGuide },
         setup: () => ({ state, events }),
-        template: `<FirstBuildGuide :progress="state.progress" :walk-route="state.walkRoute" :quiet="state.quiet" @dismiss="events.push('dismiss')" @celebrated="events.push('celebrated')" />`
+        template: `<FirstBuildGuide :progress="state.progress" :walk-route="state.walkRoute" :quiet="state.quiet" :placing="state.placing" @dismiss="events.push('dismiss')" @celebrated="events.push('celebrated')" />`
     });
     // The test page has no router; a plain link stands in for router-link.
     app.component('router-link', { props: ['to'], template: '<a :href="typeof to === \'string\' ? to : to.path + \'?arrive=\' + to.query.arrive"><slot /></a>' });
@@ -98,6 +98,45 @@ function mount(completed, walkRoute = null, quiet = false) {
     assert(events.join() === 'dismiss', 'Hide guide asks to hide it');
     unmount();
     console.log('✓ the steps, the next one\'s hint, folding and hiding');
+}
+
+// While Place is on it shrinks to the next step's hint, so it covers far less
+// of the build; + shows every step, and it opens in full once placing stops
+// (finding P2-11 of docs/reviews/EditorPlacementUX-2026-10-27.md).
+{
+    const { host, state, unmount } = mount(['place-brick']);
+    await nextTick();
+    const fullHeight = host.querySelector('.first-build-guide').getBoundingClientRect().height;
+    state.placing = true;
+    await nextTick();
+    const compact = host.querySelector('.first-build-guide--compact');
+    assert(compact && !host.querySelector('.first-build-steps'), 'placing, the card has no step list');
+    assert(compact.querySelector('.first-build-hint').textContent.trim() === t('firstBuild.hint.stack'), 'but still the next step\'s hint');
+    assert(compact.dataset.current === 'stack' && compact.textContent.includes(t('firstBuild.count', { done: 1, total: FIRST_BUILD_STEPS.length })), 'and how far along');
+    const compactHeight = compact.getBoundingClientRect().height;
+    assert(compactHeight < fullHeight / 2, `it is less than half as tall (${Math.round(compactHeight)} of ${Math.round(fullHeight)}px)`);
+    state.progress = normalizeFirstBuildProgress({ completed: ['place-brick', 'stack'] });
+    await nextTick();
+    assert(host.querySelector('.first-build-guide--compact').dataset.current === 'own', 'a step done while placing moves it on to the next hint');
+    host.querySelector('.first-build-expand-btn').click();
+    await nextTick();
+    assert(host.querySelector('.first-build-steps') && !host.querySelector('.first-build-guide--compact'), '+ shows every step');
+    state.placing = false;
+    await nextTick();
+    state.placing = true;
+    await nextTick();
+    assert(host.querySelector('.first-build-guide--compact'), 'and placing again, it shrinks again');
+    host.querySelector('.first-build-icon-btn').click();
+    await nextTick();
+    assert(host.querySelector('.first-build-guide-pill'), '– folds it to its small button');
+    host.querySelector('.first-build-guide-pill').click();
+    await nextTick();
+    assert(host.querySelector('.first-build-steps'), 'which, asked for, opens every step even while placing');
+    state.placing = false;
+    await nextTick();
+    assert(host.querySelector('.first-build-steps'), 'placing done, it stays open in full');
+    unmount();
+    console.log('✓ while placing, only the next step\'s hint');
 }
 
 // Walking inside is last: once the build is published, its hint has a button.

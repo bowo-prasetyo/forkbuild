@@ -10,7 +10,11 @@ import { t } from '../i18n/i18n.js';
 // button (as it starts on a phone), or be hidden (the command palette's
 // First-Build Guide brings it back). While `quiet` (a starter job is open,
 // ui/components/StarterJobCard.js, and is the one tutor) it folds, and opens
-// again as it started once the job is done. It only shows `progress` and
+// again as it started once the job is done. While `placing` (Place is on) it
+// shrinks to its title, count and the next step's hint, so it doesn't cover
+// the build being placed (finding P2-11 of
+// docs/reviews/EditorPlacementUX-2026-10-27.md); its + shows every step, and
+// it opens in full again once placing stops. It only shows `progress` and
 // reports what the person chose.
 const STEP_KEYS = Object.freeze({
     'place-brick': 'placeBrick',
@@ -28,7 +32,9 @@ export default {
         // Where Walk inside it goes, once the build is published; null before.
         walkRoute: { type: Object, default: null },
         // Fold while something else is teaching (a starter job).
-        quiet: { type: Boolean, default: false }
+        quiet: { type: Boolean, default: false },
+        // Place is on: shrink to the next step's hint.
+        placing: { type: Boolean, default: false }
     },
     emits: ['dismiss', 'celebrated'],
     setup(props) {
@@ -37,6 +43,14 @@ export default {
             && window.matchMedia('(max-width: 720px)').matches;
         const folded = ref(startsFolded || props.quiet);
         watch(() => props.quiet, (quiet) => { folded.value = quiet || startsFolded; });
+        // Every step asked for while placing; asked for once, until placing stops.
+        const expanded = ref(false);
+        watch(() => props.placing, (placing) => { if (!placing) expanded.value = false; });
+        const compact = computed(() => props.placing && !expanded.value);
+        function open() {
+            folded.value = false;
+            expanded.value = true;
+        }
         const steps = computed(() => {
             const done = new Set(props.progress.completed);
             const next = nextFirstBuildStep(props.progress);
@@ -45,7 +59,7 @@ export default {
         const doneCount = computed(() => props.progress.completed.length);
         const complete = computed(() => isFirstBuildComplete(props.progress));
         const current = computed(() => steps.value.find((step) => step.current) ?? null);
-        return { t, folded, steps, doneCount, complete, current, total: FIRST_BUILD_STEPS.length };
+        return { t, folded, expanded, compact, open, steps, doneCount, complete, current, total: FIRST_BUILD_STEPS.length };
     },
     template: `
         <section v-if="complete" class="first-build-guide first-build-guide--done" role="status" :aria-label="t('firstBuild.title')">
@@ -64,9 +78,23 @@ export default {
             type="button"
             class="first-build-guide-pill"
             :aria-label="t('firstBuild.openLabel', { done: doneCount, total })"
-            @click="folded = false"
+            @click="open"
         >{{ t('firstBuild.pill', { done: doneCount, total }) }}</button>
-        <section v-else class="first-build-guide" :aria-label="t('firstBuild.title')">
+        <section
+            v-else-if="compact"
+            class="first-build-guide first-build-guide--compact"
+            :aria-label="t('firstBuild.title')"
+            :data-current="current ? current.id : null"
+        >
+            <header class="first-build-header">
+                <h2 class="first-build-title">{{ t('firstBuild.title') }}</h2>
+                <span class="first-build-count">{{ t('firstBuild.count', { done: doneCount, total }) }}</span>
+                <button type="button" class="first-build-expand-btn" :title="t('firstBuild.expand')" :aria-label="t('firstBuild.expand')" @click="expanded = true">+</button>
+                <button type="button" class="first-build-icon-btn" :title="t('firstBuild.fold')" :aria-label="t('firstBuild.fold')" @click="folded = true">–</button>
+            </header>
+            <p v-if="current" class="first-build-hint">{{ t('firstBuild.hint.' + current.key) }}</p>
+        </section>
+        <section v-else class="first-build-guide" :aria-label="t('firstBuild.title')" :data-current="current ? current.id : null">
             <header class="first-build-header">
                 <h2 class="first-build-title">{{ t('firstBuild.title') }}</h2>
                 <span class="first-build-count">{{ t('firstBuild.count', { done: doneCount, total }) }}</span>
