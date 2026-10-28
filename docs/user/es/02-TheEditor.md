@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 5df87310a3ed33cb -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: cc26a2f709f6a59a -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -169,7 +169,11 @@ Cada paso se marca cuando lo hace, en cualquier orden; deshacer y rehacer
 no cuentan. Cuando los seis están hechos, la tarjeta lo celebra y ofrece
 **Ver otras construcciones** o **Seguir construyendo**, y luego desaparece;
 si ya estaba terminada antes de que entrar caminando fuera un paso, no
-vuelve. **–** la pliega en el botón pequeño; **Ocultar la guía** la oculta para
+vuelve.
+Mientras **Colocar** está activo, la tarjeta se reduce a la pista del
+siguiente paso, para no estorbar lo que construye; **+** muestra todos los
+pasos, y vuelve a abrirse entera cuando regresa a **Seleccionar**.
+**–** la pliega en el botón pequeño; **Ocultar la guía** la oculta para
 siempre en este dispositivo. Para traerla de vuelta, abra la paleta de
 comandos (**Ctrl+K**) y ejecute **Guía de la primera construcción**. Un
 dispositivo que ya tiene trabajo guardado empieza con la guía oculta.

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 5df87310a3ed33cb -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: cc26a2f709f6a59a -->
 # 02 — Editor
 
 <!-- languages -->
@@ -164,7 +164,11 @@ Setiap langkah dicentang begitu Anda melakukannya, dalam urutan apa pun;
 urungkan dan ulangi tidak dihitung. Setelah keenamnya selesai, kartu itu
 merayakannya dan menawarkan **Lihat bangunan lain** atau **Terus
 membangun**, lalu menghilang; jika sudah selesai sebelum masuk ke dalam menjadi sebuah
-langkah, kartu itu tidak muncul lagi. **–** melipatnya menjadi tombol kecil;
+langkah, kartu itu tidak muncul lagi.
+Selama **Tempatkan** aktif, kartu itu mengecil menjadi petunjuk langkah
+berikutnya, agar tidak menghalangi apa yang Anda bangun; **+** menampilkan
+semua langkah, dan kartu terbuka penuh lagi saat Anda kembali ke **Pilih**.
+**–** melipatnya menjadi tombol kecil;
 **Sembunyikan panduan** menyembunyikannya untuk seterusnya di perangkat
 ini. Untuk memunculkannya lagi, buka palet perintah (**Ctrl+K**) dan
 jalankan **Panduan Bangunan Pertama**. Perangkat yang sudah memiliki karya

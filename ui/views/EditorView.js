@@ -486,6 +486,7 @@ export default {
                         :progress="firstBuildProgress"
                         :walk-route="walkInside ? walkInside.route : null"
                         :quiet="starterCardStage === 'job'"
+                        :placing="PLACING_TOOLS.has(activeTool)"
                         @dismiss="dismissFirstBuildGuide"
                         @celebrated="finishFirstBuildGuide"
                     />

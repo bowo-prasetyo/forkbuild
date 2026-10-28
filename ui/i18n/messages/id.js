@@ -1167,6 +1167,7 @@ export default Object.freeze({
     'firstBuild.pill': 'Bangunan pertama · {done}/{total}',
     'firstBuild.openLabel': 'Buka panduan bangunan pertama ({done} dari {total} selesai)',
     'firstBuild.fold': 'Lipat panduan',
+    'firstBuild.expand': 'Tampilkan semua langkah',
     'firstBuild.hide': 'Sembunyikan panduan',
     'firstBuild.doneMark': '(selesai)',
     'firstBuild.step.placeBrick': 'Tempatkan sebuah balok',

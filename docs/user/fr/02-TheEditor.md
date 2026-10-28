@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 5df87310a3ed33cb -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: cc26a2f709f6a59a -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -171,7 +171,11 @@ Chaque étape est cochée dès que vous la faites, dans n’importe quel
 ordre ; annuler et rétablir ne comptent pas. Quand les six sont faites,
 la carte le fête et propose **Voir d’autres constructions** ou **Continuer
 à construire**, puis disparaît ; si elle était déjà terminée avant qu’entrer à pied soit
-une étape, elle ne revient pas. **–** la replie en petit bouton ; **Masquer
+une étape, elle ne revient pas.
+Tant que **Placement** est actif, la carte se réduit à l’indice de l’étape
+suivante, pour ne pas gêner ce que vous construisez ; **+** affiche toutes
+les étapes, et elle se rouvre en entier quand vous revenez à **Sélection**.
+**–** la replie en petit bouton ; **Masquer
 le guide** la masque pour de bon sur cet appareil. Pour la faire revenir,
 ouvrez la palette de commandes (**Ctrl+K**) et lancez **Guide de la
 première construction**. Un appareil qui a déjà du travail enregistré

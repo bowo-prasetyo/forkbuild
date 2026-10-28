@@ -294,8 +294,10 @@ async function reloadAndMissingWorld(browser, base) {
             await page.mouse.down();
             await page.mouse.up();
         }
-        await page.waitForSelector('.first-build-step--done[data-step="place-brick"]', { timeout: 10_000 });
         await page.keyboard.press('Escape');
+        // Back in Select, the guide shows every step again (it shrinks while placing).
+        await page.click('.tool-switcher--editor .tool-btn:nth-child(1)');
+        await page.waitForSelector('.first-build-step--done[data-step="place-brick"]', { timeout: 10_000 });
         const selectAll = async () => {
             await page.click('.tool-switcher--editor .tool-btn:nth-child(1)');
             await page.getByRole('button', { name: 'Select All' }).click();
@@ -612,7 +614,8 @@ async function firstVisit(browser, base) {
         await page.mouse.move(middle.x, middle.y, { steps: 4 });
         await page.mouse.down();
         await page.mouse.up();
-        await page.waitForSelector('.first-build-step--done[data-step="place-brick"]', { timeout: 10_000 });
+        // While placing, the guide is only the next step's hint, out of the build's way.
+        await page.waitForSelector('.first-build-guide--compact[data-current="stack"]', { timeout: 10_000 });
         assert(await page.$eval('.palette-item--active', (item) => item.textContent.includes('Cube')), 'the Build Library shows the Cube chosen');
         // The cube stands on the ground point that was clicked
         // (renderer/EditorFloor.js), so its top is just above the pointer:
@@ -624,7 +627,7 @@ async function firstVisit(browser, base) {
             await page.mouse.move(middle.x, middle.y - up, { steps: 2 });
             await page.mouse.down();
             await page.mouse.up();
-            stacked = await page.waitForSelector('.first-build-step--done[data-step="stack"]', { timeout: 1500 }).then(() => true, () => false);
+            stacked = await page.waitForSelector('.first-build-guide[data-current="own"]', { timeout: 1500 }).then(() => true, () => false);
         }
         assert(stacked, 'a click on the cube\'s top stacks another on it');
         await page.click('.first-build-icon-btn');

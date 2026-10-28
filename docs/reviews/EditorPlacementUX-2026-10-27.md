@@ -270,7 +270,7 @@ what will happen when you click.
 
 ### P2-11. Floating panels cover the area where you build
 
-**Fixed 2026-10-27:** on a phone or a touch screen, Sound is one small button beside See inside and Voice, and on a tablet the guide starts above the touch bar (roadmap, "Floating panels keep clear of the build"). On desktop the guide still covers the bottom left until it is folded.
+**Fixed 2026-10-27:** on a phone or a touch screen, Sound is one small button beside See inside and Voice, and on a tablet the guide starts above the touch bar (roadmap, "Floating panels keep clear of the build"). On 2026-10-28 the guide stopped covering the bottom left while placing: with Place on it shrinks to its next step's hint, 116 px tall instead of 302 at 1366×768 (roadmap, "The first-build guide steps aside while placing").
 
 - On a phone the **Sound** panel covers about 60% of the view's height,
   across half its width. My first test tap on the "ground" landed on it.

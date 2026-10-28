@@ -1167,6 +1167,7 @@ export default Object.freeze({
     'firstBuild.pill': 'はじめての作品 · {done}/{total}',
     'firstBuild.openLabel': 'はじめての作品ガイドを開く（{total} 個中 {done} 個完了）',
     'firstBuild.fold': 'ガイドをたたむ',
+    'firstBuild.expand': 'すべての手順を表示',
     'firstBuild.hide': 'ガイドを隠す',
     'firstBuild.doneMark': '（完了）',
     'firstBuild.step.placeBrick': 'ブロックを置く',

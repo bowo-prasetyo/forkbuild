@@ -9474,3 +9474,23 @@ something it ran into, or red beside something it cleared.
   the build, a build turning round its own origin; beside a turned build is clear and along it is blocked; Place
   Structure blocked, then clear when turned, then placed turned and the next one flush against it; moving a turned
   build; a gizmo turn into a brick is blocked, and the gizmo frames the turned box).
+
+## The first-build guide steps aside while placing (unnumbered, 2026-10-28)
+
+**Building: room to see the build.** The last part of finding P2-11 of
+[the Editor placement audit](../reviews/EditorPlacementUX-2026-10-27.md): on desktop and on a tablet the **Your first
+build** card covered the bottom left of the 3D view (304×302 px at 1366×768, 12% of the view) until it was folded by
+hand, and bricks placed there were hidden behind it.
+
+- **While Place is on** (a brick or a structure), the card shrinks to its title, how far along, and the next step's
+  hint (ui/components/FirstBuildGuide.js's new `placing` prop, from ui/views/EditorView.js): 116 px tall, 4.7% of
+  the view. The hint stays, since it is what teaches the step being done (*With Place still on, click the top of a
+  brick*), and it moves on as steps are ticked off.
+- **+** shows every step; asked for, the card stays in full until placing stops. **–** still folds it to its small
+  button, and that button opens it in full. Back in Select, it opens in full again.
+- One new message (`firstBuild.expand`, "Show every step") in all eight languages, and the user guide's *Your first
+  build* says so, in all eight.
+- Tests: tests/FirstBuildGuideBrowser.test.js (placing, no step list but the next hint and the count, under half the
+  height; a step done while placing moves the hint on; + shows every step until placing stops; – folds and its button
+  opens in full); tests/run-bundle.mjs now reads the compact card while placing in the published build. Checked in the
+  running app at 1366×768 and on an emulated iPad.

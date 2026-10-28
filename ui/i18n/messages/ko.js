@@ -1170,6 +1170,7 @@ export default Object.freeze({
     'firstBuild.pill': '첫 작품 · {done}/{total}',
     'firstBuild.openLabel': '첫 작품 가이드 열기({total}개 중 {done}개 완료)',
     'firstBuild.fold': '가이드 접기',
+    'firstBuild.expand': '모든 단계 보기',
     'firstBuild.hide': '가이드 숨기기',
     'firstBuild.doneMark': '(완료)',
     'firstBuild.step.placeBrick': '블록 놓기',
