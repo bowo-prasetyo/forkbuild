@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { actionNamed, actionSaid, nearestBySound, soundsExactly, cleanTranscript, whisperLanguage, WHISPER_LANGUAGES } from '../core/voice/Transcript.js';
 import { MAX_SPOKEN_TOKENS, SPEECH_ENGINE, SPEECH_MODEL, SpeechRuntime } from '../application/voice/SpeechRuntime.js';
 import { SPEECH_DOWNLOAD_BYTES, SPEECH_ENGINE_LOADER, SPEECH_ENGINE_SHARE, SpeechWorkerClient, TRANSCRIBE_TIMEOUT, TRANSCRIBE_TIMEOUT_MS, speechSupported } from '../application/voice/SpeechWorkerClient.js';
-import { SPEECH_MODEL_BYTES } from '../application/voice/SpeechModelPins.js';
+import { SPEECH_MODEL_BYTES, SPEECH_MODEL_FILES, SPEECH_MODEL_REVISION } from '../application/voice/SpeechModelPins.js';
 import { serveSpeech } from '../application/voice/serveSpeech.js';
 import { interpretWorldCommand } from '../core/voice/WorldVoiceCommand.js';
 import { worldVoiceVocabulary } from '../ui/i18n/worldVoiceWords.js';
@@ -94,16 +94,25 @@ function fakeCaches() {
         subtle: webcrypto.subtle,
         fetch: async (url) => { fetches += 1; return new Response(bytes); },
         importLibrary: async () => library,
-        engineLoaderUrl: `https://forkbuild.example/${SPEECH_ENGINE_LOADER}`
+        engineLoaderUrl: `https://forkbuild.example/${SPEECH_ENGINE_LOADER}`,
+        modelBytes: 20
     });
     assert(!(await runtime.downloaded()), 'nothing is downloaded before voice is turned on');
     await runtime.load((event) => progress.push(event));
     assert(fetches === 1 && await runtime.downloaded(), 'the engine is fetched once and kept');
+    // A runtime not loaded yet (another visit) knows whether turning voice on
+    // would download: the engine and every pinned file of the model kept.
+    const fresh = new SpeechRuntime({ engine, caches, subtle: webcrypto.subtle, importLibrary: async () => library, engineLoaderUrl: 'x' });
+    assert(!(await fresh.downloaded()), 'with the engine kept but not the model, voice would download again, and says so');
+    const kept = await caches.open('transformers-cache');
+    for (const path of Object.keys(SPEECH_MODEL_FILES)) await kept.put(`https://huggingface.co/${SPEECH_MODEL}/resolve/${SPEECH_MODEL_REVISION}/${path}`, new Response('x'));
+    assert(await fresh.downloaded(), 'with the engine and every pinned file kept, nothing would be downloaded');
     assert(new Uint8Array(env.backends.onnx.wasm.wasmBinary).length === bytes.length, 'the engine is given to the runtime as bytes');
     assert(env.useWasmCache === false && env.backends.onnx.wasm.wasmPaths.mjs.endsWith('/vendor/onnxruntime-web/ort-wasm-simd-threaded.asyncify.mjs') && env.backends.onnx.wasm.numThreads === 1 && env.allowLocalModels === false,
         'its loader is this site\'s, never a blob: URL, on one thread');
     assert(calls.length === 1 && calls[0].task === 'automatic-speech-recognition' && calls[0].model === SPEECH_MODEL && calls[0].options.device === 'wasm' && calls[0].options.dtype === 'q8', 'Whisper is loaded on WebAssembly, quantized');
-    assert(progress.some((event) => event.phase === 'engine') && progress.some((event) => event.phase === 'model' && event.loaded === 5 && event.total === 10), 'progress is reported for the engine and the model');
+    assert(progress.some((event) => event.phase === 'engine') && progress.some((event) => event.phase === 'model' && event.loaded === 5 && event.total === 20),
+        'progress is reported for the engine, and for the model over its whole pinned size, so it never jumps back');
     assert(await runtime.transcribe(new Float32Array(3), 'english') === ' heard 3 as english/transcribe. ', 'it transcribes in the language it is told');
     assert(heardWith.max_new_tokens === MAX_SPOKEN_TOKENS && MAX_SPOKEN_TOKENS <= 64, 'and writes a command\'s few words at most, never Whisper\'s 448 tokens');
 
@@ -122,6 +131,16 @@ function fakeCaches() {
         refused = error;
     }
     assert(refused && /SHA-256/.test(refused.message), 'an engine that isn\'t the pinned one is refused, and never run');
+
+    // Removed while it loads: the model the load was making is let go.
+    let finishPipeline = null;
+    const slowLibrary = { env: { backends: { onnx: { wasm: {} } } }, pipeline: () => new Promise((done) => { finishPipeline = () => done(async () => ({ text: 'late' })); }) };
+    const racing = new SpeechRuntime({ engine, caches: fakeCaches(), subtle: webcrypto.subtle, fetch: async () => new Response(bytes), importLibrary: async () => slowLibrary, engineLoaderUrl: 'x' });
+    const loading = racing.load().then(() => 'loaded', (error) => error.message);
+    for (let i = 0; i < 100 && !finishPipeline; i += 1) await new Promise((resolve) => setTimeout(resolve, 0));
+    await racing.remove();
+    finishPipeline();
+    assert(/removed/.test(await loading) && !(await racing.downloaded()), 'removed while loading, the model is let go rather than kept');
     console.log('✓ the speech runtime');
 }
 
@@ -480,6 +499,27 @@ function workerPair(runtimeFor) {
     const earlier = useVoiceCommands({ act: () => ({ kind: 'done' }), runtime, record, supported: true, language: () => 'en', storage: { getItem: () => 'yes', setItem() {}, removeItem() {} } });
     earlier.toggleVoice();
     assert(earlier.voice.value.step === 'intro', 'voice turned on for an earlier speech model asks again before downloading this one');
+
+    // Turned on, but the browser has thrown the model away since.
+    const evicted = useVoiceCommands({ act: () => ({ kind: 'done' }), runtime: { ...runtime, downloaded: async () => false }, record, supported: true, language: () => 'en', storage: on() });
+    evicted.toggleVoice();
+    await settle();
+    assert(evicted.voice.value.step === 'intro', 'when the browser has thrown the speech model away, a press asks again before downloading it');
+    evicted.turnOnVoice();
+    await settle();
+    assert(evicted.voice.value.step === 'listening', 'and once asked, it downloads and listens');
+
+    // Progress never goes back, whatever order the files report in.
+    const shown = [];
+    let jumpy = null;
+    const reports = [{ phase: 'engine', loaded: 2, total: 2 }, { phase: 'model', loaded: 6, total: 10 }, { phase: 'model', loaded: 6, total: 20 }];
+    jumpy = useVoiceCommands({
+        act: () => ({ kind: 'done' }), record, supported: true, language: () => 'en', storage: on(),
+        runtime: { ...runtime, load: async (report) => { for (const each of reports) { report(each); shown.push(jumpy.voice.value.progress); } } }
+    });
+    jumpy.toggleVoice();
+    await settle();
+    assert(shown.every((value, i) => i === 0 || value >= shown[i - 1]) && shown.length >= 3, `the download's progress never goes back (${shown.join(', ')})`);
     const slow = useVoiceCommands({ act: () => ({ kind: 'done' }), runtime: { ...runtime, transcribe: async () => { throw new Error(TRANSCRIBE_TIMEOUT); } }, record, supported: true, language: () => 'en', storage: on() });
     slow.toggleVoice();
     await settle();

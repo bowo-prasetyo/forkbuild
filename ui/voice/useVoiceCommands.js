@@ -53,11 +53,14 @@ export function useVoiceCommands({ act, runtime = sharedSpeechRecognizer(), reco
     async function load() {
         show({ step: 'loading', progress: 0 });
         try {
+            let shown = 0;
             await runtime.load(({ phase, loaded, total }) => {
                 // The engine is the first part of the download, the model the rest.
                 const share = total > 0 ? Math.min(1, loaded / total) : 0;
                 const engine = 100 * SPEECH_ENGINE_SHARE;
-                show({ step: 'loading', progress: Math.round(phase === 'engine' ? share * engine : engine + share * (100 - engine)) });
+                // Never backwards, whatever order the files report in.
+                shown = Math.max(shown, Math.round(phase === 'engine' ? share * engine : engine + share * (100 - engine)));
+                show({ step: 'loading', progress: shown });
             });
             return true;
         } catch (error) {
@@ -66,7 +69,14 @@ export function useVoiceCommands({ act, runtime = sharedSpeechRecognizer(), reco
         }
     }
 
-    async function listen() {
+    // `asked`: turned on just now. Otherwise, when the browser has thrown the
+    // speech model away since (runtime.downloaded()), it asks again before
+    // downloading it again.
+    async function listen({ asked = false } = {}) {
+        if (!asked && typeof runtime.downloaded === 'function' && !(await runtime.downloaded())) {
+            show({ step: 'intro' });
+            return;
+        }
         if (!(await load())) return;
         try {
             recording = await record({ onAutoStop: () => { finish(); } });
@@ -119,7 +129,7 @@ export function useVoiceCommands({ act, runtime = sharedSpeechRecognizer(), reco
 
     function turnOn() {
         writeEnabled(true);
-        listen();
+        listen({ asked: true });
     }
 
     async function turnOff() {
