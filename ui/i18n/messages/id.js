@@ -678,6 +678,10 @@ export default Object.freeze({
     'shortcuts.view.rotateGhost': 'Putar bayangan saat menempatkan',
     'shortcuts.view.rotateGhostBack': 'Putar bayangan (arah berlawanan)',
     'shortcuts.view.cancelPlacement': 'Batalkan penempatan',
+    'shortcuts.view.layRow': 'Letakkan sebaris balok yang sedang ditempatkan',
+    'shortcuts.view.layRowGesture': 'Shift+seret',
+    'shortcuts.view.pickBrick': 'Ambil balok dari bangunan Anda',
+    'shortcuts.view.pickBrickGesture': 'Alt+klik (sentuh: tahan)',
     'shortcuts.paletteHint': 'Ctrl/Cmd+K membuka Palet Perintah, yang mencari semua perintah ini berdasarkan nama.',
 
     // Editor actions (application/editor/EditorActionRegistry.js): for each

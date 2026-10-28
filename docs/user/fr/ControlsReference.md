@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: ee41957881dffe63 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 2d9d12cc9b830ce1 -->
 # Référence des commandes
 
 <!-- languages -->
@@ -338,6 +338,8 @@ pas dans la Palette de commandes (là, `R`/`Maj+R` font pivoter une
 | `T` | Basculer l’aperçu en attente sur sa face suivante | revient à zéro quand vous quittez le mode Placement |
 | `Maj+T` | Basculer l’aperçu en attente dans l’autre sens | |
 | Clic | Valider l’aperçu comme une vraie brique | refusé à une position occupée (rouge) |
+| `Maj`-glisser | Poser une rangée de la brique, bord à bord, en une étape d’annulation | suit la direction où vous glissez le plus, à la hauteur de la première brique ; rouge et refusée si une place est prise ; `Échap` l’abandonne pendant le glissement |
+| `Alt`-clic sur une brique de la construction (`Option`-clic sur Mac) | Reprendre son type, sa couleur, son orientation et son inclinaison, avec Placement actif | marche aussi depuis Sélection ; rien n’est repris sur un sol vide |
 | Nuancier **Couleur** de la Bibliothèque de construction | Choisir la couleur des prochaines briques que vous placez | revient à la couleur par défaut du type quand vous en choisissez un autre — voir [Couleurs des briques](02-TheEditor.md#couleurs-des-briques) |
 
 Pour recolorer des briques déjà placées, sélectionnez-les et utilisez le
@@ -416,6 +418,9 @@ vue remplace les touches :
 
 Les poignées du manipulateur fonctionnent au toucher comme à la souris,
 **Cadre** actif ou non : faites glisser une poignée.
+
+Pour reprendre une brique de votre construction, comme avec `Alt`-clic,
+gardez un doigt immobile dessus une demi-seconde.
 
 ## Priorité d’Échap (Éditeur)
 

@@ -682,6 +682,10 @@ export default Object.freeze({
     'shortcuts.view.rotateGhost': 'Girar la vista previa al colocar',
     'shortcuts.view.rotateGhostBack': 'Girar la vista previa (sentido contrario)',
     'shortcuts.view.cancelPlacement': 'Cancelar colocación',
+    'shortcuts.view.layRow': 'Poner una fila del bloque que coloca',
+    'shortcuts.view.layRowGesture': 'Mayús+arrastrar',
+    'shortcuts.view.pickBrick': 'Tomar un bloque de su construcción',
+    'shortcuts.view.pickBrickGesture': 'Alt+clic (táctil: mantener)',
     'shortcuts.paletteHint': 'Ctrl/Cmd+K abre la Paleta de comandos, que busca cada uno de estos por nombre.',
 
     // Editor actions (application/editor/EditorActionRegistry.js): for each

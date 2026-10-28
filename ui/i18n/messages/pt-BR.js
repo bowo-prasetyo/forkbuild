@@ -682,6 +682,10 @@ export default Object.freeze({
     'shortcuts.view.rotateGhost': 'Girar o fantasma ao colocar',
     'shortcuts.view.rotateGhostBack': 'Girar o fantasma (sentido contrário)',
     'shortcuts.view.cancelPlacement': 'Cancelar a colocação',
+    'shortcuts.view.layRow': 'Pôr uma fileira do bloco que você coloca',
+    'shortcuts.view.layRowGesture': 'Shift+arrastar',
+    'shortcuts.view.pickBrick': 'Pegar um bloco da sua construção',
+    'shortcuts.view.pickBrickGesture': 'Alt+clique (toque: segurar)',
     'shortcuts.paletteHint': 'Ctrl/Cmd+K abre a Paleta de comandos, que busca cada um destes pelo nome.',
 
     // Editor actions (application/editor/EditorActionRegistry.js): for each

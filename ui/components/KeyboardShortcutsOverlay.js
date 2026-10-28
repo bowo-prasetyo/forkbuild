@@ -30,11 +30,13 @@ const VIEW_LOCAL_SHORTCUTS = [
     { label: 'shortcuts.view.sound', shortcut: 'M' },
     { label: 'shortcuts.view.rotateGhost', shortcut: 'R' },
     { label: 'shortcuts.view.rotateGhostBack', shortcut: 'Shift+R' },
-    { label: 'shortcuts.view.cancelPlacement', shortcut: 'Esc' }
+    { label: 'shortcuts.view.cancelPlacement', shortcut: 'Esc' },
+    { label: 'shortcuts.view.layRow', shortcut: 'shortcuts.view.layRowGesture' },
+    { label: 'shortcuts.view.pickBrick', shortcut: 'shortcuts.view.pickBrickGesture' }
 ];
 
-// `shortcut` is a key name the person presses, except the mouse gestures,
-// which are messages too.
+// In both lists `shortcut` is a key name the person presses, except the
+// mouse gestures, which are messages too.
 const CAMERA_SHORTCUTS = [
     { label: 'shortcuts.camera.orbit', shortcut: 'shortcuts.camera.orbitGesture' },
     { label: 'shortcuts.camera.pan', shortcut: 'shortcuts.camera.panGesture' },
@@ -56,7 +58,7 @@ export default {
         categoryName(category) {
             return t(actionCategoryLabel(category));
         },
-        cameraShortcut(row) {
+        shortcutText(row) {
             return row.shortcut.startsWith('shortcuts.') ? t(row.shortcut) : row.shortcut;
         }
     },
@@ -104,13 +106,13 @@ export default {
                     <div :style="{ padding: '8px 0 2px', fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-faint)' }">{{ t('shortcuts.camera') }}</div>
                     <div v-for="row in CAMERA_SHORTCUTS" :key="'camera-' + row.label" :style="{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '13px', color: 'var(--ink-soft)' }">
                         <span>{{ t(row.label) }}</span>
-                        <span :style="{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--ink-faint)' }">{{ cameraShortcut(row) }}</span>
+                        <span :style="{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--ink-faint)' }">{{ shortcutText(row) }}</span>
                     </div>
 
                     <div :style="{ padding: '8px 0 2px', fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-faint)' }">{{ t('shortcuts.toolsAndView') }}</div>
                     <div v-for="row in VIEW_LOCAL_SHORTCUTS" :key="'view-' + row.label" :style="{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '13px', color: 'var(--ink-soft)' }">
                         <span>{{ t(row.label) }}</span>
-                        <span :style="{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--ink-faint)' }">{{ row.shortcut }}</span>
+                        <span :style="{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--ink-faint)' }">{{ shortcutText(row) }}</span>
                     </div>
 
                     <template v-for="group in registryGroups" :key="group.category">

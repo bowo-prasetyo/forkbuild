@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: ee41957881dffe63 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 2d9d12cc9b830ce1 -->
 # Steuerungsreferenz
 
 <!-- languages -->
@@ -330,6 +330,8 @@ Weltansicht hat gar kein Platzierwerkzeug.
 | `T` | Die wartende Vorschau auf ihre nächste Seite kippen | wird beim Verlassen des Platziermodus zurückgesetzt |
 | `Umschalt+T` | Die wartende Vorschau in die andere Richtung kippen | |
 | Klick | Die Vorschau als echten Stein übernehmen | an einer belegten (roten) Position verweigert |
+| `Umschalt`-Ziehen | Eine Reihe des Steins legen, Kante an Kante, als ein Rückgängig-Schritt | verläuft in die Richtung, in die Sie weiter ziehen, auf der Höhe des ersten Steins; rot und verweigert, wenn ein Platz belegt ist; `Esc` verwirft sie während des Ziehens |
+| `Alt`-Klick auf einen Stein im Bauwerk (Wahltaste-Klick auf dem Mac) | Art, Farbe, Drehung und Neigung übernehmen, mit Platzieren an | geht auch aus Auswählen heraus; auf leerem Boden wird nichts aufgenommen |
 | Farbfeld **Farbe** der Baubibliothek | Die Farbe für die nächsten Steine wählen, die Sie platzieren | wird auf die Standardfarbe der Steinart zurückgesetzt, wenn Sie eine andere Art wählen — siehe [Steinfarben](02-TheEditor.md#steinfarben) |
 
 Um bereits platzierte Steine umzufärben, wählen Sie sie aus und nutzen Sie
@@ -410,6 +412,9 @@ steht für die Tasten:
 
 Die Griffe des Gizmos funktionieren mit Touch genauso wie mit der Maus, ob
 **Rahmen** an oder aus ist: einen Griff ziehen.
+
+Um wie mit `Alt`-Klick einen Stein aus Ihrem Bauwerk aufzunehmen, halten Sie
+einen Finger eine halbe Sekunde still auf ihm.
 
 ## Escape-Reihenfolge (Editor)
 

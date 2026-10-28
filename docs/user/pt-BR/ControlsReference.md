@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: ee41957881dffe63 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 2d9d12cc9b830ce1 -->
 # Referência de controles
 
 <!-- languages -->
@@ -326,6 +326,8 @@ tem ferramenta Colocar.
 | `T` | Tombar a prévia pendente sobre a próxima face | volta ao normal ao sair do modo Colocar |
 | `Shift+T` | Tombar a prévia pendente ao contrário | |
 | Clicar | Confirmar a prévia como um bloco de verdade | recusado numa posição ocupada (vermelha) |
+| `Shift` + arrastar | Pôr uma fileira do bloco, borda com borda, como um passo de desfazer | segue para onde você arrastar mais, na altura do primeiro bloco; vermelha e recusada se algum lugar estiver ocupado; `Esc` a descarta enquanto arrasta |
+| `Alt` + clique num bloco da construção (`Option` + clique no Mac) | Pegar o tipo, a cor, o giro e a inclinação, com Colocar ligado | também funciona a partir de Selecionar; em chão vazio não pega nada |
 | Amostra **Cor** da Biblioteca de construção | Escolher a cor dos próximos blocos que você colocar | volta à cor padrão do tipo quando você escolhe outro tipo — veja [Cores dos blocos](02-TheEditor.md#cores-dos-blocos) |
 
 Para mudar a cor de blocos já colocados, selecione-os e use a amostra
@@ -401,6 +403,9 @@ as teclas:
 
 As alças do gizmo funcionam com toque como com o mouse, com **Caixa** ligado
 ou não: arraste uma alça.
+
+Para pegar um bloco da sua construção, como com `Alt` + clique, mantenha um
+dedo parado sobre ele por meio segundo.
 
 ## Prioridade do Esc (Editor)
 

@@ -681,6 +681,10 @@ export default Object.freeze({
     'shortcuts.view.rotateGhost': '배치 중 미리보기 회전',
     'shortcuts.view.rotateGhostBack': '미리보기 회전(반대 방향)',
     'shortcuts.view.cancelPlacement': '배치 취소',
+    'shortcuts.view.layRow': '놓고 있는 블록을 한 줄로 놓기',
+    'shortcuts.view.layRowGesture': 'Shift+드래그',
+    'shortcuts.view.pickBrick': '작품에서 블록 집기',
+    'shortcuts.view.pickBrickGesture': 'Alt+클릭(터치: 길게 누르기)',
     'shortcuts.paletteHint': 'Ctrl/Cmd+K를 누르면 명령 팔레트가 열리며, 여기 있는 모든 항목을 이름으로 검색할 수 있습니다.',
 
     // Editor actions (application/editor/EditorActionRegistry.js): for each

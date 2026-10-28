@@ -18,6 +18,8 @@ async function runTests() {
     assert(rows.includes('Sound on/off | M'), `the overlay lists M for sound (rows: ${rows.join('; ')})`);
     assert(rows.includes('Save | Ctrl/Cmd+S'), 'alongside the other view shortcuts');
     assert(rows.filter((row) => row.endsWith('| M')).length === 1, 'M is listed once');
+    assert(rows.includes('Lay a row of the brick you\'re placing | Shift+drag'), 'the overlay lists Shift+drag to lay a row');
+    assert(rows.includes('Pick up a brick from your build | Alt+click (touch: hold)'), 'and Alt-click, or a long press, to pick a brick');
 
     // M reaches the Editor's own sound toggle because no editing action claims it.
     const plainM = new KeyboardEvent('keydown', { key: 'm' });

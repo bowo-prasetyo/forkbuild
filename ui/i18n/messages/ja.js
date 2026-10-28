@@ -678,6 +678,10 @@ export default Object.freeze({
     'shortcuts.view.rotateGhost': '配置中にゴーストを回転',
     'shortcuts.view.rotateGhostBack': 'ゴーストを回転（逆方向）',
     'shortcuts.view.cancelPlacement': '配置をキャンセル',
+    'shortcuts.view.layRow': '置いているブロックを一列に並べる',
+    'shortcuts.view.layRowGesture': 'Shift+ドラッグ',
+    'shortcuts.view.pickBrick': '作品からブロックを取る',
+    'shortcuts.view.pickBrickGesture': 'Alt+クリック（タッチ: 長押し）',
     'shortcuts.paletteHint': 'Ctrl/Cmd+K でコマンドパレットが開き、これらすべてを名前で検索できます。',
 
     // Editor actions (application/editor/EditorActionRegistry.js): for each
