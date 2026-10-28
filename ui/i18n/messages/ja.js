@@ -618,6 +618,7 @@ export default Object.freeze({
     'voice.micBlocked': 'マイクが許可されていません。ブラウザーの設定でこのサイトに許可してください。',
     'voice.failed': '音声を開始できませんでした: {reason}',
     'voice.unsupported': 'このブラウザーでは録音または音声モデルの実行ができません。',
+    'voice.timeout': '話した内容の認識に時間がかかりすぎたため、中止しました。もう一度お試しください。',
     'voice.turnOff': '音声をオフにする',
     'voice.remove': '音声モデルを削除',
     'voice.removed': '音声モデルをこのブラウザーから削除しました。',

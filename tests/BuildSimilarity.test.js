@@ -83,6 +83,38 @@ console.log('✓ the same build');
 }
 console.log('✓ a copy moved or turned');
 
+// Builds of one or two kinds of brick laid in rows, where pairs of bricks
+// vote for every offset about as much: a copy is still lined up exactly.
+{
+    const rows = (width, depth, height, kinds) => {
+        const bricks = [];
+        for (let x = 0; x < width; x += 1) {
+            for (let z = 0; z < depth; z += 1) {
+                for (let y = 0; y < height; y += 1) bricks.push(brick(kinds[(x + y + z) % kinds.length], x, y + 0.5, z));
+            }
+        }
+        return bricks;
+    };
+    const builds = [
+        ['a 40 x 10 wall', rows(40, 1, 10, ['core:cube'])],
+        ['a 20 x 20 floor', rows(20, 20, 1, ['core:cube'])],
+        ['a 30 x 30 floor of two kinds', rows(30, 30, 1, ['core:cube', 'core:block_2x2'])]
+    ];
+    for (const [label, bricks] of builds) {
+        const shape = buildShape(bricks);
+        assert(compareBuildShapes(shape, shape).similarity === 1, `6a. ${label} is entirely alike to itself (got ${compareBuildShapes(shape, shape).similarity})`);
+        const copy = turnedAndMoved(bricks, 90, { x: 13, y: 0, z: -4 });
+        assert(compareBuildShapes(shape, buildShape(copy)).similarity === 1, `6b. a copy of ${label} turned and moved is entirely alike`);
+        const reordered = [...copy].reverse();
+        assert(compareBuildShapes(shape, buildShape(reordered)).similarity === 1, `6c. so is one whose bricks were placed in another order (${label})`);
+    }
+    const [, floor] = builds[1];
+    const lessARow = turnedAndMoved(floor.filter((b) => b.position.x > 0), 0, { x: 3, y: 0, z: 3 });
+    const evidence = compareBuildShapes(buildShape(floor), buildShape(lessARow));
+    assert(evidence.shared === lessARow.length && evidence.onlyTheirs === 0, `6d. a copy of the floor less a row is lined up on the side it kept (shared ${evidence.shared} of ${lessARow.length})`);
+}
+console.log('✓ a copy of a build laid in rows');
+
 {
     const recoloured = original.map((b) => brick(b.definitionId, b.position.x, b.position.y, b.position.z, { rotation: b.rotation + 180, color: 0x123456 }));
     assert(compareBuildShapes(buildShape(original), buildShape(recoloured)).similarity === 1, '7. colour and the turn of each brick are left out');

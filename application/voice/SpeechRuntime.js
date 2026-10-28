@@ -30,6 +30,12 @@ export const SPEECH_ENGINE = Object.freeze({
     bytes: 26861777
 });
 
+// The most tokens the model may write for one command. A command is a few
+// words (Japanese and Korean take more tokens a word); without a limit,
+// Whisper may write up to 448, repeating itself over noise, which takes
+// many seconds on one thread.
+export const MAX_SPOKEN_TOKENS = 48;
+
 const ENGINE_CACHE = 'forkbuild-voice-engine';
 // Where transformers.js keeps the model files (its env.cacheKey).
 const MODEL_CACHE = 'transformers-cache';
@@ -187,7 +193,7 @@ export class SpeechRuntime {
     // `language` (a Whisper language name, core/voice/Transcript.js).
     async transcribe(samples, language) {
         await this.load();
-        const result = await this._recognize(samples, { language, task: 'transcribe' });
+        const result = await this._recognize(samples, { language, task: 'transcribe', max_new_tokens: MAX_SPOKEN_TOKENS });
         return typeof result?.text === 'string' ? result.text : '';
     }
 

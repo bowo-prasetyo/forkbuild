@@ -621,6 +621,7 @@ export default Object.freeze({
     'voice.micBlocked': 'Das Mikrofon ist nicht erlaubt: Erlauben Sie es dieser Website in den Einstellungen Ihres Browsers.',
     'voice.failed': 'Die Sprachsteuerung konnte nicht starten: {reason}',
     'voice.unsupported': 'Dieser Browser kann nicht aufnehmen oder das Sprachmodell nicht ausführen.',
+    'voice.timeout': 'Das Erkennen des Gesagten hat zu lange gedauert und wurde abgebrochen. Versuchen Sie es noch einmal.',
     'voice.turnOff': 'Sprachsteuerung ausschalten',
     'voice.remove': 'Sprachmodell entfernen',
     'voice.removed': 'Das Sprachmodell wurde aus diesem Browser entfernt.',

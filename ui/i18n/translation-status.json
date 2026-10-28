@@ -593,6 +593,7 @@
         "voice.micBlocked": "cca76b5f",
         "voice.failed": "3c3d5aa8",
         "voice.unsupported": "23185ad0",
+        "voice.timeout": "10f6246a",
         "voice.turnOff": "074590c6",
         "voice.remove": "020c8da0",
         "voice.removed": "968e80a3",

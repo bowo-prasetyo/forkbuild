@@ -9664,3 +9664,29 @@ finger has no Alt.
   its lift is no tap; a quick tap is a tap; a drag or a second finger calls the hold off; held on empty ground it
   picks nothing and the lift is still a tap). Checked in the running app on an emulated iPhone 13: a long press on
   the cube picks it up (the chip names it and the message shows); one on empty ground does nothing.
+
+## Look-alikes line up builds laid in rows; voice can't get stuck (unnumbered, 2026-10-28)
+
+**Credit, and voice that answers.** Findings 1 and 7 of
+[the AI/ML audit](../reviews/AIML-2026-10-28.md): an exact copy of a wall or a floor wasn't always pointed out, and a
+command Whisper got stuck on kept voice busy until it ended.
+
+- **A copy of a build laid in rows is lined up exactly** (core/catalog/BuildSimilarity.js): bricks vote for the
+  offset by place, spread over each build, and the offsets that line up the builds' lowest and highest corners are
+  tried too. An exact copy of a 20 × 20 floor scored 0.55 against itself, below the 0.6 bar, and a 40 × 10 wall
+  0.67; both now score 1, whatever order the bricks were placed in, so Publish's "how much is the same" is right.
+  scripts/evaluate-ready-made-detection.mjs prints the same report before and after.
+- **Whisper writes at most 48 tokens for a command** (`MAX_SPOKEN_TOKENS`, application/voice/SpeechRuntime.js), not
+  448: an 11-second clip it repeated itself over took 20 s, and now 5 s. Short commands are heard the same.
+- **A transcription still going after 30 seconds is given up** (`TRANSCRIBE_TIMEOUT_MS`,
+  application/voice/SpeechWorkerClient.js): its worker is ended, the panel says it took too long
+  (`voice.timeout`, new, in all eight languages), and the next press starts again with the model from the cache.
+- **Turning voice off while it works lets go of what it hears afterwards** (ui/voice/useVoiceCommands.js), rather
+  than showing or doing it.
+- Tests: tests/BuildSimilarity.test.js 6a-6d (a wall and two floors alike to themselves, and to a copy turned, moved
+  or placed in another order; a floor less a row lined up on the side it kept); tests/VoiceBuilding.test.js (the
+  cap is passed to Whisper; a stuck transcription fails as `timeout` and ends its worker, and the next request starts
+  a new one; the panel says so and listens again; a result after turning off is let go). Checked in Chromium with
+  the pinned whisper-tiny and engine: loaded and transcribed through the real worker, and a fast-read paragraph that
+  sent it into a loop took 5.2 s capped against 20.3 s uncapped, with six spoken commands transcribed the same
+  either way.

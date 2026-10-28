@@ -26,8 +26,9 @@ export const SIMILAR_BUILD_THRESHOLD = 0.6;
 const TURNS = Object.freeze([0, 90, 180, 270]);
 const PRECISION = 1000;
 // The line-up is found by letting pairs of same-kind bricks vote for the
-// offset between the builds. These bound the work on large builds; the
-// rarest kinds of brick vote first, since they say the most.
+// offset between the builds, and by lining up their corners. These bound the
+// work on large builds; the rarest kinds of brick vote first, since they say
+// the most.
 const MAX_ANCHORS = 48;
 const MAX_PAIRS_PER_ANCHOR = 64;
 const OFFSETS_TRIED_PER_TURN = 3;
@@ -113,20 +114,45 @@ function turnPoint(point, turn) {
     }
 }
 
-function offsetsByVote(mine, turned) {
+// By place, so the same build compares the same whatever order its bricks
+// were placed in.
+function byPlace(a, b) {
+    return a.x - b.x || a.y - b.y || a.z - b.z;
+}
+
+// `count` of `points`, spread evenly from first to last, rather than the
+// first `count`: those all stand in one corner of a large build, where the
+// other build's corner may not be.
+function spread(points, count) {
+    if (points.length <= count) return points;
+    return Array.from({ length: count }, (_, i) => points[Math.floor((i * points.length) / count)]);
+}
+
+function groupByKind(points) {
     const byKind = new Map();
-    for (const point of turned) {
+    for (const point of points) {
         if (!byKind.has(point.definitionId)) byKind.set(point.definitionId, []);
         byKind.get(point.definitionId).push(point);
     }
-    const anchors = mine.points
-        .filter((point) => byKind.has(point.definitionId))
-        .sort((a, b) => byKind.get(a.definitionId).length - byKind.get(b.definitionId).length
-            || (pointKey(a.definitionId, a.x, a.y, a.z) < pointKey(b.definitionId, b.x, b.y, b.z) ? -1 : 1))
-        .slice(0, MAX_ANCHORS);
+    for (const kind of byKind.values()) kind.sort(byPlace);
+    return byKind;
+}
+
+function offsetsByVote(mine, turned) {
+    const theirsByKind = groupByKind(turned);
+    const mineByKind = groupByKind(mine.points.filter((point) => theirsByKind.has(point.definitionId)));
+    // The rarest kinds first, every brick of them while the anchors last,
+    // then the rest of a kind spread over the build.
+    const kinds = [...mineByKind.keys()]
+        .sort((a, b) => theirsByKind.get(a).length - theirsByKind.get(b).length || (a < b ? -1 : 1));
+    const anchors = [];
+    for (const kind of kinds) {
+        if (anchors.length >= MAX_ANCHORS) break;
+        anchors.push(...spread(mineByKind.get(kind), MAX_ANCHORS - anchors.length));
+    }
     const votes = new Map();
     for (const anchor of anchors) {
-        for (const point of byKind.get(anchor.definitionId).slice(0, MAX_PAIRS_PER_ANCHOR)) {
+        for (const point of spread(theirsByKind.get(anchor.definitionId), MAX_PAIRS_PER_ANCHOR)) {
             const offset = { x: rounded(anchor.x - point.x), y: rounded(anchor.y - point.y), z: rounded(anchor.z - point.z) };
             const key = `${offset.x}|${offset.y}|${offset.z}`;
             const vote = votes.get(key);
@@ -138,6 +164,33 @@ function offsetsByVote(mine, turned) {
         .sort((a, b) => b.count - a.count || (a.key < b.key ? -1 : 1))
         .slice(0, OFFSETS_TRIED_PER_TURN)
         .map((vote) => vote.offset);
+}
+
+function bounds(points) {
+    const low = { x: Infinity, y: Infinity, z: Infinity };
+    const high = { x: -Infinity, y: -Infinity, z: -Infinity };
+    for (const point of points) {
+        for (const axis of ['x', 'y', 'z']) {
+            low[axis] = Math.min(low[axis], point[axis]);
+            high[axis] = Math.max(high[axis], point[axis]);
+        }
+    }
+    return { low, high };
+}
+
+// The offsets that put `turned`'s lowest corner on `mine`'s, and its highest
+// on `mine`'s. Votes can't find a copy of a build of one or two kinds of
+// brick laid in rows (a wall, a floor), where every offset gets about as
+// many; these line up any copy moved whole, and one with bricks added or
+// taken away on one side.
+function offsetsByCorner(mine, turned) {
+    const ours = bounds(mine.points);
+    const theirs = bounds(turned);
+    return ['low', 'high'].map((corner) => ({
+        x: rounded(ours[corner].x - theirs[corner].x),
+        y: rounded(ours[corner].y - theirs[corner].y),
+        z: rounded(ours[corner].z - theirs[corner].z)
+    }));
 }
 
 // The keys of `mine` that `turned`, moved by `offset`, lands on.
@@ -156,7 +209,7 @@ function bestAlignment(mine, theirs) {
     let best = { shared: -1, turn: 0, keys: [] };
     for (const turn of TURNS) {
         const turned = theirs.points.map((point) => turnPoint(point, turn));
-        for (const offset of offsetsByVote(mine, turned)) {
+        for (const offset of [...offsetsByVote(mine, turned), ...offsetsByCorner(mine, turned)]) {
             const keys = sharedKeys(mine, turned, offset);
             if (keys.length > best.shared) best = { shared: keys.length, turn, keys };
         }

@@ -618,6 +618,7 @@ export default Object.freeze({
     'voice.micBlocked': 'Mikrofon tidak diizinkan: izinkan untuk situs ini di pengaturan peramban Anda.',
     'voice.failed': 'Suara tidak dapat dimulai: {reason}',
     'voice.unsupported': 'Peramban ini tidak dapat merekam atau menjalankan model suara.',
+    'voice.timeout': 'Memahami apa yang diucapkan terlalu lama, jadi dihentikan. Coba lagi.',
     'voice.turnOff': 'Matikan suara',
     'voice.remove': 'Hapus model suara',
     'voice.removed': 'Model suara telah dihapus dari peramban ini.',

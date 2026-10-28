@@ -1,5 +1,5 @@
 import { onBeforeUnmount, ref } from 'vue';
-import { speechSupported } from '../../application/voice/SpeechWorkerClient.js';
+import { TRANSCRIBE_TIMEOUT, speechSupported } from '../../application/voice/SpeechWorkerClient.js';
 import { cleanTranscript, whisperLanguage, withoutSilenceWords } from '../../core/voice/Transcript.js';
 import { prepareSpeech } from '../../core/voice/SpeechPreparation.js';
 import { startRecording } from './recordVoice.js';
@@ -16,13 +16,17 @@ import { currentLocale } from '../i18n/i18n.js';
 // for both views.
 //
 // `state.value.step`: 'off' | 'intro' | 'loading' | 'ready' | 'listening' |
-// 'working' | 'result' | 'failed', with `progress` (0–100) while loading
-// and `heard`/`outcome` after a command.
+// 'working' | 'result' | 'failed', with `progress` (0–100) while loading,
+// `heard`/`outcome` after a command, and `reason` on failing ('microphone',
+// 'unsupported', 'timeout' or the error's message).
 const ENABLED_KEY = 'forkbuild.voice.enabled';
 
 export function useVoiceCommands({ act, runtime = sharedSpeechRecognizer(), record = startRecording, supported = speechSupported(), language = () => currentLocale().code, storage = globalThis.localStorage }) {
     const state = ref({ step: 'off' });
     let recording = null;
+    // Counts each command, so what is heard after voice was turned off, or
+    // the view left, is let go rather than shown or done.
+    let attempt = 0;
 
     function readEnabled() {
         try {
@@ -74,6 +78,7 @@ export function useVoiceCommands({ act, runtime = sharedSpeechRecognizer(), reco
         const current = recording;
         recording = null;
         if (!current) return;
+        const mine = ++attempt;
         show({ step: 'working' });
         try {
             // Only what was said, at a level the model hears well; nothing
@@ -83,9 +88,13 @@ export function useVoiceCommands({ act, runtime = sharedSpeechRecognizer(), reco
             const heard = speech.speech
                 ? withoutSilenceWords(cleanTranscript(await runtime.transcribe(speech.samples, whisperLanguage(language()))))
                 : '';
+            if (mine !== attempt) return;
             show({ step: 'result', heard, outcome: heard ? act(heard) : { kind: 'nothing' } });
         } catch (error) {
-            show({ step: 'failed', reason: error?.message || String(error) });
+            if (mine !== attempt) return;
+            // A model that took too long was stopped (application/voice/
+            // SpeechWorkerClient.js); the next press starts it again.
+            show({ step: 'failed', reason: error?.message === TRANSCRIBE_TIMEOUT ? 'timeout' : (error?.message || String(error)) });
         }
     }
 
@@ -111,6 +120,7 @@ export function useVoiceCommands({ act, runtime = sharedSpeechRecognizer(), reco
     }
 
     async function turnOff() {
+        attempt++;
         writeEnabled(false);
         await recording?.cancel();
         recording = null;
@@ -130,6 +140,7 @@ export function useVoiceCommands({ act, runtime = sharedSpeechRecognizer(), reco
 
     // Leaving the view lets go of the microphone; the model stays loaded.
     function release() {
+        attempt++;
         recording?.cancel();
         recording = null;
     }
