@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1a92298c009cb9e8 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2ee1e50a637a34bd -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -35,6 +35,7 @@ ordnen.
 - **Werkzeuge** — wechseln Sie zwischen **Auswählen** (`1`) und
   **Platzieren** (`2`). **Platzieren** bleibt hervorgehoben, solange Sie
   einen Stein oder eine Struktur platzieren.
+  **Platzieren** (oder `2`) behält beim Platzieren, was Sie gerade halten.
   Sie bleiben oben in der Seitenleiste, während alles darunter scrollt.
 - **Bauwerkstitel** — der Name des geöffneten Bauwerks. Klicken Sie auf
   **✎**, um Titel, Beschreibung und Lizenz zu bearbeiten. Ob sie

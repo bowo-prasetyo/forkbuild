@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1a92298c009cb9e8 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2ee1e50a637a34bd -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -35,6 +35,8 @@ grupos.
 - **Herramientas**: alterne entre **Seleccionar** (`1`) y **Colocar**
   (`2`). **Colocar** sigue resaltada mientras coloca un bloque o una
   estructura.
+  Pulsar **Colocar** (o `2`) mientras coloca conserva lo que tiene en la
+  mano.
   Se quedan arriba en la barra lateral mientras todo lo de debajo se
   desplaza.
 - **Título de la construcción**: el nombre de la construcción abierta. Haga clic en

@@ -18,7 +18,7 @@ import { StructurePreviewUseCase } from '../../application/editor/StructurePrevi
 import { CompositionPreviewUseCase } from '../../application/editor/CompositionPreviewUseCase.js';
 import { CreateLibraryPreviewUseCase } from '../../application/editor/CreateLibraryPreviewUseCase.js';
 import { EditorSession } from '../../application/editor/EditorSession.js';
-import { ToolId } from '../../application/editor-state/ToolId.js';
+import { PLACING_TOOLS, ToolId, toolForPlace } from '../../application/editor-state/ToolId.js';
 import { EditorEvent } from '../../core/events/EditorEvent.js';
 import { EditorActionRegistry, createStandardActions } from '../../application/editor/EditorActionRegistry.js';
 import { EditorActionContext } from '../../application/editor/EditorActionContext.js';
@@ -117,7 +117,6 @@ import { worldBrickCount } from '../../core/catalog/BuilderStamps.js';
 
 const TOOL_SHORTCUTS = { 1: ToolId.SELECT, 2: ToolId.PLACE };
 
-const PLACING_TOOLS = new Set([ToolId.PLACE, ToolId.PLACE_STRUCTURE, ToolId.COMPOSE_STRUCTURE]);
 
 export default {
     name: 'EditorView',
@@ -1021,10 +1020,12 @@ export default {
         }
 
         // Place from the tool switch: bring the Build Library up to the top
-        // of the sidebar, unless it's already scrolled into.
+        // of the sidebar, unless it's already scrolled into. Whatever is
+        // already being placed stays in hand (toolForPlace()).
         const sidebarScroll = ref(null);
         async function placeFromSwitcher() {
-            setTool(ToolId.PLACE);
+            const tool = toolForPlace(activeTool.value);
+            if (tool) setTool(tool);
             await nextTick();
             const scroller = sidebarScroll.value;
             const library = scroller && scroller.querySelector('.build-library');
@@ -1946,7 +1947,9 @@ export default {
                 }
                 const shortcutTool = TOOL_SHORTCUTS[event.key];
                 if (shortcutTool && !event.ctrlKey && !event.metaKey) {
-                    editorContext.setActiveTool(shortcutTool);
+                    // 2 is Place, as its button is: what's in hand stays in hand.
+                    const tool = shortcutTool === ToolId.PLACE ? toolForPlace(editorContext.tool.activeTool) : shortcutTool;
+                    if (tool) editorContext.setActiveTool(tool);
                     return;
                 }
                 if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {

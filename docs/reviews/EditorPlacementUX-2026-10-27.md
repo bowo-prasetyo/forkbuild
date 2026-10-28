@@ -299,7 +299,9 @@ is committed.
 
 - **The Place button means two things.** It stays highlighted while you
   place a structure, but pressing it cancels the structure and switches to
-  bricks without telling you (`EditorView.js:280`).
+  bricks without telling you (`EditorView.js:280`). *Fixed 2026-10-28:
+  Place (or `2`) while placing keeps what is in hand and only brings the
+  library up (roadmap, "Place keeps what you're holding").*
 - **Removing a structure from My Structures** happens at once, with no
   confirmation and no Undo. *Fixed 2026-10-28: it still takes one click,
   and **Undo** in the library's header puts it back as it was (roadmap,

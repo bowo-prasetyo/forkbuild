@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 1a92298c009cb9e8 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 2ee1e50a637a34bd -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -35,6 +35,8 @@ organiser votre construction avec des groupes.
 - **Outils** — basculer entre **Sélection** (`1`) et **Placement** (`2`).
   **Placement** reste en surbrillance pendant que vous placez une brique
   ou une structure.
+  Appuyer sur **Placement** (ou `2`) pendant que vous placez garde ce que
+  vous tenez.
   Ils restent en haut de la barre latérale pendant que tout le reste défile.
 - **Titre de la construction** — le nom de la construction ouverte. Cliquez sur **✎**
   pour modifier son titre, sa description et sa licence. Son état
