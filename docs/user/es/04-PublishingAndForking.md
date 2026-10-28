@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d06277fe319f2763 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d9d2658aa5a248b1 -->
 # 04 — Publicar y remezclar
 
 <!-- languages -->
@@ -944,8 +944,7 @@ quien construye sabe qué bloques colocó.
 
 Se dejan fuera las construcciones de quien la construyó (y de quienes la
 construyeron con esa persona), todo el árbol genealógico y las
-construcciones publicadas después. «Antes» se basa en la fecha con la que se
-firmó cada construcción al publicarse.
+construcciones publicadas después. «Antes» se basa en la fecha con la que se firmó cada construcción al publicarse. Esa fecha la elige quien la construyó, así que este dispositivo la contrasta con cuándo vio por primera vez cada construcción: una construcción que solo está fechada antes que esta, pero que se vio aquí por primera vez después, aparece como «fechada el … por quien la construyó, vista aquí por primera vez el …», y una fechada después de esta que este dispositivo vio primero aparece como «vista aquí antes que esta». Una copia no puede ponerse primero solo con firmar una fecha anterior, y la 🔔 le avisa de una construcción fechada antes que la suya que este dispositivo solo ve ahora, indicando que está fechada antes que la suya.
 
 Las construcciones pueden parecerse por casualidad o por haber cambiado la
 misma estructura ya hecha de forma parecida, así que una construcción en esta lista no

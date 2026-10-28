@@ -106,6 +106,12 @@ export class LocalWorldEncounterPublicationAdmissionLog {
         return this._loadAll().map((entry) => Publication.fromJSON(entry.publication));
     }
 
+    // `{ publicationId, admittedAt }` (ISO text) for each admitted
+    // Publication, for application/publication/PublicationFirstSeenLog.js.
+    admissions() {
+        return this._loadAll().map((entry) => ({ publicationId: entry.publication?.id, admittedAt: entry.admittedAt }));
+    }
+
     _loadAll() {
         return this._storageProvider.load(STORAGE_KEY) || [];
     }

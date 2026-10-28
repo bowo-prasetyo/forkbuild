@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d06277fe319f2763 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d9d2658aa5a248b1 -->
 # 04 — Veröffentlichen & Remixen
 
 <!-- languages -->
@@ -954,8 +954,7 @@ Steine er selbst platziert hat.
 
 Außen vor bleiben Bauwerke desselben Bauenden (und aller, die es mit ihm
 gebaut haben), der ganze Stammbaum und Bauwerke, die danach veröffentlicht
-wurden. „Vorher“ richtet sich nach dem Datum, mit dem jedes Bauwerk beim
-Veröffentlichen signiert wurde.
+wurden. „Vorher“ richtet sich nach dem Datum, mit dem jedes Bauwerk beim Veröffentlichen signiert wurde. Dieses Datum wählt sein Erbauer, daher stützt dieses Gerät es darauf, wann es jedes Bauwerk zuerst gesehen hat: Ein Bauwerk, das nur vor diesem datiert ist, hier aber später zuerst gesehen wurde, steht als „von seinem Erbauer auf … datiert, hier zuerst gesehen am …“ in der Liste, und ein nach diesem datiertes Bauwerk, das dieses Gerät zuerst gesehen hat, als „hier vor diesem gesehen“. Eine Kopie kann sich nicht allein durch ein früheres Datum an den Anfang stellen, und die 🔔 meldet Ihnen ein vor Ihrem datiertes Bauwerk, das dieses Gerät erst jetzt sieht, mit dem Hinweis, dass es vor Ihrem datiert ist.
 
 Bauwerke können sich zufällig ähneln oder weil sie dieselbe fertige
 Struktur auf ähnliche Weise verändert haben. Ein Bauwerk in dieser Liste

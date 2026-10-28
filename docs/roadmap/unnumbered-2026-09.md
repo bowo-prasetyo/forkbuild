@@ -9719,3 +9719,31 @@ the same challenge, were, and the 🔔 tells a real person so.
   out a match); tests/SimilarBuildFinder.test.js and tests/LookAlikeBuildNotifier.test.js (their cottages gain a
   window, since walls and a door alone are now too plain); tests/SimilarBuildPublishBrowser.test.js (a contained,
   mirrored match reads "100% of its bricks are in yours, mirrored").
+
+## A copy can't come first by its date alone (unnumbered, 2026-10-28)
+
+**Credit that a date can't take.** Finding 2 of [the AI/ML audit](../reviews/AIML-2026-10-28.md): the look-alike
+hints decided which build came first by the date each was signed with, which its builder sets. A copy signed with an
+earlier date was listed on the original's page as **published earlier**, and its builder never heard of it.
+
+- **Dates are backed by when this device first saw each build** (core/publication/PublicationOrder.js): a build seen
+  here by the time the other's date is before it; one only dated earlier, first seen here later, is
+  `datedBefore`; one dated later that this device saw first is `seenBefore`. Unsure orders are told as they are,
+  never settled one way, so an older build found late isn't called a copy either.
+- **First-seen times** (application/publication/PublicationFirstSeenLog.js, new, `publication-first-seen:entries`):
+  earliest wins, from every Publication admitted, the ones rebuilt at startup and the admission log's
+  `admittedAt` kept before; a build published here was seen when published. At most 5000, the latest seen let go
+  first. docs/Privacy.md lists it.
+- **What changes for players:** a build's page lists a build only dated earlier as "dated … by its builder, first
+  seen here …", and the original as "seen here before this one" on the copy's page; the builder's own Explore card
+  counts a copy dated before theirs among the later look-alikes; the 🔔 tells of it: "… published a build dated
+  before yours that looks like it"; and Publish never asks a builder to credit a copy only dated before their build.
+  The 🔔 also says how much of yours is in a copy with more of its own ("100% of your "Cottage" is in …"). Seven new
+  messages in all eight languages; the user guide's *Similar builds published earlier* says so, in all eight.
+- Anchors aren't used: `anchoredAt` is the anchoring system's report until a proof verifier checks it.
+- Tests: tests/PublicationOrder.test.js and tests/PublicationFirstSeenLog.test.js (new);
+  tests/SimilarBuildFinder.test.js 35-41 (a copy only dated earlier, on the original's page and card; the original
+  seen first on the copy's page; Publish leaves the copy out; no first-seen times keep the signed dates);
+  tests/LookAlikeBuildNotifier.test.js 38-42 (a backdated copy notifies, as dated before hers, where taken at its date
+  it said nothing; a copy with more of its own says how much of hers is in it); tests/PublicationLinkViewBrowser.test.js
+  (the dated wording).

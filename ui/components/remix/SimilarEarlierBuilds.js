@@ -10,7 +10,9 @@ import { lookAlikeShare } from '../../../core/catalog/BuildSimilarity.js';
 // builder find a copy of their build, and anyone see where a build may have
 // come from. Like the family tree it is no ranking; unlike it, it is no
 // record either: looking alike is evidence for a person to weigh, so the
-// section says plainly that it doesn't mean anyone copied. `matches` are the
+// section says plainly that it doesn't mean anyone copied. A build whose
+// order this device can't be sure of is listed with what it does know
+// (application/publication/SimilarBuildFinder.js, `order`). `matches` are the
 // finder's { publication, evidence }; `routeFor(publication)` is where each
 // opens, or null. `titleKey` and `noteKey` let the builder's own card in
 // Explore show, with the same list, the look-alikes published after theirs
@@ -48,9 +50,18 @@ export default {
             const share = t(kind === 'same' ? 'similarEarlier.percent' : (kind === 'theirsInMine' ? 'similarEarlier.itInThis' : 'similarEarlier.thisInIt'), { percent });
             const how = mirrored ? t('similarEarlier.mirrored', { how: share }) : share;
             const published = new Date(match.publication.publishedAt);
-            return Number.isNaN(published.getTime())
-                ? how
-                : t('similarEarlier.detail', { how, date: formatDate(published, { dateStyle: 'medium' }) });
+            if (Number.isNaN(published.getTime())) return how;
+            const date = formatDate(published, { dateStyle: 'medium' });
+            // When this device can't back the date its builder signed
+            // (core/publication/PublicationOrder.js), it says whose date it
+            // is, and when this device first saw the build.
+            if (match.order === 'datedBefore') {
+                return Number.isFinite(match.seen)
+                    ? t('similarEarlier.datedDetail', { how, date, seen: formatDate(new Date(match.seen), { dateStyle: 'medium' }) })
+                    : t('similarEarlier.datedOnlyDetail', { how, date });
+            }
+            if (match.order === 'seenBefore') return t('similarEarlier.seenFirstDetail', { how, date });
+            return t('similarEarlier.detail', { how, date });
         }
         return { t, title, authorRoute, detail };
     },

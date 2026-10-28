@@ -13,8 +13,11 @@ export const MAX_WAITING_FOR_BYTES_MS = 30 * 24 * 60 * 60 * 1000;
 // the signed-in identity when it looks a lot like one of their own builds
 // published before it (application/publication/SimilarBuildFinder.js
 // #findEarlier()), so a builder learns of a possible copy without having to
-// come across it. Like the build page's list it is a hint, never a finding:
-// the notification says the build looks like theirs, and opens its page,
+// come across it. A build dated before theirs that this device only sees now
+// (the finder's 'seenBefore') is told of too, as dated before theirs: a copy
+// can't stay hidden by signing an earlier date. Like the build page's list it
+// is a hint, never a finding: the notification says the build looks like
+// theirs, and opens its page,
 // where they can weigh it. The build must be verifiably signed by someone
 // else they haven't blocked, who didn't build it with them; their own build
 // must be verifiably signed by them; remixes of theirs are left out (the
@@ -157,6 +160,9 @@ export class LookAlikeBuildNotifier {
         const matches = await this._finder.findEarlier(publication, { by: [recipientIdentityId] });
         const yours = (matches || []).find((match) => this._signerOf(match.publication) === recipientIdentityId);
         if (!yours) return null;
+        // The finder says how alike (its `share`), so this file, which the
+        // 🔔's text loads at startup, needn't load the comparison itself.
+        const share = yours.share || { kind: 'same', percent: Math.round((yours.evidence?.similarity || 0) * 100) };
         const event = new NotificationEvent({
             eventType: BUILD_LOOKS_LIKE_YOURS_EVENT_TYPE,
             recipientIdentityId,
@@ -166,7 +172,11 @@ export class LookAlikeBuildNotifier {
                 title: text(publication.title),
                 author: text(publication.author),
                 yourTitle: text(yours.publication.title),
-                percent: Math.round(yours.evidence.similarity * 100)
+                // How alike (core/catalog/BuildSimilarity.js#lookAlikeShare()):
+                // 'theirsInMine' is how much of yours stands in the new build.
+                percent: share.percent,
+                share: share.kind,
+                datedBefore: yours.order === 'seenBefore'
             }
         });
         this._notificationSink(event);

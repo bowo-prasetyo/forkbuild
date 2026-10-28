@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d06277fe319f2763 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d9d2658aa5a248b1 -->
 # 04 — Publier et remixer
 
 <!-- languages -->
@@ -971,8 +971,7 @@ son auteur sait quelles briques il a placées lui-même.
 
 Sont laissés de côté les constructions du même auteur (et de ceux qui l’ont
 construite avec lui), tout l’arbre généalogique et les constructions
-publiées après. « Avant » se fonde sur la date avec laquelle chaque
-construction a été signée à sa publication.
+publiées après. « Avant » se fonde sur la date avec laquelle chaque construction a été signée à sa publication. Cette date, c’est son auteur qui la choisit ; cet appareil la confronte donc au moment où il a vu chaque construction pour la première fois : une construction seulement datée d’avant celle-ci, mais vue ici pour la première fois après, apparaît comme « datée du … par son auteur, vue ici pour la première fois le … », et une construction datée d’après celle-ci que cet appareil a vue en premier apparaît comme « vue ici avant celle-ci ». Une copie ne peut pas se placer en premier en signant simplement une date antérieure, et la 🔔 vous signale une construction datée d’avant la vôtre que cet appareil ne voit que maintenant, en précisant qu’elle est datée d’avant la vôtre.
 
 Des constructions peuvent se ressembler par hasard, ou parce qu’elles ont
 modifié la même structure toute faite de façon semblable : une construction listée ici ne

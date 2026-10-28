@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 287edaaf9be8160b -->
+<!-- translation-of: docs/Privacy.md source-hash: 1a6b0b8708e8925c -->
 # Confidentialité
 
 <!-- languages -->
@@ -69,6 +69,11 @@ jamais l’appareil, sauf si vous le publiez, l’exportez ou l’envoyez :
   pouvoir les partager par un lien court.
 - pour chaque construction commencée avec **Construire ici**, le monde et
   l’emplacement choisis, pour qu’une fois publiée elle s’y dresse.
+- quand cet appareil a vu chaque construction publiée pour la première fois
+  (son identifiant et l’heure, 5000 au plus), pour distinguer une
+  construction datée d’avant une autre d’une construction qui était ici en
+  premier (**Constructions semblables publiées avant** et l’entrée 🔔 **… a
+  publié une construction datée d’avant la vôtre qui lui ressemble**).
 - les identifiants et empreintes de contenu des constructions d’autres
   personnes dont les octets ne sont pas encore arrivés sur cet appareil, et
   depuis quand (500 au plus, chacune pendant 30 jours), pour que chacune

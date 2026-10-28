@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d06277fe319f2763 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d9d2658aa5a248b1 -->
 # 04 — Publicar e remixar
 
 <!-- languages -->
@@ -920,7 +920,7 @@ quais blocos colocou.
 
 Ficam de fora as construções do mesmo autor (e de quem a construiu com
 ele), a árvore genealógica inteira e as construções publicadas depois.
-"Antes" segue a data com que cada construção foi assinada ao ser publicada.
+"Antes" segue a data com que cada construção foi assinada ao ser publicada. Essa data é escolhida por quem a construiu, então este aparelho a confere com quando viu cada construção pela primeira vez: uma construção apenas datada antes desta, mas vista aqui pela primeira vez depois, aparece como "datada de … por quem a construiu, vista aqui pela primeira vez em …", e uma datada depois desta que este aparelho viu primeiro aparece como "vista aqui antes desta". Uma cópia não pode ficar em primeiro só assinando uma data anterior, e o 🔔 avisa você de uma construção datada antes da sua que este aparelho só vê agora, dizendo que ela é datada antes da sua.
 
 Construções podem se parecer por acaso ou por terem mudado a mesma
 estrutura pronta de um jeito parecido, então uma construção nesta lista não quer dizer que

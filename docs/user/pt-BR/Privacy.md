@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 287edaaf9be8160b -->
+<!-- translation-of: docs/Privacy.md source-hash: 1a6b0b8708e8925c -->
 # Privacidade
 
 <!-- languages -->
@@ -66,6 +66,11 @@ que você publique, exporte ou envie:
   por um link curto.
 - para cada construção que você começou com **Construir aqui**, o Mundo e o
   lugar escolhidos, para que ao publicar ela fique ali.
+- quando este aparelho viu pela primeira vez cada construção publicada (o id
+  e a hora, no máximo 5000), para distinguir uma construção datada antes de
+  outra de uma que estava aqui primeiro (**Construções parecidas publicadas
+  antes** e a entrada do 🔔 **… publicou uma construção com data anterior à
+  sua que se parece com ela**).
 - os identificadores e hashes de conteúdo das construções de outras pessoas
   cujos bytes ainda não chegaram a este aparelho, e desde quando (no máximo
   500, cada um por 30 dias), para que cada uma ainda possa ser comparada com

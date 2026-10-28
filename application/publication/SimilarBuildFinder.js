@@ -1,9 +1,10 @@
 import { ContentReference } from '../../core/document/ContentReference.js';
 import { DocumentSerializer } from '../../serializer/DocumentSerializer.js';
 import {
-    MIN_COMPARED_BRICKS, SIMILAR_BUILD_THRESHOLD, buildShape, compareBuildShapes, couldBeSimilar, isSimilarBuild, withoutReadyMade
+    MIN_COMPARED_BRICKS, SIMILAR_BUILD_THRESHOLD, buildShape, compareBuildShapes, couldBeSimilar, isSimilarBuild, lookAlikeShare, withoutReadyMade
 } from '../../core/catalog/BuildSimilarity.js';
 import { placedBricks, worldBricks } from '../../core/building/PlacedBricks.js';
+import { order } from '../../core/publication/PublicationOrder.js';
 
 // Finds published builds by other people that look a lot like a build
 // (core/catalog/BuildSimilarity.js), for four places: Publish, so it can point to
@@ -25,6 +26,14 @@ import { placedBricks, worldBricks } from '../../core/building/PlacedBricks.js';
 // however moved or turned, don't look alike. `readyMadeStructures` resolves to
 // those structures (each with its `bricks`); it is asked once, when first
 // needed, since the libraries aren't part of the app's first load.
+//
+// Which came first goes by core/publication/PublicationOrder.js: the date each
+// build was signed with, backed or not by when this device first saw it
+// (`firstSeenAt(publication)`, ms or null; the signed date itself when not
+// given). A copy dated before what it copied is listed as "dated" before it,
+// and as after it too, rather than taken at its word. Each match says how:
+// `{ publication, evidence, order, seen, share }`, `share` being how alike
+// in words (core/catalog/BuildSimilarity.js#lookAlikeShare()).
 export class SimilarBuildFinder {
     constructor({
         listPublications,
@@ -36,7 +45,8 @@ export class SimilarBuildFinder {
         limit = 3,
         maxCandidates = 300,
         timeBudgetMs = 1500,
-        now = () => Date.now()
+        now = () => Date.now(),
+        firstSeenAt = (publication) => publishedTime(publication)
     } = {}) {
         if (typeof listPublications !== 'function') throw new Error('SimilarBuildFinder: listPublications is required');
         if (!contentStore || typeof contentStore.get !== 'function') throw new Error('SimilarBuildFinder: contentStore is required');
@@ -51,6 +61,7 @@ export class SimilarBuildFinder {
         this._maxCandidates = maxCandidates;
         this._timeBudgetMs = timeBudgetMs;
         this._now = now;
+        this._firstSeenAt = firstSeenAt;
         // Content hash -> shape: published bytes never change, so each is read
         // at most once a visit.
         this._shapes = new Map();
@@ -63,9 +74,11 @@ export class SimilarBuildFinder {
     // bricks it was started with (application/document/ReadyMadeBricksStore.js), or null:
     // only the builder's own bricks count, so two builds started from the
     // same ready-made house don't look alike. Builds by any identity on this
-    // device are the builder's own, and so are builds published after this
-    // one was first published. Stops early, with what it has, once its time
-    // budget is spent.
+    // device are the builder's own; only builds this device can show came
+    // before this one was first published (or before now, for a first
+    // Publish) are compared, so a copy of it dated earlier never asks its
+    // builder to credit the copier. Stops early, with what it has, once its
+    // time budget is spent.
     find(document, { readyMade = null } = {}) {
         return this._serially(() => this._find(document, readyMade));
     }
@@ -81,33 +94,37 @@ export class SimilarBuildFinder {
         if (mine.size < MIN_COMPARED_BRICKS) return [];
         const all = this._safeList();
         const firstPublished = Math.min(...all.filter((p) => p.documentId === world.id).map(publishedTime));
+        const since = Number.isFinite(firstPublished) ? firstPublished : this._nowMs();
         const candidates = this._eligible(all, {
             documentId: world.id,
             parentDocumentId: document.metadata?.parentDocumentId || null,
             builderIds: [...this._safeOwnIdentityIds(), document.metadata?.authorIdentityId],
-            notAfter: firstPublished
+            subject: { claimed: since, seen: since },
+            orders: ['before']
         });
         return this._matching(mine, candidates);
     }
 
-    // For a build's page: up to `limit` { publication, evidence } for the
-    // published builds that look like `publication` and were published before
-    // it, by the date each was signed. All its bricks count: who placed which
-    // is known only on its builder's device. Its builder is the identity that
-    // signed it (and those credited under Built with), whoever is looking.
+    // For a build's page: up to `limit` { publication, evidence, order, seen,
+    // share } for the published builds that look like `publication` and came
+    // before it ('before'), or may have ('datedBefore', 'seenBefore'). All its
+    // bricks count: who placed which is known only on its builder's device.
+    // Its builder is the identity that signed it (and those credited under
+    // Built with), whoever is looking.
     // With `by` (identity ids), only builds published by one of them are
     // compared.
     findEarlier(publication, { by = null } = {}) {
-        return this._serially(() => this._findAround(publication, { before: true, onlyBy: by }));
+        return this._serially(() => this._findAround(publication, { orders: ['before', 'datedBefore', 'seenBefore'], onlyBy: by }));
     }
 
     // For the builder's own card in Explore: as findEarlier(), but the builds
-    // published after `publication`, where a copy of it would be.
+    // that came after `publication` ('after'), or may have, where a copy of it
+    // would be, even one dated before it.
     findLater(publication) {
-        return this._serially(() => this._findAround(publication, { before: false, onlyBy: null }));
+        return this._serially(() => this._findAround(publication, { orders: ['after', 'datedBefore', 'seenBefore'], onlyBy: null }));
     }
 
-    async _findAround(publication, { before, onlyBy }) {
+    async _findAround(publication, { orders, onlyBy }) {
         const mine = await this._shapeOf(publication);
         if (!mine || mine.size < MIN_COMPARED_BRICKS) return [];
         const published = publishedTime(publication);
@@ -116,7 +133,8 @@ export class SimilarBuildFinder {
             documentId: publication.documentId,
             parentDocumentId: publication.parentDocumentId || null,
             builderIds: [publication.publisherIdentity?.id, ...(publication.builtWith || []).map((entry) => entry?.identityId)],
-            ...(before ? { before: published } : { after: published }),
+            subject: { claimed: published, seen: this._seenOf(publication) },
+            orders,
             onlyBy
         });
         return this._matching(mine, candidates);
@@ -139,7 +157,7 @@ export class SimilarBuildFinder {
     async _matching(mine, candidates) {
         const startedAt = this._now();
         const best = new Map();
-        for (const publication of candidates) {
+        for (const { publication, order: placed, seen } of candidates) {
             if (this._now() - startedAt > this._timeBudgetMs) break;
             const theirs = await this._shapeOf(publication);
             if (!theirs || theirs.size < MIN_COMPARED_BRICKS || !couldBeSimilar(mine, theirs, this._threshold)) continue;
@@ -147,7 +165,7 @@ export class SimilarBuildFinder {
             if (!isSimilarBuild(evidence, this._threshold)) continue;
             const found = best.get(publication.documentId);
             if (!found || moreAlike(evidence, found.evidence) < 0) {
-                best.set(publication.documentId, Object.freeze({ publication, evidence }));
+                best.set(publication.documentId, Object.freeze({ publication, evidence, order: placed, seen, share: lookAlikeShare(evidence) }));
             }
         }
         return [...best.values()]
@@ -155,12 +173,13 @@ export class SimilarBuildFinder {
             .slice(0, this._limit);
     }
 
-    // The Publications of `all` worth comparing with the build `documentId`:
-    // one per content hash, newest first, none by `builderIds` or in its
-    // family, none published after `notAfter`, at or after `before`, or at or
-    // before `after`; with `onlyBy`, only those published by one of its
-    // identities.
-    _eligible(all, { documentId, parentDocumentId, builderIds, notAfter = Infinity, before = Infinity, after = -Infinity, onlyBy = null }) {
+    // The Publications of `all` worth comparing with the build `documentId`
+    // (`subject`: its `{ claimed, seen }` times), as `{ publication, order,
+    // seen }`: one per content hash, newest first, none by `builderIds` or in
+    // its family, only those in one of `orders` beside it
+    // (core/publication/PublicationOrder.js); with `onlyBy`, only those
+    // published by one of its identities.
+    _eligible(all, { documentId, parentDocumentId, builderIds, subject, orders, onlyBy = null }) {
         const builders = new Set(builderIds.filter(Boolean));
         const publishers = Array.isArray(onlyBy) ? new Set(onlyBy.filter(Boolean)) : null;
         const family = remixFamilyIds(documentId, parentDocumentId, all);
@@ -173,12 +192,13 @@ export class SimilarBuildFinder {
             if (family.has(publication.documentId)) continue;
             if (publishers && !publishers.has(publication.publisherIdentity?.id)) continue;
             if (builders.has(publication.publisherIdentity?.id) || (publication.builtWith || []).some((entry) => builders.has(entry?.identityId))) continue;
-            const time = publishedTime(publication);
-            if (time > notAfter || time >= before || time <= after) continue;
-            candidates.push(publication);
+            const seenAt = this._seenOf(publication);
+            const placed = order(subject, { claimed: publishedTime(publication), seen: seenAt });
+            if (!orders.includes(placed)) continue;
+            candidates.push({ publication, order: placed, seen: seenAt });
         }
         return candidates
-            .sort((a, b) => publishedTime(b) - publishedTime(a))
+            .sort((a, b) => publishedTime(b.publication) - publishedTime(a.publication))
             .slice(0, this._maxCandidates);
     }
 
@@ -218,6 +238,23 @@ export class SimilarBuildFinder {
                 .catch(() => []);
         }
         return this._readyMadeShapes;
+    }
+
+    // When this device first saw `publication` (ms), or null.
+    _seenOf(publication) {
+        let seen = null;
+        try {
+            seen = this._firstSeenAt(publication);
+        } catch {
+            seen = null;
+        }
+        const time = seen instanceof Date ? seen.getTime() : seen;
+        return Number.isFinite(time) ? time : null;
+    }
+
+    _nowMs() {
+        const now = this._now();
+        return now instanceof Date ? now.getTime() : Number(now);
     }
 
     _safeOwnIdentityIds() {

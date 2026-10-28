@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 287edaaf9be8160b -->
+<!-- translation-of: docs/Privacy.md source-hash: 1a6b0b8708e8925c -->
 # Privasi
 
 <!-- languages -->
@@ -69,6 +69,12 @@ perangkat kecuali Anda menerbitkan, mengekspor, atau mengirimnya:
 - untuk setiap bangunan yang Anda mulai dengan **Bangun di sini**, Dunia dan
   tempat yang Anda pilih, agar saat diterbitkan bangunan itu berdiri di
   sana.
+- kapan perangkat ini pertama kali melihat tiap bangunan yang diterbitkan
+  (ID-nya dan waktunya, paling banyak 5000), agar bangunan yang bertanggal
+  sebelum bangunan lain bisa dibedakan dari bangunan yang lebih dulu ada di
+  sini (**Bangunan mirip yang diterbitkan lebih dulu** dan entri 🔔 **…
+  menerbitkan bangunan bertanggal sebelum milik Anda yang mirip
+  dengannya**).
 - ID dan hash konten bangunan orang lain yang byte-nya belum sampai ke
   perangkat ini, dan sejak kapan (paling banyak 500, masing-masing selama
   30 hari), agar masing-masing tetap bisa dibandingkan dengan bangunan Anda
