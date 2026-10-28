@@ -1103,6 +1103,7 @@ export default Object.freeze({
     'toolbar.from': 'Dari: {title}',
     'toolbar.save': 'Simpan',
     'toolbar.saved': 'Tersimpan',
+    'toolbar.saving': 'Menyimpan…',
     'toolbar.unsaved': '● Perubahan belum disimpan',
     'toolbar.export': 'Ekspor',
     'toolbar.file': 'Berkas',

@@ -1107,6 +1107,7 @@ export default Object.freeze({
     'toolbar.from': 'De: {title}',
     'toolbar.save': 'Salvar',
     'toolbar.saved': 'Salvo',
+    'toolbar.saving': 'Salvando…',
     'toolbar.unsaved': '● Alterações não salvas',
     'toolbar.export': 'Exportar',
     'toolbar.file': 'Arquivo',

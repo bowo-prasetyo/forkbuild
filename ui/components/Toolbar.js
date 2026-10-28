@@ -7,7 +7,7 @@ import { PublishSheetRow, licenseForRemix, publishSheetRows, suggestedNameNumber
 import { Findability } from '../../application/settings/FindabilityStore.js';
 import { UpdateDocumentMetadataUseCase } from '../../application/document/UpdateDocumentMetadataUseCase.js';
 import { saveFailureMessage } from './saveFailureMessages.js';
-import { saveDocument } from './saveDocument.js';
+import { saveDocument, savesInProgress } from './saveDocument.js';
 import { errorText, formatDate, t } from '../i18n/i18n.js';
 
 // Save/New/dirty indicator/Recent Documents — all driven by
@@ -486,9 +486,12 @@ export default {
             }
         });
 
+        // A save not yet stored reads "Saving…" (ui/components/saveDocument.js).
+        const saving = computed(() => savesInProgress.value > 0);
+
         return {
             t,
-            dirty, recentDocuments, sortedRecentDocuments, filteredRecentDocuments,
+            dirty, saving, recentDocuments, sortedRecentDocuments, filteredRecentDocuments,
             recentOpen, recentQuery, toggleRecent, formatModified, fileOpen, fileMenuStyle, toggleFile,
             searchThreshold: SEARCH_THRESHOLD,
             save, createNew, load, place, publish, saveAndReturnToWorld,
@@ -605,7 +608,7 @@ export default {
             </button>
 
             <span class="toolbar-dirty" :class="{ 'toolbar-dirty--clean': !dirty }">
-                {{ dirty ? t('toolbar.unsaved') : t('toolbar.saved') }}
+                {{ dirty ? t('toolbar.unsaved') : (saving ? t('toolbar.saving') : t('toolbar.saved')) }}
             </span>
 
             <!-- 0.6.2 — Editor UX Consolidation: discoverability for the
