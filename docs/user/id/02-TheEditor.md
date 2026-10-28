@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: bf41d96ddae684a1 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 5df87310a3ed33cb -->
 # 02 — Editor
 
 <!-- languages -->
@@ -66,7 +66,12 @@ dengan grup.
     pagar, bangku, semak, dan pohon pinus, perabot untuk ruangan yang Anda
     masuki (meja, ranjang, perapian, dan rak, di Detail), serta
     **Lentera** yang menyala di malam hari di Tampilan Dunia (lihat
-    [Siang dan malam](03-WorldView.md#siang-dan-malam)). Klik salah satunya untuk memilihnya (dan beralih ke
+    [Siang dan malam](03-WorldView.md#siang-dan-malam)).
+    Kepingan kecil tampak kecil di gambarnya (**Kubus** tampak lebih kecil
+    daripada **Blok 2x2**), dan ukuran setiap kepingan tertulis di bawah
+    namanya: lebar × kedalaman × tinggi dalam satuan grid (**Setengah
+    Kubus** berukuran 1×1×½).
+    Klik salah satunya untuk memilihnya (dan beralih ke
     alat Tempatkan); contoh warna **Warna** lalu muncul untuk memilih
     warnanya — lihat [Warna balok](#warna-balok) di bawah.
     **Lereng 45°**, **Lereng Landai 2x1**, **Tangga**, **Tangga Lebar**, dan

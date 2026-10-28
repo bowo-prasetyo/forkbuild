@@ -242,6 +242,8 @@ fixed at the top while the list scrolls.
 
 ### P2-9. Library previews are too small to tell pieces apart
 
+**Fixed 2026-10-28:** previews are 56 px; bricks are framed at a shared minimum size, so a Cube shows smaller than a Block 2×2 and a Plate 1×1 smaller than a Plate 2×4; each brick tile shows its size (1×1×½); and structure names wrap instead of being cut off (roadmap, "Library previews you can tell apart"). Structures stay a one-column list, with their whole names, rather than a grid.
+
 The previews are 32 px, and every piece is scaled to fill its square. As a
 result Cube, Half Cube and Block 2×2 look almost the same, and Plate 1×1
 looks as big as Plate 2×4. Structures (Cottage, House, Large House, Tool

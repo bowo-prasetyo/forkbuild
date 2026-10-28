@@ -36,6 +36,10 @@ function scheduleIdle(fn) {
 // share — renderer/DocumentThumbnailRenderer.js's `renderBricks()` and
 // core/catalog/DocumentPreview.js's `thumbnailPreview()` — not PreviewService's
 // own code.
+// Small enough that a 2x2 block still fills its frame, large enough that a
+// cube shows clearly smaller than it and a half cube lower than a cube.
+export const BRICK_FRAME_SIZE = 1.5;
+
 export class LibraryPreviewService {
     constructor({ createRenderer }) {
         this._createRenderer = createRenderer;
@@ -59,9 +63,13 @@ export class LibraryPreviewService {
     // DocumentPreview (THUMBNAIL) on success, or `null` on failure/
     // cancellation — callers fall back to a placeholder identically
     // either way.
+    // Bricks are framed alike, as if each were at least BRICK_FRAME_SIZE
+    // on every side, so a small piece looks small beside a big one
+    // (docs/reviews/EditorPlacementUX-2026-10-27.md, P2-9); a structure
+    // fills its frame.
     requestBrickPreview(definition) {
         const key = `brick:${definition.id}`;
-        return this._request(key, () => [new Brick({ definitionId: definition.id })]);
+        return this._request(key, () => [new Brick({ definitionId: definition.id })], { minSize: BRICK_FRAME_SIZE });
     }
 
     requestStructurePreview(structure) {
@@ -69,7 +77,7 @@ export class LibraryPreviewService {
         return this._request(key, () => structure.bricks);
     }
 
-    _request(key, buildBricks) {
+    _request(key, buildBricks, renderOptions = {}) {
         const cached = this.getCached(key);
         if (cached) {
             return { promise: Promise.resolve(cached), cancel() {} };
@@ -80,7 +88,7 @@ export class LibraryPreviewService {
 
         let job = this._jobs.get(key);
         if (!job) {
-            job = { key, buildBricks, waiters: [] };
+            job = { key, buildBricks, renderOptions, waiters: [] };
             this._jobs.set(key, job);
         }
         job.waiters.push(waiter);
@@ -135,7 +143,7 @@ export class LibraryPreviewService {
         try {
             const renderer = this._ensureRenderer();
             if (renderer) {
-                const image = renderer.renderBricks(job.buildBricks());
+                const image = renderer.renderBricks(job.buildBricks(), job.renderOptions);
                 preview = thumbnailPreview(image);
                 this._cache.set(job.key, preview);
             }

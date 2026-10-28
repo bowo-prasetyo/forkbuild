@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: bf41d96ddae684a1 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 5df87310a3ed33cb -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -67,7 +67,12 @@ grupos.
     ventana y ventanas redondas, vallas, bancos, arbustos y pinos, muebles
     para las habitaciones en las que se entra (una mesa, una cama, un hogar
     y un estante, en Detalles) y un **Farol** que se enciende de noche en la Vista del
-    mundo (vea [Día y noche](03-WorldView.md#día-y-noche)). Haga clic en uno para seleccionarlo
+    mundo (vea [Día y noche](03-WorldView.md#día-y-noche)).
+    Las piezas pequeñas se ven pequeñas en sus imágenes (un **Cubo** se ve
+    más pequeño que un **Bloque 2x2**), y bajo cada nombre figura el tamaño
+    de la pieza: ancho × fondo × alto en unidades de la cuadrícula (un
+    **Medio cubo** mide 1×1×½).
+    Haga clic en uno para seleccionarlo
     (y pasar a la herramienta Colocar); aparece entonces una muestra de
     **Color** para elegir su color: consulte
     [Colores de los bloques](#colores-de-los-bloques) más abajo.

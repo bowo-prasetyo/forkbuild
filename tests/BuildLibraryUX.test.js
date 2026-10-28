@@ -1,7 +1,7 @@
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';
 import { VillageLibrary } from '../core/library/VillageLibrary.js';
-import { LibraryPreviewService } from '../application/editor/LibraryPreviewService.js';
+import { BRICK_FRAME_SIZE, LibraryPreviewService } from '../application/editor/LibraryPreviewService.js';
 import { PreviewType } from '../core/catalog/DocumentPreview.js';
 import { groupBricksForDisplay, gridNeighbor, matches, normalize } from '../ui/components/BuildLibraryPanel.js';
 import { EditorContext } from '../application/editor/EditorContext.js';
@@ -216,6 +216,25 @@ async function run() {
             assert(first === null, 'renderer failure: first request resolves null, never throws');
             assert(second === null, 'renderer failure: a different key also resolves null');
             assert(attempts === 1, 'renderer failure: construction is attempted exactly once, never retried');
+        }
+
+        // 6. Bricks are framed alike, at a shared minimum size, so a small
+        //    one shows small; a structure fills its frame (finding P2-9).
+        {
+            const options = [];
+            const service = new LibraryPreviewService({
+                createRenderer: () => ({
+                    renderBricks(bricks, renderOptions) {
+                        options.push(renderOptions);
+                        return 'fake-image';
+                    }
+                })
+            });
+            await service.requestBrickPreview(brickA).promise;
+            await service.requestStructurePreview(structureA).promise;
+            assert(options[0].minSize === BRICK_FRAME_SIZE && BRICK_FRAME_SIZE > 1 && BRICK_FRAME_SIZE < 2,
+                'framing: a brick is framed at the shared minimum, bigger than a cube and smaller than a 2x2 block');
+            assert(!options[1].minSize, 'framing: a structure is framed as itself');
         }
 
         console.log('✓ Section C: LibraryPreviewService — lazy, cached by kind-qualified key, cancellable, never retries a failed renderer');

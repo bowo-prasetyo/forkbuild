@@ -10,8 +10,9 @@ import { assert } from './support/Assert.js';
 // The Build Library in the Editor's sidebar, with the shipped CSS (finding
 // P2-8 of docs/reviews/EditorPlacementUX-2026-10-27.md): the tool switch
 // and its hint stay above the scroll, the library's tabs and search stay
-// pinned while its list scrolls, and a tile reached from the keyboard
-// comes into view clear of them.
+// pinned while its list scrolls, a tile reached from the keyboard comes
+// into view clear of them, and (P2-9) previews are big enough to tell
+// pieces apart, with each brick's size and each structure's whole name.
 
 await new Promise((resolve, reject) => {
     const link = document.createElement('link');
@@ -86,6 +87,28 @@ const scroller = host.querySelector('.sidebar-scroll');
     assert(target.getBoundingClientRect().top >= box('.build-library-head').bottom - 1,
         `the focused tile is clear of the pinned head (${Math.round(target.getBoundingClientRect().top)} < ${Math.round(box('.build-library-head').bottom)})`);
     console.log('✓ a focused tile comes into view clear of the pinned head');
+}
+
+// 4. Previews big enough to tell pieces apart, each brick's size under its
+// name, and structure names whole (finding P2-9).
+{
+    const tile = host.querySelector('.palette-item[data-brick-id="core:cube_half"]');
+    const preview = tile.querySelector('.build-library-preview').getBoundingClientRect();
+    assert(preview.width >= 56 && preview.height >= 56, `a brick's preview is at least 56px (${preview.width}×${preview.height})`);
+    assert(tile.querySelector('.palette-item-size').textContent.trim() === '1×1×½', 'the Half Cube says its size');
+    assert([...host.querySelectorAll('.palette-item')].every((item) => item.scrollWidth <= item.clientWidth + 1), 'no brick tile overflows');
+
+    [...host.querySelectorAll('.build-library-tab')][1].click();
+    await nextTick();
+    const names = [...host.querySelectorAll('.structure-item-name')];
+    assert(names.length > 10, 'the structures are listed');
+    const cut = names.filter((name) => name.scrollWidth > name.clientWidth + 1 || name.scrollHeight > name.clientHeight + 1);
+    assert(cut.length === 0, `no structure name is cut off (${cut.map((name) => name.textContent).join(', ')})`);
+    const garden = names.find((name) => name.textContent.trim() === 'Garden Cottage');
+    assert(garden, 'Garden Cottage shows its whole name');
+    const card = host.querySelector('.structure-item .build-library-preview').getBoundingClientRect();
+    assert(card.width >= 56, `a structure's preview is at least 56px (${card.width})`);
+    console.log('✓ larger previews, brick sizes, and whole structure names');
 }
 
 app.unmount();

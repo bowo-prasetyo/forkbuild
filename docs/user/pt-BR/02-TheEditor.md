@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: bf41d96ddae684a1 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 5df87310a3ed33cb -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -63,7 +63,12 @@ selecionar e transformar blocos e como organizar sua construção com grupos.
     redondas, cercas, bancos, arbustos e pinheiros, móveis para os cômodos em
     que você entra (uma mesa, uma cama, uma lareira e uma estante, em
     Detalhes) e uma **Lanterna** que acende à noite na Visão do mundo (veja
-    [Dia e noite](03-WorldView.md#dia-e-noite)). Clique em um para selecioná-lo (e passar para a
+    [Dia e noite](03-WorldView.md#dia-e-noite)).
+    Peças pequenas parecem pequenas nas suas imagens (um **Cubo** parece
+    menor que um **Bloco 2x2**), e o tamanho de cada peça fica escrito sob o
+    nome: largura × profundidade × altura em unidades da grade (um **Meio
+    cubo** tem 1×1×½).
+    Clique em um para selecioná-lo (e passar para a
     ferramenta Colocar); aparece então uma amostra **Cor** para escolher a
     cor dele — veja [Cores dos blocos](#cores-dos-blocos) abaixo.
     **Rampa 45°**, **Rampa suave 2x1**, **Escada**, **Escada larga** e

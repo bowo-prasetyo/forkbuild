@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: bf41d96ddae684a1 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 5df87310a3ed33cb -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -67,7 +67,12 @@ organiser votre construction avec des groupes.
     et œils-de-bœuf, clôtures, bancs, buissons et sapins, des meubles pour
     les pièces où l’on entre (une table, un lit, un âtre et une étagère,
     dans Détails) et une **Lanterne** qui s’allume la nuit dans la Vue du Monde
-    (voir [Le jour et la nuit](03-WorldView.md#le-jour-et-la-nuit)). Cliquez sur l’une d’elles
+    (voir [Le jour et la nuit](03-WorldView.md#le-jour-et-la-nuit)).
+    Les petites pièces paraissent petites sur leur image (un **Cube** paraît
+    plus petit qu’un **Bloc 2x2**), et la taille de chaque pièce est écrite
+    sous son nom, en largeur × profondeur × hauteur, en unités de la grille
+    (un **Demi-cube** fait 1×1×½).
+    Cliquez sur l’une d’elles
     pour la sélectionner (et passer à l’outil Placement) ; un nuancier
     **Couleur** apparaît alors pour choisir sa couleur — voir
     [Couleurs des briques](#couleurs-des-briques) ci-dessous.
