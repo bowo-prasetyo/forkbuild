@@ -19,7 +19,7 @@
 // (vendor/onnxruntime-web/) are served by this site, so no script ever comes
 // from elsewhere; the engine is given to the runtime as bytes, never by URL
 // (docs/Privacy.md, "Voice building").
-import { SPEECH_MODEL, SPEECH_MODEL_REVISION, SPEECH_MODEL_FILES } from './SpeechModelPins.js';
+import { SPEECH_MODEL, SPEECH_MODEL_BYTES, SPEECH_MODEL_REVISION, SPEECH_MODEL_FILES } from './SpeechModelPins.js';
 import { PinnedModelFiles } from './PinnedModelFiles.js';
 
 export { SPEECH_MODEL };
@@ -37,6 +37,8 @@ export const SPEECH_ENGINE = Object.freeze({
 export const MAX_SPOKEN_TOKENS = 48;
 
 const ENGINE_CACHE = 'forkbuild-voice-engine';
+// Where the model's files come from (transformers.js's env.remoteHost).
+const MODEL_HOST = 'https://huggingface.co/';
 // Where transformers.js keeps the model files (its env.cacheKey).
 const MODEL_CACHE = 'transformers-cache';
 
@@ -58,12 +60,14 @@ export class SpeechRuntime {
         engine = SPEECH_ENGINE,
         modelRevision = SPEECH_MODEL_REVISION,
         modelFiles = SPEECH_MODEL_FILES,
+        modelBytes = SPEECH_MODEL_BYTES,
         engineLoaderUrl,
         model = SPEECH_MODEL
     } = {}) {
         this._model = model;
-        // Only SPEECH_MODEL has a pin.
+        // Only SPEECH_MODEL has a pin, and a known size.
         this._modelRevision = model === SPEECH_MODEL ? modelRevision : null;
+        this._modelBytes = model === SPEECH_MODEL ? modelBytes : 0;
         this._modelFiles = modelFiles;
         this._importLibrary = importLibrary;
         this._fetch = fetchResource;
@@ -73,14 +77,27 @@ export class SpeechRuntime {
         this._engineLoaderUrl = engineLoaderUrl;
         this._loading = null;
         this._recognize = null;
+        // Counts remove()s, so a load still running when voice is removed
+        // lets its model go rather than keep it.
+        this._generation = 0;
     }
 
-    // Whether the engine is already kept here, so turning voice on again
-    // downloads nothing (the model is checked by transformers.js itself).
+    // Whether voice can hear without downloading anything: the model is
+    // loaded, or the engine and every pinned file of the model are kept in
+    // this browser. A browser short of space may have thrown them away while
+    // remembering that voice was turned on, so useVoiceCommands asks again
+    // when this is false, rather than start the download unasked.
     async downloaded() {
+        if (this._recognize) return true;
         try {
-            const cache = await this._caches.open(ENGINE_CACHE);
-            return !!(await cache.match(this._engineSource.url));
+            const engineCache = await this._caches.open(ENGINE_CACHE);
+            if (!(await engineCache.match(this._engineSource.url))) return false;
+            if (!this._modelRevision) return true;
+            const modelCache = await this._caches.open(MODEL_CACHE);
+            for (const path of Object.keys(this._modelFiles)) {
+                if (!(await modelCache.match(`${MODEL_HOST}${this._model}/resolve/${this._modelRevision}/${path}`))) return false;
+            }
+            return true;
         } catch {
             return false;
         }
@@ -97,6 +114,7 @@ export class SpeechRuntime {
     }
 
     async _load(onProgress) {
+        const generation = this._generation;
         const engine = await this._engine(onProgress);
         const library = await this._importLibrary();
         const { env, pipeline } = library;
@@ -110,6 +128,9 @@ export class SpeechRuntime {
         wasm.wasmBinary = engine;
         wasm.numThreads = 1;
         wasm.proxy = false;
+        // The model's progress over its whole pinned size, so the bar never
+        // jumps back when another file starts (an unpinned model has only
+        // the files heard of so far to go by).
         const files = new Map();
         const report = (file, loaded, total) => {
             files.set(file, { loaded: loaded || 0, total: total || 0 });
@@ -119,7 +140,8 @@ export class SpeechRuntime {
                 sumLoaded += each.loaded;
                 sumTotal += each.total;
             }
-            onProgress({ phase: 'model', loaded: sumLoaded, total: sumTotal });
+            const whole = this._modelBytes || sumTotal;
+            onProgress({ phase: 'model', loaded: Math.min(sumLoaded, whole), total: whole });
         };
         const pinned = this._modelRevision !== null && this._modelRevision !== undefined;
         if (pinned) {
@@ -128,7 +150,7 @@ export class SpeechRuntime {
                 model: this._model,
                 revision: this._modelRevision,
                 files: this._modelFiles,
-                host: env.remoteHost || 'https://huggingface.co/',
+                host: env.remoteHost || MODEL_HOST,
                 fetch: this._fetch,
                 caches: this._caches,
                 cacheName: MODEL_CACHE,
@@ -140,7 +162,7 @@ export class SpeechRuntime {
             env.useCustomCache = true;
             env.customCache = pinnedFiles.cache;
         }
-        this._recognize = await pipeline('automatic-speech-recognition', this._model, {
+        const recognize = await pipeline('automatic-speech-recognition', this._model, {
             device: 'wasm',
             dtype: 'q8',
             ...(pinned ? { revision: this._modelRevision } : {}),
@@ -149,6 +171,8 @@ export class SpeechRuntime {
                 report(event.file, event.loaded, event.total);
             }
         });
+        if (generation !== this._generation) throw new Error('speech model: removed while loading');
+        this._recognize = recognize;
         return this;
     }
 
@@ -205,6 +229,7 @@ export class SpeechRuntime {
 
     // Deletes the engine and the model from this browser.
     async remove() {
+        this._generation += 1;
         this._loading = null;
         this._recognize = null;
         await Promise.all([ENGINE_CACHE, MODEL_CACHE].map((name) => Promise.resolve(this._caches.delete(name)).catch(() => false)));
