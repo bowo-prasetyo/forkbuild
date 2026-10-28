@@ -1215,6 +1215,7 @@ export default Object.freeze({
     'editor.touchPlacingHint': 'Menempatkan "{title}" — ketuk untuk melihat letaknya, lalu ketuk lagi atau tekan Taruh.',
     'editor.placeHint': 'Arahkan ke tanah, R untuk memutar, klik untuk menempatkan, Shift+seret untuk memasang satu baris.',
     'editor.brickPicked': '{name} diambil dari bangunan Anda: klik untuk menempatkan satu lagi.',
+    'editor.touchBrickPicked': '{name} diambil dari bangunan Anda: ketuk untuk melihat letak yang berikutnya, lalu ketuk lagi untuk menempatkannya.',
     'editor.placementBlocked': 'Ada yang menghalangi di sini. Coba tempat lain, atau tekan R untuk memutarnya.',
     'editor.touchPlacementBlocked': 'Ada yang menghalangi di sini. Coba tempat lain, atau ketuk Putar untuk memutarnya.',
     'editor.turnBlocked': 'Ada sesuatu yang menghalangi putaran itu. Pindahkan dulu ke tempat yang lebih lapang.',

@@ -200,6 +200,8 @@ export class EditorSession {
         this._placePress = null;
         // A Shift+drag row being laid while placing (pointerInputMethods.js).
         this._rowPress = null;
+        // A finger held still, about to pick what's under it (pointerInputMethods.js).
+        this._touchHold = null;
         // The last touch tap while placing, where the touch bar's Place acts.
         this._lastPlacingTap = null;
 

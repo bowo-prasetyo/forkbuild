@@ -11,6 +11,10 @@ const MARQUEE_DRAG_THRESHOLD_PX = 6;
 // A finger moves a little even when tapping, so touch gets a wider margin.
 const TOUCH_TAP_SLOP_PX = 10;
 
+// A finger held this long on a brick, still, picks it up (Alt-click's touch
+// counterpart, pickFromScene()).
+export const LONG_PRESS_MS = 500;
+
 // While placing by touch, a second tap this close to the one that showed the
 // ghost (the camera unmoved) places it: a fingertip on the ghost.
 const PLACE_AGAIN_TAP_PX = 28;
@@ -42,10 +46,11 @@ const PLACE_AGAIN_TAP_PX = 28;
 // that point. Other buttons never place. Hover still reaches the tools as it
 // happens, so the ghost keeps following the pointer.
 //
-// Alt-click (Option-click on a Mac) on a brick, in Select or while placing,
-// takes it up: its type, colour, turn and tilt become what Place places next,
+// Alt-click (Option-click on a Mac) on a brick, or a finger held still on it
+// for LONG_PRESS_MS, in Select or while placing, takes it up: its type, colour, turn and tilt become what Place places next,
 // and Place comes on (pickFromScene()). It reaches no tool, so it never
-// selects or places.
+// selects or places: a long press that picks is no tap when the finger lifts
+// (one held on empty ground still is). A second finger or a drag stops it.
 //
 // Placing a brick, Shift+drag lays a row instead of drawing a box: the press,
 // moves and release go straight to PlacementTool, with the camera controls
@@ -211,6 +216,7 @@ export const pointerInputMethods = {
             return;
         }
         this._touchPointerIds.delete(event.pointerId);
+        if (this._touchHold && this._touchHold.pointerId === event.pointerId) this._cancelTouchHold();
         if (this._marqueeState && this._marqueeState.pointerId === event.pointerId) {
             this.cancelMarquee();
         }
@@ -277,7 +283,8 @@ export const pointerInputMethods = {
         }
         this._touchPointerIds.add(event.pointerId);
         if (this._touchPointerIds.size > 1) {
-            // A second finger: pinch or pan, never a tap or a box.
+            // A second finger: pinch or pan, never a tap, a box or a hold.
+            this._cancelTouchHold();
             this._touchTap = null;
             this._lastPlacingTap = null;
             this.cancelMarquee();
@@ -304,7 +311,36 @@ export const pointerInputMethods = {
             return null;
         }
         this._touchTap = { pointerId: event.pointerId, x0: event.clientX, y0: event.clientY };
+        this._startTouchHold(event.pointerId);
         return null;
+    },
+
+    _startTouchHold(pointerId) {
+        this._cancelTouchHold();
+        const schedule = this._schedule || ((fn, ms) => setTimeout(fn, ms));
+        this._touchHold = { pointerId, timer: schedule(() => this._onTouchHold(pointerId), LONG_PRESS_MS) };
+    },
+
+    _cancelTouchHold() {
+        if (this._touchHold) {
+            (this._unschedule || clearTimeout)(this._touchHold.timer);
+            this._touchHold = null;
+        }
+    },
+
+    // The finger is still where it went down: pick what's under it. Picked, the
+    // lift is no tap; on empty ground it still is.
+    _onTouchHold(pointerId) {
+        if (!this._touchHold || this._touchHold.pointerId !== pointerId) return;
+        this._touchHold = null;
+        const tap = this._touchTap;
+        if (!tap || tap.pointerId !== pointerId || this._touchPointerIds.size !== 1) return;
+        if (this.pickFromScene(tap.x0, tap.y0)) {
+            this._touchTap = null;
+            this._lastPlacingTap = null;
+            // Felt as well as seen, where the device can.
+            if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') navigator.vibrate(15);
+        }
     },
 
     _onTouchPointerMove(event) {
@@ -321,6 +357,7 @@ export const pointerInputMethods = {
         if (tap && tap.pointerId === event.pointerId
             && Math.hypot(event.clientX - tap.x0, event.clientY - tap.y0) > TOUCH_TAP_SLOP_PX) {
             // A drag turns the camera, so the ghost has moved on screen.
+            this._cancelTouchHold();
             this._touchTap = null;
             this._lastPlacingTap = null;
         }
@@ -341,6 +378,7 @@ export const pointerInputMethods = {
 
     _onTouchPointerUp(event) {
         this._touchPointerIds.delete(event.pointerId);
+        if (this._touchHold && this._touchHold.pointerId === event.pointerId) this._cancelTouchHold();
         const marquee = this._marqueeState;
         if (marquee && marquee.pointerId === event.pointerId) {
             this.cancelMarquee();

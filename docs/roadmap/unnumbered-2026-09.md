@@ -9643,3 +9643,24 @@ made of meant going back to the Build Library each time.
   tests/BuildLibraryKeyboardBrowser.test.js (a brick's tile shows its key, and says so to a screen reader). Checked in
   the running app at 1366×768: three bricks chosen take 3, 4 and 5, shown on their tiles; from Select, 5 and 4 choose
   them with Place on; an empty key does nothing; the keys are still there after a reload.
+
+## A long press picks a brick on a touch screen (unnumbered, 2026-10-28)
+
+**Building: the same pick, by finger.** The touch half of "Pick from the scene" in
+[the Editor placement audit](../reviews/EditorPlacementUX-2026-10-27.md): Alt-click picks a brick from the build, but a
+finger has no Alt.
+
+- **A finger held still on a brick for half a second picks it up** (`LONG_PRESS_MS` in
+  application/editorSession/pointerInputMethods.js), as Alt-click does: its type, colour, turn and tilt, with Place on,
+  from Select or while placing. Picked, the lift is no tap, so nothing is selected or placed; the phone gives a short
+  buzz where it can (`navigator.vibrate`).
+- **Everything else stays as it was:** a quick tap is a tap, a drag still turns the camera, a second finger still
+  pinches, and a finger held on empty ground picks nothing and its lift is still a tap.
+- The Editor's 3D view no longer selects text or opens the system's press-and-hold menu (`-webkit-touch-callout`,
+  `user-select` on `.viewport`, css/main/touch-and-compact.css).
+- On a touch screen the message says to tap (`editor.touchBrickPicked`, new, in all eight languages), and the user
+  guide's *Place tool* says so, in all eight.
+- Tests: tests/PickFromScene.test.js 14-20 (a finger down starts the hold; held, it picks the brick with Place on and
+  its lift is no tap; a quick tap is a tap; a drag or a second finger calls the hold off; held on empty ground it
+  picks nothing and the lift is still a tap). Checked in the running app on an emulated iPhone 13: a long press on
+  the cube picks it up (the chip names it and the message shows); one on empty ground does nothing.

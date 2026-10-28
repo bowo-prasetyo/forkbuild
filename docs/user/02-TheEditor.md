@@ -184,7 +184,8 @@ nothing is placed; **Escape** drops the row while you drag.
 **Alt-click** (Option-click on a Mac) a brick in your build to take it up:
 its type, colour, turn and tilt become what you place next, and Place comes
 on, so the next click places another just like it. It works from Select too,
-and picks nothing on empty ground.
+and picks nothing on empty ground. On a touch screen, hold a finger still on
+the brick for half a second instead.
 
 The number keys **3** to **9** each hold a brick you chose lately, like a
 hotbar: the first brick you choose takes 3, the next 4, and so on, and a

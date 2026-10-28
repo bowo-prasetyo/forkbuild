@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 7478badd81a9e5cd -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: b07dea3a1e4b6d8c -->
 # 02 — Editor
 
 <!-- languages -->
@@ -205,7 +205,8 @@ yang ditempatkan; **Escape** membatalkan baris selama menyeret.
 jenis, warna, putaran, dan kemiringannya menjadi yang Anda tempatkan
 berikutnya, dan Tempatkan menyala, sehingga klik berikutnya menempatkan satu
 lagi yang persis sama. Ini juga bisa dari Pilih, dan tidak mengambil apa pun
-di tanah kosong.
+di tanah kosong. Di layar sentuh, tahan satu jari diam di atas balok itu
+selama setengah detik.
 
 Tombol angka **3** sampai **9** masing-masing menyimpan balok yang baru Anda
 pilih, seperti hotbar: balok pertama yang Anda pilih mendapat 3, berikutnya

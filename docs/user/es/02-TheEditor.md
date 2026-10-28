@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 7478badd81a9e5cd -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: b07dea3a1e4b6d8c -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -210,6 +210,8 @@ descarta la fila mientras arrastra.
 toma: su tipo, color, giro e inclinación pasan a ser lo que coloca a
 continuación, y se activa Colocar, así que el siguiente clic coloca otro
 igual. También funciona desde Seleccionar, y sobre suelo vacío no toma nada.
+En una pantalla táctil, mantenga en su lugar un dedo sobre el bloque medio
+segundo.
 
 Las teclas numéricas **3** a **9** guardan cada una un bloque que eligió
 hace poco, como una barra rápida: el primer bloque que elija toma el 3, el

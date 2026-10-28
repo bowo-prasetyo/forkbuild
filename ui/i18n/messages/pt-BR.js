@@ -1219,6 +1219,7 @@ export default Object.freeze({
     'editor.touchPlacingHint': 'Posicionando “{title}”: toque para ver onde vai e toque de novo ou aperte Colocar.',
     'editor.placeHint': 'Passe o cursor sobre o chão, R para girar, clique para colocar, Shift+arrastar para pôr uma fileira.',
     'editor.brickPicked': '{name} pego da sua construção: clique para colocar outro.',
+    'editor.touchBrickPicked': '{name} pego da sua construção: toque para ver onde vai o próximo e toque de novo para colocá-lo.',
     'editor.placementBlocked': 'Tem algo no caminho aqui. Tente outro lugar, ou aperte R para girar.',
     'editor.touchPlacementBlocked': 'Tem algo no caminho aqui. Tente outro lugar, ou toque em Girar para girar.',
     'editor.turnBlocked': 'Tem algo no caminho desse giro. Mova primeiro para um lugar mais livre.',

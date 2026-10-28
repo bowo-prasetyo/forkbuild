@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 7478badd81a9e5cd -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: b07dea3a1e4b6d8c -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -210,7 +210,8 @@ während des Ziehens.
 nimmt ihn auf: Art, Farbe, Drehung und Neigung werden zu dem, was Sie als
 Nächstes platzieren, und Platzieren geht an, sodass der nächste Klick einen
 genau gleichen platziert. Das geht auch aus Auswählen heraus; auf leerem
-Boden wird nichts aufgenommen.
+Boden wird nichts aufgenommen. Auf einem Touchscreen halten Sie stattdessen
+einen Finger eine halbe Sekunde still auf den Stein.
 
 Die Zifferntasten **3** bis **9** halten je einen Stein, den Sie zuletzt
 gewählt haben, wie eine Schnellleiste: Der erste gewählte Stein bekommt 3,

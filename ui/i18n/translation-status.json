@@ -1146,6 +1146,7 @@
         "editor.touchPlacingHint": "90a4ba38",
         "editor.placeHint": "ccb15f40",
         "editor.brickPicked": "9f682a30",
+        "editor.touchBrickPicked": "3d26739d",
         "editor.placementBlocked": "eb39634f",
         "editor.touchPlacementBlocked": "eb09df26",
         "editor.turnBlocked": "a7593d0f",
