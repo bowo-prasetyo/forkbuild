@@ -7,7 +7,7 @@
 //
 // - the ONNX runtime's WebAssembly engine is downloaded once from jsDelivr,
 //   at one exact version, and refused unless its SHA-256 is the one below;
-// - the speech model (onnx-community/whisper-tiny) is downloaded once from
+// - the speech model (SPEECH_MODEL, Whisper base) is downloaded once from
 //   Hugging Face, at the commit application/voice/SpeechModelPins.js names, and
 //   every file of it is refused unless its SHA-256 is the pinned one, whether
 //   downloaded or found in this browser's cache (application/voice/
@@ -19,10 +19,10 @@
 // (vendor/onnxruntime-web/) are served by this site, so no script ever comes
 // from elsewhere; the engine is given to the runtime as bytes, never by URL
 // (docs/Privacy.md, "Voice building").
-import { SPEECH_MODEL_REVISION, SPEECH_MODEL_FILES } from './SpeechModelPins.js';
+import { SPEECH_MODEL, SPEECH_MODEL_REVISION, SPEECH_MODEL_FILES } from './SpeechModelPins.js';
 import { PinnedModelFiles } from './PinnedModelFiles.js';
 
-export const SPEECH_MODEL = 'onnx-community/whisper-tiny';
+export { SPEECH_MODEL };
 
 export const SPEECH_ENGINE = Object.freeze({
     url: 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.0-dev.20260914-8d85527a0/dist/ort-wasm-simd-threaded.asyncify.wasm',
@@ -135,6 +135,7 @@ export class SpeechRuntime {
                 subtle: this._subtle,
                 onProgress: report
             });
+            await pinnedFiles.forgetOthers();
             env.fetch = (url, init) => pinnedFiles.fetch(url, init);
             env.useCustomCache = true;
             env.customCache = pinnedFiles.cache;

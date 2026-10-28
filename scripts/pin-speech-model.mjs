@@ -5,7 +5,8 @@
 // commit and the hashes into SpeechModelPins.js. A file kept in Git LFS (the
 // model's weights) is known by its LFS object id, which is by definition the
 // SHA-256 of its bytes, recorded in the commit itself; any other file is
-// downloaded at the commit and hashed.
+// downloaded at the commit and hashed. Their sizes, added up, are written as
+// SPEECH_MODEL_BYTES.
 //
 //   node scripts/pin-speech-model.mjs            pin main as it is now
 //   node scripts/pin-speech-model.mjs <commit>   pin that commit
@@ -66,21 +67,24 @@ async function filesAt(commit) {
 async function hashesAt(commit) {
     const listed = await filesAt(commit);
     const files = {};
+    let bytes = 0;
     for (const path of MODEL_FILES) {
         const file = listed.get(path);
         if (!file) throw new Error(`${path} is not in ${SPEECH_MODEL}@${commit}`);
         const lfs = /^[0-9a-f]{64}$/.test(file.lfsSha256 || '');
         files[path] = lfs ? file.lfsSha256 : await sha256Of(`${HOST}/${SPEECH_MODEL}/resolve/${commit}/${path}`);
+        bytes += Number(file.size) || 0;
         console.log(`${path}  ${files[path]}  (${lfs ? 'its Git LFS object id' : 'downloaded and hashed'})`);
     }
-    return files;
+    return { files, bytes };
 }
 
-// SpeechModelPins.js's `source` with `commit` and `files` ({ path: sha256 })
-// written in.
-export function pinnedSource(source, commit, files) {
+// SpeechModelPins.js's `source` with `commit`, `files` ({ path: sha256 }) and
+// their `bytes` written in.
+export function pinnedSource(source, commit, files, bytes = null) {
     const entries = Object.entries(files).map(([path, sha]) => `    '${path}': '${sha}'`).join(',\n');
-    return source
+    const sized = bytes === null ? source : source.replace(/export const SPEECH_MODEL_BYTES = [^;]*;/, `export const SPEECH_MODEL_BYTES = ${bytes};`);
+    return sized
         .replace(/export const SPEECH_MODEL_REVISION = [^;]*;/, `export const SPEECH_MODEL_REVISION = '${commit}';`)
         .replace(/export const SPEECH_MODEL_FILES = Object\.freeze\(\{[\s\S]*?\}\);/, `export const SPEECH_MODEL_FILES = Object.freeze({\n${entries}\n});`);
 }
@@ -91,7 +95,7 @@ async function main(argument) {
             console.error('The speech model is not pinned yet: run node scripts/pin-speech-model.mjs');
             process.exit(1);
         }
-        const files = await hashesAt(SPEECH_MODEL_REVISION);
+        const { files } = await hashesAt(SPEECH_MODEL_REVISION);
         const wrong = MODEL_FILES.filter((path) => files[path] !== SPEECH_MODEL_FILES[path]);
         if (wrong.length > 0) {
             console.error(`Not the pinned bytes: ${wrong.join(', ')}`);
@@ -102,8 +106,8 @@ async function main(argument) {
     }
     const commit = argument || await latestCommit();
     if (!/^[0-9a-f]{40}$/.test(commit)) throw new Error(`not a commit: ${commit}`);
-    const files = await hashesAt(commit);
-    writeFileSync(PINS, pinnedSource(readFileSync(PINS, 'utf8'), commit, files));
+    const { files, bytes } = await hashesAt(commit);
+    writeFileSync(PINS, pinnedSource(readFileSync(PINS, 'utf8'), commit, files, bytes));
     console.log(`Pinned ${SPEECH_MODEL}@${commit} in application/voice/SpeechModelPins.js`);
 }
 

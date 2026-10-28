@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 932ce3b7a104064f -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: fbeac6898411907a -->
 # 02 — 에디터
 
 <!-- languages -->
@@ -734,7 +734,7 @@ copyright와 extras에, STL은 헤더에, OBJ는 주석에 들어갑니다. 공�
 작업을 알아듣습니다. 질문(*친구를 어떻게 초대하나요?*)이면 **가이드에 묻기**가
 나옵니다.
 
-처음에는 음성을 켜면 무엇을 내려받는지 설명합니다. 한 번만 약 70 MB로,
+처음에는 음성을 켜면 무엇을 내려받는지 설명합니다. 한 번만 약 107 MB로,
 작은 음성 모델(Whisper)을 Hugging Face에서, 그 엔진을 jsDelivr에서 받습니다.
 둘 다 이 브라우저에 남으므로 그 뒤에는 오프라인에서도 동작합니다. 말한 내용은
 이 기기에서 녹음되고 인식되며 어디에도 보내지 않습니다

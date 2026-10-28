@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 932ce3b7a104064f -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: fbeac6898411907a -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -909,7 +909,7 @@ dite par son nom. Une question (*comment inviter un ami ?*) propose
 **Demander au guide**.
 
 La première fois, il explique ce que télécharge l’activation de la voix,
-environ 70 Mo une seule fois : un petit modèle vocal (Whisper) depuis
+environ 107 Mo une seule fois : un petit modèle vocal (Whisper) depuis
 Hugging Face et son moteur depuis jsDelivr. Ils restent dans ce navigateur,
 si bien que la voix marche ensuite hors ligne. Ce que vous dites est
 enregistré et compris sur votre appareil, et n’est jamais envoyé (voir

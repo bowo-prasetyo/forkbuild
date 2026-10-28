@@ -12,12 +12,20 @@
 // TRANSCRIBE_TIMEOUT, and the next load() reads the model from this browser's
 // cache in a new one.
 
-// About how much turning voice on downloads: the engine and the model.
-export const SPEECH_DOWNLOAD_BYTES = 70 * 1000 * 1000;
+import { SPEECH_ENGINE } from './SpeechRuntime.js';
+import { SPEECH_MODEL_BYTES } from './SpeechModelPins.js';
+
+// How much turning voice on downloads: the engine and the model; and the
+// engine's share of it, which downloads first.
+export const SPEECH_DOWNLOAD_BYTES = SPEECH_ENGINE.bytes + SPEECH_MODEL_BYTES;
+export const SPEECH_ENGINE_SHARE = SPEECH_ENGINE.bytes / SPEECH_DOWNLOAD_BYTES;
 
 // How long working out what was said may take, from a few seconds of sound,
 // before it is given up; and the reason it then fails with.
-export const TRANSCRIBE_TIMEOUT_MS = 30 * 1000;
+// Whisper base takes about 4 s for a command on a laptop, 7 s at most
+// (scripts/evaluate-voice-commands.mjs); this leaves a phone six times
+// slower room before a stuck model is given up.
+export const TRANSCRIBE_TIMEOUT_MS = 45 * 1000;
 export const TRANSCRIBE_TIMEOUT = 'timeout';
 
 // This site's copy of the speech engine's loader (scripts/vendor.mjs).

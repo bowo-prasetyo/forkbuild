@@ -326,8 +326,10 @@ the detailed references; in short:
 - Voice building (`V` in the Editor and World View): ForkBuild's one real AI
   feature, run on the device. ui/voice/recordVoice.js records from the
   microphone to mono 16 kHz samples; application/voice/SpeechRuntime.js runs
-  Whisper tiny
-  (`onnx-community/whisper-tiny`, from Hugging Face) with transformers.js
+  Whisper base
+  (`onnx-community/whisper-base`, from Hugging Face, `SPEECH_MODEL` in
+  application/voice/SpeechModelPins.js: it heard 49% of measured commands
+  right where Whisper tiny heard 37%, at about twice the time and download) with transformers.js
   (vendor/transformers/) on the ONNX runtime's WebAssembly engine, which it
   downloads from jsDelivr at one exact version, refuses unless its SHA-256 is
   the pinned one, and gives the runtime as bytes, with the engine's loader
@@ -347,7 +349,11 @@ the detailed references; in short:
   files exist, at main before it passes the revision on. Asked for its first
   byte (`Range: bytes=0-0`, how transformers.js learns a file's size), a
   pinned file answers with its size from the commit and none of its bytes.
-  Until a commit is pinned, the model loads unchecked, as before. Both are kept in Cache Storage until removed. The
+  Until a commit is pinned, the model loads unchecked, as before. Both are kept in Cache Storage until removed; another model's files, or this
+  one's at another commit, are deleted when voice loads
+  (`PinnedModelFiles#forgetOthers()`), and voice turned on for another model
+  asks again before downloading this one (`forkbuild.voice.enabled` names the
+  model it was turned on for). The
   published Content Security Policy allows `'wasm-unsafe-eval'` for this,
   never `'unsafe-eval'`. The runtime lives in a module worker
   (application/voice/speechWorker.js, answering requests through
@@ -356,7 +362,7 @@ the detailed references; in short:
   runtime's methods, starts the worker on first use and starts a new one if
   it stops. The model writes at most `MAX_SPOKEN_TOKENS` (48) for a command,
   not Whisper's 448, so a repeating loop over noise ends quickly; and a
-  transcription still going after `TRANSCRIBE_TIMEOUT_MS` (30 s) ends its
+  transcription still going after `TRANSCRIBE_TIMEOUT_MS` (45 s) ends its
   worker, which can't be interrupted otherwise, and fails as `timeout`, so
   the next press starts afresh with the model from the cache. What is heard
   after voice was turned off, or the view left, is let go

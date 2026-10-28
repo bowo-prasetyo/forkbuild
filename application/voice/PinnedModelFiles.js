@@ -120,6 +120,22 @@ export class PinnedModelFiles {
         return bytes.buffer;
     }
 
+    // Deletes from the cache every file kept that isn't one of these pins (an
+    // earlier model's, once SpeechModelPins.js names another), so a model
+    // left behind doesn't stay in this browser. Never rejects.
+    async forgetOthers() {
+        try {
+            const cache = await this._caches.open(this._cacheName);
+            const pinned = new Set(Object.keys(this._files).map((path) => `${this._prefix}${this._revision}/${path}`));
+            for (const request of await cache.keys()) {
+                const url = request?.url ?? String(request);
+                if (!pinned.has(url)) await cache.delete(request);
+            }
+        } catch {
+            // A cache that can't be read keeps what it has.
+        }
+    }
+
     // transformers.js's env.customCache: the Cache API's match() and put().
     get cache() {
         return {

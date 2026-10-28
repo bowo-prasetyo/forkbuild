@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 1a6b0b8708e8925c -->
+<!-- translation-of: docs/Privacy.md source-hash: ca4e09d21f77cc11 -->
 # プライバシー
 
 <!-- languages -->
@@ -284,7 +284,7 @@ ForkBuild が想定するファイルと完全に一致しなければ拒否さ�
 
 | いつ | サーバー（既定） | 受け取るもの |
 | --- | --- | --- |
-| エディターかワールドビューで音声をオンにしたとき（一度だけ。ファイルを削除した後に再びオンにしたときも） | Hugging Face（`huggingface.co` とそのファイルサーバー）、jsDelivr（`cdn.jsdelivr.net`） | 音声モデルのファイル（`onnx-community/whisper-tiny` の決まったバージョン）と音声エンジンの WebAssembly ファイル（`onnxruntime-web` の決まったバージョン）の要求。話した内容は一切送られません |
+| エディターかワールドビューで音声をオンにしたとき（一度だけ。ファイルを削除した後に再びオンにしたときも） | Hugging Face（`huggingface.co` とそのファイルサーバー）、jsDelivr（`cdn.jsdelivr.net`） | 音声モデルのファイル（`onnx-community/whisper-base` の決まったバージョン）と音声エンジンの WebAssembly ファイル（`onnxruntime-web` の決まったバージョン）の要求。話した内容は一切送られません |
 | 公式サイトでアプリを開いたとき、多くても 1 日 1 回（「訪問者数のカウント」を参照） | GoatCounter（`forkbuild.goatcounter.com`） | 固定のパスで、リファラーも Cookie もない画像リクエスト 1 回 |
 | 公式サイトで、作品へのリンクをコピーまたは共有したとき、共有リンクを開いたとき、そのリンクから開いた作品をエディターにコピーしたとき（「訪問者数のカウント」を参照） | GoatCounter（`forkbuild.goatcounter.com`） | 3 つのうちどの場面かを示す固定のパスで、リファラーも Cookie もない画像リクエスト 1 回 |
 | 公式サイトから ForkBuild をインストールしたとき（「訪問者数のカウント」を参照） | GoatCounter（`forkbuild.goatcounter.com`） | 固定パス `/e/installed` の画像リクエスト 1 件。リファラーなし、Cookie なし |

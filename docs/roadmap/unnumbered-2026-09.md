@@ -9773,3 +9773,26 @@ in eight languages on Whisper tiny, with one run of a synthesized English voice 
 - **Indonesian:** "Cat atapnya merah" (paint the roof red) painted the selection: the part words gain their -nya
   forms, found by tests/VoicePhrases.test.js (new), which checks every phrase, typed, in every language.
 - Tests: tests/VoicePhrases.test.js, tests/VoicePanelBrowser.test.js (new).
+
+## Voice hears with Whisper base (unnumbered, 2026-10-28)
+
+**Voice that hears more.** Whisper base, measured with scripts/evaluate-voice-commands.mjs on the 576 synthetic
+recordings: 49% of commands right where Whisper tiny heard 37% (English 93% from 68%; German 31%, Spanish 53%,
+French 43%, Indonesian 44%, Japanese 49%, Korean 42%, Portuguese 38%), and 2 wrong actions in 576, at about 4.3 s a
+command instead of 2.1 s.
+
+- **The model is `onnx-community/whisper-base`**, pinned at one commit with every file's SHA-256
+  (application/voice/SpeechModelPins.js, which now names the model, written by scripts/pin-speech-model.mjs, which
+  also writes the files' size, `SPEECH_MODEL_BYTES`). Checked end to end in Chromium through the pinned path.
+- **Turning voice on downloads about 107 MB, not 70** (`SPEECH_DOWNLOAD_BYTES`, from the engine's and the model's
+  sizes); the progress shows the engine as its share of that (`SPEECH_ENGINE_SHARE`).
+- **Voice turned on before asks again** before downloading the new model: `forkbuild.voice.enabled` names the model it
+  was turned on for, so the 'yes' kept for Whisper tiny no longer counts.
+- **Whisper tiny's files are deleted** from the browser when voice loads (`PinnedModelFiles#forgetOthers()`): another
+  model's, or this one's at another commit.
+- **A stuck transcription is given up after 45 s, not 30**, since a command takes about twice as long.
+- The user guide (*Speak a command*, *Privacy*) says 107 MB and Whisper base, in all eight languages; English is still
+  the one language voice says it hears well (`VOICE_HEARS_WELL`).
+- Tests: tests/VoiceBuilding.test.js (the model; the download is the engine and the pinned files; voice turned on for
+  Whisper tiny asks again); tests/PinnedSpeechModel.test.js 13a-13b (an earlier model's files are deleted, the pinned
+  ones stay).

@@ -2,7 +2,8 @@ import { createHash, webcrypto } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { actionNamed, actionSaid, nearestBySound, soundsExactly, cleanTranscript, whisperLanguage, WHISPER_LANGUAGES } from '../core/voice/Transcript.js';
 import { MAX_SPOKEN_TOKENS, SPEECH_ENGINE, SPEECH_MODEL, SpeechRuntime } from '../application/voice/SpeechRuntime.js';
-import { SPEECH_ENGINE_LOADER, SpeechWorkerClient, TRANSCRIBE_TIMEOUT, TRANSCRIBE_TIMEOUT_MS, speechSupported } from '../application/voice/SpeechWorkerClient.js';
+import { SPEECH_DOWNLOAD_BYTES, SPEECH_ENGINE_LOADER, SPEECH_ENGINE_SHARE, SpeechWorkerClient, TRANSCRIBE_TIMEOUT, TRANSCRIBE_TIMEOUT_MS, speechSupported } from '../application/voice/SpeechWorkerClient.js';
+import { SPEECH_MODEL_BYTES } from '../application/voice/SpeechModelPins.js';
 import { serveSpeech } from '../application/voice/serveSpeech.js';
 import { interpretWorldCommand } from '../core/voice/WorldVoiceCommand.js';
 import { worldVoiceVocabulary } from '../ui/i18n/worldVoiceWords.js';
@@ -37,7 +38,11 @@ import { assert } from './support/Assert.js';
 
 // The pinned engine is the file vendor/ was checked against.
 {
-    assert(SPEECH_MODEL === 'onnx-community/whisper-tiny', 'the model is Whisper tiny');
+    assert(SPEECH_MODEL === 'onnx-community/whisper-base', 'the model is Whisper base');
+    assert(SPEECH_DOWNLOAD_BYTES === SPEECH_ENGINE.bytes + SPEECH_MODEL_BYTES && SPEECH_DOWNLOAD_BYTES > 80e6 && SPEECH_DOWNLOAD_BYTES < 130e6,
+        `what turning voice on downloads is the engine and the pinned model's files (${SPEECH_DOWNLOAD_BYTES})`);
+    assert(Math.abs(SPEECH_ENGINE_SHARE - SPEECH_ENGINE.bytes / SPEECH_DOWNLOAD_BYTES) < 1e-9 && SPEECH_ENGINE_SHARE > 0.1 && SPEECH_ENGINE_SHARE < 0.5,
+        'the engine\'s share of the download is its part of the progress');
     assert(SPEECH_ENGINE.url.startsWith('https://cdn.jsdelivr.net/npm/onnxruntime-web@') && SPEECH_ENGINE.url.includes(readFileSync(new URL('../vendor/onnxruntime-web/VERSION', import.meta.url), 'utf8').trim()),
         'the engine is the version whose loader vendor/onnxruntime-web holds');
     assert(/^[0-9a-f]{64}$/.test(SPEECH_ENGINE.sha256), 'and is pinned by its SHA-256');
@@ -55,7 +60,8 @@ function fakeCaches() {
             return {
                 match: async (url) => (store.has(url) ? new Response(store.get(url)) : undefined),
                 put: async (url, response) => { store.set(url, await response.arrayBuffer()); },
-                delete: async (url) => store.delete(url)
+                delete: async (url) => store.delete(url?.url ?? url),
+                keys: async () => [...store.keys()].map((url) => ({ url }))
             };
         },
         async delete(name) { return stores.delete(name); }
@@ -424,7 +430,7 @@ function workerPair(runtimeFor) {
     assert(voice.voice.value.step === 'off' && !stored.size, 'Not now downloads nothing and remembers nothing');
     voice.turnOnVoice();
     await settle();
-    assert(stored.get('forkbuild.voice.enabled') === 'yes' && voice.voice.value.step === 'listening', 'turned on, it loads and listens');
+    assert(stored.get('forkbuild.voice.enabled') === SPEECH_MODEL && voice.voice.value.step === 'listening', 'turned on, for this speech model, it loads and listens');
     voice.toggleVoice();
     await settle();
     await settle();
@@ -433,7 +439,7 @@ function workerPair(runtimeFor) {
     assert(transcribed[0] < 16000 && transcribed[0] >= 6000, 'only what was said goes to the model, the silence round it cut off');
 
     // Nothing said: the model is not asked, and nothing is done.
-    const quiet = useVoiceCommands({ act: (text) => { acted.push(text); return { kind: 'done' }; }, runtime, record: async () => ({ stop: async () => new Float32Array(16000), cancel: async () => {} }), supported: true, language: () => 'en', storage: { getItem: () => 'yes', setItem() {}, removeItem() {} } });
+    const quiet = useVoiceCommands({ act: (text) => { acted.push(text); return { kind: 'done' }; }, runtime, record: async () => ({ stop: async () => new Float32Array(16000), cancel: async () => {} }), supported: true, language: () => 'en', storage: { getItem: () => SPEECH_MODEL, setItem() {}, removeItem() {} } });
     const asked = transcribed.length;
     quiet.toggleVoice();
     await settle();
@@ -444,7 +450,7 @@ function workerPair(runtimeFor) {
         'silence is not sent to the model, and nothing is done');
 
     // What the model makes up from noise is not a command.
-    const madeUp = useVoiceCommands({ act: (text) => { acted.push(text); return { kind: 'done' }; }, runtime: { ...runtime, transcribe: async () => ' ご視聴ありがとうございました。' }, record, supported: true, language: () => 'ja', storage: { getItem: () => 'yes', setItem() {}, removeItem() {} } });
+    const madeUp = useVoiceCommands({ act: (text) => { acted.push(text); return { kind: 'done' }; }, runtime: { ...runtime, transcribe: async () => ' ご視聴ありがとうございました。' }, record, supported: true, language: () => 'ja', storage: { getItem: () => SPEECH_MODEL, setItem() {}, removeItem() {} } });
     const actedBefore = acted.length;
     madeUp.toggleVoice();
     await settle();
@@ -459,7 +465,7 @@ function workerPair(runtimeFor) {
     await voice.removeVoiceModel();
     assert(removed === 1 && !stored.size && voice.voice.value.step === 'removed', 'removing the model turns voice off and deletes it');
 
-    const blocked = useVoiceCommands({ act: () => ({ kind: 'unknown' }), runtime, record: async () => { const error = new Error('denied'); error.name = 'NotAllowedError'; throw error; }, supported: true, language: () => 'en', storage: { getItem: () => 'yes', setItem() {}, removeItem() {} } });
+    const blocked = useVoiceCommands({ act: () => ({ kind: 'unknown' }), runtime, record: async () => { const error = new Error('denied'); error.name = 'NotAllowedError'; throw error; }, supported: true, language: () => 'en', storage: { getItem: () => SPEECH_MODEL, setItem() {}, removeItem() {} } });
     blocked.toggleVoice();
     await settle();
     assert(blocked.voice.value.step === 'failed' && blocked.voice.value.reason === 'microphone', 'a refused microphone says how to allow it');
@@ -467,7 +473,13 @@ function workerPair(runtimeFor) {
     unsupported.toggleVoice();
     assert(unsupported.voice.value.reason === 'unsupported', 'a browser that can\'t says so');
 
-    const on = () => ({ getItem: () => 'yes', setItem() {}, removeItem() {} });
+    const on = () => ({ getItem: () => SPEECH_MODEL, setItem() {}, removeItem() {} });
+
+    // Turned on for an earlier speech model ('yes' was kept for Whisper
+    // tiny): a new model is another download, so it asks again.
+    const earlier = useVoiceCommands({ act: () => ({ kind: 'done' }), runtime, record, supported: true, language: () => 'en', storage: { getItem: () => 'yes', setItem() {}, removeItem() {} } });
+    earlier.toggleVoice();
+    assert(earlier.voice.value.step === 'intro', 'voice turned on for an earlier speech model asks again before downloading this one');
     const slow = useVoiceCommands({ act: () => ({ kind: 'done' }), runtime: { ...runtime, transcribe: async () => { throw new Error(TRANSCRIBE_TIMEOUT); } }, record, supported: true, language: () => 'en', storage: on() });
     slow.toggleVoice();
     await settle();
