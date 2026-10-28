@@ -496,6 +496,39 @@ Adding a language to the user guide: add it to `LANGUAGES` in
 `scripts/check-doc-translations.mjs`, with its out-of-date banner, create
 its folder, and take its pictures.
 
+## Voice building
+
+Voice building hears a command with a small speech model, then reads what it
+heard with the language's own words: the plain commands'
+(`plainCommand.words.*`, `plainCommand.part.*`, `plainCommand.colour.*`),
+World View's (`worldVoice.words.*`) and the Editor's action names. So the
+words a speaker of the language would say have to be among them. A word
+matches with up to two more letters, so add the forms a speaker uses with a
+longer ending (Indonesian's "atapnya" beside "atap").
+
+`scripts/voiceCommandPhrases.mjs` holds eighteen things a player says, in
+each language, and what each should do. `tests/VoicePhrases.test.js` checks
+that each, typed, does that, so `npm run test:node -- VoicePhrases` tells you
+when a change to the words loses one.
+
+How well voice hears a language is measured with recordings of those
+phrases:
+
+1. Record each phrase in a quiet room and a noisy one, with the microphone
+   you use, and save them as
+   `voice-corpus/<code>/<you>-<room>/<phrase id>.webm` (or `.wav`, `.ogg`,
+   `.mp3`, `.m4a`), the phrase ids being those in
+   `scripts/voiceCommandPhrases.mjs`. The folder is ignored by Git: keep
+   people's voices off the repository.
+2. Run `node scripts/evaluate-voice-commands.mjs --language <code>`. It hears
+   them as the app does and says, per speaker and phrase, what was right,
+   what did nothing and what did something else, with what was heard.
+3. Put its numbers, not the recordings, in the pull request.
+
+`node scripts/synthesize-voice-corpus.mjs --piper <piper>` makes a synthetic
+set in every language, for measuring a change before people record. A
+synthetic voice is cleaner than a person, so its numbers are a floor.
+
 ## Adding a language
 
 1. Copy `ui/i18n/messages/en.js` to `ui/i18n/messages/<code>.js`, where
@@ -518,7 +551,11 @@ its folder, and take its pictures.
    (see "Translating the user guide" above): the About page links people to
    the guide in the language they chose. `tests/UserGuideLink.test.js` checks
    that every shipped language has one.
-5. Choose the language on the **Language** page and look around the app.
+5. For voice building, add the language's Whisper name to
+   `WHISPER_LANGUAGES` in `core/voice/Transcript.js`, its phrases to
+   `scripts/voiceCommandPhrases.mjs` and its voices to
+   `scripts/synthesize-voice-corpus.mjs` (see "Voice building" above).
+6. Choose the language on the **Language** page and look around the app.
 
 Right-to-left languages also need the stylesheet moved to logical
 properties (`margin-inline-start` rather than `margin-left`), which isn't
