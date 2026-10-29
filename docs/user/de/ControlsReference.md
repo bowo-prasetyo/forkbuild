@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 2d9d12cc9b830ce1 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 2893221564c37e56 -->
 # Steuerungsreferenz
 
 <!-- languages -->
@@ -24,7 +24,7 @@ der folgenden Bearbeitungsvorgänge nach Namen zu suchen.
 | Linke Maustaste auf leerer Fläche ziehen | Umkreisen |
 | Rechte Maustaste ziehen | Schwenken |
 | Mausrad | Zoomen |
-| `Pos1` | Editor: Kamera zurücksetzen (ignoriert, solange ein Gizmo gezogen wird). Weltansicht: Kamera und Avatar zu Ihrer eigenen aktuellen Welt zurückbringen — siehe [Weltansicht](03-WorldView.md#orientierung-und-orte) |
+| `Pos1` | Editor: Ganzes Bauwerk zeigen, das ganze Bauwerk im Bild (die Startansicht, solange es leer ist), wie **⌂ Ganzes Bauwerk** oben links in der Ansicht (ignoriert, solange ein Gizmo gezogen wird). Weltansicht: Kamera und Avatar zu Ihrer eigenen aktuellen Welt zurückbringen — siehe [Weltansicht](03-WorldView.md#orientierung-und-orte) |
 
 ## Befehlsoberfläche (nur Editor)
 
@@ -182,6 +182,7 @@ diesem Gerät gespeichert und überstehen ein Neuladen — siehe
 | Über einen Griff fahren | Hebt ihn hervor |
 | Einen Achsengriff ziehen (rot X / grün Y / blau Z) | Entlang dieser Achse verschieben (eingerastet) |
 | Die Mittelfläche ziehen (bernsteinfarben) | Frei auf der Bodenebene verschieben |
+| Einen ausgewählten Stein ziehen | Dieselbe freie Verschiebung, für die ganze Auswahl; ein Klick ohne Ziehen wählt nur diesen Stein aus |
 | Den Drehring ziehen (lila) | Um den Drehpunkt drehen (eingerastet) |
 | Loslassen | Übernehmen — genau ein Rückgängig-Schritt |
 | `Esc` während des Ziehens | Abbrechen — nichts ändert sich, kein Verlauf |
@@ -301,6 +302,11 @@ oder schrittweisen Verschieben.
 |---|---|---|
 | `Strg/Cmd+Z` | Rückgängig | Editor und Weltansicht |
 | `Strg/Cmd+Umschalt+Z` oder `Strg/Cmd+Y` | Wiederholen | Editor und Weltansicht |
+
+Im Editor auf einem Computer sind **Rückgängig** und **Wiederholen** auch die
+ersten Schaltflächen der Werkzeugleiste; zeigt man auf eine, sagt sie, welchen
+Schritt sie zurücknimmt oder wiederherstellt. Ein Touchscreen hat sie in
+seiner Touch-Leiste.
 
 In der Weltansicht wirken Rückgängig und Wiederholen auf ihre
 Anmerkungen: Wahrzeichen, Regionsnamen und Tierschmuck. Ihr Feld Verlauf

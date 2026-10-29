@@ -49,6 +49,39 @@
     background: var(--surface-raised);
 }
 
+/* Undo and Redo, first in the row on a screen with a mouse (a touch
+   screen has them in its touch bar), as quiet as New. */
+.toolbar-history {
+    display: flex;
+    gap: 0.25rem;
+    padding-right: 0.5rem;
+    margin-right: 0.25rem;
+    border-right: 1px solid var(--line);
+}
+
+.toolbar-undo,
+.toolbar-redo {
+    padding: 0.3rem 0.6rem;
+    background: transparent;
+    color: var(--ink-soft);
+    border: 1px solid var(--line-strong);
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.toolbar-undo:hover:not(:disabled),
+.toolbar-redo:hover:not(:disabled) {
+    background: var(--surface-raised);
+}
+
+.toolbar-undo:disabled,
+.toolbar-redo:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
 /* 0.9.641 — Editor Document Export. Same visual weight as .toolbar-new
    — a secondary action, never as loud as .toolbar-save/.toolbar-publish
    — since exporting doesn't change the document's own saved/dirty

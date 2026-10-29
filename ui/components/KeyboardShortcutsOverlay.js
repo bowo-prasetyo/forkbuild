@@ -40,9 +40,9 @@ const VIEW_LOCAL_SHORTCUTS = [
 const CAMERA_SHORTCUTS = [
     { label: 'shortcuts.camera.orbit', shortcut: 'shortcuts.camera.orbitGesture' },
     { label: 'shortcuts.camera.pan', shortcut: 'shortcuts.camera.panGesture' },
-    { label: 'shortcuts.camera.zoom', shortcut: 'shortcuts.camera.zoomGesture' },
-    { label: 'shortcuts.camera.reset', shortcut: 'Home' }
+    { label: 'shortcuts.camera.zoom', shortcut: 'shortcuts.camera.zoomGesture' }
 ];
+// Home (See the Whole Build) is a registry action, listed under Interface.
 
 export default {
     name: 'KeyboardShortcutsOverlay',

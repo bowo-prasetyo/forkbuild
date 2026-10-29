@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 2d9d12cc9b830ce1 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 2893221564c37e56 -->
 # Referência de controles
 
 <!-- languages -->
@@ -24,7 +24,7 @@ nome todas as operações de edição abaixo.
 | Arrastar com o botão esquerdo num espaço vazio | Orbitar |
 | Arrastar com o botão direito | Mover a vista |
 | Roda do mouse | Zoom |
-| `Home` | Editor: volta a câmera ao padrão (ignorado enquanto um arraste do gizmo está ativo). Visão do mundo: leva a câmera e o avatar de volta ao seu próprio mundo atual — veja [Visão do mundo](03-WorldView.md#orientação-e-locais) |
+| `Home` | Editor: Ver a construção inteira, a construção inteira à vista (a vista inicial enquanto ela estiver vazia), como faz **⌂ Construção inteira** no canto superior esquerdo da vista (ignorado enquanto um arraste do gizmo está ativo). Visão do mundo: leva a câmera e o avatar de volta ao seu próprio mundo atual — veja [Visão do mundo](03-WorldView.md#orientação-e-locais) |
 
 ## Superfície de comandos (só no Editor)
 
@@ -181,6 +181,7 @@ neste dispositivo e sobrevivem a uma recarga — veja
 | Passar o mouse sobre uma alça | Destaca a alça |
 | Arrastar uma alça de eixo (X vermelho / Y verde / Z azul) | Mover ao longo daquele eixo (com encaixe) |
 | Arrastar o quadrado central (âmbar) | Movimento livre no plano do chão |
+| Arrastar um bloco selecionado | O mesmo movimento livre, para a seleção inteira; um clique sem arrastar seleciona só aquele bloco |
 | Arrastar o anel de rotação (roxo) | Girar em torno do pivô (com encaixe) |
 | Soltar | Confirmar — exatamente um passo de desfazer |
 | `Esc` no meio do arraste | Cancelar — nada muda, nada no histórico |
@@ -297,6 +298,10 @@ deslocar na hora.
 |---|---|---|
 | `Ctrl/Cmd+Z` | Desfazer | Editor e Visão do mundo |
 | `Ctrl/Cmd+Shift+Z` ou `Ctrl/Cmd+Y` | Refazer | Editor e Visão do mundo |
+
+No Editor, no computador, **Desfazer** e **Refazer** também são os primeiros
+botões da barra de ferramentas; ao apontar para um, ele diz qual passo
+desfaz ou refaz. Uma tela sensível ao toque os tem na barra de toque.
 
 Na Visão do mundo, desfazer e refazer valem para as edições de anotação
 dela: marcos, nomes de regiões e decorações de animais. O painel Histórico

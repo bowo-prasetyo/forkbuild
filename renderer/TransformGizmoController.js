@@ -98,16 +98,34 @@ export class TransformGizmoController {
     }
 
     onPointerDown(screenX, screenY, selection) {
-        if (!this._gestureService || this._drag || !this._gizmoRenderer.visible) {
-            return false;
-        }
-        if (!selection || selection.isEmpty) {
+        if (!this._canBeginDrag(selection)) {
             return false;
         }
         const handleId = this._pickHandle(screenX, screenY);
         if (!handleId) {
             return false;
         }
+        return this._beginDrag(handleId, screenX, screenY, selection);
+    }
+
+    // A press on the selection itself rather than on a handle: drags it over
+    // the ground as the free (centre) handle does, so a selected brick moves
+    // when dragged, as a placed build does (finding P1-4 of
+    // docs/reviews/EditorUsability-2026-10-29.md). The caller decides that the
+    // press is on the selection.
+    onSelectionPointerDown(screenX, screenY, selection) {
+        if (!this._canBeginDrag(selection)) {
+            return false;
+        }
+        return this._beginDrag('free', screenX, screenY, selection);
+    }
+
+    _canBeginDrag(selection) {
+        return !!this._gestureService && !this._drag && this._gizmoRenderer.visible
+            && !!selection && !selection.isEmpty;
+    }
+
+    _beginDrag(handleId, screenX, screenY, selection) {
         const mode = handleId === 'rotate' ? 'rotate' : 'translate';
         const axis = handleId === 'rotate' ? 'y' : (handleId === 'free' ? null : handleId);
         const gestureState = this._gestureService.beginTransformGesture(selection, { mode, axis });

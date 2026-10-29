@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 2d9d12cc9b830ce1 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 2893221564c37e56 -->
 # Referensi Kontrol
 
 <!-- languages -->
@@ -23,7 +23,7 @@ operasi pengeditan di bawah ini berdasarkan nama.
 | Seret kiri di ruang kosong | Orbit |
 | Seret kanan | Geser (pan) |
 | Roda gulir | Zoom |
-| `Home` | Editor: atur ulang kamera (diabaikan selama gizmo sedang diseret). Tampilan Dunia: kembalikan kamera dan avatar ke dunia Anda sendiri saat ini — lihat [Tampilan Dunia](03-WorldView.md#orientasi-dan-lokasi) |
+| `Home` | Editor: Lihat Seluruh Bangunan, seluruh bangunan terlihat (tampilan awal selama masih kosong), seperti **⌂ Seluruh bangunan** di kiri atas tampilan (diabaikan selama gizmo sedang diseret). Tampilan Dunia: kembalikan kamera dan avatar ke dunia Anda sendiri saat ini — lihat [Tampilan Dunia](03-WorldView.md#orientasi-dan-lokasi) |
 
 ## Perintah (hanya Editor)
 
@@ -179,6 +179,7 @@ disimpan di perangkat ini dan tetap ada setelah dimuat ulang — lihat
 | Arahkan penunjuk ke pegangan | Menyorotnya |
 | Seret pegangan sumbu (X merah / Y hijau / Z biru) | Memindahkan sepanjang sumbu itu (dengan snapping) |
 | Seret bantalan tengah (kuning tua) | Memindahkan bebas di bidang tanah |
+| Seret balok yang dipilih | Perpindahan bebas yang sama, untuk seluruh pilihan; klik tanpa menyeret hanya memilih balok itu |
 | Seret cincin rotasi (ungu) | Memutar di sekitar poros (dengan snapping) |
 | Lepaskan | Menerapkan — tepat satu langkah urung |
 | `Esc` di tengah seretan | Membatalkan — tidak ada yang berubah, tidak ada riwayat |
@@ -296,6 +297,10 @@ didorong.
 |---|---|---|
 | `Ctrl/Cmd+Z` | Urungkan | Editor dan Tampilan Dunia |
 | `Ctrl/Cmd+Shift+Z` atau `Ctrl/Cmd+Y` | Ulangi | Editor dan Tampilan Dunia |
+
+Di Editor pada komputer, **Urungkan** dan **Ulangi** juga merupakan tombol
+pertama di bilah alat; saat ditunjuk, masing-masing menyebut langkah mana yang
+diurungkan atau diulanginya. Layar sentuh memilikinya di bilah sentuhnya.
 
 Di Tampilan Dunia, urungkan dan ulangi berlaku untuk suntingan anotasinya:
 penanda, nama wilayah, dan hiasan hewan. Panel Riwayatnya (lihat

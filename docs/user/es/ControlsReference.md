@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 2d9d12cc9b830ce1 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 2893221564c37e56 -->
 # Referencia de controles
 
 <!-- languages -->
@@ -25,7 +25,7 @@ por su nombre todas las operaciones de edición de abajo.
 | Arrastrar con el botón izquierdo en un espacio vacío | Orbitar |
 | Arrastrar con el botón derecho | Desplazar la vista |
 | Rueda del mouse | Zoom |
-| `Inicio` | Editor: restablecer la cámara (se ignora mientras se arrastra un gizmo). Vista del mundo: devolver la cámara y el avatar a su propio mundo actual; consulte la [Vista del mundo](03-WorldView.md#orientación-y-ubicaciones) |
+| `Inicio` | Editor: Ver toda la construcción, toda la construcción a la vista (la vista inicial mientras está vacía), como hace **⌂ Toda la construcción** arriba a la izquierda de la vista (se ignora mientras se arrastra un gizmo). Vista del mundo: devolver la cámara y el avatar a su propio mundo actual; consulte la [Vista del mundo](03-WorldView.md#orientación-y-ubicaciones) |
 
 ## Superficie de comandos (solo en el Editor)
 
@@ -184,6 +184,7 @@ en este dispositivo y se conservan al recargar: consulte
 | Pasar el cursor sobre un control | Lo resalta |
 | Arrastrar un control de eje (X rojo / Y verde / Z azul) | Mover a lo largo de ese eje (con ajuste) |
 | Arrastrar el control central (ámbar) | Mover libremente sobre el plano del suelo |
+| Arrastrar un bloque seleccionado | El mismo movimiento libre, para toda la selección; un clic sin arrastrar selecciona solo ese bloque |
 | Arrastrar el anillo de rotación (violeta) | Girar alrededor del pivote (con ajuste) |
 | Soltar | Confirmar: exactamente un paso de deshacer |
 | `Esc` a mitad del arrastre | Cancelar: no cambia nada, sin historial |
@@ -302,6 +303,10 @@ arrastrarlo o desplazarlo de inmediato.
 |---|---|---|
 | `Ctrl/Cmd+Z` | Deshacer | Editor y Vista del mundo |
 | `Ctrl/Cmd+Mayús+Z` o `Ctrl/Cmd+Y` | Rehacer | Editor y Vista del mundo |
+
+En el Editor, en un ordenador, **Deshacer** y **Rehacer** también son los
+primeros botones de la barra de herramientas; al señalarlos, cada uno dice
+qué paso deshace o rehace. Una pantalla táctil los tiene en su barra táctil.
 
 En la Vista del mundo, deshacer y rehacer se aplican a sus ediciones de
 anotación: hitos, nombres de regiones y decoraciones animales. Su panel

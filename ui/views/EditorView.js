@@ -80,6 +80,8 @@ import { editorEntryContextFromQuery } from '../../core/document/EditorEntryCont
 import { usePostPublishDistribution } from './editorView/usePostPublishDistribution.js';
 import { useBuildNoteSend } from './editorView/useBuildNoteSend.js';
 import { useSelectionActions } from './editorView/useSelectionActions.js';
+import { bringToTop, SELECTION_CARD } from './editorView/sidebarScroll.js';
+import { historyButtons as historyButtonsFor } from './editorView/historyButtons.js';
 import { useStructureLibrary } from './editorView/useStructureLibrary.js';
 import { useBlueprintExchange } from './editorView/useBlueprintExchange.js';
 import { ExportAllDocumentsUseCase, ImportDocumentBundleUseCase } from '../../application/document/DocumentBundle.js';
@@ -144,7 +146,26 @@ export default {
                 @export-all-documents="exportAllDocuments"
                 @import-document="importDocument"
                 @new-document="openNewDocumentDialog"
-            />
+            >
+                <template v-if="!touchInput" #history>
+                    <div class="toolbar-history" role="group" :aria-label="t('toolbar.history')">
+                        <button
+                            type="button"
+                            class="toolbar-undo"
+                            :disabled="!historyButtons.undo.enabled"
+                            :title="historyButtons.undo.title"
+                            @click="runAction('history.undo')"
+                        ><span aria-hidden="true">↶</span> {{ t('toolbar.undo') }}</button>
+                        <button
+                            type="button"
+                            class="toolbar-redo"
+                            :disabled="!historyButtons.redo.enabled"
+                            :title="historyButtons.redo.title"
+                            @click="runAction('history.redo')"
+                        ><span aria-hidden="true">↷</span> {{ t('toolbar.redo') }}</button>
+                    </div>
+                </template>
+            </Toolbar>
             <RecoveryBanner
                 :status="recoveryStatus"
                 @recover="recoverDocument"
@@ -273,7 +294,7 @@ export default {
                         <button
                             :class="['tool-btn', { 'tool-btn--active': activeTool === ToolId.SELECT }]"
                             :aria-pressed="activeTool === ToolId.SELECT ? 'true' : 'false'"
-                            @click="setTool(ToolId.SELECT)"
+                            @click="selectFromSwitcher"
                         >
                             {{ t('editor.select') }}
                         </button>
@@ -343,6 +364,7 @@ export default {
                         :is-structure-placement-selection="selectionIsStructurePlacement"
                         :selection-summary="selectionSummary"
                         :recolor="recolorSelection"
+                        :touch="touchInput"
                         :apply-numeric="applyNumericTransform"
                         :align="alignSelection"
                         :distribute="distributeSelection"
@@ -360,6 +382,7 @@ export default {
                         :pinned-title="pinnedTitle"
                         :preview-service="libraryPreviewService"
                         :brick-keys="recentBrickKeys"
+                        :selection-active="selectionCount > 0 && !selectionIsStructurePlacement"
                         @place="setTool(ToolId.PLACE)"
                         @fork="forkStructure"
                         @place-structure="copyStructureIntoDocument"
@@ -433,6 +456,13 @@ export default {
                         @stop="cancelTouchPlacement"
                     />
                     <div class="editor-view-tools">
+                        <!-- See the Whole Build (Home): a way back from a view turned too far. -->
+                        <button
+                            type="button"
+                            class="action-btn editor-whole-build"
+                            :title="t('editor.wholeBuildHint')"
+                            @click="runAction('camera.wholeBuild')"
+                        ><span aria-hidden="true">⌂</span> {{ t('editor.wholeBuild') }}</button>
                         <!-- See inside: the build cut away above its ground floor. -->
                         <button
                             type="button"
@@ -1039,12 +1069,24 @@ export default {
             const tool = toolForPlace(activeTool.value);
             if (tool) setTool(tool);
             await nextTick();
-            const scroller = sidebarScroll.value;
-            const library = scroller && scroller.querySelector('.build-library');
-            if (!library) return;
-            const offset = library.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
-            if (offset > 0) scroller.scrollTop += offset;
+            bringToTop(sidebarScroll.value, '.build-library', { onlyDown: true });
         }
+
+        // Select from the tool switch, and any new selection: bring the card
+        // for what is selected into view, since Place left the sidebar
+        // scrolled down to the library (sidebarScroll.js).
+        async function selectFromSwitcher() {
+            setTool(ToolId.SELECT);
+            await nextTick();
+            bringToTop(sidebarScroll.value, SELECTION_CARD, { onlyIfHidden: true });
+        }
+        const selectionKind = computed(() => {
+            if (selectionCount.value === 0) return null;
+            return selectionIsStructurePlacement.value ? 'placement' : 'bricks';
+        });
+        watch(selectionKind, (kind, was) => {
+            if (kind && kind !== was) bringToTop(sidebarScroll.value, SELECTION_CARD, { onlyIfHidden: true });
+        }, { flush: 'post' });
 
         function alignSelection(mode) {
             editorSession.alignSelection(mode);
@@ -1250,6 +1292,9 @@ export default {
         } = useSelectionActions({
             documentVersion, editorContext, editorSession, feedback, selectedPlacementInfo, selectionSummary
         });
+        // Any edit (a recolour from the sidebar or the palette, an undo) can
+        // change the selection's colour and bounds, which the card shows.
+        watch(documentVersion, () => refreshSelectionSummary());
 
         // A built-in structure's name in the chosen language, for "Remixed
         // from …"; null for one this registry doesn't hold (a personal
@@ -1566,6 +1611,13 @@ export default {
         };
         function closePalette() {
             paletteOpen.value = false;
+        }
+
+        // The toolbar's Undo and Redo (historyButtons.js).
+        const historyButtons = computed(() => historyButtonsFor(actionRegistry, getActionContext()));
+        // A registry action from a button of the view's own.
+        function runAction(id) {
+            actionRegistry.execute(id, getActionContext());
         }
 
         // Touch screens get EditorTouchActionBar. On a phone-width screen the sidebar
@@ -2249,6 +2301,9 @@ export default {
             onSaveMetadata,
             setTool,
             placeFromSwitcher,
+            historyButtons,
+            runAction,
+            selectFromSwitcher,
             sidebarScroll,
             alignSelection,
             distributeSelection,

@@ -91,6 +91,17 @@ export const selectionEditingMethods = {
         return true;
     },
 
+    // The whole build in view (frameDocument()), or the camera's starting view
+    // when there is nothing to frame. Returns false before a render session
+    // exists.
+    showWholeBuild() {
+        if (!this._session) return false;
+        if (this.frameDocument()) return true;
+        if (typeof this._session.resetCameraView !== 'function') return false;
+        this._session.resetCameraView();
+        return true;
+    },
+
     // Frames the camera on the whole open document, from the same corner a
     // thumbnail is drawn from and far enough back to see all of it, so a
     // ready-made build opened from Home or New is seen whole however large it

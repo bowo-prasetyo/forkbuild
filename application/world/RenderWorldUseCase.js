@@ -28,9 +28,15 @@ import { CoBuilderRenderer } from '../../renderer/CoBuilderRenderer.js';
 // imports application/. As of 0.1.47 the pointer move/up functions also
 // carry modifier state down to the gesture transaction (precision mode)
 // and return the service's gesture feedback up to the views.
+export const EDITOR_MAX_POLAR_ANGLE = Math.PI / 2 - 0.15;
+
 export class RenderWorldUseCase {
     execute(container, eventBus, registry, editorEventBus, { gestureService = null, structureResolver = null } = {}) {
-        const renderer = new Renderer(container);
+        // Home is the Editor's See the Whole Build (EditorActionRegistry's
+        // camera.wholeBuild), not the camera's own reset. The camera stops
+        // about 9° above the ground: lower, the ground is hardly drawn and
+        // nothing can be placed (docs/reviews/EditorUsability-2026-10-29.md, P1-4).
+        const renderer = new Renderer(container, { cameraResetKey: null, cameraMaxPolarAngle: EDITOR_MAX_POLAR_ANGLE });
         const worldRenderer = new WorldRenderer(renderer, registry, undefined, undefined, structureResolver, TransformMath);
         worldRenderer.subscribe(eventBus);
         // Animal decorations idle in place in the Editor too, on the same
@@ -119,6 +125,7 @@ export class RenderWorldUseCase {
             // (renderer/CameraState.js), read/written through this same
             // narrow handle, in both render pipelines.
             getCameraState: () => renderer.cameraController.getState(),
+            resetCameraView: () => renderer.resetCameraView(),
             setCameraState: (state) => renderer.cameraController.setState(state),
             showGizmo: (pivot, bounds) => transformGizmoController.show(pivot, bounds),
             hideGizmo: () => transformGizmoController.hide(),
@@ -126,6 +133,8 @@ export class RenderWorldUseCase {
                 transformGizmoController.hitTest(screenX, screenY),
             gizmoPointerDown: (screenX, screenY, selection) =>
                 transformGizmoController.onPointerDown(screenX, screenY, selection),
+            gizmoSelectionPointerDown: (screenX, screenY, selection) =>
+                transformGizmoController.onSelectionPointerDown(screenX, screenY, selection),
             gizmoPointerMove: (screenX, screenY, selection, modifiers = null) =>
                 transformGizmoController.onPointerMove(screenX, screenY, selection, modifiers),
             gizmoPointerUp: (screenX, screenY, selection, modifiers = null) =>

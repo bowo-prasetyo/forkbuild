@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: fbeac6898411907a -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: e99befa5a4afb6da -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -28,7 +28,9 @@ organiser votre construction avec des groupes.
 └──────────────────────┴──────────────────────────────────────┘
 ```
 
-- **Barre d’outils** — d’abord **Enregistrer**, **Publier** et
+- **Barre d’outils** — sur un ordinateur, d’abord **Annuler** et
+  **Rétablir** (un écran tactile les a dans sa barre tactile), puis
+  **Enregistrer**, **Publier** et
   **Nouveau**, puis **Fichier**, un menu avec **Exporter**, **Modèle 3D** et
   **Importer** ; rouvrir les constructions récentes, et ouvrir le panneau
   **⌨ Raccourcis** (aussi `?`).
@@ -100,7 +102,9 @@ jamais de boutons qui ne peuvent encore rien faire :
   (cliquez sur l’un d’eux pour sélectionner ses briques).
 - **Des briques sélectionnées** — combien, où elles sont, et les actions
   courantes : **Pivoter ↻ / ↺**, **Dupliquer**, **Supprimer**, **Copier**,
-  **Coller**, **Couleur**, **Centrer** et **Désélectionner**. Les outils
+  **Coller**, **Peindre la sélection**, **Centrer** et **Désélectionner**.
+  Quand vous sélectionnez quelque chose, la barre latérale amène cette
+  carte en vue, même depuis le bas de la Bibliothèque de construction. Les outils
   moins fréquents sont repliés dans trois sections en dessous : **Position
   et rotation exactes**, **Aligner, répartir, répéter**, et **Groupes et
   plan**.
@@ -277,6 +281,13 @@ Avec une ou plusieurs briques sélectionnées :
 Quand vous sélectionnez plusieurs briques, elles pivotent autour de leur
 **centre commun**, si bien qu’une section entière tourne d’un seul bloc.
 
+**Faites glisser une brique sélectionnée** pour déplacer toute la sélection
+sur le sol, calée sur la grille, comme le fait le carré central du
+manipulateur : une seule étape à annuler, et un déplacement qui tomberait
+sur une autre brique revient en arrière. Un clic dessus sans glisser ne
+sélectionne que cette brique, et un glissement ailleurs fait tourner la
+caméra.
+
 **T** couche chaque brique sélectionnée sur sa face suivante, là où elle
 est : un poteau s’allonge en poutre, un mur devient un sol, une pente se
 retourne en surplomb. Chaque brique garde la hauteur de sa base, et la
@@ -292,13 +303,18 @@ vôtre :
 
 - **Avant de placer** — une fois une brique sélectionnée dans l’onglet
   **Briques** de la Bibliothèque de construction, cliquez sur son nuancier
-  **Couleur** et choisissez une couleur. Toutes les briques que vous
+  **Couleur des nouvelles briques** et choisissez une couleur. Toutes les briques que vous
   placez ensuite l’utilisent, et le fantôme de placement la prévisualise.
   Choisir un autre type de brique revient à la couleur par défaut de ce
   type, jusqu’à ce que vous en choisissiez une de nouveau.
 - **Après avoir placé** — sélectionnez une ou plusieurs briques et
-  utilisez le nuancier **Couleur** de la section **Sélection** pour les
-  recolorer toutes d’un coup. Chaque changement s’annule (`Ctrl/Cmd+Z`)
+  utilisez le nuancier **Peindre la sélection** de la section **Sélection**
+  pour les recolorer toutes d’un coup. Il s’ouvre sur la couleur des
+  briques, et la couleur du village qu’elles ont est marquée. Tant que des
+  briques sont sélectionnées, la couleur des nouvelles briques de la
+  bibliothèque s’efface, si bien que les couleurs en vue sont celles qui les
+  peignent ; une brique sélectionnée est cernée de bleu et garde sa propre
+  couleur, pour que vous voyiez ce que vous avez choisi. Chaque changement s’annule (`Ctrl/Cmd+Z`)
   comme n’importe quelle autre modification. Le nuancier n’est pas
   proposé pour une instance de structure sélectionnée — modifiez plutôt
   la construction de la structure (voir
@@ -382,6 +398,10 @@ arrière :
 |---|---|
 | **Ctrl/Cmd + Z** | Annuler la dernière action |
 | **Ctrl/Cmd + Y** *(ou Ctrl/Cmd+Maj+Z)* | La rétablir |
+
+Sur un ordinateur, **Annuler** et **Rétablir** sont aussi les premiers
+boutons de la barre d’outils. Pointez-en un pour voir quelle étape il
+annule ou rétablit.
 
 Déplacer dix briques compte pour **une seule** étape d’annulation,
 l’annulation reste donc gérable même sur de grosses constructions.
@@ -934,9 +954,13 @@ il reste chargé quand vous passez de l’une à l’autre.
 
 - **Glisser** — orbiter autour de la scène
 - **Molette** — zoomer et dézoomer
-- **Origine** — remettre la caméra dans la vue par défaut
+- **Origine**, ou **⌂ Toute la construction** en haut à gauche de la vue —
+  voir toute la construction (la vue de départ tant qu’elle est vide). Dans
+  la palette de commandes, c’est **Voir toute la construction**.
 
-Une construction s’ouvre vue d’en haut, en biais, cadrée en entier.
+Une construction s’ouvre vue d’en haut, en biais, cadrée en entier. La
+caméra s’arrête un peu au-dessus du sol, pour que la construction et le sol
+où vous placez restent en vue.
 
 ### Voir l’intérieur
 

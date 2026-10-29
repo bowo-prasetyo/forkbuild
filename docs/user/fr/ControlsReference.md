@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 2d9d12cc9b830ce1 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 2893221564c37e56 -->
 # Référence des commandes
 
 <!-- languages -->
@@ -29,7 +29,7 @@ Les touches sont désignées par leur nom sur un clavier français : `Maj`
 | Glisser avec le bouton gauche dans le vide | Orbiter |
 | Glisser avec le bouton droit | Se déplacer latéralement |
 | Molette | Zoomer |
-| `Origine` | Éditeur : réinitialiser la caméra (ignoré pendant un glissement du manipulateur). Vue du Monde : ramener la caméra et l’avatar à votre propre monde actuel — voir [Vue du Monde](03-WorldView.md#orientation-et-emplacements) |
+| `Origine` | Éditeur : Voir toute la construction, toute la construction en vue (la vue de départ tant qu’elle est vide), comme **⌂ Toute la construction** en haut à gauche de la vue (ignoré pendant un glissement du manipulateur). Vue du Monde : ramener la caméra et l’avatar à votre propre monde actuel — voir [Vue du Monde](03-WorldView.md#orientation-et-emplacements) |
 
 ## Commandes générales (Éditeur uniquement)
 
@@ -189,6 +189,7 @@ enregistrés sur cet appareil et survivent à un rechargement — voir
 | Survoler une poignée | La met en surbrillance |
 | Faire glisser une poignée d’axe (X rouge / Y vert / Z bleu) | Déplacer le long de cet axe (aimanté) |
 | Faire glisser le pavé central (ambre) | Déplacement libre sur le plan du sol |
+| Faire glisser une brique sélectionnée | Le même déplacement libre, pour toute la sélection ; un clic sans glisser ne sélectionne que cette brique |
 | Faire glisser l’anneau de rotation (violet) | Pivoter autour du pivot (aimanté) |
 | Relâcher | Valider — exactement une étape d’annulation |
 | `Échap` en cours de glissement | Annuler — rien ne change, rien dans l’historique |
@@ -309,6 +310,10 @@ immédiatement.
 |---|---|---|
 | `Ctrl/Cmd+Z` | Annuler | Éditeur et Vue du Monde |
 | `Ctrl/Cmd+Maj+Z` ou `Ctrl/Cmd+Y` | Rétablir | Éditeur et Vue du Monde |
+
+Dans l’Éditeur, sur un ordinateur, **Annuler** et **Rétablir** sont aussi les
+premiers boutons de la barre d’outils ; pointé, chacun dit quelle étape il
+annule ou rétablit. Un écran tactile les a dans sa barre tactile.
 
 Dans la Vue du Monde, annuler et rétablir s’appliquent à ses
 modifications d’annotation : points de repère, noms de régions et

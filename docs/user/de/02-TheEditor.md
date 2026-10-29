@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: fbeac6898411907a -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: e99befa5a4afb6da -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -28,7 +28,9 @@ ordnen.
 └──────────────────────┴──────────────────────────────────────┘
 ```
 
-- **Werkzeugleiste** — zuerst **Speichern**, **Veröffentlichen** und
+- **Werkzeugleiste** — auf einem Computer zuerst **Rückgängig** und
+  **Wiederholen** (ein Touchscreen hat sie in seiner Touch-Leiste), dann
+  **Speichern**, **Veröffentlichen** und
   **Neu**, dann **Datei**, ein Menü mit **Exportieren**, **3D-Modell** und
   **Importieren**; zuletzt geöffnete wieder öffnen und die Übersicht
   **⌨ Tastenkürzel** öffnen (auch `?`).
@@ -97,7 +99,9 @@ Schaltflächen zeigt, die noch nichts tun können:
   Sie auf eine, um ihre Steine auszuwählen).
 - **Steine ausgewählt** — wie viele, wo sie sind, und die alltäglichen
   Aktionen: **Drehen ↻ / ↺**, **Duplizieren**, **Löschen**, **Kopieren**,
-  **Einfügen**, **Farbe**, **Fokussieren** und **Abwählen**. Seltener
+  **Einfügen**, **Auswahl färben**, **Fokussieren** und **Abwählen**. Wenn
+  Sie etwas auswählen, scrollt die Seitenleiste diese Karte ins Bild, auch
+  von weit unten in der Baubibliothek. Seltener
   gebrauchte Werkzeuge sind in drei Abschnitte darunter eingeklappt:
   **Genaue Position & Drehung**, **Ausrichten, verteilen, wiederholen**
   und **Gruppen & Bauplan**.
@@ -274,6 +278,13 @@ Mit einem oder mehreren ausgewählten Steinen:
 Wenn Sie mehrere Steine auswählen, drehen sie sich um ihren **gemeinsamen
 Mittelpunkt**, sodass ein ganzer Abschnitt als eine Einheit schwenkt.
 
+**Ziehen Sie einen ausgewählten Stein**, um die ganze Auswahl über den
+Boden zu verschieben, am Raster eingerastet, wie mit dem mittleren Feld des
+Gizmos: ein Schritt zum Rückgängigmachen, und eine Verschiebung, die auf
+einem anderen Stein landen würde, springt zurück. Ein Klick darauf ohne
+Ziehen wählt nur diesen Stein aus, und Ziehen an jeder anderen Stelle dreht
+die Kamera.
+
 **T** kippt jeden ausgewählten Stein an Ort und Stelle auf seine nächste
 Seite: Ein Pfosten liegt dann als Balken, eine Wand wird zum Boden, eine
 Schräge steht kopf als Überhang. Jeder Stein behält die Höhe seiner
@@ -289,14 +300,19 @@ Jede Steinart hat ihre eigene Standardfarbe, aber Sie können Ihre eigene
 wählen:
 
 - **Vor dem Platzieren** — sobald im Reiter **Steine** der Baubibliothek
-  ein Stein ausgewählt ist, klicken Sie auf sein Farbfeld **Farbe** und
+  ein Stein ausgewählt ist, klicken Sie auf sein Farbfeld **Farbe neuer Steine** und
   wählen Sie eine Farbe. Jeder Stein, den Sie danach platzieren, verwendet
   sie, und der Platziergeist zeigt sie bereits an. Wählen Sie eine andere
   Steinart, gilt wieder deren eigene Standardfarbe, bis Sie erneut eine
   wählen.
 - **Nach dem Platzieren** — wählen Sie einen oder mehrere Steine aus und
-  nutzen Sie das Farbfeld **Farbe** im Abschnitt **Auswahl**, um sie alle
-  auf einmal umzufärben. Jede Änderung lässt sich wie jede andere
+  nutzen Sie das Farbfeld **Auswahl färben** im Abschnitt **Auswahl**, um
+  sie alle auf einmal umzufärben. Es öffnet sich mit der Farbe der Steine,
+  und die Dorffarbe, die sie haben, ist markiert. Solange Steine ausgewählt
+  sind, tritt die Farbe neuer Steine der Bibliothek zur Seite, sodass die
+  sichtbaren Farben die sind, die sie färben; ein ausgewählter Stein ist
+  blau umrandet und behält seine eigene Farbe, sodass Sie sehen, was Sie
+  gewählt haben. Jede Änderung lässt sich wie jede andere
   Bearbeitung rückgängig machen (`Strg/Cmd+Z`). Für eine ausgewählte
   Strukturinstanz wird das Farbfeld nicht angeboten — bearbeiten Sie
   stattdessen das eigene Bauwerk der Struktur (siehe
@@ -375,6 +391,10 @@ Jede Änderung wird festgehalten, sodass Sie immer zurückgehen können:
 |---|---|
 | **Strg/Cmd + Z** | Die letzte Aktion rückgängig machen |
 | **Strg/Cmd + Y** *(oder Strg/Cmd+Umschalt+Z)* | Sie wiederholen |
+
+Auf einem Computer sind **Rückgängig** und **Wiederholen** auch die ersten
+Schaltflächen der Werkzeugleiste. Zeigen Sie auf eine, um zu sehen, welchen
+Schritt sie zurücknimmt oder wiederherstellt.
 
 Zehn Steine zu verschieben zählt als **ein** Rückgängig-Schritt, sodass
 Rückgängig auch bei großen Bauwerken überschaubar bleibt.
@@ -915,9 +935,13 @@ stockt, und es bleibt geladen, wenn Sie zwischen beiden wechseln.
 
 - **Ziehen** — um die Szene kreisen
 - **Scrollen** — hinein- und herauszoomen
-- **Pos1** — die Kamera auf die Standardansicht zurücksetzen
+- **Pos1**, oder **⌂ Ganzes Bauwerk** oben links in der Ansicht — das
+  ganze Bauwerk sehen (die Startansicht, solange es leer ist). In der
+  Befehlspalette heißt es **Ganzes Bauwerk zeigen**.
 
-Ein Bauwerk öffnet sich schräg von oben gesehen, ganz im Bild.
+Ein Bauwerk öffnet sich schräg von oben gesehen, ganz im Bild. Die Kamera
+hält ein wenig über dem Boden an, sodass das Bauwerk und der Boden, auf den
+Sie setzen, im Bild bleiben.
 
 ### Hineinsehen
 

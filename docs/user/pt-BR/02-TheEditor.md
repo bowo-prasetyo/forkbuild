@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: fbeac6898411907a -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: e99befa5a4afb6da -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -27,7 +27,9 @@ selecionar e transformar blocos e como organizar sua construção com grupos.
 └──────────────────────┴──────────────────────────────────────┘
 ```
 
-- **Barra de ferramentas** — primeiro **Salvar**, **Publicar** e **Novo**,
+- **Barra de ferramentas** — no computador, primeiro **Desfazer** e
+  **Refazer** (uma tela sensível ao toque os tem na barra de toque), depois
+  **Salvar**, **Publicar** e **Novo**,
   depois **Arquivo**, um menu com **Exportar**, **Modelo 3D** e **Importar**;
   reabrir os recentes e abrir a sobreposição **⌨ Atalhos** (também `?`).
 - **Ferramentas** — alterne entre **Selecionar** (`1`) e **Colocar** (`2`).
@@ -95,7 +97,9 @@ ainda não podem fazer nada:
   blocos dele).
 - **Blocos selecionados** — quantos são, onde estão, e as ações do dia a
   dia: **Girar ↻ / ↺**, **Duplicar**, **Excluir**, **Copiar**, **Colar**,
-  **Cor**, **Focar** e **Desmarcar**. As ferramentas menos usadas ficam
+  **Pintar seleção**, **Focar** e **Desmarcar**. Quando você seleciona algo,
+  a barra lateral rola este cartão até ficar à vista, mesmo lá de baixo da
+  Biblioteca de construção. As ferramentas menos usadas ficam
   recolhidas em três seções logo abaixo: **Posição e rotação exatas**,
   **Alinhar, distribuir, repetir** e **Grupos e planta**.
 - **Uma instância de estrutura selecionada** — no lugar disso, um cartão
@@ -266,6 +270,12 @@ Com um ou mais blocos selecionados:
 Quando você seleciona vários blocos, eles giram em torno do **centro em
 comum**, então uma seção inteira gira como uma unidade.
 
+**Arraste um bloco selecionado** para mover a seleção inteira pelo chão,
+encaixada na grade, como faz o quadrado central do gizmo: um passo só para
+desfazer, e um movimento que cairia sobre outro bloco volta atrás. Um clique
+nele sem arrastar seleciona só aquele bloco, e arrastar em qualquer outro
+lugar gira a câmera.
+
 **T** deita cada bloco selecionado sobre a próxima face, onde ele está:
 um poste deita como uma viga, uma parede vira piso, uma rampa vira de
 cabeça para baixo como um beiral. Cada bloco mantém a altura da base, e o
@@ -279,12 +289,17 @@ anteriores) mostram de pé os blocos tombados.
 Cada tipo de bloco tem sua cor padrão, mas você pode escolher a sua:
 
 - **Antes de colocar** — com um bloco selecionado na guia **Blocos** da
-  Biblioteca de construção, clique na amostra **Cor** dele e escolha uma
+  Biblioteca de construção, clique na amostra **Cor dos blocos novos** dele e escolha uma
   cor. Todos os blocos que você colocar a partir daí a usam, e o fantasma de
   posicionamento mostra uma prévia dela. Escolher outro tipo de bloco volta
   à cor padrão desse tipo até você escolher uma de novo.
 - **Depois de colocar** — selecione um ou mais blocos e use a amostra
-  **Cor** da seção **Seleção** para mudar a cor de todos de uma vez. Cada
+  **Pintar seleção** da seção **Seleção** para mudar a cor de todos de uma
+  vez. Ela abre na cor dos blocos, e a cor da vila que eles têm fica
+  marcada. Enquanto há blocos selecionados, a cor dos blocos novos da
+  biblioteca sai do caminho, então as cores à vista são as que os pintam; um
+  bloco selecionado ganha um contorno azul e mantém a própria cor, para você
+  ver o que escolheu. Cada
   mudança pode ser desfeita (`Ctrl/Cmd+Z`) como qualquer outra edição. A
   amostra não aparece para uma seleção de instância de estrutura — edite o
   própria construção da estrutura (veja
@@ -361,6 +376,10 @@ Toda mudança é registrada, então você sempre pode voltar:
 |---|---|
 | **Ctrl/Cmd + Z** | Desfazer a última ação |
 | **Ctrl/Cmd + Y** *(ou Ctrl/Cmd+Shift+Z)* | Refazer |
+
+No computador, **Desfazer** e **Refazer** também são os primeiros botões da
+barra de ferramentas. Aponte para um para ver qual passo ele desfaz ou
+refaz.
 
 Mover dez blocos conta como **um** passo de desfazer, então desfazer
 continua prático mesmo em construções grandes.
@@ -874,9 +893,13 @@ continua carregado quando você passa de uma para a outra.
 
 - **Arrastar** — orbitar em torno da cena
 - **Rolar** — aproximar e afastar
-- **Home** — voltar a câmera à visualização padrão
+- **Home**, ou **⌂ Construção inteira** no canto superior esquerdo da vista —
+  ver a construção inteira (a vista inicial enquanto ela estiver vazia). Na
+  paleta de comandos, é **Ver a construção inteira**.
 
-Uma construção abre vista de cima, em ângulo, enquadrada inteira.
+Uma construção abre vista de cima, em ângulo, enquadrada inteira. A câmera
+para um pouco acima do chão, para que a construção e o chão onde você coloca
+continuem à vista.
 
 ### Ver por dentro
 

@@ -200,6 +200,9 @@ export class EditorSession {
         this._placePress = null;
         // A Shift+drag row being laid while placing (pointerInputMethods.js).
         this._rowPress = null;
+        // A mouse or pen press on a selected brick, a drag of the selection
+        // until it is released as a click (pointerInputMethods.js).
+        this._selectionPress = null;
         // A finger held still, about to pick what's under it (pointerInputMethods.js).
         this._touchHold = null;
         // The last touch tap while placing, where the touch bar's Place acts.

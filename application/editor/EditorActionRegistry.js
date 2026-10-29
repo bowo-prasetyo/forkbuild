@@ -683,6 +683,18 @@ export function createStandardActions({ session, feedback, ui = {} }) {
                 }
             }
         }),
+        // Frames the whole build, or the starting view while it is empty: a
+        // way back from a view turned too far (finding P1-4 of
+        // docs/reviews/EditorUsability-2026-10-29.md). Home, the key the
+        // camera's own reset had; the Editor gives that key to this.
+        define({
+            id: 'camera.wholeBuild',
+            category: 'interface',
+            shortcut: 'Home',
+            keys: [{ key: 'home' }],
+            enabled: (ctx) => !ctx.gestureActive && typeof session.showWholeBuild === 'function',
+            execute: () => surfaceCall('showWholeBuild', 'camera', (show) => show())
+        }),
         // Brings back the guided first build after it was hidden.
         define({
             id: 'ui.firstBuildGuide',

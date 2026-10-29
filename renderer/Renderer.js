@@ -59,12 +59,14 @@ function windStrengthOf(weather) {
 // about what those objects represent lives in core/ and world/, not here.
 export class Renderer {
     // `cameraResetKey` is passed to CameraController; null turns its reset
-    // shortcut off. `wildlifeClock` returns wildlife time in seconds, the
+    // shortcut off. `cameraMaxPolarAngle`, also passed on, is how far from
+    // straight down the camera may turn (radians); left out, to just above
+    // the ground. `wildlifeClock` returns wildlife time in seconds, the
     // moment at which wandering animals are drawn (core/nature/WildlifeMotion.js);
     // World View passes its session's clock so animals are drawn where
     // collision and catching find them. `treeDetail` (renderer/TreeForest.js)
     // starts LOW where the main pointer is a finger, until setTreeDetail().
-    constructor(container, { cameraResetKey, wildlifeClock = () => Date.now() / 1000, treeDetail = defaultTreeDetail() } = {}) {
+    constructor(container, { cameraResetKey, cameraMaxPolarAngle, wildlifeClock = () => Date.now() / 1000, treeDetail = defaultTreeDetail() } = {}) {
         this._container = container;
         this._wildlifeClock = wildlifeClock;
         // Who animals turn to watch; see setWildlifeObserver().
@@ -123,7 +125,10 @@ export class Renderer {
         this._cameraController = new CameraController(
             this._webglRenderer.domElement,
             container.clientWidth / container.clientHeight,
-            cameraResetKey === undefined ? {} : { resetKey: cameraResetKey }
+            {
+                ...(cameraResetKey === undefined ? {} : { resetKey: cameraResetKey }),
+                ...(cameraMaxPolarAngle === undefined ? {} : { maxPolarAngle: cameraMaxPolarAngle })
+            }
         );
 
         this._lights = new Lights(this._sceneManager);

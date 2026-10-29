@@ -524,6 +524,9 @@ export default {
                 </span>
             </template>
 
+            <!-- Undo and Redo, filled in by EditorView where there's no touch bar
+                 to hold them (docs/reviews/EditorUsability-2026-10-29.md, P1-3). -->
+            <slot name="history"></slot>
             <button class="toolbar-save" @click="save">{{ t('toolbar.save') }}</button>
             <button class="toolbar-publish" :disabled="checkingSimilar" :aria-busy="checkingSimilar ? 'true' : 'false'" @click="requestPublish">{{ t('toolbar.publish') }}</button>
             <button class="toolbar-new" @click="createNew">{{ t('toolbar.new') }}</button>

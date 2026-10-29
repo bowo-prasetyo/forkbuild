@@ -1,9 +1,9 @@
-import { fromCssHex } from '../../core/building/ColorHex.js';
+import { fromCssHex, toCssHex } from '../../core/building/ColorHex.js';
 import { displayText, t } from '../i18n/i18n.js';
 import VillagePaletteSwatches from './VillagePaletteSwatches.js';
 
-// The card for an ordinary BRICK selection: count, live position and the
-// everyday actions. StructureInstancePanel is the card for a
+// The card for an ordinary BRICK selection: count, live position, its colour
+// and the everyday actions. StructureInstancePanel is the card for a
 // StructurePlacement selection; their data shapes differ (see
 // EditorSession#getSelectionSummary()), so EditorView never shows both.
 // EditingSidebar fills the default slot with its collapsed sections.
@@ -17,7 +17,10 @@ export default {
         summary: { type: Object, default: null },
         // A live color picker, not a no-argument command, so it is bound
         // directly rather than going through the action registry.
-        recolor: { type: Function, default: null }
+        recolor: { type: Function, default: null },
+        // A touch screen: a finger dragging a brick turns the camera, so the
+        // hint names the gizmo's arrows and the touch bar's Rotate instead.
+        touch: { type: Boolean, default: false }
     },
     computed: {
         context() {
@@ -25,6 +28,15 @@ export default {
         },
         center() {
             return this.summary ? this.summary.bounds.center : null;
+        },
+        // The colour every selected brick has, or null when they differ.
+        color() {
+            const color = this.summary ? this.summary.color : null;
+            return typeof color === 'number' ? color : null;
+        },
+        // A colour input can't be empty; bricks of several colours open it on white.
+        colorCss() {
+            return this.color === null ? '#ffffff' : toCssHex(this.color);
         }
     },
     methods: {
@@ -60,7 +72,7 @@ export default {
             <p class="editor-panel-hint">
                 X {{ round1(center.x) }} · Y {{ round1(center.y) }} · Z {{ round1(center.z) }}
             </p>
-            <p class="editor-panel-hint selection-inspector-next">{{ t('selectionInspector.next') }}</p>
+            <p class="editor-panel-hint selection-inspector-next">{{ touch ? t('selectionInspector.touchNext') : t('selectionInspector.next') }}</p>
             <div class="editor-panel-actions">
                 <button
                     type="button" class="editor-panel-btn"
@@ -107,7 +119,7 @@ export default {
                 >{{ t('selectionInspector.paste') }}</button>
                 <label v-if="recolor" class="editor-panel-btn selection-inspector-color" :title="t('selectionInspector.recolorHint')">
                     {{ t('selectionInspector.color') }}
-                    <input type="color" class="selection-inspector-color-input" @input="onColorInput" />
+                    <input type="color" class="selection-inspector-color-input" :value="colorCss" @input="onColorInput" />
                 </label>
                 <button
                     type="button" class="editor-panel-btn"
@@ -122,7 +134,7 @@ export default {
                     @click="run('selection.clear')"
                 >{{ t('selectionInspector.deselect') }}</button>
             </div>
-            <VillagePaletteSwatches v-if="recolor" @choose="recolor" />
+            <VillagePaletteSwatches v-if="recolor" :selected="color" @choose="recolor" />
             <slot></slot>
         </section>
     `

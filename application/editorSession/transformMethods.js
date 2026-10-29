@@ -109,7 +109,9 @@ export const transformMethods = {
         return true;
     },
 
-    // Count and live bounds of a brick selection, for SelectionInspector. Null for
+    // Count, live bounds and shared colour of a brick selection, for
+    // SelectionInspector. `color` is the 0xRRGGBB every selected brick shows
+    // (its own, or its kind's), or null when they differ. Null for
     // no document, an empty selection, or a placement selection (which has
     // getSelectedPlacementInfo(); the two shapes are kept apart so a UI cannot
     // wire placement editing to brick bounds).
@@ -125,8 +127,24 @@ export const transformMethods = {
         }
         return {
             count: selection.items.length,
-            bounds
+            bounds,
+            color: this._sharedSelectionColor(selection, document)
         };
+    },
+
+    _sharedSelectionColor(selection, document) {
+        let shared = null;
+        for (const item of selection.items) {
+            const building = document.world.getBuilding(item.buildingId);
+            const brick = building ? building.findBrick(item.brickId) : null;
+            if (!brick) return null;
+            const definition = this._registry ? this._registry.get(brick.definitionId) : null;
+            const color = brick.color ?? (definition ? definition.color : null);
+            if (color === null || color === undefined) return null;
+            if (shared !== null && color !== shared) return null;
+            shared = color;
+        }
+        return shared;
     },
 
     // Null when nothing (or a non-placement) is selected, or the document or

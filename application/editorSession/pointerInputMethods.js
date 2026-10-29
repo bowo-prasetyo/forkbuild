@@ -52,6 +52,13 @@ const PLACE_AGAIN_TAP_PX = 28;
 // selects or places: a long press that picks is no tap when the finger lifts
 // (one held on empty ground still is). A second finger or a drag stops it.
 //
+// In Select, a left press with no modifier key on a brick that is already
+// selected drags the whole selection over the ground, as the gizmo's centre
+// handle does, snapped and checked for collisions, in one undo step; a placed
+// build already moves this way (SelectionTool). It moves only once the pointer
+// has gone MARQUEE_DRAG_THRESHOLD_PX: released before that, it is an ordinary
+// click on that brick. Anywhere else a drag still turns the camera.
+//
 // Placing a brick, Shift+drag lays a row instead of drawing a box: the press,
 // moves and release go straight to PlacementTool, with the camera controls
 // off so they don't pan (Shift+drag) under the row. Escape or a cancelled
@@ -99,6 +106,9 @@ export const pointerInputMethods = {
             }
             return null;
         }
+        if (this._pressSelectedBrick(event)) {
+            return null;
+        }
         if (this._isPlacing()) {
             this._placePress = event.button === 0
                 ? { pointerId: event.pointerId, x0: event.clientX, y0: event.clientY, moved: false }
@@ -124,6 +134,13 @@ export const pointerInputMethods = {
                 this._marqueeState.moved = true;
             }
             return null;
+        }
+        const selectionPress = this._selectionPress;
+        if (selectionPress && selectionPress.pointerId === event.pointerId && !selectionPress.moved) {
+            if (Math.hypot(event.clientX - selectionPress.x0, event.clientY - selectionPress.y0) <= MARQUEE_DRAG_THRESHOLD_PX) {
+                return null;
+            }
+            selectionPress.moved = true;
         }
         if (this._session) {
             const result = this._session.gizmoPointerMove(
@@ -176,6 +193,21 @@ export const pointerInputMethods = {
             }
             return null;
         }
+        const selectionPress = this._selectionPress;
+        if (selectionPress && selectionPress.pointerId === event.pointerId) {
+            this._selectionPress = null;
+            if (!selectionPress.moved) {
+                // Never dragged: let the drag go and make it the click it was.
+                if (this._session && typeof this._session.cancelGizmoGesture === 'function') {
+                    this._session.cancelGizmoGesture();
+                }
+                if (this._inputDispatcher) {
+                    this._inputDispatcher.dispatchPointerDown(event);
+                    this._inputDispatcher.dispatchPointerUp(event);
+                }
+                return null;
+            }
+        }
         if (this._session) {
             const result = this._session.gizmoPointerUp(
                 event.clientX,
@@ -213,6 +245,12 @@ export const pointerInputMethods = {
             if (this._placePress && this._placePress.pointerId === event.pointerId) {
                 this._placePress = null;
             }
+            if (this._selectionPress && this._selectionPress.pointerId === event.pointerId) {
+                this._selectionPress = null;
+                if (this._session && typeof this._session.cancelGizmoGesture === 'function') {
+                    this._session.cancelGizmoGesture();
+                }
+            }
             return;
         }
         this._touchPointerIds.delete(event.pointerId);
@@ -240,6 +278,21 @@ export const pointerInputMethods = {
         this._toolManager?.activeToolInstance?.setOrientation?.({ rotation: brick.rotation || 0, tilt: brick.tilt || 0 });
         editorContext.noteBrickPicked?.(brick.definitionId);
         return brick;
+    },
+
+    // A left press with no modifier on a brick of a brick selection, in Select,
+    // arms a drag of the selection (see above). True when it did.
+    _pressSelectedBrick(event) {
+        if (event.button !== 0 || event.shiftKey || event.ctrlKey || event.metaKey || event.altKey) return false;
+        const selection = this._editorContext.selection;
+        if (!selection || selection.isEmpty || selection.isStructurePlacementSelection) return false;
+        if (this._editorContext.tool?.activeTool !== ToolId.SELECT) return false;
+        if (!this._session || typeof this._session.gizmoSelectionPointerDown !== 'function' || !this._inputDispatcher) return false;
+        const picked = this._inputDispatcher.pickBrickAt(event.clientX, event.clientY);
+        if (!picked || !selection.brickIds.includes(picked.brickId)) return false;
+        if (!this._session.gizmoSelectionPointerDown(event.clientX, event.clientY, selection)) return false;
+        this._selectionPress = { pointerId: event.pointerId, x0: event.clientX, y0: event.clientY, moved: false };
+        return true;
     },
 
     // A Shift+drag row being laid (see above).
