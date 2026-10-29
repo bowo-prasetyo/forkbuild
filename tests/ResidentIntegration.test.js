@@ -18,7 +18,7 @@ import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLib
 import { residentAppearanceFor, RESIDENT_TEMPLATE_ID } from '../core/world/ResidentAppearance.js';
 import { AvatarInteractionKind } from '../core/avatar/AvatarInteractionKind.js';
 import { AvatarAnimationState } from '../core/avatar/AvatarAnimationState.js';
-import { ResidentRuntime, RESIDENT_INTERACTION_RADIUS, MAX_RENDERED_RESIDENTS } from '../application/world/ResidentRuntime.js';
+import { ResidentRuntime, MAX_RENDERED_RESIDENTS } from '../application/world/ResidentRuntime.js';
 import { AvatarResidentConstraint } from '../application/avatar/AvatarResidentConstraint.js';
 import { AvatarMovementConstraint } from '../application/avatar/AvatarMovementConstraint.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';

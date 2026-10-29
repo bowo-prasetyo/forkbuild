@@ -91,8 +91,6 @@ function buildCanvasInstance({
     return ctx;
 }
 
-function mountCanvas(ctx) { WorldEncounterCanvas.mounted.call(ctx); }
-function unmountCanvas(ctx) { WorldEncounterCanvas.beforeUnmount.call(ctx); }
 function flush() { return new Promise((resolve) => setTimeout(resolve, 0)); }
 
 function commandSpy() {

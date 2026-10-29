@@ -18,7 +18,6 @@ import {
 } from '../application/snapshot/materialization/PeerSnapshotContentProtocol.js';
 import { PublicationSnapshotContentPeerExchange } from '../application/snapshot/materialization/PublicationSnapshotContentPeerExchange.js';
 import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
-import { StoreSnapshotContentOutcome } from '../application/snapshot/materialization/StoreSnapshotContentOutcome.js';
 import { PeerSnapshotMaterializationOutcome } from '../application/snapshot/materialization/PeerSnapshotMaterializationOutcome.js';
 import { MaterializeSnapshotFromPeerUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromPeerUseCase.js';
 import { SnapshotPeerMaterializationCoordinator } from '../application/snapshot/materialization/SnapshotPeerMaterializationCoordinator.js';
@@ -222,7 +221,7 @@ async function run() {
         // --- responding side: _handleRequest() consults ONLY the local ContentStore ---
         const reference = await contentStore.put('{"blueprint":"farmstead"}');
         const responderBus = new StubPeerMessageBus();
-        const responderExchange = new PublicationSnapshotContentPeerExchange(contentStore, responderBus, new StubConnectedPeerRegistry([]));
+        new PublicationSnapshotContentPeerExchange(contentStore, responderBus, new StubConnectedPeerRegistry([]));
         const requestingPeer = stubPeer('conn-requester', PeerLifecycleState.AUTHENTICATED);
 
         responderBus.deliver(PublicationSnapshotContentPeerExchange.DEFAULT_PROTOCOL,

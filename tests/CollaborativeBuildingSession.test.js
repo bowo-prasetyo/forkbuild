@@ -1,7 +1,6 @@
-import { storedBricks, corruptFirstBrickPosition } from './support/StoredDocumentBricks.js';
+import { storedBricks } from './support/StoredDocumentBricks.js';
 import { World } from '../core/document/World.js';
 import { Building } from '../core/building/Building.js';
-import { Brick } from '../core/building/Brick.js';
 import { Position } from '../core/document/Position.js';
 import { Document } from '../core/document/Document.js';
 import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
@@ -17,11 +16,10 @@ import { WorldAuthorizationService } from '../application/identity/WorldAuthoriz
 import { WorldAccessLevel } from '../core/collaboration/WorldAccessLevel.js';
 import { WorldSpatialPresenceUseCase } from '../application/presence/WorldSpatialPresenceUseCase.js';
 import { WorldSpatialSelection } from '../core/collaboration/WorldSpatialSelection.js';
-import { WorldSpatialActivity, deriveWorldSpatialActivity } from '../core/collaboration/WorldSpatialActivity.js';
+import { WorldSpatialActivity } from '../core/collaboration/WorldSpatialActivity.js';
 import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
 import { PlaceBrickCommand } from '../application/commands/PlaceBrickCommand.js';
 import { MoveStructurePlacementCommand } from '../application/commands/MoveStructurePlacementCommand.js';
-import { SetStructurePlacementTransformCommand } from '../application/commands/SetStructurePlacementTransformCommand.js';
 import { StructurePlacement } from '../core/building/StructurePlacement.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { WorldCommandPropagationUseCase } from '../application/document/WorldCommandPropagationUseCase.js';
@@ -69,15 +67,6 @@ import { assert } from './support/Assert.js';
 //            predicting activity while commands establish reality,
 //            simultaneous building, structure transformation,
 //            authorization revocation, persistence boundary.
-
-function assertThrows(fn, message) {
-    try {
-        fn();
-    } catch {
-        return;
-    }
-    throw new Error(`ASSERT FAILED (expected throw): ${message}`);
-}
 
 function wait(ms = 0) {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -344,9 +333,6 @@ async function runTests() {
     bobTabletStack.deviceAuth.adoptOwnDeviceGrant(tabletGrant);
     
     const worldId = 'collab-session-1';
-    const worldJsonBefore = JSON.stringify(
-        buildEmptyWorld({ worldId, authorIdentityId: alice.identity.identityId, title: "Collaborative World" }).toJSON()
-    );
     
     const doc = () => buildEmptyWorld({ worldId, authorIdentityId: alice.identity.identityId, title: "Collaborative World" });
     aliceStack.documents.set(worldId, doc());

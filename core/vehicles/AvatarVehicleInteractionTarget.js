@@ -2,7 +2,7 @@ import { VehiclePresence } from './VehiclePresence.js';
 import { VehicleInstance } from './VehicleInstance.js';
 import { withinRadiusXZ, VEHICLE_INTERACTION_RADIUS } from './AvatarVehicleProximity.js';
 import { AvatarVehicleInteractionIntent } from './AvatarVehicleInteractionIntent.js';
-import { isFiniteCoordinate, isFiniteXZPosition } from '../document/FiniteCoordinates.js';
+import { isFiniteXZPosition } from '../document/FiniteCoordinates.js';
 
 // 0.9.76 — Avatar-Vehicle Interaction Target Resolution.
 //

@@ -2,7 +2,6 @@ import { World } from '../core/document/World.js';
 import { Building } from '../core/building/Building.js';
 import { Document } from '../core/document/Document.js';
 import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
-import { SpatialBounds } from '../core/world/SpatialBounds.js';
 import { Structure } from '../core/building/Structure.js';
 import { SelectionState } from '../application/editor-state/SelectionState.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';

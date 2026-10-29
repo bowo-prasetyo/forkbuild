@@ -29,7 +29,6 @@ import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { SpatialSelectionState } from '../application/spatial-state/SpatialSelectionState.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
@@ -104,12 +103,6 @@ async function runTests() {
         });
         session._session = stubRenderer(extraRenderer);
         return session;
-    }
-
-    function selectFirstBrick(session, documentId) {
-        const building = session.getDocument(documentId).world.getBuildings()[0];
-        const brickId = building.getBricks()[0].id;
-        session._setSpatialSelection(SpatialSelectionState.brick({ documentId, buildingId: building.id, brickId }));
     }
 
     // -------------------------------------------------------------

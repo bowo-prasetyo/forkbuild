@@ -1,4 +1,3 @@
-import { DecentralizedPublication } from '../core/publication/DecentralizedPublication.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';

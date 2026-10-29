@@ -2,7 +2,6 @@ import { readFile } from 'node:fs/promises';
 import {
     avatarVehicleProximity, withinRadiusXZ, VEHICLE_INTERACTION_RADIUS
 } from '../core/vehicles/AvatarVehicleProximity.js';
-import { AVATAR_COLLISION_RADIUS } from '../core/avatar/AvatarCollision.js';
 import { VehiclePresence } from '../core/vehicles/VehiclePresence.js';
 import { VehicleType } from '../core/vehicles/VehicleType.js';
 import { Position } from '../core/document/Position.js';

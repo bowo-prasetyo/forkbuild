@@ -1,5 +1,3 @@
-import { fileURLToPath } from 'node:url';
-
 import { BaseAnchorPublisher } from '../anchoring/BaseAnchorPublisher.js';
 import { CreateBaseAnchorPublisherUseCase } from '../application/anchoring/base/CreateBaseAnchorPublisherUseCase.js';
 import { BaseReviewedSigningCoordinator } from '../application/anchoring/base/BaseReviewedSigningCoordinator.js';

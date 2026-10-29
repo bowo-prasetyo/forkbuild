@@ -1,12 +1,9 @@
-
 import { ArweaveGraphqlDiscoveryQueryService } from '../application/arweave/ArweaveGraphqlDiscoveryQueryService.js';
-import { DecentralizedDiscoveryQueryService } from '../application/discovery/DecentralizedWorldDiscoveryQuery.js';
 import { NostrDiscoveryQueryService } from '../application/nostr/NostrDiscoveryQueryService.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { describeDecentralizedDiscoveryEnvelope } from '../core/publication/DecentralizedDiscoveryEnvelope.js';
 import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
-import { ArweaveWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js';
 import { composeDecentralizedWorldEncounterMaterialDiscoveryRuntime } from '../application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
 import { composeWorldEncounterMaterialVerifier } from '../application/worldEncounter/WorldEncounterMaterialVerifierRuntimeComposition.js';
 import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
@@ -142,13 +139,11 @@ async function run() {
     // Section A — Transaction discovery: GraphQL still identifies the
     // correct Arweave announcement transaction, unmodified.
     // ===============================================================
-    let announcedTxId = null;
     {
         const net = makeFakeArweaveSubstrate();
         const announcementPublisher = new ArweaveAnnouncementPublisher({ discoveryTag: 'campaign-a', uploadTaggedTransaction: net.uploadTaggedTransaction });
         const envelope = describeDecentralizedDiscoveryEnvelope({ protocol: 'forkbuild', version: 1, kind: 'PUBLICATION', objectId: 'pub-a', uri: 'ar://TX-MATERIAL-A' });
-        const announced = await announcementPublisher.publish(envelope);
-        announcedTxId = announced.id;
+        await announcementPublisher.publish(envelope);
 
         let graphqlRequests = 0;
         const countingFetch = async (url, options) => {

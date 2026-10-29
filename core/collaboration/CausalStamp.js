@@ -1,5 +1,3 @@
-import { createId } from '../document/createId.js';
-
 // Describes the causal knowledge possessed by a replica when an
 // immutable revision was created.
 //

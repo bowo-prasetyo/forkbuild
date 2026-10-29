@@ -1,7 +1,5 @@
 import { AutomaticSnapshotEncounterCascade } from '../application/snapshot/AutomaticSnapshotEncounterCascade.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
 import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
 import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
 import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
 import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
@@ -436,7 +434,7 @@ async function runTests() {
         const registry = new WorldDiscoverySourceRegistry();
         const cascade = makeCascade(host, worldModel, registry, { resolveEncounterPosition: () => ({ x: 3, y: 0, z: 3 }) });
 
-        const reference = await placeAndAnnounce(host, 'novel-bytes-f', { publicationId, claimedPosition: maliciousClaim });
+        await placeAndAnnounce(host, 'novel-bytes-f', { publicationId, claimedPosition: maliciousClaim });
         const [candidate] = await host.discoverSnapshotCandidatesCommand();
         const result = await cascade.processCandidate(candidate);
 
@@ -659,7 +657,7 @@ async function runTests() {
         const publicationId = 'repository-boundary-pub-k';
         const contentHash = 'repository-boundary-hash-k';
         const storageProvider = new InMemoryStorageProvider();
-        const realPublication = knowPublicationLocally(storageProvider, { id: publicationId, contentHash });
+        knowPublicationLocally(storageProvider, { id: publicationId, contentHash });
         const localSource = new LocalWorldEncounterMaterialSource(storageProvider);
         const verifier = new MapVerifier({ [publicationId]: true });
 

@@ -89,7 +89,7 @@ async function run() {
     // ---------------------------------------------------------------
     // Phase A: Build — House + Well + Barn composed into one Document
     // ---------------------------------------------------------------
-    const { world, building, document } = buildComposedVillage(structureRegistry, brickRegistry);
+    const { building, document } = buildComposedVillage(structureRegistry, brickRegistry);
     const house = structureRegistry.get('village:house');
     const well = structureRegistry.get('village:well');
     const barn = structureRegistry.get('village:barn');

@@ -122,7 +122,6 @@ async function runTests() {
         }
         assert(steepSlopes.length > 0, '11. Setup: the scanned region contains at least one ROCK/SOIL coordinate');
         const minSteepSlope = Math.min(...steepSlopes);
-        const maxGrassSlope = Math.max(...grassSlopes);
         assert(minSteepSlope > 0, '12. Every ROCK/SOIL coordinate has a genuinely non-zero local slope');
         // Not every GRASS coordinate is flatter than every ROCK/SOIL one
         // (GRASS can sit anywhere below the slope threshold) — the

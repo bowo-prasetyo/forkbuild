@@ -14,7 +14,7 @@ import { RemoteReadReceiptStore } from '../application/chat/RemoteReadReceiptSto
 import { ConversationReadOutboxEntry, ReadReceiptOutboxState } from '../core/social/ConversationReadOutboxEntry.js';
 import { RemoteReadReceipt } from '../core/social/RemoteReadReceipt.js';
 import { toChatReadReceipt, isValidChatReadReceipt } from '../core/social/ChatReadReceipt.js';
-import { toChatMessage, deriveConversationId } from '../core/social/ChatMessage.js';
+import { deriveConversationId } from '../core/social/ChatMessage.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 

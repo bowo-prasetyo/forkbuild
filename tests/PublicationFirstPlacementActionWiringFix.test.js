@@ -226,7 +226,7 @@ async function run() {
         const decentralized = new DecentralizedPublicationDiscoveryProvider();
         const p1 = new Publication({ id: 'e-pub', documentId: 'e-doc', title: 'E Pub', author: 'bob', contentReference: new ContentReference({ hash: '4'.repeat(64) }) });
         decentralized.add(p1);
-        const { session, discoveryProvider } = buildSession({ decentralizedPublicationDiscoveryProvider: decentralized });
+        const { discoveryProvider } = buildSession({ decentralizedPublicationDiscoveryProvider: decentralized });
 
         assert(discoveryProvider.findById(p1.id) === null,
             'E2. Live: the narrow discoveryProvider — what fork-policy/_findPublications() still reads (world-layout was separately widened by 0.9.605, unrelated to this fork-policy boundary) — genuinely cannot see a Repository-admitted-only Publication.');

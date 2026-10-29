@@ -5,7 +5,6 @@ import { AvatarMovementState } from '../core/avatar/AvatarMovementState.js';
 import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
 import { VehicleType } from '../core/vehicles/VehicleType.js';
 import { resolveAvatarVehicleMovementCapability } from '../core/vehicles/AvatarVehicleMovementCapability.js';
-import { AvatarAnimationState } from '../core/avatar/AvatarAnimationState.js';
 import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';

@@ -251,9 +251,9 @@ export default {
             publicationObservationArchive, publicationObservationArchiveExpanded,
             persistPublicationObservationArchive, archivePublishIpfsRecord, archiveIpfsVerificationObservation,
             archiveBitcoinBroadcast, archiveBitcoinConfirmationObservation,
-            archiveBitcoinContentProofObservation, createBitcoinAnchorPublicationRecordUseCase,
+            archiveBitcoinContentProofObservation,
             archiveBitcoinAnchorPublicationRecord, archiveBaseTransactionInclusionObservation,
-            createBaseAnchorPublicationRecordUseCase, archiveBaseAnchorPublicationRecord,
+            archiveBaseAnchorPublicationRecord,
             publicationObservationArchiveView, publicationObservationArchiveProvenanceView,
             publicationObservationArchiveFingerprintView, archiveFingerprintCopied, copyArchiveFingerprint,
             archiveFingerprintComparisonInput, archiveFingerprintComparisonResult,
@@ -275,11 +275,11 @@ export default {
         });
 
         const {
-            historicalBitcoinAnchorsExpanded, historicalBitcoinAnchorEntryExpanded,
+            historicalBitcoinAnchorsExpanded,
             toggleHistoricalBitcoinAnchors, historicalBitcoinAnchorArchiveView,
             toggleHistoricalBitcoinAnchorEntry, isHistoricalBitcoinAnchorEntryExpanded,
             historicalBitcoinAnchorEvidenceView, bitcoinAnchorPublicationsExpanded,
-            bitcoinAnchorPublicationInspectionExpanded, toggleBitcoinAnchorPublications,
+            toggleBitcoinAnchorPublications,
             bitcoinAnchorPublicationRecordHistoryView, toggleBitcoinAnchorPublicationInspection,
             isBitcoinAnchorPublicationInspectionExpanded, bitcoinAnchorPublicationInspectionView,
             bitcoinAnchorPublicationLifecycleExpanded, toggleBitcoinAnchorPublicationLifecycle,
@@ -296,17 +296,17 @@ export default {
         const {
             publicationReferencesExpanded, publicationReferenceSourceKey, publicationReferenceReferencedKey,
             publicationReferenceError, togglePublicationReferences, knownPublicationIdentityOptions,
-            findKnownPublicationIdentity, createPublicationReferenceRecordUseCase, recordPublicationReference,
+            findKnownPublicationIdentity, recordPublicationReference,
             publicationReferenceRecordHistoryView, publicationReferenceGraphExpanded,
-            publicationReferenceGraphNodeExpanded, togglePublicationReferenceGraph,
-            publicationReferenceGraphView, publicationReferenceGraphNodeKey,
+            togglePublicationReferenceGraph,
+            publicationReferenceGraphView,
             togglePublicationReferenceGraphNode, isPublicationReferenceGraphNodeExpanded
         } = usePublicationReferences({
             persistPublicationObservationArchive, publicationObservationArchive
         });
 
         const {
-            achievementsExpanded, achievementBadgeExpanded, toggleAchievements, achievementBadgesView,
+            achievementsExpanded, toggleAchievements, achievementBadgesView,
             toggleAchievementBadge, isAchievementBadgeExpanded, canViewAchievementBadgeLifecycle,
             viewAchievementBadgeLifecycle, achievementProfileExpanded, achievementProfileSelectedKey,
             toggleAchievementProfile, achievementProfileView
@@ -631,7 +631,7 @@ export default {
             snapshotAcquisitionView, snapshotAcquisitionOutcomeCountsSentence,
             snapshotAcquisitionNeedsSourceHint, onMaterializationFileChosen, importSnapshotContent,
             recordMaterializationSource, localSnapshotMaterializationSourceView,
-            mapPackageOutcomeToStoreOutcome, mapPlacementOutcomeToStoreOutcome, mapPeerOutcomeToStoreOutcome,
+            mapPlacementOutcomeToStoreOutcome, mapPeerOutcomeToStoreOutcome,
             recordMaterializationHistoryEntry, materializationHistoryDetailsView,
             isMaterializationHistoryEntryExpanded, toggleMaterializationHistoryEntry,
             materializationSourceCountsSentence, toggleMaterializationHistory, materializationView,
@@ -705,7 +705,7 @@ export default {
 
         const {
             baseWalletConnection, baseNetworkObserver, basePublicationTransactionPlanCoordinator,
-            baseInjectedProviderWalletTransactionSigner, baseReviewedSigningCoordinator,
+            baseReviewedSigningCoordinator,
             baseSignedTransactionFinalizationCoordinator, baseTransactionBroadcastCoordinator,
             baseTransactionInclusionObservationCoordinator, baseAnchorPublisher, baseWalletConnectionState,
             baseAccountObservationState, connectBaseWallet, disconnectBaseWallet, baseWalletConnectionView,
@@ -728,25 +728,20 @@ export default {
         });
 
         const {
-            bitcoinWalletConnection, bitcoinWalletFundingObserver, bitcoinAnchorTransactionReviewCoordinator,
-            bitcoinAnchorReviewedSigningCoordinator, bitcoinAnchorSignedPsbtFinalizationCoordinator,
-            bitcoinAnchorBroadcastCoordinator, bitcoinAnchorConfirmationCoordinator,
+            bitcoinWalletConnection, bitcoinWalletFundingObserver,
             bitcoinAnchorPublicationCoordinator, bitcoinAnchorTransactionConstructionCoordinator,
             bitcoinWalletConnectionState, bitcoinAnchorFundingState, bitcoinAnchorFundingUtxosExpanded,
-            bitcoinAnchorTransactionReview, bitcoinAnchorReviewedSigningOutcome,
-            bitcoinAnchorSignedPsbtFinalizationOutcome, bitcoinAnchorFinalizedTransaction,
-            bitcoinAnchorBroadcastOutcome, bitcoinAnchorBroadcastedAt, bitcoinAnchorPublicationAttempt,
-            bitcoinAnchorBroadcastConfirmationOutcome, bitcoinAnchorBroadcastConfirmationHistory,
+            bitcoinAnchorTransactionReview,
+            bitcoinAnchorFinalizedTransaction,
             bitcoinAnchorBroadcastConfirmationObserving, bitcoinAnchorBroadcastConfirmationError,
             bitcoinAnchorBroadcastConfirmationHistoryExpanded,
-            bitcoinAnchorBroadcastConfirmationHistoryEntryExpanded,
-            retireBitcoinAnchorBroadcastConfirmationContext, connectBitcoinWallet, disconnectBitcoinWallet,
+            connectBitcoinWallet, disconnectBitcoinWallet,
             bitcoinWalletConnectionView, bitcoinWalletConnectionBadgeClass, isBitcoinWalletConnected,
             isBitcoinWalletConnecting, bitcoinAnchorTransactionReviewView,
             bitcoinAnchorTransactionReviewWalletMatchView, observeBitcoinAnchorFunding,
             toggleBitcoinAnchorFundingUtxosExpanded, bitcoinAnchorFundingView, bitcoinAnchorFundingBadgeClass,
             isBitcoinAnchorFundingObserved, constructBitcoinAnchorTransaction,
-            bridgeBitcoinAnchorTransactionToReview, signBitcoinAnchorReviewedTransaction,
+            signBitcoinAnchorReviewedTransaction,
             bitcoinAnchorReviewedSigningView, bitcoinAnchorReviewedSigningBadgeClass,
             isBitcoinAnchorReviewedSigning, finalizeBitcoinAnchorSignedPsbt,
             bitcoinAnchorSignedPsbtFinalizationView, bitcoinAnchorSignedPsbtFinalizationBadgeClass,
@@ -770,7 +765,7 @@ export default {
         }
 
         const {
-            selectedPeerForMaterialization, requestSnapshotFromPeer, peerMaterializationView,
+            requestSnapshotFromPeer, peerMaterializationView,
             peerMaterializationBadgeClass, peerMaterializationButtonLabel,
             isPeerPossessionPeerChecked, togglePeerPossessionPeer,
             selectedPeersForPossessionComparison, checkSnapshotPossessionWithSelectedPeers,
@@ -787,7 +782,7 @@ export default {
         });
 
         const {
-            loadPlacements, recomputePlacementConvergence, togglePlacements, resolvePlacement,
+            loadPlacements, togglePlacements, resolvePlacement,
             placementLifecycleNote, placementBadgeClass, materializePlacement, placementMaterializationView,
             placementMaterializationBadgeClass, placementMaterializationButtonLabel, togglePlacementInspect,
             placementInspectionExpanded, placementInspectionDetail, placementInspectionTypeSpecific,
@@ -802,7 +797,6 @@ export default {
         });
 
         const {
-            openIpfsRemotePublishingConfigureForm, cancelIpfsRemotePublishingConfigureForm,
             toggleIpfsRemotePublishingConfigureForm, saveIpfsRemotePublishingConfiguration,
             clearIpfsRemotePublishingConfiguration, ipfsRemotePublishingConfigurationView, publishToRemoteIpfs,
             ipfsRemotePublicationView, ipfsRemotePublicationBadgeClass, isIpfsRemotePublishing,
@@ -858,10 +852,9 @@ export default {
 
         const {
             publicationDistributionCommand, multiRelayNostrPublicationDistributionCommand,
-            snapshotDistributionCommand, snapshotDistributionAvailableStorageTypesCommand,
+            snapshotDistributionCommand,
             defaultAnnouncementDiscoveryProvider, defaultContentDistributionProvider,
             snapshotDistributionStorageTypes, snapshotDistributionStorageOptions,
-            publicationDistributionLifecycleStore, distributeEntryPublication, distributeEntrySnapshot,
             distributePublicationForEntry, discoveryDistributionButtonLabel, distributeSnapshot,
             snapshotDistributionButtonLabel, discoveryObservationsView,
             discoveryDistributionConfigurationRoute, snapshotDistributionConfigurationRoute,

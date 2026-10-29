@@ -2,7 +2,6 @@ import { readFile } from 'node:fs/promises';
 import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
 import { AvatarTreeConstraint } from '../application/avatar/AvatarTreeConstraint.js';
 import { AvatarContinuousMovementIntent } from '../core/avatar/AvatarContinuousMovementIntent.js';
-import { AvatarContinuousMovementMode } from '../core/avatar/AvatarContinuousMovementMode.js';
 import { AvatarAnimationState } from '../core/avatar/AvatarAnimationState.js';
 import { treeCollisionGeometryInRegion } from '../core/nature/TreeCollisionGeometry.js';
 import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';

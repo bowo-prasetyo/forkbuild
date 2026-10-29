@@ -200,7 +200,7 @@ async function run() {
         // --- responding side: _handleRequest() ---
         const responderBus = new StubPeerMessageBus();
         const responderRegistry = new StubConnectedPeerRegistry([]);
-        const responderExchange = new PeerContentExchange(contentStore, responderBus, responderRegistry, catalog);
+        new PeerContentExchange(contentStore, responderBus, responderRegistry, catalog);
         const requestingPeer = stubPeer('conn-requester', PeerLifecycleState.AUTHENTICATED);
 
         responderBus.deliver(PeerContentExchange.DEFAULT_PROTOCOL, { kind: 'REQUEST', hash: 'unknown-hash' }, { connectedPeer: requestingPeer });

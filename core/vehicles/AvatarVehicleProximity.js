@@ -1,5 +1,5 @@
 import { VehiclePresence } from './VehiclePresence.js';
-import { isFiniteCoordinate, isFiniteXZPosition } from '../document/FiniteCoordinates.js';
+import { isFiniteXZPosition } from '../document/FiniteCoordinates.js';
 
 // 0.9.73 — Avatar-Vehicle Proximity Detection.
 //

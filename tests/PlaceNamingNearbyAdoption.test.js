@@ -737,7 +737,6 @@ async function runTests() {
         // 56. The persisted claim is independently re-readable straight
         // from storage (not merely from the in-memory return value),
         // proving genuine persistence rather than an in-memory illusion.
-        const rehydratedStorage = new InMemoryStorageProvider();
         // Copy the exact bytes the real store wrote, to prove they are
         // genuinely serializable, real JSON, not a live object graph.
         const rawList = claimStore.list('world-1');

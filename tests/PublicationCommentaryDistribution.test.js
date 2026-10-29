@@ -261,7 +261,6 @@ async function run() {
             authorIdentityId: aliceId,
             content: 'a different claimed content under the same id'
         });
-        const conflictingEnvelope = { ...exported, content: conflictingCommentary.content };
         // Re-sign so the tampered content still carries a genuinely
         // valid signature — this models a second, honestly-signed
         // envelope under the same commentaryId, not a forged one.

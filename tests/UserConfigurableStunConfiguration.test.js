@@ -1,5 +1,4 @@
-
-import { IceServerConfiguration, isValidStunUrl } from '../core/networks/IceServerConfiguration.js';
+import { IceServerConfiguration } from '../core/networks/IceServerConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { IceServerConfigurationStore } from '../storage/IceServerConfigurationStore.js';
 import { SetIceServerConfigurationUseCase } from '../application/settings/SetIceServerConfigurationUseCase.js';

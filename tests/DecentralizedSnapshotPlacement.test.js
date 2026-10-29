@@ -14,11 +14,9 @@ import { computeContentHash } from '../serializer/contentHash.js';
 
 import { PublicationSnapshotPlacement } from '../core/publication/PublicationSnapshotPlacement.js';
 import { validatePublicationSnapshotPlacement, PublicationSnapshotPlacementError } from '../application/snapshot/placement/PublicationSnapshotPlacementValidator.js';
-import { CreatePublicationSnapshotPlacementUseCase } from '../application/snapshot/placement/CreatePublicationSnapshotPlacementUseCase.js';
 import { AddPublicationSnapshotPlacementUseCase } from '../application/snapshot/placement/AddPublicationSnapshotPlacementUseCase.js';
 import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
 import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
-import { CreateExternalSnapshotPlacementUseCase } from '../application/snapshot/placement/CreateExternalSnapshotPlacementUseCase.js';
 import { SnapshotPlacementCreationOutcome } from '../application/snapshot/placement/SnapshotPlacementCreationOutcome.js';
 import { SnapshotPlacementResolver } from '../application/snapshot/placement/SnapshotPlacementResolver.js';
 import { SnapshotPlacementResolutionOutcome } from '../application/snapshot/placement/SnapshotPlacementResolutionOutcome.js';

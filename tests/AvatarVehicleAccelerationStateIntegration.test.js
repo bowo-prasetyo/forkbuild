@@ -313,7 +313,6 @@ async function runTests() {
         // own "no separate braking rate" design (0.9.90's own header).
         const ticks = 80; // 4s — comfortably past the 3s needed to decay 12 -> 0 at 4 units/second^2
         const observed = tickSpeeds(controller, avatarPresenceSession, null, ticks, DT);
-        const expected = expectedRampSpeeds(0, car.acceleration.acceleration, DT, ticks);
         // expectedRampSpeeds() itself always starts its OWN recurrence
         // from 0 — reset it to start from CAR's own cruise speed instead,
         // matching what the controller's real `_currentMovementSpeed`

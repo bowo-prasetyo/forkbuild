@@ -216,7 +216,7 @@ async function run() {
     // Sections D-J: StructureCompositionTool — FLAGSHIP
     // ---------------------------------------------------------------
     {
-        const { world, building, document } = makeEmptyDocument();
+        const { world, building } = makeEmptyDocument();
         // An existing building occupies (0..4, 0..4) in the document —
         // composing House must be refused there.
         const preExistingBrick = new Brick({ definitionId: 'core:block_2x2', position: new Position(2, 1, 2) });

@@ -1,4 +1,3 @@
-
 import { World } from '../core/document/World.js';
 import { Document } from '../core/document/Document.js';
 import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
@@ -25,7 +24,6 @@ import { LoadPublishedWorldSessionUseCase } from '../application/publication/Loa
 import { PublishedWorldSession } from '../application/publication/PublishedWorldSession.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalWorldExperienceStore } from '../application/world/LocalWorldExperienceStore.js';
-import { LocalWorldExperience } from '../core/world/LocalWorldExperience.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { ObserverLocalEncounterStore } from '../application/worldEncounter/ObserverLocalEncounterStore.js';
 import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
@@ -556,7 +554,7 @@ async function main() {
         // brand-new Document identity together, never one without the
         // other, and NEVER mutates the source.
         const storage = new InMemoryStorageProvider();
-        const { document, publisher: sourcePublisher } = publishMinimalDocument(storage, 'Fork Source', 'alice');
+        const { document } = publishMinimalDocument(storage, 'Fork Source', 'alice');
         const sourceWorldId = document.world.id;
         const forked = new ForkDocumentUseCase(storage).execute(document.world.id, null, null);
         assert(forked.world.id !== sourceWorldId, 'F2a. Forking mints a genuinely new World/Document identity.');
@@ -846,7 +844,7 @@ async function main() {
 
         // 4. Navigate to W2: publish and enter an entirely different
         // World, while W1's own session object stays alive, untouched.
-        const { document: docW2, publication: p2 } = publishMinimalDocument(storage, 'Flagship World Two', 'bob');
+        const { publication: p2 } = publishMinimalDocument(storage, 'Flagship World Two', 'bob');
         const enterW2 = loadWorldSession(publisher, contentStore, p2);
         assert(enterW2.getWorld().id !== enterW1.getWorld().id, 'L4. W2 is a genuinely distinct World from W1.');
 

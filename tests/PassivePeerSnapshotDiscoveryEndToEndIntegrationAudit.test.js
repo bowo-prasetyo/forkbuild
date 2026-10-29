@@ -444,7 +444,7 @@ async function run() {
         // threshold, proving convergence is walking-triggered, not
         // eagerly pushed into World state.
         alicePublish2 = publishLocallyAs(alice, 'Section F — Placement Two');
-        const { catalog: aliceCatalog2, exchange: aliceExchange2 } = makeHandBuiltPlacementExchange();
+        const { catalog: aliceCatalog2 } = makeHandBuiltPlacementExchange();
         const orchestrator2 = new CreateSnapshotPlacementOrchestratorUseCase().execute({
             discoveryProvider: alicePublish2.discoveryProvider, contentResolver: alicePublish2.contentResolver,
             placementCatalog: aliceCatalog2, identityProvider: alice, stores: [aliceIpfs],
@@ -582,7 +582,7 @@ async function run() {
             const { catalog: receiverCatalog, exchange: receiverExchange } = makeHandBuiltPlacementExchange();
             const bus = new StubPeerMessageBus();
             const registry = new StubConnectedPeerRegistry([]);
-            const receiverPeerExchange = new PublicationSnapshotPlacementPeerExchange(receiverExchange, bus, registry);
+            new PublicationSnapshotPlacementPeerExchange(receiverExchange, bus, registry);
 
             assert(receiverCatalog.list().length === 0, '3. starts empty.');
             bus.deliver(PublicationSnapshotPlacementPeerExchange.DEFAULT_PROTOCOL, { kind: 'NOT_A_REAL_KIND', envelope: { garbage: true } });
@@ -598,7 +598,7 @@ async function run() {
             const senderPub = publishLocallyAs(sender, 'Section H3');
             const senderNet = makeFakeIpfsNode();
             const senderIpfs = new IpfsContentStore({ apiUrl: 'http://sender-h3.test:5001', fetchImpl: senderNet.fetchImpl });
-            const { catalog: senderCatalog, exchange: senderExchange } = makeHandBuiltPlacementExchange();
+            const { exchange: senderExchange } = makeHandBuiltPlacementExchange();
             const senderPeer = stubPeer('conn-sender-h3', sender.getSigningIdentity().id);
             const senderRegistry = new StubConnectedPeerRegistry([senderPeer]);
             const senderBus = new StubPeerMessageBus();

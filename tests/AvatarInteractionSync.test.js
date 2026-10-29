@@ -9,7 +9,6 @@ import { AvatarInteractionReplayWindow } from '../core/avatar/AvatarInteractionR
 import { AvatarInteractionTrustPolicy } from '../core/avatar/AvatarInteractionTrustPolicy.js';
 import { SignatureType, Signature } from '../core/publication/Signature.js';
 import { TrustStatus } from '../core/identity/TrustObservation.js';
-import { AvatarAnimationState } from '../core/avatar/AvatarAnimationState.js';
 import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';

@@ -20,8 +20,7 @@ import { PreviewUseCase } from '../application/editor/PreviewUseCase.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
 import {
-    DocumentCommandPropagationUseCase,
-    DocumentOperationRejectionReason
+    DocumentCommandPropagationUseCase
 } from '../application/document/DocumentCommandPropagationUseCase.js';
 import { EditorSession } from '../application/editor/EditorSession.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';

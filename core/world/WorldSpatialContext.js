@@ -20,9 +20,7 @@
 //   - core/nature/Hydrology.js: "Where does water actually collect and flow?"
 //   - core/world/CompassHeading.js: "Which way am I facing?"
 //   - application/world/WorldLocationDirectory.js: "Where can I navigate to?"
-import { terrainHeightAt } from '../nature/TerrainHeightField.js';
-import { surfaceCategoryAt, SURFACE_CATEGORY } from '../nature/TerrainSurface.js';
-import { ecologyZoneAt, ECOLOGY_ZONE } from '../nature/TerrainEcology.js';
+import { ecologyZoneAt } from '../nature/TerrainEcology.js';
 import { hydrologyFeatureAt, HYDROLOGY_FEATURE } from '../nature/Hydrology.js';
 import { Position } from '../document/Position.js';
 import { regionsContaining, describePlace } from './WorldRegionGeography.js';

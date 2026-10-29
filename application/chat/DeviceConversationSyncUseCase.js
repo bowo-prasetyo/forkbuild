@@ -1,7 +1,6 @@
 import { EventBus } from '../../core/events/EventBus.js';
 import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
 import {
-    ConversationSyncKind,
     SYNC_MESSAGES_BATCH_SIZE,
     toConversationSyncMessagesEnvelope,
     toConversationSyncReadStateEnvelope,

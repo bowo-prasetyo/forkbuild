@@ -1,8 +1,7 @@
-
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { WorldEncounterMaterialVerificationStatus } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
-import { describeWorldEncounterMaterialLoadStatusLabel, describeWorldEncounterMaterialVerificationStatusLabel } from '../application/worldEncounter/WorldEncounterMaterialInspectionView.js';
+import { describeWorldEncounterMaterialVerificationStatusLabel } from '../application/worldEncounter/WorldEncounterMaterialInspectionView.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 import { readSource as source } from './support/SourceText.js';
 
@@ -72,8 +71,6 @@ import { readSource as source } from './support/SourceText.js';
 //   H. Production-change boundary — changes are confined to presentation/
 //      view functions, template bindings, and tests; deliberate
 //      exclusions honored.
-
-const PRE_FIX_COMMIT = '6123be9'; // HEAD immediately before this milestone's own changes.
 
 let assertionCount = 0;
 function check(condition, message) {

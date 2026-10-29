@@ -74,19 +74,6 @@ function buildAvatarStack(registry, username) {
     return { avatarPresenceSession };
 }
 
-// Drives `controller` forward (W held) for `ticks` steps of `dt` seconds
-// each, at rotationY = 0 the whole time (no turning), and returns the
-// total +Z distance covered.
-function forwardDistance(controller, avatarPresenceSession, ticks, dt) {
-    const startZ = avatarPresenceSession.current.position.z;
-    controller.keyDown('w');
-    for (let i = 0; i < ticks; i++) {
-        controller.tick(dt);
-    }
-    controller.keyUp('w');
-    return avatarPresenceSession.current.position.z - startZ;
-}
-
 // 0.9.91 — the direct structural twin of forwardDistance() above, for
 // sections that need a distance ratio EXACT to floating-point precision.
 // A RATE_LIMITED capability's own TOTAL distance from rest never ratios

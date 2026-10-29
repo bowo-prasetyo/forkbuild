@@ -1,4 +1,3 @@
-
 import { World } from '../core/document/World.js';
 import { Document } from '../core/document/Document.js';
 import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
@@ -11,7 +10,6 @@ import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalRecoveryStore } from '../persistence/LocalRecoveryStore.js';
 import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
-import { CreateDocumentManagerUseCase } from '../application/document/CreateDocumentManagerUseCase.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
 import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
 import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase.js';
@@ -24,8 +22,6 @@ import { RecoverDocumentUseCase } from '../application/document/RecoverDocumentU
 import { DiscardRecoveryUseCase } from '../application/document/DiscardRecoveryUseCase.js';
 import { RecoveryObserver } from '../application/document/RecoveryObserver.js';
 import { DocumentManifest } from '../application/document/DocumentManifest.js';
-import { DocumentRevision } from '../core/document/DocumentRevision.js';
-import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { ForkPublishedWorldUseCase } from '../application/publication/ForkPublishedWorldUseCase.js';
 import { LifecycleStatus, computeLifecycleStatus, describeLifecycleStatus as describeLifecycleStatusMessage } from '../application/document/DocumentLifecycleStatus.js';
@@ -539,7 +535,6 @@ async function main() {
         assert(new Set([p1.id, p2.id, p3.id]).size === 3, 'G1. Three genuinely distinct publicationIds.');
         assert(p1.contentHash !== p2.contentHash && p2.contentHash !== p3.contentHash, 'G1b. Three genuinely distinct contentHashes — each publish captured a real, cumulative edit.');
         for (const p of publications) {
-            const snapshot = publisher.loadSnapshot(p.id);
             assert(publisher.verifySnapshot(p.id, p.contentHash) === true, `G2. Publication ${p.id} independently verifies against its own contentHash.`);
         }
         assert(document.world.id === p1.documentId && document.world.id === p2.documentId && document.world.id === p3.documentId,

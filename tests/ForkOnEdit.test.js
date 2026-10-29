@@ -142,10 +142,8 @@ async function runTests() {
     //      see docs/Principles.md "World View Observes and Navigates;
     //      Editor Mutates and Builds".
     // -------------------------------------------------------------
-    let flagshipOriginal, flagshipForkId, flagshipNewPublication;
     {
         const publication = publisher.publish(makeDocument('Castle'), alice);
-        flagshipOriginal = publication;
         const session = buildSession(undefined, { avatarPosition: new Position(3, 0, 0) });
         session._loadWorld(publication.documentId);
 
@@ -156,7 +154,6 @@ async function runTests() {
             '4b. the published source is superseded in this session (not silently mutated in place)');
 
         const forkId = session.getActiveDocumentId();
-        flagshipForkId = forkId;
         assert(forkId !== publication.documentId, '5. exactly one NEW document exists — the fork');
         assert(session.getLoadedDocuments().length === 1, '5b. still exactly one loaded document (fork replaces source in this session)');
         assert(!session.isDocumentPublished(forkId), '6. the fork itself is editable');
@@ -184,7 +181,6 @@ async function runTests() {
 
         session.saveDocument(forkId);
         const newPublication = session.publishDocument(forkId);
-        flagshipNewPublication = newPublication;
         assert(newPublication.id !== publication.id, '10. publishing the fork creates a genuinely new Publication');
         assert(newPublication.contentReference.hash !== publication.contentReference.hash,
             '10b. the new publication has its own, different ContentReference');

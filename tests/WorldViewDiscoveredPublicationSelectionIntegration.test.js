@@ -435,7 +435,6 @@ async function runTests() {
         const source = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
-        const applicationImportLines = codeOnly.split('\n').filter((line) => line.includes("from '../../application/"));
 
         assert(codeOnly.includes('selectedDiscoveredPublication') && codeOnly.includes('selectDiscoveredPublication') && codeOnly.includes('isDiscoveredPublicationSelectable'),
             '22. the new field/method/computed are actually present');

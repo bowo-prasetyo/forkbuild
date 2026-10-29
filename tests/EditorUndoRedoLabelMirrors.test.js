@@ -71,14 +71,6 @@ import { displayText, t } from '../ui/i18n/i18n.js';
 //              independently generated labels, no second history state,
 //              no new persistence/autosave/publication coupling.
 
-class InMemoryStorageProvider {
-    constructor() { this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
 function createWorldWithBricks(specs) {
     const world = new World();
     const building = new Building({ creator: 'tester' });

@@ -64,12 +64,6 @@ function namesOrigin(text, origin) {
 //            class only for 2+ entries; the single-value shape is
 //            unaffected
 
-function expectThrows(fn, message) {
-    let threw = false;
-    try { fn(); } catch { threw = true; }
-    assert(threw, message);
-}
-
 async function expectRejects(promise, message, ErrorType = null) {
     let rejected = false;
     let error = null;
@@ -218,7 +212,7 @@ async function run() {
         // genuine transport rejection) on gateway A — content/
         // ArweaveContentStore.js's own get() throws ContentUnavailableError
         // for both shapes identically, so failover treats them the same.
-        const { fetchImpl: fetchImpl2, requestsByOrigin: requests2 } = makeMultiGatewayFetch({
+        const { fetchImpl: fetchImpl2 } = makeMultiGatewayFetch({
             [A]: { status: 404 },
             [B]: { body: '{"ok":"from-b"}' }
         });

@@ -154,7 +154,7 @@ async function gossipPublicationToBob(alice, originalPublication) {
     const bobCatalog = new LocalPublicationCatalog(new InMemoryStorageProvider());
     const bobExchange = new PublicationExchange(bobCatalog, new CreatePublicationDisplayKindRegistryUseCase().execute().verifier);
     const bobBus = new StubPeerMessageBus();
-    const bobPeerExchange = new PublicationPeerExchange(bobExchange, bobBus, new StubConnectedPeerRegistry([]));
+    new PublicationPeerExchange(bobExchange, bobBus, new StubConnectedPeerRegistry([]));
     bobBus.deliver(PublicationPeerExchange.DEFAULT_PROTOCOL, aliceBus.sent[0].payload);
 
     return { cataloged: bobCatalog.list()[0], sharedStorage };

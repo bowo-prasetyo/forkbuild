@@ -144,13 +144,11 @@ async function runTests() {
     // through a completely fresh, independent discovery pathway (never
     // a special Snapshot- or Publication-aware one).
     // -------------------------------------------------------------
-    let flagshipPublication;
     let flagshipContentReference;
     {
         const doc = makeDocument('Flagship Gallery', 3);
         const manager = new DocumentManager(doc);
         const publication = publishDocumentUseCase.execute(manager);
-        flagshipPublication = publication;
         flagshipContentReference = publication.contentReference;
 
         const position = new Position(120, 0, 80);

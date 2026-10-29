@@ -108,11 +108,6 @@ function makeBackend({ notificationSink } = {}) {
     };
 }
 
-async function codeOnlySource(relativePath) {
-    const text = await rawSource(relativePath);
-    return text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-}
-
 // The real distributor ui/main.js builds, with fake WebRTC/Nostr/Arweave
 // collaborators counting calls to each — the exact shape
 // PublicationCard.js/PublicationList.js actually inject in production.

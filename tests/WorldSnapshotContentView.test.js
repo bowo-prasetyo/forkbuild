@@ -3,8 +3,7 @@ import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDisc
 import { describeLocalWorldDiscoverySource } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { registerPeerWorldSource } from '../peer/PeerWorldDiscoveryLifecycleBridge.js';
 import {
-    registerMaterializedSnapshotWorldSource,
-    unregisterMaterializedSnapshotWorldSource
+    registerMaterializedSnapshotWorldSource
 } from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
 import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
 import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';

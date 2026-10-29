@@ -1,5 +1,5 @@
 // @environment browser
-import { createApp, h, nextTick, ref } from 'vue';
+import { createApp, h, nextTick } from 'vue';
 import { createMemoryHistory, createRouter } from 'vue-router';
 import SimilarEarlierBuilds from '../ui/components/remix/SimilarEarlierBuilds.js';
 import { useSimilarEarlierBuilds } from '../ui/views/worldView/useSimilarEarlierBuilds.js';

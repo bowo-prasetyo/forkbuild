@@ -101,7 +101,6 @@ log('### E1b. Each Collection build, its own family left out of the library: bri
 log('');
 log(`| Build | Bricks | ${Object.keys(POLICIES).join(' | ')} |`);
 log(`|---|---|${Object.keys(POLICIES).map(() => '---').join('|')}|`);
-const familyOf = (id) => { const ids = new Set([id]); for (const [c, p] of Object.entries(COLLECTION_REMIXED_FROM)) if (p === id || c === id) { ids.add(c); } return ids; };
 for (const child of Object.keys(COLLECTION_REMIXED_FROM)) {
     const excluded = new Set(Object.keys(COLLECTION_REMIXED_FROM));
     excluded.add(child);

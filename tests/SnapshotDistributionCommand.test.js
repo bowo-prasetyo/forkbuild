@@ -180,7 +180,6 @@ async function run() {
     {
         const gateway = makeFakeArweaveGateway();
         const store = new ArweaveContentStore({ signer: makeFakeArweaveSigner(), fetchImpl: gateway.fetchImpl });
-        const network = makeNostrNetwork();
 
         let publishedEnvelope = null;
         const spyPublisher = {

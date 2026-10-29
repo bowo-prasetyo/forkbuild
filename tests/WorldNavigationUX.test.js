@@ -109,7 +109,7 @@ async function runTests() {
     {
         const pubA = publisher.publish(makeDocument('Alice Castle', 'alice'), alice);
         placePublicationUseCase.execute(pubA.id, new Position(500, 0, -200));
-        const pubB = publisher.publish(makeDocument('Bob Tower', 'bob'), alice);
+        publisher.publish(makeDocument('Bob Tower', 'bob'), alice);
         // Bob's Tower is deliberately left WITHOUT an explicit placement.
 
         assert(searchWorldUseCase.execute('castle').some((p) => p.title === 'Alice Castle'),

@@ -1,4 +1,4 @@
-import { storedBricks, corruptFirstBrickPosition } from './support/StoredDocumentBricks.js';
+import { storedBricks } from './support/StoredDocumentBricks.js';
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 

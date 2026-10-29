@@ -100,7 +100,7 @@ function makeMinimalDocument(title = 'Atlas', author = 'alice') {
 async function run() {
     console.log('Running Decentralized Publication Discovery Presentation Consistency Product Reassessment tests...\n');
 
-    let allPublications, rootDocumentId, forkedDocumentId;
+    let allPublications, rootDocumentId;
     let publicationRoot1, publicationRoot2, publicationFork1, publicationFork2;
 
     // =======================================================================
@@ -132,7 +132,6 @@ async function run() {
 
         const forkedDocument = new ForkDocumentUseCase(storage).execute(rootDocumentId, stubIdentityProvider, publicationRoot1);
         storage.save(forkedDocument.world.id, serializer.serialize(forkedDocument));
-        forkedDocumentId = forkedDocument.world.id;
 
         publicationFork1 = publishDocumentUseCase.execute({ document: forkedDocument });
         await wait(5);

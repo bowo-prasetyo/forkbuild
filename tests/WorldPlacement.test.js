@@ -4,13 +4,11 @@ import { Document } from '../core/document/Document.js';
 import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { Position } from '../core/document/Position.js';
 import { World } from '../core/document/World.js';
-import { WorldPosition } from '../core/document/WorldPosition.js';
 import { WorldPlacement } from '../core/publication/WorldPlacement.js';
 import { SpatialBounds } from '../core/world/SpatialBounds.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
-import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
 import { MoveWorldPlacementUseCase } from '../application/placement/MoveWorldPlacementUseCase.js';
@@ -26,15 +24,6 @@ const stubIdentityProvider = {
     currentUser: () => ({ username: 'alice', displayName: 'alice', providerId: 'stub' }),
     sign: (data) => ({ signedBy: 'alice', providerId: 'stub', data })
 };
-
-function assertThrows(fn, expectedMessage, message) {
-    try {
-        fn();
-        assert(false, message);
-    } catch (e) {
-        assert(e.message.includes(expectedMessage), `${message}: ${e.message}`);
-    }
-}
 
 function createTestDocument(brickCount = 3) {
     const world = new World();
@@ -151,7 +140,6 @@ function createTestDocument(brickCount = 3) {
 // ---------------------------------------------------------------------
 {
     const storage = new InMemoryStorageProvider();
-    const serializer = new DocumentSerializer();
     const publisher = new LocalPublisherProvider(storage);
     const discovery = new LocalDiscoveryProvider(storage);
     const spatialIndex = new LocalSpatialIndexProvider(storage);
@@ -241,7 +229,6 @@ function createTestDocument(brickCount = 3) {
 // ---------------------------------------------------------------------
 {
     const storage = new InMemoryStorageProvider();
-    const serializer = new DocumentSerializer();
     const publisher = new LocalPublisherProvider(storage);
     const discovery = new LocalDiscoveryProvider(storage);
     const spatialIndex = new LocalSpatialIndexProvider(storage);

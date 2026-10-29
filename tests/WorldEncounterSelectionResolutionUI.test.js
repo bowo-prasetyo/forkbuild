@@ -297,7 +297,6 @@ async function run() {
                 // (`isDiscoveredPublicationSelectable`) is not new
                 // trust/verified vocabulary. Every other occurrence of
                 // "verified" stays banned.
-                const sanctioned = codeOnly.split("status === 'VERIFIED'").join('');
                 continue;
             }
             assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `20. WorldEncounterCanvas.js never uses "${term}" anywhere in its own code`);

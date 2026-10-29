@@ -1,5 +1,4 @@
 import { readFile } from 'node:fs/promises';
-import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
 import { VehicleType } from '../core/vehicles/VehicleType.js';
 import { resolveAvatarVehicleMovementCapability, AvatarMovementCapabilityKind } from '../core/vehicles/AvatarVehicleMovementCapability.js';
 import { AvatarVehicleBrakingIntent } from '../core/vehicles/AvatarVehicleBrakingIntent.js';

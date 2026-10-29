@@ -7,8 +7,7 @@ import { registerPeerWorldSource, unregisterPeerWorldSource } from '../peer/Peer
 import { derivePeerWorldOrigin } from '../peer/PeerWorldDataIngress.js';
 import {
     registerMaterializedSnapshotWorldSource,
-    unregisterMaterializedSnapshotWorldSource,
-    materializedSnapshotWorldOrigin
+    unregisterMaterializedSnapshotWorldSource
 } from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
 import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
 import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
@@ -130,10 +129,6 @@ function capturingMaterialSource(material) {
             return material;
         }
     };
-}
-
-function neverCalledMaterialSource(label) {
-    return { async load() { throw new Error(`${label} must never be consulted for this selection`); } };
 }
 
 // Mirrors tests/WorldSnapshotInspectionActionabilityAudit.test.js's own

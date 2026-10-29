@@ -164,7 +164,6 @@ async function runTests() {
         assert(offer.connection.transportState === PeerConnectionState.CONNECTED, 'setup: the published offer is now answered');
         assert(!sessions.isPublishing(), '8. once one inbound connection consumes the offer, isPublishing() is false — a publication answers at most one');
 
-        before = new Set(sessions.listPeers().map((p) => p.connectionId));
         await sessions.publishSelf();
         assert(sessions.isPublishing(), '9. publishing again makes it true again');
         await sessions.stopPublishing();

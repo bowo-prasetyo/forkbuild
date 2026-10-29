@@ -452,7 +452,7 @@ function authenticated(peer) {
     };
     let changes = 0;
     const stopListening = edge.retrieve.onPendingChanged(() => { changes += 1; });
-    assert(edge.retrieve.listPending()[0].legacy === null && edge.retrieve.listPending()[0].legacy === null, 'not flagged while its Publication is still on disk');
+    assert(edge.retrieve.listPending()[0].legacy === null, 'not flagged while its Publication is still on disk');
     loaded = true;
     release();
     await waitFor(() => changes === 1, 'listeners hear once the Publication has loaded');

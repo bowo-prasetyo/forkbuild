@@ -24,7 +24,6 @@ import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
 import { RemoveWorldPlacementUseCase } from '../application/placement/RemoveWorldPlacementUseCase.js';
 import { MoveWorldPlacementUseCase } from '../application/placement/MoveWorldPlacementUseCase.js';
-import { DiscoverWorldsUseCase } from '../application/discovery/DiscoverWorldsUseCase.js';
 import { SpatialCameraController } from '../application/world/SpatialCameraController.js';
 import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
@@ -155,7 +154,6 @@ async function runTests() {
     const removeWorldPlacementUseCase = new RemoveWorldPlacementUseCase(spatialIndexProvider, placementRegistry);
     const moveWorldPlacementUseCase = new MoveWorldPlacementUseCase(spatialIndexProvider, placementRegistry, alice);
     const unpublishDocumentUseCase = new UnpublishDocumentUseCase(publisher);
-    const discoverUseCase = new DiscoverWorldsUseCase(spatialIndexProvider);
     const publishDocumentUseCase = new PublishDocumentUseCase(publisher, alice);
     const documentCloneService = new DocumentCloneService();
 

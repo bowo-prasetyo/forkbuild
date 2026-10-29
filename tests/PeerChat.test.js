@@ -312,7 +312,6 @@ async function runTests() {
     let blockedSendThrew = false;
     try { aliceChat.sendMessage(ab.peerFromA, 'Can you still hear me?'); } catch (e) { blockedSendThrew = e.message.includes('blocked'); }
     assert(blockedSendThrew, "Alice's own sendMessage refuses a BLOCKED identity even though FRIEND is still true underneath");
-    const beforeBlockCount = bobChatOnSharedBus.getConversation(Alice.id).length;
     // Bob is unaffected by ALICE's local block — he can still send TO
     // her, but her OWN ingestion (were it wired to this connection) is
     // what would refuse him; demonstrate the inbound-to-Alice direction

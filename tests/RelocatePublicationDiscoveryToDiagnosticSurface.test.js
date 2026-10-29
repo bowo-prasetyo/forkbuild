@@ -1,6 +1,4 @@
-
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import { ownPublicationPanelSource, worldEncounterCanvasSource } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { withEnglish } from './support/EnglishSource.js';

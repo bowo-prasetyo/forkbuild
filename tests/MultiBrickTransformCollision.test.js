@@ -177,7 +177,7 @@ function createWorldWithBricks(specs) {
 
 {
     const brickRegistry = new CreateBrickRegistryUseCase().execute();
-    const { world, building, ids: [a, b, obstacle] } = createWorldWithBricks([
+    const { world, building, ids: [a, b] } = createWorldWithBricks([
         { position: new Position(0, 0.5, 0) },
         { position: new Position(4, 0.5, 0) },
         { position: new Position(2, 0.5, -2) }
@@ -215,7 +215,7 @@ function createWorldWithBricks(specs) {
 
 {
     const brickRegistry = new CreateBrickRegistryUseCase().execute();
-    const { world, building, ids: [a, b, obstacle] } = createWorldWithBricks([
+    const { world, building, ids: [a, b] } = createWorldWithBricks([
         { position: new Position(0, 0.5, 0) },
         { position: new Position(2, 0.5, 0) },
         { position: new Position(6, 0.5, 0) }

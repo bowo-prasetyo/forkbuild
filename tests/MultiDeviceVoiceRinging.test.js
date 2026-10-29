@@ -282,8 +282,8 @@ const charlieConnect = new ConnectToPeerUseCase({ peerConnectionProvider: new We
 
 const { deviceConnectedPeer: phoneToBob, hubConnectedPeer: bobFromPhone } = await pairDeviceWithHub(phoneConnect, bobConnect);
 const { deviceConnectedPeer: phoneToCharlie, hubConnectedPeer: charlieFromPhone } = await pairDeviceWithHub(phoneConnect, charlieConnect);
-const { deviceConnectedPeer: laptopToBob, hubConnectedPeer: bobFromLaptop } = await pairDeviceWithHub(laptopConnect, bobConnect);
-const { deviceConnectedPeer: laptopToCharlie, hubConnectedPeer: charlieFromLaptop } = await pairDeviceWithHub(laptopConnect, charlieConnect);
+const { hubConnectedPeer: bobFromLaptop } = await pairDeviceWithHub(laptopConnect, bobConnect);
+await pairDeviceWithHub(laptopConnect, charlieConnect);
 
 const bobStack = makeVoiceStack(bob, bobConnect.registry);
 const charlieStack = makeVoiceStack(charlie, charlieConnect.registry);

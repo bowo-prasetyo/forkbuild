@@ -1,7 +1,6 @@
 import { readFile } from 'node:fs/promises';
 
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
-import { ContentUnavailableError } from '../content/IpfsContentStore.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 
 import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';

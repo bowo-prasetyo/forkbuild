@@ -4,7 +4,6 @@ import { Document } from '../core/document/Document.js';
 import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { Position } from '../core/document/Position.js';
 import { World } from '../core/document/World.js';
-import { WorldPlacement } from '../core/publication/WorldPlacement.js';
 import { SpatialBounds } from '../core/world/SpatialBounds.js';
 import { PlacementRecord } from '../core/publication/PlacementRecord.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
@@ -16,12 +15,10 @@ import { PlacePublicationUseCase } from '../application/placement/PlacePublicati
 import { MoveWorldPlacementUseCase } from '../application/placement/MoveWorldPlacementUseCase.js';
 import { RemoveWorldPlacementUseCase } from '../application/placement/RemoveWorldPlacementUseCase.js';
 import { DiscoverPlacementsUseCase } from '../application/placement/DiscoverPlacementsUseCase.js';
-import { DiscoverWorldsUseCase } from '../application/discovery/DiscoverWorldsUseCase.js';
 import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { computeContentHash } from '../serializer/contentHash.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
@@ -33,11 +30,6 @@ const stubIdentityProvider = {
     currentUser: () => ({ username: 'alice', displayName: 'alice', providerId: 'stub' }),
     sign: (data) => ({ signedBy: 'alice', providerId: 'stub', data })
 };
-
-function assertThrows(fn, expectedMessage, message) {
-    try { fn(); assert(false, message); }
-    catch (e) { assert(e.message.includes(expectedMessage), `${message}: ${e.message}`); }
-}
 
 function createTestDocument(brickCount = 3) {
     const world = new World();
@@ -254,7 +246,6 @@ function createTestDocument(brickCount = 3) {
 // ---------------------------------------------------------------------
 {
     const storage = new InMemoryStorageProvider();
-    const serializer = new DocumentSerializer();
     const publisher = new LocalPublisherProvider(storage);
     const discovery = new LocalDiscoveryProvider(storage);
     const spatialIndex = new LocalSpatialIndexProvider(storage);
@@ -295,7 +286,6 @@ function createTestDocument(brickCount = 3) {
 // ---------------------------------------------------------------------
 {
     const storage = new InMemoryStorageProvider();
-    const serializer = new DocumentSerializer();
     const publisher = new LocalPublisherProvider(storage);
     const discovery = new LocalDiscoveryProvider(storage);
     const spatialIndex = new LocalSpatialIndexProvider(storage);
@@ -339,7 +329,6 @@ function createTestDocument(brickCount = 3) {
 // ---------------------------------------------------------------------
 {
     const storage = new InMemoryStorageProvider();
-    const serializer = new DocumentSerializer();
     const publisher = new LocalPublisherProvider(storage);
     const discovery = new LocalDiscoveryProvider(storage);
     const spatialIndex = new LocalSpatialIndexProvider(storage);
@@ -527,7 +516,7 @@ function createTestDocument(brickCount = 3) {
         publicationId: 'pub-1', owner: 'alice',
         position: new Position(100, 0, 0)
     }));
-    const p3 = placementRegistry.add(new PlacementRecord({
+    placementRegistry.add(new PlacementRecord({
         publicationId: 'pub-1', owner: 'alice',
         position: new Position(200, 0, 0)
     }));
@@ -584,7 +573,6 @@ function createTestDocument(brickCount = 3) {
 // ---------------------------------------------------------------------
 {
     const storage = new InMemoryStorageProvider();
-    const serializer = new DocumentSerializer();
     const publisher = new LocalPublisherProvider(storage);
     const discovery = new LocalDiscoveryProvider(storage);
     const spatialIndex = new LocalSpatialIndexProvider(storage);

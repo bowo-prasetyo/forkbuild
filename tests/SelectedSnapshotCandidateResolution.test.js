@@ -247,7 +247,7 @@ async function run() {
     // Section C — the candidate's exact locator reaches the ContentStore.
     // ---------------------------------------------------------------
     {
-        const { registry, resolver } = makeScenario();
+        const { resolver } = makeScenario();
         let receivedReference = null;
         const spyStore = {
             storage: 'ar',
@@ -310,7 +310,7 @@ async function run() {
     // Section F — metadata cannot manufacture success.
     // ---------------------------------------------------------------
     {
-        const { registry, resolver } = makeScenario();
+        const { resolver } = makeScenario();
         // A candidate claiming a correct-LOOKING contentHash whose own
         // locator serves bytes that genuinely disagree with it.
         const spyStore = { storage: 'ar', async put() { throw new Error('unused'); }, async get() { return 'the actual bytes at this locator'; } };

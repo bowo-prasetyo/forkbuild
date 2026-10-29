@@ -56,25 +56,6 @@ function createDocumentWithBricks(count) {
     };
 }
 
-function createEditorSession(document) {
-    const brickRegistry = new CreateBrickRegistryUseCase().execute();
-    const editorContext = new EditorContext();
-    const selectionUseCase = new SelectionUseCase(editorContext);
-    const session = new EditorSession({
-        registry: brickRegistry,
-        editorContext,
-        toolRegistry: null,
-        documentManager: (() => {
-            const { DocumentManager } = { DocumentManager: null }; // placeholder, replaced below
-            return null;
-        })(),
-        selectionUseCase,
-        previewUseCase: new PreviewUseCase(editorContext),
-        loadDocumentUseCase: null
-    });
-    return { session, editorContext, selectionUseCase };
-}
-
 // ---------------------------------------------------------------------
 // 1. Selection state semantics: union add, toggle, dedupe
 // ---------------------------------------------------------------------
@@ -244,7 +225,7 @@ function createEditorSession(document) {
 
     const docId = source.document.world.id;
     const buildingId = source.building.id;
-    const [idA, idB, idC, idD] = source.ids;
+    const [idA, idB, idC] = source.ids;
     const history = nav._commandHistories.get(source.document.world.id);
 
     // Pick modes: replace / toggle / additive.

@@ -500,15 +500,6 @@ async function runTests() {
         const canvasCode = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(!canvasCode.includes('OwnPublicationPanel'), '40. WorldEncounterCanvas.js is untouched by this milestone — it knows nothing of OwnPublicationPanel');
 
-        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
-        const forbiddenInUi = [
-            'window.arweaveWallet', 'window.nostr', 'WebSocket',
-            'new ArweaveContentStore(', 'new NostrSnapshotDiscoveryPublisher(',
-            'composeSnapshotDistributionRuntime(', 'executeSnapshotDistributionCommand(',
-            'selectedEncounter', 'WorldDiscoverySourceRegistry', 'worldDiscoverySourceRegistry'
-        ];
-        for (const term of forbiddenInUi) {
-        }
 
         assert(/<OwnPublicationPanel[\s\S]{0,300}:snapshotDistributionCommand="distributeWorldEncounterSnapshot"/.test(viewCode),
             '42. OwnPublicationPanel reuses the SAME distributeWorldEncounterSnapshot wrapper WorldEncounterCanvas already uses — never a second command');

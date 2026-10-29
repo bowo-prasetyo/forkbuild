@@ -6,7 +6,6 @@ import {
 } from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
 import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
 import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
-import { resolveSnapshotWorldPlacement } from '../application/snapshot/placement/SnapshotWorldPlacement.js';
 import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
 import { assembleWorldDiscoveryInputs } from '../core/world/WorldDiscoverySourceAssembly.js';
 import { deriveWorldEncounters } from '../core/world/WorldEncounter.js';

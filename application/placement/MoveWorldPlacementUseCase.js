@@ -1,4 +1,3 @@
-import { PlacementRecord } from '../../core/publication/PlacementRecord.js';
 import { CausalStamp } from '../../core/collaboration/CausalStamp.js';
 import { RevisionReference } from '../../core/document/RevisionReference.js';
 

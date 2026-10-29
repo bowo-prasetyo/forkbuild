@@ -174,8 +174,8 @@ async function runTests() {
     const bobSessions = new PeerSessionManager({ identityProvider: bobDevice });
     const charlieSessions = new PeerSessionManager({ identityProvider: charlieDevice });
 
-    const { inviterPeer: aliceBobPeer, accepterPeer: bobPeer } = await connectPeers(aliceSessions, bobSessions);
-    const { inviterPeer: aliceCharliePeer, accepterPeer: charliePeer } = await connectPeers(aliceSessions, charlieSessions);
+    const { accepterPeer: bobPeer } = await connectPeers(aliceSessions, bobSessions);
+    const { accepterPeer: charliePeer } = await connectPeers(aliceSessions, charlieSessions);
 
     // Bob and Charlie both deliberately choose to remember Alice — see
     // application/peer/PeerRelationshipUseCase.js's own header, "Remembering

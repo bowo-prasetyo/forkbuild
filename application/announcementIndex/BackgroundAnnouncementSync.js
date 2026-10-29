@@ -84,7 +84,7 @@ export class BackgroundAnnouncementSync {
     }
 
     async _run() {
-        let summary = { targets: [], behind: false };
+        let summary;
         try {
             const { core = [], rotating = [] } = this._targets() || {};
             const start = rotating.length > 0 ? this._rotation % rotating.length : 0;

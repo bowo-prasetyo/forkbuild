@@ -151,7 +151,6 @@ const CAR_COLLISION_RADIUS = 0.80; // world units
 const DRONE_COLLISION_RADIUS = 0.5; // world units
 
 const PERMITS_BOTH_DIRECTIONS = new AvatarMovementDirectionCapability(true, true);
-const NO_DIRECTIONS_PERMITTED = new AvatarMovementDirectionCapability(false, false);
 
 // On-foot movement reaches its target speed, stops and turns within a single
 // tick, so WALK uses INSTANT for acceleration, braking and steering.

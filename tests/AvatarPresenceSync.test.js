@@ -393,7 +393,6 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         const { avatarProfileUseCase, avatarPresenceSession } = buildAvatarStack(registry, 'session-j1');
-        const template = registry.get('humanoid-01');
         const provider = new LocalAvatarPresenceBroadcastProvider('forkbuild-test-session-j1');
         const session = new WorldNavigationSession({
             registry: new CreateBrickRegistryUseCase().execute(), loadPublicationDocumentUseCase: null, worldLayoutProvider: null,

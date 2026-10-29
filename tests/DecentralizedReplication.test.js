@@ -4,7 +4,6 @@ import { ConflictSet } from '../core/collaboration/ConflictSet.js';
 import { PlacementRecord } from '../core/publication/PlacementRecord.js';
 import { Position } from '../core/document/Position.js';
 import { SpatialBounds } from '../core/world/SpatialBounds.js';
-import { Signature } from '../core/publication/Signature.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';

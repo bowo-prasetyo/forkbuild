@@ -1,5 +1,5 @@
 import { PublicationHeart, currentHeartsFor } from '../core/publication/PublicationHeart.js';
-import { PublicationHeartDistributionEnvelope, PUBLICATION_HEART_DISTRIBUTION_KIND } from '../core/publication/PublicationHeartDistributionEnvelope.js';
+import { PUBLICATION_HEART_DISTRIBUTION_KIND } from '../core/publication/PublicationHeartDistributionEnvelope.js';
 import { PublicationCommentary } from '../core/publication/PublicationCommentary.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';

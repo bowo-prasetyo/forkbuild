@@ -349,8 +349,6 @@ async function run() {
         // identity-vocabulary occurrence while allowing exactly these two,
         // already-reviewed identifiers — mirroring the `.origin`
         // allowlist's own narrowing immediately above, one concept over.
-        const identityVocabularyMatches = Array.from(codeOnly.matchAll(/[A-Za-z_$][\w$]*(?:identityId|remoteIdentity|peerId)[\w$]*/gi)).map((match) => match[0]);
-        const allowedIdentityVocabulary = new Set(['authorIdentityId', 'viewerIdentityId', 'commentary.authorIdentityId', 'this.viewerIdentityId']);
         assert(!codeOnly.includes('fetch('), '29. WorldEncounterCanvas.js never fetches peer data itself');
         assert(!/localStorage|sessionStorage|StorageProvider/.test(codeOnly), '30. WorldEncounterCanvas.js never persists anything');
         assert(!codeOnly.includes('.sort('), '31. WorldEncounterCanvas.js still performs no sorting of its own, unchanged from 0.9.3');

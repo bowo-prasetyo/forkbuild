@@ -16,9 +16,6 @@ import { NotificationEventStore } from '../storage/NotificationEventStore.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 
 import {
-    PublicationCommentaryDeliveryStatus,
-    PUBLICATION_COMMENTARY_DELIVERY_STATUS_SEQUENCE,
-    isValidPublicationCommentaryDeliveryStatusTransition,
     describesConformingPublicationCommentaryAsynchronousDeliverySubstrate
 } from '../core/publication/PublicationCommentaryAsynchronousDeliveryContract.js';
 

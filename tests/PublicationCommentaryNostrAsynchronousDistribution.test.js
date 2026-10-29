@@ -257,7 +257,7 @@ async function run() {
     {
         const relay = makeSharedFakeRelay();
         const authorProvider = makeIdentity('0.9.628-filter-author');
-        const { store: authorStore, exchange: authorExchange } = makeExchange(authorProvider);
+        const { exchange: authorExchange } = makeExchange(authorProvider);
 
         const commentaryA = new PublicationCommentary({ publicationId: 'pub-0.9.628-A', authorIdentityId: authorProvider.getSigningIdentity().id, content: 'about A' });
         const commentaryB = new PublicationCommentary({ publicationId: 'pub-0.9.628-B', authorIdentityId: authorProvider.getSigningIdentity().id, content: 'about B' });

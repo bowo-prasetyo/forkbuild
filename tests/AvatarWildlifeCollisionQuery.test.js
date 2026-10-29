@@ -3,7 +3,6 @@ import {
     wildlifeCollisionCandidatesForMovement, MAX_ANIMAL_COLLISION_RADIUS, CANDIDATE_QUERY_MARGIN
 } from '../core/avatar/AvatarWildlifeCollisionQuery.js';
 import { wildlifeCollisionGeometryInRegion, ANIMAL_COLLISION_RADIUS } from '../core/nature/WildlifeCollisionGeometry.js';
-import { wildlifeInRegion, WILDLIFE_FEATURE_TYPE } from '../core/nature/WildlifeField.js';
 import { AVATAR_COLLISION_RADIUS } from '../core/avatar/AvatarCollision.js';
 import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
 import { assert } from './support/Assert.js';

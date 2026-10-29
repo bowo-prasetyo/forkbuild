@@ -1,4 +1,3 @@
-import { DecentralizedPublication } from '../core/publication/DecentralizedPublication.js';
 import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { PublicationExchange } from '../application/publication/PublicationExchange.js';
 import { PublicationResolver } from '../application/publication/PublicationResolver.js';

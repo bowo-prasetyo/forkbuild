@@ -10,7 +10,6 @@ import { NotificationEventStore } from '../storage/NotificationEventStore.js';
 import { Publication } from '../publisher/Publication.js';
 
 import { PublicationCommentaryDistributionExchange } from '../application/publication/commentary/PublicationCommentaryDistributionExchange.js';
-import { PublicationCommentaryDistributionPeerExchange } from '../application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js';
 import { CreatePublicationCommentaryUseCase } from '../application/publication/commentary/CreatePublicationCommentaryUseCase.js';
 import { CreatePublicationCommentaryDistributionPeerExchangeUseCase } from '../application/publication/commentary/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js';
 import { PublicationCommentaryRemoteNotificationBridge } from '../application/publication/commentary/PublicationCommentaryRemoteNotificationBridge.js';
@@ -248,7 +247,7 @@ async function run() {
             list() { return []; }
             onChange() { return () => {}; }
         }
-        const { store, peerExchange, distributionStore, remoteNotificationBridge, unsubscribeRemoteNotificationBridge } =
+        const { store, peerExchange, remoteNotificationBridge, unsubscribeRemoteNotificationBridge } =
             (() => {
                 const { store, peerExchange } = new CreatePublicationCommentaryDistributionPeerExchangeUseCase().execute({
                     identityProvider: alice, peerMessageBus: bus, connectedPeerRegistry: new FakeRegistry()

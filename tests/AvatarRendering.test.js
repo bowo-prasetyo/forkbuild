@@ -1,8 +1,6 @@
 import * as THREE from 'three';
 import { AvatarRenderer } from '../renderer/AvatarRenderer.js';
 import { AvatarVisual } from '../renderer/AvatarVisual.js';
-import { AvatarProfile } from '../core/avatar/AvatarProfile.js';
-import { AvatarPresence } from '../core/avatar/AvatarPresence.js';
 import { AvatarAnimationState } from '../core/avatar/AvatarAnimationState.js';
 import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';

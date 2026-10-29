@@ -158,7 +158,6 @@ async function run() {
     // ---------------------------------------------------------------
     // Section A — FLAGSHIP
     // ---------------------------------------------------------------
-    let sharedPlacementJson, sharedNetwork;
     {
         const net = makeFakeIpfsNode();
         const aliceIpfs = new IpfsContentStore({ apiUrl: 'http://alice-node.test:5001', fetchImpl: net.fetchImpl });
@@ -209,8 +208,6 @@ async function run() {
         assert(bobResult.bytes === JSON.stringify({ farmstead: true }),
             '12. the resolved bytes are byte-identical to Alice\'s own locally stored snapshot');
 
-        sharedPlacementJson = placementJson;
-        sharedNetwork = net;
     }
     console.log('✓ Section A: Alice explicitly creates an IPFS placement; the UI states exactly "a snapshot placement was recorded," never more; Bob independently discovers and resolves it against the same store');
 

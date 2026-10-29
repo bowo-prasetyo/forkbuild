@@ -509,7 +509,7 @@ export default {
         });
 
         const {
-            showHistoryPanel, historyPanelDocumentId, historyTimeline, selectedHistoryEntryId,
+            showHistoryPanel, historyTimeline, selectedHistoryEntryId,
             historyPreviewCursor, canUndo, canRedo, undoLabel, redoLabel, openHistoryPanel, closeHistoryPanel,
             selectHistoryEntry, _resolveSelectedHistoryCursor, previewSelectedHistoryEntry,
             cancelHistoryPreviewAction, restoreSelectedHistoryEntry, undoAction, redoAction
@@ -958,7 +958,7 @@ export default {
             namingPanelGeographicRegions, namingPanelGeographicView, namingPanelDiscoveryProvider,
             namingPanelDistributionClaimId, namingPanelDistributionExecuting, namingPanelDistributionError,
             namingPanelDistributionResult, namingPanelDistributionOfferClaimId, myIdentityId,
-            refreshNamingPanel, openNamingPanel, closeNamingPanel,
+            openNamingPanel, closeNamingPanel,
             publishNamingClaim, retractNamingClaim, setPreferredNamingName, clearPreferredNamingName,
             exportNamingClaim, importNamingClaim, distributeNamingClaim, dismissNamingClaimDistributionOffer
         } = usePlaceNamingPanel({
@@ -1013,7 +1013,7 @@ export default {
             nearbyPlaceNamingClaims, placeNamingDiscoveryError, NEARBY_PLACES_SECTION,
             NEARBY_LANDMARKS_SECTION, NEARBY_PEOPLE_SECTION, WORLD_ENCOUNTERS_SECTION,
             NEARBY_PLACE_NAMING_SECTION, NEARBY_CLAIMED_BUILDS_SECTION, nearbySectionsCollapsed, setNearbySectionCollapsed,
-            nearbyLandmarkRows, nearbyPeopleRows, formatNearbyPlaceNamingCreatedAt, nearbyPlaceNamingClaimRows,
+            nearbyLandmarkRows, nearbyPeopleRows, nearbyPlaceNamingClaimRows,
             navigateToNearbyPlaceNamingClaim, adoptNearbyPlaceNamingClaim
         } = useNearbySections({
             feedback, guarded, refreshSpatialUI, resolveIdentityDisplayName, session, spatialCollaboratorRows,
@@ -1026,9 +1026,9 @@ export default {
             openMapPanel, refreshMapContent, closeMapPanel, openFocusForLocation, openFocusForGeographicPlace,
             openFocusForCollaborator, closeFocusPanel, goFromFocusPanel, showFocusOnMap,
             openNamesFromFocusPanel, currentReturnWorld, editFocusedCopyFromFocusPanel,
-            openGeographicPlaceDirectory, showGeographicPlaceDirectoryList, goToGeographicPlace,
+            openGeographicPlaceDirectory, goToGeographicPlace,
             closeGeographicPlaceDirectory, openGeographicPlace, restoreGeographicPlaceDetail,
-            closeGeographicPlacePanel, goBackInPlaces, openNamesFromPlace, showGeographicPlaceOnMap
+            goBackInPlaces, openNamesFromPlace, showGeographicPlaceOnMap
         } = usePlacesAndFocus({
             closeWelcomePanel, feedback, focusedDocumentTitle, openNamingPanel, refreshLocationsPanel,
             refreshSpatialUI, resolveIdentityDisplayName, route, router, session, setPrimaryMode,
@@ -1184,7 +1184,7 @@ export default {
             searchResults, showLocationDocuments, locationDocumentsPosition, locationDocumentsOccupants,
             showLocationBrowser, locationBrowserCenter, locationBrowserRadius, locationBrowserDocuments,
             locationBrowserInspected, performSearch, openLocationDocuments,
-            closeLocationDocuments, focusLocationDocument, openLocationBrowser, exploreHere, whatsHere,
+            closeLocationDocuments, focusLocationDocument, exploreHere, whatsHere,
             reExploreLocationBrowser, closeLocationBrowser, focusLocationBrowserResult,
             selectLocationBrowserResult, inspectLocationBrowserResult
         } = useLocationBrowser({

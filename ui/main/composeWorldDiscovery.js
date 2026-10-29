@@ -104,7 +104,6 @@ export function composeWorldDiscovery({
     // never fails over in order.
     const nostrRelayConfigurationStore = new NostrRelayConfigurationStore(new LocalStorageProvider());
     const resolvedNostrRelayUrls = (nostrRelayConfigurationStore.get() || { relayUrls: DEFAULT_NOSTR_RELAY_URLS }).relayUrls;
-    const resolvedNostrRelayUrl = resolvedNostrRelayUrls[0];
     const setNostrRelayConfigurationUseCase = new SetNostrRelayConfigurationUseCase({ nostrRelayConfigurationStore });
 
 

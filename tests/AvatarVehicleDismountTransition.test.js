@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { deriveAvatarVehicleDismountTransition } from '../core/vehicles/AvatarVehicleDismountTransition.js';
-import { AvatarVehicleMount, createAvatarVehicleMount } from '../core/vehicles/AvatarVehicleMount.js';
+import { createAvatarVehicleMount } from '../core/vehicles/AvatarVehicleMount.js';
 import { AvatarVehicleDismountIntent } from '../core/vehicles/AvatarVehicleDismountIntent.js';
 import { Position } from '../core/document/Position.js';
 import { assert } from './support/Assert.js';

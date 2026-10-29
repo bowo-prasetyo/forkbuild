@@ -213,7 +213,6 @@ async function run() {
     // deserialized World content _loadWorld() actually produced, not
     // merely on provider.findById().
     // ===============================================================
-    let flagship;
     {
         const storage = new InMemoryStorageProvider();
         const decentralized = new DecentralizedPublicationDiscoveryProvider();
@@ -256,7 +255,6 @@ async function run() {
         assert(harness.session.isDocumentPublished(publication.documentId) === true,
             'B8. The loaded document is correctly marked as an immutable published snapshot (see WorldNavigationSession#_loadWorld()\'s own 0.9.605 comment on isMaterializedPublication) — consistent with the World View read-only observation boundary, even though this Publication was never locally authored and so _isKnownPublication()/_findPublications() (fork-policy\'s own narrow choke point, untouched) cannot see it either.');
 
-        flagship = { storage, harness, publication };
         console.log('✓ B — FLAGSHIP: DISCOVER -> RESOLVE -> VERIFY -> ADMIT -> PLACE -> PlacementRecord -> WorldLayoutProvider -> discovered -> LoadPublishedWorldSessionUseCase (via _loadWorld()\'s own fallback) -> World document -> RENDER, proven end to end against the real, unmodified production classes, with the final assertion on actual rendered content (B7).');
     }
 

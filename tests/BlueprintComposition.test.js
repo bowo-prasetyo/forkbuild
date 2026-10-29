@@ -1,4 +1,3 @@
-import { Position } from '../core/document/Position.js';
 import { SpatialBounds } from '../core/world/SpatialBounds.js';
 import { World } from '../core/document/World.js';
 import { Building } from '../core/building/Building.js';

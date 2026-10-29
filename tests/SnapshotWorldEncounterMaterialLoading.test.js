@@ -197,10 +197,6 @@ function viewById(registry) {
     return Object.fromEntries(view.publications.map((p) => [p.objectId, p]));
 }
 
-function placedResult(contentHash, publicationId, position, placementId = 'placement-x') {
-    return { outcome: SnapshotWorldPlacementOutcome.PLACED, contentHash, publicationId, placementId, position, reason: null };
-}
-
 class RecordingMaterialSource extends WorldEncounterMaterialSource {
     constructor(material) { super(); this.material = material; this.calls = []; }
     async load(resolvedSelection) { this.calls.push(resolvedSelection); return this.material; }

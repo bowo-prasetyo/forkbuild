@@ -1,9 +1,8 @@
-
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 
 import { PublicationCommentary } from '../core/publication/PublicationCommentary.js';
 import { PublicationCommentaryDistributionEnvelope } from '../core/publication/PublicationCommentaryDistributionEnvelope.js';
-import { PublicationCommentaryStore, PublicationCommentaryConflictError } from '../storage/PublicationCommentaryStore.js';
+import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
 import { PublicationCommentaryDistributionExchange } from '../application/publication/commentary/PublicationCommentaryDistributionExchange.js';
 
 import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';

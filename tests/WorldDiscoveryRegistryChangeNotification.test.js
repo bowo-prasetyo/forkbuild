@@ -2,8 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
 import { describeWorldFromDiscoveryRegistry } from '../application/discovery/WorldDiscoveryRegistryProjection.js';
 import {
-    describeLocalWorldDiscoverySource,
-    describeWorldFromDiscoverySources
+    describeLocalWorldDiscoverySource
 } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { describePeerWorldDiscoverySource } from '../peer/PeerWorldDataIngress.js';
 import { describeWorldDiscoverySource } from '../core/world/WorldDiscoverySource.js';

@@ -160,7 +160,6 @@ async function runTests() {
     // connection. It has NEVER sent Bob a friend request of its own —
     // yet Bob's own eligibility check, resolving THIS connection through
     // the SAME device-authorization knowledge, already sees a FRIEND.
-    const laptopStack = makeSocialStack(laptop);
     const { peerB: bobFromLaptop } = await connectAndAuthenticate(network, 'laptop', laptop, 'bob-for-laptop', bob);
     bobStack.connectedPeerRegistry.add(bobFromLaptop);
     assert(bobStack.chat.canChat(bobStack.deviceAuth.resolveConnectionIdentity(bobFromLaptop).identityId),

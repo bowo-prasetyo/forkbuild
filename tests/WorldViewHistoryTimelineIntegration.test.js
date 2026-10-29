@@ -1,6 +1,5 @@
 import { readFile } from 'node:fs/promises';
 
-import { Brick } from '../core/building/Brick.js';
 import { Building } from '../core/building/Building.js';
 import { Document } from '../core/document/Document.js';
 import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
@@ -423,7 +422,6 @@ async function run() {
         // SAME resolver is what both Preview and Restore call — never two
         // independently-drifting lookups.
         assert(worldViewSource.includes('_resolveSelectedHistoryCursor'), 'a single cursor-resolution function exists');
-        const previewFnMatch = worldViewSource.match(/function previewSelectedHistoryEntry\(\)[\s\S]*?\n        \}/);
         const restoreFnMatch = worldViewSource.match(/function restoreSelectedHistoryEntry\(\)[\s\S]*?\n        \}/);
         assert(restoreFnMatch && restoreFnMatch[0].includes('_resolveSelectedHistoryCursor()'), 'Restore resolves the cursor via the shared resolver');
         assert(worldViewSource.includes("candidate.id === selectedHistoryEntryId.value"), 'the resolver matches by entry id, never by array position');

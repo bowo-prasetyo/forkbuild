@@ -1,4 +1,3 @@
-
 import { RendezvousConfiguration, isValidRendezvousUrl } from '../core/networks/RendezvousConfiguration.js';
 import { IceServerConfiguration } from '../core/networks/IceServerConfiguration.js';
 import { ArweaveGatewayConfiguration } from '../core/networks/ArweaveGatewayConfiguration.js';
@@ -14,7 +13,6 @@ import { WebSocketRendezvousTransport } from '../peer/WebSocketRendezvousTranspo
 import { RendezvousDiscoveryProvider } from '../peer/RendezvousDiscoveryProvider.js';
 import { DiscoveryBootstrap } from '../peer/DiscoveryBootstrap.js';
 import { DEFAULT_RENDEZVOUS_URLS } from '../peer/RendezvousConfig.js';
-import { DEFAULT_ICE_SERVERS } from '../peer/IceServerConfig.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';

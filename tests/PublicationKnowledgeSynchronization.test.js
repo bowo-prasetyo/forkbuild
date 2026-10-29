@@ -282,8 +282,6 @@ async function run() {
         bobReplica.anchorExchange.importAnchor(anchorB.toJSON());
         bobReplica.placementExchange.importPlacement(placementY.toJSON());
 
-        const bobPeerOnAlice = aliceConnect.registry.list().find((peer) => peer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED);
-        const alicePeerOnBob = bobConnect.registry.list().find((peer) => peer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED);
 
         // Alice pulls from Bob: gets Anchor B and Placement Y in ONE call.
         const aliceSync = await aliceReplica.syncCoordinator.synchronize(PUBLICATION_ID, { timeoutMs: 200 });

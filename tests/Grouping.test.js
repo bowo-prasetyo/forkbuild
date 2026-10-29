@@ -16,8 +16,6 @@ import { RenameGroupCommand } from '../application/commands/RenameGroupCommand.j
 import { AddToGroupCommand } from '../application/commands/AddToGroupCommand.js';
 import { RemoveFromGroupCommand } from '../application/commands/RemoveFromGroupCommand.js';
 import { DuplicateGroupCommand } from '../application/commands/DuplicateGroupCommand.js';
-import { PasteBricksCommand } from '../application/commands/PasteBricksCommand.js';
-import { SpatialClipboardState } from '../application/spatial-state/SpatialClipboardState.js';
 import { SpatialSelectionState } from '../application/spatial-state/SpatialSelectionState.js';
 import { SelectionState } from '../application/editor-state/SelectionState.js';
 import { CopySelectionUseCase } from '../application/editor/CopySelectionUseCase.js';
@@ -121,7 +119,7 @@ function createWorldWithBricks(specs) {
 
 {
     const registry = new CreateCommandRegistryUseCase().execute();
-    const { world, ids: [a, b, c] } = createWorldWithBricks([
+    const { world, ids: [a, b] } = createWorldWithBricks([
         { position: new Position(0, 0.5, 0) },
         { position: new Position(2, 0.5, 0) },
         { position: new Position(4, 0.5, 0) }

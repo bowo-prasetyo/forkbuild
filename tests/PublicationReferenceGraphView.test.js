@@ -159,7 +159,6 @@ async function run() {
         // Carol references Bob's publication too — Bob is now BOTH a
         // source (of his three references to Alice) AND a referenced
         // target (of Carol's new reference to him).
-        const referenceUseCase = new CreatePublicationReferenceRecordUseCase();
         let archive = PublicationObservationArchive.empty();
         const recordBobToAlice = new PublicationReferenceRecord({ sourcePublicationIdentity: bobIdentity, referencedPublicationIdentity: aliceIdentity, createdAt: new Date('2026-08-13T00:00:00Z') });
         const recordCarolToBob = new PublicationReferenceRecord({ sourcePublicationIdentity: carolIdentity, referencedPublicationIdentity: bobIdentity, createdAt: new Date('2026-08-15T00:00:00Z') });
