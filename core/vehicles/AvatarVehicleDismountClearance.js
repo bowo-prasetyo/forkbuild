@@ -1,5 +1,5 @@
 import { avatarCollisionCircleAt, avatarTreeCollision } from '../avatar/AvatarTreeCollision.js';
-import { isFiniteCoordinate, isFiniteXZPosition } from '../document/FiniteCoordinates.js';
+import { isFiniteXZPosition } from '../document/FiniteCoordinates.js';
 
 // 0.9.81 — Vehicle Dismount Destination Clearance.
 //

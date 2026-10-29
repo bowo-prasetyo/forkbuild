@@ -278,8 +278,7 @@ function run() {
         assert(JSON.stringify(first) === JSON.stringify(second), '1. calling twice with byte-identical arguments returns a byte-identical result');
         assert(Object.isFrozen(first), '2. the returned descriptor is frozen');
 
-        let threw = false;
-        try { first.contentHash = 'tampered'; } catch (e) { threw = true; }
+        try { first.contentHash = 'tampered'; } catch { /* frozen: strict mode throws */ }
         assert(first.contentHash === 'hash-abc', "3. the frozen descriptor's own contentHash cannot be reassigned");
 
         assert(Object.isFrozen(presentation) && Object.isFrozen(resolvedSelection), '4. sanity — the inputs themselves stay frozen/unmutated');

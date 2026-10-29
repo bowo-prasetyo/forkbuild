@@ -9,10 +9,6 @@ import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickReg
 import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
 import { SpatialEditingService } from '../application/editor/SpatialEditingService.js';
 import { SpatialSelectionState } from '../application/spatial-state/SpatialSelectionState.js';
-import { SelectionState } from '../application/editor-state/SelectionState.js';
-import { EditorContext } from '../application/editor/EditorContext.js';
-import { SelectionUseCase } from '../application/editor/SelectionUseCase.js';
-import { SelectionTool } from '../application/tools/SelectionTool.js';
 import { TransformMath } from '../application/editor/TransformMath.js';
 import { assert } from './support/Assert.js';
 
@@ -24,7 +20,6 @@ function close(actual, expected, message) {
     assert(Math.abs(actual - expected) < 1e-9, `${message}: expected ${expected}, got ${actual}`);
 }
 
-const PLAIN_MODIFIERS = { ctrl: false, shift: false, alt: false, meta: false };
 
 function createWorldWithBricks(specs) {
     const world = new World();

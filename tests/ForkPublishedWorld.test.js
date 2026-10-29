@@ -1,4 +1,4 @@
-import { storedBricks, corruptFirstBrickPosition } from './support/StoredDocumentBricks.js';
+import { storedBricks } from './support/StoredDocumentBricks.js';
 import { Brick } from '../core/building/Brick.js';
 import { Building } from '../core/building/Building.js';
 import { Document } from '../core/document/Document.js';
@@ -13,9 +13,7 @@ import { PlaceBrickCommand } from '../application/commands/PlaceBrickCommand.js'
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
 import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
 import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
-import { LoadPublishedSnapshotUseCase } from '../application/snapshot/LoadPublishedSnapshotUseCase.js';
 import { ForkPublishedWorldUseCase } from '../application/publication/ForkPublishedWorldUseCase.js';
-import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';

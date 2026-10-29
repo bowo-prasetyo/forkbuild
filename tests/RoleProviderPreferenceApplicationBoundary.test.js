@@ -119,12 +119,6 @@ async function run() {
     // ===============================================================
     {
         const store = makePreferenceStore();
-        const resolver = new RoleAwareProviderResolver({
-            preferenceStore: store,
-            discoveryRegistry: emptyRegistry(),
-            contentRegistry: emptyRegistry(),
-            proofRegistry: emptyRegistry()
-        });
         expectThrows(() => new ResolvePreferredRoleProviderUseCase({}), 'A1. no preferenceStore or resolver at all throws');
         expectThrows(() => new ResolvePreferredRoleProviderUseCase({ preferenceStore: {} }), 'A2. a plain object is not a RoleProviderPreferenceStore');
         expectThrows(() => new ResolvePreferredRoleProviderUseCase({ preferenceStore: store }), 'A3. missing resolver throws');
@@ -388,12 +382,6 @@ async function run() {
         // header names this class in prose only (drawing the
         // read-use-case/write-use-case symmetry) — it never imports or
         // constructs it.
-        const KNOWN_FILES = new Set([
-            'application/settings/ResolvePreferredRoleProviderUseCase.js',
-            'application/snapshot/placement/PreferredSnapshotPlacementCreationCoordinator.js',
-            'application/snapshot/placement/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js',
-            'application/settings/SetRoleProviderPreferenceUseCase.js'
-        ]);
         let hits = 0;
         const hitFiles = [];
         for (const file of allProductionFiles) {

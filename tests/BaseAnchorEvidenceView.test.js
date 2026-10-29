@@ -1,5 +1,4 @@
 import { readFile } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
 import { PublicationAnchor } from '../core/publication/PublicationAnchor.js';
 import { DecentralizedPublication } from '../core/publication/DecentralizedPublication.js';
 import { ContentReference } from '../core/document/ContentReference.js';

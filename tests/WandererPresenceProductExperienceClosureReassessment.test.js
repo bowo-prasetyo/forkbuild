@@ -16,11 +16,10 @@ import { toAvatarPresenceAdvertisement } from '../core/avatar/AvatarPresenceAdve
 import { PeerAvatarPresenceBroadcastProvider } from '../presence/PeerAvatarPresenceBroadcastProvider.js';
 import { computeNearbyAvatars } from '../core/avatar/AvatarProximity.js';
 
-import { describeLifecycleState as describeLifecycleStateMessage, describeTrustStatus as describeTrustStatusMessage, describeAnimationState as describeAnimationStateMessage } from '../application/avatar/AvatarPresenceLabels.js';
+import { describeLifecycleState as describeLifecycleStateMessage, describeAnimationState as describeAnimationStateMessage } from '../application/avatar/AvatarPresenceLabels.js';
 import { t } from '../ui/i18n/i18n.js';
 // Each label as a person reads it, in English.
 const describeLifecycleState = (...args) => t(describeLifecycleStateMessage(...args));
-const describeTrustStatus = (...args) => t(describeTrustStatusMessage(...args));
 const describeAnimationState = (...args) => t(describeAnimationStateMessage(...args));
 import NearbyAvatarsPanel from '../ui/components/NearbyAvatarsPanel.js';
 import AvatarInfoPanel from '../ui/components/AvatarInfoPanel.js';
@@ -335,15 +334,6 @@ async function main() {
         // C1 — isLocal is the one flag the panel uses to distinguish
         // "you" from "someone else," and it changes BOTH the Status row
         // AND which action buttons exist — never just a label swap.
-        const localInfo = {
-            displayName: 'You', templateLabel: 'Humanoid 01', isLocal: true,
-            position: { x: 0, y: 0, z: 0 }, distance: null, animation: 'idle'
-        };
-        const remoteInfo = {
-            displayName: 'Bob', templateLabel: 'Humanoid 01', isLocal: false,
-            lifecycleState: 'present', trustStatus: 'valid',
-            position: { x: 5, y: 0, z: 5 }, distance: 7.07, animation: 'walking'
-        };
         const infoTemplate = withEnglish(AvatarInfoPanel.template);
         assert(infoTemplate.includes('v-if="info.isLocal"') && infoTemplate.includes('This is you'),
             'C1a. The Status row explicitly reads "This is you" for the local avatar — never a lifecycle/trust judgment applied to yourself.');

@@ -1,7 +1,6 @@
 import { usePostPublishDistribution } from '../ui/views/editorView/usePostPublishDistribution.js';
 import { mountComponent } from './support/MinimalVueCompositionApiShim.js';
 
-import { executePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommand.js';
 import { composeMultiRelayNostrPublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js';
 import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
 import { PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';

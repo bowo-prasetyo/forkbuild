@@ -384,10 +384,6 @@ function writeU32LE(v) { const b = new Uint8Array(4); new DataView(b.buffer).set
 function writeU64LE(v) { const b = new Uint8Array(8); new DataView(b.buffer).setBigUint64(0, BigInt(v), true); return b; }
 function encodeVarBytes(bytes) { return concatBytes([Uint8Array.from([bytes.length]), bytes]); }
 
-function utxo(txid, vout, valueSats, scriptType) {
-    return { txid: txid.repeat(64).slice(0, 64), vout, valueSats, scriptType };
-}
-
 function fakeUnisatProvider({ account, network = 'livenet', onSignPsbt, calls = [] } = {}) {
     return {
         async requestAccounts() { return [account]; },

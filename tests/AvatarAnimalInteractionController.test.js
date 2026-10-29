@@ -3,7 +3,6 @@ import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSessi
 import { AnimalRuntimeInstances } from '../application/world/AnimalRuntimeInstances.js';
 import { animalPresenceInRegion } from '../core/nature/AnimalPlacement.js';
 import { Position } from '../core/document/Position.js';
-import { ANIMAL_SPECIES } from '../core/nature/WildlifeField.js';
 import { InventoryEntryKind } from '../core/avatar/AvatarInventory.js';
 import { assert } from './support/Assert.js';
 

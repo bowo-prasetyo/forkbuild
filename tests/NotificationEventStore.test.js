@@ -6,7 +6,6 @@ import {
     NotificationPersistenceOutcome
 } from '../storage/NotificationEventStore.js';
 import { NotificationEvent } from '../core/social/NotificationEvent.js';
-import { NotificationCollisionOutcome } from '../core/social/NotificationDeduplicationPolicy.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 

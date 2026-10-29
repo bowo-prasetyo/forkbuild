@@ -149,7 +149,7 @@ async function run() {
         const session = await connectTwoPeers('alice-a', 'bob-a', 'unit-a');
         const verifier = new LocalAuthorizationVerifier();
         const aliceBus = new PeerMessageBus();
-        const { catalog: aliceCatalog, exchange: aliceExchange, peerExchange: alicePeerExchange, connectionSync: aliceSync } =
+        const { catalog: aliceCatalog, peerExchange: alicePeerExchange, connectionSync: aliceSync } =
             new CreatePublicationPeerExchangeUseCase().execute({ peerMessageBus: aliceBus, connectedPeerRegistry: session.aliceConnect.registry });
         assert(aliceSync instanceof PublicationPeerConnectionSync, '1. CreatePublicationPeerExchangeUseCase now also returns a connectionSync.');
 

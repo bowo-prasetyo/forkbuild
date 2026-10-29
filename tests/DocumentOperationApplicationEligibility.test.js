@@ -6,7 +6,7 @@ import { Document } from '../core/document/Document.js';
 import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
-import { DocumentOperationCausalGapDetector, CausalGapStatus } from '../core/collaboration/DocumentOperationCausalGapDetector.js';
+import { DocumentOperationCausalGapDetector } from '../core/collaboration/DocumentOperationCausalGapDetector.js';
 import {
     DocumentOperationApplicationEligibility,
     isDocumentOperationApplicationEligibility,

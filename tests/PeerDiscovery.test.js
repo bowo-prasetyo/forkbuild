@@ -168,7 +168,7 @@ let flagshipCleanup;
 //    outright, before any authentication is even possible
 // ---------------------------------------------------------------------
 {
-    const { network, bob, bobTransport, bobDiscovery } = flagshipCleanup;
+    const { bob, bobTransport, bobDiscovery } = flagshipCleanup;
     const tamperedInvitation = PeerInvitation.create({ endpoint: 'nobody-registered-at-this-address' });
     const tamperedRecord = bobDiscovery.importInvitation(tamperedInvitation);
 
@@ -189,7 +189,7 @@ let flagshipCleanup;
 //    REAL identity, never the (tampered) hint
 // ---------------------------------------------------------------------
 {
-    const { network, bob, bobTransport, bobDiscovery, aliceSigning } = flagshipCleanup;
+    const { bob, bobTransport, bobDiscovery, aliceSigning } = flagshipCleanup;
     const mallory = makeDevice('Mallory');
     const mallorySigning = mallory.getSigningIdentity();
 

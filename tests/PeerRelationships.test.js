@@ -245,7 +245,7 @@ async function runTests() {
 
     // Reconnect through a completely FRESH invitation/connection/
     // authentication — never resuming anything from the closed session.
-    const { alicePeer: alicePeer2, bobPeer: bobPeer2 } = await connectAliceAndBob(aliceSessions, bobSessions);
+    const { alicePeer: alicePeer2 } = await connectAliceAndBob(aliceSessions, bobSessions);
     assert(aliceSessions.listPeers().length === 1 && aliceSessions.listPeers()[0] === alicePeer2, 'reconnecting produces a brand-new ConnectedPeer, tracked independently of the earlier, now-closed one');
     assert(aliceSessions.listPeers()[0].connectionId !== alicePeer.connectionId, 'the new connection has a completely different connectionId — nothing about the old session was resumed');
 

@@ -1,8 +1,5 @@
-import { fileURLToPath } from 'node:url';
-
 import { orchestratePublicationDistribution } from '../application/publication/distribution/PublicationDistributionOrchestrator.js';
 import { composePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js';
-import { composePublicationDistributionRuntime } from '../application/publication/distribution/PublicationDistributionRuntimeComposition.js';
 import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
 import { PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
 import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
@@ -231,7 +228,6 @@ async function run() {
         // uses (see e.g. tests/PostPublishDistributionEntryPoint.test.js's
         // own local reproduction) — guarded by a direct source match so
         // this reproduction cannot silently drift from the real function.
-        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => source(file)))).join('\n');
 
         function makeDistributeWorldEncounterPublication(publicationDistributionCommand) {
             return function distributeWorldEncounterPublication(publication, discoveryProvider) {

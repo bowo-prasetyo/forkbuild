@@ -1,7 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { registerMaterializedSnapshotWorldSource } from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
 import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
 import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
 import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
@@ -251,10 +250,6 @@ function unmountCanvas(ctx) { WorldEncounterCanvas.beforeUnmount.call(ctx); }
 function projectedPublicationsOf(ctx) {
     ctx.publicationRows = WorldEncounterCanvas.computed.publicationRows.call(ctx);
     return WorldEncounterCanvas.computed.projectedPublications.call(ctx);
-}
-
-function placedResult(contentHash, publicationId, position, placementId = 'placement-x') {
-    return { outcome: SnapshotWorldPlacementOutcome.PLACED, contentHash, publicationId, placementId, position, reason: null };
 }
 
 async function run() {

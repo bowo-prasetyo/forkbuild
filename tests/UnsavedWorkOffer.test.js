@@ -4,7 +4,6 @@
 // always belongs to a build that is not open: this runs the Editor's own
 // sequence (autosave, a new page with a new document, the offer, Recover or
 // Discard) over one storage, as a reload keeps the browser's.
-import { Brick } from '../core/building/Brick.js';
 import { Building } from '../core/building/Building.js';
 import { Document } from '../core/document/Document.js';
 import { DocumentMetadata } from '../core/document/DocumentMetadata.js';

@@ -43,7 +43,6 @@ import { assert } from './support/Assert.js';
 
 const YEAR_START = Math.ceil(1_800_000_000 / WORLD_YEAR_SECONDS) * WORLD_YEAR_SECONDS;
 const inYear = (day) => YEAR_START + day * DAY_CYCLE_SECONDS;
-const degrees = (direction) => (Math.asin(direction.y) * 180) / Math.PI;
 
 // The sun's path and the day through the year.
 {

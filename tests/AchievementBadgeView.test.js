@@ -1,7 +1,6 @@
 import { BitcoinAnchorPublicationRecord } from '../application/anchoring/bitcoin/BitcoinAnchorPublicationRecord.js';
 import { BaseAnchorPublicationRecord } from '../application/anchoring/base/BaseAnchorPublicationRecord.js';
 import { BlockchainKind } from '../application/anchoring/BlockchainKind.js';
-import { BlockchainPublicationIdentity } from '../application/anchoring/BlockchainPublicationIdentity.js';
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
 import { AchievementKind, describeAchievementEvents } from '../application/achievement/AchievementEvent.js';
@@ -63,10 +62,6 @@ function bitcoinRecord({ anchorId, contentHash, txid, network = 'mainnet', creat
 
 function baseRecord({ contentHash, txid, network = 'base-mainnet', createdAt }) {
     return new BaseAnchorPublicationRecord({ contentHash, txid, network, createdAt });
-}
-
-function kindsOf(result) {
-    return result.badges.map((b) => b.achievementKind);
 }
 
 function serializeBadge(badge) {

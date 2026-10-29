@@ -325,7 +325,7 @@ async function runTests() {
     // 12/13/14. Reconnect through a COMPLETELY fresh invitation/
     // connection/authentication — nothing resumed from the earlier,
     // now-closed session.
-    const { inviterPeer: alicePeer2, accepterPeer: bobPeer2 } = await connectPeers(aliceSessions, bobSessions);
+    const { inviterPeer: alicePeer2 } = await connectPeers(aliceSessions, bobSessions);
     assert(alicePeer2.connectionId !== alicePeer.connectionId, 'reconnecting produces a brand-new connectionId — nothing about the old session was resumed');
     assert(aliceFriends.getState(alicePeer2.remoteIdentity.identityId) === FriendshipState.FRIEND, 'the freshly, independently re-proven identity is still recognized as a friend — friendship is a property of the IDENTITY, never the connection');
     console.log('✓ FLAGSHIP: mutual authentication succeeds again over a fresh connection; friendship is recognized from the persisted identities, not the old connection');

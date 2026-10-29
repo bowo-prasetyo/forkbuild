@@ -6,7 +6,7 @@ import {
     createVehicleSteeringIntent,
     isValidVehicleSteeringIntent
 } from '../core/vehicles/VehicleSteeringIntent.js';
-import { VehicleInstance, vehicleInstanceFromPresence } from '../core/vehicles/VehicleInstance.js';
+import { vehicleInstanceFromPresence } from '../core/vehicles/VehicleInstance.js';
 import { VehiclePresence } from '../core/vehicles/VehiclePresence.js';
 import { VehicleType } from '../core/vehicles/VehicleType.js';
 import { VehicleRuntimeInstances } from '../application/world/VehicleRuntimeInstances.js';

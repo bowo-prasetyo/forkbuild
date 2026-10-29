@@ -323,7 +323,7 @@ async function runTests() {
 // ===================================================================
 {
     const harness = makeDeferralHarness('doc-237-e');
-    const { commandHistory, deferral, target } = harness;
+    const { commandHistory, target } = harness;
     const opA = moveCommand('doc-237-e', { x: 1, y: 0, z: 0 });
     const opB = moveCommand('doc-237-e', { x: 2, y: 0, z: 0 });
 

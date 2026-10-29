@@ -1,5 +1,4 @@
-
-import { RendezvousConfiguration, isValidRendezvousUrl } from '../core/networks/RendezvousConfiguration.js';
+import { RendezvousConfiguration } from '../core/networks/RendezvousConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { RendezvousConfigurationStore } from '../storage/RendezvousConfigurationStore.js';
 import { SetRendezvousConfigurationUseCase } from '../application/settings/SetRendezvousConfigurationUseCase.js';

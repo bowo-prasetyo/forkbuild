@@ -1,8 +1,6 @@
-
 import { composePublicationDistributionCommand, composeMultiRelayNostrPublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js';
 import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
 import { PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
-import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
 import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
 import { editorViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 import { readSource as source } from './support/SourceText.js';

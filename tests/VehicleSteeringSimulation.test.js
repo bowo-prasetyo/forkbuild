@@ -4,7 +4,7 @@ import {
     DEFAULT_VEHICLE_STEERING_TURN_DEGREES
 } from '../core/vehicles/VehicleSteeringSimulation.js';
 import { VehicleSteeringIntent, VehicleSteeringDirection } from '../core/vehicles/VehicleSteeringIntent.js';
-import { VehicleInstance, vehicleInstanceFromPresence } from '../core/vehicles/VehicleInstance.js';
+import { vehicleInstanceFromPresence } from '../core/vehicles/VehicleInstance.js';
 import { VehiclePresence } from '../core/vehicles/VehiclePresence.js';
 import { VehicleType } from '../core/vehicles/VehicleType.js';
 import { resolveVehicleHeadingFromMovement } from '../core/vehicles/VehicleMovementHeading.js';
@@ -32,16 +32,6 @@ import { assert } from './support/Assert.js';
 // fed REALIZED displacement, ever resolves a new heading. See
 // docs/Roadmap.md, 0.9.126.
 
-function assertThrows(fn, message) {
-    let threw = false;
-    try {
-        fn();
-    } catch (err) {
-        threw = true;
-    }
-    assert(threw, message);
-}
-
 function assertClose(actual, expected, message, epsilon = 1e-9) {
     assert(Math.abs(actual - expected) < epsilon, `${message} (expected ${expected}, got ${actual})`);
 }
@@ -58,7 +48,7 @@ function stepFromDirection(directionDegrees, stepDistance = 1) {
 }
 
 async function runTests() {
-    const { NONE, RIGHT, LEFT } = VehicleSteeringDirection;
+    const {  } = VehicleSteeringDirection;
     const none = VehicleSteeringIntent.none();
     const right = VehicleSteeringIntent.right();
     const left = VehicleSteeringIntent.left();

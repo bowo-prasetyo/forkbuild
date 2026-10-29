@@ -2,7 +2,7 @@ import { Position } from '../document/Position.js';
 import { VehiclePresence } from './VehiclePresence.js';
 import { VehicleInstance } from './VehicleInstance.js';
 import { VehicleType } from './VehicleType.js';
-import { isFiniteCoordinate, isFiniteXZPosition } from '../document/FiniteCoordinates.js';
+import { isFiniteXZPosition } from '../document/FiniteCoordinates.js';
 
 // 0.9.80 — Vehicle Dismount Position Resolution.
 // Extended by 0.9.117 — Vehicle-Aware Dismount.

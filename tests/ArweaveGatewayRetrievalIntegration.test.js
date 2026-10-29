@@ -1,4 +1,3 @@
-
 import { ArweaveGatewayConfiguration, DEFAULT_ARWEAVE_GATEWAY_URL, isValidArweaveGatewayUrl } from '../core/networks/ArweaveGatewayConfiguration.js';
 import { ArweaveGatewayConfigurationStore } from '../storage/ArweaveGatewayConfigurationStore.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
@@ -7,7 +6,6 @@ import { composeDiscoverSnapshotRuntime } from '../application/snapshot/Discover
 import { composeWorldEncounterMaterialSources } from '../application/worldEncounter/DecentralizedWorldEncounterMaterialRuntimeComposition.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
-import { readSource as source } from './support/SourceText.js';
 
 // 0.9.364 — User-Configurable Arweave Gateway Retrieval Integration.
 // See docs/Roadmap.md, "0.9.364 — User-Configurable Arweave Gateway."

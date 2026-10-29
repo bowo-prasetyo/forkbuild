@@ -355,7 +355,6 @@ async function runTests() {
         const alice = makeIdentity('Alice');
         const aliceId = resolveSigningIdentityId(alice);
         const bob = makeIdentity('Bob');
-        const bobId = resolveSigningIdentityId(bob);
         const world = new World({ id: 'world-1' });
         world.addWorldRegion(region({ id: 'region-1', worldId: 'world-1', authorIdentityId: aliceId, x: 0, z: 0 }));
         const { session } = makeReplica(alice, [{ world }]);

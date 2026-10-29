@@ -63,7 +63,6 @@ function confirmed({ txid, blockHash, blockHeight, confirmationCount, observedAt
 const TXID_A = 'a'.repeat(64);
 const TXID_B = 'b'.repeat(64);
 const BLOCK_A = 'c'.repeat(64);
-const BLOCK_B = 'd'.repeat(64);
 const CONTENT_HASH_A = 'e'.repeat(64);
 const CONTENT_HASH_B = 'f'.repeat(64);
 const NETWORK = 'mainnet';

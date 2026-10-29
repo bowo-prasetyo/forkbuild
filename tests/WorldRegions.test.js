@@ -624,7 +624,7 @@ async function run() {
         const villageId = createVillage.executedRegionId;
 
         // Phase C: Alice creates "Market District" inside Willow Village.
-        const createMarket = applyToBoth(new CreateWorldRegionCommand({
+        applyToBoth(new CreateWorldRegionCommand({
             worldId: 'capstone-world', authorIdentityId: 'alice',
             name: 'Market District', kind: RegionKind.DISTRICT,
             position: new Position(12, 0, 12), radius: 8,

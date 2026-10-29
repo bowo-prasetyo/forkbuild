@@ -124,9 +124,6 @@ async function run() {
         assert(timeline.entries[1].state === IpfsPublicationContentVerificationState.UNAVAILABLE, '5. the T2 entry is the UNAVAILABLE observation, appearing chronologically before Publication B despite being appended to Record A\'s own history AFTER the T4 HASH_MATCH');
         assert(timeline.entries[3].state === IpfsPublicationContentVerificationState.HASH_MATCH, '6. the T4 entry appears after Publication B, exactly where T4 belongs chronologically');
         assert(timeline.entries[0].locator === recordA.locator && timeline.entries[2].locator === recordB.locator, '7. publication entries carry their own record\'s own locator');
-
-        publicationHistory = publicationHistory;
-        verificationHistoriesByIndex = verificationHistoriesByIndex;
     }
     console.log('✓ Section A (FLAGSHIP): out-of-order observedAt values across two records project into a true chronological timeline, T1..T5');
 

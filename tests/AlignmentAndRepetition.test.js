@@ -5,7 +5,6 @@ import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { Position } from '../core/document/Position.js';
 import { World } from '../core/document/World.js';
 import { Group } from '../core/building/Group.js';
-import { EventBus } from '../core/events/EventBus.js';
 import { SnapMath } from '../core/building/SnapMath.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
@@ -26,13 +25,6 @@ import { EditorContext } from '../application/editor/EditorContext.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
 import { SelectionUseCase } from '../application/editor/SelectionUseCase.js';
 import { PreviewUseCase } from '../application/editor/PreviewUseCase.js';
-import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
-import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
-import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
-import { ReplayDocumentUseCase } from '../application/document/ReplayDocumentUseCase.js';
-import { RestoreHistoryStateUseCase } from '../application/document/RestoreHistoryStateUseCase.js';
-import { WorldPosition } from '../core/document/WorldPosition.js';
-import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { assert } from './support/Assert.js';
 
 // 0.4.9 — Alignment, Snapping & Repetition.
@@ -80,10 +72,6 @@ function close(actual, expected, message) {
     assert(Math.abs(actual - expected) < 1e-9, `${message}: expected ${expected}, got ${actual}`);
 }
 
-const stubLayoutProvider = {
-    getPosition: () => new WorldPosition(0, 0, 0),
-    findVisibleDocuments: () => []
-};
 
 function createWorldWithBricks(specs, worldId, buildingId) {
     const world = new World(worldId ? { id: worldId } : undefined);

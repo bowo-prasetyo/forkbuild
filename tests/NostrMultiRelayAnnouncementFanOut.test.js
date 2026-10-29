@@ -1,7 +1,4 @@
-import { fileURLToPath } from 'node:url';
-
 import { NostrMultiRelayPublicationDiscoveryPublisher } from '../application/nostr/NostrMultiRelayPublicationDiscoveryPublisher.js';
-import { orchestrateMultiRelayNostrPublicationDistribution } from '../application/nostr/NostrMultiRelayPublicationDistributionOrchestrator.js';
 import { executeMultiRelayNostrPublicationDistributionCommand, executePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommand.js';
 import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
 import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';

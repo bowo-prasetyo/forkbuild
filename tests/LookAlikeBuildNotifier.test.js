@@ -85,7 +85,7 @@ const notifier = new LookAlikeBuildNotifier({
     now: () => new Date('2026-10-20T10:00:00Z')
 });
 
-const cottage = publish(alice, { documentId: 'alice-cottage', title: 'Cozy Cottage', bricks: cottageBricks(), publishedAt: '2026-09-01T00:00:00Z' });
+publish(alice, { documentId: 'alice-cottage', title: 'Cozy Cottage', bricks: cottageBricks(), publishedAt: '2026-09-01T00:00:00Z' });
 publish(carol, { documentId: 'carol-barn', title: 'Barn', bricks: cottageBricks({ width: 12, kind: 'core:block_2x2' }), publishedAt: '2026-09-02T00:00:00Z' });
 
 {

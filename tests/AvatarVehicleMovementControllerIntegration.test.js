@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { vehiclePresenceInRegion } from '../core/vehicles/VehiclePlacement.js';
 import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../core/nature/TerrainHeightField.js';
 import { Position } from '../core/document/Position.js';

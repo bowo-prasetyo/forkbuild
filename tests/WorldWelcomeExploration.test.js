@@ -2,10 +2,6 @@ import { World } from '../core/document/World.js';
 import { WorldLandmark } from '../core/world/WorldLandmark.js';
 import { StructurePlacement } from '../core/building/StructurePlacement.js';
 import { Position } from '../core/document/Position.js';
-import { Document } from '../core/document/Document.js';
-import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
-import { Building } from '../core/building/Building.js';
-import { Brick } from '../core/building/Brick.js';
 import { derivePlaceContexts } from '../core/collaboration/WorldCurationContext.js';
 import { 
     WorldWelcomeContext, 
@@ -34,15 +30,6 @@ function assertDeepEqual(actual, expected, message) {
     if (actualStr !== expectedStr) {
         throw new Error(`ASSERT FAILED (${message}): expected ${expectedStr}, got ${actualStr}`);
     }
-}
-
-// Helper to create a simple structure document
-function createStructureDocument({ id, title, authorIdentityId, brickPosition = new Position(0, 0.5, 0) }) {
-    const world = new World({ id });
-    const building = new Building({ id: `building-${id}` });
-    building.addBrick(new Brick({ id: `brick-${id}`, definitionId: 'core:cube', position: brickPosition }));
-    world.addBuilding(building);
-    return new Document({ world, metadata: new DocumentMetadata({ title, author: 'builder', authorIdentityId }) });
 }
 
 async function runTests() {
@@ -197,12 +184,6 @@ console.log('Section C — deriveWorldWelcomeContext function');
     });
     world.addWorldLandmark(landmark);
     
-    const marketDoc = createStructureDocument({
-        id: 'doc-market',
-        title: 'Market',
-        authorIdentityId: 'bob',
-        brickPosition: new Position(0, 0.5, 0)
-    });
     const marketPlacement = new StructurePlacement({
         id: 'sp-market',
         documentId: 'doc-market',
@@ -212,12 +193,6 @@ console.log('Section C — deriveWorldWelcomeContext function');
     });
     world.addStructurePlacement(marketPlacement);
     
-    const houseDoc = createStructureDocument({
-        id: 'doc-house',
-        title: 'House',
-        authorIdentityId: 'charlie',
-        brickPosition: new Position(0, 0.5, 0)
-    });
     const housePlacement = new StructurePlacement({
         id: 'sp-house',
         documentId: 'doc-house',
@@ -227,12 +202,6 @@ console.log('Section C — deriveWorldWelcomeContext function');
     });
     world.addStructurePlacement(housePlacement);
     
-    const wellDoc = createStructureDocument({
-        id: 'doc-well',
-        title: 'Well',
-        authorIdentityId: 'alice',
-        brickPosition: new Position(0, 0.5, 0)
-    });
     const wellPlacement = new StructurePlacement({
         id: 'sp-well',
         documentId: 'doc-well',
@@ -295,7 +264,6 @@ console.log('Section D — FLAGSHIP: Full arrival and exploration scenario');
     });
     world.addWorldLandmark(villageLandmark);
     
-    const marketDoc = createStructureDocument({ id: 'doc-market', title: 'Market', authorIdentityId: 'bob' });
     const marketPlacement = new StructurePlacement({
         id: 'sp-market',
         documentId: 'doc-market',
@@ -305,7 +273,6 @@ console.log('Section D — FLAGSHIP: Full arrival and exploration scenario');
     });
     world.addStructurePlacement(marketPlacement);
     
-    const houseDoc = createStructureDocument({ id: 'doc-house', title: 'House', authorIdentityId: 'alice' });
     const housePlacement = new StructurePlacement({
         id: 'sp-house',
         documentId: 'doc-house',
@@ -315,7 +282,6 @@ console.log('Section D — FLAGSHIP: Full arrival and exploration scenario');
     });
     world.addStructurePlacement(housePlacement);
     
-    const wellDoc = createStructureDocument({ id: 'doc-well', title: 'Well', authorIdentityId: 'alice' });
     const wellPlacement = new StructurePlacement({
         id: 'sp-well',
         documentId: 'doc-well',

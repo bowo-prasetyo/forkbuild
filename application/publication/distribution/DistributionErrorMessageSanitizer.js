@@ -34,7 +34,7 @@ export function sanitizeDistributionErrorMessage(error) {
     if (!error) {
         return null;
     }
-    const raw = typeof error === 'string' ? error : (error && error.message);
+    const raw = typeof error === 'string' ? error : error.message;
     if (typeof raw !== 'string' || !raw.trim()) {
         return null;
     }

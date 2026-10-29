@@ -8,7 +8,6 @@ import { AvatarSaySyncService } from '../application/avatar/AvatarSaySyncService
 import { SayRefusal } from '../application/worldNavigation/avatarSayMethods.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { AvatarTemplateRegistry } from '../core/avatar/AvatarTemplateRegistry.js';
-import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { GuestAvatarProfileUseCase } from '../application/avatar/GuestAvatar.js';
@@ -79,7 +78,7 @@ const T0 = 1_800_000_000_000;
 
 // In World View's session: saying, being heard (or not), and hearing others.
 {
-    const registry = new AvatarTemplateRegistry(CoreAvatarTemplateLibrary);
+    const registry = new AvatarTemplateRegistry();
     const brickRegistry = new CreateBrickRegistryUseCase().execute();
     const me = makeIdentity('me');
     const avatarProfileUseCase = new AvatarProfileUseCase(new InMemoryStorageProvider(), me, registry);
@@ -142,7 +141,7 @@ const T0 = 1_800_000_000_000;
 
 // A guest, with no name, can't be seen, so says nothing.
 {
-    const registry = new AvatarTemplateRegistry(CoreAvatarTemplateLibrary);
+    const registry = new AvatarTemplateRegistry();
     const guestProfile = new GuestAvatarProfileUseCase(registry);
     const session = new WorldNavigationSession({
         registry: new CreateBrickRegistryUseCase().execute(), loadPublicationDocumentUseCase: null, worldLayoutProvider: null,

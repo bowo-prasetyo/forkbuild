@@ -194,7 +194,7 @@ async function run() {
     // ---------------------------------------------------------------
     {
         const { world, building, document } = makeEmptyDocument('Capstone');
-        const { session, editorContext, personalStructureLibraryStore, commandHistory } = buildSession({ world, building });
+        const { session, editorContext, personalStructureLibraryStore } = buildSession({ world, building });
 
         // 1. Build: two ordinary bricks, placed by hand.
         const b1 = new Brick({ definitionId: 'core:cube', position: new Position(0, 0.5, 0) });

@@ -1,7 +1,6 @@
 import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 import { readFile } from 'node:fs/promises';
 import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
-import { AvatarVehicleInteractionController } from '../application/avatar/AvatarVehicleInteractionController.js';
 import { vehiclePresenceInRegion } from '../core/vehicles/VehiclePlacement.js';
 import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
 import { Position } from '../core/document/Position.js';

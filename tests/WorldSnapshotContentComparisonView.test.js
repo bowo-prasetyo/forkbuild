@@ -1,6 +1,5 @@
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
-import { describeLocalWorldDiscoverySource } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import {
     registerMaterializedSnapshotWorldSource,
     unregisterMaterializedSnapshotWorldSource
@@ -282,8 +281,7 @@ async function run() {
         assert(JSON.stringify(first) === JSON.stringify(second), '1. calling twice with byte-identical arguments returns a byte-identical result');
         assert(Object.isFrozen(first), '2. the returned descriptor is frozen');
 
-        let threw = false;
-        try { first.contentComparison = 'tampered'; } catch (e) { threw = true; }
+        try { first.contentComparison = 'tampered'; } catch { /* frozen: strict mode throws */ }
         assert(first.contentComparison === WorldSnapshotContentComparison.SAME_CONTENT, "3. the frozen result's own contentComparison cannot be reassigned");
 
         console.log('✓ Section E: describeWorldSnapshotContentComparisonView() is pure and deterministic');

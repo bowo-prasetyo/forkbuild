@@ -362,16 +362,6 @@ async function runTests() {
         assert(viewCode.includes('publication.contentReference.hash'),
             '19. discoverOwnSnapshot() reads contentHash from publication.contentReference.hash, never re-derived');
 
-        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
-        const forbiddenInUi = [
-            'window.arweaveWallet', 'window.nostr', 'WebSocket',
-            'new ArweaveContentStore(', 'new NostrSnapshotDiscoveryQueryService(', 'new DecentralizedSnapshotResolver(',
-            'composeDiscoverSnapshotRuntime(', 'executeDiscoverSnapshotCommand(',
-            'MATCHED', 'ATTRIBUTED', 'TRUSTED', 'AUTHENTIC',
-            'selectedEncounter', 'WorldDiscoverySourceRegistry', 'worldDiscoverySourceRegistry'
-        ];
-        for (const term of forbiddenInUi) {
-        }
 
         const mainCode = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(mainCode.includes("composeDiscoverSnapshotRuntime("), '22. ui/main.js composes the discovery runtime');

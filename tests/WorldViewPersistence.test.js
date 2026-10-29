@@ -1,4 +1,4 @@
-import { storedBricks, corruptFirstBrickPosition } from './support/StoredDocumentBricks.js';
+import { storedBricks } from './support/StoredDocumentBricks.js';
 import { Brick } from '../core/building/Brick.js';
 import { Building } from '../core/building/Building.js';
 import { Document } from '../core/document/Document.js';

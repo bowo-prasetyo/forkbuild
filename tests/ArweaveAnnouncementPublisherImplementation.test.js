@@ -3,7 +3,6 @@ import { readFile } from 'node:fs/promises';
 import { WorldEncounterKind } from '../core/world/WorldEncounter.js';
 import { describeDecentralizedDiscoveryEnvelope } from '../core/publication/DecentralizedDiscoveryEnvelope.js';
 import { describePublicationDistribution } from '../application/publication/distribution/PublicationDistributionDescriptor.js';
-import { ArweavePublicationMaterialUploader } from '../application/arweave/ArweavePublicationMaterialUploader.js';
 import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
 import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
 import { executePublicationDistribution } from '../application/publication/distribution/PublicationDistributionExecutor.js';
@@ -158,10 +157,6 @@ async function run() {
     // ---------------------------------------------------------------
     {
         const net = makeFakeArweaveAnnouncementNetwork();
-        const materialUploader = new ArweavePublicationMaterialUploader({
-            signer: { sign: async () => ({ id: 'materialtx-d', transaction: {} }) },
-            fetchImpl: async () => ({ ok: true, headers: { get: () => null }, text: async () => '' })
-        });
 
         const runtime = composePublicationDistributionRuntime({
             discoveryProvider: 'arweave',
@@ -301,7 +296,6 @@ async function run() {
         assert(!/PublicationAnchor|LocalPublicationAnchorCatalog/.test(code), '35. it never constructs or catalogs a PublicationAnchor of any kind');
 
         let contentUploadCalls = 0;
-        const spyMaterialUploader = { storage: 'ar', async upload() { contentUploadCalls += 1; return 'ar://should-not-be-called'; } };
         const net = makeFakeArweaveAnnouncementNetwork();
         const announcementPublisher = new ArweaveAnnouncementPublisher({ discoveryTag: 'campaign-g', uploadTaggedTransaction: net.uploadTaggedTransaction });
 

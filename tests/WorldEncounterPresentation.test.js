@@ -200,8 +200,7 @@ function run() {
         assert(JSON.stringify(first) === JSON.stringify(second), '1. calling twice with byte-identical arguments returns a byte-identical result');
         assert(Object.isFrozen(first), '2. the returned descriptor is frozen');
 
-        let threw = false;
-        try { first.sourceFamily = 'LOCAL'; } catch (e) { threw = true; }
+        try { first.sourceFamily = 'LOCAL'; } catch { /* frozen: strict mode throws */ }
         assert(first.sourceFamily === 'SNAPSHOT', "3. the frozen descriptor's own sourceFamily cannot be reassigned");
 
         console.log('✓ Section F: describeWorldEncounterPresentation() is pure, frozen, and deterministic — no mutation of its own inputs or outputs');

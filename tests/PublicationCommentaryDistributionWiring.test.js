@@ -333,7 +333,7 @@ async function run() {
     // Commentary to an independent peer over a real, authenticated
     // transport.
     // ===============================================================
-    let deviceAStore, deviceBExchange, deviceBStorage, flagshipCommentary;
+    let deviceAStore, deviceBExchange, flagshipCommentary;
     {
         const network = new LocalPeerNetwork();
         const alice = authorProvider; // "Device A" IS the real application's own identity.
@@ -361,9 +361,8 @@ async function run() {
         // "the other device") — proving delivery reaches a genuinely
         // separate replica, never merely a second binding onto the
         // sender's own store.
-        const { storage: bobStorage, store: bobStore, exchange: bobExchange } = makeReceiver(bob);
+        const { store: bobStore, exchange: bobExchange } = makeReceiver(bob);
         deviceBExchange = bobExchange;
-        deviceBStorage = bobStorage;
         const bobBus = new PeerMessageBus();
         const bobPeerExchange = new PublicationCommentaryDistributionPeerExchange(bobExchange, bobBus, bobConnect.registry);
         const bobReceived = [];

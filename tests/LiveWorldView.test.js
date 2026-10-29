@@ -1,6 +1,5 @@
 import { readFile } from 'node:fs/promises';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { describeLocalWorldDiscoverySource } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import {
     bootstrapWorldDiscoveryRuntime,
     WORLD_DISCOVERY_PEER_PROTOCOL

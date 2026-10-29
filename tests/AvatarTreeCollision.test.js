@@ -4,7 +4,7 @@ import {
 } from '../core/avatar/AvatarTreeCollision.js';
 import { AVATAR_COLLISION_RADIUS } from '../core/avatar/AvatarCollision.js';
 import { treeCollisionCircleFor, treeCollisionGeometryInRegion } from '../core/nature/TreeCollisionGeometry.js';
-import { naturalFeaturesInRegion, FEATURE_TYPE } from '../core/nature/NaturalFeatureField.js';
+import { FEATURE_TYPE } from '../core/nature/NaturalFeatureField.js';
 import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
 import { assert } from './support/Assert.js';
 

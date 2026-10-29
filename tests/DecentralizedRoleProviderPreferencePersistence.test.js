@@ -1,5 +1,3 @@
-import { readdir } from 'node:fs/promises';
-
 import { RoleProviderRole } from '../core/publication/RoleProviderRole.js';
 import { RoleProviderPreference } from '../core/publication/RoleProviderPreference.js';
 import { StorageProvider } from '../storage/StorageProvider.js';

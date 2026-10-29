@@ -20,8 +20,6 @@ import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { PlacementRecord } from '../core/publication/PlacementRecord.js';
 import { Position } from '../core/document/Position.js';
 import { Publication } from '../publisher/Publication.js';
-import { ContentReference } from '../core/document/ContentReference.js';
-import { computeContentHash } from '../serializer/contentHash.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';

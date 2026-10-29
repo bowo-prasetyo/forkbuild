@@ -24,7 +24,6 @@ import {
 import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
 import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
-import { Publication } from '../publisher/Publication.js';
 import { Document } from '../core/document/Document.js';
 import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { World } from '../core/document/World.js';

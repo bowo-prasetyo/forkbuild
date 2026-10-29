@@ -6,7 +6,6 @@ import { Position } from '../core/document/Position.js';
 import { World } from '../core/document/World.js';
 import { WorldPosition } from '../core/document/WorldPosition.js';
 import { EventBus } from '../core/events/EventBus.js';
-import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
 import { PlaceBrickCommand } from '../application/commands/PlaceBrickCommand.js';

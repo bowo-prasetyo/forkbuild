@@ -257,14 +257,12 @@ function simulateRotationDrag(service, selection, pivot, startPoint, endPoint) {
     // every member; relative orientations preserved.
     const fixture = createWorldFixture();
     const { service } = createWorldViewEnvironment(fixture);
-    const before = brickPositions(fixture.world);
     const committed = service.applyNumericTransform(
         worldViewSelection(),
         { translation: null, rotation: 90 },
         { absolute: true }
     );
     assert(committed === true, 'absolute rotation commits');
-    const after = brickPositions(fixture.world);
     console.log('✓ absolute rotation');
 }
 

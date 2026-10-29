@@ -329,8 +329,8 @@ async function run() {
         const host = makeHost('materialization-ui-state');
         const bytesOne = 'Section D: first candidate';
         const bytesTwo = 'Section D: second candidate, genuinely different content';
-        const referenceOne = await placeAndAnnounce(host, bytesOne);
-        const referenceTwo = await placeAndAnnounce(host, bytesTwo);
+        await placeAndAnnounce(host, bytesOne);
+        await placeAndAnnounce(host, bytesTwo);
 
         const ctx = panelCtx({
             discoverSnapshotCandidatesCommand: host.discoverSnapshotCandidatesCommand,

@@ -252,7 +252,6 @@ async function run() {
         // verifier at all — proven by a plugin that would throw/assert
         // if AddPublicationAnchorUseCase ever called it, and never does.
         let verifierCalled = false;
-        const spyPlugin = { anchorType: 'bitcoin-op-return', verify: () => { verifierCalled = true; return { valid: true }; } };
         const freshCatalog = makeCatalog();
         const freshAddAnchor = new AddPublicationAnchorUseCase(freshCatalog);
         const anotherAnchor = signAnchor(registry, {

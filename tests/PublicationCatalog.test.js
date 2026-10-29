@@ -6,11 +6,9 @@ import { Document } from '../core/document/Document.js';
 import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { License, LicenseId } from '../core/document/License.js';
 import { PublicationQuery, DEFAULT_PAGE_SIZE } from '../core/catalog/PublicationQuery.js';
-import { PublicationPage } from '../core/catalog/PublicationPage.js';
 import { PublicationSort, comparePublications } from '../core/catalog/PublicationSort.js';
 import { PreviewType, derivePlaceholderPreview } from '../core/catalog/DocumentPreview.js';
 import { GroupBy, groupPublications } from '../core/catalog/PublicationGrouping.js';
-import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
 import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
@@ -178,7 +176,7 @@ async function runTests() {
     const ancientCity = publisher.publish(
         makeDocument('Ancient City', 'alice', 'A reconstruction of a Roman city showing the forum and aqueduct.'), alice);
     const marsColony = publisher.publish(makeDocument('Mars Colony', 'bob', 'A red-planet settlement.'), bob);
-    const oceanBase = publisher.publish(makeDocument('Ocean Base', 'alice', ''), alice);
+    publisher.publish(makeDocument('Ocean Base', 'alice', ''), alice);
 
     // -------------------------------------------------------------
     // 10-14. Text search: title/author always match; description only

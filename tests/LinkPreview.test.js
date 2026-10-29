@@ -17,7 +17,6 @@ import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { World } from '../core/document/World.js';
 import { Building } from '../core/building/Building.js';
 import { Brick } from '../core/building/Brick.js';
-import { Position } from '../core/document/Position.js';
 import { License, LicenseId } from '../core/document/License.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';

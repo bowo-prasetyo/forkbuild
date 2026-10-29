@@ -12,12 +12,10 @@ import { DocumentValidator } from '../serializer/DocumentValidator.js';
 import { DocumentSchemaMigrator } from '../serializer/DocumentSchemaMigrator.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
-import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { PlaceBrickCommand } from '../application/commands/PlaceBrickCommand.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
 import { RotateBrickCommand } from '../application/commands/RotateBrickCommand.js';
 import { DeleteBrickCommand } from '../application/commands/DeleteBrickCommand.js';
-import { CompositeCommand } from '../application/commands/CompositeCommand.js';
 import { CreateGroupCommand } from '../application/commands/CreateGroupCommand.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { Publication } from '../publisher/Publication.js';
@@ -346,7 +344,6 @@ function createTestDocument(brickCount = 3) {
     // Load the published snapshot into a fresh runtime.
     const loadedSnapshot = new LoadPublishedSnapshotUseCase(publisher, serializer).execute(publication.id);
     // Ensure we pass a Document instance to the serializer
-    const docToSerialize = loadedSnapshot instanceof Document ? loadedSnapshot : Document.fromJSON(loadedSnapshot);
     // Serialize the loaded snapshot.
     const serializedAfterLoad = JSON.stringify(serializer.serialize(loadedSnapshot));    
     // Byte-identical.

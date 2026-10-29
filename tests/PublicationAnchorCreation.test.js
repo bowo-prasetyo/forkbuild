@@ -161,7 +161,6 @@ async function run() {
     {
         const alice = makeIdentity('Alice');
         const replica = makeReplica();
-        const useCase = withIdentityProvider(replica, alice);
         publishContent(replica.publicationCatalog, { id: 'pub-4', hash: 'hash-4' });
 
         let verifyCalls = 0;

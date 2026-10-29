@@ -15,7 +15,6 @@ import { World } from '../core/document/World.js';
 import { Document } from '../core/document/Document.js';
 import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { Position } from '../core/document/Position.js';
-import { WorldResident } from '../core/world/WorldResident.js';
 import { WorldLandmark } from '../core/world/WorldLandmark.js';
 import { DEFAULT_WORLD_SEED } from '../core/nature/TerrainHeightField.js';
 import { isResidentWalkClear } from '../core/world/ResidentPath.js';

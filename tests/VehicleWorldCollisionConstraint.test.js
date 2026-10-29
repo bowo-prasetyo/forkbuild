@@ -1,8 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { resolveHorizontalMovement, AVATAR_COLLISION_RADIUS } from '../core/avatar/AvatarCollision.js';
 import { AvatarMovementConstraint } from '../application/avatar/AvatarMovementConstraint.js';
-import { AvatarTreeConstraint } from '../application/avatar/AvatarTreeConstraint.js';
-import { AvatarVehicleMovementController, isMovableVehicleType } from '../application/avatar/AvatarVehicleMovementController.js';
+import { AvatarVehicleMovementController } from '../application/avatar/AvatarVehicleMovementController.js';
 import { VehicleInstance } from '../core/vehicles/VehicleInstance.js';
 import { VehicleType } from '../core/vehicles/VehicleType.js';
 import { resolveAvatarVehicleMovementCapability } from '../core/vehicles/AvatarVehicleMovementCapability.js';

@@ -16,7 +16,6 @@ import { ReplicaMergeService, MergeResult } from '../replication/ReplicaMergeSer
 import { LocalReplicationStore } from '../replication/LocalReplicationStore.js';
 import { CreateReplicationUseCase } from '../application/placement/CreateReplicationUseCase.js';
 import { ReplicatePlacementUseCase } from '../application/placement/ReplicatePlacementUseCase.js';
-import { SynchronizeReplicaUseCase } from '../application/placement/SynchronizeReplicaUseCase.js';
 
 import { World } from '../core/document/World.js';
 import { StructurePlacement } from '../core/building/StructurePlacement.js';
@@ -24,7 +23,6 @@ import { MoveStructurePlacementCommand } from '../application/commands/MoveStruc
 import { SetStructurePlacementTransformCommand } from '../application/commands/SetStructurePlacementTransformCommand.js';
 import { compareWorldOperations, worldOperationSortKey } from '../core/collaboration/WorldOperationOrder.js';
 import { WorldConflictResolver, WorldOperationOutcome } from '../replication/WorldConflictResolver.js';
-import { WorldCommandPropagationUseCase } from '../application/document/WorldCommandPropagationUseCase.js';
 import { assert } from './support/Assert.js';
 import { readSource as rawSource } from './support/SourceText.js';
 import { readDoc } from './support/DocText.js';
@@ -117,10 +115,6 @@ function grepFiles(pattern, dirs, { ignoreCase = false } = {}) {
             { cwd: SOURCE_ROOT.pathname }).toString();
     } catch { /* grep exits non-zero on no match; treated as zero hits */ }
     return hits.trim() ? hits.trim().split('\n') : [];
-}
-
-async function grepCount(pattern, dirs, opts = {}) {
-    return grepFiles(pattern, dirs, opts).length;
 }
 
 // The historical family's own six files — self-references (the family

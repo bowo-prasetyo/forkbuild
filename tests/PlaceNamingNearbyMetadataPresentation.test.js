@@ -443,7 +443,6 @@ async function runTests() {
         // empty (the Section E malformed case) — PlaceNamingClaim.fromJSON()
         // never reads createdAtLabel, only createdAt.
         const carolReplica = makeReplica(makeIdentity('Carol'));
-        const malformedRow = { ...row, claimId: 'claim-malformed-label', createdAtLabel: '' };
         const claim2 = signedClaim(alice, { worldId: 'world-1', regionId: 'region-1', name: 'Second Place' });
         const [row2] = makeRows([{ claim: discoverAsEnvelope(claim2).claim, position: pos(0, 0) }], (id) => id);
         const result2 = adoptNearbyPlaceNamingClaim(carolReplica, { ...row2, createdAtLabel: '' });

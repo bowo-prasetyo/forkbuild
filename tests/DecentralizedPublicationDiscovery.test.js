@@ -151,13 +151,11 @@ async function run() {
     // ---------------------------------------------------------------
     {
         const alice = makeIdentity('Alice');
-        const bob = makeIdentity('Bob');
 
         const aliceContentStore = new LocalContentStore(new InMemoryStorageProvider());
         const bobContentStore = new LocalContentStore(new InMemoryStorageProvider());
         const verifier = new LocalAuthorizationVerifier();
 
-        const aliceAttributionStore = new LocalBlueprintAttributionStore(new InMemoryStorageProvider());
         const bobAttributionStore = new LocalBlueprintAttributionStore(new InMemoryStorageProvider());
 
         const aliceResolver = new PublicationResolver(aliceContentStore, verifier);

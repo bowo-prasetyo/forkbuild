@@ -1,4 +1,4 @@
-import { storedBricks, corruptFirstBrickPosition } from './support/StoredDocumentBricks.js';
+import { corruptFirstBrickPosition } from './support/StoredDocumentBricks.js';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -14,7 +14,6 @@ import { License, LicenseId } from '../core/document/License.js';
 import { DOCUMENT_SCHEMA_VERSION } from '../core/document/documentSchema.js';
 
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { DocumentValidator } from '../serializer/DocumentValidator.js';
 import { DocumentSchemaMigrator } from '../serializer/DocumentSchemaMigrator.js';
 
 import { DocumentManager } from '../application/document/DocumentManager.js';

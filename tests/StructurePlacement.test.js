@@ -9,7 +9,6 @@ import { DomainEvent } from '../core/events/Event.js';
 import { EventBus } from '../core/events/EventBus.js';
 import { Document } from '../core/document/Document.js';
 import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
-import { VillageLibrary } from '../core/library/VillageLibrary.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';
 import { ForkStructureUseCase } from '../application/editor/ForkStructureUseCase.js';
@@ -425,7 +424,6 @@ async function run() {
     // Section H: FLAGSHIP
     // -------------------------------------------------------------
     {
-        const brickRegistryLocal = new CreateBrickRegistryUseCase().execute();
         const structureRegistry = new CreateStructureRegistryUseCase().execute();
         const storage = new InMemoryStorageProvider();
         const serializer = new DocumentSerializer();

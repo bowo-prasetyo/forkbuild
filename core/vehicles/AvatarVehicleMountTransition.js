@@ -1,5 +1,4 @@
 import {
-    AvatarVehicleMount,
     createAvatarVehicleMount,
     isValidAvatarVehicleMount
 } from './AvatarVehicleMount.js';

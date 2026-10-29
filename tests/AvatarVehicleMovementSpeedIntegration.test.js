@@ -308,9 +308,7 @@ async function runTests() {
             '12. FLAGSHIP: the movement controller reports WALK again once dismounted');
 
         session.avatarKeyDown('w');
-        const walkZ0 = avatarPresenceSession.current.position.z;
         for (let i = 0; i < 5; i++) frameCallback(0.02);
-        const walkDistance = avatarPresenceSession.current.position.z - walkZ0;
         session.avatarKeyUp('w');
 
         // 0.9.91 note: this used to assert `mountedDistance > walkDistance`

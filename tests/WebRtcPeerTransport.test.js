@@ -274,7 +274,7 @@ let flagshipCleanup;
 //    0.2.49 authentication from nothing, nothing carried over.
 // ---------------------------------------------------------------------
 {
-    const { alice, bob, aliceTransport, bobTransport, aliceConnect, bobConnect, aliceSigning } = flagshipCleanup;
+    const { aliceTransport, bobTransport, aliceConnect, bobConnect, aliceSigning } = flagshipCleanup;
 
     const newAliceConnection = aliceTransport.createOffer();
     const newAliceConnectedPeer = aliceConnect.attach(newAliceConnection);

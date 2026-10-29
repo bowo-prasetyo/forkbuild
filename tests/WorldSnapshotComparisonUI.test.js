@@ -1,5 +1,4 @@
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import WorldEncounterMarker from '../ui/components/WorldEncounterMarker.js';
 import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
 import { describeLocalWorldDiscoverySource } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { registerPeerWorldSource } from '../peer/PeerWorldDiscoveryLifecycleBridge.js';

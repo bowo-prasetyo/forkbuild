@@ -214,7 +214,7 @@ async function run() {
         // application/anchoring/AddPublicationAnchorUseCase.js, fed the plain wire
         // envelope Alice's anchor serializes to.
         const bobAnchorCatalog = new LocalPublicationAnchorCatalog(new InMemoryStorageProvider());
-        const { anchor: bobAnchor } = new AddPublicationAnchorUseCase(bobAnchorCatalog).execute(aliceAnchor.toJSON());
+        new AddPublicationAnchorUseCase(bobAnchorCatalog).execute(aliceAnchor.toJSON());
 
         const bobAuthVerifier = new LocalAuthorizationVerifier();
         const bobExternalAnchorVerifier = new ExternalAnchorVerifier(bobAuthVerifier);

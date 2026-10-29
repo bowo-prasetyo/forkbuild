@@ -5,7 +5,6 @@ import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickReg
 import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';
 import { ForkStructureUseCase } from '../application/editor/ForkStructureUseCase.js';
 import { EditorSession } from '../application/editor/EditorSession.js';
-import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
 import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
@@ -253,7 +252,6 @@ async function run() {
     // ---------------------------------------------------------------
     {
         const registry = new CreateStructureRegistryUseCase().execute();
-        const serializer = new DocumentSerializer();
         const storage = new InMemoryStorageProvider();
         const saveDocumentUseCase = new SaveDocumentUseCase(storage);
         const loadDocumentUseCase = new LoadDocumentUseCase(storage);

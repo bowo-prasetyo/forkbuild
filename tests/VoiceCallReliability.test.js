@@ -523,7 +523,7 @@ async function runTests() {
     // SAME already-subscribed aliceVoice/bobVoice — proves VoiceSession
     // begins IDLE, never resurrecting the call that was active when the
     // old connection died.
-    const { aliceConnectedPeer: aliceConnectedPeer2, bobConnectedPeer: bobConnectedPeer2 } = await reconnectPair(aliceConnect, bobConnect);
+    const { aliceConnectedPeer: aliceConnectedPeer2 } = await reconnectPair(aliceConnect, bobConnect);
     assert(aliceVoice.getActiveCall() === null, "a brand new connection begins with VoiceSession IDLE, before any new call is placed");
     assert(bobVoice.getActiveCall() === null, 'true on both sides');
 

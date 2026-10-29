@@ -261,7 +261,7 @@ function buildingWithBricks(creator, count, { startX = 0, definitionId = 'core:c
     const world = new World();
     const buildingA = buildingWithBricks('alice', 2);
     world.addBuilding(buildingA);
-    const [brick1, brick2] = buildingA.getBricks();
+    const [brick1] = buildingA.getBricks();
     world.addGroup(new Group({ name: 'G', brickIds: [brick1.id] }));
 
     const documentA = new Document({ world, metadata: new DocumentMetadata({ title: 'Portable Grouped World', author: 'alice' }) });

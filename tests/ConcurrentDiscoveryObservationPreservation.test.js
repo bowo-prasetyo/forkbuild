@@ -1,5 +1,3 @@
-import { fileURLToPath } from 'node:url';
-
 import { composePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js';
 import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
 import { PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
@@ -374,7 +372,7 @@ async function run() {
         const { command, lifecycleStore } = makeRealComposedCommand();
         const publication = makeFakePublication('pub-i-content');
 
-        const nostrResult = await distribute(command, publication, 'nostr');
+        await distribute(command, publication, 'nostr');
         const materialAfterFirst = lifecycleStore.get(publication.id).material;
         assert(materialAfterFirst.state === PublicationDistributionState.PRESENT, n('I1. the material dimension is recorded exactly as before — unaffected by discovery observation tracking'));
 
@@ -432,7 +430,7 @@ async function run() {
     // now accumulate across calls.
     // ===============================================================
     {
-        const { command, lifecycleStore, net, getNostrPublishCount } = makeRealComposedCommand();
+        const { command, net, getNostrPublishCount } = makeRealComposedCommand();
         const publication = makeFakePublication('pub-k-no-fanout');
 
         await distribute(command, publication, 'nostr');

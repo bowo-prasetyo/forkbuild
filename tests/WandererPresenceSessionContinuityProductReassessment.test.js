@@ -1,9 +1,7 @@
-
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from './support/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
 import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
 import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
@@ -14,10 +12,8 @@ import { resolveDirectSocialIdentity } from '../application/identity/SocialIdent
 
 import { AvatarProfile } from '../core/avatar/AvatarProfile.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
-import { PresenceSyncService } from '../application/presence/PresenceSyncService.js';
 import { LocalPresenceStore } from '../application/presence/LocalPresenceStore.js';
 import { PresenceTrustBoundary } from '../application/presence/PresenceTrustBoundary.js';
-import { RemoteAvatarRegistry } from '../application/avatar/RemoteAvatarRegistry.js';
 import { toAvatarPresenceAdvertisement } from '../core/avatar/AvatarPresenceAdvertisement.js';
 import { PresenceLifecycleState } from '../core/avatar/PresenceLifecycleState.js';
 import { PeerAvatarPresenceBroadcastProvider } from '../presence/PeerAvatarPresenceBroadcastProvider.js';
@@ -218,16 +214,6 @@ function makeStack(device, { now = () => Date.now(), minIntervalMs = 30 } = {}) 
     return { device, peerMessageBus, connectedPeerRegistry, deviceAuth, worldPresence, spatialPresence, avatarPresenceTransport };
 }
 
-function spyRenderFacade() {
-    const calls = { setRemoteAvatar: [], updateRemoteAvatarPresence: [], removeRemoteAvatar: [] };
-    return {
-        calls,
-        setRemoteAvatar: (avatarId, template, appearance, presenceLike) => calls.setRemoteAvatar.push({ avatarId, presenceLike }),
-        updateRemoteAvatarPresence: (avatarId, presenceLike) => calls.updateRemoteAvatarPresence.push({ avatarId, presenceLike }),
-        removeRemoteAvatar: (avatarId) => calls.removeRemoteAvatar.push(avatarId)
-    };
-}
-
 // A minimal, real (never stand-in) local avatar body: a persistent
 // AvatarProfile plus an ephemeral AvatarPresenceSession, exactly the
 // split core/avatar/AvatarProfile.js's own header names.
@@ -376,7 +362,6 @@ async function main() {
         const worldPresenceAdSource = await readSource('core/collaboration/WorldPresenceAdvertisement.js');
         assert(/an explicit LEAVE, never merely\s*\n\/\/\s*inferred from silence/.test(worldPresenceAdSource),
             'C1. core/collaboration/WorldPresenceAdvertisement.js\'s own header states LEAVE is explicit, never inferred from silence.');
-        const spatialAdSource = await readSource('core/collaboration/WorldSpatialPresenceAdvertisement.js');
         // (Confirmed independently, live, in C3 below via leaveWorld().)
 
         // C2. AvatarPresence (the fine-grained 3D body protocol) has NO

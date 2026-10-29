@@ -440,7 +440,6 @@ async function runTests() {
         // resolves (simulated by bumping the request id the same way a
         // fresh discoverPublication() call would, after manually letting
         // the in-flight promise settle stale).
-        const staleRequestId = ctx.discoveryRequestId;
         ctx.discoveryRequestId += 1;
         resolveFirst({ discovery: {}, resolution: { status: 'RESOLVED' }, inspection: null });
         await flushMicrotasks();

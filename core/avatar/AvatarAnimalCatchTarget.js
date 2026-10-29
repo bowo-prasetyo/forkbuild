@@ -1,7 +1,7 @@
 import { AnimalPresence } from '../nature/AnimalPresence.js';
 import { withinRadiusXZ } from '../vehicles/AvatarVehicleProximity.js';
 import { AvatarAnimalCatchIntent } from './AvatarAnimalCatchIntent.js';
-import { isFiniteCoordinate, isFiniteXZPosition } from '../document/FiniteCoordinates.js';
+import { isFiniteXZPosition } from '../document/FiniteCoordinates.js';
 
 // 0.9.700 — Avatar Animal Catch Target Resolution.
 //

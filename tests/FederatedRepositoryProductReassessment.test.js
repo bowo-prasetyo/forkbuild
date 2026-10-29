@@ -709,10 +709,7 @@ async function run() {
         // spanning a line break needs whitespace (including the
         // newline) treated as a single separator, not a literal
         // substring match.
-        const normalizedRoadmap = roadmapSource.replace(/\s+/g, ' ');
-        function roadmapContains(phrase) {
-            return normalizedRoadmap.includes(phrase.replace(/\s+/g, ' '));
-        }
+        roadmapSource.replace(/\s+/g, ' ');
 
         // 0.9.330 Section H explicitly considered and REJECTED a "new
         // Peer publication-browsing protocol" as a separate, larger,

@@ -227,7 +227,7 @@ async function runTests() {
     // --- B. Bob goes offline; Alice queues a second message. ----------
     Bob.connect.registry.list().forEach((p) => p.close());
     await wait(20);
-    const queuedMessage = aliceChat.sendOrQueue(Bob.id, 'Are you there?');
+    aliceChat.sendOrQueue(Bob.id, 'Are you there?');
     assert(aliceChat.getOutbox(Bob.id).length === 1, 'the second message is genuinely queued, Bob is offline');
     const beforeReload = aliceChat.getConversation(Bob.id);
     assert(beforeReload.length === 2 && beforeReload[1].deliveryState === ChatDeliveryState.QUEUED, 'before reload: Alice sees both messages, the second one QUEUED');

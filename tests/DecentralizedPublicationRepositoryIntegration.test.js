@@ -3,7 +3,6 @@ import { execSync } from 'node:child_process';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/document/ContentReference.js';
 import { License } from '../core/document/License.js';
-import { DecentralizedPublication } from '../core/publication/DecentralizedPublication.js';
 import { PublicationExchange } from '../application/publication/PublicationExchange.js';
 import { PublicationResolver } from '../application/publication/PublicationResolver.js';
 import { PublicationResolutionOutcome } from '../application/publication/PublicationResolutionOutcome.js';
@@ -15,7 +14,6 @@ import { PUBLICATION_CONTENT_KIND } from '../application/publication/Publication
 import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { PublicationPeerExchange } from '../application/publication/PublicationPeerExchange.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
-import { DiscoveryProvider } from '../discovery/DiscoveryProvider.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';

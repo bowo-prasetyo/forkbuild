@@ -26,7 +26,6 @@ import { CreateReplicationUseCase } from '../application/placement/CreateReplica
 import { MergeResult } from '../replication/ReplicaMergeService.js';
 import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
 import { ImportDocumentUseCase } from '../application/document/ImportDocumentUseCase.js';
-import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { UpdateDocumentMetadataUseCase } from '../application/document/UpdateDocumentMetadataUseCase.js';
 import { describePlacementPolicy as describePlacementPolicyMessage, PLACEMENT_POLICY_OPTIONS } from '../application/document/PlacementPolicyLabels.js';
 import { t } from '../ui/i18n/i18n.js';

@@ -1,8 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { executePublicationDistribution } from '../application/publication/distribution/PublicationDistributionExecutor.js';
 import { describePublicationDistribution } from '../application/publication/distribution/PublicationDistributionDescriptor.js';
-import { ArweavePublicationMaterialUploader } from '../application/arweave/ArweavePublicationMaterialUploader.js';
-import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
 import { composePublicationDistributionRuntime } from '../application/publication/distribution/PublicationDistributionRuntimeComposition.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/document/ContentReference.js';

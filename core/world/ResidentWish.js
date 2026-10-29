@@ -108,7 +108,7 @@ export function residentWishNear({ seed, position, homePosition = null, builtPos
     for (const point of ringPoints(position)) {
         const feature = hydrologyFeatureAt(seed, point.x, point.z);
         if (feature === HYDROLOGY_FEATURE.RIVER) {
-            if (!river) river = point;
+            river = point;
         } else if (feature === HYDROLOGY_FEATURE.LAKE || feature === HYDROLOGY_FEATURE.SEA) {
             if (!water) water = point;
         } else if (!high && terrainHeightAt(seed, point.x, point.z) >= HIGHLAND_ELEVATION && isResidentGroundAt(seed, point.x, point.z)) {

@@ -1,6 +1,5 @@
 import { ContentReference } from '../core/document/ContentReference.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
-import { Publication } from '../publisher/Publication.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { Document } from '../core/document/Document.js';
 import { DocumentMetadata } from '../core/document/DocumentMetadata.js';

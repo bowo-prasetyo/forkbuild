@@ -14,7 +14,7 @@ import { Brick } from '../core/building/Brick.js';
 import { Position } from '../core/document/Position.js';
 import { Document } from '../core/document/Document.js';
 import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
-import { worldEncounterCanvasFiles, editorViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { editorViewFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource } from './support/SourceText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
@@ -73,10 +73,6 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 //               or an invented error state).
 //   Section G — Sequential Publications: Publication A's result cannot
 //               navigate to Publication B's document.
-
-function codeOnlyLines(source) {
-    return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-}
 
 async function flushMicrotasks() {
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -142,9 +138,6 @@ function buildHarness(_editorViewSource, { multiRelayNostrPublicationDistributio
 
 async function run() {
     const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
-    const editorViewCodeOnly = codeOnlyLines(editorViewSource);
-    const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
-    const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
 
     // ---------------------------------------------------------------
     // Section A — Exact identity.

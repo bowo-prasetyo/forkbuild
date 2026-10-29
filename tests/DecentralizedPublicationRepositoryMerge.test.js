@@ -1,4 +1,3 @@
-
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/document/ContentReference.js';
 import { License, LicenseId } from '../core/document/License.js';
@@ -9,14 +8,8 @@ import { resolvePublicationView } from '../application/publication/PublicationRe
 import { CreatePublicationDisplayKindRegistryUseCase } from '../application/publication/CreatePublicationDisplayKindRegistryUseCase.js';
 import { CreateDiscoveryUseCase } from '../application/discovery/CreateDiscoveryUseCase.js';
 import { PUBLICATION_CONTENT_KIND } from '../application/publication/PublicationContentValidator.js';
-import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
-import { ListPublicationsUseCase } from '../application/publication/ListPublicationsUseCase.js';
-import { FindPublicationUseCase } from '../application/publication/FindPublicationUseCase.js';
 import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
-import { DiscoveryProvider } from '../discovery/DiscoveryProvider.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
-import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
-import { CompositeDiscoveryProvider } from '../discovery/CompositeDiscoveryProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';

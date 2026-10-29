@@ -286,9 +286,9 @@ async function runTests() {
     //        order, not send-call order or arrival order.
     reconnectA.peerFromA.close();
     await wait(20);
-    const m1 = aliceChat.sendOrQueue(Bob.id, 'First');
-    const m2 = aliceChat.sendOrQueue(Bob.id, 'Second');
-    const m3 = aliceChat.sendOrQueue(Bob.id, 'Third');
+    aliceChat.sendOrQueue(Bob.id, 'First');
+    aliceChat.sendOrQueue(Bob.id, 'Second');
+    aliceChat.sendOrQueue(Bob.id, 'Third');
     assert(aliceChat.getOutbox(Bob.id).length === 3, 'three messages are queued while Bob is offline');
     await reconnect(Alice, Bob);
     await wait(40);

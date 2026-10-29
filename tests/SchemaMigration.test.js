@@ -1,4 +1,4 @@
-import { storedBricks, corruptFirstBrickPosition } from './support/StoredDocumentBricks.js';
+import { storedBricks } from './support/StoredDocumentBricks.js';
 import { Document } from '../core/document/Document.js';
 import { DocumentMetadata } from '../core/document/DocumentMetadata.js';
 import { World } from '../core/document/World.js';
@@ -7,7 +7,6 @@ import { Brick } from '../core/building/Brick.js';
 import { Position } from '../core/document/Position.js';
 import { Group } from '../core/building/Group.js';
 import { DOCUMENT_SCHEMA_VERSION } from '../core/document/documentSchema.js';
-import { PROTOCOL_VERSION } from '../core/app/protocolVersion.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { DocumentValidator } from '../serializer/DocumentValidator.js';
 import { DocumentSchemaMigrator } from '../serializer/DocumentSchemaMigrator.js';

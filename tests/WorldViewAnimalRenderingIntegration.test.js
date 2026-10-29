@@ -1,6 +1,5 @@
 import { readFile } from 'node:fs/promises';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
-import { AnimalRuntimeInstances, ANIMAL_RENDER_RADIUS } from '../application/world/AnimalRuntimeInstances.js';
 import { animalPresenceInRegion } from '../core/nature/AnimalPlacement.js';
 import { AnimalPresence } from '../core/nature/AnimalPresence.js';
 import { Position } from '../core/document/Position.js';

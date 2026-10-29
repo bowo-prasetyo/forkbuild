@@ -144,7 +144,7 @@ async function runTests() {
         // the in-flight Promise chain.
         sessionActive = false;
 
-        resolveGate.resolve(resolvedOutcome(contentHash));
+        resolveGate.resolve(resolvedOutcome());
         const result = await resultPromise;
 
         assert(result.outcome === AutomaticSnapshotEncounterCascadeOutcome.SUPPRESSED, `1. the late completion is SUPPRESSED, not registered — got ${result.outcome}`);
@@ -164,7 +164,7 @@ async function runTests() {
         const origin = originFor(contentHash, publicationId);
 
         const cascade = new AutomaticSnapshotEncounterCascade({
-            resolveSelectedSnapshotCommand: () => Promise.resolve(resolvedOutcome(contentHash)),
+            resolveSelectedSnapshotCommand: () => Promise.resolve(resolvedOutcome()),
             materializeSelectedSnapshotCommand: () => Promise.resolve(storedOutcome(contentHash)),
             worldDiscoverySourceRegistry: registry,
             resolvePlacementInfo: () => ({ placementId: 'p', publicationId, position: pos(0, 0, 0) }),
@@ -180,7 +180,7 @@ async function runTests() {
         // default, pre-0.9.193 shape.
         const registryNoGuard = new WorldDiscoverySourceRegistry();
         const cascadeNoGuard = new AutomaticSnapshotEncounterCascade({
-            resolveSelectedSnapshotCommand: () => Promise.resolve(resolvedOutcome(contentHash)),
+            resolveSelectedSnapshotCommand: () => Promise.resolve(resolvedOutcome()),
             materializeSelectedSnapshotCommand: () => Promise.resolve(storedOutcome(contentHash)),
             worldDiscoverySourceRegistry: registryNoGuard,
             resolvePlacementInfo: () => ({ placementId: 'p', publicationId, position: pos(0, 0, 0) }),
@@ -216,7 +216,7 @@ async function runTests() {
             const resultPromise = cascade.processCandidate(candidate);
             await flushMicrotasks();
             sessionActive = false;
-            resolveGate.resolve(resolvedOutcome(contentHash));
+            resolveGate.resolve(resolvedOutcome());
             const result = await resultPromise;
             assert(result.outcome === AutomaticSnapshotEncounterCascadeOutcome.SUPPRESSED, `1. teardown during resolution -> SUPPRESSED, got ${result.outcome}`);
             assert(!hasOrigin(registry, originFor(contentHash, publicationId)), '2. no registration for a resolution-boundary teardown');
@@ -231,7 +231,7 @@ async function runTests() {
             let sessionActive = true;
             const materializeGate = deferred();
             const cascade = new AutomaticSnapshotEncounterCascade({
-                resolveSelectedSnapshotCommand: () => Promise.resolve(resolvedOutcome(contentHash)),
+                resolveSelectedSnapshotCommand: () => Promise.resolve(resolvedOutcome()),
                 materializeSelectedSnapshotCommand: () => materializeGate.promise,
                 worldDiscoverySourceRegistry: registry,
                 resolvePlacementInfo: () => ({ placementId: 'p', publicationId, position: pos(0, 0, 0) }),
@@ -257,7 +257,7 @@ async function runTests() {
             const candidate = { contentHash, locator: 'ar://boundary-predates', storage: 'ar', publicationId };
             const registry = new WorldDiscoverySourceRegistry();
             const cascade = new AutomaticSnapshotEncounterCascade({
-                resolveSelectedSnapshotCommand: () => Promise.resolve(resolvedOutcome(contentHash)),
+                resolveSelectedSnapshotCommand: () => Promise.resolve(resolvedOutcome()),
                 materializeSelectedSnapshotCommand: () => Promise.resolve(storedOutcome(contentHash)),
                 worldDiscoverySourceRegistry: registry,
                 resolvePlacementInfo: () => ({ placementId: 'p', publicationId, position: pos(0, 0, 0) }),
@@ -286,7 +286,7 @@ async function runTests() {
         registry.removeSource = (...args) => { removeSourceCalls += 1; return originalRemoveSource(...args); };
 
         const cascade = new AutomaticSnapshotEncounterCascade({
-            resolveSelectedSnapshotCommand: () => Promise.resolve(resolvedOutcome(contentHash)),
+            resolveSelectedSnapshotCommand: () => Promise.resolve(resolvedOutcome()),
             materializeSelectedSnapshotCommand: () => {
                 materializeCalls += 1;
                 return Promise.resolve(storedOutcome(contentHash));
@@ -338,7 +338,7 @@ async function runTests() {
         // entirely unrelated candidate WHILE session A's own late completion
         // is still pending.
         const sessionBCascade = new AutomaticSnapshotEncounterCascade({
-            resolveSelectedSnapshotCommand: () => Promise.resolve(resolvedOutcome(liveHash)),
+            resolveSelectedSnapshotCommand: () => Promise.resolve(resolvedOutcome()),
             materializeSelectedSnapshotCommand: () => Promise.resolve(storedOutcome(liveHash)),
             worldDiscoverySourceRegistry: sharedRegistry,
             resolvePlacementInfo: () => ({ placementId: 'p', publicationId: livePub, position: pos(9000, 0, 0) }),
@@ -350,7 +350,7 @@ async function runTests() {
         assert(hasOrigin(sharedRegistry, originFor(liveHash, livePub)), '2. session B\'s registration genuinely landed');
 
         // NOW session A's held-open resolution finally settles.
-        resolveGate.resolve(resolvedOutcome(orphanHash));
+        resolveGate.resolve(resolvedOutcome());
         const orphanResult = await orphanResultPromise;
         assert(orphanResult.outcome === AutomaticSnapshotEncounterCascadeOutcome.SUPPRESSED, '3. session A\'s late completion is SUPPRESSED');
         assert(!hasOrigin(sharedRegistry, originFor(orphanHash, orphanPub)), '4. session A\'s subject never appears in the shared registry');
@@ -372,7 +372,7 @@ async function runTests() {
 
         let oldSessionActive = true;
         const oldCascade = new AutomaticSnapshotEncounterCascade({
-            resolveSelectedSnapshotCommand: () => Promise.resolve(resolvedOutcome(contentHash)),
+            resolveSelectedSnapshotCommand: () => Promise.resolve(resolvedOutcome()),
             materializeSelectedSnapshotCommand: () => Promise.resolve(storedOutcome(contentHash)),
             worldDiscoverySourceRegistry: sharedRegistry,
             resolvePlacementInfo: () => ({ placementId: 'p', publicationId, position: pos(0, 0, 0) }),
@@ -388,7 +388,7 @@ async function runTests() {
         // own idempotency map — never the same one the dead session used)
         // rediscovers and reprocesses the identical publicationId+contentHash.
         const newCascade = new AutomaticSnapshotEncounterCascade({
-            resolveSelectedSnapshotCommand: () => Promise.resolve(resolvedOutcome(contentHash)),
+            resolveSelectedSnapshotCommand: () => Promise.resolve(resolvedOutcome()),
             materializeSelectedSnapshotCommand: () => Promise.resolve(storedOutcome(contentHash)),
             worldDiscoverySourceRegistry: sharedRegistry,
             resolvePlacementInfo: () => ({ placementId: 'p', publicationId, position: pos(0, 0, 0) }),
@@ -424,9 +424,9 @@ async function runTests() {
         const cascade = new AutomaticSnapshotEncounterCascade({
             resolveSelectedSnapshotCommand: (candidate) => {
                 if (candidate.publicationId === bPub) {
-                    return bGate.promise.then(() => ({ ...resolvedOutcome(candidate.contentHash), contentHash: candidate.contentHash }));
+                    return bGate.promise.then(() => ({ ...resolvedOutcome(), contentHash: candidate.contentHash }));
                 }
-                return Promise.resolve({ ...resolvedOutcome(candidate.contentHash), contentHash: candidate.contentHash });
+                return Promise.resolve({ ...resolvedOutcome(), contentHash: candidate.contentHash });
             },
             materializeSelectedSnapshotCommand: (resolution) => Promise.resolve(storedOutcome(resolution.contentHash)),
             worldDiscoverySourceRegistry: registry,
@@ -508,7 +508,7 @@ async function runTests() {
             const publicationId = 'retention-suppressed-pub';
             const candidate = { contentHash, locator: 'ar://retention-suppressed', storage: 'ar', publicationId };
             const cascade = new AutomaticSnapshotEncounterCascade({
-                resolveSelectedSnapshotCommand: () => Promise.resolve(resolvedOutcome(contentHash)),
+                resolveSelectedSnapshotCommand: () => Promise.resolve(resolvedOutcome()),
                 materializeSelectedSnapshotCommand: () => Promise.resolve(storedOutcome(contentHash)),
                 worldDiscoverySourceRegistry: registry,
                 resolvePlacementInfo: () => ({ placementId: 'p', publicationId, position: pos(0, 0, 0) }),
@@ -533,7 +533,7 @@ async function runTests() {
             const publicationId = 'retention-live-pub';
             const candidate = { contentHash, locator: 'ar://retention-live', storage: 'ar', publicationId };
             const cascade = new AutomaticSnapshotEncounterCascade({
-                resolveSelectedSnapshotCommand: () => Promise.resolve(resolvedOutcome(contentHash)),
+                resolveSelectedSnapshotCommand: () => Promise.resolve(resolvedOutcome()),
                 materializeSelectedSnapshotCommand: () => Promise.resolve(storedOutcome(contentHash)),
                 worldDiscoverySourceRegistry: registry,
                 resolvePlacementInfo: () => ({ placementId: 'p', publicationId, position: pos(0, 0, 0) }),

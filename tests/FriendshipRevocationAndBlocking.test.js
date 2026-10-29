@@ -325,7 +325,6 @@ async function runTests() {
     const bobStorage = new InMemoryStorageProvider();
     const alice = makeDevice('FlagBAlice', aliceStorage).provider;
     const bob = makeDevice('FlagBBob', bobStorage).provider;
-    const aliceId = alice.getSigningIdentity().id;
     const bobId = bob.getSigningIdentity().id;
 
     const network = new LocalPeerNetwork();

@@ -4,7 +4,7 @@ import { AvatarInventoryStore } from './AvatarInventoryStore.js';
 import { AvatarAnimalCatchIntent, deriveAvatarAnimalCatchIntent } from '../../core/avatar/AvatarAnimalCatchIntent.js';
 import { ANIMAL_INTERACTION_RADIUS, resolveAvatarAnimalCatchTarget } from '../../core/avatar/AvatarAnimalCatchTarget.js';
 import { deriveAvatarAnimalCatchTransition } from '../../core/avatar/AvatarAnimalCatchTransition.js';
-import { AvatarAnimalReleaseIntent, deriveAvatarAnimalReleaseIntent } from '../../core/avatar/AvatarAnimalReleaseIntent.js';
+import { deriveAvatarAnimalReleaseIntent } from '../../core/avatar/AvatarAnimalReleaseIntent.js';
 import { deriveAvatarAnimalReleaseTransition } from '../../core/avatar/AvatarAnimalReleaseTransition.js';
 import { AnimalPresence } from '../../core/nature/AnimalPresence.js';
 import { animalPresenceInRegion } from '../../core/nature/AnimalPlacement.js';

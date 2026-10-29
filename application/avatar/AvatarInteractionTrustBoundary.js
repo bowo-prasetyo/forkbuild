@@ -1,4 +1,4 @@
-import { isValidAvatarInteractionAdvertisement, getAvatarInteractionSigningDescriptor } from '../../core/avatar/AvatarInteractionAdvertisement.js';
+import { isValidAvatarInteractionAdvertisement } from '../../core/avatar/AvatarInteractionAdvertisement.js';
 import { resolveIncomingInteraction } from '../../core/avatar/AvatarInteractionIngestion.js';
 import { PresenceAuthorityRegistry } from '../../core/avatar/PresenceAuthority.js';
 import { AvatarInteractionReplayWindow } from '../../core/avatar/AvatarInteractionReplayWindow.js';

@@ -1,5 +1,3 @@
-import { DocumentManager } from './DocumentManager.js';
-
 const DEFAULT_AUTOSAVE_DELAY_MS = 2000;
 
 // Debounced autosave orchestration (0.2.6). Deliberately boring and

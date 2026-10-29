@@ -1,4 +1,4 @@
-import { storedBricks, corruptFirstBrickPosition } from './support/StoredDocumentBricks.js';
+import { corruptFirstBrickPosition } from './support/StoredDocumentBricks.js';
 import { Brick } from '../core/building/Brick.js';
 import { Building } from '../core/building/Building.js';
 import { Document } from '../core/document/Document.js';
@@ -404,7 +404,6 @@ function buildStack(storage) {
     // Becoming clean cancels pending autosave.
     stack.save.execute(manager);                      // clean
     addBrickAt(history, doc.world, 4);               // dirty again
-    const pendingBeforeClean = timers.filter((t) => t && !t.cleared).length;
     stack.save.execute(manager);                      // clean -> cancel
     scheduler.stop();
     assert(true, 'scheduler start/stop lifecycle safe');

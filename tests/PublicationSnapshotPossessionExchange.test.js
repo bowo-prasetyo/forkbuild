@@ -233,7 +233,7 @@ async function run() {
         // --- responding side ALWAYS answers, never silence ---
         const reference = await contentStore.put('{"blueprint":"farmstead"}');
         const responderBus = new StubPeerMessageBus();
-        const responderExchange = new PublicationSnapshotPossessionPeerExchange(checkLocalPossession, responderBus, new StubConnectedPeerRegistry([]));
+        new PublicationSnapshotPossessionPeerExchange(checkLocalPossession, responderBus, new StubConnectedPeerRegistry([]));
         const requestingPeer = stubPeer('conn-requester', PeerLifecycleState.AUTHENTICATED);
 
         responderBus.deliver(PublicationSnapshotPossessionPeerExchange.DEFAULT_PROTOCOL,

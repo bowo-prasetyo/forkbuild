@@ -260,7 +260,7 @@ async function run() {
     // milestone's own public surface.
     // ---------------------------------------------------------------
     {
-        const plan = await constructPlan();
+        await constructPlan();
         const wallet = fakeWallet();
         const narrowSigner = new BaseTransactionSigner({ wallet });
         const reviewedSigner = new BaseReviewedTransactionSigner({ wallet });

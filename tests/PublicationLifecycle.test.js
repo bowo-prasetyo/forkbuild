@@ -214,7 +214,6 @@ function createTestDocument(brickCount = 3) {
 // ---------------------------------------------------------------------
 {
     const storage = new InMemoryStorageProvider();
-    const publisher = new LocalPublisherProvider(storage);
     const doc = createTestDocument();
     const manager = new DocumentManager();
     manager.load(doc, 'test-doc');
