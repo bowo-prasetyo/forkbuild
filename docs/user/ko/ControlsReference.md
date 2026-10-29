@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 61ac7536a193e60e -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 91f6d371dea195ae -->
 # 조작 참조
 
 <!-- languages -->
@@ -148,7 +148,7 @@ ForkBuild의 모든 마우스와 키보드 조작입니다. 휴대폰과 태블�
 | 블록 클릭 | 그 블록 선택(선택 대체) | 월드 보기에서는 살펴보기 패널만 열림 — [월드 보기](03-WorldView.md#월드-보기는-읽기-전용입니다--짓기는-에디터에서) 참고 |
 | `Shift`-클릭 | 블록을 선택에 추가 | |
 | `Ctrl/Cmd`-클릭 | 블록을 선택에 넣거나 빼기 | |
-| `Shift`-드래그 | 상자 선택(선택 대체) | `Ctrl/Cmd+Shift`-드래그는 선택에 추가. 그냥 드래그하면 카메라 회전 |
+| `Shift`-드래그 | 상자 선택(선택 대체) | `Ctrl/Cmd+Shift`-드래그는 선택에 추가. 그냥 드래그하면 카메라 회전, 선택은 그대로. 빈 땅을 클릭하면 선택 해제 |
 | `Ctrl/Cmd+A` | 모두 선택 | |
 | `Esc` | 선택 해제 | 아래의 에디터 Escape 순서 참고 — 월드 보기의 Escape는 열려 있는 패널만 닫음 |
 | `Delete` / `Backspace` | 선택 삭제 — **에디터 전용** | 실행 취소 한 단계. 월드 보기에는 키보드 동작이 전혀 없음 |

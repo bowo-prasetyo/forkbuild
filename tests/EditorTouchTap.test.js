@@ -129,15 +129,28 @@ function touch(pointerId, x, y, isPrimary = true) {
     console.log('✓ gizmo drag by touch');
 }
 
-// 7. Mouse input is unchanged: every event reaches the tools as it happens.
+// 7. Mouse in Select: hover reaches the tools as it happens; a press reaches
+// them only once released as a click, so a drag that turns the camera neither
+// clears the selection nor selects what it began on.
 {
     const { host, dispatched } = makeHost();
     const mouse = { pointerType: 'mouse', pointerId: 1, clientX: 1, clientY: 1, button: 0, buttons: 1, shiftKey: false };
     host.onPointerMove({ ...mouse, buttons: 0 });
+    assert(dispatched.map((d) => d.type).join(',') === 'move', 'hover passes straight through');
     host.onPointerDown(mouse);
+    assert(dispatched.length === 1, 'a press waits');
     host.onPointerUp({ ...mouse, buttons: 0 });
-    assert(dispatched.map((d) => d.type).join(',') === 'move,down,up', 'mouse events pass straight through');
-    console.log('✓ mouse unchanged');
+    assert(dispatched.map((d) => d.type).join(',') === 'move,move,down,up', `released where it began, it is a click (${dispatched.map((d) => d.type)})`);
+    dispatched.length = 0;
+    host.onPointerDown(mouse);
+    host.onPointerMove({ ...mouse, clientX: 60 });
+    host.onPointerUp({ ...mouse, clientX: 60, buttons: 0 });
+    assert(dispatched.every((d) => d.type === 'move'), 'a drag (the camera turning) reaches no tool as a press');
+    dispatched.length = 0;
+    host.onPointerDown({ ...mouse, button: 2 });
+    host.onPointerUp({ ...mouse, button: 2, buttons: 0 });
+    assert(dispatched.length === 0, 'nor does a right click');
+    console.log('✓ mouse in Select: a click on release, a drag nothing');
 }
 
 // 8. Box mode: a drag draws the marquee with the camera held still.
@@ -271,9 +284,11 @@ function touch(pointerId, x, y, isPrimary = true) {
     {
         const { host, dispatched } = placingHost('select');
         host.onPointerDown(mouse(1, 1));
-        assert(dispatched.map((d) => d.type).join(',') === 'down', 'Select still gets the press at once');
+        assert(dispatched.length === 0, 'Select waits for the release too');
+        host.onPointerUp(mouse(1, 1, { buttons: 0 }));
+        assert(dispatched.map((d) => d.type).join(',') === 'move,down,up', 'and gets the click then');
     }
-    console.log('✓ placing acts on a click, never on a camera drag');
+    console.log('✓ placing and selecting act on a click, never on a camera drag');
 }
 
 // 13. Placing by touch takes two taps: the first shows the ghost, a second on

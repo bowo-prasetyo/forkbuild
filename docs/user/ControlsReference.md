@@ -149,7 +149,7 @@ device and survive a reload — see
 | Click a brick | Select it (replaces the selection) | in World View this opens the Inspection panel only — see [World View](03-WorldView.md#world-view-is-read-only--building-happens-in-the-editor) |
 | `Shift`-click | Add brick to selection | |
 | `Ctrl/Cmd`-click | Toggle brick in/out of selection | |
-| `Shift`-drag | Marquee-select (replaces the selection) | `Ctrl/Cmd+Shift`-drag adds to the selection; a plain drag orbits the camera |
+| `Shift`-drag | Marquee-select (replaces the selection) | `Ctrl/Cmd+Shift`-drag adds to the selection; a plain drag orbits the camera and leaves the selection as it is; a click on empty ground clears it |
 | `Ctrl/Cmd+A` | Select All | |
 | `Esc` | Clear Selection | Editor's own Escape chain, below — World View's own Escape only ever closes whichever panel is open |
 | `Delete` / `Backspace` | Delete Selection — **Editor only** | one undo step; no keyboard binding at all in World View |

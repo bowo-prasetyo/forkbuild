@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 61ac7536a193e60e -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 91f6d371dea195ae -->
 # Referencia de controles
 
 <!-- languages -->
@@ -158,7 +158,7 @@ en este dispositivo y se conservan al recargar: consulte
 | Clic en un bloque | Seleccionarlo (reemplaza la selección) | en la Vista del mundo esto solo abre el panel Inspección; consulte la [Vista del mundo](03-WorldView.md#la-vista-del-mundo-es-de-solo-lectura--se-construye-en-el-editor) |
 | `Mayús` + clic | Agregar el bloque a la selección | |
 | `Ctrl/Cmd` + clic | Agregar el bloque a la selección o quitarlo | |
-| `Mayús` + arrastrar | Selección con recuadro (reemplaza la selección) | `Ctrl/Cmd+Mayús` + arrastrar agrega a la selección; arrastrar sin teclas orbita la cámara |
+| `Mayús` + arrastrar | Selección con recuadro (reemplaza la selección) | `Ctrl/Cmd+Mayús` + arrastrar agrega a la selección; arrastrar sin teclas orbita la cámara y deja la selección como está; un clic en el suelo vacío la borra |
 | `Ctrl/Cmd+A` | Seleccionar todo | |
 | `Esc` | Borrar la selección | La cadena propia de Escape del Editor, abajo; el Escape propio de la Vista del mundo solo cierra el panel que esté abierto |
 | `Supr` / `Retroceso` | Eliminar la selección: **solo en el Editor** | un paso de deshacer; en la Vista del mundo no tiene ninguna tecla asignada |

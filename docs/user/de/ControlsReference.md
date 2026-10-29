@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 61ac7536a193e60e -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 91f6d371dea195ae -->
 # Steuerungsreferenz
 
 <!-- languages -->
@@ -156,7 +156,7 @@ diesem Gerät gespeichert und überstehen ein Neuladen — siehe
 | Klick auf einen Stein | Ihn auswählen (ersetzt die Auswahl) | in der Weltansicht öffnet das nur das Feld Untersuchung — siehe [Weltansicht](03-WorldView.md#die-weltansicht-ist-schreibgeschützt--gebaut-wird-im-editor) |
 | `Umschalt`-Klick | Stein zur Auswahl hinzufügen | |
 | `Strg/Cmd`-Klick | Stein in die Auswahl aufnehmen oder daraus entfernen | |
-| `Umschalt`-Ziehen | Rahmenauswahl (ersetzt die Auswahl) | `Strg/Cmd+Umschalt`-Ziehen fügt der Auswahl hinzu; einfaches Ziehen kreist mit der Kamera |
+| `Umschalt`-Ziehen | Rahmenauswahl (ersetzt die Auswahl) | `Strg/Cmd+Umschalt`-Ziehen fügt der Auswahl hinzu; einfaches Ziehen kreist mit der Kamera und lässt die Auswahl, wie sie ist; ein Klick auf leeren Boden hebt sie auf |
 | `Strg/Cmd+A` | Alles auswählen | |
 | `Esc` | Auswahl aufheben | Die eigene Escape-Reihenfolge des Editors, unten — Escape in der Weltansicht schließt nur das jeweils offene Feld |
 | `Entf` / `Rücktaste` | Auswahl löschen — **nur Editor** | ein Rückgängig-Schritt; in der Weltansicht gar keine Tastenbelegung |

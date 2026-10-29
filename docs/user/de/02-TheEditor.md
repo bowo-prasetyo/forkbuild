@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 912406e543c26298 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 436a4011e7ce6564 -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -260,6 +260,10 @@ ForkBuild gibt Ihnen genaue Kontrolle über die Auswahl:
 | **Strg/Cmd + Umschalt + Ziehen** | Rahmenauswahl, die der aktuellen Auswahl *hinzugefügt* wird |
 | **Strg/Cmd + A** | Alle Steine des Bauwerks auswählen |
 | **Escape** | Die Auswahl aufheben |
+
+Ein Druck wählt erst aus, wenn Sie loslassen, ohne zu ziehen. Wenn Sie die
+Kamera mit Ziehen drehen oder verschieben, bleibt die Auswahl, wo immer das
+Ziehen beginnt; ein Klick auf leeren Boden hebt sie auf.
 
 > **Warum das wichtig ist:** Alles, was größer als ein einzelner Stein ist,
 > bedeutet, mit *vielen* Steinen auf einmal zu arbeiten. Lernen Sie den

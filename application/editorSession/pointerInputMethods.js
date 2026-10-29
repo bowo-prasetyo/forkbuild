@@ -52,6 +52,13 @@ const PLACE_AGAIN_TAP_PX = 28;
 // selects or places: a long press that picks is no tap when the finger lifts
 // (one held on empty ground still is). A second finger or a drag stops it.
 //
+// Mouse and pen in Select, likewise: a press also starts the camera's orbit
+// (left) or pan (right), so SelectionTool sees it only once it is released as
+// a click, left button, moved under MARQUEE_DRAG_THRESHOLD_PX. A drag that
+// turns the camera neither clears the selection nor selects the brick it began
+// on. The one press that reaches the tool at once is a left press on the placed
+// build already selected, which drags it (SelectionTool's own drag).
+//
 // In Select, a left press with no modifier key on a brick that is already
 // selected drags the whole selection over the ground, as the gizmo's centre
 // handle does, snapped and checked for collisions, in one undo step; a placed
@@ -115,9 +122,13 @@ export const pointerInputMethods = {
                 : null;
             return null;
         }
-        if (this._inputDispatcher) {
-            this._inputDispatcher.dispatchPointerDown(event);
+        if (this._pressesSelectedPlacement(event)) {
+            if (this._inputDispatcher) {
+                this._inputDispatcher.dispatchPointerDown(event);
+            }
+            return null;
         }
+        this._selectPress = { pointerId: event.pointerId, button: event.button, x0: event.clientX, y0: event.clientY, moved: false };
         return null;
     },
 
@@ -153,10 +164,11 @@ export const pointerInputMethods = {
                 return result;
             }
         }
-        const press = this._placePress;
-        if (press && press.pointerId === event.pointerId
-            && Math.hypot(event.clientX - press.x0, event.clientY - press.y0) > MARQUEE_DRAG_THRESHOLD_PX) {
-            press.moved = true;
+        for (const press of [this._placePress, this._selectPress]) {
+            if (press && press.pointerId === event.pointerId
+                && Math.hypot(event.clientX - press.x0, event.clientY - press.y0) > MARQUEE_DRAG_THRESHOLD_PX) {
+                press.moved = true;
+            }
         }
         if (this._inputDispatcher) {
             this._inputDispatcher.dispatchPointerMove(event);
@@ -220,6 +232,15 @@ export const pointerInputMethods = {
                 return result;
             }
         }
+        const selectPress = this._selectPress;
+        if (selectPress && selectPress.pointerId === event.pointerId) {
+            this._selectPress = null;
+            if (selectPress.button === 0 && event.button === 0 && !selectPress.moved
+                && Math.hypot(event.clientX - selectPress.x0, event.clientY - selectPress.y0) <= MARQUEE_DRAG_THRESHOLD_PX) {
+                this._replayClick(event);
+            }
+            return null;
+        }
         if (this._isPlacing()) {
             const press = this._placePress;
             this._placePress = null;
@@ -244,6 +265,9 @@ export const pointerInputMethods = {
         if (event.pointerType !== 'touch') {
             if (this._placePress && this._placePress.pointerId === event.pointerId) {
                 this._placePress = null;
+            }
+            if (this._selectPress && this._selectPress.pointerId === event.pointerId) {
+                this._selectPress = null;
             }
             if (this._selectionPress && this._selectionPress.pointerId === event.pointerId) {
                 this._selectionPress = null;
@@ -278,6 +302,18 @@ export const pointerInputMethods = {
         this._toolManager?.activeToolInstance?.setOrientation?.({ rotation: brick.rotation || 0, tilt: brick.tilt || 0 });
         editorContext.noteBrickPicked?.(brick.definitionId);
         return brick;
+    },
+
+    // A left press, no modifier, on the placed build that is selected: the
+    // start of SelectionTool's drag of it, which must see the press at once.
+    _pressesSelectedPlacement(event) {
+        if (event.button !== 0 || event.shiftKey || event.ctrlKey || event.metaKey) return false;
+        const selection = this._editorContext.selection;
+        if (!selection || !selection.isStructurePlacementSelection || !this._inputDispatcher
+            || typeof this._inputDispatcher.pickPlacementAt !== 'function') return false;
+        if (this._inputDispatcher.pickBrickAt(event.clientX, event.clientY)) return false;
+        const picked = this._inputDispatcher.pickPlacementAt(event.clientX, event.clientY);
+        return !!picked && picked.placementId === selection.selectedPlacementId;
     },
 
     // A left press with no modifier on a brick of a brick selection, in Select,

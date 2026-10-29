@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 912406e543c26298 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 436a4011e7ce6564 -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -262,6 +262,10 @@ ForkBuild le da un control preciso sobre la selección:
 | **Ctrl/Cmd + Mayús + arrastrar** | Selección con recuadro que se *agrega* a la selección actual |
 | **Ctrl/Cmd + A** | Selecciona todos los bloques de la construcción |
 | **Escape** | Borra la selección |
+
+Una pulsación selecciona solo al soltar sin arrastrar. Girar o desplazar la
+cámara arrastrando, empiece donde empiece, deja la selección como está; un
+clic en el suelo vacío la borra.
 
 > **Por qué importa:** Construir algo más grande que un solo bloque
 > significa trabajar con *muchos* bloques a la vez. Aprenda pronto la
