@@ -9919,3 +9919,25 @@ builders at the wrong controls.
   Turn buttons, the overlay's Selecting rows and every key once, Not saved yet then Saved); tests/EditorActions.test.js
   and tests/I18nMessageKeys.test.js (Rename Group opens the field); tests/EditorSidebarLayoutBrowser.test.js and
   tests/KeyboardShortcutsOverlayBrowser.test.js (the new labels).
+
+## A camera drag keeps the selection (unnumbered, 2026-10-29)
+
+**Building: looking round what you selected.** Left open by [the Editor usability
+review](../reviews/EditorUsability-2026-10-29.md)'s fixes: in Select, a mouse press reached SelectionTool the moment
+the button went down, so every drag that turned or panned the camera from empty ground cleared the selection, and one
+that began on another brick selected that brick instead. With dragging a selected brick now moving it, turning the
+camera round a selection is the everyday way to see where it goes.
+
+- **In Select, a mouse or pen press reaches the tool only once it is released as a click** (left button, moved under
+  6 px), the rule placing and touch already follow (application/editorSession/pointerInputMethods.js, `_selectPress`).
+  A click selects, Shift- and Ctrl-clicks add and toggle, and a click on empty ground clears, as before; a drag with
+  any button turns or pans the camera and changes nothing; a right click selects nothing.
+- **The placed build already selected still drags at once**: a left press on it reaches SelectionTool straight away
+  (`_pressesSelectedPlacement()`, with `InputDispatcher#pickPlacementAt()`, new). The selection's own drag, gizmo
+  handles, Alt-click, Shift+drag boxes and rows are unchanged.
+- The user guide (*Selecting bricks*, the Controls Reference's selection table) says so, in all eight languages.
+- Tests: tests/CameraDragKeepsSelection.test.js (new: the real SelectionTool behind the real InputDispatcher; a drag
+  from the ground or from another brick, with either button, keeps the selection; clicks select, add and clear; the
+  selected placed build still takes its press at once); tests/EditorTouchTap.test.js (mouse in Select acts on a
+  click). Checked in the running app at 1366×768: a brick stayed selected through an orbit from the ground, an orbit
+  from the brick beside it and a pan, and a click on the ground cleared it.

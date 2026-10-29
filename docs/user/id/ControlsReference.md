@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 61ac7536a193e60e -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 91f6d371dea195ae -->
 # Referensi Kontrol
 
 <!-- languages -->
@@ -153,7 +153,7 @@ disimpan di perangkat ini dan tetap ada setelah dimuat ulang — lihat
 | Klik sebuah balok | Memilihnya (menggantikan pilihan) | di Tampilan Dunia ini hanya membuka panel Pemeriksaan — lihat [Tampilan Dunia](03-WorldView.md#tampilan-dunia-hanya-dapat-dilihat--membangun-dilakukan-di-editor) |
 | `Shift`-klik | Menambahkan balok ke pilihan | |
 | `Ctrl/Cmd`-klik | Memasukkan/mengeluarkan balok dari pilihan | |
-| `Shift`-seret | Pilih dengan kotak (menggantikan pilihan) | `Ctrl/Cmd+Shift`-seret menambah ke pilihan; seret biasa mengorbit kamera |
+| `Shift`-seret | Pilih dengan kotak (menggantikan pilihan) | `Ctrl/Cmd+Shift`-seret menambah ke pilihan; seret biasa mengorbit kamera dan membiarkan pilihan apa adanya; klik di tanah kosong menghapusnya |
 | `Ctrl/Cmd+A` | Pilih Semua | |
 | `Esc` | Hapus Pilihan | Urutan Escape milik Editor sendiri, di bawah — Escape di Tampilan Dunia hanya menutup panel mana pun yang sedang terbuka |
 | `Delete` / `Backspace` | Hapus Pilihan — **hanya Editor** | satu langkah urung; tidak ada tombol yang terikat sama sekali di Tampilan Dunia |

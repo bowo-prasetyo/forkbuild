@@ -50,6 +50,11 @@ export class InputDispatcher {
         return this._pick ? this._pick(clientX, clientY) : null;
     }
 
+    // The placed build under a screen point ({ placementId, ... }), or null.
+    pickPlacementAt(clientX, clientY) {
+        return this._pickPlacement ? this._pickPlacement(clientX, clientY) : null;
+    }
+
     dispatchPointerMove(rawEvent) {
         this._toolManager.onPointerMove(this._toInteractionEvent(rawEvent));
     }

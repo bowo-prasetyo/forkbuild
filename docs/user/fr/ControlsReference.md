@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 61ac7536a193e60e -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 91f6d371dea195ae -->
 # Référence des commandes
 
 <!-- languages -->
@@ -163,7 +163,7 @@ enregistrés sur cet appareil et survivent à un rechargement — voir
 | Clic sur une brique | La sélectionner (remplace la sélection) | dans la Vue du Monde, cela ouvre seulement le panneau Inspection — voir [Vue du Monde](03-WorldView.md#la-vue-du-monde-est-en-lecture-seule--on-construit-dans-léditeur) |
 | `Maj`-clic | Ajouter la brique à la sélection | |
 | `Ctrl/Cmd`-clic | Ajouter ou retirer la brique de la sélection | |
-| `Maj`-glisser | Sélection par cadre (remplace la sélection) | `Ctrl/Cmd+Maj`-glisser ajoute à la sélection ; un simple glissement fait orbiter la caméra |
+| `Maj`-glisser | Sélection par cadre (remplace la sélection) | `Ctrl/Cmd+Maj`-glisser ajoute à la sélection ; un simple glissement fait orbiter la caméra et laisse la sélection telle qu’elle est ; un clic sur le sol vide l’efface |
 | `Ctrl/Cmd+A` | Tout sélectionner | |
 | `Échap` | Effacer la sélection | La chaîne Échap propre à l’Éditeur, ci-dessous — dans la Vue du Monde, Échap ne fait que fermer le panneau ouvert |
 | `Suppr` / `Retour arrière` | Supprimer la sélection — **Éditeur uniquement** | une étape d’annulation ; aucune touche associée dans la Vue du Monde |

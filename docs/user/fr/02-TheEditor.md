@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 912406e543c26298 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 436a4011e7ce6564 -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -264,6 +264,10 @@ ForkBuild vous donne un contrôle précis sur la sélection :
 | **Ctrl/Cmd + Maj + Glisser** | Sélection par cadre en *ajoutant* à la sélection actuelle |
 | **Ctrl/Cmd + A** | Sélectionne toutes les briques de la construction |
 | **Échap** | Efface la sélection |
+
+Un appui ne sélectionne qu’une fois relâché sans glisser. Faire tourner ou
+déplacer la caméra en glissant, où que ce soit, laisse la sélection telle
+qu’elle est ; un clic sur le sol vide l’efface.
 
 > **Pourquoi c’est important :** construire quoi que ce soit de plus grand
 > qu’une brique, c’est travailler avec *beaucoup* de briques à la fois.

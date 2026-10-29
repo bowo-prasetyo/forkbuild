@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 61ac7536a193e60e -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 91f6d371dea195ae -->
 # Referência de controles
 
 <!-- languages -->
@@ -155,7 +155,7 @@ neste dispositivo e sobrevivem a uma recarga — veja
 | Clicar num bloco | Selecioná-lo (substitui a seleção) | na Visão do mundo isso só abre o painel Inspeção — veja [Visão do mundo](03-WorldView.md#a-visão-do-mundo-é-somente-leitura--construir-é-no-editor) |
 | `Shift` + clique | Adicionar o bloco à seleção | |
 | `Ctrl/Cmd` + clique | Pôr o bloco na seleção ou tirá-lo | |
-| `Shift` + arrastar | Seleção por caixa (substitui a seleção) | `Ctrl/Cmd+Shift` + arrastar soma à seleção; arrastar sem tecla orbita a câmera |
+| `Shift` + arrastar | Seleção por caixa (substitui a seleção) | `Ctrl/Cmd+Shift` + arrastar soma à seleção; arrastar sem tecla orbita a câmera e deixa a seleção como está; um clique no chão vazio a limpa |
 | `Ctrl/Cmd+A` | Selecionar tudo | |
 | `Esc` | Limpar a seleção | Sequência própria do Esc no Editor, abaixo — o Esc da Visão do mundo só fecha o painel que estiver aberto |
 | `Delete` / `Backspace` | Excluir a seleção — **só no Editor** | um passo de desfazer; nenhuma tecla faz isso na Visão do mundo |

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 912406e543c26298 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 436a4011e7ce6564 -->
 # 02 — Editor
 
 <!-- languages -->
@@ -252,6 +252,10 @@ ForkBuild memberi Anda kendali yang presisi atas pemilihan:
 | **Ctrl/Cmd + Shift + Seret** | Memilih dengan kotak dan *menambah* ke pilihan saat ini |
 | **Ctrl/Cmd + A** | Memilih setiap balok dalam karya |
 | **Escape** | Menghapus pilihan |
+
+Tekanan baru memilih saat Anda melepasnya tanpa menyeret. Memutar atau
+menggeser kamera dengan menyeret, dari mana pun, membiarkan pilihan apa
+adanya; klik di tanah kosong menghapusnya.
 
 > **Mengapa ini penting:** Membangun apa pun yang lebih besar dari satu
 > balok berarti bekerja dengan *banyak* balok sekaligus. Pelajari kotak

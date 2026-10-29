@@ -232,6 +232,10 @@ ForkBuild gives you precise control over selection:
 | **Ctrl/Cmd + A** | Select every brick in the build |
 | **Escape** | Clear the selection |
 
+A press selects only when you let go without dragging. Turning or panning
+the camera with a drag, wherever it starts, leaves the selection as it is;
+a click on empty ground clears it.
+
 > **Why it matters:** Building anything bigger than a single brick means
 > working with *many* bricks at once. Learn the Shift-drag marquee early —
 > it's the fastest way to grab a whole wall.
