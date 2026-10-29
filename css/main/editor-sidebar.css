@@ -308,3 +308,46 @@
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
+
+/* Naming a group as it is made, or renaming it, in the Groups section. */
+.group-naming {
+    margin: 0.4rem 0;
+}
+
+.group-naming-label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    font-size: 0.75rem;
+    color: var(--ink-soft);
+}
+
+.group-naming-input {
+    padding: 0.3rem 0.4rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 3px;
+    background: var(--surface);
+    color: var(--ink-strong);
+    font-size: 0.8rem;
+}
+
+.group-naming-submit {
+    border-color: var(--accent);
+    color: var(--accent-ink);
+    font-weight: 600;
+}
+
+/* The Selection card's Move row: a label, then a step each way. */
+.selection-inspector-move {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem;
+    margin: 0.4rem 0;
+}
+
+.selection-inspector-move-label {
+    font-size: 0.75rem;
+    color: var(--ink-faint);
+    margin-right: 0.1rem;
+}

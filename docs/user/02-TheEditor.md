@@ -85,8 +85,10 @@ that can't do anything yet:
 - **Nothing selected** — a short hint, **Select All**, **Paste** once
   you've copied something, and your groups (click one to select its
   bricks).
-- **Bricks selected** — how many, where they are, and the everyday
-  actions: **Rotate ↻ / ↺**, **Duplicate**, **Delete**, **Copy**,
+- **Bricks selected** — how many, where they are, a **Move** row (a step
+  **Left**, **Right**, **Forward**, **Back**, **Up** or **Down**, as the
+  arrow keys and Page Up/Down do), and the everyday
+  actions: **Turn right ↻ / Turn left ↺**, **Duplicate**, **Delete**, **Copy**,
   **Paste**, **Paint selected**, **Focus** and **Deselect**. When you
   select something, the sidebar scrolls this card into view, even from far
   down the Build Library. Less frequent tools are
@@ -97,7 +99,10 @@ that can't do anything yet:
   [Structure instances](#structure-instances-a-live-reference)).
 
 > **Tip:** Press `Ctrl/Cmd+K` anywhere to open the **Command Palette** — a
-> searchable list of every action in this guide, by name.
+> searchable list of every action in this guide, by name or by the words you
+> would use: *colour* finds **Paint Selected**, *music* the sound, *camera*
+> **See the Whole Build**, and **Save**, **Publish**, **Export** and the
+> tools are there too.
 
 ## Try it now: a house to finish
 
@@ -374,7 +379,9 @@ Groups let you name and reuse collections of bricks — like "Roof" or "Windows"
 **Create a group:**
 1. Select some bricks.
 2. Open the Selection panel's **Groups & blueprint** section and click
-   **New group**, then give it a name with **Rename group** (below).
+   **New group**. A field asks for its name, with one suggested
+   (*Group 1*); type yours and press **Make group** or `Enter`. The new
+   group is selected, ready for the buttons below.
 
 **Use a group:** click a group's name in the list to select it (and its
 bricks) — the list is in the Selection panel when nothing is selected, and
@@ -383,7 +390,7 @@ is selected:
 
 | Button | What it does |
 |---|---|
-| **Rename group** | Change the group's name |
+| **Rename group** | Change the group's name, in the same field (or double-click its name in the list) |
 | **Duplicate group** | Copy the whole group *and* its bricks |
 | **Delete group** | Delete the group (the bricks themselves are kept) |
 | **Add to group** | Adds your current selection to the group |
@@ -584,12 +591,12 @@ instance with the Select tool (`1`) and the sidebar shows:
 | Drag in the viewport, or the [gizmo](InteractiveTransformGizmo.md) | Move / rotate, same as a brick |
 | Arrow keys / Page Up / Page Down | Nudge |
 | **X / Z / Rotation ° fields, then Apply** | Set an exact position and heading — elevation (Ground Y) always follows the terrain and isn't a target you set |
-| **Rotate ↻ / ↺** | Rotate exactly 90° |
+| **Turn right ↻ / Turn left ↺** | Turn it exactly 90° |
 | **Duplicate** (`Ctrl/Cmd+D`) | Place another instance of the same structure |
 | **Delete** | Remove this instance — the source build is untouched |
 | **Edit Source Build** | Open the referenced build itself, to change what every instance of it looks like |
 
-**Rotate ↻ / ↺**, `R` and the **Rotation °** field only turn an instance
+**Turn right ↻ / Turn left ↺**, `R` and the **Rotation °** field only turn an instance
 where it fits: a turn that would run into something leaves it as it was,
 with a sound and a message saying so. (The gizmo shows a blocked turn red
 and puts it back.)
@@ -669,7 +676,8 @@ Music plays softly while you build, a little livelier than World View's. The **�
 
 ## Saving, publishing, starting over
 
-- **Save** (`Ctrl+S`) — keep your work on this device.
+- **Save** (`Ctrl+S`) — keep your work on this device. Until a build is
+  saved for the first time, the toolbar says **Not saved yet**.
 - **Publish** — share it with everyone (see
   [Publishing & Remixing](04-PublishingAndForking.md)). Publishing also saves
   it. A build started from a ready-made one that has nothing of your own in
@@ -864,7 +872,8 @@ The Editor works by touch. Drag with one finger to orbit, two to pan, and
 pinch to zoom. A tap selects; placing takes two taps, one to see where the
 piece goes and a second on it (or **Place**) to put it down. A drag never
 selects or places. On a narrow screen, the sidebar opens from the **Tools**
-button at the top right of the scene. A bar at the bottom of the scene has
+button at the top right of the scene, as a sheet over the lower half of the
+view, so what you selected stays in sight above it; its card comes first. A bar at the bottom of the scene has
 **Undo**, **Redo**, **Rotate**, **Tilt**, **Delete**, **Multi** (each tap
 adds a brick to the selection or removes it), **Box** (drag to draw a
 selection box; the camera stays still until you turn it off), and **More**,

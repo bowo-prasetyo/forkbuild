@@ -29,7 +29,7 @@ every editing operation below by name.
 
 | Input | Action |
 |---|---|
-| `Ctrl/Cmd+K` | Command Palette |
+| `Ctrl/Cmd+K` | Command Palette: every action by name, or by another word for it (*colour*, *music*, *camera*), including Save, Publish, New, Export, Import, the tools, Sound and See inside |
 | `I` | Describe the Build: what it is made of, shown and read out by a screen reader — see [Describe the build](02-TheEditor.md#describe-the-build) |
 | `V` | Speak a command: press, speak, press again — see [Speak a command (voice)](02-TheEditor.md#speak-a-command-voice). In World View, say where to go — see [Say where to go (voice)](03-WorldView.md#say-where-to-go-voice) |
 | `?` | Keyboard Shortcuts overlay (also reachable from the toolbar's "⌨ Shortcuts" button) — every Editor shortcut |
@@ -262,8 +262,8 @@ selected, the panel lists your groups so you can click one to select it.
 
 | Operation | Availability |
 |---|---|
-| New group | bricks selected |
-| Rename / Duplicate / Delete group | a group selected |
+| New group | bricks selected; asks for its name (suggesting *Group 1*), and the new group starts selected |
+| Rename / Duplicate / Delete group | a group selected; Rename asks in the same field, as does a double-click on a group's name |
 | Add to group / Remove from group | bricks selected and a group selected |
 
 Group transforms (move/rotate/align/distribute/numeric) operate on the
@@ -338,7 +338,8 @@ whenever the device has a touch screen, so a touch laptop shows them beside
 its keyboard and mouse. On a screen 720 pixels wide or narrower, the page
 also rearranges itself: the page links fold behind a **Menu** button, World
 View's side panel opens from a **Panel** button, and the Editor's sidebar
-becomes a drawer opened from a **Tools** button.
+becomes a sheet over the lower half of the view, opened from a **Tools**
+button.
 
 ### Camera (both views)
 

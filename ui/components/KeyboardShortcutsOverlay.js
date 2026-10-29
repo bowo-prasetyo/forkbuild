@@ -16,23 +16,32 @@ import { t } from '../i18n/i18n.js';
 //      resolved — both read the same actions.
 //   2. VIEW_LOCAL_SHORTCUTS below — the small, deliberate set of
 //      shortcuts that live outside the action registry because they
-//      are not editing operations (sound, tool switching, Save, and
-//      placement-mode's own Rotate/Cancel carve-outs) — see
+//      are not actions (placement-mode's own Rotate/Cancel carve-outs,
+//      the recent-brick keys and the placing gestures) — see
 //      ui/views/EditorView.js's own keydown handler, steps 3.8/4/4.5/4.6,
 //      for why each of these is handled before the registry ever sees
 //      the keystroke. Mirrors docs/user/ControlsReference.md by hand;
 //      keep the two in sync if either changes.
 const VIEW_LOCAL_SHORTCUTS = [
-    { label: 'shortcuts.view.selectTool', shortcut: '1' },
-    { label: 'shortcuts.view.placeTool', shortcut: '2' },
     { label: 'shortcuts.view.recentBrick', shortcut: '3–9' },
-    { label: 'shortcuts.view.save', shortcut: 'Ctrl/Cmd+S' },
-    { label: 'shortcuts.view.sound', shortcut: 'M' },
     { label: 'shortcuts.view.rotateGhost', shortcut: 'R' },
     { label: 'shortcuts.view.rotateGhostBack', shortcut: 'Shift+R' },
     { label: 'shortcuts.view.cancelPlacement', shortcut: 'Esc' },
     { label: 'shortcuts.view.layRow', shortcut: 'shortcuts.view.layRowGesture' },
     { label: 'shortcuts.view.pickBrick', shortcut: 'shortcuts.view.pickBrickGesture' }
+];
+// The selection gestures (application/tools/SelectionTool.js, the marquee and
+// the drag of a selected brick in application/editorSession/pointerInputMethods.js):
+// mouse moves, not actions, so they are listed here (finding P2-5 of
+// docs/reviews/EditorUsability-2026-10-29.md). Select, Place, Save and Sound
+// are registry actions now, listed with their keys under their categories.
+const SELECTING_SHORTCUTS = [
+    { label: 'shortcuts.select.one', shortcut: 'shortcuts.select.oneGesture' },
+    { label: 'shortcuts.select.add', shortcut: 'shortcuts.select.addGesture' },
+    { label: 'shortcuts.select.toggle', shortcut: 'shortcuts.select.toggleGesture' },
+    { label: 'shortcuts.select.box', shortcut: 'shortcuts.select.boxGesture' },
+    { label: 'shortcuts.select.addBox', shortcut: 'shortcuts.select.addBoxGesture' },
+    { label: 'shortcuts.select.move', shortcut: 'shortcuts.select.moveGesture' }
 ];
 
 // In both lists `shortcut` is a key name the person presses, except the
@@ -109,6 +118,11 @@ export default {
                         <span :style="{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--ink-faint)' }">{{ shortcutText(row) }}</span>
                     </div>
 
+                    <div :style="{ padding: '8px 0 2px', fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-faint)' }">{{ t('shortcuts.selecting') }}</div>
+                    <div v-for="row in SELECTING_SHORTCUTS" :key="'select-' + row.label" :style="{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '13px', color: 'var(--ink-soft)' }">
+                        <span>{{ t(row.label) }}</span>
+                        <span :style="{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--ink-faint)' }">{{ shortcutText(row) }}</span>
+                    </div>
                     <div :style="{ padding: '8px 0 2px', fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-faint)' }">{{ t('shortcuts.toolsAndView') }}</div>
                     <div v-for="row in VIEW_LOCAL_SHORTCUTS" :key="'view-' + row.label" :style="{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '13px', color: 'var(--ink-soft)' }">
                         <span>{{ t(row.label) }}</span>
@@ -131,6 +145,6 @@ export default {
         </div>
     `,
     data() {
-        return { VIEW_LOCAL_SHORTCUTS, CAMERA_SHORTCUTS };
+        return { VIEW_LOCAL_SHORTCUTS, CAMERA_SHORTCUTS, SELECTING_SHORTCUTS };
     }
 };

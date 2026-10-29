@@ -108,10 +108,18 @@ export class EditorActionRegistry {
         if (!normalized) {
             return this.getAll();
         }
-        return this.getAll().filter((action) => {
-            const haystack = `${toText(action.label)} ${toText(actionCategoryLabel(action.category))} ${action.id}`.toLowerCase();
-            return haystack.includes(normalized);
-        });
+        const ranked = [];
+        for (const action of this.getAll()) {
+            // An action's keywords are the other words people use for it
+            // ("colour", "music", "camera"), in their language.
+            const label = String(toText(action.label)).toLowerCase();
+            const keywords = action.keywords ? String(toText(action.keywords)).toLowerCase() : '';
+            const haystack = `${label} ${String(toText(actionCategoryLabel(action.category))).toLowerCase()} ${action.id.toLowerCase()} ${keywords}`;
+            if (!haystack.includes(normalized)) continue;
+            ranked.push({ action, rank: EditorActionRegistry.matchRank(normalized, label, keywords) });
+        }
+        // Best first, the registry's order between equals (the sort is stable).
+        return ranked.sort((a, b) => a.rank - b.rank).map(({ action }) => action);
     }
 
     // Machine shortcut resolution against a normalized key event
@@ -163,6 +171,19 @@ export class EditorActionRegistry {
         return () => this._executeListeners.delete(listener);
     }
 
+    // How well a query names an action, lowest best: a word of its label
+    // starts with it; one of its keywords is it; one starts with it; it is
+    // somewhere else (the middle of a word, the category, the id). So "cor"
+    // is Paint Selected's keyword before it is the start of "corte".
+    static matchRank(query, label, keywords) {
+        const words = (text) => text.split(/[\s/,.:;()—–-]+/).filter(Boolean);
+        if (label.startsWith(query) || words(label).some((word) => word.startsWith(query))) return 0;
+        const keywordList = words(keywords);
+        if (keywordList.includes(query) || keywords.split(/\s+/).includes(query)) return 1;
+        if (keywordList.some((word) => word.startsWith(query)) || keywords.startsWith(query)) return 2;
+        return 3;
+    }
+
     static normalizeQuery(query) {
         return (query || '').trim().toLowerCase();
     }
@@ -210,7 +231,23 @@ export function createStandardActions({ session, feedback, ui = {} }) {
         // already produced, the same value WorldView.js's own tooltip
         // already shows for the identical capability.
         contextualLabel: () => null,
-        ...partial
+        ...partial,
+        // `keywords: true` names the action's search words after its id too.
+        keywords: partial.keywords ? message(`editorAction.${partial.id}.keywords`) : null
+    });
+
+    // An action the view itself does (Save, the tools, Sound…): the palette
+    // finds it and the Shortcuts overlay lists it, from here, while its key,
+    // if it has one, stays with EditorView's own keydown handler, which sees
+    // it first (`keys: null`, so no key is matched twice). Off until the view
+    // gives the hook.
+    const viewAction = (id, category, hook, { shortcut = null, args = [], when = () => true, keywords = false } = {}) => define({
+        id,
+        category,
+        shortcut,
+        keywords,
+        enabled: (ctx) => typeof ui[hook] === 'function' && !ctx.gestureActive && when(ctx),
+        execute: () => ui[hook](...args)
     });
 
     // Editing shortcuts make no sense while placing bricks or mid-gesture.
@@ -402,32 +439,40 @@ export function createStandardActions({ session, feedback, ui = {} }) {
         }),
 
         // -------------------------------------------------------- Groups
-        groupAction('create', 'createGroupFromSelection', (ctx) => ctx.hasSelection, selectionRequired, 'common'),
+        // A group is named as it is made, and renamed, in a field the view
+        // shows (ui.startNewGroup / ui.startRenameGroup, EditingSidebar), not
+        // a browser prompt (finding P2-6 of
+        // docs/reviews/EditorUsability-2026-10-29.md). Without one, Create
+        // Group makes it unnamed and Rename has nothing to ask with.
+        define({
+            id: 'group.create',
+            category: 'groups',
+            enabled: (ctx) => editingAllowed(ctx) && ctx.hasSelection,
+            disabledReason: selectionRequired,
+            execute: () => {
+                if (typeof ui.startNewGroup === 'function') {
+                    ui.startNewGroup();
+                    return;
+                }
+                surfaceCall('createGroupFromSelection', 'groups', (create) => {
+                    create();
+                    feedback.show(done('group.create'));
+                });
+            }
+        }),
         define({
             id: 'group.rename',
             category: 'groups',
             tier: 'advanced', // 0.6.2
             enabled: (ctx) => editingAllowed(ctx) && ctx.hasSelectedGroup,
             disabledReason: groupRequired,
-            // renameSelectedGroup(name) has no default for `name` — this
-            // has to actually collect one before calling it, through the
-            // same "ui hook, degrade to feedback if absent" posture as
-            // structure.createFromSelection's ui.openCreateBlueprintDialog.
-            execute: () => surfaceCall('renameSelectedGroup', 'groups', (rename) => {
-                if (typeof ui.promptRenameGroup !== 'function') {
+            execute: () => {
+                if (typeof ui.startRenameGroup !== 'function') {
                     feedback.show(message('editorActionUnavailable.groups'));
                     return;
                 }
-                const groups = typeof session.getGroups === 'function' ? session.getGroups() : [];
-                const selectedId = typeof session.getSelectedGroupId === 'function' ? session.getSelectedGroupId() : null;
-                const current = groups.find((g) => g.id === selectedId);
-                const name = ui.promptRenameGroup(current ? current.name : '');
-                if (name === null) {
-                    return;
-                }
-                rename(name.trim() || null);
-                feedback.show(done('group.rename'));
-            })
+                ui.startRenameGroup();
+            }
         }),
         groupAction('duplicate', 'duplicateSelectedGroup', (ctx) => ctx.hasSelectedGroup, groupRequired),
         groupAction('delete', 'deleteSelectedGroup', (ctx) => ctx.hasSelectedGroup, groupRequired),
@@ -691,9 +736,29 @@ export function createStandardActions({ session, feedback, ui = {} }) {
             id: 'camera.wholeBuild',
             category: 'interface',
             shortcut: 'Home',
+            keywords: true,
             keys: [{ key: 'home' }],
             enabled: (ctx) => !ctx.gestureActive && typeof session.showWholeBuild === 'function',
             execute: () => surfaceCall('showWholeBuild', 'camera', (show) => show())
+        }),
+        // What the toolbar and the view do, findable by name (finding P2-5 of
+        // docs/reviews/EditorUsability-2026-10-29.md).
+        viewAction('file.save', 'file', 'save', { shortcut: 'Ctrl/Cmd+S', keywords: true }),
+        viewAction('file.publish', 'file', 'publish', { keywords: true }),
+        viewAction('file.new', 'file', 'newDocument', { keywords: true }),
+        viewAction('file.export', 'file', 'exportDocument', { keywords: true }),
+        viewAction('file.exportModel', 'file', 'exportModel', { keywords: true }),
+        viewAction('file.import', 'file', 'importDocument', { keywords: true }),
+        viewAction('tool.select', 'interface', 'setTool', { shortcut: '1', args: ['select'], keywords: true }),
+        viewAction('tool.place', 'interface', 'setTool', { shortcut: '2', args: ['place'], keywords: true }),
+        viewAction('ui.sound', 'interface', 'toggleSound', { shortcut: 'M', keywords: true }),
+        viewAction('ui.seeInside', 'interface', 'toggleSeeInside', { keywords: true }),
+        viewAction('ui.shortcuts', 'interface', 'openShortcuts', { shortcut: '?', keywords: true }),
+        // The Selection card's colours, for a palette search by "colour" or
+        // "paint" (a colour said in words is "paint it red", PlainCommand).
+        viewAction('selection.paint', 'selection', 'focusPaint', {
+            keywords: true,
+            when: (ctx) => editingAllowed(ctx) && ctx.hasSelection && !ctx.selectionIsStructurePlacement
         }),
         // Brings back the guided first build after it was hidden.
         define({

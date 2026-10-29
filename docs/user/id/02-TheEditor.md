@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: e99befa5a4afb6da -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 912406e543c26298 -->
 # 02 — Editor
 
 <!-- languages -->
@@ -98,7 +98,9 @@ tombol yang belum bisa melakukan apa-apa:
   **Tempel** begitu Anda menyalin sesuatu, dan grup-grup Anda (klik salah
   satunya untuk memilih baloknya).
 - **Balok dipilih** — berapa banyak, di mana letaknya, dan tindakan
-  sehari-hari: **Putar ↻ / ↺**, **Duplikat**, **Hapus**, **Salin**,
+  sehari-hari: baris **Pindah** (selangkah ke **Kiri**, **Kanan**, **Maju**,
+  **Mundur**, **Naik**, atau **Turun**, seperti tombol panah dan Page
+  Up/Page Down), **Putar ke kanan ↻ / Putar ke kiri ↺**, **Duplikat**, **Hapus**, **Salin**,
   **Tempel**, **Warnai pilihan**, **Fokus**, dan **Batalkan Pilihan**. Saat
   Anda memilih sesuatu, bilah samping menggulir kartu ini ke tampilan,
   bahkan dari jauh di bawah Pustaka Bangunan. Alat yang
@@ -110,7 +112,9 @@ tombol yang belum bisa melakukan apa-apa:
 
 > **Kiat:** Tekan `Ctrl/Cmd+K` di mana saja untuk membuka **Palet
 > Perintah** — daftar yang dapat dicari berisi setiap tindakan di panduan
-> ini, berdasarkan nama.
+> ini, berdasarkan nama atau kata yang biasa Anda pakai: *warna* menemukan
+> **Warnai Pilihan**, *musik* suara, *kamera* **Lihat Seluruh Bangunan**,
+> dan **Simpan**, **Terbitkan**, **Ekspor**, serta alat-alatnya juga ada.
 
 ## Coba sekarang: rumah yang perlu diselesaikan
 
@@ -404,7 +408,9 @@ seperti "Atap" atau "Jendela".
 **Membuat grup:**
 1. Pilih beberapa balok.
 2. Buka bagian **Grup & cetak biru** di panel Pilihan dan klik **Grup
-   baru**, lalu beri nama dengan **Ganti nama grup** (di bawah).
+   baru**. Sebuah kolom meminta namanya dan menyarankan satu (*Grup 1*);
+   ketik nama Anda dan tekan **Buat grup** atau `Enter`. Grup baru itu
+   langsung dipilih, siap untuk tombol-tombol di bawah.
 
 **Memakai grup:** klik nama sebuah grup di daftar untuk memilihnya (beserta
 baloknya) — daftarnya ada di panel Pilihan saat tidak ada yang dipilih, dan
@@ -413,7 +419,7 @@ pun yang sedang dipilih:
 
 | Tombol | Fungsinya |
 |---|---|
-| **Ganti nama grup** | Mengubah nama grup |
+| **Ganti nama grup** | Mengubah nama grup, di kolom yang sama (atau klik dua kali namanya di daftar) |
 | **Duplikat grup** | Menyalin seluruh grup *dan* baloknya |
 | **Hapus grup** | Menghapus grup (baloknya sendiri tetap ada) |
 | **Tambahkan ke grup** | Menambahkan pilihan Anda saat ini ke grup |
@@ -622,12 +628,12 @@ dengan alat Pilih (`1`) dan bilah sisi menampilkan:
 | Seret di viewport, atau [gizmo](InteractiveTransformGizmo.md) | Memindahkan / memutar, sama seperti balok |
 | Tombol panah / Page Up / Page Down | Mendorong |
 | **Kolom X / Z / Rotasi °, lalu Terapkan** | Menetapkan posisi dan arah yang tepat — ketinggian (Y tanah) selalu mengikuti medan dan bukan sasaran yang Anda tetapkan |
-| **Putar ↻ / ↺** | Memutar tepat 90° |
+| **Putar ke kanan ↻ / Putar ke kiri ↺** | Memutar tepat 90° |
 | **Duplikat** (`Ctrl/Cmd+D`) | Menempatkan instans lain dari struktur yang sama |
 | **Hapus** | Menghapus instans ini — bangunan sumbernya tidak tersentuh |
 | **Edit Bangunan Sumber** | Membuka bangunan yang dirujuk itu sendiri, untuk mengubah tampilan setiap instansnya |
 
-**Putar ↻ / ↺**, `R`, dan kolom **Rotasi °** hanya memutar instans bila
+**Putar ke kanan ↻ / Putar ke kiri ↺**, `R`, dan kolom **Rotasi °** hanya memutar instans bila
 muat: putaran yang akan menabrak sesuatu membiarkannya seperti semula,
 dengan bunyi dan pesan yang memberitahukannya. (Gizmo menampilkan putaran
 yang terhalang dengan warna merah lalu mengembalikannya.)
@@ -709,6 +715,8 @@ Musik diputar pelan saat Anda membangun, sedikit lebih riang daripada di Tampila
 ## Menyimpan, menerbitkan, memulai ulang
 
 - **Simpan** (`Ctrl+S`) — menyimpan pekerjaan Anda di perangkat ini.
+  Sebelum sebuah bangunan disimpan untuk pertama kali, bilah alat
+  bertuliskan **Belum disimpan**.
 - **Terbitkan** — membagikannya kepada semua orang (lihat
   [Penerbitan & Remix](04-PublishingAndForking.md)). Menerbitkan juga
   menyimpannya. Bangunan yang dimulai dari bangunan siap pakai dan belum
@@ -925,7 +933,8 @@ jari untuk menggeser, dan cubit untuk zoom. Ketukan memilih; menempatkan
 perlu dua ketukan, satu untuk melihat letak bagiannya dan satu lagi padanya
 (atau **Taruh**) untuk meletakkannya. Seretan tidak pernah memilih atau
 menempatkan. Di layar sempit, bilah sisi dibuka dari tombol **Alat** di
-kanan atas adegan. Bilah di bagian bawah adegan memiliki **Urungkan**,
+kanan atas adegan, sebagai lembar di separuh bawah tampilan, sehingga yang
+Anda pilih tetap terlihat di atasnya; kartunya tampil lebih dulu. Bilah di bagian bawah adegan memiliki **Urungkan**,
 **Ulangi**, **Putar**, **Miringkan**, **Hapus**, **Multi** (setiap ketukan
 menambahkan balok ke pilihan atau mengeluarkannya), **Kotak** (seret untuk
 menggambar kotak pilihan; kamera tetap diam sampai Anda mematikannya), dan

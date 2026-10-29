@@ -370,6 +370,9 @@ export default {
                         :distribute="distributeSelection"
                         :repeat="repeatSelection"
                         :select-group="selectGroup"
+                        :create-group="createGroupNamed"
+                        :rename-group="renameSelectedGroupTo"
+                        @reveal="sidebarOpen = true"
                     />
                     <BuildLibraryPanel
                         :palette-use-case="paletteUseCase"
@@ -1292,6 +1295,20 @@ export default {
         } = useSelectionActions({
             documentVersion, editorContext, editorSession, feedback, selectedPlacementInfo, selectionSummary
         });
+        // A group named as it is made, then selected so the group buttons act on
+        // it; and a rename (EditingSidebar's naming field).
+        function createGroupNamed(name) {
+            const groupId = editorSession.createGroupFromSelection(name);
+            if (!groupId) return;
+            selectGroup(groupId);
+            feedback.show(t('editorAction.group.create.done'));
+        }
+        function renameSelectedGroupTo(name) {
+            if (editorSession.renameSelectedGroup(name)) {
+                documentVersion.value++;
+                feedback.show(t('editorAction.group.rename.done'));
+            }
+        }
         // Any edit (a recolour from the sidebar or the palette, an undo) can
         // change the selection's colour and bounds, which the card shows.
         watch(documentVersion, () => refreshSelectionSummary());
@@ -1552,6 +1569,26 @@ export default {
 
         const actionUi = {
             toggleVoice: () => voiceCommands.toggleVoice(),
+            // What the toolbar and the view do, for the palette (EditorActionRegistry's
+            // viewAction()): each is what its button does.
+            save: () => toolbar.value?.save(),
+            publish: () => toolbar.value?.requestPublish(),
+            newDocument: () => openNewDocumentDialog(),
+            exportDocument: () => exportDocument(),
+            exportModel: () => { modelExportOpen.value = true; },
+            importDocument: () => toolbar.value?.triggerImportDocument(),
+            setTool: (tool) => (tool === 'place' ? placeFromSwitcher() : selectFromSwitcher()),
+            toggleSound: () => toggleSound(),
+            toggleSeeInside: () => toggleSeeInside(),
+            openShortcuts: () => { shortcutsOpen.value = true; },
+            // Paint Selected: the Selection card's colours, in view and focused.
+            async focusPaint() {
+                if (compactLayout.value) sidebarOpen.value = true;
+                await nextTick();
+                bringToTop(sidebarScroll.value, SELECTION_CARD);
+                const swatch = sidebarScroll.value?.querySelector('.selection-inspector .village-palette-swatch[tabindex="0"]');
+                swatch?.focus();
+            },
             async describeBuild() {
                 buildDescriptionNote.value = '';
                 try {
@@ -1566,10 +1603,6 @@ export default {
             },
             showFirstBuildGuide() {
                 firstBuildGuide.showFirstBuildGuide();
-            },
-            // The registry cannot collect a name itself; null means Cancel.
-            promptRenameGroup(currentName = '') {
-                return prompt(t('editor.groupNamePrompt'), currentName || '');
             },
             focusNumeric: null,
             // Opens CreateBlueprintDialog with a preview Structure built from the current
@@ -1625,6 +1658,11 @@ export default {
         const touchInput = useMediaQuery(TOUCH_INPUT_QUERY);
         const compactLayout = useMediaQuery(COMPACT_LAYOUT_QUERY);
         const sidebarOpen = ref(!compactLayout.value);
+        // Tools opened on a phone with something selected: its card first, at
+        // the top of the sheet (the selection was made while it was closed).
+        watch(sidebarOpen, (open) => {
+            if (open && selectionCount.value > 0) bringToTop(sidebarScroll.value, SELECTION_CARD);
+        }, { flush: 'post' });
         const touchMultiSelect = ref(false);
         function toggleTouchMultiSelect() {
             touchMultiSelect.value = !touchMultiSelect.value;
@@ -2303,6 +2341,8 @@ export default {
             placeFromSwitcher,
             historyButtons,
             runAction,
+            createGroupNamed,
+            renameSelectedGroupTo,
             selectFromSwitcher,
             sidebarScroll,
             alignSelection,

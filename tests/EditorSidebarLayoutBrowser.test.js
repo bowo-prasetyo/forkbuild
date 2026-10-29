@@ -130,7 +130,7 @@ const emptyContext = (extra = {}) => ({ hasSelection: false, selectionCount: 0, 
     const { host, executed, ui, unmount } = mountSidebar(state);
     assert(host.querySelector('.editor-panel-title').textContent.trim() === '3 bricks selected', 'the card names the selection');
     const actions = buttonLabels(host.querySelector('.editor-panel-actions'));
-    assert(JSON.stringify(actions) === JSON.stringify(['Rotate ↻', 'Rotate ↺', 'Tilt ⤵', 'Duplicate', 'Delete', 'Copy', 'Focus', 'Deselect']),
+    assert(JSON.stringify(actions) === JSON.stringify(['Turn right ↻', 'Turn left ↺', 'Tilt ⤵', 'Duplicate', 'Delete', 'Copy', 'Focus', 'Deselect']),
         `selection actions, got ${actions.join(', ')}`);
     assert(!buttonLabels(host).includes('Clear'), 'no button is labelled a bare "Clear"');
     assert(JSON.stringify(sectionTitles(host)) === JSON.stringify(['Exact position & rotation', 'Align, distribute, repeat', 'Groups & blueprint']),

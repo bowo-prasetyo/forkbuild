@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: e99befa5a4afb6da -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 912406e543c26298 -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -96,7 +96,10 @@ ainda não podem fazer nada:
   depois que você copiou algo, e seus grupos (clique em um para selecionar os
   blocos dele).
 - **Blocos selecionados** — quantos são, onde estão, e as ações do dia a
-  dia: **Girar ↻ / ↺**, **Duplicar**, **Excluir**, **Copiar**, **Colar**,
+  dia: uma fileira **Mover** (um passo para a **Esquerda**, **Direita**,
+  **Frente**, **Trás**, **Cima** ou **Baixo**, como as setas e Page
+  Up/Page Down), **Girar para a direita ↻ / Girar para a esquerda ↺**,
+  **Duplicar**, **Excluir**, **Copiar**, **Colar**,
   **Pintar seleção**, **Focar** e **Desmarcar**. Quando você seleciona algo,
   a barra lateral rola este cartão até ficar à vista, mesmo lá de baixo da
   Biblioteca de construção. As ferramentas menos usadas ficam
@@ -107,8 +110,10 @@ ainda não podem fazer nada:
   [Instâncias de estrutura](#instâncias-de-estrutura-uma-referência-viva)).
 
 > **Dica:** Pressione `Ctrl/Cmd+K` em qualquer lugar para abrir a **Paleta
-> de comandos** — uma lista pesquisável, por nome, de todas as ações deste
-> guia.
+> de comandos** — uma lista pesquisável de todas as ações deste guia, pelo
+> nome ou pelas palavras que você usaria: *colorir* encontra **Pintar
+> seleção**, *música* o som, *câmera* **Ver a construção inteira**, e
+> **Salvar**, **Publicar**, **Exportar** e as ferramentas também estão lá.
 
 ## Experimente agora: uma casa para terminar
 
@@ -399,7 +404,9 @@ Os grupos permitem dar nome a conjuntos de blocos e reutilizá-los — como
 **Criar um grupo:**
 1. Selecione alguns blocos.
 2. Abra a seção **Grupos e planta** do painel Seleção e clique em **Novo
-   grupo**; depois dê um nome a ele com **Renomear grupo** (abaixo).
+   grupo**. Um campo pede o nome dele e sugere um (*Grupo 1*); digite o seu
+   e aperte **Criar grupo** ou `Enter`. O novo grupo fica selecionado,
+   pronto para os botões abaixo.
 
 **Usar um grupo:** clique no nome de um grupo na lista para selecioná-lo (e
 os blocos dele) — a lista fica no painel Seleção quando nada está
@@ -408,7 +415,7 @@ sobre o grupo selecionado:
 
 | Botão | O que faz |
 |---|---|
-| **Renomear grupo** | Muda o nome do grupo |
+| **Renomear grupo** | Muda o nome do grupo, no mesmo campo (ou com um clique duplo no nome dele na lista) |
 | **Duplicar grupo** | Copia o grupo inteiro *e* os blocos dele |
 | **Excluir grupo** | Exclui o grupo (os blocos em si ficam) |
 | **Adicionar ao grupo** | Adiciona sua seleção atual ao grupo |
@@ -617,12 +624,12 @@ a barra lateral mostra:
 | Arrastar na área de visualização, ou o [gizmo](InteractiveTransformGizmo.md) | Mover / girar, como um bloco |
 | Setas / Page Up / Page Down | Deslocar |
 | **Campos X / Z / Rotação °, depois Aplicar** | Definir posição e direção exatas — a altura (Y do chão) sempre acompanha o terreno e não é um alvo que você define |
-| **Girar ↻ / ↺** | Girar exatamente 90° |
+| **Girar para a direita ↻ / Girar para a esquerda ↺** | Girar exatamente 90° |
 | **Duplicar** (`Ctrl/Cmd+D`) | Posicionar outra instância da mesma estrutura |
 | **Excluir** | Remover esta instância — a construção de origem não é afetada |
 | **Editar construção de origem** | Abrir a própria construção referenciada, para mudar a aparência de todas as instâncias dela |
 
-**Girar ↻ / ↺**, `R` e o campo **Rotação °** só giram uma instância onde ela
+**Girar para a direita ↻ / Girar para a esquerda ↺**, `R` e o campo **Rotação °** só giram uma instância onde ela
 cabe: um giro que a faria bater em algo a deixa como estava, com um som e
 uma mensagem avisando. (O gizmo mostra um giro bloqueado em vermelho e o
 desfaz.)
@@ -705,7 +712,9 @@ Enquanto você constrói, toca uma música suave, um pouco mais animada que a da
 
 ## Salvar, publicar, recomeçar
 
-- **Salvar** (`Ctrl+S`) — guarda seu trabalho neste dispositivo.
+- **Salvar** (`Ctrl+S`) — guarda seu trabalho neste dispositivo. Até uma
+  construção ser salva pela primeira vez, a barra de ferramentas diz
+  **Ainda não salvo**.
 - **Publicar** — compartilha com todo mundo (veja
   [Publicar e remixar](04-PublishingAndForking.md)). Publicar também salva.
   Uma construção começada a partir de uma pronta que ainda não tem nada seu
@@ -917,7 +926,8 @@ para mover a vista, e faça pinça para o zoom. Um toque seleciona; colocar
 leva dois toques, um para ver onde a peça vai e outro sobre ela (ou
 **Colocar**) para pô-la. Arrastar nunca seleciona nem coloca. Em uma tela
 estreita, a barra lateral abre pelo botão **Ferramentas** no canto superior
-direito da cena. Uma barra na parte de baixo da cena tem **Desfazer**,
+direito da cena, como uma folha sobre a metade de baixo da vista, para o que
+você selecionou continuar à vista acima dela; o cartão dele vem primeiro. Uma barra na parte de baixo da cena tem **Desfazer**,
 **Refazer**, **Girar**, **Tombar**, **Excluir**, **Múltiplo** (cada toque
 põe um bloco na seleção ou tira dela), **Caixa** (arraste para desenhar uma
 caixa de seleção; a câmera fica parada até você desativar) e **Mais**, que

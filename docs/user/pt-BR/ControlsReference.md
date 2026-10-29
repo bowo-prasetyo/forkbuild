@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 2893221564c37e56 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 61ac7536a193e60e -->
 # Referência de controles
 
 <!-- languages -->
@@ -30,7 +30,7 @@ nome todas as operações de edição abaixo.
 
 | Entrada | Ação |
 |---|---|
-| `Ctrl/Cmd+K` | Paleta de comandos |
+| `Ctrl/Cmd+K` | Paleta de comandos: cada ação pelo nome ou por outra palavra para ela (*colorir*, *música*, *câmera*), inclusive Salvar, Publicar, Novo, Exportar, Importar, as ferramentas, o som e Ver por dentro |
 | `I` | Descrever a construção: do que ela é feita, mostrado e lido por um leitor de tela — veja [Descrever a construção](02-TheEditor.md#descrever-a-construção) |
 | `V` | Falar um comando: pressionar, falar, pressionar de novo — veja [Falar um comando (voz)](02-TheEditor.md#falar-um-comando-voz). Na visão do mundo, diga aonde ir — veja [Dizer aonde ir (voz)](03-WorldView.md#dizer-aonde-ir-voz) |
 | `?` | Sobreposição Atalhos de teclado (também pelo botão "⌨ Atalhos" da barra de ferramentas) — todos os atalhos do Editor |
@@ -268,8 +268,8 @@ painel lista seus grupos para você clicar num e selecioná-lo.
 
 | Operação | Disponível quando |
 |---|---|
-| Novo grupo | há blocos selecionados |
-| Renomear / Duplicar / Excluir grupo | há um grupo selecionado |
+| Novo grupo | há blocos selecionados; pede o nome dele (sugere *Grupo 1*), e o novo grupo fica selecionado |
+| Renomear / Duplicar / Excluir grupo | há um grupo selecionado; Renomear pergunta no mesmo campo, assim como um clique duplo no nome de um grupo |
 | Adicionar ao grupo / Remover do grupo | há blocos selecionados e um grupo selecionado |
 
 As transformações de grupo (mover/girar/alinhar/distribuir/numérica) agem
@@ -345,8 +345,8 @@ sempre que o dispositivo tem tela sensível ao toque, então um notebook com
 tela de toque os mostra ao lado do teclado e do mouse. Numa tela de 720
 pixels de largura ou menos, a página também se reorganiza: os links das
 páginas se recolhem num botão **Menu**, o painel lateral da Visão do mundo
-abre por um botão **Painel**, e a barra lateral do Editor vira uma gaveta
-aberta por um botão **Ferramentas**.
+abre por um botão **Painel**, e a barra lateral do Editor vira uma folha
+sobre a metade de baixo da vista, aberta por um botão **Ferramentas**.
 
 ### Câmera (nas duas visões)
 

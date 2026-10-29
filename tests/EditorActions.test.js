@@ -73,13 +73,10 @@ function buildHarness(sessionState = {}, sessionOverride = null) {
         toggled: 0,
         togglePalette() { this.toggled += 1; },
         focusNumeric: null,
-        // group.rename can no longer rename to undefined by calling
-        // renameSelectedGroup() with nothing — it now collects a name
-        // through this hook first (application/editor/EditorActionRegistry.js's
-        // own 0.6.2 comment on group.rename). A fixed non-null return is
-        // enough for every test below that only cares whether
-        // renameSelectedGroup ends up called at all.
-        promptRenameGroup() { return 'Renamed'; }
+        // group.rename opens the view's naming field (EditingSidebar), which
+        // renames once a name is typed; the action only has to open it.
+        renamesStarted: 0,
+        startRenameGroup() { this.renamesStarted += 1; }
     };
     const registry = new EditorActionRegistry(createStandardActions({ session, feedback, ui }));
     return { session, feedback, ui, registry };
@@ -235,7 +232,7 @@ function rawKey(key, { ctrl = false, shift = false, alt = false, meta = false, r
 // 7. Actions invoke the correct existing session APIs
 // ---------------------------------------------------------------------
 {
-    const { session, registry, feedback } = buildHarness({ clipboardCount: 2, selectedGroupId: 'g1', groups: [{ id: 'g1', name: 'Group A', memberCount: 3 }] });
+    const { session, registry, feedback, ui } = buildHarness({ clipboardCount: 2, selectedGroupId: 'g1', groups: [{ id: 'g1', name: 'Group A', memberCount: 3 }] });
     const context = contextFor({ clipboardCount: 2, selectedGroupId: 'g1', groups: [{ id: 'g1', name: 'Group A', memberCount: 3 }] });
     registry.execute('transform.alignLeft', context);
     assert(session.calledWith('alignSelection', 'x-min'), 'alignLeft -> alignSelection("x-min")');
@@ -262,7 +259,7 @@ function rawKey(key, { ctrl = false, shift = false, alt = false, meta = false, r
     registry.execute('group.create', context);
     assert(session.callCount('createGroupFromSelection') === 1, 'group.create -> createGroupFromSelection');
     registry.execute('group.rename', context);
-    assert(session.callCount('renameSelectedGroup') === 1, 'group.rename -> renameSelectedGroup');
+    assert(ui.renamesStarted === 1 && session.callCount('renameSelectedGroup') === 0, 'group.rename -> the naming field, which renames');
     registry.execute('history.undo', context);
     assert(session.callCount('undo') === 1, 'undo -> session.undo');
     registry.execute('history.redo', context);

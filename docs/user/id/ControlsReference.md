@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 2893221564c37e56 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 61ac7536a193e60e -->
 # Referensi Kontrol
 
 <!-- languages -->
@@ -29,7 +29,7 @@ operasi pengeditan di bawah ini berdasarkan nama.
 
 | Masukan | Tindakan |
 |---|---|
-| `Ctrl/Cmd+K` | Palet Perintah |
+| `Ctrl/Cmd+K` | Palet Perintah: setiap tindakan menurut namanya atau kata lain untuknya (*warna*, *musik*, *kamera*), termasuk Simpan, Terbitkan, Baru, Ekspor, Impor, alat-alat, Suara, dan Lihat ke dalam |
 | `I` | Jelaskan Bangunan: isinya, ditampilkan dan dibacakan pembaca layar — lihat [Jelaskan bangunan](02-TheEditor.md#jelaskan-bangunan) |
 | `V` | Ucapkan perintah: tekan, bicara, tekan lagi — lihat [Ucapkan perintah (suara)](02-TheEditor.md#ucapkan-perintah-suara). Di Tampilan Dunia, katakan ke mana pergi — lihat [Katakan ke mana pergi (suara)](03-WorldView.md#katakan-ke-mana-pergi-suara) |
 | `?` | Daftar Pintasan Keyboard (juga dapat dibuka dari tombol "⌨ Pintasan" di bilah alat) — setiap pintasan Editor |
@@ -267,8 +267,8 @@ satunya untuk memilihnya.
 
 | Operasi | Tersedia saat |
 |---|---|
-| Grup baru | ada balok yang dipilih |
-| Ganti nama / Duplikat / Hapus grup | ada grup yang dipilih |
+| Grup baru | ada balok yang dipilih; menanyakan namanya (menyarankan *Grup 1*), dan grup baru langsung dipilih |
+| Ganti nama / Duplikat / Hapus grup | ada grup yang dipilih; Ganti nama bertanya di kolom yang sama, begitu pula klik dua kali pada nama grup |
 | Tambahkan ke grup / Keluarkan dari grup | ada balok yang dipilih dan grup yang dipilih |
 
 Transformasi grup (pindah/putar/ratakan/sebarkan/angka) bekerja pada
@@ -345,7 +345,7 @@ laptop berlayar sentuh menampilkannya di samping keyboard dan mouse-nya.
 Di layar selebar 720 piksel atau kurang, halaman juga menata ulang
 dirinya: tautan halaman terlipat di balik tombol **Menu**, panel samping
 Tampilan Dunia dibuka dari tombol **Panel**, dan bilah sisi Editor menjadi
-laci yang dibuka dari tombol **Alat**.
+lembar di separuh bawah tampilan yang dibuka dari tombol **Alat**.
 
 ### Kamera (kedua tampilan)
 

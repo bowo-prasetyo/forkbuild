@@ -9881,3 +9881,41 @@ builders at the wrong controls.
   colour stepping aside, Home in the overlay). Checked in the running app at 1366×768: a drag on a selected brick
   moved it from X 4, Z 5 to X 2, Z 3 in one undo step, a 2 px wobble stayed a click, and a drag on the ground turned
   the camera.
+
+## The Editor's smaller frictions (unnumbered, 2026-10-29)
+
+**Building: finding and finishing the everyday edits.** The P2 findings of
+[the Editor usability review](../reviews/EditorUsability-2026-10-29.md).
+
+- **The Command Palette finds what the toolbar and the view do** (P2-5): Save, Publish, New Build, Export, 3D Model,
+  Import, Switch to Select and Switch to Place, Sound on/off, See Inside, Keyboard Shortcuts and Paint Selected are
+  registry actions now (`viewAction()` in application/editor/EditorActionRegistry.js, the view's hooks in
+  ui/views/EditorView.js's `actionUi`). Their keys stay with the Editor's own keydown handler (`keys: null`), so none is
+  handled twice. An action can carry keywords, the other words people use for it, in each language (*colour* and
+  *paint* find Paint Selected, *music* and *mute* Sound, *camera*, *zoom* and *home* See the Whole Build), and matches
+  are ranked: a label word starting with what was typed, then a keyword that is it, then one starting with it, then the
+  rest (`EditorActionRegistry.matchRank()`). The tools are named Switch to Select and Switch to Place, since "Select
+  Tool" sounds too much like "select all" for voice commands to tell apart.
+- **The Shortcuts overlay lists the selection gestures** under **Selecting** (click, Shift+click, Ctrl/Cmd+click,
+  Shift+drag in Select, Ctrl/Cmd+Shift+drag, dragging a selected brick); Shift+drag in Place says so, the placing keys
+  are under **Placing**, and Select, Place, Save and Sound come from the registry, each listed once. Its last line
+  says what the palette does now.
+- **A group is named as it is made** (P2-6): **New group** opens a field with a name suggested (*Group 1*, or the next
+  one free), Enter or **Make group** makes it, and the new group is selected. **Rename group**, a double-click on a
+  group's name and the palette's Rename Group open the same field, in place of the browser's own prompt; Escape lets
+  it be.
+- **More room on a phone** (P2-7): in the Editor the site header is one row (the logo without its name), so the view
+  starts at y = 114 px, from 162 on a 390×664 phone; Tools opens as a sheet over the lower half of the view, with the
+  Selection card first, so what is selected stays in sight; and **⌨ Shortcuts** is gone where there is no keyboard.
+- **Smaller things** (P2-8): a build never saved says **Not saved yet** rather than **Saved**; the Selection card has a
+  **Move** row, a step each way, as the arrow keys and Page Up/Down; and **Rotate ↻ / ↺** are **Turn right ↻** and
+  **Turn left ↺**, on a placed build's card too.
+- All in eight languages, the user guide's *The Editor* and *Controls Reference* too. The guide's Help search keeps its
+  answers in every language: the Portuguese guide gives *colorir* as the palette's example, since *cor* there cost the
+  colour question its section.
+- Tests: tests/EditorUsabilityP2.test.js (new: the palette's finds, in English, German, French, Japanese and
+  Portuguese; each view action runs its hook and is off without it; the keys stay with the view; Create and Rename
+  Group open the field); tests/EditorUsabilityP2Browser.test.js (new: naming and renaming a group, the Move row and
+  Turn buttons, the overlay's Selecting rows and every key once, Not saved yet then Saved); tests/EditorActions.test.js
+  and tests/I18nMessageKeys.test.js (Rename Group opens the field); tests/EditorSidebarLayoutBrowser.test.js and
+  tests/KeyboardShortcutsOverlayBrowser.test.js (the new labels).
