@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 2893221564c37e56 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 61ac7536a193e60e -->
 # Référence des commandes
 
 <!-- languages -->
@@ -35,7 +35,7 @@ Les touches sont désignées par leur nom sur un clavier français : `Maj`
 
 | Entrée | Action |
 |---|---|
-| `Ctrl/Cmd+K` | Palette de commandes |
+| `Ctrl/Cmd+K` | Palette de commandes : chaque action par son nom ou par un autre mot pour elle (*couleur*, *musique*, *caméra*), y compris Enregistrer, Publier, Nouveau, Exporter, Importer, les outils, le son et Voir l’intérieur |
 | `I` | Décrire la construction : de quoi elle est faite, affiché et lu par un lecteur d’écran — voir [Décrire la construction](02-TheEditor.md#décrire-la-construction) |
 | `V` | Dire une commande : appuyer, parler, appuyer de nouveau — voir [Dire une commande (voix)](02-TheEditor.md#dire-une-commande-voix). Dans la Vue du Monde, dire où aller — voir [Dire où aller (voix)](03-WorldView.md#dire-où-aller-voix) |
 | `?` | Panneau des raccourcis clavier (aussi accessible par le bouton « ⌨ Raccourcis » de la barre d’outils) — tous les raccourcis de l’Éditeur |
@@ -280,8 +280,8 @@ sélectionner un d’un clic.
 
 | Opération | Disponibilité |
 |---|---|
-| Nouveau groupe | des briques sélectionnées |
-| Renommer / Dupliquer / Supprimer le groupe | un groupe sélectionné |
+| Nouveau groupe | des briques sélectionnées ; demande son nom (propose *Groupe 1*), et le nouveau groupe est sélectionné |
+| Renommer / Dupliquer / Supprimer le groupe | un groupe sélectionné ; Renommer demande dans le même champ, comme un double-clic sur le nom d’un groupe |
 | Ajouter au groupe / Retirer du groupe | des briques sélectionnées et un groupe sélectionné |
 
 Les transformations de groupe (déplacer, pivoter, aligner, répartir,
@@ -359,8 +359,8 @@ qu’un ordinateur portable tactile les affiche à côté de son clavier et de
 sa souris. Sur un écran de 720 pixels de large ou moins, la page se
 réorganise aussi : les liens des pages se replient derrière un bouton
 **Menu**, le panneau latéral de la Vue du Monde s’ouvre avec un bouton
-**Panneau**, et la barre latérale de l’Éditeur devient un tiroir ouvert
-par un bouton **Outils**.
+**Panneau**, et la barre latérale de l’Éditeur devient une feuille sur la
+moitié basse de la vue, ouverte par un bouton **Outils**.
 
 ### Caméra (les deux vues)
 

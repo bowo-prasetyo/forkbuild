@@ -99,7 +99,7 @@ function assertTranslated(value, where) {
     const everything = new Proxy({}, { get: (target, name) => (name === 'getGroups' ? () => [] : () => ({ bounds: { center: {} } })) });
     const nothingThere = new Proxy({}, { get: (target, name) => (name === 'getGroups' ? () => [] : () => false) });
     const fullUi = {
-        togglePalette() {}, focusNumeric() {}, focusRepeat() {}, openCreateBlueprintDialog() {}, promptRenameGroup: () => 'Name'
+        togglePalette() {}, focusNumeric() {}, focusRepeat() {}, openCreateBlueprintDialog() {}, startNewGroup() {}, startRenameGroup() {}
     };
     const ready = new EditorActionContext({ selectionCount: 3, clipboardCount: 1, selectedGroupId: 'g', canUndo: true, canRedo: true });
     for (const [session, ui] of [[everything, fullUi], [nothingThere, fullUi], [{}, {}]]) {

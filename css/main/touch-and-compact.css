@@ -406,16 +406,28 @@
         display: none;
     }
 
+    /* A sheet over the lower half of the view, so the build and what is
+       selected stay in sight above it while it is used: recolouring, an
+       exact position (docs/reviews/EditorUsability-2026-10-29.md, P2-7). */
     .editor-body--sidebar-open .sidebar {
         display: flex;
         position: absolute;
-        top: 0;
+        top: auto;
         bottom: 0;
         left: 0;
+        right: 0;
         z-index: 30;
-        /* Leaves room for the Hide Tools button at the top right. */
-        width: min(320px, calc(100% - 7rem));
-        box-shadow: 4px 0 16px rgba(var(--shade-rgb), 0.23);
+        width: auto;
+        height: 55%;
+        border-radius: 12px 12px 0 0;
+        border-top: 1px solid var(--line-strong);
+        box-shadow: 0 -4px 16px rgba(var(--shade-rgb), 0.23);
+    }
+
+    /* In the Editor the header is one row, logo, Menu and account, so the
+       build gets the room; the toolbar below names nothing either. */
+    .app-shell--editor .app-title-text {
+        display: none;
     }
 
     /* Top right, so the open drawer never covers the button that closes it. */
@@ -553,5 +565,13 @@
 
     .world-say-form {
         width: calc(100vw - 1rem);
+    }
+}
+
+/* No keyboard to list on a touch-only screen (P2-7 of
+   docs/reviews/EditorUsability-2026-10-29.md); the palette is under More. */
+@media (hover: none) and (pointer: coarse) {
+    .toolbar-shortcuts {
+        display: none;
     }
 }

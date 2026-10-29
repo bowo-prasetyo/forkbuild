@@ -14,7 +14,9 @@ import { displayText, t } from '../i18n/i18n.js';
 //
 // Every button runs through the EditorActionRegistry, so disabled states
 // carry the same reasons and the operations stay reachable from the
-// Command Palette and keyboard.
+// Command Palette and keyboard. New group and Rename group first ask for the
+// name in a field of their own (docs/reviews/EditorUsability-2026-10-29.md,
+// P2-6), which the registry's group.create and group.rename open too.
 export default {
     name: 'EditingSidebar',
     components: { AlignmentPanel, NumericTransformPanel, RepeatPanel, CollapsibleSection, SelectionInspector },
@@ -35,13 +37,23 @@ export default {
         // The only way to set "the selected group" that Rename/Duplicate/
         // Delete/Add/Remove act on. A plain session state change, not a
         // registry action: it makes no history entry.
-        selectGroup: { type: Function, required: true }
+        selectGroup: { type: Function, required: true },
+        // createGroup(name) makes a group of the selection and selects it;
+        // renameGroup(name) renames the selected group. Both are given the
+        // name typed in the field below.
+        createGroup: { type: Function, default: null },
+        renameGroup: { type: Function, default: null }
     },
+    // reveal: the sidebar has asked for something (a group's name) and must be open.
+    emits: ['reveal'],
     data() {
         return {
             numericCollapsed: true,
             arrangeCollapsed: true,
-            groupsCollapsed: true
+            groupsCollapsed: true,
+            // A group being named as it is made ({ mode: 'new' }) or renamed
+            // ({ mode: 'rename' }), with the name typed so far.
+            naming: null
         };
     },
     computed: {
@@ -63,6 +75,15 @@ export default {
         // collapsed section, so expand it before focusing.
         this.ui.focusNumeric = () => this.expandAndFocus('numericCollapsed', '.numeric-transform-panel input');
         this.ui.focusRepeat = () => this.expandAndFocus('arrangeCollapsed', '.repeat-panel-count');
+        // Create Group and Rename Group, from the palette too, ask for the name here.
+        this.ui.startNewGroup = () => this.startNewGroup();
+        this.ui.startRenameGroup = () => this.startRenameGroup();
+    },
+    watch: {
+        // Another selection is another set of bricks: the name was for these.
+        selectionCount() {
+            if (this.naming && this.naming.mode === 'new') this.naming = null;
+        }
     },
     methods: {
         t,
@@ -88,6 +109,55 @@ export default {
                     input.focus();
                 }
             });
+        },
+        // "Group 1", or the next number no group is already called.
+        groupSuggestion() {
+            const names = new Set((this.context.groups || []).map((group) => group.name));
+            let n = (this.context.groups || []).length + 1;
+            while (names.has(t('editingSidebar.groupSuggestion', { n }))) n++;
+            return t('editingSidebar.groupSuggestion', { n });
+        },
+        startNewGroup() {
+            if (this.isDisabled('group.create') || typeof this.createGroup !== 'function') return;
+            this.openNaming({ mode: 'new', name: this.groupSuggestion() });
+        },
+        // groupId: the group to rename (a double-click on its name), else the selected one.
+        startRenameGroup(groupId = null) {
+            if (typeof this.renameGroup !== 'function') return;
+            if (groupId && groupId !== this.context.selectedGroupId) this.selectGroup(groupId);
+            this.$nextTick(() => {
+                const ctx = this.getContext();
+                const group = (ctx.groups || []).find((candidate) => candidate.id === ctx.selectedGroupId);
+                if (!group) return;
+                this.openNaming({ mode: 'rename', name: group.name || '' });
+            });
+        },
+        openNaming(naming) {
+            this.groupsCollapsed = false;
+            this.naming = naming;
+            // On a phone the sidebar may be shut (the palette's Create Group).
+            this.$emit('reveal');
+            this.$nextTick(() => {
+                const input = this.$el && this.$el.querySelector && this.$el.querySelector('.group-naming-input');
+                if (input) {
+                    input.focus();
+                    input.select();
+                }
+            });
+        },
+        submitNaming() {
+            if (!this.naming) return;
+            const { mode } = this.naming;
+            const name = (this.naming.name || '').trim();
+            this.naming = null;
+            if (mode === 'new') {
+                this.createGroup(name || this.groupSuggestion());
+            } else {
+                this.renameGroup(name || null);
+            }
+        },
+        cancelNaming() {
+            this.naming = null;
         },
         onSelectGroup(groupId) {
             this.selectGroup(groupId);
@@ -176,13 +246,30 @@ export default {
                                 :aria-pressed="group.id === context.selectedGroupId ? 'true' : 'false'"
                                 :title="t('editingSidebar.chooseGroupHint')"
                                 @click="onSelectGroup(group.id)"
+                                @dblclick="startRenameGroup(group.id)"
                             >{{ group.name || t('editingSidebar.unnamedGroup') }} <span class="editing-sidebar-group-count">{{ group.memberCount }}</span></button>
                         </li>
                     </ul>
+                    <form v-if="naming" class="group-naming" @submit.prevent="submitNaming">
+                        <label class="group-naming-label">
+                            {{ naming.mode === 'new' ? t('editingSidebar.newGroupName') : t('editingSidebar.renameGroupName') }}
+                            <input
+                                v-model="naming.name"
+                                class="group-naming-input"
+                                type="text"
+                                maxlength="60"
+                                @keydown.esc.stop.prevent="cancelNaming"
+                            />
+                        </label>
+                        <div class="editor-panel-actions">
+                            <button type="submit" class="editor-panel-btn group-naming-submit">{{ naming.mode === 'new' ? t('editingSidebar.makeGroup') : t('editingSidebar.saveGroupName') }}</button>
+                            <button type="button" class="editor-panel-btn" @click="cancelNaming">{{ t('editingSidebar.cancelNaming') }}</button>
+                        </div>
+                    </form>
                     <div class="editor-panel-actions">
                         <button type="button" class="editor-panel-btn" :disabled="isDisabled('group.create')"
                             :title="titleFor('group.create', t('editingSidebar.newGroupHint'))"
-                            @click="run('group.create')">{{ t('editingSidebar.newGroup') }}</button>
+                            @click="startNewGroup">{{ t('editingSidebar.newGroup') }}</button>
                         <template v-if="context.hasGroups">
                             <button type="button" class="editor-panel-btn" :disabled="isDisabled('group.addSelection')"
                                 :title="titleFor('group.addSelection', t('editingSidebar.addToGroupHint'))"
@@ -192,7 +279,7 @@ export default {
                                 @click="run('group.removeSelection')">{{ t('editingSidebar.removeFromGroup') }}</button>
                             <button type="button" class="editor-panel-btn" :disabled="isDisabled('group.rename')"
                                 :title="titleFor('group.rename', t('editingSidebar.renameGroupHint'))"
-                                @click="run('group.rename')">{{ t('editingSidebar.renameGroup') }}</button>
+                                @click="startRenameGroup()">{{ t('editingSidebar.renameGroup') }}</button>
                             <button type="button" class="editor-panel-btn" :disabled="isDisabled('group.duplicate')"
                                 :title="titleFor('group.duplicate', t('editingSidebar.duplicateGroupHint'))"
                                 @click="run('group.duplicate')">{{ t('editingSidebar.duplicateGroup') }}</button>

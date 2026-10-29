@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 2893221564c37e56 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 61ac7536a193e60e -->
 # Referencia de controles
 
 <!-- languages -->
@@ -31,7 +31,7 @@ por su nombre todas las operaciones de edición de abajo.
 
 | Entrada | Acción |
 |---|---|
-| `Ctrl/Cmd+K` | Paleta de comandos |
+| `Ctrl/Cmd+K` | Paleta de comandos: cada acción por su nombre o por otra palabra para ella (*color*, *música*, *cámara*), también Guardar, Publicar, Nuevo, Exportar, Importar, las herramientas, el sonido y Ver por dentro |
 | `I` | Describir la construcción: de qué está hecha, mostrado y leído por un lector de pantalla — vea [Describir la construcción](02-TheEditor.md#describir-la-construcción) |
 | `V` | Decir un comando: presionar, hablar, presionar de nuevo — vea [Decir un comando (voz)](02-TheEditor.md#decir-un-comando-voz). En la vista del mundo, diga adónde ir — vea [Decir adónde ir (voz)](03-WorldView.md#decir-adónde-ir-voz) |
 | `?` | Superposición Atajos de teclado (también desde el botón “⌨ Atajos” de la barra de herramientas): todos los atajos del Editor |
@@ -273,8 +273,8 @@ y seleccionarlo.
 
 | Operación | Disponibilidad |
 |---|---|
-| Grupo nuevo | bloques seleccionados |
-| Cambiar nombre / Duplicar / Eliminar grupo | un grupo seleccionado |
+| Grupo nuevo | bloques seleccionados; pide su nombre (sugiere *Grupo 1*) y el grupo nuevo queda seleccionado |
+| Cambiar nombre / Duplicar / Eliminar grupo | un grupo seleccionado; Cambiar nombre pregunta en el mismo campo, igual que un doble clic en el nombre de un grupo |
 | Agregar al grupo / Quitar del grupo | bloques seleccionados y un grupo seleccionado |
 
 Las transformaciones de grupo (mover/girar/alinear/distribuir/numéricas)
@@ -352,8 +352,8 @@ que una laptop táctil los muestra junto a su teclado y su mouse. En una
 pantalla de 720 píxeles de ancho o menos, la página además se reorganiza:
 los enlaces de la página se pliegan detrás de un botón **Menú**, el panel
 lateral de la Vista del mundo se abre desde un botón **Panel**, y la barra
-lateral del Editor se convierte en un cajón que se abre desde un botón
-**Herramientas**.
+lateral del Editor se convierte en una hoja sobre la mitad inferior de la
+vista, que se abre desde un botón **Herramientas**.
 
 ### Cámara (ambas vistas)
 

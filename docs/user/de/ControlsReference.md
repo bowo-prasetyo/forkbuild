@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 2893221564c37e56 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 61ac7536a193e60e -->
 # Steuerungsreferenz
 
 <!-- languages -->
@@ -30,7 +30,7 @@ der folgenden Bearbeitungsvorgänge nach Namen zu suchen.
 
 | Eingabe | Aktion |
 |---|---|
-| `Strg/Cmd+K` | Befehlspalette |
+| `Strg/Cmd+K` | Befehlspalette: jede Aktion beim Namen oder mit einem anderen Wort dafür (*Farbe*, *Musik*, *Kamera*), auch Speichern, Veröffentlichen, Neu, Exportieren, Importieren, die Werkzeuge, Ton und Hineinsehen |
 | `I` | Bauwerk beschreiben: woraus es besteht, angezeigt und von einem Screenreader vorgelesen — siehe [Das Bauwerk beschreiben](02-TheEditor.md#das-bauwerk-beschreiben) |
 | `V` | Einen Befehl sprechen: drücken, sprechen, erneut drücken — siehe [Einen Befehl sprechen (Sprachsteuerung)](02-TheEditor.md#einen-befehl-sprechen-sprachsteuerung). In der Weltansicht sagen, wohin es geht — siehe [Sagen, wohin es geht (Sprachsteuerung)](03-WorldView.md#sagen-wohin-es-geht-sprachsteuerung) |
 | `?` | Übersicht Tastenkürzel (auch über die Schaltfläche „⌨ Tastenkürzel“ in der Werkzeugleiste erreichbar) — alle Tastenkürzel des Editors |
@@ -272,8 +272,8 @@ anklicken können, um sie auszuwählen.
 
 | Vorgang | Verfügbar, wenn |
 |---|---|
-| Neue Gruppe | Steine ausgewählt sind |
-| Gruppe umbenennen / duplizieren / löschen | eine Gruppe ausgewählt ist |
+| Neue Gruppe | Steine ausgewählt sind; fragt nach ihrem Namen (schlägt *Gruppe 1* vor), und die neue Gruppe ist gleich ausgewählt |
+| Gruppe umbenennen / duplizieren / löschen | eine Gruppe ausgewählt ist; Umbenennen fragt im selben Feld, ebenso ein Doppelklick auf den Namen einer Gruppe |
 | Zur Gruppe hinzufügen / Aus Gruppe entfernen | Steine und eine Gruppe ausgewählt sind |
 
 Gruppentransformationen (verschieben/drehen/ausrichten/verteilen/genaue
@@ -353,7 +353,8 @@ Auf einem Bildschirm mit 720 Pixeln Breite oder weniger ordnet sich die
 Seite außerdem um: Die Seitenlinks klappen hinter eine Schaltfläche
 **Menü**, das Seitenfeld der Weltansicht öffnet sich über eine
 Schaltfläche **Feld**, und die Seitenleiste des Editors wird zu einer
-Schublade, die sich über eine Schaltfläche **Werkzeuge** öffnet.
+Blatt über der unteren Hälfte der Ansicht, das sich über eine Schaltfläche
+**Werkzeuge** öffnet.
 
 ### Kamera (beide Ansichten)
 

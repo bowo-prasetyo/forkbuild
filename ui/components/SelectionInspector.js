@@ -7,6 +7,10 @@ import VillagePaletteSwatches from './VillagePaletteSwatches.js';
 // StructurePlacement selection; their data shapes differ (see
 // EditorSession#getSelectionSummary()), so EditorView never shows both.
 // EditingSidebar fills the default slot with its collapsed sections.
+// The registry's nudges, in the Move row: one step each way.
+const MOVE_STEPS = Object.freeze(['Left', 'Right', 'Forward', 'Back', 'Up', 'Down']
+    .map((name) => ({ name, id: `transform.nudge${name}` })));
+
 export default {
     name: 'SelectionInspector',
     components: { VillagePaletteSwatches },
@@ -39,8 +43,17 @@ export default {
             return this.color === null ? '#ffffff' : toCssHex(this.color);
         }
     },
+    data() {
+        return { MOVE_STEPS };
+    },
     methods: {
         t,
+        // "Move Left (←)", or why it can't.
+        moveTitle(id) {
+            const action = this.registry.get(id);
+            if (!action) return null;
+            return this.titleFor(id, `${displayText(action.label)} (${action.shortcut})`);
+        },
         round1(value) {
             return Math.round((Number(value) || 0) * 10) / 10;
         },
@@ -73,6 +86,20 @@ export default {
                 X {{ round1(center.x) }} · Y {{ round1(center.y) }} · Z {{ round1(center.z) }}
             </p>
             <p class="editor-panel-hint selection-inspector-next">{{ touch ? t('selectionInspector.touchNext') : t('selectionInspector.next') }}</p>
+            <!-- Move a step, as the arrow keys and Page Up/Down do, for whoever
+                 doesn't know them (docs/reviews/EditorUsability-2026-10-29.md, P2-8). -->
+            <div class="selection-inspector-move" role="group" :aria-label="t('selectionInspector.move')">
+                <span class="selection-inspector-move-label" aria-hidden="true">{{ t('selectionInspector.move') }}</span>
+                <button
+                    v-for="step in MOVE_STEPS"
+                    :key="step.id"
+                    type="button"
+                    :class="['editor-panel-btn', 'selection-inspector-move-btn', 'selection-inspector-move-btn--' + step.name]"
+                    :disabled="isDisabled(step.id)"
+                    :title="moveTitle(step.id)"
+                    @click="run(step.id)"
+                >{{ t('selectionInspector.move' + step.name) }}</button>
+            </div>
             <div class="editor-panel-actions">
                 <button
                     type="button" class="editor-panel-btn"

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: e99befa5a4afb6da -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 912406e543c26298 -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -98,7 +98,9 @@ Schaltflächen zeigt, die noch nichts tun können:
   **Einfügen**, sobald Sie etwas kopiert haben, und Ihre Gruppen (klicken
   Sie auf eine, um ihre Steine auszuwählen).
 - **Steine ausgewählt** — wie viele, wo sie sind, und die alltäglichen
-  Aktionen: **Drehen ↻ / ↺**, **Duplizieren**, **Löschen**, **Kopieren**,
+  Aktionen: eine Zeile **Verschieben** (einen Schritt **Links**, **Rechts**,
+  **Vor**, **Zurück**, **Hoch** oder **Runter**, wie die Pfeiltasten und
+  Bild↑/Bild↓), **Rechts drehen ↻ / Links drehen ↺**, **Duplizieren**, **Löschen**, **Kopieren**,
   **Einfügen**, **Auswahl färben**, **Fokussieren** und **Abwählen**. Wenn
   Sie etwas auswählen, scrollt die Seitenleiste diese Karte ins Bild, auch
   von weit unten in der Baubibliothek. Seltener
@@ -111,7 +113,10 @@ Schaltflächen zeigt, die noch nichts tun können:
 
 > **Tipp:** Drücken Sie überall `Strg/Cmd+K`, um die **Befehlspalette** zu
 > öffnen — eine durchsuchbare Liste aller Aktionen dieser Anleitung, nach
-> Namen.
+> Namen oder mit den Worten, die Sie benutzen würden: *Farbe* findet
+> **Auswahl färben**, *Musik* den Ton, *Kamera* **Ganzes Bauwerk zeigen**,
+> und **Speichern**, **Veröffentlichen**, **Exportieren** und die Werkzeuge
+> sind auch da.
 
 ## Jetzt ausprobieren: ein Haus zum Fertigbauen
 
@@ -415,8 +420,9 @@ wiederverwenden — etwa „Dach“ oder „Fenster“.
 **Eine Gruppe erstellen:**
 1. Wählen Sie einige Steine aus.
 2. Öffnen Sie im Feld Auswahl den Abschnitt **Gruppen & Bauplan**, klicken
-   Sie auf **Neue Gruppe** und geben Sie ihr dann mit **Gruppe umbenennen**
-   (unten) einen Namen.
+   Sie auf **Neue Gruppe**. Ein Feld fragt nach ihrem Namen und schlägt einen
+   vor (*Gruppe 1*); tippen Sie Ihren ein und drücken Sie **Gruppe anlegen**
+   oder `Enter`. Die neue Gruppe ist ausgewählt, bereit für die Knöpfe unten.
 
 **Eine Gruppe verwenden:** Klicken Sie in der Liste auf den Namen einer
 Gruppe, um sie (und ihre Steine) auszuwählen — die Liste steht im Feld
@@ -425,7 +431,7 @@ Bauplan**. Diese Schaltflächen wirken auf die gerade ausgewählte Gruppe:
 
 | Schaltfläche | Was sie tut |
 |---|---|
-| **Gruppe umbenennen** | Den Namen der Gruppe ändern |
+| **Gruppe umbenennen** | Den Namen der Gruppe ändern, im selben Feld (oder ein Doppelklick auf ihren Namen in der Liste) |
 | **Gruppe duplizieren** | Die ganze Gruppe *und* ihre Steine kopieren |
 | **Gruppe löschen** | Die Gruppe löschen (die Steine selbst bleiben) |
 | **Zur Gruppe hinzufügen** | Fügt Ihre aktuelle Auswahl der Gruppe hinzu |
@@ -649,12 +655,12 @@ Auswahlwerkzeug (`1`) aus, und die Seitenleiste zeigt:
 | Im Ansichtsfenster ziehen, oder das [Gizmo](InteractiveTransformGizmo.md) | Verschieben / drehen, wie bei einem Stein |
 | Pfeiltasten / Bild↑ / Bild↓ | Schrittweise verschieben |
 | **Felder X / Z / Drehung °, dann Anwenden** | Eine genaue Position und Ausrichtung festlegen — die Höhe (Boden-Y) folgt immer dem Gelände und ist kein Zielwert, den Sie festlegen |
-| **Drehen ↻ / ↺** | Um genau 90° drehen |
+| **Rechts drehen ↻ / Links drehen ↺** | Um genau 90° drehen |
 | **Duplizieren** (`Strg/Cmd+D`) | Eine weitere Instanz derselben Struktur platzieren |
 | **Löschen** | Diese Instanz entfernen — das Ursprungsbauwerk bleibt unberührt |
 | **Ursprungsbauwerk bearbeiten** | Das referenzierte Bauwerk selbst öffnen, um zu ändern, wie jede seiner Instanzen aussieht |
 
-**Drehen ↻ / ↺**, `R` und das Feld **Drehung °** drehen eine Instanz nur, wo
+**Rechts drehen ↻ / Links drehen ↺**, `R` und das Feld **Drehung °** drehen eine Instanz nur, wo
 sie Platz hat: Eine Drehung, die in etwas hineinführen würde, lässt sie, wie
 sie war, mit einem Ton und einer Meldung. (Der Gizmo zeigt eine blockierte
 Drehung rot und nimmt sie zurück.)
@@ -740,7 +746,9 @@ Beim Bauen spielt leise Musik, etwas lebhafter als in der Weltansicht. Die Schal
 
 ## Speichern, veröffentlichen, neu beginnen
 
-- **Speichern** (`Strg+S`) — Ihre Arbeit auf diesem Gerät behalten.
+- **Speichern** (`Strg+S`) — Ihre Arbeit auf diesem Gerät behalten. Bis ein
+  Bauwerk zum ersten Mal gespeichert ist, sagt die Werkzeugleiste **Noch
+  nicht gespeichert**.
 - **Veröffentlichen** — mit allen teilen (siehe
   [Veröffentlichen & Remixen](04-PublishingAndForking.md)). Veröffentlichen
   speichert es auch. Bei einem Bauwerk, das aus einem fertigen begonnen
@@ -961,7 +969,8 @@ Zoomen. Ein Tippen wählt aus; Platzieren braucht zwei Tipper, eines, um zu
 sehen, wo das Teil hinkommt, und ein zweites darauf (oder **Setzen**), um
 es abzusetzen. Ein Ziehen wählt nie aus und platziert nie. Auf einem
 schmalen Bildschirm öffnet sich die Seitenleiste über die Schaltfläche
-**Werkzeuge** oben rechts in der Szene. Eine Leiste unten in der Szene hat
+**Werkzeuge** oben rechts in der Szene, als Blatt über der unteren Hälfte der
+Ansicht, sodass die Auswahl darüber sichtbar bleibt; ihre Karte kommt zuerst. Eine Leiste unten in der Szene hat
 **Rückgängig**, **Wiederholen**, **Drehen**, **Kippen**, **Löschen**,
 **Mehrfach** (jedes Tippen fügt der Auswahl einen Stein hinzu oder entfernt
 ihn), **Rahmen** (ziehen, um einen Auswahlrahmen aufzuziehen; die Kamera

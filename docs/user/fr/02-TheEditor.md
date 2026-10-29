@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: e99befa5a4afb6da -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 912406e543c26298 -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -101,7 +101,10 @@ jamais de boutons qui ne peuvent encore rien faire :
   **Coller** une fois que vous avez copié quelque chose, et vos groupes
   (cliquez sur l’un d’eux pour sélectionner ses briques).
 - **Des briques sélectionnées** — combien, où elles sont, et les actions
-  courantes : **Pivoter ↻ / ↺**, **Dupliquer**, **Supprimer**, **Copier**,
+  courantes : une ligne **Déplacer** (un pas à **Gauche**, à **Droite**, en
+  **Avant**, en **Arrière**, en **Haut** ou en **Bas**, comme les flèches et
+  Page préc./Page suiv.), **Tourner à droite ↻ / Tourner à gauche ↺**,
+  **Dupliquer**, **Supprimer**, **Copier**,
   **Coller**, **Peindre la sélection**, **Centrer** et **Désélectionner**.
   Quand vous sélectionnez quelque chose, la barre latérale amène cette
   carte en vue, même depuis le bas de la Bibliothèque de construction. Les outils
@@ -114,7 +117,10 @@ jamais de boutons qui ne peuvent encore rien faire :
 
 > **Astuce :** appuyez sur `Ctrl/Cmd+K` n’importe où pour ouvrir la
 > **Palette de commandes** — une liste, avec recherche par nom, de toutes
-> les actions de ce guide.
+> les actions de ce guide, ou par les mots que vous emploieriez :
+> *couleur* trouve **Peindre la sélection**, *musique* le son, *caméra*
+> **Voir toute la construction**, et **Enregistrer**, **Publier**,
+> **Exporter** et les outils y sont aussi.
 
 ## Essayez maintenant : une maison à finir
 
@@ -422,8 +428,10 @@ briques — comme « Toit » ou « Fenêtres ».
 **Créer un groupe :**
 1. Sélectionnez des briques.
 2. Ouvrez la section **Groupes et plan** du panneau Sélection et cliquez
-   sur **Nouveau groupe**, puis donnez-lui un nom avec **Renommer le
-   groupe** (ci-dessous).
+   sur **Nouveau groupe**. Un champ demande son nom et en propose un
+   (*Groupe 1*) ; tapez le vôtre et appuyez sur **Créer le groupe** ou
+   `Entrée`. Le nouveau groupe est sélectionné, prêt pour les boutons
+   ci-dessous.
 
 **Utiliser un groupe :** cliquez sur le nom d’un groupe dans la liste pour
 le sélectionner (avec ses briques) — la liste se trouve dans le panneau
@@ -432,7 +440,7 @@ Ces boutons agissent sur le groupe sélectionné :
 
 | Bouton | Ce qu’il fait |
 |---|---|
-| **Renommer le groupe** | Changer le nom du groupe |
+| **Renommer le groupe** | Changer le nom du groupe, dans le même champ (ou double-cliquer sur son nom dans la liste) |
 | **Dupliquer le groupe** | Copier le groupe entier *et* ses briques |
 | **Supprimer le groupe** | Supprimer le groupe (les briques elles-mêmes sont conservées) |
 | **Ajouter au groupe** | Ajoute votre sélection actuelle au groupe |
@@ -658,12 +666,12 @@ toutes ses instances. Sélectionnez une instance avec l’outil Sélection
 | Glisser dans la vue, ou le [manipulateur](InteractiveTransformGizmo.md) | Déplacer / faire pivoter, comme une brique |
 | Flèches / Pg préc / Pg suiv | Décaler |
 | **Champs X / Z / Rotation °, puis Appliquer** | Définir une position et une orientation exactes — l’altitude (Sol Y) suit toujours le terrain et n’est pas une cible que vous définissez |
-| **Pivoter ↻ / ↺** | Pivoter d’exactement 90° |
+| **Tourner à droite ↻ / Tourner à gauche ↺** | Pivoter d’exactement 90° |
 | **Dupliquer** (`Ctrl/Cmd+D`) | Placer une autre instance de la même structure |
 | **Supprimer** | Retirer cette instance — la construction source n’est pas touchée |
 | **Modifier la construction source** | Ouvrir la construction référencée elle-même, pour changer l’apparence de toutes ses instances |
 
-**Pivoter ↻ / ↺**, `R` et le champ **Rotation °** ne tournent une instance
+**Tourner à droite ↻ / Tourner à gauche ↺**, `R` et le champ **Rotation °** ne tournent une instance
 que là où elle tient : une rotation qui la ferait entrer dans quelque chose
 la laisse telle quelle, avec un son et un message qui le disent. (Le gizmo
 montre en rouge une rotation bloquée et la défait.)
@@ -752,6 +760,8 @@ Une musique douce accompagne la construction, un peu plus vive que celle de la V
 ## Enregistrer, publier, recommencer
 
 - **Enregistrer** (`Ctrl+S`) — garder votre travail sur cet appareil.
+  Tant qu’une construction n’a jamais été enregistrée, la barre d’outils
+  dit **Pas encore enregistré**.
 - **Publier** — le partager avec tout le monde (voir
   [Publier et remixer](04-PublishingAndForking.md)). Publier l’enregistre
   aussi. Pour une construction commencée à partir d’une construction toute
@@ -979,7 +989,9 @@ pour vous déplacer, et pincez pour zoomer. Un appui bref sélectionne ;
 placer demande deux appuis, un pour voir où va la pièce et un second dessus
 (ou **Poser**) pour la poser. Un glissement ne sélectionne et ne place
 jamais. Sur un écran étroit, la barre latérale s’ouvre avec le bouton
-**Outils** en haut à droite de la scène. Une barre en bas de la scène
+**Outils** en haut à droite de la scène, comme une feuille sur la moitié
+basse de la vue, si bien que la sélection reste visible au-dessus ; sa carte
+vient en premier. Une barre en bas de la scène
 propose **Annuler**, **Rétablir**, **Pivoter**, **Basculer**,
 **Supprimer**, **Multi** (chaque appui ajoute ou retire une brique de la
 sélection), **Cadre** (glissez pour tracer un cadre de sélection ; la

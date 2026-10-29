@@ -181,6 +181,14 @@ export default {
             }
         }
 
+        // Whether the open build is among the ones saved on this device: a new
+        // build that was never saved says so, rather than "Saved"
+        // (docs/reviews/EditorUsability-2026-10-29.md, P2-8).
+        const savedHere = computed(() => {
+            const id = props.documentManager.document?.world?.id;
+            return !!id && recentDocuments.value.some((entry) => entry.id === id);
+        });
+
         function refresh() {
             dirty.value = props.documentManager.state.dirty;
             recentDocuments.value = props.loadDocumentUseCase.listSavedDocuments();
@@ -494,7 +502,7 @@ export default {
             dirty, saving, recentDocuments, sortedRecentDocuments, filteredRecentDocuments,
             recentOpen, recentQuery, toggleRecent, formatModified, fileOpen, fileMenuStyle, toggleFile,
             searchThreshold: SEARCH_THRESHOLD,
-            save, createNew, load, place, publish, saveAndReturnToWorld,
+            save, createNew, load, place, publish, saveAndReturnToWorld, savedHere,
             signInToPublish, lockedIdentityId, requestPublish, publishAfterSignIn,
             askNothingAdded, keepBuilding, publishAnyway,
             sheetRows, sheetName, sheetBusy, sheetError, closeSheet, publishFromSheet, publishUnsignedFromSheet,
@@ -611,7 +619,7 @@ export default {
             </button>
 
             <span class="toolbar-dirty" :class="{ 'toolbar-dirty--clean': !dirty }">
-                {{ dirty ? t('toolbar.unsaved') : (saving ? t('toolbar.saving') : t('toolbar.saved')) }}
+                {{ dirty ? t('toolbar.unsaved') : (saving ? t('toolbar.saving') : (savedHere ? t('toolbar.saved') : t('toolbar.notSavedYet'))) }}
             </span>
 
             <!-- 0.6.2 — Editor UX Consolidation: discoverability for the

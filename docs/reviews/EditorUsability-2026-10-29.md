@@ -219,6 +219,8 @@ registry's label as the tooltip (*"Undo Recolor 5 Bricks (Ctrl+Z)"*).
 
 ### P2-5. The palette and the Shortcuts overlay promise more than they do
 
+**Fixed 2026-10-29:** the toolbar's and the view's actions are registry actions the palette finds, by name or by other words (*colour*, *music*, *camera*), ranked by how well they match; the overlay has a **Selecting** section and lists every key once (roadmap, "The Editor's smaller frictions").
+
 **What happens.** The overlay ends with *"Ctrl/Cmd+K opens the Command
 Palette, which searches every one of these by name."* The guide says the
 palette is *"a searchable list of every action in this guide"*. I searched
@@ -249,6 +251,8 @@ Shift+drag under both tools.
 
 ### P2-6. Naming a group takes five steps and a browser prompt
 
+**Fixed 2026-10-29:** **New group** asks for the name in a field of its own, suggesting *Group 1*, and the new group starts selected; Rename and a double-click on a name use the same field (roadmap, "The Editor's smaller frictions").
+
 **What happens.** With bricks selected: unfold **Groups & blueprint** (1),
 **New group** (2). This makes *"(unnamed group)"*, which **isn't
 selected**, so **Rename group** is disabled. Click the group in the list
@@ -267,6 +271,8 @@ such as *"Windows"*), and the new group starts selected. Rename it in
 place too, with a double-click on its name.
 
 ### P2-7. On a phone, desktop wording and too little room for the build
+
+**Fixed 2026-10-29:** the touch hint came with P1-4; now the Editor's header is one row (the view starts 48 px higher), Tools opens as a sheet over the lower half of the view with the Selection card first, and **⌨ Shortcuts** is hidden where there is no keyboard (roadmap, "The Editor's smaller frictions").
 
 ![On a phone, the Tools drawer covers about seven-tenths of the width, over the build](img/2026-10-29-phone-drawer.jpg)
 *The Tools drawer on a phone, with a brick selected: its hint says "R rotates", and the drawer covers the build.*
@@ -291,6 +297,8 @@ selection stays in view above it. Fold the site header into the
 toolbar's row while in the Editor.
 
 ### P2-8. Smaller issues
+
+**Fixed 2026-10-29:** a new build says **Not saved yet**, the Selection card has a **Move** row, and the turn buttons say **Turn right ↻** and **Turn left ↺** (roadmap, "The Editor's smaller frictions").
 
 - **"Saved" on a build that was never saved.** A new, untitled build
   shows **Saved** in the toolbar and **DRAFT** in the sidebar. Until the

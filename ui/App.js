@@ -140,9 +140,9 @@ export default {
         };
     },
     template: `
-        <div class="app-shell">
+        <div :class="['app-shell', { 'app-shell--editor': $route.name === 'editor' }]">
             <header class="app-header">
-                <span class="app-title"><img class="app-title-mark" src="assets/icons/logo-mark.svg" alt="">ForkBuild</span>
+                <span class="app-title"><img class="app-title-mark" src="assets/icons/logo-mark.svg" alt=""><span class="app-title-text">ForkBuild</span></span>
                 <button
                     type="button"
                     class="app-menu-toggle"
