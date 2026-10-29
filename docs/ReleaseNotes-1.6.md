@@ -1,7 +1,7 @@
 # ForkBuild 1.6 release notes
 
-*Released 2026-10-29 as version 1.6.0.* For 1.5, see
-[ReleaseNotes-1.5.md](ReleaseNotes-1.5.md).
+*Released 2026-10-29 as version 1.6.0, and as 1.6.1 the same day* (see
+"1.6.1" below). For 1.5, see [ReleaseNotes-1.5.md](ReleaseNotes-1.5.md).
 
 1.6, "First publish", is about the stretch where 1.5's first players
 stopped: between a first brick and a published build. In the launch week,
@@ -18,6 +18,27 @@ View goes to the peers who can see your avatar, and look-alikes keep two
 new records on this device (see "Privacy"). The protocol gains one
 additive peer message, a signed **Say** line; `PROTOCOL_VERSION` is
 unchanged. The weekly challenge's themes are the same as 1.5's.
+
+## 1.6.1
+
+**The seasons follow the challenge week.** In a week whose challenge theme
+belongs to a season, the World stays in that season from Monday to Monday,
+for everyone: the land, the sky, the lakes' ice, and whether rain or snow
+falls. So the *winter cabin* week of 16 November 2026 is winter all week,
+with snow lying and the lakes frozen hard enough to walk on. The season
+doesn't stand still: it moves from early in the season to late and back, so
+the land keeps changing a little. Every other week, the seasons turn every
+five hours or so, as before, and Monday changes the season and the theme
+together.
+
+- While a seasonal week runs, the challenge page says the World is in its
+  season for everyone. For a seasonal week before or after, it still
+  suggests choosing that season under **Season** in World View.
+- **Season** in World View still keeps one season on your device, whatever
+  the week.
+- **Update before 16 November 2026.** A copy of 1.6.0 or older keeps
+  turning the seasons through a seasonal week, so friends walking together
+  on different versions see different seasons.
 
 ## New
 
@@ -149,8 +170,9 @@ See [Privacy.md](Privacy.md) for the full list.
 
 - Nothing to do for your data: 1.6 opens everything 1.5 saved.
 - **Voice building asks again** before downloading its new model.
-- Copies of **1.4 or older should update before 16 November 2026**, when
-  their weekly themes part from 1.5's and 1.6's.
+- **Update before 16 November 2026.** Copies of 1.4 or older show other
+  weekly themes from then on, and copies older than 1.6.1 turn the seasons
+  through the winter cabin's week instead of holding winter.
 - A **Say** line from 1.6 isn't shown by 1.5; everything else between them
   works as before.
 
@@ -158,11 +180,9 @@ See [Privacy.md](Privacy.md) for the full list.
 
 The limitations listed for 1.5 still apply. Also:
 
-- **The seasons don't follow the challenge week yet.** The week of
-  16 November 2026 is the *winter cabin*, and the World's seasons still
-  turn every five hours or so, so its entries will mostly be seen out of
-  winter. Making the seasons follow the week was decided on 2026-10-22 and
-  is not built yet.
+- **Monday changes the season at once.** When a week that holds a season
+  starts or ends, at 00:00 UTC, the land, the sky and any lying snow change
+  in a moment rather than easing over.
 - **The World's trees are still the realistic ones** from 1.5. Bringing
   them to the bricks' scale is the diorama pass, still to come.
 - **The look-alike notice can still come before the Publish sheet** on a

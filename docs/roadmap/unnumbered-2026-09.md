@@ -9968,3 +9968,47 @@ message, a signed Say line on `forkbuild:avatar-say`. The weekly challenge's the
   week after release.
 - Not done: seasons on the challenge week (Later) didn't ride along; the release notes name the winter-cabin week as
   a known limitation.
+
+## The seasons follow the challenge week, and Release 1.6.1 (unnumbered, 2026-10-29)
+
+**A seasonal theme is shown in its season** (the owner's yes, 2026-10-29: "please make the seasons follow the next
+challenge week, and for weeks whose theme has no season, keep today's rotating clock as usual"; decided on 2026-10-22,
+docs/Pillars.md, "One clock that matters: the week"; [the product-direction audit](../reviews/ProductDirection-2026-10-29.md),
+finding 5). Pillar served: your work is yours, and lives in a world, and the challenge's reason to build together:
+the winter cabin's entries stand in the snow. How a player notices: the week of 16 November 2026 is winter all week,
+for everyone, where the turning seasons showed winter a quarter of the time (25.4% of that week, measured minute by
+minute). Which target it should move: `/e/plaza-visit` per `/e/challenge-join`, in the seasonal weeks against the
+others.
+
+- **A week's season holds the world** (core/nature/Season.js): `heldWeekAt()` says when the challenge week at a
+  moment (core/challenge/BuildChallenge.js#challengeAt()) belongs to a season, kept for the last week asked, and
+  `yearSecondsAt()` is the world's clock for everything seasonal. In such a week it goes from the season's
+  `HELD_FROM_DAY` (2) to `HELD_TO_DAY` (6) and back, a season's length there and back, from the week's Monday, so the
+  land changes as fast as the year turns, with no jump, and never shows the next season's edge. Every other week,
+  remix weeks too, it is the year's own turn, as before. `yearDayAt()`, and through it the look, the sky, nightfall
+  (core/nature/Nightfall.js) and the lakes' ice, follow it; so does `snowShareAt()`.
+- **The weather keeps the same season** (core/nature/Weather.js): `spellSeason()` is the season at the spell's start
+  (a week starts on a spell's start), and the snow that lies is followed from the week's Monday in a week holding
+  winter, none in a week holding another season, and from the latest winter otherwise. Followed cold from a Monday it
+  takes about 26 ms once, then moves on from where it was.
+- **The lakes are frozen hard all through winter's week**, days 2 to 6 lying inside the ice's days 2 to 7, and open in
+  the other held weeks; everyone agrees, so walking on the ice stays the same for every peer.
+- **The challenge page** (ui/components/challenge/challengeText.js, `challengeSeasonHint(challenge, now)`): while a
+  seasonal week runs, it says the world is in that season for everyone (`challenge.seasonNow.*`, four new messages);
+  for one before or after, it still suggests **Season**. World View's Season hint (`worldView.seasonHint`) says a
+  seasonal week stays in its season. All in eight languages.
+- **Season** in World View still keeps one season on a device, whatever the week.
+- The user guide: *Seasonal themes* (04-PublishingAndForking), in all eight languages, and *Seasons*
+  (03-WorldView), in English; the seven translations of 03 were already marked out of date and stay so.
+  docs/Pillars.md says it is built; it leaves Later in docs/NowNextLater.md.
+- **Version 1.6.1**: `package.json`, `package-lock.json`, `core/app/version.js` and the Game Jolt guide; the release
+  notes' "1.6.1" section (update before 16 November 2026: a copy older than 1.6.1 turns the seasons through the winter
+  cabin's week); the README.
+- Tests: tests/Seasons.test.js (each season's first held week: that season all week, land and look, between days 2
+  and 6 and back with no jump; winter's week all snow, lying, with every weather spell a winter one and the lakes
+  frozen; the other held weeks with no snow and open lakes; the weeks either side and a remix week turning through all
+  four seasons on the year's own clock; held from Monday 00:00 UTC to the next; the turning year's tests kept in a
+  week with no season), tests/ChallengeSeasonHint.test.js (new: the line during, before and after a seasonal week,
+  and none for a theme without a season).
+- Not done: Monday changes the season, the sky and any lying snow at once, rather than easing over; a peer on an older
+  copy sees the turning seasons through a held week.

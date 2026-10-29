@@ -7,14 +7,20 @@ import {
     SEASON_SECONDS,
     WORLD_YEAR_DAYS,
     WORLD_YEAR_SECONDS,
+    HELD_FROM_DAY,
+    HELD_TO_DAY,
+    heldWeekAt,
+    isLakeFrozenAt,
     seasonAt,
     seasonBoundsAt,
     seasonLookAt,
     seasonLookAtYearDay,
     seasonLookOf,
     snowShareAt,
+    weekSeasonAt,
     yearDayAt
 } from '../core/nature/Season.js';
+import { challengeAt } from '../core/challenge/BuildChallenge.js';
 import {
     FAIR_WEATHER,
     WEATHER_SPELL_SECONDS,
@@ -51,12 +57,15 @@ import { assert } from './support/Assert.js';
 // the renderer's side of it; and a device keeping one season.
 
 const YEAR = WORLD_YEAR_SECONDS;
-// The start of some world year, well into the future.
+// The start of some world year, well into the future, in a challenge week
+// whose theme has no season (the "well" week of 2027-01-11), so the year
+// turns on its own there (a week with a season is tested further down).
 const YEAR_START = Math.ceil(1_800_000_000 / YEAR) * YEAR;
 const inYear = (day) => YEAR_START + day * DAY_CYCLE_SECONDS;
 
 // A 32-day year, four seasons of eight days, each a turn of the moon.
 {
+    assert(weekSeasonAt(YEAR_START - 2 * YEAR) === null && weekSeasonAt(YEAR_START + 2 * YEAR) === null, 'the tests of the turning year run in a week with no season');
     assert(WORLD_YEAR_DAYS === 32 && SEASON_DAYS === 8 && SEASON_DAYS === MOON_CYCLE_DAYS, 'a 32-day year, a season to each turn of the moon');
     assert(SEASON_SECONDS === 8 * DAY_CYCLE_SECONDS && YEAR === 4 * SEASON_SECONDS, 'its length in seconds');
     assert(SEASONS.join() === 'SPRING,SUMMER,AUTUMN,WINTER', 'in the year\'s order');
@@ -72,7 +81,7 @@ const inYear = (day) => YEAR_START + day * DAY_CYCLE_SECONDS;
         const start = inYear(s * SEASON_DAYS);
         assert(seasonAt(start) === SEASONS[s], `${SEASONS[s]} starts on day ${s * SEASON_DAYS}`);
         assert(seasonAt(start - 1) === SEASONS[(s + 3) % 4], 'the season before ends just before');
-        assert(seasonAt(start + YEAR) === SEASONS[s] && seasonAt(start - 7 * YEAR) === SEASONS[s], 'every year the same');
+        assert(seasonAt(start + YEAR) === SEASONS[s] && seasonAt(start - 2 * YEAR) === SEASONS[s], 'every year the same');
         // Dawn: the start of a day of World View's day and night.
         assert(start % DAY_CYCLE_SECONDS === 0, 'a season starts at dawn');
         // That night's moon is new.
@@ -430,4 +439,84 @@ const inYear = (day) => YEAR_START + day * DAY_CYCLE_SECONDS;
     forest.unloadTile(token);
     forest.dispose();
     console.log('✓ the renderer follows the season, the snow and what falls');
+}
+
+// The week's season comes first (docs/Pillars.md, "One clock that matters:
+// the week"): a challenge week whose theme belongs to a season holds the
+// world in it from Monday to Monday, for the land, the lakes and the weather;
+// every other week the year turns as before.
+{
+    const monday = (id) => Date.parse(`${id}T00:00:00Z`) / 1000;
+    const WEEK = 7 * 24 * 3600;
+    // The first week of each season's theme from the winter cabin on.
+    const heldWeeks = {};
+    for (let start = monday('2026-11-16'); Object.keys(heldWeeks).length < 4; start += WEEK) {
+        const season = challengeAt(start * 1000).season;
+        if (season && !heldWeeks[season]) heldWeeks[season] = start;
+    }
+    assert(heldWeeks.WINTER === monday('2026-11-16'), 'the winter cabin\'s week holds winter');
+    for (const season of SEASONS) {
+        const start = heldWeeks[season];
+        assert(heldWeekAt(start + 1).season === season && heldWeekAt(start + 1).start === start, `${season} held from its Monday`);
+        let steady = true;
+        let smooth = true;
+        let low = Infinity;
+        let high = -Infinity;
+        let previous = null;
+        for (let t = start; t < start + WEEK; t += 30) {
+            const day = yearDayAt(t);
+            steady &&= seasonAt(t) === season && seasonLookAt(t).season === season;
+            if (previous !== null && Math.abs(day - previous) > 30 / DAY_CYCLE_SECONDS + 1e-9) smooth = false;
+            previous = day;
+            const into = day - SEASONS.indexOf(season) * SEASON_DAYS;
+            low = Math.min(low, into);
+            high = Math.max(high, into);
+        }
+        assert(steady, `${season} all week, land and look`);
+        assert(smooth, `${season}: the land changes no faster than the year turns, with no jump`);
+        assert(Math.abs(low - HELD_FROM_DAY) < 0.01 && Math.abs(high - HELD_TO_DAY) < 0.01, `${season} goes between days ${HELD_FROM_DAY} and ${HELD_TO_DAY} of it and back (${low.toFixed(2)} to ${high.toFixed(2)})`);
+    }
+    // Winter's week: snow, never rain; it lies; the lakes frozen all week.
+    const winter = heldWeeks.WINTER;
+    let snowAll = true;
+    let frozenAll = true;
+    let snowSpells = true;
+    let lies = 0;
+    for (let t = winter; t < winter + WEEK; t += 120) {
+        snowAll &&= snowShareAt(t) === 1 && rainAt(t) === 0;
+        frozenAll &&= isLakeFrozenAt(t);
+        lies = Math.max(lies, snowCoverAt(t));
+    }
+    for (let spell = winter / WEATHER_SPELL_SECONDS; spell < (winter + WEEK) / WEATHER_SPELL_SECONDS; spell++) {
+        snowSpells &&= spellSeason(spell) === SEASON.WINTER;
+    }
+    assert(snowAll, 'what falls is snow all week');
+    assert(frozenAll, 'the lakes are frozen hard all week');
+    assert(snowSpells, 'every weather spell is a winter one');
+    assert(lies > 0.5, `snow lies (up to ${lies.toFixed(2)})`);
+    // Another season's week: no snow falls or lies, the lakes are open.
+    for (const season of [SEASON.SPRING, SEASON.SUMMER, SEASON.AUTUMN]) {
+        const start = heldWeeks[season];
+        let dry = true;
+        for (let t = start; t < start + WEEK; t += 600) {
+            dry &&= snowShareAt(t) === 0 && snowCoverAt(t) === 0 && snowAt(t) === 0 && !isLakeFrozenAt(t);
+        }
+        assert(dry, `${season}'s week: no snow, open lakes`);
+    }
+    // The weeks either side turn as before, through all four seasons, a
+    // remix week too.
+    for (const start of [winter - WEEK, winter + WEEK, monday('2026-11-02')]) {
+        assert(weekSeasonAt(start + 1) === null, 'a week with no season');
+        const seen = new Set();
+        for (let t = start; t < start + WEEK; t += 600) {
+            seen.add(seasonAt(t));
+            assert(yearDayAt(t) === ((t % YEAR) + YEAR) % YEAR / DAY_CYCLE_SECONDS, 'on the year\'s own turn');
+        }
+        assert(seen.size === 4, 'every season comes round');
+    }
+    assert(challengeAt(monday('2026-11-02') * 1000).kind === 'remix', 'a remix week among them');
+    // Monday changes it at once, for everyone.
+    assert(weekSeasonAt(winter - 1) === null && weekSeasonAt(winter) === SEASON.WINTER, 'the season is held from Monday 00:00 UTC');
+    assert(weekSeasonAt(winter + WEEK - 1) === SEASON.WINTER && weekSeasonAt(winter + WEEK) === null, 'and let go the next Monday');
+    console.log('✓ a week whose theme has a season holds the world in it; the other weeks turn');
 }

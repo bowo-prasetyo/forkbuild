@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d9d2658aa5a248b1 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 0014d74c59859c59 -->
 # 04 — Veröffentlichen & Remixen
 
 <!-- languages -->
@@ -844,11 +844,11 @@ Jede vierte Woche ist stattdessen eine Remix-Woche (siehe unten).
 Garten im Frühling, ein Sommerfest, ein Erntespeicher im Herbst, eine
 Winterhütte oder ein Eislaufteich. Sie sind unter die anderen Themen
 verteilt, sodass etwa alle sechs Wochen eines an der Reihe ist, die
-Jahreszeiten nacheinander. Die Jahreszeiten der Weltansicht wechseln
-viel schneller als die Wochen, darum wartet die Woche nicht auf ihre
-Jahreszeit; stattdessen schlägt die Seite der Challenge vor, diese
-Jahreszeit in der Weltansicht unter **Jahreszeit** zu wählen, um die
-Beiträge so zu sehen, wie sie gemeint sind.
+Jahreszeiten nacheinander. Die Welt der Weltansicht bleibt die ganze Woche, von Montag bis Montag,
+für alle in dieser Jahreszeit, sodass die Beiträge so zu sehen sind, wie sie
+gemeint sind; die Seite der Challenge sagt das, solange die Woche läuft. Für
+eine frühere oder spätere Jahreszeiten-Woche schlägt sie stattdessen vor,
+diese Jahreszeit in der Weltansicht unter **Jahreszeit** zu wählen.
 
 **Remix-Wochen.** Jede vierte Woche, beginnend mit der Woche vom
 2. November 2026, ist eine Remix-Woche (`#remix-20261102`): Statt eines

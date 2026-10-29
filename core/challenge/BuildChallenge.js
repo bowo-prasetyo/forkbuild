@@ -21,12 +21,13 @@ import { normalizeBuildTag } from '../document/BuildTags.js';
 // it.
 //
 // Some themes belong to a season (`season`, core/nature/Season.js's SEASON): a
-// winter cabin, a summer fair. The world's seasons turn far faster than the
-// weeks, so the week doesn't wait for its season; the challenge page
-// suggests keeping World View in it (its Season setting) to see the entries
-// as they are meant to be seen. They are spread through the list, every
-// fifth theme from the week of 2026-11-16, so one comes round every six or
-// seven weeks, the seasons in turn.
+// winter cabin, a summer fair. Their week holds the world in that season for
+// everyone, Monday to Monday (core/nature/Season.js#heldWeekAt()), so the
+// entries are seen in it; the challenge page says so while the week runs,
+// and suggests keeping World View in it (its Season setting) for a week
+// before or after. They are spread through the list, every fifth theme from
+// the week of 2026-11-16, so one comes round every six or seven weeks, the
+// seasons in turn.
 //
 // A theme that has already run is never moved: the themes in turn are taken
 // modulo the list's length, so the list up to the week now running stays as

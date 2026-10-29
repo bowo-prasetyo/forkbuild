@@ -11,6 +11,18 @@
 // coming back finds another; the year doesn't divide a real day, so someone
 // who always plays at the same hour sees the seasons go round.
 //
+// The week's season comes first (docs/Pillars.md, "One clock that matters:
+// the week"): while the weekly challenge's theme belongs to a season
+// (core/challenge/BuildChallenge.js, a winter cabin, a summer fair), the
+// world stays in that season from Monday to Monday, so the week's entries
+// are seen in it. It doesn't stand still: it goes from the season's
+// HELD_FROM_DAY to its HELD_TO_DAY and back, a season's length there and
+// back, so the land keeps changing a little and never shows the next
+// season's edge. Every other week the year turns as above. The world's clock
+// for all of it is yearSecondsAt(), so the land, the sky, the lakes' ice and
+// the weather's rain and snow (core/nature/Weather.js) all keep the same
+// season. Monday changes the season and the theme together, at once.
+//
 // It is the world's year, not the calendar's: the same everywhere, so friends
 // walking together share it wherever they live.
 //
@@ -50,6 +62,7 @@
 // on the ice, and everyone must agree where they can.
 
 import { DAY_CYCLE_SECONDS, MOON_CYCLE_DAYS, seasonalSky } from './DayCycle.js';
+import { challengeAt } from '../challenge/BuildChallenge.js';
 
 export const SEASON = Object.freeze({
     SPRING: 'SPRING',
@@ -177,6 +190,54 @@ const SEASON_MIDDLE_DAY = Object.freeze({
     [SEASON.WINTER]: 28
 });
 
+// A week's season is held between these days of it (of 0 to SEASON_DAYS),
+// clear of the turns into the seasons either side: spring in blossom,
+// summer's green going to harvest, autumn's colours, winter's snow with the
+// lakes frozen hard (LAKE_FREEZE_DAY to LAKE_THAW_DAY) all through.
+export const HELD_FROM_DAY = 2;
+export const HELD_TO_DAY = 6;
+const HELD_SPAN_SECONDS = (HELD_TO_DAY - HELD_FROM_DAY) * DAY_CYCLE_SECONDS;
+
+// The week at `seconds` (Unix time) when it holds a season: { season, start },
+// its SEASON and its Monday in Unix seconds; null for a week whose theme has
+// none, a remix week, or no clock. The weather asks for every step it follows
+// (core/nature/Weather.js#snowCoverAt()), so the last week is kept.
+const WEEK_SECONDS = 7 * 24 * 60 * 60;
+// Unix time 0 was a Thursday: the first Monday 00:00 UTC is four days on.
+const FIRST_MONDAY_SECONDS = 4 * 24 * 60 * 60;
+let lastWeek = null;
+
+export function heldWeekAt(seconds) {
+    if (!Number.isFinite(seconds)) return null;
+    const start = Math.floor((seconds - FIRST_MONDAY_SECONDS) / WEEK_SECONDS) * WEEK_SECONDS + FIRST_MONDAY_SECONDS;
+    if (!lastWeek || lastWeek.start !== start) {
+        const challenge = challengeAt(start * 1000);
+        const season = challenge && SEASON[challenge.season] ? challenge.season : null;
+        lastWeek = { start, held: season ? Object.freeze({ season, start }) : null };
+    }
+    return lastWeek.held;
+}
+
+// The season the weekly challenge running at `seconds` belongs to (SEASON),
+// or null.
+export function weekSeasonAt(seconds) {
+    const held = heldWeekAt(seconds);
+    return held ? held.season : null;
+}
+
+// How far through the world's year `seconds` (Unix time) is, in seconds from
+// spring's first dawn, 0 up to, not including, WORLD_YEAR_SECONDS: the
+// year's own turn, or, in a week with a season, that season held.
+export function yearSecondsAt(seconds) {
+    const held = heldWeekAt(seconds);
+    if (!held) {
+        return ((seconds % WORLD_YEAR_SECONDS) + WORLD_YEAR_SECONDS) % WORLD_YEAR_SECONDS;
+    }
+    const phase = (seconds - held.start) % (2 * HELD_SPAN_SECONDS);
+    const along = phase < HELD_SPAN_SECONDS ? phase : 2 * HELD_SPAN_SECONDS - phase;
+    return SEASONS.indexOf(held.season) * SEASON_SECONDS + HELD_FROM_DAY * DAY_CYCLE_SECONDS + along;
+}
+
 // How far through the year the world is at `seconds` (Unix time), in days,
 // from 0 (spring's first dawn) up to, not including, WORLD_YEAR_DAYS. With
 // no clock, the middle of summer.
@@ -184,8 +245,7 @@ export function yearDayAt(seconds) {
     if (!Number.isFinite(seconds)) {
         return SEASON_MIDDLE_DAY[SEASON.SUMMER];
     }
-    const into = ((seconds % WORLD_YEAR_SECONDS) + WORLD_YEAR_SECONDS) % WORLD_YEAR_SECONDS;
-    return into / DAY_CYCLE_SECONDS;
+    return yearSecondsAt(seconds) / DAY_CYCLE_SECONDS;
 }
 
 export function seasonOfYearDay(yearDay) {
@@ -198,8 +258,9 @@ export function seasonAt(seconds) {
     return seasonOfYearDay(yearDayAt(seconds));
 }
 
-// When the season under way at `seconds` began, and when the next begins,
-// in Unix seconds.
+// When the year's own turn of the season under way at `seconds` began, and
+// when the next begins, in Unix seconds (a week with a season holds it past
+// these; see weekSeasonAt()).
 export function seasonBoundsAt(seconds) {
     const start = Math.floor(seconds / SEASON_SECONDS) * SEASON_SECONDS;
     return { start, end: start + SEASON_SECONDS };
@@ -293,7 +354,7 @@ function blendLooks(from, to, t) {
 // runs across the turn changes from rain to snow, or back, as it falls.
 export function snowShareAt(seconds, changeSeconds = 120) {
     if (!Number.isFinite(seconds)) return 0;
-    const into = ((seconds % WORLD_YEAR_SECONDS) + WORLD_YEAR_SECONDS) % WORLD_YEAR_SECONDS;
+    const into = yearSecondsAt(seconds);
     const winterStart = 3 * SEASON_SECONDS;
     if (into >= winterStart) {
         // Winter: snow, until it turns back to rain just before spring.

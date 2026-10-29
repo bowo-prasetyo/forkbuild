@@ -16,14 +16,15 @@ default setup uses is a rendezvous server that helps peers find each other,
 plus an anonymous, cookie-free visitor count once a day that you can turn off;
 see [docs/Privacy.md](docs/Privacy.md) for everything the app contacts.
 
-**Version 1.6.0**, released 2026-10-29: see the
+**Version 1.6.1**, released 2026-10-29: see the
 [release notes](docs/ReleaseNotes-1.6.md). It is about a first build that gets
 published: Publish in one sheet with remixing on, **Try it now**'s house with a
 job in four steps, a first walk in daylight with a clearing round every build,
 and an Editor that places only on a click, lays rows with Shift+drag, picks a
-brick from the build and moves what you select by dragging it. Copies older
-than 1.5.0 should update before 16 November 2026, when the weekly challenge's
-themes change. 1.1.0 fixed two security problems in 1.0.0, so update any copy
+brick from the build and moves what you select by dragging it; and 1.6.1
+holds the World in a seasonal challenge week's season all week. Update before
+16 November 2026, the winter cabin's week, when older copies see other
+seasons and copies older than 1.5.0 other themes. 1.1.0 fixed two security problems in 1.0.0, so update any copy
 older than that. Every milestone is recorded in
 [docs/Roadmap.md](docs/Roadmap.md).
 
