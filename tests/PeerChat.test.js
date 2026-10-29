@@ -16,6 +16,7 @@ import {
 import { ChatReplayWindow } from '../core/social/ChatReplayWindow.js';
 import { resolveIncomingChatMessage } from '../core/social/ChatMessageIngestion.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { UserFacingError } from '../core/app/UserFacingError.js';
 import { assert } from './support/Assert.js';
 
 // 0.2.61 — Direct Peer Messaging & Live Chat.
@@ -329,6 +330,20 @@ async function runTests() {
     const sentAfterUnblock = aliceChat.sendMessage(ab.peerFromA, 'Back again');
     assert(isValidChatMessage(sentAfterUnblock), 'chat works again immediately after unblocking, with no new friendship ceremony required');
     console.log('✓ SCENARIO F: reconnected/unblocked friends chat again without re-establishing friendship');
+
+    // --- F2. An empty or too-long body is refused with the player's own
+    //         message (a UserFacingError), never an internal error.
+    const refusalOf = (send) => { try { send(); } catch (e) { return e; } return null; };
+    for (const [label, send] of [
+        ['sendMessage', (body) => aliceChat.sendMessage(ab.peerFromA, body)],
+        ['sendOrQueue', (body) => aliceChat.sendOrQueue(Bob.id, body)]
+    ]) {
+        const empty = refusalOf(() => send('   '));
+        assert(empty instanceof UserFacingError && empty.userMessage.key === 'refusal.messageBodyMustNotBe', `${label} refuses an empty body with its own message, got ${empty}`);
+        const tooLong = refusalOf(() => send('x'.repeat(MAX_CHAT_BODY_LENGTH + 1)));
+        assert(tooLong instanceof UserFacingError && tooLong.userMessage.key === 'refusal.messageBodyExceedsMaximumLength', `${label} refuses a too-long body with its own message, got ${tooLong}`);
+    }
+    console.log('✓ SCENARIO F2: an empty or too-long message is refused with a message the player can read');
 
     // --- G. Offline — a message sent while the peer is disconnected is
     //        never queued or delivered later; there is no store-and-forward.

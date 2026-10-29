@@ -9834,3 +9834,11 @@ newest builds, so original work, usually older than its copies, was the first to
 - **Builds a look didn't reach are counted when the browser is idle**, one at a time, so the next look ranks them too.
 - Tests: tests/BuildKindIndex.test.js (new); tests/SimilarBuildFinder.test.js 42-47 (an original older than 400
   builds unlike it); tests/BuildSimilarity.test.js 13j-13l.
+
+## Chat refusals read again (unnumbered, 2026-10-29)
+
+**An empty or too-long chat message is refused with a message the player can read.** Sending one threw an internal
+error instead, both live and queued: the local message in `ChatUseCase#sendMessage()` and `#sendOrQueue()` was named
+`message`, which hid the imported `message()` the refusals use. Found by CodeQL's code-quality scan.
+
+- Tests: tests/PeerChat.test.js F2 (both refusals, live and queued).
