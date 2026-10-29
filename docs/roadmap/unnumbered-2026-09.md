@@ -10012,3 +10012,40 @@ others.
   and none for a theme without a season).
 - Not done: Monday changes the season, the sky and any lying snow at once, rather than easing over; a peer on an older
   copy sees the turning seasons through a held week.
+
+## The filter's answers, checked; a playtest kit; the README leads with the game (unnumbered, 2026-10-29)
+
+**Three no-code items from [the product-direction audit](../reviews/ProductDirection-2026-10-29.md)** (the owner's
+yes, 2026-10-29: "Please start with 1 and 4 now"): the kit for **Now**'s playtest (docs/NowNextLater.md), and
+findings 2 and 8.
+
+**The filter.**
+1. **Pillar:** none directly; it's how the project decides. A player notices it only through what gets built next:
+   the playtest's top three fixes, and entries that say what they should move.
+2. **First ten minutes:** no change in the app. The README, which GitHub visitors read first, now opens with the
+   game, the path a newcomer takes and the three pillars.
+3. **Building first:** yes. Nothing here is a feature; it gets the playtest of the building path ready.
+4. **Counts:** none yet. 1.6's first full week of counts ends around 5 November; the playtest will say why newcomers
+   stop where those counts say they do.
+
+- **A playtest kit** (docs/playtests/README.md and TEMPLATE.md, new): who plays (five people who play building
+  games, two on their own phone), a fresh private window on the official site, the one thing said to them, what
+  counts as a stall (a hesitation, a wrong turn, a question, a surprise, giving up, and a blocker after two minutes),
+  the path to time from Home to Share (the same steps the counts follow), four questions afterwards, and how the
+  stalls rank into the top three fixes that join **Now**. Players stay anonymous, and recordings stay out of the
+  repository.
+- **The filter's answers, checked** (tests/RoadmapFilter.test.js, new): from this entry on, every roadmap entry
+  answers the four questions in a numbered list, **Pillar**, **First ten minutes**, **Building first** and
+  **Counts**, each with something after it; the test names the entry and what it lacks. docs/Roadmap.md's "Adding
+  an entry" shows the list. Entries before this one are left as they were written.
+- **The owner's yes doesn't answer question 4** (docs/Pillars.md, "The filter"): it lets work off the newcomer's
+  path start, and the entry still names what it should move and what the counts say, or "none yet". The audit asked
+  which way this goes; this writes down the way it recommended, and the owner can change it here.
+- **The README leads with the game**: the fantasy, what it is in a paragraph, the four steps from **Try it now** to a
+  shared link, and the three pillars, then the version. The features keep their text, with **Remixing and sharing**
+  and **Friends** in a player's words; the networks, the identity's cryptography, the peer connections and the
+  Experimental list move to a new section, **How your work stays yours**, before Quick Start. "Publications page"
+  there is now **Signed Records**, the page's name since 2026-10-23.
+- Tests: tests/RoadmapFilter.test.js (the check on made-up entries: four answers pass, a missing or empty one is
+  named, answers written in passing are not ones; and every entry from this one on).
+- Not done: the playtest itself, which needs five people.

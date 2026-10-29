@@ -84,7 +84,14 @@ docs/reviews/CreativeDirection-2026-10-22.md, finding 5):
   unfinished, unless the owner moves it.
 - **Every change a player can notice has a roadmap entry**, answering these
   four questions. No commit skips the filter. The pull request template
-  (.github/pull_request_template.md) asks the same.
+  (.github/pull_request_template.md) asks the same, and from 2026-10-29
+  tests/RoadmapFilter.test.js fails on an entry without the four answers
+  (docs/Roadmap.md, "Adding an entry").
+- **The owner's yes doesn't answer question 4.** It lets work off the
+  newcomer's path start; the entry still says which first step or target it
+  should move and what the counts say about it, and when they say nothing
+  yet, it says "none yet". A run of "none yet" is the sign to get players or
+  counts before building more.
 
 ## Infrastructure, kept out of sight
 

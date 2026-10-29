@@ -7,14 +7,32 @@ account, no download.
 
 ![ForkBuild's Home page, with a small village turning in 3D](docs/launch/press/home-desktop.png)
 
-An open-source, browser-based, decentralized building platform. Creations are
-built from bricks, forked like source code, published through interchangeable
-storage and announcement providers, and explored in a shared 3D world. There are
-no accounts: identities are key pairs held on your device, and people connect to
-each other directly over authenticated peer connections. The only server the
-default setup uses is a rendezvous server that helps peers find each other,
-plus an anonymous, cookie-free visitor count once a day that you can turn off;
-see [docs/Privacy.md](docs/Privacy.md) for everything the app contacts.
+> **Build a little place. Anyone can remix it. Walk inside it with friends.**
+
+ForkBuild is a 3D building game in the browser. You snap bricks into a house,
+a bridge or a whole village, publish it, and share a link. Anyone who opens
+it can make their own copy, credited to you, and build on it. Then you walk
+through what you made, together.
+
+1. **Try it now** opens a little house with no roof and a job in four steps:
+   a roof, a chimney, a path and a garden.
+2. **Publish** is one sheet: your name, *Others may remix it* and *Everyone
+   can find it*, already chosen.
+3. **Walk inside it** puts your avatar at its door in a shared World.
+4. Its link opens on the build itself, with its family tree and one **Edit a
+   Copy** button for whoever opens it.
+
+The three things every feature serves ([docs/Pillars.md](docs/Pillars.md)):
+
+- **Building feels joyful**: fifty-nine bricks, quick and forgiving to place,
+  on a computer or a phone.
+- **Every build has a family tree**: a remix remembers what it came from,
+  so credit travels with the work, and a weekly challenge gives everyone
+  something to build together.
+- **Your work is yours, and lives in a world**: builds stay on your device,
+  signed with a key you hold, with no account; and each one is a place to
+  walk into, alone or with friends. How that works, and the networks a build
+  can go to, is in [How your work stays yours](#how-your-work-stays-yours).
 
 **Version 1.6.1**, released 2026-10-29: see the
 [release notes](docs/ReleaseNotes-1.6.md). It is about a first build that gets
@@ -24,14 +42,11 @@ and an Editor that places only on a click, lays rows with Shift+drag, picks a
 brick from the build and moves what you select by dragging it; and 1.6.1
 holds the World in a seasonal challenge week's season all week. Update before
 16 November 2026, the winter cabin's week, when older copies see other
-seasons and copies older than 1.5.0 other themes. 1.1.0 fixed two security problems in 1.0.0, so update any copy
-older than that. Every milestone is recorded in
-[docs/Roadmap.md](docs/Roadmap.md).
+seasons and copies older than 1.5.0 other themes. 1.1.0 fixed two security
+problems in 1.0.0, so update any copy older than that. Every milestone is
+recorded in [docs/Roadmap.md](docs/Roadmap.md).
 
-What ForkBuild is for, and the test every feature has to pass, is in
-[docs/Pillars.md](docs/Pillars.md): *build a little place, anyone can remix
-it, walk inside it with friends.* [docs/VISION.md](docs/VISION.md) has the
-longer-term aim.
+[docs/VISION.md](docs/VISION.md) has the longer-term aim.
 
 ## Features
 
@@ -175,27 +190,13 @@ longer-term aim.
   side panels fold away so the 3D view fills the screen. See
   [Touch screens](docs/user/ControlsReference.md#touch-screens).
 
-**Publishing and forking**
-- Every published creation is immutable. Forking creates a new document that
-  records its lineage, subject to the source's license and fork policy.
-- Repository and Author views with search, sorting, pagination and
-  client-side thumbnails.
-- Decentralized publication: content on Arweave or IPFS and announcements over
-  Nostr or Arweave and anchoring evidence on Arweave, managed from the
-  **Publications** page, plus (*experimental*, see below) Steem, Blurt and
-  anchoring on Bitcoin, Base, Steem or Blurt.
-  All of it is verified by content hash and signature, never taken on trust.
+**Remixing and sharing**
+- Every published build is a fixed snapshot. A remix is a new build that
+  records where it came from, subject to the original's license.
+- **Explore** and each builder's page, with search, sorting, pagination and
+  pictures of each build made on your device.
 
-**Identity, peers and social**
-- Ed25519 identities (did:key) held on the device, signed with the audited
-  noble-curves library. Private keys are encrypted with a passphrase
-  (PBKDF2-SHA256 and AES-256-GCM through the browser's WebCrypto), offered
-  whenever an identity is made; a first publish or walk needs only a name,
-  and its identity shows as **⚠ Unprotected**, with a reminder, until a
-  passphrase is added. Export/import, succession, revocation and
-  multi-device grants.
-- Direct WebRTC peer connections found through rendezvous or a manual
-  invitation, and authenticated with a challenge–response handshake.
+**Friends**
 - An opt-in public lobby, one for everyone and one per World, for meeting
   people whose identity you don't know yet.
 - Remembered peers, mutual-consent friendships, private one-sided follows
@@ -221,12 +222,40 @@ longer-term aim.
   device's share sheet, and Chrome and Edge can back up daily to a folder
   your cloud storage syncs. See [Your Data](docs/user/13-YourData.md).
 
-**Experimental**
+## How your work stays yours
+
+Under the game, ForkBuild is open source and decentralized: builds are
+published through interchangeable storage and announcement networks, and
+nothing depends on a ForkBuild server being up. There are no accounts: identities are key pairs held on your device, and people connect to
+each other directly over authenticated peer connections. The only server the
+default setup uses is a rendezvous server that helps peers find each other,
+plus an anonymous, cookie-free visitor count once a day that you can turn off;
+see [docs/Privacy.md](docs/Privacy.md) for everything the app contacts.
+
+- A build is a signed document kept on your device, in an open format
+  ([docs/Protocol.md](docs/Protocol.md)) any copy of ForkBuild can open,
+  check and remix with its maker's credit.
+- Decentralized publication: content on Arweave or IPFS and announcements over
+  Nostr or Arweave and anchoring evidence on Arweave, managed from the
+  **Signed Records** page, plus (*experimental*, see below) Steem, Blurt and
+  anchoring on Bitcoin, Base, Steem or Blurt.
+  All of it is verified by content hash and signature, never taken on trust.
+- Ed25519 identities (did:key) held on the device, signed with the audited
+  noble-curves library. Private keys are encrypted with a passphrase
+  (PBKDF2-SHA256 and AES-256-GCM through the browser's WebCrypto), offered
+  whenever an identity is made; a first publish or walk needs only a name,
+  and its identity shows as **⚠ Unprotected**, with a reminder, until a
+  passphrase is added. Export/import, succession, revocation and
+  multi-device grants.
+- Direct WebRTC peer connections found through rendezvous or a manual
+  invitation, and authenticated with a challenge–response handshake.
+
+### Experimental
 
 These areas work, but may change or be removed in a later version, and what
 they produce may not carry over. The app marks them with an **Experimental**
-banner, or, on the Publications page, an **Experimental** badge. The
-Publications page's tools panel and the Bitcoin Endpoint page are listed only
+banner, or, on the Signed Records page, an **Experimental** badge. The
+Signed Records page's tools panel and the Bitcoin Endpoint page are listed only
 after **Show experimental tools** is turned on in Network Settings
 (**More → Advanced**):
 - external evidence and anchoring on Bitcoin, Base, Steem and Blurt (anchoring
@@ -234,10 +263,10 @@ after **Show experimental tools** is turned on in Network Settings
   Network Settings;
 - Steem as a place to store and announce builds (added in 1.1), and remote
   IPFS pinning;
-- the Publications page's Wallet & Archive Tools panel.
+- the Signed Records page's Wallet & Archive Tools panel.
 
-The rest of the Publications page (the list and statuses, removing
-publications that can't be used, announcing on Nostr or Arweave, storing on
+The rest of the Signed Records page (the list and statuses, removing
+records that can't be used, announcing on Nostr or Arweave, storing on
 IPFS or Arweave, and a card's four tabs) is a regular feature.
 
 ## Quick Start
