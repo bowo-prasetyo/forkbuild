@@ -186,11 +186,11 @@ export class ChatUseCase {
         const myIdentityId = this._identityProvider.getSigningIdentity().id;
         const conversationId = deriveConversationId(myIdentityId, peerIdentity.identityId);
         const sequence = (this._nextSequence.get(peerIdentity.identityId) || 0) + 1;
-        const message = toChatMessage({ conversationId, senderIdentity: myIdentityId, sequence, body: trimmed });
-        this._bus.send(connectedPeer, this._protocol, message);
+        const chatMessage = toChatMessage({ conversationId, senderIdentity: myIdentityId, sequence, body: trimmed });
+        this._bus.send(connectedPeer, this._protocol, chatMessage);
         this._nextSequence.set(peerIdentity.identityId, sequence);
-        this._appendMessage(social.identityId, conversationId, message, 'outgoing');
-        return message;
+        this._appendMessage(social.identityId, conversationId, chatMessage, 'outgoing');
+        return chatMessage;
     }
 
     // Queues for an eligible peer even when offline, and flushes immediately when a
@@ -207,12 +207,12 @@ export class ChatUseCase {
         const myIdentityId = this._identityProvider.getSigningIdentity().id;
         const conversationId = deriveConversationId(myIdentityId, peerIdentityId);
         const sequence = (this._nextSequence.get(peerIdentityId) || 0) + 1;
-        const message = toChatMessage({ conversationId, senderIdentity: myIdentityId, sequence, body: trimmed });
+        const chatMessage = toChatMessage({ conversationId, senderIdentity: myIdentityId, sequence, body: trimmed });
         this._nextSequence.set(peerIdentityId, sequence);
-        this._outbox.enqueue(message, peerIdentityId, ttlMs ? { ttlMs } : {});
-        this._appendMessage(peerIdentityId, conversationId, message, 'outgoing', ChatDeliveryState.QUEUED);
+        this._outbox.enqueue(chatMessage, peerIdentityId, ttlMs ? { ttlMs } : {});
+        this._appendMessage(peerIdentityId, conversationId, chatMessage, 'outgoing', ChatDeliveryState.QUEUED);
         this._attemptFlush(peerIdentityId);
-        return message;
+        return chatMessage;
     }
 
     // QUEUED/SENT entries, oldest first (delivered ones are removed).
