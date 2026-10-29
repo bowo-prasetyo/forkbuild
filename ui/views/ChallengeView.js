@@ -54,7 +54,7 @@ export default {
                 title: challengeThemeTitle(shown),
                 brief: challengeThemeBrief(shown),
                 twist: challengeThemeTwist(shown),
-                seasonHint: challengeSeasonHint(shown),
+                seasonHint: challengeSeasonHint(shown, now),
                 dates: challengeDatesText(shown),
                 time: challengeTimeText(shown, now),
                 joinRoute: challengeJoinRoute(shown),

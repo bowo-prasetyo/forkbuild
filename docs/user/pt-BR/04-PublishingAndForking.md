@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d9d2658aa5a248b1 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 0014d74c59859c59 -->
 # 04 — Publicar e remixar
 
 <!-- languages -->
@@ -808,10 +808,11 @@ abaixo).
 **Temas da estação.** Alguns temas pertencem a uma estação: um jardim na
 primavera, uma festa de verão, um celeiro no outono, uma cabana de inverno
 ou um lago de patinação. Eles ficam espalhados entre os outros temas, então
-um deles aparece mais ou menos a cada seis semanas, uma estação de cada vez. As estações da Visão do mundo mudam muito mais
-rápido que as semanas, então a semana não espera pela sua estação; em vez
-disso, a página do desafio sugere escolher essa estação em **Estação** na
-Visão do mundo, para ver as participações como devem ser vistas.
+um deles aparece mais ou menos a cada seis semanas, uma estação de cada vez. O mundo da Visão do mundo fica nessa estação a semana inteira, de segunda a
+segunda, para todos, então as participações são vistas como devem ser vistas;
+a página do desafio diz isso enquanto a semana dura. Para uma semana de
+estação anterior ou posterior, ela sugere escolher essa estação em
+**Estação** na Visão do mundo.
 
 **Semanas de remix.** Uma em cada quatro semanas, a partir da semana de
 2 de novembro de 2026, é uma semana de remix (`#remix-20261102`): em vez de

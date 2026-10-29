@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d9d2658aa5a248b1 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 0014d74c59859c59 -->
 # 04 — Publier et remixer
 
 <!-- languages -->
@@ -858,11 +858,11 @@ semaine du remix (voir plus bas).
 jardin au printemps, une fête d’été, une réserve pour la récolte en
 automne, une cabane d’hiver ou un étang de patinage. Ils sont répartis
 parmi les autres thèmes, si bien qu’il en revient un environ toutes les six
-semaines, les saisons chacune à leur tour. Les saisons de la Vue
-du Monde tournent bien plus vite que les semaines, la semaine n’attend donc
-pas sa saison ; la page du défi suggère plutôt de choisir cette saison sous
-**Saison** dans la Vue du Monde, pour voir les participations comme elles
-doivent être vues.
+semaines, les saisons chacune à leur tour. Le monde de la Vue du Monde reste dans cette saison toute la semaine, du
+lundi au lundi, pour tout le monde, si bien que les participations se voient
+comme elles doivent être vues ; la page du défi le dit pendant la semaine.
+Pour une semaine de saison passée ou à venir, elle suggère plutôt de choisir
+cette saison sous **Saison** dans la Vue du Monde.
 
 **Semaines du remix.** Une semaine sur quatre, à partir de celle du
 2 novembre 2026, est une semaine du remix (`#remix-20261102`) : au lieu

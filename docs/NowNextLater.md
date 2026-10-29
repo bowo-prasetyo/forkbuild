@@ -36,9 +36,7 @@ first item moves up.
 1. **The diorama pass.** The World's trees and water brought to the bricks'
    scale and level of detail, simple trees by default (Pillars, "The World
    is a diorama, not a simulation").
-2. **Seasons on the challenge week** (Pillars, "One clock that matters: the
-   week").
-3. **Pillars.md back to one page:** the fantasy, the pillars, the filter,
+2. **Pillars.md back to one page:** the fantasy, the pillars, the filter,
    Words, Tone, Look and what we're not making; the networks, the side
    systems and "Where this came from" moved to a page of decisions.
 

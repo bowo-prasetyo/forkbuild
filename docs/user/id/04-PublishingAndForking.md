@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: d9d2658aa5a248b1 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 0014d74c59859c59 -->
 # 04 — Penerbitan & Remix
 
 <!-- languages -->
@@ -834,10 +834,11 @@ bawah).
 **Tema musiman.** Beberapa tema termasuk dalam satu musim: taman di musim
 semi, pasar malam musim panas, lumbung di musim gugur, pondok musim dingin,
 atau kolam seluncur. Tema-tema ini tersebar di antara tema lainnya, jadi
-satu muncul kira-kira setiap enam minggu, musim demi musim. Musim di Tampilan Dunia berganti jauh lebih cepat
-daripada minggu, jadi minggu itu tidak menunggu musimnya; sebagai gantinya
-halaman tantangan menyarankan memilih musim itu di **Musim** di Tampilan
-Dunia, untuk melihat karya peserta sebagaimana mestinya.
+satu muncul kira-kira setiap enam minggu, musim demi musim. Dunia di Tampilan Dunia tetap di musim itu sepanjang minggu, dari Senin ke
+Senin, bagi semua orang, jadi karya peserta terlihat sebagaimana mestinya;
+halaman tantangan menyebutkannya selama minggu itu berjalan. Untuk minggu
+musiman sebelum atau sesudahnya, halaman itu menyarankan memilih musim itu di
+**Musim** di Tampilan Dunia.
 
 **Minggu remix.** Setiap minggu keempat, mulai dari minggu 2 November
 2026, adalah minggu remix (`#remix-20261102`): alih-alih sebuah tema,

@@ -293,8 +293,11 @@ Decided by the owner on 2026-10-22 (docs/reviews/CreativeDirection-2026-10-22.md
 finding 3). The World's seasons follow the weekly challenge, not a clock of
 their own, so a seasonal theme (a winter cabin, a summer fair) is shown in its
 season for everyone, and Monday brings a new theme and a changed village
-together. Day and night keep their 40 minutes. Until that is built, the
-seasons turn every five hours or so, as core/nature/Season.js describes.
+together. Day and night keep their 40 minutes. Built on 2026-10-29
+(core/nature/Season.js#heldWeekAt()): a week whose theme belongs to a season
+holds the world in it from Monday to Monday, the land, the sky, the lakes'
+ice and the weather alike; every other week the seasons turn every five
+hours or so, as before.
 
 ## What we are not making
 

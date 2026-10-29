@@ -246,7 +246,11 @@ remembered on this device and changes nothing for anyone else.
 ## Seasons
 
 The world turns through four seasons, each lasting eight of World View's days
-(a little over five hours), one for every turn of the moon:
+(a little over five hours), one for every turn of the moon. In a week whose
+[build challenge](04-PublishingAndForking.md#the-weekly-build-challenge)
+belongs to a season, such as the winter cabin, the world stays in that
+season from Monday to Monday instead, for everyone, so the week's entries are
+seen in it; the next Monday it turns again. The seasons are:
 
 - **Spring**: trees blossom pink and white and come into fresh, light green
   leaf; wild flowers dot the grass, and petals drift down among the trees.

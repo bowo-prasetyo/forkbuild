@@ -758,10 +758,11 @@ the top bar opens its page.
 summer fair, a harvest store in autumn, a winter cabin or a skating pond.
 They're spread among the other themes, so one comes round about every six
 weeks, the seasons in turn.
-World View's seasons turn much faster than the weeks, so the week doesn't
-wait for its season; instead the challenge page suggests choosing that
-season under **Season** in World View, to see the entries as they're meant
-to be seen.
+In such a theme's week, World View stays in its season from Monday to
+Monday, for everyone, so the entries are seen as they're meant to be seen;
+the challenge page says so while the week runs. For an earlier or later
+seasonal week, it suggests choosing that season under **Season** in World
+View instead.
 
 **Remix weeks.** Every fourth week, starting with the week of 2 November
 2026, is a remix week (`#remix-20261102`): instead of a theme, an entry

@@ -28,7 +28,7 @@ zip -j forkbuild-gamejolt.zip docs/launch/gamejolt/index.html docs/launch/press/
 ```
 
 Under **Packages**, make a package (call it *ForkBuild*), add a release
-with **Version Number** `1.6.0` (the app's own version in package.json; a
+with **Version Number** `1.6.1` (the app's own version in package.json; a
 new release starts at 0.1.0, so change it), and upload the zip under
 **Upload Browser Build**. Leave **Fit to screen?** off: the launcher is one
 small card, and a full-screen frame only stretches the castle behind it.

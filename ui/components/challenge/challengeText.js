@@ -22,18 +22,26 @@ export function challengeThemeTwist(challenge) {
     return isRemixChallenge(challenge) ? '' : t(`challenge.theme.${themeKey(challenge)}.twist`);
 }
 
-// For a theme that belongs to a season, a suggestion to keep World View in
-// it to see the entries as they are meant to be seen; '' otherwise.
+// For a theme that belongs to a season: while its week runs, that the world
+// is in its season for everyone (core/nature/Season.js holds it); before or
+// after, a suggestion to keep World View in it to see the entries as they are
+// meant to be seen. '' for a theme with no season.
 const SEASON_HINT = Object.freeze({
     SPRING: 'challenge.seasonHint.spring',
     SUMMER: 'challenge.seasonHint.summer',
     AUTUMN: 'challenge.seasonHint.autumn',
     WINTER: 'challenge.seasonHint.winter'
 });
+const SEASON_NOW = Object.freeze({
+    SPRING: 'challenge.seasonNow.spring',
+    SUMMER: 'challenge.seasonNow.summer',
+    AUTUMN: 'challenge.seasonNow.autumn',
+    WINTER: 'challenge.seasonNow.winter'
+});
 
-export function challengeSeasonHint(challenge) {
-    const key = challenge && SEASON_HINT[challenge.season];
-    return key ? t(key) : '';
+export function challengeSeasonHint(challenge, now = Date.now()) {
+    if (!challenge || !SEASON_HINT[challenge.season]) return '';
+    return t((isChallengeOpen(challenge, now) ? SEASON_NOW : SEASON_HINT)[challenge.season]);
 }
 
 // The week's last day, such as "Sunday, 18 October": the week ends at the

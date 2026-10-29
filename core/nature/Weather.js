@@ -22,7 +22,7 @@
 // what a clear NIGHT gives, so builds stay readable in any weather.
 
 import { NIGHT } from './DayCycle.js';
-import { SEASON, SEASONS, SEASON_SECONDS, WORLD_YEAR_SECONDS, snowShareAt } from './Season.js';
+import { SEASON, SEASON_SECONDS, WORLD_YEAR_SECONDS, heldWeekAt, seasonAt, snowShareAt } from './Season.js';
 
 export const WEATHER_SPELL_SECONDS = 8 * 60;
 export const WEATHER_CHANGE_SECONDS = 2 * 60;
@@ -159,13 +159,11 @@ function wetnessStep(wet, rain, seconds) {
     return wet + (soaked - wet) * (1 - Math.exp(-seconds / tau));
 }
 
-// The season a whole spell falls in.
-const SPELLS_PER_SEASON = SEASON_SECONDS / WEATHER_SPELL_SECONDS;
-const SPELLS_PER_YEAR = WORLD_YEAR_SECONDS / WEATHER_SPELL_SECONDS;
-
+// The season a whole spell falls in: the world's (core/nature/Season.js), the
+// week's when it holds one. A week starts on a spell's start, so a spell
+// never straddles two weeks either.
 export function spellSeason(spell) {
-    const intoYear = ((spell % SPELLS_PER_YEAR) + SPELLS_PER_YEAR) % SPELLS_PER_YEAR;
-    return SEASONS[Math.floor(intoYear / SPELLS_PER_SEASON)];
+    return seasonAt(spell * WEATHER_SPELL_SECONDS);
 }
 
 // The cloud cover a whole spell settles on.
@@ -194,7 +192,9 @@ export function spellRain(spell) {
 // quickly once it is over (THAW_SECONDS), faster still in the rain.
 // Followed from the clock like the wetness, in SNOW_STEP_SECONDS steps, from
 // the start of the latest winter, when none lies; outside winter and the
-// hour after it, there is none.
+// hour after it, there is none. In a week that holds winter
+// (core/nature/Season.js#heldWeekAt()) it is followed from the week's
+// start; a week that holds another season has none.
 export const SNOW_GAIN = 2;
 export const SNOW_SETTLE_SECONDS = 150;
 export const WINTER_MELT_SECONDS = 60 * 60;
@@ -207,19 +207,10 @@ let snowFollowed = null;
 
 export function snowCoverAt(seconds) {
     if (!Number.isFinite(seconds)) return 0;
-    const year = Math.floor(seconds / WORLD_YEAR_SECONDS);
-    const into = seconds - year * WORLD_YEAR_SECONDS;
-    const winterStart = 3 * SEASON_SECONDS;
-    // Snow starts at the end of autumn's last change; take winter as from then.
-    const from = winterStart - WEATHER_CHANGE_SECONDS;
-    let anchor;
-    if (into >= from) {
-        anchor = year * WORLD_YEAR_SECONDS + from;
-    } else if (into < SNOW_AFTER_WINTER_SECONDS) {
-        anchor = (year - 1) * WORLD_YEAR_SECONDS + from;
-    } else {
-        return 0;
-    }
+    const held = heldWeekAt(seconds);
+    if (held && held.season !== SEASON.WINTER) return 0;
+    const anchor = held ? held.start : turningSnowAnchor(seconds);
+    if (anchor === null) return 0;
     const steps = Math.floor((seconds - anchor) / SNOW_STEP_SECONDS);
     let step = 0;
     let cover = 0;
@@ -232,6 +223,25 @@ export function snowCoverAt(seconds) {
     }
     snowFollowed = { anchor, step, cover };
     return clamp01(snowStep(cover, anchor + steps * SNOW_STEP_SECONDS, seconds - (anchor + steps * SNOW_STEP_SECONDS)));
+}
+
+// Where the snow lying at `seconds` is followed from in a year that turns:
+// the start of the latest winter, or null outside it and the hour after.
+function turningSnowAnchor(seconds) {
+    const year = Math.floor(seconds / WORLD_YEAR_SECONDS);
+    const into = seconds - year * WORLD_YEAR_SECONDS;
+    const winterStart = 3 * SEASON_SECONDS;
+    // Snow starts at the end of autumn's last change; take winter as from then.
+    const from = winterStart - WEATHER_CHANGE_SECONDS;
+    let anchor;
+    if (into >= from) {
+        anchor = year * WORLD_YEAR_SECONDS + from;
+    } else if (into < SNOW_AFTER_WINTER_SECONDS) {
+        anchor = (year - 1) * WORLD_YEAR_SECONDS + from;
+    } else {
+        return null;
+    }
+    return anchor;
 }
 
 function snowStep(cover, at, seconds) {
