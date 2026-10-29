@@ -46,8 +46,25 @@ version in the table below and search its part for `## 0.8.26`.
 
 ## Adding an entry
 
-Add new milestones at the end of the last part. When a part passes about
-800 KB, start a new part file under `docs/roadmap/` and add it as the
+Add new milestones at the end of the last part. From "The filter's answers,
+checked" (2026-10-29) on, every entry answers the filter's four questions
+([Pillars.md](Pillars.md), "The filter") in a list of its own, each answer
+after its label, in this order:
+
+```
+**The filter.**
+1. **Pillar:** which pillar it serves, and how a player would notice.
+2. **First ten minutes:** whether it makes them harder.
+3. **Building first:** whether building gets at least as much as everything else.
+4. **Counts:** which first step or target it should move, and what in the
+   counts says so; "none yet" when nothing does, said as it is.
+```
+
+When the owner's yes is what lets it start, the entry quotes it as well; it
+doesn't stand in for any answer. tests/RoadmapFilter.test.js fails on an
+entry without the four.
+
+When a part passes about 800 KB, start a new part file under `docs/roadmap/` and add it as the
 last row of the table above, then close the old one: delete it from
 `docs/roadmap/` and point its row at the file in the last commit that
 has it (`https://github.com/bowo-prasetyo/forkbuild/blob/<commit>/docs/roadmap/<part>.md`).

@@ -10,7 +10,7 @@
 4. **Which first step or target should it move, and what in the counts says that's where players are held back?**
 
 - [ ] It's in **Now** in docs/NowNextLater.md, or it fixes something broken, or the owner said yes (link or quote).
-- [ ] A change a player can notice has its roadmap entry (the last part under docs/roadmap/).
+- [ ] A change a player can notice has its roadmap entry (the last part under docs/roadmap/), with the four answers listed as docs/Roadmap.md's "Adding an entry" shows.
 
 ## Tests
 
