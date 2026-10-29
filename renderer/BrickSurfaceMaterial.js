@@ -92,6 +92,19 @@ float bsNoise(vec3 x) {
 		f.z);
 }
 
+// How near this point is to one of the brick's edges: 1 on an edge, falling
+// to 0 a band in from it (the band a share of the brick's smallest half-size).
+// BrickInstanceRegistry draws a selected brick's outline with it.
+float brickEdgeNearness(float band) {
+	vec3 hs = max(vSurfaceHalf, vec3(0.0001));
+	vec3 d = hs - abs(vSurfacePos - vSurfaceCenter);
+	float lo = min(d.x, min(d.y, d.z));
+	float hi = max(d.x, max(d.y, d.z));
+	float mid = d.x + d.y + d.z - lo - hi;
+	float width = clamp(min(hs.x, min(hs.y, hs.z)) * band, 0.03, 0.12);
+	return 1.0 - smoothstep(0.0, width, mid);
+}
+
 // How much this point of the brick darkens or lightens its colour.
 float brickSurfaceShade() {
 	vec3 p = vSurfacePos;

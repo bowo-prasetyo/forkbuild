@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: fbeac6898411907a -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: e99befa5a4afb6da -->
 # 02 — Editor
 
 <!-- languages -->
@@ -28,7 +28,9 @@ dengan grup.
 └──────────────────────┴──────────────────────────────────────┘
 ```
 
-- **Bilah alat** — pertama **Simpan**, **Terbitkan**, dan **Baru**, lalu
+- **Bilah alat** — di komputer, pertama **Urungkan** dan **Ulangi** (layar
+  sentuh memilikinya di bilah sentuhnya), lalu **Simpan**, **Terbitkan**,
+  dan **Baru**, lalu
   **Berkas**, menu berisi **Ekspor**, **Model 3D**, dan **Impor**; membuka
   kembali yang terbaru, dan membuka daftar **⌨ Pintasan** (juga `?`).
 - **Alat** — beralih antara **Pilih** (`1`) dan **Tempatkan** (`2`).
@@ -97,7 +99,9 @@ tombol yang belum bisa melakukan apa-apa:
   satunya untuk memilih baloknya).
 - **Balok dipilih** — berapa banyak, di mana letaknya, dan tindakan
   sehari-hari: **Putar ↻ / ↺**, **Duplikat**, **Hapus**, **Salin**,
-  **Tempel**, **Warna**, **Fokus**, dan **Batalkan Pilihan**. Alat yang
+  **Tempel**, **Warnai pilihan**, **Fokus**, dan **Batalkan Pilihan**. Saat
+  Anda memilih sesuatu, bilah samping menggulir kartu ini ke tampilan,
+  bahkan dari jauh di bawah Pustaka Bangunan. Alat yang
   lebih jarang dipakai terlipat di tiga bagian di bawahnya: **Posisi &
   rotasi tepat**, **Ratakan, sebarkan, ulangi**, dan **Grup & cetak biru**.
 - **Instans struktur dipilih** — kartunya sendiri sebagai gantinya, dengan
@@ -268,6 +272,12 @@ Saat Anda memilih beberapa balok, balok-balok itu berputar di sekitar
 **pusat bersamanya**, sehingga satu bagian utuh berayun sebagai satu
 kesatuan.
 
+**Seret balok yang dipilih** untuk memindahkan seluruh pilihan di atas
+tanah, mengikuti kisi, seperti kotak tengah gizmo: satu langkah untuk
+diurungkan, dan perpindahan yang akan mendarat di balok lain kembali. Klik
+padanya tanpa menyeret hanya memilih balok itu, dan menyeret di tempat lain
+memutar kamera.
+
 **T** merebahkan setiap balok terpilih ke sisi berikutnya, di tempatnya:
 tiang rebah menjadi balok melintang, dinding menjadi lantai, lereng terbalik
 menjadi bagian menjorok. Setiap balok mempertahankan tinggi alasnya, dan
@@ -283,13 +293,17 @@ Setiap jenis balok memiliki warna bawaannya sendiri, tetapi Anda dapat
 memilih warna sendiri:
 
 - **Sebelum menempatkan** — begitu sebuah balok dipilih di tab **Balok**
-  pada Pustaka Bangunan, klik contoh warna **Warna**-nya dan pilih warna.
+  pada Pustaka Bangunan, klik contoh warna **Warna balok baru**-nya dan pilih warna.
   Setiap balok yang Anda tempatkan sejak itu memakainya, dan bayangan
   penempatan menampilkan pratinjaunya. Memilih jenis balok lain kembali ke
   warna bawaan jenis itu sampai Anda memilih warna lagi.
 - **Setelah menempatkan** — pilih satu balok atau lebih dan gunakan contoh
-  warna **Warna** di bagian **Pilihan** untuk mewarnai ulang semuanya
-  sekaligus. Setiap perubahan dapat diurungkan (`Ctrl/Cmd+Z`) seperti
+  warna **Warnai pilihan** di bagian **Pilihan** untuk mewarnai ulang
+  semuanya sekaligus. Contoh warna itu terbuka dengan warna balok-baloknya,
+  dan warna desa yang mereka miliki ditandai. Selama ada balok yang dipilih,
+  warna balok baru dari pustaka menyingkir, sehingga warna yang terlihat
+  adalah yang mewarnainya; balok yang dipilih diberi garis tepi biru dan
+  tetap memakai warnanya sendiri, sehingga Anda melihat apa yang Anda pilih. Setiap perubahan dapat diurungkan (`Ctrl/Cmd+Z`) seperti
   suntingan lainnya. Contoh warna tidak ditawarkan untuk pilihan instans
   struktur — edit bangunan struktur itu sendiri sebagai gantinya (lihat
   [Instans struktur](#instans-struktur-referensi-hidup) di bawah).
@@ -366,6 +380,10 @@ Setiap perubahan dicatat, jadi Anda selalu dapat kembali:
 |---|---|
 | **Ctrl/Cmd + Z** | Mengurungkan tindakan terakhir |
 | **Ctrl/Cmd + Y** *(atau Ctrl/Cmd+Shift+Z)* | Mengulanginya |
+
+Di komputer, **Urungkan** dan **Ulangi** juga merupakan tombol pertama di
+bilah alat. Arahkan penunjuk ke salah satunya untuk melihat langkah mana
+yang diurungkan atau diulanginya.
 
 Memindahkan sepuluh balok dihitung sebagai **satu** langkah urung, jadi
 urungkan tetap mudah dikelola bahkan pada bangunan besar.
@@ -882,9 +900,13 @@ ia mendengarkan, dan tetap termuat saat Anda berpindah di antara keduanya.
 
 - **Seret** — mengorbit di sekitar adegan
 - **Gulir** — memperbesar dan memperkecil
-- **Home** — mengembalikan kamera ke tampilan bawaan
+- **Home**, atau **⌂ Seluruh bangunan** di kiri atas tampilan — melihat
+  seluruh bangunan (tampilan awal selama masih kosong). Di Palet Perintah
+  namanya **Lihat Seluruh Bangunan**.
 
-Bangunan terbuka dilihat dari atas secara miring, terbingkai utuh.
+Bangunan terbuka dilihat dari atas secara miring, terbingkai utuh. Kamera
+berhenti sedikit di atas tanah, sehingga bangunan dan tanah tempat Anda
+menempatkan tetap terlihat.
 
 ### Lihat ke dalam
 

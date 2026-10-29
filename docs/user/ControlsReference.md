@@ -23,7 +23,7 @@ every editing operation below by name.
 | Left-drag on empty space | Orbit |
 | Right-drag | Pan |
 | Scroll wheel | Zoom |
-| `Home` | Editor: reset camera (ignored while a gizmo drag is active). World View: return camera and avatar to your own current world — see [World View](03-WorldView.md#orientation-and-locations) |
+| `Home` | Editor: See the Whole Build, the whole build in view (the starting view while it's empty), as **⌂ Whole build** at the top left of the view does (ignored while a gizmo drag is active). World View: return camera and avatar to your own current world — see [World View](03-WorldView.md#orientation-and-locations) |
 
 ## Command Surface (Editor only)
 
@@ -175,6 +175,7 @@ device and survive a reload — see
 | Hover a handle | Highlights it |
 | Drag an axis handle (red X / green Y / blue Z) | Move along that axis (snapped) |
 | Drag the center pad (amber) | Free move on the ground plane |
+| Drag a selected brick | The same free move, for the whole selection; a click without dragging selects just that brick |
 | Drag the rotation ring (purple) | Rotate around the pivot (snapped) |
 | Release | Commit — exactly one undo step |
 | `Esc` mid-drag | Cancel — nothing changes, no history |
@@ -291,6 +292,10 @@ immediately.
 |---|---|---|
 | `Ctrl/Cmd+Z` | Undo | Editor and World View |
 | `Ctrl/Cmd+Shift+Z` or `Ctrl/Cmd+Y` | Redo | Editor and World View |
+
+In the Editor on a computer, **Undo** and **Redo** are also the first
+buttons in the toolbar; pointed at, each says which step it takes back or
+puts back. A touch screen has them in its touch bar.
 
 In World View, undo and redo apply to its annotation edits: landmarks,
 region names and animal decorations. Its History panel (see

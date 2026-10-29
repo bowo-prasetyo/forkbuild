@@ -26,7 +26,8 @@ transform bricks, and how to organize your build with groups.
 └──────────────────────┴──────────────────────────────────────┘
 ```
 
-- **Toolbar** — **Save**, **Publish** and **New** first, then **File**, a
+- **Toolbar** — **Undo** and **Redo** first on a computer (a touch screen
+  has them in its touch bar), then **Save**, **Publish** and **New**, then **File**, a
   menu with **Export**, **3D model** and **Import**; reopen recent ones, and
   open the **⌨ Shortcuts** overlay (also `?`).
 - **Tools** — switch between **Select** (`1`) and **Place** (`2`). **Place**
@@ -86,7 +87,9 @@ that can't do anything yet:
   bricks).
 - **Bricks selected** — how many, where they are, and the everyday
   actions: **Rotate ↻ / ↺**, **Duplicate**, **Delete**, **Copy**,
-  **Paste**, **Color**, **Focus** and **Deselect**. Less frequent tools are
+  **Paste**, **Paint selected**, **Focus** and **Deselect**. When you
+  select something, the sidebar scrolls this card into view, even from far
+  down the Build Library. Less frequent tools are
   folded into three sections underneath: **Exact position & rotation**,
   **Align, distribute, repeat**, and **Groups & blueprint**.
 - **A structure instance selected** — its own card instead, with its
@@ -245,6 +248,12 @@ With one or more bricks selected:
 When you select multiple bricks, they rotate around their **shared center**, so
 a whole section swings as one unit.
 
+**Drag a selected brick** to move the whole selection over the ground,
+snapped to the grid, as the gizmo's center pad does: one step to undo, and
+a move that would land on another brick goes back. A click on it without
+dragging selects just that brick, and a drag anywhere else turns the
+camera.
+
 **T** tilts each selected brick onto its next side, where it stands: a
 post lies down as a beam, a wall becomes a floor, a slope turns upside down
 as an overhang. Each brick keeps its bottom at the same height, and the
@@ -258,12 +267,17 @@ earlier) show tilted bricks upright.
 Every brick type has its own default color, but you can choose your own:
 
 - **Before placing** — once a brick is selected in the Build Library's
-  **Bricks** tab, click its **Color** swatch and pick a color. Every brick
+  **Bricks** tab, click its **Color for new bricks** swatch and pick a color. Every brick
   you place from then on uses it, and the placement ghost previews it.
   Picking a different brick type goes back to that type's own default
   color until you choose one again.
-- **After placing** — select one or more bricks and use the **Color**
-  swatch in the **Selection** section to recolor them all at once. Each
+- **After placing** — select one or more bricks and use the **Paint
+  selected** swatch in the **Selection** section to recolor them all at
+  once. It opens on the bricks' color, and the village color they are is
+  marked. While bricks are selected, the library's color for new bricks
+  steps aside, so the colors in view are the ones that paint them; a
+  selected brick is outlined in blue and keeps its own color, so you see
+  what you chose. Each
   change is undoable (`Ctrl/Cmd+Z`) like any other edit. The swatch isn't
   offered for a structure-instance selection — edit the structure's own
   build instead (see
@@ -338,6 +352,10 @@ Every change is recorded, so you can always go back:
 |---|---|
 | **Ctrl/Cmd + Z** | Undo the last action |
 | **Ctrl/Cmd + Y** *(or Ctrl/Cmd+Shift+Z)* | Redo it |
+
+On a computer, **Undo** and **Redo** are also the first buttons in the
+toolbar. Point at one to see which step it takes back or puts back
+(*Undo Recolor 5 Bricks*).
 
 Moving ten bricks counts as **one** undo step, so undo stays manageable even on
 big builds.
@@ -823,9 +841,13 @@ stays loaded as you move between the two.
 
 - **Drag** — orbit around the scene
 - **Scroll** — zoom in and out
-- **Home** — reset the camera to the default view
+- **Home**, or **⌂ Whole build** at the top left of the view — see the whole
+  build (the starting view while it's empty). It's **See the Whole Build**
+  in the Command Palette.
 
-A build opens seen from above at an angle, framed whole.
+A build opens seen from above at an angle, framed whole. The camera stops
+a little above the ground, so the build and the ground you place on stay in
+view.
 
 ### See inside
 

@@ -92,6 +92,8 @@ build or loses work.
 
 ### P1-1. After selecting, the Selection panel is out of view
 
+**Fixed 2026-10-29:** a new selection, or **Select**, brings its card to the top of the sidebar's scroll when its top is out of view (roadmap, "The Editor's features where you need them").
+
 ![At 1366×768, with five bricks selected, the sidebar shows the Build Library and its colours; the Selection panel is above, out of view](img/2026-10-29-selection-off-screen.jpg)
 *Five bricks are selected. The sidebar shows the library; the panel for the selection is above the top edge.*
 
@@ -123,6 +125,8 @@ Select/Place switch while something is selected, as the library's tabs
 are now pinned while it scrolls.
 
 ### P1-2. Two colour rows look the same but do different things, and a selection hides its colour
+
+**Fixed 2026-10-29:** the card's row is **Paint selected** and opens on the bricks' colour, the library's is **Color for new bricks** and steps aside while bricks are selected, and a selected brick is outlined, keeping its own colour (roadmap, "The Editor's features where you need them").
 
 ![The sidebar with two identical Color buttons and colour rows, one for the selection and one for placing; the selected bricks are tinted blue-violet](img/2026-10-29-two-colour-rows.jpg)
 *The selection's colours, and under them the library's colours for placing. The five bricks, just painted Roof red, show as blue-violet.*
@@ -162,6 +166,8 @@ decide recolouring is broken, or will paint the next bricks by mistake.
 
 ### P1-3. On a computer, Undo and Redo have no button
 
+**Fixed 2026-10-29:** **Undo** and **Redo** come first in the toolbar on a screen with a mouse, each titled with its step (roadmap, "The Editor's features where you need them").
+
 **What happens.** On a phone the touch bar has **Undo** and **Redo**. On
 a computer the only ways are Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z or Ctrl+Y, and
 the palette. Of the 87 controls on the page at 1440×900, none is Undo.
@@ -177,6 +183,8 @@ people try, fail and leave.
 registry's label as the tooltip (*"Undo Recolor 5 Bricks (Ctrl+Z)"*).
 
 ### P1-4. Dragging a selected brick turns the camera, and the view is easy to lose
+
+**Fixed 2026-10-29:** a drag that starts on a selected brick moves the selection, as the gizmo's centre does; **⌂ Whole build** and Home (**See the Whole Build** in the palette) frame the build; and the camera stops about 9° above the ground (roadmap, "The Editor's features where you need them").
 
 ![After a short drag on a selected brick, the camera is at ground level, looking at the bricks' undersides against the sky](img/2026-10-29-drag-orbits.jpg)
 *One 95 px upward drag, started on the selected brick: the brick didn't move, and the camera is now at ground level.*

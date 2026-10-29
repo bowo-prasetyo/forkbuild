@@ -9842,3 +9842,42 @@ error instead, both live and queued: the local message in `ChatUseCase#sendMessa
 `message`, which hid the imported `message()` the refusals use. Found by CodeQL's code-quality scan.
 
 - Tests: tests/PeerChat.test.js F2 (both refusals, live and queued).
+
+## The Editor's features where you need them (unnumbered, 2026-10-29)
+
+**Building: editing what you placed.** The four P1 findings of
+[the Editor usability review](../reviews/EditorUsability-2026-10-29.md): once bricks were placed, the screen pointed
+builders at the wrong controls.
+
+- **A selection brings its card into view** (P1-1). Place scrolls the sidebar to the Build Library, and nothing
+  scrolled it back, so with bricks selected at 1366×768 the Selection card sat at y = −258 to 142 px. Now a new
+  selection, or **Select**, brings the card to the top of the sidebar's scroll when its top is out of view
+  (ui/views/editorView/sidebarScroll.js, `bringToTop()`, shared with Place's scroll to the library).
+- **Recolouring shows what it does** (P1-2). The Selection card's row is **Paint selected**; its colour input opens
+  on the bricks' colour and the village colour they are is marked (`EditorSession#getSelectionSummary()` carries
+  `color`, the colour they share or null). The library's row is **Color for new bricks**, and steps aside while
+  bricks are selected (BuildLibraryPanel's `selectionActive`), so the colours in view are the ones that paint them.
+  A selected brick is outlined rather than washed blue: its highlight lights its edges brightly and its faces only
+  a little (`brickEdgeNearness()` in renderer/BrickSurfaceMaterial.js, used by renderer/BrickInstanceRegistry.js),
+  so painted Roof red it reads red, not violet. World View's selection gets the same outline.
+- **Undo and Redo in the toolbar** (P1-3), first in the row on a screen with a mouse (a touch screen has them in
+  its touch bar): the registry's `history.undo` and `history.redo`, titled with the step (*Undo Recolor 5 Bricks
+  (Ctrl/Cmd+Z)*) or why not (ui/views/editorView/historyButtons.js).
+- **Dragging a selected brick moves it** (P1-4), as a placed build already moved: a plain left press on a brick of
+  the selection arms the gizmo's free (centre) drag (`TransformGizmoController#onSelectionPointerDown()`), so it is
+  snapped, checked for collisions and one undo step. It moves only past the 6 px click threshold; released before,
+  it is the click it was. A drag anywhere else still turns the camera. The selection's hint says so, and on a
+  touch screen names the arrows and Rotate instead, since a finger's drag turns the camera.
+- **A way back from a lost view** (P1-4): **See the Whole Build** (`camera.wholeBuild`, key Home, found in the
+  palette by "camera") frames the build, or the starting view while it's empty (`EditorSession#showWholeBuild()`),
+  as **⌂ Whole build** at the top left of the view does. The Editor's camera stops about 9° above the ground
+  (`EDITOR_MAX_POLAR_ANGLE`), where one 95 px drag used to lay it level with the ground. The Shortcuts overlay lists
+  Home once, under Interface.
+- The new and changed messages are in all eight languages, and the user guide (*The Editor*, *Controls Reference*)
+  says all this in all eight; the guide's Editor pictures are retaken.
+- Tests: tests/EditorUsability.test.js (new: the selection's colour, Undo and Redo's titles, See the Whole Build,
+  which presses drag the selection and which stay clicks, the real gizmo controller's drag from a press on the
+  selection); tests/EditorUsabilityBrowser.test.js (new: the card brought into view, Paint selected, the library's
+  colour stepping aside, Home in the overlay). Checked in the running app at 1366×768: a drag on a selected brick
+  moved it from X 4, Z 5 to X 2, Z 3 in one undo step, a 2 px wobble stayed a click, and a drag on the ground turned
+  the camera.

@@ -278,6 +278,14 @@ export default {
             type: Object,
             required: true
         },
+        // Bricks are selected: the Selection card has the colours that paint
+        // them, so the colour for new bricks steps aside rather than sit
+        // there looking like the same control (finding P1-2 of
+        // docs/reviews/EditorUsability-2026-10-29.md).
+        selectionActive: {
+            type: Boolean,
+            default: false
+        },
         // Ordered [{ category, structures }] — see
         // core/building/StructureRegistry.js#groupByCategory(). Read once by the
         // caller (a registry's contents never change at runtime, the
@@ -856,11 +864,11 @@ export default {
             </div>
 
             <div v-if="activeTab === 'bricks'" class="brick-palette">
-                <label v-if="selectedDefinitionId" class="brick-palette-color" :title="t('buildLibrary.colorHint')">
+                <label v-if="selectedDefinitionId && !selectionActive" class="brick-palette-color" :title="t('buildLibrary.colorHint')">
                     {{ t('buildLibrary.color') }}
                     <input type="color" class="brick-palette-color-input" :value="activeColorCss" @input="onColorChange" />
                 </label>
-                <VillagePaletteSwatches v-if="selectedDefinitionId" :selected="activeColor" @choose="chooseColor" />
+                <VillagePaletteSwatches v-if="selectedDefinitionId && !selectionActive" :selected="activeColor" @choose="chooseColor" />
                 <p v-if="filteredBrickGroups.length === 0" class="build-library-empty">{{ t('buildLibrary.noBricks') }}</p>
                 <div v-for="group in filteredBrickGroups" :key="group.category" class="palette-group">
                     <h4 class="palette-category">{{ brickSectionName(group.category) }}</h4>

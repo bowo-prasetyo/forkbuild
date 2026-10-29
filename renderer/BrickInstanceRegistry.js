@@ -23,8 +23,9 @@ const INITIAL_CAPACITY = 64;
 // Per-instance state: the transform (instanceMatrix), the brick's color
 // (instanceColor, multiplied into a white material) and a highlight
 // (the `instanceEmissive` attribute, added to the material's emissive
-// light by onBeforeCompile), so selection glows exactly as a mesh's
-// material.emissive did. Bricks that shine after dark (core/nature/NightGlow.js)
+// light by onBeforeCompile: lightly across a face, brightly along its
+// edges), so selection shows as a mesh's material.emissive did without
+// hiding the brick's colour. Bricks that shine after dark (core/nature/NightGlow.js)
 // carry their light in `instanceGlow`, scaled by one strength the whole
 // registry shares (setNightGlow()), so night falls with one uniform.
 //
@@ -480,6 +481,14 @@ class BrickChunk {
     }
 }
 
+// How much of a highlight lands across a face, and how much along the brick's
+// edges (brickEdgeNearness(), renderer/BrickSurfaceMaterial.js). A selected
+// brick keeps its own colour readable through a light tint and is outlined,
+// so a colour just chosen for it can be judged (finding P1-2 of
+// docs/reviews/EditorUsability-2026-10-29.md).
+const HIGHLIGHT_FACE = '0.06';
+const HIGHLIGHT_EDGE = '1.4';
+
 // nightGlow: { value }, the uniform setNightGlow() changes.
 function createInstancedBrickMaterial(nightGlow) {
     const material = new THREE.MeshStandardMaterial({ color: 0xffffff });
@@ -490,7 +499,13 @@ function createInstancedBrickMaterial(nightGlow) {
             .replace('#include <begin_vertex>', '#include <begin_vertex>\n\tvInstanceEmissive = instanceEmissive;\n\tvInstanceGlow = instanceGlow;');
         shader.fragmentShader = shader.fragmentShader
             .replace('#include <common>', '#include <common>\nuniform float uNightGlow;\nvarying vec3 vInstanceEmissive;\nvarying vec3 vInstanceGlow;')
-            .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n\ttotalEmissiveRadiance += vInstanceEmissive + vInstanceGlow * uNightGlow;');
+            .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+	#ifdef BRICK_SURFACE
+		float instanceEdge = brickEdgeNearness(0.3);
+	#else
+		float instanceEdge = 0.0;
+	#endif
+	totalEmissiveRadiance += vInstanceEmissive * (${HIGHLIGHT_FACE} + ${HIGHLIGHT_EDGE} * instanceEdge) + vInstanceGlow * uNightGlow;`);
     };
     material.customProgramCacheKey = () => 'forkbuild-instanced-brick';
     return material;

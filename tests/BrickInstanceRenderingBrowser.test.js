@@ -5,7 +5,9 @@ import { assert } from './support/Assert.js';
 
 // Draws instanced bricks with real WebGL and reads the pixels back: each
 // instance shows its own color, a highlight lights up only its own
-// instance (the shader change in renderer/BrickInstanceRegistry.js), and
+// instance (the shader change in renderer/BrickInstanceRegistry.js), along
+// its edges, keeping the colour of its face (finding P1-2 of
+// docs/reviews/EditorUsability-2026-10-29.md), and
 // moving or removing a brick changes only that brick on screen, and a brick
 // that shines after dark lights up as night falls (setNightGlow()) while the
 // rest stay dark.
@@ -58,12 +60,18 @@ registry.add('blue', 'doc', 'b', brick(3, 0x0000ff));
     console.log('✓ each instance is drawn in its own color');
 }
 
+// Just inside a cube's left edge (the cube spans x - 0.5 to x + 0.5).
+const EDGE = 0.47;
 {
+    const plainEdge = pixelAt(A - EDGE, 0);
+    const plainMiddle = pixelAt(A, 0);
     registry.setHighlight('red', 0x00ff00);
+    const edge = pixelAt(A - EDGE, 0);
     const red = pixelAt(A, 0);
     const blue = pixelAt(B, 0);
-    assert(red[1] > 150 && red[0] > 150, `the highlighted brick glows green on top of its red (got ${red})`);
-    assert(blue[1] < 40 && blue[2] > 150, `the other brick is unchanged (got ${blue})`);
+    assert(edge[1] > 150 && plainEdge[1] < 40, `the highlighted brick's edge glows green (got ${edge}, ${plainEdge} before)`);
+    assert(red[0] > 150 && red[1] > plainMiddle[1] && red[1] < red[0] / 2, `its face keeps its red, lightly tinted (got ${red})`);
+    assert(blue[1] < 40 && blue[2] > 150 && pixelAt(B - EDGE, 0)[1] < 40, `the other brick is unchanged (got ${blue})`);
     registry.setHighlight('red', 0);
     const cleared = pixelAt(A, 0);
     assert(cleared[1] < 40 && cleared[0] > 150, `clearing the highlight restores it (got ${cleared})`);
@@ -75,7 +83,8 @@ registry.add('blue', 'doc', 'b', brick(3, 0x0000ff));
     registry.remove('red');
     assert(pixelAt(A, 0).every((c) => c === 0), 'a removed brick disappears');
     const blue = pixelAt(B, 0);
-    assert(blue[2] > 150 && blue[1] > 150, `the brick moved into its slot keeps its color and highlight (got ${blue})`);
+    const blueEdge = pixelAt(B - EDGE, 0);
+    assert(blue[2] > 150 && blueEdge[1] > 150, `the brick moved into its slot keeps its color and highlight (got ${blue}, edge ${blueEdge})`);
     registry.update('blue', brick(A, 0x0000ff));
     assert(pixelAt(B, 0).every((c) => c === 0) && pixelAt(A, 0)[2] > 150, 'a moved brick is drawn at its new place');
     console.log('✓ removing and moving bricks updates what is drawn');

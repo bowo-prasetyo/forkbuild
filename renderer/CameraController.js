@@ -27,9 +27,11 @@ const RESET_KEY = 'Home';
 // underneath a live drag.
 //
 // `resetKey: null` turns the reset shortcut off, for a view that gives
-// that key its own meaning (World View's Home returns you to your world).
+// that key its own meaning (World View's Home returns you to your world, the
+// Editor's frames the build). `maxPolarAngle` keeps the camera further above
+// the ground than the default, for a view that builds rather than walks.
 export class CameraController {
-    constructor(domElement, aspect, { resetKey = RESET_KEY } = {}) {
+    constructor(domElement, aspect, { resetKey = RESET_KEY, maxPolarAngle = DEFAULT_MAX_POLAR_ANGLE } = {}) {
         this._resetKey = resetKey;
         this._camera = new THREE.PerspectiveCamera(DEFAULT_FOV, aspect, DEFAULT_NEAR, DEFAULT_FAR);
         this._defaultState = new CameraState();
@@ -44,7 +46,7 @@ export class CameraController {
         this._controls.dampingFactor = 0.08;
         this._controls.minDistance = DEFAULT_MIN_DISTANCE;
         this._controls.maxDistance = DEFAULT_MAX_DISTANCE;
-        this._controls.maxPolarAngle = DEFAULT_MAX_POLAR_ANGLE;
+        this._controls.maxPolarAngle = maxPolarAngle;
         this._controls.update();
         this._onKeyDown = this._onKeyDown.bind(this);
         window.addEventListener('keydown', this._onKeyDown);

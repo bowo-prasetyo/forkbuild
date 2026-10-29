@@ -27,6 +27,7 @@ export default {
         // EditorSession#getSelectionSummary() for a brick selection, else null.
         selectionSummary: { type: Object, default: null },
         recolor: { type: Function, default: null },
+        touch: { type: Boolean, default: false },
         applyNumeric: { type: Function, required: true },
         align: { type: Function, required: true },
         distribute: { type: Function, required: true },
@@ -135,6 +136,7 @@ export default {
                 :get-context="getContext"
                 :summary="selectionSummary"
                 :recolor="recolor"
+                :touch="touch"
             >
                 <CollapsibleSection
                     :title="t('editingSidebar.numeric')"
