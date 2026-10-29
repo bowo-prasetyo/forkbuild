@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 6fa21c9feb160d15 -->
+<!-- translation-of: docs/Privacy.md source-hash: 34d03c49e2f2a7e5 -->
 # Privacidade
 
 <!-- languages -->
@@ -163,6 +163,12 @@ com suas configurações (veja "Notificações neste dispositivo" abaixo).
   como um par conectado comum: fica sabendo seu endereço IP e vê seu avatar
   e sua presença conforme suas configurações de visibilidade permitem. Você
   fica sabendo os dela do mesmo jeito, e o nome com que ela passeia.
+- **O que você diz na Visão do mundo.** Uma linha que você diz com
+  **Dizer** é assinada com a chave da sua identidade e enviada aos pares
+  conectados que podem ver o seu avatar, como a sua **Visibilidade da
+  presença** permite; se ela estiver oculta, a linha fica só na sua tela.
+  Ela aparece por alguns segundos e fica um minuto no registro deles, e
+  nada a guarda, então quem chega depois nunca a vê.
 - **Amigos com quem você constrói.** Qualquer pessoa que abrir um link
   **Construir comigo** que você criou, enquanto ele funcionar, se conecta a
   você do mesmo jeito e recebe seu nome de exibição, o título da construção

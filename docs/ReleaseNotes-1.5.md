@@ -1,7 +1,8 @@
 # ForkBuild 1.5 release notes
 
 *Released 2026-10-21 as version 1.5.0.* For 1.4, see
-[ReleaseNotes-1.4.md](ReleaseNotes-1.4.md).
+[ReleaseNotes-1.4.md](ReleaseNotes-1.4.md); for what came after, see
+[ReleaseNotes-1.6.md](ReleaseNotes-1.6.md).
 
 1.5 makes the World round a build worth walking through, and keeps a
 builder's credit with their work. Water runs and swells, weather comes and

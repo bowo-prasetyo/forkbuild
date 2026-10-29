@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 6fa21c9feb160d15 -->
+<!-- translation-of: docs/Privacy.md source-hash: 34d03c49e2f2a7e5 -->
 # Confidentialité
 
 <!-- languages -->
@@ -176,6 +176,12 @@ notifications sur cet appareil soient activées est gardé avec vos réglages
   elle apprend votre adresse IP et voit votre avatar et votre présence
   selon vos réglages de visibilité. Vous apprenez les siens de la même
   façon, ainsi que le nom sous lequel elle se promène.
+- **Ce que vous dites dans la Vue du Monde.** Une ligne que vous dites avec
+  **Dire** est signée avec la clé de votre identité et envoyée aux pairs
+  connectés qui peuvent voir votre avatar, comme votre **Visibilité de la
+  présence** le permet ; si elle est masquée, la ligne reste sur votre
+  écran. Elle s’affiche quelques secondes et reste une minute dans leur
+  journal, et rien ne la conserve : qui arrive plus tard ne la voit jamais.
 - **Les amis avec qui vous construisez.** Toute personne qui ouvre un lien
   **Construire avec moi** que vous avez créé, tant qu’il fonctionne, se
   connecte à vous de la même façon et reçoit votre nom d’affichage, le titre

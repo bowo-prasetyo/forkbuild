@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 6fa21c9feb160d15 -->
+<!-- translation-of: docs/Privacy.md source-hash: 34d03c49e2f2a7e5 -->
 # Datenschutz
 
 <!-- languages -->
@@ -170,6 +170,13 @@ eingeschaltet sind, wird mit Ihren Einstellungen gespeichert (siehe
   Ihre IP-Adresse und sieht Ihren Avatar und Ihre Präsenz so, wie Ihre
   Sichtbarkeitseinstellungen es erlauben. Sie erfahren seine auf dieselbe
   Weise, und den Namen, unter dem er spaziert.
+- **Was Sie in der Weltansicht sagen.** Eine Zeile, die Sie mit **Sagen**
+  sagen, wird mit dem Schlüssel Ihrer Identität signiert und an die
+  verbundenen Peers geschickt, die Ihren Avatar sehen dürfen, so wie Ihre
+  **Sichtbarkeit der Anwesenheit** es zulässt; ist sie verborgen, bleibt die
+  Zeile auf Ihrem Bildschirm. Sie wird einige Sekunden lang gezeigt und eine
+  Minute lang in deren Verlauf behalten, und nichts speichert sie, sodass
+  niemand, der später dazukommt, sie je sieht.
 - **Freunde, mit denen Sie bauen.** Wer einen Link **Mit mir bauen** öffnet,
   den Sie erstellt haben, solange er funktioniert, verbindet sich auf
   dieselbe Weise mit Ihnen und erhält Ihren Anzeigenamen, den Titel des

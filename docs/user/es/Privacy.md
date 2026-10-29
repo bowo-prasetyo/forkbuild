@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 6fa21c9feb160d15 -->
+<!-- translation-of: docs/Privacy.md source-hash: 34d03c49e2f2a7e5 -->
 # Privacidad
 
 <!-- languages -->
@@ -168,6 +168,12 @@ dispositivo» más abajo).
   par conectado corriente: conoce su dirección IP y ve su avatar y su
   presencia según lo permita su configuración de visibilidad. Usted conoce
   las suyas del mismo modo, y el nombre con el que pasea.
+- **Lo que dice en la Vista del mundo.** Una línea que dice con **Decir**
+  se firma con la clave de su identidad y se envía a los pares conectados
+  que pueden ver su avatar, según lo permita su **Visibilidad de la
+  presencia**; si está oculta, la línea se queda en su pantalla. Se muestra
+  unos segundos y se guarda un minuto en su registro, y nada la almacena,
+  así que quien llegue después nunca la ve.
 - **Amigos con los que construye.** Cualquiera que abra un enlace
   **Construir conmigo** que usted creó, mientras funcione, se conecta con
   usted del mismo modo y recibe su nombre visible, el título de la
