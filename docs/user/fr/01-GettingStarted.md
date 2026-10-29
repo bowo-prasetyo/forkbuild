@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: c6bc6de8889ba433 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 7ea2df22c95dd572 -->
 # 01 — Premiers pas
 
 <!-- languages -->
@@ -46,6 +46,17 @@ trois façons de commencer :
 - **Partir de zéro** ouvre l’Éditeur sur un terrain vide.
 - **Découvrir des constructions** ouvre **Explorer**, où se trouvent les
   constructions publiées de tout le monde.
+
+Cliquer sur le village qui tourne (**Commencer à construire**) fait la même
+chose que **Essayez maintenant**.
+
+Quand cet appareil a une construction enregistrée, l’Accueil commence par
+**Bon retour parmi nous** : **Continuer** ouvre dans l’Éditeur la
+construction que vous avez modifiée en dernier et, tant que vous n’avez
+publié aucune construction, vous rappelle de la publier. **Participer au
+défi de la semaine** s’affiche jusqu’à ce que vous participiez au défi de
+cette semaine, et **Mes constructions** ouvre votre propre page dès que vous
+avez un nom.
 
 Sous **Partir d’une construction toute prête**, chaque carte (un château,
 une île portuaire, une place de village, une maison, un moulin et un pont)

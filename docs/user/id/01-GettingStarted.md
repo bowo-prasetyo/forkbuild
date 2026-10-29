@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: c6bc6de8889ba433 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 7ea2df22c95dd572 -->
 # 01 — Memulai
 
 <!-- languages -->
@@ -45,6 +45,16 @@ menawarkan tiga cara masuk:
 - **Mulai dari nol** membuka Editor di lahan kosong.
 - **Jelajahi bangunan** membuka **Jelajahi**, tempat bangunan terbitan
   semua orang.
+
+Mengklik desa yang berputar itu sendiri (**Mulai membangun**) sama dengan
+**Coba sekarang**.
+
+Jika perangkat ini menyimpan sebuah bangunan, Beranda dimulai dengan
+**Selamat datang kembali**: **Lanjut membangun** membuka bangunan yang
+terakhir Anda ubah di Editor, dan selama Anda belum menerbitkan bangunan apa
+pun, kartu ini mengingatkan Anda untuk menerbitkannya. **Ikut tantangan
+minggu ini** tampil sampai Anda ikut tantangan minggu ini, dan **Bangunan
+Saya** membuka halaman Anda sendiri setelah Anda punya nama.
 
 Di bawah **Mulai dari bangunan siap pakai**, setiap kartu (sebuah kastel,
 pulau pelabuhan, alun-alun desa, rumah, kincir, dan jembatan) membuka

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: c6bc6de8889ba433 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 7ea2df22c95dd572 -->
 # 01 — Primeros pasos
 
 <!-- languages -->
@@ -43,6 +43,16 @@ tres formas de empezar:
 - **Empezar desde cero** abre el Editor en un terreno vacío.
 - **Explorar construcciones** abre **Explorar**, donde están las
   construcciones publicadas de todos.
+
+Hacer clic en el pueblo que gira (**Empezar a construir**) hace lo mismo que
+**Probar ahora**.
+
+Cuando este dispositivo tiene una construcción guardada, Inicio empieza con
+**Hola de nuevo**: **Seguir construyendo** abre en el Editor la construcción
+que cambió por última vez y, si todavía no ha publicado ninguna, le recuerda
+publicarla. **Unirse al desafío de la semana** aparece hasta que participe en
+el desafío de esta semana, y **Mis construcciones** abre su propia página una
+vez que tiene un nombre.
 
 En **Empiece con una construcción ya hecha**, cada tarjeta (un castillo,
 una isla con puerto, una plaza de pueblo, una casa, un molino y un puente)

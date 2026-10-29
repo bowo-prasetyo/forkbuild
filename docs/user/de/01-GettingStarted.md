@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: c6bc6de8889ba433 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 7ea2df22c95dd572 -->
 # 01 — Erste Schritte
 
 <!-- languages -->
@@ -45,6 +45,17 @@ bietet drei Einstiege:
 - **Bei null anfangen** öffnet den Editor auf einem leeren Grundstück.
 - **Bauwerke entdecken** öffnet **Entdecken**, wo die veröffentlichten
   Bauwerke aller stehen.
+
+Ein Klick auf das sich drehende Dorf selbst (**Losbauen**) tut dasselbe wie
+**Jetzt ausprobieren**.
+
+Wenn auf diesem Gerät ein Bau gespeichert ist, beginnt die Startseite mit
+**Willkommen zurück**: **Weiterbauen** öffnet den Bau, den Sie zuletzt
+geändert haben, im Editor, und solange Sie noch keinen Bau veröffentlicht
+haben, erinnert die Karte ans Veröffentlichen. **Bei der Challenge der Woche
+mitmachen** steht dort, bis Sie bei der Challenge dieser Woche mitgemacht
+haben, und **Meine Bauwerke** öffnet Ihre eigene Seite, sobald Sie einen
+Namen haben.
 
 Unter **Mit einem fertigen Bauwerk beginnen** öffnet jede Karte (eine Burg,
 eine Hafeninsel, ein Dorfplatz, ein Haus, eine Mühle und eine Brücke) auf
