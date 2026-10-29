@@ -84,10 +84,92 @@
     box-shadow: 0 12px 40px rgba(var(--shade-rgb), 0.2);
 }
 
+/* The turning village is the biggest thing on Home's first screen, so it is
+   a way in too, with a label that shows without a hover (phones have none). */
+.home-showcase-link {
+    position: relative;
+    display: block;
+    border-radius: 12px;
+    color: inherit;
+    text-decoration: none;
+}
+
+.home-showcase-link:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 4px;
+}
+
+.home-showcase-start {
+    position: absolute;
+    left: 50%;
+    bottom: 1rem;
+    transform: translateX(-50%);
+    padding: 0.5rem 1.1rem;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #ffffff;
+    font-weight: 600;
+    white-space: nowrap;
+    box-shadow: 0 4px 14px rgba(var(--shade-rgb), 0.25);
+}
+
+.home-showcase-link:hover .home-showcase-start {
+    background: var(--accent-hover);
+}
+
 .build-turntable-canvas {
     display: block;
     width: 100%;
     height: 100%;
+}
+
+/* Welcome back (ui/components/home/WelcomeBack.js): only for a device with
+   a saved build, above everything else, so a returning builder's way back
+   is the first thing they see. */
+.welcome-back {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 2rem;
+    margin-bottom: 2.5rem;
+    padding: 1.25rem 1.5rem;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface);
+}
+
+.welcome-back-text {
+    flex: 1 1 16rem;
+}
+
+.welcome-back-title {
+    margin: 0 0 0.25rem;
+    font-size: 1.35rem;
+    color: var(--ink-strong);
+}
+
+.welcome-back-lead {
+    margin: 0;
+    color: var(--ink-soft);
+}
+
+.welcome-back-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.25rem;
+}
+
+.welcome-back-actions .cta-button {
+    margin-top: 0;
+    overflow-wrap: anywhere;
+}
+
+.welcome-back-changed {
+    flex-basis: 100%;
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--ink-subtle);
 }
 
 .build-turntable-fallback {

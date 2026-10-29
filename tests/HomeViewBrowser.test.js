@@ -95,6 +95,25 @@ await nextTick();
     console.log('✓ the ready-made builds and the 3D showcase load after the page');
 }
 
+// The turning village is a way in too, to the same house as the main button,
+// with a label that shows without a hover.
+{
+    const link = host.querySelector('.home-showcase-link');
+    assert(link && link.getAttribute('href') === host.querySelector('.home-cta-primary').getAttribute('href'), `the village opens the House as the main button does (${link && link.getAttribute('href')})`);
+    assert(link.contains(host.querySelector('.home-showcase')), 'the whole showcase is the link');
+    assert(link.getAttribute('aria-label') === t('homeView.showcaseStart'), 'named for screen readers');
+    const chip = link.querySelector('.home-showcase-start');
+    assert(chip.textContent.trim() === t('homeView.showcaseStartChip') && chip.getBoundingClientRect().height > 0, 'with a visible Start building label');
+    console.log('✓ the showcase opens Try it now');
+}
+
+// A newcomer's Home has no Welcome back.
+{
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    assert(!host.querySelector('.welcome-back'), 'no saved build here, so no Welcome back');
+    console.log('✓ no Welcome back for a newcomer');
+}
+
 app.unmount();
 host.remove();
 console.log('✓ Home unmounts cleanly');

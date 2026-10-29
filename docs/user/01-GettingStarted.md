@@ -41,6 +41,15 @@ ways in:
 - **Explore builds** opens **Explore**, where everyone's published builds
   are.
 
+Clicking the turning village itself (**Start building**) does the same as
+**Try it now**.
+
+When this device has a saved build, Home opens with **Welcome back**:
+**Keep building** opens the build you changed last in the Editor, and it
+reminds you to publish when you haven't published a build yet. **Join this
+week's challenge** shows until you've entered the week's challenge, and
+**My Builds** opens your own builder page once you have a name.
+
 Under **Start from a ready-made build**, each card (a castle, a harbor
 island, a village square, a house, a mill and a bridge) opens your own copy
 of that build the same way. Nothing is published or sent anywhere until you

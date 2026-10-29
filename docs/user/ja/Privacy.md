@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 34d03c49e2f2a7e5 -->
+<!-- translation-of: docs/Privacy.md source-hash: 843ba3b5350dadcb -->
 # プライバシー
 
 <!-- languages -->
@@ -225,7 +225,7 @@ ForkBuild 自身のファイル（コード、スタイルシート、アイコ�
 
 また、毎週の建築チャレンジに参加したとき（**チャレンジに参加**、または
 エディターの **新規** のチャレンジ）: `/e/challenge-join`。
-ワールドビューでその週のチャレンジ広場を開いたとき: `/e/plaza-visit`。そしてワールドビューを開くたびに: `/e/world-visit`。さらに 1 回の訪問につき 1 度だけ、ほかの人の作品が見えたとき（この端末が公開しておらず編集もできない作品。広場のまわりのできあがった作品は数えません）: `/e/world-neighbour`。さらに ForkBuild を開くたびに多くても 1 度、まだ名前のない人がゲストとしてそこを歩いたとき: `/e/guest-walk`。どこを歩いたかは何も送られません。さらに ForkBuild を開くたびに多くても 1 度ずつ、エディターが開いたとき: `/e/editor-open`。**ホーム** やチャレンジのページのリンクから、できあがった作品があなた自身のコピーとしてエディターで開いたとき: `/e/starter-open`。そしてそこで最初に作品を変えたとき: `/e/editor-edit`。どの作品か、何を変えたかは送りません。さらに ForkBuild を開くたびに多くても 1 度ずつ、サイドシステムのどれかを使ったとき: 泳いだとき（`/e/swam`）、動物をつかまえたとき（`/e/animal-caught`）、動物で作品を飾ったとき（`/e/animal-decorated`）、動物やしまった乗り物を持ち運んだとき（`/e/inventory-used`）、チャットのメッセージを送ったとき（`/e/chat-sent`）、音声通話をかけた・受けたとき（`/e/voice-call`）、公開ロビーに参加したとき（`/e/lobby-joined`）。何をつかまえ、何を話し、誰に通話し、どこに参加したかは送りません。
+ワールドビューでその週のチャレンジ広場を開いたとき: `/e/plaza-visit`。そしてワールドビューを開くたびに: `/e/world-visit`。さらに 1 回の訪問につき 1 度だけ、ほかの人の作品が見えたとき（この端末が公開しておらず編集もできない作品。広場のまわりのできあがった作品は数えません）: `/e/world-neighbour`。さらに ForkBuild を開くたびに多くても 1 度、まだ名前のない人がゲストとしてそこを歩いたとき: `/e/guest-walk`。どこを歩いたかは何も送られません。さらに ForkBuild を開くたびに多くても 1 度ずつ、エディターが開いたとき: `/e/editor-open`。**ホーム** やチャレンジのページのリンクから、できあがった作品があなた自身のコピーとしてエディターで開いたとき: `/e/starter-open`。そしてそこで最初に作品を変えたとき: `/e/editor-edit`、**ホーム** の **おかえりなさい** から **続けて作る** で最後の作品に戻ったとき: `/e/keep-building`。どの作品か、何を変えたかは送りません。さらに ForkBuild を開くたびに多くても 1 度ずつ、サイドシステムのどれかを使ったとき: 泳いだとき（`/e/swam`）、動物をつかまえたとき（`/e/animal-caught`）、動物で作品を飾ったとき（`/e/animal-decorated`）、動物やしまった乗り物を持ち運んだとき（`/e/inventory-used`）、チャットのメッセージを送ったとき（`/e/chat-sent`）、音声通話をかけた・受けたとき（`/e/voice-call`）、公開ロビーに参加したとき（`/e/lobby-joined`）。何をつかまえ、何を話し、誰に通話し、どこに参加したかは送りません。
 また、ワールドビューで **ここで一緒に歩こう** のリンクを作ったとき: `/e/walk-link`。そのリンクから友だちが到着したとき: `/e/walk-joined`。
 また、エディターで **一緒に作ろう** のリンクを作ったとき: `/e/build-link`。そのリンクから友だちが参加したとき: `/e/build-joined`。
 また、一緒に作った友だちを記録した作品が初めて公開されたとき: `/e/publish-together`。 また、作品を公開するたびに、みんなに送ったときは `/e/publish-found`、リンクだけにしたときは `/e/publish-link-only` が送られます。
@@ -299,7 +299,7 @@ ForkBuild が想定するファイルと完全に一致しなければ拒否さ�
 | 公式サイトで、毎週の建築チャレンジに参加したとき、またはその広場を開いたとき（「訪問者数のカウント」を参照） | GoatCounter（`forkbuild.goatcounter.com`） | 固定パス `/e/challenge-join` または `/e/plaza-visit` の画像リクエスト 1 回。リファラーと Cookie はなし |
 | 公式サイトで、ワールドビューを開いたとき、そこでほかの人の作品が見えたとき（「訪問者数のカウント」を参照） | GoatCounter（`forkbuild.goatcounter.com`） | 固定パス `/e/world-visit` の画像リクエスト 1 回と、訪問ごとに多くても 1 回の `/e/world-neighbour`。リファラーと Cookie はなし |
 | 公式サイトで、名前を決める前にワールドビューを歩いたとき（「訪問者数のカウント」を参照） | GoatCounter（`forkbuild.goatcounter.com`） | ForkBuild を開くたびに多くても 1 回、固定パス `/e/guest-walk` の画像リクエスト。リファラーと Cookie はなし |
-| 公式サイトで、エディターを開いたとき、**ホーム** やチャレンジからできあがった作品をそこで開いたとき、またはそこで作品を変えたとき（「訪問者数のカウント」を参照） | GoatCounter（`forkbuild.goatcounter.com`） | ForkBuild を開くたびにそれぞれ多くても 1 回、固定パス（`/e/editor-open`、`/e/starter-open`、`/e/editor-edit`）の画像リクエスト。リファラーと Cookie はなし |
+| 公式サイトで、エディターを開いたとき、**ホーム** やチャレンジからできあがった作品をそこで開いたとき、またはそこで作品を変えたとき（「訪問者数のカウント」を参照） | GoatCounter（`forkbuild.goatcounter.com`） | ForkBuild を開くたびにそれぞれ多くても 1 回、固定パス（`/e/editor-open`、`/e/starter-open`、`/e/editor-edit`、`/e/keep-building`）の画像リクエスト。リファラーと Cookie はなし |
 | 公式サイトで、泳いだとき、動物をつかまえたとき、動物で作品を飾ったとき、何かを持ち運んだとき、チャットのメッセージを送ったとき、音声通話をかけた・受けたとき、公開ロビーに参加したとき（「訪問者数のカウント」を参照） | GoatCounter（`forkbuild.goatcounter.com`） | それぞれページの読み込みごとに多くても 1 回、固定パス（`/e/swam`、`/e/animal-caught`、`/e/animal-decorated`、`/e/inventory-used`、`/e/chat-sent`、`/e/voice-call`、`/e/lobby-joined`）の画像リクエスト。リファラーと Cookie はなし |
 | 公式サイトで **ここで一緒に歩こう** のリンクを作ったとき、またはそのリンクから到着したとき（「訪問者数のカウント」を参照） | GoatCounter（`forkbuild.goatcounter.com`） | 固定パス `/e/walk-link` または `/e/walk-joined` の画像リクエスト 1 件。リファラーも Cookie もなし |
 | 公式サイトで **一緒に作ろう** のリンクを作ったとき、またはそのリンクから参加したとき（「訪問者数のカウント」を参照） | GoatCounter（`forkbuild.goatcounter.com`） | 固定パス `/e/build-link` または `/e/build-joined`（一緒に作った作品がその友だちを記録して初めて公開されたときは `/e/publish-together` も）の画像リクエスト 1 件。リファラーも Cookie もなし |

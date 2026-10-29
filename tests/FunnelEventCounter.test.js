@@ -70,6 +70,16 @@ function counter({ origin = VISITOR_COUNT_SITE_ORIGIN, privacySignals = {}, enab
     console.log('✓ the first steps towards a build, once a page load');
 }
 
+// A returning builder's Keep building on Home: once a page load, under the setting.
+{
+    const { instance, hits } = counter();
+    assert(instance.keptBuilding() === true && instance.keptBuilding() === false, 'counted once a page load');
+    assert(hits.join() === funnelEventHitUrl(FunnelEvent.KEEP_BUILDING, '5') && hits[0].includes('p=%2Fe%2Fkeep-building'), `as /e/keep-building (${hits})`);
+    const off = counter({ enabled: false });
+    assert(off.instance.keptBuilding() === false && off.hits.length === 0, 'not when the visitor count is turned off');
+    console.log('✓ Keep building on Home, once a page load');
+}
+
 // Under the daily count's rules: the official site, the setting, GPC and DNT.
 {
     const sent = counter();

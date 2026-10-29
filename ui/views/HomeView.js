@@ -13,8 +13,9 @@ const SOURCE_URL = 'https://github.com/bowo-prasetyo/forkbuild';
 // rendered. Until then each keeps its space with an empty placeholder.
 const HomeShowcase = defineAsyncComponent(() => import('../components/home/HomeShowcase.js'));
 const FeaturedBuilds = defineAsyncComponent(() => import('../components/featured/FeaturedBuilds.js'));
-// Reads this device's own records, so it loads after Home too.
+// Read this device's own records, so they load after Home too.
 const BuilderStamps = defineAsyncComponent(() => import('../components/home/BuilderStamps.js'));
+const WelcomeBack = defineAsyncComponent(() => import('../components/home/WelcomeBack.js'));
 
 const REASONS = Object.freeze([
     { icon: '🧱', title: 'homeView.buildTitle', text: 'homeView.buildText' },
@@ -23,13 +24,15 @@ const REASONS = Object.freeze([
     { icon: '🔑', title: 'homeView.ownTitle', text: 'homeView.ownText' }
 ]);
 
-// The landing page: what ForkBuild is, a way straight into building (a
-// ready-made house, or an empty plot), this week's build challenge,
-// ready-made builds to remix, and why it's worth trying. The first page most visits open, and the only one in
-// the first load.
+// The landing page: for a returning builder, the way back to their last
+// build; what ForkBuild is, a way straight into building (a ready-made
+// house, from the button or the turning village itself, or an empty plot),
+// this week's build challenge, ready-made builds to remix, and why it's
+// worth trying. The first page most visits open, and the only one in the
+// first load.
 export default {
     name: 'HomeView',
-    components: { HomeShowcase, FeaturedBuilds, InstallAppButton, ChallengeCard, BuilderStamps },
+    components: { HomeShowcase, FeaturedBuilds, InstallAppButton, ChallengeCard, BuilderStamps, WelcomeBack },
     setup() {
         return {
             t,
@@ -42,6 +45,8 @@ export default {
     template: `
         <section class="home-view">
             <div class="home-inner">
+                <WelcomeBack />
+
                 <header class="home-hero">
                     <div class="home-hero-text">
                         <p class="tagline">{{ t('homeView.tagline') }}</p>
@@ -55,9 +60,10 @@ export default {
                         <p class="home-reassurance">{{ t('homeView.noAccountNeeded') }}</p>
                         <InstallAppButton class="home-install" :why="t('installApp.why')" />
                     </div>
-                    <div class="home-hero-visual">
+                    <router-link :to="starterRoute" class="home-hero-visual home-showcase-link" :aria-label="t('homeView.showcaseStart')">
                         <HomeShowcase />
-                    </div>
+                        <span class="home-showcase-start" aria-hidden="true">{{ t('homeView.showcaseStartChip') }}</span>
+                    </router-link>
                 </header>
 
                 <ChallengeCard />

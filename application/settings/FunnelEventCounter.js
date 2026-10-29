@@ -118,6 +118,10 @@ export class FunnelEventCounter {
         return this.countOnce(FunnelEvent.EDITOR_EDIT);
     }
 
+    keptBuilding() {
+        return this.countOnce(FunnelEvent.KEEP_BUILDING);
+    }
+
     // The builds this device has published, by document id: a visitor's own.
     ownDocumentIds() {
         try {

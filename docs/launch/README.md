@@ -119,7 +119,9 @@ the week after, by day:
   published untouched is `-0` there. That is the median the gate on new
   networks reads (core/app/LaunchTargets.js, `median-placed`).
 - **Did they come back?** `/e/second-build` against the builds published:
-  the share of builders who published a second one.
+  the share of builders who published a second one. `/e/keep-building`
+  counts builders who came back to Home and went straight back to a build
+  from **Welcome back**.
 - **Do entrants look at each other's builds?** `/e/plaza-visit` against
   `/e/challenge-join`: visits to a week's challenge plaza.
 - **Do people walk together?** `/e/walk-joined` against `/e/walk-link`:

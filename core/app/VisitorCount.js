@@ -66,8 +66,8 @@ export function visitorCountHitUrl(random) {
 // it together; a build published and sent to everyone, or kept to its link
 // (each publish, core/publication/BuildNote.js); World View opened, and someone else's
 // build seen there (once a visit); the Editor opened, a ready-made build
-// opened in it from a link, and a first edit made there (once a page load
-// each); each kept side system used (once a page
+// opened in it from a link, a first edit made there, and a returning builder's
+// Keep building on Home (once a page load each); each kept side system used (once a page
 // load: swimming, an animal caught or decorated with, the inventory, chat,
 // voice, a public lobby); and, when
 // a build is first published from this device, roughly how many bricks it
@@ -124,6 +124,9 @@ export const FunnelEvent = Object.freeze({
     EDITOR_OPEN: 'editor-open',
     STARTER_OPEN: 'starter-open',
     EDITOR_EDIT: 'editor-edit',
+    // A returning builder went back to their last build from Home's Welcome
+    // back (ui/components/home/WelcomeBack.js). Nothing about the build is sent.
+    KEEP_BUILDING: 'keep-building',
     // The side systems the owner kept (docs/Pillars.md, "The side systems";
     // core/app/SideSystemUse.js), each at most once a page load: in the water,
     // an animal caught, one decorated with (G), something carried (an animal

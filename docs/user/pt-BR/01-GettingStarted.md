@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: c6bc6de8889ba433 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 7ea2df22c95dd572 -->
 # 01 — Primeiros passos
 
 <!-- languages -->
@@ -42,6 +42,16 @@ jeitos de começar:
 - **Começar do zero** abre o Editor num terreno vazio.
 - **Explorar construções** abre o **Explorar**, onde estão as construções
   publicadas de todo mundo.
+
+Clicar no próprio vilarejo que gira (**Começar a construir**) faz o mesmo que
+**Experimente agora**.
+
+Quando este dispositivo tem uma construção salva, o Início começa com **Que
+bom ver você de novo**: **Continuar construindo** abre no Editor a construção
+que você alterou por último e, enquanto você não tiver publicado nenhuma,
+lembra você de publicar. **Participar do desafio da semana** aparece até você
+participar do desafio desta semana, e **Minhas construções** abre a sua
+própria página quando você tiver um nome.
 
 Em **Comece com uma construção pronta**, cada cartão (um castelo, uma ilha
 com porto, uma praça de vila, uma casa, um moinho e uma ponte) abre do mesmo

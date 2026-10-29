@@ -10049,3 +10049,53 @@ findings 2 and 8.
 - Tests: tests/RoadmapFilter.test.js (the check on made-up entries: four answers pass, a missing or empty one is
   named, answers written in passing are not ones; and every entry from this one on).
 - Not done: the playtest itself, which needs five people.
+
+## The village is the way in, and Welcome back (unnumbered, 2026-10-29)
+
+**Two changes on Home, one at each end of a builder's first weeks** (the owner's yes, 2026-10-29: "You mentioned
+about `Fix the top of the funnel` and `Look after the returning builder`. Can you please design and implement those
+features?"): the turning village opens **Try it now**, and a device with a saved build is welcomed back to it.
+
+**The filter.**
+1. **Pillar:** building. A newcomer notices that the turning village, the biggest thing on Home's first screen, is a
+   way into a house to finish; a returning builder notices that Home opens on the build they left, one click from
+   the Editor.
+2. **First ten minutes:** no harder. Home keeps its three ways in; the village is a fourth way to the first, with a
+   label that says so. A newcomer never sees Welcome back: it needs a saved build on the device.
+3. **Building first:** yes. Both lead into the Editor: one to a first build, the other back to a build in progress.
+4. **Counts:** `/e/editor-open` against the daily count `/`. In the week of 26 October, 16 of 42 daily visits opened
+   the Editor (38%), so 62% never pressed anything; Home's first screen is where the most visitors stop. Screenshots
+   at 1366×768 and 390×844 show **Try it now** above the fold on both, so the button isn't hidden; the turning
+   village beside it did nothing when clicked. For returning builders: on 27 October `/e/second-build` arrived
+   for the first time, from a builder whose first build was published on 19 October, so builders do come back.
+   `/e/keep-building` (new) counts how many go back to a build from Home.
+
+- **The village is the way in** (ui/views/HomeView.js, css/main/home.css): the showcase is a link to the same
+  House as **Try it now** (`/editor?start=village:house&job=roof`), so it counts as `/e/starter-open` and
+  `/e/editor-open` like the button. A **▶ Start building** label sits on it, visible without a hover since phones
+  have none, and the link is named for screen readers (`homeView.showcaseStart`).
+- **Welcome back** (ui/components/home/WelcomeBack.js, application/home/WelcomeBack.js, new): above the hero, for a
+  device whose saved documents' manifest holds a build. **Keep building "‹title›"** opens the build changed last
+  (`/editor?load=…`), saying when it was changed (today, yesterday, N days ago). Until this device has published a
+  build, the card says the build is saved here and asks to publish it, so others can walk inside it; afterwards it
+  says how many builds were published. **Join this week's challenge: ‹theme›** goes where the challenge card's Join
+  goes, while the week runs and until a build of this device's published since Monday carries the week's tag (only
+  those builds' snapshots are read). **My Builds** opens the builder page once there is a name. Loaded after Home
+  renders, as Your stamps is, and shown as soon as the saved builds are read, so the hero doesn't jump down while
+  the snapshots are checked; the challenge link joins it after. Everything is read from this device's own records
+  and nothing new is stored.
+- **One new count**, `/e/keep-building`: **Keep building** pressed on Welcome back, at most once each time
+  ForkBuild is opened, under the visitor count's own rules and setting (core/app/VisitorCount.js,
+  `FunnelEvent.KEEP_BUILDING`; FunnelEventCounter#keptBuilding()). docs/Privacy.md and its seven translations list
+  it; docs/launch/README.md says how to read it.
+- Eleven new messages (`homeView.showcaseStart`, `homeView.showcaseStartChip`, `welcomeBack.*`) in eight languages.
+  The user guide's *Opening ForkBuild* (01-GettingStarted) describes both, in all eight languages.
+- Tests: tests/WelcomeBack.test.js (new: the build changed last, whatever the manifest's order; days since a change;
+  nothing without a saved build; builds published counted once each, without waiting; this week's challenge entered only by a build
+  published since Monday carrying its tag, an older one never read, an unreadable snapshot skipped),
+  tests/WelcomeBackBrowser.test.js (new: the card with its build, route, nudge and challenge link; an entered week
+  not asked again; nothing for a newcomer; Keep building counted), tests/HomeViewBrowser.test.js (the village opens
+  what **Try it now** opens, named, with a visible label; no Welcome back for a newcomer),
+  tests/FunnelEventCounter.test.js (`/e/keep-building` once a page load, not when turned off).
+- Not done: which way in a newcomer took (the village or the button) isn't counted apart; Welcome back doesn't say
+  what happened to a build while its builder was away (remixes, hearts), which Your stamps covers in part.
