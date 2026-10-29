@@ -1,4 +1,4 @@
-<!-- translation-of: docs/Privacy.md source-hash: 6fa21c9feb160d15 -->
+<!-- translation-of: docs/Privacy.md source-hash: 34d03c49e2f2a7e5 -->
 # Privasi
 
 <!-- languages -->
@@ -172,6 +172,13 @@ Apakah notifikasi di perangkat ini aktif disimpan bersama pengaturan Anda
   mengetahui alamat IP Anda dan melihat avatar serta kehadiran Anda sesuai
   pengaturan visibilitas Anda. Anda mengetahui miliknya dengan cara yang
   sama, beserta nama yang ia pakai berjalan.
+- **Yang Anda katakan di Tampilan Dunia.** Baris yang Anda ucapkan dengan
+  **Katakan** ditandatangani dengan kunci identitas Anda dan dikirim ke
+  rekan terhubung yang boleh melihat avatar Anda, sesuai **Visibilitas
+  Kehadiran** Anda; jika disembunyikan, baris itu tetap di layar Anda saja.
+  Baris itu tampil beberapa detik dan disimpan satu menit di log mereka,
+  dan tidak ada yang menyimpannya, jadi orang yang datang kemudian tidak
+  pernah melihatnya.
 - **Teman yang membangun bersama Anda.** Siapa pun yang membuka tautan
   **Bangun bersamaku** yang Anda buat, selama tautan itu berfungsi,
   terhubung dengan Anda dengan cara yang sama dan menerima nama tampilan

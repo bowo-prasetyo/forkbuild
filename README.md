@@ -16,14 +16,15 @@ default setup uses is a rendezvous server that helps peers find each other,
 plus an anonymous, cookie-free visitor count once a day that you can turn off;
 see [docs/Privacy.md](docs/Privacy.md) for everything the app contacts.
 
-**Version 1.5.0**, released 2026-10-21: see the
-[release notes](docs/ReleaseNotes-1.5.md). It makes the World round a build
-worth walking through (running water, weather, the moon's phases, real
-trees and four seasons) and keeps a builder's credit with their work
-(look-alikes pointed out, terms that stay with a remix), with hearts, short
-links, videos of a build, and voice building on the device. Update before
-16 November 2026, when the weekly challenge's themes change. 1.1.0
-fixed two security problems in 1.0.0, so update any copy older than that. Every milestone is recorded in
+**Version 1.6.0**, released 2026-10-29: see the
+[release notes](docs/ReleaseNotes-1.6.md). It is about a first build that gets
+published: Publish in one sheet with remixing on, **Try it now**'s house with a
+job in four steps, a first walk in daylight with a clearing round every build,
+and an Editor that places only on a click, lays rows with Shift+drag, picks a
+brick from the build and moves what you select by dragging it. Copies older
+than 1.5.0 should update before 16 November 2026, when the weekly challenge's
+themes change. 1.1.0 fixed two security problems in 1.0.0, so update any copy
+older than that. Every milestone is recorded in
 [docs/Roadmap.md](docs/Roadmap.md).
 
 What ForkBuild is for, and the test every feature has to pass, is in
@@ -56,6 +57,11 @@ longer-term aim.
 - Place, select (single, multi, marquee), move, rotate, tilt onto another
   side and delete bricks, with
   undo/redo, grid snapping and a placement preview.
+- Shift+drag lays a row of bricks in one stroke; Alt-click (or a long press
+  on a touch screen) picks up a brick from the build, colour and turn
+  included; the number keys 3 to 9 hold the bricks used lately; dragging a
+  selected brick moves it; and **See the Whole Build** brings a lost view
+  back.
 - Interactive transform gizmo, numeric transform input, snapping, and alignment
   and distribution tools.
 - Groups, clipboard, brick colors with a palette of village colors, and a
@@ -319,7 +325,8 @@ See [docs/Architecture.md](docs/Architecture.md) for the full description.
 - [docs/Privacy.md](docs/Privacy.md): what ForkBuild stores, and every server
   it can contact.
 - [CONTRIBUTING.md](CONTRIBUTING.md): how to set up, test and submit changes.
-- [docs/ReleaseNotes-1.5.md](docs/ReleaseNotes-1.5.md),
+- [docs/ReleaseNotes-1.6.md](docs/ReleaseNotes-1.6.md),
+  [docs/ReleaseNotes-1.5.md](docs/ReleaseNotes-1.5.md),
   [docs/ReleaseNotes-1.4.md](docs/ReleaseNotes-1.4.md),
   [docs/ReleaseNotes-1.3.md](docs/ReleaseNotes-1.3.md),
   [docs/ReleaseNotes-1.2.md](docs/ReleaseNotes-1.2.md),

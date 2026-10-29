@@ -161,6 +161,11 @@ settings (see "Notifications on this device" below).
   name, and connects to you as an ordinary connected peer: they learn your
   IP address and see your avatar and presence as your visibility settings
   allow. You learn theirs the same way, and the name they walk under.
+- **What you Say in World View.** A line you **Say** is signed with your
+  identity's key and sent to the connected peers who may see your avatar,
+  as your Presence Visibility allows; with it hidden, the line stays on your
+  screen. It is shown for a few seconds and kept in their log for a minute,
+  and nothing stores it, so someone who arrives later never sees it.
 - **Friends you build with.** Anyone who opens a **Build with me** link you
   made, while it works, connects to you the same way and receives your
   display name, the build's title and, once their Editor asks, the build

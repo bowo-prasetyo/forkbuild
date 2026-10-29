@@ -9941,3 +9941,30 @@ camera round a selection is the everyday way to see where it goes.
   selected placed build still takes its press at once); tests/EditorTouchTap.test.js (mouse in Select acts on a
   click). Checked in the running app at 1366×768: a brick stayed selected through an orbit from the ground, an orbit
   from the brick beside it and a pan, and a click on the ground cleared it.
+
+## Release 1.6.0 (unnumbered, 2026-10-29)
+
+**Version 1.6.0 is released** (the owner's yes, 2026-10-29: "let's release 1.6 now", after
+[the product-direction audit](../reviews/ProductDirection-2026-10-29.md)'s finding 1). Everything since 1.5.0 ships
+under its own version number: 1.6, "First publish" (docs/NowNextLater.md), its fixes riding along, and the Editor work
+of 2026-10-27 to 2026-10-29. It is a minor release: it adds features (Publish in one sheet, Try it now's job in four
+steps, a first walk in daylight with a clearing round every build, rows, picking a brick, recent-brick keys, dragging a
+selection, a call that goes with you, Say, My Builds, Signed Records), switches voice building to Whisper base, and
+fixes what the entries above name, with no security fix. `PROTOCOL_VERSION` is unchanged; peers gain one additive
+message, a signed Say line on `forkbuild:avatar-say`. The weekly challenge's themes are unchanged from 1.5.0.
+
+- `package.json`, `package-lock.json` and `core/app/version.js` say 1.6.0; so does the Game Jolt guide's version
+  number.
+- `docs/ReleaseNotes-1.6.md` is new: what's new, changed and fixed, privacy (Say, the look-alikes' two records on the
+  device, Whisper base, recent bricks), upgrading from 1.5.0, and known limitations, leading with the seasons that
+  don't yet follow the challenge week before the winter-cabin week of 16 November 2026. `docs/ReleaseNotes-1.5.md`
+  points to it, and the README names 1.6.0, links all seven and lists the new Editor gestures.
+- docs/Privacy.md says what a Say line sends, and to whom; it was missing since "Say something while you walk
+  together".
+- docs/NowNextLater.md: 1.6 leaves **Now**, the written playtest moves up into it, and Next is the launch channel and
+  a week of 1.6's counts.
+- Pillar served: building feels joyful, by getting 1.6's first-publish work in front of players. Which first step it
+  should move: `/e/editor-edit` → `/e/publish-*`, and the median of `/e/publish-placed-…`, read over the first full
+  week after release.
+- Not done: seasons on the challenge week (Later) didn't ride along; the release notes name the winter-cabin week as
+  a known limitation.
