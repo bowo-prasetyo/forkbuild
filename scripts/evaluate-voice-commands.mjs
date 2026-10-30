@@ -145,7 +145,13 @@ async function hearAll() {
         console.error(`Speech model ready in ${(loadMs / 1000).toFixed(1)} s; hearing ${clips.length} recordings`);
         for (const [i, clip] of clips.entries()) {
             const prompt = promptFor[`${clip.language}/${clip.view}`] || '';
-            heard.push({ ...clip, ...(await page.evaluate(([url, language, said]) => globalThis.hear(url, language, said), [`/__audio/${clip.path}`, clip.language, prompt])) });
+            try {
+                heard.push({ ...clip, ...(await page.evaluate(([url, language, said]) => globalThis.hear(url, language, said), [`/__audio/${clip.path}`, clip.language, prompt])) });
+            } catch (error) {
+                // A recording that can't be read is heard as nothing, and said.
+                console.error(`${clip.path}: ${error.message.split('\n')[0]}`);
+                heard.push({ ...clip, transcript: '', ms: 0 });
+            }
             if ((i + 1) % 50 === 0) console.error(`${i + 1} of ${clips.length}`);
         }
     } finally {

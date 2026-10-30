@@ -100,6 +100,7 @@ export function wavBytes(samples, rate = NOISE_RATE) {
     header.writeUInt32LE(rate * 2, 28);
     header.writeUInt16LE(2, 32);
     header.writeUInt16LE(16, 34);
+    header.write('data', 36);
     header.writeUInt32LE(data.length, 40);
     return Buffer.concat([header, data]);
 }
