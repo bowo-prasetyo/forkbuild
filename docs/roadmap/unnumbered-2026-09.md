@@ -10099,3 +10099,25 @@ features?"): the turning village opens **Try it now**, and a device with a saved
   tests/FunnelEventCounter.test.js (`/e/keep-building` once a page load, not when turned off).
 - Not done: which way in a newcomer took (the village or the button) isn't counted apart; Welcome back doesn't say
   what happened to a build while its builder was away (remixes, hearts), which Your stamps covers in part.
+
+## My Builds says "Your builds" (unnumbered, 2026-10-30)
+
+**On your own builder page, the words speak to you** (the owner's yes, 2026-10-30: "Aah, I see. Yes, please design
+and implement that fix and open a PR."), after they asked why My Builds said "Their builds".
+
+**The filter.**
+1. **Pillar:** remix and share. A builder opening My Builds reads **Your builds**, not **Their builds**, right
+   under "This is you.", so the page reads as theirs.
+2. **First ten minutes:** no harder; a newcomer's empty page says "No builds of yours" instead of speaking of
+   someone else.
+3. **Building first:** unchanged; three lines of wording on a page about one's builds.
+4. **Counts:** none yet; no count looks at the builder page's wording.
+
+- **Your own builder page speaks to you** (ui/views/BuilderView.js): My Builds opens the builder page for your own
+  identity, which said "This is you." and then **Their builds**, and, when empty, "No builds crediting **them** as a
+  co-builder". On your own page it now says **Your builds**, "No builds of yours are known on this device yet." and
+  "No builds crediting you as a co-builder are known on this device yet."; someone else's page reads as before.
+- Three new messages (`builderView.yourBuilds`, `builderView.noYourBuilds`, `builderView.noBuiltWithYou`) in eight
+  languages.
+- Tests: tests/CoBuilderPagesBrowser.test.js (your page's heading and empty lines speak to you; someone else's speak
+  about them).

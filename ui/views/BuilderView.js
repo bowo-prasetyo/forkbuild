@@ -12,7 +12,8 @@ import { t } from '../i18n/i18n.js';
 // identity signed, and the builds others published crediting them as having
 // built it together (application/buildTogether/builderProfile.js), as far as
 // this device knows; Follow; and, on your own page, the builds you helped
-// make. Credited names and a shared build's author link here
+// make. On your own page (where My Builds leads) it speaks to you: "Your
+// builds", not "Their builds". Credited names and a shared build's author link here
 // (ui/components/remix/BuiltWithNames.js). Unlike the Repository's author
 // pages, which go by the typed name several people may share, this goes by
 // the identity that signs.
@@ -48,13 +49,13 @@ export default {
             <p v-if="isYou" class="builder-you">{{ t('builderView.you') }}</p>
             <FollowButton v-else-if="identityId" :identity-id="identityId" :name="name" />
 
-            <h2>{{ t('builderView.builds') }}</h2>
+            <h2>{{ t(isYou ? 'builderView.yourBuilds' : 'builderView.builds') }}</h2>
             <ul v-if="profile.builds.length" class="builder-builds">
                 <li v-for="publication in profile.builds" :key="publication.documentId" class="builder-build">
                     <router-link :to="worldRoute(publication)">{{ publication.title || t('remixFamily.untitled') }}</router-link>
                 </li>
             </ul>
-            <p v-else class="builder-empty">{{ t('builderView.noBuilds') }}</p>
+            <p v-else class="builder-empty">{{ t(isYou ? 'builderView.noYourBuilds' : 'builderView.noBuilds') }}</p>
 
             <h2>{{ t('builderView.builtWith') }}</h2>
             <ul v-if="profile.builtWith.length" class="builder-built-with">
@@ -62,7 +63,7 @@ export default {
                     <router-link :to="worldRoute(publication)">{{ creditLine(publication) }}</router-link>
                 </li>
             </ul>
-            <p v-else class="builder-empty">{{ t('builderView.noBuiltWith') }}</p>
+            <p v-else class="builder-empty">{{ t(isYou ? 'builderView.noBuiltWithYou' : 'builderView.noBuiltWith') }}</p>
 
             <template v-if="isYou && helped.length">
                 <h2>{{ t('helpedBuilds.title') }}</h2>
