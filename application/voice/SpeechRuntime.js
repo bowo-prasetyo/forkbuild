@@ -36,6 +36,11 @@ export const SPEECH_ENGINE = Object.freeze({
 // many seconds on one thread.
 export const MAX_SPOKEN_TOKENS = 48;
 
+// The most tokens of a prompt (transcribe()'s `prompt`) the model is given:
+// Whisper keeps at most half its 448-token context for what came before, and
+// the last of a longer prompt is kept.
+export const MAX_PROMPT_TOKENS = 200;
+
 const ENGINE_CACHE = 'forkbuild-voice-engine';
 // Where the model's files come from (transformers.js's env.remoteHost).
 const MODEL_HOST = 'https://huggingface.co/';
@@ -220,11 +225,30 @@ export class SpeechRuntime {
     }
 
     // What was said in `samples` (mono, 16 kHz, Float32Array), heard as
-    // `language` (a Whisper language name, core/voice/Transcript.js).
-    async transcribe(samples, language) {
+    // `language` (a Whisper language name, core/voice/Transcript.js). With a
+    // `prompt`, the model is given it as what was said before (Whisper's
+    // <|startofprev|>), which leans it toward those words; what it hears is
+    // returned without the prompt.
+    async transcribe(samples, language, { prompt = '' } = {}) {
         await this.load();
-        const result = await this._recognize(samples, { language, task: 'transcribe', max_new_tokens: MAX_SPOKEN_TOKENS });
+        const options = { language, task: 'transcribe', max_new_tokens: MAX_SPOKEN_TOKENS };
+        if (typeof prompt === 'string' && prompt.trim()) return this._transcribeAfter(prompt.trim(), samples, options);
+        const result = await this._recognize(samples, options);
         return typeof result?.text === 'string' ? result.text : '';
+    }
+
+    // transformers.js 4.3's speech pipeline has no prompt for Whisper, so the
+    // model is asked directly: <|startofprev|>, the prompt, then the tokens
+    // the pipeline would start with (the model's _retrieve_init_tokens()).
+    async _transcribeAfter(prompt, samples, options) {
+        const { model, processor, tokenizer } = this._recognize;
+        const { input_features: inputs } = await processor(samples);
+        const before = tokenizer.encode(` ${prompt}`, { add_special_tokens: false }).slice(-MAX_PROMPT_TOKENS);
+        const start = model._retrieve_init_tokens({ ...model.generation_config, ...options, return_timestamps: false });
+        const prefix = [tokenizer.convert_tokens_to_ids('<|startofprev|>'), ...before, ...start].map(Number);
+        const output = await model.generate({ inputs, decoder_input_ids: [prefix], ...options });
+        const tokens = (output?.sequences ?? output)[0].tolist().map(Number);
+        return tokenizer.decode(tokens.slice(prefix.length), { skip_special_tokens: true });
     }
 
     // Deletes the engine and the model from this browser.

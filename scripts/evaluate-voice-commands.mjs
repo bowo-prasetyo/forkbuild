@@ -10,6 +10,7 @@
 //   node scripts/evaluate-voice-commands.mjs [--audio voice-corpus] [--out report.md]
 //        [--model onnx-community/whisper-base] [--language ja]
 //        [--save-heard heard.json | --heard heard.json]
+//        [--prompt none|vocabulary|expanded]
 //
 // Recordings are <audio>/<language>/<speaker>/<phrase id>.<wav|webm|ogg|mp3|m4a>,
 // as scripts/synthesize-voice-corpus.mjs makes them, or as people record
@@ -19,15 +20,20 @@
 // `npx playwright-core install chromium` or CHROMIUM_PATH, and an HTTPS_PROXY
 // in the environment is used. `--save-heard` keeps what was heard; `--heard`
 // reads it back instead of hearing again, to measure a change to the words
-// the app listens for in seconds rather than half an hour.
+// the app listens for in seconds rather than half an hour. `--prompt` gives
+// the model the words the app can act on before each recording
+// (ui/voice/voicePrompt.js): each concept's first name (`vocabulary`), or
+// every phrasing the app reads (`expanded`).
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, extname, join, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
-import { SAID, voicePhrases } from './voiceCommandPhrases.mjs';
+import { PLACES, SAID, voicePhrases } from './voiceCommandPhrases.mjs';
 import { verdict, voiceReader } from './voiceCommandOutcome.mjs';
+import { voicePrompt } from '../ui/voice/voicePrompt.js';
+import { setAppLocale } from '../ui/i18n/i18n.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const argument = (name, fallback = null) => {
@@ -40,6 +46,11 @@ const model = argument('--model');
 const onlyLanguage = argument('--language');
 const savePath = argument('--save-heard');
 const heardPath = argument('--heard');
+const promptKind = argument('--prompt', 'none');
+if (!['none', 'vocabulary', 'expanded'].includes(promptKind)) {
+    console.error('--prompt is none, vocabulary or expanded');
+    process.exit(2);
+}
 const AUDIO_TYPES = new Set(['.wav', '.webm', '.ogg', '.mp3', '.m4a']);
 const MIME_TYPES = { '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json', '.html': 'text/html', '.wav': 'audio/wav', '.webm': 'audio/webm', '.ogg': 'audio/ogg', '.mp3': 'audio/mpeg', '.m4a': 'audio/mp4' };
 
@@ -67,7 +78,20 @@ const heard = heardPath
     : await hearAll();
 if (savePath) writeFileSync(savePath, JSON.stringify(heard.map(({ language, id, speaker, transcript, ms }) => ({ language, id, speaker, transcript, ms }))));
 
+// The prompt for each language and view, as the app would make it.
+async function prompts() {
+    const all = {};
+    if (promptKind === 'none') return all;
+    for (const language of new Set(clips.map((clip) => clip.language))) {
+        await setAppLocale(language);
+        const places = Object.values(PLACES[language]).map((title) => ({ title }));
+        for (const view of ['editor', 'world']) all[`${language}/${view}`] = voicePrompt(view, { expanded: promptKind === 'expanded', places });
+    }
+    return all;
+}
+
 async function hearAll() {
+    const promptFor = await prompts();
     const server = await new Promise((done) => {
         const server = createServer(async (request, response) => {
             const path = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
@@ -108,19 +132,20 @@ async function hearAll() {
             const started = performance.now();
             const runtime = new SpeechRuntime({ engineLoaderUrl: new URL(SPEECH_ENGINE_LOADER, location.href).href, ...(other ? { model: other } : {}) });
             await runtime.load();
-            globalThis.hear = async (url, language) => {
+            globalThis.hear = async (url, language, prompt) => {
                 const samples = await recording.toSpeechSamples(await (await fetch(url)).arrayBuffer());
                 const speech = preparation.prepareSpeech(samples);
                 if (!speech.speech) return { transcript: '', ms: 0 };
                 const at = performance.now();
-                const text = await runtime.transcribe(speech.samples, transcript.whisperLanguage(language));
+                const text = await runtime.transcribe(speech.samples, transcript.whisperLanguage(language), { prompt });
                 return { transcript: text, ms: Math.round(performance.now() - at) };
             };
             return Math.round(performance.now() - started);
         }, { model });
         console.error(`Speech model ready in ${(loadMs / 1000).toFixed(1)} s; hearing ${clips.length} recordings`);
         for (const [i, clip] of clips.entries()) {
-            heard.push({ ...clip, ...(await page.evaluate(([url, language]) => globalThis.hear(url, language), [`/__audio/${clip.path}`, clip.language])) });
+            const prompt = promptFor[`${clip.language}/${clip.view}`] || '';
+            heard.push({ ...clip, ...(await page.evaluate(([url, language, said]) => globalThis.hear(url, language, said), [`/__audio/${clip.path}`, clip.language, prompt])) });
             if ((i + 1) % 50 === 0) console.error(`${i + 1} of ${clips.length}`);
         }
     } finally {
