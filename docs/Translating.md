@@ -506,10 +506,14 @@ words a speaker of the language would say have to be among them. A word
 matches with up to two more letters, so add the forms a speaker uses with a
 longer ending (Indonesian's "atapnya" beside "atap").
 
-`scripts/voiceCommandPhrases.mjs` holds eighteen things a player says, in
-each language, and what each should do. `tests/VoicePhrases.test.js` checks
-that each, typed, does that, so `npm run test:node -- VoicePhrases` tells you
-when a change to the words loses one.
+`scripts/voiceCommandPhrases.mjs` holds twenty-five things a player says, in
+each language, and what each should do: sixteen commands, and nine that ask
+for nothing, some naming a part, a colour, a place or the sound ("Where did I
+put the windows?"), which must do nothing. Translate those to sound as near a
+command as they can without asking for anything. `tests/VoicePhrases.test.js`
+checks that each, typed, does what it should, so `npm run test:node --
+VoicePhrases` tells you when a change to the words loses one, or makes words
+that ask for nothing do something.
 
 How well voice hears a language is measured with recordings of those
 phrases:

@@ -5,6 +5,7 @@
 // not a promise; recordings of people, laid out the same way, are what count.
 //
 //   node scripts/synthesize-voice-corpus.mjs --piper <piper> [--out voice-corpus] [--espeak]
+//        [--only <id>,<id>,…]
 //
 // `--piper` is Piper's command (https://github.com/rhasspy/piper, `pip install
 // piper-tts`; Japanese also needs `pip install pyopenjtalk-plus`). Its voices
@@ -13,12 +14,15 @@
 // spoken slower and faster, as more speakers. `--espeak` adds espeak-ng's
 // voice too, a robotic one, as a speaker of its own.
 //
-// Writes <out>/<language>/<speaker>/<phrase id>.wav. The folder is ignored by
-// Git: it is made, not kept.
+// Writes <out>/<language>/<speaker>/<phrase id>.wav, and the sounds that
+// aren't speech (scripts/voiceNoise.mjs) as <out>/<language>/noise-<n>/, two
+// of each. `--only` speaks only the phrases named, to add new ones to a
+// corpus already made. The folder is ignored by Git: it is made, not kept.
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { SAID, voicePhrases } from './voiceCommandPhrases.mjs';
+import { NOISE_SOUNDS, SAID, voicePhrases } from './voiceCommandPhrases.mjs';
+import { noiseSamples, wavBytes } from './voiceNoise.mjs';
 
 const argument = (name, fallback = null) => {
     const at = process.argv.indexOf(name);
@@ -27,6 +31,9 @@ const argument = (name, fallback = null) => {
 const piper = argument('--piper');
 const out = resolve(argument('--out', 'voice-corpus'));
 const withEspeak = process.argv.includes('--espeak');
+const only = argument('--only') ? new Set(argument('--only').split(',')) : null;
+// Each sound that isn't speech is made this many ways (each its own seed).
+const NOISE_SEEDS = Object.freeze([7, 19]);
 if (!piper && !withEspeak) {
     console.error('Usage: node scripts/synthesize-voice-corpus.mjs --piper <piper> [--out voice-corpus] [--espeak]');
     process.exit(2);
@@ -64,7 +71,7 @@ function piperVoice(key) {
 
 let made = 0;
 for (const language of Object.keys(SAID)) {
-    const phrases = voicePhrases().filter((phrase) => phrase.language === language);
+    const phrases = voicePhrases().filter((phrase) => phrase.language === language && phrase.text && (!only || only.has(phrase.id)));
     const speakers = [];
     if (piper) {
         const voices = PIPER_VOICES[language];
@@ -86,6 +93,14 @@ for (const language of Object.keys(SAID)) {
         }
         console.log(`${language}: ${speaker.name}, ${phrases.length} phrases`);
     }
+    NOISE_SEEDS.forEach((seed, n) => {
+        const dir = join(out, language, `noise-${n + 1}`);
+        mkdirSync(dir, { recursive: true });
+        for (const [id] of NOISE_SOUNDS) {
+            writeFileSync(join(dir, `${id}.wav`), wavBytes(noiseSamples(id, seed)));
+            made += 1;
+        }
+    });
 }
 writeFileSync(join(out, 'README.txt'), 'Made by scripts/synthesize-voice-corpus.mjs; measured by scripts/evaluate-voice-commands.mjs.\n');
 console.log(`${made} recordings in ${out}`);

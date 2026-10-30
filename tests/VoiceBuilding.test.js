@@ -1,7 +1,7 @@
 import { createHash, webcrypto } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { actionNamed, actionSaid, nearestBySound, soundsExactly, cleanTranscript, whisperLanguage, WHISPER_LANGUAGES } from '../core/voice/Transcript.js';
-import { MAX_SPOKEN_TOKENS, SPEECH_ENGINE, SPEECH_MODEL, SpeechRuntime } from '../application/voice/SpeechRuntime.js';
+import { MAX_PROMPT_TOKENS, MAX_SPOKEN_TOKENS, SPEECH_ENGINE, SPEECH_MODEL, SpeechRuntime } from '../application/voice/SpeechRuntime.js';
 import { SPEECH_DOWNLOAD_BYTES, SPEECH_ENGINE_LOADER, SPEECH_ENGINE_SHARE, SpeechWorkerClient, TRANSCRIBE_TIMEOUT, TRANSCRIBE_TIMEOUT_MS, speechSupported } from '../application/voice/SpeechWorkerClient.js';
 import { SPEECH_MODEL_BYTES, SPEECH_MODEL_FILES, SPEECH_MODEL_REVISION } from '../application/voice/SpeechModelPins.js';
 import { serveSpeech } from '../application/voice/serveSpeech.js';
@@ -115,6 +115,35 @@ function fakeCaches() {
         'progress is reported for the engine, and for the model over its whole pinned size, so it never jumps back');
     assert(await runtime.transcribe(new Float32Array(3), 'english') === ' heard 3 as english/transcribe. ', 'it transcribes in the language it is told');
     assert(heardWith.max_new_tokens === MAX_SPOKEN_TOKENS && MAX_SPOKEN_TOKENS <= 64, 'and writes a command\'s few words at most, never Whisper\'s 448 tokens');
+
+    // With a prompt, the model is asked directly: <|startofprev|>, the
+    // prompt's tokens (its end, when too long), then the tokens the pipeline
+    // starts with; only what follows is what was heard.
+    let given = null;
+    let startedWith = null;
+    const recognize = async () => ({ text: 'from the pipeline' });
+    recognize.processor = async (samples) => ({ input_features: samples.length });
+    recognize.tokenizer = {
+        encode: (text) => [...text.trim()].map((letter) => letter.charCodeAt(0)),
+        convert_tokens_to_ids: (token) => (token === '<|startofprev|>' ? 1 : -1),
+        decode: (ids) => ids.map((id) => String.fromCharCode(id)).join('')
+    };
+    recognize.model = {
+        generation_config: { is_multilingual: true },
+        _retrieve_init_tokens: (config) => { startedWith = config; return [2, 3, 4]; },
+        generate: async ({ decoder_input_ids: [prefix], max_new_tokens: most }) => {
+            given = { prefix, most };
+            return [{ tolist: () => [...prefix, ...[...'roof red'].map((letter) => letter.charCodeAt(0))] }];
+        }
+    };
+    const prompted = new SpeechRuntime({ engine, caches, subtle: webcrypto.subtle, fetch: async () => new Response(bytes), importLibrary: async () => ({ env: { backends: { onnx: { wasm: {} } } }, pipeline: async () => recognize }), engineLoaderUrl: 'x' });
+    assert(await prompted.transcribe(new Float32Array(2), 'english', { prompt: ' roof, red ' }) === 'roof red', 'with a prompt, what was heard comes back without it');
+    assert(given.prefix.join() === [1, ...[...'roof, red'].map((letter) => letter.charCodeAt(0)), 2, 3, 4].join() && given.most === MAX_SPOKEN_TOKENS,
+        'the model is given the prompt as what came before, then its usual start, and writes a command\'s few words at most');
+    assert(startedWith.language === 'english' && startedWith.task === 'transcribe' && startedWith.return_timestamps === false, 'in the language it is told');
+    await prompted.transcribe(new Float32Array(2), 'english', { prompt: 'x'.repeat(MAX_PROMPT_TOKENS) + 'END' });
+    assert(given.prefix.length === 1 + MAX_PROMPT_TOKENS + 3 && String.fromCharCode(...given.prefix.slice(-6, -3)) === 'END', 'a prompt too long keeps its end, the words given last');
+    assert(await prompted.transcribe(new Float32Array(2), 'english', { prompt: '  ' }) === 'from the pipeline', 'with no prompt, the pipeline hears it as before');
 
     const again = new SpeechRuntime({ engine, caches, subtle: webcrypto.subtle, fetch: async () => { fetches += 1; return new Response(bytes); }, importLibrary: async () => library, engineLoaderUrl: 'x' });
     await again.load();

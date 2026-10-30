@@ -405,7 +405,14 @@ the detailed references; in short:
   Git ignores), heard in Chromium as the app hears them and read by
   scripts/voiceCommandOutcome.mjs as the app reads them, right, nothing or
   wrong per language; tests/VoicePhrases.test.js checks that every phrase,
-  typed, is read right. World View reads it with
+  typed, is read right. Among the phrases are some that ask for nothing,
+  and sounds that aren't speech (scripts/voiceNoise.mjs), which must do
+  nothing. The model is given no prompt: `SpeechRuntime#transcribe()` can
+  give it one (`prompt`, Whisper's `<|startofprev|>` text), and
+  ui/voice/voicePrompt.js makes one from the words the app reads, but
+  measured with `--prompt` and scripts/compare-voice-prompts.mjs it made
+  voice act on noise and near words, so the app doesn't use it
+  (docs/reviews/VoicePrompt-2026-10-30.md). World View reads it with
   core/voice/WorldVoiceCommand.js (words from ui/i18n/worldVoiceWords.js):
   go to a place named in Locations (or a build on a challenge plaza), Home,
   a camera view, sound off or on, undo, redo, or talk to a resident. When

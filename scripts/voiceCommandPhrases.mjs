@@ -45,37 +45,68 @@ export const COMMANDS = Object.freeze([
     ['sound-on', 'world', 'soundOn'],
     ['talk', 'world', 'talk'],
     ['chatter-editor', 'editor', 'none'],
-    ['chatter-world', 'world', 'none']
+    ['chatter-world', 'world', 'none'],
+    // Words near a command, naming a part, a colour, a place or the sound,
+    // that ask for nothing: what a speech model leaning toward the app's
+    // words (ui/voice/voicePrompt.js) might turn into one.
+    ['near-windows', 'editor', 'none'],
+    ['near-paint-later', 'editor', 'none'],
+    ['near-door', 'editor', 'none'],
+    ['near-roof', 'editor', 'none'],
+    ['near-mill', 'world', 'none'],
+    ['near-sound', 'world', 'none'],
+    ['near-bridge', 'world', 'none']
 ]);
 
 export const SAID = Object.freeze({
     en: ['Paint the roof red.', 'Select all the windows.', 'Delete the trees.', 'Paint everything green.', 'Undo.', 'Redo.', 'Rotate clockwise.', 'Copy.', 'Duplicate.',
         'Take me to the old mill.', 'Go to the stone bridge.', 'Go home.', 'First person.', 'Sound off.', 'Unmute.', 'Say hello.',
-        'What a lovely day it is.', 'I really like this castle.'],
+        'What a lovely day it is.', 'I really like this castle.',
+        'Where did I put the windows?', 'Should I paint it later?', 'This door is too small.', 'Let me think about the roof.', 'The old mill is beautiful.', 'Is the sound too loud?', 'I was at the stone bridge yesterday.'],
     de: ['Streiche das Dach rot.', 'Wähle alle Fenster.', 'Lösche die Bäume.', 'Male alles grün.', 'Rückgängig.', 'Wiederholen.', 'Im Uhrzeigersinn drehen.', 'Kopieren.', 'Duplizieren.',
         'Bring mich zur alten Mühle.', 'Geh zur Steinbrücke.', 'Nach Hause.', 'Ich-Perspektive.', 'Ton aus.', 'Ton an.', 'Sag hallo.',
-        'Was für ein schöner Tag.', 'Diese Burg gefällt mir sehr.'],
+        'Was für ein schöner Tag.', 'Diese Burg gefällt mir sehr.',
+        'Wo habe ich die Fenster hingetan?', 'Soll ich es später streichen?', 'Diese Tür ist zu klein.', 'Lass mich über das Dach nachdenken.', 'Die alte Mühle ist wunderschön.', 'Der Ton ist schön.', 'Gestern war ich an der Steinbrücke.'],
     es: ['Pinta el tejado de rojo.', 'Selecciona todas las ventanas.', 'Borra los árboles.', 'Pinta todo de verde.', 'Deshacer.', 'Rehacer.', 'Girar en sentido horario.', 'Copiar.', 'Duplicar.',
         'Llévame al molino viejo.', 'Ve al puente de piedra.', 'Vuelve a casa.', 'Primera persona.', 'Silencio.', 'Activa el sonido.', 'Hola.',
-        'Qué día tan bonito hace.', 'Me gusta mucho el castillo.'],
+        'Qué día tan bonito hace.', 'Me gusta mucho el castillo.',
+        '¿Dónde puse las ventanas?', '¿Lo pinto más tarde?', 'Esta puerta es demasiado pequeña.', 'Déjame pensar en el tejado.', 'El molino viejo es precioso.', '¿El sonido está muy alto?', 'Ayer estuve en el puente de piedra.'],
     fr: ['Peins le toit en rouge.', 'Sélectionne toutes les fenêtres.', 'Supprime les arbres.', 'Peins tout en vert.', 'Annuler.', 'Rétablir.', 'Pivoter dans le sens horaire.', 'Copier.', 'Dupliquer.',
         'Emmène-moi au vieux moulin.', 'Va au pont de pierre.', 'Rentre à la maison.', 'Première personne.', 'Coupe le son.', 'Remets le son.', 'Bonjour.',
-        'Quelle belle journée.', 'J’aime beaucoup le château.'],
+        'Quelle belle journée.', 'J’aime beaucoup le château.',
+        'Où est-ce que j’ai mis les fenêtres ?', 'Je le peins plus tard ?', 'Cette porte est trop petite.', 'Laisse-moi réfléchir au toit.', 'Le vieux moulin est magnifique.', 'Le son est trop fort ?', 'Hier, j’étais au pont de pierre.'],
     id: ['Cat atapnya merah.', 'Pilih semua jendela.', 'Hapus pohon-pohonnya.', 'Cat semuanya hijau.', 'Urungkan.', 'Ulangi.', 'Putar searah jarum jam.', 'Salin.', 'Duplikat.',
         'Bawa aku ke kincir tua.', 'Pergi ke jembatan batu.', 'Pulang.', 'Orang pertama.', 'Matikan suara.', 'Nyalakan suara.', 'Halo.',
-        'Hari yang sangat indah.', 'Aku suka sekali kastel itu.'],
+        'Hari yang sangat indah.', 'Aku suka sekali kastel itu.',
+        'Di mana aku taruh jendelanya?', 'Apa nanti saja aku cat?', 'Pintu ini terlalu kecil.', 'Biar aku pikirkan atapnya dulu.', 'Kincir tua itu indah sekali.', 'Apa suaranya terlalu keras?', 'Kemarin aku ada di jembatan batu.'],
     ja: ['屋根を赤く塗って。', '窓を全部選択して。', '木を削除して。', '全部緑に塗って。', '元に戻す。', 'やり直す。', '時計回りに回転。', 'コピー。', '複製。',
         '古い水車小屋に連れて行って。', '石の橋に行って。', '家に帰る。', '一人称。', '音を消して。', '音を出して。', 'こんにちは。',
-        'いい天気ですね。', 'このお城が大好きです。'],
+        'いい天気ですね。', 'このお城が大好きです。',
+        '窓はどこに置いたかな。', 'あとで塗ろうかな。', 'このドアは小さすぎる。', '屋根のことを考えさせて。', '古い水車小屋はきれいだね。', '音が大きすぎるかな。', '昨日は石の橋にいました。'],
     ko: ['지붕을 빨간색으로 칠해 줘.', '창문을 모두 선택해 줘.', '나무를 삭제해 줘.', '전부 초록색으로 칠해 줘.', '실행 취소.', '다시 실행.', '시계 방향 회전.', '복사.', '복제.',
         '옛 물레방아로 데려가 줘.', '돌다리로 가 줘.', '집으로 가.', '1인칭.', '소리 꺼 줘.', '소리 켜 줘.', '안녕.',
-        '날씨가 정말 좋네요.', '이 성이 정말 좋아요.'],
+        '날씨가 정말 좋네요.', '이 성이 정말 좋아요.',
+        '창문을 어디에 뒀더라.', '나중에 칠할까?', '이 문은 너무 작아.', '지붕에 대해 생각해 볼게.', '옛 물레방아가 정말 예쁘다.', '소리가 너무 큰가?', '어제는 돌다리에 있었어.'],
     'pt-BR': ['Pinte o telhado de vermelho.', 'Selecione todas as janelas.', 'Apague as árvores.', 'Pinte tudo de verde.', 'Desfazer.', 'Refazer.', 'Girar no sentido horário.', 'Copiar.', 'Duplicar.',
         'Me leve para o moinho velho.', 'Vá para a ponte de pedra.', 'Volta pra casa.', 'Primeira pessoa.', 'Desliga o som.', 'Liga o som.', 'Olá.',
-        'Que dia lindo.', 'Gostei muito desse castelo.']
+        'Que dia lindo.', 'Gostei muito desse castelo.',
+        'Onde eu coloquei as janelas?', 'Será que pinto depois?', 'Essa porta é pequena demais.', 'Deixa eu pensar no telhado.', 'O moinho velho é lindo.', 'O som está alto demais?', 'Ontem eu estava na ponte de pedra.']
 });
 
-// Every phrase: `{ id, language, view, expect, text }`.
+// Sounds that aren't speech (scripts/voiceNoise.mjs), heard in each
+// language and view: nothing should be done. [id, view].
+export const NOISE_SOUNDS = Object.freeze([
+    ['noise-keys', 'editor'],
+    ['noise-knock', 'editor'],
+    ['noise-music', 'world'],
+    ['noise-babble', 'world']
+]);
+
+// Every phrase: `{ id, language, view, expect, text }`; a sound's `text` is
+// empty.
 export function voicePhrases() {
-    return Object.entries(SAID).flatMap(([language, texts]) => COMMANDS.map(([id, view, expect], i) => ({ id, language, view, expect, text: texts[i] })));
+    return Object.entries(SAID).flatMap(([language, texts]) => [
+        ...COMMANDS.map(([id, view, expect], i) => ({ id, language, view, expect, text: texts[i] })),
+        ...NOISE_SOUNDS.map(([id, view]) => ({ id, language, view, expect: 'none', text: '' }))
+    ]);
 }
