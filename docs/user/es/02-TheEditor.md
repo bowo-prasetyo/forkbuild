@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 436a4011e7ce6564 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: b9f6583713dd4416 -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -919,6 +919,11 @@ dice lo que oyó y lo que hizo, en un solo paso que puede deshacer. Entiende
 lo mismo que [Comandos con sus propias palabras](#comandos-con-sus-propias-palabras)
 y cualquier acción dicha por su nombre. Una pregunta (*¿cómo invito a un
 amigo?*) ofrece **Preguntar a la guía**.
+
+Por voz nunca se publica, exporta, importa, empieza una construcción nueva
+ni se crea un plano: una palabra mal oída nunca debe enviar su construcción
+a ninguna parte, ni hacer lo que Deshacer no puede revertir. Eso hágalo a
+mano. Y diga qué hacer: *pinta el techo de rojo*, no solo *el techo rojo*.
 
 La primera vez explica lo que descarga activar la voz, unos 107 MB una sola
 vez: un pequeño modelo de voz (Whisper) desde Hugging Face y su motor desde

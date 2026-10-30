@@ -671,7 +671,7 @@ export default Object.freeze({
     'worldVoice.words.thirdPerson': 'verfolgerperspektive, dritte person, hinter mir',
     'worldVoice.words.birdEye': 'vogelperspektive, von oben, draufsicht',
     'worldVoice.words.soundOff': 'ton aus, stumm, ton ausschalten, leise',
-    'worldVoice.words.soundOn': 'ton an, ton ein, ton einschalten, laut',
+    'worldVoice.words.soundOn': 'ton an, ton ein, ton einschalten',
     'worldVoice.words.undo': 'rückgängig, rückgängig machen, mach das rückgängig',
     'worldVoice.words.redo': 'wiederholen, wiederherstellen',
     'worldVoice.words.talk': 'sprich mit, sprechen, rede mit, reden, unterhalte, hallo',

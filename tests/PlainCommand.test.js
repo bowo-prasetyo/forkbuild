@@ -42,6 +42,16 @@ function read(query) {
     console.log('✓ English plain commands');
 }
 
+// Whether what to do was said, or read from a colour and a part: spoken, only
+// the first is done (core/voice/EditorVoiceCommand.js).
+{
+    await setAppLocale(SOURCE_LOCALE);
+    const vocabulary = plainCommandVocabulary();
+    assert(interpretPlainCommand('paint the roof red', vocabulary).intentSaid === true, 'what to do, said');
+    const read = interpretPlainCommand('the windows red', vocabulary);
+    assert(read.intent === 'paint' && read.intentSaid === false, 'typed, a colour and a part are still paint, but not said to be');
+}
+
 // Every language reads its own.
 {
     const cases = {

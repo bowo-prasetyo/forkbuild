@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 436a4011e7ce6564 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: b9f6583713dd4416 -->
 # 02 — Editor
 
 <!-- languages -->
@@ -886,6 +886,12 @@ langkah yang bisa diurungkan. Ia memahami permintaan yang sama dengan
 [Perintah dengan kata-kata sendiri](#perintah-dengan-kata-kata-sendiri), dan
 setiap tindakan yang disebut namanya. Pertanyaan (*bagaimana cara
 mengajak teman?*) menawarkan **Tanyakan ke panduan**.
+
+Suara tidak pernah menerbitkan, mengekspor, mengimpor, memulai bangunan
+baru, atau membuat cetak biru: kata yang salah dengar tidak boleh mengirim
+bangunan Anda ke mana pun, atau melakukan apa yang tidak bisa dibatalkan
+dengan Urungkan. Lakukan itu dengan tangan. Dan sebutkan apa yang harus
+dilakukan: *cat atap jadi merah*, bukan hanya *atap merah*.
 
 Pertama kali, ia menjelaskan apa yang diunduh saat suara dinyalakan, sekitar
 107 MB sekali saja: model suara kecil (Whisper) dari Hugging Face dan mesinnya

@@ -17,6 +17,7 @@
 // Measured by scripts/evaluate-voice-commands.mjs (`--prompt`); see
 // docs/reviews/VoicePrompt-2026-10-30.md for whether the app uses it.
 import { createStandardActions } from '../../application/editor/EditorActionRegistry.js';
+import { SPOKEN_ACTIONS } from '../../core/voice/EditorVoiceCommand.js';
 import { splitWordList } from '../../core/library/LibrarySearch.js';
 import { plainCommandVocabulary } from '../i18n/plainCommandWords.js';
 import { worldVoiceVocabulary } from '../i18n/worldVoiceWords.js';
@@ -43,7 +44,7 @@ export function voicePrompt(view, { expanded = false, places = [], actions = nul
 
 function editorGroups(first, expanded, actions) {
     const vocabulary = plainCommandVocabulary();
-    const editorActions = (actions || createStandardActions({ session: {}, feedback: { show() {} } })).filter(({ id }) => id !== 'ui.voice');
+    const editorActions = (actions || createStandardActions({ session: {}, feedback: { show() {} } })).filter(({ id }) => SPOKEN_ACTIONS.has(id));
     const aliases = ['undo', 'redo'].flatMap((command) => first(splitWordList(t(`worldVoice.words.${command}`))));
     // A colour's list starts with the palette's own name ("Roof red"); its
     // everyday name ("red") is what is said.
