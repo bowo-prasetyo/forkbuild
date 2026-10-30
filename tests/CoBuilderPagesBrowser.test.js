@@ -105,6 +105,7 @@ const texts = (host, selector) => [...host.querySelectorAll(selector)].map((node
         assert(view.host.querySelector('.builder-builds a').getAttribute('href').endsWith(`/world/${tower.documentId}`), 'opening its World');
         assert(texts(view.host, '.builder-built-with a').join() === t('remixFamily.byAuthor', { title: 'Pages Harbor', author: 'pages-ana' }), `and the build he built with Ana (${texts(view.host, '.builder-built-with a')})`);
         assert(!view.host.querySelector('.builder-you') && !view.host.querySelector('.helped-builds-list'), 'not my page, so no list of mine');
+        assert(texts(view.host, 'h2')[0] === t('builderView.builds'), `his builds are "${t('builderView.builds')}" (${texts(view.host, 'h2')[0]})`);
         assert(document.documentElement.scrollWidth <= window.innerWidth, 'nothing overflows sideways');
         console.log('✓ a builder\'s page lists their builds and the ones they built with others');
     } finally {
@@ -118,6 +119,7 @@ const texts = (host, selector) => [...host.querySelectorAll(selector)].map((node
     try {
         await until(() => view.host.querySelector('.builder-view'), 'the page');
         assert(view.host.querySelector('.builder-you').textContent.trim() === t('builderView.you'), 'it says it\'s mine');
+        assert(texts(view.host, 'h2')[0] === t('builderView.yourBuilds'), `and calls my builds mine, not theirs (${texts(view.host, 'h2')[0]})`);
         const helped = texts(view.host, '.helped-build');
         assert(helped.length === 2 && helped[0].startsWith('Pages Harbor') && helped[1].includes(t('helpedBuilds.notPublished')), `the builds I helped make (${helped})`);
         const ownerLink = view.host.querySelector('.helped-build-author a');
@@ -126,6 +128,30 @@ const texts = (host, selector) => [...host.querySelectorAll(selector)].map((node
     } finally {
         view.unmount();
     }
+}
+
+// Your own page with nothing on it yet says so to you, and someone else's
+// says so about them.
+{
+    const newcomer = person('pages-newcomer');
+    const own = await mount(`/builder/${encodeURIComponent(newcomer.id)}`, newcomer);
+    try {
+        await until(() => own.host.querySelector('.builder-view'), 'the page');
+        assert(texts(own.host, '.builder-empty').join(' | ') === `${t('builderView.noYourBuilds')} | ${t('builderView.noBuiltWithYou')}`,
+            `my empty page speaks to me (${texts(own.host, '.builder-empty')})`);
+    } finally {
+        own.unmount();
+    }
+    const theirs = await mount(`/builder/${encodeURIComponent(newcomer.id)}`, ana);
+    try {
+        await until(() => theirs.host.querySelector('.builder-view'), 'the page');
+        assert(texts(theirs.host, '.builder-empty').join(' | ') === `${t('builderView.noBuilds')} | ${t('builderView.noBuiltWith')}`,
+            `someone else's speaks about them (${texts(theirs.host, '.builder-empty')})`);
+    } finally {
+        theirs.unmount();
+    }
+    assert(t('builderView.yourBuilds') === 'Your builds' && t('builderView.noBuiltWithYou').includes('crediting you'), 'in English, "Your builds" and "crediting you"');
+    console.log('✓ your own page says "Your builds"; someone else\'s says "Their builds"');
 }
 
 // My Worlds lists them too; nobody who helped make nothing sees the section.
