@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 436a4011e7ce6564 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: b9f6583713dd4416 -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -881,6 +881,12 @@ ForkBuild diz o que ouviu e o que fez, em um só passo que dá para desfazer.
 Ele entende os mesmos pedidos que [Comandos com suas palavras](#comandos-com-suas-palavras),
 e qualquer ação dita pelo nome. Uma pergunta (*como convido um amigo?*) oferece
 **Perguntar ao guia**.
+
+Por voz nunca se publica, exporta, importa, começa uma construção nova nem
+se cria uma planta: uma palavra mal ouvida nunca deve mandar sua construção
+para lugar nenhum, nem fazer o que Desfazer não desfaz. Faça isso à mão. E
+diga o que fazer: *pinte o telhado de vermelho*, não só *o telhado
+vermelho*.
 
 Na primeira vez, ele explica o que ligar a voz baixa, cerca de 107 MB uma
 única vez: um pequeno modelo de voz (Whisper) do Hugging Face e o motor dele

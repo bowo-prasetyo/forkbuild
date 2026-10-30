@@ -4,7 +4,9 @@
 // core/voice/EditorVoiceCommand.js, core/voice/WorldVoiceCommand.js). So when
 // scripts/evaluate-voice-commands.mjs finds a spoken one done wrong, the speech
 // model misheard it; and a change to the words heard can't quietly lose one.
-import { interpretEditorCommand } from '../core/voice/EditorVoiceCommand.js';
+import { SPOKEN_ACTIONS, interpretEditorCommand } from '../core/voice/EditorVoiceCommand.js';
+import { MAX_OTHER_WORDS, interpretWorldCommand } from '../core/voice/WorldVoiceCommand.js';
+import { createStandardActions } from '../application/editor/EditorActionRegistry.js';
 import { COMMANDS, SAID, voicePhrases } from '../scripts/voiceCommandPhrases.mjs';
 import { verdict, voiceReader } from '../scripts/voiceCommandOutcome.mjs';
 import { assert } from './support/Assert.js';
@@ -50,7 +52,34 @@ console.log('✓ verdicts');
     const deleting = [...actions, { id: 'selection.delete', label: 'Delete' }];
     const words = { ...vocabulary, intents: { ...vocabulary.intents, delete: ['delete'] } };
     assert(interpretEditorCommand('delete', { vocabulary: words, actions: deleting }).action.id === 'selection.delete', '13. Delete said alone is still the Delete action');
+    const parts = { ...vocabulary, parts: { roof: ['roof'] } };
+    assert(interpretEditorCommand('the roof red', { vocabulary: parts, actions }) === null && interpretEditorCommand('paint the roof red', { vocabulary: parts, actions }).kind === 'plain',
+        '14. spoken, a colour and a part are painted only when told to: "I like the red roof" paints nothing');
 }
 console.log('✓ the Editor\'s reading of a spoken command');
+
+{
+    // Only actions Undo takes back, or that only change what is seen, can be
+    // spoken; nothing that sends a build off the device or can't be undone.
+    const actions = createStandardActions({ session: {}, feedback: { show() {} } });
+    const ids = new Set(actions.map(({ id }) => id));
+    assert([...SPOKEN_ACTIONS].every((id) => ids.has(id)), '15. every action voice may run is one of the Editor\'s');
+    for (const id of ['file.publish', 'file.export', 'file.exportModel', 'file.import', 'file.new', 'structure.createFromSelection', 'ui.voice']) {
+        assert(!SPOKEN_ACTIONS.has(id), `16. ${id} can't be spoken`);
+    }
+    const said = (text) => interpretEditorCommand(text, { actions: actions.map((action) => ({ ...action, label: action.id.split('.')[1] })) });
+    assert(said('publish') === null && said('export') === null && said('new') === null, '17. "publish", "export", "new build" said do nothing');
+    assert(said('save')?.action.id === 'file.save' && said('undo')?.action.id === 'history.undo', '18. "save" and "undo" still do');
+}
+console.log('✓ what voice may run');
+
+{
+    // core/voice/WorldVoiceCommand.js: a command is said on its own.
+    const vocabulary = { home: ['home', 'go home'], talk: ['talk'], goTo: ['go to'], ignoredWords: ['is', 'to', 'the', 'my'] };
+    const kind = (text) => interpretWorldCommand(text, vocabulary)?.kind ?? null;
+    assert(kind('home') === 'home' && kind('go home') === 'home' && kind('go to home') === 'home' && kind('home please') === 'home', '19. a command, alone or with a word more');
+    assert(MAX_OTHER_WORDS === 1 && kind('who wants to talk') === null && kind('my home is far away') === null, '20. inside a sentence that says more, it is no command');
+}
+console.log('✓ World View\'s commands are said on their own');
 
 console.log('✅ All voice phrase tests passed.');

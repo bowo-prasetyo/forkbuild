@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 436a4011e7ce6564 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: b9f6583713dd4416 -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -941,6 +941,12 @@ seule étape annulable. Il comprend les mêmes demandes que
 [Des commandes avec vos mots](#des-commandes-avec-vos-mots), et toute action
 dite par son nom. Une question (*comment inviter un ami ?*) propose
 **Demander au guide**.
+
+La voix ne publie, n’exporte, n’importe, ne commence de nouvelle
+construction ni ne crée de plan, jamais : un mot mal entendu ne doit jamais
+envoyer votre construction où que ce soit, ni faire ce qu’Annuler ne peut
+pas défaire. Faites-le à la main. Et dites quoi faire : *peins le toit en
+rouge*, pas seulement *le toit rouge*.
 
 La première fois, il explique ce que télécharge l’activation de la voix,
 environ 107 Mo une seule fois : un petit modèle vocal (Whisper) depuis

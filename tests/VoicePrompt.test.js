@@ -15,8 +15,9 @@ import { assert } from './support/Assert.js';
     assert(!editor.includes('Voice'), '4. never Voice itself');
     const expanded = voicePrompt('editor', { expanded: true }).split(', ');
     assert(editor.every((word) => expanded.includes(word)) && expanded.includes('boulder') && expanded.length > editor.length, '5. expanded, every phrasing the app reads');
-    const actions = [{ id: 'made.up', label: 'Sparkle' }];
-    assert(voicePrompt('editor', { actions }).startsWith('Sparkle'), '6. an action the Editor has is in it as soon as it exists');
+    const actions = [{ id: 'history.undo', label: 'Sparkle' }, { id: 'file.publish', label: 'Publish' }];
+    assert(voicePrompt('editor', { actions }).startsWith('Sparkle') && !voicePrompt('editor', { actions }).includes('Publish'),
+        '6. an action is in it by the name the Editor gives it, and only those voice may run');
     const world = voicePrompt('world', { places: [{ title: 'The Old Mill' }] });
     assert(world.endsWith('go to, The Old Mill') && world.includes('first person'), '7. World View\'s prompt has its commands and, last, the World\'s Locations');
     await setAppLocale('ja');

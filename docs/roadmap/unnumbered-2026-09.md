@@ -10121,3 +10121,33 @@ and implement that fix and open a PR."), after they asked why My Builds said "Th
   languages.
 - Tests: tests/CoBuilderPagesBrowser.test.js (your page's heading and empty lines speak to you; someone else's speak
   about them).
+
+## Voice does only what was asked, and nothing it can't take back (unnumbered, 2026-10-30)
+
+**A misheard word never publishes, and a sentence that only mentions a command does nothing.** Measured on the
+speech model's own transcripts (docs/reviews/VoicePrompt-2026-10-30.md): spoken by synthetic voices, five everyday
+sentences made voice act in 55 of 160 recordings before, and in none now. (The owner's yes, 2026-10-30: "Great! Yes,
+I agree with your plans above. Please go ahead fixing both.")
+
+**The filter.**
+1. **Pillar:** building, by voice. A player who says something near a command, or whose word is misheard, finds
+   nothing done instead of a painted roof, a call, a flight home or a published build.
+2. **First ten minutes:** no harder; voice is turned on by choice, and does less by mistake.
+3. **Building first:** yes; it keeps what is built from being changed, or sent off, by a misheard word.
+4. **Counts:** none yet; no count looks at voice. The measure is the voice evaluation's: nothing done that must be
+   undone.
+
+- **Voice runs only what Undo takes back,** what only changes what is seen, and Save
+  (core/voice/EditorVoiceCommand.js `SPOKEN_ACTIONS`): never Publish, Export, 3D Model, Import, New Build or Create
+  Blueprint. A Publish could be heard in "Duplicar" ("Publicar") and went out unasked.
+- **Spoken, paint is done only when said:** "I like the red roof" no longer paints it, nor "How many bricks is that?"
+  the selection Brick. Typed in the palette, "the roof red" is still paint, shown before it is done.
+- **In World View, a command is said on its own:** "Who wants to talk?" and "My home is far away." no longer start a
+  call or fly home (core/voice/WorldVoiceCommand.js `MAX_OTHER_WORDS`).
+- **German:** *laut* (loud) alone no longer turns the sound on.
+- About 2% fewer commands are heard right (40.4% of the synthetic recordings, from 42.6%): paint commands whose verb
+  was misheard did the right thing by luck, and now do nothing. Nothing is done that must be undone.
+- The user guide's *Speak a command* says what voice never does, in all eight languages.
+- Tests: tests/VoicePhrases.test.js (what voice may run; a command said on its own; the five sentences, typed, in every
+  language), tests/PlainCommand.test.js (`intentSaid`), tests/VoicePrompt.test.js (only what voice may run is in a
+  prompt).

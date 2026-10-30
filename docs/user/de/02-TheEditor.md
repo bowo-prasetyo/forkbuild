@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 436a4011e7ce6564 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: b9f6583713dd4416 -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -920,6 +920,12 @@ hat, in einem Schritt, den Sie rückgängig machen können. Es versteht
 dieselben Wünsche wie [Befehle in eigenen Worten](#befehle-in-eigenen-worten)
 und jede Aktion, die Sie beim Namen nennen. Eine Frage (*Wie lade ich einen
 Freund ein?*) bietet **Das Handbuch fragen** an.
+
+Per Stimme wird nie veröffentlicht, exportiert, importiert, ein neues
+Bauwerk begonnen oder ein Bauplan erstellt: Ein falsch gehörtes Wort darf
+Ihr Bauwerk nie irgendwohin schicken oder tun, was Rückgängig nicht
+zurücknehmen kann. Das tun Sie von Hand. Und sagen Sie, was zu tun ist:
+*streiche das Dach rot*, nicht nur *das Dach rot*.
 
 Beim ersten Mal erklärt es, was das Einschalten herunterlädt, einmalig etwa
 107 MB: ein kleines Sprachmodell (Whisper) von Hugging Face und seine

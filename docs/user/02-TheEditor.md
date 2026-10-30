@@ -829,6 +829,11 @@ what it did, in one step you can undo. It understands the same requests as
 [Commands in plain words](#commands-in-plain-words), and any action said by
 its name. A question (*how do I invite a friend?*) offers **Ask the guide**.
 
+Voice never publishes, exports, imports, starts a new build or makes a
+blueprint: a misheard word must never send your build anywhere, or do what
+Undo can't take back. Do those by hand. And say what to do: *paint the roof
+red*, not just *the roof red*.
+
 The first time, it explains what turning voice on downloads, about 107 MB
 once: a small speech model (Whisper) from Hugging Face and its engine from
 jsDelivr. They stay in this browser, so voice works offline afterwards. What

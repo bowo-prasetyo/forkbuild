@@ -129,6 +129,9 @@ and Indonesian. Both would pass rules 2 (15% and 20% slower) and 3.
 
 ## What was found besides
 
+- *Both fixed on 2026-10-30: voice runs only
+  `core/voice/EditorVoiceCommand.js#SPOKEN_ACTIONS`, and the five sentences
+  below do nothing; the phrase set holds them, so they stay that way.*
 - **Voice can reach Publish.** A command spoken in the Editor can run any
   of its actions but Voice itself (`ui/views/EditorView.js#actOnVoice()`),
   Publish included. For a builder whose name, license and findability are

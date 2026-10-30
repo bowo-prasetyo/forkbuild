@@ -398,7 +398,14 @@ the detailed references; in short:
   `Transcript.js#actionSaid()`), or Ask the guide for a question; spoken, a
   plain command acts on the selection only when it says so
   (core/building/PlainCommand.js's `target.said`), since a misheard part name
-  would otherwise paint or delete the selection. How well it hears is
+  would otherwise paint or delete the selection; and only when it says what
+  to do (`plan.intentSaid`: "I like the red roof" paints nothing, though the
+  palette reads "the roof red" as paint, showing it first). Only
+  `EditorVoiceCommand.js#SPOKEN_ACTIONS` can be spoken: actions Undo takes
+  back, those that only change what is seen, and Save; never Publish,
+  Export, 3D Model, Import, New Build or Create Blueprint, so nothing
+  misheard sends a build off the device or does what Undo can't take back,
+  and a new action can be spoken only once it is added there. How well it hears is
   measured by scripts/evaluate-voice-commands.mjs: recordings of
   scripts/voiceCommandPhrases.mjs's phrases (synthetic ones from
   scripts/synthesize-voice-corpus.mjs, or people's, in voice-corpus/, which
@@ -415,7 +422,10 @@ the detailed references; in short:
   (docs/reviews/VoicePrompt-2026-10-30.md). World View reads it with
   core/voice/WorldVoiceCommand.js (words from ui/i18n/worldVoiceWords.js):
   go to a place named in Locations (or a build on a challenge plaza), Home,
-  a camera view, sound off or on, undo, redo, or talk to a resident. When
+  a camera view, sound off or on, undo, redo, or talk to a resident, each
+  said on its own: found inside a sentence with more than
+  `MAX_OTHER_WORDS` (1) other words, the language's ignored words and "go
+  to" aside, it is no command ("Who wants to talk?"). When
   "go to" was said, nothing else was asked for and no place name is found
   whole, a near miss is: each name word of four letters or more matches a
   word heard, or two heard side by side, with the same first letter within
