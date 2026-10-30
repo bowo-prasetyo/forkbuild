@@ -177,6 +177,7 @@ export class SpeechRuntime {
             }
         });
         if (generation !== this._generation) throw new Error('speech model: removed while loading');
+        this._Tensor = library.Tensor;
         this._recognize = recognize;
         return this;
     }
@@ -241,14 +242,57 @@ export class SpeechRuntime {
     // model is asked directly: <|startofprev|>, the prompt, then the tokens
     // the pipeline would start with (the model's _retrieve_init_tokens()).
     async _transcribeAfter(prompt, samples, options) {
+        return (await this._heard(prompt, samples, options, { measure: false })).text;
+    }
+
+    // What was said in `samples`, as transcribe() hears it, with how sure the
+    // model was: `{ text, noSpeech, logprob }`. `noSpeech` is the model's own
+    // probability that nothing was said (Whisper's <|nospeech|> where it
+    // starts writing), asked without the prompt: a prompt makes the model
+    // surer there are words, and whether there are is a question about the
+    // sound alone. `logprob` is the mean log-probability of what it wrote.
+    // core/voice/Transcript.js#heardNothing() reads them as Whisper's own
+    // transcription does. Asked of the model directly, with or without a
+    // prompt, so the two are measured alike; the sound is encoded once.
+    async hear(samples, language, { prompt = '' } = {}) {
+        await this.load();
+        const options = { language, task: 'transcribe', max_new_tokens: MAX_SPOKEN_TOKENS };
+        return this._heard(typeof prompt === 'string' ? prompt.trim() : '', samples, options, { measure: true });
+    }
+
+    async _heard(prompt, samples, options, { measure }) {
         const { model, processor, tokenizer } = this._recognize;
         const { input_features: inputs } = await processor(samples);
-        const before = tokenizer.encode(` ${prompt}`, { add_special_tokens: false }).slice(-MAX_PROMPT_TOKENS);
-        const start = model._retrieve_init_tokens({ ...model.generation_config, ...options, return_timestamps: false });
-        const prefix = [tokenizer.convert_tokens_to_ids('<|startofprev|>'), ...before, ...start].map(Number);
-        const output = await model.generate({ inputs, decoder_input_ids: [prefix], ...options });
+        const before = prompt ? [tokenizer.convert_tokens_to_ids('<|startofprev|>'), ...tokenizer.encode(` ${prompt}`, { add_special_tokens: false }).slice(-MAX_PROMPT_TOKENS)] : [];
+        const start = model._retrieve_init_tokens({ ...model.generation_config, ...options, return_timestamps: false }).map(Number);
+        const prefix = [...before.map(Number), ...start];
+        if (!measure) {
+            const output = await model.generate({ inputs, decoder_input_ids: [prefix], ...options });
+            const tokens = (output?.sequences ?? output)[0].tolist().map(Number);
+            return { text: tokenizer.decode(tokens.slice(prefix.length), { skip_special_tokens: true }) };
+        }
+        const ids = (list) => new this._Tensor('int64', BigInt64Array.from(list.map((id) => BigInt(id))), [1, list.length]);
+        // The sound encoded once, as generate() would (transformers.js's
+        // _prepare_encoder_decoder_kwargs_for_generation()), for all three
+        // steps below.
+        const { encoder_outputs: encoded } = await model._prepare_encoder_decoder_kwargs_for_generation({
+            inputs_tensor: inputs, model_inputs: { input_features: inputs }, model_input_name: 'input_features', generation_config: model.generation_config
+        });
+        // Is anything said, asked of the sound alone: the model's first step
+        // with no prompt.
+        const first = await model({ encoder_outputs: encoded, decoder_input_ids: ids(start.slice(0, 1)) });
+        const noSpeechId = Number(tokenizer.convert_tokens_to_ids('<|nospeech|>') ?? tokenizer.convert_tokens_to_ids('<|nocaptions|>'));
+        const noSpeech = noSpeechId >= 0 ? Math.exp(logSoftmaxAt(first.logits, 0, noSpeechId)) : 0;
+        const output = await model.generate({ inputs, encoder_outputs: encoded, decoder_input_ids: [prefix], ...options });
         const tokens = (output?.sequences ?? output)[0].tolist().map(Number);
-        return tokenizer.decode(tokens.slice(prefix.length), { skip_special_tokens: true });
+        const text = tokenizer.decode(tokens.slice(prefix.length), { skip_special_tokens: true });
+        // The model once more over all it was given and wrote: how probable
+        // each token it wrote was, given what came before.
+        const { logits } = await model({ encoder_outputs: encoded, decoder_input_ids: ids(tokens) });
+        let sum = 0;
+        for (let at = prefix.length; at < tokens.length; at += 1) sum += logSoftmaxAt(logits, at - 1, tokens[at]);
+        const written = tokens.length - prefix.length;
+        return { text, noSpeech, logprob: written > 0 ? sum / written : 0 };
     }
 
     // Deletes the engine and the model from this browser.
@@ -258,4 +302,15 @@ export class SpeechRuntime {
         this._recognize = null;
         await Promise.all([ENGINE_CACHE, MODEL_CACHE].map((name) => Promise.resolve(this._caches.delete(name)).catch(() => false)));
     }
+}
+
+// The log-probability of token `id` at place `at` of `logits` ([1, places, vocabulary]).
+function logSoftmaxAt(logits, at, id) {
+    const size = logits.dims[2];
+    const values = logits.data.subarray(at * size, (at + 1) * size);
+    let most = -Infinity;
+    for (const value of values) most = Math.max(most, value);
+    let sum = 0;
+    for (const value of values) sum += Math.exp(value - most);
+    return values[id] - most - Math.log(sum);
 }

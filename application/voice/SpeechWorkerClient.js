@@ -1,5 +1,5 @@
 // The page's side of voice building's speech recognition: the same
-// downloaded(), load(), transcribe() and remove() as SpeechRuntime, each
+// downloaded(), load(), transcribe(), hear() and remove() as SpeechRuntime, each
 // answered by the speech worker (application/voice/speechWorker.js,
 // application/voice/serveSpeech.js), which is started the first time one is
 // called. Recognition takes a second or two of hard work; in the worker, the
@@ -62,6 +62,11 @@ export class SpeechWorkerClient {
     // `samples` (mono, 16 kHz, Float32Array) is handed to the worker, not copied.
     transcribe(samples, language) {
         return this._ask({ type: 'transcribe', samples, language }, null, [samples.buffer], this._transcribeTimeoutMs);
+    }
+
+    // What was said, with how sure the model was (SpeechRuntime#hear()).
+    hear(samples, language) {
+        return this._ask({ type: 'hear', samples, language }, null, [samples.buffer], this._transcribeTimeoutMs);
     }
 
     remove() {

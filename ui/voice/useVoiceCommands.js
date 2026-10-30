@@ -1,7 +1,7 @@
 import { onBeforeUnmount, ref } from 'vue';
 import { SPEECH_ENGINE_SHARE, TRANSCRIBE_TIMEOUT, speechSupported } from '../../application/voice/SpeechWorkerClient.js';
 import { SPEECH_MODEL } from '../../application/voice/SpeechModelPins.js';
-import { cleanTranscript, whisperLanguage, withoutSilenceWords } from '../../core/voice/Transcript.js';
+import { cleanTranscript, heardNothing, repeatsItself, whisperLanguage, withoutSilenceWords } from '../../core/voice/Transcript.js';
 import { prepareSpeech } from '../../core/voice/SpeechPreparation.js';
 import { startRecording } from './recordVoice.js';
 import { sharedSpeechRecognizer } from './speechRecognizer.js';
@@ -87,6 +87,15 @@ export function useVoiceCommands({ act, runtime = sharedSpeechRecognizer(), reco
         show({ step: 'listening' });
     }
 
+    // What the model heard, or '' when, by Whisper's own test, it thought
+    // nothing was said and wasn't sure of what it wrote, or it went round in
+    // a loop (core/voice/Transcript.js#heardNothing(), #repeatsItself()).
+    async function hearSpeech(samples) {
+        if (typeof runtime.hear !== 'function') return runtime.transcribe(samples, whisperLanguage(language()));
+        const { text, noSpeech, logprob } = await runtime.hear(samples, whisperLanguage(language()));
+        return heardNothing({ noSpeech, logprob }) || repeatsItself(text) ? '' : text;
+    }
+
     async function finish() {
         const current = recording;
         recording = null;
@@ -96,11 +105,10 @@ export function useVoiceCommands({ act, runtime = sharedSpeechRecognizer(), reco
         try {
             // Only what was said, at a level the model hears well; nothing
             // said, nothing asked (core/voice/SpeechPreparation.js), and what
-            // the model makes up from silence is not taken for a command.
+            // the model makes up from silence or noise is not taken for a
+            // command.
             const speech = prepareSpeech(await current.stop());
-            const heard = speech.speech
-                ? withoutSilenceWords(cleanTranscript(await runtime.transcribe(speech.samples, whisperLanguage(language()))))
-                : '';
+            const heard = speech.speech ? withoutSilenceWords(cleanTranscript(await hearSpeech(speech.samples))) : '';
             if (mine !== attempt) return;
             show({ step: 'result', heard, outcome: heard ? act(heard) : { kind: 'nothing' } });
         } catch (error) {

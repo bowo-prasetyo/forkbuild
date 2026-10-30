@@ -88,6 +88,44 @@ export function withoutSilenceWords(text) {
     return isOnlySilenceWords(text) ? '' : text;
 }
 
+// Whisper's own test for words made up from a sound with none in it, as its
+// transcription runs it (openai/whisper, transcribe()'s no_speech_threshold
+// and logprob_threshold): the model thought it likely nothing was said, and
+// wasn't sure of what it wrote. `noSpeech` and `logprob` are
+// application/voice/SpeechRuntime.js#hear()'s. Measured with a prompt and
+// without (docs/reviews/VoicePrompt-2026-10-30.md), not tuned to it.
+export const NO_SPEECH_THRESHOLD = 0.6;
+export const LOGPROB_THRESHOLD = -1;
+
+export function heardNothing({ noSpeech, logprob } = {}) {
+    return Number.isFinite(noSpeech) && Number.isFinite(logprob) && noSpeech > NO_SPEECH_THRESHOLD && logprob < LOGPROB_THRESHOLD;
+}
+
+// How many times running a word, or a few, says itself before what was
+// heard is taken for the model going round in a loop ("white, white, white,
+// …", "sound off, sound off, sound off, …"), which it does over noise, and
+// more given a list to lean on. A command never says the same thing three
+// times.
+export const MAX_SAID_IN_A_ROW = 2;
+
+// Whether `text` says the same word, or the same few words, more than
+// MAX_SAID_IN_A_ROW times running: its words, or, written without spaces
+// between them (Japanese), its letters.
+export function repeatsItself(text) {
+    const folded = String(text || '').normalize('NFKC').toLocaleLowerCase();
+    const words = folded.split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+    const units = words.length >= MAX_SAID_IN_A_ROW + 1 ? words : [...folded.replace(/[^\p{L}\p{N}]/gu, '')];
+    const times = MAX_SAID_IN_A_ROW + 1;
+    for (let size = 1; size * times <= units.length; size += 1) {
+        for (let at = 0; at + size * times <= units.length; at += 1) {
+            let same = true;
+            for (let k = 0; same && k < size * (times - 1); k += 1) same = units[at + k] === units[at + size + k];
+            if (same) return true;
+        }
+    }
+    return false;
+}
+
 // The one action whose name (`toText(action.label)`) is exactly what was
 // said, ignoring case, accents and punctuation; null for none or several.
 export function actionNamed(transcript, actions, toText = String) {
