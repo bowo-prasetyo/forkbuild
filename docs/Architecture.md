@@ -446,7 +446,9 @@ the detailed references; in short:
   it was said, "go to" aside, it is no command ("Who wants to talk?"; "Aku
   rindu rumah", I miss home, though "aku" is in "bawa aku ke", take me to); and talk, which starts
   a call, with no other word before it ("wir reden" is not talk, "talk to
-  her" is). When
+  her" is); and a command held only as part of another's phrase ("음소거"
+  of "음소거 해제", mute of unmute) with no other word at all ("음소거
+  했지", unmute misheard, is neither). When
   "go to" was said, nothing else was asked for and no place name is found
   whole, a near miss is: each name word of four letters or more matches a
   word heard, or two heard side by side, with the same first letter within

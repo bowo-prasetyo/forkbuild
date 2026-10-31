@@ -47,25 +47,36 @@ export const MAX_OTHER_WORDS = 1;
 // only when it is the same word ("꺼", "à"). `before`: only the words before
 // the command's own.
 function otherWords(text, phrases, ignoredWords, goTo = [], { before = false } = {}) {
-    const held = (phrases || []).filter((phrase) => {
-        const whole = wordsFound(phrase, [phrase], ignoredWords);
-        return whole > 0 && wordsFound(text, [phrase], ignoredWords) >= whole;
-    });
+    const held = phrasesHeld(text, phrases, ignoredWords);
     if (held.length === 0) return null;
     const ignored = new Set(ignoredWords.map(fold));
     // Going to's words are the command's only when going to was said: "aku"
     // is in "bawa aku ke" (take me to), but "Aku rindu rumah" (I miss home)
     // isn't going anywhere.
-    const goingTo = goTo.filter((phrase) => {
-        const whole = wordsFound(phrase, [phrase], ignoredWords);
-        return whole > 0 && wordsFound(text, [phrase], ignoredWords) >= whole;
-    });
+    const goingTo = phrasesHeld(text, goTo, ignoredWords);
     const commandWords = new Set([...held, ...goingTo].flatMap((phrase) => wordsOf(fold(phrase))));
     const other = (word) => !ignored.has(word) && !commandWords.has(word) && wordsFound(word, held, ignoredWords) === 0;
     const words = wordsOf(fold(text));
     // Only those before the first of the command's own words.
     const end = before ? words.findIndex((word) => !ignored.has(word) && !other(word)) : -1;
     return (end >= 0 ? words.slice(0, end) : words).filter(other).length;
+}
+
+// Those of `phrases` that `text` holds whole.
+function phrasesHeld(text, phrases, ignoredWords) {
+    return (phrases || []).filter((phrase) => {
+        const whole = wordsFound(phrase, [phrase], ignoredWords);
+        return whole > 0 && wordsFound(text, [phrase], ignoredWords) >= whole;
+    });
+}
+
+// Whether every phrase of `command` that `text` holds is part of a longer
+// phrase of another command.
+function onlyInsideAnother(text, command, vocabulary, ignoredWords) {
+    const held = phrasesHeld(text, vocabulary[command], ignoredWords);
+    const longer = WORLD_VOICE_COMMANDS.filter((other) => other !== command)
+        .flatMap((other) => vocabulary[other] || []).map(fold);
+    return held.length > 0 && held.every((phrase) => longer.some((other) => other !== fold(phrase) && other.includes(fold(phrase))));
 }
 
 // How well `text` holds one of `phrases`: only a phrase found whole counts,
@@ -211,6 +222,11 @@ export function interpretWorldCommand(transcript, vocabulary = {}, places = []) 
     // Found inside a sentence that says more: not a command.
     if (kind && otherWords(transcript, vocabulary[kind], ignoredWords, vocabulary.goTo) > MAX_OTHER_WORDS) kind = null;
     if (kind === 'talk' && otherWords(transcript, vocabulary.talk, ignoredWords, vocabulary.goTo, { before: true }) > 0) kind = null;
+    // Held only as part of another command's phrase ("음소거" of "음소거 해제",
+    // mute of unmute), with another word: that word may be the rest of the
+    // other, misheard ("음소거 했지"), so it is neither.
+    if (kind && onlyInsideAnother(transcript, kind, vocabulary, ignoredWords)
+        && otherWords(transcript, vocabulary[kind], ignoredWords, vocabulary.goTo) > 0) kind = null;
     if (phraseScore(transcript, vocabulary.goTo, ignoredWords) > 0) {
         // A near miss only when nothing else was asked for: "go to home" is
         // home, however near "Homes" is.
