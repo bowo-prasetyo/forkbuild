@@ -674,7 +674,7 @@ export default Object.freeze({
     'worldVoice.words.soundOn': 'ton an, ton ein, ton einschalten',
     'worldVoice.words.undo': 'rückgängig, rückgängig machen, mach das rückgängig',
     'worldVoice.words.redo': 'wiederholen, wiederherstellen',
-    'worldVoice.words.talk': 'sprich mit, sprechen, rede mit, reden, unterhalte, hallo',
+    'worldVoice.words.talk': 'sprich mit, sprechen, rede mit, reden, unterhalte, sag hallo, hallo',
 
     // The Keyboard Shortcuts overlay (ui/components/KeyboardShortcutsOverlay.js).
     'shortcuts.title': 'Tastenkürzel',

@@ -409,7 +409,10 @@ the detailed references; in short:
   (core/building/PlainCommand.js's `target.said`), since a misheard part name
   would otherwise paint or delete the selection; and only when it says what
   to do (`plan.intentSaid`: "I like the red roof" paints nothing, though the
-  palette reads "the roof red" as paint, showing it first). Only
+  palette reads "the roof red" as paint, showing it first); and it acts on
+  everything only when no word it can't read comes with it (`plan.unread`,
+  words of three letters or more, two in Korean: "Selecione todas as
+  ginelas", the windows misheard, selects nothing). Only
   `EditorVoiceCommand.js#SPOKEN_ACTIONS` can be spoken: actions Undo takes
   back, those that only change what is seen, and Save; never Publish,
   Export, 3D Model, Import, New Build or Create Blueprint, so nothing
@@ -436,7 +439,9 @@ the detailed references; in short:
   a camera view, sound off or on, undo, redo, or talk to a resident, each
   said on its own: found inside a sentence with more than
   `MAX_OTHER_WORDS` (1) other words, the language's ignored words and "go
-  to" aside, it is no command ("Who wants to talk?"). When
+  to" aside, it is no command ("Who wants to talk?"); and talk, which starts
+  a call, with no other word before it ("wir reden" is not talk, "talk to
+  her" is). When
   "go to" was said, nothing else was asked for and no place name is found
   whole, a near miss is: each name word of four letters or more matches a
   word heard, or two heard side by side, with the same first letter within

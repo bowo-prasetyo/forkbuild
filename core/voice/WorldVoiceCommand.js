@@ -23,7 +23,10 @@
 // most MAX_OTHER_WORDS other words may come with it, the language's ignored
 // words aside; measured, the commands of scripts/voiceCommandPhrases.mjs,
 // typed or as the speech model heard them, came with at most one, and
-// sentences only naming a command with two to four.
+// sentences only naming a command with two to four. Talk, which starts a
+// call with someone and can't be taken back, comes with none before it: a
+// word after it says who to ("talk to her"), one before it who talks, a
+// sentence about talking ("wir reden", "Wer will reden?" heard short).
 //
 // Pure: text, words and places in, a command or null out.
 import { wordsFound, wordsOf, fold } from '../library/LibrarySearch.js';
@@ -41,8 +44,9 @@ export const MAX_OTHER_WORDS = 1;
 // (`goTo`: "go to home" is home), nor a word of one of `phrases` (a
 // command's phrasings: "rentre à la maison" holds two), when it holds one of
 // them whole; null when it holds none. A short word counts as the phrase's
-// only when it is the same word ("꺼", "à").
-function otherWords(text, phrases, ignoredWords, goTo = []) {
+// only when it is the same word ("꺼", "à"). `before`: only the words before
+// the command's own.
+function otherWords(text, phrases, ignoredWords, goTo = [], { before = false } = {}) {
     const held = (phrases || []).filter((phrase) => {
         const whole = wordsFound(phrase, [phrase], ignoredWords);
         return whole > 0 && wordsFound(text, [phrase], ignoredWords) >= whole;
@@ -50,7 +54,11 @@ function otherWords(text, phrases, ignoredWords, goTo = []) {
     if (held.length === 0) return null;
     const ignored = new Set(ignoredWords.map(fold));
     const commandWords = new Set([...held, ...goTo].flatMap((phrase) => wordsOf(fold(phrase))));
-    return wordsOf(fold(text)).filter((word) => !ignored.has(word) && !commandWords.has(word) && wordsFound(word, held, ignoredWords) === 0).length;
+    const other = (word) => !ignored.has(word) && !commandWords.has(word) && wordsFound(word, held, ignoredWords) === 0;
+    const words = wordsOf(fold(text));
+    // Only those before the first of the command's own words.
+    const end = before ? words.findIndex((word) => !ignored.has(word) && !other(word)) : -1;
+    return (end >= 0 ? words.slice(0, end) : words).filter(other).length;
 }
 
 // How well `text` holds one of `phrases`: only a phrase found whole counts,
@@ -195,6 +203,7 @@ export function interpretWorldCommand(transcript, vocabulary = {}, places = []) 
     }
     // Found inside a sentence that says more: not a command.
     if (kind && otherWords(transcript, vocabulary[kind], ignoredWords, vocabulary.goTo) > MAX_OTHER_WORDS) kind = null;
+    if (kind === 'talk' && otherWords(transcript, vocabulary.talk, ignoredWords, vocabulary.goTo, { before: true }) > 0) kind = null;
     if (phraseScore(transcript, vocabulary.goTo, ignoredWords) > 0) {
         // A near miss only when nothing else was asked for: "go to home" is
         // home, however near "Homes" is.

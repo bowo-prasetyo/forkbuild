@@ -57,6 +57,13 @@ console.log('✓ verdicts');
     const parts = { ...vocabulary, parts: { roof: ['roof'] } };
     assert(interpretEditorCommand('the roof red', { vocabulary: parts, actions }) === null && interpretEditorCommand('paint the roof red', { vocabulary: parts, actions }).kind === 'plain',
         '14. spoken, a colour and a part are painted only when told to: "I like the red roof" paints nothing');
+    const all = { ...parts, intents: { ...parts.intents, select: ['select'] }, everything: ['all', 'everything'], ignoredWords: ['the'] };
+    assert(interpretEditorCommand('select all the ginelas', { vocabulary: all, actions }) === null,
+        '14a. spoken, nothing is done to everything when a word it can\'t read comes with it: the part may have been misheard');
+    assert(interpretEditorCommand('paint everything red', { vocabulary: all, actions }).plan.target.kind === 'everything'
+        && interpretEditorCommand('paint all in red', { vocabulary: all, actions }).plan.target.kind === 'everything'
+        && interpretEditorCommand('select all the roofs', { vocabulary: all, actions }).plan.target.kind === 'part',
+        '14b. said whole, or with a short word that holds the sentence together, everything is everything');
 }
 console.log('✓ the Editor\'s reading of a spoken command');
 
@@ -81,6 +88,8 @@ console.log('✓ what voice may run');
     const kind = (text) => interpretWorldCommand(text, vocabulary)?.kind ?? null;
     assert(kind('home') === 'home' && kind('go home') === 'home' && kind('go to home') === 'home' && kind('home please') === 'home', '19. a command, alone or with a word more');
     assert(MAX_OTHER_WORDS === 1 && kind('who wants to talk') === null && kind('my home is far away') === null, '20. inside a sentence that says more, it is no command');
+    assert(kind('talk') === 'talk' && kind('talk to her') === 'talk' && kind('we talk') === null,
+        '21. talk, which can\'t be taken back, with nothing before it: "wir reden" is a sentence about talking');
 }
 console.log('✓ World View\'s commands are said on their own');
 

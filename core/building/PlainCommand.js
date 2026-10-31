@@ -12,7 +12,7 @@
 // (ui/i18n/plainCommandWords.js), so this reads any of them.
 //
 // Pure: text and words in, a plan or null out. Nothing here touches a build.
-import { wordsFound } from '../library/LibrarySearch.js';
+import { fold, wordsFound, wordsOf } from '../library/LibrarySearch.js';
 import { BUILD_PARTS } from '../catalog/BuildDescription.js';
 import { VILLAGE_PALETTE } from './VillagePalette.js';
 
@@ -65,7 +65,8 @@ function bestMatch(query, options, order, ignoredWords) {
 // was used and it is only what paint and delete fall back on; `colour` a
 // palette id, for paint only; `intentSaid` false when no word for what to do
 // was used and paint was read from a colour and what to paint ("the windows
-// red"). Null when it isn't one of these requests.
+// red"); `unread` how many of its words are none of these, nor ignored,
+// nor short ("select all the ginelas": one). Null when it isn't one of these requests.
 export function interpretPlainCommand(query, vocabulary = {}) {
     if (typeof query !== 'string' || !query.trim()) return null;
     const ignoredWords = vocabulary.ignoredWords || [];
@@ -87,5 +88,23 @@ export function interpretPlainCommand(query, vocabulary = {}) {
     else if (selection || intent !== 'select') target = Object.freeze({ kind: 'selection', said: selection });
     if (!target) return null;
 
-    return Object.freeze({ intent, target, colour: intent === 'paint' ? colour : null, intentSaid });
+    const read = [
+        vocabulary.intents?.[intent], vocabulary.colours?.[colour], vocabulary.parts?.[part],
+        everything ? vocabulary.everything : null, selection ? vocabulary.selection : null
+    ].filter(Boolean).flat();
+    return Object.freeze({ intent, target, colour: intent === 'paint' ? colour : null, intentSaid, unread: unreadWords(query, read, ignoredWords) });
+}
+
+// The fewest letters of a word that may be a part's name misheard; shorter
+// ones are words that hold a sentence together ("en", "줘"), two in the
+// scripts written in syllables.
+const UNREAD_LETTERS = 3;
+const UNREAD_SYLLABLES = 2;
+
+// The words of `query` that are neither ignored, nor a word of `phrases`,
+// nor too short to be a name.
+function unreadWords(query, phrases, ignoredWords) {
+    const ignored = new Set(ignoredWords.map(fold));
+    return wordsOf(query).filter((word) => [...word].length >= (WITHOUT_SPACES.test(word) ? UNREAD_SYLLABLES : UNREAD_LETTERS)
+        && !ignored.has(word) && wordsFound(word, phrases, ignoredWords) === 0).length;
 }
