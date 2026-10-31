@@ -19,7 +19,10 @@
 // Such a command is read as an action's name instead, or as nothing. And it
 // says what to do: typed, "the windows red" is paint, since the palette shows
 // what it will do before it does it, but spoken, nothing is shown first, and
-// "I like the red roof" would paint it.
+// "I like the red roof" would paint it. Nor does it act on everything when
+// a word it can't read comes with it: "Select all the windows" with the
+// windows misheard ("Selecione todas as ginelas") would select all
+// (docs/reviews/VoicePrompt-2026-10-30.md).
 //
 // Only SPOKEN_ACTIONS can be run by voice: those whose changes Undo takes
 // back, and those that only change what is seen or open a panel. Publish,
@@ -54,7 +57,8 @@ export const SPOKEN_ACTIONS = Object.freeze(new Set([
 
 export function interpretEditorCommand(transcript, { vocabulary = {}, actions = [], toText = String, aliases = {} } = {}) {
     const plan = interpretPlainCommand(transcript, vocabulary);
-    if (plan && plan.intentSaid && (plan.target.kind !== 'selection' || plan.target.said)) return Object.freeze({ kind: 'plain', plan });
+    if (plan && plan.intentSaid && (plan.target.kind !== 'selection' || plan.target.said)
+        && (plan.target.kind !== 'everything' || plan.unread === 0)) return Object.freeze({ kind: 'plain', plan });
     const action = actionSaid(transcript, actions.filter(({ id }) => SPOKEN_ACTIONS.has(id)), { toText, aliases });
     return action ? Object.freeze({ kind: 'action', action }) : null;
 }

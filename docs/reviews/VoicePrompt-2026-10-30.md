@@ -17,7 +17,9 @@ could make it safe.
 from noise and what repeats itself; with that, no sound did anything under
 either prompt, but both still fail on words pulled toward a command. See
 *Re-run with guards*. Nor does a prompt without the words near a command pass,
-nor one in English only: see *Second re-run*.
+nor one in English only: see *Second re-run*. The command reader no longer reads "select all"
+with a garbled part, or "wir reden", as a command: see *The command
+reader's two sentences*.
 
 ## What was compared
 
@@ -311,6 +313,54 @@ that hold one for talk. They are for the command reader, measured the same
 way. Whether a prompt in English
 helps can only be known from recordings it gets wrong: recordings of
 people, not these voices.
+
+## The command reader's two sentences (2026-10-31)
+
+**Question.** Two sentences the second re-run left are read wrong by the
+command reader, whatever the prompt: "select all" with a garbled part after
+it, and "wir reden" ("Wer will reden?" heard short) as talk. Can the reader
+leave them be without losing commands?
+
+**Answer: yes.** Both changes were measured on every hearing above, read
+again by the new reader (nothing heard again), against a rule fixed before
+scoring: in no language, on no hearing, more done that must be undone, and
+without a prompt, with the guards, commands right falling by at most one in
+a hundred.
+
+- **Spoken, everything only when nothing unread comes with it**
+  (`core/building/PlainCommand.js` `unread`, used by
+  `core/voice/EditorVoiceCommand.js`): a word of three letters or more (two
+  in Korean) that is none of the command's words, nor an ignored word, may
+  be the part, misheard. "Selecione todas as ginelas" and "Sélectionne tout
+  qu'est fait naître" select nothing; "Paint everything green" and "Peins
+  tout en vert" still paint, in every language. Typed, the palette shows
+  what it will do first, and is unchanged.
+- **Talk with no word before it** (`core/voice/WorldVoiceCommand.js`): a
+  word before it says who talks ("wir reden", "we talk"), one after it who
+  to ("talk to her"). German's talk words gain "sag hallo", as English has
+  "say hello".
+
+| | Done that must be undone, old reader | New reader | Commands right, old | New |
+|---|---|---|---|---|
+| AG, no prompt, guards | 2 | 0 | 40.2% | 40.0% |
+| BG, vocabulary, guards | 5 | 3 | 52.9% | 52.9% |
+| CG, expanded, guards | 8 | 2 | 51.6% | 51.4% |
+| DG, apart, guards | 4 | 1 | 47.5% | 47.3% |
+| EG, English only, guards | 2 | 0 | 40.6% | 40.4% |
+
+Sixteen hearings changed, over the four hearings of all languages: eleven
+"select all" with a garbled part and two "wir reden", that did something
+wrong, now do nothing; and one German recording of "Sag hallo." is lost in
+three of them, heard as "Na, hallo." (or "mach hallo", "nach hallo"), a
+word before talk. No language
+does more that must be undone on any hearing. Without a prompt, voice now
+does nothing that must be undone on any of the 1024 recordings.
+
+With the new reader, the prompts still fail rule 1, each in fewer languages:
+B in Spanish and Portuguese ("Rehacer" as "Deshacer", "Desfazer" as "e
+fazer", read as redo by its sound), C in German and Portuguese ("Nach
+Hause" as "hallo"), D in Portuguese only ("e fazer"). English only still
+fails rule 3.
 
 ## Reproducing
 

@@ -10177,3 +10177,27 @@ experiment.")
 - Tests: tests/VoiceBuilding.test.js (the guards; a made-up or looping transcript does nothing in the app; `hear()`
   encodes once and measures without the prompt), tests/VoicePhrases.test.js (no phrase the app reads repeats itself),
   tests/VoicePrompt.test.js (the guards' rule).
+
+## Voice never selects everything for a misheard part, nor talks for a sentence about talking (unnumbered, 2026-10-31)
+
+**"Select all the windows" with the windows misheard selects nothing, and "wir reden" starts no call.** Measured on
+the speech model's own transcripts (docs/reviews/VoicePrompt-2026-10-30.md, *The command reader's two sentences*):
+without a prompt, voice now does nothing that must be undone on any of the 1024 recordings, where it did in two.
+(The owner's yes, 2026-10-31: "Thanks. Yes, next please fix the command reader for those two sentences.")
+
+**The filter.**
+1. **Pillar:** building, by voice. A player whose "select all the windows" is misheard finds nothing selected,
+   instead of the whole build, and no call starts from a sentence about talking.
+2. **First ten minutes:** no harder; voice is turned on by choice, and does less by mistake.
+3. **Building first:** yes; a misheard word no longer selects, paints or deletes the whole build.
+4. **Counts:** none yet; no count looks at voice. The measure is the voice evaluation's: nothing done that must be
+   undone, and commands right falling by at most one in a hundred.
+
+- **Spoken, everything only when nothing unread comes with it** (core/building/PlainCommand.js `unread`,
+  core/voice/EditorVoiceCommand.js): a word of three letters or more (two in Korean) that the reader can't read may be
+  the part, misheard. "Paint everything green" still paints, in every language; typed, the palette is unchanged.
+- **Talk with no word before it** (core/voice/WorldVoiceCommand.js): "talk to her" is talk, "wir reden" isn't. German's
+  talk words gain *sag hallo*.
+- One command in 512 fewer is heard right (40.0%, from 40.2%): German "Sag hallo." heard as "Na, hallo.".
+- Tests: tests/VoicePhrases.test.js (everything with a word unread does nothing, and with a short word still does;
+  talk with a word before it is not talk, with one after it is).
