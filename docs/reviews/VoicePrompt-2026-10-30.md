@@ -19,7 +19,9 @@ either prompt, but both still fail on words pulled toward a command. See
 *Re-run with guards*. Nor does a prompt without the words near a command pass,
 nor one in English only: see *Second re-run*. The command reader no longer reads "select all"
 with a garbled part, or "wir reden", as a command: see *The command
-reader's two sentences*.
+reader's two sentences*. Nor "e fazer" as redo; with that, the prompt without
+the words near a command passes, on recordings the reader was fitted to:
+see *"e fazer"*.
 
 ## What was compared
 
@@ -361,6 +363,51 @@ B in Spanish and Portuguese ("Rehacer" as "Deshacer", "Desfazer" as "e
 fazer", read as redo by its sound), C in German and Portuguese ("Nach
 Hause" as "hallo"), D in Portuguese only ("e fazer"). English only still
 fails rule 3.
+
+## "e fazer" (2026-10-31)
+
+**Question.** Portuguese "Desfazer" (undo) is heard as "e fazer", which the
+reader takes for redo by its sound: one sound from "refazer", two from
+"desfazer", and a whole sound was enough of a margin. Can it be read as
+neither?
+
+**Answer: yes, with a wider margin.** `core/voice/Transcript.js`
+`SOUND_MARGIN` is now an edit and a half: a command heard by its sound must
+be that much nearer than any other command's phrase. "e fazer" is neither.
+It is heard for both: "Refazer" was heard as "e fazer" (or "É fazer") too,
+and read right only by chance.
+
+Measured as the reader's changes above, on every hearing, read again, by
+the rule fixed before scoring:
+
+- **First tried, and rejected: a match by sound must start with the same
+  sound** (or both with a vowel), as a place's name heard a little wrong
+  does. Without a prompt, Spanish "Rehacer" heard as "de hacer" became
+  undo, by its "d", where before it was nothing (two more done that must be
+  undone), and commands right fell 1.1 points ("tirar en sentido horario"
+  is no longer rotate): it fails both parts of the rule.
+- **Used: a margin of an edit and a half.** No language does more that must
+  be undone on any hearing; the three "e fazer" read as redo do nothing.
+  Without a prompt, commands right fall from 40.0% to 39.5%: "Refazer"
+  heard as "e fazer" twice, and Indonesian "Urungkan" heard as
+  "kurungkan", no longer clearly nearer undo than any other command. A margin of two was also tried, and loses "and do" for undo.
+
+| | Done that must be undone, before → after | Commands right, before → after |
+|---|---|---|
+| AG, no prompt, guards | 0 → 0 | 40.0% → 39.5% |
+| BG, vocabulary, guards | 3 → 2 | 52.9% → 52.5% |
+| CG, expanded, guards | 2 → 1 | 51.4% → 51.0% |
+| DG, apart, guards | 1 → 0 | 47.3% → 46.9% |
+| EG, English only, guards | 0 → 0 | 40.4% → 39.8% |
+
+**The prompt without the words near a command now passes the prompt's
+rule** against AG: nothing more done that must be undone in any language,
+16% slower, and 63 commands fixed for 25 broken (p < 0.001). It is not
+used. The reader's last three changes were each made to clear what this
+prompt, on these recordings, still got wrong, so its pass here is not the
+measure fixed before it was seen. It needs recordings it hasn't been
+fitted to, new voices and phrasings or people, with the rule fixed first;
+and B and C still fail, in Spanish, Portuguese and German.
 
 ## Reproducing
 

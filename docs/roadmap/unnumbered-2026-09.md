@@ -10201,3 +10201,22 @@ without a prompt, voice now does nothing that must be undone on any of the 1024 
 - One command in 512 fewer is heard right (40.0%, from 40.2%): German "Sag hallo." heard as "Na, hallo.".
 - Tests: tests/VoicePhrases.test.js (everything with a word unread does nothing, and with a short word still does;
   talk with a word before it is not talk, with one after it is).
+
+## Voice doesn't guess between undo and redo (unnumbered, 2026-10-31)
+
+**"e fazer", heard for both "Desfazer" (undo) and "Refazer" (redo), does neither.** Measured on the speech model's
+own transcripts (docs/reviews/VoicePrompt-2026-10-30.md, *"e fazer"*). (The owner's yes, 2026-10-31: "Thanks. Yes,
+please fix the "e fazer" reado reading.")
+
+**The filter.**
+1. **Pillar:** building, by voice. A player saying undo, misheard, never finds the step they undid done again.
+2. **First ten minutes:** no harder; voice is turned on by choice, and does less by mistake.
+3. **Building first:** yes; a misheard word no longer redoes a step the builder took back.
+4. **Counts:** none yet; no count looks at voice. The measure is the voice evaluation's: nothing done that must be
+   undone, and commands right falling by at most one in a hundred.
+
+- **A command heard by its sound is an edit and a half nearer than any other** (core/voice/Transcript.js
+  `SOUND_MARGIN`, from one): "e fazer" is a sound from refazer and two from desfazer, and is neither.
+- Without a prompt, three commands in 512 fewer are heard right (39.5%, from 40.0%): "Refazer" heard as "e fazer",
+  and "Urungkan" as "kurungkan".
+- Tests: tests/VoiceBuilding.test.js ("e fazer" is no command; desfazer and refazer still are).

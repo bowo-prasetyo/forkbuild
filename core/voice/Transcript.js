@@ -151,13 +151,14 @@ export function actionNamed(transcript, actions, toText = String) {
 //   edit or so in a long one. "elite" is never "delete", nor "cat" "chat".
 // - It must also be at least SOUND_MARGIN nearer than any phrase of another
 //   command, so a near miss between two commands is no command, never a
-//   guess.
+//   guess: "e fazer" is one sound from "refazer" (redo) and two from
+//   "desfazer" (undo), and is heard for both.
 //
 // Only where words are spaced: Japanese, Chinese and Korean are matched
 // whole or not at all.
 const SOUND_EDITS_ALLOWED = 0.5;
 const SOUND_SHARE_ALLOWED = 0.15;
-const SOUND_MARGIN = 1;
+const SOUND_MARGIN = 1.5;
 const VOWEL_SWAP = 0.5;
 const VOWELS = new Set(['a', 'e', 'i', 'o', 'u', 'y']);
 const SPACELESS = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u;
