@@ -7,6 +7,7 @@
 import { SPOKEN_ACTIONS, interpretEditorCommand } from '../core/voice/EditorVoiceCommand.js';
 import { MAX_OTHER_WORDS, interpretWorldCommand } from '../core/voice/WorldVoiceCommand.js';
 import { createStandardActions } from '../application/editor/EditorActionRegistry.js';
+import { repeatsItself } from '../core/voice/Transcript.js';
 import { COMMANDS, SAID, voicePhrases } from '../scripts/voiceCommandPhrases.mjs';
 import { verdict, voiceReader } from '../scripts/voiceCommandOutcome.mjs';
 import { assert } from './support/Assert.js';
@@ -22,6 +23,7 @@ import { assert } from './support/Assert.js';
         }
     }
 }
+assert(voicePhrases().every((phrase) => !repeatsItself(phrase.text)), '3a. no phrase is taken for the model going round in a loop');
 console.log('✓ every phrase, typed, does what it should in every language');
 
 {

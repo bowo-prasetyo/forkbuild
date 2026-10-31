@@ -13,6 +13,11 @@ before measuring rejects that, whatever else improves. The app keeps hearing
 without a prompt. The prompt stays measurable, as below, for the changes that
 could make it safe.
 
+**Re-run, 2026-10-31:** the app now throws away what the model makes up
+from noise and what repeats itself; with that, no sound did anything under
+either prompt, but both still fail on words pulled toward a command. See
+*Re-run with guards*.
+
 ## What was compared
 
 | | Whisper is given |
@@ -156,7 +161,7 @@ Each is a change to measure the same way, against the same rule:
 
 - **Throw away a transcript that repeats itself** ("sound off" sixteen
   times): what Whisper writes from noise, with or without a prompt, often
-  does.
+  does. *Done, with Whisper's no-speech measure: see the re-run below.*
 - **Give the prompt as a sentence, not a list**, so it isn't continued as
   one.
 - **Leave out of the prompt what can't be undone** (Publish, Export, New
@@ -164,6 +169,81 @@ Each is a change to measure the same way, against the same rule:
 - **A prompt only where it helps:** English gains nothing from one.
 - **Recordings of people.** These voices are synthetic; a prompt may help
   them more, or less, than it would help a person.
+
+## Re-run with guards (2026-10-31)
+
+**Question.** Two of the patterns above come from the model, not the
+prompt: from noise it writes words (with a prompt, the prompt's own), and
+given a list it goes on with it. Can the app throw those transcripts away,
+and does either prompt then pass?
+
+**Answer: the guards work, and are used; the prompts still fail, on what
+is left.** Every false activation from a sound is gone, with either prompt
+and without one. What still fails both prompts is the prompt pulling a
+word toward a command it sounds like, which no guard on noise can catch.
+
+**The guards** (`core/voice/Transcript.js`, used by
+`ui/voice/useVoiceCommands.js`):
+
+- **Nothing was said, by Whisper's own measure:** `SpeechRuntime#hear()`
+  returns, with the transcript, the model's no-speech probability at the
+  first step and the mean log-probability of what it wrote. A transcript
+  is thrown away when no-speech is above 0.6 and log-probability below −1
+  (`heardNothing()`), Whisper's own defaults. The no-speech probability is
+  asked without the prompt: with one, it fell to 0.30–0.58 on noise, below
+  the threshold, and "The Old Mill," from distant talk would have passed.
+  Without it, every sound scored 0.68–0.84. The sound is encoded once for
+  both, so a command takes no longer.
+- **It says the same thing three times running** (`repeatsItself()`): a
+  word or a phrase of up to a few words, or in Japanese and Korean a run
+  of characters. "Sound off, sound off, …", "white, white, white" and
+  "中国語、中国語、中国語" are thrown away; "undo undo" isn't, and no phrase
+  the app reads repeats itself (`tests/VoicePhrases.test.js`).
+
+**The rule**, fixed before the re-run, in `scripts/compare-voice-prompts.mjs`:
+the guards, on the same transcripts without a prompt (AG against A), are
+used only if nothing more is done that must be undone in any language, and
+commands right fall by at most one in a hundred. Each prompt with the guards
+(BG, CG) is then held against AG by the three rules above.
+
+**Recordings.** The 864 above and the 160 of the five sentences that only
+mention a command, 1024 in all, heard again under A, B and C.
+
+**Results**
+
+| | Commands right | Wrong | False activations | Median time |
+|---|---|---|---|---|
+| A, no prompt | 40.4% | 2 | 0 of 512 | 6.9 s |
+| AG, no prompt, guards | 40.2% | 2 | 0 of 512 | 6.9 s |
+| B, vocabulary | 53.1% | 4 | 5 of 512 | 8.2 s |
+| BG, vocabulary, guards | 52.9% | 4 | 1 of 512 | 8.2 s |
+| C, expanded | 52.0% | 8 | 2 of 512 | 8.4 s |
+| CG, expanded, guards | 51.6% | 8 | 0 of 512 | 8.4 s |
+
+(A is 40.4%, not 42.6%, since 2026-10-30: paint said without its verb no
+longer paints. The times compare with each other, measured side by side.)
+
+- **AG: used.** Without a prompt, the guards threw away 93 transcripts:
+  all 64 sounds, and 29 recordings of speech the model had garbled or
+  looped on, all of which did nothing already but one, English "redo."
+  (no-speech 0.74, log-probability −1.15), a command heard right.
+- **The guards took every noise false activation away:** B's "The Old
+  Mill," and its three "sound off", and C's two. English, which failed both
+  prompts by rule 1, now passes with either.
+- **BG and CG: not used (rule 1).** BG does more that must be undone than
+  AG in German, Spanish, French and Portuguese, CG in German, French and
+  Indonesian, each from a word pulled toward a command: "Wer will reden?"
+  heard as "wir reden" (talk), "Rehacer" as "Deshacer" (undo), "Desfazer"
+  as "e fazer" (redo), "Nach Hause" as "hallo" (talk), and "Select all the
+  windows" with the windows garbled as select all.
+- Both would still pass rule 2 (19% and 22% slower) and rule 3 (BG +83 −19,
+  CG +69 −12 against A).
+
+**What is left to make a prompt safe:** the pull toward near words. Of
+the ways listed above, a prompt that leaves out what is near another
+command, or a prompt only in English, where it now passes rule 1 but
+gains too little to pass rule 3 (+3 −2), are next to measure; and
+recordings of people.
 
 ## Reproducing
 
@@ -173,6 +253,12 @@ node scripts/evaluate-voice-commands.mjs --prompt none --save-heard heard-none.j
 node scripts/evaluate-voice-commands.mjs --prompt vocabulary --save-heard heard-vocabulary.json
 node scripts/evaluate-voice-commands.mjs --prompt expanded --save-heard heard-expanded.json
 node scripts/compare-voice-prompts.mjs --run A=heard-none.json --run B=heard-vocabulary.json --run C=heard-expanded.json
+```
+
+The re-run, with the guards (`,guard` scores a run as the app now hears):
+
+```bash
+node scripts/compare-voice-prompts.mjs --run A=heard-none.json --run AG=heard-none.json,guard --run B=heard-vocabulary.json --run C=heard-expanded.json --run BG=heard-vocabulary.json,guard --run CG=heard-expanded.json,guard
 ```
 
 Each hearing takes about two hours on four cores, the three side by side.
@@ -294,3 +380,165 @@ Each hearing takes about two hours on four cores, the three side by side.
 | C | id | Pilih semua jendela. | pilih semua agenda lah | select everything |
 | C | id | Pilih semua jendela. | pilih semua agenda, | select everything |
 | C | pt-BR | Desfazer. | e fazer. | action history.redo |
+
+## Appendix: the re-run
+
+1024 recordings each; error rate is words, characters in ja and ko.
+
+### In all
+
+| | Commands right | Rejected | Wrong | False activations | Error rate | Median time |
+|---|---|---|---|---|---|---|
+| A | 40.4% | 59.2% | 0.4% (2) | 0.0% (0 of 512) | 59.9% | 6.9 s |
+| AG | 40.2% | 59.4% | 0.4% (2) | 0.0% (0 of 512) | 59.9% | 6.9 s |
+| B | 53.1% | 46.1% | 0.8% (4) | 1.0% (5 of 512) | 55.4% | 8.2 s |
+| C | 52.0% | 46.5% | 1.6% (8) | 0.4% (2 of 512) | 62.1% | 8.4 s |
+| BG | 52.9% | 46.3% | 0.8% (4) | 0.2% (1 of 512) | 55.4% | 8.2 s |
+| CG | 51.6% | 46.9% | 1.6% (8) | 0.0% (0 of 512) | 62.1% | 8.4 s |
+
+### en
+
+| | Commands right | Rejected | Wrong | False activations | Error rate | Median time |
+|---|---|---|---|---|---|---|
+| A | 89.1% | 10.9% | 0.0% (0) | 0.0% (0 of 64) | 6.4% | 7.1 s |
+| AG | 87.5% | 12.5% | 0.0% (0) | 0.0% (0 of 64) | 6.4% | 7.1 s |
+| B | 90.6% | 9.4% | 0.0% (0) | 6.3% (4 of 64) | 5.8% | 8.3 s |
+| C | 92.2% | 7.8% | 0.0% (0) | 3.1% (2 of 64) | 5.5% | 8.4 s |
+| BG | 90.6% | 9.4% | 0.0% (0) | 0.0% (0 of 64) | 5.8% | 8.3 s |
+| CG | 92.2% | 7.8% | 0.0% (0) | 0.0% (0 of 64) | 5.5% | 8.4 s |
+
+### de
+
+| | Commands right | Rejected | Wrong | False activations | Error rate | Median time |
+|---|---|---|---|---|---|---|
+| A | 18.8% | 81.3% | 0.0% (0) | 0.0% (0 of 64) | 48.8% | 7.2 s |
+| AG | 18.8% | 81.3% | 0.0% (0) | 0.0% (0 of 64) | 48.8% | 7.2 s |
+| B | 43.8% | 56.3% | 0.0% (0) | 1.6% (1 of 64) | 44.6% | 8.8 s |
+| C | 35.9% | 62.5% | 1.6% (1) | 0.0% (0 of 64) | 58.2% | 9.0 s |
+| BG | 43.8% | 56.3% | 0.0% (0) | 1.6% (1 of 64) | 44.6% | 8.8 s |
+| CG | 35.9% | 62.5% | 1.6% (1) | 0.0% (0 of 64) | 58.2% | 9.0 s |
+
+### es
+
+| | Commands right | Rejected | Wrong | False activations | Error rate | Median time |
+|---|---|---|---|---|---|---|
+| A | 46.9% | 53.1% | 0.0% (0) | 0.0% (0 of 64) | 55.8% | 6.9 s |
+| AG | 46.9% | 53.1% | 0.0% (0) | 0.0% (0 of 64) | 55.8% | 6.9 s |
+| B | 43.8% | 54.7% | 1.6% (1) | 0.0% (0 of 64) | 38.1% | 8.1 s |
+| C | 57.8% | 42.2% | 0.0% (0) | 0.0% (0 of 64) | 38.3% | 8.3 s |
+| BG | 43.8% | 54.7% | 1.6% (1) | 0.0% (0 of 64) | 38.1% | 8.1 s |
+| CG | 57.8% | 42.2% | 0.0% (0) | 0.0% (0 of 64) | 38.3% | 8.3 s |
+
+### fr
+
+| | Commands right | Rejected | Wrong | False activations | Error rate | Median time |
+|---|---|---|---|---|---|---|
+| A | 31.3% | 68.8% | 0.0% (0) | 0.0% (0 of 64) | 64.6% | 6.8 s |
+| AG | 31.3% | 68.8% | 0.0% (0) | 0.0% (0 of 64) | 64.6% | 6.8 s |
+| B | 43.8% | 54.7% | 1.6% (1) | 0.0% (0 of 64) | 36.9% | 8.1 s |
+| C | 51.6% | 45.3% | 3.1% (2) | 0.0% (0 of 64) | 38.5% | 8.3 s |
+| BG | 43.8% | 54.7% | 1.6% (1) | 0.0% (0 of 64) | 36.9% | 8.1 s |
+| CG | 51.6% | 45.3% | 3.1% (2) | 0.0% (0 of 64) | 38.5% | 8.3 s |
+
+### id
+
+| | Commands right | Rejected | Wrong | False activations | Error rate | Median time |
+|---|---|---|---|---|---|---|
+| A | 35.9% | 62.5% | 1.6% (1) | 0.0% (0 of 64) | 43.4% | 6.7 s |
+| AG | 35.9% | 62.5% | 1.6% (1) | 0.0% (0 of 64) | 43.4% | 6.7 s |
+| B | 50.0% | 50.0% | 0.0% (0) | 0.0% (0 of 64) | 37.9% | 8.0 s |
+| C | 46.9% | 46.9% | 6.3% (4) | 0.0% (0 of 64) | 39.1% | 8.2 s |
+| BG | 48.4% | 51.6% | 0.0% (0) | 0.0% (0 of 64) | 37.9% | 8.0 s |
+| CG | 45.3% | 48.4% | 6.3% (4) | 0.0% (0 of 64) | 39.1% | 8.2 s |
+
+### ja
+
+| | Commands right | Rejected | Wrong | False activations | Error rate | Median time |
+|---|---|---|---|---|---|---|
+| A | 42.2% | 57.8% | 0.0% (0) | 0.0% (0 of 64) | 98.7% | 6.8 s |
+| AG | 42.2% | 57.8% | 0.0% (0) | 0.0% (0 of 64) | 98.7% | 6.8 s |
+| B | 54.7% | 45.3% | 0.0% (0) | 0.0% (0 of 64) | 117.5% | 8.2 s |
+| C | 56.3% | 43.8% | 0.0% (0) | 0.0% (0 of 64) | 123.7% | 8.6 s |
+| BG | 54.7% | 45.3% | 0.0% (0) | 0.0% (0 of 64) | 117.5% | 8.2 s |
+| CG | 56.3% | 43.8% | 0.0% (0) | 0.0% (0 of 64) | 123.7% | 8.6 s |
+
+### ko
+
+| | Commands right | Rejected | Wrong | False activations | Error rate | Median time |
+|---|---|---|---|---|---|---|
+| A | 31.3% | 68.8% | 0.0% (0) | 0.0% (0 of 64) | 50.3% | 6.7 s |
+| AG | 31.3% | 68.8% | 0.0% (0) | 0.0% (0 of 64) | 50.3% | 6.7 s |
+| B | 53.1% | 46.9% | 0.0% (0) | 0.0% (0 of 64) | 47.1% | 8.5 s |
+| C | 45.3% | 54.7% | 0.0% (0) | 0.0% (0 of 64) | 56.0% | 8.8 s |
+| BG | 53.1% | 46.9% | 0.0% (0) | 0.0% (0 of 64) | 47.1% | 8.5 s |
+| CG | 43.8% | 56.3% | 0.0% (0) | 0.0% (0 of 64) | 56.0% | 8.8 s |
+
+### pt-BR
+
+| | Commands right | Rejected | Wrong | False activations | Error rate | Median time |
+|---|---|---|---|---|---|---|
+| A | 28.1% | 70.3% | 1.6% (1) | 0.0% (0 of 64) | 80.2% | 7.1 s |
+| AG | 28.1% | 70.3% | 1.6% (1) | 0.0% (0 of 64) | 80.2% | 7.1 s |
+| B | 45.3% | 51.6% | 3.1% (2) | 0.0% (0 of 64) | 62.4% | 8.2 s |
+| C | 29.7% | 68.8% | 1.6% (1) | 0.0% (0 of 64) | 82.9% | 8.4 s |
+| BG | 45.3% | 51.6% | 3.1% (2) | 0.0% (0 of 64) | 62.4% | 8.2 s |
+| CG | 29.7% | 68.8% | 1.6% (1) | 0.0% (0 of 64) | 82.9% | 8.4 s |
+
+### Recording by recording, against A
+
+| | en | de | es | fr | id | ja | ko | pt-BR | All |
+|---|---|---|---|---|---|---|---|---|---|
+| AG | +0 −1 | +0 −0 | +0 −0 | +0 −0 | +0 −0 | +0 −0 | +0 −0 | +0 −0 | +0 −1 |
+| B | +3 −2 | +19 −3 | +4 −6 | +12 −4 | +10 −1 | +11 −3 | +14 −0 | +11 −0 | +84 −19 |
+| C | +4 −2 | +12 −1 | +9 −2 | +14 −1 | +7 −0 | +13 −4 | +9 −0 | +3 −2 | +71 −12 |
+| BG | +3 −2 | +19 −3 | +4 −6 | +12 −4 | +9 −1 | +11 −3 | +14 −0 | +11 −0 | +83 −19 |
+| CG | +4 −2 | +12 −1 | +9 −2 | +14 −1 | +6 −0 | +13 −4 | +8 −0 | +3 −2 | +69 −12 |
+
+### Decision
+
+- **AG (the guards' rule): use.** 0 fewer things done that must be undone; commands right 40.4% to 40.2%.
+- **B (against AG): don't use (rule 1).** en: 4 things done that must be undone, not 0 (4 false activations, 0 wrong commands); de: 1 things done that must be undone, not 0 (1 false activations, 0 wrong commands); es: 1 things done that must be undone, not 0 (0 false activations, 1 wrong commands); fr: 1 things done that must be undone, not 0 (0 false activations, 1 wrong commands); pt-BR: 2 things done that must be undone, not 1 (0 false activations, 2 wrong commands).
+- **C (against AG): don't use (rule 1).** en: 2 things done that must be undone, not 0 (2 false activations, 0 wrong commands); de: 1 things done that must be undone, not 0 (0 false activations, 1 wrong commands); fr: 2 things done that must be undone, not 0 (0 false activations, 2 wrong commands); id: 4 things done that must be undone, not 1 (0 false activations, 4 wrong commands).
+- **BG (against AG): don't use (rule 1).** de: 1 things done that must be undone, not 0 (1 false activations, 0 wrong commands); es: 1 things done that must be undone, not 0 (0 false activations, 1 wrong commands); fr: 1 things done that must be undone, not 0 (0 false activations, 1 wrong commands); pt-BR: 2 things done that must be undone, not 1 (0 false activations, 2 wrong commands).
+- **CG (against AG): don't use (rule 1).** de: 1 things done that must be undone, not 0 (0 false activations, 1 wrong commands); fr: 2 things done that must be undone, not 0 (0 false activations, 2 wrong commands); id: 4 things done that must be undone, not 1 (0 false activations, 4 wrong commands).
+
+### What was done that must be undone
+
+| | Language | Said | Heard | Did |
+|---|---|---|---|---|
+| A | id | Pilih semua jendela. | pilih, semua jenk lah. | select everything |
+| A | pt-BR | Selecione todas as janelas. | Selecione todas as ginelas. | select everything |
+| AG | id | Pilih semua jendela. | pilih, semua jenk lah. | select everything |
+| AG | pt-BR | Selecione todas as janelas. | Selecione todas as ginelas. | select everything |
+| B | en | (noise-babble) | The Old Mill, | goTo mill |
+| B | en | (noise-music) | Sound off, sound off, sound off, sound off, sound off, sound off, sound off, sound off, sound off, sound off, sound off, sound off, sound off, sound off, sound off, sound off, | soundOff |
+| B | en | (noise-babble) | sound off, | soundOff |
+| B | en | (noise-music) | Sound off, sound off, sound off, sound off, sound off, sound off, sound off, sound off, sound off, sound off, sound off, sound off, sound off, sound off, sound off, sound off, | soundOff |
+| B | de | Wer will reden? | wir reden | talk |
+| B | es | Rehacer. | Deshacer, | action history.undo |
+| B | fr | Sélectionne toutes les fenêtres. | sélectionne tout qu'est fait naître. | select everything |
+| B | pt-BR | Desfazer. | e fazer. | action history.redo |
+| B | pt-BR | Apague as árvores. | apagar, azar, por isso. | delete selection |
+| C | en | (noise-babble) | sound off, | soundOff |
+| C | en | (noise-babble) | sound off, | soundOff |
+| C | de | Nach Hause. | hallo, | talk |
+| C | fr | Sélectionne toutes les fenêtres. | sélectionne, tout, réfénet, | select everything |
+| C | fr | Sélectionne toutes les fenêtres. | sélectionne, tout le que fait naître. | select everything |
+| C | id | Pilih semua jendela. | pilih, semuanya, lah, | select everything |
+| C | id | Pilih semua jendela. | pilih semua agenda lah, | select everything |
+| C | id | Pilih semua jendela. | pilih semua agenda lah | select everything |
+| C | id | Pilih semua jendela. | pilih semua agenda, | select everything |
+| C | pt-BR | Desfazer. | e fazer. | action history.redo |
+| BG | de | Wer will reden? | wir reden | talk |
+| BG | es | Rehacer. | Deshacer, | action history.undo |
+| BG | fr | Sélectionne toutes les fenêtres. | sélectionne tout qu'est fait naître. | select everything |
+| BG | pt-BR | Desfazer. | e fazer. | action history.redo |
+| BG | pt-BR | Apague as árvores. | apagar, azar, por isso. | delete selection |
+| CG | de | Nach Hause. | hallo, | talk |
+| CG | fr | Sélectionne toutes les fenêtres. | sélectionne, tout, réfénet, | select everything |
+| CG | fr | Sélectionne toutes les fenêtres. | sélectionne, tout le que fait naître. | select everything |
+| CG | id | Pilih semua jendela. | pilih, semuanya, lah, | select everything |
+| CG | id | Pilih semua jendela. | pilih semua agenda lah, | select everything |
+| CG | id | Pilih semua jendela. | pilih semua agenda lah | select everything |
+| CG | id | Pilih semua jendela. | pilih semua agenda, | select everything |
+| CG | pt-BR | Desfazer. | e fazer. | action history.redo |

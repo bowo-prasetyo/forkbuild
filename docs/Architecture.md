@@ -388,7 +388,16 @@ the detailed references; in short:
   never sent to the model, since given silence it makes words up.
   core/voice/Transcript.js cleans what was heard, and `withoutSilenceWords()`
   drops a transcript that is only such made-up words (the sign-offs and
-  caption credits of `SILENCE_WORDS`, in every language the app speaks);
+  caption credits of `SILENCE_WORDS`, in every language the app speaks).
+  The runtime's `hear()` returns, with the transcript, Whisper's own
+  no-speech probability (its `<|nospeech|>` token at the first step, asked
+  without any prompt, which would hide it) and the mean log-probability of
+  what it wrote, encoding the sound once for both; the app throws a
+  transcript away when Whisper's defaults say nothing was said
+  (`Transcript.js#heardNothing()`: no-speech above 0.6 and log-probability
+  below −1) or when it says the same thing three times running
+  (`repeatsItself()`), as Whisper does over noise
+  (docs/reviews/VoicePrompt-2026-10-30.md);
   ui/voice/useVoiceCommands.js asks before the first
   download (saying, in a language not in `Transcript.js#VOICE_HEARS_WELL`,
   that voice hears English best) and hands what was said to the view. The

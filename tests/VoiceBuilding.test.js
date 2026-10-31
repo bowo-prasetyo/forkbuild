@@ -1,6 +1,6 @@
 import { createHash, webcrypto } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { actionNamed, actionSaid, nearestBySound, soundsExactly, cleanTranscript, whisperLanguage, WHISPER_LANGUAGES } from '../core/voice/Transcript.js';
+import { actionNamed, actionSaid, nearestBySound, soundsExactly, cleanTranscript, heardNothing, repeatsItself, whisperLanguage, WHISPER_LANGUAGES } from '../core/voice/Transcript.js';
 import { MAX_PROMPT_TOKENS, MAX_SPOKEN_TOKENS, SPEECH_ENGINE, SPEECH_MODEL, SpeechRuntime } from '../application/voice/SpeechRuntime.js';
 import { SPEECH_DOWNLOAD_BYTES, SPEECH_ENGINE_LOADER, SPEECH_ENGINE_SHARE, SpeechWorkerClient, TRANSCRIBE_TIMEOUT, TRANSCRIBE_TIMEOUT_MS, speechSupported } from '../application/voice/SpeechWorkerClient.js';
 import { SPEECH_MODEL_BYTES, SPEECH_MODEL_FILES, SPEECH_MODEL_REVISION } from '../application/voice/SpeechModelPins.js';
@@ -33,6 +33,15 @@ import { assert } from './support/Assert.js';
     const actions = [{ id: 'history.undo', label: 'Undo' }, { id: 'transform.rotateClockwise', label: 'Rotate Clockwise' }, { id: 'a', label: 'Same' }, { id: 'b', label: 'Same' }];
     assert(actionNamed('undo', actions)?.id === 'history.undo' && actionNamed('Rotate clockwise!', actions)?.id === 'transform.rotateClockwise', 'an action said by its name, in any case');
     assert(actionNamed('undo the roof', actions) === null && actionNamed('same', actions) === null && actionNamed('', actions) === null, 'only an exact name, and only one');
+    // What the model makes up: Whisper's own test, and a loop.
+    assert(heardNothing({ noSpeech: 0.71, logprob: -1.48 }) && !heardNothing({ noSpeech: 0.73, logprob: -0.47 }) && !heardNothing({ noSpeech: 0.02, logprob: -1.21 }) && !heardNothing({}),
+        'nothing was heard only when the model thought so and wasn\'t sure of what it wrote');
+    for (const loop of ['Sound off, sound off, sound off, sound off,', 'white, white, white', '黄色の アーチャー 黄色の アーチャー 黄色の アーチャー', '元に戻す元に戻す元に戻す']) {
+        assert(repeatsItself(loop), `"${loop}" goes round in a loop`);
+    }
+    for (const said of ['Paint the roof red.', 'undo undo', 'Take me to the old mill', '屋根を赤く塗って', '지붕을 빨간색으로 칠해 줘']) {
+        assert(!repeatsItself(said), `"${said}" is said once`);
+    }
     console.log('✓ transcripts');
 }
 
@@ -144,6 +153,41 @@ function fakeCaches() {
     await prompted.transcribe(new Float32Array(2), 'english', { prompt: 'x'.repeat(MAX_PROMPT_TOKENS) + 'END' });
     assert(given.prefix.length === 1 + MAX_PROMPT_TOKENS + 3 && String.fromCharCode(...given.prefix.slice(-6, -3)) === 'END', 'a prompt too long keeps its end, the words given last');
     assert(await prompted.transcribe(new Float32Array(2), 'english', { prompt: '  ' }) === 'from the pipeline', 'with no prompt, the pipeline hears it as before');
+
+    // hear(): what was said, with how sure the model was. Four tokens; every
+    // place gives <|nospeech|> (3) half the probability, the others a sixth.
+    const asked = [];
+    let encodings = 0;
+    const sure = async () => ({ text: 'unused' });
+    sure.processor = async () => ({ input_features: 'features' });
+    sure.tokenizer = {
+        encode: (text) => [...text.trim()].map(() => 0),
+        convert_tokens_to_ids: (token) => ({ '<|startofprev|>': 1, '<|nospeech|>': 3 })[token],
+        decode: (ids) => ids.map((id) => 'abcd'[id]).join('')
+    };
+    sure.model = {
+        generation_config: {},
+        _retrieve_init_tokens: () => [2],
+        _prepare_encoder_decoder_kwargs_for_generation: async () => { encodings += 1; return { encoder_outputs: 'encoded' }; },
+        generate: async ({ decoder_input_ids: [prefix], encoder_outputs: encoded }) => {
+            asked.push({ generate: prefix, encoded });
+            return [{ tolist: () => [...prefix, 0, 0] }];
+        },
+        call: null
+    };
+    const callable = Object.assign(async ({ decoder_input_ids: ids, encoder_outputs: encoded }) => {
+        const places = ids.dims[1];
+        asked.push({ forward: [...ids.data].map(Number), encoded });
+        return { logits: { dims: [1, places, 4], data: Float32Array.from({ length: places * 4 }, (_, i) => (i % 4 === 3 ? Math.log(3) : 0)) } };
+    }, sure.model);
+    sure.model = callable;
+    class FakeTensor { constructor(type, data, dims) { Object.assign(this, { type, data, dims }); } }
+    const measuring = new SpeechRuntime({ engine, caches, subtle: webcrypto.subtle, fetch: async () => new Response(bytes), importLibrary: async () => ({ Tensor: FakeTensor, env: { backends: { onnx: { wasm: {} } } }, pipeline: async () => sure }), engineLoaderUrl: 'x' });
+    const heard = await measuring.hear(new Float32Array(2), 'english', { prompt: 'xy' });
+    assert(heard.text === 'aa' && Math.abs(heard.noSpeech - 0.5) < 1e-6 && Math.abs(heard.logprob - Math.log(1 / 6)) < 1e-6, `hear() says what was written, with how sure the model was (${JSON.stringify(heard)})`);
+    assert(asked[0].forward.join() === '2' && asked[1].generate.join() === '1,0,0,2' && asked[2].forward.join() === '1,0,0,2,0,0',
+        'whether anything was said is asked without the prompt; what was said, with it; how sure, of all it wrote');
+    assert(encodings === 1 && asked.every((step) => step.encoded === 'encoded'), 'the sound is encoded once, for all three');
 
     const again = new SpeechRuntime({ engine, caches, subtle: webcrypto.subtle, fetch: async () => { fetches += 1; return new Response(bytes); }, importLibrary: async () => library, engineLoaderUrl: 'x' });
     await again.load();
@@ -507,6 +551,25 @@ function workerPair(runtimeFor) {
     await settle();
     assert(madeUp.voice.value.heard === '' && madeUp.voice.value.outcome.kind === 'nothing' && acted.length === actedBefore,
         'a sign-off the model made up from noise is taken as nothing said');
+
+    // Heard with how sure the model was (SpeechRuntime#hear()): what it made
+    // up from a sound with no words in it, or a loop, is nothing said.
+    const heardAs = async (result) => {
+        const guarded = useVoiceCommands({ act: (text) => { acted.push(text); return { kind: 'done' }; }, runtime: { ...runtime, hear: async () => result }, record, supported: true, language: () => 'en', storage: { getItem: () => SPEECH_MODEL, setItem() {}, removeItem() {} } });
+        guarded.toggleVoice();
+        await settle();
+        guarded.toggleVoice();
+        await settle();
+        await settle();
+        return guarded.voice.value;
+    };
+    const before = acted.length;
+    const noWords = await heardAs({ text: ' The Old Mill,', noSpeech: 0.71, logprob: -1.48 });
+    const loop = await heardAs({ text: ' Sound off, sound off, sound off, sound off,', noSpeech: 0.2, logprob: -0.4 });
+    assert(noWords.outcome.kind === 'nothing' && loop.outcome.kind === 'nothing' && acted.length === before,
+        'what the model made up from a sound with no words, or a loop, does nothing');
+    const said = await heardAs({ text: ' Paint the roof red.', noSpeech: 0.02, logprob: -0.2 });
+    assert(said.heard && acted.length === before + 1, `what it was sure was said is done (${JSON.stringify(said.heard)}, ${JSON.stringify(acted.at(-1))})`);
     voice.toggleVoice();
     await settle();
     assert(voice.voice.value.step === 'listening', 'once on, a press listens straight away');

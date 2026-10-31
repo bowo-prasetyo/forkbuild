@@ -76,7 +76,7 @@ const heard = heardPath
     ? JSON.parse(readFileSync(heardPath, 'utf8')).filter((clip) => !onlyLanguage || clip.language === onlyLanguage)
         .map((clip) => ({ ...phrases.get(`${clip.language}/${clip.id}`), ...clip }))
     : await hearAll();
-if (savePath) writeFileSync(savePath, JSON.stringify(heard.map(({ language, id, speaker, transcript, ms }) => ({ language, id, speaker, transcript, ms }))));
+if (savePath) writeFileSync(savePath, JSON.stringify(heard.map(({ language, id, speaker, transcript, ms, noSpeech, logprob }) => ({ language, id, speaker, transcript, ms, noSpeech, logprob }))));
 
 // The prompt for each language and view, as the app would make it.
 async function prompts() {
@@ -137,8 +137,10 @@ async function hearAll() {
                 const speech = preparation.prepareSpeech(samples);
                 if (!speech.speech) return { transcript: '', ms: 0 };
                 const at = performance.now();
-                const text = await runtime.transcribe(speech.samples, transcript.whisperLanguage(language), { prompt });
-                return { transcript: text, ms: Math.round(performance.now() - at) };
+                // With how sure the model was (SpeechRuntime#hear()), so the
+                // app's guards against what it makes up can be measured.
+                const { text, noSpeech, logprob } = await runtime.hear(speech.samples, transcript.whisperLanguage(language), { prompt });
+                return { transcript: text, ms: Math.round(performance.now() - at), noSpeech, logprob };
             };
             return Math.round(performance.now() - started);
         }, { model });

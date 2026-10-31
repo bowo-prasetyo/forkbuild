@@ -2,7 +2,7 @@
 // model to expect, and scripts/compare-voice-prompts.mjs, which measured
 // whether it should (docs/reviews/VoicePrompt-2026-10-30.md).
 import { voicePrompt } from '../ui/voice/voicePrompt.js';
-import { decide, editDistance, signTest, units } from '../scripts/compare-voice-prompts.mjs';
+import { decide, decideGuards, editDistance, signTest, units } from '../scripts/compare-voice-prompts.mjs';
 import { setAppLocale } from '../ui/i18n/i18n.js';
 import { assert } from './support/Assert.js';
 
@@ -41,6 +41,11 @@ console.log('✓ the prompt, made from what the app can act on');
     assert(!decide(baseline, slow).use && decide(baseline, slow).rule === 2, '14. nor when a command takes much longer');
     const barely = { rows: baseline.rows.map((each) => (each.key === 'a' ? { ...each, verdict: 'right' } : each)) };
     assert(!decide(baseline, barely).use && decide(baseline, barely).rule === 3, '15. nor when what it fixes could be chance');
+    const quieter = { rows: baseline.rows.map((each) => (each.key === 'n' ? each : each)) };
+    assert(decideGuards(baseline, quieter).use, '16. guards that change nothing may stay');
+    assert(!decideGuards(baseline, activating).use && decideGuards(baseline, activating).rule === 1, '17. guards that do more that must be undone, anywhere, may not');
+    const losing = { rows: better.rows.map((each) => (each.language === 'de' ? { ...each, verdict: 'nothing' } : each)) };
+    assert(!decideGuards(better, losing).use && decideGuards(better, losing).rule === 2, '18. nor guards that throw away more than one command in a hundred');
 }
 console.log('✓ the comparison and its rule');
 

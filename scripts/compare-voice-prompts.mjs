@@ -7,6 +7,12 @@
 //   node scripts/compare-voice-prompts.mjs --run A=heard-none.json
 //        --run B=heard-vocabulary.json [--run C=…] [--out report.md]
 //
+// `--run AG=heard-none.json,guard` reads a run as the app does with its
+// guards against what the model makes up (core/voice/Transcript.js
+// #heardNothing() and #repeatsItself(), from what --save-heard keeps of how
+// sure the model was): a run of the baseline's own recordings with guards is
+// judged by the guards' rule; every other run is then judged against it.
+//
 // For each, per language and in all: commands right, rejected (nothing done)
 // and wrong (something else done); false activations (something done for a
 // recording that asked for nothing: words that aren't a command, or a sound
@@ -22,11 +28,19 @@
 // 2. Rejected if hearing a command takes more than MAX_SLOWER longer (median).
 // 3. Used only if it fixes more commands than it breaks, recording by
 //    recording, beyond chance (a two-sided sign test, p < 0.05).
+//
+// The guards' rule (the same recordings, read with and without them), fixed
+// before they were measured:
+// 1. Rejected if, in any language, more is done that must be undone.
+// 2. Rejected if commands right fall by more than MAX_GUARD_LOSS (a share of
+//    all commands) in all.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { voicePhrases, SAID } from './voiceCommandPhrases.mjs';
 import { verdict, voiceReader } from './voiceCommandOutcome.mjs';
+import { heardNothing, repeatsItself } from '../core/voice/Transcript.js';
 
 export const MAX_SLOWER = 0.25;
+export const MAX_GUARD_LOSS = 0.01;
 export const SIGNIFICANCE = 0.05;
 const BY_CHARACTER = new Set(['ja', 'ko']);
 
@@ -91,8 +105,9 @@ export function measures(rows) {
     };
 }
 
-// Reads `heard` (saved transcripts) as the app would, recording by recording.
-async function scored(heard) {
+// Reads `heard` (saved transcripts) as the app would, recording by
+// recording; with `guard`, what the guards throw away as nothing.
+async function scored(heard, { guard = false } = {}) {
     const phrases = new Map(voicePhrases().map((phrase) => [`${phrase.language}/${phrase.id}`, phrase]));
     const rows = [];
     for (const language of Object.keys(SAID)) {
@@ -100,7 +115,8 @@ async function scored(heard) {
         for (const clip of heard.filter((each) => each.language === language)) {
             const phrase = phrases.get(`${language}/${clip.id}`);
             if (!phrase) continue;
-            const did = reader.did(clip.transcript || '', phrase.view);
+            const kept = guard && (heardNothing(clip) || repeatsItself(clip.transcript)) ? '' : clip.transcript || '';
+            const did = reader.did(kept, phrase.view);
             const said = units(phrase.text, language);
             rows.push({
                 key: `${language}/${clip.speaker}/${clip.id}`,
@@ -139,6 +155,23 @@ export function decide(baseline, run) {
     return { use: true, rule: null, reasons: [`${fixed} commands fixed and ${broken} broken (p = ${p.toFixed(3)})`] };
 }
 
+// The guards' rule, for `guarded` against `baseline`: the same recordings.
+export function decideGuards(baseline, guarded) {
+    const reasons = [];
+    for (const language of Object.keys(SAID)) {
+        const before = measures(baseline.rows.filter((row) => row.language === language));
+        const after = measures(guarded.rows.filter((row) => row.language === language));
+        if (after.falseActivations + after.wrong > before.falseActivations + before.wrong) reasons.push(`${language}: more done that must be undone`);
+    }
+    if (reasons.length) return { use: false, rule: 1, reasons };
+    const before = measures(baseline.rows);
+    const after = measures(guarded.rows);
+    const lost = (before.right - after.right) / Math.max(1, before.commands);
+    const undone = (m) => m.falseActivations + m.wrong;
+    const said = `${undone(before) - undone(after)} fewer things done that must be undone; commands right ${(100 * before.right / before.commands).toFixed(1)}% to ${(100 * after.right / after.commands).toFixed(1)}%`;
+    return lost > MAX_GUARD_LOSS ? { use: false, rule: 2, reasons: [said] } : { use: true, rule: null, reasons: [said] };
+}
+
 // Commands `run` got right that `baseline` didn't (fixed), and the other way (broken).
 export function paired(baseline, run, language = null) {
     const before = new Map(baseline.rows.map((row) => [row.key, row]));
@@ -170,9 +203,12 @@ function report(runs) {
         out.push(`| ${run.label} | ${cells.join(' | ')} |`);
     }
     out.push('', '## Decision', '');
+    const guarded = runs.slice(1).find((run) => run.guard && run.path === baseline.path);
     for (const run of runs.slice(1)) {
-        const { use, rule, reasons } = decide(baseline, run);
-        out.push(`- **${run.label}: ${use ? 'use' : `don't use (rule ${rule})`}.** ${reasons.join('; ')}.`);
+        const against = run === guarded ? baseline : (guarded || baseline);
+        const { use, rule, reasons } = run === guarded ? decideGuards(baseline, run) : decide(against, run);
+        const rules = run === guarded ? "the guards' rule" : `against ${against.label}`;
+        out.push(`- **${run.label} (${rules}): ${use ? 'use' : `don't use (rule ${rule})`}.** ${reasons.join('; ')}.`);
     }
     out.push('', '## What was done that must be undone', '', '| | Language | Said | Heard | Did |', '|---|---|---|---|---|');
     for (const run of runs) {
@@ -187,14 +223,15 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     const runs = [];
     process.argv.forEach((value, i) => {
         if (value !== '--run') return;
-        const [label, path] = process.argv[i + 1].split('=');
-        runs.push({ label, path });
+        const [label, spec] = process.argv[i + 1].split('=');
+        const [path, ...flags] = spec.split(',');
+        runs.push({ label, path, guard: flags.includes('guard') });
     });
     if (runs.length < 2) {
         console.error('Usage: node scripts/compare-voice-prompts.mjs --run A=heard.json --run B=heard.json [--out report.md]');
         process.exit(2);
     }
-    for (const run of runs) run.rows = await scored(JSON.parse(readFileSync(run.path, 'utf8')));
+    for (const run of runs) run.rows = await scored(JSON.parse(readFileSync(run.path, 'utf8')), { guard: run.guard });
     const text = report(runs);
     const at = process.argv.indexOf('--out');
     if (at >= 0) writeFileSync(process.argv[at + 1], text);
