@@ -53,7 +53,14 @@ function otherWords(text, phrases, ignoredWords, goTo = [], { before = false } =
     });
     if (held.length === 0) return null;
     const ignored = new Set(ignoredWords.map(fold));
-    const commandWords = new Set([...held, ...goTo].flatMap((phrase) => wordsOf(fold(phrase))));
+    // Going to's words are the command's only when going to was said: "aku"
+    // is in "bawa aku ke" (take me to), but "Aku rindu rumah" (I miss home)
+    // isn't going anywhere.
+    const goingTo = goTo.filter((phrase) => {
+        const whole = wordsFound(phrase, [phrase], ignoredWords);
+        return whole > 0 && wordsFound(text, [phrase], ignoredWords) >= whole;
+    });
+    const commandWords = new Set([...held, ...goingTo].flatMap((phrase) => wordsOf(fold(phrase))));
     const other = (word) => !ignored.has(word) && !commandWords.has(word) && wordsFound(word, held, ignoredWords) === 0;
     const words = wordsOf(fold(text));
     // Only those before the first of the command's own words.

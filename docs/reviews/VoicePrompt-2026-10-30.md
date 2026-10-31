@@ -440,8 +440,8 @@ them asking for nothing.
 **Found before hearing.** Typed, every fresh phrase is read right but one:
 Indonesian "Aku rindu rumah." ("I miss home") flies home, though it asks for
 nothing, because "rumah" is the word for Home, said almost alone. It is
-left out of the recordings (`FRESH_LEFT_OUT`), since no hearing could make
-it right, and is for the command reader, without any prompt.
+left out of the recordings, since no hearing could make it right, and is
+for the command reader, without any prompt: see *Indonesian "I miss home"*.
 
 **Results**, the guards on both (as the app hears):
 
@@ -501,6 +501,30 @@ undone is Korean "음소거 해제." heard as "음소거 했지?", sound off.
 | First recordings, every hearing | unchanged on each | unchanged on each |
 | Fresh, no prompt, guards | 4 → 1 | unchanged (149 of 384) |
 | Fresh, apart, guards | 0 → 0 | unchanged (173 of 384) |
+
+## Indonesian "I miss home" (2026-10-31)
+
+**Question.** Typed, "Aku rindu rumah." (I miss home) flies home. Can the
+reader leave it be without losing commands?
+
+**Answer: yes.** A command may come with one other word, and the words of
+"go to" don't count. Indonesian's "go to" phrasings hold "bawa aku ke"
+(take me to), so "aku" (I) never counted, and "rindu" (miss) was the one
+other word. Now `core/voice/WorldVoiceCommand.js` `otherWords()` sets aside
+the words of "go to" only when one of its phrasings was said: "Aku rindu
+rumah" holds two other words and goes nowhere; "Bawa aku ke rumah" still
+goes home, and "Aku pulang" (I'm going home) too.
+
+First tried, and not used: no other word before Home, as for talk. It
+fixes this sentence too, but loses three or four commands on each hearing
+of the first recordings, where a verb before home was heard a little wrong
+("Prendre à la maison", "Voto para casa", "volta à casa").
+
+Measured as the reader's changes above, on every hearing, read again, by
+the rule fixed before scoring: on every hearing, of both recordings,
+nothing changes, more done that must be undone or commands right. The fresh
+phrasing is back among the fresh phrases, read right typed; it has no
+recording yet, and the next `--phrases fresh` recording makes one.
 
 ## Reproducing
 

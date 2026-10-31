@@ -165,17 +165,11 @@ export const NOISE_SOUNDS = Object.freeze([
     ['noise-babble', 'world']
 ]);
 
-// Fresh phrases left out: they ask for nothing, but do something even typed
-// (the command reader's, not the speech model's; reported in
-// docs/reviews/VoicePrompt-2026-10-30.md). "I miss my home" flies home.
-export const FRESH_LEFT_OUT = Object.freeze(new Set(['id/near-home-far']));
-
 // Every phrase: `{ id, language, view, expect, text }`; a sound's `text` is
 // empty. `set` is 'main' (SAID) or 'fresh' (FRESH_SAID).
 export function voicePhrases(set = 'main') {
-    const phrases = Object.entries(set === 'fresh' ? FRESH_SAID : SAID).flatMap(([language, texts]) => [
+    return Object.entries(set === 'fresh' ? FRESH_SAID : SAID).flatMap(([language, texts]) => [
         ...COMMANDS.map(([id, view, expect], i) => ({ id, language, view, expect, text: texts[i] })),
         ...NOISE_SOUNDS.map(([id, view]) => ({ id, language, view, expect: 'none', text: '' }))
     ]);
-    return set === 'fresh' ? phrases.filter(({ language, id }) => !FRESH_LEFT_OUT.has(`${language}/${id}`)) : phrases;
 }

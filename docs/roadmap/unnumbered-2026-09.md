@@ -10242,3 +10242,25 @@ fresh recordings (docs/reviews/VoicePrompt-2026-10-30.md, *Japanese "delete ever
   without a prompt, the three Japanese "delete everything" now do nothing.
 - Tests: tests/VoicePhrases.test.js (キュ, 気 or キュー beside 全部 deletes nothing; 全部消して and 全部を消してください
   are still everything).
+
+## Voice doesn't fly home for "I miss home" in Indonesian (unnumbered, 2026-10-31)
+
+**"Aku rindu rumah." (I miss home) goes nowhere; it flew home, even typed.** Found writing the fresh recordings
+(docs/reviews/VoicePrompt-2026-10-30.md, *Indonesian "I miss home"*). (The owner's yes, 2026-10-31: "Thanks. Yes,
+please fix the Indonesian one next.")
+
+**The filter.**
+1. **Pillar:** building and visiting, by voice. A player talking about home isn't taken away from where they are.
+2. **First ten minutes:** no harder; voice is turned on by choice, and does less by mistake.
+3. **Building first:** yes; a sentence near a build no longer flies the builder away from it.
+4. **Counts:** none yet; no count looks at voice. The measure is the voice evaluation's: nothing done that must be
+   undone, and commands right falling by at most one in a hundred.
+
+- **The words of "go to" are set aside only when "go to" was said** (core/voice/WorldVoiceCommand.js `otherWords()`):
+  "aku" is in "bawa aku ke" (take me to), so it never counted as another word, and "rindu" was the one allowed.
+  "Bawa aku ke rumah" and "Pulang" still go home.
+- On every saved hearing nothing changes: no more done that must be undone, no command lost. A first try, no other
+  word before Home, lost three or four commands on each and is written up.
+- The phrase is back in the fresh phrases (scripts/voiceCommandPhrases.mjs, `FRESH_LEFT_OUT` gone).
+- Tests: tests/VoicePhrases.test.js (every fresh phrase typed is read right, "Aku rindu rumah." included; going to's
+  words count only when going to was said).

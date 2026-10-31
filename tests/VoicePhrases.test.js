@@ -101,6 +101,10 @@ console.log('✓ what voice may run');
     assert(MAX_OTHER_WORDS === 1 && kind('who wants to talk') === null && kind('my home is far away') === null, '20. inside a sentence that says more, it is no command');
     assert(kind('talk') === 'talk' && kind('talk to her') === 'talk' && kind('we talk') === null,
         '21. talk, which can\'t be taken back, with nothing before it: "wir reden" is a sentence about talking');
+    const id = { home: ['rumah', 'pulang'], goTo: ['bawa aku ke'], ignoredWords: ['ke'] };
+    const idKind = (text) => interpretWorldCommand(text, id)?.kind ?? null;
+    assert(idKind('aku rindu rumah') === null && idKind('bawa aku ke rumah') === 'home' && idKind('pulang') === 'home',
+        '22. going to\'s words are the command\'s only when going to was said: "Aku rindu rumah" (I miss home) goes nowhere, "bawa aku ke rumah" goes home');
 }
 console.log('✓ World View\'s commands are said on their own');
 

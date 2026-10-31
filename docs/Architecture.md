@@ -442,8 +442,9 @@ the detailed references; in short:
   go to a place named in Locations (or a build on a challenge plaza), Home,
   a camera view, sound off or on, undo, redo, or talk to a resident, each
   said on its own: found inside a sentence with more than
-  `MAX_OTHER_WORDS` (1) other words, the language's ignored words and "go
-  to" aside, it is no command ("Who wants to talk?"); and talk, which starts
+  `MAX_OTHER_WORDS` (1) other words, the language's ignored words and, when
+  it was said, "go to" aside, it is no command ("Who wants to talk?"; "Aku
+  rindu rumah", I miss home, though "aku" is in "bawa aku ke", take me to); and talk, which starts
   a call, with no other word before it ("wir reden" is not talk, "talk to
   her" is). When
   "go to" was said, nothing else was asked for and no place name is found
