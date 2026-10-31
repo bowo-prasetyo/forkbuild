@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: b9f6583713dd4416 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 9520715e8e39c735 -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -960,7 +960,11 @@ Il entend la langue dans laquelle ForkBuild est affiché.
 Il comprend mieux l’anglais. Dans les autres langues, le petit modèle vocal
 comprend encore mal beaucoup de commandes, et la voix le dit avant que vous
 l’activiez ; une commande mal comprise ne fait en général rien : répétez-la
-ou faites-le à la main. À voix haute, une commande n’agit sur votre
+ou faites-le à la main. En allemand, français, indonésien, japonais, coréen et
+portugais, le modèle reçoit d’abord les mots que ForkBuild comprend, ce qui
+l’aide à bien comprendre plus de commandes, pour une seconde de plus environ à
+chaque fois.
+À voix haute, une commande n’agit sur votre
 sélection que si vous le dites (*peins ceci en rouge*) : si la partie nommée
 est mal comprise, elle ne fait rien plutôt que de peindre ou supprimer votre
 sélection.

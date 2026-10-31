@@ -289,6 +289,14 @@ function workerPair(runtimeFor) {
     stranded.load().catch(() => {});
     assert(crashing.started === 2, 'and the next request starts a new one');
 
+    const hearing = [];
+    const prompted = workerPair(() => ({ load: async () => {}, hear: async (samples, language, options) => { hearing.push({ language, ...options }); return { text: 'ok', noSpeech: 0, logprob: 0 }; } }));
+    const hearer = new SpeechWorkerClient({ createWorker: prompted.createWorker, engineLoaderUrl: 'x' });
+    await hearer.hear(new Float32Array(4), 'german', { prompt: 'Dach, rot' });
+    await hearer.hear(new Float32Array(4), 'english');
+    assert(hearing[0].language === 'german' && hearing[0].prompt === 'Dach, rot' && hearing[1].prompt === '',
+        'the prompt reaches the model in the worker, and no prompt is none');
+
     const stuck = workerPair(() => ({ load: async () => {}, transcribe: () => new Promise(() => {}) }));
     const waiting = new SpeechWorkerClient({ createWorker: stuck.createWorker, engineLoaderUrl: 'x', transcribeTimeoutMs: 20 });
     await waiting.load();
@@ -571,6 +579,14 @@ function workerPair(runtimeFor) {
     const loop = await heardAs({ text: ' Sound off, sound off, sound off, sound off,', noSpeech: 0.2, logprob: -0.4 });
     assert(noWords.outcome.kind === 'nothing' && loop.outcome.kind === 'nothing' && acted.length === before,
         'what the model made up from a sound with no words, or a loop, does nothing');
+    const prompts = [];
+    const prompting = useVoiceCommands({ act: () => ({ kind: 'done' }), prompt: (language) => `words for ${language}`, runtime: { ...runtime, hear: async (samples, language, options) => { prompts.push(options?.prompt); return { text: 'Dach rot', noSpeech: 0.02, logprob: -0.2 }; } }, record, supported: true, language: () => 'de', storage: { getItem: () => SPEECH_MODEL, setItem() {}, removeItem() {} } });
+    prompting.toggleVoice();
+    await settle();
+    prompting.toggleVoice();
+    await settle();
+    await settle();
+    assert(prompts.length === 1 && prompts[0] === 'words for de', `the model is given the view's prompt in the app's language (${JSON.stringify(prompts)})`);
     const said = await heardAs({ text: ' Paint the roof red.', noSpeech: 0.02, logprob: -0.2 });
     assert(said.heard && acted.length === before + 1, `what it was sure was said is done (${JSON.stringify(said.heard)}, ${JSON.stringify(acted.at(-1))})`);
     voice.toggleVoice();

@@ -64,9 +64,10 @@ export class SpeechWorkerClient {
         return this._ask({ type: 'transcribe', samples, language }, null, [samples.buffer], this._transcribeTimeoutMs);
     }
 
-    // What was said, with how sure the model was (SpeechRuntime#hear()).
-    hear(samples, language) {
-        return this._ask({ type: 'hear', samples, language }, null, [samples.buffer], this._transcribeTimeoutMs);
+    // What was said, with how sure the model was (SpeechRuntime#hear()),
+    // given `prompt` as what came before.
+    hear(samples, language, { prompt = '' } = {}) {
+        return this._ask({ type: 'hear', samples, language, prompt }, null, [samples.buffer], this._transcribeTimeoutMs);
     }
 
     remove() {

@@ -844,7 +844,10 @@ ForkBuild is shown in.
 
 It hears English best. In the other languages the small speech model still
 mishears many commands, and voice says so before you turn it on; a command
-it mishears usually does nothing, so say it again or do it by hand. Spoken,
+it mishears usually does nothing, so say it again or do it by hand. In
+German, French, Indonesian, Japanese, Korean and Portuguese, the model is
+first told the words ForkBuild understands, which helps it hear more
+commands right, at a second or so more each time. Spoken,
 a command acts on what you have selected only when you say so (*paint this
 red*): if the part you named is misheard, it does nothing rather than paint
 or delete your selection.

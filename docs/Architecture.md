@@ -428,16 +428,19 @@ the detailed references; in short:
   wrong per language; tests/VoicePhrases.test.js checks that every phrase,
   typed, is read right. Among the phrases are some that ask for nothing,
   and sounds that aren't speech (scripts/voiceNoise.mjs), which must do
-  nothing. The model is given no prompt: `SpeechRuntime#transcribe()` can
-  give it one (`prompt`, Whisper's `<|startofprev|>` text), and
-  ui/voice/voicePrompt.js makes one from the words the app reads, but
-  measured with `--prompt` and scripts/compare-voice-prompts.mjs it made
-  voice act on noise and near words, and, without the words near a command
-  (`apart`) or in English only, still did what must be undone or fixed too
-  little to tell, so the app doesn't use it
-  (docs/reviews/VoicePrompt-2026-10-30.md). After the reader's later fixes,
-  `apart` passed on recordings made for the check (`--phrases fresh`,
-  new voices and phrasings), but it isn't turned on. World View reads it with
+  nothing. The model can be given a prompt (`SpeechRuntime#hear()`'s
+  `prompt`, Whisper's `<|startofprev|>` text), which ui/voice/voicePrompt.js
+  makes from the words the app reads. Measured with `--prompt` and
+  scripts/compare-voice-prompts.mjs, the whole vocabulary made voice act on
+  noise and near words; without the words near a command (`apart`), after
+  the reader's later fixes, it did nothing that must be undone and heard
+  more commands right, on the first recordings and on fresh ones
+  (`--phrases fresh`). So `useVoiceCommands({ prompt })` gives the model
+  `appVoicePrompt()`: `apart` in `PROMPTED_LANGUAGES` (German, French,
+  Indonesian, Japanese, Korean, Portuguese), and none in English and
+  Spanish, where it fixed about as much as it broke for a second or so more
+  (docs/reviews/VoicePrompt-2026-10-30.md, *Turned on*;
+  `--prompt app` measures what the app does). World View reads it with
   core/voice/WorldVoiceCommand.js (words from ui/i18n/worldVoiceWords.js):
   go to a place named in Locations (or a build on a challenge plaza), Home,
   a camera view, sound off or on, undo, redo, or talk to a resident, each

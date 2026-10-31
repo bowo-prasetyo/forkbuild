@@ -10286,3 +10286,30 @@ the Korean one next.")
   without a prompt, nothing is now done that must be undone.
 - Tests: tests/VoicePhrases.test.js ("음소거 했지" is neither; "음소거" mutes, "음소거 해제" unmutes, "소리 꺼 줘"
   mutes).
+
+## Voice hears more commands right in six languages (unnumbered, 2026-10-31)
+
+**In German, French, Indonesian, Japanese, Korean and Portuguese, the speech model is first told the words ForkBuild
+understands, and hears about seven commands in a hundred more right, doing nothing more that must be undone.**
+Measured on two sets of recordings (docs/reviews/VoicePrompt-2026-10-30.md, *Turned on*). (The owner's yes,
+2026-10-31: "Please turn the apart prompt on for German, French, Indonesian, Japanese, Korean and Portuguese, and
+leave English and Spanish without it.")
+
+**The filter.**
+1. **Pillar:** building, by voice. A player speaking one of six languages has more commands done, and has to say
+   them again less often.
+2. **First ten minutes:** no harder; voice is turned on by choice. A command takes a second or so longer.
+3. **Building first:** yes; most of what voice does is building.
+4. **Counts:** none yet; no count looks at voice. The measure is the voice evaluation's: nothing done that must be
+   undone, commands right, and time.
+
+- **The prompt without the words near a command, in six languages** (ui/voice/voicePrompt.js `PROMPTED_LANGUAGES`,
+  `appVoicePrompt()`; ui/voice/useVoiceCommands.js `prompt`; the speech worker passes it to `SpeechRuntime#hear()`):
+  the Editor's with its actions, World View's with its places. None in English and Spanish, where it fixed about as
+  much as it broke.
+- With the guards: 39.5% → 47.7% of commands right on the first recordings (+54 −12), 38.8% → 43.5% on the fresh
+  (+26 −8); nothing done that must be undone on either; 9% and 15% slower.
+- `--prompt app` measures what the app does (scripts/evaluate-voice-commands.mjs).
+- The Editor's guide says so (docs/user/02-TheEditor.md, *Speak a command*).
+- Tests: tests/VoicePrompt.test.js (the prompt in the six, none in English and Spanish), tests/VoiceBuilding.test.js
+  (the view's prompt reaches the model in the worker, in the app's language).

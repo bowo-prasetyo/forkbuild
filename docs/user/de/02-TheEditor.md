@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: b9f6583713dd4416 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 9520715e8e39c735 -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -939,7 +939,11 @@ die Sprache, in der ForkBuild angezeigt wird.
 Englisch versteht es am besten. In den anderen Sprachen verhört sich das
 kleine Sprachmodell noch oft, und die Sprachsteuerung sagt das, bevor Sie
 sie einschalten; ein verhörter Befehl tut meist nichts, sagen Sie ihn also
-noch einmal oder erledigen Sie es von Hand. Gesprochen wirkt ein Befehl nur
+noch einmal oder erledigen Sie es von Hand. Auf Deutsch, Französisch, Indonesisch,
+Japanisch, Koreanisch und Portugiesisch bekommt das Modell vorher die Wörter
+genannt, die ForkBuild versteht; so hört es mehr Befehle richtig, braucht aber
+jedes Mal etwa eine Sekunde länger.
+Gesprochen wirkt ein Befehl nur
 dann auf Ihre Auswahl, wenn Sie das sagen (*streiche dieses rot*): Wird der
 genannte Teil verhört, tut er nichts, statt Ihre Auswahl zu streichen oder
 zu löschen.

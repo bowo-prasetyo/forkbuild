@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: b9f6583713dd4416 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 9520715e8e39c735 -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -936,7 +936,10 @@ idioma en que se muestra ForkBuild.
 Entiende mejor el inglés. En los demás idiomas, el pequeño modelo de voz aún
 entiende mal muchas órdenes, y la voz lo dice antes de que la active; una
 orden mal entendida suele no hacer nada, así que dígala otra vez o hágalo a
-mano. Dicha en voz alta, una orden actúa sobre lo que tiene seleccionado
+mano. En alemán, francés, indonesio, japonés, coreano y portugués, al modelo
+se le dicen antes las palabras que ForkBuild entiende, lo que le ayuda a
+entender bien más órdenes, con un segundo más o menos cada vez.
+Dicha en voz alta, una orden actúa sobre lo que tiene seleccionado
 solo cuando lo dice (*pinta esto de rojo*): si la parte que nombró se
 entiende mal, no hace nada en lugar de pintar o borrar su selección.
 

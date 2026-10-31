@@ -96,6 +96,7 @@ import VoicePanel from '../components/VoicePanel.js';
 import { useVoiceCommands } from '../voice/useVoiceCommands.js';
 import { interpretEditorCommand } from '../../core/voice/EditorVoiceCommand.js';
 import { editorVoiceWords } from '../voice/editorVoiceWords.js';
+import { appVoicePrompt } from '../voice/voicePrompt.js';
 import { descriptionSuggestion, titleSuggestions } from '../i18n/buildSuggestionText.js';
 import { plainCommandVocabulary } from '../i18n/plainCommandWords.js';
 import { interpretPlainCommand } from '../../core/building/PlainCommand.js';
@@ -1561,7 +1562,7 @@ export default {
             }
             return guideQuestion(text) ? { kind: 'question' } : { kind: 'unknown' };
         }
-        const voiceCommands = useVoiceCommands({ act: actOnVoice });
+        const voiceCommands = useVoiceCommands({ act: actOnVoice, prompt: (language) => appVoicePrompt('editor', language, { actions: actionRegistry.getAll() }) });
         function askGuideAbout(question) {
             voiceCommands.closeVoice();
             router.push({ path: '/help', query: { q: question } });
