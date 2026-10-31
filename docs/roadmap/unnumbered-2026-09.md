@@ -10220,3 +10220,25 @@ please fix the "e fazer" reado reading.")
 - Without a prompt, three commands in 512 fewer are heard right (39.5%, from 40.0%): "Refazer" heard as "e fazer",
   and "Urungkan" as "kurungkan".
 - Tests: tests/VoiceBuilding.test.js ("e fazer" is no command; desfazer and refazer still are).
+
+## Voice doesn't delete everything in Japanese for a misheard part (unnumbered, 2026-10-31)
+
+**"木を全部消して" (erase all the trees), heard as "気を全部消して", deletes nothing, not everything.** Found on the
+fresh recordings (docs/reviews/VoicePrompt-2026-10-30.md, *Japanese "delete everything"*). (The owner's yes,
+2026-10-31: "Thanks. Yes, please fix the Japanese one first.")
+
+**The filter.**
+1. **Pillar:** building, by voice. A Japanese player asking to delete the trees never loses the whole build.
+2. **First ten minutes:** no harder; voice is turned on by choice, and does less by mistake.
+3. **Building first:** yes; a misheard word no longer deletes everything the builder made.
+4. **Counts:** none yet; no count looks at voice. The measure is the voice evaluation's: nothing done that must be
+   undone, and commands right falling by at most one in a hundred.
+
+- **In a sentence written without spaces, kanji or katakana the reader doesn't hold is a word it can't read**
+  (core/building/PlainCommand.js `unreadWords()`): what is left once the words read and the ignored words are taken
+  out is read, and each run of kanji or katakana left counts; hiragana left holds the sentence together (を, して).
+  Before, the whole sentence was one word, which held words read, so nothing was unread.
+- On every saved hearing, no language does more that must be undone, and no command is lost; on the fresh recordings
+  without a prompt, the three Japanese "delete everything" now do nothing.
+- Tests: tests/VoicePhrases.test.js (キュ, 気 or キュー beside 全部 deletes nothing; 全部消して and 全部を消してください
+  are still everything).

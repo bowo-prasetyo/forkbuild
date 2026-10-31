@@ -101,10 +101,34 @@ export function interpretPlainCommand(query, vocabulary = {}) {
 const UNREAD_LETTERS = 3;
 const UNREAD_SYLLABLES = 2;
 
+// Japanese is written without spaces, so a whole sentence is one word, which
+// holds the words read: there, what is left once they and the ignored words
+// are taken out is read instead, and each run of kanji or katakana left is a
+// word not read ("キュを全部消して": キュ; "気を全部消して": 気), since
+// what is left in hiragana holds the sentence together (を, して).
+const NAME_LETTER = /[\p{Script=Han}\p{Script=Katakana}]/u;
+const NAME_RUN = /[\p{Script=Han}\p{Script=Katakana}\u30fc]+/gu;
+
 // The words of `query` that are neither ignored, nor a word of `phrases`,
 // nor too short to be a name.
 function unreadWords(query, phrases, ignoredWords) {
     const ignored = new Set(ignoredWords.map(fold));
-    return wordsOf(query).filter((word) => [...word].length >= (WITHOUT_SPACES.test(word) ? UNREAD_SYLLABLES : UNREAD_LETTERS)
-        && !ignored.has(word) && wordsFound(word, phrases, ignoredWords) === 0).length;
+    let unread = 0;
+    for (const word of wordsOf(query)) {
+        if (NAME_LETTER.test(word)) {
+            unread += unreadInRun(word, [...phrases, ...ignoredWords]);
+        } else if ([...word].length >= (WITHOUT_SPACES.test(word) ? UNREAD_SYLLABLES : UNREAD_LETTERS)
+            && !ignored.has(word) && wordsFound(word, phrases, ignoredWords) === 0) unread += 1;
+    }
+    return unread;
+}
+
+// The runs of kanji or katakana left in `word` once every one of `known` is
+// taken out of it, longest first.
+function unreadInRun(word, known) {
+    let left = word;
+    for (const phrase of known.map(fold).filter(Boolean).sort((x, y) => [...y].length - [...x].length)) {
+        left = left.split(phrase).join(' ');
+    }
+    return (left.match(NAME_RUN) || []).length;
 }

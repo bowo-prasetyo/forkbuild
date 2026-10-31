@@ -411,8 +411,10 @@ the detailed references; in short:
   to do (`plan.intentSaid`: "I like the red roof" paints nothing, though the
   palette reads "the roof red" as paint, showing it first); and it acts on
   everything only when no word it can't read comes with it (`plan.unread`,
-  words of three letters or more, two in Korean: "Selecione todas as
-  ginelas", the windows misheard, selects nothing). Only
+  words of three letters or more, two in Korean, and in Japanese, written
+  without spaces, each run of kanji or katakana left once the words read
+  are taken out: "Selecione todas as ginelas", the windows misheard, selects
+  nothing, nor does "気を全部消して" delete anything). Only
   `EditorVoiceCommand.js#SPOKEN_ACTIONS` can be spoken: actions Undo takes
   back, those that only change what is seen, and Save; never Publish,
   Export, 3D Model, Import, New Build or Create Blueprint, so nothing
