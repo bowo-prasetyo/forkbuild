@@ -7,6 +7,9 @@
 //   node scripts/compare-voice-prompts.mjs --run A=heard-none.json
 //        --run B=heard-vocabulary.json [--run C=…] [--out report.md]
 //
+// `--phrases fresh` scores recordings of the second phrasing
+// (voiceCommandPhrases.mjs FRESH_SAID).
+//
 // `--run E=heard-none.json+heard-en.json` reads the second file's
 // recordings in place of the first's: a prompt in English only, heard with
 // `--language en`, and the rest without.
@@ -111,8 +114,8 @@ export function measures(rows) {
 
 // Reads `heard` (saved transcripts) as the app would, recording by
 // recording; with `guard`, what the guards throw away as nothing.
-async function scored(heard, { guard = false } = {}) {
-    const phrases = new Map(voicePhrases().map((phrase) => [`${phrase.language}/${phrase.id}`, phrase]));
+async function scored(heard, { guard = false, set = 'main' } = {}) {
+    const phrases = new Map(voicePhrases(set).map((phrase) => [`${phrase.language}/${phrase.id}`, phrase]));
     const rows = [];
     for (const language of Object.keys(SAID)) {
         const reader = await voiceReader(language);
@@ -243,7 +246,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         console.error('Usage: node scripts/compare-voice-prompts.mjs --run A=heard.json --run B=heard.json [--out report.md]');
         process.exit(2);
     }
-    for (const run of runs) run.rows = await scored(heardIn(run.path), { guard: run.guard });
+    const set = process.argv.includes('--phrases') ? process.argv[process.argv.indexOf('--phrases') + 1] : 'main';
+    for (const run of runs) run.rows = await scored(heardIn(run.path), { guard: run.guard, set });
     const text = report(runs);
     const at = process.argv.indexOf('--out');
     if (at >= 0) writeFileSync(process.argv[at + 1], text);

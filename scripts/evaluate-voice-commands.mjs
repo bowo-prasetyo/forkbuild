@@ -10,7 +10,7 @@
 //   node scripts/evaluate-voice-commands.mjs [--audio voice-corpus] [--out report.md]
 //        [--model onnx-community/whisper-base] [--language ja]
 //        [--save-heard heard.json | --heard heard.json]
-//        [--prompt none|vocabulary|expanded|apart]
+//        [--prompt none|vocabulary|expanded|apart] [--phrases fresh]
 //
 // Recordings are <audio>/<language>/<speaker>/<phrase id>.<wav|webm|ogg|mp3|m4a>,
 // as scripts/synthesize-voice-corpus.mjs makes them, or as people record
@@ -27,7 +27,7 @@
 // the words near a command (`apart`).
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
-import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, extname, join, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
@@ -56,7 +56,7 @@ const AUDIO_TYPES = new Set(['.wav', '.webm', '.ogg', '.mp3', '.m4a']);
 const MIME_TYPES = { '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json', '.html': 'text/html', '.wav': 'audio/wav', '.webm': 'audio/webm', '.ogg': 'audio/ogg', '.mp3': 'audio/mpeg', '.m4a': 'audio/mp4' };
 
 // ---- The recordings -----------------------------------------------------------
-const phrases = new Map(voicePhrases().map((phrase) => [`${phrase.language}/${phrase.id}`, phrase]));
+const phrases = new Map(voicePhrases(argument('--phrases', 'main')).map((phrase) => [`${phrase.language}/${phrase.id}`, phrase]));
 const directories = (dir) => (existsSync(dir) ? readdirSync(dir).filter((name) => !name.startsWith('.') && statSync(join(dir, name)).isDirectory()) : []);
 const clips = [];
 for (const language of directories(audio).filter((name) => Object.hasOwn(SAID, name) && (!onlyLanguage || name === onlyLanguage))) {
@@ -73,11 +73,16 @@ if (clips.length === 0 && !heardPath) {
 }
 
 // ---- Heard in Chromium --------------------------------------------------------
+// What --save-heard keeps of each recording heard.
+const kept = (list) => JSON.stringify(list.map(({ language, id, speaker, transcript, ms, noSpeech, logprob }) => ({ language, id, speaker, transcript, ms, noSpeech, logprob })));
 const heard = heardPath
     ? JSON.parse(readFileSync(heardPath, 'utf8')).filter((clip) => !onlyLanguage || clip.language === onlyLanguage)
         .map((clip) => ({ ...phrases.get(`${clip.language}/${clip.id}`), ...clip }))
     : await hearAll();
-if (savePath) writeFileSync(savePath, JSON.stringify(heard.map(({ language, id, speaker, transcript, ms, noSpeech, logprob }) => ({ language, id, speaker, transcript, ms, noSpeech, logprob }))));
+if (savePath) {
+    writeFileSync(savePath, kept(heard));
+    rmSync(`${savePath}.partial`, { force: true });
+}
 
 // The prompt for each language and view, as the app would make it.
 async function prompts() {
@@ -145,17 +150,31 @@ async function hearAll() {
             };
             return Math.round(performance.now() - started);
         }, { model });
-        console.error(`Speech model ready in ${(loadMs / 1000).toFixed(1)} s; hearing ${clips.length} recordings`);
+        // With --save-heard, what was heard is kept as it goes
+        // (<save-heard>.partial), and a hearing stopped part way picks up
+        // where it was.
+        const partial = savePath ? `${savePath}.partial` : null;
+        const before = partial && existsSync(partial) ? JSON.parse(readFileSync(partial, 'utf8')) : [];
+        const done = new Set(before.map((clip) => `${clip.language}/${clip.speaker}/${clip.id}`));
+        for (const clip of clips) {
+            const was = before.find((each) => `${each.language}/${each.speaker}/${each.id}` === `${clip.language}/${clip.speaker}/${clip.id}`);
+            if (was) heard.push({ ...clip, ...was });
+        }
+        console.error(`Speech model ready in ${(loadMs / 1000).toFixed(1)} s; hearing ${clips.length - heard.length} recordings${heard.length ? ` (${heard.length} heard before)` : ''}`);
         for (const [i, clip] of clips.entries()) {
+            if (done.has(`${clip.language}/${clip.speaker}/${clip.id}`)) continue;
             const prompt = promptFor[`${clip.language}/${clip.view}`] || '';
             try {
                 heard.push({ ...clip, ...(await page.evaluate(([url, language, said]) => globalThis.hear(url, language, said), [`/__audio/${clip.path}`, clip.language, prompt])) });
             } catch (error) {
+                // The browser gone, the hearing stops, keeping what was heard.
+                if (/has been closed/.test(error.message)) throw error;
                 // A recording that can't be read is heard as nothing, and said.
                 console.error(`${clip.path}: ${error.message.split('\n')[0]}`);
                 heard.push({ ...clip, transcript: '', ms: 0 });
             }
             if ((i + 1) % 50 === 0) console.error(`${i + 1} of ${clips.length}`);
+            if (partial && (i + 1) % 10 === 0) writeFileSync(partial, kept(heard));
         }
     } finally {
         await browser.close();

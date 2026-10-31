@@ -8,16 +8,20 @@ import { SPOKEN_ACTIONS, interpretEditorCommand } from '../core/voice/EditorVoic
 import { MAX_OTHER_WORDS, interpretWorldCommand } from '../core/voice/WorldVoiceCommand.js';
 import { createStandardActions } from '../application/editor/EditorActionRegistry.js';
 import { repeatsItself } from '../core/voice/Transcript.js';
-import { COMMANDS, SAID, voicePhrases } from '../scripts/voiceCommandPhrases.mjs';
+import { COMMANDS, FRESH_SAID, SAID, voicePhrases } from '../scripts/voiceCommandPhrases.mjs';
 import { verdict, voiceReader } from '../scripts/voiceCommandOutcome.mjs';
 import { assert } from './support/Assert.js';
 
 {
     assert(Object.keys(SAID).join() === 'en,de,es,fr,id,ja,ko,pt-BR', '1. every language the app speaks');
     assert(Object.values(SAID).every((texts) => texts.length === COMMANDS.length), '2. each says every command');
+    assert(Object.keys(FRESH_SAID).join() === Object.keys(SAID).join() && Object.values(FRESH_SAID).every((texts) => texts.length === COMMANDS.length),
+        '2a. the fresh phrasing too, in every language');
+    assert(Object.keys(SAID).every((language) => FRESH_SAID[language].filter((text, i) => text !== SAID[language][i]).length >= 20),
+        '2b. most of it said another way');
     for (const language of Object.keys(SAID)) {
         const reader = await voiceReader(language);
-        for (const phrase of voicePhrases().filter((p) => p.language === language)) {
+        for (const phrase of [...voicePhrases(), ...voicePhrases('fresh')].filter((p) => p.language === language)) {
             const did = reader.did(phrase.text, phrase.view);
             assert(verdict(phrase.expect, did) === 'right', `3. ${language} "${phrase.text}" should do ${phrase.expect}, and did ${did}`);
         }

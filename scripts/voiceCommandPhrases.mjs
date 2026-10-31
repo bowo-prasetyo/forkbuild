@@ -109,6 +109,53 @@ export const SAID = Object.freeze({
         'Eu gosto do telhado vermelho.', 'Quantos tijolos são esses?', 'Quem quer conversar?', 'Minha casa é bem longe.', 'Está alto demais?']
 });
 
+// A second phrasing of every row above, in the same order, written before
+// any of it was heard, to confirm on recordings nothing was fitted to what
+// was measured on the first (docs/reviews/VoicePrompt-2026-10-30.md,
+// "Fresh recordings"). The actions said only by their name keep it.
+export const FRESH_SAID = Object.freeze({
+    en: ['Make the roof red.', 'Pick the windows.', 'Remove all the trees.', 'Colour everything green.', 'Undo that.', 'Redo that.', 'Rotate clockwise.', 'Copy.', 'Duplicate.',
+        'Fly to the old mill.', 'Show me the stone bridge.', 'Take me home.', 'Through my eyes.', 'Mute.', 'Turn the sound on.', 'Hello.',
+        'This is taking a while.', 'I am a bit hungry.',
+        'The windows look nice from here.', 'Maybe I will paint it tomorrow.', 'Is that door big enough?', 'The roof needs more work.', 'Have you seen the old mill?', 'The sound is fine.', 'The stone bridge is far.',
+        'That red roof looks good.', 'Do I have enough bricks?', 'Nobody wants to talk.', 'I miss my home.', 'It is very loud here.'],
+    de: ['Färbe das Dach rot.', 'Markiere die Fenster.', 'Entferne alle Bäume.', 'Streiche alles grün.', 'Mach das rückgängig.', 'Wiederherstellen.', 'Im Uhrzeigersinn drehen.', 'Kopieren.', 'Duplizieren.',
+        'Flieg zur alten Mühle.', 'Zeig mir die Steinbrücke.', 'Heim.', 'Erste Person.', 'Stumm.', 'Ton einschalten.', 'Hallo.',
+        'Das dauert ein bisschen.', 'Ich habe ein wenig Hunger.',
+        'Die Fenster sehen von hier schön aus.', 'Vielleicht male ich es morgen.', 'Ist die Tür groß genug?', 'Das Dach braucht noch Arbeit.', 'Hast du die alte Mühle gesehen?', 'Der Ton passt so.', 'Die Steinbrücke ist weit.',
+        'Das rote Dach sieht gut aus.', 'Habe ich genug Steine?', 'Niemand will reden.', 'Ich vermisse mein Zuhause.', 'Hier ist es sehr laut.'],
+    es: ['Colorea el techo de rojo.', 'Marca las ventanas.', 'Quita todos los árboles.', 'Colorea todo de verde.', 'Deshazlo.', 'Rehazlo.', 'Girar en sentido horario.', 'Copiar.', 'Duplicar.',
+        'Vuela al molino viejo.', 'Muéstrame el puente de piedra.', 'A casa.', 'Primera persona.', 'Apaga el sonido.', 'Enciende el sonido.', 'Hola, amigo.',
+        'Esto tarda un poco.', 'Tengo un poco de hambre.',
+        'Las ventanas se ven bonitas desde aquí.', 'Quizás lo pinte mañana.', '¿Esa puerta es bastante grande?', 'Al tejado le falta trabajo.', '¿Has visto el molino viejo?', 'El sonido está bien.', 'El puente de piedra está lejos.',
+        'Ese tejado rojo se ve bien.', '¿Tengo suficientes ladrillos?', 'Nadie quiere hablar.', 'Extraño mi casa.', 'Aquí hay mucho ruido.'],
+    fr: ['Colore le toit en rouge.', 'Choisis les fenêtres.', 'Enlève tous les arbres.', 'Colore tout en vert.', 'Annule ça.', 'Refais.', 'Pivoter dans le sens horaire.', 'Copier.', 'Dupliquer.',
+        'Vole vers le vieux moulin.', 'Montre-moi le pont de pierre.', 'Rentre.', 'Vue subjective.', 'Silence.', 'Active le son.', 'Salut.',
+        'Ça prend un peu de temps.', 'J’ai un peu faim.',
+        'Les fenêtres sont jolies d’ici.', 'Je le peindrai peut-être demain.', 'Cette porte est assez grande ?', 'Le toit demande encore du travail.', 'Tu as vu le vieux moulin ?', 'Le son est bien.', 'Le pont de pierre est loin.',
+        'Ce toit rouge est joli.', 'J’ai assez de briques ?', 'Personne ne veut parler.', 'Ma maison me manque.', 'C’est très bruyant ici.'],
+    id: ['Warnai atapnya merah.', 'Tandai jendelanya.', 'Buang semua pohonnya.', 'Warnai semuanya hijau.', 'Batalkan.', 'Kembalikan.', 'Putar searah jarum jam.', 'Salin.', 'Duplikat.',
+        'Terbang ke kincir tua.', 'Tunjukkan jembatan batu.', 'Kembali ke rumah.', 'Sudut pandang pertama.', 'Bisukan.', 'Hidupkan suara.', 'Sapa.',
+        'Ini agak lama.', 'Aku agak lapar.',
+        'Jendelanya bagus dari sini.', 'Mungkin besok aku cat.', 'Pintu itu cukup besar?', 'Atapnya masih perlu dikerjakan.', 'Kamu sudah lihat kincir tua?', 'Suaranya bagus.', 'Jembatan batu itu jauh.',
+        'Atap merah itu bagus.', 'Batu batanya cukup?', 'Tidak ada yang mau bicara.', 'Aku rindu rumah.', 'Di sini berisik sekali.'],
+    ja: ['屋根を赤に塗って。', '窓を選んで。', '木を全部消して。', 'すべて緑に塗って。', '元に戻す。', 'やり直す。', '時計回りに回転。', 'コピー。', '複製。',
+        '古い水車小屋まで行って。', '石の橋を見せて。', 'うちに帰る。', '1人称。', 'ミュート。', '音をつけて。', '話しかけて。',
+        'ちょっと時間がかかるね。', '少しお腹がすいた。',
+        'ここから見る窓はきれい。', '明日塗るかもしれない。', 'そのドアは十分大きい？', '屋根はまだ作業が必要。', '古い水車小屋を見た？', '音はちょうどいい。', '石の橋は遠い。',
+        'あの赤い屋根はいいね。', 'レンガは足りる？', '誰も話したくない。', '家が恋しい。', 'ここはとてもうるさい。'],
+    ko: ['지붕을 빨갛게 칠해.', '창문 골라 줘.', '나무를 전부 지워.', '모두 녹색으로 칠해.', '되돌려.', '다시 해.', '시계 방향 회전.', '복사.', '복제.',
+        '옛 물레방아에 데려다 줘.', '돌다리 보여 줘.', '홈으로.', '일인칭.', '음소거.', '음소거 해제.', '말 걸어.',
+        '시간이 좀 걸리네.', '조금 배고파.',
+        '여기서 보니 창문이 예쁘네.', '내일 칠할지도 몰라.', '그 문 충분히 커?', '지붕은 아직 손볼 게 많아.', '옛 물레방아 봤어?', '소리는 괜찮아.', '돌다리는 멀어.',
+        '저 빨간 지붕 멋지다.', '벽돌 충분해?', '아무도 이야기하고 싶어 하지 않아.', '집이 그리워.', '여기 너무 시끄러워.'],
+    'pt-BR': ['Colore o telhado de vermelho.', 'Marque as janelas.', 'Tire todas as árvores.', 'Colore tudo de verde.', 'Desfaz.', 'Refaz.', 'Girar no sentido horário.', 'Copiar.', 'Duplicar.',
+        'Voe para o moinho velho.', 'Me mostra a ponte de pedra.', 'Para casa.', 'Primeira pessoa.', 'Mudo.', 'Com som.', 'Olá, amigo.',
+        'Isso está demorando um pouco.', 'Estou com um pouco de fome.',
+        'As janelas ficam bonitas daqui.', 'Talvez eu pinte amanhã.', 'Essa porta é grande o bastante?', 'O telhado ainda precisa de trabalho.', 'Você viu o moinho velho?', 'O som está bom.', 'A ponte de pedra é longe.',
+        'Aquele telhado vermelho é bonito.', 'Tenho tijolos suficientes?', 'Ninguém quer conversar.', 'Sinto falta da minha casa.', 'Aqui está muito barulhento.']
+});
+
 // Sounds that aren't speech (scripts/voiceNoise.mjs), heard in each
 // language and view: nothing should be done. [id, view].
 export const NOISE_SOUNDS = Object.freeze([
@@ -118,11 +165,17 @@ export const NOISE_SOUNDS = Object.freeze([
     ['noise-babble', 'world']
 ]);
 
+// Fresh phrases left out: they ask for nothing, but do something even typed
+// (the command reader's, not the speech model's; reported in
+// docs/reviews/VoicePrompt-2026-10-30.md). "I miss my home" flies home.
+export const FRESH_LEFT_OUT = Object.freeze(new Set(['id/near-home-far']));
+
 // Every phrase: `{ id, language, view, expect, text }`; a sound's `text` is
-// empty.
-export function voicePhrases() {
-    return Object.entries(SAID).flatMap(([language, texts]) => [
+// empty. `set` is 'main' (SAID) or 'fresh' (FRESH_SAID).
+export function voicePhrases(set = 'main') {
+    const phrases = Object.entries(set === 'fresh' ? FRESH_SAID : SAID).flatMap(([language, texts]) => [
         ...COMMANDS.map(([id, view, expect], i) => ({ id, language, view, expect, text: texts[i] })),
         ...NOISE_SOUNDS.map(([id, view]) => ({ id, language, view, expect: 'none', text: '' }))
     ]);
+    return set === 'fresh' ? phrases.filter(({ language, id }) => !FRESH_LEFT_OUT.has(`${language}/${id}`)) : phrases;
 }

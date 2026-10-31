@@ -69,3 +69,4 @@ Thumbs.db
 
 # Voice recordings made by scripts/synthesize-voice-corpus.mjs, or recorded to measure voice building
 voice-corpus/
+voice-corpus-fresh/
