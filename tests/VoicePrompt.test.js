@@ -1,7 +1,7 @@
 // ui/voice/voicePrompt.js, the words voice building could tell the speech
 // model to expect, and scripts/compare-voice-prompts.mjs, which measured
 // whether it should (docs/reviews/VoicePrompt-2026-10-30.md).
-import { voicePrompt } from '../ui/voice/voicePrompt.js';
+import { PROMPTED_LANGUAGES, appVoicePrompt, voicePrompt } from '../ui/voice/voicePrompt.js';
 import { decide, decideGuards, editDistance, heardIn, signTest, units } from '../scripts/compare-voice-prompts.mjs';
 import { setAppLocale } from '../ui/i18n/i18n.js';
 import { assert } from './support/Assert.js';
@@ -30,7 +30,13 @@ import { assert } from './support/Assert.js';
         '8c. two words for different things spelled nearly alike, both left out');
     await setAppLocale('ja');
     assert(voicePrompt('editor').includes('屋根'), '8. in the chosen language');
+    const places = [{ title: '古い水車小屋' }];
+    assert(appVoicePrompt('editor', 'ja') === voicePrompt('editor', { apart: true }) && appVoicePrompt('world', 'ja', { places }) === voicePrompt('world', { apart: true, places }),
+        '8d. the app gives the model the prompt without the words near a command');
     await setAppLocale('en');
+    assert(appVoicePrompt('editor', 'en') === '' && appVoicePrompt('world', 'es', { places }) === '',
+        '8e. and none in English and Spanish, where it fixed about as much as it broke');
+    assert([...PROMPTED_LANGUAGES].sort().join() === 'de,fr,id,ja,ko,pt-BR', '8f. a prompt in German, French, Indonesian, Japanese, Korean and Portuguese');
 }
 console.log('✓ the prompt, made from what the app can act on');
 

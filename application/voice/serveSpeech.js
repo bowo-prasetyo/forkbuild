@@ -4,7 +4,8 @@
 // so the model is loaded once and stays loaded however many views ask.
 //
 // A request is `{ id, type, engineLoaderUrl, ... }`, `type` one of 'load',
-// 'transcribe' and 'hear' (with `samples` and `language`), 'downloaded' and
+// 'transcribe' and 'hear' (with `samples` and `language`, and for 'hear' a
+// `prompt`), 'downloaded' and
 // 'remove'.
 // Each gets one `{ id, done: true, value }` or `{ id, done: true, error }`;
 // 'load' first sends `{ id, progress }` while it downloads.
@@ -20,7 +21,7 @@ export function serveSpeech(scope, createRuntime) {
             case 'transcribe':
                 return runtime.transcribe(request.samples, request.language);
             case 'hear':
-                return runtime.hear(request.samples, request.language);
+                return runtime.hear(request.samples, request.language, { prompt: request.prompt || '' });
             case 'downloaded':
                 return runtime.downloaded();
             case 'remove':

@@ -21,9 +21,12 @@ import { currentLocale } from '../i18n/i18n.js';
 // 'working' | 'result' | 'failed', with `progress` (0–100) while loading,
 // `heard`/`outcome` after a command, and `reason` on failing ('microphone',
 // 'unsupported', 'timeout' or the error's message).
+//
+// `prompt(language)`: what the model is told it is likely to hear, in the
+// app's language (ui/voice/voicePrompt.js#appVoicePrompt()); '' for none.
 const ENABLED_KEY = 'forkbuild.voice.enabled';
 
-export function useVoiceCommands({ act, runtime = sharedSpeechRecognizer(), record = startRecording, supported = speechSupported(), language = () => currentLocale().code, storage = globalThis.localStorage }) {
+export function useVoiceCommands({ act, prompt = () => '', runtime = sharedSpeechRecognizer(), record = startRecording, supported = speechSupported(), language = () => currentLocale().code, storage = globalThis.localStorage }) {
     const state = ref({ step: 'off' });
     let recording = null;
     // Counts each command, so what is heard after voice was turned off, or
@@ -92,7 +95,7 @@ export function useVoiceCommands({ act, runtime = sharedSpeechRecognizer(), reco
     // a loop (core/voice/Transcript.js#heardNothing(), #repeatsItself()).
     async function hearSpeech(samples) {
         if (typeof runtime.hear !== 'function') return runtime.transcribe(samples, whisperLanguage(language()));
-        const { text, noSpeech, logprob } = await runtime.hear(samples, whisperLanguage(language()));
+        const { text, noSpeech, logprob } = await runtime.hear(samples, whisperLanguage(language()), { prompt: prompt(language()) || '' });
         return heardNothing({ noSpeech, logprob }) || repeatsItself(text) ? '' : text;
     }
 

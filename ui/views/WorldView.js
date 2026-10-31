@@ -112,6 +112,7 @@ import WorldSayPanel from '../components/WorldSayPanel.js';
 import { useVoiceCommands } from '../voice/useVoiceCommands.js';
 import { interpretWorldCommand } from '../../core/voice/WorldVoiceCommand.js';
 import { worldVoiceVocabulary } from '../i18n/worldVoiceWords.js';
+import { appVoicePrompt } from '../voice/voicePrompt.js';
 
 // The seasons World View can be kept in, in the year's order.
 const SEASON_OPTIONS = Object.freeze([
@@ -1298,14 +1299,17 @@ export default {
             free: null, firstPerson: CameraPerspective.FIRST_PERSON, thirdPerson: CameraPerspective.THIRD_PERSON, birdEye: CameraPerspective.BIRD_EYE
         };
         const CAMERA_LABEL = { free: 'worldView.free', firstPerson: 'worldView.firstPerson', thirdPerson: 'worldView.thirdPerson', birdEye: 'worldView.birdSEye' };
-        function actOnVoice(text) {
-            // On a challenge plaza, its builds too, which aren't in Locations.
+        // The places voice can go to: on a challenge plaza, its builds too,
+        // which aren't in Locations.
+        function voicePlaces() {
             const exhibits = plaza.value ? [...(plaza.value.exhibits || []), ...(plaza.value.readyMades || [])] : [];
-            const places = [
+            return [
                 ...exhibits.map((exhibit) => ({ id: exhibit.key, title: exhibit.title, exhibit })),
                 ...session.getWorldLocations().map((location) => location.toJSON())
             ];
-            const command = interpretWorldCommand(text, worldVoiceVocabulary(), places);
+        }
+        function actOnVoice(text) {
+            const command = interpretWorldCommand(text, worldVoiceVocabulary(), voicePlaces());
             const done = (label) => ({ kind: 'done', label });
             const refused = (label, reason) => ({ kind: 'disabled', label, reason });
             switch (command?.kind) {
@@ -1346,7 +1350,7 @@ export default {
                     return text.trim().length >= 3 ? { kind: 'question' } : { kind: 'unknown' };
             }
         }
-        const voiceCommands = useVoiceCommands({ act: actOnVoice });
+        const voiceCommands = useVoiceCommands({ act: actOnVoice, prompt: (language) => appVoicePrompt('world', language, { places: voicePlaces() }) });
         function askGuideAbout(question) {
             voiceCommands.closeVoice();
             router.push({ path: '/help', query: { q: question } });

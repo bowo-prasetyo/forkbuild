@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: b9f6583713dd4416 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 9520715e8e39c735 -->
 # 02 — Editor
 
 <!-- languages -->
@@ -904,7 +904,11 @@ Ia mendengar bahasa yang dipakai ForkBuild.
 Ia paling baik memahami bahasa Inggris. Dalam bahasa lain, model suara kecil
 ini masih sering salah dengar, dan suara mengatakannya sebelum Anda
 menyalakannya; perintah yang salah dengar biasanya tidak melakukan apa-apa,
-jadi ucapkan lagi atau lakukan secara manual. Saat diucapkan, perintah hanya
+jadi ucapkan lagi atau lakukan secara manual. Dalam bahasa Jerman, Prancis,
+Indonesia, Jepang, Korea, dan Portugis, model terlebih dahulu diberi kata-kata
+yang dipahami ForkBuild, sehingga lebih banyak perintah terdengar benar, dengan
+tambahan sekitar satu detik setiap kali.
+Saat diucapkan, perintah hanya
 berlaku pada yang Anda pilih jika Anda mengatakannya (*cat ini merah*): jika
 bagian yang Anda sebut salah dengar, perintah tidak melakukan apa-apa
 alih-alih mengecat atau menghapus pilihan Anda.

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: b9f6583713dd4416 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 9520715e8e39c735 -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -899,7 +899,10 @@ idioma em que o ForkBuild é mostrado.
 Ele entende melhor o inglês. Nos outros idiomas, o pequeno modelo de voz
 ainda entende mal muitos comandos, e a voz avisa antes de você ligá-la; um
 comando mal entendido costuma não fazer nada, então diga de novo ou faça à
-mão. Falado, um comando age sobre o que você selecionou só quando você diz
+mão. Em alemão, francês, indonésio, japonês, coreano e português, o modelo
+recebe antes as palavras que o ForkBuild entende, o que o ajuda a entender
+certo mais comandos, com um segundo a mais, mais ou menos, a cada vez.
+Falado, um comando age sobre o que você selecionou só quando você diz
 (*pinte isto de vermelho*): se a parte que você citou for mal entendida, ele
 não faz nada em vez de pintar ou apagar a sua seleção.
 

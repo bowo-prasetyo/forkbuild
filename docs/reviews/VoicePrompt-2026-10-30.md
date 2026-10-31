@@ -1,4 +1,4 @@
-# Telling the speech model what to expect: measured, not used
+# Telling the speech model what to expect: measured, and used in six languages
 
 **Question.** Voice building hears commands with Whisper base, in the
 browser, given nothing but the recording and its language. Whisper can also
@@ -27,6 +27,10 @@ deleted everything for a Japanese "delete the trees" heard a little wrong,
 which the reader no longer does: see *Fresh recordings* and *Japanese
 "delete everything"*. With *Korean "unmute"*, the app, without a prompt,
 does nothing on the fresh recordings that must be undone.
+
+**Turned on, 2026-10-31:** the app now gives the model the prompt without
+the words near a command in German, French, Indonesian, Japanese, Korean and
+Portuguese, and none in English and Spanish: see *Turned on*.
 
 ## What was compared
 
@@ -548,6 +552,43 @@ on any hearing, and no command is lost on any. On the fresh recordings,
 without a prompt, "음소거 했지?" does nothing, and with that nothing is
 done there that must be undone (1 → 0).
 
+## Turned on (2026-10-31)
+
+**Question.** With the reader as it now is, should the app give the model
+the prompt without the words near a command, and in which languages?
+
+**Answer: yes, in German, French, Indonesian, Japanese, Korean and
+Portuguese; not in English and Spanish** (the owner's decision, 2026-10-31,
+on the recommendation below). `ui/voice/voicePrompt.js` `PROMPTED_LANGUAGES`
+names them, and `appVoicePrompt()` is what `useVoiceCommands` gives the
+model in the Editor and in World View, with the view's actions or places.
+
+**Why.** Re-read with today's reader, with the guards, on both recordings:
+
+| | First recordings: right, fixed and broken | Fresh: right, fixed and broken | Done that must be undone | Median time, first / fresh |
+|---|---|---|---|---|
+| AG, no prompt | 39.5% | 38.8% | 0 and 0 | 6.9 s / 8.6 s |
+| DG, apart everywhere | 46.9%, +63 −25 | 45.1%, +32 −8 | 0 and 0 | 8.0 s / 10.5 s |
+| FG, apart in six (the app) | 47.7%, +54 −12 | 43.5%, +26 −8 | 0 and 0 | 7.5 s / 9.9 s |
+
+- The prompt does nothing that must be undone in any language, on either
+  recording, and hears about seven commands in a hundred more right.
+- English (+3 −5, then +3 −0) and Spanish (+6 −8, then +3 −0) fixed about as
+  much as they broke, for a second or so more each time: without a prompt,
+  English already hears 79% to 88% right. The six gain on both: German +12
+  −4, French +13 −4, Indonesian +18 −6, Japanese +15 −4, Korean +13 −2,
+  Portuguese +9 −0.
+- FG passes the prompt's rule against AG on both recordings: nothing more
+  done that must be undone, 9% and 15% slower, 54 fixed for 12 broken and
+  26 for 8 (p < 0.001, p = 0.003). On the first recordings it hears more
+  right than DG; on the fresh, fewer, by English and Spanish's six.
+
+**What is not known.** Which languages was chosen after seeing these
+recordings, of 48 to 64 commands a language: a judgment, not a measure
+fixed first. And these are synthetic voices; people speak otherwise, and no
+count looks at voice. A few recordings of people, scored with
+`--prompt app` against `--prompt none`, would tell.
+
 ## Reproducing
 
 ```bash
@@ -580,6 +621,11 @@ node scripts/evaluate-voice-commands.mjs --audio voice-corpus-fresh --phrases fr
 node scripts/evaluate-voice-commands.mjs --audio voice-corpus-fresh --phrases fresh --prompt apart --save-heard heard-fresh-apart.json
 node scripts/compare-voice-prompts.mjs --phrases fresh --run A=heard-fresh-none.json --run AG=heard-fresh-none.json,guard --run D=heard-fresh-apart.json --run DG=heard-fresh-apart.json,guard
 ```
+
+What the app does, `apart` in six languages and none in English and
+Spanish, can be heard as such (`--prompt app`), or scored from the hearings
+above, the six languages' recordings of `heard-apart.json` laid over
+`heard-none.json` (`--run FG=heard-none.json+heard-apart6.json,guard`).
 
 Each hearing takes about two hours on four cores, the three side by side.
 

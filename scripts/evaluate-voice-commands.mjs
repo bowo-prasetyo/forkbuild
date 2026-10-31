@@ -10,7 +10,7 @@
 //   node scripts/evaluate-voice-commands.mjs [--audio voice-corpus] [--out report.md]
 //        [--model onnx-community/whisper-base] [--language ja]
 //        [--save-heard heard.json | --heard heard.json]
-//        [--prompt none|vocabulary|expanded|apart] [--phrases fresh]
+//        [--prompt none|vocabulary|expanded|apart|app] [--phrases fresh]
 //
 // Recordings are <audio>/<language>/<speaker>/<phrase id>.<wav|webm|ogg|mp3|m4a>,
 // as scripts/synthesize-voice-corpus.mjs makes them, or as people record
@@ -24,7 +24,8 @@
 // the model the words the app can act on before each recording
 // (ui/voice/voicePrompt.js): each concept's first name (`vocabulary`), or
 // every phrasing the app reads (`expanded`), or the first names without
-// the words near a command (`apart`).
+// the words near a command (`apart`), or what the app gives it: `apart` in
+// some languages and none in others (`app`, voicePrompt.js#appVoicePrompt()).
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { existsSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
@@ -33,7 +34,7 @@ import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 import { PLACES, SAID, voicePhrases } from './voiceCommandPhrases.mjs';
 import { verdict, voiceReader } from './voiceCommandOutcome.mjs';
-import { voicePrompt } from '../ui/voice/voicePrompt.js';
+import { appVoicePrompt, voicePrompt } from '../ui/voice/appVoicePrompt, voicePrompt.js';
 import { setAppLocale } from '../ui/i18n/i18n.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -48,8 +49,8 @@ const onlyLanguage = argument('--language');
 const savePath = argument('--save-heard');
 const heardPath = argument('--heard');
 const promptKind = argument('--prompt', 'none');
-if (!['none', 'vocabulary', 'expanded', 'apart'].includes(promptKind)) {
-    console.error('--prompt is none, vocabulary, expanded or apart');
+if (!['none', 'vocabulary', 'expanded', 'apart', 'app'].includes(promptKind)) {
+    console.error('--prompt is none, vocabulary, expanded, apart or app');
     process.exit(2);
 }
 const AUDIO_TYPES = new Set(['.wav', '.webm', '.ogg', '.mp3', '.m4a']);
@@ -91,7 +92,11 @@ async function prompts() {
     for (const language of new Set(clips.map((clip) => clip.language))) {
         await setAppLocale(language);
         const places = Object.values(PLACES[language]).map((title) => ({ title }));
-        for (const view of ['editor', 'world']) all[`${language}/${view}`] = voicePrompt(view, { expanded: promptKind === 'expanded', apart: promptKind === 'apart', places });
+        for (const view of ['editor', 'world']) {
+            all[`${language}/${view}`] = promptKind === 'app'
+                ? appVoicePrompt(view, language, { places })
+                : voicePrompt(view, { expanded: promptKind === 'expanded', apart: promptKind === 'apart', places });
+        }
     }
     return all;
 }

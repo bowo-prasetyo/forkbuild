@@ -21,7 +21,8 @@
 // part beside one becomes "select all".
 //
 // Measured by scripts/evaluate-voice-commands.mjs (`--prompt`); see
-// docs/reviews/VoicePrompt-2026-10-30.md for whether the app uses it.
+// docs/reviews/VoicePrompt-2026-10-30.md. The app gives the model `apart` in
+// PROMPTED_LANGUAGES (appVoicePrompt()), and no prompt in the others.
 import { createStandardActions } from '../../application/editor/EditorActionRegistry.js';
 import { SPOKEN_ACTIONS } from '../../core/voice/EditorVoiceCommand.js';
 import { splitWordList } from '../../core/library/LibrarySearch.js';
@@ -32,6 +33,20 @@ import { t } from '../i18n/i18n.js';
 // Two words are near when changing at most this share of the longer one's
 // letters makes one the other.
 export const NEAR = 1 / 3;
+
+// The languages the app gives the model a prompt in: those where `apart`,
+// with the guards, heard more commands right on both the first and the
+// fresh recordings, and did nothing more that must be undone. English and
+// Spanish fixed about as many as they broke, for a second or two more each
+// time, so they have none (docs/reviews/VoicePrompt-2026-10-30.md, *Turned
+// on*).
+export const PROMPTED_LANGUAGES = Object.freeze(new Set(['de', 'fr', 'id', 'ja', 'ko', 'pt-BR']));
+
+// The prompt the app gives the model for `view` in `language` (an app
+// locale code): `apart` in PROMPTED_LANGUAGES, otherwise none ('').
+export function appVoicePrompt(view, language, { places = [], actions = null } = {}) {
+    return PROMPTED_LANGUAGES.has(language) ? voicePrompt(view, { apart: true, places, actions }) : '';
+}
 
 // `view` is 'editor' or 'world'; `places`, World View's Locations
 // (`{ title }`); `actions`, the Editor's, when already made.
