@@ -68,6 +68,13 @@ console.log('✓ verdicts');
         && interpretEditorCommand('paint all in red', { vocabulary: all, actions }).plan.target.kind === 'everything'
         && interpretEditorCommand('select all the roofs', { vocabulary: all, actions }).plan.target.kind === 'part',
         '14b. said whole, or with a short word that holds the sentence together, everything is everything');
+    const ja = { intents: { delete: ['削除', '消'] }, everything: ['全部'], parts: { tree: ['木'] }, ignoredWords: ['を'] };
+    assert(['キュを全部消して', '気を全部消して', 'キューを全部消して'].every((said) => interpretEditorCommand(said, { vocabulary: ja, actions: deleting }) === null),
+        '14c. in Japanese, written without spaces, kanji or katakana it can\'t read is a word it can\'t read: "木を全部消して" heard as "気を全部消して" deletes nothing');
+    assert(interpretEditorCommand('全部消して', { vocabulary: ja, actions: deleting }).plan.target.kind === 'everything'
+        && interpretEditorCommand('全部を消してください', { vocabulary: ja, actions: deleting }).plan.target.kind === 'everything'
+        && interpretEditorCommand('木を全部消して', { vocabulary: ja, actions: deleting }).plan.target.kind === 'part',
+        '14d. what is left in hiragana holds the sentence together: "全部消して" is still everything');
 }
 console.log('✓ the Editor\'s reading of a spoken command');
 

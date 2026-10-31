@@ -23,8 +23,9 @@ reader's two sentences*. Nor "e fazer" as redo; with that, the prompt without
 the words near a command passes, on recordings the reader was fitted to:
 see *"e fazer"*. On fresh recordings, made after the rule was fixed, it
 passes again; it is not yet turned on, and the app, without a prompt,
-deletes everything for a Japanese "delete the trees" heard a little wrong:
-see *Fresh recordings*.
+deleted everything for a Japanese "delete the trees" heard a little wrong,
+which the reader no longer does: see *Fresh recordings* and *Japanese
+"delete everything"*.
 
 ## What was compared
 
@@ -471,8 +472,35 @@ pace, and the reader read each as delete everything. A word it doesn't hold besi
 "全部" (all) keeps it from deleting everything, but Japanese is written
 without spaces, so the reader takes the whole sentence for one word, which
 holds words it reads, and finds nothing unread. The
-prompt heard "木" each time. This is what the app does now, and it is for
-the command reader, as the sentences above were.
+prompt heard "木" each time. It is for the command reader, as the
+sentences above were: see *Japanese "delete everything"*.
+
+## Japanese "delete everything" (2026-10-31)
+
+**Question.** Can the reader leave "キュを全部消して" alone, and "木を全部消
+して" heard a little wrong, without losing commands?
+
+**Answer: yes.** In a word with kanji or katakana, as a Japanese sentence
+without spaces is, `core/building/PlainCommand.js` `unreadWords()` now takes
+out the words it read and the ignored words, and counts each run of kanji or
+katakana left as a word not read: キュ, 気, キュー. Hiragana left, を or して,
+holds the sentence together and doesn't count. Everything is still done for
+"全部消して" and "全部を消してください". A sentence with a kanji the reader
+doesn't hold now does nothing to everything: "全部を緑色に塗って", with 色,
+paints nothing, where "全部緑に塗って" paints. That is the safe way to be
+wrong.
+
+Measured as the reader's changes above, on every hearing, read again, by
+the rule fixed before scoring: no language does more that must be undone on
+any hearing, and no command is lost on any. On the fresh recordings, without
+a prompt, the three "delete everything" do nothing; what is left there to be
+undone is Korean "음소거 해제." heard as "음소거 했지?", sound off.
+
+| | Done that must be undone, before → after | Commands right |
+|---|---|---|
+| First recordings, every hearing | unchanged on each | unchanged on each |
+| Fresh, no prompt, guards | 4 → 1 | unchanged (149 of 384) |
+| Fresh, apart, guards | 0 → 0 | unchanged (173 of 384) |
 
 ## Reproducing
 
