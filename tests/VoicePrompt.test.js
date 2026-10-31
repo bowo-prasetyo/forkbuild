@@ -2,7 +2,7 @@
 // model to expect, and scripts/compare-voice-prompts.mjs, which measured
 // whether it should (docs/reviews/VoicePrompt-2026-10-30.md).
 import { voicePrompt } from '../ui/voice/voicePrompt.js';
-import { decide, decideGuards, editDistance, signTest, units } from '../scripts/compare-voice-prompts.mjs';
+import { decide, decideGuards, editDistance, heardIn, signTest, units } from '../scripts/compare-voice-prompts.mjs';
 import { setAppLocale } from '../ui/i18n/i18n.js';
 import { assert } from './support/Assert.js';
 
@@ -20,6 +20,14 @@ import { assert } from './support/Assert.js';
         '6. an action is in it by the name the Editor gives it, and only those voice may run');
     const world = voicePrompt('world', { places: [{ title: 'The Old Mill' }] });
     assert(world.endsWith('go to, The Old Mill') && world.includes('first person'), '7. World View\'s prompt has its commands and, last, the World\'s Locations');
+    const apart = voicePrompt('editor', { apart: true }).split(', ');
+    assert(apart.length < editor.length && apart.every((word) => editor.includes(word)), '8a. apart, a part of the prompt');
+    assert(!apart.includes('everything') && !apart.includes('Select All') && apart.includes('roof') && apart.includes('Undo'),
+        '8b. without the words for everything, keeping what nothing is spelled near');
+    await setAppLocale('pt-BR');
+    const portuguese = voicePrompt('editor', { apart: true }).split(', ');
+    assert(voicePrompt('editor').includes('Desfazer') && !portuguese.includes('Desfazer') && !portuguese.includes('Refazer'),
+        '8c. two words for different things spelled nearly alike, both left out');
     await setAppLocale('ja');
     assert(voicePrompt('editor').includes('屋根'), '8. in the chosen language');
     await setAppLocale('en');
@@ -29,6 +37,11 @@ console.log('✓ the prompt, made from what the app can act on');
 {
     assert(units('Paint the roof, red!', 'en').join() === 'paint,the,roof,red' && units('屋根を赤く。', 'ja').join('') === '屋根を赤く', '9. words, or in Japanese and Korean characters, without punctuation');
     assert(editDistance(['a', 'b', 'c'], ['a', 'x', 'c', 'd']) === 2 && editDistance([], ['a']) === 1, '10. the fewest changes');
+    const files = { 'a.json': [{ language: 'en', speaker: 's', id: 'x', transcript: 'a' }, { language: 'de', speaker: 's', id: 'x', transcript: 'a' }],
+        'b.json': [{ language: 'en', speaker: 's', id: 'x', transcript: 'b' }] };
+    const merged = heardIn('a.json+b.json', (file) => files[file]);
+    assert(merged.length === 2 && merged.find((clip) => clip.language === 'en').transcript === 'b' && merged.find((clip) => clip.language === 'de').transcript === 'a',
+        '11a. a+b: b\'s recordings in place of a\'s');
     assert(signTest(0, 0) === 1 && signTest(10, 0) < 0.01 && signTest(6, 4) > 0.5, '11. a sign test');
     const row = (language, expect, verdict, key, ms = 1000) => ({ language, expect, verdict, key, ms, edits: 0, length: 1 });
     const baseline = { rows: [row('en', 'x', 'nothing', 'a'), row('en', 'none', 'right', 'n'), ...Array.from({ length: 12 }, (_, i) => row('de', 'x', 'nothing', `d${i}`))] };

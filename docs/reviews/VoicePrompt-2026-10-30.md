@@ -16,7 +16,8 @@ could make it safe.
 **Re-run, 2026-10-31:** the app now throws away what the model makes up
 from noise and what repeats itself; with that, no sound did anything under
 either prompt, but both still fail on words pulled toward a command. See
-*Re-run with guards*.
+*Re-run with guards*. Nor does a prompt without the words near a command pass,
+nor one in English only: see *Second re-run*.
 
 ## What was compared
 
@@ -245,6 +246,72 @@ command, or a prompt only in English, where it now passes rule 1 but
 gains too little to pass rule 3 (+3 −2), are next to measure; and
 recordings of people.
 
+## Second re-run: without the words near a command, and in English only (2026-10-31)
+
+**Question.** The re-run above left the prompt pulling a word toward a
+command it sounds like. Is a prompt safe without the words near a command?
+And is a prompt in English only, where it did nothing that must be undone,
+worth using?
+
+**Answer: no to both.** Without the words near a command, the prompt still
+does what must be undone in German and French, from words that were never
+in it. In English only, nothing is done that must be undone, but what it
+fixes could be chance, and on these recordings it can't be shown otherwise.
+
+**What was compared**, fixed before hearing, each with the app's guards and
+held against AG (no prompt, with the guards) by the three rules above:
+
+- **D, apart:** B's prompt without the words near a command
+  (`voicePrompt(view, { apart: true })`, `--prompt apart`). Two words for
+  different things are near when changing at most a third of the longer
+  one's letters, case and accents aside, makes one the other (`NEAR`), and
+  both are left out: "Desfazer" and "Refazer", "Deshacer" and "Rehacer",
+  "select" and "delete", "sound on" and "sound off", "Move Up" and "Move
+  Down". So are the words for everything ("everything", "tout", "semua",
+  Select All), since a garbled part beside one reads as select all. The
+  prompts keep 46 to 64 of their 84 to 86 Editor words, and 6 to 10 of World
+  View's 12.
+- **E, English only:** B's prompt in English (`--language en`), and no
+  prompt in the other languages (`--run E=heard-none.json+heard-en.json`).
+
+**Results**
+
+| | Commands right | Wrong | False activations | Fixed and broken against A | Median time |
+|---|---|---|---|---|---|
+| AG, no prompt, guards | 40.2% | 2 | 0 of 512 | +0 −1 | 6.9 s |
+| BG, vocabulary, guards | 52.9% | 4 | 1 of 512 | +83 −19 | 8.2 s |
+| DG, apart, guards | 47.5% | 3 | 1 of 512 | +63 −27 | 8.0 s |
+| EG, English only, guards | 40.6% | 2 | 0 of 512 | +3 −2 | 6.9 s |
+
+- **DG: not used (rule 1),** in German and French. What it fixed: Spanish
+  "Rehacer" is no longer heard as undo, and Portuguese does no more than
+  without a prompt. What is left came from words it doesn't hold: "Wer will
+  reden?" is still heard as "wir reden" (talk; the prompt says "sprich
+  mit"), and "Sélectionne toutes les fenêtres" as "Sélectionne tout qu'est
+  fait naître" (select all), though "tout" and "Sélectionne" were left out.
+  A prompt in the language, any prompt, makes the model write that
+  language more readily, and with it these sentences. Leaving words out
+  also cost: a quarter fewer commands fixed than B (+63 against +83), more
+  broken (27 against 19), and English fell to 84.4% from 87.5%. Without the
+  guards, distant talk and a tune were again heard as "The Old Mill"
+  (four times); the guards caught all four.
+- **EG: not used (rule 3).** Against AG it fixed 4 commands and broke 2
+  (p = 0.69), and did nothing that must be undone. It can't do much
+  better on these recordings: without a prompt English already hears 56 of
+  its 64 commands right, and of the 8 left, a sign test needs at least 6
+  fixed and none broken. Its transcripts were word for word those of B's
+  English, heard the day before: Whisper, given the same recording and
+  prompt, writes the same thing.
+
+**What this leaves.** Neither prompt is used. The two sentences DG still
+gets wrong are read as commands by the app's reader, not pulled by the
+prompt's words: "select all" with a garbled part after it, which is also
+A's own two wrong commands, without any prompt; and "wir reden", two words
+that hold one for talk. They are for the command reader, measured the same
+way. Whether a prompt in English
+helps can only be known from recordings it gets wrong: recordings of
+people, not these voices.
+
 ## Reproducing
 
 ```bash
@@ -259,6 +326,14 @@ The re-run, with the guards (`,guard` scores a run as the app now hears):
 
 ```bash
 node scripts/compare-voice-prompts.mjs --run A=heard-none.json --run AG=heard-none.json,guard --run B=heard-vocabulary.json --run C=heard-expanded.json --run BG=heard-vocabulary.json,guard --run CG=heard-expanded.json,guard
+```
+
+The second re-run:
+
+```bash
+node scripts/evaluate-voice-commands.mjs --prompt apart --save-heard heard-apart.json
+node scripts/evaluate-voice-commands.mjs --prompt vocabulary --language en --save-heard heard-en.json
+node scripts/compare-voice-prompts.mjs --run A=heard-none.json --run AG=heard-none.json,guard --run BG=heard-vocabulary.json,guard --run D=heard-apart.json --run DG=heard-apart.json,guard --run EG=heard-none.json+heard-en.json,guard
 ```
 
 Each hearing takes about two hours on four cores, the three side by side.
@@ -542,3 +617,152 @@ Each hearing takes about two hours on four cores, the three side by side.
 | CG | id | Pilih semua jendela. | pilih semua agenda lah | select everything |
 | CG | id | Pilih semua jendela. | pilih semua agenda, | select everything |
 | CG | pt-BR | Desfazer. | e fazer. | action history.redo |
+
+## Appendix: the second re-run
+
+1024 recordings each; error rate is words, characters in ja and ko.
+
+### In all
+
+| | Commands right | Rejected | Wrong | False activations | Error rate | Median time |
+|---|---|---|---|---|---|---|
+| A | 40.4% | 59.2% | 0.4% (2) | 0.0% (0 of 512) | 59.9% | 6.9 s |
+| AG | 40.2% | 59.4% | 0.4% (2) | 0.0% (0 of 512) | 59.9% | 6.9 s |
+| BG | 52.9% | 46.3% | 0.8% (4) | 0.2% (1 of 512) | 55.4% | 8.2 s |
+| D | 47.7% | 51.8% | 0.6% (3) | 1.0% (5 of 512) | 57.0% | 8.0 s |
+| DG | 47.5% | 52.0% | 0.6% (3) | 0.2% (1 of 512) | 57.0% | 8.0 s |
+| EG | 40.6% | 59.0% | 0.4% (2) | 0.0% (0 of 512) | 59.8% | 6.9 s |
+
+### en
+
+| | Commands right | Rejected | Wrong | False activations | Error rate | Median time |
+|---|---|---|---|---|---|---|
+| A | 89.1% | 10.9% | 0.0% (0) | 0.0% (0 of 64) | 6.4% | 7.1 s |
+| AG | 87.5% | 12.5% | 0.0% (0) | 0.0% (0 of 64) | 6.4% | 7.1 s |
+| BG | 90.6% | 9.4% | 0.0% (0) | 0.0% (0 of 64) | 5.8% | 8.3 s |
+| D | 85.9% | 14.1% | 0.0% (0) | 6.3% (4 of 64) | 10.6% | 7.6 s |
+| DG | 84.4% | 15.6% | 0.0% (0) | 0.0% (0 of 64) | 10.6% | 7.6 s |
+| EG | 90.6% | 9.4% | 0.0% (0) | 0.0% (0 of 64) | 5.8% | 8.0 s |
+
+### de
+
+| | Commands right | Rejected | Wrong | False activations | Error rate | Median time |
+|---|---|---|---|---|---|---|
+| A | 18.8% | 81.3% | 0.0% (0) | 0.0% (0 of 64) | 48.8% | 7.2 s |
+| AG | 18.8% | 81.3% | 0.0% (0) | 0.0% (0 of 64) | 48.8% | 7.2 s |
+| BG | 43.8% | 56.3% | 0.0% (0) | 1.6% (1 of 64) | 44.6% | 8.8 s |
+| D | 31.3% | 68.8% | 0.0% (0) | 1.6% (1 of 64) | 41.1% | 8.2 s |
+| DG | 31.3% | 68.8% | 0.0% (0) | 1.6% (1 of 64) | 41.1% | 8.2 s |
+| EG | 18.8% | 81.3% | 0.0% (0) | 0.0% (0 of 64) | 48.8% | 7.2 s |
+
+### es
+
+| | Commands right | Rejected | Wrong | False activations | Error rate | Median time |
+|---|---|---|---|---|---|---|
+| A | 46.9% | 53.1% | 0.0% (0) | 0.0% (0 of 64) | 55.8% | 6.9 s |
+| AG | 46.9% | 53.1% | 0.0% (0) | 0.0% (0 of 64) | 55.8% | 6.9 s |
+| BG | 43.8% | 54.7% | 1.6% (1) | 0.0% (0 of 64) | 38.1% | 8.1 s |
+| D | 43.8% | 56.3% | 0.0% (0) | 0.0% (0 of 64) | 36.2% | 8.1 s |
+| DG | 43.8% | 56.3% | 0.0% (0) | 0.0% (0 of 64) | 36.2% | 8.1 s |
+| EG | 46.9% | 53.1% | 0.0% (0) | 0.0% (0 of 64) | 55.8% | 6.9 s |
+
+### fr
+
+| | Commands right | Rejected | Wrong | False activations | Error rate | Median time |
+|---|---|---|---|---|---|---|
+| A | 31.3% | 68.8% | 0.0% (0) | 0.0% (0 of 64) | 64.6% | 6.8 s |
+| AG | 31.3% | 68.8% | 0.0% (0) | 0.0% (0 of 64) | 64.6% | 6.8 s |
+| BG | 43.8% | 54.7% | 1.6% (1) | 0.0% (0 of 64) | 36.9% | 8.1 s |
+| D | 45.3% | 53.1% | 1.6% (1) | 0.0% (0 of 64) | 38.8% | 8.0 s |
+| DG | 45.3% | 53.1% | 1.6% (1) | 0.0% (0 of 64) | 38.8% | 8.0 s |
+| EG | 31.3% | 68.8% | 0.0% (0) | 0.0% (0 of 64) | 64.6% | 6.8 s |
+
+### id
+
+| | Commands right | Rejected | Wrong | False activations | Error rate | Median time |
+|---|---|---|---|---|---|---|
+| A | 35.9% | 62.5% | 1.6% (1) | 0.0% (0 of 64) | 43.4% | 6.7 s |
+| AG | 35.9% | 62.5% | 1.6% (1) | 0.0% (0 of 64) | 43.4% | 6.7 s |
+| BG | 48.4% | 51.6% | 0.0% (0) | 0.0% (0 of 64) | 37.9% | 8.0 s |
+| D | 46.9% | 51.6% | 1.6% (1) | 0.0% (0 of 64) | 43.2% | 8.2 s |
+| DG | 46.9% | 51.6% | 1.6% (1) | 0.0% (0 of 64) | 43.2% | 8.2 s |
+| EG | 35.9% | 62.5% | 1.6% (1) | 0.0% (0 of 64) | 43.4% | 6.7 s |
+
+### ja
+
+| | Commands right | Rejected | Wrong | False activations | Error rate | Median time |
+|---|---|---|---|---|---|---|
+| A | 42.2% | 57.8% | 0.0% (0) | 0.0% (0 of 64) | 98.7% | 6.8 s |
+| AG | 42.2% | 57.8% | 0.0% (0) | 0.0% (0 of 64) | 98.7% | 6.8 s |
+| BG | 54.7% | 45.3% | 0.0% (0) | 0.0% (0 of 64) | 117.5% | 8.2 s |
+| D | 51.6% | 48.4% | 0.0% (0) | 0.0% (0 of 64) | 111.9% | 8.3 s |
+| DG | 51.6% | 48.4% | 0.0% (0) | 0.0% (0 of 64) | 111.9% | 8.3 s |
+| EG | 42.2% | 57.8% | 0.0% (0) | 0.0% (0 of 64) | 98.7% | 6.8 s |
+
+### ko
+
+| | Commands right | Rejected | Wrong | False activations | Error rate | Median time |
+|---|---|---|---|---|---|---|
+| A | 31.3% | 68.8% | 0.0% (0) | 0.0% (0 of 64) | 50.3% | 6.7 s |
+| AG | 31.3% | 68.8% | 0.0% (0) | 0.0% (0 of 64) | 50.3% | 6.7 s |
+| BG | 53.1% | 46.9% | 0.0% (0) | 0.0% (0 of 64) | 47.1% | 8.5 s |
+| D | 42.2% | 57.8% | 0.0% (0) | 0.0% (0 of 64) | 57.9% | 8.0 s |
+| DG | 42.2% | 57.8% | 0.0% (0) | 0.0% (0 of 64) | 57.9% | 8.0 s |
+| EG | 31.3% | 68.8% | 0.0% (0) | 0.0% (0 of 64) | 50.3% | 6.7 s |
+
+### pt-BR
+
+| | Commands right | Rejected | Wrong | False activations | Error rate | Median time |
+|---|---|---|---|---|---|---|
+| A | 28.1% | 70.3% | 1.6% (1) | 0.0% (0 of 64) | 80.2% | 7.1 s |
+| AG | 28.1% | 70.3% | 1.6% (1) | 0.0% (0 of 64) | 80.2% | 7.1 s |
+| BG | 45.3% | 51.6% | 3.1% (2) | 0.0% (0 of 64) | 62.4% | 8.2 s |
+| D | 34.4% | 64.1% | 1.6% (1) | 0.0% (0 of 64) | 63.5% | 8.2 s |
+| DG | 34.4% | 64.1% | 1.6% (1) | 0.0% (0 of 64) | 63.5% | 8.2 s |
+| EG | 28.1% | 70.3% | 1.6% (1) | 0.0% (0 of 64) | 80.2% | 7.1 s |
+
+### Recording by recording, against A
+
+| | en | de | es | fr | id | ja | ko | pt-BR | All |
+|---|---|---|---|---|---|---|---|---|---|
+| AG | +0 −1 | +0 −0 | +0 −0 | +0 −0 | +0 −0 | +0 −0 | +0 −0 | +0 −0 | +0 −1 |
+| BG | +3 −2 | +19 −3 | +4 −6 | +12 −4 | +9 −1 | +11 −3 | +14 −0 | +11 −0 | +83 −19 |
+| D | +3 −5 | +10 −2 | +6 −8 | +12 −3 | +10 −3 | +10 −4 | +7 −0 | +5 −1 | +63 −26 |
+| DG | +3 −6 | +10 −2 | +6 −8 | +12 −3 | +10 −3 | +10 −4 | +7 −0 | +5 −1 | +63 −27 |
+| EG | +3 −2 | +0 −0 | +0 −0 | +0 −0 | +0 −0 | +0 −0 | +0 −0 | +0 −0 | +3 −2 |
+
+### Decision
+
+- **AG (the guards' rule): use.** 0 fewer things done that must be undone; commands right 40.4% to 40.2%.
+- **BG (against AG): don't use (rule 1).** de: 1 things done that must be undone, not 0 (1 false activations, 0 wrong commands); es: 1 things done that must be undone, not 0 (0 false activations, 1 wrong commands); fr: 1 things done that must be undone, not 0 (0 false activations, 1 wrong commands); pt-BR: 2 things done that must be undone, not 1 (0 false activations, 2 wrong commands).
+- **D (against AG): don't use (rule 1).** en: 4 things done that must be undone, not 0 (4 false activations, 0 wrong commands); de: 1 things done that must be undone, not 0 (1 false activations, 0 wrong commands); fr: 1 things done that must be undone, not 0 (0 false activations, 1 wrong commands).
+- **DG (against AG): don't use (rule 1).** de: 1 things done that must be undone, not 0 (1 false activations, 0 wrong commands); fr: 1 things done that must be undone, not 0 (0 false activations, 1 wrong commands).
+- **EG (against AG): don't use (rule 3).** 4 commands fixed and 2 broken (p = 0.688).
+
+### What was done that must be undone
+
+| | Language | Said | Heard | Did |
+|---|---|---|---|---|
+| A | id | Pilih semua jendela. | pilih, semua jenk lah. | select everything |
+| A | pt-BR | Selecione todas as janelas. | Selecione todas as ginelas. | select everything |
+| AG | id | Pilih semua jendela. | pilih, semua jenk lah. | select everything |
+| AG | pt-BR | Selecione todas as janelas. | Selecione todas as ginelas. | select everything |
+| BG | de | Wer will reden? | wir reden | talk |
+| BG | es | Rehacer. | Deshacer, | action history.undo |
+| BG | fr | Sélectionne toutes les fenêtres. | sélectionne tout qu'est fait naître. | select everything |
+| BG | pt-BR | Desfazer. | e fazer. | action history.redo |
+| BG | pt-BR | Apague as árvores. | apagar, azar, por isso. | delete selection |
+| D | en | (noise-babble) | The Old Mill, | goTo mill |
+| D | en | (noise-music) | The Old Mill, | goTo mill |
+| D | en | (noise-babble) | The Old Mill, | goTo mill |
+| D | en | (noise-music) | The Old Mill, | goTo mill |
+| D | de | Wer will reden? | wir reden. | talk |
+| D | fr | Sélectionne toutes les fenêtres. | Sélectionne tout qu'est fait naître | select everything |
+| D | id | Pilih semua jendela. | pilih, semua, jangkala, | select everything |
+| D | pt-BR | Desfazer. | e fazer. | action history.redo |
+| DG | de | Wer will reden? | wir reden. | talk |
+| DG | fr | Sélectionne toutes les fenêtres. | Sélectionne tout qu'est fait naître | select everything |
+| DG | id | Pilih semua jendela. | pilih, semua, jangkala, | select everything |
+| DG | pt-BR | Desfazer. | e fazer. | action history.redo |
+| EG | id | Pilih semua jendela. | pilih, semua jenk lah. | select everything |
+| EG | pt-BR | Selecione todas as janelas. | Selecione todas as ginelas. | select everything |

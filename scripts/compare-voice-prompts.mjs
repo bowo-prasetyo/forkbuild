@@ -7,6 +7,10 @@
 //   node scripts/compare-voice-prompts.mjs --run A=heard-none.json
 //        --run B=heard-vocabulary.json [--run C=…] [--out report.md]
 //
+// `--run E=heard-none.json+heard-en.json` reads the second file's
+// recordings in place of the first's: a prompt in English only, heard with
+// `--language en`, and the rest without.
+//
 // `--run AG=heard-none.json,guard` reads a run as the app does with its
 // guards against what the model makes up (core/voice/Transcript.js
 // #heardNothing() and #repeatsItself(), from what --save-heard keeps of how
@@ -219,6 +223,14 @@ function report(runs) {
     return `${out.join('\n')}\n`;
 }
 
+// What was heard in `path`, or in `a.json+b.json`: b's recordings in place
+// of a's, as a prompt in one language only would hear them.
+export function heardIn(path, read = (file) => JSON.parse(readFileSync(file, 'utf8'))) {
+    const clips = new Map();
+    for (const file of path.split('+')) for (const clip of read(file)) clips.set(`${clip.language}/${clip.speaker}/${clip.id}`, clip);
+    return [...clips.values()];
+}
+
 if (import.meta.url === `file://${process.argv[1]}`) {
     const runs = [];
     process.argv.forEach((value, i) => {
@@ -231,7 +243,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         console.error('Usage: node scripts/compare-voice-prompts.mjs --run A=heard.json --run B=heard.json [--out report.md]');
         process.exit(2);
     }
-    for (const run of runs) run.rows = await scored(JSON.parse(readFileSync(run.path, 'utf8')), { guard: run.guard });
+    for (const run of runs) run.rows = await scored(heardIn(run.path), { guard: run.guard });
     const text = report(runs);
     const at = process.argv.indexOf('--out');
     if (at >= 0) writeFileSync(process.argv[at + 1], text);

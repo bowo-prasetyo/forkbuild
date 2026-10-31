@@ -10,7 +10,7 @@
 //   node scripts/evaluate-voice-commands.mjs [--audio voice-corpus] [--out report.md]
 //        [--model onnx-community/whisper-base] [--language ja]
 //        [--save-heard heard.json | --heard heard.json]
-//        [--prompt none|vocabulary|expanded]
+//        [--prompt none|vocabulary|expanded|apart]
 //
 // Recordings are <audio>/<language>/<speaker>/<phrase id>.<wav|webm|ogg|mp3|m4a>,
 // as scripts/synthesize-voice-corpus.mjs makes them, or as people record
@@ -23,7 +23,8 @@
 // the app listens for in seconds rather than half an hour. `--prompt` gives
 // the model the words the app can act on before each recording
 // (ui/voice/voicePrompt.js): each concept's first name (`vocabulary`), or
-// every phrasing the app reads (`expanded`).
+// every phrasing the app reads (`expanded`), or the first names without
+// the words near a command (`apart`).
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
@@ -47,8 +48,8 @@ const onlyLanguage = argument('--language');
 const savePath = argument('--save-heard');
 const heardPath = argument('--heard');
 const promptKind = argument('--prompt', 'none');
-if (!['none', 'vocabulary', 'expanded'].includes(promptKind)) {
-    console.error('--prompt is none, vocabulary or expanded');
+if (!['none', 'vocabulary', 'expanded', 'apart'].includes(promptKind)) {
+    console.error('--prompt is none, vocabulary, expanded or apart');
     process.exit(2);
 }
 const AUDIO_TYPES = new Set(['.wav', '.webm', '.ogg', '.mp3', '.m4a']);
@@ -85,7 +86,7 @@ async function prompts() {
     for (const language of new Set(clips.map((clip) => clip.language))) {
         await setAppLocale(language);
         const places = Object.values(PLACES[language]).map((title) => ({ title }));
-        for (const view of ['editor', 'world']) all[`${language}/${view}`] = voicePrompt(view, { expanded: promptKind === 'expanded', places });
+        for (const view of ['editor', 'world']) all[`${language}/${view}`] = voicePrompt(view, { expanded: promptKind === 'expanded', apart: promptKind === 'apart', places });
     }
     return all;
 }
