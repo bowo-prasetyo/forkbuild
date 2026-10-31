@@ -456,7 +456,8 @@ the detailed references; in short:
   `nearestBySound()` compares it with every command's phrases without spaces,
   a doubled letter as one, a vowel heard as another costing half an edit. The
   nearest is taken when it is at most half an edit away (15% of its length
-  for a long phrase) and a whole edit nearer than any other command's; "go
+  for a long phrase) and an edit and a half nearer than any other
+  command's ("e fazer" is neither refazer nor desfazer); "go
   to" said is still a place. In the Editor, among every action's name and
   phrasings, so "elite" is never Delete.
   scripts/vendor.mjs

@@ -453,6 +453,9 @@ function workerPair(runtimeFor) {
     }
     await setAppLocale('es');
     assert(read('des hacer') === 'undo', 'World View by sound: "des hacer" is deshacer, undo, in Spanish');
+    await setAppLocale('pt-BR');
+    assert(read('e fazer') === null && read('desfazer') === 'undo' && read('refazer') === 'redo',
+        'World View by sound: "e fazer", the start lost, is a sound from refazer and two from desfazer: neither, never a guess');
     await setAppLocale(SOURCE_LOCALE);
 
     // The Editor: an action by its name, by World View's phrasings for undo
