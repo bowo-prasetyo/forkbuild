@@ -10151,3 +10151,29 @@ I agree with your plans above. Please go ahead fixing both.")
 - Tests: tests/VoicePhrases.test.js (what voice may run; a command said on its own; the five sentences, typed, in every
   language), tests/PlainCommand.test.js (`intentSaid`), tests/VoicePrompt.test.js (only what voice may run is in a
   prompt).
+
+## Voice ignores what the speech model makes up (unnumbered, 2026-10-31)
+
+**A tune, a knock or distant talk never becomes a command, and a transcript that says the same thing over and over
+is thrown away.** Measured on the speech model's own transcripts (docs/reviews/VoicePrompt-2026-10-30.md, *Re-run
+with guards*). (The owner's yes, 2026-10-30: "Great! Yes, next please fix those two patterns and re-run the prompt
+experiment.")
+
+**The filter.**
+1. **Pillar:** building, by voice. A player whose microphone hears music or a room's talk finds nothing done,
+   instead of World View muting itself or flying to The Old Mill.
+2. **First ten minutes:** no harder; voice is turned on by choice, and does less by mistake.
+3. **Building first:** yes; what is built isn't changed by what nobody said.
+4. **Counts:** none yet; no count looks at voice. The measure is the voice evaluation's: nothing done that must be
+   undone, and commands right falling by at most one in a hundred.
+
+- **Nothing was said, by the model's own measure** (core/voice/Transcript.js `heardNothing()`): the speech runtime's
+  `hear()` returns Whisper's no-speech probability, asked without any prompt, and how sure it was of what it wrote; a
+  transcript is thrown away by Whisper's own defaults (no-speech above 0.6, log-probability below −1).
+- **Said three times running** (`repeatsItself()`): "Sound off, sound off, sound off, …" is thrown away.
+- Without a prompt, as the app hears, nothing more is done that must be undone, and one command in 512 fewer is heard
+  right (40.2%, from 40.4%). With either prompt, every false activation from a sound is gone; the prompts still aren't
+  used, since both pull a few words toward a command they sound like.
+- Tests: tests/VoiceBuilding.test.js (the guards; a made-up or looping transcript does nothing in the app; `hear()`
+  encodes once and measures without the prompt), tests/VoicePhrases.test.js (no phrase the app reads repeats itself),
+  tests/VoicePrompt.test.js (the guards' rule).
