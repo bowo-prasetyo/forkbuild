@@ -10,7 +10,7 @@
 //   node scripts/evaluate-voice-commands.mjs [--audio voice-corpus] [--out report.md]
 //        [--model onnx-community/whisper-base] [--language ja]
 //        [--save-heard heard.json | --heard heard.json]
-//        [--prompt none|vocabulary|expanded|apart]
+//        [--prompt none|vocabulary|expanded|apart] [--phrases fresh]
 //
 // Recordings are <audio>/<language>/<speaker>/<phrase id>.<wav|webm|ogg|mp3|m4a>,
 // as scripts/synthesize-voice-corpus.mjs makes them, or as people record
@@ -56,7 +56,7 @@ const AUDIO_TYPES = new Set(['.wav', '.webm', '.ogg', '.mp3', '.m4a']);
 const MIME_TYPES = { '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json', '.html': 'text/html', '.wav': 'audio/wav', '.webm': 'audio/webm', '.ogg': 'audio/ogg', '.mp3': 'audio/mpeg', '.m4a': 'audio/mp4' };
 
 // ---- The recordings -----------------------------------------------------------
-const phrases = new Map(voicePhrases().map((phrase) => [`${phrase.language}/${phrase.id}`, phrase]));
+const phrases = new Map(voicePhrases(argument('--phrases', 'main')).map((phrase) => [`${phrase.language}/${phrase.id}`, phrase]));
 const directories = (dir) => (existsSync(dir) ? readdirSync(dir).filter((name) => !name.startsWith('.') && statSync(join(dir, name)).isDirectory()) : []);
 const clips = [];
 for (const language of directories(audio).filter((name) => Object.hasOwn(SAID, name) && (!onlyLanguage || name === onlyLanguage))) {

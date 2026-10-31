@@ -5,7 +5,7 @@
 // not a promise; recordings of people, laid out the same way, are what count.
 //
 //   node scripts/synthesize-voice-corpus.mjs --piper <piper> [--out voice-corpus] [--espeak]
-//        [--only <id>,<id>,…]
+//        [--only <id>,<id>,…] [--phrases fresh]
 //
 // `--piper` is Piper's command (https://github.com/rhasspy/piper, `pip install
 // piper-tts`; Japanese also needs `pip install pyopenjtalk-plus`). Its voices
@@ -17,7 +17,10 @@
 // Writes <out>/<language>/<speaker>/<phrase id>.wav, and the sounds that
 // aren't speech (scripts/voiceNoise.mjs) as <out>/<language>/noise-<n>/, two
 // of each. `--only` speaks only the phrases named, to add new ones to a
-// corpus already made. The folder is ignored by Git: it is made, not kept.
+// corpus already made. `--phrases fresh` speaks the second phrasing
+// (FRESH_SAID) with voices, paces and noise none of the first was made with,
+// to confirm on recordings nothing was fitted to. The folder is ignored by
+// Git: it is made, not kept.
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -32,8 +35,9 @@ const piper = argument('--piper');
 const out = resolve(argument('--out', 'voice-corpus'));
 const withEspeak = process.argv.includes('--espeak');
 const only = argument('--only') ? new Set(argument('--only').split(',')) : null;
+const fresh = argument('--phrases') === 'fresh';
 // Each sound that isn't speech is made this many ways (each its own seed).
-const NOISE_SEEDS = Object.freeze([7, 19]);
+const NOISE_SEEDS = Object.freeze(fresh ? [101, 211] : [7, 19]);
 if (!piper && !withEspeak) {
     console.error('Usage: node scripts/synthesize-voice-corpus.mjs --piper <piper> [--out voice-corpus] [--espeak]');
     process.exit(2);
@@ -50,8 +54,20 @@ const PIPER_VOICES = Object.freeze({
     ko: ['ko_KR-kss-medium'],
     'pt-BR': ['pt_BR-faber-medium', 'pt_BR-cadu-medium', 'pt_BR-jeff-medium']
 });
+// Voices the first corpus wasn't made with. Indonesian, Japanese and Korean
+// have one voice each, heard again at other paces.
+const FRESH_PIPER_VOICES = Object.freeze({
+    en: ['en_US-lessac-medium', 'en_US-ryan-medium', 'en_GB-jenny_dioco-medium'],
+    de: ['de_DE-karlsson-low', 'de_DE-ramona-low', 'de_DE-pavoque-low'],
+    es: ['es_ES-carlfm-x_low', 'es_MX-claude-high', 'es_ES-mls_9972-low'],
+    fr: ['fr_FR-gilles-low', 'fr_FR-mls-medium', 'fr_FR-mls_1840-low'],
+    id: ['id_ID-news_tts-medium'],
+    ja: ['ja_JP-hi_fi_captain-medium'],
+    ko: ['ko_KR-kss-medium'],
+    'pt-BR': ['pt_BR-edresson-low']
+});
 // How fast a lone voice also speaks (Piper's length scale: above 1 is slower).
-const ONE_VOICE_PACES = Object.freeze([1, 1.25, 0.85]);
+const ONE_VOICE_PACES = Object.freeze(fresh ? [1.1, 0.95, 1.4] : [1, 1.25, 0.85]);
 const ESPEAK_VOICES = Object.freeze({ en: 'en-us', de: 'de', es: 'es', fr: 'fr-fr', id: 'id', ja: 'ja', ko: 'ko', 'pt-BR': 'pt-br' });
 
 // Where a voice is in rhasspy/piper-voices: en_US-amy-medium is en/en_US/amy/medium.
@@ -71,10 +87,10 @@ function piperVoice(key) {
 
 let made = 0;
 for (const language of Object.keys(SAID)) {
-    const phrases = voicePhrases().filter((phrase) => phrase.language === language && phrase.text && (!only || only.has(phrase.id)));
+    const phrases = voicePhrases(fresh ? 'fresh' : 'main').filter((phrase) => phrase.language === language && phrase.text && (!only || only.has(phrase.id)));
     const speakers = [];
     if (piper) {
-        const voices = PIPER_VOICES[language];
+        const voices = (fresh ? FRESH_PIPER_VOICES : PIPER_VOICES)[language];
         for (const key of voices) {
             for (const pace of voices.length === 1 ? ONE_VOICE_PACES : [1]) {
                 speakers.push({ name: `piper-${key}${pace === 1 ? '' : `-pace${pace}`}`, say: (text, file) => execFileSync(piper, ['-m', piperVoice(key), '-f', file, '--length-scale', String(pace)], { input: text, stdio: ['pipe', 'ignore', 'pipe'] }) });
