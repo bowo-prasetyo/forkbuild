@@ -106,6 +106,10 @@ console.log('✓ what voice may run');
     assert(idKind('aku rindu rumah') === null && idKind('bawa aku ke rumah') === 'home' && idKind('pulang') === 'home',
         '22. going to\'s words are the command\'s only when going to was said: "Aku rindu rumah" (I miss home) goes nowhere, "bawa aku ke rumah" goes home');
 }
+    const ko = { soundOff: ['음소거', '소리 꺼'], soundOn: ['음소거 해제', '소리 켜'], ignoredWords: [] };
+    const koKind = (text) => interpretWorldCommand(text, ko)?.kind ?? null;
+    assert(koKind('음소거 했지') === null && koKind('음소거') === 'soundOff' && koKind('음소거 해제') === 'soundOn' && koKind('소리 꺼 줘') === 'soundOff',
+        '23. a command held only as part of another\'s phrase, with another word, is neither: "음소거 해제" (unmute) heard as "음소거 했지" doesn\'t mute');
 console.log('✓ World View\'s commands are said on their own');
 
 console.log('✅ All voice phrase tests passed.');

@@ -25,7 +25,8 @@ see *"e fazer"*. On fresh recordings, made after the rule was fixed, it
 passes again; it is not yet turned on, and the app, without a prompt,
 deleted everything for a Japanese "delete the trees" heard a little wrong,
 which the reader no longer does: see *Fresh recordings* and *Japanese
-"delete everything"*.
+"delete everything"*. With *Korean "unmute"*, the app, without a prompt,
+does nothing on the fresh recordings that must be undone.
 
 ## What was compared
 
@@ -494,7 +495,8 @@ Measured as the reader's changes above, on every hearing, read again, by
 the rule fixed before scoring: no language does more that must be undone on
 any hearing, and no command is lost on any. On the fresh recordings, without
 a prompt, the three "delete everything" do nothing; what is left there to be
-undone is Korean "음소거 해제." heard as "음소거 했지?", sound off.
+undone is Korean "음소거 해제." heard as "음소거 했지?", sound off (see
+*Korean "unmute"*).
 
 | | Done that must be undone, before → after | Commands right |
 |---|---|---|
@@ -525,6 +527,26 @@ the rule fixed before scoring: on every hearing, of both recordings,
 nothing changes, more done that must be undone or commands right. The fresh
 phrasing is back among the fresh phrases, read right typed; it has no
 recording yet, and the next `--phrases fresh` recording makes one.
+
+## Korean "unmute" (2026-10-31)
+
+**Question.** "음소거 해제." (unmute) was heard as "음소거 했지?" and muted:
+"음소거" alone is mute, and "했지" the one other word a command may come
+with. Can the reader leave it be without losing commands?
+
+**Answer: yes.** A command held only as part of another command's phrase
+("음소거" of "음소거 해제", "mute" of "unmute", "ミュート" of "ミュート解除",
+"liga o som" of "desliga o som"), said with another word, is now neither
+(`core/voice/WorldVoiceCommand.js` `onlyInsideAnother()`): the other word may
+be the rest of the longer phrase, misheard. Said alone, "음소거" is still
+mute; "소리 꺼 줘", whose phrase is no part of another, still mutes. "Mute
+please" now does nothing, though: "please" is not an ignored word.
+
+Measured as the reader's changes above, on every hearing, read again, by
+the rule fixed before scoring: no language does more that must be undone
+on any hearing, and no command is lost on any. On the fresh recordings,
+without a prompt, "음소거 했지?" does nothing, and with that nothing is
+done there that must be undone (1 → 0).
 
 ## Reproducing
 

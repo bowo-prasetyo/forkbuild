@@ -10264,3 +10264,25 @@ please fix the Indonesian one next.")
 - The phrase is back in the fresh phrases (scripts/voiceCommandPhrases.mjs, `FRESH_LEFT_OUT` gone).
 - Tests: tests/VoicePhrases.test.js (every fresh phrase typed is read right, "Aku rindu rumah." included; going to's
   words count only when going to was said).
+
+## Voice doesn't mute for a misheard "unmute" in Korean (unnumbered, 2026-10-31)
+
+**"음소거 해제." (unmute), heard as "음소거 했지?", does nothing; it muted.** Found on the fresh recordings
+(docs/reviews/VoicePrompt-2026-10-30.md, *Korean "unmute"*). (The owner's yes, 2026-10-31: "Thanks. Yes, please fix
+the Korean one next.")
+
+**The filter.**
+1. **Pillar:** visiting, by voice. A player asking for sound back never has it taken away instead.
+2. **First ten minutes:** no harder; voice is turned on by choice, and does less by mistake.
+3. **Building first:** neutral; World View's sound, not building, but voice there no longer does the opposite of what
+   was asked.
+4. **Counts:** none yet; no count looks at voice. The measure is the voice evaluation's: nothing done that must be
+   undone, and commands right falling by at most one in a hundred.
+
+- **A command held only as part of another command's phrase, with another word, is neither**
+  (core/voice/WorldVoiceCommand.js `onlyInsideAnother()`): "음소거" of "음소거 해제", mute of unmute, ミュート of
+  ミュート解除, "liga o som" of "desliga o som". "음소거" alone still mutes; "Mute please" no longer does.
+- On every saved hearing, no language does more that must be undone, and no command is lost; on the fresh recordings
+  without a prompt, nothing is now done that must be undone.
+- Tests: tests/VoicePhrases.test.js ("음소거 했지" is neither; "음소거" mutes, "음소거 해제" unmutes, "소리 꺼 줘"
+  mutes).
