@@ -21,7 +21,10 @@ nor one in English only: see *Second re-run*. The command reader no longer reads
 with a garbled part, or "wir reden", as a command: see *The command
 reader's two sentences*. Nor "e fazer" as redo; with that, the prompt without
 the words near a command passes, on recordings the reader was fitted to:
-see *"e fazer"*.
+see *"e fazer"*. On fresh recordings, made after the rule was fixed, it
+passes again; it is not yet turned on, and the app, without a prompt,
+deletes everything for a Japanese "delete the trees" heard a little wrong:
+see *Fresh recordings*.
 
 ## What was compared
 
@@ -409,6 +412,68 @@ measure fixed before it was seen. It needs recordings it hasn't been
 fitted to, new voices and phrasings or people, with the rule fixed first;
 and B and C still fail, in Spanish, Portuguese and German.
 
+## Fresh recordings (2026-10-31)
+
+**Question.** The prompt without the words near a command (`apart`) passed
+the prompt's rule only after the reader's last three changes, each made to
+clear what it got wrong on those recordings. Does it pass on recordings
+nothing was fitted to?
+
+**Answer: yes.** On new phrasings in new voices, with the rule and the
+comparison written down before any of them was made, DG passes all three
+rules against AG. It is not turned on: that is a decision for the app, not
+for this measure.
+
+**What was heard.** A second phrasing of every phrase, in all eight
+languages, written before hearing (`FRESH_SAID` in
+scripts/voiceCommandPhrases.mjs, `--phrases fresh`): "Pick the windows."
+for "Select all the windows.", "Entferne alle Bäume." for "Lösche die Bäume.",
+and so on; undo, redo, rotate, copy and duplicate said by their names in
+another form where the language has one. Voices not in the first
+recordings: three new Piper voices each in English, German, Spanish and
+French, and Portuguese's other voice at three paces. Indonesian, Japanese
+and Korean have one Piper voice, so they have the same voice at new paces
+(1.1, 0.95 and 1.4). New noise (seeds 101 and 211). 781 recordings, 397 of
+them asking for nothing.
+
+**Found before hearing.** Typed, every fresh phrase is read right but one:
+Indonesian "Aku rindu rumah." ("I miss home") flies home, though it asks for
+nothing, because "rumah" is the word for Home, said almost alone. It is
+left out of the recordings (`FRESH_LEFT_OUT`), since no hearing could make
+it right, and is for the command reader, without any prompt.
+
+**Results**, the guards on both (as the app hears):
+
+| | Commands right | Wrong | False activations | Fixed and broken against A | Median time |
+|---|---|---|---|---|---|
+| AG, no prompt, guards | 38.8% | 4 | 0 of 397 | +0 −0 | 8.6 s |
+| DG, apart, guards | 45.1% | 0 | 0 of 397 | +32 −8 | 10.5 s |
+
+- **Rule 1, passed.** No language does anything that must be undone with
+  the prompt; without it, Japanese does three times and Korean once. Without
+  the guards, two tunes were heard as "The Old Mill" again; the guards
+  caught both.
+- **Rule 2, passed.** 22% slower (8.6 s to 10.5 s). The two hearings ran
+  side by side, but the last 91 apart recordings were heard alone; on the
+  690 heard together it is 20% slower (8.7 s to 10.4 s).
+- **Rule 3, passed.** 32 commands fixed and 8 broken, p = 0.0002. Fixed in
+  every language but French, where one was fixed and one broken, and
+  German, two and two; most fixed are a word heard right that was heard
+  near it: "Fly to the Old Mill", "Pick the windows", "Duplicar", "Salin",
+  "石の橋", "홈으로". The 8 broken are a word heard a little further off:
+  "Boine" for "Bäume", "rot gängig" for "rückgängig", "s'allure" for
+  "Salut", "batukan" for "Batalkan".
+
+**Found besides: the app, without a prompt, deletes everything for "delete
+the trees" in Japanese.** "木を全部消して。" (erase all the trees) was heard
+as "キュを全部消して", "気を全部消して" and "キューを全部消して", at each
+pace, and the reader read each as delete everything. A word it doesn't hold beside
+"全部" (all) keeps it from deleting everything, but Japanese is written
+without spaces, so the reader takes the whole sentence for one word, which
+holds words it reads, and finds nothing unread. The
+prompt heard "木" each time. This is what the app does now, and it is for
+the command reader, as the sentences above were.
+
 ## Reproducing
 
 ```bash
@@ -431,6 +496,15 @@ The second re-run:
 node scripts/evaluate-voice-commands.mjs --prompt apart --save-heard heard-apart.json
 node scripts/evaluate-voice-commands.mjs --prompt vocabulary --language en --save-heard heard-en.json
 node scripts/compare-voice-prompts.mjs --run A=heard-none.json --run AG=heard-none.json,guard --run BG=heard-vocabulary.json,guard --run D=heard-apart.json --run DG=heard-apart.json,guard --run EG=heard-none.json+heard-en.json,guard
+```
+
+The fresh recordings:
+
+```bash
+node scripts/synthesize-voice-corpus.mjs --piper <piper> --espeak --phrases fresh --out voice-corpus-fresh
+node scripts/evaluate-voice-commands.mjs --audio voice-corpus-fresh --phrases fresh --prompt none --save-heard heard-fresh-none.json
+node scripts/evaluate-voice-commands.mjs --audio voice-corpus-fresh --phrases fresh --prompt apart --save-heard heard-fresh-apart.json
+node scripts/compare-voice-prompts.mjs --phrases fresh --run A=heard-fresh-none.json --run AG=heard-fresh-none.json,guard --run D=heard-fresh-apart.json --run DG=heard-fresh-apart.json,guard
 ```
 
 Each hearing takes about two hours on four cores, the three side by side.
@@ -863,3 +937,116 @@ Each hearing takes about two hours on four cores, the three side by side.
 | DG | pt-BR | Desfazer. | e fazer. | action history.redo |
 | EG | id | Pilih semua jendela. | pilih, semua jenk lah. | select everything |
 | EG | pt-BR | Selecione todas as janelas. | Selecione todas as ginelas. | select everything |
+
+## Appendix: the fresh recordings
+781 recordings each; error rate is words, characters in ja and ko.
+
+### In all
+
+| | Commands right | Rejected | Wrong | False activations | Error rate | Median time |
+|---|---|---|---|---|---|---|
+| A | 38.8% | 60.2% | 1.0% (4) | 0.0% (0 of 397) | 59.0% | 8.6 s |
+| AG | 38.8% | 60.2% | 1.0% (4) | 0.0% (0 of 397) | 59.0% | 8.6 s |
+| D | 45.1% | 54.9% | 0.0% (0) | 0.5% (2 of 397) | 55.6% | 10.5 s |
+| DG | 45.1% | 54.9% | 0.0% (0) | 0.0% (0 of 397) | 55.6% | 10.5 s |
+
+### en
+
+| | Commands right | Rejected | Wrong | False activations | Error rate | Median time |
+|---|---|---|---|---|---|---|
+| A | 79.2% | 20.8% | 0.0% (0) | 0.0% (0 of 50) | 7.9% | 8.5 s |
+| AG | 79.2% | 20.8% | 0.0% (0) | 0.0% (0 of 50) | 7.9% | 8.5 s |
+| D | 85.4% | 14.6% | 0.0% (0) | 4.0% (2 of 50) | 5.6% | 10.3 s |
+| DG | 85.4% | 14.6% | 0.0% (0) | 0.0% (0 of 50) | 5.6% | 10.3 s |
+
+### de
+
+| | Commands right | Rejected | Wrong | False activations | Error rate | Median time |
+|---|---|---|---|---|---|---|
+| A | 35.4% | 64.6% | 0.0% (0) | 0.0% (0 of 50) | 33.7% | 8.7 s |
+| AG | 35.4% | 64.6% | 0.0% (0) | 0.0% (0 of 50) | 33.7% | 8.7 s |
+| D | 35.4% | 64.6% | 0.0% (0) | 0.0% (0 of 50) | 37.5% | 10.6 s |
+| DG | 35.4% | 64.6% | 0.0% (0) | 0.0% (0 of 50) | 37.5% | 10.6 s |
+
+### es
+
+| | Commands right | Rejected | Wrong | False activations | Error rate | Median time |
+|---|---|---|---|---|---|---|
+| A | 29.2% | 70.8% | 0.0% (0) | 0.0% (0 of 50) | 112.5% | 8.6 s |
+| AG | 29.2% | 70.8% | 0.0% (0) | 0.0% (0 of 50) | 112.5% | 8.6 s |
+| D | 35.4% | 64.6% | 0.0% (0) | 0.0% (0 of 50) | 109.8% | 10.0 s |
+| DG | 35.4% | 64.6% | 0.0% (0) | 0.0% (0 of 50) | 109.8% | 10.0 s |
+
+### fr
+
+| | Commands right | Rejected | Wrong | False activations | Error rate | Median time |
+|---|---|---|---|---|---|---|
+| A | 6.3% | 93.8% | 0.0% (0) | 0.0% (0 of 50) | 216.4% | 8.5 s |
+| AG | 6.3% | 93.8% | 0.0% (0) | 0.0% (0 of 50) | 216.4% | 8.5 s |
+| D | 6.3% | 93.8% | 0.0% (0) | 0.0% (0 of 50) | 204.5% | 10.9 s |
+| DG | 6.3% | 93.8% | 0.0% (0) | 0.0% (0 of 50) | 204.5% | 10.9 s |
+
+### id
+
+| | Commands right | Rejected | Wrong | False activations | Error rate | Median time |
+|---|---|---|---|---|---|---|
+| A | 68.8% | 31.3% | 0.0% (0) | 0.0% (0 of 47) | 34.1% | 8.5 s |
+| AG | 68.8% | 31.3% | 0.0% (0) | 0.0% (0 of 47) | 34.1% | 8.5 s |
+| D | 79.2% | 20.8% | 0.0% (0) | 0.0% (0 of 47) | 18.8% | 10.2 s |
+| DG | 79.2% | 20.8% | 0.0% (0) | 0.0% (0 of 47) | 18.8% | 10.2 s |
+
+### ja
+
+| | Commands right | Rejected | Wrong | False activations | Error rate | Median time |
+|---|---|---|---|---|---|---|
+| A | 58.3% | 35.4% | 6.3% (3) | 0.0% (0 of 50) | 20.1% | 8.5 s |
+| AG | 58.3% | 35.4% | 6.3% (3) | 0.0% (0 of 50) | 20.1% | 8.5 s |
+| D | 68.8% | 31.3% | 0.0% (0) | 0.0% (0 of 50) | 19.1% | 10.9 s |
+| DG | 68.8% | 31.3% | 0.0% (0) | 0.0% (0 of 50) | 19.1% | 10.9 s |
+
+### ko
+
+| | Commands right | Rejected | Wrong | False activations | Error rate | Median time |
+|---|---|---|---|---|---|---|
+| A | 22.9% | 75.0% | 2.1% (1) | 0.0% (0 of 50) | 28.1% | 8.9 s |
+| AG | 22.9% | 75.0% | 2.1% (1) | 0.0% (0 of 50) | 28.1% | 8.9 s |
+| D | 31.3% | 68.8% | 0.0% (0) | 0.0% (0 of 50) | 23.5% | 10.3 s |
+| DG | 31.3% | 68.8% | 0.0% (0) | 0.0% (0 of 50) | 23.5% | 10.3 s |
+
+### pt-BR
+
+| | Commands right | Rejected | Wrong | False activations | Error rate | Median time |
+|---|---|---|---|---|---|---|
+| A | 10.4% | 89.6% | 0.0% (0) | 0.0% (0 of 50) | 59.5% | 8.4 s |
+| AG | 10.4% | 89.6% | 0.0% (0) | 0.0% (0 of 50) | 59.5% | 8.4 s |
+| D | 18.8% | 81.3% | 0.0% (0) | 0.0% (0 of 50) | 62.8% | 10.6 s |
+| DG | 18.8% | 81.3% | 0.0% (0) | 0.0% (0 of 50) | 62.8% | 10.6 s |
+
+### Recording by recording, against A
+
+| | en | de | es | fr | id | ja | ko | pt-BR | All |
+|---|---|---|---|---|---|---|---|---|---|
+| AG | +0 −0 | +0 −0 | +0 −0 | +0 −0 | +0 −0 | +0 −0 | +0 −0 | +0 −0 | +0 −0 |
+| D | +3 −0 | +2 −2 | +3 −0 | +1 −1 | +8 −3 | +5 −0 | +6 −2 | +4 −0 | +32 −8 |
+| DG | +3 −0 | +2 −2 | +3 −0 | +1 −1 | +8 −3 | +5 −0 | +6 −2 | +4 −0 | +32 −8 |
+
+### Decision
+
+- **AG (the guards' rule): use.** 0 fewer things done that must be undone; commands right 38.8% to 38.8%.
+- **D (against AG): don't use (rule 1).** en: 2 things done that must be undone, not 0 (2 false activations, 0 wrong commands).
+- **DG (against AG): use.** 32 commands fixed and 8 broken (p = 0.000).
+
+### What was done that must be undone
+
+| | Language | Said | Heard | Did |
+|---|---|---|---|---|
+| A | ja | 木を全部消して。 | キュを全部消して | delete everything |
+| A | ja | 木を全部消して。 | 気を全部消して | delete everything |
+| A | ja | 木を全部消して。 | キューを全部消して | delete everything |
+| A | ko | 음소거 해제. | 음소거 했지? | soundOff |
+| AG | ja | 木を全部消して。 | キュを全部消して | delete everything |
+| AG | ja | 木を全部消して。 | 気を全部消して | delete everything |
+| AG | ja | 木を全部消して。 | キューを全部消して | delete everything |
+| AG | ko | 음소거 해제. | 음소거 했지? | soundOff |
+| D | en | (noise-music) | The Old Mill, | goTo mill |
+| D | en | (noise-music) | The Old Mill, | goTo mill |

@@ -433,7 +433,9 @@ the detailed references; in short:
   voice act on noise and near words, and, without the words near a command
   (`apart`) or in English only, still did what must be undone or fixed too
   little to tell, so the app doesn't use it
-  (docs/reviews/VoicePrompt-2026-10-30.md). World View reads it with
+  (docs/reviews/VoicePrompt-2026-10-30.md). After the reader's later fixes,
+  `apart` passed on recordings made for the check (`--phrases fresh`,
+  new voices and phrasings), but it isn't turned on. World View reads it with
   core/voice/WorldVoiceCommand.js (words from ui/i18n/worldVoiceWords.js):
   go to a place named in Locations (or a build on a challenge plaza), Home,
   a camera view, sound off or on, undo, redo, or talk to a resident, each
