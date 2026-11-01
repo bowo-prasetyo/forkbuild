@@ -10313,3 +10313,23 @@ leave English and Spanish without it.")
 - The Editor's guide says so (docs/user/02-TheEditor.md, *Speak a command*).
 - Tests: tests/VoicePrompt.test.js (the prompt in the six, none in English and Spanish), tests/VoiceBuilding.test.js
   (the view's prompt reaches the model in the worker, in the app's language).
+
+## A moved build moves on screen at once (unnumbered, 2026-11-01)
+
+**Moving a build that is already on screen in World View now redraws it at its new spot straight away; before, it
+stayed where it was until the page was reloaded, though the move had been saved.**
+
+**The filter.**
+1. **Pillar:** your work is yours, and lives in a world. A player who moves their build out of another one sees it
+   land where they put it, instead of thinking the move failed.
+2. **First ten minutes:** no harder; easier for a player who moves their first build.
+3. **Building first:** neutral; placing, not building, but nothing is taken from building.
+4. **Counts:** none yet; no count looks at moving a placement.
+
+- **A move redraws every loaded World of the moved Publication at its new position**
+  (application/worldNavigation/placementMethods.js `_reseatLoadedWorldsForPublication()`, called by `movePlacement()`
+  and `movePublicationPlacement()`). The renderer places a World's bricks once, in `addWorld()`, and streaming never
+  adds a World already loaded, so nothing redrew it. Forks keep their own position and a World held by a history
+  preview is left alone.
+- Tests: tests/PlacementWorldView.test.js (6d–6f: a moved, loaded World is removed and added again at the new
+  position, from the info panel and from the Placements list).
