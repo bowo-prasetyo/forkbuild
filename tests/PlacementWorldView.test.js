@@ -182,6 +182,37 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
+    // 6d-6f. A move redraws a World that is already on screen at its new
+    //        position. The renderer bakes the offset in at addWorld(), and
+    //        streaming never re-adds a World that is already loaded, so
+    //        without this the build stayed at its old spot until a page
+    //        reload.
+    // -------------------------------------------------------------
+    {
+        const calls = [];
+        const session = buildSession();
+        session._session = stubRenderer({
+            addWorld(world, documentId, layoutPosition) { calls.push({ op: 'add', documentId, layoutPosition }); },
+            removeWorld(world, documentId) { calls.push({ op: 'remove', documentId }); }
+        });
+        session._loadWorld(flagshipPublication.documentId);
+        calls.length = 0;
+
+        session.movePlacement(flagshipPublication.documentId, { x: 120, y: 0, z: -40 });
+        assert(calls.length === 2 && calls[0].op === 'remove' && calls[1].op === 'add',
+            '6d. moving a loaded World removes and re-adds it in the renderer');
+        assert(calls[1].documentId === flagshipPublication.documentId
+            && calls[1].layoutPosition.x === 120 && calls[1].layoutPosition.z === -40,
+            '6e. it is re-added at the NEW position, with no reload needed');
+
+        calls.length = 0;
+        const placementId = session.getPlacementInfo(flagshipPublication.documentId).placementId;
+        session.movePublicationPlacement(flagshipPublication.id, placementId, { x: 140, y: 0, z: -60 });
+        assert(calls.length === 2 && calls[1].layoutPosition.x === 140 && calls[1].layoutPosition.z === -60,
+            '6f. moving from the Placements list redraws it the same way');
+    }
+
+    // -------------------------------------------------------------
     // 7-10. The central claim: MOVE PLACEMENT != EDIT DOCUMENT !=
     //       CREATE FORK. Moving a placement never touches the
     //       document/publication, never forks anything, and works on

@@ -400,7 +400,36 @@ export const placementMethods = {
         if (!record) {
             throw new Error(`WorldNavigationSession: "${id}" has no known placement to move`);
         }
-        return this._moveWorldPlacementUseCase.execute(record.placementId, newPosition);
+        const moved = this._moveWorldPlacementUseCase.execute(record.placementId, newPosition);
+        this._reseatLoadedWorldsForPublication(record.publicationId);
+        return moved;
+    },
+
+    // Redraws every loaded World of `publicationId` at its current layout
+    // position. The renderer bakes a World's offset into its meshes once, at
+    // addWorld(), and streaming only adds/removes Worlds as they enter/leave
+    // range, so a World already on screen would otherwise stay drawn at its old
+    // spot until a page reload, even though the placement data had moved.
+    //
+    // Skipped: a fork (it keeps its own local position, see _localPositions)
+    // and a document whose render slot is held by a history preview.
+    _reseatLoadedWorldsForPublication(publicationId) {
+        if (!this._session || !publicationId) return;
+        let reseated = false;
+        for (const [documentId, document] of this._loadedDocuments) {
+            if (this._localPositions.has(documentId)) continue;
+            if (this._historyPreview && this._historyPreview.active
+                && this._historyPreview.documentId === documentId) continue;
+            const publication = this._resolvePublicationForPlacement(documentId);
+            if (!publication || publication.id !== publicationId) continue;
+            this._session.removeWorld(document.world, documentId);
+            this._session.addWorld(document.world, documentId, this._getWorldPosition(documentId));
+            reseated = true;
+        }
+        if (!reseated) return;
+        // Trees displaced by the old footprint grow back; the new one clears its own.
+        if (this._treeDisplacementInstance) this._treeDisplacementInstance.invalidate();
+        this._refreshGizmo();
     },
 
     // Takes the placement out of shared space. Not unpublish: the Publication,
@@ -457,7 +486,9 @@ export const placementMethods = {
             throw new Error('WorldNavigationSession: placement cannot be moved — no MoveWorldPlacementUseCase wired');
         }
         const record = this._resolvePublicationPlacementRecord(publicationId, placementId);
-        return this._moveWorldPlacementUseCase.execute(record.placementId, newPosition);
+        const moved = this._moveWorldPlacementUseCase.execute(record.placementId, newPosition);
+        this._reseatLoadedWorldsForPublication(record.publicationId);
+        return moved;
     },
 
     removePublicationPlacement(publicationId, placementId) {
