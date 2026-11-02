@@ -35,7 +35,7 @@ export function useChallengePlaza({ route, router, session, refreshSpatialUI, vi
     const neighbourDiscovery = inject('repositoryNetworkDiscovery', null);
     const funnel = inject('funnelEventCounter', null);
     const networkPublicationLocatorStore = inject('networkPublicationLocatorStore', null);
-    const { listEntries } = new CreateChallengeEntriesUseCase().execute({
+    const { loadEntries } = new CreateChallengeEntriesUseCase().execute({
         decentralizedDiscoveryProvider: inject('decentralizedPublicationDiscoveryProvider', null),
         entryLog: inject('challengeEntryLog', null)
     });
@@ -176,7 +176,9 @@ export function useChallengePlaza({ route, router, session, refreshSpatialUI, vi
 
     // Reads every entry not read yet, one at a time, redrawing as each arrives.
     async function load() {
-        const ordered = plazaEntryOrder(listEntries(challenge.tag));
+        const entries = await loadEntries(challenge.tag);
+        if (!active) return;
+        const ordered = plazaEntryOrder(entries);
         quietSquare(ordered);
         const candidates = ordered.filter(isPlaceable);
         plaza.value = { ...plaza.value, notPlaceable: ordered.length - candidates.length };

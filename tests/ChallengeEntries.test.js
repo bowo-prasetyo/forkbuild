@@ -12,7 +12,10 @@ import { RepositoryNetworkDiscovery } from '../application/publication/Repositor
 import { ChallengeEntryDiscovery } from '../application/challenge/ChallengeEntryDiscovery.js';
 import { ChallengeEntryLog, MAX_LOGGED_ENTRIES } from '../application/challenge/ChallengeEntryLog.js';
 import { listChallengeEntries } from '../application/challenge/ChallengeEntries.js';
-import { publishedBuildTags } from '../application/challenge/PublishedBuildTags.js';
+import { publishedBuildTags, readPublishedBuildTags } from '../application/challenge/PublishedBuildTags.js';
+import { CreateChallengeEntriesUseCase } from '../application/challenge/CreateChallengeEntriesUseCase.js';
+import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
+import { StorageEntryNotLoadedError } from '../storage/StorageEntryNotLoadedError.js';
 import { composeWorldEncounterMaterialVerifier } from '../application/worldEncounter/WorldEncounterMaterialVerifierRuntimeComposition.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { Document } from '../core/document/Document.js';
@@ -91,6 +94,64 @@ const ENVELOPE = Object.freeze({ protocol: 'forkbuild', version: 1, kind: WorldE
     assert(publishedBuildTags(storage, 'pub-unknown').length === 0, 'C2. none for a build this device has no snapshot of');
     assert(publishedBuildTags({ load() { throw new Error('broken'); } }, publication.id).length === 0, 'C3. none when storage fails');
     console.log('✓ C. a published build\'s tags come from its snapshot');
+}
+
+// Section C2 — a snapshot still on disk (IndexedDB keeps them there until
+// read) is read when it arrives, so the week's own entries are listed then.
+{
+    const storage = new InMemoryStorageProvider();
+    const identity = new LocalIdentityProvider(new InMemoryStorageProvider());
+    identity.login('alice');
+    const document = new Document();
+    document.metadata.title = 'Bakery Cottage';
+    document.metadata.tags = [ENTRY_TAG];
+    const publication = new LocalPublisherProvider(storage).publish(document, identity);
+    // Like LocalStorageProvider over IndexedDB: a snapshot not yet in memory
+    // throws, with a promise for it; once read it is in memory.
+    const inMemory = new Set();
+    let reads = 0;
+    const cold = {
+        load(name) {
+            if (!name.startsWith('snapshot:') || inMemory.has(name)) return storage.load(name);
+            reads += 1;
+            throw new StorageEntryNotLoadedError(name, Promise.resolve().then(() => { inMemory.add(name); return storage.load(name); }));
+        }
+    };
+    const read = readPublishedBuildTags(cold, publication.id);
+    assert(read.pending && (await read.pending).join() === ENTRY_TAG, 'C2a. an on-disk snapshot\'s tags arrive once read');
+    assert(readPublishedBuildTags(cold, publication.id).tags.join() === ENTRY_TAG, 'C2b. then they are there at once');
+    const failing = { load(name) { throw new StorageEntryNotLoadedError(name, Promise.reject(new Error('gone'))); } };
+    assert((await readPublishedBuildTags(failing, publication.id).pending).length === 0, 'C2c. none when the read fails');
+
+    // The use case also lists this device's own Publications from browser
+    // storage, as the other wiring tests stand it in.
+    if (typeof globalThis.window === 'undefined') {
+        const store = new Map();
+        globalThis.window = {
+            localStorage: {
+                getItem: (k) => (store.has(k) ? store.get(k) : null),
+                setItem: (k, v) => { store.set(k, String(v)); },
+                removeItem: (k) => { store.delete(k); },
+                key: (i) => Array.from(store.keys())[i] ?? null,
+                get length() { return store.size; }
+            }
+        };
+    }
+    inMemory.clear();
+    reads = 0;
+    const discovery = new DecentralizedPublicationDiscoveryProvider();
+    discovery.add(publication);
+    const make = () => new CreateChallengeEntriesUseCase().execute({ decentralizedDiscoveryProvider: discovery, storageProvider: cold });
+    const page = make();
+    assert(page.listEntries(ENTRY_TAG).length === 0 && page.whenTagsLoaded(), 'C2d. not listed while its snapshot is read');
+    page.listEntries(ENTRY_TAG);
+    assert(reads === 1, `C2e. read once, not again while reading (${reads})`);
+    await page.whenTagsLoaded();
+    assert(page.listEntries(ENTRY_TAG).map((p) => p.id).join() === publication.id && page.whenTagsLoaded() === null, 'C2f. listed once read');
+    inMemory.clear();
+    const entries = await make().loadEntries(ENTRY_TAG);
+    assert(entries.map((p) => p.id).join() === publication.id, 'C2g. loadEntries() waits for it');
+    console.log('✓ C2. an entry whose snapshot is still on disk is listed once it is read');
 }
 
 // Section D — the per-tag log of entries found on the networks.

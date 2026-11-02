@@ -34,7 +34,7 @@ export default {
         const networkPublicationLocatorStore = inject('networkPublicationLocatorStore', null);
         const buildDescriber = inject('buildDescriber', null);
         const contentStore = inject('publicationContentStore', null);
-        const { discoveryProvider, listEntries } = new CreateChallengeEntriesUseCase().execute({
+        const { discoveryProvider, listEntries, whenTagsLoaded } = new CreateChallengeEntriesUseCase().execute({
             decentralizedDiscoveryProvider: inject('decentralizedPublicationDiscoveryProvider', null),
             entryLog
         });
@@ -96,6 +96,12 @@ export default {
                 findByDocumentId: (documentId) => discoveryProvider.findByDocumentId(documentId),
                 findByParentId: (documentId) => discoveryProvider.findByParentId(documentId)
             });
+            // Entries whose snapshots were still on disk join once read.
+            const loading = whenTagsLoaded();
+            if (loading) {
+                const shown = challenge.value;
+                loading.then(() => { if (!unmounted && challenge.value === shown) refresh(); });
+            }
             const asked = ++familyChangesFor;
             familyChangesText(buildDescriber, families.value, { contentStore }).then((texts) => {
                 if (asked === familyChangesFor) familyChanges.value = texts;
