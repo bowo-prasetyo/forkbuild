@@ -162,6 +162,8 @@ host.remove();
     });
     const remixSearched = [];
     const remixHost = document.createElement('div');
+    // Short, like a window, so the page scrolls on its own as it does in the app.
+    remixHost.style.cssText = 'display: flex; height: 300px;';
     document.body.appendChild(remixHost);
     const remixApp = createApp({ template: '<router-view />' });
     remixApp.use(remixRouter);
@@ -178,6 +180,21 @@ host.remove();
     assert(remixJoin === remixRouter.resolve(challengeJoinRoute(remix)).href && remixJoin.includes('#challenge-remix-from'), `Join goes to last week's entries (${remixJoin})`);
     const cards = remixHost.querySelectorAll('.challenge-remix-entries > *');
     assert(cards.length === 1 && remixHost.querySelector('.challenge-remix-from').textContent.includes('Harbor Light'), 'last week\'s entry is there to remix');
+    // Join takes you there: the page scrolls to last week's entries and focus
+    // moves to them, and again if Join is clicked once you are there.
+    const scroller = remixHost.querySelector('.challenge-view');
+    const remixSection = remixHost.querySelector('#challenge-remix-from');
+    const sectionOffset = () => remixSection.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+    assert(scroller.scrollTop === 0 && sectionOffset() > 40, `last week's entries start out of view (${sectionOffset()})`);
+    remixHost.querySelector('.challenge-join').click();
+    await until(() => remixRouter.currentRoute.value.hash === '#challenge-remix-from', 'Join');
+    await until(() => Math.abs(sectionOffset()) < 40 && document.activeElement === remixSection, 'last week\'s entries in view');
+    await until(() => scroller.scrollTop === scroller.scrollHeight - scroller.clientHeight || Math.abs(sectionOffset() - 16) < 2, 'the scroll to settle');
+    scroller.scrollTop = 0;
+    remixSection.blur();
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    remixHost.querySelector('.challenge-join').click();
+    await until(() => Math.abs(sectionOffset()) < 40 && document.activeElement === remixSection, 'Join again');
     remixHost.querySelector('.challenge-remix-entries .action-btn--fork').click();
     await until(() => remixRouter.currentRoute.value.path === '/editor', 'the remix');
     const query = remixRouter.currentRoute.value.query;
