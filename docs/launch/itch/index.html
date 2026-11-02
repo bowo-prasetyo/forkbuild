@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ForkBuild</title>
 <!-- The itch.io launcher (docs/launch/ItchIo.md): uploaded zipped with
-     editor-castle.png beside it. ForkBuild can't run inside itch's frame, so
+     itch-launcher-village.png beside it, the village on the cover
+     (scripts/itch-cover.mjs). ForkBuild can't run inside itch's frame, so
      this page sends players to the site. Colours are css/main/theme.css's. -->
 <style>
   :root {
@@ -19,7 +20,9 @@
   html, body { height: 100%; margin: 0; }
   body {
     display: flex; align-items: center; justify-content: flex-start;
-    background: var(--paper) url("editor-castle.png") -250px -175px / 1300px auto no-repeat;
+    /* The village to the right of the card; the sky colour (renderer/Renderer.js's
+       SKY_COLOR) carries the picture's own sky to the frame's edges. */
+    background: #87ceeb url("itch-launcher-village.png") 152px -40px / 864px auto no-repeat;
     color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; text-align: center;
   }
   main {
@@ -36,7 +39,7 @@
   }
   a.play:hover, a.play:focus-visible { background: var(--accent-hover); }
   small { display: block; margin-top: 14px; color: var(--ink-soft); }
-  /* Phones and narrow embeds: the card in the middle, over the castle. */
+  /* Phones and narrow embeds: the card in the middle, over the village. */
   @media (max-width: 560px) {
     body { justify-content: center; background-position: center; background-size: cover; }
     main { margin: 16px; }

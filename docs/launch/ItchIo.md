@@ -13,18 +13,19 @@ brought up to 1.4 on 14 October 2026)
 
 ## The upload
 
-[itch/index.html](itch/index.html) is the launcher: the castle behind a
-paper card with the logo, the fantasy in one line and one big **Play
+[itch/index.html](itch/index.html) is the launcher: the village from the
+cover behind a paper card with the logo, the fantasy in one line and one big **Play
 ForkBuild** button that opens the site in a new tab with `?ref=itch`. It
-follows the device's light or dark look. Zip it with the castle shot beside
-it, from the repository's root:
+follows the device's light or dark look. Zip it with the village picture
+beside it (`press/itch-launcher-village.png`, made with the cover by
+`node scripts/itch-cover.mjs`), from the repository's root:
 
 ```
-zip -j forkbuild-itch.zip docs/launch/itch/index.html docs/launch/press/editor-castle.png
+zip -j forkbuild-itch.zip docs/launch/itch/index.html docs/launch/press/itch-launcher-village.png
 ```
 
 Upload the zip, mark it **This file will be played in the browser**, and
-delete the old upload. Re-zip after the press shots change.
+delete the old upload. Re-zip after the village pictures change.
 
 ## Every field on the edit page
 

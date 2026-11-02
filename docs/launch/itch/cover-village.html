@@ -5,7 +5,8 @@
 <title>ForkBuild itch.io cover: the village</title>
 <!-- The itch.io cover, 630 × 500, photographed by scripts/itch-cover.mjs as
      docs/launch/press/itch-cover-village.png and, turning, as
-     itch-cover-village.gif. The village is drawn by the app's own renderer
+     itch-cover-village.gif; with ?background, the launcher's backdrop,
+     itch-launcher-village.png. The village is drawn by the app's own renderer
      (cover-village.js); the words are big enough to read at itch's thumbnail
      size, about half this. Colours are css/main/theme.css's. -->
 <script type="importmap">
@@ -30,6 +31,9 @@
   }
   .name img { width: 40px; height: 40px; }
   .name span { font-size: 30px; font-weight: 700; letter-spacing: -0.5px; }
+  html.background, html.background body { width: 1200px; height: 750px; }
+  html.background #scene, html.background #picture { left: 0; top: 0; width: 1200px; height: 750px; }
+  html.background .name, html.background .line { display: none; }
   .line {
     position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 18px 16px;
     background: #357f52; color: #ffffff; text-align: center;
@@ -39,7 +43,7 @@
 </head>
 <body>
   <canvas id="scene"></canvas>
-  <canvas id="picture" width="820" height="640"></canvas>
+  <canvas id="picture"></canvas>
   <div class="name"><img src="../../../assets/icons/logo.svg" alt=""><span>ForkBuild</span></div>
   <div class="line">Build it. Remix it. Walk inside.</div>
   <script type="module" src="cover-village.js"></script>

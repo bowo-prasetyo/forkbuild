@@ -1,7 +1,9 @@
 // Takes itch.io's village cover (docs/launch/itch/cover-village.html) from
 // this checkout, in a real browser, with no network: a still,
 // docs/launch/press/itch-cover-village.png, and a looping GIF of the village
-// turning once, itch-cover-village.gif. Both 630 × 500, itch's cover size.
+// turning once, itch-cover-village.gif, both 630 × 500, itch's cover size;
+// and the same village with no words, 1200 × 750, as the launcher's
+// backdrop (docs/launch/itch/index.html), itch-launcher-village.png.
 //
 //   node scripts/itch-cover.mjs
 //
@@ -67,6 +69,13 @@ try {
         '-loop', '0', gif
     ]);
     console.log(`✓ itch-cover-village.gif (${Math.round((await stat(gif)).size / 1024)} KB)`);
+
+    const backdrop = await browser.newPage({ viewport: { width: 1200, height: 750 } });
+    await backdrop.goto(`http://127.0.0.1:${server.address().port}/docs/launch/itch/cover-village.html?background`);
+    await backdrop.waitForFunction(() => window.cover?.ready, null, { timeout: 60_000 });
+    await backdrop.evaluate((radians) => window.cover.turn(radians), STILL_TURN);
+    await backdrop.screenshot({ path: join(outdir, 'itch-launcher-village.png') });
+    console.log('✓ itch-launcher-village.png');
 } finally {
     await rm(frames, { recursive: true, force: true });
     await browser.close();
