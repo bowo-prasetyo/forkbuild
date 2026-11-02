@@ -98,13 +98,14 @@ export class ImportDocumentBundleUseCase {
                     continue;
                 }
                 const existing = await this._storageProvider.loadAsync(document.world.id);
+                // As a single import marks it (DocumentImportPolicy.js). One
+                // this device already has, marked or not, is left as it is.
+                const unverified = hasUnverifiedOrigin(outcome, sealStatus);
                 if (existing === null) {
-                    // As a single import marks it (DocumentImportPolicy.js);
-                    // one this device already has is left as it is.
-                    if (hasUnverifiedOrigin(outcome, sealStatus)) document.metadata.markUnverifiedOrigin();
+                    if (unverified) document.metadata.markUnverifiedOrigin();
                     this._saveDocumentUseCase.execute(new DocumentManager(document));
                     result.added++;
-                } else if (this._sameContent(existing, document)) {
+                } else if (this._sameContent(existing, document) || (unverified && this._sameContent(existing, this._marked(document)))) {
                     result.unchanged++;
                 } else {
                     this._saveDocumentUseCase.execute(new DocumentManager(this._importDocumentUseCase.execute(json)));
@@ -115,6 +116,13 @@ export class ImportDocumentBundleUseCase {
             }
         }
         return result;
+    }
+
+    // `document` as Import would save it, marked as of unverified origin.
+    _marked(document) {
+        const marked = this._documentSerializer.deserialize(this._documentSerializer.serialize(document));
+        marked.metadata.markUnverifiedOrigin();
+        return marked;
     }
 
     _sameContent(existingJson, document) {

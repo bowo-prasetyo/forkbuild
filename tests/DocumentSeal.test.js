@@ -339,6 +339,9 @@ const bobId = bob.getSigningIdentity().id;
     await new ImportDocumentBundleUseCase(markedStorage, { identityProvider: alice }).execute(unsealedBundle);
     const markedSaved = new DocumentManifest(markedStorage).list().map((entry) => markedStorage.load(entry.id));
     assert(markedSaved.length === 2 && markedSaved.every((json) => json.metadata.unverifiedOrigin === true), 'builds restored from an unsealed bundle are marked');
+    const markedAgain = await new ImportDocumentBundleUseCase(markedStorage, { identityProvider: alice }).execute(unsealedBundle);
+    assert(markedAgain.unchanged === 2 && markedAgain.added === 0 && markedAgain.copied === 0,
+        'importing the same unsealed bundle again changes nothing: the marked builds already there are the same');
     const sealedRestore = new InMemoryStorageProvider();
     await new ImportDocumentBundleUseCase(sealedRestore, { identityProvider: alice }).execute(bundle);
     assert(new DocumentManifest(sealedRestore).list().every((entry) => !sealedRestore.load(entry.id).metadata.unverifiedOrigin), 'builds restored from her sealed bundle aren\'t');
