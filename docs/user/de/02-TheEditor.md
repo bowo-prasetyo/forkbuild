@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 9520715e8e39c735 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 44939d3a4efd2616 -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -784,7 +784,15 @@ Beim Bauen spielt leise Musik, etwas lebhafter als in der Weltansicht. Die Schal
   kann. Ihre eigenen Bauwerke werden als sie selbst importiert. Das Bauwerk
   eines anderen öffnet sich als Ihre eigene Kopie, die ihn nennt, wenn seine
   Lizenz Remixe erlaubt; wenn nicht, oder wenn die Datei geändert wurde,
-  nachdem ihr Urheber sie signiert hat, wird es nicht importiert. Die Datei
+  nachdem ihr Urheber sie signiert hat, wird es nicht importiert.
+  Auch das Bauwerk eines anderen in einer Datei ohne seine Signatur (von
+  jemand anderem weitergegeben oder exportiert, während sein Urheber
+  abgemeldet war) wird nicht importiert, da jeder seine Lizenz hätte
+  hineinschreiben können: Bitten Sie den Urheber, es für Sie zu exportieren,
+  oder nutzen Sie **Eine Kopie bearbeiten** auf seiner veröffentlichten
+  Seite. Ein Bauwerk, das Sie mit seinem Urheber gebaut haben, öffnet sich
+  nur aus dessen eigenem Export so, wie es ist.
+  Die Datei
   trägt die Lizenz, die das Bauwerk beim Exportieren hat. Sie können ein
   Bauwerk also als **All Rights Reserved** veröffentlichen und trotzdem
   jemandem eine Kopie geben, auf der er aufbauen darf: Wählen Sie in

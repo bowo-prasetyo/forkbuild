@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 9520715e8e39c735 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 44939d3a4efd2616 -->
 # 02 — Editor
 
 <!-- languages -->
@@ -753,7 +753,14 @@ Musik diputar pelan saat Anda membangun, sedikit lebih riang daripada di Tampila
   dalamnya. Bangunan Anda sendiri diimpor sebagai dirinya sendiri. Bangunan
   orang lain dibuka sebagai salinan Anda sendiri yang mencantumkan
   pembuatnya, jika lisensinya mengizinkan remix; jika tidak, atau jika file
-  diubah setelah pembuatnya menandatanganinya, file tidak diimpor. File
+  diubah setelah pembuatnya menandatanganinya, file tidak diimpor.
+  Bangunan orang lain dalam file tanpa tanda tangannya (diteruskan oleh
+  orang lain, atau diekspor saat pembuatnya tidak masuk) juga tidak diimpor,
+  karena siapa pun bisa saja menulis lisensinya: minta pembuatnya
+  mengekspornya untuk Anda, atau gunakan **Edit Salinan** di halaman
+  terbitannya. Bangunan yang Anda bangun bersama pembuatnya hanya terbuka
+  apa adanya dari ekspor pembuatnya sendiri.
+  File
   membawa lisensi yang dimiliki bangunan saat Anda mengekspornya, jadi Anda
   dapat menerbitkan bangunan sebagai **All Rights Reserved** dan tetap
   memberi seseorang salinan yang boleh ia kembangkan: pilih lisensi lain di

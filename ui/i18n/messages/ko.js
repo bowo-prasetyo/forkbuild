@@ -1402,6 +1402,7 @@ export default Object.freeze({
     'blueprintExchange.importedCopyUnnamed': '“{title}”을(를) 내 사본으로 열었습니다',
     'blueprintExchange.importNotAllowed': '만든 사람이 복사를 허용하지 않아 내 작품으로 가져올 수 없습니다.',
     'blueprintExchange.importAltered': '이 작품은 만든 사람이 서명한 뒤에 바뀌어서 가져올 수 없습니다.',
+    'blueprintExchange.importUnverified': '이 작품에는 만든 사람의 서명이 없어 이용 조건을 확인할 수 없습니다. 만든 사람에게 내보내 달라고 하거나, 공개된 페이지에서 “사본 편집”을 사용하세요.',
     'blueprintExchange.remixedCopies': '{count}개는 다른 사람의 작품이라 내 사본으로',
     'blueprintExchange.leftOutNotYours': '{count}개는 제외: 다른 사람의 작품이며 복사가 허용되지 않음',
     'blueprintExchange.exportedAttribution': '내 저작자 표시를 내보냈습니다',

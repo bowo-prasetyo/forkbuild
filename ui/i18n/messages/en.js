@@ -1401,6 +1401,7 @@ export default Object.freeze({
     'blueprintExchange.importedCopyUnnamed': 'Opened as your own copy of "{title}"',
     'blueprintExchange.importNotAllowed': 'Its maker hasn\'t allowed copies, so it can\'t be imported as your build.',
     'blueprintExchange.importAltered': 'This build was changed after its maker signed it, so it can\'t be imported.',
+    'blueprintExchange.importUnverified': 'This build doesn\'t carry its maker\'s signature, so its terms can\'t be checked. Ask its maker to export it for you, or use “Edit a Copy” on its published page.',
     'blueprintExchange.remixedCopies': '{count} by someone else, as your own copy',
     'blueprintExchange.leftOutNotYours': '{count} left out: by someone else, and not allowed to be copied',
     'blueprintExchange.exportedAttribution': 'Exported your attribution',

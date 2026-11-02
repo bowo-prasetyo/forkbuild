@@ -1402,6 +1402,7 @@ export default Object.freeze({
     'blueprintExchange.importedCopyUnnamed': 'Als Ihre eigene Kopie von „{title}“ geöffnet',
     'blueprintExchange.importNotAllowed': 'Der Urheber hat keine Kopien erlaubt, daher kann es nicht als Ihr Bauwerk importiert werden.',
     'blueprintExchange.importAltered': 'Dieses Bauwerk wurde geändert, nachdem sein Urheber es signiert hat, daher kann es nicht importiert werden.',
+    'blueprintExchange.importUnverified': 'Dieses Bauwerk trägt keine Signatur seines Urhebers, daher lassen sich seine Bedingungen nicht prüfen. Bitten Sie den Urheber, es für Sie zu exportieren, oder nutzen Sie „Eine Kopie bearbeiten“ auf seiner veröffentlichten Seite.',
     'blueprintExchange.remixedCopies': '{count} von jemand anderem, als Ihre eigene Kopie',
     'blueprintExchange.leftOutNotYours': '{count} ausgelassen: von jemand anderem und nicht zum Kopieren freigegeben',
     'blueprintExchange.exportedAttribution': 'Ihre Zuschreibung exportiert',

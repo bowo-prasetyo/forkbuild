@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 9520715e8e39c735 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 44939d3a4efd2616 -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -783,7 +783,14 @@ Mientras construye suena una música suave, algo más animada que la de la Vista
   propias construcciones se importan como ellas mismas. La de otra persona
   se abre como copia suya, que le da el crédito, cuando su licencia permite
   remezclas; cuando no lo permite, o cuando el archivo se cambió después de
-  que su autor lo firmara, no se importa. El archivo lleva la licencia que
+  que su autor lo firmara, no se importa.
+  Tampoco se importa la construcción de otra persona en un archivo sin su
+  firma (pasado por otra persona, o exportado con su autor sin sesión
+  iniciada), ya que cualquiera podría haber escrito su licencia: pida a su
+  autor que se la exporte, o use **Editar una copia** en su página
+  publicada. Una construcción que hizo con su autor se abre tal cual solo
+  desde la exportación de su autor.
+  El archivo lleva la licencia que
   tiene la construcción al exportarla, así que puede publicar una
   construcción como **All Rights Reserved** y aun así dar a alguien una
   copia sobre la que pueda construir: elija otra licencia en **Propiedades de la

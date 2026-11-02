@@ -1399,6 +1399,7 @@ export default Object.freeze({
     'blueprintExchange.importedCopyUnnamed': 'Dibuka sebagai salinan Anda sendiri dari "{title}"',
     'blueprintExchange.importNotAllowed': 'Pembuatnya tidak mengizinkan salinan, jadi tidak dapat diimpor sebagai bangunan Anda.',
     'blueprintExchange.importAltered': 'Bangunan ini diubah setelah pembuatnya menandatanganinya, jadi tidak dapat diimpor.',
+    'blueprintExchange.importUnverified': 'Bangunan ini tidak membawa tanda tangan pembuatnya, jadi ketentuannya tidak dapat diperiksa. Minta pembuatnya mengekspornya untuk Anda, atau gunakan “Edit Salinan” di halaman terbitannya.',
     'blueprintExchange.remixedCopies': '{count} milik orang lain, sebagai salinan Anda',
     'blueprintExchange.leftOutNotYours': '{count} dilewati: milik orang lain dan tidak boleh disalin',
     'blueprintExchange.exportedAttribution': 'Atribusi Anda diekspor',
