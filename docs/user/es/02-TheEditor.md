@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 44939d3a4efd2616 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 97d2423119ec7afb -->
 # 02 — El Editor
 
 <!-- languages -->
@@ -790,6 +790,10 @@ Mientras construye suena una música suave, algo más animada que la de la Vista
   autor que se la exporte, o use **Editar una copia** en su página
   publicada. Una construcción que hizo con su autor se abre tal cual solo
   desde la exportación de su autor.
+  Un archivo que no nombra autor, o que le
+  nombra a usted, se abre como construcción suya, pero si no lleva su propia
+  firma, su información dice **Importada de un archivo que no podía mostrar
+  quién la hizo**, en cada copia y dondequiera que se publique.
   El archivo lleva la licencia que
   tiene la construcción al exportarla, así que puede publicar una
   construcción como **All Rights Reserved** y aun así dar a alguien una

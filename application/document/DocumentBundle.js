@@ -4,7 +4,7 @@ import { DocumentManager } from './DocumentManager.js';
 import { SaveDocumentUseCase } from './SaveDocumentUseCase.js';
 import { ImportDocumentUseCase } from './ImportDocumentUseCase.js';
 import { sealDocumentJson, verifyDocumentSeal } from '../../identity/DocumentSealing.js';
-import { DocumentImportOutcome, decideDocumentImport } from './DocumentImportPolicy.js';
+import { DocumentImportOutcome, decideDocumentImport, hasUnverifiedOrigin } from './DocumentImportPolicy.js';
 
 // Every saved document in one file, for moving them all to another device
 // or keeping a copy (a single document still exports on its own).
@@ -80,11 +80,12 @@ export class ImportDocumentBundleUseCase {
         for (const json of bundle.documents) {
             try {
                 const document = this._documentSerializer.deserialize(json);
+                const sealStatus = verifyDocumentSeal(json).status;
                 const outcome = decideDocumentImport({
                     authorIdentityId: document.metadata.authorIdentityId,
                     license: document.metadata.license,
                     builtWith: document.metadata.builtWith,
-                    sealStatus: verifyDocumentSeal(json).status,
+                    sealStatus,
                     ownIdentityIds
                 });
                 if (outcome === DocumentImportOutcome.COPY) {
@@ -98,6 +99,9 @@ export class ImportDocumentBundleUseCase {
                 }
                 const existing = await this._storageProvider.loadAsync(document.world.id);
                 if (existing === null) {
+                    // As a single import marks it (DocumentImportPolicy.js);
+                    // one this device already has is left as it is.
+                    if (hasUnverifiedOrigin(outcome, sealStatus)) document.metadata.markUnverifiedOrigin();
                     this._saveDocumentUseCase.execute(new DocumentManager(document));
                     result.added++;
                 } else if (this._sameContent(existing, document)) {

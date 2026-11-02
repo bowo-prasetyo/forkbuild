@@ -142,7 +142,9 @@ export function useBlueprintExchange({
     }
 
     // What Import made of a file: the same build, or (someone else's build)
-    // the importer's own copy, which names whose it was.
+    // the importer's own copy, which names whose it was. A build opened as
+    // the importer's own from a file that couldn't show it is theirs says it
+    // is marked so (core/document/DocumentMetadata.js#unverifiedOrigin).
     function importedText(imported) {
     	const attribution = imported.metadata.parentDocumentId ? imported.metadata.license?.attribution : null;
     	if (attribution) {
@@ -150,6 +152,9 @@ export function useBlueprintExchange({
     		return attribution.author
     			? t('blueprintExchange.importedCopy', { author: attribution.author, title })
     			: t('blueprintExchange.importedCopyUnnamed', { title });
+    	}
+    	if (imported.metadata.unverifiedOrigin) {
+    		return t('blueprintExchange.importedUnverifiedOrigin');
     	}
     	return imported.metadata.title ? t('blueprintExchange.importedDocument', { title: imported.metadata.title }) : t('blueprintExchange.importedUntitled');
     }

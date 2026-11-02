@@ -10360,3 +10360,36 @@ and adding one's own name under Built with made it import as one's own build.**
   importer's build; nothing in a file can tell that from a build exported while signed out.
 - Tests: tests/DocumentSeal.test.js (a seal deleted and the license, the maker's name or Built with rewritten; an
   unsealed bundle; the Editor's message).
+
+## A build whose maker was taken off its file says so (unnumbered, 2026-11-02)
+
+**A build Import opens as the importer's own without their seal is now marked "Imported from a file that couldn't
+show who made it", and the mark stays on every copy of it and on what it is published as. Before, taking the
+maker's identity out of someone else's file, or writing one's own in, made their build import as one's own with
+nothing to show for it, and one's next export sealed it as one's own work.**
+
+**The filter.**
+1. **Pillar:** your work is yours. A build passed off from an edited file no longer looks like its importer's own
+   sealed work: its information says where it came from can't be shown, on every device it reaches.
+2. **First ten minutes:** no harder; a new player's own builds, exported sealed, open unmarked as before.
+3. **Building first:** neutral; nothing is taken from building.
+4. **Counts:** none yet; no count looks at imports.
+
+- **`unverifiedOrigin` on a build's metadata** (core/document/DocumentMetadata.js), written only when true, so other
+  builds keep their content hash. Import sets it whenever a build opens as the importer's own without a valid seal
+  of the identity it names (application/document/DocumentImportPolicy.js `hasUnverifiedOrigin()`): a file naming no
+  maker, or naming the importer, or whose seal doesn't hold. Nothing in a file can tell those from a build exported
+  while signed out, so they still open; the mark keeps them from passing as sealed work. Export All Builds' import
+  marks the builds it adds; one the device already has is left as it is.
+- **The mark can't be edited off a file.** A seal covers it, a Publication signs it (the published bytes are the
+  document), and every copy keeps it (application/document/DocumentCloneService.js: Edit a Copy, Duplicate, Fork, a
+  remix import). Taking it out of a file breaks the seal, and Import puts it back. Only a device's own storage,
+  changed outside ForkBuild, can lose it; a player's own device is theirs.
+- **Shown** in the build panel, in the Editor and World View (ui/components/DocumentInfoPanel.js: an *Origin* row and
+  a line in the compact form), and when Import opens such a build (`blueprintExchange.importedUnverifiedOrigin`), in
+  all eight languages. The guide says so (docs/user/02-TheEditor.md, *Saving, publishing, starting over*).
+- One's own builds restored from an unsealed file (exported before seals, or while signed out or locked) are marked
+  too, since such a file can't show they are one's own.
+- Tests: tests/DocumentSeal.test.js (the maker taken off or replaced, under and without a seal; the mark through a
+  sealed export, an edited file, someone else's copy, Edit a Copy and Export All Builds), tests/UnverifiedOriginBrowser.test.js
+  (the panel, and a Publication signing the mark).

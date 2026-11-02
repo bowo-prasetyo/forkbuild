@@ -8,6 +8,7 @@ import {
     DocumentImportOutcome,
     DocumentImportRefusedError,
     decideDocumentImport,
+    hasUnverifiedOrigin,
     ownIdentityIdsOf
 } from './DocumentImportPolicy.js';
 
@@ -42,7 +43,9 @@ import {
 // as itself; someone else's opens as the importer's credited copy when its
 // maker sealed it and its license allows remixes, and is refused
 // (DocumentImportRefusedError) when its license doesn't, when its seal
-// doesn't hold, or when it carries no seal to vouch for its terms.
+// doesn't hold, or when it carries no seal to vouch for its terms. A build
+// that opens as the importer's own without their seal is marked as of
+// unverified origin (DocumentImportPolicy.js#hasUnverifiedOrigin()).
 export class ImportDocumentUseCase {
     // `ownIdentityIds`, when given, names identities besides this device's
     // own that count as the importer's (the one an authorized device acts
@@ -62,11 +65,12 @@ export class ImportDocumentUseCase {
     execute(json) {
         const sourceDocument = this._documentSerializer.deserialize(json);
         const metadata = sourceDocument.metadata;
+        const sealStatus = verifyDocumentSeal(json).status;
         const outcome = decideDocumentImport({
             authorIdentityId: metadata.authorIdentityId,
             license: metadata.license,
             builtWith: metadata.builtWith,
-            sealStatus: verifyDocumentSeal(json).status,
+            sealStatus,
             ownIdentityIds: this.ownIdentityIds()
         });
         if (outcome === DocumentImportOutcome.COPY) {
@@ -75,7 +79,7 @@ export class ImportDocumentUseCase {
         if (outcome !== DocumentImportOutcome.OWN) {
             throw new DocumentImportRefusedError(outcome, metadata.author || null);
         }
-        return this._documentCloneService.execute(sourceDocument, {
+        const own = this._documentCloneService.execute(sourceDocument, {
             title: metadata.title,
             description: metadata.description,
             author: metadata.author,
@@ -94,6 +98,8 @@ export class ImportDocumentUseCase {
             // rather than defaulted into silently.
             parentDocumentId: null
         });
+        if (hasUnverifiedOrigin(outcome, sealStatus)) own.metadata.markUnverifiedOrigin();
+        return own;
     }
 
     // Someone else's build as the importer's own copy, the way

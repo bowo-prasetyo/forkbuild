@@ -55,6 +55,17 @@ export function decideDocumentImport({ authorIdentityId = null, license = null, 
     return sealStatus === DocumentSealStatus.VALID ? DocumentImportOutcome.COPY : DocumentImportOutcome.UNVERIFIED;
 }
 
+// Whether a build Import opens as the importer's own came from a file that
+// couldn't show it is theirs (core/document/DocumentMetadata.js
+// #unverifiedOrigin): any OWN without the seal of the identity it names. A
+// file naming no maker, or naming the importer, opens as theirs whatever is
+// in it, since nothing in a file can tell a build exported while signed out
+// from someone else's with its maker taken off (2026-11-02 review); the
+// mark keeps that from passing as the importer's own sealed work.
+export function hasUnverifiedOrigin(outcome, sealStatus) {
+    return outcome === DocumentImportOutcome.OWN && sealStatus !== DocumentSealStatus.VALID;
+}
+
 // The identities a build counts as this player's own: every identity this
 // device holds a key for, the one signing now, and any `extra` the caller
 // knows of (the identity an authorized device acts for).

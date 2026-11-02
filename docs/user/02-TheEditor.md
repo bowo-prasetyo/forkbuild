@@ -713,7 +713,10 @@ Music plays softly while you build, a little livelier than World View's. The **â
   exported while its maker was signed out), since anyone could have written
   its license: ask its maker to export it for you, or use **Edit a Copy** on
   its published page. A build you built with its maker opens as it is only
-  from its maker's own export. The file carries the license
+  from its maker's own export. A file that names no maker, or names you,
+  opens as your build, but unless your own signature is on it, its
+  information says **Imported from a file that couldn't show who made it**,
+  on every copy of it and wherever it's published. The file carries the license
   the build has when you export it, so you can publish a build as **All
   Rights Reserved** and still give someone a copy they may build on: choose
   another license in **Build Properties**, export, then set it back.

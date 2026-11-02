@@ -1344,6 +1344,7 @@ export default {
                 author: document.metadata.author,
                 authorIdentityId: document.metadata.authorIdentityId || null,
                 builtWith: document.metadata.builtWith,
+                unverifiedOrigin: document.metadata.unverifiedOrigin === true,
                 license: document.metadata.license,
                 placementPolicy: document.metadata.placementPolicy,
                 parentDocumentId: document.metadata.parentDocumentId,

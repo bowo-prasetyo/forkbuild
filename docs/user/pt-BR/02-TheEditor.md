@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 44939d3a4efd2616 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 97d2423119ec7afb -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -757,6 +757,10 @@ Enquanto você constrói, toca uma música suave, um pouco mais animada que a da
   peça a quem fez para exportá-la para você, ou use **Editar uma cópia** na
   página publicada. Uma construção que você fez junto com quem a fez só
   abre como é a partir da exportação de quem a fez.
+  Um arquivo que não nomeia quem fez, ou que
+  nomeia você, abre como construção sua, mas se não trouxer a sua própria
+  assinatura, as informações dela dizem **Importada de um arquivo que não
+  podia mostrar quem a fez**, em cada cópia e onde quer que seja publicada.
   O arquivo leva a licença que a construção
   tem quando você exporta, então você pode publicar uma construção como
   **All Rights Reserved** e mesmo assim dar a alguém uma cópia em que essa

@@ -75,7 +75,16 @@ export class DocumentMetadata {
         // Friends who built it together with its author (core/catalog/BuiltWith.js),
         // copied onto the signed Publication. Stored only when there are
         // some, so older documents keep their content hash.
-        builtWith = []
+        builtWith = [],
+        // True when the build came into this device from a file that couldn't
+        // show who made it: Import opened it as the importer's own build with
+        // no seal (core/document/DocumentSeal.js) of theirs to say so — a file
+        // naming no maker, or naming the importer, either of which anyone can
+        // write into a file. Copies keep it (application/document/
+        // DocumentCloneService.js), a seal covers it and a Publication signs
+        // it, so editing a file can't take it off: Import puts it back.
+        // Stored only when true, so other documents keep their content hash.
+        unverifiedOrigin = false
     } = {}) {
         this._title = title;
         this._description = description;
@@ -91,6 +100,7 @@ export class DocumentMetadata {
         this._placementPolicy = placementPolicy || PlacementPolicy.ANYONE;
         this._tags = Object.freeze(normalizeBuildTags(tags));
         this._builtWith = normalizeBuiltWith(builtWith, { authorIdentityId: this._authorIdentityId });
+        this._unverifiedOrigin = unverifiedOrigin === true;
     }
 
     get title() { return this._title; }
@@ -107,6 +117,7 @@ export class DocumentMetadata {
     get placementPolicy() { return this._placementPolicy; }
     get tags() { return this._tags; }
     get builtWith() { return this._builtWith; }
+    get unverifiedOrigin() { return this._unverifiedOrigin; }
 
     // 0.2.21: title/description become directly editable (Document
     // Properties UI) — same "value object with a few narrow, explicit
@@ -137,6 +148,13 @@ export class DocumentMetadata {
         this._authorIdentityId = authorIdentityId;
         this.touch();
         return true;
+    }
+
+    // Marks the build as having come from a file that couldn't show who made
+    // it (see the constructor). Never cleared: nothing on this device can
+    // show more about where it came from than the file did.
+    markUnverifiedOrigin() {
+        this._unverifiedOrigin = true;
     }
 
     // Credits `builder` ({ name, identityId }), a friend whose edits this
@@ -176,7 +194,8 @@ export class DocumentMetadata {
             license: this._license.toJSON(),
             ...(this._placementPolicy !== PlacementPolicy.ANYONE ? { placementPolicy: this._placementPolicy } : {}),
             ...(this._tags.length > 0 ? { tags: [...this._tags] } : {}),
-            ...(this._builtWith.length > 0 ? { builtWith: this._builtWith.map((entry) => ({ ...entry })) } : {})
+            ...(this._builtWith.length > 0 ? { builtWith: this._builtWith.map((entry) => ({ ...entry })) } : {}),
+            ...(this._unverifiedOrigin ? { unverifiedOrigin: true } : {})
         };
     }
 
@@ -206,7 +225,8 @@ export class DocumentMetadata {
             license: json.license ? License.fromJSON(json.license) : null,
             placementPolicy: json.placementPolicy || PlacementPolicy.ANYONE,
             tags: Array.isArray(json.tags) ? json.tags : [],
-            builtWith: Array.isArray(json.builtWith) ? json.builtWith : []
+            builtWith: Array.isArray(json.builtWith) ? json.builtWith : [],
+            unverifiedOrigin: json.unverifiedOrigin === true
         });
     }
 }

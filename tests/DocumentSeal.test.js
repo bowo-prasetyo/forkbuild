@@ -17,6 +17,7 @@ import { ExportDocumentUseCase } from '../application/document/ExportDocumentUse
 import { ImportDocumentUseCase } from '../application/document/ImportDocumentUseCase.js';
 import { DocumentImportOutcome, DocumentImportRefusedError, decideDocumentImport } from '../application/document/DocumentImportPolicy.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
+import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
 import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
 import { DocumentManifest } from '../application/document/DocumentManifest.js';
 import { ExportAllDocumentsUseCase, ImportDocumentBundleUseCase } from '../application/document/DocumentBundle.js';
@@ -191,6 +192,58 @@ const bobId = bob.getSigningIdentity().id;
     console.log('✓ deleting a seal and rewriting the license or the credits doesn\'t get someone else\'s build imported');
 }
 
+// Taking the maker off a file, or writing the importer in as its maker
+// (2026-11-02 review): it still opens as the importer's build, since nothing
+// in a file can tell that from a build exported while signed out, but it is
+// marked as of unverified origin, and editing a file can't take the mark off.
+{
+    const carol = player('carol');
+    const carolId = carol.getSigningIdentity().id;
+    const file = exportFile(buildBy(alice, { licenseId: LicenseId.CC_BY_4_0 }), alice);
+    const edited = (change) => {
+        const copy = JSON.parse(JSON.stringify(file));
+        change(copy);
+        return copy;
+    };
+
+    assert(file.metadata.unverifiedOrigin === undefined && !('unverifiedOrigin' in buildBy(alice).toJSON().metadata),
+        'a build not marked doesn\'t write the mark, so its content hash is as before');
+    const ownSealed = importAs(alice, file);
+    assert(ownSealed.metadata.unverifiedOrigin === false, 'the maker\'s own sealed file isn\'t marked');
+
+    const noMaker = importAs(bob, edited((json) => { delete json.seal; json.metadata.authorIdentityId = null; }));
+    assert(noMaker.metadata.unverifiedOrigin === true, 'a file with its maker taken off opens marked');
+    const claimed = importAs(bob, edited((json) => { delete json.seal; json.metadata.authorIdentityId = bobId; json.metadata.author = 'bob'; }));
+    assert(claimed.metadata.authorIdentityId === bobId && claimed.metadata.unverifiedOrigin === true,
+        'a file with the importer written in as its maker opens as theirs, marked');
+    const claimedUnderSeal = importAs(bob, edited((json) => { json.metadata.authorIdentityId = bobId; }));
+    assert(verifyDocumentSeal(edited((json) => { json.metadata.authorIdentityId = bobId; })).status === DocumentSealStatus.BROKEN
+        && claimedUnderSeal.metadata.unverifiedOrigin === true, 'so does one whose maker\'s seal was left on');
+    const ownUnsealed = buildBy(alice).toJSON();
+    assert(importAs(alice, ownUnsealed).metadata.unverifiedOrigin === true, 'one\'s own unsealed file opens marked too');
+
+    // The mark travels: sealed into Bob's export, signed into what he publishes.
+    const laundered = exportFile(claimed, bob);
+    assert(verifyDocumentSeal(laundered).status === DocumentSealStatus.VALID && laundered.metadata.unverifiedOrigin === true,
+        'Bob\'s export of it is sealed with the mark under his seal');
+    assert(importAs(bob, laundered).metadata.unverifiedOrigin === true, 'and opens marked on his other devices');
+
+    const markRemoved = JSON.parse(JSON.stringify(laundered));
+    delete markRemoved.metadata.unverifiedOrigin;
+    assert(verifyDocumentSeal(markRemoved).status === DocumentSealStatus.BROKEN, 'taking the mark out of his file breaks his seal');
+    assert(importAs(bob, markRemoved).metadata.unverifiedOrigin === true, 'and the import marks it again');
+    delete markRemoved.seal;
+    assert(importAs(bob, markRemoved).metadata.unverifiedOrigin === true, 'as it does with the seal taken off too');
+
+    const carols = importAs(carol, laundered);
+    assert(carols.metadata.authorIdentityId === carolId && carols.metadata.license.attribution?.author === 'bob' && carols.metadata.unverifiedOrigin === true,
+        'someone else\'s copy of it is marked as well');
+    const forked = new DocumentCloneService().execute(claimed, { author: 'bob', authorIdentityId: bobId });
+    assert(forked.metadata.unverifiedOrigin === true, 'and so is Bob\'s own copy of it (Edit a Copy, Duplicate)');
+    assert(new DocumentCloneService().execute(ownSealed).metadata.unverifiedOrigin === false, 'a copy of an unmarked build isn\'t marked');
+    console.log('✓ a file whose maker was taken off or replaced opens marked as of unverified origin, and the mark stays');
+}
+
 // A player's own builds open as themselves, so moving between devices works.
 {
     const monument = buildBy(alice);
@@ -281,6 +334,16 @@ const bobId = bob.getSigningIdentity().id;
         'builds unsealed and relabelled inside a bundle are left out');
     const restoredUnsealed = await new ImportDocumentBundleUseCase(new InMemoryStorageProvider(), { identityProvider: alice }).execute(unsealedBundle);
     assert(restoredUnsealed.added === 2, 'the maker still restores her own builds from an unsealed bundle');
+
+    const markedStorage = new InMemoryStorageProvider();
+    await new ImportDocumentBundleUseCase(markedStorage, { identityProvider: alice }).execute(unsealedBundle);
+    const markedSaved = new DocumentManifest(markedStorage).list().map((entry) => markedStorage.load(entry.id));
+    assert(markedSaved.length === 2 && markedSaved.every((json) => json.metadata.unverifiedOrigin === true), 'builds restored from an unsealed bundle are marked');
+    const sealedRestore = new InMemoryStorageProvider();
+    await new ImportDocumentBundleUseCase(sealedRestore, { identityProvider: alice }).execute(bundle);
+    assert(new DocumentManifest(sealedRestore).list().every((entry) => !sealedRestore.load(entry.id).metadata.unverifiedOrigin), 'builds restored from her sealed bundle aren\'t');
+    const sameAgain = await new ImportDocumentBundleUseCase(aliceStorage, { identityProvider: alice }).execute(JSON.parse(JSON.stringify(await new ExportAllDocumentsUseCase(aliceStorage, new DocumentManifest(aliceStorage)).execute())));
+    assert(sameAgain.unchanged >= 2 && sameAgain.added === 0, 'a build this device already has is left as it is, not marked and saved again');
     console.log('✓ Export All Builds seals the maker\'s builds, and its import follows the same rules');
 }
 
@@ -314,6 +377,11 @@ const bobId = bob.getSigningIdentity().id;
     delete unsealed.seal;
     assert(importThroughEditor(bob, unsealed) === 'This build doesn\'t carry its maker\'s signature, so its terms can\'t be checked. Ask its maker to export it for you, or use “Edit a Copy” on its published page.',
         'an unsealed file of someone else\'s says its terms can\'t be checked');
+    const claimedFile = exportFile(open, alice);
+    delete claimedFile.seal;
+    claimedFile.metadata.authorIdentityId = bobId;
+    assert(importThroughEditor(bob, claimedFile) === 'Imported. The file couldn\'t show who made this build, so it\'s marked as of unverified origin, here and wherever it\'s published.',
+        'a build opened as one\'s own from a file that couldn\'t show it says it is marked');
     console.log('✓ the Editor says what Import did, or why it didn\'t');
 }
 

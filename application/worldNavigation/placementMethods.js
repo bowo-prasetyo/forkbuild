@@ -52,6 +52,9 @@ export const placementMethods = {
             // The ownership fact WorldAuthorizationService/WorldMembershipUseCase use,
             // so a Members panel can label the owner's row. Null for older documents.
             authorIdentityId: doc.metadata.authorIdentityId || null,
+            // Imported from a file that couldn't show who made it
+            // (core/document/DocumentMetadata.js), as its Publication signed.
+            unverifiedOrigin: doc.metadata.unverifiedOrigin === true,
             license: doc.metadata.license,
             placementPolicy: doc.metadata.placementPolicy,
             parentDocumentId: doc.metadata.parentDocumentId,
