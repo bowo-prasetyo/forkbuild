@@ -47,9 +47,9 @@ export class ExportAllDocumentsUseCase {
 //
 // Someone else's build in a bundle follows the same rules as a single
 // import (application/document/DocumentImportPolicy.js): it is saved as
-// the importer's credited copy when its license allows remixes
-// (`remixed`), and left out when it doesn't or its seal doesn't hold
-// (`refused`).
+// the importer's credited copy when its maker sealed it and its license
+// allows remixes (`remixed`), and left out when its license doesn't, its
+// seal doesn't hold, or it carries no seal (`refused`).
 export class ImportDocumentBundleUseCase {
     constructor(
         storageProvider,

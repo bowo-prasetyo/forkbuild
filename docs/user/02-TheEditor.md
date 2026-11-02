@@ -708,7 +708,12 @@ Music plays softly while you build, a little livelier than World View's. The **â
   can trust the name and license in it. Your own builds import as
   themselves. Someone else's opens as your own copy, crediting them, when
   its license allows remixes; when it doesn't, or when the file was changed
-  after its maker signed it, it isn't imported. The file carries the license
+  after its maker signed it, it isn't imported. Nor is someone else's build
+  in a file their signature isn't on (one passed along by someone else, or
+  exported while its maker was signed out), since anyone could have written
+  its license: ask its maker to export it for you, or use **Edit a Copy** on
+  its published page. A build you built with its maker opens as it is only
+  from its maker's own export. The file carries the license
   the build has when you export it, so you can publish a build as **All
   Rights Reserved** and still give someone a copy they may build on: choose
   another license in **Build Properties**, export, then set it back.

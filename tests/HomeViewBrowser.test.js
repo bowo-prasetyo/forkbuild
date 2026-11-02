@@ -38,7 +38,7 @@ const RouterLinkStub = {
         href() {
             if (typeof this.to === 'string') return `#${this.to}`;
             const query = new URLSearchParams(this.to.query || {}).toString();
-            return `#${this.to.path}${query ? `?${query}` : ''}`;
+            return `#${this.to.path}${query ? `?${query}` : ''}${this.to.hash || ''}`;
         }
     },
     template: '<a :href="href"><slot></slot></a>'

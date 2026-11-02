@@ -10333,3 +10333,30 @@ stayed where it was until the page was reloaded, though the move had been saved.
   preview is left alone.
 - Tests: tests/PlacementWorldView.test.js (6d–6f: a moved, loaded World is removed and added again at the new
   position, from the info panel and from the Placements list).
+
+## An unsigned file can't pass off someone else's build (unnumbered, 2026-11-02)
+
+**Import no longer takes someone else's build file at its word when its maker's signature has been taken off. Before,
+deleting the seal from an All Rights Reserved build's file and writing CC0 in its place made it import as a remix,
+and adding one's own name under Built with made it import as one's own build.**
+
+**The filter.**
+1. **Pillar:** your work is yours. A maker's license and credit hold even when someone edits the exported file; a
+   player importing a tampered file is told its terms can't be checked.
+2. **First ten minutes:** no harder; a new player imports their own builds and their maker's exports as before.
+3. **Building first:** neutral; nothing is taken from building.
+4. **Counts:** none yet; no count looks at imports.
+
+- **A new outcome, `UNVERIFIED`** (application/document/DocumentImportPolicy.js `decideDocumentImport()`): someone
+  else's build with no seal, whose license says it allows remixes, is refused, since nobody can tell its terms from
+  rewritten ones. An unsealed file that says copies aren't allowed is still believed, and refused as before. Export
+  All Builds' import leaves such builds out (`refused`).
+- **Built with counts only under the maker's seal**: being credited as a co-builder makes a build open as one's own
+  only when the maker sealed the file. A co-builder's own export of a shared build carries no seal, so it no longer
+  restores as the same build; the maker's export does.
+- The Editor says why (`blueprintExchange.importUnverified`, in all eight languages), and the guide says so
+  (docs/user/02-TheEditor.md, *Saving, publishing, starting over*).
+- Still open: a file whose maker identity is deleted, or replaced with the importer's own, still opens as the
+  importer's build; nothing in a file can tell that from a build exported while signed out.
+- Tests: tests/DocumentSeal.test.js (a seal deleted and the license, the maker's name or Built with rewritten; an
+  unsealed bundle; the Editor's message).

@@ -140,6 +140,57 @@ const bobId = bob.getSigningIdentity().id;
     console.log('✓ a file changed after sealing is refused, and a seal can\'t be forged');
 }
 
+// Deleting the seal and then rewriting the file (2026-11-02 review): none of
+// it makes someone else's build the importer's.
+{
+    const file = exportFile(buildBy(alice), alice);
+    const stripped = () => {
+        const copy = JSON.parse(JSON.stringify(file));
+        delete copy.seal;
+        return copy;
+    };
+
+    const relicensed = stripped();
+    relicensed.metadata.license = { id: LicenseId.CC0_1_0 };
+    const relicensedError = refusal(() => importAs(bob, relicensed));
+    assert(relicensedError instanceof DocumentImportRefusedError && relicensedError.outcome === DocumentImportOutcome.UNVERIFIED,
+        'an All Rights Reserved build unsealed and relabelled CC0 is refused');
+    assert(relicensedError.author === 'alice', 'the refusal names the maker the file gives');
+
+    for (const licenseId of [LicenseId.CC_BY_4_0, LicenseId.CC_BY_SA_4_0, LicenseId.CC_BY_NC_4_0]) {
+        const loosened = stripped();
+        loosened.metadata.license = { id: licenseId };
+        assert(refusal(() => importAs(bob, loosened))?.outcome === DocumentImportOutcome.UNVERIFIED, `unsealed and relabelled ${licenseId}: refused`);
+    }
+
+    const renamed = stripped();
+    renamed.metadata.license = { id: LicenseId.CC0_1_0 };
+    renamed.metadata.author = 'someone else';
+    assert(refusal(() => importAs(bob, renamed))?.outcome === DocumentImportOutcome.UNVERIFIED,
+        'relabelled and credited to another name: refused');
+
+    const selfCredited = stripped();
+    selfCredited.metadata.builtWith = [{ name: 'bob', identityId: bobId }];
+    assert(refusal(() => importAs(bob, selfCredited))?.outcome === DocumentImportOutcome.NOT_ALLOWED,
+        'adding oneself to Built with on an unsealed file doesn\'t make it one\'s own');
+    const selfCreditedRemixable = stripped();
+    selfCreditedRemixable.metadata.builtWith = [{ name: 'bob', identityId: bobId }];
+    selfCreditedRemixable.metadata.license = { id: LicenseId.CC_BY_4_0 };
+    assert(refusal(() => importAs(bob, selfCreditedRemixable))?.outcome === DocumentImportOutcome.UNVERIFIED,
+        'nor does it with a remixable license written in');
+
+    const sealedCredit = exportFile(buildBy(alice), alice);
+    sealedCredit.metadata.builtWith = [{ name: 'bob', identityId: bobId }];
+    assert(refusal(() => importAs(bob, sealedCredit))?.outcome === DocumentImportOutcome.ALTERED,
+        'adding oneself to Built with on a sealed file breaks its seal');
+
+    const genuinelyRemixable = exportFile(buildBy(alice, { licenseId: LicenseId.CC_BY_4_0 }), alice);
+    delete genuinelyRemixable.seal;
+    assert(refusal(() => importAs(bob, genuinelyRemixable))?.outcome === DocumentImportOutcome.UNVERIFIED,
+        'a remixable build passed along without its seal is refused too, since its terms can\'t be told from rewritten ones');
+    console.log('✓ deleting a seal and rewriting the license or the credits doesn\'t get someone else\'s build imported');
+}
+
 // A player's own builds open as themselves, so moving between devices works.
 {
     const monument = buildBy(alice);
@@ -154,12 +205,11 @@ const bobId = bob.getSigningIdentity().id;
     assert(asDevice.metadata.authorIdentityId === aliceId && asDevice.metadata.parentDocumentId === null,
         'a device acting for the maker opens it as the maker\'s own');
 
-    const coBuilt = buildBy(alice);
-    const coBuiltJson = coBuilt.toJSON();
+    const coBuiltJson = buildBy(alice).toJSON();
     coBuiltJson.metadata.builtWith = [{ name: 'bob', identityId: bobId }];
-    const restoredCoBuilt = importAs(bob, coBuiltJson);
+    const restoredCoBuilt = importAs(bob, JSON.parse(JSON.stringify(sealDocumentJson(coBuiltJson, alice))));
     assert(restoredCoBuilt.metadata.authorIdentityId === aliceId && restoredCoBuilt.metadata.parentDocumentId === null,
-        'a build that credits the importer as having built it with its maker opens as it is');
+        'a build its maker sealed crediting the importer as having built it with them opens as it is');
 
     const noMaker = monument.toJSON();
     noMaker.metadata.authorIdentityId = null;
@@ -177,11 +227,18 @@ const bobId = bob.getSigningIdentity().id;
     assert(decideDocumentImport({ authorIdentityId: someone, license: forbids, sealStatus: DocumentSealStatus.BROKEN, ownIdentityIds: [someone] }) === DocumentImportOutcome.OWN,
         'one\'s own build stays one\'s own even if its file was edited');
     assert(decideDocumentImport({ authorIdentityId: someone, license: allows, sealStatus: DocumentSealStatus.BROKEN }) === DocumentImportOutcome.ALTERED, 'broken seal: altered');
-    assert(decideDocumentImport({ authorIdentityId: someone, license: forbids, ownIdentityIds: ['me'], builtWith: [{ identityId: 'me' }] }) === DocumentImportOutcome.OWN,
-        'built with its maker: as it is');
+    assert(decideDocumentImport({ authorIdentityId: someone, license: forbids, sealStatus: DocumentSealStatus.VALID, ownIdentityIds: ['me'], builtWith: [{ identityId: 'me' }] }) === DocumentImportOutcome.OWN,
+        'built with its maker, by the maker\'s seal: as it is');
+    assert(decideDocumentImport({ authorIdentityId: someone, license: forbids, ownIdentityIds: ['me'], builtWith: [{ identityId: 'me' }] }) === DocumentImportOutcome.NOT_ALLOWED,
+        'built with its maker, by an unsealed file\'s word: someone else\'s build');
+    assert(decideDocumentImport({ authorIdentityId: someone, license: allows, ownIdentityIds: ['me'], builtWith: [{ identityId: 'me' }] }) === DocumentImportOutcome.UNVERIFIED,
+        'built with its maker, unsealed, remixable: unverified');
     assert(decideDocumentImport({ authorIdentityId: someone, license: forbids, sealStatus: DocumentSealStatus.BROKEN, ownIdentityIds: ['me'], builtWith: [{ identityId: 'me' }] }) === DocumentImportOutcome.ALTERED,
         'a credit added to a sealed file after sealing doesn\'t count');
-    assert(decideDocumentImport({ authorIdentityId: someone, license: allows }) === DocumentImportOutcome.COPY, 'remixable: copy');
+    assert(decideDocumentImport({ authorIdentityId: someone, license: allows, sealStatus: DocumentSealStatus.VALID }) === DocumentImportOutcome.COPY, 'sealed, remixable: copy');
+    assert(decideDocumentImport({ authorIdentityId: someone, license: allows }) === DocumentImportOutcome.UNVERIFIED, 'unsealed, remixable: unverified');
+    assert(decideDocumentImport({ authorIdentityId: someone, license: forbids }) === DocumentImportOutcome.NOT_ALLOWED, 'unsealed, no copies: not allowed');
+    assert(decideDocumentImport({ authorIdentityId: someone, license: null }) === DocumentImportOutcome.NOT_ALLOWED, 'unsealed, no license: not allowed');
     assert(decideDocumentImport({ authorIdentityId: someone, license: forbids, sealStatus: DocumentSealStatus.VALID }) === DocumentImportOutcome.NOT_ALLOWED, 'no copies: not allowed');
     console.log('✓ the import decision covers every case');
 }
@@ -213,6 +270,17 @@ const bobId = bob.getSigningIdentity().id;
     tampered.documents[0].metadata.license = { id: LicenseId.CC0_1_0 };
     const intoBobAgain = await new ImportDocumentBundleUseCase(new InMemoryStorageProvider(), { identityProvider: bob }).execute(tampered);
     assert(intoBobAgain.refused >= 1, 'a build changed inside a bundle is left out');
+
+    const unsealedBundle = JSON.parse(JSON.stringify(bundle));
+    for (const json of unsealedBundle.documents) {
+        delete json.seal;
+        json.metadata.license = { id: LicenseId.CC0_1_0 };
+    }
+    const intoBobUnsealed = await new ImportDocumentBundleUseCase(new InMemoryStorageProvider(), { identityProvider: bob }).execute(unsealedBundle);
+    assert(intoBobUnsealed.refused === 2 && intoBobUnsealed.remixed === 0 && intoBobUnsealed.added === 0,
+        'builds unsealed and relabelled inside a bundle are left out');
+    const restoredUnsealed = await new ImportDocumentBundleUseCase(new InMemoryStorageProvider(), { identityProvider: alice }).execute(unsealedBundle);
+    assert(restoredUnsealed.added === 2, 'the maker still restores her own builds from an unsealed bundle');
     console.log('✓ Export All Builds seals the maker\'s builds, and its import follows the same rules');
 }
 
@@ -242,6 +310,10 @@ const bobId = bob.getSigningIdentity().id;
     const changed = exportFile(buildBy(alice), alice);
     changed.metadata.license = { id: LicenseId.CC0_1_0 };
     assert(importThroughEditor(bob, changed) === 'This build was changed after its maker signed it, so it can\'t be imported.', 'a changed file says so');
+    const unsealed = exportFile(open, alice);
+    delete unsealed.seal;
+    assert(importThroughEditor(bob, unsealed) === 'This build doesn\'t carry its maker\'s signature, so its terms can\'t be checked. Ask its maker to export it for you, or use “Edit a Copy” on its published page.',
+        'an unsealed file of someone else\'s says its terms can\'t be checked');
     console.log('✓ the Editor says what Import did, or why it didn\'t');
 }
 

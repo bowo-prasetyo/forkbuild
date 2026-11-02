@@ -1399,6 +1399,7 @@ export default Object.freeze({
     'blueprintExchange.importedCopyUnnamed': '「{title}」を自分のコピーとして開きました',
     'blueprintExchange.importNotAllowed': '作者がコピーを許可していないため、自分の作品としてインポートできません。',
     'blueprintExchange.importAltered': 'この作品は作者が署名した後に変更されているため、インポートできません。',
+    'blueprintExchange.importUnverified': 'この作品には作者の署名がないため、条件を確認できません。作者にエクスポートしてもらうか、公開ページの「コピーを編集」を使ってください。',
     'blueprintExchange.remixedCopies': '{count}件はほかの人の作品で、自分のコピーとして追加',
     'blueprintExchange.leftOutNotYours': '{count}件は除外: ほかの人の作品で、コピーが許可されていません',
     'blueprintExchange.exportedAttribution': 'あなたの作者情報をエクスポートしました',

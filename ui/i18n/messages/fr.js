@@ -1402,6 +1402,7 @@ export default Object.freeze({
     'blueprintExchange.importedCopyUnnamed': 'Ouvert comme votre propre copie de « {title} »',
     'blueprintExchange.importNotAllowed': 'Son auteur n’a pas autorisé les copies, elle ne peut donc pas être importée comme votre construction.',
     'blueprintExchange.importAltered': 'Cette construction a été modifiée après que son auteur l’a signée, elle ne peut donc pas être importée.',
+    'blueprintExchange.importUnverified': 'Cette construction ne porte pas la signature de son auteur, ses conditions ne peuvent donc pas être vérifiées. Demandez à son auteur de l’exporter pour vous, ou utilisez « Modifier une copie » sur sa page publiée.',
     'blueprintExchange.remixedCopies': '{count} d’une autre personne, en copie à vous',
     'blueprintExchange.leftOutNotYours': '{count} laissé(s) de côté : d’une autre personne, sans permission de copie',
     'blueprintExchange.exportedAttribution': 'Votre attribution a été exportée',

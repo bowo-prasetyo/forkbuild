@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 9520715e8e39c735 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 44939d3a4efd2616 -->
 # 02 — O Editor
 
 <!-- languages -->
@@ -750,7 +750,14 @@ Enquanto você constrói, toca uma música suave, um pouco mais animada que a da
   construções são importadas como elas mesmas. A de outra pessoa abre como
   cópia sua, dando o crédito a ela, quando a licença permite remixes;
   quando não permite, ou quando o arquivo foi mudado depois que quem fez o
-  assinou, ela não é importada. O arquivo leva a licença que a construção
+  assinou, ela não é importada.
+  Também não é importada a construção de outra pessoa num arquivo sem a
+  assinatura dela (repassado por outra pessoa, ou exportado com quem fez
+  sem sessão iniciada), já que qualquer um poderia ter escrito a licença:
+  peça a quem fez para exportá-la para você, ou use **Editar uma cópia** na
+  página publicada. Uma construção que você fez junto com quem a fez só
+  abre como é a partir da exportação de quem a fez.
+  O arquivo leva a licença que a construção
   tem quando você exporta, então você pode publicar uma construção como
   **All Rights Reserved** e mesmo assim dar a alguém uma cópia em que essa
   pessoa possa construir: escolha outra licença em **Propriedades da

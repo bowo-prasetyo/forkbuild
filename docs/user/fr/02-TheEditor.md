@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 9520715e8e39c735 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 44939d3a4efd2616 -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -800,7 +800,15 @@ Une musique douce accompagne la construction, un peu plus vive que celle de la V
   porte. Vos propres constructions s’importent telles quelles. Celle de
   quelqu’un d’autre s’ouvre comme votre propre copie, qui le crédite,
   quand sa licence autorise les remix ; sinon, ou si le fichier a été
-  modifié après que son auteur l’a signé, elle n’est pas importée. Le
+  modifié après que son auteur l’a signé, elle n’est pas importée.
+  La construction de quelqu’un d’autre dans un fichier qui ne porte pas
+  sa signature (transmis par quelqu’un d’autre, ou exporté alors que son
+  auteur était déconnecté) n’est pas importée non plus, puisque n’importe
+  qui aurait pu y écrire sa licence : demandez à son auteur de l’exporter
+  pour vous, ou utilisez **Modifier une copie** sur sa page publiée. Une
+  construction que vous avez faite avec son auteur ne s’ouvre telle quelle
+  que depuis l’export de son auteur.
+  Le
   fichier porte la licence qu’a la construction au moment de l’export :
   vous pouvez donc publier une construction en **All Rights Reserved** et
   quand même donner à quelqu’un une copie sur laquelle il peut construire.

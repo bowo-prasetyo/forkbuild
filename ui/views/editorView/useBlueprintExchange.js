@@ -8,6 +8,13 @@ import { message } from '../../../core/app/Message.js';
 import { errorText, t } from '../../i18n/i18n.js';
 import { libraryItemName } from '../../i18n/libraryText.js';
 
+// Why Import refused a build file (application/document/DocumentImportPolicy.js).
+const REFUSAL_MESSAGE_KEYS = Object.freeze({
+    [DocumentImportOutcome.ALTERED]: 'blueprintExchange.importAltered',
+    [DocumentImportOutcome.UNVERIFIED]: 'blueprintExchange.importUnverified',
+    [DocumentImportOutcome.NOT_ALLOWED]: 'blueprintExchange.importNotAllowed'
+});
+
 // Downloads `data` as pretty-printed JSON, with no intermediate modal.
 function downloadJson(filename, data) {
     const link = document.createElement('a');
@@ -127,7 +134,7 @@ export function useBlueprintExchange({
     		feedback.show(importedText(imported));
     	} catch (e) {
     		if (e instanceof DocumentImportRefusedError) {
-    			feedback.show(t(e.outcome === DocumentImportOutcome.ALTERED ? 'blueprintExchange.importAltered' : 'blueprintExchange.importNotAllowed'), { durationMs: 8000 });
+    			feedback.show(t(REFUSAL_MESSAGE_KEYS[e.outcome] || 'blueprintExchange.importNotAllowed'), { durationMs: 8000 });
     			return;
     		}
     		feedback.show(errorText(e).replace(/^DocumentSerializer:\s*/, ''));

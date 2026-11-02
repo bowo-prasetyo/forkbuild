@@ -40,8 +40,9 @@ import {
 // DocumentImportPolicy.js decides from the maker the file names, its seal
 // (core/document/DocumentSeal.js) and its license. The importer's own build opens
 // as itself; someone else's opens as the importer's credited copy when its
-// license allows remixes, and is refused (DocumentImportRefusedError)
-// when it doesn't or when its seal doesn't hold.
+// maker sealed it and its license allows remixes, and is refused
+// (DocumentImportRefusedError) when its license doesn't, when its seal
+// doesn't hold, or when it carries no seal to vouch for its terms.
 export class ImportDocumentUseCase {
     // `ownIdentityIds`, when given, names identities besides this device's
     // own that count as the importer's (the one an authorized device acts
