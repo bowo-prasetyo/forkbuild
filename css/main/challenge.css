@@ -105,6 +105,13 @@
 
 .challenge-section {
     margin-top: 2.5rem;
+    scroll-margin-top: 1rem;
+}
+
+/* Focus moves here when Join brings it into view; the heading already says
+   where you are, so only keyboard focus shows a ring. */
+.challenge-section:focus:not(:focus-visible) {
+    outline: none;
 }
 
 .challenge-section h2 {

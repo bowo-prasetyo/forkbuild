@@ -1,4 +1,4 @@
-import { computed, defineAsyncComponent, inject, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, defineAsyncComponent, inject, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { challengeAt, challengeById, isChallengeOpen, isRemixChallenge, previousChallenge } from '../../core/challenge/BuildChallenge.js';
 import { countRemixes, describeRemixSource } from '../../core/publication/RemixLineage.js';
@@ -40,10 +40,14 @@ export default {
         });
 
         // Both routes show this page, so moving from one week to another
-        // reuses it: everything below follows the route's week.
+        // reuses it: everything below follows the route's week, by its id.
+        // /challenge and this week's /challenge/<id> are the same week (Join
+        // on a remix week moves from one to the other), and a new fragment is
+        // no new week, so neither starts the page over.
         const now = Date.now();
-        const challenge = computed(() => (route.params.id ? challengeById(String(route.params.id)) : challengeAt(now)));
         const current = challengeAt(now);
+        const challengeId = computed(() => (route.params.id ? String(route.params.id) : current?.id ?? null));
+        const challenge = computed(() => (challengeId.value ? challengeById(challengeId.value) : null));
         const view = computed(() => {
             const shown = challenge.value;
             if (!shown) return null;
@@ -138,10 +142,32 @@ export default {
             searchNetworks();
         }, { immediate: true });
 
+        // A link to a part of the page (Join on a remix week goes to
+        // #challenge-remix-from): the router leaves the fragment alone, and
+        // this page scrolls on its own (.challenge-view), not the window, so
+        // the page brings that part into view itself and moves focus there.
+        // Join clicked while already there is no navigation at all, so it
+        // asks again.
+        function revealFragment() {
+            const id = route.hash ? decodeURIComponent(route.hash.slice(1)) : '';
+            if (!id) return;
+            nextTick(() => {
+                const target = document.getElementById(id);
+                if (!target) return;
+                if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+                target.focus({ preventScroll: true });
+                const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+                target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+            });
+        }
+        onMounted(revealFragment);
+        watch(() => route.fullPath, revealFragment);
+
         return {
             t,
             challenge,
             view,
+            revealFragment,
             entries, remixFrom, remixCounts, remixSources, families, familyChanges, familyRoute,
             remixPublication: (pub) => router.push(challengeRemixRoute(challenge.value, pub)),
             networkSearch, networkSearchText, searchNetworks,
@@ -171,7 +197,7 @@ export default {
                     <p v-if="view.seasonHint" class="form-hint form-hint--neutral challenge-season-hint">{{ view.seasonHint }}</p>
                     <p class="challenge-card-tag">#{{ challenge.tag }}</p>
                     <div class="challenge-card-actions">
-                        <router-link v-if="view.open" :to="view.joinRoute" class="cta-button challenge-join">{{ t('challenge.join') }}</router-link>
+                        <router-link v-if="view.open" :to="view.joinRoute" class="cta-button challenge-join" @click="revealFragment">{{ t('challenge.join') }}</router-link>
                         <router-link v-if="entries.length" :to="{ path: '/plaza/' + challenge.id }" class="home-cta-secondary challenge-plaza-link">{{ t('challenge.walkPlaza') }}</router-link>
                         <router-link v-if="!view.isCurrent" to="/challenge" class="home-cta-secondary challenge-current-link">{{ t('challenge.current') }}</router-link>
                         <router-link v-if="view.previousRoute" :to="view.previousRoute" class="home-cta-secondary challenge-previous-link">{{ t('challenge.previous', { theme: view.previousTitle }) }}</router-link>
