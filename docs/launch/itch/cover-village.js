@@ -9,6 +9,10 @@ import { composeShowcase, featuredStructures } from '../../../application/home/F
 // Warm roofs and a striped lighthouse read as a village even at thumbnail size.
 const STRUCTURE_IDS = ['collection:house_with_garden', 'village:mill', 'collection:keepers_lighthouse', 'village:garden_cottage'];
 
+// `?background`: the village alone, larger and with no words, for the
+// launcher's backdrop (docs/launch/itch/index.html).
+if (new URLSearchParams(location.search).has('background')) document.documentElement.classList.add('background');
+
 const brickRegistry = new CreateBrickRegistryUseCase().execute();
 const structureRegistry = new CreateStructureRegistryUseCase().execute();
 // The renderer draws into a hidden WebGL canvas, copied into the picture in
@@ -16,6 +20,8 @@ const structureRegistry = new CreateStructureRegistryUseCase().execute();
 // over it would make a screenshot composite it again, blank.
 const scene = document.querySelector('#scene');
 const picture = document.querySelector('#picture').getContext('2d');
+picture.canvas.width = picture.canvas.clientWidth;
+picture.canvas.height = picture.canvas.clientHeight;
 const renderer = new ShowcaseTurntableRenderer(brickRegistry, scene, { reducedMotion: true });
 const copy = () => picture.drawImage(scene, 0, 0, picture.canvas.width, picture.canvas.height);
 renderer.resize();
