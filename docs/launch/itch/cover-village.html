@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ForkBuild itch.io cover: the village</title>
+<!-- The itch.io cover, 630 × 500, photographed by scripts/itch-cover.mjs as
+     docs/launch/press/itch-cover-village.png and, turning, as
+     itch-cover-village.gif. The village is drawn by the app's own renderer
+     (cover-village.js); the words are big enough to read at itch's thumbnail
+     size, about half this. Colours are css/main/theme.css's. -->
+<script type="importmap">
+{
+    "imports": {
+        "three": "../../../vendor/three/build/three.module.js",
+        "three/addons/": "../../../vendor/three/examples/jsm/"
+    }
+}
+</script>
+<style>
+  html, body { margin: 0; width: 630px; height: 500px; overflow: hidden; }
+  body { position: relative; font: 16px/1.2 system-ui, -apple-system, "Segoe UI", sans-serif; color: #2e261c; }
+  canvas { position: absolute; display: block; }
+  /* The scene is drawn larger than the cover and cropped, so the village fills it. */
+  #scene { left: -95px; top: -105px; width: 820px; height: 640px; visibility: hidden; }
+  #picture { left: -95px; top: -105px; width: 820px; height: 640px; }
+  .name {
+    position: absolute; left: 18px; top: 18px; display: flex; align-items: center; gap: 10px;
+    padding: 8px 16px 8px 10px; border-radius: 999px; background: rgb(255 252 246 / 0.94);
+    box-shadow: 0 4px 14px rgb(74 52 24 / 0.25);
+  }
+  .name img { width: 40px; height: 40px; }
+  .name span { font-size: 30px; font-weight: 700; letter-spacing: -0.5px; }
+  .line {
+    position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 18px 16px;
+    background: #357f52; color: #ffffff; text-align: center;
+    font-size: 34px; font-weight: 700; letter-spacing: -0.3px;
+  }
+</style>
+</head>
+<body>
+  <canvas id="scene"></canvas>
+  <canvas id="picture" width="820" height="640"></canvas>
+  <div class="name"><img src="../../../assets/icons/logo.svg" alt=""><span>ForkBuild</span></div>
+  <div class="line">Build it. Remix it. Walk inside.</div>
+  <script type="module" src="cover-village.js"></script>
+</body>
+</html>

@@ -41,6 +41,7 @@ In [press/](press/), made by `node scripts/press-kit.mjs`:
 | `challenge.png` | This week's build challenge | 1280 × 800 |
 | `producthunt-home.png`, `producthunt-editor.png` | Product Hunt's gallery size | 1270 × 760 |
 | `itch-cover.png` | itch.io's cover: the castle, with the logo, name and tagline ([itch/cover.html](itch/cover.html)) | 630 × 500 |
+| `itch-cover-village.png`, `itch-cover-village.gif` | itch.io's village cover: four ready-made builds round a green, drawn by the app's own renderer, with the name and "Build it. Remix it. Walk inside." The GIF turns the village once, a five-second loop (`node scripts/itch-cover.mjs`, needs ffmpeg; the page is [itch/cover-village.html](itch/cover-village.html)) | 630 × 500 |
 | `itch-wide-cover.png` | itch.io's wide cover, for its home page featuring: the logo, name and the fantasy beside the castle ([itch/wide-cover.html](itch/wide-cover.html)) | 1260 × 540 (21:9) |
 | `launch-clip.mp4` | The 30-second launch clip: Try it now, the roof put on, Publish it, Walk inside it, with captions and an end card (`node scripts/launch-clip.mjs`; the end card is [clip/end-card.html](clip/end-card.html)) | 1280 × 720, no sound |
 

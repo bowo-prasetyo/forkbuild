@@ -46,7 +46,7 @@ delete the old upload. Re-zip after the press shots change.
 | Custom noun | Leave blank. |
 | Community | **Comments** on. A page with comments looks alive, and they're where itch players say what broke. Answer them like any launch comment. |
 | Visibility | Public |
-| Cover image | `press/itch-cover.png` (630 × 500): the castle, with the logo, name and tagline on a paper band. |
+| Cover image | `press/itch-cover-village.gif` (630 × 500): the village turning, with the name and "Build it. Remix it. Walk inside." Being tested against the castle cover, `press/itch-cover.png`; see "The cover test" below. |
 | Gameplay video | `press/launch-clip.mp4`, uploaded to YouTube (or Vimeo) and its link pasted here: *Try it now → put the roof on → Publish it → Walk inside it*, 30 seconds, 1280 × 720, no sound, captioned, ending on where to play. Pages with a video are clicked more than pages without one. Remake it with `node scripts/launch-clip.mjs` after a visible change to those screens. |
 | Screenshots | Four, in this order, from [the press kit](press/): `home-desktop.png`, `editor-castle.png`, `editor-harbor-island.png`, `home-phone.png`. None names a week's theme, so they don't go out of date. |
 | Promo images | Under **Metadata → Promo images**: **Wide cover** `press/itch-wide-cover.png` (1260 × 540, 21:9; itch only features a game on its home page with one), **Social media image** `assets/social/forkbuild-card.png`, **Favicon** `assets/icons/icon-512.png`. Leave **Logo** empty until there is a wide, transparent logo with the name in it: itch shows the title instead. |
@@ -59,6 +59,27 @@ code) were all written with an AI assistant, so the honest answer is **Yes**,
 with **Code**, **Text & Dialog**, **Graphics** and **Sounds** ticked. itch
 adds filtering tags from the answer, so some players who filter out AI work
 won't see the page; answering "No" isn't an option.
+
+### The cover test
+
+The cover is what itch shows in its listings: tag pages, search and
+"new and popular". In the 30 days to 2 November 2026 the castle cover
+(`press/itch-cover.png`, a grey castle under a paper band) was shown 278
+times in a week and clicked 0.72% of the time, while about half the people
+who opened the page went on to the site. So the page works, and the
+thumbnail is where players are lost.
+
+The village cover tries a thumbnail that says what ForkBuild is at half
+size: a colourful village, the name, and one line in big type. Run it for
+one full week at a time, changing nothing else, and compare the **CTR** on
+**Analytics** against 0.72%:
+
+1. **The animated village**, `press/itch-cover-village.gif`: one slow turn,
+   five seconds, looping. Motion stands out in a grid of still thumbnails.
+2. **The still village**, `press/itch-cover-village.png`, if the GIF is
+   refused, or as a second week to tell the motion apart from the picture.
+
+Keep whichever has the higher CTR, and record the numbers here.
 
 ## Short description
 
