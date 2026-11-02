@@ -20,21 +20,22 @@ October 2026, page by page (**Details**, **Description**, **Design**,
 [gamejolt/index.html](gamejolt/index.html) is the launcher: the itch.io one
 with Game Jolt's `ref`, so its **Play ForkBuild** button opens the site in a
 new tab with `?ref=gamejolt`. Game Jolt wants `index.html` at the top of the
-zip, not in a folder. Zip it with the castle shot beside it, from the
-repository's root:
+zip, not in a folder. Zip it with the village picture beside it
+(`press/itch-launcher-village.png`, made with itch.io's cover by
+`node scripts/itch-cover.mjs`), from the repository's root:
 
 ```
-zip -j forkbuild-gamejolt.zip docs/launch/gamejolt/index.html docs/launch/press/editor-castle.png
+zip -j forkbuild-gamejolt.zip docs/launch/gamejolt/index.html docs/launch/press/itch-launcher-village.png
 ```
 
 Under **Packages**, make a package (call it *ForkBuild*), add a release
 with **Version Number** `1.6.1` (the app's own version in package.json; a
 new release starts at 0.1.0, so change it), and upload the zip under
 **Upload Browser Build**. Leave **Fit to screen?** off: the launcher is one
-small card, and a full-screen frame only stretches the castle behind it.
+small card, and a full-screen frame only stretches the village behind it.
 Leave **HTTPS support?** on. Publish the release; releases start hidden.
 
-Re-zip after the launcher or the castle shot changes, and add a new release
+Re-zip after the launcher or the village picture changes, and add a new release
 for each app release so the page's version stays current.
 
 ## Every field
@@ -51,7 +52,7 @@ for each app release so the page's version stays current.
 | Description → Game Tags | **#other**. The listed tags are genres (action, horror, puzzle…) and none fits a building game; Game Jolt takes your own tags as `#hashtags` in the description instead: `#building #sandbox #cozy #3d #multiplayer #coop #opensource #creative #relaxing #exploration`, one word each, so `co-op` and `open-source` lose their hyphens. |
 | Design → Change Header | `press/itch-wide-cover.png` (1260 × 540): the logo, name and the fantasy beside the castle. |
 | Design → Add Media | The same four screenshots as itch.io, in this order: `home-desktop.png`, `editor-castle.png`, `editor-harbor-island.png`, `home-phone.png`; and the launch clip's YouTube link (`press/launch-clip.mp4`). |
-| Design → Game Thumbnail | `press/itch-cover.png` (630 × 500), or a crop of `press/editor-castle.png` if the form asks for another size. Required before the page can be published. |
+| Design → Game Thumbnail | `press/itch-cover-village.gif` (630 × 500), the village turning, as on itch.io (see [itch.io](ItchIo.md#the-cover-test)); `press/itch-cover-village.png` if the GIF is refused. Required before the page can be published. |
 | Design → Color Theme | The app's green, `#357f52`, if it's offered. |
 | Maturity → Age Rating | **All Ages**, with every content descriptor (violence, substances, sex/nudity, language, humor, gambling) at **None**. The form doesn't ask about players talking to each other; the description says there's chat and voice. |
 | Music | Nothing for now: it takes MP3s only, and ForkBuild's music is synthesized as it plays. |
