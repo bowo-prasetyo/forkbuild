@@ -10,6 +10,7 @@ against. Each is a build file as **File → Export** writes it; open one with
 | [forkbuild-document-islet-lighthouse.json](forkbuild-document-islet-lighthouse.json) | **The Islet Lighthouse**: a striped lighthouse on a rocky islet of its own, with a wooden jetty. |
 | [forkbuild-document-hay-wain-bridge.json](forkbuild-document-hay-wain-bridge.json) | **The Hay Wain Bridge**: a timber truss bridge across a river, wide enough for the hay wagon. |
 | [forkbuild-document-packhorse-arch.json](forkbuild-document-packhorse-arch.json) | **The Packhorse Arch**: a humpbacked stone bridge over a river, wide enough for the hay wagon. |
+| [forkbuild-document-the-bakery-cottage.json](forkbuild-document-the-bakery-cottage.json) | **The Bakery Cottage**: a remix of The One-Room Cottage (CC BY-SA 4.0) into a village bakehouse, with a bread oven inside and a porch under a yellow awning where the loaves are sold. |
 
 What uses them:
 
