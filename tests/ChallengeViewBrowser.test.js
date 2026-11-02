@@ -202,6 +202,12 @@ host.remove();
     await until(() => remixSearched.length === 2, 'both searches');
     assert(remixSearched.join() === `${remix.tag},${before.tag}`, 'the networks are searched for this week\'s entries and last week\'s');
     assert(!remixHost.querySelector('.challenge-section .featured-build-card'), 'no ready-made ideas');
+    // Open opens the build in the Editor, as it does on Explore.
+    await remixRouter.push('/challenge');
+    await until(() => remixHost.querySelector('.challenge-remix-entries .action-btn--open'), 'back on the challenge page');
+    remixHost.querySelector('.challenge-remix-entries .action-btn--open').click();
+    await until(() => remixRouter.currentRoute.value.path === '/editor', 'Open');
+    assert(remixRouter.currentRoute.value.query.load === 'doc-pub-logged', `Open loads the build (${JSON.stringify(remixRouter.currentRoute.value.query)})`);
     remixApp.unmount();
     remixHost.remove();
     console.log('✓ a remix week starts from last week\'s entries');
