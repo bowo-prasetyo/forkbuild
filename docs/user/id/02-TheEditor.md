@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 44939d3a4efd2616 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 97d2423119ec7afb -->
 # 02 — Editor
 
 <!-- languages -->
@@ -760,6 +760,11 @@ Musik diputar pelan saat Anda membangun, sedikit lebih riang daripada di Tampila
   mengekspornya untuk Anda, atau gunakan **Edit Salinan** di halaman
   terbitannya. Bangunan yang Anda bangun bersama pembuatnya hanya terbuka
   apa adanya dari ekspor pembuatnya sendiri.
+  File yang tidak menyebut pembuat, atau
+  menyebut Anda, terbuka sebagai bangunan Anda, tetapi jika tidak membawa
+  tanda tangan Anda sendiri, informasinya menyebut **Diimpor dari file yang
+  tidak dapat menunjukkan siapa pembuatnya**, di setiap salinan dan di mana
+  pun ia diterbitkan.
   File
   membawa lisensi yang dimiliki bangunan saat Anda mengekspornya, jadi Anda
   dapat menerbitkan bangunan sebagai **All Rights Reserved** dan tetap

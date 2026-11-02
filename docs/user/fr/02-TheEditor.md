@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 44939d3a4efd2616 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 97d2423119ec7afb -->
 # 02 — L’Éditeur
 
 <!-- languages -->
@@ -808,6 +808,11 @@ Une musique douce accompagne la construction, un peu plus vive que celle de la V
   pour vous, ou utilisez **Modifier une copie** sur sa page publiée. Une
   construction que vous avez faite avec son auteur ne s’ouvre telle quelle
   que depuis l’export de son auteur.
+  Un fichier qui ne nomme aucun auteur, ou
+  qui vous nomme, s’ouvre comme votre construction ; mais s’il ne porte pas
+  votre propre signature, ses informations indiquent **Importée d’un
+  fichier qui ne pouvait pas montrer qui l’a faite**, sur chaque copie et
+  partout où elle est publiée.
   Le
   fichier porte la licence qu’a la construction au moment de l’export :
   vous pouvez donc publier une construction en **All Rights Reserved** et

@@ -1,4 +1,4 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 44939d3a4efd2616 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 97d2423119ec7afb -->
 # 02 — Der Editor
 
 <!-- languages -->
@@ -792,6 +792,11 @@ Beim Bauen spielt leise Musik, etwas lebhafter als in der Weltansicht. Die Schal
   oder nutzen Sie **Eine Kopie bearbeiten** auf seiner veröffentlichten
   Seite. Ein Bauwerk, das Sie mit seinem Urheber gebaut haben, öffnet sich
   nur aus dessen eigenem Export so, wie es ist.
+  Eine Datei, die keinen Urheber oder Sie als
+  Urheber nennt, öffnet sich als Ihr Bauwerk; trägt sie nicht Ihre eigene
+  Signatur, steht in seinen Informationen jedoch **Aus einer Datei
+  importiert, die nicht zeigen konnte, wer es gemacht hat**, auf jeder
+  Kopie und überall, wo es veröffentlicht wird.
   Die Datei
   trägt die Lizenz, die das Bauwerk beim Exportieren hat. Sie können ein
   Bauwerk also als **All Rights Reserved** veröffentlichen und trotzdem

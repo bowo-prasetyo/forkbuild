@@ -4,7 +4,7 @@ import { DocumentManager } from './DocumentManager.js';
 import { SaveDocumentUseCase } from './SaveDocumentUseCase.js';
 import { ImportDocumentUseCase } from './ImportDocumentUseCase.js';
 import { sealDocumentJson, verifyDocumentSeal } from '../../identity/DocumentSealing.js';
-import { DocumentImportOutcome, decideDocumentImport } from './DocumentImportPolicy.js';
+import { DocumentImportOutcome, decideDocumentImport, hasUnverifiedOrigin } from './DocumentImportPolicy.js';
 
 // Every saved document in one file, for moving them all to another device
 // or keeping a copy (a single document still exports on its own).
@@ -80,11 +80,12 @@ export class ImportDocumentBundleUseCase {
         for (const json of bundle.documents) {
             try {
                 const document = this._documentSerializer.deserialize(json);
+                const sealStatus = verifyDocumentSeal(json).status;
                 const outcome = decideDocumentImport({
                     authorIdentityId: document.metadata.authorIdentityId,
                     license: document.metadata.license,
                     builtWith: document.metadata.builtWith,
-                    sealStatus: verifyDocumentSeal(json).status,
+                    sealStatus,
                     ownIdentityIds
                 });
                 if (outcome === DocumentImportOutcome.COPY) {
@@ -97,10 +98,14 @@ export class ImportDocumentBundleUseCase {
                     continue;
                 }
                 const existing = await this._storageProvider.loadAsync(document.world.id);
+                // As a single import marks it (DocumentImportPolicy.js). One
+                // this device already has, marked or not, is left as it is.
+                const unverified = hasUnverifiedOrigin(outcome, sealStatus);
                 if (existing === null) {
+                    if (unverified) document.metadata.markUnverifiedOrigin();
                     this._saveDocumentUseCase.execute(new DocumentManager(document));
                     result.added++;
-                } else if (this._sameContent(existing, document)) {
+                } else if (this._sameContent(existing, document) || (unverified && this._sameContent(existing, this._marked(document)))) {
                     result.unchanged++;
                 } else {
                     this._saveDocumentUseCase.execute(new DocumentManager(this._importDocumentUseCase.execute(json)));
@@ -111,6 +116,13 @@ export class ImportDocumentBundleUseCase {
             }
         }
         return result;
+    }
+
+    // `document` as Import would save it, marked as of unverified origin.
+    _marked(document) {
+        const marked = this._documentSerializer.deserialize(this._documentSerializer.serialize(document));
+        marked.metadata.markUnverifiedOrigin();
+        return marked;
     }
 
     _sameContent(existingJson, document) {

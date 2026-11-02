@@ -99,7 +99,10 @@ export class DocumentCloneService {
             license: nextLicense,
             // Not inherited: who may place a publication is its publisher's
             // choice, so a fork's author starts from the default.
-            placementPolicy
+            placementPolicy,
+            // Inherited: a copy of a build whose maker couldn't be shown is
+            // no better known (core/document/DocumentMetadata.js).
+            unverifiedOrigin: sourceDocument.metadata.unverifiedOrigin
         });
         return new Document({ world: clonedWorld, metadata });
     }

@@ -16,7 +16,7 @@ import I18nText from '../i18n/I18nText.js';
 //
 //   { title, description, author, builtWith, license, parentDocumentId,
 //     parentStructureId, parentStructureName, statusLabel, dirty,
-//     editable, editabilityNotice }
+//     editable, editabilityNotice, unverifiedOrigin }
 //
 // Deliberately dumb: no session/use-case imports, no mutation. It
 // renders `info` and emits 'edit-metadata' when the caller should open
@@ -130,6 +130,9 @@ export default {
             <p v-if="info.parentDocumentId || info.parentStructureId" class="document-info-compact-origin">
                 {{ t('documentInfo.forkedFromCompact', { origin: originLabel(info) }) }}
             </p>
+            <p v-if="info.unverifiedOrigin" class="document-info-compact-origin document-info-unverified-origin">
+                {{ t('documentInfo.unverifiedOrigin') }}
+            </p>
             <p v-if="builtWith(info)" class="document-info-compact-built-with">
                 <I18nText keypath="builtWith.line"><template #names><BuiltWithNames :list="info.builtWith" /></template></I18nText>
             </p>
@@ -196,6 +199,10 @@ export default {
             <div class="info-row" v-if="info.parentDocumentId">
                 <span class="info-label">{{ t('documentInfo.forkedFrom') }}</span>
                 <span class="info-value">{{ shortId(info.parentDocumentId) }}</span>
+            </div>
+            <div class="info-row document-info-unverified-origin" v-if="info.unverifiedOrigin">
+                <span class="info-label">{{ t('documentInfo.origin') }}</span>
+                <span class="info-value">{{ t('documentInfo.unverifiedOrigin') }}</span>
             </div>
             <div class="info-row" v-if="info.parentStructureId">
                 <span class="info-label">{{ t('documentInfo.forkedFromStructure') }}</span>
