@@ -1022,10 +1022,11 @@ export default {
         // A copy just opened from ?fork=: its bricks are someone else's, not its
         // builder's (core/building/PlacedBricks.js), and a remix week's entry (its
         // challenge page's Remix) is tagged for the week.
-        function afterForkOpened() {
+        // `remixWeek` is read from the link before the copy is made: a build
+        // still on disk is copied later, after the link has been cleared.
+        function afterForkOpened(remixWeek) {
             editorSession.noteReadyMadeStart();
-            const remixWeek = typeof route.query.challenge === 'string' ? challengeById(route.query.challenge) : null;
-            if (remixWeek) joinChallenge(remixWeek);
+            return remixWeek ? joinChallenge(remixWeek) : false;
         }
         function startFromChallenge(challengeId) {
             newDocumentDialog.value = null;
@@ -1890,9 +1891,11 @@ export default {
                 // success and the return address on failure.
                 const decodedEntryContext = editorEntryContextFromQuery(route.query, sourceDocumentId);
                 let sourcePublication = null;
+                // A remix week's Remix: the copy is tagged for the week.
+                const remixWeek = typeof route.query.challenge === 'string' ? challengeById(route.query.challenge) : null;
                 const openFork = (forkedDocument) => {
                     editorSession.openDocument(forkedDocument, decodedEntryContext);
-                    afterForkOpened();
+                    const joined = afterForkOpened(remixWeek);
                     // A copy made on a shared link's screen has no spot to look at,
                     // so it is seen whole, as a ready-made build is.
                     if (decodedEntryContext && !decodedEntryContext.focusPosition) editorSession.frameDocument();
@@ -1900,8 +1903,9 @@ export default {
                     // Set only after openDocument() succeeds.
                     entryContext.value = decodedEntryContext;
                     arrivalDocumentId = decodedEntryContext ? forkedDocument.world.id : null;
-                    // Transient arrival message, naming what was being looked at when known.
-                    feedback.show(decodedEntryContext && decodedEntryContext.title
+                    // Transient arrival message, naming what was being looked at when known;
+                    // joining the week says so itself, with its tag.
+                    if (!joined) feedback.show(decodedEntryContext && decodedEntryContext.title
                         ? t('editor.editingCopy', { title: decodedEntryContext.title })
                         : t('editor.forkCreated', { title: forkedDocument.metadata.title }));
                 };
