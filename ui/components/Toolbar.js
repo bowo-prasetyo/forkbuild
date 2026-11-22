@@ -131,6 +131,7 @@ export default {
         const findabilityStore = inject('findabilityStore', null);
         const readyMadeBricks = inject('readyMadeBricksStore', null);
         const similarBuildFinder = inject('similarBuildFinder', null);
+        const funnelEventCounter = inject('funnelEventCounter', null);
         const dirty = ref(props.documentManager.state.dirty);
         const recentDocuments = ref(props.loadDocumentUseCase.listSavedDocuments());
         const recentOpen = ref(false);
@@ -229,6 +230,9 @@ export default {
         const similarBuilds = ref([]);
         function requestPublish() {
             if (checkingSimilar.value) return;
+            // Counted before any question, so a visitor who stops at one is
+            // still heard as having tried (/e/publish-start).
+            funnelEventCounter?.startedPublish();
             const world = props.documentManager.document?.world;
             if (world && readyMadeBricks && !NOTHING_ADDED_ASKED.has(world.id)) {
                 let untouched = false;

@@ -66,7 +66,7 @@ export function visitorCountHitUrl(random) {
 // it together; a build published and sent to everyone, or kept to its link
 // (each publish, core/publication/BuildNote.js); World View opened, and someone else's
 // build seen there (once a visit); the Editor opened, a ready-made build
-// opened in it from a link, a first edit made there, and a returning builder's
+// opened in it from a link, a first edit made there, Publish pressed, and a returning builder's
 // Keep building on Home (once a page load each); each kept side system used (once a page
 // load: swimming, an animal caught or decorated with, the inventory, chat,
 // voice, a public lobby); and, when
@@ -124,6 +124,12 @@ export const FunnelEvent = Object.freeze({
     EDITOR_OPEN: 'editor-open',
     STARTER_OPEN: 'starter-open',
     EDITOR_EDIT: 'editor-edit',
+    // Publish pressed (the toolbar's, or a ready-made build's card), at most
+    // once a page load, whether or not a build is then published: read
+    // against the publish-bricks totals, it tells a visitor who never tries
+    // to publish from one who tries and stops on the way (the questions
+    // before publishing, a name to sign with). Nothing about the build is sent.
+    PUBLISH_START: 'publish-start',
     // A returning builder went back to their last build from Home's Welcome
     // back (ui/components/home/WelcomeBack.js). Nothing about the build is sent.
     KEEP_BUILDING: 'keep-building',

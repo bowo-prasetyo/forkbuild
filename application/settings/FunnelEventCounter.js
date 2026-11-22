@@ -118,6 +118,12 @@ export class FunnelEventCounter {
         return this.countOnce(FunnelEvent.EDITOR_EDIT);
     }
 
+    // Publish pressed (ui/components/Toolbar.js, requestPublish), whether or
+    // not a build is then published; once a page load.
+    startedPublish() {
+        return this.countOnce(FunnelEvent.PUBLISH_START);
+    }
+
     keptBuilding() {
         return this.countOnce(FunnelEvent.KEEP_BUILDING);
     }
