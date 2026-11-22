@@ -2,7 +2,7 @@
 # Referência de controles
 
 <!-- languages -->
-[English](../ControlsReference.md) · [Deutsch](../de/ControlsReference.md) · [Español](../es/ControlsReference.md) · [Français](../fr/ControlsReference.md) · [Bahasa Indonesia](../id/ControlsReference.md) · [日本語](../ja/ControlsReference.md) · [한국어](../ko/ControlsReference.md) · **Português (Brasil)**
+[English](../ControlsReference.md) · [Deutsch](../de/ControlsReference.md) · [Español](../es/ControlsReference.md) · [Français](../fr/ControlsReference.md) · [Bahasa Indonesia](../id/ControlsReference.md) · [日本語](../ja/ControlsReference.md) · [한국어](../ko/ControlsReference.md) · **Português (Brasil)** · [中文（简体）](../zh/ControlsReference.md)
 <!-- /languages -->
 
 Todas as interações de mouse e teclado do ForkBuild; celulares e tablets

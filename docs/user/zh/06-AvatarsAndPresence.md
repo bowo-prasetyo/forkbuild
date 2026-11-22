@@ -1,5 +1,9 @@
-<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: 0000000000000000 -->
+<!-- translation-of: docs/user/06-AvatarsAndPresence.md source-hash: d3cda869f61d33ed -->
 # 06 — 化身与在线状态
+
+<!-- languages -->
+[English](../06-AvatarsAndPresence.md) · [Deutsch](../de/06-AvatarsAndPresence.md) · [Español](../es/06-AvatarsAndPresence.md) · [Français](../fr/06-AvatarsAndPresence.md) · [Bahasa Indonesia](../id/06-AvatarsAndPresence.md) · [日本語](../ja/06-AvatarsAndPresence.md) · [한국어](../ko/06-AvatarsAndPresence.md) · [Português (Brasil)](../pt-BR/06-AvatarsAndPresence.md) · **中文（简体）**
+<!-- /languages -->
 
 你的**化身**是其他人在世界视图中看到的你——它的外观、位置以及移动方式。这份指南介绍如何自定义它、
 控制谁能看到它，以及与其他所有人的化身互动。

@@ -2,7 +2,7 @@
 # 08 — 채팅과 대화
 
 <!-- languages -->
-[English](../08-ChatAndConversations.md) · [Deutsch](../de/08-ChatAndConversations.md) · [Español](../es/08-ChatAndConversations.md) · [Français](../fr/08-ChatAndConversations.md) · [Bahasa Indonesia](../id/08-ChatAndConversations.md) · [日本語](../ja/08-ChatAndConversations.md) · **한국어** · [Português (Brasil)](../pt-BR/08-ChatAndConversations.md)
+[English](../08-ChatAndConversations.md) · [Deutsch](../de/08-ChatAndConversations.md) · [Español](../es/08-ChatAndConversations.md) · [Français](../fr/08-ChatAndConversations.md) · [Bahasa Indonesia](../id/08-ChatAndConversations.md) · [日本語](../ja/08-ChatAndConversations.md) · **한국어** · [Português (Brasil)](../pt-BR/08-ChatAndConversations.md) · [中文（简体）](../zh/08-ChatAndConversations.md)
 <!-- /languages -->
 
 > **고급.** 짓고, 공유하고, 리믹스하고, 친구와 돌아다니는 데 이 장은 필요

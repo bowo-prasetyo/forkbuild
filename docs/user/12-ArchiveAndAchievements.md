@@ -1,7 +1,7 @@
 # 12 — Archive & Achievements
 
 <!-- languages -->
-**English** · [Deutsch](de/12-ArchiveAndAchievements.md) · [Español](es/12-ArchiveAndAchievements.md) · [Français](fr/12-ArchiveAndAchievements.md) · [Bahasa Indonesia](id/12-ArchiveAndAchievements.md) · [日本語](ja/12-ArchiveAndAchievements.md) · [한국어](ko/12-ArchiveAndAchievements.md) · [Português (Brasil)](pt-BR/12-ArchiveAndAchievements.md)
+**English** · [Deutsch](de/12-ArchiveAndAchievements.md) · [Español](es/12-ArchiveAndAchievements.md) · [Français](fr/12-ArchiveAndAchievements.md) · [Bahasa Indonesia](id/12-ArchiveAndAchievements.md) · [日本語](ja/12-ArchiveAndAchievements.md) · [한국어](ko/12-ArchiveAndAchievements.md) · [Português (Brasil)](pt-BR/12-ArchiveAndAchievements.md) · [中文（简体）](zh/12-ArchiveAndAchievements.md)
 <!-- /languages -->
 
 > **Advanced.** You don't need this chapter to build, share, remix or walk

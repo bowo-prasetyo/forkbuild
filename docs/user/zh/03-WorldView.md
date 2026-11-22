@@ -1,5 +1,9 @@
-<!-- translation-of: docs/user/03-WorldView.md source-hash: 0000000000000000 -->
+<!-- translation-of: docs/user/03-WorldView.md source-hash: a59df140c51bc42f -->
 # 03 — 世界视图
+
+<!-- languages -->
+[English](../03-WorldView.md) · [Deutsch](../de/03-WorldView.md) · [Español](../es/03-WorldView.md) · [Français](../fr/03-WorldView.md) · [Bahasa Indonesia](../id/03-WorldView.md) · [日本語](../ja/03-WorldView.md) · [한국어](../ko/03-WorldView.md) · [Português (Brasil)](../pt-BR/03-WorldView.md) · **中文（简体）**
+<!-- /languages -->
 
 世界视图是一个共享的 3D 世界，**每个已发布的作品都并排立在这里**。你可以四处行走或飞行、
 寻找东西、看看别人搭了什么，还可以带上朋友。

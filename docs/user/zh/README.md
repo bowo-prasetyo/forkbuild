@@ -1,5 +1,9 @@
-<!-- translation-of: docs/user/README.md source-hash: 0000000000000000 -->
+<!-- translation-of: docs/user/README.md source-hash: 168564d162b23c2b -->
 # ForkBuild 用户文档
+
+<!-- languages -->
+[English](../README.md) · [Deutsch](../de/README.md) · [Español](../es/README.md) · [Français](../fr/README.md) · [Bahasa Indonesia](../id/README.md) · [日本語](../ja/README.md) · [한국어](../ko/README.md) · [Português (Brasil)](../pt-BR/README.md) · **中文（简体）**
+<!-- /languages -->
 
 在浏览器中使用 ForkBuild 的操作指南。第一次来？请从
 **[入门](01-GettingStarted.md)** 开始：从打开应用到走进你的第一个作品，只需五分钟。

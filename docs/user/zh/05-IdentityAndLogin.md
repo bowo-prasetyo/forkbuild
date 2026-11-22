@@ -1,5 +1,9 @@
-<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: 0000000000000000 -->
+<!-- translation-of: docs/user/05-IdentityAndLogin.md source-hash: ed66279f6cd72634 -->
 # 05 — 你的名字与身份
+
+<!-- languages -->
+[English](../05-IdentityAndLogin.md) · [Deutsch](../de/05-IdentityAndLogin.md) · [Español](../es/05-IdentityAndLogin.md) · [Français](../fr/05-IdentityAndLogin.md) · [Bahasa Indonesia](../id/05-IdentityAndLogin.md) · [日本語](../ja/05-IdentityAndLogin.md) · [한국어](../ko/05-IdentityAndLogin.md) · [Português (Brasil)](../pt-BR/05-IdentityAndLogin.md) · **中文（简体）**
+<!-- /languages -->
 
 > **高级。** 搭建、分享、改编或和朋友一起四处走走都不需要这一章：[开始玩的章节](README.md#开始玩按顺序阅读)
 > 已经涵盖了这些。想知道底层运作方式时再继续阅读。

@@ -1,5 +1,9 @@
-<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 0000000000000000 -->
+<!-- translation-of: docs/user/09-PublicationsAndEvidence.md source-hash: 7a94f288453a4fe2 -->
 # 09 — 签名记录与外部证据
+
+<!-- languages -->
+[English](../09-PublicationsAndEvidence.md) · [Deutsch](../de/09-PublicationsAndEvidence.md) · [Español](../es/09-PublicationsAndEvidence.md) · [Français](../fr/09-PublicationsAndEvidence.md) · [Bahasa Indonesia](../id/09-PublicationsAndEvidence.md) · [日本語](../ja/09-PublicationsAndEvidence.md) · [한국어](../ko/09-PublicationsAndEvidence.md) · [Português (Brasil)](../pt-BR/09-PublicationsAndEvidence.md) · **中文（简体）**
+<!-- /languages -->
 
 > **高级。** 搭建、分享、改编或和朋友一起四处走走都不需要这一章：[开始玩的章节](README.md#开始玩按顺序阅读)
 > 已经涵盖了这些。想知道底层运作方式时再继续阅读。

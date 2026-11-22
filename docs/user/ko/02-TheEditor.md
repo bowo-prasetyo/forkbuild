@@ -2,7 +2,7 @@
 # 02 — 에디터
 
 <!-- languages -->
-[English](../02-TheEditor.md) · [Deutsch](../de/02-TheEditor.md) · [Español](../es/02-TheEditor.md) · [Français](../fr/02-TheEditor.md) · [Bahasa Indonesia](../id/02-TheEditor.md) · [日本語](../ja/02-TheEditor.md) · **한국어** · [Português (Brasil)](../pt-BR/02-TheEditor.md)
+[English](../02-TheEditor.md) · [Deutsch](../de/02-TheEditor.md) · [Español](../es/02-TheEditor.md) · [Français](../fr/02-TheEditor.md) · [Bahasa Indonesia](../id/02-TheEditor.md) · [日本語](../ja/02-TheEditor.md) · **한국어** · [Português (Brasil)](../pt-BR/02-TheEditor.md) · [中文（简体）](../zh/02-TheEditor.md)
 <!-- /languages -->
 
 <!-- languages -->

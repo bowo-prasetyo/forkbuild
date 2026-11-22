@@ -1,5 +1,9 @@
-<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 0000000000000000 -->
+<!-- translation-of: docs/user/11-EvidenceAndStorage.md source-hash: 0cc0471bd48f8142 -->
 # 11 — 证据与存储
+
+<!-- languages -->
+[English](../11-EvidenceAndStorage.md) · [Deutsch](../de/11-EvidenceAndStorage.md) · [Español](../es/11-EvidenceAndStorage.md) · [Français](../fr/11-EvidenceAndStorage.md) · [Bahasa Indonesia](../id/11-EvidenceAndStorage.md) · [日本語](../ja/11-EvidenceAndStorage.md) · [한국어](../ko/11-EvidenceAndStorage.md) · [Português (Brasil)](../pt-BR/11-EvidenceAndStorage.md) · **中文（简体）**
+<!-- /languages -->
 
 > **高级。** 搭建、分享、改编或和朋友一起四处走走都不需要这一章：[开始玩的章节](README.md#开始玩按顺序阅读)
 > 已经涵盖了这些。想知道底层运作方式时再继续阅读。

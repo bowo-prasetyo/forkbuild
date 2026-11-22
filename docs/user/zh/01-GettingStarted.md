@@ -1,5 +1,9 @@
-<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 0000000000000000 -->
+<!-- translation-of: docs/user/01-GettingStarted.md source-hash: 7ea2df22c95dd572 -->
 # 01 — 入门
+
+<!-- languages -->
+[English](../01-GettingStarted.md) · [Deutsch](../de/01-GettingStarted.md) · [Español](../es/01-GettingStarted.md) · [Français](../fr/01-GettingStarted.md) · [Bahasa Indonesia](../id/01-GettingStarted.md) · [日本語](../ja/01-GettingStarted.md) · [한국어](../ko/01-GettingStarted.md) · [Português (Brasil)](../pt-BR/01-GettingStarted.md) · **中文（简体）**
+<!-- /languages -->
 
 欢迎！这份指南会带你在大约五分钟内，从“刚打开应用”到“我搭出了东西”。
 开始时不需要账户、不需要下载，也不需要名字：在你选择分享之前，一切都保存在你的设备上。

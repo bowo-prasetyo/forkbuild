@@ -1,5 +1,9 @@
-<!-- translation-of: docs/user/12-ArchiveAndAchievements.md source-hash: 0000000000000000 -->
+<!-- translation-of: docs/user/12-ArchiveAndAchievements.md source-hash: 40a1d36fb48cc3e7 -->
 # 12 — 存档与成就
+
+<!-- languages -->
+[English](../12-ArchiveAndAchievements.md) · [Deutsch](../de/12-ArchiveAndAchievements.md) · [Español](../es/12-ArchiveAndAchievements.md) · [Français](../fr/12-ArchiveAndAchievements.md) · [Bahasa Indonesia](../id/12-ArchiveAndAchievements.md) · [日本語](../ja/12-ArchiveAndAchievements.md) · [한국어](../ko/12-ArchiveAndAchievements.md) · [Português (Brasil)](../pt-BR/12-ArchiveAndAchievements.md) · **中文（简体）**
+<!-- /languages -->
 
 > **高级。** 搭建、分享、改编或和朋友一起四处走走都不需要这一章：[开始玩的章节](README.md#开始玩按顺序阅读)
 > 已经涵盖了这些。想知道底层运作方式时再继续阅读。

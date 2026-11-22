@@ -2,7 +2,7 @@
 # 01 — 시작하기
 
 <!-- languages -->
-[English](../01-GettingStarted.md) · [Deutsch](../de/01-GettingStarted.md) · [Español](../es/01-GettingStarted.md) · [Français](../fr/01-GettingStarted.md) · [Bahasa Indonesia](../id/01-GettingStarted.md) · [日本語](../ja/01-GettingStarted.md) · **한국어** · [Português (Brasil)](../pt-BR/01-GettingStarted.md)
+[English](../01-GettingStarted.md) · [Deutsch](../de/01-GettingStarted.md) · [Español](../es/01-GettingStarted.md) · [Français](../fr/01-GettingStarted.md) · [Bahasa Indonesia](../id/01-GettingStarted.md) · [日本語](../ja/01-GettingStarted.md) · **한국어** · [Português (Brasil)](../pt-BR/01-GettingStarted.md) · [中文（简体）](../zh/01-GettingStarted.md)
 <!-- /languages -->
 
 환영합니다! 이 안내를 따라가면 “앱을 막 열었다”에서 “무언가를 지었다”까지

@@ -3,7 +3,8 @@
 ForkBuild can be shown in another language: every page's text is a message
 (`ui/i18n/`), chosen on the **Language** page, with a pseudo-locale for
 finding text that isn't ready. It ships in English, German, Spanish,
-French, Bahasa Indonesia, Japanese, Korean and Brazilian Portuguese; the table below lists the few things that stay in the language they were written
+French, Bahasa Indonesia, Japanese, Korean, Brazilian Portuguese and Simplified
+Chinese; the table below lists the few things that stay in the language they were written
 in.
 
 ## Languages
@@ -18,6 +19,7 @@ in.
 | 日本語 (Japanese) | `ja` | `ui/i18n/messages/ja.js`, complete (see "Japanese" below) |
 | 한국어 (Korean) | `ko` | `ui/i18n/messages/ko.js`, complete (see "Korean" below) |
 | Português (Brasil) (Brazilian Portuguese) | `pt-BR` | `ui/i18n/messages/pt-BR.js`, complete (see "Brazilian Portuguese" below) |
+| 中文（简体） (Simplified Chinese) | `zh` | `ui/i18n/messages/zh.js`, complete (see "Chinese" below) |
 
 ## What is ready
 
@@ -413,6 +415,52 @@ resident's `{where}` is a place phrase ("북쪽으로 약 3.2km 떨어진 곳") 
 sentence follows with 에. Compass points are 북, 북동, 동, 남동, 남, 남서, 서,
 북서, and a direction before a distance takes 쪽 ("서쪽 40m").
 
+## Chinese
+
+`ui/i18n/messages/zh.js` translates every key into Simplified Chinese, and
+is chosen for every Chinese browser (`zh`, `zh-CN`, `zh-SG`, and also
+`zh-TW` and `zh-HK` until there is a Traditional Chinese translation). It
+uses plain, friendly mainland usage: sentences in a neutral 你 register and
+short verb phrases for buttons ("保存", "导出蓝图"), with full-width
+punctuation (，。：？！（）) and “” for quoted titles. A half-width space
+separates Chinese from Latin letters and numbers ("放置 3 块积木",
+"ForkBuild 能离线使用吗"). Network and product names (ForkBuild, Arweave,
+Nostr, IPFS, Steem, Bitcoin, Base, Kubo, WebRTC, STUN, TURN) stay in Latin
+letters, and protocol words use their usual Chinese terms (网关, 中继, 端点,
+快照, 哈希, 交易, 确认). The words it uses for ForkBuild's own ideas:
+
+| English | Chinese |
+|---|---|
+| World | 世界 |
+| brick | 积木 |
+| build (a creation) | 作品 |
+| structure / blueprint | 结构 / 蓝图 |
+| My Structures / Build Library | 我的结构 / 积木库 |
+| publish | 发布 |
+| Shared World (a World's signed record) | 共享世界 |
+| Signed Claim / Signed Records | 签名声明 / 签名记录 |
+| remix (fork) | 改编 (…的改编); a copy is 副本 |
+| peer | 对等节点 |
+| identity / passphrase | 身份 / 密码短语 |
+| landmark / region / resident | 地标 / 区域 / 居民 |
+| placement / place | 放置 / 放置 |
+| anchor / anchoring | 锚定 |
+| undo / redo | 撤销 / 重做 |
+| wallet / gateway / relay | 钱包 / 网关 / 中继 |
+
+Chinese has one plural form, so plural messages give only `other`, with a
+measure word after the number (`{count} 块积木`, `{count} 个`, `{count} 条`,
+`{count} 人`); the undo labels also give `=1` ("放置积木" rather than "放置
+1 块积木"). An undo label reads "撤销移动 12,000 块积木". A place comes
+before what is there, so a resident's `{where}` is a place phrase
+("北边约 3.2 公里处") that the sentence follows with 有. Compass points are
+北, 东北, 东, 东南, 南, 西南, 西, 西北, and distances are written with
+米 / 公里. Voice and palette word lists (`plainCommand.words.*`,
+`worldVoice.words.*`, `buildLibrary.searchIgnoredWords`,
+`help.ignoredWords`) are comma-separated with ASCII commas, as in every
+language; Chinese is matched without spaces, so a list holds whole words and
+the pairs of letters that question words are made of.
+
 ## Translating the user guide
 
 The user guide in `docs/user/` is translated page by page. A translation
@@ -421,8 +469,8 @@ lives in `docs/user/<code>/` under the English page's file name
 is translated there as well (`docs/user/ja/Privacy.md`). The rest of
 `docs/` is for developers and stays in English.
 
-Translated so far, in German, Spanish, French, Indonesian, Japanese, Korean
-and Brazilian Portuguese: every page of the
+Translated so far, in German, Spanish, French, Indonesian, Japanese, Korean,
+Brazilian Portuguese and Simplified Chinese: every page of the
 user guide, and `Privacy.md`.
 
 Writing a translation:
@@ -435,14 +483,14 @@ Writing a translation:
   **Sauvegarder dans un fichier**, `id.js`:
   **Cadangkan ke File**, `ja.js`: **ファイルにバックアップ**, `ko.js`:
   **파일로 백업**, `pt-BR.js`:
-  **Fazer backup em um arquivo**). The word lists under "German",
-  "Spanish", "French", "Indonesian", "Japanese", "Korean" and "Brazilian Portuguese" above
+  **Fazer backup em um arquivo**, `zh.js`: **备份到文件**). The word lists under "German",
+  "Spanish", "French", "Indonesian", "Japanese", "Korean", "Brazilian Portuguese" and "Chinese" above
   apply here too.
 - Text the app shows only in English (a publish error from `application/`,
   say) stays in English, with a translation beside it.
 - Link to the translated page when there is one (`FAQ.md`), and to the
   English otherwise (`../02-TheEditor.md`), marked as English: "(Englisch)",
-  "(en inglés)", "(en anglais)", "(bahasa Inggris)", "（英語）", "(영어)", "(em inglês)". An anchor into a translated page is made from its
+  "(en inglés)", "(en anglais)", "(bahasa Inggris)", "（英語）", "(영어)", "(em inglês)", "（英文）". An anchor into a translated page is made from its
   translated heading, the way GitHub makes it: `ControlsReference.md#タッチ画面`.
 - Start the page with the line that names its English original. The hash
   is filled in by `--stamp`:

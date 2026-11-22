@@ -1,5 +1,9 @@
-<!-- translation-of: docs/user/Distribution.md source-hash: 0000000000000000 -->
+<!-- translation-of: docs/user/Distribution.md source-hash: 8a0b3b5d89aebe19 -->
 # 分发你的作品
+
+<!-- languages -->
+[English](../Distribution.md) · [Deutsch](../de/Distribution.md) · [Español](../es/Distribution.md) · [Français](../fr/Distribution.md) · [Bahasa Indonesia](../id/Distribution.md) · [日本語](../ja/Distribution.md) · [한국어](../ko/Distribution.md) · [Português (Brasil)](../pt-BR/Distribution.md) · **中文（简体）**
+<!-- /languages -->
 
 你在 ForkBuild 中做的一切都从你自己的设备开始。**分发**会把它放到去中心化网络上，让没有与你连接的人也能找到它、获取它，
 并确认它是你的。它是可选的，而且与发布是两回事。

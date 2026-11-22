@@ -2,7 +2,7 @@
 # 대화형 변환 기즈모
 
 <!-- languages -->
-[English](../InteractiveTransformGizmo.md) · [Deutsch](../de/InteractiveTransformGizmo.md) · [Español](../es/InteractiveTransformGizmo.md) · [Français](../fr/InteractiveTransformGizmo.md) · [Bahasa Indonesia](../id/InteractiveTransformGizmo.md) · [日本語](../ja/InteractiveTransformGizmo.md) · **한국어** · [Português (Brasil)](../pt-BR/InteractiveTransformGizmo.md)
+[English](../InteractiveTransformGizmo.md) · [Deutsch](../de/InteractiveTransformGizmo.md) · [Español](../es/InteractiveTransformGizmo.md) · [Français](../fr/InteractiveTransformGizmo.md) · [Bahasa Indonesia](../id/InteractiveTransformGizmo.md) · [日本語](../ja/InteractiveTransformGizmo.md) · **한국어** · [Português (Brasil)](../pt-BR/InteractiveTransformGizmo.md) · [中文（简体）](../zh/InteractiveTransformGizmo.md)
 <!-- /languages -->
 
 <!-- languages -->

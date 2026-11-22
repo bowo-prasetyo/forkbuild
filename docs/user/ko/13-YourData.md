@@ -2,7 +2,7 @@
 # 13 — 내 데이터
 
 <!-- languages -->
-[English](../13-YourData.md) · [Deutsch](../de/13-YourData.md) · [Español](../es/13-YourData.md) · [Français](../fr/13-YourData.md) · [Bahasa Indonesia](../id/13-YourData.md) · [日本語](../ja/13-YourData.md) · **한국어** · [Português (Brasil)](../pt-BR/13-YourData.md)
+[English](../13-YourData.md) · [Deutsch](../de/13-YourData.md) · [Español](../es/13-YourData.md) · [Français](../fr/13-YourData.md) · [Bahasa Indonesia](../id/13-YourData.md) · [日本語](../ja/13-YourData.md) · **한국어** · [Português (Brasil)](../pt-BR/13-YourData.md) · [中文（简体）](../zh/13-YourData.md)
 <!-- /languages -->
 
 <!-- languages -->

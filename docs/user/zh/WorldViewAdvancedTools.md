@@ -1,5 +1,9 @@
-<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: 0000000000000000 -->
+<!-- translation-of: docs/user/WorldViewAdvancedTools.md source-hash: d67f6b7ce2344c01 -->
 # 世界视图：高级工具
+
+<!-- languages -->
+[English](../WorldViewAdvancedTools.md) · [Deutsch](../de/WorldViewAdvancedTools.md) · [Español](../es/WorldViewAdvancedTools.md) · [Français](../fr/WorldViewAdvancedTools.md) · [Bahasa Indonesia](../id/WorldViewAdvancedTools.md) · [日本語](../ja/WorldViewAdvancedTools.md) · [한국어](../ko/WorldViewAdvancedTools.md) · [Português (Brasil)](../pt-BR/WorldViewAdvancedTools.md) · **中文（简体）**
+<!-- /languages -->
 
 本页介绍[世界视图](03-WorldView.md)中只有在你勾选侧面板底部的**显示高级工具**后才会出现的部分。
 它们针对的是世界背后的网络：作品放在哪里、存储在哪里，以及其他人在附近公告了什么。

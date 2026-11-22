@@ -1,7 +1,7 @@
 # 10 — Network Settings
 
 <!-- languages -->
-**English** · [Deutsch](de/10-NetworkSettings.md) · [Español](es/10-NetworkSettings.md) · [Français](fr/10-NetworkSettings.md) · [Bahasa Indonesia](id/10-NetworkSettings.md) · [日本語](ja/10-NetworkSettings.md) · [한국어](ko/10-NetworkSettings.md) · [Português (Brasil)](pt-BR/10-NetworkSettings.md)
+**English** · [Deutsch](de/10-NetworkSettings.md) · [Español](es/10-NetworkSettings.md) · [Français](fr/10-NetworkSettings.md) · [Bahasa Indonesia](id/10-NetworkSettings.md) · [日本語](ja/10-NetworkSettings.md) · [한국어](ko/10-NetworkSettings.md) · [Português (Brasil)](pt-BR/10-NetworkSettings.md) · [中文（简体）](zh/10-NetworkSettings.md)
 <!-- /languages -->
 
 > **Advanced.** You don't need this chapter to build, share, remix or walk

@@ -2,7 +2,7 @@
 # 03 — 월드 보기
 
 <!-- languages -->
-[English](../03-WorldView.md) · [Deutsch](../de/03-WorldView.md) · [Español](../es/03-WorldView.md) · [Français](../fr/03-WorldView.md) · [Bahasa Indonesia](../id/03-WorldView.md) · [日本語](../ja/03-WorldView.md) · **한국어** · [Português (Brasil)](../pt-BR/03-WorldView.md)
+[English](../03-WorldView.md) · [Deutsch](../de/03-WorldView.md) · [Español](../es/03-WorldView.md) · [Français](../fr/03-WorldView.md) · [Bahasa Indonesia](../id/03-WorldView.md) · [日本語](../ja/03-WorldView.md) · **한국어** · [Português (Brasil)](../pt-BR/03-WorldView.md) · [中文（简体）](../zh/03-WorldView.md)
 <!-- /languages -->
 
 <!-- stale -->

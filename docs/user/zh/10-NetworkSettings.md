@@ -1,5 +1,9 @@
-<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 0000000000000000 -->
+<!-- translation-of: docs/user/10-NetworkSettings.md source-hash: 22cbbdb4844c4278 -->
 # 10 — 网络设置
+
+<!-- languages -->
+[English](../10-NetworkSettings.md) · [Deutsch](../de/10-NetworkSettings.md) · [Español](../es/10-NetworkSettings.md) · [Français](../fr/10-NetworkSettings.md) · [Bahasa Indonesia](../id/10-NetworkSettings.md) · [日本語](../ja/10-NetworkSettings.md) · [한국어](../ko/10-NetworkSettings.md) · [Português (Brasil)](../pt-BR/10-NetworkSettings.md) · **中文（简体）**
+<!-- /languages -->
 
 > **高级。** 搭建、分享、改编或和朋友一起四处走走都不需要这一章：[开始玩的章节](README.md#开始玩按顺序阅读)
 > 已经涵盖了这些。想知道底层运作方式时再继续阅读。

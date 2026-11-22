@@ -1,5 +1,9 @@
-<!-- translation-of: docs/user/13-YourData.md source-hash: 0000000000000000 -->
+<!-- translation-of: docs/user/13-YourData.md source-hash: 33341ea95fd2e843 -->
 # 13 — 你的数据
+
+<!-- languages -->
+[English](../13-YourData.md) · [Deutsch](../de/13-YourData.md) · [Español](../es/13-YourData.md) · [Français](../fr/13-YourData.md) · [Bahasa Indonesia](../id/13-YourData.md) · [日本語](../ja/13-YourData.md) · [한국어](../ko/13-YourData.md) · [Português (Brasil)](../pt-BR/13-YourData.md) · **中文（简体）**
+<!-- /languages -->
 
 ForkBuild 没有账户，也没有保管你作品的服务器。它保存的一切都存在于此设备上的这个浏览器中：你的作品、身份及其私钥、
 结构、发布内容、对等节点和好友、聊天记录和设置。**在浏览器中清除本网站的数据会永久删除全部内容**，

@@ -1,5 +1,9 @@
-<!-- translation-of: docs/user/02-TheEditor.md source-hash: 0000000000000000 -->
+<!-- translation-of: docs/user/02-TheEditor.md source-hash: 97d2423119ec7afb -->
 # 02 — 编辑器
+
+<!-- languages -->
+[English](../02-TheEditor.md) · [Deutsch](../de/02-TheEditor.md) · [Español](../es/02-TheEditor.md) · [Français](../fr/02-TheEditor.md) · [Bahasa Indonesia](../id/02-TheEditor.md) · [日本語](../ja/02-TheEditor.md) · [한국어](../ko/02-TheEditor.md) · [Português (Brasil)](../pt-BR/02-TheEditor.md) · **中文（简体）**
+<!-- /languages -->
 
 编辑器是你搭建的地方。这份指南介绍各种工具、如何选择和变换积木，以及如何用组来整理你的作品。
 

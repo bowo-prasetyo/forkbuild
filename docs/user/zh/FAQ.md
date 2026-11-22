@@ -1,5 +1,9 @@
-<!-- translation-of: docs/user/FAQ.md source-hash: 0000000000000000 -->
+<!-- translation-of: docs/user/FAQ.md source-hash: f174ea3c3d70e078 -->
 # 常见问题
+
+<!-- languages -->
+[English](../FAQ.md) · [Deutsch](../de/FAQ.md) · [Español](../es/FAQ.md) · [Français](../fr/FAQ.md) · [Bahasa Indonesia](../id/FAQ.md) · [日本語](../ja/FAQ.md) · [한국어](../ko/FAQ.md) · [Português (Brasil)](../pt-BR/FAQ.md) · **中文（简体）**
+<!-- /languages -->
 
 人们最常遇到的问题的简短回答，每个都链接到有完整说明的指南。
 

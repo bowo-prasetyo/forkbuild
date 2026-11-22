@@ -1,5 +1,9 @@
-<!-- translation-of: docs/user/ControlsReference.md source-hash: 0000000000000000 -->
+<!-- translation-of: docs/user/ControlsReference.md source-hash: 91f6d371dea195ae -->
 # 操作参考
+
+<!-- languages -->
+[English](../ControlsReference.md) · [Deutsch](../de/ControlsReference.md) · [Español](../es/ControlsReference.md) · [Français](../fr/ControlsReference.md) · [Bahasa Indonesia](../id/ControlsReference.md) · [日本語](../ja/ControlsReference.md) · [한국어](../ko/ControlsReference.md) · [Português (Brasil)](../pt-BR/ControlsReference.md) · **中文（简体）**
+<!-- /languages -->
 
 ForkBuild 中的每一种鼠标和键盘操作；手机和平板请见[触屏](#触屏)。世界视图用于环顾和导航；
 所有搭建操作（用于编辑的选择、变换、组、剪贴板、放置和命令面板）都只在编辑器中有效。

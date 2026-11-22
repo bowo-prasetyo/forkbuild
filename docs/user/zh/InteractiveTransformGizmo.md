@@ -1,5 +1,9 @@
-<!-- translation-of: docs/user/InteractiveTransformGizmo.md source-hash: 0000000000000000 -->
+<!-- translation-of: docs/user/InteractiveTransformGizmo.md source-hash: abe609dc8dec857e -->
 # 交互式变换操纵器
+
+<!-- languages -->
+[English](../InteractiveTransformGizmo.md) · [Deutsch](../de/InteractiveTransformGizmo.md) · [Español](../es/InteractiveTransformGizmo.md) · [Français](../fr/InteractiveTransformGizmo.md) · [Bahasa Indonesia](../id/InteractiveTransformGizmo.md) · [日本語](../ja/InteractiveTransformGizmo.md) · [한국어](../ko/InteractiveTransformGizmo.md) · [Português (Brasil)](../pt-BR/InteractiveTransformGizmo.md) · **中文（简体）**
+<!-- /languages -->
 
 每当在编辑器中选中积木时，所选内容的轴心处就会出现一个操纵器。拖动它的手柄会移动或旋转所选内容，并实时预览；
 松开会把更改确认为**一步撤销**。在编辑器中选中单个[结构实例](02-TheEditor.md#结构实例一个实时引用)时，

@@ -1,7 +1,7 @@
 # Distributing Your Work
 
 <!-- languages -->
-**English** · [Deutsch](de/Distribution.md) · [Español](es/Distribution.md) · [Français](fr/Distribution.md) · [Bahasa Indonesia](id/Distribution.md) · [日本語](ja/Distribution.md) · [한국어](ko/Distribution.md) · [Português (Brasil)](pt-BR/Distribution.md)
+**English** · [Deutsch](de/Distribution.md) · [Español](es/Distribution.md) · [Français](fr/Distribution.md) · [Bahasa Indonesia](id/Distribution.md) · [日本語](ja/Distribution.md) · [한국어](ko/Distribution.md) · [Português (Brasil)](pt-BR/Distribution.md) · [中文（简体）](zh/Distribution.md)
 <!-- /languages -->
 
 Everything you make in ForkBuild starts on your own device.

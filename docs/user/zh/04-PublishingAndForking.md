@@ -1,5 +1,9 @@
-<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 0000000000000000 -->
+<!-- translation-of: docs/user/04-PublishingAndForking.md source-hash: 0014d74c59859c59 -->
 # 04 — 发布与改编
+
+<!-- languages -->
+[English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · [Español](../es/04-PublishingAndForking.md) · [Français](../fr/04-PublishingAndForking.md) · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · [한국어](../ko/04-PublishingAndForking.md) · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md) · **中文（简体）**
+<!-- /languages -->
 
 这是 ForkBuild 的核心。**发布**把你的作品分享给全世界。**改编**让任何人都能为一个作品制作自己的副本，
 并在此基础上继续发展，同时保留它的完整历史。（开发者文档把改编称为 *fork*，ForkBuild 的名字就来源于此。）
