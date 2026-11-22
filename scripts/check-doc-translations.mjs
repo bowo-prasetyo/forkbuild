@@ -71,6 +71,11 @@ export const LANGUAGES = Object.freeze([
         code: 'pt-BR',
         name: 'Português (Brasil)',
         staleBanner: '> **Nota:** A versão em inglês desta página mudou desde a tradução, então esta tradução pode estar desatualizada. Consulte a [versão em inglês]({source}).'
+    }),
+    Object.freeze({
+        code: 'zh',
+        name: '中文（简体）',
+        staleBanner: '> **注意：** 本页的英文版在翻译之后有过修改，因此这份译文可能已经过时。请参阅[英文版]({source})。'
     })
 ]);
 

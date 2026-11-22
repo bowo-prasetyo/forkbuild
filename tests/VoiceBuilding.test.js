@@ -391,9 +391,10 @@ function workerPair(runtimeFor) {
         id: [['bawa aku ke kincir tua', 'goTo:mill'], ['pulang', 'home'], ['matikan suara', 'soundOff'], ['nyalakan suara', 'soundOn'], ['orang pertama', 'firstPerson'], ['urungkan', 'undo']],
         ja: [['古い水車小屋に連れて行って', 'goTo:mill'], ['ホームに戻って', 'home'], ['ミュート', 'soundOff'], ['ミュート解除', 'soundOn'], ['一人称', 'firstPerson'], ['1人称にして', 'firstPerson'], ['３人称', 'thirdPerson'], ['元に戻して', 'undo']],
         ko: [['오래된 물레방아로 데려가 줘', 'goTo:mill'], ['홈으로', 'home'], ['음소거', 'soundOff'], ['음소거 해제', 'soundOn'], ['1인칭', 'firstPerson'], ['실행 취소', 'undo']],
-        'pt-BR': [['me leve ao moinho velho', 'goTo:mill'], ['para casa', 'home'], ['sem som', 'soundOff'], ['liga o som', 'soundOn'], ['terceira pessoa', 'thirdPerson'], ['desfazer', 'undo']]
+        'pt-BR': [['me leve ao moinho velho', 'goTo:mill'], ['para casa', 'home'], ['sem som', 'soundOff'], ['liga o som', 'soundOn'], ['terceira pessoa', 'thirdPerson'], ['desfazer', 'undo']],
+        zh: [['带我去老磨坊', 'goTo:mill'], ['回家', 'home'], ['静音', 'soundOff'], ['打开声音', 'soundOn'], ['第一人称', 'firstPerson'], ['鸟瞰', 'birdEye'], ['撤销', 'undo']]
     };
-    const translated = { de: 'Alte Mühle', es: 'Molino viejo', fr: 'Vieux moulin', id: 'Kincir tua', ja: '古い水車小屋', ko: '오래된 물레방아', 'pt-BR': 'Moinho velho' };
+    const translated = { de: 'Alte Mühle', es: 'Molino viejo', fr: 'Vieux moulin', id: 'Kincir tua', ja: '古い水車小屋', ko: '오래된 물레방아', 'pt-BR': 'Moinho velho', zh: '老磨坊' };
     for (const [code, list] of Object.entries(cases)) {
         await setAppLocale(code);
         const local = [{ id: 'origin', title: 'Origin' }, { id: 'mill', title: translated[code] }];

@@ -122,10 +122,11 @@ const PLAIN_SAID = {
     id: ["buat atap jadi merah", "bisa cat pintu jadi cokelat", "singkirkan semua pohon", "pilih setiap jendela", "cat pagar jadi putih", "hapus lampu", "warnai cerobong jadi abu-abu tua", "sorot tangga", "cat rumput jadi kuning", "cat semuanya biru", "hapus batu", "cat semak jadi hijau muda", "pilih semua meja", "cat ini oranye", "putar atap", "bagaimana cara menyimpan", "buat lebih besar", "tolong cat lengkungan jadi emas"],
     ja: ["屋根を赤にして", "ドアを茶色に塗ってくれる", "木を全部消して", "窓をすべて選んで", "柵を白く塗って", "ランプを削除", "煙突を濃い灰色に塗る", "階段を選択", "芝生を黄色にして", "全部青く塗って", "岩を消して", "茂みを黄緑に塗って", "テーブルを全部選んで", "これをオレンジに塗って", "屋根を回転して", "保存のしかた", "もっと大きくして", "アーチを金色に塗ってください"],
     ko: ["지붕을 빨간색으로 해줘", "문을 갈색으로 칠해 줄래", "나무를 전부 지워", "창문을 모두 골라", "울타리를 하얗게 칠해", "램프를 삭제해", "굴뚝을 짙은 회색으로 칠해", "계단을 선택해", "잔디를 노랗게 칠해", "전부 파랗게 칠해", "바위를 삭제해", "덤불을 연두색으로 칠해", "테이블을 모두 선택해", "이거 주황색으로 칠해", "지붕을 회전해", "저장하는 방법", "더 크게 해줘", "아치를 금색으로 칠해 주세요"],
-    'pt-BR': ["deixa o telhado vermelho", "pode pintar as portas de marrom", "tira todas as árvores", "seleciona cada janela", "pinta a cerca de branco", "apaga as lanternas", "pinta as chaminés de cinza escuro", "destaca as escadas", "pinta a grama de amarelo", "pinta tudo de azul", "apaga as pedras", "pinta os arbustos de verde claro", "escolhe todas as mesas", "pinta isso de laranja", "gira o telhado", "como eu salvo", "deixa maior", "por favor pinta os arcos de dourado"]
+    'pt-BR': ["deixa o telhado vermelho", "pode pintar as portas de marrom", "tira todas as árvores", "seleciona cada janela", "pinta a cerca de branco", "apaga as lanternas", "pinta as chaminés de cinza escuro", "destaca as escadas", "pinta a grama de amarelo", "pinta tudo de azul", "apaga as pedras", "pinta os arbustos de verde claro", "escolhe todas as mesas", "pinta isso de laranja", "gira o telhado", "como eu salvo", "deixa maior", "por favor pinta os arcos de dourado"],
+    zh: ["把屋顶弄成红色", "你能把门涂成棕色吗", "去掉所有的树", "选择每扇窗户", "把栅栏刷成白色", "删掉灯", "把烟囱涂成深灰色", "高亮楼梯", "把草坪变成黄色", "全部涂成蓝色", "删除岩石", "把灌木涂成浅绿色", "选出所有桌子", "把这个涂成橙色", "旋转屋顶", "怎么保存", "把它弄大一点", "请把拱门涂成金色"]
 };
 // Measured 2026-10-28, after the words these found missing were added.
-const PLAIN_FLOOR = { en: 18, de: 18, es: 18, fr: 18, id: 18, ja: 18, ko: 18, 'pt-BR': 18 };
+const PLAIN_FLOOR = { en: 18, de: 18, es: 18, fr: 18, id: 18, ja: 18, ko: 18, 'pt-BR': 18, zh: 18 };
 
 {
     assert(CODES.every((code) => PLAIN_SAID[code]?.length === PLAIN_PLANS.length), '3. every request is said in every language');
@@ -177,11 +178,12 @@ const LIBRARY_ASKED = {
     id: ["tempat untuk kuda saya", "tempat menyimpan gandum", "menara untuk berjaga", "bangunan tempat warga desa berkumpul", "tempat mengambil air", "lampu yang memandu kapal di laut", "tempat menambatkan perahu", "gereja kecil", "benteng untuk raja", "tempat menggiling tepung", "sesuatu untuk duduk", "api untuk menghangatkan badan", "naik ke loteng", "tempat menyimpan anggur", "batu untuk taman", "tempat untuk makan"],
     ja: ["馬を飼う場所", "穀物をしまう場所", "見張りをする塔", "村の人が集まる建物", "水をくむ場所", "海の船を導く明かり", "ボートをつなぐ場所", "小さな教会", "王様のための要塞", "小麦粉をひく場所", "座るもの", "暖まるための火", "屋根裏に登る", "ワインをしまうもの", "庭に置く石", "ご飯を食べるところ"],
     ko: ["말을 기르는 곳", "곡식을 저장하는 곳", "망을 보는 탑", "마을 사람들이 모이는 건물", "물을 긷는 곳", "바다의 배를 안내하는 불빛", "배를 매어 두는 곳", "작은 교회", "왕을 위한 요새", "밀가루를 빻는 곳", "앉을 것", "몸을 녹일 불", "다락에 올라가기", "와인을 보관할 것", "정원에 둘 돌", "밥 먹을 곳"],
-    'pt-BR': ["um lugar para os meus cavalos", "um lugar para guardar grãos", "uma torre para vigiar", "um prédio onde a vila se reúne", "um lugar para pegar água", "uma luz que guia os navios no mar", "um lugar para amarrar um barco", "uma igreja pequena", "uma fortaleza para um rei", "um lugar para moer farinha", "algo para sentar", "um fogo para se aquecer", "subir até o sótão", "algo para guardar vinho", "uma pedra para o jardim", "um lugar para fazer as refeições"]
+    'pt-BR': ["um lugar para os meus cavalos", "um lugar para guardar grãos", "uma torre para vigiar", "um prédio onde a vila se reúne", "um lugar para pegar água", "uma luz que guia os navios no mar", "um lugar para amarrar um barco", "uma igreja pequena", "uma fortaleza para um rei", "um lugar para moer farinha", "algo para sentar", "um fogo para se aquecer", "subir até o sótão", "algo para guardar vinho", "uma pedra para o jardim", "um lugar para fazer as refeições"],
+    zh: ["一个养马的地方", "一个储存谷物的地方", "一座用来站岗的塔", "村民聚会的建筑", "一个打水的地方", "在海上为船只引路的灯", "一个停船的地方", "一座小教堂", "国王的要塞", "一个磨面粉的地方", "坐的东西", "取暖的火", "爬上阁楼", "储存葡萄酒的东西", "放在花园里的石头", "吃饭的地方"]
 };
 // Measured 2026-10-28, after wine and meals were added to the Barrel's and
 // the Table's words.
-const LIBRARY_FLOOR = { en: 14, de: 15, es: 16, fr: 16, id: 15, ja: 15, ko: 16, 'pt-BR': 16 };
+const LIBRARY_FLOOR = { en: 14, de: 15, es: 16, fr: 16, id: 15, ja: 15, ko: 16, 'pt-BR': 16, zh: 16 };
 
 {
     assert(CODES.every((code) => LIBRARY_ASKED[code]?.length === LIBRARY_WANTED.length), '6. every description is asked in every language');

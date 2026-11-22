@@ -13,7 +13,7 @@ import { verdict, voiceReader } from '../scripts/voiceCommandOutcome.mjs';
 import { assert } from './support/Assert.js';
 
 {
-    assert(Object.keys(SAID).join() === 'en,de,es,fr,id,ja,ko,pt-BR', '1. every language the app speaks');
+    assert(Object.keys(SAID).join() === 'en,de,es,fr,id,ja,ko,pt-BR,zh', '1. every language the app speaks');
     assert(Object.values(SAID).every((texts) => texts.length === COMMANDS.length), '2. each says every command');
     assert(Object.keys(FRESH_SAID).join() === Object.keys(SAID).join() && Object.values(FRESH_SAID).every((texts) => texts.length === COMMANDS.length),
         '2a. the fresh phrasing too, in every language');
