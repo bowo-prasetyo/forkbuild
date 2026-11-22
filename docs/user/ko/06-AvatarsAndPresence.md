@@ -2,7 +2,7 @@
 # 06 — 아바타와 접속 상태
 
 <!-- languages -->
-[English](../06-AvatarsAndPresence.md) · [Deutsch](../de/06-AvatarsAndPresence.md) · [Español](../es/06-AvatarsAndPresence.md) · [Français](../fr/06-AvatarsAndPresence.md) · [Bahasa Indonesia](../id/06-AvatarsAndPresence.md) · [日本語](../ja/06-AvatarsAndPresence.md) · **한국어** · [Português (Brasil)](../pt-BR/06-AvatarsAndPresence.md)
+[English](../06-AvatarsAndPresence.md) · [Deutsch](../de/06-AvatarsAndPresence.md) · [Español](../es/06-AvatarsAndPresence.md) · [Français](../fr/06-AvatarsAndPresence.md) · [Bahasa Indonesia](../id/06-AvatarsAndPresence.md) · [日本語](../ja/06-AvatarsAndPresence.md) · **한국어** · [Português (Brasil)](../pt-BR/06-AvatarsAndPresence.md) · [中文（简体）](../zh/06-AvatarsAndPresence.md)
 <!-- /languages -->
 
 <!-- languages -->

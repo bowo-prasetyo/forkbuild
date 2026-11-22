@@ -2,7 +2,7 @@
 # 12 — Arquivo e conquistas
 
 <!-- languages -->
-[English](../12-ArchiveAndAchievements.md) · [Deutsch](../de/12-ArchiveAndAchievements.md) · [Español](../es/12-ArchiveAndAchievements.md) · [Français](../fr/12-ArchiveAndAchievements.md) · [Bahasa Indonesia](../id/12-ArchiveAndAchievements.md) · [日本語](../ja/12-ArchiveAndAchievements.md) · [한국어](../ko/12-ArchiveAndAchievements.md) · **Português (Brasil)**
+[English](../12-ArchiveAndAchievements.md) · [Deutsch](../de/12-ArchiveAndAchievements.md) · [Español](../es/12-ArchiveAndAchievements.md) · [Français](../fr/12-ArchiveAndAchievements.md) · [Bahasa Indonesia](../id/12-ArchiveAndAchievements.md) · [日本語](../ja/12-ArchiveAndAchievements.md) · [한국어](../ko/12-ArchiveAndAchievements.md) · **Português (Brasil)** · [中文（简体）](../zh/12-ArchiveAndAchievements.md)
 <!-- /languages -->
 
 > **Avançado.** Você não precisa deste capítulo para construir, compartilhar,

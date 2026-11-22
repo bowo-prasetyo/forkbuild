@@ -2,7 +2,7 @@
 # ForkBuild 사용자 문서
 
 <!-- languages -->
-[English](../README.md) · [Deutsch](../de/README.md) · [Español](../es/README.md) · [Français](../fr/README.md) · [Bahasa Indonesia](../id/README.md) · [日本語](../ja/README.md) · **한국어** · [Português (Brasil)](../pt-BR/README.md)
+[English](../README.md) · [Deutsch](../de/README.md) · [Español](../es/README.md) · [Français](../fr/README.md) · [Bahasa Indonesia](../id/README.md) · [日本語](../ja/README.md) · **한국어** · [Português (Brasil)](../pt-BR/README.md) · [中文（简体）](../zh/README.md)
 <!-- /languages -->
 
 <!-- languages -->

@@ -2,7 +2,7 @@
 # 자주 묻는 질문
 
 <!-- languages -->
-[English](../FAQ.md) · [Deutsch](../de/FAQ.md) · [Español](../es/FAQ.md) · [Français](../fr/FAQ.md) · [Bahasa Indonesia](../id/FAQ.md) · [日本語](../ja/FAQ.md) · **한국어** · [Português (Brasil)](../pt-BR/FAQ.md)
+[English](../FAQ.md) · [Deutsch](../de/FAQ.md) · [Español](../es/FAQ.md) · [Français](../fr/FAQ.md) · [Bahasa Indonesia](../id/FAQ.md) · [日本語](../ja/FAQ.md) · **한국어** · [Português (Brasil)](../pt-BR/FAQ.md) · [中文（简体）](../zh/FAQ.md)
 <!-- /languages -->
 
 사람들이 가장 자주 부딪히는 질문에 대한 짧은 답이며, 각각 자세히 설명하는

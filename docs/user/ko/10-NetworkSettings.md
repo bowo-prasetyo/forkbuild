@@ -2,7 +2,7 @@
 # 10 — 네트워크 설정
 
 <!-- languages -->
-[English](../10-NetworkSettings.md) · [Deutsch](../de/10-NetworkSettings.md) · [Español](../es/10-NetworkSettings.md) · [Français](../fr/10-NetworkSettings.md) · [Bahasa Indonesia](../id/10-NetworkSettings.md) · [日本語](../ja/10-NetworkSettings.md) · **한국어** · [Português (Brasil)](../pt-BR/10-NetworkSettings.md)
+[English](../10-NetworkSettings.md) · [Deutsch](../de/10-NetworkSettings.md) · [Español](../es/10-NetworkSettings.md) · [Français](../fr/10-NetworkSettings.md) · [Bahasa Indonesia](../id/10-NetworkSettings.md) · [日本語](../ja/10-NetworkSettings.md) · **한국어** · [Português (Brasil)](../pt-BR/10-NetworkSettings.md) · [中文（简体）](../zh/10-NetworkSettings.md)
 <!-- /languages -->
 
 > **고급.** 짓고, 공유하고, 리믹스하고, 친구와 돌아다니는 데 이 장은 필요

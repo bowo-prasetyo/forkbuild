@@ -2,7 +2,7 @@
 # 操作リファレンス
 
 <!-- languages -->
-[English](../ControlsReference.md) · [Deutsch](../de/ControlsReference.md) · [Español](../es/ControlsReference.md) · [Français](../fr/ControlsReference.md) · [Bahasa Indonesia](../id/ControlsReference.md) · **日本語** · [한국어](../ko/ControlsReference.md) · [Português (Brasil)](../pt-BR/ControlsReference.md)
+[English](../ControlsReference.md) · [Deutsch](../de/ControlsReference.md) · [Español](../es/ControlsReference.md) · [Français](../fr/ControlsReference.md) · [Bahasa Indonesia](../id/ControlsReference.md) · **日本語** · [한국어](../ko/ControlsReference.md) · [Português (Brasil)](../pt-BR/ControlsReference.md) · [中文（简体）](../zh/ControlsReference.md)
 <!-- /languages -->
 
 ForkBuild のマウスとキーボードの操作をすべてまとめています。

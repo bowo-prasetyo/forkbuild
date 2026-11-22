@@ -61,7 +61,8 @@ function read(query) {
         id: [['cat atap jadi merah', 'paint roof roofRed'], ['pilih semua jendela', 'select window'], ['hapus pohon', 'delete tree']],
         ja: [['屋根を赤く塗って', 'paint roof roofRed'], ['窓を全部選択', 'select window'], ['木を削除して', 'delete tree'], ['扉を黄緑に塗る', 'paint door meadow']],
         ko: [['지붕을 빨갛게 칠해', 'paint roof roofRed'], ['창문을 모두 선택', 'select window'], ['나무를 삭제해', 'delete tree']],
-        'pt-BR': [['pinte o telhado de vermelho', 'paint roof roofRed'], ['selecione todas as janelas', 'select window'], ['apague as árvores', 'delete tree']]
+        'pt-BR': [['pinte o telhado de vermelho', 'paint roof roofRed'], ['selecione todas as janelas', 'select window'], ['apague as árvores', 'delete tree']],
+        zh: [['把屋顶涂成红色', 'paint roof roofRed'], ['选择所有窗户', 'select window'], ['删除树', 'delete tree'], ['把门涂成浅绿色', 'paint door meadow']]
     };
     for (const [code, list] of Object.entries(cases)) {
         await setAppLocale(code);

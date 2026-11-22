@@ -2,7 +2,7 @@
 # 작품 배포하기
 
 <!-- languages -->
-[English](../Distribution.md) · [Deutsch](../de/Distribution.md) · [Español](../es/Distribution.md) · [Français](../fr/Distribution.md) · [Bahasa Indonesia](../id/Distribution.md) · [日本語](../ja/Distribution.md) · **한국어** · [Português (Brasil)](../pt-BR/Distribution.md)
+[English](../Distribution.md) · [Deutsch](../de/Distribution.md) · [Español](../es/Distribution.md) · [Français](../fr/Distribution.md) · [Bahasa Indonesia](../id/Distribution.md) · [日本語](../ja/Distribution.md) · **한국어** · [Português (Brasil)](../pt-BR/Distribution.md) · [中文（简体）](../zh/Distribution.md)
 <!-- /languages -->
 
 ForkBuild에서 만드는 모든 것은 내 기기에서 시작합니다. **배포**는 그것을

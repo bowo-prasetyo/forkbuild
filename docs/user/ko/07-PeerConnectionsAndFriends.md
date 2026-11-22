@@ -2,7 +2,7 @@
 # 07 — 피어 연결과 친구
 
 <!-- languages -->
-[English](../07-PeerConnectionsAndFriends.md) · [Deutsch](../de/07-PeerConnectionsAndFriends.md) · [Español](../es/07-PeerConnectionsAndFriends.md) · [Français](../fr/07-PeerConnectionsAndFriends.md) · [Bahasa Indonesia](../id/07-PeerConnectionsAndFriends.md) · [日本語](../ja/07-PeerConnectionsAndFriends.md) · **한국어** · [Português (Brasil)](../pt-BR/07-PeerConnectionsAndFriends.md)
+[English](../07-PeerConnectionsAndFriends.md) · [Deutsch](../de/07-PeerConnectionsAndFriends.md) · [Español](../es/07-PeerConnectionsAndFriends.md) · [Français](../fr/07-PeerConnectionsAndFriends.md) · [Bahasa Indonesia](../id/07-PeerConnectionsAndFriends.md) · [日本語](../ja/07-PeerConnectionsAndFriends.md) · **한국어** · [Português (Brasil)](../pt-BR/07-PeerConnectionsAndFriends.md) · [中文（简体）](../zh/07-PeerConnectionsAndFriends.md)
 <!-- /languages -->
 
 > **고급.** 짓고, 공유하고, 리믹스하고, 친구와 돌아다니는 데 이 장은 필요

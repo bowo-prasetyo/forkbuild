@@ -2,7 +2,7 @@
 # 04 — 게시와 리믹스
 
 <!-- languages -->
-[English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · [Español](../es/04-PublishingAndForking.md) · [Français](../fr/04-PublishingAndForking.md) · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · **한국어** · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md)
+[English](../04-PublishingAndForking.md) · [Deutsch](../de/04-PublishingAndForking.md) · [Español](../es/04-PublishingAndForking.md) · [Français](../fr/04-PublishingAndForking.md) · [Bahasa Indonesia](../id/04-PublishingAndForking.md) · [日本語](../ja/04-PublishingAndForking.md) · **한국어** · [Português (Brasil)](../pt-BR/04-PublishingAndForking.md) · [中文（简体）](../zh/04-PublishingAndForking.md)
 <!-- /languages -->
 
 이것이 ForkBuild의 핵심입니다. **게시**는 내 작품을 세상과 공유합니다.

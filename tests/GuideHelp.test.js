@@ -58,7 +58,8 @@ const fromDisk = new GuideLibrary({ fetchText: (path) => readFile(new URL(`../${
         id: ['Memindahkan, memutar, dan menghapus', 'Urungkan dan ulangi'],
         ja: ['移動、回転、削除', '元に戻す・やり直す'],
         ko: ['이동, 회전, 삭제', '실행 취소와 다시 실행'],
-        'pt-BR': ['Mover, girar e excluir', 'Desfazer e refazer']
+        'pt-BR': ['Mover, girar e excluir', 'Desfazer e refazer'],
+        zh: ['移动、旋转和删除', '撤销和重做']
     };
     for (const { code } of LOCALES.filter((locale) => expected[locale.code])) {
         await setAppLocale(code);

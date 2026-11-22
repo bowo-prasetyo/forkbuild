@@ -2,7 +2,7 @@
 # 11 — 증거와 저장소
 
 <!-- languages -->
-[English](../11-EvidenceAndStorage.md) · [Deutsch](../de/11-EvidenceAndStorage.md) · [Español](../es/11-EvidenceAndStorage.md) · [Français](../fr/11-EvidenceAndStorage.md) · [Bahasa Indonesia](../id/11-EvidenceAndStorage.md) · [日本語](../ja/11-EvidenceAndStorage.md) · **한국어** · [Português (Brasil)](../pt-BR/11-EvidenceAndStorage.md)
+[English](../11-EvidenceAndStorage.md) · [Deutsch](../de/11-EvidenceAndStorage.md) · [Español](../es/11-EvidenceAndStorage.md) · [Français](../fr/11-EvidenceAndStorage.md) · [Bahasa Indonesia](../id/11-EvidenceAndStorage.md) · [日本語](../ja/11-EvidenceAndStorage.md) · **한국어** · [Português (Brasil)](../pt-BR/11-EvidenceAndStorage.md) · [中文（简体）](../zh/11-EvidenceAndStorage.md)
 <!-- /languages -->
 
 > **고급.** 짓고, 공유하고, 리믹스하고, 친구와 돌아다니는 데 이 장은 필요

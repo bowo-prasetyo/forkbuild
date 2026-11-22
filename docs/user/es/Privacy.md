@@ -2,7 +2,7 @@
 # Privacidad
 
 <!-- languages -->
-[English](../../Privacy.md) · [Deutsch](../de/Privacy.md) · **Español** · [Français](../fr/Privacy.md) · [Bahasa Indonesia](../id/Privacy.md) · [日本語](../ja/Privacy.md) · [한국어](../ko/Privacy.md) · [Português (Brasil)](../pt-BR/Privacy.md)
+[English](../../Privacy.md) · [Deutsch](../de/Privacy.md) · **Español** · [Français](../fr/Privacy.md) · [Bahasa Indonesia](../id/Privacy.md) · [日本語](../ja/Privacy.md) · [한국어](../ko/Privacy.md) · [Português (Brasil)](../pt-BR/Privacy.md) · [中文（简体）](../zh/Privacy.md)
 <!-- /languages -->
 
 ForkBuild no tiene cuentas y no lo rastrea. Guarda su trabajo en su propio

@@ -2,7 +2,7 @@
 # 05 — 이름과 신원
 
 <!-- languages -->
-[English](../05-IdentityAndLogin.md) · [Deutsch](../de/05-IdentityAndLogin.md) · [Español](../es/05-IdentityAndLogin.md) · [Français](../fr/05-IdentityAndLogin.md) · [Bahasa Indonesia](../id/05-IdentityAndLogin.md) · [日本語](../ja/05-IdentityAndLogin.md) · **한국어** · [Português (Brasil)](../pt-BR/05-IdentityAndLogin.md)
+[English](../05-IdentityAndLogin.md) · [Deutsch](../de/05-IdentityAndLogin.md) · [Español](../es/05-IdentityAndLogin.md) · [Français](../fr/05-IdentityAndLogin.md) · [Bahasa Indonesia](../id/05-IdentityAndLogin.md) · [日本語](../ja/05-IdentityAndLogin.md) · **한국어** · [Português (Brasil)](../pt-BR/05-IdentityAndLogin.md) · [中文（简体）](../zh/05-IdentityAndLogin.md)
 <!-- /languages -->
 
 > **고급.** 짓고, 공유하고, 리믹스하고, 친구와 돌아다니는 데 이 장은 필요

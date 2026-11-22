@@ -16,7 +16,8 @@ export const WHISPER_LANGUAGES = Object.freeze({
     id: 'indonesian',
     ja: 'japanese',
     ko: 'korean',
-    'pt-BR': 'portuguese'
+    'pt-BR': 'portuguese',
+    zh: 'chinese'
 });
 
 export function whisperLanguage(code) {

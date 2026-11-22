@@ -23,7 +23,8 @@ export const PLACES = Object.freeze({
     id: { mill: 'Kincir Tua', bridge: 'Jembatan Batu' },
     ja: { mill: '古い水車小屋', bridge: '石の橋' },
     ko: { mill: '옛 물레방아', bridge: '돌다리' },
-    'pt-BR': { mill: 'Moinho Velho', bridge: 'Ponte de Pedra' }
+    'pt-BR': { mill: 'Moinho Velho', bridge: 'Ponte de Pedra' },
+    zh: { mill: '老磨坊', bridge: '石桥' }
 });
 
 // [id, view, expect], each said in every language below, in this order.
@@ -106,7 +107,12 @@ export const SAID = Object.freeze({
         'Me leve para o moinho velho.', 'Vá para a ponte de pedra.', 'Volta pra casa.', 'Primeira pessoa.', 'Desliga o som.', 'Liga o som.', 'Olá.',
         'Que dia lindo.', 'Gostei muito desse castelo.',
         'Onde eu coloquei as janelas?', 'Será que pinto depois?', 'Essa porta é pequena demais.', 'Deixa eu pensar no telhado.', 'O moinho velho é lindo.', 'O som está alto demais?', 'Ontem eu estava na ponte de pedra.',
-        'Eu gosto do telhado vermelho.', 'Quantos tijolos são esses?', 'Quem quer conversar?', 'Minha casa é bem longe.', 'Está alto demais?']
+        'Eu gosto do telhado vermelho.', 'Quantos tijolos são esses?', 'Quem quer conversar?', 'Minha casa é bem longe.', 'Está alto demais?'],
+    zh: ['把屋顶涂成红色。', '选择所有窗户。', '删除树。', '全部涂成绿色。', '撤销。', '重做。', '顺时针旋转。', '复制。', '复制一份。',
+        '带我去老磨坊。', '去石桥。', '回家。', '第一人称。', '关闭声音。', '打开声音。', '你好。',
+        '今天天气真好。', '我很喜欢这座城堡。',
+        '我把窗户放哪儿了？', '要不要以后再涂？', '这扇门太小了。', '让我想想屋顶。', '老磨坊真漂亮。', '声音是不是太大了？', '昨天我在石桥那儿。',
+        '我喜欢红色的屋顶。', '这有多少块积木？', '谁想聊聊？', '我家离这儿很远。', '是不是太吵了？']
 });
 
 // A second phrasing of every row above, in the same order, written before
@@ -153,7 +159,12 @@ export const FRESH_SAID = Object.freeze({
         'Voe para o moinho velho.', 'Me mostra a ponte de pedra.', 'Para casa.', 'Primeira pessoa.', 'Mudo.', 'Com som.', 'Olá, amigo.',
         'Isso está demorando um pouco.', 'Estou com um pouco de fome.',
         'As janelas ficam bonitas daqui.', 'Talvez eu pinte amanhã.', 'Essa porta é grande o bastante?', 'O telhado ainda precisa de trabalho.', 'Você viu o moinho velho?', 'O som está bom.', 'A ponte de pedra é longe.',
-        'Aquele telhado vermelho é bonito.', 'Tenho tijolos suficientes?', 'Ninguém quer conversar.', 'Sinto falta da minha casa.', 'Aqui está muito barulhento.']
+        'Aquele telhado vermelho é bonito.', 'Tenho tijolos suficientes?', 'Ninguém quer conversar.', 'Sinto falta da minha casa.', 'Aqui está muito barulhento.'],
+    zh: ['把屋顶刷成红色。', '挑出窗户。', '去掉所有的树。', '把所有东西涂成绿色。', '撤消。', '恢复。', '顺时针旋转。', '复制。', '复制一份。',
+        '飞到老磨坊。', '给我看石桥。', '带我回家。', '用我的眼睛。', '静音。', '把声音打开。', '打招呼。',
+        '这要花点时间。', '我有点饿了。',
+        '从这里看窗户很好看。', '也许我明天再涂。', '那扇门够大吗？', '屋顶还需要再弄弄。', '你见过老磨坊吗？', '声音挺好的。', '石桥很远。',
+        '那个红屋顶真好看。', '我的积木够吗？', '没人想聊。', '我想家了。', '这里好吵。']
 });
 
 // Sounds that aren't speech (scripts/voiceNoise.mjs), heard in each

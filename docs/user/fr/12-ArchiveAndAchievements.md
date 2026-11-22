@@ -2,7 +2,7 @@
 # 12 — Archive et succès
 
 <!-- languages -->
-[English](../12-ArchiveAndAchievements.md) · [Deutsch](../de/12-ArchiveAndAchievements.md) · [Español](../es/12-ArchiveAndAchievements.md) · **Français** · [Bahasa Indonesia](../id/12-ArchiveAndAchievements.md) · [日本語](../ja/12-ArchiveAndAchievements.md) · [한국어](../ko/12-ArchiveAndAchievements.md) · [Português (Brasil)](../pt-BR/12-ArchiveAndAchievements.md)
+[English](../12-ArchiveAndAchievements.md) · [Deutsch](../de/12-ArchiveAndAchievements.md) · [Español](../es/12-ArchiveAndAchievements.md) · **Français** · [Bahasa Indonesia](../id/12-ArchiveAndAchievements.md) · [日本語](../ja/12-ArchiveAndAchievements.md) · [한국어](../ko/12-ArchiveAndAchievements.md) · [Português (Brasil)](../pt-BR/12-ArchiveAndAchievements.md) · [中文（简体）](../zh/12-ArchiveAndAchievements.md)
 <!-- /languages -->
 
 > **Avancé.** Ce chapitre n’est pas nécessaire pour construire, partager,

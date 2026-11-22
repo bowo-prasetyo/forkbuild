@@ -77,7 +77,7 @@ function findBricks(query) {
 {
     // Each language's user guide (docs/user/<code>/02-TheEditor.md) gives
     // the river sentence and the sleeping word as examples.
-    const sleep = { de: 'schlafen', es: 'dormir', fr: 'dormir', id: 'tidur', ja: '寝る', ko: '침실', 'pt-BR': 'dormir' };
+    const sleep = { de: 'schlafen', es: 'dormir', fr: 'dormir', id: 'tidur', ja: '寝る', ko: '침실', 'pt-BR': 'dormir', zh: '睡觉' };
     const sentences = {
         de: ['über den Fluss', 'village:bridge'],
         es: ['quiero cruzar el río', 'village:bridge'],
@@ -85,7 +85,8 @@ function findBricks(query) {
         id: ['saya mau menyeberang sungai', 'village:bridge'],
         ja: ['川を渡りたい', 'village:bridge'],
         ko: ['강을 건너고 싶어요', 'village:bridge'],
-        'pt-BR': ['quero atravessar o rio', 'village:bridge']
+        'pt-BR': ['quero atravessar o rio', 'village:bridge'],
+        zh: ['我想过河', 'village:bridge']
     };
     for (const locale of LOCALES.map((entry) => entry.code).filter((code) => code !== SOURCE_LOCALE && sentences[code])) {
         await setAppLocale(locale);

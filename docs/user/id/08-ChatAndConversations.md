@@ -2,7 +2,7 @@
 # 08 — Obrolan & Percakapan
 
 <!-- languages -->
-[English](../08-ChatAndConversations.md) · [Deutsch](../de/08-ChatAndConversations.md) · [Español](../es/08-ChatAndConversations.md) · [Français](../fr/08-ChatAndConversations.md) · **Bahasa Indonesia** · [日本語](../ja/08-ChatAndConversations.md) · [한국어](../ko/08-ChatAndConversations.md) · [Português (Brasil)](../pt-BR/08-ChatAndConversations.md)
+[English](../08-ChatAndConversations.md) · [Deutsch](../de/08-ChatAndConversations.md) · [Español](../es/08-ChatAndConversations.md) · [Français](../fr/08-ChatAndConversations.md) · **Bahasa Indonesia** · [日本語](../ja/08-ChatAndConversations.md) · [한국어](../ko/08-ChatAndConversations.md) · [Português (Brasil)](../pt-BR/08-ChatAndConversations.md) · [中文（简体）](../zh/08-ChatAndConversations.md)
 <!-- /languages -->
 
 > **Lanjutan.** Anda tidak memerlukan bab ini untuk membangun, berbagi,

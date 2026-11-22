@@ -1,7 +1,7 @@
 # 05 — Your Name & Identity
 
 <!-- languages -->
-**English** · [Deutsch](de/05-IdentityAndLogin.md) · [Español](es/05-IdentityAndLogin.md) · [Français](fr/05-IdentityAndLogin.md) · [Bahasa Indonesia](id/05-IdentityAndLogin.md) · [日本語](ja/05-IdentityAndLogin.md) · [한국어](ko/05-IdentityAndLogin.md) · [Português (Brasil)](pt-BR/05-IdentityAndLogin.md)
+**English** · [Deutsch](de/05-IdentityAndLogin.md) · [Español](es/05-IdentityAndLogin.md) · [Français](fr/05-IdentityAndLogin.md) · [Bahasa Indonesia](id/05-IdentityAndLogin.md) · [日本語](ja/05-IdentityAndLogin.md) · [한국어](ko/05-IdentityAndLogin.md) · [Português (Brasil)](pt-BR/05-IdentityAndLogin.md) · [中文（简体）](zh/05-IdentityAndLogin.md)
 <!-- /languages -->
 
 > **Advanced.** You don't need this chapter to build, share, remix or walk

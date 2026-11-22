@@ -1,7 +1,7 @@
 # 11 — Evidence & Storage
 
 <!-- languages -->
-**English** · [Deutsch](de/11-EvidenceAndStorage.md) · [Español](es/11-EvidenceAndStorage.md) · [Français](fr/11-EvidenceAndStorage.md) · [Bahasa Indonesia](id/11-EvidenceAndStorage.md) · [日本語](ja/11-EvidenceAndStorage.md) · [한국어](ko/11-EvidenceAndStorage.md) · [Português (Brasil)](pt-BR/11-EvidenceAndStorage.md)
+**English** · [Deutsch](de/11-EvidenceAndStorage.md) · [Español](es/11-EvidenceAndStorage.md) · [Français](fr/11-EvidenceAndStorage.md) · [Bahasa Indonesia](id/11-EvidenceAndStorage.md) · [日本語](ja/11-EvidenceAndStorage.md) · [한국어](ko/11-EvidenceAndStorage.md) · [Português (Brasil)](pt-BR/11-EvidenceAndStorage.md) · [中文（简体）](zh/11-EvidenceAndStorage.md)
 <!-- /languages -->
 
 > **Advanced.** You don't need this chapter to build, share, remix or walk

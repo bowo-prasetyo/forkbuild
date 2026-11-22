@@ -2,7 +2,7 @@
 # 12 — Archiv & Erfolge
 
 <!-- languages -->
-[English](../12-ArchiveAndAchievements.md) · **Deutsch** · [Español](../es/12-ArchiveAndAchievements.md) · [Français](../fr/12-ArchiveAndAchievements.md) · [Bahasa Indonesia](../id/12-ArchiveAndAchievements.md) · [日本語](../ja/12-ArchiveAndAchievements.md) · [한국어](../ko/12-ArchiveAndAchievements.md) · [Português (Brasil)](../pt-BR/12-ArchiveAndAchievements.md)
+[English](../12-ArchiveAndAchievements.md) · **Deutsch** · [Español](../es/12-ArchiveAndAchievements.md) · [Français](../fr/12-ArchiveAndAchievements.md) · [Bahasa Indonesia](../id/12-ArchiveAndAchievements.md) · [日本語](../ja/12-ArchiveAndAchievements.md) · [한국어](../ko/12-ArchiveAndAchievements.md) · [Português (Brasil)](../pt-BR/12-ArchiveAndAchievements.md) · [中文（简体）](../zh/12-ArchiveAndAchievements.md)
 <!-- /languages -->
 
 > **Erweitert.** Zum Bauen, Teilen, Remixen und Herumlaufen mit Freunden

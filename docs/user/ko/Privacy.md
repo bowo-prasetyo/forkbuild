@@ -2,7 +2,7 @@
 # 개인정보 보호
 
 <!-- languages -->
-[English](../../Privacy.md) · [Deutsch](../de/Privacy.md) · [Español](../es/Privacy.md) · [Français](../fr/Privacy.md) · [Bahasa Indonesia](../id/Privacy.md) · [日本語](../ja/Privacy.md) · **한국어** · [Português (Brasil)](../pt-BR/Privacy.md)
+[English](../../Privacy.md) · [Deutsch](../de/Privacy.md) · [Español](../es/Privacy.md) · [Français](../fr/Privacy.md) · [Bahasa Indonesia](../id/Privacy.md) · [日本語](../ja/Privacy.md) · **한국어** · [Português (Brasil)](../pt-BR/Privacy.md) · [中文（简体）](../zh/Privacy.md)
 <!-- /languages -->
 
 ForkBuild에는 계정이 없고 나를 추적하지 않습니다. 작업은 내 브라우저에

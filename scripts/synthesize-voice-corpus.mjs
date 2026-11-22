@@ -52,10 +52,11 @@ const PIPER_VOICES = Object.freeze({
     id: ['id_ID-news_tts-medium'],
     ja: ['ja_JP-hi_fi_captain-medium'],
     ko: ['ko_KR-kss-medium'],
-    'pt-BR': ['pt_BR-faber-medium', 'pt_BR-cadu-medium', 'pt_BR-jeff-medium']
+    'pt-BR': ['pt_BR-faber-medium', 'pt_BR-cadu-medium', 'pt_BR-jeff-medium'],
+    zh: ['zh_CN-huayan-medium']
 });
-// Voices the first corpus wasn't made with. Indonesian, Japanese and Korean
-// have one voice each, heard again at other paces.
+// Voices the first corpus wasn't made with. Indonesian, Japanese, Korean and
+// Chinese have one voice each, heard again at other paces.
 const FRESH_PIPER_VOICES = Object.freeze({
     en: ['en_US-lessac-medium', 'en_US-ryan-medium', 'en_GB-jenny_dioco-medium'],
     de: ['de_DE-karlsson-low', 'de_DE-ramona-low', 'de_DE-pavoque-low'],
@@ -64,11 +65,12 @@ const FRESH_PIPER_VOICES = Object.freeze({
     id: ['id_ID-news_tts-medium'],
     ja: ['ja_JP-hi_fi_captain-medium'],
     ko: ['ko_KR-kss-medium'],
-    'pt-BR': ['pt_BR-edresson-low']
+    'pt-BR': ['pt_BR-edresson-low'],
+    zh: ['zh_CN-huayan-x_low']
 });
 // How fast a lone voice also speaks (Piper's length scale: above 1 is slower).
 const ONE_VOICE_PACES = Object.freeze(fresh ? [1.1, 0.95, 1.4] : [1, 1.25, 0.85]);
-const ESPEAK_VOICES = Object.freeze({ en: 'en-us', de: 'de', es: 'es', fr: 'fr-fr', id: 'id', ja: 'ja', ko: 'ko', 'pt-BR': 'pt-br' });
+const ESPEAK_VOICES = Object.freeze({ en: 'en-us', de: 'de', es: 'es', fr: 'fr-fr', id: 'id', ja: 'ja', ko: 'ko', 'pt-BR': 'pt-br', zh: 'cmn' });
 
 // Where a voice is in rhasspy/piper-voices: en_US-amy-medium is en/en_US/amy/medium.
 function piperVoice(key) {
