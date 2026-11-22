@@ -105,6 +105,11 @@ feeds of the communities they're shared to. Post the same Monday challenge
 devlog as on itch.io (see [itch.io](ItchIo.md#devlogs)), with the
 `?ref=gamejolt` link instead of `?ref=itch`, and an image: posts without one
 are easy to scroll past.
+For the week of 23 November 2026, post the Windmill devlog from
+[itch.io](ItchIo.md#devlogs) as an **Article**, with this as the Play line:
+<https://bowo-prasetyo.github.io/forkbuild/?ref=gamejolt>. Use
+`press/itch-cover-village.gif` as its header image. Tag it with the game,
+and share it to a building or cozy-games community.
 
 Share each post to one or two **communities** that fit (building, cozy or
 indie-games communities), following each community's own rules about

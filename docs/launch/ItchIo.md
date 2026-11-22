@@ -119,7 +119,56 @@ Keep whichever has the higher CTR, and record the numbers here.
 
 Each Monday, post a devlog naming the new challenge theme and its twist,
 with one entry from last week, so the page's followers hear there's
-something new. When a release ships, post one for it. For 1.4:
+something new. When a release ships, post one for it.
+
+For the week of 23 November 2026 (the Windmill challenge, after 1.5, 1.6 and
+Simplified Chinese). Post it on Monday 23 November, when the challenge
+opens (00:00 UTC). Lead with `press/itch-cover-village.gif`. Before posting,
+replace the bracketed line with a winter cabin entry, or delete it.
+
+> **New this week: a Windmill challenge, a world that changes with the seasons, and a quicker first Publish**
+>
+> **This week's challenge: Windmill.** Build a mill and the farm around it:
+> sails, sheds, fields and fences. The twist is that you can use **only three
+> colours**. Join from the Challenge page to start from a ready-made mill, or
+> start from nothing. Next week is a remix week, so this week's entries
+> become next week's starting points.
+>
+> [Last week's winter cabin: link and builder's name, one line on what's
+> good about it.]
+>
+> **What's changed since our last devlog**
+>
+> - **A first build, published in one step.** Publishing used to ask three
+>   questions in turn. Now it's one sheet with your name, remixing and who
+>   can find it already filled in, and one Publish button. Try it now's house
+>   gives you a four-step job: a roof, a chimney, a path and a garden.
+> - **A world worth walking through.** It has four seasons, weather, water,
+>   a moon that waxes and wanes, and deer and villagers who keep out of your
+>   builds. On a seasonal challenge week, the whole world stays in that
+>   season for everyone.
+> - **Building feels better.** Moving the camera never drops a brick by
+>   mistake. Shift+drag lays a row. Alt-click copies any brick in your
+>   build, with its colour and turn, and keys 3–9 hold the bricks you used last.
+> - **Share it your way.** Builds get short links that work in Discord and
+>   Telegram. **Make a video** turns a build into a time-lapse or a
+>   walk-through for YouTube, Shorts or TikTok, and credits everyone who
+>   built it.
+> - **Build by voice**, on your device, in the Editor and the world.
+> - **ForkBuild now speaks Simplified Chinese (简体中文)**, alongside
+>   English, German, Spanish, French, Indonesian, Japanese, Korean and
+>   Portuguese.
+>
+> It's free and runs in your browser, with no account or download. Build
+> something, press **Publish**, and post your link in the comments. We'll
+> feature one next week.
+>
+> Play: <https://bowo-prasetyo.github.io/forkbuild/?ref=itch>
+>
+> Everything that changed:
+> <https://github.com/bowo-prasetyo/forkbuild/blob/main/docs/ReleaseNotes-1.6.md>
+
+For 1.4:
 
 > **ForkBuild 1.4: the builder's release**
 >
