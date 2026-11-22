@@ -10393,3 +10393,43 @@ nothing to show for it, and one's next export sealed it as one's own work.**
 - Tests: tests/DocumentSeal.test.js (the maker taken off or replaced, under and without a seal; the mark through a
   sealed export, an edited file, someone else's copy, Edit a Copy and Export All Builds), tests/UnverifiedOriginBrowser.test.js
   (the panel, and a Publication signing the mark).
+
+## Publish pressed, and six more launch channels (unnumbered, 2026-11-22)
+
+**In the week of 15 November, 20 visits made a first edit and about none published, and the counts can't say
+whether those builders never pressed Publish or pressed it and stopped on the way** (the owner's yes, 2026-11-22:
+"Yes, please design and implement adding the publish-start event and the extra ref channels."). Publish asks up to
+three things first: whether a ready-made build with nothing added should be published anyway, whether it looks like
+someone else's build, and the sheet (a name, remixing, who can find it). A count of Publish pressed splits the drop in
+two. The same week, about 92% of visits had no tag, while China, Japan and Vietnam brought 39% of them and none of
+their sites was on `?ref=`'s list.
+
+**The filter.**
+1. **Pillar:** building. Nothing a player notices changes; it says where the step from building to a published build
+   is lost, which is where every Building target is stuck at "too few".
+2. **First ten minutes:** unchanged. Publish behaves as before.
+3. **Building first:** yes. Measuring the last step of the first build is what lets the next change aim at it.
+4. **Counts:** week of 15 November: `/` 72, `/e/editor-open` 40, `/e/starter-open` 31, `/e/editor-edit` 20,
+   `/e/publish-bricks-…` about 0 (at most 3 hidden under "Show more"), `/e/share-link` about 0,
+   `/e/opened-shared-link` 15, `/r/itch` 3, `/r/gamejolt` 3. `/e/publish-start` (new) against `/e/editor-edit` and
+   the published builds: few pressing means nothing asks them to publish; many pressing but few publishing means the
+   questions on the way.
+
+- **`/e/publish-start`** (core/app/VisitorCount.js, application/settings/FunnelEventCounter.js `startedPublish`,
+  ui/components/Toolbar.js `requestPublish`): counted when Publish is pressed in the toolbar or on a ready-made
+  build's card, before any question, at most once a page load, under the visitor count's rules and setting.
+  Nothing about the build is sent.
+- **The scorecard's FIRST STEPS** (core/app/LaunchTargets.js) read it between the first edit and the builds
+  published; docs/Pillars.md and docs/launch/README.md say how to read the drop on each side of it.
+- **Six more launch channels** (core/app/LaunchChannel.js): `bilibili` and `zhihu` (China), `qiita` and `note`
+  (Japan), `x`, and `facebook` (groups and pages, where Vietnam's builders are likeliest to be found), each counted
+  once as `/r/<channel>` like the others; any other value is still ignored and never sent. docs/launch/README.md lists
+  each link.
+- The Privacy page names the new count and channels in all eight languages. The translations were written without a
+  native speaker's review.
+- Tests: tests/FunnelEventCounter.test.js (Publish pressed: one fixed path, once a page load, not when turned off or
+  with Global Privacy Control), tests/PublishSheetBrowser.test.js (counted while the sheet still asks, and Publish
+  works with no counter), tests/LaunchTargets.test.js (the new first step, in order), tests/LaunchChannel.test.js
+  (the six channels; `X`, `twitter` and `note.com` aren't).
+- Not done: no Chinese or Vietnamese translation of the app, though 19% and 8% of the week's visitors browse in
+  those languages; that is a bigger piece of work of its own.

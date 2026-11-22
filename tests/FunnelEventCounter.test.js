@@ -70,6 +70,20 @@ function counter({ origin = VISITOR_COUNT_SITE_ORIGIN, privacySignals = {}, enab
     console.log('✓ the first steps towards a build, once a page load');
 }
 
+// Publish pressed: a fixed path, once a page load, under the same rules, and
+// heard whether or not a build is then published.
+{
+    const { instance, hits } = counter();
+    assert(instance.startedPublish() === true && instance.startedPublish() === false && instance.startedPublish() === false,
+        'counted the first time Publish is pressed, not again on the same page');
+    assert(hits.length === 1 && hits[0] === 'https://forkbuild.goatcounter.com/count?p=%2Fe%2Fpublish-start&rnd=5',
+        `as /e/publish-start, with nothing about the build (${hits})`);
+    const off = counter({ enabled: false });
+    assert(off.instance.startedPublish() === false && off.hits.length === 0, 'not when the visitor count is turned off');
+    assert(counter({ privacySignals: { globalPrivacyControl: true } }).instance.startedPublish() === false, 'not with Global Privacy Control');
+    console.log('✓ Publish pressed, once a page load');
+}
+
 // A returning builder's Keep building on Home: once a page load, under the setting.
 {
     const { instance, hits } = counter();

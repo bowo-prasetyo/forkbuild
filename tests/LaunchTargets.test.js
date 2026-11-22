@@ -29,9 +29,9 @@ const byId = (results) => Object.fromEntries(results.map((result) => [result.id,
 {
     const paths = new Set(Object.values(FunnelEvent).map((event) => `/e/${event}`));
     assert(FIRST_STEPS.every((step) => step.paths.every((key) => paths.has(key))), 'every first step reads paths the app counts');
-    const steps = evaluateFirstSteps({ '/': 40, '/e/editor-open': 20, '/e/starter-open': 12, '/e/editor-edit': 8, '/e/publish-bricks-1': 2, '/e/publish-bricks-50': 1 });
-    assert(steps.map((step) => step.id).join() === 'editor,ready-made,edit,publish', 'in the order a newcomer takes them');
-    assert(steps.map((step) => step.count).join() === '20,12,8,3' && steps[0].share === 0.5 && steps[3].share === 3 / 40,
+    const steps = evaluateFirstSteps({ '/': 40, '/e/editor-open': 20, '/e/starter-open': 12, '/e/editor-edit': 8, '/e/publish-start': 5, '/e/publish-bricks-1': 2, '/e/publish-bricks-50': 1 });
+    assert(steps.map((step) => step.id).join() === 'editor,ready-made,edit,publish-start,publish', 'in the order a newcomer takes them');
+    assert(steps.map((step) => step.count).join() === '20,12,8,5,3' && steps[0].share === 0.5 && steps[3].share === 5 / 40 && steps[4].share === 3 / 40,
         `each step's total and share of the daily visits, publishing the builds published (${JSON.stringify(steps)})`);
     assert(evaluateFirstSteps({ '/e/editor-open': 3 })[0].share === null, 'no daily visits, no share');
     console.log('✓ the first steps are read in order against the daily visits');

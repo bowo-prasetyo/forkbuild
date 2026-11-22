@@ -32,6 +32,12 @@ Every post links to the site with a `ref` naming where it was posted:
 | Game Jolt | <https://bowo-prasetyo.github.io/forkbuild/?ref=gamejolt> |
 | IndieDB | <https://bowo-prasetyo.github.io/forkbuild/?ref=indiedb> |
 | YouTube (the launch clip's description) | <https://bowo-prasetyo.github.io/forkbuild/?ref=youtube> |
+| Bilibili (China) | <https://bowo-prasetyo.github.io/forkbuild/?ref=bilibili> |
+| Zhihu (China) | <https://bowo-prasetyo.github.io/forkbuild/?ref=zhihu> |
+| Qiita (Japan) | <https://bowo-prasetyo.github.io/forkbuild/?ref=qiita> |
+| note (Japan) | <https://bowo-prasetyo.github.io/forkbuild/?ref=note> |
+| X | <https://bowo-prasetyo.github.io/forkbuild/?ref=x> |
+| Facebook (groups and pages, e.g. Vietnam) | <https://bowo-prasetyo.github.io/forkbuild/?ref=facebook> |
 
 A visit through one of these is counted once as `/r/<channel>` on the
 public visitor counter, <https://forkbuild.goatcounter.com/>, under the same
@@ -102,12 +108,14 @@ the week after, by day:
 - **Where do newcomers stop?** Against the daily count `/`, in the order a
   newcomer takes them: `/e/editor-open` (the Editor opened, any way in),
   `/e/starter-open` (a ready-made build opened from Home's main button or a
-  challenge), `/e/editor-edit` (a first edit made), then the builds
-  published (the five `/e/publish-bricks-…` paths). Each Editor step counts
-  at most once a page load. The biggest drop between two of them is where
-  to look first: few opening the Editor is Home's page; many opening it
-  but few editing is the Editor's first minute; many editing but few
-  publishing is Publish. The scorecard prints these first as FIRST STEPS.
+  challenge), `/e/editor-edit` (a first edit made), `/e/publish-start`
+  (Publish pressed, whether or not a build is then published), then the
+  builds published (the five `/e/publish-bricks-…` paths). Each Editor step
+  counts at most once a page load. The biggest drop between two of them is
+  where to look first: few opening the Editor is Home's page; many opening
+  it but few editing is the Editor's first minute; many editing but few
+  pressing Publish is that nothing asks them to; many pressing it but few
+  publishing is the questions Publish asks on the way. The scorecard prints these first as FIRST STEPS.
 - **How much did they build?** The five `/e/publish-bricks-…` paths, one per
   build published for the first time, so together they are the builds
   published. The range holding the middle one is the median build's size:

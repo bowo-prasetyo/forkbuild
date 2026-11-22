@@ -51,7 +51,7 @@ function identities({ names = [], signedIn = false } = {}) {
     };
 }
 
-function mount({ licenseId = LicenseId.UNSPECIFIED, findability = null, identityUseCase = identities() } = {}) {
+function mount({ licenseId = LicenseId.UNSPECIFIED, findability = null, identityUseCase = identities(), funnel = null } = {}) {
     const published = [];
     let chosen = findability;
     const metadata = { title: 'House', license: new License({ id: licenseId }), authorIdentityId: null, touch() {} };
@@ -75,6 +75,7 @@ function mount({ licenseId = LicenseId.UNSPECIFIED, findability = null, identity
     });
     app.provide('identityUseCase', identityUseCase);
     app.provide('findabilityStore', { get: () => chosen, set: (value) => { chosen = value; return value; } });
+    if (funnel) app.provide('funnelEventCounter', funnel);
     app.mount(host);
     return {
         host,
@@ -181,6 +182,25 @@ console.log('✓ each choice changes in place, and the name can be typed over');
     toolbar.unmount();
 }
 console.log('✓ Keep building and Escape publish nothing and keep nothing');
+
+// Pressing Publish is counted (/e/publish-start) before anything is asked, so
+// a visitor who stops at the sheet is still heard as having tried.
+{
+    const started = [];
+    const toolbar = mount({ funnel: { startedPublish: () => started.push('publish-start') } });
+    await toolbar.publish();
+    assert(started.length === 1 && toolbar.sheet() && toolbar.published.length === 0, 'Publish pressed is counted while the sheet still asks');
+    await toolbar.click('.publish-sheet-cancel');
+    assert(started.length === 1 && toolbar.published.length === 0, 'and Keep building takes nothing back');
+    await toolbar.publish();
+    assert(started.length === 2, 'each press reaches the counter, which keeps it to once a page load');
+    toolbar.unmount();
+    const without = mount();
+    await without.publish();
+    assert(without.sheet(), 'with no counter, Publish works as before');
+    without.unmount();
+}
+console.log('✓ pressing Publish is counted before anything is asked');
 
 // Publishing with no name, from Advanced.
 {

@@ -211,6 +211,7 @@ export const FIRST_STEPS = Object.freeze([
     Object.freeze({ id: 'editor', question: 'Do visitors open the Editor?', paths: Object.freeze([path(FunnelEvent.EDITOR_OPEN)]) }),
     Object.freeze({ id: 'ready-made', question: 'Do they open a ready-made build from Home or a challenge?', paths: Object.freeze([path(FunnelEvent.STARTER_OPEN)]) }),
     Object.freeze({ id: 'edit', question: 'Do they make an edit?', paths: Object.freeze([path(FunnelEvent.EDITOR_EDIT)]) }),
+    Object.freeze({ id: 'publish-start', question: 'Do they press Publish?', paths: Object.freeze([path(FunnelEvent.PUBLISH_START)]) }),
     Object.freeze({ id: 'publish', question: 'Do they publish a build?', paths: Object.freeze(BRICK_RANGES.map((range) => range.path)) })
 ]);
 
